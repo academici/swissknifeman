@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(php artisan *)",
+      "Bash(php -l *)",
+      "Bash(php -r *)",
+      "Bash(php -v)",
+      "Bash(composer install *)",
+      "Bash(composer update *)",
+      "Bash(composer require *)",
+      "Bash(composer remove *)",
+      "Bash(composer dump-autoload *)",
+      "Bash(composer run *)",
+      "Bash(composer show *)",
+      "Bash(composer outdated *)",
+      "Bash(composer validate *)",
+      "Bash(vendor/bin/pest *)",
+      "Bash(vendor/bin/phpunit *)",
+      "Bash(vendor/bin/pint *)",
+      "Bash(vendor/bin/phpstan *)",
+      "Bash(vendor/bin/rector *)",
+      "Bash(./vendor/bin/pest *)",
+      "Bash(./vendor/bin/phpunit *)",
+      "Bash(./vendor/bin/pint *)",
+      "Bash(./vendor/bin/phpstan *)",
+      "Bash(./vendor/bin/rector *)",
+      "Bash(./vendor/bin/sail *)",
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(npx vite *)"
+    ],
+    "ask": [
+      "Bash(php artisan migrate:fresh *)",
+      "Bash(php artisan migrate:reset *)",
+      "Bash(php artisan db:wipe *)"
+    ]
+  }
+}

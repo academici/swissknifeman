@@ -479,9 +479,9 @@
       "name": "laravel-packages",
       "bucket": "php",
       "path": "skills/php/laravel-packages/SKILL.md",
-      "version": "0.2.0",
-      "description": "Создание Laravel packages с Boost skill publishing",
-      "sha256": "a5343401668766e72a437e95db89b47bc94798dc9cfd798f7b037b95f2f7c258",
+      "version": "0.3.0",
+      "description": "Создание Laravel-пакетов: scaffold, тесты, публикация скиллов пакета потребителям через vendor:publish",
+      "sha256": "f2d67a7081f4a048339e3ed244547a48405fccc6b1d344eb1c96b7d9daa69a7a",
       "source": "local"
     },
     {

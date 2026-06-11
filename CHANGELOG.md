@@ -1,5 +1,25 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- **Документация на VitePress** (`docs/`): гайд (принципы, установка, профили,
+  анатомия скилла, upstream-sync, реестр, сканер, CI), конфиги, адаптеры,
+  примеры, roadmap; деплой на GitHub Pages (`docs.yml`)
+- **Пресеты permissions для Claude Code** (`configs/claude-code/`):
+  base/laravel/php-package/node/python/docker/yolo +
+  `scripts/apply-permissions.sh` (merge в settings.local.json, автодетект стека,
+  dry-run, бэкап)
+- **Vendor-skills**: универсальный механизм публикации скиллов из Composer-пакета
+  потребителю через `vendor:publish` — док-страница + переработанный скилл
+  `php/laravel-packages` (v0.3.0) со сниппетом `boost-skill-publisher.php`
+- **Спецификация адаптерных дельт**: формат `Override:`/`Additional:`,
+  pre-flight хуки, критерии «когда дельта нужна»
+- Критерии качества сниппетов для сканера (порог 60/100) в документации
+- Roadmap: ближайшие фазы + стратегические/технические/экспериментальные идеи
+  (перенесено из tmp-черновиков master-plan v3, черновики удалены)
+
 ## [0.2.0] - 2026-06-11
 
 ### Added

@@ -3,6 +3,9 @@
 > Универсальный личный реестр AI-скиллов и сниппетов: один источник истины,
 > установка в любой проект и любую IDE, отслеживание внешних источников.
 
+**Документация:** [academici.github.io/swissknifeman](https://academici.github.io/swissknifeman/)
+(локально: `npm install && npm run docs:dev`)
+
 ## Для чего этот пакет
 
 Единая библиотека скиллов (provider-neutral `SKILL.md` + `snippets/`) под мои
@@ -35,11 +38,13 @@ skills/                    # скилл = папка + SKILL.md + snippets/ (+ u
 └── roles/      (4)        # персоны: tech-lead, startup-cto, ...
 
 profiles/                  # тип проекта → набор bucket-ов
+configs/                   # готовые конфиги: пресеты permissions для Claude Code
 references/                # каталог внешних источников (что брать, статус)
 adapters/                  # доки по интеграции: claude-code, cursor, perplexity
-scripts/                   # validate, update-upstreams, scanner
+scripts/                   # validate, update-upstreams, scanner, apply-permissions
 generate-skill/            # мета-скилл создания новых скиллов
 skills.json                # реестр (генерируется sync.sh, с provenance)
+docs/                      # документация (VitePress)
 ```
 
 > `references/` в корне — каталог внешних источников для отбора;
@@ -80,6 +85,25 @@ Claude Code не видит вложенные bucket-структуры. Кол
 Проект может зафиксировать свою конфигурацию в `.swissknife.json`
 (см. [.swissknife.example.json](.swissknife.example.json)) — приоритет:
 флаги → `.swissknife.json` → автодетект.
+
+## Пресеты permissions для Claude Code
+
+Готовые наборы разрешений ([configs/claude-code/](configs/claude-code/README.md)),
+чтобы агент в новом проекте работал без permission-промптов:
+
+```bash
+# base + автодетект стека (artisan → laravel, package.json → node, ...)
+./scripts/apply-permissions.sh --target ~/projects/my-laravel-app
+
+# Явный набор / превью
+./scripts/apply-permissions.sh --target . --preset base,laravel,docker
+./scripts/apply-permissions.sh --target . --dry-run
+```
+
+Пресеты: `base`, `laravel`, `php-package`, `node`, `python`, `docker`, `yolo`.
+Merge в `.claude/settings.local.json` без затирания существующих правил, с бэкапом.
+Опасные операции (`git push`, `rm -rf`, `migrate:fresh`) — через ask, секреты
+(`.env`, ключи, `~/.ssh`) — deny.
 
 ## Профили
 

@@ -24,10 +24,11 @@
     },
     {
       "file": "boost-skill-publisher.php",
-      "description": "Boost skill publisher",
+      "description": "Публикация скиллов пакета потребителю через vendor:publish (агент-нейтральная и Claude Code раскладки)",
       "tags": [
         "boost",
-        "laravel"
+        "laravel",
+        "vendor-skills"
       ]
     },
     {

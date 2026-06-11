@@ -1,0 +1,15 @@
+{
+  "name": "@academici/swissknifeman",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Универсальный личный реестр AI-скиллов и сниппетов: один источник истины, установка в любой проект и любую IDE",
+  "type": "module",
+  "scripts": {
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
+  },
+  "devDependencies": {
+    "vitepress": "^1.6.3"
+  }
+}

@@ -1,1 +1,5 @@
 .scanner-output/
+.venv-docx
+node_modules/
+docs/.vitepress/dist/
+docs/.vitepress/cache/

@@ -1,0 +1,23 @@
+---
+name: laravel
+bucket: php
+version: 0.2.0
+description: "Laravel architecture patterns: actions, repositories, resources"
+risk: write
+persona: oss-dev
+tags: ["php", "laravel"]
+requires: []
+produces_for: []
+outputs: []
+snippets: ["service-provider.php", "repository-pattern.php", "action-class.php", "form-request.php", "api-resource.php", "event-listener.php", "custom-middleware.php"]
+adapters: [claude, cursor, fable]
+sha256: ""
+---
+
+## Контекст
+
+Laravel architecture patterns: actions, repositories, resources
+
+## Алгоритм
+
+Используй сниппеты как шаблоны.

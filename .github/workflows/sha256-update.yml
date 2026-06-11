@@ -1,0 +1,31 @@
+name: Update SHA256
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'skills/**'
+      - 'generate-skill/**'
+
+jobs:
+  update-hashes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Recalculate skills.json
+        run: ./sync.sh --update-registry
+
+      - name: Commit updated registry
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add skills.json
+          if git diff --staged --quiet; then
+            echo "No changes to skills.json"
+          else
+            git commit -m "chore: update skills.json sha256 hashes"
+            git push
+          fi

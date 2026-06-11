@@ -1,0 +1,33 @@
+{
+  "skill": "php-patterns",
+  "snippets": [
+    {
+      "file": "value-object.php",
+      "description": "Value Object",
+      "tags": [
+        "pattern"
+      ]
+    },
+    {
+      "file": "dto.php",
+      "description": "DTO",
+      "tags": [
+        "pattern"
+      ]
+    },
+    {
+      "file": "pipeline.php",
+      "description": "Pipeline",
+      "tags": [
+        "pattern"
+      ]
+    },
+    {
+      "file": "specification.php",
+      "description": "Specification",
+      "tags": [
+        "pattern"
+      ]
+    }
+  ]
+}

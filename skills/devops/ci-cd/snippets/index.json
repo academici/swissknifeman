@@ -1,0 +1,28 @@
+{
+  "skill": "ci-cd",
+  "snippets": [
+    {
+      "file": "github-actions-laravel.yml",
+      "description": "Laravel CI",
+      "tags": [
+        "ci",
+        "laravel"
+      ]
+    },
+    {
+      "file": "github-actions-release.yml",
+      "description": "Release workflow",
+      "tags": [
+        "release"
+      ]
+    },
+    {
+      "file": "github-actions-docker.yml",
+      "description": "Docker build",
+      "tags": [
+        "docker",
+        "ci"
+      ]
+    }
+  ]
+}

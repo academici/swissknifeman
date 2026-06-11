@@ -1,0 +1,10 @@
+{
+  "skill": "capacity-planning",
+  "snippets": [
+    {
+      "file": "load-forecast.md",
+      "description": "load forecast",
+      "tags": []
+    }
+  ]
+}

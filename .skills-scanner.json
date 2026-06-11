@@ -1,0 +1,16 @@
+{
+  "version": "1.0",
+  "scan_paths": [
+    "~/projects/packages/azguard",
+    "~/projects/packages/botkit",
+    "~/projects/filament-*"
+  ],
+  "output": {
+    "repo": "academici/swissknifeman",
+    "branch_prefix": "feat/scanner",
+    "auto_pr": true
+  },
+  "quality_threshold": 60,
+  "languages": ["php", "yaml", "shell"],
+  "exclude_patterns": ["vendor/", "node_modules/", "*.test.php", "storage/"]
+}

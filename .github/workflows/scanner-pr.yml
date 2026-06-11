@@ -1,0 +1,48 @@
+name: Scanner PR
+
+on:
+  schedule:
+    - cron: '0 8 * * 1'
+  workflow_dispatch:
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run scanner (extract only in CI)
+        run: |
+          chmod +x scripts/scan-skills.sh scripts/scan-and-pr.sh
+          ./scripts/scan-skills.sh --extract || true
+
+      - name: Check for candidates
+        id: check
+        run: |
+          if [ -f .scanner-output/candidates.json ]; then
+            count=$(python3 -c "import json; print(len(json.load(open('.scanner-output/candidates.json'))))")
+            echo "count=$count" >> "$GITHUB_OUTPUT"
+          else
+            echo "count=0" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create PR with extracted snippets
+        if: steps.check.outputs.count != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./scripts/scan-and-pr.sh --no-pr
+
+      - name: Push branch and open PR
+        if: steps.check.outputs.count != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          BRANCH="feat/scanner-$(date +%Y%m%d)"
+          git push -u origin "$BRANCH" || true
+          gh pr create \
+            --title "feat(scanner): extracted snippets" \
+            --body "Auto-generated scanner PR. Review before merge." \
+            || echo "PR may already exist"

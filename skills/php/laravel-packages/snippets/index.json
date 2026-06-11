@@ -1,0 +1,42 @@
+{
+  "skill": "laravel-packages",
+  "snippets": [
+    {
+      "file": "composer.json.stub",
+      "description": "composer.json stub",
+      "tags": [
+        "package"
+      ]
+    },
+    {
+      "file": "ServiceProvider.stub.php",
+      "description": "ServiceProvider stub",
+      "tags": [
+        "package"
+      ]
+    },
+    {
+      "file": "config.stub.php",
+      "description": "Config stub",
+      "tags": [
+        "package"
+      ]
+    },
+    {
+      "file": "boost-skill-publisher.php",
+      "description": "Boost skill publisher",
+      "tags": [
+        "boost",
+        "laravel"
+      ]
+    },
+    {
+      "file": "TestCase.stub.php",
+      "description": "TestCase stub",
+      "tags": [
+        "package",
+        "testing"
+      ]
+    }
+  ]
+}

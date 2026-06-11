@@ -1,0 +1,21 @@
+{
+  "skill": "docker-vite",
+  "snippets": [
+    {
+      "file": "Dockerfile.node",
+      "description": "Node Dockerfile",
+      "tags": [
+        "dockerfile",
+        "node"
+      ]
+    },
+    {
+      "file": "vite.config.docker.ts",
+      "description": "Vite Docker config",
+      "tags": [
+        "vite",
+        "config"
+      ]
+    }
+  ]
+}

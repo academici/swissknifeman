@@ -1,0 +1,19 @@
+{
+  "skill": "docker-postgres",
+  "snippets": [
+    {
+      "file": "postgres.conf",
+      "description": "postgres.conf",
+      "tags": [
+        "config"
+      ]
+    },
+    {
+      "file": "init.sql",
+      "description": "Init SQL",
+      "tags": [
+        "sql"
+      ]
+    }
+  ]
+}

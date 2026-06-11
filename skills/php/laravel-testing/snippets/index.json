@@ -1,0 +1,34 @@
+{
+  "skill": "laravel-testing",
+  "snippets": [
+    {
+      "file": "feature-test.php",
+      "description": "Feature test",
+      "tags": [
+        "testing"
+      ]
+    },
+    {
+      "file": "unit-test.php",
+      "description": "Unit test",
+      "tags": [
+        "testing"
+      ]
+    },
+    {
+      "file": "factory-pattern.php",
+      "description": "Factory",
+      "tags": [
+        "testing"
+      ]
+    },
+    {
+      "file": "pest-test.php",
+      "description": "Pest test",
+      "tags": [
+        "testing",
+        "pest"
+      ]
+    }
+  ]
+}

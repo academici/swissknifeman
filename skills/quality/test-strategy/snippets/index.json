@@ -1,0 +1,10 @@
+{
+  "skill": "test-strategy",
+  "snippets": [
+    {
+      "file": "test-pyramid.md",
+      "description": "test pyramid",
+      "tags": []
+    }
+  ]
+}

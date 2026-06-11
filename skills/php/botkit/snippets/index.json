@@ -1,0 +1,20 @@
+{
+  "skill": "botkit",
+  "snippets": [
+    {
+      "file": "bot-definition.php",
+      "description": "BotDefinition contract implementation",
+      "tags": ["botkit", "pattern"]
+    },
+    {
+      "file": "bot-service-provider.php",
+      "description": "AbstractBotPackageServiceProvider extension",
+      "tags": ["botkit", "laravel"]
+    },
+    {
+      "file": "webhook-controller.php",
+      "description": "Webhook endpoint with HMAC signature verification",
+      "tags": ["botkit", "webhook", "security"]
+    }
+  ]
+}

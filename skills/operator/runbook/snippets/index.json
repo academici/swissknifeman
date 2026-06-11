@@ -1,0 +1,10 @@
+{
+  "skill": "runbook",
+  "snippets": [
+    {
+      "file": "runbook-template.md",
+      "description": "runbook template",
+      "tags": []
+    }
+  ]
+}

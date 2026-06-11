@@ -1,0 +1,19 @@
+{
+  "skill": "solo-founder",
+  "snippets": [
+    {
+      "file": "weekly-review.md",
+      "description": "Weekly review",
+      "tags": [
+        "role"
+      ]
+    },
+    {
+      "file": "decision-log.md",
+      "description": "Decision log",
+      "tags": [
+        "role"
+      ]
+    }
+  ]
+}

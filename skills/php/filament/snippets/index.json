@@ -1,0 +1,15 @@
+{
+  "skill": "filament",
+  "snippets": [
+    {
+      "file": "resource-stub.php",
+      "description": "Filament v3 CRUD Resource stub",
+      "tags": ["filament", "resource"]
+    },
+    {
+      "file": "relation-manager-stub.php",
+      "description": "Filament RelationManager stub",
+      "tags": ["filament", "relation-manager"]
+    }
+  ]
+}

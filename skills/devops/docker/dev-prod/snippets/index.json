@@ -1,0 +1,42 @@
+{
+  "skill": "docker-dev-prod",
+  "snippets": [
+    {
+      "file": "docker-compose.yml",
+      "description": "Base compose",
+      "tags": [
+        "compose"
+      ]
+    },
+    {
+      "file": "docker-compose.override.yml",
+      "description": "Dev overrides",
+      "tags": [
+        "compose",
+        "dev"
+      ]
+    },
+    {
+      "file": "docker-compose.prod.yml",
+      "description": "Prod overrides",
+      "tags": [
+        "compose",
+        "prod"
+      ]
+    },
+    {
+      "file": ".env.example",
+      "description": "Env example",
+      "tags": [
+        "env"
+      ]
+    },
+    {
+      "file": "Makefile",
+      "description": "Makefile",
+      "tags": [
+        "make"
+      ]
+    }
+  ]
+}

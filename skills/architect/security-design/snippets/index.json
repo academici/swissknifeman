@@ -1,0 +1,10 @@
+{
+  "skill": "security-design",
+  "snippets": [
+    {
+      "file": "stride-threat-model.md",
+      "description": "stride threat model",
+      "tags": []
+    }
+  ]
+}

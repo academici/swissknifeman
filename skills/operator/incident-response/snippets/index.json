@@ -1,0 +1,10 @@
+{
+  "skill": "incident-response",
+  "snippets": [
+    {
+      "file": "incident-timeline.md",
+      "description": "incident timeline",
+      "tags": []
+    }
+  ]
+}

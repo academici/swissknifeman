@@ -1,0 +1,59 @@
+{
+  "skill": "laravel",
+  "snippets": [
+    {
+      "file": "service-provider.php",
+      "description": "Service Provider",
+      "tags": [
+        "laravel"
+      ]
+    },
+    {
+      "file": "repository-pattern.php",
+      "description": "Repository pattern",
+      "tags": [
+        "laravel",
+        "pattern"
+      ]
+    },
+    {
+      "file": "action-class.php",
+      "description": "Action class",
+      "tags": [
+        "laravel",
+        "action"
+      ]
+    },
+    {
+      "file": "form-request.php",
+      "description": "Form Request",
+      "tags": [
+        "laravel",
+        "validation"
+      ]
+    },
+    {
+      "file": "api-resource.php",
+      "description": "API Resource",
+      "tags": [
+        "laravel",
+        "api"
+      ]
+    },
+    {
+      "file": "event-listener.php",
+      "description": "Event Listener",
+      "tags": [
+        "laravel",
+        "events"
+      ]
+    },
+    {
+      "file": "custom-middleware.php",
+      "description": "Middleware",
+      "tags": [
+        "laravel"
+      ]
+    }
+  ]
+}

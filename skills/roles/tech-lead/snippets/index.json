@@ -1,0 +1,19 @@
+{
+  "skill": "tech-lead",
+  "snippets": [
+    {
+      "file": "sprint-kickoff.md",
+      "description": "Sprint kickoff",
+      "tags": [
+        "role"
+      ]
+    },
+    {
+      "file": "1on1-template.md",
+      "description": "1:1 template",
+      "tags": [
+        "role"
+      ]
+    }
+  ]
+}

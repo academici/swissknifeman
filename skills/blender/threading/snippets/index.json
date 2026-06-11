@@ -1,0 +1,13 @@
+{
+  "skill": "threading",
+  "snippets": [
+    {
+      "file": "snippets-threading.md",
+      "description": "Резьба и винтовая геометрия — соглашения DiaBox",
+      "tags": [
+        "blender",
+        "threading"
+      ]
+    }
+  ]
+}

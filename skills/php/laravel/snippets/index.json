@@ -54,6 +54,62 @@
       "tags": [
         "laravel"
       ]
+    },
+    {
+      "file": "actions.md",
+      "description": "Action/UseCase паттерн — final readonly class, Command DTO, DB::transaction()",
+      "tags": [
+        "laravel",
+        "action"
+      ]
+    },
+    {
+      "file": "authorization.md",
+      "description": "3-layer auth — PermissionEnum + Policy с #[GateAbility] + Abilities DTO для frontend",
+      "tags": [
+        "laravel",
+        "authorization"
+      ]
+    },
+    {
+      "file": "db-conventions.md",
+      "description": "Соглашения по именованию таблиц (domain prefix) и миграциям через model reference",
+      "tags": [
+        "laravel",
+        "database"
+      ]
+    },
+    {
+      "file": "domain-structure.md",
+      "description": "Организация Laravel-проекта по доменам и слоям — конкретная структура app/",
+      "tags": [
+        "laravel",
+        "architecture"
+      ]
+    },
+    {
+      "file": "dto.md",
+      "description": "Spatie LaravelData DTO — Form/View/Policy/Mapper/Command buckets + TypeScript генерация",
+      "tags": [
+        "laravel",
+        "dto"
+      ]
+    },
+    {
+      "file": "eloquent-model.md",
+      "description": "Настройка Eloquent-модели — PHP атрибуты, fillable, casts, accessors, relations",
+      "tags": [
+        "laravel",
+        "eloquent"
+      ]
+    },
+    {
+      "file": "layer-boundaries.md",
+      "description": "Строгие границы слоёв Action/Service/Repository/Controller/Policy в Laravel",
+      "tags": [
+        "laravel",
+        "architecture"
+      ]
     }
   ]
 }

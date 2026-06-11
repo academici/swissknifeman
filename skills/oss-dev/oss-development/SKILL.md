@@ -2,7 +2,7 @@
 name: oss-development
 bucket: oss-dev
 version: 0.1.0
-description: OSS-проект: repo structure, README, Architecture, ADR, SemVer, CI/CD. PHP-специфика в references/oss-php.md
+description: OSS-проект: repo structure, README, Architecture, ADR, SemVer, CI/CD. PHP-специфика в ../references/oss-php.md
 risk: write
 persona: oss-dev
 tags: [oss]
@@ -199,7 +199,7 @@ CONTRIBUTING.md должен содержать:
 
 ## PHP-специфика
 
-См. [[references/oss-php]] — composer.json, PSR-стандарты, PHPStan, PHPUnit, Packagist, CI matrix.
+См. [[../references/oss-php]] (файл `../references/oss-php.md` относительно этого скилла) — composer.json, PSR-стандарты, PHPStan, PHPUnit, Packagist, CI matrix.
 
 ---
 

@@ -1,0 +1,195 @@
+# Laravel Eloquent Model
+
+> Нейминг таблиц и шаблон миграции — в `db-conventions.md`.
+
+## Шаблон новой модели
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace App\Models\Ticket;
+
+use App\Enums\Ticket\TicketStatus;
+use App\Observers\Ticket\Observer;
+use Doctrine\DBAL\Schema\Table;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+#[Table(name: 'tickets')]
+#[ObservedBy(Observer::class)]
+final class Ticket extends Model
+{
+    protected $fillable = [
+        'subject',
+        'description',
+        'status',
+        'creator_id',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'status'     => TicketStatus::class,
+            'created_at' => 'immutable_datetime',
+            'updated_at' => 'immutable_datetime',
+        ];
+    }
+
+    // Relations
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(related: User::class, foreignKey: 'creator_id');
+    }
+}
+```
+
+---
+
+## PHP атрибуты на классе
+
+| Атрибут | Когда |
+|:---|:---|
+| `#[Table(name: '...')]` | Всегда — явное имя таблицы (единственный источник) |
+| `#[ObservedBy(Observer::class)]` | Если у домена есть Observer |
+
+```php
+#[Table(name: 'ticket_participants')]
+#[ObservedBy(ParticipantObserver::class)]
+final class Participant extends Model {}
+```
+
+---
+
+## Mass assignment
+
+Предпочтительно — явный `$fillable`:
+
+```php
+// ✅ Явный список — видно что assignable
+protected $fillable = ['subject', 'status', 'creator_id'];
+
+// Альтернатива — если нужны все поля (осторожно)
+protected $guarded = [];
+```
+
+---
+
+## casts() — приоритет над $casts
+
+```php
+// ✅ Метод casts() — предпочтительно (Laravel 11+)
+protected function casts(): array
+{
+    return [
+        'status'       => TicketStatus::class,     // enum
+        'meta'         => 'array',                  // JSON → array
+        'is_active'    => 'boolean',
+        'published_at' => 'immutable_datetime',     // CarbonImmutable
+        'settings'     => 'collection',
+    ];
+}
+
+// ❌ Устаревший $casts массив
+protected $casts = ['status' => TicketStatus::class];
+```
+
+---
+
+## Accessors и mutators
+
+```php
+// ✅ Новый стиль — Attribute::make()
+protected function fullName(): Attribute
+{
+    return Attribute::make(
+        get: fn () => "{$this->first_name} {$this->last_name}",
+    );
+}
+
+// Getter + setter
+protected function slug(): Attribute
+{
+    return Attribute::make(
+        get: fn (string $value) => strtolower(value: $value),
+        set: fn (string $value) => Str::slug(title: $value),
+    );
+}
+
+// ❌ Устаревший стиль
+public function getFullNameAttribute(): string { ... }
+public function setSlugAttribute(string $value): void { ... }
+```
+
+---
+
+## $hidden
+
+```php
+// Поля, которые не должны попадать в JSON / toArray()
+protected $hidden = ['password', 'remember_token', 'api_token'];
+```
+
+---
+
+## Relations — именование и named arguments
+
+```php
+public function creator(): BelongsTo
+{
+    return $this->belongsTo(related: User::class, foreignKey: 'creator_id');
+}
+
+public function participants(): HasMany
+{
+    return $this->hasMany(related: Participant::class, foreignKey: 'ticket_id');
+}
+
+public function tags(): BelongsToMany
+{
+    return $this->belongsToMany(
+        related: Tag::class,
+        table: (new TicketTag())->getTable(),
+        foreignPivotKey: 'ticket_id',
+        relatedPivotKey: 'tag_id',
+    );
+}
+```
+
+---
+
+## $with — eager load по умолчанию
+
+```php
+// Только если связь нужна в 95%+ случаев
+// Осторожно: увеличивает нагрузку на list-запросы
+protected $with = ['creator'];
+```
+
+---
+
+## Scopes
+
+```php
+// Local scope
+public function scopeActive(Builder $query): Builder
+{
+    return $query->where(column: 'is_active', operator: true);
+}
+
+// Использование: Ticket::query()->active()->get()
+```
+
+---
+
+## Чеклист новой модели
+
+- [ ] `#[Table(name: '...')]` — явное имя таблицы
+- [ ] `final class` — нет наследования без явной причины
+- [ ] `$fillable` — явный список mass-assignable полей
+- [ ] `casts()` — enum, datetime, json, boolean типизированы
+- [ ] `#[ObservedBy]` — если нужен Observer
+- [ ] Relations — named arguments, через `getTable()` для pivot

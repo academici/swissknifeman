@@ -23,6 +23,14 @@
         "docker",
         "ci"
       ]
+    },
+    {
+      "file": "gitlab-ci-practices.md",
+      "description": "Стандарты и лучшие практики написания .gitlab-ci.yml пайплайнов",
+      "tags": [
+        "gitlab",
+        "ci"
+      ]
     }
   ]
 }

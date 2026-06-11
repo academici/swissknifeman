@@ -9,7 +9,7 @@ tags: ["php", "laravel"]
 requires: []
 produces_for: []
 outputs: []
-snippets: ["service-provider.php", "repository-pattern.php", "action-class.php", "form-request.php", "api-resource.php", "event-listener.php", "custom-middleware.php"]
+snippets: ["service-provider.php", "repository-pattern.php", "action-class.php", "form-request.php", "api-resource.php", "event-listener.php", "custom-middleware.php", "actions.md", "authorization.md", "db-conventions.md", "domain-structure.md", "dto.md", "eloquent-model.md", "layer-boundaries.md"]
 adapters: [claude, cursor, fable]
 sha256: ""
 ---

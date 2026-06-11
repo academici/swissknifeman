@@ -9,7 +9,7 @@ tags: ["php", "laravel"]
 requires: []
 produces_for: []
 outputs: []
-snippets: ["feature-test.php", "unit-test.php", "factory-pattern.php", "pest-test.php"]
+snippets: ["feature-test.php", "unit-test.php", "factory-pattern.php", "pest-test.php", "pest-testing.md", "testing-rules.md", "testing-safety-report.md"]
 adapters: [claude, cursor, fable]
 sha256: ""
 ---

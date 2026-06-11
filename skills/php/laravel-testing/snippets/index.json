@@ -29,6 +29,30 @@
         "testing",
         "pest"
       ]
+    },
+    {
+      "file": "pest-testing.md",
+      "description": "Написание и правка тестов Pest (Feature/Unit), отладка падений",
+      "tags": [
+        "pest",
+        "testing"
+      ]
+    },
+    {
+      "file": "testing-rules.md",
+      "description": "Testing rules: DB isolation, Dusk browser tests, Pest conventions",
+      "tags": [
+        "testing",
+        "rules"
+      ]
+    },
+    {
+      "file": "testing-safety-report.md",
+      "description": "Безопасность тестовой среды: изоляция тестовой БД",
+      "tags": [
+        "testing",
+        "database"
+      ]
     }
   ]
 }

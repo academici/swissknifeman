@@ -1,0 +1,45 @@
+{
+  "skill": "mcp-blender-workflow",
+  "snippets": [
+    {
+      "file": "role.md",
+      "description": "Роль агента DiaBox — архитектор автоматизации Blender 5.x на Python",
+      "tags": [
+        "blender",
+        "role"
+      ]
+    },
+    {
+      "file": "config-and-profile.md",
+      "description": "Конфиги и силуэт: именование конфигов, profile_knots",
+      "tags": [
+        "blender",
+        "config"
+      ]
+    },
+    {
+      "file": "config-conventions.md",
+      "description": "Соглашения по конфигам и именованию переменных",
+      "tags": [
+        "blender",
+        "config"
+      ]
+    },
+    {
+      "file": "naming-and-scene.md",
+      "description": "Именование объектов и сцена: префиксы, иерархия, коллекции",
+      "tags": [
+        "blender",
+        "naming"
+      ]
+    },
+    {
+      "file": "internals.md",
+      "description": "Внутренние соглашения: spl, pts, bounding box",
+      "tags": [
+        "blender",
+        "internals"
+      ]
+    }
+  ]
+}

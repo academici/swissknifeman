@@ -4,12 +4,25 @@
     {
       "file": "resource-stub.php",
       "description": "Filament v3 CRUD Resource stub",
-      "tags": ["filament", "resource"]
+      "tags": [
+        "filament",
+        "resource"
+      ]
     },
     {
       "file": "relation-manager-stub.php",
       "description": "Filament RelationManager stub",
-      "tags": ["filament", "relation-manager"]
+      "tags": [
+        "filament",
+        "relation-manager"
+      ]
+    },
+    {
+      "file": "filament-development.md",
+      "description": "Build and maintain Filament v3 panels, resources, forms, tables, actions, and tests",
+      "tags": [
+        "filament"
+      ]
     }
   ]
 }

@@ -12,6 +12,7 @@ outputs: []
 snippets:
   - resource-stub.php
   - relation-manager-stub.php
+  - filament-development.md
 adapters: [claude, cursor, fable]
 sha256: ""
 ---

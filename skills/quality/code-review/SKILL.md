@@ -10,6 +10,7 @@ requires: []
 produces_for: []
 outputs: ["docs/03_Dev/Code_Review_Guide.md"]
 sha256: ""
+snippets: ["code-review.md"]
 adapters: [claude, cursor, fable]
 ---
 

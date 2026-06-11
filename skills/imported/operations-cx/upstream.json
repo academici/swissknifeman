@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "source": "github",
+  "repo": "get-zeked/operations-cx-super-skill",
+  "strategy": "notify",
+  "license": "MIT",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "url": "https://raw.githubusercontent.com/get-zeked/operations-cx-super-skill/main/SKILL.md",
+      "sha256": "8eb99a76ba75b6afd7d1a9872ad1a30e53fb436ccc7e47f8b45be9497a338efe",
+      "fetched_at": "2026-06-11"
+    }
+  ],
+  "notes": "Local copy adapted for swissknifeman (bucket frontmatter added); do not auto-replace."
+}

@@ -1,0 +1,6 @@
+{
+  "name": "php-package",
+  "description": "Open-source PHP package development (Laravel packages included)",
+  "buckets": ["oss-dev", "php", "quality", "devops"],
+  "include_meta": false
+}

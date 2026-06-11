@@ -1,64 +1,160 @@
 # academici/swissknifeman
 
-> Skills & Snippets registry for the [academici](https://github.com/academici) ecosystem.
+> Универсальный личный реестр AI-скиллов и сниппетов: один источник истины,
+> установка в любой проект и любую IDE, отслеживание внешних источников.
 
-Единый реестр скиллов — provider-neutral `SKILL.md` + `snippets/` + опциональные `adapters/`. Совместим с `skills-lock.json` schema v3 из `academici/brain`.
+## Для чего этот пакет
 
-## Structure
+Единая библиотека скиллов (provider-neutral `SKILL.md` + `snippets/`) под мои
+сценарии работы:
+
+1. **Документация** — написание и сопровождение технической документации
+2. **Obsidian vault** — управление знаниями, заметки, базы знаний
+3. **Технические задания** — составление ТЗ (BRD → PRD → архитектура)
+4. **PHP-пакеты** — разработка open-source пакетов, в первую очередь Laravel
+5. **Крупные Laravel-проекты** — архитектура, паттерны, DevOps, качество
+
+Скиллы накапливаются постепенно: свои — из опыта реальных проектов (AzGuard,
+botkit и др.), внешние — выборочно из лучших открытых источников с отслеживанием
+обновлений. Каркас универсален: один реестр → установка в Claude Code, Cursor
+или любой другой агент.
+
+## Структура
 
 ```
-skills/
-├── founder/          # 5 skills
-├── pm/               # 8 skills
-├── architect/        # 9 skills
-├── oss-dev/          # 5 skills + references/
-├── quality/          # 4 skills
-├── operator/         # 5 skills
-├── devops/           # 6 skills — Docker, CI/CD, GitOps
-├── php/              # 7 skills — Laravel, AzGuard, Botkit, Filament
-├── roles/            # 4 personas
-└── imported/         # 12 super-skills
+skills/                    # скилл = папка + SKILL.md + snippets/ (+ upstream.json у внешних)
+├── architect/  (9)        # архитектура, API, данные, безопасность
+├── devops/     (6)        # Docker, CI/CD, GitOps
+├── founder/    (5)        # идеи, анализ конкурентов, питчи
+├── imported/   (12)       # внешние super-skills (отслеживаются через upstream.json)
+├── operator/   (5)        # инциденты, runbook, postmortem
+├── oss-dev/    (5+refs)   # open-source разработка + языковые references/
+├── php/        (7)        # Laravel, пакеты, тесты, паттерны
+├── pm/         (8)        # BRD, PRD, roadmap, монетизация
+├── quality/    (4)        # code review, тесты, техдолг
+└── roles/      (4)        # персоны: tech-lead, startup-cto, ...
 
-adapters/             # cursor, claude-code, perplexity
-generate-skill/       # Meta-skill for creating new skills
-skills.json           # Registry (source of truth)
+profiles/                  # тип проекта → набор bucket-ов
+references/                # каталог внешних источников (что брать, статус)
+adapters/                  # доки по интеграции: claude-code, cursor, perplexity
+scripts/                   # validate, update-upstreams, scanner
+generate-skill/            # мета-скилл создания новых скиллов
+skills.json                # реестр (генерируется sync.sh, с provenance)
 ```
 
-## Quick Start
+> `references/` в корне — каталог внешних источников для отбора;
+> `skills/oss-dev/references/` — языковые reference-файлы внутри bucket-а. Это разные вещи.
+
+## Установка
+
+Установщик сам определяет тип проекта и ставит подходящий набор скиллов:
 
 ```bash
-# Install all skills
-./install.sh
+# Laravel-проект (artisan+composer.json) → architect, php, devops, quality, operator
+cd ~/projects/my-laravel-app
+~/projects/packages/swissknifeman/install.sh --target . --agent claude
 
-# Install specific bucket
-./install.sh ~/.cursor/skills php
+# Obsidian vault (.obsidian/) → architect, pm, founder, operator, roles, imported
+~/projects/packages/swissknifeman/install.sh --target ~/vaults/brain
 
-# Update registry hashes
-./sync.sh --update-registry
+# Превью без установки
+./install.sh --target ~/projects/my-app --list
 
-# Sync to academici/brain (not Obsidian — отдельного sync-скрипта для vault нет)
-BRAIN_PATH=~/path/to/brain ./sync.sh --update-registry
+# Явный профиль / bucket-ы / исключения
+./install.sh --target . --profile php-package
+./install.sh --target . --buckets php,quality --exclude botkit
+
+# Глобально в home (~/.claude/skills)
+./install.sh --target ~ --agent claude
+
+# Legacy-режим (deprecated): копия bucket-а как есть
+./install.sh ~/.ai/skills php
 ```
 
-## Creating a Skill
+**`--agent claude`** раскладывает скиллы плоско (`.claude/skills/<name>/SKILL.md`) —
+Claude Code не видит вложенные bucket-структуры. Коллизии имён разрешаются
+префиксом bucket-а. Внимание: установка в общий `~/.claude/skills` может
+перекрыть одноимённые скиллы, поставленные не отсюда. Переустановка чистит
+только то, что ставила сама (манифест `.swissknifeman-manifest.json`).
 
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+Проект может зафиксировать свою конфигурацию в `.swissknife.json`
+(см. [.swissknife.example.json](.swissknife.example.json)) — приоритет:
+флаги → `.swissknife.json` → автодетект.
+
+## Профили
+
+| Профиль | Автодетект | Bucket-ы |
+|---|---|---|
+| `obsidian-vault` | `.obsidian/` | architect, pm, founder, operator, roles, imported |
+| `laravel-project` | `artisan` + `composer.json` | architect, php, devops, quality, operator |
+| `php-package` | `composer.json` без `artisan` | oss-dev, php, quality, devops |
+| `standalone` | нет маркеров | все + generate-skill |
+
+## Upstream-sync: отслеживание внешних скиллов
+
+Скилл, взятый из внешнего источника, содержит `upstream.json` рядом со `SKILL.md`:
+
+```json
+{
+  "schema_version": 1,
+  "source": "github",
+  "repo": "get-zeked/research-knowledge-super-skill",
+  "strategy": "notify",
+  "files": [
+    { "path": "SKILL.md",
+      "url": "https://raw.githubusercontent.com/.../SKILL.md",
+      "sha256": "…", "fetched_at": "2026-06-11" }
+  ]
+}
+```
+
+- **Нет `upstream.json`** → скилл самописный, sync-тулинг его не трогает
+- **`strategy: replace`** → файл зеркалируется как есть, обновления применяются автоматически
+- **`strategy: notify`** → локальная копия адаптирована; об обновлениях апстрима
+  только сообщается, файл не перезаписывается
+
+```bash
+./scripts/update-upstreams.sh --check        # отчёт: что устарело (exit 10 = есть изменения)
+./scripts/update-upstreams.sh --apply        # применить replace-обновления, записать sha
+./scripts/update-upstreams.sh --apply --force --skill imported/research   # перезаписать конфликт
+```
+
+GitHub Action `upstream-sync.yml` еженедельно проверяет все апстримы и открывает
+PR с диффом — изменения чужих репозиториев попадают в main только после ревью.
+
+## Реестр
+
+`skills.json` генерируется `./sync.sh --update-registry`: путь, версия, sha256
+и provenance каждого скилла (`source: local|github|http`, `upstream` URL,
+`fetched_at`).
+
+```bash
+./sync.sh --update-registry                    # пересобрать реестр
+BRAIN_PATH=~/path/to/brain ./sync.sh           # + зеркало в brain/.ai/skills-registry/
+```
+
+## Добавление скиллов
+
+- **Свой скилл:** папка + `SKILL.md` по `SKILL_TEMPLATE.md` (см. [CONTRIBUTING.md](CONTRIBUTING.md))
+- **Внешний скилл:** папка + `upstream.json` → `./scripts/update-upstreams.sh --apply --skill ...`
+- **Источники-кандидаты:** каталог [references/](references/README.md) — что брать выборочно и откуда
 
 ## Scanner
 
+Извлечение сниппетов из локальных проектов (пути в `.skills-scanner.json`):
+
 ```bash
-./scripts/scan-skills.sh              # find candidates
-./scripts/scan-skills.sh --extract    # anonymize to .scanner-output/
+./scripts/scan-skills.sh              # найти кандидатов
+./scripts/scan-skills.sh --extract    # анонимизировать в .scanner-output/
 ./scripts/scan-and-pr.sh              # commit + PR
 ```
 
-Configure paths in `.skills-scanner.json`.
-
 ## CI/CD
 
-| Workflow | Purpose |
-|----------|---------|
-| `validate.yml` | Frontmatter + snippet manifest validation |
-| `sha256-update.yml` | Recalculate registry hashes |
-| `sync-to-brain.yml` | Daily sync to academici/brain |
-| `scanner-pr.yml` | Weekly scanner PR |
+| Workflow | Назначение |
+|----------|------------|
+| `validate.yml` | `scripts/validate.sh`: frontmatter, upstream.json, profiles, манифесты |
+| `upstream-sync.yml` | Еженедельная проверка апстримов → PR с диффом |
+| `sha256-update.yml` | Пересчёт хешей реестра при пуше |
+| `sync-to-brain.yml` | Ежедневное зеркало в academici/brain |
+| `scanner-pr.yml` | Еженедельный PR от сканера |

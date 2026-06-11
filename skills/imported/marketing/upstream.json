@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "source": "github",
+  "repo": "get-zeked/marketing-super-skill",
+  "strategy": "notify",
+  "license": "MIT",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "url": "https://raw.githubusercontent.com/get-zeked/marketing-super-skill/main/SKILL.md",
+      "sha256": "d87c00cb2242ca2cf75fc77dd397c703118749f9f3e19e95a8354329d5091982",
+      "fetched_at": "2026-06-11"
+    }
+  ],
+  "notes": "Local copy adapted for swissknifeman (bucket frontmatter added); do not auto-replace."
+}

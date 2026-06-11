@@ -1,0 +1,6 @@
+{
+  "name": "obsidian-vault",
+  "description": "Obsidian vault: knowledge management, documentation, technical specs",
+  "buckets": ["architect", "pm", "founder", "operator", "roles", "imported"],
+  "include_meta": false
+}

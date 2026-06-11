@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "source": "github",
+  "repo": "get-zeked/finance-super-skill",
+  "strategy": "notify",
+  "license": "MIT",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "url": "https://raw.githubusercontent.com/get-zeked/finance-super-skill/main/SKILL.md",
+      "sha256": "92c4591ffe4712cec3bd81bb40de6306b9a6c8535e2e0dd4b459159ece0f0697",
+      "fetched_at": "2026-06-11"
+    }
+  ],
+  "notes": "Local copy adapted for swissknifeman (bucket frontmatter added); do not auto-replace."
+}

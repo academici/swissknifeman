@@ -49,6 +49,22 @@ root = Path(sys.argv[1])
 skills = []
 references = []
 
+
+def parse_frontmatter(path):
+    """Keys from the first ----delimited block only (body lines ignored)."""
+    lines = path.read_text(encoding="utf-8").replace("\r\n", "\n").splitlines()
+    fm = {}
+    if not lines or lines[0].strip() != "---":
+        return fm
+    for line in lines[1:]:
+        if line.strip() == "---":
+            break
+        if ":" in line and not line.startswith((" ", "\t", "-")):
+            key, value = line.split(":", 1)
+            fm[key.strip()] = value.strip().strip('"').strip("'")
+    return fm
+
+
 for skill_md in sorted(root.glob("skills/**/SKILL.md")):
     rel = skill_md.relative_to(root)
     parts = rel.parts
@@ -60,26 +76,31 @@ for skill_md in sorted(root.glob("skills/**/SKILL.md")):
         name = f"{parts[-2]}-{parts[-3]}" if parts[-3] != bucket else parts[-2]
     else:
         name = parts[2]
-    # Prefer frontmatter name when present
-    content = skill_md.read_text(encoding="utf-8")
-    for line in content.splitlines():
-        if line.startswith("name:"):
-            name = line.split(":", 1)[1].strip()
-            break
+    fm = parse_frontmatter(skill_md)
+    name = fm.get("name") or name
     sha = hashlib.sha256(skill_md.read_bytes()).hexdigest()
-    desc = ""
-    for line in content.splitlines():
-        if line.startswith("description:"):
-            desc = line.split(":", 1)[1].strip().strip('"').strip("'")
-            break
-    skills.append({
+    entry = {
         "name": name,
         "bucket": bucket,
         "path": str(rel),
-        "version": "0.1.0",
-        "description": desc,
+        "version": fm.get("version") or "0.1.0",
+        "description": fm.get("description", ""),
         "sha256": sha,
-    })
+    }
+    # Provenance: upstream.json next to SKILL.md marks an externally-sourced skill
+    upstream_file = skill_md.parent / "upstream.json"
+    if upstream_file.exists():
+        up = json.loads(upstream_file.read_text(encoding="utf-8"))
+        files = up.get("files", [])
+        main = next((f for f in files if f.get("path") == "SKILL.md"),
+                    files[0] if files else {})
+        entry["source"] = up.get("source", "http")
+        entry["upstream"] = main.get("url", "")
+        if main.get("fetched_at"):
+            entry["fetched_at"] = main["fetched_at"]
+    else:
+        entry["source"] = "local"
+    skills.append(entry)
 
 for ref in sorted((root / "skills/oss-dev/references").glob("*.md")):
     references.append({

@@ -1,0 +1,6 @@
+{
+  "name": "standalone",
+  "description": "No project markers detected: install everything",
+  "buckets": ["*"],
+  "include_meta": true
+}

@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "source": "github",
+  "repo": "get-zeked/dev-engineering-super-skill",
+  "strategy": "notify",
+  "license": "MIT",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "url": "https://raw.githubusercontent.com/get-zeked/dev-engineering-super-skill/main/SKILL.md",
+      "sha256": "a1d5f1b748813319b1ce3b1cf52e2ef20dfcae32995177195200caca640db507",
+      "fetched_at": "2026-06-11"
+    }
+  ],
+  "notes": "Local copy adapted for swissknifeman (bucket frontmatter added); do not auto-replace."
+}

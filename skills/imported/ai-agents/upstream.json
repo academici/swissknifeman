@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "source": "github",
+  "repo": "get-zeked/ai-agent-super-skill",
+  "strategy": "notify",
+  "license": "MIT",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "url": "https://raw.githubusercontent.com/get-zeked/ai-agent-super-skill/main/SKILL.md",
+      "sha256": "cfd45bc6f0e05cd905072fd5b2826e8a76b5915800ac143990cd1e2976406911",
+      "fetched_at": "2026-06-11"
+    }
+  ],
+  "notes": "Local copy adapted for swissknifeman (bucket frontmatter added); do not auto-replace."
+}

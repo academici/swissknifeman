@@ -1,6 +1,7 @@
 ---
 name: prd-from-brd
 bucket: pm
+version: 0.1.0
 description: Product Requirements Document — разворачивает BRD в детальные user stories с acceptance criteria и приоритизацией
 risk: draft
 persona: pm

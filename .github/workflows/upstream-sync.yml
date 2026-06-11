@@ -1,0 +1,68 @@
+name: Upstream Sync
+
+on:
+  schedule:
+    - cron: '0 7 * * 1'  # weekly, Mon 07:00 UTC (scanner-pr runs at 08:00)
+  workflow_dispatch:
+
+jobs:
+  upstream-sync:
+    runs-on: ubuntu-latest
+    if: github.repository == 'academici/swissknifeman'
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check upstreams
+        id: check
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set +e
+          ./scripts/update-upstreams.sh --check | tee /tmp/upstream-report.txt
+          echo "code=$?" >> "$GITHUB_OUTPUT"
+
+      - name: Apply updates
+        if: steps.check.outputs.code == '10'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          # no --force in CI: conflicts stay listed in the report for manual review
+          ./scripts/update-upstreams.sh --apply | tee -a /tmp/upstream-report.txt
+          ./sync.sh --update-registry
+
+      - name: Open PR
+        if: steps.check.outputs.code == '10'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          BRANCH="chore/upstream-sync-$(date +%Y%m%d)"
+          git checkout -b "$BRANCH"
+          git add -A
+          if git diff --staged --quiet; then
+            echo "Only notify-strategy items changed nothing; see report in run log"
+            exit 0
+          fi
+          git commit -m "chore(upstream): weekly upstream sync"
+          git push -u origin "$BRANCH" || true
+          {
+            echo "Weekly upstream sync. Review the diff before merge."
+            echo
+            echo '```'
+            cat /tmp/upstream-report.txt
+            echo '```'
+          } > /tmp/pr-body.md
+          gh pr create \
+            --title "chore(upstream): weekly upstream sync" \
+            --body-file /tmp/pr-body.md \
+            || echo "PR may already exist"
+
+      - name: Fail on errors
+        if: steps.check.outputs.code == '1' || steps.check.outputs.code == '2'
+        run: |
+          cat /tmp/upstream-report.txt
+          exit 1

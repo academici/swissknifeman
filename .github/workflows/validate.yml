@@ -12,46 +12,5 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Validate SKILL.md frontmatter
-        run: |
-          set -e
-          errors=0
-          for skill in skills/**/SKILL.md generate-skill/SKILL.md; do
-            [ -f "$skill" ] || continue
-            for field in name bucket version description; do
-              if ! grep -q "^${field}:" "$skill"; then
-                echo "ERROR: $skill missing required field: $field"
-                errors=$((errors + 1))
-              fi
-            done
-          done
-
-          if [ -f skills.json ]; then
-            python3 -c "import json; json.load(open('skills.json'))"
-          else
-            echo "ERROR: skills.json not found"
-            errors=$((errors + 1))
-          fi
-
-          if [ "$errors" -gt 0 ]; then
-            exit 1
-          fi
-          echo "All skills valid"
-
-      - name: Validate snippet manifests
-        run: |
-          set -e
-          for manifest in skills/**/snippets/index.json; do
-            [ -f "$manifest" ] || continue
-            python3 -c "
-          import json, sys
-          from pathlib import Path
-          m = Path('$manifest')
-          data = json.loads(m.read_text())
-          d = m.parent
-          for s in data.get('snippets', []):
-              f = d / s['file']
-              assert f.exists(), f'Missing snippet: {f}'
-          "
-          done
-          echo "Snippet manifests OK"
+      - name: Validate repository structure
+        run: ./scripts/validate.sh

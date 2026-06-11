@@ -1,0 +1,13 @@
+{
+  "_comment": "Скопируй в корень целевого проекта как .swissknife.json — install.sh прочтёт его автоматически. Все ключи опциональны. Приоритет: флаги CLI > этот файл > автодетект.",
+  "_comment_project_type": "obsidian-vault | laravel-project | php-package | standalone — маппится на profiles/<type>.json",
+  "project_type": "laravel-project",
+  "_comment_buckets": "явный список bucket-ов; если задан — project_type игнорируется",
+  "buckets": ["architect", "php", "quality"],
+  "_comment_exclude": "имена скиллов, папок или bucket-relative пути; объединяется с --exclude",
+  "exclude": ["botkit", "devops/gitops"],
+  "_comment_skills_path": "куда ставить относительно корня проекта; по умолчанию зависит от agent",
+  "skills_path": ".claude/skills",
+  "_comment_agent": "claude | cursor | generic; claude = плоская раскладка",
+  "agent": "claude"
+}

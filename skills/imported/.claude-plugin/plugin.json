@@ -1,0 +1,5 @@
+{
+  "name": "imported",
+  "description": "External super-skills tracked via upstream.json (marketing, sales, legal, research and more)",
+  "skills": "./"
+}

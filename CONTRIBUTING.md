@@ -5,7 +5,10 @@
 1. Copy `SKILL_TEMPLATE.md` → `skills/{bucket}/{name}/SKILL.md`
 2. Add `snippets/` with `index.json` manifest
 3. Run `./scripts/validate.sh`
-4. Run `./sync.sh --update-registry`
+4. Run `./sync.sh --update-registry` — обновляет skills.json **и генерирует
+   манифесты плагинов** (`.claude-plugin/marketplace.json`,
+   `skills/*/.claude-plugin/plugin.json`); обязательно после
+   добавления/перемещения/удаления скилла
 5. Open PR — CI runs the same validation
 
 ## Adding an External (Upstream-Tracked) Skill
@@ -61,7 +64,19 @@ bucket-ы, статус `planned` → `imported` / `rejected`. При факти
 
 Проверяет: frontmatter всех SKILL.md (для внешних с upstream.json — только
 `name` + `description`), схему upstream.json, profiles/*.json, skills.json,
-snippet-манифесты.
+snippet-манифесты, buckets.json (1:1 с каталогами bucket-ов), свежесть
+plugin-манифестов (`.claude-plugin/`), уникальность имён скиллов (дубль внутри
+bucket-а — ошибка, между bucket-ами — warning).
+
+## Releases & Tagging
+
+- Аннотированные semver-теги: `git tag -a vX.Y.Z -m "..."` (push тегов — вручную).
+- **minor** — новая возможность каркаса (установщик, sync, marketplace);
+  **patch** — наполнение/правки скиллов.
+- При теге перенести раздел `[Unreleased]` CHANGELOG в `[X.Y.Z]`.
+- Версии плагинов Claude Code разрешаются в git SHA (поля `version` в
+  манифестах намеренно нет) — теги служат человекочитаемыми маркерами релизов,
+  на обновление плагинов не влияют.
 
 ## Snippet Guidelines
 

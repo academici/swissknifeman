@@ -47,7 +47,7 @@ def load_upstream(skill_dir):
 
 # --- 1. SKILL.md frontmatter ---------------------------------------------
 skill_files = sorted(root.glob("skills/**/SKILL.md"))
-meta_skill = root / "generate-skill/SKILL.md"
+meta_skill = root / "generate-skill/generate-skill/SKILL.md"
 if meta_skill.exists():
     skill_files.append(meta_skill)
 
@@ -75,7 +75,7 @@ for skill_md in skill_files:
 
 # --- 2. upstream.json -----------------------------------------------------
 for up_file in sorted(root.glob("skills/**/upstream.json")) + \
-        sorted((root / "generate-skill").glob("upstream.json")):
+        sorted((root / "generate-skill").glob("**/upstream.json")):
     rel = up_file.relative_to(root)
     skill_dir = up_file.parent
     if not (skill_dir / "SKILL.md").exists():
@@ -156,6 +156,125 @@ for manifest in sorted(root.glob("skills/**/snippets/index.json")):
         f = manifest.parent / s.get("file", "")
         if not f.exists():
             errors.append(f"{rel}: missing snippet: {s.get('file')}")
+
+# --- 6. buckets.json --------------------------------------------------------
+KEBAB_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
+bucket_dirs = sorted(d.name for d in (root / "skills").iterdir() if d.is_dir())
+bucket_meta = {}
+meta_file = root / "buckets.json"
+if not meta_file.exists():
+    errors.append("buckets.json not found")
+else:
+    try:
+        bucket_meta = json.loads(meta_file.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        errors.append(f"buckets.json: invalid JSON: {e}")
+        bucket_meta = {}
+    for b in bucket_dirs:
+        if b not in bucket_meta:
+            errors.append(f"buckets.json: missing entry for bucket: {b}")
+    for b, meta in bucket_meta.items():
+        if b not in bucket_dirs:
+            errors.append(f"buckets.json: entry without skills/ dir: {b}")
+        if not (isinstance(meta, dict) and meta.get("description")):
+            errors.append(f"buckets.json: {b}: description must be non-empty")
+
+
+# --- 7. plugin manifests (.claude-plugin/) ----------------------------------
+def expected_skills_dirs(plugin_root):
+    """Same algorithm as sync.sh: parents of skill dirs, ./-prefixed."""
+    dirs = set()
+    for skill_md in plugin_root.rglob("SKILL.md"):
+        rel = skill_md.parent.parent.relative_to(plugin_root)
+        dirs.add("./" if str(rel) == "." else f"./{rel.as_posix()}")
+    return sorted(dirs)
+
+
+STALE_HINT = "run ./sync.sh --update-registry"
+plugin_roots = {b: root / "skills" / b for b in bucket_dirs}
+plugin_roots["generate-skill"] = root / "generate-skill"
+
+for plugin_name, plugin_root in sorted(plugin_roots.items()):
+    pj = plugin_root / ".claude-plugin" / "plugin.json"
+    rel = pj.relative_to(root)
+    if not pj.exists():
+        errors.append(f"{rel}: missing ({STALE_HINT})")
+        continue
+    try:
+        data = json.loads(pj.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        errors.append(f"{rel}: invalid JSON: {e}")
+        continue
+    if data.get("name") != plugin_name:
+        errors.append(f"{rel}: name must be '{plugin_name}'")
+    if not KEBAB_RE.match(data.get("name", "")):
+        errors.append(f"{rel}: name must be kebab-case")
+    if not data.get("description"):
+        errors.append(f"{rel}: description must be non-empty")
+    declared = data.get("skills", [])
+    declared = [declared] if isinstance(declared, str) else declared
+    if sorted(declared) != expected_skills_dirs(plugin_root):
+        errors.append(f"{rel}: stale skills dirs ({STALE_HINT})")
+
+mp_file = root / ".claude-plugin" / "marketplace.json"
+if not mp_file.exists():
+    errors.append(f".claude-plugin/marketplace.json: missing ({STALE_HINT})")
+else:
+    try:
+        mp = json.loads(mp_file.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        errors.append(f".claude-plugin/marketplace.json: invalid JSON: {e}")
+        mp = {}
+    if mp:
+        if mp.get("name") != "swissknifeman":
+            errors.append(".claude-plugin/marketplace.json: name must be 'swissknifeman'")
+        if not mp.get("owner", {}).get("name"):
+            errors.append(".claude-plugin/marketplace.json: owner.name must be set")
+        entries = mp.get("plugins", [])
+        names = [p.get("name", "") for p in entries]
+        if len(names) != len(set(names)):
+            errors.append(".claude-plugin/marketplace.json: duplicate plugin names")
+        if sorted(names) != sorted(plugin_roots):
+            errors.append(
+                f".claude-plugin/marketplace.json: plugins must match dirs on disk "
+                f"({STALE_HINT})")
+        for p in entries:
+            src = p.get("source", "")
+            if not (root / src).is_dir():
+                errors.append(
+                    f".claude-plugin/marketplace.json: {p.get('name')}: "
+                    f"source dir not found: {src}")
+            if not p.get("description"):
+                errors.append(
+                    f".claude-plugin/marketplace.json: {p.get('name')}: "
+                    f"description must be non-empty")
+
+# --- 8. skill-name uniqueness ------------------------------------------------
+# Plugin namespace flattens per plugin: dup inside a bucket = error.
+# Across buckets namespacing keeps it legal, but vendoring modes collide: warn.
+by_bucket = {}
+for skill_md in skill_files:
+    fm = parse_frontmatter(skill_md) or {}
+    name = fm.get("name", "")
+    if not name:
+        continue
+    bucket = skill_md.relative_to(root).parts[1] \
+        if skill_md.relative_to(root).parts[0] == "skills" else "generate-skill"
+    by_bucket.setdefault(bucket, {}).setdefault(name, []).append(
+        str(skill_md.relative_to(root)))
+seen_names = {}
+for bucket, names in sorted(by_bucket.items()):
+    for name, paths in sorted(names.items()):
+        if len(paths) > 1:
+            errors.append(
+                f"duplicate skill name '{name}' in bucket '{bucket}': "
+                f"{', '.join(paths)}")
+        seen_names.setdefault(name, []).append(bucket)
+for name, in_buckets in sorted(seen_names.items()):
+    if len(in_buckets) > 1:
+        warnings.append(
+            f"skill name '{name}' appears in buckets {', '.join(in_buckets)} — "
+            f"legal with plugin namespaces, collides in vendoring modes")
 
 # --- report ----------------------------------------------------------------
 for w in warnings:

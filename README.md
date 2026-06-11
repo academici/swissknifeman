@@ -41,9 +41,11 @@ profiles/                  # тип проекта → набор bucket-ов
 configs/                   # готовые конфиги: пресеты permissions для Claude Code
 references/                # каталог внешних источников (что брать, статус)
 adapters/                  # доки по интеграции: claude-code, cursor, perplexity
-scripts/                   # validate, update-upstreams, scanner, apply-permissions
+scripts/                   # validate, update-upstreams, scanner, apply-permissions, connect-claude
 generate-skill/            # мета-скилл создания новых скиллов
 skills.json                # реестр (генерируется sync.sh, с provenance)
+buckets.json               # метаданные bucket-ов (description/category/tags)
+.claude-plugin/            # marketplace.json — нативный marketplace Claude Code (генерируется)
 docs/                      # документация (VitePress)
 ```
 
@@ -52,12 +54,38 @@ docs/                      # документация (VitePress)
 
 ## Установка
 
-Установщик сам определяет тип проекта и ставит подходящий набор скиллов:
+### Claude Code: plugin marketplace (рекомендуется)
+
+Репозиторий — нативный marketplace плагинов Claude Code: каждый bucket = плагин,
+скиллы получают неймспейс `<bucket>:<skill>` (например `php:laravel-packages`).
+Скиллы **не копируются** в проект — живут в кэше Claude Code и обновляются отсюда.
+
+```bash
+# Один раз на машину
+claude plugin marketplace add ~/projects/packages/swissknifeman
+
+# На каждый проект: автодетект профиля, запись в .claude/settings.local.json
+./scripts/connect-claude.sh --target ~/projects/my-app
+
+# Превью / явный набор / миграция со старого вендоринга
+./scripts/connect-claude.sh --target . --dry-run
+./scripts/connect-claude.sh --target . --plugins php,quality
+./scripts/connect-claude.sh --target . --cleanup-vendored
+```
+
+Версия плагина = git SHA: правки скиллов подтягиваются в проекты после
+локального **коммита** (пуш не нужен) — `/plugin marketplace update swissknifeman`
+или перезапуск сессии. Манифесты плагинов (`.claude-plugin/`) генерируются
+`./sync.sh --update-registry`.
+
+### Cursor / другие агенты: вендоринг install.sh
+
+Установщик сам определяет тип проекта и копирует подходящий набор скиллов:
 
 ```bash
 # Laravel-проект (artisan+composer.json) → architect, php, devops, quality, operator
 cd ~/projects/my-laravel-app
-~/projects/packages/swissknifeman/install.sh --target . --agent claude
+~/projects/packages/swissknifeman/install.sh --target . --agent cursor
 
 # Obsidian vault (.obsidian/) → architect, pm, founder, operator, roles, imported
 ~/projects/packages/swissknifeman/install.sh --target ~/vaults/brain
@@ -68,23 +96,18 @@ cd ~/projects/my-laravel-app
 # Явный профиль / bucket-ы / исключения
 ./install.sh --target . --profile php-package
 ./install.sh --target . --buckets php,quality --exclude botkit
-
-# Глобально в home (~/.claude/skills)
-./install.sh --target ~ --agent claude
-
-# Legacy-режим (deprecated): копия bucket-а как есть
-./install.sh ~/.ai/skills php
 ```
 
-**`--agent claude`** раскладывает скиллы плоско (`.claude/skills/<name>/SKILL.md`) —
-Claude Code не видит вложенные bucket-структуры. Коллизии имён разрешаются
-префиксом bucket-а. Внимание: установка в общий `~/.claude/skills` может
-перекрыть одноимённые скиллы, поставленные не отсюда. Переустановка чистит
-только то, что ставила сама (манифест `.swissknifeman-manifest.json`).
+Переустановка чистит только то, что ставила сама (манифест
+`.swissknifeman-manifest.json` в обоих режимах раскладки); существующие чужие
+папки скиллов — ошибка-коллизия, перезапись только с `--force`.
+Режим `--agent claude` (плоский вендоринг) оставлен для совместимости,
+для Claude Code предпочтителен marketplace.
 
 Проект может зафиксировать свою конфигурацию в `.swissknife.json`
 (см. [.swissknife.example.json](.swissknife.example.json)) — приоритет:
-флаги → `.swissknife.json` → автодетект.
+флаги → `.swissknife.json` → автодетект. Файл проходит схема-валидацию
+(опечатка в ключе → ошибка с подсказкой).
 
 ## Пресеты permissions для Claude Code
 

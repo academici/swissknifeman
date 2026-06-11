@@ -2,7 +2,41 @@
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-06-11
+
 ### Added
+
+- **Нативный plugin marketplace Claude Code**: `.claude-plugin/marketplace.json`
+  + `plugin.json` на каждый bucket (генерируются `sync.sh --update-registry`,
+  метаданные в `buckets.json`); плагин = bucket, скиллы с неймспейсом
+  `<bucket>:<skill>`, версия плагина = git SHA
+- **`scripts/connect-claude.sh`**: подключение проекта к marketplace —
+  автодетект профиля, идемпотентный merge `extraKnownMarketplaces` +
+  `enabledPlugins` в `.claude/settings.local.json`, `--dry-run`/`--list`,
+  миграция со старого вендоринга (`--cleanup-vendored` удаляет только
+  манифестные копии)
+- **`buckets.json`**: description/category/tags на bucket; описания попадают
+  в plugin-манифесты и skills.json (registry v4)
+- **Схема-валидация `.swissknife.json`** в install.sh и connect-claude.sh:
+  неизвестный ключ/тип → ошибка с подсказкой (`did you mean 'buckets'?`)
+- **Манифест и коллизии в bucket-режиме install.sh**: `.swissknifeman-manifest.json`
+  теперь пишется и в generic/cursor-режиме (чистая переустановка), существующие
+  чужие папки — ошибка-коллизия, перезапись только с `--force`
+- validate.sh: проверки buckets.json, свежести plugin-манифестов,
+  уникальности имён скиллов
+
+### Changed
+
+- `generate-skill/` реструктурирован в layout плагина
+  (`generate-skill/generate-skill/SKILL.md`)
+- `--agent claude` в install.sh — deprecated (предпочтителен marketplace);
+  `.claude-plugin/` исключён из вендоринга и brain-sync
+- Документация: адаптер Claude Code переписан вокруг marketplace,
+  гайд установки разделён на каналы Claude Code / Cursor-generic
+- Ссылки на `references/` в `oss-dev/oss-development` исправлены на
+  относительные к скиллу (`../references/...`)
+
+### Added (docs & configs wave)
 
 - **Документация на VitePress** (`docs/`): гайд (принципы, установка, профили,
   анатомия скилла, upstream-sync, реестр, сканер, CI), конфиги, адаптеры,

@@ -1,20 +1,37 @@
 # Установка скиллов
 
+Два канала доставки:
+
+| Агент | Механизм | Что попадает в проект |
+|---|---|---|
+| **Claude Code** | нативный plugin marketplace → [`connect-claude.sh`](/adapters/claude-code) | только записи в `.claude/settings.local.json` |
+| **Cursor / generic** | вендоринг копий → `install.sh` | сами скиллы в `.cursor/skills` / `.ai/skills` |
+
+## Claude Code: marketplace
+
+```bash
+# один раз на машину
+claude plugin marketplace add ~/projects/packages/swissknifeman
+
+# на каждый проект (автодетект профиля)
+~/projects/packages/swissknifeman/scripts/connect-claude.sh --target ~/projects/my-app
+```
+
+Скиллы живут в кэше Claude Code и обновляются из репо — подробности в
+[адаптере Claude Code](/adapters/claude-code).
+
+## Cursor / generic: install.sh
+
 Установщик `install.sh` сам определяет тип проекта и ставит подходящий набор
 скиллов. Никакой конфигурации для старта не нужно.
-
-## Быстрый старт
 
 ```bash
 # Laravel-проект (artisan + composer.json) → architect, php, devops, quality, operator
 cd ~/projects/my-laravel-app
-~/projects/packages/swissknifeman/install.sh --target . --agent claude
+~/projects/packages/swissknifeman/install.sh --target . --agent cursor
 
 # Obsidian vault (.obsidian/) → architect, pm, founder, operator, roles, imported
 ~/projects/packages/swissknifeman/install.sh --target ~/vaults/brain
-
-# Глобально в home (~/.claude/skills)
-./install.sh --target ~ --agent claude
 ```
 
 ## Превью без установки
@@ -45,7 +62,7 @@ cd ~/projects/my-laravel-app
 ## Фиксация конфигурации: `.swissknife.json`
 
 Проект может зафиксировать свою конфигурацию установки в `.swissknife.json`
-в корне — `install.sh` прочтёт его автоматически:
+в корне — `install.sh` и `connect-claude.sh` прочтут его автоматически:
 
 ```json
 {
@@ -58,19 +75,26 @@ cd ~/projects/my-laravel-app
 ```
 
 Все ключи опциональны. Если задан `buckets`, поле `project_type` игнорируется.
+Файл проходит схема-валидацию: неизвестный ключ или неверный тип — понятная
+ошибка с подсказкой (`unknown key 'bucket' — did you mean 'buckets'?`).
+Ключи, начинающиеся с `_`, считаются комментариями.
 Шаблон — [.swissknife.example.json](https://github.com/academici/swissknifeman/blob/main/.swissknife.example.json).
 
-## Режим `--agent claude`
+## Манифест, переустановка и коллизии
 
-Claude Code не видит вложенные bucket-структуры, поэтому `--agent claude`
-раскладывает скиллы **плоско**: `.claude/skills/<name>/SKILL.md`. Коллизии имён
-разрешаются префиксом bucket-а.
+Установщик пишет манифест `.swissknifeman-manifest.json` рядом со скиллами —
+в обоих режимах раскладки (плоской и bucket). Переустановка сначала удаляет
+**только** перечисленное в манифесте, затем ставит заново — чужие скиллы не
+трогаются.
 
-::: warning Общий ~/.claude/skills
-Установка в общий `~/.claude/skills` может перекрыть одноимённые скиллы,
-поставленные не отсюда. Переустановка чистит только то, что ставила сама —
-по манифесту `.swissknifeman-manifest.json`.
-:::
+Если целевая папка скилла уже существует и не числится в манифесте, установка
+прерывается со списком коллизий. Перезаписать осознанно: `--force`.
+
+## Режим `--agent claude` (deprecated)
+
+Вендоринг для Claude Code оставлен для совместимости (плоская раскладка
+`.claude/skills/<name>/SKILL.md`, коллизии разрешаются префиксом bucket-а),
+но предпочтительный путь — [marketplace](/adapters/claude-code).
 
 ## Legacy-режим
 

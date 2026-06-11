@@ -1,0 +1,174 @@
+{
+  "name": "swissknifeman",
+  "owner": {
+    "name": "Dmitry Vostrikov",
+    "email": "dv.vostrikov@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "architect",
+      "source": "./skills/architect",
+      "description": "Architecture, API and data design, security, observability, tech stack selection",
+      "category": "engineering",
+      "tags": [
+        "architecture",
+        "api",
+        "security",
+        "data"
+      ]
+    },
+    {
+      "name": "blender",
+      "source": "./skills/blender",
+      "description": "Blender 3D modeling: MCP workflow, threading for FDM/SLA, version gotchas, model rules",
+      "category": "engineering",
+      "tags": [
+        "blender",
+        "3d",
+        "python"
+      ]
+    },
+    {
+      "name": "devops",
+      "source": "./skills/devops",
+      "description": "Docker environments, CI/CD pipelines, GitOps",
+      "category": "infrastructure",
+      "tags": [
+        "docker",
+        "ci-cd",
+        "gitops"
+      ]
+    },
+    {
+      "name": "founder",
+      "source": "./skills/founder",
+      "description": "Idea discovery, competitive analysis, risk assessment, pitch decks",
+      "category": "business",
+      "tags": [
+        "startup",
+        "ideas",
+        "pitch"
+      ]
+    },
+    {
+      "name": "frontend",
+      "source": "./skills/frontend",
+      "description": "Frontend development: Vite, Vue Composition API, Tailwind CSS, Inertia",
+      "category": "engineering",
+      "tags": [
+        "vue",
+        "vite",
+        "tailwind",
+        "inertia"
+      ]
+    },
+    {
+      "name": "general",
+      "source": "./skills/general",
+      "description": "General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists",
+      "category": "workflow",
+      "tags": [
+        "workflow",
+        "conventions",
+        "git"
+      ]
+    },
+    {
+      "name": "generate-skill",
+      "source": "./generate-skill",
+      "description": "Meta-skill для создания новых скиллов по SKILL_TEMPLATE",
+      "category": "meta",
+      "tags": [
+        "meta",
+        "authoring"
+      ]
+    },
+    {
+      "name": "imported",
+      "source": "./skills/imported",
+      "description": "External super-skills tracked via upstream.json (marketing, sales, legal, research and more)",
+      "category": "external",
+      "tags": [
+        "super-skills",
+        "upstream"
+      ]
+    },
+    {
+      "name": "operator",
+      "source": "./skills/operator",
+      "description": "Incident response, runbooks, postmortems, on-call and capacity planning",
+      "category": "operations",
+      "tags": [
+        "incidents",
+        "runbooks",
+        "sre"
+      ]
+    },
+    {
+      "name": "oss-dev",
+      "source": "./skills/oss-dev",
+      "description": "Open-source development: releases, governance, DX, dependency audits + language references",
+      "category": "engineering",
+      "tags": [
+        "open-source",
+        "releases",
+        "dx"
+      ]
+    },
+    {
+      "name": "php",
+      "source": "./skills/php",
+      "description": "PHP and Laravel: applications, packages, Filament, permissions, testing, patterns",
+      "category": "engineering",
+      "tags": [
+        "php",
+        "laravel",
+        "testing"
+      ]
+    },
+    {
+      "name": "pm",
+      "source": "./skills/pm",
+      "description": "Product management: BRD, PRD, roadmap, monetization, unit economics",
+      "category": "product",
+      "tags": [
+        "brd",
+        "prd",
+        "roadmap"
+      ]
+    },
+    {
+      "name": "python",
+      "source": "./skills/python",
+      "description": "Python: ML project structure, virtualenv and dependency management",
+      "category": "engineering",
+      "tags": [
+        "python",
+        "ml",
+        "venv"
+      ]
+    },
+    {
+      "name": "quality",
+      "source": "./skills/quality",
+      "description": "Code review, refactoring plans, tech debt audits, test strategy",
+      "category": "engineering",
+      "tags": [
+        "code-review",
+        "refactoring",
+        "tech-debt"
+      ]
+    },
+    {
+      "name": "roles",
+      "source": "./skills/roles",
+      "description": "Personas: tech lead, startup CTO, solo founder, open-source maintainer",
+      "category": "personas",
+      "tags": [
+        "tech-lead",
+        "cto",
+        "maintainer"
+      ]
+    }
+  ]
+}

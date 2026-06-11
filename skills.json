@@ -1,46 +1,76 @@
 {
-  "version": 3,
+  "version": 4,
   "name": "swissknifeman",
   "repository": "https://github.com/academici/swissknifeman",
   "schema": "https://github.com/academici/swissknifeman/blob/main/SKILL_TEMPLATE.md",
   "buckets": {
     "architect": {
+      "description": "Architecture, API and data design, security, observability, tech stack selection",
       "count": 9,
       "status": "active"
     },
+    "blender": {
+      "description": "Blender 3D modeling: MCP workflow, threading for FDM/SLA, version gotchas, model rules",
+      "count": 4,
+      "status": "active"
+    },
     "devops": {
-      "count": 6,
+      "description": "Docker environments, CI/CD pipelines, GitOps",
+      "count": 9,
       "status": "active"
     },
     "founder": {
+      "description": "Idea discovery, competitive analysis, risk assessment, pitch decks",
       "count": 5,
       "status": "active"
     },
+    "frontend": {
+      "description": "Frontend development: Vite, Vue Composition API, Tailwind CSS, Inertia",
+      "count": 4,
+      "status": "active"
+    },
+    "general": {
+      "description": "General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists",
+      "count": 11,
+      "status": "active"
+    },
     "imported": {
+      "description": "External super-skills tracked via upstream.json (marketing, sales, legal, research and more)",
       "count": 12,
       "status": "active"
     },
     "operator": {
+      "description": "Incident response, runbooks, postmortems, on-call and capacity planning",
       "count": 5,
       "status": "active"
     },
     "oss-dev": {
+      "description": "Open-source development: releases, governance, DX, dependency audits + language references",
       "count": 5,
       "status": "active"
     },
     "php": {
-      "count": 7,
+      "description": "PHP and Laravel: applications, packages, Filament, permissions, testing, patterns",
+      "count": 11,
       "status": "active"
     },
     "pm": {
+      "description": "Product management: BRD, PRD, roadmap, monetization, unit economics",
       "count": 8,
       "status": "active"
     },
+    "python": {
+      "description": "Python: ML project structure, virtualenv and dependency management",
+      "count": 2,
+      "status": "active"
+    },
     "quality": {
+      "description": "Code review, refactoring plans, tech debt audits, test strategy",
       "count": 4,
       "status": "active"
     },
     "roles": {
+      "description": "Personas: tech lead, startup CTO, solo founder, open-source maintainer",
       "count": 4,
       "status": "active"
     }
@@ -128,12 +158,57 @@
       "source": "local"
     },
     {
+      "name": "mcp-blender-workflow",
+      "bucket": "blender",
+      "path": "skills/blender/mcp-blender-workflow/SKILL.md",
+      "version": "0.1.0",
+      "description": "MCP Blender: инструменты, обязательный workflow построения моделей и соглашения проекта DiaBox",
+      "sha256": "cd3f990499c3a8fa1182349057d4ca1c4cbbe77d7c65d13a374780d3424fb515",
+      "source": "local"
+    },
+    {
+      "name": "model-rules",
+      "bucket": "blender",
+      "path": "skills/blender/model-rules/SKILL.md",
+      "version": "0.1.0",
+      "description": "Шаблон models/{name}/ai/rules.md — моделе-специфичные правила, читаемые агентом перед любой задачей",
+      "sha256": "495cc9e8731e287bff09834ab3a9c6562a4fa132e44fe081e3c94a453732055b",
+      "source": "local"
+    },
+    {
+      "name": "threading",
+      "bucket": "blender",
+      "path": "skills/blender/threading/SKILL.md",
+      "version": "0.1.0",
+      "description": "Резьба на FDM/SLA-деталях: материал, физика печати, радиальные зазоры по типу посадки",
+      "sha256": "bf938c2226e25305df0a6cb14bacc25584f90890678fcf78ef933ea2961b8906",
+      "source": "local"
+    },
+    {
+      "name": "version-gotchas",
+      "bucket": "blender",
+      "path": "skills/blender/version-gotchas/SKILL.md",
+      "version": "0.1.0",
+      "description": "Известные breaking changes и ловушки Blender 5.0 API",
+      "sha256": "9f7d245f6a4d9671e9c8fc7158e6e573c765b426b36c5bc6834e287879c7ff1d",
+      "source": "local"
+    },
+    {
       "name": "ci-cd",
       "bucket": "devops",
       "path": "skills/devops/ci-cd/SKILL.md",
       "version": "0.2.0",
       "description": "GitHub Actions CI/CD pipelines для Laravel проектов",
       "sha256": "a4bc5599cfa121f563e20443f728e4e1257d5226d63db20bab1d755607c735b3",
+      "source": "local"
+    },
+    {
+      "name": "docker",
+      "bucket": "devops",
+      "path": "skills/devops/docker/SKILL.md",
+      "version": "0.1.0",
+      "description": "Advanced Docker containerization expertise: container optimization, security hardening, multi-stage builds, orchestration patterns, and production deployment strategies",
+      "sha256": "e0d1a1b4a90c5e7b9f379d7c51d93ef432dd4142ce6646e590cb35091fea9184",
       "source": "local"
     },
     {
@@ -182,6 +257,24 @@
       "source": "local"
     },
     {
+      "name": "makefile",
+      "bucket": "devops",
+      "path": "skills/devops/makefile/SKILL.md",
+      "version": "0.1.0",
+      "description": "Makefile как единая точка входа для управления проектом в локальной среде разработки",
+      "sha256": "c0c7ef0bd27075cc144f9b6003a119a964d89824f037feae9b53c717520bd676",
+      "source": "local"
+    },
+    {
+      "name": "node-pnpm-preflight",
+      "bucket": "devops",
+      "path": "skills/devops/node-pnpm-preflight/SKILL.md",
+      "version": "0.1.0",
+      "description": "Проверка доступности Node/pnpm на хосте перед командами и git hooks, которые используют pnpm (commitlint, lint, сборка).",
+      "sha256": "28c16bcf5c1f820601bd39138ca741af83fa2f5758e8a60350b25ca2b132cad9",
+      "source": "local"
+    },
+    {
       "name": "competitive-analysis",
       "bucket": "founder",
       "path": "skills/founder/competitive-analysis/SKILL.md",
@@ -224,6 +317,141 @@
       "version": "0.1.0",
       "description": "5 категорий рисков, Risk Matrix, RAID-лог, pre-mortem для критичных рисков",
       "sha256": "0e36ebb3b7d18802bc27716b091defb8594fe93a12376c3aa42220d707a9fc28",
+      "source": "local"
+    },
+    {
+      "name": "inertia-vue",
+      "bucket": "frontend",
+      "path": "skills/frontend/inertia-vue/SKILL.md",
+      "version": "0.1.0",
+      "description": "Develop Inertia + Vue pages/components and form flows in this Laravel app.",
+      "sha256": "4a4707e5901e51074d151f8d8407e4c25ffc991c8ebde1f3f7197baf99bf337f",
+      "source": "local"
+    },
+    {
+      "name": "tailwindcss",
+      "bucket": "frontend",
+      "path": "skills/frontend/tailwindcss/SKILL.md",
+      "version": "0.1.0",
+      "description": "Implement UI changes using Tailwind CSS in this project.",
+      "sha256": "a4ee1c6f7250dfe2bdf8a7814c959fc3977cb74e02e8c3848010a34ebe1ee5b3",
+      "source": "local"
+    },
+    {
+      "name": "vite-module-loader",
+      "bucket": "frontend",
+      "path": "skills/frontend/vite-module-loader/SKILL.md",
+      "version": "0.1.0",
+      "description": "Vite как основной сборщик Frontend-проектов: базовая конфигурация, алиасы, build-практики",
+      "sha256": "4a8786c219f596a6d25efd7597f8f36ffaa8f6d2e33d670faf3a593d298d1ddc",
+      "source": "local"
+    },
+    {
+      "name": "vue-composition-api",
+      "bucket": "frontend",
+      "path": "skills/frontend/vue-composition-api/SKILL.md",
+      "version": "0.1.0",
+      "description": "Vue Composition API паттерны: синтаксис <script setup> как стандарт написания компонентов",
+      "sha256": "64d1570ca77871c41bc607f087b75757fecae1ad191a95b58a88476d6578cc28",
+      "source": "local"
+    },
+    {
+      "name": "ai-context-workflow",
+      "bucket": "general",
+      "path": "skills/general/ai-context-workflow/SKILL.md",
+      "version": "0.1.0",
+      "description": "Редактирование AI-контекста проекта: .ai/guidelines, .ai/skills, boost.json; запрет правки сгенерированных CLAUDE.md/AGENTS.md; обязательный php artisan boost:update; объяснение цикла для Cursor и Claude Code.",
+      "sha256": "f267c68e8e3d5309b23dcb3035fab8f7d81729e282b100c32404b803d3edccc2",
+      "source": "local"
+    },
+    {
+      "name": "compact-responses",
+      "bucket": "general",
+      "path": "skills/general/compact-responses/SKILL.md",
+      "version": "0.1.0",
+      "description": "Activate to switch Claude into ultra-compact response mode: minimal prose, code-only answers, no explanations unless asked. Use when you want terse output — e.g. quick edits, code reviews, or repeated tasks where context is already established.",
+      "sha256": "98e34359bd5edda5095ec7d65a8542b16742916937263ed5aa9bbf6a15c2856d",
+      "source": "local"
+    },
+    {
+      "name": "complex-task-orchestrator",
+      "bucket": "general",
+      "path": "skills/general/complex-task-orchestrator/SKILL.md",
+      "version": "0.1.0",
+      "description": "Оркестрация сложных задач: декомпозиция, контекст-роутинг, управление рисками, Definition of Done и минимальный верификационный контур.",
+      "sha256": "04040f997809a4ca224360590ab7049dd00f907efdc69bd08c738cbc7b752191",
+      "source": "local"
+    },
+    {
+      "name": "cross-layer-change-checklist",
+      "bucket": "general",
+      "path": "skills/general/cross-layer-change-checklist/SKILL.md",
+      "version": "0.1.0",
+      "description": "Универсальный checklist для изменений, затрагивающих несколько слоев: код, доступы, UI, документацию и тесты.",
+      "sha256": "f4f858643404895373a9e3497b64668a0b9d7d0a107823bdd2bd6b6402b66679",
+      "source": "local"
+    },
+    {
+      "name": "git-commit-rules",
+      "bucket": "general",
+      "path": "skills/general/git-commit-rules/SKILL.md",
+      "version": "0.1.0",
+      "description": "Правила работы с Git в проекте: подготовка коммита, husky/commitlint, формат сообщений и безопасный порядок действий.",
+      "sha256": "ccb8ac467fe95edc5ba04ccc7c2eb1dfb04ac14ef152323cac0cc900d4086ee5",
+      "source": "local"
+    },
+    {
+      "name": "mcp-development",
+      "bucket": "general",
+      "path": "skills/general/mcp-development/SKILL.md",
+      "version": "0.1.0",
+      "description": "Work with MCP servers (Laravel Boost) and agent integrations in this project.",
+      "sha256": "8527bf4715089c701fccc15ada06218470f8f5cb167e051c50d889c8c24b06f0",
+      "source": "local"
+    },
+    {
+      "name": "packages-stack",
+      "bucket": "general",
+      "path": "skills/general/packages-stack/SKILL.md",
+      "version": "0.1.0",
+      "description": "Реестр используемых внешних NPM и Composer пакетов. Опирайся на официальную документацию этих пакетов при написании кода.",
+      "sha256": "36e7c9dd358556057d7a8cc014ad5fa58b51d3a0372ee85617b803356d81a248",
+      "source": "local"
+    },
+    {
+      "name": "project-map",
+      "bucket": "general",
+      "path": "skills/general/project-map/SKILL.md",
+      "version": "0.1.0",
+      "description": "Быстрая карта структуры проекта и зон ответственности по директориям для безопасного роутинга изменений.",
+      "sha256": "21ad1eb3fa60c9794869efad497278d243f1d44bd28cd6526f0df62c80fff524",
+      "source": "local"
+    },
+    {
+      "name": "task-brief-template",
+      "bucket": "general",
+      "path": "skills/general/task-brief-template/SKILL.md",
+      "version": "0.1.0",
+      "description": "Шаблон постановки сложных задач для агента: цель, границы, инварианты, слои, критерии приемки, проверки.",
+      "sha256": "feb4e5d37d10587bb18ab9457b950fe0245c5b90a8ba6dbd365dca7887861e0a",
+      "source": "local"
+    },
+    {
+      "name": "ticket-workflow",
+      "bucket": "general",
+      "path": "skills/general/ticket-workflow/SKILL.md",
+      "version": "0.1.0",
+      "description": "Use for ticket domain logic: Actions, Services, Repositories, Observers, Policies, Notifications in the ticket system. Activate when working with Ticket, Participant, History, Message models; TicketStatus transitions via StateMachine; Actions in app/Actions/Ticket/; NotificationService; UserService::getPrimaryRole; or ticket authorization via Gate/Policies.",
+      "sha256": "8281189fbc8ec093e0262840bb88272814321541a2e3d406936499a4b0b19e9e",
+      "source": "local"
+    },
+    {
+      "name": "user-roles",
+      "bucket": "general",
+      "path": "skills/general/user-roles/SKILL.md",
+      "version": "0.1.0",
+      "description": "Use when working with UserRole enum, user permissions, role priority resolution, or any code that calls UserService::getPrimaryRole(). Activate when the task involves role-based access, participant roles in tickets, #[Priority] attributes on UserRole enum cases, or determining which role a user has in a given ticket context.",
+      "sha256": "422c4c7d01bb18ab419023b7acc354f79069d762eaa628fde0076fd64cb0b33f",
       "source": "local"
     },
     {
@@ -426,8 +654,8 @@
       "bucket": "oss-dev",
       "path": "skills/oss-dev/oss-development/SKILL.md",
       "version": "0.1.0",
-      "description": "OSS-проект: repo structure, README, Architecture, ADR, SemVer, CI/CD. PHP-специфика в references/oss-php.md",
-      "sha256": "77717a7ef9fd7c1a4b658064309c89d7089d776eb2d39cd002b834e22e0fb4a0",
+      "description": "OSS-проект: repo structure, README, Architecture, ADR, SemVer, CI/CD. PHP-специфика в ../references/oss-php.md",
+      "sha256": "53facbdb9e975cf032c9be9efe38d4fa0852e26c83884dd49709d2546061b0a0",
       "source": "local"
     },
     {
@@ -458,12 +686,21 @@
       "source": "local"
     },
     {
+      "name": "database",
+      "bucket": "php",
+      "path": "skills/php/database/SKILL.md",
+      "version": "0.1.0",
+      "description": "Database migrations, models, and table naming. Activate when writing migrations, creating models, defining schema, foreign keys, or working in database/migrations/.",
+      "sha256": "398233baf695f59e68070f8c51865b560b68802776c79948c660725c1b9d69c5",
+      "source": "local"
+    },
+    {
       "name": "filament",
       "bucket": "php",
       "path": "skills/php/filament/SKILL.md",
       "version": "0.2.0",
       "description": "Filament v3 resource patterns: CRUD resource, relation managers, panel integration",
-      "sha256": "dda4be28724ddcb906fd3911a6d7efff7946f557bc29a322033e85e03258466b",
+      "sha256": "0edecd64814560f7860916ba5a4b6f4a03a73bf6d57e80fad1f51c277e0377b6",
       "source": "local"
     },
     {
@@ -472,7 +709,7 @@
       "path": "skills/php/laravel/SKILL.md",
       "version": "0.2.0",
       "description": "Laravel architecture patterns: actions, repositories, resources",
-      "sha256": "0db04dadeb64d56b2fdf67e350feaf40f60e4f4fafbadc8f6a0ad2e6f463883c",
+      "sha256": "23511c5d90261670ebc5b8c5561fcfcec421ffbe7baac3ce7bffedca8f0bb476",
       "source": "local"
     },
     {
@@ -499,7 +736,25 @@
       "path": "skills/php/laravel-testing/SKILL.md",
       "version": "0.2.0",
       "description": "Feature/unit/pest testing patterns",
-      "sha256": "c2e25877ebf737f294454da6396e9311bcecdf17d9b3f1cd739f230202f38ba0",
+      "sha256": "40ce9a72ea936ddc27453cd9df4b240238df62de9d73e9ec36fc4cad2d70298f",
+      "source": "local"
+    },
+    {
+      "name": "livewire",
+      "bucket": "php",
+      "path": "skills/php/livewire/SKILL.md",
+      "version": "0.1.0",
+      "description": "Build and test Livewire components in this Laravel application.",
+      "sha256": "0f27d7b584a03b2a80b10ef18b3a262bb153e77ed110ef428e9bb389e8e6cbad",
+      "source": "local"
+    },
+    {
+      "name": "modular-architecture",
+      "bucket": "php",
+      "path": "skills/php/modular-architecture/SKILL.md",
+      "version": "0.1.0",
+      "description": "Организация Laravel-кода по бизнес-доменам: Модульный Монолит (Modular Monolith) и паттерны DDD",
+      "sha256": "3b4b29f38a1a36afbdcf9c3087b97c86b52f5413ccd5a501d788381f04125a9d",
       "source": "local"
     },
     {
@@ -509,6 +764,15 @@
       "version": "0.2.0",
       "description": "PHP domain patterns: VO, DTO, pipeline, specification",
       "sha256": "ab0160846a2dd0bc8e47b3ea975699ae7d99063119d908fc65449886373de69c",
+      "source": "local"
+    },
+    {
+      "name": "static-analysis",
+      "bucket": "php",
+      "path": "skills/php/static-analysis/SKILL.md",
+      "version": "0.1.0",
+      "description": "Статический анализ и линтинг PHP/Laravel: Laravel Pint, PHPStan и Rector локально и в CI",
+      "sha256": "4bb84b4884034be77504e1dee12edaa3da3d94a26670bc6dd15855c630633adc",
       "source": "local"
     },
     {
@@ -584,12 +848,30 @@
       "source": "local"
     },
     {
+      "name": "ml-project-structure",
+      "bucket": "python",
+      "path": "skills/python/ml-project-structure/SKILL.md",
+      "version": "0.1.0",
+      "description": "Стандартизированная структура ML/Data Science проектов по подходу Cookiecutter Data Science",
+      "sha256": "d983ec0d3f5b6d7b310e3fbc26315fa303bac2dddd6c8b4b23a5ea010552c340",
+      "source": "local"
+    },
+    {
+      "name": "venv-dependencies",
+      "bucket": "python",
+      "path": "skills/python/venv-dependencies/SKILL.md",
+      "version": "0.1.0",
+      "description": "Управление зависимостями и виртуальными окружениями Python для воспроизводимости проектов",
+      "sha256": "968d23535d47ab6a759707f4326500c58a4a86dfc8c8f7680c3038fa88a74531",
+      "source": "local"
+    },
+    {
       "name": "code-review",
       "bucket": "quality",
       "path": "skills/quality/code-review/SKILL.md",
       "version": "0.1.0",
       "description": "Процесс и чек-лист code review: что обязательно проверять, severity градация комментариев, async vs sync review, шаблон PR-комментариев",
-      "sha256": "d11a50d9ec1260fedfed8c419ceaa78cfa8f42b10aacca8ed89746a772c9ba20",
+      "sha256": "a333078d6fb4b0c27db527d4752650ba78e603ba26b4430da88dbf6839da7834",
       "source": "local"
     },
     {

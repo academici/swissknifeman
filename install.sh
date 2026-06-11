@@ -26,6 +26,8 @@ Options:
                      cursor=.cursor/skills, generic=.ai/skills)
   --list            Print resolved profile + skill list, install nothing
   --dry-run         Print every copy action, write nothing
+  --force           Overwrite existing skill dirs not installed by swissknifeman
+                    (bucket layout only; default: abort on collision)
   -h, --help        Show help
 
 Resolution precedence: flags > .swissknife.json (in target) > autodetect.
@@ -47,8 +49,8 @@ legacy_install() {
       echo "Installing bucket: $(basename "$dir")"
       cp -r "$dir" "$target/"
     done
-    [[ -d "$REPO_ROOT/generate-skill" ]] && \
-      cp -r "$REPO_ROOT/generate-skill" "$target/../generate-skill" 2>/dev/null || true
+    [[ -d "$REPO_ROOT/generate-skill/generate-skill" ]] && \
+      cp -r "$REPO_ROOT/generate-skill/generate-skill" "$target/../generate-skill" 2>/dev/null || true
   else
     [[ -d "$REPO_ROOT/skills/$bucket" ]] || { echo "Unknown bucket: $bucket"; exit 1; }
     echo "Installing bucket: $bucket"
@@ -74,6 +76,7 @@ EXCLUDE=""
 SKILLS_PATH=""
 LIST=false
 DRY_RUN=false
+FORCE=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -85,6 +88,7 @@ while [[ $# -gt 0 ]]; do
     --skills-path) SKILLS_PATH="$2"; shift 2 ;;
     --list) LIST=true; shift ;;
     --dry-run) DRY_RUN=true; shift ;;
+    --force) FORCE=true; shift ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown option: $1" >&2; usage >&2; exit 1 ;;
   esac
@@ -92,7 +96,7 @@ done
 
 export SKM_TARGET="$TARGET" SKM_AGENT="$AGENT" SKM_PROFILE="$PROFILE" \
        SKM_BUCKETS="$BUCKETS" SKM_EXCLUDE="$EXCLUDE" SKM_SKILLS_PATH="$SKILLS_PATH" \
-       SKM_LIST="$LIST" SKM_DRY_RUN="$DRY_RUN"
+       SKM_LIST="$LIST" SKM_DRY_RUN="$DRY_RUN" SKM_FORCE="$FORCE"
 
 python3 - "$REPO_ROOT" <<'PY'
 import json, os, re, shutil, sys
@@ -108,6 +112,7 @@ flag_exclude = [e for e in os.environ["SKM_EXCLUDE"].split(",") if e]
 flag_skills_path = os.environ["SKM_SKILLS_PATH"]
 list_only = os.environ["SKM_LIST"] == "true"
 dry_run = os.environ["SKM_DRY_RUN"] == "true"
+force = os.environ["SKM_FORCE"] == "true"
 
 AGENT_DEFAULTS = {"claude": ".claude/skills", "cursor": ".cursor/skills",
                   "generic": ".ai/skills"}
@@ -132,6 +137,36 @@ def parse_frontmatter_name(skill_md):
 
 
 # --- 1. project config + autodetect -----------------------------------------
+CONFIG_KEYS = {
+    "project_type": str, "buckets": list, "exclude": list,
+    "skills_path": str, "agent": str,
+}
+
+
+def validate_config(config, cfg_file, profiles_dir):
+    """Schema check for .swissknife.json; keys starting with _ are comments."""
+    import difflib
+    profile_names = sorted(p.stem for p in profiles_dir.glob("*.json"))
+    for key, value in config.items():
+        if key.startswith("_"):
+            continue
+        if key not in CONFIG_KEYS:
+            hint = difflib.get_close_matches(key, CONFIG_KEYS, n=1)
+            suffix = f" — did you mean '{hint[0]}'?" if hint else ""
+            die(f"{cfg_file}: unknown key '{key}'{suffix}")
+        if not isinstance(value, CONFIG_KEYS[key]):
+            die(f"{cfg_file}: '{key}' must be a "
+                f"{'list of strings' if CONFIG_KEYS[key] is list else 'string'}")
+        if CONFIG_KEYS[key] is list and not all(isinstance(v, str) for v in value):
+            die(f"{cfg_file}: '{key}' must be a list of strings")
+    if config.get("project_type") and config["project_type"] not in profile_names:
+        die(f"{cfg_file}: unknown project_type '{config['project_type']}' "
+            f"(available: {', '.join(profile_names)})")
+    if config.get("agent") and config["agent"] not in AGENT_DEFAULTS:
+        die(f"{cfg_file}: unknown agent '{config['agent']}' "
+            f"(available: {', '.join(AGENT_DEFAULTS)})")
+
+
 config = {}
 cfg_file = target / ".swissknife.json"
 if cfg_file.exists():
@@ -139,6 +174,7 @@ if cfg_file.exists():
         config = json.loads(cfg_file.read_text(encoding="utf-8"))
     except json.JSONDecodeError as e:
         die(f"{cfg_file}: invalid JSON: {e}")
+    validate_config(config, cfg_file, root / "profiles")
 
 
 def autodetect():
@@ -212,8 +248,8 @@ for bucket in buckets:
             continue
         skills.append((bucket, str(rel), d, fm_name))
 
-if include_meta and (root / "generate-skill/SKILL.md").exists():
-    d = root / "generate-skill"
+if include_meta and (root / "generate-skill/generate-skill/SKILL.md").exists():
+    d = root / "generate-skill/generate-skill"
     fm_name = parse_frontmatter_name(d / "SKILL.md")
     if not ({fm_name, "generate-skill"} & exclude):
         skills.append(("generate-skill", ".", d, fm_name))
@@ -277,24 +313,48 @@ if list_only:
 
 # --- 5. install ------------------------------------------------------------------
 def copy_skill(src, dst):
-    """Copy a skill dir excluding upstream.json (registry metadata)."""
+    """Copy a skill dir excluding registry/plugin metadata."""
     if dry_run:
         print(f"[dry-run] {src.relative_to(root)} -> {dst}")
         return
     shutil.copytree(src, dst, dirs_exist_ok=True,
-                    ignore=shutil.ignore_patterns("upstream.json"))
+                    ignore=shutil.ignore_patterns("upstream.json", ".claude-plugin"))
+
+
+def load_manifest(manifest_file):
+    if manifest_file.exists():
+        return json.loads(manifest_file.read_text(encoding="utf-8"))
+    return {}
+
+
+def contained(path):
+    return str(path.resolve()).startswith(str(dest_root.resolve()) + os.sep)
+
+
+def write_manifest(manifest_file, layout, installed, support_files=None):
+    data = {
+        "installed_at": date.today().isoformat(),
+        "profile": profile_name,
+        "agent": agent,
+        "layout": layout,
+        "skills": installed,
+    }
+    if support_files is not None:
+        data["support_files"] = support_files
+    manifest_file.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n",
+                             encoding="utf-8")
 
 
 if agent == "claude":
+    print("NOTE: --agent claude vendoring is deprecated for Claude Code projects — "
+          "prefer the plugin marketplace: scripts/connect-claude.sh", file=sys.stderr)
     # flatten: <skills_path>/<flat_name>/SKILL.md
     manifest_file = dest_root / MANIFEST
-    if manifest_file.exists() and not dry_run:
-        old = json.loads(manifest_file.read_text(encoding="utf-8"))
-        for entry in old.get("skills", []):
-            stale = (dest_root / entry["flat_name"]).resolve()
-            if stale.is_dir() and str(stale).startswith(str(dest_root.resolve())):
-                shutil.rmtree(stale)
     if not dry_run:
+        for entry in load_manifest(manifest_file).get("skills", []):
+            stale = dest_root / entry["flat_name"]
+            if stale.is_dir() and contained(stale):
+                shutil.rmtree(stale)
         dest_root.mkdir(parents=True, exist_ok=True)
     installed = []
     for i, (bucket, rel, d, fm_name) in enumerate(skills):
@@ -302,36 +362,73 @@ if agent == "claude":
         installed.append({"flat_name": flats[i],
                           "source_path": str(d.relative_to(root))})
     if not dry_run:
-        manifest_file.write_text(json.dumps({
-            "installed_at": date.today().isoformat(),
-            "profile": profile_name,
-            "agent": agent,
-            "skills": installed,
-        }, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        write_manifest(manifest_file, "flat", installed)
 else:
-    # bucket layout (additive: reinstall overwrites, never deletes)
-    if not dry_run:
-        dest_root.mkdir(parents=True, exist_ok=True)
-    for bucket, rel, d, fm_name in skills:
-        dst = dest_root / bucket / rel if rel != "." else dest_root / bucket
-        copy_skill(d, dst)
-    # bucket support files (e.g. skills/oss-dev/references/) for selected buckets
+    # bucket layout: manifest-driven clean reinstall, no silent overwrites
+    manifest_file = dest_root / MANIFEST
+    old = load_manifest(manifest_file)
+    old_paths = {e["path"] for e in old.get("skills", [])}
+
+    # collect support files (e.g. skills/oss-dev/references/) for selected buckets
+    support = []  # (src, rel "<bucket>/<rel_item>")
     for bucket in buckets:
         bucket_dir = root / "skills" / bucket
         for item in sorted(bucket_dir.rglob("*")):
             if item.is_dir() or item.name in ("SKILL.md", "upstream.json"):
                 continue
             rel_item = item.relative_to(bucket_dir)
+            if ".claude-plugin" in rel_item.parts:
+                continue
             # skip files inside any skill dir (copied already, or excluded)
             if any(str(rel_item).startswith(r + os.sep)
                    for r in all_skill_rels.get(bucket, []) if r != "."):
                 continue
-            dst = dest_root / bucket / rel_item
-            if dry_run:
-                print(f"[dry-run] {item.relative_to(root)} -> {dst}")
-            else:
-                dst.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(item, dst)
+            support.append((item, f"{bucket}/{rel_item}"))
+
+    # pre-flight: existing dirs not from a previous install are collisions
+    planned = [(bucket, rel, d, f"{bucket}/{rel}" if rel != "." else bucket)
+               for bucket, rel, d, fm_name in skills]
+    collisions = [p for _, _, _, p in planned
+                  if (dest_root / p).exists() and p not in old_paths]
+    if collisions and not force:
+        for p in collisions:
+            print(f"ERROR: exists and was not installed by swissknifeman: "
+                  f"{dest_root / p}", file=sys.stderr)
+        die(f"{len(collisions)} collision(s) — rerun with --force to overwrite")
+
+    if not dry_run:
+        # clean previous install (skills + support files), prune empty dirs
+        for p in sorted(old_paths | {e for e in old.get("support_files", [])},
+                        reverse=True):
+            stale = dest_root / p
+            if not contained(stale):
+                continue
+            if stale.is_dir():
+                shutil.rmtree(stale)
+            elif stale.is_file():
+                stale.unlink()
+            parent = stale.parent
+            while parent != dest_root and parent.is_dir() and \
+                    not any(parent.iterdir()):
+                parent.rmdir()
+                parent = parent.parent
+        dest_root.mkdir(parents=True, exist_ok=True)
+
+    installed = []
+    for bucket, rel, d, path in planned:
+        copy_skill(d, dest_root / path)
+        installed.append({"path": path, "source_path": str(d.relative_to(root))})
+    support_rels = []
+    for item, rel_path in support:
+        dst = dest_root / rel_path
+        support_rels.append(rel_path)
+        if dry_run:
+            print(f"[dry-run] {item.relative_to(root)} -> {dst}")
+        else:
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(item, dst)
+    if not dry_run:
+        write_manifest(manifest_file, "bucket", installed, support_rels)
 
 print(("[dry-run] " if dry_run else "") + f"Installed {len(skills)} skills -> {dest_root}")
 PY

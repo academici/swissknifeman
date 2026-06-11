@@ -48,6 +48,13 @@ from pathlib import Path
 root = Path(sys.argv[1])
 skills = []
 references = []
+MARKETPLACE_NAME = "swissknifeman"
+OWNER = {"name": "Dmitry Vostrikov", "email": "dv.vostrikov@gmail.com"}
+
+
+def die(msg):
+    print(f"ERROR: {msg}", file=sys.stderr)
+    sys.exit(1)
 
 
 def parse_frontmatter(path):
@@ -116,18 +123,93 @@ for s in skills:
     buckets.setdefault(b, 0)
     buckets[b] += 1
 
+# --- bucket metadata (buckets.json) ----------------------------------------
+meta_file = root / "buckets.json"
+if not meta_file.exists():
+    die("buckets.json not found — every bucket needs description/category/tags")
+bucket_meta = json.loads(meta_file.read_text(encoding="utf-8"))
+bucket_dirs = sorted(d.name for d in (root / "skills").iterdir() if d.is_dir())
+missing = [b for b in bucket_dirs if b not in bucket_meta]
+orphans = [b for b in bucket_meta if b not in bucket_dirs]
+if missing:
+    die(f"buckets.json: missing entries for: {', '.join(missing)}")
+if orphans:
+    die(f"buckets.json: entries without skills/ dir: {', '.join(orphans)}")
+
 registry = {
-    "version": 3,
+    "version": 4,
     "name": "swissknifeman",
     "repository": "https://github.com/academici/swissknifeman",
     "schema": "https://github.com/academici/swissknifeman/blob/main/SKILL_TEMPLATE.md",
-    "buckets": {b: {"count": c, "status": "active"} for b, c in sorted(buckets.items())},
+    "buckets": {b: {"description": bucket_meta[b]["description"],
+                    "count": c, "status": "active"}
+                for b, c in sorted(buckets.items())},
     "skills": skills,
     "references": references,
 }
 
 (root / "skills.json").write_text(json.dumps(registry, indent=2, ensure_ascii=False) + "\n")
 print(f"Updated skills.json: {len(skills)} skills, {len(references)} references")
+
+# --- Claude Code plugin manifests -------------------------------------------
+# Each bucket is a plugin; skills are discovered via plugin.json "skills" dirs.
+def write_json(path, data):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n",
+                    encoding="utf-8")
+
+
+def skills_dirs(plugin_root):
+    """Dirs (relative, ./-prefixed) whose subdirs contain SKILL.md files."""
+    dirs = set()
+    for skill_md in plugin_root.rglob("SKILL.md"):
+        rel = skill_md.parent.parent.relative_to(plugin_root)
+        dirs.add("./" if str(rel) == "." else f"./{rel.as_posix()}")
+    return sorted(dirs)
+
+
+marketplace_plugins = []
+for bucket in bucket_dirs:
+    bucket_dir = root / "skills" / bucket
+    dirs = skills_dirs(bucket_dir)
+    if not dirs:
+        continue
+    meta = bucket_meta[bucket]
+    write_json(bucket_dir / ".claude-plugin" / "plugin.json", {
+        "name": bucket,
+        "description": meta["description"],
+        "skills": dirs[0] if len(dirs) == 1 else dirs,
+    })
+    marketplace_plugins.append({
+        "name": bucket,
+        "source": f"./skills/{bucket}",
+        "description": meta["description"],
+        "category": meta.get("category", ""),
+        "tags": meta.get("tags", []),
+    })
+
+meta_skill_dir = root / "generate-skill"
+meta_fm = parse_frontmatter(meta_skill_dir / "generate-skill" / "SKILL.md")
+write_json(meta_skill_dir / ".claude-plugin" / "plugin.json", {
+    "name": "generate-skill",
+    "description": meta_fm.get("description", "Meta-skill for creating new skills"),
+    "skills": "./",
+})
+marketplace_plugins.append({
+    "name": "generate-skill",
+    "source": "./generate-skill",
+    "description": meta_fm.get("description", "Meta-skill for creating new skills"),
+    "category": "meta",
+    "tags": ["meta", "authoring"],
+})
+
+write_json(root / ".claude-plugin" / "marketplace.json", {
+    "name": MARKETPLACE_NAME,
+    "owner": OWNER,
+    "plugins": sorted(marketplace_plugins, key=lambda p: p["name"]),
+})
+print(f"Updated plugin manifests: {len(marketplace_plugins)} plugins "
+      f"(.claude-plugin/marketplace.json)")
 PY
 }
 
@@ -147,7 +229,7 @@ sync_to_brain() {
   fi
 
   mkdir -p "$dest"
-  rsync -a --delete "$REPO_ROOT/skills/" "$dest/"
+  rsync -a --delete --exclude='.claude-plugin' "$REPO_ROOT/skills/" "$dest/"
   cp "$REPO_ROOT/skills.json" "$BRAIN_PATH/skills-lock.json"
   echo "Synced to brain"
 }

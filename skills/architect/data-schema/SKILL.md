@@ -8,7 +8,7 @@ persona: architect
 tags: [data, architecture]
 requires: [brd]
 produces_for: [api-design]
-outputs: ["03_Dev/Database_Schema.md"]
+outputs: ["docs/03_Dev/Database_Schema.md"]
 sha256: ""
 adapters: [claude, cursor, fable]
 ---
@@ -24,7 +24,7 @@ adapters: [claude, cursor, fable]
 Схема данных **агностична к БД**. Никакого SQL, никаких CREATE TABLE, никаких движков.
 Только сущности, атрибуты, типы и связи — в markdown-таблицах.
 
-Размещать в `03_Dev/Database_Schema.md` или `03_Dev/Database_*.md`.
+Размещать в `docs/03_Dev/Database_Schema.md` или `docs/03_Dev/Database_*.md`.
 
 ---
 

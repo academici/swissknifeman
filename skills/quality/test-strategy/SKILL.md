@@ -8,7 +8,7 @@ persona: quality
 tags: [quality, testing]
 requires: []
 produces_for: [code-review]
-outputs: ["03_Dev/Test_Strategy.md"]
+outputs: ["docs/03_Dev/Test_Strategy.md"]
 sha256: ""
 adapters: [claude, cursor, fable]
 ---

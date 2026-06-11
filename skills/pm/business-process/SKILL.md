@@ -8,7 +8,7 @@ persona: pm
 tags: [requirements]
 requires: []
 produces_for: [brd]
-outputs: ["02_Workflow/[ProcessName].md"]
+outputs: ["docs/02_Workflow/[ProcessName].md"]
 sha256: ""
 adapters: [claude, cursor, fable]
 ---
@@ -21,7 +21,7 @@ adapters: [claude, cursor, fable]
 
 ## Принцип: каждый процесс = Finite State Machine
 
-Структура каждого файла в `02_Workflow/`:
+Структура каждого файла в `docs/02_Workflow/`:
 
 ```
 1. Название процесса
@@ -90,4 +90,4 @@ stateDiagram-v2
 
 Один файл = один изолированный процесс. Если процесс зависит от другого — ссылка через `[[Имя процесса]]`, не копирование.
 
-После создания файла — обновить `02_Workflow/_index.md`.
+После создания файла — обновить `docs/02_Workflow/_index.md`.

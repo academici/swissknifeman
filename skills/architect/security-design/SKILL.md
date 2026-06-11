@@ -8,7 +8,7 @@ persona: architect
 tags: [security, compliance]
 requires: [architecture]
 produces_for: []
-outputs: ["03_Dev/Security_Design.md"]
+outputs: ["docs/03_Dev/Security_Design.md"]
 sha256: ""
 adapters: [claude, cursor, fable]
 ---
@@ -133,7 +133,7 @@ Security — это не список фич, которые добавят в �
 
 ## Формат вывода в документе
 
-Создавать в `03_Dev/Security_Design.md`:
+Создавать в `docs/03_Dev/Security_Design.md`:
 
 ```markdown
 # Security Design: ProjectName

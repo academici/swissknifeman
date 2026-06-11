@@ -8,7 +8,7 @@ persona: architect
 tags: [api, architecture]
 requires: [data-schema]
 produces_for: []
-outputs: ["03_Dev/API_Endpoints.md"]
+outputs: ["docs/03_Dev/API_Endpoints.md"]
 sha256: ""
 adapters: [claude, cursor, fable]
 ---
@@ -123,7 +123,7 @@ API = контракт. Контракт сложно изменить посл�
 
 ## Формат в документе
 
-Размещать в `03_Dev/API_Endpoints.md`
+Размещать в `docs/03_Dev/API_Endpoints.md`
 
 Структура файла:
 ```markdown

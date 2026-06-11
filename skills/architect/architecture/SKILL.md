@@ -8,7 +8,7 @@ persona: architect
 tags: [architecture]
 requires: [brd]
 produces_for: [data-schema, api-design, security-design, agent-design, observability-design, legal-compliance]
-outputs: ["03_Dev/Architecture_[Name].md"]
+outputs: ["docs/03_Dev/Architecture_[Name].md"]
 sha256: ""
 adapters: [claude, cursor, fable]
 ---
@@ -40,7 +40,7 @@ adapters: [claude, cursor, fable]
    - Какие риски принимаем осознанно
 4. Компонентная схема (Mermaid)
 5. Интеграции и внешние зависимости
-6. ADR-записи для нетривиальных решений → `03_Dev/ADR/`
+6. ADR-записи для нетривиальных решений → `docs/03_Dev/ADR/`
 ```
 
 ---
@@ -56,7 +56,7 @@ adapters: [claude, cursor, fable]
 
 ## ADR (Architecture Decision Record)
 
-Создавать ADR в `03_Dev/ADR/ADR-NNN_название.md` когда:
+Создавать ADR в `docs/03_Dev/ADR/ADR-NNN_название.md` когда:
 - Решение нетривиально и может быть оспорено
 - Есть реальные альтернативы с похожими trade-off
 - Решение влияет на несколько компонентов
@@ -81,7 +81,7 @@ adapters: [claude, cursor, fable]
 
 ## Полный шаблон архитектурного документа
 
-Создавать в `03_Dev/Architecture_[Name].md`:
+Создавать в `docs/03_Dev/Architecture_[Name].md`:
 
 ```markdown
 # Architecture: [ProjectName] — [компонент/контекст]
@@ -126,14 +126,14 @@ adapters: [claude, cursor, fable]
 - [ ] Async для долгих операций? (queue / background jobs)
 
 ## 8. ADR
-[Ссылки на записи в 03_Dev/ADR/]
+[Ссылки на записи в docs/03_Dev/ADR/]
 ```
 
 ---
 
 ## Security Gate
 
-**Если продукт работает с пользовательскими данными, финансами или сторонними интеграциями** → читать `.ai/skills/architect/security-design.md` параллельно с этим скиллом. Результат — `03_Dev/Security_Design.md`.
+**Если продукт работает с пользовательскими данными, финансами или сторонними интеграциями** → читать `.ai/skills/architect/security-design.md` параллельно с этим скиллом. Результат — `docs/03_Dev/Security_Design.md`.
 
 ---
 

@@ -8,7 +8,7 @@ persona: founder
 tags: [discovery]
 requires: []
 produces_for: [monetization-design, new-project]
-outputs: ["01_Business/00_Idea_Discovery.md"]
+outputs: ["docs/01_Business/00_Idea_Discovery.md"]
 sha256: ""
 adapters: [claude, cursor, fable]
 ---
@@ -23,7 +23,7 @@ adapters: [claude, cursor, fable]
 
 ## Когда НЕ применять
 
-- Идея уже описана в `01_Business/01_Concept_and_Monetization.md` или BRD — пропустить, идти на `competitive-analysis`.
+- Идея уже описана в `docs/01_Business/01_Concept_and_Monetization.md` или BRD — пропустить, идти на `competitive-analysis`.
 - Пользователь просит конкретный документ (BRD, GTM, риски) — это не discovery, грузить целевой скилл.
 - Технический вопрос про существующий проект — Founder-режим не активируется.
 
@@ -84,7 +84,7 @@ adapters: [claude, cursor, fable]
 
 ## Структура output-файла
 
-`01_Business/00_Idea_Discovery.md`:
+`docs/01_Business/00_Idea_Discovery.md`:
 
 ```markdown
 ---

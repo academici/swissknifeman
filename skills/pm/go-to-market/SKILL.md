@@ -8,7 +8,7 @@ persona: pm
 tags: [gtm, market]
 requires: [competitive-analysis]
 produces_for: [product-roadmap, pitch-deck]
-outputs: ["01_Business/06_Go_To_Market.md"]
+outputs: ["docs/01_Business/06_Go_To_Market.md"]
 sha256: ""
 adapters: [claude, cursor, fable]
 ---
@@ -101,7 +101,7 @@ Phase 3: Growth
 
 ## Формат в документе
 
-Размещать в `01_Business/06_Go_To_Market.md`
+Размещать в `docs/01_Business/06_Go_To_Market.md`
 
 ---
 

@@ -8,7 +8,7 @@ persona: founder
 tags: [discovery, requirements]
 requires: [competitive-analysis, risk-assessment]
 produces_for: []
-outputs: [ProjectName.md, "01_Business/01_Concept_and_Monetization.md", "01_Business/02_Competitive_Analysis.md", "01_Business/Risk_Register.md", "Открытые вопросы.md"]
+outputs: [ProjectName.md, "docs/01_Business/01_Concept_and_Monetization.md", "docs/01_Business/02_Competitive_Analysis.md", "docs/01_Business/Risk_Register.md", "Открытые вопросы.md"]
 sha256: ""
 adapters: [claude, cursor, fable]
 ---
@@ -56,18 +56,18 @@ adapters: [claude, cursor, fable]
 
 | Этап | Файл | Скилл | Запрещено |
 |:---|:---|:---|:---|
-| 1 | `01_Business/01_Concept_and_Monetization.md` | — | Технические детали |
-| 2 | `01_Business/02_Competitive_Analysis.md` | `competitive-analysis.md` | — |
-| 3 | `01_Business/Risk_Register.md` | `risk-assessment.md` | — |
-| 4 | `01_Business/04_Unit_Economics.md` | `unit-economics.md` | SQL, классы |
+| 1 | `docs/01_Business/01_Concept_and_Monetization.md` | — | Технические детали |
+| 2 | `docs/01_Business/02_Competitive_Analysis.md` | `competitive-analysis.md` | — |
+| 3 | `docs/01_Business/Risk_Register.md` | `risk-assessment.md` | — |
+| 4 | `docs/01_Business/04_Unit_Economics.md` | `unit-economics.md` | SQL, классы |
 | 5 | `Открытые вопросы.md` — только блокирующее | — | Отвечать за пользователя |
-| 6 | `02_Workflow/` — FSM-процессы | `business-process.md` | Архитектурные решения |
-| 7 | `01_Business/06_Go_To_Market.md` | `go-to-market.md` | — |
-| 8 | `01_Business/07_Product_Roadmap.md` | `product-roadmap.md` | — |
-| 9 | `03_Dev/BRD.md` | `brd.md` | Классы, схемы БД, код |
-| 10 | `03_Dev/Architecture*.md` | `architecture.md` | — |
-| 11 | `03_Dev/Database_Schema.md` | `data-schema.md` | SQL |
-| 12 | `03_Dev/API_Endpoints.md` | `api-design.md` | — |
+| 6 | `docs/02_Workflow/` — FSM-процессы | `business-process.md` | Архитектурные решения |
+| 7 | `docs/01_Business/06_Go_To_Market.md` | `go-to-market.md` | — |
+| 8 | `docs/01_Business/07_Product_Roadmap.md` | `product-roadmap.md` | — |
+| 9 | `docs/03_Dev/BRD.md` | `brd.md` | Классы, схемы БД, код |
+| 10 | `docs/03_Dev/Architecture*.md` | `architecture.md` | — |
+| 11 | `docs/03_Dev/Database_Schema.md` | `data-schema.md` | SQL |
+| 12 | `docs/03_Dev/API_Endpoints.md` | `api-design.md` | — |
 
 ## Шаг 4. Межпроектные синергии
 

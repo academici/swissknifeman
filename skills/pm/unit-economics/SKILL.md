@@ -8,7 +8,7 @@ persona: pm
 tags: [monetization]
 requires: []
 produces_for: [pitch-deck]
-outputs: ["01_Business/04_Unit_Economics.md"]
+outputs: ["docs/01_Business/04_Unit_Economics.md"]
 sha256: ""
 adapters: [claude, cursor, fable]
 ---
@@ -84,7 +84,7 @@ Break-even = Fixed costs / (Unit price - Variable cost per unit)
 
 ## Формат в документе
 
-Размещать в `01_Business/04_Unit_Economics.md`
+Размещать в `docs/01_Business/04_Unit_Economics.md`
 
 Структура:
 ```markdown

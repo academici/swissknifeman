@@ -8,7 +8,7 @@ persona: quality
 tags: [quality, validation]
 requires: []
 produces_for: []
-outputs: ["03_Dev/Code_Review_Guide.md"]
+outputs: ["docs/03_Dev/Code_Review_Guide.md"]
 sha256: ""
 adapters: [claude, cursor, fable]
 ---

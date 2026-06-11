@@ -8,7 +8,7 @@ persona: architect
 tags: [agentic, architecture]
 requires: [architecture]
 produces_for: [eval-design]
-outputs: ["03_Dev/Agent_Design.md"]
+outputs: ["docs/03_Dev/Agent_Design.md"]
 sha256: ""
 adapters: [claude, cursor, fable]
 ---
@@ -139,7 +139,7 @@ draft_action() → preview → user_confirm() → commit_action()
 
 ## Формат agentного раздела в Architecture doc
 
-Добавить секцию `## Agent Design` в `03_Dev/Architecture_[Name].md`:
+Добавить секцию `## Agent Design` в `docs/03_Dev/Architecture_[Name].md`:
 
 ```markdown
 ## Agent Design

@@ -8,7 +8,7 @@ persona: founder
 tags: [gtm, market]
 requires: [competitive-analysis, unit-economics, go-to-market]
 produces_for: []
-outputs: ["01_Business/08_Pitch_Deck.md"]
+outputs: ["docs/01_Business/08_Pitch_Deck.md"]
 sha256: ""
 adapters: [claude, cursor, fable]
 ---
@@ -81,7 +81,7 @@ adapters: [claude, cursor, fable]
 
 ## Структура output-файла
 
-`01_Business/08_Pitch_Deck.md`:
+`docs/01_Business/08_Pitch_Deck.md`:
 
 ```markdown
 ---

@@ -8,7 +8,7 @@ persona: pm
 tags: [requirements]
 requires: [brd]
 produces_for: [architecture, product-roadmap, api-design]
-outputs: ["03_Dev/PRD.md"]
+outputs: ["docs/03_Dev/PRD.md"]
 sha256: ""
 adapters: [claude, cursor, fable]
 ---
@@ -130,15 +130,15 @@ Then [ожидаемый результат].
 
 ## Структура output-файла
 
-`03_Dev/PRD.md`:
+`docs/03_Dev/PRD.md`:
 
 ```markdown
 ---
 project: [ProjectName]
 stage: prd
 version: v1
-based_on_brd: 03_Dev/BRD.md
-requires_input_from: [03_Dev/BRD.md]
+based_on_brd: docs/03_Dev/BRD.md
+requires_input_from: [docs/03_Dev/BRD.md]
 produces_input_for: [Architecture, Product_Roadmap, API_Endpoints]
 created: YYYY-MM-DD
 ---

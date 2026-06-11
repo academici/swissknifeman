@@ -8,7 +8,7 @@ persona: operator
 tags: [ops, observability]
 requires: []
 produces_for: []
-outputs: ["03_Dev/Capacity_Plan.md"]
+outputs: ["docs/03_Dev/Capacity_Plan.md"]
 sha256: ""
 adapters: [claude, cursor, fable]
 ---

@@ -8,7 +8,7 @@ persona: quality
 tags: [quality, validation]
 requires: []
 produces_for: [refactoring-plan]
-outputs: ["03_Dev/Tech_Debt_Register.md"]
+outputs: ["docs/03_Dev/Tech_Debt_Register.md"]
 sha256: ""
 adapters: [claude, cursor, fable]
 ---

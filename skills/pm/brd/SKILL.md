@@ -8,14 +8,14 @@ persona: pm
 tags: [requirements]
 requires: [business-process]
 produces_for: [architecture, data-schema, product-roadmap, requirement-critic, prd-from-brd, tech-stack-selection]
-outputs: ["03_Dev/BRD.md"]
+outputs: ["docs/03_Dev/BRD.md"]
 sha256: ""
 adapters: [claude, cursor, fable]
 ---
 
 # Skill: BRD Writing
 
-Применять когда: задача на написание или обновление BRD (`03_Dev/BRD.md`).
+Применять когда: задача на написание или обновление BRD (`docs/03_Dev/BRD.md`).
 
 ---
 
@@ -29,7 +29,7 @@ BRD = **ЧТО** система делает. Не КАК.
 
 ## Обязательные вопросы ПЕРЕД написанием
 
-Задать пользователю (только если ещё не известно из `02_Workflow/`):
+Задать пользователю (только если ещё не известно из `docs/02_Workflow/`):
 - Ключевые сценарии: кто, что, когда делает
 - Исключения и граничные случаи
 - Интеграции с внешними системами

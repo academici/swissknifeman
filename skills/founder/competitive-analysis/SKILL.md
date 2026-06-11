@@ -8,7 +8,7 @@ persona: founder
 tags: [discovery, market]
 requires: []
 produces_for: [go-to-market, new-project, pitch-deck]
-outputs: ["01_Business/02_Competitive_Analysis.md"]
+outputs: ["docs/01_Business/02_Competitive_Analysis.md"]
 sha256: ""
 adapters: [claude, cursor, fable]
 ---
@@ -71,7 +71,7 @@ adapters: [claude, cursor, fable]
 
 ## Формат в документе
 
-Размещать в `01_Business/02_Competitive_Analysis.md` или `01_Business/03_Competitive_Analysis.md` в зависимости от нумерации проекта.
+Размещать в `docs/01_Business/02_Competitive_Analysis.md` или `docs/01_Business/03_Competitive_Analysis.md` в зависимости от нумерации проекта.
 
 Обязательно добавить таблицу позиционирования в конце:
 ```

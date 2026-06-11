@@ -8,7 +8,7 @@ persona: operator
 tags: [incident, ops]
 requires: []
 produces_for: [postmortem]
-outputs: ["03_Dev/Incident_Response.md"]
+outputs: ["docs/03_Dev/Incident_Response.md"]
 sha256: ""
 adapters: [claude, cursor, fable]
 ---

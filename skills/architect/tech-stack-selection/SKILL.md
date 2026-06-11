@@ -8,7 +8,7 @@ persona: architect
 tags: [stack-choice, architecture]
 requires: [brd]
 produces_for: [architecture, oss-development, release-engineering]
-outputs: ["03_Dev/Tech_Stack_Selection.md", "03_Dev/ADR/ADR-001_tech_stack.md"]
+outputs: ["docs/03_Dev/Tech_Stack_Selection.md", "docs/03_Dev/ADR/ADR-001_tech_stack.md"]
 sha256: ""
 adapters: [claude, cursor, fable]
 ---
@@ -89,7 +89,7 @@ adapters: [claude, cursor, fable]
 - **Триггеры пересмотра** — конкретные метрики (например, «при > 10k RPS пересмотреть кэш-стратегию»).
 
 ### Шаг 5. ADR-001 — фиксация решения
-Создать `03_Dev/ADR/ADR-001_tech_stack.md` сразу. Не «когда-нибудь потом». Это первая ADR проекта.
+Создать `docs/03_Dev/ADR/ADR-001_tech_stack.md` сразу. Не «когда-нибудь потом». Это первая ADR проекта.
 
 ---
 
@@ -105,13 +105,13 @@ adapters: [claude, cursor, fable]
 
 ## Структура output-файлов
 
-### `03_Dev/Tech_Stack_Selection.md`
+### `docs/03_Dev/Tech_Stack_Selection.md`
 
 ```markdown
 ---
 project: [ProjectName]
 stage: tech-stack-selection
-based_on_brd: 03_Dev/BRD.md
+based_on_brd: docs/03_Dev/BRD.md
 produces_input_for: [Architecture_[Name].md, ADR-001_tech_stack.md]
 ---
 
@@ -160,10 +160,10 @@ produces_input_for: [Architecture_[Name].md, ADR-001_tech_stack.md]
 - ...
 
 ## ADR
-→ `03_Dev/ADR/ADR-001_tech_stack.md`
+→ `docs/03_Dev/ADR/ADR-001_tech_stack.md`
 ```
 
-### `03_Dev/ADR/ADR-001_tech_stack.md`
+### `docs/03_Dev/ADR/ADR-001_tech_stack.md`
 
 ```markdown
 # ADR-001: Tech stack selection for [ProjectName]

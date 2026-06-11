@@ -8,7 +8,7 @@ persona: pm
 tags: [requirements, gtm]
 requires: [brd]
 produces_for: []
-outputs: ["01_Business/07_Product_Roadmap.md"]
+outputs: ["docs/01_Business/07_Product_Roadmap.md"]
 sha256: ""
 adapters: [claude, cursor, fable]
 ---
@@ -99,7 +99,7 @@ MVP = минимум, при котором пользователь получ�
 
 ## Формат в документе
 
-Размещать в `01_Business/07_Product_Roadmap.md`
+Размещать в `docs/01_Business/07_Product_Roadmap.md`
 
 ---
 

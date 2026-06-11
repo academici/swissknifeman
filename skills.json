@@ -52,7 +52,7 @@
       "path": "skills/architect/agent-design/SKILL.md",
       "version": "0.1.0",
       "description": "Проектирование агентов, agentic loop, tool contracts, harness, permission gates",
-      "sha256": "d40091d738ba0d7383c6834753ba2a02408d30b4c8e8b184c538aa005dbd7c1d",
+      "sha256": "180932a8396dcbff9244963933d77ec6831c5595b7b0d6c6cc48c84d78cbbdb1",
       "source": "local"
     },
     {
@@ -61,7 +61,7 @@
       "path": "skills/architect/api-design/SKILL.md",
       "version": "0.1.0",
       "description": "Проектирование REST/GraphQL API, эндпоинтов, контрактов, версионирования, аутентификации",
-      "sha256": "93135ecb56139419bb7d49e5e1b85f4ce5e1bb6f5ff8a8541ea53aa740d0b8e8",
+      "sha256": "1bf33c601d7dc76cf927473198c5dfed0dff149c134d19ccbc6e52c05d1a5d81",
       "source": "local"
     },
     {
@@ -70,7 +70,7 @@
       "path": "skills/architect/architecture/SKILL.md",
       "version": "0.1.0",
       "description": "Архитектура системы, выбор стека, ADR, C4-диаграммы, deployment, scalability",
-      "sha256": "3c97061d3379ec85fbe0480a10dff99a856ab5e1b8a1a52f932b8814e47a221b",
+      "sha256": "63bb745f4482296107808651ae0dc1fcce89a7ae4bd8b2dea3f4ef10018ecfc2",
       "source": "local"
     },
     {
@@ -79,7 +79,7 @@
       "path": "skills/architect/data-schema/SKILL.md",
       "version": "0.1.0",
       "description": "Схема данных, сущности, атрибуты, связи. Агностично к СУБД — только markdown-таблицы",
-      "sha256": "8c4e00ec4e326bddadd6ab2c4c2ebeb41aea41ade4a935f37626d90551bfacc5",
+      "sha256": "87f9312f573b42fe47336ff58293c5b8f03e5c30f209cb280ce8998c18559c2c",
       "source": "local"
     },
     {
@@ -88,7 +88,7 @@
       "path": "skills/architect/eval-design/SKILL.md",
       "version": "0.1.0",
       "description": "Оценка качества LLM/AI-выводов — eval-set, метрики, regression-харнес, automated + human review",
-      "sha256": "0ca5db028feb4146163bd6d62f9c658d4c863f6660b41b027411e4de19ce53cf",
+      "sha256": "4afd6c90ac322b592899070ef14b6a95ec2cb844f8ccd24f1a0e201aef1f2d4d",
       "source": "local"
     },
     {
@@ -97,7 +97,7 @@
       "path": "skills/architect/legal-compliance/SKILL.md",
       "version": "0.1.0",
       "description": "GDPR, CCPA, AI Act, DMCA, COPPA, DSA — чеклист регуляторных требований до запуска",
-      "sha256": "7fe705d85283a691f03387d68e3eee0831423fabbc49f83770935128fcdaafa9",
+      "sha256": "225f207ee92faaa9238893968fa75d984dae3f0012f0b86cf746de6ae749b0c1",
       "source": "local"
     },
     {
@@ -106,7 +106,7 @@
       "path": "skills/architect/observability-design/SKILL.md",
       "version": "0.1.0",
       "description": "Logging, metrics, tracing, alerting. SLO/SLI, error budget, runbooks для прод-готовности",
-      "sha256": "ed165ca6d36f4e807df2c85105547586fd48bade648e5c0c75e71e9679e27e02",
+      "sha256": "f1bd59bad8e4eb7046c412912ebccb2826c9c8913e7220e644876b52116c78bf",
       "source": "local"
     },
     {
@@ -115,7 +115,7 @@
       "path": "skills/architect/security-design/SKILL.md",
       "version": "0.1.0",
       "description": "Классификация данных, auth-стратегия, RBAC/ABAC, OWASP Top 10, GDPR, STRIDE threat modeling",
-      "sha256": "68236e55ec0dd0537130012857ae83574f31675485bb5213618ac78ff7e528ed",
+      "sha256": "d457a52333f2a2a77762c267ab888b4d8559836da5961e9fe740de3a40f58b27",
       "source": "local"
     },
     {
@@ -124,7 +124,7 @@
       "path": "skills/architect/tech-stack-selection/SKILL.md",
       "version": "0.1.0",
       "description": "Выбор технологического стека с trade-off матрицей до архитектурного дизайна. ADR-первый шаг",
-      "sha256": "938a1531e9ce2224a71a637c2ee80b557b174b1bc28b4136dc8dbadb9a16c769",
+      "sha256": "80bef37346047bf96da07bd24cd741222f0adf8db9878f3b3118bc0b862bfdc0",
       "source": "local"
     },
     {
@@ -187,7 +187,7 @@
       "path": "skills/founder/competitive-analysis/SKILL.md",
       "version": "0.1.0",
       "description": "Анализ рынка, конкурентов, JTBD, незанятая ниша, вектор атаки. Использует Perplexity search_deep",
-      "sha256": "4fe1eb58d3af3aa8ad1b0498bdfe1578bfc604e7d2f3d7bc4f5631cc61a79363",
+      "sha256": "a7f500cebb99da7f56f2f2cf9eb8ec4eb17c92fe772b11334d8bef983bbe79fe",
       "source": "local"
     },
     {
@@ -196,7 +196,7 @@
       "path": "skills/founder/idea-discovery/SKILL.md",
       "version": "0.1.0",
       "description": "Структурированный опрос по сырой идее — JTBD, problem statement, hypothesis, перед competitive-analysis",
-      "sha256": "1a9f522bbb15ae3d6a5ae064a79865f70e67fb084363dc2d42c044fc3d23bdc9",
+      "sha256": "56358d585b35a090cefc15bd181acb8931de0eedcc36af662125e0e99df7566a",
       "source": "local"
     },
     {
@@ -205,7 +205,7 @@
       "path": "skills/founder/new-project/SKILL.md",
       "version": "0.1.0",
       "description": "Запуск нового стартап-проекта: концепция, конкуренты, риски, полная структура папок",
-      "sha256": "52b09441c052b75ee88074c2d27bc91f311c5ef3fcfff25fdfe33a45cd118394",
+      "sha256": "4915c03266fcaf6d8c2f661b62bb5c87c168fa895b2a076251f20fccbf7286a6",
       "source": "local"
     },
     {
@@ -214,7 +214,7 @@
       "path": "skills/founder/pitch-deck/SKILL.md",
       "version": "0.1.0",
       "description": "10-слайдовая инвесторская дека по канону YC/Sequoia на основе готовых артефактов проекта",
-      "sha256": "b2b9c3f5bfbd15ad667884b91087ed66a96d047d6e74fdcbdd0d9c0edb66825a",
+      "sha256": "89cb1400e8fff612c89bdb2189198f8aa43a5873b2fb523ce9938548239281c0",
       "source": "local"
     },
     {
@@ -223,7 +223,7 @@
       "path": "skills/founder/risk-assessment/SKILL.md",
       "version": "0.1.0",
       "description": "5 категорий рисков, Risk Matrix, RAID-лог, pre-mortem для критичных рисков",
-      "sha256": "011b9366ca096792f3681146ee87a46a20d5508cf77d218c9524366eb3d31c76",
+      "sha256": "0e36ebb3b7d18802bc27716b091defb8594fe93a12376c3aa42220d707a9fc28",
       "source": "local"
     },
     {
@@ -364,7 +364,7 @@
       "path": "skills/operator/capacity-planning/SKILL.md",
       "version": "0.1.0",
       "description": "Планирование capacity — load forecasting, headroom, autoscaling policy, cost budget, что мониторить, когда масштабироваться вверх/вниз",
-      "sha256": "45acf26423d5a3b3ab368a76b4b163820d7dae36b743a175388a49aaae1b25a6",
+      "sha256": "dd14065513941f2e583612a2201607c5c575ddb0bbb6798322e76b22f829d0ef",
       "source": "local"
     },
     {
@@ -373,7 +373,7 @@
       "path": "skills/operator/incident-response/SKILL.md",
       "version": "0.1.0",
       "description": "Процесс реагирования на инциденты в проде — severity-уровни, роли (IC/Comms/SME), коммуникация, action log, переход к postmortem",
-      "sha256": "3dbbd9e28ec90d6c2d8a612186ac8070c3acd9dee770426556d1dbb431d23e71",
+      "sha256": "d4e9327219fcec16c878ec0200429496f345e3612bf6662843aad51e87681b75",
       "source": "local"
     },
     {
@@ -382,7 +382,7 @@
       "path": "skills/operator/oncall-rotation/SKILL.md",
       "version": "0.1.0",
       "description": "Дизайн on-call ротации — расписание, primary/secondary, handoff, compensation, defusing burnout, paging policy",
-      "sha256": "33e268a3cabbae1fd247c60f16b42322df69a02116ef9d2eecddcdc56bcafa9d",
+      "sha256": "8394a56b3bf38fdde64012611cefe2436d5737a29503298f3fdc39b09dead152",
       "source": "local"
     },
     {
@@ -391,7 +391,7 @@
       "path": "skills/operator/postmortem/SKILL.md",
       "version": "0.1.0",
       "description": "Blameless postmortem после SEV-1/2 инцидента — таймлайн, root cause (5 Whys), contributing factors, action items, дистрибуция знаний",
-      "sha256": "1461315b75f2a4629d2ffce7ce3f0e596b32cee991d98b6b59cf69350af94f93",
+      "sha256": "baa62686f6d14c7c4a65cce0a814101ad43637c7f4d442625302fe972dccc964",
       "source": "local"
     },
     {
@@ -400,7 +400,7 @@
       "path": "skills/operator/runbook/SKILL.md",
       "version": "0.1.0",
       "description": "Шаблон operational runbook на каждый P1/P2-алерт — symptoms, диагностика, mitigation steps, escalation, post-actions",
-      "sha256": "3aed4ab5827301672544f449b6bc9b5b9d4421abb2b548dfe32572798c05bd1e",
+      "sha256": "ac1c525e221e86d47229c9021cf142c277cd8f0e260f2252602e13ca45932313",
       "source": "local"
     },
     {
@@ -517,7 +517,7 @@
       "path": "skills/pm/brd/SKILL.md",
       "version": "0.1.0",
       "description": "Business Requirements Document: функциональные требования, user stories, acceptance criteria",
-      "sha256": "9fc5d30019b4ee208aa4e3d0d0ca73110f71910e7397e2ead04c31a0d761e9ab",
+      "sha256": "c25223b7180bd6f27c4def56260390835cf369b2bc337a297d7a62dd4696b153",
       "source": "local"
     },
     {
@@ -526,7 +526,7 @@
       "path": "skills/pm/business-process/SKILL.md",
       "version": "0.1.0",
       "description": "Бизнес-процессы, workflow, FSM, sequence/state-диаграммы, обработка ошибок",
-      "sha256": "4eb316ec8e15f0a7d7a6f0556978f850fa77d191a7db1dfce112c551740cbf37",
+      "sha256": "e6bef655e39d523cb4852f38d8b5271ded54e60be0ab86c26df9586d363cd6fd",
       "source": "local"
     },
     {
@@ -535,7 +535,7 @@
       "path": "skills/pm/go-to-market/SKILL.md",
       "version": "0.1.0",
       "description": "GTM-стратегия, ICP, messaging framework, каналы привлечения, launch plan",
-      "sha256": "6cc449fbe5e994e658a695326c32dcc4ef51eeaa5213f1514ce9c1c95f5cd1ae",
+      "sha256": "65f51fb64173a8fd3b0816189bc3447577ff895793b7ea2c5678de65d87f1d8d",
       "source": "local"
     },
     {
@@ -544,7 +544,7 @@
       "path": "skills/pm/monetization-design/SKILL.md",
       "version": "0.1.0",
       "description": "Выбор бизнес-модели (SaaS / marketplace / ads / freemium / hybrid) с trade-off матрицей и обоснованием",
-      "sha256": "adb760ae8724ef5ecc1cdda1b98f2f9d7a4b36fadc45ab574b3cfa3a058d5328",
+      "sha256": "91d3972ed70be1a6399fa2f12f89354a2521a61e778a66e950e9267df4725c06",
       "source": "local"
     },
     {
@@ -553,7 +553,7 @@
       "path": "skills/pm/prd-from-brd/SKILL.md",
       "version": "0.1.0",
       "description": "Product Requirements Document — разворачивает BRD в детальные user stories с acceptance criteria и приоритизацией",
-      "sha256": "809047836d7dba2eda39f15886e03ff5348e822624f35167f29b78cb19e30cc5",
+      "sha256": "75743ae565e9b09b3502e62573e44578691852a3c08d8438b8a90bf3e5889203",
       "source": "local"
     },
     {
@@ -562,7 +562,7 @@
       "path": "skills/pm/product-roadmap/SKILL.md",
       "version": "0.1.0",
       "description": "MVP definition, Impact/Effort приоритизация, фазы MVP → v1 → v2 → Backlog, метрики перехода",
-      "sha256": "f80be4e9904f6bf3cd9cff9b7621f238537c291481ecdd868f2dea3006bcea99",
+      "sha256": "b4b748a4cd8711bc77f06588656fc8dfe2384fe1d7ad46f6ac287de17f06f399",
       "source": "local"
     },
     {
@@ -580,7 +580,7 @@
       "path": "skills/pm/unit-economics/SKILL.md",
       "version": "0.1.0",
       "description": "Unit economics: LTV, CAC, payback, churn, break-even, 3 сценария",
-      "sha256": "a4760f39e9fd3adebbe96c87eac06e9dce0f35ec7e598da606592d729ae8f26f",
+      "sha256": "dd0b6a7a8efe25c5ef592a7f0c2f4c075032c82c7a584b592fc9c566005c1c96",
       "source": "local"
     },
     {
@@ -589,7 +589,7 @@
       "path": "skills/quality/code-review/SKILL.md",
       "version": "0.1.0",
       "description": "Процесс и чек-лист code review: что обязательно проверять, severity градация комментариев, async vs sync review, шаблон PR-комментариев",
-      "sha256": "a64e149484950e9f613a983bcd0593b623cfdf85ddc1a45394c890222c659171",
+      "sha256": "d11a50d9ec1260fedfed8c419ceaa78cfa8f42b10aacca8ed89746a772c9ba20",
       "source": "local"
     },
     {
@@ -598,7 +598,7 @@
       "path": "skills/quality/refactoring-plan/SKILL.md",
       "version": "0.1.0",
       "description": "План безопасного рефакторинга: scope, Mikado / strangler pattern, atomic шаги, критерии готовности, rollback",
-      "sha256": "ae657402d1b33240f555791b64536779331aef3069dbbf4784c523417651d193",
+      "sha256": "2fb49bbc5a4dc5832ed33859755fa9498f36f892321ad95fb51ed659dc8ca9d8",
       "source": "local"
     },
     {
@@ -607,7 +607,7 @@
       "path": "skills/quality/tech-debt-audit/SKILL.md",
       "version": "0.1.0",
       "description": "Инвентаризация техдолга, классификация (architectural/code/dependency/test/process), приоритизация по impact × effort, расчёт payback ROI",
-      "sha256": "5761cd5627257872c5072b33cbaa93ecf89da8390f75d29813eab37b94b75ce2",
+      "sha256": "bb2ac062b545b615450876127705a99d297594d9af6b99d589055493bd312121",
       "source": "local"
     },
     {
@@ -616,7 +616,7 @@
       "path": "skills/quality/test-strategy/SKILL.md",
       "version": "0.1.0",
       "description": "Стратегия тестирования: пирамида (unit/integration/e2e), coverage policy, mock vs real, какие фичи требуют какой уровень тестов",
-      "sha256": "cc06bea754667ca209d265d4de4d45d4c95ae04142d1fe56345c7947531336db",
+      "sha256": "42d89dde501a28f859eee7946e731e4fec74e964903b834994a7ccd0d50bf764",
       "source": "local"
     },
     {

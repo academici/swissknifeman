@@ -8,7 +8,7 @@ persona: architect
 tags: [compliance]
 requires: [architecture]
 produces_for: [security-design]
-outputs: ["03_Dev/Legal_Compliance.md", "01_Business/Privacy_Policy_Draft.md", "01_Business/Terms_of_Service_Draft.md"]
+outputs: ["docs/03_Dev/Legal_Compliance.md", "docs/01_Business/Privacy_Policy_Draft.md", "docs/01_Business/Terms_of_Service_Draft.md"]
 sha256: ""
 adapters: [claude, cursor, fable]
 ---
@@ -101,7 +101,7 @@ adapters: [claude, cursor, fable]
 | **Limited risk** | Chatbots, deepfakes | Transparency: «вы общаетесь с AI» | Edufy tutor, Memster (caption generator), GetChat |
 | **Minimal risk** | Spam-фильтры, рекомендации | Voluntary codes of conduct | большинство фич |
 
-Для high-risk: отдельный документ `03_Dev/AI_Act_Conformity.md` (не покрывается этим скиллом, отдельный сценарий с юристом).
+Для high-risk: отдельный документ `docs/03_Dev/AI_Act_Conformity.md` (не покрывается этим скиллом, отдельный сценарий с юристом).
 
 ---
 
@@ -143,13 +143,13 @@ adapters: [claude, cursor, fable]
 
 ## Структура output-файлов
 
-### `03_Dev/Legal_Compliance.md`
+### `docs/03_Dev/Legal_Compliance.md`
 
 ```markdown
 ---
 project: [ProjectName]
 stage: legal-compliance
-based_on: 03_Dev/Architecture_[Name].md
+based_on: docs/03_Dev/Architecture_[Name].md
 overall_risk: low | medium | high | critical
 requires_lawyer_review: true
 ---
@@ -211,10 +211,10 @@ requires_lawyer_review: true
 4. AI Act conformity assessment для high-risk компонентов
 ```
 
-### `01_Business/Privacy_Policy_Draft.md`
+### `docs/01_Business/Privacy_Policy_Draft.md`
 Стандартный шаблон GDPR-compliant Privacy Policy с placeholder'ами для контактов и юрисдикции. **Помечен как DRAFT** — без юриста не публиковать.
 
-### `01_Business/Terms_of_Service_Draft.md`
+### `docs/01_Business/Terms_of_Service_Draft.md`
 Базовый ToS draft. Аналогично — DRAFT до юриста.
 
 ---

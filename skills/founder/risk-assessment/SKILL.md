@@ -8,7 +8,7 @@ persona: founder
 tags: [validation]
 requires: []
 produces_for: [new-project]
-outputs: [chat, "01_Business/Risk_Register.md"]
+outputs: [chat, "docs/01_Business/Risk_Register.md"]
 sha256: ""
 adapters: [claude, cursor, fable]
 ---
@@ -89,8 +89,8 @@ adapters: [claude, cursor, fable]
 ## Формат в документе
 
 Размещать в:
-- `01_Business/Risk_Register.md` — для стартапов
-- `03_Dev/Risk_Register.md` — для технических рисков конкретного проекта
+- `docs/01_Business/Risk_Register.md` — для стартапов
+- `docs/03_Dev/Risk_Register.md` — для технических рисков конкретного проекта
 
 Структура файла:
 

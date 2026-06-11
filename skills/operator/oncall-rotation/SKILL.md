@@ -8,7 +8,7 @@ persona: operator
 tags: [ops, incident]
 requires: []
 produces_for: [incident-response]
-outputs: ["03_Dev/OnCall_Rotation.md"]
+outputs: ["docs/03_Dev/OnCall_Rotation.md"]
 sha256: ""
 adapters: [claude, cursor, fable]
 ---

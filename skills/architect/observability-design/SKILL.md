@@ -8,7 +8,7 @@ persona: architect
 tags: [observability]
 requires: [architecture]
 produces_for: []
-outputs: ["03_Dev/Observability_Design.md"]
+outputs: ["docs/03_Dev/Observability_Design.md"]
 sha256: ""
 adapters: [claude, cursor, fable]
 ---
@@ -108,7 +108,7 @@ Observability не бесплатна. На pre-seed нельзя ставить
 
 ## Runbooks (operational playbook)
 
-Для каждого P1-алерта — runbook `03_Dev/Runbooks/<alert_name>.md`:
+Для каждого P1-алерта — runbook `docs/03_Dev/Runbooks/<alert_name>.md`:
 
 ```
 1. Симптом (что видим)
@@ -134,13 +134,13 @@ Observability не бесплатна. На pre-seed нельзя ставить
 
 ## Структура output-файла
 
-`03_Dev/Observability_Design.md`:
+`docs/03_Dev/Observability_Design.md`:
 
 ```markdown
 ---
 project: [ProjectName]
 stage: observability-design
-based_on: 03_Dev/Architecture_[Name].md
+based_on: docs/03_Dev/Architecture_[Name].md
 tier: 0 | 1 | 2
 ---
 
@@ -179,7 +179,7 @@ tier: 0 | 1 | 2
 ## Alerts
 | Имя | Severity | Условие | Runbook |
 |:---|:---|:---|:---|
-| ... | P1 | ... | `03_Dev/Runbooks/...md` |
+| ... | P1 | ... | `docs/03_Dev/Runbooks/...md` |
 
 ## SLO / SLI
 | Сервис | SLI | Target | Error budget |
@@ -189,7 +189,7 @@ tier: 0 | 1 | 2
 - ...
 
 ## Runbooks
-[список созданных файлов в 03_Dev/Runbooks/]
+[список созданных файлов в docs/03_Dev/Runbooks/]
 
 ## Domain-specific дополнения (агент)
 - ...

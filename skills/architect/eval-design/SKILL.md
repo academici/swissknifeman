@@ -8,7 +8,7 @@ persona: architect
 tags: [agentic, validation]
 requires: [agent-design]
 produces_for: []
-outputs: ["03_Dev/Eval_Design.md", "03_Dev/Evals/eval_set_v1.jsonl"]
+outputs: ["docs/03_Dev/Eval_Design.md", "docs/03_Dev/Evals/eval_set_v1.jsonl"]
 sha256: ""
 adapters: [claude, cursor, fable]
 ---
@@ -84,7 +84,7 @@ adapters: [claude, cursor, fable]
 
 ## Eval set — структура
 
-Формат хранения: JSONL в `03_Dev/Evals/eval_set_v1.jsonl`
+Формат хранения: JSONL в `docs/03_Dev/Evals/eval_set_v1.jsonl`
 
 ```json
 {"id": "ev-001", "category": "happy-path", "input": "...", "reference": "...", "metrics": ["embedding_sim", "llm_judge"]}
@@ -146,13 +146,13 @@ Mitigation:
 
 ## Структура output-файлов
 
-### `03_Dev/Eval_Design.md`
+### `docs/03_Dev/Eval_Design.md`
 
 ```markdown
 ---
 project: [ProjectName]
 stage: eval-design
-based_on: 03_Dev/Agent_Design.md
+based_on: docs/03_Dev/Agent_Design.md
 ---
 
 # Eval Design — [ProjectName]
@@ -173,7 +173,7 @@ based_on: 03_Dev/Agent_Design.md
 |:---|:---|:---|
 
 ## Eval set v1
-- Файл: `03_Dev/Evals/eval_set_v1.jsonl`
+- Файл: `docs/03_Dev/Evals/eval_set_v1.jsonl`
 - Покрытие: [happy/edge/adversarial/domain %]
 - Размер: [N примеров]
 
@@ -199,7 +199,7 @@ based_on: 03_Dev/Agent_Design.md
 - Reproducibility: temperature=0, model pin: ...
 ```
 
-### `03_Dev/Evals/eval_set_v1.jsonl`
+### `docs/03_Dev/Evals/eval_set_v1.jsonl`
 Стартовый eval-set, минимум 50 примеров на launch.
 
 ---

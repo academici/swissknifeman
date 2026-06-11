@@ -8,7 +8,7 @@ persona: operator
 tags: [incident, ops]
 requires: [incident-response]
 produces_for: []
-outputs: ["03_Dev/Postmortems/[YYYY-MM-DD]_[ShortName].md"]
+outputs: ["docs/03_Dev/Postmortems/[YYYY-MM-DD]_[ShortName].md"]
 sha256: ""
 adapters: [claude, cursor, fable]
 ---
@@ -177,7 +177,7 @@ adapters: [claude, cursor, fable]
 См. Шаг 2 (полная структура). Папка:
 
 ```
-03_Dev/Postmortems/
+docs/03_Dev/Postmortems/
 ├── 2025-03-14_checkout-5xx.md
 ├── 2025-04-02_payment-webhook-down.md
 └── _index.md  ← перечень + статус action items

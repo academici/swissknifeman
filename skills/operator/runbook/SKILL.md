@@ -8,7 +8,7 @@ persona: operator
 tags: [ops, incident]
 requires: []
 produces_for: [incident-response]
-outputs: ["03_Dev/Runbooks/[AlertName].md"]
+outputs: ["docs/03_Dev/Runbooks/[AlertName].md"]
 sha256: ""
 adapters: [claude, cursor, fable]
 ---
@@ -32,7 +32,7 @@ adapters: [claude, cursor, fable]
 
 ## Шаг 1. Один алерт = один runbook
 
-**Не валим всё в один документ.** На каждый алерт — отдельный файл `03_Dev/Runbooks/<alert_name>.md`. Имя файла = имя алерта в системе (Prometheus rule name, Datadog monitor name, etc.). Это критично для on-call: алерт пришёл → ссылка на runbook прямо из page'а → один клик.
+**Не валим всё в один документ.** На каждый алерт — отдельный файл `docs/03_Dev/Runbooks/<alert_name>.md`. Имя файла = имя алерта в системе (Prometheus rule name, Datadog monitor name, etc.). Это критично для on-call: алерт пришёл → ссылка на runbook прямо из page'а → один клик.
 
 **Anti-pattern:** «общий runbook» с разделами на 30 алертов. Никто не будет в 3 ночи листать оглавление.
 
@@ -137,7 +137,7 @@ Runbook **протухает быстрее всего** в репозитори
 - alert: HighErrorRate
   annotations:
     summary: "5xx rate > 5%"
-    runbook_url: "https://github.com/org/repo/blob/main/03_Dev/Runbooks/HighErrorRate.md"
+    runbook_url: "https://github.com/org/repo/blob/main/docs/03_Dev/Runbooks/HighErrorRate.md"
 ```
 
 Без `runbook_url` алерт не должен пэйджить — это policy. CI проверка опционально (linter поверх Prometheus rules).
@@ -148,7 +148,7 @@ Runbook **протухает быстрее всего** в репозитори
 
 - Шаблон runbook (готовый markdown, скопировать-заменить)
 - Связка с `incident-response`: указать в Runbook'е какие severity/IC роли применимы
-- Подсказка по структуре каталога: `03_Dev/Runbooks/<AlertName>.md` (одно имя файла = одно имя алерта)
+- Подсказка по структуре каталога: `docs/03_Dev/Runbooks/<AlertName>.md` (одно имя файла = одно имя алерта)
 - Чек-лист «runbook ready»: есть symptoms / diagnostic ≥ 3 шагов / mitigation ≥ 2 опций / verification конкретный
 - Предупреждение про PII в runbook'ах: не вставлять реальные пользовательские данные в примеры — только маски
 
@@ -159,7 +159,7 @@ Runbook **протухает быстрее всего** в репозитори
 См. Шаг 2 — это и есть структура файла. Файл назван по имени алерта:
 
 ```
-03_Dev/Runbooks/
+docs/03_Dev/Runbooks/
 ├── HighErrorRate.md
 ├── DatabaseConnectionsExhausted.md
 ├── PaymentWebhookFailure.md

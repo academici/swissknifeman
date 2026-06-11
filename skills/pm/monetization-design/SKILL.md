@@ -8,7 +8,7 @@ persona: pm
 tags: [monetization]
 requires: [idea-discovery]
 produces_for: [unit-economics, go-to-market, brd]
-outputs: ["01_Business/03_Monetization_Model.md"]
+outputs: ["docs/01_Business/03_Monetization_Model.md"]
 sha256: ""
 adapters: [claude, cursor, fable]
 ---
@@ -23,7 +23,7 @@ adapters: [claude, cursor, fable]
 
 ## Когда НЕ применять
 
-- Модель уже зафиксирована в `01_Business/01_Concept_and_Monetization.md` — пропустить.
+- Модель уже зафиксирована в `docs/01_Business/01_Concept_and_Monetization.md` — пропустить.
 - Open-source проект без коммерции (BrainKit, AzGuard) — не применимо.
 - Пользователь уже знает модель и просит её обосновать — это `unit-economics` + `go-to-market`, не выбор.
 
@@ -92,7 +92,7 @@ adapters: [claude, cursor, fable]
 
 ## Структура output-файла
 
-`01_Business/03_Monetization_Model.md`:
+`docs/01_Business/03_Monetization_Model.md`:
 
 ```markdown
 ---

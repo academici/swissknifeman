@@ -249,6 +249,18 @@ else:
                     f".claude-plugin/marketplace.json: {p.get('name')}: "
                     f"description must be non-empty")
 
+# --- 7b. no skills nested inside a skill dir ---------------------------------
+# Claude Code discovers a dir with SKILL.md as a leaf skill; SKILL.md deeper
+# inside it is silently invisible to plugin discovery.
+for skill_md in skill_files:
+    d = skill_md.parent
+    nested = [p for p in d.rglob("SKILL.md") if p != skill_md]
+    for p in nested:
+        errors.append(
+            f"{p.relative_to(root)}: nested inside skill "
+            f"'{d.relative_to(root)}' — invisible to plugin discovery; "
+            f"flatten it (e.g. '{d.name}-{p.parent.name}' next to '{d.name}')")
+
 # --- 8. skill-name uniqueness ------------------------------------------------
 # Plugin namespace flattens per plugin: dup inside a bucket = error.
 # Across buckets namespacing keeps it legal, but vendoring modes collide: warn.

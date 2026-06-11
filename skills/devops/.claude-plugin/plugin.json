@@ -1,8 +1,5 @@
 {
   "name": "devops",
   "description": "Docker environments, CI/CD pipelines, GitOps",
-  "skills": [
-    "./",
-    "./docker"
-  ]
+  "skills": "./"
 }

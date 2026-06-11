@@ -214,7 +214,7 @@
     {
       "name": "docker-dev-prod",
       "bucket": "devops",
-      "path": "skills/devops/docker/dev-prod/SKILL.md",
+      "path": "skills/devops/docker-dev-prod/SKILL.md",
       "version": "0.2.0",
       "description": "docker-compose dev/prod stack для Laravel",
       "sha256": "128655c8b7ab9c6b7e103c315ee6c2d2e2d4c48d5f719ffabfd6d2af859b15d1",
@@ -223,7 +223,7 @@
     {
       "name": "docker-php",
       "bucket": "devops",
-      "path": "skills/devops/docker/php/SKILL.md",
+      "path": "skills/devops/docker-php/SKILL.md",
       "version": "0.2.0",
       "description": "Production-ready PHP-FPM Docker образ с opcache, healthcheck и non-root user",
       "sha256": "9d6f8e7511a66dbba269b8b4c1b95727fdb4b990220c67a2d1d9740edab55557",
@@ -232,7 +232,7 @@
     {
       "name": "docker-postgres",
       "bucket": "devops",
-      "path": "skills/devops/docker/postgres/SKILL.md",
+      "path": "skills/devops/docker-postgres/SKILL.md",
       "version": "0.2.0",
       "description": "PostgreSQL в Docker с init scripts",
       "sha256": "980de4d755ee05dd36e5e8ca4a21185ad285081dd5db8fe3f937a62b441a239a",
@@ -241,7 +241,7 @@
     {
       "name": "docker-vite",
       "bucket": "devops",
-      "path": "skills/devops/docker/vite/SKILL.md",
+      "path": "skills/devops/docker-vite/SKILL.md",
       "version": "0.2.0",
       "description": "Vite dev server в Docker для Laravel frontend",
       "sha256": "97923e9ef426f29bd4ab514decb27f1b532ad55edd8374164051dd7645c0b85a",

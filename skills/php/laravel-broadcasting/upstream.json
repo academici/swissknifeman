@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "source": "github",
+  "repo": "laravel/docs",
+  "strategy": "notify",
+  "license": "MIT",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "url": "https://raw.githubusercontent.com/laravel/docs/12.x/broadcasting.md",
+      "sha256": "366b4b3ea9050f84469e03eb2ef8c5275d943cd7a45fa8d6f278ff9049c21bdb",
+      "fetched_at": "2026-06-12"
+    }
+  ],
+  "notes": "SKILL.md distills Laravel Broadcasting docs (Echo/Reverb, channel auth, presence, pitfalls) for Laravel 12.x. strategy=notify: when laravel/docs broadcasting.md changes, review the skill against the new docs. Bump the branch in the url on new Laravel majors."
+}

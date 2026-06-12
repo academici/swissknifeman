@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "source": "github",
+  "repo": "spatie/guidelines.spatie.be",
+  "strategy": "notify",
+  "license": "MIT",
+  "files": [
+    {
+      "path": "references/spatie-laravel-php-guidelines.md",
+      "url": "https://raw.githubusercontent.com/spatie/guidelines.spatie.be/master/content/code-style/laravel-php.md",
+      "sha256": "a42cd5fe29790c6079b9e72f22f87918e34d67d0ec4d8753ab45cb5a626760ef",
+      "fetched_at": "2026-06-12"
+    }
+  ],
+  "notes": "references/spatie-laravel-php-guidelines.md is derived from the Spatie Laravel & PHP style guide (guidelines.spatie.be). SKILL.md is our RU summary with a final_class conflict note. strategy=notify: merge upstream guideline changes manually."
+}

@@ -209,7 +209,9 @@
       "version": "0.1.0",
       "description": "Advanced Docker containerization expertise: container optimization, security hardening, multi-stage builds, orchestration patterns, and production deployment strategies",
       "sha256": "e0d1a1b4a90c5e7b9f379d7c51d93ef432dd4142ce6646e590cb35091fea9184",
-      "source": "local"
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/sickn33/antigravity-awesome-skills/main/skills/docker-expert/SKILL.md",
+      "fetched_at": "2026-06-12"
     },
     {
       "name": "docker-dev-prod",
@@ -344,7 +346,9 @@
       "version": "0.1.0",
       "description": "Стиль JS/TS по Spatie: 4 пробела, ширина 120, одинарные кавычки, const-first, строгое ===, function для именованных функций, деструктуризация, именованные импорты.",
       "sha256": "f4b3ac6c1106000e4412a3c9c71c66f0a513eae983f150084456c669f6aa5192",
-      "source": "local"
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/spatie/guidelines.spatie.be/master/content/code-style/javascript.md",
+      "fetched_at": "2026-06-12"
     },
     {
       "name": "vite-module-loader",
@@ -737,7 +741,9 @@
       "version": "0.1.0",
       "description": "Стиль кода Laravel/PHP по гайдлайнам Spatie: Laravel-конвенции прежде PSR-12, типизация вместо докблоков, early returns, happy path последним",
       "sha256": "fd9b2b535c3f84e15d5b0739bf9c87ba6526ad104caf1012063dcfa251189f7a",
-      "source": "local"
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/spatie/guidelines.spatie.be/master/content/code-style/laravel-php.md",
+      "fetched_at": "2026-06-12"
     },
     {
       "name": "database",
@@ -802,7 +808,9 @@
       "version": "0.1.0",
       "description": "Laravel Echo + Reverb/Pusher/Ably: broadcast-события, авторизация каналов, presence/whisper, model broadcasting",
       "sha256": "076965c385d32933a47e32bc668fb636629450ea79078095528dfb2e17c8af7f",
-      "source": "local"
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/laravel/docs/12.x/broadcasting.md",
+      "fetched_at": "2026-06-12"
     },
     {
       "name": "laravel-dusk",

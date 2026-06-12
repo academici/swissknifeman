@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "source": "github",
+  "repo": "spatie/guidelines.spatie.be",
+  "strategy": "notify",
+  "license": "MIT",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "url": "https://raw.githubusercontent.com/spatie/guidelines.spatie.be/master/content/code-style/javascript.md",
+      "sha256": "a40b449cfb43361d877e8b53dab243e8e089979c0321e118c7aae7a76074c507",
+      "fetched_at": "2026-06-12"
+    }
+  ],
+  "notes": "SKILL.md encodes the Spatie JavaScript style guide (guidelines.spatie.be) as a RU skill with our examples. strategy=notify: when the upstream guide changes, review and update the rules manually."
+}

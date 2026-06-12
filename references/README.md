@@ -28,6 +28,9 @@
 | Источник | Ценность | Статус |
 |---|---|---|
 | [laravel/boost](laravel-boost.md) | Версионно-специфичные Laravel-скиллы + MCP + генератор CLAUDE.md | trusted |
+| [laravel/docs](laravel-docs.md) | Официальная документация Laravel (главы → дистилляты) | imported |
+| [spatie/guidelines.spatie.be](spatie-guidelines.md) | Гайдлайны Spatie: code-style PHP/JS | imported |
+| [sickn33/antigravity-awesome-skills](sickn33-antigravity-awesome-skills.md) | Источник docker-expert | imported |
 | [get-zeked/perplexity-super-skills](get-zeked-perplexity-super-skills.md) | 12 super-skills, gap-analysis формат | imported |
 | [anthropics/claude-code](anthropics-claude-code.md) | Официальная спецификация SKILL.md | imported |
 | [VoltAgent/awesome-agent-skills](voltagent-awesome-agent-skills.md) | Курируемый индекс официальных скиллов | planned |

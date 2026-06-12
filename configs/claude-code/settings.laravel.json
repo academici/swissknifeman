@@ -34,6 +34,15 @@
       "Bash(php artisan migrate:fresh *)",
       "Bash(php artisan migrate:reset *)",
       "Bash(php artisan db:wipe *)"
+    ],
+    "deny": [
+      "Read(storage/logs/**)",
+      "Read(node_modules/**)",
+      "Read(**/*.lock)",
+      "Read(.phpunit.cache/**)",
+      "Read(public/build/**)",
+      "Read(_ide_helper*.php)",
+      "Read(.phpstorm.meta.php)"
     ]
   }
 }

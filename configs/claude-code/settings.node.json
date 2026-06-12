@@ -21,6 +21,16 @@
     "ask": [
       "Bash(npm publish *)",
       "Bash(npm version *)"
+    ],
+    "deny": [
+      "Read(node_modules/**)",
+      "Read(**/*.lock)",
+      "Read(dist/**)",
+      "Read(build/**)",
+      "Read(.next/**)",
+      "Read(coverage/**)",
+      "Read(**/*.min.js)",
+      "Read(**/*.min.css)"
     ]
   }
 }

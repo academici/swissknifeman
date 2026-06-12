@@ -6,9 +6,9 @@
 | Пресет | Что разрешает |
 |---|---|
 | `base` | git (push — с подтверждением), gh, файловые операции, curl/wget, jq/rg/sed; deny на секреты (`.env`, ключи, `~/.ssh`) и `sudo` |
-| `laravel` | `php artisan`, composer, pest/phpunit/pint/phpstan/rector, sail, npm/vite; деструктивные миграции — с подтверждением |
+| `laravel` | `php artisan`, composer, pest/phpunit/pint/phpstan/rector, sail, npm/vite; деструктивные миграции — с подтверждением; deny на токен-шум (`storage/logs`, `node_modules`, `*.lock`, кэши) — `vendor/` **не** блокируется: там Boost-гайдлайны (`vendor/laravel/boost/.ai/`) |
 | `php-package` | composer, pest/phpunit/pint/phpstan/rector/infection — без artisan |
-| `node` | node/npm/npx/pnpm/yarn, tsc, vitest, eslint, prettier; publish — с подтверждением |
+| `node` | node/npm/npx/pnpm/yarn, tsc, vitest, eslint, prettier; publish — с подтверждением; deny на токен-шум (`node_modules`, `dist`, `build`, `coverage`, `*.lock`, минифицированные бандлы) |
 | `python` | python/pip/pytest, uv, poetry, ruff/black/mypy |
 | `docker` | docker + docker compose; удаление контейнеров/volumes/prune — с подтверждением |
 | `yolo` | `bypassPermissions` — только для контейнеров и VM, см. предупреждение в доке |

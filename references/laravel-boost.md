@@ -6,6 +6,11 @@
 - **Статус:** trusted (не импортируем — доверяем на месте)
 - **Проверено:** 2026-06-12
 
+**Upstream-отслеживание:** `skills/php/laravel-best-practices/upstream.json`
+(strategy=notify, 21 файл: SKILL.md + 20 правил `rules/*.md` ↔ наши `references/*.md`) —
+CI/`./scripts/update-upstreams.sh --check` сообщит, когда Boost изменит правила;
+слияние — вручную.
+
 Официальный пакет Laravel для AI-агентов: поставляет версионно-специфичные
 скиллы/гайдлайны, MCP-сервер и генератор корневых CLAUDE.md/AGENTS.md.
 

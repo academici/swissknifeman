@@ -1,0 +1,136 @@
+{
+  "schema_version": 1,
+  "source": "github",
+  "repo": "laravel/boost",
+  "strategy": "notify",
+  "license": "MIT",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "url": "https://raw.githubusercontent.com/laravel/boost/main/.ai/laravel/skill/laravel-best-practices/SKILL.md",
+      "sha256": "39ac9e89aeb3f9e46e0ac07dcf08d7b001d3a2829bd4b5c03170f31df4af935c",
+      "fetched_at": "2026-06-12"
+    },
+    {
+      "path": "references/advanced-queries.md",
+      "url": "https://raw.githubusercontent.com/laravel/boost/main/.ai/laravel/skill/laravel-best-practices/rules/advanced-queries.md",
+      "sha256": "b55bf81071373a4cfde4dd70d7084f4fc02c664d3f5a35affe576c3b55cb64a0",
+      "fetched_at": "2026-06-12"
+    },
+    {
+      "path": "references/architecture.md",
+      "url": "https://raw.githubusercontent.com/laravel/boost/main/.ai/laravel/skill/laravel-best-practices/rules/architecture.md",
+      "sha256": "e27e5cf94c5319fff5414fcb3086945c652845d5addb9d4f34ca5195f0fdd1c8",
+      "fetched_at": "2026-06-12"
+    },
+    {
+      "path": "references/blade-views.md",
+      "url": "https://raw.githubusercontent.com/laravel/boost/main/.ai/laravel/skill/laravel-best-practices/rules/blade-views.md",
+      "sha256": "3315178e62a58b000f408588c9ee2a8aca47b17969f47cb6eac99f0302f3f551",
+      "fetched_at": "2026-06-12"
+    },
+    {
+      "path": "references/caching.md",
+      "url": "https://raw.githubusercontent.com/laravel/boost/main/.ai/laravel/skill/laravel-best-practices/rules/caching.md",
+      "sha256": "46840806a7e1ca8f57294f445e53a574008d63b29ce788ec1d99e711a7e12950",
+      "fetched_at": "2026-06-12"
+    },
+    {
+      "path": "references/collections.md",
+      "url": "https://raw.githubusercontent.com/laravel/boost/main/.ai/laravel/skill/laravel-best-practices/rules/collections.md",
+      "sha256": "7d08536f655efbcd98a5da9dc4686cdd4e3a283fe715753e574f8e62ea8b7091",
+      "fetched_at": "2026-06-12"
+    },
+    {
+      "path": "references/config.md",
+      "url": "https://raw.githubusercontent.com/laravel/boost/main/.ai/laravel/skill/laravel-best-practices/rules/config.md",
+      "sha256": "18d5755ec9c36982a64ab5db0908ee256b993d7edeecaab5e1a8307edbc347c8",
+      "fetched_at": "2026-06-12"
+    },
+    {
+      "path": "references/db-performance.md",
+      "url": "https://raw.githubusercontent.com/laravel/boost/main/.ai/laravel/skill/laravel-best-practices/rules/db-performance.md",
+      "sha256": "68808678084299c9b969e8ab65c3b75ef48a1008850ad90b734638f9f0eb4cdb",
+      "fetched_at": "2026-06-12"
+    },
+    {
+      "path": "references/eloquent.md",
+      "url": "https://raw.githubusercontent.com/laravel/boost/main/.ai/laravel/skill/laravel-best-practices/rules/eloquent.md",
+      "sha256": "575912a0630db60ccc74106b860839aa0d98601fdeac4a2d09837f413d5c7b82",
+      "fetched_at": "2026-06-12"
+    },
+    {
+      "path": "references/error-handling.md",
+      "url": "https://raw.githubusercontent.com/laravel/boost/main/.ai/laravel/skill/laravel-best-practices/rules/error-handling.md",
+      "sha256": "51df735307e0df81e124a6b4f303c8dba57172beb895d356d5209fdcb8b3144c",
+      "fetched_at": "2026-06-12"
+    },
+    {
+      "path": "references/events-notifications.md",
+      "url": "https://raw.githubusercontent.com/laravel/boost/main/.ai/laravel/skill/laravel-best-practices/rules/events-notifications.md",
+      "sha256": "47d1cf3df64ee426ce1d04d8d6994d97ae898dbaf804611792ddf4adc69a19d4",
+      "fetched_at": "2026-06-12"
+    },
+    {
+      "path": "references/http-client.md",
+      "url": "https://raw.githubusercontent.com/laravel/boost/main/.ai/laravel/skill/laravel-best-practices/rules/http-client.md",
+      "sha256": "652d9692e958283625a329fa092dc29142835a2e322cf1365c9520c2b0779f4f",
+      "fetched_at": "2026-06-12"
+    },
+    {
+      "path": "references/mail.md",
+      "url": "https://raw.githubusercontent.com/laravel/boost/main/.ai/laravel/skill/laravel-best-practices/rules/mail.md",
+      "sha256": "88dde87ec0a68a39f26a021859b91a0e21ddcf2742d2bfe30437257d3abc0a63",
+      "fetched_at": "2026-06-12"
+    },
+    {
+      "path": "references/migrations.md",
+      "url": "https://raw.githubusercontent.com/laravel/boost/main/.ai/laravel/skill/laravel-best-practices/rules/migrations.md",
+      "sha256": "b4d10488d1a4aa492b32b1abce460a157c61f27f15f3cd0807e31c10733d1ea1",
+      "fetched_at": "2026-06-12"
+    },
+    {
+      "path": "references/queue-jobs.md",
+      "url": "https://raw.githubusercontent.com/laravel/boost/main/.ai/laravel/skill/laravel-best-practices/rules/queue-jobs.md",
+      "sha256": "b58343a53d782606088df763a7209b90c354f4be993910700d890a5c701144bc",
+      "fetched_at": "2026-06-12"
+    },
+    {
+      "path": "references/routing.md",
+      "url": "https://raw.githubusercontent.com/laravel/boost/main/.ai/laravel/skill/laravel-best-practices/rules/routing.md",
+      "sha256": "62149e71347149bfa6976f3285e19cb7da92e4a8c55eb4a77d20cfe370baf518",
+      "fetched_at": "2026-06-12"
+    },
+    {
+      "path": "references/scheduling.md",
+      "url": "https://raw.githubusercontent.com/laravel/boost/main/.ai/laravel/skill/laravel-best-practices/rules/scheduling.md",
+      "sha256": "4bd7d930874207cc3bd0cd0848bdae567061ba8914415807b381700e3ba7ec45",
+      "fetched_at": "2026-06-12"
+    },
+    {
+      "path": "references/security.md",
+      "url": "https://raw.githubusercontent.com/laravel/boost/main/.ai/laravel/skill/laravel-best-practices/rules/security.md",
+      "sha256": "79c642278b3353e6db226fbdf766d94af157e24c46f07d3ee6ab063c759831e0",
+      "fetched_at": "2026-06-12"
+    },
+    {
+      "path": "references/style.md",
+      "url": "https://raw.githubusercontent.com/laravel/boost/main/.ai/laravel/skill/laravel-best-practices/rules/style.md",
+      "sha256": "7a9051b8b77996720c1f60798574b19fdb7201b325fbc44bb86c0dfdace3678e",
+      "fetched_at": "2026-06-12"
+    },
+    {
+      "path": "references/testing.md",
+      "url": "https://raw.githubusercontent.com/laravel/boost/main/.ai/laravel/skill/laravel-best-practices/rules/testing.md",
+      "sha256": "366269aa5a78042c58eaf2f303cdbf3f9c182845376ea7d284ca01bd4d58cfcd",
+      "fetched_at": "2026-06-12"
+    },
+    {
+      "path": "references/validation.md",
+      "url": "https://raw.githubusercontent.com/laravel/boost/main/.ai/laravel/skill/laravel-best-practices/rules/validation.md",
+      "sha256": "ef1e4d908e116b80db90c6ba58b150b562c252f9cd7c789b83f6e47058b50562",
+      "fetched_at": "2026-06-12"
+    }
+  ],
+  "notes": "Derived from laravel/boost built-in skill laravel-best-practices (.ai/laravel/skill/laravel-best-practices): rules/*.md -> references/*.md (anonymized), SKILL.md rewritten as RU meta-router. strategy=notify: upstream changes are reported only — review and merge manually. In Boost projects the built-in skill supersedes this one (docs/boost-compatibility.md)."
+}

@@ -791,7 +791,9 @@
       "version": "0.1.0",
       "description": "Лучшие практики Laravel: 20 категорий правил (Eloquent, валидация, кеш, очереди, безопасность) с маршрутизацией по задаче",
       "sha256": "a8a4ef2a4df42e79dc966a59fa4fecc2780efe2f7185157d2c778b9363a016a8",
-      "source": "local"
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/laravel/boost/main/.ai/laravel/skill/laravel-best-practices/SKILL.md",
+      "fetched_at": "2026-06-12"
     },
     {
       "name": "laravel-broadcasting",

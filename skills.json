@@ -51,7 +51,7 @@
     },
     "php": {
       "description": "PHP and Laravel: applications, packages, Filament, permissions, testing, patterns",
-      "count": 26,
+      "count": 29,
       "status": "active"
     },
     "pm": {
@@ -467,9 +467,9 @@
       "name": "project-map",
       "bucket": "general",
       "path": "skills/general/project-map/SKILL.md",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "description": "Быстрая карта структуры проекта и зон ответственности по директориям для безопасного роутинга изменений.",
-      "sha256": "21ad1eb3fa60c9794869efad497278d243f1d44bd28cd6526f0df62c80fff524",
+      "sha256": "accd3656e06f9256e44fb31a6806f269e9cd0284a191a547fde596db52d0ebeb",
       "source": "local"
     },
     {
@@ -758,6 +758,15 @@
       "source": "local"
     },
     {
+      "name": "dependency-injection",
+      "bucket": "php",
+      "path": "skills/php/dependency-injection/SKILL.md",
+      "version": "0.1.0",
+      "description": "Взаимодействие слоёв через constructor injection: final readonly + promotion, матрица инъекций, композиция Actions",
+      "sha256": "5d9b8e639b85ad40df017b60277000f0b4f711ce3e69c79fefcf2f097d6cd0af",
+      "source": "local"
+    },
+    {
       "name": "enum-attributes",
       "bucket": "php",
       "path": "skills/php/enum-attributes/SKILL.md",
@@ -779,9 +788,9 @@
       "name": "laravel",
       "bucket": "php",
       "path": "skills/php/laravel/SKILL.md",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "description": "Laravel architecture patterns: actions, repositories, resources",
-      "sha256": "988c04f04523ed63dc33d6f4b9ae5aca06c1980a30eff88b6f28c76398a17b64",
+      "sha256": "290c1bc48aac6d2b33f8125a1fa41cd6e505137ca48d88f2d0280a6faeecb597",
       "source": "local"
     },
     {
@@ -918,6 +927,15 @@
       "source": "local"
     },
     {
+      "name": "laravel-structure",
+      "bucket": "php",
+      "path": "skills/php/laravel-structure/SKILL.md",
+      "version": "0.1.0",
+      "description": "Канон структуры Laravel-проекта: доменная таксономия, правило зеркала слоёв, размещение и нейминг классов",
+      "sha256": "d072a86b4c216b8749a6be695275c09d78f27dd54ede7603f3b83a51a5f4041c",
+      "source": "local"
+    },
+    {
       "name": "laravel-testing",
       "bucket": "php",
       "path": "skills/php/laravel-testing/SKILL.md",
@@ -960,6 +978,15 @@
       "version": "0.2.0",
       "description": "PHP domain patterns: VO, DTO, pipeline, specification",
       "sha256": "ab0160846a2dd0bc8e47b3ea975699ae7d99063119d908fc65449886373de69c",
+      "source": "local"
+    },
+    {
+      "name": "repositories",
+      "bucket": "php",
+      "path": "skills/php/repositories/SKILL.md",
+      "version": "0.1.0",
+      "description": "Система репозиториев Laravel: read/store split, model scopes, delta-DTO, фасад, VisibilityService",
+      "sha256": "d4de66715af521aecdbc32b9ee3c07bc1b628a9591302b3960646d0efcd12e5b",
       "source": "local"
     },
     {

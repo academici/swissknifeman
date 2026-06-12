@@ -1,7 +1,7 @@
 ---
 name: project-map
 bucket: general
-version: 0.1.0
+version: 0.2.0
 description: "Быстрая карта структуры проекта и зон ответственности по директориям для безопасного роутинга изменений."
 risk: read
 persona: oss-dev
@@ -29,7 +29,7 @@ sha256: ""
 - `app/Policies/` — правила доступа и permission-контракты.
 - `app/Dto/` — DTO и маппинг рядом с DTO-классами.
 - `app/Enums/` — статусы, роли, типы, workflow-константы.
-- Граф переходов статусов тикета — `TicketStatus::transitionDefinitions()`, runtime — `App\Services\Ticket\TicketStatusTransitions` + `App\Services\Ticket\StateMachine` (не отдельная папка `app/States/`).
+- Граф переходов статусов сущности — `<Entity>Status::transitionDefinitions()`, runtime — `App\Services\<Домен>\StatusTransitions` + `StateMachine` (не отдельная папка `app/States/`).
 - `resources/js/` — Inertia/Vue UI и клиентская логика.
 - `routes/` — HTTP-маршрутизация.
 - `tests/Feature` и `tests/Unit` — контракт поведения и чистая логика.
@@ -52,6 +52,7 @@ sha256: ""
 
 ## Связанные источники
 
+- Канон структуры для новых проектов — скилл `php/laravel-structure` (доменная таксономия, правило зеркала, размещение классов)
 - Базовая архитектура: `.ai/guidelines/architecture.md`
 - Навигация по контексту: `.ai/guidelines/navigation.md`
 - Workflow-зависимости: `.ai/guidelines/project-development.md`

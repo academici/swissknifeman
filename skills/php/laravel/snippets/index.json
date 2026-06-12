@@ -80,14 +80,6 @@
       ]
     },
     {
-      "file": "domain-structure.md",
-      "description": "Организация Laravel-проекта по доменам и слоям — конкретная структура app/",
-      "tags": [
-        "laravel",
-        "architecture"
-      ]
-    },
-    {
       "file": "dto.md",
       "description": "Spatie LaravelData DTO — Form/View/Policy/Mapper/Command buckets + TypeScript генерация",
       "tags": [

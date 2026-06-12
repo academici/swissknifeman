@@ -5,9 +5,9 @@
 1. Copy `SKILL_TEMPLATE.md` → `skills/{bucket}/{name}/SKILL.md`
 2. Add `snippets/` with `index.json` manifest
 3. Run `./scripts/validate.sh`
-4. Run `./sync.sh --update-registry` — обновляет skills.json **и генерирует
+4. Run `swissknifeman registry` — обновляет skills.json **и генерирует
    манифесты плагинов** (`.claude-plugin/marketplace.json`,
-   `skills/*/.claude-plugin/plugin.json`); обязательно после
+   `skills/*/.claude-plugin/plugin.json`) и граф; обязательно после
    добавления/перемещения/удаления скилла
 5. Open PR — CI runs the same validation
 
@@ -37,7 +37,7 @@
      frontmatter (`name` + `description`), иначе валидатор не пропустит
    - `notify` — вы адаптируете локальную копию (свой frontmatter, правки);
      об обновлениях апстрима только сообщается
-5. `./sync.sh --update-registry` → PR
+5. `swissknifeman registry` → PR
 6. Обновить статус источника в `references/{source}.md` на `imported`
 
 ## references/ Lifecycle
@@ -71,7 +71,7 @@ bucket-а — ошибка, между bucket-ами — warning).
 ## Releases & Tagging
 
 - Аннотированные semver-теги: `git tag -a vX.Y.Z -m "..."` (push тегов — вручную).
-- **minor** — новая возможность каркаса (установщик, sync, marketplace);
+- **minor** — новая возможность каркаса (CLI, установщик, registry, marketplace);
   **patch** — наполнение/правки скиллов.
 - При теге перенести раздел `[Unreleased]` CHANGELOG в `[X.Y.Z]`.
 - Версии плагинов Claude Code разрешаются в git SHA (поля `version` в
@@ -90,7 +90,8 @@ Provider-specific deltas go in `skills/{bucket}/{name}/adapters/` — never dupl
 
 Global adapter docs: `adapters/{cursor,claude-code,perplexity}/`.
 
-Отдельного sync-скрипта для Obsidian нет. `sync.sh` пушит только в `academici/brain`.
+Отдельного sync-скрипта для Obsidian нет: vault (brain) — обычный потребляющий
+проект (`cd <vault> && swissknifeman vendor`, дальше `swissknifeman update`).
 
 ## Scanner
 
@@ -100,11 +101,13 @@ Global adapter docs: `adapters/{cursor,claude-code,perplexity}/`.
 ./scripts/scan-and-pr.sh              # + COMMIT + PR
 ```
 
-## Sync to Brain
+## Internal Project Skills
 
-```bash
-BRAIN_PATH=/path/to/brain ./sync.sh --update-registry
-```
+Методика разработки самого реестра закреплена во внутренних скиллах
+`.claude/skills/` (package-architecture, skill-authoring, release-discipline,
+docs-maintenance). Они автоматически подхватываются Claude Code в этом репо,
+**не экспортируются** (валидатор и реестр сканируют только `skills/**`) и
+линтуются мягко: frontmatter `name` + `description`, name == имя каталога.
 
 ## Backlog
 

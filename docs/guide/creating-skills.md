@@ -9,7 +9,7 @@
 2. Заполните frontmatter и разделы (см. [Анатомию скилла](/guide/skill-anatomy))
 3. Добавьте `snippets/` с манифестом `index.json`
 4. Проверьте: `./scripts/validate.sh`
-5. Пересоберите реестр: `./sync.sh --update-registry`
+5. Пересоберите реестр: `swissknifeman registry`
 6. Откройте PR — CI прогонит ту же валидацию
 
 ::: tip generate-skill
@@ -56,7 +56,7 @@
    - `notify` — вы адаптируете локальную копию (свой frontmatter, правки);
      об обновлениях апстрима только сообщается.
 
-5. `./sync.sh --update-registry` → PR
+5. `swissknifeman registry` → PR
 6. Обновите статус источника в `references/{source}.md` на `imported`
 
 ## Жизненный цикл references/

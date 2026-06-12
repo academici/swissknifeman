@@ -56,9 +56,10 @@ configs/                   # готовые конфиги: пресеты permi
 references/                # каталог внешних источников (что брать, статус)
 adapters/                  # доки по интеграции: claude-code, cursor, perplexity
 docs/workflows/            # межсистемные методологии (Perplexity→Claude→Cursor→ревью)
-scripts/                   # validate, update-upstreams, scanner, apply-permissions, connect-claude
+bin/                       # CLI swissknifeman (connect/vendor/update/status/list/registry/doctor)
+scripts/                   # validate, update-upstreams, scanner, apply-permissions
 generate-skill/            # мета-скилл создания новых скиллов
-skills.json                # реестр (генерируется sync.sh, с provenance)
+skills.json                # реестр (генерируется swissknifeman registry, с provenance)
 buckets.json               # метаданные bucket-ов (description/category/tags)
 .claude-plugin/            # marketplace.json — нативный marketplace Claude Code (генерируется)
 docs/                      # документация (VitePress)
@@ -69,6 +70,18 @@ docs/                      # документация (VitePress)
 
 ## Установка
 
+### Шаг 1: CLI (один раз на машину)
+
+```bash
+cd ~/projects/packages/swissknifeman
+./install.sh        # симлинк ~/.local/bin/swissknifeman → bin/swissknifeman
+swissknifeman doctor
+```
+
+Дальше всё делается **из каталога проекта** — корень ищется автоматически,
+реестру не нужно знать о ваших проектах (карта подключений копится в
+`~/.swissknifeman/projects.json`). Справочник команд: [docs/guide/cli.md](docs/guide/cli.md).
+
 ### Claude Code: plugin marketplace (рекомендуется)
 
 Репозиторий — нативный marketplace плагинов Claude Code: каждый bucket = плагин,
@@ -76,41 +89,47 @@ docs/                      # документация (VitePress)
 Скиллы **не копируются** в проект — живут в кэше Claude Code и обновляются отсюда.
 
 ```bash
-# Один раз на машину
-claude plugin marketplace add ~/projects/packages/swissknifeman
-
-# На каждый проект: автодетект профиля, запись в .claude/settings.local.json
-./scripts/connect-claude.sh --target ~/projects/my-app
+cd ~/projects/my-app
+swissknifeman connect                      # автодетект профиля → settings.local.json
 
 # Превью / явный набор / миграция со старого вендоринга
-./scripts/connect-claude.sh --target . --dry-run
-./scripts/connect-claude.sh --target . --plugins php,quality
-./scripts/connect-claude.sh --target . --cleanup-vendored
+swissknifeman connect --dry-run
+swissknifeman connect --plugins php,quality
+swissknifeman connect --cleanup-vendored
 ```
 
 Версия плагина = git SHA: правки скиллов подтягиваются в проекты после
 локального **коммита** (пуш не нужен) — `/plugin marketplace update swissknifeman`
 или перезапуск сессии. Манифесты плагинов (`.claude-plugin/`) генерируются
-`./sync.sh --update-registry`.
+`swissknifeman registry`.
 
-### Cursor / другие агенты: вендоринг install.sh
+### Cursor / другие агенты: вендоринг
 
-Установщик сам определяет тип проекта и копирует подходящий набор скиллов:
+`swissknifeman vendor` сам определяет тип проекта и копирует подходящий набор скиллов:
 
 ```bash
 # Laravel-проект (artisan+composer.json) → architect, php, devops, quality, operator
 cd ~/projects/my-laravel-app
-~/projects/packages/swissknifeman/install.sh --target . --agent cursor
+swissknifeman vendor --agent cursor
 
 # Obsidian vault (.obsidian/) → architect, pm, founder, operator, roles, imported
-~/projects/packages/swissknifeman/install.sh --target ~/vaults/brain
+cd ~/vaults/brain && swissknifeman vendor
 
 # Превью без установки
-./install.sh --target ~/projects/my-app --list
+swissknifeman vendor --list
 
 # Явный профиль / bucket-ы / исключения
-./install.sh --target . --profile php-package
-./install.sh --target . --buckets php,quality --exclude botkit
+swissknifeman vendor --profile php-package
+swissknifeman vendor --buckets php,quality --exclude botkit
+```
+
+### Обновление подключённых проектов
+
+```bash
+cd ~/projects/my-app && swissknifeman update   # текущий проект (канал детектится сам)
+swissknifeman update --all                     # все зарегистрированные
+swissknifeman status                           # отчёт по текущему проекту
+swissknifeman list                             # карта проектов
 ```
 
 Переустановка чистит только то, что ставила сама (манифест
@@ -130,7 +149,8 @@ cd ~/projects/my-laravel-app
 чтения источников + индекс установленных скиллов с правилами поиска:
 
 ```bash
-./scripts/generate-hub.sh --target ~/projects/my-app   # или флаг --hub у установщиков
+swissknifeman update          # регенерирует хаб, если он уже есть в проекте
+./scripts/generate-hub.sh --target ~/projects/my-app   # или флаг --hub у connect/vendor
 ```
 
 - проект **с Laravel Boost** (есть `boost.json`) → пишется фрагмент
@@ -142,7 +162,7 @@ cd ~/projects/my-laravel-app
 
 Установленное определяется по `enabledPlugins` в `.claude/settings*.json`
 (канал marketplace) и/или манифестам `.swissknifeman-manifest.json`
-(канал install.sh). Приоритеты и таблица роутинга «тип задачи → скилл» —
+(канал вендоринга). Приоритеты и таблица роутинга «тип задачи → скилл» —
 [docs/routing.md](docs/routing.md); политика совместимости с Laravel Boost —
 [docs/boost-compatibility.md](docs/boost-compatibility.md); устройство единого
 источника истины скиллов в проекте — скилл `general/skills-ssot`.
@@ -212,14 +232,16 @@ PR с диффом — изменения чужих репозиториев п
 
 ## Реестр
 
-`skills.json` генерируется `./sync.sh --update-registry`: путь, версия, sha256
+`skills.json` генерируется `swissknifeman registry`: путь, версия, sha256
 и provenance каждого скилла (`source: local|github|http`, `upstream` URL,
 `fetched_at`).
 
 ```bash
-./sync.sh --update-registry                    # пересобрать реестр
-BRAIN_PATH=~/path/to/brain ./sync.sh           # + зеркало в brain/.ai/skills-registry/
+swissknifeman registry                         # пересобрать реестр + манифесты + граф
 ```
+
+Отдельного зеркалирования в brain больше нет: brain — обычный потребляющий
+проект (`cd <brain> && swissknifeman vendor`, дальше `swissknifeman update`).
 
 ## Добавление скиллов
 
@@ -244,5 +266,4 @@ BRAIN_PATH=~/path/to/brain ./sync.sh           # + зеркало в brain/.ai/s
 | `validate.yml` | `scripts/validate.sh`: frontmatter, upstream.json, profiles, манифесты |
 | `upstream-sync.yml` | Еженедельная проверка апстримов → PR с диффом |
 | `sha256-update.yml` | Пересчёт хешей реестра при пуше |
-| `sync-to-brain.yml` | Ежедневное зеркало в academici/brain |
 | `scanner-pr.yml` | Еженедельный PR от сканера |

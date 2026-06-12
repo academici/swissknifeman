@@ -18,7 +18,7 @@
 
 ```bash
 # 1. Скиллы: автодетект → architect, php, devops, quality, operator
-~/projects/packages/swissknifeman/install.sh --target . --agent claude
+swissknifeman connect
 
 # 2. Permissions: автодетект → base + laravel + node (+ docker, если есть Dockerfile)
 ~/projects/packages/swissknifeman/scripts/apply-permissions.sh --target .

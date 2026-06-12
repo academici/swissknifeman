@@ -31,7 +31,7 @@ jobs:
         run: |
           # no --force in CI: conflicts stay listed in the report for manual review
           ./scripts/update-upstreams.sh --apply | tee -a /tmp/upstream-report.txt
-          ./sync.sh --update-registry
+          ./bin/swissknifeman registry
 
       - name: Open PR
         if: steps.check.outputs.code == '10'

@@ -6,7 +6,7 @@
 ## Установка
 
 ```bash
-~/projects/packages/swissknifeman/install.sh --target ~/vaults/brain
+cd ~/vaults/brain && swissknifeman vendor
 ```
 
 Автодетект видит `.obsidian/` → профиль `obsidian-vault` → bucket-ы
@@ -31,12 +31,12 @@
 
 ## Связка с реестром
 
-Vault может получать зеркало реестра скиллов — workflow `sync-to-brain.yml`
-ежедневно синхронизирует `skills.json` в `brain/.ai/skills-registry/`, а
-локально это делает:
+Отдельного зеркалирования реестра в vault больше нет: vault — обычный
+проект-потребитель. Скиллы ставятся один раз через `swissknifeman vendor`,
+а дальше обновляются командой:
 
 ```bash
-BRAIN_PATH=~/vaults/brain ./sync.sh
+cd ~/vaults/brain && swissknifeman update
 ```
 
 Так база знаний всегда видит актуальный каталог скиллов — полезно, когда

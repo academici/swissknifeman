@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitepress'
+import { withMermaid } from 'vitepress-plugin-mermaid'
 
-export default defineConfig({
+export default withMermaid(defineConfig({
   lang: 'ru-RU',
   title: 'SwissKnifeMan',
   description:
@@ -24,6 +25,7 @@ export default defineConfig({
           items: [
             { text: 'Что такое SwissKnifeMan', link: '/guide/' },
             { text: 'Установка скиллов', link: '/guide/installation' },
+            { text: 'CLI swissknifeman', link: '/guide/cli' },
             { text: 'Профили и автодетект', link: '/guide/profiles' },
             { text: 'Анатомия скилла', link: '/guide/skill-anatomy' },
             { text: 'Адаптерные дельты', link: '/guide/adapter-deltas' },
@@ -31,6 +33,7 @@ export default defineConfig({
             { text: 'Скиллы из пакетов', link: '/guide/vendor-skills' },
             { text: 'Upstream-sync', link: '/guide/upstream-sync' },
             { text: 'Реестр skills.json', link: '/guide/registry' },
+            { text: 'Граф зависимостей', link: '/guide/graph' },
             { text: 'Сканер сниппетов', link: '/guide/scanner' },
             { text: 'CI/CD', link: '/guide/ci' },
           ],
@@ -65,6 +68,7 @@ export default defineConfig({
             { text: 'Claude Fable 5', link: '/workflows/fable-5' },
             { text: 'Cursor / VS Code', link: '/workflows/cursor' },
             { text: 'Python / 3D', link: '/workflows/python-3d' },
+            { text: 'Фоновые агенты', link: '/workflows/background-agents' },
           ],
         },
         {
@@ -107,4 +111,4 @@ export default defineConfig({
     sidebarMenuLabel: 'Меню',
     returnToTopLabel: 'Наверх',
   },
-})
+}))

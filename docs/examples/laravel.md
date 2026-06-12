@@ -13,7 +13,7 @@ laravel new shop && cd shop
 ## Шаг 1. Скиллы
 
 ```bash
-~/projects/packages/swissknifeman/install.sh --target . --agent claude
+swissknifeman vendor --agent claude
 ```
 
 Автодетект видит `artisan` + `composer.json` → профиль `laravel-project` →
@@ -24,7 +24,7 @@ Docker, code review и инцидентам.
 Проверить, что поставится, можно заранее:
 
 ```bash
-~/projects/packages/swissknifeman/install.sh --target . --list
+swissknifeman vendor --list
 ```
 
 ## Шаг 2. Permissions
@@ -71,7 +71,7 @@ shop/
 
 ```bash
 # Исключить неактуальные скиллы
-~/projects/packages/swissknifeman/install.sh --target . --profile laravel-project --exclude botkit
+swissknifeman vendor --profile laravel-project --exclude botkit
 
 # Добавить docker-пресет, если автодетект его не увидел
 ~/projects/packages/swissknifeman/scripts/apply-permissions.sh --target . --preset docker

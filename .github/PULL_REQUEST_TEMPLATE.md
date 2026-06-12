@@ -10,7 +10,7 @@
 
 - [ ] `SKILL.md` has required frontmatter: name, bucket, version, description
 - [ ] Snippets have `index.json` manifest (if applicable)
-- [ ] Ran `./sync.sh --update-registry`
+- [ ] Ran `swissknifeman registry` (или `./bin/swissknifeman registry`)
 - [ ] No project-specific secrets or credentials in snippets
 - [ ] Namespaces anonymized in code snippets
 

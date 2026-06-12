@@ -1,0 +1,1272 @@
+#!/usr/bin/env bash
+# swissknifeman — CLI реестра скиллов. Устанавливается симлинком в ~/.local/bin
+# (./install.sh); путь к реестру выводится из readlink -f самого файла.
+#
+# Команды (запускаются из потребляющего проекта, корень ищется вверх от CWD):
+#   connect   подключить проект через plugin marketplace Claude Code
+#   vendor    вендорить скиллы в проект (Cursor и другие агенты)
+#   update    обновить подключение/вендоринг текущего проекта (--all: все)
+#   status    отчёт по текущему проекту (read-only)
+#   list      зарегистрированные проекты (~/.swissknifeman/projects.json)
+#
+# Команды мейнтейнера (работают с самим реестром):
+#   registry  регенерировать skills.json + плагин-манифесты + граф
+#   validate  scripts/validate.sh
+#   doctor    диагностика окружения
+#   version   версия (git SHA) и путь к реестру
+set -euo pipefail
+
+SELF="$(readlink -f "${BASH_SOURCE[0]}")"
+REPO_ROOT="$(cd "$(dirname "$SELF")/.." && pwd)"
+
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "ERROR: swissknifeman требует python3 (apt install python3 / brew install python3)" >&2
+  exit 1
+fi
+if [[ ! -d "$REPO_ROOT/skills" || ! -f "$REPO_ROOT/.claude-plugin/marketplace.json" ]]; then
+  echo "ERROR: реестр swissknifeman не найден в $REPO_ROOT" >&2
+  echo "Если репозиторий переехал — перезапустите install.sh из нового расположения." >&2
+  exit 1
+fi
+
+usage() {
+  grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '2,16p'
+}
+
+CMD="${1:-help}"
+[[ $# -gt 0 ]] && shift
+
+case "$CMD" in
+  -h|--help|help) usage; exit 0 ;;
+  validate) exec "$REPO_ROOT/scripts/validate.sh" "$@" ;;
+  version)
+    sha="$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
+    echo "swissknifeman $sha ($REPO_ROOT)"
+    exit 0 ;;
+  connect|vendor|update|status|list|registry|doctor) ;;
+  *) echo "Неизвестная команда: $CMD" >&2; usage >&2; exit 1 ;;
+esac
+
+exec python3 - "$REPO_ROOT" "$CMD" "$@" <<'PY'
+import json, os, re, shutil, subprocess, sys
+from datetime import date, datetime, timezone
+from pathlib import Path
+
+root = Path(sys.argv[1])
+cmd = sys.argv[2]
+argv = sys.argv[3:]
+
+HOME = Path.home()
+STATE_DIR = HOME / ".swissknifeman"
+DB_FILE = STATE_DIR / "projects.json"
+DB_VERSION = 1
+MARKETPLACE = "swissknifeman"
+MANIFEST = ".swissknifeman-manifest.json"
+AGENT_DEFAULTS = {"claude": ".claude/skills", "cursor": ".cursor/skills",
+                  "generic": ".ai/skills"}
+CONFIG_KEYS = {
+    "project_type": str, "buckets": list, "exclude": list,
+    "skills_path": str, "agent": str,
+}
+HUB_MARKER = "<!-- swissknifeman:hub:begin -->"
+
+
+def die(msg):
+    print(f"ERROR: {msg}", file=sys.stderr)
+    sys.exit(1)
+
+
+def warn(msg):
+    print(f"WARN: {msg}", file=sys.stderr)
+
+
+def now_iso():
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def confirm(prompt):
+    if not sys.stdin.isatty():
+        return False
+    return input(f"{prompt} [y/N] ").strip().lower() in ("y", "yes")
+
+
+# --- flag parsing -------------------------------------------------------------
+def parse_flags(args, spec):
+    """spec: {'--flag': 'str'|'bool'}; returns dict keyed by flag name sans --."""
+    out = {k.lstrip("-").replace("-", "_"): ("" if t == "str" else False)
+           for k, t in spec.items()}
+    i = 0
+    while i < len(args):
+        a = args[i]
+        if a in ("-h", "--help"):
+            out["help"] = True
+            i += 1
+            continue
+        if a not in spec:
+            die(f"неизвестный флаг: {a}")
+        key = a.lstrip("-").replace("-", "_")
+        if spec[a] == "bool":
+            out[key] = True
+            i += 1
+        else:
+            if i + 1 >= len(args):
+                die(f"флаг {a} требует значение")
+            out[key] = args[i + 1]
+            i += 2
+    out.setdefault("help", False)
+    return out
+
+
+# --- frontmatter --------------------------------------------------------------
+def parse_frontmatter(path):
+    """Keys from the first ----delimited block only (body lines ignored)."""
+    lines = path.read_text(encoding="utf-8").replace("\r\n", "\n").splitlines()
+    fm = {}
+    if not lines or lines[0].strip() != "---":
+        return fm
+    for line in lines[1:]:
+        if line.strip() == "---":
+            break
+        if ":" in line and not line.startswith((" ", "\t", "-")):
+            key, value = line.split(":", 1)
+            fm[key.strip()] = value.strip().strip('"').strip("'")
+    return fm
+
+
+def parse_inline_list(value):
+    value = (value or "").strip()
+    if not (value.startswith("[") and value.endswith("]")):
+        return []
+    items = [i.strip().strip('"').strip("'") for i in value[1:-1].split(",")]
+    return [i for i in items if i]
+
+
+def parse_frontmatter_fields(skill_md):
+    """name + requires from the first ----delimited block."""
+    fm = parse_frontmatter(skill_md)
+    return {"name": fm.get("name", ""),
+            "requires": parse_inline_list(fm.get("requires", ""))}
+
+
+# --- project config / profiles ------------------------------------------------
+def validate_config(config, cfg_file):
+    import difflib
+    profile_names = sorted(p.stem for p in (root / "profiles").glob("*.json"))
+    for key, value in config.items():
+        if key.startswith("_"):
+            continue
+        if key not in CONFIG_KEYS:
+            hint = difflib.get_close_matches(key, CONFIG_KEYS, n=1)
+            suffix = f" — did you mean '{hint[0]}'?" if hint else ""
+            die(f"{cfg_file}: unknown key '{key}'{suffix}")
+        if not isinstance(value, CONFIG_KEYS[key]):
+            die(f"{cfg_file}: '{key}' must be a "
+                f"{'list of strings' if CONFIG_KEYS[key] is list else 'string'}")
+        if CONFIG_KEYS[key] is list and not all(isinstance(v, str) for v in value):
+            die(f"{cfg_file}: '{key}' must be a list of strings")
+    if config.get("project_type") and config["project_type"] not in profile_names:
+        die(f"{cfg_file}: unknown project_type '{config['project_type']}' "
+            f"(available: {', '.join(profile_names)})")
+    if config.get("agent") and config["agent"] not in AGENT_DEFAULTS:
+        die(f"{cfg_file}: unknown agent '{config['agent']}' "
+            f"(available: {', '.join(AGENT_DEFAULTS)})")
+
+
+def load_config(target):
+    cfg_file = target / ".swissknife.json"
+    if not cfg_file.exists():
+        return {}
+    try:
+        config = json.loads(cfg_file.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        die(f"{cfg_file}: invalid JSON: {e}")
+    validate_config(config, cfg_file)
+    return config
+
+
+def autodetect(target):
+    if (target / ".obsidian").is_dir():
+        return "obsidian-vault"
+    if (target / "artisan").is_file() and (target / "composer.json").is_file():
+        return "laravel-project"
+    if (target / "composer.json").is_file():
+        return "php-package"
+    return "standalone"
+
+
+def load_profile(name):
+    f = root / "profiles" / f"{name}.json"
+    if not f.exists():
+        available = ", ".join(sorted(p.stem for p in (root / "profiles").glob("*.json")))
+        die(f"unknown profile '{name}' (available: {available})")
+    return json.loads(f.read_text(encoding="utf-8"))
+
+
+def all_buckets():
+    return sorted(d.name for d in (root / "skills").iterdir() if d.is_dir())
+
+
+def resolve_selection(target, config, flag_profile, flag_items):
+    """Shared precedence: flags > .swissknife.json > autodetect.
+    Returns (items, profile_name, profile_source, source_label, include_meta)."""
+    buckets = all_buckets()
+    profile_name, include_meta = None, False
+    if flag_items:
+        return flag_items, None, "items", "flags", False
+    if flag_profile:
+        prof = load_profile(flag_profile)
+        items = buckets if prof["buckets"] == ["*"] else prof["buckets"]
+        return items, flag_profile, "flag", "--profile", prof.get("include_meta", False)
+    if config.get("buckets"):
+        return config["buckets"], None, "config", ".swissknife.json buckets", False
+    if config.get("project_type"):
+        prof = load_profile(config["project_type"])
+        items = buckets if prof["buckets"] == ["*"] else prof["buckets"]
+        return (items, config["project_type"], "config",
+                ".swissknife.json project_type", prof.get("include_meta", False))
+    name = autodetect(target)
+    prof = load_profile(name)
+    items = buckets if prof["buckets"] == ["*"] else prof["buckets"]
+    return items, name, "autodetect", "autodetect", prof.get("include_meta", False)
+
+
+# --- project root discovery ----------------------------------------------------
+def find_project_root(start=None):
+    """Nearest dir upward containing .swissknife.json, .claude/ or .git."""
+    p = (start or Path.cwd()).resolve()
+    home = HOME.resolve()
+    while True:
+        if str(p) == p.root:
+            return None, None
+        if (p / ".swissknife.json").is_file():
+            return p, ".swissknife.json"
+        if (p / ".claude").is_dir():
+            return p, ".claude/"
+        if (p / ".git").exists():  # dir or file (worktree/submodule)
+            return p, ".git"
+        if p == home:
+            return None, None
+        p = p.parent
+
+
+def resolve_target(opts, allow_home_confirm=False):
+    """--target wins; otherwise walk up from CWD. Refuses the registry repo."""
+    if opts.get("target"):
+        target = Path(os.path.expanduser(opts["target"])).resolve()
+        if not target.is_dir():
+            die(f"каталог не найден: {target}")
+        via = "--target"
+    else:
+        target, via = find_project_root()
+        if target is None:
+            die("корень проекта не найден выше CWD (искал .swissknife.json, "
+                ".claude/, .git). Перейдите в проект или создайте "
+                ".swissknife.json в его корне.")
+        if target == HOME.resolve() and allow_home_confirm:
+            print("Корень проекта определился как домашняя директория.")
+            if not confirm(f"Продолжить с {target}?"):
+                die("отменено — перейдите в проект или укажите --target")
+    if target == root.resolve() and cmd in ("connect", "vendor", "update"):
+        die("вы внутри самого реестра swissknifeman — перейдите в "
+            "потребляющий проект")
+    return target, via
+
+
+# --- ~/.swissknifeman/projects.json ---------------------------------------------
+def load_db():
+    if not DB_FILE.exists():
+        return {"version": DB_VERSION, "projects": []}
+    try:
+        db = json.loads(DB_FILE.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        backup = DB_FILE.with_name(f"projects.json.corrupt.{date.today().isoformat()}")
+        DB_FILE.rename(backup)
+        warn(f"{DB_FILE} повреждён — переименован в {backup.name}, начинаю заново "
+             f"(записи восстановятся при swissknifeman update в проектах)")
+        return {"version": DB_VERSION, "projects": []}
+    if db.get("version", 1) > DB_VERSION:
+        die(f"{DB_FILE} записан более новой версией swissknifeman — обновите "
+            f"репозиторий реестра (git pull) и перезапустите install.sh")
+    return db
+
+
+def save_db(db):
+    STATE_DIR.mkdir(parents=True, exist_ok=True)
+    tmp = DB_FILE.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(db, indent=2, ensure_ascii=False) + "\n",
+                   encoding="utf-8")
+    os.replace(tmp, DB_FILE)
+
+
+def upsert_project(record):
+    """Records keyed by (path, channel); preserves first_connected_at."""
+    db = load_db()
+    record["updated_at"] = now_iso()
+    for i, p in enumerate(db["projects"]):
+        if p["path"] == record["path"] and p["channel"] == record["channel"]:
+            record["first_connected_at"] = p.get("first_connected_at",
+                                                 record["updated_at"])
+            db["projects"][i] = record
+            break
+    else:
+        record["first_connected_at"] = record["updated_at"]
+        db["projects"].append(record)
+    save_db(db)
+
+
+def db_records(path):
+    return [p for p in load_db()["projects"] if p["path"] == str(path)]
+
+
+# --- registry git state ---------------------------------------------------------
+def registry_git_state():
+    """(short sha | None, dirty: bool) — dirty considers skills/ + manifests."""
+    try:
+        sha = subprocess.run(
+            ["git", "-C", str(root), "rev-parse", "--short", "HEAD"],
+            capture_output=True, text=True, check=True).stdout.strip()
+        porcelain = subprocess.run(
+            ["git", "-C", str(root), "status", "--porcelain",
+             "skills", "generate-skill", "skills.json", ".claude-plugin"],
+            capture_output=True, text=True, check=True).stdout.strip()
+        return sha, bool(porcelain)
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return None, False
+
+
+def print_registry_state():
+    sha, dirty = registry_git_state()
+    if sha:
+        print(f"Реестр:   HEAD {sha}" + (" (есть незакоммиченные изменения "
+              "скиллов — marketplace видит только коммиты)" if dirty else ""))
+
+
+# --- hub -------------------------------------------------------------------------
+def hub_artifacts_exist(target):
+    if (target / ".ai" / "guidelines" / "swissknifeman-hub.md").is_file():
+        return True
+    claude_md = target / "CLAUDE.md"
+    return claude_md.is_file() and HUB_MARKER in claude_md.read_text(encoding="utf-8")
+
+
+def generate_hub(target):
+    subprocess.run([str(root / "scripts" / "generate-hub.sh"),
+                    "--target", str(target)], check=True)
+
+
+# =================================================================================
+# connect — канал plugin marketplace Claude Code
+# =================================================================================
+def do_connect(target, opts, register=True, fix_path_drift=False):
+    config = load_config(target)
+    flag_plugins = [p for p in opts.get("plugins", "").split(",") if p]
+    plugins, profile_name, profile_source, source, include_meta = \
+        resolve_selection(target, config, opts.get("profile", ""), flag_plugins)
+    if profile_source == "items":
+        profile_source = "plugins"
+
+    buckets = all_buckets()
+    known_plugins = set(buckets) | {"generate-skill"}
+    for p in plugins:
+        if p not in known_plugins:
+            die(f"unknown plugin: {p} (available: {', '.join(sorted(known_plugins))})")
+    if include_meta and "generate-skill" not in plugins:
+        plugins = list(plugins) + ["generate-skill"]
+    plugins = sorted(set(plugins))
+
+    if config.get("exclude"):
+        print("NOTE: .swissknife.json 'exclude' is skill-granular and is ignored "
+              "in plugin mode (plugins are bucket-granular)")
+
+    print(f"Target:   {target}")
+    print(f"Profile:  {profile_name or '-'} (via {source})")
+    print(f"Source:   {root}")
+    print(f"Plugins:  {' '.join(plugins)}")
+
+    list_only = opts.get("list", False)
+    dry_run = opts.get("dry_run", False)
+    if list_only:
+        return None
+
+    settings_file = opts.get("file") or "settings.local.json"
+    if settings_file not in ("settings.json", "settings.local.json"):
+        die("--file должен быть settings.json или settings.local.json")
+    dest = target / ".claude" / settings_file
+    settings = {}
+    if dest.exists():
+        try:
+            settings = json.loads(dest.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as e:
+            die(f"{dest}: invalid JSON: {e}")
+
+    marketplaces = settings.setdefault("extraKnownMarketplaces", {})
+    our_source = {"source": "directory", "path": str(root)}
+    if MARKETPLACE in marketplaces:
+        existing = marketplaces[MARKETPLACE].get("source", {})
+        if existing != our_source:
+            if fix_path_drift and existing.get("source") == "directory":
+                print(f"NOTE: путь marketplace устарел ({existing.get('path')}) — "
+                      f"обновляю на {root}")
+                marketplaces[MARKETPLACE] = {"source": our_source}
+            else:
+                print(f"NOTE: marketplace '{MARKETPLACE}' already declared with a "
+                      f"different source — keeping it: {json.dumps(existing)}")
+    else:
+        marketplaces[MARKETPLACE] = {"source": our_source}
+
+    enabled = settings.setdefault("enabledPlugins", {})
+    added, skipped_false = [], []
+    for p in plugins:
+        key = f"{p}@{MARKETPLACE}"
+        if key not in enabled:
+            enabled[key] = True
+            added.append(p)
+        elif enabled[key] is False:
+            skipped_false.append(p)
+    drift = [k for k, v in enabled.items()
+             if k.endswith(f"@{MARKETPLACE}") and v
+             and k.split("@")[0] not in plugins]
+
+    if dry_run:
+        print(f"--- dry-run: {dest} ---")
+        print(json.dumps(settings, ensure_ascii=False, indent=2))
+    else:
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        if dest.exists():
+            shutil.copy2(dest, f"{dest}.bak")
+            print(f"Бэкап:    {dest}.bak")
+        dest.write_text(json.dumps(settings, ensure_ascii=False, indent=2) + "\n",
+                        encoding="utf-8")
+        print(f"Записано: {dest}")
+
+    if added:
+        print(f"Включены: {' '.join(added)}")
+    if skipped_false:
+        print(f"Пропущены (явный false): {' '.join(skipped_false)}")
+    if drift:
+        print(f"NOTE: включены сверх профиля (не трогаю): {' '.join(drift)}")
+
+    # vendored-copy migration
+    skills_path = config.get("skills_path") or AGENT_DEFAULTS["claude"]
+    manifest_file = target / skills_path / MANIFEST
+    if manifest_file.exists():
+        manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
+        dest_root = manifest_file.parent
+        stale = []
+        for entry in manifest.get("skills", []):
+            name = entry.get("flat_name") or entry.get("path", "")
+            d = dest_root / name
+            if name and d.is_dir() and \
+                    str(d.resolve()).startswith(str(dest_root.resolve()) + os.sep):
+                stale.append(d)
+        if opts.get("cleanup_vendored") and not dry_run:
+            for d in stale:
+                shutil.rmtree(d)
+            manifest_file.unlink()
+            print(f"Удалены вендоренные копии: {len(stale)} skill dir(s) + манифест")
+        else:
+            print(f"NOTE: найдены вендоренные копии ({len(stale)} dir(s) в "
+                  f"{dest_root}) — удалить: --cleanup-vendored")
+
+    hub = opts.get("hub", False)
+    if hub and not dry_run:
+        generate_hub(target)
+    elif not dry_run:
+        print(f"Подсказка: корневой хаб скиллов — swissknifeman update или "
+              f"перезапуск с --hub")
+
+    record = {
+        "path": str(target),
+        "channel": "marketplace",
+        "profile": profile_name,
+        "profile_source": profile_source,
+        "plugins": plugins,
+        "settings_file": settings_file,
+        "hub": hub or hub_artifacts_exist(target),
+    }
+    if register and not dry_run:
+        upsert_project(record)
+
+    print("Далее: перезапустите сессию Claude Code в проекте "
+          "(или /plugin marketplace update swissknifeman)")
+    return record
+
+
+def cmd_connect():
+    opts = parse_flags(argv, {
+        "--target": "str", "--profile": "str", "--plugins": "str",
+        "--file": "str", "--cleanup-vendored": "bool", "--list": "bool",
+        "--dry-run": "bool", "--hub": "bool",
+    })
+    if opts["help"]:
+        print("swissknifeman connect [--profile P|--plugins a,b] "
+              "[--file settings.json|settings.local.json] [--cleanup-vendored] "
+              "[--list] [--dry-run] [--hub]")
+        return
+    target, _ = resolve_target(opts, allow_home_confirm=True)
+    do_connect(target, opts)
+
+
+# =================================================================================
+# vendor — канал вендоринга (Cursor и другие агенты)
+# =================================================================================
+def do_vendor(target, opts, register=True):
+    config = load_config(target)
+    flag_buckets = [b for b in opts.get("buckets", "").split(",") if b]
+    flag_exclude = [e for e in opts.get("exclude", "").split(",") if e]
+    list_only = opts.get("list", False)
+    dry_run = opts.get("dry_run", False)
+    force = opts.get("force", False)
+
+    buckets, profile_name, profile_source, source, include_meta = \
+        resolve_selection(target, config, opts.get("profile", ""), flag_buckets)
+    if profile_source == "items":
+        profile_source = "buckets"
+
+    known = all_buckets()
+    for b in buckets:
+        if b not in known:
+            die(f"unknown bucket: {b}")
+
+    # exclude = union of flag and config (safety-oriented, not precedence-based)
+    exclude = set(flag_exclude) | set(config.get("exclude", []))
+
+    agent = opts.get("agent", "") or config.get("agent", "") or "generic"
+    if agent not in AGENT_DEFAULTS:
+        die(f"unknown agent '{agent}' (available: {', '.join(AGENT_DEFAULTS)})")
+
+    skills_path = opts.get("skills_path", "") or config.get("skills_path", "") \
+        or AGENT_DEFAULTS[agent]
+    dest_root = target / skills_path
+
+    # --- collect skills (dir directly containing SKILL.md) ---------------------
+    skills = []  # (bucket, rel_path_under_bucket, dir, fm_name)
+    all_skill_rels = {}  # bucket -> [rel paths of every skill dir]
+    for bucket in buckets:
+        bucket_dir = root / "skills" / bucket
+        for skill_md in sorted(bucket_dir.rglob("SKILL.md")):
+            d = skill_md.parent
+            rel = d.relative_to(bucket_dir)
+            all_skill_rels.setdefault(bucket, []).append(str(rel))
+            fm_name = parse_frontmatter_fields(skill_md)["name"]
+            ids = {fm_name, d.name, f"{bucket}/{rel}".replace("\\", "/")}
+            if ids & exclude:
+                continue
+            skills.append((bucket, str(rel), d, fm_name))
+
+    if include_meta and (root / "generate-skill/generate-skill/SKILL.md").exists():
+        d = root / "generate-skill/generate-skill"
+        fm_name = parse_frontmatter_fields(d / "SKILL.md")["name"]
+        if not ({fm_name, "generate-skill"} & exclude):
+            skills.append(("generate-skill", ".", d, fm_name))
+
+    # --- dependency resolution (frontmatter `requires`) -------------------------
+    # Selected skills pull their `requires` transitively, across buckets; a pulled
+    # skill keeps its own bucket path in bucket layout. --exclude wins over a
+    # dependency (exclude is safety-oriented) — skipped with a warning.
+    index = {}  # fm_name (or dir name) -> (bucket, rel, dir, requires)
+    for bucket in known:
+        bucket_dir = root / "skills" / bucket
+        for skill_md in sorted(bucket_dir.rglob("SKILL.md")):
+            d = skill_md.parent
+            fields = parse_frontmatter_fields(skill_md)
+            index.setdefault(fields["name"] or d.name,
+                             (bucket, str(d.relative_to(bucket_dir)), d,
+                              fields["requires"]))
+
+    selected = {fm_name or d.name for _, _, d, fm_name in skills}
+    pulled = {}  # fm_name -> skill that first required it
+    queue = []
+    for bucket, rel, d, fm_name in skills:
+        key = fm_name or d.name
+        queue.extend((dep, key) for dep in index.get(key, ("", "", None, []))[3])
+
+    while queue:
+        dep, requester = queue.pop(0)
+        if dep in selected:
+            continue
+        if dep not in index:
+            warn(f"'{requester}' requires unknown skill '{dep}' — skipping")
+            continue
+        bucket, rel, d, dep_requires = index[dep]
+        if {dep, d.name, f"{bucket}/{rel}".replace("\\", "/")} & exclude:
+            warn(f"'{requester}' requires '{dep}' — excluded by --exclude, skipping")
+            continue
+        skills.append((bucket, rel, d, dep))
+        selected.add(dep)
+        pulled[dep] = requester
+        queue.extend((dd, dep) for dd in dep_requires)
+
+    def sanitize(name):
+        name = name.lower().replace(" ", "-").replace("_", "-")
+        name = re.sub(r"[^a-z0-9-]", "", name)
+        return re.sub(r"-{2,}", "-", name).strip("-")
+
+    # --- flat names for claude ---------------------------------------------------
+    def flat_names():
+        names = {}
+        for i, (bucket, rel, d, fm_name) in enumerate(skills):
+            names[i] = sanitize(fm_name) or sanitize(rel.replace("/", "-")) \
+                or sanitize(d.name)
+        # collision pass 1: prefix bucket
+        seen = {}
+        for i, n in names.items():
+            seen.setdefault(n, []).append(i)
+        for n, idxs in list(seen.items()):
+            if len(idxs) > 1:
+                for i in idxs:
+                    bucket = skills[i][0]
+                    if not names[i].startswith(bucket + "-"):
+                        warn(f"collision: '{n}' -> '{bucket}-{n}'")
+                        names[i] = f"{bucket}-{n}"
+        # collision pass 2: full path slug
+        seen = {}
+        for i, n in names.items():
+            seen.setdefault(n, []).append(i)
+        for n, idxs in seen.items():
+            if len(idxs) > 1:
+                for i in idxs:
+                    bucket, rel = skills[i][0], skills[i][1]
+                    slug = sanitize(f"{bucket}-{rel.replace('/', '-')}")
+                    warn(f"collision: '{n}' -> '{slug}'")
+                    names[i] = slug
+        return names
+
+    # --- report / list -------------------------------------------------------------
+    print(f"Target:      {target}")
+    print(f"Profile:     {profile_name or '-'} (via {source})")
+    print(f"Agent:       {agent}")
+    print(f"Skills path: {skills_path}")
+    print(f"Buckets:     {' '.join(buckets)}")
+    if exclude:
+        print(f"Exclude:     {' '.join(sorted(exclude))}")
+    print(f"Skills:      {len(skills)}")
+    if pulled:
+        print(f"Dependencies: {len(pulled)} pulled via requires")
+
+    flats = flat_names() if agent == "claude" else {}
+    if list_only:
+        for i, (bucket, rel, d, fm_name) in enumerate(skills):
+            suffix = f" -> {flats[i]}/" if agent == "claude" else ""
+            key = fm_name or d.name
+            dep_note = f"  (dependency of {pulled[key]})" if key in pulled else ""
+            print(f"  {bucket}/{rel}{suffix}{dep_note}")
+        return None
+
+    # --- install ---------------------------------------------------------------------
+    def copy_skill(src, dst):
+        if dry_run:
+            print(f"[dry-run] {src.relative_to(root)} -> {dst}")
+            return
+        shutil.copytree(src, dst, dirs_exist_ok=True,
+                        ignore=shutil.ignore_patterns("upstream.json",
+                                                      ".claude-plugin"))
+
+    def load_manifest(manifest_file):
+        if manifest_file.exists():
+            return json.loads(manifest_file.read_text(encoding="utf-8"))
+        return {}
+
+    def contained(path):
+        return str(path.resolve()).startswith(str(dest_root.resolve()) + os.sep)
+
+    def write_manifest(manifest_file, layout, installed, support_files=None):
+        data = {
+            "installed_at": date.today().isoformat(),
+            "profile": profile_name,
+            "agent": agent,
+            "layout": layout,
+            "skills": installed,
+        }
+        if support_files is not None:
+            data["support_files"] = support_files
+        manifest_file.write_text(json.dumps(data, indent=2, ensure_ascii=False)
+                                 + "\n", encoding="utf-8")
+
+    if agent == "claude":
+        print("NOTE: --agent claude vendoring is deprecated for Claude Code "
+              "projects — prefer the plugin marketplace: swissknifeman connect",
+              file=sys.stderr)
+        manifest_file = dest_root / MANIFEST
+        if not dry_run:
+            for entry in load_manifest(manifest_file).get("skills", []):
+                stale = dest_root / entry["flat_name"]
+                if stale.is_dir() and contained(stale):
+                    shutil.rmtree(stale)
+            dest_root.mkdir(parents=True, exist_ok=True)
+        installed = []
+        for i, (bucket, rel, d, fm_name) in enumerate(skills):
+            copy_skill(d, dest_root / flats[i])
+            installed.append({"flat_name": flats[i],
+                              "source_path": str(d.relative_to(root))})
+        if not dry_run:
+            write_manifest(manifest_file, "flat", installed)
+    else:
+        # bucket layout: manifest-driven clean reinstall, no silent overwrites
+        manifest_file = dest_root / MANIFEST
+        old = load_manifest(manifest_file)
+        old_paths = {e["path"] for e in old.get("skills", [])}
+
+        # support files (e.g. skills/oss-dev/references/) for selected buckets
+        support = []  # (src, rel "<bucket>/<rel_item>")
+        for bucket in buckets:
+            bucket_dir = root / "skills" / bucket
+            for item in sorted(bucket_dir.rglob("*")):
+                if item.is_dir() or item.name in ("SKILL.md", "upstream.json"):
+                    continue
+                rel_item = item.relative_to(bucket_dir)
+                if ".claude-plugin" in rel_item.parts:
+                    continue
+                if any(str(rel_item).startswith(r + os.sep)
+                       for r in all_skill_rels.get(bucket, []) if r != "."):
+                    continue
+                support.append((item, f"{bucket}/{rel_item}"))
+
+        planned = [(bucket, rel, d, f"{bucket}/{rel}" if rel != "." else bucket)
+                   for bucket, rel, d, fm_name in skills]
+        collisions = [p for _, _, _, p in planned
+                      if (dest_root / p).exists() and p not in old_paths]
+        if collisions and not force:
+            for p in collisions:
+                print(f"ERROR: exists and was not installed by swissknifeman: "
+                      f"{dest_root / p}", file=sys.stderr)
+            die(f"{len(collisions)} collision(s) — rerun with --force to overwrite")
+
+        if not dry_run:
+            for p in sorted(old_paths | set(old.get("support_files", [])),
+                            reverse=True):
+                stale = dest_root / p
+                if not contained(stale):
+                    continue
+                if stale.is_dir():
+                    shutil.rmtree(stale)
+                elif stale.is_file():
+                    stale.unlink()
+                parent = stale.parent
+                while parent != dest_root and parent.is_dir() and \
+                        not any(parent.iterdir()):
+                    parent.rmdir()
+                    parent = parent.parent
+            dest_root.mkdir(parents=True, exist_ok=True)
+
+        installed = []
+        for bucket, rel, d, path in planned:
+            copy_skill(d, dest_root / path)
+            installed.append({"path": path, "source_path": str(d.relative_to(root))})
+        support_rels = []
+        for item, rel_path in support:
+            dst = dest_root / rel_path
+            support_rels.append(rel_path)
+            if dry_run:
+                print(f"[dry-run] {item.relative_to(root)} -> {dst}")
+            else:
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(item, dst)
+        if not dry_run:
+            write_manifest(manifest_file, "bucket", installed, support_rels)
+
+    print(("[dry-run] " if dry_run else "")
+          + f"Installed {len(skills)} skills -> {dest_root}")
+
+    hub = opts.get("hub", False)
+    if hub and not dry_run:
+        generate_hub(target)
+    elif not dry_run:
+        print(f"Hint: корневой хаб скиллов — swissknifeman update или "
+              f"перезапуск с --hub")
+
+    record = {
+        "path": str(target),
+        "channel": "vendor",
+        "profile": profile_name,
+        "profile_source": profile_source,
+        "agent": agent,
+        "buckets": list(buckets),
+        "exclude": sorted(exclude),
+        "skills_path": skills_path,
+        "hub": hub or hub_artifacts_exist(target),
+    }
+    if register and not dry_run:
+        upsert_project(record)
+    return record
+
+
+def cmd_vendor():
+    opts = parse_flags(argv, {
+        "--target": "str", "--agent": "str", "--profile": "str",
+        "--buckets": "str", "--exclude": "str", "--skills-path": "str",
+        "--list": "bool", "--dry-run": "bool", "--force": "bool", "--hub": "bool",
+    })
+    if opts["help"]:
+        print("swissknifeman vendor [--agent claude|cursor|generic] "
+              "[--profile P|--buckets a,b] [--exclude x,y] [--skills-path P] "
+              "[--list] [--dry-run] [--force] [--hub]")
+        return
+    target, _ = resolve_target(opts, allow_home_confirm=True)
+    do_vendor(target, opts)
+
+
+# =================================================================================
+# update — обновить подключение/вендоринг проекта (диск — источник истины)
+# =================================================================================
+def detect_marketplace_file(target):
+    for fname in ("settings.local.json", "settings.json"):
+        f = target / ".claude" / fname
+        if f.is_file():
+            try:
+                s = json.loads(f.read_text(encoding="utf-8"))
+            except json.JSONDecodeError:
+                continue
+            if MARKETPLACE in s.get("extraKnownMarketplaces", {}):
+                return fname
+    return None
+
+
+def detect_vendor_path(target, config):
+    candidates = []
+    if config.get("skills_path"):
+        candidates.append(config["skills_path"])
+    candidates += [p for p in AGENT_DEFAULTS.values() if p not in candidates]
+    for p in candidates:
+        if (target / p / MANIFEST).is_file():
+            return p
+    return None
+
+
+def replay_opts(record):
+    """projects.json record -> flags for do_connect/do_vendor.
+    Explicit user choices (flag/plugins/buckets) are replayed; autodetect and
+    config sources re-resolve from disk."""
+    opts = {}
+    src = record.get("profile_source", "autodetect")
+    if src == "flag" and record.get("profile"):
+        opts["profile"] = record["profile"]
+    elif src == "plugins" and record.get("plugins"):
+        opts["plugins"] = ",".join(record["plugins"])
+    elif src == "buckets" and record.get("buckets"):
+        opts["buckets"] = ",".join(record["buckets"])
+    return opts
+
+
+def update_one(target, dry_run=False):
+    config = load_config(target)
+    mk_file = detect_marketplace_file(target)
+    vendor_path = detect_vendor_path(target, config)
+    records = {r["channel"]: r for r in db_records(target)}
+
+    if not mk_file and not vendor_path:
+        if records:
+            warn(f"{target}: записан в projects.json, но маркеры подключения "
+                 f"не найдены — забыть: swissknifeman list --prune")
+        else:
+            die(f"{target} не подключён — выполните 'swissknifeman connect' "
+                f"(Claude Code) или 'swissknifeman vendor' (другие агенты)")
+        return False
+
+    ok = True
+    if mk_file:
+        rec = records.get("marketplace", {})
+        if not rec:
+            print(f"NOTE: {target} не был в projects.json — регистрирую (adopt)")
+        opts = replay_opts(rec)
+        opts["file"] = mk_file
+        opts["dry_run"] = dry_run
+        opts["hub"] = bool(rec.get("hub")) or hub_artifacts_exist(target)
+        print(f"--- update (marketplace): {target} ---")
+        do_connect(target, opts, fix_path_drift=True)
+        print_registry_state()
+    if vendor_path:
+        rec = records.get("vendor", {})
+        manifest = {}
+        mf = target / vendor_path / MANIFEST
+        if mf.is_file():
+            manifest = json.loads(mf.read_text(encoding="utf-8"))
+        if not rec:
+            print(f"NOTE: {target} не был в projects.json — регистрирую (adopt)")
+        opts = replay_opts(rec)
+        # precedence: .swissknife.json > projects.json record > manifest
+        if not config.get("agent"):
+            agent = rec.get("agent") or manifest.get("agent") or ""
+            if agent:
+                opts["agent"] = agent
+        if not config.get("skills_path"):
+            opts["skills_path"] = vendor_path
+        if rec.get("exclude"):
+            opts["exclude"] = ",".join(rec["exclude"])
+        if not opts.get("profile") and not opts.get("buckets") \
+                and not config.get("buckets") and not config.get("project_type") \
+                and manifest.get("profile"):
+            opts["profile"] = manifest["profile"]
+        opts["dry_run"] = dry_run
+        opts["hub"] = bool(rec.get("hub")) or hub_artifacts_exist(target)
+        print(f"--- update (vendor): {target} ---")
+        do_vendor(target, opts)
+    return ok
+
+
+def cmd_update():
+    opts = parse_flags(argv, {"--target": "str", "--all": "bool",
+                              "--dry-run": "bool"})
+    if opts["help"]:
+        print("swissknifeman update [--all] [--dry-run]")
+        return
+    if opts["all"]:
+        db = load_db()
+        seen, results = set(), []
+        for rec in db["projects"]:
+            path = rec["path"]
+            if path in seen:
+                continue
+            seen.add(path)
+            target = Path(path)
+            if not target.is_dir():
+                warn(f"{path}: каталог не найден — пропускаю "
+                     f"(забыть: swissknifeman list --prune)")
+                results.append((path, "missing"))
+                continue
+            if target.resolve() == root.resolve():
+                continue
+            try:
+                update_one(target, dry_run=opts["dry_run"])
+                results.append((path, "ok"))
+            except SystemExit:
+                results.append((path, "failed"))
+        print("\n--- итог ---")
+        for path, state in results:
+            print(f"  {state:8} {path}")
+        if any(s == "failed" for _, s in results):
+            sys.exit(1)
+        return
+    target, _ = resolve_target(opts)
+    update_one(target, dry_run=opts["dry_run"])
+
+
+# =================================================================================
+# status — read-only отчёт по проекту
+# =================================================================================
+def cmd_status():
+    opts = parse_flags(argv, {"--target": "str"})
+    if opts["help"]:
+        print("swissknifeman status")
+        return
+    if opts.get("target"):
+        target = Path(os.path.expanduser(opts["target"])).resolve()
+        via = "--target"
+    else:
+        target, via = find_project_root()
+        if target is None:
+            die("корень проекта не найден выше CWD")
+    config = load_config(target)
+    print(f"Проект:   {target} (по маркеру {via})")
+    registered = {r["channel"] for r in db_records(target)}
+    print(f"Реестр:   {root}")
+    print(f"В projects.json: "
+          f"{', '.join(sorted(registered)) if registered else 'не зарегистрирован'}")
+
+    mk_file = detect_marketplace_file(target)
+    if mk_file:
+        s = json.loads((target / ".claude" / mk_file).read_text(encoding="utf-8"))
+        src = s["extraKnownMarketplaces"][MARKETPLACE].get("source", {})
+        moved = src != {"source": "directory", "path": str(root)}
+        print(f"\nКанал marketplace ({mk_file}):")
+        print(f"  Источник: {src.get('path', json.dumps(src))}"
+              + ("  [ПЕРЕЕХАЛ — починить: swissknifeman update]" if moved else ""))
+        enabled = [k.split("@")[0] for k, v in s.get("enabledPlugins", {}).items()
+                   if k.endswith(f"@{MARKETPLACE}") and v]
+        disabled = [k.split("@")[0] for k, v in s.get("enabledPlugins", {}).items()
+                    if k.endswith(f"@{MARKETPLACE}") and v is False]
+        plugins, profile_name, _, source, include_meta = \
+            resolve_selection(target, config, "", [])
+        if include_meta and "generate-skill" not in plugins:
+            plugins = list(plugins) + ["generate-skill"]
+        missing = sorted(set(plugins) - set(enabled) - set(disabled))
+        extra = sorted(set(enabled) - set(plugins))
+        print(f"  Включены: {' '.join(sorted(enabled)) or '-'}")
+        if disabled:
+            print(f"  Выключены явно: {' '.join(sorted(disabled))}")
+        print(f"  Профиль:  {profile_name or '-'} (via {source})")
+        if missing:
+            print(f"  Не хватает по профилю: {' '.join(missing)} "
+                  f"(добавить: swissknifeman update)")
+        if extra:
+            print(f"  Сверх профиля: {' '.join(extra)}")
+    vendor_path = detect_vendor_path(target, config)
+    if vendor_path:
+        mf = target / vendor_path / MANIFEST
+        manifest = json.loads(mf.read_text(encoding="utf-8"))
+        skills = manifest.get("skills", [])
+        gone = [e.get("source_path", "") for e in skills
+                if e.get("source_path") and not (root / e["source_path"]).exists()]
+        print(f"\nКанал vendor ({vendor_path}, layout {manifest.get('layout')}):")
+        print(f"  Скиллов: {len(skills)}, установлено {manifest.get('installed_at')}"
+              f", агент {manifest.get('agent')}, профиль {manifest.get('profile') or '-'}")
+        if gone:
+            print(f"  Удалены/переименованы в реестре ({len(gone)}): "
+                  + " ".join(gone[:5]) + (" …" if len(gone) > 5 else "")
+                  + "  (почистить: swissknifeman update)")
+    if not mk_file and not vendor_path:
+        print("\nКаналы: не подключён (swissknifeman connect | vendor)")
+    print()
+    print_registry_state()
+
+
+# =================================================================================
+# list — зарегистрированные проекты
+# =================================================================================
+def cmd_list():
+    opts = parse_flags(argv, {"--prune": "bool"})
+    if opts["help"]:
+        print("swissknifeman list [--prune]")
+        return
+    db = load_db()
+    if not db["projects"]:
+        print("Нет зарегистрированных проектов — swissknifeman connect/vendor "
+              "в проекте добавит запись.")
+        return
+    rows, missing = [], []
+    for rec in db["projects"]:
+        state = "ok" if Path(rec["path"]).is_dir() else "missing"
+        if state == "missing":
+            missing.append(rec)
+        rows.append((state, rec["channel"], rec.get("profile") or "-",
+                     rec.get("updated_at", "-"), rec["path"]))
+    w = max(len(r[4]) for r in rows)
+    print(f"{'STATE':8} {'CHANNEL':12} {'PROFILE':18} {'UPDATED':22} PATH")
+    for state, channel, profile, updated, path in rows:
+        print(f"{state:8} {channel:12} {profile:18} {updated:22} {path}")
+    if opts["prune"]:
+        if not missing:
+            print("\nНечего чистить.")
+            return
+        db["projects"] = [r for r in db["projects"] if Path(r["path"]).is_dir()]
+        save_db(db)
+        print(f"\nУдалено записей: {len(missing)}")
+    elif missing:
+        print(f"\n{len(missing)} запис(ей) указывают на отсутствующие каталоги — "
+              f"почистить: swissknifeman list --prune")
+
+
+# =================================================================================
+# registry — регенерация skills.json + плагин-манифестов (мейнтейнер)
+# =================================================================================
+def cmd_registry():
+    skills = []
+    references = []
+    OWNER = {"name": "Dmitry Vostrikov", "email": "dv.vostrikov@gmail.com"}
+    import hashlib
+
+    for skill_md in sorted(root.glob("skills/**/SKILL.md")):
+        rel = skill_md.relative_to(root)
+        parts = rel.parts
+        if len(parts) < 3:
+            continue
+        bucket = parts[1]
+        # Nested paths: devops/docker/php -> docker-php
+        if len(parts) > 4:
+            name = f"{parts[-2]}-{parts[-3]}" if parts[-3] != bucket else parts[-2]
+        else:
+            name = parts[2]
+        fm = parse_frontmatter(skill_md)
+        name = fm.get("name") or name
+        sha = hashlib.sha256(skill_md.read_bytes()).hexdigest()
+        entry = {
+            "name": name,
+            "bucket": bucket,
+            "path": str(rel),
+            "version": fm.get("version") or "0.1.0",
+            "description": fm.get("description", ""),
+            "sha256": sha,
+        }
+        # Graph/meta fields: optional, omitted when empty (same as upstream fields)
+        for list_key in ("tags", "requires", "produces_for"):
+            vals = parse_inline_list(fm.get(list_key, ""))
+            if vals:
+                entry[list_key] = vals
+        # Provenance: upstream.json next to SKILL.md marks an external skill
+        upstream_file = skill_md.parent / "upstream.json"
+        if upstream_file.exists():
+            up = json.loads(upstream_file.read_text(encoding="utf-8"))
+            files = up.get("files", [])
+            main = next((f for f in files if f.get("path") == "SKILL.md"),
+                        files[0] if files else {})
+            entry["source"] = up.get("source", "http")
+            entry["upstream"] = main.get("url", "")
+            if main.get("fetched_at"):
+                entry["fetched_at"] = main["fetched_at"]
+        else:
+            entry["source"] = "local"
+        skills.append(entry)
+
+    for ref in sorted((root / "skills/oss-dev/references").glob("*.md")):
+        references.append({
+            "name": ref.stem,
+            "path": str(ref.relative_to(root)),
+            "parent": "oss-development",
+            "sha256": hashlib.sha256(ref.read_bytes()).hexdigest(),
+        })
+
+    buckets = {}
+    for s in skills:
+        buckets.setdefault(s["bucket"], 0)
+        buckets[s["bucket"]] += 1
+
+    # --- bucket metadata (buckets.json) --------------------------------------
+    meta_file = root / "buckets.json"
+    if not meta_file.exists():
+        die("buckets.json not found — every bucket needs description/category/tags")
+    bucket_meta = json.loads(meta_file.read_text(encoding="utf-8"))
+    bucket_dirs = sorted(d.name for d in (root / "skills").iterdir() if d.is_dir())
+    missing = [b for b in bucket_dirs if b not in bucket_meta]
+    orphans = [b for b in bucket_meta if b not in bucket_dirs]
+    if missing:
+        die(f"buckets.json: missing entries for: {', '.join(missing)}")
+    if orphans:
+        die(f"buckets.json: entries without skills/ dir: {', '.join(orphans)}")
+
+    registry = {
+        "version": 5,
+        "name": "swissknifeman",
+        "repository": "https://github.com/academici/swissknifeman",
+        "schema": "https://github.com/academici/swissknifeman/blob/main/SKILL_TEMPLATE.md",
+        "buckets": {b: {"description": bucket_meta[b]["description"],
+                        "count": c, "status": "active"}
+                    for b, c in sorted(buckets.items())},
+        "skills": skills,
+        "references": references,
+    }
+
+    (root / "skills.json").write_text(
+        json.dumps(registry, indent=2, ensure_ascii=False) + "\n")
+    print(f"Updated skills.json: {len(skills)} skills, {len(references)} references")
+
+    # --- Claude Code plugin manifests -----------------------------------------
+    def write_json(path, data):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n",
+                        encoding="utf-8")
+
+    def skills_dirs(plugin_root):
+        """Dirs (relative, ./-prefixed) whose subdirs contain SKILL.md files."""
+        dirs = set()
+        for skill_md in plugin_root.rglob("SKILL.md"):
+            rel = skill_md.parent.parent.relative_to(plugin_root)
+            dirs.add("./" if str(rel) == "." else f"./{rel.as_posix()}")
+        return sorted(dirs)
+
+    marketplace_plugins = []
+    for bucket in bucket_dirs:
+        bucket_dir = root / "skills" / bucket
+        dirs = skills_dirs(bucket_dir)
+        if not dirs:
+            continue
+        meta = bucket_meta[bucket]
+        write_json(bucket_dir / ".claude-plugin" / "plugin.json", {
+            "name": bucket,
+            "description": meta["description"],
+            "skills": dirs[0] if len(dirs) == 1 else dirs,
+        })
+        marketplace_plugins.append({
+            "name": bucket,
+            "source": f"./skills/{bucket}",
+            "description": meta["description"],
+            "category": meta.get("category", ""),
+            "tags": meta.get("tags", []),
+        })
+
+    meta_skill_dir = root / "generate-skill"
+    meta_fm = parse_frontmatter(meta_skill_dir / "generate-skill" / "SKILL.md")
+    write_json(meta_skill_dir / ".claude-plugin" / "plugin.json", {
+        "name": "generate-skill",
+        "description": meta_fm.get("description", "Meta-skill for creating new skills"),
+        "skills": "./",
+    })
+    marketplace_plugins.append({
+        "name": "generate-skill",
+        "source": "./generate-skill",
+        "description": meta_fm.get("description", "Meta-skill for creating new skills"),
+        "category": "meta",
+        "tags": ["meta", "authoring"],
+    })
+
+    write_json(root / ".claude-plugin" / "marketplace.json", {
+        "name": MARKETPLACE,
+        "owner": OWNER,
+        "plugins": sorted(marketplace_plugins, key=lambda p: p["name"]),
+    })
+    print(f"Updated plugin manifests: {len(marketplace_plugins)} plugins "
+          f"(.claude-plugin/marketplace.json)")
+
+    subprocess.run([str(root / "scripts" / "generate-graph.sh")], check=True)
+
+
+# =================================================================================
+# doctor — диагностика окружения
+# =================================================================================
+def cmd_doctor():
+    issues = 0
+
+    def check(ok, label, hint=""):
+        nonlocal issues
+        mark = "ok " if ok else "FAIL"
+        print(f"  [{mark}] {label}" + (f" — {hint}" if hint and not ok else ""))
+        if not ok:
+            issues += 1
+
+    print(f"swissknifeman doctor (реестр: {root})")
+    check(sys.version_info >= (3, 8), f"python3 {sys.version.split()[0]}")
+
+    link = Path(os.path.expanduser("~/.local/bin/swissknifeman"))
+    resolved = Path(os.path.realpath(link)) if link.exists() else None
+    check(resolved is not None and str(resolved).startswith(str(root) + os.sep),
+          f"симлинк {link}",
+          "перезапустите install.sh из репозитория реестра")
+    on_path = any(Path(p or ".").resolve() == link.parent.resolve()
+                  for p in os.environ.get("PATH", "").split(os.pathsep))
+    check(on_path, f"{link.parent} в PATH",
+          'добавьте: export PATH="$HOME/.local/bin:$PATH"')
+
+    if DB_FILE.exists():
+        try:
+            db = json.loads(DB_FILE.read_text(encoding="utf-8"))
+            check(db.get("version", 1) <= DB_VERSION,
+                  f"projects.json (записей: {len(db.get('projects', []))})",
+                  "версия новее поддерживаемой — git pull в реестре")
+            stale = [p for p in db.get("projects", [])
+                     if not Path(p["path"]).is_dir()]
+            check(not stale,
+                  f"записи projects.json указывают на существующие каталоги",
+                  f"{len(stale)} устаревших — swissknifeman list --prune")
+        except json.JSONDecodeError:
+            check(False, "projects.json парсится",
+                  "битый JSON — следующая запись пересоздаст файл")
+    else:
+        check(True, "projects.json отсутствует (создастся при первом connect/vendor)")
+
+    sha, dirty = registry_git_state()
+    check(sha is not None, "реестр — git-репозиторий")
+    if sha:
+        check(not dirty, f"реестр чистый (HEAD {sha})",
+              "есть незакоммиченные изменения скиллов — marketplace видит "
+              "только коммиты")
+    profiles = sorted((root / "profiles").glob("*.json"))
+    bad = []
+    for p in profiles:
+        try:
+            json.loads(p.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            bad.append(p.name)
+    check(profiles and not bad, f"профили загружаются ({len(profiles)})",
+          f"битые: {', '.join(bad)}")
+
+    print(f"\n{'Все проверки пройдены.' if issues == 0 else f'Проблем: {issues}'}")
+    if issues:
+        sys.exit(1)
+
+
+COMMANDS = {
+    "connect": cmd_connect, "vendor": cmd_vendor, "update": cmd_update,
+    "status": cmd_status, "list": cmd_list, "registry": cmd_registry,
+    "doctor": cmd_doctor,
+}
+COMMANDS[cmd]()
+PY

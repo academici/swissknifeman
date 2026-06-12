@@ -8,7 +8,6 @@
 | `validate.yml` | push / PR | `scripts/validate.sh`: frontmatter, upstream.json, профили, манифесты |
 | `upstream-sync.yml` | еженедельно | проверка апстримов → PR с диффом |
 | `sha256-update.yml` | push | пересчёт хешей реестра |
-| `sync-to-brain.yml` | ежедневно | зеркало реестра в `academici/brain` |
 | `scanner-pr.yml` | еженедельно | PR с кандидатами от сканера |
 
 ## Принцип: всё через PR

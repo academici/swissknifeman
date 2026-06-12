@@ -21,10 +21,11 @@ claude plugin marketplace add ~/projects/packages/swissknifeman
 ## На каждый проект: подключить плагины
 
 ```bash
-~/projects/packages/swissknifeman/scripts/connect-claude.sh --target ~/projects/my-app
+cd ~/projects/my-app && swissknifeman connect
 ```
 
-Скрипт определяет тип проекта (те же маркеры, что и `install.sh`) и записывает
+Команда определяет тип проекта (те же маркеры, что и `swissknifeman vendor`;
+корень проекта находится автоматически от текущей директории) и записывает
 в `.claude/settings.local.json` проекта:
 
 ```json
@@ -57,7 +58,7 @@ claude plugin marketplace add ~/projects/packages/swissknifeman
 
 Манифесты (`.claude-plugin/plugin.json` в каждом bucket-е и корневой
 `marketplace.json`) **генерируются** — после добавления/перемещения скилла
-запускайте `./sync.sh --update-registry`; `validate.sh` ловит устаревшие.
+запускайте `swissknifeman registry`; `validate.sh` ловит устаревшие.
 
 ## Обновления
 
@@ -68,8 +69,9 @@ claude plugin marketplace add ~/projects/packages/swissknifeman
 
 ## Миграция со старого вендоринга
 
-Раньше скиллы копировались в `.claude/skills/` проекта (`install.sh --agent claude`,
-теперь deprecated для Claude Code). `connect-claude.sh` находит старый манифест
+Раньше скиллы копировались в `.claude/skills/` проекта (вендоринг — теперь
+`swissknifeman vendor --agent claude`, deprecated для Claude Code).
+`swissknifeman connect` находит старый манифест
 `.swissknifeman-manifest.json` и по флагу `--cleanup-vendored` удаляет **только**
 вендоренные копии — собственные скиллы проекта не трогаются.
 
@@ -88,7 +90,7 @@ claude plugin marketplace add ~/projects/packages/swissknifeman
 ```
 
 Такой источник можно класть и в коммитимый `.claude/settings.json`
-(`connect-claude.sh --file settings.json` + ручная правка source). Для фоновых
+(`swissknifeman connect --file settings.json` + ручная правка source). Для фоновых
 автообновлений приватного репо нужен `GITHUB_TOKEN` в окружении.
 
 ## Permissions
@@ -109,8 +111,9 @@ overrides для CLAUDE.md-специфики. Формат — в
 
 ## Вендоринг (deprecated для Claude Code)
 
-`./install.sh --target <проект> --agent claude` по-прежнему работает (плоская
-раскладка + манифест), но для Claude Code предпочтителен marketplace: единый
+`swissknifeman vendor --agent claude` (из каталога проекта) по-прежнему
+работает (плоская раскладка + манифест), но для Claude Code предпочтителен
+marketplace: единый
 источник, обновления без переустановки, ничего лишнего в репо проекта.
 Вендоринг остаётся основным путём для Cursor и других агентов — см.
 [Установку скиллов](/guide/installation).

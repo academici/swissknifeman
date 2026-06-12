@@ -29,7 +29,8 @@
 
 ## Как работает автодетект
 
-`install.sh` проверяет маркеры в целевом каталоге в порядке специфичности:
+`swissknifeman vendor` (как и `connect`) проверяет маркеры в целевом каталоге
+в порядке специфичности:
 
 1. `.obsidian/` → `obsidian-vault`
 2. `artisan` + `composer.json` → `laravel-project`

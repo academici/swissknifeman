@@ -4,7 +4,7 @@
 
 | Направление | Механизм | Кто источник |
 |---|---|---|
-| **Реестр → проект** | `install.sh` | SwissKnifeMan: универсальные скиллы под тип проекта |
+| **Реестр → проект** | `swissknifeman vendor` | SwissKnifeMan: универсальные скиллы под тип проекта |
 | **Пакет → приложение** | `vendor:publish` | Composer-пакет: доменные скиллы о самом пакете |
 
 Первое направление описано в [Установке](/guide/installation). Эта страница —
@@ -70,11 +70,11 @@ php artisan vendor:publish --tag=my-package-skills-claude
 php artisan vendor:publish --tag=my-package-skills-claude --force
 ```
 
-## Сосуществование с install.sh
+## Сосуществование с swissknifeman vendor
 
 Оба механизма работают в одном проекте и не мешают друг другу:
 
-- `install.sh` ведёт манифест `.swissknifeman-manifest.json` и при
+- `swissknifeman vendor` ведёт манифест `.swissknifeman-manifest.json` и при
   переустановке чистит **только свои** скиллы — опубликованные пакетами
   не трогаются;
 - префикс пакета в имени папки гарантирует отсутствие коллизий имён;
@@ -102,7 +102,7 @@ php artisan vendor:publish --tag=my-package-skills-claude --force
 Полный цикл экосистемы выглядит так:
 
 ```
-SwissKnifeMan ──install.sh──→ проект пакета     (скиллы для разработки пакета)
+SwissKnifeMan ──swissknifeman vendor──→ проект пакета (скиллы для разработки пакета)
 проект пакета ──разработка──→ доменные скиллы   (resources/skills/)
 пакет ──vendor:publish──→ приложения-потребители (скиллы для использования пакета)
 приложения ──сканер──→ SwissKnifeMan             (новые сниппеты из практики)

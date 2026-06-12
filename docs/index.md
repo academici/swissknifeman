@@ -22,7 +22,7 @@ features:
     details: 65+ скиллов в 10 bucket-ах, пресеты permissions, профили проектов, адаптеры под IDE. Один источник истины вместо копипасты между проектами.
   - icon: 🎯
     title: Контекстная установка
-    details: install.sh сам определяет тип проекта — Laravel, PHP-пакет, Obsidian vault — и ставит подходящий набор скиллов. Одна команда — и проект готов к работе с AI.
+    details: CLI swissknifeman сам определяет тип проекта — Laravel, PHP-пакет, Obsidian vault — и подключает подходящий набор скиллов. Одна команда — и проект готов к работе с AI.
   - icon: 🔓
     title: Пресеты permissions
     details: Готовые .claude/settings.json с максимально разрешённым доступом — git, composer, artisan, npm, docker. Никаких бесконечных permission-промптов в новом проекте.

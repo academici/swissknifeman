@@ -9,29 +9,35 @@
 
 - путь и версию;
 - `sha256` каждого файла — целостность и детект изменений;
-- **provenance**: `source: local | github | http`, URL апстрима, `fetched_at`.
+- **provenance**: `source: local | github | http`, URL апстрима, `fetched_at`;
+- **граф и маршрутизация** (реестр v5): `tags`, `requires`, `produces_for`
+  из frontmatter — поля опциональны и опускаются, если пусты.
 
 По реестру всегда видно, что в библиотеке самописное, что откуда взято и
 какой давности.
 
+Поля графа использует [страница графа зависимостей](./graph) (генерируется
+`scripts/generate-graph.sh` при каждом `swissknifeman registry`);
+`swissknifeman vendor` читает `requires` напрямую из frontmatter и транзитивно
+дотягивает зависимости при выборочной установке.
+
 ## Пересборка
 
 ```bash
-# Пересобрать реестр
-./sync.sh --update-registry
-
-# Пересборка + зеркало в Obsidian vault
-BRAIN_PATH=~/path/to/brain ./sync.sh
+# Пересобрать реестр (skills.json, манифесты плагинов, граф)
+swissknifeman registry
 ```
 
-`sync.sh` парсит frontmatter каждого `SKILL.md` (только frontmatter, не всё
-тело файла), считает хеши и собирает итоговый JSON.
+`swissknifeman registry` парсит frontmatter каждого `SKILL.md` (только
+frontmatter, не всё тело файла), считает хеши и собирает итоговый JSON.
 
 ## Автоматизация
 
-- `sha256-update.yml` — пересчитывает хеши реестра при каждом пуше;
-- `sync-to-brain.yml` — ежедневно зеркалирует реестр в `academici/brain`
-  (`.ai/skills-registry/`).
+- `sha256-update.yml` — пересчитывает хеши реестра при каждом пуше.
+
+Отдельного зеркалирования в Obsidian vault больше нет: vault — обычный
+проект-потребитель, который подключается через `swissknifeman vendor`
+и обновляется командой `swissknifeman update` (см. [CLI](./cli)).
 
 ## Когда пересобирать вручную
 

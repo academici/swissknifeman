@@ -34,6 +34,15 @@ def parse_frontmatter(path):
     return None  # unterminated block
 
 
+def parse_inline_list(value):
+    """Inline YAML list ('[a, "b", c]') -> list of strings; anything else -> []."""
+    value = (value or "").strip()
+    if not (value.startswith("[") and value.endswith("]")):
+        return []
+    items = [i.strip().strip('"').strip("'") for i in value[1:-1].split(",")]
+    return [i for i in items if i]
+
+
 def load_upstream(skill_dir):
     f = skill_dir / "upstream.json"
     if not f.exists():
@@ -190,7 +199,7 @@ def expected_skills_dirs(plugin_root):
     return sorted(dirs)
 
 
-STALE_HINT = "run ./sync.sh --update-registry"
+STALE_HINT = "run 'swissknifeman registry' (or ./sync.sh --update-registry)"
 plugin_roots = {b: root / "skills" / b for b in bucket_dirs}
 plugin_roots["generate-skill"] = root / "generate-skill"
 
@@ -288,6 +297,90 @@ for name, in_buckets in sorted(seen_names.items()):
             f"skill name '{name}' appears in buckets {', '.join(in_buckets)} — "
             f"legal with plugin namespaces, collides in vendoring modes")
 
+# --- 9. dependency graph (requires / produces_for) ---------------------------
+# Edge names are frontmatter `name` values. Cycles are checked over `requires`
+# only: an `A requires B` + `B produces_for A` pair is a normal complementary
+# link, not a cycle.
+graph_requires = {}
+graph_produces = {}
+name_to_rel = {}
+for skill_md in skill_files:
+    rel = skill_md.relative_to(root)
+    fm = parse_frontmatter(skill_md) or {}
+    name = fm.get("name", "").strip().strip('"').strip("'")
+    if not name:
+        continue
+    name_to_rel.setdefault(name, str(rel))
+    for key, store in (("requires", graph_requires), ("produces_for", graph_produces)):
+        raw = fm.get(key, "").strip()
+        deps = parse_inline_list(raw)
+        if raw and raw != "[]" and not deps:
+            warnings.append(
+                f"{rel}: {key} is set but not an inline list ('{raw}') — "
+                f"use '[a, b]' syntax; multiline YAML lists are not parsed")
+        store[name] = deps
+
+all_names = set(graph_requires) | set(graph_produces)
+for name in sorted(all_names):
+    src = name_to_rel[name]
+    for key, store in (("requires", graph_requires), ("produces_for", graph_produces)):
+        for dep in store.get(name, []):
+            if dep == name:
+                errors.append(f"{src}: {key} references itself")
+            elif dep not in all_names:
+                errors.append(f"{src}: {key} unknown skill '{dep}'")
+
+# Cycle detection over `requires` (iterative DFS, white/grey/black colouring)
+WHITE, GREY, BLACK = 0, 1, 2
+colour = {n: WHITE for n in all_names}
+for start in sorted(all_names):
+    if colour[start] != WHITE:
+        continue
+    stack = [(start, iter(graph_requires.get(start, [])))]
+    colour[start] = GREY
+    path = [start]
+    while stack:
+        node, it = stack[-1]
+        advanced = False
+        for dep in it:
+            if dep not in all_names:
+                continue
+            if colour[dep] == GREY:
+                cycle = path[path.index(dep):] + [dep]
+                errors.append(f"requires cycle: {' -> '.join(cycle)}")
+            elif colour[dep] == WHITE:
+                colour[dep] = GREY
+                path.append(dep)
+                stack.append((dep, iter(graph_requires.get(dep, []))))
+                advanced = True
+                break
+        if not advanced:
+            colour[node] = BLACK
+            path.pop()
+            stack.pop()
+
+# --- 10. internal project skills (.claude/skills/) ---------------------------
+# Внутренние скиллы разработки реестра: НЕ экспортируются и НЕ попадают в
+# skills.json — линтуются мягко (только name+description, без полей реестра).
+registry_names = set(seen_names)
+for skill_md in sorted(root.glob(".claude/skills/*/SKILL.md")):
+    rel = skill_md.relative_to(root)
+    fm = parse_frontmatter(skill_md)
+    if fm is None:
+        errors.append(f"{rel}: missing frontmatter block")
+        continue
+    name = fm.get("name", "").strip().strip('"').strip("'")
+    if not name or not fm.get("description"):
+        errors.append(f"{rel}: internal skill needs name + description")
+        continue
+    if not KEBAB_RE.match(name):
+        errors.append(f"{rel}: name must be kebab-case")
+    if name != skill_md.parent.name:
+        errors.append(f"{rel}: name '{name}' must match dir '{skill_md.parent.name}'")
+    if name in registry_names:
+        warnings.append(
+            f"{rel}: internal skill name '{name}' collides with a registry skill")
+
 # --- report ----------------------------------------------------------------
 for w in warnings:
     print(f"WARN: {w}")
@@ -300,3 +393,12 @@ if errors:
     sys.exit(1)
 print(f"{checked} skills checked — all valid ({len(warnings)} warning(s))")
 PY
+
+# --- 11. CLI + shell scripts ---------------------------------------------------
+[[ -x "$REPO_ROOT/bin/swissknifeman" ]] || {
+  echo "ERROR: bin/swissknifeman missing or not executable" >&2; exit 1; }
+for sh in "$REPO_ROOT/bin/swissknifeman" "$REPO_ROOT/install.sh" \
+          "$REPO_ROOT/sync.sh" "$REPO_ROOT"/scripts/*.sh; do
+  bash -n "$sh" || { echo "ERROR: bash -n failed: $sh" >&2; exit 1; }
+done
+echo "CLI + shell scripts: syntax OK"

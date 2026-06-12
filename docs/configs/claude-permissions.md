@@ -47,7 +47,7 @@
 ./scripts/apply-permissions.sh --target . --file settings.json
 ```
 
-Автодетект использует те же маркеры, что и `install.sh`:
+Автодетект использует те же маркеры, что и `swissknifeman vendor`:
 
 | Маркер | Пресет |
 |---|---|

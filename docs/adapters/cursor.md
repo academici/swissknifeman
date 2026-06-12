@@ -3,10 +3,10 @@
 ## Установка скиллов
 
 ```bash
-# Глобально
-./install.sh ~/.cursor/skills
+# Из каталога проекта — вендоринг в .cursor/skills/
+swissknifeman vendor --agent cursor
 
-# Project-level — скопируйте нужный SKILL.md в .cursor/skills/ проекта
+# Точечно — скопируйте нужный SKILL.md в .cursor/skills/ проекта
 cp -r skills/php/laravel-testing ~/projects/my-app/.cursor/skills/
 ```
 

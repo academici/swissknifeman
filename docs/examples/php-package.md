@@ -8,7 +8,7 @@
 cd ~/projects/packages/my-package
 
 # Скиллы: composer.json без artisan → профиль php-package
-~/projects/packages/swissknifeman/install.sh --target . --agent claude
+swissknifeman vendor --agent claude
 
 # Permissions: base + php-package
 ~/projects/packages/swissknifeman/scripts/apply-permissions.sh --target .
@@ -43,5 +43,5 @@ vendor/bin/infection
 доставьте её явно:
 
 ```bash
-~/projects/packages/swissknifeman/install.sh --target . --buckets roles --agent claude
+swissknifeman vendor --buckets roles --agent claude
 ```

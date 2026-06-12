@@ -1,0 +1,15 @@
+{
+  "skill": "medialibrary",
+  "snippets": [
+    {
+      "file": "model-media.php",
+      "description": "Модель с HasMedia/InteractsWithMedia: коллекции (singleFile, useDisk, fallback) и конверсии (Fit, nonQueued)",
+      "tags": ["media", "model", "collections", "conversions"]
+    },
+    {
+      "file": "media-usage.php",
+      "description": "Добавление (addMedia/FromRequest + FileAdder-опции), получение URL и удаление медиа в контроллере",
+      "tags": ["media", "controller", "upload", "urls"]
+    }
+  ]
+}

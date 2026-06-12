@@ -1,0 +1,25 @@
+{
+  "skill": "enum-attributes",
+  "snippets": [
+    {
+      "file": "attribute.php",
+      "description": "Классы атрибутов метаданных: final readonly + TARGET_CLASS_CONSTANT (Label, Color, Description, многопараметровый Dashboard)",
+      "tags": ["enum", "attributes", "metadata"]
+    },
+    {
+      "file": "concern-trait.php",
+      "description": "EnumCaseAttributeResolver (reflection + статический кеш) и Concern-трейты HasLabelAttribute/HasColorAttribute с дефолтами",
+      "tags": ["enum", "trait", "reflection", "resolver"]
+    },
+    {
+      "file": "enum-example.php",
+      "description": "Обогащённый enum OrderStatus: атрибуты над кейсами, трейты, выборка allForStage() по доменному атрибуту",
+      "tags": ["enum", "example", "filament"]
+    },
+    {
+      "file": "composer-path-repo.json",
+      "description": "Подключение локального пакета через repositories path + symlink с фиксацией версии",
+      "tags": ["composer", "path-repository", "local-package"]
+    }
+  ]
+}

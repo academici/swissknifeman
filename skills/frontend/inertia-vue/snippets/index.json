@@ -1,0 +1,20 @@
+{
+  "skill": "inertia-vue",
+  "snippets": [
+    {
+      "file": "structure.md",
+      "description": "Карта слоёв resources/js с деревом и таблицей «что куда кладём», правила доменной организации",
+      "tags": ["architecture", "structure", "layers"]
+    },
+    {
+      "file": "composable-example.ts",
+      "description": "Доменный composable useDocumentForm: useForm + wayfinder actions/routes, навигация через router.visit",
+      "tags": ["composable", "useform", "wayfinder"]
+    },
+    {
+      "file": "page-example.vue",
+      "description": "Тонкая Inertia-страница: layout, Link, доменный компонент, форма через composable",
+      "tags": ["page", "inertia", "vue"]
+    }
+  ]
+}

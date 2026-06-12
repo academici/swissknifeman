@@ -1,14 +1,15 @@
 ---
 name: security-design
 bucket: architect
-version: 0.1.0
-description: Классификация данных, auth-стратегия, RBAC/ABAC, OWASP Top 10, GDPR, STRIDE threat modeling
+version: 0.2.0
+description: "Классификация данных, auth-стратегия, RBAC/ABAC, OWASP Top 10, GDPR, STRIDE threat modeling, операционный чеклист безопасности"
 risk: draft
 persona: architect
 tags: [security, compliance]
 requires: [architecture]
 produces_for: []
 outputs: ["docs/03_Dev/Security_Design.md"]
+snippets: ["stride-threat-model.md", "ops-security-checklist.md"]
 sha256: ""
 adapters: [claude, cursor, fable]
 ---
@@ -128,6 +129,15 @@ Security — это не список фич, которые добавят в �
 | **I**nformation Disclosure | Какие данные могут утечь и через какой канал? |
 | **D**enial of Service | Есть ли rate limiting? Защита от flood? |
 | **E**levation of Privilege | Может ли User получить Admin-права? |
+
+---
+
+## Когда какой сниппет открывать
+
+| Ситуация | Файл |
+|:---|:---|
+| Прохожу STRIDE по компонентам (Шаг 7) — нужен развёрнутый шаблон | `snippets/stride-threat-model.md` |
+| Настройка/ревью приложения, БД, серверов, кредов, бэкапов — операционные правила (по Spatie) | `snippets/ops-security-checklist.md` |
 
 ---
 

@@ -1,0 +1,30 @@
+{
+  "skill": "vite-multi-build",
+  "snippets": [
+    {
+      "file": "vite.config.js",
+      "description": "Основная сборка: входы app.ts + sass, loadEnv для APP_URL/VITE_PORT, HMR/CORS для Docker, алиасы",
+      "tags": ["vite", "laravel", "docker"]
+    },
+    {
+      "file": "vite.admin.config.js",
+      "description": "Админская сборка Filament: отдельный hotFile, buildDirectory public/filament, свой tailwind-конфиг",
+      "tags": ["vite", "filament", "admin"]
+    },
+    {
+      "file": "tailwind.config.js",
+      "description": "Tailwind-тема основного приложения: кастомные шрифты, plugin forms, content без Filament",
+      "tags": ["tailwind", "theme"]
+    },
+    {
+      "file": "tailwind-admin.config.js",
+      "description": "Tailwind админки: presets с пресетом Filament, content только Filament-файлы",
+      "tags": ["tailwind", "filament", "preset"]
+    },
+    {
+      "file": "package-scripts.json",
+      "description": "Скрипты package.json: dev/build и dev:admin/build:admin для двух сборок",
+      "tags": ["npm", "scripts", "build"]
+    }
+  ]
+}

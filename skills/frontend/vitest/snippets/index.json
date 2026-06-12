@@ -1,0 +1,15 @@
+{
+  "skill": "vitest",
+  "snippets": [
+    {
+      "file": "vitest.config.ts",
+      "description": "Конфиг Vitest: jsdom, globals, алиасы как в vite.config, coverage v8 с exclude автогена (wayfinder/actions/routes)",
+      "tags": ["vitest", "config", "coverage"]
+    },
+    {
+      "file": "component-test.ts",
+      "description": "Примеры тестов: Vue-компонент через mount() и composable как чистая функция, зеркальная структура tests/",
+      "tags": ["vitest", "vue-test-utils", "composable"]
+    }
+  ]
+}

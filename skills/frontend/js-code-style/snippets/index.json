@@ -1,0 +1,15 @@
+{
+  "skill": "js-code-style",
+  "snippets": [
+    {
+      "file": "prettier-config.json",
+      "description": "Prettier-конфиг Spatie-стиля: tabWidth 4, printWidth 120, singleQuote",
+      "tags": ["prettier", "config", "formatting"]
+    },
+    {
+      "file": "style-examples.ts",
+      "description": "Примеры до/после: const/let, строгое ===, function vs стрелочные, shorthand, деструктуризация, имена, импорты",
+      "tags": ["typescript", "examples", "spatie"]
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 ---
 name: laravel-permissions
 bucket: php
-version: 0.2.0
+version: 0.3.0
 description: "RBAC, policies, gates и entity-scoped permissions (AzGuard patterns)"
 risk: write
 persona: oss-dev
@@ -23,6 +23,8 @@ sha256: ""
 ## Контекст
 
 RBAC для Laravel: стандартные policies/gates + entity-scoped permissions (контекст workspace/project).
+
+Базовый вариант для новых проектов — пакет **azguard** (code-first RBAC, см. скилл `php/azguard`). Сниппеты этого скилла — ручная реализация без пакета: используй их, когда внешняя зависимость нежелательна.
 
 ## Алгоритм
 

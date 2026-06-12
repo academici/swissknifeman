@@ -1,4 +1,4 @@
-# Code review (SOVA)
+# Code review
 
 ## Когда активировать
 
@@ -42,7 +42,7 @@
 - **`RefreshDatabase`** / изоляция **`{{project_name}}_test`** — **`testing-rules`**.
 - Минимальный набор команд и Docker vs хост — таблица в **`testing-rules`**.
 
-## Security pass (SOVA)
+## Security pass
 
 Сначала опирайся на навык **`spatie-security`** (общие практики Laravel и безопасность кода).
 

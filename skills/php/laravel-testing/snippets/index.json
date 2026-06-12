@@ -53,6 +53,41 @@
         "testing",
         "database"
       ]
+    },
+    {
+      "file": "phpunit.xml",
+      "description": "phpunit.xml с изолированной тестовой БД <app>_test: server + env force=true, array-драйверы, media-test диск",
+      "tags": [
+        "testing",
+        "phpunit",
+        "database"
+      ]
+    },
+    {
+      "file": "coverage-gate-config.php",
+      "description": "coverage.php: baseline 70% общий, 55% для критических путей (Actions/Policies/Services/Middleware), env-переопределения",
+      "tags": [
+        "testing",
+        "coverage"
+      ]
+    },
+    {
+      "file": "check-coverage-gate.php",
+      "description": "Скрипт-гейт покрытия: читает coverage/clover.xml, режимы report/soft/hard, пофайловая проверка критичных зон",
+      "tags": [
+        "testing",
+        "coverage",
+        "ci"
+      ]
+    },
+    {
+      "file": "composer-test-scripts.json",
+      "description": "Composer-скрипты: test (config:clear + lint:check + artisan test), test:coverage, test:coverage:gate, test:critical",
+      "tags": [
+        "testing",
+        "composer",
+        "ci"
+      ]
     }
   ]
 }

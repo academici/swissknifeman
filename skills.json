@@ -16,7 +16,7 @@
     },
     "devops": {
       "description": "Docker environments, CI/CD pipelines, GitOps",
-      "count": 9,
+      "count": 10,
       "status": "active"
     },
     "founder": {
@@ -26,7 +26,7 @@
     },
     "frontend": {
       "description": "Frontend development: Vite, Vue Composition API, Tailwind CSS, Inertia",
-      "count": 4,
+      "count": 8,
       "status": "active"
     },
     "general": {
@@ -51,7 +51,7 @@
     },
     "php": {
       "description": "PHP and Laravel: applications, packages, Filament, permissions, testing, patterns",
-      "count": 11,
+      "count": 26,
       "status": "active"
     },
     "pm": {
@@ -143,9 +143,9 @@
       "name": "security-design",
       "bucket": "architect",
       "path": "skills/architect/security-design/SKILL.md",
-      "version": "0.1.0",
-      "description": "Классификация данных, auth-стратегия, RBAC/ABAC, OWASP Top 10, GDPR, STRIDE threat modeling",
-      "sha256": "d457a52333f2a2a77762c267ab888b4d8559836da5961e9fe740de3a40f58b27",
+      "version": "0.2.0",
+      "description": "Классификация данных, auth-стратегия, RBAC/ABAC, OWASP Top 10, GDPR, STRIDE threat modeling, операционный чеклист безопасности",
+      "sha256": "2adbbfabb128dbd17ea6b5d6a9de316d0b403f447eaeb65319ed9fd26c2e6c0a",
       "source": "local"
     },
     {
@@ -215,36 +215,45 @@
       "name": "docker-dev-prod",
       "bucket": "devops",
       "path": "skills/devops/docker-dev-prod/SKILL.md",
-      "version": "0.2.0",
-      "description": "docker-compose dev/prod stack для Laravel",
-      "sha256": "128655c8b7ab9c6b7e103c315ee6c2d2e2d4c48d5f719ffabfd6d2af859b15d1",
+      "version": "0.3.0",
+      "description": "Разнесение docker-compose на dev (build + bind-mount) и prod (готовый образ + named volumes), локальный override, якорь &app_env",
+      "sha256": "e2e6a9df0fb1a7468da4c5374d3305133485b1dbfeb53485f72ea988c6c0d9cb",
       "source": "local"
     },
     {
       "name": "docker-php",
       "bucket": "devops",
       "path": "skills/devops/docker-php/SKILL.md",
-      "version": "0.2.0",
-      "description": "Production-ready PHP-FPM Docker образ с opcache, healthcheck и non-root user",
-      "sha256": "9d6f8e7511a66dbba269b8b4c1b95727fdb4b990220c67a2d1d9740edab55557",
+      "version": "0.3.0",
+      "description": "Production-ready PHP Docker образ: alpine-fpm или всё-в-одном serversideup/php (FPM+Nginx), entrypoint.d-хуки, healthcheck на /up",
+      "sha256": "d89e0e59d48cc8ddacd4d08563a3bae6a44d9ac6e5e27105b0f1cd64a43cefbc",
       "source": "local"
     },
     {
       "name": "docker-postgres",
       "bucket": "devops",
       "path": "skills/devops/docker-postgres/SKILL.md",
-      "version": "0.2.0",
-      "description": "PostgreSQL в Docker с init scripts",
-      "sha256": "980de4d755ee05dd36e5e8ca4a21185ad285081dd5db8fe3f937a62b441a239a",
+      "version": "0.3.0",
+      "description": "PostgreSQL в Docker: healthcheck pg_isready, named volume данных, init-скрипт создания тестовой БД <app>_test для изоляции тестов",
+      "sha256": "56b8779a075359e60eaa239cae885abe165167aafbfbc02dfd8a77fbc960cdc5",
+      "source": "local"
+    },
+    {
+      "name": "docker-services",
+      "bucket": "devops",
+      "path": "skills/devops/docker-services/SKILL.md",
+      "version": "0.1.0",
+      "description": "Полный сервисный стек Laravel из одного образа: app (fpm-nginx), queue, scheduler, reverb, опционально docs; healthcheck /up и depends_on service_healthy",
+      "sha256": "4e9f17279e97eab4748a4bebe2efb05d2ffa263275d0fe75c93bea76915cc505",
       "source": "local"
     },
     {
       "name": "docker-vite",
       "bucket": "devops",
       "path": "skills/devops/docker-vite/SKILL.md",
-      "version": "0.2.0",
-      "description": "Vite dev server в Docker для Laravel frontend",
-      "sha256": "97923e9ef426f29bd4ab514decb27f1b532ad55edd8374164051dd7645c0b85a",
+      "version": "0.3.0",
+      "description": "Vite dev server отдельным compose-сервисом для Laravel: named volume для node_modules, HMR через localhost, host 0.0.0.0",
+      "sha256": "e34c8773d0b5ae7fed2844461a2421cf0d27d0552adb05d47f3749c732cafbc0",
       "source": "local"
     },
     {
@@ -260,9 +269,9 @@
       "name": "makefile",
       "bucket": "devops",
       "path": "skills/devops/makefile/SKILL.md",
-      "version": "0.1.0",
-      "description": "Makefile как единая точка входа для управления проектом в локальной среде разработки",
-      "sha256": "c0c7ef0bd27075cc144f9b6003a119a964d89824f037feae9b53c717520bd676",
+      "version": "0.2.0",
+      "description": "Makefile как единая точка входа: help, .PHONY, алиасы Docker-команд; паттерн делегирующего корневого Makefile с catch-all в docker/Makefile",
+      "sha256": "c12e66d7036696dc30d2312b8eea4ad1f721f4da67f1b028d63478b9a2179dee",
       "source": "local"
     },
     {
@@ -323,9 +332,18 @@
       "name": "inertia-vue",
       "bucket": "frontend",
       "path": "skills/frontend/inertia-vue/SKILL.md",
+      "version": "0.2.0",
+      "description": "Inertia + Vue в Laravel: страницы, формы, навигация и слоистая организация resources/js (pages, layouts, components, composables, stores, features, events, types, actions/wayfinder).",
+      "sha256": "b485a792a2c95c5894c66ba25e363daabf8afed732e51c3a51e7dd8c405178e7",
+      "source": "local"
+    },
+    {
+      "name": "js-code-style",
+      "bucket": "frontend",
+      "path": "skills/frontend/js-code-style/SKILL.md",
       "version": "0.1.0",
-      "description": "Develop Inertia + Vue pages/components and form flows in this Laravel app.",
-      "sha256": "4a4707e5901e51074d151f8d8407e4c25ffc991c8ebde1f3f7197baf99bf337f",
+      "description": "Стиль JS/TS по Spatie: 4 пробела, ширина 120, одинарные кавычки, const-first, строгое ===, function для именованных функций, деструктуризация, именованные импорты.",
+      "sha256": "f4b3ac6c1106000e4412a3c9c71c66f0a513eae983f150084456c669f6aa5192",
       "source": "local"
     },
     {
@@ -347,6 +365,24 @@
       "source": "local"
     },
     {
+      "name": "vite-multi-build",
+      "bucket": "frontend",
+      "path": "skills/frontend/vite-multi-build/SKILL.md",
+      "version": "0.1.0",
+      "description": "Две независимые Vite-сборки в одном Laravel-проекте: основное приложение и Filament-админка с раздельными конфигами Vite/Tailwind, hotfile и build-директориями.",
+      "sha256": "8cd99934674b1b01e138a4fa4caed94256977df45bca5e29719a0af18fc83e87",
+      "source": "local"
+    },
+    {
+      "name": "vitest",
+      "bucket": "frontend",
+      "path": "skills/frontend/vitest/SKILL.md",
+      "version": "0.1.0",
+      "description": "Vitest для Vue/Inertia-проекта на Laravel: jsdom, globals, тесты в resources/js/tests зеркалят исходники, coverage v8 с обязательным exclude автогенерённого кода.",
+      "sha256": "0813506dfb4213ac3fb2e949823770691677372291b974a149deb53ad627eb5d",
+      "source": "local"
+    },
+    {
       "name": "vue-composition-api",
       "bucket": "frontend",
       "path": "skills/frontend/vue-composition-api/SKILL.md",
@@ -356,12 +392,21 @@
       "source": "local"
     },
     {
+      "name": "wayfinder",
+      "bucket": "frontend",
+      "path": "skills/frontend/wayfinder/SKILL.md",
+      "version": "0.1.0",
+      "description": "Laravel Wayfinder: типобезопасные роуты и controller actions для фронтенда. Генерация, именованные импорты, form(), архитектурные границы импортов через ESLint.",
+      "sha256": "96affc9e8a8175bb42849389e5645c9a73fd1245f1f5d720d9a92982a01a206d",
+      "source": "local"
+    },
+    {
       "name": "ai-context-workflow",
       "bucket": "general",
       "path": "skills/general/ai-context-workflow/SKILL.md",
       "version": "0.1.0",
       "description": "Редактирование AI-контекста проекта: .ai/guidelines, .ai/skills, boost.json; запрет правки сгенерированных CLAUDE.md/AGENTS.md; обязательный php artisan boost:update; объяснение цикла для Cursor и Claude Code.",
-      "sha256": "f267c68e8e3d5309b23dcb3035fab8f7d81729e282b100c32404b803d3edccc2",
+      "sha256": "2b8d76b4fbbe82ba312b4b040631661b788f38d86fc10df7deff3cc892a24c6b",
       "source": "local"
     },
     {
@@ -677,6 +722,15 @@
       "source": "local"
     },
     {
+      "name": "azguard",
+      "bucket": "php",
+      "path": "skills/php/azguard/SKILL.md",
+      "version": "0.1.0",
+      "description": "Роли и контроль доступа на базе пакета azguard: code-first RBAC, панели, scoped roles, direct grants, abilities для фронтенда",
+      "sha256": "aab391423210855ff1eef445c0c2e54fe861f0bbb10da0e8ef7619519c3e1f37",
+      "source": "local"
+    },
+    {
       "name": "botkit",
       "bucket": "php",
       "path": "skills/php/botkit/SKILL.md",
@@ -686,12 +740,30 @@
       "source": "local"
     },
     {
+      "name": "code-style-spatie",
+      "bucket": "php",
+      "path": "skills/php/code-style-spatie/SKILL.md",
+      "version": "0.1.0",
+      "description": "Стиль кода Laravel/PHP по гайдлайнам Spatie: Laravel-конвенции прежде PSR-12, типизация вместо докблоков, early returns, happy path последним",
+      "sha256": "fd9b2b535c3f84e15d5b0739bf9c87ba6526ad104caf1012063dcfa251189f7a",
+      "source": "local"
+    },
+    {
       "name": "database",
       "bucket": "php",
       "path": "skills/php/database/SKILL.md",
       "version": "0.1.0",
       "description": "Database migrations, models, and table naming. Activate when writing migrations, creating models, defining schema, foreign keys, or working in database/migrations/.",
       "sha256": "398233baf695f59e68070f8c51865b560b68802776c79948c660725c1b9d69c5",
+      "source": "local"
+    },
+    {
+      "name": "enum-attributes",
+      "bucket": "php",
+      "path": "skills/php/enum-attributes/SKILL.md",
+      "version": "0.1.0",
+      "description": "Метаданные enum-кейсов через PHP-атрибуты (#[Label], #[Color], #[Description]) + Concern-трейты с reflection-резолвером",
+      "sha256": "ca6281246f774a873fe81a1fb91ba6e27c14fb198abcd48f2a205c6e15c7359b",
       "source": "local"
     },
     {
@@ -707,10 +779,125 @@
       "name": "laravel",
       "bucket": "php",
       "path": "skills/php/laravel/SKILL.md",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "description": "Laravel architecture patterns: actions, repositories, resources",
-      "sha256": "23511c5d90261670ebc5b8c5561fcfcec421ffbe7baac3ce7bffedca8f0bb476",
+      "sha256": "988c04f04523ed63dc33d6f4b9ae5aca06c1980a30eff88b6f28c76398a17b64",
       "source": "local"
+    },
+    {
+      "name": "laravel-best-practices",
+      "bucket": "php",
+      "path": "skills/php/laravel-best-practices/SKILL.md",
+      "version": "0.1.0",
+      "description": "Лучшие практики Laravel: 20 категорий правил (Eloquent, валидация, кеш, очереди, безопасность) с маршрутизацией по задаче",
+      "sha256": "879b9688bf870b1eb8a5166d4f36e0d117e238bb2e2546d9b028e54c18cdc27f",
+      "source": "local"
+    },
+    {
+      "name": "laravel-broadcasting",
+      "bucket": "php",
+      "path": "skills/php/laravel-broadcasting/SKILL.md",
+      "version": "0.1.0",
+      "description": "Laravel Echo + Reverb/Pusher/Ably: broadcast-события, авторизация каналов, presence/whisper, model broadcasting",
+      "sha256": "076965c385d32933a47e32bc668fb636629450ea79078095528dfb2e17c8af7f",
+      "source": "local"
+    },
+    {
+      "name": "laravel-dusk",
+      "bucket": "php",
+      "path": "skills/php/laravel-dusk/SKILL.md",
+      "version": "0.1.0",
+      "description": "Laravel Dusk: браузерные E2E-тесты, изолированная тестовая БД, запуск из Docker через host ChromeDriver, Page Objects",
+      "sha256": "751b62c15b3931e0f7d5671ff25054ae0f1feb94e63d21ce85e4307c2f90e25f",
+      "source": "local"
+    },
+    {
+      "name": "laravel-package-compatibility",
+      "bucket": "php",
+      "path": "skills/php/laravel-package-compatibility/SKILL.md",
+      "version": "0.3.0",
+      "description": "Use this skill when reviewing Laravel package compatibility across composer constraints, PHP versions, Laravel versions, Testbench versions, dependency stability lanes, Windows CI, or matrix-sensitive code and workflow changes.",
+      "sha256": "717830372593d7df404a98f679f4e4a0efd9bb45e7e86835df2df53ac74d4841",
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-compatibility/SKILL.md",
+      "fetched_at": "2026-06-12"
+    },
+    {
+      "name": "laravel-package-docs",
+      "bucket": "php",
+      "path": "skills/php/laravel-package-docs/SKILL.md",
+      "version": "0.3.0",
+      "description": "Use this skill when writing or revising package documentation after creating a package from this starter: README content, VitePress pages, contributing docs, upgrade notes, installation, usage, testing, workbench docs, or examples.",
+      "sha256": "410143c04614acf15533c525b8ca5d9b8591e275d9ec456cecc1e0b8a0cb7675",
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-docs/SKILL.md",
+      "fetched_at": "2026-06-12"
+    },
+    {
+      "name": "laravel-package-expressive",
+      "bucket": "php",
+      "path": "skills/php/laravel-package-expressive/SKILL.md",
+      "version": "0.3.0",
+      "description": "Use this skill when changing this Laravel package expressive repository itself: placeholders, configure flow, starter defaults, root guidance, local skills, temporary phase tests, dist hygiene, or scaffold-wide conventions. Do not use for ordinary package feature work after a package has been configured.",
+      "sha256": "f4f608015b94ba1f038ad3c36fded05655524f207280cb987d5baf9e7f272ac1",
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/skeleton-development/SKILL.md",
+      "fetched_at": "2026-06-12"
+    },
+    {
+      "name": "laravel-package-generate-skill",
+      "bucket": "php",
+      "path": "skills/php/laravel-package-generate-skill/SKILL.md",
+      "version": "0.3.0",
+      "description": "Use this skill when creating or updating the bundled Laravel Boost skill under resources/boost/skills from the package implementation and documentation. Trigger after public APIs, commands, config, routes, views, publish tags, examples, or docs change.",
+      "sha256": "2eeaf3effaea865b9e8bbe1e5b7e91369ffe58af9be183a851be2d2435f84c46",
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-generate-skill/SKILL.md",
+      "fetched_at": "2026-06-12"
+    },
+    {
+      "name": "laravel-package-release",
+      "bucket": "php",
+      "path": "skills/php/laravel-package-release/SKILL.md",
+      "version": "0.3.0",
+      "description": "Use this skill when preparing Laravel package releases: generated release notes, GitHub release workflows, version checks, tags, release validation, or release automation changes. Never publish autonomously.",
+      "sha256": "22a0b8e730e25af20d5b40dac8a4096c2a7dcf6c5d20b74645dc2abdd9d3b91d",
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-release/SKILL.md",
+      "fetched_at": "2026-06-12"
+    },
+    {
+      "name": "laravel-package-scaffold",
+      "bucket": "php",
+      "path": "skills/php/laravel-package-scaffold/SKILL.md",
+      "version": "0.3.0",
+      "description": "Use this skill when adding Laravel package capabilities or package shape changes after creating a package from this starter: commands, migrations, routes, config, views, assets, middleware, workbench files, or new publishable resources.",
+      "sha256": "e91472b285f2ca6cb63b5cfa5047c0a2c88a6ccb46dc3c2e83f778a1c029e204",
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-scaffold/SKILL.md",
+      "fetched_at": "2026-06-12"
+    },
+    {
+      "name": "laravel-package-service-provider",
+      "bucket": "php",
+      "path": "skills/php/laravel-package-service-provider/SKILL.md",
+      "version": "0.3.0",
+      "description": "Use this skill when changing a Laravel package service provider: config merges, routes, views, translations, publishing, migrations, assets, Blade components, commands, console-only behavior, or package metadata.",
+      "sha256": "af4b58cc9971bf5d7be749788529908885f249f3df038d28498492cf3e608d5f",
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-service-provider/SKILL.md",
+      "fetched_at": "2026-06-12"
+    },
+    {
+      "name": "laravel-package-testing",
+      "bucket": "php",
+      "path": "skills/php/laravel-package-testing/SKILL.md",
+      "version": "0.3.0",
+      "description": "Use this skill when writing, editing, fixing, or reviewing package tests with Pest 4 and Orchestra Testbench, including TDD, feature tests, unit tests, type coverage, arch tests, workbench behavior, commands, routes, config, migrations, and publishable resources.",
+      "sha256": "75bbd271f26368a684e44b15a7c04d28a1cc43c09726804d15f75b984995fa9a",
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-testing/SKILL.md",
+      "fetched_at": "2026-06-12"
     },
     {
       "name": "laravel-packages",
@@ -725,18 +912,18 @@
       "name": "laravel-permissions",
       "bucket": "php",
       "path": "skills/php/laravel-permissions/SKILL.md",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "description": "RBAC, policies, gates и entity-scoped permissions (AzGuard patterns)",
-      "sha256": "47ef5aa6614bec1240850085ba9e4b1bef7579fd3f94c44a1e65f2c88a1ef96a",
+      "sha256": "2e88cffe8d30ab8c3be5a36b1db2a1170bc22bdec423920b5669b3618802e379",
       "source": "local"
     },
     {
       "name": "laravel-testing",
       "bucket": "php",
       "path": "skills/php/laravel-testing/SKILL.md",
-      "version": "0.2.0",
-      "description": "Feature/unit/pest testing patterns",
-      "sha256": "40ce9a72ea936ddc27453cd9df4b240238df62de9d73e9ec36fc4cad2d70298f",
+      "version": "0.3.0",
+      "description": "Feature/unit/pest testing patterns: изоляция тестовой БД, детект Docker/локального окружения, coverage gate",
+      "sha256": "c83532f8dc62ebc8f3862a02cf3391defafce1b3f422e30e4108a3be12e83107",
       "source": "local"
     },
     {
@@ -746,6 +933,15 @@
       "version": "0.1.0",
       "description": "Build and test Livewire components in this Laravel application.",
       "sha256": "0f27d7b584a03b2a80b10ef18b3a262bb153e77ed110ef428e9bb389e8e6cbad",
+      "source": "local"
+    },
+    {
+      "name": "medialibrary",
+      "bucket": "php",
+      "path": "skills/php/medialibrary/SKILL.md",
+      "version": "0.1.0",
+      "description": "spatie/laravel-medialibrary: привязка файлов к Eloquent-моделям, коллекции, конверсии, получение URL",
+      "sha256": "76bc81b21d51b8922e56df7be6c3adfb0372dd50ebd470d642e6015cd3273fb5",
       "source": "local"
     },
     {
@@ -770,82 +966,10 @@
       "name": "static-analysis",
       "bucket": "php",
       "path": "skills/php/static-analysis/SKILL.md",
-      "version": "0.1.0",
-      "description": "Статический анализ и линтинг PHP/Laravel: Laravel Pint, PHPStan и Rector локально и в CI",
-      "sha256": "4bb84b4884034be77504e1dee12edaa3da3d94a26670bc6dd15855c630633adc",
+      "version": "0.2.0",
+      "description": "Статический анализ и линтинг PHP/Laravel: Laravel Pint, PHPStan и Rector локально и в CI, эталонные конфиги",
+      "sha256": "921abbf24878f98865d81a4e2951306910c33d36e070ede4ec53c9ba08bd3b96",
       "source": "local"
-    },
-    {
-      "name": "laravel-package-compatibility",
-      "bucket": "php",
-      "path": "skills/php/laravel-package-compatibility/SKILL.md",
-      "version": "0.3.0",
-      "description": "Use this skill when reviewing Laravel package compatibility across composer constraints, PHP versions, Laravel versions, Testbench versions, dependency stability lanes, Windows CI, or matrix-sensitive code and workflow changes.",
-      "sha256": "717830372593d7df404a98f679f4e4a0efd9bb45e7e86835df2df53ac74d4841",
-      "source": "upstream:WendellAdriel/laravel-expressive"
-    },
-    {
-      "name": "laravel-package-docs",
-      "bucket": "php",
-      "path": "skills/php/laravel-package-docs/SKILL.md",
-      "version": "0.3.0",
-      "description": "Use this skill when writing or revising package documentation after creating a package from this starter: README content, VitePress pages, contributing docs, upgrade notes, installation, usage, testing, workbench docs, or examples.",
-      "sha256": "410143c04614acf15533c525b8ca5d9b8591e275d9ec456cecc1e0b8a0cb7675",
-      "source": "upstream:WendellAdriel/laravel-expressive"
-    },
-    {
-      "name": "laravel-package-generate-skill",
-      "bucket": "php",
-      "path": "skills/php/laravel-package-generate-skill/SKILL.md",
-      "version": "0.3.0",
-      "description": "Use this skill when creating or updating the bundled Laravel Boost skill under resources/boost/skills from the package implementation and documentation. Trigger after public APIs, commands, config, routes, views, publish tags, examples, or docs change.",
-      "sha256": "2eeaf3effaea865b9e8bbe1e5b7e91369ffe58af9be183a851be2d2435f84c46",
-      "source": "upstream:WendellAdriel/laravel-expressive"
-    },
-    {
-      "name": "laravel-package-release",
-      "bucket": "php",
-      "path": "skills/php/laravel-package-release/SKILL.md",
-      "version": "0.3.0",
-      "description": "Use this skill when preparing Laravel package releases: generated release notes, GitHub release workflows, version checks, tags, release validation, or release automation changes. Never publish autonomously.",
-      "sha256": "22a0b8e730e25af20d5b40dac8a4096c2a7dcf6c5d20b74645dc2abdd9d3b91d",
-      "source": "upstream:WendellAdriel/laravel-expressive"
-    },
-    {
-      "name": "laravel-package-scaffold",
-      "bucket": "php",
-      "path": "skills/php/laravel-package-scaffold/SKILL.md",
-      "version": "0.3.0",
-      "description": "Use this skill when adding Laravel package capabilities or package shape changes after creating a package from this starter: commands, migrations, routes, config, views, assets, middleware, workbench files, or new publishable resources.",
-      "sha256": "e91472b285f2ca6cb63b5cfa5047c0a2c88a6ccb46dc3c2e83f778a1c029e204",
-      "source": "upstream:WendellAdriel/laravel-expressive"
-    },
-    {
-      "name": "laravel-package-service-provider",
-      "bucket": "php",
-      "path": "skills/php/laravel-package-service-provider/SKILL.md",
-      "version": "0.3.0",
-      "description": "Use this skill when changing a Laravel package service provider: config merges, routes, views, translations, publishing, migrations, assets, Blade components, commands, console-only behavior, or package metadata.",
-      "sha256": "af4b58cc9971bf5d7be749788529908885f249f3df038d28498492cf3e608d5f",
-      "source": "upstream:WendellAdriel/laravel-expressive"
-    },
-    {
-      "name": "laravel-package-testing",
-      "bucket": "php",
-      "path": "skills/php/laravel-package-testing/SKILL.md",
-      "version": "0.3.0",
-      "description": "Use this skill when writing, editing, fixing, or reviewing package tests with Pest 4 and Orchestra Testbench, including TDD, feature tests, unit tests, type coverage, arch tests, workbench behavior, commands, routes, config, migrations, and publishable resources.",
-      "sha256": "75bbd271f26368a684e44b15a7c04d28a1cc43c09726804d15f75b984995fa9a",
-      "source": "upstream:WendellAdriel/laravel-expressive"
-    },
-    {
-      "name": "laravel-package-expressive",
-      "bucket": "php",
-      "path": "skills/php/laravel-package-expressive/SKILL.md",
-      "version": "0.3.0",
-      "description": "Use this skill when changing this Laravel package expressive repository itself: placeholders, configure flow, starter defaults, root guidance, local skills, temporary phase tests, dist hygiene, or scaffold-wide conventions. Do not use for ordinary package feature work after a package has been configured.",
-      "sha256": "f4f608015b94ba1f038ad3c36fded05655524f207280cb987d5baf9e7f272ac1",
-      "source": "upstream:WendellAdriel/laravel-expressive"
     },
     {
       "name": "brd",

@@ -1,0 +1,20 @@
+{
+  "skill": "wayfinder",
+  "snippets": [
+    {
+      "file": "wayfinder-usage.ts",
+      "description": "Именованные импорты, методы show/store/update, form(), query-параметры, composable-обёртка",
+      "tags": ["wayfinder", "typescript", "inertia"]
+    },
+    {
+      "file": "eslint-boundaries.cjs",
+      "description": "ESLint flat config: запрет прямых импортов @/wayfinder/routes/* в доменных компонентах и строковых литералов вместо enum",
+      "tags": ["eslint", "architecture", "boundaries"]
+    },
+    {
+      "file": "vite-wayfinder.js",
+      "description": "Подключение vite-плагина wayfinder() и алиасов @/routes, @ для автогенерённого кода",
+      "tags": ["vite", "wayfinder", "config"]
+    }
+  ]
+}

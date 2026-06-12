@@ -1,0 +1,23 @@
+{
+  "//": "Source: anonymized production Laravel project",
+  "//doc": [
+    "Подключение локального пакета (packages/enum-concern) как path-repository.",
+    "symlink: true — правки в packages/ видны сразу, без composer update.",
+    "После добавления repositories: composer require emreyarligan/enum-concern:^1.0",
+    "ВАЖНО: в composer.json самого пакета должна быть зафиксирована 'version'",
+    "(например \"version\": \"1.0.7\"), иначе constraint ^1.0 не зарезолвится.",
+    "В Docker симлинк обязан указывать внутрь build-контекста."
+  ],
+  "require": {
+    "emreyarligan/enum-concern": "^1.0"
+  },
+  "repositories": [
+    {
+      "type": "path",
+      "url": "packages/enum-concern",
+      "options": {
+        "symlink": true
+      }
+    }
+  ]
+}

@@ -110,6 +110,14 @@
         "laravel",
         "architecture"
       ]
+    },
+    {
+      "file": "routes-organization.md",
+      "description": "Организация routes/web.php: Route::controller()->prefix()->name()->group(), доменные подпрефиксы (documents/{document}/review), middleware группы, precognitive, минимальный api.php с throttle:30,1",
+      "tags": [
+        "laravel",
+        "routing"
+      ]
     }
   ]
 }

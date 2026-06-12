@@ -37,7 +37,7 @@
 | [anthropics/knowledge-work-plugins](anthropics-knowledge-work-plugins.md) | Официальная plugin-архитектура | planned |
 | [alexeymezenin/laravel-best-practices](alexeymezenin-laravel-best-practices.md) | 40+ Laravel best practices (bad/good) | planned |
 | [LaravelDaily/laravel-tips](laraveldaily-laravel-tips.md) | 1000+ Laravel tips | planned |
-| [WendellAdriel/laravel-expressive](wendelladriel-laravel-expressive.md) | .agents/skills паттерн для пакетов | planned |
+| [WendellAdriel/laravel-expressive](wendelladriel-laravel-expressive.md) | 8 скиллов разработки Laravel-пакетов → `php/` | imported |
 | [adr/madr](adr-madr.md) | MADR шаблоны ADR | planned |
 | [nicholasjconn/docker-best-practices](nicholasjconn-docker-best-practices.md) | Docker паттерны | planned |
 | [DenisSergeevitch/agents-best-practices](denissergeevitch-agents-best-practices.md) | Агентные workflow-паттерны | planned |

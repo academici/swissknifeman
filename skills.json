@@ -776,6 +776,78 @@
       "source": "local"
     },
     {
+      "name": "laravel-package-compatibility",
+      "bucket": "php",
+      "path": "skills/php/laravel-package-compatibility/SKILL.md",
+      "version": "0.3.0",
+      "description": "Use this skill when reviewing Laravel package compatibility across composer constraints, PHP versions, Laravel versions, Testbench versions, dependency stability lanes, Windows CI, or matrix-sensitive code and workflow changes.",
+      "sha256": "717830372593d7df404a98f679f4e4a0efd9bb45e7e86835df2df53ac74d4841",
+      "source": "upstream:WendellAdriel/laravel-expressive"
+    },
+    {
+      "name": "laravel-package-docs",
+      "bucket": "php",
+      "path": "skills/php/laravel-package-docs/SKILL.md",
+      "version": "0.3.0",
+      "description": "Use this skill when writing or revising package documentation after creating a package from this starter: README content, VitePress pages, contributing docs, upgrade notes, installation, usage, testing, workbench docs, or examples.",
+      "sha256": "410143c04614acf15533c525b8ca5d9b8591e275d9ec456cecc1e0b8a0cb7675",
+      "source": "upstream:WendellAdriel/laravel-expressive"
+    },
+    {
+      "name": "laravel-package-generate-skill",
+      "bucket": "php",
+      "path": "skills/php/laravel-package-generate-skill/SKILL.md",
+      "version": "0.3.0",
+      "description": "Use this skill when creating or updating the bundled Laravel Boost skill under resources/boost/skills from the package implementation and documentation. Trigger after public APIs, commands, config, routes, views, publish tags, examples, or docs change.",
+      "sha256": "2eeaf3effaea865b9e8bbe1e5b7e91369ffe58af9be183a851be2d2435f84c46",
+      "source": "upstream:WendellAdriel/laravel-expressive"
+    },
+    {
+      "name": "laravel-package-release",
+      "bucket": "php",
+      "path": "skills/php/laravel-package-release/SKILL.md",
+      "version": "0.3.0",
+      "description": "Use this skill when preparing Laravel package releases: generated release notes, GitHub release workflows, version checks, tags, release validation, or release automation changes. Never publish autonomously.",
+      "sha256": "22a0b8e730e25af20d5b40dac8a4096c2a7dcf6c5d20b74645dc2abdd9d3b91d",
+      "source": "upstream:WendellAdriel/laravel-expressive"
+    },
+    {
+      "name": "laravel-package-scaffold",
+      "bucket": "php",
+      "path": "skills/php/laravel-package-scaffold/SKILL.md",
+      "version": "0.3.0",
+      "description": "Use this skill when adding Laravel package capabilities or package shape changes after creating a package from this starter: commands, migrations, routes, config, views, assets, middleware, workbench files, or new publishable resources.",
+      "sha256": "e91472b285f2ca6cb63b5cfa5047c0a2c88a6ccb46dc3c2e83f778a1c029e204",
+      "source": "upstream:WendellAdriel/laravel-expressive"
+    },
+    {
+      "name": "laravel-package-service-provider",
+      "bucket": "php",
+      "path": "skills/php/laravel-package-service-provider/SKILL.md",
+      "version": "0.3.0",
+      "description": "Use this skill when changing a Laravel package service provider: config merges, routes, views, translations, publishing, migrations, assets, Blade components, commands, console-only behavior, or package metadata.",
+      "sha256": "af4b58cc9971bf5d7be749788529908885f249f3df038d28498492cf3e608d5f",
+      "source": "upstream:WendellAdriel/laravel-expressive"
+    },
+    {
+      "name": "laravel-package-testing",
+      "bucket": "php",
+      "path": "skills/php/laravel-package-testing/SKILL.md",
+      "version": "0.3.0",
+      "description": "Use this skill when writing, editing, fixing, or reviewing package tests with Pest 4 and Orchestra Testbench, including TDD, feature tests, unit tests, type coverage, arch tests, workbench behavior, commands, routes, config, migrations, and publishable resources.",
+      "sha256": "75bbd271f26368a684e44b15a7c04d28a1cc43c09726804d15f75b984995fa9a",
+      "source": "upstream:WendellAdriel/laravel-expressive"
+    },
+    {
+      "name": "laravel-package-expressive",
+      "bucket": "php",
+      "path": "skills/php/laravel-package-expressive/SKILL.md",
+      "version": "0.3.0",
+      "description": "Use this skill when changing this Laravel package expressive repository itself: placeholders, configure flow, starter defaults, root guidance, local skills, temporary phase tests, dist hygiene, or scaffold-wide conventions. Do not use for ordinary package feature work after a package has been configured.",
+      "sha256": "f4f608015b94ba1f038ad3c36fded05655524f207280cb987d5baf9e7f272ac1",
+      "source": "upstream:WendellAdriel/laravel-expressive"
+    },
+    {
       "name": "brd",
       "bucket": "pm",
       "path": "skills/pm/brd/SKILL.md",

@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "source": "github",
+  "repo": "WendellAdriel/laravel-expressive",
+  "strategy": "notify",
+  "license": "MIT",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "url": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-service-provider/SKILL.md",
+      "sha256": "35c5e17291bc4bd08ad097222fb9ada51be18c604c08dcf8f29fc1b6eb5637c6",
+      "fetched_at": "2026-06-12"
+    }
+  ],
+  "notes": "Imported from WendellAdriel/laravel-expressive .agents/skills/package-service-provider; bucket frontmatter added (name package-service-provider -> laravel-package-service-provider). Do not auto-replace."
+}

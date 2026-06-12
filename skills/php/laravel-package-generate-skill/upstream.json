@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "source": "github",
+  "repo": "WendellAdriel/laravel-expressive",
+  "strategy": "notify",
+  "license": "MIT",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "url": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-generate-skill/SKILL.md",
+      "sha256": "2dd54da92665b3a1510b91897f0dc1f18d0b3f7729d2e3bcacb2f4424514b310",
+      "fetched_at": "2026-06-12"
+    }
+  ],
+  "notes": "Imported from WendellAdriel/laravel-expressive .agents/skills/package-generate-skill; bucket frontmatter added (name package-generate-skill -> laravel-package-generate-skill). Do not auto-replace."
+}

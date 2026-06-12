@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "source": "github",
+  "repo": "WendellAdriel/laravel-expressive",
+  "strategy": "notify",
+  "license": "MIT",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "url": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-compatibility/SKILL.md",
+      "sha256": "49221e1226f27a00e7f1932154f6eaf840ded6657dd54996fa2f2eafa3b70915",
+      "fetched_at": "2026-06-12"
+    }
+  ],
+  "notes": "Imported from WendellAdriel/laravel-expressive .agents/skills/package-compatibility; bucket frontmatter added (name package-compatibility -> laravel-package-compatibility). Do not auto-replace."
+}

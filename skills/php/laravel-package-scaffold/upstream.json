@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "source": "github",
+  "repo": "WendellAdriel/laravel-expressive",
+  "strategy": "notify",
+  "license": "MIT",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "url": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-scaffold/SKILL.md",
+      "sha256": "e0b20f4710cb5896645e2fa1b0643b516a4fe0dcc7f5435d2a6aa2de33527969",
+      "fetched_at": "2026-06-12"
+    }
+  ],
+  "notes": "Imported from WendellAdriel/laravel-expressive .agents/skills/package-scaffold; bucket frontmatter added (name package-scaffold -> laravel-package-scaffold). Do not auto-replace."
+}

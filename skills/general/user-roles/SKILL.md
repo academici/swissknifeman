@@ -60,3 +60,7 @@ return match($role) {
 ## Attributes
 
 `#[Priority(forTicket: N)]` attribute lives at `app/Attributes/User/Role/Priority.php`. Used by `UserService` via reflection to sort roles.
+
+## Ссылки
+
+- Для универсального RBAC в новых проектах — `php/azguard`

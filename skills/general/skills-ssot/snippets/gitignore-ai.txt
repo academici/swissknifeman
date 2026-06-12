@@ -1,0 +1,7 @@
+# AI agent generated files (источник правды: .ai/; regen: php artisan boost:update или scripts/symlink-sync.sh)
+/CLAUDE.md
+/AGENTS.md
+/GEMINI.md
+/.claude/settings.json
+/.claude/skills/
+/.cursor/skills/

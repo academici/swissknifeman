@@ -124,6 +124,29 @@ cd ~/projects/my-laravel-app
 флаги → `.swissknife.json` → автодетект. Файл проходит схема-валидацию
 (опечатка в ключе → ошибка с подсказкой).
 
+### Корневой хаб скиллов (generate-hub.sh)
+
+После подключения скиллов сгенерируйте в проекте «разветвитель» — приоритеты
+чтения источников + индекс установленных скиллов с правилами поиска:
+
+```bash
+./scripts/generate-hub.sh --target ~/projects/my-app   # или флаг --hub у установщиков
+```
+
+- проект **с Laravel Boost** (есть `boost.json`) → пишется фрагмент
+  `.ai/guidelines/swissknifeman-hub.md`; в CLAUDE.md/AGENTS.md его вставит сам
+  Boost при `php artisan boost:update`;
+- проект **без Boost** → managed-блок в `CLAUDE.md` между маркерами
+  `<!-- swissknifeman:hub:start/end -->`; пользовательский контент вне маркеров
+  не затрагивается, повторный запуск идемпотентен.
+
+Установленное определяется по `enabledPlugins` в `.claude/settings*.json`
+(канал marketplace) и/или манифестам `.swissknifeman-manifest.json`
+(канал install.sh). Приоритеты и таблица роутинга «тип задачи → скилл» —
+[docs/routing.md](docs/routing.md); политика совместимости с Laravel Boost —
+[docs/boost-compatibility.md](docs/boost-compatibility.md); устройство единого
+источника истины скиллов в проекте — скилл `general/skills-ssot`.
+
 ## Пресеты permissions для Claude Code
 
 Готовые наборы разрешений ([configs/claude-code/](configs/claude-code/README.md)),

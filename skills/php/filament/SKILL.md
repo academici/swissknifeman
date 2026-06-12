@@ -21,6 +21,8 @@ sha256: ""
 
 Паттерны Filament v3 Resource для admin-панелей: CRUD, relation managers, navigation groups.
 
+**Laravel Boost**: версионные гайдлайны Filament поставляет Boost (third-party guidelines); здесь — структура ресурсов и проектные паттерны.
+
 ## Алгоритм
 
 1. Создай Resource с model binding

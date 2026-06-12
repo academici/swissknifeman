@@ -58,3 +58,4 @@ sha256: ""
 - https://vitest.dev/guide/coverage
 - https://test-utils.vuejs.org/
 - Связанные скиллы: `frontend/inertia-vue` (структура resources/js), `frontend/wayfinder` (что считается автогеном)
+- Скилл `quality/test-strategy` — стратегия пирамиды и coverage policy

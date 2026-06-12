@@ -28,6 +28,9 @@ Options:
   --dry-run         Print every copy action, write nothing
   --force           Overwrite existing skill dirs not installed by swissknifeman
                     (bucket layout only; default: abort on collision)
+  --hub             After install, generate the root skills hub in the target
+                    (scripts/generate-hub.sh: CLAUDE.md managed block, or
+                     .ai/guidelines/swissknifeman-hub.md when Laravel Boost detected)
   -h, --help        Show help
 
 Resolution precedence: flags > .swissknife.json (in target) > autodetect.
@@ -77,6 +80,7 @@ SKILLS_PATH=""
 LIST=false
 DRY_RUN=false
 FORCE=false
+HUB=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -89,6 +93,7 @@ while [[ $# -gt 0 ]]; do
     --list) LIST=true; shift ;;
     --dry-run) DRY_RUN=true; shift ;;
     --force) FORCE=true; shift ;;
+    --hub) HUB=true; shift ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown option: $1" >&2; usage >&2; exit 1 ;;
   esac
@@ -432,3 +437,9 @@ else:
 
 print(("[dry-run] " if dry_run else "") + f"Installed {len(skills)} skills -> {dest_root}")
 PY
+
+if [[ "$HUB" == true && "$LIST" == false && "$DRY_RUN" == false ]]; then
+  "$REPO_ROOT/scripts/generate-hub.sh" --target "$TARGET"
+elif [[ "$LIST" == false && "$DRY_RUN" == false ]]; then
+  echo "Hint: generate the root skills hub: $REPO_ROOT/scripts/generate-hub.sh --target $TARGET (or rerun with --hub)"
+fi

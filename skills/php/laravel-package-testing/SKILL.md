@@ -50,3 +50,7 @@ Prove package behavior with Pest 4, Orchestra Testbench, and the local `tests/Te
 - Relying only on smoke tests when behavior needs assertions.
 - Testing implementation details when observable package behavior is available.
 - Keeping throwaway scaffolding experiment tests in the package test suite.
+
+## Ссылки
+
+- Скилл `quality/test-strategy` — стратегия пирамиды и coverage policy

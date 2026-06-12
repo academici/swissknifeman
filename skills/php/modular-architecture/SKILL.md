@@ -1,8 +1,8 @@
 ---
 name: modular-architecture
 bucket: php
-version: 0.1.0
-description: "Организация Laravel-кода по бизнес-доменам: Модульный Монолит (Modular Monolith) и паттерны DDD"
+version: 0.2.0
+description: "Масштабирование Laravel-кода при росте: организация по бизнес-доменам, Модульный Монолит (Modular Monolith) и паттерны DDD; стартовая структура — php/laravel-structure"
 risk: write
 persona: oss-dev
 tags: [php, laravel, architecture]
@@ -16,7 +16,9 @@ sha256: ""
 
 # Модульная Архитектура (Laravel)
 
-При росте кодовой базы стандартной структуры Laravel (`app/Http`, `app/Models`) становится недостаточно. Для сложных проектов мы применяем концепцию **Модульного Монолита (Modular Monolith)** или паттерны **Domain-Driven Design (DDD)**.
+## Контекст
+
+Скилл для масштабирования при росте: десятки доменов, несколько команд, кодовая база, где стандартной структуры Laravel (`app/Http`, `app/Models`) уже недостаточно. Для сложных проектов мы применяем концепцию **Модульного Монолита (Modular Monolith)** или паттерны **Domain-Driven Design (DDD)**. Стартовая структура нового проекта — канон `php/laravel-structure`; сюда переходи, когда он перестаёт вмещать рост.
 
 ## Основная Идея
 

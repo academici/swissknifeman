@@ -58,4 +58,4 @@ sha256: ""
 
 - https://laravel.com/docs/vite
 - https://filamentphp.com/docs (раздел про кастомные темы / vite theme)
-- Связанные скиллы: `frontend/tailwindcss`, `frontend/wayfinder` (плагин в основной сборке)
+- Связанные скиллы: `frontend/wayfinder` (плагин в основной сборке); версионные гайдлайны Tailwind — Boost-скилл `tailwindcss` (v3/v4)

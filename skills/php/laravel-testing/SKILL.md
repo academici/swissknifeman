@@ -18,6 +18,8 @@ sha256: ""
 
 Тестирование Laravel-приложений (Pest/PHPUnit): паттерны Feature/Unit-тестов, безопасная изоляция тестовой БД от рабочей, детект окружения (Docker vs локальный PHP), порог покрытия (coverage gate) для CI. Базовые ожидания: **Feature по умолчанию**, Unit — только для чистой логики без БД; ассерты про поведение (HTTP-код, состояние БД, уведомления), а не про внутреннюю реализацию; данные — через фабрики моделей.
 
+**Laravel Boost**: синтаксис и приёмы Pest — Boost-скилл pest-testing; здесь — изоляция тестовой БД, coverage gate и окружение.
+
 ## Алгоритм
 
 ### 1. Изоляция тестовой БД (дуальная схема)
@@ -93,6 +95,7 @@ protected function assertIsolatedTestDatabase(): void
 
 ## Ссылки
 
+- Скилл `quality/test-strategy` — стратегия пирамиды и coverage policy
 - Скилл `static-analysis` (bucket php) — конвейер rector → pint → phpstan → tests
 - Скилл `laravel` (bucket php) — архитектурные паттерны, которые покрываются тестами
 - https://pestphp.com/docs — документация Pest

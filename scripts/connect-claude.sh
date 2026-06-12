@@ -14,6 +14,7 @@
 #   ./scripts/connect-claude.sh --target . --dry-run                  # итоговый JSON без записи
 #   ./scripts/connect-claude.sh --target . --cleanup-vendored         # удалить старые вендоренные копии
 #   ./scripts/connect-claude.sh --target . --file settings.json       # в шаримый settings.json
+#   ./scripts/connect-claude.sh --target . --hub                      # + корневой хаб скиллов
 #
 # Merge-семантика: только добавляет отсутствующие ключи. Явный false в
 # enabledPlugins не перетирается; ранее включённые плагины не отключаются
@@ -31,6 +32,7 @@ SETTINGS_FILE="settings.local.json"
 CLEANUP=false
 LIST=false
 DRY_RUN=false
+HUB=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -41,6 +43,7 @@ while [[ $# -gt 0 ]]; do
     --cleanup-vendored) CLEANUP=true; shift ;;
     --list) LIST=true; shift ;;
     --dry-run) DRY_RUN=true; shift ;;
+    --hub) HUB=true; shift ;;
     -h|--help) usage 0 ;;
     *) echo "Неизвестный аргумент: $1" >&2; usage 1 ;;
   esac
@@ -257,3 +260,9 @@ if manifest_file.exists():
 print("Далее: перезапустите сессию Claude Code в проекте "
       "(или /plugin marketplace update swissknifeman)")
 PY
+
+if [[ "$HUB" == true && "$LIST" == false && "$DRY_RUN" == false ]]; then
+  "$REPO_ROOT/scripts/generate-hub.sh" --target "$TARGET"
+elif [[ "$LIST" == false && "$DRY_RUN" == false ]]; then
+  echo "Подсказка: сгенерируйте корневой хаб скиллов: $REPO_ROOT/scripts/generate-hub.sh --target $TARGET (или перезапустите с --hub)"
+fi

@@ -26,7 +26,7 @@
     },
     "frontend": {
       "description": "Frontend development: Vite, Vue Composition API, Tailwind CSS, Inertia",
-      "count": 8,
+      "count": 7,
       "status": "active"
     },
     "general": {
@@ -51,7 +51,7 @@
     },
     "php": {
       "description": "PHP and Laravel: applications, packages, Filament, permissions, testing, patterns",
-      "count": 29,
+      "count": 28,
       "status": "active"
     },
     "pm": {
@@ -260,9 +260,9 @@
       "name": "gitops",
       "bucket": "devops",
       "path": "skills/devops/gitops/SKILL.md",
-      "version": "0.2.0",
-      "description": "Git branching strategy и commit conventions",
-      "sha256": "c65fb296edbef08dda8326d9912640a3097e96ecbdafdea9e24073942c506be3",
+      "version": "0.3.0",
+      "description": "Командная Git-стратегия: модель веток (main/develop/feature/hotfix), PR-workflow, защита веток",
+      "sha256": "8014e848beb0ebdae84c20a338a0cd31a76a51189726e605b19bfb8c66cf9fec",
       "source": "local"
     },
     {
@@ -334,7 +334,7 @@
       "path": "skills/frontend/inertia-vue/SKILL.md",
       "version": "0.2.0",
       "description": "Inertia + Vue в Laravel: страницы, формы, навигация и слоистая организация resources/js (pages, layouts, components, composables, stores, features, events, types, actions/wayfinder).",
-      "sha256": "b485a792a2c95c5894c66ba25e363daabf8afed732e51c3a51e7dd8c405178e7",
+      "sha256": "6ca4199b60df2292ac5aa64de18ac5a1ba5a9b6fcd06cb9b9779a484f7e9c808",
       "source": "local"
     },
     {
@@ -344,15 +344,6 @@
       "version": "0.1.0",
       "description": "Стиль JS/TS по Spatie: 4 пробела, ширина 120, одинарные кавычки, const-first, строгое ===, function для именованных функций, деструктуризация, именованные импорты.",
       "sha256": "f4b3ac6c1106000e4412a3c9c71c66f0a513eae983f150084456c669f6aa5192",
-      "source": "local"
-    },
-    {
-      "name": "tailwindcss",
-      "bucket": "frontend",
-      "path": "skills/frontend/tailwindcss/SKILL.md",
-      "version": "0.1.0",
-      "description": "Implement UI changes using Tailwind CSS in this project.",
-      "sha256": "a4ee1c6f7250dfe2bdf8a7814c959fc3977cb74e02e8c3848010a34ebe1ee5b3",
       "source": "local"
     },
     {
@@ -370,7 +361,7 @@
       "path": "skills/frontend/vite-multi-build/SKILL.md",
       "version": "0.1.0",
       "description": "Две независимые Vite-сборки в одном Laravel-проекте: основное приложение и Filament-админка с раздельными конфигами Vite/Tailwind, hotfile и build-директориями.",
-      "sha256": "8cd99934674b1b01e138a4fa4caed94256977df45bca5e29719a0af18fc83e87",
+      "sha256": "1db5261a012be78d76a8aa24f5fc83ae7712baf7822dcd14afffb6155a59ca17",
       "source": "local"
     },
     {
@@ -379,7 +370,7 @@
       "path": "skills/frontend/vitest/SKILL.md",
       "version": "0.1.0",
       "description": "Vitest для Vue/Inertia-проекта на Laravel: jsdom, globals, тесты в resources/js/tests зеркалят исходники, coverage v8 с обязательным exclude автогенерённого кода.",
-      "sha256": "0813506dfb4213ac3fb2e949823770691677372291b974a149deb53ad627eb5d",
+      "sha256": "d126386eb710921963f79c58df48a5730c5f8c1c225e03bfb9eb8db9077baef2",
       "source": "local"
     },
     {
@@ -397,7 +388,7 @@
       "path": "skills/frontend/wayfinder/SKILL.md",
       "version": "0.1.0",
       "description": "Laravel Wayfinder: типобезопасные роуты и controller actions для фронтенда. Генерация, именованные импорты, form(), архитектурные границы импортов через ESLint.",
-      "sha256": "96affc9e8a8175bb42849389e5645c9a73fd1245f1f5d720d9a92982a01a206d",
+      "sha256": "a17e5a714a6e5f1596d347b9ab56df135552cee3eb852180bf78d9f252bbdf14",
       "source": "local"
     },
     {
@@ -446,15 +437,6 @@
       "source": "local"
     },
     {
-      "name": "mcp-development",
-      "bucket": "general",
-      "path": "skills/general/mcp-development/SKILL.md",
-      "version": "0.1.0",
-      "description": "Work with MCP servers (Laravel Boost) and agent integrations in this project.",
-      "sha256": "8527bf4715089c701fccc15ada06218470f8f5cb167e051c50d889c8c24b06f0",
-      "source": "local"
-    },
-    {
       "name": "packages-stack",
       "bucket": "general",
       "path": "skills/general/packages-stack/SKILL.md",
@@ -470,6 +452,15 @@
       "version": "0.2.0",
       "description": "Быстрая карта структуры проекта и зон ответственности по директориям для безопасного роутинга изменений.",
       "sha256": "accd3656e06f9256e44fb31a6806f269e9cd0284a191a547fde596db52d0ebeb",
+      "source": "local"
+    },
+    {
+      "name": "skills-ssot",
+      "bucket": "general",
+      "path": "skills/general/skills-ssot/SKILL.md",
+      "version": "0.1.0",
+      "description": "Единый источник истины скиллов для нескольких AI-агентов: .ai/skills + симлинки, gitignore, цикл обновления",
+      "sha256": "a305ee21468e05d007d1670ba81ed8d8ed75047a4cf85aa7708d01dcdb8b3f5d",
       "source": "local"
     },
     {
@@ -496,7 +487,7 @@
       "path": "skills/general/user-roles/SKILL.md",
       "version": "0.1.0",
       "description": "Use when working with UserRole enum, user permissions, role priority resolution, or any code that calls UserService::getPrimaryRole(). Activate when the task involves role-based access, participant roles in tickets, #[Priority] attributes on UserRole enum cases, or determining which role a user has in a given ticket context.",
-      "sha256": "422c4c7d01bb18ab419023b7acc354f79069d762eaa628fde0076fd64cb0b33f",
+      "sha256": "2b75bd38144532fb61b895671d0bfec5b78e725abe7c0bc5b6181d785a4100a7",
       "source": "local"
     },
     {
@@ -781,7 +772,7 @@
       "path": "skills/php/filament/SKILL.md",
       "version": "0.2.0",
       "description": "Filament v3 resource patterns: CRUD resource, relation managers, panel integration",
-      "sha256": "0edecd64814560f7860916ba5a4b6f4a03a73bf6d57e80fad1f51c277e0377b6",
+      "sha256": "6a9d5bb649cd3d200be7b51bfeb5c0018f7cb559af5d193574de032039d168cf",
       "source": "local"
     },
     {
@@ -799,7 +790,7 @@
       "path": "skills/php/laravel-best-practices/SKILL.md",
       "version": "0.1.0",
       "description": "Лучшие практики Laravel: 20 категорий правил (Eloquent, валидация, кеш, очереди, безопасность) с маршрутизацией по задаче",
-      "sha256": "879b9688bf870b1eb8a5166d4f36e0d117e238bb2e2546d9b028e54c18cdc27f",
+      "sha256": "ff21da9893c5579209585349e384120603abf597a910c17d04288d7e6ef22d00",
       "source": "local"
     },
     {
@@ -817,7 +808,7 @@
       "path": "skills/php/laravel-dusk/SKILL.md",
       "version": "0.1.0",
       "description": "Laravel Dusk: браузерные E2E-тесты, изолированная тестовая БД, запуск из Docker через host ChromeDriver, Page Objects",
-      "sha256": "751b62c15b3931e0f7d5671ff25054ae0f1feb94e63d21ce85e4307c2f90e25f",
+      "sha256": "2588f869535b47728e2acd25257fc9e9043b3d5fe282ac21b5969f7c2a6fe896",
       "source": "local"
     },
     {
@@ -847,8 +838,8 @@
       "bucket": "php",
       "path": "skills/php/laravel-package-expressive/SKILL.md",
       "version": "0.3.0",
-      "description": "Use this skill when changing this Laravel package expressive repository itself: placeholders, configure flow, starter defaults, root guidance, local skills, temporary phase tests, dist hygiene, or scaffold-wide conventions. Do not use for ordinary package feature work after a package has been configured.",
-      "sha256": "f4f608015b94ba1f038ad3c36fded05655524f207280cb987d5baf9e7f272ac1",
+      "description": "Upstream-скилл для работы НАД самим пакетом WendellAdriel/laravel-expressive (starter kit), не общий скилл пакетной разработки: placeholders, configure flow, starter defaults, root guidance, local skills, temporary phase tests, dist hygiene, scaffold-wide conventions. Do not use for ordinary package feature work after a package has been configured.",
+      "sha256": "3318ee7d5d5240d52a0fa7fbf18e4ef4bb2285de5690f3ba8eddd2167b21d997",
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/skeleton-development/SKILL.md",
       "fetched_at": "2026-06-12"
@@ -903,7 +894,7 @@
       "path": "skills/php/laravel-package-testing/SKILL.md",
       "version": "0.3.0",
       "description": "Use this skill when writing, editing, fixing, or reviewing package tests with Pest 4 and Orchestra Testbench, including TDD, feature tests, unit tests, type coverage, arch tests, workbench behavior, commands, routes, config, migrations, and publishable resources.",
-      "sha256": "75bbd271f26368a684e44b15a7c04d28a1cc43c09726804d15f75b984995fa9a",
+      "sha256": "cc1eb55341b5c19fc771d7f3b5929b9be090dd2c2c76fd1fc6032ef31be3db67",
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-testing/SKILL.md",
       "fetched_at": "2026-06-12"
@@ -930,9 +921,9 @@
       "name": "laravel-structure",
       "bucket": "php",
       "path": "skills/php/laravel-structure/SKILL.md",
-      "version": "0.1.0",
-      "description": "Канон структуры Laravel-проекта: доменная таксономия, правило зеркала слоёв, размещение и нейминг классов",
-      "sha256": "d072a86b4c216b8749a6be695275c09d78f27dd54ede7603f3b83a51a5f4041c",
+      "version": "0.2.0",
+      "description": "Канон структуры Laravel-проекта для greenfield-проектов и добавления доменов: доменная таксономия, правило зеркала слоёв, размещение и нейминг классов",
+      "sha256": "c13ba40addab68c1d2b7d8cd499cc9d569a8be8646adf2565ed0c9800d095918",
       "source": "local"
     },
     {
@@ -941,16 +932,7 @@
       "path": "skills/php/laravel-testing/SKILL.md",
       "version": "0.3.0",
       "description": "Feature/unit/pest testing patterns: изоляция тестовой БД, детект Docker/локального окружения, coverage gate",
-      "sha256": "c83532f8dc62ebc8f3862a02cf3391defafce1b3f422e30e4108a3be12e83107",
-      "source": "local"
-    },
-    {
-      "name": "livewire",
-      "bucket": "php",
-      "path": "skills/php/livewire/SKILL.md",
-      "version": "0.1.0",
-      "description": "Build and test Livewire components in this Laravel application.",
-      "sha256": "0f27d7b584a03b2a80b10ef18b3a262bb153e77ed110ef428e9bb389e8e6cbad",
+      "sha256": "04a3258c11ac49edf5815f67f60fe9fef767db356bf916a56707bf594fee0085",
       "source": "local"
     },
     {
@@ -959,16 +941,16 @@
       "path": "skills/php/medialibrary/SKILL.md",
       "version": "0.1.0",
       "description": "spatie/laravel-medialibrary: привязка файлов к Eloquent-моделям, коллекции, конверсии, получение URL",
-      "sha256": "76bc81b21d51b8922e56df7be6c3adfb0372dd50ebd470d642e6015cd3273fb5",
+      "sha256": "a37f690af18c5050bcb6598a17fa968488ef1c3348acbe2783aafb7bc231afa6",
       "source": "local"
     },
     {
       "name": "modular-architecture",
       "bucket": "php",
       "path": "skills/php/modular-architecture/SKILL.md",
-      "version": "0.1.0",
-      "description": "Организация Laravel-кода по бизнес-доменам: Модульный Монолит (Modular Monolith) и паттерны DDD",
-      "sha256": "3b4b29f38a1a36afbdcf9c3087b97c86b52f5413ccd5a501d788381f04125a9d",
+      "version": "0.2.0",
+      "description": "Масштабирование Laravel-кода при росте: организация по бизнес-доменам, Модульный Монолит (Modular Monolith) и паттерны DDD; стартовая структура — php/laravel-structure",
+      "sha256": "6aec4e744643693f55b8a98374dcb1246e1fd3c4f30342921f86f7709617b730",
       "source": "local"
     },
     {
@@ -1121,7 +1103,7 @@
       "path": "skills/quality/test-strategy/SKILL.md",
       "version": "0.1.0",
       "description": "Стратегия тестирования: пирамида (unit/integration/e2e), coverage policy, mock vs real, какие фичи требуют какой уровень тестов",
-      "sha256": "42d89dde501a28f859eee7946e731e4fec74e964903b834994a7ccd0d50bf764",
+      "sha256": "baa9ad528201a39e7b446ab8be9b9d17b119839f2fa105d207c08af9fe20ac89",
       "source": "local"
     },
     {

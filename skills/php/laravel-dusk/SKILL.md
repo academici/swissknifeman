@@ -63,3 +63,4 @@ Laravel Dusk — браузерные E2E-тесты через ChromeDriver. С
 
 - https://laravel.com/docs/dusk
 - https://github.com/php-webdriver/php-webdriver
+- Скилл `quality/test-strategy` — стратегия пирамиды и coverage policy

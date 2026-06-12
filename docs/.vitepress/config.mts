@@ -35,6 +35,12 @@ export default defineConfig({
           ],
         },
         {
+          text: 'Окружение',
+          items: [
+            { text: 'Настройка Claude Code', link: '/setup/claude' },
+          ],
+        },
+        {
           text: 'Конфиги',
           items: [
             { text: 'Обзор', link: '/configs/' },

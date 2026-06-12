@@ -12,6 +12,7 @@
 | `python` | python/pip/pytest, uv, poetry, ruff/black/mypy |
 | `docker` | docker + docker compose; удаление контейнеров/volumes/prune — с подтверждением |
 | `yolo` | `bypassPermissions` — только для контейнеров и VM, см. предупреждение в доке |
+| `global` | baseline для `~/.claude/settings.json`: read-only команды (grep/find/ls/cat, git diff/log/status), безопасный git (add/commit/checkout/stash), deny на sudo/force-push/секреты + **hook-логгер команд** (применяется через `--global`) |
 
 ## Быстрый старт
 
@@ -24,10 +25,29 @@
 
 # превью без записи
 ./scripts/apply-permissions.sh --target . --dry-run
+
+# глобальный baseline + hook-логгер в ~/.claude (один раз на машину)
+./scripts/apply-permissions.sh --global
 ```
 
 Скрипт объединяет `allow`/`ask`/`deny` с уже существующими правилами цели
 (ничего не затирает, дубликаты убирает) и делает бэкап `settings.local.json.bak`.
+
+## Лог команд («прокси»)
+
+Пресет `global` регистрирует PreToolUse-hook ([hooks/log-bash-command.sh](hooks/log-bash-command.sh)):
+каждая Bash-команда Claude Code пишется в `~/.claude/logs/bash-commands.jsonl` —
+в любой момент можно проверить, что агент реально выполнял. Hook только логирует,
+никогда не блокирует. Подхватывается при старте сессии — после установки
+перезапустите Claude Code.
+
+```bash
+# последние 20 команд
+tail -20 ~/.claude/logs/bash-commands.jsonl | jq -r '"\(.ts) [\(.cwd)] \(.command)"'
+
+# команды конкретного проекта
+jq -r 'select(.cwd | test("myproject")) | .command' ~/.claude/logs/bash-commands.jsonl
+```
 
 Подробный разбор синтаксиса правил и логики пресетов — в
 [документации](../../docs/configs/claude-permissions.md).

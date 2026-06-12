@@ -8,6 +8,7 @@
 #   ./scripts/apply-permissions.sh --target . --list                          # доступные пресеты
 #   ./scripts/apply-permissions.sh --target . --dry-run                       # показать без записи
 #   ./scripts/apply-permissions.sh --target . --file settings.json            # в шаримый settings.json
+#   ./scripts/apply-permissions.sh --global                                    # baseline + hook-логгер в ~/.claude
 #
 # Merge-семантика: allow/ask/deny объединяются и дедуплицируются, существующие
 # правила цели сохраняются. defaultMode берётся из пресета только если в цели
@@ -22,8 +23,9 @@ TARGET=""
 PRESETS=""
 SETTINGS_FILE="settings.local.json"
 DRY_RUN=0
+GLOBAL=0
 
-usage() { grep '^#' "$0" | sed 's/^# \{0,1\}//' | head -14; exit "${1:-0}"; }
+usage() { grep '^#' "$0" | sed 's/^# \{0,1\}//' | head -15; exit "${1:-0}"; }
 
 list_presets() {
   echo "Доступные пресеты (configs/claude-code/):"
@@ -39,11 +41,25 @@ while [[ $# -gt 0 ]]; do
     --preset)  PRESETS="$2"; shift 2 ;;
     --file)    SETTINGS_FILE="$2"; shift 2 ;;
     --list)    list_presets ;;
+    --global)  GLOBAL=1; shift ;;
     --dry-run) DRY_RUN=1; shift ;;
     -h|--help) usage 0 ;;
     *) echo "Неизвестный аргумент: $1" >&2; usage 1 ;;
   esac
 done
+
+# --global: пресет global в ~/.claude/settings.json + установка hook-логгера
+if [[ "$GLOBAL" -eq 1 ]]; then
+  TARGET="$HOME"
+  SETTINGS_FILE="settings.json"
+  PRESETS="${PRESETS:-global}"
+  mkdir -p "$HOME/.claude/hooks"
+  if [[ "$DRY_RUN" -eq 0 ]]; then
+    cp "$PRESETS_DIR/hooks/log-bash-command.sh" "$HOME/.claude/hooks/"
+    chmod +x "$HOME/.claude/hooks/log-bash-command.sh"
+    echo "Hook установлен: ~/.claude/hooks/log-bash-command.sh"
+  fi
+fi
 
 [[ -n "$TARGET" ]] || { echo "Ошибка: --target обязателен" >&2; usage 1; }
 [[ -d "$TARGET" ]] || { echo "Ошибка: каталог не найден: $TARGET" >&2; exit 1; }
@@ -97,7 +113,8 @@ result = load(dest_path)
 perms = result.setdefault("permissions", {})
 
 for path in preset_paths:
-    preset = load(path).get("permissions", {})
+    data = load(path)
+    preset = data.get("permissions", {})
     for key in ("allow", "ask", "deny"):
         merged = perms.get(key, []) + [r for r in preset.get(key, [])
                                        if r not in perms.get(key, [])]
@@ -105,6 +122,10 @@ for path in preset_paths:
             perms[key] = merged
     if "defaultMode" in preset and "defaultMode" not in perms:
         perms["defaultMode"] = preset["defaultMode"]
+    # hooks из пресета: добавляем записи, которых ещё нет в цели
+    for event, entries in data.get("hooks", {}).items():
+        existing = result.setdefault("hooks", {}).setdefault(event, [])
+        existing.extend(e for e in entries if e not in existing)
 
 print(json.dumps(result, ensure_ascii=False, indent=2))
 PY

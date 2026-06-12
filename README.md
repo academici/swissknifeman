@@ -121,9 +121,12 @@ cd ~/projects/my-laravel-app
 # Явный набор / превью
 ./scripts/apply-permissions.sh --target . --preset base,laravel,docker
 ./scripts/apply-permissions.sh --target . --dry-run
+
+# Глобальный baseline (read-only команды) + hook-логгер всех Bash-команд в ~/.claude
+./scripts/apply-permissions.sh --global
 ```
 
-Пресеты: `base`, `laravel`, `php-package`, `node`, `python`, `docker`, `yolo`.
+Пресеты: `base`, `laravel`, `php-package`, `node`, `python`, `docker`, `yolo`, `global`.
 Merge в `.claude/settings.local.json` без затирания существующих правил, с бэкапом.
 Опасные операции (`git push`, `rm -rf`, `migrate:fresh`) — через ask, секреты
 (`.env`, ключи, `~/.ssh`) — deny.

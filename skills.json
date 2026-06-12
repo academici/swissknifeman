@@ -334,7 +334,7 @@
       "path": "skills/frontend/inertia-vue/SKILL.md",
       "version": "0.2.0",
       "description": "Inertia + Vue в Laravel: страницы, формы, навигация и слоистая организация resources/js (pages, layouts, components, composables, stores, features, events, types, actions/wayfinder).",
-      "sha256": "6ca4199b60df2292ac5aa64de18ac5a1ba5a9b6fcd06cb9b9779a484f7e9c808",
+      "sha256": "eea604193d7740aa11f9d35cf6bc66b771db8a319e48507f75a7c12c94982015",
       "source": "local"
     },
     {
@@ -388,7 +388,7 @@
       "path": "skills/frontend/wayfinder/SKILL.md",
       "version": "0.1.0",
       "description": "Laravel Wayfinder: типобезопасные роуты и controller actions для фронтенда. Генерация, именованные импорты, form(), архитектурные границы импортов через ESLint.",
-      "sha256": "a17e5a714a6e5f1596d347b9ab56df135552cee3eb852180bf78d9f252bbdf14",
+      "sha256": "653cb0cd1a57cbfe59b0f129e528349b754f2f6b1f71f38d37d20eef0f5f7892",
       "source": "local"
     },
     {
@@ -460,7 +460,7 @@
       "path": "skills/general/skills-ssot/SKILL.md",
       "version": "0.1.0",
       "description": "Единый источник истины скиллов для нескольких AI-агентов: .ai/skills + симлинки, gitignore, цикл обновления",
-      "sha256": "a305ee21468e05d007d1670ba81ed8d8ed75047a4cf85aa7708d01dcdb8b3f5d",
+      "sha256": "67fab2cc934ac2217a4292aa451f27e56e9cae8107c007c12158f259d5421a4a",
       "source": "local"
     },
     {
@@ -772,7 +772,7 @@
       "path": "skills/php/filament/SKILL.md",
       "version": "0.2.0",
       "description": "Filament v3 resource patterns: CRUD resource, relation managers, panel integration",
-      "sha256": "6a9d5bb649cd3d200be7b51bfeb5c0018f7cb559af5d193574de032039d168cf",
+      "sha256": "2106084b68faedbb0d3c712b7920868affb9f04bda2e8c314d127005a6b1d866",
       "source": "local"
     },
     {
@@ -790,7 +790,7 @@
       "path": "skills/php/laravel-best-practices/SKILL.md",
       "version": "0.1.0",
       "description": "Лучшие практики Laravel: 20 категорий правил (Eloquent, валидация, кеш, очереди, безопасность) с маршрутизацией по задаче",
-      "sha256": "ff21da9893c5579209585349e384120603abf597a910c17d04288d7e6ef22d00",
+      "sha256": "a8a4ef2a4df42e79dc966a59fa4fecc2780efe2f7185157d2c778b9363a016a8",
       "source": "local"
     },
     {
@@ -932,7 +932,7 @@
       "path": "skills/php/laravel-testing/SKILL.md",
       "version": "0.3.0",
       "description": "Feature/unit/pest testing patterns: изоляция тестовой БД, детект Docker/локального окружения, coverage gate",
-      "sha256": "04a3258c11ac49edf5815f67f60fe9fef767db356bf916a56707bf594fee0085",
+      "sha256": "33581e0e09fde980fe0ad90cbf848fc51a20c158263c59b231e6dcafcde96ec7",
       "source": "local"
     },
     {
@@ -941,7 +941,7 @@
       "path": "skills/php/medialibrary/SKILL.md",
       "version": "0.1.0",
       "description": "spatie/laravel-medialibrary: привязка файлов к Eloquent-моделям, коллекции, конверсии, получение URL",
-      "sha256": "a37f690af18c5050bcb6598a17fa968488ef1c3348acbe2783aafb7bc231afa6",
+      "sha256": "71b66379048227a8bf143655c7d9c935fb7ed11e93aedb3cbe8f328766a30294",
       "source": "local"
     },
     {

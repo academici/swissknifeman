@@ -20,7 +20,7 @@ sha256: ""
 
 Разработка Inertia + Vue фронтенда в Laravel-приложении: страницы, компоненты, формы, навигация — и слоистая организация `resources/js/`, чтобы каждый новый файл попадал в правильный слой, а не в свалку. Применять при любой правке под `resources/js/` и при вопросе «куда положить этот файл».
 
-**Laravel Boost**: версионные основы Inertia (формы, навигация, API) — Boost-скилл inertia-vue-development; здесь — слоистая организация resources/js и проектные конвенции.
+**Laravel Boost**: версионные основы Inertia (формы, навигация, API) — Boost-скилл inertia-vue-development; здесь — слоистая организация resources/js и проектные конвенции. Пакет: https://github.com/laravel/boost (скиллы — `vendor/laravel/boost/.ai/`).
 
 ## Алгоритм
 

@@ -20,7 +20,7 @@ sha256: ""
 
 `spatie/laravel-medialibrary` — привязка файлов к Eloquent-моделям: коллекции, конверсии изображений (через spatie/image), responsive images, разные диски. Скилл активируется при работе с загрузкой файлов, аватарами, превью, `HasMedia`/`InteractsWithMedia`.
 
-**Laravel Boost**: при подключённом Boost гайдлайны spatie/laravel-medialibrary приходят из пакета; этот скилл самодостаточен для проектов без Boost.
+**Laravel Boost**: при подключённом Boost гайдлайны spatie/laravel-medialibrary приходят из пакета; этот скилл самодостаточен для проектов без Boost. Пакет: https://github.com/laravel/boost (скиллы — `vendor/laravel/boost/.ai/`).
 
 ## Алгоритм
 

@@ -21,11 +21,13 @@
 | `planned` | Источник изучен, отобраны кандидаты, импорт ещё не делался |
 | `imported` | Что-то уже взято (есть скиллы с `upstream.json` на этот источник) |
 | `rejected` | Изучен и отклонён (причина в файле) |
+| `trusted` | Не импортируем — доверяем на месте в проектах; реестр дополняет, не дублирует |
 
 ## Индекс
 
 | Источник | Ценность | Статус |
 |---|---|---|
+| [laravel/boost](laravel-boost.md) | Версионно-специфичные Laravel-скиллы + MCP + генератор CLAUDE.md | trusted |
 | [get-zeked/perplexity-super-skills](get-zeked-perplexity-super-skills.md) | 12 super-skills, gap-analysis формат | imported |
 | [anthropics/claude-code](anthropics-claude-code.md) | Официальная спецификация SKILL.md | imported |
 | [VoltAgent/awesome-agent-skills](voltagent-awesome-agent-skills.md) | Курируемый индекс официальных скиллов | planned |

@@ -2,6 +2,45 @@
 
 ## [Unreleased]
 
+### Added (token optimization wave)
+
+- **`php/pao` (1.0.0)**: скилл по laravel/pao — агентно-оптимизированный вывод
+  PHPUnit/Pest/PHPStan/Rector/Artisan (~20 токенов JSON вместо тысяч);
+  установка, проверка, ограничения
+- **`general/context-economy` (1.0.0)**: экономия контекста Claude Code —
+  CLAUDE.md ≤200 строк, path-scoped `.claude/rules/` с `paths:`, /compact vs
+  /clear, Plan→Clear→Execute, аудит MCP, нативная маршрутизация моделей;
+  сниппеты: шаблон правила, команды /prime //plan //execute, чеклист аудита
+  CLAUDE.md
+- deny-блок «токен-шума» в пресетах `configs/claude-code/settings.laravel.json`
+  и `settings.node.json` (`storage/logs`, `node_modules`, `*.lock`, кэши,
+  бандлы); `vendor/` сознательно не блокируется — там Boost-гайдлайны
+
+### Changed
+
+- **`php/filament` 0.2.0 → 1.0.0**: переписан с v3 на Filament v5 — структура
+  v5-генератора (Schemas/ + Tables/), таблица корректных namespaces
+  (`Filament\Actions\*`, `Filament\Schemas\Components\*`), CLI-справочник
+  `make:filament-*`, union-типы свойств, типичные ошибки из официальных
+  Boost-гайдлайнов; snippets обновлены под v5 + новый
+  `forms-tables-reference.md`; upstream.json отслеживает
+  filamentphp/filament `boost/guidelines/core.blade.php` (strategy=notify)
+- `general/compact-responses` 0.1.0 → 0.2.0: поведенческие шаблоны цикла
+  разработки (`✓ tests passed (N)`, только упавший тест при ошибке) и формат
+  единственного развёрнутого финального отчёта
+- `general/task-brief-template`: раздел Plan→Clear→Execute (план и выполнение —
+  раздельные сессии)
+
+### Rejected (по итогам фактчека отчётов Perplexity)
+
+- `.claudeignore` — не существует в Claude Code (рабочий механизм —
+  `permissions.deny: Read(...)`)
+- `paths:` frontmatter для SKILL.md — `paths:` работает только в
+  `.claude/rules/`; скиллы и так загружаются лениво
+- claude-code-router — сторонний прокси; нативный `/model` достаточен
+- waaseyaa/agent-output как стандарт — перекрывается laravel/pao
+- `deny Read(vendor/**)` — ломает чтение Boost-гайдлайнов
+
 ## [0.3.0] - 2026-06-11
 
 ### Added

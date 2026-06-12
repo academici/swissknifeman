@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "source": "github",
+  "repo": "filamentphp/filament",
+  "strategy": "notify",
+  "license": "MIT",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "url": "https://raw.githubusercontent.com/filamentphp/filament/5.x/packages/panels/resources/boost/guidelines/core.blade.php",
+      "sha256": "3bcd231ce10d34d273bf934c5dac2a0ca2e6ad62766e75e668b96ba349735422",
+      "fetched_at": "2026-06-12"
+    }
+  ],
+  "notes": "SKILL.md — рукописный RU-скилл по Filament v5; таблица namespaces, типы свойств и 'типичные ошибки' выверены по официальным Boost-гайдлайнам Filament (packages/panels/resources/boost/guidelines/core.blade.php, ветка 5.x). strategy=notify: при изменении гайдлайнов — ручная сверка SKILL.md и snippets/. В Boost-проектах vendor-гайдлайны приоритетны (SSOT)."
+}

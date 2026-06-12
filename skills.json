@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 5,
   "name": "swissknifeman",
   "repository": "https://github.com/academici/swissknifeman",
   "schema": "https://github.com/academici/swissknifeman/blob/main/SKILL_TEMPLATE.md",
@@ -31,7 +31,7 @@
     },
     "general": {
       "description": "General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists",
-      "count": 11,
+      "count": 15,
       "status": "active"
     },
     "imported": {
@@ -51,7 +51,7 @@
     },
     "php": {
       "description": "PHP and Laravel: applications, packages, Filament, permissions, testing, patterns",
-      "count": 28,
+      "count": 30,
       "status": "active"
     },
     "pm": {
@@ -66,7 +66,7 @@
     },
     "quality": {
       "description": "Code review, refactoring plans, tech debt audits, test strategy",
-      "count": 4,
+      "count": 5,
       "status": "active"
     },
     "roles": {
@@ -83,6 +83,16 @@
       "version": "0.1.0",
       "description": "Проектирование агентов, agentic loop, tool contracts, harness, permission gates",
       "sha256": "180932a8396dcbff9244963933d77ec6831c5595b7b0d6c6cc48c84d78cbbdb1",
+      "tags": [
+        "agentic",
+        "architecture"
+      ],
+      "requires": [
+        "architecture"
+      ],
+      "produces_for": [
+        "eval-design"
+      ],
       "source": "local"
     },
     {
@@ -92,6 +102,13 @@
       "version": "0.1.0",
       "description": "Проектирование REST/GraphQL API, эндпоинтов, контрактов, версионирования, аутентификации",
       "sha256": "1bf33c601d7dc76cf927473198c5dfed0dff149c134d19ccbc6e52c05d1a5d81",
+      "tags": [
+        "api",
+        "architecture"
+      ],
+      "requires": [
+        "data-schema"
+      ],
       "source": "local"
     },
     {
@@ -101,6 +118,20 @@
       "version": "0.1.0",
       "description": "Архитектура системы, выбор стека, ADR, C4-диаграммы, deployment, scalability",
       "sha256": "63bb745f4482296107808651ae0dc1fcce89a7ae4bd8b2dea3f4ef10018ecfc2",
+      "tags": [
+        "architecture"
+      ],
+      "requires": [
+        "brd"
+      ],
+      "produces_for": [
+        "data-schema",
+        "api-design",
+        "security-design",
+        "agent-design",
+        "observability-design",
+        "legal-compliance"
+      ],
       "source": "local"
     },
     {
@@ -110,6 +141,16 @@
       "version": "0.1.0",
       "description": "Схема данных, сущности, атрибуты, связи. Агностично к СУБД — только markdown-таблицы",
       "sha256": "87f9312f573b42fe47336ff58293c5b8f03e5c30f209cb280ce8998c18559c2c",
+      "tags": [
+        "data",
+        "architecture"
+      ],
+      "requires": [
+        "brd"
+      ],
+      "produces_for": [
+        "api-design"
+      ],
       "source": "local"
     },
     {
@@ -119,6 +160,13 @@
       "version": "0.1.0",
       "description": "Оценка качества LLM/AI-выводов — eval-set, метрики, regression-харнес, automated + human review",
       "sha256": "4afd6c90ac322b592899070ef14b6a95ec2cb844f8ccd24f1a0e201aef1f2d4d",
+      "tags": [
+        "agentic",
+        "validation"
+      ],
+      "requires": [
+        "agent-design"
+      ],
       "source": "local"
     },
     {
@@ -128,6 +176,15 @@
       "version": "0.1.0",
       "description": "GDPR, CCPA, AI Act, DMCA, COPPA, DSA — чеклист регуляторных требований до запуска",
       "sha256": "225f207ee92faaa9238893968fa75d984dae3f0012f0b86cf746de6ae749b0c1",
+      "tags": [
+        "compliance"
+      ],
+      "requires": [
+        "architecture"
+      ],
+      "produces_for": [
+        "security-design"
+      ],
       "source": "local"
     },
     {
@@ -137,6 +194,12 @@
       "version": "0.1.0",
       "description": "Logging, metrics, tracing, alerting. SLO/SLI, error budget, runbooks для прод-готовности",
       "sha256": "f1bd59bad8e4eb7046c412912ebccb2826c9c8913e7220e644876b52116c78bf",
+      "tags": [
+        "observability"
+      ],
+      "requires": [
+        "architecture"
+      ],
       "source": "local"
     },
     {
@@ -146,6 +209,13 @@
       "version": "0.2.0",
       "description": "Классификация данных, auth-стратегия, RBAC/ABAC, OWASP Top 10, GDPR, STRIDE threat modeling, операционный чеклист безопасности",
       "sha256": "2adbbfabb128dbd17ea6b5d6a9de316d0b403f447eaeb65319ed9fd26c2e6c0a",
+      "tags": [
+        "security",
+        "compliance"
+      ],
+      "requires": [
+        "architecture"
+      ],
       "source": "local"
     },
     {
@@ -155,6 +225,18 @@
       "version": "0.1.0",
       "description": "Выбор технологического стека с trade-off матрицей до архитектурного дизайна. ADR-первый шаг",
       "sha256": "80bef37346047bf96da07bd24cd741222f0adf8db9878f3b3118bc0b862bfdc0",
+      "tags": [
+        "stack-choice",
+        "architecture"
+      ],
+      "requires": [
+        "brd"
+      ],
+      "produces_for": [
+        "architecture",
+        "oss-development",
+        "release-engineering"
+      ],
       "source": "local"
     },
     {
@@ -164,6 +246,12 @@
       "version": "0.1.0",
       "description": "MCP Blender: инструменты, обязательный workflow построения моделей и соглашения проекта DiaBox",
       "sha256": "cd3f990499c3a8fa1182349057d4ca1c4cbbe77d7c65d13a374780d3424fb515",
+      "tags": [
+        "blender",
+        "mcp",
+        "python",
+        "3d"
+      ],
       "source": "local"
     },
     {
@@ -173,6 +261,11 @@
       "version": "0.1.0",
       "description": "Шаблон models/{name}/ai/rules.md — моделе-специфичные правила, читаемые агентом перед любой задачей",
       "sha256": "495cc9e8731e287bff09834ab3a9c6562a4fa132e44fe081e3c94a453732055b",
+      "tags": [
+        "blender",
+        "template",
+        "rules"
+      ],
       "source": "local"
     },
     {
@@ -182,6 +275,12 @@
       "version": "0.1.0",
       "description": "Резьба на FDM/SLA-деталях: материал, физика печати, радиальные зазоры по типу посадки",
       "sha256": "bf938c2226e25305df0a6cb14bacc25584f90890678fcf78ef933ea2961b8906",
+      "tags": [
+        "blender",
+        "3d",
+        "fdm",
+        "threading"
+      ],
       "source": "local"
     },
     {
@@ -191,6 +290,10 @@
       "version": "0.1.0",
       "description": "Известные breaking changes и ловушки Blender 5.0 API",
       "sha256": "9f7d245f6a4d9671e9c8fc7158e6e573c765b426b36c5bc6834e287879c7ff1d",
+      "tags": [
+        "blender",
+        "api"
+      ],
       "source": "local"
     },
     {
@@ -200,6 +303,11 @@
       "version": "0.2.0",
       "description": "GitHub Actions CI/CD pipelines для Laravel проектов",
       "sha256": "a4bc5599cfa121f563e20443f728e4e1257d5226d63db20bab1d755607c735b3",
+      "tags": [
+        "ci",
+        "github-actions",
+        "laravel"
+      ],
       "source": "local"
     },
     {
@@ -209,6 +317,10 @@
       "version": "0.1.0",
       "description": "Advanced Docker containerization expertise: container optimization, security hardening, multi-stage builds, orchestration patterns, and production deployment strategies",
       "sha256": "e0d1a1b4a90c5e7b9f379d7c51d93ef432dd4142ce6646e590cb35091fea9184",
+      "tags": [
+        "docker",
+        "devops"
+      ],
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/sickn33/antigravity-awesome-skills/main/skills/docker-expert/SKILL.md",
       "fetched_at": "2026-06-12"
@@ -220,6 +332,15 @@
       "version": "0.3.0",
       "description": "Разнесение docker-compose на dev (build + bind-mount) и prod (готовый образ + named volumes), локальный override, якорь &app_env",
       "sha256": "e2e6a9df0fb1a7468da4c5374d3305133485b1dbfeb53485f72ea988c6c0d9cb",
+      "tags": [
+        "docker",
+        "devops",
+        "compose",
+        "laravel"
+      ],
+      "produces_for": [
+        "docker-services"
+      ],
       "source": "local"
     },
     {
@@ -229,6 +350,16 @@
       "version": "0.3.0",
       "description": "Production-ready PHP Docker образ: alpine-fpm или всё-в-одном serversideup/php (FPM+Nginx), entrypoint.d-хуки, healthcheck на /up",
       "sha256": "d89e0e59d48cc8ddacd4d08563a3bae6a44d9ac6e5e27105b0f1cd64a43cefbc",
+      "tags": [
+        "docker",
+        "php",
+        "devops",
+        "laravel"
+      ],
+      "produces_for": [
+        "docker-dev-prod",
+        "docker-services"
+      ],
       "source": "local"
     },
     {
@@ -238,6 +369,16 @@
       "version": "0.3.0",
       "description": "PostgreSQL в Docker: healthcheck pg_isready, named volume данных, init-скрипт создания тестовой БД <app>_test для изоляции тестов",
       "sha256": "56b8779a075359e60eaa239cae885abe165167aafbfbc02dfd8a77fbc960cdc5",
+      "tags": [
+        "docker",
+        "devops",
+        "postgres",
+        "testing"
+      ],
+      "produces_for": [
+        "docker-dev-prod",
+        "docker-services"
+      ],
       "source": "local"
     },
     {
@@ -247,6 +388,17 @@
       "version": "0.1.0",
       "description": "Полный сервисный стек Laravel из одного образа: app (fpm-nginx), queue, scheduler, reverb, опционально docs; healthcheck /up и depends_on service_healthy",
       "sha256": "4e9f17279e97eab4748a4bebe2efb05d2ffa263275d0fe75c93bea76915cc505",
+      "tags": [
+        "docker",
+        "devops",
+        "compose",
+        "laravel",
+        "queue",
+        "websocket"
+      ],
+      "requires": [
+        "docker-php"
+      ],
       "source": "local"
     },
     {
@@ -256,6 +408,16 @@
       "version": "0.3.0",
       "description": "Vite dev server отдельным compose-сервисом для Laravel: named volume для node_modules, HMR через localhost, host 0.0.0.0",
       "sha256": "e34c8773d0b5ae7fed2844461a2421cf0d27d0552adb05d47f3749c732cafbc0",
+      "tags": [
+        "docker",
+        "devops",
+        "vite",
+        "frontend",
+        "laravel"
+      ],
+      "produces_for": [
+        "docker-dev-prod"
+      ],
       "source": "local"
     },
     {
@@ -265,6 +427,10 @@
       "version": "0.3.0",
       "description": "Командная Git-стратегия: модель веток (main/develop/feature/hotfix), PR-workflow, защита веток",
       "sha256": "8014e848beb0ebdae84c20a338a0cd31a76a51189726e605b19bfb8c66cf9fec",
+      "tags": [
+        "git",
+        "gitops"
+      ],
       "source": "local"
     },
     {
@@ -274,6 +440,15 @@
       "version": "0.2.0",
       "description": "Makefile как единая точка входа: help, .PHONY, алиасы Docker-команд; паттерн делегирующего корневого Makefile с catch-all в docker/Makefile",
       "sha256": "c12e66d7036696dc30d2312b8eea4ad1f721f4da67f1b028d63478b9a2179dee",
+      "tags": [
+        "make",
+        "devops",
+        "docker"
+      ],
+      "produces_for": [
+        "docker-dev-prod",
+        "docker-services"
+      ],
       "source": "local"
     },
     {
@@ -283,6 +458,11 @@
       "version": "0.1.0",
       "description": "Проверка доступности Node/pnpm на хосте перед командами и git hooks, которые используют pnpm (commitlint, lint, сборка).",
       "sha256": "28c16bcf5c1f820601bd39138ca741af83fa2f5758e8a60350b25ca2b132cad9",
+      "tags": [
+        "node",
+        "pnpm",
+        "devops"
+      ],
       "source": "local"
     },
     {
@@ -292,6 +472,15 @@
       "version": "0.1.0",
       "description": "Анализ рынка, конкурентов, JTBD, незанятая ниша, вектор атаки. Использует Perplexity search_deep",
       "sha256": "a7f500cebb99da7f56f2f2cf9eb8ec4eb17c92fe772b11334d8bef983bbe79fe",
+      "tags": [
+        "discovery",
+        "market"
+      ],
+      "produces_for": [
+        "go-to-market",
+        "new-project",
+        "pitch-deck"
+      ],
       "source": "local"
     },
     {
@@ -301,6 +490,13 @@
       "version": "0.1.0",
       "description": "Структурированный опрос по сырой идее — JTBD, problem statement, hypothesis, перед competitive-analysis",
       "sha256": "56358d585b35a090cefc15bd181acb8931de0eedcc36af662125e0e99df7566a",
+      "tags": [
+        "discovery"
+      ],
+      "produces_for": [
+        "monetization-design",
+        "new-project"
+      ],
       "source": "local"
     },
     {
@@ -310,6 +506,14 @@
       "version": "0.1.0",
       "description": "Запуск нового стартап-проекта: концепция, конкуренты, риски, полная структура папок",
       "sha256": "4915c03266fcaf6d8c2f661b62bb5c87c168fa895b2a076251f20fccbf7286a6",
+      "tags": [
+        "discovery",
+        "requirements"
+      ],
+      "requires": [
+        "competitive-analysis",
+        "risk-assessment"
+      ],
       "source": "local"
     },
     {
@@ -319,6 +523,15 @@
       "version": "0.1.0",
       "description": "10-слайдовая инвесторская дека по канону YC/Sequoia на основе готовых артефактов проекта",
       "sha256": "89cb1400e8fff612c89bdb2189198f8aa43a5873b2fb523ce9938548239281c0",
+      "tags": [
+        "gtm",
+        "market"
+      ],
+      "requires": [
+        "competitive-analysis",
+        "unit-economics",
+        "go-to-market"
+      ],
       "source": "local"
     },
     {
@@ -328,6 +541,12 @@
       "version": "0.1.0",
       "description": "5 категорий рисков, Risk Matrix, RAID-лог, pre-mortem для критичных рисков",
       "sha256": "0e36ebb3b7d18802bc27716b091defb8594fe93a12376c3aa42220d707a9fc28",
+      "tags": [
+        "validation"
+      ],
+      "produces_for": [
+        "new-project"
+      ],
       "source": "local"
     },
     {
@@ -337,6 +556,14 @@
       "version": "0.2.0",
       "description": "Inertia + Vue в Laravel: страницы, формы, навигация и слоистая организация resources/js (pages, layouts, components, composables, stores, features, events, types, actions/wayfinder).",
       "sha256": "eea604193d7740aa11f9d35cf6bc66b771db8a319e48507f75a7c12c94982015",
+      "tags": [
+        "inertia",
+        "vue",
+        "laravel",
+        "frontend",
+        "architecture",
+        "structure"
+      ],
       "source": "local"
     },
     {
@@ -346,6 +573,14 @@
       "version": "0.1.0",
       "description": "Стиль JS/TS по Spatie: 4 пробела, ширина 120, одинарные кавычки, const-first, строгое ===, function для именованных функций, деструктуризация, именованные импорты.",
       "sha256": "f4b3ac6c1106000e4412a3c9c71c66f0a513eae983f150084456c669f6aa5192",
+      "tags": [
+        "javascript",
+        "typescript",
+        "code-style",
+        "spatie",
+        "prettier",
+        "vue"
+      ],
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/spatie/guidelines.spatie.be/master/content/code-style/javascript.md",
       "fetched_at": "2026-06-12"
@@ -357,6 +592,11 @@
       "version": "0.1.0",
       "description": "Vite как основной сборщик Frontend-проектов: базовая конфигурация, алиасы, build-практики",
       "sha256": "4a8786c219f596a6d25efd7597f8f36ffaa8f6d2e33d670faf3a593d298d1ddc",
+      "tags": [
+        "vite",
+        "frontend",
+        "build"
+      ],
       "source": "local"
     },
     {
@@ -366,6 +606,14 @@
       "version": "0.1.0",
       "description": "Две независимые Vite-сборки в одном Laravel-проекте: основное приложение и Filament-админка с раздельными конфигами Vite/Tailwind, hotfile и build-директориями.",
       "sha256": "1db5261a012be78d76a8aa24f5fc83ae7712baf7822dcd14afffb6155a59ca17",
+      "tags": [
+        "vite",
+        "laravel",
+        "filament",
+        "tailwind",
+        "build",
+        "multi-config"
+      ],
       "source": "local"
     },
     {
@@ -375,6 +623,14 @@
       "version": "0.1.0",
       "description": "Vitest для Vue/Inertia-проекта на Laravel: jsdom, globals, тесты в resources/js/tests зеркалят исходники, coverage v8 с обязательным exclude автогенерённого кода.",
       "sha256": "d126386eb710921963f79c58df48a5730c5f8c1c225e03bfb9eb8db9077baef2",
+      "tags": [
+        "vitest",
+        "testing",
+        "vue",
+        "coverage",
+        "jsdom",
+        "laravel"
+      ],
       "source": "local"
     },
     {
@@ -384,6 +640,10 @@
       "version": "0.1.0",
       "description": "Vue Composition API паттерны: синтаксис <script setup> как стандарт написания компонентов",
       "sha256": "64d1570ca77871c41bc607f087b75757fecae1ad191a95b58a88476d6578cc28",
+      "tags": [
+        "vue",
+        "frontend"
+      ],
       "source": "local"
     },
     {
@@ -393,6 +653,14 @@
       "version": "0.1.0",
       "description": "Laravel Wayfinder: типобезопасные роуты и controller actions для фронтенда. Генерация, именованные импорты, form(), архитектурные границы импортов через ESLint.",
       "sha256": "653cb0cd1a57cbfe59b0f129e528349b754f2f6b1f71f38d37d20eef0f5f7892",
+      "tags": [
+        "wayfinder",
+        "laravel",
+        "typescript",
+        "routes",
+        "inertia",
+        "eslint"
+      ],
       "source": "local"
     },
     {
@@ -402,15 +670,38 @@
       "version": "0.1.0",
       "description": "Редактирование AI-контекста проекта: .ai/guidelines, .ai/skills, boost.json; запрет правки сгенерированных CLAUDE.md/AGENTS.md; обязательный php artisan boost:update; объяснение цикла для Cursor и Claude Code.",
       "sha256": "2b8d76b4fbbe82ba312b4b040631661b788f38d86fc10df7deff3cc892a24c6b",
+      "tags": [
+        "ai",
+        "workflow",
+        "conventions"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "anti-drift",
+      "bucket": "general",
+      "path": "skills/general/anti-drift/SKILL.md",
+      "version": "0.1.0",
+      "description": "Дисциплина против «закапывания» агента: думай до кода, простота прежде всего, хирургические правки, circuit-breaker при затянувшихся итерациях.",
+      "sha256": "e893ac02c9e3ba370c72f60374c2eee88f57a6ef06b6a81da2171ae49ea1848b",
+      "tags": [
+        "workflow",
+        "discipline"
+      ],
       "source": "local"
     },
     {
       "name": "compact-responses",
       "bucket": "general",
       "path": "skills/general/compact-responses/SKILL.md",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "description": "Activate to switch Claude into ultra-compact response mode: minimal prose, code-only answers, no explanations unless asked. Use when you want terse output — e.g. quick edits, code reviews, or repeated tasks where context is already established.",
-      "sha256": "98e34359bd5edda5095ec7d65a8542b16742916937263ed5aa9bbf6a15c2856d",
+      "sha256": "1289de618b5cc32786826c24ad5b1d676c3e6979f2b9147d1cd0a916e1890e66",
+      "tags": [
+        "conventions",
+        "style",
+        "tokens"
+      ],
       "source": "local"
     },
     {
@@ -420,6 +711,25 @@
       "version": "0.1.0",
       "description": "Оркестрация сложных задач: декомпозиция, контекст-роутинг, управление рисками, Definition of Done и минимальный верификационный контур.",
       "sha256": "04040f997809a4ca224360590ab7049dd00f907efdc69bd08c738cbc7b752191",
+      "tags": [
+        "workflow",
+        "orchestration"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "context-economy",
+      "bucket": "general",
+      "path": "skills/general/context-economy/SKILL.md",
+      "version": "1.0.0",
+      "description": "Экономия контекста Claude Code в проекте: CLAUDE.md ≤200 строк, path-scoped правила .claude/rules/, /compact vs /clear, паттерн Plan→Clear→Execute, аудит MCP, маршрутизация моделей. Только официально поддерживаемые механизмы — без мифов вроде .claudeignore.",
+      "sha256": "f1205ea8b0b12c89c7757d4e28e86b53abab931d47346a67dc3af5a3178071f3",
+      "tags": [
+        "tokens",
+        "context",
+        "claude-code",
+        "workflow"
+      ],
       "source": "local"
     },
     {
@@ -429,6 +739,10 @@
       "version": "0.1.0",
       "description": "Универсальный checklist для изменений, затрагивающих несколько слоев: код, доступы, UI, документацию и тесты.",
       "sha256": "f4f858643404895373a9e3497b64668a0b9d7d0a107823bdd2bd6b6402b66679",
+      "tags": [
+        "checklist",
+        "workflow"
+      ],
       "source": "local"
     },
     {
@@ -438,6 +752,10 @@
       "version": "0.1.0",
       "description": "Правила работы с Git в проекте: подготовка коммита, husky/commitlint, формат сообщений и безопасный порядок действий.",
       "sha256": "ccb8ac467fe95edc5ba04ccc7c2eb1dfb04ac14ef152323cac0cc900d4086ee5",
+      "tags": [
+        "git",
+        "conventions"
+      ],
       "source": "local"
     },
     {
@@ -447,6 +765,10 @@
       "version": "0.1.0",
       "description": "Реестр используемых внешних NPM и Composer пакетов. Опирайся на официальную документацию этих пакетов при написании кода.",
       "sha256": "36e7c9dd358556057d7a8cc014ad5fa58b51d3a0372ee85617b803356d81a248",
+      "tags": [
+        "dependencies",
+        "conventions"
+      ],
       "source": "local"
     },
     {
@@ -456,6 +778,23 @@
       "version": "0.2.0",
       "description": "Быстрая карта структуры проекта и зон ответственности по директориям для безопасного роутинга изменений.",
       "sha256": "accd3656e06f9256e44fb31a6806f269e9cd0284a191a547fde596db52d0ebeb",
+      "tags": [
+        "conventions",
+        "navigation"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "session-handoff",
+      "bucket": "general",
+      "path": "skills/general/session-handoff/SKILL.md",
+      "version": "0.1.0",
+      "description": "Передача контекста между сессиями и агентами: сжатие сессии в структурированный handoff-документ — состояние, решения, незакрытые вопросы, следующие шаги.",
+      "sha256": "634558d8e85a2728d8916d7c5c9b93df9b0a42c7d94167cb79d4820db228deda",
+      "tags": [
+        "workflow",
+        "context"
+      ],
       "source": "local"
     },
     {
@@ -465,15 +804,41 @@
       "version": "0.1.0",
       "description": "Единый источник истины скиллов для нескольких AI-агентов: .ai/skills + симлинки, gitignore, цикл обновления",
       "sha256": "67fab2cc934ac2217a4292aa451f27e56e9cae8107c007c12158f259d5421a4a",
+      "tags": [
+        "ai-context",
+        "skills",
+        "ssot",
+        "workflow"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "spec-interview",
+      "bucket": "general",
+      "path": "skills/general/spec-interview/SKILL.md",
+      "version": "0.1.0",
+      "description": "Интервью перед кодом: агент задаёт вопросы по одному, сам читает кодовую базу где может, предлагает рекомендованный ответ; итог — заполненное ТЗ по task-brief-template.",
+      "sha256": "d7fd7aa6b83bd3c84ebc81de03b763a5d218eaed153ed2754ee794776aaa4483",
+      "tags": [
+        "workflow",
+        "requirements"
+      ],
+      "produces_for": [
+        "task-brief-template"
+      ],
       "source": "local"
     },
     {
       "name": "task-brief-template",
       "bucket": "general",
       "path": "skills/general/task-brief-template/SKILL.md",
-      "version": "0.1.0",
-      "description": "Шаблон постановки сложных задач для агента: цель, границы, инварианты, слои, критерии приемки, проверки.",
-      "sha256": "feb4e5d37d10587bb18ab9457b950fe0245c5b90a8ba6dbd365dca7887861e0a",
+      "version": "0.3.0",
+      "description": "Шаблон постановки сложных задач для агента: цель, границы, инварианты, явные предположения, out of scope, критерии приемки, definition of done. Плюс паттерн Plan→Clear→Execute: план и выполнение — в раздельных сессиях.",
+      "sha256": "50ce58649dbbd8b32b653a0a143c11fbe41a44dccb3061e66f350c92e3f61848",
+      "tags": [
+        "workflow",
+        "template"
+      ],
       "source": "local"
     },
     {
@@ -483,6 +848,11 @@
       "version": "0.1.0",
       "description": "Use for ticket domain logic: Actions, Services, Repositories, Observers, Policies, Notifications in the ticket system. Activate when working with Ticket, Participant, History, Message models; TicketStatus transitions via StateMachine; Actions in app/Actions/Ticket/; NotificationService; UserService::getPrimaryRole; or ticket authorization via Gate/Policies.",
       "sha256": "8281189fbc8ec093e0262840bb88272814321541a2e3d406936499a4b0b19e9e",
+      "tags": [
+        "workflow",
+        "domain",
+        "laravel"
+      ],
       "source": "local"
     },
     {
@@ -492,6 +862,11 @@
       "version": "0.1.0",
       "description": "Use when working with UserRole enum, user permissions, role priority resolution, or any code that calls UserService::getPrimaryRole(). Activate when the task involves role-based access, participant roles in tickets, #[Priority] attributes on UserRole enum cases, or determining which role a user has in a given ticket context.",
       "sha256": "2b75bd38144532fb61b895671d0bfec5b78e725abe7c0bc5b6181d785a4100a7",
+      "tags": [
+        "roles",
+        "authorization",
+        "laravel"
+      ],
       "source": "local"
     },
     {
@@ -633,6 +1008,10 @@
       "version": "0.1.0",
       "description": "Планирование capacity — load forecasting, headroom, autoscaling policy, cost budget, что мониторить, когда масштабироваться вверх/вниз",
       "sha256": "dd14065513941f2e583612a2201607c5c575ddb0bbb6798322e76b22f829d0ef",
+      "tags": [
+        "ops",
+        "observability"
+      ],
       "source": "local"
     },
     {
@@ -642,6 +1021,13 @@
       "version": "0.1.0",
       "description": "Процесс реагирования на инциденты в проде — severity-уровни, роли (IC/Comms/SME), коммуникация, action log, переход к postmortem",
       "sha256": "d4e9327219fcec16c878ec0200429496f345e3612bf6662843aad51e87681b75",
+      "tags": [
+        "incident",
+        "ops"
+      ],
+      "produces_for": [
+        "postmortem"
+      ],
       "source": "local"
     },
     {
@@ -651,6 +1037,13 @@
       "version": "0.1.0",
       "description": "Дизайн on-call ротации — расписание, primary/secondary, handoff, compensation, defusing burnout, paging policy",
       "sha256": "8394a56b3bf38fdde64012611cefe2436d5737a29503298f3fdc39b09dead152",
+      "tags": [
+        "ops",
+        "incident"
+      ],
+      "produces_for": [
+        "incident-response"
+      ],
       "source": "local"
     },
     {
@@ -660,6 +1053,13 @@
       "version": "0.1.0",
       "description": "Blameless postmortem после SEV-1/2 инцидента — таймлайн, root cause (5 Whys), contributing factors, action items, дистрибуция знаний",
       "sha256": "baa62686f6d14c7c4a65cce0a814101ad43637c7f4d442625302fe972dccc964",
+      "tags": [
+        "incident",
+        "ops"
+      ],
+      "requires": [
+        "incident-response"
+      ],
       "source": "local"
     },
     {
@@ -669,15 +1069,33 @@
       "version": "0.1.0",
       "description": "Шаблон operational runbook на каждый P1/P2-алерт — symptoms, диагностика, mitigation steps, escalation, post-actions",
       "sha256": "ac1c525e221e86d47229c9021cf142c277cd8f0e260f2252602e13ca45932313",
+      "tags": [
+        "ops",
+        "incident"
+      ],
+      "produces_for": [
+        "incident-response"
+      ],
       "source": "local"
     },
     {
       "name": "dependency-audit",
       "bucket": "oss-dev",
       "path": "skills/oss-dev/dependency-audit/SKILL.md",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "description": "Аудит зависимостей: lockfile sanity, vuln scan, лицензионная совместимость, supply-chain risk, SBOM",
-      "sha256": "b84593f7f8eef168ac1fbc792d66fbe2c366506e1c46a0d7834b47d4575790ab",
+      "sha256": "e9de289c03684df4c27ac574b07a6ca6881e86221beddfa1f0ca44dfee9228ff",
+      "tags": [
+        "oss",
+        "compliance",
+        "security"
+      ],
+      "requires": [
+        "oss-development"
+      ],
+      "produces_for": [
+        "security-design"
+      ],
       "source": "local"
     },
     {
@@ -687,6 +1105,12 @@
       "version": "0.1.0",
       "description": "Developer Experience: README, quick-start (≤ 60 сек), API ergonomics, error messages, типы, CLI UX",
       "sha256": "617914e2ada62afa37d407915e1a47a3ab7a656a0fe64a90f1942f59781cd818",
+      "tags": [
+        "oss"
+      ],
+      "requires": [
+        "oss-development"
+      ],
       "source": "local"
     },
     {
@@ -696,6 +1120,15 @@
       "version": "0.1.0",
       "description": "OSS-проект: repo structure, README, Architecture, ADR, SemVer, CI/CD. PHP-специфика в ../references/oss-php.md",
       "sha256": "53facbdb9e975cf032c9be9efe38d4fa0852e26c83884dd49709d2546061b0a0",
+      "tags": [
+        "oss"
+      ],
+      "produces_for": [
+        "release-engineering",
+        "dx-design",
+        "oss-governance",
+        "dependency-audit"
+      ],
       "source": "local"
     },
     {
@@ -705,6 +1138,13 @@
       "version": "0.1.0",
       "description": "LICENSE, CoC, CONTRIBUTING, MAINTAINERS, RFC-процесс, security policy для OSS-проекта",
       "sha256": "ad45acda39096c666da2ddfd421b8438ddbebc85a4ee6012dd59af2d022710a1",
+      "tags": [
+        "oss",
+        "compliance"
+      ],
+      "requires": [
+        "oss-development"
+      ],
       "source": "local"
     },
     {
@@ -714,6 +1154,12 @@
       "version": "0.1.0",
       "description": "SemVer-стратегия, CHANGELOG, релизный pipeline (CI/CD), pre-releases, deprecation policy для OSS-пакета",
       "sha256": "920092a90e17a0d96564277d9523ec9f8ab2071843a1c444e9ff9621d69f14b2",
+      "tags": [
+        "oss"
+      ],
+      "requires": [
+        "oss-development"
+      ],
       "source": "local"
     },
     {
@@ -723,6 +1169,13 @@
       "version": "0.1.0",
       "description": "Роли и контроль доступа на базе пакета azguard: code-first RBAC, панели, scoped roles, direct grants, abilities для фронтенда",
       "sha256": "aab391423210855ff1eef445c0c2e54fe861f0bbb10da0e8ef7619519c3e1f37",
+      "tags": [
+        "php",
+        "laravel",
+        "permissions",
+        "azguard",
+        "rbac"
+      ],
       "source": "local"
     },
     {
@@ -732,6 +1185,15 @@
       "version": "0.2.0",
       "description": "Bot framework patterns: BotDefinition contract, package service provider, webhook handling",
       "sha256": "4e08ce71358e41c031b00012babb42c77c1568515718a188efd5c238bbde71a7",
+      "tags": [
+        "php",
+        "laravel",
+        "bots",
+        "botkit"
+      ],
+      "requires": [
+        "laravel"
+      ],
       "source": "local"
     },
     {
@@ -741,6 +1203,12 @@
       "version": "0.1.0",
       "description": "Стиль кода Laravel/PHP по гайдлайнам Spatie: Laravel-конвенции прежде PSR-12, типизация вместо докблоков, early returns, happy path последним",
       "sha256": "fd9b2b535c3f84e15d5b0739bf9c87ba6526ad104caf1012063dcfa251189f7a",
+      "tags": [
+        "php",
+        "laravel",
+        "code-style",
+        "spatie"
+      ],
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/spatie/guidelines.spatie.be/master/content/code-style/laravel-php.md",
       "fetched_at": "2026-06-12"
@@ -752,6 +1220,14 @@
       "version": "0.1.0",
       "description": "Database migrations, models, and table naming. Activate when writing migrations, creating models, defining schema, foreign keys, or working in database/migrations/.",
       "sha256": "398233baf695f59e68070f8c51865b560b68802776c79948c660725c1b9d69c5",
+      "tags": [
+        "php",
+        "laravel",
+        "database"
+      ],
+      "requires": [
+        "laravel"
+      ],
       "source": "local"
     },
     {
@@ -761,6 +1237,12 @@
       "version": "0.1.0",
       "description": "Взаимодействие слоёв через constructor injection: final readonly + promotion, матрица инъекций, композиция Actions",
       "sha256": "5d9b8e639b85ad40df017b60277000f0b4f711ce3e69c79fefcf2f097d6cd0af",
+      "tags": [
+        "php",
+        "laravel",
+        "di",
+        "architecture"
+      ],
       "source": "local"
     },
     {
@@ -770,16 +1252,39 @@
       "version": "0.1.0",
       "description": "Метаданные enum-кейсов через PHP-атрибуты (#[Label], #[Color], #[Description]) + Concern-трейты с reflection-резолвером",
       "sha256": "ca6281246f774a873fe81a1fb91ba6e27c14fb198abcd48f2a205c6e15c7359b",
+      "tags": [
+        "php",
+        "enum",
+        "attributes",
+        "reflection",
+        "laravel",
+        "patterns"
+      ],
       "source": "local"
     },
     {
       "name": "filament",
       "bucket": "php",
       "path": "skills/php/filament/SKILL.md",
-      "version": "0.2.0",
-      "description": "Filament v3 resource patterns: CRUD resource, relation managers, panel integration",
-      "sha256": "2106084b68faedbb0d3c712b7920868affb9f04bda2e8c314d127005a6b1d866",
-      "source": "local"
+      "version": "1.0.0",
+      "description": "Filament v5 — Panels, Resources, Schemas, Tables, Widgets, Actions: структура файлов, CLI-справочник make:filament-*, корректные namespaces, авторизация, tenancy, типичные ошибки. Scaffold только через artisan.",
+      "sha256": "85701c4b0d5598ce8311f00630355af97e93c2ee44c73b45f67e13d24f68ff76",
+      "tags": [
+        "php",
+        "laravel",
+        "filament",
+        "ui",
+        "admin-panel",
+        "crud",
+        "livewire"
+      ],
+      "requires": [
+        "laravel",
+        "laravel-structure"
+      ],
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/filamentphp/filament/5.x/packages/panels/resources/boost/guidelines/core.blade.php",
+      "fetched_at": "2026-06-12"
     },
     {
       "name": "laravel",
@@ -788,6 +1293,10 @@
       "version": "0.4.0",
       "description": "Laravel architecture patterns: actions, repositories, resources",
       "sha256": "290c1bc48aac6d2b33f8125a1fa41cd6e505137ca48d88f2d0280a6faeecb597",
+      "tags": [
+        "php",
+        "laravel"
+      ],
       "source": "local"
     },
     {
@@ -797,6 +1306,11 @@
       "version": "0.1.0",
       "description": "Лучшие практики Laravel: 20 категорий правил (Eloquent, валидация, кеш, очереди, безопасность) с маршрутизацией по задаче",
       "sha256": "a8a4ef2a4df42e79dc966a59fa4fecc2780efe2f7185157d2c778b9363a016a8",
+      "tags": [
+        "php",
+        "laravel",
+        "best-practices"
+      ],
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/laravel/boost/main/.ai/laravel/skill/laravel-best-practices/SKILL.md",
       "fetched_at": "2026-06-12"
@@ -808,6 +1322,15 @@
       "version": "0.1.0",
       "description": "Laravel Echo + Reverb/Pusher/Ably: broadcast-события, авторизация каналов, presence/whisper, model broadcasting",
       "sha256": "076965c385d32933a47e32bc668fb636629450ea79078095528dfb2e17c8af7f",
+      "tags": [
+        "php",
+        "laravel",
+        "broadcasting",
+        "echo",
+        "reverb",
+        "websockets",
+        "realtime"
+      ],
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/laravel/docs/12.x/broadcasting.md",
       "fetched_at": "2026-06-12"
@@ -819,6 +1342,15 @@
       "version": "0.1.0",
       "description": "Laravel Dusk: браузерные E2E-тесты, изолированная тестовая БД, запуск из Docker через host ChromeDriver, Page Objects",
       "sha256": "2588f869535b47728e2acd25257fc9e9043b3d5fe282ac21b5969f7c2a6fe896",
+      "tags": [
+        "php",
+        "laravel",
+        "dusk",
+        "e2e",
+        "browser-testing",
+        "chromedriver",
+        "docker"
+      ],
       "source": "local"
     },
     {
@@ -828,6 +1360,11 @@
       "version": "0.3.0",
       "description": "Use this skill when reviewing Laravel package compatibility across composer constraints, PHP versions, Laravel versions, Testbench versions, dependency stability lanes, Windows CI, or matrix-sensitive code and workflow changes.",
       "sha256": "717830372593d7df404a98f679f4e4a0efd9bb45e7e86835df2df53ac74d4841",
+      "tags": [
+        "php",
+        "laravel",
+        "package-dev"
+      ],
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-compatibility/SKILL.md",
       "fetched_at": "2026-06-12"
@@ -839,6 +1376,11 @@
       "version": "0.3.0",
       "description": "Use this skill when writing or revising package documentation after creating a package from this starter: README content, VitePress pages, contributing docs, upgrade notes, installation, usage, testing, workbench docs, or examples.",
       "sha256": "410143c04614acf15533c525b8ca5d9b8591e275d9ec456cecc1e0b8a0cb7675",
+      "tags": [
+        "php",
+        "laravel",
+        "package-dev"
+      ],
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-docs/SKILL.md",
       "fetched_at": "2026-06-12"
@@ -850,6 +1392,11 @@
       "version": "0.3.0",
       "description": "Upstream-скилл для работы НАД самим пакетом WendellAdriel/laravel-expressive (starter kit), не общий скилл пакетной разработки: placeholders, configure flow, starter defaults, root guidance, local skills, temporary phase tests, dist hygiene, scaffold-wide conventions. Do not use for ordinary package feature work after a package has been configured.",
       "sha256": "3318ee7d5d5240d52a0fa7fbf18e4ef4bb2285de5690f3ba8eddd2167b21d997",
+      "tags": [
+        "php",
+        "laravel",
+        "package-dev"
+      ],
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/skeleton-development/SKILL.md",
       "fetched_at": "2026-06-12"
@@ -861,6 +1408,11 @@
       "version": "0.3.0",
       "description": "Use this skill when creating or updating the bundled Laravel Boost skill under resources/boost/skills from the package implementation and documentation. Trigger after public APIs, commands, config, routes, views, publish tags, examples, or docs change.",
       "sha256": "2eeaf3effaea865b9e8bbe1e5b7e91369ffe58af9be183a851be2d2435f84c46",
+      "tags": [
+        "php",
+        "laravel",
+        "package-dev"
+      ],
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-generate-skill/SKILL.md",
       "fetched_at": "2026-06-12"
@@ -872,6 +1424,11 @@
       "version": "0.3.0",
       "description": "Use this skill when preparing Laravel package releases: generated release notes, GitHub release workflows, version checks, tags, release validation, or release automation changes. Never publish autonomously.",
       "sha256": "22a0b8e730e25af20d5b40dac8a4096c2a7dcf6c5d20b74645dc2abdd9d3b91d",
+      "tags": [
+        "php",
+        "laravel",
+        "package-dev"
+      ],
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-release/SKILL.md",
       "fetched_at": "2026-06-12"
@@ -883,6 +1440,11 @@
       "version": "0.3.0",
       "description": "Use this skill when adding Laravel package capabilities or package shape changes after creating a package from this starter: commands, migrations, routes, config, views, assets, middleware, workbench files, or new publishable resources.",
       "sha256": "e91472b285f2ca6cb63b5cfa5047c0a2c88a6ccb46dc3c2e83f778a1c029e204",
+      "tags": [
+        "php",
+        "laravel",
+        "package-dev"
+      ],
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-scaffold/SKILL.md",
       "fetched_at": "2026-06-12"
@@ -894,6 +1456,11 @@
       "version": "0.3.0",
       "description": "Use this skill when changing a Laravel package service provider: config merges, routes, views, translations, publishing, migrations, assets, Blade components, commands, console-only behavior, or package metadata.",
       "sha256": "af4b58cc9971bf5d7be749788529908885f249f3df038d28498492cf3e608d5f",
+      "tags": [
+        "php",
+        "laravel",
+        "package-dev"
+      ],
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-service-provider/SKILL.md",
       "fetched_at": "2026-06-12"
@@ -905,6 +1472,11 @@
       "version": "0.3.0",
       "description": "Use this skill when writing, editing, fixing, or reviewing package tests with Pest 4 and Orchestra Testbench, including TDD, feature tests, unit tests, type coverage, arch tests, workbench behavior, commands, routes, config, migrations, and publishable resources.",
       "sha256": "cc1eb55341b5c19fc771d7f3b5929b9be090dd2c2c76fd1fc6032ef31be3db67",
+      "tags": [
+        "php",
+        "laravel",
+        "package-dev"
+      ],
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-testing/SKILL.md",
       "fetched_at": "2026-06-12"
@@ -916,6 +1488,10 @@
       "version": "0.3.0",
       "description": "Создание Laravel-пакетов: scaffold, тесты, публикация скиллов пакета потребителям через vendor:publish",
       "sha256": "f2d67a7081f4a048339e3ed244547a48405fccc6b1d344eb1c96b7d9daa69a7a",
+      "tags": [
+        "php",
+        "laravel"
+      ],
       "source": "local"
     },
     {
@@ -925,6 +1501,32 @@
       "version": "0.3.0",
       "description": "RBAC, policies, gates и entity-scoped permissions (AzGuard patterns)",
       "sha256": "2e88cffe8d30ab8c3be5a36b1db2a1170bc22bdec423920b5669b3618802e379",
+      "tags": [
+        "php",
+        "laravel",
+        "permissions",
+        "azguard"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "laravel-security-audit",
+      "bucket": "php",
+      "path": "skills/php/laravel-security-audit/SKILL.md",
+      "version": "0.1.0",
+      "description": "Аудит Laravel-кода на «острые грани»: raw-запросы Eloquent, mass assignment, XSS в Blade, CSRF-обходы, open redirect, небезопасная сериализация, дыры авторизации.",
+      "sha256": "27464eecfe594bfe007a885906a00c643449e986aa38d5c60c15be8235b3fec6",
+      "tags": [
+        "php",
+        "laravel",
+        "security"
+      ],
+      "requires": [
+        "static-analysis"
+      ],
+      "produces_for": [
+        "security-design"
+      ],
       "source": "local"
     },
     {
@@ -934,6 +1536,12 @@
       "version": "0.2.0",
       "description": "Канон структуры Laravel-проекта для greenfield-проектов и добавления доменов: доменная таксономия, правило зеркала слоёв, размещение и нейминг классов",
       "sha256": "c13ba40addab68c1d2b7d8cd499cc9d569a8be8646adf2565ed0c9800d095918",
+      "tags": [
+        "php",
+        "laravel",
+        "architecture",
+        "structure"
+      ],
       "source": "local"
     },
     {
@@ -943,6 +1551,11 @@
       "version": "0.3.0",
       "description": "Feature/unit/pest testing patterns: изоляция тестовой БД, детект Docker/локального окружения, coverage gate",
       "sha256": "33581e0e09fde980fe0ad90cbf848fc51a20c158263c59b231e6dcafcde96ec7",
+      "tags": [
+        "php",
+        "laravel",
+        "testing"
+      ],
       "source": "local"
     },
     {
@@ -952,6 +1565,14 @@
       "version": "0.1.0",
       "description": "spatie/laravel-medialibrary: привязка файлов к Eloquent-моделям, коллекции, конверсии, получение URL",
       "sha256": "71b66379048227a8bf143655c7d9c935fb7ed11e93aedb3cbe8f328766a30294",
+      "tags": [
+        "php",
+        "laravel",
+        "media",
+        "spatie",
+        "uploads",
+        "images"
+      ],
       "source": "local"
     },
     {
@@ -961,6 +1582,30 @@
       "version": "0.2.0",
       "description": "Масштабирование Laravel-кода при росте: организация по бизнес-доменам, Модульный Монолит (Modular Monolith) и паттерны DDD; стартовая структура — php/laravel-structure",
       "sha256": "6aec4e744643693f55b8a98374dcb1246e1fd3c4f30342921f86f7709617b730",
+      "tags": [
+        "php",
+        "laravel",
+        "architecture"
+      ],
+      "requires": [
+        "laravel"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "pao",
+      "bucket": "php",
+      "path": "skills/php/pao/SKILL.md",
+      "version": "1.0.0",
+      "description": "Laravel PAO — агентно-оптимизированный вывод PHP-инструментов: PHPUnit/Pest/Paratest/PHPStan/Rector/Artisan сжимаются в компактный JSON (~20 токенов вместо тысяч) при работе внутри AI-агента. Установка, проверка, ограничения.",
+      "sha256": "ee75801651712b6dc01bf100d82cdd48033f4f04e354505a12a3658072c0d9ae",
+      "tags": [
+        "php",
+        "laravel",
+        "testing",
+        "tokens",
+        "agent-output"
+      ],
       "source": "local"
     },
     {
@@ -970,6 +1615,10 @@
       "version": "0.2.0",
       "description": "PHP domain patterns: VO, DTO, pipeline, specification",
       "sha256": "ab0160846a2dd0bc8e47b3ea975699ae7d99063119d908fc65449886373de69c",
+      "tags": [
+        "php",
+        "laravel"
+      ],
       "source": "local"
     },
     {
@@ -979,6 +1628,12 @@
       "version": "0.1.0",
       "description": "Система репозиториев Laravel: read/store split, model scopes, delta-DTO, фасад, VisibilityService",
       "sha256": "d4de66715af521aecdbc32b9ee3c07bc1b628a9591302b3960646d0efcd12e5b",
+      "tags": [
+        "php",
+        "laravel",
+        "repository",
+        "architecture"
+      ],
       "source": "local"
     },
     {
@@ -988,6 +1643,11 @@
       "version": "0.2.0",
       "description": "Статический анализ и линтинг PHP/Laravel: Laravel Pint, PHPStan и Rector локально и в CI, эталонные конфиги",
       "sha256": "921abbf24878f98865d81a4e2951306910c33d36e070ede4ec53c9ba08bd3b96",
+      "tags": [
+        "php",
+        "laravel",
+        "quality"
+      ],
       "source": "local"
     },
     {
@@ -997,6 +1657,20 @@
       "version": "0.1.0",
       "description": "Business Requirements Document: функциональные требования, user stories, acceptance criteria",
       "sha256": "c25223b7180bd6f27c4def56260390835cf369b2bc337a297d7a62dd4696b153",
+      "tags": [
+        "requirements"
+      ],
+      "requires": [
+        "business-process"
+      ],
+      "produces_for": [
+        "architecture",
+        "data-schema",
+        "product-roadmap",
+        "requirement-critic",
+        "prd-from-brd",
+        "tech-stack-selection"
+      ],
       "source": "local"
     },
     {
@@ -1006,6 +1680,12 @@
       "version": "0.1.0",
       "description": "Бизнес-процессы, workflow, FSM, sequence/state-диаграммы, обработка ошибок",
       "sha256": "e6bef655e39d523cb4852f38d8b5271ded54e60be0ab86c26df9586d363cd6fd",
+      "tags": [
+        "requirements"
+      ],
+      "produces_for": [
+        "brd"
+      ],
       "source": "local"
     },
     {
@@ -1015,6 +1695,17 @@
       "version": "0.1.0",
       "description": "GTM-стратегия, ICP, messaging framework, каналы привлечения, launch plan",
       "sha256": "65f51fb64173a8fd3b0816189bc3447577ff895793b7ea2c5678de65d87f1d8d",
+      "tags": [
+        "gtm",
+        "market"
+      ],
+      "requires": [
+        "competitive-analysis"
+      ],
+      "produces_for": [
+        "product-roadmap",
+        "pitch-deck"
+      ],
       "source": "local"
     },
     {
@@ -1024,6 +1715,17 @@
       "version": "0.1.0",
       "description": "Выбор бизнес-модели (SaaS / marketplace / ads / freemium / hybrid) с trade-off матрицей и обоснованием",
       "sha256": "91d3972ed70be1a6399fa2f12f89354a2521a61e778a66e950e9267df4725c06",
+      "tags": [
+        "monetization"
+      ],
+      "requires": [
+        "idea-discovery"
+      ],
+      "produces_for": [
+        "unit-economics",
+        "go-to-market",
+        "brd"
+      ],
       "source": "local"
     },
     {
@@ -1033,6 +1735,17 @@
       "version": "0.1.0",
       "description": "Product Requirements Document — разворачивает BRD в детальные user stories с acceptance criteria и приоритизацией",
       "sha256": "75743ae565e9b09b3502e62573e44578691852a3c08d8438b8a90bf3e5889203",
+      "tags": [
+        "requirements"
+      ],
+      "requires": [
+        "brd"
+      ],
+      "produces_for": [
+        "architecture",
+        "product-roadmap",
+        "api-design"
+      ],
       "source": "local"
     },
     {
@@ -1042,6 +1755,13 @@
       "version": "0.1.0",
       "description": "MVP definition, Impact/Effort приоритизация, фазы MVP → v1 → v2 → Backlog, метрики перехода",
       "sha256": "b4b748a4cd8711bc77f06588656fc8dfe2384fe1d7ad46f6ac287de17f06f399",
+      "tags": [
+        "requirements",
+        "gtm"
+      ],
+      "requires": [
+        "brd"
+      ],
       "source": "local"
     },
     {
@@ -1051,6 +1771,13 @@
       "version": "0.1.0",
       "description": "Аудит BRD: полнота, конфликты, допущения, gap-анализ, MoSCoW. Только в чат, файл не создаётся",
       "sha256": "078ef1a4197406f9265306f71859220e841657bf39d610b8590933bf4966d6a2",
+      "tags": [
+        "requirements",
+        "validation"
+      ],
+      "requires": [
+        "brd"
+      ],
       "source": "local"
     },
     {
@@ -1060,6 +1787,12 @@
       "version": "0.1.0",
       "description": "Unit economics: LTV, CAC, payback, churn, break-even, 3 сценария",
       "sha256": "dd0b6a7a8efe25c5ef592a7f0c2f4c075032c82c7a584b592fc9c566005c1c96",
+      "tags": [
+        "monetization"
+      ],
+      "produces_for": [
+        "pitch-deck"
+      ],
       "source": "local"
     },
     {
@@ -1069,6 +1802,11 @@
       "version": "0.1.0",
       "description": "Стандартизированная структура ML/Data Science проектов по подходу Cookiecutter Data Science",
       "sha256": "d983ec0d3f5b6d7b310e3fbc26315fa303bac2dddd6c8b4b23a5ea010552c340",
+      "tags": [
+        "python",
+        "ml",
+        "structure"
+      ],
       "source": "local"
     },
     {
@@ -1078,6 +1816,11 @@
       "version": "0.1.0",
       "description": "Управление зависимостями и виртуальными окружениями Python для воспроизводимости проектов",
       "sha256": "968d23535d47ab6a759707f4326500c58a4a86dfc8c8f7680c3038fa88a74531",
+      "tags": [
+        "python",
+        "venv",
+        "dependencies"
+      ],
       "source": "local"
     },
     {
@@ -1087,6 +1830,23 @@
       "version": "0.1.0",
       "description": "Процесс и чек-лист code review: что обязательно проверять, severity градация комментариев, async vs sync review, шаблон PR-комментариев",
       "sha256": "a333078d6fb4b0c27db527d4752650ba78e603ba26b4430da88dbf6839da7834",
+      "tags": [
+        "quality",
+        "validation"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "code-simplifier",
+      "bucket": "quality",
+      "path": "skills/quality/code-simplifier/SKILL.md",
+      "version": "0.1.0",
+      "description": "Упрощение свеженаписанного кода без изменения поведения: мёртвый код, лишние абстракции, дубли, выравнивание с паттернами проекта. Поведение фиксируют тесты.",
+      "sha256": "5866f7ad78f77d9ba45223f607f5680a182546c78889440471f746db5c77c968",
+      "tags": [
+        "quality",
+        "refactoring"
+      ],
       "source": "local"
     },
     {
@@ -1096,6 +1856,13 @@
       "version": "0.1.0",
       "description": "План безопасного рефакторинга: scope, Mikado / strangler pattern, atomic шаги, критерии готовности, rollback",
       "sha256": "2fb49bbc5a4dc5832ed33859755fa9498f36f892321ad95fb51ed659dc8ca9d8",
+      "tags": [
+        "quality",
+        "refactor"
+      ],
+      "requires": [
+        "tech-debt-audit"
+      ],
       "source": "local"
     },
     {
@@ -1105,6 +1872,13 @@
       "version": "0.1.0",
       "description": "Инвентаризация техдолга, классификация (architectural/code/dependency/test/process), приоритизация по impact × effort, расчёт payback ROI",
       "sha256": "bb2ac062b545b615450876127705a99d297594d9af6b99d589055493bd312121",
+      "tags": [
+        "quality",
+        "validation"
+      ],
+      "produces_for": [
+        "refactoring-plan"
+      ],
       "source": "local"
     },
     {
@@ -1114,6 +1888,13 @@
       "version": "0.1.0",
       "description": "Стратегия тестирования: пирамида (unit/integration/e2e), coverage policy, mock vs real, какие фичи требуют какой уровень тестов",
       "sha256": "baa9ad528201a39e7b446ab8be9b9d17b119839f2fa105d207c08af9fe20ac89",
+      "tags": [
+        "quality",
+        "testing"
+      ],
+      "produces_for": [
+        "code-review"
+      ],
       "source": "local"
     },
     {
@@ -1123,6 +1904,10 @@
       "version": "0.2.0",
       "description": "OSS Maintainer — triage, review, releases",
       "sha256": "5c2aada5acbd952087fb5784024db20498e6ae8242362d2e6a54a14d695af33b",
+      "tags": [
+        "role",
+        "persona"
+      ],
       "source": "local"
     },
     {
@@ -1132,6 +1917,10 @@
       "version": "0.2.0",
       "description": "Solo Founder — weekly review, decision log",
       "sha256": "3222a7d455b7f250528bc23477dddf24eeacf514f6f6f66c4df0d920b38efc39",
+      "tags": [
+        "role",
+        "persona"
+      ],
       "source": "local"
     },
     {
@@ -1141,6 +1930,10 @@
       "version": "0.2.0",
       "description": "Startup CTO persona — tech radar, hiring, architecture decisions",
       "sha256": "5947545fc15e27fa3686f6b0862f2ef9304c3d78fb884411ae0678d3bb4c5299",
+      "tags": [
+        "role",
+        "persona"
+      ],
       "source": "local"
     },
     {
@@ -1150,6 +1943,10 @@
       "version": "0.2.0",
       "description": "Tech Lead persona — sprint kickoff, 1:1s, team coordination",
       "sha256": "c9e821b6c42735cd093e581d65a9555524786d62fc59334d07edd9fc2b82bc72",
+      "tags": [
+        "role",
+        "persona"
+      ],
       "source": "local"
     }
   ],

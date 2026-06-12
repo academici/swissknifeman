@@ -1,0 +1,45 @@
+# Шаблон для целевого проекта: .github/workflows/security-audit.yml
+# Фоновый security-аудит Laravel по расписанию: агент проходит таблицу
+# «острых граней» из скилла laravel-security-audit и открывает Issue
+# с категоризацией находок по severity. Ничего не правит в коде.
+#
+# Требования:
+# - secret ANTHROPIC_API_KEY (платные токены — см. docs/workflows/background-agents)
+# - установленный скилл laravel-security-audit (install.sh или plugin marketplace)
+name: Laravel Security Audit
+
+on:
+  schedule:
+    - cron: '0 3 * * 1' # еженедельно, понедельник 03:00 UTC
+  workflow_dispatch:
+
+concurrency:
+  group: security-audit
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run security audit
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Проведи аудит безопасности по скиллу laravel-security-audit:
+            пройди все пять «острых граней» (raw-запросы, mass assignment,
+            XSS в Blade, CSRF/redirect, сериализация/авторизация).
+
+            Правила:
+            - Каждое grep-совпадение верифицируй по контексту — отчёт
+              только из подтверждённых находок.
+            - Формат находки: файл:строка, цепочка от ввода до уязвимого
+              вызова, severity (critical/high/medium/low), рекомендация.
+            - Код не править. Результат оформи как GitHub Issue
+              с заголовком "Security audit YYYY-MM-DD" и метками severity.
+            - Если находок нет — Issue не создавать.

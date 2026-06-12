@@ -1,7 +1,7 @@
 ---
 name: dependency-audit
 bucket: oss-dev
-version: 0.1.0
+version: 0.2.0
 description: Аудит зависимостей: lockfile sanity, vuln scan, лицензионная совместимость, supply-chain risk, SBOM
 risk: draft
 persona: oss-dev
@@ -209,6 +209,14 @@ tooling: npm@X, composer@Y, ...
 
 ### `ProjectName/SBOM.json`
 Сгенерированный файл, не редактируется вручную. Регенерируется при каждом релизе.
+
+---
+
+## Ссылки
+
+- [references/composer.md](references/composer.md) — composer-специфика:
+  команды по измерениям, roave/security-advisories, reproducible installs,
+  composer-грабли, SBOM для PHP.
 
 ---
 

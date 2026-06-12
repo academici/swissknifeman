@@ -9,7 +9,7 @@
 - Репозиторий: https://github.com/laravel/boost — скиллы/гайдлайны в [`/.ai/`](https://github.com/laravel/boost/tree/main/.ai) (`*/core.blade.php` и `*/skill/*/SKILL.blade.php` по пакетам и версиям); документация: https://laravel.com/docs/boost
 - В установленном проекте: `vendor/laravel/boost/.ai/` (обновляются с composer-пакетом); выбор — `boost.json` проекта; рендер в CLAUDE.md/AGENTS.md — `php artisan boost:update`
 - Third-party гайдлайны приходят из самих пакетов через `boost.json::packages` (filament/filament, spatie/laravel-medialibrary, …)
-- Карточка источника в реестре: [references/laravel-boost.md](../references/laravel-boost.md)
+- Карточка источника в реестре: [references/laravel-boost.md](https://github.com/academici/swissknifeman/blob/main/references/laravel-boost.md)
 
 ## Таблица 1. Доверенные Boost-скиллы/гайдлайны
 

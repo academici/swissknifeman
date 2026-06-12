@@ -13,6 +13,7 @@ export default defineConfig({
       { text: 'Гайд', link: '/guide/', activeMatch: '/guide/' },
       { text: 'Конфиги', link: '/configs/', activeMatch: '/configs/' },
       { text: 'Адаптеры', link: '/adapters/claude-code', activeMatch: '/adapters/' },
+      { text: 'Воркфлоу', link: '/workflows/', activeMatch: '/workflows/' },
       { text: 'Примеры', link: '/examples/laravel', activeMatch: '/examples/' },
     ],
 
@@ -53,6 +54,17 @@ export default defineConfig({
             { text: 'Claude Code', link: '/adapters/claude-code' },
             { text: 'Cursor', link: '/adapters/cursor' },
             { text: 'Perplexity', link: '/adapters/perplexity' },
+          ],
+        },
+        {
+          text: 'Воркфлоу',
+          items: [
+            { text: 'AI-assisted development', link: '/workflows/' },
+            { text: 'Perplexity', link: '/workflows/perplexity' },
+            { text: 'Claude', link: '/workflows/claude' },
+            { text: 'Claude Fable 5', link: '/workflows/fable-5' },
+            { text: 'Cursor / VS Code', link: '/workflows/cursor' },
+            { text: 'Python / 3D', link: '/workflows/python-3d' },
           ],
         },
         {

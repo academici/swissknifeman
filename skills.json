@@ -46,7 +46,7 @@
     },
     "oss-dev": {
       "description": "Open-source development: releases, governance, DX, dependency audits + language references",
-      "count": 5,
+      "count": 6,
       "status": "active"
     },
     "php": {
@@ -749,12 +749,16 @@
       "name": "git-commit-rules",
       "bucket": "general",
       "path": "skills/general/git-commit-rules/SKILL.md",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "description": "Правила работы с Git в проекте: подготовка коммита, husky/commitlint, формат сообщений и безопасный порядок действий.",
-      "sha256": "ccb8ac467fe95edc5ba04ccc7c2eb1dfb04ac14ef152323cac0cc900d4086ee5",
+      "sha256": "9d3dc2a44c6fce795246070aec66a6bad3553073922f0034321ab6dc4647d15c",
       "tags": [
         "git",
-        "conventions"
+        "conventions",
+        "conventional-commits"
+      ],
+      "produces_for": [
+        "github-flow"
       ],
       "source": "local"
     },
@@ -1110,6 +1114,26 @@
       ],
       "requires": [
         "oss-development"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "github-flow",
+      "bucket": "oss-dev",
+      "path": "skills/oss-dev/github-flow/SKILL.md",
+      "version": "0.1.0",
+      "description": "Цепочка Issue → Branch → PR → Merge → Tag → Release на GitHub: naming, labels, SemVer-оракул по типам коммитов, шаблоны Issue/PR. Формат коммитов — git-commit-rules, changelog и pipeline — release-engineering.",
+      "sha256": "a8b9399d8f0f938ec53351db4c372c200a39410f063022e8f613f24c4a536932",
+      "tags": [
+        "oss",
+        "github",
+        "git",
+        "semver",
+        "release"
+      ],
+      "requires": [
+        "git-commit-rules",
+        "release-engineering"
       ],
       "source": "local"
     },

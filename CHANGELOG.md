@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Added (github-flow)
+
+- **`oss-dev/github-flow` (0.1.0)**: процессная цепочка Issue → Branch → PR →
+  Merge → Tag → Release на GitHub — naming Issue/веток/PR, labels, SemVer-оракул
+  по типам коммитов, контрольные точки с обязательными вопросами агента;
+  PHP/Packagist-гейт в `references/php-package-gate.md`; snippets с шаблонами
+  PR/Issue; `requires: git-commit-rules, release-engineering` (формат коммитов
+  и changelog/pipeline не дублируются)
+
+### Changed (github-flow)
+
+- **`general/git-commit-rules` 0.1.0 → 0.2.0**: расширен список типов
+  (`perf`, `style`, `build`, `ci`, `revert`), раздел «Conventional Commits:
+  scopes и breaking changes» (источник scope — commitlint, footer
+  `BREAKING CHANGE` / `!` после типа), ссылка на SemVer-оракул github-flow
+
 ### Added (CLI swissknifeman + внутренние скиллы)
 
 - **CLI `bin/swissknifeman`**: единая точка входа — `connect` (marketplace

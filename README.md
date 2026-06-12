@@ -45,7 +45,7 @@ skills/                    # скилл = папка + SKILL.md + snippets/ (+ u
 ├── founder/    (5)        # идеи, анализ конкурентов, питчи
 ├── imported/   (12)       # внешние super-skills (отслеживаются через upstream.json)
 ├── operator/   (5)        # инциденты, runbook, postmortem
-├── oss-dev/    (5+refs)   # open-source разработка + языковые references/
+├── oss-dev/    (6+refs)   # open-source разработка + языковые references/
 ├── php/        (7)        # Laravel, пакеты, тесты, паттерны
 ├── pm/         (8)        # BRD, PRD, roadmap, монетизация
 ├── quality/    (4)        # code review, тесты, техдолг

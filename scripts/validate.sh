@@ -402,3 +402,10 @@ for sh in "$REPO_ROOT/bin/swissknifeman" "$REPO_ROOT/install.sh" \
   bash -n "$sh" || { echo "ERROR: bash -n failed: $sh" >&2; exit 1; }
 done
 echo "CLI + shell scripts: syntax OK"
+
+# --- 12. lib/swissknifeman package + unit/integration tests --------------------
+[[ -d "$REPO_ROOT/lib/swissknifeman" ]] || {
+  echo "ERROR: lib/swissknifeman package missing" >&2; exit 1; }
+PYTHONPATH="$REPO_ROOT/lib" python3 -c "import swissknifeman.cli" || {
+  echo "ERROR: lib/swissknifeman fails to import" >&2; exit 1; }
+"$REPO_ROOT/scripts/test.sh" || { echo "ERROR: tests failed" >&2; exit 1; }

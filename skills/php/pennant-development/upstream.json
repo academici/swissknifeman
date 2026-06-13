@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "source": "github",
+  "repo": "laravel/boost",
+  "strategy": "notify",
+  "license": "MIT",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "url": "https://raw.githubusercontent.com/laravel/boost/main/.ai/pennant/skill/pennant-development/SKILL.md",
+      "sha256": "96addef8df942a3e11af4a024a43e9de5594134b1d2dd5de6de0f8da652918f9",
+      "fetched_at": "2026-06-13"
+    }
+  ],
+  "notes": "Извлечено из laravel/boost (.ai/pennant/skill/pennant-development/SKILL.md). strategy=notify: локальная копия адаптирована под реестр (frontmatter бакета, перевод секций) — апстрим только репортится, не replace. Pennant версионно стабилен (нет version-веток в Boost), поэтому скилл переносим как самодостаточный для проектов без Boost."
+}

@@ -46,12 +46,12 @@
     },
     "oss-dev": {
       "description": "Open-source development: releases, governance, DX, dependency audits + language references",
-      "count": 6,
+      "count": 7,
       "status": "active"
     },
     "php": {
       "description": "PHP and Laravel: applications, packages, Filament, permissions, testing, patterns",
-      "count": 30,
+      "count": 33,
       "status": "active"
     },
     "pm": {
@@ -721,9 +721,9 @@
       "name": "context-economy",
       "bucket": "general",
       "path": "skills/general/context-economy/SKILL.md",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "description": "Экономия контекста Claude Code в проекте: CLAUDE.md ≤200 строк, path-scoped правила .claude/rules/, /compact vs /clear, паттерн Plan→Clear→Execute, аудит MCP, маршрутизация моделей. Только официально поддерживаемые механизмы — без мифов вроде .claudeignore.",
-      "sha256": "f1205ea8b0b12c89c7757d4e28e86b53abab931d47346a67dc3af5a3178071f3",
+      "sha256": "60b2a4f36e545a2ccfdc820f1d0ad1192101318321c5aed3d91859f4ba35b484",
       "tags": [
         "tokens",
         "context",
@@ -1118,12 +1118,35 @@
       "source": "local"
     },
     {
+      "name": "gh-review",
+      "bucket": "oss-dev",
+      "path": "skills/oss-dev/gh-review/SKILL.md",
+      "version": "0.1.0",
+      "description": "Ревью и хендофф изменений через GitHub CLI (gh) с экономией контекста: gh pr diff/view/comment/review, gh api для точечного чтения файлов вместо загрузки целиком. Активировать при ревью PR, передаче работы dev'у, чтении чужих изменений на GitHub.",
+      "sha256": "ab6456f17940f427f874c8d9af26645327cf788abc360514b40cabf82052f4a0",
+      "tags": [
+        "github",
+        "gh",
+        "review",
+        "handoff",
+        "tokens",
+        "context"
+      ],
+      "requires": [
+        "context-economy"
+      ],
+      "produces_for": [
+        "github-flow"
+      ],
+      "source": "local"
+    },
+    {
       "name": "github-flow",
       "bucket": "oss-dev",
       "path": "skills/oss-dev/github-flow/SKILL.md",
-      "version": "0.1.0",
-      "description": "Цепочка Issue → Branch → PR → Merge → Tag → Release на GitHub: naming, labels, SemVer-оракул по типам коммитов, шаблоны Issue/PR. Формат коммитов — git-commit-rules, changelog и pipeline — release-engineering.",
-      "sha256": "a8b9399d8f0f938ec53351db4c372c200a39410f063022e8f613f24c4a536932",
+      "version": "0.2.0",
+      "description": "Цепочка Issue → Branch → PR → Merge → Tag → Release на GitHub: naming, labels, SemVer-оракул по типам коммитов, шаблоны Issue/PR. Формат коммитов — git-commit-rules, changelog и pipeline — release-engineering, ревью PR — gh-review.",
+      "sha256": "e75ad44287360b724b890a748b70c8f85955b46badf056cd2394e2bb6bdd6311",
       "tags": [
         "oss",
         "github",
@@ -1133,7 +1156,8 @@
       ],
       "requires": [
         "git-commit-rules",
-        "release-engineering"
+        "release-engineering",
+        "gh-review"
       ],
       "source": "local"
     },
@@ -1569,6 +1593,21 @@
       "source": "local"
     },
     {
+      "name": "laravel-subagents",
+      "bucket": "php",
+      "path": "skills/php/laravel-subagents/SKILL.md",
+      "version": "0.1.0",
+      "description": "Оркестрация субагентов на крупных Laravel-задачах: порог срабатывания, делегирование исследования Explore-агентам, ревью через laravel-reviewer, тесты через laravel-test-writer, worktree-изоляция параллельных правок. Не применять к мелким и средним задачам.",
+      "sha256": "790c01491aacc1de2e165c522c1abb25a408121f7c334d43ed3a8fe83f18037e",
+      "tags": [
+        "workflow",
+        "orchestration",
+        "agents",
+        "laravel"
+      ],
+      "source": "local"
+    },
+    {
       "name": "laravel-testing",
       "bucket": "php",
       "path": "skills/php/laravel-testing/SKILL.md",
@@ -1617,6 +1656,21 @@
       "source": "local"
     },
     {
+      "name": "named-arguments",
+      "bucket": "php",
+      "path": "skills/php/named-arguments/SKILL.md",
+      "version": "0.1.0",
+      "description": "Правило обязательных именованных аргументов в PHP: вызовы методов/функций, исключения, активировать при написании или ревью вызовов и при упоминании читаемости/порядка параметров",
+      "sha256": "1a9ac7b68abe4d9f9386b826ca9536f22ec7a342ee526afef6092fc9dc8c8df9",
+      "tags": [
+        "php",
+        "code-style",
+        "readability",
+        "conventions"
+      ],
+      "source": "local"
+    },
+    {
       "name": "pao",
       "bucket": "php",
       "path": "skills/php/pao/SKILL.md",
@@ -1631,6 +1685,23 @@
         "agent-output"
       ],
       "source": "local"
+    },
+    {
+      "name": "pennant-development",
+      "bucket": "php",
+      "path": "skills/php/pennant-development/SKILL.md",
+      "version": "0.1.0",
+      "description": "Laravel Pennant — feature-флаги: define/active/for-scope, директива @feature, активация/деактивация, A/B и постепенные раскатки. Адаптировано из laravel/boost (strategy=notify)",
+      "sha256": "086435bfebca39255b0f34afeaad7fd17d875ed20780adfdd1269c4b43fa56f6",
+      "tags": [
+        "php",
+        "laravel",
+        "pennant",
+        "feature-flags"
+      ],
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/laravel/boost/main/.ai/pennant/skill/pennant-development/SKILL.md",
+      "fetched_at": "2026-06-13"
     },
     {
       "name": "php-patterns",

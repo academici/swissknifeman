@@ -66,7 +66,22 @@ bucket-ы, статус `planned` → `imported` / `rejected`. При факти
 `name` + `description`), схему upstream.json, profiles/*.json, skills.json,
 snippet-манифесты, buckets.json (1:1 с каталогами bucket-ов), свежесть
 plugin-манифестов (`.claude-plugin/`), уникальность имён скиллов (дубль внутри
-bucket-а — ошибка, между bucket-ами — warning).
+bucket-а — ошибка, между bucket-ами — warning) и прогон тестов CLI (см. ниже).
+
+## Tests
+
+Логика CLI живёт в пакете `lib/swissknifeman/` (`bin/swissknifeman` —
+тонкий лаунчер). Тесты — stdlib `unittest`, без зависимостей:
+
+```bash
+./scripts/test.sh        # юнит + интеграционные; -v — подробный вывод
+```
+
+Юнит-тесты покрывают чистые функции (frontmatter, парсинг флагов, выбор
+скиллов, резолв `requires`); интеграционные гоняют `connect`/`vendor` против
+синтетического реестра в tmpdir (`tests/fixtures.py`) — настоящий реестр и сеть
+не нужны. `validate.sh` запускает `test.sh`, так что отдельно его звать перед PR
+не обязательно.
 
 ## Releases & Tagging
 

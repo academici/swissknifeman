@@ -1,5 +1,7 @@
 .scanner-output/
 .venv-docx
+__pycache__/
+*.pyc
 node_modules/
 docs/.vitepress/dist/
 docs/.vitepress/cache/

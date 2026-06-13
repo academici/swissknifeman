@@ -2,6 +2,123 @@
 
 ## [Unreleased]
 
+### Changed (рефакторинг CLI: lib/ + тесты)
+
+- **`bin/swissknifeman` → тонкий лаунчер**: вся Python-логика (раньше — heredoc
+  на 1300 строк внутри bash) вынесена в пакет `lib/swissknifeman/` и разложена
+  по модулям (`common`, `config`, `state`, `connect`, `vendor`, `update`,
+  `status`, `listing`, `registry`, `doctor`, `boost`, `hub`, `cli`). Бинарник
+  делает preflight-проверки и `exec python3 -m swissknifeman <root> <cmd>`.
+  Поведение байт-в-байт прежнее (`registry` даёт идентичные `skills.json` и
+  манифесты); установщик и симлинк не затронуты. Модульные глобали
+  `root`/`cmd`/`argv` заменены явным `Env` — функции стали импортируемыми
+
+### Added (тесты CLI)
+
+- **`tests/` (stdlib unittest, без зависимостей)**: 27 юнит-тестов
+  (frontmatter, парсинг флагов, sanitize, autodetect, precedence
+  `resolve_selection`, транзитивный `requires`, коллизии flat-имён) и
+  11 интеграционных — фейковый Laravel-проект в tmpdir, кейсы `connect`/`vendor`
+  (autodetect, явные плагины, сохранение `false`, dry-run, bucket/flat-layout,
+  pull `requires`, `--exclude`, синк `boost.json`, чистая переустановка).
+  Синтетический реестр (`tests/fixtures.py`) — тесты не зависят от контента
+  скиллов
+- **`scripts/test.sh`** — раннер тестов (`-v` для подробного вывода), встроен в
+  `scripts/validate.sh` (группа 12: импорт пакета + прогон сьюта). Тот же
+  скрипт гоняет CI
+
+### Added (gh-driven ревью и экономия контекста)
+
+- **`oss-dev/gh-review` (0.1.0)**: ревью и хендофф изменений через GitHub CLI
+  с экономией контекста — `gh pr diff/view/comment/review` отдают точечный срез
+  (дифф, треды), `gh api .../contents` тянет один файл вместо загрузки целиком.
+  Чёткая граница: локальный VCS (commit/branch/diff/log/rebase) — за `git`,
+  платформа (PR/issue/release/api) — за `gh`. `requires: context-economy`,
+  `produces_for: github-flow`; snippet-шпаргалка команд
+- **`scripts/update-upstreams.sh` — канал `gh api`**: для GitHub raw-URL и при
+  наличии `gh` файл тянется через `gh api repos/{o}/{r}/contents/{path}?ref=...`
+  (авто-аутентификация из `gh auth`, rate-limit, один файл). Тихий откат на
+  `urllib`+`GITHUB_TOKEN`, если `gh` недоступен; отключение — `UPSTREAM_NO_GH=1`.
+  Касается импортируемых скиллов (`source: github`)
+
+### Changed
+
+- **`general/context-economy` 1.0.0 → 1.1.0**: раздел «Платформенный слой —
+  через `gh`, не файлами» (`gh` дополняет `git`, не заменяет; экономия на
+  точечном срезе) + пункт чеклиста; ссылка на `oss-dev/gh-review`
+- **`oss-dev/github-flow` 0.1.0 → 0.2.0**: шаг Review ссылается на `gh-review`
+  (`requires += gh-review`); ревью PR — через `gh`, не загрузкой файлов
+- **Документация**: этап «dev-review через gh» в межсистемной цепочке
+  (`docs/workflows/index.md`), канал `gh api → urllib` в
+  `docs/guide/upstream-sync.md`
+
+### Added (интеграция с Laravel Boost — совместимое ядро)
+
+- **`php/named-arguments` (0.1.0)**: правило обязательных именованных аргументов
+  в PHP-вызовах с границами применения и исключениями (один аргумент, встроенные
+  функции, splat). Извлечено и де-агельтизировано из проектного скилла;
+  `source: local`. Дополняет, а не дублирует — реестр раньше только *использовал*
+  именованные аргументы в примерах, отдельного правила не было
+- **`php/pennant-development` (0.1.0)**: feature-флаги Laravel Pennant
+  (`define`/`active`/`for`-scope, директива `@feature`, активация/раскатки).
+  Извлечено из `laravel/boost` (`upstream.json` strategy=notify) — единственный
+  чистый static-`.md` generic-кандидат без версионной развилки; Blade-скиллы
+  Boost (`folio`/`volt`/`mcp`) остаются за Boost (нужен render-контекст)
+- **`php/laravel` → `eloquent-model.md`**: секция «Accessors и mutators» дополнена
+  правилами `Attribute::make()` (видимость `protected`, camelCase→snake_case,
+  позиция в классе, миграция с legacy-аксессоров) — слито из проектного
+  `laravel-attributes` вместо создания дубля
+
+### Added (CLI и хаб — установка в Boost-проекты)
+
+- **Boost-aware `vendor`/`update`**: при наличии `boost.json` в целевом проекте
+  CLI (1) автоматически использует **flat-раскладку** `.ai/skills/<name>/SKILL.md`
+  — Boost обнаруживает user-скиллы через `glob('.ai/skills/*')` на один уровень,
+  bucket-подпапки он бы не нашёл; (2) идемпотентно дозаписывает вендоренные
+  скиллы в `boost.json::skills` (по frontmatter-`name`) и подсказывает
+  `php artisan boost:update`. Скиллы автоматически расходятся по всем агентам
+  Boost из единого источника `.ai/skills/`
+- **`generate-hub.sh --root-files A,B`**: managed-блок хаба (между маркерами
+  `swissknifeman:hub:start/end`) дополнительно пишется в указанные корневые файлы
+  (`AGENTS.md`, `GEMINI.md`, …) для тулз вне Boost; контент вне маркеров не
+  трогается
+
+### Fixed
+
+- **Рассинхрон маркера хаба**: `bin/swissknifeman` искал
+  `<!-- swissknifeman:hub:begin -->`, тогда как `generate-hub.sh` пишет
+  `:start`/`:end`. Из-за этого `hub_artifacts_exist()` не находил managed-блок в
+  `CLAUDE.md`, и `update`/повторный `connect` не понимали, что хаб уже стоит.
+  Приведено к единому `hub:start`
+
+### Changed (документация концепции ядра)
+
+- **Политика совместимого ядра** зафиксирована явно: `docs/guide/index.md`
+  (принцип №6 «Совместимое ядро» + таблица прецедентов), `README.md`,
+  `references/laravel-boost.md` (критерий извлечения static/версионность/generic,
+  что извлечено, что нет и почему), `docs/guide/installation.md` (раздел
+  «Проект с Laravel Boost»). Поток обновлений инвертирован: generic-скиллы
+  внешнего источника обновляются сначала в реестре, затем подтягиваются в проекты
+
+### Added (субагенты Laravel)
+
+- **`php/agents/` — первые агент-определения в плагине**: бакет-плагин теперь
+  несёт каталог `agents/` (Claude Code обнаруживает его в корне плагина
+  автоматически; реестр и валидатор каталоги без SKILL.md игнорируют;
+  доступно только в plugin-канале — `vendor` агентов не копирует).
+  Агенты: `laravel-reviewer` (read-only ревью свежим контекстом:
+  PHPStan/Pint/целевые Pest, Laravel-критерии, структурированные находки без
+  правок) и `laravel-test-writer` (Pest-тесты по готовому коду в стиле
+  существующих тестов проекта; прикладной код не меняет — расхождения
+  репортит)
+- **`php/laravel-subagents` (0.1.0)**: протокол оркестрации субагентов на
+  крупных Laravel-задачах — порог срабатывания (≥3 слоёв/доменов или целая
+  фича; мелкое/среднее — напрямую, явный анти-триггер), исследование через
+  Explore-агентов, архитектурный код пишет оркестратор, параллель только для
+  независимых подзадач (иначе worktree), `laravel-reviewer` после каждой
+  единицы, `laravel-test-writer` по готовому коду, анти-паттерны конвейера
+  ролевых агентов
+
 ### Added (github-flow)
 
 - **`oss-dev/github-flow` (0.1.0)**: процессная цепочка Issue → Branch → PR →

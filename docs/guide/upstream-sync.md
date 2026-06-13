@@ -44,6 +44,21 @@
 ./scripts/update-upstreams.sh --apply --force --skill imported/research
 ```
 
+## Канал загрузки: gh api → urllib
+
+Для GitHub raw-URL (`raw.githubusercontent.com/{owner}/{repo}/{ref}/{path}`)
+и при наличии **GitHub CLI** скрипт тянет файл точечно через
+`gh api repos/{owner}/{repo}/contents/{path}?ref={ref}`:
+
+- авто-аутентификация из `gh auth` — не нужно прокидывать `GITHUB_TOKEN`;
+- уважает rate-limit GitHub API;
+- один файл вместо полной загрузки — экономия трафика/контекста (тот же
+  принцип, что в скилле `oss-dev/gh-review`).
+
+Если `gh` недоступен или вызов упал — **тихий откат** на `urllib`
+(с `GITHUB_TOKEN` из окружения, если задан). Принудительно отключить gh-путь:
+`UPSTREAM_NO_GH=1`. Поведение и формат `upstream.json` при этом не меняются.
+
 ## Еженедельный CI
 
 GitHub Action `upstream-sync.yml` раз в неделю проверяет все апстримы и — если

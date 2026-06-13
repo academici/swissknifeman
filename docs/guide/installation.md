@@ -40,9 +40,83 @@ swissknifeman vendor --agent cursor
 | **Claude Code** | `swissknifeman connect` | только записи в `.claude/settings.local.json` |
 | **Cursor / generic** | `swissknifeman vendor` | сами скиллы в `.cursor/skills` / `.ai/skills` |
 
+::: tip Агенты — только в plugin-канале
+Бакет-плагин может нести не только скиллы, но и каталог `agents/` в своём корне
+(`*.md` с YAML-frontmatter `name`/`description`/`tools`) — Claude Code
+обнаруживает его автоматически. Такие агенты доступны **только через канал
+`connect`**: `vendor` копирует скиллы, но не агентов, поэтому в Cursor и других
+generic-агентах их не будет. Пример — бакет `php` с агентами `laravel-reviewer`
+и `laravel-test-writer` (см. скилл `laravel-subagents`).
+:::
+
 Каждое подключение автоматически регистрирует проект в
 `~/.swissknifeman/projects.json` — это включает `swissknifeman list` и
 `swissknifeman update --all`.
+
+## Проект с Laravel Boost (мульти-агент, единый источник истины)
+
+Если проект уже использует [Laravel Boost](/boost-compatibility) — у него есть
+`boost.json`, каталог `.ai/` (guidelines + skills) и команда
+`php artisan boost:update`, которая генерирует `CLAUDE.md`/`AGENTS.md` и
+раскидывает копии скиллов по `.cursor/`, `.gemini/`, `.codex/`, `.github/`.
+Чтобы скиллы swissknifeman жили в **одном источнике истины** и расходились по
+всем тулзам автоматически — вендорим прямо в `.ai/skills/` и отдаём раздачу
+Boost-у.
+
+```bash
+cd ~/projects/my-laravel-app
+swissknifeman vendor \
+  --agent generic \
+  --skills-path .ai/skills \
+  --profile laravel-project \
+  --exclude code-style-spatie,node-pnpm-preflight \
+  --hub
+php artisan boost:update      # или: composer ai:sync
+```
+
+Что происходит:
+
+1. **`vendor --skills-path .ai/skills`** — скиллы копируются в источник истины
+   Boost. При обнаружении `boost.json` CLI автоматически берёт **flat-раскладку**
+   `.ai/skills/<skill>/SKILL.md` (Boost обнаруживает user-скиллы через
+   `glob('.ai/skills/*')` на один уровень — bucket-подпапки он бы не нашёл).
+   Если имя нашего скилла совпадает с уже существующим в проекте — установка
+   остановится на коллизии; добавь такой скилл в `--exclude` (проектная версия
+   приоритетна).
+2. **Обнаружен `boost.json`** — CLI идемпотентно дозаписывает вендоренные скиллы
+   в `boost.json::skills` (по `name` из frontmatter) и печатает подсказку
+   `php artisan boost:update`.
+3. **`--hub`** — индекс установленного пишется в
+   `.ai/guidelines/swissknifeman-hub.md`; Boost сам встроит его в
+   `CLAUDE.md`/`AGENTS.md` при `boost:update`.
+4. **`boost:update`** — перегенерирует корневые доки и копии скиллов по всем
+   агентам из `boost.json::agents`.
+
+::: warning Исключайте конфликтующее
+`--exclude` убирает скиллы, чьи правила противоречат проекту. Типичные
+конфликты: `code-style-spatie` (не-`final` по умолчанию) против проекта с
+обязательным `final`; `node-pnpm-preflight` (pnpm) против yarn-проекта.
+Политика совместимости — [boost-compatibility.md](/boost-compatibility),
+принцип ядра — [Что такое SwissKnifeMan](/guide/#_6-совместимое-ядро-политика-конфликтов).
+:::
+
+**Обновление** такого проекта — обычный `swissknifeman update`: он повторно
+вендорит, дозаписывает `boost.json` и регенерирует хаб; затем вручную
+`php artisan boost:update`.
+
+### Тулзы вне Boost: managed-блок в корневых файлах
+
+Для проектов **без** Boost тот же индекс можно класть managed-блоком прямо в
+корневые файлы агентов:
+
+```bash
+./scripts/generate-hub.sh --target . --root-files AGENTS.md,GEMINI.md
+```
+
+Блок вставляется между маркерами `<!-- swissknifeman:hub:start -->` …
+`<!-- swissknifeman:hub:end -->` в `CLAUDE.md` (по умолчанию) и в каждый
+указанный файл; контент вне маркеров не трогается, файл создаётся при
+отсутствии.
 
 ## Шаг 3. Обновление
 

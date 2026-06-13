@@ -55,7 +55,7 @@ export UPSTREAM_MODE="$MODE" UPSTREAM_FORCE="$FORCE" UPSTREAM_JSON="$JSON_OUT" \
        UPSTREAM_TIMEOUT="$TIMEOUT" UPSTREAM_SKILLS="${SKILLS[*]:-}"
 
 python3 - "$REPO_ROOT" <<'PY'
-import hashlib, json, os, sys, time, urllib.request, urllib.error
+import hashlib, json, os, re, shutil, subprocess, sys, time, urllib.request, urllib.error
 from datetime import date
 from pathlib import Path
 
@@ -82,8 +82,39 @@ def sha256_bytes(data):
     return hashlib.sha256(data).hexdigest()
 
 
+_HAS_GH = shutil.which("gh") is not None and \
+    os.environ.get("UPSTREAM_NO_GH", "") != "1"
+_RAW_RE = re.compile(
+    r"^https://raw\.githubusercontent\.com/([^/]+)/([^/]+)/([^/]+)/(.+)$")
+
+
+def _normalize(raw):
+    return raw.decode("utf-8").replace("\r\n", "\n").encode("utf-8")
+
+
+def fetch_gh(owner, repo, ref, path):
+    """Точечный fetch одного файла через GitHub CLI: один файл, авто-аутентификация
+    (gh auth), уважает rate-limit — экономит контекст против полной загрузки.
+    Возвращает bytes или возбуждает исключение (caller откатится на urllib)."""
+    out = subprocess.run(
+        ["gh", "api", f"repos/{owner}/{repo}/contents/{path}",
+         "-f", f"ref={ref}", "-q", ".content"],
+        capture_output=True, text=True, timeout=timeout, check=True)
+    import base64
+    return _normalize(base64.b64decode(out.stdout))
+
+
 def fetch(url):
-    """Return CRLF-normalized UTF-8 bytes. Raises on failure."""
+    """Return CRLF-normalized UTF-8 bytes. Raises on failure.
+
+    Для GitHub raw-URL и доступного `gh` тянет через `gh api .../contents`
+    (авто-аутентификация, rate-limit). Иначе/при сбое — urllib с GITHUB_TOKEN."""
+    m = _RAW_RE.match(url)
+    if m and _HAS_GH:
+        try:
+            return fetch_gh(*m.groups())
+        except Exception:
+            pass  # gh недоступен/ошибка — тихий откат на urllib ниже
     headers = {"User-Agent": "swissknifeman-upstream-sync"}
     token = os.environ.get("GITHUB_TOKEN", "")
     if token and url.startswith("https://raw.githubusercontent.com/"):
@@ -99,8 +130,7 @@ def fetch(url):
                 time.sleep(2)
                 continue
             raise
-    text = raw.decode("utf-8")  # UnicodeDecodeError -> caller reports [fail]
-    return text.replace("\r\n", "\n").encode("utf-8")
+    return _normalize(raw)  # UnicodeDecodeError -> caller reports [fail]
 
 
 def line(tag, sid, fname, msg):

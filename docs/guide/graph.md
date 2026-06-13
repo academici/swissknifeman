@@ -37,6 +37,7 @@ flowchart LR
     risk_assessment["risk-assessment"]
   end
   subgraph general["general"]
+    context_economy["context-economy"]
     git_commit_rules["git-commit-rules"]
     spec_interview["spec-interview"]
     task_brief_template["task-brief-template"]
@@ -50,6 +51,7 @@ flowchart LR
   subgraph oss_dev["oss-dev"]
     dependency_audit["dependency-audit"]
     dx_design["dx-design"]
+    gh_review["gh-review"]
     github_flow["github-flow"]
     oss_development["oss-development"]
     oss_governance["oss-governance"]
@@ -94,6 +96,8 @@ flowchart LR
   eval_design -->|requires| agent_design
   filament -->|requires| laravel
   filament -->|requires| laravel_structure
+  gh_review -->|requires| context_economy
+  github_flow -->|requires| gh_review
   github_flow -->|requires| git_commit_rules
   github_flow -->|requires| release_engineering
   go_to_market -->|requires| competitive_analysis
@@ -145,9 +149,9 @@ flowchart LR
   test_strategy -.->|feeds| code_review
 ```
 
-**В графе:** 53 скиллов, 35 рёбер requires, 27 рёбер produces_for.
+**В графе:** 55 скиллов, 37 рёбер requires, 27 рёбер produces_for.
 
-## Изолированные скиллы (69)
+## Изолированные скиллы (71)
 
 Скиллы без связей `requires`/`produces_for` — самодостаточны.
 
@@ -156,10 +160,10 @@ flowchart LR
 | blender | `mcp-blender-workflow`, `model-rules`, `threading`, `version-gotchas` |
 | devops | `ci-cd`, `docker`, `gitops`, `node-pnpm-preflight` |
 | frontend | `inertia-vue`, `js-code-style`, `vite-module-loader`, `vite-multi-build`, `vitest`, `vue-composition-api`, `wayfinder` |
-| general | `ai-context-workflow`, `anti-drift`, `compact-responses`, `complex-task-orchestrator`, `context-economy`, `cross-layer-change-checklist`, `packages-stack`, `project-map`, `session-handoff`, `skills-ssot`, `ticket-workflow`, `user-roles` |
+| general | `ai-context-workflow`, `anti-drift`, `compact-responses`, `complex-task-orchestrator`, `cross-layer-change-checklist`, `packages-stack`, `project-map`, `session-handoff`, `skills-ssot`, `ticket-workflow`, `user-roles` |
 | imported | `agent-security-super-skill`, `ai-agent-super-skill`, `content-creative-super-skill`, `dev-engineering-super-skill`, `finance-super-skill`, `legal-super-skill`, `marketing-super-skill`, `operations-cx-super-skill`, `pm-super-skill`, `research-knowledge-super-skill`, `sales-super-skill`, `token-efficient` |
 | operator | `capacity-planning` |
-| php | `azguard`, `code-style-spatie`, `dependency-injection`, `enum-attributes`, `laravel-best-practices`, `laravel-broadcasting`, `laravel-dusk`, `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages`, `laravel-permissions`, `laravel-testing`, `medialibrary`, `pao`, `php-patterns`, `repositories` |
+| php | `azguard`, `code-style-spatie`, `dependency-injection`, `enum-attributes`, `laravel-best-practices`, `laravel-broadcasting`, `laravel-dusk`, `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages`, `laravel-permissions`, `laravel-subagents`, `laravel-testing`, `medialibrary`, `named-arguments`, `pao`, `pennant-development`, `php-patterns`, `repositories` |
 | python | `ml-project-structure`, `venv-dependencies` |
 | quality | `code-simplifier` |
 | roles | `open-source-maintainer`, `solo-founder`, `startup-cto`, `tech-lead` |

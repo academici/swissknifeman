@@ -46,7 +46,7 @@
     },
     "oss-dev": {
       "description": "Open-source development: releases, governance, DX, dependency audits + language references",
-      "count": 6,
+      "count": 7,
       "status": "active"
     },
     "php": {
@@ -721,9 +721,9 @@
       "name": "context-economy",
       "bucket": "general",
       "path": "skills/general/context-economy/SKILL.md",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "description": "Экономия контекста Claude Code в проекте: CLAUDE.md ≤200 строк, path-scoped правила .claude/rules/, /compact vs /clear, паттерн Plan→Clear→Execute, аудит MCP, маршрутизация моделей. Только официально поддерживаемые механизмы — без мифов вроде .claudeignore.",
-      "sha256": "f1205ea8b0b12c89c7757d4e28e86b53abab931d47346a67dc3af5a3178071f3",
+      "sha256": "60b2a4f36e545a2ccfdc820f1d0ad1192101318321c5aed3d91859f4ba35b484",
       "tags": [
         "tokens",
         "context",
@@ -1118,12 +1118,35 @@
       "source": "local"
     },
     {
+      "name": "gh-review",
+      "bucket": "oss-dev",
+      "path": "skills/oss-dev/gh-review/SKILL.md",
+      "version": "0.1.0",
+      "description": "Ревью и хендофф изменений через GitHub CLI (gh) с экономией контекста: gh pr diff/view/comment/review, gh api для точечного чтения файлов вместо загрузки целиком. Активировать при ревью PR, передаче работы dev'у, чтении чужих изменений на GitHub.",
+      "sha256": "ab6456f17940f427f874c8d9af26645327cf788abc360514b40cabf82052f4a0",
+      "tags": [
+        "github",
+        "gh",
+        "review",
+        "handoff",
+        "tokens",
+        "context"
+      ],
+      "requires": [
+        "context-economy"
+      ],
+      "produces_for": [
+        "github-flow"
+      ],
+      "source": "local"
+    },
+    {
       "name": "github-flow",
       "bucket": "oss-dev",
       "path": "skills/oss-dev/github-flow/SKILL.md",
-      "version": "0.1.0",
-      "description": "Цепочка Issue → Branch → PR → Merge → Tag → Release на GitHub: naming, labels, SemVer-оракул по типам коммитов, шаблоны Issue/PR. Формат коммитов — git-commit-rules, changelog и pipeline — release-engineering.",
-      "sha256": "a8b9399d8f0f938ec53351db4c372c200a39410f063022e8f613f24c4a536932",
+      "version": "0.2.0",
+      "description": "Цепочка Issue → Branch → PR → Merge → Tag → Release на GitHub: naming, labels, SemVer-оракул по типам коммитов, шаблоны Issue/PR. Формат коммитов — git-commit-rules, changelog и pipeline — release-engineering, ревью PR — gh-review.",
+      "sha256": "e75ad44287360b724b890a748b70c8f85955b46badf056cd2394e2bb6bdd6311",
       "tags": [
         "oss",
         "github",
@@ -1133,7 +1156,8 @@
       ],
       "requires": [
         "git-commit-rules",
-        "release-engineering"
+        "release-engineering",
+        "gh-review"
       ],
       "source": "local"
     },

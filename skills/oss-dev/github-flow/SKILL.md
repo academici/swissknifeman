@@ -1,12 +1,12 @@
 ---
 name: github-flow
 bucket: oss-dev
-version: 0.1.0
-description: "Цепочка Issue → Branch → PR → Merge → Tag → Release на GitHub: naming, labels, SemVer-оракул по типам коммитов, шаблоны Issue/PR. Формат коммитов — git-commit-rules, changelog и pipeline — release-engineering."
+version: 0.2.0
+description: "Цепочка Issue → Branch → PR → Merge → Tag → Release на GitHub: naming, labels, SemVer-оракул по типам коммитов, шаблоны Issue/PR. Формат коммитов — git-commit-rules, changelog и pipeline — release-engineering, ревью PR — gh-review."
 risk: write
 persona: oss-dev
 tags: [oss, github, git, semver, release]
-requires: [git-commit-rules, release-engineering]
+requires: [git-commit-rules, release-engineering, gh-review]
 produces_for: []
 outputs: [".github/PULL_REQUEST_TEMPLATE.md", ".github/ISSUE_TEMPLATE/"]
 snippets: [pull-request-template.md, issue-templates.md]
@@ -122,6 +122,14 @@ security/38-path-traversal-loader
 - `needs-changelog` — CHANGELOG не обновлён;
 - `breaking-change` — есть `BREAKING CHANGE` footer или `!` в типе.
 
+### Review
+
+Сам шаг ревью (чтение диффа, треды, публикация находок) — через `gh`, не
+загрузкой файлов целиком: `gh pr diff <N>`, `gh pr view <N> --comments`,
+`gh pr review <N> --approve|--request-changes -b "..."`. Полный алгоритм и
+экономия контекста — скилл **`oss-dev/gh-review`**; критерии и severity находок
+— `quality/code-review`.
+
 ---
 
 ## SemVer Oracle — следующая версия по коммитам
@@ -184,6 +192,7 @@ security/38-path-traversal-loader
 - [references/php-package-gate.md](references/php-package-gate.md) — composer.json gate, keywords, Packagist-деплой
 - [snippets/](snippets/) — шаблоны PR и Issue
 - `../release-engineering/SKILL.md` — SemVer-контракт, CHANGELOG, pipeline, deprecation
+- `../gh-review/SKILL.md` — ревью/хендофф PR через gh с экономией контекста
 - `../../general/git-commit-rules/SKILL.md` — формат коммитов, scopes, BREAKING CHANGE
 - `../../devops/ci-cd/snippets/github-actions-release.yml` — release workflow по тегу
 

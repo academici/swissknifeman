@@ -2,6 +2,31 @@
 
 ## [Unreleased]
 
+### Added (gh-driven ревью и экономия контекста)
+
+- **`oss-dev/gh-review` (0.1.0)**: ревью и хендофф изменений через GitHub CLI
+  с экономией контекста — `gh pr diff/view/comment/review` отдают точечный срез
+  (дифф, треды), `gh api .../contents` тянет один файл вместо загрузки целиком.
+  Чёткая граница: локальный VCS (commit/branch/diff/log/rebase) — за `git`,
+  платформа (PR/issue/release/api) — за `gh`. `requires: context-economy`,
+  `produces_for: github-flow`; snippet-шпаргалка команд
+- **`scripts/update-upstreams.sh` — канал `gh api`**: для GitHub raw-URL и при
+  наличии `gh` файл тянется через `gh api repos/{o}/{r}/contents/{path}?ref=...`
+  (авто-аутентификация из `gh auth`, rate-limit, один файл). Тихий откат на
+  `urllib`+`GITHUB_TOKEN`, если `gh` недоступен; отключение — `UPSTREAM_NO_GH=1`.
+  Касается импортируемых скиллов (`source: github`)
+
+### Changed
+
+- **`general/context-economy` 1.0.0 → 1.1.0**: раздел «Платформенный слой —
+  через `gh`, не файлами» (`gh` дополняет `git`, не заменяет; экономия на
+  точечном срезе) + пункт чеклиста; ссылка на `oss-dev/gh-review`
+- **`oss-dev/github-flow` 0.1.0 → 0.2.0**: шаг Review ссылается на `gh-review`
+  (`requires += gh-review`); ревью PR — через `gh`, не загрузкой файлов
+- **Документация**: этап «dev-review через gh» в межсистемной цепочке
+  (`docs/workflows/index.md`), канал `gh api → urllib` в
+  `docs/guide/upstream-sync.md`
+
 ### Added (интеграция с Laravel Boost — совместимое ядро)
 
 - **`php/named-arguments` (0.1.0)**: правило обязательных именованных аргументов

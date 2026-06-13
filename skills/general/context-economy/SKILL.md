@@ -1,7 +1,7 @@
 ---
 name: context-economy
 bucket: general
-version: 1.0.0
+version: 1.1.0
 description: "Экономия контекста Claude Code в проекте: CLAUDE.md ≤200 строк, path-scoped правила .claude/rules/, /compact vs /clear, паттерн Plan→Clear→Execute, аудит MCP, маршрутизация моделей. Только официально поддерживаемые механизмы — без мифов вроде .claudeignore."
 risk: draft
 persona: oss-dev
@@ -64,7 +64,11 @@ paths:
 - MCP-сервер не использовался 7 дней → отключить (его схема грузится в каждый запрос). CLI вместо MCP, где возможно.
 - Модель — нативно через `/model`: рутина/разведка — Haiku, архитектура/дебаг — старшая модель. Сторонние прокси-роутеры (claude-code-router) не использовать: лишний слой риска без нативных гарантий.
 
-### 6. Жёсткая блокировка шума — permissions.deny
+### 6. Платформенный слой — через `gh`, не файлами
+
+GitHub-операции (PR, ревью-треды, чужой код, релизы) — через **GitHub CLI**, а не чтением файлов целиком и не веб-UI. Это **не** замена `git`: локальный VCS (commit, branch, diff рабочего дерева, log, rebase) остаётся за `git`, `gh` его не умеет. Разделение: локально → `git`; платформа → `gh`. Экономия в том, что `gh` отдаёт минимальный срез: `gh pr diff <N>` — только дифф, `gh pr view <N> --comments` — только треды, `gh api .../contents/{path}` — один файл (а не клонирование репо). Детальный алгоритм и команды — скилл `oss-dev/gh-review`.
+
+### 7. Жёсткая блокировка шума — permissions.deny
 
 `permissions.deny: Read(...)` в `.claude/settings.json` — аппаратный блок чтения (`storage/logs/**`, `node_modules/**`, `*.lock`). Готовые пресеты: `configs/claude-code/` + `scripts/apply-permissions.sh`. В Laravel-проектах с Boost НЕ блокировать `vendor/**` — гайдлайны живут в `vendor/laravel/boost/.ai/`.
 
@@ -75,6 +79,7 @@ paths:
 - [ ] deny-пресет шума применён; `vendor/**` не заблокирован в Boost-проектах
 - [ ] Команды prime/plan/execute скопированы в `.claude/commands/`
 - [ ] MCP-серверы проверены за последние 30 дней
+- [ ] Платформенные операции (PR/ревью/чужой код) идут через `gh`, не загрузкой файлов целиком
 
 ## Ссылки
 
@@ -82,3 +87,4 @@ paths:
 - snippets/command-prime.md, snippets/command-plan.md, snippets/command-execute.md
 - https://code.claude.com/docs/en/memory — CLAUDE.md, rules, auto memory
 - Скилл `pao` (php) — сжатие вывода PHP-инструментов
+- Скилл `oss-dev/gh-review` — gh-driven ревью/хендофф (раздел 6, полный алгоритм)

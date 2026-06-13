@@ -40,6 +40,15 @@ swissknifeman vendor --agent cursor
 | **Claude Code** | `swissknifeman connect` | только записи в `.claude/settings.local.json` |
 | **Cursor / generic** | `swissknifeman vendor` | сами скиллы в `.cursor/skills` / `.ai/skills` |
 
+::: tip Агенты — только в plugin-канале
+Бакет-плагин может нести не только скиллы, но и каталог `agents/` в своём корне
+(`*.md` с YAML-frontmatter `name`/`description`/`tools`) — Claude Code
+обнаруживает его автоматически. Такие агенты доступны **только через канал
+`connect`**: `vendor` копирует скиллы, но не агентов, поэтому в Cursor и других
+generic-агентах их не будет. Пример — бакет `php` с агентами `laravel-reviewer`
+и `laravel-test-writer` (см. скилл `laravel-subagents`).
+:::
+
 Каждое подключение автоматически регистрирует проект в
 `~/.swissknifeman/projects.json` — это включает `swissknifeman list` и
 `swissknifeman update --all`.

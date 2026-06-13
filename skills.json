@@ -51,7 +51,7 @@
     },
     "php": {
       "description": "PHP and Laravel: applications, packages, Filament, permissions, testing, patterns",
-      "count": 30,
+      "count": 31,
       "status": "active"
     },
     "pm": {
@@ -1565,6 +1565,21 @@
         "laravel",
         "architecture",
         "structure"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "laravel-subagents",
+      "bucket": "php",
+      "path": "skills/php/laravel-subagents/SKILL.md",
+      "version": "0.1.0",
+      "description": "Оркестрация субагентов на крупных Laravel-задачах: порог срабатывания, делегирование исследования Explore-агентам, ревью через laravel-reviewer, тесты через laravel-test-writer, worktree-изоляция параллельных правок. Не применять к мелким и средним задачам.",
+      "sha256": "790c01491aacc1de2e165c522c1abb25a408121f7c334d43ed3a8fe83f18037e",
+      "tags": [
+        "workflow",
+        "orchestration",
+        "agents",
+        "laravel"
       ],
       "source": "local"
     },

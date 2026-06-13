@@ -147,7 +147,7 @@ flowchart LR
 
 **В графе:** 53 скиллов, 35 рёбер requires, 27 рёбер produces_for.
 
-## Изолированные скиллы (69)
+## Изолированные скиллы (70)
 
 Скиллы без связей `requires`/`produces_for` — самодостаточны.
 
@@ -159,7 +159,7 @@ flowchart LR
 | general | `ai-context-workflow`, `anti-drift`, `compact-responses`, `complex-task-orchestrator`, `context-economy`, `cross-layer-change-checklist`, `packages-stack`, `project-map`, `session-handoff`, `skills-ssot`, `ticket-workflow`, `user-roles` |
 | imported | `agent-security-super-skill`, `ai-agent-super-skill`, `content-creative-super-skill`, `dev-engineering-super-skill`, `finance-super-skill`, `legal-super-skill`, `marketing-super-skill`, `operations-cx-super-skill`, `pm-super-skill`, `research-knowledge-super-skill`, `sales-super-skill`, `token-efficient` |
 | operator | `capacity-planning` |
-| php | `azguard`, `code-style-spatie`, `dependency-injection`, `enum-attributes`, `laravel-best-practices`, `laravel-broadcasting`, `laravel-dusk`, `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages`, `laravel-permissions`, `laravel-testing`, `medialibrary`, `pao`, `php-patterns`, `repositories` |
+| php | `azguard`, `code-style-spatie`, `dependency-injection`, `enum-attributes`, `laravel-best-practices`, `laravel-broadcasting`, `laravel-dusk`, `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages`, `laravel-permissions`, `laravel-subagents`, `laravel-testing`, `medialibrary`, `pao`, `php-patterns`, `repositories` |
 | python | `ml-project-structure`, `venv-dependencies` |
 | quality | `code-simplifier` |
 | roles | `open-source-maintainer`, `solo-founder`, `startup-cto`, `tech-lead` |

@@ -100,7 +100,7 @@ version: 1.0.0
 
 ### 3.2 Блок: Issues
 
-```markdown
+````markdown
 ## Issues
 
 ### Обязательные вопросы перед созданием Issue
@@ -137,11 +137,11 @@ version: 1.0.0
 
 Дополнительные meta-labels: `semver:patch`, `semver:minor`, `semver:major` —
 проставляются агентом на основе оценки влияния (см. SemVer-оракул).
-```
+````
 
 ### 3.3 Блок: Ветки
 
-```markdown
+````markdown
 ## Branch Naming
 
 Формат:
@@ -174,11 +174,11 @@ security/38-sql-injection-scope-builder
 
 Агент создаёт ветку автоматически после подтверждения Issue, используя
 `gh issue view <N>` для получения заголовка.
-```
+````
 
 ### 3.4 Блок: Conventional Commits
 
-```markdown
+````markdown
 ## Conventional Commits
 
 Стандарт: https://www.conventionalcommits.org/en/v1.0.0/
@@ -265,11 +265,11 @@ feat!: remove deprecated withPermissions() method
 BREAKING CHANGE: withPermissions() was deprecated in v2.3.0.
 Use authorize() with a Gate contract instead.
 ```
-```
+````
 
 ### 3.5 Блок: Pull Requests
 
-```markdown
+`````markdown
 ## Pull Requests
 
 ### Обязательные вопросы перед созданием PR
@@ -293,7 +293,7 @@ feat(gate): entity-scoped role resolution (#42)
 
 ### Шаблон тела PR (агент заполняет автоматически)
 
-```markdown
+````markdown
 ## Summary
 <!-- Что сделано и зачем -->
 
@@ -317,7 +317,7 @@ feat(gate): entity-scoped role resolution (#42)
 
 ## Related Issues
 Closes #N
-```
+````
 
 ### Labels на PR
 
@@ -325,11 +325,11 @@ Closes #N
 - `ready-for-review` — когда PR не draft
 - `needs-changelog` — если CHANGELOG не обновлён
 - `breaking-change` — если есть BREAKING CHANGE footer
-```
+`````
 
 ### 3.6 Блок: SemVer-оракул
 
-```markdown
+````markdown
 ## SemVer Oracle — автоопределение следующей версии
 
 ### Алгоритм
@@ -367,11 +367,11 @@ vX.Y.Z-rc.N     — release candidate
 2. Обновления `composer.json` → `"version": "X.Y.Z"`
 3. Обновления CHANGELOG.md
 4. Merge PR в main/master
-```
+````
 
 ### 3.7 Блок: PHP Package Metadata
 
-```markdown
+````markdown
 ## PHP Package Metadata (composer.json)
 
 ### Обязательные поля для публикации на Packagist
@@ -428,11 +428,11 @@ vX.Y.Z-rc.N     — release candidate
 - Поле `"version"` в `composer.json` — опционально для Packagist (берётся из тега)
 - Если присутствует — ДОЛЖНО совпадать с тегом
 - Агент синхронизирует его автоматически на шаге деплоя
-```
+````
 
 ### 3.8 Блок: Pre-Deploy Checklist
 
-```markdown
+````markdown
 ## Pre-Deploy Gate — чеклист перед созданием тега/релиза
 
 Агент выполняет проверки последовательно и останавливается при fail:
@@ -468,18 +468,18 @@ vX.Y.Z-rc.N     — release candidate
 8. [агент] создать GitHub Release через API (из CHANGELOG-секции)
 9. [Packagist] обновляется автоматически через webhook
 ```
-```
+````
 
 ### 3.9 Блок: CHANGELOG
 
-```markdown
+`````markdown
 ## CHANGELOG (Keep a Changelog)
 
 Формат: https://keepachangelog.com/en/1.1.0/
 
 ### Структура раздела
 
-```markdown
+````markdown
 ## [X.Y.Z] - YYYY-MM-DD
 
 ### Added
@@ -499,7 +499,7 @@ vX.Y.Z-rc.N     — release candidate
 
 ### Security
 - security-коммиты
-```
+````
 
 ### Автозаполнение агентом
 
@@ -508,7 +508,7 @@ vX.Y.Z-rc.N     — release candidate
 git log vX.Y.Z-1..HEAD --pretty=format:"%s" --no-merges
 ```
 Фильтрует по типу → раскладывает по подразделам → запрашивает подтверждение.
-```
+`````
 
 ---
 

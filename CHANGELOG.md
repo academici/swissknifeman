@@ -2,6 +2,28 @@
 
 ## [Unreleased]
 
+### Added (продуктовая готовность)
+
+- **`LICENSE` (MIT)** + поле `license` в `package.json` — юридическая основа для
+  распространения; внешние (imported) скиллы сохраняют лицензии источников
+  (`upstream.json`)
+- **`SECURITY.md`** — порядок раскрытия уязвимостей, модель доверия импортируемых
+  скиллов (sha256 в `upstream.json`, стратегии `notify`/`replace`), правило
+  «нет секретов в snippets», приоритет «проект > источник > реестр»
+- **`.github/workflows/test.yml`** — отдельный CI с матрицей Python 3.9–3.12
+  (раньше тесты гонялись только хвостом `validate.sh` на одной версии)
+- **Покрытие ядра CLI тестами** (38 → 57): `registry` (`build_registry`,
+  `write_plugin_manifests`, provenance внешних скиллов, die без `buckets.json`),
+  `state` (CRUD `projects.json`, сохранение `first_connected_at`, атомарность),
+  `doctor`, `status`, `update` (реплей выбора, идемпотентность) — теперь у каждой
+  команды есть прямой тест; хелпер `write_upstream` в `tests/fixtures.py`
+- **`docs/guide/troubleshooting.md`** — диагностика (`command not found`, Claude
+  Code не видит скиллы, конфликт `settings.json`, коллизии вендоринга, битый
+  `projects.json`) и обновление (реестр, vendor `update`/`--all`, смена схемы);
+  добавлена в sidebar
+- **Бейджи в README** (Tests / Validate / Docs / License) + разделы
+  «Безопасность» и «Лицензия»
+
 ### Changed (рефакторинг CLI: lib/ + тесты)
 
 - **`bin/swissknifeman` → тонкий лаунчер**: вся Python-логика (раньше — heredoc

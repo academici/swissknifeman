@@ -23,6 +23,19 @@ def write_skill(skill_dir, name, *, version="0.1.0", description="desc",
                                         encoding="utf-8")
 
 
+def write_upstream(skill_dir, *, source="github", url="https://example/SKILL.md",
+                   sha256="deadbeef", fetched_at="2026-01-01"):
+    """Положить upstream.json рядом с SKILL.md (метит скилл как внешний)."""
+    import json as _json
+    (skill_dir / "upstream.json").write_text(_json.dumps({
+        "schema_version": 1,
+        "source": source,
+        "strategy": "notify",
+        "files": [{"path": "SKILL.md", "url": url, "sha256": sha256,
+                   "fetched_at": fetched_at}],
+    }) + "\n", encoding="utf-8")
+
+
 def make_registry(tmp_path):
     """Собрать минимальный, но валидный реестр в tmp_path.
 

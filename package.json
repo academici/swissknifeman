@@ -2,6 +2,7 @@
   "name": "@academici/swissknifeman",
   "version": "0.3.0",
   "private": true,
+  "license": "MIT",
   "description": "Универсальный личный реестр AI-скиллов и сниппетов: один источник истины, установка в любой проект и любую IDE",
   "type": "module",
   "scripts": {

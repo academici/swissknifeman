@@ -1,6 +1,7 @@
 """Общие утилиты: окружение, вывод, парсинг flag'ов и frontmatter."""
 import re
 import sys
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -19,17 +20,24 @@ CONFIG_KEYS = {
 HUB_MARKER = "<!-- swissknifeman:hub:start -->"
 
 
+@dataclass(frozen=True)
 class Env:
-    """Контекст запуска: корень реестра и текущая команда.
+    """Контекст запуска: корень реестра, текущая команда, домашний каталог.
 
     Раньше эти значения были модульными глобалями (root/cmd/argv). Теперь
     передаются явно — функции становятся тестируемыми (можно подсунуть
-    временный корень реестра, не трогая argv процесса)."""
+    временный корень реестра, не трогая argv процесса). frozen=True: контекст
+    запуска неизменен; __post_init__ нормализует root/home в Path (принимаем
+    как str, так и Path). home по умолчанию — реальный HOME."""
 
-    def __init__(self, root, cmd="", home=None):
-        self.root = Path(root)
-        self.cmd = cmd
-        self.home = Path(home) if home else HOME
+    root: Path
+    cmd: str = ""
+    home: Path = field(default_factory=lambda: HOME)
+
+    def __post_init__(self):
+        # frozen запрещает обычное присваивание — пишем через object.__setattr__
+        object.__setattr__(self, "root", Path(self.root))
+        object.__setattr__(self, "home", Path(self.home))
 
     @property
     def state_dir(self):

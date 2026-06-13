@@ -68,7 +68,7 @@ CONFIG_KEYS = {
     "project_type": str, "buckets": list, "exclude": list,
     "skills_path": str, "agent": str,
 }
-HUB_MARKER = "<!-- swissknifeman:hub:begin -->"
+HUB_MARKER = "<!-- swissknifeman:hub:start -->"
 
 
 def die(msg):
@@ -354,6 +354,39 @@ def generate_hub(target):
                     "--target", str(target)], check=True)
 
 
+def sync_boost_json(target, skill_names, dry_run=False):
+    """Если в target есть boost.json — идемпотентно дозаписать вендоренные
+    скиллы в boost.json::skills (по frontmatter-name), чтобы их подхватил
+    `php artisan boost:update`. Возвращает True, если boost.json обнаружен."""
+    boost_file = target / "boost.json"
+    if not boost_file.is_file():
+        return False
+    try:
+        data = json.loads(boost_file.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        print(f"WARN: {boost_file}: invalid JSON ({e}) — boost.json не обновлён",
+              file=sys.stderr)
+        return True
+    existing = data.get("skills")
+    if not isinstance(existing, list):
+        existing = []
+    added = [n for n in skill_names if n not in existing]
+    if not added:
+        print("boost.json: все вендоренные скиллы уже в skills[] — без изменений")
+        return True
+    if dry_run:
+        print(f"[dry-run] boost.json: добавил бы в skills[]: {', '.join(added)}")
+        return True
+    data["skills"] = existing + sorted(added)
+    boost_file.write_text(json.dumps(data, indent=4, ensure_ascii=False) + "\n",
+                          encoding="utf-8")
+    print(f"boost.json: добавлено в skills[] ({len(added)}): {', '.join(added)}")
+    print("Обнаружен Laravel Boost: выполните `php artisan boost:update` "
+          "(или `composer ai:sync`), чтобы скиллы попали в CLAUDE.md/AGENTS.md "
+          "и копии по тулзам.")
+    return True
+
+
 # =================================================================================
 # connect — канал plugin marketplace Claude Code
 # =================================================================================
@@ -539,6 +572,12 @@ def do_vendor(target, opts, register=True):
         or AGENT_DEFAULTS[agent]
     dest_root = target / skills_path
 
+    # Layout: flat (.ai/skills/<name>/SKILL.md) vs bucket
+    # (.ai/skills/<bucket>/<name>/SKILL.md). Laravel Boost обнаруживает
+    # user-скиллы через glob('.ai/skills/*') на ОДИН уровень (SkillComposer),
+    # поэтому в Boost-проектах нужен flat, иначе boost:update их не увидит.
+    flat_layout = (agent == "claude") or (target / "boost.json").is_file()
+
     # --- collect skills (dir directly containing SKILL.md) ---------------------
     skills = []  # (bucket, rel_path_under_bucket, dir, fm_name)
     all_skill_rels = {}  # bucket -> [rel paths of every skill dir]
@@ -644,10 +683,10 @@ def do_vendor(target, opts, register=True):
     if pulled:
         print(f"Dependencies: {len(pulled)} pulled via requires")
 
-    flats = flat_names() if agent == "claude" else {}
+    flats = flat_names() if flat_layout else {}
     if list_only:
         for i, (bucket, rel, d, fm_name) in enumerate(skills):
-            suffix = f" -> {flats[i]}/" if agent == "claude" else ""
+            suffix = f" -> {flats[i]}/" if flat_layout else ""
             key = fm_name or d.name
             dep_note = f"  (dependency of {pulled[key]})" if key in pulled else ""
             print(f"  {bucket}/{rel}{suffix}{dep_note}")
@@ -683,10 +722,15 @@ def do_vendor(target, opts, register=True):
         manifest_file.write_text(json.dumps(data, indent=2, ensure_ascii=False)
                                  + "\n", encoding="utf-8")
 
-    if agent == "claude":
-        print("NOTE: --agent claude vendoring is deprecated for Claude Code "
-              "projects — prefer the plugin marketplace: swissknifeman connect",
-              file=sys.stderr)
+    if flat_layout:
+        if agent == "claude":
+            print("NOTE: --agent claude vendoring is deprecated for Claude Code "
+                  "projects — prefer the plugin marketplace: swissknifeman connect",
+                  file=sys.stderr)
+        elif (target / "boost.json").is_file():
+            print("NOTE: обнаружен Laravel Boost — использую flat-раскладку "
+                  "(.ai/skills/<name>/SKILL.md), чтобы boost:update нашёл скиллы",
+                  file=sys.stderr)
         manifest_file = dest_root / MANIFEST
         if not dry_run:
             for entry in load_manifest(manifest_file).get("skills", []):
@@ -767,6 +811,10 @@ def do_vendor(target, opts, register=True):
 
     print(("[dry-run] " if dry_run else "")
           + f"Installed {len(skills)} skills -> {dest_root}")
+
+    # Laravel Boost: дозаписать вендоренные скиллы в boost.json::skills
+    vendored_names = sorted({fm_name for _, _, _, fm_name in skills})
+    sync_boost_json(target, vendored_names, dry_run=dry_run)
 
     hub = opts.get("hub", False)
     if hub and not dry_run:

@@ -2,6 +2,54 @@
 
 ## [Unreleased]
 
+### Added (интеграция с Laravel Boost — совместимое ядро)
+
+- **`php/named-arguments` (0.1.0)**: правило обязательных именованных аргументов
+  в PHP-вызовах с границами применения и исключениями (один аргумент, встроенные
+  функции, splat). Извлечено и де-агельтизировано из проектного скилла;
+  `source: local`. Дополняет, а не дублирует — реестр раньше только *использовал*
+  именованные аргументы в примерах, отдельного правила не было
+- **`php/pennant-development` (0.1.0)**: feature-флаги Laravel Pennant
+  (`define`/`active`/`for`-scope, директива `@feature`, активация/раскатки).
+  Извлечено из `laravel/boost` (`upstream.json` strategy=notify) — единственный
+  чистый static-`.md` generic-кандидат без версионной развилки; Blade-скиллы
+  Boost (`folio`/`volt`/`mcp`) остаются за Boost (нужен render-контекст)
+- **`php/laravel` → `eloquent-model.md`**: секция «Accessors и mutators» дополнена
+  правилами `Attribute::make()` (видимость `protected`, camelCase→snake_case,
+  позиция в классе, миграция с legacy-аксессоров) — слито из проектного
+  `laravel-attributes` вместо создания дубля
+
+### Added (CLI и хаб — установка в Boost-проекты)
+
+- **Boost-aware `vendor`/`update`**: при наличии `boost.json` в целевом проекте
+  CLI (1) автоматически использует **flat-раскладку** `.ai/skills/<name>/SKILL.md`
+  — Boost обнаруживает user-скиллы через `glob('.ai/skills/*')` на один уровень,
+  bucket-подпапки он бы не нашёл; (2) идемпотентно дозаписывает вендоренные
+  скиллы в `boost.json::skills` (по frontmatter-`name`) и подсказывает
+  `php artisan boost:update`. Скиллы автоматически расходятся по всем агентам
+  Boost из единого источника `.ai/skills/`
+- **`generate-hub.sh --root-files A,B`**: managed-блок хаба (между маркерами
+  `swissknifeman:hub:start/end`) дополнительно пишется в указанные корневые файлы
+  (`AGENTS.md`, `GEMINI.md`, …) для тулз вне Boost; контент вне маркеров не
+  трогается
+
+### Fixed
+
+- **Рассинхрон маркера хаба**: `bin/swissknifeman` искал
+  `<!-- swissknifeman:hub:begin -->`, тогда как `generate-hub.sh` пишет
+  `:start`/`:end`. Из-за этого `hub_artifacts_exist()` не находил managed-блок в
+  `CLAUDE.md`, и `update`/повторный `connect` не понимали, что хаб уже стоит.
+  Приведено к единому `hub:start`
+
+### Changed (документация концепции ядра)
+
+- **Политика совместимого ядра** зафиксирована явно: `docs/guide/index.md`
+  (принцип №6 «Совместимое ядро» + таблица прецедентов), `README.md`,
+  `references/laravel-boost.md` (критерий извлечения static/версионность/generic,
+  что извлечено, что нет и почему), `docs/guide/installation.md` (раздел
+  «Проект с Laravel Boost»). Поток обновлений инвертирован: generic-скиллы
+  внешнего источника обновляются сначала в реестре, затем подтягиваются в проекты
+
 ### Added (субагенты Laravel)
 
 - **`php/agents/` — первые агент-определения в плагине**: бакет-плагин теперь

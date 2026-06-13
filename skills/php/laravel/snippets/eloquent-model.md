@@ -124,6 +124,27 @@ public function getFullNameAttribute(): string { ... }
 public function setSlugAttribute(string $value): void { ... }
 ```
 
+### Правила Attribute::make()
+
+- **Видимость `protected`** — методы-аксессоры всегда `protected`, не `public`.
+- **Имя метода — camelCase без префикса `get`**; Laravel сам приводит к
+  snake_case для доступа: `fullName()` → `$model->full_name`,
+  `isActive()` → `$model->is_active`.
+- **Возвращаемый тип `: Attribute`** объявляется всегда; импорт —
+  `use Illuminate\Database\Eloquent\Casts\Attribute;`.
+- **Короткие замыкания** (`fn`) для простых аксессоров; полное замыкание с
+  телом — когда нужна логика. Сигнатура замыкания: `fn ($value, $attributes)`
+  (`$value` — сырое значение из БД, `$attributes` — все атрибуты модели).
+- **Позиция в классе** — блок аксессоров после связей (relations) и перед
+  скоупами (scopes).
+
+### Миграция с legacy-аксессоров
+
+1. Удали `getXxxAttribute()` / `setXxxAttribute()`.
+2. Добавь `protected function xxx(): Attribute { return Attribute::make(...); }`.
+3. Добавь импорт `Attribute`, если его нет.
+4. Прогони тесты — поведение доступа должно остаться прежним.
+
 ---
 
 ## $hidden

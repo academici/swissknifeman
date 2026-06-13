@@ -2,6 +2,31 @@
 
 ## [Unreleased]
 
+### Changed (рефакторинг CLI: lib/ + тесты)
+
+- **`bin/swissknifeman` → тонкий лаунчер**: вся Python-логика (раньше — heredoc
+  на 1300 строк внутри bash) вынесена в пакет `lib/swissknifeman/` и разложена
+  по модулям (`common`, `config`, `state`, `connect`, `vendor`, `update`,
+  `status`, `listing`, `registry`, `doctor`, `boost`, `hub`, `cli`). Бинарник
+  делает preflight-проверки и `exec python3 -m swissknifeman <root> <cmd>`.
+  Поведение байт-в-байт прежнее (`registry` даёт идентичные `skills.json` и
+  манифесты); установщик и симлинк не затронуты. Модульные глобали
+  `root`/`cmd`/`argv` заменены явным `Env` — функции стали импортируемыми
+
+### Added (тесты CLI)
+
+- **`tests/` (stdlib unittest, без зависимостей)**: 27 юнит-тестов
+  (frontmatter, парсинг флагов, sanitize, autodetect, precedence
+  `resolve_selection`, транзитивный `requires`, коллизии flat-имён) и
+  11 интеграционных — фейковый Laravel-проект в tmpdir, кейсы `connect`/`vendor`
+  (autodetect, явные плагины, сохранение `false`, dry-run, bucket/flat-layout,
+  pull `requires`, `--exclude`, синк `boost.json`, чистая переустановка).
+  Синтетический реестр (`tests/fixtures.py`) — тесты не зависят от контента
+  скиллов
+- **`scripts/test.sh`** — раннер тестов (`-v` для подробного вывода), встроен в
+  `scripts/validate.sh` (группа 12: импорт пакета + прогон сьюта). Тот же
+  скрипт гоняет CI
+
 ### Added (gh-driven ревью и экономия контекста)
 
 - **`oss-dev/gh-review` (0.1.0)**: ревью и хендофф изменений через GitHub CLI

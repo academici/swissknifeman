@@ -83,11 +83,16 @@ flowchart LR
     tech_debt_audit["tech-debt-audit"]
     test_strategy["test-strategy"]
   end
+  subgraph system["system"]
+    cross_project_coordinator["cross-project-coordinator"]
+    local_topology["local-topology"]
+  end
   agent_design -->|requires| architecture
   api_design -->|requires| data_schema
   architecture -->|requires| brd
   botkit -->|requires| laravel
   brd -->|requires| business_process
+  cross_project_coordinator -->|requires| local_topology
   data_schema -->|requires| brd
   database -->|requires| laravel
   dependency_audit -->|requires| oss_development
@@ -149,9 +154,9 @@ flowchart LR
   test_strategy -.->|feeds| code_review
 ```
 
-**В графе:** 55 скиллов, 37 рёбер requires, 27 рёбер produces_for.
+**В графе:** 57 скиллов, 38 рёбер requires, 27 рёбер produces_for.
 
-## Изолированные скиллы (72)
+## Изолированные скиллы (71)
 
 Скиллы без связей `requires`/`produces_for` — самодостаточны.
 
@@ -167,4 +172,3 @@ flowchart LR
 | python | `ml-project-structure`, `venv-dependencies` |
 | quality | `code-simplifier` |
 | roles | `open-source-maintainer`, `solo-founder`, `startup-cto`, `tech-lead` |
-| system | `local-topology` |

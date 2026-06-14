@@ -76,7 +76,7 @@
     },
     "system": {
       "description": "Local environment topology: the three hub nodes (Brain vault, swissknifeman, projects base) and how agents navigate between projects and their docs",
-      "count": 1,
+      "count": 2,
       "status": "active"
     }
   },
@@ -2046,6 +2046,25 @@
       "tags": [
         "role",
         "persona"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "cross-project-coordinator",
+      "bucket": "system",
+      "path": "skills/system/cross-project-coordinator/SKILL.md",
+      "version": "0.1.0",
+      "description": "Оркестрация межпроектного анализа кода: обойти связанные проекты (через топологию), найти дубли/расхождения/кандидатов в общий пакет и выдать приоритизированные рекомендации по унификации. Read-only — правок и PR не делает. Запускать для широкой межпроектной задачи, не для одного репозитория.",
+      "sha256": "aa4734cfb1299bb130d8b2e8cdefb633f05d9299826a40e3b97d53554c7f7d65",
+      "tags": [
+        "cross-project",
+        "coordination",
+        "refactoring",
+        "duplication",
+        "topology"
+      ],
+      "requires": [
+        "local-topology"
       ],
       "source": "local"
     },

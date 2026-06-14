@@ -4,6 +4,16 @@
 
 ### Added
 
+- **Межпроектный координатор кода** — `system/cross-project-coordinator` (скилл) +
+  агент `system/agents/code-coordinator` (read-only). Поверх топологии обходит
+  связанные проекты, перечисляя только git-отслеживаемые файлы (`git ls-files` —
+  уважает `.gitignore`/`.git/info/exclude`, секреты и вендор/генерёжку не читает),
+  и ищет по семи критериям: дубли между репо, расходящиеся реализации одного
+  концепта, дрейф от реестра скиллов, копия-вместо-зависимости, расхождение
+  конвенций/документации/зависимостей. Критерии переиспользуют `quality/`-скиллы
+  (tech-debt-audit, refactoring-plan, code-simplifier, code-review). Выдаёт
+  приоритизированный (impact×effort) отчёт с `file:line` по проектам и named
+  extraction target; правок/PR не делает. `requires: local-topology`
 - **Топология локальной среды** — корневой узел системы. Новый бакет `system`
   со скиллом `local-topology` (раздаётся всем проектам: добавлен в профили
   laravel-project/php-package/obsidian-vault), команда `swissknifeman topology

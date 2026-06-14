@@ -1,0 +1,121 @@
+{
+  "_version": "1",
+  "_comment": "Главный конфиг узла mAInd. Скопируй в .maind.json и поправь под себя. Надмножество .projects.json из brain — поля projects[].{id,name,repo,local_path,type} совместимы с brain, остальное — расширения maind.",
+
+  "_comment_node": "Идентификация узла. role: primary | secondary | mirror.",
+  "node": {
+    "id": "hub",
+    "name": "Academici Hub",
+    "role": "primary",
+    "description": "Central knowledge and agent hub"
+  },
+
+  "_comment_memory": "agent-memory демон. Порты можно переопределить через .env (AGENTMEMORY_PORT/AGENTMEMORY_STREAM_PORT) — env приоритетнее этих значений.",
+  "memory": {
+    "enabled": true,
+    "config_path": "config/memory/iii-config.yaml",
+    "http_port": 4111,
+    "stream_port": 4112,
+    "data_dir": "./data"
+  },
+
+  "_comment_graph": "Граф связей. adapter: memory (stdlib, по умолчанию) | graphify | disabled.",
+  "graph": {
+    "enabled": true,
+    "adapter": "memory",
+    "persist": true,
+    "persist_path": "./data/graph.db"
+  },
+
+  "_comment_agents": "Реестр агентов узла. definitions — дескрипторы агентов, которые крутятся здесь.",
+  "agents": {
+    "registry_enabled": true,
+    "heartbeat_interval_ms": 30000,
+    "max_idle_ms": 300000,
+    "definitions": [
+      {
+        "id": "vault-architect",
+        "description": "Senior architect for the brain vault",
+        "skills": ["architect", "oss-dev"],
+        "memory_scope": "project:brain",
+        "autostart": false
+      }
+    ]
+  },
+
+  "_comment_projects": "Проекты экосистемы. Минимум для совместимости с brain: id, name, repo, local_path, type. Остальные поля — расширения maind.",
+  "projects": [
+    {
+      "id": "brain",
+      "name": "Brain",
+      "repo": "academici/brain",
+      "local_path": "~/Vaults/Brain",
+      "type": "obsidian-vault",
+      "graph_node": true,
+      "memory_scope": "project:brain",
+      "agents": ["vault-architect"],
+      "tags": ["primary", "docs"],
+      "status": "active",
+      "dependencies": ["maind"]
+    },
+    {
+      "id": "swissknifeman",
+      "name": "SwissKnifeMan",
+      "repo": "academici/swissknifeman",
+      "local_path": "~/projects/packages/swissknifeman",
+      "type": "node-package",
+      "graph_node": true,
+      "memory_scope": "project:swissknifeman",
+      "agents": [],
+      "tags": ["package", "skills"],
+      "status": "active",
+      "dependencies": ["maind"]
+    },
+    {
+      "id": "maind",
+      "name": "mAInd",
+      "repo": "academici/maind",
+      "local_path": "~/projects/packages/maind",
+      "type": "python-package",
+      "graph_node": true,
+      "memory_scope": "project:maind",
+      "agents": [],
+      "tags": ["hub", "memory", "graph"],
+      "status": "active",
+      "dependencies": []
+    }
+  ],
+
+  "_comment_integrations": "Связи со смежными проектами. sync_direction: import | export | bidirectional.",
+  "integrations": {
+    "swissknifeman": {
+      "enabled": true,
+      "skills_sync": true
+    },
+    "brain": {
+      "enabled": true,
+      "projects_sync": true,
+      "sync_direction": "import"
+    }
+  },
+
+  "_comment_mcp": "MCP-серверы, к которым подключается узел (и которые он публикует).",
+  "mcp": {
+    "servers": [
+      {
+        "name": "agentmemory",
+        "transport": "http",
+        "url": "http://127.0.0.1:4111/mcp",
+        "enabled": true
+      }
+    ]
+  },
+
+  "_comment_observability": "log_level: debug | info | warn | error.",
+  "observability": {
+    "service_name": "maind",
+    "log_level": "info",
+    "metrics_enabled": true,
+    "traces_enabled": false
+  }
+}

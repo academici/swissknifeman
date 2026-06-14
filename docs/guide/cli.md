@@ -39,6 +39,18 @@ swissknifeman vendor [--agent claude|cursor|generic]
                      [--skills-path P] [--list] [--dry-run] [--force] [--hub]
 ```
 
+### `swissknifeman integrate`
+
+Интерактивный визард интеграции: проходит [чеклист](./integration-checklist) по
+всему функционалу (скиллы, permissions, хуки auto-approve/память, hub) и применяет
+выбранное. Безопасно — `--dry-run`, merge-only, бэкапы.
+
+```
+swissknifeman integrate [--target P]
+                        [--bundle minimal|recommended|full|custom]
+                        [--yes] [--dry-run] [--file settings.json|settings.local.json]
+```
+
 ### `swissknifeman update [--all] [--dry-run]`
 
 Обновляет подключение проекта. Диск — источник истины: каналы определяются

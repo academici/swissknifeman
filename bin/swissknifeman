@@ -9,6 +9,7 @@
 # Команды (запускаются из потребляющего проекта, корень ищется вверх от CWD):
 #   connect   подключить проект через plugin marketplace Claude Code
 #   vendor    вендорить скиллы в проект (Cursor и другие агенты)
+#   integrate визард интеграции: чеклист по всему функционалу (скиллы/хуки/память/hub)
 #   update    обновить подключение/вендоринг текущего проекта (--all: все)
 #   status    отчёт по текущему проекту (read-only)
 #   list      зарегистрированные проекты (~/.swissknifeman/projects.json)
@@ -53,7 +54,7 @@ case "$CMD" in
     sha="$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
     echo "swissknifeman $sha ($REPO_ROOT)"
     exit 0 ;;
-  connect|vendor|update|status|list|registry|doctor|topology) ;;
+  connect|vendor|integrate|update|status|list|registry|doctor|topology) ;;
   *) echo "Неизвестная команда: $CMD" >&2; usage >&2; exit 1 ;;
 esac
 

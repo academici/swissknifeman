@@ -31,7 +31,7 @@
     },
     "general": {
       "description": "General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists",
-      "count": 15,
+      "count": 16,
       "status": "active"
     },
     "imported": {
@@ -51,7 +51,7 @@
     },
     "php": {
       "description": "PHP and Laravel: applications, packages, Filament, permissions, testing, patterns",
-      "count": 33,
+      "count": 34,
       "status": "active"
     },
     "pm": {
@@ -66,7 +66,7 @@
     },
     "quality": {
       "description": "Code review, refactoring plans, tech debt audits, test strategy",
-      "count": 5,
+      "count": 6,
       "status": "active"
     },
     "roles": {
@@ -875,6 +875,22 @@
         "roles",
         "authorization",
         "laravel"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "writing-style",
+      "bucket": "general",
+      "path": "skills/general/writing-style/SKILL.md",
+      "version": "0.1.0",
+      "description": "Живой язык комментариев и текста коммитов: писать о причине, а не пересказывать код; настоящее/прошедшее время, без канцелярита; заголовок коммита — завершённое действие, в body причина и эффект. Активировать при написании комментариев и сообщений коммитов.",
+      "sha256": "692856d1bb3c807f83312bd3080efec7a74048ff3e4489fbea931f2d7733faf6",
+      "tags": [
+        "writing",
+        "comments",
+        "commits",
+        "style",
+        "language"
       ],
       "source": "local"
     },
@@ -1722,6 +1738,23 @@
       "source": "local"
     },
     {
+      "name": "php-upgrade-checklist",
+      "bucket": "php",
+      "path": "skills/php/php-upgrade-checklist/SKILL.md",
+      "version": "0.1.0",
+      "description": "Чеклист апгрейда версии PHP в приложении (минор/мажор): обновить образ/CI, composer update и устранение deprecations, phpstan-baseline, полный suite, обновить rector-наборы, просмотреть RFC на несовместимости. Активировать перед bump версии PHP.",
+      "sha256": "da2f109a963b9a3af05f989ddac935916ba8dc5347caf760568c9608fed9d368",
+      "tags": [
+        "php",
+        "upgrade",
+        "version",
+        "rector",
+        "phpstan",
+        "composer"
+      ],
+      "source": "local"
+    },
+    {
       "name": "repositories",
       "bucket": "php",
       "path": "skills/php/repositories/SKILL.md",
@@ -1994,6 +2027,22 @@
       ],
       "produces_for": [
         "code-review"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "testing-safety-report",
+      "bucket": "quality",
+      "path": "skills/quality/testing-safety-report/SKILL.md",
+      "version": "0.1.0",
+      "description": "Отчёт безопасности после рискованного изменения (миграции, рефакторинг схемы/слоёв, апгрейд зависимостей): что структурно изменено, какие тесты прогнаны и с каким результатом, какие риски и контрольные проверки остаются. Делать после изменения, чтобы оно было аудируемым.",
+      "sha256": "44b35ab507af3a83bba4d3980351e2cc79083d652139c587c8e008aa84f6dae2",
+      "tags": [
+        "testing",
+        "safety",
+        "migrations",
+        "reporting",
+        "verification"
       ],
       "source": "local"
     },

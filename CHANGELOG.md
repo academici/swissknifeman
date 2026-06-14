@@ -4,6 +4,14 @@
 
 ### Added
 
+- **Экстракция универсальных скиллов из flexcrm** (источник: local, авторские):
+  `quality/testing-safety-report` (отчёт безопасности после миграций/рефакторинга),
+  `php/php-upgrade-checklist` (чеклист апгрейда версии PHP — образ/CI, composer,
+  phpstan-baseline, rector, RFC), `general/writing-style` (живой язык комментариев
+  и текстов коммитов, дополняет `git-commit-rules`). Boost-владения (tailwind/mcp/
+  pest) и уже существующее в реестре не дублировались; `fortify-development` оставлен
+  локальным в проекте по решению владельца
+
 - **Гибкая «единая память» констелляции** — самодостаточная папка-хук
   `configs/claude-code/hooks/memory/` по образцу auto-approve: переключатель
   `memory.sh` (remember/recall/members/status/sync), режим в `env.ini`

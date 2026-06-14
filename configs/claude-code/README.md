@@ -157,3 +157,48 @@ MODE=strict
 
 Подробный разбор синтаксиса правил и логики пресетов — в
 [документации](../../docs/configs/claude-permissions.md).
+
+## Единая память (memory)
+
+Силос-проблема: что выучено в одном проекте, не вспоминается в связанном.
+Самодостаточная папка [`hooks/memory/`](hooks/memory/) даёт **общий «мозг»** —
+но не всем подряд, а **только участникам одной группы** (`brain`). Структура и
+эргономика — как у auto-approve: переключатель [`memory.sh`](hooks/memory/memory.sh),
+режим в [`env.ini`](hooks/memory/env.ini), группы и участники в
+[`config.json`](hooks/memory/config.json), бэкенды в [`modes/`](hooks/memory/modes/).
+
+```
+hooks/memory/
+  memory.sh        # remember | recall | members | status | sync
+  env.ini          # MODE=file|federation|agentmemory|off  ← выбор бэкенда
+  config.json      # default_brain + brains{ <имя>: { members, store, agentmemory } }
+  lib/{common,store}.sh
+  modes/{file,federation,agentmemory,off}.sh
+```
+
+| `MODE` | Хранилище | Поиск | Демон |
+|---|---|---|---|
+| `file` | один общий store на группу (markdown) | grep + ранжирование | нет |
+| `federation` | свои `memory/` участников + нативная память Claude Code + общий store | grep по всем + ранжирование | нет |
+| `agentmemory` | сторонний AgentMemory (демон на Brain) | семантический | да |
+| `off` | — | — | — |
+
+Режимы взаимозаменяемы — переключаешь `MODE` и сравниваешь на одной группе.
+
+**Membership.** `members` группы — имена узлов топологии (`brain`/`swissknifeman`)
+или ключи/пути проектов (резолв через `~/.swissknifeman/topology.json` +
+`projects.json`). Участник видит мозг, только если он в `members`.
+
+```bash
+# в начале задачи — спросить общий мозг
+~/.claude/hooks/memory/memory.sh recall "retry backoff"
+# зафиксировать межпроектно-полезный факт
+~/.claude/hooks/memory/memory.sh remember --type project "retry-логика дублируется в botkit и azguard"
+~/.claude/hooks/memory/memory.sh status      # режим, группа, участники, число фактов
+```
+
+**Per-project override** (как auto-approve): `<project>/.claude/memory.env.ini`
+(MODE) и `<project>/.claude/memory.config.json` (группа/участники); плюс
+`memory_brain` в `<project>/.swissknife.json`. Установка файлов —
+`./scripts/apply-permissions.sh --global` (код/lib/modes обновляются, `env.ini`/
+`config.json` не перезатираются). Агент-обвязка — скилл `system/shared-memory`.

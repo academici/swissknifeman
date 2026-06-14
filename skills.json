@@ -76,7 +76,7 @@
     },
     "system": {
       "description": "Local environment topology: the three hub nodes (Brain vault, swissknifeman, projects base) and how agents navigate between projects and their docs",
-      "count": 1,
+      "count": 3,
       "status": "active"
     }
   },
@@ -2050,6 +2050,25 @@
       "source": "local"
     },
     {
+      "name": "cross-project-coordinator",
+      "bucket": "system",
+      "path": "skills/system/cross-project-coordinator/SKILL.md",
+      "version": "0.1.0",
+      "description": "Оркестрация межпроектного анализа кода: обойти связанные проекты (через топологию), найти дубли/расхождения/кандидатов в общий пакет и выдать приоритизированные рекомендации по унификации. Read-only — правок и PR не делает. Запускать для широкой межпроектной задачи, не для одного репозитория.",
+      "sha256": "aa4734cfb1299bb130d8b2e8cdefb633f05d9299826a40e3b97d53554c7f7d65",
+      "tags": [
+        "cross-project",
+        "coordination",
+        "refactoring",
+        "duplication",
+        "topology"
+      ],
+      "requires": [
+        "local-topology"
+      ],
+      "source": "local"
+    },
+    {
       "name": "local-topology",
       "bucket": "system",
       "path": "skills/system/local-topology/SKILL.md",
@@ -2061,6 +2080,24 @@
         "architecture",
         "navigation",
         "meta"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "shared-memory",
+      "bucket": "system",
+      "path": "skills/system/shared-memory/SKILL.md",
+      "version": "0.1.0",
+      "description": "Единый «мозг» (общая память) для выбранных проектов констелляции через хук ~/.claude/hooks/memory/. Recall перед работой, remember после — факты делятся только между участниками одной группы (brain). Бэкенд сменный: file|federation|agentmemory|off, переопределяется конфигом.",
+      "sha256": "20b4ef35902933f2e3c9ba599ffb61f146e7cb7e12783352366af8315a4b8b8f",
+      "tags": [
+        "memory",
+        "cross-project",
+        "topology",
+        "recall"
+      ],
+      "requires": [
+        "local-topology"
       ],
       "source": "local"
     }

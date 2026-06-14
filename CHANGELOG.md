@@ -4,6 +4,29 @@
 
 ### Added
 
+- **Гибкая «единая память» констелляции** — самодостаточная папка-хук
+  `configs/claude-code/hooks/memory/` по образцу auto-approve: переключатель
+  `memory.sh` (remember/recall/members/status/sync), режим в `env.ini`
+  (`MODE=file|federation|agentmemory|off`), группы и участники в `config.json`,
+  бэкенды в `modes/`. **Membership:** общий «мозг» (brain) видят только участники
+  из его `members` (резолв узлов/проектов через топологию). Режимы взаимозаменяемы
+  (file/federation на markdown без демона; agentmemory — прокси к стороннему
+  демону на Brain, деградирует при недоступности), конфиг переопределяется
+  per-project (`<project>/.claude/memory.{env.ini,config.json}` + `.swissknife.json:
+  memory_brain`). Схема факта совместима с нативной памятью Claude Code, поэтому
+  `federation` читает и `~/.claude/projects/<slug>/memory/` участников. Агент-обвязка —
+  скилл `system/shared-memory`; установка через `apply-permissions.sh --global`.
+  `validate.sh` теперь `bash -n`-ит все хук-скрипты `configs/claude-code/hooks/`
+- **Межпроектный координатор кода** — `system/cross-project-coordinator` (скилл) +
+  агент `system/agents/code-coordinator` (read-only). Поверх топологии обходит
+  связанные проекты, перечисляя только git-отслеживаемые файлы (`git ls-files` —
+  уважает `.gitignore`/`.git/info/exclude`, секреты и вендор/генерёжку не читает),
+  и ищет по семи критериям: дубли между репо, расходящиеся реализации одного
+  концепта, дрейф от реестра скиллов, копия-вместо-зависимости, расхождение
+  конвенций/документации/зависимостей. Критерии переиспользуют `quality/`-скиллы
+  (tech-debt-audit, refactoring-plan, code-simplifier, code-review). Выдаёт
+  приоритизированный (impact×effort) отчёт с `file:line` по проектам и named
+  extraction target; правок/PR не делает. `requires: local-topology`
 - **Топология локальной среды** — корневой узел системы. Новый бакет `system`
   со скиллом `local-topology` (раздаётся всем проектам: добавлен в профили
   laravel-project/php-package/obsidian-vault), команда `swissknifeman topology

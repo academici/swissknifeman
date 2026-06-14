@@ -72,8 +72,19 @@ if [[ "$GLOBAL" -eq 1 ]]; then
     chmod +x "$AA_DST/auto-approve.sh" "$AA_DST/modes/"*.sh
     [[ -f "$AA_DST/env.ini" ]]    || cp "$AA_SRC/env.ini" "$AA_DST/"
     [[ -f "$AA_DST/config.json" ]] || cp "$AA_SRC/config.json" "$AA_DST/"
-    echo "Установлено глобально: log-bash-command + notify (активны) + файлы auto-approve/ (НЕ активен)."
-    echo "auto-approve включается ПО ПРОЕКТУ: добавь хук в <project>/.claude/settings.json (см. README)."
+    # Папка memory (единая память): код/lib/modes — обновляем; env.ini и
+    # config.json — не перезатираем (там режим и состав групп пользователя).
+    MM_SRC="$PRESETS_DIR/hooks/memory"; MM_DST="$HOME/.claude/hooks/memory"
+    mkdir -p "$MM_DST/lib" "$MM_DST/modes"
+    cp "$MM_SRC/memory.sh" "$MM_DST/"
+    cp "$MM_SRC/lib/"*.sh "$MM_DST/lib/"
+    cp "$MM_SRC/modes/"*.sh "$MM_DST/modes/"
+    cp "$MM_SRC/CREDITS.md" "$MM_DST/"
+    chmod +x "$MM_DST/memory.sh" "$MM_DST/modes/"*.sh
+    [[ -f "$MM_DST/env.ini" ]]    || cp "$MM_SRC/env.ini" "$MM_DST/"
+    [[ -f "$MM_DST/config.json" ]] || cp "$MM_SRC/config.json" "$MM_DST/"
+    echo "Установлено глобально: log-bash-command + notify (активны) + файлы auto-approve/ и memory/ (НЕ активны)."
+    echo "auto-approve и memory включаются ПО ПРОЕКТУ / по вызову (см. README)."
   fi
 fi
 

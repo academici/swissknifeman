@@ -169,6 +169,18 @@
         "cto",
         "maintainer"
       ]
+    },
+    {
+      "name": "system",
+      "source": "./skills/system",
+      "description": "Local environment topology: the three hub nodes (Brain vault, swissknifeman, projects base) and how agents navigate between projects and their docs",
+      "category": "meta",
+      "tags": [
+        "topology",
+        "architecture",
+        "navigation",
+        "meta"
+      ]
     }
   ]
 }

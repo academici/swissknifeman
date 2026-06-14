@@ -73,6 +73,11 @@
       "description": "Personas: tech lead, startup CTO, solo founder, open-source maintainer",
       "count": 4,
       "status": "active"
+    },
+    "system": {
+      "description": "Local environment topology: the three hub nodes (Brain vault, swissknifeman, projects base) and how agents navigate between projects and their docs",
+      "count": 1,
+      "status": "active"
     }
   },
   "skills": [
@@ -2041,6 +2046,21 @@
       "tags": [
         "role",
         "persona"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "local-topology",
+      "bucket": "system",
+      "path": "skills/system/local-topology/SKILL.md",
+      "version": "0.1.0",
+      "description": "Корневая карта локальной среды разработки — три узла-хаба (Brain-волт, swissknifeman, база проектов) и навигация между проектами, их кодом и документацией. Читается из ~/.swissknifeman/topology.json",
+      "sha256": "47b98874e70cfe15f9da14d88c31d33bf58e05b0f2367cbf55528e733fe6ece4",
+      "tags": [
+        "topology",
+        "architecture",
+        "navigation",
+        "meta"
       ],
       "source": "local"
     }

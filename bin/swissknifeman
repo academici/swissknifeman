@@ -12,6 +12,7 @@
 #   update    обновить подключение/вендоринг текущего проекта (--all: все)
 #   status    отчёт по текущему проекту (read-only)
 #   list      зарегистрированные проекты (~/.swissknifeman/projects.json)
+#   topology  карта локальной среды (init|show) — ~/.swissknifeman/topology.json
 #
 # Команды мейнтейнера (работают с самим реестром):
 #   registry  регенерировать skills.json + плагин-манифесты + граф
@@ -52,7 +53,7 @@ case "$CMD" in
     sha="$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
     echo "swissknifeman $sha ($REPO_ROOT)"
     exit 0 ;;
-  connect|vendor|update|status|list|registry|doctor) ;;
+  connect|vendor|update|status|list|registry|doctor|topology) ;;
   *) echo "Неизвестная команда: $CMD" >&2; usage >&2; exit 1 ;;
 esac
 

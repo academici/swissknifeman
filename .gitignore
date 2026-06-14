@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+node_modules/
+data/*
+!data/.gitkeep
+.env
+.maind.json
+docs/.vitepress/dist/
+docs/.vitepress/cache/
+.claude/settings.json

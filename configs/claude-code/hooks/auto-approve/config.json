@@ -38,7 +38,8 @@
   "$comment_deny": "deny_hard => активный DENY (катастрофично). deny_block_approve => fall-through на обычный промпт (мутация, но решаешь сам).",
 
   "deny_hard": [
-    "(^|[^[:alnum:]_/.-])(sudo|doas|rm|rmdir|shred|mkfs|mkswap|reboot|shutdown|poweroff|halt|init|fdisk|parted)([[:space:]]|$)",
+    "(^|[^[:alnum:]_/.-])(sudo|doas|rm|rmdir|shred|mkfs|mkswap|reboot|shutdown|poweroff|halt|fdisk|parted)([[:space:]]|$)",
+    "(^|[^[:alnum:]_/.-])(telinit|init)[[:space:]]+[0-6sS]([[:space:]]|$)",
     "(^|[^[:alnum:]_/.-])dd[[:space:]]+[^|;&]*(of=|if=/dev/)",
     ":[[:space:]]*\\(\\)[[:space:]]*\\{[^}]*:[^}]*\\|",
     "\\|[[:space:]]*(ba|z|k)?sh([[:space:]]|$)",
@@ -48,7 +49,7 @@
   "deny_block_approve": [
     ">>|[^0-9&]>[[:space:]]*[^&[:space:]]|>[[:space:]]*[^&[:space:]/]",
     "(^|[^[:alnum:]_/.-])(mv|cp|ln|tee|truncate|unlink|chmod|chown|chgrp|setfacl|eval|exec|source|kill|pkill|killall|nc|ncat|netcat|telnet|ssh|scp|rsync|sftp|mount|umount|crontab|at|systemctl|service|launchctl|iptables|nft|ufw)([[:space:]]|$)",
-    "git[[:space:]]+(push|reset|clean|rebase|filter-branch|filter-repo|commit|add|stash|merge|cherry-pick|am|apply|revert|gc|prune|tag|update-ref|config|remote|fetch|pull|init)",
+    "git[[:space:]]+(push|reset|clean|rebase|filter-branch|filter-repo|commit|add|stash|merge|cherry-pick|am|apply|revert|gc|prune|tag|update-ref|config|remote|fetch|pull|init|rm)",
     "gh[[:space:]]+(auth|config|alias|extension|gist|codespace|secret|ssh-key|gpg-key|release|workflow)",
     "gh[[:space:]]+(pr|issue)[[:space:]]+(merge|close|create|edit|comment|review|ready|reopen|delete|lock|unlock)",
     "gh[[:space:]]+repo[[:space:]]+(create|delete|fork|edit|rename|archive|sync|clone)",

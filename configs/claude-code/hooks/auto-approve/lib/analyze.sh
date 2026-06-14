@@ -125,8 +125,14 @@ run_bash_analysis() {
   local mode="$1"
   local scan; scan="$(_normalize "$HOOK_CMD")"
 
+  # git rm обратим (файлы в индексе/истории) — не катастрофа: маскируем "git rm",
+  # чтобы общий rm-паттерн deny_hard его не ловил. Голый rm / xargs rm / rm -rf
+  # остаются под deny_hard; git rm учитывается как мутация (deny_block_approve).
+  local scan_dh; scan_dh="$(printf '%s' "$scan" \
+    | sed -E 's/(^|[^[:alnum:]_/.-])git[[:space:]]+rm([[:space:]]|$)/\1git-rm\2/g')"
+
   # 1) deny_hard => активный DENY (катастрофично) — во всех режимах.
-  _match_any "$scan" "${DENY_HARD[@]}" \
+  _match_any "$scan_dh" "${DENY_HARD[@]}" \
     && emit_deny "Заблокировано: опасная операция (deny_hard). Выполните вручную при необходимости."
 
   # bypass: одобряем всё, что не катастрофично.

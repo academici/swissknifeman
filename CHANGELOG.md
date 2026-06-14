@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **auto-approve: ложные `deny_hard` на `git rm` и `*-init`** — общий токен `rm`
+  ловил `git rm` (обратим, файлы в индексе/истории), а токен `init` — `git init`/
+  `npm init`/`composer init`/`swissknifeman topology init`. Теперь `analyze.sh`
+  маскирует `git rm` перед deny_hard-проверкой (голый `rm`/`xargs rm`/`rm -rf`
+  по-прежнему блокируются; `git rm` идёт как мутация — промпт в strict/permissive,
+  разрешён в bypass), а `init` убран из общего списка и заменён точечным паттерном
+  рантлевела (`telinit`/`init [0-6sS]`). `git rm` добавлен в `deny_block_approve`.
+  Файлы хука обновляются `apply-permissions.sh --global` (для `config.json` —
+  перезалить вручную, т.к. он не перезатирается)
+
 ### Added
 
 - **Экстракция универсальных скиллов из flexcrm** (источник: local, авторские):

@@ -53,11 +53,27 @@ if [[ "$GLOBAL" -eq 1 ]]; then
   TARGET="$HOME"
   SETTINGS_FILE="settings.json"
   PRESETS="${PRESETS:-global}"
-  mkdir -p "$HOME/.claude/hooks"
+  mkdir -p "$HOME/.claude/hooks/auto-approve"
   if [[ "$DRY_RUN" -eq 0 ]]; then
     cp "$PRESETS_DIR/hooks/log-bash-command.sh" "$HOME/.claude/hooks/"
     chmod +x "$HOME/.claude/hooks/log-bash-command.sh"
-    echo "Hook установлен: ~/.claude/hooks/log-bash-command.sh"
+    # notify: ОС-уведомления на запрос подтверждения / утверждения плана
+    mkdir -p "$HOME/.claude/hooks/notify"
+    cp "$PRESETS_DIR/hooks/notify/notify.sh" "$HOME/.claude/hooks/notify/"
+    chmod +x "$HOME/.claude/hooks/notify/notify.sh"
+    # Папка auto-approve: код/lib/modes — обновляем; env.ini и config.json —
+    # не перезатираем (там выбор режима и кастомизация пользователя).
+    AA_SRC="$PRESETS_DIR/hooks/auto-approve"; AA_DST="$HOME/.claude/hooks/auto-approve"
+    mkdir -p "$AA_DST/lib" "$AA_DST/modes"
+    cp "$AA_SRC/auto-approve.sh" "$AA_DST/"
+    cp "$AA_SRC/lib/"*.sh "$AA_DST/lib/"
+    cp "$AA_SRC/modes/"*.sh "$AA_DST/modes/"
+    cp "$AA_SRC/CREDITS.md" "$AA_DST/"
+    chmod +x "$AA_DST/auto-approve.sh" "$AA_DST/modes/"*.sh
+    [[ -f "$AA_DST/env.ini" ]]    || cp "$AA_SRC/env.ini" "$AA_DST/"
+    [[ -f "$AA_DST/config.json" ]] || cp "$AA_SRC/config.json" "$AA_DST/"
+    echo "Установлено глобально: log-bash-command + notify (активны) + файлы auto-approve/ (НЕ активен)."
+    echo "auto-approve включается ПО ПРОЕКТУ: добавь хук в <project>/.claude/settings.json (см. README)."
   fi
 fi
 

@@ -15,6 +15,7 @@
       "Bash(file *)",
       "Bash(diff *)",
       "Bash(stat *)",
+      "Bash(test *)",
       "Bash(du *)",
       "Bash(jq *)",
       "Bash(sort *)",
@@ -37,6 +38,7 @@
       "Bash(gh pr list *)",
       "Bash(gh issue list *)",
       "Bash(mkdir *)",
+      "Bash(rmdir *)",
       "Bash(cp *)",
       "Bash(mv *)",
       "Bash(touch *)",
@@ -73,6 +75,16 @@
           {
             "type": "command",
             "command": "~/.claude/hooks/log-bash-command.sh"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/notify/notify.sh"
           }
         ]
       }

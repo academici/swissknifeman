@@ -15,6 +15,7 @@
 #   swissknifeman connect    # Claude Code (plugin marketplace)
 #   swissknifeman vendor     # Cursor и другие агенты (копирование скиллов)
 #   swissknifeman update     # обновить подключение текущего проекта
+#   swissknifeman topology   # карта локальной среды (init|show) — предлагается при установке
 #
 # Репозиторий переехал? Просто перезапустите ./install.sh из нового места.
 set -euo pipefail
@@ -64,6 +65,14 @@ if [[ -e "$LINK" || -L "$LINK" ]]; then
 fi
 ln -sfn "$CLI" "$LINK"
 echo "Установлено: $LINK -> $CLI"
+
+# Карта локальной среды (~/.swissknifeman/topology.json) — машинно-специфична
+# (пути к Brain-волту, swissknifeman и базе проектов), поэтому создаётся
+# интерактивно, а не сидится молча. Предлагаем настроить сразу при наличии TTY.
+if [[ ! -f "$HOME/.swissknifeman/topology.json" && -t 0 ]]; then
+  read -r -p "Настроить карту локальной среды (swissknifeman topology init)? [y/N] " ans
+  [[ "$ans" =~ ^[yY] ]] && "$CLI" topology init || true
+fi
 
 case ":$PATH:" in
   *":$BIN_DIR:"*) ;;

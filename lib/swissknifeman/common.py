@@ -47,6 +47,10 @@ class Env:
     def db_file(self):
         return self.state_dir / "projects.json"
 
+    @property
+    def topology_file(self):
+        return self.state_dir / "topology.json"
+
 
 def die(msg):
     print(f"ERROR: {msg}", file=sys.stderr)

@@ -151,7 +151,7 @@ flowchart LR
 
 **В графе:** 55 скиллов, 37 рёбер requires, 27 рёбер produces_for.
 
-## Изолированные скиллы (71)
+## Изолированные скиллы (72)
 
 Скиллы без связей `requires`/`produces_for` — самодостаточны.
 
@@ -167,3 +167,4 @@ flowchart LR
 | python | `ml-project-structure`, `venv-dependencies` |
 | quality | `code-simplifier` |
 | roles | `open-source-maintainer`, `solo-founder`, `startup-cto`, `tech-lead` |
+| system | `local-topology` |

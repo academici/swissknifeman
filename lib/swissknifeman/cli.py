@@ -7,6 +7,7 @@ from .doctor import cmd_doctor
 from .listing import cmd_list
 from .registry import cmd_registry
 from .status import cmd_status
+from .topology import cmd_topology
 from .update import cmd_update
 from .vendor import cmd_vendor
 
@@ -18,6 +19,7 @@ COMMANDS = {
     "list": cmd_list,
     "registry": cmd_registry,
     "doctor": cmd_doctor,
+    "topology": cmd_topology,
 }
 
 

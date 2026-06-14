@@ -36,6 +36,7 @@ export default withMermaid(defineConfig({
             { text: 'Граф зависимостей', link: '/guide/graph' },
             { text: 'Сканер сниппетов', link: '/guide/scanner' },
             { text: 'CI/CD', link: '/guide/ci' },
+            { text: 'Диагностика и обновление', link: '/guide/troubleshooting' },
           ],
         },
         {

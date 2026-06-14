@@ -1,5 +1,10 @@
 # academici/swissknifeman
 
+[![Tests](https://github.com/academici/swissknifeman/actions/workflows/test.yml/badge.svg)](https://github.com/academici/swissknifeman/actions/workflows/test.yml)
+[![Validate](https://github.com/academici/swissknifeman/actions/workflows/validate.yml/badge.svg)](https://github.com/academici/swissknifeman/actions/workflows/validate.yml)
+[![Docs](https://github.com/academici/swissknifeman/actions/workflows/docs.yml/badge.svg)](https://academici.github.io/swissknifeman/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 > Универсальный личный реестр AI-скиллов и сниппетов: один источник истины,
 > установка в любой проект и любую IDE, отслеживание внешних источников.
 
@@ -274,5 +279,17 @@ swissknifeman registry                         # пересобрать реес
 |----------|------------|
 | `validate.yml` | `scripts/validate.sh`: frontmatter, upstream.json, profiles, манифесты |
 | `upstream-sync.yml` | Еженедельная проверка апстримов → PR с диффом |
+| `test.yml` | `scripts/test.sh` на матрице Python 3.9–3.12 |
 | `sha256-update.yml` | Пересчёт хешей реестра при пуше |
 | `scanner-pr.yml` | Еженедельный PR от сканера |
+
+## Безопасность
+
+Политика и порядок раскрытия уязвимостей — в [SECURITY.md](SECURITY.md)
+(модель доверия импортируемых скиллов, sha256 в `upstream.json`, правило «нет
+секретов в snippets»).
+
+## Лицензия
+
+[MIT](LICENSE) © Dmitry Vostrikov. Внешние (imported) скиллы сохраняют лицензии
+своих источников — см. `upstream.json` рядом с каждым.

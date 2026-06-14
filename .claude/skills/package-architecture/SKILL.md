@@ -44,9 +44,21 @@ connect/vendor/update; диск всегда источник истины, за
 
 Команды: `connect`, `vendor`, `update [--all]` (детект каналов по маркерам,
 adopt незарегистрированных, починка path-drift marketplace), `status`, `list
-[--prune]`, `registry` (мейнтейнер), `validate`, `doctor`, `version`. Корень
-проекта ищется вверх от CWD: `.swissknife.json` → `.claude/` → `.git`.
-Внутри самого реестра project-команды отказываются работать.
+[--prune]`, `topology [init|show]`, `registry` (мейнтейнер), `validate`,
+`doctor`, `version`. Корень проекта ищется вверх от CWD: `.swissknife.json` →
+`.claude/` → `.git`. Внутри самого реестра project-команды отказываются работать.
+Лаунчер `bin/swissknifeman` whitelist'ит команды в `case` — новую команду
+добавлять и в `COMMANDS` (`lib/swissknifeman/cli.py`), и в `case`.
+
+**Топология (`topology`, `lib/swissknifeman/topology.py`).** Глобальная карта
+локальной среды `~/.swissknifeman/topology.json` (version 1): три узла-хаба
+`brain`/`swissknifeman`/`projects_base` (роли `docs-hub`/`skills-hub`/`workspace`).
+`init` — интерактивный сбор (авто-детект дефолтов: swissknifeman = корень реестра,
+projects_base = общий предок путей из `projects.json`, brain = `~/Vaults/Brain`),
+атомарная запись с бэкапом `.bak`, сохранение `created_at`. `show [--json]` —
+печать. Файл машинно-специфичен, в проекты не коммитится. Предлагается при
+`install.sh` (TTY). Раздаваемый скилл `skills/system/local-topology` объясняет
+схему и резолвит узлы по этому файлу.
 
 `scripts/connect-claude.sh` и `sync.sh` — deprecation-wrapper'ы на один релиз.
 Brain-sync удалён: brain — обычный потребляющий проект.

@@ -1,6 +1,6 @@
 {
   "name": "laravel-project",
   "description": "Large Laravel application development",
-  "buckets": ["architect", "php", "devops", "quality", "operator"],
+  "buckets": ["system", "architect", "php", "devops", "quality", "operator"],
   "include_meta": false
 }

@@ -16,6 +16,7 @@ AGENT_DEFAULTS = {"claude": ".claude/skills", "cursor": ".cursor/skills",
 CONFIG_KEYS = {
     "project_type": str, "buckets": list, "exclude": list,
     "skills_path": str, "agent": str,
+    "memory_brain": str, "coordinator_ignore": list,
 }
 HUB_MARKER = "<!-- swissknifeman:hub:start -->"
 

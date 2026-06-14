@@ -15,6 +15,16 @@
   `update` удаляют ранее вендоренные скиллы, выпавшие из набора реестра, включая
   **незакоммиченные** локальные копии — проектные скиллы держать в git; превью
   удаляемого — `--dry-run`. (Острый угол, всплывший при онбординге flexcrm)
+- **Визард интеграции `swissknifeman integrate`** (`lib/swissknifeman/integrate.py`)
+  + [чеклист](docs/guide/integration-checklist.md) — единая точка входа: проходит
+  чеклист «выбери, что хочешь из максимального функционала» и применяет выбранное,
+  переиспользуя `do_connect`/`do_vendor` (скиллы), `apply-permissions.sh` (permissions),
+  `generate_hub` (hub) + пишет per-project hook-JSON (auto-approve на PreToolUse
+  Bash/ExitPlanMode) и `.swissknife.json:memory_brain` (членство в memory-brain).
+  Бандлы `minimal|recommended|full|custom`; безопасно — `--dry-run`, merge-only с
+  бэкапами `*.bak`, идемпотентно, пререквизиты (`topology init`, `--global`) только
+  с подтверждением. Зарегистрирован в `cli.py`/лаунчере; тесты `tests/test_integrate.py`.
+  В `CONFIG_KEYS` добавлены `memory_brain`/`coordinator_ignore` (валидны в `.swissknife.json`)
 
 - **Гибкая «единая память» констелляции** — самодостаточная папка-хук
   `configs/claude-code/hooks/memory/` по образцу auto-approve: переключатель

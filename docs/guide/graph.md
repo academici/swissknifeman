@@ -86,6 +86,7 @@ flowchart LR
   subgraph system["system"]
     cross_project_coordinator["cross-project-coordinator"]
     local_topology["local-topology"]
+    shared_memory["shared-memory"]
   end
   agent_design -->|requires| architecture
   api_design -->|requires| data_schema
@@ -124,6 +125,7 @@ flowchart LR
   release_engineering -->|requires| oss_development
   requirement_critic -->|requires| brd
   security_design -->|requires| architecture
+  shared_memory -->|requires| local_topology
   tech_stack_selection -->|requires| brd
   architecture -.->|feeds| api_design
   architecture -.->|feeds| data_schema
@@ -154,7 +156,7 @@ flowchart LR
   test_strategy -.->|feeds| code_review
 ```
 
-**В графе:** 57 скиллов, 38 рёбер requires, 27 рёбер produces_for.
+**В графе:** 58 скиллов, 39 рёбер requires, 27 рёбер produces_for.
 
 ## Изолированные скиллы (71)
 

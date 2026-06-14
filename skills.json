@@ -76,7 +76,7 @@
     },
     "system": {
       "description": "Local environment topology: the three hub nodes (Brain vault, swissknifeman, projects base) and how agents navigate between projects and their docs",
-      "count": 2,
+      "count": 3,
       "status": "active"
     }
   },
@@ -2080,6 +2080,24 @@
         "architecture",
         "navigation",
         "meta"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "shared-memory",
+      "bucket": "system",
+      "path": "skills/system/shared-memory/SKILL.md",
+      "version": "0.1.0",
+      "description": "Единый «мозг» (общая память) для выбранных проектов констелляции через хук ~/.claude/hooks/memory/. Recall перед работой, remember после — факты делятся только между участниками одной группы (brain). Бэкенд сменный: file|federation|agentmemory|off, переопределяется конфигом.",
+      "sha256": "20b4ef35902933f2e3c9ba599ffb61f146e7cb7e12783352366af8315a4b8b8f",
+      "tags": [
+        "memory",
+        "cross-project",
+        "topology",
+        "recall"
+      ],
+      "requires": [
+        "local-topology"
       ],
       "source": "local"
     }

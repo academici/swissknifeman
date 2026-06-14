@@ -1,0 +1,65 @@
+{
+  "$comment": "Конструкции для auto-approve хука (lib/analyze.sh). В коде только логика — все списки и паттерны здесь. Per-project override: <project>/.claude/auto-approve.config.json.",
+
+  "trust_inline_interpreters": true,
+  "use_shfmt_ast": true,
+
+  "inline_interpreters": ["python", "python3", "node", "deno", "ruby", "perl", "php"],
+
+  "allow": [
+    "ls", "cat", "head", "tail", "wc", "stat", "file", "find", "grep", "egrep",
+    "fgrep", "rg", "ag", "tree", "which", "type", "whereis", "pwd", "basename",
+    "dirname", "realpath", "readlink", "date", "sleep", "test", "true", "false",
+    "sort", "uniq", "cut", "tr", "comm", "diff", "cmp", "od", "xxd", "hexdump",
+    "nl", "tac", "column", "fold", "fmt", "expand", "unexpand", "paste", "join",
+    "seq", "yes", "printf", "echo", "jq", "yq", "awk", "sed", "cd", "pushd",
+    "popd", "dirs", "env", "printenv", "id", "whoami", "hostname", "uname",
+    "uptime", "df", "du", "free", "ps", "grep"
+  ],
+
+  "subcommand_read": {
+    "git": [
+      "log", "diff", "status", "show", "branch", "ls-files", "rev-parse",
+      "describe", "blame", "cat-file", "for-each-ref", "shortlog", "ls-remote",
+      "reflog", "whatchanged", "name-rev", "count-objects", "rev-list",
+      "symbolic-ref", "version", "help"
+    ],
+    "docker": [
+      "ps", "logs", "inspect", "images", "version", "info", "top", "port",
+      "stats", "events", "history", "diff"
+    ]
+  },
+
+  "gh": {
+    "read_verbs": ["view", "list", "checks", "diff", "status", "get"],
+    "read_nouns_any": ["api", "search"]
+  },
+
+  "$comment_deny": "deny_hard => активный DENY (катастрофично). deny_block_approve => fall-through на обычный промпт (мутация, но решаешь сам).",
+
+  "deny_hard": [
+    "(^|[^[:alnum:]_/.-])(sudo|doas|rm|rmdir|shred|mkfs|mkswap|reboot|shutdown|poweroff|halt|init|fdisk|parted)([[:space:]]|$)",
+    "(^|[^[:alnum:]_/.-])dd[[:space:]]+[^|;&]*(of=|if=/dev/)",
+    ":[[:space:]]*\\(\\)[[:space:]]*\\{[^}]*:[^}]*\\|",
+    "\\|[[:space:]]*(ba|z|k)?sh([[:space:]]|$)",
+    ">[[:space:]]*/dev/(sd|nvme|disk|mmcblk)"
+  ],
+
+  "deny_block_approve": [
+    ">>|[^0-9&]>[[:space:]]*[^&[:space:]]|>[[:space:]]*[^&[:space:]/]",
+    "(^|[^[:alnum:]_/.-])(mv|cp|ln|tee|truncate|unlink|chmod|chown|chgrp|setfacl|eval|exec|source|kill|pkill|killall|nc|ncat|netcat|telnet|ssh|scp|rsync|sftp|mount|umount|crontab|at|systemctl|service|launchctl|iptables|nft|ufw)([[:space:]]|$)",
+    "git[[:space:]]+(push|reset|clean|rebase|filter-branch|filter-repo|commit|add|stash|merge|cherry-pick|am|apply|revert|gc|prune|tag|update-ref|config|remote|fetch|pull|init)",
+    "gh[[:space:]]+(auth|config|alias|extension|gist|codespace|secret|ssh-key|gpg-key|release|workflow)",
+    "gh[[:space:]]+(pr|issue)[[:space:]]+(merge|close|create|edit|comment|review|ready|reopen|delete|lock|unlock)",
+    "gh[[:space:]]+repo[[:space:]]+(create|delete|fork|edit|rename|archive|sync|clone)",
+    "gh[[:space:]]+api[[:space:]]+[^|;&]*(-X|--method|-f[[:space:]]|--field|--input)",
+    "docker[[:space:]]+(rm|rmi|prune|kill|stop|start|restart|exec|run|build|push|pull|tag|commit|login|volume|network|system|compose)",
+    "compose[[:space:]]+(up|down|build|run|exec|restart|stop|start)",
+    "(npm|pnpm)[[:space:]]+(install|i|ci|add|update|publish|uninstall|remove|run|exec|dlx)",
+    "yarn[[:space:]]+(add|remove|install|up|upgrade|dlx)",
+    "pip[0-9]?[[:space:]]+(install|uninstall)",
+    "composer[[:space:]]+(install|update|require|remove|dump|dump-autoload)",
+    "(^|[^[:alnum:]_/.-])(apt|apt-get|dpkg|yum|dnf|zypper|pacman|apk|brew|snap|gem|cargo|go|make|kubectl|helm|terraform|aws|gcloud|az)([[:space:]]|$)",
+    "sed[[:space:]]+[^|;&]*-i"
+  ]
+}

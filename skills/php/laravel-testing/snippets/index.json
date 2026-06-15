@@ -31,6 +31,17 @@
       ]
     },
     {
+      "file": "pest-composition.php",
+      "description": "Композиция Pest: setUp-трейты ActsAsUser/SeedsUserRoles, тонкий TestCase через use, beforeEach с preventStrayRequests/Sleep::fake/freezeTime для Feature и Unit, кастомный expectation, именованный и инлайн датасеты ->with() поверх фабрик Eloquent",
+      "tags": [
+        "pest",
+        "testing",
+        "composition",
+        "traits",
+        "dataset"
+      ]
+    },
+    {
       "file": "pest-testing.md",
       "description": "Написание и правка тестов Pest (Feature/Unit), отладка падений",
       "tags": [

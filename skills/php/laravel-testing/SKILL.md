@@ -1,15 +1,15 @@
 ---
 name: laravel-testing
 bucket: php
-version: 0.3.0
-description: "Feature/unit/pest testing patterns: изоляция тестовой БД, детект Docker/локального окружения, coverage gate"
+version: 0.4.1
+description: "Feature/unit/pest testing patterns: изоляция тестовой БД, детект Docker/локального окружения, coverage gate, композиция Pest (setUp-трейты, фикстуры, beforeEach fake/freeze, датасеты)"
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "testing"]
 requires: []
 produces_for: []
 outputs: []
-snippets: ["feature-test.php", "unit-test.php", "factory-pattern.php", "pest-test.php", "pest-testing.md", "testing-rules.md", "testing-safety-report.md", "phpunit.xml", "coverage-gate-config.php", "check-coverage-gate.php", "composer-test-scripts.json"]
+snippets: ["feature-test.php", "unit-test.php", "factory-pattern.php", "pest-test.php", "pest-composition.php", "pest-testing.md", "testing-rules.md", "testing-safety-report.md", "phpunit.xml", "coverage-gate-config.php", "check-coverage-gate.php", "composer-test-scripts.json"]
 adapters: [claude, cursor, fable]
 sha256: ""
 ---
@@ -17,6 +17,8 @@ sha256: ""
 ## Контекст
 
 Тестирование Laravel-приложений (Pest/PHPUnit): паттерны Feature/Unit-тестов, безопасная изоляция тестовой БД от рабочей, детект окружения (Docker vs локальный PHP), порог покрытия (coverage gate) для CI. Базовые ожидания: **Feature по умолчанию**, Unit — только для чистой логики без БД; ассерты про поведение (HTTP-код, состояние БД, уведомления), а не про внутреннюю реализацию; данные — через фабрики моделей.
+
+**Когда активировать**: пишу или правлю тесты Laravel (`tests/Feature`, `tests/Unit`, `*Test.php`, Pest `it()/test()`); настраиваю `phpunit.xml`, изоляцию тестовой БД, фабрики моделей; собираю coverage gate в CI; запускаю `php artisan test` / `vendor/bin/pest` и нужно определить окружение (Docker vs локально); переиспользую setUp-логику через трейты/`beforeEach`/датасеты. Не активировать для архитектуры приложения (скилл `laravel`) и общей стратегии пирамиды (скилл `quality/test-strategy`).
 
 **Laravel Boost**: синтаксис и приёмы Pest — Boost-скилл pest-testing; здесь — изоляция тестовой БД, coverage gate и окружение. Пакет: https://github.com/laravel/boost (скиллы — `vendor/laravel/boost/.ai/`).
 
@@ -67,6 +69,79 @@ protected function assertIsolatedTestDatabase(): void
 - Скрипт-гейт читает `coverage/clover.xml` после `php artisan test --coverage --coverage-clover=...`, режимы `COVERAGE_GATE_MODE=report|soft|hard` — сниппет `check-coverage-gate.php`.
 - Composer-конвейер: `test` (config:clear → lint:check → artisan test), `test:coverage`, `test:coverage:clover`, `test:coverage:gate`, `test:critical` (поимённый список критичных сьютов) — сниппет `composer-test-scripts.json`.
 
+## Композиция Pest: трейты + фикстуры
+
+Boost владеет базовым синтаксисом Pest (тест, `expect`, навигация по `pest()`). Здесь — **дельта**: как переиспользовать setUp-логику и держать сьют детерминированным **композицией, а не наследованием**. Не плоди подклассы `TestCase` (`AdminTestCase`, `ApiTestCase`, `OrderTestCase`) — глубокая иерархия хрупкая и тащит лишнее в каждый тест. Собирай поведение из мелких трейтов и хелперов.
+
+### 1. Переиспользуемые setUp-трейты (concerns) вместо подклассов
+
+Каждый кусок повторяющегося префикса теста — отдельный трейт в `tests/Support/Concerns/` с **узкой ответственностью**:
+
+- `ActsAsUser` — `makeUserWithRole($role)` / `actingAsRole($role)`: создать пользователя фабрикой, назначить роль, авторизовать. Убирает копипасту «создал юзера → assignRole → actingAs» из десятков тестов.
+- `SeedsUserRoles` (или `SeedsLookupData`) — `seedUserRoles()`: загрузить узкий справочник (роли/статусы/типы), на который завязаны ассерты доступа; не дублирует общий `DatabaseSeeder`.
+
+`TestCase` остаётся тонким и **подключает трейты**, а не наследует поведение через цепочку классов:
+
+```php
+// tests/TestCase.php
+abstract class TestCase extends BaseTestCase
+{
+    use ActsAsUser;       // хелперы доступа
+    use SeedsUserRoles;   // справочник ролей
+    // + guard изоляции тестовой БД (см. секцию выше)
+}
+```
+
+Хелперы трейтов доступны во **всех Pest-замыканиях** автоматически — Pest биндит замыкание на класс `TestCase`, так что `$this->actingAsRole(...)` работает внутри `it(...)`. Новая потребность — новый трейт, а не новый подкласс. Где конкретное поведение нужно лишь части сьютов — подключай трейт в `Pest.php` точечно: `pest()->extend(TestCase::class)->use(SeedsLookupData::class)->in('Feature/Admin')`.
+
+### 2. Единая гигиена окружения через `beforeEach` в `tests/Pest.php`
+
+Детерминизм сети и времени задаётся **один раз на директорию**, а не повторяется в каждом файле. Привязка к папкам через `->in('Feature')` / `->in('Unit')`:
+
+```php
+pest()->extend(Tests\TestCase::class)
+    ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)   // только Feature
+    ->beforeEach(function () {
+        Str::createRandomStringsNormally();   // сброс возможного фейка из прошлого теста
+        Str::createUuidsNormally();
+        Http::fake(['127.0.0.1:5173/*' => Http::response('')]);   // гасим dev-ассеты
+        Http::preventStrayRequests();         // любой неподделанный HTTP = падение
+        Sleep::fake();                        // sleep() в коде не тормозит прогон
+        $this->freezeTime();                  // Carbon::now() заморожен
+    })
+    ->in('Feature');
+```
+
+Три кита детерминизма: **`Http::preventStrayRequests()`** превращает молчаливый поход во внешний API в явное падение; **`Sleep::fake()`** убирает реальные паузы; **`freezeTime()`** стабилизирует ассерты времени. Для `Unit` — тот же блок, но **без** `RefreshDatabase` (чистая логика без БД). Кастомные `expect()->extend(...)` и глобальные хелперы тоже живут в `Pest.php` — расширение API вместо наследования.
+
+### 3. Датасеты `->with()` — параметризация вместо копипасты тел
+
+Один сценарий × множество входов задаётся датасетом, а не N почти одинаковыми тестами. Именованный `dataset()` (ключи строками) делает вывод падений читабельным (`with data set "orders.cancel"`):
+
+```php
+dataset('order_guest_endpoints', [
+    'cancel'  => ['orders.cancel', ['reason' => 'duplicate']],
+    'confirm' => ['orders.confirm', []],
+]);
+
+it('закрывает endpoint от гостя', function (string $route, array $payload) {
+    $order = Order::factory()->pending()->create();   // фабрика Eloquent + states
+    $this->post(route($route, $order), $payload)->assertRedirect(route('login'));
+})->with('order_guest_endpoints');
+```
+
+Локальный набор — инлайн `->with([...])` прямо в тесте; общий, переиспользуемый между файлами — именованный `dataset()`. Данные всегда через **фабрики моделей** (`Model::factory()->state()->create()`) и фабрики-хелперы тестов (`tests/Support/Factories/`), собирающие связный граф (`Order` + участники + позиции), — не через ручные `INSERT` и не через хардкод id.
+
+### Граница с Boost
+
+| Тема | Где |
+|:---|:---|
+| Базовый Pest: `it/test`, `expect`, `pest()`, навигация по тесту | Boost-скилл `pest-testing` |
+| Изоляция тестовой БД, coverage gate, Docker/локальный детект | этот скилл, секции выше |
+| Композиция: setUp-трейты, фикстуры, `beforeEach` fake/freeze, датасеты | **этот скилл, эта секция** |
+
+Полный пример (два concern-трейта, `Pest.php` с `beforeEach` для Feature и Unit, кастомный expectation, именованный и инлайн датасеты) — сниппет `pest-composition.php`.
+
 ## Когда какой сниппет открывать
 
 | Ситуация | Файл |
@@ -75,6 +150,7 @@ protected function assertIsolatedTestDatabase(): void
 | Пишу Unit-тест чистой логики без БД | `unit-test.php` |
 | Нужна фабрика модели / states | `factory-pattern.php` |
 | Пишу тест в Pest-синтаксисе | `pest-test.php` |
+| Переиспользую setUp-трейты/фикстуры, `beforeEach` fake/freeze, датасеты `->with()` | `pest-composition.php` |
 | Сценарий работы агента с Pest, выбор Feature/Unit, отладка падений | `pest-testing.md` |
 | Перед запуском тестов: Docker vs локально, таблица команд, запреты | `testing-rules.md` |
 | Разбираюсь, как устроена изоляция БД, создание `<app>_test` | `testing-safety-report.md` |
@@ -92,6 +168,9 @@ protected function assertIsolatedTestDatabase(): void
 - [ ] Режим (Docker/локально) определён по `DB_HOST`, команды запущены из того же окружения
 - [ ] Feature по умолчанию; Unit — чистая логика; данные через фабрики; ассерты поведенческие
 - [ ] Coverage gate подключён в CI: общий ≥ 70%, критические пути ≥ 55%
+- [ ] Повторяющийся setUp вынесен в трейт `tests/Support/Concerns/`, а не в новый подкласс `TestCase` (композиция, не наследование)
+- [ ] `Pest.php`: `beforeEach` с `Http::preventStrayRequests()` + `Sleep::fake()` + `freezeTime()`; `RefreshDatabase` только в Feature
+- [ ] Множественные входы — через `->with()`/`dataset()`, а не копипаста тел; данные через фабрики моделей
 
 ## Ссылки
 

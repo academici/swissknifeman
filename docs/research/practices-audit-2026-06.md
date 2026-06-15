@@ -205,8 +205,9 @@ Pre-flight перед прогоном тестов: проверить дост
 
 ## 5. Отложенный бэклог (verified, ниже уверенность / 1 проект)
 
-Практики подтверждены эвиденсом, но встречаются в одном проекте или требуют
-больше обобщения, прежде чем стать скиллом реестра. По одной строке с источником:
+**Статус: реализовано (batch-2, 2026-06-15).** Весь бэклог §5 авторён как
+универсальные скиллы (проект — только эвиденс, в скилл идёт обобщённый паттерн).
+Соответствие «кандидат бэклога → скилл реестра»:
 
 > **Граница с Laravel Boost.** `livewire-blade-attributes` и любые будущие
 > Tailwind/Livewire/MCP-кандидаты создавать ТОЛЬКО как complementary-дельту с
@@ -214,20 +215,27 @@ Pre-flight перед прогоном тестов: проверить дост
 > за Boost. Удалённые дубли (`php/livewire`, `frontend/tailwindcss`,
 > `general/mcp-development`) не воссоздавать. См. `docs/boost-compatibility.md`.
 
-| Кандидат | Бакет | Источник-эвиденс |
+| Кандидат бэклога | Скилл реестра | Тип |
 |:---|:---|:---|
-| `reka-ui-cva-primitives` | frontend | Agelto `resources/js/components/ui/*` (20 примитивов: button/dialog/sidebar…) + CVA в `*/index.ts` |
-| `naive-ui-theming` | frontend | FlexCRM `resources/js/config/naive-ui.ts` (`GlobalThemeOverrides`), подключение в `app.ts`; Naive UI в FlexCRM/Sova |
-| `dark-mode-appearance` (composable `useAppearance`) | frontend | Agelto/FlexCRM `resources/js/composables/useAppearance.ts` + `components/AppearanceTabs.vue` + `pages/settings/Appearance.vue` |
-| `echo-reverb-client` (composable) | frontend | Sova `resources/js/composables/useEcho.ts` (runtime-конфиг Reverb), `events/adapters/echo-*.ts`, тесты `tests/composables/useEcho.test.ts` |
-| `lucide-dynamic-icon` | frontend | Agelto `resources/js/components/Icon.vue` (динамический выбор `lucide-vue-next`) |
-| `filepond-upload` | frontend | FlexCRM (`vue-filepond`, `filepond-plugin-*`), Sova `components/forms/VueFilePond.ts` + `composables/shared/useFileUpload.ts`, art-kombinat |
-| `livewire-blade-attributes` | php/frontend | unbox `.cursor/rules/livewire-blade.mdc` (запрет `@if`/`@js()` в атрибутах, `ComponentAttributeBag`) |
-| `playwright-e2e` | quality/devops | unbox `package.json` (`playwright ^1.57`), `tests/Browser`, `MEDIA_ISOLATION.md` |
-| `health-check-suite` | php/operator | Sova `app/Health/Checks/*` (Reverb TCP/client, Queue, Scheduler heartbeat, Disk/Storage write, Cache, DB), `config/health.php`, `tests/Feature/Health/` |
-| `spatie-laravel-settings` (+ Filament UI-binding) | php | Sova `app/Settings/**` (`WebsocketClientSettings`, `Ticket/Deadlines`) + `app/Filament/Pages/Settings/Manage*` |
-| `monorepo-mutation-testing` | quality/php | botkit `infection.json5`; azguard multi-testsuite (`Arch/Feature/Context/Unit/UnitFilament`) |
-| `blender-parametric-config` | **blender** (новый профиль/расширение) | diabox `config/`, `lib/{spline,geometry}.py`, `ai/`→`CLAUDE.md` генератор (`scripts/ai_generate_rules.py`), `CURRENT_MODEL`/`revolve_profile`/`apply_bool` |
+| `reka-ui-cva-primitives` | `frontend/reka-ui-cva` | ours-only |
+| `naive-ui-theming` | `frontend/naive-ui-theming` | ours-only |
+| `dark-mode-appearance` | `frontend/dark-mode` | ours-only (граница на Boost) |
+| `echo-reverb-client` | `frontend/laravel-echo-client` | ours-only (граница на Boost) |
+| `lucide-dynamic-icon` | `frontend/vue-dynamic-icons` | ours-only (обобщён, не привязан к lucide) |
+| `filepond-upload` | `frontend/filepond-upload` | ours-only |
+| (Pinia из art-kombinat/Sova/FlexCRM) | `frontend/pinia-stores` | ours-only |
+| `livewire-blade-attributes` | `php/livewire-blade-attributes` | **complementary** к Boost livewire |
+| `health-check-suite` | `php/health-checks` | ours-only |
+| `spatie-laravel-settings` | `php/spatie-settings` | **complementary** (3rd-party Boost) |
+| (DTO из §7) spatie/laravel-data | `php/laravel-data` | **complementary** (3rd-party Boost) |
+| `playwright-e2e` | `quality/playwright-e2e` | ours-only |
+| `monorepo-mutation-testing` | `quality/mutation-testing` | ours-only |
+| `blender-parametric-config` | `blender/parametric-config` | ours-only |
+| (Pest-композиция из §7) | `php/laravel-testing` (расширен) | complementary к Boost pest |
+
+**Остаточный бэклог** (не авторён): Nuxt-стек (Nuxt 4 + Pinia + i18n + Bootstrap,
+art-kombinat) — отложен как отдельный фреймворк из одного проекта; Pinia-часть
+покрыта универсальным `frontend/pinia-stores`. erp-sdk (Dart) и axioma-studio — §6.
 
 ## 6. Вне охвата
 

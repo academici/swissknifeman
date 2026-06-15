@@ -16,6 +16,25 @@
 
 ### Added
 
+- **Реализация бэклога аудита — ещё 14 универсальных скиллов + 1 расширение
+  (batch-2).** Добиты все отложенные §5 кандидаты из
+  `docs/research/practices-audit-2026-06.md`; всё обобщено (проект — только
+  эвиденс, в скилл идёт переносимый паттерн + анонимизированные снипеты).
+  **Фронтенд (7):** `frontend/reka-ui-cva` (headless-примитивы Reka UI + cva),
+  `frontend/dark-mode` (composable light/dark/system, без вспышки, SSR-cookie),
+  `frontend/naive-ui-theming` (GlobalThemeOverrides), `frontend/laravel-echo-client`
+  (Echo/Reverb composable, X-Socket-ID), `frontend/filepond-upload` (vue-filepond
+  + rahulhaque/laravel-filepond), `frontend/vue-dynamic-icons` (динамическая иконка
+  по имени), `frontend/pinia-stores` (setup-сторы, композиция). **PHP (4):**
+  `php/livewire-blade-attributes` (дельта-гочизы к Boost livewire),
+  `php/spatie-settings`, `php/health-checks` (spatie/laravel-health),
+  `php/laravel-data` (spatie/laravel-data DTO + `#[TypeScript]`). **Quality (2):**
+  `quality/playwright-e2e`, `quality/mutation-testing` (Infection). **Blender (1):**
+  `blender/parametric-config` (config-dataclass → profile/check без bpy).
+  **Расширен** `php/laravel-testing` (Pest-композиция: трейты + fake/freeze/dataset).
+  `skills.json` 138 → 152; Boost-границы соблюдены (complementary: `laravel-data`,
+  `spatie-settings`, `livewire-blade-attributes`); `boost-compatibility.md` обновлён;
+  `validate.sh` зелёный (0 warnings, 76 tests).
 - **Скиллы из практик констелляции (аудит + 10 скиллов, фокус — фронтенд).**
   Read-only аудит всех проектов из `~/Vaults/Brain/.projects.json` + `unbox`,
   `art-kombinat/frontend`, `sova` (6 Explore-агентов, сверка кандидатов с живым

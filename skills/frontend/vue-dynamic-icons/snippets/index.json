@@ -1,0 +1,15 @@
+{
+  "skill": "vue-dynamic-icons",
+  "snippets": [
+    {
+      "file": "Icon.vue",
+      "description": "Единый компонент-иконка: import * as icons, ленивый computed-резолв по имени через <component :is>, нормализация имени, проброс size/strokeWidth/color/class с мерджем классов и фолбэком",
+      "tags": ["vue", "dynamic-component", "lucide", "icon"]
+    },
+    {
+      "file": "icon-name.type.ts",
+      "description": "Типобезопасное имя иконки: union из keyof typeof icons либо явный список с const-кортежем, плюс рантайм-гард isIconName для строк из API/конфига",
+      "tags": ["typescript", "type-safety", "union", "guard"]
+    }
+  ]
+}

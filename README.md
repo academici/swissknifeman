@@ -13,27 +13,32 @@ Node-демона памяти и сборки документации.
 
 ---
 
-## Топология: единый хаб + scopes
+## Топология: единый хаб + namespace'ы
 
 ```
-                 ┌──────────────── maind hub ────────────────┐
-                 │  agent-memory daemon (Node, 4111/4112)    │
-   maind start ─▶│   ns: project:brain · project:skm · global │
-                 │  graph.db  (ОДИН общий граф, stdlib)       │
-                 │  ~/.maind/  agents.json · projects.json    │
-                 │  maind mcp  (stdio JSON-RPC: 6 tools)      │
-                 └───────▲────────────▲────────────▲──────────┘
+                 ┌──────────────────── maind hub ─────────────────────┐
+                 │  agent-memory daemon (Node, 4111/4112)             │
+   maind start ─▶│   бакеты: project:<id> · ns:<имя> · global          │
+                 │  data/graphs/*  (граф на проект + _index.db, stdlib)│
+                 │  ~/.maind/  agents.json · projects.json             │
+                 │  maind mcp  (stdio JSON-RPC: 11 tools)              │
+                 └───────▲────────────▲────────────▲──────────────────┘
             MCP/HTTP     │            │            │
                       brain     swissknifeman   erp-sdk …   (клиенты, изоляция по namespace)
 ```
 
-- **Память** — один Node-демон `@agentmemory/agentmemory`; изоляция между проектами по
-  `namespace` (scope), а не отдельными демонами. Общие факты — в scope `global`.
-- **Граф** — один на всю экосистему: проект → `depends_on` → проект, память →
-  `belongs_to` → проект, агент → `belongs_to` → проект, проект → `uses` → скилл. Это и
-  есть «общая связь».
-- **Порты не хардкодятся** — берутся из `.env` / `.maind.json` (дефолт 4111/4112), чтобы
-  не конфликтовать с другим узлом.
+Через хаб идут **два независимых механизма связывания**, оба работают по namespace'ам:
+
+- **agent-memory** (память/контекст) — один Node-демон; изоляция логическая, по бакетам:
+  `project:<id>` (приватно) · `ns:<имя>` (группа) · `global` (вся экосистема). Внутри группы
+  память общая, между группами изолирована.
+- **maind-граф** (топология между проектами) — федерация: граф на проект (`data/graphs/<id>.db`)
+  + тонкий `_index.db`. Строится из источников истины (`derive`: composer/Brain/override/skills),
+  не из ручного дубля. Межпроектное ребро — только внутри общего namespace.
+- **graphify** (граф кода внутри проекта) — со-равный механизм, раскатывается отдельным
+  MCP-сервером (`deploy --with-graphify`).
+- **Порты не хардкодятся** — из `.env` / `.maind.json` (дефолт 4111/4112), чтобы не
+  конфликтовать с другим узлом.
 
 ---
 
@@ -90,20 +95,21 @@ maind читает legacy `.projects.json` в режиме read-only (с пре�
 HTTP-контракт демона (agentmemory 0.9.x, сверено вживую): `GET /agentmemory/health` ·
 `POST /agentmemory/remember {namespace, content, type}` ·
 `POST /agentmemory/search {query, namespace}`. maind оркестрирует демон
-(`start/stop/status`) и говорит по HTTP, скоупя запросы по namespace проекта
-(`project:<id>`) или `global`.
+(`start/stop/status`) и говорит по HTTP, скоупя запросы по бакетам проекта
+(`project:<id>` · `ns:<имя>` · `global`).
 
 ## Граф
 
-Движок по умолчанию — чистый stdlib (BFS-соседи, кратчайший путь, подграф, статистика),
-персист в node-link JSON (`data/graph.db`). `networkx`/`graphify` подключаются как
-опциональные адаптеры через `graph.adapter`.
+Движок — чистый stdlib (BFS-соседи, кратчайший путь, подграф, статистика), персист в
+node-link JSON. Раскладка — **федерация**: граф на проект (`data/graphs/<id>.db`) + тонкий
+регенерируемый `_index.db`; строится из источников истины (`derive`), читается через единый
+фасад `federation.graph_reader`. `graph.adapter`: `federation` (по умолчанию) | `disabled`.
 
 ## MCP
 
-`maind mcp` — stdio JSON-RPC сервер. Tools: `maind_memory_store`, `maind_memory_recall`,
-`maind_graph_query`, `maind_graph_neighbors`, `maind_agents_list`, `maind_projects_list`.
-Подключение клиента (`.mcp.json`):
+`maind mcp` — stdio JSON-RPC сервер (11 tools): память (`store`/`recall`/`forget`), граф
+(`query`/`neighbors`/`path`/`project`), `memory_links`, `agents_list`, `projects_list`,
+`projects_status`. Подключение клиента (`.mcp.json`):
 
 ```json
 { "mcpServers": { "maind": { "command": "<repo>/bin/maind", "args": ["mcp"] } } }

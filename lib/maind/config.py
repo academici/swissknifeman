@@ -75,8 +75,8 @@ def validate_config(config, cfg_file):
                    {"enabled": bool, "config_path": str, "http_port": int,
                     "stream_port": int, "data_dir": str, "url": str})
     _check_section(cfg_file, "graph", config.get("graph", {}),
-                   {"enabled": bool, "persist": bool, "persist_path": str,
-                    "store_layout": str})
+                   {"enabled": bool, "adapter": str, "persist": bool,
+                    "persist_path": str, "store_layout": str})
     # adapter: канонически {federation, disabled}; legacy (memory/graphify/networkx)
     # принимаем с предупреждением (нормализуется в federation в merge_defaults).
     adapter = (config.get("graph") or {}).get("adapter")

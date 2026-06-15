@@ -1,55 +1,71 @@
 # Граф связей
 
-Один граф на всю экосистему — это «общая связь». Движок по умолчанию — чистый **stdlib**
-(без сторонних зависимостей), персист в node-link JSON (`data/graph.db`).
+Граф — это **топология между проектами**: кто от кого зависит, кто что предоставляет, какие
+скиллы используют. Движок — чистый **stdlib** (BFS/кратчайший путь, без сторонних зависимостей),
+персист в node-link JSON. Раскладка — **федерация**: граф на проект (`data/graphs/<id>.db`) плюс
+тонкий регенерируемый индекс `_index.db` (см. [Федерация](/guide/federation)).
+
+> Граф связывает **код/топологию**; память (`agent-memory`) связывает **контекст/факты**. Это два
+> независимых механизма хаба, оба работают по [namespace'ам](/guide/namespaces). Граф *кода внутри
+> проекта* (символы/файлы) — это [graphify](/guide/graphify), отдельный слой.
 
 ## Типы узлов и рёбер
 
 | Узел (`<type>:<key>`) | | Ребро | |
 |:--|:--|:--|:--|
-| `project` | проект экосистемы | `uses` | проект/агент использует скилл |
-| `agent` | запущенный агент | `knows` | агент знает единицу памяти |
-| `memory` | единица памяти | `relates_to` | связь двух памятей |
-| `skill` | скилл из swissknifeman | `belongs_to` | память/агент принадлежит проекту |
-| `entity` | произвольная сущность | `depends_on` | межпроектная зависимость |
+| `project` | проект экосистемы | `depends_on` | межпроектная зависимость (из composer) |
+| `package` | composer/npm-пакет | `requires` | проект требует пакет |
+| `skill` | скилл из swissknifeman | `provided_by` | пакет/скилл предоставлен проектом/тулом |
+| `tool` | swissknifeman / boost / brain | `uses` | проект использует скилл / doc-связь |
+| `doc` · `agent` · `memory` · `entity` | прочие домены | `relates_to` · `belongs_to` · `knows` | override / прочее |
 
-Узлы именуются `<type>:<key>` (например `project:brain`) — это даёт бесконфликтную склейку
-доменов и позволяет выводить тип из id.
+Узлы именуются `<type>:<key>` (например `project:brain`) — бесконфликтная склейка доменов,
+тип выводится из id.
 
-## API (`graph.py`)
+## Откуда берутся связи (derive, без ручного дубля)
+
+`maind graph derive` строит сторы проектов из **источников истины**, помечая рёбра планом
+(`code|doc|meta|runtime`) и источником (`via`) — `derive.py`:
+
+| План (`via`) | Источник | Рёбра |
+|:--|:--|:--|
+| `code` | `composer.json`/`package.json` (+ path-repos) | `project ─requires→ package`, `package ─provided_by→ project`, cross `project ─depends_on→ project` |
+| `doc` | Brain frontmatter `uses:/used_by:` (**только чтение**) | `project ─uses→ project` |
+| `override` | `<repo>/.maind.graph.json` | объявленные `relates_to`/… (runtime/API) |
+| `skills` | `skills-lock.json` | `project ─uses→ skill ─provided_by→ tool` |
+
+Истина остаётся в composer/Brain/lock — `_index.db` лишь регенерируемый кэш. Конфиг-поля проекта
+(`dependencies`/`agents`) графом **не материализуются**: чтобы объявить связь, которой нет в коде,
+используйте `.maind.graph.json` (план `override`).
+
+## API (`graph.py` — примитив)
 
 ```python
-g.add_node("project:brain", "project", name="Brain")
-g.add_edge("project:swissknifeman", "project:maind", "depends_on")
 g.neighbors("project:maind", depth=1, direction="in")   # кто зависит от maind
-g.path("project:swissknifeman", "project:maind")        # кратчайший путь (BFS)
+g.path("project:flexcrm", "project:azguard")            # кратчайший путь (BFS)
 g.subgraph(["project:brain", "project:maind"])          # индуцированный подграф
 g.stats()                                               # узлы/рёбра/компоненты/степень
 ```
 
+Читать федерированный граф нужно через `federation.graph_reader(env, config)` (единый фасад),
+а не открывать стор напрямую.
+
 ## CLI
 
 ```bash
-maind graph stats
-maind graph query --from project:brain --depth 2
-maind graph neighbors --node project:maind --direction in --edge-types depends_on
-maind graph --cross --namespace axioma   # межпроектный слой одной namespace-группы
+maind graph derive --all                 # собрать графы всех проектов из источников
+maind graph rebuild                      # пересобрать только _index.db
+maind graph stats                        # сводка по федерации
+maind graph query --from project:flexcrm --depth 2 [--edge-types depends_on]
+maind graph neighbors --node project:maind --direction in
+maind graph --project flexcrm            # граф одного проекта
+maind graph --cross [--namespace axioma] # межпроектный слой (опц. одной группы)
 ```
 
-## Namespaces
+## Адаптер
 
-В режиме федерации межпроектные связи **изолируются по namespace**: ребро A↔B строится, только
-если проекты делят группу (`projects[].namespaces`); `["*"]` — общая инфраструктура. См.
-[Архитектура → Namespaces](/architecture#namespaces-изоляция-связей).
+`graph.adapter` в конфиге: `federation` (по умолчанию, единственная раскладка) либо `disabled`
+(граф-команды недоступны). Устаревшие `memory`/`graphify`/`networkx` принимаются с предупреждением
+и нормализуются в `federation`.
 
-## Автозасев из конфига
-
-`maind start` и `maind migrate from-brain` регистрируют проекты из `.maind.json` как узлы
-и материализуют `dependencies`→`depends_on`, `skills`→`uses`, `agents`→`belongs_to`.
-
-## Адаптеры
-
-`graph.adapter` в конфиге: `memory` (stdlib, по умолчанию) · `graphify` / `networkx`
-(опциональные, lazy-import; нужны только если выбраны явно) · `disabled`.
-
-Дальше: [Агенты →](/guide/agents)
+Дальше: [Федерация →](/guide/federation)

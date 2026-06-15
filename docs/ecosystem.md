@@ -61,20 +61,22 @@ flowchart LR
   together -. "убрать путь" .-> alone
 ```
 
-## Единый хаб + scopes
+## Единый хаб + namespace'ы
 
-Память и граф — **одни на всю экосистему**, на хабе maind. Изоляция проектов — логическая, по
-`namespace`/scope (`project:<id>`), а не отдельными демонами. Это и есть «общий мозг».
+Память и граф — **одни на всю экосистему**, на хабе maind. Изоляция — логическая и по
+namespace'ам: граф — федерация (граф на проект + индекс), память — бакеты
+(`project:<id>`/`ns:<имя>`/`global`). Внутри группы общее, между группами изолировано. Это и
+есть «общий мозг» без отдельных демонов на проект.
 
 ```mermaid
 graph TD
   subgraph hub["maind hub"]
     D["agent-memory daemon · 4111/4112"]
-    NS["ns: project:brain · project:flexcrm · global"]
-    G["graph.db — один общий граф"]
+    NS["бакеты памяти: project:&lt;id&gt; · ns:&lt;имя&gt; · global"]
+    G["data/graphs/*: граф на проект + _index.db (федерация)"]
   end
-  flexcrm -->|MCP, ns project:flexcrm| hub
-  brain -->|MCP, ns project:brain| hub
+  flexcrm -->|MCP, бакет project:flexcrm + ns:axioma| hub
+  brain -->|MCP, бакет project:brain| hub
   others["… остальные проекты"] -->|MCP| hub
 ```
 
@@ -98,7 +100,7 @@ sequenceDiagram
   maind->>skm: integrate (skills + hooks)
   skm->>proj: .claude/skills + хуки + skills-lock.json
   maind->>proj: deploy — agent-memory MCP (scope project:id) [+ graphify]
-  maind->>maind: seed graph (project, uses→skill, depends_on)
+  maind->>maind: derive graph (composer/doc/override/skills → стор проекта + индекс)
   opt --with-brain
     maind->>brain: репозиторий для docs-sync
   end
@@ -146,8 +148,8 @@ flowchart TD
 |:--|:--|:--|
 | Реестр проектов | `.maind.json` | maind (`projects.write_config` — единственный писатель) |
 | Доверие Claude к проектам | `<maind>/.claude/settings.local.json` | maind (`workspace sync` из реестра) |
-| Общая память | agent-memory demon (scopes) | проекты пишут в свой `project:<id>` |
-| Граф связей | `data/graph.db` | maind (seed из конфига + skills-lock) |
+| Общая память | agent-memory demon (бакеты `project:<id>`/`ns:<имя>`/`global`) | проекты пишут в свой `project:<id>`, cross-ref — в `ns:<группа>` |
+| Граф связей | `data/graphs/<id>.db` + `_index.db` (федерация) | maind `derive` из composer/Brain/override/skills |
 | Карта скиллов проекта | `<project>/skills-lock.json` | `swissknifeman lock` |
 | Документация проекта | vault ↔ repo | `brain sync` (docs-watcher) |
 

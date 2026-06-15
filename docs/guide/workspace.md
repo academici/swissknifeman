@@ -92,4 +92,4 @@ maind status               # строка «доверие: N/M проектов
 
 GUI-панель (`gui/index.html`) показывает колонку **trust** над тем же `status --json`.
 
-Дальше: [MCP-сервер →](/guide/mcp)
+Дальше: [Агенты →](/guide/agents)

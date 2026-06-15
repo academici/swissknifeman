@@ -11,7 +11,7 @@ difflib), неизвестный вложенный — предупрежден
 |:--|:--|
 | `node` | идентификация узла: `id`, `name`, `role` (`primary`/`secondary`/`mirror`) |
 | `memory` | `http_port`, `stream_port`, `data_dir`, `url`, `config_path` |
-| `graph` | `adapter` (`memory`/`graphify`/`disabled`), `persist`, `persist_path` |
+| `graph` | `adapter` (`federation` по умолчанию / `disabled`) — federation единственная раскладка |
 | `agents` | `registry_enabled`, `heartbeat_interval_ms`, `max_idle_ms`, `definitions[]` |
 | `projects[]` | проекты (см. ниже) |
 | `namespaces` | необязательный реестр namespace-групп: `{ id: { name, description } }` |
@@ -27,11 +27,11 @@ difflib), неизвестный вложенный — предупрежден
   "id": "brain", "name": "Brain", "repo": "academici/brain",
   "local_path": "~/Vaults/Brain", "type": "obsidian-vault",
   // расширения maind
-  "graph_node": true, "memory_scope": "project:brain",
+  "memory_scope": "project:brain",     // приватный бакет памяти проекта
   "agents": ["vault-architect"], "skills": [], "tags": ["docs"],
-  "namespaces": ["axioma"],            // группы изоляции связей; ["*"] = общая инфраструктура
-  "status": "active",                  // active | archived | planning
-  "dependencies": ["maind"]            // id других проектов → рёбра depends_on
+  "namespaces": ["axioma"],            // группы изоляции связей графа+памяти; ["*"] = общая инфраструктура
+  "graph_store": "hub",                // hub (data/graphs/<id>.db) | local (<repo>/.maind/graph.db)
+  "status": "active"                   // active | archived | planning
 }
 ```
 
@@ -40,20 +40,22 @@ difflib), неизвестный вложенный — предупрежден
 
 ## Namespaces
 
-`namespaces` у проекта изолируют межпроектные связи: ребро A↔B в графе строится, только если
-A и B делят хотя бы одну группу. Нет поля / `[]` → неявный `default` (всё связано, как раньше);
-`["*"]` → общая инфраструктура, связывается со всеми группами. Подробнее —
-[Архитектура → Namespaces](/architecture#namespaces-изоляция-связей).
+`namespaces` у проекта изолируют межпроектные связи **и графа, и памяти**: ребро A↔B строится,
+только если A и B делят хотя бы одну группу; факты памяти проекта видны внутри его namespace
+(`ns:<имя>`) и изолированы между группами. Нет поля / `[]` → неявный `default`; `["*"]` →
+общая инфраструктура, связывается со всеми группами. Подробнее — [Namespaces](/guide/namespaces).
 
 ## Дефолты
 
 `merge_defaults` дописывает обязательные значения (`memory.http_port=4111`,
-`graph.adapter=memory`, `agents.heartbeat_interval_ms=30000`,
-`observability.service_name=maind` …), чтобы код никогда не ловил `KeyError`.
+`graph.adapter=federation`, `agents.heartbeat_interval_ms=30000`,
+`observability.service_name=maind` …), чтобы код никогда не ловил `KeyError`. Устаревший
+`graph.adapter` (`memory`/`graphify`/`networkx`) принимается с предупреждением и нормализуется
+в `federation`.
 
 ::: warning Порты
 `memory.http_port`/`stream_port` — лишь дефолт; `.env` (`AGENTMEMORY_PORT`/
 `AGENTMEMORY_STREAM_PORT`) их переопределяет. См. [Память](/guide/memory).
 :::
 
-Дальше: [Миграция →](/guide/migration)
+Дальше: [Память →](/guide/memory)

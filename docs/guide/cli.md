@@ -18,9 +18,8 @@ maind graph neighbors --node project:maind --direction in
 maind graph stats [--json]
 maind graph --project flexcrm          # граф одного проекта (федерация)
 maind graph --cross [--namespace NS]   # межпроектный слой (_index.db), опц. одна группа
-maind graph derive [--project ID | --all]   # собрать графы из composer/Brain/override
+maind graph derive [--project ID | --all]   # собрать графы из composer/Brain/override/skills
 maind graph rebuild                    # пересобрать _index.db
-maind graph migrate-federation         # бэкап legacy graph.db + derive всех
 
 maind agents register <id> [--project P --pid N --kind K]
 maind agents heartbeat <id>
@@ -55,4 +54,4 @@ maind version                          # git SHA + путь к узлу
 - Контекст запуска — frozen-dataclass `Env` (корень узла, команда, HOME) — передаётся
   явно, без модульных глобалей. Поэтому всё легко тестируется.
 
-Дальше: [Память →](/guide/memory)
+Дальше: [MCP-сервер →](/guide/mcp)

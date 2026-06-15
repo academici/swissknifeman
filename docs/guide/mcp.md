@@ -36,13 +36,18 @@ maind mcp [--scope project:<id>]   # stdio: NDJSON из stdin → ответы �
 | `maind_graph_query` | `from, depth?, edge_types?` | `graph.query` |
 | `maind_graph_neighbors` | `node, depth?, direction?` | `graph.neighbors` |
 | `maind_graph_path` | `from, to` | `graph.path` (кратчайший путь) |
+| `maind_graph_project` | `project` | `Federation.project_view` (граф одного проекта) |
+| `maind_memory_links` | `project, depth?, namespace?` | граф-связи + ecosystem-link память |
 | `maind_agents_list` | — | `agents.listing` |
 | `maind_projects_list` | — | `projects.listing` |
 | `maind_projects_status` | `project?` | `probe` (состояние хаба + проектов) |
 
-`scope?` — необязательно (по умолчанию scope узла, см. авто-scope). Память-инструменты требуют
-живого демона; нет обязательного аргумента, демон недоступен или ошибка инструмента → ответ
-помечается `isError: true`, **сервер при этом не падает** (крэш-устойчивый цикл).
+Итого **11 инструментов** (memory · graph · ecosystem-links · реестры). `scope?` —
+необязательно (по умолчанию scope узла, см. авто-scope). `maind_memory_links` отдаёт память
+проекта из всех релевантных бакетов (`project:<id>` + `ns:<группы>` + `global`) — внутри
+namespace память общая, между группами изолирована (паритет с графом, см. [Память](/guide/memory)).
+Память-инструменты требуют живого демона; нет обязательного аргумента, демон недоступен или
+ошибка инструмента → ответ помечается `isError: true`, **сервер при этом не падает**.
 
 ## Методы JSON-RPC
 
@@ -54,9 +59,9 @@ maind mcp [--scope project:<id>]   # stdio: NDJSON из stdin → ответы �
 
 maind — **stdlib-only, Python 3.9+, переносимый** (как swissknifeman/brain). FastMCP тянет ~25
 pip-зависимостей (`pydantic`/`uvicorn`/`httpx`/`authlib`/…) и Python ≥3.10 — непропорционально для
-9 stdio-инструментов и ломает zero-dep идентичность пакета. Свой сервер закалён **conformance-тестом
+11 stdio-инструментов и ломает zero-dep идентичность пакета. Свой сервер закалён **conformance-тестом
 на реальный spawn** (полный NDJSON-хендшейк), так что класс багов вроде framing'а не повторится.
 Пересмотрим решение, если понадобится **HTTP-транспорт, авторизация или много инструментов** —
 тогда фреймворк оправдан.
 
-Дальше: [Конфиг .maind.json →](/guide/config)
+Дальше: [Healthcheck →](/guide/health)

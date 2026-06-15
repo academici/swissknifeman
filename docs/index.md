@@ -26,7 +26,7 @@ features:
   - title: 📦 Реестр проектов
     details: .maind.json — надмножество brain .projects.json, с fallback на legacy и синком из brain.
   - title: 🔌 MCP-сервер
-    details: maind mcp — stdio JSON-RPC. 6 tools поверх памяти, графа, агентов и проектов для любого агента.
+    details: maind mcp — stdio JSON-RPC. 11 tools поверх памяти, графа, ecosystem-связей, агентов и проектов для любого агента.
   - title: 🐍 Python + bash
     details: Ядро на stdlib (как swissknifeman / brain). npm — только для демона памяти и документации.
 ---

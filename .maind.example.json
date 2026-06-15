@@ -19,13 +19,11 @@
     "data_dir": "./data"
   },
 
-  "_comment_graph": "Граф связей. adapter: memory (единый граф, stdlib) | federation (граф на проект в data/graphs/<id>.db + тонкий _index.db, связи derive'ятся из composer/Brain/.maind.graph.json) | graphify | disabled. store_layout: hub (графы в data/graphs/) | project-local (через projects[].graph_store=local — граф в самом репо проекта).",
+  "_comment_graph": "Граф связей (топология между проектами). adapter: federation (по умолчанию, единственная раскладка — граф на проект в data/graphs/<id>.db + тонкий _index.db; связи derive'ятся из composer/Brain/.maind.graph.json/skills-lock) | disabled. Устаревшие memory/graphify/networkx принимаются с предупреждением и нормализуются в federation. store_layout: hub (графы в data/graphs/) | project-local (через projects[].graph_store=local — граф в самом репо проекта). graphify — отдельный MCP-слой над КОДОМ проекта (deploy --with-graphify), не адаптер этого графа.",
   "graph": {
     "enabled": true,
     "adapter": "federation",
-    "store_layout": "hub",
-    "persist": true,
-    "persist_path": "./data/graph.db"
+    "store_layout": "hub"
   },
 
   "_comment_agents": "Реестр агентов узла. definitions — дескрипторы агентов, которые крутятся здесь.",
@@ -58,7 +56,6 @@
       "repo": "academici/brain",
       "local_path": "~/Vaults/Brain",
       "type": "obsidian-vault",
-      "graph_node": true,
       "memory_scope": "project:brain",
       "agents": ["vault-architect"],
       "tags": ["primary", "docs"],
@@ -72,7 +69,6 @@
       "repo": "academici/swissknifeman",
       "local_path": "~/projects/packages/swissknifeman",
       "type": "node-package",
-      "graph_node": true,
       "memory_scope": "project:swissknifeman",
       "agents": [],
       "tags": ["package", "skills"],
@@ -86,7 +82,6 @@
       "repo": "academici/maind",
       "local_path": "~/projects/packages/maind",
       "type": "python-package",
-      "graph_node": true,
       "memory_scope": "project:maind",
       "agents": [],
       "tags": ["hub", "memory", "graph"],

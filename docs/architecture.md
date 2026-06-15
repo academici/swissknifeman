@@ -12,27 +12,28 @@
 ```mermaid
 graph TD
   subgraph hub["maind hub (этот пакет)"]
-    M["agent-memory daemon<br/>Node · 4111/4112<br/>ns: project:* · global"]
+    M["agent-memory daemon<br/>Node · 4111/4112<br/>бакеты: project:&lt;id&gt; · ns:&lt;имя&gt; · global"]
     G["data/graphs/*<br/>федерация: граф на проект + _index.db"]
     R["~/.maind<br/>agents.json · projects.json"]
-    MCP["maind mcp<br/>stdio JSON-RPC · 6 tools"]
+    MCP["maind mcp<br/>stdio JSON-RPC · 11 tools"]
   end
   brain -->|MCP/HTTP, ns project:brain| hub
   swissknifeman -->|MCP/HTTP, ns project:swissknifeman| hub
   erp["erp-sdk · …"] -->|MCP/HTTP| hub
 ```
 
-Изоляция между проектами — **логическая** (по `namespace`/scope), а не отдельными
-демонами. Демон памяти **не** запускается на каждый проект — один на хаб.
+Изоляция между проектами — **логическая** (граф — по namespace; память — по бакетам
+`project:<id>`/`ns:<имя>`/`global`), а не отдельными демонами. Демон памяти **не**
+запускается на каждый проект — один на хаб; на проекты раскатывается лишь MCP-клиент к нему.
 
 ## Три слоя
 
 ```mermaid
 flowchart LR
   CLI["bin/maind (bash) → python3 -m maind"] --> cli["cli.py · COMMANDS"]
-  cli --> mem["memory.py"] & gr["graph.py"] & ag["agents.py"] & pr["projects.py"] & mcp["mcp.py"]
+  cli --> mem["memory.py"] & gr["graph.py + federation.py"] & ag["agents.py"] & pr["projects.py"] & mcp["mcp.py"]
   mem -->|HTTP| daemon["agent-memory (Node)"]
-  gr -->|node-link JSON| db[("data/graph.db")]
+  gr -->|node-link JSON| db[("data/graphs/&lt;id&gt;.db + _index.db")]
   ag -->|atomic JSON| aj[("~/.maind/agents.json")]
   pr -->|читает/пишет| cfg[(".maind.json")]
   mcp --> mem & gr & ag & pr
@@ -41,8 +42,9 @@ flowchart LR
 - **Память** (`memory.py`) — оркестрирует внешний Node-демон `@agentmemory/agentmemory`
   (start/stop/status, health-poll, pidfile) и говорит по HTTP со scope'ами. Демон —
   зависимость, не переписывается на Python.
-- **Граф** (`graph.py`) — stdlib property-граф (BFS-соседи, кратчайший путь, подграф,
-  статистика), персист в node-link JSON. `networkx`/`graphify` — опциональные адаптеры.
+- **Граф** (`graph.py` + `federation.py`) — stdlib property-граф (BFS-соседи, кратчайший
+  путь, подграф, статистика), персист в node-link JSON; раскладка — федерация (граф на
+  проект + `_index.db`). Строится из источников истины (`derive.py`), не из ручного дубля.
 - **Агенты** (`agents.py`) — реестр в `~/.maind/agents.json`; состояние выводится из
   возраста heartbeat и живости pid.
 - **Проекты** (`projects.py`) — `.maind.json` (надмножество brain `.projects.json`),
@@ -83,8 +85,9 @@ flowchart LR
 | override | `<repo>/.maind.graph.json` | объявленные `relates_to`/… (runtime/API) |
 | skills | `skills-lock.json` | `project ─uses→ skill ─provided_by→ tool` |
 
-Истина связей остаётся в composer/Brain — `_index.db` лишь регенерируемый кэш. `maind graph
-migrate-federation` бэкапит legacy `graph.db` и собирает федерацию.
+Истина связей остаётся в composer/Brain — `_index.db` лишь регенерируемый кэш. Конфиг-поля
+проекта (`dependencies`/`agents`) графом не материализуются; ручные связи объявляются через
+`<repo>/.maind.graph.json` (план `override`).
 
 ## Namespaces: изоляция связей
 
@@ -122,9 +125,11 @@ SessionStart-хук (`.claude/settings.json`, **не блокирует**) + у�
 
 ## Память: видимость «общая» + seed
 
-При онбординге/синке в scope `project:<id>` пишется базовый факт о связях (роль, зависимости,
-«память ОБЩАЯ, факты экосистемы — в `global`») + cross-ref в `global` (`seed.py`, идемпотентно).
-MCP-tool `maind_memory_links` отдаёт агенту граф-связи проекта + его ecosystem-link память.
+При онбординге/синке в приватный бакет `project:<id>` пишется базовый факт о связях (роль,
+зависимости), а короткий cross-ref — в бакеты группы `ns:<имя>` (wildcard-инфраструктура → `global`),
+`seed.py`, идемпотентно. Так память следует namespace'ам как и граф: внутри группы общая, между
+группами изолирована. MCP-tool `maind_memory_links` отдаёт агенту граф-связи проекта + его
+ecosystem-link память из всех релевантных бакетов (`project:<id>` + `ns:<группы>` + `global`).
 
 ## Единый провижининг: `maind sync`
 

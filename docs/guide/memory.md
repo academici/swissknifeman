@@ -21,15 +21,25 @@ maind memory stop      # SIGTERM→SIGKILL; чужой демон (без pidfil
 `stream_port` / `url`) → **дефолт** `4111/4112`. Никаких хардкодов — два узла на одной
 машине разводятся по портам через `.env`.
 
-## Scopes (namespace)
+## Scopes (бакеты памяти)
 
-Изоляция проектов — логическая, в рамках одного демона:
+Один демон на хаб; изоляция — логическая, через **бакеты (scope)**. Память следует той же
+namespace-модели, что и граф: внутри группы общая, между группами изолирована (паритет с
+graphify по неймспейсам).
 
 | scope | назначение |
 |:--|:--|
-| `project:brain` | приватная память проекта brain |
-| `project:swissknifeman` | приватная память swissknifeman |
-| `global` | факты всей экосистемы |
+| `project:<id>` | приватная память проекта (его собственные факты) |
+| `ns:<имя>` | **общий бакет namespace-группы** — факты, видимые всем её проектам |
+| `global` | вся экосистема: wildcard-инфраструктура (`["*"]`) + ecosystem-wide факты |
+
+При `maind sync`/`onboard` seed пишет базовый факт о связях в приватный `project:<id>`, а
+короткий cross-ref — в бакеты группы (`ns:<имя>`; для wildcard-проектов — в `global`). Агент
+проекта читает свою память из `project:<id>` + `ns:<его группы>` + `global` (см.
+`namespaces.recall_scopes`). Так проект из `axioma` видит факты группы `axioma` и инфраструктуру,
+но не память чужого namespace. Деривация бакетов — `namespaces.py`
+(`private_scope`/`group_scopes`/`recall_scopes`), seed — `seed.py`. Подробнее про группы —
+[Namespaces](/guide/namespaces).
 
 ## HTTP-контракт демона
 

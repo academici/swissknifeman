@@ -1,0 +1,20 @@
+{
+  "skill": "reka-ui-cva",
+  "snippets": [
+    {
+      "file": "button-variants.ts",
+      "description": "cva-набор вариантов (base + variants variant/size + defaultVariants), выведенный тип VariantProps и реэкспорт компонента из index.ts",
+      "tags": ["cva", "variants", "variantprops", "index"]
+    },
+    {
+      "file": "Button.vue",
+      "description": "Тонкая обёртка примитива Primitive из reka-ui: PrimitiveProps + as/asChild, типизированные пропы вариантов, слияние классов cn(buttonVariants(...), props.class), data-slot",
+      "tags": ["reka-ui", "primitive", "aschild", "cn", "vue"]
+    },
+    {
+      "file": "dialog-composite.md",
+      "description": "Составной компонент Root/Trigger/Content: форвардинг useForwardPropsEmits, исключение своего class через reactiveOmit, портал+оверлей с inheritAttrs:false, состояния data-[state], структурная часть div+cn, реэкспорт index.ts",
+      "tags": ["dialog", "composite", "forward-props", "reactive-omit", "portal"]
+    }
+  ]
+}

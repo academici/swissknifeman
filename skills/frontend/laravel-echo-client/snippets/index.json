@@ -1,0 +1,20 @@
+{
+  "skill": "laravel-echo-client",
+  "snippets": [
+    {
+      "file": "echo-config.ts",
+      "description": "Единая инициализация Echo за сессию: конфиг по приоритету runtime->env->дефолт, broadcaster reverb/pusher, forceTLS из scheme, disconnect при логауте",
+      "tags": ["echo", "config", "reverb", "runtime-config", "bootstrap"]
+    },
+    {
+      "file": "useEcho.ts",
+      "description": "Vue 3 composable: подписка на private-канал с отпиской в onUnmounted, гард на отсутствие Echo, listen на broadcastAs-имя; варианты presence-канала и ref-count-обёртки для разделяемого канала",
+      "tags": ["composable", "private-channel", "presence", "onunmounted", "ref-count"]
+    },
+    {
+      "file": "axios-socket-id.ts",
+      "description": "Проброс X-Socket-ID в axios-интерсептор и Inertia-визиты для broadcast toOthers (исключение инициатора из рассылки)",
+      "tags": ["axios", "x-socket-id", "tothers", "interceptor", "inertia"]
+    }
+  ]
+}

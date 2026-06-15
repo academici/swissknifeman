@@ -1,4 +1,5 @@
 <?php
+// Source: anonymized production Laravel project
 use Tests\TestCase;
 
 final class ExampleFeatureTest extends TestCase

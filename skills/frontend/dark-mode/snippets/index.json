@@ -1,0 +1,25 @@
+{
+  "skill": "dark-mode",
+  "snippets": [
+    {
+      "file": "useDarkMode.ts",
+      "description": "Composable темы light|dark|system: типы Appearance/ResolvedAppearance, updateTheme (classList.toggle .dark), persist в localStorage+cookie, initializeTheme с matchMedia change-слушателем, SSR-guards",
+      "tags": ["composable", "vue", "matchmedia", "localstorage", "cookie", "ssr"]
+    },
+    {
+      "file": "bootstrap-init.ts",
+      "description": "Точка входа (app.ts): вызов initializeTheme() ДО маунта приложения — убирает клиентскую вспышку светлой темы",
+      "tags": ["bootstrap", "init", "no-flash", "vue"]
+    },
+    {
+      "file": "no-flash-init.html",
+      "description": "Фрагмент <head> SSR-шаблона: класс .dark из cookie + синхронный inline-скрипт для режима system + inline-style фона — нет серверной вспышки FOUC",
+      "tags": ["ssr", "no-flash", "fouc", "cookie", "blade"]
+    },
+    {
+      "file": "ThemeToggle.vue",
+      "description": "Тонкий мини-переключатель light/dark/system через useDarkMode, подсветка по выбору appearance, токены/dark:* для цветов",
+      "tags": ["vue", "component", "toggle", "ui"]
+    }
+  ]
+}

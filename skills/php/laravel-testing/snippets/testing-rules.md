@@ -1,3 +1,4 @@
+<!-- Source: anonymized production Laravel project -->
 # Testing Rules
 
 ## Перед началом задачи: Docker или локальный PHP

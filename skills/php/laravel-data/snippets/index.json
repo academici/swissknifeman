@@ -1,0 +1,15 @@
+{
+  "skill": "laravel-data",
+  "snippets": [
+    {
+      "file": "OrderData.php",
+      "description": "Data-класс: вложенная DataCollection с #[DataCollectionOf], каст/трансформер даты, #[Computed]-итог, классовый маппинг snake_case, валидация на свойствах и экспорт #[TypeScript]",
+      "tags": ["data", "datacollection", "casts", "transformer", "computed", "mapname", "typescript"]
+    },
+    {
+      "file": "from-request-usage.php",
+      "description": "Тонкий контроллер: OrderData::from($request) с валидацией, передача в сервис, отдача Data в API (toResponse) и Inertia (render), toArray() и взаимозаменяемые источники from()",
+      "tags": ["from-request", "validation", "inertia", "api", "toarray", "controller"]
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+<!-- Source: anonymized production project -->
+<!--
+  Фрагмент <head> серверного шаблона страницы (Blade / Twig / Edge / любой SSR).
+  Закрывает вспышку темы при server-side рендере. Псевдо-плейсхолдеры в {{ }}
+  замени синтаксисом своего движка: {{ appearance }} — значение cookie 'appearance'
+  ('light' | 'dark' | 'system'), считанное на сервере; дефолт — 'system'.
+
+  Два приёма работают вместе:
+    1. class на <html> из cookie — закрывает явный выбор light/dark на сервере;
+    2. inline-скрипт — закрывает режим 'system' на клиенте до первого кадра
+       (систему знает только браузер, сервер её не видит).
+-->
+
+<!-- 1. Явный выбор приходит классом сразу в HTML (нужен helper "класс если dark"). -->
+<html lang="en" class="{{ appearance === 'dark' ? 'dark' : '' }}">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+        <!-- 2. Режим 'system': ставим .dark синхронно ДО бандла и до контента. -->
+        <script>
+            (function () {
+                var appearance = '{{ appearance ?? "system" }}';
+
+                if (appearance === 'system') {
+                    var prefersDark = window.matchMedia(
+                        '(prefers-color-scheme: dark)',
+                    ).matches;
+
+                    if (prefersDark) {
+                        document.documentElement.classList.add('dark');
+                    }
+                }
+            })();
+        </script>
+
+        <!-- Опционально: фон самой страницы не мигает до загрузки CSS/контента. -->
+        <style>
+            html {
+                background-color: #ffffff;
+            }
+            html.dark {
+                background-color: #0a0a0a;
+            }
+        </style>
+
+        <!-- ...тут <title>, бандл приложения (app.ts), стили... -->
+    </head>
+    <body>
+        <div id="app"></div>
+    </body>
+</html>

@@ -1,4 +1,5 @@
 <?php
+// Source: anonymized production Laravel project
 use PHPUnit\Framework\TestCase;
 
 final class ExampleUnitTest extends TestCase

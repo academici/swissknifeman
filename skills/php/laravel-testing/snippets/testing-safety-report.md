@@ -1,3 +1,4 @@
+<!-- Source: anonymized production Laravel project -->
 # Безопасность тестовой среды в {{project_name}}
 
 ## Как устроена изоляция
@@ -45,8 +46,8 @@ psql -h 127.0.0.1 -U {{project_name}} -d postgres -c 'CREATE DATABASE {{project_
 
 ```bash
 php artisan test
-php artisan test tests/Feature/Ticket/
-php artisan test --filter=TicketActionsTest
+php artisan test tests/Feature/Document/
+php artisan test --filter=DocumentActionsTest
 php artisan dusk
 ```
 
@@ -54,8 +55,8 @@ php artisan dusk
 
 ```bash
 docker compose exec app php artisan test
-docker compose exec app php artisan test tests/Feature/Ticket/
-docker compose exec app php artisan test --filter=TicketActionsTest
+docker compose exec app php artisan test tests/Feature/Document/
+docker compose exec app php artisan test --filter=DocumentActionsTest
 # Dusk — если настроен в образе:
 docker compose exec app php artisan dusk
 ```

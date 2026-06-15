@@ -1,9 +1,10 @@
+<!-- Source: anonymized production Laravel project -->
 # Pest-тестирование
 
 ## Сначала прочитай
 
 1. **`testing-rules`** — изоляция БД `{{project_name}}_test`, Docker vs локальный PHP, Dusk, запрет опасных команд вне testing.
-2. Тип теста: для HTTP, API и сценариев доступа — Feature (`tests/Feature/`); для домена Ticket и Actions — часто `tests/Feature/Ticket/`; чистая логика без БД — Unit (`tests/Unit/`).
+2. Тип теста: для HTTP, API и сценариев доступа — Feature (`tests/Feature/`); для доменной модели и Actions — часто `tests/Feature/Document/`; чистая логика без БД — Unit (`tests/Unit/`).
 
 ## Сценарий работы агента
 

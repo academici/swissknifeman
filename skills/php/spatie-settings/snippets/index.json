@@ -1,0 +1,20 @@
+{
+  "skill": "spatie-settings",
+  "snippets": [
+    {
+      "file": "ExampleSettings.php",
+      "description": "Типизированный класс настроек: final extends Settings, public typed properties (скаляры/nullable/array), group(), заметка про casts; namespace App\\Settings",
+      "tags": ["settings", "class", "typed-properties", "group"]
+    },
+    {
+      "file": "create_example_settings.php",
+      "description": "Settings-миграция: SettingsMigration с migrator->add() дефолтов (ключи group.property), addEncrypted для секретов, блок эволюции схемы add/rename/delete",
+      "tags": ["settings", "migration", "defaults", "schema-evolution"]
+    },
+    {
+      "file": "filament-settings-page.php",
+      "description": "Привязка к Filament SettingsPage: $settings = ::class, поля form() с name == имена свойств, условные required(fn Get $get), мульти-select; авто-сохранение пакетом",
+      "tags": ["settings", "filament", "form", "settings-page"]
+    }
+  ]
+}

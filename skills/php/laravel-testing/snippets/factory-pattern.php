@@ -1,4 +1,5 @@
 <?php
+// Source: anonymized production Laravel project
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;

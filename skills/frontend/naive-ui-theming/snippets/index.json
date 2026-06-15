@@ -1,0 +1,15 @@
+{
+  "skill": "naive-ui-theming",
+  "snippets": [
+    {
+      "file": "naive-theme.ts",
+      "description": "Единый GlobalThemeOverrides: common (палитра через CSS-переменные, шрифт, радиус, высоты) + пер-компонент Button/Card/Form/Input/Tag/Tabs, плюс отдельные darkThemeOverrides",
+      "tags": ["theme", "global-theme-overrides", "design-tokens", "css-variables", "dark-mode"]
+    },
+    {
+      "file": "app.ts",
+      "description": "Точка входа: NConfigProvider с themeOverrides/locale/darkTheme, тёмный режим по классу .dark (общий флаг с Tailwind), вложенные provider'ы modal/dialog/message внутри config-provider",
+      "tags": ["entry-point", "nconfigprovider", "dark-theme", "providers", "locale"]
+    }
+  ]
+}

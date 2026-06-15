@@ -11,7 +11,7 @@
     },
     "blender": {
       "description": "Blender 3D modeling: MCP workflow, threading for FDM/SLA, version gotchas, model rules",
-      "count": 4,
+      "count": 5,
       "status": "active"
     },
     "devops": {
@@ -26,7 +26,7 @@
     },
     "frontend": {
       "description": "Frontend development: Vite, Vue Composition API, Tailwind CSS, Inertia",
-      "count": 10,
+      "count": 17,
       "status": "active"
     },
     "general": {
@@ -51,7 +51,7 @@
     },
     "php": {
       "description": "PHP and Laravel: applications, packages, Filament, permissions, testing, patterns",
-      "count": 36,
+      "count": 40,
       "status": "active"
     },
     "pm": {
@@ -66,7 +66,7 @@
     },
     "quality": {
       "description": "Code review, refactoring plans, tech debt audits, test strategy",
-      "count": 6,
+      "count": 8,
       "status": "active"
     },
     "roles": {
@@ -270,6 +270,26 @@
         "blender",
         "template",
         "rules"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "parametric-config",
+      "bucket": "blender",
+      "path": "skills/blender/parametric-config/SKILL.md",
+      "version": "0.1.0",
+      "description": "Параметрическое 3D-моделирование в Blender (bpy) на основе конфига-данных: dataclass-параметры детали (размеры/допуски/материал/единицы mm), построение профиля и revolve/extrude, валидация инвариантов без запуска Blender. Активировать при правке models/*/config.py, profile.py, parts/*, check.py, при добавлении параметра детали, при вопросах про допуски/единицы/стыковку радиусов для FDM/SLA-печати.",
+      "sha256": "d75c92fb955ab9554b14bf06cd5b7550307928c8e0db8d1e4792d764a95af384",
+      "tags": [
+        "blender",
+        "bpy",
+        "parametric",
+        "dataclass",
+        "cad",
+        "fdm",
+        "sla",
+        "geometry",
+        "units"
       ],
       "source": "local"
     },
@@ -593,6 +613,28 @@
       "source": "local"
     },
     {
+      "name": "dark-mode",
+      "bucket": "frontend",
+      "path": "skills/frontend/dark-mode/SKILL.md",
+      "version": "0.1.0",
+      "description": "Тёмная тема light|dark|system на Vue 3: composable useDarkMode (matchMedia prefers-color-scheme, localStorage + cookie для SSR, toggle класса .dark на documentElement, слушатель change для system), инициализация до маунта без вспышки темы, мини-переключатель. Активировать при добавлении переключения темы, борьбе со вспышкой светлой темы (FOUC), синхронизации темы с системой или восстановлении темы при SSR.",
+      "sha256": "ff929af7a933cd716699bf38206d291b264b4b040ab987e245980b00a8e95dec",
+      "tags": [
+        "dark-mode",
+        "theme",
+        "vue",
+        "composable",
+        "ssr",
+        "tailwind",
+        "matchmedia",
+        "localstorage"
+      ],
+      "requires": [
+        "tailwind-conventions"
+      ],
+      "source": "local"
+    },
+    {
       "name": "eslint-flat-config",
       "bucket": "frontend",
       "path": "skills/frontend/eslint-flat-config/SKILL.md",
@@ -607,6 +649,24 @@
         "typescript",
         "stylistic",
         "tooling"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "filepond-upload",
+      "bucket": "frontend",
+      "path": "skills/frontend/filepond-upload/SKILL.md",
+      "version": "0.1.0",
+      "description": "Загрузка файлов через FilePond в Vue + Laravel: регистрация vue-filepond и плагинов (validate-type/size, image-preview, file-poster), серверная обработка через rahulhaque/laravel-filepond (process/revert на /filepond), привязка serverId загруженного файла к форме, превью и постеры. Активировать при добавлении/правке загрузки файлов, drag-and-drop аплоада, FilePond-поля, превью изображений в форме, при словах filepond/vue-filepond/laravel-filepond/file upload/process/revert/serverId.",
+      "sha256": "e5c92748ad3c56601bcecfda1749a19f021f5ab6ad419dafa30c07c284e271d9",
+      "tags": [
+        "filepond",
+        "vue",
+        "laravel",
+        "file-upload",
+        "frontend",
+        "forms",
+        "image-preview"
       ],
       "source": "local"
     },
@@ -645,6 +705,79 @@
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/spatie/guidelines.spatie.be/master/content/code-style/javascript.md",
       "fetched_at": "2026-06-12"
+    },
+    {
+      "name": "laravel-echo-client",
+      "bucket": "frontend",
+      "path": "skills/frontend/laravel-echo-client/SKILL.md",
+      "version": "0.1.0",
+      "description": "Фронтовый realtime-клиент Laravel Echo (Reverb/Pusher) во Vue 3: настройка Echo из runtime-конфига/env, подписка на private/presence-каналы, listen на broadcastAs-события, отписка в onUnmounted, проброс X-Socket-ID в axios. Активировать когда: подключаешь websockets на фронте, делаешь useEcho/useChannel-composable, слушаешь .broadcastAs-событие, видишь window.echo / Echo / laravel-echo / реактивный realtime в Vue.",
+      "sha256": "05a40a20b15fc424f94fbbb06d12d77be5e33988f877a0a11955cd15cf64f85b",
+      "tags": [
+        "laravel-echo",
+        "reverb",
+        "pusher",
+        "websockets",
+        "realtime",
+        "vue",
+        "broadcasting",
+        "frontend"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "naive-ui-theming",
+      "bucket": "frontend",
+      "path": "skills/frontend/naive-ui-theming/SKILL.md",
+      "version": "0.1.0",
+      "description": "Глобальная тема Naive UI: GlobalThemeOverrides (common + Button/Card/Form/Input/Tag/Tabs…), NConfigProvider в точке входа, тёмная тема naive (darkTheme), связь токенов с Tailwind/CSS-переменными. Активировать при правке config/naive-ui.ts, темы Naive, themeOverrides, NConfigProvider, primaryColor/borderRadius, dark mode под Naive UI.",
+      "sha256": "f8e728baec34fbe089971f4d16fc9696feced0a82e479609d13efc2d643c04c9",
+      "tags": [
+        "naive-ui",
+        "vue",
+        "theming",
+        "design-tokens",
+        "dark-mode",
+        "tailwind",
+        "frontend"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "pinia-stores",
+      "bucket": "frontend",
+      "path": "skills/frontend/pinia-stores/SKILL.md",
+      "version": "0.1.0",
+      "description": "Pinia (Vue 3) — глобальное состояние: setup-сторы (defineStore с функцией), ref=state/computed=getters/function=actions, именование use*Store, композиция сторов, доступ к стору вне компонента, hydration из props, persist. Активировать при создании/правке файла под resources/js/stores/**, defineStore, useXxxStore, при вопросах «как хранить глобальное состояние / шарить данные между компонентами / куда вынести состояние из компонента».",
+      "sha256": "c4ee00443b052a9164e3c66888b80b29cab22641eb03514dad433c21f05ee499",
+      "tags": [
+        "pinia",
+        "vue",
+        "frontend",
+        "state-management",
+        "store",
+        "architecture"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "reka-ui-cva",
+      "bucket": "frontend",
+      "path": "skills/frontend/reka-ui-cva/SKILL.md",
+      "version": "0.1.0",
+      "description": "Библиотека UI-компонентов на headless-примитивах Reka UI + варианты class-variance-authority (cva). Активировать при добавлении/правке компонента в components/ui/, при заведении cva-вариантов, обёртке reka-ui примитива в свой компонент, составном Root/Trigger/Content (Dialog/Dropdown/Tooltip), слиянии классов cn() и связке с Tailwind.",
+      "sha256": "08ca787baeba49993e40c983f65562937623868432164d450d95bfa9f70b64e6",
+      "tags": [
+        "reka-ui",
+        "cva",
+        "vue",
+        "tailwind",
+        "headless",
+        "components",
+        "variants",
+        "design-system"
+      ],
+      "source": "local"
     },
     {
       "name": "tailwind-conventions",
@@ -722,6 +855,23 @@
       "sha256": "64d1570ca77871c41bc607f087b75757fecae1ad191a95b58a88476d6578cc28",
       "tags": [
         "vue",
+        "frontend"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "vue-dynamic-icons",
+      "bucket": "frontend",
+      "path": "skills/frontend/vue-dynamic-icons/SKILL.md",
+      "version": "0.1.0",
+      "description": "Vue: один компонент-иконка, выбирающий SVG по строковому имени из набора (lucide-vue-next и др.) через <component :is>; активировать при словах динамическая иконка, icon by name, component is icon, проброс size/strokeWidth/color, типобезопасное имя иконки, замена набора иконок.",
+      "sha256": "eb5eb59511a0429619f1b8274f97c9046f826bc17970afc8795956a68082bcd5",
+      "tags": [
+        "vue",
+        "icons",
+        "dynamic-component",
+        "lucide",
+        "typescript",
         "frontend"
       ],
       "source": "local"
@@ -1454,6 +1604,24 @@
       "fetched_at": "2026-06-12"
     },
     {
+      "name": "health-checks",
+      "bucket": "php",
+      "path": "skills/php/health-checks/SKILL.md",
+      "version": "0.1.0",
+      "description": "spatie/laravel-health в Laravel: кастомные Check-классы (диск, очередь, heartbeat шедулера, TCP-порт сервиса, кэш, БД) на Result::ok/failed, регистрация в config/health и Health::checks(), /health endpoint (live/ready, JSON/Filament), расписание прогона и уведомления. Активировать при словах health check, healthcheck, liveness/readiness, /health, spatie health, мониторинг доступности, проверка диска/очереди/кэша/heartbeat, при правке app/Health/** или config/health.php.",
+      "sha256": "224767ce8ead4d4edba3fafb7556f289488c782c09d2425abc5ad5cf0ed1df87",
+      "tags": [
+        "laravel",
+        "health",
+        "monitoring",
+        "spatie",
+        "liveness",
+        "readiness",
+        "observability"
+      ],
+      "source": "local"
+    },
+    {
       "name": "laravel",
       "bucket": "php",
       "path": "skills/php/laravel/SKILL.md",
@@ -1501,6 +1669,29 @@
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/laravel/docs/12.x/broadcasting.md",
       "fetched_at": "2026-06-12"
+    },
+    {
+      "name": "laravel-data",
+      "bucket": "php",
+      "path": "skills/php/laravel-data/SKILL.md",
+      "version": "0.1.0",
+      "description": "DTO на spatie/laravel-data: типизированные Data-классы, вложенные DataCollection, casts/transformers, computed-свойства, mapName/mapInputName, создание from(request) с валидацией, отдача в API/Inertia и аннотация #[TypeScript]. Активировать: нужен типобезопасный DTO вместо массива/array-доступа, разбор входящего запроса в объект, единая форма данных между бэком и фронтом, замена ad-hoc JsonResource на Data.",
+      "sha256": "b6ad47ec3f943555742f731e6be5f46d6c4fcaf34937d398fca4b8ea91c8fc1f",
+      "tags": [
+        "laravel",
+        "spatie",
+        "laravel-data",
+        "dto",
+        "data-transfer-object",
+        "casts",
+        "validation",
+        "inertia",
+        "api"
+      ],
+      "produces_for": [
+        "backend-type-sync"
+      ],
+      "source": "local"
     },
     {
       "name": "laravel-dusk",
@@ -1730,13 +1921,30 @@
       "name": "laravel-testing",
       "bucket": "php",
       "path": "skills/php/laravel-testing/SKILL.md",
-      "version": "0.3.0",
-      "description": "Feature/unit/pest testing patterns: изоляция тестовой БД, детект Docker/локального окружения, coverage gate",
-      "sha256": "33581e0e09fde980fe0ad90cbf848fc51a20c158263c59b231e6dcafcde96ec7",
+      "version": "0.4.1",
+      "description": "Feature/unit/pest testing patterns: изоляция тестовой БД, детект Docker/локального окружения, coverage gate, композиция Pest (setUp-трейты, фикстуры, beforeEach fake/freeze, датасеты)",
+      "sha256": "b2d21e0e8c5b5963ba6ba519230705a365bfad9b390d18b2bab885baa2867a8c",
       "tags": [
         "php",
         "laravel",
         "testing"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "livewire-blade-attributes",
+      "bucket": "php",
+      "path": "skills/php/livewire-blade-attributes/SKILL.md",
+      "version": "0.1.0",
+      "description": "Дельта-гочизы Livewire 3 по атрибутам Blade-компонентов. Активировать при написании/ревью Blade-разметки Livewire-компонентов, когда атрибут тега должен быть условным или динамическим: НЕ ставить @if/@endif/@js() внутри списка атрибутов (ломает парсинг компонента) — собирать атрибуты заранее в @php через ComponentAttributeBag (->merge, ->class) и разворачивать одним выражением. Триггеры: ошибка парсинга/рендера Blade-компонента, условный wire:model/wire:sortable/step/disabled, @js() в атрибуте, нестабильный wire:key в цикле",
+      "sha256": "ca9e8a81b20dd93bc3635cf0d6e657ee1176b9302a24caadc3a93fbe18ead87d",
+      "tags": [
+        "livewire",
+        "blade",
+        "laravel",
+        "frontend",
+        "advisory",
+        "gotchas"
       ],
       "source": "local"
     },
@@ -1867,6 +2075,23 @@
         "laravel",
         "repository",
         "architecture"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "spatie-settings",
+      "bucket": "php",
+      "path": "skills/php/spatie-settings/SKILL.md",
+      "version": "0.1.0",
+      "description": "spatie/laravel-settings: типизированные классы настроек (extends Settings, public-свойства, group()), миграции настроек add/migrate/rename, кэш, выбор рантайм-настройки vs config/, привязка к Filament SettingsPage. Активировать при создании/правке класса настроек, добавлении свойства, settings-миграции или экрана редактирования настроек.",
+      "sha256": "d63797c12893d425bbb43a02c7beb7db64d59daf41a78b06681c030bff7a35af",
+      "tags": [
+        "php",
+        "laravel",
+        "spatie",
+        "settings",
+        "filament",
+        "configuration"
       ],
       "source": "local"
     },
@@ -2102,6 +2327,44 @@
       "tags": [
         "quality",
         "refactoring"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "mutation-testing",
+      "bucket": "quality",
+      "path": "skills/quality/mutation-testing/SKILL.md",
+      "version": "0.1.0",
+      "description": "Мутационное тестирование PHP через Infection: infection.json5 (source/excludes, мутаторы, logs, гейты minMsi/minCoveredMsi), запуск с --threads и --git-diff-lines для инкремента в CI, интерпретация MSI и escaped mutants. Активировать когда настраивают Infection, добавляют мутационный гейт качества тестов в CI, читают отчёт MSI или разбираются с выжившими мутантами.",
+      "sha256": "fc5b7e93948bb3320f4d997ccd2c22b82c6a2d4fc642bf038cd080267f29b625",
+      "tags": [
+        "quality",
+        "testing",
+        "mutation",
+        "infection",
+        "php",
+        "ci"
+      ],
+      "produces_for": [
+        "code-review"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "playwright-e2e",
+      "bucket": "quality",
+      "path": "skills/quality/playwright-e2e/SKILL.md",
+      "version": "0.1.0",
+      "description": "Браузерный E2E на Playwright для веб-приложения (агностично к Vue/Inertia/Livewire): playwright.config с webServer и projects, авторизация одним логином через storageState, конвенция data-testid, изоляция данных/медиа между прогонами, запуск в CI. Активировать когда добавляешь/чинишь end-to-end сценарий через реальный браузер, настраиваешь playwright.config или storageState-логин.",
+      "sha256": "1038a2af4cbde3223b657a50e194565a5f87b3bc9a07715f8674d92e99e4be08",
+      "tags": [
+        "playwright",
+        "e2e",
+        "browser",
+        "testing",
+        "storage-state",
+        "ci",
+        "quality"
       ],
       "source": "local"
     },

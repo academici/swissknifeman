@@ -1,0 +1,10 @@
+{
+  "skill": "livewire-blade-attributes",
+  "snippets": [
+    {
+      "file": "blade-attributes.blade.php",
+      "description": "Пары до/после: плохо — @if/@endif и @js() внутри списка атрибутов тега; хорошо — сборка атрибутов заранее в @php через ComponentAttributeBag (->merge, ->class), плюс корректные wire:model-модификаторы и стабильный wire:key",
+      "tags": ["livewire", "blade", "attributes", "component-attribute-bag", "wire-model", "wire-key"]
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "skill": "parametric-config",
+  "snippets": [
+    {
+      "file": "config.py",
+      "description": "dataclass-параметры детали (generic Part): размеры/допуски/материал в мм, группировка по сущностям (ModelConfig/ShellConfig/JointConfig/ThreadConfig), узлы профиля, производные функции без bpy, экземпляры внизу + вызов derive_all",
+      "tags": ["dataclass", "config", "units", "tolerances", "parameters"]
+    },
+    {
+      "file": "check.py",
+      "description": "Валидация инвариантов параметров без запуска Blender: [OK]/[FAIL], exit-код; проверки высот, стыковки радиусов по допуску, минимальной толщины стенки FDM/SLA, зазора посадки и зазор-vs-глубина резьбы",
+      "tags": ["validation", "invariants", "no-bpy", "fdm", "tolerances"]
+    },
+    {
+      "file": "profile.py",
+      "description": "Профиль из узлов (z,r): derive_all (пересчёт зависимых размеров + синхронизация последнего узла), линейная интерполяция силуэта, revolve_profile через SCREW по оси Z с ленивым импортом bpy/bmesh и конверсией mm",
+      "tags": ["profile", "revolve", "screw", "interpolation", "lazy-bpy", "units"]
+    }
+  ]
+}

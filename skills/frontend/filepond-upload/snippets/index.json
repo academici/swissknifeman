@@ -1,0 +1,20 @@
+{
+  "skill": "filepond-upload",
+  "snippets": [
+    {
+      "file": "register-filepond.ts",
+      "description": "Регистрация FilePond один раз на приложение: фабрика vue-filepond + плагины (validate-type/size, image-preview, file-poster) + CSS ядра и плагинов; варианты published-пакет и локальная обёртка",
+      "tags": ["filepond", "vue-filepond", "plugins", "registration", "app-entry"]
+    },
+    {
+      "file": "FilePondField.vue",
+      "description": "Переиспользуемое поле загрузки: server-конфиг laravel-filepond (process/revert/patch на /filepond, CSRF), v-model списком { id?, serverId? }, восстановление сохранённых файлов постерами, привязка serverId на processfile/removefile",
+      "tags": ["field", "vue", "server-config", "v-model", "poster", "csrf"]
+    },
+    {
+      "file": "form-binding.md",
+      "description": "Привязка списка загруженных файлов к Inertia-форме (useForm) и серверная обработка: маршрут /filepond, колбэки process/revert/patch/restore, Filepond::field($serverId)->getFile()->привязка к модели",
+      "tags": ["form", "useform", "inertia", "laravel-filepond", "backend", "serverId"]
+    }
+  ]
+}

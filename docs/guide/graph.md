@@ -38,6 +38,8 @@ flowchart LR
   end
   subgraph frontend["frontend"]
     backend_type_sync["backend-type-sync"]
+    dark_mode["dark-mode"]
+    tailwind_conventions["tailwind-conventions"]
     wayfinder["wayfinder"]
   end
   subgraph general["general"]
@@ -66,6 +68,7 @@ flowchart LR
     database["database"]
     filament["filament"]
     laravel["laravel"]
+    laravel_data["laravel-data"]
     laravel_security_audit["laravel-security-audit"]
     laravel_structure["laravel-structure"]
     laravel_testing["laravel-testing"]
@@ -85,6 +88,7 @@ flowchart LR
   end
   subgraph quality["quality"]
     code_review["code-review"]
+    mutation_testing["mutation-testing"]
     refactoring_plan["refactoring-plan"]
     tech_debt_audit["tech-debt-audit"]
     test_strategy["test-strategy"]
@@ -101,6 +105,7 @@ flowchart LR
   botkit -->|requires| laravel
   brd -->|requires| business_process
   cross_project_coordinator -->|requires| local_topology
+  dark_mode -->|requires| tailwind_conventions
   data_schema -->|requires| brd
   database -->|requires| laravel
   dependency_audit -->|requires| oss_development
@@ -145,6 +150,7 @@ flowchart LR
   docker_vite -.->|feeds| docker_dev_prod
   go_to_market -.->|feeds| product_roadmap
   idea_discovery -.->|feeds| new_project
+  laravel_data -.->|feeds| backend_type_sync
   laravel_security_audit -.->|feeds| security_design
   legal_compliance -.->|feeds| security_design
   makefile -.->|feeds| docker_dev_prod
@@ -152,6 +158,7 @@ flowchart LR
   monetization_design -.->|feeds| brd
   monetization_design -.->|feeds| go_to_market
   monetization_design -.->|feeds| unit_economics
+  mutation_testing -.->|feeds| code_review
   oncall_rotation -.->|feeds| incident_response
   prd_from_brd -.->|feeds| api_design
   prd_from_brd -.->|feeds| architecture
@@ -164,21 +171,21 @@ flowchart LR
   test_strategy -.->|feeds| code_review
 ```
 
-**В графе:** 62 скиллов, 41 рёбер requires, 27 рёбер produces_for.
+**В графе:** 66 скиллов, 42 рёбер requires, 29 рёбер produces_for.
 
-## Изолированные скиллы (76)
+## Изолированные скиллы (86)
 
 Скиллы без связей `requires`/`produces_for` — самодостаточны.
 
 | Бакет | Скиллы |
 |---|---|
-| blender | `mcp-blender-workflow`, `model-rules`, `threading`, `version-gotchas` |
+| blender | `mcp-blender-workflow`, `model-rules`, `parametric-config`, `threading`, `version-gotchas` |
 | devops | `ci-cd`, `db-test-preflight`, `docker`, `gitops`, `node-pnpm-preflight` |
-| frontend | `eslint-flat-config`, `inertia-vue`, `js-code-style`, `tailwind-conventions`, `vite-module-loader`, `vite-multi-build`, `vitest`, `vue-composition-api` |
+| frontend | `eslint-flat-config`, `filepond-upload`, `inertia-vue`, `js-code-style`, `laravel-echo-client`, `naive-ui-theming`, `pinia-stores`, `reka-ui-cva`, `vite-module-loader`, `vite-multi-build`, `vitest`, `vue-composition-api`, `vue-dynamic-icons` |
 | general | `ai-context-workflow`, `anti-drift`, `compact-responses`, `complex-task-orchestrator`, `cross-layer-change-checklist`, `packages-stack`, `project-map`, `session-handoff`, `skills-ssot`, `ticket-workflow`, `user-roles`, `writing-style` |
 | imported | `agent-security-super-skill`, `ai-agent-super-skill`, `content-creative-super-skill`, `dev-engineering-super-skill`, `finance-super-skill`, `legal-super-skill`, `marketing-super-skill`, `operations-cx-super-skill`, `pm-super-skill`, `research-knowledge-super-skill`, `sales-super-skill`, `token-efficient` |
 | operator | `capacity-planning` |
-| php | `attribute-authorization`, `azguard`, `code-style-spatie`, `dependency-injection`, `enum-attributes`, `laravel-best-practices`, `laravel-broadcasting`, `laravel-dusk`, `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages`, `laravel-permissions`, `laravel-subagents`, `medialibrary`, `named-arguments`, `pao`, `pennant-development`, `php-patterns`, `php-upgrade-checklist`, `repositories` |
+| php | `attribute-authorization`, `azguard`, `code-style-spatie`, `dependency-injection`, `enum-attributes`, `health-checks`, `laravel-best-practices`, `laravel-broadcasting`, `laravel-dusk`, `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages`, `laravel-permissions`, `laravel-subagents`, `livewire-blade-attributes`, `medialibrary`, `named-arguments`, `pao`, `pennant-development`, `php-patterns`, `php-upgrade-checklist`, `repositories`, `spatie-settings` |
 | python | `ml-project-structure`, `venv-dependencies` |
-| quality | `code-simplifier`, `testing-safety-report` |
+| quality | `code-simplifier`, `playwright-e2e`, `testing-safety-report` |
 | roles | `open-source-maintainer`, `solo-founder`, `startup-cto`, `tech-lead` |

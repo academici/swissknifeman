@@ -1,0 +1,25 @@
+// Source: anonymized production Vue 3 + TS project (.prettierrc, plugin chain)
+// Значения форматирования (tabWidth/printWidth/singleQuote/semi) — из скилла frontend/js-code-style.
+// Здесь ВАЖЕН ПОРЯДОК плагинов: organize-imports перед tailwindcss, а tailwindcss — СТРОГО последним.
+{
+    "semi": true,
+    "singleQuote": true,
+    "tabWidth": 4,
+    "printWidth": 120,
+    "singleAttributePerLine": false,
+    "htmlWhitespaceSensitivity": "css",
+    "plugins": [
+        "prettier-plugin-organize-imports",
+        "prettier-plugin-tailwindcss"
+    ],
+    "tailwindFunctions": ["clsx", "cn", "cva"],
+    "tailwindStylesheet": "resources/css/app.css",
+    "overrides": [
+        {
+            "files": "**/*.yml",
+            "options": {
+                "tabWidth": 2
+            }
+        }
+    ]
+}

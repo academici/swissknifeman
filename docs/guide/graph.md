@@ -36,6 +36,10 @@ flowchart LR
     pitch_deck["pitch-deck"]
     risk_assessment["risk-assessment"]
   end
+  subgraph frontend["frontend"]
+    backend_type_sync["backend-type-sync"]
+    wayfinder["wayfinder"]
+  end
   subgraph general["general"]
     context_economy["context-economy"]
     git_commit_rules["git-commit-rules"]
@@ -64,8 +68,10 @@ flowchart LR
     laravel["laravel"]
     laravel_security_audit["laravel-security-audit"]
     laravel_structure["laravel-structure"]
+    laravel_testing["laravel-testing"]
     modular_architecture["modular-architecture"]
     static_analysis["static-analysis"]
+    test_isolation_guard["test-isolation-guard"]
   end
   subgraph pm["pm"]
     brd["brd"]
@@ -91,6 +97,7 @@ flowchart LR
   agent_design -->|requires| architecture
   api_design -->|requires| data_schema
   architecture -->|requires| brd
+  backend_type_sync -->|requires| wayfinder
   botkit -->|requires| laravel
   brd -->|requires| business_process
   cross_project_coordinator -->|requires| local_topology
@@ -127,6 +134,7 @@ flowchart LR
   security_design -->|requires| architecture
   shared_memory -->|requires| local_topology
   tech_stack_selection -->|requires| brd
+  test_isolation_guard -->|requires| laravel_testing
   architecture -.->|feeds| api_design
   architecture -.->|feeds| data_schema
   dependency_audit -.->|feeds| security_design
@@ -156,21 +164,21 @@ flowchart LR
   test_strategy -.->|feeds| code_review
 ```
 
-**В графе:** 58 скиллов, 39 рёбер requires, 27 рёбер produces_for.
+**В графе:** 62 скиллов, 41 рёбер requires, 27 рёбер produces_for.
 
-## Изолированные скиллы (71)
+## Изолированные скиллы (74)
 
 Скиллы без связей `requires`/`produces_for` — самодостаточны.
 
 | Бакет | Скиллы |
 |---|---|
 | blender | `mcp-blender-workflow`, `model-rules`, `threading`, `version-gotchas` |
-| devops | `ci-cd`, `docker`, `gitops`, `node-pnpm-preflight` |
-| frontend | `inertia-vue`, `js-code-style`, `vite-module-loader`, `vite-multi-build`, `vitest`, `vue-composition-api`, `wayfinder` |
-| general | `ai-context-workflow`, `anti-drift`, `compact-responses`, `complex-task-orchestrator`, `cross-layer-change-checklist`, `packages-stack`, `project-map`, `session-handoff`, `skills-ssot`, `ticket-workflow`, `user-roles` |
+| devops | `ci-cd`, `db-test-preflight`, `docker`, `gitops`, `node-pnpm-preflight` |
+| frontend | `eslint-flat-config`, `inertia-vue`, `js-code-style`, `tailwind-conventions`, `vite-module-loader`, `vite-multi-build`, `vitest`, `vue-composition-api` |
+| general | `ai-context-workflow`, `anti-drift`, `compact-responses`, `complex-task-orchestrator`, `cross-layer-change-checklist`, `packages-stack`, `project-map`, `session-handoff`, `skills-ssot`, `ticket-workflow`, `user-roles`, `writing-style` |
 | imported | `agent-security-super-skill`, `ai-agent-super-skill`, `content-creative-super-skill`, `dev-engineering-super-skill`, `finance-super-skill`, `legal-super-skill`, `marketing-super-skill`, `operations-cx-super-skill`, `pm-super-skill`, `research-knowledge-super-skill`, `sales-super-skill`, `token-efficient` |
 | operator | `capacity-planning` |
-| php | `azguard`, `code-style-spatie`, `dependency-injection`, `enum-attributes`, `laravel-best-practices`, `laravel-broadcasting`, `laravel-dusk`, `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages`, `laravel-permissions`, `laravel-subagents`, `laravel-testing`, `medialibrary`, `named-arguments`, `pao`, `pennant-development`, `php-patterns`, `repositories` |
+| php | `attribute-authorization`, `azguard`, `code-style-spatie`, `dependency-injection`, `enum-attributes`, `laravel-best-practices`, `laravel-broadcasting`, `laravel-dusk`, `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages`, `laravel-permissions`, `laravel-subagents`, `medialibrary`, `named-arguments`, `pao`, `pennant-development`, `php-patterns`, `repositories` |
 | python | `ml-project-structure`, `venv-dependencies` |
 | quality | `code-simplifier` |
 | roles | `open-source-maintainer`, `solo-founder`, `startup-cto`, `tech-lead` |

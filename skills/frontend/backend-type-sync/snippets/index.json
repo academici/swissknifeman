@@ -1,0 +1,20 @@
+{
+  "skill": "backend-type-sync",
+  "snippets": [
+    {
+      "file": "typescript-transformer.php",
+      "description": "Конфиг config/typescript-transformer.php: collectors, transformers (Enum/SpatieEnum/Dto/State), datetime->string replacements, output_file, флаги native-enum и null-to-optional",
+      "tags": ["config", "typescript-transformer", "spatie"]
+    },
+    {
+      "file": "annotated-enum.php",
+      "description": "Backed-enum и Spatie-Data DTO с #[TypeScript]: App.Enums.* и App.Data.*, типизация коллекций через PHPDoc, вложенные аннотированные типы",
+      "tags": ["enum", "dto", "spatie-data", "typescript-attribute"]
+    },
+    {
+      "file": "generated-type-usage.vue",
+      "description": "Использование глобальных App.Enums.* / App.Data.* в Vue: DTO как пропсы, Record по enum-union с исчерпывающей проверкой, граница с wayfinder",
+      "tags": ["vue", "typescript", "usage", "app-namespace"]
+    }
+  ]
+}

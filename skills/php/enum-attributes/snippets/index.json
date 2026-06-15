@@ -20,6 +20,11 @@
       "file": "composer-path-repo.json",
       "description": "Подключение локального пакета через repositories path + symlink с фиксацией версии",
       "tags": ["composer", "path-repository", "local-package"]
+    },
+    {
+      "file": "enum-typescript.php",
+      "description": "Стэк #[TypeScript] (экспорт enum в .d.ts) поверх кастомных #[Label]/#[Priority]: Label-атрибут, HasLabelAttribute concern, enum implements HasLabel и фрагмент config/typescript-transformer.php (App.Enums.* union)",
+      "tags": ["enum", "typescript", "spatie", "type-sync", "transformer"]
     }
   ]
 }

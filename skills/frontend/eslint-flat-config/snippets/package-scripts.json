@@ -1,0 +1,30 @@
+// Source: anonymized production Vue 3 + TS project (package.json excerpt)
+// Скрипты lint/format/types + devDependencies всей цепочки. "type": "module" обязателен,
+// иначе eslint.config.js (ESM) не загрузится. Версии — ориентир (ESLint 9+, Vue 3.5+, Tailwind v4).
+{
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "lint": "eslint . --fix",
+        "lint:check": "eslint .",
+        "format": "prettier --write resources/",
+        "format:check": "prettier --check resources/",
+        "types:check": "vue-tsc --noEmit"
+    },
+    "devDependencies": {
+        "@eslint/js": "^9.19.0",
+        "@stylistic/eslint-plugin": "^5.10.0",
+        "@vue/eslint-config-typescript": "^14.3.0",
+        "eslint": "^9.17.0",
+        "eslint-config-prettier": "^10.0.1",
+        "eslint-import-resolver-typescript": "^4.4.4",
+        "eslint-plugin-import": "^2.32.0",
+        "eslint-plugin-vue": "^9.32.0",
+        "prettier": "^3.4.2",
+        "prettier-plugin-organize-imports": "^4.1.0",
+        "prettier-plugin-tailwindcss": "^0.6.11",
+        "typescript": "^5.2.2",
+        "typescript-eslint": "^8.23.0",
+        "vue-tsc": "^2.2.4"
+    }
+}

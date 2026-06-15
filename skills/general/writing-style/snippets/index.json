@@ -1,0 +1,10 @@
+{
+  "skill": "writing-style",
+  "snippets": [
+    {
+      "file": "before-after.md",
+      "description": "Пары «плохо/хорошо» для комментария в коде, описания теста и заголовка коммита: русский по умолчанию, причина вместо пересказа, завершённое действие вместо инфинитива",
+      "tags": ["before-after", "comments", "tests", "commits", "russian"]
+    }
+  ]
+}

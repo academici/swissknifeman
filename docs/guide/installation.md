@@ -13,6 +13,12 @@ git clone <repo> maind && cd maind
 - `--with-service` — регистрирует демон как systemd --user сервис (`maind service install`):
   автозапуск при логине + авто-рестарт. См. [Демон памяти (systemd)](/guide/systemd).
 
+Чтобы демон поднимался **при загрузке ОС** (а не только после логина) — включите linger (разово):
+
+```bash
+loginctl enable-linger $USER       # проверка: loginctl show-user $USER -p Linger → yes
+```
+
 После — подключайте проекты: `maind onboard <path>` (см. навык `ecosystem-integration`).
 
 ## Только CLI

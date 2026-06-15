@@ -56,6 +56,10 @@ maind graph --project <id>      # граф проекта и соседи
 `partial` обычно значит «демон памяти не запущен» → `maind start --only memory` (или
 зарегистрируй сервис: `maind service install`).
 
+Демон под systemd стартует при логине; чтобы поднимался **при загрузке ОС** (сервер по SSH) —
+разово включи linger: `loginctl enable-linger $USER` (проверка: `loginctl show-user $USER -p
+Linger` → `yes`). См. [systemd-гайд](../../docs/guide/systemd.md).
+
 ## Код-граф (graphify) — опционально
 
 graphify — отдельный per-project MCP-сервер графа КОДА. На текущий момент бинаря `graphify-mcp`

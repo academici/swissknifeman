@@ -117,7 +117,8 @@ namespace.
 
 ## Надёжность «всё всегда поднято»
 
-- Демон памяти — под **systemd** (`maind service install`), автозапуск + авто-рестарт. См.
+- Демон памяти — под **systemd** (`maind service install`), автозапуск + авто-рестарт. Для старта
+  при загрузке ОС (без логина) — `loginctl enable-linger $USER`. См.
   [Демон памяти (systemd)](/guide/systemd).
 - MCP-серверы прописаны в `.mcp.json` каждого проекта — клиент поднимает их сам при старте сессии.
 - SessionStart-хук печатает статус связи; чинит — `maind health --cwd --fix`.

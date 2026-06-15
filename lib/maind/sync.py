@@ -78,7 +78,7 @@ def _mcp_run(env, config, projects, mode, dry):
     from .projects import write_config
     results, applied = [], False
     for p in projects:
-        res = deploy_project(env, config, p, dry=dry)
+        res = deploy_project(env, config, p, with_graphify=p.get("graphify", False), dry=dry)
         if res is None:
             results.append({"provisioner": "mcp", "id": p["id"], "status": "skip",
                             "detail": "нет/нет пути проекта"})

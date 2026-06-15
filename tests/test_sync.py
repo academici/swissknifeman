@@ -74,6 +74,29 @@ class TestSync(unittest.TestCase):
             r2 = sync.run_sync(env, config, projs, only="mcp")
             self.assertFalse(r2[0]["changed"])  # повтор — без изменений
 
+    def test_mcp_provisioner_graphify_config_driven(self):
+        # graphify:true в записи проекта → провиженер mcp раскатывает graphify
+        # (когда бинарь есть); без флага — нет. Бинарь мокаем присутствующим.
+        from maind import deploy
+        orig = deploy.shutil.which
+        deploy.shutil.which = lambda name: f"/usr/bin/{name}"
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                env, config, proj = _setup(tmp)
+                config["projects"][0]["graphify"] = True
+                projs = sync.select_projects(env, config, {"all": True})
+                sync.run_sync(env, config, projs, only="mcp")
+                self.assertTrue(has_server(proj / ".mcp.json", "graphify"))
+        finally:
+            deploy.shutil.which = orig
+
+    def test_mcp_provisioner_no_graphify_by_default(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj = _setup(tmp)
+            projs = sync.select_projects(env, config, {"all": True})
+            sync.run_sync(env, config, projs, only="mcp")
+            self.assertFalse(has_server(proj / ".mcp.json", "graphify"))
+
     def test_graph_provisioner_builds_stores(self):
         with tempfile.TemporaryDirectory() as tmp:
             env, config, _ = _setup(tmp)

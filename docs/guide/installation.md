@@ -1,25 +1,32 @@
 # Установка
 
-## CLI
+## Полный bootstrap (рекомендуется)
+
+Одной командой: CLI + демон памяти + автозапуск под systemd.
 
 ```bash
 git clone <repo> maind && cd maind
+./install.sh --with-memory --with-service
+```
+
+- `--with-memory` — `npm install` в корне (демон `@agentmemory/agentmemory`).
+- `--with-service` — регистрирует демон как systemd --user сервис (`maind service install`):
+  автозапуск при логине + авто-рестарт. См. [Демон памяти (systemd)](/guide/systemd).
+
+После — подключайте проекты: `maind onboard <path>` (см. навык `ecosystem-integration`).
+
+## Только CLI
+
+```bash
 ./install.sh
 ```
 
-`install.sh` создаёт симлинк `~/.local/bin/maind → bin/maind` и каталог состояния
-`~/.maind` (`projects.json`, `agents.json`). Опции: `--bin-dir DIR`, `--force`.
+Создаёт симлинк `~/.local/bin/maind → bin/maind` и каталог состояния `~/.maind`
+(`projects.json`, `agents.json`). Опции: `--bin-dir DIR`, `--force`. Проверка: `maind doctor`.
 
-Проверка окружения:
+## Память вручную (без systemd)
 
-```bash
-maind doctor
-```
-
-## Память (опционально)
-
-Демон памяти — Node-пакет `@agentmemory/agentmemory`. Нужен, только если используете
-долгосрочную память:
+Демон памяти — Node-пакет `@agentmemory/agentmemory`:
 
 ```bash
 npm install                  # ставит демон в node_modules
@@ -44,5 +51,7 @@ npm run docs:build      # сборка статического сайта
 
 - **Python 3.8+** и **bash** — для ядра CLI (обязательно).
 - **Node.js** — только для демона памяти и сборки документации.
+- **graphify-mcp** — опционально, для графа кода в проекте (см. [graphify](/guide/graphify));
+  по умолчанию слой выключен, остальное работает без него.
 
 Дальше: [Конфиг .maind.json →](/guide/config)

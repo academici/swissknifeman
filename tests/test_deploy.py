@@ -93,6 +93,23 @@ class TestDeploy(unittest.TestCase):
         finally:
             deploy.shutil.which = orig
 
+    def test_graphify_command_override(self):
+        # graphify_command в записи проекта → произвольный code-intelligence MCP.
+        orig = deploy.shutil.which
+        deploy.shutil.which = lambda name: f"/usr/bin/{name}"
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                _, env = make_repo(tmp)
+                ppath = _project(tmp)
+                cfg = _config(ppath)
+                cfg["projects"][0]["graphify_command"] = "serena-mcp"
+                res = deploy.deploy_project(env, cfg, cfg["projects"][0], with_graphify=True)
+                self.assertEqual(res["graphify"], "written")
+                servers = json.loads((ppath / ".mcp.json").read_text())["mcpServers"]
+                self.assertEqual(servers["graphify"]["command"], "serena-mcp")
+        finally:
+            deploy.shutil.which = orig
+
     def test_mark_deployed_roundtrip(self):
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)

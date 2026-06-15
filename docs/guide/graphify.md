@@ -1,6 +1,14 @@
 # graphify — граф кода
 
-Хаб связывает проекты **двумя независимыми механизмами**, и оба — равноправны:
+::: warning Статус: опциональный слой, бинаря пока нет
+`graphify-mcp` — **внешний** per-project MCP-сервер графа кода. На текущий момент готового бинаря
+в системе нет (нет в npm/PATH), поэтому слой **опционален и неактивен по умолчанию**: всё остальное
+(память + maind-граф + скиллы) работает без него. Когда бинарь появится — включается одним полем в
+конфиге (см. ниже), без переустановки. Можно подключить и любой сторонний code-intelligence MCP
+через `graphify_command`.
+:::
+
+Хаб связывает проекты **двумя независимыми механизмами**:
 
 | Механизм | Что связывает | Как доставляется |
 |:--|:--|:--|
@@ -11,25 +19,30 @@
 держит **топологию между проектами** (composer/doc/skills); graphify — граф **кода внутри**
 одного проекта. maind его не дублирует, а раскатывает как отдельный MCP-сервер.
 
-## Развёртывание
+## Включение (config-driven)
 
-graphify отложен: ставится только по флагу и только если бинарь `graphify-mcp` найден в PATH
-(иначе — warn-and-skip, остальной деплой идёт дальше):
+Намерение «включить graphify» — поле проекта в `.maind.json`; тогда его уважает и `maind sync`:
 
-```bash
-maind deploy --project flexcrm --with-graphify     # допишет graphify MCP в .mcp.json проекта
-maind onboard flexcrm --with-graphify              # онбординг сразу с graphify
+```json
+{ "id": "flexcrm", "graphify": true,
+  "graphify_command": "graphify-mcp" }   // graphify_command опционально (сторонний MCP)
 ```
 
-Запись в `.mcp.json` проекта:
+```bash
+maind sync --project flexcrm --only mcp        # допишет graphify в .mcp.json (если бинарь есть)
+maind onboard flexcrm --with-graphify          # онбординг сразу с graphify (флаг сохранится в конфиг)
+```
+
+Запись в `.mcp.json` проекта (когда бинарь найден):
 
 ```json
 { "mcpServers": {
     "graphify": { "command": "graphify-mcp", "args": ["--root", "/path/to/flexcrm"] } } }
 ```
 
-Состояние деплоя отражается в отчёте: `written` / `skipped-not-installed` / `disabled`, и в
-`projects[].mcp.graphify` после `mark_deployed`.
+Если бинаря (`graphify_command`) нет в PATH — корректный пропуск: отчёт `skipped-not-installed`,
+остальные серверы пишутся, sync не падает. Состояния: `written` / `skipped-not-installed` /
+`disabled` (когда `graphify` не включён).
 
 ## Когда использовать
 

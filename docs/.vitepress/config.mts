@@ -25,6 +25,7 @@ export default withMermaid(defineConfig({
             { text: 'Что такое mAInd', link: '/guide/' },
             { text: 'Философия экосистемы', link: '/ecosystem' },
             { text: 'Архитектура узла', link: '/architecture' },
+            { text: 'Как это всё работает', link: '/guide/how-it-works' },
             { text: 'Установка', link: '/guide/installation' },
             { text: 'Конфиг .maind.json', link: '/guide/config' },
           ],

@@ -5,27 +5,34 @@
 # (projects.json/agents.json — реестры узла, пополняются командами CLI).
 #
 # Использование:
-#   ./install.sh [--bin-dir DIR] [--force]
+#   ./install.sh [--bin-dir DIR] [--force] [--with-memory] [--with-service]
 #
 #   --bin-dir DIR   куда класть симлинк (по умолчанию ~/.local/bin)
 #   --force         заменить чужой файл/симлинк без вопроса
+#   --with-memory   npm install в корне maind (демон памяти @agentmemory/agentmemory)
+#   --with-service  зарегистрировать демон памяти как systemd --user сервис
+#                   (maind service install — автозапуск + авто-рестарт)
 #
-# Демон памяти (agent-memory) — Node: `npm install` в корне maind, затем
-# `maind start --only memory`. Порты настраиваются через .env (см. .env.example),
-# чтобы не конфликтовать с другим узлом.
+# Полный bootstrap: ./install.sh --with-memory --with-service
+# Порты демона настраиваются через .env (см. .env.example), чтобы не конфликтовать
+# с другим узлом. graphify (граф кода) — опционален, ставится отдельно.
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CLI="$REPO_ROOT/bin/maind"
 BIN_DIR="$HOME/.local/bin"
 FORCE=false
+WITH_MEMORY=false
+WITH_SERVICE=false
 
-usage() { grep '^#' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' | sed -n '2,15p'; }
+usage() { grep '^#' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' | sed -n '2,18p'; }
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --bin-dir) BIN_DIR="$2"; shift 2 ;;
     --force) FORCE=true; shift ;;
+    --with-memory) WITH_MEMORY=true; shift ;;
+    --with-service) WITH_SERVICE=true; shift ;;
     -h|--help) usage; exit 0 ;;
     *) echo "ERROR: неизвестный аргумент: $1" >&2; usage >&2; exit 1 ;;
   esac
@@ -70,4 +77,28 @@ case ":$PATH:" in
     esac ;;
 esac
 
-echo "Проверка: maind doctor"
+# ── опциональный bootstrap демона памяти ─────────────────────────────────────
+if [[ "$WITH_MEMORY" == true ]]; then
+  if command -v npm >/dev/null 2>&1; then
+    echo "Установка демона памяти (npm install в $REPO_ROOT)..."
+    ( cd "$REPO_ROOT" && npm install ) || echo "WARN: npm install завершилась с ошибкой"
+  else
+    echo "WARN: npm не найден — пропускаю установку демона памяти (нужен Node.js)"
+  fi
+fi
+
+if [[ "$WITH_SERVICE" == true ]]; then
+  echo "Регистрация systemd --user сервиса демона памяти..."
+  "$CLI" service install || echo "WARN: maind service install не удался (см. вывод выше)"
+fi
+
+# ── graphify (опционально) ───────────────────────────────────────────────────
+command -v graphify-mcp >/dev/null 2>&1 || \
+  echo "INFO: graphify-mcp не найден в PATH — код-граф опционален (см. docs/guide/graphify.md)"
+
+echo ""
+echo "Готово. Дальше:"
+[[ "$WITH_SERVICE" == true ]] || echo "  maind start --only memory       # поднять память (или: maind service install)"
+echo "  maind onboard <path|id>         # подключить проект к экосистеме"
+echo "  maind health --cwd              # проверить связь из каталога проекта"
+echo "  maind doctor                    # диагностика окружения"

@@ -31,6 +31,8 @@ difflib), неизвестный вложенный — предупрежден
   "agents": ["vault-architect"], "skills": [], "tags": ["docs"],
   "namespaces": ["axioma"],            // группы изоляции связей графа+памяти; ["*"] = общая инфраструктура
   "graph_store": "hub",                // hub (data/graphs/<id>.db) | local (<repo>/.maind/graph.db)
+  "graphify": false,                   // включить MCP-сервер графа кода (опц.; бинарь нужен в PATH)
+  "graphify_command": "graphify-mcp",  // опц. команда code-intelligence MCP (дефолт graphify-mcp)
   "status": "active"                   // active | archived | planning
 }
 ```

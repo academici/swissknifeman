@@ -69,6 +69,12 @@ def onboard(env, config, project_or_path, opts):
                           "detail": "swissknifeman недоступен — пропуск"})
 
     # 2. maind deploy — память + граф (MCP-серверы хаба)
+    # --with-graphify фиксируем как намерение в записи проекта, чтобы последующие
+    # `maind sync` тоже раскатывали graphify (config-driven, см. _mcp_run).
+    if opts.get("with_graphify") and not proj.get("graphify"):
+        proj["graphify"] = True
+        if not dry:
+            write_config(env, config)
     res = deploy_project(env, config, proj, targets=opts.get("targets") or None,
                          with_graphify=opts.get("with_graphify", False), dry=dry)
     if res is None:

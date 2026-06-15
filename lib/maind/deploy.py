@@ -29,8 +29,10 @@ def _maind_entry(env, scope):
             "args": ["mcp", "--scope", scope]}
 
 
-def _graphify_entry(project_path):
-    return {"command": "graphify-mcp", "args": ["--root", str(project_path)]}
+def _graphify_entry(project_path, command="graphify-mcp"):
+    """MCP-сервер код-графа проекта. command переопределяется полем graphify_command
+    (задел под сторонний code-intelligence MCP); бинаря может не быть — см. deploy_project."""
+    return {"command": command, "args": ["--root", str(project_path)]}
 
 
 def _resolve_targets(project_path, opt_targets):
@@ -68,13 +70,14 @@ def deploy_project(env, config, project, *, targets=None, with_graphify=False,
         entries["maind"] = _maind_entry(env, scope)
     graphify_state = "disabled"
     if with_graphify:
-        if shutil.which("graphify-mcp"):
-            entries["graphify"] = _graphify_entry(project_path)
+        gcmd = project.get("graphify_command", "graphify-mcp")
+        if shutil.which(gcmd):
+            entries["graphify"] = _graphify_entry(project_path, gcmd)
             graphify_state = "written"
         else:
             graphify_state = "skipped-not-installed"
-            warn(f"проект '{pid}': команда graphify-mcp не найдена в PATH — пропускаю "
-                 f"graphify (установите graphify-mcp, затем повторите --with-graphify)")
+            warn(f"проект '{pid}': команда '{gcmd}' не найдена в PATH — пропускаю graphify "
+                 f"(код-граф опционален; установите бинарь или задайте graphify_command)")
 
     written = []
     for _channel, path in _resolve_targets(project_path, targets):

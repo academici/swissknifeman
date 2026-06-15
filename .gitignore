@@ -5,6 +5,7 @@ data/*
 !data/.gitkeep
 .env
 .maind.json
+gui/status.json
 docs/.vitepress/dist/
 docs/.vitepress/cache/
 .claude/settings.json

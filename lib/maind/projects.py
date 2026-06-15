@@ -75,15 +75,47 @@ def brain_path(config):
 # ── CLI ─────────────────────────────────────────────────────────────────────
 def cmd_projects(env, argv):
     if not argv or argv[0] in ("-h", "--help"):
-        print("maind projects <list|sync> [--json] [--from brain] [--path DIR]")
+        print("maind projects <list|status|sync> [--json] [--project ID] "
+              "[--from brain] [--path DIR]")
         return
     sub, rest = argv[0], argv[1:]
     if sub == "list":
         _cmd_list(env, rest)
+    elif sub == "status":
+        _cmd_status(env, rest)
     elif sub == "sync":
         _cmd_sync(env, rest)
     else:
-        die(f"неизвестная подкоманда projects: {sub} (list|sync)")
+        die(f"неизвестная подкоманда projects: {sub} (list|status|sync)")
+
+
+def _cmd_status(env, argv):
+    from .probe import probe_hub, probe_project
+    opts, _ = parse_args(argv, {"--json": "bool", "--project": "str", "--all": "bool"})
+    config, _src = load_config(env)
+    hub = probe_hub(env, config)
+    reach = hub["memory"]["running"]
+    projs = listing(env, config)
+    if opts["project"]:
+        projs = [p for p in projs if p.get("id") == opts["project"]]
+    reports = [probe_project(env, config, p, memory_reachable=reach) for p in projs]
+    snapshot = {"hub": hub, "projects": reports}
+    if opts["json"]:
+        print(json.dumps(snapshot, ensure_ascii=False, indent=2))
+        return
+    m, g, dw = hub["memory"], hub["graph"], hub["docs_watcher"]
+    print(f"Хаб: память {'up' if m['running'] else 'down'} ({m['url']}) · "
+          f"граф {g['nodes']}n/{g['edges']}e · docs-watcher "
+          f"{'up' if dw['running'] else 'down'}")
+    print(f"Проекты ({len(reports)}):")
+    for r in reports:
+        c = r.get("configured", {})
+        mcp = ("a" if c.get("agentmemory_mcp") else "-") \
+            + ("m" if c.get("maind_mcp") else "-") \
+            + ("g" if c.get("graphify_mcp") else "-")
+        sk = r.get("skills", {}).get("total", 0)
+        print(f"  {r['status']:<11} {r['id']:<18} mcp[{mcp}] skills={sk:<3} "
+              f"{r.get('memory_scope', '')}")
 
 
 def _cmd_list(env, argv):
@@ -108,12 +140,21 @@ def _cmd_list(env, argv):
 
 def _cmd_sync(env, argv):
     opts, _ = parse_args(argv, {"--from": "str", "--path": "str"})
-    if opts["from"] not in ("brain", ""):
-        die(f"поддерживается только --from brain (получено: '{opts['from']}')")
+    src = opts["from"] or "brain"
     config, _src = load_config(env)
-    path = opts["path"] or brain_path(config)
-    config, stats = sync_from_brain(env, config, path)
-    write_config(env, config)
-    print(f"Синк из brain ({path}): +{stats['added']} новых, "
-          f"~{stats['updated']} обновлено, всего {stats['total']}. "
-          f"Записано в {env.default_config.name}")
+    if src == "brain":
+        path = opts["path"] or brain_path(config)
+        config, stats = sync_from_brain(env, config, path)
+        write_config(env, config)
+        print(f"Синк из brain ({path}): +{stats['added']} новых, "
+              f"~{stats['updated']} обновлено, всего {stats['total']}. "
+              f"Записано в {env.default_config.name}")
+    elif src == "swissknifeman":
+        from .graph import open_graph, seed_skills
+        g = open_graph(env, config)
+        stats = seed_skills(g, env, config)
+        g.save()
+        print(f"Синк скиллов из swissknifeman: {stats['projects']} проектов, "
+              f"{stats['skill_nodes']} скилл-узлов, {stats['edges']} рёбер → граф")
+    else:
+        die(f"--from: brain | swissknifeman (получено: '{src}')")

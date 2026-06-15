@@ -9,7 +9,10 @@
 #   memory    демон памяти: start | stop | status
 #   graph     граф: query | stats | neighbors
 #   agents    реестр агентов: list | kill | heartbeat | register
-#   projects  реестр проектов: list | sync
+#   projects  реестр проектов: list | status | sync
+#   deploy    раскатать MCP-серверы хаба на проекты (--project X | --all)
+#   run       выполнить команду соседнего пакета: run <proj> <cap> (--list)
+#   onboard   единый онбординг проекта: skills (swissknifeman) + подключение к мозгу
 #   migrate   импорт: from-brain <.projects.json> | from-agentmemory <dir>
 #   mcp       запустить maind как MCP-сервер (stdio JSON-RPC)
 #   doctor    диагностика окружения
@@ -29,7 +32,7 @@ if [[ ! -d "$REPO_ROOT/lib/maind" ]]; then
   exit 1
 fi
 
-usage() { grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '2,16p'; }
+usage() { grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '2,19p'; }
 
 CMD="${1:-help}"
 [[ $# -gt 0 ]] && shift
@@ -40,7 +43,7 @@ case "$CMD" in
     sha="$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
     echo "maind $sha ($REPO_ROOT)"
     exit 0 ;;
-  start|status|memory|graph|agents|projects|migrate|mcp|doctor) ;;
+  start|status|memory|graph|agents|projects|deploy|run|onboard|migrate|mcp|doctor) ;;
   *) echo "Неизвестная команда: $CMD" >&2; usage >&2; exit 1 ;;
 esac
 

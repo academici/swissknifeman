@@ -7,6 +7,7 @@ import copy
 import json
 import os
 import re
+import shutil
 import sys
 import urllib.error
 import urllib.request
@@ -145,6 +146,17 @@ def parse_args(args, spec, max_pos=0):
     if len(pos) > max_pos:
         die(f"лишние аргументы: {' '.join(pos[max_pos:])}")
     return opts, pos
+
+
+# ── файловые помощники ──────────────────────────────────────────────────────
+def backup_file(path):
+    """Копия <path>.bak, если файл существует. Возвращает путь бэкапа или None."""
+    path = Path(path)
+    if not path.exists():
+        return None
+    bak = path.with_name(path.name + ".bak")
+    shutil.copy2(path, bak)
+    return bak
 
 
 # ── JSON-хранилища (atomic write + устойчивое чтение) ───────────────────────

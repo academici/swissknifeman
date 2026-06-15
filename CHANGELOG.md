@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **auto-approve: ложные `deny_hard` на `git rm` и `*-init`** — общий токен `rm`
+  ловил `git rm` (обратим, файлы в индексе/истории), а токен `init` — `git init`/
+  `npm init`/`composer init`/`swissknifeman topology init`. Теперь `analyze.sh`
+  маскирует `git rm` перед deny_hard-проверкой (голый `rm`/`xargs rm`/`rm -rf`
+  по-прежнему блокируются; `git rm` идёт как мутация — промпт в strict/permissive,
+  разрешён в bypass), а `init` убран из общего списка и заменён точечным паттерном
+  рантлевела (`telinit`/`init [0-6sS]`). `git rm` добавлен в `deny_block_approve`.
+  Файлы хука обновляются `apply-permissions.sh --global` (для `config.json` —
+  перезалить вручную, т.к. он не перезатирается)
+
 ### Added
 
 - **Скиллы из практик констелляции (аудит + 10 скиллов, фокус — фронтенд).**
@@ -17,12 +29,35 @@
   `@stylistic`, границы импортов, цепочка Prettier), `php/test-isolation-guard`
   (bootstrap-страж против тестов по боевой БД/медиа-диску), `php/attribute-authorization`
   (`#[CheckPermission]` + reflection-middleware поверх Gate), `general/writing-style`
-  (тон/язык комментариев, коммитов, описаний тестов), `devops/db-test-preflight`
+  (тон/язык комментариев, коммитов, описаний тестов — расширенная версия, объединена
+  с одноимённым скиллом из flexcrm-экстракции ниже), `devops/db-test-preflight`
   (пре-флайт Postgres-БД перед тестами — аналог `node-pnpm-preflight`). **3 расширены:**
   `frontend/inertia-vue` (доменные срезы `features/<домен>/` + границы импортов, →0.3.0),
   `php/enum-attributes` (секция `#[TypeScript]` + экспорт типов, →0.2.0),
   `php/modular-architecture` (реализация на `nwidart/laravel-modules` + Filament discovery, →0.3.0).
-  `skills.json` 129 → 136; снипеты анонимизированы; `validate.sh` зелёный.
+  Снипеты анонимизированы; `validate.sh` зелёный (0 warnings).
+- **Экстракция универсальных скиллов из flexcrm** (источник: local, авторские):
+  `quality/testing-safety-report` (отчёт безопасности после миграций/рефакторинга),
+  `php/php-upgrade-checklist` (чеклист апгрейда версии PHP — образ/CI, composer,
+  phpstan-baseline, rector, RFC), `general/writing-style` (живой язык комментариев
+  и текстов коммитов, дополняет `git-commit-rules`). Boost-владения (tailwind/mcp/
+  pest) и уже существующее в реестре не дублировались; `fortify-development` оставлен
+  локальным в проекте по решению владельца
+- **Док-предупреждение про чистую переустановку** (`docs/guide/cli.md`): `vendor`/
+  `update` удаляют ранее вендоренные скиллы, выпавшие из набора реестра, включая
+  **незакоммиченные** локальные копии — проектные скиллы держать в git; превью
+  удаляемого — `--dry-run`. (Острый угол, всплывший при онбординге flexcrm)
+- **Визард интеграции `swissknifeman integrate`** (`lib/swissknifeman/integrate.py`)
+  + [чеклист](docs/guide/integration-checklist.md) — единая точка входа: проходит
+  чеклист «выбери, что хочешь из максимального функционала» и применяет выбранное,
+  переиспользуя `do_connect`/`do_vendor` (скиллы), `apply-permissions.sh` (permissions),
+  `generate_hub` (hub) + пишет per-project hook-JSON (auto-approve на PreToolUse
+  Bash/ExitPlanMode) и `.swissknife.json:memory_brain` (членство в memory-brain).
+  Бандлы `minimal|recommended|full|custom`; безопасно — `--dry-run`, merge-only с
+  бэкапами `*.bak`, идемпотентно, пререквизиты (`topology init`, `--global`) только
+  с подтверждением. Зарегистрирован в `cli.py`/лаунчере; тесты `tests/test_integrate.py`.
+  В `CONFIG_KEYS` добавлены `memory_brain`/`coordinator_ignore` (валидны в `.swissknife.json`)
+
 - **Гибкая «единая память» констелляции** — самодостаточная папка-хук
   `configs/claude-code/hooks/memory/` по образцу auto-approve: переключатель
   `memory.sh` (remember/recall/members/status/sync), режим в `env.ini`

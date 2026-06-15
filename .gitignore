@@ -6,3 +6,9 @@ node_modules/
 docs/.vitepress/dist/
 docs/.vitepress/cache/
 .claude/settings.json
+# personal per-project hook overrides (autonomy/mode — must not be committed)
+.claude/auto-approve.env.ini
+.claude/auto-approve.config.json
+.claude/memory.env.ini
+.claude/memory.config.json
+settings.local.json.bak

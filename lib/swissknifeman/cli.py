@@ -4,6 +4,7 @@ import sys
 from .common import Env
 from .connect import cmd_connect
 from .doctor import cmd_doctor
+from .integrate import cmd_integrate
 from .listing import cmd_list
 from .registry import cmd_registry
 from .status import cmd_status
@@ -14,6 +15,7 @@ from .vendor import cmd_vendor
 COMMANDS = {
     "connect": cmd_connect,
     "vendor": cmd_vendor,
+    "integrate": cmd_integrate,
     "update": cmd_update,
     "status": cmd_status,
     "list": cmd_list,

@@ -39,6 +39,18 @@ swissknifeman vendor [--agent claude|cursor|generic]
                      [--skills-path P] [--list] [--dry-run] [--force] [--hub]
 ```
 
+### `swissknifeman integrate`
+
+Интерактивный визард интеграции: проходит [чеклист](./integration-checklist) по
+всему функционалу (скиллы, permissions, хуки auto-approve/память, hub) и применяет
+выбранное. Безопасно — `--dry-run`, merge-only, бэкапы.
+
+```
+swissknifeman integrate [--target P]
+                        [--bundle minimal|recommended|full|custom]
+                        [--yes] [--dry-run] [--file settings.json|settings.local.json]
+```
+
 ### `swissknifeman update [--all] [--dry-run]`
 
 Обновляет подключение проекта. Диск — источник истины: каналы определяются
@@ -52,6 +64,16 @@ swissknifeman vendor [--agent claude|cursor|generic]
   (marketplace видит только коммиты).
 - **vendor**: чистая переустановка по манифесту — удалённые/переименованные
   в реестре скиллы убираются из проекта.
+
+::: warning Чистая переустановка удаляет ранее вендоренные скиллы
+`vendor` (и `update`) читает `.swissknifeman-manifest.json` и **удаляет** скиллы,
+которые были вендорены ранее, но больше не входят в текущий набор реестра
+(скилл убрали/переименовали в реестре, либо он выпал из выбора `--buckets`/
+`--exclude`). Это касается и **незакоммиченных** локальных копий с тем же путём.
+Проектные скиллы, которые нужно сохранить, **держите в git** (или вне
+`skills_path`/манифеста); при Boost их копии остаются в `.cursor/skills`,
+`.claude/skills` и восстанавливаются оттуда. Превью удаляемого — `--dry-run`.
+:::
 
 Проект с маркерами, но без записи в `projects.json`, регистрируется
 автоматически (adopt) — карта проектов самовосстанавливается.

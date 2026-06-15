@@ -166,7 +166,7 @@ flowchart LR
 
 **В графе:** 62 скиллов, 41 рёбер requires, 27 рёбер produces_for.
 
-## Изолированные скиллы (74)
+## Изолированные скиллы (76)
 
 Скиллы без связей `requires`/`produces_for` — самодостаточны.
 
@@ -178,7 +178,7 @@ flowchart LR
 | general | `ai-context-workflow`, `anti-drift`, `compact-responses`, `complex-task-orchestrator`, `cross-layer-change-checklist`, `packages-stack`, `project-map`, `session-handoff`, `skills-ssot`, `ticket-workflow`, `user-roles`, `writing-style` |
 | imported | `agent-security-super-skill`, `ai-agent-super-skill`, `content-creative-super-skill`, `dev-engineering-super-skill`, `finance-super-skill`, `legal-super-skill`, `marketing-super-skill`, `operations-cx-super-skill`, `pm-super-skill`, `research-knowledge-super-skill`, `sales-super-skill`, `token-efficient` |
 | operator | `capacity-planning` |
-| php | `attribute-authorization`, `azguard`, `code-style-spatie`, `dependency-injection`, `enum-attributes`, `laravel-best-practices`, `laravel-broadcasting`, `laravel-dusk`, `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages`, `laravel-permissions`, `laravel-subagents`, `medialibrary`, `named-arguments`, `pao`, `pennant-development`, `php-patterns`, `repositories` |
+| php | `attribute-authorization`, `azguard`, `code-style-spatie`, `dependency-injection`, `enum-attributes`, `laravel-best-practices`, `laravel-broadcasting`, `laravel-dusk`, `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages`, `laravel-permissions`, `laravel-subagents`, `medialibrary`, `named-arguments`, `pao`, `pennant-development`, `php-patterns`, `php-upgrade-checklist`, `repositories` |
 | python | `ml-project-structure`, `venv-dependencies` |
-| quality | `code-simplifier` |
+| quality | `code-simplifier`, `testing-safety-report` |
 | roles | `open-source-maintainer`, `solo-founder`, `startup-cto`, `tech-lead` |

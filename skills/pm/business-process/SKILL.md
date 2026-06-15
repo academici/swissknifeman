@@ -5,7 +5,7 @@ version: 0.1.0
 description: Бизнес-процессы, workflow, FSM, sequence/state-диаграммы, обработка ошибок
 risk: draft
 persona: pm
-tags: [requirements]
+tags: [requirements, workflow]
 requires: []
 produces_for: [brd]
 outputs: ["docs/02_Workflow/[ProcessName].md"]
@@ -91,3 +91,11 @@ stateDiagram-v2
 Один файл = один изолированный процесс. Если процесс зависит от другого — ссылка через `[[Имя процесса]]`, не копирование.
 
 После создания файла — обновить `docs/02_Workflow/_index.md`.
+
+---
+
+## Связанные скиллы
+
+- `pm/brd` — потребитель: функциональные требования и user stories опираются на описанные здесь процессы.
+- `architect/api-design` — FSM-переходы часто становятся эндпоинтами/командами; sequence-диаграмма помогает спроектировать контракт.
+- `general/ticket-workflow` — пример реализации FSM (TicketStatus через StateMachine) в коде Laravel.

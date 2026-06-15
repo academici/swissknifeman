@@ -88,3 +88,6 @@ $model->save(['touch' => false]);
 
 - `php/laravel` — примеры именованных аргументов в Eloquent, связях, DI.
 - `php/dependency-injection` — конструкторы и method injection с именованными аргументами.
+- `php/repositories` — DTO-команды и вызовы store-методов с именованными аргументами.
+- `php/code-style-spatie` (external) — общий стиль кода Laravel/PHP, в который вписывается это правило.
+- `php/static-analysis` — конвейер pint/rector, частично подчищающий стиль вызовов.

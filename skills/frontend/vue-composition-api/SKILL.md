@@ -5,7 +5,7 @@ version: 0.1.0
 description: "Vue Composition API паттерны: синтаксис <script setup> как стандарт написания компонентов"
 risk: write
 persona: oss-dev
-tags: [vue, frontend]
+tags: [vue, frontend, composable, patterns]
 requires: []
 produces_for: []
 outputs: []
@@ -132,3 +132,9 @@ const handleDelete = (id) => {
 }
 </script>
 ```
+
+## Ссылки
+
+- https://vuejs.org/guide/extras/composition-api-faq.html
+- https://vuejs.org/guide/reusability/composables
+- Связанные скиллы: `frontend/pinia-stores` (глобальное состояние — когда `ref` в компоненте/composable уже мало), `frontend/inertia-vue` (где живут `composables/`), `frontend/dark-mode` (пример боевого composable), `frontend/reka-ui-cva` и `frontend/vue-dynamic-icons` (компоненты на `<script setup>`)

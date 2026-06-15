@@ -5,9 +5,9 @@ version: 0.1.0
 description: "Use when working with UserRole enum, user permissions, role priority resolution, or any code that calls UserService::getPrimaryRole(). Activate when the task involves role-based access, participant roles in tickets, #[Priority] attributes on UserRole enum cases, or determining which role a user has in a given ticket context."
 risk: read
 persona: oss-dev
-tags: [roles, authorization, laravel]
-requires: []
-produces_for: []
+tags: [roles, authorization, laravel, php, enum, permissions, reflection]
+requires: [laravel]
+produces_for: [ticket-workflow]
 outputs: []
 snippets: []
 adapters: [claude, cursor, fable]
@@ -64,3 +64,7 @@ return match($role) {
 ## Ссылки
 
 - Для универсального RBAC в новых проектах — `php/azguard`
+- `general/ticket-workflow` — где `getPrimaryRole` применяется в доменной логике тикетов (этот скилл — про сам enum и резолв роли).
+- `php/enum-attributes` — общий паттерн метаданных enum через атрибуты + reflection-резолвер (как `#[Priority]` здесь).
+- `php/attribute-authorization` — декларативная авторизация на экшенах через enum-права.
+- `php/laravel-permissions` — RBAC, policies, gates и entity-scoped permissions.

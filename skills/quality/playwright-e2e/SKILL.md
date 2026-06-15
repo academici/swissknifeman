@@ -5,7 +5,7 @@ version: 0.1.0
 description: "Браузерный E2E на Playwright для веб-приложения (агностично к Vue/Inertia/Livewire): playwright.config с webServer и projects, авторизация одним логином через storageState, конвенция data-testid, изоляция данных/медиа между прогонами, запуск в CI. Активировать когда добавляешь/чинишь end-to-end сценарий через реальный браузер, настраиваешь playwright.config или storageState-логин."
 risk: write
 persona: oss-dev
-tags: [playwright, e2e, browser, testing, storage-state, ci, quality]
+tags: [playwright, e2e, browser, testing, storage-state, ci, quality, frontend, typescript]
 requires: []
 produces_for: []
 outputs: []
@@ -136,4 +136,10 @@ playwright.config.ts
 - https://playwright.dev/docs/locators — getByTestId / getByRole
 - https://playwright.dev/docs/test-webserver
 - snippets/playwright.config.ts, snippets/example.spec.ts, snippets/ci-step.yml
-- Связанные скиллы: `quality/test-strategy` (что покрывать E2E), `frontend/vitest` (unit/компонентные тесты)
+- Связанные скиллы:
+  - `quality/test-strategy` — что вообще покрывать E2E (пирамида, ~10% сверху)
+  - `frontend/vitest` — unit/компонентные тесты фронта (нижний слой пирамиды)
+  - `php/laravel-dusk` — браузерный E2E в Laravel-стеке через Dusk/ChromeDriver; этот скилл — нативный TS-стек `@playwright/test`. Выбор: Playwright для отдельного JS/TS-слоя, Dusk — когда E2E живут в PHP
+  - `php/test-isolation-guard` — страж тестовой БД/медиа-диска (та же задача изоляции, что и шаг 7)
+  - `devops/db-test-preflight` — пре-флайт тестовой БД перед прогоном E2E в CI
+  - `devops/ci-cd` — где монтируется E2E-шаг в пайплайне

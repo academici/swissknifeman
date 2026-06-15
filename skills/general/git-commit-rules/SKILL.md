@@ -5,8 +5,8 @@ version: 0.2.0
 description: "Правила работы с Git в проекте: подготовка коммита, husky/commitlint, формат сообщений и безопасный порядок действий."
 risk: write
 persona: oss-dev
-tags: [git, conventions, conventional-commits]
-requires: []
+tags: [git, conventions, conventional-commits, gitops]
+requires: [node-pnpm-preflight]
 produces_for: [github-flow]
 outputs: []
 snippets: []
@@ -98,3 +98,10 @@ ci(deps): добавить php-расширения для composer install
 - Не выполнять destructive git-команды без явного запроса пользователя.
 - Не смешивать в коммите несвязанные изменения.
 - Не править generated AI-артефакты (`CLAUDE.md`, `AGENTS.md`) вручную.
+
+## Связанные скиллы
+
+- `writing-style` (general) — тон и язык тела коммита (русский, причина вместо механики); формат — здесь.
+- `devops/node-pnpm-preflight` — проверка Node/pnpm перед коммитом с husky/commitlint-хуками.
+- `oss-dev/github-flow` — цепочка Issue → Branch → PR → Merge → Tag и SemVer Oracle (тип коммита → bump версии).
+- `project-map` (general) — откуда брать допустимый scope, если commitlint-конфига нет.

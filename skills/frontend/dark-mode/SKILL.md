@@ -115,4 +115,4 @@ sha256: ""
 - https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme
 - https://developer.mozilla.org/en-US/docs/Web/API/Window/matchMedia
 - https://vuejs.org/guide/reusability/composables
-- Связанные скиллы: `frontend/tailwind-conventions`, `frontend/inertia-vue`, `frontend/vue-composition-api`
+- Связанные скиллы: `frontend/tailwind-conventions` (как `.dark` влияет на цвета/токены), `frontend/inertia-vue` (где живёт composable в слоях), `frontend/vue-composition-api` (паттерн composable), `frontend/naive-ui-theming` (тот же флаг `.dark` выбирает `darkTheme` Naive)

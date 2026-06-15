@@ -6,7 +6,7 @@ description: "Полный сервисный стек Laravel из одного
 risk: write
 persona: operator
 tags: ["docker", "devops", "compose", "laravel", "queue", "websocket"]
-requires: ["docker-php"]
+requires: ["docker-php", "docker-postgres"]
 produces_for: []
 outputs: ["docker-compose.yml (сервисы app/queue/scheduler/reverb/docs)"]
 snippets: ["services.yml", "healthchecks.yml"]
@@ -62,4 +62,4 @@ sha256: ""
 
 - https://docs.docker.com/reference/compose-file/services/#depends_on — условия depends_on
 - https://laravel.com/docs/queues#running-the-queue-worker, https://laravel.com/docs/reverb — воркеры и Reverb
-- Смежные скиллы: `docker-php` (образ), `docker-dev-prod` (dev/prod раскладка), `docker-postgres` (healthy pgsql), `makefile` (управление стеком)
+- Смежные скиллы: `docker-php` (образ), `docker-dev-prod` (dev/prod раскладка), `docker-postgres` (healthy pgsql), `makefile` (управление стеком), `php/health-checks` (содержимое `/up`, liveness/readiness), `php/laravel-broadcasting` (сервис reverb, websockets)

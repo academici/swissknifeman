@@ -5,9 +5,9 @@ version: 0.1.0
 description: LICENSE, CoC, CONTRIBUTING, MAINTAINERS, RFC-процесс, security policy для OSS-проекта
 risk: draft
 persona: oss-dev
-tags: [oss, compliance]
+tags: [oss, compliance, license, security, documentation]
 requires: [oss-development]
-produces_for: []
+produces_for: [dependency-audit]
 outputs: ["ProjectName/LICENSE", "ProjectName/CODE_OF_CONDUCT.md", "ProjectName/CONTRIBUTING.md", "ProjectName/MAINTAINERS.md", "ProjectName/SECURITY.md"]
 sha256: ""
 adapters: [claude, cursor, fable]
@@ -199,6 +199,16 @@ Contributor Covenant 2.1 с подставленным email для reports.
 
 ### (опционально) `ProjectName/docs/rfcs/0000-template.md`
 Шаблон RFC если включён процесс.
+
+---
+
+## Ссылки
+
+- `oss-dev/oss-development` — предпосылка: базовая структура репо.
+- `oss-dev/dependency-audit` — потребитель: LICENSE/SPDX проекта задаёт критерий лицензионной совместимости зависимостей.
+- `oss-dev/dx-design` — стык: issue/PR-шаблоны и CONTRIBUTING — часть и DX, и governance.
+- `oss-dev/github-flow` — куда кладутся ISSUE_TEMPLATE/PR-шаблоны и как идёт PR-flow.
+- `architect/legal-compliance` — регуляторика (GDPR/CCPA/AI Act/DMCA) для продукта; здесь — только OSS-лицензирование/CoC.
 
 ---
 

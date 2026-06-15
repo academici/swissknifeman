@@ -5,9 +5,9 @@ version: 0.1.0
 description: "Параметрическое 3D-моделирование в Blender (bpy) на основе конфига-данных: dataclass-параметры детали (размеры/допуски/материал/единицы mm), построение профиля и revolve/extrude, валидация инвариантов без запуска Blender. Активировать при правке models/*/config.py, profile.py, parts/*, check.py, при добавлении параметра детали, при вопросах про допуски/единицы/стыковку радиусов для FDM/SLA-печати."
 risk: write
 persona: oss-dev
-tags: [blender, bpy, parametric, dataclass, cad, fdm, sla, geometry, units]
-requires: []
-produces_for: []
+tags: [blender, bpy, parametric, dataclass, cad, fdm, sla, geometry, units, python, 3d]
+requires: [threading, model-rules]
+produces_for: [mcp-blender-workflow]
 outputs: []
 snippets: [config.py, check.py, profile.py]
 adapters: [claude, cursor, fable]
@@ -139,7 +139,7 @@ Python (для `check.py`, тестов уровня 1, CI), а тяжёлый B
 - snippets/config.py — dataclass-параметры детали, единицы, производные функции
 - snippets/check.py — валидация инвариантов без Blender
 - snippets/profile.py — профиль из узлов + revolve через SCREW + `derive_all`
-- Связанные навыки: `blender/model-rules`, `blender/threading`
+- Связанные навыки: `blender/model-rules`, `blender/threading`, `blender/mcp-blender-workflow` (общий цикл построения и проверки модели), `blender/version-gotchas` (5.0-API правила для `bmesh`/SCREW)
 - https://docs.blender.org/api/current/bpy.html
 - https://docs.blender.org/manual/en/latest/modeling/modifiers/generate/screw.html
 - https://help.prusa3d.com/article/tolerances_n_of_fdm_3d_printing

@@ -5,7 +5,7 @@ version: 0.1.0
 description: Инвентаризация техдолга, классификация (architectural/code/dependency/test/process), приоритизация по impact × effort, расчёт payback ROI
 risk: draft
 persona: quality
-tags: [quality, validation]
+tags: [quality, validation, refactor, dependencies, workflow]
 requires: []
 produces_for: [refactoring-plan]
 outputs: ["docs/03_Dev/Tech_Debt_Register.md"]
@@ -182,6 +182,17 @@ ROI < 1 → отложить (терпеть дешевле)
 - % capacity на debt: Y%
 - Resolved за квартал: Z items
 ```
+
+---
+
+## Ссылки
+
+- `quality/refactoring-plan` — куда списываются `architectural`/крупные `code`-долги (produces_for)
+- `oss-dev/dependency-audit` — источник сигналов по `dependency`-типу (outdated/CVE/abandoned)
+- `quality/test-strategy` — источник сигналов по `test`-типу (coverage gaps, ice-cream cone)
+- `operator/postmortem` — incident postmortems как источник root-cause долга
+- `quality/code-review` — архив `[issue]`/`[blocker]` комментов как источник сигналов
+- `system/cross-project-coordinator` — межпроектные дубли как кандидаты в долг/общий пакет
 
 ---
 

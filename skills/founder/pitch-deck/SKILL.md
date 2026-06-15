@@ -5,7 +5,7 @@ version: 0.1.0
 description: 10-слайдовая инвесторская дека по канону YC/Sequoia на основе готовых артефактов проекта
 risk: draft
 persona: founder
-tags: [gtm, market]
+tags: [gtm, market, monetization]
 requires: [competitive-analysis, unit-economics, go-to-market]
 produces_for: []
 outputs: ["docs/01_Business/08_Pitch_Deck.md"]
@@ -166,3 +166,17 @@ created: YYYY-MM-DD
 Если пользователь просит .pptx или .pdf:
 - Использовать `document-generator-mcp` (см. `docs/ai/mcp-servers.md`)
 - Markdown остаётся источником истины — `.pptx` собирается из него каждый раз заново, не редактируется отдельно
+
+---
+
+## Связанные скиллы
+
+Дека — потребитель готовых артефактов, ничего не считает заново. Источники слайдов:
+
+- `founder/competitive-analysis` — слайды Competition и Why-now (карта рынка, вектор атаки)
+- `pm/unit-economics` — слайд Business model (LTV/CAC/payback)
+- `pm/go-to-market` — слайд Traction / GTM (план запуска)
+- `founder/idea-discovery` — слайд Problem (боль, цена нерешения)
+- `pm/monetization-design` — слайд Business model (выбранная бизнес-модель)
+- `pm/product-roadmap` — слайд Product и опциональный Roadmap
+- `founder/risk-assessment` — опциональный Risk-acknowledgement слайд в appendix

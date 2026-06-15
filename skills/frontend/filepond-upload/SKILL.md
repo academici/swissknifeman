@@ -5,7 +5,7 @@ version: 0.1.0
 description: "Загрузка файлов через FilePond в Vue + Laravel: регистрация vue-filepond и плагинов (validate-type/size, image-preview, file-poster), серверная обработка через rahulhaque/laravel-filepond (process/revert на /filepond), привязка serverId загруженного файла к форме, превью и постеры. Активировать при добавлении/правке загрузки файлов, drag-and-drop аплоада, FilePond-поля, превью изображений в форме, при словах filepond/vue-filepond/laravel-filepond/file upload/process/revert/serverId."
 risk: write
 persona: oss-dev
-tags: [filepond, vue, laravel, file-upload, frontend, forms, image-preview]
+tags: [filepond, vue, laravel, file-upload, frontend, forms, image-preview, inertia, uploads]
 requires: []
 produces_for: []
 outputs: []

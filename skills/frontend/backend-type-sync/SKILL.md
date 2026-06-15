@@ -5,7 +5,7 @@ version: 0.1.0
 description: "Синхронизация типов backend→frontend через spatie/laravel-typescript-transformer: #[TypeScript] на enum/DTO/Spatie-Data, php artisan typescript:transform → generated.d.ts, использование App.Enums.* / App.Data.* в Vue/TS. Активировать: новый enum/DTO нужен на фронте, рассинхрон типов фронта с бэком, настройка type-sync. Граница с wayfinder (роуты ≠ типы)."
 risk: write
 persona: oss-dev
-tags: [typescript, laravel, spatie, types, enum, dto, frontend, type-sync]
+tags: [typescript, laravel, spatie, types, enum, dto, frontend, type-sync, ci]
 requires: [wayfinder]
 produces_for: []
 outputs: []
@@ -121,4 +121,4 @@ git diff --exit-code -- resources/js/types/generated.d.ts \
 - snippets/generated-type-usage.vue — использование `App.Enums.*` / `App.Data.*` в Vue/TS
 - https://spatie.be/docs/typescript-transformer
 - https://spatie.be/docs/laravel-data
-- Связанные скиллы: `frontend/wayfinder` (роуты), `php/enum-attributes` (устройство enum), `frontend/inertia-vue` (слой types/)
+- Связанные скиллы: `frontend/wayfinder` (роуты), `php/enum-attributes` (устройство enum), `php/laravel-data` (устройство Spatie-Data DTO, которые аннотируем `#[TypeScript]`), `frontend/inertia-vue` (слой types/), `frontend/vitest` (exclude `generated.d.ts` из coverage)

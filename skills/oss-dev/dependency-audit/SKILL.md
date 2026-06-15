@@ -5,9 +5,9 @@ version: 0.2.0
 description: Аудит зависимостей: lockfile sanity, vuln scan, лицензионная совместимость, supply-chain risk, SBOM
 risk: draft
 persona: oss-dev
-tags: [oss, compliance, security]
+tags: [oss, compliance, security, dependencies, php]
 requires: [oss-development]
-produces_for: [security-design]
+produces_for: [security-design, release-engineering]
 outputs: ["ProjectName/Dependency_Audit.md", "ProjectName/SBOM.json"]
 sha256: ""
 adapters: [claude, cursor, fable]
@@ -217,6 +217,13 @@ tooling: npm@X, composer@Y, ...
 - [references/composer.md](references/composer.md) — composer-специфика:
   команды по измерениям, roave/security-advisories, reproducible installs,
   composer-грабли, SBOM для PHP.
+- `oss-dev/oss-development` — предпосылка: даёт манифест (`composer.json`/`package.json`), по которому идёт аудит.
+- `oss-dev/release-engineering` — потребитель: SBOM публикуется как release artefact.
+- `oss-dev/oss-governance` — LICENSE-выбор проекта; лицензионная совместимость зависимостей — здесь.
+- `architect/security-design` — потребитель: vuln/supply-chain находки идут в compliance-pipeline.
+- `php/laravel-package-compatibility` — composer-constraints, версии PHP/Laravel/Testbench для PHP-пакетов.
+- `php/static-analysis` — Pint/PHPStan/Rector: качество кода рядом с аудитом зависимостей.
+- `general/packages-stack` — реестр используемых внешних NPM/Composer пакетов проекта.
 
 ---
 

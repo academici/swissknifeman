@@ -5,8 +5,8 @@ version: 0.1.0
 description: "Мутационное тестирование PHP через Infection: infection.json5 (source/excludes, мутаторы, logs, гейты minMsi/minCoveredMsi), запуск с --threads и --git-diff-lines для инкремента в CI, интерпретация MSI и escaped mutants. Активировать когда настраивают Infection, добавляют мутационный гейт качества тестов в CI, читают отчёт MSI или разбираются с выжившими мутантами."
 risk: write
 persona: quality
-tags: [quality, testing, mutation, infection, php, ci]
-requires: []
+tags: [quality, testing, mutation, infection, php, ci, coverage]
+requires: [test-strategy]
 produces_for: [code-review]
 outputs: [infection.json5]
 snippets: [infection.json5, mutation-ci.yml]
@@ -130,4 +130,10 @@ sha256: ""
 - https://infection.github.io/guide/command-line-options.html
 - snippets/infection.json5 — конфиг с гейтами, мутаторами и logs
 - snippets/mutation-ci.yml — CI-шаг: инкремент `--git-diff-lines` + полный прогон
-- Связанные скиллы: `quality/test-strategy` (стратегия и политика покрытия)
+- Связанные скиллы:
+  - `quality/test-strategy` — стратегия и политика покрытия (что покрывать; MSI ловит слабые ассерты в уже покрытом)
+  - `quality/code-review` — MSI как объективный гейт качества тестов на ревью
+  - `php/static-analysis` — соседний CI-гейт качества PHP (Pint/PHPStan/Rector); мутации проверяют тесты, статанализ — код
+  - `php/laravel-testing` — Pest-набор и драйвер покрытия (Xdebug/PCOV), на котором запускается Infection
+  - `php/pao` — компактный вывод PHP-инструментов (включая Infection) для работы внутри агента
+  - `devops/ci-cd` — где живёт мутационный workflow в пайплайне

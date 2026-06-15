@@ -5,9 +5,9 @@ version: 0.1.0
 description: SemVer-стратегия, CHANGELOG, релизный pipeline (CI/CD), pre-releases, deprecation policy для OSS-пакета
 risk: draft
 persona: oss-dev
-tags: [oss]
+tags: [oss, semver, release, changelog, ci]
 requires: [oss-development]
-produces_for: []
+produces_for: [github-flow]
 outputs: ["ProjectName/RELEASING.md", "ProjectName/CHANGELOG.md"]
 sha256: ""
 adapters: [claude, cursor, fable]
@@ -202,6 +202,18 @@ based_on: oss-development.md
 ### `ProjectName/CHANGELOG.md`
 
 См. формат Keep a Changelog выше. Создаётся пустым с секцией `[Unreleased]` если её нет.
+
+---
+
+## Ссылки
+
+- `oss-dev/oss-development` — предпосылка: базовая структура репо и `Architecture.md`.
+- `oss-dev/github-flow` — потребитель: процессная цепочка Issue→PR→Tag→Release исполняет этот SemVer-контракт и CHANGELOG-формат.
+- `oss-dev/dependency-audit` — SBOM как release artefact; vuln-фиксы влияют на версию.
+- `oss-dev/dx-design` — что break/feature/fix значит для пользователя; TS-типы как публичный API.
+- `general/git-commit-rules` — формат коммитов, по которым SemVer-оракул определяет bump.
+- `devops/ci-cd` — GitHub Actions release-pipeline (тег → test → build → publish).
+- `php/laravel-package-release` — release-нотки/теги/валидация для PHP-пакетов (язык-специфика).
 
 ---
 

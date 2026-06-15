@@ -74,4 +74,4 @@ sha256: ""
 - https://vuejs.org/guide/essentials/component-basics#dynamic-components
 - https://lucide.dev/guide/packages/lucide-vue-next
 - `snippets/Icon.vue`, `snippets/icon-name.type.ts`
-- Связанные скиллы: `frontend/inertia-vue`, `frontend/vue-composition-api`
+- Связанные скиллы: `frontend/inertia-vue` (где живёт `components/shared/Icon.vue`), `frontend/vue-composition-api` (`<script setup>`, `computed`), `frontend/tailwind-conventions` (`cn()` для мерджа классов иконки), `frontend/reka-ui-cva` (иконки внутри компонентов UI-кита)

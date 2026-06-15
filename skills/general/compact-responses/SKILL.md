@@ -5,7 +5,7 @@ version: 0.2.0
 description: "Activate to switch Claude into ultra-compact response mode: minimal prose, code-only answers, no explanations unless asked. Use when you want terse output — e.g. quick edits, code reviews, or repeated tasks where context is already established."
 risk: read
 persona: oss-dev
-tags: [conventions, style, tokens]
+tags: [conventions, style, tokens, context, workflow]
 requires: []
 produces_for: []
 outputs: []
@@ -45,3 +45,9 @@ The one place where expanded output is allowed (and required):
 ```
 
 This mode stays active for the rest of the conversation unless the user says "normal mode" or "подробнее".
+
+## Ссылки
+
+- `context-economy` (general) — экономия **контекста** сессии (CLAUDE.md, rules, /compact, MCP-аудит); этот скилл — про лаконичность **вывода**, не дублируются.
+- `pao` (php) — сжатие вывода PHP-инструментов (тесты/статанализ) до компактного JSON.
+- `writing-style` (general) — тон и язык артефактов, когда подробный текст всё же нужен.

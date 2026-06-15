@@ -5,9 +5,9 @@ version: 0.1.0
 description: Logging, metrics, tracing, alerting. SLO/SLI, error budget, runbooks для прод-готовности
 risk: draft
 persona: architect
-tags: [observability]
+tags: [observability, logging, metrics, tracing, alerting, slo, runbook]
 requires: [architecture]
-produces_for: []
+produces_for: [runbook, incident-response, capacity-planning]
 outputs: ["docs/03_Dev/Observability_Design.md"]
 sha256: ""
 adapters: [claude, cursor, fable]
@@ -207,3 +207,15 @@ tier: 0 | 1 | 2
 - "Логи как-нибудь" — структурированный JSON обязателен
 - Метрики без named labels / dimensions
 - Trace_id не пропагируется через async / queue — ломает debug
+
+---
+
+## Связанные скиллы
+
+- `architect/architecture` — утверждённая архитектура как предусловие.
+- `architect/security-design` — PII-policy в логах, маскировка email/phone/PAN.
+- `architect/eval-design` — AI/LLM-метрики (token cost, hallucination rate) кормят прод-мониторинг (вход этого скилла).
+- `operator/runbook` — детальный operational runbook на каждый P1/P2-алерт, спроектированный здесь (выход).
+- `operator/incident-response` — процесс реагирования, опирающийся на severity и алерты отсюда (выход).
+- `operator/capacity-planning` — что мониторить для масштабирования, на основе USE-метрик отсюда.
+- `php/health-checks` — Laravel-реализация liveness/readiness (spatie/laravel-health) для дизайна отсюда.

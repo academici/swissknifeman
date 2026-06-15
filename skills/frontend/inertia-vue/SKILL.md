@@ -96,4 +96,4 @@ Vue-компонент / page  →  composables (или model)  →  actions  �
 
 - https://inertiajs.com/
 - https://vuejs.org/guide/reusability/composables
-- Связанные скиллы: `frontend/wayfinder`, `frontend/vitest`, `frontend/vue-composition-api`, `frontend/js-code-style`
+- Связанные скиллы: `frontend/wayfinder`, `frontend/vitest`, `frontend/vue-composition-api`, `frontend/js-code-style`, `frontend/pinia-stores` (слой `stores/`), `frontend/eslint-flat-config` (enforce границы импортов `no-restricted-imports`), `frontend/tailwind-conventions`

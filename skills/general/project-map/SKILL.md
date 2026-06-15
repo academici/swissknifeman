@@ -5,7 +5,7 @@ version: 0.2.0
 description: "Быстрая карта структуры проекта и зон ответственности по директориям для безопасного роутинга изменений."
 risk: read
 persona: oss-dev
-tags: [conventions, navigation]
+tags: [conventions, navigation, laravel, architecture, structure]
 requires: []
 produces_for: []
 outputs: []
@@ -53,6 +53,9 @@ sha256: ""
 ## Связанные источники
 
 - Канон структуры для новых проектов — скилл `php/laravel-structure` (доменная таксономия, правило зеркала, размещение классов)
+- Слой репозиториев (read/store split, scopes, delta-DTO) — скилл `php/repositories`
+- Архитектурные паттерны Laravel (actions, resources) — скилл `php/laravel`
+- Масштабирование на модули при росте — скилл `php/modular-architecture`
 - Базовая архитектура: `.ai/guidelines/architecture.md`
 - Навигация по контексту: `.ai/guidelines/navigation.md`
 - Workflow-зависимости: `.ai/guidelines/project-development.md`

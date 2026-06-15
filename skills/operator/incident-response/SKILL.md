@@ -5,7 +5,7 @@ version: 0.1.0
 description: Процесс реагирования на инциденты в проде — severity-уровни, роли (IC/Comms/SME), коммуникация, action log, переход к postmortem
 risk: draft
 persona: operator
-tags: [incident, ops]
+tags: [incident, ops, workflow, sla]
 requires: []
 produces_for: [postmortem]
 outputs: ["docs/03_Dev/Incident_Response.md"]
@@ -166,3 +166,13 @@ adapters: [claude, cursor, fable]
 - Указывать вину людей в action log («Х накосячил») — только действия и факты
 - Менять severity вниз без согласия IC (легко скрыть SEV-2 как SEV-3)
 - Деплоить fix в прод без code review во время SEV-1 «потому что горит» (одна катастрофа порождает следующую) — кроме явных rollback'ов
+
+---
+
+## Ссылки
+
+- `operator/runbook` — на каждый pageable алерт; первые шаги диагностики/митигации SME берёт отсюда
+- `operator/oncall-rotation` — кто такой Primary/Secondary, paging policy по severity, эскалация
+- `operator/postmortem` — обязательный шаг после RESOLVE для SEV-1/2 (lifecycle → POSTMORTEM)
+- `operator/capacity-planning` — capacity-инциденты как отдельная классификация; pre-event war room
+- `architect/observability-design` — алертинг/SLO/error budget, на которых строится DETECT и severity-матрица

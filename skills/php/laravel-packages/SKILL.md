@@ -5,7 +5,7 @@ version: 0.3.0
 description: "Создание Laravel-пакетов: scaffold, тесты, публикация скиллов пакета потребителям через vendor:publish"
 risk: write
 persona: oss-dev
-tags: ["php", "laravel"]
+tags: ["php", "laravel", "package-dev", "skills"]
 requires: []
 produces_for: []
 outputs: []
@@ -68,3 +68,7 @@ sha256: ""
 - snippets/boost-skill-publisher.php
 - snippets/ServiceProvider.stub.php
 - snippets/composer.json.stub
+- Связанные скиллы (upstream-скиллы по работе над пакетом из стартеров): `php/laravel-package-scaffold`, `php/laravel-package-service-provider`, `php/laravel-package-testing`, `php/laravel-package-docs`, `php/laravel-package-release`, `php/laravel-package-compatibility` (все external)
+- `php/laravel` — архитектурные паттерны внутри пакета; `php/laravel-structure` — размещение классов
+- `php/botkit` — пример доменного пакета, публикующего скиллы потребителям
+- `general/skills-ssot` — единый источник истины скиллов для нескольких агентов

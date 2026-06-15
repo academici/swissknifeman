@@ -5,7 +5,7 @@ version: 0.1.0
 description: Процесс и чек-лист code review: что обязательно проверять, severity градация комментариев, async vs sync review, шаблон PR-комментариев
 risk: draft
 persona: quality
-tags: [quality, validation]
+tags: [quality, validation, review, github, workflow]
 requires: []
 produces_for: []
 outputs: ["docs/03_Dev/Code_Review_Guide.md"]
@@ -150,3 +150,13 @@ adapters: [claude, cursor, fable]
 - Мержить PR с красным CI (даже «потом починим»)
 - PR > 500 строк без явного разрешения tech lead
 - Review «по диагонали» PR с security/payments/auth изменениями
+
+---
+
+## Ссылки
+
+- `oss-dev/gh-review` — механика ревью через `gh` CLI (diff/comment/review, экономия контекста); этот скилл — процесс и чек-лист, gh-review — инструмент исполнения
+- `quality/code-simplifier` — что предложить автору по упрощению свежего диффа (вход для `[suggestion]`/`[nit]`)
+- `quality/test-strategy` — критерий «есть ли тесты на новую логику» (P1) опирается на стратегию покрытия
+- `quality/mutation-testing` — объективный гейт качества тестов вместо ручной оценки «тесты есть»
+- `general/git-commit-rules` — конвенции коммитов/PR, которые проверяются на ревью

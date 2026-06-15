@@ -152,4 +152,5 @@ public function archived_document_is_hidden_from_public_list(): void { /* ... */
 
 - `git-commit-rules` (general) — формат и механика git: Conventional Commits,
   типы, scope, breaking, husky/commitlint, порядок действий.
+- `compact-responses` (general) — лаконичность вывода модели (когда сколько текста); этот скилл — про тон и язык, когда текст всё же нужен.
 - snippets/before-after.md — пары «плохо/хорошо» для комментария и заголовка коммита.

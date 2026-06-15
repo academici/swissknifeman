@@ -5,7 +5,7 @@ version: 0.1.0
 description: "Проверка доступности Node/pnpm на хосте перед командами и git hooks, которые используют pnpm (commitlint, lint, сборка)."
 risk: read
 persona: operator
-tags: [node, pnpm, devops]
+tags: [node, pnpm, devops, preflight, ci]
 requires: []
 produces_for: []
 outputs: []
@@ -33,3 +33,7 @@ sha256: ""
 ## Для коммитов
 
 Перед `git commit` убедитесь, что `pnpm` и `node` доступны в текущем shell-сеансе, иначе `commit-msg` hook с `commitlint` упадет.
+
+## Ссылки
+
+- Смежные скиллы: `devops/db-test-preflight` (аналогичный пре-флайт для тестовой БД), `devops/docker-vite` (Vite/pnpm в Docker-сервисе), `general/git-commit-rules` (husky/commitlint, ради которых нужен pnpm в shell)

@@ -76,3 +76,4 @@ sha256: ""
 - https://laravel.com/docs/blade#default-merged-attributes (ComponentAttributeBag, `merge`, `class`)
 - Laravel Boost (`livewire/*`) — версионные правила Livewire 2/3/4; этот скилл их не дублирует.
 - `snippets/blade-attributes.blade.php` — пары до/после.
+- Связанные скиллы: `php/filament` (UI на Livewire — те же Blade-компоненты), `frontend/laravel-echo-client` (realtime во фронте, если Livewire дополняется websockets).

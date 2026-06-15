@@ -5,9 +5,9 @@ version: 0.1.0
 description: Структурированный опрос по сырой идее — JTBD, problem statement, hypothesis, перед competitive-analysis
 risk: draft
 persona: founder
-tags: [discovery]
+tags: [discovery, requirements, market]
 requires: []
-produces_for: [monetization-design, new-project]
+produces_for: [competitive-analysis, monetization-design, new-project]
 outputs: ["docs/01_Business/00_Idea_Discovery.md"]
 sha256: ""
 adapters: [claude, cursor, fable]
@@ -141,3 +141,13 @@ When [situation], [persona] wants to [job], so that [outcome].
 - Уходить в roadmap
 
 Всё это — следующие шаги цепочки, не текущий.
+
+---
+
+## Связанные скиллы
+
+- `founder/competitive-analysis` — следующий шаг цепочки: JTBD отсюда задаёт конкурентный ландшафт
+- `pm/monetization-design` — потребитель: выбор бизнес-модели опирается на сегмент и боль из discovery
+- `founder/new-project` — оркестратор: запускает discovery как первый шаг при заведении проекта
+- `general/spec-interview` — родственная методика опроса (один вопрос за раз, агент сам читает контекст), но для технического ТЗ перед кодом, а не для бизнес-идеи
+- `founder/risk-assessment` — смежный: kill-criteria и red flags перекликаются с рыночными рисками

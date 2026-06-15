@@ -5,9 +5,9 @@ version: 0.1.0
 description: "Шаблон models/{name}/ai/rules.md — моделе-специфичные правила, читаемые агентом перед любой задачей"
 risk: write
 persona: oss-dev
-tags: [blender, template, rules]
+tags: [blender, template, rules, 3d, cad, conventions]
 requires: []
-produces_for: []
+produces_for: [mcp-blender-workflow]
 outputs: []
 snippets: []
 adapters: [claude, cursor, fable]
@@ -92,3 +92,9 @@ set_viewport_camera(z_mm=<z>,  distance=<d>)  # <зона 2>
 - При изменении резьбы → обновить таблицу параметров резьбы.
 - При изменении компоновки или зон камеры → обновить готовые значения.
 - При обнаружении новой межконфигурной зависимости → обновить таблицу зависимостей.
+
+## Связанные скиллы
+
+- `blender/mcp-blender-workflow` — читает этот файл на Шаге 0 перед любой задачей; общий цикл построения модели.
+- `blender/parametric-config` — реализация межконфигурных зависимостей и зон камеры из этого шаблона в `config.py`/`profile.py`/`common.py`.
+- `blender/threading` — источник значений для таблицы «Параметры резьбы».

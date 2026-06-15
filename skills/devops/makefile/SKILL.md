@@ -62,4 +62,4 @@ Makefile — единая точка входа для управления пр
 
 - https://www.gnu.org/software/make/manual/make.html#Phony-Targets — .PHONY
 - https://www.gnu.org/software/make/manual/make.html#Last-Resort — match-anything (catch-all) правила
-- Смежные скиллы: `docker-dev-prod` (compose-файлы, которые дергает Makefile), `docker-postgres` (цель db-create-test)
+- Смежные скиллы: `docker-dev-prod` (compose-файлы, которые дергает Makefile), `docker-services` (управление стеком: logs/restart/workers), `docker-postgres` (цель db-create-test), `db-test-preflight` (цель `test-preflight` как зависимость `test`)

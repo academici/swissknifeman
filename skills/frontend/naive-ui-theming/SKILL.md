@@ -5,8 +5,8 @@ version: 0.1.0
 description: "Глобальная тема Naive UI: GlobalThemeOverrides (common + Button/Card/Form/Input/Tag/Tabs…), NConfigProvider в точке входа, тёмная тема naive (darkTheme), связь токенов с Tailwind/CSS-переменными. Активировать при правке config/naive-ui.ts, темы Naive, themeOverrides, NConfigProvider, primaryColor/borderRadius, dark mode под Naive UI."
 risk: write
 persona: oss-dev
-tags: [naive-ui, vue, theming, design-tokens, dark-mode, tailwind, frontend]
-requires: []
+tags: [naive-ui, vue, theming, design-tokens, dark-mode, tailwind, frontend, components, ui]
+requires: [tailwind-conventions]
 produces_for: []
 outputs: []
 snippets: [naive-theme.ts, app.ts]
@@ -154,4 +154,4 @@ sha256: ""
 - https://www.naiveui.com/en-US/os-theme/docs/customize-theme
 - https://www.naiveui.com/en-US/os-theme/docs/theme — общая модель тем и `darkTheme`
 - Переменные компонента: `node_modules/naive-ui/es/<component>/styles/light.ts`
-- Связанные скиллы: `frontend/tailwind-conventions`, `frontend/inertia-vue`, `frontend/vue-composition-api`
+- Связанные скиллы: `frontend/tailwind-conventions` (токены/CSS-переменные, флаг `.dark`), `frontend/inertia-vue` (где живёт `config/naive-ui.ts`), `frontend/vue-composition-api`, `frontend/dark-mode` (тот же флаг `.dark` выбирает `darkTheme`), `frontend/reka-ui-cva` (альтернатива: свой UI-кит на headless-примитивах вместо готового Naive)

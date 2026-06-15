@@ -5,9 +5,9 @@ version: 0.1.0
 description: "Упрощение свеженаписанного кода без изменения поведения: мёртвый код, лишние абстракции, дубли, выравнивание с паттернами проекта. Поведение фиксируют тесты."
 risk: write
 persona: quality
-tags: [quality, refactoring]
+tags: [quality, refactoring, refactor, ci, validation]
 requires: []
-produces_for: []
+produces_for: [code-review]
 outputs: []
 snippets: ["simplify-on-push.yml"]
 adapters: [claude, cursor, fable]
@@ -59,3 +59,11 @@ sha256: ""
 `snippets/simplify-on-push.yml` — шаблон GitHub Actions: агент прогоняет
 этот чек-лист по диффу пуша и оставляет предложения как PR-комментарий.
 Фоновый агент **предлагает**, но не мержит. См. docs/workflows/background-agents.
+
+## Ссылки
+
+- `quality/refactoring-plan` — плановый рефакторинг старого кода (legacy), а не свежего диффа
+- `quality/tech-debt-audit` — инвентаризация и приоритизация долга до рефакторинга
+- `quality/code-review` — упрощение свежего диффа подаёт предложения `[suggestion]`/`[nit]` в ревью
+- `quality/test-strategy` — тесты как гейт: без покрытия изменяемого участка не упрощать
+- `system/cross-project-coordinator` — дубли между проектами (когда копия утилиты живёт в другом репо)

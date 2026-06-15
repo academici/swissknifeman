@@ -94,4 +94,4 @@ export const useCounterStore = defineStore('counter', () => {
 - https://pinia.vuejs.org/cookbook/composing-stores.html
 - https://pinia.vuejs.org/ssr/ (hydration, per-request instance)
 - https://prazdevs.github.io/pinia-plugin-persistedstate/
-- Связанные скиллы: `frontend/vue-composition-api` (локальное состояние компонента), `frontend/inertia-vue` (где `stores/` в слоистой `resources/js`)
+- Связанные скиллы: `frontend/vue-composition-api` (локальное состояние компонента), `frontend/inertia-vue` (где `stores/` в слоистой `resources/js`), `frontend/laravel-echo-client` (живые обновления стора через realtime-события)

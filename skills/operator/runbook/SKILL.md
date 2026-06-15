@@ -5,7 +5,7 @@ version: 0.1.0
 description: Шаблон operational runbook на каждый P1/P2-алерт — symptoms, диагностика, mitigation steps, escalation, post-actions
 risk: draft
 persona: operator
-tags: [ops, incident]
+tags: [ops, incident, template, monitoring]
 requires: []
 produces_for: [incident-response]
 outputs: ["docs/03_Dev/Runbooks/[AlertName].md"]
@@ -179,3 +179,16 @@ docs/03_Dev/Runbooks/
 - Реальные PII / секреты в примерах команд
 - Молчаливое устаревание: если runbook не трогали > 6 мес — review-метка
 - Хранить runbook'и вне репо (Confluence-only, Notion-only) — теряются при ротации tooling
+
+---
+
+## Ссылки
+
+- `operator/incident-response` — предпосылка: без процесса инцидентов runbook бессмысленен; severity/IC-роли берутся отсюда
+- `operator/oncall-rotation` — page обязан ссылаться на runbook; runbook = что делать разбуженному on-call
+- `operator/postmortem` — устаревший runbook вскрывается в постмортеме → AI на update (postmortem produces_for runbook)
+- `operator/capacity-planning` — scale-up как опция митигации опирается на autoscaling policy и max replicas
+- `architect/observability-design` — алертинг определяет, на какие алерты нужны runbook'и (runbook_url в payload)
+- `php/health-checks` — /health (live/ready) как источник symptoms и diagnostic steps
+- `php/pennant-development` — feature-flag off как приоритетная (реверсивная) митигация
+- `quality/tech-debt-audit` — структурная проблема из post-actions → строка в Tech_Debt_Register

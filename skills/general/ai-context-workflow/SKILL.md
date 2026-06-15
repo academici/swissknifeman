@@ -5,7 +5,7 @@ version: 0.1.0
 description: "Редактирование AI-контекста проекта: .ai/guidelines, .ai/skills, boost.json; запрет правки сгенерированных CLAUDE.md/AGENTS.md; обязательный php artisan boost:update; объяснение цикла для Cursor и Claude Code."
 risk: write
 persona: oss-dev
-tags: [ai, workflow, conventions]
+tags: [ai, workflow, conventions, ai-context, skills, laravel]
 requires: []
 produces_for: []
 outputs: []
@@ -51,3 +51,9 @@ sha256: ""
 ## Ссылка для людей
 
 Полный разбор для людей: каталог `docs/ai/` (`index.md`, `source-layout.md`, `scenarios.md`, `environment.md`); в собранной документации портал `/ai`.
+
+## Связанные скиллы
+
+- `skills-ssot` (general) — **структура** SSOT (`.ai/skills` + симлинки, gitignore, vendor-скиллы); этот скилл — **workflow** правок AI-контекста и `boost:update`, не дублируются.
+- `context-economy` (general) — что держать в CLAUDE.md / `.claude/rules/`, чтобы не раздувать контекст.
+- `cross-layer-change-checklist` (general) — шаг «Документация и контекст агентов» при кросс-слойных изменениях.

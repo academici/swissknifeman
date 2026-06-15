@@ -5,8 +5,8 @@ version: 0.1.0
 description: Запуск нового стартап-проекта: концепция, конкуренты, риски, полная структура папок
 risk: write
 persona: founder
-tags: [discovery, requirements]
-requires: [competitive-analysis, risk-assessment]
+tags: [discovery, requirements, market, gtm]
+requires: [idea-discovery, competitive-analysis, risk-assessment]
 produces_for: []
 outputs: [ProjectName.md, "docs/01_Business/01_Concept_and_Monetization.md", "docs/01_Business/02_Competitive_Analysis.md", "docs/01_Business/Risk_Register.md", "Открытые вопросы.md"]
 sha256: ""
@@ -75,3 +75,21 @@ adapters: [claude, cursor, fable]
 - Общие модули, которые можно вынести в `02 - Knowledge/`
 - Пересечение аудитории с другим проектом → возможность bundle/partnership
 - Общие технические решения → ссылка через `[[файл]]`
+
+---
+
+## Связанные скиллы
+
+Этот скилл — оркестратор: он не дублирует доменные скиллы, а вызывает их по этапам. Цепочка:
+
+- `founder/idea-discovery` — этап 0: discovery сырой идеи (JTBD, гипотеза, kill-criteria) до концепции
+- `founder/competitive-analysis` — этап 2: рынок, конкуренты, вектор атаки
+- `founder/risk-assessment` — этап 3: 5 категорий рисков, Risk Register
+- `pm/unit-economics` — этап 4: LTV/CAC/payback
+- `pm/business-process` — этап 6: FSM-процессы
+- `pm/go-to-market` — этап 7: GTM-стратегия
+- `pm/product-roadmap` — этап 8: MVP → v1 → v2
+- `pm/brd` — этап 9: Business Requirements Document
+- `architect/architecture`, `architect/data-schema`, `architect/api-design` — этапы 10–12: технический дизайн
+- `pm/monetization-design` — смежный: выбор бизнес-модели перед unit-economics
+- `roles/solo-founder`, `roles/startup-cto` — персоны, которые активируют эту цепочку

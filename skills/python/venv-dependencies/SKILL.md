@@ -5,8 +5,8 @@ version: 0.1.0
 description: "Управление зависимостями и виртуальными окружениями Python для воспроизводимости проектов"
 risk: write
 persona: oss-dev
-tags: [python, venv, dependencies]
-requires: []
+tags: [python, venv, dependencies, tooling, quality, conventions]
+requires: [ml-project-structure]
 produces_for: []
 outputs: []
 snippets: []
@@ -88,3 +88,10 @@ __pycache__/
 - **Black:** Бескомпромиссный форматтер кода. Спорить о стиле больше не нужно, Black сам всё отформатирует (`black .`).
 - **Ruff:** Современный, невероятно быстрый линтер на Rust (заменяет Flake8, Isort и многие другие).
 - **Mypy:** Статический анализатор типов (опционально, но крайне полезно при написании сложной логики и Backend-а на Python).
+
+## Связанные скиллы
+
+- `python/ml-project-structure` — структура проекта, которая определяет, куда кладутся `requirements.txt`/`pyproject.toml` и что попадает в `.gitignore`.
+- `php/static-analysis` — PHP-аналог связки Black/Ruff/Mypy (Pint, PHPStan, Rector) локально и в CI.
+- `general/packages-stack` — реестр внешних зависимостей проекта и опора на их официальную документацию.
+- `oss-dev/dependency-audit` — аудит зависимостей (vuln scan, лицензии, supply-chain, SBOM) поверх зафиксированных версий.

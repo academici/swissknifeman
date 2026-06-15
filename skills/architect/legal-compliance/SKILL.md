@@ -5,7 +5,7 @@ version: 0.1.0
 description: GDPR, CCPA, AI Act, DMCA, COPPA, DSA — чеклист регуляторных требований до запуска
 risk: draft
 persona: architect
-tags: [compliance]
+tags: [compliance, gdpr, privacy, ai-act, regulatory]
 requires: [architecture]
 produces_for: [security-design]
 outputs: ["docs/03_Dev/Legal_Compliance.md", "docs/01_Business/Privacy_Policy_Draft.md", "docs/01_Business/Terms_of_Service_Draft.md"]
@@ -230,3 +230,13 @@ requires_lawyer_review: true
 - Хранить данные детей < 13 без COPPA-flow в US
 - Делать crypto/fintech без юр-консультации по AML/KYC
 - "Compliance потом" — retrofit обычно стоит в 10× дороже design-time
+
+---
+
+## Связанные скиллы
+
+- `architect/architecture` — карта хранения данных и vendors как основа для compliance (предусловие).
+- `architect/security-design` — GDPR privacy-by-design, классификация данных, retention; этот чеклист кормит её требованиями.
+- `architect/eval-design` — для AI Act high/limited-risk: eval-харнес как часть conformity и transparency.
+- `architect/observability-design` — audit trail и retention логов под Article 30 / breach-response.
+- `imported/legal-super-skill` — внешний свод по контрактам/NDA/compliance (анализ, не зеркало).

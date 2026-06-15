@@ -6,8 +6,8 @@ description: Unit economics: LTV, CAC, payback, churn, break-even, 3 сцена�
 risk: draft
 persona: pm
 tags: [monetization]
-requires: []
-produces_for: [pitch-deck]
+requires: [monetization-design]
+produces_for: [pitch-deck, go-to-market]
 outputs: ["docs/01_Business/04_Unit_Economics.md"]
 sha256: ""
 adapters: [claude, cursor, fable]
@@ -115,3 +115,12 @@ Break-even = Fixed costs / (Unit price - Variable cost per unit)
 - Сравнение с бенчмарками отрасли (SaaS: LTV/CAC ≥ 3, Churn < 5%)
 - Предложение: какую метрику улучшить в первую очередь и как
 - Связь с риском: если unit economics отрицательная → ссылка на `[[Risk Register]]`
+
+---
+
+## Связанные скиллы
+
+- `pm/monetization-design` — вход: выбранная бизнес-модель задаёт набор метрик (требуется ДО расчёта).
+- `pm/go-to-market` — потребитель: гейты запуска платных каналов (CAC < LTV, payback) берутся отсюда.
+- `founder/pitch-deck` — потребитель: финансовый слайд деки опирается на эти цифры.
+- `founder/risk-assessment` — отрицательная unit economics → запись в Risk Register.

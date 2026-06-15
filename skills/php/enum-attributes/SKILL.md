@@ -86,4 +86,4 @@ sha256: ""
 - https://getcomposer.org/doc/05-repositories.md#path
 - https://github.com/spatie/laravel-typescript-transformer
 - `snippets/enum-typescript.php` — enum со стэком #[TypeScript]+#[Label], Label-атрибут и concern, фрагмент config
-- Связанные скиллы: `frontend/backend-type-sync` (потребление App.Enums.* на фронте), `php/filament`
+- Связанные скиллы: `frontend/backend-type-sync` (потребление App.Enums.* на фронте), `php/filament`, `php/attribute-authorization` (тот же приём reflection+атрибут, но для enum-прав на экшенах), `php/laravel-data` (enum-кейсы как свойства DTO), `php/laravel-structure` (размещение Enums/Concerns/Attributes/Support в дереве)

@@ -5,9 +5,9 @@ version: 0.1.0
 description: Оценка качества LLM/AI-выводов — eval-set, метрики, regression-харнес, automated + human review
 risk: draft
 persona: architect
-tags: [agentic, validation]
+tags: [agentic, validation, llm, metrics, testing]
 requires: [agent-design]
-produces_for: []
+produces_for: [observability-design]
 outputs: ["docs/03_Dev/Eval_Design.md", "docs/03_Dev/Evals/eval_set_v1.jsonl"]
 sha256: ""
 adapters: [claude, cursor, fable]
@@ -213,3 +213,13 @@ based_on: docs/03_Dev/Agent_Design.md
 - Хранить реальные user-запросы в eval-set без анонимизации
 - "Покажу метрики потом" — без eval-set качество = вкусовщина
 - Игнорировать adversarial категорию — jailbreak найдут пользователи
+
+---
+
+## Связанные скиллы
+
+- `architect/agent-design` — agent-контракт (tool registry, autonomy level), без него непонятно что мерять (предусловие).
+- `architect/observability-design` — production-evals и метрики качества кормят прод-мониторинг и алерты (выход этого скилла).
+- `architect/security-design` — анонимизация реальных user-запросов перед добавлением в eval-set.
+- `quality/test-strategy` — общая пирамида тестов; eval — её AI-специфичный слой.
+- `imported/agent-security-super-skill` — внешний справочник по adversarial/jailbreak-сценариям.

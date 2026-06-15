@@ -92,3 +92,5 @@ final readonly class StoreAction
 - `php/laravel-structure` — где живут Actions/Services/Repositories, правила размещения файлов.
 - `php/repositories` — что разрешено инжектить репозиториям и как они устроены внутри.
 - `php/laravel` → `layer-boundaries.md` — границы слоёв и направления вызовов; `actions.md` — анатомия Action и Command DTO.
+- `php/named-arguments` — конструкторы и method injection с именованными аргументами.
+- `php/php-patterns` — VO/DTO/pipeline, собираемые через инъекцию.

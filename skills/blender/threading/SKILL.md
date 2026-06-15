@@ -5,9 +5,9 @@ version: 0.1.0
 description: "Резьба на FDM/SLA-деталях: материал, физика печати, радиальные зазоры по типу посадки"
 risk: write
 persona: oss-dev
-tags: [blender, 3d, fdm, threading]
+tags: [blender, 3d, fdm, sla, threading, geometry, bpy]
 requires: []
-produces_for: []
+produces_for: [parametric-config, mcp-blender-workflow]
 outputs: []
 snippets: ["snippets-threading.md"]
 adapters: [claude, cursor, fable]
@@ -69,3 +69,10 @@ scr.iterations   = turns       # число витков
 
 - [Blender SCREW modifier](https://docs.blender.org/manual/en/latest/modeling/modifiers/generate/screw.html)
 - [FDM thread tolerances — Prusa Knowledge Base](https://help.prusa3d.com/article/tolerances_n_of_fdm_3d_printing)
+
+## Связанные скиллы
+
+- `blender/parametric-config` — параметры `*_thread_*` и `*_clearance` заводятся в `config.py` как dataclass-поля и проверяются инвариантом `thread_depth > thread_clearance` в `check.py`.
+- `blender/model-rules` — таблица «Параметры резьбы» в `models/{name}/ai/rules.md` хранит pitch/depth/turns/clearance для конкретных пар деталей.
+- `blender/mcp-blender-workflow` — общий цикл построения и проверки модели, в который встроена печать резьбы.
+- `blender/version-gotchas` — ловушки SCREW-модификатора и `temp_override` в Blender 5.0.

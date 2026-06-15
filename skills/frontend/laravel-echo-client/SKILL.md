@@ -93,4 +93,4 @@ onUnmounted ──▶ dispose(): channel.stopListening('.event', namedHandler)
 - https://github.com/laravel/echo
 - https://reverb.laravel.com/
 - snippets/useEcho.ts, snippets/echo-config.ts, snippets/axios-socket-id.ts
-- Связанные скиллы: `php/laravel-broadcasting` (backend: события, каналы, ShouldBroadcast), `frontend/inertia-vue`, `frontend/vue-composition-api`
+- Связанные скиллы: `php/laravel-broadcasting` (backend: события, каналы, ShouldBroadcast), `frontend/inertia-vue`, `frontend/vue-composition-api`, `frontend/pinia-stores` (realtime-состояние «кто онлайн»/уведомления в сторе, доступ к стору из ws-адаптера вне компонента)

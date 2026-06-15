@@ -5,9 +5,9 @@ version: 0.1.0
 description: "Дисциплина против «закапывания» агента: думай до кода, простота прежде всего, хирургические правки, circuit-breaker при затянувшихся итерациях."
 risk: read
 persona: oss-dev
-tags: [workflow, discipline]
+tags: [workflow, discipline, orchestration, context]
 requires: []
-produces_for: []
+produces_for: [session-handoff]
 outputs: []
 snippets: ["claude-md-anti-drift.md"]
 adapters: [claude, cursor, fable]
@@ -75,6 +75,8 @@ sha256: ""
 
 - `task-brief-template` — scope и критерии приёмки фиксируются до старта.
 - `session-handoff` — выход из сессии после жёсткого порога.
+- `complex-task-orchestrator` — декомпозиция и DoD для сложных задач; этот скилл — про дисциплину итераций внутри них.
+- `context-economy` — экономия контекста при затянувшейся сессии (`/compact`, `/clear`, Plan→Clear→Execute).
 
 ## Сниппет
 

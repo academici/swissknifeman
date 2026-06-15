@@ -7,7 +7,7 @@ risk: write
 persona: operator
 tags: ["docker", "devops", "postgres", "testing"]
 requires: []
-produces_for: ["docker-dev-prod", "docker-services"]
+produces_for: ["docker-dev-prod", "docker-services", "db-test-preflight"]
 outputs: ["docker-compose.yml (сервис pgsql)", "docker/postgres/init/01-test-db.sh"]
 snippets: ["postgres.conf", "init.sql", "pgsql-service.yml", "init-test-db.sh"]
 adapters: [claude, cursor, fable]
@@ -55,4 +55,4 @@ sha256: ""
 
 - https://hub.docker.com/_/postgres — раздел Initialization scripts (`/docker-entrypoint-initdb.d`)
 - https://www.postgresql.org/docs/current/app-pg-isready.html — pg_isready
-- Смежные скиллы: `docker-services` (depends_on-паттерны), `makefile` (цель db-create-test)
+- Смежные скиллы: `docker-services` (depends_on-паттерны), `docker-dev-prod` (раскладка dev/prod compose), `makefile` (цель db-create-test), `db-test-preflight` (проверка `<app>_test` перед прогоном тестов), `php/test-isolation-guard` (страж изоляции тестовой БД), `php/laravel-testing` (тесты поверх `<app>_test`)

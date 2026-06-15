@@ -5,7 +5,7 @@ version: 0.1.0
 description: "Универсальный checklist для изменений, затрагивающих несколько слоев: код, доступы, UI, документацию и тесты."
 risk: read
 persona: oss-dev
-tags: [checklist, workflow]
+tags: [checklist, workflow, validation]
 requires: []
 produces_for: []
 outputs: []
@@ -64,3 +64,10 @@ sha256: ""
 [x] Tests
 Остаточные риски:
 ```
+
+## Связанные скиллы
+
+- `complex-task-orchestrator` (general) — декомпозиция и DoD; этот чеклист — финальная синхронизация слоёв перед закрытием.
+- `project-map` (general) — куда какой слой ложится (Action/Service/Repository/Policy).
+- `ai-context-workflow` (general) — порядок правок `.ai/*` и `php artisan boost:update` (шаг «Документация и контекст агентов»).
+- `quality/code-review` — финальное ревью изменения по слоям.

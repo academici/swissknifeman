@@ -5,8 +5,8 @@ version: 0.1.0
 description: "Две независимые Vite-сборки в одном Laravel-проекте: основное приложение и Filament-админка с раздельными конфигами Vite/Tailwind, hotfile и build-директориями."
 risk: write
 persona: oss-dev
-tags: [vite, laravel, filament, tailwind, build, multi-config]
-requires: []
+tags: [vite, laravel, filament, tailwind, build, multi-config, frontend]
+requires: [vite-module-loader]
 produces_for: []
 outputs: []
 snippets: [vite.config.js, vite.admin.config.js, tailwind.config.js, tailwind-admin.config.js, package-scripts.json]
@@ -58,4 +58,4 @@ sha256: ""
 
 - https://laravel.com/docs/vite
 - https://filamentphp.com/docs (раздел про кастомные темы / vite theme)
-- Связанные скиллы: `frontend/wayfinder` (плагин в основной сборке); версионные гайдлайны Tailwind — Boost-скилл `tailwindcss` (v3/v4)
+- Связанные скиллы: `frontend/vite-module-loader` (базовый конфиг Vite: алиасы, чанки, laravel-vite-plugin), `frontend/wayfinder` (плагин в основной сборке), `frontend/tailwind-conventions` (тема приложения на Tailwind v4), `devops/docker-vite` (Vite dev-сервер в compose, HMR в Docker); версионные гайдлайны Tailwind — Boost-скилл `tailwindcss` (v3/v4)

@@ -120,4 +120,5 @@ gh issue view <N> --json url -q .url        # ссылка на issue
 - `general/context-economy` — общая дисциплина расхода токенов (раздел про gh)
 - `oss-dev/github-flow` — процесс Issue→PR→Merge→Release (ревью-шаг ссылается сюда)
 - `quality/code-review` — критерии и severity находок
+- `general/session-handoff` — передача контекста между сессиями (handoff ссылкой, не дампом)
 - `docs/guide/upstream-sync.md` — gh-fetch при импорте внешних скиллов

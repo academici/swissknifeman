@@ -1,8 +1,14 @@
 # mAInd — Requirements Document
 
-> **Статус:** Draft v0.1 · Июнь 2026
+> **Статус:** Draft v0.1 · Июнь 2026 — **исторический документ исходного замысла.**
 > **Репозиторий:** `academici/maind`
 > **Слоган:** The central intelligence layer of the academici ecosystem
+
+> [!NOTE]
+> Это первоначальный спек-документ. Реализация местами разошлась с ним: граф-движок — чистый
+> **stdlib + федерация** (а не graphify как engine), graphify — отдельный MCP-слой над кодом
+> проекта. Актуальную архитектуру и API смотри в [`docs/architecture.md`](docs/architecture.md),
+> [`docs/ecosystem.md`](docs/ecosystem.md) и `docs/guide/*` (а также [`CLAUDE.md`](CLAUDE.md)).
 
 ---
 
@@ -199,12 +205,11 @@ CLI mAInd при запуске читает сначала `.maind.json`, и е
       "type": "obsidian-vault",
 
       // Расширения mAInd
-      "graph_node": true,               // регистрировать как node в графе
-      "memory_scope": "project:brain",  // изолированный scope памяти
+      "memory_scope": "project:brain",  // приватный бакет памяти проекта
       "agents": ["vault-architect"],    // связанные агенты
       "tags": ["primary", "docs"],
-      "status": "active",               // active | archived | planning
-      "dependencies": []                // id других проектов
+      "namespaces": ["axioma"],         // группы изоляции связей графа+памяти; ["*"] — общая инфраструктура
+      "status": "active"                // active | archived | planning
     },
     {
       "id": "swissknifeman",
@@ -213,12 +218,11 @@ CLI mAInd при запуске читает сначала `.maind.json`, и е
       "local_path": "~/projects/packages/swissknifeman",
       "type": "node-package",
 
-      "graph_node": true,
       "memory_scope": "project:swissknifeman",
       "agents": [],
       "tags": ["package", "skills"],
-      "status": "active",
-      "dependencies": ["maind"]
+      "namespaces": ["*"],
+      "status": "active"
     }
   ],
 

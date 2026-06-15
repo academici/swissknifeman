@@ -157,13 +157,18 @@ class Federation:
     def __init__(self, env, config):
         self.env = env
         self.config = config
+        self._union_cache = {}   # namespace → union-граф (инстанс короткоживущий, read-only)
 
     def _union(self, namespace=None):
+        if namespace in self._union_cache:
+            return self._union_cache[namespace]
         projects = None
         if namespace:
             projects = [p for p in _enabled_projects(self.config)
                         if in_namespace(p, namespace)]
-        return federated_graph(self.env, self.config, projects)
+        union = federated_graph(self.env, self.config, projects)
+        self._union_cache[namespace] = union
+        return union
 
     def query(self, frm, depth=1, edge_types=None, direction="out", namespace=None):
         return self._union(namespace).query(frm, depth, edge_types, direction)

@@ -82,6 +82,16 @@ class TestSync(unittest.TestCase):
             self.assertTrue((env.data_dir / "graphs" / "flexcrm.db").exists())
             self.assertTrue((env.data_dir / "graphs" / "_index.db").exists())
 
+    def test_graph_provisioner_changed_is_honest(self):
+        # повторный derive без изменений источников → changed=False (детерминированный стор)
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, _ = _setup(tmp)
+            projs = sync.select_projects(env, config, {"all": True})
+            r1 = sync.run_sync(env, config, projs, only="graph")
+            self.assertTrue(all(r["changed"] for r in r1))  # первый прогон — создание
+            r2 = sync.run_sync(env, config, projs, only="graph")
+            self.assertTrue(all(not r["changed"] for r in r2))  # повтор — без изменений
+
     def test_dry_run_writes_nothing(self):
         with tempfile.TemporaryDirectory() as tmp:
             env, config, proj = _setup(tmp)

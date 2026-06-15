@@ -96,17 +96,22 @@ def _mcp_run(env, config, projects, mode, dry):
 
 
 def _graph_run(env, config, projects, mode, dry):
-    """Derive графа проектов из источников (composer/Brain/override) + пересборка индекса."""
+    """Derive графа проектов из источников (composer/Brain/override) + пересборка индекса.
+    changed — честно по содержимому стора (сериализация детерминирована), чтобы
+    --mode update не сообщал об изменении там, где граф фактически не поменялся."""
     from .derive import build_provider_index, derive_project_graph
-    from .federation import rebuild_index
+    from .federation import rebuild_index, store_path
     results = []
     if dry:
         return [{"provisioner": "graph", "id": p["id"], "status": "dry"} for p in projects]
     providers = build_provider_index(env, config)
     for p in projects:
+        sp = Path(store_path(env, config, p))
+        before = sp.read_bytes() if sp.exists() else None
         d = derive_project_graph(env, config, p, providers)
+        after = sp.read_bytes() if sp.exists() else None
         results.append({"provisioner": "graph", "id": p["id"], "status": "ok",
-                        "changed": True,
+                        "changed": before != after,
                         "detail": f"{d['nodes']}n/{d['edges']}e "
                                   f"(code {d['by_via']['code']}, doc {d['by_via']['doc']})"})
     rebuild_index(env, config)

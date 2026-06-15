@@ -17,6 +17,7 @@ from .onboard import cmd_onboard
 from .orchestrate import cmd_run
 from .projects import cmd_projects
 from .start import cmd_start, cmd_status
+from .workspace import cmd_workspace
 
 COMMANDS = {
     "start": cmd_start,
@@ -26,6 +27,7 @@ COMMANDS = {
     "agents": cmd_agents,
     "projects": cmd_projects,
     "deploy": cmd_deploy,
+    "workspace": cmd_workspace,
     "run": cmd_run,
     "onboard": cmd_onboard,
     "migrate": cmd_migrate,

@@ -8,6 +8,7 @@ from .graph import open_graph, seed_from_config, seed_skills
 from .memory import start as memory_start
 from .memory import status as memory_status
 from .projects import listing as projects_listing
+from .workspace import audit as workspace_audit
 
 
 def cmd_start(env, argv):
@@ -43,6 +44,7 @@ def cmd_status(env, argv):
     alive = sum(1 for a in agents if a["state"] == "alive")
     projects = projects_listing(env, config)
     configured = sum(1 for p in projects if p.get("deployed"))
+    wa = workspace_audit(env, config)
 
     snapshot = {
         "config_source": source,
@@ -53,6 +55,8 @@ def cmd_status(env, argv):
                   "edges": gstats["edges"]},
         "agents": {"total": len(agents), "alive": alive},
         "projects": {"total": len(projects), "configured": configured},
+        "workspace": {"trusted": len(wa["covered"]),
+                      "registry": wa["registry_count"], "settings": wa["settings"]},
     }
     if opts["json"]:
         print(json.dumps(snapshot, ensure_ascii=False, indent=2))
@@ -66,3 +70,5 @@ def cmd_status(env, argv):
     print(f"  граф:     {adapter} — {gstats['nodes']} узлов, {gstats['edges']} рёбер")
     print(f"  агенты:   {alive} живых / {len(agents)} всего")
     print(f"  проекты:  {len(projects)} (подключено: {configured})")
+    print(f"  доверие:  {len(wa['covered'])}/{wa['registry_count']} проектов "
+          f"(.claude/settings.local.json)")

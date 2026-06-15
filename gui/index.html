@@ -46,6 +46,7 @@ function render(d) {
       <td><span class="badge ${p.status}">${p.status}</span></td>
       <td><b>${p.id}</b></td>
       <td><code>${mcp(c)}</code></td>
+      <td>${p.trusted ? "✓" : "<span style='color:var(--muted)'>·</span>"}</td>
       <td>${s.total || 0} <small style="color:var(--muted)">(skm ${s.swissknifeman || 0} · boost ${s.laravel_boost || 0})</small></td>
       <td>${c.boost ? "✓" : ""}</td>
       <td><code>${p.memory_scope || ""}</code></td>
@@ -58,8 +59,8 @@ function render(d) {
       <div>${dot(w.running)} <b>docs-watcher</b> ${w.running ? "up" : "down"}</div>
     </div>
     <main><table>
-      <thead><tr><th>статус</th><th>проект</th><th>mcp[a/m/g]</th><th>скиллы</th><th>boost</th><th>scope</th></tr></thead>
-      <tbody>${rows || '<tr><td colspan="6" class="err">нет проектов</td></tr>'}</tbody>
+      <thead><tr><th>статус</th><th>проект</th><th>mcp[a/m/g]</th><th>trust</th><th>скиллы</th><th>boost</th><th>scope</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="7" class="err">нет проектов</td></tr>'}</tbody>
     </table></main>`;
 }
 fetch(SRC).then(r => r.json()).then(render).catch(() => {

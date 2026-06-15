@@ -17,8 +17,8 @@ MEMORY_WORKERS = (
 GLOBAL_SCOPE = "global"
 
 # ── граф ────────────────────────────────────────────────────────────────────
-NODE_TYPES = {"project", "agent", "memory", "skill", "entity"}
-EDGE_TYPES = {"uses", "knows", "relates_to", "belongs_to", "depends_on"}
+NODE_TYPES = {"project", "agent", "memory", "skill", "entity", "tool"}
+EDGE_TYPES = {"uses", "knows", "relates_to", "belongs_to", "depends_on", "provided_by"}
 GRAPH_ADAPTERS = {"memory", "graphify", "disabled"}
 GRAPH_VERSION = 1
 

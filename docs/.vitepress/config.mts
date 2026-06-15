@@ -12,6 +12,7 @@ export default withMermaid(defineConfig({
   themeConfig: {
     nav: [
       { text: 'Гайд', link: '/guide/', activeMatch: '/guide/' },
+      { text: 'Экосистема', link: '/ecosystem', activeMatch: '/ecosystem' },
       { text: 'Архитектура', link: '/architecture', activeMatch: '/architecture' },
       { text: 'Roadmap', link: '/roadmap', activeMatch: '/roadmap' },
     ],
@@ -34,8 +35,11 @@ export default withMermaid(defineConfig({
           ],
         },
         {
-          text: 'Архитектура',
-          items: [{ text: 'Композиция узла', link: '/architecture' }],
+          text: 'Экосистема',
+          items: [
+            { text: 'Философия трёх пакетов', link: '/ecosystem' },
+            { text: 'Композиция узла', link: '/architecture' },
+          ],
         },
         {
           text: 'Roadmap',

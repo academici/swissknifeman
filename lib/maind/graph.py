@@ -270,6 +270,68 @@ def seed_from_config(g, config):
     return g
 
 
+# ── skills_sync: связать swissknifeman/boost в граф из skills-lock.json ──────
+_PROVIDERS = ("swissknifeman", "laravel-boost", "brain")
+
+
+def _lock_skills(project):
+    """skills-lock.json проекта → {name: {source, bucket, also_in}} или None."""
+    local = project.get("local_path")
+    if not local:
+        return None
+    f = Path(os.path.expanduser(local)) / "skills-lock.json"
+    if not f.is_file():
+        return None
+    try:
+        return json.loads(f.read_text(encoding="utf-8")).get("skills") or {}
+    except (json.JSONDecodeError, OSError):
+        return None
+
+
+def _skm_has_project(env, project):
+    """Есть ли проект в реестре swissknifeman (~/.swissknifeman/projects.json)."""
+    reg = env.home / ".swissknifeman" / "projects.json"
+    local = project.get("local_path")
+    if not reg.is_file() or not local:
+        return False
+    try:
+        db = json.loads(reg.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return False
+    target = os.path.realpath(os.path.expanduser(local))
+    return any(os.path.realpath(os.path.expanduser(p.get("path", ""))) == target
+               for p in db.get("projects", []))
+
+
+def seed_skills(g, env, config):
+    """Материализует скиллы проектов в граф: skill-узлы, project─uses→skill,
+    skill─provided_by→tool:<источник>. Без lock — грубый fallback project─uses→tool:swissknifeman
+    (если проект есть в реестре skm). Идемпотентно (upsert)."""
+    stats = {"projects": 0, "skill_nodes": 0, "edges": 0}
+    for p in (config or {}).get("projects") or []:
+        pid = f"project:{p['id']}"
+        skills = _lock_skills(p)
+        if skills is not None:
+            g.add_node(pid, "project", name=p.get("name", p["id"]))
+            for name, entry in skills.items():
+                snode = f"skill:{name}"
+                g.add_node(snode, "skill", bucket=entry.get("bucket", ""))
+                g.add_edge(pid, snode, "uses")
+                stats["edges"] += 1
+                for src in [entry.get("source")] + list(entry.get("also_in") or []):
+                    if src in _PROVIDERS:
+                        g.add_edge(snode, f"tool:{src}", "provided_by")
+                        stats["edges"] += 1
+                stats["skill_nodes"] += 1
+            stats["projects"] += 1
+        elif _skm_has_project(env, p):
+            g.add_node(pid, "project", name=p.get("name", p["id"]))
+            g.add_edge(pid, "tool:swissknifeman", "uses")
+            stats["edges"] += 1
+            stats["projects"] += 1
+    return stats
+
+
 # ── CLI ─────────────────────────────────────────────────────────────────────
 def _parse_depth(value, default=1):
     try:

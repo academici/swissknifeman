@@ -4,7 +4,7 @@ import json
 from .agents import listing as agents_listing
 from .common import die, parse_args
 from .config import load_config
-from .graph import open_graph, seed_from_config
+from .graph import open_graph, seed_from_config, seed_skills
 from .memory import start as memory_start
 from .memory import status as memory_status
 from .projects import listing as projects_listing
@@ -23,6 +23,8 @@ def cmd_start(env, argv):
         # граф — файл; «запуск» = загрузить + засеять проекты/связи из конфига.
         g = open_graph(env, config)
         seed_from_config(g, config)
+        if (config.get("graph") or {}).get("seed_skills", True):
+            seed_skills(g, env, config)
         g.save()
         s = g.stats()
         print(f"граф готов: {g.db_path} ({s['nodes']} узлов, {s['edges']} рёбер)")
@@ -40,6 +42,7 @@ def cmd_status(env, argv):
     agents = agents_listing(env, config)
     alive = sum(1 for a in agents if a["state"] == "alive")
     projects = projects_listing(env, config)
+    configured = sum(1 for p in projects if p.get("deployed"))
 
     snapshot = {
         "config_source": source,
@@ -49,7 +52,7 @@ def cmd_status(env, argv):
         "graph": {"adapter": adapter, "nodes": gstats["nodes"],
                   "edges": gstats["edges"]},
         "agents": {"total": len(agents), "alive": alive},
-        "projects": {"total": len(projects)},
+        "projects": {"total": len(projects), "configured": configured},
     }
     if opts["json"]:
         print(json.dumps(snapshot, ensure_ascii=False, indent=2))
@@ -62,4 +65,4 @@ def cmd_status(env, argv):
           f"{mem['url']}" + (f" (pid {mem['pid']})" if mem["pid"] else ""))
     print(f"  граф:     {adapter} — {gstats['nodes']} узлов, {gstats['edges']} рёбер")
     print(f"  агенты:   {alive} живых / {len(agents)} всего")
-    print(f"  проекты:  {len(projects)}")
+    print(f"  проекты:  {len(projects)} (подключено: {configured})")

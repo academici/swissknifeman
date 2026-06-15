@@ -7,11 +7,14 @@ import sys
 
 from .agents import cmd_agents
 from .common import Env
+from .deploy import cmd_deploy
 from .doctor import cmd_doctor
 from .graph import cmd_graph
 from .mcp import cmd_mcp
 from .memory import cmd_memory
 from .migrate import cmd_migrate
+from .onboard import cmd_onboard
+from .orchestrate import cmd_run
 from .projects import cmd_projects
 from .start import cmd_start, cmd_status
 
@@ -22,6 +25,9 @@ COMMANDS = {
     "graph": cmd_graph,
     "agents": cmd_agents,
     "projects": cmd_projects,
+    "deploy": cmd_deploy,
+    "run": cmd_run,
+    "onboard": cmd_onboard,
     "migrate": cmd_migrate,
     "mcp": cmd_mcp,
     "doctor": cmd_doctor,

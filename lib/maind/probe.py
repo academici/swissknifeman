@@ -10,6 +10,7 @@ from pathlib import Path
 from .mcpconfig import MCP_FILES, has_server
 from .memory import health, resolve_ports
 from .memory import status as memory_status
+from .workspace import norm_path, trusted_dirs
 
 _SKILL_KEY = {"swissknifeman": "swissknifeman", "laravel-boost": "laravel_boost"}
 
@@ -24,14 +25,20 @@ def _read_skills_lock(project_path):
         return None
 
 
-def probe_project(env, config, project, *, memory_reachable=None):
-    """Состояние одного проекта (read-only). status ∈ connected|partial|standalone|missing-path."""
+def probe_project(env, config, project, *, memory_reachable=None, trusted=None):
+    """Состояние одного проекта (read-only). status ∈ connected|partial|standalone|missing-path.
+
+    trusted: множество доверенных каталогов (из hub-настроек). None → читаем один раз тут;
+    в цикле передавайте заранее вычисленное (как memory_reachable)."""
     pid = project["id"]
     local = project.get("local_path")
     path = Path(os.path.expanduser(local)) if local else None
+    if trusted is None:
+        trusted = trusted_dirs(env)
     if not path or not path.is_dir():
         return {"id": pid, "name": project.get("name", pid), "path": local,
-                "status": "missing-path", "configured": {}, "skills": {}, "daemons": {}}
+                "status": "missing-path", "configured": {}, "skills": {}, "daemons": {},
+                "trusted": False}
 
     def any_has(name):
         return any(has_server(path / rel, name) for rel in MCP_FILES.values())
@@ -67,7 +74,8 @@ def probe_project(env, config, project, *, memory_reachable=None):
     return {"id": pid, "name": project.get("name", pid), "path": str(path),
             "memory_scope": project.get("memory_scope") or f"project:{pid}",
             "configured": configured, "skills": skills,
-            "daemons": {"memory_reachable": memory_reachable}, "status": status}
+            "daemons": {"memory_reachable": memory_reachable},
+            "trusted": norm_path(local) in trusted, "status": status}
 
 
 def detect_docs_watcher(env):

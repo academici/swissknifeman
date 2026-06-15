@@ -91,14 +91,17 @@ def cmd_projects(env, argv):
 
 def _cmd_status(env, argv):
     from .probe import probe_hub, probe_project
+    from .workspace import trusted_dirs
     opts, _ = parse_args(argv, {"--json": "bool", "--project": "str", "--all": "bool"})
     config, _src = load_config(env)
     hub = probe_hub(env, config)
     reach = hub["memory"]["running"]
+    trusted = trusted_dirs(env)
     projs = listing(env, config)
     if opts["project"]:
         projs = [p for p in projs if p.get("id") == opts["project"]]
-    reports = [probe_project(env, config, p, memory_reachable=reach) for p in projs]
+    reports = [probe_project(env, config, p, memory_reachable=reach, trusted=trusted)
+               for p in projs]
     snapshot = {"hub": hub, "projects": reports}
     if opts["json"]:
         print(json.dumps(snapshot, ensure_ascii=False, indent=2))
@@ -114,7 +117,8 @@ def _cmd_status(env, argv):
             + ("m" if c.get("maind_mcp") else "-") \
             + ("g" if c.get("graphify_mcp") else "-")
         sk = r.get("skills", {}).get("total", 0)
-        print(f"  {r['status']:<11} {r['id']:<18} mcp[{mcp}] skills={sk:<3} "
+        trust = "trust✓" if r.get("trusted") else "trust·"
+        print(f"  {r['status']:<11} {r['id']:<18} mcp[{mcp}] {trust} skills={sk:<3} "
               f"{r.get('memory_scope', '')}")
 
 

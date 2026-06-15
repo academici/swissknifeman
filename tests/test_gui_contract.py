@@ -13,7 +13,7 @@ HUB_KEYS = {"memory", "graph", "docs_watcher"}
 MEMORY_KEYS = {"running", "url", "pid"}
 GRAPH_KEYS = {"adapter", "nodes", "edges"}
 PROJECT_KEYS = {"id", "name", "path", "memory_scope", "configured", "skills",
-                "daemons", "status"}
+                "daemons", "status", "trusted"}
 CONFIGURED_KEYS = {"agentmemory_mcp", "maind_mcp", "graphify_mcp", "mcp_files",
                    "skills_lock", "skills_count", "boost", "deployed_flag"}
 SKILLS_KEYS = {"total", "swissknifeman", "laravel_boost", "local"}

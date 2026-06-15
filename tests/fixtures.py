@@ -41,7 +41,7 @@ def write_maind_config(root, **overrides):
         "_version": "1",
         "node": {"id": "test", "name": "Test", "role": "primary"},
         "memory": {"http_port": 4111, "stream_port": 4112},
-        "graph": {"adapter": "memory"},
+        "graph": {"adapter": "federation"},
         "projects": [
             {"id": "alpha", "name": "Alpha", "type": "node-package",
              "status": "active", "dependencies": ["maind"], "skills": ["x"]},

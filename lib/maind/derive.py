@@ -5,7 +5,7 @@
              `package ─provided_by→ project`, cross `project ─depends_on→ project`.
 - doc      — Brain frontmatter `uses:/used_by:` (только ЧТЕНИЕ vault, без дублей).
 - override — `<repo>/.maind.graph.json` для связей, которых нет в коде/доках (runtime/API).
-- skills   — skills-lock.json (порт seed_skills): `project ─uses→ skill ─provided_by→ tool`.
+- skills   — skills-lock.json: `project ─uses→ skill ─provided_by→ tool` (swissknifeman/boost).
 
 Каждый derive_project_graph строит стор проекта ЗАНОВО (идемпотентно, без накопления
 устаревших рёбер) и помечает узлы/рёбра owner-проектом → федерация резолвит владение."""
@@ -274,7 +274,7 @@ def derive_override(g, project, config):
     return edges
 
 
-# ── план: skills (порт seed_skills) ──────────────────────────────────────────
+# ── план: skills (skills-lock.json) ──────────────────────────────────────────
 _PROVIDERS = ("swissknifeman", "laravel-boost", "brain")
 
 

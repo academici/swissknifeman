@@ -11,6 +11,7 @@ from pathlib import Path
 from maind import mcp
 from maind import memory as memory_mod
 from maind.config import merge_defaults
+from maind.federation import rebuild_index, store_path
 from maind.graph import Graph
 from tests.fixtures import FakeMemoryServer, make_repo
 
@@ -19,6 +20,18 @@ def cfg(**over):
     base = merge_defaults({})
     base.update(over)
     return base
+
+
+def fed_edge(env, config, src_pid, edge_dst, etype="depends_on"):
+    """Записать ребро src_pid → edge_dst в стор проекта src_pid (федерация) + индекс.
+    Граф читается федерацией (per-project сторы), а не единым legacy graph.db."""
+    proj = {"id": src_pid}
+    g = Graph(env, config, path=store_path(env, config, proj))
+    g._loaded = True
+    g.add_node(f"project:{src_pid}", "project", project=src_pid)
+    g.add_edge(f"project:{src_pid}", edge_dst, etype)
+    g.save()
+    rebuild_index(env, config)
 
 
 def call(env, config, name, arguments=None, req_id=1):
@@ -85,10 +98,9 @@ class TestToolCalls(unittest.TestCase):
     def test_graph_query(self):
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
-            g = Graph(env)
-            g.add_edge("project:a", "project:b", "depends_on")
-            g.save()
-            r = call(env, cfg(), "maind_graph_query", {"from": "project:a"})
+            config = cfg(projects=[{"id": "a"}, {"id": "b"}])
+            fed_edge(env, config, "a", "project:b")
+            r = call(env, config, "maind_graph_query", {"from": "project:a"})
             data = json.loads(r["result"]["content"][0]["text"])
             self.assertEqual(data["count"], 1)
 
@@ -112,10 +124,10 @@ class TestToolCalls(unittest.TestCase):
     def test_graph_path(self):
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
-            g = Graph(env)
-            g.add_edge("project:a", "project:b", "depends_on")
-            g.save()
-            r = call(env, cfg(), "maind_graph_path", {"from": "project:a", "to": "project:b"})
+            config = cfg(projects=[{"id": "a"}, {"id": "b"}])
+            fed_edge(env, config, "a", "project:b")
+            r = call(env, config, "maind_graph_path",
+                     {"from": "project:a", "to": "project:b"})
             data = json.loads(r["result"]["content"][0]["text"])
             self.assertEqual(data["path"], ["project:a", "project:b"])
 

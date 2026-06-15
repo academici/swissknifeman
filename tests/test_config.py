@@ -10,7 +10,14 @@ from tests.fixtures import make_repo, write_brain_projects, write_maind_config
 class TestValidate(unittest.TestCase):
     def test_valid_passes(self):
         validate_config({"node": {"role": "primary"},
-                         "graph": {"adapter": "memory"}}, "x")
+                         "graph": {"adapter": "federation"}}, "x")
+
+    def test_legacy_adapter_accepted_with_warning(self):
+        # memory/graphify/networkx устарели → принимаются (нормализуются в federation),
+        # не падают
+        validate_config({"graph": {"adapter": "memory"}}, "x")
+        self.assertEqual(merge_defaults({"graph": {"adapter": "memory"}})["graph"]["adapter"],
+                         "federation")
 
     def test_unknown_top_key_dies(self):
         with self.assertRaises(SystemExit):
@@ -38,7 +45,7 @@ class TestDefaults(unittest.TestCase):
         m = merge_defaults({})
         self.assertEqual(m["memory"]["http_port"], 4111)
         self.assertEqual(m["memory"]["stream_port"], 4112)
-        self.assertEqual(m["graph"]["adapter"], "memory")
+        self.assertEqual(m["graph"]["adapter"], "federation")
         self.assertEqual(m["observability"]["service_name"], "maind")
         self.assertEqual(m["agents"]["heartbeat_interval_ms"], 30000)
         self.assertEqual(m["projects"], [])

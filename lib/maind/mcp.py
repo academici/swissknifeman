@@ -13,18 +13,15 @@ from . import memory as memory_mod
 from . import projects as projects_mod
 from .common import parse_args
 from .config import load_config
-from .graph import open_graph
 
 PROTOCOL_VERSION = "2024-11-05"
 SERVER_INFO = {"name": "maind", "version": "0.2.0"}
 
 
 def _graph_reader(env, config):
-    """Read-фасад графа: Federation при adapter=federation, иначе единый open_graph."""
-    if (config.get("graph") or {}).get("adapter", "memory") == "federation":
-        from .federation import Federation
-        return Federation(env, config)
-    return open_graph(env, config)
+    """Единый read-фасад графа (федерация — единственная раскладка; disabled → die)."""
+    from .federation import graph_reader
+    return graph_reader(env, config)
 
 TOOLS = [
     {"name": "maind_memory_store",

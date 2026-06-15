@@ -13,7 +13,9 @@ class TestStartStatus(unittest.TestCase):
             root, env = make_repo(tmp)
             write_maind_config(root)
             _, out = capture(cmd_start, env, ["--only", "graph"])
-            self.assertTrue(env.graph_db.exists())
+            # федерация: стор проекта + индекс (а не единый legacy graph.db)
+            self.assertTrue((env.data_dir / "graphs" / "alpha.db").exists())
+            self.assertTrue((env.data_dir / "graphs" / "_index.db").exists())
             self.assertIn("граф готов", out)
 
     def test_status_json_against_fake(self):

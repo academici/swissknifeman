@@ -13,12 +13,27 @@
 import os
 from pathlib import Path
 
+from .common import die
 from .graph import Graph, empty_graph
 from .namespaces import in_namespace, shares
 
 
 def _enabled_projects(config):
     return [p for p in (config.get("projects") or []) if p.get("enabled", True)]
+
+
+def graph_disabled(config):
+    """Граф выключен (adapter=disabled)?"""
+    return ((config or {}).get("graph") or {}).get("adapter") == "disabled"
+
+
+def graph_reader(env, config):
+    """Единый read-фасад топологии графа: федерация — единственная раскладка.
+    Дуктайп-совместим с graph.Graph по чтению (query/neighbors/path/subgraph/stats).
+    adapter=disabled → die. Используется CLI/MCP/probe/status — без дублей выбора движка."""
+    if graph_disabled(config):
+        die("граф отключён (graph.adapter = disabled)")
+    return Federation(env, config)
 
 
 def _owners_share_ns(so, do, pmap):

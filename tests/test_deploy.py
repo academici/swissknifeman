@@ -75,6 +75,24 @@ class TestDeploy(unittest.TestCase):
                 servers = json.loads((ppath / ".mcp.json").read_text())["mcpServers"]
                 self.assertNotIn("graphify", servers)
 
+    def test_graphify_present_written(self):
+        # graphify — со-равный agent-memory механизм связей (граф КОДА проекта),
+        # раскатывается отдельным MCP-сервером. Мокаем наличие бинаря.
+        orig = deploy.shutil.which
+        deploy.shutil.which = lambda name: "/usr/bin/graphify-mcp"
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                _, env = make_repo(tmp)
+                ppath = _project(tmp)
+                cfg = _config(ppath)
+                res = deploy.deploy_project(env, cfg, cfg["projects"][0], with_graphify=True)
+                self.assertEqual(res["graphify"], "written")
+                servers = json.loads((ppath / ".mcp.json").read_text())["mcpServers"]
+                self.assertEqual(servers["graphify"]["command"], "graphify-mcp")
+                self.assertEqual(servers["graphify"]["args"], ["--root", str(ppath)])
+        finally:
+            deploy.shutil.which = orig
+
     def test_mark_deployed_roundtrip(self):
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)

@@ -20,7 +20,12 @@ GLOBAL_SCOPE = "global"
 NODE_TYPES = {"project", "agent", "memory", "skill", "entity", "tool", "package", "doc"}
 EDGE_TYPES = {"uses", "knows", "relates_to", "belongs_to", "depends_on", "provided_by",
               "requires"}
-GRAPH_ADAPTERS = {"memory", "federation", "graphify", "disabled"}
+# Раскладка графа: федерация (граф на проект + индекс) — единственная первоклассная;
+# disabled выключает граф-команды. Движок везде stdlib (graphify — отдельный MCP-слой
+# над КОДОМ проекта, не адаптер этого графа; см. docs/guide/graphify.md).
+GRAPH_ADAPTERS = {"federation", "disabled"}
+# Устаревшие значения adapter — принимаются с предупреждением и нормализуются в federation.
+LEGACY_GRAPH_ADAPTERS = {"memory", "graphify", "networkx"}
 GRAPH_VERSION = 1
 
 # Планы графа (природа связи) и источник, из которого ребро/узел получены (derive).

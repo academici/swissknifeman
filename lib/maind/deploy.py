@@ -73,8 +73,8 @@ def deploy_project(env, config, project, *, targets=None, with_graphify=False,
             graphify_state = "written"
         else:
             graphify_state = "skipped-not-installed"
-            warn(f"проект '{pid}': graphify-mcp не установлен — пропускаю graphify "
-                 f"(pip install graphifyy)")
+            warn(f"проект '{pid}': команда graphify-mcp не найдена в PATH — пропускаю "
+                 f"graphify (установите graphify-mcp, затем повторите --with-graphify)")
 
     written = []
     for _channel, path in _resolve_targets(project_path, targets):

@@ -1,11 +1,15 @@
-"""Тесты skills_sync — связать swissknifeman/boost в граф из skills-lock.json (+ fallback)."""
+"""Тесты derive_skills — связать swissknifeman/boost в граф из skills-lock.json.
+
+Единый derive-движок (легаси seed_skills удалён): skills-lock.json проекта →
+project ─uses→ skill ─provided_by→ tool (via=skills, plane=meta). Без lock → 0 рёбер
+(грубого fallback'а по реестру swissknifeman больше нет — источник истины только lock)."""
 import json
 import tempfile
 import unittest
 from pathlib import Path
 
-from maind.config import merge_defaults
-from maind.graph import Graph, seed_skills
+from maind.derive import derive_skills
+from maind.graph import Graph
 from tests.fixtures import make_repo
 
 
@@ -14,26 +18,21 @@ def _proj_with_lock(tmp, pid, skills):
     path.mkdir(parents=True)
     (path / "skills-lock.json").write_text(
         json.dumps({"version": 1, "skills": skills}), encoding="utf-8")
-    return path
+    return {"id": pid, "name": pid.title(), "local_path": str(path)}
 
 
-def _cfg(path, pid):
-    return merge_defaults({"projects": [{"id": pid, "name": pid.title(),
-                                         "local_path": str(path)}]})
-
-
-class TestSeedSkills(unittest.TestCase):
+class TestDeriveSkills(unittest.TestCase):
     def test_lock_materializes_edges(self):
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
-            ppath = _proj_with_lock(tmp, "flexcrm", {
+            proj = _proj_with_lock(tmp, "flexcrm", {
                 "laravel-best-practices": {"source": "swissknifeman", "bucket": "php",
                                            "also_in": ["laravel-boost"]},
                 "pest-testing": {"source": "laravel-boost"}})
             g = Graph(env)
-            stats = seed_skills(g, env, _cfg(ppath, "flexcrm"))
-            self.assertEqual(stats["projects"], 1)
-            self.assertEqual(stats["skill_nodes"], 2)
+            g.add_node("project:flexcrm", "project", project="flexcrm")
+            edges = derive_skills(g, proj)
+            self.assertEqual(edges, 5)  # 2 uses + 2 provided_by(lbp) + 1 provided_by(pest)
             uses = {n["id"] for n in g.neighbors("project:flexcrm", 1, edge_types=["uses"])}
             self.assertEqual(uses, {"skill:laravel-best-practices", "skill:pest-testing"})
             prov = {n["id"] for n in g.neighbors("skill:laravel-best-practices", 1,
@@ -44,42 +43,39 @@ class TestSeedSkills(unittest.TestCase):
             self.assertEqual(prov2, {"tool:laravel-boost"})
             self.assertEqual(g.nodes["tool:swissknifeman"]["type"], "tool")
 
-    def test_fallback_to_skm_registry(self):
+    def test_skills_carry_owner_and_via(self):
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
-            ppath = Path(tmp) / "proj" / "agelto"
-            ppath.mkdir(parents=True)  # без lock
-            skm = env.home / ".swissknifeman"
-            skm.mkdir(parents=True)
-            (skm / "projects.json").write_text(json.dumps({"projects": [
-                {"path": str(ppath), "channel": "vendor", "buckets": ["php"]}]}),
-                encoding="utf-8")
+            proj = _proj_with_lock(tmp, "p", {"x": {"source": "swissknifeman"}})
             g = Graph(env)
-            stats = seed_skills(g, env, _cfg(ppath, "agelto"))
-            self.assertEqual(stats["projects"], 1)
-            uses = {n["id"] for n in g.neighbors("project:agelto", 1, edge_types=["uses"])}
-            self.assertIn("tool:swissknifeman", uses)
+            g.add_node("project:p", "project", project="p")
+            derive_skills(g, proj)
+            self.assertEqual(g.nodes["skill:x"]["attrs"]["project"], "p")
+            edge = g.adj["project:p"]["skill:x"]
+            self.assertEqual(edge["attrs"]["via"], "skills")
+            self.assertEqual(edge["attrs"]["plane"], "meta")
 
     def test_idempotent(self):
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
-            ppath = _proj_with_lock(tmp, "p", {"x": {"source": "swissknifeman"}})
-            cfg = _cfg(ppath, "p")
+            proj = _proj_with_lock(tmp, "p", {"x": {"source": "swissknifeman"}})
             g = Graph(env)
-            seed_skills(g, env, cfg)
+            g.add_node("project:p", "project", project="p")
+            derive_skills(g, proj)
             before = (len(g.nodes), sum(len(d) for d in g.adj.values()))
-            seed_skills(g, env, cfg)
+            derive_skills(g, proj)
             after = (len(g.nodes), sum(len(d) for d in g.adj.values()))
             self.assertEqual(before, after)
 
-    def test_no_lock_no_registry_skipped(self):
+    def test_no_lock_no_edges(self):
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
             ppath = Path(tmp) / "proj" / "x"
             ppath.mkdir(parents=True)
             g = Graph(env)
-            stats = seed_skills(g, env, _cfg(ppath, "x"))
-            self.assertEqual(stats["projects"], 0)
+            g.add_node("project:x", "project", project="x")
+            edges = derive_skills(g, {"id": "x", "name": "X", "local_path": str(ppath)})
+            self.assertEqual(edges, 0)
 
 
 if __name__ == "__main__":

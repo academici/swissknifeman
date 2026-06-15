@@ -8,7 +8,6 @@ from pathlib import Path
 
 from .common import confirm, die, parse_args
 from .config import load_brain_projects, merge_defaults
-from .graph import open_graph, seed_from_config
 from .projects import write_config
 
 
@@ -42,11 +41,12 @@ def _from_brain(env, argv):
                                    "path": str(Path(pos[0]).expanduser())}},
     })
     write_config(env, config)
-    # материализуем граф: проекты как узлы + связи (общая связь)
-    g = seed_from_config(open_graph(env, config), config)
-    g.save()
+    # материализуем граф из источников истины (derive → стор на проект + индекс)
+    from .derive import derive_all
+    stats = derive_all(env, config)
+    nodes = sum(s["nodes"] for s in stats)
     print(f"импортировано из brain: {len(projects)} проектов → "
-          f"{env.default_config.name} + граф ({g.stats()['nodes']} узлов)")
+          f"{env.default_config.name} + граф ({nodes} узлов в {len(stats)} сторах)")
 
 
 def _from_agentmemory(env, argv):

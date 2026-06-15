@@ -18,7 +18,8 @@ class TestMigrate(unittest.TestCase):
             cfg, source = load_config(env)
             self.assertEqual(source, ".maind.json")
             self.assertIn("brain", [p["id"] for p in cfg["projects"]])
-            self.assertTrue(env.graph_db.exists())
+            # derive → федерация: индекс собран (а не единый legacy graph.db)
+            self.assertTrue((env.data_dir / "graphs" / "_index.db").exists())
 
     def test_from_brain_refuses_overwrite(self):
         with tempfile.TemporaryDirectory() as tmp:

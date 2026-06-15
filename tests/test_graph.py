@@ -2,7 +2,9 @@
 import tempfile
 import unittest
 
-from maind.graph import Graph, open_graph
+from maind.config import merge_defaults
+from maind.federation import Federation, graph_disabled, graph_reader
+from maind.graph import Graph
 from tests.fixtures import make_repo
 
 
@@ -92,13 +94,20 @@ class TestGraph(unittest.TestCase):
             self.assertEqual(g2.stats()["nodes"], 4)
             self.assertEqual(len(g2.neighbors("project:brain", 1)), 2)
 
-    def test_open_graph_adapters(self):
+    def test_graph_reader_is_federation(self):
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
-            self.assertIsInstance(open_graph(env, {"graph": {"adapter": "memory"}}),
-                                  Graph)
+            cfg = merge_defaults({"graph": {"adapter": "federation"}})
+            self.assertIsInstance(graph_reader(env, cfg), Federation)
+            self.assertFalse(graph_disabled(cfg))
+
+    def test_graph_reader_disabled_dies(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            cfg = merge_defaults({"graph": {"adapter": "disabled"}})
+            self.assertTrue(graph_disabled(cfg))
             with self.assertRaises(SystemExit):
-                open_graph(env, {"graph": {"adapter": "disabled"}})
+                graph_reader(env, cfg)
 
 
 if __name__ == "__main__":

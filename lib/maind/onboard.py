@@ -11,7 +11,6 @@ from pathlib import Path
 from .common import die, parse_args, sanitize
 from .config import load_config
 from .deploy import deploy_project, mark_deployed
-from .graph import open_graph, seed_from_config, seed_skills
 from .orchestrate import run_capability
 from .projects import get as get_project
 from .projects import write_config
@@ -39,7 +38,7 @@ def _ensure_project(env, config, project_or_path, dry=False):
     pid = sanitize(path.name)
     proj = {"id": pid, "name": path.name, "local_path": str(path), "repo": None,
             "type": _infer_type(path), "enabled": True,
-            "memory_scope": f"project:{pid}", "graph_node": True,
+            "memory_scope": f"project:{pid}",
             "agents": [], "skills": [], "tags": [], "status": "active", "dependencies": []}
     config["projects"] = list(config.get("projects") or []) + [proj]
     if not dry:
@@ -82,12 +81,14 @@ def onboard(env, config, project_or_path, opts):
             config = mark_deployed(config, proj["id"], res)
             write_config(env, config)
 
-    # 3. seed/derive графа (project · uses→skill · depends_on · код/доки)
+    # 3. derive графа из источников истины (код/доки/override/skills) → стор проекта + индекс
     gstats = {}
-    adapter = (config.get("graph") or {}).get("adapter", "memory")
+    from .federation import graph_disabled
     if dry:
         steps.append({"name": "graph", "status": "skipped", "detail": "--dry-run"})
-    elif adapter == "federation":
+    elif graph_disabled(config):
+        steps.append({"name": "graph", "status": "skipped", "detail": "граф отключён"})
+    else:
         from .derive import derive_project_graph
         from .federation import Federation, rebuild_index
         d = derive_project_graph(env, config, proj)
@@ -97,14 +98,6 @@ def onboard(env, config, project_or_path, opts):
                       "detail": f"derive {proj['id']}: {d['nodes']} узлов, "
                                 f"{d['edges']} рёбер (code {d['by_via']['code']}, "
                                 f"doc {d['by_via']['doc']})"})
-    else:
-        g = open_graph(env, config)
-        seed_from_config(g, config)
-        seed_skills(g, env, config)
-        g.save()
-        gstats = g.stats()
-        steps.append({"name": "graph", "status": "ok",
-                      "detail": f"{gstats['nodes']} узлов, {gstats['edges']} рёбер"})
 
     # 3b. seed-память: базовый факт о связях (видимость «память общая»)
     if not dry:

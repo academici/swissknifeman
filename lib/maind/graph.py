@@ -1,8 +1,8 @@
 """Property-граф узла: nodes/edges/neighbors/path/subgraph/stats + node-link JSON.
 
-Движок по умолчанию (adapter=memory) — чистый stdlib (BFS/кратчайший путь), без
-сторонних зависимостей. networkx/graphify — опциональные адаптеры (lazy-import),
-выбираются через config.graph.adapter; их отсутствие важно только если выбраны явно.
+Движок — чистый stdlib (BFS/кратчайший путь), без сторонних зависимостей. Это примитив
+хранения: федерация (federation.py) держит граф на проект поверх этого класса; читать
+граф нужно через federation.graph_reader (единый фасад), а не напрямую.
 
 Узлы именуются '<type>:<key>' (например project:brain) — это даёт бесконфликтную
 склейку доменов и позволяет выводить тип узла из id."""
@@ -225,119 +225,12 @@ class Graph:
         return {"root": frm, "depth": depth, "count": len(nb), "neighbors": nb}
 
 
-def _require_optional(adapter):
-    mod = "graphifyy" if adapter == "graphify" else "networkx"
-    try:
-        __import__(mod)
-    except ImportError:
-        die(f"graph.adapter = {adapter}, но пакет '{mod}' не установлен "
-            f"(pip install {mod}) — или используйте adapter=memory (stdlib)")
-
-
 def empty_graph(env, config):
     """Пустой in-memory граф (тот же движок), который НЕ читает с диска и не должен
     сохраняться. Используется федерацией для union'а нескольких per-project сторов."""
     g = Graph(env, config)
     g._loaded = True  # запретить load() читать persist_path
     return g
-
-
-def open_graph(env, config):
-    """Выбирает движок графа по config.graph.adapter и возвращает загруженный граф.
-
-    memory   — stdlib-движок (по умолчанию);
-    graphify/networkx — требуют установленный пакет (lazy-проверка); generic
-        node/edge-операции по-прежнему на stdlib-движке с общим персистом, внешняя
-        библиотека доступна для расширенных функций;
-    disabled — граф-команды недоступны."""
-    adapter = ((config or {}).get("graph") or {}).get("adapter", "memory")
-    if adapter == "disabled":
-        die("граф отключён (graph.adapter = disabled)")
-    if adapter in ("graphify", "networkx"):
-        _require_optional(adapter)
-    return Graph(env, config).load()
-
-
-def seed_from_config(g, config):
-    """Материализует «общую связь»: проекты → узлы, dependencies → depends_on,
-    skills → uses, agents → belongs_to. Идемпотентно (upsert). Возвращает граф."""
-    projects = (config or {}).get("projects") or []
-    for p in projects:
-        if p.get("graph_node", True):
-            g.add_node(f"project:{p['id']}", "project", name=p.get("name", p["id"]))
-    for p in projects:
-        pid = f"project:{p['id']}"
-        if pid not in g.nodes:
-            continue
-        for dep in p.get("dependencies") or []:
-            g.add_edge(pid, f"project:{dep}", "depends_on")
-        for skill in p.get("skills") or []:
-            g.add_edge(pid, f"skill:{skill}", "uses")
-        for agent in p.get("agents") or []:
-            g.add_edge(f"agent:{agent}", pid, "belongs_to")
-    return g
-
-
-# ── skills_sync: связать swissknifeman/boost в граф из skills-lock.json ──────
-_PROVIDERS = ("swissknifeman", "laravel-boost", "brain")
-
-
-def _lock_skills(project):
-    """skills-lock.json проекта → {name: {source, bucket, also_in}} или None."""
-    local = project.get("local_path")
-    if not local:
-        return None
-    f = Path(os.path.expanduser(local)) / "skills-lock.json"
-    if not f.is_file():
-        return None
-    try:
-        return json.loads(f.read_text(encoding="utf-8")).get("skills") or {}
-    except (json.JSONDecodeError, OSError):
-        return None
-
-
-def _skm_has_project(env, project):
-    """Есть ли проект в реестре swissknifeman (~/.swissknifeman/projects.json)."""
-    reg = env.home / ".swissknifeman" / "projects.json"
-    local = project.get("local_path")
-    if not reg.is_file() or not local:
-        return False
-    try:
-        db = json.loads(reg.read_text(encoding="utf-8"))
-    except (json.JSONDecodeError, OSError):
-        return False
-    target = os.path.realpath(os.path.expanduser(local))
-    return any(os.path.realpath(os.path.expanduser(p.get("path", ""))) == target
-               for p in db.get("projects", []))
-
-
-def seed_skills(g, env, config):
-    """Материализует скиллы проектов в граф: skill-узлы, project─uses→skill,
-    skill─provided_by→tool:<источник>. Без lock — грубый fallback project─uses→tool:swissknifeman
-    (если проект есть в реестре skm). Идемпотентно (upsert)."""
-    stats = {"projects": 0, "skill_nodes": 0, "edges": 0}
-    for p in (config or {}).get("projects") or []:
-        pid = f"project:{p['id']}"
-        skills = _lock_skills(p)
-        if skills is not None:
-            g.add_node(pid, "project", name=p.get("name", p["id"]))
-            for name, entry in skills.items():
-                snode = f"skill:{name}"
-                g.add_node(snode, "skill", bucket=entry.get("bucket", ""))
-                g.add_edge(pid, snode, "uses")
-                stats["edges"] += 1
-                for src in [entry.get("source")] + list(entry.get("also_in") or []):
-                    if src in _PROVIDERS:
-                        g.add_edge(snode, f"tool:{src}", "provided_by")
-                        stats["edges"] += 1
-                stats["skill_nodes"] += 1
-            stats["projects"] += 1
-        elif _skm_has_project(env, p):
-            g.add_node(pid, "project", name=p.get("name", p["id"]))
-            g.add_edge(pid, "tool:swissknifeman", "uses")
-            stats["edges"] += 1
-            stats["projects"] += 1
-    return stats
 
 
 # ── CLI ─────────────────────────────────────────────────────────────────────
@@ -354,11 +247,9 @@ def _edge_types_opt(opts):
 
 
 def _reader(env, config):
-    """Read-фасад графа: Federation при adapter=federation, иначе единый open_graph."""
-    from .federation import Federation
-    if (config.get("graph") or {}).get("adapter", "memory") == "federation":
-        return Federation(env, config)
-    return open_graph(env, config)
+    """Единый read-фасад графа (federation.graph_reader); lazy-import против цикла."""
+    from .federation import graph_reader
+    return graph_reader(env, config)
 
 
 def cmd_graph(env, argv):
@@ -372,8 +263,7 @@ def cmd_graph(env, argv):
         return _cmd_view(env, argv)
     sub, rest = argv[0], argv[1:]
     handlers = {"query": _cmd_query, "stats": _cmd_stats, "neighbors": _cmd_neighbors,
-                "view": _cmd_view, "derive": _cmd_derive, "rebuild": _cmd_rebuild,
-                "migrate-federation": _cmd_migrate_fed}
+                "view": _cmd_view, "derive": _cmd_derive, "rebuild": _cmd_rebuild}
     handler = handlers.get(sub)
     if handler is None:
         die(f"неизвестная подкоманда graph: {sub} "
@@ -432,25 +322,6 @@ def _cmd_derive(env, argv):
         print(f"  {s['id']:<18} узлов {s['nodes']}, рёбер {s['edges']} "
               f"(code {s['by_via'].get('code', 0)}, doc {s['by_via'].get('doc', 0)}, "
               f"override {s['by_via'].get('override', 0)})")
-
-
-def _cmd_migrate_fed(env, argv):
-    """Перейти на федерацию: бэкап legacy data/graph.db + derive всех проектов в сторы."""
-    from .common import backup_file
-    from .config import load_config
-    from .derive import derive_all
-    opts, _ = parse_args(argv, {"--json": "bool"})
-    config, _src = load_config(env)
-    bak = backup_file(env.graph_db)
-    stats = derive_all(env, config)
-    if opts["json"]:
-        print(json.dumps({"backup": str(bak) if bak else None, "projects": stats},
-                         ensure_ascii=False, indent=2))
-        return
-    if bak:
-        print(f"legacy-граф сохранён → {bak.name}")
-    print(f"Федерация собрана: {len(stats)} проектов. "
-          f"Установите graph.adapter=\"federation\" в .maind.json.")
 
 
 def _cmd_rebuild(env, argv):

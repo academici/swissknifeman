@@ -8,8 +8,9 @@ import os
 from pathlib import Path
 
 from .common import die, sanitize, warn
-from .constants import (GRAPH_ADAPTERS, HEARTBEAT_DEFAULT_MS, MAX_IDLE_DEFAULT_MS,
-                        MEMORY_HTTP_PORT, MEMORY_STREAM_PORT, SERVICE_NAME)
+from .constants import (GRAPH_ADAPTERS, HEARTBEAT_DEFAULT_MS, LEGACY_GRAPH_ADAPTERS,
+                        MAX_IDLE_DEFAULT_MS, MEMORY_HTTP_PORT, MEMORY_STREAM_PORT,
+                        SERVICE_NAME)
 
 # Топ-ключи .maind.json (кроме _-мета). Значение — ожидаемый Python-тип.
 TOP_KEYS = {
@@ -75,8 +76,17 @@ def validate_config(config, cfg_file):
                     "stream_port": int, "data_dir": str, "url": str})
     _check_section(cfg_file, "graph", config.get("graph", {}),
                    {"enabled": bool, "persist": bool, "persist_path": str,
-                    "store_layout": str},
-                   {"adapter": GRAPH_ADAPTERS})
+                    "store_layout": str})
+    # adapter: канонически {federation, disabled}; legacy (memory/graphify/networkx)
+    # принимаем с предупреждением (нормализуется в federation в merge_defaults).
+    adapter = (config.get("graph") or {}).get("adapter")
+    if adapter is not None and adapter not in GRAPH_ADAPTERS:
+        if adapter in LEGACY_GRAPH_ADAPTERS:
+            warn(f"{cfg_file}: graph.adapter='{adapter}' устарел → используется "
+                 f"'federation' (единственная раскладка; graphify — отдельный MCP-слой)")
+        else:
+            die(f"{cfg_file}: graph.adapter = '{adapter}' — допустимо: "
+                f"{', '.join(sorted(GRAPH_ADAPTERS))}")
     _check_section(cfg_file, "agents", config.get("agents", {}),
                    {"registry_enabled": bool, "heartbeat_interval_ms": int,
                     "max_idle_ms": int, "definitions": list})
@@ -121,9 +131,10 @@ def merge_defaults(config):
 
     gr = dict(config.get("graph") or {})
     gr.setdefault("enabled", True)
-    gr.setdefault("adapter", "memory")
-    gr.setdefault("persist", True)
-    gr.setdefault("persist_path", "./data/graph.db")
+    gr.setdefault("adapter", "federation")
+    # legacy adapter → федерация (единственная раскладка; движок всегда stdlib)
+    if gr["adapter"] in LEGACY_GRAPH_ADAPTERS:
+        gr["adapter"] = "federation"
     config["graph"] = gr
 
     ag = dict(config.get("agents") or {})
@@ -182,7 +193,6 @@ def map_brain_project(bp):
         "type": _infer_type(local_path),
         "enabled": bp.get("enabled", True),
         "docs_folders": bp.get("folders", []),
-        "graph_node": True,
         "memory_scope": f"project:{slug}" if slug else None,
         "agents": [],
         "skills": [],

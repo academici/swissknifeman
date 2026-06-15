@@ -31,7 +31,7 @@ maind projects sync --from brain [--path DIR]
 maind namespaces [--json]              # namespace-группы экосистемы и их проекты-члены
 
 maind deploy [--project ID | --all] [--with-graphify] [--dry-run]   # MCP-серверы хаба (= sync --only mcp)
-maind sync [--project ID | --namespace NS | --all] [--only mcp,graph,memory,health-hook,health-doc] \
+maind sync [--project ID | --namespace NS | --all] [--only mcp,graph,memory,health-hook,health-doc,ecosystem-skill] \
            [--mode install|update|auto] [--dry-run] [--json]        # раскатать управляемые артефакты
 maind health [--cwd | --project ID] [--fix] [--strict] [--json]     # healthcheck связи проекта с хабом
 maind workspace sync [--dry-run] [--no-allow] [--no-mode]           # доверие Claude к проектам экосистемы

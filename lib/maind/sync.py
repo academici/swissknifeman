@@ -136,6 +136,12 @@ def _health_doc_run(env, config, projects, mode, dry):
     return [apply_health_doc(env, config, p, mode, dry) for p in projects]
 
 
+def _ecosystem_skill_run(env, config, projects, mode, dry):
+    """Управляемый скилл ecosystem-mcp (инструкция про MCP-инструменты и связи) в проекты."""
+    from .skilldoc import apply_ecosystem_skill
+    return [apply_ecosystem_skill(env, config, p, mode, dry) for p in projects]
+
+
 # Реестр провиженеров и порядок применения (ORDER задаёт последовательность).
 PROVISIONERS = {
     "mcp": _mcp_run,
@@ -143,8 +149,9 @@ PROVISIONERS = {
     "memory": _memory_run,
     "health-hook": _health_hook_run,
     "health-doc": _health_doc_run,
+    "ecosystem-skill": _ecosystem_skill_run,
 }
-ORDER = ["mcp", "graph", "memory", "health-hook", "health-doc"]
+ORDER = ["mcp", "graph", "memory", "health-hook", "health-doc", "ecosystem-skill"]
 
 
 def provisioner_names(only=None):
@@ -173,8 +180,8 @@ def cmd_sync(env, argv):
                                 "--json": "bool"})
     if opts["help"]:
         print("maind sync [--project ID | --namespace NS | --all] [--only mcp,graph,"
-              "memory,health-hook,health-doc] [--mode install|update|auto] [--dry-run] "
-              "[--json]")
+              "memory,health-hook,health-doc,ecosystem-skill] [--mode install|update|auto] "
+              "[--dry-run] [--json]")
         return
     mode = opts["mode"] or "auto"
     if mode not in MODES:

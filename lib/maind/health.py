@@ -28,12 +28,9 @@ HOOK_SCRIPT = ".claude/maind-health.sh"
 
 
 # ── шаблоны ──────────────────────────────────────────────────────────────────
-def _templates_dir(env):
-    return env.root / "templates" / "health"
-
-
-def _render(env, name, subst):
-    text = (_templates_dir(env) / name).read_text(encoding="utf-8")
+def _render(env, relpath, subst):
+    """Прочитать шаблон <maind>/templates/<relpath> и подставить {{KEY}} → значение."""
+    text = (env.root / "templates" / relpath).read_text(encoding="utf-8")
     for k, v in subst.items():
         text = text.replace("{{" + k + "}}", str(v))
     return text
@@ -114,7 +111,7 @@ def apply_health_doc(env, config, project, mode, dry):
     path = Path(os.path.expanduser(local)) if local else None
     if not path or not path.is_dir():
         return _result(pid, "health-doc", "absent", False, dry, "нет пути")
-    block = _render(env, "priority-block.md",
+    block = _render(env, "health/priority-block.md",
                     {"SCOPE": project.get("memory_scope") or f"project:{pid}",
                      "PROJECT": pid})
     claude = path / "CLAUDE.md"
@@ -161,7 +158,7 @@ def apply_health_hook(env, config, project, mode, dry):
     path = Path(os.path.expanduser(local)) if local else None
     if not path or not path.is_dir():
         return _result(pid, "health-hook", "absent", False, dry, "нет пути")
-    script = _render(env, "session-start-hook.sh", {"MAIND_BIN": _maind_bin(env)})
+    script = _render(env, "health/session-start-hook.sh", {"MAIND_BIN": _maind_bin(env)})
     script_path = path / HOOK_SCRIPT
     state = _file_state(script_path, script)
     settings_path = path / ".claude" / "settings.json"

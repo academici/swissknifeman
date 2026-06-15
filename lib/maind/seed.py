@@ -11,7 +11,7 @@ from .namespaces import group_scopes, namespaces_of, private_scope, recall_scope
 MARKER = "maind:ecosystem-link"
 
 
-def _linked_projects(env, config, project):
+def linked_projects(env, config, project):
     """Связанные проекты из графа проекта (соседи project:<id> → другие project:*)."""
     from .federation import project_graph, store_path
     from pathlib import Path
@@ -34,7 +34,7 @@ def seed_text(env, config, project):
     name = project.get("name", pid)
     ptype = project.get("type", "unknown")
     http_port, _, _ = resolve_ports(env, config)
-    linked = _linked_projects(env, config, project)
+    linked = linked_projects(env, config, project)
     parts = [f"[{MARKER}] {name} ({ptype}) — узел экосистемы academici."]
     ns = sorted(namespaces_of(project))
     if ns != ["default"]:                    # связи ограничены этим(и) namespace
@@ -67,7 +67,7 @@ def seed_memory(env, config, project, *, dry=False):
     if dry:
         return {"provisioner": "memory", "id": pid, "status": "dry", "changed": False}
     store(url, scope, "ecosystem-link", text)
-    linked = _linked_projects(env, config, project)
+    linked = linked_projects(env, config, project)
     shared = group_scopes(project)
     if linked:
         cross = f"[{MARKER}] {pid} → {', '.join(linked)}"

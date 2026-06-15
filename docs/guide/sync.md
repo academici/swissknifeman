@@ -26,6 +26,7 @@ maind sync --all --dry-run --json                  # план без запис�
 | `memory` | seed базового факта о связях в `project:<id>` + `ns:<группа>` | `seed.py` |
 | `health-hook` | SessionStart-хук связи с хабом в `.claude/settings.json` | `health.py` |
 | `health-doc` | управляемый блок «приоритет №1» в `CLAUDE.md` | `health.py` |
+| `ecosystem-skill` | управляемый скилл `ecosystem-mcp` (что за MCP-инструменты, связи, починка) в `.claude/skills/` | `skilldoc.py` |
 
 `--only mcp,graph,...` ограничивает набор (имена сверяются с реестром, опечатка → ошибка).
 
@@ -45,12 +46,13 @@ maind sync --all --dry-run --json                  # план без запис�
 ## Пример вывода
 
 ```
-sync (mode=auto, проектов 1, провиженеры: mcp, graph, memory, health-hook, health-doc)
-  ✓ mcp         flexcrm            .mcp.json
-  ✓ graph       flexcrm            12n/9e (code 7, doc 1)
-  ○ memory      flexcrm            демон памяти не запущен
-  ✓ health-hook flexcrm            установлен
-  ✓ health-doc  flexcrm            обновлён
+sync (mode=auto, проектов 1, провиженеры: mcp, graph, memory, health-hook, health-doc, ecosystem-skill)
+  ✓ mcp             flexcrm            .mcp.json
+  ✓ graph           flexcrm            12n/9e (code 7, doc 1)
+  ○ memory          flexcrm            демон памяти не запущен
+  ✓ health-hook     flexcrm            установлен
+  ✓ health-doc      flexcrm            обновлён
+  ✓ ecosystem-skill flexcrm            .claude/skills/ecosystem-mcp/SKILL.md
 ```
 
 Дальше: [Доверие (workspace) →](/guide/workspace)

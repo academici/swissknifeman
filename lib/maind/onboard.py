@@ -106,6 +106,16 @@ def onboard(env, config, project_or_path, opts):
         steps.append({"name": "memory", "status": "ok" if ms["status"] == "ok" else "skipped",
                       "detail": ms.get("detail", ms["status"])})
 
+    # 3c. ecosystem-skill: управляемый скилл с инструкцией про MCP-инструменты и связи
+    from .skilldoc import apply_ecosystem_skill
+    try:
+        sk = apply_ecosystem_skill(env, config, proj, "auto", dry)
+        steps.append({"name": "skill",
+                      "status": "ok" if sk["status"] in ("ok", "dry") else "skipped",
+                      "detail": f"ecosystem-mcp ({sk.get('detail', sk['status'])})"})
+    except OSError as e:
+        steps.append({"name": "skill", "status": "skipped", "detail": f"шаблон недоступен: {e}"})
+
     # 4. опционально brain
     if opts.get("with_brain"):
         try:

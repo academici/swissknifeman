@@ -16,6 +16,26 @@
 
 ### Added
 
+- **Скиллы из практик констелляции (аудит + 10 скиллов, фокус — фронтенд).**
+  Read-only аудит всех проектов из `~/Vaults/Brain/.projects.json` + `unbox`,
+  `art-kombinat/frontend`, `sova` (6 Explore-агентов, сверка кандидатов с живым
+  реестром, чтобы отсечь вендоренные копии). Разбор — в
+  `docs/research/practices-audit-2026-06.md` (стек-фингерпринты, поправка
+  vendored-vs-local, авторённое, отложенный бэклог, вне охвата). **7 новых
+  скиллов:** `frontend/tailwind-conventions` (Tailwind v4: CSS-first `@theme`,
+  токены, тёмная тема, `cn()`, prettier-plugin-tailwindcss), `frontend/backend-type-sync`
+  (`spatie/laravel-typescript-transformer` + `#[TypeScript]` → `App.Enums.*`/`App.Data.*`,
+  в паре с `wayfinder`), `frontend/eslint-flat-config` (ESLint 9 flat для Vue/TS:
+  `@stylistic`, границы импортов, цепочка Prettier), `php/test-isolation-guard`
+  (bootstrap-страж против тестов по боевой БД/медиа-диску), `php/attribute-authorization`
+  (`#[CheckPermission]` + reflection-middleware поверх Gate), `general/writing-style`
+  (тон/язык комментариев, коммитов, описаний тестов — расширенная версия, объединена
+  с одноимённым скиллом из flexcrm-экстракции ниже), `devops/db-test-preflight`
+  (пре-флайт Postgres-БД перед тестами — аналог `node-pnpm-preflight`). **3 расширены:**
+  `frontend/inertia-vue` (доменные срезы `features/<домен>/` + границы импортов, →0.3.0),
+  `php/enum-attributes` (секция `#[TypeScript]` + экспорт типов, →0.2.0),
+  `php/modular-architecture` (реализация на `nwidart/laravel-modules` + Filament discovery, →0.3.0).
+  Снипеты анонимизированы; `validate.sh` зелёный (0 warnings).
 - **Экстракция универсальных скиллов из flexcrm** (источник: local, авторские):
   `quality/testing-safety-report` (отчёт безопасности после миграций/рефакторинга),
   `php/php-upgrade-checklist` (чеклист апгрейда версии PHP — образ/CI, composer,

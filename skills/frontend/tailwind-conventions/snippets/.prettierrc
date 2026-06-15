@@ -1,0 +1,32 @@
+// Source: anonymized production project
+{
+    "semi": true,
+    "singleQuote": true,
+    "printWidth": 80,
+    "tabWidth": 4,
+    "htmlWhitespaceSensitivity": "css",
+
+    "plugins": ["prettier-plugin-tailwindcss"],
+
+    "tailwindFunctions": ["clsx", "cn", "cva", "tv"],
+
+    "tailwindStylesheet": "resources/css/app.css",
+
+    "overrides": [
+        {
+            "files": "**/*.yml",
+            "options": { "tabWidth": 2 }
+        }
+    ]
+}
+
+// Пояснение (в реальном .prettierrc комментарии не оставляют — JSON их не допускает):
+//
+//   plugins: prettier-plugin-tailwindcss   — авто-сортировка классов в каноническом
+//                                            порядке Tailwind при каждом форматировании.
+//   tailwindFunctions: [clsx, cn, cva, tv]  — функции, чьи строковые аргументы плагин тоже
+//                                            считает классами и сортирует. Без этого классы
+//                                            внутри cn(...) / cva(...) остаются неотсортированными.
+//   tailwindStylesheet: resources/css/app.css — для Tailwind v4 плагину нужен путь к CSS-входу
+//                                            (там живут @theme-токены), иначе он не знает кастомные
+//                                            утилиты. В v3 указывали tailwindConfig: tailwind.config.js.

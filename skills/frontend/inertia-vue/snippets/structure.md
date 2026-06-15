@@ -1,6 +1,6 @@
-# Карта слоёв resources/js (Laravel + Inertia + Vue)
+<!-- Source: anonymized production Laravel project -->
 
-Source: anonymized production Laravel project.
+# Карта слоёв resources/js (Laravel + Inertia + Vue)
 
 ```
 resources/js/

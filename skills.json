@@ -16,7 +16,7 @@
     },
     "devops": {
       "description": "Docker environments, CI/CD pipelines, GitOps",
-      "count": 10,
+      "count": 11,
       "status": "active"
     },
     "founder": {
@@ -26,7 +26,7 @@
     },
     "frontend": {
       "description": "Frontend development: Vite, Vue Composition API, Tailwind CSS, Inertia",
-      "count": 7,
+      "count": 10,
       "status": "active"
     },
     "general": {
@@ -51,7 +51,7 @@
     },
     "php": {
       "description": "PHP and Laravel: applications, packages, Filament, permissions, testing, patterns",
-      "count": 34,
+      "count": 36,
       "status": "active"
     },
     "pm": {
@@ -316,6 +316,22 @@
       "source": "local"
     },
     {
+      "name": "db-test-preflight",
+      "bucket": "devops",
+      "path": "skills/devops/db-test-preflight/SKILL.md",
+      "version": "0.1.0",
+      "description": "Пре-флайт проверка тестовой БД (Postgres в Docker) ПЕРЕД запуском тестов: контейнер поднят (docker compose ps / pg_isready), целевая БД существует и её имя оканчивается на _test (не dev/prod), миграции применены; различает host- и docker-подключение. Активировать при запуске тестов с Postgres, настройке хуков/CI и когда «тесты падают на подключении к БД».",
+      "sha256": "516dcec5f052c5ca8a53e59a954f98c298bcf1ad43accaf6b30d4910dc0ba638",
+      "tags": [
+        "postgres",
+        "docker",
+        "testing",
+        "preflight",
+        "devops"
+      ],
+      "source": "local"
+    },
+    {
       "name": "docker",
       "bucket": "devops",
       "path": "skills/devops/docker/SKILL.md",
@@ -555,12 +571,52 @@
       "source": "local"
     },
     {
+      "name": "backend-type-sync",
+      "bucket": "frontend",
+      "path": "skills/frontend/backend-type-sync/SKILL.md",
+      "version": "0.1.0",
+      "description": "Синхронизация типов backend→frontend через spatie/laravel-typescript-transformer: #[TypeScript] на enum/DTO/Spatie-Data, php artisan typescript:transform → generated.d.ts, использование App.Enums.* / App.Data.* в Vue/TS. Активировать: новый enum/DTO нужен на фронте, рассинхрон типов фронта с бэком, настройка type-sync. Граница с wayfinder (роуты ≠ типы).",
+      "sha256": "84e67fcab9469b8c44adc61ebf87efdae47672302f035e9d861be772fe2bf737",
+      "tags": [
+        "typescript",
+        "laravel",
+        "spatie",
+        "types",
+        "enum",
+        "dto",
+        "frontend",
+        "type-sync"
+      ],
+      "requires": [
+        "wayfinder"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "eslint-flat-config",
+      "bucket": "frontend",
+      "path": "skills/frontend/eslint-flat-config/SKILL.md",
+      "version": "0.1.0",
+      "description": "ESLint flat config (eslint.config.js) для Vue 3 + TypeScript: defineConfigWithVueTs/typescript-eslint + eslint-plugin-vue, @stylistic, import/order и границы импортов, padding-line-between-statements, цепочка Prettier (eslint-config-prettier + tailwindcss + organize-imports), скрипты lint/lint:fix. Триггеры: настройка/правка eslint или prettier, новый Vue/TS проект.",
+      "sha256": "ffa3d6f0cc21875078219988d77fb3362546b0e21eafc1c899caa06df6ff2c53",
+      "tags": [
+        "eslint",
+        "prettier",
+        "flat-config",
+        "vue",
+        "typescript",
+        "stylistic",
+        "tooling"
+      ],
+      "source": "local"
+    },
+    {
       "name": "inertia-vue",
       "bucket": "frontend",
       "path": "skills/frontend/inertia-vue/SKILL.md",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "description": "Inertia + Vue в Laravel: страницы, формы, навигация и слоистая организация resources/js (pages, layouts, components, composables, stores, features, events, types, actions/wayfinder).",
-      "sha256": "eea604193d7740aa11f9d35cf6bc66b771db8a319e48507f75a7c12c94982015",
+      "sha256": "0bd46069b348e1376cf4121c591f7943ad09bfd6c05e6e50d82d31ac389d1e93",
       "tags": [
         "inertia",
         "vue",
@@ -589,6 +645,25 @@
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/spatie/guidelines.spatie.be/master/content/code-style/javascript.md",
       "fetched_at": "2026-06-12"
+    },
+    {
+      "name": "tailwind-conventions",
+      "bucket": "frontend",
+      "path": "skills/frontend/tailwind-conventions/SKILL.md",
+      "version": "0.1.0",
+      "description": "Конвенции Tailwind CSS v4 для Laravel/Vue: CSS-first конфиг (@import tailwindcss, @theme-токены вместо tailwind.config.js), дизайн-токены, тёмная тема (.dark + dark:* + useAppearance), cn() (clsx+tailwind-merge), prettier-plugin-tailwindcss + tailwindFunctions, дисциплина отступов. Активировать при правке *.vue/*.css с Tailwind, настройке tailwind/postcss/prettier под Tailwind, работе с тёмной темой.",
+      "sha256": "84969a26cb46347910920df4bbb8e9b251cebdebfeaa979e6a49411027b9c4c4",
+      "tags": [
+        "tailwind",
+        "tailwindcss-v4",
+        "css",
+        "vue",
+        "laravel",
+        "dark-mode",
+        "design-tokens",
+        "prettier"
+      ],
+      "source": "local"
     },
     {
       "name": "vite-module-loader",
@@ -883,14 +958,17 @@
       "bucket": "general",
       "path": "skills/general/writing-style/SKILL.md",
       "version": "0.1.0",
-      "description": "Живой язык комментариев и текста коммитов: писать о причине, а не пересказывать код; настоящее/прошедшее время, без канцелярита; заголовок коммита — завершённое действие, в body причина и эффект. Активировать при написании комментариев и сообщений коммитов.",
-      "sha256": "692856d1bb3c807f83312bd3080efec7a74048ff3e4489fbea931f2d7733faf6",
+      "description": "Тон и язык кодовых артефактов: русский по умолчанию для комментариев, тел коммитов, описаний тестов it()/test(), docstring и внутренних доков; живой язык без канцелярита, объяснять ПОЧЕМУ, а не ЧТО. Активировать при написании комментариев, тел коммитов, описаний тестов и внутренней документации (формат/механика git — в git-commit-rules).",
+      "sha256": "5cd0f38b377ed0cbd0b9600e1fbcab16e90ad57c967da7c2420c95f8e3a1fd9e",
       "tags": [
         "writing",
+        "language",
+        "russian",
         "comments",
         "commits",
-        "style",
-        "language"
+        "tests",
+        "docs",
+        "style"
       ],
       "source": "local"
     },
@@ -1232,6 +1310,25 @@
       "source": "local"
     },
     {
+      "name": "attribute-authorization",
+      "bucket": "php",
+      "path": "skills/php/attribute-authorization/SKILL.md",
+      "version": "0.1.0",
+      "description": "Декларативная авторизация на уровне методов контроллера через атрибут #[CheckPermission] (enum-право + аргументы маршрута) и reflection-middleware CheckAccess поверх Gate. Активировать когда нужна декларативная проверка прав на экшенах, enum-права вместо строк, рефлексия-middleware.",
+      "sha256": "c33b721a69837691b7d6930c8cca9e8bac63f87a1053c949f987c7c68149daa8",
+      "tags": [
+        "php",
+        "laravel",
+        "authorization",
+        "attribute",
+        "reflection",
+        "middleware",
+        "gate",
+        "enum"
+      ],
+      "source": "local"
+    },
+    {
       "name": "azguard",
       "bucket": "php",
       "path": "skills/php/azguard/SKILL.md",
@@ -1318,16 +1415,17 @@
       "name": "enum-attributes",
       "bucket": "php",
       "path": "skills/php/enum-attributes/SKILL.md",
-      "version": "0.1.0",
-      "description": "Метаданные enum-кейсов через PHP-атрибуты (#[Label], #[Color], #[Description]) + Concern-трейты с reflection-резолвером",
-      "sha256": "ca6281246f774a873fe81a1fb91ba6e27c14fb198abcd48f2a205c6e15c7359b",
+      "version": "0.2.0",
+      "description": "Активируй при работе с метаданными enum: когда match-простыни label()/color()/description() пора заменить на PHP-атрибуты #[Label]/#[Color]/#[Description] над кейсами + Concern-трейты с reflection-резолвером, или когда нужно экспортировать enum как TS-тип через стэк #[TypeScript] (App.Enums.* union в .d.ts). Триггеры: PHP enum, атрибуты на кейсах, getLabel()/getColor(), Filament HasLabel, spatie/laravel-typescript-transformer, локальный enum-concern через path-repository",
+      "sha256": "cf3f006b27158c26719b5c4489ffb11a5209269a4796b996623dc64f8b2be4ac",
       "tags": [
         "php",
         "enum",
         "attributes",
         "reflection",
         "laravel",
-        "patterns"
+        "patterns",
+        "typescript"
       ],
       "source": "local"
     },
@@ -1663,13 +1761,16 @@
       "name": "modular-architecture",
       "bucket": "php",
       "path": "skills/php/modular-architecture/SKILL.md",
-      "version": "0.2.0",
-      "description": "Масштабирование Laravel-кода при росте: организация по бизнес-доменам, Модульный Монолит (Modular Monolith) и паттерны DDD; стартовая структура — php/laravel-structure",
-      "sha256": "6aec4e744643693f55b8a98374dcb1246e1fd3c4f30342921f86f7709617b730",
+      "version": "0.3.0",
+      "description": "Масштабирование Laravel-кода при росте: организация по бизнес-доменам, Модульный Монолит (Modular Monolith) и паттерны DDD; реализация на nwidart/laravel-modules (module:make*, структура модуля, namespace без Modules\\\\, Filament discovery); стартовая структура — php/laravel-structure",
+      "sha256": "587aba3599f1d81128ad5f75d0812681d841163b28ae70b5c812ae73d3878737",
       "tags": [
         "php",
         "laravel",
-        "architecture"
+        "architecture",
+        "nwidart",
+        "laravel-modules",
+        "filament"
       ],
       "requires": [
         "laravel"
@@ -1780,6 +1881,28 @@
         "php",
         "laravel",
         "quality"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "test-isolation-guard",
+      "bucket": "php",
+      "path": "skills/php/test-isolation-guard/SKILL.md",
+      "version": "0.1.0",
+      "description": "Защита тестов Laravel от запуска по боевой/dev БД и медиа-диску: bootstrap.php выставляет DB_DATABASE=*_test и media-test до autoload, класс-страж TestEnvironmentGuard аварийно прерывает createApplication() при нарушении изоляции, безопасный RefreshDatabase. Активировать при настройке тестового окружения, защите CI и подозрении, что тесты бьют по dev/prod БД.",
+      "sha256": "890cb88ec38e8fb708e1b5ac27f21a2cdd5af9a8ae94ee5f04daf18ebbff2487",
+      "tags": [
+        "php",
+        "laravel",
+        "testing",
+        "isolation",
+        "safety",
+        "database",
+        "ci",
+        "refreshdatabase"
+      ],
+      "requires": [
+        "laravel-testing"
       ],
       "source": "local"
     },

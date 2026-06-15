@@ -15,6 +15,11 @@
       "file": "page-example.vue",
       "description": "Тонкая Inertia-страница: layout, Link, доменный компонент, форма через composable",
       "tags": ["page", "inertia", "vue"]
+    },
+    {
+      "file": "feature-structure.md",
+      "description": "Доменный срез features/<домен>/{actions,composables,model,config}: дерево, однонаправленный граф импортов, граница @/wayfinder/routes/* через ESLint no-restricted-imports, мини-composable",
+      "tags": ["feature", "architecture", "import-boundary", "eslint", "wayfinder"]
     }
   ]
 }

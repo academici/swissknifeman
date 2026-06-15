@@ -1,0 +1,20 @@
+{
+  "skill": "attribute-authorization",
+  "snippets": [
+    {
+      "file": "CheckPermission.php",
+      "description": "Атрибут #[CheckPermission]: повторяемый, TARGET_METHOD, принимает enum-право (UnitEnum), список имён параметров маршрута, abort-статус и сообщение",
+      "tags": ["attribute", "enum", "authorization", "php"]
+    },
+    {
+      "file": "CheckAccess.php",
+      "description": "Middleware-исполнитель: ReflectionMethod::getAttributes() читает атрибуты экшена, резолвит аргументы из route-параметров, вызывает Gate::allows(право->value, аргументы) с abort_if",
+      "tags": ["middleware", "reflection", "gate", "abort_if"]
+    },
+    {
+      "file": "OrderController.php",
+      "description": "Пример контроллера: index без аргументов, show с одним правом, update с несколькими повторяющимися #[CheckPermission] и разными abort-статусами",
+      "tags": ["controller", "example", "route-model-binding"]
+    }
+  ]
+}

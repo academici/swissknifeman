@@ -1,0 +1,20 @@
+{
+  "skill": "eslint-flat-config",
+  "snippets": [
+    {
+      "file": "eslint.config.js",
+      "description": "Полный flat config Vue 3 + TS: defineConfigWithVueTs + eslint-plugin-vue, @stylistic (brace + padding-хелпер), import/order и резолвер, границы импортов с whitelist, ignores автогена, eslint-config-prettier последним",
+      "tags": ["eslint", "flat-config", "vue", "typescript", "stylistic", "import-order"]
+    },
+    {
+      "file": "prettierrc.json",
+      "description": "Цепочка плагинов Prettier: organize-imports перед tailwindcss (последним); значения форматирования из js-code-style, override для yml",
+      "tags": ["prettier", "tailwindcss", "organize-imports"]
+    },
+    {
+      "file": "package-scripts.json",
+      "description": "npm-скрипты lint/lint:check/format/types:check и devDependencies всей цепочки ESLint+Prettier",
+      "tags": ["package-json", "scripts", "devdependencies"]
+    }
+  ]
+}

@@ -2,7 +2,7 @@
 
 **Политика.** Laravel Boost — доверенный источник версионно-специфичных скиллов и гайдлайнов: он поставляется с пакетами, знает установленные версии (`boost:update`) и обновляется вместе с экосистемой. Наш реестр **не дублирует** Boost, а **дополняет** его архитектурой, проектными конвенциями и практиками, которых в Boost нет. Версионно-специфичная тема → Boost; архитектура/процессы/инфраструктура → swissknifeman.
 
-Дата ревизии: 2026-06-12.
+Дата ревизии: 2026-06-15.
 
 **Где живёт Boost:**
 
@@ -56,10 +56,11 @@
 | `php/filament` | filament/filament (third-party) | структура ресурсов, проектные паттерны админки |
 | `php/medialibrary` | spatie/laravel-medialibrary (third-party) | самодостаточный вариант для проектов без Boost |
 | `php/laravel-testing` | pest-testing | изоляция тестовой БД, детект окружения, coverage gate |
+| `frontend/tailwind-conventions` | tailwindcss 3/4 | v4 CSS-first: токены `@theme`, тёмная тема `.dark`+`useAppearance`, `cn()` (clsx+tailwind-merge), сортировка классов Prettier, дисциплина отступов |
 
 ### ours-only — аналога в Boost нет
 
-`php/laravel-structure`, `php/repositories`, `php/dependency-injection`, `php/azguard`, `php/database`, `php/enum-attributes`, `php/laravel-broadcasting`, `php/laravel-dusk`, `php/code-style-spatie`, `php/static-analysis`, `php/laravel`, `php/laravel-permissions`, `php/php-patterns`, `php/modular-architecture`, `php/botkit`, все `php/laravel-package-*` (scaffold, testing, docs, release, service-provider, compatibility, generate-skill, expressive) и `php/laravel-packages`, все `devops/docker-*` (а также `devops/ci-cd`, `devops/gitops`, `devops/makefile`, `devops/node-pnpm-preflight`), `frontend/vite-multi-build`, `frontend/vite-module-loader`, `frontend/vitest`, `frontend/js-code-style`, `frontend/vue-composition-api`, и все не-Laravel бакеты целиком: `architect/*`, `blender/*`, `founder/*`, `general/*`, `imported/*`, `operator/*`, `oss-dev/*`, `pm/*`, `python/*`, `quality/*`, `roles/*`.
+`php/laravel-structure`, `php/repositories`, `php/dependency-injection`, `php/azguard`, `php/database`, `php/enum-attributes`, `php/laravel-broadcasting`, `php/laravel-dusk`, `php/code-style-spatie`, `php/static-analysis`, `php/laravel`, `php/laravel-permissions`, `php/php-patterns`, `php/modular-architecture`, `php/botkit`, все `php/laravel-package-*` (scaffold, testing, docs, release, service-provider, compatibility, generate-skill, expressive) и `php/laravel-packages`, `php/test-isolation-guard`, `php/attribute-authorization`, все `devops/docker-*` (а также `devops/ci-cd`, `devops/gitops`, `devops/makefile`, `devops/node-pnpm-preflight`, `devops/db-test-preflight`), `frontend/vite-multi-build`, `frontend/vite-module-loader`, `frontend/vitest`, `frontend/js-code-style`, `frontend/vue-composition-api`, `frontend/backend-type-sync`, `frontend/eslint-flat-config`, и все не-Laravel бакеты целиком: `architect/*`, `blender/*`, `founder/*`, `general/*`, `imported/*`, `operator/*`, `oss-dev/*`, `pm/*`, `python/*`, `quality/*`, `roles/*`.
 
 ## Как применять
 

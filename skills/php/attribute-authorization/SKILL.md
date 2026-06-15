@@ -5,8 +5,8 @@ version: 0.1.0
 description: "Декларативная авторизация на уровне методов контроллера через атрибут #[CheckPermission] (enum-право + аргументы маршрута) и reflection-middleware CheckAccess поверх Gate. Активировать когда нужна декларативная проверка прав на экшенах, enum-права вместо строк, рефлексия-middleware."
 risk: write
 persona: oss-dev
-tags: [php, laravel, authorization, attribute, reflection, middleware, gate, enum]
-requires: []
+tags: [php, laravel, authorization, attribute, reflection, middleware, gate, enum, permissions, rbac]
+requires: [laravel-permissions]
 produces_for: []
 outputs: []
 snippets: [CheckPermission.php, CheckAccess.php, OrderController.php]
@@ -109,4 +109,4 @@ Route::middleware(['auth', 'check-access'])->group(function (): void {
 - snippets/OrderController.php — контроллер с `#[CheckPermission]`
 - https://www.php.net/manual/en/language.attributes.php
 - https://laravel.com/docs/authorization (Gate::allows)
-- Связанные скиллы: `php/laravel-permissions` (определение прав/политик/гейтов — граница выше), `php/enum-attributes` (enum как метаданные), `php/named-arguments` (стиль вызовов в сниппетах)
+- Связанные скиллы: `php/laravel-permissions` (определение прав/политик/гейтов — граница выше), `php/azguard` (пакетный code-first RBAC как источник abilities), `php/enum-attributes` (enum как метаданные), `php/named-arguments` (стиль вызовов в сниппетах), `architect/security-design` (auth-стратегия на уровне архитектуры)

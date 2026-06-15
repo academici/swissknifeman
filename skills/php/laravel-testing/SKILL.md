@@ -177,4 +177,8 @@ it('закрывает endpoint от гостя', function (string $route, array
 - Скилл `quality/test-strategy` — стратегия пирамиды и coverage policy
 - Скилл `static-analysis` (bucket php) — конвейер rector → pint → phpstan → tests
 - Скилл `laravel` (bucket php) — архитектурные паттерны, которые покрываются тестами
+- Скилл `php/test-isolation-guard` — жёсткая изоляция (bootstrap + страж `createApplication`), надстройка над этим скиллом
+- Скилл `php/laravel-dusk` — браузерные E2E-тесты (там своя изоляция, без `RefreshDatabase`)
+- Скилл `php/pao` — компактный JSON-вывод PHPUnit/Pest для AI-агента
+- Скилл `devops/db-test-preflight` — пре-флайт тестовой Postgres-БД перед прогоном
 - https://pestphp.com/docs — документация Pest

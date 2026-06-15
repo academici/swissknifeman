@@ -5,8 +5,8 @@ version: 0.1.0
 description: MVP definition, Impact/Effort приоритизация, фазы MVP → v1 → v2 → Backlog, метрики перехода
 risk: draft
 persona: pm
-tags: [requirements, gtm]
-requires: [brd]
+tags: [requirements, gtm, market]
+requires: [brd, go-to-market]
 produces_for: []
 outputs: ["docs/01_Business/07_Product_Roadmap.md"]
 sha256: ""
@@ -119,3 +119,13 @@ MVP = минимум, при котором пользователь получ�
 - "Сначала сделаем всё, потом запустим" — запуск с MVP, итерации быстро
 - Фичи без обоснования (зачем, для кого, что улучшает)
 - Одновременно работать над retention И growth — строго последовательно
+
+---
+
+## Связанные скиллы
+
+- `pm/brd` — вход: функциональные требования, из которых отбираются фичи MVP (требуется ДО roadmap).
+- `pm/go-to-market` — источник ICP для MVP Definition и метрик перехода между фазами (требуется ДО roadmap).
+- `pm/prd-from-brd` — RICE-приоритизация и версии stories питают разбивку по фазам.
+- `pm/unit-economics` — метрики перехода (retention, CAC, LTV) на границах фаз сверять отсюда.
+- `founder/risk-assessment` — `[[Risk Register]]`: если фаза зависит от внешнего риска, связать явно.

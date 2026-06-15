@@ -5,8 +5,8 @@ version: 0.1.0
 description: "Use for ticket domain logic: Actions, Services, Repositories, Observers, Policies, Notifications in the ticket system. Activate when working with Ticket, Participant, History, Message models; TicketStatus transitions via StateMachine; Actions in app/Actions/Ticket/; NotificationService; UserService::getPrimaryRole; or ticket authorization via Gate/Policies."
 risk: write
 persona: oss-dev
-tags: [workflow, domain, laravel]
-requires: []
+tags: [workflow, domain, laravel, authorization, repository, architecture]
+requires: [laravel, user-roles, repositories]
 produces_for: []
 outputs: []
 snippets: []
@@ -150,3 +150,11 @@ If task is cross-layer or ambiguous, activate:
 
 - `complex-task-orchestrator` — decomposition, risks, DoD;
 - `cross-layer-change-checklist` — mandatory synchronization checks before finalization.
+
+## Связанные скиллы
+
+- `user-roles` (general) — детали `UserRole` enum, `#[Priority]` и резолва `UserService::getPrimaryRole`, на который опирается домен.
+- `project-map` (general) — где какой слой (Action/Service/Repository/Policy) в этом проекте.
+- `php/repositories` — read/store split, на котором держится слой репозиториев тикетов.
+- `php/laravel` — базовые паттерны actions/repositories/resources.
+- `php/attribute-authorization`, `php/laravel-permissions` — Gate/Policy и enum-права для авторизации тикетов.

@@ -100,3 +100,6 @@ sha256: ""
 - Внедрение зависимостей и связывание: `php/dependency-injection`
 - Атрибуты, Concern-трейты, резолвер, локальный пакет: `php/enum-attributes`
 - Общие правила архитектуры: `php/laravel-best-practices` → `references/architecture.md`
+- Рост до модулей (десятки доменов, несколько команд): `php/modular-architecture`
+- Миграции, модели, нейминг таблиц: `php/database`
+- Тесты по доменам (зеркало `tests/`): `php/laravel-testing`

@@ -80,4 +80,4 @@ sha256: ""
 - snippets/TestCase.php — подключение стража в `createApplication()` + безопасный `RefreshDatabase`
 - https://laravel.com/docs/database-testing#resetting-the-database-after-each-test
 - https://github.com/laravel/framework/blob/master/src/Illuminate/Foundation/Testing/RefreshDatabase.php
-- Связанные скиллы: `php/laravel-testing`, `php/medialibrary`
+- Связанные скиллы: `php/laravel-testing` (база, requires), `php/medialibrary` (тестовый медиа-диск), `php/laravel-dusk` (изоляция в браузерных тестах — отдельная схема без `RefreshDatabase`), `devops/db-test-preflight` (пре-флайт контейнера/БД перед прогоном)

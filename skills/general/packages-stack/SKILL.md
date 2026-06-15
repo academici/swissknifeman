@@ -5,7 +5,7 @@ version: 0.1.0
 description: "Реестр используемых внешних NPM и Composer пакетов. Опирайся на официальную документацию этих пакетов при написании кода."
 risk: read
 persona: oss-dev
-tags: [dependencies, conventions]
+tags: [dependencies, conventions, laravel, vue, navigation]
 requires: []
 produces_for: []
 outputs: []
@@ -58,3 +58,16 @@ sha256: ""
 
 5. **`vite`**
    - Сборщик фронтенда. Конфигурируется в `vite.config.ts`.
+
+## Ссылки на профильные скиллы
+
+Этот скилл — реестр-указатель; детальные паттерны по каждому пакету:
+
+- `php/modular-architecture`, `general/packages-stack` → nwidart/laravel-modules.
+- `php/medialibrary` → spatie/laravel-medialibrary.
+- `php/filament` → filament/filament.
+- `php/laravel-data` → spatie/laravel-data (DTO).
+- `frontend/vue-composition-api`, `frontend/pinia-stores` → vue, pinia.
+- `frontend/tailwind-conventions` → tailwindcss.
+- `frontend/inertia-vue` → @inertiajs/vue3.
+- `frontend/vite-module-loader`, `frontend/vite-multi-build` → vite.

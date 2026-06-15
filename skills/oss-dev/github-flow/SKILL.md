@@ -195,6 +195,7 @@ security/38-path-traversal-loader
 - `../gh-review/SKILL.md` — ревью/хендофф PR через gh с экономией контекста
 - `../../general/git-commit-rules/SKILL.md` — формат коммитов, scopes, BREAKING CHANGE
 - `../../devops/ci-cd/snippets/github-actions-release.yml` — release workflow по тегу
+- `devops/gitops` — командная модель веток (main/develop/feature/hotfix) и защита веток; github-flow — GitHub-проекция этого процесса (Issue→PR→Release).
 
 ---
 

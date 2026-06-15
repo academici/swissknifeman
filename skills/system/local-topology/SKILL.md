@@ -5,7 +5,9 @@ version: 0.1.0
 description: Корневая карта локальной среды разработки — три узла-хаба (Brain-волт, swissknifeman, база проектов) и навигация между проектами, их кодом и документацией. Читается из ~/.swissknifeman/topology.json
 risk: read
 persona: architect
-tags: [topology, architecture, navigation, meta]
+tags: [topology, architecture, navigation, meta, cross-project]
+requires: []
+produces_for: [cross-project-coordinator, shared-memory]
 sha256: ""
 adapters: [claude, cursor, fable]
 ---
@@ -135,10 +137,10 @@ swissknifeman status        # состояние текущего проекта
 
 ## Roadmap
 
-В планах — **межпроектный агент-оптимизатор**: обходит все связанные через
-топологию проекты, ищет общие части (дублирующийся код, расходящиеся реализации
-одного и того же), и рекомендует унификацию в общую кодовую базу. Карта
-топологии — фундамент для такого обхода. См. `docs/roadmap.md`.
+**Межпроектный агент-оптимизатор** уже реализован поверх этой карты —
+см. `cross-project-coordinator` (бакет system): обходит связанные через
+топологию проекты, ищет дубли/расхождения и рекомендует унификацию (read-only).
+Карта топологии — фундамент для такого обхода. Дальнейшие планы — `docs/roadmap.md`.
 
 ---
 
@@ -148,3 +150,10 @@ swissknifeman status        # состояние текущего проекта
 - [ ] Использовал реальные пути узлов, а не захардкоженные
 - [ ] Для документации — шёл через Brain (`brain status/sync`), не правил зеркала вручную
 - [ ] Не коммитил `topology.json` в проект
+
+---
+
+## Ссылки
+
+- `cross-project-coordinator` (бакет system) — обход связанных проектов на базе этой карты (read-only анализ дублей/расхождений).
+- `shared-memory` (бакет system) — общий «мозг» группы; резолвит участников через ту же топологию.

@@ -5,8 +5,8 @@ version: 0.1.0
 description: Анализ рынка, конкурентов, JTBD, незанятая ниша, вектор атаки. Использует Perplexity search_deep
 risk: external
 persona: founder
-tags: [discovery, market]
-requires: []
+tags: [discovery, market, gtm]
+requires: [idea-discovery]
 produces_for: [go-to-market, new-project, pitch-deck]
 outputs: ["docs/01_Business/02_Competitive_Analysis.md"]
 sha256: ""
@@ -78,3 +78,13 @@ adapters: [claude, cursor, fable]
 Наш продукт vs рынок:
 [ось X] vs [ось Y] — где мы стоим
 ```
+
+---
+
+## Связанные скиллы
+
+- `founder/idea-discovery` — предшествующий шаг: JTBD и problem statement, которые задают конкурентный ландшафт (кого считать конкурентом)
+- `pm/go-to-market` — потребитель: ICP и messaging строятся поверх найденного вектора атаки
+- `founder/pitch-deck` — потребитель: слайды Competition и Why-now берут карту рынка отсюда
+- `founder/new-project` — оркестратор: вызывает этот скилл на этапе 2 цепочки запуска
+- `pm/monetization-design` — смежный: выбор бизнес-модели опирается на сегмент и модели конкурентов

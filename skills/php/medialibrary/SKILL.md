@@ -67,3 +67,4 @@ sha256: ""
 
 - `references/medialibrary-guide.md` — полный справочник по API пакета
 - https://spatie.be/docs/laravel-medialibrary
+- Связанные скиллы: `frontend/filepond-upload` (загрузка файлов на фронте, серверная привязка к модели), `php/test-isolation-guard` (изолированный медиа-диск `media-test` в тестах), `php/laravel-data` (URL медиа в DTO/ресурсах), `php/filament` (media-поля в админке)

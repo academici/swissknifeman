@@ -5,7 +5,7 @@ version: 0.1.0
 description: Business Requirements Document: функциональные требования, user stories, acceptance criteria
 risk: draft
 persona: pm
-tags: [requirements]
+tags: [requirements, template]
 requires: [business-process]
 produces_for: [architecture, data-schema, product-roadmap, requirement-critic, prd-from-brd, tech-stack-selection]
 outputs: ["docs/03_Dev/BRD.md"]
@@ -70,3 +70,14 @@ BRD = **ЧТО** система делает. Не КАК.
 - Структуры данных в коде
 - Конкретные паттерны реализации (Repository, CQRS и т.д.)
 - Выбор технологий (кроме случаев, где это бизнес-требование)
+
+---
+
+## Связанные скиллы
+
+- `pm/business-process` — вход для BRD: FSM/workflow, на которые опираются функциональные требования (требуется ДО BRD).
+- `pm/requirement-critic` — аудит готового BRD (полнота, конфликты, MoSCoW) перед переходом в архитектуру.
+- `pm/prd-from-brd` — следующий слой: разворачивает BRD в детальные user stories с AC и UX.
+- `pm/product-roadmap` — фазирование требований (MVP → v1 → v2) поверх BRD.
+- `architect/architecture`, `architect/data-schema`, `architect/tech-stack-selection` — третий слой (КАК), потребляют BRD.
+- `general/spec-interview` — техника интервью «по одному вопросу» для сбора недостающих требований перед BRD.

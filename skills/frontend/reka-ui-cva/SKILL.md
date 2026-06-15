@@ -5,8 +5,8 @@ version: 0.1.0
 description: "Библиотека UI-компонентов на headless-примитивах Reka UI + варианты class-variance-authority (cva). Активировать при добавлении/правке компонента в components/ui/, при заведении cva-вариантов, обёртке reka-ui примитива в свой компонент, составном Root/Trigger/Content (Dialog/Dropdown/Tooltip), слиянии классов cn() и связке с Tailwind."
 risk: write
 persona: oss-dev
-tags: [reka-ui, cva, vue, tailwind, headless, components, variants, design-system]
-requires: []
+tags: [reka-ui, cva, vue, tailwind, headless, components, variants, design-system, ui, frontend]
+requires: [tailwind-conventions]
 produces_for: []
 outputs: []
 snippets: [button-variants.ts, Button.vue, dialog-composite.md]
@@ -107,4 +107,4 @@ sha256: ""
 - https://reka-ui.com/
 - https://cva.style/docs
 - https://github.com/dcastil/tailwind-merge
-- Связанные скиллы: `frontend/inertia-vue`, `frontend/js-code-style`
+- Связанные скиллы: `frontend/tailwind-conventions` (`cn()`, дизайн-токены, `cva` в `tailwindFunctions`), `frontend/inertia-vue` (где живёт `components/ui/`), `frontend/js-code-style`, `frontend/vue-composition-api` (`<script setup>` компонентов), `frontend/naive-ui-theming` (альтернатива: готовый UI-кит Naive вместо своего на примитивах)

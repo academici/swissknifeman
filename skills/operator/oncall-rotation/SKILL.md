@@ -5,7 +5,7 @@ version: 0.1.0
 description: Дизайн on-call ротации — расписание, primary/secondary, handoff, compensation, defusing burnout, paging policy
 risk: draft
 persona: operator
-tags: [ops, incident]
+tags: [ops, incident, sla, handoff]
 requires: []
 produces_for: [incident-response]
 outputs: ["docs/03_Dev/OnCall_Rotation.md"]
@@ -171,3 +171,12 @@ Handoff приклеить в incident channel либо в общую doc, **н�
 - Smolить on-call как «бесплатное приложение к работе» (письменно зафиксировать comp)
 - Junior on-call без shadowing'а ≥ 2 смен
 - Использовать DM как способ позвать on-call — только paging-канал/инструмент (DM теряются)
+
+---
+
+## Ссылки
+
+- `operator/incident-response` — Primary = IC в терминах incident-response; severity-матрица определяет paging policy
+- `operator/runbook` — page обязан указывать на runbook; без него ротация бессмысленна
+- `operator/capacity-planning` — недостаток headroom = рост числа page'ей = выгорание; здоровье ротации зависит от capacity
+- `architect/observability-design` — alert tuning и self-healing снижают шум, по которому считается здоровье ротации

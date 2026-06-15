@@ -5,7 +5,7 @@ version: 0.1.0
 description: "Единый источник истины скиллов для нескольких AI-агентов: .ai/skills + симлинки, gitignore, цикл обновления"
 risk: write
 persona: oss-dev
-tags: ["ai-context", "skills", "ssot", "workflow"]
+tags: [ai-context, skills, ssot, workflow, conventions, ai]
 requires: []
 produces_for: []
 outputs: []

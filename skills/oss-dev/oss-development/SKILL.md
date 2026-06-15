@@ -5,7 +5,7 @@ version: 0.1.0
 description: OSS-проект: repo structure, README, Architecture, ADR, SemVer, CI/CD. PHP-специфика в ../references/oss-php.md
 risk: write
 persona: oss-dev
-tags: [oss]
+tags: [oss, architecture, documentation, ci]
 requires: []
 produces_for: [release-engineering, dx-design, oss-governance, dependency-audit]
 outputs: ["ProjectName/ProjectName.md", "ProjectName/Architecture.md", "ProjectName/Roadmap.md", "ProjectName/ADR/"]
@@ -200,6 +200,25 @@ CONTRIBUTING.md должен содержать:
 ## PHP-специфика
 
 См. [[../references/oss-php]] (файл `../references/oss-php.md` относительно этого скилла) — composer.json, PSR-стандарты, PHPStan, PHPUnit, Packagist, CI matrix.
+
+---
+
+## Ссылки
+
+Этот скилл — корень OSS-трека; от него отходят:
+
+- `oss-dev/release-engineering` — SemVer-контракт, CHANGELOG, релизный pipeline.
+- `oss-dev/dx-design` — README/quick-start, API-эргономика, error-messages.
+- `oss-dev/oss-governance` — LICENSE, CoC, CONTRIBUTING, SECURITY, RFC.
+- `oss-dev/dependency-audit` — vuln/license/supply-chain аудит зависимостей.
+- `oss-dev/github-flow` — процессная цепочка Issue→PR→Tag→Release на GitHub.
+
+Смежное (вход/детализация):
+
+- `architect/tech-stack-selection` — выбор стека ДО структуры репо (ADR-первый шаг).
+- `architect/architecture` — C4/ADR-детализация (здесь — только базовый уровень).
+- `devops/ci-cd` — GitHub Actions pipelines (здесь — только минимум CI).
+- `php/laravel-packages` — scaffold/публикация Laravel-пакетов (язык-специфика).
 
 ---
 

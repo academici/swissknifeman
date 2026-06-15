@@ -5,7 +5,7 @@ version: 0.1.0
 description: "Vite как основной сборщик Frontend-проектов: базовая конфигурация, алиасы, build-практики"
 risk: write
 persona: oss-dev
-tags: [vite, frontend, build]
+tags: [vite, frontend, build, laravel, vue]
 requires: []
 produces_for: []
 outputs: []
@@ -96,3 +96,9 @@ export default defineConfig({
     ],
 });
 ```
+
+## Ссылки
+
+- https://vitejs.dev/config/
+- https://github.com/laravel/vite-plugin
+- Связанные скиллы: `frontend/vite-multi-build` (две независимые сборки: приложение + Filament), `devops/docker-vite` (Vite dev-сервер отдельным compose-сервисом, HMR в Docker), `frontend/wayfinder` (vite-плагин `wayfinder()` в сборке), `frontend/tailwind-conventions` (плагин `@tailwindcss/vite` и сборка Tailwind v4)

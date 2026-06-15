@@ -5,7 +5,7 @@ version: 0.1.0
 description: "ESLint flat config (eslint.config.js) для Vue 3 + TypeScript: defineConfigWithVueTs/typescript-eslint + eslint-plugin-vue, @stylistic, import/order и границы импортов, padding-line-between-statements, цепочка Prettier (eslint-config-prettier + tailwindcss + organize-imports), скрипты lint/lint:fix. Триггеры: настройка/правка eslint или prettier, новый Vue/TS проект."
 risk: write
 persona: oss-dev
-tags: [eslint, prettier, flat-config, vue, typescript, stylistic, tooling]
+tags: [eslint, prettier, flat-config, vue, typescript, stylistic, tooling, code-style, frontend]
 requires: []
 produces_for: []
 outputs: []
@@ -97,4 +97,4 @@ sha256: ""
 - https://github.com/prettier/eslint-config-prettier
 - https://github.com/tailwindlabs/prettier-plugin-tailwindcss
 - snippets/eslint.config.js, snippets/prettierrc.json, snippets/package-scripts.json
-- Связанные скиллы: `frontend/js-code-style` (ЧТО — правила стиля), `frontend/wayfinder` (паттерн границ импортов), `frontend/inertia-vue` (feature-слои), `frontend/vitest`
+- Связанные скиллы: `frontend/js-code-style` (ЧТО — правила стиля), `frontend/wayfinder` (паттерн границ импортов), `frontend/inertia-vue` (feature-слои), `frontend/vitest`, `frontend/tailwind-conventions` (цепочка `prettier-plugin-tailwindcss` и `tailwindFunctions`)

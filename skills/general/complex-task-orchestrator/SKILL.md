@@ -5,9 +5,9 @@ version: 0.1.0
 description: "Оркестрация сложных задач: декомпозиция, контекст-роутинг, управление рисками, Definition of Done и минимальный верификационный контур."
 risk: write
 persona: oss-dev
-tags: [workflow, orchestration]
+tags: [workflow, orchestration, checklist, agents]
 requires: []
-produces_for: []
+produces_for: [cross-layer-change-checklist]
 outputs: []
 snippets: []
 adapters: [claude, cursor, fable]
@@ -64,3 +64,12 @@ sha256: ""
 - Добавлены/обновлены тесты для измененного поведения.
 - Запущен минимальный test-gate, результаты зафиксированы.
 - В финальном отчете есть: что сделано, что проверено, какие ограничения остались.
+
+## Связанные скиллы
+
+- `task-brief-template` (general) — шаблон постановки (цель, границы, инварианты, DoD), куда ложится декомпозиция отсюда.
+- `spec-interview` (general) — если постановка нечёткая, сначала интервью, потом декомпозиция.
+- `cross-layer-change-checklist` (general) — обязательная синхронизация слоёв перед финализацией.
+- `anti-drift` (general) — дисциплина итераций и circuit-breaker внутри выполнения.
+- `php/laravel-subagents` — делегирование подзадач субагентам на крупных Laravel-задачах.
+- `session-handoff` (general) — передача незакрытой задачи в следующую сессию.

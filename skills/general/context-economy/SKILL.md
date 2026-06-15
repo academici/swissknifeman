@@ -5,9 +5,9 @@ version: 1.1.0
 description: "Экономия контекста Claude Code в проекте: CLAUDE.md ≤200 строк, path-scoped правила .claude/rules/, /compact vs /clear, паттерн Plan→Clear→Execute, аудит MCP, маршрутизация моделей. Только официально поддерживаемые механизмы — без мифов вроде .claudeignore."
 risk: draft
 persona: oss-dev
-tags: [tokens, context, claude-code, workflow]
+tags: [tokens, context, claude-code, workflow, conventions]
 requires: []
-produces_for: []
+produces_for: [gh-review]
 outputs: [".claude/rules/*.md", ".claude/commands/*.md", "CLAUDE.md (trim)"]
 snippets:
   - rules-example.md
@@ -88,3 +88,6 @@ GitHub-операции (PR, ревью-треды, чужой код, рели�
 - https://code.claude.com/docs/en/memory — CLAUDE.md, rules, auto memory
 - Скилл `pao` (php) — сжатие вывода PHP-инструментов
 - Скилл `oss-dev/gh-review` — gh-driven ревью/хендофф (раздел 6, полный алгоритм)
+- Скилл `compact-responses` (general) — лаконичность вывода модели (другая ось экономии: ответ, а не контекст)
+- Скилл `task-brief-template` (general) — паттерн Plan→Clear→Execute и шаблоны команд `/plan`, `/execute`
+- Скилл `session-handoff` (general) — сжатие сессии в handoff перед `/clear`

@@ -5,7 +5,7 @@ version: 0.1.0
 description: "Роли и контроль доступа на базе пакета azguard: code-first RBAC, панели, scoped roles, direct grants, abilities для фронтенда"
 risk: write
 persona: oss-dev
-tags: ["php", "laravel", "permissions", "azguard", "rbac"]
+tags: ["php", "laravel", "permissions", "azguard", "rbac", "authorization", "gate", "enum"]
 requires: []
 produces_for: []
 outputs: []
@@ -91,3 +91,7 @@ php artisan migrate
 - Исходник: `/home/vostrikov/projects/packages/azguard` (docs/guide: basic-usage, permissions, roles, panels, entity-scopes, direct-grants, policies-and-gates, abilities-frontend, testing)
 - Ручная реализация RBAC без пакета — скилл `php/laravel-permissions`
 - Filament-интеграция — пакет `azguard/filament`, скилл `php/filament`
+- Декларативная проверка прав на экшенах через атрибут — `php/attribute-authorization` (ортогональный слой поверх Gate)
+- Enum-права как метаданные/типобезопасный слой — `php/enum-attributes`
+- Abilities во фронтенд (Inertia/TS) — `frontend/backend-type-sync`
+- Auth-стратегия и threat modeling на уровне архитектуры — `architect/security-design`

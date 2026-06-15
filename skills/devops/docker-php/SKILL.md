@@ -7,7 +7,7 @@ risk: write
 persona: operator
 tags: ["docker", "php", "devops", "laravel"]
 requires: []
-produces_for: ["docker-dev-prod", "docker-services"]
+produces_for: ["docker-dev-prod", "docker-services", "docker-vite"]
 outputs: ["infra/docker/php/Dockerfile", "infra/docker/php/php.ini"]
 snippets: ["Dockerfile.php-fpm", "Dockerfile.php-cli", "Dockerfile.serversideup", "entrypoint-hook.sh", "php.ini.production", "opcache.ini"]
 adapters: [claude, cursor, fable]
@@ -58,4 +58,4 @@ Production-ready PHP Docker образ для Laravel/PHP приложений. 
 
 - https://serversideup.net/open-source/docker-php/docs — serversideup/php (entrypoint.d, PUID/PGID, S6-overlay)
 - https://laravel.com/docs/deployment#the-health-route — Laravel health-эндпоинт `/up`
-- Смежные скиллы: `docker-dev-prod` (раскладка compose), `docker-services` (стек из одного образа)
+- Смежные скиллы: `docker-dev-prod` (раскладка compose), `docker-services` (стек из одного образа), `docker-vite` (Node+pnpm в этом же образе для фронта), `php/health-checks` (что отдаёт `/up`, liveness/readiness)

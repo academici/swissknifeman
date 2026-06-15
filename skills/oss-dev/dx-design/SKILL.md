@@ -5,7 +5,7 @@ version: 0.1.0
 description: Developer Experience: README, quick-start (≤ 60 сек), API ergonomics, error messages, типы, CLI UX
 risk: draft
 persona: oss-dev
-tags: [oss]
+tags: [oss, documentation, api, cli]
 requires: [oss-development]
 produces_for: []
 outputs: ["ProjectName/DX_Design.md", "ProjectName/README.md"]
@@ -225,6 +225,16 @@ based_on: oss-development.md
 ### `ProjectName/README.md`
 
 Создаётся / переписывается по структуре выше. Это основной артефакт DX.
+
+---
+
+## Ссылки
+
+- `oss-dev/oss-development` — предпосылка: базовая структура и понимание, что делает пакет.
+- `oss-dev/release-engineering` — DX-метрики в release notes; TS-типы как публичный API (breaking).
+- `oss-dev/oss-governance` — CONTRIBUTING/CoC и issue/PR-шаблоны — тоже часть DX.
+- `php/laravel-package-docs` — README/VitePress/usage-доки для PHP-пакетов (язык-специфика).
+- `general/writing-style` — тон и язык текстов README, error-messages и доков.
 
 ---
 

@@ -5,8 +5,8 @@ version: 0.1.0
 description: "Vitest для Vue/Inertia-проекта на Laravel: jsdom, globals, тесты в resources/js/tests зеркалят исходники, coverage v8 с обязательным exclude автогенерённого кода."
 risk: write
 persona: oss-dev
-tags: [vitest, testing, vue, coverage, jsdom, laravel]
-requires: []
+tags: [vitest, testing, vue, coverage, jsdom, laravel, frontend]
+requires: [inertia-vue]
 produces_for: []
 outputs: []
 snippets: [vitest.config.ts, component-test.ts]
@@ -57,5 +57,6 @@ sha256: ""
 - https://vitest.dev/config/
 - https://vitest.dev/guide/coverage
 - https://test-utils.vuejs.org/
-- Связанные скиллы: `frontend/inertia-vue` (структура resources/js), `frontend/wayfinder` (что считается автогеном)
+- Связанные скиллы: `frontend/inertia-vue` (структура resources/js), `frontend/wayfinder` (что считается автогеном), `frontend/vue-composition-api` (composables, которые тестируем как функции)
 - Скилл `quality/test-strategy` — стратегия пирамиды и coverage policy
+- Скилл `quality/playwright-e2e` — браузерные/E2E-сценарии (то, что не покрывает Vitest)

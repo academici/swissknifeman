@@ -5,7 +5,7 @@ version: 0.1.0
 description: "Database migrations, models, and table naming. Activate when writing migrations, creating models, defining schema, foreign keys, or working in database/migrations/."
 risk: write
 persona: oss-dev
-tags: [php, laravel, database]
+tags: [php, laravel, database, migrations]
 requires: [laravel]
 produces_for: []
 outputs: []
@@ -126,3 +126,11 @@ php artisan make:model ModelName -m --no-interaction
 ## Текущее состояние в {{project_name}}
 
 Существующие миграции (до внедрения этого паттерна) используют хардкод-строки. **При написании новых миграций — всегда применять паттерн через `getTable()`**. При редактировании старых миграций — при удобном случае приводить к новому стилю.
+
+## Ссылки
+
+- `php/laravel` — архитектурные паттерны (модели, связи, Eloquent).
+- `php/laravel-structure` — размещение моделей и фабрик по доменам (`Models/<Домен>`, `database/factories/<Домен>`).
+- `php/laravel-testing`, `php/test-isolation-guard` — изоляция тестовой БД при прогоне миграций.
+- `architect/data-schema` — проектирование схемы данных (сущности, связи) до миграций.
+- `devops/docker-postgres`, `devops/db-test-preflight` — Postgres в Docker и пре-флайт тестовой БД.

@@ -5,7 +5,7 @@ version: 0.3.0
 description: "RBAC, policies, gates и entity-scoped permissions (AzGuard patterns)"
 risk: write
 persona: oss-dev
-tags: ["php", "laravel", "permissions", "azguard"]
+tags: ["php", "laravel", "permissions", "azguard", "rbac", "authorization"]
 requires: []
 produces_for: []
 outputs: []
@@ -37,3 +37,11 @@ RBAC для Laravel: стандартные policies/gates + entity-scoped permi
 - [ ] Контекст сбрасывается после request
 - [ ] Policy проверяет и глобальные, и контекстные права
 - [ ] Таблица context_roles индексирована по (context_type, context_id, model_id)
+
+## Ссылки
+
+- `php/azguard` — готовый code-first RBAC-пакет (предпочтительный путь для новых проектов); этот скилл — ручная реализация без зависимости.
+- `php/attribute-authorization` — декларативная проверка прав на экшенах через атрибут `#[CheckPermission]` поверх Gate (ортогональный слой; права определяются здесь).
+- `php/enum-attributes` — enum-права как типобезопасный слой вместо строковых abilities.
+- `php/laravel-structure` — размещение Policies/Enums/Permissions в дереве проекта.
+- `architect/security-design` — auth-стратегия, RBAC/ABAC, threat modeling на уровне архитектуры.

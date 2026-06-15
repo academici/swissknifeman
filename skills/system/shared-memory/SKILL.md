@@ -5,7 +5,7 @@ version: 0.1.0
 description: "Единый «мозг» (общая память) для выбранных проектов констелляции через хук ~/.claude/hooks/memory/. Recall перед работой, remember после — факты делятся только между участниками одной группы (brain). Бэкенд сменный: file|federation|agentmemory|off, переопределяется конфигом."
 risk: write
 persona: architect
-tags: [memory, cross-project, topology, recall]
+tags: [memory, cross-project, topology, recall, context, coordination]
 requires: [local-topology]
 produces_for: []
 outputs: []
@@ -90,4 +90,6 @@ sha256: ""
 
 - `~/.claude/hooks/memory/` — сам хук (`memory.sh`, `env.ini`, `config.json`, `modes/`, `CREDITS.md`).
 - `local-topology` (бакет system) — резолв участников через `~/.swissknifeman/topology.json`.
+- `cross-project-coordinator` (бакет system) — поставщик межпроектных находок (дубли/расхождения/кандидаты в общий пакет), которые стоит `remember` для группы.
+- `general/session-handoff` — смежная тема: передача контекста между сессиями (разово), тогда как shared-memory — постоянный общий store группы.
 - Установка файлов хука: `scripts/apply-permissions.sh --global`.

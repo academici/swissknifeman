@@ -106,4 +106,4 @@ sha256: ""
 - snippets/.prettierrc — Prettier с плагином и `tailwindFunctions`
 - https://tailwindcss.com/docs/upgrade-guide — гайд миграции v3 → v4
 - https://tailwindcss.com/docs/theme — директива `@theme` и токены
-- Связанные скиллы: `frontend/inertia-vue`, `frontend/vue-composition-api`, `frontend/js-code-style`
+- Связанные скиллы: `frontend/dark-mode` (трёхрежимный composable `useAppearance`, boot без FOUC, SSR — владелец состояния `.dark`), `frontend/inertia-vue`, `frontend/vue-composition-api`, `frontend/js-code-style`, `frontend/eslint-flat-config` (где прописывается цепочка Prettier-плагинов), `frontend/reka-ui-cva` (`cn()` и токены в компонентах UI-кита), `frontend/naive-ui-theming` (общий источник правды цветов через CSS-переменные)

@@ -5,7 +5,7 @@ version: 0.2.0
 description: "Классификация данных, auth-стратегия, RBAC/ABAC, OWASP Top 10, GDPR, STRIDE threat modeling, операционный чеклист безопасности"
 risk: draft
 persona: architect
-tags: [security, compliance]
+tags: [security, compliance, auth, owasp, threat-modeling, rbac, gdpr, privacy, stride]
 requires: [architecture]
 produces_for: []
 outputs: ["docs/03_Dev/Security_Design.md"]
@@ -191,3 +191,16 @@ Security — это не список фич, которые добавят в �
 - Рекомендовать хранить API keys в клиентском коде
 - Пропускать IDOR проверку для API с пользовательскими ресурсами
 - Смешивать Auth (кто ты?) с Authz (что тебе можно?)
+
+---
+
+## Связанные скиллы
+
+- `architect/architecture` — запускать параллельно: security — ограничения, влияющие на архитектуру с самого начала.
+- `architect/legal-compliance` — GDPR/AI Act-чеклист, который кормит требования сюда (вход этого скилла).
+- `architect/api-design` — auth-схема под тип клиента и rate limiting для контрактов API.
+- `architect/observability-design` — PII-policy в логах, маскировка, audit trail.
+- `oss-dev/dependency-audit` — supply-chain/SBOM/vuln-скан, кормит A06 OWASP (вход этого скилла).
+- `php/laravel-security-audit` — code-level аудит реализации (raw SQL, mass assignment, XSS), кормит этот дизайн (вход).
+- `php/azguard`, `php/laravel-permissions`, `php/attribute-authorization` — RBAC/ABAC-реализация выбранной модели авторизации.
+- `imported/agent-security-super-skill` — внешний defensive playbook (OWASP LLM Top 10, NIST AI RMF).

@@ -6,7 +6,7 @@ description: "Разнесение docker-compose на dev (build + bind-mount) 
 risk: write
 persona: operator
 tags: ["docker", "devops", "compose", "laravel"]
-requires: []
+requires: ["docker-php"]
 produces_for: ["docker-services"]
 outputs: ["docker-compose.yml", "docker-compose.prod.yml", "docker-compose.override.example.yml"]
 snippets: ["docker-compose.yml", "docker-compose.dev.yml", "docker-compose.prod.yml", "docker-compose.override.yml", "docker-compose.override.example.yml", ".env.example", "Makefile"]
@@ -60,4 +60,4 @@ sha256: ""
 
 - https://docs.docker.com/compose/how-tos/multiple-compose-files/merge/ — механика override-файлов
 - https://docs.docker.com/reference/compose-file/fragments/ — YAML-якоря в compose
-- Смежные скиллы: `docker-php` (Dockerfile), `docker-services` (полный стек сервисов), `makefile` (делегирующий Makefile)
+- Смежные скиллы: `docker-php` (Dockerfile), `docker-services` (полный стек сервисов), `docker-postgres` (сервис БД и named volume), `docker-vite` (override для node_modules/WSL2), `makefile` (делегирующий Makefile)

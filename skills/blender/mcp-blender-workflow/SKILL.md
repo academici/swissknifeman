@@ -5,8 +5,8 @@ version: 0.1.0
 description: "MCP Blender: инструменты, обязательный workflow построения моделей и соглашения проекта DiaBox"
 risk: write
 persona: oss-dev
-tags: [blender, mcp, python, 3d]
-requires: []
+tags: [blender, mcp, python, 3d, bpy, cad, workflow, orchestration, fdm, sla]
+requires: [parametric-config, model-rules, threading, version-gotchas]
 produces_for: []
 outputs: []
 snippets: ["role.md", "config-and-profile.md", "config-conventions.md", "naming-and-scene.md", "internals.md"]
@@ -622,3 +622,12 @@ python models/{CURRENT_MODEL}/test/check.py
 ```
 
 Содержит кросс-деталевые проверки (стыки, стеки высот, PCD соединений, совместимость посадок) и автоматически запускает `test_config()` из каждого `parts/*.test.py`. Новые детали подхватываются без правки `check.py`. Полное описание архитектуры тестирования → `ai/rules/internals.md`.
+
+---
+
+## Связанные скиллы
+
+- `blender/parametric-config` — архитектура слоёв `config.py`/`profile.py`/`parts/*`/`check.py`, на которой держится весь этот workflow (числа в конфиге, ленивый `import bpy`, двухуровневые тесты).
+- `blender/model-rules` — шаблон `models/{name}/ai/rules.md`, обязательно читаемый на Шаге 0.
+- `blender/threading` — печать резьбы и радиальные зазоры по типу посадки (Шаги 3–7).
+- `blender/version-gotchas` — ловушки Blender 5.0 API, на которые ссылается таблица диагностики ошибок Шага 4 (`temp_override`, нормали после boolean, `surface_render_method`).

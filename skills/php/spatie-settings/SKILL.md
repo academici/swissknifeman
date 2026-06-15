@@ -142,3 +142,4 @@ $settings->save();
 - snippets/ExampleSettings.php — класс настроек
 - snippets/create_example_settings.php — settings-миграция (дефолты + эволюция)
 - snippets/filament-settings-page.php — привязка к Filament-форме
+- Связанные скиллы: `php/filament` (SettingsPage и плагин), `php/laravel-data` (Data как тип свойства настройки), `php/enum-attributes` (enum-касты настроек), `php/database` (settings-миграции рядом с обычными)

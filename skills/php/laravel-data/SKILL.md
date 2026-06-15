@@ -5,7 +5,7 @@ version: 0.1.0
 description: "DTO на spatie/laravel-data: типизированные Data-классы, вложенные DataCollection, casts/transformers, computed-свойства, mapName/mapInputName, создание from(request) с валидацией, отдача в API/Inertia и аннотация #[TypeScript]. Активировать: нужен типобезопасный DTO вместо массива/array-доступа, разбор входящего запроса в объект, единая форма данных между бэком и фронтом, замена ad-hoc JsonResource на Data."
 risk: write
 persona: oss-dev
-tags: [laravel, spatie, laravel-data, dto, data-transfer-object, casts, validation, inertia, api]
+tags: [php, laravel, spatie, laravel-data, dto, data-transfer-object, casts, validation, inertia, api]
 requires: []
 produces_for: [backend-type-sync]
 outputs: []
@@ -110,4 +110,4 @@ sha256: ""
 
 - https://spatie.be/docs/laravel-data
 - https://spatie.be/docs/laravel-data/advanced-usage/typescript
-- Связанные скиллы: `frontend/backend-type-sync` (Data → TS-типы), `php/enum-attributes` (enum в свойствах Data), `php/named-arguments` (создание Data явными именованными аргументами)
+- Связанные скиллы: `frontend/backend-type-sync` (Data → TS-типы), `php/enum-attributes` (enum в свойствах Data), `php/named-arguments` (создание Data явными именованными аргументами), `php/php-patterns` («голый» DTO/VO без пакета — когда зависимость нежелательна), `php/laravel-structure` (где живут Dto/View/Form/Command в дереве проекта)

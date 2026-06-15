@@ -5,7 +5,7 @@ version: 0.1.0
 description: "Передача контекста между сессиями и агентами: сжатие сессии в структурированный handoff-документ — состояние, решения, незакрытые вопросы, следующие шаги."
 risk: draft
 persona: oss-dev
-tags: [workflow, context]
+tags: [workflow, context, tokens, handoff]
 requires: []
 produces_for: []
 outputs: []
@@ -49,3 +49,10 @@ sha256: ""
 - Писать summary по памяти, не сверяясь с `git status`/`git diff`.
 - Перечислять сделанное без «почему» у решений.
 - Тащить в handoff весь лог сессии — это сжатие, а не стенограмма.
+
+## Связанные скиллы
+
+- `anti-drift` (general) — после жёсткого порога сессия завершается этим handoff.
+- `context-economy` (general) — handoff перед `/clear` как часть Plan→Clear→Execute.
+- `complex-task-orchestrator` (general) — незакрытые подзадачи и риски ложатся в handoff.
+- `system/shared-memory` — если у проектов общая память, ключевые факты — туда (remember), а не только в handoff-файл.

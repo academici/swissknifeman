@@ -5,9 +5,9 @@ version: 0.1.0
 description: "Стандартизированная структура ML/Data Science проектов по подходу Cookiecutter Data Science"
 risk: write
 persona: oss-dev
-tags: [python, ml, structure]
+tags: [python, ml, structure, architecture, data, conventions]
 requires: []
-produces_for: []
+produces_for: [venv-dependencies]
 outputs: []
 snippets: []
 adapters: [claude, cursor, fable]
@@ -49,3 +49,10 @@ my_ml_project/
     - Из ноутбука вы должны вызывать импортированные функции из `src/`, а не писать длинные простыни кода в самом ноутбуке.
 3.  **Логирование:** Используйте модуль `logging` вместо обилия `print()`. Это позволит легко отключать логи, перенаправлять их в файл или менять уровень детализации (INFO, DEBUG).
 4.  **Конфиги:** Выносите гиперпараметры, пути к файлам и настройки в конфигурационные файлы (YAML, JSON или `.env`), а не хардкодьте их прямо в скриптах.
+
+## Связанные скиллы
+
+- `python/venv-dependencies` — управление зависимостями и окружениями для папки (`requirements.txt` / `pyproject.toml`, линтеры), которую задаёт эта структура.
+- `php/laravel-structure` — аналогичный канон структуры, но для Laravel-проектов.
+- `general/project-map` — карта структуры произвольного проекта для безопасного роутинга изменений.
+- `oss-dev/oss-development` — структура OSS-репозитория (README, ADR, CI) поверх кода проекта.

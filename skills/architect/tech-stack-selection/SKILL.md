@@ -5,7 +5,7 @@ version: 0.1.0
 description: Выбор технологического стека с trade-off матрицей до архитектурного дизайна. ADR-первый шаг
 risk: draft
 persona: architect
-tags: [stack-choice, architecture]
+tags: [stack-choice, architecture, adr, trade-off]
 requires: [brd]
 produces_for: [architecture, oss-development, release-engineering]
 outputs: ["docs/03_Dev/Tech_Stack_Selection.md", "docs/03_Dev/ADR/ADR-001_tech_stack.md"]
@@ -196,3 +196,13 @@ Accepted — YYYY-MM-DD
 - Брать k8s/микросервисы на pre-seed без жёсткого обоснования
 - Оставлять «решим потом» — это `architecture` будет страдать
 - Не создавать ADR-001 сразу
+
+---
+
+## Связанные скиллы
+
+- `pm/brd` — нефункциональные требования и нагрузка как предусловие.
+- `architect/architecture` — проектирование компонентов при уже выбранном стеке (выход этого скилла).
+- `oss-dev/oss-development`, `oss-dev/release-engineering` — OSS-трек, опирающийся на выбранный стек (выход).
+- `oss-dev/dependency-audit` — лицензии зависимостей для open-source spin-off.
+- `php/laravel-structure` — если выбран Laravel: канон структуры проекта на следующем шаге.

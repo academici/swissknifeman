@@ -5,9 +5,9 @@ version: 0.1.0
 description: "Пре-флайт проверка тестовой БД (Postgres в Docker) ПЕРЕД запуском тестов: контейнер поднят (docker compose ps / pg_isready), целевая БД существует и её имя оканчивается на _test (не dev/prod), миграции применены; различает host- и docker-подключение. Активировать при запуске тестов с Postgres, настройке хуков/CI и когда «тесты падают на подключении к БД»."
 risk: read
 persona: operator
-tags: [postgres, docker, testing, preflight, devops]
-requires: []
-produces_for: []
+tags: [postgres, docker, testing, preflight, devops, ci, isolation]
+requires: [docker-postgres]
+produces_for: [laravel-testing, test-isolation-guard]
 outputs: []
 snippets: [preflight.sh, Makefile.test, composer-scripts.json]
 adapters: [claude, cursor, fable]
@@ -88,4 +88,4 @@ sha256: ""
 - snippets/preflight.sh
 - snippets/Makefile.test
 - snippets/composer-scripts.json
-- Связанные скиллы: `devops/docker-postgres`, `devops/makefile`, `devops/node-pnpm-preflight`
+- Связанные скиллы: `devops/docker-postgres` (init-скрипт создаёт `<app>_test`), `devops/makefile` (цель `db-create-test`), `devops/node-pnpm-preflight` (аналог пре-флайта для Node/pnpm), `php/test-isolation-guard` (страж изоляции на уровне bootstrap.php), `php/laravel-testing` (паттерны тестов поверх изолированной БД)

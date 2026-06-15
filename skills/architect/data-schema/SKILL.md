@@ -5,7 +5,7 @@ version: 0.1.0
 description: Схема данных, сущности, атрибуты, связи. Агностично к СУБД — только markdown-таблицы
 risk: draft
 persona: architect
-tags: [data, architecture]
+tags: [data, architecture, schema, entities, erd]
 requires: [brd]
 produces_for: [api-design]
 outputs: ["docs/03_Dev/Database_Schema.md"]
@@ -122,3 +122,13 @@ adapters: [claude, cursor, fable]
 - Никаких упоминаний конкретной СУБД (PostgreSQL, MySQL, SQLite)
 - Никаких ORM-паттернов (миграции, модели, репозитории)
 - Никаких движков хранения (InnoDB, TimescaleDB гипертаблицы — это в Architecture.md)
+
+---
+
+## Связанные скиллы
+
+- `pm/brd` — источник сущностей и требований (предусловие).
+- `architect/api-design` — API строится поверх этой схемы (выход этого скилла).
+- `architect/architecture` — выбор СУБД и движков хранения живёт там, не здесь.
+- `php/database` — реализация схемы в Laravel-миграциях/моделях (граница: дизайн vs реализация).
+- `php/repositories` — слой доступа к данным поверх реализованной схемы.

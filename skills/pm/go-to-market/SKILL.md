@@ -5,8 +5,8 @@ version: 0.1.0
 description: GTM-стратегия, ICP, messaging framework, каналы привлечения, launch plan
 risk: draft
 persona: pm
-tags: [gtm, market]
-requires: [competitive-analysis]
+tags: [gtm, market, monetization]
+requires: [competitive-analysis, monetization-design]
 produces_for: [product-roadmap, pitch-deck]
 outputs: ["docs/01_Business/06_Go_To_Market.md"]
 sha256: ""
@@ -120,3 +120,13 @@ Phase 3: Growth
 - ICP "все, кому нужен [продукт]" — слишком широко
 - Запускать платные каналы до проверки retention
 - GTM без конкретной метрики успеха (что значит "успешный launch")
+
+---
+
+## Связанные скиллы
+
+- `founder/competitive-analysis` — вход для GTM: рынок, конкуренты, JTBD, незанятая ниша (требуется ДО GTM).
+- `pm/monetization-design` — выбранная модель монетизации задаёт каналы и messaging (требуется ДО GTM).
+- `pm/unit-economics` — источник гейтов запуска платных каналов (CAC < LTV, payback); сверять с метриками отсюда.
+- `pm/product-roadmap` — потребитель: ICP и фазы launch ложатся в фазирование продукта.
+- `founder/pitch-deck` — потребитель: GTM-секция деки берётся отсюда.

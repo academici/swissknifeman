@@ -5,7 +5,7 @@ version: 0.1.0
 description: Product Requirements Document — разворачивает BRD в детальные user stories с acceptance criteria и приоритизацией
 risk: draft
 persona: pm
-tags: [requirements]
+tags: [requirements, template]
 requires: [brd]
 produces_for: [architecture, product-roadmap, api-design]
 outputs: ["docs/03_Dev/PRD.md"]
@@ -219,3 +219,13 @@ created: YYYY-MM-DD
 - Писать код в AC
 
 PRD остаётся продуктовым документом — границы между **что нужно** и **как реализовано** держать жёстко.
+
+---
+
+## Связанные скиллы
+
+- `pm/brd` — обязательный вход: PRD разворачивает утверждённый BRD (требуется ДО PRD).
+- `pm/requirement-critic` — прогнать BRD через аудит до написания PRD, чтобы не тащить пробелы дальше.
+- `pm/product-roadmap` — потребитель: RICE-приоритизация и версии (v1/v1.1/v2) ложатся в фазы roadmap.
+- `architect/architecture`, `architect/api-design` — третий слой (КАК), потребляют PRD.
+- `architect/data-schema` — сущности из user stories питают схему данных.

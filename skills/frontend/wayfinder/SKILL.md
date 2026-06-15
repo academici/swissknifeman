@@ -5,7 +5,7 @@ version: 0.1.0
 description: "Laravel Wayfinder: типобезопасные роуты и controller actions для фронтенда. Генерация, именованные импорты, form(), архитектурные границы импортов через ESLint."
 risk: write
 persona: oss-dev
-tags: [wayfinder, laravel, typescript, routes, inertia, eslint]
+tags: [wayfinder, laravel, typescript, routes, inertia, eslint, frontend]
 requires: []
 produces_for: []
 outputs: []
@@ -60,4 +60,4 @@ Wayfinder автогенерирует типизированные TS-функ�
 
 - https://github.com/laravel/wayfinder
 - https://laravel.com/docs/wayfinder (актуальную версию проверить)
-- Связанные скиллы: `frontend/inertia-vue` (слои resources/js), `frontend/vitest` (exclude автогена из coverage)
+- Связанные скиллы: `frontend/inertia-vue` (слои resources/js, actions-слой), `frontend/vitest` (exclude автогена из coverage), `frontend/eslint-flat-config` (где живёт `no-restricted-imports`-граница), `frontend/backend-type-sync` (парная генерация: роуты ≠ типы DTO/enum)

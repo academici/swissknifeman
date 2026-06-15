@@ -5,9 +5,9 @@ version: 0.1.0
 description: Blameless postmortem после SEV-1/2 инцидента — таймлайн, root cause (5 Whys), contributing factors, action items, дистрибуция знаний
 risk: draft
 persona: operator
-tags: [incident, ops]
+tags: [incident, ops, workflow, reflection]
 requires: [incident-response]
-produces_for: []
+produces_for: [tech-debt-audit, runbook]
 outputs: ["docs/03_Dev/Postmortems/[YYYY-MM-DD]_[ShortName].md"]
 sha256: ""
 adapters: [claude, cursor, fable]
@@ -196,3 +196,13 @@ docs/03_Dev/Postmortems/
 - Финализировать без хотя бы одного external reviewer (минимум 2 глаза)
 - Игнорировать `What went well` — это часть культуры, без неё постмортем становится только наказанием
 - Закрывать постмортем без 5 Whys (или альтернативного RCA метода) до структурного уровня
+
+---
+
+## Ссылки
+
+- `operator/incident-response` — вход постмортема: action log, severity, таймлайн (lifecycle RESOLVE → POSTMORTEM)
+- `operator/runbook` — устаревший/отсутствующий runbook → action item на update/create (produces_for)
+- `quality/tech-debt-audit` — структурные lessons → строки в Tech_Debt_Register с impact high (produces_for)
+- `operator/capacity-planning` — capacity-инциденты: root cause часто = недостаток headroom/forecast
+- `architect/observability-design` — contributing factor «алерт сработал поздно» → правка порогов/SLO

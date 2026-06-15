@@ -5,7 +5,7 @@ version: 0.1.0
 description: Выбор бизнес-модели (SaaS / marketplace / ads / freemium / hybrid) с trade-off матрицей и обоснованием
 risk: draft
 persona: pm
-tags: [monetization]
+tags: [monetization, market]
 requires: [idea-discovery]
 produces_for: [unit-economics, go-to-market, brd]
 outputs: ["docs/01_Business/03_Monetization_Model.md"]
@@ -144,3 +144,13 @@ produces_input_for: [04_Unit_Economics.md, 06_Go_To_Market.md, BRD.md]
 - Решать, на каком фреймворке делать биллинг — это `architecture`
 
 Только **выбор модели** и **trade-off обоснование**.
+
+---
+
+## Связанные скиллы
+
+- `founder/idea-discovery` — вход: JTBD, проблема, сегмент (требуется ДО выбора модели).
+- `pm/unit-economics` — следующий шаг: расчёт LTV/CAC/payback для выбранной модели.
+- `pm/go-to-market` — потребитель: модель задаёт каналы и messaging.
+- `pm/brd` — потребитель: выбранная модель добавляет обязательные фичи (биллинг, paywall, invoicing).
+- `founder/competitive-analysis` — модели аналогов на рынке (зрелость, take-rate) питают trade-off матрицу.

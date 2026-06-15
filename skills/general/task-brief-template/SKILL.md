@@ -5,9 +5,9 @@ version: 0.3.0
 description: "Шаблон постановки сложных задач для агента: цель, границы, инварианты, явные предположения, out of scope, критерии приемки, definition of done. Плюс паттерн Plan→Clear→Execute: план и выполнение — в раздельных сессиях."
 risk: draft
 persona: oss-dev
-tags: [workflow, template]
+tags: [workflow, template, requirements, context]
 requires: []
-produces_for: []
+produces_for: [complex-task-orchestrator]
 outputs: []
 snippets: []
 adapters: [claude, cursor, fable]
@@ -96,3 +96,11 @@ Definition of Done:
 
 Готовые шаблоны команд `/plan` и `/execute` и остальная дисциплина экономии
 контекста — в скилле `context-economy` (bucket general).
+
+## Связанные скиллы
+
+- `spec-interview` (general) — заполнение этого шаблона по нечёткой идее через интервью.
+- `complex-task-orchestrator` (general) — декомпозиция готового брифа на подзадачи по слоям.
+- `cross-layer-change-checklist` (general) — синхронизация слоёв при выполнении.
+- `context-economy` (general) — Plan→Clear→Execute и команды `/plan`, `/execute`.
+- `anti-drift` (general) — дисциплина итераций, опирается на зафиксированный scope.

@@ -5,9 +5,9 @@ version: 0.1.0
 description: Проектирование агентов, agentic loop, tool contracts, harness, permission gates
 risk: draft
 persona: architect
-tags: [agentic, architecture]
+tags: [agentic, architecture, security, validation]
 requires: [architecture]
-produces_for: [eval-design]
+produces_for: [eval-design, observability-design]
 outputs: ["docs/03_Dev/Agent_Design.md"]
 sha256: ""
 adapters: [claude, cursor, fable]
@@ -182,3 +182,14 @@ draft_action() → preview → user_confirm() → commit_action()
 ## Референс
 
 `https://github.com/DenisSergeevitch/agents-best-practices` — полные reference files: agentic-loop, tools-and-permissions, mvp-blueprint, security-evals, prompt-caching, workflow-orchestration.
+
+---
+
+## Связанные скиллы
+
+- `architect/architecture` — общий архитектурный документ, в который встраивается секция Agent Design (предусловие).
+- `architect/eval-design` — измерение качества agentic-вывода; eval-харнес тестирует harness, не только модель (выход этого скилла).
+- `architect/security-design` — STRIDE, prompt-injection, secrets вне контекста модели — параллельно для агентов с PII/деньгами.
+- `architect/observability-design` — traces, token-cost, latency per model, jailbreak-метрики для прод-агента.
+- `imported/ai-agent-super-skill` — внешний свод по построению агентов/MCP/RAG (анализ, не зеркало).
+- `imported/agent-security-super-skill` — внешний defensive playbook по prompt injection и tool-use safety.

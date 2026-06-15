@@ -5,9 +5,9 @@ version: 0.1.0
 description: План безопасного рефакторинга: scope, Mikado / strangler pattern, atomic шаги, критерии готовности, rollback
 risk: draft
 persona: quality
-tags: [quality, refactor]
+tags: [quality, refactor, refactoring, validation, workflow]
 requires: [tech-debt-audit]
-produces_for: []
+produces_for: [testing-safety-report]
 outputs: ["docs/03_Dev/Refactoring_Plan.md"]
 sha256: ""
 adapters: [claude, cursor, fable]
@@ -139,6 +139,17 @@ adapters: [claude, cursor, fable]
 - Предупреждение если план > 15 шагов или > 8 недель — высокий риск abandoned
 - Рекомендация feature flag tool под стек, если выбран Branch by Abstraction
 - Backlinks в `Refactoring_Plan.md` → `Tech_Debt_Register.md`
+
+---
+
+## Ссылки
+
+- `quality/tech-debt-audit` — источник scope: какие TD-NNN закрывает план (requires)
+- `quality/testing-safety-report` — пост-фактум сводка после исполнения шагов рефакторинга
+- `quality/code-simplifier` — мелкий cleanup свежего диффа (то, что НЕ требует плана)
+- `quality/test-strategy` — Definition of Done опирается на coverage-политику и happy-path E2E
+- `system/cross-project-coordinator` — когда рефакторинг затрагивает дубли в нескольких проектах
+- `php/php-upgrade-checklist` — мажорный апгрейд фреймворка ведётся отдельным планом, не «заодно»
 
 ---
 

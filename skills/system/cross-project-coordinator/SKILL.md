@@ -5,9 +5,9 @@ version: 0.1.0
 description: "Оркестрация межпроектного анализа кода: обойти связанные проекты (через топологию), найти дубли/расхождения/кандидатов в общий пакет и выдать приоритизированные рекомендации по унификации. Read-only — правок и PR не делает. Запускать для широкой межпроектной задачи, не для одного репозитория."
 risk: read
 persona: architect
-tags: [cross-project, coordination, refactoring, duplication, topology]
+tags: [cross-project, coordination, refactoring, duplication, topology, orchestration, agents, tokens]
 requires: [local-topology]
-produces_for: []
+produces_for: [refactoring-plan]
 outputs: []
 snippets: []
 adapters: [claude]
@@ -105,4 +105,6 @@ impact×effort) + итог (топ-возможности, предлагаем�
 - `agents/code-coordinator.md` — read-only агент межпроектного анализа (только plugin-канал Claude Code).
 - `local-topology` (бакет system) — резолв узлов и проектов через `~/.swissknifeman/topology.json`.
 - `quality/tech-debt-audit`, `quality/refactoring-plan`, `quality/code-simplifier`, `quality/code-review` — критерии и стратегии вынесения.
+- `php/laravel-subagents` — паттерн раздачи концернов Explore-субагентам (возвращают находки, не тела файлов).
+- `shared-memory` (бакет system) — куда зафиксировать межпроектные находки (дубли, расхождения, кандидаты в общий пакет), чтобы их увидели другие проекты группы.
 - `scan-skills.sh` — если паттерн стоит поднять В реестр скиллов.

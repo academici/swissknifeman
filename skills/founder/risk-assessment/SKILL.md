@@ -5,9 +5,9 @@ version: 0.1.0
 description: 5 категорий рисков, Risk Matrix, RAID-лог, pre-mortem для критичных рисков
 risk: read
 persona: founder
-tags: [validation]
+tags: [validation, compliance, security]
 requires: []
-produces_for: [new-project]
+produces_for: [new-project, pitch-deck]
 outputs: [chat, "docs/01_Business/Risk_Register.md"]
 sha256: ""
 adapters: [claude, cursor, fable]
@@ -127,3 +127,13 @@ adapters: [claude, cursor, fable]
 - Расплывчатые формулировки ("могут быть проблемы")
 - Выдуманные риски без обоснования
 - Игнорировать категории — все 5 должны быть проверены
+
+---
+
+## Связанные скиллы
+
+- `founder/new-project` — оркестратор: прогоняет risk-assessment на этапе 3 цепочки запуска
+- `founder/pitch-deck` — потребитель: risk-acknowledgement слайд адресует ключевой риск из этого реестра
+- `architect/legal-compliance` — углубляет регуляторную категорию (GDPR, AI Act, DSA, лицензирование)
+- `architect/security-design` — углубляет техническую категорию (auth, OWASP, STRIDE threat modeling)
+- `quality/tech-debt-audit` — смежный для технических рисков уже существующего кода (impact × effort)

@@ -5,9 +5,9 @@ version: 0.3.0
 description: "Командная Git-стратегия: модель веток (main/develop/feature/hotfix), PR-workflow, защита веток"
 risk: read
 persona: operator
-tags: ["git", "gitops"]
+tags: ["git", "gitops", "github"]
 requires: []
-produces_for: []
+produces_for: ["github-flow"]
 outputs: []
 snippets: ["branch-strategy.md", "commit-conventions.md"]
 adapters: [claude, cursor, fable]
@@ -65,3 +65,4 @@ sha256: ""
 ## Ссылки
 
 - Формат сообщений коммитов и pre-commit-порядок: скилл `general/git-commit-rules`
+- Смежные скиллы: `oss-dev/github-flow` (полная цепочка Issue→Branch→PR→Merge→Tag→Release поверх этой веточной модели), `oss-dev/gh-review` (ревью PR через gh CLI), `oss-dev/release-engineering` (релизный pipeline и SemVer), `devops/ci-cd` (зелёный CI как условие мержа в защищённые ветки)

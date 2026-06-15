@@ -5,9 +5,9 @@ version: 0.1.0
 description: Стратегия тестирования: пирамида (unit/integration/e2e), coverage policy, mock vs real, какие фичи требуют какой уровень тестов
 risk: draft
 persona: quality
-tags: [quality, testing]
+tags: [quality, testing, coverage, validation, ci]
 requires: []
-produces_for: [code-review]
+produces_for: [code-review, mutation-testing, playwright-e2e]
 outputs: ["docs/03_Dev/Test_Strategy.md"]
 sha256: ""
 adapters: [claude, cursor, fable]
@@ -155,4 +155,8 @@ stages:
 
 ## Ссылки
 
-- Реализации стратегии: `php/laravel-testing` (приложение), `php/laravel-package-testing` (пакеты), `php/laravel-dusk` (E2E), `frontend/vitest` (фронтенд)
+- Реализации стратегии: `php/laravel-testing` (приложение), `php/laravel-package-testing` (пакеты), `php/laravel-dusk` (E2E), `frontend/vitest` (фронтенд), `quality/playwright-e2e` (нативный TS E2E)
+- `quality/mutation-testing` — измерить качество тестов (MSI) поверх coverage-политики
+- `quality/code-review` — критерий «есть ли тесты на новую логику» опирается на эту стратегию
+- `quality/tech-debt-audit` — куда списывается ice-cream cone и coverage-долг
+- `php/test-isolation-guard`, `devops/db-test-preflight` — изоляция и пре-флайт тестовой БД

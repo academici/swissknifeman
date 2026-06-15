@@ -5,8 +5,8 @@ version: 0.1.0
 description: Архитектура системы, выбор стека, ADR, C4-диаграммы, deployment, scalability
 risk: draft
 persona: architect
-tags: [architecture]
-requires: [brd]
+tags: [architecture, adr, c4, scalability, deployment]
+requires: [brd, tech-stack-selection]
 produces_for: [data-schema, api-design, security-design, agent-design, observability-design, legal-compliance]
 outputs: ["docs/03_Dev/Architecture_[Name].md"]
 sha256: ""
@@ -145,3 +145,16 @@ adapters: [claude, cursor, fable]
 - Оставлять SLO/нагрузку неопределёнными ("потом разберёмся")
 - Создавать архитектурный документ без Mermaid-схемы
 - Пропускать Security Gate для продуктов с PII
+
+---
+
+## Связанные скиллы
+
+- `pm/brd` — утверждённый BRD как обязательное предусловие.
+- `architect/tech-stack-selection` — выбор стека с trade-off матрицей идёт ДО этого скилла.
+- `architect/data-schema`, `architect/api-design` — детализация данных и контрактов после архитектуры.
+- `architect/security-design` — Security Gate, запускать параллельно для продуктов с PII/деньгами.
+- `architect/observability-design` — прод-наблюдаемость (SLO/SLI/runbooks) поверх утверждённой архитектуры.
+- `architect/agent-design` — секция Agent Design для продуктов с агентами.
+- `architect/legal-compliance` — регуляторный чеклист на основе архитектуры (где хранятся данные).
+- `php/laravel-structure`, `php/modular-architecture` — реализация архитектуры в конкретном Laravel-коде.

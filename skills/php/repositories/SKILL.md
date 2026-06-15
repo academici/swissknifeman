@@ -77,3 +77,6 @@ Eloquent сам по себе — уже repository + active record, поэто�
 - `php/laravel-structure` — размещение слоёв (`app/Repositories/<Домен>/`, `app/Dto/<Домен>/Repository/`, `app/Services/<Домен>/Access/`).
 - `php/dependency-injection` — кто кого инжектит: VisibilityService → ReadRepository → Repository(фасад) → контроллер; StoreRepository → Action.
 - `php/laravel` → `layer-boundaries.md` — границы слоёв: что разрешено Action, что репозиторию, что модели.
+- `php/laravel-data` — DTO-команды (`Form`), которые принимает write-side; `php/php-patterns` — delta-DTO и specification.
+- `php/database` — модели и scopes, поверх которых строятся выборки.
+- `php/laravel-permissions` / `php/azguard` — где определяются права, которые читает `VisibilityService`.

@@ -5,9 +5,9 @@ version: 0.1.0
 description: "Известные breaking changes и ловушки Blender 5.0 API"
 risk: write
 persona: oss-dev
-tags: [blender, api]
+tags: [blender, api, bpy, 3d, python, gotchas, advisory, version]
 requires: []
-produces_for: []
+produces_for: [mcp-blender-workflow, parametric-config]
 outputs: []
 snippets: []
 adapters: [claude, cursor, fable]
@@ -76,3 +76,11 @@ for obj in bpy.data.objects:
 
 - `bpy.data` + `bmesh` в 25–300x быстрее `bpy.ops` для построения мешей
 - `foreach_set()` для массовой записи координат вершин (через NumPy): массив должен быть `.flatten()` или `.ravel()` перед передачей
+
+---
+
+## Связанные скиллы
+
+- `blender/mcp-blender-workflow` — таблица диагностики ошибок Шага 4 ссылается на эти ловушки (`temp_override`, нормали после boolean, `surface_render_method`); режим `realism` уже включает пересчёт нормалей.
+- `blender/parametric-config` — построение меша через `bmesh`/SCREW, где применяются эти 5.0-API правила.
+- `blender/threading` — SCREW-модификатор резьбы, чувствительный к смене API.

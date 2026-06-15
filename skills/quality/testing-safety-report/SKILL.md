@@ -5,7 +5,7 @@ version: 0.1.0
 description: "Отчёт безопасности после рискованного изменения (миграции, рефакторинг схемы/слоёв, апгрейд зависимостей): что структурно изменено, какие тесты прогнаны и с каким результатом, какие риски и контрольные проверки остаются. Делать после изменения, чтобы оно было аудируемым."
 risk: read
 persona: architect
-tags: [testing, safety, migrations, reporting, verification]
+tags: [testing, safety, migrations, reporting, verification, quality, refactor]
 requires: []
 produces_for: []
 outputs: []
@@ -72,4 +72,9 @@ Safety Report: <краткое имя изменения>
 ## Ссылки
 
 - `test-strategy` (quality) — планирование тестов до изменения.
-- `refactoring-plan` (quality) — план самого изменения и его шагов.
+- `refactoring-plan` (quality) — план самого изменения и его шагов (его исполнение фиксирует этот отчёт).
+- `php/php-upgrade-checklist` — чеклист апгрейда PHP; отчёт фиксирует результат прогона.
+- `php/static-analysis` — phpstan/линтер, чьи итоги попадают в строку «Прогнано».
+- `php/test-isolation-guard`, `devops/db-test-preflight` — гарантии безопасной тестовой БД при прогоне.
+- `oss-dev/dependency-audit` — апгрейд зависимостей как триггер для отчёта.
+- `quality/code-review` — отчёт прикладывается к PR, чтобы ревьюер видел границы безопасности.

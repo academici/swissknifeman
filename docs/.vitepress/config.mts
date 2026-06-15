@@ -46,6 +46,7 @@ export default withMermaid(defineConfig({
             { text: 'MCP-сервер', link: '/guide/mcp' },
             { text: 'Healthcheck', link: '/guide/health' },
             { text: 'Sync', link: '/guide/sync' },
+            { text: 'Демон памяти (systemd)', link: '/guide/systemd' },
             { text: 'Доверие (workspace)', link: '/guide/workspace' },
           ],
         },

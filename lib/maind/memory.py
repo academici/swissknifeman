@@ -61,20 +61,16 @@ def _pid_alive(pid):
 
 
 # ── жизненный цикл демона ────────────────────────────────────────────────────
-def start(env, config, *, detach=True, timeout_s=10):
-    """Запускает Node-демон отдельной сессией, пишет pidfile, ждёт health. 0 — успех."""
+def _daemon_argv(env, config):
+    """(cmd, child_env, url) для запуска Node-демона памяти. Общий для start()/run().
+    Проверяет node и бинарь демона — иначе die с подсказкой."""
     http_port, stream_port, url = resolve_ports(env, config)
-    if health(url):
-        print(f"память уже запущена: {url}")
-        return 0
     if shutil.which("node") is None:
         die("node не найден в PATH — agent-memory это Node-демон")
     bin_path = env.root / "node_modules" / ".bin" / "agentmemory"
     if not bin_path.exists():
         die("agentmemory не установлен — выполните `npm install` в корне maind "
             "(демон памяти @agentmemory/agentmemory)")
-
-    env.data_dir.mkdir(parents=True, exist_ok=True)
     cmd = ["node"]
     if env.env_file.exists():
         cmd.append(f"--env-file={env.env_file}")
@@ -86,6 +82,30 @@ def start(env, config, *, detach=True, timeout_s=10):
         "AGENTMEMORY_URL": url,
         "AGENTMEMORY_III_CONFIG": str(env.memory_config),
     }
+    return cmd, child_env, url
+
+
+def run_foreground(env, config):
+    """Запустить демон памяти в ПЕРЕДНЕМ плане (для systemd Type=simple): exec node,
+    заменяя текущий процесс — systemd трекает демон как MAINPID и сам рулит рестартом.
+    При успехе НЕ возвращается."""
+    cmd, child_env, _ = _daemon_argv(env, config)
+    env.data_dir.mkdir(parents=True, exist_ok=True)
+    # exec сохраняет PID → pidfile корректно указывает на node, и `maind memory
+    # status`/`stop` видят реальный процесс (даже под управлением systemd).
+    env.memory_pidfile.write_text(str(os.getpid()), encoding="utf-8")
+    os.chdir(str(env.root))
+    os.execvpe(cmd[0], cmd, child_env)
+
+
+def start(env, config, *, detach=True, timeout_s=10):
+    """Запускает Node-демон отдельной сессией, пишет pidfile, ждёт health. 0 — успех."""
+    _, stream_port, url = resolve_ports(env, config)
+    if health(url):
+        print(f"память уже запущена: {url}")
+        return 0
+    env.data_dir.mkdir(parents=True, exist_ok=True)
+    cmd, child_env, _ = _daemon_argv(env, config)
     log = open(env.memory_log, "ab")
     try:
         proc = subprocess.Popen(
@@ -202,12 +222,14 @@ def export(url, scope):
 # ── CLI ─────────────────────────────────────────────────────────────────────
 def cmd_memory(env, argv):
     if not argv or argv[0] in ("-h", "--help"):
-        print("maind memory <start|stop|status> [--json]")
+        print("maind memory <start|run|stop|status> [--json]")
         return
     sub, rest = argv[0], argv[1:]
     config, _src = load_config(env)
     if sub == "start":
         start(env, config)
+    elif sub == "run":
+        run_foreground(env, config)  # foreground для systemd (exec, не возвращается)
     elif sub == "stop":
         stop(env, config)
     elif sub == "status":

@@ -6,7 +6,8 @@
 # Команды (корень узла = каталог установки maind):
 #   start     запустить воркеры узла (--only memory|graph)
 #   status    сводный статус: память, граф, агенты, проекты
-#   memory    демон памяти: start | stop | status
+#   memory    демон памяти: start | run (foreground) | stop | status
+#   service   systemd --user для демона памяти: install | start | stop | logs | ...
 #   graph     граф (федерация): query | stats | neighbors | view | derive | rebuild
 #   agents    реестр агентов: list | kill | heartbeat | register
 #   projects  реестр проектов: list | status | sync (--namespace NS фильтрует)
@@ -36,7 +37,7 @@ if [[ ! -d "$REPO_ROOT/lib/maind" ]]; then
   exit 1
 fi
 
-usage() { grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '2,21p'; }
+usage() { grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '2,24p'; }
 
 CMD="${1:-help}"
 [[ $# -gt 0 ]] && shift
@@ -47,7 +48,7 @@ case "$CMD" in
     sha="$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
     echo "maind $sha ($REPO_ROOT)"
     exit 0 ;;
-  start|status|memory|graph|agents|projects|namespaces|deploy|sync|health|workspace|run|onboard|migrate|mcp|doctor) ;;
+  start|status|memory|service|graph|agents|projects|namespaces|deploy|sync|health|workspace|run|onboard|migrate|mcp|doctor) ;;
   *) echo "Неизвестная команда: $CMD" >&2; usage >&2; exit 1 ;;
 esac
 

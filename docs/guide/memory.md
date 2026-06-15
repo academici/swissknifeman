@@ -8,11 +8,13 @@ maind его **оркестрирует** (не переписывает на Py
 
 ```bash
 maind memory start     # запуск отдельной сессией, pidfile в data/, health-poll
+maind memory run       # foreground (exec node) — для systemd Type=simple
 maind memory status    # running / url / pid / порты / воркеры
 maind memory stop      # SIGTERM→SIGKILL; чужой демон (без pidfile) не трогается
 ```
 
-`maind start` без `--only` поднимает и память, и граф.
+`maind start` без `--only` поднимает и память, и граф. Для автозапуска при логине/загрузке —
+зарегистрируйте демон как systemd-сервис: [`maind service install`](/guide/systemd).
 
 ## Порты — из env/конфига
 

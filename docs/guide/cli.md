@@ -10,8 +10,12 @@ maind start [--only memory|graph]      # поднять воркеры узла
 maind status [--json]                  # сводка: память, граф, агенты, проекты
 
 maind memory start                     # запустить демон памяти (Node)
+maind memory run                       # foreground (exec node) — для systemd
 maind memory stop                      # остановить (только свой, чужой не трогает)
 maind memory status [--json]
+
+maind service install                  # systemd --user: автозапуск демона памяти
+maind service {start|stop|restart|status|logs|uninstall}   # управление юнитом
 
 maind graph query --from project:brain --depth 2 [--edge-types depends_on,uses] [--json]
 maind graph neighbors --node project:maind --direction in

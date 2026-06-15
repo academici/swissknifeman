@@ -17,6 +17,7 @@ from .migrate import cmd_migrate
 from .onboard import cmd_onboard
 from .orchestrate import cmd_run
 from .projects import cmd_namespaces, cmd_projects
+from .service import cmd_service
 from .start import cmd_start, cmd_status
 from .sync import cmd_sync
 from .workspace import cmd_workspace
@@ -25,6 +26,7 @@ COMMANDS = {
     "start": cmd_start,
     "status": cmd_status,
     "memory": cmd_memory,
+    "service": cmd_service,
     "graph": cmd_graph,
     "agents": cmd_agents,
     "projects": cmd_projects,

@@ -6,6 +6,7 @@ from .connect import cmd_connect
 from .doctor import cmd_doctor
 from .integrate import cmd_integrate
 from .listing import cmd_list
+from .lock import cmd_lock
 from .registry import cmd_registry
 from .status import cmd_status
 from .topology import cmd_topology
@@ -17,6 +18,7 @@ COMMANDS = {
     "vendor": cmd_vendor,
     "integrate": cmd_integrate,
     "update": cmd_update,
+    "lock": cmd_lock,
     "status": cmd_status,
     "list": cmd_list,
     "registry": cmd_registry,

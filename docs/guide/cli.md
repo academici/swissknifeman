@@ -25,6 +25,12 @@ maind agents kill <id> [--force]
 maind projects list [--json]
 maind projects sync --from brain [--path DIR]
 
+maind deploy [--project ID | --all] [--with-graphify] [--dry-run]   # MCP-серверы хаба на проекты
+maind workspace sync [--dry-run] [--no-allow] [--no-mode]           # доверие Claude к проектам экосистемы
+maind workspace status [--json]
+maind run <project> <capability> [-- args]   # дёрнуть команду brain / swissknifeman
+maind onboard <project> [--with-graphify] [--with-brain]            # единый онбординг
+
 maind migrate from-brain <.projects.json> [--force]
 maind migrate from-agentmemory <dir> [--force]
 

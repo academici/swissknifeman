@@ -29,6 +29,7 @@ export default withMermaid(defineConfig({
             { text: 'Граф связей', link: '/guide/graph' },
             { text: 'Агенты', link: '/guide/agents' },
             { text: 'Проекты', link: '/guide/projects' },
+            { text: 'Доверие (workspace)', link: '/guide/workspace' },
             { text: 'MCP-сервер', link: '/guide/mcp' },
             { text: 'Конфиг .maind.json', link: '/guide/config' },
             { text: 'Миграция', link: '/guide/migration' },

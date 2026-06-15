@@ -107,9 +107,11 @@ sequenceDiagram
 
 ## Поток конфигов и данных
 
-maind — **читатель всех** ключевых файлов и **писатель** только `.maind.json` и MCP-конфигов
-проекта. Скиллы проекта описывает `skills-lock.json` (composes swissknifeman + Laravel Boost,
-swissknifeman wins). brain держит свой `<vault>/.projects.json` для docs-watcher.
+maind — **читатель всех** ключевых файлов и **писатель** только `.maind.json`, MCP-конфигов
+проекта и **собственного** `.claude/settings.local.json` (доверие хаба к проектам экосистемы,
+см. [Workspace](/guide/workspace)). Скиллы проекта описывает `skills-lock.json` (composes
+swissknifeman + Laravel Boost, swissknifeman wins). brain держит свой `<vault>/.projects.json`
+для docs-watcher.
 
 ```mermaid
 flowchart LR
@@ -143,6 +145,7 @@ flowchart TD
 | Что | Где живёт | Кто пишет |
 |:--|:--|:--|
 | Реестр проектов | `.maind.json` | maind (`projects.write_config` — единственный писатель) |
+| Доверие Claude к проектам | `<maind>/.claude/settings.local.json` | maind (`workspace sync` из реестра) |
 | Общая память | agent-memory demon (scopes) | проекты пишут в свой `project:<id>` |
 | Граф связей | `data/graph.db` | maind (seed из конфига + skills-lock) |
 | Карта скиллов проекта | `<project>/skills-lock.json` | `swissknifeman lock` |

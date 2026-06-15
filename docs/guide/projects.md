@@ -39,4 +39,4 @@ maind-only поля (`skills`/`tags`/`dependencies`/`agents`/`repo`).
 | `folders` | `docs_folders` | как есть |
 | — | `type` | по маркерам репозитория (composer.json→php, package.json→node, .obsidian→vault) |
 
-Дальше: [MCP-сервер →](/guide/mcp)
+Дальше: [Доверие (workspace) →](/guide/workspace)

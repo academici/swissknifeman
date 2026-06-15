@@ -1,6 +1,6 @@
 {
   "name": "@academici/maind",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "license": "MIT",
   "description": "mAInd — центральный узел экосистемы academici: память агентов, граф связей, реестр агентов и проектов, MCP-сервер. Ядро — Python + bash; npm нужен только для демона памяти и документации.",

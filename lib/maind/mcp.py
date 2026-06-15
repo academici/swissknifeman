@@ -1,9 +1,10 @@
-"""maind как MCP-сервер: stdio JSON-RPC 2.0 (LSP-style Content-Length framing).
+"""maind как MCP-сервер: stdio JSON-RPC 2.0, newline-delimited JSON (транспорт MCP).
 
 Экспонирует 6 tools поверх memory/graph/agents/projects. Запуск: `maind mcp`.
 Подключение клиента (.mcp.json):
   {"command": "<repo>/bin/maind", "args": ["mcp"]}
-Чистый stdlib — без MCP SDK. Логи/предупреждения идут в stderr, протокол — в stdout."""
+Чистый stdlib — без MCP SDK. Логи/предупреждения идут в stderr, протокол — в stdout
+(каждое сообщение — одна строка JSON + '\\n', без Content-Length)."""
 import json
 import sys
 
@@ -124,30 +125,22 @@ def dispatch(env, config, req):
     return _error(req_id, -32601, f"неизвестный метод: {method}")
 
 
-# ── framing ──────────────────────────────────────────────────────────────────
+# ── framing: newline-delimited JSON (stdio-транспорт MCP) ───────────────────
+# MCP stdio: каждое JSON-RPC сообщение — одна строка, оканчивается '\n', без
+# embedded-переводов строки и БЕЗ Content-Length заголовков (это не LSP).
 def read_message(stream):
-    """Читает одно Content-Length-framed сообщение из бинарного потока. EOF → None."""
-    headers = {}
+    """Читает одно NDJSON-сообщение. EOF → None. Пустые строки пропускаются."""
     while True:
         line = stream.readline()
         if not line:
             return None
-        line = line.decode("ascii", "replace").strip()
-        if line == "":
-            break
-        if ":" in line:
-            k, v = line.split(":", 1)
-            headers[k.strip().lower()] = v.strip()
-    length = int(headers.get("content-length", 0))
-    if length <= 0:
-        return None
-    return json.loads(stream.read(length).decode("utf-8"))
+        line = line.strip()
+        if line:
+            return json.loads(line.decode("utf-8"))
 
 
 def write_message(stream, obj):
-    body = json.dumps(obj, ensure_ascii=False).encode("utf-8")
-    stream.write(f"Content-Length: {len(body)}\r\n\r\n".encode("ascii"))
-    stream.write(body)
+    stream.write((json.dumps(obj, ensure_ascii=False) + "\n").encode("utf-8"))
     stream.flush()
 
 

@@ -103,6 +103,17 @@ class TestFraming(unittest.TestCase):
         msg = mcp.read_message(buf)
         self.assertTrue(msg["result"]["ok"])
 
+    def test_wire_is_newline_delimited(self):
+        # реальный MCP-клиент (Cursor/Claude) шлёт NDJSON, НЕ Content-Length
+        raw = b'{"jsonrpc":"2.0","id":7,"method":"tools/list"}\n'
+        self.assertEqual(mcp.read_message(io.BytesIO(raw))["method"], "tools/list")
+        buf = io.BytesIO()
+        mcp.write_message(buf, {"id": 1, "result": {}})
+        out = buf.getvalue()
+        self.assertTrue(out.endswith(b"\n"))
+        self.assertEqual(out.count(b"\n"), 1)          # одно сообщение = одна строка
+        self.assertNotIn(b"Content-Length", out)        # никаких LSP-заголовков
+
     def test_serve_processes_then_eof(self):
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)

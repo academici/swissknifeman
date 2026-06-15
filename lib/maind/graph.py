@@ -364,8 +364,8 @@ def _reader(env, config):
 def cmd_graph(env, argv):
     if not argv or argv[0] in ("-h", "--help"):
         print("maind graph <query|stats|neighbors|view|derive|rebuild> "
-              "[--from ID] [--node ID] [--project ID] [--cross] [--depth N] "
-              "[--edge-types a,b] [--direction out|in|both] [--all] [--json]")
+              "[--from ID] [--node ID] [--project ID] [--cross] [--namespace NS] "
+              "[--depth N] [--edge-types a,b] [--direction out|in|both] [--all] [--json]")
         return
     # `maind graph --project X` / `maind graph --cross` — короткая форма view
     if argv[0] in ("--project", "--cross"):
@@ -385,12 +385,14 @@ def _cmd_view(env, argv):
     """Подграф одного проекта (--project) или весь межпроектный слой (--cross)."""
     from .config import load_config
     from .federation import Federation
-    opts, _ = parse_args(argv, {"--project": "str", "--cross": "bool", "--json": "bool"})
+    opts, _ = parse_args(argv, {"--project": "str", "--cross": "bool",
+                                "--namespace": "str", "--json": "bool"})
     config, _src = load_config(env)
     fed = Federation(env, config)
     if opts["cross"]:
-        sub = fed.cross()
-        label = "межпроектный слой"
+        sub = fed.cross(opts["namespace"] or None)
+        label = "межпроектный слой" + (f" [ns {opts['namespace']}]"
+                                       if opts["namespace"] else "")
     elif opts["project"]:
         sub = fed.project_view(opts["project"])
         label = f"граф проекта {opts['project']}"

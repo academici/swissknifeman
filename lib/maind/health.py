@@ -17,6 +17,7 @@ from .common import (atomic_write_json, backup_file, content_hash, die, parse_ar
 from .config import load_config
 from .memory import health as mem_health
 from .memory import resolve_ports
+from .namespaces import namespaces_of
 from .probe import probe_project
 from .projects import get as get_project
 from .projects import listing
@@ -60,6 +61,7 @@ def health_report(env, config, project, *, memory_reachable=None):
         hints.append(f"нет maind MCP в проекте → maind sync --only mcp --project {pid}")
     return {
         "id": pid, "scope": rep.get("memory_scope", f"project:{pid}"),
+        "namespaces": sorted(namespaces_of(project)),
         "status": rep.get("status", "standalone"),
         "memory_daemon": memory_reachable,
         "agentmemory_mcp": bool(c.get("agentmemory_mcp")),

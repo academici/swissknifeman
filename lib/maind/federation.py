@@ -14,10 +14,18 @@ import os
 from pathlib import Path
 
 from .graph import Graph, empty_graph
+from .namespaces import in_namespace, shares
 
 
 def _enabled_projects(config):
     return [p for p in (config.get("projects") or []) if p.get("enabled", True)]
+
+
+def _owners_share_ns(so, do, pmap):
+    """Делят ли проекты-владельцы namespace. Неизвестный владелец (внешний узел, нет
+    записи) → True: namespace неизвестен, cross-ребро сохраняем (как derive.link_allowed)."""
+    a, b = pmap.get(so), pmap.get(do)
+    return True if a is None or b is None else shares(a, b)
 
 
 def store_path(env, config, project):
@@ -88,6 +96,7 @@ def rebuild_index(env, config):
     attrs.project) + межпроектные рёбра (владельцы src/dst различны). Регенерируемо.
     Возвращает {projects, cross_edges}."""
     owners = _owner_map(env, config)
+    pmap = {p["id"]: p for p in _enabled_projects(config)}
     idx = Graph(env, config, path=index_path(env))
     idx._loaded = True  # строим с нуля, не читаем старый индекс
     cross = 0
@@ -104,7 +113,10 @@ def rebuild_index(env, config):
         for src_id, dsts in g.adj.items():
             for dst_id, e in dsts.items():
                 so, do = _owner(src_id, owners), _owner(dst_id, owners)
-                if so is not None and do is not None and so != do:
+                # defense-in-depth: меж-namespace cross-ребро не индексируем
+                # (на случай устаревших/локальных сторов, не прошедших derive-гейт)
+                if (so is not None and do is not None and so != do
+                        and _owners_share_ns(so, do, pmap)):
                     for nid in (src_id, dst_id):
                         if nid not in idx.nodes:
                             idx.add_node(nid, g.nodes.get(nid, {}).get("type")
@@ -131,17 +143,21 @@ class Federation:
         self.env = env
         self.config = config
 
-    def _union(self):
-        return federated_graph(self.env, self.config)
+    def _union(self, namespace=None):
+        projects = None
+        if namespace:
+            projects = [p for p in _enabled_projects(self.config)
+                        if in_namespace(p, namespace)]
+        return federated_graph(self.env, self.config, projects)
 
-    def query(self, frm, depth=1, edge_types=None, direction="out"):
-        return self._union().query(frm, depth, edge_types, direction)
+    def query(self, frm, depth=1, edge_types=None, direction="out", namespace=None):
+        return self._union(namespace).query(frm, depth, edge_types, direction)
 
-    def neighbors(self, node_id, depth=1, edge_types=None, direction="out"):
-        return self._union().neighbors(node_id, depth, edge_types, direction)
+    def neighbors(self, node_id, depth=1, edge_types=None, direction="out", namespace=None):
+        return self._union(namespace).neighbors(node_id, depth, edge_types, direction)
 
-    def path(self, src, dst, edge_types=None, direction="out"):
-        return self._union().path(src, dst, edge_types, direction)
+    def path(self, src, dst, edge_types=None, direction="out", namespace=None):
+        return self._union(namespace).path(src, dst, edge_types, direction)
 
     def subgraph(self, ids, depth=0, direction="both", edge_types=None):
         return self._union().subgraph(ids, depth, direction, edge_types)
@@ -154,10 +170,17 @@ class Federation:
         g = project_graph(self.env, self.config, proj)
         return g.subgraph(list(g.nodes), depth=0)
 
-    def cross(self):
-        """Межпроектный слой целиком (узлы project:* + cross-рёбра)."""
+    def cross(self, namespace=None):
+        """Межпроектный слой (узлы project:* + cross-рёбра). namespace → только узлы
+        проектов этого namespace (wildcard-проекты попадают в любой namespace)."""
         ig = index_graph(self.env, self.config)
-        return ig.subgraph(list(ig.nodes), depth=0)
+        ids = list(ig.nodes)
+        if namespace:
+            pmap = {p["id"]: p for p in _enabled_projects(self.config)}
+            ids = [nid for nid in ids
+                   if (pmap.get(ig.nodes[nid]["attrs"].get("project")) is not None
+                       and in_namespace(pmap[ig.nodes[nid]["attrs"]["project"]], namespace))]
+        return ig.subgraph(ids, depth=0)
 
     def stats(self):
         s = self._union().stats()

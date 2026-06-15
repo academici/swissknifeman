@@ -9,9 +9,10 @@
 #   memory    демон памяти: start | stop | status
 #   graph     граф (федерация): query | stats | neighbors | view | derive | rebuild
 #   agents    реестр агентов: list | kill | heartbeat | register
-#   projects  реестр проектов: list | status | sync
+#   projects  реестр проектов: list | status | sync (--namespace NS фильтрует)
+#   namespaces namespace-группы экосистемы и их проекты-члены
 #   deploy    раскатать MCP-серверы хаба на проекты (--project X | --all)
-#   sync      раскатать управляемые артефакты на проекты: --only mcp,graph,memory,health-*
+#   sync      раскатать управляемые артефакты: --only ... (--project|--namespace|--all)
 #   health    healthcheck связи проекта с хабом: --cwd | --project X [--fix]
 #   workspace единое доверие Claude к проектам экосистемы: sync | status
 #   run       выполнить команду соседнего пакета: run <proj> <cap> (--list)
@@ -35,7 +36,7 @@ if [[ ! -d "$REPO_ROOT/lib/maind" ]]; then
   exit 1
 fi
 
-usage() { grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '2,20p'; }
+usage() { grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '2,21p'; }
 
 CMD="${1:-help}"
 [[ $# -gt 0 ]] && shift
@@ -46,7 +47,7 @@ case "$CMD" in
     sha="$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
     echo "maind $sha ($REPO_ROOT)"
     exit 0 ;;
-  start|status|memory|graph|agents|projects|deploy|sync|health|workspace|run|onboard|migrate|mcp|doctor) ;;
+  start|status|memory|graph|agents|projects|namespaces|deploy|sync|health|workspace|run|onboard|migrate|mcp|doctor) ;;
   *) echo "Неизвестная команда: $CMD" >&2; usage >&2; exit 1 ;;
 esac
 

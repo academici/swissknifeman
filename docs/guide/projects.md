@@ -18,13 +18,21 @@
 ## CLI
 
 ```bash
-maind projects list [--json]
+maind projects list [--namespace NS] [--json]
 maind projects sync --from brain [--path ~/Vaults/Brain]
+maind namespaces [--json]            # namespace-группы и их проекты-члены
 ```
 
 `sync` идемпотентен: мерджит по `id`, обновляет brain-источные поля
 (`name`/`local_path`/`vault_path`/`type`/`enabled`/`docs_folders`) и **сохраняет**
-maind-only поля (`skills`/`tags`/`dependencies`/`agents`/`repo`).
+maind-only поля (`skills`/`tags`/`namespaces`/`dependencies`/`agents`/`repo`).
+
+## Namespaces
+
+Поле `projects[].namespaces` группирует проекты и **изолирует** межпроектные связи: ребро
+строится только между проектами одной группы (`["*"]` — общая инфраструктура, связывается со
+всеми). `--namespace NS` фильтрует `projects list`/`status` и `sync`. Подробнее —
+[Архитектура → Namespaces](/architecture#namespaces-изоляция-связей).
 
 ## Маппинг из brain
 

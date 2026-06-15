@@ -18,6 +18,7 @@ TOP_KEYS = {
     "graph": dict,
     "agents": dict,
     "projects": list,
+    "namespaces": dict,
     "integrations": dict,
     "mcp": dict,
     "observability": dict,
@@ -84,6 +85,7 @@ def validate_config(config, cfg_file):
                     "traces_enabled": bool},
                    {"log_level": LOG_LEVELS})
 
+    registry = config.get("namespaces") or {}
     for i, proj in enumerate(config.get("projects", [])):
         if not isinstance(proj, dict):
             die(f"{cfg_file}: projects[{i}] должно быть объектом")
@@ -93,6 +95,14 @@ def validate_config(config, cfg_file):
         if "status" in proj and proj["status"] not in PROJECT_STATUSES:
             die(f"{cfg_file}: projects[{i}].status = '{proj['status']}' — допустимо: "
                 f"{', '.join(sorted(PROJECT_STATUSES))}")
+        if "namespaces" in proj:
+            ns = proj["namespaces"]
+            if not isinstance(ns, list) or not all(isinstance(x, str) for x in ns):
+                die(f"{cfg_file}: projects[{i}].namespaces должно быть списком строк")
+            for n in ns:                       # реестр задан → подсказка на опечатки
+                if registry and n not in registry and n not in ("*", "default"):
+                    warn(f"{cfg_file}: projects[{i}] ссылается на незарегистрированный "
+                         f"namespace '{n}' (нет в секции namespaces)")
 
 
 # ── дефолты ─────────────────────────────────────────────────────────────────
@@ -132,6 +142,7 @@ def merge_defaults(config):
 
     config["node"] = dict(config.get("node") or {})
     config["projects"] = list(config.get("projects") or [])
+    config["namespaces"] = dict(config.get("namespaces") or {})
     config["integrations"] = dict(config.get("integrations") or {})
     config["mcp"] = dict(config.get("mcp") or {})
     return config
@@ -176,6 +187,7 @@ def map_brain_project(bp):
         "agents": [],
         "skills": [],
         "tags": [],
+        "namespaces": [],                   # maind-only; brain не источник namespace
         "status": "active",
         "dependencies": [],
     }

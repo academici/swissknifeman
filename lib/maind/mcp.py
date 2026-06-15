@@ -64,9 +64,11 @@ TOOLS = [
          "required": ["project"]}},
     {"name": "maind_memory_links",
      "description": "С чем связан проект: межпроектные связи из графа + его ecosystem-link "
-                    "память (память ОБЩАЯ, факты экосистемы — в scope global).",
+                    "память (память ОБЩАЯ, факты экосистемы — в scope global). Связи "
+                    "ограничены namespace проекта; необязательный namespace сужает обход.",
      "inputSchema": {"type": "object", "properties": {
-         "project": {"type": "string"}, "depth": {"type": "integer"}},
+         "project": {"type": "string"}, "depth": {"type": "integer"},
+         "namespace": {"type": "string", "description": "ограничить обход одним namespace"}},
          "required": ["project"]}},
     {"name": "maind_agents_list",
      "description": "Список зарегистрированных агентов узла с их состоянием.",
@@ -139,7 +141,8 @@ def _run_tool(env, config, name, args, default_scope):
     if name == "maind_memory_links":
         from .federation import Federation
         pid = args["project"]
-        links = Federation(env, config).query(f"project:{pid}", int(args.get("depth", 1)))
+        links = Federation(env, config).query(f"project:{pid}", int(args.get("depth", 1)),
+                                              namespace=args.get("namespace") or None)
         _, _, url = memory_mod.resolve_ports(env, config)
         mem = (memory_mod.recall(url, f"project:{pid}", "maind:ecosystem-link")
                if memory_mod.health(url) else [])

@@ -33,7 +33,14 @@ g.stats()                                               # узлы/рёбра/к
 maind graph stats
 maind graph query --from project:brain --depth 2
 maind graph neighbors --node project:maind --direction in --edge-types depends_on
+maind graph --cross --namespace axioma   # межпроектный слой одной namespace-группы
 ```
+
+## Namespaces
+
+В режиме федерации межпроектные связи **изолируются по namespace**: ребро A↔B строится, только
+если проекты делят группу (`projects[].namespaces`); `["*"]` — общая инфраструктура. См.
+[Архитектура → Namespaces](/architecture#namespaces-изоляция-связей).
 
 ## Автозасев из конфига
 

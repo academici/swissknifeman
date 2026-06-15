@@ -15,6 +15,7 @@ from pathlib import Path
 
 from .common import die, parse_args
 from .config import load_config
+from .namespaces import in_namespace
 from .projects import get as get_project
 from .projects import listing
 
@@ -48,15 +49,22 @@ class ProjectContext:
 
 
 def select_projects(env, config, opts):
-    """Фан-аут: --project <id> | --all (enabled). Единственный источник выборки проектов."""
+    """Фан-аут: --project <id> | --namespace <ns> | --all (enabled). Единственный
+    источник выборки проектов."""
     if opts.get("project"):
         proj = get_project(config, opts["project"])
         if proj is None:
             die(f"проект не найден в .maind.json: {opts['project']}")
         return [proj]
+    if opts.get("namespace"):
+        projs = [p for p in listing(env, config)
+                 if p.get("enabled", True) and in_namespace(p, opts["namespace"])]
+        if not projs:
+            die(f"в namespace '{opts['namespace']}' нет enabled-проектов")
+        return projs
     if opts.get("all"):
         return [p for p in listing(env, config) if p.get("enabled", True)]
-    die("укажите --project <id> или --all")
+    die("укажите --project <id>, --namespace <ns> или --all")
 
 
 def contexts(env, config, projects):
@@ -155,11 +163,13 @@ def run_sync(env, config, projects, *, only=None, mode="auto", dry=False):
 
 # ── CLI ─────────────────────────────────────────────────────────────────────
 def cmd_sync(env, argv):
-    opts, _ = parse_args(argv, {"--project": "str", "--all": "bool", "--only": "str",
-                                "--mode": "str", "--dry-run": "bool", "--json": "bool"})
+    opts, _ = parse_args(argv, {"--project": "str", "--namespace": "str", "--all": "bool",
+                                "--only": "str", "--mode": "str", "--dry-run": "bool",
+                                "--json": "bool"})
     if opts["help"]:
-        print("maind sync [--project ID | --all] [--only mcp,graph,memory,health-hook,"
-              "health-doc] [--mode install|update|auto] [--dry-run] [--json]")
+        print("maind sync [--project ID | --namespace NS | --all] [--only mcp,graph,"
+              "memory,health-hook,health-doc] [--mode install|update|auto] [--dry-run] "
+              "[--json]")
         return
     mode = opts["mode"] or "auto"
     if mode not in MODES:

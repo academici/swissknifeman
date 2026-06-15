@@ -14,6 +14,7 @@ difflib), неизвестный вложенный — предупрежден
 | `graph` | `adapter` (`memory`/`graphify`/`disabled`), `persist`, `persist_path` |
 | `agents` | `registry_enabled`, `heartbeat_interval_ms`, `max_idle_ms`, `definitions[]` |
 | `projects[]` | проекты (см. ниже) |
+| `namespaces` | необязательный реестр namespace-групп: `{ id: { name, description } }` |
 | `integrations` | `swissknifeman`, `brain` (синк) |
 | `mcp` | `servers[]` — внешние MCP-серверы узла |
 | `observability` | `service_name`, `log_level`, `metrics_enabled`, `traces_enabled` |
@@ -28,6 +29,7 @@ difflib), неизвестный вложенный — предупрежден
   // расширения maind
   "graph_node": true, "memory_scope": "project:brain",
   "agents": ["vault-architect"], "skills": [], "tags": ["docs"],
+  "namespaces": ["axioma"],            // группы изоляции связей; ["*"] = общая инфраструктура
   "status": "active",                  // active | archived | planning
   "dependencies": ["maind"]            // id других проектов → рёбра depends_on
 }
@@ -35,6 +37,13 @@ difflib), неизвестный вложенный — предупрежден
 
 Обязательные для совместимости с brain поля: `id`, `name`, `repo`, `local_path`, `type`.
 Остальное — расширения maind (brain их игнорирует при чтении fallback).
+
+## Namespaces
+
+`namespaces` у проекта изолируют межпроектные связи: ребро A↔B в графе строится, только если
+A и B делят хотя бы одну группу. Нет поля / `[]` → неявный `default` (всё связано, как раньше);
+`["*"]` → общая инфраструктура, связывается со всеми группами. Подробнее —
+[Архитектура → Namespaces](/architecture#namespaces-изоляция-связей).
 
 ## Дефолты
 

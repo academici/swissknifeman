@@ -4,6 +4,7 @@
 повтор с тем же текстом не плодит фактов (дедуп по маркеру/тексту)."""
 from .common import content_hash
 from .memory import health, recall, resolve_ports, store
+from .namespaces import namespaces_of
 
 MARKER = "maind:ecosystem-link"
 
@@ -33,6 +34,9 @@ def seed_text(env, config, project):
     http_port, _, _ = resolve_ports(env, config)
     linked = _linked_projects(env, config, project)
     parts = [f"[{MARKER}] {name} ({ptype}) — узел экосистемы academici."]
+    ns = sorted(namespaces_of(project))
+    if ns != ["default"]:                    # связи ограничены этим(и) namespace
+        parts.append("Namespace: " + ", ".join(ns) + ".")
     if linked:
         parts.append("Связан с: " + ", ".join(linked) + ".")
     parts.append(

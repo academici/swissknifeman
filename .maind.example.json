@@ -44,7 +44,13 @@
     ]
   },
 
-  "_comment_projects": "Проекты экосистемы. Минимум для совместимости с brain: id, name, repo, local_path, type. Остальные поля — расширения maind. Доп. опции федерации: graph_store=local (граф проекта в <local_path>/.maind/graph.db, а не на хабе); vault_path — для derive doc-связей из Brain frontmatter; межпроектные связи, не выводимые из кода/доков, объявляй в <local_path>/.maind.graph.json: {\"links\":[{\"to\":\"getchat\",\"type\":\"relates_to\",\"plane\":\"runtime\",\"note\":\"REST\"}]}.",
+  "_comment_namespaces": "Необязательный реестр namespace-групп (id → {name, description}). Изоляция межпроектных связей: ребро A↔B в графе строится, только если A и B делят хотя бы один namespace (поле projects[].namespaces). Реестр нужен лишь для метаданных и подсказок на опечатки — членство задаётся в проектах. Нет реестра → namespace свободны.",
+  "namespaces": {
+    "axioma": { "name": "Axioma", "description": "Продукты и пакеты линейки Axioma" },
+    "flexcrm": { "name": "FlexCRM", "description": "Продуктовая группа FlexCRM" }
+  },
+
+  "_comment_projects": "Проекты экосистемы. Минимум для совместимости с brain: id, name, repo, local_path, type. Остальные поля — расширения maind. namespaces: список групп проекта — связи изолируются группой; нет/пусто → неявный 'default' (всё связано, как раньше); ['*'] → общая инфраструктура, связывается со ВСЕМИ namespace. Доп. опции федерации: graph_store=local (граф проекта в <local_path>/.maind/graph.db, а не на хабе); vault_path — для derive doc-связей из Brain frontmatter; межпроектные связи, не выводимые из кода/доков, объявляй в <local_path>/.maind.graph.json: {\"links\":[{\"to\":\"getchat\",\"type\":\"relates_to\",\"plane\":\"runtime\",\"note\":\"REST\"}]}.",
   "projects": [
     {
       "id": "brain",
@@ -56,6 +62,7 @@
       "memory_scope": "project:brain",
       "agents": ["vault-architect"],
       "tags": ["primary", "docs"],
+      "namespaces": ["*"],
       "status": "active",
       "dependencies": ["maind"]
     },
@@ -69,6 +76,7 @@
       "memory_scope": "project:swissknifeman",
       "agents": [],
       "tags": ["package", "skills"],
+      "namespaces": ["*"],
       "status": "active",
       "dependencies": ["maind"]
     },
@@ -82,6 +90,7 @@
       "memory_scope": "project:maind",
       "agents": [],
       "tags": ["hub", "memory", "graph"],
+      "namespaces": ["*"],
       "status": "active",
       "dependencies": []
     }

@@ -16,6 +16,7 @@ from pathlib import Path
 from .common import warn
 from .federation import project_graph, rebuild_index, store_path
 from .graph import Graph
+from .namespaces import link_allowed
 
 # Вендоры первых сторон экосистемы (фильтр composer-зависимостей от laravel/symfony/…).
 FIRST_PARTY_VENDORS = {"axioma-studio", "botkit", "corex", "azguard", "docvault",
@@ -143,10 +144,14 @@ def derive_code(g, project, config, providers):
     for dep in _project_requires(repo):
         if not _is_first_party(dep, providers):
             continue
+        owner = providers.get(dep)
+        # cross-namespace: пакет принадлежит проекту из изолированного namespace — не
+        # строим ни requires-мост, ни depends_on (иначе package-узел сошьёт сторы).
+        if owner and owner != pid and not link_allowed(project, owner, config):
+            continue
         g.add_node(f"package:{dep}", "package", name=dep.split("/")[-1])
         g.add_edge(pnode, f"package:{dep}", "requires", via="code", plane="code")
         edges += 1
-        owner = providers.get(dep)
         if owner and owner != pid:
             g.add_node(f"project:{owner}", "project")
             g.add_edge(pnode, f"project:{owner}", "depends_on", via="code", plane="code")
@@ -155,10 +160,14 @@ def derive_code(g, project, config, providers):
     pkg = _load_json(repo / "package.json")
     if pkg:
         for dep in {**(pkg.get("dependencies") or {}), **(pkg.get("devDependencies") or {})}:
-            if _is_first_party(dep, providers):
-                g.add_node(f"package:{dep}", "package", name=dep.split("/")[-1])
-                g.add_edge(pnode, f"package:{dep}", "requires", via="code", plane="code")
-                edges += 1
+            if not _is_first_party(dep, providers):
+                continue
+            owner = providers.get(dep)
+            if owner and owner != pid and not link_allowed(project, owner, config):
+                continue
+            g.add_node(f"package:{dep}", "package", name=dep.split("/")[-1])
+            g.add_edge(pnode, f"package:{dep}", "requires", via="code", plane="code")
+            edges += 1
     return edges
 
 
@@ -218,13 +227,13 @@ def derive_doc(g, project, config):
     edges = 0
     for name in fm.get("uses") or []:
         tid, reg = resolve_project(name, config)
-        if tid and tid != pid:
+        if tid and tid != pid and link_allowed(project, tid, config):
             g.add_node(f"project:{tid}", "project", registered=reg)
             g.add_edge(pnode, f"project:{tid}", "uses", via="doc", plane="doc")
             edges += 1
     for name in fm.get("used_by") or []:
         tid, reg = resolve_project(name, config)
-        if tid and tid != pid:
+        if tid and tid != pid and link_allowed(project, tid, config):
             g.add_node(f"project:{tid}", "project", registered=reg)
             g.add_edge(f"project:{tid}", pnode, "uses", via="doc", plane="doc")
             edges += 1
@@ -249,6 +258,8 @@ def derive_override(g, project, config):
         if not to:
             continue
         tid, reg = resolve_project(to, config)
+        if tid != pid and not link_allowed(project, tid, config):
+            continue  # cross-namespace: объявленную связь не строим
         etype = link.get("type", "relates_to")
         plane = link.get("plane", "runtime")
         g.add_node(f"project:{tid}", "project", registered=reg)

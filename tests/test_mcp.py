@@ -42,9 +42,10 @@ class TestDispatch(unittest.TestCase):
             r = mcp.dispatch(env, cfg(), {"jsonrpc": "2.0", "id": 2,
                                           "method": "tools/list"})
             names = {t["name"] for t in r["result"]["tools"]}
-            self.assertEqual(len(names), 9)
+            self.assertEqual(len(names), 11)
             self.assertTrue({"maind_graph_path", "maind_projects_status",
-                             "maind_memory_forget"} <= names)
+                             "maind_memory_forget", "maind_graph_project",
+                             "maind_memory_links"} <= names)
 
     def test_protocol_version_echo(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -192,7 +193,7 @@ class TestFraming(unittest.TestCase):
             mcp.serve(env, cfg(), stdin=inp, stdout=outp)
             outp.seek(0)
             resp = mcp.read_message(outp)
-            self.assertEqual(len(resp["result"]["tools"]), 9)
+            self.assertEqual(len(resp["result"]["tools"]), 11)
 
 
 class TestConformance(unittest.TestCase):
@@ -233,7 +234,7 @@ class TestConformance(unittest.TestCase):
                         by_id[m["id"]] = m
             self.assertEqual(by_id[1]["result"]["serverInfo"]["name"], "maind")
             self.assertEqual(by_id[1]["result"]["protocolVersion"], "2025-03-26")
-            self.assertEqual(len(by_id[2]["result"]["tools"]), 9)
+            self.assertEqual(len(by_id[2]["result"]["tools"]), 11)
             self.assertIsInstance(json.loads(by_id[3]["result"]["content"][0]["text"]), list)
             self.assertIn(4, by_id)                              # ping ответил
 

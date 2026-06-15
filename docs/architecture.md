@@ -13,7 +13,7 @@
 graph TD
   subgraph hub["maind hub (этот пакет)"]
     M["agent-memory daemon<br/>Node · 4111/4112<br/>ns: project:* · global"]
-    G["graph.db<br/>ОДИН общий граф (stdlib)"]
+    G["data/graphs/*<br/>федерация: граф на проект + _index.db"]
     R["~/.maind<br/>agents.json · projects.json"]
     MCP["maind mcp<br/>stdio JSON-RPC · 6 tools"]
   end
@@ -49,12 +49,65 @@ flowchart LR
   fallback на legacy, синк из brain.
 - **MCP** (`mcp.py`) — публикует всё это как stdio JSON-RPC сервер для внешних агентов.
 
-## Как строится «общая связь»
+## Три слоя графа
 
-На `maind start` / `maind migrate from-brain` проекты из конфига регистрируются как узлы
-графа, а поля `dependencies` / `skills` / `agents` материализуются в рёбра
-`depends_on` / `uses` / `belongs_to`. Обход графа (`maind graph query --from project:brain
---depth 2`) показывает межпроектные связи — это и есть единый источник истины о топологии.
+Связи бывают разной природы, и их нельзя смешивать (иначе топология выглядит «как единый код»):
+
+1. **Код внутри проекта** (символы/файлы/вызовы) — `graphify-mcp --root <проект>`, граф на проект,
+   уже физически отдельный. maind его не дублирует.
+2. **Топология между проектами** (кто от кого зависит, общие пакеты) — это слой maind, см. ниже.
+3. **Доки↔доки** — Brain vault (wikilinks, frontmatter `uses/used_by`). maind только **читает** их.
+
+## Слой 2: федерация графов
+
+`graph.adapter = "federation"` — вместо одного `graph.db` граф **на проект**
+(`data/graphs/<id>.db`, или в репо проекта при `graph_store=local`) плюс тонкий регенерируемый
+`data/graphs/_index.db` (только `project:*`-узлы + межпроектные рёбра). Запрос, пересекающий
+границу проекта, **сшивает** нужные сторы в один in-memory union и гоняет обычный BFS
+(`federation.Federation` поверх `graph.Graph`). Это даёт изоляцию (граф проекта можно удалить/
+перенести без вреда остальным) при простом read-фасаде.
+
+- `maind graph --project <id>` — граф одного проекта (его узлы + исходящие межпроектные рёбра).
+- `maind graph --cross` — весь межпроектный слой (`_index.db`).
+- `maind graph query --from project:flexcrm --depth 2` — обход через границы (федерация).
+
+## Откуда берутся связи (derive, без дублей)
+
+`maind graph derive` строит сторы проектов из **источников истины**, а не из ручного дубля
+(`derive.py`), помечая узлы/рёбра планом (`code|doc|meta|runtime`) и источником (`via`):
+
+| План | Источник | Рёбра |
+|:--|:--|:--|
+| code | `composer.json` + path-repos, `package.json` | `project ─requires→ package`, `package ─provided_by→ project`, cross `project ─depends_on→ project` |
+| doc | Brain frontmatter `uses/used_by` (**read-only**) | `project ─uses→ project` |
+| override | `<repo>/.maind.graph.json` | объявленные `relates_to`/… (runtime/API) |
+| skills | `skills-lock.json` | `project ─uses→ skill ─provided_by→ tool` |
+
+Истина связей остаётся в composer/Brain — `_index.db` лишь регенерируемый кэш. `maind graph
+migrate-federation` бэкапит legacy `graph.db` и собирает федерацию.
+
+## Гарантия подключения: healthcheck
+
+Если в проекте не подняты память + maind MCP, разработка идёт «мимо» графа/памяти → пробелы.
+`maind health --cwd` (клиентский, из проекта) печатает `connected|partial|standalone` + подсказки;
+`--fix` поднимает память и дописывает MCP-серверы. «Приоритет №1» доставляется в проекты как
+SessionStart-хук (`.claude/settings.json`, **не блокирует**) + управляемый блок в `CLAUDE.md` —
+источник в `templates/health/*`.
+
+## Память: видимость «общая» + seed
+
+При онбординге/синке в scope `project:<id>` пишется базовый факт о связях (роль, зависимости,
+«память ОБЩАЯ, факты экосистемы — в `global`») + cross-ref в `global` (`seed.py`, идемпотентно).
+MCP-tool `maind_memory_links` отдаёт агенту граф-связи проекта + его ecosystem-link память.
+
+## Единый провижининг: `maind sync`
+
+Одна команда анализирует `.maind.json` и раскатывает **управляемые артефакты** на все
+подключённые проекты через реестр провиженеров (`sync.py`): `mcp` · `graph` (derive) · `memory`
+(seed) · `health-hook` · `health-doc`. `--only` сужает набор, `--mode install|update|auto` задаёт
+«метод синка по области» (создать, если нет / обновить устаревшее по content-hash / и то, и
+другое). Фан-аут по проектам и резолв пути/scope вынесены в `ProjectContext`/`select_projects`
+(DRY): `deploy` — это `sync --only mcp`.
 
 ## Почему Python + bash
 

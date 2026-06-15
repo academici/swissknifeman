@@ -18,6 +18,14 @@ from .graph import open_graph
 PROTOCOL_VERSION = "2024-11-05"
 SERVER_INFO = {"name": "maind", "version": "0.2.0"}
 
+
+def _graph_reader(env, config):
+    """Read-фасад графа: Federation при adapter=federation, иначе единый open_graph."""
+    if (config.get("graph") or {}).get("adapter", "memory") == "federation":
+        from .federation import Federation
+        return Federation(env, config)
+    return open_graph(env, config)
+
 TOOLS = [
     {"name": "maind_memory_store",
      "description": "Сохранить факт в долгосрочную память (scope=namespace; по умолчанию — scope узла).",
@@ -49,6 +57,17 @@ TOOLS = [
      "inputSchema": {"type": "object", "properties": {
          "from": {"type": "string"}, "to": {"type": "string"}},
          "required": ["from", "to"]}},
+    {"name": "maind_graph_project",
+     "description": "Граф одного проекта (его узлы + исходящие межпроектные рёбра).",
+     "inputSchema": {"type": "object", "properties": {
+         "project": {"type": "string", "description": "id проекта, напр. flexcrm"}},
+         "required": ["project"]}},
+    {"name": "maind_memory_links",
+     "description": "С чем связан проект: межпроектные связи из графа + его ecosystem-link "
+                    "память (память ОБЩАЯ, факты экосистемы — в scope global).",
+     "inputSchema": {"type": "object", "properties": {
+         "project": {"type": "string"}, "depth": {"type": "integer"}},
+         "required": ["project"]}},
     {"name": "maind_agents_list",
      "description": "Список зарегистрированных агентов узла с их состоянием.",
      "inputSchema": {"type": "object", "properties": {}}},
@@ -104,16 +123,27 @@ def _run_tool(env, config, name, args, default_scope):
             return _content(memory_mod.recall(url, scope, args["query"]))
         return _content(memory_mod.forget(url, scope, args["key"]))
     if name == "maind_graph_query":
-        res = open_graph(env, config).query(args["from"], int(args.get("depth", 1)),
-                                            _edge_types(args.get("edge_types")))
+        res = _graph_reader(env, config).query(args["from"], int(args.get("depth", 1)),
+                                               _edge_types(args.get("edge_types")))
         return _content(res)
     if name == "maind_graph_neighbors":
-        res = open_graph(env, config).neighbors(args["node"], int(args.get("depth", 1)),
-                                                None, args.get("direction", "out"))
+        res = _graph_reader(env, config).neighbors(args["node"], int(args.get("depth", 1)),
+                                                   None, args.get("direction", "out"))
         return _content(res)
     if name == "maind_graph_path":
-        res = open_graph(env, config).path(args["from"], args["to"])
+        res = _graph_reader(env, config).path(args["from"], args["to"])
         return _content({"from": args["from"], "to": args["to"], "path": res})
+    if name == "maind_graph_project":
+        from .federation import Federation
+        return _content(Federation(env, config).project_view(args["project"]))
+    if name == "maind_memory_links":
+        from .federation import Federation
+        pid = args["project"]
+        links = Federation(env, config).query(f"project:{pid}", int(args.get("depth", 1)))
+        _, _, url = memory_mod.resolve_ports(env, config)
+        mem = (memory_mod.recall(url, f"project:{pid}", "maind:ecosystem-link")
+               if memory_mod.health(url) else [])
+        return _content({"project": pid, "graph": links, "memory": mem})
     if name == "maind_agents_list":
         return _content(agents_mod.listing(env, config))
     if name == "maind_projects_list":

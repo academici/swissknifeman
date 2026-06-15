@@ -234,6 +234,14 @@ def _require_optional(adapter):
             f"(pip install {mod}) — или используйте adapter=memory (stdlib)")
 
 
+def empty_graph(env, config):
+    """Пустой in-memory граф (тот же движок), который НЕ читает с диска и не должен
+    сохраняться. Используется федерацией для union'а нескольких per-project сторов."""
+    g = Graph(env, config)
+    g._loaded = True  # запретить load() читать persist_path
+    return g
+
+
 def open_graph(env, config):
     """Выбирает движок графа по config.graph.adapter и возвращает загруженный граф.
 
@@ -345,18 +353,116 @@ def _edge_types_opt(opts):
     return [t.strip() for t in raw.split(",") if t.strip()] or None
 
 
+def _reader(env, config):
+    """Read-фасад графа: Federation при adapter=federation, иначе единый open_graph."""
+    from .federation import Federation
+    if (config.get("graph") or {}).get("adapter", "memory") == "federation":
+        return Federation(env, config)
+    return open_graph(env, config)
+
+
 def cmd_graph(env, argv):
     if not argv or argv[0] in ("-h", "--help"):
-        print("maind graph <query|stats|neighbors> "
-              "[--from ID] [--node ID] [--depth N] [--edge-types a,b] "
-              "[--direction out|in|both] [--json]")
+        print("maind graph <query|stats|neighbors|view|derive|rebuild> "
+              "[--from ID] [--node ID] [--project ID] [--cross] [--depth N] "
+              "[--edge-types a,b] [--direction out|in|both] [--all] [--json]")
         return
+    # `maind graph --project X` / `maind graph --cross` — короткая форма view
+    if argv[0] in ("--project", "--cross"):
+        return _cmd_view(env, argv)
     sub, rest = argv[0], argv[1:]
-    handlers = {"query": _cmd_query, "stats": _cmd_stats, "neighbors": _cmd_neighbors}
+    handlers = {"query": _cmd_query, "stats": _cmd_stats, "neighbors": _cmd_neighbors,
+                "view": _cmd_view, "derive": _cmd_derive, "rebuild": _cmd_rebuild,
+                "migrate-federation": _cmd_migrate_fed}
     handler = handlers.get(sub)
     if handler is None:
-        die(f"неизвестная подкоманда graph: {sub} (query|stats|neighbors)")
+        die(f"неизвестная подкоманда graph: {sub} "
+            f"(query|stats|neighbors|view|derive|rebuild)")
     handler(env, rest)
+
+
+def _cmd_view(env, argv):
+    """Подграф одного проекта (--project) или весь межпроектный слой (--cross)."""
+    from .config import load_config
+    from .federation import Federation
+    opts, _ = parse_args(argv, {"--project": "str", "--cross": "bool", "--json": "bool"})
+    config, _src = load_config(env)
+    fed = Federation(env, config)
+    if opts["cross"]:
+        sub = fed.cross()
+        label = "межпроектный слой"
+    elif opts["project"]:
+        sub = fed.project_view(opts["project"])
+        label = f"граф проекта {opts['project']}"
+    else:
+        die("укажите --project <id> или --cross")
+    if opts["json"]:
+        print(json.dumps(sub, ensure_ascii=False, indent=2))
+        return
+    print(f"{label}: {len(sub['nodes'])} узлов, {len(sub['edges'])} рёбер")
+    for n in sub["nodes"]:
+        name = n["attrs"].get("name", "")
+        print(f"  {n['id']:<32} {n['type']:<10} {name}")
+    for e in sub["edges"]:
+        via = e["attrs"].get("via", "")
+        print(f"  {e['src']:<28} —{e['type']}→ {e['dst']}"
+              + (f"  [{via}]" if via else ""))
+
+
+def _cmd_derive(env, argv):
+    """Пересобрать графы проектов из источников (composer/Brain/override) + индекс."""
+    from .config import load_config
+    from .derive import derive_all, derive_project_graph
+    from .projects import get as get_project
+    opts, _ = parse_args(argv, {"--project": "str", "--all": "bool", "--json": "bool"})
+    config, _src = load_config(env)
+    if opts["project"]:
+        proj = get_project(config, opts["project"])
+        if proj is None:
+            die(f"проект не найден в .maind.json: {opts['project']}")
+        stats = [derive_project_graph(env, config, proj)]
+    else:
+        stats = derive_all(env, config)
+    if opts["json"]:
+        print(json.dumps(stats, ensure_ascii=False, indent=2))
+        return
+    for s in stats:
+        print(f"  {s['id']:<18} узлов {s['nodes']}, рёбер {s['edges']} "
+              f"(code {s['by_via'].get('code', 0)}, doc {s['by_via'].get('doc', 0)}, "
+              f"override {s['by_via'].get('override', 0)})")
+
+
+def _cmd_migrate_fed(env, argv):
+    """Перейти на федерацию: бэкап legacy data/graph.db + derive всех проектов в сторы."""
+    from .common import backup_file
+    from .config import load_config
+    from .derive import derive_all
+    opts, _ = parse_args(argv, {"--json": "bool"})
+    config, _src = load_config(env)
+    bak = backup_file(env.graph_db)
+    stats = derive_all(env, config)
+    if opts["json"]:
+        print(json.dumps({"backup": str(bak) if bak else None, "projects": stats},
+                         ensure_ascii=False, indent=2))
+        return
+    if bak:
+        print(f"legacy-граф сохранён → {bak.name}")
+    print(f"Федерация собрана: {len(stats)} проектов. "
+          f"Установите graph.adapter=\"federation\" в .maind.json.")
+
+
+def _cmd_rebuild(env, argv):
+    """Пересобрать только индекс из существующих per-project сторов."""
+    from .config import load_config
+    from .federation import rebuild_index
+    opts, _ = parse_args(argv, {"--json": "bool"})
+    config, _src = load_config(env)
+    res = rebuild_index(env, config)
+    if opts["json"]:
+        print(json.dumps(res, ensure_ascii=False, indent=2))
+        return
+    print(f"Индекс пересобран: {res['projects']} проектов, "
+          f"{res['cross_edges']} межпроектных рёбер")
 
 
 def _cmd_query(env, argv):
@@ -367,7 +473,7 @@ def _cmd_query(env, argv):
     if not opts["from"]:
         die("укажите --from <node-id> (например project:brain)")
     config, _src = load_config(env)
-    res = open_graph(env, config).query(
+    res = _reader(env, config).query(
         opts["from"], _parse_depth(opts["depth"], 1),
         _edge_types_opt(opts), opts["direction"] or "out")
     if opts["json"]:
@@ -383,7 +489,7 @@ def _cmd_stats(env, argv):
     from .config import load_config
     opts, _ = parse_args(argv, {"--json": "bool"})
     config, _src = load_config(env)
-    s = open_graph(env, config).stats()
+    s = _reader(env, config).stats()
     if opts["json"]:
         print(json.dumps(s, ensure_ascii=False, indent=2))
         return
@@ -403,7 +509,7 @@ def _cmd_neighbors(env, argv):
     if not opts["node"]:
         die("укажите --node <node-id>")
     config, _src = load_config(env)
-    nb = open_graph(env, config).neighbors(
+    nb = _reader(env, config).neighbors(
         opts["node"], _parse_depth(opts["depth"], 1),
         _edge_types_opt(opts), opts["direction"] or "out")
     if opts["json"]:

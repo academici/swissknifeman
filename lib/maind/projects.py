@@ -154,11 +154,18 @@ def _cmd_sync(env, argv):
               f"~{stats['updated']} обновлено, всего {stats['total']}. "
               f"Записано в {env.default_config.name}")
     elif src == "swissknifeman":
-        from .graph import open_graph, seed_skills
-        g = open_graph(env, config)
-        stats = seed_skills(g, env, config)
-        g.save()
-        print(f"Синк скиллов из swissknifeman: {stats['projects']} проектов, "
-              f"{stats['skill_nodes']} скилл-узлов, {stats['edges']} рёбер → граф")
+        if (config.get("graph") or {}).get("adapter", "memory") == "federation":
+            from .derive import derive_all
+            stats = derive_all(env, config)
+            edges = sum(s["by_via"]["skills"] for s in stats)
+            print(f"Derive скиллов (федерация): {len(stats)} проектов, "
+                  f"{edges} скилл-рёбер → графы проектов")
+        else:
+            from .graph import open_graph, seed_skills
+            g = open_graph(env, config)
+            stats = seed_skills(g, env, config)
+            g.save()
+            print(f"Синк скиллов из swissknifeman: {stats['projects']} проектов, "
+                  f"{stats['skill_nodes']} скилл-узлов, {stats['edges']} рёбер → граф")
     else:
         die(f"--from: brain | swissknifeman (получено: '{src}')")

@@ -21,14 +21,23 @@ def cmd_start(env, argv):
     if only in ("", "memory"):
         memory_start(env, config)
     if only in ("", "graph"):
-        # граф — файл; «запуск» = загрузить + засеять проекты/связи из конфига.
-        g = open_graph(env, config)
-        seed_from_config(g, config)
-        if (config.get("graph") or {}).get("seed_skills", True):
-            seed_skills(g, env, config)
-        g.save()
-        s = g.stats()
-        print(f"граф готов: {g.db_path} ({s['nodes']} узлов, {s['edges']} рёбер)")
+        # граф — файл; «запуск» = собрать связи. Под федерацией derive из источников,
+        # иначе legacy-seed проектов/связей из конфига в единый граф.
+        if (config.get("graph") or {}).get("adapter", "memory") == "federation":
+            from .derive import derive_all
+            from .federation import Federation
+            derive_all(env, config)
+            s = Federation(env, config).stats()
+            print(f"граф готов (федерация): {s['nodes']} узлов, {s['edges']} рёбер, "
+                  f"{s.get('cross_edges', 0)} межпроектных")
+        else:
+            g = open_graph(env, config)
+            seed_from_config(g, config)
+            if (config.get("graph") or {}).get("seed_skills", True):
+                seed_skills(g, env, config)
+            g.save()
+            s = g.stats()
+            print(f"граф готов: {g.db_path} ({s['nodes']} узлов, {s['edges']} рёбер)")
     if only == "":
         print(f"конфиг: {source}")
 
@@ -38,8 +47,13 @@ def cmd_status(env, argv):
     config, source = load_config(env)
     mem = memory_status(env, config)
     adapter = config["graph"]["adapter"]
-    gstats = open_graph(env, config).stats() if adapter != "disabled" \
-        else {"nodes": 0, "edges": 0}
+    if adapter == "disabled":
+        gstats = {"nodes": 0, "edges": 0}
+    elif adapter == "federation":
+        from .federation import Federation
+        gstats = Federation(env, config).stats()
+    else:
+        gstats = open_graph(env, config).stats()
     agents = agents_listing(env, config)
     alive = sum(1 for a in agents if a["state"] == "alive")
     projects = projects_listing(env, config)

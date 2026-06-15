@@ -16,6 +16,11 @@ maind memory status [--json]
 maind graph query --from project:brain --depth 2 [--edge-types depends_on,uses] [--json]
 maind graph neighbors --node project:maind --direction in
 maind graph stats [--json]
+maind graph --project flexcrm          # граф одного проекта (федерация)
+maind graph --cross                    # межпроектный слой (_index.db)
+maind graph derive [--project ID | --all]   # собрать графы из composer/Brain/override
+maind graph rebuild                    # пересобрать _index.db
+maind graph migrate-federation         # бэкап legacy graph.db + derive всех
 
 maind agents register <id> [--project P --pid N --kind K]
 maind agents heartbeat <id>
@@ -25,7 +30,10 @@ maind agents kill <id> [--force]
 maind projects list [--json]
 maind projects sync --from brain [--path DIR]
 
-maind deploy [--project ID | --all] [--with-graphify] [--dry-run]   # MCP-серверы хаба на проекты
+maind deploy [--project ID | --all] [--with-graphify] [--dry-run]   # MCP-серверы хаба (= sync --only mcp)
+maind sync [--project ID | --all] [--only mcp,graph,memory,health-hook,health-doc] \
+           [--mode install|update|auto] [--dry-run] [--json]        # раскатать управляемые артефакты
+maind health [--cwd | --project ID] [--fix] [--strict] [--json]     # healthcheck связи проекта с хабом
 maind workspace sync [--dry-run] [--no-allow] [--no-mode]           # доверие Claude к проектам экосистемы
 maind workspace status [--json]
 maind run <project> <capability> [-- args]   # дёрнуть команду brain / swissknifeman

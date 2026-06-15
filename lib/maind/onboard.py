@@ -82,10 +82,21 @@ def onboard(env, config, project_or_path, opts):
             config = mark_deployed(config, proj["id"], res)
             write_config(env, config)
 
-    # 3. seed графа (project · uses→skill из свежего skills-lock · depends_on)
+    # 3. seed/derive графа (project · uses→skill · depends_on · код/доки)
     gstats = {}
+    adapter = (config.get("graph") or {}).get("adapter", "memory")
     if dry:
         steps.append({"name": "graph", "status": "skipped", "detail": "--dry-run"})
+    elif adapter == "federation":
+        from .derive import derive_project_graph
+        from .federation import Federation, rebuild_index
+        d = derive_project_graph(env, config, proj)
+        rebuild_index(env, config)
+        gstats = Federation(env, config).stats()
+        steps.append({"name": "graph", "status": "ok",
+                      "detail": f"derive {proj['id']}: {d['nodes']} узлов, "
+                                f"{d['edges']} рёбер (code {d['by_via']['code']}, "
+                                f"doc {d['by_via']['doc']})"})
     else:
         g = open_graph(env, config)
         seed_from_config(g, config)
@@ -94,6 +105,13 @@ def onboard(env, config, project_or_path, opts):
         gstats = g.stats()
         steps.append({"name": "graph", "status": "ok",
                       "detail": f"{gstats['nodes']} узлов, {gstats['edges']} рёбер"})
+
+    # 3b. seed-память: базовый факт о связях (видимость «память общая»)
+    if not dry:
+        from .seed import seed_memory
+        ms = seed_memory(env, config, proj)
+        steps.append({"name": "memory", "status": "ok" if ms["status"] == "ok" else "skipped",
+                      "detail": ms.get("detail", ms["status"])})
 
     # 4. опционально brain
     if opts.get("with_brain"):

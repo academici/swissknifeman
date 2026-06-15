@@ -100,11 +100,15 @@ def detect_docs_watcher(env):
 
 def probe_hub(env, config):
     """Состояние хаба: память, граф, docs-watcher (read-only)."""
-    from .graph import open_graph
     mem = memory_status(env, config)
     adapter = (config.get("graph") or {}).get("adapter", "memory")
     try:
-        gstats = open_graph(env, config).stats()
+        if adapter == "federation":
+            from .federation import Federation
+            gstats = Federation(env, config).stats()
+        else:
+            from .graph import open_graph
+            gstats = open_graph(env, config).stats()
     except SystemExit:
         gstats = {"nodes": 0, "edges": 0}
     return {

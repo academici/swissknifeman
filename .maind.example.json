@@ -19,10 +19,11 @@
     "data_dir": "./data"
   },
 
-  "_comment_graph": "Граф связей. adapter: memory (stdlib, по умолчанию) | graphify | disabled.",
+  "_comment_graph": "Граф связей. adapter: memory (единый граф, stdlib) | federation (граф на проект в data/graphs/<id>.db + тонкий _index.db, связи derive'ятся из composer/Brain/.maind.graph.json) | graphify | disabled. store_layout: hub (графы в data/graphs/) | project-local (через projects[].graph_store=local — граф в самом репо проекта).",
   "graph": {
     "enabled": true,
-    "adapter": "memory",
+    "adapter": "federation",
+    "store_layout": "hub",
     "persist": true,
     "persist_path": "./data/graph.db"
   },
@@ -43,7 +44,7 @@
     ]
   },
 
-  "_comment_projects": "Проекты экосистемы. Минимум для совместимости с brain: id, name, repo, local_path, type. Остальные поля — расширения maind.",
+  "_comment_projects": "Проекты экосистемы. Минимум для совместимости с brain: id, name, repo, local_path, type. Остальные поля — расширения maind. Доп. опции федерации: graph_store=local (граф проекта в <local_path>/.maind/graph.db, а не на хабе); vault_path — для derive doc-связей из Brain frontmatter; межпроектные связи, не выводимые из кода/доков, объявляй в <local_path>/.maind.graph.json: {\"links\":[{\"to\":\"getchat\",\"type\":\"relates_to\",\"plane\":\"runtime\",\"note\":\"REST\"}]}.",
   "projects": [
     {
       "id": "brain",

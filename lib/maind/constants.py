@@ -17,10 +17,15 @@ MEMORY_WORKERS = (
 GLOBAL_SCOPE = "global"
 
 # ── граф ────────────────────────────────────────────────────────────────────
-NODE_TYPES = {"project", "agent", "memory", "skill", "entity", "tool"}
-EDGE_TYPES = {"uses", "knows", "relates_to", "belongs_to", "depends_on", "provided_by"}
-GRAPH_ADAPTERS = {"memory", "graphify", "disabled"}
+NODE_TYPES = {"project", "agent", "memory", "skill", "entity", "tool", "package", "doc"}
+EDGE_TYPES = {"uses", "knows", "relates_to", "belongs_to", "depends_on", "provided_by",
+              "requires"}
+GRAPH_ADAPTERS = {"memory", "federation", "graphify", "disabled"}
 GRAPH_VERSION = 1
+
+# Планы графа (природа связи) и источник, из которого ребро/узел получены (derive).
+GRAPH_PLANES = {"code", "doc", "meta", "runtime"}
+LINK_VIA = {"code", "doc", "override", "skills"}
 
 # ── агенты ──────────────────────────────────────────────────────────────────
 HEARTBEAT_DEFAULT_MS = 30000

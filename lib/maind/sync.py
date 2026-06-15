@@ -1,0 +1,185 @@
+"""maind sync — единый провижининг: проанализировать .maind.json и раскатать управляемые
+артефакты на все подключённые проекты ОДНОЙ командой.
+
+Каждый артефакт — провиженер с `run(env, config, projects, mode, dry) → [result]`. Реестр
+PROVISIONERS + порядок ORDER; `--only` сужает набор. Режим (mode) задаёт «метод синка по
+области»: install — первичная установка (создать, если нет), update — обновить уже
+существующее (drift по хэшу), auto — и то, и другое (нет→install, устарело→update, свежо→skip).
+
+Фан-аут по проектам и резолв пути/scope вынесены сюда (DRY): deploy/derive/seed/health —
+провиженеры поверх одного контекста, а не дубль цикла в каждом модуле."""
+import json
+import os
+from dataclasses import dataclass
+from pathlib import Path
+
+from .common import die, parse_args
+from .config import load_config
+from .projects import get as get_project
+from .projects import listing
+
+MODES = ("install", "update", "auto")
+
+
+# ── контекст проекта (единый резолв пути/scope) ──────────────────────────────
+@dataclass
+class ProjectContext:
+    env: object
+    config: dict
+    project: dict
+
+    @property
+    def id(self):
+        return self.project["id"]
+
+    @property
+    def path(self):
+        local = self.project.get("local_path")
+        return Path(os.path.expanduser(local)) if local else None
+
+    @property
+    def exists(self):
+        p = self.path
+        return p is not None and p.is_dir()
+
+    @property
+    def scope(self):
+        return self.project.get("memory_scope") or f"project:{self.id}"
+
+
+def select_projects(env, config, opts):
+    """Фан-аут: --project <id> | --all (enabled). Единственный источник выборки проектов."""
+    if opts.get("project"):
+        proj = get_project(config, opts["project"])
+        if proj is None:
+            die(f"проект не найден в .maind.json: {opts['project']}")
+        return [proj]
+    if opts.get("all"):
+        return [p for p in listing(env, config) if p.get("enabled", True)]
+    die("укажите --project <id> или --all")
+
+
+def contexts(env, config, projects):
+    return [ProjectContext(env, config, p) for p in projects]
+
+
+# ── провиженеры ──────────────────────────────────────────────────────────────
+def _mcp_run(env, config, projects, mode, dry):
+    """MCP-серверы хаба (agent-memory + maind [+ graphify]) в конфиги проектов."""
+    from .deploy import deploy_project, mark_deployed
+    from .projects import write_config
+    results, applied = [], False
+    for p in projects:
+        res = deploy_project(env, config, p, dry=dry)
+        if res is None:
+            results.append({"provisioner": "mcp", "id": p["id"], "status": "skip",
+                            "detail": "нет/нет пути проекта"})
+            continue
+        changed = any(w["changed"] for w in res["written"])
+        if not dry:
+            mark_deployed(config, p["id"], res)
+            applied = True
+        results.append({"provisioner": "mcp", "id": p["id"],
+                        "status": "ok", "changed": changed,
+                        "detail": ", ".join(res["targets"])})
+    if applied:
+        write_config(env, config)
+    return results
+
+
+def _graph_run(env, config, projects, mode, dry):
+    """Derive графа проектов из источников (composer/Brain/override) + пересборка индекса."""
+    from .derive import build_provider_index, derive_project_graph
+    from .federation import rebuild_index
+    results = []
+    if dry:
+        return [{"provisioner": "graph", "id": p["id"], "status": "dry"} for p in projects]
+    providers = build_provider_index(env, config)
+    for p in projects:
+        d = derive_project_graph(env, config, p, providers)
+        results.append({"provisioner": "graph", "id": p["id"], "status": "ok",
+                        "changed": True,
+                        "detail": f"{d['nodes']}n/{d['edges']}e "
+                                  f"(code {d['by_via']['code']}, doc {d['by_via']['doc']})"})
+    rebuild_index(env, config)
+    return results
+
+
+def _memory_run(env, config, projects, mode, dry):
+    """Seed-память: базовый факт о связях проекта в project:<id> + cross-ref в global."""
+    from .seed import seed_memory
+    return [seed_memory(env, config, p, dry=dry) for p in projects]
+
+
+def _health_hook_run(env, config, projects, mode, dry):
+    """SessionStart-хук связи с хабом (НЕ блокирует) в .claude/settings.json проектов."""
+    from .health import apply_health_hook
+    return [apply_health_hook(env, config, p, mode, dry) for p in projects]
+
+
+def _health_doc_run(env, config, projects, mode, dry):
+    """Управляемый блок «ПРИОРИТЕТ №1 — связь с mAInd» в CLAUDE.md проектов."""
+    from .health import apply_health_doc
+    return [apply_health_doc(env, config, p, mode, dry) for p in projects]
+
+
+# Реестр провиженеров и порядок применения (ORDER задаёт последовательность).
+PROVISIONERS = {
+    "mcp": _mcp_run,
+    "graph": _graph_run,
+    "memory": _memory_run,
+    "health-hook": _health_hook_run,
+    "health-doc": _health_doc_run,
+}
+ORDER = ["mcp", "graph", "memory", "health-hook", "health-doc"]
+
+
+def provisioner_names(only=None):
+    """Имена провиженеров в порядке ORDER, ограниченные --only (csv) и реестром."""
+    if only:
+        want = [x.strip() for x in only.split(",") if x.strip()]
+        for x in want:
+            if x not in PROVISIONERS:
+                die(f"неизвестный провиженер: {x} (есть: {', '.join(sorted(PROVISIONERS))})")
+        return [n for n in ORDER if n in want]
+    return [n for n in ORDER if n in PROVISIONERS]
+
+
+def run_sync(env, config, projects, *, only=None, mode="auto", dry=False):
+    """Применить выбранные провиженеры к проектам. Возвращает плоский список результатов."""
+    results = []
+    for name in provisioner_names(only):
+        results.extend(PROVISIONERS[name](env, config, projects, mode, dry))
+    return results
+
+
+# ── CLI ─────────────────────────────────────────────────────────────────────
+def cmd_sync(env, argv):
+    opts, _ = parse_args(argv, {"--project": "str", "--all": "bool", "--only": "str",
+                                "--mode": "str", "--dry-run": "bool", "--json": "bool"})
+    if opts["help"]:
+        print("maind sync [--project ID | --all] [--only mcp,graph,memory,health-hook,"
+              "health-doc] [--mode install|update|auto] [--dry-run] [--json]")
+        return
+    mode = opts["mode"] or "auto"
+    if mode not in MODES:
+        die(f"--mode: {', '.join(MODES)} (получено: {mode})")
+    config, _src = load_config(env)
+    projects = select_projects(env, config, opts)
+    results = run_sync(env, config, projects, only=opts["only"], mode=mode,
+                       dry=opts["dry_run"])
+    if opts["json"]:
+        print(json.dumps(results, ensure_ascii=False, indent=2))
+        return
+    tag = "[dry-run] " if opts["dry_run"] else ""
+    print(f"{tag}sync (mode={mode}, проектов {len(projects)}, "
+          f"провиженеры: {', '.join(provisioner_names(opts['only']))})")
+    for r in results:
+        mark = {"ok": "✓", "skip": "○", "dry": "·"}.get(r["status"], "·")
+        if r["status"] == "dry":
+            note = f" (план: {r.get('state', 'apply')})"
+        elif r["status"] == "ok" and not r.get("changed", True):
+            note = " (без изменений)"
+        else:
+            note = ""
+        print(f"  {mark} {r['provisioner']:<11} {r['id']:<18} {r.get('detail', '')}{note}")

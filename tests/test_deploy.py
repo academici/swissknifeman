@@ -42,6 +42,7 @@ class TestDeploy(unittest.TestCase):
             self.assertEqual(res["scope"], "project:flexcrm")
             self.assertEqual(servers["agentmemory"]["env"]["AGENTMEMORY_NAMESPACE"],
                              "project:flexcrm")
+            self.assertEqual(servers["maind"]["args"], ["mcp", "--scope", "project:flexcrm"])
 
     def test_preserves_boost_in_cursor(self):
         with tempfile.TemporaryDirectory() as tmp:

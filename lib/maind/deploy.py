@@ -24,8 +24,9 @@ def _agentmemory_entry(env, config, scope):
             "env": {"AGENTMEMORY_URL": url, "AGENTMEMORY_NAMESPACE": scope}}
 
 
-def _maind_entry(env):
-    return {"command": str(env.root / "bin" / "maind"), "args": ["mcp"]}
+def _maind_entry(env, scope):
+    return {"command": str(env.root / "bin" / "maind"),
+            "args": ["mcp", "--scope", scope]}
 
 
 def _graphify_entry(project_path):
@@ -64,7 +65,7 @@ def deploy_project(env, config, project, *, targets=None, with_graphify=False,
 
     entries = {"agentmemory": _agentmemory_entry(env, config, scope)}
     if maind_server:
-        entries["maind"] = _maind_entry(env)
+        entries["maind"] = _maind_entry(env, scope)
     graphify_state = "disabled"
     if with_graphify:
         if shutil.which("graphify-mcp"):

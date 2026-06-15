@@ -14,7 +14,12 @@
 
 Связи изолируются в ТОЧКЕ создания ребра (derive.*), поэтому сторы проектов физически
 не содержат меж-namespace мостов и всё ниже (union, index, query, seed) изолируется само.
-rebuild_index держит дублирующий гейт как defense-in-depth."""
+rebuild_index держит дублирующий гейт как defense-in-depth.
+
+Память следует той же модели через scope-бакеты (см. constants): приватный `project:<id>`,
+общий на группу `ns:<имя>`, экосистемный `global` (wildcard '*' → global)."""
+
+from .constants import GLOBAL_SCOPE, NS_SCOPE_PREFIX
 
 DEFAULT_NS = "default"
 WILDCARD = "*"
@@ -51,3 +56,30 @@ def in_namespace(project, namespace):
     """Входит ли проект в namespace (учитывая wildcard '*' у проекта)."""
     ns = namespaces_of(project)
     return WILDCARD in ns or namespace in ns
+
+
+# ── память: scope-бакеты по namespace'ам (паритет с графом) ──────────────────
+def private_scope(project):
+    """Приватный бакет памяти проекта: memory_scope из конфига или project:<id>."""
+    return project.get("memory_scope") or f"project:{project['id']}"
+
+
+def group_scopes(project):
+    """Общие бакеты, в которые проект кладёт cross-ref о связях: ns:<имя> на каждый
+    namespace (wildcard '*' → global, т.к. инфраструктура видна всей экосистеме)."""
+    out = []
+    for n in sorted(namespaces_of(project)):
+        scope = GLOBAL_SCOPE if n == WILDCARD else f"{NS_SCOPE_PREFIX}{n}"
+        if scope not in out:
+            out.append(scope)
+    return out
+
+
+def recall_scopes(project):
+    """Бакеты, релевантные проекту при recall: приватный + общие группы + global
+    (global всегда — чтобы видеть инфраструктуру/экосистемные факты). Без дублей."""
+    out = [private_scope(project)]
+    for s in group_scopes(project) + [GLOBAL_SCOPE]:
+        if s not in out:
+            out.append(s)
+    return out

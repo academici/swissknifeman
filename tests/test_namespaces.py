@@ -79,6 +79,34 @@ class TestRules(unittest.TestCase):
         self.assertTrue(namespaces.in_namespace({"id": "x"}, "default"))
 
 
+# ── память: scope-бакеты по namespace'ам (паритет с графом) ──────────────────
+class TestMemoryScopes(unittest.TestCase):
+    def test_private_scope(self):
+        self.assertEqual(namespaces.private_scope({"id": "flexcrm"}), "project:flexcrm")
+        self.assertEqual(namespaces.private_scope(
+            {"id": "flexcrm", "memory_scope": "project:custom"}), "project:custom")
+
+    def test_group_scopes_default_and_named(self):
+        self.assertEqual(namespaces.group_scopes({"id": "x"}), ["ns:default"])
+        self.assertEqual(namespaces.group_scopes({"id": "x", "namespaces": ["axioma"]}),
+                         ["ns:axioma"])
+        self.assertEqual(
+            namespaces.group_scopes({"id": "x", "namespaces": ["b", "a"]}),
+            ["ns:a", "ns:b"])  # отсортировано
+
+    def test_group_scopes_wildcard_is_global(self):
+        # инфраструктура (wildcard) → бакет global (видна всей экосистеме)
+        self.assertEqual(namespaces.group_scopes({"id": "x", "namespaces": ["*"]}),
+                         ["global"])
+
+    def test_recall_scopes_include_private_and_global(self):
+        rs = namespaces.recall_scopes({"id": "flexcrm", "namespaces": ["axioma"]})
+        self.assertEqual(rs, ["project:flexcrm", "ns:axioma", "global"])
+        # wildcard: приватный + global (без дублей)
+        self.assertEqual(namespaces.recall_scopes({"id": "z", "namespaces": ["*"]}),
+                         ["project:z", "global"])
+
+
 # ── изоляция связей (derive + federation) ────────────────────────────────────
 class TestIsolation(unittest.TestCase):
     def test_same_namespace_keeps_link(self):

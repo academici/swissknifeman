@@ -61,8 +61,9 @@ TOOLS = [
          "required": ["project"]}},
     {"name": "maind_memory_links",
      "description": "С чем связан проект: межпроектные связи из графа + его ecosystem-link "
-                    "память (память ОБЩАЯ, факты экосистемы — в scope global). Связи "
-                    "ограничены namespace проекта; необязательный namespace сужает обход.",
+                    "память из всех релевантных бакетов (project:<id> + ns:<группы> + "
+                    "global). Память следует namespace'ам: внутри группы общая, между — "
+                    "изолирована. Необязательный namespace сужает обход графа.",
      "inputSchema": {"type": "object", "properties": {
          "project": {"type": "string"}, "depth": {"type": "integer"},
          "namespace": {"type": "string", "description": "ограничить обход одним namespace"}},
@@ -137,12 +138,17 @@ def _run_tool(env, config, name, args, default_scope):
         return _content(Federation(env, config).project_view(args["project"]))
     if name == "maind_memory_links":
         from .federation import Federation
+        from .namespaces import find, recall_scopes
         pid = args["project"]
         links = Federation(env, config).query(f"project:{pid}", int(args.get("depth", 1)),
                                               namespace=args.get("namespace") or None)
+        proj = find(config, pid) or {"id": pid}
         _, _, url = memory_mod.resolve_ports(env, config)
-        mem = (memory_mod.recall(url, f"project:{pid}", "maind:ecosystem-link")
-               if memory_mod.health(url) else [])
+        mem = []
+        if memory_mod.health(url):
+            for sc in recall_scopes(proj):   # project:<id> + ns:<группы> + global
+                for r in memory_mod.recall(url, sc, "maind:ecosystem-link"):
+                    mem.append({**r, "scope": sc})
         return _content({"project": pid, "graph": links, "memory": mem})
     if name == "maind_agents_list":
         return _content(agents_mod.listing(env, config))

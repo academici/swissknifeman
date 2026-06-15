@@ -13,8 +13,13 @@ MEMORY_WORKERS = (
     "iii-cron", "iii-stream", "iii-observability",
 )
 
-# Глобальный scope/namespace памяти для фактов всей экосистемы.
+# Бакеты памяти (scope'ы). Паритет с графом по namespace'ам: факты группы видны внутри
+# namespace и изолированы между группами.
+#   project:<id>  — приватный бакет проекта;
+#   ns:<имя>      — общий бакет namespace-группы (аналог cross-рёбер графа внутри ns);
+#   global        — вся экосистема (wildcard-инфраструктура + ecosystem-wide факты).
 GLOBAL_SCOPE = "global"
+NS_SCOPE_PREFIX = "ns:"
 
 # ── граф ────────────────────────────────────────────────────────────────────
 NODE_TYPES = {"project", "agent", "memory", "skill", "entity", "tool", "package", "doc"}

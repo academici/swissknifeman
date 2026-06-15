@@ -1,10 +1,12 @@
 """Seed-память: базовый факт о связях проекта, чтобы память сразу была «не пустой» и
 делала видимым, что она ОБЩАЯ. Текст генерируется из derive-графа (роль, связанные
-проекты), пишется в scope project:<id> + короткий cross-ref в global. Идемпотентно:
-повтор с тем же текстом не плодит фактов (дедуп по маркеру/тексту)."""
+проекты), пишется в приватный бакет project:<id> + короткий cross-ref в общие бакеты
+группы (ns:<имя>, wildcard → global) — паритет с графом по namespace'ам: факты группы
+видны внутри namespace и изолированы между. Идемпотентно: повтор с тем же текстом не
+плодит фактов (дедуп по маркеру/тексту)."""
 from .common import content_hash
 from .memory import health, recall, resolve_ports, store
-from .namespaces import namespaces_of
+from .namespaces import group_scopes, namespaces_of, private_scope, recall_scopes
 
 MARKER = "maind:ecosystem-link"
 
@@ -40,17 +42,19 @@ def seed_text(env, config, project):
     if linked:
         parts.append("Связан с: " + ", ".join(linked) + ".")
     parts.append(
-        f"Память ОБЩАЯ (демон mAInd :{http_port}); scope этого проекта — project:{pid}; "
-        f"факты всей экосистемы — в scope global. Связи: maind graph --project {pid}.")
+        f"Память ОБЩАЯ (демон mAInd :{http_port}); бакеты этого проекта — "
+        f"{', '.join(recall_scopes(project))}; внутри namespace память общая, между "
+        f"namespace изолирована. Связи: maind graph --project {pid}.")
     body = " ".join(parts)
     return f"{body} #{content_hash(body)}"
 
 
 def seed_memory(env, config, project, *, dry=False):
-    """Записать seed-факт в project:<id> + cross-ref в global (идемпотентно). Демон лежит —
-    skip с пометкой (запишется на следующем sync)."""
+    """Записать seed-факт в приватный бакет project:<id> + cross-ref в общие бакеты группы
+    (ns:<имя>, wildcard → global) — идемпотентно. Демон лежит — skip с пометкой
+    (запишется на следующем sync)."""
     pid = project["id"]
-    scope = project.get("memory_scope") or f"project:{pid}"
+    scope = private_scope(project)
     text = seed_text(env, config, project)
     _, _, url = resolve_ports(env, config)
     if not health(url):
@@ -64,8 +68,11 @@ def seed_memory(env, config, project, *, dry=False):
         return {"provisioner": "memory", "id": pid, "status": "dry", "changed": False}
     store(url, scope, "ecosystem-link", text)
     linked = _linked_projects(env, config, project)
+    shared = group_scopes(project)
     if linked:
-        store(url, "global", "ecosystem-link",
-              f"[{MARKER}] {pid} → {', '.join(linked)}")
-    return {"provisioner": "memory", "id": pid, "status": "ok",
-            "changed": True, "state": "stale" if existing else "absent", "detail": scope}
+        cross = f"[{MARKER}] {pid} → {', '.join(linked)}"
+        for bucket in shared:                # ns:<имя> группы (или global для wildcard)
+            store(url, bucket, "ecosystem-link", cross)
+    return {"provisioner": "memory", "id": pid, "status": "ok", "changed": True,
+            "state": "stale" if existing else "absent",
+            "detail": scope + (f" +{','.join(shared)}" if linked else "")}

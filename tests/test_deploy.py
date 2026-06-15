@@ -65,36 +65,24 @@ class TestDeploy(unittest.TestCase):
             self.assertTrue(all(not w["changed"] for w in res2["written"]))
 
     def test_graphify_absent_skipped(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            _, env = make_repo(tmp)
-            ppath = _project(tmp)
-            cfg = _config(ppath)
-            res = deploy.deploy_project(env, cfg, cfg["projects"][0], with_graphify=True)
-            self.assertIn(res["graphify"], ("written", "skipped-not-installed"))
-            if res["graphify"] == "skipped-not-installed":
-                servers = json.loads((ppath / ".mcp.json").read_text())["mcpServers"]
-                self.assertNotIn("graphify", servers)
-
-    def test_graphify_present_written(self):
-        # graphify — со-равный agent-memory механизм связей (граф КОДА проекта),
-        # раскатывается отдельным MCP-сервером. Мокаем наличие бинаря.
+        # Команды код-графа нет в PATH → skipped-not-installed, остальное пишется.
         orig = deploy.shutil.which
-        deploy.shutil.which = lambda name: "/usr/bin/graphify-mcp"
+        deploy.shutil.which = lambda name: None
         try:
             with tempfile.TemporaryDirectory() as tmp:
                 _, env = make_repo(tmp)
                 ppath = _project(tmp)
                 cfg = _config(ppath)
                 res = deploy.deploy_project(env, cfg, cfg["projects"][0], with_graphify=True)
-                self.assertEqual(res["graphify"], "written")
+                self.assertEqual(res["graphify"], "skipped-not-installed")
                 servers = json.loads((ppath / ".mcp.json").read_text())["mcpServers"]
-                self.assertEqual(servers["graphify"]["command"], "graphify-mcp")
-                self.assertEqual(servers["graphify"]["args"], ["--root", str(ppath)])
+                self.assertNotIn("serena", servers)
+                self.assertIn("agentmemory", servers)   # остальные серверы на месте
         finally:
             deploy.shutil.which = orig
 
-    def test_graphify_command_override(self):
-        # graphify_command в записи проекта → произвольный code-intelligence MCP.
+    def test_graphify_present_written_serena_default(self):
+        # Код-граф по умолчанию — Serena через uvx; {root} → путь проекта. Мокаем uvx.
         orig = deploy.shutil.which
         deploy.shutil.which = lambda name: f"/usr/bin/{name}"
         try:
@@ -102,11 +90,34 @@ class TestDeploy(unittest.TestCase):
                 _, env = make_repo(tmp)
                 ppath = _project(tmp)
                 cfg = _config(ppath)
-                cfg["projects"][0]["graphify_command"] = "serena-mcp"
                 res = deploy.deploy_project(env, cfg, cfg["projects"][0], with_graphify=True)
                 self.assertEqual(res["graphify"], "written")
                 servers = json.loads((ppath / ".mcp.json").read_text())["mcpServers"]
-                self.assertEqual(servers["graphify"]["command"], "serena-mcp")
+                self.assertEqual(servers["serena"]["command"], "uvx")
+                self.assertIn("start-mcp-server", servers["serena"]["args"])
+                self.assertIn(str(ppath), servers["serena"]["args"])   # {root} подставлен
+                self.assertNotIn("{root}", servers["serena"]["args"])
+        finally:
+            deploy.shutil.which = orig
+
+    def test_graphify_override(self):
+        # graphify_command/args/server_name → произвольный code-intelligence MCP.
+        orig = deploy.shutil.which
+        deploy.shutil.which = lambda name: f"/usr/bin/{name}"
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                _, env = make_repo(tmp)
+                ppath = _project(tmp)
+                cfg = _config(ppath)
+                cfg["projects"][0].update({
+                    "graphify_command": "php",
+                    "graphify_args": ["artisan", "boost:mcp"],
+                    "graphify_server_name": "laravel-boost"})
+                res = deploy.deploy_project(env, cfg, cfg["projects"][0], with_graphify=True)
+                self.assertEqual(res["graphify"], "written")
+                servers = json.loads((ppath / ".mcp.json").read_text())["mcpServers"]
+                self.assertEqual(servers["laravel-boost"]["command"], "php")
+                self.assertEqual(servers["laravel-boost"]["args"], ["artisan", "boost:mcp"])
         finally:
             deploy.shutil.which = orig
 

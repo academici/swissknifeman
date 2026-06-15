@@ -60,18 +60,19 @@ maind graph --project <id>      # граф проекта и соседи
 разово включи linger: `loginctl enable-linger $USER` (проверка: `loginctl show-user $USER -p
 Linger` → `yes`). См. [systemd-гайд](../../docs/guide/systemd.md).
 
-## Код-граф (graphify) — опционально
+## Код-граф (граф кода в проекте) — универсальный
 
-graphify — отдельный per-project MCP-сервер графа КОДА. На текущий момент бинаря `graphify-mcp`
-в системе нет, поэтому слой **опционален**. Включается намерением в `.maind.json`:
+Отдельный per-project MCP графа КОДА (символы/ссылки/реализации). Движок по умолчанию —
+**Serena** (language-agnostic, через `uvx`), работает для любого стека. Включается намерением:
 
 ```json
 { "id": "myproject", "graphify": true, ... }
 ```
 
-При следующем `maind sync --project myproject --only mcp` graphify добавится в `.mcp.json`,
-**если** бинарь установлен; иначе — корректный пропуск (`skipped-not-installed`), остальное
-работает. Можно указать свой code-intelligence MCP полем `"graphify_command": "<команда>"`.
+`maind sync --project myproject --only mcp` допишет сервер `serena` в `.mcp.json` (нужен `uvx`
+в PATH; нет — корректный пропуск `skipped-not-installed`, остальное работает). Движок
+переопределяется на проект (`graphify_command` / `graphify_args` с `{root}` / `graphify_server_name`)
+— например, стек-специфичный сервер. Подробнее — [граф кода](../../docs/guide/graphify.md).
 
 ## Памятка
 

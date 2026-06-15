@@ -86,7 +86,7 @@ class TestSync(unittest.TestCase):
                 config["projects"][0]["graphify"] = True
                 projs = sync.select_projects(env, config, {"all": True})
                 sync.run_sync(env, config, projs, only="mcp")
-                self.assertTrue(has_server(proj / ".mcp.json", "graphify"))
+                self.assertTrue(has_server(proj / ".mcp.json", "serena"))
         finally:
             deploy.shutil.which = orig
 
@@ -95,7 +95,7 @@ class TestSync(unittest.TestCase):
             env, config, proj = _setup(tmp)
             projs = sync.select_projects(env, config, {"all": True})
             sync.run_sync(env, config, projs, only="mcp")
-            self.assertFalse(has_server(proj / ".mcp.json", "graphify"))
+            self.assertFalse(has_server(proj / ".mcp.json", "serena"))
 
     def test_graph_provisioner_builds_stores(self):
         with tempfile.TemporaryDirectory() as tmp:

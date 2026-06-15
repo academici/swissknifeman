@@ -11,6 +11,7 @@ from pathlib import Path
 
 from .common import die, now_iso, parse_args, warn
 from .config import load_config
+from .constants import CODE_MCP_ARGS, CODE_MCP_COMMAND, CODE_MCP_NAME
 from .mcpconfig import MCP_FILES, load_mcp, mcp_path, merge_server, write_mcp
 from .memory import health, resolve_ports
 from .projects import get as get_project
@@ -29,10 +30,12 @@ def _maind_entry(env, scope):
             "args": ["mcp", "--scope", scope]}
 
 
-def _graphify_entry(project_path, command="graphify-mcp"):
-    """MCP-сервер код-графа проекта. command переопределяется полем graphify_command
-    (задел под сторонний code-intelligence MCP); бинаря может не быть — см. deploy_project."""
-    return {"command": command, "args": ["--root", str(project_path)]}
+def _graphify_entry(project_path, command, args):
+    """MCP-сервер код-графа проекта (по умолчанию Serena, см. constants.CODE_MCP_*).
+    Плейсхолдер {root} в args заменяется на путь проекта. command/args/имя сервера
+    переопределяются полями проекта — задел под любой code-intelligence MCP."""
+    root = str(project_path)
+    return {"command": command, "args": [a.replace("{root}", root) for a in args]}
 
 
 def _resolve_targets(project_path, opt_targets):
@@ -70,14 +73,16 @@ def deploy_project(env, config, project, *, targets=None, with_graphify=False,
         entries["maind"] = _maind_entry(env, scope)
     graphify_state = "disabled"
     if with_graphify:
-        gcmd = project.get("graphify_command", "graphify-mcp")
+        gcmd = project.get("graphify_command", CODE_MCP_COMMAND)
+        gargs = project.get("graphify_args", CODE_MCP_ARGS)
+        gname = project.get("graphify_server_name", CODE_MCP_NAME)
         if shutil.which(gcmd):
-            entries["graphify"] = _graphify_entry(project_path, gcmd)
+            entries[gname] = _graphify_entry(project_path, gcmd, gargs)
             graphify_state = "written"
         else:
             graphify_state = "skipped-not-installed"
-            warn(f"проект '{pid}': команда '{gcmd}' не найдена в PATH — пропускаю graphify "
-                 f"(код-граф опционален; установите бинарь или задайте graphify_command)")
+            warn(f"проект '{pid}': команда '{gcmd}' код-графа не найдена в PATH — пропускаю "
+                 f"(установите её, напр. uvx для Serena, или задайте graphify_command)")
 
     written = []
     for _channel, path in _resolve_targets(project_path, targets):

@@ -33,6 +33,21 @@ GRAPH_ADAPTERS = {"federation", "disabled"}
 LEGACY_GRAPH_ADAPTERS = {"memory", "graphify", "networkx"}
 GRAPH_VERSION = 1
 
+# Универсальный код-граф (граф КОДА внутри проекта) по умолчанию — Serena
+# (github.com/oraios/serena) через uvx: language-agnostic (LSP), даёт символы/ссылки/
+# реализации/обзор. Проверено рабочим (MCP initialize + 22 code-инструмента). Включается
+# на проект полем `graphify: true`; движок переопределяется полями graphify_command /
+# graphify_args (плейсхолдер {root} → путь проекта) / graphify_server_name.
+CODE_MCP_NAME = "serena"
+CODE_MCP_COMMAND = "uvx"
+CODE_MCP_ARGS = [
+    "--from", "git+https://github.com/oraios/serena",
+    "serena", "start-mcp-server",
+    "--context", "ide-assistant",
+    "--project", "{root}",
+    "--enable-web-dashboard", "false",
+]
+
 # Планы графа (природа связи) и источник, из которого ребро/узел получены (derive).
 GRAPH_PLANES = {"code", "doc", "meta", "runtime"}
 LINK_VIA = {"code", "doc", "override", "skills"}

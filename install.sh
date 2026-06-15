@@ -92,9 +92,9 @@ if [[ "$WITH_SERVICE" == true ]]; then
   "$CLI" service install || echo "WARN: maind service install не удался (см. вывод выше)"
 fi
 
-# ── graphify (опционально) ───────────────────────────────────────────────────
-command -v graphify-mcp >/dev/null 2>&1 || \
-  echo "INFO: graphify-mcp не найден в PATH — код-граф опционален (см. docs/guide/graphify.md)"
+# ── граф кода (опционально, движок Serena через uvx) ─────────────────────────
+command -v uvx >/dev/null 2>&1 || \
+  echo "INFO: uvx не найден в PATH — для графа кода (Serena) поставьте uv: https://docs.astral.sh/uv/"
 
 echo ""
 echo "Готово. Дальше:"

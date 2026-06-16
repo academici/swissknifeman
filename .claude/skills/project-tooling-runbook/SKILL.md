@@ -1,6 +1,6 @@
 ---
 name: project-tooling-runbook
-description: Раннбук управления инструментами проектов экосистемы — мультиисточниковая система скиллов (swissknifeman-бакеты + Laravel Boost + собственные local-скиллы, склеиваются через skills-lock.json) и двусторонний синк документации с Brain-валтом. Используй, когда нужно «добавить проекту скиллы разработчика/проектировщика», поменять набор плагинов, разрулить источники скиллов, или синхронизировать docs/ проекта с Brain. Дополняет ecosystem-integration (онбординг в хаб) операционным слоем skills+docs.
+description: Раннбук управления инструментами проектов экосистемы — мультиисточниковая система скиллов (swissknifeman ДВУМЯ каналами — connect/marketplace и vendor/физ.перенос через .swissknifeman/config.json — + собственные local-скиллы; Laravel Boost только как MCP, не как канал скиллов; карта в skills-lock.json) и двусторонний синк документации с Brain-валтом. Используй, когда нужно «добавить проекту скиллы разработчика/проектировщика», установить/выбрать скиллы (ВСЕГДА спрашивай канал connect vs vendor), поменять набор, разрулить источники, или синхронизировать docs/ с Brain. Дополняет ecosystem-integration (онбординг в хаб) операционным слоем skills+docs.
 ---
 
 # Раннбук: скиллы проекта (мультиисточник) + doc-sync (brain)
@@ -15,19 +15,42 @@ description: Раннбук управления инструментами пр
 
 | Источник | Свой конфиг | Что это |
 |:--|:--|:--|
-| **swissknifeman** | `skills.json` (реестр) + marketplace-плагины | курируемые бакеты ролей |
-| **Laravel Boost** | `boost.json` (`skills[]`) | Laravel сам ставит свои скиллы/guidelines (`php artisan boost:install`) |
+| **swissknifeman** | `skills.json` (реестр) → **два канала установки** (см. ниже) | курируемые бакеты/скиллы ролей |
+| **Laravel Boost** | `boost.json` (`mcp`/`guidelines`/`skills[]`) | **только MCP + guidelines** — как канал скиллов НЕ используем (см. ниже) |
 | **local** (свои) | — (просто папка `.claude/skills/<name>/`) | твои собственные / раскатанные из другого хаба (напр. `ecosystem-mcp` от maind) |
 
-**Арбитр — `swissknifeman lock`** → пишет в проект `skills-lock.json` (коммитится, как `composer.lock`):
-- universe = установленные скиллы (`.claude|.cursor|.ai/skills`) ∪ `boost.json::skills[]`;
-- `source`: имя в реестре swissknifeman → `swissknifeman` (wins); имя в `boost.json::skills` → `laravel-boost`;
-  иначе → `local`. **Boost не «съедает» local-скиллы только потому, что подключён.**
-- конфликт (имя в нескольких) **не теряется**: победитель в `source`, проигравший в `also_in`.
+### ⚠️ swissknifeman ставит скиллы ДВУМЯ каналами — СПРОСИ пользователя, каким
 
-Прогоняй `swissknifeman lock` после изменения любого источника (добавил бакет / `boost:install` /
-свой скилл) — карта пересоберётся. `--dry-run` покажет состав без записи. Собственные local-скиллы
-**легитимны** — пиши их, когда нужен проектный контекст, которого нет в бакетах/Boost.
+Перед установкой/добавлением скиллов из swissknifeman **всегда уточни у пользователя канал** (это
+не дефолт — выбор меняет, что попадёт в репо и какой гранулярностью управляешь):
+
+| Канал | Команда | Что делает | Гранулярность | В репо |
+|:--|:--|:--|:--|:--|
+| **connect** (marketplace) | `swissknifeman connect` | включает плагины-бакеты через `enabledPlugins` в `.claude/settings.local.json` | **только бакет целиком** | файлы скиллов НЕ копируются |
+| **vendor** (физ. перенос) | `swissknifeman sync` | копирует выбранные скиллы в `.claude/skills/`, пишет `skills-lock.json` (`managed`) | **отдельные скиллы** (include/buckets/exclude) | да, видно и коммитится |
+
+- **connect** — когда фиксация в репо не нужна и устраивает «весь бакет».
+- **vendor** — когда нужно: видеть скиллы в репо, выбрать ровно нужные позиции из разных областей,
+  обновлять из библиотеки по lock. Конфиг — `.swissknifeman/config.json` (`mode: "vendor"`,
+  `include`/`buckets`/`exclude`). См. swissknifeman docs → гайд «Vendor-режим (sync)».
+
+> Спрашивай через AskUserQuestion: «connect (плагины-бакеты, не в репо)» vs «vendor (физический
+> перенос конкретных скиллов в репо + lock)». Рекомендация по умолчанию — **vendor**, если
+> пользователь хочет контроль над набором и фиксацию в репозитории.
+
+**`skills-lock.json`** (коммитится, как `composer.lock`) пишут **две** команды — какая, зависит от канала:
+- **vendor**: `swissknifeman sync` пишет lock сам — на каждый перенесённый скилл запись
+  `source: swissknifeman` + **`managed: true`** + `sha256`. При синке выбывшие из конфига `managed`
+  удаляются; **чужие записи (не `managed`) не трогаются**.
+- **connect / смешанный**: `swissknifeman lock` (read-only композитор) — сканирует установленное
+  (`.claude|.cursor|.ai/skills`) ∪ `boost.json::skills[]` и проставляет `source`: имя в реестре →
+  `swissknifeman` (wins); в `boost.json::skills` → `laravel-boost`; иначе → `local`. Конфликт (имя в
+  нескольких) **не теряется**: победитель в `source`, проигравший в `also_in`. **Boost не «съедает»
+  local-скиллы только потому, что подключён.**
+
+В vendor-режиме арбитр — это `sync` (config → managed-lock). `lock` нужен для connect/смешанных
+проектов. Собственные local-скиллы **легитимны** — пиши их, когда нужен проектный контекст, которого
+нет в библиотеке (`sync` их не перетирает — они не `managed`).
 
 ### Бакеты swissknifeman (роли)
 
@@ -46,22 +69,34 @@ CLI — `swissknifeman` (запускать из каталога проекта
 
 ```bash
 swissknifeman status                       # что подключено: профиль, бакеты, канал
+# --- канал CONNECT (плагины-бакеты, не в репо) ---
 swissknifeman connect --profile laravel-project          # подключить по профилю
 swissknifeman connect --plugins a,b,c                    # точный набор бакетов (перезаписывает enabledPlugins)
 swissknifeman connect --plugins ... --dry-run            # предпросмотр (сохраняет permissions/bypass)
-swissknifeman integrate --bundle recommended --yes       # визард: скиллы+хуки+память+hub
-swissknifeman lock [--dry-run]             # пересобрать skills-lock.json (карта всех источников)
+# --- канал VENDOR (физ. перенос конкретных скиллов в репо) ---
+#   1) создать .swissknifeman/config.json (mode:vendor, include/buckets/exclude)
+swissknifeman sync --dry-run               # план: +add ~update -remove =keep
+swissknifeman sync                         # применить (managed-скиллы в .claude/skills/ + lock)
+swissknifeman sync --force                 # перетереть занятый чужим путь версией из библиотеки
+# --- общее ---
+swissknifeman integrate --bundle recommended --yes       # визард: спросит канал (connect/vendor) + хуки/память/hub
+swissknifeman lock [--dry-run]             # карта источников для connect/смешанных (read-only композитор)
 swissknifeman update                       # обновить подключение проекта
 ```
 
-Laravel Boost (если проект на Laravel и нужны его скиллы/guidelines) — отдельный источник, ставится
-из проекта: `composer require laravel/boost --dev` → `php artisan boost:install --skills --guidelines`
-(**без `--mcp`** — `.mcp.json` управляется maind, не дай Boost'у его переписать). После — `swissknifeman lock`.
+**Laravel Boost** — держим как **MCP-сервер** (database-query/tinker/logs/docs) и при желании его
+guidelines, но **НЕ как канал скиллов**. В `boost.json`: `"mcp": true`, `"guidelines": true` (опц.),
+`"skills": []`. Его прежние скиллы заменяй прямыми аналогами из библиотеки через vendor (`frontend/
+inertia-vue`, `frontend/tailwind-conventions`, `frontend/wayfinder` и т.п.). Нужный, но отсутствующий
+в библиотеке Boost-скилл — импортируй в неё как external. MCP-сервер `laravel-boost` остаётся в
+`.mcp.json` (его дописывает maind при онбординге, если у проекта `boost.json`).
 
-**Добавить роль к проекту** = добавить бакет: `connect --plugins <текущие>,<новый>`. Текущие смотри
-в `swissknifeman status` (или `enabledPlugins` в `.claude/settings.local.json`). `connect` сохраняет
-`permissions`/`defaultMode` (в т.ч. bypass, см. [[auto-approve-bypass]]). После — рестарт сессии
-или `/plugin marketplace update swissknifeman`.
+**Добавить роль к проекту** (сначала спроси канал, см. выше):
+- **connect**: `connect --plugins <текущие>,<новый>` (текущие — в `swissknifeman status` /
+  `enabledPlugins`). Сохраняет `permissions`/`defaultMode` (bypass, см. [[auto-approve-bypass]]).
+  После — рестарт сессии или `/plugin marketplace update swissknifeman`.
+- **vendor**: допиши скиллы в `.swissknifeman/config.json` (`include`/`buckets`) → `swissknifeman sync`.
+  Скиллы появятся в `.claude/skills/` сразу (рестарт нужен, чтобы Claude их подхватил).
 
 > Типичный кейс «дай проекту скиллы разработчика+проектировщика»: laravel-project уже даёт `php`
 > (разработчик) + `architect` (проектировщик). Если фронт на Vue/Nuxt — добавь `frontend`.
@@ -83,9 +118,12 @@ Laravel Boost (если проект на Laravel и нужны его скил�
 ## Порядок «дать проекту всё» (полный)
 
 1. Онбординг в хаб — [ecosystem-integration] (`maind onboard …`, namespace, health=connected).
-2. Скиллы ролей — бакеты swissknifeman: `connect --plugins …` (architect+php[+frontend]).
-3. (Laravel) Boost — `composer require laravel/boost --dev` + `boost:install --skills --guidelines`.
-4. Зафиксировать карту источников — `swissknifeman lock` → `skills-lock.json` в репо.
+2. Скиллы ролей — **спроси канал** (connect/vendor), затем:
+   - connect: `connect --plugins …` (architect+php[+frontend]); или
+   - vendor: `.swissknifeman/config.json` (include/buckets) → `swissknifeman sync`.
+3. (Laravel) Boost — как **MCP** (`composer require laravel/boost --dev`, `boost.json: mcp:true,
+   skills:[]`); скиллы Boost НЕ ставим — берём аналоги из библиотеки (vendor).
+4. Зафиксировать карту — vendor: уже в `skills-lock.json` от `sync`; connect/смешанный: `swissknifeman lock`.
 5. Doc-sync — `repo:` в control-ноту + `brain sync all <proj>`.
 6. Авто-аппрув без промптов — bypass, см. [[auto-approve-bypass]].
 7. Проверка: `swissknifeman status` · `cat skills-lock.json` · `maind health --project <id>` · `brain status <proj>`.

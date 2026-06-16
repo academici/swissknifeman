@@ -19,7 +19,11 @@ maind onboard <path|id> [--with-code] [--with-brain] [--yes]
 
 1. **register** — добавить проект в `.maind.json` (namespace по умолчанию пустой → задай вручную,
    см. ниже).
-2. **skills** — `swissknifeman integrate` (скиллы + хуки), если не `--skip-skills`.
+2. **skills** — `swissknifeman integrate` (скиллы + хуки), если не `--skip-skills`. ⚠️ swissknifeman
+   ставит скиллы **двумя каналами** — `connect` (плагины-бакеты, не в репо) и `vendor` (физический
+   перенос конкретных скиллов в репо через `.swissknifeman/config.json` + `swissknifeman sync`).
+   **Спроси у пользователя канал** перед установкой (визард `integrate` тоже спрашивает). Операционные
+   детали и Boost-как-MCP — в [project-tooling-runbook].
 3. **deploy** — MCP-серверы хаба в `.mcp.json` проекта: `agentmemory` + `maind` [+ код-граф].
 4. **graph** — `derive` графа топологии из composer/доков + пересборка индекса.
 5. **memory** — seed-факт о связях в общей памяти.

@@ -2,9 +2,10 @@
 
 Композиция источников: **swissknifeman** (курируемый реестр) + **Laravel Boost**
 (`boost.json::skills[]`). Скилл считается swissknifeman'овским, если его имя есть в
-`skills.json` реестра — тогда swissknifeman wins; остальные скиллы из `boost.json` —
-`laravel-boost`. Конфликты (имя в обоих) не теряются: победитель в `source`, второй
-в `also_in`. Источники работают порознь и вместе, складываясь в общий набор.
+`skills.json` реестра — тогда swissknifeman wins; скилл из `boost.json::skills[]` —
+`laravel-boost`; всё прочее установленное — `local` (собственный скилл проекта, напр.
+раскатанный из другого хаба). Конфликты (имя в нескольких) не теряются: победитель в
+`source`, второй в `also_in`. Источники работают порознь и вместе, складываясь в набор.
 
 Universe = реально установленные скиллы (агентские раскладки) ∪ `boost.json::skills`.
 Файл коммитится в проект — это lock-карта внешних скиллов (как composer.lock)."""
@@ -60,7 +61,6 @@ def compose_lock(env, target):
     """Собрать skills-lock: swissknifeman wins, boost дополняет, конфликты в also_in."""
     reg = _registry_map(env)
     boost = _boost_skills(target)
-    boost_present = boost is not None  # проект использует Laravel Boost
     universe = _installed_skills(target) | set(boost or [])
     skills = {}
     for name in sorted(universe):
@@ -68,12 +68,14 @@ def compose_lock(env, target):
             entry = {"source": "swissknifeman", "bucket": reg[name]}
             if boost and name in boost:
                 entry["also_in"] = ["laravel-boost"]
-        elif boost_present:
-            # Boost подключён → не-swissknifeman скилл относим к нему (его скиллы
-            # могут быть установлены, но не перечислены в boost.json::skills).
+        elif boost and name in boost:
+            # Скилл явно объявлен в boost.json::skills — это скилл Laravel Boost.
             entry = {"source": "laravel-boost"}
         else:
-            entry = {"source": "local"}  # установлен, но ни реестр, ни Boost
+            # Установлен, но ни в реестре, ни в boost.json — собственный скилл
+            # проекта (например, раскатанный из другого хаба). Не приписываем Boost'у
+            # только потому, что он подключён.
+            entry = {"source": "local"}
         skills[name] = entry
     sources = {"swissknifeman": {"ref": "registry"}}
     if boost is not None:

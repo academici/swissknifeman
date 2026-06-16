@@ -62,6 +62,17 @@ class TestComposeLock(unittest.TestCase):
             # установлен, не в реестре, без boost → local (не laravel-boost)
             self.assertEqual(lock["skills"]["database"]["source"], "local")
 
+    def test_local_skill_not_attributed_to_boost(self):
+        # Скилл установлен, не в реестре, Boost ПОДКЛЮЧЁН, но скилла нет в
+        # boost.json::skills (напр. ecosystem-mcp из хаба maind) → local, не boost.
+        with tempfile.TemporaryDirectory() as tmp:
+            env, target = _setup(tmp)
+            (target / ".claude/skills/ecosystem-mcp").mkdir(parents=True)
+            skills = compose_lock(env, target)["skills"]
+            self.assertEqual(skills["ecosystem-mcp"]["source"], "local")
+            # boost-объявленный скилл по-прежнему относится к boost
+            self.assertEqual(skills["database"]["source"], "laravel-boost")
+
 
 if __name__ == "__main__":
     unittest.main()

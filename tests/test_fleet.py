@@ -43,7 +43,7 @@ class TestManifest(unittest.TestCase):
             m = fleet.manifest(env, config)
             self.assertEqual(len(m["projects"]), 2)
             fx = next(p for p in m["projects"] if p["id"] == "flexcrm")
-            self.assertTrue(fx["graphify"])
+            self.assertTrue(fx["code"])
             self.assertTrue(fx["path"].endswith("flexcrm"))
             self.assertEqual(fx["scopes"]["private"], "project:flexcrm")
             sp = m["shared_packages"]
@@ -97,6 +97,35 @@ class TestFeatureLog(unittest.TestCase):
             self.assertTrue(any("CSV" in m["text"] for m in got))
             feats = fleet.features(env, config, namespace="axioma")
             self.assertTrue(any("CSV" in f["text"] for f in feats))
+
+
+class TestSimilar(unittest.TestCase):
+    def test_extract_chunks_finds_declarations(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            a = Path(tmp) / "pa"
+            (a / "vendor").mkdir(parents=True)         # vendor игнорится
+            (a / "src").mkdir(parents=True)
+            (a / "src" / "X.php").write_text(
+                "<?php\nclass Importer {\n  public function importCsv($f) {\n"
+                "    $rows = read($f);\n    return map($rows);\n  }\n}\n", encoding="utf-8")
+            (a / "vendor" / "Y.php").write_text("<?php\nfunction ignored(){}\n", encoding="utf-8")
+            chunks = fleet.extract_chunks({str(a): "pa"}, min_chars=10)
+            names = {c["name"] for c in chunks}
+            self.assertIn("Importer", names)
+            self.assertNotIn("ignored", names)         # из vendor не берём
+
+    def test_cross_project_pairs_above_threshold(self):
+        chunks = [{"project": "a", "name": "F", "file": "/a/F.php"},
+                  {"project": "b", "name": "G", "file": "/b/G.php"},
+                  {"project": "a", "name": "H", "file": "/a/H.php"}]
+        vecs = [[1.0, 0.0], [0.99, 0.01], [0.0, 1.0]]   # F~G (разные проекты), H ортогонален
+        pairs = fleet.cross_project_pairs(chunks, vecs, 0.9)
+        self.assertEqual(len(pairs), 1)
+        self.assertEqual({pairs[0]["a"]["project"], pairs[0]["b"]["project"]}, {"a", "b"})
+
+    def test_embed_dies_without_backend(self):
+        with self.assertRaises(SystemExit):
+            fleet._embed(["x"], None)
 
 
 if __name__ == "__main__":

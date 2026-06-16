@@ -58,6 +58,6 @@ npm run docs:build      # сборка статического сайта
 - **Python 3.8+** и **bash** — для ядра CLI (обязательно).
 - **Node.js** — только для демона памяти и сборки документации.
 - **uvx** (из [uv](https://docs.astral.sh/uv/)) — для графа кода в проекте (движок Serena, см.
-  [граф кода](/guide/graphify)); включается на проект полем `graphify:true`.
+  [граф кода](/guide/code-graph)); включается на проект полем `code:true`.
 
 Дальше: [Конфиг .maind.json →](/guide/config)

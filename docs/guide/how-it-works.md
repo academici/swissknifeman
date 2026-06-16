@@ -12,7 +12,7 @@
 |:--|:--|:--|:--|
 | **agent-memory** | факты/решения/контекст (общая память) | демон на хабе `:4111` | работает (под systemd) |
 | **maind-граф** | топология **между** проектами (кто от кого зависит) | в хабе `data/graphs/<id>.db` | работает |
-| **код-MCP (Serena)** | граф **кода внутри** проекта (символы/ссылки/реализации) | отдельный MCP-сервер в проекте (uvx Serena) | работает (универсальный, по `graphify:true`) |
+| **код-MCP (Serena)** | граф **кода внутри** проекта (символы/ссылки/реализации) | отдельный MCP-сервер в проекте (uvx Serena) | работает (универсальный, по `code:true`) |
 
 Ключевое: **agent-memory централизован специально** (в этом смысл общей памяти — проекты видят
 решения друг друга внутри namespace). **код-MCP (Serena), наоборот, пер-проектный** — код у каждого свой.
@@ -34,7 +34,7 @@ graph TB
   GFY["serena (код-MCP в проекте)"]
   MCPJSON -- "agentmemory" --> MEM
   MCPJSON -- "maind" --> SRV
-  MCPJSON -. "serena (если graphify:true)" .-> GFY
+  MCPJSON -. "serena (если code:true)" .-> GFY
   SRV --> GR
   SRV --> MEM
 ```
@@ -127,4 +127,4 @@ namespace.
 [Решения, трейд-оффы, ограничения](/guide/design-notes).
 
 Дальше: [Память →](/guide/memory) · [Граф →](/guide/graph) · [Namespaces →](/guide/namespaces) ·
-[Граф кода →](/guide/graphify).
+[Граф кода →](/guide/code-graph).

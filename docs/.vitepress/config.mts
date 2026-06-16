@@ -39,7 +39,7 @@ export default withMermaid(defineConfig({
             { text: 'Граф связей', link: '/guide/graph' },
             { text: 'Федерация', link: '/guide/federation' },
             { text: 'Namespaces', link: '/guide/namespaces' },
-            { text: 'Граф кода (Serena)', link: '/guide/graphify' },
+            { text: 'Граф кода (Serena)', link: '/guide/code-graph' },
           ],
         },
         {

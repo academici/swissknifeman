@@ -12,7 +12,7 @@ description: Как подключить (онбордить) новый про�
 ## Подключить новый проект
 
 ```bash
-maind onboard <path|id> [--with-graphify] [--with-brain] [--yes]
+maind onboard <path|id> [--with-code] [--with-brain] [--yes]
 ```
 
 Цепочка (каждый шаг standalone-safe — отсутствие соседа не валит онбординг):
@@ -20,7 +20,7 @@ maind onboard <path|id> [--with-graphify] [--with-brain] [--yes]
 1. **register** — добавить проект в `.maind.json` (namespace по умолчанию пустой → задай вручную,
    см. ниже).
 2. **skills** — `swissknifeman integrate` (скиллы + хуки), если не `--skip-skills`.
-3. **deploy** — MCP-серверы хаба в `.mcp.json` проекта: `agentmemory` + `maind` [+ `graphify`].
+3. **deploy** — MCP-серверы хаба в `.mcp.json` проекта: `agentmemory` + `maind` [+ код-граф].
 4. **graph** — `derive` графа топологии из composer/доков + пересборка индекса.
 5. **memory** — seed-факт о связях в общей памяти.
 6. **ecosystem-skill** — раскатать скилл `ecosystem-mcp` в проект (ориентир для его агента).
@@ -66,13 +66,13 @@ Linger` → `yes`). См. [systemd-гайд](../../docs/guide/systemd.md).
 **Serena** (language-agnostic, через `uvx`), работает для любого стека. Включается намерением:
 
 ```json
-{ "id": "myproject", "graphify": true, ... }
+{ "id": "myproject", "code": true, ... }
 ```
 
 `maind sync --project myproject --only mcp` допишет сервер `serena` в `.mcp.json` (нужен `uvx`
 в PATH; нет — корректный пропуск `skipped-not-installed`, остальное работает). Движок
-переопределяется на проект (`graphify_command` / `graphify_args` с `{root}` / `graphify_server_name`)
-— например, стек-специфичный сервер. Подробнее — [граф кода](../../docs/guide/graphify.md).
+переопределяется на проект (`code_command` / `code_args` с `{root}` / `code_server_name`)
+— например, стек-специфичный сервер. Подробнее — [граф кода](../../docs/guide/code-graph.md).
 
 ## Памятка
 

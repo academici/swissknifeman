@@ -14,7 +14,7 @@ description: Межпроектная оптимизация ~N похожих �
 
 ### 1. Карта флота — где искать
 ```bash
-maind fleet manifest                 # JSON: проекты (пути/scopes/graphify) + группы по ОБЩИМ пакетам
+maind fleet manifest                 # JSON: проекты (пути/scopes/code) + группы по ОБЩИМ пакетам
 ```
 `shared_packages` — проекты, делящие пакет (напр. azguard-core у flexcrm+azguard+corex). Это
 готовые группы для оптимизации: что улучшаешь в общем пакете — влияет на всех его консьюмеров.
@@ -51,4 +51,4 @@ maind fleet duplicates --projects flexcrm,azguard --json            # по яв�
   Решение о выносе — по смыслу, через Serena, а не только по jscpd.
 - **Пиши в общую память** что вынес — чтобы следующий проход видел историю и не дублировал работу.
 - Доступ ко всем репозиториям у тебя уже есть (workspace-доверие хаба). Подробнее —
-  [граф кода](../../docs/guide/graphify.md), [fleet](../../docs/guide/fleet.md).
+  [граф кода](../../docs/guide/code-graph.md), [fleet](../../docs/guide/fleet.md).

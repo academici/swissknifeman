@@ -105,6 +105,22 @@ class TestHealthHook(unittest.TestCase):
             self.assertEqual(r2["state"], "fresh")
             self.assertFalse(r2["changed"])
 
+    def test_feature_log_hook_session_end(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj, pdir = _setup(tmp)
+            r = health.apply_feature_log_hook(env, config, proj, "auto", dry=False)
+            self.assertTrue(r["changed"])
+            self.assertTrue((pdir / ".claude" / "maind-feature-log.sh").is_file())
+            settings = json.loads((pdir / ".claude" / "settings.json").read_text())
+            cmds = [h["command"] for g in settings["hooks"]["SessionEnd"]
+                    for h in g["hooks"]]
+            self.assertTrue(any("maind-feature-log" in c for c in cmds))
+            # SessionEnd-хук не конфликтует с SessionStart (health) — оба сосуществуют
+            health.apply_health_hook(env, config, proj, "auto", dry=False)
+            s2 = json.loads((pdir / ".claude" / "settings.json").read_text())
+            self.assertIn("SessionStart", s2["hooks"])
+            self.assertIn("SessionEnd", s2["hooks"])
+
 
 class TestCLI(unittest.TestCase):
     def test_json_output(self):

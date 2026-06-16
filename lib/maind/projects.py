@@ -119,7 +119,7 @@ def _cmd_status(env, argv):
         c = r.get("configured", {})
         mcp = ("a" if c.get("agentmemory_mcp") else "-") \
             + ("m" if c.get("maind_mcp") else "-") \
-            + ("g" if c.get("graphify_mcp") else "-")
+            + ("c" if c.get("code_mcp") else "-")
         sk = r.get("skills", {}).get("total", 0)
         trust = "trust✓" if r.get("trusted") else "trust·"
         print(f"  {r['status']:<11} {r['id']:<18} mcp[{mcp}] {trust} skills={sk:<3} "

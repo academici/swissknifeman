@@ -26,6 +26,22 @@
     "store_layout": "hub"
   },
 
+  "_comment_code_graph": "Граф КОДА внутри проекта (отдельный per-project MCP, движок Serena через uvx). ПОЛИТИКА ЗДЕСЬ, не в коде — правь под себя. Включается на проект полем projects[].code:true (legacy-alias graphify:true). ignores — что НЕ индексировать (сторонние + симлинкнутые first-party пакеты графятся как свои проекты). workspace_ignores — для проекта, что разрабатывается ВМЕСТЕ с пакетами под packages/* (монорепо/консьюмер): packages НЕ игнорим (единый граф), но режем vendor и вложенные **/vendor; режим включается авто при наличии packages/ или явно projects[].code_workspace. pre_index — фоновая прогрев-индексация при включении. feature_log_hook — SessionEnd-хук фиксации коммитов в общую память. Движок переопределяется на проект: code_command/code_args({root})/code_server_name.",
+  "code_graph": {
+    "enabled_default": false,
+    "engine": "serena",
+    "command": "uvx",
+    "args": ["--from", "git+https://github.com/oraios/serena", "serena", "start-mcp-server", "--context", "ide-assistant", "--project", "{root}", "--enable-web-dashboard", "false"],
+    "index_args": ["--from", "git+https://github.com/oraios/serena", "serena", "project", "index", "{root}"],
+    "server_name": "serena",
+    "language_by_type": { "php-package": "php", "node-package": "typescript" },
+    "ignores": ["vendor", "node_modules", "packages", "storage", "bootstrap/cache", "public/build", "dist", ".git"],
+    "workspace_ignores": ["vendor", "node_modules", "**/vendor", "**/node_modules", "storage", "bootstrap/cache", "public/build", "dist", ".git"],
+    "pre_index": true,
+    "feature_log_hook": true,
+    "embed": null
+  },
+
   "_comment_agents": "Реестр агентов узла. definitions — дескрипторы агентов, которые крутятся здесь.",
   "agents": {
     "registry_enabled": true,

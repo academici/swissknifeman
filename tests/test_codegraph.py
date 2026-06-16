@@ -1,6 +1,7 @@
-"""Тесты codegraph.py — провиженер дефолтного .serena/project.yml (код-граф Serena)."""
+"""Тесты codegraph.py — резолвер политики код-графа + провиженер .serena/project.yml."""
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 from maind import codegraph
@@ -10,14 +11,15 @@ from tests.fixtures import make_repo, write_maind_config
 _CFG = Path(".serena") / "project.yml"
 
 
-def _setup(tmp, **proj):
+def _setup(tmp, *, code_graph=None, **proj):
     root, env = make_repo(tmp)
     pdir = Path(tmp) / "flexcrm"
     pdir.mkdir(parents=True, exist_ok=True)
     p = {"id": "flexcrm", "name": "FlexCRM", "type": "php-package",
          "enabled": True, "local_path": str(pdir)}
     p.update(proj)
-    write_maind_config(root, projects=[p])
+    extra = {"code_graph": code_graph} if code_graph is not None else {}
+    write_maind_config(root, projects=[p], **extra)
     config, _ = load_config(env)
     return env, config, config["projects"][0], pdir
 
@@ -101,6 +103,46 @@ class TestSerenaConfig(unittest.TestCase):
             env, config, proj, pdir = _setup(tmp, graphify=True, type="node-package")
             codegraph.apply_serena_config(env, config, proj, "auto", dry=False)
             self.assertIn("- typescript", (pdir / _CFG).read_text())
+
+
+class TestConfigDriven(unittest.TestCase):
+    def test_code_alias_equals_graphify(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj, pdir = _setup(tmp, code=True)   # новое имя поля (alias graphify)
+            r = codegraph.apply_serena_config(env, config, proj, "auto", dry=False)
+            self.assertTrue(r["changed"])
+            self.assertIn('project_name: "flexcrm"', (pdir / _CFG).read_text())
+
+    def test_ignores_from_config_not_hardcode(self):
+        # политика игноров берётся из секции code_graph, не из кода
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj, pdir = _setup(
+                tmp, code=True,
+                code_graph={"ignores": ["vendor", "custom-dir"]})
+            codegraph.apply_serena_config(env, config, proj, "auto", dry=False)
+            txt = (pdir / _CFG).read_text()
+            self.assertIn('- "custom-dir"', txt)
+            self.assertNotIn('- "packages"', txt)        # дефолта нет — взяли конфиг
+
+    def test_pre_index_launched_when_enabled(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj, pdir = _setup(tmp, code=True)   # pre_index дефолт true
+            with mock.patch.object(codegraph.shutil, "which", return_value="/u/uvx"), \
+                 mock.patch.object(codegraph.subprocess, "Popen") as popen:
+                codegraph.apply_serena_config(env, config, proj, "auto", dry=False)
+                popen.assert_called_once()
+                argv = popen.call_args.args[0]
+                self.assertIn("index", argv)
+                self.assertIn(str(pdir), argv)            # {root} подставлен
+
+    def test_pre_index_skipped_when_disabled(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj, _ = _setup(tmp, code=True,
+                                          code_graph={"pre_index": False})
+            with mock.patch.object(codegraph.shutil, "which", return_value="/u/uvx"), \
+                 mock.patch.object(codegraph.subprocess, "Popen") as popen:
+                codegraph.apply_serena_config(env, config, proj, "auto", dry=False)
+                popen.assert_not_called()
 
 
 if __name__ == "__main__":

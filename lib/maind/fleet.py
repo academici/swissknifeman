@@ -7,11 +7,16 @@
               путям → «что именно повторяется» (cross-project клоны первыми).
 - feature-log — факты «сделал фичу X» в общую память (ns/global), чтобы агент коррелировал
               похожие изменения между проектами.
+- similar    — СЕМАНТИЧЕСКАЯ похожесть кода (эмбеддинги функций/классов) поверх литеральных
+              дублей jscpd: «похоже по смыслу, не дословно». Бэкенд эмбеддингов — внешний
+              (config code_graph.embed), оркеструется; без него — внятный die.
 
 «Слитого» графа кода нет и не нужно: сигнал = топология (группы) + дубли + память; точечную
-правку даёт Serena в нужном проекте. stdlib-only; jscpd — внешний (npx), оркеструется."""
+правку даёт Serena в нужном проекте. stdlib-only; jscpd/эмбеддер — внешние, оркеструются."""
 import json
+import math
 import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -37,7 +42,7 @@ def _proj_entry(project):
         "type": project.get("type", "unknown"),
         "path": str(Path(os.path.expanduser(local))) if local else None,
         "namespaces": sorted(namespaces_of(project)),
-        "graphify": bool(project.get("graphify")),
+        "code": bool(project.get("code", project.get("graphify", False))),
         "scopes": {"private": private_scope(project), "group": group_scopes(project)},
     }
 
@@ -185,13 +190,109 @@ def features(env, config, *, namespace=None):
     return out
 
 
+# ── семантическая похожесть (эмбеддинги) ─────────────────────────────────────
+# Чанк кода = объявление функции/класса/метода + следующие строки (контекст). Простой
+# language-agnostic-ish захват (PHP/JS/TS/Python). Глубокий разбор не нужен — для эмбеддинга
+# важен текст фрагмента, а не точный AST.
+_DECL_RE = re.compile(
+    r"^\s*(?:(?:public|private|protected|static|final|abstract|async)\s+)*"
+    r"(?:function|class|interface|trait|def)\s+(\w+)", re.MULTILINE)
+_IGNORE_DIRS = {"vendor", "node_modules", ".git", "storage", "dist", "build"}
+
+
+def _iter_code_files(base, exts):
+    for root, dirs, files in os.walk(base):
+        dirs[:] = [d for d in dirs if d not in _IGNORE_DIRS]
+        for f in files:
+            if os.path.splitext(f)[1] in exts:
+                yield os.path.join(root, f)
+
+
+def extract_chunks(pmap, exts=(".php", ".py", ".ts", ".js"), context=24, min_chars=80):
+    """[{project, file, name, text}] — объявления функций/классов + контекст из путей pmap."""
+    out = []
+    for base, pid in pmap.items():
+        for fp in _iter_code_files(base, set(exts)):
+            try:
+                lines = Path(fp).read_text(encoding="utf-8", errors="ignore").splitlines()
+            except OSError:
+                continue
+            for m in _DECL_RE.finditer("\n".join(lines)):
+                start = "\n".join(lines).count("\n", 0, m.start())
+                text = "\n".join(lines[start:start + context]).strip()
+                if len(text) >= min_chars:
+                    out.append({"project": pid, "file": fp, "name": m.group(1), "text": text})
+    return out
+
+
+def _cosine(a, b):
+    dot = sum(x * y for x, y in zip(a, b))
+    na = math.sqrt(sum(x * x for x in a)) or 1.0
+    nb = math.sqrt(sum(y * y for y in b)) or 1.0
+    return dot / (na * nb)
+
+
+def cross_project_pairs(chunks, vectors, threshold):
+    """Пары чанков из РАЗНЫХ проектов с косинусом ≥ threshold (по убыванию)."""
+    pairs = []
+    for i in range(len(chunks)):
+        for j in range(i + 1, len(chunks)):
+            if chunks[i]["project"] == chunks[j]["project"]:
+                continue
+            sim = _cosine(vectors[i], vectors[j])
+            if sim >= threshold:
+                pairs.append({"similarity": round(sim, 4),
+                              "a": {k: chunks[i][k] for k in ("project", "name", "file")},
+                              "b": {k: chunks[j][k] for k in ("project", "name", "file")}})
+    pairs.sort(key=lambda p: -p["similarity"])
+    return pairs
+
+
+def _embed(texts, embed_cfg):
+    """Эмбеддинги через ВНЕШНИЙ бэкенд из config.code_graph.embed:
+    {command:[...], input_env|input_arg, output} — пишем JSONL текстов во временный файл,
+    запускаем команду, читаем JSON-массив векторов. Без конфига — die."""
+    if not embed_cfg or not embed_cfg.get("command"):
+        die("эмбеддер не настроен — задайте code_graph.embed.command в .maind.json "
+            "(внешний инструмент: текст→вектор). Без него доступен только `fleet duplicates`.")
+    with tempfile.TemporaryDirectory() as tmp:
+        inp, outp = Path(tmp) / "in.jsonl", Path(tmp) / "out.json"
+        inp.write_text("\n".join(json.dumps(t, ensure_ascii=False) for t in texts),
+                       encoding="utf-8")
+        argv = [a.replace("{input}", str(inp)).replace("{output}", str(outp))
+                for a in embed_cfg["command"]]
+        subprocess.run(argv, capture_output=True, text=True)
+        if not outp.is_file():
+            die("эмбеддер не создал {output} — проверьте code_graph.embed.command")
+        vecs = json.loads(outp.read_text(encoding="utf-8"))
+    if len(vecs) != len(texts):
+        die(f"эмбеддер вернул {len(vecs)} векторов на {len(texts)} текстов")
+    return vecs
+
+
+def find_similar(env, config, opts):
+    pmap, _paths = _resolve_targets(env, config, opts)
+    if not pmap:
+        die("нет проектов для анализа (укажите --projects или --group)")
+    chunks = extract_chunks(pmap)
+    if not chunks:
+        return {"projects": sorted(set(pmap.values())), "chunks": 0, "pairs": []}
+    embed_cfg = (config.get("code_graph") or {}).get("embed")
+    vectors = _embed([c["text"] for c in chunks], embed_cfg)
+    threshold = float(opts.get("threshold") or 0.85)
+    pairs = cross_project_pairs(chunks, vectors, threshold)
+    return {"projects": sorted(set(pmap.values())), "chunks": len(chunks),
+            "threshold": threshold, "pairs": pairs}
+
+
 # ── CLI ──────────────────────────────────────────────────────────────────────
 def cmd_fleet(env, argv):
     sub = argv[0] if argv and not argv[0].startswith("-") else "manifest"
     rest = argv[1:] if argv and not argv[0].startswith("-") else argv
     if sub in ("-h", "--help", "help"):
         print("maind fleet [manifest] | duplicates [--group PKG|--projects a,b|--min-tokens N] "
-              "| log <text> [--project ID] | features [--namespace NS]   [--json]")
+              "| similar [--group|--projects|--threshold T] | log <text> [--project ID] "
+              "| features [--namespace NS]   [--json]")
         return
     config, _ = load_config(env)
 
@@ -217,6 +318,22 @@ def cmd_fleet(env, argv):
                 a, b = c["files"]
                 print(f"  {tag} {c['lines']}стр  {a['project']}:{a['name']} ↔ "
                       f"{b['project']}:{b['name']}")
+        return
+
+    if sub == "similar":
+        opts, _pos = parse_args(rest, {"--group": "str", "--projects": "str",
+                                       "--threshold": "str", "--json": "bool"})
+        res = find_similar(env, config, {"group": opts["group"],
+                                         "projects": opts["projects"],
+                                         "threshold": opts["threshold"]})
+        if opts["json"]:
+            print(json.dumps(res, ensure_ascii=False, indent=2))
+        else:
+            print(f"семантически похожих пар: {len(res['pairs'])} "
+                  f"(чанков {res['chunks']}, порог {res.get('threshold')})")
+            for p in res["pairs"][:30]:
+                print(f"  {p['similarity']}  {p['a']['project']}:{p['a']['name']} ~ "
+                      f"{p['b']['project']}:{p['b']['name']}")
         return
 
     if sub == "log":
@@ -245,4 +362,5 @@ def cmd_fleet(env, argv):
                 print(f"  [{f['scope']}] {f['text']}")
         return
 
-    die(f"неизвестная подкоманда fleet: {sub} (manifest|duplicates|log|features)")
+    die(f"неизвестная подкоманда fleet: {sub} "
+        "(manifest|duplicates|similar|log|features)")

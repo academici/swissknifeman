@@ -8,13 +8,13 @@
 2. **дубли** (`duplicates`, движок jscpd) → *что именно* повторяется;
 3. **общая память** (`features`/`log`) → *что недавно менялось* — корреляция похожих фич.
 
-Точечную правку даёт [граф кода (Serena)](/guide/graphify) в нужном проекте. Готовый сценарий —
+Точечную правку даёт [граф кода (Serena)](/guide/code-graph) в нужном проекте. Готовый сценарий —
 скилл `cross-project-optimizer`.
 
 ## manifest — карта флота
 
 ```bash
-maind fleet manifest        # JSON: проекты (пути/scopes/graphify) + shared_packages
+maind fleet manifest        # JSON: проекты (пути/scopes/code) + shared_packages
 ```
 
 `shared_packages` — first-party пакеты, которые требуют ≥2 проекта, с консьюмерами и провайдером:
@@ -48,6 +48,24 @@ maind fleet duplicates --projects flexcrm,shop,crm [--json]            # по я
 Serena), а не только по jscpd.
 :::
 
+## similar — семантически похожий код (эмбеддинги)
+
+```bash
+maind fleet similar --group azguard-core --threshold 0.85 [--json]
+```
+
+Поверх литеральных дублей jscpd: извлекает функции/классы по сгруппированным путям, эмбеддит их
+**внешним** бэкендом и ищет кросс-проектные пары «похоже по смыслу, не дословно». Бэкенд —
+pluggable через `code_graph.embed.command` в `.maind.json` (внешний инструмент `текст→вектор`,
+плейсхолдеры `{input}`/`{output}`):
+
+```jsonc
+"code_graph": { "embed": { "command": ["my-embedder", "--in", "{input}", "--out", "{output}"] } }
+```
+
+Не настроен бэкенд → внятный `die` (доступен только `duplicates`). Извлечение чанков и
+косинус-сравнение — на stdlib; эмбеддинг — внешний (как jscpd). MVP, развивается.
+
 ## features / log — корреляция фич через общую память
 
 ```bash
@@ -68,4 +86,4 @@ maind fleet features --namespace axioma                    # факты груп
 | корреляция фич | общая память + namespaces |
 | **детектор дублей (jscpd)** | **новое** — `maind fleet duplicates` |
 
-Дальше: [граф кода →](/guide/graphify) · [Память →](/guide/memory)
+Дальше: [граф кода →](/guide/code-graph) · [Память →](/guide/memory)

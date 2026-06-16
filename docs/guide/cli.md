@@ -34,7 +34,7 @@ maind projects list [--namespace NS] [--json]
 maind projects sync --from brain [--path DIR]
 maind namespaces [--json]              # namespace-группы экосистемы и их проекты-члены
 
-maind deploy [--project ID | --all] [--with-graphify] [--dry-run]   # MCP-серверы хаба (= sync --only mcp)
+maind deploy [--project ID | --all] [--with-code] [--dry-run]   # MCP-серверы хаба (= sync --only mcp)
 maind sync [--project ID | --namespace NS | --all] [--only mcp,graph,memory,health-hook,health-doc,ecosystem-skill] \
            [--mode install|update|auto] [--dry-run] [--json]        # раскатать управляемые артефакты
 maind health [--cwd | --project ID] [--fix] [--strict] [--json]     # healthcheck связи проекта с хабом
@@ -44,10 +44,11 @@ maind run <project> <capability> [-- args]   # дёрнуть команду bra
 
 maind fleet manifest                                      # проекты + группы по общим пакетам (JSON)
 maind fleet duplicates [--group PKG | --projects a,b] [--min-tokens N] [--json]  # кросс-проектные дубли (jscpd)
+maind fleet similar [--group PKG | --projects a,b] [--threshold T] [--json]  # семантически похожий код (эмбеддинги)
 maind fleet log "<что сделал>" [--project ID]            # feature-факт в общую память
 maind fleet features [--namespace NS]                    # feature-факты группы
 
-maind onboard <project> [--with-graphify] [--with-brain]            # единый онбординг
+maind onboard <project> [--with-code] [--with-brain]            # единый онбординг
 
 maind migrate from-brain <.projects.json> [--force]
 maind migrate from-agentmemory <dir> [--force]

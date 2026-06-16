@@ -41,7 +41,8 @@ namespace'ам:
 | `seed.py` | seed-память: факт о связях в `project:<id>` + `ns:<группа>` |
 | `mcp.py` | MCP-сервер (stdio JSON-RPC, 11 tools) |
 | `deploy.py` / `sync.py` | провижининг MCP-серверов / единый провижининг (фан-аут) |
-| `fleet.py` | межпроектный слой: manifest (группы по общим пакетам) · duplicates (jscpd) · feature-log |
+| `fleet.py` | межпроектный слой: manifest · duplicates (jscpd) · similar (эмбеддинги) · feature-log |
+| `codegraph.py` | политика графа кода (секция `code_graph` конфига) + провиженер `.serena/project.yml` (Serena); alias `graphify_*`→`code_*` |
 | `health.py` / `probe.py` | healthcheck связи проекта с хабом / read-only снимки |
 | `skilldoc.py` | провиженер скилла `ecosystem-mcp` (инструкция про MCP-инструменты/связи) в проекты |
 | `workspace.py` | доверие Claude к проектам (`.claude/settings.local.json`) |

@@ -73,8 +73,8 @@ class TestDeploy(unittest.TestCase):
                 _, env = make_repo(tmp)
                 ppath = _project(tmp)
                 cfg = _config(ppath)
-                res = deploy.deploy_project(env, cfg, cfg["projects"][0], with_graphify=True)
-                self.assertEqual(res["graphify"], "skipped-not-installed")
+                res = deploy.deploy_project(env, cfg, cfg["projects"][0], with_code=True)
+                self.assertEqual(res["code"], "skipped-not-installed")
                 servers = json.loads((ppath / ".mcp.json").read_text())["mcpServers"]
                 self.assertNotIn("serena", servers)
                 self.assertIn("agentmemory", servers)   # остальные серверы на месте
@@ -90,8 +90,8 @@ class TestDeploy(unittest.TestCase):
                 _, env = make_repo(tmp)
                 ppath = _project(tmp)
                 cfg = _config(ppath)
-                res = deploy.deploy_project(env, cfg, cfg["projects"][0], with_graphify=True)
-                self.assertEqual(res["graphify"], "written")
+                res = deploy.deploy_project(env, cfg, cfg["projects"][0], with_code=True)
+                self.assertEqual(res["code"], "written")
                 servers = json.loads((ppath / ".mcp.json").read_text())["mcpServers"]
                 self.assertEqual(servers["serena"]["command"], "uvx")
                 self.assertIn("start-mcp-server", servers["serena"]["args"])
@@ -113,8 +113,8 @@ class TestDeploy(unittest.TestCase):
                     "graphify_command": "php",
                     "graphify_args": ["artisan", "boost:mcp"],
                     "graphify_server_name": "laravel-boost"})
-                res = deploy.deploy_project(env, cfg, cfg["projects"][0], with_graphify=True)
-                self.assertEqual(res["graphify"], "written")
+                res = deploy.deploy_project(env, cfg, cfg["projects"][0], with_code=True)
+                self.assertEqual(res["code"], "written")
                 servers = json.loads((ppath / ".mcp.json").read_text())["mcpServers"]
                 self.assertEqual(servers["laravel-boost"]["command"], "php")
                 self.assertEqual(servers["laravel-boost"]["args"], ["artisan", "boost:mcp"])

@@ -7,6 +7,7 @@ import os
 import subprocess
 from pathlib import Path
 
+from . import codegraph
 from .mcpconfig import MCP_FILES, has_server
 from .memory import health, resolve_ports
 from .memory import status as memory_status
@@ -52,9 +53,10 @@ def probe_project(env, config, project, *, memory_reachable=None, trusted=None):
             skills[_SKILL_KEY.get(e.get("source", "local"), "local")] += 1
 
     agentmemory_mcp = any_has("agentmemory")
+    code_server = codegraph.server_name(project, codegraph.settings(config))
     configured = {
         "agentmemory_mcp": agentmemory_mcp, "maind_mcp": any_has("maind"),
-        "graphify_mcp": any_has("graphify"), "mcp_files": files,
+        "code_mcp": any_has(code_server), "mcp_files": files,
         "skills_lock": lock is not None, "skills_count": skills["total"],
         "boost": (path / "boost.json").is_file(),
         "deployed_flag": bool(project.get("deployed")),

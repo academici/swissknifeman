@@ -7,10 +7,10 @@ language-agnostic (через LSP, работает для PHP/TS/Python/Go/Rust
 все вызовы, реализации интерфейса, обзор символов файла) — и экономит токены против чтения файлов
 целиком.
 
-::: tip Историческое имя
-В коде/конфиге слой исторически называется `graphify` (по черновику спецификации). Готового
-инструмента с таким именем нет; **движок по умолчанию — Serena**. Имя поля сохранено для
-совместимости; движок переопределяется (см. ниже).
+::: tip Имя поля и движок
+Включается полем проекта `code: true` (старое `graphify: true` — **legacy-alias**, работает).
+Готового инструмента «graphify» не существует; **движок по умолчанию — Serena**. Вся политика
+(команда, игноры, промпты) — в секции `code_graph` конфига, не в коде (см. [Конфиг](/guide/config)).
 :::
 
 Три слоя экосистемы — разные задачи:
@@ -23,15 +23,15 @@ language-agnostic (через LSP, работает для PHP/TS/Python/Go/Rust
 
 ## Включение (config-driven)
 
-Поле проекта `graphify: true` в `.maind.json` — и `maind sync`/`onboard` раскатают код-MCP:
+Поле проекта `code: true` в `.maind.json` — и `maind sync`/`onboard` раскатают код-MCP:
 
 ```json
-{ "id": "flexcrm", "graphify": true }
+{ "id": "flexcrm", "code": true }
 ```
 
 ```bash
 maind sync --project flexcrm --only mcp     # допишет код-MCP в .mcp.json (если команда есть в PATH)
-maind onboard flexcrm --with-graphify       # онбординг сразу с код-графом (флаг сохранится в конфиг)
+maind onboard flexcrm --with-code       # онбординг сразу с код-графом (флаг сохранится в конфиг)
 ```
 
 Запись в `.mcp.json` проекта (дефолт — Serena):
@@ -49,7 +49,7 @@ maind onboard flexcrm --with-graphify       # онбординг сразу с �
 
 ## Дефолтный `.serena/project.yml` (provision)
 
-При `graphify:true` (движок Serena) провиженер **`code-graph`** кладёт в проект стартовый
+При `code:true` (движок Serena) провиженер **`code-graph`** кладёт в проект стартовый
 `.serena/project.yml`: язык по типу проекта + стандартные игноры + `initial_prompt` (нативно
 нацеливает агента на symbol-инструменты). Пишется **только если файла ещё нет** — после первой
 активации файлом владеет Serena, maind её правки не клобберит.
@@ -60,8 +60,9 @@ maind sync --project flexcrm --only mcp,code-graph
 
 ### Почему игнорируются `vendor` и `packages`
 
-Игноры по умолчанию: `vendor`, `node_modules`, `packages`, `storage`, `bootstrap/cache`,
-`public/build`, `dist`, `.git`. Это **осознанно**, особенно в монорепо с симлинками:
+Игноры по умолчанию (`code_graph.ignores` в конфиге — правишь там, не в коде): `vendor`,
+`node_modules`, `packages`, `storage`, `bootstrap/cache`, `public/build`, `dist`, `.git`. Это
+**осознанно**, особенно в монорепо с симлинками:
 
 - сторонние зависимости (`vendor/laravel/…`) — огромные и read-only, индексировать незачем;
 - **first-party пакеты, подсимлинкованные внутрь проекта** (Composer path-repos: `vendor/<vendor>/<pkg>`
@@ -70,7 +71,7 @@ maind sync --project flexcrm --only mcp,code-graph
   `vendor → laravel/vendor → …`), на которых скан виснет.
 
 **Модель по умолчанию:** каждый first-party пакет — **свой проект со своим код-графом**
-(`graphify:true` на нём же); зависимый проект графит только свой код. Связь «кто кого использует» —
+(`code:true` на нём же); зависимый проект графит только свой код. Связь «кто кого использует» —
 в [maind-графе топологии](/guide/federation). Линковку менять не нужно — она для Composer/рантайма.
 
 ## Workspace-режим: единый граф с локальными пакетами
@@ -83,7 +84,7 @@ maind sync --project flexcrm --only mcp,code-graph
 исходником ИЛИ консьюмер с подсимлинкованными пакетами). Можно задать явно/выключить:
 
 ```json
-{ "id": "flexcrm", "graphify": true, "graphify_workspace": true }   // true | false (override авто)
+{ "id": "flexcrm", "code": true, "code_workspace": true }   // true | false (override авто)
 ```
 
 Тогда maind генерит `.serena/project.yml`, который **не игнорирует `packages`** (исходник
@@ -97,7 +98,7 @@ maind sync --project flexcrm --only mcp,code-graph
 (`CoreX\Auth\CoreAuthServiceProvider`) — пакет виден как часть графа.
 
 ::: tip Когда какой режим
-**Дефолт** (`graphify_workspace` не задан) — проект графит только свой код; пакеты графятся как
+**Дефолт** (`code_workspace` не задан) — проект графит только свой код; пакеты графятся как
 свои проекты. **Workspace** — для «монорепо-style» разработки, где пакеты подсимлинкованы под
 проект и ты правишь их вместе. Ограничение остаётся для НЕзависимых проектов (не под одним
 деревом): объединить их в один граф нельзя — `additional_workspace_folders` Serena пока только
@@ -109,15 +110,15 @@ maind sync --project flexcrm --only mcp,code-graph
 Движок задаётся на проект — например, стек-специфичный сервер вместо Serena:
 
 ```json
-{ "id": "flexcrm", "graphify": true,
-  "graphify_server_name": "laravel-boost",
-  "graphify_command": "php",
-  "graphify_args": ["artisan", "boost:mcp"] }
+{ "id": "flexcrm", "code": true,
+  "code_server_name": "laravel-boost",
+  "code_command": "php",
+  "code_args": ["artisan", "boost:mcp"] }
 ```
 
-Поля: `graphify_command` (бинарь, проверяется в PATH), `graphify_args` (аргументы; плейсхолдер
-`{root}` → путь проекта), `graphify_server_name` (имя сервера в `.mcp.json`). Дефолты — в
-`constants.CODE_MCP_*`.
+Поля: `code_command` (бинарь, проверяется в PATH), `code_args` (аргументы; плейсхолдер
+`{root}` → путь проекта), `code_server_name` (имя сервера в `.mcp.json`). Дефолты — в секции
+`code_graph` конфига (см. [Конфиг](/guide/config)), можно задать глобально или на проект.
 
 ## Когда использовать
 

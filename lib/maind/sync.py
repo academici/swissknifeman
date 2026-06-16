@@ -78,7 +78,7 @@ def _mcp_run(env, config, projects, mode, dry):
     from .projects import write_config
     results, applied = [], False
     for p in projects:
-        res = deploy_project(env, config, p, with_graphify=p.get("graphify", False), dry=dry)
+        res = deploy_project(env, config, p, dry=dry)  # with_code=None → из политики/полей проекта
         if res is None:
             results.append({"provisioner": "mcp", "id": p["id"], "status": "skip",
                             "detail": "нет/нет пути проекта"})
@@ -142,6 +142,17 @@ def _health_doc_run(env, config, projects, mode, dry):
     return [apply_health_doc(env, config, p, mode, dry) for p in projects]
 
 
+def _feature_log_hook_run(env, config, projects, mode, dry):
+    """SessionEnd-хук фиксации коммитов в общую память (если code_graph.feature_log_hook)."""
+    from .codegraph import settings
+    if not settings(config).get("feature_log_hook", True):
+        return [{"provisioner": "feature-log-hook", "id": p["id"], "status": "skip",
+                 "changed": False, "state": "disabled", "detail": "выключен в конфиге"}
+                for p in projects]
+    from .health import apply_feature_log_hook
+    return [apply_feature_log_hook(env, config, p, mode, dry) for p in projects]
+
+
 def _ecosystem_skill_run(env, config, projects, mode, dry):
     """Управляемый скилл ecosystem-mcp (инструкция про MCP-инструменты и связи) в проекты."""
     from .skilldoc import apply_ecosystem_skill
@@ -156,10 +167,11 @@ PROVISIONERS = {
     "memory": _memory_run,
     "health-hook": _health_hook_run,
     "health-doc": _health_doc_run,
+    "feature-log-hook": _feature_log_hook_run,
     "ecosystem-skill": _ecosystem_skill_run,
 }
 ORDER = ["mcp", "code-graph", "graph", "memory", "health-hook", "health-doc",
-         "ecosystem-skill"]
+         "feature-log-hook", "ecosystem-skill"]
 
 
 def provisioner_names(only=None):
@@ -188,8 +200,8 @@ def cmd_sync(env, argv):
                                 "--json": "bool"})
     if opts["help"]:
         print("maind sync [--project ID | --namespace NS | --all] [--only mcp,code-graph,"
-              "graph,memory,health-hook,health-doc,ecosystem-skill] [--mode install|update|"
-              "auto] [--dry-run] [--json]")
+              "graph,memory,health-hook,health-doc,feature-log-hook,ecosystem-skill] "
+              "[--mode install|update|auto] [--dry-run] [--json]")
         return
     mode = opts["mode"] or "auto"
     if mode not in MODES:

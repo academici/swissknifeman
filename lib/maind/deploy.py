@@ -3,15 +3,16 @@
 Из .maind.json вписываем в MCP-конфиг каждого проекта серверы хаба (agent-memory + maind),
 со scope project:<id>. Слияние недеструктивное (mcpconfig: upsert + .bak), идемпотентное, opt-in.
 Демон не обязателен — пишем клиентский конфиг и при выключенном демоне (с предупреждением).
-graphify отложен: --with-graphify, и только если установлен graphify-mcp (иначе warn-and-skip)."""
+Код-граф (движок Serena) опционален: --with-code (legacy --with-graphify), и только если бинарь
+движка установлен в PATH (иначе warn-and-skip). Политика — из секции code_graph конфига."""
 import json
 import os
 import shutil
 from pathlib import Path
 
+from . import codegraph
 from .common import die, now_iso, parse_args, warn
 from .config import load_config
-from .constants import CODE_MCP_ARGS, CODE_MCP_COMMAND, CODE_MCP_NAME
 from .mcpconfig import MCP_FILES, load_mcp, mcp_path, merge_server, write_mcp
 from .memory import health, resolve_ports
 from .projects import get as get_project
@@ -30,10 +31,9 @@ def _maind_entry(env, scope):
             "args": ["mcp", "--scope", scope]}
 
 
-def _graphify_entry(project_path, command, args):
-    """MCP-сервер код-графа проекта (по умолчанию Serena, см. constants.CODE_MCP_*).
-    Плейсхолдер {root} в args заменяется на путь проекта. command/args/имя сервера
-    переопределяются полями проекта — задел под любой code-intelligence MCP."""
+def _code_entry(project_path, command, args):
+    """MCP-сервер код-графа проекта (по умолчанию Serena). Плейсхолдер {root} в args →
+    путь проекта. command/args/имя сервера — из политики code_graph + per-project override."""
     root = str(project_path)
     return {"command": command, "args": [a.replace("{root}", root) for a in args]}
 
@@ -54,9 +54,10 @@ def _resolve_targets(project_path, opt_targets):
     return out
 
 
-def deploy_project(env, config, project, *, targets=None, with_graphify=False,
+def deploy_project(env, config, project, *, targets=None, with_code=None,
                    maind_server=True, dry=False):
-    """Раскатать серверы хаба в один проект. Возвращает result-dict или None (пропуск)."""
+    """Раскатать серверы хаба в один проект. with_code=None → берётся из политики/полей проекта
+    (code|graphify). Возвращает result-dict или None (пропуск)."""
     pid = project["id"]
     local = project.get("local_path")
     if not local:
@@ -68,21 +69,24 @@ def deploy_project(env, config, project, *, targets=None, with_graphify=False,
         return None
     scope = project.get("memory_scope") or f"project:{pid}"
 
+    st = codegraph.settings(config)
+    if with_code is None:
+        with_code = codegraph.enabled(project, st)
     entries = {"agentmemory": _agentmemory_entry(env, config, scope)}
     if maind_server:
         entries["maind"] = _maind_entry(env, scope)
     graphify_state = "disabled"
-    if with_graphify:
-        gcmd = project.get("graphify_command", CODE_MCP_COMMAND)
-        gargs = project.get("graphify_args", CODE_MCP_ARGS)
-        gname = project.get("graphify_server_name", CODE_MCP_NAME)
+    if with_code:
+        gcmd = codegraph.command(project, st)
+        gargs = codegraph.cmd_args(project, st)
+        gname = codegraph.server_name(project, st)
         if shutil.which(gcmd):
-            entries[gname] = _graphify_entry(project_path, gcmd, gargs)
+            entries[gname] = _code_entry(project_path, gcmd, gargs)
             graphify_state = "written"
         else:
             graphify_state = "skipped-not-installed"
             warn(f"проект '{pid}': команда '{gcmd}' код-графа не найдена в PATH — пропускаю "
-                 f"(установите её, напр. uvx для Serena, или задайте graphify_command)")
+                 f"(установите, напр. uvx для Serena, или задайте code_command)")
 
     written = []
     for _channel, path in _resolve_targets(project_path, targets):
@@ -96,7 +100,8 @@ def deploy_project(env, config, project, *, targets=None, with_graphify=False,
         written.append({"file": str(path.relative_to(project_path)),
                         "servers": list(entries), "changed": changed_any})
 
-    return {"id": pid, "scope": scope, "written": written, "graphify": graphify_state,
+    return {"id": pid, "scope": scope, "written": written, "code": graphify_state,
+            "code_server": codegraph.server_name(project, st),
             "servers": list(entries), "targets": [w["file"] for w in written]}
 
 
@@ -110,7 +115,8 @@ def mark_deployed(config, project_id, result):
     proj["mcp"] = {
         "agentmemory": "agentmemory" in result["servers"],
         "maind": "maind" in result["servers"],
-        "graphify": result["graphify"] == "written",
+        "code": result["code"] == "written",
+        "code_server": result.get("code_server"),
         "targets": result["targets"],
         "scope": result["scope"],
     }
@@ -119,7 +125,8 @@ def mark_deployed(config, project_id, result):
 
 def cmd_deploy(env, argv):
     opts, _ = parse_args(argv, {"--project": "str", "--all": "bool", "--targets": "str",
-                                "--with-graphify": "bool", "--no-maind-server": "bool",
+                                "--with-code": "bool", "--with-graphify": "bool",
+                                "--no-maind-server": "bool",
                                 "--dry-run": "bool", "--json": "bool"})
     config, _src = load_config(env)
     if opts["project"]:
@@ -139,8 +146,10 @@ def cmd_deploy(env, argv):
 
     results = []
     for proj in projects:
+        # флаг (--with-code|--with-graphify) форсит код-граф; иначе None → из конфига проекта
+        with_code = True if (opts["with_code"] or opts["with_graphify"]) else None
         res = deploy_project(env, config, proj, targets=opts["targets"] or None,
-                             with_graphify=opts["with_graphify"],
+                             with_code=with_code,
                              maind_server=not opts["no_maind_server"], dry=opts["dry_run"])
         if res is None:
             continue
@@ -158,6 +167,6 @@ def cmd_deploy(env, argv):
         print("нечего деплоить (нет проектов с существующим local_path)")
         return
     for r in results:
-        gf = "" if r["graphify"] == "disabled" else f", graphify:{r['graphify']}"
+        gf = "" if r["code"] == "disabled" else f", code:{r['code']}"
         print(f"  {r['id']:<18} scope={r['scope']:<24} → {', '.join(r['targets'])} "
               f"({', '.join(r['servers'])}{gf})")

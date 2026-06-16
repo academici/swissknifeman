@@ -9,7 +9,7 @@
   **systemd** (автозапуск + рестарт + linger).
 - **Граф топологии** между проектами (федерация, `derive` из composer/доков/скиллов).
 - **Граф кода** — пер-проектный MCP **Serena** (language-agnostic, через `uvx`), config-driven
-  (`graphify:true`), дефолтный `.serena/project.yml` с правильными игнорами.
+  (`code:true`), дефолтный `.serena/project.yml` с правильными игнорами.
 - **Workspace-режим** (авто по наличию `packages/`): единый граф «проект + локальные пакеты»,
   правки идут в реальные репозитории пакетов. Проверено на flexcrm+corex.
 - **Межпроектный слой** `maind fleet`: manifest (группы по общим пакетам), duplicates (jscpd),

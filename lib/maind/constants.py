@@ -33,52 +33,55 @@ GRAPH_ADAPTERS = {"federation", "disabled"}
 LEGACY_GRAPH_ADAPTERS = {"memory", "graphify", "networkx"}
 GRAPH_VERSION = 1
 
-# Универсальный код-граф (граф КОДА внутри проекта) по умолчанию — Serena
-# (github.com/oraios/serena) через uvx: language-agnostic (LSP), даёт символы/ссылки/
-# реализации/обзор. Проверено рабочим (MCP initialize + 22 code-инструмента). Включается
-# на проект полем `graphify: true`; движок переопределяется полями graphify_command /
-# graphify_args (плейсхолдер {root} → путь проекта) / graphify_server_name.
-CODE_MCP_NAME = "serena"
-CODE_MCP_COMMAND = "uvx"
-CODE_MCP_ARGS = [
-    "--from", "git+https://github.com/oraios/serena",
-    "serena", "start-mcp-server",
-    "--context", "ide-assistant",
-    "--project", "{root}",
-    "--enable-web-dashboard", "false",
-]
-
-# Дефолтный .serena/project.yml, который maind кладёт в проект при graphify:true (движок
-# Serena). Язык — по типу проекта; игноры исключают сторонние и СИМЛИНКНУТЫЕ first-party
-# пакеты (vendor/packages) — они индексируются как СВОИ проекты, иначе дубли символов и
-# рекурсивные симлинки (testbench) зацикливают скан. initial_prompt — нативный механизм
-# Serena: текст даётся модели при активации проекта (нацеливает на symbol-инструменты).
-SERENA_LANG_BY_TYPE = {"php-package": "php", "node-package": "typescript"}
-SERENA_IGNORES = ["vendor", "node_modules", "packages", "storage",
-                  "bootstrap/cache", "public/build", "dist", ".git"]
-SERENA_INITIAL_PROMPT = (
-    "Навигацию по коду этого проекта веди через symbol-инструменты Serena "
-    "(get_symbols_overview, find_symbol, find_referencing_symbols, find_implementations) "
-    "вместо чтения файлов целиком — это точнее и экономит токены. Код связанных пакетов "
-    "экосистемы живёт в их собственных проектах; межпроектные связи — в mAInd "
-    "(maind graph)."
-)
-
-# Workspace-режим (graphify_workspace:true): проект развивается ВМЕСТЕ со своими локально
-# подсимлинкованными first-party пакетами (packages/*). Их исходник физически под деревом
-# проекта → один корень = единый граф (LSP резолвит ссылки app↔пакеты). vendor и ВЛОЖЕННЫЕ
-# vendor игнорируем (дубли симлинков + рекурсия testbench), packages — НЕТ. Проверено: из
-# сессии-консьюмера видны символы пакета, правки идут в его реальный репозиторий.
-SERENA_WORKSPACE_IGNORES = ["vendor", "node_modules", "**/vendor", "**/node_modules",
-                            "storage", "bootstrap/cache", "public/build", "dist", ".git"]
-SERENA_WORKSPACE_PROMPT = (
-    "Этот проект — workspace: его код + локально разрабатываемые пакеты экосистемы под "
-    "packages/* образуют ЕДИНЫЙ граф. Навигацию веди symbol-инструментами Serena "
-    "(get_symbols_overview, find_symbol, find_referencing_symbols, find_implementations). "
-    "Папки packages/* — это РЕАЛЬНЫЕ репозитории пакетов (через симлинк): найдя улучшение в "
-    "пакете, предложи его и, ПО ПОДТВЕРЖДЕНИЮ пользователя, правь прямо в packages/<пакет>/… — "
-    "изменение затронет сам пакет и всех его консьюмеров."
-)
+# Код-граф (граф КОДА внутри проекта) — ПОЛИТИКА В КОНФИГЕ, не в коде. Это лишь fallback-
+# дефолт для merge_defaults (секция code_graph в .maind.json); реальные значения берутся из
+# конфига (см. .maind.example.json) — игноры/команду/промпты редактируют там, не здесь.
+# Движок по умолчанию — Serena (github.com/oraios/serena) через uvx: language-agnostic (LSP).
+# Включается на проект полем `code: true` (legacy-alias `graphify: true`).
+#
+# ignores: исключают сторонние и СИМЛИНКНУТЫЕ first-party пакеты (vendor/packages) — они
+#   графятся как СВОИ проекты (иначе дубли символов и рекурсивные симлинки testbench виснут).
+# workspace_ignores: для монорепо/консьюмера, где пакеты под packages/* — их НЕ игнорим
+#   (единый граф app↔пакеты), но режем vendor и ВЛОЖЕННЫЕ **/vendor.
+# initial_prompt/workspace_prompt: нативно даются модели при активации проекта Serena.
+CODE_GRAPH_DEFAULTS = {
+    "enabled_default": False,
+    "engine": "serena",
+    "command": "uvx",
+    "args": [
+        "--from", "git+https://github.com/oraios/serena",
+        "serena", "start-mcp-server",
+        "--context", "ide-assistant",
+        "--project", "{root}",
+        "--enable-web-dashboard", "false",
+    ],
+    "index_args": [
+        "--from", "git+https://github.com/oraios/serena",
+        "serena", "project", "index", "{root}",
+    ],
+    "server_name": "serena",
+    "language_by_type": {"php-package": "php", "node-package": "typescript"},
+    "ignores": ["vendor", "node_modules", "packages", "storage",
+                "bootstrap/cache", "public/build", "dist", ".git"],
+    "workspace_ignores": ["vendor", "node_modules", "**/vendor", "**/node_modules",
+                          "storage", "bootstrap/cache", "public/build", "dist", ".git"],
+    "initial_prompt": (
+        "Навигацию по коду этого проекта веди через symbol-инструменты Serena "
+        "(get_symbols_overview, find_symbol, find_referencing_symbols, find_implementations) "
+        "вместо чтения файлов целиком — это точнее и экономит токены. Код связанных пакетов "
+        "экосистемы живёт в их собственных проектах; межпроектные связи — в mAInd (maind graph)."
+    ),
+    "workspace_prompt": (
+        "Этот проект — workspace: его код + локально разрабатываемые пакеты экосистемы под "
+        "packages/* образуют ЕДИНЫЙ граф. Навигацию веди symbol-инструментами Serena "
+        "(get_symbols_overview, find_symbol, find_referencing_symbols, find_implementations). "
+        "Папки packages/* — это РЕАЛЬНЫЕ репозитории пакетов (через симлинк): найдя улучшение в "
+        "пакете, предложи его и, ПО ПОДТВЕРЖДЕНИЮ пользователя, правь прямо в packages/<пакет>/… "
+        "— изменение затронет сам пакет и всех его консьюмеров."
+    ),
+    "pre_index": True,
+    "feature_log_hook": True,
+}
 
 # Планы графа (природа связи) и источник, из которого ребро/узел получены (derive).
 GRAPH_PLANES = {"code", "doc", "meta", "runtime"}

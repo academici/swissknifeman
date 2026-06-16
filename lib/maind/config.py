@@ -8,15 +8,16 @@ import os
 from pathlib import Path
 
 from .common import die, sanitize, warn
-from .constants import (GRAPH_ADAPTERS, HEARTBEAT_DEFAULT_MS, LEGACY_GRAPH_ADAPTERS,
-                        MAX_IDLE_DEFAULT_MS, MEMORY_HTTP_PORT, MEMORY_STREAM_PORT,
-                        SERVICE_NAME)
+from .constants import (CODE_GRAPH_DEFAULTS, GRAPH_ADAPTERS, HEARTBEAT_DEFAULT_MS,
+                        LEGACY_GRAPH_ADAPTERS, MAX_IDLE_DEFAULT_MS, MEMORY_HTTP_PORT,
+                        MEMORY_STREAM_PORT, SERVICE_NAME)
 
 # Топ-ключи .maind.json (кроме _-мета). Значение — ожидаемый Python-тип.
 TOP_KEYS = {
     "node": dict,
     "memory": dict,
     "graph": dict,
+    "code_graph": dict,
     "agents": dict,
     "projects": list,
     "namespaces": dict,
@@ -136,6 +137,12 @@ def merge_defaults(config):
     if gr["adapter"] in LEGACY_GRAPH_ADAPTERS:
         gr["adapter"] = "federation"
     config["graph"] = gr
+
+    # code_graph: политика код-графа из конфига поверх fallback-дефолтов (top-level ключи).
+    cg = dict(config.get("code_graph") or {})
+    for k, v in CODE_GRAPH_DEFAULTS.items():
+        cg.setdefault(k, v)
+    config["code_graph"] = cg
 
     ag = dict(config.get("agents") or {})
     ag.setdefault("registry_enabled", True)

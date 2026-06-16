@@ -69,17 +69,18 @@ def onboard(env, config, project_or_path, opts):
                           "detail": "swissknifeman недоступен — пропуск"})
 
     # 2. maind deploy — память + граф (MCP-серверы хаба)
-    # --with-graphify фиксируем как намерение в записи проекта, чтобы последующие
-    # `maind sync` тоже раскатывали graphify (config-driven, см. _mcp_run).
-    if opts.get("with_graphify") and not proj.get("graphify"):
-        proj["graphify"] = True
+    # --with-code (legacy --with-graphify) фиксируем как намерение в записи проекта, чтобы
+    # последующие `maind sync` тоже раскатывали код-граф (config-driven, см. _mcp_run).
+    want_code = opts.get("with_code") or opts.get("with_graphify")
+    if want_code and not (proj.get("code") or proj.get("graphify")):
+        proj["code"] = True
         if not dry:
             write_config(env, config)
     res = deploy_project(env, config, proj, targets=opts.get("targets") or None,
-                         with_graphify=opts.get("with_graphify", False), dry=dry)
-    if proj.get("graphify"):  # дефолтный .serena/project.yml (если код-граф включён)
-        from .codegraph import apply_serena_config
-        apply_serena_config(env, config, proj, "install", dry)
+                         with_code=True if want_code else None, dry=dry)
+    from . import codegraph
+    if codegraph.enabled(proj, codegraph.settings(config)):  # дефолтный .serena/project.yml
+        codegraph.apply_serena_config(env, config, proj, "install", dry)
     if res is None:
         steps.append({"name": "deploy", "status": "failed", "detail": "нет пути проекта"})
     else:
@@ -139,16 +140,17 @@ def onboard(env, config, project_or_path, opts):
 
 def cmd_onboard(env, argv):
     o, pos = parse_args(argv, {"--bundle": "str", "--skip-skills": "bool",
-                               "--targets": "str", "--with-graphify": "bool",
+                               "--targets": "str", "--with-code": "bool",
+                               "--with-graphify": "bool",
                                "--with-brain": "bool", "--dry-run": "bool",
                                "--yes": "bool", "--json": "bool"}, max_pos=1)
     if not pos:
         die("использование: maind onboard <project|path> [--bundle B --yes "
-            "--with-graphify --with-brain --dry-run]")
+            "--with-code --with-brain --dry-run]")
     config, _src = load_config(env)
     opts = {"bundle": o["bundle"], "skip_skills": o["skip_skills"], "targets": o["targets"],
-            "with_graphify": o["with_graphify"], "with_brain": o["with_brain"],
-            "dry": o["dry_run"], "yes": o["yes"]}
+            "with_code": o["with_code"], "with_graphify": o["with_graphify"],
+            "with_brain": o["with_brain"], "dry": o["dry_run"], "yes": o["yes"]}
     report = onboard(env, config, pos[0], opts)
     if o["json"]:
         print(json.dumps(report, ensure_ascii=False, indent=2))

@@ -63,7 +63,7 @@ def health_report(env, config, project, *, memory_reachable=None):
         "memory_daemon": memory_reachable,
         "agentmemory_mcp": bool(c.get("agentmemory_mcp")),
         "maind_mcp": bool(c.get("maind_mcp")),
-        "graphify_mcp": bool(c.get("graphify_mcp")),
+        "code_mcp": bool(c.get("code_mcp")),
         "path": rep.get("path"), "hints": hints,
     }
 
@@ -136,13 +136,13 @@ def _file_state(path, content):
     return "fresh" if content_hash(cur) == content_hash(content) else "stale"
 
 
-def _merge_session_hook(settings, command):
-    """Идемпотентно добавить/обновить SessionStart-хук maind в настройки Claude."""
+def _merge_session_hook(settings, command, event="SessionStart", marker="maind-health"):
+    """Идемпотентно добавить/обновить хук maind (по marker в команде) в событие event."""
     hooks = settings.setdefault("hooks", {})
-    sessions = hooks.setdefault("SessionStart", [])
+    sessions = hooks.setdefault(event, [])
     for group in sessions:
         for h in group.get("hooks", []):
-            if "maind-health" in h.get("command", ""):
+            if marker in h.get("command", ""):
                 if h["command"] != command:
                     h["command"] = command
                     return settings, True
@@ -182,6 +182,45 @@ def apply_health_hook(env, config, project, mode, dry):
                 backup_file(settings_path)
             atomic_write_json(settings_path, merged)
     return _result(pid, "health-hook", state, True, dry, ".claude/maind-health.sh + settings")
+
+
+FEATURE_HOOK_SCRIPT = ".claude/maind-feature-log.sh"
+
+
+def apply_feature_log_hook(env, config, project, mode, dry):
+    """SessionEnd-скрипт фиксации нового коммита в общую память (maind fleet log) + хук."""
+    pid = project["id"]
+    local = project.get("local_path")
+    path = Path(os.path.expanduser(local)) if local else None
+    if not path or not path.is_dir():
+        return _result(pid, "feature-log-hook", "absent", False, dry, "нет пути")
+    script = _render(env, "health/feature-log-hook.sh",
+                     {"MAIND_BIN": _maind_bin(env), "PROJECT": pid})
+    script_path = path / FEATURE_HOOK_SCRIPT
+    state = _file_state(script_path, script)
+    settings_path = path / ".claude" / "settings.json"
+    command = f"bash {script_path}"
+    settings, _existed = load_settings(settings_path)
+    _, hook_changed = _merge_session_hook(json.loads(json.dumps(settings)), command,
+                                          event="SessionEnd", marker="maind-feature-log")
+    if state == "fresh" and hook_changed:
+        state = "stale"
+    if not _act(mode, state):
+        return _result(pid, "feature-log-hook", state, False, dry, ".claude/")
+    if not dry:
+        script_path.parent.mkdir(parents=True, exist_ok=True)
+        if script_path.is_file():
+            backup_file(script_path)
+        script_path.write_text(script, encoding="utf-8")
+        script_path.chmod(script_path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP)
+        merged, changed = _merge_session_hook(settings, command, event="SessionEnd",
+                                              marker="maind-feature-log")
+        if changed:
+            if settings_path.is_file():
+                backup_file(settings_path)
+            atomic_write_json(settings_path, merged)
+    return _result(pid, "feature-log-hook", state, True, dry,
+                   ".claude/maind-feature-log.sh + settings")
 
 
 # ── CLI ─────────────────────────────────────────────────────────────────────

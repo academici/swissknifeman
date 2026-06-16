@@ -202,6 +202,10 @@ def expected_skills_dirs(plugin_root):
 STALE_HINT = "run 'swissknifeman registry' (or ./sync.sh --update-registry)"
 plugin_roots = {b: root / "skills" / b for b in bucket_dirs}
 plugin_roots["generate-skill"] = root / "generate-skill"
+# Management plugin (командное лицо CLI, без скиллов) — валидируем как обычный плагин,
+# если каталог есть; registry.py добавляет его в marketplace.json синхронно.
+if (root / "skm" / ".claude-plugin" / "plugin.json").exists():
+    plugin_roots["skm"] = root / "skm"
 
 for plugin_name, plugin_root in sorted(plugin_roots.items()):
     pj = plugin_root / ".claude-plugin" / "plugin.json"

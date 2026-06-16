@@ -41,6 +41,12 @@ maind health [--cwd | --project ID] [--fix] [--strict] [--json]     # healthchec
 maind workspace sync [--dry-run] [--no-allow] [--no-mode]           # доверие Claude к проектам экосистемы
 maind workspace status [--json]
 maind run <project> <capability> [-- args]   # дёрнуть команду brain / swissknifeman
+
+maind fleet manifest                                      # проекты + группы по общим пакетам (JSON)
+maind fleet duplicates [--group PKG | --projects a,b] [--min-tokens N] [--json]  # кросс-проектные дубли (jscpd)
+maind fleet log "<что сделал>" [--project ID]            # feature-факт в общую память
+maind fleet features [--namespace NS]                    # feature-факты группы
+
 maind onboard <project> [--with-graphify] [--with-brain]            # единый онбординг
 
 maind migrate from-brain <.projects.json> [--force]

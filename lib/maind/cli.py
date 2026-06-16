@@ -9,6 +9,7 @@ from .agents import cmd_agents
 from .common import Env
 from .deploy import cmd_deploy
 from .doctor import cmd_doctor
+from .fleet import cmd_fleet
 from .graph import cmd_graph
 from .health import cmd_health
 from .mcp import cmd_mcp
@@ -36,6 +37,7 @@ COMMANDS = {
     "health": cmd_health,
     "workspace": cmd_workspace,
     "run": cmd_run,
+    "fleet": cmd_fleet,
     "onboard": cmd_onboard,
     "migrate": cmd_migrate,
     "mcp": cmd_mcp,

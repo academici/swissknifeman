@@ -45,6 +45,7 @@ export default withMermaid(defineConfig({
           text: 'Провижининг и эксплуатация',
           items: [
             { text: 'CLI', link: '/guide/cli' },
+            { text: 'Fleet (межпроектный слой)', link: '/guide/fleet' },
             { text: 'MCP-сервер', link: '/guide/mcp' },
             { text: 'Healthcheck', link: '/guide/health' },
             { text: 'Sync', link: '/guide/sync' },

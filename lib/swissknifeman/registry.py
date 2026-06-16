@@ -150,6 +150,19 @@ def write_plugin_manifests(env, bucket_meta, bucket_dirs):
         "tags": ["meta", "authoring"],
     })
 
+    # Management plugin: командное лицо swissknifeman CLI (каталог skm/ со статичным
+    # plugin.json + commands/). Не бакет скиллов — добавляем запись в marketplace вручную,
+    # чтобы install `skm@swissknifeman` давал slash-команды управления скиллами.
+    if (root / "skm" / ".claude-plugin" / "plugin.json").exists():
+        marketplace_plugins.append({
+            "name": "skm",
+            "source": "./skm",
+            "description": "swissknifeman CLI — управление скиллами проекта: бакеты "
+                           "(connect/vendor), integrate, статус",
+            "category": "meta",
+            "tags": ["cli", "skills", "management"],
+        })
+
     write_json(root / ".claude-plugin" / "marketplace.json", {
         "name": MARKETPLACE,
         "owner": OWNER,

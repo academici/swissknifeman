@@ -26,6 +26,7 @@ export default withMermaid(defineConfig({
             { text: 'Философия экосистемы', link: '/ecosystem' },
             { text: 'Архитектура узла', link: '/architecture' },
             { text: 'Как это всё работает', link: '/guide/how-it-works' },
+            { text: 'Решения, трейд-оффы, ограничения', link: '/guide/design-notes' },
             { text: 'Установка', link: '/guide/installation' },
             { text: 'Конфиг .maind.json', link: '/guide/config' },
           ],
@@ -37,7 +38,7 @@ export default withMermaid(defineConfig({
             { text: 'Граф связей', link: '/guide/graph' },
             { text: 'Федерация', link: '/guide/federation' },
             { text: 'Namespaces', link: '/guide/namespaces' },
-            { text: 'graphify (граф кода)', link: '/guide/graphify' },
+            { text: 'Граф кода (Serena)', link: '/guide/graphify' },
           ],
         },
         {

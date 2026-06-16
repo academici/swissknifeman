@@ -7,10 +7,26 @@ from .memory import health, resolve_ports
 
 
 def cmd_doctor(env, argv):
-    opts, _ = parse_args(argv, {"--quiet": "bool"})
+    opts, _ = parse_args(argv, {"--quiet": "bool", "--audit": "str", "--json": "bool"})
     if opts["help"]:
-        print("maind doctor [--quiet] — проверка окружения узла")
+        print("maind doctor [--quiet] — проверка окружения узла\n"
+              "maind doctor --audit mcp|claude|deny|core|all [--json] — "
+              "fleet-аудит оптимизаций по проектам (read-only)")
         return
+
+    # --audit: read-only fleet-отчёт о полноте раздачи оптимизаций по проектам
+    if opts["audit"]:
+        from .audit import run_audit
+        config = {}
+        if env.default_config.exists():
+            try:
+                from .config import load_config
+                config, _ = load_config(env)
+            except SystemExit:
+                config = {}
+        run_audit(env, config, opts["audit"], as_json=opts["json"])
+        return
+
     quiet = opts["quiet"]
     issues = 0
 

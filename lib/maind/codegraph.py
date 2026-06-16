@@ -12,7 +12,8 @@ import os
 from pathlib import Path
 
 from .constants import (CODE_MCP_COMMAND, CODE_MCP_NAME, SERENA_IGNORES,
-                        SERENA_INITIAL_PROMPT, SERENA_LANG_BY_TYPE)
+                        SERENA_INITIAL_PROMPT, SERENA_LANG_BY_TYPE,
+                        SERENA_WORKSPACE_IGNORES, SERENA_WORKSPACE_PROMPT)
 
 SERENA_CONFIG = Path(".serena") / "project.yml"
 
@@ -36,12 +37,13 @@ def _infer_language(project, path):
 
 
 def render_project_yaml(name, language, ignores=SERENA_IGNORES,
-                        initial_prompt=SERENA_INITIAL_PROMPT):
+                        initial_prompt=SERENA_INITIAL_PROMPT, gitignore=True):
     """Минимальный валидный .serena/project.yml (Serena дополнит шаблон при активации)."""
     lines = [f'project_name: "{name}"']
     if language:
         lines += ["languages:", f"  - {language}"]
-    lines += ["ignore_all_files_in_gitignore: true", "ignored_paths:"]
+    lines += [f"ignore_all_files_in_gitignore: {'true' if gitignore else 'false'}",
+              "ignored_paths:"]
     lines += [f'  - "{p}"' for p in ignores]
     lines += ["read_only: false", f'initial_prompt: "{initial_prompt}"', ""]
     return "\n".join(lines)
@@ -65,7 +67,12 @@ def apply_serena_config(env, config, project, mode, dry):
     if target.exists():  # после активации файлом владеет Serena — не перезаписываем
         return {"provisioner": "code-graph", "id": pid, "status": "ok",
                 "changed": False, "state": "present", "detail": str(SERENA_CONFIG)}
-    content = render_project_yaml(pid, _infer_language(project, path))
+    workspace = bool(project.get("graphify_workspace"))
+    content = render_project_yaml(
+        pid, _infer_language(project, path),
+        ignores=SERENA_WORKSPACE_IGNORES if workspace else SERENA_IGNORES,
+        initial_prompt=SERENA_WORKSPACE_PROMPT if workspace else SERENA_INITIAL_PROMPT,
+        gitignore=not workspace)
     if not dry:
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(content, encoding="utf-8")

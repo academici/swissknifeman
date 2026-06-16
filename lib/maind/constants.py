@@ -64,6 +64,22 @@ SERENA_INITIAL_PROMPT = (
     "(maind graph)."
 )
 
+# Workspace-режим (graphify_workspace:true): проект развивается ВМЕСТЕ со своими локально
+# подсимлинкованными first-party пакетами (packages/*). Их исходник физически под деревом
+# проекта → один корень = единый граф (LSP резолвит ссылки app↔пакеты). vendor и ВЛОЖЕННЫЕ
+# vendor игнорируем (дубли симлинков + рекурсия testbench), packages — НЕТ. Проверено: из
+# сессии-консьюмера видны символы пакета, правки идут в его реальный репозиторий.
+SERENA_WORKSPACE_IGNORES = ["vendor", "node_modules", "**/vendor", "**/node_modules",
+                            "storage", "bootstrap/cache", "public/build", "dist", ".git"]
+SERENA_WORKSPACE_PROMPT = (
+    "Этот проект — workspace: его код + локально разрабатываемые пакеты экосистемы под "
+    "packages/* образуют ЕДИНЫЙ граф. Навигацию веди symbol-инструментами Serena "
+    "(get_symbols_overview, find_symbol, find_referencing_symbols, find_implementations). "
+    "Папки packages/* — это РЕАЛЬНЫЕ репозитории пакетов (через симлинк): найдя улучшение в "
+    "пакете, предложи его и, ПО ПОДТВЕРЖДЕНИЮ пользователя, правь прямо в packages/<пакет>/… — "
+    "изменение затронет сам пакет и всех его консьюмеров."
+)
+
 # Планы графа (природа связи) и источник, из которого ребро/узел получены (derive).
 GRAPH_PLANES = {"code", "doc", "meta", "runtime"}
 LINK_VIA = {"code", "doc", "override", "skills"}

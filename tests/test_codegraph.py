@@ -70,6 +70,16 @@ class TestSerenaConfig(unittest.TestCase):
             self.assertEqual(r["status"], "dry")
             self.assertFalse((pdir / _CFG).exists())
 
+    def test_workspace_mode_includes_packages(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj, pdir = _setup(tmp, graphify=True, graphify_workspace=True)
+            codegraph.apply_serena_config(env, config, proj, "auto", dry=False)
+            txt = (pdir / _CFG).read_text(encoding="utf-8")
+            self.assertIn('- "**/vendor"', txt)              # рекурсию/дубли режем
+            self.assertNotIn('- "packages"', txt)            # пакеты НЕ игнорим (единый граф)
+            self.assertIn("ignore_all_files_in_gitignore: false", txt)
+            self.assertIn("workspace", txt)                  # промпт про единый граф/правки
+
     def test_node_package_language(self):
         with tempfile.TemporaryDirectory() as tmp:
             env, config, proj, pdir = _setup(tmp, graphify=True, type="node-package")

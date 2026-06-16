@@ -80,6 +80,22 @@ class TestSerenaConfig(unittest.TestCase):
             self.assertIn("ignore_all_files_in_gitignore: false", txt)
             self.assertIn("workspace", txt)                  # промпт про единый граф/правки
 
+    def test_workspace_auto_detected_by_packages_dir(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj, pdir = _setup(tmp, graphify=True)   # без явного флага
+            (pdir / "packages").mkdir()                            # → авто-workspace
+            codegraph.apply_serena_config(env, config, proj, "auto", dry=False)
+            txt = (pdir / _CFG).read_text(encoding="utf-8")
+            self.assertNotIn('- "packages"', txt)
+            self.assertIn('- "**/vendor"', txt)
+
+    def test_explicit_false_overrides_auto(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj, pdir = _setup(tmp, graphify=True, graphify_workspace=False)
+            (pdir / "packages").mkdir()                            # есть, но флаг=false
+            codegraph.apply_serena_config(env, config, proj, "auto", dry=False)
+            self.assertIn('- "packages"', (pdir / _CFG).read_text())  # дефолтный игнор
+
     def test_node_package_language(self):
         with tempfile.TemporaryDirectory() as tmp:
             env, config, proj, pdir = _setup(tmp, graphify=True, type="node-package")

@@ -24,6 +24,17 @@ def _is_serena(project):
             and project.get("graphify_server_name", CODE_MCP_NAME) == CODE_MCP_NAME)
 
 
+def _is_workspace(project, path):
+    """Workspace-режим (единый граф с локальными пакетами): явный флаг graphify_workspace,
+    иначе авто — есть каталог packages/ (монорепо со своим исходником ИЛИ консьюмер с
+    подсимлинкованными first-party пакетами). Без него дефолт игнорит packages/ и прячет
+    этот исходник."""
+    flag = project.get("graphify_workspace")
+    if flag is not None:
+        return bool(flag)
+    return (path / "packages").is_dir()
+
+
 def _infer_language(project, path):
     """Язык для Serena: по типу проекта, иначе по манифесту. None → Serena определит сама."""
     lang = SERENA_LANG_BY_TYPE.get(project.get("type"))
@@ -67,7 +78,7 @@ def apply_serena_config(env, config, project, mode, dry):
     if target.exists():  # после активации файлом владеет Serena — не перезаписываем
         return {"provisioner": "code-graph", "id": pid, "status": "ok",
                 "changed": False, "state": "present", "detail": str(SERENA_CONFIG)}
-    workspace = bool(project.get("graphify_workspace"))
+    workspace = _is_workspace(project, path)
     content = render_project_yaml(
         pid, _infer_language(project, path),
         ignores=SERENA_WORKSPACE_IGNORES if workspace else SERENA_IGNORES,

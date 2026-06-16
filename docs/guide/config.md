@@ -35,7 +35,7 @@ difflib), неизвестный вложенный — предупрежден
   "graphify_command": "uvx",           // опц. бинарь code-intelligence MCP (дефолт uvx → Serena)
   "graphify_args": ["..."],            // опц. аргументы; {root} → путь проекта
   "graphify_server_name": "serena",    // опц. имя сервера в .mcp.json (дефолт serena)
-  "graphify_workspace": false,         // опц. единый граф: индексировать локальные пакеты (packages/*)
+  "graphify_workspace": false,         // опц. override авто-режима «единый граф с packages/*» (авто, если есть packages/)
   "status": "active"                   // active | archived | planning
 }
 ```

@@ -25,6 +25,7 @@ export default withMermaid(defineConfig({
           items: [
             { text: 'Что такое SwissKnifeMan', link: '/guide/' },
             { text: 'Установка скиллов', link: '/guide/installation' },
+            { text: 'Vendor-режим (sync)', link: '/guide/vendor-mode' },
             { text: 'Чеклист интеграции', link: '/guide/integration-checklist' },
             { text: 'CLI swissknifeman', link: '/guide/cli' },
             { text: 'Профили и автодетект', link: '/guide/profiles' },

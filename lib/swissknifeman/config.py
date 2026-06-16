@@ -97,6 +97,8 @@ def find_project_root(env, start=None):
             return None, None
         if (p / ".swissknife.json").is_file():
             return p, ".swissknife.json"
+        if (p / ".swissknifeman" / "config.json").is_file():
+            return p, ".swissknifeman/config.json"
         if (p / ".claude").is_dir():
             return p, ".claude/"
         if (p / ".git").exists():  # dir or file (worktree/submodule)
@@ -123,7 +125,7 @@ def resolve_target(env, opts, allow_home_confirm=False):
             print("Корень проекта определился как домашняя директория.")
             if not confirm(f"Продолжить с {target}?"):
                 die("отменено — перейдите в проект или укажите --target")
-    if target == env.root.resolve() and env.cmd in ("connect", "vendor", "update"):
+    if target == env.root.resolve() and env.cmd in ("connect", "vendor", "update", "sync"):
         die("вы внутри самого реестра swissknifeman — перейдите в "
             "потребляющий проект")
     return target, via

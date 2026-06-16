@@ -16,6 +16,22 @@
 
 ### Added
 
+- **Vendor-режим `swissknifeman sync` — физический перенос скиллов по единому
+  конфигу.** `.swissknifeman/config.json` — источник истины (правила:
+  `include` конкретных скиллов + `buckets` целиком − `exclude`); `sync`
+  разворачивает их в плоский набор по `skills.json`, копирует файлы в
+  `skills_path` (по умолчанию `.claude/skills`) и пишет производный
+  `skills-lock.json` с пометкой `managed`. Безопасный prune: удаляются только
+  `managed=true` записи, исчезнувшие из конфига — чужой/ручной вендоринг
+  (наследие Boost, другой хаб) не трогается. Конфиг распознаётся как маркер
+  корня проекта; пример — `.swissknifeman.example/config.json`; доки —
+  `docs/guide/vendor-mode.md`. Read-only композитор `lock` остаётся для
+  проектов без vendor-режима.
+- **Management-плагин `skm@swissknifeman`** — командное лицо CLI: каталог
+  `skm/` со статичным `plugin.json` + slash-команды (`skm`, `skills`,
+  `integrate`, `status`, `doctor`). Не бакет скиллов — `registry` добавляет
+  запись в `marketplace.json` синхронно, `validate.sh` проверяет как обычный
+  плагин. Install `skm@swissknifeman` даёт команды управления скиллами проекта.
 - **Реализация бэклога аудита — ещё 14 универсальных скиллов + 1 расширение
   (batch-2).** Добиты все отложенные §5 кандидаты из
   `docs/research/practices-audit-2026-06.md`; всё обобщено (проект — только

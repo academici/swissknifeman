@@ -120,8 +120,8 @@ node-link JSON. Раскладка — **федерация**: граф на п�
 maind ставится и как **плагин Claude Code** — тонкое лицо над CLI. После `./install.sh`:
 
 ```
-/plugin marketplace add /путь/к/maind     # single-entry marketplace «academici»
-/plugin install maind@academici
+/plugin marketplace add /путь/к/maind     # single-entry marketplace «maind»
+/plugin install maind@maind
 ```
 
 Появляются slash-команды `/maind:*` (`onboard`, `sync`, `status`, `health`, `doctor`) — обёртки над

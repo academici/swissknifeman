@@ -9,7 +9,7 @@ maind поставляется и как **плагин Claude Code** — тон
 | Артефакт | Назначение |
 |:--|:--|
 | `.claude-plugin/plugin.json` | манифест плагина (имя `maind`, путь к командам, ссылка на MCP) |
-| `.claude-plugin/marketplace.json` | single-entry marketplace `academici` — делает репозиторий устанавливаемым |
+| `.claude-plugin/marketplace.json` | single-entry marketplace `maind` — делает репозиторий устанавливаемым |
 | `commands/*.md` | slash-команды — обёртки над CLI |
 | `.mcp.json` | hub-MCP сервер `maind-hub` (global scope) — инструменты хаба в сессии |
 
@@ -25,7 +25,7 @@ cd maind && ./install.sh          # симлинк ~/.local/bin/maind
 
 ```
 /plugin marketplace add /путь/к/maind     # или github:academici/maind
-/plugin install maind@academici
+/plugin install maind@maind
 ```
 
 После перезагрузки появляются команды `/maind:*`. MCP-сервер `maind-hub` поднимается

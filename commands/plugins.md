@@ -11,7 +11,7 @@ allowed-tools: Bash(jq:*), Read, Edit
 ## Что сделать
 1. Покажи пользователю: какие marketplace зарегистрированы и какие плагины включены (`enabledPlugins`).
 2. Сопоставь с экосистемой — должны быть доступны три плагина:
-   - `maind@academici` (хаб: онбординг/sync/статус/здоровье),
+   - `maind@maind` (хаб: онбординг/sync/статус/здоровье),
    - `skm@swissknifeman` (скиллы проекта: бакеты/connect/vendor/integrate),
    - `brain@brain` (docs-sync валта).
    Отметь, чего не хватает (нет marketplace или плагин выключен).

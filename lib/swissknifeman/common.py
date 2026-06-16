@@ -1,5 +1,6 @@
 """Общие утилиты: окружение, вывод, парсинг flag'ов и frontmatter."""
 import re
+import subprocess
 import sys
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -70,6 +71,26 @@ def confirm(prompt):
     if not sys.stdin.isatty():
         return False
     return input(f"{prompt} [y/N] ").strip().lower() in ("y", "yes")
+
+
+def apply_permissions(env, target, presets="", dry_run=False, settings_file=None):
+    """Влить permissions-пресеты в .claude цели через scripts/apply-permissions.sh.
+    presets="" → автодетект стека внутри скрипта. settings_file=None → дефолт
+    скрипта (settings.local.json). Возвращает True, если скрипт запущен."""
+    script = env.root / "scripts" / "apply-permissions.sh"
+    if not script.exists():
+        warn("scripts/apply-permissions.sh не найден — пропуск permissions")
+        return False
+    cmd = ["bash", str(script), "--target", str(target)]
+    if presets:
+        cmd += ["--preset", presets]
+    if settings_file:
+        cmd += ["--file", settings_file]
+    if dry_run:
+        cmd.append("--dry-run")
+    sys.stdout.flush()
+    subprocess.run(cmd, check=False)
+    return True
 
 
 # --- flag parsing -------------------------------------------------------------

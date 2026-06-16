@@ -6,9 +6,10 @@ import sys
 from datetime import date
 
 from .boost import sync_boost_json
-from .common import (AGENT_DEFAULTS, MANIFEST, die, parse_flags,
-                     parse_frontmatter_fields, sanitize, warn)
-from .config import all_buckets, load_config, resolve_selection, resolve_target
+from .common import (AGENT_DEFAULTS, MANIFEST, apply_permissions, die,
+                     parse_flags, parse_frontmatter_fields, sanitize, warn)
+from .config import (DEFAULT_EXCLUDE, all_buckets, core_skill_tuples,
+                     load_config, resolve_selection, resolve_target)
 from .hub import generate_hub, hub_artifacts_exist
 from .state import upsert_project
 
@@ -130,6 +131,10 @@ def do_vendor(env, target, opts, register=True):
 
     # exclude = union of flag and config (safety-oriented, not precedence-based)
     exclude = set(flag_exclude) | set(config.get("exclude", []))
+    no_core = opts.get("no_core", False)
+    if not no_core:
+        # CORE-политика: не раздаём дубль-хаба/ручные инструменты по умолчанию
+        exclude |= set(DEFAULT_EXCLUDE)
 
     agent = opts.get("agent", "") or config.get("agent", "") or "generic"
     if agent not in AGENT_DEFAULTS:
@@ -147,6 +152,16 @@ def do_vendor(env, target, opts, register=True):
 
     # --- collect skills (dir directly containing SKILL.md) ---------------------
     skills, all_skill_rels = collect_skills(env, buckets, exclude)
+
+    # CORE: токен-скиллы раздаём всегда (если не --no-core), даже когда их бакет
+    # не входит в профиль проекта (general/oss-dev обычно вне код-профилей).
+    core_added = []
+    if not no_core:
+        have = {f"{b}/{r}" for b, r, _, _ in skills}
+        for tup in core_skill_tuples(env, exclude):
+            if f"{tup[0]}/{tup[1]}" not in have:
+                skills.append(tup)
+                core_added.append(f"{tup[0]}/{tup[1]}")
 
     if include_meta and (root / "generate-skill/generate-skill/SKILL.md").exists():
         d = root / "generate-skill/generate-skill"
@@ -170,6 +185,8 @@ def do_vendor(env, target, opts, register=True):
     if exclude:
         print(f"Exclude:     {' '.join(sorted(exclude))}")
     print(f"Skills:      {len(skills)}")
+    if core_added:
+        print(f"CORE:        {' '.join(core_added)} (раздаются по умолчанию; --no-core отключает)")
     if pulled:
         print(f"Dependencies: {len(pulled)} pulled via requires")
 
@@ -306,6 +323,10 @@ def do_vendor(env, target, opts, register=True):
     vendored_names = sorted({fm_name for _, _, _, fm_name in skills})
     sync_boost_json(target, vendored_names, dry_run=dry_run)
 
+    # permissions-пресеты (deny мусора + allow стека) в .claude/settings.local.json
+    if not opts.get("no_permissions"):
+        apply_permissions(env, target, dry_run=dry_run)
+
     hub = opts.get("hub", False)
     if hub and not dry_run:
         generate_hub(env, target)
@@ -334,11 +355,12 @@ def cmd_vendor(env, argv):
         "--target": "str", "--agent": "str", "--profile": "str",
         "--buckets": "str", "--exclude": "str", "--skills-path": "str",
         "--list": "bool", "--dry-run": "bool", "--force": "bool", "--hub": "bool",
+        "--no-core": "bool", "--no-permissions": "bool",
     })
     if opts["help"]:
         print("swissknifeman vendor [--agent claude|cursor|generic] "
               "[--profile P|--buckets a,b] [--exclude x,y] [--skills-path P] "
-              "[--list] [--dry-run] [--force] [--hub]")
+              "[--list] [--dry-run] [--force] [--hub] [--no-core] [--no-permissions]")
         return
     target, _ = resolve_target(env, opts, allow_home_confirm=True)
     do_vendor(env, target, opts)

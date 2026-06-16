@@ -385,6 +385,17 @@ for skill_md in sorted(root.glob(".claude/skills/*/SKILL.md")):
         warnings.append(
             f"{rel}: internal skill name '{name}' collides with a registry skill")
 
+# --- 10b. slash-команды плагина skm (frontmatter) ----------------------------
+# Командное лицо CLI: каждый skm/commands/*.md должен иметь frontmatter с
+# непустым description (иначе команда без подписи в меню Claude Code).
+for cmd_md in sorted(root.glob("skm/commands/*.md")):
+    rel = cmd_md.relative_to(root)
+    fm = parse_frontmatter(cmd_md)
+    if fm is None:
+        errors.append(f"{rel}: missing/unterminated frontmatter block")
+    elif not fm.get("description"):
+        errors.append(f"{rel}: slash-команда без непустого description")
+
 # --- report ----------------------------------------------------------------
 for w in warnings:
     print(f"WARN: {w}")

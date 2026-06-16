@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "maind-hub": {
+      "command": "${CLAUDE_PLUGIN_ROOT}/bin/maind",
+      "args": ["mcp", "--scope", "global"]
+    }
+  }
+}

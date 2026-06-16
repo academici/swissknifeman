@@ -1,0 +1,16 @@
+{
+  "name": "academici",
+  "owner": {
+    "name": "Dmitry Vostrikov",
+    "email": "dv.vostrikov@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "maind",
+      "source": "./",
+      "description": "mAInd hub — тонкое лицо над CLI: онбординг проектов, sync артефактов, статус хаба, здоровье связи. MCP-инструменты хаба на global scope.",
+      "category": "ecosystem",
+      "tags": ["hub", "mcp", "memory", "graph", "onboarding"]
+    }
+  ]
+}

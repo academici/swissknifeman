@@ -48,6 +48,7 @@ export default withMermaid(defineConfig({
             { text: 'CLI', link: '/guide/cli' },
             { text: 'Fleet (межпроектный слой)', link: '/guide/fleet' },
             { text: 'MCP-сервер', link: '/guide/mcp' },
+            { text: 'Плагин Claude Code', link: '/guide/plugin' },
             { text: 'Healthcheck', link: '/guide/health' },
             { text: 'Sync', link: '/guide/sync' },
             { text: 'Демон памяти (systemd)', link: '/guide/systemd' },

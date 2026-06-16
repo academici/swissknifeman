@@ -24,6 +24,8 @@ namespace'ам:
 - `lib/maind/*.py` — вся логика, **stdlib-only** (без сторонних зависимостей в рантайме).
 - `tests/` — `unittest`, без живого демона (`FakeMemoryServer`), изоляция в tmpdir.
 - `docs/` — VitePress; `templates/health/` — управляемые артефакты; `config/memory/` — конфиг демона.
+- `.claude-plugin/` + `commands/*.md` + `.mcp.json` — **плагин Claude Code**: тонкое лицо над CLI
+  (slash-команды `/maind:*` → `bin/maind`; hub-MCP `maind-hub`). Логики нет — обёртки; см. `docs/guide/plugin.md`.
 
 ### Ключевые модули
 

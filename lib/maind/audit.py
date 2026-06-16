@@ -21,6 +21,13 @@ DIMS = ("mcp", "claude", "deny", "core")
 CLAUDE_MD_WARN = 200  # ориентир Anthropic (context-economy ось 1)
 CORE_SKILLS = ("context-economy", "anti-drift", "compact-responses",
                "session-handoff", "gh-review")
+# CORE может доехать ДВУМЯ каналами: vendor → физ. файлы скиллов; connect →
+# бакет-плагин включён в settings.enabledPlugins. Бакет каждого CORE-скилла:
+CORE_SKILL_BUCKET = {
+    "context-economy": "general", "anti-drift": "general",
+    "compact-responses": "general", "session-handoff": "general",
+    "gh-review": "oss-dev",
+}
 # Серверы, которые maind раскатывает штатно — не кандидаты на ревизию.
 HUB_MCP = {"agentmemory", "maind"}
 
@@ -82,6 +89,25 @@ def _present_skills(path):
     return names
 
 
+def _enabled_buckets(path):
+    """Бакеты-плагины, включённые в .claude/settings(.local).json (connect-канал).
+    Ключи enabledPlugins вида '<bucket>@<marketplace>' → имя бакета."""
+    buckets = set()
+    for name in ("settings.json", "settings.local.json"):
+        f = path / ".claude" / name
+        if not f.is_file():
+            continue
+        try:
+            data = json.loads(f.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            continue
+        if isinstance(data, dict):
+            for key, on in (data.get("enabledPlugins") or {}).items():
+                if on:
+                    buckets.add(key.split("@")[0])
+    return buckets
+
+
 def audit_project(env, project, dims, code_st):
     pid = project["id"]
     local = project.get("local_path")
@@ -101,8 +127,11 @@ def audit_project(env, project, dims, code_st):
     if "deny" in dims:
         row["deny"] = _deny_present(path)
     if "core" in dims:
-        present = _present_skills(path)
-        row["core"] = {"missing": [s for s in CORE_SKILLS if s not in present]}
+        present = _present_skills(path)          # vendor: физ. файлы
+        enabled = _enabled_buckets(path)         # connect: бакет-плагины
+        row["core"] = {"missing": [
+            s for s in CORE_SKILLS
+            if s not in present and CORE_SKILL_BUCKET.get(s) not in enabled]}
     return row
 
 

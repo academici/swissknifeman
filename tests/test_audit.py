@@ -11,7 +11,8 @@ from maind import audit, codegraph  # noqa: E402
 import tests.fixtures as fx  # noqa: E402
 
 
-def _make_project(tmp, *, claude_lines=0, deny=False, mcp=None, skills=None):
+def _make_project(tmp, *, claude_lines=0, deny=False, mcp=None, skills=None,
+                  plugins=None):
     p = Path(tmp) / "proj"
     p.mkdir(parents=True, exist_ok=True)
     if claude_lines:
@@ -20,6 +21,10 @@ def _make_project(tmp, *, claude_lines=0, deny=False, mcp=None, skills=None):
     if deny:
         (p / ".claude" / "settings.json").write_text(json.dumps(
             {"permissions": {"deny": ["Read(_ide_helper*.php)"]}}), encoding="utf-8")
+    if plugins:  # connect-канал: enabledPlugins бакеты в settings.local.json
+        (p / ".claude" / "settings.local.json").write_text(json.dumps(
+            {"enabledPlugins": {f"{b}@swissknifeman": True for b in plugins}}),
+            encoding="utf-8")
     if mcp:
         (p / ".mcp.json").write_text(json.dumps(
             {"mcpServers": {n: {} for n in mcp}}), encoding="utf-8")
@@ -63,6 +68,20 @@ class AuditCase(unittest.TestCase):
         self.assertFalse(row["deny"])
         self.assertEqual(set(row["core"]["missing"]), set(audit.CORE_SKILLS))
         self.assertEqual(row["mcp"]["servers"], [])
+
+    def test_core_present_via_connect_buckets(self):
+        # connect-канал: CORE доезжает бакет-плагинами general+oss-dev (без физ. файлов)
+        p = _make_project(self.tmp, plugins=["general", "oss-dev"])
+        row = audit.audit_project(self.env, {"id": "c", "local_path": str(p)},
+                                  audit.DIMS, self.code_st)
+        self.assertEqual(row["core"]["missing"], [])
+
+    def test_core_partial_via_connect_buckets(self):
+        # включён только general → gh-review (oss-dev) остаётся missing
+        p = _make_project(self.tmp, plugins=["general"])
+        row = audit.audit_project(self.env, {"id": "c", "local_path": str(p)},
+                                  audit.DIMS, self.code_st)
+        self.assertEqual(row["core"]["missing"], ["gh-review"])
 
     def test_missing_path(self):
         row = audit.audit_project(self.env,

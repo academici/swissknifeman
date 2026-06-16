@@ -48,6 +48,22 @@ CODE_MCP_ARGS = [
     "--enable-web-dashboard", "false",
 ]
 
+# Дефолтный .serena/project.yml, который maind кладёт в проект при graphify:true (движок
+# Serena). Язык — по типу проекта; игноры исключают сторонние и СИМЛИНКНУТЫЕ first-party
+# пакеты (vendor/packages) — они индексируются как СВОИ проекты, иначе дубли символов и
+# рекурсивные симлинки (testbench) зацикливают скан. initial_prompt — нативный механизм
+# Serena: текст даётся модели при активации проекта (нацеливает на symbol-инструменты).
+SERENA_LANG_BY_TYPE = {"php-package": "php", "node-package": "typescript"}
+SERENA_IGNORES = ["vendor", "node_modules", "packages", "storage",
+                  "bootstrap/cache", "public/build", "dist", ".git"]
+SERENA_INITIAL_PROMPT = (
+    "Навигацию по коду этого проекта веди через symbol-инструменты Serena "
+    "(get_symbols_overview, find_symbol, find_referencing_symbols, find_implementations) "
+    "вместо чтения файлов целиком — это точнее и экономит токены. Код связанных пакетов "
+    "экосистемы живёт в их собственных проектах; межпроектные связи — в mAInd "
+    "(maind graph)."
+)
+
 # Планы графа (природа связи) и источник, из которого ребро/узел получены (derive).
 GRAPH_PLANES = {"code", "doc", "meta", "runtime"}
 LINK_VIA = {"code", "doc", "override", "skills"}

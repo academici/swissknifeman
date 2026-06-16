@@ -77,6 +77,9 @@ def onboard(env, config, project_or_path, opts):
             write_config(env, config)
     res = deploy_project(env, config, proj, targets=opts.get("targets") or None,
                          with_graphify=opts.get("with_graphify", False), dry=dry)
+    if proj.get("graphify"):  # дефолтный .serena/project.yml (если код-граф включён)
+        from .codegraph import apply_serena_config
+        apply_serena_config(env, config, proj, "install", dry)
     if res is None:
         steps.append({"name": "deploy", "status": "failed", "detail": "нет пути проекта"})
     else:

@@ -95,6 +95,12 @@ def _mcp_run(env, config, projects, mode, dry):
     return results
 
 
+def _codegraph_run(env, config, projects, mode, dry):
+    """Дефолтный .serena/project.yml в проекты с включённым код-графом (движок Serena)."""
+    from .codegraph import apply_serena_config
+    return [apply_serena_config(env, config, p, mode, dry) for p in projects]
+
+
 def _graph_run(env, config, projects, mode, dry):
     """Derive графа проектов из источников (composer/Brain/override) + пересборка индекса.
     changed — честно по содержимому стора (сериализация детерминирована), чтобы
@@ -145,13 +151,15 @@ def _ecosystem_skill_run(env, config, projects, mode, dry):
 # Реестр провиженеров и порядок применения (ORDER задаёт последовательность).
 PROVISIONERS = {
     "mcp": _mcp_run,
+    "code-graph": _codegraph_run,
     "graph": _graph_run,
     "memory": _memory_run,
     "health-hook": _health_hook_run,
     "health-doc": _health_doc_run,
     "ecosystem-skill": _ecosystem_skill_run,
 }
-ORDER = ["mcp", "graph", "memory", "health-hook", "health-doc", "ecosystem-skill"]
+ORDER = ["mcp", "code-graph", "graph", "memory", "health-hook", "health-doc",
+         "ecosystem-skill"]
 
 
 def provisioner_names(only=None):
@@ -179,9 +187,9 @@ def cmd_sync(env, argv):
                                 "--only": "str", "--mode": "str", "--dry-run": "bool",
                                 "--json": "bool"})
     if opts["help"]:
-        print("maind sync [--project ID | --namespace NS | --all] [--only mcp,graph,"
-              "memory,health-hook,health-doc,ecosystem-skill] [--mode install|update|auto] "
-              "[--dry-run] [--json]")
+        print("maind sync [--project ID | --namespace NS | --all] [--only mcp,code-graph,"
+              "graph,memory,health-hook,health-doc,ecosystem-skill] [--mode install|update|"
+              "auto] [--dry-run] [--json]")
         return
     mode = opts["mode"] or "auto"
     if mode not in MODES:

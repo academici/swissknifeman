@@ -21,7 +21,8 @@ maind sync --all --dry-run --json                  # план без запис�
 
 | Провиженер | Что делает | Модуль |
 |:--|:--|:--|
-| `mcp` | пишет MCP-серверы хаба (agent-memory + maind [+ graphify]) в `.mcp.json` проекта | `deploy.py` |
+| `mcp` | пишет MCP-серверы хаба (agent-memory + maind [+ код-граф]) в `.mcp.json` проекта | `deploy.py` |
+| `code-graph` | стартовый `.serena/project.yml` (при `graphify:true`, движок Serena) — язык + игноры + initial_prompt | `codegraph.py` |
 | `graph` | `derive` графа проекта из источников + пересборка `_index.db` | `derive.py` |
 | `memory` | seed базового факта о связях в `project:<id>` + `ns:<группа>` | `seed.py` |
 | `health-hook` | SessionStart-хук связи с хабом в `.claude/settings.json` | `health.py` |

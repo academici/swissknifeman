@@ -171,6 +171,53 @@ def write_plugin_manifests(env, bucket_meta, bucket_dirs):
     return len(marketplace_plugins)
 
 
+def render_index(registry, bucket_meta):
+    """Markdown-реестр для discovery (skills/_index.md): скиллы по бакетам + tag matrix.
+    Полностью генерируется из skills.json — человекочитаемое лицо машинного реестра."""
+    skills = registry["skills"]
+    by_bucket = {}
+    for s in skills:
+        by_bucket.setdefault(s["bucket"], []).append(s)
+    tag_map = {}
+    for s in skills:
+        for t in s.get("tags", []):
+            tag_map.setdefault(t, []).append(s["name"])
+
+    lines = [
+        "# Реестр скиллов swissknifeman",
+        "",
+        "<!-- GENERATED `swissknifeman registry` — не редактировать вручную -->",
+        "",
+        "Источник истины портируемых скиллов (машинный реестр — `skills.json`). "
+        "Раздача в проекты: `swissknifeman connect` (плагины-бакеты) / `vendor` "
+        "(физ. перенос). CORE-набор токен-скиллов (`general`/`oss-dev`) раздаётся "
+        "по умолчанию — см. `connect`/`vendor`.",
+        "",
+        f"Всего: {len(skills)} скиллов в {len(by_bucket)} бакетах.",
+        "",
+        "## Скиллы по бакетам",
+    ]
+    for bucket in sorted(by_bucket):
+        desc = bucket_meta.get(bucket, {}).get("description", "")
+        items = sorted(by_bucket[bucket], key=lambda s: s["name"])
+        lines += ["", f"### {bucket} — {desc} ({len(items)})", "",
+                  "| Скилл | Описание | Теги |", "|:--|:--|:--|"]
+        for s in items:
+            d = s.get("description", "").replace("|", "\\|")
+            if len(d) > 90:
+                d = d[:89] + "…"
+            tags = ", ".join(f"`{t}`" for t in s.get("tags", []))
+            lines.append(f"| `{s['name']}` | {d} | {tags} |")
+
+    lines += ["", "## Tag matrix", "",
+              "Поиск скиллов по тегу (грузи точечно, не весь бакет).", "",
+              "| Тег | Скиллы |", "|:--|:--|"]
+    for tag in sorted(tag_map):
+        names = ", ".join(f"`{n}`" for n in sorted(set(tag_map[tag])))
+        lines.append(f"| `{tag}` | {names} |")
+    return "\n".join(lines) + "\n"
+
+
 def cmd_registry(env, argv):
     # registry не принимает флагов, но help/неизвестные обрабатываем единообразно
     opts = parse_flags(argv, {})
@@ -184,6 +231,10 @@ def cmd_registry(env, argv):
         json.dumps(registry, indent=2, ensure_ascii=False) + "\n")
     print(f"Updated skills.json: {len(registry['skills'])} skills, "
           f"{len(registry['references'])} references")
+
+    (root / "skills" / "_index.md").write_text(
+        render_index(registry, bucket_meta), encoding="utf-8")
+    print("Updated skills/_index.md (tag matrix)")
 
     n_plugins = write_plugin_manifests(env, bucket_meta, bucket_dirs)
     print(f"Updated plugin manifests: {n_plugins} plugins "

@@ -3,8 +3,10 @@ import json
 import os
 import shutil
 
-from .common import AGENT_DEFAULTS, MANIFEST, MARKETPLACE, die, parse_flags
-from .config import all_buckets, load_config, resolve_selection, resolve_target
+from .common import (AGENT_DEFAULTS, MANIFEST, MARKETPLACE, apply_permissions,
+                     die, parse_flags)
+from .config import (CORE_BUCKETS, all_buckets, load_config, resolve_selection,
+                     resolve_target)
 from .hub import generate_hub, hub_artifacts_exist
 from .state import print_registry_state, upsert_project
 
@@ -19,6 +21,14 @@ def do_connect(env, target, opts, register=True, fix_path_drift=False):
         profile_source = "plugins"
 
     buckets = all_buckets(env)
+    # CORE: marketplace bucket-granular → раздаём токен-бакеты general+oss-dev в
+    # каждый проект (skill-level CORE недоступен в plugin-режиме). --no-core отключает.
+    # Только существующие бакеты (реестр может их не содержать — напр. в тестах).
+    core_added = []
+    if not opts.get("no_core"):
+        core_added = [b for b in CORE_BUCKETS if b not in plugins and b in buckets]
+        plugins = list(plugins) + core_added
+
     known_plugins = set(buckets) | {"generate-skill"}
     for p in plugins:
         if p not in known_plugins:
@@ -35,6 +45,8 @@ def do_connect(env, target, opts, register=True, fix_path_drift=False):
     print(f"Profile:  {profile_name or '-'} (via {source})")
     print(f"Source:   {root}")
     print(f"Plugins:  {' '.join(plugins)}")
+    if core_added:
+        print(f"CORE:     {' '.join(core_added)} (токен-бакеты по умолчанию; --no-core отключает)")
 
     list_only = opts.get("list", False)
     dry_run = opts.get("dry_run", False)
@@ -99,6 +111,10 @@ def do_connect(env, target, opts, register=True, fix_path_drift=False):
     if drift:
         print(f"NOTE: включены сверх профиля (не трогаю): {' '.join(drift)}")
 
+    # permissions-пресеты (deny мусора + allow стека) в тот же settings-файл
+    if not opts.get("no_permissions"):
+        apply_permissions(env, target, settings_file=settings_file, dry_run=dry_run)
+
     # vendored-copy migration
     skills_path = config.get("skills_path") or AGENT_DEFAULTS["claude"]
     manifest_file = target / skills_path / MANIFEST
@@ -149,12 +165,13 @@ def cmd_connect(env, argv):
     opts = parse_flags(argv, {
         "--target": "str", "--profile": "str", "--plugins": "str",
         "--file": "str", "--cleanup-vendored": "bool", "--list": "bool",
-        "--dry-run": "bool", "--hub": "bool",
+        "--dry-run": "bool", "--hub": "bool", "--no-core": "bool",
+        "--no-permissions": "bool",
     })
     if opts["help"]:
         print("swissknifeman connect [--profile P|--plugins a,b] "
               "[--file settings.json|settings.local.json] [--cleanup-vendored] "
-              "[--list] [--dry-run] [--hub]")
+              "[--list] [--dry-run] [--hub] [--no-core] [--no-permissions]")
         return
     target, _ = resolve_target(env, opts, allow_home_confirm=True)
     do_connect(env, target, opts)

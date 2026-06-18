@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "source": "github",
+  "repo": "onmax/nuxt-skills",
+  "strategy": "notify",
+  "license": "MIT",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "url": "https://raw.githubusercontent.com/onmax/nuxt-skills/main/skills/nuxt-modules/SKILL.md",
+      "sha256": "c658ddf775c683d87fed12144a941e6c718ba0a0470b7af82037ad38a33d5c3c",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/ci-workflows.md",
+      "url": "https://raw.githubusercontent.com/onmax/nuxt-skills/main/skills/nuxt-modules/references/ci-workflows.md",
+      "sha256": "69df88074f7e5ed4bc887b55c32fd6e4e4c9a426b8d360b48009db8b7b411ec9",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/development.md",
+      "url": "https://raw.githubusercontent.com/onmax/nuxt-skills/main/skills/nuxt-modules/references/development.md",
+      "sha256": "22572b0823c7d75231a6ab867e3e83bc98a3fa8758dd51645b0bede5a8d6081b",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/testing-and-publishing.md",
+      "url": "https://raw.githubusercontent.com/onmax/nuxt-skills/main/skills/nuxt-modules/references/testing-and-publishing.md",
+      "sha256": "f12b41853a00213a14ce2744fe1e97cd89dbfcdb973e8c6b950d1fe51aa86b32",
+      "fetched_at": "2026-06-17"
+    }
+  ],
+  "notes": "Imported from onmax/nuxt-skills (skills/nuxt-modules/SKILL.md). strategy=notify: upstream changes are reported only — review and merge manually."
+}

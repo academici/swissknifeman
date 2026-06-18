@@ -1,0 +1,20 @@
+{
+  "skill": "figma-to-vue",
+  "snippets": [
+    {
+      "file": "theme.css",
+      "description": "Tailwind v4 CSS-first @theme из tokens.json: --color-*/--spacing-*/--radius-*/--text-* генерируют утилиты; Variable Modes light/dark → переопределение токенов под .dark",
+      "tags": ["tailwind", "tailwindcss-v4", "theme", "design-tokens", "dark-mode"]
+    },
+    {
+      "file": "variant-component.vue",
+      "description": "Vue-компонент с вариантами через class-variance-authority (cva): маппинг Figma Component Set (intent/size/disabled) в variants, классы через cn(), defineProps по VariantProps",
+      "tags": ["vue", "cva", "variants", "tailwind", "component"]
+    },
+    {
+      "file": "auto-layout-mapping.md",
+      "description": "Таблица соответствия Figma Auto-layout → Tailwind/flexbox: layoutMode, itemSpacing→gap, padding, sizing modes (FIXED/AUTO/FILL), выравнивание по осям, constraints",
+      "tags": ["auto-layout", "flexbox", "tailwind", "mapping"]
+    }
+  ]
+}

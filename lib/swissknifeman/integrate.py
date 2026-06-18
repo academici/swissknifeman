@@ -12,7 +12,7 @@ import shutil
 import subprocess
 import sys
 
-from .common import die, parse_flags
+from .common import apply_permissions, die, parse_flags
 from .config import autodetect, load_config, resolve_target
 from .connect import do_connect
 from .vendor import do_vendor
@@ -173,17 +173,7 @@ def _block_perms(env, target, choices, dry):
         print("\n[2] Permissions: пропуск")
         return
     print("\n[2] Permissions")
-    script = env.root / "scripts" / "apply-permissions.sh"
-    if not script.exists():
-        print("  пропуск: scripts/apply-permissions.sh не найден")
-        return
-    cmd = ["bash", str(script), "--target", str(target)]
-    if choices.get("perms_presets"):
-        cmd += ["--preset", choices["perms_presets"]]
-    if dry:
-        cmd.append("--dry-run")
-    sys.stdout.flush()
-    subprocess.run(cmd, check=False)
+    apply_permissions(env, target, choices.get("perms_presets", ""), dry)
 
 
 def _block_autoapprove(target, choices, dry):

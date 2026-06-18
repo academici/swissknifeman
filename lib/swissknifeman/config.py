@@ -3,7 +3,39 @@ import json
 import os
 from pathlib import Path
 
-from .common import (AGENT_DEFAULTS, CONFIG_KEYS, Env, confirm, die)
+from .common import (AGENT_DEFAULTS, CONFIG_KEYS, Env, confirm, die,
+                     parse_frontmatter_fields)
+
+# CORE-политика раздачи: токен-экономные скиллы, которые swissknifeman кладёт в
+# КАЖДЫЙ проект по умолчанию (см. deep_analysis §5–§6). Каналы разной гранулярности:
+#   connect (marketplace) — bucket-granular → CORE_BUCKETS;
+#   vendor (физ. копия)    — skill-granular → CORE_SKILLS + DEFAULT_EXCLUDE.
+# DEFAULT_EXCLUDE убирает из авто-раздачи скиллы, дублирующие хаб maind
+# (shared-memory ← agent-memory MCP) и ручные инструменты (cross-project-coordinator).
+# Отключается флагом --no-core у connect/vendor.
+CORE_SKILLS = [
+    "general/context-economy", "general/anti-drift", "general/compact-responses",
+    "general/session-handoff", "oss-dev/gh-review",
+]
+CORE_BUCKETS = ["general", "oss-dev"]
+DEFAULT_EXCLUDE = ["system/shared-memory", "system/cross-project-coordinator"]
+
+
+def core_skill_tuples(env, exclude):
+    """CORE_SKILLS → [(bucket, rel, dir, fm_name)]; пропускает excluded и
+    отсутствующие. Формат кортежа совпадает с vendor.collect_skills."""
+    out = []
+    for path in CORE_SKILLS:
+        bucket, _, rel = path.partition("/")
+        d = env.root / "skills" / bucket / rel
+        md = d / "SKILL.md"
+        if not md.is_file():
+            continue
+        fm_name = parse_frontmatter_fields(md)["name"]
+        if {fm_name, d.name, path} & exclude:
+            continue
+        out.append((bucket, rel, d, fm_name))
+    return out
 
 
 def validate_config(env, config, cfg_file):

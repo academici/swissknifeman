@@ -46,6 +46,26 @@ MVP = минимум, при котором пользователь получ�
 
 ---
 
+## Шаг 1.5. Scope guard: feature-amendment criteria
+
+В эпоху agentic coding исчез традиционный forcing function против scope creep — стоимость engineering time. Фича теперь стоит afternoon вместо sprint, поэтому **zero-friction scope creep**: каждое добавление по отдельности защитимо, но продукт расползается за границы → потеря direction и momentum.
+
+Антидот — **scope document до первой строки кода**, сдвигающий decision point:
+- ❌ «Стоит ли это добавить?» (на это всегда «ну да, полезно»)
+- ✅ «Критическая масса реальных пользователей сказала, что не получает ценности без этого?»
+
+```markdown
+## Scope guard
+**Продукт делает:** [одно предложение — core]
+**Продукт намеренно НЕ делает:** [список — важнее, чем in-scope]
+**Feature-amendment criteria:** новая фича добавляется ТОЛЬКО если ___
+  (конкретное доказательство от реальных пользователей, не founder-энтузиазм под видом product thinking)
+```
+
+Когда всплывает новая идея фичи — прогнать через критерий: это genuine signal от юзеров или энтузиазм? `adversarial-check` помогает отличить.
+
+---
+
 ## Шаг 2. Приоритизация фич
 
 Использовать матрицу Impact/Effort:
@@ -128,4 +148,7 @@ MVP = минимум, при котором пользователь получ�
 - `pm/go-to-market` — источник ICP для MVP Definition и метрик перехода между фазами (требуется ДО roadmap).
 - `pm/prd-from-brd` — RICE-приоритизация и версии stories питают разбивку по фазам.
 - `pm/unit-economics` — метрики перехода (retention, CAC, LTV) на границах фаз сверять отсюда.
+- `pm/pmf-diagnostics` — уточняет MVP-exit: метрика перехода MVP→v1 = genuine PMF (Sean Ellis, retention), не просто «первый платящий».
+- `founder/startup-lifecycle` — рамка: MVP scope guard и фазовые ворота = механика Idea→MVP→Launch перехода.
+- `founder/adversarial-check` — фильтр feature-amendment: genuine signal vs founder enthusiasm.
 - `founder/risk-assessment` — `[[Risk Register]]`: если фаза зависит от внешнего риска, связать явно.

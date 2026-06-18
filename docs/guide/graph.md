@@ -16,6 +16,7 @@ flowchart LR
     architecture["architecture"]
     data_schema["data-schema"]
     eval_design["eval-design"]
+    figma_mcp_core["figma-mcp-core"]
     legal_compliance["legal-compliance"]
     observability_design["observability-design"]
     security_design["security-design"]
@@ -41,15 +42,20 @@ flowchart LR
     node_pnpm_preflight["node-pnpm-preflight"]
   end
   subgraph founder["founder"]
+    adversarial_check["adversarial-check"]
     competitive_analysis["competitive-analysis"]
+    customer_discovery["customer-discovery"]
+    defensibility["defensibility"]
     idea_discovery["idea-discovery"]
     new_project["new-project"]
     pitch_deck["pitch-deck"]
     risk_assessment["risk-assessment"]
+    startup_lifecycle["startup-lifecycle"]
   end
   subgraph frontend["frontend"]
     backend_type_sync["backend-type-sync"]
     dark_mode["dark-mode"]
+    figma_to_vue["figma-to-vue"]
     inertia_vue["inertia-vue"]
     naive_ui_theming["naive-ui-theming"]
     reka_ui_cva["reka-ui-cva"]
@@ -70,6 +76,9 @@ flowchart LR
     task_brief_template["task-brief-template"]
     ticket_workflow["ticket-workflow"]
     user_roles["user-roles"]
+  end
+  subgraph mobile["mobile"]
+    figma_to_flutter["figma-to-flutter"]
   end
   subgraph operator["operator"]
     capacity_planning["capacity-planning"]
@@ -109,6 +118,7 @@ flowchart LR
     business_process["business-process"]
     go_to_market["go-to-market"]
     monetization_design["monetization-design"]
+    pmf_diagnostics["pmf-diagnostics"]
     prd_from_brd["prd-from-brd"]
     product_roadmap["product-roadmap"]
     requirement_critic["requirement-critic"]
@@ -144,6 +154,7 @@ flowchart LR
   capacity_planning -->|requires| observability_design
   competitive_analysis -->|requires| idea_discovery
   cross_project_coordinator -->|requires| local_topology
+  customer_discovery -->|requires| idea_discovery
   dark_mode -->|requires| tailwind_conventions
   data_schema -->|requires| brd
   database -->|requires| laravel
@@ -154,6 +165,8 @@ flowchart LR
   docker_services -->|requires| docker_postgres
   dx_design -->|requires| oss_development
   eval_design -->|requires| agent_design
+  figma_to_flutter -->|requires| figma_mcp_core
+  figma_to_vue -->|requires| figma_mcp_core
   filament -->|requires| laravel
   filament -->|requires| laravel_structure
   gh_review -->|requires| context_economy
@@ -183,6 +196,7 @@ flowchart LR
   pitch_deck -->|requires| competitive_analysis
   pitch_deck -->|requires| go_to_market
   pitch_deck -->|requires| unit_economics
+  pmf_diagnostics -->|requires| product_roadmap
   postmortem -->|requires| incident_response
   prd_from_brd -->|requires| brd
   product_roadmap -->|requires| brd
@@ -203,6 +217,12 @@ flowchart LR
   venv_dependencies -->|requires| ml_project_structure
   vite_multi_build -->|requires| vite_module_loader
   vitest -->|requires| inertia_vue
+  adversarial_check -.->|feeds| competitive_analysis
+  adversarial_check -.->|feeds| idea_discovery
+  adversarial_check -.->|feeds| new_project
+  adversarial_check -.->|feeds| pmf_diagnostics
+  adversarial_check -.->|feeds| risk_assessment
+  adversarial_check -.->|feeds| startup_lifecycle
   agent_design -.->|feeds| observability_design
   anti_drift -.->|feeds| session_handoff
   architecture -.->|feeds| api_design
@@ -211,8 +231,13 @@ flowchart LR
   code_simplifier -.->|feeds| code_review
   complex_task_orchestrator -.->|feeds| cross_layer_change_checklist
   cross_project_coordinator -.->|feeds| refactoring_plan
+  customer_discovery -.->|feeds| competitive_analysis
+  customer_discovery -.->|feeds| monetization_design
+  customer_discovery -.->|feeds| new_project
   db_test_preflight -.->|feeds| laravel_testing
   db_test_preflight -.->|feeds| test_isolation_guard
+  defensibility -.->|feeds| go_to_market
+  defensibility -.->|feeds| pitch_deck
   dependency_audit -.->|feeds| release_engineering
   dependency_audit -.->|feeds| security_design
   docker_dev_prod -.->|feeds| docker_services
@@ -220,6 +245,10 @@ flowchart LR
   docker_postgres -.->|feeds| docker_dev_prod
   docker_vite -.->|feeds| docker_dev_prod
   eval_design -.->|feeds| observability_design
+  figma_to_vue -.->|feeds| dark_mode
+  figma_to_vue -.->|feeds| naive_ui_theming
+  figma_to_vue -.->|feeds| reka_ui_cva
+  figma_to_vue -.->|feeds| tailwind_conventions
   gitops -.->|feeds| github_flow
   laravel -.->|feeds| dependency_injection
   laravel -.->|feeds| repositories
@@ -243,6 +272,10 @@ flowchart LR
   risk_assessment -.->|feeds| pitch_deck
   runbook -.->|feeds| incident_response
   spec_interview -.->|feeds| task_brief_template
+  startup_lifecycle -.->|feeds| customer_discovery
+  startup_lifecycle -.->|feeds| defensibility
+  startup_lifecycle -.->|feeds| new_project
+  startup_lifecycle -.->|feeds| pmf_diagnostics
   task_brief_template -.->|feeds| complex_task_orchestrator
   tech_stack_selection -.->|feeds| oss_development
   tech_stack_selection -.->|feeds| release_engineering
@@ -252,16 +285,16 @@ flowchart LR
   version_gotchas -.->|feeds| parametric_config
 ```
 
-**В графе:** 97 скиллов, 70 рёбер requires, 47 рёбер produces_for.
+**В графе:** 105 скиллов, 74 рёбер requires, 66 рёбер produces_for.
 
-## Изолированные скиллы (55)
+## Изолированные скиллы (72)
 
 Скиллы без связей `requires`/`produces_for` — самодостаточны.
 
 | Бакет | Скиллы |
 |---|---|
 | devops | `docker` |
-| frontend | `eslint-flat-config`, `filepond-upload`, `js-code-style`, `laravel-echo-client`, `pinia-stores`, `vue-composition-api`, `vue-dynamic-icons` |
+| frontend | `antfu`, `document-writer`, `eslint-flat-config`, `filepond-upload`, `js-code-style`, `laravel-echo-client`, `motion`, `nuxt`, `nuxt-modules`, `nuxt-seo`, `pinia`, `pinia-stores`, `ts-library`, `vite`, `vitepress`, `vitest-vue`, `vue`, `vue-best-practices`, `vue-composition-api`, `vue-dynamic-icons`, `vue-router-best-practices`, `vue-testing-best-practices`, `vueuse-functions`, `web-design-guidelines` |
 | general | `ai-context-workflow`, `compact-responses`, `packages-stack`, `project-map`, `skills-ssot`, `writing-style` |
 | imported | `agent-security-super-skill`, `ai-agent-super-skill`, `content-creative-super-skill`, `dev-engineering-super-skill`, `finance-super-skill`, `legal-super-skill`, `marketing-super-skill`, `operations-cx-super-skill`, `pm-super-skill`, `research-knowledge-super-skill`, `sales-super-skill`, `token-efficient` |
 | php | `azguard`, `code-style-spatie`, `enum-attributes`, `health-checks`, `laravel-best-practices`, `laravel-broadcasting`, `laravel-dusk`, `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages`, `laravel-subagents`, `livewire-blade-attributes`, `medialibrary`, `named-arguments`, `pao`, `pennant-development`, `php-patterns`, `php-upgrade-checklist`, `spatie-settings` |

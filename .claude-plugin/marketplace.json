@@ -94,6 +94,18 @@
       ]
     },
     {
+      "name": "mobile",
+      "source": "./skills/mobile",
+      "description": "Mobile development: Flutter — design-to-code, theming, layout mapping from Figma",
+      "category": "engineering",
+      "tags": [
+        "flutter",
+        "mobile",
+        "dart",
+        "figma"
+      ]
+    },
+    {
       "name": "operator",
       "source": "./skills/operator",
       "description": "Incident response, runbooks, postmortems, on-call and capacity planning",

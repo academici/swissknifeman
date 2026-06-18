@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "source": "github",
+  "repo": "onmax/nuxt-skills",
+  "strategy": "notify",
+  "license": "MIT",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "url": "https://raw.githubusercontent.com/onmax/nuxt-skills/main/skills/nuxt/SKILL.md",
+      "sha256": "d80787f1f777b476bb1e6662e9665b730145cb522e394cf02ac0fd25248705b5",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/middleware-plugins.md",
+      "url": "https://raw.githubusercontent.com/onmax/nuxt-skills/main/skills/nuxt/references/middleware-plugins.md",
+      "sha256": "1f71ceb2ee1480cb02b061d6d7f45331868177bb342b728dfc188553fa934b9f",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/nuxt-components.md",
+      "url": "https://raw.githubusercontent.com/onmax/nuxt-skills/main/skills/nuxt/references/nuxt-components.md",
+      "sha256": "b6a666c2094ac2121d684e3e856e4e21ad8050549c1bd2b81b92622f93ab628a",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/nuxt-composables.md",
+      "url": "https://raw.githubusercontent.com/onmax/nuxt-skills/main/skills/nuxt/references/nuxt-composables.md",
+      "sha256": "c6dc8b5da6d097276ab4754c803dda053f84a3552e8a630cd6e09f7e9580efdd",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/nuxt-config.md",
+      "url": "https://raw.githubusercontent.com/onmax/nuxt-skills/main/skills/nuxt/references/nuxt-config.md",
+      "sha256": "abd8591dd8a08e978a6564e35deeea6bb3d4ca33c06f08d2426b2f323d0de6b5",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/project-setup.md",
+      "url": "https://raw.githubusercontent.com/onmax/nuxt-skills/main/skills/nuxt/references/project-setup.md",
+      "sha256": "8da40a9fad48459146e6b213eb2e7630ef5e051e05dbcf149ef83ebdae913151",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/routing.md",
+      "url": "https://raw.githubusercontent.com/onmax/nuxt-skills/main/skills/nuxt/references/routing.md",
+      "sha256": "f687d2d42a505d0acaaa40d86c37a571fa3343145b96fdee401d52e41fcc20f4",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/server.md",
+      "url": "https://raw.githubusercontent.com/onmax/nuxt-skills/main/skills/nuxt/references/server.md",
+      "sha256": "c4fc207cba9ca2bb0aace0bdc171f1193fe04b24a75dba40e0006764cd631e06",
+      "fetched_at": "2026-06-17"
+    }
+  ],
+  "notes": "Imported from onmax/nuxt-skills (skills/nuxt/SKILL.md). strategy=notify: upstream changes are reported only — review and merge manually."
+}

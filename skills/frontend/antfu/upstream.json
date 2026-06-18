@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "source": "github",
+  "repo": "antfu/skills",
+  "strategy": "notify",
+  "license": "MIT",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/antfu/SKILL.md",
+      "sha256": "bf1badde2a7b0ac941613adaa3694cab11a258d589dbc8b31b42045ecbcfa0c1",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/antfu-eslint-config.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/antfu/references/antfu-eslint-config.md",
+      "sha256": "d5a17c833786c37013a997108a7ecd78a49264098f5f3a5733c74aa1899585ed",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/app-development.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/antfu/references/app-development.md",
+      "sha256": "bfb8120da5c4b50665132c818e3d58fcb701f087c91006e1d8fe8733b30e083a",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/library-development.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/antfu/references/library-development.md",
+      "sha256": "16d7d2d30b56160e70caa9dc23c48cdae84a1bb2dbd18a4b49c75c3cb12add25",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/monorepo.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/antfu/references/monorepo.md",
+      "sha256": "8aab746d76fe269e961c5dfc0a23b9f97e0e5d38335e7d735b634bfe16b15e2b",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/setting-up.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/antfu/references/setting-up.md",
+      "sha256": "6775a717c657514cb2519d5acc6919e6ec9049d952cb2eb052b666d690ec5d55",
+      "fetched_at": "2026-06-17"
+    }
+  ],
+  "notes": "Imported from antfu/skills (skills/antfu/SKILL.md). strategy=notify: upstream changes are reported only — review and merge manually."
+}

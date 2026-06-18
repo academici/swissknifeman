@@ -19,6 +19,19 @@ adapters: [claude, cursor, fable]
 
 ---
 
+## Шаг 0. Idea-gate (до документирования)
+
+Прежде чем городить структуру папок — убедиться, что идея **заслуживает** строительства (Founder's Playbook: главный риск стадии — *mistaking building for validating*). Если приходит сырая идея или первичный отчёт:
+
+1. `idea-discovery` — заострить гипотезу до проверяемой формы.
+2. `adversarial-check` — pressure-test до коммита (AI подтвердит что угодно; нужен обратный вектор).
+3. `customer-discovery` — если доказательств из живых разговоров ещё нет, спланировать их (для serious-проекта — собрать; для быстрой валидации — хотя бы фреймворк).
+4. **Problem-solution fit (3 «да»):** проблема реальна+специфична+частотна? решение бьёт по реальной проблеме? сигнала достаточно для MVP? (`startup-lifecycle` Idea-exit).
+
+Только при прохождении gate — заводить документацию. Не прошло → не скаффолдить, вернуть на discovery/pivot.
+
+---
+
 ## Шаг 1. Глубокий анализ (обязателен, не пропускать)
 
 Перед любым документированием агент **самостоятельно** выполняет:
@@ -52,6 +65,8 @@ adapters: [claude, cursor, fable]
 
 ## Шаг 3. Создание документации (стадийно)
 
+При создании control-tower `ProjectName.md` выставить во frontmatter **`stage: idea`** (бизнес-стадия валидации; новый проект всегда стартует с idea). Стадия поднимается через stage-gate review (`startup-lifecycle`), не вручную по настроению.
+
 Этапы строго последовательны. Каждый этап требует явного «Утверждено» перед следующим.
 
 | Этап | Файл | Скилл | Запрещено |
@@ -82,7 +97,10 @@ adapters: [claude, cursor, fable]
 
 Этот скилл — оркестратор: он не дублирует доменные скиллы, а вызывает их по этапам. Цепочка:
 
+- `founder/startup-lifecycle` — рамка стадий: new-project ставит `stage: idea` и прогоняет idea-gate
 - `founder/idea-discovery` — этап 0: discovery сырой идеи (JTBD, гипотеза, kill-criteria) до концепции
+- `founder/adversarial-check` — idea-gate: pressure-test гипотезы до скаффолда
+- `founder/customer-discovery` — idea-gate: доказательства problem-solution fit живыми интервью
 - `founder/competitive-analysis` — этап 2: рынок, конкуренты, вектор атаки
 - `founder/risk-assessment` — этап 3: 5 категорий рисков, Risk Register
 - `pm/unit-economics` — этап 4: LTV/CAC/payback

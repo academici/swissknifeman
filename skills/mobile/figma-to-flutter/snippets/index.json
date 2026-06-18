@@ -1,0 +1,20 @@
+{
+  "skill": "figma-to-flutter",
+  "snippets": [
+    {
+      "file": "app_theme.dart",
+      "description": "ThemeData из tokens.json: ColorScheme (primary/surface), TextTheme (typography composite), отдельные light/dark через ThemeData(brightness); цвета/шрифты из токенов, не хардкод",
+      "tags": ["flutter", "dart", "theme", "colorscheme", "texttheme", "dark-mode"]
+    },
+    {
+      "file": "spacing_extension.dart",
+      "description": "Extension на ThemeData/BuildContext для доступа к spacing-токенам (xs..xl) как типизированным double — замена магическим числам отступов",
+      "tags": ["flutter", "dart", "spacing", "design-tokens", "extension"]
+    },
+    {
+      "file": "auto-layout-mapping.md",
+      "description": "Таблица соответствия Figma Auto-layout → Flutter: layoutMode→Row/Column, itemSpacing→spacing/SizedBox, padding→Padding, sizing modes→Expanded/SizedBox, выравнивание→mainAxis/crossAxisAlignment, абсолют→Stack/Positioned",
+      "tags": ["auto-layout", "flutter", "widgets", "mapping"]
+    }
+  ]
+}

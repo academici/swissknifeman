@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "source": "github",
+  "repo": "antfu/skills",
+  "strategy": "notify",
+  "license": "MIT",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-testing-best-practices/SKILL.md",
+      "sha256": "6d686a36a3583862287cca400982bd61956442583b7b6416b600d0a81d31b41b",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "reference/async-component-testing.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-testing-best-practices/reference/async-component-testing.md",
+      "sha256": "75b1c7b3949a5f0211824c525fd7b3f8a6b2cdd4933592ada65f37ecaa4146d3",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "reference/teleport-testing-complexity.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-testing-best-practices/reference/teleport-testing-complexity.md",
+      "sha256": "5a42ce8eb5497b5165b09cd758b647ddf4bb537be9cf808a84bee7ae8c3aca39",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "reference/testing-async-await-flushpromises.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-testing-best-practices/reference/testing-async-await-flushpromises.md",
+      "sha256": "2dd5099b32cf2626d19aab2ef4b365cc26102cfb5a0aedc5667efc06d2070cab",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "reference/testing-browser-vs-node-runners.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-testing-best-practices/reference/testing-browser-vs-node-runners.md",
+      "sha256": "ffc13da105aadfca0bded6d955f79f9c02c5548ee699f274ff5976cb7484ac98",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "reference/testing-component-blackbox-approach.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-testing-best-practices/reference/testing-component-blackbox-approach.md",
+      "sha256": "16ac94d67addf1cb60177a81a5c5c01318daa310216261ffb2d60b396112f86d",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "reference/testing-composables-helper-wrapper.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-testing-best-practices/reference/testing-composables-helper-wrapper.md",
+      "sha256": "57af3ae779cf0770ed53034575d783463d2b9e790c29fbc9bb80f166be3255bd",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "reference/testing-e2e-playwright-recommended.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-testing-best-practices/reference/testing-e2e-playwright-recommended.md",
+      "sha256": "d415a403c6851cb57666b9143cb3acec6eba53af269cf765918c108dd0c96355",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "reference/testing-no-snapshot-only.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-testing-best-practices/reference/testing-no-snapshot-only.md",
+      "sha256": "d541b490b8c9c0f822a2ca0d8184d7325b07918e76124d717fb480bc7a488995",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "reference/testing-pinia-store-setup.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-testing-best-practices/reference/testing-pinia-store-setup.md",
+      "sha256": "005a375c587bd33d1eb3a1b7fe1c89e42daf4c115014e49cf327ab5af5d0ed4e",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "reference/testing-suspense-async-components.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-testing-best-practices/reference/testing-suspense-async-components.md",
+      "sha256": "12307929380fcf0e8bcbd6be23a6bc1710904c9462cec945f80ce4b5aa0b7f12",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "reference/testing-vitest-recommended-for-vue.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-testing-best-practices/reference/testing-vitest-recommended-for-vue.md",
+      "sha256": "acfa0b3986e092f43d4cd8090864860cff07ffa3aaa62a10c5a622770ccaeb6b",
+      "fetched_at": "2026-06-17"
+    }
+  ],
+  "notes": "Imported from antfu/skills (skills/vue-testing-best-practices/SKILL.md). strategy=notify: upstream changes are reported only — review and merge manually."
+}

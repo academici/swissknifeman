@@ -99,6 +99,25 @@ Phase 3: Growth
 
 ---
 
+## Шаг 5. GTM как функция (Launch/Scale)
+
+Launch-plan выше — это запуск. На Launch/Scale-стадии задача другая: **построить repeatable growth engine**, а не разовый launch. Organic growth (founder-led selling, Product Hunt, личные связи) имеет потолок, и большинство фаундеров упираются в него до того, как впервые построили настоящую GTM-функцию.
+
+**Repeatable & channel-driven (Launch-exit):** рост предсказуем через конкретные каналы с понятной экономикой — **CAC, LTV, payback** (числа, которые знаешь и можешь защитить), а не «повезло с постом». Сверять с `unit-economics`.
+
+**Audience-segmented voice (Scale):** на Scale нужно достучаться не только до новых юзеров, но и до **инвесторов** и **enterprise-байеров**. У каждой аудитории свой словарь и свои критерии оценки:
+| Аудитория | Что хочет слышать |
+|---|---|
+| Пользователи | боль → результат, time-to-value |
+| Enterprise-байеры | reliability, security/compliance, SLA, support, integration depth |
+| Инвесторы/аналитики | moat narrative, growth-механика, TAM, unit economics |
+
+Создать **brand voice & story** + product-marketing инфраструктуру (interactive demo, integration docs, API-references, sandbox), чтобы GTM-motion работал асинхронно. Moat narrative для инвесторов/enterprise берётся из `defensibility`.
+
+> GTM-функция не обязана быть большой, чтобы быть эффективной — та же AI-инфраструктура, что построила продукт, bootstrap'ит и вывод на рынок.
+
+---
+
 ## Формат в документе
 
 Размещать в `docs/01_Business/06_Go_To_Market.md`
@@ -129,4 +148,6 @@ Phase 3: Growth
 - `pm/monetization-design` — выбранная модель монетизации задаёт каналы и messaging (требуется ДО GTM).
 - `pm/unit-economics` — источник гейтов запуска платных каналов (CAC < LTV, payback); сверять с метриками отсюда.
 - `pm/product-roadmap` — потребитель: ICP и фазы launch ложатся в фазирование продукта.
+- `founder/startup-lifecycle` — рамка: launch-plan = вход в Launch, repeatable channel-driven growth = Launch-exit.
+- `founder/defensibility` — поставщик moat narrative для investor/enterprise voice на Scale.
 - `founder/pitch-deck` — потребитель: GTM-секция деки берётся отсюда.

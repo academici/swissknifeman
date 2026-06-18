@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "source": "github",
+  "repo": "onmax/nuxt-skills",
+  "strategy": "notify",
+  "license": "MIT",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "url": "https://raw.githubusercontent.com/onmax/nuxt-skills/main/skills/motion/SKILL.md",
+      "sha256": "f0e7a7749a2eed534f115c551b6ff27c17c9f38c25689302b7032fe583e41a60",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/components.md",
+      "url": "https://raw.githubusercontent.com/onmax/nuxt-skills/main/skills/motion/references/components.md",
+      "sha256": "739a643e263a50006fb29dce5fd1e84a704574d4bdfcda485b4951023ac02110",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/composables.md",
+      "url": "https://raw.githubusercontent.com/onmax/nuxt-skills/main/skills/motion/references/composables.md",
+      "sha256": "99b732a765cd1a6ccaba4ec8bad36bb861184717a0d3d654f9335f6ff5c6ba56",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/examples.md",
+      "url": "https://raw.githubusercontent.com/onmax/nuxt-skills/main/skills/motion/references/examples.md",
+      "sha256": "581b1df1e3ac71b124bea641501b1b33c3e4bfbc87ce2614bce024920d425807",
+      "fetched_at": "2026-06-17"
+    }
+  ],
+  "notes": "Imported from onmax/nuxt-skills (skills/motion/SKILL.md). strategy=notify: upstream changes are reported only — review and merge manually."
+}

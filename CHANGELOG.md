@@ -16,6 +16,17 @@
 
 ### Added
 
+- **`swissknifeman sync` догнал `vendor`/`connect`: манифест, CORE-политика и
+  индекс скиллов.** Раньше `sync` только копировал скиллы и писал
+  `skills-lock.json` — без `.swissknifeman-manifest.json` (контракт переустановки
+  и источник для `generate-hub.sh`), без CORE-скиллов и без обновления
+  managed-блока в корне проекта. Теперь `sync`: (1) пишет манифест в `skills_path`
+  (`layout: flat`, `flat_name`/`source_path`); (2) раздаёт `CORE_SKILLS` по
+  умолчанию и применяет `DEFAULT_EXCLUDE` (флаг `--no-core` отключает), как
+  остальные каналы; (3) обновляет индекс скиллов (managed-блок `CLAUDE.md` /
+  `.ai/guidelines/swissknifeman-hub.md`), если он уже есть в проекте или передан
+  `--hub` (`--no-hub` отключает). `generate-hub.sh` дополнительно ищет манифест в
+  `skills_path` из конфига (находит нестандартные раскладки вроде `.agents/skills`).
 - **Figma MCP-скиллы + новый бакет `mobile`.** Три скилла прокачивают работу
   агента с подключённым Figma Dev Mode MCP: `architect/figma-mcp-core` —
   фреймворк-агностичная дисциплина (реальные инструменты `get_metadata`/

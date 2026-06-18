@@ -13,7 +13,25 @@ from swissknifeman.skillset import (load_lock, load_skillset_config, plan_sync,
                                     resolve_skillset, skillset_config_path,
                                     sync_skillset)
 
+from swissknifeman.common import MANIFEST
+
 from tests.fixtures import make_laravel_project, make_registry, write_skill
+
+
+def _write_core_skills(root):
+    """Положить CORE_SKILLS + maind-дубли в синтетический реестр и
+    дописать их бакеты в buckets.json (требование 1:1 с каталогами)."""
+    skills = root / "skills"
+    for name in ("context-economy", "anti-drift", "compact-responses",
+                 "session-handoff"):
+        write_skill(skills / "general" / name, name)
+    write_skill(skills / "oss-dev" / "gh-review", "gh-review")
+    write_skill(skills / "system" / "shared-memory", "shared-memory")
+    bf = root / "buckets.json"
+    meta = json.loads(bf.read_text(encoding="utf-8"))
+    for b in ("general", "oss-dev", "system"):
+        meta[b] = {"description": b, "category": "general", "tags": [b]}
+    bf.write_text(json.dumps(meta) + "\n", encoding="utf-8")
 
 
 def _materialize_registry(env):
@@ -258,6 +276,61 @@ class TestConfigLoad(unittest.TestCase):
             tmp = Path(tmp)
             target = make_laravel_project(tmp)
             self.assertIsNone(load_skillset_config(target))
+
+
+class TestCoreAndManifest(unittest.TestCase):
+    def test_include_core_injects_core_skills(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            root, env = make_registry(tmp)
+            _write_core_skills(root)
+            _materialize_registry(env)
+            entries, _ = resolve_skillset(
+                env, {"include": ["php/code-style"]}, include_core=True)
+            names = {e["name"] for e in entries}
+            self.assertIn("code-style", names)
+            self.assertIn("context-economy", names)
+            self.assertIn("gh-review", names)
+            # без include_core CORE не добавляется
+            base, _ = resolve_skillset(env, {"include": ["php/code-style"]})
+            self.assertEqual({e["name"] for e in base}, {"code-style"})
+
+    def test_include_core_applies_default_exclude(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            root, env = make_registry(tmp)
+            _write_core_skills(root)
+            _materialize_registry(env)
+            entries, _ = resolve_skillset(
+                env, {"buckets": ["system"]}, include_core=True)
+            names = {e["name"] for e in entries}
+            self.assertNotIn("shared-memory", names)  # DEFAULT_EXCLUDE
+
+    def test_sync_writes_manifest(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            root, env = make_registry(tmp)
+            _materialize_registry(env)
+            target = make_laravel_project(tmp)
+            _write_config(target, {"mode": "vendor", "buckets": ["php"]})
+            sync_skillset(env, target, {"buckets": ["php"]})
+            mf = target / ".claude" / "skills" / MANIFEST
+            self.assertTrue(mf.is_file())
+            data = json.loads(mf.read_text(encoding="utf-8"))
+            self.assertEqual(data["layout"], "flat")
+            names = {s["flat_name"] for s in data["skills"]}
+            self.assertEqual(names, {"laravel-conventions", "code-style"})
+            self.assertTrue(all(s["source_path"].startswith("skills/")
+                                for s in data["skills"]))
+
+    def test_dry_run_writes_no_manifest(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            root, env = make_registry(tmp)
+            _materialize_registry(env)
+            target = make_laravel_project(tmp)
+            sync_skillset(env, target, {"buckets": ["php"]}, dry_run=True)
+            self.assertFalse((target / ".claude" / "skills" / MANIFEST).exists())
 
 
 if __name__ == "__main__":

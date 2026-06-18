@@ -34,6 +34,11 @@
     "category": "external",
     "tags": ["super-skills", "upstream"]
   },
+  "mobile": {
+    "description": "Mobile development: Flutter — design-to-code, theming, layout mapping from Figma",
+    "category": "engineering",
+    "tags": ["flutter", "mobile", "dart", "figma"]
+  },
   "operator": {
     "description": "Incident response, runbooks, postmortems, on-call and capacity planning",
     "category": "operations",

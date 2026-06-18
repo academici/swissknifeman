@@ -4,11 +4,11 @@
 
 Источник истины портируемых скиллов (машинный реестр — `skills.json`). Раздача в проекты: `swissknifeman connect` (плагины-бакеты) / `vendor` (физ. перенос). CORE-набор токен-скиллов (`general`/`oss-dev`) раздаётся по умолчанию — см. `connect`/`vendor`.
 
-Всего: 152 скиллов в 15 бакетах.
+Всего: 177 скиллов в 16 бакетах.
 
 ## Скиллы по бакетам
 
-### architect — Architecture, API and data design, security, observability, tech stack selection (9)
+### architect — Architecture, API and data design, security, observability, tech stack selection (10)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
@@ -17,6 +17,7 @@
 | `architecture` | Архитектура системы, выбор стека, ADR, C4-диаграммы, deployment, scalability | `architecture`, `adr`, `c4`, `scalability`, `deployment` |
 | `data-schema` | Схема данных, сущности, атрибуты, связи. Агностично к СУБД — только markdown-таблицы | `data`, `architecture`, `schema`, `entities`, `erd` |
 | `eval-design` | Оценка качества LLM/AI-выводов — eval-set, метрики, regression-харнес, automated + human … | `agentic`, `validation`, `llm`, `metrics`, `testing` |
+| `figma-mcp-core` | Дисциплина работы с официальным Figma Dev Mode MCP: реальные инструменты (get_metadata, g… | `figma`, `mcp`, `design-system`, `design-tokens`, `dev-mode`, `code-connect`, `ui` |
 | `legal-compliance` | GDPR, CCPA, AI Act, DMCA, COPPA, DSA — чеклист регуляторных требований до запуска | `compliance`, `gdpr`, `privacy`, `ai-act`, `regulatory` |
 | `observability-design` | Logging, metrics, tracing, alerting. SLO/SLI, error budget, runbooks для прод-готовности | `observability`, `logging`, `metrics`, `tracing`, `alerting`, `slo`, `runbook` |
 | `security-design` | Классификация данных, auth-стратегия, RBAC/ABAC, OWASP Top 10, GDPR, STRIDE threat modeli… | `security`, `compliance`, `auth`, `owasp`, `threat-modeling`, `rbac`, `gdpr`, `privacy`, `stride` |
@@ -48,37 +49,59 @@
 | `makefile` | Makefile как единая точка входа: help, .PHONY, алиасы Docker-команд; паттерн делегирующег… | `make`, `devops`, `docker` |
 | `node-pnpm-preflight` | Проверка доступности Node/pnpm на хосте перед командами и git hooks, которые используют p… | `node`, `pnpm`, `devops`, `preflight`, `ci` |
 
-### founder — Idea discovery, competitive analysis, risk assessment, pitch decks (5)
+### founder — Idea discovery, competitive analysis, risk assessment, pitch decks (9)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
+| `adversarial-check` | Структурированный «адвокат дьявола» — 3 сильнейших контраргумента, failed competitors, не… | `validation`, `market` |
 | `competitive-analysis` | Анализ рынка, конкурентов, JTBD, незанятая ниша, вектор атаки. Использует Perplexity sear… | `discovery`, `market`, `gtm` |
+| `customer-discovery` | Систематическое discovery — target profile, interview framework (прошлое не будущее), pos… | `discovery`, `validation`, `market` |
+| `defensibility` | Moat-анализ для Scale-стадии — accumulated depth, data flywheel, workflow lock-in, domain… | `market`, `validation` |
 | `idea-discovery` | Структурированный опрос по сырой идее — JTBD, problem statement, hypothesis, перед compet… | `discovery`, `requirements`, `market` |
 | `new-project` | Запуск нового стартап-проекта: концепция, конкуренты, риски, полная структура папок | `discovery`, `requirements`, `market`, `gtm` |
 | `pitch-deck` | 10-слайдовая инвесторская дека по канону YC/Sequoia на основе готовых артефактов проекта | `gtm`, `market`, `monetization` |
 | `risk-assessment` | 5 категорий рисков, Risk Matrix, RAID-лог, pre-mortem для критичных рисков | `validation`, `compliance`, `security` |
+| `startup-lifecycle` | 4 стадии AI-native стартапа (Idea→MVP→Launch→Scale) с exit-criteria, failure modes и анти… | `validation`, `requirements`, `market` |
 
-### frontend — Frontend development: Vite, Vue Composition API, Tailwind CSS, Inertia (17)
+### frontend — Frontend development: Vite, Vue Composition API, Tailwind CSS, Inertia (35)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
+| `antfu` | Anthony Fu's opinionated tooling and conventions for JavaScript/TypeScript projects. Use … |  |
 | `backend-type-sync` | Синхронизация типов backend→frontend через spatie/laravel-typescript-transformer: #[TypeS… | `typescript`, `laravel`, `spatie`, `types`, `enum`, `dto`, `frontend`, `type-sync`, `ci` |
 | `dark-mode` | Тёмная тема light\|dark\|system на Vue 3: composable useDarkMode (matchMedia prefers-colo… | `dark-mode`, `theme`, `vue`, `composable`, `ssr`, `tailwind`, `matchmedia`, `localstorage` |
+| `document-writer` | Use when writing blog posts or documentation markdown files - provides writing style guid… |  |
 | `eslint-flat-config` | ESLint flat config (eslint.config.js) для Vue 3 + TypeScript: defineConfigWithVueTs/types… | `eslint`, `prettier`, `flat-config`, `vue`, `typescript`, `stylistic`, `tooling`, `code-style`, `frontend` |
+| `figma-to-vue` | Маппинг дизайна из Figma Dev Mode MCP в Vue + Tailwind v4: Auto-layout → flexbox/grid, to… | `figma`, `vue`, `tailwind`, `tailwindcss-v4`, `cva`, `design-tokens`, `dark-mode`, `auto-layout` |
 | `filepond-upload` | Загрузка файлов через FilePond в Vue + Laravel: регистрация vue-filepond и плагинов (vali… | `filepond`, `vue`, `laravel`, `file-upload`, `frontend`, `forms`, `image-preview`, `inertia`, `uploads` |
 | `inertia-vue` | Inertia + Vue в Laravel: страницы, формы, навигация и слоистая организация resources/js (… | `inertia`, `vue`, `laravel`, `frontend`, `architecture`, `structure` |
 | `js-code-style` | Стиль JS/TS по Spatie: 4 пробела, ширина 120, одинарные кавычки, const-first, строгое ===… | `javascript`, `typescript`, `code-style`, `spatie`, `prettier`, `vue` |
 | `laravel-echo-client` | Фронтовый realtime-клиент Laravel Echo (Reverb/Pusher) во Vue 3: настройка Echo из runtim… | `laravel-echo`, `reverb`, `pusher`, `websockets`, `realtime`, `vue`, `broadcasting`, `frontend` |
+| `motion` | Use when adding animations with Motion Vue (motion-v) - provides motion component API, ge… |  |
 | `naive-ui-theming` | Глобальная тема Naive UI: GlobalThemeOverrides (common + Button/Card/Form/Input/Tag/Tabs…… | `naive-ui`, `vue`, `theming`, `design-tokens`, `dark-mode`, `tailwind`, `frontend`, `components`, `ui` |
+| `nuxt` | Use when working on Nuxt 4+ projects - provides server routes, file-based routing, middle… |  |
+| `nuxt-modules` | Use when creating Nuxt modules: (1) Published npm modules (@nuxtjs/, nuxt-), (2) Local pr… |  |
+| `nuxt-seo` | Nuxt SEO meta-module with robots, sitemap, og-image, schema-org. Use when configuring SEO… |  |
+| `pinia` | Pinia official Vue state management library, type-safe and extensible. Use when defining … |  |
 | `pinia-stores` | Pinia (Vue 3) — глобальное состояние: setup-сторы (defineStore с функцией), ref=state/com… | `pinia`, `vue`, `frontend`, `state-management`, `store`, `architecture` |
 | `reka-ui-cva` | Библиотека UI-компонентов на headless-примитивах Reka UI + варианты class-variance-author… | `reka-ui`, `cva`, `vue`, `tailwind`, `headless`, `components`, `variants`, `design-system`, `ui`, `frontend` |
 | `tailwind-conventions` | Конвенции Tailwind CSS v4 для Laravel/Vue: CSS-first конфиг (@import tailwindcss, @theme-… | `tailwind`, `tailwindcss-v4`, `css`, `vue`, `laravel`, `dark-mode`, `design-tokens`, `prettier` |
+| `ts-library` | Use when authoring TypeScript libraries or npm packages - covers project setup, package.j… |  |
+| `vite` | Vite build tool configuration, plugin API, SSR, and Vite 8 Rolldown migration. Use when w… |  |
 | `vite-module-loader` | Vite как основной сборщик Frontend-проектов: базовая конфигурация, алиасы, build-практики | `vite`, `frontend`, `build`, `laravel`, `vue` |
 | `vite-multi-build` | Две независимые Vite-сборки в одном Laravel-проекте: основное приложение и Filament-админ… | `vite`, `laravel`, `filament`, `tailwind`, `build`, `multi-config`, `frontend` |
+| `vitepress` | VitePress static site generator powered by Vite and Vue. Use when building documentation … |  |
 | `vitest` | Vitest для Vue/Inertia-проекта на Laravel: jsdom, globals, тесты в resources/js/tests зер… | `vitest`, `testing`, `vue`, `coverage`, `jsdom`, `laravel`, `frontend` |
+| `vitest-vue` | Vitest fast unit testing framework powered by Vite with Jest-compatible API. Use when wri… |  |
+| `vue` | Vue 3 Composition API, script setup macros, reactivity system, and built-in components. U… |  |
+| `vue-best-practices` | MUST be used for Vue.js tasks. Strongly recommends Composition API with `<script setup>` … |  |
 | `vue-composition-api` | Vue Composition API паттерны: синтаксис <script setup> как стандарт написания компонентов | `vue`, `frontend`, `composable`, `patterns` |
 | `vue-dynamic-icons` | Vue: один компонент-иконка, выбирающий SVG по строковому имени из набора (lucide-vue-next… | `vue`, `icons`, `dynamic-component`, `lucide`, `typescript`, `frontend` |
+| `vue-router-best-practices` | Vue Router 4 patterns, navigation guards, route params, and route-component lifecycle int… |  |
+| `vue-testing-best-practices` | Use for Vue.js testing. Covers Vitest, Vue Test Utils, component testing, mocking, testin… |  |
+| `vueuse-functions` | Apply VueUse composables where appropriate to build concise, maintainable Vue.js / Nuxt f… |  |
 | `wayfinder` | Laravel Wayfinder: типобезопасные роуты и controller actions для фронтенда. Генерация, им… | `wayfinder`, `laravel`, `typescript`, `routes`, `inertia`, `eslint`, `frontend` |
+| `web-design-guidelines` | Review UI code for Web Interface Guidelines compliance. Use when asked to "review my UI",… |  |
 
 ### general — General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists (16)
 
@@ -117,6 +140,12 @@
 | `research-knowledge-super-skill` | Comprehensive research and knowledge management skill merging Perplexity Computer's resea… |  |
 | `sales-super-skill` | Comprehensive end-to-end sales skill merging Perplexity Computer's 6 built-in sales skill… |  |
 | `token-efficient` | Reduces Perplexity Computer output verbosity and token waste. Eliminates sycophantic open… |  |
+
+### mobile — Mobile development: Flutter — design-to-code, theming, layout mapping from Figma (1)
+
+| Скилл | Описание | Теги |
+|:--|:--|:--|
+| `figma-to-flutter` | Маппинг дизайна из Figma Dev Mode MCP в Flutter: Auto-layout → Row/Column/Expanded/Paddin… | `figma`, `flutter`, `dart`, `mobile`, `design-tokens`, `theming`, `auto-layout` |
 
 ### operator — Incident response, runbooks, postmortems, on-call and capacity planning (5)
 
@@ -185,7 +214,7 @@
 | `static-analysis` | Статический анализ и линтинг PHP/Laravel: Laravel Pint, PHPStan и Rector локально и в CI,… | `php`, `laravel`, `quality` |
 | `test-isolation-guard` | Защита тестов Laravel от запуска по боевой/dev БД и медиа-диску: bootstrap.php выставляет… | `php`, `laravel`, `testing`, `isolation`, `safety`, `database`, `ci`, `refreshdatabase` |
 
-### pm — Product management: BRD, PRD, roadmap, monetization, unit economics (8)
+### pm — Product management: BRD, PRD, roadmap, monetization, unit economics (9)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
@@ -193,6 +222,7 @@
 | `business-process` | Бизнес-процессы, workflow, FSM, sequence/state-диаграммы, обработка ошибок | `requirements`, `workflow` |
 | `go-to-market` | GTM-стратегия, ICP, messaging framework, каналы привлечения, launch plan | `gtm`, `market`, `monetization` |
 | `monetization-design` | Выбор бизнес-модели (SaaS / marketplace / ads / freemium / hybrid) с trade-off матрицей и… | `monetization`, `market` |
+| `pmf-diagnostics` | Диагностика product-market fit — measurement framework до launch, Sean Ellis test (>40%),… | `validation`, `market` |
 | `prd-from-brd` | Product Requirements Document — разворачивает BRD в детальные user stories с acceptance c… | `requirements`, `template` |
 | `product-roadmap` | MVP definition, Impact/Effort приоритизация, фазы MVP → v1 → v2 → Backlog, метрики перехо… | `requirements`, `gtm`, `market` |
 | `requirement-critic` | Аудит BRD: полнота, конфликты, допущения, gap-анализ, MoSCoW. Только в чат, файл не созда… | `requirements`, `validation` |
@@ -258,6 +288,7 @@
 | `attributes` | `enum-attributes` |
 | `auth` | `security-design` |
 | `authorization` | `attribute-authorization`, `azguard`, `laravel-permissions`, `ticket-workflow`, `user-roles` |
+| `auto-layout` | `figma-to-flutter`, `figma-to-vue` |
 | `azguard` | `azguard`, `laravel-permissions` |
 | `best-practices` | `laravel-best-practices` |
 | `blade` | `livewire-blade-attributes` |
@@ -278,6 +309,7 @@
 | `ci` | `backend-type-sync`, `ci-cd`, `code-simplifier`, `db-test-preflight`, `mutation-testing`, `node-pnpm-preflight`, `oss-development`, `playwright-e2e`, `release-engineering`, `test-isolation-guard`, `test-strategy` |
 | `claude-code` | `context-economy` |
 | `cli` | `dx-design` |
+| `code-connect` | `figma-mcp-core` |
 | `code-style` | `code-style-spatie`, `eslint-flat-config`, `js-code-style`, `named-arguments` |
 | `comments` | `writing-style` |
 | `commits` | `writing-style` |
@@ -296,20 +328,22 @@
 | `cross-project` | `cross-project-coordinator`, `local-topology`, `shared-memory` |
 | `crud` | `filament` |
 | `css` | `tailwind-conventions` |
-| `cva` | `reka-ui-cva` |
-| `dark-mode` | `dark-mode`, `naive-ui-theming`, `tailwind-conventions` |
+| `cva` | `figma-to-vue`, `reka-ui-cva` |
+| `dark-mode` | `dark-mode`, `figma-to-vue`, `naive-ui-theming`, `tailwind-conventions` |
+| `dart` | `figma-to-flutter` |
 | `data` | `data-schema`, `ml-project-structure` |
 | `data-transfer-object` | `laravel-data` |
 | `database` | `database`, `test-isolation-guard` |
 | `dataclass` | `parametric-config` |
 | `dependencies` | `dependency-audit`, `packages-stack`, `tech-debt-audit`, `venv-dependencies` |
 | `deployment` | `architecture` |
-| `design-system` | `reka-ui-cva` |
-| `design-tokens` | `naive-ui-theming`, `tailwind-conventions` |
+| `design-system` | `figma-mcp-core`, `reka-ui-cva` |
+| `design-tokens` | `figma-mcp-core`, `figma-to-flutter`, `figma-to-vue`, `naive-ui-theming`, `tailwind-conventions` |
+| `dev-mode` | `figma-mcp-core` |
 | `devops` | `ci-cd`, `db-test-preflight`, `docker`, `docker-dev-prod`, `docker-php`, `docker-postgres`, `docker-services`, `docker-vite`, `makefile`, `node-pnpm-preflight` |
 | `di` | `dependency-injection` |
 | `discipline` | `anti-drift`, `startup-cto` |
-| `discovery` | `competitive-analysis`, `idea-discovery`, `new-project`, `solo-founder`, `spec-interview` |
+| `discovery` | `competitive-analysis`, `customer-discovery`, `idea-discovery`, `new-project`, `solo-founder`, `spec-interview` |
 | `docker` | `db-test-preflight`, `docker`, `docker-dev-prod`, `docker-php`, `docker-postgres`, `docker-services`, `docker-vite`, `laravel-dusk`, `makefile` |
 | `docs` | `writing-style` |
 | `documentation` | `dx-design`, `oss-development`, `oss-governance` |
@@ -326,10 +360,12 @@
 | `eslint` | `eslint-flat-config`, `wayfinder` |
 | `fdm` | `mcp-blender-workflow`, `parametric-config`, `threading` |
 | `feature-flags` | `pennant-development` |
+| `figma` | `figma-mcp-core`, `figma-to-flutter`, `figma-to-vue` |
 | `filament` | `filament`, `modular-architecture`, `spatie-settings`, `vite-multi-build` |
 | `file-upload` | `filepond-upload` |
 | `filepond` | `filepond-upload` |
 | `flat-config` | `eslint-flat-config` |
+| `flutter` | `figma-to-flutter` |
 | `forms` | `filepond-upload` |
 | `frontend` | `backend-type-sync`, `docker-vite`, `eslint-flat-config`, `filepond-upload`, `inertia-vue`, `laravel-echo-client`, `livewire-blade-attributes`, `naive-ui-theming`, `pinia-stores`, `playwright-e2e`, `reka-ui-cva`, `vite-module-loader`, `vite-multi-build`, `vitest`, `vue-composition-api`, `vue-dynamic-icons`, `wayfinder` |
 | `gate` | `attribute-authorization`, `azguard` |
@@ -367,9 +403,9 @@
 | `logging` | `observability-design` |
 | `lucide` | `vue-dynamic-icons` |
 | `make` | `makefile` |
-| `market` | `competitive-analysis`, `go-to-market`, `idea-discovery`, `monetization-design`, `new-project`, `pitch-deck`, `product-roadmap`, `solo-founder` |
+| `market` | `adversarial-check`, `competitive-analysis`, `customer-discovery`, `defensibility`, `go-to-market`, `idea-discovery`, `monetization-design`, `new-project`, `pitch-deck`, `pmf-diagnostics`, `product-roadmap`, `solo-founder`, `startup-lifecycle` |
 | `matchmedia` | `dark-mode` |
-| `mcp` | `mcp-blender-workflow` |
+| `mcp` | `figma-mcp-core`, `mcp-blender-workflow` |
 | `media` | `medialibrary` |
 | `memory` | `shared-memory` |
 | `meta` | `local-topology` |
@@ -377,6 +413,7 @@
 | `middleware` | `attribute-authorization` |
 | `migrations` | `database`, `testing-safety-report` |
 | `ml` | `ml-project-structure` |
+| `mobile` | `figma-to-flutter` |
 | `monetization` | `go-to-market`, `monetization-design`, `pitch-deck`, `unit-economics` |
 | `monitoring` | `capacity-planning`, `health-checks`, `runbook` |
 | `multi-config` | `vite-multi-build` |
@@ -424,7 +461,7 @@
 | `release` | `ci-cd`, `github-flow`, `open-source-maintainer`, `release-engineering` |
 | `reporting` | `testing-safety-report` |
 | `repository` | `repositories`, `ticket-workflow` |
-| `requirements` | `brd`, `business-process`, `idea-discovery`, `new-project`, `prd-from-brd`, `product-roadmap`, `requirement-critic`, `spec-interview`, `task-brief-template` |
+| `requirements` | `brd`, `business-process`, `idea-discovery`, `new-project`, `prd-from-brd`, `product-roadmap`, `requirement-critic`, `spec-interview`, `startup-lifecycle`, `task-brief-template` |
 | `rest` | `api-design` |
 | `reverb` | `laravel-broadcasting`, `laravel-echo-client` |
 | `review` | `code-review`, `gh-review`, `open-source-maintainer`, `tech-lead` |
@@ -454,13 +491,13 @@
 | `structure` | `inertia-vue`, `laravel-structure`, `ml-project-structure`, `project-map` |
 | `style` | `compact-responses`, `writing-style` |
 | `stylistic` | `eslint-flat-config` |
-| `tailwind` | `dark-mode`, `naive-ui-theming`, `reka-ui-cva`, `tailwind-conventions`, `vite-multi-build` |
-| `tailwindcss-v4` | `tailwind-conventions` |
+| `tailwind` | `dark-mode`, `figma-to-vue`, `naive-ui-theming`, `reka-ui-cva`, `tailwind-conventions`, `vite-multi-build` |
+| `tailwindcss-v4` | `figma-to-vue`, `tailwind-conventions` |
 | `template` | `brd`, `model-rules`, `prd-from-brd`, `runbook`, `task-brief-template` |
 | `testing` | `db-test-preflight`, `docker-postgres`, `eval-design`, `laravel-testing`, `mutation-testing`, `pao`, `playwright-e2e`, `test-isolation-guard`, `test-strategy`, `testing-safety-report`, `vitest` |
 | `tests` | `writing-style` |
 | `theme` | `dark-mode` |
-| `theming` | `naive-ui-theming` |
+| `theming` | `figma-to-flutter`, `naive-ui-theming` |
 | `threading` | `threading` |
 | `threat-modeling` | `security-design` |
 | `tokens` | `compact-responses`, `context-economy`, `cross-project-coordinator`, `gh-review`, `pao`, `session-handoff` |
@@ -472,18 +509,18 @@
 | `type-sync` | `backend-type-sync` |
 | `types` | `backend-type-sync` |
 | `typescript` | `backend-type-sync`, `enum-attributes`, `eslint-flat-config`, `js-code-style`, `playwright-e2e`, `vue-dynamic-icons`, `wayfinder` |
-| `ui` | `filament`, `naive-ui-theming`, `reka-ui-cva` |
+| `ui` | `figma-mcp-core`, `filament`, `naive-ui-theming`, `reka-ui-cva` |
 | `units` | `parametric-config` |
 | `upgrade` | `php-upgrade-checklist` |
 | `uploads` | `filepond-upload`, `medialibrary` |
-| `validation` | `agent-design`, `code-review`, `code-simplifier`, `cross-layer-change-checklist`, `eval-design`, `laravel-data`, `refactoring-plan`, `requirement-critic`, `risk-assessment`, `solo-founder`, `tech-debt-audit`, `test-strategy` |
+| `validation` | `adversarial-check`, `agent-design`, `code-review`, `code-simplifier`, `cross-layer-change-checklist`, `customer-discovery`, `defensibility`, `eval-design`, `laravel-data`, `pmf-diagnostics`, `refactoring-plan`, `requirement-critic`, `risk-assessment`, `solo-founder`, `startup-lifecycle`, `tech-debt-audit`, `test-strategy` |
 | `variants` | `reka-ui-cva` |
 | `venv` | `venv-dependencies` |
 | `verification` | `testing-safety-report` |
 | `version` | `php-upgrade-checklist`, `version-gotchas` |
 | `vite` | `docker-vite`, `vite-module-loader`, `vite-multi-build` |
 | `vitest` | `vitest` |
-| `vue` | `dark-mode`, `eslint-flat-config`, `filepond-upload`, `inertia-vue`, `js-code-style`, `laravel-echo-client`, `naive-ui-theming`, `packages-stack`, `pinia-stores`, `reka-ui-cva`, `tailwind-conventions`, `vite-module-loader`, `vitest`, `vue-composition-api`, `vue-dynamic-icons` |
+| `vue` | `dark-mode`, `eslint-flat-config`, `figma-to-vue`, `filepond-upload`, `inertia-vue`, `js-code-style`, `laravel-echo-client`, `naive-ui-theming`, `packages-stack`, `pinia-stores`, `reka-ui-cva`, `tailwind-conventions`, `vite-module-loader`, `vitest`, `vue-composition-api`, `vue-dynamic-icons` |
 | `wayfinder` | `wayfinder` |
 | `websocket` | `docker-services` |
 | `websockets` | `laravel-broadcasting`, `laravel-echo-client` |

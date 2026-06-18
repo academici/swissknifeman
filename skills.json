@@ -6,7 +6,7 @@
   "buckets": {
     "architect": {
       "description": "Architecture, API and data design, security, observability, tech stack selection",
-      "count": 9,
+      "count": 10,
       "status": "active"
     },
     "blender": {
@@ -21,12 +21,12 @@
     },
     "founder": {
       "description": "Idea discovery, competitive analysis, risk assessment, pitch decks",
-      "count": 5,
+      "count": 9,
       "status": "active"
     },
     "frontend": {
       "description": "Frontend development: Vite, Vue Composition API, Tailwind CSS, Inertia",
-      "count": 17,
+      "count": 35,
       "status": "active"
     },
     "general": {
@@ -37,6 +37,11 @@
     "imported": {
       "description": "External super-skills tracked via upstream.json (marketing, sales, legal, research and more)",
       "count": 12,
+      "status": "active"
+    },
+    "mobile": {
+      "description": "Mobile development: Flutter — design-to-code, theming, layout mapping from Figma",
+      "count": 1,
       "status": "active"
     },
     "operator": {
@@ -56,7 +61,7 @@
     },
     "pm": {
       "description": "Product management: BRD, PRD, roadmap, monetization, unit economics",
-      "count": 8,
+      "count": 9,
       "status": "active"
     },
     "python": {
@@ -194,6 +199,28 @@
       "source": "local"
     },
     {
+      "name": "figma-mcp-core",
+      "bucket": "architect",
+      "path": "skills/architect/figma-mcp-core/SKILL.md",
+      "version": "0.1.0",
+      "description": "Дисциплина работы с официальным Figma Dev Mode MCP: реальные инструменты (get_metadata, get_variable_defs, get_code, get_code_connect_map, get_screenshot, search_design_system), запрет извлечения значений из скриншотов, selection-driven алгоритм, извлечение design tokens в W3C tokens.json, переиспользование компонентов через Code Connect, аудит design-system, антипаттерны. Активировать при любой задаче по реализации UI из Figma через подключённый MCP-сервер, до маппинга в конкретный фреймворк.",
+      "sha256": "81030b43e4c2156f6fd2163d5ea679e8add5c45a7bfb1b8d70b7c207b2e867a2",
+      "tags": [
+        "figma",
+        "mcp",
+        "design-system",
+        "design-tokens",
+        "dev-mode",
+        "code-connect",
+        "ui"
+      ],
+      "produces_for": [
+        "figma-to-vue",
+        "figma-to-flutter"
+      ],
+      "source": "local"
+    },
+    {
       "name": "legal-compliance",
       "bucket": "architect",
       "path": "skills/architect/legal-compliance/SKILL.md",
@@ -247,7 +274,7 @@
       "path": "skills/architect/security-design/SKILL.md",
       "version": "0.2.0",
       "description": "Классификация данных, auth-стратегия, RBAC/ABAC, OWASP Top 10, GDPR, STRIDE threat modeling, операционный чеклист безопасности",
-      "sha256": "445075d087ecdca4042e88083718729258d8ff5b4ca54e24e7804aa738acbda9",
+      "sha256": "e38daffb585e60fc157902bca59ccdd1afcc83513b3ec682c6f6a7d51ad771ef",
       "tags": [
         "security",
         "compliance",
@@ -620,12 +647,33 @@
       "source": "local"
     },
     {
+      "name": "adversarial-check",
+      "bucket": "founder",
+      "path": "skills/founder/adversarial-check/SKILL.md",
+      "version": "0.1.0",
+      "description": "Структурированный «адвокат дьявола» — 3 сильнейших контраргумента, failed competitors, негативные сигналы, structural obstacles. Антидот против confirmation bias × AI. Cross-stage.",
+      "sha256": "ba8ffefce0acb052bd0a4404095c64990d889dd8f3a8f2bb443a8d53e0260a3a",
+      "tags": [
+        "validation",
+        "market"
+      ],
+      "produces_for": [
+        "idea-discovery",
+        "competitive-analysis",
+        "risk-assessment",
+        "pmf-diagnostics",
+        "new-project",
+        "startup-lifecycle"
+      ],
+      "source": "local"
+    },
+    {
       "name": "competitive-analysis",
       "bucket": "founder",
       "path": "skills/founder/competitive-analysis/SKILL.md",
       "version": "0.1.0",
       "description": "Анализ рынка, конкурентов, JTBD, незанятая ниша, вектор атаки. Использует Perplexity search_deep",
-      "sha256": "4fe72e9d9f169f06d9b091743816135325c6b5237af18165d21e8f8f6402e2dc",
+      "sha256": "7779347c7e6ac3bd8369f92b71206b95c8f220a523fcddb8fa0245bf06efd807",
       "tags": [
         "discovery",
         "market",
@@ -642,12 +690,51 @@
       "source": "local"
     },
     {
+      "name": "customer-discovery",
+      "bucket": "founder",
+      "path": "skills/founder/customer-discovery/SKILL.md",
+      "version": "0.1.0",
+      "description": "Систематическое discovery — target profile, interview framework (прошлое не будущее), post-interview анализ 2 списков, asymmetry-check каждые 5 интервью, outreach-автоматизация",
+      "sha256": "cf27d0750d0296d26ff048e9994b32153f0cd6989a29249e0bb9ea8c4d0ec2ea",
+      "tags": [
+        "discovery",
+        "validation",
+        "market"
+      ],
+      "requires": [
+        "idea-discovery"
+      ],
+      "produces_for": [
+        "competitive-analysis",
+        "monetization-design",
+        "new-project"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "defensibility",
+      "bucket": "founder",
+      "path": "skills/founder/defensibility/SKILL.md",
+      "version": "0.1.0",
+      "description": "Moat-анализ для Scale-стадии — accumulated depth, data flywheel, workflow lock-in, domain-as-context, moat narrative one-pager",
+      "sha256": "a9660c7b7094de46daec335b6e05969d0df701806bd693c1a1b5b105b5b70088",
+      "tags": [
+        "market",
+        "validation"
+      ],
+      "produces_for": [
+        "pitch-deck",
+        "go-to-market"
+      ],
+      "source": "local"
+    },
+    {
       "name": "idea-discovery",
       "bucket": "founder",
       "path": "skills/founder/idea-discovery/SKILL.md",
       "version": "0.1.0",
       "description": "Структурированный опрос по сырой идее — JTBD, problem statement, hypothesis, перед competitive-analysis",
-      "sha256": "25788d1694cce128c9373d797cf6ed8d340fba8fee4aebcbb7d5b84ea6eeeb2d",
+      "sha256": "be5133f629cb39b045a62dd05172c65d5b93e9c1363e4cb806e45446c3d705b2",
       "tags": [
         "discovery",
         "requirements",
@@ -666,7 +753,7 @@
       "path": "skills/founder/new-project/SKILL.md",
       "version": "0.1.0",
       "description": "Запуск нового стартап-проекта: концепция, конкуренты, риски, полная структура папок",
-      "sha256": "a1c3dce3009cd7d23731388d0b63a417fec45cba56a8b793ccd545d2d4bfc4e3",
+      "sha256": "eb1ec818130461d67030f402e8b586e758e06172fdf3c83cd97dab1c49553b0c",
       "tags": [
         "discovery",
         "requirements",
@@ -705,7 +792,7 @@
       "path": "skills/founder/risk-assessment/SKILL.md",
       "version": "0.1.0",
       "description": "5 категорий рисков, Risk Matrix, RAID-лог, pre-mortem для критичных рисков",
-      "sha256": "88d0445d403de2320211dd8424644301cb8b4c2aed36908f57c16d5f20d782df",
+      "sha256": "bbe992eaec6b06118fc1cf086d2d2a7aa665718ae060106b47c09c82a67f46ae",
       "tags": [
         "validation",
         "compliance",
@@ -716,6 +803,37 @@
         "pitch-deck"
       ],
       "source": "local"
+    },
+    {
+      "name": "startup-lifecycle",
+      "bucket": "founder",
+      "path": "skills/founder/startup-lifecycle/SKILL.md",
+      "version": "0.1.0",
+      "description": "4 стадии AI-native стартапа (Idea→MVP→Launch→Scale) с exit-criteria, failure modes и антидотами + метод stage-gate review",
+      "sha256": "1ba2c78008f4ac7111940ef27db23d4dd1892d6ec5c9e3b58ff6bb796dfd9fb9",
+      "tags": [
+        "validation",
+        "requirements",
+        "market"
+      ],
+      "produces_for": [
+        "new-project",
+        "customer-discovery",
+        "pmf-diagnostics",
+        "defensibility"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "antfu",
+      "bucket": "frontend",
+      "path": "skills/frontend/antfu/SKILL.md",
+      "version": "0.1.0",
+      "description": "Anthony Fu's opinionated tooling and conventions for JavaScript/TypeScript projects. Use when setting up new projects, configuring ESLint/Prettier alternatives, monorepos, library publishing, or when the user mentions Anthony Fu's preferences.",
+      "sha256": "bf1badde2a7b0ac941613adaa3694cab11a258d589dbc8b31b42045ecbcfa0c1",
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/antfu/skills/main/skills/antfu/SKILL.md",
+      "fetched_at": "2026-06-17"
     },
     {
       "name": "backend-type-sync",
@@ -763,6 +881,17 @@
       "source": "local"
     },
     {
+      "name": "document-writer",
+      "bucket": "frontend",
+      "path": "skills/frontend/document-writer/SKILL.md",
+      "version": "0.1.0",
+      "description": "Use when writing blog posts or documentation markdown files - provides writing style guide (active voice, present tense), content structure patterns, and MDC component usage. Overrides brevity rules for proper grammar. Use nuxt-content for MDC syntax, nuxt-ui for component props.",
+      "sha256": "cadc77c68f1205526757057250e9769a41a6a2d00a4e31406989059fcf208083",
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/onmax/nuxt-skills/main/skills/document-writer/SKILL.md",
+      "fetched_at": "2026-06-17"
+    },
+    {
       "name": "eslint-flat-config",
       "bucket": "frontend",
       "path": "skills/frontend/eslint-flat-config/SKILL.md",
@@ -779,6 +908,34 @@
         "tooling",
         "code-style",
         "frontend"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "figma-to-vue",
+      "bucket": "frontend",
+      "path": "skills/frontend/figma-to-vue/SKILL.md",
+      "version": "0.1.0",
+      "description": "Маппинг дизайна из Figma Dev Mode MCP в Vue + Tailwind v4: Auto-layout → flexbox/grid, tokens.json → @theme-токены (CSS-first), Variants → class-variance-authority (cva), Variable Modes → тёмная тема (.dark), переиспользование компонентов через Code Connect. Активировать при реализации Vue-экранов/компонентов по Figma; работает поверх figma-mcp-core.",
+      "sha256": "823ca1b282790b9f78c1c99e3dfa94ae833698c907c5086d04a22e73ef7ffbba",
+      "tags": [
+        "figma",
+        "vue",
+        "tailwind",
+        "tailwindcss-v4",
+        "cva",
+        "design-tokens",
+        "dark-mode",
+        "auto-layout"
+      ],
+      "requires": [
+        "figma-mcp-core"
+      ],
+      "produces_for": [
+        "tailwind-conventions",
+        "reka-ui-cva",
+        "naive-ui-theming",
+        "dark-mode"
       ],
       "source": "local"
     },
@@ -858,6 +1015,17 @@
       "source": "local"
     },
     {
+      "name": "motion",
+      "bucket": "frontend",
+      "path": "skills/frontend/motion/SKILL.md",
+      "version": "0.1.0",
+      "description": "Use when adding animations with Motion Vue (motion-v) - provides motion component API, gesture animations, scroll-linked effects, layout transitions, and composables for Vue 3/Nuxt",
+      "sha256": "f0e7a7749a2eed534f115c551b6ff27c17c9f38c25689302b7032fe583e41a60",
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/onmax/nuxt-skills/main/skills/motion/SKILL.md",
+      "fetched_at": "2026-06-17"
+    },
+    {
       "name": "naive-ui-theming",
       "bucket": "frontend",
       "path": "skills/frontend/naive-ui-theming/SKILL.md",
@@ -879,6 +1047,50 @@
         "tailwind-conventions"
       ],
       "source": "local"
+    },
+    {
+      "name": "nuxt",
+      "bucket": "frontend",
+      "path": "skills/frontend/nuxt/SKILL.md",
+      "version": "0.1.0",
+      "description": "Use when working on Nuxt 4+ projects - provides server routes, file-based routing, middleware patterns, Nuxt-specific composables, and configuration with latest docs. Covers h3 v1 helpers (validation, WebSocket, SSE) and nitropack v2 patterns. Updated for Nuxt 4.3+.",
+      "sha256": "d80787f1f777b476bb1e6662e9665b730145cb522e394cf02ac0fd25248705b5",
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/onmax/nuxt-skills/main/skills/nuxt/SKILL.md",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "name": "nuxt-modules",
+      "bucket": "frontend",
+      "path": "skills/frontend/nuxt-modules/SKILL.md",
+      "version": "0.1.0",
+      "description": "Use when creating Nuxt modules: (1) Published npm modules (@nuxtjs/, nuxt-), (2) Local project modules (modules/ directory), (3) Runtime extensions (components, composables, plugins), (4) Server extensions (API routes, middleware), (5) Releasing/publishing modules to npm, (6) Setting up CI/CD workflows for modules. Provides defineNuxtModule patterns, Kit utilities, hooks, E2E testing, and release automation.",
+      "sha256": "c658ddf775c683d87fed12144a941e6c718ba0a0470b7af82037ad38a33d5c3c",
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/onmax/nuxt-skills/main/skills/nuxt-modules/SKILL.md",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "name": "nuxt-seo",
+      "bucket": "frontend",
+      "path": "skills/frontend/nuxt-seo/SKILL.md",
+      "version": "0.1.0",
+      "description": "Nuxt SEO meta-module with robots, sitemap, og-image, schema-org. Use when configuring SEO, generating sitemaps, creating OG images, or adding structured data.",
+      "sha256": "254b902fbdd467b08ff7c2556f02dec2afc99fcd47583e02d1f31f9c30e8fbb3",
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/onmax/nuxt-skills/main/skills/nuxt-seo/SKILL.md",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "name": "pinia",
+      "bucket": "frontend",
+      "path": "skills/frontend/pinia/SKILL.md",
+      "version": "0.1.0",
+      "description": "Pinia official Vue state management library, type-safe and extensible. Use when defining stores, working with state/getters/actions, or implementing store patterns in Vue apps.",
+      "sha256": "fba52570068a715fef7d306e582a5993bf08a838b55465d3c3c7bff8ba70f731",
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/antfu/skills/main/skills/pinia/SKILL.md",
+      "fetched_at": "2026-06-17"
     },
     {
       "name": "pinia-stores",
@@ -941,6 +1153,28 @@
       "source": "local"
     },
     {
+      "name": "ts-library",
+      "bucket": "frontend",
+      "path": "skills/frontend/ts-library/SKILL.md",
+      "version": "0.1.0",
+      "description": "Use when authoring TypeScript libraries or npm packages - covers project setup, package.json exports, build tooling (tsdown/unbuild), API design patterns, type inference tricks, testing, and publishing to npm. Use when bundling, configuring dual CJS/ESM output, or setting up release workflows.",
+      "sha256": "eb47397d20c8ca098fb8d3188fe44be08e726cd323f003b9fb2e1f279628d768",
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/onmax/nuxt-skills/main/skills/ts-library/SKILL.md",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "name": "vite",
+      "bucket": "frontend",
+      "path": "skills/frontend/vite/SKILL.md",
+      "version": "0.1.0",
+      "description": "Vite build tool configuration, plugin API, SSR, and Vite 8 Rolldown migration. Use when working with Vite projects, vite.config.ts, Vite plugins, or building libraries/SSR apps with Vite.",
+      "sha256": "3cb7a75336e338faa9be15dd8b97479721ac8ceac6f1ff4061c9b9eefccd9983",
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/antfu/skills/main/skills/vite/SKILL.md",
+      "fetched_at": "2026-06-17"
+    },
+    {
       "name": "vite-module-loader",
       "bucket": "frontend",
       "path": "skills/frontend/vite-module-loader/SKILL.md",
@@ -978,6 +1212,17 @@
       "source": "local"
     },
     {
+      "name": "vitepress",
+      "bucket": "frontend",
+      "path": "skills/frontend/vitepress/SKILL.md",
+      "version": "0.1.0",
+      "description": "VitePress static site generator powered by Vite and Vue. Use when building documentation sites, configuring themes, or writing Markdown with Vue components.",
+      "sha256": "eba57687640159cd74333a6d0abcc1c6e7967883b978bc801b9a8fb461021d8c",
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/antfu/skills/main/skills/vitepress/SKILL.md",
+      "fetched_at": "2026-06-17"
+    },
+    {
       "name": "vitest",
       "bucket": "frontend",
       "path": "skills/frontend/vitest/SKILL.md",
@@ -997,6 +1242,39 @@
         "inertia-vue"
       ],
       "source": "local"
+    },
+    {
+      "name": "vitest-vue",
+      "bucket": "frontend",
+      "path": "skills/frontend/vitest-vue/SKILL.md",
+      "version": "0.1.0",
+      "description": "Vitest fast unit testing framework powered by Vite with Jest-compatible API. Use when writing tests, mocking, configuring coverage, or working with test filtering and fixtures.",
+      "sha256": "7f358d58cdd698f98ad090918e3f95405cfa4050b36473737475d977f80426d9",
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/antfu/skills/main/skills/vitest/SKILL.md",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "name": "vue",
+      "bucket": "frontend",
+      "path": "skills/frontend/vue/SKILL.md",
+      "version": "0.1.0",
+      "description": "Vue 3 Composition API, script setup macros, reactivity system, and built-in components. Use when writing Vue SFCs, defineProps/defineEmits/defineModel, watchers, or using Transition/Teleport/Suspense/KeepAlive.",
+      "sha256": "f6c27e0f1cf037b26ded2a0b3c6a6bb537d7a8fb7cd7745448aa85bc01fc3a76",
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/antfu/skills/main/skills/vue/SKILL.md",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "name": "vue-best-practices",
+      "bucket": "frontend",
+      "path": "skills/frontend/vue-best-practices/SKILL.md",
+      "version": "0.1.0",
+      "description": "MUST be used for Vue.js tasks. Strongly recommends Composition API with `<script setup>` and TypeScript as the standard approach. Covers Vue 3, SSR, Volar, vue-tsc. Load for any Vue, .vue files, Vue Router, Pinia, or Vite with Vue work. ALWAYS use Composition API unless the project explicitly requires Options API.",
+      "sha256": "42466063eb5ba6dd71a146ee726f187d7b0fb252e3f8c4bcbf01a04799c9166b",
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-best-practices/SKILL.md",
+      "fetched_at": "2026-06-17"
     },
     {
       "name": "vue-composition-api",
@@ -1031,6 +1309,39 @@
       "source": "local"
     },
     {
+      "name": "vue-router-best-practices",
+      "bucket": "frontend",
+      "path": "skills/frontend/vue-router-best-practices/SKILL.md",
+      "version": "1.0.0",
+      "description": "Vue Router 4 patterns, navigation guards, route params, and route-component lifecycle interactions.",
+      "sha256": "33889faf631e80bf112a096dfe3e76029447f05f99d6d5c0aea2daddff186d7c",
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-router-best-practices/SKILL.md",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "name": "vue-testing-best-practices",
+      "bucket": "frontend",
+      "path": "skills/frontend/vue-testing-best-practices/SKILL.md",
+      "version": "1.0.0",
+      "description": "Use for Vue.js testing. Covers Vitest, Vue Test Utils, component testing, mocking, testing patterns, and Playwright for E2E testing.",
+      "sha256": "6d686a36a3583862287cca400982bd61956442583b7b6416b600d0a81d31b41b",
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-testing-best-practices/SKILL.md",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "name": "vueuse-functions",
+      "bucket": "frontend",
+      "path": "skills/frontend/vueuse-functions/SKILL.md",
+      "version": "0.1.0",
+      "description": "Apply VueUse composables where appropriate to build concise, maintainable Vue.js / Nuxt features.",
+      "sha256": "8c4a245c65d73b6d6e95335c499d214faa85cc10cf5187b0d6132d822f1c7d88",
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/SKILL.md",
+      "fetched_at": "2026-06-17"
+    },
+    {
       "name": "wayfinder",
       "bucket": "frontend",
       "path": "skills/frontend/wayfinder/SKILL.md",
@@ -1047,6 +1358,17 @@
         "frontend"
       ],
       "source": "local"
+    },
+    {
+      "name": "web-design-guidelines",
+      "bucket": "frontend",
+      "path": "skills/frontend/web-design-guidelines/SKILL.md",
+      "version": "0.1.0",
+      "description": "Review UI code for Web Interface Guidelines compliance. Use when asked to \"review my UI\", \"check accessibility\", \"audit design\", \"review UX\", or \"check my site against best practices\".",
+      "sha256": "f4647ca866a3accf763777f83e7682954f0187cd6bea7eea0399796652414e8f",
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/antfu/skills/main/skills/web-design-guidelines/SKILL.md",
+      "fetched_at": "2026-06-17"
     },
     {
       "name": "ai-context-workflow",
@@ -1466,6 +1788,27 @@
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/get-zeked/agent-security-super-skill/main/SKILL.md",
       "fetched_at": "2026-06-11"
+    },
+    {
+      "name": "figma-to-flutter",
+      "bucket": "mobile",
+      "path": "skills/mobile/figma-to-flutter/SKILL.md",
+      "version": "0.1.0",
+      "description": "Маппинг дизайна из Figma Dev Mode MCP в Flutter: Auto-layout → Row/Column/Expanded/Padding, tokens.json → ThemeData (ColorScheme/TextTheme), Variable Modes light/dark → ThemeData(brightness), абсолютное позиционирование → Stack/Positioned, image fills → DecorationImage. Активировать при реализации Flutter-экранов/виджетов по Figma; работает поверх figma-mcp-core.",
+      "sha256": "e08ed4aa4086898fd7117ff76e601a0eac4b697c5757cf195fab250744d6ad9a",
+      "tags": [
+        "figma",
+        "flutter",
+        "dart",
+        "mobile",
+        "design-tokens",
+        "theming",
+        "auto-layout"
+      ],
+      "requires": [
+        "figma-mcp-core"
+      ],
+      "source": "local"
     },
     {
       "name": "capacity-planning",
@@ -2456,7 +2799,7 @@
       "path": "skills/pm/go-to-market/SKILL.md",
       "version": "0.1.0",
       "description": "GTM-стратегия, ICP, messaging framework, каналы привлечения, launch plan",
-      "sha256": "e635bbdc16060b66453047246ed41e3b6fd15e5364ad79daa704f738ec5aad9b",
+      "sha256": "23940414311fab6ab75f8d64dc0d488e413a80070f58682e4796b9f485d6438b",
       "tags": [
         "gtm",
         "market",
@@ -2494,6 +2837,22 @@
       "source": "local"
     },
     {
+      "name": "pmf-diagnostics",
+      "bucket": "pm",
+      "path": "skills/pm/pmf-diagnostics/SKILL.md",
+      "version": "0.1.0",
+      "description": "Диагностика product-market fit — measurement framework до launch, Sean Ellis test (>40%), effort test, retention D1/7/30, false-positive паттерны, pivot-диагностика",
+      "sha256": "979ea32378112f61894b75b84797e83929003491325e0aa2f7966d398809f5e6",
+      "tags": [
+        "validation",
+        "market"
+      ],
+      "requires": [
+        "product-roadmap"
+      ],
+      "source": "local"
+    },
+    {
       "name": "prd-from-brd",
       "bucket": "pm",
       "path": "skills/pm/prd-from-brd/SKILL.md",
@@ -2520,7 +2879,7 @@
       "path": "skills/pm/product-roadmap/SKILL.md",
       "version": "0.1.0",
       "description": "MVP definition, Impact/Effort приоритизация, фазы MVP → v1 → v2 → Backlog, метрики перехода",
-      "sha256": "a3dedbbe0ab52c586ac0c3f3b90fa9cc8dc9bde6a8daed013361bb9aeb194b04",
+      "sha256": "82d9416165c7afeefc9eadc231b0fb94da658003333b194e50cc68e440cc3067",
       "tags": [
         "requirements",
         "gtm",
@@ -2714,7 +3073,7 @@
       "path": "skills/quality/tech-debt-audit/SKILL.md",
       "version": "0.1.0",
       "description": "Инвентаризация техдолга, классификация (architectural/code/dependency/test/process), приоритизация по impact × effort, расчёт payback ROI",
-      "sha256": "f049874a0650b5e803b935df7b5cb71eb271ef9eabf0483eb186bb56793a88d3",
+      "sha256": "5e8736c18d0b8249181fb6fd057d007bbf071bbcc29fea4780622f4d43ff5e6f",
       "tags": [
         "quality",
         "validation",

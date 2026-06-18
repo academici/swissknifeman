@@ -16,6 +16,15 @@
 
 ### Added
 
+- **Figma MCP-скиллы + новый бакет `mobile`.** Три скилла прокачивают работу
+  агента с подключённым Figma Dev Mode MCP: `architect/figma-mcp-core` —
+  фреймворк-агностичная дисциплина (реальные инструменты `get_metadata`/
+  `get_variable_defs`/`get_code`/`get_code_connect_map`/`get_screenshot`/
+  `search_design_system`, запрет извлечения значений из скриншотов,
+  selection-driven алгоритм, W3C `tokens.json`, аудит design-system);
+  `frontend/figma-to-vue` — маппинг в Vue + Tailwind v4 (`@theme`, cva, `.dark`);
+  `mobile/figma-to-flutter` — маппинг в Flutter (`ThemeData`, Row/Column/Expanded,
+  Stack/Positioned). Новый бакет `mobile` (Flutter) в `buckets.json`.
 - **Vendor-режим `swissknifeman sync` — физический перенос скиллов по единому
   конфигу.** `.swissknifeman/config.json` — источник истины (правила:
   `include` конкретных скиллов + `buckets` целиком − `exclude`); `sync`

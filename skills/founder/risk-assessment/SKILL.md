@@ -86,6 +86,17 @@ adapters: [claude, cursor, fable]
 
 ---
 
+## AI-эпоха: premature scaling (отдельный рыночный риск)
+
+Когда строить стало почти бесплатно, появился риск, которого раньше не было в такой форме: **scaling execution далеко впереди того, что требует бизнес** — коммит к продуктовому пути до того, как валидировано, что путь стоит коммита. Agentic coding настолько мощно, что легко начать масштабировать исполнение далеко за пределами problem-solution fit, ни разу сознательно не решив сойти с курса. AI сгенерит, оттестит и отрефакторит кодовую базу вокруг фундаментально ошибочной посылки с тем же энтузиазмом, что и вокруг великой идеи.
+
+- В Risk Matrix завести явный риск: «строим/масштабируем раньше валидации».
+- Митигация — держать `sense-making` (валидацию) **впереди** building; gate стадии (`startup-lifecycle`).
+
+> При оценке рыночных рисков и любых критичных допущений (Assumptions в RAID) — прогнать `adversarial-check`: AI поддержит то, во что веришь; нужен направленный в обратную сторону pressure-test.
+
+---
+
 ## Формат в документе
 
 Размещать в:
@@ -132,6 +143,8 @@ adapters: [claude, cursor, fable]
 
 ## Связанные скиллы
 
+- `founder/adversarial-check` — быстрый точечный pressure-test допущений; risk-assessment — более широкий RAID/pre-mortem
+- `founder/startup-lifecycle` — premature scaling = failure mode Idea/MVP; gate держит валидацию впереди building
 - `founder/new-project` — оркестратор: прогоняет risk-assessment на этапе 3 цепочки запуска
 - `founder/pitch-deck` — потребитель: risk-acknowledgement слайд адресует ключевой риск из этого реестра
 - `architect/legal-compliance` — углубляет регуляторную категорию (GDPR, AI Act, DSA, лицензирование)

@@ -1,0 +1,22 @@
+{
+  "mcpServers": {
+    "agentmemory": {
+      "command": "/home/vostrikov/projects/packages/maind/node_modules/.bin/agentmemory",
+      "args": [
+        "mcp"
+      ],
+      "env": {
+        "AGENTMEMORY_URL": "http://127.0.0.1:4111",
+        "AGENTMEMORY_NAMESPACE": "project:swissknifeman"
+      }
+    },
+    "maind": {
+      "command": "/home/vostrikov/projects/packages/maind/bin/maind",
+      "args": [
+        "mcp",
+        "--scope",
+        "project:swissknifeman"
+      ]
+    }
+  }
+}

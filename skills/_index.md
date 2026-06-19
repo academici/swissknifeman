@@ -38,7 +38,7 @@
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
-| `ci-cd` | GitHub Actions CI/CD pipelines для Laravel проектов | `ci`, `github-actions`, `laravel`, `devops`, `release` |
+| `ci-cd` | GitHub Actions CI/CD pipelines для Laravel проектов: lint, тесты, build, release + securi… | `ci`, `github-actions`, `laravel`, `devops`, `release`, `security` |
 | `db-test-preflight` | Пре-флайт проверка тестовой БД (Postgres в Docker) ПЕРЕД запуском тестов: контейнер подня… | `postgres`, `docker`, `testing`, `preflight`, `devops`, `ci`, `isolation` |
 | `docker` | Advanced Docker containerization expertise: container optimization, security hardening, m… | `docker`, `devops` |
 | `docker-dev-prod` | Разнесение docker-compose на dev (build + bind-mount) и prod (готовый образ + named volum… | `docker`, `devops`, `compose`, `laravel` |
@@ -96,7 +96,7 @@
 | `vitest-vue` | Vitest fast unit testing framework powered by Vite with Jest-compatible API. Use when wri… |  |
 | `vue` | Vue 3 Composition API, script setup macros, reactivity system, and built-in components. U… |  |
 | `vue-best-practices` | MUST be used for Vue.js tasks. Strongly recommends Composition API with `<script setup>` … |  |
-| `vue-composition-api` | Vue Composition API паттерны: синтаксис <script setup> как стандарт написания компонентов | `vue`, `frontend`, `composable`, `patterns` |
+| `vue-composition-api` | Проектные конвенции Composition API: ref-first и паттерн composables. НЕ справочник API (… | `vue`, `frontend`, `composable`, `patterns` |
 | `vue-dynamic-icons` | Vue: один компонент-иконка, выбирающий SVG по строковому имени из набора (lucide-vue-next… | `vue`, `icons`, `dynamic-component`, `lucide`, `typescript`, `frontend` |
 | `vue-router-best-practices` | Vue Router 4 patterns, navigation guards, route params, and route-component lifecycle int… |  |
 | `vue-testing-best-practices` | Use for Vue.js testing. Covers Vitest, Vue Test Utils, component testing, mocking, testin… |  |
@@ -197,7 +197,7 @@
 | `laravel-package-service-provider` | Use this skill when changing a Laravel package service provider: config merges, routes, v… | `php`, `laravel`, `package-dev` |
 | `laravel-package-testing` | Use this skill when writing, editing, fixing, or reviewing package tests with Pest 4 and … | `php`, `laravel`, `package-dev` |
 | `laravel-packages` | Создание Laravel-пакетов: scaffold, тесты, публикация скиллов пакета потребителям через v… | `php`, `laravel`, `package-dev`, `skills` |
-| `laravel-permissions` | RBAC, policies, gates и entity-scoped permissions (AzGuard patterns) | `php`, `laravel`, `permissions`, `azguard`, `rbac`, `authorization` |
+| `laravel-permissions` | Ручной/нативный Laravel RBAC: policies, gates, entity-scoped permissions без спец-пакета.… | `php`, `laravel`, `permissions`, `azguard`, `rbac`, `authorization` |
 | `laravel-security-audit` | Аудит Laravel-кода на «острые грани»: raw-запросы Eloquent, mass assignment, XSS в Blade,… | `php`, `laravel`, `security` |
 | `laravel-structure` | Канон структуры Laravel-проекта для greenfield-проектов и добавления доменов: доменная та… | `php`, `laravel`, `architecture`, `structure` |
 | `laravel-subagents` | Оркестрация субагентов на крупных Laravel-задачах: порог срабатывания, делегирование иссл… | `workflow`, `orchestration`, `agents`, `laravel` |
@@ -481,7 +481,7 @@
 | `safety` | `test-isolation-guard`, `testing-safety-report` |
 | `scalability` | `architecture` |
 | `schema` | `data-schema` |
-| `security` | `agent-design`, `dependency-audit`, `laravel-security-audit`, `oss-governance`, `risk-assessment`, `security-design` |
+| `security` | `agent-design`, `ci-cd`, `dependency-audit`, `laravel-security-audit`, `oss-governance`, `risk-assessment`, `security-design` |
 | `semver` | `github-flow`, `package-contribution-protocol`, `release-engineering` |
 | `settings` | `spatie-settings` |
 | `skills` | `ai-context-workflow`, `laravel-packages`, `skills-ssot` |

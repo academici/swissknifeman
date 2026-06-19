@@ -1,8 +1,8 @@
 ---
 name: vue-composition-api
 bucket: frontend
-version: 0.1.0
-description: "Vue Composition API паттерны: синтаксис <script setup> как стандарт написания компонентов"
+version: 0.2.0
+description: "Проектные конвенции Composition API: ref-first и паттерн composables. НЕ справочник API (`<script setup>`, defineProps/Emits, reactivity) — база в `vue`; НЕ общий workflow — в `vue-best-practices`. Здесь только дельта-решения и куда дальше."
 risk: write
 persona: oss-dev
 tags: [vue, frontend, composable, patterns]
@@ -14,127 +14,44 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-# Vue Composition API Паттерны
+# Vue Composition API — конвенции проекта
 
-Composition API (особенно синтаксис `<script setup>`) — это стандарт написания Vue компонентов. Options API (`data`, `methods`, `computed` внутри объекта экспорта) считается устаревшим.
+Дельта-скилл: только наши решения по Composition API. Базовый синтаксис `<script setup>`,
+`defineProps`/`defineEmits`, reactivity и встроенные компоненты — в скилле `vue` (API-референс);
+рабочий workflow и архитектура компонентов — в `vue-best-practices`. Грузить эту тройку вместе.
 
-## Базовый Синтаксис (`<script setup>`)
+## Конвенция 1: ref-first
 
-```vue
-<script setup>
-import { ref, computed, onMounted } from 'vue'
+- По умолчанию — **`ref`** для любых данных (примитивы, объекты, массивы): единообразно, доступ через `.value`.
+- `reactive` — только для объекта, который не переназначается целиком (иначе теряется реактивность).
 
-// 1. Состояние (State)
-const count = ref(0)
-const user = ref({ name: 'John', age: 30 })
+## Конвенция 2: composables
 
-// 2. Вычисляемые свойства (Computed)
-const doubleCount = computed(() => count.value * 2)
-
-// 3. Методы
-const increment = () => {
-  count.value++
-}
-
-// 4. Хуки Жизненного Цикла
-onMounted(() => {
-  console.log('Component mounted')
-})
-</script>
-
-<template>
-  <button @click="increment">Счет: {{ count }} (Двойной: {{ doubleCount }})</button>
-</template>
-```
-
-## `ref` против `reactive`
-
--   **Всегда используйте `ref`** по умолчанию для любых типов данных (примитивов, объектов, массивов). Это более универсальный подход. Обращение к значению в скрипте всегда через `.value`.
--   Используйте `reactive` только когда вам нужен объект, который не будет переназначаться целиком (иначе реактивность сломается).
-
-## Composables (Хуки)
-
-Composables — это функции, которые инкапсулируют логику с использованием Composition API для её переиспользования в разных компонентах. Обычно начинаются с префикса `use`.
-
-### Пример: `useFetch.js`
+Логика, переиспользуемая между компонентами, выносится в `use*`-функции (`composables/`).
+Сигнал к composable: одно и то же реактивное состояние + методы нужны в 2+ компонентах.
 
 ```javascript
-// src/composables/useFetch.js
+// composables/useFetch.js — composable принимает ref-аргумент и сам перезапрашивает
 import { ref, isRef, unref, watchEffect } from 'vue'
 
 export function useFetch(url) {
-  const data = ref(null)
-  const error = ref(null)
-  const isPending = ref(false)
-
-  const fetchData = async () => {
-    isPending.value = true
-    data.value = null
-    error.value = null
-
+  const data = ref(null), error = ref(null), isPending = ref(false)
+  const run = async () => {
+    isPending.value = true; data.value = null; error.value = null
     try {
-      // unref достает значение, если url - это ref, или возвращает как есть
-      const response = await fetch(unref(url)) 
-      if (!response.ok) throw new Error('Ошибка загрузки')
-      data.value = await response.json()
-    } catch (err) {
-      error.value = err.message
-    } finally {
-      isPending.value = false
-    }
+      const res = await fetch(unref(url))
+      if (!res.ok) throw new Error('Ошибка загрузки')
+      data.value = await res.json()
+    } catch (e) { error.value = e.message } finally { isPending.value = false }
   }
-
-  // Если url - это ref, мы хотим перезапрашивать данные при его изменении
-  if (isRef(url)) {
-    watchEffect(fetchData)
-  } else {
-    fetchData()
-  }
-
+  isRef(url) ? watchEffect(run) : run()
   return { data, error, isPending }
 }
 ```
 
-### Использование в компоненте:
+## Связанные скиллы
 
-```vue
-<script setup>
-import { ref } from 'vue'
-import { useFetch } from '@/composables/useFetch'
-
-const userId = ref(1)
-// Передаем ref, запрос будет автоматически повторяться при изменении userId
-const { data: user, isPending, error } = useFetch(() => `https://api.example.com/users/${userId.value}`)
-</script>
-```
-
-## Пропсы и Эмиты (Props & Emits)
-
-Для объявления пропсов и эмитов используются макросы компилятора `defineProps` и `defineEmits`.
-
-```vue
-<script setup>
-const props = defineProps({
-  title: {
-    type: String,
-    required: true
-  },
-  items: {
-    type: Array,
-    default: () => []
-  }
-})
-
-const emit = defineEmits(['update', 'delete'])
-
-const handleDelete = (id) => {
-  emit('delete', id)
-}
-</script>
-```
-
-## Ссылки
-
-- https://vuejs.org/guide/extras/composition-api-faq.html
-- https://vuejs.org/guide/reusability/composables
-- Связанные скиллы: `frontend/pinia-stores` (глобальное состояние — когда `ref` в компоненте/composable уже мало), `frontend/inertia-vue` (где живут `composables/`), `frontend/dark-mode` (пример боевого composable), `frontend/reka-ui-cva` и `frontend/vue-dynamic-icons` (компоненты на `<script setup>`)
+- `vue` (frontend) — справочник API (база, грузить вместе); `vue-best-practices` (frontend) — workflow и архитектура.
+- `frontend/pinia-stores` — глобальное состояние, когда `ref` в composable уже мало.
+- `frontend/inertia-vue` — где живут `composables/` в слоях проекта.
+- `frontend/dark-mode` — пример боевого composable; `frontend/reka-ui-cva`, `frontend/vue-dynamic-icons` — компоненты на `<script setup>`.

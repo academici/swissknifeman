@@ -31,6 +31,7 @@ export default withMermaid(defineConfig({
             { text: 'Профили и автодетект', link: '/guide/profiles' },
             { text: 'Анатомия скилла', link: '/guide/skill-anatomy' },
             { text: 'Адаптерные дельты', link: '/guide/adapter-deltas' },
+            { text: 'Методология: против раздувания кода', link: '/guide/methodology' },
             { text: 'Создание скиллов', link: '/guide/creating-skills' },
             { text: 'Скиллы из пакетов', link: '/guide/vendor-skills' },
             { text: 'Upstream-sync', link: '/guide/upstream-sync' },

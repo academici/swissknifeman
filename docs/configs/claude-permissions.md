@@ -18,7 +18,14 @@
 | `node` | `settings.node.json` | node/npm/npx/pnpm/yarn, tsc, vitest, eslint, prettier |
 | `python` | `settings.python.json` | python/pip/pytest, uv, poetry, ruff/black/mypy |
 | `docker` | `settings.docker.json` | docker + docker compose; удаление и prune — с подтверждением |
+| `product-boundary` | `settings.product-boundary.json` | deny на запись в зависимый пакет (`Write/Edit(vendor/**)`) — граница «проект ↔ пакет» |
 | `yolo` | `settings.yolo.json` | `bypassPermissions` — только для изолированных окружений |
+
+Пресет `product-boundary` **opt-in** (не входит в автодетект): применяй его в
+проектах-потребителях, которые дорабатывают свои пакеты, чтобы агент не правил
+код пакета «по ходу» продуктовой задачи. Подробнее — скилл
+[`package-contribution-protocol`](https://github.com/academici/swissknifeman/blob/main/skills/architect/package-contribution-protocol/SKILL.md);
+вариант для path-репо (`packages/**`) — в его сниппете `permissions-deny.md`.
 
 Логика каждого пресета трёхуровневая:
 

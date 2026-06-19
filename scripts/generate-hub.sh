@@ -102,7 +102,22 @@ for s in registry["skills"]:
     # skills/<bucket>/<rel>/SKILL.md -> skills/<bucket>/<rel>
     by_source_path[str(Path(s["path"]).parent)] = s
 
-for rel_root in (".claude/skills", ".cursor/skills", ".ai/skills"):
+# Пути для поиска манифеста: фиксированные дефолты + skills_path из конфига
+# vendor-режима (.swissknifeman/config.json), чтобы находить нестандартные
+# раскладки вроде .agents/skills (sync пишет туда манифест).
+scan_roots = [".claude/skills", ".cursor/skills", ".ai/skills"]
+for cfg_rel in (".swissknifeman/config.json", ".swissknife.json"):
+    cfg_file = target / cfg_rel
+    if not cfg_file.is_file():
+        continue
+    try:
+        sp = json.loads(cfg_file.read_text(encoding="utf-8")).get("skills_path")
+    except (json.JSONDecodeError, OSError):
+        sp = None
+    if sp and sp not in scan_roots:
+        scan_roots.append(sp)
+
+for rel_root in scan_roots:
     mf = target / rel_root / ".swissknifeman-manifest.json"
     if not mf.exists():
         continue

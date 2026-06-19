@@ -23,10 +23,13 @@ import hashlib
 import json
 import os
 import shutil
+from datetime import date
 from pathlib import Path
 
-from .common import die, parse_flags, warn
-from .config import all_buckets, resolve_target
+from .common import MANIFEST, die, parse_flags, warn
+from .config import (DEFAULT_EXCLUDE, all_buckets, core_skill_tuples,
+                     resolve_target)
+from .hub import generate_hub, hub_artifacts_exist
 
 # Куда складываем скиллы по умолчанию (Claude находит автоматически).
 DEFAULT_SKILLS_PATH = ".claude/skills"
@@ -124,8 +127,11 @@ def load_skillset_config(target):
     return cfg
 
 
-def resolve_skillset(env, cfg):
+def resolve_skillset(env, cfg, include_core=False):
     """Развернуть правила конфига в набор entry: (buckets ∪ include) − exclude.
+
+    include_core=True добавляет CORE_SKILLS (как vendor/connect) и применяет
+    DEFAULT_EXCLUDE — токен-скиллы раздаются в каждый проект по умолчанию.
 
     Возвращает (entries, skipped): entries отсортированы по 'bucket/name';
     skipped — токены, не найденные в реестре (с warning)."""
@@ -151,8 +157,16 @@ def resolve_skillset(env, cfg):
             continue
         selected[entry["name"]] = entry
 
-    # вычитание
+    # CORE-политика: токен-скиллы по умолчанию + DEFAULT_EXCLUDE дублей хаба
     exclude = set(cfg.get("exclude", []))
+    if include_core:
+        exclude |= set(DEFAULT_EXCLUDE)
+        for bucket, _rel, _d, fm_name in core_skill_tuples(env, exclude):
+            entry = by_name.get(fm_name)
+            if entry:
+                selected[entry["name"]] = entry
+
+    # вычитание
     if exclude:
         for name, entry in list(selected.items()):
             full = f"{entry['bucket']}/{entry['rel']}".rstrip("/") \
@@ -193,7 +207,7 @@ def _dir_sha256(skill_dir):
 
 
 # --- sync ---------------------------------------------------------------------
-def plan_sync(env, target, cfg):
+def plan_sync(env, target, cfg, include_core=False):
     """Сухой расчёт: что добавить/обновить/удалить. Ничего не пишет.
 
     Возвращает dict: {add, update, remove, keep, conflicts, skills_path, entries}.
@@ -204,7 +218,7 @@ def plan_sync(env, target, cfg):
     - conflicts: name'ы из add, чей путь занят ЧУЖИМ скиллом (не managed) — symlink/
                  каталог/файл, который мы не ставили. sync без force их пропускает.
     Чужие (managed!=true) записи в расчёте удаления НЕ участвуют."""
-    entries, skipped = resolve_skillset(env, cfg)
+    entries, skipped = resolve_skillset(env, cfg, include_core=include_core)
     skills_path = cfg.get("skills_path") or DEFAULT_SKILLS_PATH
     dest_root = Path(target) / skills_path
     lock = load_lock(target)
@@ -247,11 +261,13 @@ def _remove_path(path):
         shutil.rmtree(path)
 
 
-def sync_skillset(env, target, cfg, dry_run=False, force=False):
+def sync_skillset(env, target, cfg, dry_run=False, force=False,
+                  include_core=False):
     """Применить конфиг: скопировать новые/обновлённые, удалить выбывшие managed,
     переписать skills-lock.json. Чужие скиллы остаются как есть (конфликты
-    пропускаются с warning; --force перетирает чужой путь нашим скиллом)."""
-    plan = plan_sync(env, target, cfg)
+    пропускаются с warning; --force перетирает чужой путь нашим скиллом).
+    include_core=True — раздать CORE_SKILLS по умолчанию (как vendor/connect)."""
+    plan = plan_sync(env, target, cfg, include_core=include_core)
     dest_root = plan["dest_root"]
     entries = {e["name"]: e for e in plan["entries"]}
     lock = load_lock(target)
@@ -323,19 +339,55 @@ def sync_skillset(env, target, cfg, dry_run=False, force=False):
     }
     if not dry_run:
         write_lock(target, new_lock)
+        _write_manifest(target, plan["skills_path"], new_lock["skills"],
+                        entries, cfg)
     return plan
+
+
+def _write_manifest(target, skills_path, locked, entries, cfg):
+    """Манифест .swissknifeman-manifest.json в skills_path — контракт для
+    переустановки (vendor) и источник для generate-hub.sh (индекс скиллов).
+    Раскладка sync всегда flat: <skills_path>/<name>/SKILL.md. Перечисляем
+    все managed-скиллы, фактически установленные после операции."""
+    dest_root = Path(target) / skills_path
+    if not dest_root.is_dir():
+        return
+    installed = []
+    for name in sorted(locked):
+        entry = entries.get(name)
+        if not entry:
+            continue  # managed-запись без entry в реестре — не индексируем
+        installed.append({
+            "flat_name": name,
+            "source_path": str(Path(entry["path"]).parent),
+        })
+    data = {
+        "installed_at": date.today().isoformat(),
+        "profile": cfg.get("project_type", ""),
+        "agent": cfg.get("agent", "claude"),
+        "layout": "flat",
+        "skills": installed,
+    }
+    (dest_root / MANIFEST).write_text(
+        json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
 # --- CLI ----------------------------------------------------------------------
 def cmd_sync(env, argv):
     opts = parse_flags(argv, {"--target": "str", "--dry-run": "bool",
-                              "--force": "bool"})
+                              "--force": "bool", "--hub": "bool",
+                              "--no-hub": "bool", "--no-core": "bool"})
     if opts["help"]:
-        print("swissknifeman sync [--target DIR] [--dry-run] [--force]\n"
+        print("swissknifeman sync [--target DIR] [--dry-run] [--force] "
+              "[--hub] [--no-hub] [--no-core]\n"
               "  Применяет .swissknifeman/config.json (mode=vendor): копирует "
-              "скиллы из библиотеки в проект, пишет skills-lock.json (managed) и\n"
-              "  удаляет выбывшие managed-скиллы. Чужие скиллы не трогает "
-              "(--force перетирает занятый чужим путь версией из библиотеки).")
+              "скиллы из библиотеки в проект, пишет skills-lock.json (managed),\n"
+              "  манифест .swissknifeman-manifest.json и удаляет выбывшие "
+              "managed-скиллы. Чужие скиллы не трогает (--force перетирает\n"
+              "  занятый чужим путь версией из библиотеки). CORE-скиллы "
+              "раздаются по умолчанию (--no-core отключает). Индекс скиллов\n"
+              "  (managed-блок CLAUDE.md / .ai/guidelines) обновляется, если он "
+              "уже есть в проекте или передан --hub; --no-hub отключает.")
         return
     target, via = resolve_target(env, opts, allow_home_confirm=True)
     cfg = load_skillset_config(target)
@@ -344,7 +396,7 @@ def cmd_sync(env, argv):
             "vendor-режима (mode=vendor, include/buckets/exclude)")
 
     plan = sync_skillset(env, target, cfg, dry_run=opts["dry_run"],
-                         force=opts["force"])
+                         force=opts["force"], include_core=not opts["no_core"])
     prefix = "[dry-run] " if opts["dry_run"] else ""
     n_repl = len(plan["conflicts"]) if opts["force"] else 0
     print(f"{prefix}sync ({via}): +{len(plan['add'])} ~{len(plan['update'])} "
@@ -356,3 +408,10 @@ def cmd_sync(env, argv):
               "— --force чтобы заменить")
     if plan["skipped"]:
         print(f"  пропущено (нет в реестре): {', '.join(plan['skipped'])}")
+
+    # Индекс скиллов в корне проекта: догоняем поведение vendor — обновляем,
+    # если хаб уже есть или запрошен явно. --no-hub перебивает автоопределение.
+    want_hub = opts["hub"] or (hub_artifacts_exist(target)
+                               and not opts["no_hub"])
+    if want_hub and not opts["dry_run"]:
+        generate_hub(env, target)

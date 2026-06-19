@@ -67,6 +67,7 @@ connect → бакеты `general`+`oss-dev`; vendor → skill-level `context-ec
 - **Скилл** = каталог с `SKILL.md`; frontmatter: `name·bucket·version·description·risk·persona·tags·requires·produces_for·outputs`.
 - **После правок скиллов/бакетов** — `swissknifeman registry` (перегенерит реестр/индекс/манифесты).
 - connect — **bucket-granular** (skill-level exclude игнорируется); vendor — **skill-granular**.
+- **Анти-bloat при создании скиллов** — новый скилл только без пересечений (иначе расширяй существующий), без имён конкретных проектов/пакетов в теле. Гейты: `anti-drift` («спроси перед расширением»), `code-simplifier` (YAGNI-чеклист), `architecture` (ADR), `package-contribution-protocol` (граница «проект↔пакет»). Полная методология — `docs/guide/methodology.md`.
 
 ## Разработка
 

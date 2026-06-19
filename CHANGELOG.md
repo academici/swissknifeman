@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Changed
+
+- **Анти-bloat в существующих скиллах (вместо новых дублей).** `anti-drift`
+  (0.2.0) — секция «Граница зависимого пакета: спроси перед расширением» +
+  обновлён сниппет CLAUDE.md; `code-simplifier` (0.2.0) — чеклист
+  speculative-generality (YAGNI) по свежему диффу; `api-design` (0.1.1) —
+  cross-ref на эволюцию контракта пакета; внутренний `skill-authoring` —
+  стандарт ревью скилла (универсальность, без имён проектов/пакетов).
+  `CLAUDE.md`/`CONTRIBUTING.md` — указатели на методологию и анти-bloat гейты.
+
 ### Fixed
 
 - **auto-approve: ложные `deny_hard` на `git rm` и `*-init`** — общий токен `rm`
@@ -16,6 +26,23 @@
 
 ### Added
 
+- **Методология против раздувания кода + скилл `architect/package-contribution-protocol`.**
+  По аудиту практик разработки экосистемы «проект ↔ зависимый пакет» добавлен
+  generic-гейт против Speculative Generality: главный вопрос (Rule of Three +
+  YAGNI), принцип «остановись и спроси / субагент go/no-go перед расширением
+  пакета», двухступенчатый gate (proposal → ADR), таблица «что НЕ идёт в пакет»,
+  направление зависимостей и SemVer контрактов. Сниппеты: `proposal-issue.md`,
+  `adr-template.md`, `claude-md-priority.md` (ручной «первый приоритет» в
+  CLAUDE.md потребителя), `permissions-deny.md`. Скилл **opt-in** (бакет
+  `architect`), без имён конкретных проектов/пакетов. Базовый рефлекс «спроси
+  перед расширением» — в CORE-скилле `anti-drift` (едет во все проекты);
+  глубокий протокол подключается выборочно (гибридная раздача).
+- **Permissions-пресет `product-boundary`** (`configs/claude-code/settings.product-boundary.json`):
+  deny на запись в зависимый пакет (`Write/Edit(vendor/**)`); вариант для
+  path-репо (`packages/**`) — в сниппете скилла. Opt-in (не в автодетекте),
+  применяется через `apply-permissions.sh --preset product-boundary`.
+- **Страница `docs/guide/methodology.md`** (VitePress, в сайдбаре «Гайд») —
+  методология анти-bloat с картой «принцип → скилл/конфиг» и гибридной раздачей.
 - **Figma MCP-скиллы + новый бакет `mobile`.** Три скилла прокачивают работу
   агента с подключённым Figma Dev Mode MCP: `architect/figma-mcp-core` —
   фреймворк-агностичная дисциплина (реальные инструменты `get_metadata`/

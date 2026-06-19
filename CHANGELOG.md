@@ -26,6 +26,16 @@
 
 ### Added
 
+- **Семантика loop'ов поверх скиллов (без отдельного реестра `loops/`).** По
+  аудиту [loops.elorm.xyz](https://loops.elorm.xyz/loops): страница
+  `docs/guide/loop-semantics.md` (VitePress, в сайдбаре «Гайд») — модель loop'а
+  (Goal/Run mode/Max iterations/Between-check/Exit condition + anti-gaming
+  guardrails), маппинг фаз на существующие скиллы и граница «скилл даёт гейты,
+  раннер встроен (`/loop`, `/schedule`)». Скилл `task-brief-template` (0.4.0):
+  поля `Loop verifier`/`Exit condition`/`Hard stop trigger` в шаблоне + сниппет
+  `loop-kickoff.md` (стартовый шаблон итеративной задачи для `.claude/commands/`).
+  Сознательно без дублей: iteration/stop уже в `anti-drift`, session-split — в
+  `context-economy`, shared-code gate — в `package-contribution-protocol`.
 - **`swissknifeman sync` догнал `vendor`/`connect`: манифест, CORE-политика и
   индекс скиллов.** Раньше `sync` только копировал скиллы и писал
   `skills-lock.json` — без `.swissknifeman-manifest.json` (контракт переустановки

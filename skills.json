@@ -1602,9 +1602,9 @@
       "name": "task-brief-template",
       "bucket": "general",
       "path": "skills/general/task-brief-template/SKILL.md",
-      "version": "0.3.0",
-      "description": "Шаблон постановки сложных задач для агента: цель, границы, инварианты, явные предположения, out of scope, критерии приемки, definition of done. Плюс паттерн Plan→Clear→Execute: план и выполнение — в раздельных сессиях.",
-      "sha256": "82c286138773783b7222ffc0a4047449f11b1101a7df0febfecd35653a98f4c7",
+      "version": "0.4.0",
+      "description": "Шаблон постановки сложных задач для агента: цель, границы, инварианты, явные предположения, out of scope, критерии приемки, definition of done. Плюс паттерн Plan→Clear→Execute и поля для итеративного (loop) исполнения: verifier, exit condition, hard-stop.",
+      "sha256": "6dd47e2132667db488088bd0aa5dd4bf06254ef04d59523dea1876353f3fb44a",
       "tags": [
         "workflow",
         "template",

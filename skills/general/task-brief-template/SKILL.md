@@ -1,15 +1,15 @@
 ---
 name: task-brief-template
 bucket: general
-version: 0.3.0
-description: "Шаблон постановки сложных задач для агента: цель, границы, инварианты, явные предположения, out of scope, критерии приемки, definition of done. Плюс паттерн Plan→Clear→Execute: план и выполнение — в раздельных сессиях."
+version: 0.4.0
+description: "Шаблон постановки сложных задач для агента: цель, границы, инварианты, явные предположения, out of scope, критерии приемки, definition of done. Плюс паттерн Plan→Clear→Execute и поля для итеративного (loop) исполнения: verifier, exit condition, hard-stop."
 risk: draft
 persona: oss-dev
 tags: [workflow, template, requirements, context]
 requires: []
 produces_for: [complex-task-orchestrator]
 outputs: []
-snippets: []
+snippets: ["loop-kickoff.md"]
 adapters: [claude, cursor, fable]
 sha256: ""
 ---
@@ -60,6 +60,13 @@ Out of Scope (не трогаем без явного запроса):
 Минимальная верификация:
 - Какие тесты/проверки обязательно запустить.
 
+Loop (заполнять, если задача предполагает >1 осмысленной итерации):
+- Loop verifier: команда/проверка между кругами (тест, линт, `git log`).
+- Exit condition: объективное состояние = задача завершена (по выводу проверки,
+  не по утверждению агента).
+- Hard stop trigger: сигнал, при котором агент останавливается и запрашивает
+  согласование (см. circuit breaker в `anti-drift`).
+
 Definition of Done:
 - [ ] Все критерии приемки закрыты.
 - [ ] Тесты и линт зелёные.
@@ -80,6 +87,7 @@ Definition of Done:
 - Definition of Done отличим от критериев приемки: процессные условия
   (тесты, линт, диф в границах scope), а не поведение фичи.
 - Зафиксирован формат финального отчета по задаче.
+- Для итеративных задач заполнены поля Loop: без Exit condition loop не стартует.
 
 Заполнять шаблон по нечёткой идее помогает скилл `spec-interview`
 (bucket general): интервью с вопросами по одному до старта кода.
@@ -96,6 +104,16 @@ Definition of Done:
 
 Готовые шаблоны команд `/plan` и `/execute` и остальная дисциплина экономии
 контекста — в скилле `context-economy` (bucket general).
+
+## Итеративное (loop) исполнение
+
+Если задача требует нескольких кругов с промежуточной проверкой — заполни поля
+Loop в шаблоне и запускай через встроенный `/loop` (self-paced) или `/schedule`
+(cron). Стоп-контроллер круга — `anti-drift` (circuit breaker), verifier между
+кругами — `cross-layer-change-checklist`. Готовый стартовый шаблон —
+`snippets/loop-kickoff.md` (скопировать в `.claude/commands/` проекта). Полная
+модель и почему нет отдельного реестра `loops/` — гайд
+[Семантика loop'ов](https://github.com/academici/swissknifeman/blob/main/docs/guide/loop-semantics.md).
 
 ## Связанные скиллы
 

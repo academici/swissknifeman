@@ -41,15 +41,26 @@
         ↓ resolve            (buckets ∪ include) − exclude → плоский набор
    набор скиллов библиотеки   (резолвится по skills.json реестра)
         ↓ sync               install + update(по sha256) + prune(по managed)
+                             + CORE-скиллы по умолчанию (как vendor/connect)
 .claude/skills/<name>/        физические копии (видит Claude)
 skills-lock.json             производная карта: managed-записи + чужие нетронуты
+.swissknifeman-manifest.json  манифест в skills_path (переустановка + индекс хаба)
+CLAUDE.md / .ai/guidelines    индекс скиллов (managed-блок), если есть или --hub
 ```
 
 ```bash
 swissknifeman sync --dry-run     # показать план: +add ~update -remove =keep
-swissknifeman sync               # применить
+swissknifeman sync               # применить (CORE раздаётся по умолчанию)
 swissknifeman sync --force       # перетереть чужой путь версией из библиотеки
+swissknifeman sync --hub         # дополнительно сгенерировать индекс скиллов
+swissknifeman sync --no-core     # без CORE-скиллов; --no-hub — без индекса
 ```
+
+`sync` пишет `.swissknifeman-manifest.json` в `skills_path` (контракт чистой
+переустановки и источник для `generate-hub.sh`), раздаёт `CORE_SKILLS` по
+умолчанию (`--no-core` отключает) и обновляет индекс скиллов в корне проекта
+(managed-блок `CLAUDE.md` или `.ai/guidelines/swissknifeman-hub.md` для Boost),
+если он уже есть в проекте или передан `--hub`.
 
 ## skills-lock.json — производный, не источник
 

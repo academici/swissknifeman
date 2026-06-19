@@ -36,6 +36,17 @@
   `loop-kickoff.md` (стартовый шаблон итеративной задачи для `.claude/commands/`).
   Сознательно без дублей: iteration/stop уже в `anti-drift`, session-split — в
   `context-economy`, shared-code gate — в `package-contribution-protocol`.
+- **`swissknifeman sync` догнал `vendor`/`connect`: манифест, CORE-политика и
+  индекс скиллов.** Раньше `sync` только копировал скиллы и писал
+  `skills-lock.json` — без `.swissknifeman-manifest.json` (контракт переустановки
+  и источник для `generate-hub.sh`), без CORE-скиллов и без обновления
+  managed-блока в корне проекта. Теперь `sync`: (1) пишет манифест в `skills_path`
+  (`layout: flat`, `flat_name`/`source_path`); (2) раздаёт `CORE_SKILLS` по
+  умолчанию и применяет `DEFAULT_EXCLUDE` (флаг `--no-core` отключает), как
+  остальные каналы; (3) обновляет индекс скиллов (managed-блок `CLAUDE.md` /
+  `.ai/guidelines/swissknifeman-hub.md`), если он уже есть в проекте или передан
+  `--hub` (`--no-hub` отключает). `generate-hub.sh` дополнительно ищет манифест в
+  `skills_path` из конфига (находит нестандартные раскладки вроде `.agents/skills`).
 - **Методология против раздувания кода + скилл `architect/package-contribution-protocol`.**
   По аудиту практик разработки экосистемы «проект ↔ зависимый пакет» добавлен
   generic-гейт против Speculative Generality: главный вопрос (Rule of Three +

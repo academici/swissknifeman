@@ -1,7 +1,7 @@
 ---
 name: api-design
 bucket: architect
-version: 0.1.0
+version: 0.1.1
 description: Проектирование REST/GraphQL API, эндпоинтов, контрактов, версионирования, аутентификации
 risk: draft
 persona: architect
@@ -179,3 +179,4 @@ API = контракт. Контракт сложно изменить посл�
 - `architect/architecture` — общий контекст, где API — один из контейнеров.
 - `frontend/wayfinder` — типобезопасные роуты/actions на фронте для Laravel-реализации этого контракта.
 - `php/laravel-data` — DTO-форма запроса/ответа при реализации контракта на Laravel.
+- `architect/package-contribution-protocol` — эволюция контракта общего пакета: SemVer, «это breaking?», migration guide, гейт против раздувания.

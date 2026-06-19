@@ -6,7 +6,7 @@
   "buckets": {
     "architect": {
       "description": "Architecture, API and data design, security, observability, tech stack selection",
-      "count": 10,
+      "count": 11,
       "status": "active"
     },
     "blender": {
@@ -112,9 +112,9 @@
       "name": "api-design",
       "bucket": "architect",
       "path": "skills/architect/api-design/SKILL.md",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "description": "Проектирование REST/GraphQL API, эндпоинтов, контрактов, версионирования, аутентификации",
-      "sha256": "c761fa46077b783472809bf09ddf84d62c85f29c5f3fbda4d4c7c0cf5a185868",
+      "sha256": "e3e059b65e603048fd60ff0a48384af9e62281d565ad932cc4ea7135ec8d1080",
       "tags": [
         "api",
         "architecture",
@@ -265,6 +265,30 @@
         "runbook",
         "incident-response",
         "capacity-planning"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "package-contribution-protocol",
+      "bucket": "architect",
+      "path": "skills/architect/package-contribution-protocol/SKILL.md",
+      "version": "0.1.0",
+      "description": "Гейт против раздувания зависимого пакета из проекта-потребителя: Rule of Three, proposal→ADR, минимальный контракт, направление зависимостей, SemVer и граница read-only. Активировать, когда задача в проекте требует правки общего пакета, при «вынести общее» и при добавлении класса/провайдера/интерфейса/абстракции в зависимый пакет.",
+      "sha256": "82d6257940b1d811e4aec1e5464c2db9705ca4eec3f26a969336b222a88821ce",
+      "tags": [
+        "governance",
+        "package",
+        "monorepo",
+        "contribution",
+        "semver",
+        "anti-bloat",
+        "boundary"
+      ],
+      "requires": [
+        "architecture",
+        "api-design",
+        "task-brief-template",
+        "anti-drift"
       ],
       "source": "local"
     },
@@ -1391,9 +1415,9 @@
       "name": "anti-drift",
       "bucket": "general",
       "path": "skills/general/anti-drift/SKILL.md",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "description": "Дисциплина против «закапывания» агента: думай до кода, простота прежде всего, хирургические правки, circuit-breaker при затянувшихся итерациях.",
-      "sha256": "b303a50feef7e0cf4d1d9316bf3982ef3a9f35e43fe3c02b3c885d87ca92d0e7",
+      "sha256": "dc8219fe6a5ae3497c54448cb699f2e67849c1e8bed4730f306ca8fc985873b2",
       "tags": [
         "workflow",
         "discipline",
@@ -2986,9 +3010,9 @@
       "name": "code-simplifier",
       "bucket": "quality",
       "path": "skills/quality/code-simplifier/SKILL.md",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "description": "Упрощение свеженаписанного кода без изменения поведения: мёртвый код, лишние абстракции, дубли, выравнивание с паттернами проекта. Поведение фиксируют тесты.",
-      "sha256": "7f8b26638c2d12785ac2f801fc86d0accd1dfc2aba32951cf1c9d2b869792f6f",
+      "sha256": "0fc621256ac46c0ad8d5eff7b5523c6851c644b9e41ff0e53a9059939c3eccfa",
       "tags": [
         "quality",
         "refactoring",

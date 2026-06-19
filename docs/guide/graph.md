@@ -19,6 +19,7 @@ flowchart LR
     figma_mcp_core["figma-mcp-core"]
     legal_compliance["legal-compliance"]
     observability_design["observability-design"]
+    package_contribution_protocol["package-contribution-protocol"]
     security_design["security-design"]
     tech_stack_selection["tech-stack-selection"]
   end
@@ -191,6 +192,10 @@ flowchart LR
   new_project -->|requires| risk_assessment
   observability_design -->|requires| architecture
   oss_governance -->|requires| oss_development
+  package_contribution_protocol -->|requires| anti_drift
+  package_contribution_protocol -->|requires| api_design
+  package_contribution_protocol -->|requires| architecture
+  package_contribution_protocol -->|requires| task_brief_template
   parametric_config -->|requires| model_rules
   parametric_config -->|requires| threading
   pitch_deck -->|requires| competitive_analysis
@@ -285,7 +290,7 @@ flowchart LR
   version_gotchas -.->|feeds| parametric_config
 ```
 
-**В графе:** 105 скиллов, 74 рёбер requires, 66 рёбер produces_for.
+**В графе:** 106 скиллов, 78 рёбер requires, 66 рёбер produces_for.
 
 ## Изолированные скиллы (72)
 

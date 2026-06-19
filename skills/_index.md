@@ -4,11 +4,11 @@
 
 Источник истины портируемых скиллов (машинный реестр — `skills.json`). Раздача в проекты: `swissknifeman connect` (плагины-бакеты) / `vendor` (физ. перенос). CORE-набор токен-скиллов (`general`/`oss-dev`) раздаётся по умолчанию — см. `connect`/`vendor`.
 
-Всего: 177 скиллов в 16 бакетах.
+Всего: 178 скиллов в 16 бакетах.
 
 ## Скиллы по бакетам
 
-### architect — Architecture, API and data design, security, observability, tech stack selection (10)
+### architect — Architecture, API and data design, security, observability, tech stack selection (11)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
@@ -20,6 +20,7 @@
 | `figma-mcp-core` | Дисциплина работы с официальным Figma Dev Mode MCP: реальные инструменты (get_metadata, g… | `figma`, `mcp`, `design-system`, `design-tokens`, `dev-mode`, `code-connect`, `ui` |
 | `legal-compliance` | GDPR, CCPA, AI Act, DMCA, COPPA, DSA — чеклист регуляторных требований до запуска | `compliance`, `gdpr`, `privacy`, `ai-act`, `regulatory` |
 | `observability-design` | Logging, metrics, tracing, alerting. SLO/SLI, error budget, runbooks для прод-готовности | `observability`, `logging`, `metrics`, `tracing`, `alerting`, `slo`, `runbook` |
+| `package-contribution-protocol` | Гейт против раздувания зависимого пакета из проекта-потребителя: Rule of Three, proposal→… | `governance`, `package`, `monorepo`, `contribution`, `semver`, `anti-bloat`, `boundary` |
 | `security-design` | Классификация данных, auth-стратегия, RBAC/ABAC, OWASP Top 10, GDPR, STRIDE threat modeli… | `security`, `compliance`, `auth`, `owasp`, `threat-modeling`, `rbac`, `gdpr`, `privacy`, `stride` |
 | `tech-stack-selection` | Выбор технологического стека с trade-off матрицей до архитектурного дизайна. ADR-первый ш… | `stack-choice`, `architecture`, `adr`, `trade-off` |
 
@@ -282,6 +283,7 @@
 | `ai-act` | `legal-compliance` |
 | `ai-context` | `ai-context-workflow`, `skills-ssot` |
 | `alerting` | `observability-design` |
+| `anti-bloat` | `package-contribution-protocol` |
 | `api` | `api-design`, `dx-design`, `laravel-data`, `version-gotchas` |
 | `architecture` | `agent-design`, `api-design`, `architecture`, `data-schema`, `dependency-injection`, `inertia-vue`, `laravel`, `laravel-structure`, `local-topology`, `ml-project-structure`, `modular-architecture`, `oss-development`, `php-patterns`, `pinia-stores`, `project-map`, `repositories`, `startup-cto`, `tech-stack-selection`, `ticket-workflow` |
 | `attribute` | `attribute-authorization` |
@@ -295,6 +297,7 @@
 | `blender` | `mcp-blender-workflow`, `model-rules`, `parametric-config`, `threading`, `version-gotchas` |
 | `botkit` | `botkit` |
 | `bots` | `botkit` |
+| `boundary` | `package-contribution-protocol` |
 | `bpy` | `mcp-blender-workflow`, `parametric-config`, `threading`, `version-gotchas` |
 | `broadcasting` | `laravel-broadcasting`, `laravel-echo-client` |
 | `browser` | `playwright-e2e` |
@@ -321,6 +324,7 @@
 | `configuration` | `spatie-settings` |
 | `context` | `anti-drift`, `compact-responses`, `context-economy`, `gh-review`, `session-handoff`, `shared-memory`, `task-brief-template` |
 | `contracts` | `api-design` |
+| `contribution` | `package-contribution-protocol` |
 | `conventional-commits` | `git-commit-rules` |
 | `conventions` | `ai-context-workflow`, `compact-responses`, `context-economy`, `git-commit-rules`, `ml-project-structure`, `model-rules`, `named-arguments`, `packages-stack`, `project-map`, `skills-ssot`, `venv-dependencies` |
 | `coordination` | `cross-project-coordinator`, `shared-memory` |
@@ -377,6 +381,7 @@
 | `github-actions` | `ci-cd` |
 | `gitops` | `git-commit-rules`, `gitops` |
 | `gotchas` | `livewire-blade-attributes`, `version-gotchas` |
+| `governance` | `package-contribution-protocol` |
 | `gtm` | `competitive-analysis`, `go-to-market`, `new-project`, `pitch-deck`, `product-roadmap` |
 | `handoff` | `gh-review`, `oncall-rotation`, `session-handoff` |
 | `headless` | `reka-ui-cva` |
@@ -416,6 +421,7 @@
 | `mobile` | `figma-to-flutter` |
 | `monetization` | `go-to-market`, `monetization-design`, `pitch-deck`, `unit-economics` |
 | `monitoring` | `capacity-planning`, `health-checks`, `runbook` |
+| `monorepo` | `package-contribution-protocol` |
 | `multi-config` | `vite-multi-build` |
 | `mutation` | `mutation-testing` |
 | `naive-ui` | `naive-ui-theming` |
@@ -427,6 +433,7 @@
 | `orchestration` | `anti-drift`, `complex-task-orchestrator`, `cross-project-coordinator`, `laravel-subagents`, `mcp-blender-workflow`, `tech-lead` |
 | `oss` | `dependency-audit`, `dx-design`, `github-flow`, `open-source-maintainer`, `oss-development`, `oss-governance`, `release-engineering` |
 | `owasp` | `security-design` |
+| `package` | `package-contribution-protocol` |
 | `package-dev` | `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages` |
 | `parametric` | `parametric-config` |
 | `patterns` | `enum-attributes`, `laravel`, `php-patterns`, `vue-composition-api` |
@@ -475,7 +482,7 @@
 | `scalability` | `architecture` |
 | `schema` | `data-schema` |
 | `security` | `agent-design`, `dependency-audit`, `laravel-security-audit`, `oss-governance`, `risk-assessment`, `security-design` |
-| `semver` | `github-flow`, `release-engineering` |
+| `semver` | `github-flow`, `package-contribution-protocol`, `release-engineering` |
 | `settings` | `spatie-settings` |
 | `skills` | `ai-context-workflow`, `laravel-packages`, `skills-ssot` |
 | `sla` | `capacity-planning`, `incident-response`, `mcp-blender-workflow`, `oncall-rotation`, `parametric-config`, `threading` |

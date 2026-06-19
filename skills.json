@@ -463,15 +463,16 @@
       "name": "ci-cd",
       "bucket": "devops",
       "path": "skills/devops/ci-cd/SKILL.md",
-      "version": "0.2.0",
-      "description": "GitHub Actions CI/CD pipelines для Laravel проектов",
-      "sha256": "2bc03a6fda3a9b05d3e4284124378e6b617bb15492418b35909df70a6be847d1",
+      "version": "0.3.0",
+      "description": "GitHub Actions CI/CD pipelines для Laravel проектов: lint, тесты, build, release + security-гейты (SAST, аудит зависимостей, скан образа)",
+      "sha256": "6e31a7895fed49e762cf16345acc0b3039848906cb14b7c59b78748f735eeda2",
       "tags": [
         "ci",
         "github-actions",
         "laravel",
         "devops",
-        "release"
+        "release",
+        "security"
       ],
       "produces_for": [
         "release-engineering"
@@ -1250,9 +1251,9 @@
       "name": "vitest",
       "bucket": "frontend",
       "path": "skills/frontend/vitest/SKILL.md",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "description": "Vitest для Vue/Inertia-проекта на Laravel: jsdom, globals, тесты в resources/js/tests зеркалят исходники, coverage v8 с обязательным exclude автогенерённого кода.",
-      "sha256": "c5c16e224c66b51ec3525292d8ce541c107efbea6a41a0bef01bff67715f649e",
+      "sha256": "aed40fc15a5cc068622557f10a0f5a843bd1ec27de432973a44d24003a0c70b6",
       "tags": [
         "vitest",
         "testing",
@@ -1304,9 +1305,9 @@
       "name": "vue-composition-api",
       "bucket": "frontend",
       "path": "skills/frontend/vue-composition-api/SKILL.md",
-      "version": "0.1.0",
-      "description": "Vue Composition API паттерны: синтаксис <script setup> как стандарт написания компонентов",
-      "sha256": "8a855f00c932e1ffcebc6750ec58e79a78e2ebfa03fa8df4f62f10e8af68ef39",
+      "version": "0.2.0",
+      "description": "Проектные конвенции Composition API: ref-first и паттерн composables. НЕ справочник API (`<script setup>`, defineProps/Emits, reactivity) — база в `vue`; НЕ общий workflow — в `vue-best-practices`. Здесь только дельта-решения и куда дальше.",
+      "sha256": "c263c2839ff95910e508929fe51706de5f313702104f8dcd004fe7f8d221e39b",
       "tags": [
         "vue",
         "frontend",
@@ -2497,9 +2498,9 @@
       "name": "laravel-permissions",
       "bucket": "php",
       "path": "skills/php/laravel-permissions/SKILL.md",
-      "version": "0.3.0",
-      "description": "RBAC, policies, gates и entity-scoped permissions (AzGuard patterns)",
-      "sha256": "dcdcbc3a5a206fbef2892482063a2895c01ea077ba7e9980bf623b168c743d88",
+      "version": "0.3.1",
+      "description": "Ручной/нативный Laravel RBAC: policies, gates, entity-scoped permissions без спец-пакета. Когда нужен пакет azguard → скилл azguard; декларативные атрибуты прав на экшенах → attribute-authorization.",
+      "sha256": "ea8858fc0e9e89b9bebc8330de06585798308a4fa56df682cdeda968dbdadaa2",
       "tags": [
         "php",
         "laravel",

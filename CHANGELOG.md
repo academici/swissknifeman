@@ -4,6 +4,16 @@
 
 ### Changed
 
+- **Ревью внешнего аудита: дизамбигуация overlap-кластеров + CI security-гейты.**
+  По разбору `Audit.md` (вердикт — `docs/research/audit-2026-06-review.md`): из
+  всех рекомендаций реальны 3 (остальное — already-done/дубли/вне scope/против
+  stdlib-only инварианта). `frontend/vue-composition-api` (0.2.0) обрезан до дельты
+  (ref-first + composables), базовый синтаксис отдан upstream `vue`/`vue-best-practices`
+  (не удалён — служит якорем «паттерн composable» для ≈13 frontend-скиллов).
+  `php/laravel-permissions` (0.3.1) и `frontend/vitest` (0.1.1) — острые
+  description-триггеры против путаницы роутинга (vs `azguard`/`attribute-authorization`
+  и vs `vitest-vue`). `devops/ci-cd` (0.3.0) — секция «Security gates» (SAST/PHPStan-taint,
+  `composer`/`npm audit`+Dependabot, Trivy скан образа) + сниппет `github-actions-security.yml`.
 - **Анти-bloat в существующих скиллах (вместо новых дублей).** `anti-drift`
   (0.2.0) — секция «Граница зависимого пакета: спроси перед расширением» +
   обновлён сниппет CLAUDE.md; `code-simplifier` (0.2.0) — чеклист

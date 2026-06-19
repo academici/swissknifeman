@@ -1,8 +1,8 @@
 ---
 name: laravel-permissions
 bucket: php
-version: 0.3.0
-description: "RBAC, policies, gates и entity-scoped permissions (AzGuard patterns)"
+version: 0.3.1
+description: "Ручной/нативный Laravel RBAC: policies, gates, entity-scoped permissions без спец-пакета. Когда нужен пакет azguard → скилл azguard; декларативные атрибуты прав на экшенах → attribute-authorization."
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "permissions", "azguard", "rbac", "authorization"]

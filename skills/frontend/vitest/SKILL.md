@@ -1,7 +1,7 @@
 ---
 name: vitest
 bucket: frontend
-version: 0.1.0
+version: 0.1.1
 description: "Vitest для Vue/Inertia-проекта на Laravel: jsdom, globals, тесты в resources/js/tests зеркалят исходники, coverage v8 с обязательным exclude автогенерённого кода."
 risk: write
 persona: oss-dev
@@ -58,5 +58,6 @@ sha256: ""
 - https://vitest.dev/guide/coverage
 - https://test-utils.vuejs.org/
 - Связанные скиллы: `frontend/inertia-vue` (структура resources/js), `frontend/wayfinder` (что считается автогеном), `frontend/vue-composition-api` (composables, которые тестируем как функции)
+- `frontend/vitest-vue` — generic справочник API Vitest (test/describe/mock/coverage, upstream). Этот скилл — рецепт конфига именно для Laravel/Inertia; за общим API иди туда.
 - Скилл `quality/test-strategy` — стратегия пирамиды и coverage policy
 - Скилл `quality/playwright-e2e` — браузерные/E2E-сценарии (то, что не покрывает Vitest)

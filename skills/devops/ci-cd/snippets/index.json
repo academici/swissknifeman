@@ -31,6 +31,16 @@
         "gitlab",
         "ci"
       ]
+    },
+    {
+      "file": "github-actions-security.yml",
+      "description": "Security-job для GitHub Actions: composer audit + npm audit + Trivy скан образа, блок только на HIGH/CRITICAL",
+      "tags": [
+        "ci",
+        "security",
+        "trivy",
+        "audit"
+      ]
     }
   ]
 }

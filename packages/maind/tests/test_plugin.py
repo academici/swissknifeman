@@ -33,9 +33,16 @@ class TestPluginManifest(unittest.TestCase):
         self.assertTrue((ROOT / m["mcpServers"]).is_file(), "manifest.mcpServers → нет файла")
 
     def test_marketplace_valid_and_consistent(self):
-        mk = _load_json(PLUGIN_DIR / "marketplace.json")
-        entry = next(p for p in mk["plugins"] if p["name"] == "maind")
-        self.assertEqual(entry["source"], "./")
+        # В монорепо marketplace.json — единый, в КОРНЕ репо (его генерит swissknifeman
+        # registry, добавляя maind как sibling-пакет). Собственного marketplace у maind нет.
+        repo_root = next((c for c in (ROOT, *ROOT.parents) if (c / ".git").exists()), None)
+        mk_file = (repo_root / ".claude-plugin" / "marketplace.json") if repo_root else None
+        if not mk_file or not mk_file.is_file():
+            self.skipTest("корневой marketplace.json не найден (standalone-раскладка)")
+        mk = _load_json(mk_file)
+        entry = next((p for p in mk["plugins"] if p["name"] == "maind"), None)
+        self.assertIsNotNone(entry, "maind отсутствует в корневом marketplace")
+        self.assertEqual(entry["source"], "./packages/maind")
         # имя плагина в marketplace совпадает с plugin.json (install: maind@<marketplace>)
         self.assertEqual(entry["name"], _load_json(PLUGIN_DIR / "plugin.json")["name"])
 

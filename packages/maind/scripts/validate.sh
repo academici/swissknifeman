@@ -17,15 +17,16 @@ for f in bin/maind install.sh scripts/*.sh; do
 done
 
 echo "[3/6] JSON конфиги"
+# marketplace.json в монорепо — единый, в корне репо (не в пакете): здесь не проверяем.
 for f in .maind.example.json package.json \
-         .claude-plugin/plugin.json .claude-plugin/marketplace.json .mcp.json; do
+         .claude-plugin/plugin.json .mcp.json; do
   [[ -f "$f" ]] && { python3 -m json.tool "$f" >/dev/null || err "битый JSON: $f"; }
 done
 
 echo "[4/6] обязательные файлы"
 for f in bin/maind lib/maind/__init__.py lib/maind/cli.py \
          config/memory/iii-config.yaml .maind.example.json .env.example \
-         .claude-plugin/plugin.json .claude-plugin/marketplace.json .mcp.json \
+         .claude-plugin/plugin.json .mcp.json \
          commands/maind.md commands/onboard.md commands/sync.md \
          README.md LICENSE; do
   [[ -e "$f" ]] || err "нет файла: $f"

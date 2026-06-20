@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Changed
+
+- **Монорепо academici: верификация + массовый re-deploy потребителей (этап 7).** MCP-конфиги
+  проектов перенацелены на новый путь хаба: `maind deploy` прогнан по 15 проектам реестра —
+  14 обновлены (corex/azguard/edufy/memster/vintera/… → `packages/swissknifeman/packages/maind/`),
+  1 пропущен (agelto: предсуществующий битый `.cursor/mcp.json` с дублем JSON — не трогаем).
+  `swissknifeman update --all` обновил скиллы потребителей. Проверка `maind health` на проекте:
+  статус `connected`. Доделаны хвосты этапа 4: тест `test_plugin.py` и `validate.sh` maind
+  больше не требуют собственный marketplace.json пакета (он в корне репо).
+
 ### Added
 
 - **Монорепо academici: зонтичная навигация (этап 6).** Корневой `CLAUDE.md` (карта

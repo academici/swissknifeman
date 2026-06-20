@@ -1,41 +1,33 @@
-"""Общие утилиты maind: окружение (Env), вывод, парсинг аргументов, atomic JSON, HTTP.
+"""Общие утилиты maind: окружение (Env), парсинг аргументов, atomic JSON, HTTP.
 
-Стиль и инварианты — как в swissknifeman/brain: окружение передаётся явно через
-Env (без модульных глобалей), JSON-хранилища пишутся атомарно, сетевые вызовы —
-на stdlib urllib (никаких сторонних зависимостей в рантайме)."""
+Дословно общий с swissknifeman/brain код (die/warn/now_iso/confirm/sanitize +
+ядро Env) вынесен в academici_core; здесь — специфика maind (path-property узла,
+parse_args с позиционными, atomic JSON, managed-block, HTTP на stdlib urllib)."""
 import copy
 import hashlib
 import json
 import os
 import re
 import shutil
-import sys
 import urllib.error
 import urllib.request
-from dataclasses import dataclass, field
-from datetime import date, datetime, timezone
+from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 
-HOME = Path.home()
+# Общий core (подключается через PYTHONPATH лаунчером/test.sh). Реэкспорт для
+# модулей пакета, которые исторически берут эти имена из .common.
+from academici_core import (  # noqa: F401
+    HOME, BaseEnv, confirm, die, now_iso, sanitize, warn,
+)
+
 DB_VERSION = 1
-SLUG_RE = re.compile(r"[^a-z0-9-]")
 
 
 @dataclass(frozen=True)
-class Env:
-    """Контекст запуска: корень репозитория maind, текущая команда, домашний каталог.
-
-    Значения передаются явно (не модульные глобали) — функции тестируемы: можно
-    подсунуть временный root и home, не трогая argv процесса. frozen=True: контекст
-    запуска неизменен; __post_init__ нормализует root/home в Path (принимаем str/Path)."""
-
-    root: Path
-    cmd: str = ""
-    home: Path = field(default_factory=lambda: HOME)
-
-    def __post_init__(self):
-        object.__setattr__(self, "root", Path(self.root))
-        object.__setattr__(self, "home", Path(self.home))
+class Env(BaseEnv):
+    """Контекст запуска maind: ядро (root/cmd/home) — из BaseEnv; здесь только
+    path-property узла (~/.maind, root/data, config)."""
 
     # ── состояние пользователя (~/.maind) ──────────────────────────────────
     @property
@@ -85,31 +77,7 @@ class Env:
         return self.root / ".env"
 
 
-# ── вывод и завершение ─────────────────────────────────────────────────────
-def die(msg, code=1):
-    print(f"ERROR: {msg}", file=sys.stderr)
-    sys.exit(code)
-
-
-def warn(msg):
-    print(f"WARN: {msg}", file=sys.stderr)
-
-
-def now_iso():
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-
-
-def confirm(prompt):
-    if not sys.stdin.isatty():
-        return False
-    return input(f"{prompt} [y/N] ").strip().lower() in ("y", "yes")
-
-
-def sanitize(name):
-    """Slug: lower, пробелы/подчёркивания → дефис, прочее убрать, схлопнуть дефисы."""
-    name = name.lower().replace(" ", "-").replace("_", "-")
-    name = SLUG_RE.sub("", name)
-    return re.sub(r"-{2,}", "-", name).strip("-")
+# die/warn/now_iso/confirm/sanitize — из academici_core (реэкспорт выше).
 
 
 # ── парсинг аргументов (флаги + позиционные, стиль brain) ───────────────────

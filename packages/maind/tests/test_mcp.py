@@ -214,6 +214,13 @@ class TestConformance(unittest.TestCase):
 
     def test_real_spawn_handshake(self):
         repo = Path(__file__).resolve().parents[1]
+        # academici_core живёт в <monorepo>/core (на два уровня выше пакета) и
+        # подключается лаунчером; при реальном спавне добавляем его в PYTHONPATH.
+        # standalone-раскладка: core рядом нет — путь просто отсутствует в списке.
+        core = repo.parents[1] / "core"
+        pp = [str(repo / "lib")]
+        if core.is_dir():
+            pp.append(str(core))
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "node"
             (root / "config" / "memory").mkdir(parents=True)
@@ -223,7 +230,7 @@ class TestConformance(unittest.TestCase):
             proc = subprocess.Popen(
                 [sys.executable, "-m", "maind", str(root), "mcp"],
                 stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
-                env={**os.environ, "PYTHONPATH": str(repo / "lib")})
+                env={**os.environ, "PYTHONPATH": os.pathsep.join(pp)})
             msgs = [
                 {"jsonrpc": "2.0", "id": 1, "method": "initialize",
                  "params": {"protocolVersion": "2025-03-26"}},

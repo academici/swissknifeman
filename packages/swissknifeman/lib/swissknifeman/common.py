@@ -1,12 +1,19 @@
-"""Общие утилиты: окружение, вывод, парсинг flag'ов и frontmatter."""
-import re
+"""Общие утилиты: окружение, вывод, парсинг flag'ов и frontmatter.
+
+Дословно общий с maind/brain код (die/warn/now_iso/confirm/sanitize + ядро Env)
+вынесен в academici_core; здесь — только специфика swissknifeman (path-property,
+parse_flags, frontmatter, apply_permissions, константы реестра)."""
 import subprocess
 import sys
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from dataclasses import dataclass
 from pathlib import Path
 
-HOME = Path.home()
+# Общий core (подключается через PYTHONPATH лаунчером/test.sh). Реэкспорт для
+# модулей пакета, которые исторически берут эти имена из .common.
+from academici_core import (  # noqa: F401
+    HOME, BaseEnv, confirm, die, now_iso, sanitize, warn,
+)
+
 STATE_DIR = HOME / ".swissknifeman"
 DB_FILE = STATE_DIR / "projects.json"
 DB_VERSION = 1
@@ -23,23 +30,9 @@ HUB_MARKER = "<!-- swissknifeman:hub:start -->"
 
 
 @dataclass(frozen=True)
-class Env:
-    """Контекст запуска: корень реестра, текущая команда, домашний каталог.
-
-    Раньше эти значения были модульными глобалями (root/cmd/argv). Теперь
-    передаются явно — функции становятся тестируемыми (можно подсунуть
-    временный корень реестра, не трогая argv процесса). frozen=True: контекст
-    запуска неизменен; __post_init__ нормализует root/home в Path (принимаем
-    как str, так и Path). home по умолчанию — реальный HOME."""
-
-    root: Path
-    cmd: str = ""
-    home: Path = field(default_factory=lambda: HOME)
-
-    def __post_init__(self):
-        # frozen запрещает обычное присваивание — пишем через object.__setattr__
-        object.__setattr__(self, "root", Path(self.root))
-        object.__setattr__(self, "home", Path(self.home))
+class Env(BaseEnv):
+    """Контекст запуска swissknifeman: ядро (root/cmd/home) — из BaseEnv;
+    здесь только path-property реестра (state ~/.swissknifeman)."""
 
     @property
     def state_dir(self):
@@ -52,25 +45,6 @@ class Env:
     @property
     def topology_file(self):
         return self.state_dir / "topology.json"
-
-
-def die(msg):
-    print(f"ERROR: {msg}", file=sys.stderr)
-    sys.exit(1)
-
-
-def warn(msg):
-    print(f"WARN: {msg}", file=sys.stderr)
-
-
-def now_iso():
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-
-
-def confirm(prompt):
-    if not sys.stdin.isatty():
-        return False
-    return input(f"{prompt} [y/N] ").strip().lower() in ("y", "yes")
 
 
 def apply_permissions(env, target, presets="", dry_run=False, settings_file=None):
@@ -149,9 +123,3 @@ def parse_frontmatter_fields(skill_md):
     fm = parse_frontmatter(skill_md)
     return {"name": fm.get("name", ""),
             "requires": parse_inline_list(fm.get("requires", ""))}
-
-
-def sanitize(name):
-    name = name.lower().replace(" ", "-").replace("_", "-")
-    name = re.sub(r"[^a-z0-9-]", "", name)
-    return re.sub(r"-{2,}", "-", name).strip("-")

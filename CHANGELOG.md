@@ -4,6 +4,16 @@
 
 ### Changed
 
+- **Монорепо academici: общий `core/academici_core` (этап 3).** Дословные дубли,
+  исторически копировавшиеся между swissknifeman/maind/brain байт-в-байт, вынесены в
+  общий stdlib-only пакет: `die/warn/now_iso/confirm` (`term`), `sanitize` (`text`),
+  базовый `BaseEnv` (ядро root/cmd/home + `__post_init__`, `env`). `Env` каждого пакета
+  теперь наследует `BaseEnv` и добавляет только свои path-property. Подключение — через
+  PYTHONPATH (без pip): лаунчеры, `test.sh`, `validate.sh` добавляют `<repo>/core`
+  (опционально — fallback на standalone-раскладку). `parse_args`/`parse_flags`, atomic
+  JSON, HTTP, frontmatter, managed-block остаются в `common.py` пакетов (расходятся по
+  контракту — не дословны). 5 smoke-тестов core; 113 (skm) + 235 (maind) зелёные.
+
 - **Монорепо academici: maind внесён в `packages/maind/` (через `git subtree`, история
   сохранена).** Хаб памяти/графа теперь живёт под зонтиком рядом с реестром скиллов.
   `node_modules` (демон `@agentmemory/agentmemory`) переустановлен в новом месте (`npm ci`);

@@ -13,7 +13,9 @@ if ! command -v python3 >/dev/null 2>&1; then
 fi
 
 # lib/ — пакет swissknifeman; REPO_ROOT — чтобы импортировался tests.fixtures.
-export PYTHONPATH="$REPO_ROOT/lib:$REPO_ROOT${PYTHONPATH:+:$PYTHONPATH}"
+# core/ — общий academici_core (на два уровня выше пакета), опционально (standalone).
+CORE_DIR="$(cd "$REPO_ROOT/../../core" 2>/dev/null && pwd || true)"
+export PYTHONPATH="$REPO_ROOT/lib:$REPO_ROOT${CORE_DIR:+:$CORE_DIR}${PYTHONPATH:+:$PYTHONPATH}"
 
 verbose=""
 [[ "${1:-}" == "-v" ]] && verbose="-v"

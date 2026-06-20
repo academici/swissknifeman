@@ -4,6 +4,12 @@
 
 ### Added
 
+- **Монорепо academici: зонтичная навигация (этап 6).** Корневой `CLAUDE.md` (карта
+  монорепо: пакеты, консоль, core, marketplace) и корневой `README.md` зонтика. README
+  swissknifeman перенесён в `packages/swissknifeman/README.md`. `docs:*`-скрипты
+  swissknifeman нацелены на корневой `docs/` (`../../docs`). docs/ пакетов и два VitePress
+  оставлены на местах (полное слияние сайтов — отдельная задача).
+
 - **Монорепо academici: единая консоль `bin/academici` + зонтичный `install.sh` (этап 5).**
   `academici` — тонкий bash-роутер: `academici maind <cmd>` / `academici skm <cmd>` →
   под-бинарник пакета; уникальные команды авто-роутятся без префикса; конфликтные имена

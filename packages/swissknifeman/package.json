@@ -6,9 +6,9 @@
   "description": "Универсальный личный реестр AI-скиллов и сниппетов: один источник истины, установка в любой проект и любую IDE",
   "type": "module",
   "scripts": {
-    "docs:dev": "vitepress dev docs",
-    "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs"
+    "docs:dev": "vitepress dev ../../docs",
+    "docs:build": "vitepress build ../../docs",
+    "docs:preview": "vitepress preview ../../docs"
   },
   "devDependencies": {
     "mermaid": "^11.14.0",

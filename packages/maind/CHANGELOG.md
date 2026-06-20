@@ -1,0 +1,80 @@
+# Changelog
+
+Формат — [Keep a Changelog](https://keepachangelog.com/ru/1.0.0/),
+версионирование — [SemVer](https://semver.org/lang/ru/).
+
+## [Unreleased]
+
+## [0.2.0] — 2026-06-15
+
+### Added
+- **Федерация графа**: граф **на проект** (`data/graphs/<id>.db`) + тонкий регенерируемый
+  `_index.db` вместо единого `graph.db`. Запрос через границу — federate-on-read (union сторов).
+  `graph_store: local` кладёт стор в сам репо проекта.
+- **Derive-движок**: граф строится из **источников истины** (`composer.json`/`package.json`,
+  Brain frontmatter, `<repo>/.maind.graph.json`, `skills-lock.json`) с пометкой плана (`via`),
+  а не из ручного дубля. Команды `graph derive` / `graph rebuild` / `graph --project` / `graph --cross`.
+- **Namespaces**: изоляция межпроектных связей по группам (`projects[].namespaces`) — внутри
+  группы общее, между группами изолировано; `["*"]` — общая инфраструктура. Применяется и к
+  графу (точка создания ребра), и к **памяти** (бакеты `ns:<имя>`).
+- **Namespace-паритет памяти**: scope-ярус `ns:<имя>` рядом с `project:<id>`/`global`; seed
+  пишет cross-ref о связях в бакеты группы; `maind_memory_links` отдаёт память из всех
+  релевантных бакетов (`project:<id>` + `ns:<группы>` + `global`).
+- **Healthcheck** (`maind health [--cwd|--project] [--fix] [--strict]`): статус
+  `connected|partial|standalone` + подсказки; провиженеры доставки «приоритета №1» в проекты
+  (SessionStart-хук + управляемый блок в `CLAUDE.md`).
+- **Единый провижининг** `maind sync`: фан-аут управляемых артефактов на проекты через реестр
+  провиженеров (`mcp` · `graph` · `memory` · `health-hook` · `health-doc`), режимы
+  `install|update|auto` с честным `changed` по content-hash; `deploy` = `sync --only mcp`.
+- **Workspace trust** (`maind workspace sync|status`): доверие Claude к проектам экосистемы
+  через `.claude/settings.local.json` (отдельно от allow/deny).
+- **MCP harden+extend**: крэш-устойчивый цикл (ошибка инструмента → `isError`, сервер жив),
+  эхо `protocolVersion`, stderr-логи, conformance-тест на реальный spawn. **11 tools**
+  (+`graph_path`, `graph_project`, `memory_forget`, `memory_links`, `projects_status`).
+- **graphify** как со-равный agent-memory механизм связей (граф **кода** проекта),
+  раскатывается отдельным MCP-сервером (`deploy --with-graphify`).
+- Локальный скилл `.claude/skills/maind-overview` + корневой `CLAUDE.md` (карта кода/конвенции).
+- Гайды: federation, namespaces, graphify, health, sync (ru-RU, с примерами).
+
+### Changed
+- **Единственная раскладка графа — федерация**: легаси-путь `seed_*` (единый `graph.db` из
+  конфига) удалён; всё строится через `derive`. `graph.adapter` канонически
+  `federation`/`disabled`; устаревшие `memory`/`graphify`/`networkx` принимаются с
+  предупреждением и нормализуются в `federation`.
+- Чтение графа — через единый фасад `federation.graph_reader`.
+- Документация и `.maind.example.json` приведены к текущей модели; удалено мёртвое поле
+  `graph_node`; команда `graph migrate-federation` убрана.
+
+### Performance
+- Federation кэширует in-memory union в пределах инстанса (read-only) — query/neighbors/path/
+  stats не пересобирают union на каждый вызов.
+
+### Tests
+- Покрытие `cli`/`doctor`/`constants` (26/26 модулей), namespace-изоляция памяти,
+  graphify-деплой, честный `changed` в sync. 166 → 189 тестов.
+
+## [0.1.0] — 2026-06-14
+
+### Added
+- Ядро на Python + bash (тонкий лаунчер `bin/maind` → `python3 -m maind`), stdlib-only.
+- **Память**: оркестрация Node-демона `@agentmemory/agentmemory` (`memory start/stop/status`)
+  + HTTP-обёртка со scope'ами (`store/recall/forget/export`), сверенная с реальным API
+  agentmemory 0.9.x (`/agentmemory/remember` · `/agentmemory/search` · `/agentmemory/health`).
+  Порты — из env/конфига, без хардкода.
+- **Граф**: stdlib property-граф (`node/edge/neighbors/path/subgraph/stats`) с персистом
+  в node-link JSON; `networkx`/`graphify` как опциональные адаптеры через `graph.adapter`.
+  Автозасев проектов/связей из конфига (`depends_on`/`uses`/`belongs_to`).
+- **Реестр агентов**: `register/heartbeat/list/kill/reap` (`~/.maind/agents.json`),
+  деривация состояния `alive/stale/dead` из heartbeat + живости pid.
+- **Реестр проектов**: `.maind.json` (надмножество brain `.projects.json`) + fallback на
+  legacy с предупреждением; `projects sync --from brain` (маппинг реальной схемы brain).
+- **MCP-сервер**: `maind mcp` — stdio JSON-RPC, 6 tools (memory/graph/agents/projects).
+- **Миграция**: `migrate from-brain` (конфиг + граф), `migrate from-agentmemory` (iii-config).
+- **CLI**: `start`, `status`, `doctor`, сводный статус узла.
+- `install.sh`, `.maind.example.json`, `.env.example`, `config/memory/iii-config.yaml`
+  (service_name: maind), `scripts/test.sh`, `scripts/validate.sh`.
+- Документация (VitePress, ru-RU), 65 unit-тестов (без живого демона — `FakeMemoryServer`).
+
+[Unreleased]: https://github.com/academici/maind/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/academici/maind/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/academici/maind/releases/tag/v0.1.0

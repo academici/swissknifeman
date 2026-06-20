@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# maind — CLI центрального узла экосистемы academici (память + граф + агенты).
+# Тонкий лаунчер: проверяет окружение и передаёт управление пакету lib/maind
+# (python3 -m maind). Вся логика — в lib/ (импортируемо и тестируемо: см. tests/).
+#
+# Команды (корень узла = каталог установки maind):
+#   start     запустить воркеры узла (--only memory|graph)
+#   status    сводный статус: память, граф, агенты, проекты
+#   memory    демон памяти: start | run (foreground) | stop | status
+#   service   systemd --user для демона памяти: install | start | stop | logs | ...
+#   graph     граф (федерация): query | stats | neighbors | view | derive | rebuild
+#   agents    реестр агентов: list | kill | heartbeat | register
+#   projects  реестр проектов: list | status | sync (--namespace NS фильтрует)
+#   namespaces namespace-группы экосистемы и их проекты-члены
+#   deploy    раскатать MCP-серверы хаба на проекты (--project X | --all)
+#   sync      раскатать управляемые артефакты: --only ... (--project|--namespace|--all)
+#   health    healthcheck связи проекта с хабом: --cwd | --project X [--fix]
+#   workspace единое доверие Claude к проектам экосистемы: sync | status
+#   run       выполнить команду соседнего пакета: run <proj> <cap> (--list)
+#   fleet     межпроектный слой: manifest | duplicates | log | features
+#   onboard   единый онбординг проекта: skills (swissknifeman) + подключение к мозгу
+#   migrate   импорт: from-brain <.projects.json> | from-agentmemory <dir>
+#   mcp       запустить maind как MCP-сервер (stdio JSON-RPC)
+#   doctor    диагностика окружения
+#   version   версия (git SHA) и путь к узлу
+set -euo pipefail
+
+SELF="$(readlink -f "${BASH_SOURCE[0]}")"
+REPO_ROOT="$(cd "$(dirname "$SELF")/.." && pwd)"
+
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "ERROR: maind требует python3 (apt install python3 / brew install python3)" >&2
+  exit 1
+fi
+if [[ ! -d "$REPO_ROOT/lib/maind" ]]; then
+  echo "ERROR: пакет lib/maind не найден в $REPO_ROOT/lib" >&2
+  echo "Узел повреждён или это старая копия — git pull / перезапустите install.sh." >&2
+  exit 1
+fi
+
+usage() { grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '2,25p'; }
+
+CMD="${1:-help}"
+[[ $# -gt 0 ]] && shift
+
+case "$CMD" in
+  -h|--help|help) usage; exit 0 ;;
+  version)
+    sha="$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
+    echo "maind $sha ($REPO_ROOT)"
+    exit 0 ;;
+  start|status|memory|service|graph|agents|projects|namespaces|deploy|sync|health|workspace|run|fleet|onboard|migrate|mcp|doctor) ;;
+  *) echo "Неизвестная команда: $CMD" >&2; usage >&2; exit 1 ;;
+esac
+
+exec env PYTHONPATH="$REPO_ROOT/lib${PYTHONPATH:+:$PYTHONPATH}" \
+  python3 -m maind "$REPO_ROOT" "$CMD" "$@"

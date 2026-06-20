@@ -1,0 +1,10 @@
+{
+  "name": "maind",
+  "version": "0.2.0",
+  "description": "mAInd hub — тонкое лицо над CLI: онбординг проектов в экосистему academici (скиллы + память + граф + MCP), sync, статус, здоровье связи.",
+  "author": { "name": "Dmitry Vostrikov", "email": "dv.vostrikov@gmail.com" },
+  "homepage": "https://github.com/academici/maind",
+  "keywords": ["maind", "hub", "mcp", "memory", "graph", "academici", "ecosystem"],
+  "commands": "commands/",
+  "mcpServers": ".mcp.json"
+}

@@ -54,11 +54,24 @@ jq -r 'select(.cwd | test("myproject")) | .command' ~/.claude/logs/bash-commands
 Пресеты `.mcp.json` под рабочие сценарии — голый объект конфига сервера в
 `mcp/<имя>.json` (ключ в `mcpServers` = имя файла). `swissknifeman integrate`
 вливает выбранные пресеты в `<проект>/.mcp.json` merge-only (чужие серверы целы,
-бэкап `*.bak`, `--dry-run`).
+бэкап `*.bak`, `--dry-run`). Описание каждого инструмента — в
+[каталоге интеграций](https://academici.github.io/swissknifeman/integrations/).
 
 | Сервер | Конфиг | Когда |
 |---|---|---|
-| `context7` | `mcp/context7.json` (remote HTTP `mcp.context7.com/mcp`) | среды разработки (всё, кроме obsidian-vault); `recommended`/`full` — по умолчанию |
+| `context7` | `mcp/context7.json` (remote HTTP `mcp.context7.com/mcp`) | dev-дефолт: среды разработки (всё, кроме obsidian-vault); `recommended`/`full` — по умолчанию |
+| `playwright` | `mcp/playwright.json` (npx `@playwright/mcp`, headless) | opt-in: браузерная автоматизация / E2E |
+| `filesystem` | `mcp/filesystem.json` (npx `@modelcontextprotocol/server-filesystem`) | opt-in: доступ к ФС в заданных каталогах |
+| `fetch` | `mcp/fetch.json` (uvx `mcp-server-fetch`, **Python/uv**) | opt-in: HTTP → markdown |
+| `memory` | `mcp/memory.json` (npx `@modelcontextprotocol/server-memory`) | opt-in: knowledge graph между сессиями |
+| `sequential-thinking` | `mcp/sequential-thinking.json` (npx) | opt-in: пошаговое рассуждение |
+| `github` | `mcp/github.json` (remote `api.githubcopilot.com/mcp/`) | opt-in: Issues/PR/репозитории |
+
+Курированный сабсет (всё, кроме `context7`) — **opt-in**, по умолчанию не ставится:
+
+```bash
+swissknifeman integrate --mcp playwright,filesystem
+```
 
 Добавить сервер: положить пресет в `mcp/`; чтобы он раздавался по умолчанию в
 dev-проекты — добавить имя в `DEV_MCP` (`lib/swissknifeman/integrate.py`).

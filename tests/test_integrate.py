@@ -35,11 +35,13 @@ class IntegrateCase(unittest.TestCase):
         self.tmp = Path(self._tmp.name)
         self.root, self.env = fx.make_registry(self.tmp)
         self.proj = fx.make_laravel_project(self.tmp)
-        # пресет MCP context7 в синтетическом реестре (как в configs/claude-code/mcp/)
-        preset = self.root / "configs" / "claude-code" / "mcp" / "context7.json"
-        preset.parent.mkdir(parents=True, exist_ok=True)
-        preset.write_text(json.dumps(
+        # пресеты MCP в синтетическом реестре (как в configs/claude-code/mcp/)
+        mcpd = self.root / "configs" / "claude-code" / "mcp"
+        mcpd.mkdir(parents=True, exist_ok=True)
+        (mcpd / "context7.json").write_text(json.dumps(
             {"type": "http", "url": "https://mcp.context7.com/mcp"}) + "\n")
+        (mcpd / "playwright.json").write_text(json.dumps(
+            {"command": "npx", "args": ["@playwright/mcp@latest", "--headless"]}) + "\n")
 
     def tearDown(self):
         self._tmp.cleanup()
@@ -145,6 +147,38 @@ class IntegrateCase(unittest.TestCase):
         vault = self.tmp / "vault"; (vault / ".obsidian").mkdir(parents=True)
         rv = _gather(self.env, vault, {"file": None}, "recommended", False)
         self.assertEqual(rv["mcp"], [])
+
+    def test_mcp_flag_unions_with_default(self):
+        # --mcp добавляет opt-in пресеты поверх dev-дефолта, без дублей
+        rec = _gather(self.env, self.proj,
+                      {"file": None, "mcp": "playwright"}, "recommended", False)
+        self.assertEqual(rec["mcp"], ["context7", "playwright"])
+        # minimal: context7 нет, но явный --mcp ставится
+        mn = _gather(self.env, self.proj,
+                     {"file": None, "mcp": "playwright"}, "minimal", False)
+        self.assertEqual(mn["mcp"], ["playwright"])
+        # дубль context7 не плодится
+        dup = _gather(self.env, self.proj,
+                      {"file": None, "mcp": "context7,playwright"}, "recommended", False)
+        self.assertEqual(dup["mcp"], ["context7", "playwright"])
+        # на obsidian-vault явный --mcp бьёт dev-гейт
+        vault = self.tmp / "vault2"; (vault / ".obsidian").mkdir(parents=True)
+        rv = _gather(self.env, vault,
+                     {"file": None, "mcp": "playwright"}, "recommended", False)
+        self.assertEqual(rv["mcp"], ["playwright"])
+
+    def test_mcp_flag_installs_optin_preset_e2e(self):
+        # minimal-бандл (без hub) + --mcp playwright: ставится playwright, без context7
+        run(cmd_integrate, self.env,
+            ["--target", str(self.proj), "--bundle", "minimal", "--yes",
+             "--mcp", "playwright"])
+        data = json.loads((self.proj / ".mcp.json").read_text())
+        self.assertIn("playwright", data["mcpServers"])
+        self.assertNotIn("context7", data["mcpServers"])
+
+    def test_mcp_unknown_preset_skipped(self):
+        run(_block_mcp, self.env, self.proj, {"mcp": ["nope"]}, False)
+        self.assertFalse((self.proj / ".mcp.json").exists())
 
     # --- guards -------------------------------------------------------------
     def test_unknown_bundle_exits(self):

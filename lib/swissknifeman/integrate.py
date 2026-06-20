@@ -184,6 +184,26 @@ def _default_mcp(target):
     return list(DEV_MCP) if autodetect(target) != "obsidian-vault" else []
 
 
+def _available_mcp(env):
+    """Имена доступных MCP-пресетов (configs/claude-code/mcp/<name>.json)."""
+    d = env.root / "configs" / "claude-code" / "mcp"
+    return sorted(p.stem for p in d.glob("*.json")) if d.is_dir() else []
+
+
+def _parse_mcp_flag(opts):
+    """--mcp a,b,c → ['a','b','c'] (trim, без пустых)."""
+    raw = opts.get("mcp")
+    return [s.strip() for s in raw.split(",") if s.strip()] if raw else []
+
+
+def _add_unique(lst, names):
+    """Дописать names в lst, сохраняя порядок и без дублей. Возвращает lst."""
+    for name in names:
+        if name and name not in lst:
+            lst.append(name)
+    return lst
+
+
 def _block_mcp(env, target, choices, dry):
     """Влить пресеты MCP-серверов в <project>/.mcp.json, merge-only.
 
@@ -280,8 +300,10 @@ def _gather(env, target, opts, bundle, interactive):
     if bundle != "custom":
         # авто-пресеты permissions (autodetect внутри apply-permissions при пустом)
         base["perms_presets"] = ""
-        # mcp=True в бандле → dev-дефолты (context7), но не для obsidian-vault
-        base["mcp"] = _default_mcp(target) if base.get("mcp") else []
+        # mcp=True в бандле → dev-дефолты (context7), но не для obsidian-vault;
+        # --mcp <a,b> добавляет opt-in пресеты поверх (явный выбор бьёт dev-гейт)
+        base["mcp"] = _add_unique(
+            _default_mcp(target) if base.get("mcp") else [], _parse_mcp_flag(opts))
         return base
 
     # custom — интерактивный чеклист
@@ -303,6 +325,14 @@ def _gather(env, target, opts, bundle, interactive):
         ch["mcp"] = list(DEV_MCP) if want_mcp else []
     else:
         ch["mcp"] = []
+    # доп. opt-in пресеты: интерактивный ввод + флаг --mcp
+    extra_avail = [m for m in _available_mcp(env) if m not in ch["mcp"]]
+    if interactive and extra_avail:
+        picked = _ask_text(
+            f"  доп. MCP-пресеты через запятую ({', '.join(extra_avail)}); Enter — пропуск",
+            "", interactive)
+        _add_unique(ch["mcp"], (s.strip() for s in picked.split(",")))
+    _add_unique(ch["mcp"], _parse_mcp_flag(opts))
     ch["autoapprove"] = _ask_choice("auto-approve режим", AA_MODES + ("skip",),
                                     "strict", interactive)
     if ch["autoapprove"] == "skip":
@@ -321,11 +351,12 @@ def _gather(env, target, opts, bundle, interactive):
 def cmd_integrate(env, argv):
     opts = parse_flags(argv, {
         "--target": "str", "--dry-run": "bool", "--yes": "bool",
-        "--bundle": "str", "--file": "str",
+        "--bundle": "str", "--file": "str", "--mcp": "str",
     })
     if opts["help"]:
         print("swissknifeman integrate [--target P] [--bundle minimal|recommended|full|custom] "
-              "[--yes] [--dry-run] [--file settings.json|settings.local.json]")
+              "[--yes] [--dry-run] [--file settings.json|settings.local.json] "
+              "[--mcp name1,name2]")
         return
     target, _ = resolve_target(env, opts, allow_home_confirm=True)
     if target == env.root.resolve():

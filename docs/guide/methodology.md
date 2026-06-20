@@ -107,8 +107,8 @@
    пакеты. Там же — два ручных усиления:
    - **Первый приоритет в корневом `CLAUDE.md`** потребителя — готовый
      generic-блок в сниппете `claude-md-priority.md` скилла (вставляется руками).
-   - **Пресет `product-boundary`** — `bash scripts/apply-permissions.sh --target
-     <project> --preset product-boundary` блокирует запись в `vendor/**`; вариант
+   - **Пресет `product-boundary`** — `bash scripts/apply-permissions.sh --target <project> --preset product-boundary`
+     блокирует запись в `vendor/**`; вариант
      для path-репо (`packages/**`) — в сниппете `permissions-deny.md`.
 
 ## Plan → Clear → Execute для cross-repo задач

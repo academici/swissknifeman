@@ -15,6 +15,7 @@ export default withMermaid(defineConfig({
       { text: 'Конфиги', link: '/configs/', activeMatch: '/configs/' },
       { text: 'Адаптеры', link: '/adapters/claude-code', activeMatch: '/adapters/' },
       { text: 'Воркфлоу', link: '/workflows/', activeMatch: '/workflows/' },
+      { text: 'Интеграции', link: '/integrations/', activeMatch: '/integrations/' },
       { text: 'Примеры', link: '/examples/laravel', activeMatch: '/examples/' },
     ],
 
@@ -74,6 +75,22 @@ export default withMermaid(defineConfig({
             { text: 'Cursor / VS Code', link: '/workflows/cursor' },
             { text: 'Python / 3D', link: '/workflows/python-3d' },
             { text: 'Фоновые агенты', link: '/workflows/background-agents' },
+          ],
+        },
+        {
+          text: 'Интеграции',
+          items: [
+            { text: 'Обзор', link: '/integrations/' },
+            { text: 'Context7 MCP', link: '/integrations/context7' },
+            { text: 'Playwright MCP', link: '/integrations/playwright-mcp' },
+            { text: 'filesystem MCP', link: '/integrations/filesystem' },
+            { text: 'fetch MCP', link: '/integrations/fetch' },
+            { text: 'memory MCP', link: '/integrations/memory' },
+            { text: 'sequential-thinking MCP', link: '/integrations/sequential-thinking' },
+            { text: 'GitHub MCP', link: '/integrations/github' },
+            { text: 'Task Master AI', link: '/integrations/task-master' },
+            { text: 'GitHub Spec Kit', link: '/integrations/spec-kit' },
+            { text: 'Claude Code Router', link: '/integrations/claude-code-router' },
           ],
         },
         {

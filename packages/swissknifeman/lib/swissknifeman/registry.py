@@ -97,10 +97,29 @@ def build_registry(env):
     return registry, bucket_meta, bucket_dirs
 
 
+def _repo_root(pkg_root):
+    """Корень монорепо (где .git и общий .claude-plugin/marketplace.json) — ищем
+    .git вверх от корня пакета. Fallback: сам pkg_root (standalone-раскладка)."""
+    p = pkg_root
+    for cand in (p, *p.parents):
+        if (cand / ".git").exists():
+            return cand
+    return pkg_root
+
+
 def write_plugin_manifests(env, bucket_meta, bucket_dirs):
-    """Записать skills/*/.claude-plugin/plugin.json + marketplace.json.
+    """Записать skills/*/.claude-plugin/plugin.json (в пакете) + marketplace.json
+    (в корне монорепо). source-пути плагинов — относительно корня репо.
     Возвращает число плагинов."""
     root = env.root
+    repo_root = _repo_root(root)
+    # Префикс пакета относительно корня репо: "packages/swissknifeman" или "" (standalone)
+    rel_pkg = root.relative_to(repo_root).as_posix() if root != repo_root else ""
+    prefix = f"./{rel_pkg}" if rel_pkg else "."
+
+    def src(sub):
+        """source-путь плагина от корня репо: ./packages/swissknifeman/<sub> или ./<sub>."""
+        return f"{prefix}/{sub}" if rel_pkg else f"./{sub}"
 
     def write_json(path, data):
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -129,7 +148,7 @@ def write_plugin_manifests(env, bucket_meta, bucket_dirs):
         })
         marketplace_plugins.append({
             "name": bucket,
-            "source": f"./skills/{bucket}",
+            "source": src(f"skills/{bucket}"),
             "description": meta["description"],
             "category": meta.get("category", ""),
             "tags": meta.get("tags", []),
@@ -144,7 +163,7 @@ def write_plugin_manifests(env, bucket_meta, bucket_dirs):
     })
     marketplace_plugins.append({
         "name": "generate-skill",
-        "source": "./generate-skill",
+        "source": src("generate-skill"),
         "description": meta_fm.get("description", "Meta-skill for creating new skills"),
         "category": "meta",
         "tags": ["meta", "authoring"],
@@ -156,14 +175,15 @@ def write_plugin_manifests(env, bucket_meta, bucket_dirs):
     if (root / "skm" / ".claude-plugin" / "plugin.json").exists():
         marketplace_plugins.append({
             "name": "skm",
-            "source": "./skm",
+            "source": src("skm"),
             "description": "swissknifeman CLI — управление скиллами проекта: бакеты "
                            "(connect/vendor), integrate, статус",
             "category": "meta",
             "tags": ["cli", "skills", "management"],
         })
 
-    write_json(root / ".claude-plugin" / "marketplace.json", {
+    # marketplace.json — в КОРНЕ монорепо (один манифест на все плагины репо), а не в пакете.
+    write_json(repo_root / ".claude-plugin" / "marketplace.json", {
         "name": MARKETPLACE,
         "owner": OWNER,
         "plugins": sorted(marketplace_plugins, key=lambda p: p["name"]),

@@ -10,7 +10,14 @@ python3 - "$REPO_ROOT" <<'PY'
 import json, re, sys
 from pathlib import Path
 
-root = Path(sys.argv[1])
+root = Path(sys.argv[1])  # корень пакета (skills/, lib/, buckets.json)
+# marketplace.json — в корне монорепо; source-пути плагинов относительны корня репо.
+def _repo_root(p):
+    for cand in (p, *p.parents):
+        if (cand / ".git").exists():
+            return cand
+    return p
+repo_root = _repo_root(root)
 errors = []
 warnings = []
 
@@ -229,7 +236,7 @@ for plugin_name, plugin_root in sorted(plugin_roots.items()):
     if sorted(declared) != expected_skills_dirs(plugin_root):
         errors.append(f"{rel}: stale skills dirs ({STALE_HINT})")
 
-mp_file = root / ".claude-plugin" / "marketplace.json"
+mp_file = repo_root / ".claude-plugin" / "marketplace.json"
 if not mp_file.exists():
     errors.append(f".claude-plugin/marketplace.json: missing ({STALE_HINT})")
 else:
@@ -253,7 +260,8 @@ else:
                 f"({STALE_HINT})")
         for p in entries:
             src = p.get("source", "")
-            if not (root / src).is_dir():
+            # source-пути относительны корня репо (./packages/swissknifeman/...)
+            if not (repo_root / src).is_dir():
                 errors.append(
                     f".claude-plugin/marketplace.json: {p.get('name')}: "
                     f"source dir not found: {src}")

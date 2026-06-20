@@ -10,9 +10,17 @@ python3 - "$REPO_ROOT" <<'PY'
 import json, sys
 from pathlib import Path
 
-root = Path(sys.argv[1])
+root = Path(sys.argv[1])  # корень пакета (skills.json здесь)
 registry = json.loads((root / "skills.json").read_text(encoding="utf-8"))
 skills = registry["skills"]
+
+# docs/ живёт в корне монорепо (зонтичная документация), а не в пакете — ищем .git вверх.
+def _docs_root(p):
+    for cand in (p, *p.parents):
+        if (cand / "docs" / "guide").is_dir():
+            return cand
+    return p
+docs_root = _docs_root(root)
 
 by_name = {s["name"]: s for s in skills}
 
@@ -90,8 +98,8 @@ for bucket in sorted(isolated):
     lines.append(f"| {bucket} | {names} |")
 lines.append("")
 
-out = root / "docs/guide/graph.md"
+out = docs_root / "docs/guide/graph.md"
 out.write_text("\n".join(lines), encoding="utf-8")
-print(f"Updated {out.relative_to(root)}: {len(connected)} nodes, "
+print(f"Updated {out.relative_to(docs_root)}: {len(connected)} nodes, "
       f"{len(requires_edges) + len(produces_edges)} edges")
 PY

@@ -4,6 +4,17 @@
 
 ### Changed
 
+- **Монорепо academici: переезд в `packages/swissknifeman/`.** Репозиторий становится
+  зонтиком экосистемы — содержимое реестра (`lib/`, `bin/`, `skills/`, `skm/`,
+  `generate-skill/`, `scripts/`, `configs/`, `buckets.json` …) переехало в
+  `packages/swissknifeman/`; в корне остаются зонтичные артефакты (`.claude-plugin/`,
+  `docs/`, `README`, `LICENSE`, `CHANGELOG`). Один `marketplace.json` в корне репо теперь
+  объявляет плагины с `source: ./packages/swissknifeman/...` (генератор `registry.py`
+  разводит корень-пакета vs корень-репо через поиск `.git`; `validate.sh` и
+  `generate-graph.sh` адаптированы). `bin/swissknifeman` больше не требует marketplace.json
+  в корне пакета. Симлинк переустанавливается `install.sh` из нового пути. Готовит почву
+  для пакета `packages/maind/` под тем же зонтиком.
+
 - **Ревью внешнего аудита: дизамбигуация overlap-кластеров + CI security-гейты.**
   По разбору `Audit.md` (вердикт — `docs/research/audit-2026-06-review.md`): из
   всех рекомендаций реальны 3 (остальное — already-done/дубли/вне scope/против

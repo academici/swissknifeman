@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Edit(/.claude/skills/package-architecture/**)",
+      "Edit(/.claude/skills/skill-authoring/**)",
+      "Edit(/.claude/skills/release-discipline/**)"
+    ]
+  }
+}

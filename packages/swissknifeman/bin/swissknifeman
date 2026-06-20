@@ -25,20 +25,16 @@
 set -euo pipefail
 
 SELF="$(readlink -f "${BASH_SOURCE[0]}")"
+# Корень ПАКЕТА (packages/swissknifeman): здесь skills/, lib/, scripts/, buckets.json.
 REPO_ROOT="$(cd "$(dirname "$SELF")/.." && pwd)"
 
 if ! command -v python3 >/dev/null 2>&1; then
   echo "ERROR: swissknifeman требует python3 (apt install python3 / brew install python3)" >&2
   exit 1
 fi
-if [[ ! -d "$REPO_ROOT/skills" || ! -f "$REPO_ROOT/.claude-plugin/marketplace.json" ]]; then
+if [[ ! -d "$REPO_ROOT/skills" || ! -d "$REPO_ROOT/lib/swissknifeman" ]]; then
   echo "ERROR: реестр swissknifeman не найден в $REPO_ROOT" >&2
   echo "Если репозиторий переехал — перезапустите install.sh из нового расположения." >&2
-  exit 1
-fi
-if [[ ! -d "$REPO_ROOT/lib/swissknifeman" ]]; then
-  echo "ERROR: пакет lib/swissknifeman не найден в $REPO_ROOT/lib" >&2
-  echo "Реестр повреждён или это старая копия — git pull / перезапустите install.sh." >&2
   exit 1
 fi
 

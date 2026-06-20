@@ -12,3 +12,4 @@ docs/.vitepress/cache/
 .claude/memory.env.ini
 .claude/memory.config.json
 settings.local.json.bak
+MERGE-PLAN.snapshots/

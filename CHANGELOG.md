@@ -4,6 +4,16 @@
 
 ### Changed
 
+- **Монорепо academici: единый marketplace + плагин maind под зонтиком (этап 4).** Корневой
+  `.claude-plugin/marketplace.json` теперь объявляет 19 плагинов — 18 swissknifeman
+  (бакеты + generate-skill + skm) и `maind` (`source: ./packages/maind`). Генератор
+  `registry.py` сканирует соседние пакеты `packages/<name>/.claude-plugin/plugin.json`
+  (источник истины — их манифест) и добавляет их в marketplace; `validate.sh` учитывает
+  sibling-плагины в match-проверке. Собственный `packages/maind/.claude-plugin/marketplace.json`
+  удалён (его роль берёт корневой). Плагин maind (`commands/` + `.mcp.json` с
+  `${CLAUDE_PLUGIN_ROOT}`) переносим без правок. Миграция кэша Claude Code
+  (`maind@maind` → `maind@swissknifeman`) — вручную в панели `/plugin`.
+
 - **Монорепо academici: общий `core/academici_core` (этап 3).** Дословные дубли,
   исторически копировавшиеся между swissknifeman/maind/brain байт-в-байт, вынесены в
   общий stdlib-only пакет: `die/warn/now_iso/confirm` (`term`), `sanitize` (`text`),

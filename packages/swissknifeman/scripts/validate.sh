@@ -214,6 +214,23 @@ plugin_roots["generate-skill"] = root / "generate-skill"
 if (root / "skm" / ".claude-plugin" / "plugin.json").exists():
     plugin_roots["skm"] = root / "skm"
 
+# Соседние пакеты монорепо (packages/<name>, кроме swissknifeman) — командные/MCP-плагины
+# без skills-поля; их plugin.json — источник истины, registry добавляет их в marketplace.
+# Здесь только собираем их имена для match-проверки (полная валидация — в их пакете).
+sibling_plugin_names = []
+pkgs_dir = repo_root / "packages"
+if root != repo_root and pkgs_dir.is_dir():
+    for pkg in sorted(pkgs_dir.iterdir()):
+        if not pkg.is_dir() or pkg.name == root.name:
+            continue
+        pj = pkg / ".claude-plugin" / "plugin.json"
+        if pj.exists():
+            try:
+                sibling_plugin_names.append(
+                    json.loads(pj.read_text(encoding="utf-8")).get("name", pkg.name))
+            except json.JSONDecodeError as e:
+                errors.append(f"packages/{pkg.name}/.claude-plugin/plugin.json: invalid JSON: {e}")
+
 for plugin_name, plugin_root in sorted(plugin_roots.items()):
     pj = plugin_root / ".claude-plugin" / "plugin.json"
     rel = pj.relative_to(root)
@@ -254,7 +271,8 @@ else:
         names = [p.get("name", "") for p in entries]
         if len(names) != len(set(names)):
             errors.append(".claude-plugin/marketplace.json: duplicate plugin names")
-        if sorted(names) != sorted(plugin_roots):
+        expected_names = list(plugin_roots) + sibling_plugin_names
+        if sorted(names) != sorted(expected_names):
             errors.append(
                 f".claude-plugin/marketplace.json: plugins must match dirs on disk "
                 f"({STALE_HINT})")

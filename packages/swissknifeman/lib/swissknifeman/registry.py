@@ -182,6 +182,27 @@ def write_plugin_manifests(env, bucket_meta, bucket_dirs):
             "tags": ["cli", "skills", "management"],
         })
 
+    # Соседние пакеты монорепо (packages/<name>/.claude-plugin/plugin.json), кроме самого
+    # swissknifeman: maind и др. Источник истины — их plugin.json (name/description/keywords).
+    # source считается от корня репо: ./packages/<name>.
+    pkgs_dir = repo_root / "packages"
+    if rel_pkg and pkgs_dir.is_dir():
+        self_name = root.name  # "swissknifeman" — его плагины уже добавлены выше
+        for pkg in sorted(pkgs_dir.iterdir()):
+            if not pkg.is_dir() or pkg.name == self_name:
+                continue
+            pj = pkg / ".claude-plugin" / "plugin.json"
+            if not pj.exists():
+                continue
+            data = json.loads(pj.read_text(encoding="utf-8"))
+            marketplace_plugins.append({
+                "name": data.get("name", pkg.name),
+                "source": f"./packages/{pkg.name}",
+                "description": data.get("description", ""),
+                "category": data.get("category", "ecosystem"),
+                "tags": data.get("keywords", []),
+            })
+
     # marketplace.json — в КОРНЕ монорепо (один манифест на все плагины репо), а не в пакете.
     write_json(repo_root / ".claude-plugin" / "marketplace.json", {
         "name": MARKETPLACE,

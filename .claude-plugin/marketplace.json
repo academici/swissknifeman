@@ -94,6 +94,21 @@
       ]
     },
     {
+      "name": "maind",
+      "source": "./packages/maind",
+      "description": "mAInd hub — тонкое лицо над CLI: онбординг проектов в экосистему academici (скиллы + память + граф + MCP), sync, статус, здоровье связи.",
+      "category": "ecosystem",
+      "tags": [
+        "maind",
+        "hub",
+        "mcp",
+        "memory",
+        "graph",
+        "academici",
+        "ecosystem"
+      ]
+    },
+    {
       "name": "mobile",
       "source": "./packages/swissknifeman/skills/mobile",
       "description": "Mobile development: Flutter — design-to-code, theming, layout mapping from Figma",

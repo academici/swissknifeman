@@ -10,7 +10,7 @@
 | Конфиг | Где лежит | Что делает |
 |---|---|---|
 | [Пресеты permissions для Claude Code](/configs/claude-permissions) | `configs/claude-code/` | готовые `settings.json` с максимально разрешённым доступом: git, composer, artisan, npm, docker — по стекам |
-| MCP-серверы | `configs/claude-code/mcp/` | пресеты `.mcp.json`; `context7` (up-to-date docs библиотек) ставит `swissknifeman integrate` в среды разработки (всё, кроме obsidian-vault) |
+| MCP-серверы | `configs/claude-code/mcp/` | пресеты `.mcp.json`; `context7` ставит `swissknifeman integrate` по умолчанию, курированный сабсет (playwright, filesystem, fetch, …) — opt-in через `--mcp`. Каталог: [Интеграции](/integrations/) |
 
 ## Сценарий
 
@@ -36,8 +36,10 @@ swissknifeman connect
 - **Агенты** — преднастроенные субагенты (`.claude/agents/`) под типовые роли;
 - **Хуки** — `settings.json`-хуки: автоформатирование после правок, валидация
   перед коммитом;
-- **Больше MCP-серверов** — `context7` уже раздаётся через `integrate`; дальше —
-  другие проверенные конфигурации `.mcp.json` под рабочие сценарии;
+- **Больше MCP-серверов** — `context7` раздаётся по умолчанию, курированный сабсет
+  (playwright, filesystem, fetch, memory, sequential-thinking, github) — opt-in через
+  `--mcp`; каталог инструментов — раздел [Интеграции](/integrations/). Дальше — новые
+  проверенные конфигурации `.mcp.json`;
 - **Конфиги других IDE** — правила Cursor, настройки Perplexity.
 
 Принцип тот же, что у скиллов: всё проверено в бою, всё в одном месте,

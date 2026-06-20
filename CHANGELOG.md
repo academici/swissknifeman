@@ -36,6 +36,22 @@
 
 ### Added
 
+- **Каталог интеграций `docs/integrations/` + курированные MCP-пресеты.** По разбору
+  внешнего аудита (`CLAUDE_INTEGRATION_TASK.md`): новый раздел VitePress «Интеграции» —
+  индекс + 11 страниц (context7, playwright, filesystem, fetch, memory,
+  sequential-thinking, github, task-master, spec-kit, claude-code-router), приведённых к
+  реальности хаба (remote-HTTP context7, механизм пресет→`integrate`, актуальные пакеты:
+  fetch — `uvx mcp-server-fetch`, github — remote `api.githubcopilot.com/mcp/`; без
+  устаревших model-id и выдуманных схем). Курированный сабсет пресетов в
+  `configs/claude-code/mcp/` (`playwright`/`filesystem`/`fetch`/`memory`/
+  `sequential-thinking`/`github`) — **opt-in** через новый флаг `swissknifeman integrate
+  --mcp <a,b>` (в интерактиве — отдельный вопрос); `DEV_MCP` по умолчанию не расширен.
+  `claude-code-router` — страница «инструмент есть, но под сомнением». **Скиллы из аудита
+  сознательно не созданы** (анти-bloat): `playwright-e2e-tester` дублирует
+  `quality/playwright-e2e`, `git-flow-ru` — `git-commit-rules`+`github-flow`+`writing-style`,
+  а `context7-dart-flutter`/`fintech-api-context`/`pos-fiscal-assistant` нарушают запрет на
+  имена конкретных продуктов в теле скилла и попали бы в CORE-бакет `general` — их место в
+  `.ai/skills/` конкретных проектов.
 - **`integrate`: MCP-серверы в среды разработки (context7).** Новый блок визарда
   `_block_mcp` вливает пресеты MCP-серверов в `<project>/.mcp.json` (merge-only,
   чужие серверы целы, бэкап `*.bak`, `--dry-run`). Пресеты —

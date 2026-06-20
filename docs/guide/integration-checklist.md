@@ -16,12 +16,14 @@ swissknifeman integrate --yes --bundle recommended   # без вопросов, 
 
 Быстрый старт без перебора каждого пункта — `--bundle`:
 
-| Бандл | Скиллы | Permissions | auto-approve | Память | Hub |
-|---|---|---|---|---|---|
-| `minimal` | connect | — | — | — | — |
-| `recommended` (дефолт для `--yes`) | connect | autodetect | strict | — | да |
-| `full` | connect | autodetect | strict | brain `core`, federation | да |
-| `custom` (дефолт интерактивно) | спрашивает каждый блок | | | | |
+| Бандл | Скиллы | Permissions | MCP | auto-approve | Память | Hub |
+|---|---|---|---|---|---|---|
+| `minimal` | connect | — | — | — | — | — |
+| `recommended` (дефолт для `--yes`) | connect | autodetect | context7¹ | strict | — | да |
+| `full` | connect | autodetect | context7¹ | strict | brain `core`, federation | да |
+| `custom` (дефолт интерактивно) | спрашивает каждый блок | | | | | |
+
+¹ В средах разработки (всё, кроме obsidian-vault).
 
 ## Чеклист (что можно включить)
 
@@ -42,7 +44,16 @@ swissknifeman integrate --yes --bundle recommended   # без вопросов, 
 - Ручками: `./scripts/apply-permissions.sh --target <проект>`.
 - Подробнее: [Permissions](/configs/claude-permissions).
 
-### 3. auto-approve (per-project)
+### 3. MCP-серверы (среды разработки)
+Пресеты `.mcp.json` под рабочие сценарии — вливаются merge-only в
+`<проект>/.mcp.json` (`mcpServers`, чужие серверы целы, бэкап `*.bak`).
+- Сейчас один: **context7** (remote HTTP `mcp.context7.com/mcp`) — up-to-date
+  документация библиотек прямо в контексте агента.
+- Гейт «среда разработки»: ставится во всё, **кроме** obsidian-vault. `recommended`/
+  `full` включают по умолчанию, `minimal` — нет, `custom` — спрашивает.
+- Пресеты серверов — `configs/claude-code/mcp/<имя>.json`.
+
+### 4. auto-approve (per-project)
 PreToolUse-хук, разбирающий **всю** командную строку (компаунд-команды), режимы
 `strict|permissive|bypass|off`.
 - Визард пишет `.claude/auto-approve.env.ini` (MODE) + регистрирует хук на
@@ -50,20 +61,20 @@ PreToolUse-хук, разбирающий **всю** командную стро
 - Файлы хука ставятся один раз на машину: `apply-permissions.sh --global`.
 - Подробнее: [конфиги Claude Code](https://github.com/academici/swissknifeman/tree/main/configs/claude-code#авто-апрув-команд-hooks).
 
-### 4. Память (членство в общем «мозге»)
+### 5. Память (членство в общем «мозге»)
 Проект делит факты с другими участниками своей группы (brain); режимы
 `file|federation|agentmemory|off`.
 - Визард пишет `.swissknife.json:memory_brain` + `.claude/memory.env.ini` (MODE).
 - Состав участников группы — `~/.claude/hooks/memory/config.json` (`brains.<имя>.members`).
 - Файлы хука — `apply-permissions.sh --global`. Скилл-обвязка: `system/shared-memory`.
 
-### 5. Hub (индекс скиллов)
+### 6. Hub (индекс скиллов)
 Managed-блок в `CLAUDE.md` (или `.ai/guidelines/swissknifeman-hub.md` при Boost) —
 агент видит, какие скиллы подключены.
 - Визард включает `--hub` у connect/vendor.
 - Ручками: `./scripts/generate-hub.sh --target <проект>`.
 
-### 6. Brain docs-sync (со стороны волта)
+### 7. Brain docs-sync (со стороны волта)
 Двусторонний синк `docs/`/`docs-public` между проектом и Obsidian-волтом Brain.
 - **Не автоматизируется из проекта** — настраивается во волте: во frontmatter
   заметки проекта добавь `repo: <путь к проекту>`, затем `brain status/sync`.

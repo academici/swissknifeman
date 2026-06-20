@@ -36,6 +36,13 @@
 
 ### Added
 
+- **`integrate`: MCP-серверы в среды разработки (context7).** Новый блок визарда
+  `_block_mcp` вливает пресеты MCP-серверов в `<project>/.mcp.json` (merge-only,
+  чужие серверы целы, бэкап `*.bak`, `--dry-run`). Пресеты —
+  `configs/claude-code/mcp/<name>.json`; первый — `context7` (remote HTTP
+  `mcp.context7.com/mcp`, up-to-date docs библиотек). Гейт «среда разработки»:
+  раздаётся во всё, кроме `obsidian-vault`. Бандлы `recommended`/`full` включают
+  по умолчанию, `minimal` — нет, `custom` — спрашивает.
 - **Семантика loop'ов поверх скиллов (без отдельного реестра `loops/`).** По
   аудиту [loops.elorm.xyz](https://loops.elorm.xyz/loops): страница
   `docs/guide/loop-semantics.md` (VitePress, в сайдбаре «Гайд») — модель loop'а

@@ -49,6 +49,20 @@ tail -20 ~/.claude/logs/bash-commands.jsonl | jq -r '"\(.ts) [\(.cwd)] \(.comman
 jq -r 'select(.cwd | test("myproject")) | .command' ~/.claude/logs/bash-commands.jsonl
 ```
 
+## MCP-серверы (`mcp/`)
+
+Пресеты `.mcp.json` под рабочие сценарии — голый объект конфига сервера в
+`mcp/<имя>.json` (ключ в `mcpServers` = имя файла). `swissknifeman integrate`
+вливает выбранные пресеты в `<проект>/.mcp.json` merge-only (чужие серверы целы,
+бэкап `*.bak`, `--dry-run`).
+
+| Сервер | Конфиг | Когда |
+|---|---|---|
+| `context7` | `mcp/context7.json` (remote HTTP `mcp.context7.com/mcp`) | среды разработки (всё, кроме obsidian-vault); `recommended`/`full` — по умолчанию |
+
+Добавить сервер: положить пресет в `mcp/`; чтобы он раздавался по умолчанию в
+dev-проекты — добавить имя в `DEV_MCP` (`lib/swissknifeman/integrate.py`).
+
 ## ОС-уведомления (notify)
 
 Пресет `global` регистрирует Notification-hook

@@ -15,7 +15,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
 from swissknifeman.integrate import (
-    cmd_integrate, _block_autoapprove, _block_memory,
+    cmd_integrate, _block_autoapprove, _block_memory, _block_mcp, _default_mcp,
+    _gather,
 )
 from swissknifeman.config import load_config
 import tests.fixtures as fx
@@ -34,6 +35,11 @@ class IntegrateCase(unittest.TestCase):
         self.tmp = Path(self._tmp.name)
         self.root, self.env = fx.make_registry(self.tmp)
         self.proj = fx.make_laravel_project(self.tmp)
+        # пресет MCP context7 в синтетическом реестре (как в configs/claude-code/mcp/)
+        preset = self.root / "configs" / "claude-code" / "mcp" / "context7.json"
+        preset.parent.mkdir(parents=True, exist_ok=True)
+        preset.write_text(json.dumps(
+            {"type": "http", "url": "https://mcp.context7.com/mcp"}) + "\n")
 
     def tearDown(self):
         self._tmp.cleanup()
@@ -44,6 +50,7 @@ class IntegrateCase(unittest.TestCase):
             ["--target", str(self.proj), "--bundle", "full", "--yes", "--dry-run"])
         self.assertFalse((self.proj / ".claude").exists())
         self.assertFalse((self.proj / ".swissknife.json").exists())
+        self.assertFalse((self.proj / ".mcp.json").exists())
 
     # --- minimal bundle = connect only --------------------------------------
     def test_minimal_connects_skills(self):
@@ -102,6 +109,42 @@ class IntegrateCase(unittest.TestCase):
             "MODE=federation")
         # memory_brain — валидный ключ .swissknife.json (CONFIG_KEYS расширен)
         self.assertEqual(load_config(self.env, self.proj).get("memory_brain"), "core")
+
+    # --- MCP block: .mcp.json merge-only, dev-gating ------------------------
+    def test_mcp_block_adds_context7_mergeonly(self):
+        # уже есть сторонний сервер — не должен быть затёрт
+        (self.proj / ".mcp.json").write_text(json.dumps(
+            {"mcpServers": {"maind": {"command": "maind"}}}) + "\n")
+        run(_block_mcp, self.env, self.proj, {"mcp": ["context7"]}, False)
+        data = json.loads((self.proj / ".mcp.json").read_text())
+        self.assertEqual(data["mcpServers"]["context7"],
+                         {"type": "http", "url": "https://mcp.context7.com/mcp"})
+        self.assertIn("maind", data["mcpServers"])          # чужой сервер цел
+        self.assertTrue((self.proj / ".mcp.json.bak").exists())
+        # повтор не плодит изменений / дублей (merge-only, идемпотентно)
+        run(_block_mcp, self.env, self.proj, {"mcp": ["context7"]}, False)
+        data2 = json.loads((self.proj / ".mcp.json").read_text())
+        self.assertEqual(list(data2["mcpServers"]), list(data["mcpServers"]))
+
+    def test_mcp_block_empty_writes_nothing(self):
+        run(_block_mcp, self.env, self.proj, {"mcp": []}, False)
+        self.assertFalse((self.proj / ".mcp.json").exists())
+
+    def test_default_mcp_dev_vs_vault(self):
+        self.assertEqual(_default_mcp(self.proj), ["context7"])   # laravel = dev
+        vault = self.tmp / "vault"; (vault / ".obsidian").mkdir(parents=True)
+        self.assertEqual(_default_mcp(vault), [])                 # vault ≠ dev
+
+    def test_bundle_resolves_dev_mcp(self):
+        # recommended/full на dev-проекте → context7; minimal → пусто
+        rec = _gather(self.env, self.proj, {"file": None}, "recommended", False)
+        self.assertEqual(rec["mcp"], ["context7"])
+        mn = _gather(self.env, self.proj, {"file": None}, "minimal", False)
+        self.assertEqual(mn["mcp"], [])
+        # тот же bundle на obsidian-vault → пусто (не dev-среда)
+        vault = self.tmp / "vault"; (vault / ".obsidian").mkdir(parents=True)
+        rv = _gather(self.env, vault, {"file": None}, "recommended", False)
+        self.assertEqual(rv["mcp"], [])
 
     # --- guards -------------------------------------------------------------
     def test_unknown_bundle_exits(self):

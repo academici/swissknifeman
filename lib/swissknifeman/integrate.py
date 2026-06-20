@@ -5,14 +5,14 @@
 apply-permissions.sh (permissions), generate_hub (хаб) + пишет per-project хук-JSON
 и .swissknife.json. Безопасно: --dry-run, merge-only, бэкап *.bak, confirm.
 
-Блоки: пререквизиты → скиллы → permissions → auto-approve → memory → hub → brain.
+Блоки: пререквизиты → скиллы → permissions → MCP → auto-approve → memory → hub → brain.
 """
 import json
 import shutil
 import subprocess
 import sys
 
-from .common import apply_permissions, die, parse_flags
+from .common import apply_permissions, die, parse_flags, warn
 from .config import autodetect, load_config, resolve_target
 from .connect import do_connect
 from .vendor import do_vendor
@@ -20,16 +20,19 @@ from .hub import generate_hub
 from .topology import cmd_topology
 
 # Бандл = пред-ответы на чеклист. custom → спрашиваем интерактивно.
+# mcp=True → раздать dev-дефолтные MCP-серверы (резолв по autodetect в _gather).
 BUNDLES = {
-    "minimal":     {"skills": "connect", "perms": False, "autoapprove": None,
-                    "memory": None, "hub": False, "brain": False},
-    "recommended": {"skills": "connect", "perms": True, "autoapprove": "strict",
-                    "memory": None, "hub": True, "brain": False},
-    "full":        {"skills": "connect", "perms": True, "autoapprove": "strict",
-                    "memory": "federation", "hub": True, "brain": True},
+    "minimal":     {"skills": "connect", "perms": False, "mcp": False,
+                    "autoapprove": None, "memory": None, "hub": False, "brain": False},
+    "recommended": {"skills": "connect", "perms": True, "mcp": True,
+                    "autoapprove": "strict", "memory": None, "hub": True, "brain": False},
+    "full":        {"skills": "connect", "perms": True, "mcp": True,
+                    "autoapprove": "strict", "memory": "federation", "hub": True, "brain": True},
 }
 AA_MODES = ("strict", "permissive", "bypass", "off")
 MEM_MODES = ("file", "federation", "agentmemory", "off")
+# MCP-серверы, раздаваемые в среды разработки по умолчанию (пресеты — configs/claude-code/mcp/).
+DEV_MCP = ("context7",)
 
 
 # --- prompt helpers -----------------------------------------------------------
@@ -176,9 +179,47 @@ def _block_perms(env, target, choices, dry):
     apply_permissions(env, target, choices.get("perms_presets", ""), dry)
 
 
+def _default_mcp(target):
+    """MCP-серверы по умолчанию для среды разработки (не для obsidian-vault)."""
+    return list(DEV_MCP) if autodetect(target) != "obsidian-vault" else []
+
+
+def _block_mcp(env, target, choices, dry):
+    """Влить пресеты MCP-серверов в <project>/.mcp.json, merge-only.
+
+    Пресет сервера — configs/claude-code/mcp/<name>.json (голый объект конфига
+    сервера). Существующие записи mcpServers не затираются, бэкап *.bak."""
+    servers = choices.get("mcp") or []
+    print(f"\n[3] MCP-серверы: {', '.join(servers) if servers else 'пропуск'}")
+    if not servers:
+        return
+    f = target / ".mcp.json"
+    data = {}
+    if f.exists():
+        try:
+            data = json.loads(f.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as e:
+            die(f"{f}: невалидный JSON: {e}")
+    mcp = data.setdefault("mcpServers", {})
+    added = []
+    for name in servers:
+        preset = env.root / "configs" / "claude-code" / "mcp" / f"{name}.json"
+        if not preset.exists():
+            warn(f"  нет пресета MCP '{name}' ({preset}) — пропуск")
+            continue
+        if name in mcp:
+            print(f"  MCP '{name}' уже в .mcp.json — пропуск")
+            continue
+        mcp[name] = json.loads(preset.read_text(encoding="utf-8"))
+        added.append(name)
+    if added:
+        _write_json(f, data, dry)
+        print(f"  добавлены MCP: {', '.join(added)}")
+
+
 def _block_autoapprove(target, choices, dry):
     mode = choices["autoapprove"]
-    print(f"\n[3] auto-approve: {mode or 'пропуск'}")
+    print(f"\n[4] auto-approve: {mode or 'пропуск'}")
     if not mode:
         return
     _write_text(target / ".claude" / "auto-approve.env.ini", f"MODE={mode}\n", dry)
@@ -198,7 +239,7 @@ def _block_autoapprove(target, choices, dry):
 
 def _block_memory(env, target, choices, dry):
     brain_mode = choices["memory"]
-    print(f"\n[4] memory: {('brain=' + choices.get('memory_brain', 'core') + ' mode=' + brain_mode) if brain_mode else 'пропуск'}")
+    print(f"\n[5] memory: {('brain=' + choices.get('memory_brain', 'core') + ' mode=' + brain_mode) if brain_mode else 'пропуск'}")
     if not brain_mode:
         return
     brain = choices.get("memory_brain") or "core"
@@ -212,7 +253,7 @@ def _block_hub(env, target, choices, dry):
     # Хаб уже сгенерён внутри connect/vendor, если skills+hub. Иначе — отдельно.
     if not choices["hub"] or choices["skills"]:
         return
-    print("\n[5] Hub")
+    print("\n[6] Hub")
     if dry:
         print("  [dry-run] сгенерировал бы хаб (CLAUDE.md / .ai)")
         return
@@ -225,7 +266,7 @@ def _block_hub(env, target, choices, dry):
 def _block_brain(target, choices):
     if not choices["brain"]:
         return
-    print("\n[6] Brain docs-sync (подсказка — настраивается со стороны волта)")
+    print("\n[7] Brain docs-sync (подсказка — настраивается со стороны волта)")
     print(f"  В заметке проекта в Brain-волте добавь во frontmatter:")
     print(f"      repo: {target}")
     print(f"  Затем: brain status <project> / brain sync <project>")
@@ -239,6 +280,8 @@ def _gather(env, target, opts, bundle, interactive):
     if bundle != "custom":
         # авто-пресеты permissions (autodetect внутри apply-permissions при пустом)
         base["perms_presets"] = ""
+        # mcp=True в бандле → dev-дефолты (context7), но не для obsidian-vault
+        base["mcp"] = _default_mcp(target) if base.get("mcp") else []
         return base
 
     # custom — интерактивный чеклист
@@ -254,6 +297,12 @@ def _gather(env, target, opts, bundle, interactive):
                                          "cursor", interactive)
     ch["perms"] = _ask_yn("Применить permissions-пресеты (autodetect)?", True, interactive)
     ch["perms_presets"] = ""
+    if detected != "obsidian-vault":
+        want_mcp = _ask_yn(
+            "Установить MCP context7 (up-to-date docs библиотек)?", True, interactive)
+        ch["mcp"] = list(DEV_MCP) if want_mcp else []
+    else:
+        ch["mcp"] = []
     ch["autoapprove"] = _ask_choice("auto-approve режим", AA_MODES + ("skip",),
                                     "strict", interactive)
     if ch["autoapprove"] == "skip":
@@ -297,6 +346,7 @@ def cmd_integrate(env, argv):
     _block_prereqs(env, dry, interactive)
     _block_skills(env, target, choices, dry)
     _block_perms(env, target, choices, dry)
+    _block_mcp(env, target, choices, dry)
     _block_autoapprove(target, choices, dry)
     _block_memory(env, target, choices, dry)
     _block_hub(env, target, choices, dry)

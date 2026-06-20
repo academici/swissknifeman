@@ -85,6 +85,21 @@ SKILL.md; (8) уникальность имён в бакете (через ба
 (10) мягкий линт внутренних скиллов `.claude/skills/` (name+description,
 kebab-case == имя каталога); (11) `bash -n` всех скриптов + исполняемость CLI.
 
+## Визард `integrate` (`lib/swissknifeman/integrate.py`)
+
+Чеклист-обёртка над командами: пререквизиты → скиллы → permissions → **MCP** →
+auto-approve → memory → hub → brain. Бандлы `minimal`/`recommended`/`full`/`custom`
+(`BUNDLES` = пред-ответы). Все записи merge-only, бэкап `*.bak`, `--dry-run`.
+
+**MCP-блок (`_block_mcp`).** Вливает пресеты MCP-серверов в `<project>/.mcp.json`
+(`mcpServers`, merge-only, чужие серверы не трогаются). Пресет сервера —
+`configs/claude-code/mcp/<name>.json` (голый объект конфига, ключ = имя файла).
+Гейт «среда разработки»: `_default_mcp(target)` раздаёт `DEV_MCP` (сейчас
+`context7`, remote HTTP `mcp.context7.com/mcp`) во всё, **кроме** `obsidian-vault`.
+`recommended`/`full` включают dev-MCP по умолчанию; `minimal` — нет; `custom` —
+спрашивает. Добавить сервер: положить пресет в `configs/claude-code/mcp/`, при
+необходимости — в `DEV_MCP`.
+
 ## Прочие инструменты и контракты
 
 - `scripts/update-upstreams.sh --check|--apply` — синк внешних скиллов по

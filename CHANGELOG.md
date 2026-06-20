@@ -4,6 +4,14 @@
 
 ### Changed
 
+- **Монорепо academici: maind внесён в `packages/maind/` (через `git subtree`, история
+  сохранена).** Хаб памяти/графа теперь живёт под зонтиком рядом с реестром скиллов.
+  `node_modules` (демон `@agentmemory/agentmemory`) переустановлен в новом месте (`npm ci`);
+  systemd unit `maind-memory.service` перегенерён на новый путь (`maind service install`),
+  демон памяти жив (порты 4111/4112). `.maind.json` (конфиг узла, `0600`) перенесён в пакет.
+  `orchestrate.py`: путь к лаунчеру swissknifeman обновлён на `packages/swissknifeman/bin/...`
+  (local_path остаётся корнем репо). `maind doctor` и 235 тестов зелёные из нового места.
+  Re-deploy `.mcp.json` потребителей (≈18 проектов держат старый абсолютный путь) — этап 7.
 - **Монорепо academici: переезд в `packages/swissknifeman/`.** Репозиторий становится
   зонтиком экосистемы — содержимое реестра (`lib/`, `bin/`, `skills/`, `skm/`,
   `generate-skill/`, `scripts/`, `configs/`, `buckets.json` …) переехало в

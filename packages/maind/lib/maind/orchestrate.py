@@ -28,8 +28,11 @@ CAPABILITIES = {
 SIBLINGS = {
     "brain": {"env": "MAIND_BRAIN_BIN", "project_id": "brain",
               "path_key": "vault_path", "bin": "bin/brain"},
+    # монорепо academici: лаунчер живёт в подпакете packages/swissknifeman/, а
+    # local_path указывает на корень репо (где .git) — отсюда вложенный bin-путь.
     "swissknifeman": {"env": "MAIND_SKM_BIN", "project_id": "swissknifeman",
-                      "path_key": "local_path", "bin": "bin/swissknifeman"},
+                      "path_key": "local_path",
+                      "bin": "packages/swissknifeman/bin/swissknifeman"},
 }
 
 

@@ -65,14 +65,14 @@ def cmd_doctor(env, argv):
         try:
             from .config import load_config
             config, source = load_config(env)
-            check(True, f".maind.json валиден (источник: {source})")
+            check(True, f"конфиг узла валиден (источник: {source})")
         except SystemExit:
-            check(False, ".maind.json валиден", "см. ошибку валидации выше")
+            check(False, "конфиг узла валиден", "см. ошибку валидации выше")
     else:
         legacy = env.root / ".projects.json"
         suffix = (" (есть legacy .projects.json — maind migrate from-brain)"
-                  if legacy.exists() else " (создайте из .maind.example.json)")
-        check(True, ".maind.json отсутствует" + suffix)
+                  if legacy.exists() else " (создайте из config.example.json)")
+        check(True, "config.json отсутствует" + suffix)
 
     # порты памяти — на разрешённых портах (env/конфиг), информативно
     if not quiet:

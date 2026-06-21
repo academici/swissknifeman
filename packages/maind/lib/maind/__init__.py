@@ -6,7 +6,7 @@
 Модули:
   common    — Env, die/warn/now_iso/confirm, parse_args, atomic JSON, HTTP
   constants — порты памяти, типы узлов/рёбер графа, дефолты
-  config    — .maind.json (+ fallback на legacy .projects.json из brain)
+  config    — config.json (+ fallback на legacy .projects.json из brain)
   memory    — жизненный цикл agent-memory демона + HTTP-обёртка (scopes)
   graph     — property-граф: node/edge/neighbors/path/subgraph/stats
   agents    — реестр агентов: register/heartbeat/list/kill

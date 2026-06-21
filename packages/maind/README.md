@@ -37,7 +37,7 @@ Node-демона памяти и сборки документации.
   не из ручного дубля. Межпроектное ребро — только внутри общего namespace.
 - **graphify** (граф кода внутри проекта) — со-равный механизм, раскатывается отдельным
   MCP-сервером (`deploy --with-graphify`).
-- **Порты не хардкодятся** — из `.env` / `.maind.json` (дефолт 4111/4112), чтобы не
+- **Порты не хардкодятся** — из `.env` / `config.json` (дефолт 4111/4112), чтобы не
   конфликтовать с другим узлом.
 
 ---
@@ -83,11 +83,13 @@ maind projects list
 
 ---
 
-## Конфиг `.maind.json`
+## Конфиг `config.json`
 
-Главный конфиг узла — надмножество `.projects.json` из `brain`. Если `.maind.json` нет,
-maind читает legacy `.projects.json` в режиме read-only (с предупреждением о миграции).
-Полная схема — в [.maind.example.json](.maind.example.json). Ключевые секции: `node`,
+Главный конфиг узла — `config.json` **в корне монорепо** (не в пакете maind; резолвер
+поднимается до каталога с `packages/`). Legacy-имя `.maind.json` по-прежнему подхватывается.
+Надмножество `.projects.json` из `brain`. Если конфига нет, maind читает legacy `.projects.json`
+в режиме read-only (с предупреждением о миграции).
+Полная схема — в [config.example.json](config.example.json). Ключевые секции: `node`,
 `memory`, `graph`, `agents`, `projects[]`, `integrations`, `mcp`, `observability`.
 
 ## Память (scopes)

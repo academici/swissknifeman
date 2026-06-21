@@ -18,7 +18,8 @@ class TestEnvPaths(unittest.TestCase):
         self.assertEqual(env.memory_pidfile, Path("/srv/maind/data/agentmemory.pid"))
         self.assertEqual(env.memory_config,
                          Path("/srv/maind/config/memory/iii-config.yaml"))
-        self.assertEqual(env.default_config, Path("/srv/maind/.maind.json"))
+        # config.json в корне монорепо; standalone (нет packages/ рядом) → сам root
+        self.assertEqual(env.default_config, Path("/srv/maind/config.json"))
 
 
 class TestParseArgs(unittest.TestCase):

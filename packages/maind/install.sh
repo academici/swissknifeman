@@ -92,10 +92,15 @@ if [[ "$WITH_SERVICE" == true ]]; then
   "$CLI" service install || echo "WARN: maind service install не удался (см. вывод выше)"
 fi
 
-# ── живой конфиг узла из example (если ещё нет; .maind.json в .gitignore) ─────
-if [[ ! -f "$REPO_ROOT/.maind.json" && -f "$REPO_ROOT/.maind.example.json" ]]; then
-  cp "$REPO_ROOT/.maind.example.json" "$REPO_ROOT/.maind.json"
-  echo "Создан $REPO_ROOT/.maind.json из example — отредактируй проекты/политику под себя"
+# ── живой конфиг узла из example (если ещё нет; config.json в .gitignore) ─────
+# config.json — общий конфиг узла в КОРНЕ монорепо (на два уровня выше пакета).
+# Fallback на standalone-раскладку: если корня монорепо нет — пакетный каталог.
+CFG_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
+[ -d "$CFG_ROOT/packages" ] || CFG_ROOT="$REPO_ROOT"
+if [[ ! -f "$CFG_ROOT/config.json" && -f "$CFG_ROOT/config.example.json" ]]; then
+  cp "$CFG_ROOT/config.example.json" "$CFG_ROOT/config.json"
+  chmod 600 "$CFG_ROOT/config.json"
+  echo "Создан $CFG_ROOT/config.json из example — отредактируй проекты/политику под себя"
   echo "  (секция code_graph — игноры/движок код-графа; projects[] — узлы экосистемы)"
 fi
 

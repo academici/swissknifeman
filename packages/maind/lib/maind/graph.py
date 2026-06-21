@@ -311,7 +311,7 @@ def _cmd_derive(env, argv):
     if opts["project"]:
         proj = get_project(config, opts["project"])
         if proj is None:
-            die(f"проект не найден в .maind.json: {opts['project']}")
+            die(f"проект не найден в config.json: {opts['project']}")
         stats = [derive_project_graph(env, config, proj)]
     else:
         stats = derive_all(env, config)

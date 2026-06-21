@@ -13,3 +13,5 @@ docs/.vitepress/cache/
 .claude/memory.config.json
 settings.local.json.bak
 MERGE-PLAN.snapshots/
+# Приватный конфиг узла maind (пути ко всем проектам); шаблон — config.example.json
+config.json

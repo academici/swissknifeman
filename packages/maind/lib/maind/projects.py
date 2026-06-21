@@ -1,7 +1,7 @@
 """Реестр проектов узла (надмножество brain .projects.json).
 
-Чтение — из конфига (.maind.json или brain-fallback). Запись — только write_config
-(единственный писатель .maind.json). sync_from_brain идемпотентен и сохраняет
+Чтение — из конфига (config.json или brain-fallback). Запись — только write_config
+(единственный писатель config.json). sync_from_brain идемпотентен и сохраняет
 maind-only поля (skills/tags/dependencies/agents/repo)."""
 import json
 import os
@@ -54,7 +54,7 @@ def sync_from_brain(env, config, brain_path):
 
 
 def write_config(env, config):
-    """Единственный писатель .maind.json (atomic). _version проставляется первым ключом."""
+    """Единственный писатель config.json (atomic). _version проставляется первым ключом."""
     out = {"_version": str(config.get("_version", "1"))}
     out.update({k: v for k, v in config.items() if k != "_version"})
     atomic_write_json(env.default_config, out)
@@ -136,7 +136,7 @@ def _cmd_list(env, argv):
         print(json.dumps(projects, ensure_ascii=False, indent=2))
         return
     if not projects:
-        print("проектов нет — создайте .maind.json из .maind.example.json "
+        print("проектов нет — создайте config.json из config.example.json "
               "или `maind projects sync --from brain`")
         return
     print(f"Проекты ({len(projects)}, источник: {source}):")

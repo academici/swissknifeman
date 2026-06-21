@@ -72,9 +72,13 @@ class TestOrchestrate(unittest.TestCase):
     def test_missing_sibling_dies(self):
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
-            cfg = merge_defaults({"projects": [{"id": "flexcrm", "name": "F",
-                                                "local_path": "/x"}]})
-            with self.assertRaises(SystemExit):   # нет brain-проекта, нет env-override
+            # brain резолвится через integrations.brain.path; направляем в каталог
+            # без bin/brain → лаунчер не найден → SystemExit. (env-override отсутствует.)
+            cfg = merge_defaults({
+                "projects": [{"id": "flexcrm", "name": "F", "local_path": "/x"}],
+                "integrations": {"brain": {"path": f"{tmp}/no-brain-vault"}},
+            })
+            with self.assertRaises(SystemExit):
                 orch.run_capability(env, cfg, "flexcrm", "brain:status")
 
     def test_dry_run_does_not_execute(self):

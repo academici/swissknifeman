@@ -4,6 +4,16 @@
 
 ### Changed
 
+- **Конфиг узла: `.maind.json` → `config.json` в корне монорепо (общий).** Конфиг переехал
+  из пакета в корень монорепо и переименован (шаблон — `config.example.json`). Резолвер
+  `Env.default_config` ищет `config.json` вверх по дереву (до каталога с `packages/`), с
+  обратной совместимостью на legacy `.maind.json`. Добавлена лёгкая обёртка `Config`
+  (подкласс dict: `Config.load(env)`/`.save(env)`/`.projects`/`.project(id)` — единая точка
+  логики конфига; старый доступ `cfg["projects"]` сохранён). `config.json` — gitignored,
+  `0600`. Резолв brain в оркестрации сделан консистентным с синком (через
+  `integrations.brain.path` → vault → дефолт `~/Vaults/Brain`, нормализация к каталогу) —
+  `maind run brain:*` работает без записи проекта brain. Документация и сообщения обновлены.
+
 - **Плагин maind 0.2.0 → 0.2.1.** Bump версии, чтобы Claude Code перекэшировал плагин со
   свежим кодом (исправленный `.mcp.json` → `maind` из PATH, `from core`); кэш по прежней
   версии не перестраивался. `package.json` синхронизирован.

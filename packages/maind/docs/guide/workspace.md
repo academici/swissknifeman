@@ -2,7 +2,7 @@
 
 Единое пространство правок: сессия Claude Code, запущенная из хаба maind, читает и
 правит **любой проект экосистемы без подтверждений**. Список доверенных путей maind
-берёт из реестра проектов (`.maind.json`) и кладёт в свой `.claude/settings.local.json`.
+берёт из реестра проектов (`config.json`) и кладёт в свой `.claude/settings.local.json`.
 
 ## Проблема
 
@@ -29,7 +29,7 @@ flowchart LR
 глушит**. Поэтому при правке смежных проектов подтверждения приходят даже в auto-approve.
 
 Фикс границы — `permissions.additionalDirectories` (абсолютные пути). maind уже владеет
-авторитетным списком: `projects[].local_path` в `.maind.json`.
+авторитетным списком: `projects[].local_path` в `config.json`.
 
 ## Решение: hub-scoped
 

@@ -16,7 +16,7 @@ class TestMigrate(unittest.TestCase):
             capture(cmd_migrate, env, ["from-brain", str(bpath)])
             self.assertTrue(env.default_config.exists())
             cfg, source = load_config(env)
-            self.assertEqual(source, ".maind.json")
+            self.assertEqual(source, "config.json")
             self.assertIn("brain", [p["id"] for p in cfg["projects"]])
             # derive → федерация: индекс собран (а не единый legacy graph.db)
             self.assertTrue((env.data_dir / "graphs" / "_index.db").exists())

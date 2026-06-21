@@ -6,9 +6,10 @@
 maind migrate from-brain ~/Vaults/Brain/.projects.json [--force]
 ```
 
-Собирает `.maind.json` из brain-кэша проектов (реальная схема brain маппится в формат
-maind), прописывает `integrations.brain` и **материализует граф** (проекты как узлы).
-Отказывается перезаписывать существующий `.maind.json` без `--force`.
+Собирает `config.json` (в корне монорепо; legacy-имя `.maind.json` всё ещё подхватывается)
+из brain-кэша проектов (реальная схема brain маппится в формат maind), прописывает
+`integrations.brain` и **материализует граф** (проекты как узлы). Отказывается
+перезаписывать существующий `config.json` без `--force`.
 
 ## Из agent-memory (конфиг демона)
 

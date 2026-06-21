@@ -16,7 +16,7 @@ class TestSync(unittest.TestCase):
                  "dependencies": ["maind"], "type": "obsidian-vault"}])
             bpath = write_brain_projects(root)
             cfg, source = load_config(env)
-            self.assertEqual(source, ".maind.json")
+            self.assertEqual(source, "config.json")
             cfg, stats = sync_from_brain(env, cfg, bpath)
             self.assertEqual(stats["added"], 1)    # swiss-knife-man — новый
             self.assertEqual(stats["updated"], 1)  # brain — обновлён
@@ -36,7 +36,7 @@ class TestSync(unittest.TestCase):
             cfg, _ = sync_from_brain(env, cfg, write_brain_projects(root))
             write_config(env, cfg)
             cfg2, source2 = load_config(env)
-            self.assertEqual(source2, ".maind.json")  # .maind.json приоритетнее
+            self.assertEqual(source2, "config.json")  # .maind.json приоритетнее
             self.assertTrue(get(cfg2, "brain"))
             self.assertEqual(len(listing(env, cfg2)), 2)
 

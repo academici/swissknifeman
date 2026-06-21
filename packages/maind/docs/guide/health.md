@@ -54,6 +54,6 @@ maind sync --all --only health-doc,health-hook --mode update   # обновит�
 
 - `демон памяти не запущен` → `maind start --only memory`.
 - `нет … MCP в проекте` → `maind sync --only mcp --project <id>` (или `maind health --fix`).
-- `missing-path` → у проекта нет `local_path` или путь не существует — поправьте `.maind.json`.
+- `missing-path` → у проекта нет `local_path` или путь не существует — поправьте `config.json`.
 
 Дальше: [Sync →](/guide/sync)

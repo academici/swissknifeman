@@ -6,7 +6,7 @@ Namespace — это **группа проектов**. Внутри групп�
 
 ## Объявление
 
-Проект объявляет членство полем `namespaces` в `.maind.json` (maind-only, как `tags`):
+Проект объявляет членство полем `namespaces` в `config.json` (maind-only, как `tags`):
 
 ```jsonc
 { "id": "flexcrm",  "namespaces": ["axioma"] }
@@ -21,7 +21,7 @@ Namespace — это **группа проектов**. Внутри групп�
 | `["axioma"]` | связь только с проектами, у которых тоже есть `axioma` |
 | `["*"]` (wildcard) | общая инфраструктура: связывается со ВСЕМИ группами |
 
-Необязательный реестр `namespaces: { axioma: { name, description } }` в `.maind.json` даёт
+Необязательный реестр `namespaces: { axioma: { name, description } }` в `config.json` даёт
 метаданные и подсказки на опечатки; членство задаётся в самих проектах.
 
 ## Граф: изоляция в точке создания ребра

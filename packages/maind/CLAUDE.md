@@ -33,7 +33,7 @@ namespace'ам:
 |:--|:--|
 | `cli.py` | диспетчер команд (`COMMANDS` → `cmd_*(env, argv)`) |
 | `common.py` | `Env` (frozen dataclass), atomic JSON, HTTP (urllib), `parse_args` |
-| `config.py` | загрузка/валидация `.maind.json`, дефолты, маппинг из brain |
+| `config.py` | загрузка/валидация `config.json` (в корне монорепо; legacy `.maind.json`), дефолты, маппинг из brain |
 | `constants.py` | порты, типы узлов/рёбер, адаптеры, scope-бакеты |
 | `memory.py` | оркестрация agent-memory демона + HTTP-обёртка (scope'ы) |
 | `graph.py` | примитив property-графа (BFS/path/subgraph/stats) |

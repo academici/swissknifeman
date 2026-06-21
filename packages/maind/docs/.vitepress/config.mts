@@ -29,7 +29,7 @@ export default withMermaid(defineConfig({
             { text: 'FAQ — частые вопросы', link: '/guide/faq' },
             { text: 'Решения, трейд-оффы, ограничения', link: '/guide/design-notes' },
             { text: 'Установка', link: '/guide/installation' },
-            { text: 'Конфиг .maind.json', link: '/guide/config' },
+            { text: 'Конфиг config.json', link: '/guide/config' },
           ],
         },
         {

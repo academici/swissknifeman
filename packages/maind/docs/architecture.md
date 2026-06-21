@@ -1,7 +1,7 @@
 # Архитектура
 
 **mAInd** — вершина иерархии экосистемы. Один общий хаб композирует три слоя под одним
-конфигом `.maind.json` и одним CLI. Остальные проекты подключаются к нему как клиенты.
+конфигом `config.json` и одним CLI. Остальные проекты подключаются к нему как клиенты.
 
 > Философию всей экосистемы (роли swissknifeman / brain / maind, принцип «связаны, но работают по
 > отдельности», онбординг, слои командного пункта) см. на странице [Экосистема](/ecosystem).
@@ -35,7 +35,7 @@ flowchart LR
   mem -->|HTTP| daemon["agent-memory (Node)"]
   gr -->|node-link JSON| db[("data/graphs/&lt;id&gt;.db + _index.db")]
   ag -->|atomic JSON| aj[("~/.maind/agents.json")]
-  pr -->|читает/пишет| cfg[(".maind.json")]
+  pr -->|читает/пишет| cfg[("config.json")]
   mcp --> mem & gr & ag & pr
 ```
 
@@ -47,8 +47,8 @@ flowchart LR
   проект + `_index.db`). Строится из источников истины (`derive.py`), не из ручного дубля.
 - **Агенты** (`agents.py`) — реестр в `~/.maind/agents.json`; состояние выводится из
   возраста heartbeat и живости pid.
-- **Проекты** (`projects.py`) — `.maind.json` (надмножество brain `.projects.json`),
-  fallback на legacy, синк из brain.
+- **Проекты** (`projects.py`) — `config.json` (надмножество brain `.projects.json`;
+  legacy-имя `.maind.json` всё ещё подхватывается), синк из brain.
 - **MCP** (`mcp.py`) — публикует всё это как stdio JSON-RPC сервер для внешних агентов.
 
 ## Три слоя графа
@@ -105,7 +105,7 @@ flowchart LR
 поэтому сторы физически не содержат меж-namespace мостов и всё ниже (union, query, `_index.db`,
 seed) изолируется само; `rebuild_index` дублирует гейт как защиту устаревших/локальных сторов.
 Связь с **незарегистрированным** внешним узлом (нет записи в `projects[]`) сохраняется — его
-namespace неизвестен. Необязательный реестр `namespaces: { axioma: {...} }` в `.maind.json`
+namespace неизвестен. Необязательный реестр `namespaces: { axioma: {...} }` в `config.json`
 даёт метаданные и подсказки на опечатки; членство задаётся в проектах.
 
 ```bash
@@ -133,7 +133,7 @@ ecosystem-link память из всех релевантных бакетов 
 
 ## Единый провижининг: `maind sync`
 
-Одна команда анализирует `.maind.json` и раскатывает **управляемые артефакты** на все
+Одна команда анализирует `config.json` и раскатывает **управляемые артефакты** на все
 подключённые проекты через реестр провиженеров (`sync.py`): `mcp` · `graph` (derive) · `memory`
 (seed) · `health-hook` · `health-doc` · `ecosystem-skill` (скилл `ecosystem-mcp` в проект).
 `--only` сужает набор, `--mode install|update|auto` задаёт

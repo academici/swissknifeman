@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **Валидный формат `plugin.json` для установки из marketplace.** Текущий Claude Code
+  ужесточил схему — старый формат не ставился (`commands: Invalid input,
+  mcpServers: Invalid input`): `commands` теперь массив путей (`["./commands"]`),
+  `mcpServers` — путь с `./` (`"./.mcp.json"`). Битый YAML-frontmatter команд (`description`
+  с двоеточием `academici: …` парсился как вложенный ключ) обёрнут в кавычки. Затронуты оба
+  командных плагина (maind, skm) — проходят `claude plugin validate`. Тест `test_plugin.py`
+  ловит эти дефекты до установки.
+
 ### Changed
 
 - **Монорепо academici: верификация + массовый re-deploy потребителей (этап 7).** MCP-конфиги

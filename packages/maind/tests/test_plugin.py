@@ -28,9 +28,13 @@ class TestPluginManifest(unittest.TestCase):
     def test_plugin_json_valid_and_links_exist(self):
         m = _load_json(PLUGIN_DIR / "plugin.json")
         self.assertEqual(m["name"], "maind")
-        self.assertEqual(m.get("commands"), "commands/")
+        # Claude Code plugin schema: commands — массив путей; mcpServers — путь-строка ('./...').
+        self.assertIsInstance(m.get("commands"), list, "commands должен быть массивом путей")
         self.assertTrue((ROOT / "commands").is_dir(), "нет каталога commands/")
-        self.assertTrue((ROOT / m["mcpServers"]).is_file(), "manifest.mcpServers → нет файла")
+        mcp = m["mcpServers"]
+        self.assertIsInstance(mcp, str, "mcpServers — путь-строка к .mcp.json")
+        rel = mcp[2:] if mcp.startswith("./") else mcp   # снять './'-префикс, не трогая .mcp.json
+        self.assertTrue((ROOT / rel).is_file(), "mcpServers → нет файла")
 
     def test_marketplace_valid_and_consistent(self):
         # В монорепо marketplace.json — единый, в КОРНЕ репо (его генерит swissknifeman
@@ -60,6 +64,14 @@ class TestPluginCommands(unittest.TestCase):
             fm = _frontmatter(path.read_text(encoding="utf-8"))
             self.assertIsNotNone(fm, f"{name}.md без YAML-фронтматтера")
             self.assertIn("description:", fm, f"{name}.md без description")
+            # YAML-значение с незакавыченным двоеточием не парсится Claude Code
+            # (ловим до установки плагина — урок миграции монорепо).
+            for line in fm.splitlines():
+                if line.startswith("description:"):
+                    val = line[len("description:"):].strip()
+                    if ":" in val and not (val.startswith('"') or val.startswith("'")):
+                        self.fail(f"{name}.md: description c двоеточием без кавычек — "
+                                  f"битый YAML-frontmatter")
 
     def test_action_commands_preview_then_apply(self):
         # мутирующая команда обязана сперва dry-run, затем неинтерактивный --yes

@@ -1,5 +1,5 @@
 ---
-description: swissknifeman — парадная дверь управления скиллами проекта: бакеты, integrate, статус, диагностика.
+description: "swissknifeman — парадная дверь управления скиллами проекта: бакеты, integrate, статус, диагностика."
 ---
 Ты — лицо **swissknifeman** (реестр скиллов: provider-neutral SKILL.md, два канала доставки).
 

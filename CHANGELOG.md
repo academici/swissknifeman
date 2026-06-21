@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Removed
+
+- **Убрана консоль-обёртка `bin/academici`.** Зонтичный роутер `academici maind/skm <cmd>`
+  удалён — остаются два независимых CLI в PATH (`swissknifeman`, `maind`). Зонтичный
+  `install.sh` теперь только делегирует установку пакетным `install.sh`; CLAUDE.md/README
+  описывают два CLI без обёртки. (Имя экосистемы «academici» как бренд сохранено.)
+
 ### Changed
 
 - **Общий core: `academici_core` → пакет `core`.** Убрано слово `academici` из путей/имён.

@@ -1,14 +1,14 @@
 # CLAUDE.md — academici (монорепо)
 
 Гид для агентов по корню монорепо. Это **зонтик экосистемы academici**: один репозиторий —
-несколько независимых пакетов и плагинов под общей крышей, единая консоль `academici`.
+несколько независимых пакетов и плагинов под общей крышей. Каждый пакет — самостоятельный CLI
+(`swissknifeman`, `maind`); единой консоли-обёртки нет.
 
 ## Раскладка
 
 ```
-academici/
-├── bin/academici              # единая консоль-роутер (домен → под-бинарник)
-├── install.sh                 # зонтичный установщик (ставит academici + делегирует пакетам)
+<monorepo>/
+├── install.sh                 # зонтичный установщик (делегирует install.sh пакетов)
 ├── core/                      # общий stdlib-only пакет `core` (дословные дубли: Env/term/text)
 ├── packages/
 │   ├── swissknifeman/         # реестр AI-скиллов (skills/, skm/, generate-skill/, lib/, bin/)
@@ -28,17 +28,15 @@ academici/
 Это **один монорепозиторий, не «соседние пакеты»**: maind координирует swissknifeman через
 `subprocess` (см. `packages/maind/lib/maind/orchestrate.py`), оба используют общий `core/`.
 
-## Консоль `academici` (единая точка входа)
+## CLI пакетов (две независимые команды)
 
 ```bash
-academici maind <cmd>      # → packages/maind/bin/maind
-academici skm   <cmd>      # → packages/swissknifeman/bin/swissknifeman
-academici <cmd>            # авто-роут уникальной команды без префикса
-academici doctor|status    # сводка по обоим пакетам
+swissknifeman <cmd>        # реестр скиллов: connect, vendor, integrate, registry, status, …
+maind <cmd>                # хаб: memory, graph, onboard, deploy, sync, health, doctor, …
 ```
 
-Под-бинарники `maind`/`swissknifeman` остаются самостоятельными (их пути зашиты в `.mcp.json`
-онбордженных проектов — не ломать). `academici` их не заменяет, а сводит в одну точку.
+Единой консоли-обёртки нет — каждый пакет ставится в PATH своим `install.sh` (зонтичный
+`install.sh` делегирует им). Их пути зашиты в `.mcp.json` онбордженных проектов — не ломать.
 
 ## Общий пакет `core`
 

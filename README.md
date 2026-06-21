@@ -9,27 +9,25 @@
 
 | Пакет | Роль | CLI |
 |:--|:--|:--|
-| [`packages/swissknifeman`](packages/swissknifeman/) | реестр AI-скиллов — раздаёт навыки в проекты (connect/vendor) | `swissknifeman` / `academici skm` |
-| [`packages/maind`](packages/maind/) | хаб памяти, графа и координации экосистемы (MCP-шина) | `maind` / `academici maind` |
+| [`packages/swissknifeman`](packages/swissknifeman/) | реестр AI-скиллов — раздаёт навыки в проекты (connect/vendor) | `swissknifeman` |
+| [`packages/maind`](packages/maind/) | хаб памяти, графа и координации экосистемы (MCP-шина) | `maind` |
 
 Общий фундамент — пакет [`core`](core/) (stdlib-only: `Env`, вывод, slug).
 
 ## Установка
 
 ```bash
-./install.sh                  # ставит academici + под-команды maind/swissknifeman
-academici help                # единая точка входа
+./install.sh                  # ставит swissknifeman и maind в PATH (делегирует install.sh пакетов)
 ```
 
 `install.sh` делегирует пакетную пост-настройку их собственным установщикам
-(`packages/*/install.sh`). Под-бинарники `maind`/`swissknifeman` остаются самостоятельными.
+(`packages/*/install.sh`). Два независимых CLI в PATH — единой консоли-обёртки нет.
 
-## Консоль
+## CLI
 
 ```bash
-academici maind <cmd>         # команды хаба (memory, graph, onboard, deploy, sync, …)
-academici skm   <cmd>         # команды реестра (connect, vendor, integrate, registry, …)
-academici doctor              # сводная диагностика обоих пакетов
+maind <cmd>                   # команды хаба (memory, graph, onboard, deploy, sync, …)
+swissknifeman <cmd>           # команды реестра (connect, vendor, integrate, registry, …)
 ```
 
 ## Плагины Claude Code

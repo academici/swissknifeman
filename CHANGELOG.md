@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Changed
+
+- **Общий core: `academici_core` → пакет `core`.** Убрано слово `academici` из путей/имён.
+  Каталог `core/` сам стал python-пакетом (`core/__init__.py`, `core/env.py`, …); импорт
+  `from core import ...`. PYTHONPATH теперь указывает на корень монорепо (где лежит `core/`),
+  а не на сам `core/` — обновлены лаунчеры, `test.sh`, `validate.sh` обоих пакетов и
+  real-spawn тест maind (`CORE_DIR` → `MONOREPO_ROOT`).
+
 ### Fixed
 
 - **Валидный формат `plugin.json` для установки из marketplace.** Текущий Claude Code

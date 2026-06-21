@@ -1,7 +1,7 @@
 """Общие утилиты maind: окружение (Env), парсинг аргументов, atomic JSON, HTTP.
 
 Дословно общий с swissknifeman/brain код (die/warn/now_iso/confirm/sanitize +
-ядро Env) вынесен в academici_core; здесь — специфика maind (path-property узла,
+ядро Env) вынесен в общий core; здесь — специфика maind (path-property узла,
 parse_args с позиционными, atomic JSON, managed-block, HTTP на stdlib urllib)."""
 import copy
 import hashlib
@@ -17,7 +17,7 @@ from pathlib import Path
 
 # Общий core (подключается через PYTHONPATH лаунчером/test.sh). Реэкспорт для
 # модулей пакета, которые исторически берут эти имена из .common.
-from academici_core import (  # noqa: F401
+from core import (  # noqa: F401
     HOME, BaseEnv, confirm, die, now_iso, sanitize, warn,
 )
 
@@ -77,7 +77,7 @@ class Env(BaseEnv):
         return self.root / ".env"
 
 
-# die/warn/now_iso/confirm/sanitize — из academici_core (реэкспорт выше).
+# die/warn/now_iso/confirm/sanitize — из общего core (реэкспорт выше).
 
 
 # ── парсинг аргументов (флаги + позиционные, стиль brain) ───────────────────

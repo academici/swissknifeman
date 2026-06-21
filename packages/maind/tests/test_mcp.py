@@ -214,13 +214,13 @@ class TestConformance(unittest.TestCase):
 
     def test_real_spawn_handshake(self):
         repo = Path(__file__).resolve().parents[1]
-        # academici_core живёт в <monorepo>/core (на два уровня выше пакета) и
-        # подключается лаунчером; при реальном спавне добавляем его в PYTHONPATH.
-        # standalone-раскладка: core рядом нет — путь просто отсутствует в списке.
-        core = repo.parents[1] / "core"
+        # Пакет `core` лежит в <monorepo>/core (на два уровня выше пакета); чтобы
+        # `from core import ...` работал при реальном спавне, в PYTHONPATH нужен
+        # КОРЕНЬ монорепо. standalone-раскладка: каталога core нет — путь не добавляется.
+        monorepo = repo.parents[1]
         pp = [str(repo / "lib")]
-        if core.is_dir():
-            pp.append(str(core))
+        if (monorepo / "core").is_dir():
+            pp.append(str(monorepo))
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "node"
             (root / "config" / "memory").mkdir(parents=True)

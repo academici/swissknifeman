@@ -12,7 +12,7 @@
 | [`packages/swissknifeman`](packages/swissknifeman/) | реестр AI-скиллов — раздаёт навыки в проекты (connect/vendor) | `swissknifeman` / `academici skm` |
 | [`packages/maind`](packages/maind/) | хаб памяти, графа и координации экосистемы (MCP-шина) | `maind` / `academici maind` |
 
-Общий фундамент — [`core/academici_core`](core/) (stdlib-only: `Env`, вывод, slug).
+Общий фундамент — пакет [`core`](core/) (stdlib-only: `Env`, вывод, slug).
 
 ## Установка
 

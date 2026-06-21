@@ -453,8 +453,10 @@ echo "CLI + shell scripts: syntax OK"
 # --- 12. lib/swissknifeman package + unit/integration tests --------------------
 [[ -d "$REPO_ROOT/lib/swissknifeman" ]] || {
   echo "ERROR: lib/swissknifeman package missing" >&2; exit 1; }
-# core/ — общий academici_core (на два уровня выше пакета), опционально (standalone).
-CORE_DIR="$(cd "$REPO_ROOT/../../core" 2>/dev/null && pwd || true)"
-PYTHONPATH="$REPO_ROOT/lib${CORE_DIR:+:$CORE_DIR}" python3 -c "import swissknifeman.cli" || {
+# MONOREPO_ROOT (на два уровня выше пакета) — чтобы импортировался пакет `core`;
+# опционально: в standalone-раскладке каталога core нет, путь не добавляется.
+MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
+[ -d "$MONOREPO_ROOT/core" ] || MONOREPO_ROOT=""
+PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}" python3 -c "import swissknifeman.cli" || {
   echo "ERROR: lib/swissknifeman fails to import" >&2; exit 1; }
 "$REPO_ROOT/scripts/test.sh" || { echo "ERROR: tests failed" >&2; exit 1; }

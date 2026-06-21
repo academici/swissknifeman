@@ -56,8 +56,9 @@ case "$CMD" in
   *) echo "Неизвестная команда: $CMD" >&2; usage >&2; exit 1 ;;
 esac
 
-# Общий core монорепо (academici_core) — на два уровня выше пакета (<repo>/core).
-# Fallback на standalone-раскладку: если core рядом нет, PYTHONPATH просто без него.
-CORE_DIR="$(cd "$REPO_ROOT/../../core" 2>/dev/null && pwd || true)"
-exec env PYTHONPATH="$REPO_ROOT/lib${CORE_DIR:+:$CORE_DIR}${PYTHONPATH:+:$PYTHONPATH}" \
+# Корень монорепо (на два уровня выше пакета) даёт пакет `core` (общий фундамент).
+# Fallback на standalone-раскладку: если каталога core рядом нет — путь не добавляется.
+MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
+[ -d "$MONOREPO_ROOT/core" ] || MONOREPO_ROOT=""
+exec env PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}${PYTHONPATH:+:$PYTHONPATH}" \
   python3 -m swissknifeman "$REPO_ROOT" "$CMD" "$@"

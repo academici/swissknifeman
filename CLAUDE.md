@@ -9,7 +9,7 @@
 academici/
 ├── bin/academici              # единая консоль-роутер (домен → под-бинарник)
 ├── install.sh                 # зонтичный установщик (ставит academici + делегирует пакетам)
-├── core/academici_core/       # общий stdlib-only фундамент (дословные дубли: Env/term/text)
+├── core/                      # общий stdlib-only пакет `core` (дословные дубли: Env/term/text)
 ├── packages/
 │   ├── swissknifeman/         # реестр AI-скиллов (skills/, skm/, generate-skill/, lib/, bin/)
 │   └── maind/                 # хаб памяти/графа/координации (lib/, bin/, commands/, .mcp.json)
@@ -40,12 +40,13 @@ academici doctor|status    # сводка по обоим пакетам
 Под-бинарники `maind`/`swissknifeman` остаются самостоятельными (их пути зашиты в `.mcp.json`
 онбордженных проектов — не ломать). `academici` их не заменяет, а сводит в одну точку.
 
-## Общий core (`core/academici_core`)
+## Общий пакет `core`
 
-Только **дословные дубли**, исторически копировавшиеся между пакетами: `term` (die/warn/now_iso/
-confirm), `text` (sanitize), `env` (BaseEnv — ядро root/cmd/home). `Env` каждого пакета наследует
-`BaseEnv`. Подключается через PYTHONPATH (без pip): лаунчеры/`test.sh`/`validate.sh` добавляют
-`<repo>/core` опционально (fallback на standalone-раскладку пакета). stdlib-only.
+Только **дословные дубли**, исторически копировавшиеся между пакетами: `core.term` (die/warn/
+now_iso/confirm), `core.text` (sanitize), `core.env` (BaseEnv — ядро root/cmd/home). `Env` каждого
+пакета наследует `BaseEnv`, импорт — `from core import ...`. Подключается через PYTHONPATH (без
+pip): лаунчеры/`test.sh`/`validate.sh` добавляют **корень монорепо** (где лежит `core/`)
+опционально (fallback на standalone-раскладку пакета). stdlib-only.
 
 ## Единый marketplace
 
@@ -60,7 +61,7 @@ confirm), `text` (sanitize), `env` (BaseEnv — ядро root/cmd/home). `Env` �
 # тесты/валидация — по пакету (каждый знает свой core через PYTHONPATH):
 bash packages/swissknifeman/scripts/validate.sh
 bash packages/maind/scripts/validate.sh
-PYTHONPATH=core python3 -m unittest discover -s core/tests   # smoke-тесты core
+PYTHONPATH=. python3 -m unittest discover -s core/tests       # smoke-тесты пакета core
 ```
 
 Конвенции пакетов — в их CLAUDE.md. Общее: **stdlib-only** в python, `Env` явно, atomic JSON,

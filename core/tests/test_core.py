@@ -1,7 +1,9 @@
-"""Smoke-тесты academici_core — общий фундамент монорепо (stdlib-only)."""
+"""Smoke-тесты пакета core — общий фундамент монорепо (stdlib-only).
+
+Запуск: PYTHONPATH=<корень монорепо> python3 -m unittest discover -s core/tests"""
 import unittest
 
-from academici_core import BaseEnv, now_iso, sanitize
+from core import BaseEnv, now_iso, sanitize
 
 
 class TestText(unittest.TestCase):

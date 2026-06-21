@@ -1,7 +1,7 @@
 """Общие утилиты: окружение, вывод, парсинг flag'ов и frontmatter.
 
 Дословно общий с maind/brain код (die/warn/now_iso/confirm/sanitize + ядро Env)
-вынесен в academici_core; здесь — только специфика swissknifeman (path-property,
+вынесен в общий core; здесь — только специфика swissknifeman (path-property,
 parse_flags, frontmatter, apply_permissions, константы реестра)."""
 import subprocess
 import sys
@@ -10,7 +10,7 @@ from pathlib import Path
 
 # Общий core (подключается через PYTHONPATH лаунчером/test.sh). Реэкспорт для
 # модулей пакета, которые исторически берут эти имена из .common.
-from academici_core import (  # noqa: F401
+from core import (  # noqa: F401
     HOME, BaseEnv, confirm, die, now_iso, sanitize, warn,
 )
 

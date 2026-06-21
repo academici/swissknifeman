@@ -55,6 +55,8 @@ esac
 
 # Корень монорепо (на два уровня выше пакета) даёт пакет `core` (общий фундамент).
 # Fallback на standalone-раскладку: если каталога core рядом нет — путь не добавляется.
+# (Python-эквивалент — core.repo.find_monorepo_root; здесь фикс. ../.., т.к. core
+#  ещё не на PYTHONPATH — осознанный дубль bash-стороны.)
 MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
 [ -d "$MONOREPO_ROOT/core" ] || MONOREPO_ROOT=""
 exec env PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}${PYTHONPATH:+:$PYTHONPATH}" \

@@ -1,9 +1,13 @@
 """Smoke-тесты пакета core — общий фундамент монорепо (stdlib-only).
 
 Запуск: PYTHONPATH=<корень монорепо> python3 -m unittest discover -s core/tests"""
+import json
+import tempfile
 import unittest
+from pathlib import Path
 
-from core import BaseEnv, now_iso, sanitize
+from core import (BaseEnv, atomic_write_json, atomic_write_text,
+                  find_monorepo_root, find_repo_root, now_iso, sanitize)
 
 
 class TestText(unittest.TestCase):
@@ -42,6 +46,60 @@ class TestTerm(unittest.TestCase):
     def test_now_iso_format(self):
         # YYYY-MM-DDTHH:MM:SSZ
         self.assertRegex(now_iso(), r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
+
+
+class TestAtomicIO(unittest.TestCase):
+    def test_write_text_creates_parents(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Path(tmp) / "a" / "b" / "f.txt"
+            atomic_write_text(p, "привет")
+            self.assertEqual(p.read_text(encoding="utf-8"), "привет")
+            # tmp-файл не остаётся после успешной записи
+            self.assertEqual(list(Path(tmp).rglob("*.tmp")), [])
+
+    def test_write_json_version_first_and_newline(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Path(tmp) / "db.json"
+            atomic_write_json(p, {"a": 1, "version": 9}, version=2)
+            text = p.read_text(encoding="utf-8")
+            self.assertTrue(text.endswith("\n"))
+            data = json.loads(text)
+            self.assertEqual(data["version"], 2)            # version переписан
+            self.assertEqual(list(data.keys())[0], "version")  # первым ключом
+            self.assertEqual(data["a"], 1)
+
+    def test_write_json_indent_param(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Path(tmp) / "x.json"
+            atomic_write_json(p, {"k": "v"}, indent=4)
+            self.assertIn('\n    "k"', p.read_text(encoding="utf-8"))
+
+
+class TestRepoRoot(unittest.TestCase):
+    def test_find_repo_root_walks_up_to_git(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / ".git").mkdir()
+            deep = root / "packages" / "x" / "lib"
+            deep.mkdir(parents=True)
+            self.assertEqual(find_repo_root(deep), root)
+
+    def test_find_repo_root_none_when_absent(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertIsNone(find_repo_root(Path(tmp)))
+
+    def test_find_monorepo_root_by_marker(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "core").mkdir()
+            (root / "packages").mkdir()
+            deep = root / "packages" / "maind"
+            deep.mkdir()
+            self.assertEqual(find_monorepo_root(deep), root)
+
+    def test_find_monorepo_root_none_standalone(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertIsNone(find_monorepo_root(Path(tmp) / "lonely"))
 
 
 if __name__ == "__main__":

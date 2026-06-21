@@ -12,6 +12,8 @@ import shutil
 import subprocess
 import sys
 
+from core import atomic_write_text
+
 from .common import apply_permissions, die, parse_flags, warn
 from .config import autodetect, load_config, resolve_target
 from .connect import do_connect
@@ -76,11 +78,9 @@ def _write_json(path, data, dry):
     if dry:
         print(f"  [dry-run] записал бы {path}")
         return
-    path.parent.mkdir(parents=True, exist_ok=True)
     if path.exists():
         shutil.copy2(path, f"{path}.bak")
-    path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n",
-                    encoding="utf-8")
+    atomic_write_text(path, json.dumps(data, ensure_ascii=False, indent=2) + "\n")
     print(f"  записано: {path}")
 
 
@@ -88,10 +88,9 @@ def _write_text(path, text, dry):
     if dry:
         print(f"  [dry-run] записал бы {path} ({text!r})")
         return
-    path.parent.mkdir(parents=True, exist_ok=True)
     if path.exists():
         shutil.copy2(path, f"{path}.bak")
-    path.write_text(text, encoding="utf-8")
+    atomic_write_text(path, text)
     print(f"  записано: {path}")
 
 

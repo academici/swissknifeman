@@ -1,4 +1,5 @@
 """Юнит-тесты common.py: Env, parse_args, now_iso, atomic JSON, sanitize."""
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -90,6 +91,21 @@ class TestSanitize(unittest.TestCase):
         self.assertEqual(sanitize("Hello World"), "hello-world")
         self.assertEqual(sanitize("A__B  C"), "a-b-c")
         self.assertEqual(sanitize("Weird!@#Name"), "weirdname")
+
+
+class TestEnvOverrides(unittest.TestCase):
+    def test_memory_config_default(self):
+        env = Env("/srv/maind", home="/h")
+        self.assertEqual(env.memory_config,
+                         Path("/srv/maind/config/memory/iii-config.yaml"))
+
+    def test_memory_config_env_override(self):
+        env = Env("/srv/maind", home="/h")
+        os.environ["MAIND_III_CONFIG"] = "/custom/iii.yaml"
+        try:
+            self.assertEqual(env.memory_config, Path("/custom/iii.yaml"))
+        finally:
+            del os.environ["MAIND_III_CONFIG"]
 
 
 if __name__ == "__main__":

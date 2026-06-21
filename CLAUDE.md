@@ -40,11 +40,15 @@ maind <cmd>                # хаб: memory, graph, onboard, deploy, sync, healt
 
 ## Общий пакет `core`
 
-Только **дословные дубли**, исторически копировавшиеся между пакетами: `core.term` (die/warn/
-now_iso/confirm), `core.text` (sanitize), `core.env` (BaseEnv — ядро root/cmd/home). `Env` каждого
-пакета наследует `BaseEnv`, импорт — `from core import ...`. Подключается через PYTHONPATH (без
-pip): лаунчеры/`test.sh`/`validate.sh` добавляют **корень монорепо** (где лежит `core/`)
-опционально (fallback на standalone-раскладку пакета). stdlib-only.
+**Дословные дубли** + **примитивы, которые оба пакета успели скопировать независимо** (сведены
+к одному источнику истины): `core.term` (die/warn/now_iso/confirm), `core.text` (sanitize),
+`core.env` (BaseEnv — ядро root/cmd/home), `core.io` (atomic_write_text/json — атомарная запись
+tmp+`os.replace`), `core.repo` (find_repo_root/find_monorepo_root — единый поиск корня вместо
+расходившихся копий). `Env` каждого пакета наследует `BaseEnv`, импорт — `from core import ...`.
+Подключается через PYTHONPATH (без pip): лаунчеры/`test.sh`/`validate.sh` добавляют **корень
+монорепо** (где лежит `core/`) опционально (fallback на standalone-раскладку пакета). stdlib-only.
+Bash-лаунчеры и heredoc в `validate.sh` определяют корень своим способом (фикс. `../..` / поиск
+`.git`) — осознанный дубль: `core` ещё не на PYTHONPATH в момент их работы.
 
 ## Единый marketplace
 

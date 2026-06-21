@@ -62,7 +62,7 @@ def write_config(env, config):
 
 def brain_path(config):
     """Где искать brain .projects.json: integrations.brain.path → vault проекта brain
-    → дефолт ~/Vaults/Brain."""
+    → env `MAIND_BRAIN_VAULT` → дефолт ~/Vaults/Brain."""
     integ = (config.get("integrations") or {}).get("brain") or {}
     p = integ.get("path") or integ.get("local_path")
     if p:
@@ -70,7 +70,7 @@ def brain_path(config):
     for proj in config.get("projects") or []:
         if proj.get("id") == "brain" and proj.get("vault_path"):
             return proj["vault_path"]
-    return os.path.expanduser("~/Vaults/Brain")
+    return os.path.expanduser(os.environ.get("MAIND_BRAIN_VAULT") or "~/Vaults/Brain")
 
 
 # ── CLI ─────────────────────────────────────────────────────────────────────

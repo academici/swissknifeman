@@ -1,7 +1,0 @@
-{
-  "name": "skm",
-  "version": "0.3.0",
-  "description": "swissknifeman — управление скиллами проекта: бакеты (connect/vendor), визард integrate, статус, диагностика. Тонкое лицо над CLI.",
-  "author": { "name": "Dmitry Vostrikov", "email": "dv.vostrikov@gmail.com" },
-  "commands": "commands/"
-}

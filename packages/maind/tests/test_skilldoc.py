@@ -1,0 +1,76 @@
+"""Тесты skilldoc.py: провиженер управляемого скилла ecosystem-mcp в проекты."""
+import shutil
+import tempfile
+import unittest
+from pathlib import Path
+
+from maind import skilldoc
+from maind.config import load_config
+from tests.fixtures import make_repo, write_maind_config
+
+_TEMPLATES = Path(__file__).resolve().parents[1] / "templates"
+_SKILL = Path(".claude") / "skills" / "ecosystem-mcp" / "SKILL.md"
+
+
+def _setup(tmp):
+    root, env = make_repo(tmp)
+    shutil.copytree(_TEMPLATES, root / "templates")  # шаблоны доступны в env.root
+    proj = Path(tmp) / "flexcrm"
+    proj.mkdir(parents=True, exist_ok=True)
+    projects = [{"id": "flexcrm", "name": "FlexCRM", "type": "php-package",
+                 "status": "active", "enabled": True, "local_path": str(proj),
+                 "memory_scope": "project:flexcrm", "namespaces": ["axioma"]}]
+    write_maind_config(root, graph={"adapter": "federation"}, projects=projects)
+    config, _ = load_config(env)
+    return env, config, config["projects"][0], proj
+
+
+class TestEcosystemSkill(unittest.TestCase):
+    def test_install_then_idempotent(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj, pdir = _setup(tmp)
+            r1 = skilldoc.apply_ecosystem_skill(env, config, proj, "auto", dry=False)
+            self.assertEqual(r1["state"], "absent")
+            self.assertTrue(r1["changed"])
+            text = (pdir / _SKILL).read_text(encoding="utf-8")
+            self.assertIn("name: ecosystem-mcp", text)
+            self.assertIn("flexcrm", text)            # {{PROJECT}}
+            self.assertIn("project:flexcrm", text)    # {{SCOPE}}
+            self.assertIn("axioma", text)             # {{NAMESPACES}}
+            self.assertNotIn("{{", text)              # все плейсхолдеры подставлены
+            r2 = skilldoc.apply_ecosystem_skill(env, config, proj, "auto", dry=False)
+            self.assertEqual(r2["state"], "fresh")
+            self.assertFalse(r2["changed"])
+
+    def test_install_skips_stale_update_applies(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj, pdir = _setup(tmp)
+            skilldoc.apply_ecosystem_skill(env, config, proj, "auto", dry=False)
+            target = pdir / _SKILL
+            target.write_text(target.read_text() + "\nдрейф\n", encoding="utf-8")
+            r = skilldoc.apply_ecosystem_skill(env, config, proj, "install", dry=False)
+            self.assertEqual(r["state"], "stale")
+            self.assertFalse(r["changed"])            # install не обновляет устаревшее
+            r2 = skilldoc.apply_ecosystem_skill(env, config, proj, "update", dry=False)
+            self.assertTrue(r2["changed"])            # update — обновляет
+            self.assertNotIn("дрейф", target.read_text())
+
+    def test_dry_run_does_not_write(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj, pdir = _setup(tmp)
+            r = skilldoc.apply_ecosystem_skill(env, config, proj, "auto", dry=True)
+            self.assertEqual(r["status"], "dry")
+            self.assertFalse((pdir / _SKILL).exists())
+
+    def test_no_path(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj, _ = _setup(tmp)
+            proj = dict(proj)
+            proj.pop("local_path")
+            r = skilldoc.apply_ecosystem_skill(env, config, proj, "auto", dry=False)
+            self.assertEqual(r["state"], "absent")
+            self.assertFalse(r["changed"])
+
+
+if __name__ == "__main__":
+    unittest.main()

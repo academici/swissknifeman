@@ -1,0 +1,142 @@
+{
+  "_version": "1",
+  "_comment": "Главный конфиг узла mAInd. Скопируй в .maind.json и поправь под себя. Надмножество .projects.json из brain — поля projects[].{id,name,repo,local_path,type} совместимы с brain, остальное — расширения maind.",
+
+  "_comment_node": "Идентификация узла. role: primary | secondary | mirror.",
+  "node": {
+    "id": "hub",
+    "name": "Academici Hub",
+    "role": "primary",
+    "description": "Central knowledge and agent hub"
+  },
+
+  "_comment_memory": "agent-memory демон. Порты можно переопределить через .env (AGENTMEMORY_PORT/AGENTMEMORY_STREAM_PORT) — env приоритетнее этих значений.",
+  "memory": {
+    "enabled": true,
+    "config_path": "config/memory/iii-config.yaml",
+    "http_port": 4111,
+    "stream_port": 4112,
+    "data_dir": "./data"
+  },
+
+  "_comment_graph": "Граф связей (топология между проектами). adapter: federation (по умолчанию, единственная раскладка — граф на проект в data/graphs/<id>.db + тонкий _index.db; связи derive'ятся из composer/Brain/.maind.graph.json/skills-lock) | disabled. Устаревшие memory/graphify/networkx принимаются с предупреждением и нормализуются в federation. store_layout: hub (графы в data/graphs/) | project-local (через projects[].graph_store=local — граф в самом репо проекта). graphify — отдельный MCP-слой над КОДОМ проекта (deploy --with-graphify), не адаптер этого графа.",
+  "graph": {
+    "enabled": true,
+    "adapter": "federation",
+    "store_layout": "hub"
+  },
+
+  "_comment_code_graph": "Граф КОДА внутри проекта (отдельный per-project MCP, движок Serena через uvx). ПОЛИТИКА ЗДЕСЬ, не в коде — правь под себя. Включается на проект полем projects[].code:true (legacy-alias graphify:true). ignores — что НЕ индексировать (сторонние + симлинкнутые first-party пакеты графятся как свои проекты). workspace_ignores — для проекта, что разрабатывается ВМЕСТЕ с пакетами под packages/* (монорепо/консьюмер): packages НЕ игнорим (единый граф), но режем vendor и вложенные **/vendor; режим включается авто при наличии packages/ или явно projects[].code_workspace. pre_index — фоновая прогрев-индексация при включении. feature_log_hook — SessionEnd-хук фиксации коммитов в общую память. Движок переопределяется на проект: code_command/code_args({root})/code_server_name.",
+  "code_graph": {
+    "enabled_default": false,
+    "engine": "serena",
+    "command": "uvx",
+    "args": ["--from", "git+https://github.com/oraios/serena", "serena", "start-mcp-server", "--context", "ide-assistant", "--project", "{root}", "--enable-web-dashboard", "false"],
+    "index_args": ["--from", "git+https://github.com/oraios/serena", "serena", "project", "index", "{root}"],
+    "server_name": "serena",
+    "language_by_type": { "php-package": "php", "node-package": "typescript" },
+    "ignores": ["vendor", "node_modules", "packages", "storage", "bootstrap/cache", "public/build", "dist", ".git"],
+    "workspace_ignores": ["vendor", "node_modules", "**/vendor", "**/node_modules", "storage", "bootstrap/cache", "public/build", "dist", ".git"],
+    "pre_index": true,
+    "feature_log_hook": true,
+    "embed": null
+  },
+
+  "_comment_agents": "Реестр агентов узла. definitions — дескрипторы агентов, которые крутятся здесь.",
+  "agents": {
+    "registry_enabled": true,
+    "heartbeat_interval_ms": 30000,
+    "max_idle_ms": 300000,
+    "definitions": [
+      {
+        "id": "vault-architect",
+        "description": "Senior architect for the brain vault",
+        "skills": ["architect", "oss-dev"],
+        "memory_scope": "project:brain",
+        "autostart": false
+      }
+    ]
+  },
+
+  "_comment_namespaces": "Необязательный реестр namespace-групп (id → {name, description}). Изоляция межпроектных связей: ребро A↔B в графе строится, только если A и B делят хотя бы один namespace (поле projects[].namespaces). Реестр нужен лишь для метаданных и подсказок на опечатки — членство задаётся в проектах. Нет реестра → namespace свободны.",
+  "namespaces": {
+    "axioma": { "name": "Axioma", "description": "Продукты и пакеты линейки Axioma" },
+    "flexcrm": { "name": "FlexCRM", "description": "Продуктовая группа FlexCRM" }
+  },
+
+  "_comment_projects": "Проекты экосистемы. Минимум для совместимости с brain: id, name, repo, local_path, type. Остальные поля — расширения maind. namespaces: список групп проекта — связи изолируются группой; нет/пусто → неявный 'default' (всё связано, как раньше); ['*'] → общая инфраструктура, связывается со ВСЕМИ namespace. Доп. опции федерации: graph_store=local (граф проекта в <local_path>/.maind/graph.db, а не на хабе); vault_path — для derive doc-связей из Brain frontmatter; межпроектные связи, не выводимые из кода/доков, объявляй в <local_path>/.maind.graph.json: {\"links\":[{\"to\":\"getchat\",\"type\":\"relates_to\",\"plane\":\"runtime\",\"note\":\"REST\"}]}.",
+  "projects": [
+    {
+      "id": "brain",
+      "name": "Brain",
+      "repo": "academici/brain",
+      "local_path": "~/Vaults/Brain",
+      "type": "obsidian-vault",
+      "memory_scope": "project:brain",
+      "agents": ["vault-architect"],
+      "tags": ["primary", "docs"],
+      "namespaces": ["*"],
+      "status": "active",
+      "dependencies": ["maind"]
+    },
+    {
+      "id": "swissknifeman",
+      "name": "SwissKnifeMan",
+      "repo": "academici/swissknifeman",
+      "local_path": "~/projects/packages/swissknifeman",
+      "type": "node-package",
+      "memory_scope": "project:swissknifeman",
+      "agents": [],
+      "tags": ["package", "skills"],
+      "namespaces": ["*"],
+      "status": "active",
+      "dependencies": ["maind"]
+    },
+    {
+      "id": "maind",
+      "name": "mAInd",
+      "repo": "academici/maind",
+      "local_path": "~/projects/packages/maind",
+      "type": "python-package",
+      "memory_scope": "project:maind",
+      "agents": [],
+      "tags": ["hub", "memory", "graph"],
+      "namespaces": ["*"],
+      "status": "active",
+      "dependencies": []
+    }
+  ],
+
+  "_comment_integrations": "Связи со смежными проектами. sync_direction: import | export | bidirectional.",
+  "integrations": {
+    "swissknifeman": {
+      "enabled": true,
+      "skills_sync": true
+    },
+    "brain": {
+      "enabled": true,
+      "projects_sync": true,
+      "sync_direction": "import"
+    }
+  },
+
+  "_comment_mcp": "MCP-серверы, к которым подключается узел (и которые он публикует).",
+  "mcp": {
+    "servers": [
+      {
+        "name": "agentmemory",
+        "transport": "http",
+        "url": "http://127.0.0.1:4111/mcp",
+        "enabled": true
+      }
+    ]
+  },
+
+  "_comment_observability": "log_level: debug | info | warn | error.",
+  "observability": {
+    "service_name": "maind",
+    "log_level": "info",
+    "metrics_enabled": true,
+    "traces_enabled": false
+  }
+}

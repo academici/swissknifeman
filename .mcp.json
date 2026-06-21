@@ -1,7 +1,7 @@
 {
   "mcpServers": {
     "agentmemory": {
-      "command": "/home/vostrikov/projects/packages/maind/node_modules/.bin/agentmemory",
+      "command": "/home/vostrikov/projects/packages/swissknifeman/packages/maind/node_modules/.bin/agentmemory",
       "args": [
         "mcp"
       ],
@@ -11,7 +11,7 @@
       }
     },
     "maind": {
-      "command": "/home/vostrikov/projects/packages/maind/bin/maind",
+      "command": "/home/vostrikov/projects/packages/swissknifeman/packages/maind/bin/maind",
       "args": [
         "mcp",
         "--scope",

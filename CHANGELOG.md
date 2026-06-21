@@ -4,6 +4,102 @@
 
 ### Changed
 
+- **Плагин maind 0.2.0 → 0.2.1.** Bump версии, чтобы Claude Code перекэшировал плагин со
+  свежим кодом (исправленный `.mcp.json` → `maind` из PATH, `from core`); кэш по прежней
+  версии не перестраивался. `package.json` синхронизирован.
+
+### Removed
+
+- **Убрана консоль-обёртка `bin/academici`.** Зонтичный роутер `academici maind/skm <cmd>`
+  удалён — остаются два независимых CLI в PATH (`swissknifeman`, `maind`). Зонтичный
+  `install.sh` теперь только делегирует установку пакетным `install.sh`; CLAUDE.md/README
+  описывают два CLI без обёртки. (Имя экосистемы «academici» как бренд сохранено.)
+
+### Changed
+
+- **Общий core: `academici_core` → пакет `core`.** Убрано слово `academici` из путей/имён.
+  Каталог `core/` сам стал python-пакетом (`core/__init__.py`, `core/env.py`, …); импорт
+  `from core import ...`. PYTHONPATH теперь указывает на корень монорепо (где лежит `core/`),
+  а не на сам `core/` — обновлены лаунчеры, `test.sh`, `validate.sh` обоих пакетов и
+  real-spawn тест maind (`CORE_DIR` → `MONOREPO_ROOT`).
+
+### Fixed
+
+- **Валидный формат `plugin.json` для установки из marketplace.** Текущий Claude Code
+  ужесточил схему — старый формат не ставился (`commands: Invalid input,
+  mcpServers: Invalid input`): `commands` теперь массив путей (`["./commands"]`),
+  `mcpServers` — путь с `./` (`"./.mcp.json"`). Битый YAML-frontmatter команд (`description`
+  с двоеточием `academici: …` парсился как вложенный ключ) обёрнут в кавычки. Затронуты оба
+  командных плагина (maind, skm) — проходят `claude plugin validate`. Тест `test_plugin.py`
+  ловит эти дефекты до установки.
+
+### Changed
+
+- **Монорепо academici: верификация + массовый re-deploy потребителей (этап 7).** MCP-конфиги
+  проектов перенацелены на новый путь хаба: `maind deploy` прогнан по 15 проектам реестра —
+  14 обновлены (corex/azguard/edufy/memster/vintera/… → `packages/swissknifeman/packages/maind/`),
+  1 пропущен (agelto: предсуществующий битый `.cursor/mcp.json` с дублем JSON — не трогаем).
+  `swissknifeman update --all` обновил скиллы потребителей. Проверка `maind health` на проекте:
+  статус `connected`. Доделаны хвосты этапа 4: тест `test_plugin.py` и `validate.sh` maind
+  больше не требуют собственный marketplace.json пакета (он в корне репо).
+
+### Added
+
+- **Монорепо academici: зонтичная навигация (этап 6).** Корневой `CLAUDE.md` (карта
+  монорепо: пакеты, консоль, core, marketplace) и корневой `README.md` зонтика. README
+  swissknifeman перенесён в `packages/swissknifeman/README.md`. `docs:*`-скрипты
+  swissknifeman нацелены на корневой `docs/` (`../../docs`). docs/ пакетов и два VitePress
+  оставлены на местах (полное слияние сайтов — отдельная задача).
+
+- **Монорепо academici: единая консоль `bin/academici` + зонтичный `install.sh` (этап 5).**
+  `academici` — тонкий bash-роутер: `academici maind <cmd>` / `academici skm <cmd>` →
+  под-бинарник пакета; уникальные команды авто-роутятся без префикса; конфликтные имена
+  (`status`/`doctor`) дают сводку по обоим пакетам, `sync` требует домен. Под-бинарники
+  `maind`/`swissknifeman` остаются самостоятельными (не ломаем `.mcp.json` и мышечную память).
+  Зонтичный `install.sh` ставит `academici` и делегирует установку пакетных CLI их
+  собственным `install.sh` (с пакетной пост-настройкой). Все три симлинка указывают в монорепо.
+
+### Changed
+
+- **Монорепо academici: единый marketplace + плагин maind под зонтиком (этап 4).** Корневой
+  `.claude-plugin/marketplace.json` теперь объявляет 19 плагинов — 18 swissknifeman
+  (бакеты + generate-skill + skm) и `maind` (`source: ./packages/maind`). Генератор
+  `registry.py` сканирует соседние пакеты `packages/<name>/.claude-plugin/plugin.json`
+  (источник истины — их манифест) и добавляет их в marketplace; `validate.sh` учитывает
+  sibling-плагины в match-проверке. Собственный `packages/maind/.claude-plugin/marketplace.json`
+  удалён (его роль берёт корневой). Плагин maind (`commands/` + `.mcp.json` с
+  `${CLAUDE_PLUGIN_ROOT}`) переносим без правок. Миграция кэша Claude Code
+  (`maind@maind` → `maind@swissknifeman`) — вручную в панели `/plugin`.
+
+- **Монорепо academici: общий `core/academici_core` (этап 3).** Дословные дубли,
+  исторически копировавшиеся между swissknifeman/maind/brain байт-в-байт, вынесены в
+  общий stdlib-only пакет: `die/warn/now_iso/confirm` (`term`), `sanitize` (`text`),
+  базовый `BaseEnv` (ядро root/cmd/home + `__post_init__`, `env`). `Env` каждого пакета
+  теперь наследует `BaseEnv` и добавляет только свои path-property. Подключение — через
+  PYTHONPATH (без pip): лаунчеры, `test.sh`, `validate.sh` добавляют `<repo>/core`
+  (опционально — fallback на standalone-раскладку). `parse_args`/`parse_flags`, atomic
+  JSON, HTTP, frontmatter, managed-block остаются в `common.py` пакетов (расходятся по
+  контракту — не дословны). 5 smoke-тестов core; 113 (skm) + 235 (maind) зелёные.
+
+- **Монорепо academici: maind внесён в `packages/maind/` (через `git subtree`, история
+  сохранена).** Хаб памяти/графа теперь живёт под зонтиком рядом с реестром скиллов.
+  `node_modules` (демон `@agentmemory/agentmemory`) переустановлен в новом месте (`npm ci`);
+  systemd unit `maind-memory.service` перегенерён на новый путь (`maind service install`),
+  демон памяти жив (порты 4111/4112). `.maind.json` (конфиг узла, `0600`) перенесён в пакет.
+  `orchestrate.py`: путь к лаунчеру swissknifeman обновлён на `packages/swissknifeman/bin/...`
+  (local_path остаётся корнем репо). `maind doctor` и 235 тестов зелёные из нового места.
+  Re-deploy `.mcp.json` потребителей (≈18 проектов держат старый абсолютный путь) — этап 7.
+- **Монорепо academici: переезд в `packages/swissknifeman/`.** Репозиторий становится
+  зонтиком экосистемы — содержимое реестра (`lib/`, `bin/`, `skills/`, `skm/`,
+  `generate-skill/`, `scripts/`, `configs/`, `buckets.json` …) переехало в
+  `packages/swissknifeman/`; в корне остаются зонтичные артефакты (`.claude-plugin/`,
+  `docs/`, `README`, `LICENSE`, `CHANGELOG`). Один `marketplace.json` в корне репо теперь
+  объявляет плагины с `source: ./packages/swissknifeman/...` (генератор `registry.py`
+  разводит корень-пакета vs корень-репо через поиск `.git`; `validate.sh` и
+  `generate-graph.sh` адаптированы). `bin/swissknifeman` больше не требует marketplace.json
+  в корне пакета. Симлинк переустанавливается `install.sh` из нового пути. Готовит почву
+  для пакета `packages/maind/` под тем же зонтиком.
+
 - **Ревью внешнего аудита: дизамбигуация overlap-кластеров + CI security-гейты.**
   По разбору `Audit.md` (вердикт — `docs/research/audit-2026-06-review.md`): из
   всех рекомендаций реальны 3 (остальное — already-done/дубли/вне scope/против

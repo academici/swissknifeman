@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+# swissknifeman — CLI реестра скиллов. Устанавливается симлинком в ~/.local/bin
+# (./install.sh); путь к реестру выводится из readlink -f самого файла.
+#
+# Тонкий лаунчер: проверяет окружение и передаёт управление пакету
+# lib/swissknifeman (python3 -m swissknifeman). Вся логика — в lib/, что
+# делает её импортируемой и тестируемой (см. tests/, scripts/test.sh).
+#
+# Команды (запускаются из потребляющего проекта, корень ищется вверх от CWD):
+#   connect   подключить проект через plugin marketplace Claude Code
+#   vendor    вендорить скиллы в проект (Cursor и другие агенты)
+#   integrate визард интеграции: чеклист по всему функционалу (скиллы/хуки/память/hub)
+#   update    обновить подключение/вендоринг текущего проекта (--all: все)
+#   sync      vendor-режим: применить .swissknifeman/config.json (физ. перенос + lock)
+#   lock      обновить skills-lock.json проекта (карта внешних скиллов: skm + boost)
+#   status    отчёт по текущему проекту (read-only)
+#   list      зарегистрированные проекты (~/.swissknifeman/projects.json)
+#   topology  карта локальной среды (init|show) — ~/.swissknifeman/topology.json
+#
+# Команды мейнтейнера (работают с самим реестром):
+#   registry  регенерировать skills.json + плагин-манифесты + граф
+#   validate  scripts/validate.sh
+#   doctor    диагностика окружения
+#   version   версия (git SHA) и путь к реестру
+set -euo pipefail
+
+SELF="$(readlink -f "${BASH_SOURCE[0]}")"
+# Корень ПАКЕТА (packages/swissknifeman): здесь skills/, lib/, scripts/, buckets.json.
+REPO_ROOT="$(cd "$(dirname "$SELF")/.." && pwd)"
+
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "ERROR: swissknifeman требует python3 (apt install python3 / brew install python3)" >&2
+  exit 1
+fi
+if [[ ! -d "$REPO_ROOT/skills" || ! -d "$REPO_ROOT/lib/swissknifeman" ]]; then
+  echo "ERROR: реестр swissknifeman не найден в $REPO_ROOT" >&2
+  echo "Если репозиторий переехал — перезапустите install.sh из нового расположения." >&2
+  exit 1
+fi
+
+usage() {
+  grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '8,22p'
+}
+
+CMD="${1:-help}"
+[[ $# -gt 0 ]] && shift
+
+case "$CMD" in
+  -h|--help|help) usage; exit 0 ;;
+  validate) exec "$REPO_ROOT/scripts/validate.sh" "$@" ;;
+  version)
+    sha="$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
+    echo "swissknifeman $sha ($REPO_ROOT)"
+    exit 0 ;;
+  connect|vendor|integrate|update|sync|lock|status|list|registry|doctor|topology) ;;
+  *) echo "Неизвестная команда: $CMD" >&2; usage >&2; exit 1 ;;
+esac
+
+# Корень монорепо (на два уровня выше пакета) даёт пакет `core` (общий фундамент).
+# Fallback на standalone-раскладку: если каталога core рядом нет — путь не добавляется.
+MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
+[ -d "$MONOREPO_ROOT/core" ] || MONOREPO_ROOT=""
+exec env PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}${PYTHONPATH:+:$PYTHONPATH}" \
+  python3 -m swissknifeman "$REPO_ROOT" "$CMD" "$@"

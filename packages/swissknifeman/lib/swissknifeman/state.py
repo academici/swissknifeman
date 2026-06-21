@@ -1,8 +1,9 @@
 """~/.swissknifeman/projects.json и git-состояние реестра."""
 import json
-import os
 import subprocess
 from datetime import date
+
+from core import atomic_write_text
 
 from .common import DB_VERSION, die, now_iso, warn
 
@@ -27,12 +28,8 @@ def load_db(env):
 
 
 def save_db(env, db):
-    env.state_dir.mkdir(parents=True, exist_ok=True)
-    db_file = env.db_file
-    tmp = db_file.with_suffix(".json.tmp")
-    tmp.write_text(json.dumps(db, indent=2, ensure_ascii=False) + "\n",
-                   encoding="utf-8")
-    os.replace(tmp, db_file)
+    atomic_write_text(env.db_file,
+                      json.dumps(db, indent=2, ensure_ascii=False) + "\n")
 
 
 def upsert_project(env, record):

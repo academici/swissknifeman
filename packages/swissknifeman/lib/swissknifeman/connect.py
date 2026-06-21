@@ -3,6 +3,8 @@ import json
 import os
 import shutil
 
+from core import atomic_write_text
+
 from .common import (AGENT_DEFAULTS, MANIFEST, MARKETPLACE, apply_permissions,
                      die, parse_flags)
 from .config import (CORE_BUCKETS, all_buckets, load_config, resolve_selection,
@@ -96,12 +98,11 @@ def do_connect(env, target, opts, register=True, fix_path_drift=False):
         print(f"--- dry-run: {dest} ---")
         print(json.dumps(settings, ensure_ascii=False, indent=2))
     else:
-        dest.parent.mkdir(parents=True, exist_ok=True)
         if dest.exists():
             shutil.copy2(dest, f"{dest}.bak")
             print(f"Бэкап:    {dest}.bak")
-        dest.write_text(json.dumps(settings, ensure_ascii=False, indent=2) + "\n",
-                        encoding="utf-8")
+        atomic_write_text(dest,
+                          json.dumps(settings, ensure_ascii=False, indent=2) + "\n")
         print(f"Записано: {dest}")
 
     if added:

@@ -14,7 +14,7 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from .common import warn
+from .common import atomic_write_text, warn
 from .constants import CODE_GRAPH_DEFAULTS
 
 SERENA_CONFIG = Path(".serena") / "project.yml"
@@ -134,8 +134,7 @@ def apply_serena_config(env, config, project, mode, dry):
     content = render_project_yaml(pid, _infer_language(project, path, st),
                                   ignores, prompt, gitignore=not ws)
     if not dry:
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(content, encoding="utf-8")
+        atomic_write_text(target, content)
         _maybe_pre_index(st, project, path)
     return {"provisioner": "code-graph", "id": pid,
             "status": "dry" if dry else "ok", "changed": not dry,

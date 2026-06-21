@@ -12,8 +12,8 @@ import os
 import stat
 from pathlib import Path
 
-from .common import (atomic_write_json, backup_file, content_hash, die, parse_args,
-                     upsert_block, warn)
+from .common import (atomic_write_json, atomic_write_text, backup_file,
+                     content_hash, die, parse_args, upsert_block, warn)
 from .config import load_config
 from .memory import health as mem_health
 from .memory import resolve_ports
@@ -122,7 +122,7 @@ def apply_health_doc(env, config, project, mode, dry):
     if not dry:
         if claude.is_file():
             backup_file(claude)
-        claude.write_text(new_text, encoding="utf-8")
+        atomic_write_text(claude, new_text)
     return _result(pid, "health-doc", state, True, dry, "CLAUDE.md")
 
 
@@ -174,7 +174,7 @@ def apply_health_hook(env, config, project, mode, dry):
         script_path.parent.mkdir(parents=True, exist_ok=True)
         if script_path.is_file():
             backup_file(script_path)
-        script_path.write_text(script, encoding="utf-8")
+        atomic_write_text(script_path, script)
         script_path.chmod(script_path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP)
         merged, changed = _merge_session_hook(settings, command)
         if changed:
@@ -211,7 +211,7 @@ def apply_feature_log_hook(env, config, project, mode, dry):
         script_path.parent.mkdir(parents=True, exist_ok=True)
         if script_path.is_file():
             backup_file(script_path)
-        script_path.write_text(script, encoding="utf-8")
+        atomic_write_text(script_path, script)
         script_path.chmod(script_path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP)
         merged, changed = _merge_session_hook(settings, command, event="SessionEnd",
                                               marker="maind-feature-log")

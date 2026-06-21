@@ -2,6 +2,8 @@
 import json
 import sys
 
+from core import atomic_write_text
+
 
 def sync_boost_json(target, skill_names, dry_run=False):
     """Если в target есть boost.json — идемпотентно дозаписать вендоренные
@@ -27,8 +29,8 @@ def sync_boost_json(target, skill_names, dry_run=False):
         print(f"[dry-run] boost.json: добавил бы в skills[]: {', '.join(added)}")
         return True
     data["skills"] = existing + sorted(added)
-    boost_file.write_text(json.dumps(data, indent=4, ensure_ascii=False) + "\n",
-                          encoding="utf-8")
+    atomic_write_text(boost_file,
+                      json.dumps(data, indent=4, ensure_ascii=False) + "\n")
     print(f"boost.json: добавлено в skills[] ({len(added)}): {', '.join(added)}")
     print("Обнаружен Laravel Boost: выполните `php artisan boost:update` "
           "(или `composer ai:sync`), чтобы скиллы попали в CLAUDE.md/AGENTS.md "

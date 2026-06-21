@@ -12,6 +12,8 @@ from pathlib import Path
 
 root = Path(sys.argv[1])  # корень пакета (skills/, lib/, buckets.json)
 # marketplace.json — в корне монорепо; source-пути плагинов относительны корня репо.
+# (Канон — core.repo.find_repo_root; здесь самодостаточный дубль: heredoc гоняется
+#  до установки PYTHONPATH на core — осознанно не импортируем.)
 def _repo_root(p):
     for cand in (p, *p.parents):
         if (cand / ".git").exists():

@@ -1,9 +1,10 @@
 """Тесты projects.py: синк из brain (маппинг, идемпотентность, сохранение полей)."""
+import os
 import tempfile
 import unittest
 
 from maind.config import load_config
-from maind.projects import get, listing, sync_from_brain, write_config
+from maind.projects import brain_path, get, listing, sync_from_brain, write_config
 from tests.fixtures import make_repo, write_brain_projects, write_maind_config
 
 
@@ -39,6 +40,26 @@ class TestSync(unittest.TestCase):
             self.assertEqual(source2, "config.json")  # .maind.json приоритетнее
             self.assertTrue(get(cfg2, "brain"))
             self.assertEqual(len(listing(env, cfg2)), 2)
+
+
+class TestBrainPath(unittest.TestCase):
+    def test_config_path_wins_over_env(self):
+        os.environ["MAIND_BRAIN_VAULT"] = "/env/vault"
+        try:
+            cfg = {"integrations": {"brain": {"path": "/cfg/vault"}}}
+            self.assertEqual(brain_path(cfg), "/cfg/vault")
+        finally:
+            del os.environ["MAIND_BRAIN_VAULT"]
+
+    def test_env_override_before_default(self):
+        os.environ["MAIND_BRAIN_VAULT"] = "/env/vault"
+        try:
+            self.assertEqual(brain_path({}), "/env/vault")
+        finally:
+            del os.environ["MAIND_BRAIN_VAULT"]
+
+    def test_default_fallback(self):
+        self.assertEqual(brain_path({}), os.path.expanduser("~/Vaults/Brain"))
 
 
 if __name__ == "__main__":

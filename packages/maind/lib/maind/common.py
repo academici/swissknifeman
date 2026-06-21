@@ -18,7 +18,8 @@ from pathlib import Path
 # Общий core (подключается через PYTHONPATH лаунчером/test.sh). Реэкспорт для
 # модулей пакета, которые исторически берут эти имена из .common.
 from core import (  # noqa: F401
-    HOME, BaseEnv, confirm, die, now_iso, sanitize, warn,
+    HOME, BaseEnv, atomic_write_json, atomic_write_text, confirm, die,
+    find_monorepo_root, now_iso, sanitize, warn,
 )
 
 DB_VERSION = 1
@@ -62,16 +63,19 @@ class Env(BaseEnv):
     # ── конфигурация узла ──────────────────────────────────────────────────
     @property
     def memory_config(self):
+        """Конфиг agent-memory демона. Env `MAIND_III_CONFIG` переопределяет путь
+        (по образцу `MAIND_SKM_BIN`/`MAIND_BRAIN_BIN` в orchestrate); иначе —
+        `config/memory/iii-config.yaml` в пакете."""
+        override = os.environ.get("MAIND_III_CONFIG")
+        if override:
+            return Path(os.path.expanduser(override))
         return self.root / "config" / "memory" / "iii-config.yaml"
 
     @property
     def monorepo_root(self):
-        """Корень монорепо — каталог с `packages/` выше пакета. Конфиг узла
+        """Корень монорепо — каталог с `packages/`/`core/` выше пакета. Конфиг узла
         (`config.json`) общий и лежит здесь. Fallback: сам root (standalone)."""
-        for cand in (self.root, *self.root.parents):
-            if (cand / "packages").is_dir():
-                return cand
-        return self.root
+        return find_monorepo_root(self.root) or self.root
 
     @property
     def default_config(self):
@@ -181,21 +185,7 @@ def upsert_block(text, content, marker):
     return text[:m.start()] + block + text[m.end():], True, "stale"
 
 
-# ── JSON-хранилища (atomic write + устойчивое чтение) ───────────────────────
-def atomic_write_json(path, data, *, version=None):
-    """Пишет JSON атомарно (tmp + os.replace) c финальным '\\n'. Если version задан
-    и data — dict, проставляет data['version']=version первым ключом."""
-    path = Path(path)
-    if version is not None and isinstance(data, dict):
-        rest = {k: v for k, v in data.items() if k != "version"}
-        data = {"version": version, **rest}
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_name(path.name + ".tmp")
-    tmp.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n",
-                   encoding="utf-8")
-    os.replace(tmp, path)
-
-
+# ── JSON-хранилища (atomic write — из core; устойчивое чтение — здесь) ───────
 def load_json_db(path, default):
     """Читает JSON-БД. Битый файл → бэкап .corrupt.<date> + warn + копия default.
     Версия новее DB_VERSION → die. default не мутируется (возвращается deepcopy)."""

@@ -3,6 +3,8 @@ import hashlib
 import json
 import subprocess
 
+from core import atomic_write_text, find_repo_root
+
 from .common import MARKETPLACE, die, parse_flags, parse_frontmatter, parse_inline_list
 
 OWNER = {"name": "Dmitry Vostrikov", "email": "dv.vostrikov@gmail.com"}
@@ -98,13 +100,9 @@ def build_registry(env):
 
 
 def _repo_root(pkg_root):
-    """Корень монорепо (где .git и общий .claude-plugin/marketplace.json) — ищем
-    .git вверх от корня пакета. Fallback: сам pkg_root (standalone-раскладка)."""
-    p = pkg_root
-    for cand in (p, *p.parents):
-        if (cand / ".git").exists():
-            return cand
-    return pkg_root
+    """Корень монорепо (где .git и общий .claude-plugin/marketplace.json) — граница
+    git вверх от корня пакета. Fallback: сам pkg_root (standalone-раскладка)."""
+    return find_repo_root(pkg_root) or pkg_root
 
 
 def write_plugin_manifests(env, bucket_meta, bucket_dirs):
@@ -122,9 +120,7 @@ def write_plugin_manifests(env, bucket_meta, bucket_dirs):
         return f"{prefix}/{sub}" if rel_pkg else f"./{sub}"
 
     def write_json(path, data):
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n",
-                        encoding="utf-8")
+        atomic_write_text(path, json.dumps(data, indent=2, ensure_ascii=False) + "\n")
 
     def skills_dirs(plugin_root):
         """Dirs (relative, ./-prefixed) whose subdirs contain SKILL.md files."""
@@ -268,13 +264,13 @@ def cmd_registry(env, argv):
     root = env.root
     registry, bucket_meta, bucket_dirs = build_registry(env)
 
-    (root / "skills.json").write_text(
-        json.dumps(registry, indent=2, ensure_ascii=False) + "\n")
+    atomic_write_text(root / "skills.json",
+                      json.dumps(registry, indent=2, ensure_ascii=False) + "\n")
     print(f"Updated skills.json: {len(registry['skills'])} skills, "
           f"{len(registry['references'])} references")
 
-    (root / "skills" / "_index.md").write_text(
-        render_index(registry, bucket_meta), encoding="utf-8")
+    atomic_write_text(root / "skills" / "_index.md",
+                      render_index(registry, bucket_meta))
     print("Updated skills/_index.md (tag matrix)")
 
     n_plugins = write_plugin_manifests(env, bucket_meta, bucket_dirs)

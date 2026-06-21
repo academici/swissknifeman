@@ -44,9 +44,8 @@ def apply_ecosystem_skill(env, config, project, mode, dry):
     if not _act(mode, state):
         return _result(pid, "ecosystem-skill", state, False, dry, str(SKILL_PATH))
     if not dry:
-        from .common import backup_file
-        target.parent.mkdir(parents=True, exist_ok=True)
+        from .common import atomic_write_text, backup_file
         if target.is_file():
             backup_file(target)
-        target.write_text(content, encoding="utf-8")
+        atomic_write_text(target, content)
     return _result(pid, "ecosystem-skill", state, True, dry, str(SKILL_PATH))

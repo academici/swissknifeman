@@ -52,7 +52,9 @@ class TestPluginManifest(unittest.TestCase):
 
     def test_mcp_server_points_to_launcher(self):
         srv = _load_json(ROOT / ".mcp.json")["mcpServers"]["maind-hub"]
-        self.assertIn("bin/maind", srv["command"])  # абсолютный путь через ${CLAUDE_PLUGIN_ROOT}
+        # MCP-сервер плагина зовёт `maind` из PATH (полная установка с пакетом core),
+        # а не копию из изолированного кэша плагина (там нет core монорепо).
+        self.assertEqual(srv["command"], "maind")
         self.assertIn("mcp", srv["args"])
 
 

@@ -34,7 +34,7 @@ def _ensure_project(env, config, project_or_path, dry=False):
         return config, proj, False
     path = Path(os.path.expanduser(project_or_path))
     if not path.is_dir():
-        die(f"проект не найден: '{project_or_path}' — ни id в .maind.json, ни каталог")
+        die(f"проект не найден: '{project_or_path}' — ни id в config.json, ни каталог")
     pid = sanitize(path.name)
     proj = {"id": pid, "name": path.name, "local_path": str(path), "repo": None,
             "type": _infer_type(path), "enabled": True,

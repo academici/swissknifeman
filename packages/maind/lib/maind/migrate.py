@@ -1,6 +1,6 @@
 """Миграция в maind: from-brain (.projects.json) и from-agentmemory (.agentmemory).
 
-from-brain   — собирает .maind.json из brain-кэша проектов + материализует граф.
+from-brain   — собирает config.json из brain-кэша проектов + материализует граф.
 from-agentmemory (alias from-skm) — переносит iii-config.yaml в config/memory/
                с service_name: maind. Перенос НЕдеструктивный — источник не трогаем."""
 import re

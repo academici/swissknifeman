@@ -63,7 +63,7 @@ class TestPrecedence(unittest.TestCase):
             write_maind_config(root)
             write_brain_projects(root)  # присутствует, но .maind.json приоритетнее
             cfg, source = load_config(env)
-            self.assertEqual(source, ".maind.json")
+            self.assertEqual(source, "config.json")
             self.assertEqual(cfg["projects"][0]["id"], "alpha")
 
     def test_brain_fallback(self):

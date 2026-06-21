@@ -17,20 +17,24 @@ for f in bin/maind install.sh scripts/*.sh; do
 done
 
 echo "[3/6] JSON конфиги"
-# marketplace.json в монорепо — единый, в корне репо (не в пакете): здесь не проверяем.
-for f in .maind.example.json package.json \
-         .claude-plugin/plugin.json .mcp.json; do
+# marketplace.json (единый) и config.example.json — в корне монорепо, не в пакете.
+for f in package.json .claude-plugin/plugin.json .mcp.json; do
   [[ -f "$f" ]] && { python3 -m json.tool "$f" >/dev/null || err "битый JSON: $f"; }
 done
+# config.example.json — шаблон конфига узла в корне монорепо (на 2 уровня выше).
+CFG_EXAMPLE="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || echo "$REPO_ROOT")/config.example.json"
+[[ -f "$CFG_EXAMPLE" ]] && { python3 -m json.tool "$CFG_EXAMPLE" >/dev/null || err "битый JSON: config.example.json"; }
 
 echo "[4/6] обязательные файлы"
 for f in bin/maind lib/maind/__init__.py lib/maind/cli.py \
-         config/memory/iii-config.yaml .maind.example.json .env.example \
+         config/memory/iii-config.yaml .env.example \
          .claude-plugin/plugin.json .mcp.json \
          commands/maind.md commands/onboard.md commands/sync.md \
          README.md LICENSE; do
   [[ -e "$f" ]] || err "нет файла: $f"
 done
+# config.example.json — обязателен, но в корне монорепо
+[[ -e "$CFG_EXAMPLE" ]] || err "нет файла: config.example.json (корень монорепо)"
 grep -q '^workers:' config/memory/iii-config.yaml || err "iii-config.yaml без workers:"
 
 echo "[5/6] slash-команды (frontmatter)"

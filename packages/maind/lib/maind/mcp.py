@@ -72,7 +72,7 @@ TOOLS = [
      "description": "Список зарегистрированных агентов узла с их состоянием.",
      "inputSchema": {"type": "object", "properties": {}}},
     {"name": "maind_projects_list",
-     "description": "Список проектов экосистемы (из .maind.json или brain).",
+     "description": "Список проектов экосистемы (из config.json или brain).",
      "inputSchema": {"type": "object", "properties": {}}},
     {"name": "maind_projects_status",
      "description": "Состояние экосистемы: хаб (память/граф/демоны) + проекты (подключение, скиллы).",

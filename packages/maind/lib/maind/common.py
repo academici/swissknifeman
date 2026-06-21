@@ -65,12 +65,35 @@ class Env(BaseEnv):
         return self.root / "config" / "memory" / "iii-config.yaml"
 
     @property
+    def monorepo_root(self):
+        """Корень монорепо — каталог с `packages/` выше пакета. Конфиг узла
+        (`config.json`) общий и лежит здесь. Fallback: сам root (standalone)."""
+        for cand in (self.root, *self.root.parents):
+            if (cand / "packages").is_dir():
+                return cand
+        return self.root
+
+    @property
     def default_config(self):
-        return self.root / ".maind.json"
+        """Конфиг узла. Канонически — `config.json` в корне монорепо. Обратная
+        совместимость: если его нет, но есть старый `.maind.json` (в корне или в
+        пакете) — берём его (миграция без поломки существующих установок)."""
+        root_cfg = self.monorepo_root / "config.json"
+        if root_cfg.exists():
+            return root_cfg
+        for legacy in (self.monorepo_root / ".maind.json", self.root / ".maind.json"):
+            if legacy.exists():
+                return legacy
+        return root_cfg  # путь по умолчанию для записи/подсказок — новый
 
     @property
     def example_config(self):
-        return self.root / ".maind.example.json"
+        """Шаблон конфига — `config.example.json` в корне монорепо (с legacy-fallback)."""
+        root_ex = self.monorepo_root / "config.example.json"
+        if root_ex.exists():
+            return root_ex
+        legacy = self.monorepo_root / ".maind.example.json"
+        return legacy if legacy.exists() else root_ex
 
     @property
     def env_file(self):

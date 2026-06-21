@@ -36,7 +36,8 @@ def make_repo(tmp):
 
 
 def write_maind_config(root, **overrides):
-    """Пишет валидный .maind.json в корень узла; overrides сливаются поверх дефолта."""
+    """Пишет валидный config.json в корень узла; overrides сливаются поверх дефолта.
+    (standalone-раскладка теста: нет packages/ рядом → резолвер ждёт config.json в root)."""
     config = {
         "_version": "1",
         "node": {"id": "test", "name": "Test", "role": "primary"},
@@ -48,7 +49,7 @@ def write_maind_config(root, **overrides):
         ],
     }
     config.update(overrides)
-    path = Path(root) / ".maind.json"
+    path = Path(root) / "config.json"
     path.write_text(json.dumps(config, ensure_ascii=False, indent=2) + "\n",
                     encoding="utf-8")
     return path

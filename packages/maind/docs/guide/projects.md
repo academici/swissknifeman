@@ -1,18 +1,21 @@
 # Проекты
 
-Реестр проектов экосистемы — в `.maind.json` (надмножество brain `.projects.json`).
+Реестр проектов экосистемы — в `config.json` (в корне монорепо, надмножество brain
+`.projects.json`).
 
 ## Приоритет загрузки
 
 ```
-.maind.json      (primary — если есть)
+config.json      (primary — в корне монорепо, если есть)
+    ↓ fallback
+.maind.json      (legacy-имя того же конфига — обратная совместимость)
     ↓ fallback
 .projects.json   (legacy brain — только чтение, с предупреждением о миграции)
     ↓
 пустой конфиг
 ```
 
-`load_config` возвращает `(config, source)`, где `source ∈ {".maind.json",
+`load_config` возвращает `(config, source)`, где `source ∈ {"config.json", ".maind.json",
 "brain-fallback", "empty"}` — чтобы было видно происхождение.
 
 ## CLI

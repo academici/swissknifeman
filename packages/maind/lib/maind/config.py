@@ -1,8 +1,11 @@
-"""Конфиг узла maind: .maind.json (primary) + fallback на legacy .projects.json (brain).
+"""Конфиг узла maind: config.json в корне монорепо (primary; legacy .maind.json
+подхватывается тем же резолвером) + fallback на legacy .projects.json (brain).
 
 Валидация — на stdlib (без jsonschema): декларативные карты типов + difflib-подсказки,
-как в swissknifeman/config.py. load_config возвращает (config, source), где source ∈
-{".maind.json", "brain-fallback", "empty"} — чтобы вызывающий знал происхождение."""
+как в swissknifeman/config.py. load_config возвращает (config, source) для совместимости;
+Config.load(env) — обёртка над тем же, инкапсулирует path/source/save и доступ к секциям,
+чтобы менять логику конфига в одном месте. Config — подкласс dict (старый доступ
+config["projects"] продолжает работать)."""
 import json
 import os
 from pathlib import Path
@@ -226,8 +229,9 @@ def load_brain_projects(path):
 
 # ── загрузка с приоритетом ──────────────────────────────────────────────────
 def load_config(env):
-    """Возвращает (config, source). Приоритет: .maind.json → legacy .projects.json
-    (brain, read-only, с предупреждением о миграции) → пустой конфиг."""
+    """Возвращает (config, source). Приоритет: config.json (корень монорепо;
+    legacy .maind.json подхватывается тем же резолвером env.default_config) →
+    legacy .projects.json (brain, read-only, с предупреждением) → пустой конфиг."""
     primary = env.default_config
     if primary.is_file():
         try:
@@ -235,11 +239,11 @@ def load_config(env):
         except json.JSONDecodeError as e:
             die(f"{primary}: битый JSON: {e}")
         validate_config(config, primary)
-        return merge_defaults(config), ".maind.json"
+        return merge_defaults(config), primary.name
 
     legacy = env.root / ".projects.json"
     if legacy.is_file():
-        warn(".maind.json не найден — читаю legacy .projects.json (brain) в режиме "
+        warn("config.json не найден — читаю legacy .projects.json (brain) в режиме "
              "read-only; запустите `maind migrate from-brain .projects.json` для "
              "постоянной конфигурации")
         config = {
@@ -250,3 +254,56 @@ def load_config(env):
         return merge_defaults(config), "brain-fallback"
 
     return merge_defaults({}), "empty"
+
+
+# ── обёртка над конфигом ─────────────────────────────────────────────────────
+class Config(dict):
+    """Лёгкая обёртка узлового конфига. Подкласс dict — старый доступ
+    (`cfg["projects"]`, `cfg.get(...)`, `cfg.items()`) работает без изменений.
+    Сверху: load/save, происхождение (path/source) и аксессоры секций —
+    единая точка, где живёт логика конфига (резолв имени файла, валидация, миграция).
+
+    Использование:
+        cfg = Config.load(env)          # читает env.default_config (config.json)
+        cfg.projects                    # список проектов (или [])
+        cfg.project("corex")            # запись проекта по id или None
+        cfg.save(env)                   # atomic-запись обратно
+    """
+
+    def __init__(self, data=None, *, source="empty", path=None):
+        super().__init__(data or {})
+        self.source = source        # происхождение: "config.json"|".maind.json"|"brain-fallback"|"empty"
+        self.path = path            # Path, откуда прочитан (None для пустого/fallback)
+
+    @classmethod
+    def load(cls, env):
+        """Прочитать конфиг узла через общий резолвер (config.json в корне монорепо,
+        с legacy-fallback). Возвращает Config с заполненными source/path."""
+        data, source = load_config(env)
+        path = env.default_config if source not in ("brain-fallback", "empty") else None
+        return cls(data, source=source, path=path)
+
+    def save(self, env):
+        """Atomic-запись конфига обратно (через единственного писателя projects.write_config)."""
+        from .projects import write_config
+        write_config(env, self)
+
+    # ── аксессоры секций (логику фильтрации/поиска держим здесь) ──────────────
+    @property
+    def projects(self):
+        return list(self.get("projects") or [])
+
+    def project(self, project_id):
+        """Запись проекта по id, либо None."""
+        for p in self.get("projects") or []:
+            if p.get("id") == project_id:
+                return p
+        return None
+
+    @property
+    def namespaces(self):
+        return self.get("namespaces") or {}
+
+    @property
+    def integrations(self):
+        return self.get("integrations") or {}

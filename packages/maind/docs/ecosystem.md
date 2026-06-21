@@ -50,12 +50,12 @@ graph TB
 ```mermaid
 flowchart LR
   subgraph alone["каждый сам по себе"]
-    A1["maind: свой .maind.json"]
+    A1["maind: свой config.json"]
     A2["brain: свой discovery"]
     A3["swissknifeman: свой реестр"]
   end
   subgraph together["связаны через пути в конфиге (opt-in)"]
-    T[".maind.json ↔ brain maind_config_path ↔ project skills-lock"]
+    T["config.json ↔ brain maind_config_path ↔ project skills-lock"]
   end
   alone -. "добавить путь" .-> together
   together -. "убрать путь" .-> alone
@@ -96,7 +96,7 @@ sequenceDiagram
   participant proj as проект
   participant brain
   Dev->>maind: maind onboard &lt;project&gt;
-  maind->>maind: зарегистрировать в .maind.json
+  maind->>maind: зарегистрировать в config.json
   maind->>skm: integrate (skills + hooks)
   skm->>proj: .claude/skills + хуки + skills-lock.json
   maind->>proj: deploy — agent-memory MCP (scope project:id) [+ graphify]
@@ -109,7 +109,7 @@ sequenceDiagram
 
 ## Поток конфигов и данных
 
-maind — **читатель всех** ключевых файлов и **писатель** только `.maind.json`, MCP-конфигов
+maind — **читатель всех** ключевых файлов и **писатель** только `config.json`, MCP-конфигов
 проекта и **собственного** `.claude/settings.local.json` (доверие хаба к проектам экосистемы,
 см. [Workspace](/guide/workspace)). Скиллы проекта описывает `skills-lock.json` (composes
 swissknifeman + Laravel Boost, swissknifeman wins). brain держит свой `<vault>/.projects.json`
@@ -117,7 +117,7 @@ swissknifeman + Laravel Boost, swissknifeman wins). brain держит свой 
 
 ```mermaid
 flowchart LR
-  MJ[".maind.json — реестр проектов (пишет maind)"]
+  MJ["config.json — реестр проектов (пишет maind)"]
   PJ["&lt;vault&gt;/.projects.json — docs-watcher (brain)"]
   SL["skills-lock.json — карта скиллов (swissknifeman lock)"]
   BJ["boost.json — Laravel Boost"]
@@ -146,7 +146,7 @@ flowchart TD
 
 | Что | Где живёт | Кто пишет |
 |:--|:--|:--|
-| Реестр проектов | `.maind.json` | maind (`projects.write_config` — единственный писатель) |
+| Реестр проектов | `config.json` (в корне монорепо) | maind (`projects.write_config` — единственный писатель) |
 | Доверие Claude к проектам | `<maind>/.claude/settings.local.json` | maind (`workspace sync` из реестра) |
 | Общая память | agent-memory demon (бакеты `project:<id>`/`ns:<имя>`/`global`) | проекты пишут в свой `project:<id>`, cross-ref — в `ns:<группа>` |
 | Граф связей | `data/graphs/<id>.db` + `_index.db` (федерация) | maind `derive` из composer/Brain/override/skills |

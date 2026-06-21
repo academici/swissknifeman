@@ -1,5 +1,5 @@
 ---
-description: Диагностика окружения узла mAInd — python, Node/agentmemory, конфиг памяти, .maind.json, демон.
+description: Диагностика окружения узла mAInd — python, Node/agentmemory, конфиг памяти, config.json, демон.
 allowed-tools: Bash(maind:*)
 ---
 ## Диагностика узла

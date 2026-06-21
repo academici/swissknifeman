@@ -1,6 +1,6 @@
 """maind deploy — провижининг: раскатать MCP-серверы хаба на проекты («клонировать сеть»).
 
-Из .maind.json вписываем в MCP-конфиг каждого проекта серверы хаба (agent-memory + maind),
+Из config.json вписываем в MCP-конфиг каждого проекта серверы хаба (agent-memory + maind),
 со scope project:<id>. Слияние недеструктивное (mcpconfig: upsert + .bak), идемпотентное, opt-in.
 Демон не обязателен — пишем клиентский конфиг и при выключенном демоне (с предупреждением).
 Код-граф (движок Serena) опционален: --with-code (legacy --with-graphify), и только если бинарь
@@ -106,7 +106,7 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
 
 
 def mark_deployed(config, project_id, result):
-    """Отметить проект deployed в .maind.json (вызывающий сохраняет через write_config)."""
+    """Отметить проект deployed в config.json (вызывающий сохраняет через write_config)."""
     proj = get_project(config, project_id)
     if proj is None:
         return config
@@ -132,7 +132,7 @@ def cmd_deploy(env, argv):
     if opts["project"]:
         proj = get_project(config, opts["project"])
         if proj is None:
-            die(f"проект не найден в .maind.json: {opts['project']}")
+            die(f"проект не найден в config.json: {opts['project']}")
         projects = [proj]
     elif opts["all"]:
         projects = [p for p in listing(env, config) if p.get("enabled", True)]

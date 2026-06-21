@@ -1,4 +1,4 @@
-"""maind sync — единый провижининг: проанализировать .maind.json и раскатать управляемые
+"""maind sync — единый провижининг: проанализировать config.json и раскатать управляемые
 артефакты на все подключённые проекты ОДНОЙ командой.
 
 Каждый артефакт — провиженер с `run(env, config, projects, mode, dry) → [result]`. Реестр
@@ -54,7 +54,7 @@ def select_projects(env, config, opts):
     if opts.get("project"):
         proj = get_project(config, opts["project"])
         if proj is None:
-            die(f"проект не найден в .maind.json: {opts['project']}")
+            die(f"проект не найден в config.json: {opts['project']}")
         return [proj]
     if opts.get("namespace"):
         projs = [p for p in listing(env, config)

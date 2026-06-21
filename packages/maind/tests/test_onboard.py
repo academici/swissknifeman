@@ -11,7 +11,7 @@ from tests.fixtures import make_repo
 
 
 def _seed_config(root, projects=None):
-    (root / ".maind.json").write_text(
+    (root / "config.json").write_text(
         json.dumps({"_version": "1", "projects": projects or []}), encoding="utf-8")
 
 

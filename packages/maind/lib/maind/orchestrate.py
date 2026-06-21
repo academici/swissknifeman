@@ -24,7 +24,7 @@ CAPABILITIES = {
     "skm:status":    ("swissknifeman", ["status", "--target", "{path}"], True),
 }
 
-# sibling → как найти его лаунчер (env-override · проект в .maind.json · путь · bin).
+# sibling → как найти его лаунчер (env-override · проект в config.json · путь · bin).
 SIBLINGS = {
     "brain": {"env": "MAIND_BRAIN_BIN", "project_id": "brain",
               "path_key": "vault_path", "bin": "bin/brain"},
@@ -46,9 +46,16 @@ def _sibling_bin(config, which):
         return p
     proj = get_project(config, spec["project_id"])
     root = proj.get(spec["path_key"]) if proj else None
+    # brain: если нет записи проекта — резолвим vault так же, как синк (brain_path):
+    # integrations.brain.path → vault проекта brain → дефолт ~/Vaults/Brain. brain_path
+    # может вернуть путь к файлу .projects.json — нормализуем к каталогу vault (его родитель).
+    if not root and which == "brain":
+        from .projects import brain_path
+        bp = Path(os.path.expanduser(brain_path(config)))
+        root = str(bp.parent if bp.name.endswith(".json") else bp)
     if not root:
         die(f"{which} не найден: добавьте проект '{spec['project_id']}' с {spec['path_key']} "
-            f"в .maind.json, или задайте {spec['env']}")
+            f"в config.json, или задайте {spec['env']}")
     binp = Path(os.path.expanduser(root)) / spec["bin"]
     if not binp.exists():
         die(f"{which}: лаунчер не найден — {binp}")
@@ -66,7 +73,7 @@ def run_capability(env, config, project_id, capability, extra=None, *, dry=False
     if needs_project:
         proj = get_project(config, project_id)
         if proj is None:
-            die(f"проект не найден в .maind.json: {project_id}")
+            die(f"проект не найден в config.json: {project_id}")
         subst = {"project": proj.get("id", project_id),
                  "path": os.path.expanduser(proj.get("local_path") or "")}
     argv = [str(binp)] + [a.format(**subst) for a in template] + list(extra or [])

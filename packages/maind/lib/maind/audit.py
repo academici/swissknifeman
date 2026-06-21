@@ -151,7 +151,7 @@ def run_audit(env, config, dim, as_json=False):
         return
     print(f"maind audit ({', '.join(dims)}) — проектов: {len(rows)}")
     if not rows:
-        print("  проектов нет — .maind.json пуст или отсутствует")
+        print("  проектов нет — config.json пуст или отсутствует")
         return
     for r in rows:
         if r.get("status") == "missing-path":

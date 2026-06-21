@@ -73,7 +73,7 @@ def _target(env, config, opts):
     if opts.get("project"):
         proj = get_project(config, opts["project"])
         if proj is None:
-            die(f"проект не найден в .maind.json: {opts['project']}")
+            die(f"проект не найден в config.json: {opts['project']}")
         return proj
     cwd = norm_path(os.getcwd())
     for p in listing(env, config):

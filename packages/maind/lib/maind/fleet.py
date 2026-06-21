@@ -253,7 +253,7 @@ def _embed(texts, embed_cfg):
     {command:[...], input_env|input_arg, output} — пишем JSONL текстов во временный файл,
     запускаем команду, читаем JSON-массив векторов. Без конфига — die."""
     if not embed_cfg or not embed_cfg.get("command"):
-        die("эмбеддер не настроен — задайте code_graph.embed.command в .maind.json "
+        die("эмбеддер не настроен — задайте code_graph.embed.command в config.json "
             "(внешний инструмент: текст→вектор). Без него доступен только `fleet duplicates`.")
     with tempfile.TemporaryDirectory() as tmp:
         inp, outp = Path(tmp) / "in.jsonl", Path(tmp) / "out.json"

@@ -60,4 +60,4 @@ npm run docs:build      # сборка статического сайта
 - **uvx** (из [uv](https://docs.astral.sh/uv/)) — для графа кода в проекте (движок Serena, см.
   [граф кода](/guide/code-graph)); включается на проект полем `code:true`.
 
-Дальше: [Конфиг .maind.json →](/guide/config)
+Дальше: [Конфиг config.json →](/guide/config) (живёт в корне монорепо, не в пакете maind)

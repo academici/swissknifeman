@@ -25,7 +25,7 @@ class TestStartStatus(unittest.TestCase):
                 write_maind_config(root, memory={"url": url})
                 _, out = capture(cmd_status, env, ["--json"])
                 snap = json.loads(out)
-                self.assertEqual(snap["config_source"], ".maind.json")
+                self.assertEqual(snap["config_source"], "config.json")
                 self.assertTrue(snap["memory"]["running"])
                 self.assertEqual(snap["projects"]["total"], 1)  # alpha из фикстуры
 

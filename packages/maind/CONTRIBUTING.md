@@ -40,4 +40,4 @@ scripts/validate.sh      # py_compile + bash -n + JSON + тесты (то, чт�
 
 - Перед PR: `scripts/validate.sh` должен быть зелёным.
 - Обновите `CHANGELOG.md` (секция `[Unreleased]`).
-- Не коммитьте `.maind.json`, `.env`, `data/*` — они gitignored (машинно-специфичны).
+- Не коммитьте `config.json`, `.env`, `data/*` — они gitignored (машинно-специфичны).

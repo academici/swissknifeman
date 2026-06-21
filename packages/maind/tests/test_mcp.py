@@ -224,7 +224,7 @@ class TestConformance(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "node"
             (root / "config" / "memory").mkdir(parents=True)
-            (root / ".maind.json").write_text(
+            (root / "config.json").write_text(
                 json.dumps({"_version": "1", "projects": [{"id": "x", "name": "X"}]}),
                 encoding="utf-8")
             proc = subprocess.Popen(

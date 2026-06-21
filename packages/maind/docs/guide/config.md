@@ -1,7 +1,10 @@
-# Конфиг `.maind.json`
+# Конфиг `config.json`
 
-Главный конфиг узла — надмножество `.projects.json` из brain. Полный пример с
-комментариями — [`.maind.example.json`](https://github.com/academici/maind/blob/main/.maind.example.json).
+Главный конфиг узла — `config.json` **в корне монорепо** (не в пакете maind);
+резолвер поднимается вверх до каталога с `packages/`. Legacy-имя `.maind.json`
+по-прежнему подхватывается для обратной совместимости. Надмножество `.projects.json`
+из brain. Полный пример с комментариями —
+[`config.example.json`](https://github.com/academici/maind/blob/main/config.example.json).
 Валидация — на stdlib (без jsonschema): неизвестный топ-ключ фатален (с подсказкой через
 difflib), неизвестный вложенный — предупреждение.
 

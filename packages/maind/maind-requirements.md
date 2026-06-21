@@ -24,7 +24,7 @@
 |:---|:---|
 | `academici/swissknifeman` | Модуль `agent-memory` (`.agentmemory/`) целиком |
 | `safishamsi/graphify` | Граф-движок: nodes, edges, traversal |
-| `academici/brain` | `.projects.json` → становится `.maind.json` (расширенная версия) |
+| `academici/brain` | `.projects.json` → становится `config.json` (расширенная версия) |
 
 ---
 
@@ -37,7 +37,7 @@
 │  │ agent-memory │  │   graphify   │  │  agents   │ │
 │  │  (из SKM)    │  │  (граф связей│  │  runtime  │ │
 │  └──────────────┘  └──────────────┘  └───────────┘ │
-│               ↕ .maind.json ↕                       │
+│               ↕ config.json ↕                       │
 └─────────────────────────────────────────────────────┘
          ↑                    ↑
   swissknifeman             brain
@@ -108,7 +108,7 @@ Graphify встраивается как граф-движок для хране
 
 | Node type | Описание |
 |:---|:---|
-| `project` | Проект экосистемы (из `.maind.json`) |
+| `project` | Проект экосистемы (из `config.json`) |
 | `agent` | Запущенный агент с идентификатором сессии |
 | `memory` | Единица долгосрочной памяти агента |
 | `skill` | Скилл из swissknifeman |
@@ -126,9 +126,11 @@ Graphify встраивается как граф-движок для хране
 
 ---
 
-## 5. Конфигурация: `.maind.json`
+## 5. Конфигурация: `config.json`
 
-`.maind.json` — главный конфиг узла. Является **надмножеством** `.projects.json` из `brain`.
+`config.json` (в корне монорепо, не в пакете maind) — главный конфиг узла. Является
+**надмножеством** `.projects.json` из `brain`. Legacy-имя `.maind.json` подхватывается для
+обратной совместимости.
 
 ### 5.1 Отношение к `.projects.json`
 
@@ -136,15 +138,17 @@ Graphify встраивается как граф-движок для хране
 совместимости. Логика приоритета:
 
 ```
-.maind.json   (primary — если есть)
+config.json   (primary — в корне монорепо, если есть)
+    ↓ fallback
+.maind.json   (legacy-имя того же конфига — обратная совместимость)
     ↓ fallback
 .projects.json  (legacy — только чтение, только поля совместимые с brain)
 ```
 
-CLI mAInd при запуске читает сначала `.maind.json`, и если его нет — подхватывает `.projects.json`
-с предупреждением о миграции.
+CLI mAInd при запуске читает сначала `config.json` (затем legacy `.maind.json`), и если его
+нет — подхватывает `.projects.json` с предупреждением о миграции.
 
-### 5.2 Схема `.maind.json`
+### 5.2 Схема `config.json`
 
 ```jsonc
 {
@@ -289,7 +293,7 @@ CLI mAInd при запуске читает сначала `.maind.json`, и е
 
 ```
 academici/maind/
-├── .maind.example.json       ← пример конфига (как .swissknife.example.json в SKM)
+├── config.example.json       ← пример конфига (как .swissknife.example.json в SKM)
 ├── config/
 │   └── memory/
 │       └── iii-config.yaml   ← перенесено из SKM/.agentmemory/
@@ -297,7 +301,7 @@ academici/maind/
 │   └── maind/
 │       ├── __init__.py
 │       ├── cli.py            ← CLI: maind start | status | agents | graph
-│       ├── config.py         ← парсинг .maind.json + fallback .projects.json
+│       ├── config.py         ← парсинг config.json + fallback .projects.json
 │       ├── memory.py         ← интерфейс к agent-memory воркерам
 │       ├── graph.py          ← интерфейс к graphify
 │       ├── agents.py         ← реестр агентов, heartbeat, lifecycle
@@ -341,7 +345,7 @@ academici/maind/
 - `agents.scope(id)` — изолированный memory + graph scope агента
 
 **Projects Registry** (`lib/maind/projects.py`)
-- Загрузка `.maind.json` с fallback на `.projects.json`
+- Загрузка `config.json` с fallback на `.projects.json`
 - `projects.list(status?)` — все проекты
 - `projects.get(id)` — проект по id
 - `projects.sync_from_brain(path)` — импорт из `.projects.json`
@@ -396,10 +400,10 @@ maind migrate from-skm .agentmemory/       # импорт модуля из SKM
 
 - [ ] Создать репозиторий `academici/maind`
 - [ ] Перенести `.agentmemory/` → `config/memory/iii-config.yaml`
-- [ ] Реализовать `config.py` с поддержкой `.maind.json` + fallback `.projects.json`
+- [ ] Реализовать `config.py` с поддержкой `config.json` + fallback `.projects.json`
 - [ ] Реализовать `memory.py` (обёртка над iii-*)
 - [ ] CLI: `maind start`, `maind status`
-- [ ] `.maind.example.json` с полной схемой
+- [ ] `config.example.json` с полной схемой
 - [ ] `install.sh` (аналог brain/swissknifeman)
 - [ ] Обновить swissknifeman: убрать `.agentmemory/`, добавить зависимость на maind
 
@@ -408,7 +412,7 @@ maind migrate from-skm .agentmemory/       # импорт модуля из SKM
 - [ ] Интегрировать graphify как зависимость
 - [ ] Реализовать `graph.py` — все методы API
 - [ ] Расширить `iii-state` для dual-backend (KV + graph)
-- [ ] Автоматическая регистрация проектов из `.maind.json` как nodes
+- [ ] Автоматическая регистрация проектов из `config.json` как nodes
 - [ ] CLI: `maind graph query`, `maind graph stats`
 
 ### Phase 3 — Agent Runtime
@@ -437,7 +441,7 @@ maind migrate from-skm .agentmemory/       # импорт модуля из SKM
 | `agent-memory` (iii-*) | из SKM | Memory воркеры |
 | `@anthropic/sdk` | latest | MCP protocol |
 | `yaml` | ^2 | Парсинг iii-config.yaml |
-| `zod` / `jsonschema` | latest | Валидация .maind.json |
+| `zod` / `jsonschema` | latest | Валидация config.json |
 
 ---
 

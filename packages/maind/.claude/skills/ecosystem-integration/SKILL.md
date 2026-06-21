@@ -17,7 +17,7 @@ maind onboard <path|id> [--with-code] [--with-brain] [--yes]
 
 Цепочка (каждый шаг standalone-safe — отсутствие соседа не валит онбординг):
 
-1. **register** — добавить проект в `.maind.json` (namespace по умолчанию пустой → задай вручную,
+1. **register** — добавить проект в `config.json` (namespace по умолчанию пустой → задай вручную,
    см. ниже).
 2. **skills** — `swissknifeman integrate` (скиллы + хуки), если не `--skip-skills`. ⚠️ swissknifeman
    ставит скиллы **двумя каналами** — `connect` (плагины-бакеты, не в репо) и `vendor` (физический
@@ -32,7 +32,7 @@ maind onboard <path|id> [--with-code] [--with-brain] [--yes]
 ## Namespace (важно)
 
 Связи и общая память изолируются по namespace. Свежесозданная запись попадает в `default` и
-**не свяжется** с группой. Пропиши группу в `.maind.json` у проекта:
+**не свяжется** с группой. Пропиши группу в `config.json` у проекта:
 
 ```json
 { "id": "myproject", "namespaces": ["axioma"], ... }

@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Changed
+
+- **Плагин maind 0.2.0 → 0.2.1.** Bump версии, чтобы Claude Code перекэшировал плагин со
+  свежим кодом (исправленный `.mcp.json` → `maind` из PATH, `from core`); кэш по прежней
+  версии не перестраивался. `package.json` синхронизирован.
+
 ### Removed
 
 - **Убрана консоль-обёртка `bin/academici`.** Зонтичный роутер `academici maind/skm <cmd>`

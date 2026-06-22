@@ -19,7 +19,8 @@ from pathlib import Path
 # модулей пакета, которые исторически берут эти имена из .common.
 from core import (  # noqa: F401
     HOME, BaseEnv, atomic_write_json, atomic_write_text, confirm, die,
-    find_monorepo_root, now_iso, sanitize, warn,
+    find_monorepo_root, now_iso, parse_args, run_cmd, safe_load_json,
+    sanitize, warn,
 )
 
 DB_VERSION = 1
@@ -107,41 +108,8 @@ class Env(BaseEnv):
 # die/warn/now_iso/confirm/sanitize — из общего core (реэкспорт выше).
 
 
-# ── парсинг аргументов (флаги + позиционные, стиль brain) ───────────────────
-def parse_args(args, spec, max_pos=0):
-    """spec: {'--flag': 'str'|'bool'}; возвращает (opts, positionals).
-
-    opts ключуются по имени флага без '--', с '-'→'_'. -h/--help → opts['help'].
-    Неизвестный флаг, нехватка значения или перебор позиционных → die."""
-    opts = {k.lstrip("-").replace("-", "_"): ("" if t == "str" else False)
-            for k, t in spec.items()}
-    opts.setdefault("help", False)
-    pos = []
-    i = 0
-    while i < len(args):
-        a = args[i]
-        if a in ("-h", "--help"):
-            opts["help"] = True
-            i += 1
-            continue
-        if a.startswith("-") and a != "-":
-            if a not in spec:
-                die(f"неизвестный флаг: {a}")
-            key = a.lstrip("-").replace("-", "_")
-            if spec[a] == "bool":
-                opts[key] = True
-                i += 1
-            else:
-                if i + 1 >= len(args):
-                    die(f"флаг {a} требует значение")
-                opts[key] = args[i + 1]
-                i += 2
-        else:
-            pos.append(a)
-            i += 1
-    if len(pos) > max_pos:
-        die(f"лишние аргументы: {' '.join(pos[max_pos:])}")
-    return opts, pos
+# parse_args — из общего core (реэкспорт выше); раньше дублировался здесь
+# (надмножество parse_flags с позиционными, стиль brain).
 
 
 # ── файловые помощники ──────────────────────────────────────────────────────

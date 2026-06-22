@@ -56,7 +56,7 @@
     },
     "php": {
       "description": "PHP and Laravel: applications, packages, Filament, permissions, testing, patterns",
-      "count": 40,
+      "count": 41,
       "status": "active"
     },
     "pm": {
@@ -463,16 +463,18 @@
       "name": "ci-cd",
       "bucket": "devops",
       "path": "skills/devops/ci-cd/SKILL.md",
-      "version": "0.3.0",
-      "description": "GitHub Actions CI/CD pipelines для Laravel проектов: lint, тесты, build, release + security-гейты (SAST, аудит зависимостей, скан образа)",
-      "sha256": "6e31a7895fed49e762cf16345acc0b3039848906cb14b7c59b78748f735eeda2",
+      "version": "0.4.0",
+      "description": "GitHub Actions / GitLab CI пайплайны для Laravel: lint, тесты, build, release + security-гейты (SAST, аудит зависимостей, скан образа) + coverage-gate в CI (Clover-порог, jobs)",
+      "sha256": "8dbb69abfc82c5e151faec1293028b2ccd663dcbe15d815c4ac61793c7c9bfed",
       "tags": [
         "ci",
         "github-actions",
+        "gitlab-ci",
         "laravel",
         "devops",
         "release",
-        "security"
+        "security",
+        "coverage"
       ],
       "produces_for": [
         "release-engineering"
@@ -2209,6 +2211,25 @@
       "source": "local"
     },
     {
+      "name": "enum-state-machine",
+      "bucket": "php",
+      "path": "skills/php/enum-state-machine/SKILL.md",
+      "version": "0.1.0",
+      "description": "Активируй, когда статус домена (Order/Document/Subscription) растёт в граф переходов: единый граф рёбер как метод enum transitionDefinitions() (from→to + guard + action + label), рантайм-реестр переходов (canTransition/allowedFrom) поверх него, и исполнение перехода в Action под DB::transaction() с доменным событием. Триггеры: PHP enum статусов, разрешённые переходы, StateMachine/workflow, parallel transition graph пора свести в один источник, canTransitionTo, allowedTransitions, нелегальный переход статуса",
+      "sha256": "7e317f71ff70da326376370a09b8092c9361a7a190ea02e8b6ccf5494c45ea07",
+      "tags": [
+        "php",
+        "enum",
+        "state-machine",
+        "workflow",
+        "laravel",
+        "transitions",
+        "domain",
+        "actions"
+      ],
+      "source": "local"
+    },
+    {
       "name": "filament",
       "bucket": "php",
       "path": "skills/php/filament/SKILL.md",
@@ -2729,9 +2750,9 @@
       "name": "spatie-settings",
       "bucket": "php",
       "path": "skills/php/spatie-settings/SKILL.md",
-      "version": "0.1.0",
-      "description": "spatie/laravel-settings: типизированные классы настроек (extends Settings, public-свойства, group()), миграции настроек add/migrate/rename, кэш, выбор рантайм-настройки vs config/, привязка к Filament SettingsPage. Активировать при создании/правке класса настроек, добавлении свойства, settings-миграции или экрана редактирования настроек.",
-      "sha256": "af87a855ae70bd9ae10acac4e018eb2269e915ac363d2069e04568fa849709bd",
+      "version": "0.2.0",
+      "description": "spatie/laravel-settings: типизированные классы настроек (extends Settings, public-свойства, group()), миграции настроек add/migrate/rename, кэш, выбор рантайм-настройки vs config/, привязка к Filament SettingsPage, рантайм-инфраконфиг (websocket/Reverb) из админки во фронт через DTO. Активировать при создании/правке класса настроек, добавлении свойства, settings-миграции, экрана редактирования или вынесения инфра-настройки в рантайм-переопределение.",
+      "sha256": "f76fb89d38b591450eca0be6e475b3edbd9e759e6521c8807fdb98b28ae9e47e",
       "tags": [
         "php",
         "laravel",
@@ -3115,15 +3136,17 @@
       "name": "test-strategy",
       "bucket": "quality",
       "path": "skills/quality/test-strategy/SKILL.md",
-      "version": "0.1.0",
-      "description": "Стратегия тестирования: пирамида (unit/integration/e2e), coverage policy, mock vs real, какие фичи требуют какой уровень тестов",
-      "sha256": "e8ecd59c2b457bcf6a602196323f5ca6f85289a71699229663bd0ee8a28c9ec0",
+      "version": "0.2.0",
+      "description": "Стратегия тестирования: пирамида (unit/integration/e2e), coverage policy, mock vs real, какие фичи требуют какой уровень тестов, композиция тест-сюитов (Arch/Feature/Unit) и архитектурные тесты Pest Arch",
+      "sha256": "0dd93d2abb540a1dbaeb2d599e35affeef0e75e5e6708d50c599bc2eb2ded088",
       "tags": [
         "quality",
         "testing",
         "coverage",
         "validation",
-        "ci"
+        "ci",
+        "architecture",
+        "pest"
       ],
       "produces_for": [
         "code-review",

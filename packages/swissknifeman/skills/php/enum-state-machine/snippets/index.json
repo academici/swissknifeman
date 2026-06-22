@@ -1,0 +1,35 @@
+{
+  "skill": "enum-state-machine",
+  "snippets": [
+    {
+      "file": "enum-with-transitions.php",
+      "description": "Граф переходов как метод enum transitionDefinitions(): рёбра from→to + guard/action/label, единый источник истины",
+      "tags": [
+        "php",
+        "enum",
+        "state-machine",
+        "transitions"
+      ]
+    },
+    {
+      "file": "transitions-registry.php",
+      "description": "Рантайм-реестр переходов: ленивое построение adjacency из transitionDefinitions(), allowedFrom() и canTransition()",
+      "tags": [
+        "php",
+        "state-machine",
+        "registry"
+      ]
+    },
+    {
+      "file": "transition-action.php",
+      "description": "Исполнение перехода в final readonly Action: guard + DB::transaction() + доменное событие с ShouldDispatchAfterCommit",
+      "tags": [
+        "php",
+        "laravel",
+        "action",
+        "state-machine",
+        "events"
+      ]
+    }
+  ]
+}

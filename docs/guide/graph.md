@@ -292,7 +292,7 @@ flowchart LR
 
 **В графе:** 106 скиллов, 78 рёбер requires, 66 рёбер produces_for.
 
-## Изолированные скиллы (72)
+## Изолированные скиллы (73)
 
 Скиллы без связей `requires`/`produces_for` — самодостаточны.
 
@@ -302,5 +302,5 @@ flowchart LR
 | frontend | `antfu`, `document-writer`, `eslint-flat-config`, `filepond-upload`, `js-code-style`, `laravel-echo-client`, `motion`, `nuxt`, `nuxt-modules`, `nuxt-seo`, `pinia`, `pinia-stores`, `ts-library`, `vite`, `vitepress`, `vitest-vue`, `vue`, `vue-best-practices`, `vue-composition-api`, `vue-dynamic-icons`, `vue-router-best-practices`, `vue-testing-best-practices`, `vueuse-functions`, `web-design-guidelines` |
 | general | `ai-context-workflow`, `compact-responses`, `packages-stack`, `project-map`, `skills-ssot`, `writing-style` |
 | imported | `agent-security-super-skill`, `ai-agent-super-skill`, `content-creative-super-skill`, `dev-engineering-super-skill`, `finance-super-skill`, `legal-super-skill`, `marketing-super-skill`, `operations-cx-super-skill`, `pm-super-skill`, `research-knowledge-super-skill`, `sales-super-skill`, `token-efficient` |
-| php | `azguard`, `code-style-spatie`, `enum-attributes`, `health-checks`, `laravel-best-practices`, `laravel-broadcasting`, `laravel-dusk`, `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages`, `laravel-subagents`, `livewire-blade-attributes`, `medialibrary`, `named-arguments`, `pao`, `pennant-development`, `php-patterns`, `php-upgrade-checklist`, `spatie-settings` |
+| php | `azguard`, `code-style-spatie`, `enum-attributes`, `enum-state-machine`, `health-checks`, `laravel-best-practices`, `laravel-broadcasting`, `laravel-dusk`, `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages`, `laravel-subagents`, `livewire-blade-attributes`, `medialibrary`, `named-arguments`, `pao`, `pennant-development`, `php-patterns`, `php-upgrade-checklist`, `spatie-settings` |
 | roles | `open-source-maintainer`, `solo-founder`, `startup-cto`, `tech-lead` |

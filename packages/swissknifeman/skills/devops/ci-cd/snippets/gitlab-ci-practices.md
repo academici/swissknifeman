@@ -77,3 +77,53 @@ test_backend:
   script:
     - vendor/bin/phpunit
 ```
+
+## Coverage-gate job
+
+Порог покрытия — отдельный job поверх общего `.php-base` (сборка PHP-расширений,
+ожидание Postgres, миграции). Парсер/конфиг порога — в скилле `php/laravel-testing`
+(`coverage.php` + `check-php-coverage-gate.php`); CI лишь вызывает их с env-порогами.
+
+```yaml
+variables:
+  COVERAGE_GATE_MODE: hard         # hard => exit 1 ниже порога; report/soft — не блокируют
+  COVERAGE_GLOBAL_MIN: "70.0"      # общий минимум по строкам
+  COVERAGE_CRITICAL_MIN: "55.0"    # ужесточённый для критичных директорий (Actions/Policies/Services)
+
+.php-base:
+  stage: test
+  image: php:8.3-cli-bookworm
+  services:
+    - { name: postgres:16-alpine, alias: postgres }
+  cache:
+    key: { files: [composer.lock] }
+    paths: [vendor/]
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq git unzip libpq-dev libicu-dev $PHPIZE_DEPS postgresql-client
+    - docker-php-ext-install -j "$(nproc)" intl pdo_pgsql zip
+    - pecl install pcov && docker-php-ext-enable pcov   # pcov быстрее xdebug
+    - printf 'pcov.directory=app\n' > /usr/local/etc/php/conf.d/pcov.ini
+    - curl -fsSL https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+    - composer install --no-interaction --prefer-dist
+    - touch .env && php artisan key:generate --force --no-interaction
+    - until pg_isready -h postgres -U postgres; do sleep 1; done
+    - php artisan migrate --force --no-interaction
+
+php-coverage:
+  extends: .php-base
+  interruptible: true
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+  script:
+    - php -d memory_limit=512M artisan test --coverage --coverage-clover=coverage/clover.xml
+    - php scripts/check-php-coverage-gate.php
+  artifacts:
+    when: on_success
+    paths: [coverage/clover.xml]
+    expire_in: 1 week
+```
+
+Принцип: быстрый `php-tests` (без покрытия) даёт ранний fail; `php-coverage` отдельным
+job считает Clover и валит merge только при `hard` ниже порога. Покрытие — нижняя
+граница риска, не цель (качество тестов — `quality/mutation-testing`).

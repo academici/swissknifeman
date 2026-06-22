@@ -1,14 +1,15 @@
 ---
 name: test-strategy
 bucket: quality
-version: 0.1.0
-description: Стратегия тестирования: пирамида (unit/integration/e2e), coverage policy, mock vs real, какие фичи требуют какой уровень тестов
+version: 0.2.0
+description: "Стратегия тестирования: пирамида (unit/integration/e2e), coverage policy, mock vs real, какие фичи требуют какой уровень тестов, композиция тест-сюитов (Arch/Feature/Unit) и архитектурные тесты Pest Arch"
 risk: draft
 persona: quality
-tags: [quality, testing, coverage, validation, ci]
+tags: [quality, testing, coverage, validation, ci, architecture, pest]
 requires: []
 produces_for: [code-review, mutation-testing, playwright-e2e]
 outputs: ["docs/03_Dev/Test_Strategy.md"]
+snippets: ["test-pyramid.md", "pest-arch-test.php", "phpunit-testsuites.xml"]
 sha256: ""
 adapters: [claude, cursor, fable]
 ---
@@ -101,7 +102,39 @@ adapters: [claude, cursor, fable]
 
 ---
 
-## Шаг 6. CI Integration
+## Шаг 6. Композиция тест-сюитов (PHPUnit/Pest)
+
+Не один плоский `tests/` — разнести на **именованные `<testsuite>`**, чтобы быстрые тесты падали первыми, а медленные изолировались в отдельный job:
+
+| Suite | Что | Скорость | Запуск |
+|:---|:---|:---|:---|
+| **Arch** | архитектурные инварианты (Pest Arch) | мс, без БД | первым, отдельно |
+| **Unit** | чистая логика, изоляция через mock | мс | до Feature |
+| **Feature** | слой↔слой, БД, HTTP | сотни мс | основной |
+| **Context** | сквозные доменные сценарии (опц.) | секунды | после Feature |
+| **UnitFilament** / UI-suite | панель/виджеты, отдельный bootstrap | сотни мс | отдельно |
+
+Преимущество: `--testsuite=Arch` гоняется в CI первым шагом (быстрый fail на нарушении границ ещё до подъёма БД); каждый suite параллелится отдельным job; `<exclude>` убирает пересечения (например, `Unit` исключает `Unit/Filament`). См. `snippets/phpunit-testsuites.xml`.
+
+Включить строгость прогона на уровне `<phpunit>`: `failOnWarning`, `failOnRisky`, `failOnEmptyTestSuite`, `beStrictAboutOutputDuringTests`, `executionOrder="random"` — ловят забытые ассерты, случайный вывод и зависимость от порядка.
+
+---
+
+## Шаг 7. Архитектурные тесты (Pest Arch)
+
+Arch-тесты кодируют **границы и инварианты** как исполняемые правила — дешевле и надёжнее, чем ревью «на глаз». Не заменяют unit, а защищают архитектуру от эрозии. Типовой набор инвариантов для слоистого backend:
+
+- `strict_types=1` во всём коде пакета/приложения (`->toUseStrictTypes()`).
+- **Нет debug-хелперов** в проде: `dd, dump, ray, var_dump, die` (`->not->toBeUsed()`).
+- **Actions** финальны (`->toBeFinal()`); **DTO / ValueObjects / Events** — `readonly`.
+- **Contracts** — это интерфейсы (`->toBeInterfaces()`).
+- **Actions и Repositories не зависят от HTTP** (`->not->toUse(Request::class)`) — мутации и запросы не должны тащить транспортный слой.
+
+Это самый дешёвый барьер против дрейфа архитектуры: правило пишется один раз, держит весь слой. См. `snippets/pest-arch-test.php`. Реализация в Laravel-проектах/пакетах — `php/laravel-testing` и `php/laravel-package-testing`; границы слоёв описывает `php/laravel-structure`.
+
+---
+
+## Шаг 8. CI Integration
 
 ```yaml
 # .github/workflows/test.yml
@@ -160,3 +193,7 @@ stages:
 - `quality/code-review` — критерий «есть ли тесты на новую логику» опирается на эту стратегию
 - `quality/tech-debt-audit` — куда списывается ice-cream cone и coverage-долг
 - `php/test-isolation-guard`, `devops/db-test-preflight` — изоляция и пре-флайт тестовой БД
+- `devops/ci-cd` — coverage-gate как отдельный CI-job (порог из этой coverage policy), запуск сюитов по job'ам
+- `php/laravel-structure` — границы слоёв, которые проверяют Arch-инварианты
+- snippets/pest-arch-test.php — набор Pest Arch-правил (strict types, no-debug, final actions, readonly DTO/VO/Events, contracts=interfaces, no Request в Actions/Repositories)
+- snippets/phpunit-testsuites.xml — `<testsuites>` Arch/Feature/Context/Unit + строгие флаги прогона

@@ -31,7 +31,7 @@
     },
     "general": {
       "description": "General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists",
-      "count": 16,
+      "count": 17,
       "status": "active"
     },
     "imported": {
@@ -56,7 +56,7 @@
     },
     "php": {
       "description": "PHP and Laravel: applications, packages, Filament, permissions, testing, patterns",
-      "count": 41,
+      "count": 42,
       "status": "active"
     },
     "pm": {
@@ -1521,6 +1521,23 @@
       "source": "local"
     },
     {
+      "name": "naming-conventions",
+      "bucket": "general",
+      "path": "skills/general/naming-conventions/SKILL.md",
+      "version": "0.1.0",
+      "description": "Дисциплина именования сущностей (язык-агностично): имя раскрывает намерение, а не реализацию; борьба с шумовыми словами (Manager/Helper/data/process) и комбинаторным взрывом методов (findByXOrFail/getOrNull). Активировать при именовании или ревью имён функций, классов, переменных, методов.",
+      "sha256": "8877fc2656e42fb4dec4095e14d878cb78a0358bbe401a8c0e77999218efc03d",
+      "tags": [
+        "naming",
+        "conventions",
+        "readability",
+        "code-style",
+        "discipline",
+        "clean-code"
+      ],
+      "source": "local"
+    },
+    {
       "name": "packages-stack",
       "bucket": "general",
       "path": "skills/general/packages-stack/SKILL.md",
@@ -2148,7 +2165,7 @@
       "path": "skills/php/code-style-spatie/SKILL.md",
       "version": "0.1.0",
       "description": "Стиль кода Laravel/PHP по гайдлайнам Spatie: Laravel-конвенции прежде PSR-12, типизация вместо докблоков, early returns, happy path последним",
-      "sha256": "fd9b2b535c3f84e15d5b0739bf9c87ba6526ad104caf1012063dcfa251189f7a",
+      "sha256": "3e48aa0261096a1a1e1180ff6d433b44e1ea74c7cae1b2f4447d5fa7b5f3f2e5",
       "tags": [
         "php",
         "laravel",
@@ -2656,12 +2673,29 @@
       "path": "skills/php/named-arguments/SKILL.md",
       "version": "0.1.0",
       "description": "Правило обязательных именованных аргументов в PHP: вызовы методов/функций, исключения, активировать при написании или ревью вызовов и при упоминании читаемости/порядка параметров",
-      "sha256": "d7071767969dcc3b8df033b540982fa4ba3942d5f7273ead50bd375513c8c5d7",
+      "sha256": "f6c1e8b5f1c035edfd9c4958b7893ed7a3191f196051e92c1f91326a2d7166fe",
       "tags": [
         "php",
         "code-style",
         "readability",
         "conventions"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "naming-conventions",
+      "bucket": "php",
+      "path": "skills/php/naming-conventions/SKILL.md",
+      "version": "0.1.0",
+      "description": "Именование сущностей Laravel/PHP: методы репозиториев по намерению (а не findByCodeOrFail-взрыв), Action/DTO/VO/Enum/Event/Job, таблицы/колонки/роуты. Борьба с мусорными именами, которые любит генерить ИИ. Активировать при создании или ревью имён классов, методов, миграций.",
+      "sha256": "e4703277685deb698c5574453cd41cd7d08ebc7458852679aa1f4f21dd1081e3",
+      "tags": [
+        "php",
+        "laravel",
+        "naming",
+        "conventions",
+        "code-style",
+        "readability"
       ],
       "source": "local"
     },
@@ -2737,7 +2771,7 @@
       "path": "skills/php/repositories/SKILL.md",
       "version": "0.1.0",
       "description": "Система репозиториев Laravel: read/store split, model scopes, delta-DTO, фасад, VisibilityService",
-      "sha256": "97a9c09acb0cf659c9a86a40fa6a41ca8fc0f44459988147b3ad22a512ca9d29",
+      "sha256": "d524219d3ee88c49d2604d825693360dd5c8722bbd06435bb7452332adec053c",
       "tags": [
         "php",
         "laravel",

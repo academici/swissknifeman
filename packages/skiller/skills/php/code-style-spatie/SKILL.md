@@ -73,4 +73,5 @@ sha256: ""
 
 - `references/spatie-laravel-php-guidelines.md` — полный reference
 - https://spatie.be/guidelines — первоисточник
+- `php/naming-conventions` — именование *сущностей* (Action/Repository/DTO/VO/Enum, разбор `findByXOrFail`); этот скилл задаёт naming роутов/контроллеров, тот — классов и методов
 - Скилл `static-analysis` (bucket php) — Pint/PHPStan/Rector конфиги, конфликт `final_class`

@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### Added (скиллы дисциплины именования)
+
+- **`general/naming-conventions`** (бакет `general` — CORE-connect, авто-раздаётся в каждый
+  проект) — язык-агностичные правила: имя раскрывает намерение, борьба с шумовыми словами
+  (`Manager`/`Helper`/`data`/`process`) и комбинаторным взрывом методов (`findByX…OrFail`/
+  `…OrNull`). Сниппет `naming-gallery.md` (плохо → хорошо).
+- **`php/naming-conventions`** (бакет `php`) — Laravel-конкретика: именование Action/Repository/
+  DTO/VO/Enum/Event/Job, таблиц/колонок, разбор анти-паттерна `findByCodeOrFail`-взрыва
+  (→ route binding / model scopes по намерению / критерий / один канонический `findByIdOrFail`).
+  Сниппеты `naming-antipatterns.php`, `repository-method-naming.php`. Перекрёстные ссылки в
+  `repositories`, `code-style-spatie`, `named-arguments`; уточнён чеклист `repositories`
+  (единственный канонический lookup, не плодить метод-на-поле).
+- Имя `naming-conventions` намеренно живёт в двух бакетах (`general` + `php`): legal под
+  plugin-namespaces (connect), в vendor-режиме flat-имена разводятся префиксом бакета.
+
 ## [0.4.0] - 2026-06-22
 
 > **Зонтичная единая версия монорепо.** Накопленное с `v0.3.0`: выделение пакета

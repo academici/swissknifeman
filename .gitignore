@@ -15,3 +15,11 @@ settings.local.json.bak
 MERGE-PLAN.snapshots/
 # Приватный конфиг узла maind (пути ко всем проектам); шаблон — config.example.json
 config.json
+
+# Сборочные копии per-package доков (источник — packages/<pkg>/docs; см. scripts/docs-sync.sh)
+docs/skiller/
+docs/harness/
+docs/maind/
+
+# Внутренние research-доки (аудиты/трекеры) — локально, не публиковать
+research/

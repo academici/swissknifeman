@@ -53,9 +53,18 @@ def onboard(env, config, project_or_path, opts):
     steps.append({"name": "register", "status": "ok",
                   "detail": f"{'создан' if created else 'найден'} project:{proj['id']}"})
 
-    # 1. skiller integrate — скиллы + хуки (standalone-safe)
+    # 1. skiller integrate — скиллы + окружение (integrate делегирует permissions/MCP/
+    # хуки пакету harness). standalone-safe. При --skip-skills окружение всё равно
+    # настраиваем напрямую через harness (env:apply), т.к. integrate не вызывался.
     if opts.get("skip_skills"):
         steps.append({"name": "skills", "status": "skipped", "detail": "--skip-skills"})
+        try:
+            rc = run_capability(env, config, proj["id"], "env:apply", dry=dry)
+            steps.append({"name": "env", "status": "ok" if rc == 0 else "failed",
+                          "detail": f"harness permissions rc={rc}"})
+        except SystemExit:
+            steps.append({"name": "env", "status": "skipped",
+                          "detail": "harness недоступен — пропуск"})
     else:
         extra = ["--bundle", opts.get("bundle") or "recommended"]
         if opts.get("yes"):

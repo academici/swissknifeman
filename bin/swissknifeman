@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# swissknifeman — корневой управляющий слой зонтика (router + setup-фасад).
+# Зонтик = единое управление; пакеты = возможности. Тонкий диспетчер: знает три
+# пакета и кросс-пакетный онбординг, сам логику не реализует (делегирует).
+#
+# Группы (канонично):
+#   skills <args>   → skiller  (реестр скиллов: connect, vendor, registry, …)
+#   env <args>      → harness  (окружение Claude Code: permissions, mcp, hooks, …)
+#   maind <args>    → maind    (хаб: memory, graph, onboard, deploy, sync, health, …)
+#   setup <project> → maind onboard (полный онбординг: скиллы+окружение+память+граф)
+#   doctor          → диагностика всех трёх (fan-out)
+#
+# Back-compat: исторические команды swissknifeman = skiller (алиас сохранён):
+#   connect vendor integrate update sync lock status list registry topology validate version
+set -euo pipefail
+
+SELF="$(readlink -f "${BASH_SOURCE[0]}")"
+ROOT="$(cd "$(dirname "$SELF")/.." && pwd)"
+SKILLER="$ROOT/packages/skiller/bin/skiller"
+HARNESS="$ROOT/packages/harness/bin/harness"
+MAIND="$ROOT/packages/maind/bin/maind"
+
+usage() { grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '2,18p'; }
+
+need() {  # $1 — путь к лаунчеру пакета
+  [[ -x "$1" ]] || { echo "ERROR: не найден лаунчер пакета: $1" >&2
+    echo "Репозиторий повреждён/неполон — перезапустите ./install.sh." >&2; exit 1; }
+}
+
+CMD="${1:-help}"
+case "$CMD" in
+  -h|--help|help) usage; exit 0 ;;
+  skills)  shift; need "$SKILLER"; exec "$SKILLER" "$@" ;;
+  env)     shift; need "$HARNESS"; exec "$HARNESS" "$@" ;;
+  maind|hub) shift; need "$MAIND"; exec "$MAIND" "$@" ;;
+  setup)   shift; need "$MAIND"; exec "$MAIND" onboard "$@" ;;
+  doctor)
+    rc=0
+    echo "== skiller =="; need "$SKILLER"; "$SKILLER" doctor || rc=$?
+    echo; echo "== harness =="; need "$HARNESS"; "$HARNESS" doctor || rc=$?
+    echo; echo "== maind ==";  need "$MAIND";   "$MAIND" doctor || rc=$?
+    exit "$rc" ;;
+  # back-compat: старый алиас swissknifeman → skiller (онбордженные проекты/привычка)
+  connect|vendor|integrate|update|sync|lock|status|list|registry|topology|validate|version)
+    need "$SKILLER"; exec "$SKILLER" "$@" ;;
+  *) echo "Неизвестная команда: $CMD" >&2; usage >&2; exit 1 ;;
+esac

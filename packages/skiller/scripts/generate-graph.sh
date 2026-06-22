@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Generate docs/guide/graph.md (Mermaid dependency graph) from skills.json.
-# Reads requires/produces_for fields (registry v5+); run after
+# Generate packages/skiller/docs/guide/graph.md (Mermaid dependency graph) from
+# skills.json. Reads requires/produces_for fields (registry v5+); run after
 # 'skiller registry' (the registry command calls this automatically).
 set -euo pipefail
 
@@ -14,7 +14,8 @@ root = Path(sys.argv[1])  # корень пакета (skills.json здесь)
 registry = json.loads((root / "skills.json").read_text(encoding="utf-8"))
 skills = registry["skills"]
 
-# docs/ живёт в корне монорепо (зонтичная документация), а не в пакете — ищем .git вверх.
+# Доки skiller живут в самом пакете (packages/skiller/docs/guide) — ищем вверх
+# ближайший каталог с docs/guide (это сам пакет; fallback — корень).
 def _docs_root(p):
     for cand in (p, *p.parents):
         if (cand / "docs" / "guide").is_dir():

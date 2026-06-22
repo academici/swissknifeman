@@ -1,110 +1,133 @@
 import { defineConfig } from 'vitepress'
 import { withMermaid } from 'vitepress-plugin-mermaid'
 
+// Зонтичная документация экосистемы. Доки живут ВНУТРИ каждого пакета
+// (packages/<pkg>/docs) и подключаются сюда симлинками docs/skiller, docs/harness —
+// единый сайт собирается из per-package файлов. Общая информация — в корне docs/.
+// maind пока — отдельный сайт (его доки используют абсолютные ссылки своей базы);
+// агрегация maind — следующий шаг (нормализация ссылок).
 export default withMermaid(defineConfig({
   lang: 'ru-RU',
   title: 'SwissKnifeMan',
   description:
-    'Универсальный личный реестр AI-скиллов и конфигов: один источник истины для любого проекта и любой IDE',
+    'Зонтик экосистемы academici: скиллы (skiller), окружение Claude Code (harness), память и граф (maind)',
   base: '/swissknifeman/',
   lastUpdated: true,
 
   themeConfig: {
     nav: [
-      { text: 'Гайд', link: '/guide/', activeMatch: '/guide/' },
-      { text: 'Конфиги', link: '/configs/', activeMatch: '/configs/' },
-      { text: 'Адаптеры', link: '/adapters/claude-code', activeMatch: '/adapters/' },
-      { text: 'Воркфлоу', link: '/workflows/', activeMatch: '/workflows/' },
-      { text: 'Интеграции', link: '/integrations/', activeMatch: '/integrations/' },
-      { text: 'Примеры', link: '/examples/laravel', activeMatch: '/examples/' },
+      { text: 'Обзор', link: '/' },
+      { text: 'Окружение', link: '/harness/', activeMatch: '/harness/' },
+      { text: 'Скиллы', link: '/skiller/guide/', activeMatch: '/skiller/' },
+      {
+        text: 'Память и граф (maind)',
+        link: 'https://github.com/academici/swissknifeman/tree/main/packages/maind/docs',
+      },
     ],
 
     sidebar: {
-      '/': [
+      '/harness/': [
         {
-          text: 'Гайд',
+          text: 'Окружение (harness)',
           items: [
-            { text: 'Что такое SwissKnifeMan', link: '/guide/' },
-            { text: 'Установка скиллов', link: '/guide/installation' },
-            { text: 'Vendor-режим (sync)', link: '/guide/vendor-mode' },
-            { text: 'Чеклист интеграции', link: '/guide/integration-checklist' },
-            { text: 'CLI swissknifeman', link: '/guide/cli' },
-            { text: 'CLI harness (окружение)', link: '/guide/harness' },
-            { text: 'Профили и автодетект', link: '/guide/profiles' },
-            { text: 'Анатомия скилла', link: '/guide/skill-anatomy' },
-            { text: 'Адаптерные дельты', link: '/guide/adapter-deltas' },
-            { text: 'Методология: против раздувания кода', link: '/guide/methodology' },
-            { text: 'Семантика loop’ов', link: '/guide/loop-semantics' },
-            { text: 'Создание скиллов', link: '/guide/creating-skills' },
-            { text: 'Скиллы из пакетов', link: '/guide/vendor-skills' },
-            { text: 'Upstream-sync', link: '/guide/upstream-sync' },
-            { text: 'Реестр skills.json', link: '/guide/registry' },
-            { text: 'Граф зависимостей', link: '/guide/graph' },
-            { text: 'Сканер сниппетов', link: '/guide/scanner' },
-            { text: 'CI/CD', link: '/guide/ci' },
-            { text: 'Диагностика и обновление', link: '/guide/troubleshooting' },
+            { text: 'Обзор: CLI harness', link: '/harness/' },
+            { text: 'Permissions для Claude Code', link: '/harness/configs/claude-permissions' },
+            { text: 'Конфиги (обзор)', link: '/harness/configs/' },
+            { text: 'Настройка Claude Code (машина)', link: '/harness/setup/claude' },
           ],
         },
         {
-          text: 'Окружение',
+          text: 'Интеграции (MCP)',
           items: [
-            { text: 'Настройка Claude Code', link: '/setup/claude' },
+            { text: 'Обзор', link: '/harness/integrations/' },
+            { text: 'Context7 MCP', link: '/harness/integrations/context7' },
+            { text: 'Playwright MCP', link: '/harness/integrations/playwright-mcp' },
+            { text: 'filesystem MCP', link: '/harness/integrations/filesystem' },
+            { text: 'fetch MCP', link: '/harness/integrations/fetch' },
+            { text: 'memory MCP', link: '/harness/integrations/memory' },
+            { text: 'sequential-thinking MCP', link: '/harness/integrations/sequential-thinking' },
+            { text: 'GitHub MCP', link: '/harness/integrations/github' },
+            { text: 'Task Master AI', link: '/harness/integrations/task-master' },
+            { text: 'GitHub Spec Kit', link: '/harness/integrations/spec-kit' },
+            { text: 'Claude Code Router', link: '/harness/integrations/claude-code-router' },
+          ],
+        },
+      ],
+
+      '/skiller/': [
+        {
+          text: 'Скиллы (skiller)',
+          items: [
+            { text: 'Что такое SwissKnifeMan', link: '/skiller/guide/' },
+            { text: 'Установка скиллов', link: '/skiller/guide/installation' },
+            { text: 'Vendor-режим (sync)', link: '/skiller/guide/vendor-mode' },
+            { text: 'Чеклист интеграции', link: '/skiller/guide/integration-checklist' },
+            { text: 'CLI swissknifeman', link: '/skiller/guide/cli' },
+            { text: 'Профили и автодетект', link: '/skiller/guide/profiles' },
+            { text: 'Анатомия скилла', link: '/skiller/guide/skill-anatomy' },
+            { text: 'Адаптерные дельты', link: '/skiller/guide/adapter-deltas' },
+            { text: 'Методология: против раздувания кода', link: '/skiller/guide/methodology' },
+            { text: 'Семантика loop’ов', link: '/skiller/guide/loop-semantics' },
+            { text: 'Создание скиллов', link: '/skiller/guide/creating-skills' },
+            { text: 'Скиллы из пакетов', link: '/skiller/guide/vendor-skills' },
+            { text: 'Upstream-sync', link: '/skiller/guide/upstream-sync' },
+            { text: 'Реестр skills.json', link: '/skiller/guide/registry' },
+            { text: 'Граф зависимостей', link: '/skiller/guide/graph' },
+            { text: 'Сканер сниппетов', link: '/skiller/guide/scanner' },
+            { text: 'CI/CD', link: '/skiller/guide/ci' },
+            { text: 'Диагностика и обновление', link: '/skiller/guide/troubleshooting' },
+            { text: 'Совместимость с Laravel Boost', link: '/skiller/boost-compatibility' },
           ],
         },
         {
-          text: 'Конфиги',
+          text: 'Адаптеры IDE',
           items: [
-            { text: 'Обзор', link: '/configs/' },
-            { text: 'Permissions для Claude Code', link: '/configs/claude-permissions' },
-          ],
-        },
-        {
-          text: 'Адаптеры',
-          items: [
-            { text: 'Claude Code', link: '/adapters/claude-code' },
-            { text: 'Cursor', link: '/adapters/cursor' },
-            { text: 'Perplexity', link: '/adapters/perplexity' },
+            { text: 'Claude Code', link: '/skiller/adapters/claude-code' },
+            { text: 'Cursor', link: '/skiller/adapters/cursor' },
+            { text: 'Perplexity', link: '/skiller/adapters/perplexity' },
           ],
         },
         {
           text: 'Воркфлоу',
           items: [
-            { text: 'AI-assisted development', link: '/workflows/' },
-            { text: 'Perplexity', link: '/workflows/perplexity' },
-            { text: 'Claude', link: '/workflows/claude' },
-            { text: 'Claude Fable 5', link: '/workflows/fable-5' },
-            { text: 'Cursor / VS Code', link: '/workflows/cursor' },
-            { text: 'Python / 3D', link: '/workflows/python-3d' },
-            { text: 'Фоновые агенты', link: '/workflows/background-agents' },
-          ],
-        },
-        {
-          text: 'Интеграции',
-          items: [
-            { text: 'Обзор', link: '/integrations/' },
-            { text: 'Context7 MCP', link: '/integrations/context7' },
-            { text: 'Playwright MCP', link: '/integrations/playwright-mcp' },
-            { text: 'filesystem MCP', link: '/integrations/filesystem' },
-            { text: 'fetch MCP', link: '/integrations/fetch' },
-            { text: 'memory MCP', link: '/integrations/memory' },
-            { text: 'sequential-thinking MCP', link: '/integrations/sequential-thinking' },
-            { text: 'GitHub MCP', link: '/integrations/github' },
-            { text: 'Task Master AI', link: '/integrations/task-master' },
-            { text: 'GitHub Spec Kit', link: '/integrations/spec-kit' },
-            { text: 'Claude Code Router', link: '/integrations/claude-code-router' },
+            { text: 'AI-assisted development', link: '/skiller/workflows/' },
+            { text: 'Perplexity', link: '/skiller/workflows/perplexity' },
+            { text: 'Claude', link: '/skiller/workflows/claude' },
+            { text: 'Claude Fable 5', link: '/skiller/workflows/fable-5' },
+            { text: 'Cursor / VS Code', link: '/skiller/workflows/cursor' },
+            { text: 'Python / 3D', link: '/skiller/workflows/python-3d' },
+            { text: 'Фоновые агенты', link: '/skiller/workflows/background-agents' },
           ],
         },
         {
           text: 'Примеры',
           items: [
-            { text: 'Laravel-проект с нуля', link: '/examples/laravel' },
-            { text: 'PHP-пакет', link: '/examples/php-package' },
-            { text: 'Obsidian vault', link: '/examples/obsidian' },
+            { text: 'Laravel-проект с нуля', link: '/skiller/examples/laravel' },
+            { text: 'PHP-пакет', link: '/skiller/examples/php-package' },
+            { text: 'Obsidian vault', link: '/skiller/examples/obsidian' },
+          ],
+        },
+      ],
+
+      '/': [
+        {
+          text: 'Экосистема',
+          items: [
+            { text: 'Обзор', link: '/' },
+            { text: 'Роутинг источников и задач', link: '/routing' },
+            { text: 'Roadmap', link: '/roadmap' },
           ],
         },
         {
-          text: 'Roadmap',
-          items: [{ text: 'Идеи развития', link: '/roadmap' }],
+          text: 'Пакеты',
+          items: [
+            { text: 'Скиллы — skiller', link: '/skiller/guide/' },
+            { text: 'Окружение — harness', link: '/harness/' },
+            {
+              text: 'Память и граф — maind',
+              link: 'https://github.com/academici/swissknifeman/tree/main/packages/maind/docs',
+            },
+          ],
         },
       ],
     },

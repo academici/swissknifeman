@@ -444,12 +444,8 @@ for sh in "$REPO_ROOT/bin/skiller" "$REPO_ROOT/install.sh" \
           "$REPO_ROOT/sync.sh" "$REPO_ROOT"/scripts/*.sh; do
   bash -n "$sh" || { echo "ERROR: bash -n failed: $sh" >&2; exit 1; }
 done
-# хук-скрипты конфигов (auto-approve / notify / memory) — синтакс-проверка
-if [[ -d "$REPO_ROOT/configs/claude-code/hooks" ]]; then
-  while IFS= read -r -d '' sh; do
-    bash -n "$sh" || { echo "ERROR: bash -n failed: $sh" >&2; exit 1; }
-  done < <(find "$REPO_ROOT/configs/claude-code/hooks" -name '*.sh' -print0)
-fi
+# Пресеты/хуки Claude Code вынесены в пакет harness (см. packages/harness);
+# их bash-проверка — в packages/harness/scripts/validate.sh.
 echo "CLI + shell scripts: syntax OK"
 
 # --- 12. lib/skiller package + unit/integration tests --------------------------

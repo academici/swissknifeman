@@ -2,19 +2,17 @@
 
 Проходит чеклист «выбери, что хочешь из максимального функционала» и применяет
 выбранное, переиспользуя существующие команды: do_connect/do_vendor (скиллы),
-apply-permissions.sh (permissions), generate_hub (хаб) + пишет per-project хук-JSON
-и .swissknife.json. Безопасно: --dry-run, merge-only, бэкап *.bak, confirm.
+generate_hub (хаб). Окружение Claude Code (permissions/MCP/auto-approve/memory)
+вынесено в отдельный пакет `harness` — соответствующие блоки делегируются ему через
+subprocess (как maind делегирует skiller). Безопасно: --dry-run, merge-only, confirm.
 
 Блоки: пререквизиты → скиллы → permissions → MCP → auto-approve → memory → hub → brain.
+Скилл-блоки (skills/hub) — здесь; окружение (permissions/MCP/auto-approve/memory) — в harness.
 """
-import json
-import shutil
 import subprocess
 import sys
 
-from core import atomic_write_text
-
-from .common import apply_permissions, die, parse_flags, warn
+from .common import apply_permissions, die, harness_bin, parse_flags, warn
 from .config import autodetect, load_config, resolve_target
 from .connect import do_connect
 from .vendor import do_vendor
@@ -33,7 +31,7 @@ BUNDLES = {
 }
 AA_MODES = ("strict", "permissive", "bypass", "off")
 MEM_MODES = ("file", "federation", "agentmemory", "off")
-# MCP-серверы, раздаваемые в среды разработки по умолчанию (пресеты — configs/claude-code/mcp/).
+# MCP-серверы, раздаваемые в среды разработки по умолчанию (пресеты — в пакете harness).
 DEV_MCP = ("context7",)
 
 
@@ -73,64 +71,50 @@ def _ask_text(prompt, default, interactive):
     return input(f"{prompt} [{default}]: ").strip() or default
 
 
-# --- settings / file writers (merge-only, dry-run aware) ----------------------
-def _write_json(path, data, dry):
-    if dry:
-        print(f"  [dry-run] записал бы {path}")
-        return
-    if path.exists():
-        shutil.copy2(path, f"{path}.bak")
-    atomic_write_text(path, json.dumps(data, ensure_ascii=False, indent=2) + "\n")
-    print(f"  записано: {path}")
-
-
-def _write_text(path, text, dry):
-    if dry:
-        print(f"  [dry-run] записал бы {path} ({text!r})")
-        return
-    if path.exists():
-        shutil.copy2(path, f"{path}.bak")
-    atomic_write_text(path, text)
-    print(f"  записано: {path}")
-
-
-def _load_settings(target, fname):
-    f = target / ".claude" / fname
-    if f.exists():
-        try:
-            return json.loads(f.read_text(encoding="utf-8")), f
-        except json.JSONDecodeError as e:
-            die(f"{f}: невалидный JSON: {e}")
-    return {}, f
-
-
-def _add_hook(settings, event, matcher, command):
-    """Добавить PreToolUse/Notification-хук, merge-only. True если добавлен."""
-    entries = settings.setdefault("hooks", {}).setdefault(event, [])
-    for e in entries:
-        if e.get("matcher") == matcher and \
-                any(h.get("command") == command for h in e.get("hooks", [])):
-            return False
-    entry = {"hooks": [{"type": "command", "command": command}]}
-    if matcher:
-        entry = {"matcher": matcher, **entry}
-    entries.append(entry)
+# --- harness delegation (окружение Claude Code вынесено в пакет harness) -------
+def _run_harness(env, args):
+    """Выполнить команду пакета harness (настройка окружения). False — если harness
+    не установлен (тогда блок мягко пропускается, как раньше при отсутствии скрипта)."""
+    binp = harness_bin(env)
+    if binp is None:
+        warn("  harness не установлен — пропуск (packages/harness/install.sh)")
+        return False
+    sys.stdout.flush()
+    subprocess.run([str(binp)] + args, check=False)
     return True
 
 
-def _set_swissknife(target, key, value, dry):
-    f = target / ".swissknife.json"
-    data = {}
-    if f.exists():
-        try:
-            data = json.loads(f.read_text(encoding="utf-8"))
-        except json.JSONDecodeError as e:
-            die(f"{f}: невалидный JSON: {e}")
-    if data.get(key) == value:
-        print(f"  .swissknife.json:{key} уже = {value}")
-        return
-    data[key] = value
-    _write_json(f, data, dry)
+# --- choices helpers (политика выбора — на стороне визарда) --------------------
+def _default_mcp(target):
+    """MCP-серверы по умолчанию для среды разработки (не для obsidian-vault)."""
+    return list(DEV_MCP) if autodetect(target) != "obsidian-vault" else []
+
+
+def _available_mcp(env):
+    """Имена доступных MCP-пресетов — через `harness mcp --list` (пусто, если harness нет)."""
+    binp = harness_bin(env)
+    if binp is None:
+        return []
+    try:
+        out = subprocess.run([str(binp), "mcp", "--list"],
+                             capture_output=True, text=True, check=False).stdout
+    except OSError:
+        return []
+    return [ln.strip() for ln in out.splitlines() if ln.strip()]
+
+
+def _parse_mcp_flag(opts):
+    """--mcp a,b,c → ['a','b','c'] (trim, без пустых)."""
+    raw = opts.get("mcp")
+    return [s.strip() for s in raw.split(",") if s.strip()] if raw else []
+
+
+def _add_unique(lst, names):
+    """Дописать names в lst, сохраняя порядок и без дублей. Возвращает lst."""
+    for name in names:
+        if name and name not in lst:
+            lst.append(name)
+    return lst
 
 
 # --- blocks -------------------------------------------------------------------
@@ -149,12 +133,10 @@ def _block_prereqs(env, dry, interactive):
     if have:
         print("  ✓ файлы хуков установлены (~/.claude/hooks/)")
     else:
-        print("  ✗ файлы хуков не установлены — нужно ./scripts/apply-permissions.sh --global")
-        script = env.root / "scripts" / "apply-permissions.sh"
-        if not dry and interactive and script.exists() and \
+        print("  ✗ файлы хуков не установлены — нужно: harness hooks --global")
+        if not dry and interactive and \
                 _yn("  Установить файлы хуков глобально сейчас?", False):
-            sys.stdout.flush()
-            subprocess.run(["bash", str(script), "--global"], check=False)
+            _run_harness(env, ["hooks", "--global"])
 
 
 def _block_skills(env, target, choices, dry):
@@ -178,82 +160,28 @@ def _block_perms(env, target, choices, dry):
     apply_permissions(env, target, choices.get("perms_presets", ""), dry)
 
 
-def _default_mcp(target):
-    """MCP-серверы по умолчанию для среды разработки (не для obsidian-vault)."""
-    return list(DEV_MCP) if autodetect(target) != "obsidian-vault" else []
-
-
-def _available_mcp(env):
-    """Имена доступных MCP-пресетов (configs/claude-code/mcp/<name>.json)."""
-    d = env.root / "configs" / "claude-code" / "mcp"
-    return sorted(p.stem for p in d.glob("*.json")) if d.is_dir() else []
-
-
-def _parse_mcp_flag(opts):
-    """--mcp a,b,c → ['a','b','c'] (trim, без пустых)."""
-    raw = opts.get("mcp")
-    return [s.strip() for s in raw.split(",") if s.strip()] if raw else []
-
-
-def _add_unique(lst, names):
-    """Дописать names в lst, сохраняя порядок и без дублей. Возвращает lst."""
-    for name in names:
-        if name and name not in lst:
-            lst.append(name)
-    return lst
-
-
 def _block_mcp(env, target, choices, dry):
-    """Влить пресеты MCP-серверов в <project>/.mcp.json, merge-only.
-
-    Пресет сервера — configs/claude-code/mcp/<name>.json (голый объект конфига
-    сервера). Существующие записи mcpServers не затираются, бэкап *.bak."""
+    """Делегировать установку MCP-серверов пакету harness (merge-only в .mcp.json)."""
     servers = choices.get("mcp") or []
     print(f"\n[3] MCP-серверы: {', '.join(servers) if servers else 'пропуск'}")
     if not servers:
         return
-    f = target / ".mcp.json"
-    data = {}
-    if f.exists():
-        try:
-            data = json.loads(f.read_text(encoding="utf-8"))
-        except json.JSONDecodeError as e:
-            die(f"{f}: невалидный JSON: {e}")
-    mcp = data.setdefault("mcpServers", {})
-    added = []
-    for name in servers:
-        preset = env.root / "configs" / "claude-code" / "mcp" / f"{name}.json"
-        if not preset.exists():
-            warn(f"  нет пресета MCP '{name}' ({preset}) — пропуск")
-            continue
-        if name in mcp:
-            print(f"  MCP '{name}' уже в .mcp.json — пропуск")
-            continue
-        mcp[name] = json.loads(preset.read_text(encoding="utf-8"))
-        added.append(name)
-    if added:
-        _write_json(f, data, dry)
-        print(f"  добавлены MCP: {', '.join(added)}")
+    args = ["mcp", "--target", str(target), "--mcp", ",".join(servers)]
+    if dry:
+        args.append("--dry-run")
+    _run_harness(env, args)
 
 
-def _block_autoapprove(target, choices, dry):
+def _block_autoapprove(env, target, choices, dry):
     mode = choices["autoapprove"]
     print(f"\n[4] auto-approve: {mode or 'пропуск'}")
     if not mode:
         return
-    _write_text(target / ".claude" / "auto-approve.env.ini", f"MODE={mode}\n", dry)
-    if mode == "off":
-        return
-    fname = choices["settings_file"]
-    settings, f = _load_settings(target, fname)
-    cmd = "~/.claude/hooks/auto-approve/auto-approve.sh"
-    added = False
-    for matcher in ("Bash", "ExitPlanMode"):
-        added |= _add_hook(settings, "PreToolUse", matcher, cmd)
-    if added:
-        _write_json(f, settings, dry)
-    else:
-        print(f"  хук auto-approve уже зарегистрирован в {f}")
+    args = ["hooks", "--target", str(target), "--auto-approve", mode,
+            "--file", choices["settings_file"]]
+    if dry:
+        args.append("--dry-run")
+    _run_harness(env, args)
 
 
 def _block_memory(env, target, choices, dry):
@@ -262,10 +190,10 @@ def _block_memory(env, target, choices, dry):
     if not brain_mode:
         return
     brain = choices.get("memory_brain") or "core"
-    _set_swissknife(target, "memory_brain", brain, dry)
-    _write_text(target / ".claude" / "memory.env.ini", f"MODE={brain_mode}\n", dry)
-    print(f"  проект присоединён к brain '{brain}' (режим {brain_mode}). "
-          f"Состав участников — ~/.claude/hooks/memory/config.json")
+    args = ["hooks", "--target", str(target), "--memory", f"{brain}:{brain_mode}"]
+    if dry:
+        args.append("--dry-run")
+    _run_harness(env, args)
 
 
 def _block_hub(env, target, choices, dry):
@@ -297,7 +225,7 @@ def _gather(env, target, opts, bundle, interactive):
     base["settings_file"] = opts.get("file") or "settings.json"
     base["memory_brain"] = "core"
     if bundle != "custom":
-        # авто-пресеты permissions (autodetect внутри apply-permissions при пустом)
+        # авто-пресеты permissions (autodetect внутри harness при пустом)
         base["perms_presets"] = ""
         # mcp=True в бандле → dev-дефолты (context7), но не для obsidian-vault;
         # --mcp <a,b> добавляет opt-in пресеты поверх (явный выбор бьёт dev-гейт)
@@ -377,7 +305,7 @@ def cmd_integrate(env, argv):
     _block_skills(env, target, choices, dry)
     _block_perms(env, target, choices, dry)
     _block_mcp(env, target, choices, dry)
-    _block_autoapprove(target, choices, dry)
+    _block_autoapprove(env, target, choices, dry)
     _block_memory(env, target, choices, dry)
     _block_hub(env, target, choices, dry)
     _block_brain(target, choices)

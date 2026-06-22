@@ -114,7 +114,7 @@ brain sync <project>        # синхронизировать (двусторо
 ```bash
 skiller list          # какие проекты к чему подключены
 skiller status        # состояние текущего проекта
-# скиллы — skills/<bucket>/, хуки и пресеты — configs/claude-code/
+# скиллы — пакет skiller (skills/<bucket>/); хуки и пресеты — пакет harness
 ```
 
 Подключение нового проекта к раздаче скиллов — `skiller connect`

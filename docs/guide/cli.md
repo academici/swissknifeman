@@ -42,8 +42,10 @@ skiller vendor [--agent claude|cursor|generic]
 ### `skiller integrate`
 
 Интерактивный визард интеграции: проходит [чеклист](./integration-checklist) по
-всему функционалу (скиллы, permissions, хуки auto-approve/память, hub) и применяет
-выбранное. Безопасно — `--dry-run`, merge-only, бэкапы.
+всему функционалу (скиллы, permissions, MCP, хуки auto-approve/память, hub) и
+применяет выбранное. Скиллы/hub — сам skiller; окружение (permissions/MCP/хуки)
+делегируется пакету [`harness`](./harness) через subprocess. Безопасно —
+`--dry-run`, merge-only, бэкапы.
 
 ```
 skiller integrate [--target P]

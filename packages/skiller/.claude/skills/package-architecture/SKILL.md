@@ -71,7 +71,7 @@ Brain-sync удалён: brain — обычный потребляющий пр�
 | `skills/*/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` | `skiller registry` |
 | `docs/guide/graph.md` (Mermaid-граф зависимостей) | `skiller registry` → `scripts/generate-graph.sh` |
 | Хаб в проекте (managed-блок CLAUDE.md или `.ai/guidelines/swissknifeman-hub.md`) | `scripts/generate-hub.sh` |
-| Permissions-пресеты в проекте | `scripts/apply-permissions.sh` (пресеты в `configs/claude-code/`) |
+| Permissions/MCP/хуки в проекте | пакет **`harness`** (`harness permissions\|mcp\|hooks`); skiller делегирует через subprocess |
 
 ## Валидация — `scripts/validate.sh` (== CI)
 
@@ -91,14 +91,15 @@ kebab-case == имя каталога); (11) `bash -n` всех скриптов
 auto-approve → memory → hub → brain. Бандлы `minimal`/`recommended`/`full`/`custom`
 (`BUNDLES` = пред-ответы). Все записи merge-only, бэкап `*.bak`, `--dry-run`.
 
-**MCP-блок (`_block_mcp`).** Вливает пресеты MCP-серверов в `<project>/.mcp.json`
-(`mcpServers`, merge-only, чужие серверы не трогаются). Пресет сервера —
-`configs/claude-code/mcp/<name>.json` (голый объект конфига, ключ = имя файла).
-Гейт «среда разработки»: `_default_mcp(target)` раздаёт `DEV_MCP` (сейчас
-`context7`, remote HTTP `mcp.context7.com/mcp`) во всё, **кроме** `obsidian-vault`.
-`recommended`/`full` включают dev-MCP по умолчанию; `minimal` — нет; `custom` —
-спрашивает. Добавить сервер: положить пресет в `configs/claude-code/mcp/`, при
-необходимости — в `DEV_MCP`.
+**Окружение делегируется в `harness`.** Блоки permissions / MCP / auto-approve /
+memory не пишут файлы сами — зовут `harness permissions|mcp|hooks` через subprocess
+(резолв лаунчера: `harness_bin(env)` → `SKM_HARNESS_BIN` или
+`<монорепо>/packages/harness/bin/harness`; нет harness → блок мягко пропускается).
+Здесь остаётся ПОЛИТИКА выбора: `_default_mcp(target)` раздаёт `DEV_MCP` (сейчас
+`context7`) во всё, **кроме** `obsidian-vault`; `recommended`/`full` включают dev-MCP,
+`minimal` — нет, `custom` — спрашивает. Сами пресеты MCP/permissions и их merge —
+в пакете `harness` (`configs/claude-code/`). Добавить сервер: пресет в
+`packages/harness/configs/claude-code/mcp/`, при необходимости — `DEV_MCP` в integrate.
 
 ## Прочие инструменты и контракты
 

@@ -2,6 +2,29 @@
 
 ## [Unreleased]
 
+### Added (пакет `harness` — настройка окружения Claude Code)
+
+- **Новый пакет `packages/harness`** (CLI `harness`): настройка харнеса Claude Code —
+  пресеты permissions, режимы auto-approve/bypass, MCP-серверы, хуки (memory/notify/log).
+  Выделен из `skiller`, потому что к управлению скиллами не относится. `git mv`
+  `configs/claude-code/` и `scripts/apply-permissions.sh` из skiller → harness (история
+  сохранена). Команды: `harness permissions|mcp|hooks|doctor`. Пакет stateless
+  (пишет в `.claude/` целей и `~/.claude/hooks/`); зонтичный `install.sh` ставит
+  `skiller · harness · maind`.
+- **skiller делегирует окружение в harness через subprocess** (как maind → skiller):
+  `apply_permissions` и env-блоки `integrate` (permissions/MCP/auto-approve/memory)
+  зовут `harness …`; резолв лаунчера — `SKM_HARNESS_BIN` →
+  `<монорепо>/packages/harness/bin/harness`. Сигнатура `apply_permissions` не менялась —
+  `connect`/`vendor` не трогались; harness не установлен → graceful skip (как раньше при
+  отсутствии скрипта). Политика выбора MCP (`_default_mcp`/dev-гейт) осталась в integrate.
+- **marketplace: поле провенанса `package`** у каждой записи плагина (`skiller`/`harness`/
+  `maind`) — `skiller registry` проставляет автоматически; harness подхватывается как
+  соседний пакет (плагин `harness@swissknifeman`, только команды `/harness:*`). Имена
+  плагинов и имя marketplace НЕ менялись (back-compat: `<plugin>@swissknifeman`).
+- **PR-шаблон** переписан под монорепо (затронутые пакеты skiller/harness/maind/core,
+  per-package validate, regenerate-marketplace, docs). Память хуков делит state со skiller
+  (`~/.swissknifeman/`) — пути в установленных хуках не менялись.
+
 ### Changed (модель имён и топология MCP)
 
 - **Пакет `packages/swissknifeman` → `packages/skiller`** (CLI `skiller`). Репо/зонтик остаётся

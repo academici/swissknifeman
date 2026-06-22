@@ -148,6 +148,7 @@ def write_plugin_manifests(env, bucket_meta, bucket_dirs):
             "description": meta["description"],
             "category": meta.get("category", ""),
             "tags": meta.get("tags", []),
+            "package": "skiller",
         })
 
     meta_skill_dir = root / "generate-skill"
@@ -163,6 +164,7 @@ def write_plugin_manifests(env, bucket_meta, bucket_dirs):
         "description": meta_fm.get("description", "Meta-skill for creating new skills"),
         "category": "meta",
         "tags": ["meta", "authoring"],
+        "package": "skiller",
     })
 
     # Management plugin: командное лицо skiller CLI (каталог skm/ со статичным
@@ -176,14 +178,16 @@ def write_plugin_manifests(env, bucket_meta, bucket_dirs):
                            "(connect/vendor), integrate, статус",
             "category": "meta",
             "tags": ["cli", "skills", "management"],
+            "package": "skiller",
         })
 
     # Соседние пакеты монорепо (packages/<name>/.claude-plugin/plugin.json), кроме самого
-    # swissknifeman: maind и др. Источник истины — их plugin.json (name/description/keywords).
-    # source считается от корня репо: ./packages/<name>.
+    # пакета skiller: maind, harness и др. Источник истины — их plugin.json
+    # (name/description/keywords). source считается от корня репо: ./packages/<name>.
+    # Поле `package` = имя каталога пакета (провенанс: какой пакет предоставил плагин).
     pkgs_dir = repo_root / "packages"
     if rel_pkg and pkgs_dir.is_dir():
-        self_name = root.name  # "swissknifeman" — его плагины уже добавлены выше
+        self_name = root.name  # каталог skiller — его плагины уже добавлены выше
         for pkg in sorted(pkgs_dir.iterdir()):
             if not pkg.is_dir() or pkg.name == self_name:
                 continue
@@ -197,6 +201,7 @@ def write_plugin_manifests(env, bucket_meta, bucket_dirs):
                 "description": data.get("description", ""),
                 "category": data.get("category", "ecosystem"),
                 "tags": data.get("keywords", []),
+                "package": pkg.name,
             })
 
     # marketplace.json — в КОРНЕ монорепо (один манифест на все плагины репо), а не в пакете.

@@ -15,7 +15,8 @@
         "api",
         "security",
         "data"
-      ]
+      ],
+      "package": "skiller"
     },
     {
       "name": "blender",
@@ -26,7 +27,8 @@
         "blender",
         "3d",
         "python"
-      ]
+      ],
+      "package": "skiller"
     },
     {
       "name": "devops",
@@ -37,7 +39,8 @@
         "docker",
         "ci-cd",
         "gitops"
-      ]
+      ],
+      "package": "skiller"
     },
     {
       "name": "founder",
@@ -48,7 +51,8 @@
         "startup",
         "ideas",
         "pitch"
-      ]
+      ],
+      "package": "skiller"
     },
     {
       "name": "frontend",
@@ -60,7 +64,8 @@
         "vite",
         "tailwind",
         "inertia"
-      ]
+      ],
+      "package": "skiller"
     },
     {
       "name": "general",
@@ -71,7 +76,8 @@
         "workflow",
         "conventions",
         "git"
-      ]
+      ],
+      "package": "skiller"
     },
     {
       "name": "generate-skill",
@@ -81,7 +87,25 @@
       "tags": [
         "meta",
         "authoring"
-      ]
+      ],
+      "package": "skiller"
+    },
+    {
+      "name": "harness",
+      "source": "./packages/harness",
+      "description": "harness — настройка окружения Claude Code: пресеты permissions, auto-approve/bypass, MCP-серверы и хуки (memory/notify). Тонкое лицо над CLI harness.",
+      "category": "ecosystem",
+      "tags": [
+        "harness",
+        "claude-code",
+        "permissions",
+        "auto-approve",
+        "mcp",
+        "hooks",
+        "academici",
+        "ecosystem"
+      ],
+      "package": "harness"
     },
     {
       "name": "imported",
@@ -91,7 +115,8 @@
       "tags": [
         "super-skills",
         "upstream"
-      ]
+      ],
+      "package": "skiller"
     },
     {
       "name": "maind",
@@ -106,7 +131,8 @@
         "graph",
         "academici",
         "ecosystem"
-      ]
+      ],
+      "package": "maind"
     },
     {
       "name": "mobile",
@@ -118,7 +144,8 @@
         "mobile",
         "dart",
         "figma"
-      ]
+      ],
+      "package": "skiller"
     },
     {
       "name": "operator",
@@ -129,7 +156,8 @@
         "incidents",
         "runbooks",
         "sre"
-      ]
+      ],
+      "package": "skiller"
     },
     {
       "name": "oss-dev",
@@ -140,7 +168,8 @@
         "open-source",
         "releases",
         "dx"
-      ]
+      ],
+      "package": "skiller"
     },
     {
       "name": "php",
@@ -151,7 +180,8 @@
         "php",
         "laravel",
         "testing"
-      ]
+      ],
+      "package": "skiller"
     },
     {
       "name": "pm",
@@ -162,7 +192,8 @@
         "brd",
         "prd",
         "roadmap"
-      ]
+      ],
+      "package": "skiller"
     },
     {
       "name": "python",
@@ -173,7 +204,8 @@
         "python",
         "ml",
         "venv"
-      ]
+      ],
+      "package": "skiller"
     },
     {
       "name": "quality",
@@ -184,7 +216,8 @@
         "code-review",
         "refactoring",
         "tech-debt"
-      ]
+      ],
+      "package": "skiller"
     },
     {
       "name": "roles",
@@ -195,7 +228,8 @@
         "tech-lead",
         "cto",
         "maintainer"
-      ]
+      ],
+      "package": "skiller"
     },
     {
       "name": "skm",
@@ -206,7 +240,8 @@
         "cli",
         "skills",
         "management"
-      ]
+      ],
+      "package": "skiller"
     },
     {
       "name": "system",
@@ -218,7 +253,8 @@
         "architecture",
         "navigation",
         "meta"
-      ]
+      ],
+      "package": "skiller"
     }
   ]
 }

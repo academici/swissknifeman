@@ -274,7 +274,7 @@
       "path": "skills/architect/package-contribution-protocol/SKILL.md",
       "version": "0.1.0",
       "description": "Гейт против раздувания зависимого пакета из проекта-потребителя: Rule of Three, proposal→ADR, минимальный контракт, направление зависимостей, SemVer и граница read-only. Активировать, когда задача в проекте требует правки общего пакета, при «вынести общее» и при добавлении класса/провайдера/интерфейса/абстракции в зависимый пакет.",
-      "sha256": "82d6257940b1d811e4aec1e5464c2db9705ca4eec3f26a969336b222a88821ce",
+      "sha256": "3473f0852ccf085d0c86891d013c073593549014b5c8d77d5a04d9841234e0f3",
       "tags": [
         "governance",
         "package",
@@ -3270,7 +3270,7 @@
       "path": "skills/system/local-topology/SKILL.md",
       "version": "0.1.0",
       "description": "Корневая карта локальной среды разработки — три узла-хаба (Brain-волт, swissknifeman, база проектов) и навигация между проектами, их кодом и документацией. Читается из ~/.swissknifeman/topology.json",
-      "sha256": "bc001f1388406b64c8a683cb7b102b307744d6d6066039188baf1c790646409a",
+      "sha256": "266fbc7ec2665e91e3d8bd2f9ba4477eef717bab9cc20a3cabb918146ff2fe4a",
       "tags": [
         "topology",
         "architecture",
@@ -3290,7 +3290,7 @@
       "path": "skills/system/shared-memory/SKILL.md",
       "version": "0.1.0",
       "description": "Единый «мозг» (общая память) для выбранных проектов констелляции через хук ~/.claude/hooks/memory/. Recall перед работой, remember после — факты делятся только между участниками одной группы (brain). Бэкенд сменный: file|federation|agentmemory|off, переопределяется конфигом.",
-      "sha256": "1540094b303328e1f7de3e2a1a18e897e850f848dd6ab11a061c3498827332ce",
+      "sha256": "8ab282fae27be39e4da7d01661f9ec491da0a63d37263a06fb9d7437c92e36a8",
       "tags": [
         "memory",
         "cross-project",

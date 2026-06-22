@@ -66,12 +66,11 @@ skills/                    # скилл = папка + SKILL.md + snippets/ (+ u
 └── roles/      (4)        # персоны: tech-lead, startup-cto, ...
 
 profiles/                  # тип проекта → набор bucket-ов
-configs/                   # готовые конфиги: пресеты permissions для Claude Code
 references/                # каталог внешних источников (что брать, статус)
 adapters/                  # доки по интеграции: claude-code, cursor, perplexity
 docs/workflows/            # межсистемные методологии (Perplexity→Claude→Cursor→ревью)
-bin/                       # CLI swissknifeman (connect/vendor/update/status/list/registry/doctor)
-scripts/                   # validate, update-upstreams, scanner, apply-permissions
+bin/                       # CLI skiller (connect/vendor/update/status/list/registry/doctor)
+scripts/                   # validate, update-upstreams, scanner
 generate-skill/            # мета-скилл создания новых скиллов
 skills.json                # реестр (генерируется skiller registry, с provenance)
 buckets.json               # метаданные bucket-ов (description/category/tags)
@@ -183,19 +182,21 @@ skiller update          # регенерирует хаб, если он уже 
 
 ## Пресеты permissions для Claude Code
 
-Готовые наборы разрешений ([configs/claude-code/](configs/claude-code/README.md)),
-чтобы агент в новом проекте работал без permission-промптов:
+Настройка окружения Claude Code (пресеты permissions, MCP-серверы, хуки) **вынесена
+в отдельный пакет [`harness`](../harness/README.md)**. skiller делегирует туда:
+`connect`/`vendor`/`integrate` зовут `harness permissions` под капотом (`--no-permissions`
+отключает). Напрямую:
 
 ```bash
 # base + автодетект стека (artisan → laravel, package.json → node, ...)
-./scripts/apply-permissions.sh --target ~/projects/my-laravel-app
+harness permissions --target ~/projects/my-laravel-app
 
 # Явный набор / превью
-./scripts/apply-permissions.sh --target . --preset base,laravel,docker
-./scripts/apply-permissions.sh --target . --dry-run
+harness permissions --target . --preset base,laravel,docker
+harness permissions --target . --dry-run
 
-# Глобальный baseline (read-only команды) + hook-логгер всех Bash-команд в ~/.claude
-./scripts/apply-permissions.sh --global
+# Глобальный baseline (read-only) + hook-логгер всех Bash-команд в ~/.claude
+harness permissions --global
 ```
 
 Пресеты: `base`, `laravel`, `php-package`, `node`, `python`, `docker`, `yolo`, `global`.

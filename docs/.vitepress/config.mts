@@ -29,6 +29,7 @@ export default withMermaid(defineConfig({
             { text: 'Vendor-режим (sync)', link: '/guide/vendor-mode' },
             { text: 'Чеклист интеграции', link: '/guide/integration-checklist' },
             { text: 'CLI swissknifeman', link: '/guide/cli' },
+            { text: 'CLI harness (окружение)', link: '/guide/harness' },
             { text: 'Профили и автодетект', link: '/guide/profiles' },
             { text: 'Анатомия скилла', link: '/guide/skill-anatomy' },
             { text: 'Адаптерные дельты', link: '/guide/adapter-deltas' },

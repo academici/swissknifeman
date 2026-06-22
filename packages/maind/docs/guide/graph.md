@@ -60,7 +60,23 @@ maind graph query --from project:flexcrm --depth 2 [--edge-types depends_on]
 maind graph neighbors --node project:maind --direction in
 maind graph --project flexcrm            # граф одного проекта
 maind graph --cross [--namespace axioma] # межпроектный слой (опц. одной группы)
+maind graph export --project flexcrm     # → Mermaid (один проект)
+maind graph export --cross               # → Mermaid (весь межпроектный слой)
 ```
+
+## Визуализация (Mermaid)
+
+У межпроектного maind-графа нет веб-UI (в отличие от памяти — там вьюер :3113). Самый надёжный
+способ увидеть его картинкой — экспорт в **Mermaid**: рендерится прямо в GitHub/VitePress/любом
+md-просмотрщике, без рантайма и демонов (нечему «сбиваться»).
+
+```bash
+maind graph export --cross > docs/graph.md   # вставь в доку — отрисуется как диаграмма
+maind graph export --project corex            # один проект, копи-пейст (обёрнуто в ```mermaid)
+```
+
+Вывод — готовый блок ` ```mermaid … ``` ` (форма узла: project — прямоугольник, package —
+скруглённый). `--raw` убирает обёртку (для вставки в свой layout).
 
 ## Пример: что увидишь
 

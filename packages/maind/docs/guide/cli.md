@@ -24,6 +24,8 @@ maind graph --project flexcrm          # граф одного проекта (�
 maind graph --cross [--namespace NS]   # межпроектный слой (_index.db), опц. одна группа
 maind graph derive [--project ID | --all]   # собрать графы из composer/Brain/override/skills
 maind graph rebuild                    # пересобрать _index.db
+maind graph export --project flexcrm   # граф проекта → Mermaid (копи-пейст в .md)
+maind graph export --cross [--raw]     # весь межпроектный слой → Mermaid (--raw: без ```-обёртки)
 
 maind agents register <id> [--project P --pid N --kind K]
 maind agents heartbeat <id>
@@ -55,6 +57,7 @@ maind migrate from-agentmemory <dir> [--force]
 
 maind mcp                              # запустить как MCP-сервер (stdio)
 maind doctor [--quiet]                 # диагностика окружения
+maind verify [--json]                  # пруф работы 3 плоскостей: пишут реально или вхолостую
 maind version                          # git SHA + путь к узлу
 ```
 

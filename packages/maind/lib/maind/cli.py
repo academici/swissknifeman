@@ -21,6 +21,7 @@ from .projects import cmd_namespaces, cmd_projects
 from .service import cmd_service
 from .start import cmd_start, cmd_status
 from .sync import cmd_sync
+from .verify import cmd_verify
 from .workspace import cmd_workspace
 
 COMMANDS = {
@@ -42,6 +43,7 @@ COMMANDS = {
     "migrate": cmd_migrate,
     "mcp": cmd_mcp,
     "doctor": cmd_doctor,
+    "verify": cmd_verify,
 }
 
 

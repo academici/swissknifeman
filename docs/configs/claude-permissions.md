@@ -1,9 +1,9 @@
 # Permissions для Claude Code
 
-Готовые пресеты разрешений в `configs/claude-code/` решают главную боль нового
-проекта: десятки permission-промптов в первые полчаса работы. Один запуск
-`apply-permissions.sh` — и агент может выполнять весь типовой инструментарий
-стека, а опасные операции остаются под контролем.
+Готовые пресеты разрешений (пакет `harness`, `packages/harness/configs/claude-code/`)
+решают главную боль нового проекта: десятки permission-промптов в первые полчаса
+работы. Один запуск `harness permissions` — и агент может выполнять весь типовой
+инструментарий стека, а опасные операции остаются под контролем.
 
 > Полная настройка машины (глобальный baseline + лог всех команд агента) —
 > в гайде [Настройка окружения Claude Code](/setup/claude).
@@ -35,23 +35,23 @@
 - **deny** — секреты (`.env`, `*.pem`, `*.key`, `~/.ssh`, `~/.aws`) и `sudo`
   заблокированы всегда.
 
-## Скрипт apply-permissions.sh
+## CLI `harness permissions`
 
 ```bash
 # base + автодетект стека по маркерам проекта
-./scripts/apply-permissions.sh --target ~/projects/my-laravel-app
+harness permissions --target ~/projects/my-laravel-app
 
 # Явный набор пресетов
-./scripts/apply-permissions.sh --target . --preset base,laravel,docker
+harness permissions --target . --preset base,laravel,docker
 
 # Превью без записи
-./scripts/apply-permissions.sh --target . --dry-run
+harness permissions --target . --dry-run
 
 # Список доступных пресетов
-./scripts/apply-permissions.sh --target . --list
+harness permissions --list
 
 # В шаримый settings.json вместо локального
-./scripts/apply-permissions.sh --target . --file settings.json
+harness permissions --target . --file settings.json
 ```
 
 Автодетект использует те же маркеры, что и `skiller vendor`:
@@ -160,11 +160,11 @@ VM, devcontainer-ах, где агент не может навредить ос
 ## Пример: содержимое base
 
 ::: details settings.base.json целиком
-<<< ../../configs/claude-code/settings.base.json
+<<< ../../packages/harness/configs/claude-code/settings.base.json
 :::
 
 Остальные пресеты — в
-[configs/claude-code/](https://github.com/academici/swissknifeman/tree/main/configs/claude-code).
+[packages/harness/configs/claude-code/](https://github.com/academici/swissknifeman/tree/main/packages/harness/configs/claude-code).
 
 ## Тонкая настройка под проект
 

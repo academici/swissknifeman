@@ -92,4 +92,4 @@ sha256: ""
 - `local-topology` (бакет system) — резолв участников через `~/.swissknifeman/topology.json`.
 - `cross-project-coordinator` (бакет system) — поставщик межпроектных находок (дубли/расхождения/кандидаты в общий пакет), которые стоит `remember` для группы.
 - `general/session-handoff` — смежная тема: передача контекста между сессиями (разово), тогда как shared-memory — постоянный общий store группы.
-- Установка файлов хука: `scripts/apply-permissions.sh --global`.
+- Установка файлов хука: `harness hooks --global` (пакет harness).

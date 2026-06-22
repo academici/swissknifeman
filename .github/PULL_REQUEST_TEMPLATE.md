@@ -1,20 +1,36 @@
 ## Summary
 
-<!-- What skill(s) or snippets are added/changed? -->
+<!-- Что меняется и зачем. Это монорепо-зонтик `swissknifeman`: несколько
+     независимых пакетов под общей крышей. -->
 
-## Bucket
+## Затронутые пакеты
 
-<!-- founder | pm | architect | oss-dev | quality | operator | devops | php | roles | imported -->
+<!-- Отметьте всё, что трогает PR -->
+
+- [ ] `skiller` — реестр скиллов (skills/, реестр, connect/vendor)
+- [ ] `harness` — настройка окружения Claude Code (permissions/MCP/хуки)
+- [ ] `maind` — память + граф + координация
+- [ ] `core` — общий stdlib-фундамент (затрагивает все пакеты сразу)
+- [ ] docs / инфраструктура (docs/, install.sh, CI, marketplace)
+
+## Тип изменения
+
+<!-- feat | fix | refactor | docs | chore — Conventional Commits, на русском -->
 
 ## Checklist
 
-- [ ] `SKILL.md` has required frontmatter: name, bucket, version, description
-- [ ] Snippets have `index.json` manifest (if applicable)
-- [ ] Ran `skiller registry` (или `./packages/skiller/bin/skiller registry`)
-- [ ] No project-specific secrets or credentials in snippets
-- [ ] Namespaces anonymized in code snippets
+- [ ] `scripts/validate.sh` зелёный в каждом затронутом пакете
+      (`bash packages/<pkg>/scripts/validate.sh`)
+- [ ] Изменения в `core/` — оба зависимых пакета (skiller + maind) проходят validate
+- [ ] Скиллы: `SKILL.md` имеет frontmatter (name·bucket·version·description);
+      snippets — `index.json`; нет имён конкретных проектов/секретов
+- [ ] Плагины/бакеты/команды менялись → прогнан `skiller registry`
+      (регенерит `.claude-plugin/marketplace.json`, skills.json, индекс, граф)
+- [ ] Новый пакет/команда → есть `.claude-plugin/plugin.json` с непустым description
+- [ ] Содержательное изменение → обновлены `docs/` и затронутые `CLAUDE.md`
 
 ## Test plan
 
-- [ ] CI validate passes
-- [ ] Skill installs via `./install.sh`
+- [ ] CI / validate проходит для затронутых пакетов
+- [ ] Установка: `./install.sh --bin-dir <tmp>` ставит `skiller` · `harness` · `maind`
+- [ ] (если уместно) проверка вручную: команды CLI / slash-команды плагина

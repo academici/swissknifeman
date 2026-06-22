@@ -6,11 +6,10 @@
 ## Через пресет (рекомендуется)
 
 ```bash
-swissknifeman ... # или напрямую:
-bash scripts/apply-permissions.sh --target <project> --preset product-boundary
+harness permissions --target <project> --preset product-boundary
 ```
 
-Пресет `configs/claude-code/settings.product-boundary.json` добавляет в deny:
+Пресет `settings.product-boundary.json` (пакет harness, `configs/claude-code/`) добавляет в deny:
 
 ```json
 {

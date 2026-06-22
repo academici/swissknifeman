@@ -2,7 +2,8 @@
 
 Дословно общий с maind/brain код (die/warn/now_iso/confirm/sanitize + ядро Env)
 вынесен в общий core; здесь — только специфика swissknifeman (path-property,
-parse_flags, frontmatter, apply_permissions, константы реестра)."""
+parse_flags, frontmatter, делегирование окружения в harness, константы реестра)."""
+import os
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -11,7 +12,7 @@ from pathlib import Path
 # Общий core (подключается через PYTHONPATH лаунчером/test.sh). Реэкспорт для
 # модулей пакета, которые исторически берут эти имена из .common.
 from core import (  # noqa: F401
-    HOME, BaseEnv, confirm, die, now_iso, sanitize, warn,
+    HOME, BaseEnv, confirm, die, find_monorepo_root, now_iso, sanitize, warn,
 )
 
 STATE_DIR = HOME / ".swissknifeman"
@@ -47,15 +48,32 @@ class Env(BaseEnv):
         return self.state_dir / "topology.json"
 
 
+def harness_bin(env):
+    """Путь к лаунчеру пакета `harness` (настройка окружения вынесена туда).
+    Резолв: env-override `SKM_HARNESS_BIN` → `<монорепо>/packages/harness/bin/harness`.
+    None, если пакет не найден (standalone-раскладка / harness не установлен)."""
+    override = os.environ.get("SKM_HARNESS_BIN")
+    if override:
+        p = Path(os.path.expanduser(override))
+        return p if p.exists() else None
+    mono = find_monorepo_root(env.root)
+    if not mono:
+        return None
+    p = mono / "packages" / "harness" / "bin" / "harness"
+    return p if p.exists() else None
+
+
 def apply_permissions(env, target, presets="", dry_run=False, settings_file=None):
-    """Влить permissions-пресеты в .claude цели через scripts/apply-permissions.sh.
-    presets="" → автодетект стека внутри скрипта. settings_file=None → дефолт
-    скрипта (settings.local.json). Возвращает True, если скрипт запущен."""
-    script = env.root / "scripts" / "apply-permissions.sh"
-    if not script.exists():
-        warn("scripts/apply-permissions.sh не найден — пропуск permissions")
+    """Влить permissions-пресеты в .claude цели — делегируется пакету `harness`.
+    Окружение Claude Code (permissions/MCP/хуки) вынесено в отдельный пакет; skiller
+    зовёт `harness permissions` через subprocess. presets="" → автодетект стека.
+    Возвращает True, если harness запущен; False (с warn) — если harness не установлен."""
+    binp = harness_bin(env)
+    if binp is None:
+        warn("harness не установлен — пропуск permissions "
+             "(установите: packages/harness/install.sh)")
         return False
-    cmd = ["bash", str(script), "--target", str(target)]
+    cmd = [str(binp), "permissions", "--target", str(target)]
     if presets:
         cmd += ["--preset", presets]
     if settings_file:

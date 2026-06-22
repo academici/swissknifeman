@@ -30,7 +30,9 @@ connect → бакеты `general`+`oss-dev`; vendor → skill-level `context-ec
 - `lib/skiller/*.py` — вся логика, **stdlib-only** (без сторонних зависимостей в рантайме).
 - `skills/<bucket>/<name>/SKILL.md` — скиллы; `buckets.json` — метаданные бакетов (description/category/tags).
 - `profiles/*.json` — профили по типу проекта (project-type → buckets).
-- `configs/claude-code/` — пресеты `permissions` (settings.*.json) + хуки (auto-approve/memory/notify).
+- Настройка окружения Claude Code (пресеты permissions, MCP, хуки) **вынесена в пакет
+  [`harness`](../harness/CLAUDE.md)** — skiller делегирует туда через subprocess (`apply_permissions`,
+  env-блоки `integrate`). Источник истины пресетов больше не здесь.
 - `generate-skill/` — meta-скилл создания скиллов; `skm/` — management-плагин (slash-команды CLI).
 - `tests/` — `unittest` против синтетического реестра (`tests/fixtures.py`), tmpdir.
 - **Генерёжка (не править руками):** `skills.json`, `skills/_index.md`, `.claude-plugin/marketplace.json`,
@@ -41,11 +43,11 @@ connect → бакеты `general`+`oss-dev`; vendor → skill-level `context-ec
 | Модуль | Ответственность |
 |:--|:--|
 | `cli.py` | диспетчер команд (`COMMANDS` → `cmd_*`) |
-| `common.py` | `Env` (frozen), `parse_flags`, frontmatter-парсинг, `apply_permissions` |
+| `common.py` | `Env` (frozen), `parse_flags`, frontmatter-парсинг, `harness_bin`/`apply_permissions` (делегируют окружение пакету harness) |
 | `config.py` | `.swissknife.json`, профили, `resolve_selection`, **CORE-политика** (`CORE_SKILLS`/`CORE_BUCKETS`/`DEFAULT_EXCLUDE`) |
 | `connect.py` | канал marketplace (плагины-бакеты) |
 | `vendor.py` | канал физ. переноса (сбор скиллов, `requires`, flat/bucket-раскладка, boost.json) |
-| `integrate.py` | визард: скиллы + permissions + auto-approve + memory + hub + brain |
+| `integrate.py` | визард: скиллы + hub (свои) + permissions/MCP/auto-approve/memory (делегируются в `harness`) + brain |
 | `registry.py` | `skills.json` + `skills/_index.md` (tag matrix) + marketplace/plugin-манифесты + граф |
 | `update.py` / `sync.py`* | обновление подключения; vendor-синк из конфига |
 | `lock.py` | `skills-lock.json` (карта внешних скиллов: skm + boost) |

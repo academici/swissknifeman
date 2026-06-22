@@ -140,7 +140,7 @@ sha256: ""
   дорабатывают свои пакеты, и усиливается ручным «первым приоритетом» в корневом
   CLAUDE.md потребителя — готовый generic-блок в `snippets/claude-md-priority.md`.
 - Аппаратная граница записи в пакет — permissions-пресет `product-boundary`
-  (`scripts/apply-permissions.sh --preset product-boundary`); фрагмент и вариант
+  (`harness permissions --preset product-boundary`); фрагмент и вариант
   для path-репо — в `snippets/permissions-deny.md`.
 
 ## Связанные скиллы

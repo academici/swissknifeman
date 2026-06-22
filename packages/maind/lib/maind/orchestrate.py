@@ -23,9 +23,12 @@ CAPABILITIES = {
     "skm:integrate": ("swissknifeman", ["integrate", "--target", "{path}"], True),
     "skm:status":    ("swissknifeman", ["status", "--target", "{path}"], True),
     # окружение Claude Code (permissions/MCP/хуки) — пакет harness. skiller integrate
-    # уже зовёт harness под капотом; env:apply нужен для прямого применения окружения
-    # (напр. при onboard --skip-skills) и для router'а зонтика `swissknifeman env`.
+    # уже зовёт harness под капотом; env:* нужны для прямого/гранулярного применения
+    # окружения (напр. при onboard --skip-skills) и для router'а зонтика `swissknifeman env`.
+    # env:apply — permissions; env:mcp/env:hooks — точечная раскатка MCP-серверов/хуков.
     "env:apply":     ("harness", ["permissions", "--target", "{path}"], True),
+    "env:mcp":       ("harness", ["mcp", "--target", "{path}"], True),
+    "env:hooks":     ("harness", ["hooks", "--target", "{path}"], True),
 }
 
 # sibling → как найти его лаунчер (env-override · проект в config.json · путь · bin).

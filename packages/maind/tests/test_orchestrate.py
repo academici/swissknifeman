@@ -63,6 +63,31 @@ class TestOrchestrate(unittest.TestCase):
                 del os.environ["MAIND_BRAIN_BIN"]
                 orch.subprocess.run = orig
 
+    def test_env_capabilities_route_to_harness(self):
+        # env:mcp / env:hooks — гранулярная раскатка окружения через harness
+        # (рядом с env:apply). Проверяем sibling, подкоманду и {path}-подстановку.
+        for cap, sub in (("env:mcp", "mcp"), ("env:hooks", "hooks"),
+                         ("env:apply", "permissions")):
+            calls = {}
+            orig = orch.subprocess.run
+            orch.subprocess.run = _fake_run(calls)
+            with tempfile.TemporaryDirectory() as tmp:
+                _, env = make_repo(tmp)
+                os.environ["MAIND_HARNESS_BIN"] = str(_fake_bin(tmp, "harness"))
+                try:
+                    cfg = merge_defaults({"projects": [
+                        {"id": "flexcrm", "name": "F", "local_path": "/x/flexcrm"}]})
+                    rc = orch.run_capability(env, cfg, "flexcrm", cap)
+                    self.assertEqual(rc, 0)
+                    argv = calls["argv"]
+                    self.assertTrue(argv[0].endswith("/harness"), cap)
+                    self.assertEqual(argv[1], sub, cap)
+                    self.assertIn("--target", argv)
+                    self.assertIn("/x/flexcrm", argv)
+                finally:
+                    del os.environ["MAIND_HARNESS_BIN"]
+                    orch.subprocess.run = orig
+
     def test_unknown_capability_dies(self):
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)

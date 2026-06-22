@@ -47,20 +47,20 @@ SwissKnifeMan решает это одним реестром: **один ист
 Скилл — это папка с `SKILL.md` (frontmatter + инструкции) и `snippets/`.
 Формат не привязан к конкретному агенту: специфика IDE выносится в
 delta-файлы `adapters/*.md` внутри скилла. Подробнее — в
-[Анатомии скилла](/skiller/guide/skill-anatomy).
+[Анатомии скилла](./skill-anatomy).
 
 ### 3. Выборочный импорт с provenance
 
 Внешние скиллы берутся **выборочно** — только то, что реально подходит, а не
 репозитории целиком. У каждого внешнего скилла есть `upstream.json` с источником,
-стратегией обновления и sha256 — см. [Upstream-sync](/skiller/guide/upstream-sync).
+стратегией обновления и sha256 — см. [Upstream-sync](./upstream-sync).
 Каталог источников-кандидатов ведётся в `references/`.
 
 ### 4. Контекстная установка
 
 `skiller vendor` определяет тип целевого проекта по маркерам (`artisan`,
 `composer.json`, `.obsidian/`) и ставит подходящий набор bucket-ов — см.
-[Профили](/skiller/guide/profiles). Той же логикой
+[Профили](./profiles). Той же логикой
 [`apply-permissions.sh`](/harness/configs/claude-permissions) подбирает пресеты
 разрешений.
 
@@ -102,7 +102,7 @@ delta-файлы `adapters/*.md` внутри скилла. Подробнее �
 | Boost `pennant-development` (static `.md`, stable API) | извлечь в ядро с upstream.json |
 | Boost `folio`/`volt`/`mcp` (`.blade.php` с <code v-pre>{{ $assist-&gt;… }}</code>) | render-контекст Boost → оставить за Boost |
 
-Полная матрица доверия Boost — [boost-compatibility.md](/skiller/boost-compatibility),
+Полная матрица доверия Boost — [boost-compatibility.md](../boost-compatibility),
 карточка источника — `references/laravel-boost.md`.
 
 ## Сценарии использования
@@ -133,6 +133,6 @@ docs/               # эта документация (VitePress)
 
 ## С чего начать
 
-1. [Установить скиллы в проект](/skiller/guide/installation) — одна команда с автодетектом
+1. [Установить скиллы в проект](./installation) — одна команда с автодетектом
 2. [Подтянуть пресеты permissions](/harness/configs/claude-permissions) — чтобы агент работал без промптов
-3. [Посмотреть примеры](/skiller/examples/laravel) — типовые сценарии от и до
+3. [Посмотреть примеры](../examples/laravel) — типовые сценарии от и до

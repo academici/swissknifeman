@@ -16,7 +16,7 @@
 
 Вливает пресеты permissions в `.claude/settings*.json` (merge-only, бэкап `*.bak`).
 Без `--preset` стек определяется автоматически (base + laravel/php-package/node/
-python/docker). Подробности и список пресетов — [Permissions](/harness/configs/claude-permissions).
+python/docker). Подробности и список пресетов — [Permissions](./configs/claude-permissions).
 
 ```
 harness permissions --target .                    # autodetect стека
@@ -29,7 +29,7 @@ harness permissions --global                      # baseline + файлы хук
 ### `harness mcp`
 
 Добавляет MCP-серверы в `.mcp.json` из пресетов (merge-only, чужие серверы целы).
-Каталог пресетов и описания — [Интеграции](/harness/integrations/).
+Каталог пресетов и описания — [Интеграции](./integrations/).
 
 ```
 harness mcp --list

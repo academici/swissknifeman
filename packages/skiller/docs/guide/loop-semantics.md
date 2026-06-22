@@ -67,7 +67,7 @@ Loop-aware исполнение — это **связка** этих скилл�
 
 ## Почему нет папки `loops/`
 
-Тот же анти-bloat, что и в [методологии против раздувания кода](/skiller/guide/methodology):
+Тот же анти-bloat, что и в [методологии против раздувания кода](./methodology):
 loop-семантика живёт **внутри canonical-скилла**, а не в параллельном реестре.
 
 - Отдельный `loops/`-реестр = второй индекс рядом со скиллами → дубли одного
@@ -113,4 +113,4 @@ Verifier здесь — слой Docs из `cross-layer-change-checklist`; stop-
 - [loops.elorm.xyz/loops](https://loops.elorm.xyz/loops) — каталог переиспользуемых
   loop'ов для AI-агентов (модель Goal/Run mode/Max iterations/Between-check/Exit).
 - [loops.elorm.xyz/loops/changelog-sync-after-ship](https://loops.elorm.xyz/loops/changelog-sync-after-ship) — конкретный loop, на котором построен пример выше.
-- [Методология: против раздувания кода](/skiller/guide/methodology) — общий принцип «спроси перед расширением», на который опирается отказ от `loops/`-реестра.
+- [Методология: против раздувания кода](./methodology) — общий принцип «спроси перед расширением», на который опирается отказ от `loops/`-реестра.

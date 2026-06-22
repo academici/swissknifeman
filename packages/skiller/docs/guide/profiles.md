@@ -38,7 +38,7 @@
 4. ничего не найдено → `standalone`
 
 Переопределить можно флагом `--profile`, списком `--buckets` или файлом
-[`.swissknife.json`](/skiller/guide/installation#фиксация-конфигурации-swissknife-json).
+[`.swissknife.json`](./installation#фиксация-конфигурации-swissknife-json).
 
 ## Свой профиль
 

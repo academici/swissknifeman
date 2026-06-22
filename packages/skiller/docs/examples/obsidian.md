@@ -48,5 +48,5 @@ cd ~/vaults/brain && skiller update
    по структуре;
 2. идея зреет → `pm/brd`, затем `pm/prd-from-brd` превращают её в ТЗ;
 3. ТЗ готово → `architect/*` проектирует решение;
-4. проект стартует → [Laravel-сценарий](/skiller/examples/laravel) разворачивает
+4. проект стартует → [Laravel-сценарий](./laravel) разворачивает
    рабочее окружение.

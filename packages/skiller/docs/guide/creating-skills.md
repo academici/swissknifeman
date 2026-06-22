@@ -6,7 +6,7 @@
 ## Свой скилл
 
 1. Скопируйте `SKILL_TEMPLATE.md` → `skills/{bucket}/{name}/SKILL.md`
-2. Заполните frontmatter и разделы (см. [Анатомию скилла](/skiller/guide/skill-anatomy))
+2. Заполните frontmatter и разделы (см. [Анатомию скилла](./skill-anatomy))
 3. Добавьте `snippets/` с манифестом `index.json`
 4. Проверьте: `./scripts/validate.sh`
 5. Пересоберите реестр: `skiller registry`
@@ -81,4 +81,4 @@ planned → imported | rejected
 ```
 
 Проверяет frontmatter всех скиллов, корректность `upstream.json`, профили,
-реестр и snippet-манифесты. CI ([validate.yml](/skiller/guide/ci)) запускает то же самое.
+реестр и snippet-манифесты. CI ([validate.yml](./ci)) запускает то же самое.

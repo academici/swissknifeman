@@ -107,5 +107,5 @@ Laravel Boost — это **MCP-сервер** (database-query, tinker, logs, doc
 - собственные скиллы проекта (git-tracked, напр. в `.ai/skills/`) остаются нетронутыми —
   `sync` их не перетирает (они не `managed`).
 
-См. также [Установка скиллов](/skiller/guide/installation) (канал connect) и
-[Реестр skills.json](/skiller/guide/registry) (источник истины набора).
+См. также [Установка скиллов](./installation) (канал connect) и
+[Реестр skills.json](./registry) (источник истины набора).

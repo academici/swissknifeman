@@ -107,7 +107,7 @@ cd ~/projects/my-app && skiller connect
 
 Специфика Claude Code внутри скилла выносится в `adapters/claude.md` —
 overrides для CLAUDE.md-специфики. Формат — в
-[спецификации адаптерных дельт](/skiller/guide/adapter-deltas).
+[спецификации адаптерных дельт](../guide/adapter-deltas).
 
 ## Вендоринг (deprecated для Claude Code)
 
@@ -116,4 +116,4 @@ overrides для CLAUDE.md-специфики. Формат — в
 marketplace: единый
 источник, обновления без переустановки, ничего лишнего в репо проекта.
 Вендоринг остаётся основным путём для Cursor и других агентов — см.
-[Установку скиллов](/skiller/guide/installation).
+[Установку скиллов](../guide/installation).

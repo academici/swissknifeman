@@ -53,4 +53,4 @@ swissknifeman **раздаёт** пресеты в проекты-потреби
 Пресеты `playwright`, `filesystem`, `fetch`, `memory`, `sequential-thinking`, `github` —
 **opt-in**: по умолчанию не ставятся, только по `--mcp`. По умолчанию в среды разработки
 едет только `context7`. Полный список пресетов — `configs/claude-code/mcp/`, см. также
-[обзор конфигов](/harness/configs/).
+[обзор конфигов](../configs/).

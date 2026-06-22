@@ -14,7 +14,7 @@ cp -r skills/php/laravel-testing ~/projects/my-app/.cursor/skills/
 
 Специфика Cursor выносится в `adapters/cursor.md` внутри скилла — там только
 overrides для `.cursor/rules`, основной `SKILL.md` остаётся provider-neutral.
-Формат — в [спецификации адаптерных дельт](/skiller/guide/adapter-deltas).
+Формат — в [спецификации адаптерных дельт](../guide/adapter-deltas).
 
 ## Что учесть
 

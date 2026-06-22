@@ -77,6 +77,11 @@ harness doctor
 ```bash
 bash scripts/test.sh          # unittest (без сети)
 bash scripts/validate.sh      # py_compile + bash -n + JSON + frontmatter + тесты
+npm run docs:build            # standalone-сайт доков (своя docs/.vitepress, base /harness/)
 ```
+
+Доки пакета (`docs/`) собираются и **standalone** (своя `docs/.vitepress/config.mts`),
+и в зонтичном агрегате (`scripts/docs-sync.sh` отбрасывает per-package `.vitepress`).
+Поэтому внутренние ссылки доков — **относительные** (`./`, `../`), без `/harness/`-префикса.
 
 Коммиты — Conventional Commits, на русском. Перед PR: `scripts/validate.sh` зелёный.

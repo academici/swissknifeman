@@ -77,6 +77,13 @@ connect → бакеты `general`+`oss-dev`; vendor → skill-level `context-ec
 bash scripts/test.sh          # unittest (синтетический реестр, без сети/php)
 bash scripts/validate.sh      # py_compile + bash -n + JSON + тесты
 skiller registry        # регенерация skills.json / _index.md / marketplace.json / graph
+npm run docs:standalone:build # standalone-сайт доков (своя docs/.vitepress, base /skiller/)
+npm run docs:build            # зонтичный агрегат (docs-sync → ../../docs)
 ```
+
+Доки пакета (`docs/`) собираются и **standalone** (своя `docs/.vitepress/config.mts`),
+и в зонтичном агрегате. Внутренние ссылки — **относительные** (`./`, `../`), без
+`/skiller/`-префикса; кросс-пакетные ссылки (на `harness`/зонтичный `/routing`)
+резолвятся только в агрегате — в standalone они в `ignoreDeadLinks`.
 
 Коммиты — Conventional Commits, на русском. Перед PR: `scripts/validate.sh` зелёный, `registry` прогнан.

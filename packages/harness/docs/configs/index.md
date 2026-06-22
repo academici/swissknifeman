@@ -9,8 +9,8 @@
 
 | Конфиг | Где лежит | Что делает |
 |---|---|---|
-| [Пресеты permissions для Claude Code](/harness/configs/claude-permissions) | `configs/claude-code/` | готовые `settings.json` с максимально разрешённым доступом: git, composer, artisan, npm, docker — по стекам |
-| MCP-серверы | `configs/claude-code/mcp/` | пресеты `.mcp.json`; `context7` ставит `skiller integrate` по умолчанию, курированный сабсет (playwright, filesystem, fetch, …) — opt-in через `--mcp`. Каталог: [Интеграции](/harness/integrations/) |
+| [Пресеты permissions для Claude Code](./claude-permissions) | `configs/claude-code/` | готовые `settings.json` с максимально разрешённым доступом: git, composer, artisan, npm, docker — по стекам |
+| MCP-серверы | `configs/claude-code/mcp/` | пресеты `.mcp.json`; `context7` ставит `skiller integrate` по умолчанию, курированный сабсет (playwright, filesystem, fetch, …) — opt-in через `--mcp`. Каталог: [Интеграции](../integrations/) |
 
 ## Сценарий
 
@@ -38,7 +38,7 @@ skiller connect
   перед коммитом;
 - **Больше MCP-серверов** — `context7` раздаётся по умолчанию, курированный сабсет
   (playwright, filesystem, fetch, memory, sequential-thinking, github) — opt-in через
-  `--mcp`; каталог инструментов — раздел [Интеграции](/harness/integrations/). Дальше — новые
+  `--mcp`; каталог инструментов — раздел [Интеграции](../integrations/). Дальше — новые
   проверенные конфигурации `.mcp.json`;
 - **Конфиги других IDE** — правила Cursor, настройки Perplexity.
 

@@ -98,6 +98,6 @@ Managed-блок в `CLAUDE.md` (или `.ai/guidelines/swissknifeman-hub.md` п
 - Идемпотентно: повторный прогон не плодит дубли хуков/правил.
 
 ## См. также
-- [Установка скиллов](/skiller/guide/installation) — детали connect/vendor.
-- [CLI swissknifeman](/skiller/guide/cli) — все команды.
-- [Профили и автодетект](/skiller/guide/profiles).
+- [Установка скиллов](./installation) — детали connect/vendor.
+- [CLI swissknifeman](./cli) — все команды.
+- [Профили и автодетект](./profiles).

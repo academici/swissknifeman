@@ -17,7 +17,9 @@
 │   └── maind/                 # хаб памяти/графа/координации (lib/, bin/, commands/) — CLI maind
 ├── .claude-plugin/
 │   └── marketplace.json       # ЕДИНЫЙ marketplace репо (генерируется), 20 плагинов
-└── docs/                      # зонтичная документация (VitePress)
+└── docs/                      # зонтичный VitePress: общее (index/routing/roadmap) + агрегат
+                               # per-package доков (источник — packages/<pkg>/docs,
+                               # scripts/docs-sync.sh копирует в docs/<pkg>/, gitignored)
 ```
 
 > **Имена ≠ роли.** Репо/marketplace/`~/.swissknifeman/` state — это зонтик `swissknifeman`

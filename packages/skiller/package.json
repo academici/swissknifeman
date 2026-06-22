@@ -6,8 +6,9 @@
   "description": "Универсальный личный реестр AI-скиллов и сниппетов: один источник истины, установка в любой проект и любую IDE",
   "type": "module",
   "scripts": {
-    "docs:dev": "vitepress dev ../../docs",
-    "docs:build": "vitepress build ../../docs",
+    "docs:sync": "bash ../../scripts/docs-sync.sh",
+    "docs:dev": "npm run docs:sync && vitepress dev ../../docs",
+    "docs:build": "npm run docs:sync && vitepress build ../../docs",
     "docs:preview": "vitepress preview ../../docs"
   },
   "devDependencies": {

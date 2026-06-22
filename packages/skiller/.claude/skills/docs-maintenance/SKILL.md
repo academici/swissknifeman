@@ -44,17 +44,22 @@ description: "После каждой завершённой задачи в р�
 
 ## Карта docs/ по темам
 
+Доки сгруппированы по пакетам: каждый пакет владеет своими в `packages/<pkg>/docs/`;
+зонтичный сайт собирается из них (`scripts/docs-sync.sh` → `docs/<pkg>/`, gitignored).
+Общая информация — в корне `docs/`. Пути ниже — относительно пакета `skiller`.
+
 - Установка/каналы/CLI: `docs/guide/installation.md`, `docs/guide/cli.md`,
   `docs/guide/profiles.md`, `docs/guide/vendor-skills.md`.
 - Реестр и схемы: `docs/guide/registry.md`, `docs/guide/skill-anatomy.md`.
 - Внешние скиллы: `docs/guide/upstream-sync.md`.
 - Создание скиллов: `docs/guide/creating-skills.md`.
 - Адаптеры/сканер/CI: `docs/guide/adapter-deltas.md`, `docs/guide/scanner.md`,
-  `docs/guide/ci.md`.
-- Провайдеры: `docs/workflows/*`, `docs/setup/*`.
+  `docs/guide/ci.md`; воркфлоу — `docs/workflows/*`.
 - `docs/guide/graph.md` — **генерируется, не редактировать**.
-- `docs/roadmap.md`, `docs/routing.md`, `docs/boost-compatibility.md`,
-  `docs/index.md`.
+- `docs/boost-compatibility.md` — совместимость с Laravel Boost.
+- **Окружение Claude Code** (permissions/MCP/хуки/setup) — в пакете
+  `packages/harness/docs/` (configs/, integrations/, setup/, index).
+- **Общее зонтика** — в корне репо `docs/`: `index.md`, `routing.md`, `roadmap.md`.
 
 ## Чеклист
 

@@ -5,9 +5,9 @@
 персист в node-link JSON. Раскладка — **федерация**: граф на проект (`data/graphs/<id>.db`) плюс
 тонкий регенерируемый индекс `_index.db` (см. [Федерация](./federation)).
 
-> Граф связывает **код/топологию**; память (`agent-memory`) связывает **контекст/факты**. Это два
-> независимых механизма хаба, оба работают по [namespace'ам](./namespaces). Граф *кода внутри
-> проекта* (символы/файлы) — это [graphify](./code-graph), отдельный слой.
+> Этот граф (maind-граф) связывает **топологию между проектами**; память (`agent-memory`) связывает
+> **контекст/факты**. Это независимые механизмы хаба, работают по [namespace'ам](./namespaces). Граф
+> *кода внутри проекта* (символы/файлы) — это отдельная плоскость, [код-граф (Serena)](./code-graph).
 
 ## Типы узлов и рёбер
 
@@ -61,6 +61,44 @@ maind graph neighbors --node project:maind --direction in
 maind graph --project flexcrm            # граф одного проекта
 maind graph --cross [--namespace axioma] # межпроектный слой (опц. одной группы)
 ```
+
+## Пример: что увидишь
+
+Собрать граф проекта и посмотреть его подграф (реальный вывод для `corex`):
+
+```console
+$ maind graph derive --project corex
+  corex              узлов 12, рёбер 14 (code 10, doc 5, override 0)
+
+$ maind graph view --project corex
+граф проекта corex: 12 узлов, 14 рёбер
+  package:corex/core               package    core
+  package:corex/crm                package    crm
+  project:flexcrm                  project
+  project:azguard                  project
+  …
+  package:corex/core           —provided_by→ project:corex             [code]
+  project:corex                —requires→ package:axioma-studio/azguard-core  [code]
+
+$ maind graph stats
+Граф: 15 узлов, 22 рёбер, 1 компонент(ы), max степень 14
+  узлы:  package=9, project=6
+  рёбра: provided_by=9, requires=7, uses=6
+```
+
+## Те же запросы из агента (MCP)
+
+В сессии проекта эти связи доступны как MCP-инструменты сервера `maind` — агент зовёт их сам:
+
+| Инструмент | Аргументы | Отвечает на |
+|:--|:--|:--|
+| `maind_graph_project` | `{ "project": "corex" }` | подграф проекта + исходящие кросс-рёбра |
+| `maind_graph_neighbors` | `{ "node": "project:corex", "depth": 1, "direction": "in" }` | кто зависит от corex |
+| `maind_graph_query` | `{ "from": "project:flexcrm", "depth": 2, "edge_types": "depends_on" }` | обход от узла по типам рёбер |
+| `maind_graph_path` | `{ "from": "project:flexcrm", "to": "project:azguard" }` | кратчайший путь между проектами |
+
+Это **pull**: инструменты пассивны, вызов инициирует модель (скилл `ecosystem-mcp` подсказывает когда).
+Память — отдельные инструменты той же сессии: `maind_memory_recall` / `maind_memory_store` / `maind_memory_links`.
 
 ## Адаптер
 

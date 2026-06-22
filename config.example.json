@@ -19,7 +19,7 @@
     "data_dir": "./data"
   },
 
-  "_comment_graph": "Граф связей (топология между проектами). adapter: federation (по умолчанию, единственная раскладка — граф на проект в data/graphs/<id>.db + тонкий _index.db; связи derive'ятся из composer/Brain/.maind.graph.json/skills-lock) | disabled. Устаревшие memory/graphify/networkx принимаются с предупреждением и нормализуются в federation. store_layout: hub (графы в data/graphs/) | project-local (через projects[].graph_store=local — граф в самом репо проекта). graphify — отдельный MCP-слой над КОДОМ проекта (deploy --with-graphify), не адаптер этого графа.",
+  "_comment_graph": "Граф связей (топология между проектами). adapter: federation (по умолчанию, единственная раскладка — граф на проект в data/graphs/<id>.db + тонкий _index.db; связи derive'ятся из composer/Brain/.maind.graph.json/skills-lock) | disabled. Устаревшие memory/graphify/networkx принимаются с предупреждением и нормализуются в federation. store_layout: hub (графы в data/graphs/) | project-local (через projects[].graph_store=local — граф в самом репо проекта). код-граф (Serena) — отдельный MCP-слой над КОДОМ проекта (deploy --with-code; legacy --with-graphify), не адаптер этого графа.",
   "graph": {
     "enabled": true,
     "adapter": "federation",

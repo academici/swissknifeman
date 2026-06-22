@@ -26,8 +26,8 @@ NODE_TYPES = {"project", "agent", "memory", "skill", "entity", "tool", "package"
 EDGE_TYPES = {"uses", "knows", "relates_to", "belongs_to", "depends_on", "provided_by",
               "requires"}
 # Раскладка графа: федерация (граф на проект + индекс) — единственная первоклассная;
-# disabled выключает граф-команды. Движок везде stdlib (graphify — отдельный MCP-слой
-# над КОДОМ проекта, не адаптер этого графа; см. docs/guide/graphify.md).
+# disabled выключает граф-команды. Движок везде stdlib (код-граф — отдельный MCP-слой
+# над КОДОМ проекта, не адаптер этого графа; см. docs/guide/code-graph.md).
 GRAPH_ADAPTERS = {"federation", "disabled"}
 # Устаревшие значения adapter — принимаются с предупреждением и нормализуются в federation.
 LEGACY_GRAPH_ADAPTERS = {"memory", "graphify", "networkx"}

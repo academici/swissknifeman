@@ -99,7 +99,7 @@ sequenceDiagram
   maind->>maind: зарегистрировать в config.json
   maind->>skm: integrate (skills + hooks)
   skm->>proj: .claude/skills + хуки + skills-lock.json
-  maind->>proj: deploy — agent-memory MCP (scope project:id) [+ graphify]
+  maind->>proj: deploy — agent-memory MCP (scope project:id) [+ код-граф/Serena]
   maind->>maind: derive graph (composer/doc/override/skills → стор проекта + индекс)
   opt --with-brain
     maind->>brain: репозиторий для docs-sync

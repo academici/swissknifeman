@@ -169,6 +169,28 @@ class TestToolCalls(unittest.TestCase):
                 data = json.loads(r["result"]["content"][0]["text"])
                 self.assertEqual(data[0]["text"], "scoped fact")
 
+    def test_default_scope_from_cwd(self):
+        # без явного --scope/MAIND_SCOPE дефолт = project:<id> по cwd, иначе global
+        # (argless-сервер пишет в бакет своего проекта, а не в общий global).
+        from maind import projects as projects_mod
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            proj_dir = os.path.realpath(os.path.join(tmp, "proj"))
+            outside = os.path.realpath(os.path.join(tmp, "outside"))
+            os.makedirs(proj_dir)
+            os.makedirs(outside)
+            config = cfg(projects=[{"id": "foo", "local_path": proj_dir}])
+            self.assertEqual(projects_mod.match_cwd(env, config, cwd=proj_dir)["id"], "foo")
+            self.assertIsNone(projects_mod.match_cwd(env, config, cwd=outside))
+            cwd0 = os.getcwd()
+            try:
+                os.chdir(proj_dir)
+                self.assertEqual(mcp._default_scope_from_cwd(env, config), "project:foo")
+                os.chdir(outside)
+                self.assertEqual(mcp._default_scope_from_cwd(env, config), "global")
+            finally:
+                os.chdir(cwd0)
+
     def test_tool_error_does_not_crash(self):
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)  # граф disabled → die() → SystemExit → isError

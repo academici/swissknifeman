@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "maind-hub": {
-      "command": "maind",
-      "args": ["mcp", "--scope", "global"]
-    }
-  }
-}

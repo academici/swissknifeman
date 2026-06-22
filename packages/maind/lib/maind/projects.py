@@ -27,6 +27,21 @@ def get(config, project_id):
     return None
 
 
+def match_cwd(env, config, cwd=None):
+    """Проект, в каталоге которого мы находимся: матч cwd по local_path. None если не найден
+    (в отличие от health._target, который die'ит). Используется для дефолт-scope MCP-сервера."""
+    from .workspace import norm_path
+    cwd = norm_path(cwd or os.getcwd())
+    for p in listing(env, config):
+        lp = p.get("local_path")
+        if not lp:
+            continue
+        base = norm_path(lp)
+        if cwd == base or cwd.startswith(base + os.sep):
+            return p
+    return None
+
+
 def sync_from_brain(env, config, brain_path):
     """Импорт/обновление проектов из brain .projects.json. Идемпотентно, мерджит по
     id. Возвращает (config, stats); config НЕ записывается (это делает write_config)."""

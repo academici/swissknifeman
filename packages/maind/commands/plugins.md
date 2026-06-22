@@ -10,14 +10,16 @@ allowed-tools: Bash(jq:*), Read, Edit
 
 ## Что сделать
 1. Покажи пользователю: какие marketplace зарегистрированы и какие плагины включены (`enabledPlugins`).
-2. Сопоставь с экосистемой — должны быть доступны три плагина:
-   - `maind@maind` (хаб: онбординг/sync/статус/здоровье),
+2. Сопоставь с экосистемой — оба пакета монорепо живут в ОДНОМ marketplace `swissknifeman`:
+   - `maind@swissknifeman` (хаб: онбординг/sync/статус/здоровье),
    - `skm@swissknifeman` (скиллы проекта: бакеты/connect/vendor/integrate),
-   - `brain@brain` (docs-sync валта).
-   Отметь, чего не хватает (нет marketplace или плагин выключен).
+   - `brain@brain` (docs-sync валта, отдельный репозиторий).
+   Отметь, чего не хватает (нет marketplace или плагин выключен) и нет ли **дублей**: один и тот же
+   плагин включён из двух marketplace (напр. `maind@academici` + `maind@swissknifeman`) — оставь
+   только `@swissknifeman`.
 3. Если пользователь просит включить — отредактируй `~/.claude/settings.json` (Edit, сохраняя остальное):
    - впиши `"<plugin>@<marketplace>": true` в `enabledPlugins`;
-   - если marketplace не зарегистрирован — добавь в `extraKnownMarketplaces` запись `{ "source": { "source": "directory", "path": "<путь к репо>" } }` (пути: maind→этот репозиторий, swissknifeman/brain — их каталоги).
+   - если marketplace не зарегистрирован — добавь в `extraKnownMarketplaces` запись `{ "source": { "source": "directory", "path": "<путь к репо>" } }` (пути: maind+skm→корень монорепо `swissknifeman`, brain — его каталог).
 4. Напомни: изменения активируются **после перезагрузки** Claude Code.
 
 > Это и есть «хаб управляет плагинами»: maind пишет `enabledPlugins`/marketplaces, как `connect.py` у swissknifeman. Сами операции в проектах делают команды `/maind:*`, `/skm:*`, `/brain:*`.

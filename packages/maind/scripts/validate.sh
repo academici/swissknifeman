@@ -18,7 +18,7 @@ done
 
 echo "[3/6] JSON конфиги"
 # marketplace.json (единый) и config.example.json — в корне монорепо, не в пакете.
-for f in package.json .claude-plugin/plugin.json .mcp.json; do
+for f in package.json .claude-plugin/plugin.json; do
   [[ -f "$f" ]] && { python3 -m json.tool "$f" >/dev/null || err "битый JSON: $f"; }
 done
 # config.example.json — шаблон конфига узла в корне монорепо (на 2 уровня выше).
@@ -28,7 +28,7 @@ CFG_EXAMPLE="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || echo "$REPO_ROOT")/co
 echo "[4/6] обязательные файлы"
 for f in bin/maind lib/maind/__init__.py lib/maind/cli.py \
          config/memory/iii-config.yaml .env.example \
-         .claude-plugin/plugin.json .mcp.json \
+         .claude-plugin/plugin.json \
          commands/maind.md commands/onboard.md commands/sync.md \
          README.md LICENSE; do
   [[ -e "$f" ]] || err "нет файла: $f"

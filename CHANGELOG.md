@@ -29,6 +29,10 @@
 - **`core.io.safe_load_json`** — единый graceful-ридер JSON (битый/отсутствующий →
   default, опц. `on_error`). Для БД с бэкапом битого файла остаётся доменный
   `maind.common.load_json_db`.
+- **Сплит `maind/common.py`**: HTTP-клиент (`http_get_json`/`http_post_json`/`ping`)
+  → `maind/http.py`, управляемый markdown-блок (`managed_block`/`upsert_block`/
+  `content_hash`) → `maind/blocks.py`. Реэкспорт из `common.py` — импорты
+  `from .common import ...` не тронуты (non-breaking).
 - Аудит subprocess-вызовов: остальные уже защищены (`shutil.which`-гварды,
   `try/except OSError`, health-poll демона памяти с детектом раннего выхода) —
   не трогали (рекомендация аудита про `shlex.quote` оказалась ложной: argv-списки

@@ -1,15 +1,15 @@
 # Чеклист интеграции в проект
 
 При интеграции swissknifeman в проект ты выбираешь, **что хочешь из максимального
-функционала**. Есть два пути: интерактивный **визард** (`swissknifeman integrate`),
+функционала**. Есть два пути: интерактивный **визард** (`skiller integrate`),
 который проходит чеклист и применяет выбранное, и **ручной** — те же действия
 отдельными командами.
 
 ```bash
 cd ~/projects/my-app
-swissknifeman integrate            # интерактивно (меню по каждому блоку)
-swissknifeman integrate --dry-run  # показать план, ничего не записывая
-swissknifeman integrate --yes --bundle recommended   # без вопросов, готовый набор
+skiller integrate            # интерактивно (меню по каждому блоку)
+skiller integrate --dry-run  # показать план, ничего не записывая
+skiller integrate --yes --bundle recommended   # без вопросов, готовый набор
 ```
 
 ## Уровни (бандлы)
@@ -36,7 +36,7 @@ swissknifeman integrate --yes --bundle recommended   # без вопросов, 
 - **vendor** — Cursor и другие агенты (копирует скиллы в `.cursor/skills` / `.ai/skills`).
 - Профиль/бакеты — autodetect (`.obsidian/` → vault, `artisan`+`composer.json` → laravel,
   `composer.json` → php-package, иначе standalone), переопределяется флагами.
-- Ручками: `swissknifeman connect` / `swissknifeman vendor --agent cursor`.
+- Ручками: `skiller connect` / `skiller vendor --agent cursor`.
 
 ### 2. Permissions-пресеты
 Готовые `allow/ask/deny` под стек — меньше permission-промптов.
@@ -83,7 +83,7 @@ Managed-блок в `CLAUDE.md` (или `.ai/guidelines/swissknifeman-hub.md` п
 ## Пререквизиты (один раз на машину)
 
 Визард их проверяет и предлагает выполнить:
-- **Топология** — `swissknifeman topology init` (`~/.swissknifeman/topology.json`);
+- **Топология** — `skiller topology init` (`~/.swissknifeman/topology.json`);
   от неё зависят память и координатор (резолв узлов/участников).
 - **Файлы хуков** — `./scripts/apply-permissions.sh --global` ставит
   `~/.claude/hooks/{notify,auto-approve,memory}` (notify/лог активны сразу,

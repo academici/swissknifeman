@@ -20,7 +20,7 @@ Playwright MCP от Microsoft даёт Claude Code управление брау
 Пресетом (opt-in):
 
 ```bash
-swissknifeman integrate --mcp playwright
+skiller integrate --mcp playwright
 ```
 
 Пресет — `configs/claude-code/mcp/playwright.json`:

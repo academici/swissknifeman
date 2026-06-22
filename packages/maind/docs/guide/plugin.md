@@ -4,14 +4,19 @@ maind поставляется и как **плагин Claude Code** — тон
 проекте → появляются slash-команды `/maind:*`, которыми хаб управляется прямо из чата, не выходя в
 терминал. Плагин ничего не дублирует: команды вызывают тот же `maind` (см. [CLI](./cli)).
 
+Плагин — **только команды/скиллы, без собственного MCP-сервера**. MCP-инструменты хаба в проект
+приходят отдельным каналом — per-project сервером `maind` из `.mcp.json` проекта (его пишет
+`deploy`/`onboard`). Так в сессии ровно одна `maind`-строка (project-линза), а не две.
+
 ## Что внутри
 
 | Артефакт | Назначение |
 |:--|:--|
-| `.claude-plugin/plugin.json` | манифест плагина (имя `maind`, путь к командам, ссылка на MCP) |
-| `.claude-plugin/marketplace.json` | single-entry marketplace `maind` — делает репозиторий устанавливаемым |
+| `.claude-plugin/plugin.json` | манифест плагина (имя `maind`, путь к командам) |
 | `commands/*.md` | slash-команды — обёртки над CLI |
-| `.mcp.json` | hub-MCP сервер `maind-hub` (global scope) — инструменты хаба в сессии |
+
+> Marketplace — единый `swissknifeman` в корне монорепо (генерит `skiller registry`,
+> добавляя maind sibling-пакетом). Собственного marketplace у maind нет.
 
 ## Установка
 
@@ -24,12 +29,12 @@ cd maind && ./install.sh          # симлинк ~/.local/bin/maind
 Затем в Claude Code:
 
 ```
-/plugin marketplace add /путь/к/maind     # или github:academici/maind
-/plugin install maind@maind
+/plugin marketplace add /путь/к/swissknifeman   # единый marketplace монорепо
+/plugin install maind@swissknifeman
 ```
 
-После перезагрузки появляются команды `/maind:*`. MCP-сервер `maind-hub` поднимается
-автоматически (проверь `/mcp`).
+После перезагрузки появляются команды `/maind:*`. MCP-серверов плагин не поднимает —
+инструменты хаба даёт per-project сервер `maind` из `.mcp.json` проекта (проверь `/mcp`).
 
 ## Команды
 
@@ -50,13 +55,17 @@ slash-команда запускает bash **не в TTY**, поэтому и�
 (`--bundle … --yes`). Мутирующие команды (`onboard`, `sync`) сперва показывают `--dry-run`, затем
 применяют по подтверждению.
 
-## hub-MCP сервер
+## MCP-инструменты хаба (без отдельного сервера плагина)
 
-`.mcp.json` бандлит сервер `maind-hub` (`maind mcp --scope global`) — даёт инструменты хаба
-(`maind_projects_list`, `maind_projects_status`, `maind_agents_list`, обходы графа, global-память)
-в любой сессии с включённым плагином. Имя `maind-hub` намеренно отличается от per-project сервера
-`maind` (project scope), который `deploy` пишет в `.mcp.json` подключённых проектов — чтобы серверы
-не коллизировали. См. [MCP-сервер](./mcp).
+Раньше плагин бандлил собственный сервер `maind-hub` (`--scope global`), и он заезжал в **каждую**
+сессию поверх per-project сервера `maind` — две одинаковые `maind`-строки в `/mcp`, разные scope,
+лёгкий промах «пишем в global вместо project». Теперь плагин **MCP-сервера не несёт**.
+
+Инструменты хаба (`maind_projects_list`, `maind_projects_status`, `maind_agents_list`, обходы графа,
+память) даёт **per-project сервер `maind`** из `.mcp.json` проекта (`maind mcp --scope project:<id>`,
+пишет `deploy`/`onboard`). Граф, `projects_*`, `links` — **scope-независимы**: один project-сервер
+видит всю экосистему. `scope` влияет только на бакет памяти по умолчанию; ecosystem-факт при нужде
+пишется явным `scope:"global"` в `maind_memory_store`. См. [MCP-сервер](./mcp).
 
 ## Кросс-провайдерность
 

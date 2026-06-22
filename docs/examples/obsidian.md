@@ -6,7 +6,7 @@
 ## Установка
 
 ```bash
-cd ~/vaults/brain && swissknifeman vendor
+cd ~/vaults/brain && skiller vendor
 ```
 
 Автодетект видит `.obsidian/` → профиль `obsidian-vault` → bucket-ы
@@ -23,7 +23,7 @@ cd ~/vaults/brain && swissknifeman vendor
 Для vault-а достаточно `base` — кодовых стеков тут нет:
 
 ```bash
-~/projects/packages/swissknifeman/scripts/apply-permissions.sh --target ~/vaults/brain
+~/projects/packages/swissknifeman/packages/skiller/scripts/apply-permissions.sh --target ~/vaults/brain
 ```
 
 Автодетект не найдёт маркеров стека и применит только `base`: git, файловые
@@ -32,11 +32,11 @@ cd ~/vaults/brain && swissknifeman vendor
 ## Связка с реестром
 
 Отдельного зеркалирования реестра в vault больше нет: vault — обычный
-проект-потребитель. Скиллы ставятся один раз через `swissknifeman vendor`,
+проект-потребитель. Скиллы ставятся один раз через `skiller vendor`,
 а дальше обновляются командой:
 
 ```bash
-cd ~/vaults/brain && swissknifeman update
+cd ~/vaults/brain && skiller update
 ```
 
 Так база знаний всегда видит актуальный каталог скиллов — полезно, когда

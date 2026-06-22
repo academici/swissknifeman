@@ -26,8 +26,8 @@ description: Раннбук управления инструментами пр
 
 | Канал | Команда | Что делает | Гранулярность | В репо |
 |:--|:--|:--|:--|:--|
-| **connect** (marketplace) | `swissknifeman connect` | включает плагины-бакеты через `enabledPlugins` в `.claude/settings.local.json` | **только бакет целиком** | файлы скиллов НЕ копируются |
-| **vendor** (физ. перенос) | `swissknifeman sync` | копирует выбранные скиллы в `.claude/skills/`, пишет `skills-lock.json` (`managed`) | **отдельные скиллы** (include/buckets/exclude) | да, видно и коммитится |
+| **connect** (marketplace) | `skiller connect` | включает плагины-бакеты через `enabledPlugins` в `.claude/settings.local.json` | **только бакет целиком** | файлы скиллов НЕ копируются |
+| **vendor** (физ. перенос) | `skiller sync` | копирует выбранные скиллы в `.claude/skills/`, пишет `skills-lock.json` (`managed`) | **отдельные скиллы** (include/buckets/exclude) | да, видно и коммитится |
 
 - **connect** — когда фиксация в репо не нужна и устраивает «весь бакет».
 - **vendor** — когда нужно: видеть скиллы в репо, выбрать ровно нужные позиции из разных областей,
@@ -39,10 +39,10 @@ description: Раннбук управления инструментами пр
 > пользователь хочет контроль над набором и фиксацию в репозитории.
 
 **`skills-lock.json`** (коммитится, как `composer.lock`) пишут **две** команды — какая, зависит от канала:
-- **vendor**: `swissknifeman sync` пишет lock сам — на каждый перенесённый скилл запись
+- **vendor**: `skiller sync` пишет lock сам — на каждый перенесённый скилл запись
   `source: swissknifeman` + **`managed: true`** + `sha256`. При синке выбывшие из конфига `managed`
   удаляются; **чужие записи (не `managed`) не трогаются**.
-- **connect / смешанный**: `swissknifeman lock` (read-only композитор) — сканирует установленное
+- **connect / смешанный**: `skiller lock` (read-only композитор) — сканирует установленное
   (`.claude|.cursor|.ai/skills`) ∪ `boost.json::skills[]` и проставляет `source`: имя в реестре →
   `swissknifeman` (wins); в `boost.json::skills` → `laravel-boost`; иначе → `local`. Конфликт (имя в
   нескольких) **не теряется**: победитель в `source`, проигравший в `also_in`. **Boost не «съедает»
@@ -68,20 +68,20 @@ description: Раннбук управления инструментами пр
 CLI — `swissknifeman` (запускать из каталога проекта; корень ищется вверх от CWD):
 
 ```bash
-swissknifeman status                       # что подключено: профиль, бакеты, канал
+skiller status                       # что подключено: профиль, бакеты, канал
 # --- канал CONNECT (плагины-бакеты, не в репо) ---
-swissknifeman connect --profile laravel-project          # подключить по профилю
-swissknifeman connect --plugins a,b,c                    # точный набор бакетов (перезаписывает enabledPlugins)
-swissknifeman connect --plugins ... --dry-run            # предпросмотр (сохраняет permissions/bypass)
+skiller connect --profile laravel-project          # подключить по профилю
+skiller connect --plugins a,b,c                    # точный набор бакетов (перезаписывает enabledPlugins)
+skiller connect --plugins ... --dry-run            # предпросмотр (сохраняет permissions/bypass)
 # --- канал VENDOR (физ. перенос конкретных скиллов в репо) ---
 #   1) создать .swissknifeman/config.json (mode:vendor, include/buckets/exclude)
-swissknifeman sync --dry-run               # план: +add ~update -remove =keep
-swissknifeman sync                         # применить (managed-скиллы в .claude/skills/ + lock)
-swissknifeman sync --force                 # перетереть занятый чужим путь версией из библиотеки
+skiller sync --dry-run               # план: +add ~update -remove =keep
+skiller sync                         # применить (managed-скиллы в .claude/skills/ + lock)
+skiller sync --force                 # перетереть занятый чужим путь версией из библиотеки
 # --- общее ---
-swissknifeman integrate --bundle recommended --yes       # визард: спросит канал (connect/vendor) + хуки/память/hub
-swissknifeman lock [--dry-run]             # карта источников для connect/смешанных (read-only композитор)
-swissknifeman update                       # обновить подключение проекта
+skiller integrate --bundle recommended --yes       # визард: спросит канал (connect/vendor) + хуки/память/hub
+skiller lock [--dry-run]             # карта источников для connect/смешанных (read-only композитор)
+skiller update                       # обновить подключение проекта
 ```
 
 **Laravel Boost** — держим как **MCP-сервер** (database-query/tinker/logs/docs) и при желании его
@@ -92,10 +92,10 @@ inertia-vue`, `frontend/tailwind-conventions`, `frontend/wayfinder` и т.п.). 
 `.mcp.json` (его дописывает maind при онбординге, если у проекта `boost.json`).
 
 **Добавить роль к проекту** (сначала спроси канал, см. выше):
-- **connect**: `connect --plugins <текущие>,<новый>` (текущие — в `swissknifeman status` /
+- **connect**: `connect --plugins <текущие>,<новый>` (текущие — в `skiller status` /
   `enabledPlugins`). Сохраняет `permissions`/`defaultMode` (bypass, см. [[auto-approve-bypass]]).
   После — рестарт сессии или `/plugin marketplace update swissknifeman`.
-- **vendor**: допиши скиллы в `.swissknifeman/config.json` (`include`/`buckets`) → `swissknifeman sync`.
+- **vendor**: допиши скиллы в `.swissknifeman/config.json` (`include`/`buckets`) → `skiller sync`.
   Скиллы появятся в `.claude/skills/` сразу (рестарт нужен, чтобы Claude их подхватил).
 
 > Типичный кейс «дай проекту скиллы разработчика+проектировщика»: laravel-project уже даёт `php`
@@ -120,13 +120,13 @@ inertia-vue`, `frontend/tailwind-conventions`, `frontend/wayfinder` и т.п.). 
 1. Онбординг в хаб — [ecosystem-integration] (`maind onboard …`, namespace, health=connected).
 2. Скиллы ролей — **спроси канал** (connect/vendor), затем:
    - connect: `connect --plugins …` (architect+php[+frontend]); или
-   - vendor: `.swissknifeman/config.json` (include/buckets) → `swissknifeman sync`.
+   - vendor: `.swissknifeman/config.json` (include/buckets) → `skiller sync`.
 3. (Laravel) Boost — как **MCP** (`composer require laravel/boost --dev`, `boost.json: mcp:true,
    skills:[]`); скиллы Boost НЕ ставим — берём аналоги из библиотеки (vendor).
-4. Зафиксировать карту — vendor: уже в `skills-lock.json` от `sync`; connect/смешанный: `swissknifeman lock`.
+4. Зафиксировать карту — vendor: уже в `skills-lock.json` от `sync`; connect/смешанный: `skiller lock`.
 5. Doc-sync — `repo:` в control-ноту + `brain sync all <proj>`.
 6. Авто-аппрув без промптов — bypass, см. [[auto-approve-bypass]].
-7. Проверка: `swissknifeman status` · `cat skills-lock.json` · `maind health --project <id>` · `brain status <proj>`.
+7. Проверка: `skiller status` · `cat skills-lock.json` · `maind health --project <id>` · `brain status <proj>`.
 
 ## Ссылки
 

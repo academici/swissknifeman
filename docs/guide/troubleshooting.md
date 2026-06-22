@@ -1,6 +1,6 @@
 # Диагностика и обновление
 
-Первый шаг при любой проблеме — `swissknifeman doctor`: он проверяет версию
+Первый шаг при любой проблеме — `skiller doctor`: он проверяет версию
 Python, симлинк, `PATH`, целостность `~/.swissknifeman/projects.json`, что реестр
 — git-репозиторий и без незакоммиченных скиллов, что профили читаются.
 
@@ -28,7 +28,7 @@ echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc && exec bash
 
 Маркетплейс подхватывает только **закоммиченные** изменения. Проверьте:
 
-1. `swissknifeman status` в проекте — раздел «Канал marketplace» показывает
+1. `skiller status` в проекте — раздел «Канал marketplace» показывает
    включённые плагины и не помечен ли источник как `[ПЕРЕЕХАЛ]`.
 2. В реестре нет незакоммиченных правок (`doctor` это покажет): `git add … &&
    git commit` в репозитории реестра.
@@ -36,7 +36,7 @@ echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc && exec bash
    `/plugin marketplace update swissknifeman`.
 
 Если источник помечен `[ПЕРЕЕХАЛ]` (репозиторий реестра сменил путь) — почините
-ссылку: `swissknifeman update`.
+ссылку: `skiller update`.
 
 ### Конфликт `settings.json`
 
@@ -55,8 +55,8 @@ echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc && exec bash
 ### `projects.json` повреждён
 
 При битом JSON CLI переименует файл в `projects.json.corrupt.<дата>` и начнёт с
-чистого состояния — записи восстановятся при `swissknifeman update` в проектах.
-Устаревшие записи (каталог удалён) убираются: `swissknifeman list --prune`.
+чистого состояния — записи восстановятся при `skiller update` в проектах.
+Устаревшие записи (каталог удалён) убираются: `skiller list --prune`.
 
 ## Обновление
 
@@ -69,11 +69,11 @@ cd ~/projects/packages/swissknifeman && git pull
 - **Claude Code (marketplace):** изменения видны сразу после коммита в реестре —
   копирования нет. Перезапустите сессию Claude Code, если плагины не подхватились.
 - **Cursor / generic (vendor):** скиллы скопированы в проект, поэтому обновите
-  явно: `swissknifeman update` (текущий проект) или `swissknifeman update --all`
+  явно: `skiller update` (текущий проект) или `skiller update --all`
   (все зарегистрированные). `update` сам определяет канал по маркерам на диске и
   проигрывает сохранённый выбор плагинов/бакетов.
 
-Проверить, что именно поедет, не трогая диск: `swissknifeman update --dry-run`.
+Проверить, что именно поедет, не трогая диск: `skiller update --dry-run`.
 
 ### Смена схемы реестра
 

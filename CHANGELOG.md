@@ -2,6 +2,32 @@
 
 ## [Unreleased]
 
+### Changed (модель имён и топология MCP)
+
+- **Пакет `packages/swissknifeman` → `packages/skiller`** (CLI `skiller`). Репо/зонтик остаётся
+  `swissknifeman` (= контейнер-«швейцарский нож»); имя пакета теперь явно про управление СКИЛЛАМИ
+  и не путается с репозиторием. `git mv` каталога + `lib/swissknifeman`→`lib/skiller` (импорты
+  пакета относительные — менялись только absolute-импорты в `tests/`) + `bin/swissknifeman`→
+  `bin/skiller` (`python3 -m skiller`). `install.sh` ставит `skiller` **и back-compat алиас
+  `swissknifeman`** в PATH — доки/привычка/онбордженные проекты не ломаются. **НЕ менялись**
+  (бренд зонтика): имя marketplace `swissknifeman`, state-каталог `~/.swissknifeman/`,
+  `.swissknifeman-manifest.json`, `.swissknife.json`, репо-URL; `skm`-плагин и `/skm:*`.
+  `orchestrate.py` (maind): путь sibling-лаунчера → `packages/skiller/bin/skiller`.
+- **Плагин `maind` → только команды (`/maind:*`), без MCP-сервера.** Снято поле `mcpServers`
+  из `plugin.json`, удалён `packages/maind/.mcp.json` (сервер `maind-hub --scope global`). Раньше
+  user-global плагин тащил `maind-hub` в КАЖДУЮ сессию поверх per-project сервера `maind` — две
+  одинаковые `maind`-строки в `/mcp` с разными scope (промах «пишем в global вместо project»).
+  Теперь MCP-инструменты хаба даёт только per-project сервер `maind` из `.mcp.json` проекта;
+  граф/`projects_*`/`links` scope-независимы, ecosystem-факт пишется явным `scope:"global"`.
+- **maind MCP: дефолт-scope из cwd, а не глухой `global`.** При запуске без `--scope`/`MAIND_SCOPE`
+  сервер определяет `project:<id>` по текущему каталогу (резолвер общий с `health --cwd`), падая
+  в `global` только вне известного проекта — argless-сервер пишет в бакет своего проекта.
+- **Дедуп включения плагина в `~/.claude/settings.json`** (user-config): снят дубль
+  `maind@academici` (+ stale marketplace `academici`, указывавший на pre-monorepo standalone-клон);
+  оставлен единый `maind@swissknifeman`.
+- **Решение: maind остаётся единым** (память+граф связаны namespace-моделью; memory `agentmemory`
+  и graphify уже отдельные MCP-серверы — дробить нечего). Зафиксировано в CLAUDE.md.
+
 ### Added
 
 - **Аудит практик round-2 + 4 дельты реестра скиллов.** Продолжение

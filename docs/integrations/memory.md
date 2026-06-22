@@ -13,7 +13,7 @@
 Пресетом (opt-in):
 
 ```bash
-swissknifeman integrate --mcp memory
+skiller integrate --mcp memory
 ```
 
 Пресет — `configs/claude-code/mcp/memory.json`:

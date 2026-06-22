@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # install.sh — зонтичный установщик монорепо.
-# Ставит CLI пакетов (swissknifeman, maind), делегируя установку каждого его
+# Ставит CLI пакетов (skiller, maind), делегируя установку каждого его
 # собственному install.sh (там пакетная пост-настройка). Это два независимых
 # CLI в PATH — единой консоли-обёртки нет.
 #
@@ -26,12 +26,12 @@ done
 mkdir -p "$BIN_DIR"
 
 # Делегируем установку пакетных CLI их собственным install.sh (там пакетная
-# пост-настройка: maind — npm/service опции; swissknifeman — topology).
+# пост-настройка: maind — npm/service опции; skiller — topology).
 fwd=(); $FORCE && fwd+=(--force); fwd+=(--bin-dir "$BIN_DIR")
 echo "Установка CLI пакетов (bin-dir: $BIN_DIR):"
-if [[ -x "$REPO_ROOT/packages/swissknifeman/install.sh" ]]; then
-  echo "— swissknifeman:"
-  "$REPO_ROOT/packages/swissknifeman/install.sh" "${fwd[@]}" || echo "  (swissknifeman install.sh завершился с ошибкой — проверьте вручную)" >&2
+if [[ -x "$REPO_ROOT/packages/skiller/install.sh" ]]; then
+  echo "— skiller:"
+  "$REPO_ROOT/packages/skiller/install.sh" "${fwd[@]}" || echo "  (skiller install.sh завершился с ошибкой — проверьте вручную)" >&2
 fi
 if [[ -x "$REPO_ROOT/packages/maind/install.sh" ]]; then
   echo "— maind:"
@@ -43,4 +43,4 @@ case ":$PATH:" in
   *) echo "ВНИМАНИЕ: $BIN_DIR не в PATH — добавьте: export PATH=\"$BIN_DIR:\$PATH\"" >&2 ;;
 esac
 
-echo "Готово. CLI: swissknifeman · maind"
+echo "Готово. CLI: skiller (алиас swissknifeman) · maind"

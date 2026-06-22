@@ -119,7 +119,7 @@ swissknifeman + Laravel Boost, swissknifeman wins). brain держит свой 
 flowchart LR
   MJ["config.json — реестр проектов (пишет maind)"]
   PJ["&lt;vault&gt;/.projects.json — docs-watcher (brain)"]
-  SL["skills-lock.json — карта скиллов (swissknifeman lock)"]
+  SL["skills-lock.json — карта скиллов (skiller lock)"]
   BJ["boost.json — Laravel Boost"]
   MC[".mcp.json / .cursor/mcp.json — серверы (пишет maind deploy)"]
   BJ -->|compose| SL
@@ -150,7 +150,7 @@ flowchart TD
 | Доверие Claude к проектам | `<maind>/.claude/settings.local.json` | maind (`workspace sync` из реестра) |
 | Общая память | agent-memory demon (бакеты `project:<id>`/`ns:<имя>`/`global`) | проекты пишут в свой `project:<id>`, cross-ref — в `ns:<группа>` |
 | Граф связей | `data/graphs/<id>.db` + `_index.db` (федерация) | maind `derive` из composer/Brain/override/skills |
-| Карта скиллов проекта | `<project>/skills-lock.json` | `swissknifeman lock` |
+| Карта скиллов проекта | `<project>/skills-lock.json` | `skiller lock` |
 | Документация проекта | vault ↔ repo | `brain sync` (docs-watcher) |
 
 Эта страница — канонический источник философии экосистемы. swissknifeman и brain ссылаются сюда.

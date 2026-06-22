@@ -1,42 +1,49 @@
 # CLAUDE.md — academici (монорепо)
 
 Гид для агентов по корню монорепо. Это **зонтик экосистемы academici**: один репозиторий —
-несколько независимых пакетов и плагинов под общей крышей. Каждый пакет — самостоятельный CLI
-(`swissknifeman`, `maind`); единой консоли-обёртки нет.
+несколько независимых пакетов и плагинов под общей крышей (имя `swissknifeman` = контейнер-«швейцарский
+нож», НЕ один из инструментов). Каждый пакет — самостоятельный CLI (`skiller`, `maind`); единой
+консоли-обёртки нет.
 
 ## Раскладка
 
 ```
-<monorepo>/
+<monorepo>/                     # репо `swissknifeman` (зонтик-контейнер)
 ├── install.sh                 # зонтичный установщик (делегирует install.sh пакетов)
 ├── core/                      # общий stdlib-only пакет `core` (дословные дубли: Env/term/text)
 ├── packages/
-│   ├── swissknifeman/         # реестр AI-скиллов (skills/, skm/, generate-skill/, lib/, bin/)
-│   └── maind/                 # хаб памяти/графа/координации (lib/, bin/, commands/, .mcp.json)
+│   ├── skiller/               # реестр AI-скиллов (skills/, skm/, generate-skill/, lib/, bin/) — CLI skiller
+│   └── maind/                 # хаб памяти/графа/координации (lib/, bin/, commands/) — CLI maind
 ├── .claude-plugin/
 │   └── marketplace.json       # ЕДИНЫЙ marketplace репо (генерируется), 19 плагинов
 └── docs/                      # зонтичная документация (VitePress)
 ```
 
+> **Имена ≠ роли.** Репо/marketplace/`~/.swissknifeman/` state — это зонтик `swissknifeman`
+> (бренд экосистемы, не переименовываем). Инструмент управления скиллами — пакет/CLI `skiller`
+> (бывш. inner `swissknifeman`; алиас `swissknifeman` сохранён в PATH). «hub/хаб» — только роль
+> центрального узла mAInd в прозе, не имя сервера.
+
 ## Пакеты (у каждого свой CLAUDE.md — читай его при работе внутри)
 
 | Пакет | Роль | CLI | Деталь |
 |:--|:--|:--|:--|
-| [`packages/swissknifeman`](packages/swissknifeman/CLAUDE.md) | реестр скиллов (раздаёт навыки в проекты) | `swissknifeman` | source истины скиллов; 2 канала connect/vendor |
-| [`packages/maind`](packages/maind/CLAUDE.md) | память + граф + координация (хаб/шина) | `maind` | MCP-хаб, namespace-память, федерация графа |
+| [`packages/skiller`](packages/skiller/CLAUDE.md) | реестр скиллов (раздаёт навыки в проекты) | `skiller` (алиас `swissknifeman`) | source истины скиллов; 2 канала connect/vendor |
+| [`packages/maind`](packages/maind/CLAUDE.md) | память + граф + координация (хаб/шина) | `maind` | MCP-хаб, namespace-память, федерация графа. **Единый** — память (`agentmemory`) и graphify (граф кода) уже отдельные MCP-серверы; дробить maind не нужно |
 
-Это **один монорепозиторий, не «соседние пакеты»**: maind координирует swissknifeman через
+Это **один монорепозиторий, не «соседние пакеты»**: maind координирует skiller через
 `subprocess` (см. `packages/maind/lib/maind/orchestrate.py`), оба используют общий `core/`.
 
 ## CLI пакетов (две независимые команды)
 
 ```bash
-swissknifeman <cmd>        # реестр скиллов: connect, vendor, integrate, registry, status, …
+skiller <cmd>              # реестр скиллов: connect, vendor, integrate, registry, status, … (алиас swissknifeman)
 maind <cmd>                # хаб: memory, graph, onboard, deploy, sync, health, doctor, …
 ```
 
 Единой консоли-обёртки нет — каждый пакет ставится в PATH своим `install.sh` (зонтичный
-`install.sh` делегирует им). Их пути зашиты в `.mcp.json` онбордженных проектов — не ломать.
+`install.sh` делегирует им). `skiller` ставится с back-compat алиасом `swissknifeman`. Пути maind
+зашиты в `.mcp.json` онбордженных проектов — не ломать.
 
 ## Общий пакет `core`
 
@@ -53,15 +60,17 @@ Bash-лаунчеры и heredoc в `validate.sh` определяют коре�
 ## Единый marketplace
 
 Один `.claude-plugin/marketplace.json` в корне репо объявляет все плагины (бакеты скиллов +
-`skm` + `generate-skill` + `maind`). Генерируется `swissknifeman registry`: бакеты — из
+`skm` + `generate-skill` + `maind`). Генерируется `skiller registry`: бакеты — из
 `skills/**/SKILL.md`; соседние пакеты (`maind`) — из их `packages/<name>/.claude-plugin/plugin.json`.
-`source`-пути относительны корня репо (`./packages/...`). Имя marketplace — `swissknifeman`.
+`source`-пути относительны корня репо (`./packages/...`). Имя marketplace — `swissknifeman` (= зонтик).
+Плагин `maind` — **только команды** (`/maind:*`), MCP-сервера в нём нет; MCP-инструменты хаба
+приходят в проект per-project сервером `maind` из его `.mcp.json`.
 
 ## Разработка
 
 ```bash
 # тесты/валидация — по пакету (каждый знает свой core через PYTHONPATH):
-bash packages/swissknifeman/scripts/validate.sh
+bash packages/skiller/scripts/validate.sh
 bash packages/maind/scripts/validate.sh
 PYTHONPATH=. python3 -m unittest discover -s core/tests       # smoke-тесты пакета core
 ```

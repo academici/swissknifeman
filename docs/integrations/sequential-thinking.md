@@ -14,7 +14,7 @@
 Пресетом (opt-in):
 
 ```bash
-swissknifeman integrate --mcp sequential-thinking
+skiller integrate --mcp sequential-thinking
 ```
 
 Пресет — `configs/claude-code/mcp/sequential-thinking.json`:

@@ -16,7 +16,7 @@ Context7 от Upstash — MCP-сервер, который на лету под�
 без флага:
 
 ```bash
-swissknifeman integrate
+skiller integrate
 ```
 
 Пресет — `configs/claude-code/mcp/context7.json`:

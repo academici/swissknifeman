@@ -15,7 +15,7 @@ swissknifeman раздаёт скиллы и конфиги. Этот разде
   в `<проект>/.mcp.json` merge-only (чужие серверы целы, бэкап `*.bak`):
 
   ```bash
-  swissknifeman integrate --mcp playwright,filesystem
+  skiller integrate --mcp playwright,filesystem
   ```
 
   `context7` входит в dev-дефолт и ставится без флага (во всё, кроме obsidian-vault).

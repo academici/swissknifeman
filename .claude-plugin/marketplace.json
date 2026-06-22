@@ -7,7 +7,7 @@
   "plugins": [
     {
       "name": "architect",
-      "source": "./packages/swissknifeman/skills/architect",
+      "source": "./packages/skiller/skills/architect",
       "description": "Architecture, API and data design, security, observability, tech stack selection",
       "category": "engineering",
       "tags": [
@@ -19,7 +19,7 @@
     },
     {
       "name": "blender",
-      "source": "./packages/swissknifeman/skills/blender",
+      "source": "./packages/skiller/skills/blender",
       "description": "Blender 3D modeling: MCP workflow, threading for FDM/SLA, version gotchas, model rules",
       "category": "engineering",
       "tags": [
@@ -30,7 +30,7 @@
     },
     {
       "name": "devops",
-      "source": "./packages/swissknifeman/skills/devops",
+      "source": "./packages/skiller/skills/devops",
       "description": "Docker environments, CI/CD pipelines, GitOps",
       "category": "infrastructure",
       "tags": [
@@ -41,7 +41,7 @@
     },
     {
       "name": "founder",
-      "source": "./packages/swissknifeman/skills/founder",
+      "source": "./packages/skiller/skills/founder",
       "description": "Idea discovery, competitive analysis, risk assessment, pitch decks",
       "category": "business",
       "tags": [
@@ -52,7 +52,7 @@
     },
     {
       "name": "frontend",
-      "source": "./packages/swissknifeman/skills/frontend",
+      "source": "./packages/skiller/skills/frontend",
       "description": "Frontend development: Vite, Vue Composition API, Tailwind CSS, Inertia",
       "category": "engineering",
       "tags": [
@@ -64,7 +64,7 @@
     },
     {
       "name": "general",
-      "source": "./packages/swissknifeman/skills/general",
+      "source": "./packages/skiller/skills/general",
       "description": "General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists",
       "category": "workflow",
       "tags": [
@@ -75,7 +75,7 @@
     },
     {
       "name": "generate-skill",
-      "source": "./packages/swissknifeman/generate-skill",
+      "source": "./packages/skiller/generate-skill",
       "description": "Meta-skill для создания новых скиллов по SKILL_TEMPLATE",
       "category": "meta",
       "tags": [
@@ -85,7 +85,7 @@
     },
     {
       "name": "imported",
-      "source": "./packages/swissknifeman/skills/imported",
+      "source": "./packages/skiller/skills/imported",
       "description": "External super-skills tracked via upstream.json (marketing, sales, legal, research and more)",
       "category": "external",
       "tags": [
@@ -110,7 +110,7 @@
     },
     {
       "name": "mobile",
-      "source": "./packages/swissknifeman/skills/mobile",
+      "source": "./packages/skiller/skills/mobile",
       "description": "Mobile development: Flutter — design-to-code, theming, layout mapping from Figma",
       "category": "engineering",
       "tags": [
@@ -122,7 +122,7 @@
     },
     {
       "name": "operator",
-      "source": "./packages/swissknifeman/skills/operator",
+      "source": "./packages/skiller/skills/operator",
       "description": "Incident response, runbooks, postmortems, on-call and capacity planning",
       "category": "operations",
       "tags": [
@@ -133,7 +133,7 @@
     },
     {
       "name": "oss-dev",
-      "source": "./packages/swissknifeman/skills/oss-dev",
+      "source": "./packages/skiller/skills/oss-dev",
       "description": "Open-source development: releases, governance, DX, dependency audits + language references",
       "category": "engineering",
       "tags": [
@@ -144,7 +144,7 @@
     },
     {
       "name": "php",
-      "source": "./packages/swissknifeman/skills/php",
+      "source": "./packages/skiller/skills/php",
       "description": "PHP and Laravel: applications, packages, Filament, permissions, testing, patterns",
       "category": "engineering",
       "tags": [
@@ -155,7 +155,7 @@
     },
     {
       "name": "pm",
-      "source": "./packages/swissknifeman/skills/pm",
+      "source": "./packages/skiller/skills/pm",
       "description": "Product management: BRD, PRD, roadmap, monetization, unit economics",
       "category": "product",
       "tags": [
@@ -166,7 +166,7 @@
     },
     {
       "name": "python",
-      "source": "./packages/swissknifeman/skills/python",
+      "source": "./packages/skiller/skills/python",
       "description": "Python: ML project structure, virtualenv and dependency management",
       "category": "engineering",
       "tags": [
@@ -177,7 +177,7 @@
     },
     {
       "name": "quality",
-      "source": "./packages/swissknifeman/skills/quality",
+      "source": "./packages/skiller/skills/quality",
       "description": "Code review, refactoring plans, tech debt audits, test strategy",
       "category": "engineering",
       "tags": [
@@ -188,7 +188,7 @@
     },
     {
       "name": "roles",
-      "source": "./packages/swissknifeman/skills/roles",
+      "source": "./packages/skiller/skills/roles",
       "description": "Personas: tech lead, startup CTO, solo founder, open-source maintainer",
       "category": "personas",
       "tags": [
@@ -199,8 +199,8 @@
     },
     {
       "name": "skm",
-      "source": "./packages/swissknifeman/skm",
-      "description": "swissknifeman CLI — управление скиллами проекта: бакеты (connect/vendor), integrate, статус",
+      "source": "./packages/skiller/skm",
+      "description": "skiller CLI — управление скиллами проекта: бакеты (connect/vendor), integrate, статус",
       "category": "meta",
       "tags": [
         "cli",
@@ -210,7 +210,7 @@
     },
     {
       "name": "system",
-      "source": "./packages/swissknifeman/skills/system",
+      "source": "./packages/skiller/skills/system",
       "description": "Local environment topology: the three hub nodes (Brain vault, swissknifeman, projects base) and how agents navigate between projects and their docs",
       "category": "meta",
       "tags": [

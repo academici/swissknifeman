@@ -19,7 +19,7 @@ markdown. Полезен, чтобы агент сам читал внешнюю
 Пресетом (opt-in):
 
 ```bash
-swissknifeman integrate --mcp fetch
+skiller integrate --mcp fetch
 ```
 
 Пресет — `configs/claude-code/mcp/fetch.json`:

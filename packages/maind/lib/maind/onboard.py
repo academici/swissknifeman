@@ -1,6 +1,6 @@
-"""maind onboard <project> — единый онбординг: скиллы (swissknifeman) + подключение к мозгу.
+"""maind onboard <project> — единый онбординг: скиллы (skiller) + подключение к мозгу.
 
-Оркеструет цепочку: зарегистрировать проект → swissknifeman integrate (скиллы+хуки) →
+Оркеструет цепочку: зарегистрировать проект → skiller integrate (скиллы+хуки) →
 maind deploy (память+граф) → seed графа. Каждый шаг standalone-safe: нет соседа — шаг
 пропускается с предупреждением, онбординг продолжается. integrate идёт ДО deploy/seed,
 чтобы к моменту seed уже существовал skills-lock.json."""
@@ -53,7 +53,7 @@ def onboard(env, config, project_or_path, opts):
     steps.append({"name": "register", "status": "ok",
                   "detail": f"{'создан' if created else 'найден'} project:{proj['id']}"})
 
-    # 1. swissknifeman integrate — скиллы + хуки (standalone-safe)
+    # 1. skiller integrate — скиллы + хуки (standalone-safe)
     if opts.get("skip_skills"):
         steps.append({"name": "skills", "status": "skipped", "detail": "--skip-skills"})
     else:
@@ -63,10 +63,10 @@ def onboard(env, config, project_or_path, opts):
         try:
             rc = run_capability(env, config, proj["id"], "skm:integrate", extra, dry=dry)
             steps.append({"name": "skills", "status": "ok" if rc == 0 else "failed",
-                          "detail": f"swissknifeman integrate rc={rc}"})
+                          "detail": f"skiller integrate rc={rc}"})
         except SystemExit:
             steps.append({"name": "skills", "status": "skipped",
-                          "detail": "swissknifeman недоступен — пропуск"})
+                          "detail": "skiller недоступен — пропуск"})
 
     # 2. maind deploy — память + граф (MCP-серверы хаба)
     # --with-code (legacy --with-graphify) фиксируем как намерение в записи проекта, чтобы

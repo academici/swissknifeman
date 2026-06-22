@@ -8,10 +8,10 @@
 cd ~/projects/packages/my-package
 
 # Скиллы: composer.json без artisan → профиль php-package
-swissknifeman vendor --agent claude
+skiller vendor --agent claude
 
 # Permissions: base + php-package
-~/projects/packages/swissknifeman/scripts/apply-permissions.sh --target .
+~/projects/packages/swissknifeman/packages/skiller/scripts/apply-permissions.sh --target .
 ```
 
 Профиль `php-package` ставит bucket-ы **oss-dev, php, quality, devops**:
@@ -43,5 +43,5 @@ vendor/bin/infection
 доставьте её явно:
 
 ```bash
-swissknifeman vendor --buckets roles --agent claude
+skiller vendor --buckets roles --agent claude
 ```

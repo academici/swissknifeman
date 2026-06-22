@@ -13,7 +13,7 @@
 Пресетом (opt-in):
 
 ```bash
-swissknifeman integrate --mcp filesystem
+skiller integrate --mcp filesystem
 ```
 
 Пресет — `configs/claude-code/mcp/filesystem.json` (по умолчанию — корень проекта):

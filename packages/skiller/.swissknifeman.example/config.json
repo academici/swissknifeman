@@ -1,0 +1,14 @@
+{
+  "_comment": "Конфиг vendor-режима (физический перенос скиллов в репо). Скопируй в целевой проект как .swissknifeman/config.json. Источник истины: правила ниже разворачиваются в плоский набор, sync копирует скиллы из библиотеки swissknifeman в skills_path и пишет skills-lock.json (managed). Команда: skiller sync [--dry-run].",
+  "version": 1,
+  "_comment_mode": "пока только vendor (физический перенос + lock)",
+  "mode": "vendor",
+  "_comment_skills_path": "куда копировать; по умолчанию .claude/skills (Claude находит автоматически)",
+  "skills_path": ".claude/skills",
+  "_comment_include": "конкретные скиллы из любых областей: 'bucket/rel' или просто 'name'",
+  "include": ["php/eloquent-performance", "architect/api-design"],
+  "_comment_buckets": "бакеты целиком (объединяются с include)",
+  "buckets": ["quality"],
+  "_comment_exclude": "вычитание из (buckets ∪ include): имя скилла или 'bucket/rel'",
+  "exclude": ["quality/mutation-testing"]
+}

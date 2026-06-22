@@ -28,13 +28,14 @@ class TestPluginManifest(unittest.TestCase):
     def test_plugin_json_valid_and_links_exist(self):
         m = _load_json(PLUGIN_DIR / "plugin.json")
         self.assertEqual(m["name"], "maind")
-        # Claude Code plugin schema: commands — массив путей; mcpServers — путь-строка ('./...').
+        # Claude Code plugin schema: commands — массив путей.
         self.assertIsInstance(m.get("commands"), list, "commands должен быть массивом путей")
         self.assertTrue((ROOT / "commands").is_dir(), "нет каталога commands/")
-        mcp = m["mcpServers"]
-        self.assertIsInstance(mcp, str, "mcpServers — путь-строка к .mcp.json")
-        rel = mcp[2:] if mcp.startswith("./") else mcp   # снять './'-префикс, не трогая .mcp.json
-        self.assertTrue((ROOT / rel).is_file(), "mcpServers → нет файла")
+        # Плагин — ТОЛЬКО скиллы/команды (slash → CLI). MCP-сервера в плагине нет:
+        # per-project `maind` приходит из .mcp.json проекта (project-линза), а ecosystem-факт
+        # пишется явным scope:"global". Иначе плагин дублировал бы тулсет `maind_*` в каждой
+        # сессии вторым `maind-hub`-сервером (--scope global) — устранённая путаница.
+        self.assertNotIn("mcpServers", m, "плагин maind = только команды, без MCP-сервера")
 
     def test_marketplace_valid_and_consistent(self):
         # В монорепо marketplace.json — единый, в КОРНЕ репо (его генерит swissknifeman
@@ -49,13 +50,6 @@ class TestPluginManifest(unittest.TestCase):
         self.assertEqual(entry["source"], "./packages/maind")
         # имя плагина в marketplace совпадает с plugin.json (install: maind@<marketplace>)
         self.assertEqual(entry["name"], _load_json(PLUGIN_DIR / "plugin.json")["name"])
-
-    def test_mcp_server_points_to_launcher(self):
-        srv = _load_json(ROOT / ".mcp.json")["mcpServers"]["maind-hub"]
-        # MCP-сервер плагина зовёт `maind` из PATH (полная установка с пакетом core),
-        # а не копию из изолированного кэша плагина (там нет core монорепо).
-        self.assertEqual(srv["command"], "maind")
-        self.assertIn("mcp", srv["args"])
 
 
 class TestPluginCommands(unittest.TestCase):

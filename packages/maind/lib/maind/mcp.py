@@ -252,8 +252,19 @@ def serve(env, config, stdin=None, stdout=None, default_scope="global"):
     _log("стоп (EOF)")
 
 
+def _default_scope_from_cwd(env, config):
+    """Дефолт-scope, когда нет явного --scope/MAIND_SCOPE: project:<id> по cwd, иначе global.
+    Безопаснее прежнего глухого 'global': argless-сервер пишет в бакет СВОЕГО проекта, а не в
+    общий global (футган — раньше промах cwd ⇒ память утекала в shared-слой)."""
+    from .namespaces import private_scope
+    from .constants import GLOBAL_SCOPE
+    proj = projects_mod.match_cwd(env, config)
+    return private_scope(proj) if proj else GLOBAL_SCOPE
+
+
 def cmd_mcp(env, argv):
     opts, _ = parse_args(argv, {"--scope": "str"})
-    default_scope = opts["scope"] or os.environ.get("MAIND_SCOPE") or "global"
     config, _src = load_config(env)
+    default_scope = (opts["scope"] or os.environ.get("MAIND_SCOPE")
+                     or _default_scope_from_cwd(env, config))
     serve(env, config, default_scope=default_scope)

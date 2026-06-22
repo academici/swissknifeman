@@ -122,12 +122,13 @@ node-link JSON. Раскладка — **федерация**: граф на п�
 maind ставится и как **плагин Claude Code** — тонкое лицо над CLI. После `./install.sh`:
 
 ```
-/plugin marketplace add /путь/к/maind     # single-entry marketplace «maind»
-/plugin install maind@maind
+/plugin marketplace add /путь/к/swissknifeman   # единый marketplace монорепо
+/plugin install maind@swissknifeman
 ```
 
 Появляются slash-команды `/maind:*` (`onboard`, `sync`, `status`, `health`, `doctor`) — обёртки над
-тем же CLI; плюс hub-MCP сервер `maind-hub` (global scope). Подробнее — [docs/guide/plugin.md](docs/guide/plugin.md).
+тем же CLI. Плагин **MCP-сервера не несёт**: инструменты хаба даёт per-project сервер `maind` из
+`.mcp.json` проекта. Подробнее — [docs/guide/plugin.md](docs/guide/plugin.md).
 
 ---
 

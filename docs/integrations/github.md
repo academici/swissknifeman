@@ -14,7 +14,7 @@
 Пресетом (opt-in) — поставляется remote-вариант (без Docker и токенов в файле):
 
 ```bash
-swissknifeman integrate --mcp github
+skiller integrate --mcp github
 ```
 
 Пресет — `configs/claude-code/mcp/github.json`:

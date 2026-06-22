@@ -20,8 +20,8 @@ from .memory import resolve_ports
 from .namespaces import namespaces_of
 from .probe import probe_project
 from .projects import get as get_project
-from .projects import listing
-from .workspace import load_settings, norm_path
+from .projects import match_cwd
+from .workspace import load_settings
 
 BLOCK_MARKER = "maind:healthcheck"
 HOOK_SCRIPT = ".claude/maind-health.sh"
@@ -75,15 +75,10 @@ def _target(env, config, opts):
         if proj is None:
             die(f"проект не найден в config.json: {opts['project']}")
         return proj
-    cwd = norm_path(os.getcwd())
-    for p in listing(env, config):
-        lp = p.get("local_path")
-        if not lp:
-            continue
-        base = norm_path(lp)
-        if cwd == base or cwd.startswith(base + os.sep):
-            return p
-    die("не удалось определить проект из текущего каталога — укажите --project <id>")
+    proj = match_cwd(env, config)
+    if proj is None:
+        die("не удалось определить проект из текущего каталога — укажите --project <id>")
+    return proj
 
 
 # ── провиженеры (вызываются из sync) ─────────────────────────────────────────

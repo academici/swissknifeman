@@ -18,7 +18,7 @@ PR-комментарий или Issue.
 | `simplify-on-push.yml` | `quality/code-simplifier` | pull_request (PHP-файлы) | Предложения по упрощению комментарием к PR |
 | `security-audit-scheduled.yml` | `php/laravel-security-audit` | cron (еженедельно) + ручной | Issue с находками по severity |
 
-После установки скиллов через `swissknifeman vendor` сниппеты лежат в
+После установки скиллов через `skiller vendor` сниппеты лежат в
 `<skills-path>/<skill>/snippets/`; в самом реестре swissknifeman эти
 workflow не настраиваются.
 
@@ -26,8 +26,8 @@ workflow не настраиваются.
 
 1. **Secret `ANTHROPIC_API_KEY`** в настройках репозитория — фоновые агенты
    расходуют платные токены.
-2. **Установленный скилл** в целевом проекте (`swissknifeman vendor` или
-   plugin marketplace через `swissknifeman connect`) — промпт workflow
+2. **Установленный скилл** в целевом проекте (`skiller vendor` или
+   plugin marketplace через `skiller connect`) — промпт workflow
    ссылается на протокол скилла.
 3. **Permissions** заданы в шаблонах минимально необходимые:
    `contents: read` + `pull-requests: write` или `issues: write`.

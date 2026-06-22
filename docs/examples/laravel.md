@@ -13,7 +13,7 @@ laravel new shop && cd shop
 ## Шаг 1. Скиллы
 
 ```bash
-swissknifeman vendor --agent claude
+skiller vendor --agent claude
 ```
 
 Автодетект видит `artisan` + `composer.json` → профиль `laravel-project` →
@@ -24,13 +24,13 @@ Docker, code review и инцидентам.
 Проверить, что поставится, можно заранее:
 
 ```bash
-swissknifeman vendor --list
+skiller vendor --list
 ```
 
 ## Шаг 2. Permissions
 
 ```bash
-~/projects/packages/swissknifeman/scripts/apply-permissions.sh --target .
+~/projects/packages/swissknifeman/packages/skiller/scripts/apply-permissions.sh --target .
 ```
 
 Автодетект по маркерам: `artisan` → `laravel`, `package.json` → `node`,
@@ -47,7 +47,7 @@ swissknifeman vendor --list
 Чтобы любой клон проекта восстанавливал то же окружение:
 
 ```bash
-cp ~/projects/packages/swissknifeman/.swissknife.example.json .swissknife.json
+cp ~/projects/packages/swissknifeman/packages/skiller/.swissknife.example.json .swissknife.json
 # отредактировать под проект и закоммитить
 ```
 
@@ -71,8 +71,8 @@ shop/
 
 ```bash
 # Исключить неактуальные скиллы
-swissknifeman vendor --profile laravel-project --exclude botkit
+skiller vendor --profile laravel-project --exclude botkit
 
 # Добавить docker-пресет, если автодетект его не увидел
-~/projects/packages/swissknifeman/scripts/apply-permissions.sh --target . --preset docker
+~/projects/packages/swissknifeman/packages/skiller/scripts/apply-permissions.sh --target . --preset docker
 ```

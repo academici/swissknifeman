@@ -1,16 +1,13 @@
-"""Общие утилиты maind: окружение (Env), парсинг аргументов, atomic JSON, HTTP.
+"""Общие утилиты maind: окружение (Env), atomic JSON, JSON-БД, backup.
 
 Дословно общий с swissknifeman/brain код (die/warn/now_iso/confirm/sanitize +
-ядро Env) вынесен в общий core; здесь — специфика maind (path-property узла,
-parse_args с позиционными, atomic JSON, managed-block, HTTP на stdlib urllib)."""
+ядро Env, parse_args, run_cmd, atomic/safe JSON) вынесен в общий core; HTTP-клиент
+вынесен в `maind.http`, управляемый markdown-блок — в `maind.blocks` (реэкспорт ниже
+для обратной совместимости импортов `from .common import ...`)."""
 import copy
-import hashlib
 import json
 import os
-import re
 import shutil
-import urllib.error
-import urllib.request
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
@@ -19,8 +16,12 @@ from pathlib import Path
 # модулей пакета, которые исторически берут эти имена из .common.
 from core import (  # noqa: F401
     HOME, BaseEnv, atomic_write_json, atomic_write_text, confirm, die,
-    find_monorepo_root, now_iso, sanitize, warn,
+    find_monorepo_root, now_iso, parse_args, run_cmd, safe_load_json,
+    sanitize, warn,
 )
+# Выделенные модули — реэкспорт ради `from .common import ...` (back-compat).
+from .blocks import content_hash, managed_block, upsert_block  # noqa: F401
+from .http import http_get_json, http_post_json, ping  # noqa: F401
 
 DB_VERSION = 1
 
@@ -107,41 +108,8 @@ class Env(BaseEnv):
 # die/warn/now_iso/confirm/sanitize — из общего core (реэкспорт выше).
 
 
-# ── парсинг аргументов (флаги + позиционные, стиль brain) ───────────────────
-def parse_args(args, spec, max_pos=0):
-    """spec: {'--flag': 'str'|'bool'}; возвращает (opts, positionals).
-
-    opts ключуются по имени флага без '--', с '-'→'_'. -h/--help → opts['help'].
-    Неизвестный флаг, нехватка значения или перебор позиционных → die."""
-    opts = {k.lstrip("-").replace("-", "_"): ("" if t == "str" else False)
-            for k, t in spec.items()}
-    opts.setdefault("help", False)
-    pos = []
-    i = 0
-    while i < len(args):
-        a = args[i]
-        if a in ("-h", "--help"):
-            opts["help"] = True
-            i += 1
-            continue
-        if a.startswith("-") and a != "-":
-            if a not in spec:
-                die(f"неизвестный флаг: {a}")
-            key = a.lstrip("-").replace("-", "_")
-            if spec[a] == "bool":
-                opts[key] = True
-                i += 1
-            else:
-                if i + 1 >= len(args):
-                    die(f"флаг {a} требует значение")
-                opts[key] = args[i + 1]
-                i += 2
-        else:
-            pos.append(a)
-            i += 1
-    if len(pos) > max_pos:
-        die(f"лишние аргументы: {' '.join(pos[max_pos:])}")
-    return opts, pos
+# parse_args — из общего core (реэкспорт выше); раньше дублировался здесь
+# (надмножество parse_flags с позиционными, стиль brain).
 
 
 # ── файловые помощники ──────────────────────────────────────────────────────
@@ -155,34 +123,8 @@ def backup_file(path):
     return bak
 
 
-# ── управляемый markdown-блок (идемпотентная вставка/обновление) ────────────
-def content_hash(text):
-    """Короткий стабильный хэш содержимого (для детекта дрейфа управляемых артефактов)."""
-    return hashlib.sha256(text.encode("utf-8")).hexdigest()[:12]
-
-
-def managed_block(content, marker):
-    """Управляемый блок с маркерами begin/end и хэшем: maind — единственный его писатель."""
-    h = content_hash(content)
-    return (f"<!-- {marker} hash={h} (managed by maind — не редактировать вручную) -->\n"
-            f"{content.rstrip()}\n<!-- /{marker} -->")
-
-
-def upsert_block(text, content, marker):
-    """Вставить/обновить управляемый блок в text. Возвращает (new_text, changed, state),
-    state ∈ {absent→install, stale→update, fresh→skip}. Существующий блок ищется по маркерам,
-    чужой текст не трогается; отсутствует — добавляется в конец."""
-    block = managed_block(content, marker)
-    pat = re.compile(rf"<!-- {re.escape(marker)}\b.*?<!-- /{re.escape(marker)} -->",
-                     re.DOTALL)
-    m = pat.search(text or "")
-    if m is None:
-        sep = "" if not text or text.endswith("\n") else "\n"
-        joiner = "\n" if text else ""
-        return (text or "") + sep + joiner + block + "\n", True, "absent"
-    if m.group(0).strip() == block.strip():
-        return text, False, "fresh"
-    return text[:m.start()] + block + text[m.end():], True, "stale"
+# managed_block/upsert_block/content_hash — в maind.blocks (реэкспорт выше).
+# http_get_json/http_post_json/ping — в maind.http (реэкспорт выше).
 
 
 # ── JSON-хранилища (atomic write — из core; устойчивое чтение — здесь) ───────
@@ -202,43 +144,3 @@ def load_json_db(path, default):
     if isinstance(db, dict) and db.get("version", 1) > DB_VERSION:
         die(f"{path} записан более новой версией maind — обновите репозиторий (git pull)")
     return db
-
-
-# ── HTTP (stdlib urllib) ────────────────────────────────────────────────────
-def http_get_json(url, *, timeout=5):
-    """GET → распарсенный JSON. Сетевые ошибки → RuntimeError с понятным текстом."""
-    req = urllib.request.Request(url, method="GET")
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            return json.loads(resp.read().decode("utf-8") or "null")
-    except urllib.error.HTTPError as e:
-        raise RuntimeError(f"HTTP {e.code} от {url}") from e
-    except (urllib.error.URLError, OSError) as e:
-        raise RuntimeError(f"нет связи с {url}: {getattr(e, 'reason', e)}") from e
-
-
-def http_post_json(url, payload, *, timeout=10):
-    """POST JSON → распарсенный JSON-ответ (пустой ответ → {})."""
-    data = json.dumps(payload).encode("utf-8")
-    req = urllib.request.Request(url, data=data, method="POST",
-                                 headers={"Content-Type": "application/json"})
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            body = resp.read().decode("utf-8")
-            return json.loads(body) if body.strip() else {}
-    except urllib.error.HTTPError as e:
-        raise RuntimeError(f"HTTP {e.code} от {url}") from e
-    except (urllib.error.URLError, OSError) as e:
-        raise RuntimeError(f"нет связи с {url}: {getattr(e, 'reason', e)}") from e
-
-
-def ping(url, *, timeout=3):
-    """True, если по url вообще отвечает HTTP (даже 4xx). HTTPError = сервис жив
-    (как в brain healthcheck); URLError/OSError = недоступен."""
-    try:
-        urllib.request.urlopen(urllib.request.Request(url, method="GET"), timeout=timeout)
-        return True
-    except urllib.error.HTTPError:
-        return True
-    except (urllib.error.URLError, OSError):
-        return False

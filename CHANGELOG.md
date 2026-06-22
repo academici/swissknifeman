@@ -16,6 +16,32 @@
   и общие `../`/`.agents`-ссылки (раскладка проекта-потребителя у upstream/imported —
   ложные срабатывания). Все новые проверки дают 0 нарушений на текущем реестре.
 
+### Changed (core: дедупликация + защищённый subprocess)
+
+- **`parse_flags`/`parse_args` сведены в `core/cli.py`** — раньше `parse_flags`
+  дублировался в skiller и harness байт-в-байт, `parse_args` (надмножество с
+  позиционными) жил в maind. Теперь один источник истины, пакеты реэкспортируют из
+  своих `common.py` (импорты `from .common import parse_flags|parse_args` не тронуты).
+- **`core.cli.run_cmd`** — защищённый запуск подпроцесса (argv-список, без shell):
+  `FileNotFoundError`/`TimeoutExpired`/ненулевой код → чистый `die` вместо
+  трейсбэка. Применён к `registry`/`hub` (вызовы `generate-*.sh` с `check=True`
+  больше не падают трейсбэком).
+- **`core.io.safe_load_json`** — единый graceful-ридер JSON (битый/отсутствующий →
+  default, опц. `on_error`). Для БД с бэкапом битого файла остаётся доменный
+  `maind.common.load_json_db`.
+- **Сплит `maind/common.py`**: HTTP-клиент (`http_get_json`/`http_post_json`/`ping`)
+  → `maind/http.py`, управляемый markdown-блок (`managed_block`/`upsert_block`/
+  `content_hash`) → `maind/blocks.py`. Реэкспорт из `common.py` — импорты
+  `from .common import ...` не тронуты (non-breaking).
+- Аудит subprocess-вызовов: остальные уже защищены (`shutil.which`-гварды,
+  `try/except OSError`, health-poll демона памяти с детектом раннего выхода) —
+  не трогали (рекомендация аудита про `shlex.quote` оказалась ложной: argv-списки
+  не инъектируемы шеллом).
+- **Тесты:** core 12→28 (parse_flags/parse_args/run_cmd/safe_load_json), harness
+  14→28 (новое покрытие `doctor`/`settings`/`cli`-диспетчер).
+
+### Added (скиллы дисциплины именования)
+
 - **`general/naming-conventions`** (бакет `general` — CORE-connect, авто-раздаётся в каждый
   проект) — язык-агностичные правила: имя раскрывает намерение, борьба с шумовыми словами
   (`Manager`/`Helper`/`data`/`process`) и комбинаторным взрывом методов (`findByX…OrFail`/

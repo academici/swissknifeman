@@ -16,8 +16,8 @@ jobs:
 
       - name: Run scanner (extract only in CI)
         run: |
-          chmod +x scripts/scan-skills.sh scripts/scan-and-pr.sh
-          ./scripts/scan-skills.sh --extract || true
+          chmod +x packages/skiller/scripts/scan-skills.sh packages/skiller/scripts/scan-and-pr.sh
+          ./packages/skiller/scripts/scan-skills.sh --extract || true
 
       - name: Check for candidates
         id: check
@@ -33,7 +33,7 @@ jobs:
         if: steps.check.outputs.count != '0'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: ./scripts/scan-and-pr.sh --no-pr
+        run: ./packages/skiller/scripts/scan-and-pr.sh --no-pr
 
       - name: Push branch and open PR
         if: steps.check.outputs.count != '0'

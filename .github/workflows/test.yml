@@ -21,5 +21,16 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Run test suite
-        run: bash scripts/test.sh -v
+      # Монорепо: тесты по пакету (каждый знает свой core через PYTHONPATH) + smoke
+      # пакета core. Скрипты переехали из корня в packages/*/scripts/ при реструктуризации.
+      - name: Test skiller
+        run: bash packages/skiller/scripts/test.sh -v
+
+      - name: Test harness
+        run: bash packages/harness/scripts/test.sh -v
+
+      - name: Test maind
+        run: bash packages/maind/scripts/test.sh -v
+
+      - name: Test core (stdlib фундамент)
+        run: PYTHONPATH=. python3 -m unittest discover -s core/tests -v

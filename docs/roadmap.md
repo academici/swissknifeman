@@ -9,7 +9,7 @@
 **Миграция собственных скиллов из локальных проектов.** Анализ наработок
 в проектах из `.skills-scanner.json`, перенос универсальной части в реестр
 (через [сканер](/guide/scanner) и вручную), затем подключение в проекты через
-`swissknifeman connect` / `swissknifeman vendor` и удаление локальных копий —
+`skiller connect` / `skiller vendor` и удаление локальных копий —
 чтобы источник истины был один.
 
 **Vendor-skills в боевых пакетах.** Применить
@@ -37,7 +37,7 @@
 - **Skill Composition** — `extends: laravel` во frontmatter: агент загружает
   родительский контекст перед выполнением дочернего скилла. Аналог наследования.
 - **Versioned Snapshots** — SemVer-теги на репозиторий и pin версии
-  в `swissknifeman vendor` (`swissknifeman@1.2.0`). Потребители фиксируют версию,
+  в `skiller vendor` (`swissknifeman@1.2.0`). Потребители фиксируют версию,
   а не latest; sha256 в реестре уже есть.
 - **Skill Chains (pipeline)** — граф `requires` / `produces_for` уже есть
   во frontmatter. Идея: визуализировать как DAG и выполнять цепочку

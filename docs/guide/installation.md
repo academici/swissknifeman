@@ -6,7 +6,7 @@
 
 > Хочешь выбрать сразу весь функционал (скиллы + permissions + хуки + память + hub)
 > через один интерактивный визард — см. [Чеклист интеграции](./integration-checklist)
-> (`swissknifeman integrate`). Ниже — установка скиллов по отдельности.
+> (`skiller integrate`). Ниже — установка скиллов по отдельности.
 
 ## Шаг 1. CLI (один раз на машину)
 
@@ -15,14 +15,14 @@ cd ~/projects/packages/swissknifeman
 ./install.sh
 ```
 
-`install.sh` создаёт симлинк `~/.local/bin/swissknifeman → <repo>/bin/swissknifeman`
+`install.sh` создаёт симлинк `~/.local/bin/skiller → <repo>/bin/skiller`
 и каталог состояния `~/.swissknifeman/`. Симлинк означает: после `git pull`
 CLI всегда свежий, а путь к реестру он определяет сам (через `readlink`).
 Репозиторий переехал — просто перезапустите `./install.sh` из нового места.
 
 Флаги: `--bin-dir DIR` (по умолчанию `~/.local/bin`), `--force` (заменить
 чужой файл без вопроса). Если `~/.local/bin` не в `PATH`, установщик подскажет
-команду для вашего шелла. Проверка установки: `swissknifeman doctor`.
+команду для вашего шелла. Проверка установки: `skiller doctor`.
 
 ## Шаг 2. Подключение проекта
 
@@ -32,17 +32,17 @@ CLI всегда свежий, а путь к реестру он определ
 ```bash
 # Claude Code — нативный plugin marketplace (рекомендуется)
 cd ~/projects/my-app
-swissknifeman connect
+skiller connect
 
 # Cursor и другие агенты — вендоринг копий скиллов
 cd ~/projects/my-app
-swissknifeman vendor --agent cursor
+skiller vendor --agent cursor
 ```
 
 | Канал | Команда | Что попадает в проект |
 |---|---|---|
-| **Claude Code** | `swissknifeman connect` | только записи в `.claude/settings.local.json` |
-| **Cursor / generic** | `swissknifeman vendor` | сами скиллы в `.cursor/skills` / `.ai/skills` |
+| **Claude Code** | `skiller connect` | только записи в `.claude/settings.local.json` |
+| **Cursor / generic** | `skiller vendor` | сами скиллы в `.cursor/skills` / `.ai/skills` |
 
 ::: tip Агенты — только в plugin-канале
 Бакет-плагин может нести не только скиллы, но и каталог `agents/` в своём корне
@@ -54,8 +54,8 @@ generic-агентах их не будет. Пример — бакет `php` �
 :::
 
 Каждое подключение автоматически регистрирует проект в
-`~/.swissknifeman/projects.json` — это включает `swissknifeman list` и
-`swissknifeman update --all`.
+`~/.swissknifeman/projects.json` — это включает `skiller list` и
+`skiller update --all`.
 
 ## Проект с Laravel Boost (мульти-агент, единый источник истины)
 
@@ -69,7 +69,7 @@ Boost-у.
 
 ```bash
 cd ~/projects/my-laravel-app
-swissknifeman vendor \
+skiller vendor \
   --agent generic \
   --skills-path .ai/skills \
   --profile laravel-project \
@@ -104,7 +104,7 @@ php artisan boost:update      # или: composer ai:sync
 принцип ядра — [Что такое SwissKnifeMan](/guide/#_6-совместимое-ядро-политика-конфликтов).
 :::
 
-**Обновление** такого проекта — обычный `swissknifeman update`: он повторно
+**Обновление** такого проекта — обычный `skiller update`: он повторно
 вендорит, дозаписывает `boost.json` и регенерирует хаб; затем вручную
 `php artisan boost:update`.
 
@@ -125,8 +125,8 @@ php artisan boost:update      # или: composer ai:sync
 ## Шаг 3. Обновление
 
 ```bash
-cd ~/projects/my-app && swissknifeman update   # текущий проект
-swissknifeman update --all                     # все зарегистрированные
+cd ~/projects/my-app && skiller update   # текущий проект
+skiller update --all                     # все зарегистрированные
 ```
 
 `update` сам определяет канал(ы) проекта по маркерам на диске, обновляет
@@ -137,8 +137,8 @@ swissknifeman update --all                     # все зарегистриро
 ## Превью без установки
 
 ```bash
-swissknifeman vendor --list      # что будет установлено, файлы не трогаются
-swissknifeman connect --dry-run  # итоговый settings.json без записи
+skiller vendor --list      # что будет установлено, файлы не трогаются
+skiller connect --dry-run  # итоговый settings.json без записи
 ```
 
 ## Явное управление
@@ -148,10 +148,10 @@ swissknifeman connect --dry-run  # итоговый settings.json без зап�
 переопределить:
 
 ```bash
-swissknifeman vendor --profile php-package
-swissknifeman vendor --buckets php,quality
-swissknifeman vendor --buckets php,quality --exclude botkit
-swissknifeman connect --plugins php,quality
+skiller vendor --profile php-package
+skiller vendor --buckets php,quality
+skiller vendor --buckets php,quality --exclude botkit
+skiller connect --plugins php,quality
 ```
 
 Приоритет источников конфигурации: **флаги CLI → `.swissknife.json` → автодетект**.
@@ -214,8 +214,8 @@ CLI лишь предупреждает (`WARN: ... excluded by --exclude, skipp
 
 Вендоринг для Claude Code оставлен для совместимости (плоская раскладка
 `.claude/skills/<name>/SKILL.md`, коллизии разрешаются префиксом bucket-а),
-но предпочтительный путь — `swissknifeman connect` ([marketplace](/adapters/claude-code)).
-Мигрировать с вендоринга: `swissknifeman connect --cleanup-vendored`.
+но предпочтительный путь — `skiller connect` ([marketplace](/adapters/claude-code)).
+Мигрировать с вендоринга: `skiller connect --cleanup-vendored`.
 
 ## Что дальше
 

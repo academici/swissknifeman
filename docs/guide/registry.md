@@ -17,18 +17,18 @@
 какой давности.
 
 Поля графа использует [страница графа зависимостей](./graph) (генерируется
-`scripts/generate-graph.sh` при каждом `swissknifeman registry`);
-`swissknifeman vendor` читает `requires` напрямую из frontmatter и транзитивно
+`scripts/generate-graph.sh` при каждом `skiller registry`);
+`skiller vendor` читает `requires` напрямую из frontmatter и транзитивно
 дотягивает зависимости при выборочной установке.
 
 ## Пересборка
 
 ```bash
 # Пересобрать реестр (skills.json, манифесты плагинов, граф)
-swissknifeman registry
+skiller registry
 ```
 
-`swissknifeman registry` парсит frontmatter каждого `SKILL.md` (только
+`skiller registry` парсит frontmatter каждого `SKILL.md` (только
 frontmatter, не всё тело файла), считает хеши и собирает итоговый JSON.
 
 ## Автоматизация
@@ -36,8 +36,8 @@ frontmatter, не всё тело файла), считает хеши и соб
 - `sha256-update.yml` — пересчитывает хеши реестра при каждом пуше.
 
 Отдельного зеркалирования в Obsidian vault больше нет: vault — обычный
-проект-потребитель, который подключается через `swissknifeman vendor`
-и обновляется командой `swissknifeman update` (см. [CLI](./cli)).
+проект-потребитель, который подключается через `skiller vendor`
+и обновляется командой `skiller update` (см. [CLI](./cli)).
 
 ## Когда пересобирать вручную
 

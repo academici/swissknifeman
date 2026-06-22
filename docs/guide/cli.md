@@ -1,6 +1,6 @@
 # CLI swissknifeman
 
-`bin/swissknifeman` — единая точка входа: подключение проектов, обновление,
+`bin/skiller` — единая точка входа: подключение проектов, обновление,
 диагностика и мейнтенанс реестра. Устанавливается симлинком в `~/.local/bin`
 (см. [Установка](./installation)); путь к реестру определяет сам через
 `readlink` собственного файла — никакой конфигурации пути нет.
@@ -14,7 +14,7 @@
 `.swissknife.json` в нужный каталог. Внутри самого реестра project-команды
 отказываются работать.
 
-### `swissknifeman connect`
+### `skiller connect`
 
 Подключает проект к нативному plugin marketplace Claude Code: пишет
 `extraKnownMarketplaces.swissknifeman` и `enabledPlugins."<bucket>@swissknifeman"`
@@ -22,36 +22,36 @@
 включённое сверх профиля не отключается, бэкап в `*.bak`.
 
 ```
-swissknifeman connect [--profile P | --plugins a,b]
+skiller connect [--profile P | --plugins a,b]
                       [--file settings.json|settings.local.json]
                       [--cleanup-vendored] [--list] [--dry-run] [--hub]
 ```
 
-### `swissknifeman vendor`
+### `skiller vendor`
 
 Вендорит скиллы в проект (Cursor и другие агенты): профили, автодетект,
 транзитивный резолв `requires`, манифест-переустановка — см.
 [Установка](./installation) и [Вендоринг](./vendor-skills).
 
 ```
-swissknifeman vendor [--agent claude|cursor|generic]
+skiller vendor [--agent claude|cursor|generic]
                      [--profile P | --buckets a,b] [--exclude x,y]
                      [--skills-path P] [--list] [--dry-run] [--force] [--hub]
 ```
 
-### `swissknifeman integrate`
+### `skiller integrate`
 
 Интерактивный визард интеграции: проходит [чеклист](./integration-checklist) по
 всему функционалу (скиллы, permissions, хуки auto-approve/память, hub) и применяет
 выбранное. Безопасно — `--dry-run`, merge-only, бэкапы.
 
 ```
-swissknifeman integrate [--target P]
+skiller integrate [--target P]
                         [--bundle minimal|recommended|full|custom]
                         [--yes] [--dry-run] [--file settings.json|settings.local.json]
 ```
 
-### `swissknifeman update [--all] [--dry-run]`
+### `skiller update [--all] [--dry-run]`
 
 Обновляет подключение проекта. Диск — источник истины: каналы определяются
 по маркерам (`extraKnownMarketplaces.swissknifeman` в `.claude/settings*.json`;
@@ -80,12 +80,12 @@ swissknifeman integrate [--target P]
 `--all` обходит все зарегистрированные проекты, пропуская отсутствующие
 каталоги, и печатает сводку.
 
-### `swissknifeman status`
+### `skiller status`
 
 Read-only отчёт: корень и маркер, каналы, дрейф плагинов относительно профиля,
 переехавший путь marketplace, состояние вендоренных скиллов, SHA реестра.
 
-### `swissknifeman list [--prune]`
+### `skiller list [--prune]`
 
 Таблица зарегистрированных проектов со статусом `ok|missing`. Записи никогда
 не удаляются автоматически — только явный `--prune`.
@@ -94,9 +94,9 @@ Read-only отчёт: корень и маркер, каналы, дрейф п�
 
 | Команда | Что делает |
 |---|---|
-| `swissknifeman registry` | регенерирует `skills.json`, плагин-манифесты `.claude-plugin/*` и `docs/guide/graph.md` (бывший `./sync.sh --update-registry`) |
+| `skiller registry` | регенерирует `skills.json`, плагин-манифесты `.claude-plugin/*` и `docs/guide/graph.md` (бывший `./sync.sh --update-registry`) |
 | `swissknifeman validate` | `scripts/validate.sh` (то же, что CI) |
-| `swissknifeman doctor` | python3, симлинк, PATH, projects.json, чистота реестра, профили |
+| `skiller doctor` | python3, симлинк, PATH, projects.json, чистота реестра, профили |
 | `swissknifeman version` | git SHA + путь к реестру |
 
 ## Карта проектов: `~/.swissknifeman/projects.json`
@@ -140,11 +140,11 @@ adopt-ом при следующем `update` в проекте.
   `brew install python3`).
 - **Проект не находится** — нет ни `.swissknife.json`, ни `.claude/`, ни
   `.git` вверх по дереву; создайте `.swissknife.json` в корне проекта.
-- Общая диагностика: `swissknifeman doctor`.
+- Общая диагностика: `skiller doctor`.
 
 ## Deprecated
 
 `scripts/connect-claude.sh` и `./sync.sh --update-registry` — тонкие
 wrapper'ы на один релиз, переадресуют в CLI. Brain-sync (`BRAIN_PATH`)
 удалён: brain подключается как обычный проект (`cd <brain> && swissknifeman
-vendor`, дальше `swissknifeman update`).
+vendor`, дальше `skiller update`).

@@ -4,8 +4,8 @@
 
 | Канал | Команда | Что делает | Гранулярность |
 |---|---|---|---|
-| **connect** (marketplace) | `swissknifeman connect` | Включает плагины-бакеты Claude Code через `enabledPlugins`. Файлы скиллов **не копируются** в репо. | Бакет целиком |
-| **vendor** (физ. перенос) | `swissknifeman sync` | **Копирует** выбранные скиллы в репо, пишет производный `skills-lock.json`. | Отдельные скиллы |
+| **connect** (marketplace) | `skiller connect` | Включает плагины-бакеты Claude Code через `enabledPlugins`. Файлы скиллов **не копируются** в репо. | Бакет целиком |
+| **vendor** (физ. перенос) | `skiller sync` | **Копирует** выбранные скиллы в репо, пишет производный `skills-lock.json`. | Отдельные скиллы |
 
 `connect` хорош, когда не нужна фиксация в репозитории и устраивает «весь бакет».
 **vendor-режим** — когда нужно: видеть скиллы в репо, выбирать ровно нужные позиции
@@ -49,11 +49,11 @@ CLAUDE.md / .ai/guidelines    индекс скиллов (managed-блок), е
 ```
 
 ```bash
-swissknifeman sync --dry-run     # показать план: +add ~update -remove =keep
-swissknifeman sync               # применить (CORE раздаётся по умолчанию)
-swissknifeman sync --force       # перетереть чужой путь версией из библиотеки
-swissknifeman sync --hub         # дополнительно сгенерировать индекс скиллов
-swissknifeman sync --no-core     # без CORE-скиллов; --no-hub — без индекса
+skiller sync --dry-run     # показать план: +add ~update -remove =keep
+skiller sync               # применить (CORE раздаётся по умолчанию)
+skiller sync --force       # перетереть чужой путь версией из библиотеки
+skiller sync --hub         # дополнительно сгенерировать индекс скиллов
+skiller sync --no-core     # без CORE-скиллов; --no-hub — без индекса
 ```
 
 `sync` пишет `.swissknifeman-manifest.json` в `skills_path` (контракт чистой

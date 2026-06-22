@@ -31,7 +31,7 @@
 | 1f | nuxt модули/seo → сниппеты | ❌ | Skill-granular вендоринг: проект тянет только nuxt-seo при нужде |
 | 1g | «Наследуемые скиллы» (docker-php → docker) | ✅ уже есть | `requires` + транзитивный `resolve_requires` (vendor.py); напр. `docker-services`→`[docker-php,docker-postgres]` |
 | 1h | founder/pm/roles пересечения | ❌ | Разнесены по persona-бакетам осознанно (разная аудитория раздачи) |
-| 2А | `skill.yaml` → CLI генерит plugin.json/skills.json | ✅ уже есть | `SKILL.md` frontmatter = SSOT; `swissknifeman registry` генерит всё. plugin.json — **per-bucket**, не per-skill (аудит ошибся в гранулярности) |
+| 2А | `skill.yaml` → CLI генерит plugin.json/skills.json | ✅ уже есть | `SKILL.md` frontmatter = SSOT; `skiller registry` генерит всё. plugin.json — **per-bucket**, не per-skill (аудит ошибся в гранулярности) |
 | 2Б | Typer/Click/Rich вместо argparse | ❌ инвариант | CLAUDE.md: `lib/` — **stdlib-only**. Осознанный дизайн (zero-install) |
 | 2Б | Pydantic для валидации JSON | ❌ инвариант | Тот же stdlib-only; забота уже закрыта `scripts/validate.sh` |
 | 2Б | bash → Python ради Windows | ❌ non-goal | Windows нигде не цель; скрипты проверяются `bash -n` |

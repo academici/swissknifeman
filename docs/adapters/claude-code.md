@@ -21,10 +21,10 @@ claude plugin marketplace add ~/projects/packages/swissknifeman
 ## На каждый проект: подключить плагины
 
 ```bash
-cd ~/projects/my-app && swissknifeman connect
+cd ~/projects/my-app && skiller connect
 ```
 
-Команда определяет тип проекта (те же маркеры, что и `swissknifeman vendor`;
+Команда определяет тип проекта (те же маркеры, что и `skiller vendor`;
 корень проекта находится автоматически от текущей директории) и записывает
 в `.claude/settings.local.json` проекта:
 
@@ -58,7 +58,7 @@ cd ~/projects/my-app && swissknifeman connect
 
 Манифесты (`.claude-plugin/plugin.json` в каждом bucket-е и корневой
 `marketplace.json`) **генерируются** — после добавления/перемещения скилла
-запускайте `swissknifeman registry`; `validate.sh` ловит устаревшие.
+запускайте `skiller registry`; `validate.sh` ловит устаревшие.
 
 ## Обновления
 
@@ -70,8 +70,8 @@ cd ~/projects/my-app && swissknifeman connect
 ## Миграция со старого вендоринга
 
 Раньше скиллы копировались в `.claude/skills/` проекта (вендоринг — теперь
-`swissknifeman vendor --agent claude`, deprecated для Claude Code).
-`swissknifeman connect` находит старый манифест
+`skiller vendor --agent claude`, deprecated для Claude Code).
+`skiller connect` находит старый манифест
 `.swissknifeman-manifest.json` и по флагу `--cleanup-vendored` удаляет **только**
 вендоренные копии — собственные скиллы проекта не трогаются.
 
@@ -90,7 +90,7 @@ cd ~/projects/my-app && swissknifeman connect
 ```
 
 Такой источник можно класть и в коммитимый `.claude/settings.json`
-(`swissknifeman connect --file settings.json` + ручная правка source). Для фоновых
+(`skiller connect --file settings.json` + ручная правка source). Для фоновых
 автообновлений приватного репо нужен `GITHUB_TOKEN` в окружении.
 
 ## Permissions
@@ -111,7 +111,7 @@ overrides для CLAUDE.md-специфики. Формат — в
 
 ## Вендоринг (deprecated для Claude Code)
 
-`swissknifeman vendor --agent claude` (из каталога проекта) по-прежнему
+`skiller vendor --agent claude` (из каталога проекта) по-прежнему
 работает (плоская раскладка + манифест), но для Claude Code предпочтителен
 marketplace: единый
 источник, обновления без переустановки, ничего лишнего в репо проекта.

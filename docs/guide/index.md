@@ -58,7 +58,7 @@ delta-файлы `adapters/*.md` внутри скилла. Подробнее �
 
 ### 4. Контекстная установка
 
-`swissknifeman vendor` определяет тип целевого проекта по маркерам (`artisan`,
+`skiller vendor` определяет тип целевого проекта по маркерам (`artisan`,
 `composer.json`, `.obsidian/`) и ставит подходящий набор bucket-ов — см.
 [Профили](/guide/profiles). Той же логикой
 [`apply-permissions.sh`](/configs/claude-permissions) подбирает пресеты
@@ -125,8 +125,8 @@ references/         # каталог внешних источников (что
 adapters/           # доки по интеграции: claude-code, cursor, perplexity
 scripts/            # validate, update-upstreams, scanner, apply-permissions
 generate-skill/     # мета-скилл создания новых скиллов
-skills.json         # реестр (генерируется swissknifeman registry, с provenance)
-bin/swissknifeman   # CLI: connect, vendor, update, status, registry
+skills.json         # реестр (генерируется skiller registry, с provenance)
+bin/skiller   # CLI: connect, vendor, update, status, registry
 install.sh          # установка CLI симлинком в ~/.local/bin
 docs/               # эта документация (VitePress)
 ```

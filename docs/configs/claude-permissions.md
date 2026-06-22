@@ -54,7 +54,7 @@
 ./scripts/apply-permissions.sh --target . --file settings.json
 ```
 
-Автодетект использует те же маркеры, что и `swissknifeman vendor`:
+Автодетект использует те же маркеры, что и `skiller vendor`:
 
 | Маркер | Пресет |
 |---|---|

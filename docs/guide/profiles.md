@@ -29,7 +29,7 @@
 
 ## Как работает автодетект
 
-`swissknifeman vendor` (как и `connect`) проверяет маркеры в целевом каталоге
+`skiller vendor` (как и `connect`) проверяет маркеры в целевом каталоге
 в порядке специфичности:
 
 1. `.obsidian/` → `obsidian-vault`

@@ -21,7 +21,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           set +e
-          ./scripts/update-upstreams.sh --check | tee /tmp/upstream-report.txt
+          ./packages/skiller/scripts/update-upstreams.sh --check | tee /tmp/upstream-report.txt
           echo "code=$?" >> "$GITHUB_OUTPUT"
 
       - name: Apply updates
@@ -30,8 +30,8 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           # no --force in CI: conflicts stay listed in the report for manual review
-          ./scripts/update-upstreams.sh --apply | tee -a /tmp/upstream-report.txt
-          ./bin/swissknifeman registry
+          ./packages/skiller/scripts/update-upstreams.sh --apply | tee -a /tmp/upstream-report.txt
+          ./packages/skiller/bin/skiller registry
 
       - name: Open PR
         if: steps.check.outputs.code == '10'

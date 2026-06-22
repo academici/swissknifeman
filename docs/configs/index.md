@@ -10,7 +10,7 @@
 | Конфиг | Где лежит | Что делает |
 |---|---|---|
 | [Пресеты permissions для Claude Code](/configs/claude-permissions) | `configs/claude-code/` | готовые `settings.json` с максимально разрешённым доступом: git, composer, artisan, npm, docker — по стекам |
-| MCP-серверы | `configs/claude-code/mcp/` | пресеты `.mcp.json`; `context7` ставит `swissknifeman integrate` по умолчанию, курированный сабсет (playwright, filesystem, fetch, …) — opt-in через `--mcp`. Каталог: [Интеграции](/integrations/) |
+| MCP-серверы | `configs/claude-code/mcp/` | пресеты `.mcp.json`; `context7` ставит `skiller integrate` по умолчанию, курированный сабсет (playwright, filesystem, fetch, …) — opt-in через `--mcp`. Каталог: [Интеграции](/integrations/) |
 
 ## Сценарий
 
@@ -19,10 +19,10 @@
 
 ```bash
 # 1. Скиллы: автодетект → architect, php, devops, quality, operator
-swissknifeman connect
+skiller connect
 
 # 2. Permissions: автодетект → base + laravel + node (+ docker, если есть Dockerfile)
-~/projects/packages/swissknifeman/scripts/apply-permissions.sh --target .
+~/projects/packages/swissknifeman/packages/skiller/scripts/apply-permissions.sh --target .
 ```
 
 После этого Claude Code может запускать `php artisan`, `composer`, тесты,

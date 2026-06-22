@@ -4,7 +4,7 @@
 
 ```bash
 # Из каталога проекта — вендоринг в .cursor/skills/
-swissknifeman vendor --agent cursor
+skiller vendor --agent cursor
 
 # Точечно — скопируйте нужный SKILL.md в .cursor/skills/ проекта
 cp -r skills/php/laravel-testing ~/projects/my-app/.cursor/skills/

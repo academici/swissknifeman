@@ -6,7 +6,7 @@
 ## ✅ Отгружено в `main`
 
 - **Топология** (PR #8): конфиг `~/.swissknifeman/topology.json`, бакет `system`,
-  скилл `local-topology`, CLI `swissknifeman topology init|show`, notify-хук.
+  скилл `local-topology`, CLI `skiller topology init|show`, notify-хук.
 - **auto-approve** (PR #9): файлы хука `configs/claude-code/hooks/auto-approve/`
   + мелкие правки конфигов/доков.
 - **Координатор + память** (PR #10): скилл `system/cross-project-coordinator`
@@ -18,7 +18,7 @@
 ## ⬜ Осталось
 
 ### A. Активация на машине (one-time — без неё фичи не «оживают»)
-- [ ] `swissknifeman topology init` — создать `~/.swissknifeman/topology.json`
+- [ ] `skiller topology init` — создать `~/.swissknifeman/topology.json`
       (авто-детект: swissknifeman=этот репо, projects_base=`~/projects`,
       brain=`~/Vaults/Brain` — подтвердить/поправить). **Координатор и память
       (federation/membership) зависят от него.**
@@ -60,7 +60,7 @@
       версию, когда захочешь (`release-discipline`).
 
 ## Где что лежит
-- Топология: `lib/swissknifeman/topology.py`, `skills/system/local-topology/`.
+- Топология: `lib/skiller/topology.py`, `skills/system/local-topology/`.
 - Координатор: `skills/system/cross-project-coordinator/SKILL.md`,
   `skills/system/agents/code-coordinator.md`.
 - Память: `configs/claude-code/hooks/memory/` (memory.sh, env.ini, config.json,

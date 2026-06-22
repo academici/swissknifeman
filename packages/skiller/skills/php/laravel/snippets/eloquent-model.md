@@ -12,9 +12,10 @@ declare(strict_types=1);
 namespace App\Models\Ticket;
 
 use App\Enums\Ticket\TicketStatus;
+use App\Models\User\User;
 use App\Observers\Ticket\Observer;
-use Doctrine\DBAL\Schema\Table;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;

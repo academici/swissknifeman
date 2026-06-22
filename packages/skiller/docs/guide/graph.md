@@ -64,6 +64,8 @@ flowchart LR
     vite_module_loader["vite-module-loader"]
     vite_multi_build["vite-multi-build"]
     vitest["vitest"]
+    vue["vue"]
+    vue_testing_best_practices["vue-testing-best-practices"]
     wayfinder["wayfinder"]
   end
   subgraph general["general"]
@@ -222,6 +224,8 @@ flowchart LR
   venv_dependencies -->|requires| ml_project_structure
   vite_multi_build -->|requires| vite_module_loader
   vitest -->|requires| inertia_vue
+  vue_testing_best_practices -->|requires| vitest
+  vue_testing_best_practices -->|requires| vue
   adversarial_check -.->|feeds| competitive_analysis
   adversarial_check -.->|feeds| idea_discovery
   adversarial_check -.->|feeds| new_project
@@ -290,16 +294,16 @@ flowchart LR
   version_gotchas -.->|feeds| parametric_config
 ```
 
-**В графе:** 106 скиллов, 78 рёбер requires, 66 рёбер produces_for.
+**В графе:** 108 скиллов, 80 рёбер requires, 66 рёбер produces_for.
 
-## Изолированные скиллы (75)
+## Изолированные скиллы (73)
 
 Скиллы без связей `requires`/`produces_for` — самодостаточны.
 
 | Бакет | Скиллы |
 |---|---|
 | devops | `docker` |
-| frontend | `antfu`, `document-writer`, `eslint-flat-config`, `filepond-upload`, `js-code-style`, `laravel-echo-client`, `motion`, `nuxt`, `nuxt-modules`, `nuxt-seo`, `pinia`, `pinia-stores`, `ts-library`, `vite`, `vitepress`, `vitest-vue`, `vue`, `vue-best-practices`, `vue-composition-api`, `vue-dynamic-icons`, `vue-router-best-practices`, `vue-testing-best-practices`, `vueuse-functions`, `web-design-guidelines` |
+| frontend | `antfu`, `document-writer`, `eslint-flat-config`, `filepond-upload`, `js-code-style`, `laravel-echo-client`, `motion`, `nuxt`, `nuxt-modules`, `nuxt-seo`, `pinia`, `pinia-stores`, `ts-library`, `vite`, `vitepress`, `vitest-vue`, `vue-best-practices`, `vue-composition-api`, `vue-dynamic-icons`, `vue-router-best-practices`, `vueuse-functions`, `web-design-guidelines` |
 | general | `ai-context-workflow`, `compact-responses`, `naming-conventions`, `packages-stack`, `project-map`, `skills-ssot`, `writing-style` |
 | imported | `agent-security-super-skill`, `ai-agent-super-skill`, `content-creative-super-skill`, `dev-engineering-super-skill`, `finance-super-skill`, `legal-super-skill`, `marketing-super-skill`, `operations-cx-super-skill`, `pm-super-skill`, `research-knowledge-super-skill`, `sales-super-skill`, `token-efficient` |
 | php | `azguard`, `code-style-spatie`, `enum-attributes`, `enum-state-machine`, `health-checks`, `laravel-best-practices`, `laravel-broadcasting`, `laravel-dusk`, `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages`, `laravel-subagents`, `livewire-blade-attributes`, `medialibrary`, `named-arguments`, `naming-conventions`, `pao`, `pennant-development`, `php-patterns`, `php-upgrade-checklist`, `spatie-settings` |

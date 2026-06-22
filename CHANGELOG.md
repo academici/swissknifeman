@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+### Added (корневой управляющий слой `swissknifeman`)
+
+- **`bin/swissknifeman`** — тонкий router + setup-фасад над тремя пакетами (зонтик =
+  единое управление, пакеты = возможности): `swissknifeman skills|env|maind …` →
+  skiller/harness/maind; `swissknifeman setup <project>` → `maind onboard` (полный
+  онбординг: скиллы+окружение+память+граф); `swissknifeman doctor` → fan-out трёх.
+  Логику не реализует — делегирует; цепочка онбординга одна (`maind/onboard.py`).
+- **Back-compat алиаса**: исторические `swissknifeman <cmd>` (connect/vendor/integrate/
+  update/sync/lock/status/list/registry/topology/validate/version) router проксирует в
+  `skiller` — онбордженные проекты и привычка не ломаются.
+- **Владение алиасом перешло зонтику**: `swissknifeman`→`bin/swissknifeman` ставит
+  зонтичный `install.sh` ПОСЛЕ пакетов; из `packages/skiller/install.sh` установка
+  алиаса убрана (иначе re-run skiller install затирал бы router). Standalone-skiller
+  без зонтика — только `skiller` (алиаса нет).
+- **maind**: capability `env:apply` (sibling `harness`) — прямое применение окружения
+  (`maind run <p> env:apply`, router `swissknifeman env`); `onboard --skip-skills` теперь
+  всё равно настраивает окружение через harness (раньше оно шло только внутри
+  `skiller integrate`).
+
 ### Added (пакет `harness` — настройка окружения Claude Code)
 
 - **Новый пакет `packages/harness`** (CLI `harness`): настройка харнеса Claude Code —

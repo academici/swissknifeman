@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # install.sh — зонтичный установщик монорепо.
 # Ставит CLI пакетов (skiller, harness, maind), делегируя установку каждого его
-# собственному install.sh (там пакетная пост-настройка). Это независимые CLI в
-# PATH — единой консоли-обёртки пока нет (корневой управляющий слой — Фаза 2).
+# собственному install.sh (там пакетная пост-настройка), плюс корневой
+# управляющий слой `swissknifeman` (router + setup-фасад над тремя пакетами).
 #
 # Использование:
 #   ./install.sh [--bin-dir DIR] [--force]
@@ -42,9 +42,31 @@ if [[ -x "$REPO_ROOT/packages/maind/install.sh" ]]; then
   "$REPO_ROOT/packages/maind/install.sh" "${fwd[@]}" || echo "  (maind install.sh завершился с ошибкой — проверьте вручную)" >&2
 fi
 
+# Корневой управляющий слой: симлинк `swissknifeman` → bin/swissknifeman (router).
+# Ставится ПОСЛЕ пакетов — раньше алиас `swissknifeman` ставил skiller; теперь им
+# владеет зонтик. Молча заменяем наш прежний симлинк (на skiller/router); чужой —
+# только с --force/подтверждением.
+ROUTER="$REPO_ROOT/bin/swissknifeman"
+LINK="$BIN_DIR/swissknifeman"
+if [[ -x "$ROUTER" ]]; then
+  if [[ -e "$LINK" || -L "$LINK" ]]; then
+    current="$(readlink -f "$LINK" 2>/dev/null || true)"
+    if [[ "$current" == */bin/swissknifeman || "$current" == */bin/skiller ]]; then
+      : # наш прежний симлинк (router или старый алиас→skiller) — молча заменяем
+    elif [[ "$FORCE" == true ]]; then :;
+    elif [[ -t 0 ]]; then
+      read -r -p "$LINK уже существует и не похож на наш. Заменить? [y/N] " a
+      [[ "$a" =~ ^[yY] ]] || { echo "Пропуск swissknifeman."; ROUTER=""; }
+    else
+      echo "ВНИМАНИЕ: $LINK существует — пропуск (перезапустите с --force)" >&2; ROUTER=""
+    fi
+  fi
+  [[ -n "$ROUTER" ]] && { ln -sfn "$ROUTER" "$LINK"; echo "— swissknifeman: $LINK -> $ROUTER"; }
+fi
+
 case ":$PATH:" in
   *":$BIN_DIR:"*) ;;
   *) echo "ВНИМАНИЕ: $BIN_DIR не в PATH — добавьте: export PATH=\"$BIN_DIR:\$PATH\"" >&2 ;;
 esac
 
-echo "Готово. CLI: skiller (алиас swissknifeman) · harness · maind"
+echo "Готово. CLI: swissknifeman (router) · skiller · harness · maind"

@@ -3,7 +3,8 @@
 Гид для агентов по корню монорепо. Это **зонтик экосистемы academici**: один репозиторий —
 несколько независимых пакетов и плагинов под общей крышей (имя `swissknifeman` = контейнер-«швейцарский
 нож», НЕ один из инструментов). Каждый пакет — самостоятельный CLI (`skiller`, `harness`, `maind`);
-единой консоли-обёртки пока нет (корневой управляющий слой — запланированная Фаза 2).
+над ними — тонкий **корневой управляющий слой** `swissknifeman` (`bin/swissknifeman`):
+router к пакетам + кросс-пакетный `setup` (онбординг). Зонтик = единое управление, пакеты = возможности.
 
 ## Раскладка
 
@@ -39,17 +40,27 @@
 `subprocess` (см. `packages/maind/lib/maind/orchestrate.py`); skiller так же делегирует окружение
 в harness (`apply_permissions`/integrate → `harness permissions|mcp|hooks`). Все используют `core/`.
 
-## CLI пакетов (три независимые команды)
+## CLI: корневой router + три пакета
 
 ```bash
-skiller <cmd>              # реестр скиллов: connect, vendor, integrate, registry, status, … (алиас swissknifeman)
+swissknifeman <group> …    # корневой управляющий слой (bin/swissknifeman): router + setup-фасад
+  swissknifeman skills …   #   → skiller   (connect, vendor, registry, …)
+  swissknifeman env …      #   → harness   (permissions, mcp, hooks, …)
+  swissknifeman maind …    #   → maind     (memory, graph, onboard, deploy, …)
+  swissknifeman setup <p>  #   → maind onboard (скиллы+окружение+память+граф одной командой)
+  swissknifeman doctor     #   диагностика всех трёх (fan-out)
+# back-compat: swissknifeman <skiller-cmd> (connect/vendor/integrate/…) → skiller (старый алиас)
+
+skiller <cmd>              # реестр скиллов: connect, vendor, integrate, registry, status, …
 harness <cmd>              # окружение Claude Code: permissions, mcp, hooks, doctor
 maind <cmd>                # хаб: memory, graph, onboard, deploy, sync, health, doctor, …
 ```
 
-Единой консоли-обёртки пока нет (Фаза 2) — каждый пакет ставится в PATH своим `install.sh`
-(зонтичный `install.sh` делегирует им). `skiller` ставится с back-compat алиасом `swissknifeman`.
-Пути maind зашиты в `.mcp.json` онбордженных проектов — не ломать.
+Корневой `swissknifeman` — тонкий диспетчер: логику не реализует, делегирует пакетам;
+кросс-пакетный онбординг живёт ОДИН — в `maind/onboard.py` (его зовёт `swissknifeman setup`).
+Установка: зонтичный `install.sh` ставит `skiller`/`harness`/`maind` (их `install.sh`) + симлинк
+`swissknifeman`→`bin/swissknifeman`; **алиасом `swissknifeman` владеет зонтик** (не skiller — иначе
+re-run skiller install затирал бы router). Пути maind зашиты в `.mcp.json` онбордженных — не ломать.
 
 ## Общий пакет `core`
 

@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
 # install.sh — устанавливает CLI skiller (бывш. swissknifeman).
 #
-# Создаёт симлинк <bin-dir>/skiller -> <repo>/bin/skiller (+ алиас swissknifeman)
-# и каталог состояния ~/.swissknifeman (projects.json — карта подключённых
-# проектов, пополняется автоматически командами connect/vendor/update).
+# Создаёт симлинк <bin-dir>/skiller -> <repo>/bin/skiller и каталог состояния
+# ~/.swissknifeman (projects.json — карта подключённых проектов, пополняется
+# автоматически командами connect/vendor/update).
+#
+# Алиас `swissknifeman` ставит ЗОНТИЧНЫЙ install.sh (корневой router-слой), а не
+# этот пакет — чтобы re-run skiller install не затирал router. При standalone-
+# установке только skiller алиаса `swissknifeman` не будет (используйте `skiller`).
 #
 # Использование:
 #   ./install.sh [--bin-dir DIR] [--force]
@@ -70,8 +74,7 @@ install_link() {  # $1 — имя в BIN_DIR
   echo "Установлено: $link -> $CLI"
 }
 
-install_link skiller          # основной CLI
-install_link swissknifeman    # back-compat алиас (доки/привычка/онбордженные проекты)
+install_link skiller          # основной CLI (алиас swissknifeman — зонтичный install.sh)
 
 # Карта локальной среды (~/.swissknifeman/topology.json) — машинно-специфична
 # (пути к Brain-волту, swissknifeman и базе проектов), поэтому создаётся

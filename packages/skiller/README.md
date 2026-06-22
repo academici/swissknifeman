@@ -176,7 +176,7 @@ skiller update          # регенерирует хаб, если он уже 
 Установленное определяется по `enabledPlugins` в `.claude/settings*.json`
 (канал marketplace) и/или манифестам `.swissknifeman-manifest.json`
 (канал вендоринга). Приоритеты и таблица роутинга «тип задачи → скилл» —
-[docs/routing.md](docs/routing.md); политика совместимости с Laravel Boost —
+[routing.md (зонтик)](../../docs/routing.md); политика совместимости с Laravel Boost —
 [docs/boost-compatibility.md](docs/boost-compatibility.md); устройство единого
 источника истины скиллов в проекте — скилл `general/skills-ssot`.
 

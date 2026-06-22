@@ -254,20 +254,22 @@ def _reader(env, config):
 
 def cmd_graph(env, argv):
     if not argv or argv[0] in ("-h", "--help"):
-        print("maind graph <query|stats|neighbors|view|derive|rebuild> "
+        print("maind graph <query|stats|neighbors|view|derive|rebuild|export> "
               "[--from ID] [--node ID] [--project ID] [--cross] [--namespace NS] "
               "[--depth N] [--edge-types a,b] [--direction out|in|both] [--all] [--json]")
+        print("  export [--project ID | --cross] [--format mermaid] [--raw]  → Mermaid-диаграмма")
         return
     # `maind graph --project X` / `maind graph --cross` — короткая форма view
     if argv[0] in ("--project", "--cross"):
         return _cmd_view(env, argv)
     sub, rest = argv[0], argv[1:]
     handlers = {"query": _cmd_query, "stats": _cmd_stats, "neighbors": _cmd_neighbors,
-                "view": _cmd_view, "derive": _cmd_derive, "rebuild": _cmd_rebuild}
+                "view": _cmd_view, "derive": _cmd_derive, "rebuild": _cmd_rebuild,
+                "export": _cmd_export}
     handler = handlers.get(sub)
     if handler is None:
         die(f"неизвестная подкоманда graph: {sub} "
-            f"(query|stats|neighbors|view|derive|rebuild)")
+            f"(query|stats|neighbors|view|derive|rebuild|export)")
     handler(env, rest)
 
 
@@ -299,6 +301,54 @@ def _cmd_view(env, argv):
         via = e["attrs"].get("via", "")
         print(f"  {e['src']:<28} —{e['type']}→ {e['dst']}"
               + (f"  [{via}]" if via else ""))
+
+
+def _mermaid(sub, title):
+    """Подграф {nodes,edges} → Mermaid flowchart. Рендерится в GitHub/VitePress без рантайма.
+    Форма узла по типу: project — прямоугольник, package — скруглённый, прочее — по умолчанию."""
+    import re
+    safe = {}
+    for i, n in enumerate(sub["nodes"]):
+        safe[n["id"]] = f"n{i}"
+    lines = [f"%% {title}", "graph LR"]
+    for n in sub["nodes"]:
+        label = (n["attrs"].get("name") or n["id"]).replace('"', "'")
+        nid = safe[n["id"]]
+        if n["type"] == "project":
+            lines.append(f'  {nid}["{label}"]')
+        elif n["type"] == "package":
+            lines.append(f'  {nid}("{label}")')
+        else:
+            lines.append(f'  {nid}["{n["type"]}: {label}"]')
+    for e in sub["edges"]:
+        s, d = safe.get(e["src"]), safe.get(e["dst"])
+        if s and d:
+            lines.append(f'  {s} -->|{e["type"]}| {d}')
+    return "\n".join(lines)
+
+
+def _cmd_export(env, argv):
+    """Экспорт графа в Mermaid: --project <id> (один) или --cross (весь межпроектный слой).
+    Копи-пейст в .md (обёрнуто в ```mermaid; --raw — без обёртки)."""
+    from .config import load_config
+    from .federation import Federation
+    opts, _ = parse_args(argv, {"--project": "str", "--cross": "bool",
+                                "--namespace": "str", "--format": "str", "--raw": "bool"})
+    if opts["format"] and opts["format"] != "mermaid":
+        die(f"формат не поддержан: {opts['format']} (пока только mermaid)")
+    config, _src = load_config(env)
+    fed = Federation(env, config)
+    if opts["cross"]:
+        sub = fed.cross(opts["namespace"] or None)
+        title = "maind-граф: межпроектный слой" + (f" [ns {opts['namespace']}]"
+                                                    if opts["namespace"] else "")
+    elif opts["project"]:
+        sub = fed.project_view(opts["project"])
+        title = f"maind-граф: проект {opts['project']}"
+    else:
+        die("укажите --project <id> или --cross")
+    body = _mermaid(sub, title)
+    print(body if opts["raw"] else f"```mermaid\n{body}\n```")
 
 
 def _cmd_derive(env, argv):

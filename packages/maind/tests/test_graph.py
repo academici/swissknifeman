@@ -109,6 +109,18 @@ class TestGraph(unittest.TestCase):
             with self.assertRaises(SystemExit):
                 graph_reader(env, cfg)
 
+    def test_mermaid_export(self):
+        from maind.graph import _mermaid
+        sub = {"nodes": [{"id": "project:a", "type": "project", "attrs": {"name": "A"}},
+                         {"id": "package:a/core", "type": "package", "attrs": {}}],
+               "edges": [{"src": "project:a", "dst": "package:a/core",
+                          "type": "requires", "attrs": {}}]}
+        out = _mermaid(sub, "t")
+        self.assertIn("graph LR", out)
+        self.assertIn('["A"]', out)                  # project — прямоугольник с именем
+        self.assertIn("-->|requires|", out)          # ребро с типом
+        self.assertNotIn("project:a", out)           # id санитизированы (без двоеточий)
+
 
 if __name__ == "__main__":
     unittest.main()

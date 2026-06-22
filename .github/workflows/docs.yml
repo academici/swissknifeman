@@ -4,9 +4,11 @@ on:
   push:
     branches: [main]
     paths:
-      - 'docs/**'
-      - 'configs/**'
-      - 'package.json'
+      - 'docs/**'                      # общее зонтика + .vitepress конфиг
+      - 'packages/*/docs/**'           # per-package доки (источник истины)
+      - 'packages/harness/configs/**'  # инлайны/пресеты, на которые ссылаются доки
+      - 'packages/skiller/package.json'
+      - 'scripts/docs-sync.sh'
       - '.github/workflows/docs.yml'
   workflow_dispatch:
 
@@ -28,8 +30,14 @@ jobs:
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: packages/skiller/package-lock.json
+      # docs-тулинг (vitepress) живёт в packages/skiller (root package.json нет —
+      # монорепо). docs:build = docs:sync (агрегирует packages/<pkg>/docs → docs/<pkg>)
+      # + vitepress build ../../docs → артефакт в <repo>/docs/.vitepress/dist.
       - run: npm ci
+        working-directory: packages/skiller
       - run: npm run docs:build
+        working-directory: packages/skiller
       - uses: actions/configure-pages@v4
       - uses: actions/upload-pages-artifact@v3
         with:

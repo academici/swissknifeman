@@ -6,6 +6,10 @@ node_modules/
 docs/.vitepress/dist/
 docs/.vitepress/cache/
 .claude/settings.json
+# personal/local Claude-настройки проекта (права, defaultMode — могут содержать
+# bypassPermissions; машинно-специфичны, в публичный репо не коммитим). Раньше
+# ловилось только глобальным ~/.config/git/ignore — добавлено явно для свежих клонов/CI.
+.claude/settings.local.json
 # personal per-project hook overrides (autonomy/mode — must not be committed)
 .claude/auto-approve.env.ini
 .claude/auto-approve.config.json

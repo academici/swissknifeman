@@ -5,7 +5,7 @@
 #
 # Группы (канонично):
 #   skills <args>   → skiller  (реестр скиллов: connect, vendor, registry, …)
-#   env <args>      → harness  (окружение Claude Code: permissions, mcp, hooks, …)
+#   env <args>      → harness  (окружение: permissions, mcp, hooks — полный passthrough)
 #   maind <args>    → maind    (хаб: memory, graph, onboard, deploy, sync, health, …)
 #   setup <project> → maind onboard (полный онбординг: скиллы+окружение+память+граф)
 #   doctor          → диагностика всех трёх (fan-out)

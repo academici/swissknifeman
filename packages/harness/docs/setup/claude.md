@@ -44,7 +44,7 @@
 ### 2. Профиль проекта (`.claude/settings.local.json`)
 
 Поверх baseline в каждый проект накатывается пресет стека —
-[см. подробный разбор](/harness/configs/claude-permissions). Автодетект по маркерам:
+[см. подробный разбор](../configs/claude-permissions). Автодетект по маркерам:
 `artisan` → laravel, `composer.json` → php-package, `package.json` → node,
 `Dockerfile` → docker. После этого тесты, линтеры, composer и artisan
 работают без промптов, а деструктивное (`migrate:fresh`,

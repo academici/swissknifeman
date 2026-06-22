@@ -17,5 +17,5 @@
 
 - Perplexity не читает локальные каталоги — установка только через UI;
 - upstream-tracked скиллы (`skills/imported/`) обновляются через
-  [upstream-sync](/skiller/guide/upstream-sync): после обновления в реестре перезагрузите
+  [upstream-sync](../guide/upstream-sync): после обновления в реестре перезагрузите
   файл в Perplexity вручную.

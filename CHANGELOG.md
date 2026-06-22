@@ -2,6 +2,37 @@
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-06-22
+
+> **Зонтичная единая версия монорепо.** Накопленное с `v0.3.0`: выделение пакета
+> `harness` (окружение Claude Code), корневой управляющий слой `swissknifeman`,
+> доки по пакетам + зонтичный агрегат, гранулярная оркестрация окружения и
+> standalone-сборка доков пакетов. Тег `vX.Y.Z` — единый маркер всего репозитория;
+> версии плагинов Claude Code резолвятся в git SHA и от тега не зависят, per-package
+> `plugin.json` (harness 0.1.0 · maind 0.2.1 · skm 0.3.0) — информативны.
+
+### Added (Фаза 3 — гранулярная оркестрация окружения)
+
+- **Capability `env:mcp` / `env:hooks`** в `maind/orchestrate.py` рядом с `env:apply` —
+  точечная раскатка MCP-серверов / хуков через пакет `harness` (`maind run <project>
+  env:mcp|env:hooks`, router `swissknifeman env mcp|hooks` — полный passthrough в
+  harness). Раньше окружение настраивалось только цельным шагом (`skiller integrate`
+  или `env:apply` для permissions); теперь «зонтик = единое управление» покрывает и
+  MCP/хуки гранулярно. Whitelist `CAPABILITIES` расширен, тесты orchestrate дополнены
+  (sibling=harness, подкоманда, `{path}`-подстановка).
+
+### Changed (Фаза 3 — standalone-сборка доков пакетов)
+
+- **Доки skiller/harness собираются и standalone, и в агрегате** (как уже умеет
+  maind). У каждого пакета — своя `docs/.vitepress/config.mts` (base `/skiller/`,
+  `/harness/`); зонтичный `scripts/docs-sync.sh` по-прежнему отбрасывает per-package
+  `.vitepress` и собирает единый сайт. Внутренние ссылки доков переведены на
+  **относительные** (`./`, `../`, без `/skiller/`·`/harness/`-префикса) — один
+  источник валиден в обеих сборках; кросс-пакетные ссылки skiller→harness/`/routing`
+  резолвятся только в агрегате и в standalone помечены `ignoreDeadLinks`. `harness`
+  получил `package.json` (docs-скрипты), skiller — `docs:standalone:*`. Проверено:
+  агрегат + оба standalone-сайта собираются без dead links.
+
 ### Changed (docs: maind влит в единый сайт)
 
 - **maind-доки вошли в зонтичный VitePress** — `scripts/docs-sync.sh` теперь

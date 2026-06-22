@@ -59,7 +59,7 @@ generic-агентах их не будет. Пример — бакет `php` �
 
 ## Проект с Laravel Boost (мульти-агент, единый источник истины)
 
-Если проект уже использует [Laravel Boost](/skiller/boost-compatibility) — у него есть
+Если проект уже использует [Laravel Boost](../boost-compatibility) — у него есть
 `boost.json`, каталог `.ai/` (guidelines + skills) и команда
 `php artisan boost:update`, которая генерирует `CLAUDE.md`/`AGENTS.md` и
 раскидывает копии скиллов по `.cursor/`, `.gemini/`, `.codex/`, `.github/`.
@@ -100,8 +100,8 @@ php artisan boost:update      # или: composer ai:sync
 `--exclude` убирает скиллы, чьи правила противоречат проекту. Типичные
 конфликты: `code-style-spatie` (не-`final` по умолчанию) против проекта с
 обязательным `final`; `node-pnpm-preflight` (pnpm) против yarn-проекта.
-Политика совместимости — [boost-compatibility.md](/skiller/boost-compatibility),
-принцип ядра — [Что такое SwissKnifeMan](/skiller/guide/#_6-совместимое-ядро-политика-конфликтов).
+Политика совместимости — [boost-compatibility.md](../boost-compatibility),
+принцип ядра — [Что такое SwissKnifeMan](./#_6-совместимое-ядро-политика-конфликтов).
 :::
 
 **Обновление** такого проекта — обычный `skiller update`: он повторно
@@ -214,7 +214,7 @@ CLI лишь предупреждает (`WARN: ... excluded by --exclude, skipp
 
 Вендоринг для Claude Code оставлен для совместимости (плоская раскладка
 `.claude/skills/<name>/SKILL.md`, коллизии разрешаются префиксом bucket-а),
-но предпочтительный путь — `skiller connect` ([marketplace](/skiller/adapters/claude-code)).
+но предпочтительный путь — `skiller connect` ([marketplace](../adapters/claude-code)).
 Мигрировать с вендоринга: `skiller connect --cleanup-vendored`.
 
 ## Что дальше

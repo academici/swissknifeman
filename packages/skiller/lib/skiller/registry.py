@@ -1,9 +1,8 @@
 """registry — регенерация skills.json + плагин-манифестов + графа (мейнтейнер)."""
 import hashlib
 import json
-import subprocess
 
-from core import atomic_write_text, find_repo_root
+from core import atomic_write_text, find_repo_root, run_cmd
 
 from .common import MARKETPLACE, die, parse_flags, parse_frontmatter, parse_inline_list
 
@@ -282,4 +281,4 @@ def cmd_registry(env, argv):
     print(f"Updated plugin manifests: {n_plugins} plugins "
           f"(.claude-plugin/marketplace.json)")
 
-    subprocess.run([str(root / "scripts" / "generate-graph.sh")], check=True)
+    run_cmd([str(root / "scripts" / "generate-graph.sh")])

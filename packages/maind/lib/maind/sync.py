@@ -73,7 +73,7 @@ def contexts(env, config, projects):
 
 # ── провиженеры ──────────────────────────────────────────────────────────────
 def _mcp_run(env, config, projects, mode, dry):
-    """MCP-серверы хаба (agent-memory + maind [+ graphify]) в конфиги проектов."""
+    """MCP-серверы хаба (agent-memory + maind [+ код-граф/Serena]) в конфиги проектов."""
     from .deploy import deploy_project, mark_deployed
     from .projects import write_config
     results, applied = [], False

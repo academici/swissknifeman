@@ -1,7 +1,7 @@
 """maind ecosystem-skill — провиженер управляемого скилла `ecosystem-mcp` в проекты.
 
 Раскатывает <project>/.claude/skills/ecosystem-mcp/SKILL.md — инструкцию агенту о том, что за
-MCP-инструменты доступны в проекте (agent-memory/graphify), когда их вызывать, с какими проектами
+MCP-инструменты доступны в проекте (agent-memory/код-граф), когда их вызывать, с какими проектами
 экосистемы он связан и как чинить связь при сбое. Источник истины — templates/skills/ecosystem-mcp/
 SKILL.md в самом maind; файл целиком управляем (идемпотентность по content-hash, как у hook-скрипта).
 

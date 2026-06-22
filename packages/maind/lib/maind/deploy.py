@@ -75,16 +75,16 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
     entries = {"agentmemory": _agentmemory_entry(env, config, scope)}
     if maind_server:
         entries["maind"] = _maind_entry(env, scope)
-    graphify_state = "disabled"
+    code_state = "disabled"
     if with_code:
         gcmd = codegraph.command(project, st)
         gargs = codegraph.cmd_args(project, st)
         gname = codegraph.server_name(project, st)
         if shutil.which(gcmd):
             entries[gname] = _code_entry(project_path, gcmd, gargs)
-            graphify_state = "written"
+            code_state = "written"
         else:
-            graphify_state = "skipped-not-installed"
+            code_state = "skipped-not-installed"
             warn(f"проект '{pid}': команда '{gcmd}' код-графа не найдена в PATH — пропускаю "
                  f"(установите, напр. uvx для Serena, или задайте code_command)")
 
@@ -100,7 +100,7 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
         written.append({"file": str(path.relative_to(project_path)),
                         "servers": list(entries), "changed": changed_any})
 
-    return {"id": pid, "scope": scope, "written": written, "code": graphify_state,
+    return {"id": pid, "scope": scope, "written": written, "code": code_state,
             "code_server": codegraph.server_name(project, st),
             "servers": list(entries), "targets": [w["file"] for w in written]}
 

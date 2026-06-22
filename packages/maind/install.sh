@@ -15,7 +15,7 @@
 #
 # Полный bootstrap: ./install.sh --with-memory --with-service
 # Порты демона настраиваются через .env (см. .env.example), чтобы не конфликтовать
-# с другим узлом. graphify (граф кода) — опционален, ставится отдельно.
+# с другим узлом. Код-граф (Serena) — опционален, ставится отдельно (per-project).
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

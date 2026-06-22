@@ -1,0 +1,5 @@
+{
+  "name": "blender-modeling",
+  "description": "Parametric CAD modeling in Blender for FDM/SLA: config-driven dataclasses, profile/revolve geometry, threading clearances, config & scene conventions, model-rules template, generic build loop",
+  "skills": "./"
+}

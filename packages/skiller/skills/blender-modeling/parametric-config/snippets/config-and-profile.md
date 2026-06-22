@@ -60,11 +60,11 @@ def derive_all(model, part_a, part_b, external_element, ...):
 
 ## Импорт: порядок модулей
 
-Цикл **`config` ↔ `profile`**: при ручных тестах сначала `import {CURRENT_MODEL}.config`, не импортируйте `{CURRENT_MODEL}.profile` до полной загрузки `config`. Точка входа `{CURRENT_MODEL}.py` тянет `common` → `config` — порядок безопасный.
+Цикл **`config` ↔ `profile`**: при ручных тестах сначала `import {model}.config`, не импортируйте `{model}.profile` до полной загрузки `config`. Точка входа `{model}.py` тянет `common` → `config` — порядок безопасный.
 
 ## Сплайн `spl` и профиль `pts` — детали
 
-Подробное описание внутреннего устройства `spl`, правила обхода `pts`, диагностика non-manifold → `ai/rules/internals.md`.
+Подробное описание внутреннего устройства `spl`, правила обхода `pts`, диагностика non-manifold → сниппет `internals.md` этого скилла.
 
 ## Глобальный сплайн vs по частям
 

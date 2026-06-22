@@ -17,6 +17,17 @@
 - Имя `naming-conventions` намеренно живёт в двух бакетах (`general` + `php`): legal под
   plugin-namespaces (connect), в vendor-режиме flat-имена разводятся префиксом бакета.
 
+### Changed
+
+- **Бакет `blender` разрезан на два плагина:** `blender` (универсальный bpy+MCP —
+  `version-gotchas`, `mcp-blender`) и `blender-modeling` (параметрический CAD под
+  FDM/SLA — `parametric-config`, `threading`, `model-rules`, `config-conventions`,
+  `scene-conventions`, `build-loop`). Раньше один бакет смешивал универсальный
+  Blender, методологию CAD и приватный workflow проекта DiaBox; диабокс-специфика
+  (слой C) вырезана из плагина. Имена деталей в скиллах обезличены
+  (`lens/glass/rocket → part/insert/model`). `blender-modeling` зависит от `blender`
+  (`mcp-blender` от B не зависит); потребителям модельных скиллов подключать оба плагина.
+
 ## [0.4.0] - 2026-06-22
 
 > **Зонтичная единая версия монорепо.** Накопленное с `v0.3.0`: выделение пакета

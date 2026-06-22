@@ -4,7 +4,7 @@
 
 Источник истины портируемых скиллов (машинный реестр — `skills.json`). Раздача в проекты: `skiller connect` (плагины-бакеты) / `vendor` (физ. перенос). CORE-набор токен-скиллов (`general`/`oss-dev`) раздаётся по умолчанию — см. `connect`/`vendor`.
 
-Всего: 181 скиллов в 16 бакетах.
+Всего: 184 скиллов в 17 бакетах.
 
 ## Скиллы по бакетам
 
@@ -24,15 +24,23 @@
 | `security-design` | Классификация данных, auth-стратегия, RBAC/ABAC, OWASP Top 10, GDPR, STRIDE threat modeli… | `security`, `compliance`, `auth`, `owasp`, `threat-modeling`, `rbac`, `gdpr`, `privacy`, `stride` |
 | `tech-stack-selection` | Выбор технологического стека с trade-off матрицей до архитектурного дизайна. ADR-первый ш… | `stack-choice`, `architecture`, `adr`, `trade-off` |
 
-### blender — Blender 3D modeling: MCP workflow, threading for FDM/SLA, version gotchas, model rules (5)
+### blender — Universal Blender bpy+MCP tooling: MCP workflow primitives, viewport modes, camera helper, version gotchas (2)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
-| `mcp-blender-workflow` | MCP Blender: инструменты, обязательный workflow построения моделей и соглашения проекта D… | `blender`, `mcp`, `python`, `3d`, `bpy`, `cad`, `workflow`, `orchestration`, `fdm`, `sla` |
+| `mcp-blender` | MCP Blender: инструменты (execute_blender_code, get_object_info, get_viewport_screenshot,… | `blender`, `mcp`, `python`, `3d`, `bpy`, `viewport`, `camera`, `screenshot`, `orchestration` |
+| `version-gotchas` | Известные breaking changes и ловушки Blender 5.0 API | `blender`, `api`, `bpy`, `3d`, `python`, `gotchas`, `advisory`, `version` |
+
+### blender-modeling — Parametric CAD modeling in Blender for FDM/SLA: config-driven dataclasses, profile/revolve geometry, threading clearances, config & scene conventions, model-rules template, generic build loop (6)
+
+| Скилл | Описание | Теги |
+|:--|:--|:--|
+| `build-loop` | Дисциплина цикла параметрического моделирования через MCP Blender: анализ задачи → провер… | `blender`, `cad`, `parametric`, `workflow`, `bpy`, `mcp`, `3d`, `fdm`, `sla` |
+| `config-conventions` | Соглашения параметрического CAD-конфига: одна сущность — один dataclass; именование перем… | `blender`, `cad`, `parametric`, `dataclass`, `config`, `cross-config`, `conventions`, `bpy`, `fdm`, `sla` |
 | `model-rules` | Шаблон models/{name}/ai/rules.md — моделе-специфичные правила, читаемые агентом перед люб… | `blender`, `template`, `rules`, `3d`, `cad`, `conventions` |
 | `parametric-config` | Параметрическое 3D-моделирование в Blender (bpy) на основе конфига-данных: dataclass-пара… | `blender`, `bpy`, `parametric`, `dataclass`, `cad`, `fdm`, `sla`, `geometry`, `units`, `python`, `3d` |
+| `scene-conventions` | Соглашения сцены параметрической модели: префиксы объектов (MESH_/CRV_/LGT_/MTL_), иерарх… | `blender`, `cad`, `parametric`, `naming`, `scene`, `materials`, `parenting`, `bpy` |
 | `threading` | Резьба на FDM/SLA-деталях: материал, физика печати, радиальные зазоры по типу посадки | `blender`, `3d`, `fdm`, `sla`, `threading`, `geometry`, `bpy` |
-| `version-gotchas` | Известные breaking changes и ловушки Blender 5.0 API | `blender`, `api`, `bpy`, `3d`, `python`, `gotchas`, `advisory`, `version` |
 
 ### devops — Docker environments, CI/CD pipelines, GitOps (11)
 
@@ -275,7 +283,7 @@
 
 | Тег | Скиллы |
 |:--|:--|
-| `3d` | `mcp-blender-workflow`, `model-rules`, `parametric-config`, `threading`, `version-gotchas` |
+| `3d` | `build-loop`, `mcp-blender`, `model-rules`, `parametric-config`, `threading`, `version-gotchas` |
 | `actions` | `enum-state-machine` |
 | `admin-panel` | `filament` |
 | `adr` | `architecture`, `tech-stack-selection` |
@@ -298,17 +306,18 @@
 | `azguard` | `azguard`, `laravel-permissions` |
 | `best-practices` | `laravel-best-practices` |
 | `blade` | `livewire-blade-attributes` |
-| `blender` | `mcp-blender-workflow`, `model-rules`, `parametric-config`, `threading`, `version-gotchas` |
+| `blender` | `build-loop`, `config-conventions`, `mcp-blender`, `model-rules`, `parametric-config`, `scene-conventions`, `threading`, `version-gotchas` |
 | `botkit` | `botkit` |
 | `bots` | `botkit` |
 | `boundary` | `package-contribution-protocol` |
-| `bpy` | `mcp-blender-workflow`, `parametric-config`, `threading`, `version-gotchas` |
+| `bpy` | `build-loop`, `config-conventions`, `mcp-blender`, `parametric-config`, `scene-conventions`, `threading`, `version-gotchas` |
 | `broadcasting` | `laravel-broadcasting`, `laravel-echo-client` |
 | `browser` | `playwright-e2e` |
 | `browser-testing` | `laravel-dusk` |
 | `build` | `vite-module-loader`, `vite-multi-build` |
 | `c4` | `architecture` |
-| `cad` | `mcp-blender-workflow`, `model-rules`, `parametric-config` |
+| `cad` | `build-loop`, `config-conventions`, `model-rules`, `parametric-config`, `scene-conventions` |
+| `camera` | `mcp-blender` |
 | `casts` | `laravel-data` |
 | `changelog` | `release-engineering` |
 | `checklist` | `complex-task-orchestrator`, `cross-layer-change-checklist` |
@@ -326,14 +335,16 @@
 | `composable` | `dark-mode`, `vue-composition-api` |
 | `compose` | `docker-dev-prod`, `docker-services` |
 | `composer` | `php-upgrade-checklist` |
+| `config` | `config-conventions` |
 | `configuration` | `spatie-settings` |
 | `context` | `anti-drift`, `compact-responses`, `context-economy`, `gh-review`, `session-handoff`, `shared-memory`, `task-brief-template` |
 | `contracts` | `api-design` |
 | `contribution` | `package-contribution-protocol` |
 | `conventional-commits` | `git-commit-rules` |
-| `conventions` | `ai-context-workflow`, `compact-responses`, `context-economy`, `git-commit-rules`, `ml-project-structure`, `model-rules`, `named-arguments`, `naming-conventions`, `packages-stack`, `project-map`, `skills-ssot`, `venv-dependencies` |
+| `conventions` | `ai-context-workflow`, `compact-responses`, `config-conventions`, `context-economy`, `git-commit-rules`, `ml-project-structure`, `model-rules`, `named-arguments`, `naming-conventions`, `packages-stack`, `project-map`, `skills-ssot`, `venv-dependencies` |
 | `coordination` | `cross-project-coordinator`, `shared-memory` |
 | `coverage` | `ci-cd`, `mutation-testing`, `test-strategy`, `vitest` |
+| `cross-config` | `config-conventions` |
 | `cross-project` | `cross-project-coordinator`, `local-topology`, `shared-memory` |
 | `crud` | `filament` |
 | `css` | `tailwind-conventions` |
@@ -343,7 +354,7 @@
 | `data` | `data-schema`, `ml-project-structure` |
 | `data-transfer-object` | `laravel-data` |
 | `database` | `database`, `test-isolation-guard` |
-| `dataclass` | `parametric-config` |
+| `dataclass` | `config-conventions`, `parametric-config` |
 | `dependencies` | `dependency-audit`, `packages-stack`, `tech-debt-audit`, `venv-dependencies` |
 | `deployment` | `architecture` |
 | `design-system` | `figma-mcp-core`, `reka-ui-cva` |
@@ -367,7 +378,7 @@
 | `enum` | `attribute-authorization`, `azguard`, `backend-type-sync`, `enum-attributes`, `enum-state-machine`, `user-roles` |
 | `erd` | `data-schema` |
 | `eslint` | `eslint-flat-config`, `wayfinder` |
-| `fdm` | `mcp-blender-workflow`, `parametric-config`, `threading` |
+| `fdm` | `build-loop`, `config-conventions`, `parametric-config`, `threading` |
 | `feature-flags` | `pennant-development` |
 | `figma` | `figma-mcp-core`, `figma-to-flutter`, `figma-to-vue` |
 | `filament` | `filament`, `modular-architecture`, `spatie-settings`, `vite-multi-build` |
@@ -416,7 +427,8 @@
 | `make` | `makefile` |
 | `market` | `adversarial-check`, `competitive-analysis`, `customer-discovery`, `defensibility`, `go-to-market`, `idea-discovery`, `monetization-design`, `new-project`, `pitch-deck`, `pmf-diagnostics`, `product-roadmap`, `solo-founder`, `startup-lifecycle` |
 | `matchmedia` | `dark-mode` |
-| `mcp` | `figma-mcp-core`, `mcp-blender-workflow` |
+| `materials` | `scene-conventions` |
+| `mcp` | `build-loop`, `figma-mcp-core`, `mcp-blender` |
 | `media` | `medialibrary` |
 | `memory` | `shared-memory` |
 | `meta` | `local-topology` |
@@ -431,18 +443,19 @@
 | `multi-config` | `vite-multi-build` |
 | `mutation` | `mutation-testing` |
 | `naive-ui` | `naive-ui-theming` |
-| `naming` | `naming-conventions` |
+| `naming` | `naming-conventions`, `scene-conventions` |
 | `navigation` | `local-topology`, `packages-stack`, `project-map` |
 | `node` | `node-pnpm-preflight` |
 | `nwidart` | `modular-architecture` |
 | `observability` | `capacity-planning`, `health-checks`, `observability-design` |
 | `ops` | `capacity-planning`, `incident-response`, `oncall-rotation`, `postmortem`, `runbook` |
-| `orchestration` | `anti-drift`, `complex-task-orchestrator`, `cross-project-coordinator`, `laravel-subagents`, `mcp-blender-workflow`, `tech-lead` |
+| `orchestration` | `anti-drift`, `complex-task-orchestrator`, `cross-project-coordinator`, `laravel-subagents`, `mcp-blender`, `tech-lead` |
 | `oss` | `dependency-audit`, `dx-design`, `github-flow`, `open-source-maintainer`, `oss-development`, `oss-governance`, `release-engineering` |
 | `owasp` | `security-design` |
 | `package` | `package-contribution-protocol` |
 | `package-dev` | `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages` |
-| `parametric` | `parametric-config` |
+| `parametric` | `build-loop`, `config-conventions`, `parametric-config`, `scene-conventions` |
+| `parenting` | `scene-conventions` |
 | `patterns` | `enum-attributes`, `laravel`, `php-patterns`, `vue-composition-api` |
 | `pennant` | `pennant-development` |
 | `permissions` | `attribute-authorization`, `azguard`, `laravel-permissions`, `user-roles` |
@@ -458,7 +471,7 @@
 | `prettier` | `eslint-flat-config`, `js-code-style`, `tailwind-conventions` |
 | `privacy` | `legal-compliance`, `security-design` |
 | `pusher` | `laravel-echo-client` |
-| `python` | `mcp-blender-workflow`, `ml-project-structure`, `parametric-config`, `venv-dependencies`, `version-gotchas` |
+| `python` | `mcp-blender`, `ml-project-structure`, `parametric-config`, `venv-dependencies`, `version-gotchas` |
 | `quality` | `code-review`, `code-simplifier`, `mutation-testing`, `playwright-e2e`, `refactoring-plan`, `static-analysis`, `tech-debt-audit`, `test-strategy`, `testing-safety-report`, `venv-dependencies` |
 | `queue` | `docker-services` |
 | `rbac` | `attribute-authorization`, `azguard`, `laravel-permissions`, `security-design` |
@@ -488,12 +501,14 @@
 | `russian` | `writing-style` |
 | `safety` | `test-isolation-guard`, `testing-safety-report` |
 | `scalability` | `architecture` |
+| `scene` | `scene-conventions` |
 | `schema` | `data-schema` |
+| `screenshot` | `mcp-blender` |
 | `security` | `agent-design`, `ci-cd`, `dependency-audit`, `laravel-security-audit`, `oss-governance`, `risk-assessment`, `security-design` |
 | `semver` | `github-flow`, `package-contribution-protocol`, `release-engineering` |
 | `settings` | `spatie-settings` |
 | `skills` | `ai-context-workflow`, `laravel-packages`, `skills-ssot` |
-| `sla` | `capacity-planning`, `incident-response`, `mcp-blender-workflow`, `oncall-rotation`, `parametric-config`, `threading` |
+| `sla` | `build-loop`, `capacity-planning`, `config-conventions`, `incident-response`, `oncall-rotation`, `parametric-config`, `threading` |
 | `slo` | `observability-design` |
 | `spatie` | `backend-type-sync`, `code-style-spatie`, `health-checks`, `js-code-style`, `laravel-data`, `medialibrary`, `spatie-settings` |
 | `ssot` | `skills-ssot` |
@@ -535,11 +550,12 @@
 | `venv` | `venv-dependencies` |
 | `verification` | `testing-safety-report` |
 | `version` | `php-upgrade-checklist`, `version-gotchas` |
+| `viewport` | `mcp-blender` |
 | `vite` | `docker-vite`, `vite-module-loader`, `vite-multi-build` |
 | `vitest` | `vitest` |
 | `vue` | `dark-mode`, `eslint-flat-config`, `figma-to-vue`, `filepond-upload`, `inertia-vue`, `js-code-style`, `laravel-echo-client`, `naive-ui-theming`, `packages-stack`, `pinia-stores`, `reka-ui-cva`, `tailwind-conventions`, `vite-module-loader`, `vitest`, `vue-composition-api`, `vue-dynamic-icons` |
 | `wayfinder` | `wayfinder` |
 | `websocket` | `docker-services` |
 | `websockets` | `laravel-broadcasting`, `laravel-echo-client` |
-| `workflow` | `ai-context-workflow`, `anti-drift`, `business-process`, `code-review`, `compact-responses`, `complex-task-orchestrator`, `context-economy`, `cross-layer-change-checklist`, `enum-state-machine`, `incident-response`, `laravel-subagents`, `mcp-blender-workflow`, `postmortem`, `refactoring-plan`, `session-handoff`, `skills-ssot`, `spec-interview`, `task-brief-template`, `tech-debt-audit`, `tech-lead`, `ticket-workflow` |
+| `workflow` | `ai-context-workflow`, `anti-drift`, `build-loop`, `business-process`, `code-review`, `compact-responses`, `complex-task-orchestrator`, `context-economy`, `cross-layer-change-checklist`, `enum-state-machine`, `incident-response`, `laravel-subagents`, `postmortem`, `refactoring-plan`, `session-handoff`, `skills-ssot`, `spec-interview`, `task-brief-template`, `tech-debt-audit`, `tech-lead`, `ticket-workflow` |
 | `writing` | `writing-style` |

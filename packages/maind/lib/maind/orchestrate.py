@@ -22,6 +22,10 @@ CAPABILITIES = {
     "skm:lock":      ("swissknifeman", ["lock", "--target", "{path}"], True),
     "skm:integrate": ("swissknifeman", ["integrate", "--target", "{path}"], True),
     "skm:status":    ("swissknifeman", ["status", "--target", "{path}"], True),
+    # окружение Claude Code (permissions/MCP/хуки) — пакет harness. skiller integrate
+    # уже зовёт harness под капотом; env:apply нужен для прямого применения окружения
+    # (напр. при onboard --skip-skills) и для router'а зонтика `swissknifeman env`.
+    "env:apply":     ("harness", ["permissions", "--target", "{path}"], True),
 }
 
 # sibling → как найти его лаунчер (env-override · проект в config.json · путь · bin).
@@ -34,6 +38,10 @@ SIBLINGS = {
     "swissknifeman": {"env": "MAIND_SKM_BIN", "project_id": "swissknifeman",
                       "path_key": "local_path",
                       "bin": "packages/skiller/bin/skiller"},
+    # harness живёт в том же монорепо (local_path проекта-репо swissknifeman).
+    "harness": {"env": "MAIND_HARNESS_BIN", "project_id": "swissknifeman",
+                "path_key": "local_path",
+                "bin": "packages/harness/bin/harness"},
 }
 
 

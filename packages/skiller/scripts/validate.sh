@@ -26,6 +26,14 @@ warnings = []
 UPSTREAM_SOURCES = {"github", "http", "file"}
 UPSTREAM_STRATEGIES = {"replace", "notify"}
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+# Допустимые значения enum-полей frontmatter + формат версии (semver).
+RISK_VALUES = {"read", "draft", "write", "external"}
+ADAPTER_VALUES = {"claude", "cursor", "fable"}
+SEMVER_RE = re.compile(r"^\d+\.\d+\.\d+$")
+# Внутрискилловые относительные ссылки (snippets/…, references/…) в теле SKILL.md —
+# должны резолвиться. ../ и .agents/.claude (раскладка проекта-потребителя) и
+# прозовые URL'ы НЕ проверяем (ложные срабатывания на upstream/imported).
+INTRA_LINK_RE = re.compile(r"\]\((snippets/[^)#]+|references/[^)#]+)\)")
 
 
 def parse_frontmatter(path):
@@ -90,6 +98,42 @@ for skill_md in skill_files:
     for field in required:
         if not fm.get(field):
             errors.append(f"{rel}: missing required frontmatter field: {field}")
+
+    # --- 1a. enum / semver / bucket-vs-dir / declared snippets / intra-links ---
+    parts = rel.parts
+    path_bucket = parts[1] if parts[0] == "skills" and len(parts) > 2 else None
+
+    risk = fm.get("risk", "")
+    if risk and risk not in RISK_VALUES:
+        errors.append(f"{rel}: risk '{risk}' не из {sorted(RISK_VALUES)}")
+
+    bad_adapters = [a for a in parse_inline_list(fm.get("adapters", ""))
+                    if a not in ADAPTER_VALUES]
+    if bad_adapters:
+        errors.append(f"{rel}: неизвестные adapters {bad_adapters} "
+                      f"(допустимо {sorted(ADAPTER_VALUES)})")
+
+    # version/bucket — только для локальных (upstream-скиллы держат минимальный frontmatter)
+    if upstream is None:
+        ver = fm.get("version", "")
+        if ver and not SEMVER_RE.match(ver):
+            errors.append(f"{rel}: version '{ver}' не semver (\\d+.\\d+.\\d+)")
+        fm_bucket = fm.get("bucket", "")
+        if path_bucket and fm_bucket and fm_bucket != path_bucket:
+            errors.append(f"{rel}: frontmatter bucket '{fm_bucket}' != каталог "
+                          f"'{path_bucket}'")
+
+    # объявленные в frontmatter сниппеты должны существовать на диске
+    for snip in parse_inline_list(fm.get("snippets", "")):
+        if not (skill_dir / "snippets" / snip).exists():
+            errors.append(f"{rel}: snippets[{snip}] объявлен, но файла нет на диске")
+
+    # внутрискилловые ссылки snippets/… references/… в теле — должны резолвиться
+    body = skill_md.read_text(encoding="utf-8")
+    for m in INTRA_LINK_RE.finditer(body):
+        tgt = m.group(1).split("#")[0]
+        if not (skill_dir / tgt).exists():
+            errors.append(f"{rel}: битая ссылка на {tgt} (файла нет)")
 
 # --- 2. upstream.json -----------------------------------------------------
 for up_file in sorted(root.glob("skills/**/upstream.json")) + \

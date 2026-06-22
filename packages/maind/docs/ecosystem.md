@@ -80,7 +80,7 @@ graph TD
   others["… остальные проекты"] -->|MCP| hub
 ```
 
-Подробнее о топологии и внутренних слоях — [Архитектура](/architecture).
+Подробнее о топологии и внутренних слоях — [Архитектура](./architecture).
 
 ## Онбординг нового проекта
 
@@ -111,7 +111,7 @@ sequenceDiagram
 
 maind — **читатель всех** ключевых файлов и **писатель** только `config.json`, MCP-конфигов
 проекта и **собственного** `.claude/settings.local.json` (доверие хаба к проектам экосистемы,
-см. [Workspace](/guide/workspace)). Скиллы проекта описывает `skills-lock.json` (composes
+см. [Workspace](./guide/workspace)). Скиллы проекта описывает `skills-lock.json` (composes
 swissknifeman + Laravel Boost, swissknifeman wins). brain держит свой `<vault>/.projects.json`
 для docs-watcher.
 
@@ -140,7 +140,7 @@ flowchart TD
 ```
 
 Если слой 2 (`status`) держать **JSON-first**, то GUI (слой 4) — тонкая надстройка над тем же
-контрактом, а не отдельная переписка. Каждый слой — отдельная команда maind; см. [CLI](/guide/cli).
+контрактом, а не отдельная переписка. Каждый слой — отдельная команда maind; см. [CLI](./guide/cli).
 
 ## Источник истины
 

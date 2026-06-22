@@ -57,4 +57,4 @@ g = graph_reader(env, config)
 g.query("project:flexcrm", depth=2)
 ```
 
-Дальше: [Namespaces →](/guide/namespaces)
+Дальше: [Namespaces →](./namespaces)

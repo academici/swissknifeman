@@ -2,10 +2,10 @@ import { defineConfig } from 'vitepress'
 import { withMermaid } from 'vitepress-plugin-mermaid'
 
 // Зонтичная документация экосистемы. Доки живут ВНУТРИ каждого пакета
-// (packages/<pkg>/docs) и подключаются сюда симлинками docs/skiller, docs/harness —
-// единый сайт собирается из per-package файлов. Общая информация — в корне docs/.
-// maind пока — отдельный сайт (его доки используют абсолютные ссылки своей базы);
-// агрегация maind — следующий шаг (нормализация ссылок).
+// (packages/<pkg>/docs); scripts/docs-sync.sh копирует их в docs/skiller, docs/harness,
+// docs/maind (gitignored) — единый сайт собирается из per-package файлов. Общая
+// информация — в корне docs/. Внутренние ссылки package-доков относительные → пакет
+// собирается и standalone (свой .vitepress), и в этом агрегате.
 export default withMermaid(defineConfig({
   lang: 'ru-RU',
   title: 'SwissKnifeMan',
@@ -19,10 +19,7 @@ export default withMermaid(defineConfig({
       { text: 'Обзор', link: '/' },
       { text: 'Окружение', link: '/harness/', activeMatch: '/harness/' },
       { text: 'Скиллы', link: '/skiller/guide/', activeMatch: '/skiller/' },
-      {
-        text: 'Память и граф (maind)',
-        link: 'https://github.com/academici/swissknifeman/tree/main/packages/maind/docs',
-      },
+      { text: 'Память и граф', link: '/maind/', activeMatch: '/maind/' },
     ],
 
     sidebar: {
@@ -109,6 +106,58 @@ export default withMermaid(defineConfig({
         },
       ],
 
+      '/maind/': [
+        {
+          text: 'Знакомство',
+          items: [
+            { text: 'Обзор mAInd', link: '/maind/' },
+            { text: 'Что такое mAInd', link: '/maind/guide/' },
+            { text: 'Философия экосистемы', link: '/maind/ecosystem' },
+            { text: 'Архитектура узла', link: '/maind/architecture' },
+            { text: 'Как это всё работает', link: '/maind/guide/how-it-works' },
+            { text: 'FAQ — частые вопросы', link: '/maind/guide/faq' },
+            { text: 'Решения, трейд-оффы, ограничения', link: '/maind/guide/design-notes' },
+            { text: 'Установка', link: '/maind/guide/installation' },
+            { text: 'Конфиг config.json', link: '/maind/guide/config' },
+          ],
+        },
+        {
+          text: 'Связи: память + граф',
+          items: [
+            { text: 'Память (agent-memory)', link: '/maind/guide/memory' },
+            { text: 'Граф связей', link: '/maind/guide/graph' },
+            { text: 'Федерация', link: '/maind/guide/federation' },
+            { text: 'Namespaces', link: '/maind/guide/namespaces' },
+            { text: 'Граф кода (Serena)', link: '/maind/guide/code-graph' },
+          ],
+        },
+        {
+          text: 'Провижининг и эксплуатация',
+          items: [
+            { text: 'CLI', link: '/maind/guide/cli' },
+            { text: 'Fleet (межпроектный слой)', link: '/maind/guide/fleet' },
+            { text: 'MCP-сервер', link: '/maind/guide/mcp' },
+            { text: 'Плагин Claude Code', link: '/maind/guide/plugin' },
+            { text: 'Healthcheck', link: '/maind/guide/health' },
+            { text: 'Sync', link: '/maind/guide/sync' },
+            { text: 'Демон памяти (systemd)', link: '/maind/guide/systemd' },
+            { text: 'Доверие (workspace)', link: '/maind/guide/workspace' },
+          ],
+        },
+        {
+          text: 'Реестры и миграция',
+          items: [
+            { text: 'Агенты', link: '/maind/guide/agents' },
+            { text: 'Проекты', link: '/maind/guide/projects' },
+            { text: 'Миграция', link: '/maind/guide/migration' },
+          ],
+        },
+        {
+          text: 'Roadmap',
+          items: [{ text: 'Идеи развития', link: '/maind/roadmap' }],
+        },
+      ],
+
       '/': [
         {
           text: 'Экосистема',
@@ -123,10 +172,7 @@ export default withMermaid(defineConfig({
           items: [
             { text: 'Скиллы — skiller', link: '/skiller/guide/' },
             { text: 'Окружение — harness', link: '/harness/' },
-            {
-              text: 'Память и граф — maind',
-              link: 'https://github.com/academici/swissknifeman/tree/main/packages/maind/docs',
-            },
+            { text: 'Память и граф — maind', link: '/maind/' },
           ],
         },
       ],

@@ -11,7 +11,7 @@ git clone <repo> maind && cd maind
 
 - `--with-memory` — `npm install` в корне (демон `@agentmemory/agentmemory`).
 - `--with-service` — регистрирует демон как systemd --user сервис (`maind service install`):
-  автозапуск при логине + авто-рестарт. См. [Демон памяти (systemd)](/guide/systemd).
+  автозапуск при логине + авто-рестарт. См. [Демон памяти (systemd)](./systemd).
 
 Чтобы демон поднимался **при загрузке ОС** (а не только после логина) — включите linger (разово):
 
@@ -58,6 +58,6 @@ npm run docs:build      # сборка статического сайта
 - **Python 3.8+** и **bash** — для ядра CLI (обязательно).
 - **Node.js** — только для демона памяти и сборки документации.
 - **uvx** (из [uv](https://docs.astral.sh/uv/)) — для графа кода в проекте (движок Serena, см.
-  [граф кода](/guide/code-graph)); включается на проект полем `code:true`.
+  [граф кода](./code-graph)); включается на проект полем `code:true`.
 
-Дальше: [Конфиг config.json →](/guide/config) (живёт в корне монорепо, не в пакете maind)
+Дальше: [Конфиг config.json →](./config) (живёт в корне монорепо, не в пакете maind)

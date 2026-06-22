@@ -56,4 +56,4 @@ sync (mode=auto, проектов 1, провиженеры: mcp, graph, memory,
   ✓ ecosystem-skill flexcrm            .claude/skills/ecosystem-mcp/SKILL.md
 ```
 
-Дальше: [Доверие (workspace) →](/guide/workspace)
+Дальше: [Доверие (workspace) →](./workspace)

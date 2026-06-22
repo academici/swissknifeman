@@ -1,13 +1,13 @@
 ---
 name: threading
-bucket: blender
+bucket: blender-modeling
 version: 0.1.0
 description: "Резьба на FDM/SLA-деталях: материал, физика печати, радиальные зазоры по типу посадки"
 risk: write
 persona: oss-dev
 tags: [blender, 3d, fdm, sla, threading, geometry, bpy]
 requires: []
-produces_for: [parametric-config, mcp-blender-workflow]
+produces_for: [parametric-config, build-loop]
 outputs: []
 snippets: ["snippets-threading.md"]
 adapters: [claude, cursor, fable]
@@ -59,7 +59,7 @@ scr.iterations   = turns       # число витков
 
 Для деталей из PG треугольного профиля достаточно: витки самозацентрируются при завинчивании.
 
-Конкретные параметры резьбы для пар деталей текущей модели — в `models/{CURRENT_MODEL}/ai/rules.md`.
+Конкретные параметры резьбы для пар деталей текущей модели — в `models/{name}/ai/rules.md`.
 
 **Вариант с трапециевидным профилем** — если треугольник даёт заедание после печати (добавить по результатам замера).
 
@@ -72,7 +72,7 @@ scr.iterations   = turns       # число витков
 
 ## Связанные скиллы
 
-- `blender/parametric-config` — параметры `*_thread_*` и `*_clearance` заводятся в `config.py` как dataclass-поля и проверяются инвариантом `thread_depth > thread_clearance` в `check.py`.
-- `blender/model-rules` — таблица «Параметры резьбы» в `models/{name}/ai/rules.md` хранит pitch/depth/turns/clearance для конкретных пар деталей.
-- `blender/mcp-blender-workflow` — общий цикл построения и проверки модели, в который встроена печать резьбы.
+- `blender-modeling/parametric-config` — параметры `*_thread_*` и `*_clearance` заводятся в `config.py` как dataclass-поля и проверяются инвариантом `thread_depth > thread_clearance` в `check.py`.
+- `blender-modeling/model-rules` — таблица «Параметры резьбы» в `models/{name}/ai/rules.md` хранит pitch/depth/turns/clearance для конкретных пар деталей.
+- `blender-modeling/build-loop` — общий цикл построения и проверки модели, в который встроена печать резьбы.
 - `blender/version-gotchas` — ловушки SCREW-модификатора и `temp_override` в Blender 5.0.

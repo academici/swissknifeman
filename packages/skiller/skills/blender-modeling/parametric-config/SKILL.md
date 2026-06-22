@@ -1,15 +1,15 @@
 ---
 name: parametric-config
-bucket: blender
+bucket: blender-modeling
 version: 0.1.0
 description: "Параметрическое 3D-моделирование в Blender (bpy) на основе конфига-данных: dataclass-параметры детали (размеры/допуски/материал/единицы mm), построение профиля и revolve/extrude, валидация инвариантов без запуска Blender. Активировать при правке models/*/config.py, profile.py, parts/*, check.py, при добавлении параметра детали, при вопросах про допуски/единицы/стыковку радиусов для FDM/SLA-печати."
 risk: write
 persona: oss-dev
 tags: [blender, bpy, parametric, dataclass, cad, fdm, sla, geometry, units, python, 3d]
-requires: [threading, model-rules]
-produces_for: [mcp-blender-workflow]
+requires: [threading, model-rules, version-gotchas]
+produces_for: [build-loop]
 outputs: []
-snippets: [config.py, check.py, profile.py]
+snippets: [config.py, check.py, profile.py, config-and-profile.md, internals.md]
 adapters: [claude, cursor, fable]
 sha256: ""
 ---
@@ -34,8 +34,8 @@ sha256: ""
 **Ключевой принцип:** числа живут только в `config.py`. В `parts/*.py` и `profile.py` —
 никаких «магических» констант; любой новый размер заводится параметром dataclass.
 
-**Связанные навыки:** `blender/model-rules` (моделе-специфичные правила `ai/rules.md` —
-стек деталей, соединения, зоны камеры), `blender/threading` (зазоры и профиль резьбы для
+**Связанные навыки:** `blender-modeling/model-rules` (моделе-специфичные правила `ai/rules.md` —
+стек деталей, соединения, зоны камеры), `blender-modeling/threading` (зазоры и профиль резьбы для
 FDM/SLA — параметры `*_thread_*` в этом конфиге берутся оттуда).
 
 ## Архитектура слоёв
@@ -97,7 +97,7 @@ Python (для `check.py`, тестов уровня 1, CI), а тяжёлый B
 
 8. **Печать (FDM/SLA) — заложи допуски.** Зазоры посадки и резьбы — отдельные параметры
    (`*_clearance`), а не «впритык». Минимальная печатаемая толщина стенки — инвариант в `check.py`
-   (типично `≥ 0.8–1.5 мм`). Параметры резьбы и зазоры берутся из навыка `blender/threading`.
+   (типично `≥ 0.8–1.5 мм`). Параметры резьбы и зазоры берутся из навыка `blender-modeling/threading`.
 
 ## Конвенции параметров
 
@@ -139,7 +139,9 @@ Python (для `check.py`, тестов уровня 1, CI), а тяжёлый B
 - snippets/config.py — dataclass-параметры детали, единицы, производные функции
 - snippets/check.py — валидация инвариантов без Blender
 - snippets/profile.py — профиль из узлов + revolve через SCREW + `derive_all`
-- Связанные навыки: `blender/model-rules`, `blender/threading`, `blender/mcp-blender-workflow` (общий цикл построения и проверки модели), `blender/version-gotchas` (5.0-API правила для `bmesh`/SCREW)
+- snippets/config-and-profile.md — именование конфигов, `profile_knots`, локальный/мировой Z, `derive_all`
+- snippets/internals.md — устройство `spl`, порядок точек `pts`, non-manifold, единицы, тест-файлы
+- Связанные навыки: `blender-modeling/model-rules`, `blender-modeling/threading`, `blender-modeling/build-loop` (общий цикл построения и проверки), `blender/mcp-blender` (инструменты MCP/вьюпорт), `blender/version-gotchas` (5.0-API правила для `bmesh`/SCREW)
 - https://docs.blender.org/api/current/bpy.html
 - https://docs.blender.org/manual/en/latest/modeling/modifiers/generate/screw.html
 - https://help.prusa3d.com/article/tolerances_n_of_fdm_3d_printing

@@ -176,7 +176,7 @@ def _cut_holes(ring, spl, col):
 | Составная подчасть (кольцо, фланец) | `MESH_Model_Part_ConnRing` | да |
 | Boolean-инструмент (расточка, гнездо) | `_part_joint_tool`, `_part_hole_0` | нет (удаляется) |
 
-Подчасть строится в `_build_*`-функции, добавляется в ту же коллекцию, **не** сливается через UNION с основным телом — остаётся отдельным объектом. Parenting (иерархия объектов) — `ai/rules/naming-and-scene.md`. При финализации оба объекта получают одинаковый материал и обрабатываются как одна деталь.
+Подчасть строится в `_build_*`-функции, добавляется в ту же коллекцию, **не** сливается через UNION с основным телом — остаётся отдельным объектом. Parenting (иерархия объектов) — скилл `blender-modeling/scene-conventions`. При финализации оба объекта получают одинаковый материал и обрабатываются как одна деталь.
 
 Это позволяет:
 - выбрать кольцо отдельно в Outliner и проверить его размеры через `get_object_info`
@@ -272,8 +272,8 @@ test/geom_test.py                ← меш-утилиты для уровня 2
 
 **Запуск:**
 ```bash
-python models/{CURRENT_MODEL}/test/check.py          # всё разом — перед каждым Blender
-python models/{CURRENT_MODEL}/parts/{name}.test.py   # только одна деталь
+python models/{model}/test/check.py          # всё разом — перед каждым Blender
+python models/{model}/parts/{name}.test.py   # только одна деталь
 ```
 
 **Автодискавери:** `test/check.py` находит все `parts/*.test.py` через `glob` — новые детали подхватываются автоматически, без правки `check.py`.
@@ -291,7 +291,7 @@ python models/{CURRENT_MODEL}/parts/{name}.test.py   # только одна д�
 - Стыковые радиусы между секциями совпадают
 - Стек высот не отрицательный
 - PCD магнитов/штырей совпадает у обеих стыкующихся деталей
-- Размеры вставляемых элементов (картридж, труба) не выходят за пределы принимающей детали
+- Размеры вставляемых элементов (вставка, труба) не выходят за пределы принимающей детали
 
 ### Уровень 2 — меш (`test_mesh()`, внутри Blender)
 
@@ -314,7 +314,7 @@ _mod.test_mesh(obj, subpart)
 - `assert_z_position(obj, z_min, z_max)` — деталь на правильной позиции
 - `print_bb(obj)` — антигаллюцинация размеров (вызывать всегда)
 
-Функции из `{CURRENT_MODEL}/test/geom_test` (расширенные):
+Функции из `{model}/test/geom_test` (расширенные):
 - `assert_normals_outward(obj)` — нормали не вывернуты после boolean
 - `assert_rotational_symmetry(obj)` — диаметры X/Y совпадают (тело вращения)
 - `assert_wall_solid(obj, r_inner, r_outer, z_samples)` — стенка заполнена (ray cast)
@@ -323,7 +323,7 @@ _mod.test_mesh(obj, subpart)
 
 ```python
 # Импорт расширенных функций внутри Blender:
-from {CURRENT_MODEL}.test.geom_test import (
+from {model}.test.geom_test import (
     assert_normals_outward, assert_rotational_symmetry, assert_wall_solid,
 )
 ```

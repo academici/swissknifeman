@@ -3,7 +3,7 @@
   "snippets": [
     {
       "file": "snippets-threading.md",
-      "description": "Резьба и винтовая геометрия — соглашения DiaBox",
+      "description": "Резьба и винтовая геометрия: распределение зазора по типу посадки",
       "tags": [
         "blender",
         "threading"

@@ -21,12 +21,28 @@
     {
       "name": "blender",
       "source": "./packages/skiller/skills/blender",
-      "description": "Blender 3D modeling: MCP workflow, threading for FDM/SLA, version gotchas, model rules",
+      "description": "Universal Blender bpy+MCP tooling: MCP workflow primitives, viewport modes, camera helper, version gotchas",
       "category": "engineering",
       "tags": [
         "blender",
         "3d",
-        "python"
+        "bpy",
+        "mcp"
+      ],
+      "package": "skiller"
+    },
+    {
+      "name": "blender-modeling",
+      "source": "./packages/skiller/skills/blender-modeling",
+      "description": "Parametric CAD modeling in Blender for FDM/SLA: config-driven dataclasses, profile/revolve geometry, threading clearances, config & scene conventions, model-rules template, generic build loop",
+      "category": "engineering",
+      "tags": [
+        "blender",
+        "cad",
+        "parametric",
+        "fdm",
+        "sla",
+        "bpy"
       ],
       "package": "skiller"
     },

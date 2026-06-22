@@ -1,0 +1,13 @@
+{
+  "skill": "mcp-blender",
+  "snippets": [
+    {
+      "file": "role.md",
+      "description": "Роль агента — архитектор автоматизации Blender 5.x на Python",
+      "tags": [
+        "blender",
+        "role"
+      ]
+    }
+  ]
+}

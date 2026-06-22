@@ -15,6 +15,16 @@
       "file": "profile.py",
       "description": "Профиль из узлов (z,r): derive_all (пересчёт зависимых размеров + синхронизация последнего узла), линейная интерполяция силуэта, revolve_profile через SCREW по оси Z с ленивым импортом bpy/bmesh и конверсией mm",
       "tags": ["profile", "revolve", "screw", "interpolation", "lazy-bpy", "units"]
+    },
+    {
+      "file": "config-and-profile.md",
+      "description": "Конфиги и силуэт: именование конфигов, profile_knots (локальный Z), перевод в мировой Z, derive_all, порядок импорта config↔profile, глобальный сплайн vs по частям",
+      "tags": ["config", "profile", "derive_all", "knots", "spline"]
+    },
+    {
+      "file": "internals.md",
+      "description": "Внутренности: устройство spl (zs/rs/ms, Monotone Cubic Hermite), порядок и замыкание точек pts, диагностика non-manifold, r_inner_floor, bounding box, единицы, архитектура тест-файлов",
+      "tags": ["internals", "spl", "pts", "non-manifold", "bounding-box", "tests"]
     }
   ]
 }

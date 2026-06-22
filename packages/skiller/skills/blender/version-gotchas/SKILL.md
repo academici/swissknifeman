@@ -7,7 +7,7 @@ risk: write
 persona: oss-dev
 tags: [blender, api, bpy, 3d, python, gotchas, advisory, version]
 requires: []
-produces_for: [mcp-blender-workflow, parametric-config]
+produces_for: [mcp-blender, parametric-config]
 outputs: []
 snippets: []
 adapters: [claude, cursor, fable]
@@ -54,7 +54,7 @@ for obj in bpy.data.objects:
     obj.data.update()
 ```
 
-Это уже встроено в режим `realism` (`mcp-blender-workflow.md`). При подозрении на инвертированные нормали — включить `realism` и проверить.
+Это уже встроено в режим `realism` (`mcp-blender`). При подозрении на инвертированные нормали — включить `realism` и проверить.
 
 ### `bpy.ops` без override в 5.0
 
@@ -81,6 +81,6 @@ for obj in bpy.data.objects:
 
 ## Связанные скиллы
 
-- `blender/mcp-blender-workflow` — таблица диагностики ошибок Шага 4 ссылается на эти ловушки (`temp_override`, нормали после boolean, `surface_render_method`); режим `realism` уже включает пересчёт нормалей.
-- `blender/parametric-config` — построение меша через `bmesh`/SCREW, где применяются эти 5.0-API правила.
-- `blender/threading` — SCREW-модификатор резьбы, чувствительный к смене API.
+- `blender/mcp-blender` — таблица диагностики ошибок ссылается на эти ловушки (`temp_override`, нормали после boolean, `surface_render_method`); режим `realism` уже включает пересчёт нормалей.
+- `blender-modeling/parametric-config` — построение меша через `bmesh`/SCREW, где применяются эти 5.0-API правила.
+- `blender-modeling/threading` — SCREW-модификатор резьбы, чувствительный к смене API.

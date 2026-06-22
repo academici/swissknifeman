@@ -10,8 +10,13 @@
       "status": "active"
     },
     "blender": {
-      "description": "Blender 3D modeling: MCP workflow, threading for FDM/SLA, version gotchas, model rules",
-      "count": 5,
+      "description": "Universal Blender bpy+MCP tooling: MCP workflow primitives, viewport modes, camera helper, version gotchas",
+      "count": 2,
+      "status": "active"
+    },
+    "blender-modeling": {
+      "description": "Parametric CAD modeling in Blender for FDM/SLA: config-driven dataclasses, profile/revolve geometry, threading clearances, config & scene conventions, model-rules template, generic build loop",
+      "count": 6,
       "status": "active"
     },
     "devops": {
@@ -339,39 +344,114 @@
       "source": "local"
     },
     {
-      "name": "mcp-blender-workflow",
+      "name": "mcp-blender",
       "bucket": "blender",
-      "path": "skills/blender/mcp-blender-workflow/SKILL.md",
+      "path": "skills/blender/mcp-blender/SKILL.md",
       "version": "0.1.0",
-      "description": "MCP Blender: инструменты, обязательный workflow построения моделей и соглашения проекта DiaBox",
-      "sha256": "0af577b83f683e96a28130af7daead149127f2900b8a715688740b6c97b215de",
+      "description": "MCP Blender: инструменты (execute_blender_code, get_object_info, get_viewport_screenshot, get_scene_info), режимы отображения вьюпорта (tech/material/realism/xray), принцип камеры-через-хелпер, паттерн отправки кода и сброса кеша модулей (del sys.modules), скрытие мешающих объектов для скриншота, параллельная работа нескольких агентов. Активировать при работе с Blender через MCP — построение, настройка вьюпорта, скриншоты.",
+      "sha256": "66e57feae0cd8b0aa97951951460a2216c23dc8f02861b0d2722a672c1549edf",
       "tags": [
         "blender",
         "mcp",
         "python",
         "3d",
         "bpy",
+        "viewport",
+        "camera",
+        "screenshot",
+        "orchestration"
+      ],
+      "requires": [
+        "version-gotchas"
+      ],
+      "produces_for": [
+        "build-loop"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "version-gotchas",
+      "bucket": "blender",
+      "path": "skills/blender/version-gotchas/SKILL.md",
+      "version": "0.1.0",
+      "description": "Известные breaking changes и ловушки Blender 5.0 API",
+      "sha256": "21f87e4580de4e17251bd8a179f4239b6ba0f8f42b6c848ab0f952f057e5cfa4",
+      "tags": [
+        "blender",
+        "api",
+        "bpy",
+        "3d",
+        "python",
+        "gotchas",
+        "advisory",
+        "version"
+      ],
+      "produces_for": [
+        "mcp-blender",
+        "parametric-config"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "build-loop",
+      "bucket": "blender-modeling",
+      "path": "skills/blender-modeling/build-loop/SKILL.md",
+      "version": "0.1.0",
+      "description": "Дисциплина цикла параметрического моделирования через MCP Blender: анализ задачи → проверка гибкости/сквозного пересчёта (cross-config) → инкрементальная сборка детали → проверка геометрии через get_object_info ДО скриншота → камера на изменённую зону → скриншот в нужном режиме → предложить доработки правил. Включает шаблон docstring детали и таблицу диагностики типовых ошибок. Активировать при любой задаче построения/правки детали модели в Blender. Механику инструментов и пресетов брать из скилла blender/mcp-blender.",
+      "sha256": "a347ddcbac6cc2f53fd0b80c42663c7406bb6a18f2e2f27d1b9885f45f766daa",
+      "tags": [
+        "blender",
         "cad",
+        "parametric",
         "workflow",
-        "orchestration",
+        "bpy",
+        "mcp",
+        "3d",
         "fdm",
         "sla"
       ],
       "requires": [
+        "mcp-blender",
         "parametric-config",
+        "config-conventions",
+        "scene-conventions",
         "model-rules",
-        "threading",
-        "version-gotchas"
+        "threading"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "config-conventions",
+      "bucket": "blender-modeling",
+      "path": "skills/blender-modeling/config-conventions/SKILL.md",
+      "version": "0.1.0",
+      "description": "Соглашения параметрического CAD-конфига: одна сущность — один dataclass; именование переменных (r_outer/z0/wall/clearance); единицы мм; принцип «всё на формулах» (никаких магических чисел в parts/); межконфигурные (cross-config) зависимости и сквозной пересчёт; паттерн добавления детали. Активировать при правке config.py, добавлении параметра/детали, вопросах про cross-config, хардкод размеров, чтение конфига чужой детали.",
+      "sha256": "aad74bd7fc25a70a79bb2508efee9b909985c98e808714111691dfd09a4d34c7",
+      "tags": [
+        "blender",
+        "cad",
+        "parametric",
+        "dataclass",
+        "config",
+        "cross-config",
+        "conventions",
+        "bpy",
+        "fdm",
+        "sla"
+      ],
+      "produces_for": [
+        "parametric-config",
+        "build-loop"
       ],
       "source": "local"
     },
     {
       "name": "model-rules",
-      "bucket": "blender",
-      "path": "skills/blender/model-rules/SKILL.md",
+      "bucket": "blender-modeling",
+      "path": "skills/blender-modeling/model-rules/SKILL.md",
       "version": "0.1.0",
       "description": "Шаблон models/{name}/ai/rules.md — моделе-специфичные правила, читаемые агентом перед любой задачей",
-      "sha256": "10fd4ba52c24c52b9efd535ac3923d0b8d463f97df227fd5431aff36f425d28f",
+      "sha256": "a18a01b91220535dacac4149950b73e3f457a4c6708b62e147e9c64c3a2f580d",
       "tags": [
         "blender",
         "template",
@@ -381,17 +461,17 @@
         "conventions"
       ],
       "produces_for": [
-        "mcp-blender-workflow"
+        "build-loop"
       ],
       "source": "local"
     },
     {
       "name": "parametric-config",
-      "bucket": "blender",
-      "path": "skills/blender/parametric-config/SKILL.md",
+      "bucket": "blender-modeling",
+      "path": "skills/blender-modeling/parametric-config/SKILL.md",
       "version": "0.1.0",
       "description": "Параметрическое 3D-моделирование в Blender (bpy) на основе конфига-данных: dataclass-параметры детали (размеры/допуски/материал/единицы mm), построение профиля и revolve/extrude, валидация инвариантов без запуска Blender. Активировать при правке models/*/config.py, profile.py, parts/*, check.py, при добавлении параметра детали, при вопросах про допуски/единицы/стыковку радиусов для FDM/SLA-печати.",
-      "sha256": "ca58660ff4b3e6a47d385fc0e5aa816f088823fc19e5900d60aae0c452a7cdd3",
+      "sha256": "1be4b02c6b471b1d6cdb0e4d1c421161e203cd5b495b7ef519a1312d7364162f",
       "tags": [
         "blender",
         "bpy",
@@ -407,20 +487,43 @@
       ],
       "requires": [
         "threading",
-        "model-rules"
+        "model-rules",
+        "version-gotchas"
       ],
       "produces_for": [
-        "mcp-blender-workflow"
+        "build-loop"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "scene-conventions",
+      "bucket": "blender-modeling",
+      "path": "skills/blender-modeling/scene-conventions/SKILL.md",
+      "version": "0.1.0",
+      "description": "Соглашения сцены параметрической модели: префиксы объектов (MESH_/CRV_/LGT_/MTL_), иерархия parenting по физической принадлежности, коллекции, назначение материала из поля color конфига. Активировать при создании объектов/материалов в сцене, настройке parenting подчастей составной детали, вопросах про имена объектов и серый материал.",
+      "sha256": "b6952f75b2d573ead06bbd2b5e23173fe8f556355dbd46f059d2a50cff4e6b06",
+      "tags": [
+        "blender",
+        "cad",
+        "parametric",
+        "naming",
+        "scene",
+        "materials",
+        "parenting",
+        "bpy"
+      ],
+      "produces_for": [
+        "build-loop"
       ],
       "source": "local"
     },
     {
       "name": "threading",
-      "bucket": "blender",
-      "path": "skills/blender/threading/SKILL.md",
+      "bucket": "blender-modeling",
+      "path": "skills/blender-modeling/threading/SKILL.md",
       "version": "0.1.0",
       "description": "Резьба на FDM/SLA-деталях: материал, физика печати, радиальные зазоры по типу посадки",
-      "sha256": "f382d4858e7ba9d1bca6f4c876319ba960395a4caad0d9d1d45e4c2cd1993fa3",
+      "sha256": "410a05a99ebde51362cd683f2b94d9394b3ed61f5fcf4497b868a8a06c1d95e0",
       "tags": [
         "blender",
         "3d",
@@ -432,30 +535,7 @@
       ],
       "produces_for": [
         "parametric-config",
-        "mcp-blender-workflow"
-      ],
-      "source": "local"
-    },
-    {
-      "name": "version-gotchas",
-      "bucket": "blender",
-      "path": "skills/blender/version-gotchas/SKILL.md",
-      "version": "0.1.0",
-      "description": "Известные breaking changes и ловушки Blender 5.0 API",
-      "sha256": "23e7830462380fb641ec1c0ebb8d7db86a2d4661998ae7e3afcb4035c39a0beb",
-      "tags": [
-        "blender",
-        "api",
-        "bpy",
-        "3d",
-        "python",
-        "gotchas",
-        "advisory",
-        "version"
-      ],
-      "produces_for": [
-        "mcp-blender-workflow",
-        "parametric-config"
+        "build-loop"
       ],
       "source": "local"
     },

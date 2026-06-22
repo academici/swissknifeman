@@ -1,3 +1,19 @@
+---
+name: config-conventions
+bucket: blender-modeling
+version: 0.1.0
+description: "Соглашения параметрического CAD-конфига: одна сущность — один dataclass; именование переменных (r_outer/z0/wall/clearance); единицы мм; принцип «всё на формулах» (никаких магических чисел в parts/); межконфигурные (cross-config) зависимости и сквозной пересчёт; паттерн добавления детали. Активировать при правке config.py, добавлении параметра/детали, вопросах про cross-config, хардкод размеров, чтение конфига чужой детали."
+risk: write
+persona: oss-dev
+tags: [blender, cad, parametric, dataclass, config, cross-config, conventions, bpy, fdm, sla]
+requires: []
+produces_for: [parametric-config, build-loop]
+outputs: []
+snippets: []
+adapters: [claude, cursor, fable]
+sha256: ""
+---
+
 # Соглашения по конфигам и именованию переменных
 
 Применяются ко всем моделям в `models/*/`. Цель — единый язык между конфигами, кодом деталей и комментариями.
@@ -6,24 +22,24 @@
 
 ## 1. Принцип: одна сущность — один dataclass
 
-Каждая физическая сущность (деталь, материал, оптический элемент) получает **свой `@dataclass`** в `config.py` модели.
+Каждая физическая сущность (деталь, материал, вставной/покупной элемент) получает **свой `@dataclass`** в `config.py` модели.
 
 ```python
 @dataclass
-class GlassConfig:
-    thickness: float = 1.0        # толщина, мм
-    outer_diameter: float = 30.0  # наружный диаметр, мм
+class ShellConfig:
+    height: float = 60.0          # высота, мм
+    wall: float = 2.8             # толщина стенки, мм
+    outer_diameter: float = 40.0  # наружный диаметр, мм
 
 @dataclass
-class LensConfig:
+class InsertConfig:                # внешний/покупной элемент, вставляемый в деталь
     outer_diameter: float = 40.2  # посадочный ⌀, мм
-    convexity: float = 0.0        # выпуклость (0 = плоская), мм
-    focal_length: float = 50.0    # фокусное расстояние, мм
+    thickness: float = 3.5        # толщина, мм
 ```
 
 **Правила:**
-- Имя класса: `PascalCase` + суффикс `Config` → `GlassConfig`, `LensMountConfig`, `CartridgeConfig`
-- Имя экземпляра: `snake_case` + суффикс `_config` → `glass_config`, `lens_mount_config`
+- Имя класса: `PascalCase` + суффикс `Config` → `ShellConfig`, `MountConfig`, `InsertConfig`
+- Имя экземпляра: `snake_case` + суффикс `_config` → `shell_config`, `mount_config`
 - Экземпляры объявляются **внизу** `config.py`, после всех классов
 - Все линейные размеры — в **миллиметрах**; цвет — `(R, G, B, A)` 0..1
 - Если параметр вычисляется из других — делать `@property` или метод, не хранить в поле
@@ -31,13 +47,13 @@ class LensConfig:
 
 ```python
 # Правильно: аргументы явные
-def full_stack_height(self, glass: GlassConfig, photo: PhotoConfig) -> float:
-    return 2 * self.casing_wall + 2 * glass.thickness + photo.thickness
+def full_stack_height(self, insert: InsertConfig, plate: PlateConfig) -> float:
+    return 2 * self.wall + 2 * insert.thickness + plate.thickness
 
 # Неправильно: скрытая зависимость от глобала
 @property
 def full_stack_height(self):
-    return 2 * self.casing_wall + 2 * glass_config.thickness  # хрупко
+    return 2 * self.wall + 2 * insert_config.thickness  # хрупко
 ```
 
 ---
@@ -50,8 +66,8 @@ def full_stack_height(self):
 |---|---|
 | `r_outer` | наружный радиус детали / цилиндра |
 | `r_inner` | внутренний радиус (полость, канал) |
-| `r_glass` | радиус стекла / оптического элемента |
-| `r_bore` | радиус сквозного отверстия (порт, посадка линзы) |
+| `r_insert` | радиус вставляемого / покупного элемента |
+| `r_bore` | радиус сквозного отверстия (порт, посадка) |
 | `r_rim` | радиус бортика (уступ, перекрывающий элемент) |
 | `r_view` | радиус отверстия для обзора / светового канала |
 | `r_slot` | радиус цилиндрической ступени паза |
@@ -60,7 +76,7 @@ def full_stack_height(self):
 | `r_tip` | радиус кончика зубца резьбы |
 | `r_inner_floor` | минимальный допустимый внутренний радиус (= `base_radius`) |
 
-Диаметр в конфиге → радиус в коде: `r_glass = gc.outer_diameter * 0.5`
+Диаметр в конфиге → радиус в коде: `r_insert = ic.outer_diameter * 0.5`
 
 ### Высоты и z-координаты
 
@@ -71,7 +87,6 @@ def full_stack_height(self):
 | `z_floor` | дно внутреннего кармана / полости |
 | `z_groove_top` | верхняя граница паза по Z |
 | `z_groove_bot` | нижняя граница паза по Z |
-| `z_bg_bot` | нижняя граница нижнего паза |
 | `mount_h` | высота скоса / переходной зоны |
 | `h_cap` | высота крышки |
 | `h_half` | высота полудетали |
@@ -89,22 +104,22 @@ def full_stack_height(self):
 
 ### Локальные алиасы конфигов
 
-В начале каждой функции-строителя — короткие алиасы:
+В начале каждой функции-строителя — короткие алиасы (по 1–2 буквы от имени детали):
 
 ```python
-def build_bottom(spl, col):
-    m  = model_config
-    lm = lens_mount_config
-    bs = bottom_shell_config
+def build_shell(spl, col):
+    m  = model_config       # общий конфиг модели
+    sh = shell_config       # текущая деталь
+    ins = insert_config     # вставляемый элемент
 ```
 
-Стандартные однобуквенные алиасы: `m` — model, `c` — cartridge, `gc` — glass, `lm` — lens_mount, `bs` — bottom_shell, `bo` — body_shell, `ns` — nose_shell.
+Правило: алиас читаем (`sh` — shell, `ins` — insert, `mt` — mount), один и тот же по всему файлу; общий конфиг модели — всегда `m`.
 
 ---
 
 ## 3. Профиль `pts`: как строить
 
-Порядок точек, правило замыкания, non-manifold диагностика → `ai/rules/internals.md` (раздел «Профиль `pts`»).
+Порядок точек, правило замыкания, non-manifold диагностика → скилл `blender-modeling/parametric-config` (сниппет `internals.md`, раздел «Профиль `pts`»).
 
 Правило именования точек в коде: каждая точка сопровождается inline-комментарием с её смыслом:
 
@@ -123,49 +138,48 @@ pts = [
 
 ## 4. Паттерн добавления новой сущности
 
-Пример: добавляется линза в модель.
+Пример: добавляется вставной элемент в модель.
 
 **Шаг 1** — конфиг в `config.py`:
 ```python
 @dataclass
-class LensConfig:
+class InsertConfig:
     outer_diameter: float = 40.2   # посадочный ⌀, мм
-    thickness: float = 3.5         # толщина линзы, мм
-    convexity: float = 2.0         # высота выпуклости, мм
+    thickness: float = 3.5         # толщина, мм
 
-lens_config = LensConfig()
+insert_config = InsertConfig()
 ```
 
-**Шаг 2** — деталь в `parts/lens.py`:
+**Шаг 2** — деталь в `parts/insert.py`:
 ```python
-from ..config import lens_config, model_config
+from ..config import insert_config, model_config
 from ..common import build_revolved_solid
 
-def build_lens(col):
-    lc = lens_config
-    r_outer = lc.outer_diameter * 0.5
+def build_insert(col):
+    ic = insert_config
+    r_outer = ic.outer_diameter * 0.5
     ...
 ```
 
 **Шаг 3** — проверки в `test/check.py` (кросс-деталевые) или `parts/{name}.test.py` (локальные):
 ```python
 # В test/check.py — если новая деталь взаимодействует с существующей:
-check(lc.outer_diameter <= lm.seat_inner_diameter + 0.4, ...)
+check(ic.outer_diameter <= mt.seat_inner_diameter + 0.4, ...)
 
-# В parts/lens.test.py → test_config() — локальные инварианты самой детали:
-assert lc.outer_diameter > 0
-assert lc.thickness >= 1.0
+# В parts/insert.test.py → test_config() — локальные инварианты самой детали:
+assert ic.outer_diameter > 0
+assert ic.thickness >= 1.0
 ```
 
-**Шаг 4** — вызов в `main()` в `{CURRENT_MODEL}.py`.
+**Шаг 4** — вызов в `main()` в `{model}.py`.
 
-**Шаг 5** — описание детали в `models/{CURRENT_MODEL}/docs/tech.md`: строка в таблице деталей + раздел конструкции.
+**Шаг 5** — описание детали в `models/{name}/docs/tech.md`: строка в таблице деталей + раздел конструкции.
 
 ---
 
 ## 5. Единицы измерения
 
-Полная картина (таблица, функция `mm()`, правило, примеры) → `ai/rules/internals.md` (раздел «Единицы измерения»).
+Полная картина (таблица, функция `mm()`, правило, примеры) → скилл `blender-modeling/parametric-config` (сниппет `internals.md`, раздел «Единицы измерения»).
 
 Специфика конфигов:
 - Все поля в `config.py` — **мм**: `height = 60.0`, `wall = 2.8`
@@ -180,7 +194,7 @@ assert lc.thickness >= 1.0
 
 **Внешние и покупные детали — тоже в конфиг:**
 
-Любая деталь, которая не печатается, но задаёт ограничения на геометрию (линза, стекло картриджа, плата, батарея, крепёж), обязана иметь свой `*Config` с физическими размерами. Эти размеры используются в формулах; менять размер детали = менять одну строку в конфиге, остальное пересчитывается автоматически.
+Любая деталь, которая не печатается, но задаёт ограничения на геометрию (вставка, стекло, плата, батарея, крепёж), обязана иметь свой `*Config` с физическими размерами. Эти размеры используются в формулах; менять размер детали = менять одну строку в конфиге, остальное пересчитывается автоматически.
 
 ```python
 # Правильно: паз под плату берётся из конфига платы
@@ -197,9 +211,9 @@ board_r = 17.5   # откуда это число? не очевидно, не �
 
 ```python
 # Правильно: размер папы берётся из конфига мамы
-jd = float(bs.joint_depth)     # глубина посадки
-jw = float(bs.joint_wall)      # толщина стенки папы
-jclr = float(bs.joint_clearance)
+jd = float(mt.joint_depth)     # глубина посадки
+jw = float(mt.joint_wall)      # толщина стенки папы
+jclr = float(mt.joint_clearance)
 r_papa_out = r_wall_top         # наружный r папы = внутренний r мамы
 r_papa_in  = r_papa_out - jw
 
@@ -231,15 +245,15 @@ ring_inner_r = inner_r_mating_part
 **Правило:** источник истины — один конфиг. Все остальные детали, которые к нему примыкают, читают его параметры напрямую — не дублируют числа.
 
 ```python
-# Деталь body.py читает конфиг bottom, чтобы точно попасть в посадку:
-from ..config import bottom_shell_config, body_shell_config
+# Деталь part_a.py читает конфиг part_b, чтобы точно попасть в посадку:
+from ..config import part_b_config, part_a_config
 
-def build_body(spl, col):
-    bs = bottom_shell_config
-    bo = body_shell_config
-    # Посадочный цилиндр («мама») — геометрия из конфига bottom:
-    r_joint_in = spl.r(bs.height) - bs.joint_wall   # радиус посадки
-    z_joint_bot = bs.height - bs.joint_depth          # нижняя граница паза
+def build_part_a(spl, col):
+    pb = part_b_config
+    pa = part_a_config
+    # Посадочный цилиндр («мама») — геометрия из конфига part_b:
+    r_joint_in = spl.r(pb.height) - pb.joint_wall   # радиус посадки
+    z_joint_bot = pb.height - pb.joint_depth          # нижняя граница паза
 ```
 
 **Типичные виды связей между деталями:**
@@ -251,15 +265,15 @@ def build_body(spl, col):
 | Деталь A формирует чашу под элемент C | A читает конфиг C: наружный диаметр, высота, зазор |
 | Соединительный элемент между A и B | читает конфиги обеих деталей |
 
-Конкретные связи для текущей модели — в `models/{CURRENT_MODEL}/ai/rules.md`.
+Конкретные связи для текущей модели — в `models/{name}/ai/rules.md` (см. скилл `blender-modeling/model-rules`).
 
 **Принцип сквозного пересчёта — обязателен при построении:**
 
 При любом изменении конфига вся связанная цепочка деталей должна пересчитаться без ручной правки. Проверять мысленно:
 
-- Изменился `wall` корпуса → внутренний радиус сдвинулся → паз трубы не должен «плавать»
-- Изменилась `height` нижней детали → нос поднялся → кольцо соединения должно остаться на своём месте относительно стыка
-- Изменился размер картриджа → чаша трубы пересчиталась → труба не выступает за пределы корпуса
+- Изменился `wall` корпуса → внутренний радиус сдвинулся → паз ответной детали не должен «плавать»
+- Изменилась `height` нижней детали → верхняя поднялась → кольцо соединения должно остаться на своём месте относительно стыка
+- Изменился размер вставки → чаша под неё пересчиталась → деталь не выступает за пределы корпуса
 
 Если мысленная проверка показывает, что деталь «поплывёт» — значит в её коде есть хардкод, который нужно заменить формулой из конфига.
 
@@ -270,7 +284,7 @@ def build_body(spl, col):
 from ..config import insert_config, holder_config
 
 def build_holder(spl, col):
-    ic = insert_config   # вставляемая деталь (картридж, плата, оптика...)
+    ic = insert_config   # вставляемая деталь (плата, оптика, картридж...)
     hc = holder_config
     r_cup_outer = ic.outer_diameter * 0.5 + ic.wall + hc.cup_clearance
     # ^ если insert изменится — чаша перестроится автоматически
@@ -286,3 +300,10 @@ def build_holder(spl, col):
 - Не читать глобальные конфиги внутри методов dataclass — принимать аргументами
 - Не добавлять поле в существующий конфиг если это новая сущность — создавать отдельный класс
 - Не прописывать в коде детали размеры, которые уже есть в конфиге другой детали — читать оттуда
+
+## Связанные скиллы
+
+- `blender-modeling/parametric-config` — слой `config.py`/`profile.py`/`check.py`, единицы и внутренности `spl`/`pts` (сниппеты `config-and-profile.md`, `internals.md`).
+- `blender-modeling/model-rules` — шаблон `models/{name}/ai/rules.md`, где фиксируются конкретные cross-config связи модели.
+- `blender-modeling/scene-conventions` — именование объектов сцены и материалов.
+- `blender-modeling/threading` — параметры резьбы (`*_clearance`, `*_thread_*`), заводимые по этим конвенциям.

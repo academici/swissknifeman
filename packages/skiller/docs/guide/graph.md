@@ -24,11 +24,16 @@ flowchart LR
     tech_stack_selection["tech-stack-selection"]
   end
   subgraph blender["blender"]
-    mcp_blender_workflow["mcp-blender-workflow"]
+    mcp_blender["mcp-blender"]
+    version_gotchas["version-gotchas"]
+  end
+  subgraph blender_modeling["blender-modeling"]
+    build_loop["build-loop"]
+    config_conventions["config-conventions"]
     model_rules["model-rules"]
     parametric_config["parametric-config"]
+    scene_conventions["scene-conventions"]
     threading["threading"]
-    version_gotchas["version-gotchas"]
   end
   subgraph devops["devops"]
     ci_cd["ci-cd"]
@@ -152,6 +157,12 @@ flowchart LR
   backend_type_sync -->|requires| wayfinder
   botkit -->|requires| laravel
   brd -->|requires| business_process
+  build_loop -->|requires| config_conventions
+  build_loop -->|requires| mcp_blender
+  build_loop -->|requires| model_rules
+  build_loop -->|requires| parametric_config
+  build_loop -->|requires| scene_conventions
+  build_loop -->|requires| threading
   capacity_planning -->|requires| observability_design
   competitive_analysis -->|requires| idea_discovery
   cross_project_coordinator -->|requires| local_topology
@@ -179,10 +190,7 @@ flowchart LR
   go_to_market -->|requires| monetization_design
   laravel_security_audit -->|requires| static_analysis
   legal_compliance -->|requires| architecture
-  mcp_blender_workflow -->|requires| model_rules
-  mcp_blender_workflow -->|requires| parametric_config
-  mcp_blender_workflow -->|requires| threading
-  mcp_blender_workflow -->|requires| version_gotchas
+  mcp_blender -->|requires| version_gotchas
   modular_architecture -->|requires| laravel
   monetization_design -->|requires| idea_discovery
   mutation_testing -->|requires| test_strategy
@@ -198,6 +206,7 @@ flowchart LR
   package_contribution_protocol -->|requires| task_brief_template
   parametric_config -->|requires| model_rules
   parametric_config -->|requires| threading
+  parametric_config -->|requires| version_gotchas
   pitch_deck -->|requires| competitive_analysis
   pitch_deck -->|requires| go_to_market
   pitch_deck -->|requires| unit_economics
@@ -235,6 +244,7 @@ flowchart LR
   ci_cd -.->|feeds| release_engineering
   code_simplifier -.->|feeds| code_review
   complex_task_orchestrator -.->|feeds| cross_layer_change_checklist
+  config_conventions -.->|feeds| parametric_config
   cross_project_coordinator -.->|feeds| refactoring_plan
   customer_discovery -.->|feeds| competitive_analysis
   customer_discovery -.->|feeds| monetization_design
@@ -287,10 +297,9 @@ flowchart LR
   test_strategy -.->|feeds| code_review
   test_strategy -.->|feeds| playwright_e2e
   unit_economics -.->|feeds| go_to_market
-  version_gotchas -.->|feeds| parametric_config
 ```
 
-**В графе:** 106 скиллов, 78 рёбер requires, 66 рёбер produces_for.
+**В графе:** 109 скиллов, 82 рёбер requires, 66 рёбер produces_for.
 
 ## Изолированные скиллы (75)
 

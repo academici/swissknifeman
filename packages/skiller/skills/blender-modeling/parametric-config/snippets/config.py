@@ -68,7 +68,7 @@ class JointConfig:
     clearance: float = 0.15            # зазор на сторону между папой и мамой, мм
 
 
-# ── Резьба (параметры — см. навык blender/threading) ─────────────────────────
+# ── Резьба (параметры — см. навык blender-modeling/threading) ─────────────────────────
 
 
 @dataclass

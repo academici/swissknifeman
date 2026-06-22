@@ -1,5 +1,5 @@
 {
   "name": "blender",
-  "description": "Blender 3D modeling: MCP workflow, threading for FDM/SLA, version gotchas, model rules",
+  "description": "Universal Blender bpy+MCP tooling: MCP workflow primitives, viewport modes, camera helper, version gotchas",
   "skills": "./"
 }

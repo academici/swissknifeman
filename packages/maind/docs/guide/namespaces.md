@@ -57,4 +57,4 @@ maind sync --namespace axioma --only graph,memory   # фан-аут по гру�
 в своей группе их не видит. `azguard` с `["axioma","*"]` — мост: виден и в `axioma`, и как общая
 инфраструктура всем.
 
-Дальше: [graphify (граф кода) →](/guide/code-graph)
+Дальше: [graphify (граф кода) →](./code-graph)

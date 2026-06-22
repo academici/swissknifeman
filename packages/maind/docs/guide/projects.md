@@ -35,7 +35,7 @@ maind-only поля (`skills`/`tags`/`namespaces`/`dependencies`/`agents`/`repo`
 Поле `projects[].namespaces` группирует проекты и **изолирует** межпроектные связи: ребро
 строится только между проектами одной группы (`["*"]` — общая инфраструктура, связывается со
 всеми). `--namespace NS` фильтрует `projects list`/`status` и `sync`. Подробнее —
-[Архитектура → Namespaces](/architecture#namespaces-изоляция-связей).
+[Архитектура → Namespaces](../architecture#namespaces-изоляция-связей).
 
 ## Маппинг из brain
 
@@ -50,4 +50,4 @@ maind-only поля (`skills`/`tags`/`namespaces`/`dependencies`/`agents`/`repo`
 | `folders` | `docs_folders` | как есть |
 | — | `type` | по маркерам репозитория (composer.json→php, package.json→node, .obsidian→vault) |
 
-Дальше: [Миграция →](/guide/migration)
+Дальше: [Миграция →](./migration)

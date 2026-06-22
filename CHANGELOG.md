@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Changed (docs: maind влит в единый сайт)
+
+- **maind-доки вошли в зонтичный VitePress** — `scripts/docs-sync.sh` теперь
+  агрегирует и `packages/maind/docs`; в меню «Память и граф» ведёт внутрь сайта
+  (`/maind/…`), не наружу. Внутренние ссылки maind-доков переведены с абсолютных
+  (база `/maind/`) на **относительные** — пакет собирается и standalone (свой
+  `.vitepress`), и в агрегате (общая база `/swissknifeman/`). Единый сайт зелёный
+  (`vitepress build`, без dead links); standalone-сборка maind тоже зелёная.
+
 ### Added (корневой управляющий слой `swissknifeman`)
 
 - **`bin/swissknifeman`** — тонкий router + setup-фасад над тремя пакетами (зонтик =

@@ -72,7 +72,7 @@ loginctl show-user $USER -p Linger    # проверка → Linger=yes
 
 Демон слушает `:4111` (HTTP) и `:4112` (stream) — переопределяются через `.env` в корне maind
 (`AGENTMEMORY_PORT` / `AGENTMEMORY_STREAM_PORT`); конфиг воркеров — `config/memory/iii-config.yaml`.
-См. [Память (agent-memory)](/guide/memory).
+См. [Память (agent-memory)](./memory).
 
 ## Если нет systemd
 

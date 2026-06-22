@@ -14,7 +14,7 @@ maind memory stop      # SIGTERM→SIGKILL; чужой демон (без pidfil
 ```
 
 `maind start` без `--only` поднимает и память, и граф. Для автозапуска при логине/загрузке —
-зарегистрируйте демон как systemd-сервис: [`maind service install`](/guide/systemd).
+зарегистрируйте демон как systemd-сервис: [`maind service install`](./systemd).
 
 ## Порты — из env/конфига
 
@@ -41,7 +41,7 @@ graphify по неймспейсам).
 `namespaces.recall_scopes`). Так проект из `axioma` видит факты группы `axioma` и инфраструктуру,
 но не память чужого namespace. Деривация бакетов — `namespaces.py`
 (`private_scope`/`group_scopes`/`recall_scopes`), seed — `seed.py`. Подробнее про группы —
-[Namespaces](/guide/namespaces).
+[Namespaces](./namespaces).
 
 ## HTTP-контракт демона
 
@@ -55,4 +55,4 @@ graphify по неймспейсам).
 (нормализует ответ в `[{score, text, id}]`), `forget`/`export` (best-effort). Конфиг
 воркеров — `config/memory/iii-config.yaml` (7 воркеров `iii-*`, `service_name: maind`).
 
-Дальше: [Граф →](/guide/graph)
+Дальше: [Граф →](./graph)

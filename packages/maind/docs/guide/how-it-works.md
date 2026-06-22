@@ -119,12 +119,12 @@ namespace.
 
 - Демон памяти — под **systemd** (`maind service install`), автозапуск + авто-рестарт. Для старта
   при загрузке ОС (без логина) — `loginctl enable-linger $USER`. См.
-  [Демон памяти (systemd)](/guide/systemd).
+  [Демон памяти (systemd)](./systemd).
 - MCP-серверы прописаны в `.mcp.json` каждого проекта — клиент поднимает их сам при старте сессии.
 - SessionStart-хук печатает статус связи; чинит — `maind health --cwd --fix`.
 
 Нюансы, границы каждого слоя и чего система **не делает** — отдельно:
-[Решения, трейд-оффы, ограничения](/guide/design-notes).
+[Решения, трейд-оффы, ограничения](./design-notes).
 
-Дальше: [Память →](/guide/memory) · [Граф →](/guide/graph) · [Namespaces →](/guide/namespaces) ·
-[Граф кода →](/guide/code-graph).
+Дальше: [Память →](./memory) · [Граф →](./graph) · [Namespaces →](./namespaces) ·
+[Граф кода →](./code-graph).

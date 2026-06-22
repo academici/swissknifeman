@@ -37,6 +37,6 @@ reap(env, config)                                     # вернёт число 
 ## Связь с графом
 
 Агент из `projects[].agents` материализуется в графе как `agent:<id>` с ребром
-`belongs_to` к проекту — см. [Граф](/guide/graph).
+`belongs_to` к проекту — см. [Граф](./graph).
 
-Дальше: [Проекты →](/guide/projects)
+Дальше: [Проекты →](./projects)

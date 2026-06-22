@@ -18,4 +18,4 @@ sync_pkg() {
 echo "docs-sync:"
 sync_pkg skiller
 sync_pkg harness
-# maind пока отдельным сайтом (его доки на абсолютных ссылках своей базы) — агрегация позже
+sync_pkg maind   # внутренние ссылки maind-доков относительные → работают и standalone, и в агрегате

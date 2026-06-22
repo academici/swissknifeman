@@ -1,0 +1,10 @@
+{
+  "skill": "vue-testing-best-practices",
+  "snippets": [
+    {
+      "file": "component.spec.ts",
+      "description": "Эталонный спек Vue-компонента: mount + createTestingPinia (stubActions) + flushPromises/nextTick + проверка emitted; устойчивые data-testid и стаб дочернего компонента",
+      "tags": ["vue-test-utils", "pinia", "async", "emits", "data-testid"]
+    }
+  ]
+}

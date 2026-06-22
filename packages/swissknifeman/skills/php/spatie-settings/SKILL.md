@@ -1,8 +1,8 @@
 ---
 name: spatie-settings
 bucket: php
-version: 0.1.0
-description: "spatie/laravel-settings: типизированные классы настроек (extends Settings, public-свойства, group()), миграции настроек add/migrate/rename, кэш, выбор рантайм-настройки vs config/, привязка к Filament SettingsPage. Активировать при создании/правке класса настроек, добавлении свойства, settings-миграции или экрана редактирования настроек."
+version: 0.2.0
+description: "spatie/laravel-settings: типизированные классы настроек (extends Settings, public-свойства, group()), миграции настроек add/migrate/rename, кэш, выбор рантайм-настройки vs config/, привязка к Filament SettingsPage, рантайм-инфраконфиг (websocket/Reverb) из админки во фронт через DTO. Активировать при создании/правке класса настроек, добавлении свойства, settings-миграции, экрана редактирования или вынесения инфра-настройки в рантайм-переопределение."
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "spatie", "settings", "filament", "configuration"]
@@ -106,6 +106,35 @@ $settings->save();
 
 См. `snippets/filament-settings-page.php`. Для не-Filament форм: на сохранении вручную присвоить свойства и вызвать `->save()`.
 
+### 7a. Рантайм-инфраконфиг из админки → во фронт
+
+Частный, но мощный случай: **инфраструктурный параметр**, который обычно фиксируется на
+деплое (`config/*.php` + env), нужно уметь переопределять **в рантайме из админки** — без
+релиза. Типичный пример: параметры websocket-клиента (Reverb/Pusher: `host`, `port`,
+`scheme`, `app_key`, `path`), которые фронту нужно знать, чтобы подключиться к Echo.
+
+Паттерн (поверх шагов 2–7):
+
+1. **Класс настроек инфра-группы** — `final class WebsocketClientSettings extends Settings`,
+   `group(): 'broadcast'`, public typed-свойства (`bool $enabled`, `string $host`, `int $port`,
+   …). Флаг `enabled` — переключатель «брать значения из этих настроек vs из env/Vite».
+2. **Filament-страница** (`SettingsPage`, шаг 7) даёт админу редактировать значения; поля с
+   валидацией (`regex` на host/path, диапазон портов) и `required(fn (Get $get) => $get('enabled'))`,
+   чтобы при выключенном флаге не требовать заполнения.
+3. **Отдача во фронт — через DTO, не «сырые настройки»**. В рантайме резолвим класс настроек,
+   собираем **публичный** DTO (например `WebsocketClientData`) и прокидываем во фронт (Inertia
+   `share`/middleware, либо `<script>`-конфиг). Фронт: при `enabled` берёт значения из DTO,
+   иначе — из build-time env/Vite. Echo-клиентская сторона — `frontend/laravel-echo-client`.
+4. **Граница секретов.** Во фронт уходят **только публичные** значения (host/port/scheme/app_key
+   для клиента). Приватные креды (app_secret и т.п.) — НЕ в этот класс настроек/DTO: они
+   остаются в env/`config/`, при необходимости в БД — через `addEncrypted` (шаг 4), и во фронт
+   не отдаются никогда.
+5. **Типизация DTO → TS** (если на фронте TypeScript) — DTO под `#[TypeScript]`, см.
+   `frontend/backend-type-sync`.
+
+Когда это оправдано: значение должен менять администратор без деплоя, и оно нужно фронту в
+рантайме. Когда нет: чистый build-time параметр или секрет — оставить в `config/`/env (шаг 1).
+
 ### 8. Проверка
 
 1. Класс зарегистрирован (в `config/settings.php` или auto-discover) — иначе не резолвится.
@@ -134,6 +163,7 @@ $settings->save();
 - [ ] Эволюция схемы — отдельной миграцией (`add`/`rename`/`delete`), синхронно с классом
 - [ ] Форма: `name` полей == имена свойств; валидация на полях
 - [ ] Кэш: поведение при `SETTINGS_CACHE_ENABLED` учтено, в тестах выключен
+- [ ] Рантайм-инфраконфиг: во фронт отдаётся публичный DTO, не сырые настройки; секреты не уходят; есть флаг `enabled` (настройка vs env)
 
 ## Ссылки
 
@@ -142,4 +172,4 @@ $settings->save();
 - snippets/ExampleSettings.php — класс настроек
 - snippets/create_example_settings.php — settings-миграция (дефолты + эволюция)
 - snippets/filament-settings-page.php — привязка к Filament-форме
-- Связанные скиллы: `php/filament` (SettingsPage и плагин), `php/laravel-data` (Data как тип свойства настройки), `php/enum-attributes` (enum-касты настроек), `php/database` (settings-миграции рядом с обычными)
+- Связанные скиллы: `php/filament` (SettingsPage и плагин), `php/laravel-data` (Data как тип свойства настройки и публичный DTO во фронт), `php/enum-attributes` (enum-касты настроек), `php/database` (settings-миграции рядом с обычными), `frontend/laravel-echo-client` (потребление websocket-настроек на клиенте), `frontend/backend-type-sync` (DTO настройки → TS-тип)

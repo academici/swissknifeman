@@ -2,6 +2,24 @@
 
 ## [Unreleased]
 
+### Added
+
+- **Аудит практик round-2 + 4 дельты реестра скиллов.** Продолжение
+  `docs/research/practices-audit-2026-06.md` — новый док `practices-audit-2026-06-r2.md`
+  (карта покрыто/частично/гэп/отклонено + бэклог, Dart отложен как 1 проект). Заавторены:
+  - **NEW `php/enum-state-machine`** — граф переходов доменного статуса единым источником
+    (`transitionDefinitions()` на enum) + рантайм-реестр (`allowedFrom`/`canTransition`) +
+    исполнение перехода в Action под `DB::transaction()` с событием `ShouldDispatchAfterCommit`.
+    Гэп: `enum-attributes` исключает state-machine, `ticket-workflow` проектно-специфичен.
+  - **EXTEND `devops/ci-cd` 0.3.0 → 0.4.0** — coverage-gate отдельным CI-job (GitHub Actions
+    + GitLab `.php-base`/`php-coverage`); парсер/конфиг переиспользованы из `php/laravel-testing`,
+    не дублируются. Сниппет `github-actions-coverage-gate.yml`.
+  - **EXTEND `quality/test-strategy` 0.1.0 → 0.2.0** — композиция именованных тест-сюитов
+    (Arch/Unit/Feature/Context) + архитектурные тесты Pest Arch. Сниппеты `pest-arch-test.php`,
+    `phpunit-testsuites.xml`.
+  - **EXTEND `php/spatie-settings` 0.1.0 → 0.2.0** — паттерн «рантайм-инфраконфиг (websocket/
+    Reverb) из админки → во фронт публичным DTO», граница секретов.
+
 ### Changed
 
 - **Конфиг узла: `.maind.json` → `config.json` в корне монорепо (общий).** Конфиг переехал

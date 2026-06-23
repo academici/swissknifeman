@@ -27,8 +27,9 @@ def _infer_type(path):
     return "unknown"
 
 
-def _ensure_project(env, config, project_or_path, dry=False):
-    """(config, project, created). Новый путь → синтез записи (+ write_config, если не dry)."""
+def _ensure_project(env, config, project_or_path, namespaces=None, dry=False):
+    """(config, project, created). Новый путь → синтез записи (+ write_config, если не dry).
+    namespaces по умолчанию — общий `axioma` + свой `<id>` (несколько на проект)."""
     proj = get_project(config, project_or_path)
     if proj is not None:
         return config, proj, False
@@ -39,6 +40,7 @@ def _ensure_project(env, config, project_or_path, dry=False):
     proj = {"id": pid, "name": path.name, "local_path": str(path), "repo": None,
             "type": _infer_type(path), "enabled": True,
             "memory_scope": f"project:{pid}",
+            "namespaces": list(namespaces) if namespaces else ["axioma", pid],
             "agents": [], "skills": [], "tags": [], "status": "active", "dependencies": []}
     config["projects"] = list(config.get("projects") or []) + [proj]
     if not dry:
@@ -46,12 +48,48 @@ def _ensure_project(env, config, project_or_path, dry=False):
     return config, proj, True
 
 
+def _wire_memory(env, config, proj, namespaces=None, dry=False):
+    """Память проекта на демоне mAInd: гарантировать namespaces (общий `axioma` + свой,
+    несколько на проект — клиентам передавай явный список без axioma) и хук-режим `maind`
+    (`.claude/memory.env.ini`), чтобы и хук, и MCP писали/читали один изолированный scope.
+    Идемпотентно; для уже подключённого проекта тоже доводит проводку."""
+    changed = False
+    if namespaces and proj.get("namespaces") != list(namespaces):
+        proj["namespaces"] = list(namespaces)
+        changed = True
+    elif not proj.get("namespaces"):
+        proj["namespaces"] = ["axioma", proj["id"]]
+        changed = True
+    if changed and not dry:
+        write_config(env, config)
+    wrote = False
+    lp = proj.get("local_path")
+    if lp and not dry:
+        cdir = Path(os.path.expanduser(lp)) / ".claude"
+        f = cdir / "memory.env.ini"
+        cur = f.read_text(encoding="utf-8") if f.is_file() else ""
+        if "MODE=maind" not in cur:
+            cdir.mkdir(parents=True, exist_ok=True)
+            f.write_text("# Память через демон mAInd (изоляция по scope на стороне maind).\n"
+                         "# scope из проекта: приватный project:<id> + общие ns:<тег> + global.\n"
+                         "MODE=maind\n", encoding="utf-8")
+            wrote = True
+    return {"namespaces": proj.get("namespaces"), "memory_env_written": wrote, "changed": changed}
+
+
 def onboard(env, config, project_or_path, opts):
     dry = bool(opts.get("dry"))
     steps = []
-    config, proj, created = _ensure_project(env, config, project_or_path, dry=dry)
+    config, proj, created = _ensure_project(env, config, project_or_path,
+                                            namespaces=opts.get("namespaces"), dry=dry)
     steps.append({"name": "register", "status": "ok",
                   "detail": f"{'создан' if created else 'найден'} project:{proj['id']}"})
+
+    # 0. память на демоне: namespaces + хук-режим maind (и для уже подключённого — доводим)
+    mw = _wire_memory(env, config, proj, namespaces=opts.get("namespaces"), dry=dry)
+    steps.append({"name": "memwire", "status": "ok",
+                  "detail": f"ns=[{','.join(mw['namespaces'] or [])}] hook=MODE=maind"
+                            + ("" if not mw["memory_env_written"] else " (записан .claude/memory.env.ini)")})
 
     # 1. skiller integrate — скиллы + окружение (integrate делегирует permissions/MCP/
     # хуки пакету harness). standalone-safe. При --skip-skills окружение всё равно
@@ -150,15 +188,17 @@ def onboard(env, config, project_or_path, opts):
 def cmd_onboard(env, argv):
     o, pos = parse_args(argv, {"--bundle": "str", "--skip-skills": "bool",
                                "--targets": "str", "--with-code": "bool",
-                               "--with-graphify": "bool",
+                               "--with-graphify": "bool", "--namespace": "str",
                                "--with-brain": "bool", "--dry-run": "bool",
                                "--yes": "bool", "--json": "bool"}, max_pos=1)
     if not pos:
-        die("использование: maind onboard <project|path> [--bundle B --yes "
-            "--with-code --with-brain --dry-run]")
+        die("использование: maind onboard <project|path> [--namespace a,b] [--bundle B "
+            "--yes --with-code --with-brain --dry-run]")
     config, _src = load_config(env)
+    ns = [s.strip() for s in (o["namespace"] or "").split(",") if s.strip()] or None
     opts = {"bundle": o["bundle"], "skip_skills": o["skip_skills"], "targets": o["targets"],
             "with_code": o["with_code"], "with_graphify": o["with_graphify"],
+            "namespaces": ns,
             "with_brain": o["with_brain"], "dry": o["dry_run"], "yes": o["yes"]}
     report = onboard(env, config, pos[0], opts)
     if o["json"]:

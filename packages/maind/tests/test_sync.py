@@ -68,8 +68,8 @@ class TestSync(unittest.TestCase):
             env, config, proj = _setup(tmp)
             projs = sync.select_projects(env, config, {"all": True})
             r1 = sync.run_sync(env, config, projs, only="mcp")
-            self.assertTrue(has_server(proj / ".mcp.json", "agentmemory"))
             self.assertTrue(has_server(proj / ".mcp.json", "maind"))
+            self.assertFalse(has_server(proj / ".mcp.json", "agentmemory"))  # raw выведен
             self.assertTrue(r1[0]["changed"])
             r2 = sync.run_sync(env, config, projs, only="mcp")
             self.assertFalse(r2[0]["changed"])  # повтор — без изменений

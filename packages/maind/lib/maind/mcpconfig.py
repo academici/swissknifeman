@@ -44,6 +44,15 @@ def merge_server(data, name, entry):
     return data, True
 
 
+def remove_server(data, name):
+    """Удалить mcpServers[name], если есть. Возвращает (data, changed)."""
+    servers = data.get("mcpServers")
+    if isinstance(servers, dict) and name in servers:
+        del servers[name]
+        return data, True
+    return data, False
+
+
 def write_mcp(path, data, *, dry=False, backup=True):
     path = Path(path)
     if dry:

@@ -5,6 +5,46 @@
 
 ## [Unreleased]
 
+### Changed
+- **Память проекта раскатывается только сервером `maind`** — raw MCP-сервер `agentmemory`
+  больше НЕ деплоится и активно УДАЛЯЕТСЯ из `.mcp.json` при `deploy`/`sync` (он писал мимо
+  scope-маркера → записи невидимы для scoped-recall, footgun изоляции). Legacy-возврат —
+  `maind deploy --with-agentmemory`. Статус проекта (`probe`/`health`) теперь определяется
+  наличием сервера `maind`, а не `agentmemory`. `mcpconfig.remove_server` — новый хелпер.
+
+### Docs
+- **`guide/memory.md` переписан под правду**: изоляция — на стороне maind (демон —
+  единый пул, `namespace`/`sessionId` игнорирует, `type` переопределяет; scope-маркер в
+  контенте), единый путь хук+MCP через `MODE=maind`, контракт `forget {memoryId}`, проверка
+  round-trip + troubleshooting, снята коллизия имён `federation` (память-файлы vs граф).
+  `guide/federation.md` получил врезку «не путать с памятью». Скилл `system/shared-memory`
+  → 0.2.0 (канон `MODE=maind`, мульти-namespace, membership по namespaces).
+
+### Added
+- **Онбординг авто-проводит память**: `maind onboard` доводит проводку памяти и для уже
+  подключённого проекта — задаёт `namespaces` (дефолт «общий `axioma` + свой `<id>`»,
+  `--namespace a,b` для нескольких; клиентам — явный список без `axioma`) и пишет
+  `<project>/.claude/memory.env.ini` `MODE=maind`. Шаг `memwire` в отчёте.
+- **`maind health` — round-trip памяти**: проба write→recall→forget по temp-факту в
+  приватном scope + проверка, что хук в режиме `MODE=maind`. Ловит раскол (хук пишет не
+  в тот стор), сломанный forget и потерю изоляции. `--strict` падает при провале round-trip.
+- **`maind memory remember|recall|forget` (scope-aware CLI)**: единый путь записи/чтения
+  памяти для человека И хука. scope считается из конфига проекта через `namespaces.py`
+  (`--project`/cwd/`--scope`): `remember` пишет в приватный `project:<id>` (+ `--share`
+  в общие `ns:<тег>`); `recall` объединяет приватный + группы + `global` с дедупом.
+- **Изоляция памяти НА СТОРОНЕ maind**: agentmemory 0.9.x — единый глобальный пул, поле
+  `namespace` он игнорирует, `type` переопределяет (сверено живым `curl`). Поэтому maind
+  встраивает scope-маркер `[[s:<scope>]]` в контент при записи и фильтрует результаты по
+  нему при чтении (см. `store`/`recall`, `mark_scope`/`split_scope`). Приватность и
+  «общее-по-тегу» теперь реально работают; `maind_memory_recall` (MCP) разворачивает
+  `project:<id>` в полный набор recall-scope'ов.
+
+### Fixed
+- **`maind memory forget`**: payload теперь `{memoryId}` вместо `{namespace, id}` —
+  прежний вариант давал `HTTP 400` от agentmemory 0.9.x (сверено живым `curl`), удаление
+  не работало. `FakeMemoryServer` в тестах получил `/agentmemory/forget` (по `memoryId`),
+  тест `test_memory_forget_deletes_by_id` доказывает round-trip store→recall→forget→gone.
+
 ## [0.2.0] — 2026-06-15
 
 ### Added

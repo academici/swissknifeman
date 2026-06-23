@@ -52,10 +52,11 @@ def probe_project(env, config, project, *, memory_reachable=None, trusted=None):
             skills["total"] += 1
             skills[_SKILL_KEY.get(e.get("source", "local"), "local")] += 1
 
-    agentmemory_mcp = any_has("agentmemory")
+    mem_mcp = any_has("maind")       # сервер памяти проекта = maind (raw agentmemory выведен)
     code_server = codegraph.server_name(project, codegraph.settings(config))
     configured = {
-        "agentmemory_mcp": agentmemory_mcp, "maind_mcp": any_has("maind"),
+        "agentmemory_mcp": any_has("agentmemory"),   # info: остался ли raw-сервер (footgun)
+        "maind_mcp": mem_mcp,
         "code_mcp": any_has(code_server), "mcp_files": files,
         "skills_lock": lock is not None, "skills_count": skills["total"],
         "boost": (path / "boost.json").is_file(),
@@ -66,9 +67,9 @@ def probe_project(env, config, project, *, memory_reachable=None, trusted=None):
         _, _, url = resolve_ports(env, config)
         memory_reachable = health(url)
 
-    if agentmemory_mcp and memory_reachable:
+    if mem_mcp and memory_reachable:
         status = "connected"
-    elif agentmemory_mcp or configured["deployed_flag"]:
+    elif mem_mcp or configured["deployed_flag"]:
         status = "partial"   # сервер без живого демона, или флаг без сервера (drift)
     else:
         status = "standalone"

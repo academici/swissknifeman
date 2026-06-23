@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # memory — переключатель «единой памяти» для констелляции проектов.
 # Использование: memory.sh <remember|recall|members|status|sync> [--brain B] [--type T] [текст/запрос...]
-# Режим (бэкенд) — в env.ini: MODE=file|federation|agentmemory|off. Группы (brains)
+# Режим (бэкенд) — в env.ini: MODE=maind|file|federation|agentmemory|off. Группы (brains)
 # и участники — в config.json. Оба переопределяются per-project (.claude/memory.*).
+# MODE=maind (рекомендуется для проектов) — делегирует в `maind memory` (демон + изоляция
+# по scope на стороне maind); brain игнорируется, scope берётся из проекта.
 
 HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "$HOOK_DIR/lib/common.sh" || { echo "memory: нет lib/common.sh" >&2; exit 1; }
@@ -13,7 +15,7 @@ MEM_CONFIG="$(config_file "$HOOK_DIR")"
 [ -n "$MEM_CONFIG" ] || MEM_die "не найден config.json"
 
 MODE="$(read_mode "$HOOK_DIR")"
-case "$MODE" in file|federation|agentmemory|off) ;; *) MODE=off ;; esac
+case "$MODE" in maind|file|federation|agentmemory|off) ;; *) MODE=off ;; esac
 . "$HOOK_DIR/modes/$MODE.sh" || MEM_die "нет modes/$MODE.sh"
 
 CMD="${1:-status}"; [ $# -gt 0 ] && shift

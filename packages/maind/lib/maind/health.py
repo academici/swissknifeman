@@ -15,9 +15,12 @@ from pathlib import Path
 from .common import (atomic_write_json, atomic_write_text, backup_file,
                      content_hash, die, parse_args, upsert_block, warn)
 from .config import load_config
+from .memory import forget as mem_forget
 from .memory import health as mem_health
+from .memory import recall as mem_recall
 from .memory import resolve_ports
-from .namespaces import namespaces_of
+from .memory import store as mem_store
+from .namespaces import namespaces_of, private_scope
 from .probe import probe_project
 from .projects import get as get_project
 from .projects import match_cwd
@@ -40,20 +43,62 @@ def _maind_bin(env):
     return str(env.root / "bin" / "maind")
 
 
+# ── проба памяти и режима хука ───────────────────────────────────────────────
+def _hook_memory_mode(project):
+    """MODE из <project>/.claude/memory.env.ini (режим хука памяти) или None."""
+    lp = project.get("local_path")
+    if not lp:
+        return None
+    f = Path(os.path.expanduser(lp)) / ".claude" / "memory.env.ini"
+    if not f.is_file():
+        return None
+    for line in f.read_text(encoding="utf-8").splitlines():
+        s = line.strip()
+        if s.startswith("MODE="):
+            return s.split("=", 1)[1].split("#")[0].strip().strip("\"'")
+    return None
+
+
+def memory_roundtrip(env, config, project, memory_reachable):
+    """Доказать, что память РЕАЛЬНО работает: write→recall→forget по temp-факту в приватном
+    scope. Ловит раскол (хук пишет не в тот стор), сломанный forget и потерю изоляции."""
+    if not memory_reachable:
+        return {"ok": False, "detail": "демон не запущен"}
+    _, _, url = resolve_ports(env, config)
+    scope = private_scope(project)
+    token = f"maind-health-probe-{project['id']}"
+    try:
+        res = mem_store(url, scope, "health-probe", token)
+        mid = (res.get("memory") or {}).get("id") if isinstance(res, dict) else None
+        found = any(token in (r.get("text") or "") for r in mem_recall(url, scope, token))
+        if mid:
+            mem_forget(url, scope, mid)          # чисто за собой
+        return {"ok": bool(found),
+                "detail": scope if found else "запись не нашлась при recall (раскол стора?)"}
+    except RuntimeError as e:
+        return {"ok": False, "detail": str(e)}
+
+
 # ── отчёт ────────────────────────────────────────────────────────────────────
 def health_report(env, config, project, *, memory_reachable=None):
-    """Состояние связи одного проекта с хабом + подсказки по починке."""
+    """Состояние связи одного проекта с хабом + проба памяти + подсказки по починке."""
     pid = project["id"]
     if memory_reachable is None:
         _, _, url = resolve_ports(env, config)
         memory_reachable = mem_health(url)
     rep = probe_project(env, config, project, memory_reachable=memory_reachable)
     c = rep.get("configured", {})
+    hook_mode = _hook_memory_mode(project)
+    roundtrip = memory_roundtrip(env, config, project, memory_reachable)
     hints = []
     if not memory_reachable:
         hints.append("демон памяти не запущен → maind start --only memory")
-    if not c.get("agentmemory_mcp"):
-        hints.append(f"нет agentmemory MCP в проекте → maind sync --only mcp --project {pid}")
+    if hook_mode != "maind":
+        hints.append("хук памяти не в режиме maind → maind onboard "
+                     f"{pid} (запишет .claude/memory.env.ini MODE=maind)")
+    if not roundtrip["ok"] and memory_reachable:
+        hints.append(f"память не проходит round-trip ({roundtrip['detail']}) — "
+                     "remember/recall идут в разные сторы?")
     if not c.get("maind_mcp"):
         hints.append(f"нет maind MCP в проекте → maind sync --only mcp --project {pid}")
     return {
@@ -61,6 +106,8 @@ def health_report(env, config, project, *, memory_reachable=None):
         "namespaces": sorted(namespaces_of(project)),
         "status": rep.get("status", "standalone"),
         "memory_daemon": memory_reachable,
+        "hook_memory_mode": hook_mode,
+        "memory_roundtrip": roundtrip["ok"],
         "agentmemory_mcp": bool(c.get("agentmemory_mcp")),
         "maind_mcp": bool(c.get("maind_mcp")),
         "code_mcp": bool(c.get("code_mcp")),
@@ -248,10 +295,13 @@ def cmd_health(env, argv):
         print(f"{icon} mAInd health — project:{rep['id']} (scope {rep['scope']})")
         ok = lambda b: "ok  " if b else "FAIL"
         print(f"  [{ok(rep['memory_daemon'])}] демон памяти ({url})")
-        print(f"  [{ok(rep['agentmemory_mcp'])}] agentmemory MCP в проекте")
         print(f"  [{ok(rep['maind_mcp'])}] maind MCP в проекте")
-        print(f"  статус: {rep['status']}")
+        print(f"  [{ok(rep['hook_memory_mode'] == 'maind')}] хук памяти MODE=maind "
+              f"({rep['hook_memory_mode'] or 'не задан'})")
+        print(f"  [{ok(rep['memory_roundtrip'])}] память round-trip (write→recall→forget)")
+        print(f"  ns: [{', '.join(rep['namespaces'])}]  статус: {rep['status']}")
         for h in rep["hints"]:
             print(f"    → {h}")
-    if opts["strict"] and rep["status"] != "connected":
+    # strict падает, если связь не connected ИЛИ память не проходит round-trip
+    if opts["strict"] and (rep["status"] != "connected" or not rep["memory_roundtrip"]):
         raise SystemExit(1)

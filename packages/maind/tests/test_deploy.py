@@ -37,12 +37,23 @@ class TestDeploy(unittest.TestCase):
             res = deploy.deploy_project(env, cfg, cfg["projects"][0])
             self.assertIsNotNone(res)
             servers = json.loads((ppath / ".mcp.json").read_text())["mcpServers"]
-            self.assertIn("agentmemory", servers)
             self.assertIn("maind", servers)
+            self.assertNotIn("agentmemory", servers)   # raw-сервер больше не раскатывается
             self.assertEqual(res["scope"], "project:flexcrm")
-            self.assertEqual(servers["agentmemory"]["env"]["AGENTMEMORY_NAMESPACE"],
-                             "project:flexcrm")
             self.assertEqual(servers["maind"]["args"], ["mcp", "--scope", "project:flexcrm"])
+
+    def test_removes_stale_agentmemory(self):
+        # старый .mcp.json с raw-сервером agentmemory → деплой его убирает (footgun)
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            ppath = _project(tmp)
+            (ppath / ".mcp.json").write_text(
+                json.dumps({"mcpServers": {"agentmemory": {"command": "x"}}}), encoding="utf-8")
+            cfg = _config(ppath)
+            deploy.deploy_project(env, cfg, cfg["projects"][0])
+            servers = json.loads((ppath / ".mcp.json").read_text())["mcpServers"]
+            self.assertNotIn("agentmemory", servers)
+            self.assertIn("maind", servers)
 
     def test_preserves_boost_in_cursor(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -52,7 +63,7 @@ class TestDeploy(unittest.TestCase):
             deploy.deploy_project(env, cfg, cfg["projects"][0])
             cursor = json.loads((ppath / ".cursor" / "mcp.json").read_text())["mcpServers"]
             self.assertIn("laravel-boost", cursor)  # чужой сохранён
-            self.assertIn("agentmemory", cursor)
+            self.assertIn("maind", cursor)
             self.assertTrue((ppath / ".mcp.json").exists())  # cursor auto-detected → both
 
     def test_idempotent(self):
@@ -77,7 +88,7 @@ class TestDeploy(unittest.TestCase):
                 self.assertEqual(res["code"], "skipped-not-installed")
                 servers = json.loads((ppath / ".mcp.json").read_text())["mcpServers"]
                 self.assertNotIn("serena", servers)
-                self.assertIn("agentmemory", servers)   # остальные серверы на месте
+                self.assertIn("maind", servers)   # сервер памяти на месте
         finally:
             deploy.shutil.which = orig
 
@@ -131,14 +142,16 @@ class TestDeploy(unittest.TestCase):
             p = get(cfg, "flexcrm")
             self.assertTrue(p["deployed"])
             self.assertEqual(p["mcp"]["scope"], "project:flexcrm")
-            self.assertTrue(p["mcp"]["agentmemory"])
+            self.assertTrue(p["mcp"]["maind"])
+            self.assertFalse(p["mcp"]["agentmemory"])   # raw-сервер выведен из деплоя
 
     def test_url_from_resolve_ports(self):
+        # legacy raw-сервер (--with-agentmemory) несёт разрешённый URL из resolve_ports
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
             ppath = _project(tmp)
             cfg = _config(ppath, http_port=4211)
-            deploy.deploy_project(env, cfg, cfg["projects"][0])
+            deploy.deploy_project(env, cfg, cfg["projects"][0], with_agentmemory=True)
             servers = json.loads((ppath / ".mcp.json").read_text())["mcpServers"]
             self.assertIn("4211", servers["agentmemory"]["env"]["AGENTMEMORY_URL"])
 

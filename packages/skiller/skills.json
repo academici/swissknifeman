@@ -3464,9 +3464,9 @@
       "name": "shared-memory",
       "bucket": "system",
       "path": "skills/system/shared-memory/SKILL.md",
-      "version": "0.1.0",
-      "description": "Единый «мозг» (общая память) для выбранных проектов констелляции через хук ~/.claude/hooks/memory/. Recall перед работой, remember после — факты делятся только между участниками одной группы (brain). Бэкенд сменный: file|federation|agentmemory|off, переопределяется конфигом.",
-      "sha256": "8ab282fae27be39e4da7d01661f9ec491da0a63d37263a06fb9d7437c92e36a8",
+      "version": "0.2.0",
+      "description": "Единый «мозг» (общая память) проектов констелляции через хук ~/.claude/hooks/memory/ + демон mAInd. Recall перед работой, remember после. Канон для проектов — MODE=maind (демон :4111, изоляция по scope на стороне maind): приватный project:<id> + общее по тегам ns:<namespace> + global; recall их объединяет. Бэкенд сменный: maind|file|federation|agentmemory|off.",
+      "sha256": "ea9765eacf77d65fd17bf507ca4a57551e18226d9ad048a6c7bb8d89bce00a6f",
       "tags": [
         "memory",
         "cross-project",

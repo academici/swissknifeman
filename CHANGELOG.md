@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Added (harness — режим памяти `maind`)
+
+- **Хук памяти получил режим `MODE=maind`** (`hooks/memory/modes/maind.sh`): делегирует
+  `remember`/`recall` в `maind memory` (демон :4111 + изоляция по scope на стороне maind).
+  brain игнорируется, scope берётся из проекта (`CLAUDE_PROJECT_DIR` → `match_cwd`). Чинит
+  раскол «хук пишет в файлы `core`, MCP читает пустой scope демона»: теперь оба пути идут
+  в один стор. Рекомендуется для прикладных проектов; глобальный дефолт пока `federation`.
+
 ### Changed (session-observer 0.3.0 — авто-включение логгера)
 
 - **`/observe on` теперь полный чеклист**, который Claude выполняет автоматически:

@@ -13,7 +13,8 @@ from pathlib import Path
 from . import codegraph
 from .common import die, now_iso, parse_args, warn
 from .config import load_config
-from .mcpconfig import MCP_FILES, load_mcp, mcp_path, merge_server, write_mcp
+from .mcpconfig import (MCP_FILES, load_mcp, mcp_path, merge_server,
+                        remove_server, write_mcp)
 from .memory import health, resolve_ports
 from .projects import get as get_project
 from .projects import listing, write_config
@@ -55,9 +56,12 @@ def _resolve_targets(project_path, opt_targets):
 
 
 def deploy_project(env, config, project, *, targets=None, with_code=None,
-                   maind_server=True, dry=False):
+                   maind_server=True, with_agentmemory=False, dry=False):
     """Раскатать серверы хаба в один проект. with_code=None → берётся из политики/полей проекта
-    (code|graphify). Возвращает result-dict или None (пропуск)."""
+    (code|graphify). Память проекта — через сервер `maind` (изоляция по scope на стороне maind);
+    raw-сервер `agentmemory` НЕ раскатывается (он пишет мимо scope-маркера → невидимо для
+    scoped-recall) и УДАЛЯЕТСЯ из .mcp.json, если остался от старых деплоев. Возвращает
+    result-dict или None (пропуск)."""
     pid = project["id"]
     local = project.get("local_path")
     if not local:
@@ -72,9 +76,12 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
     st = codegraph.settings(config)
     if with_code is None:
         with_code = codegraph.enabled(project, st)
-    entries = {"agentmemory": _agentmemory_entry(env, config, scope)}
+    entries = {}
     if maind_server:
-        entries["maind"] = _maind_entry(env, scope)
+        entries["maind"] = _maind_entry(env, scope)          # память через maind (изоляция)
+    if with_agentmemory:                                     # legacy/opt-in raw-сервер
+        entries["agentmemory"] = _agentmemory_entry(env, config, scope)
+    drop = [] if with_agentmemory else ["agentmemory"]       # чистим raw-сервер из старых .mcp.json
     code_state = "disabled"
     if with_code:
         gcmd = codegraph.command(project, st)
@@ -94,6 +101,9 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
         changed_any = False
         for name, entry in entries.items():
             data, changed = merge_server(data, name, entry)
+            changed_any = changed_any or changed
+        for name in drop:                                    # снять устаревший raw-сервер
+            data, changed = remove_server(data, name)
             changed_any = changed_any or changed
         if changed_any:
             write_mcp(path, data, dry=dry)
@@ -126,7 +136,7 @@ def mark_deployed(config, project_id, result):
 def cmd_deploy(env, argv):
     opts, _ = parse_args(argv, {"--project": "str", "--all": "bool", "--targets": "str",
                                 "--with-code": "bool", "--with-graphify": "bool",
-                                "--no-maind-server": "bool",
+                                "--no-maind-server": "bool", "--with-agentmemory": "bool",
                                 "--dry-run": "bool", "--json": "bool"})
     config, _src = load_config(env)
     if opts["project"]:
@@ -149,7 +159,7 @@ def cmd_deploy(env, argv):
         # флаг (--with-code|--with-graphify) форсит код-граф; иначе None → из конфига проекта
         with_code = True if (opts["with_code"] or opts["with_graphify"]) else None
         res = deploy_project(env, config, proj, targets=opts["targets"] or None,
-                             with_code=with_code,
+                             with_code=with_code, with_agentmemory=opts["with_agentmemory"],
                              maind_server=not opts["no_maind_server"], dry=opts["dry_run"])
         if res is None:
             continue

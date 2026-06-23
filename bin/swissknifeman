@@ -35,10 +35,16 @@ case "$CMD" in
   maind|hub) shift; need "$MAIND"; exec "$MAIND" "$@" ;;
   setup)   shift; need "$MAIND"; exec "$MAIND" onboard "$@" ;;
   doctor)
+    # fan-out на все три пакета. НЕ через need() — он бьёт exit 1 на первом же
+    # отсутствующем лаунчере и не даёт проверить остальные; здесь агрегируем rc.
     rc=0
-    echo "== skiller =="; need "$SKILLER"; "$SKILLER" doctor || rc=$?
-    echo; echo "== harness =="; need "$HARNESS"; "$HARNESS" doctor || rc=$?
-    echo; echo "== maind ==";  need "$MAIND";   "$MAIND" doctor || rc=$?
+    for entry in "skiller:$SKILLER" "harness:$HARNESS" "maind:$MAIND"; do
+      name="${entry%%:*}"; pkg="${entry#*:}"
+      echo "== $name =="
+      if [[ -x "$pkg" ]]; then "$pkg" doctor || rc=$?
+      else echo "ERROR: не найден лаунчер пакета: $pkg" >&2; rc=1; fi
+      echo
+    done
     exit "$rc" ;;
   # back-compat: старый алиас swissknifeman → skiller (онбордженные проекты/привычка)
   connect|vendor|integrate|update|sync|lock|status|list|registry|topology|validate|version)

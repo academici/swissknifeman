@@ -28,12 +28,18 @@ def safe_load_json(path, default=None, *, on_error: Optional[Callable] = None):
 
 def atomic_write_text(path, text, *, encoding="utf-8"):
     """Пишет текст атомарно: `<name>.tmp` рядом → `os.replace`. Создаёт
-    родительские каталоги. Краш в процессе не оставляет битого целевого файла."""
+    родительские каталоги. Краш в процессе не оставляет битого целевого файла; при
+    ошибке записи/замены подчищает и осиротевший `.tmp` (иначе он копится на диске
+    в долгоживущих процессах, напр. при `No space left`)."""
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_name(path.name + ".tmp")
-    tmp.write_text(text, encoding=encoding)
-    os.replace(tmp, path)
+    try:
+        tmp.write_text(text, encoding=encoding)
+        os.replace(tmp, path)
+    except BaseException:
+        tmp.unlink(missing_ok=True)
+        raise
 
 
 def atomic_write_json(path, data, *, version=None, indent=2):

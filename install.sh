@@ -29,18 +29,13 @@ mkdir -p "$BIN_DIR"
 # пост-настройка: maind — npm/service опции; skiller — topology; harness — stateless).
 fwd=(); $FORCE && fwd+=(--force); fwd+=(--bin-dir "$BIN_DIR")
 echo "Установка CLI пакетов (bin-dir: $BIN_DIR):"
-if [[ -x "$REPO_ROOT/packages/skiller/install.sh" ]]; then
-  echo "— skiller:"
-  "$REPO_ROOT/packages/skiller/install.sh" "${fwd[@]}" || echo "  (skiller install.sh завершился с ошибкой — проверьте вручную)" >&2
-fi
-if [[ -x "$REPO_ROOT/packages/harness/install.sh" ]]; then
-  echo "— harness:"
-  "$REPO_ROOT/packages/harness/install.sh" "${fwd[@]}" || echo "  (harness install.sh завершился с ошибкой — проверьте вручную)" >&2
-fi
-if [[ -x "$REPO_ROOT/packages/maind/install.sh" ]]; then
-  echo "— maind:"
-  "$REPO_ROOT/packages/maind/install.sh" "${fwd[@]}" || echo "  (maind install.sh завершился с ошибкой — проверьте вручную)" >&2
-fi
+failed=()  # пакеты, чей install.sh упал — для итогового статуса (иначе «Готово» врёт)
+for pkg in skiller harness maind; do
+  inst="$REPO_ROOT/packages/$pkg/install.sh"
+  [[ -x "$inst" ]] || continue
+  echo "— $pkg:"
+  "$inst" "${fwd[@]}" || { echo "  ($pkg install.sh завершился с ошибкой — проверьте вручную)" >&2; failed+=("$pkg"); }
+done
 
 # Корневой управляющий слой: симлинк `swissknifeman` → bin/swissknifeman (router).
 # Ставится ПОСЛЕ пакетов — раньше алиас `swissknifeman` ставил skiller; теперь им
@@ -69,4 +64,8 @@ case ":$PATH:" in
   *) echo "ВНИМАНИЕ: $BIN_DIR не в PATH — добавьте: export PATH=\"$BIN_DIR:\$PATH\"" >&2 ;;
 esac
 
+if (( ${#failed[@]} )); then
+  echo "ОШИБКА: не установлены пакеты: ${failed[*]} — установка неполна, см. лог выше." >&2
+  exit 1
+fi
 echo "Готово. CLI: swissknifeman (router) · skiller · harness · maind"

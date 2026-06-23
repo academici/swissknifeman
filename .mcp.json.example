@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "maind": {
+      "command": "{{REPO_ROOT}}/packages/maind/bin/maind",
+      "args": [
+        "mcp",
+        "--scope",
+        "project:swissknifeman"
+      ]
+    }
+  }
+}

@@ -135,7 +135,8 @@ ecosystem-link память из всех релевантных бакетов 
 
 Одна команда анализирует `config.json` и раскатывает **управляемые артефакты** на все
 подключённые проекты через реестр провиженеров (`sync.py`): `mcp` · `graph` (derive) · `memory`
-(seed) · `health-hook` · `health-doc` · `ecosystem-skill` (скилл `ecosystem-mcp` в проект).
+(seed) · `memory-hook` (авто-загрузка дайджеста + native off) · `health-hook` · `health-doc` ·
+`feature-log-hook` · `ecosystem-skill` (скилл `ecosystem-mcp` в проект).
 `--only` сужает набор, `--mode install|update|auto` задаёт
 «метод синка по области» (создать, если нет / обновить устаревшее по content-hash / и то, и
 другое). Фан-аут по проектам и резолв пути/scope вынесены в `ProjectContext`/`select_projects`

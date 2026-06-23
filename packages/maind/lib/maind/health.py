@@ -44,8 +44,9 @@ def _maind_bin(env):
 
 
 # ── проба памяти и режима хука ───────────────────────────────────────────────
-def _hook_memory_mode(project):
-    """MODE из <project>/.claude/memory.env.ini (режим хука памяти) или None."""
+def hook_memory_mode(project):
+    """MODE из <project>/.claude/memory.env.ini (режим хука памяти) или None.
+    Источник истины «намерения» памяти проекта — читают и health, и sync (memory-hook)."""
     lp = project.get("local_path")
     if not lp:
         return None
@@ -101,7 +102,7 @@ def health_report(env, config, project, *, memory_reachable=None):
         memory_reachable = mem_health(url)
     rep = probe_project(env, config, project, memory_reachable=memory_reachable)
     c = rep.get("configured", {})
-    hook_mode = _hook_memory_mode(project)
+    hook_mode = hook_memory_mode(project)
     native_off, digest_hook = _native_memory_state(project)
     roundtrip = memory_roundtrip(env, config, project, memory_reachable)
     hints = []

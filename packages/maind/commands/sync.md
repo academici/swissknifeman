@@ -10,4 +10,4 @@ allowed-tools: Bash(maind:*)
 1. **Цель** из «$ARGUMENTS»: конкретный `<project-id>` · `--all` (все enabled) · `--namespace <NS>`. Если пусто — спроси (по умолчанию предложи `--all`).
 2. **Предпросмотр**: `maind sync <target> --dry-run --json` — покажи, что изменится.
 3. **Применение** по подтверждению: `maind sync <target> --json`.
-4. **Отчёт**: по каждому проекту/провиженеру — ok / skip / без изменений. Набор можно сузить флагом `--only`: `mcp,code-graph,graph,memory,health-hook,health-doc,feature-log-hook,ecosystem-skill`.
+4. **Отчёт**: по каждому проекту/провиженеру — ok / skip / без изменений. Набор можно сузить флагом `--only`: `mcp,code-graph,graph,memory,memory-hook,health-hook,health-doc,feature-log-hook,ecosystem-skill`.

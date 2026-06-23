@@ -1,8 +1,11 @@
-"""Тесты sync.py (фан-аут + провиженеры mcp/graph) и common.managed_block."""
+"""Тесты sync.py (фан-аут + провиженеры mcp/graph/memory-hook) и common.managed_block."""
 import json
+import shutil
 import tempfile
 import unittest
 from pathlib import Path
+
+_TEMPLATES = Path(__file__).resolve().parents[1] / "templates"
 
 from maind import sync
 from maind.common import managed_block, upsert_block
@@ -127,6 +130,60 @@ class TestSync(unittest.TestCase):
             _setup(tmp)
             with self.assertRaises(SystemExit):
                 sync.provisioner_names("bogus")
+
+    def test_memory_hook_in_default_order(self):
+        # авто-загрузка памяти раскатывается и обычным `maind sync --all`
+        self.assertIn("memory-hook", sync.provisioner_names())
+
+
+class TestMemoryHookProvisioner(unittest.TestCase):
+    """memory-hook читает интент из .claude/memory.env.ini: MODE=maind → инжект дайджеста +
+    native off; нет конфига → пропуск; off → revert. Так фича докатывается через sync."""
+
+    def _with_templates(self, tmp):
+        env, config, proj = _setup(tmp)
+        shutil.copytree(_TEMPLATES, env.root / "templates")  # шаблоны health в env.root
+        return env, config, proj
+
+    def test_skip_when_no_memory_env(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj = self._with_templates(tmp)
+            projs = sync.select_projects(env, config, {"all": True})
+            r = sync.run_sync(env, config, projs, only="memory-hook")
+            self.assertEqual(r[0]["status"], "skip")
+            self.assertFalse((proj / ".claude" / "maind-memory.sh").is_file())
+
+    def test_apply_when_mode_maind_then_idempotent(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj = self._with_templates(tmp)
+            (proj / ".claude").mkdir(parents=True, exist_ok=True)
+            (proj / ".claude" / "memory.env.ini").write_text("MODE=maind\n", encoding="utf-8")
+            projs = sync.select_projects(env, config, {"all": True})
+            r1 = sync.run_sync(env, config, projs, only="memory-hook")
+            self.assertEqual(r1[0]["provisioner"], "memory-hook")
+            self.assertTrue(r1[0]["changed"])
+            self.assertTrue((proj / ".claude" / "maind-memory.sh").is_file())
+            s = json.loads((proj / ".claude" / "settings.json").read_text())
+            self.assertIs(s["autoMemoryEnabled"], False)
+            cmds = [h["command"] for g in s["hooks"]["SessionStart"] for h in g["hooks"]]
+            self.assertTrue(any("maind-memory" in c for c in cmds))
+            r2 = sync.run_sync(env, config, projs, only="memory-hook")
+            self.assertFalse(r2[0]["changed"])  # повтор — без изменений
+
+    def test_revert_when_mode_off(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj = self._with_templates(tmp)
+            (proj / ".claude").mkdir(parents=True, exist_ok=True)
+            (proj / ".claude" / "memory.env.ini").write_text("MODE=maind\n", encoding="utf-8")
+            projs = sync.select_projects(env, config, {"all": True})
+            sync.run_sync(env, config, projs, only="memory-hook")          # сперва ставим
+            (proj / ".claude" / "memory.env.ini").write_text("MODE=off\n", encoding="utf-8")
+            sync.run_sync(env, config, projs, only="memory-hook")          # потом откатываем
+            s = json.loads((proj / ".claude" / "settings.json").read_text())
+            self.assertNotIn("autoMemoryEnabled", s)
+            cmds = [h["command"] for g in s.get("hooks", {}).get("SessionStart", [])
+                    for h in g["hooks"]]
+            self.assertFalse(any("maind-memory" in c for c in cmds))
 
 
 if __name__ == "__main__":

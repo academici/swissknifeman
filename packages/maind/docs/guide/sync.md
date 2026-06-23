@@ -25,9 +25,15 @@ maind sync --all --dry-run --json                  # план без запис�
 | `code-graph` | стартовый `.serena/project.yml` (при `code:true`, движок Serena) — язык + игноры + initial_prompt | `codegraph.py` |
 | `graph` | `derive` графа проекта из источников + пересборка `_index.db` | `derive.py` |
 | `memory` | seed базового факта о связях в `project:<id>` + `ns:<группа>` | `seed.py` |
+| `memory-hook` | SessionStart-инжект дайджеста памяти + `autoMemoryEnabled:false` для проектов на `MODE=maind` (revert для ушедших на native/off) — авто-загрузка памяти | `health.py` |
 | `health-hook` | SessionStart-хук связи с хабом в `.claude/settings.json` | `health.py` |
 | `health-doc` | управляемый блок «приоритет №1» в `CLAUDE.md` | `health.py` |
+| `feature-log-hook` | SessionEnd-хук фиксации нового коммита в общую память (при `code_graph.feature_log_hook`) | `health.py` |
 | `ecosystem-skill` | управляемый скилл `ecosystem-mcp` (что за MCP-инструменты, связи, починка) в `.claude/skills/` | `skilldoc.py` |
+
+> `memory-hook` читает «намерение» памяти из `<project>/.claude/memory.env.ini` (`MODE`),
+> который пишет `maind onboard --memory`. Так авто-загрузку можно докатить на уже подключённые
+> проекты без полного onboard: `maind sync --all --only memory-hook`.
 
 `--only mcp,graph,...` ограничивает набор (имена сверяются с реестром, опечатка → ошибка).
 
@@ -47,7 +53,7 @@ maind sync --all --dry-run --json                  # план без запис�
 ## Пример вывода
 
 ```
-sync (mode=auto, проектов 1, провиженеры: mcp, graph, memory, health-hook, health-doc, ecosystem-skill)
+sync (mode=auto, проектов 1, провиженеры: mcp, graph, memory, memory-hook, health-hook, health-doc, ecosystem-skill)
   ✓ mcp             flexcrm            .mcp.json
   ✓ graph           flexcrm            12n/9e (code 7, doc 1)
   ○ memory          flexcrm            демон памяти не запущен

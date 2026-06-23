@@ -3443,9 +3443,9 @@
       "name": "session-observer",
       "bucket": "system",
       "path": "skills/system/session-observer/SKILL.md",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "description": "ЭКСПЕРИМЕНТАЛЬНО (включается per-project). Пост-фактум разбор сессии Claude Code по JSONL-логам — ищет слабые места в трёх осях: агенты (skill-skip, drift, циклы), скиллы (пробелы, мёртвый вес, тонкие), настройки (хуки, права). Находки → learnings через memory-хук, промоция человеком. Активировать ПОСЛЕ цикла работы / в конце сессии / по запросу «проанализируй сессию» — только если включён в проекте.",
-      "sha256": "3380f3c91c6559ceb58d42043854f73d3cf7f1bdf93e8f1d74a1c6973f69b2ad",
+      "sha256": "01c57fbd9ba70a0fdfa1e3c4a861d4ab390b9a72b0e44e6a03f9062ab97cbb0e",
       "tags": [
         "observer",
         "session-analysis",

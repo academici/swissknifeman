@@ -1,7 +1,7 @@
 ---
 name: session-observer
 bucket: system
-version: 0.1.0
+version: 0.2.0
 description: "ЭКСПЕРИМЕНТАЛЬНО (включается per-project). Пост-фактум разбор сессии Claude Code по JSONL-логам — ищет слабые места в трёх осях: агенты (skill-skip, drift, циклы), скиллы (пробелы, мёртвый вес, тонкие), настройки (хуки, права). Находки → learnings через memory-хук, промоция человеком. Активировать ПОСЛЕ цикла работы / в конце сессии / по запросу «проанализируй сессию» — только если включён в проекте."
 risk: read
 persona: architect
@@ -54,6 +54,9 @@ Observer по умолчанию **выключен** (эксперимента�
 - `<proj>/<session-id>.jsonl` — главный поток (user/assistant/tool calls, ошибки).
 - `<proj>/<session-id>/subagents/agent-*.jsonl` — изолированные логи субагентов.
 - `git -C <project> diff HEAD` — что реально изменилось в коде.
+- `.claude/observer/runtime.jsonl` + `archive/*.jsonl` — если включён **capture-слой**
+  (harness-хук `observer`, PreToolUse/PostToolUse/Stop): компактный project-local лог
+  с готовыми алертами (`LOOP`). Включение: `/observe on` + `harness hooks --preset observer`.
 
 Точные jq-рецепты на каждое измерение — `snippets/analyze-session.md`.
 

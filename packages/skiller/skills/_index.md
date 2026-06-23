@@ -4,7 +4,7 @@
 
 Источник истины портируемых скиллов (машинный реестр — `skills.json`). Раздача в проекты: `skiller connect` (плагины-бакеты) / `vendor` (физ. перенос). CORE-набор токен-скиллов (`general`/`oss-dev`) раздаётся по умолчанию — см. `connect`/`vendor`.
 
-Всего: 184 скиллов в 17 бакетах.
+Всего: 185 скиллов в 17 бакетах.
 
 ## Скиллы по бакетам
 
@@ -269,12 +269,13 @@
 | `startup-cto` | Startup CTO persona — tech radar, hiring, architecture decisions | `role`, `persona`, `architecture`, `stack-choice`, `discipline` |
 | `tech-lead` | Tech Lead persona — sprint kickoff, 1:1s, team coordination | `role`, `persona`, `orchestration`, `review`, `workflow` |
 
-### system — Local environment topology: the three hub nodes (Brain vault, swissknifeman, projects base) and how agents navigate between projects and their docs (3)
+### system — Local environment topology: the three hub nodes (Brain vault, swissknifeman, projects base) and how agents navigate between projects and their docs (4)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
 | `cross-project-coordinator` | Оркестрация межпроектного анализа кода: обойти связанные проекты (через топологию), найти… | `cross-project`, `coordination`, `refactoring`, `duplication`, `topology`, `orchestration`, `agents`, `tokens` |
 | `local-topology` | Корневая карта локальной среды разработки — три узла-хаба (Brain-волт, swissknifeman, баз… | `topology`, `architecture`, `navigation`, `meta`, `cross-project` |
+| `session-observer` | ЭКСПЕРИМЕНТАЛЬНО (включается per-project). Пост-фактум разбор сессии Claude Code по JSONL… | `observer`, `session-analysis`, `learning`, `jsonl`, `drift`, `self-improvement`, `post-mortem` |
 | `shared-memory` | Единый «мозг» (общая память) для выбранных проектов констелляции через хук ~/.claude/hook… | `memory`, `cross-project`, `topology`, `recall`, `context`, `coordination` |
 
 ## Tag matrix
@@ -369,6 +370,7 @@
 | `docs` | `writing-style` |
 | `documentation` | `dx-design`, `oss-development`, `oss-governance` |
 | `domain` | `enum-state-machine`, `ticket-workflow` |
+| `drift` | `session-observer` |
 | `dto` | `backend-type-sync`, `laravel-data`, `php-patterns` |
 | `duplication` | `cross-project-coordinator` |
 | `dusk` | `laravel-dusk` |
@@ -413,12 +415,14 @@
 | `isolation` | `db-test-preflight`, `test-isolation-guard` |
 | `javascript` | `js-code-style` |
 | `jsdom` | `vitest` |
+| `jsonl` | `session-observer` |
 | `language` | `writing-style` |
 | `laravel` | `ai-context-workflow`, `attribute-authorization`, `azguard`, `backend-type-sync`, `botkit`, `ci-cd`, `code-style-spatie`, `database`, `dependency-injection`, `docker-dev-prod`, `docker-php`, `docker-services`, `docker-vite`, `enum-attributes`, `enum-state-machine`, `filament`, `filepond-upload`, `health-checks`, `inertia-vue`, `laravel`, `laravel-best-practices`, `laravel-broadcasting`, `laravel-data`, `laravel-dusk`, `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages`, `laravel-permissions`, `laravel-security-audit`, `laravel-structure`, `laravel-subagents`, `laravel-testing`, `livewire-blade-attributes`, `medialibrary`, `modular-architecture`, `naming-conventions`, `packages-stack`, `pao`, `pennant-development`, `php-patterns`, `project-map`, `repositories`, `spatie-settings`, `static-analysis`, `tailwind-conventions`, `test-isolation-guard`, `ticket-workflow`, `user-roles`, `vite-module-loader`, `vite-multi-build`, `vitest`, `wayfinder` |
 | `laravel-data` | `laravel-data` |
 | `laravel-echo` | `laravel-echo-client` |
 | `laravel-modules` | `modular-architecture` |
 | `lazy-loading` | `vue-router-best-practices` |
+| `learning` | `session-observer` |
 | `license` | `oss-governance` |
 | `liveness` | `health-checks` |
 | `livewire` | `filament`, `livewire-blade-attributes` |
@@ -451,6 +455,7 @@
 | `node` | `node-pnpm-preflight` |
 | `nwidart` | `modular-architecture` |
 | `observability` | `capacity-planning`, `health-checks`, `observability-design` |
+| `observer` | `session-observer` |
 | `ops` | `capacity-planning`, `incident-response`, `oncall-rotation`, `postmortem`, `runbook` |
 | `orchestration` | `anti-drift`, `complex-task-orchestrator`, `cross-project-coordinator`, `laravel-subagents`, `mcp-blender`, `tech-lead` |
 | `oss` | `dependency-audit`, `dx-design`, `github-flow`, `open-source-maintainer`, `oss-development`, `oss-governance`, `release-engineering` |
@@ -469,6 +474,7 @@
 | `pinia` | `pinia-stores`, `vue-testing-best-practices` |
 | `playwright` | `playwright-e2e` |
 | `pnpm` | `node-pnpm-preflight` |
+| `post-mortem` | `session-observer` |
 | `postgres` | `db-test-preflight`, `docker-postgres` |
 | `preflight` | `db-test-preflight`, `node-pnpm-preflight` |
 | `prettier` | `eslint-flat-config`, `js-code-style`, `tailwind-conventions` |
@@ -509,7 +515,9 @@
 | `schema` | `data-schema` |
 | `screenshot` | `mcp-blender` |
 | `security` | `agent-design`, `ci-cd`, `dependency-audit`, `laravel-security-audit`, `oss-governance`, `risk-assessment`, `security-design` |
+| `self-improvement` | `session-observer` |
 | `semver` | `github-flow`, `package-contribution-protocol`, `release-engineering` |
+| `session-analysis` | `session-observer` |
 | `settings` | `spatie-settings` |
 | `skills` | `ai-context-workflow`, `laravel-packages`, `skills-ssot` |
 | `sla` | `build-loop`, `capacity-planning`, `config-conventions`, `incident-response`, `oncall-rotation`, `parametric-config`, `threading` |

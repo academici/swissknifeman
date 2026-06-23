@@ -86,7 +86,7 @@
     },
     "system": {
       "description": "Local environment topology: the three hub nodes (Brain vault, swissknifeman, projects base) and how agents navigate between projects and their docs",
-      "count": 3,
+      "count": 4,
       "status": "active"
     }
   },
@@ -3416,6 +3416,27 @@
       ],
       "produces_for": [
         "cross-project-coordinator",
+        "shared-memory"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "session-observer",
+      "bucket": "system",
+      "path": "skills/system/session-observer/SKILL.md",
+      "version": "0.1.0",
+      "description": "ЭКСПЕРИМЕНТАЛЬНО (включается per-project). Пост-фактум разбор сессии Claude Code по JSONL-логам — ищет слабые места в трёх осях: агенты (skill-skip, drift, циклы), скиллы (пробелы, мёртвый вес, тонкие), настройки (хуки, права). Находки → learnings через memory-хук, промоция человеком. Активировать ПОСЛЕ цикла работы / в конце сессии / по запросу «проанализируй сессию» — только если включён в проекте.",
+      "sha256": "3380f3c91c6559ceb58d42043854f73d3cf7f1bdf93e8f1d74a1c6973f69b2ad",
+      "tags": [
+        "observer",
+        "session-analysis",
+        "learning",
+        "jsonl",
+        "drift",
+        "self-improvement",
+        "post-mortem"
+      ],
+      "requires": [
         "shared-memory"
       ],
       "source": "local"

@@ -149,6 +149,7 @@ flowchart LR
   subgraph system["system"]
     cross_project_coordinator["cross-project-coordinator"]
     local_topology["local-topology"]
+    session_observer["session-observer"]
     shared_memory["shared-memory"]
   end
   agent_design -->|requires| architecture
@@ -222,6 +223,7 @@ flowchart LR
   release_engineering -->|requires| oss_development
   requirement_critic -->|requires| brd
   security_design -->|requires| architecture
+  session_observer -->|requires| shared_memory
   shared_memory -->|requires| local_topology
   tech_stack_selection -->|requires| brd
   test_isolation_guard -->|requires| laravel_testing
@@ -303,7 +305,7 @@ flowchart LR
   unit_economics -.->|feeds| go_to_market
 ```
 
-**В графе:** 111 скиллов, 84 рёбер requires, 66 рёбер produces_for.
+**В графе:** 112 скиллов, 85 рёбер requires, 66 рёбер produces_for.
 
 ## Изолированные скиллы (73)
 

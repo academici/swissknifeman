@@ -61,6 +61,15 @@ if [[ "$GLOBAL" -eq 1 ]]; then
     mkdir -p "$HOME/.claude/hooks/notify"
     cp "$PRESETS_DIR/hooks/notify/notify.sh" "$HOME/.claude/hooks/notify/"
     chmod +x "$HOME/.claude/hooks/notify/notify.sh"
+    # review-gate: гейт архитектуры на SubagentStop. Код обновляем; env.ini и
+    # config.json не перезатираем (там режим и проверка проекта).
+    RG_SRC="$PRESETS_DIR/hooks/review-gate"; RG_DST="$HOME/.claude/hooks/review-gate"
+    mkdir -p "$RG_DST"
+    cp "$RG_SRC/review-gate.sh" "$RG_DST/"
+    cp "$RG_SRC/README.md" "$RG_DST/"
+    chmod +x "$RG_DST/review-gate.sh"
+    [[ -f "$RG_DST/env.ini" ]]     || cp "$RG_SRC/env.ini" "$RG_DST/"
+    [[ -f "$RG_DST/config.json" ]] || cp "$RG_SRC/config.json" "$RG_DST/"
     # Папка auto-approve: код/lib/modes — обновляем; env.ini и config.json —
     # не перезатираем (там выбор режима и кастомизация пользователя).
     AA_SRC="$PRESETS_DIR/hooks/auto-approve"; AA_DST="$HOME/.claude/hooks/auto-approve"

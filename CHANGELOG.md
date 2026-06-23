@@ -14,6 +14,19 @@
 - **`php/laravel-implementer`:** прозовый «ПЕРВЫЙ ШАГ — load via Skill» заменён на
   декларативное поле `skills:`; жёсткие правила оставлены L4-страховкой.
 
+### Added (гейт принуждения + Observer — план agent-skill-binding, Stage B–D)
+
+- **`harness` review-gate** — детерминированный гейт архитектуры на `SubagentStop`
+  (`off|warn|strict`, дефолт `warn`): прогоняет настроенную проектом проверку
+  (`check_command`), `warn` → подсказка в `additionalContext`, `strict` → блок
+  субагента. Без проверки — no-op. L5-рубеж под `skills:`-preload. (Stage B)
+- **`system/session-observer`** (skiller, ЭКСПЕРИМЕНТАЛЬНО, per-project toggle
+  `.claude/observer.env.ini`) — пост-фактум разбор сессии по JSONL-логам с
+  3-осевой аналитикой слабых мест: **агенты** (skill-skip/drift/циклы), **скиллы**
+  (gap/thin/dead/correction-after-load), **настройки** (хуки/права). Находки →
+  learnings через memory-хук, промоция человеком; замкнутый цикл самопочинки.
+  Сниппет `analyze-session.md` (jq/grep-рецепты). Read-only по коду, не live. (Stage C–D)
+
 ### Changed (валидация: строгий frontmatter + битые ссылки)
 
 - **`validate.sh` ужесточён** (секция 1a) — раньше проверялось только *наличие*

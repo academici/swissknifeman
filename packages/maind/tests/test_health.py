@@ -7,12 +7,12 @@ from pathlib import Path
 
 from maind import health
 from maind.config import load_config
-from tests.fixtures import capture, make_repo, write_maind_config
+from tests.fixtures import FakeMemoryServer, capture, make_repo, write_maind_config
 
 _TEMPLATES = Path(__file__).resolve().parents[1] / "templates"
 
 
-def _setup(tmp, *, with_mcp=False):
+def _setup(tmp, *, with_mcp=False, memory_url=None, hook_maind=False):
     root, env = make_repo(tmp)
     shutil.copytree(_TEMPLATES, root / "templates")  # шаблоны health доступны в env.root
     proj = Path(tmp) / "flexcrm"
@@ -20,10 +20,16 @@ def _setup(tmp, *, with_mcp=False):
     if with_mcp:
         (proj / ".mcp.json").write_text(json.dumps({"mcpServers": {
             "agentmemory": {"command": "x"}, "maind": {"command": "y"}}}), encoding="utf-8")
+    if hook_maind:                            # хук памяти в режиме демона
+        (proj / ".claude").mkdir(parents=True, exist_ok=True)
+        (proj / ".claude" / "memory.env.ini").write_text("MODE=maind\n", encoding="utf-8")
     projects = [{"id": "flexcrm", "name": "FlexCRM", "type": "php-package",
                  "status": "active", "enabled": True, "local_path": str(proj),
                  "memory_scope": "project:flexcrm"}]
-    write_maind_config(root, graph={"adapter": "federation"}, projects=projects)
+    cfg_over = {"graph": {"adapter": "federation"}, "projects": projects}
+    if memory_url:
+        cfg_over["memory"] = {"url": memory_url}
+    write_maind_config(root, **cfg_over)
     config, _ = load_config(env)
     return env, config, config["projects"][0], proj
 
@@ -38,12 +44,24 @@ class TestReport(unittest.TestCase):
             self.assertTrue(any("start --only memory" in h for h in rep["hints"]))
 
     def test_connected_with_mcp_and_daemon(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            env, config, proj, _ = _setup(tmp, with_mcp=True)
+        # Полностью здоровый проект: MCP + демон + хук MODE=maind + рабочий round-trip.
+        with tempfile.TemporaryDirectory() as tmp, FakeMemoryServer() as url:
+            env, config, proj, _ = _setup(tmp, with_mcp=True, memory_url=url, hook_maind=True)
             rep = health.health_report(env, config, proj, memory_reachable=True)
             self.assertEqual(rep["status"], "connected")
             self.assertTrue(rep["agentmemory_mcp"] and rep["maind_mcp"])
+            self.assertEqual(rep["hook_memory_mode"], "maind")
+            self.assertTrue(rep["memory_roundtrip"])      # write→recall→forget прошёл
             self.assertEqual(rep["hints"], [])
+
+    def test_roundtrip_fails_when_split(self):
+        # Демон есть, но хук не в режиме maind → подсказка про режим (ловит раскол).
+        with tempfile.TemporaryDirectory() as tmp, FakeMemoryServer() as url:
+            env, config, proj, _ = _setup(tmp, with_mcp=True, memory_url=url, hook_maind=False)
+            rep = health.health_report(env, config, proj, memory_reachable=True)
+            self.assertTrue(rep["memory_roundtrip"])       # сам демон отвечает
+            self.assertNotEqual(rep["hook_memory_mode"], "maind")
+            self.assertTrue(any("режиме maind" in h for h in rep["hints"]))
 
 
 class TestHealthDoc(unittest.TestCase):

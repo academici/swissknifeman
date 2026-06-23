@@ -6,6 +6,13 @@
 ## [Unreleased]
 
 ### Added
+- **Онбординг авто-проводит память**: `maind onboard` доводит проводку памяти и для уже
+  подключённого проекта — задаёт `namespaces` (дефолт «общий `axioma` + свой `<id>`»,
+  `--namespace a,b` для нескольких; клиентам — явный список без `axioma`) и пишет
+  `<project>/.claude/memory.env.ini` `MODE=maind`. Шаг `memwire` в отчёте.
+- **`maind health` — round-trip памяти**: проба write→recall→forget по temp-факту в
+  приватном scope + проверка, что хук в режиме `MODE=maind`. Ловит раскол (хук пишет не
+  в тот стор), сломанный forget и потерю изоляции. `--strict` падает при провале round-trip.
 - **`maind memory remember|recall|forget` (scope-aware CLI)**: единый путь записи/чтения
   памяти для человека И хука. scope считается из конфига проекта через `namespaces.py`
   (`--project`/cwd/`--scope`): `remember` пишет в приватный `project:<id>` (+ `--share`

@@ -1,6 +1,8 @@
 """doctor — диагностика окружения."""
+import hashlib
 import json
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -69,6 +71,36 @@ def cmd_doctor(env, argv):
             bad.append(p.name)
     check(profiles and not bad, f"профили загружаются ({len(profiles)})",
           f"битые: {', '.join(bad)}")
+
+    # freshness хабов: штамп <!-- swissknifeman:registry sha=… --> в хабе проекта
+    # сверяем с текущим sha реестра (тот же расчёт, что в generate-hub.sh). Проекты
+    # без штампа (старый хаб) — пропускаем: получат штамп при следующей перегенерации.
+    reg_skills = root / "skills.json"
+    if reg_skills.is_file():
+        reg_sha = hashlib.sha256(reg_skills.read_bytes()).hexdigest()[:12]
+        pat = re.compile(r"swissknifeman:registry sha=([0-9a-f]+)")
+        projects = []
+        if db_file.exists():
+            try:
+                projects = json.loads(db_file.read_text(encoding="utf-8")).get("projects", [])
+            except json.JSONDecodeError:
+                projects = []
+        stale_hubs = []
+        for p in projects:
+            pdir = Path(p["path"])
+            if not pdir.is_dir():
+                continue
+            for cand in (pdir / ".ai/guidelines/swissknifeman-hub.md", pdir / "CLAUDE.md"):
+                if not cand.is_file():
+                    continue
+                m = pat.search(cand.read_text(encoding="utf-8", errors="ignore"))
+                if m:
+                    if m.group(1) != reg_sha:
+                        stale_hubs.append(pdir.name)
+                    break
+        check(not stale_hubs, f"хабы проектов свежие (реестр sha {reg_sha})",
+              f"{len(stale_hubs)} устарел(и): {', '.join(stale_hubs)} — перегенерируй "
+              "(skiller update / generate-hub.sh)")
 
     print(f"\n{'Все проверки пройдены.' if issues == 0 else f'Проблем: {issues}'}")
     if issues:

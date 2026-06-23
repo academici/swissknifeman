@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Changed (session-observer 0.3.0 — авто-включение логгера)
+
+- **`/observe on` теперь полный чеклист**, который Claude выполняет автоматически:
+  установка хука глобально → проводка пресета `observer` в проект → `ENABLED=true`
+  → gitignore `.claude/observer/` → напоминание про рестарт сессии. Раньше скилл
+  подразумевал только `ENABLED=true`, чего недостаточно для активации логгера.
+  Добавлен `/observe off`.
+
 ### Docs (мультипровайдерная раздача — dev-план)
 
 - **`skiller/docs/multi-provider-distribution.md`** — dev-план: увести раздачу

@@ -1,7 +1,7 @@
 ---
 name: session-observer
 bucket: system
-version: 0.2.0
+version: 0.3.0
 description: "ЭКСПЕРИМЕНТАЛЬНО (включается per-project). Пост-фактум разбор сессии Claude Code по JSONL-логам — ищет слабые места в трёх осях: агенты (skill-skip, drift, циклы), скиллы (пробелы, мёртвый вес, тонкие), настройки (хуки, права). Находки → learnings через memory-хук, промоция человеком. Активировать ПОСЛЕ цикла работы / в конце сессии / по запросу «проанализируй сессию» — только если включён в проекте."
 risk: read
 persona: architect
@@ -28,15 +28,31 @@ sha256: ""
 
 ## Включение — экспериментально, per-project
 
-Observer по умолчанию **выключен** (экспериментальная фича). Состояние —
-флаг проекта `.claude/observer.env.ini` → `ENABLED=true|false` (дефолт `false`).
+Observer по умолчанию **выключен** (экспериментальная фича). Глобально ничего не
+навязывается, у каждого проекта своё. **Перед разбором проверь флаг** (`.claude/
+observer.env.ini` → `ENABLED`): не `true` → скажи «Observer выключен; включить —
+/observe on», ничего не делай.
 
-- **Перед разбором проверь флаг.** `ENABLED` не `true` → ничего не делай, скажи
-  «Observer выключен в проекте; включить — /observe on».
-- **Claude управляет сам, per-project:** по просьбе включить/выключить —
-  правит этот флаг в ТЕКУЩЕМ проекте (`/observe on` → `ENABLED=true`, `/observe
-  off` → `false`). Глобально ничего не навязывается, у каждого проекта своё.
-- Всё состояние — под `.claude/observer/` проекта (git-игнор).
+### `/observe on` — Claude выполняет ВСЕ шаги автоматически
+
+Только `ENABLED=true` логгер НЕ активирует — нужен весь набор. По запросу включить
+сделай по порядку (каждый — merge-only, безопасно повторять):
+
+1. **Файлы хука глобально** — если `~/.claude/hooks/observer/observer.sh` нет:
+   `harness hooks --global` (или `<harness>/scripts/apply-permissions.sh --global`).
+2. **Проводка в проект** — `<harness>/scripts/apply-permissions.sh --target . --preset observer`
+   (добавляет PreToolUse/PostToolUse/Stop → observer.sh в `.claude/settings.local.json`).
+3. **Флаг** — записать `.claude/observer.env.ini` → `ENABLED=true`.
+4. **gitignore** — добавить `.claude/observer/` в `.gitignore` проекта.
+5. **Сказать пользователю про рестарт** — хук активируется при СТАРТЕ сессии, не при
+   `/clear`. Чтобы логгер захватил прогон, **перезапусти сессию** (не только clear).
+   Иначе субагенты отработают, но `runtime.jsonl` будет пуст — тогда разбор post-hoc
+   по session-JSONL (`/observe session` всё равно работает).
+
+### `/observe off`
+
+`.claude/observer.env.ini` → `ENABLED=false`. Хук остаётся проведён, но мгновенно
+no-op (ничего не пишет). Снимать проводку не требуется.
 
 ## Что умеет и чего НЕ умеет (честно)
 

@@ -28,6 +28,20 @@
   (`lens/glass/rocket → part/insert/model`). `blender-modeling` зависит от `blender`
   (`mcp-blender` от B не зависит); потребителям модельных скиллов подключать оба плагина.
 
+### Added (agent-framework — каркас агент-практик + continuous-audit)
+
+- **Документация каркаса агентов** (`docs/skiller/agent-framework/`): обзор,
+  `framework-overview` (текущее состояние — вход аудита), `decisions-ledger`
+  (принято/отклонено + проверенные факты Claude Code), `roles`,
+  `skills-index-and-hub`, `post-integration-checklist`. Стойка: **данные + скилл,
+  не движок-генератор**.
+- **Переиспользуемый аудит-промт** `docs/skiller/workflows/framework-audit.md` —
+  периодическая ревизия каркаса через Perplexity (вход: overview + ledger; выход:
+  строгие дельта-таблицы); самоякорящаяся петля, не перепредлагает готовое.
+- **Архив аудитов** `docs/skiller/audits/` (raw verbatim + триаж двух прогонов
+  2026-06-23: universal-framework, agent-teams+ponytail) + ledger
+  `references/framework-audits.md`. Sidebar обновлён (standalone + агрегат).
+
 ## [0.4.0] - 2026-06-22
 
 > **Зонтичная единая версия монорепо.** Накопленное с `v0.3.0`: выделение пакета

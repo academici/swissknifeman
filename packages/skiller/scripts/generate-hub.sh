@@ -46,7 +46,7 @@ done
 export SKM_TARGET="$TARGET" SKM_DRY_RUN="$DRY_RUN" SKM_ROOT_FILES="$ROOT_FILES"
 
 python3 - "$REPO_ROOT" <<'PY'
-import json, os, sys
+import hashlib, json, os, sys
 from pathlib import Path
 
 root = Path(sys.argv[1])
@@ -136,6 +136,64 @@ if not installed:
         "  (нет enabledPlugins в .claude/settings*.json и нет "
         ".swissknifeman-manifest.json) — сначала connect-claude.sh или install.sh")
 
+# --- 1b. агенты проекта + сверка их skills: с реестром ------------------------
+# Регрессия «скиллы не видны»: нативное поле skills: у субагента молча no-op на
+# неизвестном имени. Индексируем .claude/agents/*.md в хаб и проверяем каждое имя.
+registry_names = {s["name"] for s in registry["skills"]}
+
+
+def parse_agent_frontmatter(path):
+    """name + description (скаляры) + skills (inline [..] или блок-список)."""
+    fm = {"name": "", "description": "", "skills": []}
+    text = Path(path).read_text(encoding="utf-8").replace("\r\n", "\n")
+    lines_ = text.splitlines()
+    if not lines_ or lines_[0].strip() != "---":
+        return fm
+    list_key = None
+    for line in lines_[1:]:
+        if line.strip() == "---":
+            break
+        stripped = line.strip()
+        if list_key and line[:1] in (" ", "\t") and stripped.startswith("- "):
+            fm[list_key].append(stripped[2:].strip().strip('"').strip("'"))
+            continue
+        list_key = None
+        if ":" in line and not line.startswith((" ", "\t", "-")):
+            key, value = line.split(":", 1)
+            key, value = key.strip(), value.strip()
+            if key in ("name", "description"):
+                fm[key] = value.strip('"').strip("'")
+            elif key == "skills":
+                if value.startswith("["):
+                    fm["skills"] = [v.strip().strip('"').strip("'")
+                                    for v in value.strip("[]").split(",") if v.strip()]
+                elif value == "":
+                    list_key = "skills"  # дальше блок-список
+    return fm
+
+
+agents = []
+unknown_skills = set()
+agents_dir = target / ".claude" / "agents"
+if agents_dir.is_dir():
+    for af in sorted(agents_dir.glob("*.md")):
+        a = parse_agent_frontmatter(af)
+        a["file"] = af.name
+        checked = []
+        for sk in a["skills"]:
+            bare = sk.split(":", 1)[1] if ":" in sk else sk  # допускаем bucket:name
+            ok = bare in registry_names
+            if not ok:
+                unknown_skills.add(sk)
+            checked.append((sk, ok))
+        a["skills_checked"] = checked
+        agents.append(a)
+
+# freshness-штамп: хэш реестра — doctor сверяет его с текущим, ловя дрейф «реестр
+# изменился, хаб не перегенерён».
+reg_sha = hashlib.sha256((root / "skills.json").read_bytes()).hexdigest()[:12]
+reg_count = len(registry["skills"])
+
 # --- 2. собрать markdown хаба ---------------------------------------------------
 boost_mode = (target / "boost.json").exists()
 total = sum(len(v) for v in installed.values())
@@ -145,6 +203,7 @@ lines.append("# Swissknifeman: хаб скиллов")
 lines.append("")
 lines.append("<!-- Сгенерировано scripts/generate-hub.sh из реестра swissknifeman. -->")
 lines.append("<!-- НЕ редактируйте вручную: перегенерация затрёт правки. -->")
+lines.append(f"<!-- swissknifeman:registry sha={reg_sha} skills={reg_count} -->")
 lines.append("")
 lines.append("## Приоритет источников правил")
 lines.append("")
@@ -175,6 +234,29 @@ lines.append("3. Структурные вопросы нового кода р�
 lines.append("4. Устройство системы скиллов в проекте (источник истины, симлинки, "
              "gitignore) — скилл `skills-ssot`.")
 lines.append("")
+if agents:
+    lines.append(f"## Агенты проекта ({len(agents)})")
+    lines.append("")
+    lines.append("Роли в `.claude/agents/`. Преднагруженные скиллы — поле `skills:` "
+                 "(⚠ = имя не найдено в реестре, preload молча не сработает).")
+    lines.append("")
+    lines.append("| Агент | Назначение | Преднагруженные скиллы |")
+    lines.append("|---|---|---|")
+    for a in agents:
+        sk = ", ".join((f"⚠ {n}" if not ok else n)
+                       for n, ok in a["skills_checked"]) or "—"
+        desc = (a["description"] or "").replace("|", "\\|").replace("\n", " ")
+        if len(desc) > 120:
+            desc = desc[:117] + "…"
+        lines.append(f"| `{a['name'] or a['file']}` | {desc} | {sk} |")
+    lines.append("")
+    if unknown_skills:
+        lines.append("> ⚠ **Несостыковка:** имена в `skills:` не найдены в реестре: "
+                     + ", ".join("`" + u + "`" for u in sorted(unknown_skills))
+                     + ". Проверь имена или подключи нужный бакет — иначе preload молча "
+                       "не сработает.")
+        lines.append("")
+
 lines.append(f"## Установленные скиллы ({total})")
 lines.append("")
 for bucket in sorted(installed):
@@ -231,4 +313,9 @@ else:
         print(block)
 
 print(f"Скиллов в индексе: {total}, бакетов: {len(installed)}")
+if agents:
+    print(f"Агентов проиндексировано: {len(agents)}")
+if unknown_skills:
+    print("WARNING: skills: у агентов не найдены в реестре (preload no-op): "
+          + ", ".join(sorted(unknown_skills)), file=sys.stderr)
 PY

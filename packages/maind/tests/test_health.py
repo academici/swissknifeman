@@ -140,6 +140,38 @@ class TestHealthHook(unittest.TestCase):
             self.assertIn("SessionEnd", s2["hooks"])
 
 
+class TestMemoryHook(unittest.TestCase):
+    def test_apply_wires_digest_hook_and_disables_native(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj, pdir = _setup(tmp)
+            r = health.apply_memory_hook(env, config, proj, "auto", dry=False)
+            self.assertTrue(r["changed"])
+            self.assertTrue((pdir / ".claude" / "maind-memory.sh").is_file())
+            settings = json.loads((pdir / ".claude" / "settings.json").read_text())
+            self.assertIs(settings["autoMemoryEnabled"], False)   # native выключена
+            cmds = [h["command"] for g in settings["hooks"]["SessionStart"] for h in g["hooks"]]
+            self.assertTrue(any("maind-memory" in c for c in cmds))
+
+    def test_apply_idempotent(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj, _ = _setup(tmp)
+            health.apply_memory_hook(env, config, proj, "auto", dry=False)
+            r2 = health.apply_memory_hook(env, config, proj, "auto", dry=False)
+            self.assertEqual(r2["state"], "fresh")
+            self.assertFalse(r2["changed"])
+
+    def test_revert_restores_native(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj, pdir = _setup(tmp)
+            health.apply_memory_hook(env, config, proj, "auto", dry=False)
+            health.revert_memory_hook(env, config, proj, dry=False)
+            settings = json.loads((pdir / ".claude" / "settings.json").read_text())
+            self.assertNotIn("autoMemoryEnabled", settings)       # native возвращена
+            cmds = [h["command"] for g in settings.get("hooks", {}).get("SessionStart", [])
+                    for h in g["hooks"]]
+            self.assertFalse(any("maind-memory" in c for c in cmds))
+
+
 class TestCLI(unittest.TestCase):
     def test_json_output(self):
         with tempfile.TemporaryDirectory() as tmp:

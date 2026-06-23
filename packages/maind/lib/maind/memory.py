@@ -279,9 +279,11 @@ def cmd_memory(env, argv):
         _cmd_recall(env, config, rest)
     elif sub == "forget":
         _cmd_forget(env, config, rest)
+    elif sub == "digest":
+        _cmd_digest(env, config, rest)
     else:
         die(f"неизвестная подкоманда memory: {sub} "
-            "(start|stop|status|remember|recall|forget)")
+            "(start|stop|status|remember|recall|forget|digest)")
 
 
 # ── память: scope-aware CLI (единый путь для хука и человека) ─────────────────
@@ -384,6 +386,59 @@ def _cmd_forget(env, config, argv):
     else:
         deleted = res.get("deleted") if isinstance(res, dict) else None
         print(f"memory(maind): forget {pos[0]} → deleted={deleted}")
+
+
+def _cmd_digest(env, config, argv):
+    """Компактный дайджест памяти проекта для SessionStart-хука (additionalContext).
+    ДЕТЕРМИНИРОВАННО (не семантика): берём ВСЕ факты scope'ов проекта через list+фильтр по
+    scope-маркеру, приоритет приватному, свежее сверху. ХУК-БЕЗОПАСНО: демон лёг / scope не
+    определён → молча пусто, без die. Так maind получает свойство авто-загрузки native-памяти."""
+    opts, _ = parse_args(argv, {"--project": "str", "--scope": "str",
+                                "--limit": "str", "--json": "bool"}, max_pos=0)
+    if opts["help"]:
+        print("maind memory digest [--project ID|--scope S] [--limit N]  # дайджест для SessionStart")
+        return
+    try:
+        limit = int(opts.get("limit") or 8)
+    except (TypeError, ValueError):
+        limit = 8
+    _, _, url = resolve_ports(env, config)
+    if not health(url):
+        return                                   # демон лёг → тихо (хук-безопасно)
+    try:
+        proj, _w, read_scopes = _memory_target(env, config, opts)
+    except SystemExit:
+        return                                   # scope не определён → тихо
+    private = read_scopes[0] if read_scopes else None
+    want = set(read_scopes)
+    try:
+        raw = export(url, "")                    # весь пул (namespace игнор) → фильтр по маркеру
+    except RuntimeError:
+        return
+    seen, rows = set(), []
+    for m in raw:
+        text = m.get("content") or m.get("narrative") or m.get("title") or ""
+        sc, clean = split_scope(text)
+        clean = (clean or "").strip()
+        if sc not in want or not clean or clean in seen:
+            continue
+        # чужие seed-cross-ref'ы ("[maind:ecosystem-link] a → b") — graph-сиды, не контекст
+        if sc != private and clean.startswith("[maind:ecosystem-link]") and " → " in clean:
+            continue
+        seen.add(clean)
+        rows.append((0 if sc == private else 1, m.get("timestamp") or "", clean))
+    rows.sort(key=lambda r: r[1], reverse=True)  # свежее сверху
+    rows.sort(key=lambda r: r[0])                # приватный scope первым (стабильно)
+    items = [r[2] for r in rows[:limit]]
+    if not items:
+        return
+    if opts["json"]:
+        print(json.dumps(items, ensure_ascii=False))
+        return
+    pid = proj["id"] if proj else (opts.get("scope") or "?")
+    print(f"Память проекта {pid} (mAInd — детали: `maind memory recall \"<тема>\"`):")
+    for t in items:
+        print(f"- {t}")
 
 
 def _cmd_status(env, config, argv):

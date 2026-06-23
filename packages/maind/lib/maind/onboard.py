@@ -74,7 +74,12 @@ def _wire_memory(env, config, proj, namespaces=None, dry=False):
                          "# scope из проекта: приватный project:<id> + общие ns:<тег> + global.\n"
                          "MODE=maind\n", encoding="utf-8")
             wrote = True
-    return {"namespaces": proj.get("namespaces"), "memory_env_written": wrote, "changed": changed}
+    # MODE=maind → демон становится источником контекста: SessionStart-инжект дайджеста
+    # памяти + выключение нативной авто-памяти (autoMemoryEnabled:false).
+    from .health import apply_memory_hook
+    hook = apply_memory_hook(env, config, proj, "auto", dry)
+    return {"namespaces": proj.get("namespaces"), "memory_env_written": wrote,
+            "changed": changed, "memory_hook": hook.get("status")}
 
 
 def onboard(env, config, project_or_path, opts):
@@ -85,11 +90,12 @@ def onboard(env, config, project_or_path, opts):
     steps.append({"name": "register", "status": "ok",
                   "detail": f"{'создан' if created else 'найден'} project:{proj['id']}"})
 
-    # 0. память на демоне: namespaces + хук-режим maind (и для уже подключённого — доводим)
+    # 0. память на демоне: namespaces + хук-режим maind + SessionStart-инжект дайджеста
+    #    (autoMemoryEnabled:false — native off). Доводит и уже подключённый проект.
     mw = _wire_memory(env, config, proj, namespaces=opts.get("namespaces"), dry=dry)
     steps.append({"name": "memwire", "status": "ok",
-                  "detail": f"ns=[{','.join(mw['namespaces'] or [])}] hook=MODE=maind"
-                            + ("" if not mw["memory_env_written"] else " (записан .claude/memory.env.ini)")})
+                  "detail": f"ns=[{','.join(mw['namespaces'] or [])}] MODE=maind, "
+                            f"digest-hook+native-off ({mw.get('memory_hook')})"})
 
     # 1. skiller integrate — скиллы + окружение (integrate делегирует permissions/MCP/
     # хуки пакету harness). standalone-safe. При --skip-skills окружение всё равно

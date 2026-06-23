@@ -265,6 +265,76 @@ def apply_feature_log_hook(env, config, project, mode, dry):
                    ".claude/maind-feature-log.sh + settings")
 
 
+MEMORY_HOOK_SCRIPT = ".claude/maind-memory.sh"
+
+
+def apply_memory_hook(env, config, project, mode, dry):
+    """SessionStart-хук инжекта дайджеста памяти (additionalContext) + выключение НАТИВНОЙ
+    авто-памяти (`autoMemoryEnabled:false`). Ставится для проектов на `MODE=maind`: maind
+    становится источником контекста вместо native MEMORY.md (даёт авто-загрузку, которой у
+    демона иначе нет). Идемпотентно. Парный «не-maind» путь делает revert — `revert_memory_hook`."""
+    pid = project["id"]
+    local = project.get("local_path")
+    path = Path(os.path.expanduser(local)) if local else None
+    if not path or not path.is_dir():
+        return _result(pid, "memory-hook", "absent", False, dry, "нет пути")
+    try:
+        script = _render(env, "health/memory-digest-hook.sh", {"MAIND_BIN": _maind_bin(env)})
+    except OSError as e:                         # шаблон недоступен (standalone-safe)
+        return _result(pid, "memory-hook", "absent", False, dry, f"шаблон недоступен: {e}")
+    script_path = path / MEMORY_HOOK_SCRIPT
+    state = _file_state(script_path, script)
+    settings_path = path / ".claude" / "settings.json"
+    command = f"bash {script_path}"
+    settings, _existed = load_settings(settings_path)
+    _, hook_changed = _merge_session_hook(json.loads(json.dumps(settings)), command,
+                                          marker="maind-memory")
+    native_off = settings.get("autoMemoryEnabled") is False
+    if state == "fresh" and (hook_changed or not native_off):
+        state = "stale"
+    if not _act(mode, state):
+        return _result(pid, "memory-hook", state, False, dry, ".claude/ (native off + digest)")
+    if not dry:
+        script_path.parent.mkdir(parents=True, exist_ok=True)
+        if script_path.is_file():
+            backup_file(script_path)
+        atomic_write_text(script_path, script)
+        script_path.chmod(script_path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP)
+        merged, _ = _merge_session_hook(settings, command, marker="maind-memory")
+        merged["autoMemoryEnabled"] = False          # выключить нативную авто-память
+        if settings_path.is_file():
+            backup_file(settings_path)
+        atomic_write_json(settings_path, merged)
+    return _result(pid, "memory-hook", state, True, dry,
+                   ".claude/maind-memory.sh + autoMemoryEnabled:false")
+
+
+def revert_memory_hook(env, config, project, dry):
+    """Откат к нативной памяти: снять SessionStart-хук инжекта и вернуть авто-память
+    (`autoMemoryEnabled` убрать). Для проектов, ушедших с `MODE=maind` на native."""
+    pid = project["id"]
+    local = project.get("local_path")
+    path = Path(os.path.expanduser(local)) if local else None
+    if not path or not path.is_dir():
+        return _result(pid, "memory-hook", "absent", False, dry, "нет пути")
+    settings_path = path / ".claude" / "settings.json"
+    settings, existed = load_settings(settings_path)
+    changed = False
+    sessions = (settings.get("hooks") or {}).get("SessionStart") or []
+    for group in sessions:
+        kept = [h for h in group.get("hooks", []) if "maind-memory" not in h.get("command", "")]
+        if len(kept) != len(group.get("hooks", [])):
+            group["hooks"] = kept
+            changed = True
+    if settings.pop("autoMemoryEnabled", None) is not None:
+        changed = True
+    if changed and not dry and existed:
+        backup_file(settings_path)
+        atomic_write_json(settings_path, settings)
+    return _result(pid, "memory-hook", "stale" if changed else "fresh", changed, dry,
+                   "native восстановлена")
+
+
 # ── CLI ─────────────────────────────────────────────────────────────────────
 def cmd_health(env, argv):
     opts, _ = parse_args(argv, {"--project": "str", "--cwd": "bool", "--fix": "bool",

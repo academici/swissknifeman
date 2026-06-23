@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Changed (session-observer 0.3.0 — авто-включение логгера)
+
+- **`/observe on` теперь полный чеклист**, который Claude выполняет автоматически:
+  установка хука глобально → проводка пресета `observer` в проект → `ENABLED=true`
+  → gitignore `.claude/observer/` → напоминание про рестарт сессии. Раньше скилл
+  подразумевал только `ENABLED=true`, чего недостаточно для активации логгера.
+  Добавлен `/observe off`.
+
 ### Added (Observer capture-слой — план agent-skill-binding, Stage D)
 
 - **`harness` observer-хук** (PreToolUse/PostToolUse/Stop), ЭКСПЕРИМЕНТАЛЬНО,

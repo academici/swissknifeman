@@ -59,6 +59,19 @@ def _hook_memory_mode(project):
     return None
 
 
+def _native_memory_state(project):
+    """(native_off, digest_hook_wired) из <project>/.claude/settings.json — для MODE=maind
+    нативная авто-память должна быть выключена, а SessionStart-инжект дайджеста — на месте."""
+    lp = project.get("local_path")
+    if not lp:
+        return (None, None)
+    settings, _ = load_settings(Path(os.path.expanduser(lp)) / ".claude" / "settings.json")
+    native_off = settings.get("autoMemoryEnabled") is False
+    cmds = [h.get("command", "") for g in (settings.get("hooks") or {}).get("SessionStart", [])
+            for h in g.get("hooks", [])]
+    return (native_off, any("maind-memory" in c for c in cmds))
+
+
 def memory_roundtrip(env, config, project, memory_reachable):
     """Доказать, что память РЕАЛЬНО работает: write→recall→forget по temp-факту в приватном
     scope. Ловит раскол (хук пишет не в тот стор), сломанный forget и потерю изоляции."""
@@ -89,6 +102,7 @@ def health_report(env, config, project, *, memory_reachable=None):
     rep = probe_project(env, config, project, memory_reachable=memory_reachable)
     c = rep.get("configured", {})
     hook_mode = _hook_memory_mode(project)
+    native_off, digest_hook = _native_memory_state(project)
     roundtrip = memory_roundtrip(env, config, project, memory_reachable)
     hints = []
     if not memory_reachable:
@@ -96,6 +110,9 @@ def health_report(env, config, project, *, memory_reachable=None):
     if hook_mode != "maind":
         hints.append("хук памяти не в режиме maind → maind onboard "
                      f"{pid} (запишет .claude/memory.env.ini MODE=maind)")
+    elif not (native_off and digest_hook):
+        hints.append("MODE=maind, но native-память не выключена / нет digest-инжекта → "
+                     f"maind onboard {pid} (autoMemoryEnabled:false + .claude/maind-memory.sh)")
     if not roundtrip["ok"] and memory_reachable:
         hints.append(f"память не проходит round-trip ({roundtrip['detail']}) — "
                      "remember/recall идут в разные сторы?")
@@ -107,6 +124,8 @@ def health_report(env, config, project, *, memory_reachable=None):
         "status": rep.get("status", "standalone"),
         "memory_daemon": memory_reachable,
         "hook_memory_mode": hook_mode,
+        "native_memory_off": native_off,
+        "digest_hook": digest_hook,
         "memory_roundtrip": roundtrip["ok"],
         "agentmemory_mcp": bool(c.get("agentmemory_mcp")),
         "maind_mcp": bool(c.get("maind_mcp")),
@@ -265,6 +284,76 @@ def apply_feature_log_hook(env, config, project, mode, dry):
                    ".claude/maind-feature-log.sh + settings")
 
 
+MEMORY_HOOK_SCRIPT = ".claude/maind-memory.sh"
+
+
+def apply_memory_hook(env, config, project, mode, dry):
+    """SessionStart-хук инжекта дайджеста памяти (additionalContext) + выключение НАТИВНОЙ
+    авто-памяти (`autoMemoryEnabled:false`). Ставится для проектов на `MODE=maind`: maind
+    становится источником контекста вместо native MEMORY.md (даёт авто-загрузку, которой у
+    демона иначе нет). Идемпотентно. Парный «не-maind» путь делает revert — `revert_memory_hook`."""
+    pid = project["id"]
+    local = project.get("local_path")
+    path = Path(os.path.expanduser(local)) if local else None
+    if not path or not path.is_dir():
+        return _result(pid, "memory-hook", "absent", False, dry, "нет пути")
+    try:
+        script = _render(env, "health/memory-digest-hook.sh", {"MAIND_BIN": _maind_bin(env)})
+    except OSError as e:                         # шаблон недоступен (standalone-safe)
+        return _result(pid, "memory-hook", "absent", False, dry, f"шаблон недоступен: {e}")
+    script_path = path / MEMORY_HOOK_SCRIPT
+    state = _file_state(script_path, script)
+    settings_path = path / ".claude" / "settings.json"
+    command = f"bash {script_path}"
+    settings, _existed = load_settings(settings_path)
+    _, hook_changed = _merge_session_hook(json.loads(json.dumps(settings)), command,
+                                          marker="maind-memory")
+    native_off = settings.get("autoMemoryEnabled") is False
+    if state == "fresh" and (hook_changed or not native_off):
+        state = "stale"
+    if not _act(mode, state):
+        return _result(pid, "memory-hook", state, False, dry, ".claude/ (native off + digest)")
+    if not dry:
+        script_path.parent.mkdir(parents=True, exist_ok=True)
+        if script_path.is_file():
+            backup_file(script_path)
+        atomic_write_text(script_path, script)
+        script_path.chmod(script_path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP)
+        merged, _ = _merge_session_hook(settings, command, marker="maind-memory")
+        merged["autoMemoryEnabled"] = False          # выключить нативную авто-память
+        if settings_path.is_file():
+            backup_file(settings_path)
+        atomic_write_json(settings_path, merged)
+    return _result(pid, "memory-hook", state, True, dry,
+                   ".claude/maind-memory.sh + autoMemoryEnabled:false")
+
+
+def revert_memory_hook(env, config, project, dry):
+    """Откат к нативной памяти: снять SessionStart-хук инжекта и вернуть авто-память
+    (`autoMemoryEnabled` убрать). Для проектов, ушедших с `MODE=maind` на native."""
+    pid = project["id"]
+    local = project.get("local_path")
+    path = Path(os.path.expanduser(local)) if local else None
+    if not path or not path.is_dir():
+        return _result(pid, "memory-hook", "absent", False, dry, "нет пути")
+    settings_path = path / ".claude" / "settings.json"
+    settings, existed = load_settings(settings_path)
+    changed = False
+    sessions = (settings.get("hooks") or {}).get("SessionStart") or []
+    for group in sessions:
+        kept = [h for h in group.get("hooks", []) if "maind-memory" not in h.get("command", "")]
+        if len(kept) != len(group.get("hooks", [])):
+            group["hooks"] = kept
+            changed = True
+    if settings.pop("autoMemoryEnabled", None) is not None:
+        changed = True
+    if changed and not dry and existed:
+        backup_file(settings_path)
+        atomic_write_json(settings_path, settings)
+    return _result(pid, "memory-hook", "stale" if changed else "fresh", changed, dry,
+                   "native восстановлена")
+
+
 # ── CLI ─────────────────────────────────────────────────────────────────────
 def cmd_health(env, argv):
     opts, _ = parse_args(argv, {"--project": "str", "--cwd": "bool", "--fix": "bool",
@@ -298,6 +387,9 @@ def cmd_health(env, argv):
         print(f"  [{ok(rep['maind_mcp'])}] maind MCP в проекте")
         print(f"  [{ok(rep['hook_memory_mode'] == 'maind')}] хук памяти MODE=maind "
               f"({rep['hook_memory_mode'] or 'не задан'})")
+        if rep['hook_memory_mode'] == 'maind':
+            print(f"  [{ok(rep['native_memory_off'] and rep['digest_hook'])}] native off + "
+                  "digest-инжект (SessionStart)")
         print(f"  [{ok(rep['memory_roundtrip'])}] память round-trip (write→recall→forget)")
         print(f"  ns: [{', '.join(rep['namespaces'])}]  статус: {rep['status']}")
         for h in rep["hints"]:

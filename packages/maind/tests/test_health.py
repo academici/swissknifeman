@@ -44,13 +44,15 @@ class TestReport(unittest.TestCase):
             self.assertTrue(any("start --only memory" in h for h in rep["hints"]))
 
     def test_connected_with_mcp_and_daemon(self):
-        # Полностью здоровый проект: MCP + демон + хук MODE=maind + рабочий round-trip.
+        # Полностью здоровый проект: MCP + демон + MODE=maind + native off + digest-инжект + round-trip.
         with tempfile.TemporaryDirectory() as tmp, FakeMemoryServer() as url:
             env, config, proj, _ = _setup(tmp, with_mcp=True, memory_url=url, hook_maind=True)
+            health.apply_memory_hook(env, config, proj, "auto", dry=False)  # native off + digest hook
             rep = health.health_report(env, config, proj, memory_reachable=True)
             self.assertEqual(rep["status"], "connected")
-            self.assertTrue(rep["agentmemory_mcp"] and rep["maind_mcp"])
+            self.assertTrue(rep["maind_mcp"])
             self.assertEqual(rep["hook_memory_mode"], "maind")
+            self.assertTrue(rep["native_memory_off"] and rep["digest_hook"])
             self.assertTrue(rep["memory_roundtrip"])      # write→recall→forget прошёл
             self.assertEqual(rep["hints"], [])
 
@@ -138,6 +140,38 @@ class TestHealthHook(unittest.TestCase):
             s2 = json.loads((pdir / ".claude" / "settings.json").read_text())
             self.assertIn("SessionStart", s2["hooks"])
             self.assertIn("SessionEnd", s2["hooks"])
+
+
+class TestMemoryHook(unittest.TestCase):
+    def test_apply_wires_digest_hook_and_disables_native(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj, pdir = _setup(tmp)
+            r = health.apply_memory_hook(env, config, proj, "auto", dry=False)
+            self.assertTrue(r["changed"])
+            self.assertTrue((pdir / ".claude" / "maind-memory.sh").is_file())
+            settings = json.loads((pdir / ".claude" / "settings.json").read_text())
+            self.assertIs(settings["autoMemoryEnabled"], False)   # native выключена
+            cmds = [h["command"] for g in settings["hooks"]["SessionStart"] for h in g["hooks"]]
+            self.assertTrue(any("maind-memory" in c for c in cmds))
+
+    def test_apply_idempotent(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj, _ = _setup(tmp)
+            health.apply_memory_hook(env, config, proj, "auto", dry=False)
+            r2 = health.apply_memory_hook(env, config, proj, "auto", dry=False)
+            self.assertEqual(r2["state"], "fresh")
+            self.assertFalse(r2["changed"])
+
+    def test_revert_restores_native(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj, pdir = _setup(tmp)
+            health.apply_memory_hook(env, config, proj, "auto", dry=False)
+            health.revert_memory_hook(env, config, proj, dry=False)
+            settings = json.loads((pdir / ".claude" / "settings.json").read_text())
+            self.assertNotIn("autoMemoryEnabled", settings)       # native возвращена
+            cmds = [h["command"] for g in settings.get("hooks", {}).get("SessionStart", [])
+                    for h in g["hooks"]]
+            self.assertFalse(any("maind-memory" in c for c in cmds))
 
 
 class TestCLI(unittest.TestCase):

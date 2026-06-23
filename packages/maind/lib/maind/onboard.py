@@ -6,6 +6,7 @@ maind deploy (память+граф) → seed графа. Каждый шаг st
 чтобы к моменту seed уже существовал skills-lock.json."""
 import json
 import os
+import sys
 from pathlib import Path
 
 from .common import die, parse_args, sanitize
@@ -48,33 +49,45 @@ def _ensure_project(env, config, project_or_path, namespaces=None, dry=False):
     return config, proj, True
 
 
-def _wire_memory(env, config, proj, namespaces=None, dry=False):
-    """Память проекта на демоне mAInd: гарантировать namespaces (общий `axioma` + свой,
-    несколько на проект — клиентам передавай явный список без axioma) и хук-режим `maind`
-    (`.claude/memory.env.ini`), чтобы и хук, и MCP писали/читали один изолированный scope.
-    Идемпотентно; для уже подключённого проекта тоже доводит проводку."""
+def _wire_memory(env, config, proj, namespaces=None, mechanism="maind", dry=False):
+    """Проводка памяти проекта по выбранному механизму (гибко, дефолт `maind`):
+    - **maind** (рекомендуется): namespaces (`axioma` + свой) + `.claude/memory.env.ini`
+      MODE=maind + SessionStart-инжект дайджеста + выключение нативной авто-памяти
+      (`autoMemoryEnabled:false`). Демон — единый источник памяти и контекста.
+    - **native**: вернуть нативную авто-память Claude Code (revert хука), MODE=off.
+    - **off**: память выключена (MODE=off, native не трогаем).
+    Идемпотентно; доводит и уже подключённый проект."""
+    from .health import apply_memory_hook, revert_memory_hook
     changed = False
-    if namespaces and proj.get("namespaces") != list(namespaces):
-        proj["namespaces"] = list(namespaces)
-        changed = True
-    elif not proj.get("namespaces"):
-        proj["namespaces"] = ["axioma", proj["id"]]
-        changed = True
-    if changed and not dry:
-        write_config(env, config)
+    if mechanism == "maind":
+        if namespaces and proj.get("namespaces") != list(namespaces):
+            proj["namespaces"] = list(namespaces)
+            changed = True
+        elif not proj.get("namespaces"):
+            proj["namespaces"] = ["axioma", proj["id"]]
+            changed = True
+        if changed and not dry:
+            write_config(env, config)
     wrote = False
     lp = proj.get("local_path")
+    mode = {"maind": "maind", "native": "off", "off": "off"}.get(mechanism, "maind")
     if lp and not dry:
         cdir = Path(os.path.expanduser(lp)) / ".claude"
         f = cdir / "memory.env.ini"
         cur = f.read_text(encoding="utf-8") if f.is_file() else ""
-        if "MODE=maind" not in cur:
+        if f"MODE={mode}" not in cur:
             cdir.mkdir(parents=True, exist_ok=True)
-            f.write_text("# Память через демон mAInd (изоляция по scope на стороне maind).\n"
-                         "# scope из проекта: приватный project:<id> + общие ns:<тег> + global.\n"
-                         "MODE=maind\n", encoding="utf-8")
+            f.write_text(f"# Память проекта — механизм '{mechanism}'.\n"
+                         f"# maind = демон + изоляция по scope; native = авто-память Claude Code.\n"
+                         f"MODE={mode}\n", encoding="utf-8")
             wrote = True
-    return {"namespaces": proj.get("namespaces"), "memory_env_written": wrote, "changed": changed}
+    # maind → ставим digest-хук + выключаем native; иначе — revert на нативную память.
+    if mechanism == "maind":
+        hook = apply_memory_hook(env, config, proj, "auto", dry)
+    else:
+        hook = revert_memory_hook(env, config, proj, dry)
+    return {"mechanism": mechanism, "namespaces": proj.get("namespaces"),
+            "memory_env_written": wrote, "changed": changed, "memory_hook": hook.get("status")}
 
 
 def onboard(env, config, project_or_path, opts):
@@ -85,11 +98,12 @@ def onboard(env, config, project_or_path, opts):
     steps.append({"name": "register", "status": "ok",
                   "detail": f"{'создан' if created else 'найден'} project:{proj['id']}"})
 
-    # 0. память на демоне: namespaces + хук-режим maind (и для уже подключённого — доводим)
-    mw = _wire_memory(env, config, proj, namespaces=opts.get("namespaces"), dry=dry)
+    # 0. память: выбранный механизм (дефолт maind = демон + изоляция + native off + digest-инжект).
+    mw = _wire_memory(env, config, proj, namespaces=opts.get("namespaces"),
+                      mechanism=opts.get("memory") or "maind", dry=dry)
     steps.append({"name": "memwire", "status": "ok",
-                  "detail": f"ns=[{','.join(mw['namespaces'] or [])}] hook=MODE=maind"
-                            + ("" if not mw["memory_env_written"] else " (записан .claude/memory.env.ini)")})
+                  "detail": f"механизм={mw['mechanism']} ns=[{','.join(mw['namespaces'] or [])}] "
+                            f"hook={mw.get('memory_hook')}"})
 
     # 1. skiller integrate — скиллы + окружение (integrate делегирует permissions/MCP/
     # хуки пакету harness). standalone-safe. При --skip-skills окружение всё равно
@@ -189,16 +203,26 @@ def cmd_onboard(env, argv):
     o, pos = parse_args(argv, {"--bundle": "str", "--skip-skills": "bool",
                                "--targets": "str", "--with-code": "bool",
                                "--with-graphify": "bool", "--namespace": "str",
+                               "--memory": "str",
                                "--with-brain": "bool", "--dry-run": "bool",
                                "--yes": "bool", "--json": "bool"}, max_pos=1)
     if not pos:
-        die("использование: maind onboard <project|path> [--namespace a,b] [--bundle B "
-            "--yes --with-code --with-brain --dry-run]")
+        die("использование: maind onboard <project|path> [--memory maind|native|off] "
+            "[--namespace a,b] [--bundle B --yes --with-code --with-brain --dry-run]")
     config, _src = load_config(env)
     ns = [s.strip() for s in (o["namespace"] or "").split(",") if s.strip()] or None
+    # Чек-лист: механизм памяти. Дефолт — maind (демон + изоляция + авто-инжект контекста).
+    memory = o["memory"]
+    if memory and memory not in ("maind", "native", "off"):
+        die(f"--memory: {memory} (допустимо: maind|native|off)")
+    if not memory and not o["yes"] and sys.stdin.isatty():
+        ans = input("Механизм памяти проекта [maind]/native/off: ").strip().lower()
+        memory = ans or "maind"
+        if memory not in ("maind", "native", "off"):
+            memory = "maind"
     opts = {"bundle": o["bundle"], "skip_skills": o["skip_skills"], "targets": o["targets"],
             "with_code": o["with_code"], "with_graphify": o["with_graphify"],
-            "namespaces": ns,
+            "namespaces": ns, "memory": memory or "maind",
             "with_brain": o["with_brain"], "dry": o["dry_run"], "yes": o["yes"]}
     report = onboard(env, config, pos[0], opts)
     if o["json"]:

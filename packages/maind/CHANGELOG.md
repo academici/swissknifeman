@@ -5,6 +5,18 @@
 
 ## [Unreleased]
 
+### Added
+- **Авто-загрузка памяти на старте сессии** (`maind memory digest` + SessionStart-хук):
+  при `MODE=maind` онбординг ставит `.claude/maind-memory.sh`, который инжектит дайджест
+  памяти проекта в контекст Claude Code (`additionalContext`), и **выключает нативную
+  авто-память** (`autoMemoryEnabled:false`). Так демон становится единым источником
+  контекста — закрывает дыру «у демона нет авто-загрузки, агент должен помнить про recall».
+  Дайджест детерминирован (list+фильтр по scope-маркеру, приватный scope первым, свежее
+  сверху), хук-безопасен (демон лёг → тихий no-op). Откат на native — `revert_memory_hook`.
+- **Гибкий выбор механизма памяти**: `maind onboard --memory maind|native|off` (дефолт
+  `maind`; в интерактиве — вопрос чек-листа). `native` возвращает авто-память Claude Code.
+  `maind health` проверяет консистентность: `MODE=maind ⇒ native off + digest-инжект на месте`.
+
 ### Changed
 - **Память проекта раскатывается только сервером `maind`** — raw MCP-сервер `agentmemory`
   больше НЕ деплоится и активно УДАЛЯЕТСЯ из `.mcp.json` при `deploy`/`sync` (он писал мимо

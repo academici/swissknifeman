@@ -88,6 +88,16 @@
           }
         ]
       }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/review-gate/review-gate.sh"
+          }
+        ]
+      }
     ]
   }
 }

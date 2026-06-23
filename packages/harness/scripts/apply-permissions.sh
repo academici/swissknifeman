@@ -70,6 +70,15 @@ if [[ "$GLOBAL" -eq 1 ]]; then
     chmod +x "$RG_DST/review-gate.sh"
     [[ -f "$RG_DST/env.ini" ]]     || cp "$RG_SRC/env.ini" "$RG_DST/"
     [[ -f "$RG_DST/config.json" ]] || cp "$RG_SRC/config.json" "$RG_DST/"
+    # observer: capture-слой (PreToolUse/PostToolUse/Stop), ЭКСПЕРИМЕНТАЛЬНО.
+    # Код обновляем; env.ini не перезатираем (там ENABLED проекта). Проводка —
+    # opt-in пресетом observer, не глобально.
+    OB_SRC="$PRESETS_DIR/hooks/observer"; OB_DST="$HOME/.claude/hooks/observer"
+    mkdir -p "$OB_DST"
+    cp "$OB_SRC/observer.sh" "$OB_DST/"
+    cp "$OB_SRC/README.md" "$OB_DST/"
+    chmod +x "$OB_DST/observer.sh"
+    [[ -f "$OB_DST/env.ini" ]] || cp "$OB_SRC/env.ini" "$OB_DST/"
     # Папка auto-approve: код/lib/modes — обновляем; env.ini и config.json —
     # не перезатираем (там выбор режима и кастомизация пользователя).
     AA_SRC="$PRESETS_DIR/hooks/auto-approve"; AA_DST="$HOME/.claude/hooks/auto-approve"

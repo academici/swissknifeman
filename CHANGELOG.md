@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Added (Observer capture-слой — план agent-skill-binding, Stage D)
+
+- **`harness` observer-хук** (PreToolUse/PostToolUse/Stop), ЭКСПЕРИМЕНТАЛЬНО,
+  per-project (`.claude/observer.env.ini` → `ENABLED`, дефолт `false`): пишет
+  компактный project-local `.claude/observer/runtime.jsonl` + алерт `LOOP`
+  (3+ ошибки подряд), архивирует на `Stop`. **Никогда не блокирует** (наблюдатель,
+  не гейт). Проводка — opt-in пресет `settings.observer.json` (`harness hooks
+  --preset observer`), не глобально. Разбор — скилл `system/session-observer`.
+- **`system/session-observer` 0.2.0** — добавлен `runtime.jsonl`/`archive` в
+  источники данных + как включить capture-слой.
+
 ### Added (детерминированная привязка скиллов к агентам)
 
 - **Поле `skills:` во frontmatter агентов бакетов** (`skills/<bucket>/agents/*.md`) —

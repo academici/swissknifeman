@@ -91,6 +91,77 @@
   (`lens/glass/rocket → part/insert/model`). `blender-modeling` зависит от `blender`
   (`mcp-blender` от B не зависит); потребителям модельных скиллов подключать оба плагина.
 
+### Added (agent-framework — каркас агент-практик + continuous-audit)
+
+- **Документация каркаса агентов** (`docs/skiller/agent-framework/`): обзор,
+  `framework-overview` (текущее состояние — вход аудита), `decisions-ledger`
+  (принято/отклонено + проверенные факты Claude Code), `roles`,
+  `skills-index-and-hub`, `post-integration-checklist`. Стойка: **данные + скилл,
+  не движок-генератор**.
+- **Переиспользуемый аудит-промт** `docs/skiller/workflows/framework-audit.md` —
+  периодическая ревизия каркаса через Perplexity (вход: overview + ledger; выход:
+  строгие дельта-таблицы); самоякорящаяся петля, не перепредлагает готовое.
+- **Архив аудитов** `docs/skiller/audits/` (raw verbatim + триаж двух прогонов
+  2026-06-23: universal-framework, agent-teams+ponytail) + ledger
+  `references/framework-audits.md`. Sidebar обновлён (standalone + агрегат).
+
+### Changed (hub — видимость агентов и скиллов, Фаза 1)
+
+- **`generate-hub.sh`**: в хаб добавлен срез **«Агенты проекта»** (таблица из
+  `.claude/agents/*.md`: роль → назначение → преднагруженные `skills:`) — роли и их
+  скиллы теперь видны оркестратору. Каждое имя в `skills:` сверяется с реестром;
+  неизвестное помечается `⚠` (preload молча no-op) + WARNING в stderr. Добавлен
+  **freshness-штамп** `<!-- swissknifeman:registry sha=… skills=N -->` для сверки
+  дрейфа «реестр изменился — хаб не перегенерён» (doctor — Фаза 5). Парс блок-списка
+  `skills:` — инлайн в скрипте; общий хелпер в common.py придёт с валидатором (Фаза 3).
+
+### Added (agent-packs — версионируемая pack-система, Фаза 2)
+
+- **Скилл `system/agent-packs`** — playbook установки и версионного апгрейда паков в
+  проект-потребитель: детект стека → интервью → рендер+копия → lock; upgrade по
+  CHANGELOG-дельте с 3-way reasoning через sha256 в lock (без diff-движка). Стойка:
+  агент-driven, не движок-генератор.
+- **Пак `backend-laravel` v0.1.0** (`harness/configs/claude-code/agent-packs/`):
+  агенты slice-builder/test-writer/reviewer + workflow dev-loop + review-gate хук +
+  settings-фрагмент + guideline; обобщены плейсхолдерами (`{{PACK_PREFIX}}`,
+  `{{PHP_RUNNER}}`, `{{TEST_RUNNER_CMD}}`, `{{TEST_DB}}`, `{{CHECK_CMD}}`,
+  `{{PROJECT_DIR}}`). `pack.json` (manifest) + per-pack `CHANGELOG.md` + README паков.
+- **Lock-схема** `.claude/agent-pack.lock.json` (версия + ответы интервью + per-file
+  `base_sha256` отрендеренного) — основа upgrade без diff-движка.
+
+### Added (Фаза 3 — роли, path-scoped rules, ponytail-дисциплина)
+
+- **Роль `spec-writer`** (опц.) в паке `backend-laravel` — пишет `docs/specs/<feature>.md`
+  (tech-spec) на крупные фичи, НЕ глобальный гейт. Path-scoped `rules/{api-controllers,
+  migrations,tests}.md` — нативная авто-загрузка `.claude/rules/` по путям; тонкие
+  триггеры, ссылаются на скиллы (без дублирования текста).
+- **ponytail-дисциплина впитана в `quality/code-simplifier`** (0.2.0→0.3.0): лесенка
+  YAGNI до кода (7 ступеней) + delete-list формат (теги `delete:`/`stdlib:`/`native:`/
+  `yagni:`/`shrink:`). Внешний плагин ponytail НЕ подключаем (конфликт с boost).
+  Reviewer-роль пака ссылается на over-engineering-проход.
+- **`.swissknife.json` схема** (`CONFIG_KEYS`): `shape`/`stacks`/`skills_map` — данные
+  профиля для универсальности back/front/fullstack (не движок).
+- Сверка имён `skills:` у агентов уже покрыта hub-проверкой (Фаза 1) — отдельная
+  команда `validate-agents` не понадобилась.
+
+### Added (Фаза 5 — doctor freshness-дрейф)
+
+- **`skiller doctor`** сверяет штамп `swissknifeman:registry sha=…` в хабе каждого
+  зарегистрированного проекта с текущим sha реестра → флагит устаревшие хабы («реестр
+  изменился — хаб не перегенерён»). Проекты без штампа (старый хаб) пропускаются.
+  Замыкает continuous-audit петлю на детект дрейфа.
+
+### Added (Фаза 6 — Agent Teams, опц.)
+
+- **Пресет `settings.agent-teams.json`** (harness) — opt-in включение экспериментальных
+  Agent Teams: `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` + `teammateMode` (merge-only,
+  сосуществует с auto-approve/review-gate). Предпосылка: Claude Code ≥2.1.178; конфиг
+  форвард-совместим.
+- **Doc `agent-framework/agent-teams`** — когда брать Teams vs субагенты, spawn-шаблоны
+  (full-stack фича, параллельный дебаг), module-boundaries (зоны путей под роли, БЕЗ
+  file-lock), опц. quality-gate хуки `TeammateIdle`/`TaskCompleted` (переиспользуют
+  review-gate). Роли каркаса годятся как teammates. Sidebar обновлён.
+
 ## [0.4.0] - 2026-06-22
 
 > **Зонтичная единая версия монорепо.** Накопленное с `v0.3.0`: выделение пакета

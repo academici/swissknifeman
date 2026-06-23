@@ -70,6 +70,20 @@ export default withMermaid(defineConfig({
             { text: 'Cursor / VS Code', link: '/workflows/cursor' },
             { text: 'Python / 3D', link: '/workflows/python-3d' },
             { text: 'Фоновые агенты', link: '/workflows/background-agents' },
+            { text: 'Аудит каркаса (Perplexity)', link: '/workflows/framework-audit' },
+          ],
+        },
+        {
+          text: 'Agent Framework',
+          items: [
+            { text: 'Обзор каркаса', link: '/agent-framework/' },
+            { text: 'Текущее состояние', link: '/agent-framework/framework-overview' },
+            { text: 'Реестр решений', link: '/agent-framework/decisions-ledger' },
+            { text: 'Универсальные роли', link: '/agent-framework/roles' },
+            { text: 'Hub = Skills Index', link: '/agent-framework/skills-index-and-hub' },
+            { text: 'Чеклист после внедрения', link: '/agent-framework/post-integration-checklist' },
+            { text: 'Agent Teams (Mesh)', link: '/agent-framework/agent-teams' },
+            { text: 'Архив аудитов', link: '/audits/' },
           ],
         },
         {

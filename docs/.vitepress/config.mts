@@ -94,6 +94,20 @@ export default withMermaid(defineConfig({
             { text: 'Cursor / VS Code', link: '/skiller/workflows/cursor' },
             { text: 'Python / 3D', link: '/skiller/workflows/python-3d' },
             { text: 'Фоновые агенты', link: '/skiller/workflows/background-agents' },
+            { text: 'Аудит каркаса (Perplexity)', link: '/skiller/workflows/framework-audit' },
+          ],
+        },
+        {
+          text: 'Agent Framework',
+          items: [
+            { text: 'Обзор каркаса', link: '/skiller/agent-framework/' },
+            { text: 'Текущее состояние', link: '/skiller/agent-framework/framework-overview' },
+            { text: 'Реестр решений', link: '/skiller/agent-framework/decisions-ledger' },
+            { text: 'Универсальные роли', link: '/skiller/agent-framework/roles' },
+            { text: 'Hub = Skills Index', link: '/skiller/agent-framework/skills-index-and-hub' },
+            { text: 'Чеклист после внедрения', link: '/skiller/agent-framework/post-integration-checklist' },
+            { text: 'Agent Teams (Mesh)', link: '/skiller/agent-framework/agent-teams' },
+            { text: 'Архив аудитов', link: '/skiller/audits/' },
           ],
         },
         {

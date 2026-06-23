@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "pack": "backend-laravel",
+  "version": "0.1.0",
+  "description": "Backend dev-loop для Laravel: агенты slice-builder/test-writer/reviewer (преднагружены архитектурными скиллами), последовательный одно-веточный workflow dev-loop (срез→impl→test→review), SubagentStop review-gate. Обобщено из проверенных overnight-артефактов memster.",
+  "stack": {
+    "shape": "backend",
+    "language": "php",
+    "framework": "laravel",
+    "detect": { "all_of": ["artisan", "composer.json"] }
+  },
+  "requires": {
+    "skills": [
+      "repositories", "laravel-structure", "dependency-injection", "laravel-data",
+      "laravel", "database", "code-style-spatie", "named-arguments",
+      "laravel-testing", "test-isolation-guard", "laravel-security-audit"
+    ],
+    "harness_presets": ["base", "laravel"]
+  },
+  "interview": [
+    { "id": "PACK_PREFIX", "q": "Префикс имён агентов/воркфлоу?", "default": "{project_dirname}", "kind": "slug" },
+    { "id": "PROJECT_DIR", "q": "Абсолютный путь к проекту?", "detect": "pwd" },
+    { "id": "PHP_RUNNER", "q": "Бинарь PHP для artisan/тестов?", "detect": "command -v php8.4 || command -v php", "default": "php" },
+    { "id": "TEST_FRAMEWORK", "q": "PHPUnit-native или Pest?", "detect": "composer.json:require-dev.pestphp/pest", "enum": ["phpunit", "pest"], "default": "phpunit" },
+    { "id": "TEST_RUNNER_CMD", "q": "Команда прогона тестов?", "default": "{PHP_RUNNER} artisan test" },
+    { "id": "TEST_DB", "q": "Имя изолированной тестовой БД?", "default": "{PACK_PREFIX}_test" },
+    { "id": "BASE_BRANCH", "q": "Базовая ветка прогонов?", "detect": "git symbolic-ref --short refs/remotes/origin/HEAD", "default": "main" },
+    { "id": "CHECK_CMD", "q": "Быстрая команда review-gate (статика)?", "default": "vendor/bin/pint --parallel --test -q" },
+    { "id": "ACCESS_LAYER", "q": "Канон access-layer (тонкий контроллер, Action/Repository)?", "kind": "bool", "default": true },
+    { "id": "DOCS_DIR", "q": "Куда положить guideline?", "default": "docs/05_AI/guidelines" }
+  ],
+  "files": [
+    { "src": "agents/slice-builder.md", "target": ".claude/agents/{PACK_PREFIX}-slice-builder.md", "kind": "template", "role": "agent" },
+    { "src": "agents/test-writer.md", "target": ".claude/agents/{PACK_PREFIX}-test-writer.md", "kind": "template", "role": "agent" },
+    { "src": "agents/reviewer.md", "target": ".claude/agents/{PACK_PREFIX}-reviewer.md", "kind": "template", "role": "agent" },
+    { "src": "agents/spec-writer.md", "target": ".claude/agents/{PACK_PREFIX}-spec-writer.md", "kind": "template", "role": "agent", "optional": true },
+    { "src": "workflows/dev-loop.js", "target": ".claude/workflows/{PACK_PREFIX}-dev-loop.js", "kind": "template", "role": "workflow" },
+    { "src": "hooks/review-gate.sh", "target": ".claude/hooks/review-gate.sh", "kind": "verbatim", "role": "hook", "chmod": "+x" },
+    { "src": "hooks/review-gate.env.ini", "target": ".claude/review-gate.env.ini", "kind": "template", "role": "config", "user_owned": true },
+    { "src": "settings/settings.fragment.json", "target": ".claude/settings.json", "kind": "merge", "role": "settings", "merge": "hooks.SubagentStop[] append-if-absent" },
+    { "src": "docs/subagents-and-workflows.md", "target": "{DOCS_DIR}/subagents-and-workflows.md", "kind": "template", "role": "doc" },
+    { "src": "rules/api-controllers.md", "target": ".claude/rules/api-controllers.md", "kind": "verbatim", "role": "rule" },
+    { "src": "rules/migrations.md", "target": ".claude/rules/migrations.md", "kind": "verbatim", "role": "rule" },
+    { "src": "rules/tests.md", "target": ".claude/rules/tests.md", "kind": "template", "role": "rule" }
+  ],
+  "notes": {
+    "project_specific_prose": "Агенты несут инфра-предположения memster-происхождения (защищённый .env, заранее созданная Postgres тестовая БД). Проекты с иной инфрой — отредактируй отрендеренные агенты после install.",
+    "verify_workflow": "dev-loop.js использует top-level return/await (Workflow-рантайм) — node --check к нему НЕ применять; проверяй балансом скобок и непустотой.",
+    "access_layer": "Для backend-laravel access-layer интринсивен (default true). Отключение (ACCESS_LAYER=false) — ручная правка отрендеренных агентов; placeholder-разводка придёт версией пака."
+  }
+}

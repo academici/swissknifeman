@@ -27,6 +27,10 @@ CONFIG_KEYS = {
     "project_type": str, "buckets": list, "exclude": list,
     "skills_path": str, "agent": str,
     "memory_brain": str, "coordinator_ignore": list,
+    # Профиль каркаса агентов (данные для agent-packs/универсальности, не движок):
+    # shape — backend|frontend|fullstack; stacks — напр. ["laravel","vue"];
+    # skills_map — домен→скиллы для преднагрузки ролей под стек.
+    "shape": str, "stacks": list, "skills_map": dict,
 }
 HUB_MARKER = "<!-- swissknifeman:hub:start -->"
 

@@ -86,7 +86,7 @@
     },
     "system": {
       "description": "Local environment topology: the three hub nodes (Brain vault, swissknifeman, projects base) and how agents navigate between projects and their docs",
-      "count": 4,
+      "count": 5,
       "status": "active"
     }
   },
@@ -3168,9 +3168,9 @@
       "name": "code-simplifier",
       "bucket": "quality",
       "path": "skills/quality/code-simplifier/SKILL.md",
-      "version": "0.2.0",
-      "description": "Упрощение свеженаписанного кода без изменения поведения: мёртвый код, лишние абстракции, дубли, выравнивание с паттернами проекта. Поведение фиксируют тесты.",
-      "sha256": "0fc621256ac46c0ad8d5eff7b5523c6851c644b9e41ff0e53a9059939c3eccfa",
+      "version": "0.3.0",
+      "description": "Упрощение свеженаписанного кода без изменения поведения: мёртвый код, лишние абстракции, дубли, выравнивание с паттернами проекта; лесенка YAGNI до кода и delete-list по диффу (адаптация дисциплины ponytail). Поведение фиксируют тесты.",
+      "sha256": "bc79740ce9c5c59c6036b54fc0c7a2f9ffa51e3b4d11b647d64973afbd93adaa",
       "tags": [
         "quality",
         "refactoring",
@@ -3372,6 +3372,25 @@
         "orchestration",
         "review",
         "workflow"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "agent-packs",
+      "bucket": "system",
+      "path": "skills/system/agent-packs/SKILL.md",
+      "version": "0.1.0",
+      "description": "Установка и ВЕРСИОНИРОВАННЫЙ апгрейд agent-packs (агенты/воркфлоу/хуки Claude Code) из harness в проект-потребитель: детект стека -> интервью -> рендер+копия -> lock; апгрейд по CHANGELOG-дельте с 3-way reasoning через sha256 в lock, без diff-движка. Активировать при словах: внедрить/обновить agent-pack, поставить роли+dev-loop+review-gate в проект, версионный upgrade шаблонов агентов, agent-pack.lock.",
+      "sha256": "f0951fa7161b69c22b6f5425a0c003c6bc4f17e6394de48f271b2e1fee859038",
+      "tags": [
+        "agent-packs",
+        "templates",
+        "versioning",
+        "upgrade",
+        "install",
+        "claude-code",
+        "harness",
+        "lock"
       ],
       "source": "local"
     },

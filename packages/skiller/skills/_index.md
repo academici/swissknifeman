@@ -4,7 +4,7 @@
 
 Источник истины портируемых скиллов (машинный реестр — `skills.json`). Раздача в проекты: `skiller connect` (плагины-бакеты) / `vendor` (физ. перенос). CORE-набор токен-скиллов (`general`/`oss-dev`) раздаётся по умолчанию — см. `connect`/`vendor`.
 
-Всего: 185 скиллов в 17 бакетах.
+Всего: 186 скиллов в 17 бакетах.
 
 ## Скиллы по бакетам
 
@@ -269,10 +269,11 @@
 | `startup-cto` | Startup CTO persona — tech radar, hiring, architecture decisions | `role`, `persona`, `architecture`, `stack-choice`, `discipline` |
 | `tech-lead` | Tech Lead persona — sprint kickoff, 1:1s, team coordination | `role`, `persona`, `orchestration`, `review`, `workflow` |
 
-### system — Local environment topology: the three hub nodes (Brain vault, swissknifeman, projects base) and how agents navigate between projects and their docs (4)
+### system — Local environment topology: the three hub nodes (Brain vault, swissknifeman, projects base) and how agents navigate between projects and their docs (5)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
+| `agent-packs` | Установка и ВЕРСИОНИРОВАННЫЙ апгрейд agent-packs (агенты/воркфлоу/хуки Claude Code) из ha… | `agent-packs`, `templates`, `versioning`, `upgrade`, `install`, `claude-code`, `harness`, `lock` |
 | `cross-project-coordinator` | Оркестрация межпроектного анализа кода: обойти связанные проекты (через топологию), найти… | `cross-project`, `coordination`, `refactoring`, `duplication`, `topology`, `orchestration`, `agents`, `tokens` |
 | `local-topology` | Корневая карта локальной среды разработки — три узла-хаба (Brain-волт, swissknifeman, баз… | `topology`, `architecture`, `navigation`, `meta`, `cross-project` |
 | `session-observer` | ЭКСПЕРИМЕНТАЛЬНО (включается per-project). Пост-фактум разбор сессии Claude Code по JSONL… | `observer`, `session-analysis`, `learning`, `jsonl`, `drift`, `self-improvement`, `post-mortem` |
@@ -290,6 +291,7 @@
 | `adr` | `architecture`, `tech-stack-selection` |
 | `advisory` | `livewire-blade-attributes`, `version-gotchas` |
 | `agent-output` | `pao` |
+| `agent-packs` | `agent-packs` |
 | `agentic` | `agent-design`, `eval-design` |
 | `agents` | `complex-task-orchestrator`, `cross-project-coordinator`, `laravel-subagents` |
 | `ai` | `ai-context-workflow`, `skills-ssot` |
@@ -324,7 +326,7 @@
 | `checklist` | `complex-task-orchestrator`, `cross-layer-change-checklist` |
 | `chromedriver` | `laravel-dusk` |
 | `ci` | `backend-type-sync`, `ci-cd`, `code-simplifier`, `db-test-preflight`, `mutation-testing`, `node-pnpm-preflight`, `oss-development`, `playwright-e2e`, `release-engineering`, `test-isolation-guard`, `test-strategy` |
-| `claude-code` | `context-economy` |
+| `claude-code` | `agent-packs`, `context-economy` |
 | `clean-code` | `naming-conventions` |
 | `cli` | `dx-design` |
 | `code-connect` | `figma-mcp-core` |
@@ -404,6 +406,7 @@
 | `governance` | `package-contribution-protocol` |
 | `gtm` | `competitive-analysis`, `go-to-market`, `new-project`, `pitch-deck`, `product-roadmap` |
 | `handoff` | `gh-review`, `oncall-rotation`, `session-handoff` |
+| `harness` | `agent-packs` |
 | `headless` | `reka-ui-cva` |
 | `health` | `health-checks` |
 | `icons` | `vue-dynamic-icons` |
@@ -412,6 +415,7 @@
 | `incident` | `incident-response`, `oncall-rotation`, `postmortem`, `runbook` |
 | `inertia` | `filepond-upload`, `inertia-vue`, `laravel-data`, `wayfinder` |
 | `infection` | `mutation-testing` |
+| `install` | `agent-packs` |
 | `isolation` | `db-test-preflight`, `test-isolation-guard` |
 | `javascript` | `js-code-style` |
 | `jsdom` | `vitest` |
@@ -428,6 +432,7 @@
 | `livewire` | `filament`, `livewire-blade-attributes` |
 | `llm` | `eval-design` |
 | `localstorage` | `dark-mode` |
+| `lock` | `agent-packs` |
 | `logging` | `observability-design` |
 | `lucide` | `vue-dynamic-icons` |
 | `make` | `makefile` |
@@ -537,6 +542,7 @@
 | `tailwind` | `dark-mode`, `figma-to-vue`, `naive-ui-theming`, `reka-ui-cva`, `tailwind-conventions`, `vite-multi-build` |
 | `tailwindcss-v4` | `figma-to-vue`, `tailwind-conventions` |
 | `template` | `brd`, `model-rules`, `prd-from-brd`, `runbook`, `task-brief-template` |
+| `templates` | `agent-packs` |
 | `testing` | `db-test-preflight`, `docker-postgres`, `eval-design`, `laravel-testing`, `mutation-testing`, `pao`, `playwright-e2e`, `test-isolation-guard`, `test-strategy`, `testing-safety-report`, `vitest`, `vue-testing-best-practices` |
 | `tests` | `writing-style` |
 | `theme` | `dark-mode` |
@@ -555,13 +561,14 @@
 | `typescript` | `backend-type-sync`, `enum-attributes`, `eslint-flat-config`, `js-code-style`, `playwright-e2e`, `vue-dynamic-icons`, `vue-router-best-practices`, `wayfinder` |
 | `ui` | `figma-mcp-core`, `filament`, `naive-ui-theming`, `reka-ui-cva` |
 | `units` | `parametric-config` |
-| `upgrade` | `php-upgrade-checklist` |
+| `upgrade` | `agent-packs`, `php-upgrade-checklist` |
 | `uploads` | `filepond-upload`, `medialibrary` |
 | `validation` | `adversarial-check`, `agent-design`, `code-review`, `code-simplifier`, `cross-layer-change-checklist`, `customer-discovery`, `defensibility`, `eval-design`, `laravel-data`, `pmf-diagnostics`, `refactoring-plan`, `requirement-critic`, `risk-assessment`, `solo-founder`, `startup-lifecycle`, `tech-debt-audit`, `test-strategy` |
 | `variants` | `reka-ui-cva` |
 | `venv` | `venv-dependencies` |
 | `verification` | `testing-safety-report` |
 | `version` | `php-upgrade-checklist`, `version-gotchas` |
+| `versioning` | `agent-packs` |
 | `viewport` | `mcp-blender` |
 | `vite` | `docker-vite`, `vite-module-loader`, `vite-multi-build` |
 | `vitest` | `vitest`, `vue-testing-best-practices` |

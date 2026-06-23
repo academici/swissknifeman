@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Docs (мультипровайдерная раздача — dev-план)
+
+- **`skiller/docs/multi-provider-distribution.md`** — dev-план: увести раздачу
+  локального `.ai/` контента (CLAUDE.md/AGENTS.md/Cursor) из Laravel Boost в skiller
+  (Boost → только MCP). Фиксирует гэп (`vendor.py`/`skillset.py` резолвят реестр, не
+  локальный `.ai/`), целевой дизайн и reference-пилот `sibintek-insiders`. Кросс-ссылки
+  из `boost-compatibility.md` и `index.md`; пункт в сайдбаре VitePress.
+
 ### Added (Observer capture-слой — план agent-skill-binding, Stage D)
 
 - **`harness` observer-хук** (PreToolUse/PostToolUse/Stop), ЭКСПЕРИМЕНТАЛЬНО,

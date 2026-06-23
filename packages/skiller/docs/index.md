@@ -12,6 +12,7 @@ title: Скиллы (skiller)
 - [CLI swissknifeman](./guide/cli) · [Профили и автодетект](./guide/profiles)
 - [Создание скиллов](./guide/creating-skills) · [Реестр skills.json](./guide/registry)
 - [Адаптеры IDE](./adapters/claude-code) · [Примеры](./examples/laravel)
+- [Совместимость с Laravel Boost](./boost-compatibility) · [Раздача локального `.ai/` на провайдеры (dev-план)](./multi-provider-distribution)
 
 > Настройка окружения Claude Code (permissions/MCP/хуки) — в пакете
 > [harness](/harness/). Память и граф экосистемы — пакет maind.

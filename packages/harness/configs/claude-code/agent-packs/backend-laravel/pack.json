@@ -33,11 +33,15 @@
     { "src": "agents/slice-builder.md", "target": ".claude/agents/{PACK_PREFIX}-slice-builder.md", "kind": "template", "role": "agent" },
     { "src": "agents/test-writer.md", "target": ".claude/agents/{PACK_PREFIX}-test-writer.md", "kind": "template", "role": "agent" },
     { "src": "agents/reviewer.md", "target": ".claude/agents/{PACK_PREFIX}-reviewer.md", "kind": "template", "role": "agent" },
+    { "src": "agents/spec-writer.md", "target": ".claude/agents/{PACK_PREFIX}-spec-writer.md", "kind": "template", "role": "agent", "optional": true },
     { "src": "workflows/dev-loop.js", "target": ".claude/workflows/{PACK_PREFIX}-dev-loop.js", "kind": "template", "role": "workflow" },
     { "src": "hooks/review-gate.sh", "target": ".claude/hooks/review-gate.sh", "kind": "verbatim", "role": "hook", "chmod": "+x" },
     { "src": "hooks/review-gate.env.ini", "target": ".claude/review-gate.env.ini", "kind": "template", "role": "config", "user_owned": true },
     { "src": "settings/settings.fragment.json", "target": ".claude/settings.json", "kind": "merge", "role": "settings", "merge": "hooks.SubagentStop[] append-if-absent" },
-    { "src": "docs/subagents-and-workflows.md", "target": "{DOCS_DIR}/subagents-and-workflows.md", "kind": "template", "role": "doc" }
+    { "src": "docs/subagents-and-workflows.md", "target": "{DOCS_DIR}/subagents-and-workflows.md", "kind": "template", "role": "doc" },
+    { "src": "rules/api-controllers.md", "target": ".claude/rules/api-controllers.md", "kind": "verbatim", "role": "rule" },
+    { "src": "rules/migrations.md", "target": ".claude/rules/migrations.md", "kind": "verbatim", "role": "rule" },
+    { "src": "rules/tests.md", "target": ".claude/rules/tests.md", "kind": "template", "role": "rule" }
   ],
   "notes": {
     "project_specific_prose": "Агенты несут инфра-предположения memster-происхождения (защищённый .env, заранее созданная Postgres тестовая БД). Проекты с иной инфрой — отредактируй отрендеренные агенты после install.",

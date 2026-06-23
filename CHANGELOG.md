@@ -66,6 +66,21 @@
 - **Lock-схема** `.claude/agent-pack.lock.json` (версия + ответы интервью + per-file
   `base_sha256` отрендеренного) — основа upgrade без diff-движка.
 
+### Added (Фаза 3 — роли, path-scoped rules, ponytail-дисциплина)
+
+- **Роль `spec-writer`** (опц.) в паке `backend-laravel` — пишет `docs/specs/<feature>.md`
+  (tech-spec) на крупные фичи, НЕ глобальный гейт. Path-scoped `rules/{api-controllers,
+  migrations,tests}.md` — нативная авто-загрузка `.claude/rules/` по путям; тонкие
+  триггеры, ссылаются на скиллы (без дублирования текста).
+- **ponytail-дисциплина впитана в `quality/code-simplifier`** (0.2.0→0.3.0): лесенка
+  YAGNI до кода (7 ступеней) + delete-list формат (теги `delete:`/`stdlib:`/`native:`/
+  `yagni:`/`shrink:`). Внешний плагин ponytail НЕ подключаем (конфликт с boost).
+  Reviewer-роль пака ссылается на over-engineering-проход.
+- **`.swissknife.json` схема** (`CONFIG_KEYS`): `shape`/`stacks`/`skills_map` — данные
+  профиля для универсальности back/front/fullstack (не движок).
+- Сверка имён `skills:` у агентов уже покрыта hub-проверкой (Фаза 1) — отдельная
+  команда `validate-agents` не понадобилась.
+
 ## [0.4.0] - 2026-06-22
 
 > **Зонтичная единая версия монорепо.** Накопленное с `v0.3.0`: выделение пакета

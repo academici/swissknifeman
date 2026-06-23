@@ -18,6 +18,9 @@
     user_owned) — SubagentStop-гейт off|warn|strict.
   - `settings/settings.fragment.json` — регистрация SubagentStop (merge append-if-absent).
   - `docs/subagents-and-workflows.md` — guideline.
+  - `agents/spec-writer.md` (опц.) — пишет `docs/specs/<feature>.md` на крупные фичи.
+  - `rules/{api-controllers,migrations,tests}.md` — path-scoped правила (`.claude/rules/`,
+    нативная авто-загрузка по путям); тонкие триггеры → ссылаются на скиллы.
 - Плейсхолдеры: `{{PACK_PREFIX}}`, `{{PROJECT_DIR}}`, `{{PHP_RUNNER}}`,
   `{{TEST_RUNNER_CMD}}`, `{{TEST_DB}}`, `{{CHECK_CMD}}`.
 

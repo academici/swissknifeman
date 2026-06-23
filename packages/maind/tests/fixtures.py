@@ -111,17 +111,32 @@ class _Handler(BaseHTTPRequestHandler):
         payload = json.loads(self.rfile.read(length) or b"{}")
         ns = payload.get("namespace", "")
         if parsed.path == "/agentmemory/remember":
+            self.server._seq += 1
+            mid = f"mem_fake_{self.server._seq}"
             self.server.memories.setdefault(ns, []).append(
-                {"content": payload.get("content", ""), "type": payload.get("type")})
+                {"id": mid, "content": payload.get("content", ""), "type": payload.get("type")})
             self._send(201, {"success": True,
-                             "memory": {"content": payload.get("content", "")}})
+                             "memory": {"id": mid, "content": payload.get("content", "")}})
         elif parsed.path == "/agentmemory/search":
             query = (payload.get("query") or "").lower()
-            results = [{"observation": {"narrative": m["content"], "title": m["content"],
-                                        "facts": [m["content"]]}, "score": 1.0}
+            results = [{"observation": {"id": m["id"], "narrative": m["content"],
+                                        "title": m["content"], "facts": [m["content"]]},
+                        "score": 1.0}
                        for m in self.server.memories.get(ns, [])
                        if query in m["content"].lower()]
             self._send(200, {"results": results})
+        elif parsed.path == "/agentmemory/forget":
+            # agentmemory ждёт memoryId; без него — 400 (как живой демон).
+            mid = payload.get("memoryId")
+            if not mid:
+                self._send(400, {"error": "memoryId required"})
+                return
+            deleted = 0
+            for arr in self.server.memories.values():
+                before = len(arr)
+                arr[:] = [m for m in arr if m.get("id") != mid]
+                deleted += before - len(arr)
+            self._send(200, {"success": True, "deleted": deleted})
         else:
             self._send(404, {"error": "not found"})
 
@@ -133,6 +148,7 @@ class FakeMemoryServer:
     def __init__(self):
         self.httpd = ThreadingHTTPServer(("127.0.0.1", 0), _Handler)
         self.httpd.memories = {}
+        self.httpd._seq = 0
         self.thread = threading.Thread(target=self.httpd.serve_forever, daemon=True)
 
     @property

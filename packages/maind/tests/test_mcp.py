@@ -139,13 +139,25 @@ class TestToolCalls(unittest.TestCase):
             self.assertIn("hub", data)
             self.assertIn("projects", data)
 
-    def test_memory_forget_unsupported_is_error(self):
+    def test_memory_forget_deletes_by_id(self):
+        # forget шлёт {memoryId} (не {namespace,id}) → удаляет факт; раньше был HTTP 400.
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
-            with FakeMemoryServer() as url:  # /forget не реализован → RuntimeError → isError
-                r = call(env, cfg(memory={"url": url}), "maind_memory_forget",
-                         {"scope": "project:x", "key": "k"})
-                self.assertTrue(r["result"]["isError"])
+            with FakeMemoryServer() as url:
+                c = cfg(memory={"url": url})
+                stored = json.loads(call(env, c, "maind_memory_store",
+                    {"scope": "project:x", "key": "fact", "value": "hello world"}
+                    )["result"]["content"][0]["text"])
+                mid = stored["memory"]["id"]
+                got = json.loads(call(env, c, "maind_memory_recall",
+                    {"scope": "project:x", "query": "hello"})["result"]["content"][0]["text"])
+                self.assertEqual(len(got), 1)
+                r = call(env, c, "maind_memory_forget", {"scope": "project:x", "key": mid})
+                self.assertFalse(r["result"].get("isError"))
+                self.assertEqual(json.loads(r["result"]["content"][0]["text"])["deleted"], 1)
+                gone = json.loads(call(env, c, "maind_memory_recall",
+                    {"scope": "project:x", "query": "hello"})["result"]["content"][0]["text"])
+                self.assertEqual(len(gone), 0)
 
     def test_missing_required_is_error(self):
         with tempfile.TemporaryDirectory() as tmp:

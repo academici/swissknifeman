@@ -5,6 +5,12 @@
 
 ## [Unreleased]
 
+### Fixed
+- **`maind memory forget`**: payload теперь `{memoryId}` вместо `{namespace, id}` —
+  прежний вариант давал `HTTP 400` от agentmemory 0.9.x (сверено живым `curl`), удаление
+  не работало. `FakeMemoryServer` в тестах получил `/agentmemory/forget` (по `memoryId`),
+  тест `test_memory_forget_deletes_by_id` доказывает round-trip store→recall→forget→gone.
+
 ## [0.2.0] — 2026-06-15
 
 ### Added

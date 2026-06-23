@@ -205,10 +205,14 @@ def recall(url, scope, query):
 
 
 def forget(url, scope, key):
-    """Удалить факт по id (best-effort): POST /agentmemory/forget."""
+    """Удалить факт по memoryId: POST /agentmemory/forget {memoryId}.
+
+    agentmemory 0.9.x ждёт ИМЕННО `memoryId` (id памяти глобально уникален);
+    прежний payload {namespace, id} давал HTTP 400 (сверено живым curl к демону).
+    scope сохранён в сигнатуре для совместимости вызовов, но в запрос не идёт.
+    """
     try:
-        return http_post_json(f"{url}/agentmemory/forget",
-                              {"namespace": scope, "id": key})
+        return http_post_json(f"{url}/agentmemory/forget", {"memoryId": key})
     except RuntimeError as e:
         raise RuntimeError(f"forget: {e}") from e
 

@@ -3464,9 +3464,9 @@
       "name": "shared-memory",
       "bucket": "system",
       "path": "skills/system/shared-memory/SKILL.md",
-      "version": "0.2.0",
-      "description": "Единый «мозг» (общая память) проектов констелляции через хук ~/.claude/hooks/memory/ + демон mAInd. Recall перед работой, remember после. Канон для проектов — MODE=maind (демон :4111, изоляция по scope на стороне maind): приватный project:<id> + общее по тегам ns:<namespace> + global; recall их объединяет. Бэкенд сменный: maind|file|federation|agentmemory|off.",
-      "sha256": "ea9765eacf77d65fd17bf507ca4a57551e18226d9ad048a6c7bb8d89bce00a6f",
+      "version": "0.3.0",
+      "description": "Единый «мозг» (общая память) проектов констелляции через хук ~/.claude/hooks/memory/ + демон mAInd. Recall перед работой, remember после. Канон для проектов — MODE=maind (демон :4111, изоляция по scope на стороне maind): приватный project:<id> + общее по тегам ns:<namespace> + global; recall их объединяет; на старте сессии авто-инжект дайджеста (native-память выключается). Правило роутинга: один факт в один стор. Бэкенд сменный: maind|native|file|federation|off.",
+      "sha256": "5624f36811f16981ae52f710294f3351a32f2ed48b2dcacc944bf4fd4dcb72c3",
       "tags": [
         "memory",
         "cross-project",

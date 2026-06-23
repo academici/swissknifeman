@@ -44,13 +44,15 @@ class TestReport(unittest.TestCase):
             self.assertTrue(any("start --only memory" in h for h in rep["hints"]))
 
     def test_connected_with_mcp_and_daemon(self):
-        # Полностью здоровый проект: MCP + демон + хук MODE=maind + рабочий round-trip.
+        # Полностью здоровый проект: MCP + демон + MODE=maind + native off + digest-инжект + round-trip.
         with tempfile.TemporaryDirectory() as tmp, FakeMemoryServer() as url:
             env, config, proj, _ = _setup(tmp, with_mcp=True, memory_url=url, hook_maind=True)
+            health.apply_memory_hook(env, config, proj, "auto", dry=False)  # native off + digest hook
             rep = health.health_report(env, config, proj, memory_reachable=True)
             self.assertEqual(rep["status"], "connected")
-            self.assertTrue(rep["agentmemory_mcp"] and rep["maind_mcp"])
+            self.assertTrue(rep["maind_mcp"])
             self.assertEqual(rep["hook_memory_mode"], "maind")
+            self.assertTrue(rep["native_memory_off"] and rep["digest_hook"])
             self.assertTrue(rep["memory_roundtrip"])      # write→recall→forget прошёл
             self.assertEqual(rep["hints"], [])
 

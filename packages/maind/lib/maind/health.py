@@ -59,6 +59,19 @@ def _hook_memory_mode(project):
     return None
 
 
+def _native_memory_state(project):
+    """(native_off, digest_hook_wired) из <project>/.claude/settings.json — для MODE=maind
+    нативная авто-память должна быть выключена, а SessionStart-инжект дайджеста — на месте."""
+    lp = project.get("local_path")
+    if not lp:
+        return (None, None)
+    settings, _ = load_settings(Path(os.path.expanduser(lp)) / ".claude" / "settings.json")
+    native_off = settings.get("autoMemoryEnabled") is False
+    cmds = [h.get("command", "") for g in (settings.get("hooks") or {}).get("SessionStart", [])
+            for h in g.get("hooks", [])]
+    return (native_off, any("maind-memory" in c for c in cmds))
+
+
 def memory_roundtrip(env, config, project, memory_reachable):
     """Доказать, что память РЕАЛЬНО работает: write→recall→forget по temp-факту в приватном
     scope. Ловит раскол (хук пишет не в тот стор), сломанный forget и потерю изоляции."""
@@ -89,6 +102,7 @@ def health_report(env, config, project, *, memory_reachable=None):
     rep = probe_project(env, config, project, memory_reachable=memory_reachable)
     c = rep.get("configured", {})
     hook_mode = _hook_memory_mode(project)
+    native_off, digest_hook = _native_memory_state(project)
     roundtrip = memory_roundtrip(env, config, project, memory_reachable)
     hints = []
     if not memory_reachable:
@@ -96,6 +110,9 @@ def health_report(env, config, project, *, memory_reachable=None):
     if hook_mode != "maind":
         hints.append("хук памяти не в режиме maind → maind onboard "
                      f"{pid} (запишет .claude/memory.env.ini MODE=maind)")
+    elif not (native_off and digest_hook):
+        hints.append("MODE=maind, но native-память не выключена / нет digest-инжекта → "
+                     f"maind onboard {pid} (autoMemoryEnabled:false + .claude/maind-memory.sh)")
     if not roundtrip["ok"] and memory_reachable:
         hints.append(f"память не проходит round-trip ({roundtrip['detail']}) — "
                      "remember/recall идут в разные сторы?")
@@ -107,6 +124,8 @@ def health_report(env, config, project, *, memory_reachable=None):
         "status": rep.get("status", "standalone"),
         "memory_daemon": memory_reachable,
         "hook_memory_mode": hook_mode,
+        "native_memory_off": native_off,
+        "digest_hook": digest_hook,
         "memory_roundtrip": roundtrip["ok"],
         "agentmemory_mcp": bool(c.get("agentmemory_mcp")),
         "maind_mcp": bool(c.get("maind_mcp")),
@@ -368,6 +387,9 @@ def cmd_health(env, argv):
         print(f"  [{ok(rep['maind_mcp'])}] maind MCP в проекте")
         print(f"  [{ok(rep['hook_memory_mode'] == 'maind')}] хук памяти MODE=maind "
               f"({rep['hook_memory_mode'] or 'не задан'})")
+        if rep['hook_memory_mode'] == 'maind':
+            print(f"  [{ok(rep['native_memory_off'] and rep['digest_hook'])}] native off + "
+                  "digest-инжект (SessionStart)")
         print(f"  [{ok(rep['memory_roundtrip'])}] память round-trip (write→recall→forget)")
         print(f"  ns: [{', '.join(rep['namespaces'])}]  статус: {rep['status']}")
         for h in rep["hints"]:

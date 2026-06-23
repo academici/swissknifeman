@@ -1,8 +1,8 @@
 ---
 name: shared-memory
 bucket: system
-version: 0.2.0
-description: "Единый «мозг» (общая память) проектов констелляции через хук ~/.claude/hooks/memory/ + демон mAInd. Recall перед работой, remember после. Канон для проектов — MODE=maind (демон :4111, изоляция по scope на стороне maind): приватный project:<id> + общее по тегам ns:<namespace> + global; recall их объединяет. Бэкенд сменный: maind|file|federation|agentmemory|off."
+version: 0.3.0
+description: "Единый «мозг» (общая память) проектов констелляции через хук ~/.claude/hooks/memory/ + демон mAInd. Recall перед работой, remember после. Канон для проектов — MODE=maind (демон :4111, изоляция по scope на стороне maind): приватный project:<id> + общее по тегам ns:<namespace> + global; recall их объединяет; на старте сессии авто-инжект дайджеста (native-память выключается). Правило роутинга: один факт в один стор. Бэкенд сменный: maind|native|file|federation|off."
 risk: write
 persona: architect
 tags: [memory, cross-project, topology, recall, context, coordination]
@@ -81,12 +81,26 @@ sha256: ""
 (группа/участники); плюс `memory_brain` в `<project>/.swissknife.json` — какую
 группу проект использует по умолчанию.
 
+## Авто-загрузка на старте (digest) и роутинг native vs maind
+
+`MODE=maind` ставит SessionStart-хук, который инжектит **дайджест** памяти проекта в контекст
+(`maind memory digest` → `additionalContext`), и выключает нативную авто-память
+(`autoMemoryEnabled:false`) — демон становится единым источником и памяти, и стартового контекста.
+Гибко per-project: `maind onboard <id> --memory maind|native|off` (дефолт `maind`).
+
+**Правило роутинга — один факт в один стор, без дублей:**
+- **maind** (`maind memory` / `maind_memory_*`) — память проекта и дома (приватное `project:<id>`,
+  общее `--share`, кросс-проект/кросс-агент, авто-дайджест на старте). ← дефолт.
+- **native MEMORY.md** — выключена при `MODE=maind`. Если `--memory native`: только мелкие
+  инварианты «всегда под рукой», **без копий** maind-фактов.
+- **file-federation (`MODE=file/federation`)** — legacy, только инфра-узлы (brain/swissknifeman).
+
 ## Дисциплина
 
 - Recall **до** работы, remember **после** — но только межпроектно-полезное.
-- Факт — одной фразой + **почему** (как в нативной памяти: суть + зачем).
+- Факт — одной фразой + **почему** (суть + зачем).
+- **Не дублируй** факт в native и maind — пиши в один стор по правилу роутинга выше.
 - Хук только дописывает; чужие факты не трогает. Секреты в память не кладём.
-- Группы держим осмысленными: один мозг = реально связанные проекты, не «всё подряд».
 
 ## Чеклист качества
 

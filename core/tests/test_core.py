@@ -2,12 +2,14 @@
 
 Запуск: PYTHONPATH=<корень монорепо> python3 -m unittest discover -s core/tests"""
 import json
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 
 from core import (BaseEnv, atomic_write_json, atomic_write_text,
-                  find_monorepo_root, find_repo_root, now_iso, sanitize)
+                  find_monorepo_root, find_repo_root, now_iso, parse_args,
+                  parse_flags, run_cmd, safe_load_json, sanitize)
 
 
 class TestText(unittest.TestCase):
@@ -100,6 +102,91 @@ class TestRepoRoot(unittest.TestCase):
     def test_find_monorepo_root_none_standalone(self):
         with tempfile.TemporaryDirectory() as tmp:
             self.assertIsNone(find_monorepo_root(Path(tmp) / "lonely"))
+
+
+class TestParseFlags(unittest.TestCase):
+    def test_bool_and_str_flags(self):
+        out = parse_flags(["--name", "x", "--force"],
+                          {"--name": "str", "--force": "bool"})
+        self.assertEqual(out["name"], "x")
+        self.assertIs(out["force"], True)
+        self.assertIs(out["help"], False)
+
+    def test_defaults_when_absent(self):
+        out = parse_flags([], {"--name": "str", "--force": "bool"})
+        self.assertEqual(out["name"], "")
+        self.assertIs(out["force"], False)
+
+    def test_dash_to_underscore_key(self):
+        out = parse_flags(["--dry-run"], {"--dry-run": "bool"})
+        self.assertIs(out["dry_run"], True)
+
+    def test_help_flag(self):
+        self.assertIs(parse_flags(["-h"], {})["help"], True)
+
+    def test_unknown_flag_dies(self):
+        with self.assertRaises(SystemExit):
+            parse_flags(["--nope"], {})
+
+    def test_missing_value_dies(self):
+        with self.assertRaises(SystemExit):
+            parse_flags(["--name"], {"--name": "str"})
+
+
+class TestParseArgs(unittest.TestCase):
+    def test_positionals_collected(self):
+        opts, pos = parse_args(["a", "--force", "b"],
+                               {"--force": "bool"}, max_pos=2)
+        self.assertEqual(pos, ["a", "b"])
+        self.assertIs(opts["force"], True)
+
+    def test_too_many_positionals_dies(self):
+        with self.assertRaises(SystemExit):
+            parse_args(["a", "b"], {}, max_pos=1)
+
+    def test_unknown_flag_dies(self):
+        with self.assertRaises(SystemExit):
+            parse_args(["--x"], {}, max_pos=0)
+
+
+class TestRunCmd(unittest.TestCase):
+    def test_success_capture(self):
+        r = run_cmd([sys.executable, "-c", "print('hi')"], capture=True)
+        self.assertEqual(r.returncode, 0)
+        self.assertEqual(r.stdout.strip(), "hi")
+
+    def test_nonzero_with_check_dies(self):
+        with self.assertRaises(SystemExit):
+            run_cmd([sys.executable, "-c", "import sys; sys.exit(3)"])
+
+    def test_nonzero_without_check_returns(self):
+        r = run_cmd([sys.executable, "-c", "import sys; sys.exit(3)"],
+                    check=False)
+        self.assertEqual(r.returncode, 3)
+
+    def test_missing_binary_dies(self):
+        with self.assertRaises(SystemExit):
+            run_cmd(["definitely-no-such-binary-xyz"])
+
+
+class TestSafeLoadJson(unittest.TestCase):
+    def test_loads_valid(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Path(tmp) / "a.json"
+            p.write_text('{"k": 1}', encoding="utf-8")
+            self.assertEqual(safe_load_json(p), {"k": 1})
+
+    def test_missing_returns_default(self):
+        self.assertEqual(safe_load_json("/no/such/file.json", default={}), {})
+
+    def test_corrupt_returns_default_and_calls_on_error(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Path(tmp) / "bad.json"
+            p.write_text("{not json", encoding="utf-8")
+            seen = []
+            out = safe_load_json(p, default=[], on_error=seen.append)
+            self.assertEqual(out, [])
+            self.assertEqual(len(seen), 1)
 
 
 if __name__ == "__main__":

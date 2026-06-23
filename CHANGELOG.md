@@ -2,6 +2,69 @@
 
 ## [Unreleased]
 
+### Added (детерминированная привязка скиллов к агентам)
+
+- **Поле `skills:` во frontmatter агентов бакетов** (`skills/<bucket>/agents/*.md`) —
+  нативный preload Claude Code (v2.0.43+): полный контент перечисленных скиллов
+  инжектится в субагента на старте, без надежды на model-invocation. Привязаны
+  `php/laravel-implementer`, `laravel-reviewer`, `laravel-test-writer`. Закрывает
+  корень сбоя «агент проигнорировал скилл» (6/7 пропустили `repositories`).
+- **Валидация (`scripts/validate.sh`, 10c):** каждый `skills:`-элемент агента обязан
+  резолвиться в реальный скилл реестра (`bucket:name`); ненеймспейснутый — warning.
+- **`php/laravel-implementer`:** прозовый «ПЕРВЫЙ ШАГ — load via Skill» заменён на
+  декларативное поле `skills:`; жёсткие правила оставлены L4-страховкой.
+
+### Added (гейт принуждения + Observer — план agent-skill-binding, Stage B–D)
+
+- **`harness` review-gate** — детерминированный гейт архитектуры на `SubagentStop`
+  (`off|warn|strict`, дефолт `warn`): прогоняет настроенную проектом проверку
+  (`check_command`), `warn` → подсказка в `additionalContext`, `strict` → блок
+  субагента. Без проверки — no-op. L5-рубеж под `skills:`-preload. (Stage B)
+- **`system/session-observer`** (skiller, ЭКСПЕРИМЕНТАЛЬНО, per-project toggle
+  `.claude/observer.env.ini`) — пост-фактум разбор сессии по JSONL-логам с
+  3-осевой аналитикой слабых мест: **агенты** (skill-skip/drift/циклы), **скиллы**
+  (gap/thin/dead/correction-after-load), **настройки** (хуки/права). Находки →
+  learnings через memory-хук, промоция человеком; замкнутый цикл самопочинки.
+  Сниппет `analyze-session.md` (jq/grep-рецепты). Read-only по коду, не live. (Stage C–D)
+
+### Changed (валидация: строгий frontmatter + битые ссылки)
+
+- **`validate.sh` ужесточён** (секция 1a) — раньше проверялось только *наличие*
+  обязательных полей; теперь:
+  - `risk` ∈ {read, draft, write, external}; `adapters` ⊆ {claude, cursor, fable};
+  - `version` — semver (`\d+.\d+.\d+`); frontmatter `bucket` == каталог бакета (для локальных);
+  - объявленные в frontmatter `snippets:` обязаны существовать на диске;
+  - **внутрискилловые ссылки** `snippets/…` / `references/…` в теле SKILL.md обязаны
+    резолвиться (битая ссылка → error).
+- Намеренно НЕ проверяем: равенство frontmatter `snippets:` ↔ `index.json` (принятая
+  конвенция — index.json самодостаточен, frontmatter-список опционален; 34 скилла),
+  и общие `../`/`.agents`-ссылки (раскладка проекта-потребителя у upstream/imported —
+  ложные срабатывания). Все новые проверки дают 0 нарушений на текущем реестре.
+
+### Changed (core: дедупликация + защищённый subprocess)
+
+- **`parse_flags`/`parse_args` сведены в `core/cli.py`** — раньше `parse_flags`
+  дублировался в skiller и harness байт-в-байт, `parse_args` (надмножество с
+  позиционными) жил в maind. Теперь один источник истины, пакеты реэкспортируют из
+  своих `common.py` (импорты `from .common import parse_flags|parse_args` не тронуты).
+- **`core.cli.run_cmd`** — защищённый запуск подпроцесса (argv-список, без shell):
+  `FileNotFoundError`/`TimeoutExpired`/ненулевой код → чистый `die` вместо
+  трейсбэка. Применён к `registry`/`hub` (вызовы `generate-*.sh` с `check=True`
+  больше не падают трейсбэком).
+- **`core.io.safe_load_json`** — единый graceful-ридер JSON (битый/отсутствующий →
+  default, опц. `on_error`). Для БД с бэкапом битого файла остаётся доменный
+  `maind.common.load_json_db`.
+- **Сплит `maind/common.py`**: HTTP-клиент (`http_get_json`/`http_post_json`/`ping`)
+  → `maind/http.py`, управляемый markdown-блок (`managed_block`/`upsert_block`/
+  `content_hash`) → `maind/blocks.py`. Реэкспорт из `common.py` — импорты
+  `from .common import ...` не тронуты (non-breaking).
+- Аудит subprocess-вызовов: остальные уже защищены (`shutil.which`-гварды,
+  `try/except OSError`, health-poll демона памяти с детектом раннего выхода) —
+  не трогали (рекомендация аудита про `shlex.quote` оказалась ложной: argv-списки
+  не инъектируемы шеллом).
+- **Тесты:** core 12→28 (parse_flags/parse_args/run_cmd/safe_load_json), harness
+  14→28 (новое покрытие `doctor`/`settings`/`cli`-диспетчер).
+
 ### Added (скиллы дисциплины именования)
 
 - **`general/naming-conventions`** (бакет `general` — CORE-connect, авто-раздаётся в каждый

@@ -4,7 +4,7 @@
 
 Источник истины портируемых скиллов (машинный реестр — `skills.json`). Раздача в проекты: `skiller connect` (плагины-бакеты) / `vendor` (физ. перенос). CORE-набор токен-скиллов (`general`/`oss-dev`) раздаётся по умолчанию — см. `connect`/`vendor`.
 
-Всего: 185 скиллов в 17 бакетах.
+Всего: 186 скиллов в 17 бакетах.
 
 ## Скиллы по бакетам
 
@@ -106,8 +106,8 @@
 | `vue-best-practices` | MUST be used for Vue.js tasks. Strongly recommends Composition API with `<script setup>` … |  |
 | `vue-composition-api` | Проектные конвенции Composition API: ref-first и паттерн composables. НЕ справочник API (… | `vue`, `frontend`, `composable`, `patterns` |
 | `vue-dynamic-icons` | Vue: один компонент-иконка, выбирающий SVG по строковому имени из набора (lucide-vue-next… | `vue`, `icons`, `dynamic-component`, `lucide`, `typescript`, `frontend` |
-| `vue-router-best-practices` | Vue Router 4 patterns, navigation guards, route params, and route-component lifecycle int… |  |
-| `vue-testing-best-practices` | Use for Vue.js testing. Covers Vitest, Vue Test Utils, component testing, mocking, testin… |  |
+| `vue-router-best-practices` | Vue Router 4 — маршрутизация и навигация: typed/именованные routes, lazy-loading view-ком… | `vue`, `vue-router`, `frontend`, `routing`, `navigation-guards`, `lazy-loading`, `typescript` |
+| `vue-testing-best-practices` | Практики тестирования Vue 3-компонентов через Vitest + Vue Test Utils 2: mount vs shallow… | `vue`, `testing`, `vitest`, `vue-test-utils`, `pinia`, `composables`, `frontend` |
 | `vueuse-functions` | Apply VueUse composables where appropriate to build concise, maintainable Vue.js / Nuxt f… |  |
 | `wayfinder` | Laravel Wayfinder: типобезопасные роуты и controller actions для фронтенда. Генерация, им… | `wayfinder`, `laravel`, `typescript`, `routes`, `inertia`, `eslint`, `frontend` |
 | `web-design-guidelines` | Review UI code for Web Interface Guidelines compliance. Use when asked to "review my UI",… |  |
@@ -269,13 +269,14 @@
 | `startup-cto` | Startup CTO persona — tech radar, hiring, architecture decisions | `role`, `persona`, `architecture`, `stack-choice`, `discipline` |
 | `tech-lead` | Tech Lead persona — sprint kickoff, 1:1s, team coordination | `role`, `persona`, `orchestration`, `review`, `workflow` |
 
-### system — Local environment topology: the three hub nodes (Brain vault, swissknifeman, projects base) and how agents navigate between projects and their docs (4)
+### system — Local environment topology: the three hub nodes (Brain vault, swissknifeman, projects base) and how agents navigate between projects and their docs (5)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
 | `agent-packs` | Установка и ВЕРСИОНИРОВАННЫЙ апгрейд agent-packs (агенты/воркфлоу/хуки Claude Code) из ha… | `agent-packs`, `templates`, `versioning`, `upgrade`, `install`, `claude-code`, `harness`, `lock` |
 | `cross-project-coordinator` | Оркестрация межпроектного анализа кода: обойти связанные проекты (через топологию), найти… | `cross-project`, `coordination`, `refactoring`, `duplication`, `topology`, `orchestration`, `agents`, `tokens` |
 | `local-topology` | Корневая карта локальной среды разработки — три узла-хаба (Brain-волт, swissknifeman, баз… | `topology`, `architecture`, `navigation`, `meta`, `cross-project` |
+| `session-observer` | ЭКСПЕРИМЕНТАЛЬНО (включается per-project). Пост-фактум разбор сессии Claude Code по JSONL… | `observer`, `session-analysis`, `learning`, `jsonl`, `drift`, `self-improvement`, `post-mortem` |
 | `shared-memory` | Единый «мозг» (общая память) для выбранных проектов констелляции через хук ~/.claude/hook… | `memory`, `cross-project`, `topology`, `recall`, `context`, `coordination` |
 
 ## Tag matrix
@@ -335,6 +336,7 @@
 | `compliance` | `dependency-audit`, `legal-compliance`, `oss-governance`, `risk-assessment`, `security-design` |
 | `components` | `naive-ui-theming`, `reka-ui-cva` |
 | `composable` | `dark-mode`, `vue-composition-api` |
+| `composables` | `vue-testing-best-practices` |
 | `compose` | `docker-dev-prod`, `docker-services` |
 | `composer` | `php-upgrade-checklist` |
 | `config` | `config-conventions` |
@@ -370,6 +372,7 @@
 | `docs` | `writing-style` |
 | `documentation` | `dx-design`, `oss-development`, `oss-governance` |
 | `domain` | `enum-state-machine`, `ticket-workflow` |
+| `drift` | `session-observer` |
 | `dto` | `backend-type-sync`, `laravel-data`, `php-patterns` |
 | `duplication` | `cross-project-coordinator` |
 | `dusk` | `laravel-dusk` |
@@ -389,7 +392,7 @@
 | `flat-config` | `eslint-flat-config` |
 | `flutter` | `figma-to-flutter` |
 | `forms` | `filepond-upload` |
-| `frontend` | `backend-type-sync`, `docker-vite`, `eslint-flat-config`, `filepond-upload`, `inertia-vue`, `laravel-echo-client`, `livewire-blade-attributes`, `naive-ui-theming`, `pinia-stores`, `playwright-e2e`, `reka-ui-cva`, `vite-module-loader`, `vite-multi-build`, `vitest`, `vue-composition-api`, `vue-dynamic-icons`, `wayfinder` |
+| `frontend` | `backend-type-sync`, `docker-vite`, `eslint-flat-config`, `filepond-upload`, `inertia-vue`, `laravel-echo-client`, `livewire-blade-attributes`, `naive-ui-theming`, `pinia-stores`, `playwright-e2e`, `reka-ui-cva`, `vite-module-loader`, `vite-multi-build`, `vitest`, `vue-composition-api`, `vue-dynamic-icons`, `vue-router-best-practices`, `vue-testing-best-practices`, `wayfinder` |
 | `gate` | `attribute-authorization`, `azguard` |
 | `gdpr` | `legal-compliance`, `security-design` |
 | `geometry` | `parametric-config`, `threading` |
@@ -416,11 +419,14 @@
 | `isolation` | `db-test-preflight`, `test-isolation-guard` |
 | `javascript` | `js-code-style` |
 | `jsdom` | `vitest` |
+| `jsonl` | `session-observer` |
 | `language` | `writing-style` |
 | `laravel` | `ai-context-workflow`, `attribute-authorization`, `azguard`, `backend-type-sync`, `botkit`, `ci-cd`, `code-style-spatie`, `database`, `dependency-injection`, `docker-dev-prod`, `docker-php`, `docker-services`, `docker-vite`, `enum-attributes`, `enum-state-machine`, `filament`, `filepond-upload`, `health-checks`, `inertia-vue`, `laravel`, `laravel-best-practices`, `laravel-broadcasting`, `laravel-data`, `laravel-dusk`, `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages`, `laravel-permissions`, `laravel-security-audit`, `laravel-structure`, `laravel-subagents`, `laravel-testing`, `livewire-blade-attributes`, `medialibrary`, `modular-architecture`, `naming-conventions`, `packages-stack`, `pao`, `pennant-development`, `php-patterns`, `project-map`, `repositories`, `spatie-settings`, `static-analysis`, `tailwind-conventions`, `test-isolation-guard`, `ticket-workflow`, `user-roles`, `vite-module-loader`, `vite-multi-build`, `vitest`, `wayfinder` |
 | `laravel-data` | `laravel-data` |
 | `laravel-echo` | `laravel-echo-client` |
 | `laravel-modules` | `modular-architecture` |
+| `lazy-loading` | `vue-router-best-practices` |
+| `learning` | `session-observer` |
 | `license` | `oss-governance` |
 | `liveness` | `health-checks` |
 | `livewire` | `filament`, `livewire-blade-attributes` |
@@ -450,9 +456,11 @@
 | `naive-ui` | `naive-ui-theming` |
 | `naming` | `naming-conventions`, `scene-conventions` |
 | `navigation` | `local-topology`, `packages-stack`, `project-map` |
+| `navigation-guards` | `vue-router-best-practices` |
 | `node` | `node-pnpm-preflight` |
 | `nwidart` | `modular-architecture` |
 | `observability` | `capacity-planning`, `health-checks`, `observability-design` |
+| `observer` | `session-observer` |
 | `ops` | `capacity-planning`, `incident-response`, `oncall-rotation`, `postmortem`, `runbook` |
 | `orchestration` | `anti-drift`, `complex-task-orchestrator`, `cross-project-coordinator`, `laravel-subagents`, `mcp-blender`, `tech-lead` |
 | `oss` | `dependency-audit`, `dx-design`, `github-flow`, `open-source-maintainer`, `oss-development`, `oss-governance`, `release-engineering` |
@@ -468,9 +476,10 @@
 | `pest` | `test-strategy` |
 | `php` | `attribute-authorization`, `azguard`, `botkit`, `code-style-spatie`, `database`, `dependency-audit`, `dependency-injection`, `docker-php`, `enum-attributes`, `enum-state-machine`, `filament`, `laravel`, `laravel-best-practices`, `laravel-broadcasting`, `laravel-data`, `laravel-dusk`, `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages`, `laravel-permissions`, `laravel-security-audit`, `laravel-structure`, `laravel-testing`, `medialibrary`, `modular-architecture`, `mutation-testing`, `named-arguments`, `naming-conventions`, `pao`, `pennant-development`, `php-patterns`, `php-upgrade-checklist`, `repositories`, `spatie-settings`, `static-analysis`, `test-isolation-guard`, `user-roles` |
 | `phpstan` | `php-upgrade-checklist` |
-| `pinia` | `pinia-stores` |
+| `pinia` | `pinia-stores`, `vue-testing-best-practices` |
 | `playwright` | `playwright-e2e` |
 | `pnpm` | `node-pnpm-preflight` |
+| `post-mortem` | `session-observer` |
 | `postgres` | `db-test-preflight`, `docker-postgres` |
 | `preflight` | `db-test-preflight`, `node-pnpm-preflight` |
 | `prettier` | `eslint-flat-config`, `js-code-style`, `tailwind-conventions` |
@@ -501,6 +510,7 @@
 | `role` | `open-source-maintainer`, `solo-founder`, `startup-cto`, `tech-lead` |
 | `roles` | `user-roles` |
 | `routes` | `wayfinder` |
+| `routing` | `vue-router-best-practices` |
 | `rules` | `model-rules` |
 | `runbook` | `observability-design` |
 | `russian` | `writing-style` |
@@ -510,7 +520,9 @@
 | `schema` | `data-schema` |
 | `screenshot` | `mcp-blender` |
 | `security` | `agent-design`, `ci-cd`, `dependency-audit`, `laravel-security-audit`, `oss-governance`, `risk-assessment`, `security-design` |
+| `self-improvement` | `session-observer` |
 | `semver` | `github-flow`, `package-contribution-protocol`, `release-engineering` |
+| `session-analysis` | `session-observer` |
 | `settings` | `spatie-settings` |
 | `skills` | `ai-context-workflow`, `laravel-packages`, `skills-ssot` |
 | `sla` | `build-loop`, `capacity-planning`, `config-conventions`, `incident-response`, `oncall-rotation`, `parametric-config`, `threading` |
@@ -531,7 +543,7 @@
 | `tailwindcss-v4` | `figma-to-vue`, `tailwind-conventions` |
 | `template` | `brd`, `model-rules`, `prd-from-brd`, `runbook`, `task-brief-template` |
 | `templates` | `agent-packs` |
-| `testing` | `db-test-preflight`, `docker-postgres`, `eval-design`, `laravel-testing`, `mutation-testing`, `pao`, `playwright-e2e`, `test-isolation-guard`, `test-strategy`, `testing-safety-report`, `vitest` |
+| `testing` | `db-test-preflight`, `docker-postgres`, `eval-design`, `laravel-testing`, `mutation-testing`, `pao`, `playwright-e2e`, `test-isolation-guard`, `test-strategy`, `testing-safety-report`, `vitest`, `vue-testing-best-practices` |
 | `tests` | `writing-style` |
 | `theme` | `dark-mode` |
 | `theming` | `figma-to-flutter`, `naive-ui-theming` |
@@ -546,7 +558,7 @@
 | `triage` | `open-source-maintainer` |
 | `type-sync` | `backend-type-sync` |
 | `types` | `backend-type-sync` |
-| `typescript` | `backend-type-sync`, `enum-attributes`, `eslint-flat-config`, `js-code-style`, `playwright-e2e`, `vue-dynamic-icons`, `wayfinder` |
+| `typescript` | `backend-type-sync`, `enum-attributes`, `eslint-flat-config`, `js-code-style`, `playwright-e2e`, `vue-dynamic-icons`, `vue-router-best-practices`, `wayfinder` |
 | `ui` | `figma-mcp-core`, `filament`, `naive-ui-theming`, `reka-ui-cva` |
 | `units` | `parametric-config` |
 | `upgrade` | `agent-packs`, `php-upgrade-checklist` |
@@ -559,8 +571,10 @@
 | `versioning` | `agent-packs` |
 | `viewport` | `mcp-blender` |
 | `vite` | `docker-vite`, `vite-module-loader`, `vite-multi-build` |
-| `vitest` | `vitest` |
-| `vue` | `dark-mode`, `eslint-flat-config`, `figma-to-vue`, `filepond-upload`, `inertia-vue`, `js-code-style`, `laravel-echo-client`, `naive-ui-theming`, `packages-stack`, `pinia-stores`, `reka-ui-cva`, `tailwind-conventions`, `vite-module-loader`, `vitest`, `vue-composition-api`, `vue-dynamic-icons` |
+| `vitest` | `vitest`, `vue-testing-best-practices` |
+| `vue` | `dark-mode`, `eslint-flat-config`, `figma-to-vue`, `filepond-upload`, `inertia-vue`, `js-code-style`, `laravel-echo-client`, `naive-ui-theming`, `packages-stack`, `pinia-stores`, `reka-ui-cva`, `tailwind-conventions`, `vite-module-loader`, `vitest`, `vue-composition-api`, `vue-dynamic-icons`, `vue-router-best-practices`, `vue-testing-best-practices` |
+| `vue-router` | `vue-router-best-practices` |
+| `vue-test-utils` | `vue-testing-best-practices` |
 | `wayfinder` | `wayfinder` |
 | `websocket` | `docker-services` |
 | `websockets` | `laravel-broadcasting`, `laravel-echo-client` |

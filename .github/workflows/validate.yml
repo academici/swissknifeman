@@ -12,5 +12,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Validate repository structure
-        run: ./scripts/validate.sh
+      # Монорепо: у каждого пакета свой validate.sh (py_compile + bash -n + JSON +
+      # frontmatter/манифесты + тесты). Скрипты переехали из корня в packages/*/scripts/
+      # при реструктуризации — CI зовёт их по новым путям.
+      - name: Validate skiller (skills registry)
+        run: bash packages/skiller/scripts/validate.sh
+
+      - name: Validate harness
+        run: bash packages/harness/scripts/validate.sh
+
+      - name: Validate maind
+        run: bash packages/maind/scripts/validate.sh

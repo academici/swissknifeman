@@ -86,7 +86,7 @@
     },
     "system": {
       "description": "Local environment topology: the three hub nodes (Brain vault, swissknifeman, projects base) and how agents navigate between projects and their docs",
-      "count": 4,
+      "count": 5,
       "status": "active"
     }
   },
@@ -1419,9 +1419,18 @@
       "name": "vue-router-best-practices",
       "bucket": "frontend",
       "path": "skills/frontend/vue-router-best-practices/SKILL.md",
-      "version": "1.0.0",
-      "description": "Vue Router 4 patterns, navigation guards, route params, and route-component lifecycle interactions.",
-      "sha256": "33889faf631e80bf112a096dfe3e76029447f05f99d6d5c0aea2daddff186d7c",
+      "version": "0.2.0",
+      "description": "Vue Router 4 — маршрутизация и навигация: typed/именованные routes, lazy-loading view-компонентов, route meta, навигационные гварды на ВОЗВРАТ-API (return route/false/path вместо deprecated next()), per-route vs global гварды, beforeEnter, scrollBehavior, обработка NavigationFailure/onError, useRoute/useRouter/useLink. Активировать при создании/правке router/index.ts, маршрутов, гвардов, при вопросах «как защитить роут / редирект в гварде / почему next() висит / lazy-загрузка страницы / восстановить скролл».",
+      "sha256": "bb3ccb1f2941c884d2297d03eb239302195512e629076e3a13e594be966db36a",
+      "tags": [
+        "vue",
+        "vue-router",
+        "frontend",
+        "routing",
+        "navigation-guards",
+        "lazy-loading",
+        "typescript"
+      ],
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-router-best-practices/SKILL.md",
       "fetched_at": "2026-06-17"
@@ -1430,9 +1439,22 @@
       "name": "vue-testing-best-practices",
       "bucket": "frontend",
       "path": "skills/frontend/vue-testing-best-practices/SKILL.md",
-      "version": "1.0.0",
-      "description": "Use for Vue.js testing. Covers Vitest, Vue Test Utils, component testing, mocking, testing patterns, and Playwright for E2E testing.",
-      "sha256": "6d686a36a3583862287cca400982bd61956442583b7b6416b600d0a81d31b41b",
+      "version": "1.1.0",
+      "description": "Практики тестирования Vue 3-компонентов через Vitest + Vue Test Utils 2: mount vs shallowMount, изоляция композаблов, createTestingPinia, async/flushPromises, устойчивые data-testid, моки детей/слотов/эмитов и что НЕ тестировать.",
+      "sha256": "61bf72ef041adb3629d2074d0371bc306524f4e7928a9b675002851f069b3783",
+      "tags": [
+        "vue",
+        "testing",
+        "vitest",
+        "vue-test-utils",
+        "pinia",
+        "composables",
+        "frontend"
+      ],
+      "requires": [
+        "vue",
+        "vitest"
+      ],
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-testing-best-practices/SKILL.md",
       "fetched_at": "2026-06-17"
@@ -2374,7 +2396,7 @@
       "path": "skills/php/laravel/SKILL.md",
       "version": "0.4.0",
       "description": "Laravel architecture patterns: actions, repositories, resources",
-      "sha256": "06af44cefaafbeef987297f65b0c24a6af9b1ec19a83d2be4ca9115c719433a8",
+      "sha256": "c4bb6ed85334db1926388dc3783b02bc0bec4d1c50e4218ac6f61a5f76605f01",
       "tags": [
         "php",
         "laravel",
@@ -2818,7 +2840,7 @@
       "path": "skills/php/php-patterns/SKILL.md",
       "version": "0.2.0",
       "description": "PHP domain patterns: VO, DTO, pipeline, specification",
-      "sha256": "aed312453b576fa23ac1d51c72159f716926422e645a73615f9114e70d236141",
+      "sha256": "5e9c3d66b8726cc79de61cf8b32a2f9e3c587dd9f7a589e000588485a1eef6f9",
       "tags": [
         "php",
         "laravel",
@@ -3293,7 +3315,7 @@
       "path": "skills/roles/open-source-maintainer/SKILL.md",
       "version": "0.2.0",
       "description": "OSS Maintainer — triage, review, releases",
-      "sha256": "e9ccd0e321bed1ea138a255e627d2dafb6dedaa399295d6639ea93b9573a9b22",
+      "sha256": "b860b2ba7a20a79ca4aa7fc5c7dbb6b8678ececb47cf5261ec0e20bb11f6f8b3",
       "tags": [
         "role",
         "persona",
@@ -3311,7 +3333,7 @@
       "path": "skills/roles/solo-founder/SKILL.md",
       "version": "0.2.0",
       "description": "Solo Founder — weekly review, decision log",
-      "sha256": "702ba6d7f1790fa8d29c4083ab09b542db17b46514da93b5a0c555a72fcd3d38",
+      "sha256": "4ab48f8974724ccfea96a52b98248f329431ca4e5a3778384830143ae837dc5e",
       "tags": [
         "role",
         "persona",
@@ -3327,7 +3349,7 @@
       "path": "skills/roles/startup-cto/SKILL.md",
       "version": "0.2.0",
       "description": "Startup CTO persona — tech radar, hiring, architecture decisions",
-      "sha256": "a5904a6f7b59a04f88f6fee1975f68c3293ef9151e89aecbb982441382d9d353",
+      "sha256": "b5495299ce9b00aadb1bfe977e1bc3ea80289122fa3f5631e057af64c0772533",
       "tags": [
         "role",
         "persona",
@@ -3343,7 +3365,7 @@
       "path": "skills/roles/tech-lead/SKILL.md",
       "version": "0.2.0",
       "description": "Tech Lead persona — sprint kickoff, 1:1s, team coordination",
-      "sha256": "15fb9bb8d52e06b67bc559944bed20acd2512afca7a72a0c56e83258e0f1cd9d",
+      "sha256": "1e96364448706d0e2b5df0cd939b41a56eb4ae63a5626541e9470cee8c0bac51",
       "tags": [
         "role",
         "persona",
@@ -3413,6 +3435,27 @@
       ],
       "produces_for": [
         "cross-project-coordinator",
+        "shared-memory"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "session-observer",
+      "bucket": "system",
+      "path": "skills/system/session-observer/SKILL.md",
+      "version": "0.1.0",
+      "description": "ЭКСПЕРИМЕНТАЛЬНО (включается per-project). Пост-фактум разбор сессии Claude Code по JSONL-логам — ищет слабые места в трёх осях: агенты (skill-skip, drift, циклы), скиллы (пробелы, мёртвый вес, тонкие), настройки (хуки, права). Находки → learnings через memory-хук, промоция человеком. Активировать ПОСЛЕ цикла работы / в конце сессии / по запросу «проанализируй сессию» — только если включён в проекте.",
+      "sha256": "3380f3c91c6559ceb58d42043854f73d3cf7f1bdf93e8f1d74a1c6973f69b2ad",
+      "tags": [
+        "observer",
+        "session-analysis",
+        "learning",
+        "jsonl",
+        "drift",
+        "self-improvement",
+        "post-mortem"
+      ],
+      "requires": [
         "shared-memory"
       ],
       "source": "local"

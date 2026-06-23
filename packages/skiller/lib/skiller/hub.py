@@ -1,7 +1,5 @@
 """Корневой хаб скиллов в проекте (managed-блок CLAUDE.md / .ai/guidelines)."""
-import subprocess
-
-from .common import HUB_MARKER
+from .common import HUB_MARKER, run_cmd
 
 
 def hub_artifacts_exist(target):
@@ -12,5 +10,5 @@ def hub_artifacts_exist(target):
 
 
 def generate_hub(env, target):
-    subprocess.run([str(env.root / "scripts" / "generate-hub.sh"),
-                    "--target", str(target)], check=True)
+    run_cmd([str(env.root / "scripts" / "generate-hub.sh"),
+             "--target", str(target)])

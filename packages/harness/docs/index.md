@@ -42,7 +42,7 @@ harness mcp --target . --mcp context7 --dry-run
 Глобальная установка файлов хуков (раз на машину) и включение режимов по проекту.
 
 ```
-harness hooks --global                            # auto-approve/memory/notify/log → ~/.claude/hooks
+harness hooks --global                            # auto-approve/memory/notify/log/review-gate → ~/.claude/hooks
 harness hooks --target . --auto-approve strict    # strict|permissive|bypass|off
 harness hooks --target . --memory core:federation # file|federation|agentmemory|off
 ```
@@ -51,6 +51,11 @@ harness hooks --target . --memory core:federation # file|federation|agentmemory|
   (Bash/ExitPlanMode), merge-only.
 - `--memory BRAIN:MODE` присоединяет проект к мозгу: `.swissknife.json:memory_brain`
   + `.claude/memory.env.ini`.
+- **review-gate** (`SubagentStop`) — детерминированный гейт архитектуры: прогоняет
+  проверку проекта после субагента, `warn` → подсказка, `strict` → блок. Режим в
+  `.claude/review-gate.env.ini` (`off|warn|strict`, дефолт `warn`), проверка в
+  `.claude/review-gate.config.json` (`check_command`; пусто → no-op). Подробно —
+  `hooks/review-gate/README.md`.
 
 ::: warning bypass снимает подтверждения
 Режим `bypass` авто-одобряет всё, кроме жёсткого denylist — только для

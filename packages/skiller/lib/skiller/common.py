@@ -12,7 +12,8 @@ from pathlib import Path
 # Общий core (подключается через PYTHONPATH лаунчером/test.sh). Реэкспорт для
 # модулей пакета, которые исторически берут эти имена из .common.
 from core import (  # noqa: F401
-    HOME, BaseEnv, confirm, die, find_monorepo_root, now_iso, sanitize, warn,
+    HOME, BaseEnv, confirm, die, find_monorepo_root, now_iso, parse_flags,
+    run_cmd, safe_load_json, sanitize, warn,
 )
 
 STATE_DIR = HOME / ".swissknifeman"
@@ -89,31 +90,7 @@ def apply_permissions(env, target, presets="", dry_run=False, settings_file=None
     return True
 
 
-# --- flag parsing -------------------------------------------------------------
-def parse_flags(args, spec):
-    """spec: {'--flag': 'str'|'bool'}; returns dict keyed by flag name sans --."""
-    out = {k.lstrip("-").replace("-", "_"): ("" if t == "str" else False)
-           for k, t in spec.items()}
-    i = 0
-    while i < len(args):
-        a = args[i]
-        if a in ("-h", "--help"):
-            out["help"] = True
-            i += 1
-            continue
-        if a not in spec:
-            die(f"неизвестный флаг: {a}")
-        key = a.lstrip("-").replace("-", "_")
-        if spec[a] == "bool":
-            out[key] = True
-            i += 1
-        else:
-            if i + 1 >= len(args):
-                die(f"флаг {a} требует значение")
-            out[key] = args[i + 1]
-            i += 2
-    out.setdefault("help", False)
-    return out
+# parse_flags — из общего core (реэкспорт выше); раньше дублировался здесь.
 
 
 # --- frontmatter --------------------------------------------------------------

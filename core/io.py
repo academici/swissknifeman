@@ -7,6 +7,23 @@ swissknifeman (`state.save_db`) и maind (`common.atomic_write_json`) скопи
 import json
 import os
 from pathlib import Path
+from typing import Callable, Optional
+
+
+def safe_load_json(path, default=None, *, on_error: Optional[Callable] = None):
+    """Читает JSON с graceful-восстановлением. Несуществующий/битый файл →
+    `default` (если задан on_error — он вызывается с исключением до возврата).
+
+    Единый источник истины вместо россыпи `json.loads(path.read_text())` с
+    разнобоем обработки ошибок. Для БД с бэкапом битого файла см. доменные
+    обёртки (например maind.common.load_json_db). stdlib-only."""
+    path = Path(path)
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError, UnicodeDecodeError) as e:
+        if on_error is not None:
+            on_error(e)
+        return default
 
 
 def atomic_write_text(path, text, *, encoding="utf-8"):

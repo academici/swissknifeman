@@ -38,8 +38,8 @@ class TestProbe(unittest.TestCase):
             deploy.deploy_project(env, cfg, cfg["projects"][0])  # пишет .mcp.json
             r = probe.probe_project(env, cfg, cfg["projects"][0], memory_reachable=True)
             self.assertEqual(r["status"], "connected")
-            self.assertTrue(r["configured"]["agentmemory_mcp"])
-            self.assertTrue(r["configured"]["maind_mcp"])
+            self.assertTrue(r["configured"]["maind_mcp"])         # сервер памяти = maind
+            self.assertFalse(r["configured"]["agentmemory_mcp"])  # raw-сервер выведен
 
     def test_standalone(self):
         with tempfile.TemporaryDirectory() as tmp:

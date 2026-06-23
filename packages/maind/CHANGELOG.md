@@ -5,6 +5,13 @@
 
 ## [Unreleased]
 
+### Changed
+- **Память проекта раскатывается только сервером `maind`** — raw MCP-сервер `agentmemory`
+  больше НЕ деплоится и активно УДАЛЯЕТСЯ из `.mcp.json` при `deploy`/`sync` (он писал мимо
+  scope-маркера → записи невидимы для scoped-recall, footgun изоляции). Legacy-возврат —
+  `maind deploy --with-agentmemory`. Статус проекта (`probe`/`health`) теперь определяется
+  наличием сервера `maind`, а не `agentmemory`. `mcpconfig.remove_server` — новый хелпер.
+
 ### Docs
 - **`guide/memory.md` переписан под правду**: изоляция — на стороне maind (демон —
   единый пул, `namespace`/`sessionId` игнорирует, `type` переопределяет; scope-маркер в

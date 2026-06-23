@@ -4,6 +4,10 @@
 
 Дата ревизии: 2026-06-15.
 
+> **Следующий шаг.** Есть проекты, где Boost хотят оставить **только как MCP**, а раздачу
+> локального `.ai/` контента на провайдеров (CLAUDE.md/AGENTS.md/Cursor) увести в skiller — см.
+> [Раздача локального `.ai/` на провайдеры (dev-план)](./multi-provider-distribution).
+
 **Где живёт Boost:**
 
 - Репозиторий: https://github.com/laravel/boost — скиллы/гайдлайны в [`/.ai/`](https://github.com/laravel/boost/tree/main/.ai) (`*/core.blade.php` и `*/skill/*/SKILL.blade.php` по пакетам и версиям); документация: https://laravel.com/docs/boost

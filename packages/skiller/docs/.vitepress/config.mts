@@ -50,6 +50,7 @@ export default withMermaid(defineConfig({
             { text: 'CI/CD', link: '/guide/ci' },
             { text: 'Диагностика и обновление', link: '/guide/troubleshooting' },
             { text: 'Совместимость с Laravel Boost', link: '/boost-compatibility' },
+            { text: 'Раздача локального .ai/ на провайдеры (dev-план)', link: '/multi-provider-distribution' },
           ],
         },
         {

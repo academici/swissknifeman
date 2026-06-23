@@ -5,6 +5,18 @@
 
 ## [Unreleased]
 
+### Added
+- **`maind memory remember|recall|forget` (scope-aware CLI)**: единый путь записи/чтения
+  памяти для человека И хука. scope считается из конфига проекта через `namespaces.py`
+  (`--project`/cwd/`--scope`): `remember` пишет в приватный `project:<id>` (+ `--share`
+  в общие `ns:<тег>`); `recall` объединяет приватный + группы + `global` с дедупом.
+- **Изоляция памяти НА СТОРОНЕ maind**: agentmemory 0.9.x — единый глобальный пул, поле
+  `namespace` он игнорирует, `type` переопределяет (сверено живым `curl`). Поэтому maind
+  встраивает scope-маркер `[[s:<scope>]]` в контент при записи и фильтрует результаты по
+  нему при чтении (см. `store`/`recall`, `mark_scope`/`split_scope`). Приватность и
+  «общее-по-тегу» теперь реально работают; `maind_memory_recall` (MCP) разворачивает
+  `project:<id>` в полный набор recall-scope'ов.
+
 ### Fixed
 - **`maind memory forget`**: payload теперь `{memoryId}` вместо `{namespace, id}` —
   прежний вариант давал `HTTP 400` от agentmemory 0.9.x (сверено живым `curl`), удаление

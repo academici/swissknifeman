@@ -8,6 +8,7 @@ HTTP-контракт демона: GET /health · POST /memories {namespace,typ
 GET /search?namespace=&q= → {results:[{score,text}]}."""
 import json
 import os
+import re
 import shutil
 import signal
 import subprocess
@@ -182,24 +183,58 @@ def status(env, config):
     }
 
 
-# ── HTTP-обёртка со scope'ами ────────────────────────────────────────────────
+# ── HTTP-обёртка со scope'ами + ИЗОЛЯЦИЯ НА СТОРОНЕ maind ─────────────────────
 # agentmemory 0.9.x: REST под префиксом /agentmemory/* (сверено с живым демоном).
+#
+# ВАЖНО: демон — ЕДИНЫЙ глобальный пул. Эмпирически (живой curl) поле `namespace`
+# в remember/search/list ИГНОРИРУЕТСЯ, а `type` демон ПЕРЕОПРЕДЕЛЯЕТ (classifier).
+# Дословно сохраняется только `content`. Поэтому изоляцию по scope обеспечивает САМ
+# maind: при записи встраиваем scope-маркер в начало контента, при чтении — фильтруем
+# результаты по маркеру и снимаем его. Это единственный надёжный канал на этой версии
+# движка (см. docs/maind/guide/federation.md — «изоляция на стороне maind»).
+SCOPE_MARK_RE = re.compile(r"^\[\[s:(?P<scope>[^\]]+)\]\]\s?")
+RECALL_LIMIT = 50  # кандидатов из глобального пула до фильтра по scope
+
+
+def mark_scope(scope, value):
+    """Встроить scope-маркер в начало контента: единственный канал, который демон
+    сохраняет дословно (namespace игнорит, type переопределяет)."""
+    return f"[[s:{scope}]] {value}"
+
+
+def split_scope(text):
+    """(scope|None, чистый_текст) из контента. Немаркированный (старый/чужой) → (None, text)."""
+    m = SCOPE_MARK_RE.match(text or "")
+    if not m:
+        return None, text
+    return m.group("scope"), text[m.end():]
+
+
 def store(url, scope, key, value):
-    """Сохранить факт: POST /agentmemory/remember {namespace, content, type}."""
+    """Сохранить факт: POST /agentmemory/remember. scope встраивается в КОНТЕНТ маркером
+    `[[s:<scope>]]` (демон игнорит namespace и переопределяет type — это единственный
+    надёжный канал изоляции на стороне maind). `namespace`/`type` шлём как было — на
+    будущее, если движок начнёт их уважать."""
     return http_post_json(f"{url}/agentmemory/remember",
-                          {"namespace": scope, "content": value, "type": key})
+                          {"namespace": scope, "content": mark_scope(scope, value),
+                           "type": key})
 
 
-def recall(url, scope, query):
-    """Поиск: POST /agentmemory/search {query, namespace} → [{score, text, id}]."""
+def recall(url, scope, query, limit=RECALL_LIMIT):
+    """Поиск С ИЗОЛЯЦИЕЙ: демон ищет по ГЛОБАЛЬНОМУ пулу (namespace не фильтрует),
+    поэтому берём широкий топ и оставляем ТОЛЬКО факты запрошенного `scope` по маркеру
+    в контенте; маркер из текста снимаем. Немаркированные факты (легаси) — режем."""
     res = http_post_json(f"{url}/agentmemory/search",
-                         {"query": query, "namespace": scope})
+                         {"query": query, "namespace": scope, "limit": limit})
     results = res.get("results", []) if isinstance(res, dict) else []
     out = []
     for r in results:
         obs = r.get("observation") or {}
-        text = (obs.get("narrative") or obs.get("title")
-                or " ".join(obs.get("facts") or []))
+        raw = (obs.get("narrative") or obs.get("title")
+               or " ".join(obs.get("facts") or []))
+        sc, text = split_scope(raw)
+        if sc != scope:           # чужой scope или немаркированный легаси → изолируем
+            continue
         out.append({"score": r.get("score"), "text": text, "id": obs.get("id")})
     return out
 
@@ -226,7 +261,7 @@ def export(url, scope):
 # ── CLI ─────────────────────────────────────────────────────────────────────
 def cmd_memory(env, argv):
     if not argv or argv[0] in ("-h", "--help"):
-        print("maind memory <start|run|stop|status> [--json]")
+        print("maind memory <start|run|stop|status|remember|recall|forget> ...")
         return
     sub, rest = argv[0], argv[1:]
     config, _src = load_config(env)
@@ -238,8 +273,117 @@ def cmd_memory(env, argv):
         stop(env, config)
     elif sub == "status":
         _cmd_status(env, config, rest)
+    elif sub == "remember":
+        _cmd_remember(env, config, rest)
+    elif sub == "recall":
+        _cmd_recall(env, config, rest)
+    elif sub == "forget":
+        _cmd_forget(env, config, rest)
     else:
-        die(f"неизвестная подкоманда memory: {sub} (start|stop|status)")
+        die(f"неизвестная подкоманда memory: {sub} "
+            "(start|stop|status|remember|recall|forget)")
+
+
+# ── память: scope-aware CLI (единый путь для хука и человека) ─────────────────
+# remember/recall/forget считают scope из конфига проекта через namespaces.py —
+# тот же источник истины, что у MCP и seed. Хук памяти делегирует сюда (modes/maind.sh),
+# поэтому «запомнил» (хук) и «вспомнил» (MCP/CLI) гарантированно идут в один стор.
+def _memory_target(env, config, opts):
+    """(project|None, write_scopes, read_scopes). --scope = raw-режим без проекта."""
+    from .namespaces import find as ns_find
+    from .namespaces import group_scopes, private_scope, recall_scopes
+    from .projects import match_cwd
+    raw = opts.get("scope")
+    if raw:
+        return None, [raw], [raw]
+    pid = opts.get("project")
+    if pid:
+        proj = ns_find(config, pid)
+        if not proj:
+            die(f"проект не найден в config.json: {pid}")
+    else:
+        proj = match_cwd(env, config)
+        if not proj:
+            die("не определить проект из cwd — укажи --project <id> или --scope <scope>")
+    write = [private_scope(proj)]
+    if opts.get("share"):                 # --share → ещё и в общие бакеты группы (ns:<тег>)
+        for s in group_scopes(proj):
+            if s not in write:
+                write.append(s)
+    return proj, write, recall_scopes(proj)
+
+
+def _require_daemon(env, config):
+    _, _, url = resolve_ports(env, config)
+    if not health(url):
+        die(f"демон памяти не запущен ({url}) — подними: maind start --only memory")
+    return url
+
+
+def _cmd_remember(env, config, argv):
+    opts, pos = parse_args(argv, {"--project": "str", "--scope": "str", "--share": "bool",
+                                  "--type": "str", "--json": "bool"}, max_pos=1)
+    if opts["help"] or not pos:
+        print('maind memory remember [--project ID | --scope S] [--share] [--type T] "<факт>"')
+        return
+    url = _require_daemon(env, config)
+    _proj, write_scopes, _read = _memory_target(env, config, opts)
+    key = opts.get("type") or "fact"
+    written = []
+    for sc in write_scopes:
+        res = store(url, sc, key, pos[0])
+        mid = (res.get("memory") or {}).get("id") if isinstance(res, dict) else None
+        written.append({"scope": sc, "id": mid})
+    if opts["json"]:
+        print(json.dumps({"written": written}, ensure_ascii=False))
+    else:
+        print("memory(maind): записано → " + ", ".join(w["scope"] for w in written))
+
+
+def _cmd_recall(env, config, argv):
+    opts, pos = parse_args(argv, {"--project": "str", "--scope": "str",
+                                  "--limit": "str", "--json": "bool"}, max_pos=1)
+    if opts["help"] or not pos:
+        print('maind memory recall [--project ID | --scope S] [--limit N] "<запрос>"')
+        return
+    try:
+        limit = int(opts.get("limit") or 10)
+    except (TypeError, ValueError):
+        limit = 10
+    url = _require_daemon(env, config)
+    _proj, _write, read_scopes = _memory_target(env, config, opts)
+    seen, merged = set(), []
+    for sc in read_scopes:                # union по приватному + ns:<тег> + global
+        for r in recall(url, sc, pos[0]):
+            text = r.get("text")          # один факт, всплывший в неск. scope'ах — раз
+            if text in seen:
+                continue
+            seen.add(text)
+            merged.append({**r, "scope": sc})
+    merged.sort(key=lambda r: r.get("score") or 0, reverse=True)
+    merged = merged[:limit]
+    if opts["json"]:
+        print(json.dumps(merged, ensure_ascii=False))
+    elif not merged:
+        print("memory(maind): ничего не найдено")
+    else:
+        for r in merged:
+            print(f"— [{r.get('score')}] {r.get('text')}  ({r.get('scope')})")
+
+
+def _cmd_forget(env, config, argv):
+    opts, pos = parse_args(argv, {"--project": "str", "--scope": "str",
+                                  "--json": "bool"}, max_pos=1)
+    if opts["help"] or not pos:
+        print("maind memory forget [--project ID] <memoryId>   # id памяти глобально уникален")
+        return
+    url = _require_daemon(env, config)
+    res = forget(url, None, pos[0])
+    if opts["json"]:
+        print(json.dumps(res, ensure_ascii=False))
+    else:
+        deleted = res.get("deleted") if isinstance(res, dict) else None
+        print(f"memory(maind): forget {pos[0]} → deleted={deleted}")
 
 
 def _cmd_status(env, config, argv):

@@ -110,6 +110,26 @@ def _missing_required(tool, args):
     return [k for k in tool["inputSchema"].get("required", []) if not args.get(k)]
 
 
+def _recall_union(config, url, scope, query):
+    """Recall с изоляцией + объединением scope'ов проекта: project:<id> разворачивается в
+    приватный + ns:<группы> + global (recall_scopes), чтобы Claude видел и приватную, и
+    общую-по-тегу память. Сырой/непроектный scope → ровно он. Дедуп по тексту."""
+    from .namespaces import find, recall_scopes
+    scopes = [scope]
+    if isinstance(scope, str) and scope.startswith("project:"):
+        proj = find(config, scope.split(":", 1)[1])
+        if proj:
+            scopes = recall_scopes(proj)
+    seen, out = set(), []
+    for sc in scopes:
+        for r in memory_mod.recall(url, sc, query):
+            if r.get("text") in seen:
+                continue
+            seen.add(r.get("text"))
+            out.append({**r, "scope": sc})
+    return out
+
+
 def _run_tool(env, config, name, args, default_scope):
     if name in ("maind_memory_store", "maind_memory_recall", "maind_memory_forget"):
         _, _, url = memory_mod.resolve_ports(env, config)
@@ -120,7 +140,7 @@ def _run_tool(env, config, name, args, default_scope):
         if name == "maind_memory_store":
             return _content(memory_mod.store(url, scope, args.get("key", "fact"), args["value"]))
         if name == "maind_memory_recall":
-            return _content(memory_mod.recall(url, scope, args["query"]))
+            return _content(_recall_union(config, url, scope, args["query"]))
         return _content(memory_mod.forget(url, scope, args["key"]))
     if name == "maind_graph_query":
         res = _graph_reader(env, config).query(args["from"], int(args.get("depth", 1)),

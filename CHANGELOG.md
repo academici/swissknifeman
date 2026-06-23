@@ -88,6 +88,17 @@
   изменился — хаб не перегенерён»). Проекты без штампа (старый хаб) пропускаются.
   Замыкает continuous-audit петлю на детект дрейфа.
 
+### Added (Фаза 6 — Agent Teams, опц.)
+
+- **Пресет `settings.agent-teams.json`** (harness) — opt-in включение экспериментальных
+  Agent Teams: `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` + `teammateMode` (merge-only,
+  сосуществует с auto-approve/review-gate). Предпосылка: Claude Code ≥2.1.178; конфиг
+  форвард-совместим.
+- **Doc `agent-framework/agent-teams`** — когда брать Teams vs субагенты, spawn-шаблоны
+  (full-stack фича, параллельный дебаг), module-boundaries (зоны путей под роли, БЕЗ
+  file-lock), опц. quality-gate хуки `TeammateIdle`/`TaskCompleted` (переиспользуют
+  review-gate). Роли каркаса годятся как teammates. Sidebar обновлён.
+
 ## [0.4.0] - 2026-06-22
 
 > **Зонтичная единая версия монорепо.** Накопленное с `v0.3.0`: выделение пакета

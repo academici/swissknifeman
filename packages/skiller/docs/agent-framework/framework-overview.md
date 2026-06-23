@@ -42,8 +42,10 @@
 - ✅ **auto-approve** (PreToolUse), **memory**, **notify**, **log** (harness).
 - ✅ **review-gate** (SubagentStop, off|warn|strict) — первая реализация в memster;
   harness-заглушка ещё пустая (🔜 поднять generic-раннер в harness).
-- 🔜 **Agent Teams** (Фаза 6, эксперимент, CC ≥2.1.178): env-флаг + `teammateMode` +
-  хуки `TeammateIdle`/`TaskCompleted` + spawn-шаблоны + module-boundaries.
+- ✅ **Agent Teams** (опц., эксперимент, CC ≥2.1.178): пресет
+  `harness/configs/claude-code/settings.agent-teams.json` (env-флаг + `teammateMode`) +
+  doc [agent-teams](./agent-teams) (spawn-шаблоны, module-boundaries, quality-gate хуки).
+  Config форвард-совместим; роли каркаса годятся как teammates.
 
 ## Воркфлоу
 

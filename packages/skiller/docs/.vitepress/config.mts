@@ -82,6 +82,7 @@ export default withMermaid(defineConfig({
             { text: 'Универсальные роли', link: '/agent-framework/roles' },
             { text: 'Hub = Skills Index', link: '/agent-framework/skills-index-and-hub' },
             { text: 'Чеклист после внедрения', link: '/agent-framework/post-integration-checklist' },
+            { text: 'Agent Teams (Mesh)', link: '/agent-framework/agent-teams' },
             { text: 'Архив аудитов', link: '/audits/' },
           ],
         },

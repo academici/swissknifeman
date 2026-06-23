@@ -23,11 +23,7 @@ maind memory stop      # SIGTERM→SIGKILL; чужой демон (без pidfil
 `stream_port` / `url`) → **дефолт** `4111/4112`. Никаких хардкодов — два узла на одной
 машине разводятся по портам через `.env`.
 
-## Scopes (бакеты памяти)
-
-Один демон на хаб; изоляция — логическая, через **бакеты (scope)**. Память следует той же
-namespace-модели, что и граф: внутри группы общая, между группами изолирована (паритет с
-maind-графом по неймспейсам).
+## Scopes (бакеты памяти) и где живёт изоляция
 
 | scope | назначение |
 |:--|:--|
@@ -35,24 +31,66 @@ maind-графом по неймспейсам).
 | `ns:<имя>` | **общий бакет namespace-группы** — факты, видимые всем её проектам |
 | `global` | вся экосистема: wildcard-инфраструктура (`["*"]`) + ecosystem-wide факты |
 
-При `maind sync`/`onboard` seed пишет базовый факт о связях в приватный `project:<id>`, а
-короткий cross-ref — в бакеты группы (`ns:<имя>`; для wildcard-проектов — в `global`). Агент
-проекта читает свою память из `project:<id>` + `ns:<его группы>` + `global` (см.
-`namespaces.recall_scopes`). Так проект из `axioma` видит факты группы `axioma` и инфраструктуру,
-но не память чужого namespace. Деривация бакетов — `namespaces.py`
-(`private_scope`/`group_scopes`/`recall_scopes`), seed — `seed.py`. Подробнее про группы —
+> ⚠️ **Изоляция — на стороне maind, не движка.** agentmemory 0.9.x — **единый
+> глобальный пул**: поле `namespace` в `remember`/`search`/`memories` он
+> **игнорирует**, `sessionId` тоже, а присланный `type` **переопределяет** своим
+> классификатором (сверено живым `curl`). Дословно сохраняется только `content`.
+> Поэтому scope-изоляцию обеспечивает **сам maind**: при записи встраивает маркер
+> `[[s:<scope>]]` в начало контента, при чтении — фильтрует результаты глобального
+> поиска по этому маркеру и снимает его (`memory.mark_scope`/`split_scope`).
+> Без этого слоя проект видел бы «приватную» память чужих проектов. Не пишите в
+> демон в обход maind (`maind memory` / `maind_memory_*` MCP) — записи без маркера
+> будут невидимы для scoped-recall.
+
+Модель скоупов: при `maind onboard`/`sync` seed пишет базовый факт о связях в приватный
+`project:<id>`, а короткий cross-ref — в бакеты группы (`ns:<имя>`; wildcard → `global`).
+Запись через `maind memory remember` идёт в приватный scope; `--share` дублирует в группы.
+Recall объединяет `project:<id>` + `ns:<все группы>` + `global` (`namespaces.recall_scopes`)
+с дедупом по тексту. Так проект из `axioma` видит общий дом и инфраструктуру, но не приватную
+память чужого проекта. Деривация бакетов — `namespaces.py`, seed — `seed.py`. Группы —
 [Namespaces](./namespaces).
+
+## Единый путь записи/чтения: хук + MCP через maind
+
+Чтобы «запомнил» (хук памяти) и «вспомнил» (MCP/CLI) шли в ОДИН изолированный стор:
+
+- **Хук памяти** в режиме `MODE=maind` (`~/.claude/hooks/memory/modes/maind.sh`) делегирует
+  `remember`/`recall` в `maind memory`; scope берётся из проекта (`CLAUDE_PROJECT_DIR` →
+  `match_cwd`), brain игнорируется. `maind onboard` сам пишет `<project>/.claude/memory.env.ini`
+  `MODE=maind`.
+- **MCP** `maind_memory_store|recall|forget` идут через те же `memory.py`-обёртки;
+  `maind_memory_recall(project:<id>)` разворачивается в полный набор recall-scope'ов.
+- **CLI** для человека: `maind memory remember|recall|forget [--project ID|--scope S] [--share]`.
 
 ## HTTP-контракт демона
 
 | Операция | Запрос (agentmemory 0.9.x, сверено с живым демоном) |
 |:--|:--|
 | health | `GET /agentmemory/health` |
-| store | `POST /agentmemory/remember {namespace, content, type}` |
-| recall | `POST /agentmemory/search {query, namespace}` → `{results:[{observation, score}]}` |
+| store | `POST /agentmemory/remember {namespace, content, type}` — `content` несёт маркер `[[s:<scope>]]` |
+| recall | `POST /agentmemory/search {query, namespace, limit}` → `{results:[{observation, score}]}` (фильтр по маркеру — в maind) |
+| forget | `POST /agentmemory/forget {memoryId}` — **именно `memoryId`** (не `{namespace,id}` → HTTP 400) |
 
-Обёртка в `memory.py`: `store(url, scope, key, value)`, `recall(url, scope, query)`
-(нормализует ответ в `[{score, text, id}]`), `forget`/`export` (best-effort). Конфиг
-воркеров — `config/memory/iii-config.yaml` (7 воркеров `iii-*`, `service_name: maind`).
+Обёртка в `memory.py`: `store`/`recall` (маркер + фильтр + нормализация в `[{score, text, id}]`),
+`forget`/`export`. Конфиг воркеров — `config/memory/iii-config.yaml` (7 воркеров `iii-*`).
+
+## Проверка «реально ли работает» и troubleshooting
+
+`maind health [--project ID]` гоняет **round-trip** write→recall→forget по приватному scope и
+проверяет, что хук в `MODE=maind`. `--strict` падает при провале. Частые случаи:
+
+- **remember и recall расходятся** (записал — не вспоминается): хук не в `MODE=maind` (пишет в
+  файловый `core`-brain мимо демона) → `maind onboard <id>` или поставь `.claude/memory.env.ini`
+  `MODE=maind` + переподними сессию.
+- **`forget` отдаёт HTTP 400**: старый payload `{namespace,id}` — нужен `{memoryId}` (починено).
+- **recall видит «приватные» факты чужого проекта**: запись шла в обход maind (без маркера) —
+  пиши только через `maind memory` / `maind_memory_*`.
+- **граф проекта пуст**: derive не прогонялся → `maind graph derive --project <id>` (онбординг
+  делает это сам; пустой у свежего app-проекта без внутри-экосистемных зависимостей — норма).
+
+> **Коллизия имён «federation».** В хуке памяти `MODE=federation` — это файловый бэкенд
+> (`~/.swissknifeman/memory/<brain>/*.md`), он НЕ связан с graph-federation maind (граф по
+> проектам + индекс). Для прикладных проектов канон — `MODE=maind` (демон), файловый
+> `federation`/`core` оставлен для инфра-узлов.
 
 Дальше: [Граф →](./graph)

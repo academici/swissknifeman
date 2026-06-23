@@ -277,7 +277,7 @@
 | `cross-project-coordinator` | Оркестрация межпроектного анализа кода: обойти связанные проекты (через топологию), найти… | `cross-project`, `coordination`, `refactoring`, `duplication`, `topology`, `orchestration`, `agents`, `tokens` |
 | `local-topology` | Корневая карта локальной среды разработки — три узла-хаба (Brain-волт, swissknifeman, баз… | `topology`, `architecture`, `navigation`, `meta`, `cross-project` |
 | `session-observer` | ЭКСПЕРИМЕНТАЛЬНО (включается per-project). Пост-фактум разбор сессии Claude Code по JSONL… | `observer`, `session-analysis`, `learning`, `jsonl`, `drift`, `self-improvement`, `post-mortem` |
-| `shared-memory` | Единый «мозг» (общая память) для выбранных проектов констелляции через хук ~/.claude/hook… | `memory`, `cross-project`, `topology`, `recall`, `context`, `coordination` |
+| `shared-memory` | Единый «мозг» (общая память) проектов констелляции через хук ~/.claude/hooks/memory/ + де… | `memory`, `cross-project`, `topology`, `recall`, `context`, `coordination` |
 
 ## Tag matrix
 

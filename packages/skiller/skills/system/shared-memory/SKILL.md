@@ -1,8 +1,8 @@
 ---
 name: shared-memory
 bucket: system
-version: 0.1.0
-description: "Единый «мозг» (общая память) для выбранных проектов констелляции через хук ~/.claude/hooks/memory/. Recall перед работой, remember после — факты делятся только между участниками одной группы (brain). Бэкенд сменный: file|federation|agentmemory|off, переопределяется конфигом."
+version: 0.2.0
+description: "Единый «мозг» (общая память) проектов констелляции через хук ~/.claude/hooks/memory/ + демон mAInd. Recall перед работой, remember после. Канон для проектов — MODE=maind (демон :4111, изоляция по scope на стороне maind): приватный project:<id> + общее по тегам ns:<namespace> + global; recall их объединяет. Бэкенд сменный: maind|file|federation|agentmemory|off."
 risk: write
 persona: architect
 tags: [memory, cross-project, topology, recall, context, coordination]
@@ -48,22 +48,31 @@ sha256: ""
 
 ## Режимы (бэкенды) — `env.ini` MODE
 
+- **maind** ← **канон для прикладных проектов.** Делегирует в `maind memory` (демон
+  :4111). Та же память, что у MCP `maind_memory_*`: приватный `project:<id>` + общее по
+  тегам `ns:<namespace>` + `global`, recall объединяет. **Изоляция — на стороне maind**
+  (демон-пул один и `namespace` он игнорирует; maind встраивает scope-маркер в контент и
+  фильтрует на чтении). brain не нужен — scope берётся из проекта. `maind onboard` сам
+  ставит `MODE=maind` и namespaces (общий `axioma` + свой, см. [namespaces]).
 - **file** — один общий store на группу (markdown). Просто и предсказуемо.
-- **federation** — истина = свои `memory/` участников (+ нативная память Claude
-  Code) + общий store; recall читает по всем и ранжирует. Git-прозрачно, без демона. ← дефолт.
-- **agentmemory** — прокси к стороннему AgentMemory (демон на Brain): семантический
-  поиск; если демон спит — `status` сообщает, без падения.
-- **off** — выключено (база для сравнения).
+- **federation** — файловый: свои `memory/` участников + общий store. Git-прозрачно, без
+  демона. Оставлен для **инфра-узлов** (brain/swissknifeman); НЕ путать с graph-federation maind.
+- **agentmemory** — старый прямой proxy к демону (бил мимо API/scope) — **не использовать**,
+  заменён режимом `maind`.
+- **off** — выключено.
 
-Режимы взаимозаменяемы — переключаешь MODE и сравниваешь file/federation/agentmemory
-на одной группе.
+> ⚠️ Пиши/читай память проекта только через `maind memory` (хук в `MODE=maind`) или MCP
+> `maind_memory_*` — записи в обход (raw agentmemory) идут без scope-маркера и не находятся
+> scoped-recall'ом. Подробности изоляции — `docs/maind/guide/memory.md`.
 
-## Группы и участники (membership) — `config.json`
+## Группы и участники (membership)
 
-`brains` → `{ имя: { members, store, agentmemory } }`. `members` — имена узлов
-топологии (`brain`/`swissknifeman`) или ключи/пути проектов. **Участник видит
-мозг, только если он в `members`.** Можно держать несколько групп (`core`,
-`experiment`) и сравнивать составы.
+- **MODE=maind (канон):** членство — через **namespaces проекта** в `config.json`
+  (`projects[].namespaces`), не через brains. Общий дом — `axioma` (все свои проекты);
+  у проекта плюс свой/продуктовый namespace (memster → `[axioma, memster]`); сторонним
+  клиентам — namespace без `axioma`. Видимость = `project:<id>` + его `ns:<…>` + `global`.
+- **MODE=file/federation (инфра):** `brains` → `{ имя: { members, store, agentmemory } }`;
+  участник видит мозг, только если он в `members`.
 
 ## Per-project override (как auto-approve)
 
@@ -83,8 +92,8 @@ sha256: ""
 
 - [ ] Перед содержательной задачей сделан `recall` по теме.
 - [ ] Зафиксирован только межпроектно-полезный факт (не локальная мелочь), с «почему».
-- [ ] Факт ушёл в правильную группу (участник в `members`).
-- [ ] Режим выбран осознанно (file/federation/agentmemory) — для эксперимента можно сравнить.
+- [ ] Факт ушёл в правильный scope (приватный по умолчанию; `--share`/общий — только если полезен дому).
+- [ ] Для проекта режим `MODE=maind` (демон); `maind health` проходит round-trip.
 
 ## Ссылки
 

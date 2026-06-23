@@ -5,6 +5,14 @@
 
 ## [Unreleased]
 
+### Docs
+- **`guide/memory.md` переписан под правду**: изоляция — на стороне maind (демон —
+  единый пул, `namespace`/`sessionId` игнорирует, `type` переопределяет; scope-маркер в
+  контенте), единый путь хук+MCP через `MODE=maind`, контракт `forget {memoryId}`, проверка
+  round-trip + troubleshooting, снята коллизия имён `federation` (память-файлы vs граф).
+  `guide/federation.md` получил врезку «не путать с памятью». Скилл `system/shared-memory`
+  → 0.2.0 (канон `MODE=maind`, мульти-namespace, membership по namespaces).
+
 ### Added
 - **Онбординг авто-проводит память**: `maind onboard` доводит проводку памяти и для уже
   подключённого проекта — задаёт `namespaces` (дефолт «общий `axioma` + свой `<id>`»,

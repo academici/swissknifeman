@@ -52,6 +52,20 @@
   дрейфа «реестр изменился — хаб не перегенерён» (doctor — Фаза 5). Парс блок-списка
   `skills:` — инлайн в скрипте; общий хелпер в common.py придёт с валидатором (Фаза 3).
 
+### Added (agent-packs — версионируемая pack-система, Фаза 2)
+
+- **Скилл `system/agent-packs`** — playbook установки и версионного апгрейда паков в
+  проект-потребитель: детект стека → интервью → рендер+копия → lock; upgrade по
+  CHANGELOG-дельте с 3-way reasoning через sha256 в lock (без diff-движка). Стойка:
+  агент-driven, не движок-генератор.
+- **Пак `backend-laravel` v0.1.0** (`harness/configs/claude-code/agent-packs/`):
+  агенты slice-builder/test-writer/reviewer + workflow dev-loop + review-gate хук +
+  settings-фрагмент + guideline; обобщены плейсхолдерами (`{{PACK_PREFIX}}`,
+  `{{PHP_RUNNER}}`, `{{TEST_RUNNER_CMD}}`, `{{TEST_DB}}`, `{{CHECK_CMD}}`,
+  `{{PROJECT_DIR}}`). `pack.json` (manifest) + per-pack `CHANGELOG.md` + README паков.
+- **Lock-схема** `.claude/agent-pack.lock.json` (версия + ответы интервью + per-file
+  `base_sha256` отрендеренного) — основа upgrade без diff-движка.
+
 ## [0.4.0] - 2026-06-22
 
 > **Зонтичная единая версия монорепо.** Накопленное с `v0.3.0`: выделение пакета

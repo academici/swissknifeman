@@ -301,7 +301,7 @@ flowchart LR
 
 **В графе:** 109 скиллов, 82 рёбер requires, 66 рёбер produces_for.
 
-## Изолированные скиллы (75)
+## Изолированные скиллы (76)
 
 Скиллы без связей `requires`/`produces_for` — самодостаточны.
 
@@ -313,3 +313,4 @@ flowchart LR
 | imported | `agent-security-super-skill`, `ai-agent-super-skill`, `content-creative-super-skill`, `dev-engineering-super-skill`, `finance-super-skill`, `legal-super-skill`, `marketing-super-skill`, `operations-cx-super-skill`, `pm-super-skill`, `research-knowledge-super-skill`, `sales-super-skill`, `token-efficient` |
 | php | `azguard`, `code-style-spatie`, `enum-attributes`, `enum-state-machine`, `health-checks`, `laravel-best-practices`, `laravel-broadcasting`, `laravel-dusk`, `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages`, `laravel-subagents`, `livewire-blade-attributes`, `medialibrary`, `named-arguments`, `naming-conventions`, `pao`, `pennant-development`, `php-patterns`, `php-upgrade-checklist`, `spatie-settings` |
 | roles | `open-source-maintainer`, `solo-founder`, `startup-cto`, `tech-lead` |
+| system | `agent-packs` |

@@ -86,7 +86,7 @@
     },
     "system": {
       "description": "Local environment topology: the three hub nodes (Brain vault, swissknifeman, projects base) and how agents navigate between projects and their docs",
-      "count": 3,
+      "count": 4,
       "status": "active"
     }
   },
@@ -3350,6 +3350,25 @@
         "orchestration",
         "review",
         "workflow"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "agent-packs",
+      "bucket": "system",
+      "path": "skills/system/agent-packs/SKILL.md",
+      "version": "0.1.0",
+      "description": "Установка и ВЕРСИОНИРОВАННЫЙ апгрейд agent-packs (агенты/воркфлоу/хуки Claude Code) из harness в проект-потребитель: детект стека -> интервью -> рендер+копия -> lock; апгрейд по CHANGELOG-дельте с 3-way reasoning через sha256 в lock, без diff-движка. Активировать при словах: внедрить/обновить agent-pack, поставить роли+dev-loop+review-gate в проект, версионный upgrade шаблонов агентов, agent-pack.lock.",
+      "sha256": "f0951fa7161b69c22b6f5425a0c003c6bc4f17e6394de48f271b2e1fee859038",
+      "tags": [
+        "agent-packs",
+        "templates",
+        "versioning",
+        "upgrade",
+        "install",
+        "claude-code",
+        "harness",
+        "lock"
       ],
       "source": "local"
     },

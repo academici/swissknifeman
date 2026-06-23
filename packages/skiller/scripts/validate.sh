@@ -468,6 +468,33 @@ for cmd_md in sorted(root.glob("skm/commands/*.md")):
     elif not fm.get("description"):
         errors.append(f"{rel}: slash-команда без непустого description")
 
+# --- 10c. agent `skills:` references resolve to registry skills --------------
+# Агенты бакетов (skills/<bucket>/agents/*.md) предзагружают скиллы нативным
+# полем `skills: [bucket:name, ...]` (Claude Code subagent preload). Каждый
+# namespaced-элемент обязан указывать на реальный скилл реестра — иначе CC
+# тихо пропускает его с warning в debug-лог.
+registry_bn = set()
+for skill_md in skill_files:
+    fm = parse_frontmatter(skill_md)
+    if not fm:
+        continue
+    b = (fm.get("bucket", "") or "").strip().strip('"').strip("'")
+    n = (fm.get("name", "") or "").strip().strip('"').strip("'")
+    if b and n:
+        registry_bn.add(f"{b}:{n}")
+for agent_md in sorted(root.glob("skills/*/agents/*.md")):
+    rel = agent_md.relative_to(root)
+    fm = parse_frontmatter(agent_md)
+    if not fm:
+        continue
+    for entry in parse_inline_list(fm.get("skills", "")):
+        if ":" not in entry:
+            warnings.append(
+                f"{rel}: skills-элемент '{entry}' без namespace (нужно bucket:name)")
+        elif entry not in registry_bn:
+            errors.append(
+                f"{rel}: skills-элемент '{entry}' не резолвится в скилл реестра")
+
 # --- report ----------------------------------------------------------------
 for w in warnings:
     print(f"WARN: {w}")

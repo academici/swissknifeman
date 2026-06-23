@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Added (детерминированная привязка скиллов к агентам)
+
+- **Поле `skills:` во frontmatter агентов бакетов** (`skills/<bucket>/agents/*.md`) —
+  нативный preload Claude Code (v2.0.43+): полный контент перечисленных скиллов
+  инжектится в субагента на старте, без надежды на model-invocation. Привязаны
+  `php/laravel-implementer`, `laravel-reviewer`, `laravel-test-writer`. Закрывает
+  корень сбоя «агент проигнорировал скилл» (6/7 пропустили `repositories`).
+- **Валидация (`scripts/validate.sh`, 10c):** каждый `skills:`-элемент агента обязан
+  резолвиться в реальный скилл реестра (`bucket:name`); ненеймспейснутый — warning.
+- **`php/laravel-implementer`:** прозовый «ПЕРВЫЙ ШАГ — load via Skill» заменён на
+  декларативное поле `skills:`; жёсткие правила оставлены L4-страховкой.
+
 ### Changed (валидация: строгий frontmatter + битые ссылки)
 
 - **`validate.sh` ужесточён** (секция 1a) — раньше проверялось только *наличие*

@@ -2,6 +2,7 @@
 name: laravel-reviewer
 description: Read-only ревью Laravel-кода свежим контекстом. Вызывать после завершения каждой единицы реализации (домен, слой, фича) — передать дифф или список изменённых файлов. Запускает PHPStan, Pint и целевые Pest-тесты, проверяет Laravel-критерии и возвращает структурированные находки. Кода не меняет.
 tools: Read, Grep, Glob, Bash
+skills: [php:repositories, php:laravel-structure, php:laravel, php:code-style-spatie, php:laravel-testing]
 ---
 
 Ты — ревьюер Laravel-кода. Работаешь со свежим контекстом, без предвзятости
@@ -26,6 +27,13 @@ tools: Read, Grep, Glob, Bash
 3. Проверь по Laravel-критериям:
    - **Слои и размещение**: класс лежит и назван по канону проекта
      (доменные подпапки, зеркало слоёв); бизнес-логика не в контроллере.
+   - **Слой доступа к данным** (если в проекте есть скилл `php:repositories`
+     или каталоги `app/Repositories`/`app/Actions`): контроллер НЕ ходит в
+     модель напрямую — grep по контроллерам на `::query(|::create(|::where(|::all(|::find(`
+     должен быть пуст; мутации идут через **Action** + `*StoreRepository`
+     (а не `Model::create()` в Action/контроллере); чтения — через
+     `*Repository`/scopes; `*Service` не персистит и не принимает `Request`.
+     Обход этого слоя — `major`, даже при зелёных тестах.
    - **N+1 и запросы**: ленивые связи в циклах, отсутствующие
      eager load, запросы внутри Blade/Resource.
    - **Валидация**: входные данные проходят через FormRequest/DTO,

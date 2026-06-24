@@ -23,10 +23,11 @@ import hashlib
 import json
 import os
 import shutil
-from datetime import date
 from pathlib import Path
 
-from .common import MANIFEST, die, parse_flags, warn
+from core.io import atomic_write_json
+
+from .common import MANIFEST, die, now_iso, parse_flags, warn
 from .config import (DEFAULT_EXCLUDE, all_buckets, core_skill_tuples,
                      resolve_target)
 from .hub import generate_hub, hub_artifacts_exist
@@ -37,6 +38,7 @@ CONFIG_DIR = ".swissknifeman"
 CONFIG_FILE = "config.json"
 LOCK_FILE = "skills-lock.json"
 LOCK_VERSION = 1
+MANIFEST_VERSION = 1
 SOURCE = "swissknifeman"
 
 # Ключи конфига vendor-режима (.swissknifeman/config.json). Намеренно шире
@@ -71,6 +73,7 @@ def _registry_index(env):
         bucket = s.get("bucket", "")
         path = s.get("path", "")  # "skills/<bucket>/<rel>/SKILL.md"
         if not (name and path):
+            warn(f"skills.json: запись пропущена (нет name или path): {s}")
             continue
         skill_dir = (env.root / path).parent
         # rel внутри бакета: skills/<bucket>/<rel>/SKILL.md → <rel>
@@ -84,7 +87,12 @@ def _registry_index(env):
         }
         full = f"{bucket}/{rel}".rstrip("/") if rel else bucket
         by_key[full] = entry
-        by_name.setdefault(name, entry)
+        if name in by_name:
+            warn(f"skills.json: дубль имени '{name}' "
+                 f"(бакеты: {by_name[name]['bucket']} и {bucket}) — по имени "
+                 f"доступен первый; используйте полный путь 'bucket/rel'")
+        else:
+            by_name[name] = entry
     return by_key, by_name
 
 
@@ -362,14 +370,15 @@ def _write_manifest(target, skills_path, locked, entries, cfg):
             "source_path": str(Path(entry["path"]).parent),
         })
     data = {
-        "installed_at": date.today().isoformat(),
+        "installed_at": now_iso(),
         "profile": cfg.get("project_type", ""),
         "agent": cfg.get("agent", "claude"),
         "layout": "flat",
         "skills": installed,
     }
-    (dest_root / MANIFEST).write_text(
-        json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    # Атомарно (tmp+os.replace) и с version первым ключом — как skills-lock.json;
+    # raw write_text здесь оставлял бы шанс на полузаписанный манифест при крахе.
+    atomic_write_json(dest_root / MANIFEST, data, version=MANIFEST_VERSION)
 
 
 # --- CLI ----------------------------------------------------------------------

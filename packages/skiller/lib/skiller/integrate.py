@@ -81,11 +81,18 @@ def _run_harness(env, args):
         warn("  harness не установлен — пропуск (packages/harness/install.sh)")
         return False
     sys.stdout.flush()
-    r = subprocess.run([str(binp)] + args, check=False)
+    try:
+        r = subprocess.run([str(binp)] + args, check=False, timeout=30,
+                           stderr=subprocess.PIPE, text=True)
+    except subprocess.TimeoutExpired:
+        warn(f"  harness: превышен таймаут 30s — блок мог не примениться "
+             f"({args[0] if args else ''})")
+        return True
     if r.returncode != 0:
         # graceful: визард не валим, но НЕ молчим — иначе «готово» при непримен. блоке
+        detail = f": {r.stderr.strip()}" if r.stderr else ""
         warn(f"  harness вернул код {r.returncode} — блок мог не примениться "
-             f"({args[0] if args else ''})")
+             f"({args[0] if args else ''}){detail}")
     return True
 
 

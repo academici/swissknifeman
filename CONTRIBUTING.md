@@ -24,8 +24,9 @@ install.sh            # зонтичный установщик (делегир�
 - **Без pip, stdlib-only.** Рантайм-зависимостей в Python нет; `core` подключается через
   `PYTHONPATH` — лаунчеры (`packages/*/bin/*`) добавляют корень монорепо автоматически
   (fallback на standalone-раскладку пакета). Отдельно ничего «устанавливать» для `core` не нужно.
-- **IDE-автодополнение `from core import ...`:** если Pylance/PyCharm не видят `core`, добавьте пути
-  `core`, `packages/*/lib` в `python.analysis.extraPaths` (или `pyrightconfig.json`) — не через pip.
+- **IDE-автодополнение `from core import ...`:** для Pylance/pyright в корне лежит
+  `pyrightconfig.json` (`extraPaths`: корень репо `.` + `packages/*/lib`) — резолв работает «из
+  коробки», без pip. PyCharm: отметь `.` и `packages/*/lib` как *Sources Root*.
 - **`.mcp.json` и `config.json` машинно-специфичны** (абсолютные пути) и не коммитятся
   (`.gitignore`); шаблоны — `.mcp.json.example` / `config.example.json`. Реальный `.mcp.json` для
   этого репо генерит `maind` (sync/deploy).

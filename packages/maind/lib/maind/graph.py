@@ -306,7 +306,6 @@ def _cmd_view(env, argv):
 def _mermaid(sub, title):
     """Подграф {nodes,edges} → Mermaid flowchart. Рендерится в GitHub/VitePress без рантайма.
     Форма узла по типу: project — прямоугольник, package — скруглённый, прочее — по умолчанию."""
-    import re
     safe = {}
     for i, n in enumerate(sub["nodes"]):
         safe[n["id"]] = f"n{i}"

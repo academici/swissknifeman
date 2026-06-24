@@ -48,7 +48,7 @@ def cmd_doctor(env, argv):
             stale = [p for p in db.get("projects", [])
                      if not Path(p["path"]).is_dir()]
             check(not stale,
-                  f"записи projects.json указывают на существующие каталоги",
+                  "записи projects.json указывают на существующие каталоги",
                   f"{len(stale)} устаревших — skiller list --prune")
         except json.JSONDecodeError:
             check(False, "projects.json парсится",

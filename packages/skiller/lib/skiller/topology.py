@@ -13,7 +13,6 @@ import json
 import os
 import shutil
 import sys
-from pathlib import Path
 
 from .common import die, now_iso, parse_flags, warn
 from .state import load_db

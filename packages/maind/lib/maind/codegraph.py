@@ -68,7 +68,14 @@ def is_workspace(project, path):
 
 
 def _infer_language(project, path, st):
-    """Язык для Serena: по типу проекта (из конфига), иначе по манифесту. None → Serena сама."""
+    """Язык(и) для Serena. Приоритет: per-project override (code_language(s), legacy
+    graphify_language) → по типу проекта (language_by_type) → по манифесту → None (Serena
+    автодетектит сама). Возвращает str | список str | None. Override нужен для смешанных
+    репо: type задаёт ОДИН язык (напр. node-package→typescript), а у python-монорепо с
+    docs на TS код в основном python — здесь это и чинится без правки общих констант."""
+    override = _proj(project, "code_language", "code_languages", "graphify_language")
+    if override:
+        return override
     lang = (st.get("language_by_type") or {}).get(project.get("type"))
     if lang:
         return lang
@@ -80,10 +87,12 @@ def _infer_language(project, path, st):
 
 
 def render_project_yaml(name, language, ignores, initial_prompt, gitignore=True):
-    """Минимальный валидный .serena/project.yml (Serena дополнит шаблон при активации)."""
+    """Минимальный валидный .serena/project.yml (Serena дополнит шаблон при активации).
+    language: str | список str | None — None опускает секцию (Serena автодетектит сама)."""
     lines = [f'project_name: "{name}"']
-    if language:
-        lines += ["languages:", f"  - {language}"]
+    langs = [language] if isinstance(language, str) else (language or [])
+    if langs:
+        lines += ["languages:"] + [f"  - {lang}" for lang in langs]
     lines += [f"ignore_all_files_in_gitignore: {'true' if gitignore else 'false'}",
               "ignored_paths:"]
     lines += [f'  - "{p}"' for p in ignores]

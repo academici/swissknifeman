@@ -214,9 +214,9 @@ def _block_brain(target, choices):
     if not choices["brain"]:
         return
     print("\n[7] Brain docs-sync (подсказка — настраивается со стороны волта)")
-    print(f"  В заметке проекта в Brain-волте добавь во frontmatter:")
+    print("  В заметке проекта в Brain-волте добавь во frontmatter:")
     print(f"      repo: {target}")
-    print(f"  Затем: brain status <project> / brain sync <project>")
+    print("  Затем: brain status <project> / brain sync <project>")
 
 
 # --- choices assembly ---------------------------------------------------------

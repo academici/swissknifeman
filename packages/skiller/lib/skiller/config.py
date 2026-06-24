@@ -3,7 +3,7 @@ import json
 import os
 from pathlib import Path
 
-from .common import (AGENT_DEFAULTS, CONFIG_KEYS, Env, confirm, die,
+from .common import (AGENT_DEFAULTS, CONFIG_KEYS, confirm, die,
                      parse_frontmatter_fields)
 
 # CORE-политика раздачи: токен-экономные скиллы, которые swissknifeman кладёт в

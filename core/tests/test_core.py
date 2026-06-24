@@ -6,6 +6,7 @@ import os
 import sys
 import tempfile
 import unittest
+from dataclasses import FrozenInstanceError
 from pathlib import Path
 from unittest import mock
 
@@ -37,7 +38,7 @@ class TestEnv(unittest.TestCase):
 
     def test_base_env_is_frozen(self):
         env = BaseEnv("/tmp/x")
-        with self.assertRaises(Exception):
+        with self.assertRaises(FrozenInstanceError):
             env.root = "/other"  # frozen dataclass
 
     def test_subclass_keeps_frozen_and_core(self):

@@ -1,0 +1,9 @@
+{
+  "typeCheckingMode": "off",
+  "extraPaths": [
+    ".",
+    "packages/skiller/lib",
+    "packages/harness/lib",
+    "packages/maind/lib"
+  ]
+}

@@ -28,7 +28,7 @@ def cmd_doctor(env, argv):
     hooks = env.home / ".claude" / "hooks"
     have = {d: (hooks / d).exists() for d in ("notify", "auto-approve", "memory")}
     if all(have.values()):
-        print(f"  ✓ файлы хуков установлены глобально (~/.claude/hooks/)")
+        print("  ✓ файлы хуков установлены глобально (~/.claude/hooks/)")
     else:
         missing = [d for d, v in have.items() if not v]
         print(f"  · файлы хуков не установлены: {', '.join(missing)} "

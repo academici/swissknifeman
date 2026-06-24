@@ -28,6 +28,21 @@
 - **CI `test.yml`**: матрица Python расширена 3.9–3.12 → 3.9–3.13.
 - **`MERGE-PLAN.md`** удалён (рабочий артефакт процесса слияния, ценности для пользователя нет).
 
+### Added / Tooling (follow-up аудита — улучшенные варианты)
+
+- **`pyrightconfig.json`**: Pylance/pyright резолвят `from core import …` и межпакетные импорты
+  из коробки (`extraPaths`: корень `.` + `packages/*/lib`, `typeCheckingMode: off`) — IDE-DX без pip,
+  stdlib-only цел. PyCharm — Sources Root (см. `CONTRIBUTING.md`).
+- **`swissknifeman --version` / `-V`**: версия монорепо из `git describe` (фолбэк «dev»). Заодно
+  убран висячий `version` из роутера — он делегировал в `skiller version`, которой не существует.
+- **Линтер ruff в CI** (job `lint`): `pipx run ruff==0.15.19 check` — эфемерно, ruff НЕ зависимость
+  репо; конфиг `ruff.toml`, набор `F,B`, `target-version=py39` (B905 не конфликтует с 3.9). Разовая
+  зачистка: 6 неиспользуемых импортов, 8 пустых f-строк, 9 unused loop-vars, 1 broad-except в тесте.
+- **Per-project `code_language(s)`** (maind/codegraph): override языка код-графа (str|список) поверх
+  `language_by_type` — смешанный репо (python-код + TS-доки при `type:node-package`) граф­ится верно
+  без правки общих констант; swissknifeman → `python`. `render_project_yaml` рендерит и список
+  (мульти-язык). +тесты.
+
 ### Added (harness — режим памяти `maind`)
 
 - **Хук памяти получил режим `MODE=maind`** (`hooks/memory/modes/maind.sh`): делегирует

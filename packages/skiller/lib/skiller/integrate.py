@@ -80,7 +80,11 @@ def _run_harness(env, args):
         warn("  harness не установлен — пропуск (packages/harness/install.sh)")
         return False
     sys.stdout.flush()
-    subprocess.run([str(binp)] + args, check=False)
+    r = subprocess.run([str(binp)] + args, check=False)
+    if r.returncode != 0:
+        # graceful: визард не валим, но НЕ молчим — иначе «готово» при непримен. блоке
+        warn(f"  harness вернул код {r.returncode} — блок мог не примениться "
+             f"({args[0] if args else ''})")
     return True
 
 
@@ -214,9 +218,9 @@ def _block_brain(target, choices):
     if not choices["brain"]:
         return
     print("\n[7] Brain docs-sync (подсказка — настраивается со стороны волта)")
-    print(f"  В заметке проекта в Brain-волте добавь во frontmatter:")
+    print("  В заметке проекта в Brain-волте добавь во frontmatter:")
     print(f"      repo: {target}")
-    print(f"  Затем: brain status <project> / brain sync <project>")
+    print("  Затем: brain status <project> / brain sync <project>")
 
 
 # --- choices assembly ---------------------------------------------------------

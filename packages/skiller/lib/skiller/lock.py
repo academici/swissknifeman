@@ -11,7 +11,6 @@ Universe = реально установленные скиллы (агентс�
 Файл коммитится в проект — это lock-карта внешних скиллов (как composer.lock)."""
 import json
 import os
-from pathlib import Path
 
 from .common import die, parse_flags
 from .config import resolve_target

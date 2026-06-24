@@ -14,7 +14,7 @@ import os
 from pathlib import Path
 
 from .common import warn
-from .federation import project_graph, rebuild_index, store_path
+from .federation import rebuild_index, store_path
 from .graph import Graph
 from .namespaces import link_allowed
 

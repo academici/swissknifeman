@@ -104,6 +104,27 @@ class TestSerenaConfig(unittest.TestCase):
             codegraph.apply_serena_config(env, config, proj, "auto", dry=False)
             self.assertIn("- typescript", (pdir / _CFG).read_text())
 
+    def test_code_language_override_beats_type(self):
+        # per-project code_language перебивает language_by_type (node-package→typescript):
+        # смешанный репо (python-код + TS-доки) графим как python, не трогая общие константы.
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj, pdir = _setup(tmp, code=True, type="node-package",
+                                             code_language="python")
+            codegraph.apply_serena_config(env, config, proj, "auto", dry=False)
+            txt = (pdir / _CFG).read_text()
+            self.assertIn("- python", txt)
+            self.assertNotIn("- typescript", txt)
+
+    def test_code_languages_list_renders_multi(self):
+        # список языков → несколько записей languages: (мульти-язычный граф смешанного репо)
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj, pdir = _setup(tmp, code=True,
+                                             code_languages=["python", "typescript"])
+            codegraph.apply_serena_config(env, config, proj, "auto", dry=False)
+            txt = (pdir / _CFG).read_text()
+            self.assertIn("- python", txt)
+            self.assertIn("- typescript", txt)
+
 
 class TestConfigDriven(unittest.TestCase):
     def test_code_alias_equals_graphify(self):

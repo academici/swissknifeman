@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12']
+        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
     steps:
       - uses: actions/checkout@v4
 
@@ -34,3 +34,12 @@ jobs:
 
       - name: Test core (stdlib фундамент)
         run: PYTHONPATH=. python3 -m unittest discover -s core/tests -v
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Линтер эфемерно через pipx (предустановлен на runner'е) — ruff НЕ зависимость
+      # репо, версия пиннована (детерминизм). Набор F,B — конфиг в ruff.toml.
+      - name: Ruff (баги — pyflakes F + bugbear B)
+        run: pipx run ruff==0.15.19 check core/ packages/skiller/lib packages/harness/lib packages/maind/lib

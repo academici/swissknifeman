@@ -20,6 +20,12 @@ MERGE-PLAN.snapshots/
 # Приватный конфиг узла maind (пути ко всем проектам); шаблон — config.example.json
 config.json
 
+# Машинно-специфичный MCP-конфиг проекта: абсолютные пути к лаунчеру maind (утечка
+# пути + ломает клон у других). Шаблон — .mcp.json.example; реальный файл генерит
+# `maind` (sync/deploy → mcpconfig.write_mcp). .bak — бэкап от write_mcp.
+.mcp.json
+.mcp.json.bak
+
 # Сборочные копии per-package доков (источник — packages/<pkg>/docs; см. scripts/docs-sync.sh)
 docs/skiller/
 docs/harness/
@@ -27,3 +33,4 @@ docs/maind/
 
 # Внутренние research-доки (аудиты/трекеры) — локально, не публиковать
 research/
+*.bak

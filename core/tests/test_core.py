@@ -2,10 +2,13 @@
 
 Запуск: PYTHONPATH=<корень монорепо> python3 -m unittest discover -s core/tests"""
 import json
+import os
 import sys
 import tempfile
 import unittest
+from dataclasses import FrozenInstanceError
 from pathlib import Path
+from unittest import mock
 
 from core import (BaseEnv, atomic_write_json, atomic_write_text,
                   find_monorepo_root, find_repo_root, now_iso, parse_args,
@@ -26,9 +29,16 @@ class TestEnv(unittest.TestCase):
         self.assertEqual(str(env.home), "/tmp/h")
         self.assertEqual(env.cmd, "cmd")
 
+    def test_base_env_home_reads_current_env(self):
+        # default_factory зовёт Path.home() при создании (не модульный снимок) —
+        # подменённый $HOME подхватывается (нужно для тестируемости).
+        with tempfile.TemporaryDirectory() as tmp:
+            with mock.patch.dict(os.environ, {"HOME": tmp}):
+                self.assertEqual(BaseEnv("/r").home, Path(tmp))
+
     def test_base_env_is_frozen(self):
         env = BaseEnv("/tmp/x")
-        with self.assertRaises(Exception):
+        with self.assertRaises(FrozenInstanceError):
             env.root = "/other"  # frozen dataclass
 
     def test_subclass_keeps_frozen_and_core(self):
@@ -58,6 +68,17 @@ class TestAtomicIO(unittest.TestCase):
             self.assertEqual(p.read_text(encoding="utf-8"), "привет")
             # tmp-файл не остаётся после успешной записи
             self.assertEqual(list(Path(tmp).rglob("*.tmp")), [])
+
+    def test_write_text_cleans_tmp_on_failure(self):
+        # Если replace падает (кросс-устройство/нет места), осиротевший .tmp не
+        # должен оставаться на диске — иначе мусор копится в долгоживущих процессах.
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Path(tmp) / "f.txt"
+            with mock.patch("core.io.os.replace", side_effect=OSError("boom")):
+                with self.assertRaises(OSError):
+                    atomic_write_text(p, "data")
+            self.assertEqual(list(Path(tmp).rglob("*.tmp")), [])
+            self.assertFalse(p.exists())
 
     def test_write_json_version_first_and_newline(self):
         with tempfile.TemporaryDirectory() as tmp:

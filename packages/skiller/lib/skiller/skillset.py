@@ -161,7 +161,7 @@ def resolve_skillset(env, cfg, include_core=False):
     exclude = set(cfg.get("exclude", []))
     if include_core:
         exclude |= set(DEFAULT_EXCLUDE)
-        for bucket, _rel, _d, fm_name in core_skill_tuples(env, exclude):
+        for _bucket, _rel, _d, fm_name in core_skill_tuples(env, exclude):
             entry = by_name.get(fm_name)
             if entry:
                 selected[entry["name"]] = entry

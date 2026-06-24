@@ -26,7 +26,7 @@
     "store_layout": "hub"
   },
 
-  "_comment_code_graph": "Граф КОДА внутри проекта (отдельный per-project MCP, движок Serena через uvx). ПОЛИТИКА ЗДЕСЬ, не в коде — правь под себя. Включается на проект полем projects[].code:true (legacy-alias graphify:true). ignores — что НЕ индексировать (сторонние + симлинкнутые first-party пакеты графятся как свои проекты). workspace_ignores — для проекта, что разрабатывается ВМЕСТЕ с пакетами под packages/* (монорепо/консьюмер): packages НЕ игнорим (единый граф), но режем vendor и вложенные **/vendor; режим включается авто при наличии packages/ или явно projects[].code_workspace. pre_index — фоновая прогрев-индексация при включении. feature_log_hook — SessionEnd-хук фиксации коммитов в общую память. Движок переопределяется на проект: code_command/code_args({root})/code_server_name.",
+  "_comment_code_graph": "Граф КОДА внутри проекта (отдельный per-project MCP, движок Serena через uvx). ПОЛИТИКА ЗДЕСЬ, не в коде — правь под себя. Включается на проект полем projects[].code:true (legacy-alias graphify:true). ignores — что НЕ индексировать (сторонние + симлинкнутые first-party пакеты графятся как свои проекты). workspace_ignores — для проекта, что разрабатывается ВМЕСТЕ с пакетами под packages/* (монорепо/консьюмер): packages НЕ игнорим (единый граф), но режем vendor и вложенные **/vendor; режим включается авто при наличии packages/ или явно projects[].code_workspace. pre_index — фоновая прогрев-индексация при включении. feature_log_hook — SessionEnd-хук фиксации коммитов в общую память. Движок переопределяется на проект: code_command/code_args({root})/code_server_name; язык — code_language (str|список, перебивает language_by_type: смешанный репо с python-кодом при type=node-package графится как python, без правки общих констант).",
   "code_graph": {
     "enabled_default": false,
     "engine": "serena",
@@ -85,6 +85,7 @@
       "repo": "academici/swissknifeman",
       "local_path": "~/projects/packages/swissknifeman",
       "type": "node-package",
+      "code_language": "python",
       "memory_scope": "project:swissknifeman",
       "agents": [],
       "tags": ["package", "skills"],

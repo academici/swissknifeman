@@ -20,7 +20,10 @@ class BaseEnv:
 
     root: Path
     cmd: str = ""
-    home: Path = field(default_factory=lambda: HOME)
+    # Зовём Path.home() при создании экземпляра (а не модульный снимок HOME) —
+    # подменённый в тестах $HOME подхватывается. Модульный HOME оставлен как
+    # публичная константа (re-export в core.__init__, STATE_DIR в пакетах).
+    home: Path = field(default_factory=lambda: Path.home())
 
     def __post_init__(self):
         object.__setattr__(self, "root", Path(self.root))

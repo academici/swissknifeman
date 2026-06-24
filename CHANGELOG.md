@@ -2,6 +2,64 @@
 
 ## [Unreleased]
 
+### Fixed (второй аудит skiller — реальные баги)
+
+- **`integrate` больше не глушит ошибки harness**: `_run_harness` проверяет returncode и `warn`-ит при
+  ненулевом — раньше визард молча рапортовал «готово», даже если блок не применился. Graceful
+  degradation сохранена (визард не падает).
+- **frontmatter устойчив к BOM** (`common.parse_frontmatter`): чтение `SKILL.md` через `utf-8-sig` —
+  файл с BOM больше не игнорируется молча. +тест.
+- **`projects.json` без дублей**: `upsert_project`/`db_records` нормализуют путь через `Path.resolve()`
+  (раньше разные repr одного каталога — `./`, `..`, симлинк — плодили дубли). +тест.
+- **`boost.json::skills` сортируется целиком** (`sorted(existing + added)`, не только `added`) —
+  детерминированный порядок.
+
+> Отклонено как ложное/over-engineering для Linux-only single-user (с обоснованием в плане): «double-nesting
+> `extraKnownMarketplaces`» — это корректная схема Claude Code (подтверждено реальными конфигами);
+> frontmatter «режет на `:`» (там `split(":",1)`); TOCTOU/атомарность `copy_skill`; Windows-пути; mmap/
+> чтение-частями мелких файлов; ротация `.bak`; `deque` вместо `pop(0)`.
+
+### Security / Fixed (аудит репозитория — зонтик, core, CI)
+
+- **`.mcp.json` выведен из-под git** (`git rm --cached` + `.gitignore`): машинно-специфичный файл
+  с абсолютными путями к `maind` (утечка пути автора + ломал клон у других). Шаблон —
+  `.mcp.json.example` (плейсхолдер `{{REPO_ROOT}}`); реальный файл генерит `maind` (sync/deploy).
+- **`core.atomic_write_text`**: при ошибке записи/`os.replace` подчищает осиротевший `.tmp`
+  (`try/except → unlink`) — иначе мусор копился в долгоживущих процессах (напр. `No space left`). +тест.
+- **`bin/swissknifeman doctor`**: больше не прерывается на первом отсутствующем лаунчере
+  (`need()` бил `exit 1`) — fan-out на все три пакета с агрегацией итогового exit-кода.
+- **`install.sh`**: собирает упавшие пакетные установки и завершает `exit 1` со списком — раньше
+  печатал «Готово» и выходил 0 даже если пакеты не установились.
+- **`scanner-pr.yml`**: имя ветки берётся из репозитория (`git rev-parse --abbrev-ref HEAD`), а не из
+  продублированной формулы `$(date +%Y%m%d)` (гонка на границе суток); снят `|| true` с `git push`
+  (реальный сбой push больше не маскируется перед `gh pr create`).
+- **`core/env.py`**: `BaseEnv.home` default_factory зовёт `Path.home()` при создании (а не модульный
+  снимок) — подменённый `$HOME` подхватывается в тестах. Глобал `HOME` сохранён (публичный API). +тест.
+
+### Changed (документация и CI — аудит)
+
+- **README**: добавлен пакет `harness` (таблица + CLI) и корневой роутер `swissknifeman`/`setup`;
+  убрана устаревшая фраза «единой консоли-обёртки нет».
+- **`CONTRIBUTING.md`** (корневой) — новый: раскладка, dev-установка (stdlib-only/без pip, IDE
+  extraPaths вместо pip), тесты/валидация, конвенции, релизная дисциплина.
+- **CI `test.yml`**: матрица Python расширена 3.9–3.12 → 3.9–3.13.
+- **`MERGE-PLAN.md`** удалён (рабочий артефакт процесса слияния, ценности для пользователя нет).
+
+### Added / Tooling (follow-up аудита — улучшенные варианты)
+
+- **`pyrightconfig.json`**: Pylance/pyright резолвят `from core import …` и межпакетные импорты
+  из коробки (`extraPaths`: корень `.` + `packages/*/lib`, `typeCheckingMode: off`) — IDE-DX без pip,
+  stdlib-only цел. PyCharm — Sources Root (см. `CONTRIBUTING.md`).
+- **`swissknifeman --version` / `-V`**: версия монорепо из `git describe` (фолбэк «dev»). Заодно
+  убран висячий `version` из роутера — он делегировал в `skiller version`, которой не существует.
+- **Линтер ruff в CI** (job `lint`): `pipx run ruff==0.15.19 check` — эфемерно, ruff НЕ зависимость
+  репо; конфиг `ruff.toml`, набор `F,B`, `target-version=py39` (B905 не конфликтует с 3.9). Разовая
+  зачистка: 6 неиспользуемых импортов, 8 пустых f-строк, 9 unused loop-vars, 1 broad-except в тесте.
+- **Per-project `code_language(s)`** (maind/codegraph): override языка код-графа (str|список) поверх
+  `language_by_type` — смешанный репо (python-код + TS-доки при `type:node-package`) граф­ится верно
+  без правки общих констант; swissknifeman → `python`. `render_project_yaml` рендерит и список
+  (мульти-язык). +тесты.
+
 ### Added (harness — режим памяти `maind`)
 
 - **Хук памяти получил режим `MODE=maind`** (`hooks/memory/modes/maind.sh`): делегирует

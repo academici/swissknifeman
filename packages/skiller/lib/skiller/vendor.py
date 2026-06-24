@@ -56,7 +56,7 @@ def resolve_requires(skills, index, exclude):
     selected = {fm_name or d.name for _, _, d, fm_name in skills}
     pulled = {}
     queue = []
-    for bucket, rel, d, fm_name in skills:
+    for _bucket, _rel, d, fm_name in skills:
         key = fm_name or d.name
         queue.extend((dep, key) for dep in index.get(key, ("", "", None, []))[3])
 
@@ -82,7 +82,7 @@ def flat_names(skills):
     """flat-имена для claude/Boost-раскладки: sanitize + два прохода
     разрешения коллизий (префикс бакета, затем полный путь-слаг)."""
     names = {}
-    for i, (bucket, rel, d, fm_name) in enumerate(skills):
+    for i, (_bucket, rel, d, fm_name) in enumerate(skills):
         names[i] = sanitize(fm_name) or sanitize(rel.replace("/", "-")) \
             or sanitize(d.name)
     # collision pass 1: prefix bucket
@@ -246,7 +246,7 @@ def do_vendor(env, target, opts, register=True):
                     shutil.rmtree(stale)
             dest_root.mkdir(parents=True, exist_ok=True)
         installed = []
-        for i, (bucket, rel, d, fm_name) in enumerate(skills):
+        for i, (_bucket, _rel, d, _fm_name) in enumerate(skills):
             copy_skill(d, dest_root / flats[i])
             installed.append({"flat_name": flats[i],
                               "source_path": str(d.relative_to(root))})
@@ -301,7 +301,7 @@ def do_vendor(env, target, opts, register=True):
             dest_root.mkdir(parents=True, exist_ok=True)
 
         installed = []
-        for bucket, rel, d, path in planned:
+        for _bucket, _rel, d, path in planned:
             copy_skill(d, dest_root / path)
             installed.append({"path": path, "source_path": str(d.relative_to(root))})
         support_rels = []
@@ -331,8 +331,8 @@ def do_vendor(env, target, opts, register=True):
     if hub and not dry_run:
         generate_hub(env, target)
     elif not dry_run:
-        print(f"Hint: корневой хаб скиллов — skiller update или "
-              f"перезапуск с --hub")
+        print("Hint: корневой хаб скиллов — skiller update или "
+              "перезапуск с --hub")
 
     record = {
         "path": str(target),

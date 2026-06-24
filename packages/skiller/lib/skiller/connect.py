@@ -10,7 +10,7 @@ from .common import (AGENT_DEFAULTS, MANIFEST, MARKETPLACE, apply_permissions,
 from .config import (CORE_BUCKETS, all_buckets, load_config, resolve_selection,
                      resolve_target)
 from .hub import generate_hub, hub_artifacts_exist
-from .state import print_registry_state, upsert_project
+from .state import upsert_project
 
 
 def do_connect(env, target, opts, register=True, fix_path_drift=False):
@@ -142,8 +142,8 @@ def do_connect(env, target, opts, register=True, fix_path_drift=False):
     if hub and not dry_run:
         generate_hub(env, target)
     elif not dry_run:
-        print(f"Подсказка: корневой хаб скиллов — skiller update или "
-              f"перезапуск с --hub")
+        print("Подсказка: корневой хаб скиллов — skiller update или "
+              "перезапуск с --hub")
 
     record = {
         "path": str(target),

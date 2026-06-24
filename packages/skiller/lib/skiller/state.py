@@ -2,6 +2,7 @@
 import json
 import subprocess
 from datetime import date
+from pathlib import Path
 
 from core import atomic_write_text
 
@@ -35,6 +36,8 @@ def save_db(env, db):
 def upsert_project(env, record):
     """Records keyed by (path, channel); preserves first_connected_at."""
     db = load_db(env)
+    # нормализуем путь: иначе разные repr одного каталога (симлинк, ./, ..) → дубли
+    record["path"] = str(Path(record["path"]).resolve())
     record["updated_at"] = now_iso()
     for i, p in enumerate(db["projects"]):
         if p["path"] == record["path"] and p["channel"] == record["channel"]:
@@ -49,7 +52,8 @@ def upsert_project(env, record):
 
 
 def db_records(env, path):
-    return [p for p in load_db(env)["projects"] if p["path"] == str(path)]
+    target = str(Path(path).resolve())  # симметрично upsert_project — иначе lookup мимо
+    return [p for p in load_db(env)["projects"] if p["path"] == target]
 
 
 # --- registry git state ---------------------------------------------------------

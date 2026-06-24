@@ -5,6 +5,7 @@ COMMANDS отображает имя команды на обработчик cm
 пробрасывается явно (тестируемо в tmpdir)."""
 import sys
 
+from .agentpacks import cmd_agent_packs
 from .common import Env
 from .doctor import cmd_doctor
 from .hooks import cmd_hooks
@@ -16,6 +17,7 @@ COMMANDS = {
     "apply": cmd_permissions,  # alias
     "mcp": cmd_mcp,
     "hooks": cmd_hooks,
+    "agent-packs": cmd_agent_packs,
     "doctor": cmd_doctor,
 }
 

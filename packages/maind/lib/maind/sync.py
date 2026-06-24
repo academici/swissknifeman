@@ -13,7 +13,7 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
-from .common import die, parse_args
+from .common import die, parse_args, safe_load_json
 from .config import load_config
 from .namespaces import in_namespace
 from .projects import get as get_project
@@ -179,6 +179,79 @@ def _ecosystem_skill_run(env, config, projects, mode, dry):
     return [apply_ecosystem_skill(env, config, p, mode, dry) for p in projects]
 
 
+def _skiller_profiles_dir(config):
+    """Каталог профилей skiller (<repo>/packages/skiller/profiles) или None.
+    Резолв корня репо — как у orchestrate._sibling_bin (проект 'swissknifeman')."""
+    from .orchestrate import SIBLINGS
+    spec = SIBLINGS["swissknifeman"]
+    proj = get_project(config, spec["project_id"])
+    root = proj.get(spec["path_key"]) if proj else None
+    if not root:
+        return None
+    d = Path(os.path.expanduser(root)) / "packages" / "skiller" / "profiles"
+    return d if d.is_dir() else None
+
+
+def _profile_for(config, project):
+    """Профиль skiller по project.type (dict) или {}."""
+    pdir, ptype = _skiller_profiles_dir(config), project.get("type")
+    if not pdir or not ptype:
+        return {}
+    return safe_load_json(pdir / f"{ptype}.json", default={}) or {}
+
+
+def _resolve_agent_pack(config, project):
+    """Список паков профиля проекта: project.agent_pack (str|list) > profile.agent_pack
+    по project.type. [] — не определилось (онбординг/sync просто пропустят шаг)."""
+    explicit = project.get("agent_pack")
+    if isinstance(explicit, str):
+        return [explicit]
+    if isinstance(explicit, list):
+        return list(explicit)
+    pack = _profile_for(config, project).get("agent_pack")
+    if isinstance(pack, str):
+        return [pack]
+    return list(pack) if isinstance(pack, list) else []
+
+
+def _profile_answers(config, project):
+    """Доп. --answer для рендера из профиля: model_tiers (role → MODEL_<ROLE>=tier).
+    Так профиль типа проекта пре-заполняет модельные тиры агентов пака."""
+    out = []
+    for role, tier in (_profile_for(config, project).get("model_tiers") or {}).items():
+        out += ["--answer", f"MODEL_{role.upper().replace('-', '_')}={tier}"]
+    return out
+
+
+def _agent_pack_run(env, config, projects, mode, dry):
+    """Детерминированно раскатать agent-pack(и) профиля проекта в .claude/ через harness
+    (без агента в цикле). install — только если ещё не стоит; update — версионный апгрейд;
+    auto — render --auto (install + идемпотентный ре-ролл). Нет пака/пути/harness → skip."""
+    from .orchestrate import run_capability
+    results = []
+    for p in projects:
+        packs = _resolve_agent_pack(config, p)
+        if not packs or not p.get("local_path"):
+            results.append({"provisioner": "agent-pack", "id": p["id"], "status": "skip",
+                            "changed": False, "detail": "нет профиля/agent_pack или пути"})
+            continue
+        answers = _profile_answers(config, p)
+        for pack in packs:
+            cap = "env:agent-pack-upgrade" if mode == "update" else "env:agent-pack"
+            extra = (["--pack", pack] + answers
+                     + (["--install-only"] if mode == "install" else []))
+            try:
+                rc = run_capability(env, config, p["id"], cap, extra, dry=dry)
+                results.append({"provisioner": "agent-pack", "id": p["id"],
+                                "status": "ok" if rc == 0 else "skip",
+                                "detail": f"pack={pack} rc={rc}"})
+            except SystemExit:
+                results.append({"provisioner": "agent-pack", "id": p["id"],
+                                "status": "skip", "changed": False,
+                                "detail": f"pack={pack}: harness недоступен"})
+    return results
+
+
 # Реестр провиженеров и порядок применения (ORDER задаёт последовательность).
 PROVISIONERS = {
     "mcp": _mcp_run,
@@ -190,9 +263,10 @@ PROVISIONERS = {
     "health-doc": _health_doc_run,
     "feature-log-hook": _feature_log_hook_run,
     "ecosystem-skill": _ecosystem_skill_run,
+    "agent-pack": _agent_pack_run,
 }
 ORDER = ["mcp", "code-graph", "graph", "memory", "memory-hook", "health-hook",
-         "health-doc", "feature-log-hook", "ecosystem-skill"]
+         "health-doc", "feature-log-hook", "ecosystem-skill", "agent-pack"]
 
 
 def provisioner_names(only=None):
@@ -222,7 +296,7 @@ def cmd_sync(env, argv):
     if opts["help"]:
         print("maind sync [--project ID | --namespace NS | --all] [--only mcp,code-graph,"
               "graph,memory,memory-hook,health-hook,health-doc,feature-log-hook,"
-              "ecosystem-skill] [--mode install|update|auto] [--dry-run] [--json]")
+              "ecosystem-skill,agent-pack] [--mode install|update|auto] [--dry-run] [--json]")
         return
     mode = opts["mode"] or "auto"
     if mode not in MODES:

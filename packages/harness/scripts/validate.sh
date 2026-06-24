@@ -71,6 +71,13 @@ MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
 [ -d "$MONOREPO_ROOT/core" ] || MONOREPO_ROOT=""
 PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}" python3 -c "import harness.cli" \
   || err "lib/harness не импортируется"
+# целостность agent-packs: все files[].src на месте, нет остаточных {{...}} при
+# рендере с дефолтами, у каждого {{TOKEN}} есть interview-id (do_doctor).
+PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}" python3 -c "
+import sys
+from harness.agentpacks import do_doctor
+from harness.common import Env
+sys.exit(do_doctor(Env('$REPO_ROOT', 'validate')))" || err "agent-packs integrity"
 scripts/test.sh || err "тесты"
 
 echo ""

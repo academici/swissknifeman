@@ -9,7 +9,7 @@ import os
 import sys
 from pathlib import Path
 
-from .common import die, parse_args, sanitize
+from .common import detect_project_type, die, parse_args, sanitize
 from .config import load_config
 from .deploy import deploy_project, mark_deployed
 from .orchestrate import run_capability
@@ -18,14 +18,9 @@ from .projects import write_config
 
 
 def _infer_type(path):
-    p = Path(path)
-    if (p / ".obsidian").is_dir():
-        return "obsidian-vault"
-    if (p / "composer.json").is_file():
-        return "php-package"
-    if (p / "package.json").is_file():
-        return "node-package"
-    return "unknown"
+    """Тип проекта по маркерам — единый детектор core (path уже существует:
+    _ensure_project проверил is_dir перед вызовом)."""
+    return detect_project_type(path)
 
 
 def _ensure_project(env, config, project_or_path, namespaces=None, dry=False):
@@ -119,6 +114,11 @@ def onboard(env, config, project_or_path, opts):
                           "detail": "harness недоступен — пропуск"})
     else:
         extra = ["--bundle", opts.get("bundle") or "recommended"]
+        # тип проекта (== имя профиля skiller) → явный --profile, чтобы выбор
+        # скиллов/пресетов/mcp шёл по профилю типа, а не только по дефолтам бандла.
+        ptype = proj.get("type")
+        if ptype and ptype != "unknown":
+            extra += ["--profile", ptype]
         if opts.get("yes"):
             extra.append("--yes")
         try:
@@ -186,6 +186,26 @@ def onboard(env, config, project_or_path, opts):
                       "detail": f"ecosystem-mcp ({sk.get('detail', sk['status'])})"})
     except OSError as e:
         steps.append({"name": "skill", "status": "skipped", "detail": f"шаблон недоступен: {e}"})
+
+    # 3d. agent-pack профиля проекта — детерминированная доставка субагентов через harness
+    # (без агента в цикле). Пак из project.agent_pack или profile.agent_pack по type.
+    from .sync import _profile_answers, _resolve_agent_pack
+    packs = _resolve_agent_pack(config, proj)
+    if packs:
+        answers = _profile_answers(config, proj)
+        for pack in packs:
+            try:
+                rc = run_capability(env, config, proj["id"], "env:agent-pack",
+                                    ["--pack", pack] + answers, dry=dry)
+                steps.append({"name": "agent-pack",
+                              "status": "ok" if rc == 0 else "skipped",
+                              "detail": f"pack={pack} rc={rc}"})
+            except SystemExit:
+                steps.append({"name": "agent-pack", "status": "skipped",
+                              "detail": f"pack={pack}: harness недоступен"})
+    else:
+        steps.append({"name": "agent-pack", "status": "skipped",
+                      "detail": "профиль без agent_pack"})
 
     # 4. опционально brain
     if opts.get("with_brain"):

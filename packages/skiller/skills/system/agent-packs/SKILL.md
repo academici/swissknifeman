@@ -61,7 +61,26 @@ Python/Mustache движка-генератора**.
 файл проекта append-if-absent. `user_owned: true` — файл правит пользователь
 (например `.env.ini`): на апгрейде НИКОГДА не перезаписывается молча.
 
-## Install — алгоритм
+## Делегирование детерминированному CLI (предпочтительно)
+
+Если доступен `harness agent-packs` (резолв лаунчера как в orchestrate/SIBLINGS),
+для install/upgrade **вызови его** — детерминированный stdlib-рендер: резолвит интервью
+из `detect:`-проб+дефолтов БЕЗ участия агента, подставляет плейсхолдеры, пишет lock в
+той же схеме, что описана ниже. Команды:
+
+```bash
+harness agent-packs render  --auto --pack <pack> --target . [--answer KEY=VAL ...]
+harness agent-packs upgrade        --pack <pack> --target .
+harness agent-packs doctor  [--pack <pack>]
+```
+
+Агент-driven рендер (ниже) — **фолбэк** только когда CLI вернул `needs-agent`/`assumed`/
+`conflict` (неоднозначный enum без detect, локально-правленые файлы при апгрейде) или
+когда нужна прозовая адаптация под нестандартную инфру. Оба пути пишут ОДИН формат lock
+(`base_sha256` = sha отрендеренного, `atomic_write_json`), поэтому совместимы: агент
+дочитывает то, что CLI пометил нерезолвенным/конфликтным, и наоборот.
+
+## Install — алгоритм (агент-driven фолбэк)
 
 1. **Детект стека.** Выполни `stack.detect` (например `test -f artisan && test -f
    composer.json`); подбери подходящий(е) пак(и). Префилл дефолтов из детекта.

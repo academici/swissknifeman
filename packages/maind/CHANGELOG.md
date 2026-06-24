@@ -6,6 +6,17 @@
 ## [Unreleased]
 
 ### Added
+- **Доставка субагентов по типу проекта (хаб → проект)**: профиль skiller называет
+  `agent_pack` (строка или список — композиция), а `maind onboard`/`maind sync` детерминированно
+  раскатывают пак(и) в `.claude/agents/` через `harness agent-packs render --auto` — БЕЗ агента в
+  цикле. Новый провиженер `agent-pack` (10-й в `sync` ORDER), capability `env:agent-pack`/
+  `env:agent-pack-upgrade` в orchestrate, шаг в onboard. `profile.model_tiers` пре-заполняют
+  модельные тиры агентов.
+- **Единый детектор типа проекта в `core.project`**: `maind._infer_type` (×2) и
+  `skiller.autodetect` сведены к одной таксономии (`core.detect_project_type`); `language_by_type`
+  тянется из `core.LANGUAGE_BY_TYPE`. Устранены 3 расходящиеся копии детекта.
+- `maind onboard` передаёт `--profile <type>` в `skiller integrate` — выбор скиллов/пресетов/MCP
+  идёт по профилю типа, а не только по дефолтам бандла.
 - **Авто-загрузка памяти на старте сессии** (`maind memory digest` + SessionStart-хук):
   при `MODE=maind` онбординг ставит `.claude/maind-memory.sh`, который инжектит дайджест
   памяти проекта в контекст Claude Code (`additionalContext`), и **выключает нативную

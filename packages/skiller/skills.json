@@ -3381,7 +3381,7 @@
       "path": "skills/system/agent-packs/SKILL.md",
       "version": "0.1.0",
       "description": "Установка и ВЕРСИОНИРОВАННЫЙ апгрейд agent-packs (агенты/воркфлоу/хуки Claude Code) из harness в проект-потребитель: детект стека -> интервью -> рендер+копия -> lock; апгрейд по CHANGELOG-дельте с 3-way reasoning через sha256 в lock, без diff-движка. Активировать при словах: внедрить/обновить agent-pack, поставить роли+dev-loop+review-gate в проект, версионный upgrade шаблонов агентов, agent-pack.lock.",
-      "sha256": "f0951fa7161b69c22b6f5425a0c003c6bc4f17e6394de48f271b2e1fee859038",
+      "sha256": "e8ce9af628138c4a08f0e1d4ce097e919313273653c3323690e759514bbbaea5",
       "tags": [
         "agent-packs",
         "templates",

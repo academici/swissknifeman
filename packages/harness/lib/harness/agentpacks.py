@@ -281,7 +281,7 @@ def _merge_fragment(target, sfile, directive, answers, dry):
     if added:
         write_json(f, settings, dry)
     else:
-        print(f"  settings.json: хуки фрагмента уже на месте — пропуск")
+        print("  settings.json: хуки фрагмента уже на месте — пропуск")
     return added
 
 
@@ -402,7 +402,7 @@ def do_upgrade(env, pack, target, *, overrides, dry, shell_policy):
                           "base_sha256": new_sha,
                           "local_modified": cat == "conflict"})
     print(f"=== upgrade {pack}: {v_old} → {v_new} ===")
-    for cat, src, tgt_rel in plan:
+    for cat, _src, tgt_rel in plan:
         print(f"  [{cat}] {tgt_rel}")
     removed = sorted(set(prior_files) - {f["src"] for f in manifest.get("files", [])})
     for src in removed:

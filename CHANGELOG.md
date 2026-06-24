@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Fixed (второй аудит skiller — реальные баги)
+
+- **`integrate` больше не глушит ошибки harness**: `_run_harness` проверяет returncode и `warn`-ит при
+  ненулевом — раньше визард молча рапортовал «готово», даже если блок не применился. Graceful
+  degradation сохранена (визард не падает).
+- **frontmatter устойчив к BOM** (`common.parse_frontmatter`): чтение `SKILL.md` через `utf-8-sig` —
+  файл с BOM больше не игнорируется молча. +тест.
+- **`projects.json` без дублей**: `upsert_project`/`db_records` нормализуют путь через `Path.resolve()`
+  (раньше разные repr одного каталога — `./`, `..`, симлинк — плодили дубли). +тест.
+- **`boost.json::skills` сортируется целиком** (`sorted(existing + added)`, не только `added`) —
+  детерминированный порядок.
+
+> Отклонено как ложное/over-engineering для Linux-only single-user (с обоснованием в плане): «double-nesting
+> `extraKnownMarketplaces`» — это корректная схема Claude Code (подтверждено реальными конфигами);
+> frontmatter «режет на `:`» (там `split(":",1)`); TOCTOU/атомарность `copy_skill`; Windows-пути; mmap/
+> чтение-частями мелких файлов; ротация `.bak`; `deque` вместо `pop(0)`.
+
 ### Security / Fixed (аудит репозитория — зонтик, core, CI)
 
 - **`.mcp.json` выведен из-под git** (`git rm --cached` + `.gitignore`): машинно-специфичный файл

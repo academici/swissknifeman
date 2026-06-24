@@ -137,6 +137,16 @@ class StateCase(unittest.TestCase):
         recs = db_records(self.env, "/p")
         self.assertEqual({r["channel"] for r in recs}, {"vendor", "marketplace"})
 
+    def test_upsert_normalizes_path_dedupes(self):
+        # разные repr одного пути (./, ..) → одна запись (нормализация resolve())
+        upsert_project(self.env, {"path": "/p", "channel": "vendor"})
+        upsert_project(self.env, {"path": "/p/.", "channel": "vendor"})
+        db = load_db(self.env)
+        self.assertEqual(len(db["projects"]), 1)
+        self.assertEqual(db["projects"][0]["path"], "/p")
+        # lookup тоже нормализует — находит запись по «грязному» repr
+        self.assertEqual(len(db_records(self.env, "/p/.")), 1)
+
     def test_save_load_round_trip_no_tmp_left(self):
         save_db(self.env, {"version": 1, "projects": [{"path": "/x",
                                                        "channel": "vendor"}]})

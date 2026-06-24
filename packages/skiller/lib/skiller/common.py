@@ -96,7 +96,9 @@ def apply_permissions(env, target, presets="", dry_run=False, settings_file=None
 # --- frontmatter --------------------------------------------------------------
 def parse_frontmatter(path):
     """Keys from the first ----delimited block only (body lines ignored)."""
-    lines = Path(path).read_text(encoding="utf-8").replace("\r\n", "\n").splitlines()
+    # utf-8-sig: срезает BOM, если есть (иначе `﻿---` != `---` и весь
+    # frontmatter молча игнорируется); без BOM ведёт себя как обычный utf-8.
+    lines = Path(path).read_text(encoding="utf-8-sig").replace("\r\n", "\n").splitlines()
     fm = {}
     if not lines or lines[0].strip() != "---":
         return fm

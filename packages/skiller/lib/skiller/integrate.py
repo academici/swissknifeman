@@ -80,7 +80,11 @@ def _run_harness(env, args):
         warn("  harness не установлен — пропуск (packages/harness/install.sh)")
         return False
     sys.stdout.flush()
-    subprocess.run([str(binp)] + args, check=False)
+    r = subprocess.run([str(binp)] + args, check=False)
+    if r.returncode != 0:
+        # graceful: визард не валим, но НЕ молчим — иначе «готово» при непримен. блоке
+        warn(f"  harness вернул код {r.returncode} — блок мог не примениться "
+             f"({args[0] if args else ''})")
     return True
 
 

@@ -41,6 +41,11 @@ class TestFrontmatter(unittest.TestCase):
         f = self._write("---\nname: foo\n---\nkey: should-not-parse\n")
         self.assertNotIn("key", parse_frontmatter(f))
 
+    def test_bom_prefixed_frontmatter(self):
+        # UTF-8 BOM перед `---` не должен ронять парсинг (utf-8-sig срезает BOM)
+        f = self._write("﻿---\nname: foo\n---\nbody\n")
+        self.assertEqual(parse_frontmatter(f)["name"], "foo")
+
     def test_requires_inline_list(self):
         f = self._write("---\nname: foo\nrequires: [a, b, c]\n---\n")
         fields = parse_frontmatter_fields(f)

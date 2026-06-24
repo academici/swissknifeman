@@ -28,7 +28,7 @@ def sync_boost_json(target, skill_names, dry_run=False):
     if dry_run:
         print(f"[dry-run] boost.json: добавил бы в skills[]: {', '.join(added)}")
         return True
-    data["skills"] = existing + sorted(added)
+    data["skills"] = sorted(existing + added)
     atomic_write_text(boost_file,
                       json.dumps(data, indent=4, ensure_ascii=False) + "\n")
     print(f"boost.json: добавлено в skills[] ({len(added)}): {', '.join(added)}")

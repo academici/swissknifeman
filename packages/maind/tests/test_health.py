@@ -174,6 +174,40 @@ class TestMemoryHook(unittest.TestCase):
             self.assertFalse(any("maind-memory" in c for c in cmds))
 
 
+class TestHookPortability(unittest.TestCase):
+    """Сгенерированные хук-скрипты НЕ содержат машинно-специфичного пути к maind:
+    лаунчер резолвится в рантайме (env MAIND_BIN → PATH). Защита от утечки абс-пути."""
+
+    def _assert_portable(self, script_path, env):
+        txt = script_path.read_text(encoding="utf-8")
+        self.assertNotIn(str(env.root), txt)        # нет baked абс-пути пакета maind
+        self.assertNotIn("/bin/maind", txt)
+        self.assertNotIn("{{MAIND_BIN}}", txt)      # плейсхолдер не утёк
+        self.assertIn("MAIND_BIN", txt)             # env-override
+        self.assertIn("command -v maind", txt)      # PATH-фолбэк
+
+    def test_memory_hook_portable(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj, pdir = _setup(tmp)
+            health.apply_memory_hook(env, config, proj, "auto", dry=False)
+            self._assert_portable(pdir / ".claude" / "maind-memory.sh", env)
+
+    def test_health_hook_portable(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj, pdir = _setup(tmp)
+            health.apply_health_hook(env, config, proj, "auto", dry=False)
+            self._assert_portable(pdir / ".claude" / "maind-health.sh", env)
+
+    def test_feature_log_hook_portable_and_keeps_project(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj, pdir = _setup(tmp)
+            health.apply_feature_log_hook(env, config, proj, "auto", dry=False)
+            script = pdir / ".claude" / "maind-feature-log.sh"
+            self._assert_portable(script, env)
+            # снятие MAIND_BIN не сломало подстановку {{PROJECT}}
+            self.assertIn('--project "flexcrm"', script.read_text(encoding="utf-8"))
+
+
 class TestCLI(unittest.TestCase):
     def test_json_output(self):
         with tempfile.TemporaryDirectory() as tmp:

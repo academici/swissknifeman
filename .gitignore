@@ -26,6 +26,13 @@ config.json
 .mcp.json
 .mcp.json.bak
 
+# Генерируемые maind хук-скрипты проекта (SessionStart/SessionEnd) + их рантайм-state:
+# пишет `maind sync` из templates/health/*; лаунчер maind резолвится в самих скриптах
+# из env MAIND_BIN → PATH (без машинно-специфичного пути). Не коммитим — как .mcp.json.
+.claude/maind-*.sh
+.claude/.maind-feature-log.last
+.claude/scheduled_tasks.lock
+
 # Сборочные копии per-package доков (источник — packages/<pkg>/docs; см. scripts/docs-sync.sh)
 docs/skiller/
 docs/harness/

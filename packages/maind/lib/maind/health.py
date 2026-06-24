@@ -39,8 +39,9 @@ def _render(env, relpath, subst):
     return text
 
 
-def _maind_bin(env):
-    return str(env.root / "bin" / "maind")
+# Путь к лаунчеру maind в хук-скриптах больше НЕ подставляется: шаблоны резолвят его
+# в рантайме (env MAIND_BIN → PATH), чтобы в артефакт не попадал машинно-специфичный
+# абсолютный путь. См. templates/health/*.sh.
 
 
 # ── проба памяти и режима хука ───────────────────────────────────────────────
@@ -220,7 +221,7 @@ def apply_health_hook(env, config, project, mode, dry):
     path = Path(os.path.expanduser(local)) if local else None
     if not path or not path.is_dir():
         return _result(pid, "health-hook", "absent", False, dry, "нет пути")
-    script = _render(env, "health/session-start-hook.sh", {"MAIND_BIN": _maind_bin(env)})
+    script = _render(env, "health/session-start-hook.sh", {})
     script_path = path / HOOK_SCRIPT
     state = _file_state(script_path, script)
     settings_path = path / ".claude" / "settings.json"
@@ -256,8 +257,7 @@ def apply_feature_log_hook(env, config, project, mode, dry):
     path = Path(os.path.expanduser(local)) if local else None
     if not path or not path.is_dir():
         return _result(pid, "feature-log-hook", "absent", False, dry, "нет пути")
-    script = _render(env, "health/feature-log-hook.sh",
-                     {"MAIND_BIN": _maind_bin(env), "PROJECT": pid})
+    script = _render(env, "health/feature-log-hook.sh", {"PROJECT": pid})
     script_path = path / FEATURE_HOOK_SCRIPT
     state = _file_state(script_path, script)
     settings_path = path / ".claude" / "settings.json"
@@ -299,7 +299,7 @@ def apply_memory_hook(env, config, project, mode, dry):
     if not path or not path.is_dir():
         return _result(pid, "memory-hook", "absent", False, dry, "нет пути")
     try:
-        script = _render(env, "health/memory-digest-hook.sh", {"MAIND_BIN": _maind_bin(env)})
+        script = _render(env, "health/memory-digest-hook.sh", {})
     except OSError as e:                         # шаблон недоступен (standalone-safe)
         return _result(pid, "memory-hook", "absent", False, dry, f"шаблон недоступен: {e}")
     script_path = path / MEMORY_HOOK_SCRIPT

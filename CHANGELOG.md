@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Security / Fixed (maind — портабельность генерируемых хуков, без утечки пути)
+
+- **Хук-скрипты maind больше не зашивают абсолютный путь к лаунчеру.** Шаблоны
+  `templates/health/*.sh` (memory-digest · session-start · feature-log) резолвят `maind` в рантайме
+  (`env MAIND_BIN → command -v maind`), а не подставляют машинно-специфичный
+  `<…>/packages/maind/bin/maind` через `_maind_bin` (удалён). Генерируемый артефакт теперь одинаков
+  на любой машине; лаунчер не найден → тихий no-op (как при лёгшем демоне). Конфигурируется через
+  env `MAIND_BIN` (можно из `.claude/*.env.ini`). Бэк-совместимо: уже раскатанные хуки работают,
+  `command -v maind` резолвит тот же `~/.local/bin/maind`. +3 теста (нет abs-пути, есть env→PATH).
+- **`.claude/maind-*.sh` (+ `.maind-feature-log.last`, `scheduled_tasks.lock`) в `.gitignore`** —
+  генерируемые per-project хуки/рантайм-state не попадают в репо, как `.mcp.json`. Закрывает утечку
+  абсолютного пути автора при `git add .claude/`.
+- **Аудит MCP** (без изменений — уже чисто): пресеты `packages/harness/configs/claude-code/mcp/*.json`
+  портабельны (`npx`/`uvx`/`http`, без abs-путей); `.mcp.json` (с abs-путём maind) уже gitignored,
+  шаблон — `.mcp.json.example` с `{{REPO_ROOT}}`, реальный файл генерит `maind` на деплое.
+
 ### Fixed (третий аудит skiller — харденинг тихих отказов)
 
 - **`_registry_index` больше не теряет скиллы молча**: запись в `skills.json` без `name`/`path` и дубль

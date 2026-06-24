@@ -16,6 +16,12 @@
 - **Гибкий выбор механизма памяти**: `maind onboard --memory maind|native|off` (дефолт
   `maind`; в интерактиве — вопрос чек-листа). `native` возвращает авто-память Claude Code.
   `maind health` проверяет консистентность: `MODE=maind ⇒ native off + digest-инжект на месте`.
+- **Провиженер `memory-hook` в `maind sync`** — авто-загрузка памяти теперь докатывается на
+  уже подключённые проекты одной командой (`maind sync --all --only memory-hook`), не гоняя
+  полный `onboard`. Интент берётся из `.claude/memory.env.ini` (`MODE=maind` → ставит
+  digest-инжект + native off; `off` → revert на native; нет конфига → пропуск). Включён в
+  дефолтный набор `sync`, идемпотентен (drift по content-hash). Закрывает разрыв: шаблон
+  хука уже ссылался на эту команду, но провиженера в `sync` не было.
 
 ### Changed
 - **Память проекта раскатывается только сервером `maind`** — raw MCP-сервер `agentmemory`

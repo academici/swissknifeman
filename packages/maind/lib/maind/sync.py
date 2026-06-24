@@ -136,6 +136,26 @@ def _health_hook_run(env, config, projects, mode, dry):
     return [apply_health_hook(env, config, p, mode, dry) for p in projects]
 
 
+def _memory_hook_run(env, config, projects, mode, dry):
+    """SessionStart-инжект ДАЙДЖЕСТА памяти + выключение нативной авто-памяти — по интенту
+    проекта из .claude/memory.env.ini: MODE=maind → ставим (apply_memory_hook), MODE=off →
+    откатываем на native (revert_memory_hook), нет конфига → не трогаем. Так `maind sync`
+    раскатывает авто-загрузку памяти на уже подключённые проекты, не гоняя полный onboard."""
+    from .health import (apply_memory_hook, hook_memory_mode, revert_memory_hook)
+    results = []
+    for p in projects:
+        hmode = hook_memory_mode(p)
+        if hmode == "maind":
+            results.append(apply_memory_hook(env, config, p, mode, dry))
+        elif hmode is not None:                       # off/native — вернуть нативную память
+            results.append(revert_memory_hook(env, config, p, dry))
+        else:                                         # память проекта не сконфигурирована
+            results.append({"provisioner": "memory-hook", "id": p["id"], "status": "skip",
+                            "changed": False, "state": "absent",
+                            "detail": "нет MODE в .claude/memory.env.ini — пропуск"})
+    return results
+
+
 def _health_doc_run(env, config, projects, mode, dry):
     """Управляемый блок «ПРИОРИТЕТ №1 — связь с mAInd» в CLAUDE.md проектов."""
     from .health import apply_health_doc
@@ -165,13 +185,14 @@ PROVISIONERS = {
     "code-graph": _codegraph_run,
     "graph": _graph_run,
     "memory": _memory_run,
+    "memory-hook": _memory_hook_run,
     "health-hook": _health_hook_run,
     "health-doc": _health_doc_run,
     "feature-log-hook": _feature_log_hook_run,
     "ecosystem-skill": _ecosystem_skill_run,
 }
-ORDER = ["mcp", "code-graph", "graph", "memory", "health-hook", "health-doc",
-         "feature-log-hook", "ecosystem-skill"]
+ORDER = ["mcp", "code-graph", "graph", "memory", "memory-hook", "health-hook",
+         "health-doc", "feature-log-hook", "ecosystem-skill"]
 
 
 def provisioner_names(only=None):
@@ -200,8 +221,8 @@ def cmd_sync(env, argv):
                                 "--json": "bool"})
     if opts["help"]:
         print("maind sync [--project ID | --namespace NS | --all] [--only mcp,code-graph,"
-              "graph,memory,health-hook,health-doc,feature-log-hook,ecosystem-skill] "
-              "[--mode install|update|auto] [--dry-run] [--json]")
+              "graph,memory,memory-hook,health-hook,health-doc,feature-log-hook,"
+              "ecosystem-skill] [--mode install|update|auto] [--dry-run] [--json]")
         return
     mode = opts["mode"] or "auto"
     if mode not in MODES:

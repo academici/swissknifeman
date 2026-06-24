@@ -177,6 +177,19 @@ for up_file in sorted(root.glob("skills/**/upstream.json")) + \
             errors.append(f"{rel}: files[{i}].fetched_at must be YYYY-MM-DD or empty")
 
 # --- 3. profiles/*.json ---------------------------------------------------
+# Канон таксономии — core.project.PROJECT_TYPES; здесь самодостаточный дубль
+# (heredoc гоняется до PYTHONPATH на core — осознанно не импортируем; держать
+#  в синхроне с core/project.py). Ссылки на пресеты/паки/mcp живут в пакете
+# harness — проверяем только если он на месте (монорепо), иначе graceful skip.
+PROJECT_TYPE_IDS = {
+    "obsidian-vault", "laravel-project", "php-package", "dart-flutter",
+    "python-backend", "node-frontend", "node-package", "standalone",
+}
+AA_MODES = {"strict", "permissive", "bypass", "off"}
+MEM_MODES = {"file", "federation", "agentmemory", "maind", "off"}
+MODEL_TIERS = {"inherit", "opus", "sonnet", "haiku"}
+hc_dir = repo_root / "packages" / "harness" / "configs" / "claude-code"
+profile_names = set()
 profiles_dir = root / "profiles"
 if profiles_dir.is_dir():
     for prof in sorted(profiles_dir.glob("*.json")):
@@ -186,6 +199,7 @@ if profiles_dir.is_dir():
         except (json.JSONDecodeError, UnicodeDecodeError) as e:
             errors.append(f"{rel}: invalid JSON: {e}")
             continue
+        profile_names.add(prof.stem)
         if data.get("name") != prof.stem:
             errors.append(f"{rel}: name must match filename ({prof.stem})")
         buckets = data.get("buckets")
@@ -195,6 +209,44 @@ if profiles_dir.is_dir():
             for b in buckets:
                 if not (root / "skills" / b).is_dir():
                     errors.append(f"{rel}: unknown bucket: {b}")
+        # --- расширенные опц. ключи: agent_pack/presets/mcp/hooks/model_tiers ---
+        pack = data.get("agent_pack")
+        if pack is not None and not isinstance(pack, (str, list)):
+            errors.append(f"{rel}: agent_pack must be a string or list")
+        packs = [pack] if isinstance(pack, str) else (pack if isinstance(pack, list) else [])
+        if hc_dir.is_dir():
+            for pk in packs:
+                if not (hc_dir / "agent-packs" / str(pk) / "pack.json").exists():
+                    errors.append(f"{rel}: agent_pack '{pk}' — нет pack.json в harness")
+            for preset in data.get("harness_presets", []) or []:
+                if not (hc_dir / f"settings.{preset}.json").exists():
+                    errors.append(f"{rel}: harness_preset '{preset}' — нет settings.{preset}.json")
+            for srv in data.get("mcp", []) or []:
+                if not (hc_dir / "mcp" / f"{srv}.json").exists():
+                    errors.append(f"{rel}: mcp '{srv}' — нет mcp/{srv}.json")
+        hooks = data.get("hooks") or {}
+        if not isinstance(hooks, dict):
+            errors.append(f"{rel}: hooks must be an object")
+        else:
+            aa = hooks.get("auto_approve")
+            if aa is not None and aa not in AA_MODES:
+                errors.append(f"{rel}: hooks.auto_approve '{aa}' не из {sorted(AA_MODES)}")
+            mem = hooks.get("memory")
+            if mem is not None and mem not in MEM_MODES:
+                errors.append(f"{rel}: hooks.memory '{mem}' не из {sorted(MEM_MODES)}")
+        tiers = data.get("model_tiers") or {}
+        if not isinstance(tiers, dict):
+            errors.append(f"{rel}: model_tiers must be an object")
+        else:
+            for role, tier in tiers.items():
+                if tier not in MODEL_TIERS:
+                    errors.append(f"{rel}: model_tiers.{role} '{tier}' "
+                                  f"не из {sorted(MODEL_TIERS)}")
+    # --- 3b. покрытие: каждый id таксономии имеет profiles/<id>.json ---
+    missing = PROJECT_TYPE_IDS - profile_names
+    if missing:
+        errors.append(f"profiles/: нет профилей для типов {sorted(missing)} "
+                      f"(см. core.project.PROJECT_TYPES)")
 
 # --- 4. skills.json -------------------------------------------------------
 reg = root / "skills.json"

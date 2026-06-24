@@ -10,9 +10,10 @@ from dataclasses import FrozenInstanceError
 from pathlib import Path
 from unittest import mock
 
-from core import (BaseEnv, atomic_write_json, atomic_write_text,
-                  find_monorepo_root, find_repo_root, now_iso, parse_args,
-                  parse_flags, run_cmd, safe_load_json, sanitize)
+from core import (PROJECT_TYPES, BaseEnv, atomic_write_json,
+                  atomic_write_text, detect_project_type, find_monorepo_root,
+                  find_repo_root, now_iso, parse_args, parse_flags, run_cmd,
+                  safe_load_json, sanitize)
 
 
 class TestText(unittest.TestCase):
@@ -208,6 +209,64 @@ class TestSafeLoadJson(unittest.TestCase):
             out = safe_load_json(p, default=[], on_error=seen.append)
             self.assertEqual(out, [])
             self.assertEqual(len(seen), 1)
+
+
+class TestProjectDetect(unittest.TestCase):
+    def _mk(self, tmp, files=(), dirs=()):
+        root = Path(tmp)
+        for d in dirs:
+            (root / d).mkdir(parents=True, exist_ok=True)
+        for name, content in files:
+            (root / name).write_text(content, encoding="utf-8")
+        return root
+
+    def test_taxonomy_ids_unique_and_complete(self):
+        self.assertEqual(len(PROJECT_TYPES), len(set(PROJECT_TYPES)))
+        self.assertIn("standalone", PROJECT_TYPES)
+
+    def test_obsidian_wins(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = self._mk(tmp, files=[("composer.json", "{}")], dirs=[".obsidian"])
+            self.assertEqual(detect_project_type(root), "obsidian-vault")
+
+    def test_laravel_vs_php_package(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = self._mk(tmp, files=[("composer.json", "{}"), ("artisan", "")])
+            self.assertEqual(detect_project_type(root), "laravel-project")
+        with tempfile.TemporaryDirectory() as tmp:
+            root = self._mk(tmp, files=[("composer.json", "{}")])
+            self.assertEqual(detect_project_type(root), "php-package")
+
+    def test_dart_flutter(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = self._mk(tmp, files=[("pubspec.yaml", "name: x")])
+            self.assertEqual(detect_project_type(root), "dart-flutter")
+
+    def test_python_before_node(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = self._mk(tmp, files=[("pyproject.toml", ""), ("package.json", "{}")])
+            self.assertEqual(detect_project_type(root), "python-backend")
+
+    def test_node_frontend_vs_package(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = self._mk(tmp, files=[
+                ("package.json", '{"dependencies": {"vue": "^3"}}')])
+            self.assertEqual(detect_project_type(root), "node-frontend")
+        with tempfile.TemporaryDirectory() as tmp:
+            root = self._mk(tmp, files=[("package.json", '{"name": "lib"}')])
+            self.assertEqual(detect_project_type(root), "node-package")
+        with tempfile.TemporaryDirectory() as tmp:
+            root = self._mk(tmp, files=[("package.json", "{}"), ("vite.config.ts", "")])
+            self.assertEqual(detect_project_type(root), "node-frontend")
+
+    def test_standalone_default_never_unknown(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertEqual(detect_project_type(tmp), "standalone")
+
+    def test_corrupt_package_json_degrades(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = self._mk(tmp, files=[("package.json", "{not json")])
+            self.assertEqual(detect_project_type(root), "node-package")
 
 
 if __name__ == "__main__":

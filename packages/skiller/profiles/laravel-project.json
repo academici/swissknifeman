@@ -2,5 +2,15 @@
   "name": "laravel-project",
   "description": "Large Laravel application development",
   "buckets": ["system", "architect", "php", "devops", "quality", "operator"],
-  "include_meta": false
+  "include_meta": false,
+  "agent_pack": ["backend-laravel", "_common"],
+  "harness_presets": ["base", "laravel"],
+  "mcp": ["context7"],
+  "model_tiers": {
+    "reviewer": "opus",
+    "spec-writer": "opus",
+    "orchestrator": "opus",
+    "slice-builder": "sonnet",
+    "test-writer": "sonnet"
+  }
 }

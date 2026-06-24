@@ -1,4 +1,5 @@
 """Константы maind: порты памяти, типы узлов/рёбер графа, дефолты, тайминги."""
+from core import LANGUAGE_BY_TYPE as _LANGUAGE_BY_TYPE
 
 # ── память (agent-memory daemon) ───────────────────────────────────────────
 MEMORY_HTTP_PORT = 4111
@@ -60,7 +61,7 @@ CODE_GRAPH_DEFAULTS = {
         "serena", "project", "index", "{root}",
     ],
     "server_name": "serena",
-    "language_by_type": {"php-package": "php", "node-package": "typescript"},
+    "language_by_type": dict(_LANGUAGE_BY_TYPE),  # единый источник — core.project
     "ignores": ["vendor", "node_modules", "packages", "storage",
                 "bootstrap/cache", "public/build", "dist", ".git"],
     "workspace_ignores": ["vendor", "node_modules", "**/vendor", "**/node_modules",

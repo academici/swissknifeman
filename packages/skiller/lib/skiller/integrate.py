@@ -13,7 +13,8 @@ import subprocess
 import sys
 
 from .common import apply_permissions, die, harness_bin, parse_flags, warn
-from .config import autodetect, load_config, resolve_target
+from .config import (autodetect, load_config, load_profile, resolve_profile_name,
+                     resolve_target)
 from .connect import do_connect
 from .vendor import do_vendor
 from .hub import generate_hub
@@ -148,7 +149,8 @@ def _block_skills(env, target, choices, dry):
     print(f"\n[1] Скиллы: {ch or 'пропуск'}")
     if not ch:
         return
-    opts = {"dry_run": dry, "hub": choices["hub"]}
+    opts = {"dry_run": dry, "hub": choices["hub"],
+            "profile": choices.get("profile") or ""}
     if ch == "connect":
         do_connect(env, target, opts)
     elif ch == "vendor":
@@ -224,10 +226,41 @@ def _block_brain(target, choices):
 
 
 # --- choices assembly ---------------------------------------------------------
+def _profile_dict(env, target, opts):
+    """Полный профиль проекта (по иерархии flag>config>autodetect) или {} — если
+    выбор задан явными buckets/профиль не резолвится."""
+    config = load_config(env, target)
+    name = resolve_profile_name(target, config, opts.get("profile") or "")
+    if not name:
+        return "", {}
+    try:
+        return name, load_profile(env, name)
+    except SystemExit:
+        return name, {}
+
+
+def _apply_profile_env(base, profile):
+    """Влить профильное СОДЕРЖИМОЕ окружения в choices: harness_presets/mcp/hooks.
+    Бандл задаёт тумблеры (вкл/выкл), профиль наполняет значениями для типа."""
+    presets = profile.get("harness_presets")
+    if presets:
+        base["perms_presets"] = ",".join(presets)
+    base["mcp"] = _add_unique(list(profile.get("mcp") or []), base.get("mcp") or [])
+    hooks = profile.get("hooks") or {}
+    if "auto_approve" in hooks:
+        aa = hooks["auto_approve"]
+        base["autoapprove"] = None if aa in (None, "off") else aa
+    if "memory" in hooks:
+        mem = hooks["memory"]
+        base["memory"] = None if mem in (None, "off") else mem
+
+
 def _gather(env, target, opts, bundle, interactive):
     base = dict(BUNDLES.get(bundle, BUNDLES["recommended"]))
     base["settings_file"] = opts.get("file") or "settings.json"
     base["memory_brain"] = "core"
+    prof_name, profile = _profile_dict(env, target, opts)
+    base["profile"] = prof_name
     if bundle != "custom":
         # авто-пресеты permissions (autodetect внутри harness при пустом)
         base["perms_presets"] = ""
@@ -235,12 +268,15 @@ def _gather(env, target, opts, bundle, interactive):
         # --mcp <a,b> добавляет opt-in пресеты поверх (явный выбор бьёт dev-гейт)
         base["mcp"] = _add_unique(
             _default_mcp(target) if base.get("mcp") else [], _parse_mcp_flag(opts))
+        # профиль (если есть) наполняет presets/mcp/hooks содержимым под тип
+        _apply_profile_env(base, profile)
         return base
 
     # custom — интерактивный чеклист
     detected = autodetect(target)
     print(f"Проект: {target}  (autodetect: {detected})")
-    ch = {"settings_file": opts.get("file") or "settings.json", "memory_brain": "core"}
+    ch = {"settings_file": opts.get("file") or "settings.json",
+          "memory_brain": "core", "profile": prof_name}
     ch["skills"] = _ask_choice("Канал скиллов", ("connect", "vendor", "skip"),
                                "connect", interactive)
     if ch["skills"] == "skip":
@@ -282,12 +318,12 @@ def _gather(env, target, opts, bundle, interactive):
 def cmd_integrate(env, argv):
     opts = parse_flags(argv, {
         "--target": "str", "--dry-run": "bool", "--yes": "bool",
-        "--bundle": "str", "--file": "str", "--mcp": "str",
+        "--bundle": "str", "--file": "str", "--mcp": "str", "--profile": "str",
     })
     if opts["help"]:
         print("skiller integrate [--target P] [--bundle minimal|recommended|full|custom] "
-              "[--yes] [--dry-run] [--file settings.json|settings.local.json] "
-              "[--mcp name1,name2]")
+              "[--profile name] [--yes] [--dry-run] "
+              "[--file settings.json|settings.local.json] [--mcp name1,name2]")
         return
     target, _ = resolve_target(env, opts, allow_home_confirm=True)
     if target == env.root.resolve():

@@ -29,6 +29,11 @@ class Env(BaseEnv):
         return self.configs_dir / "mcp"
 
     @property
+    def agent_packs_dir(self):
+        """Каталог паков субагентов: agent-packs/<pack>/pack.json."""
+        return self.configs_dir / "agent-packs"
+
+    @property
     def apply_script(self):
         return self.root / "scripts" / "apply-permissions.sh"
 

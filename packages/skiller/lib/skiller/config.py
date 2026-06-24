@@ -3,6 +3,8 @@ import json
 import os
 from pathlib import Path
 
+from core import detect_project_type
+
 from .common import (AGENT_DEFAULTS, CONFIG_KEYS, confirm, die,
                      parse_frontmatter_fields)
 
@@ -74,13 +76,9 @@ def load_config(env, target):
 
 
 def autodetect(target):
-    if (target / ".obsidian").is_dir():
-        return "obsidian-vault"
-    if (target / "artisan").is_file() and (target / "composer.json").is_file():
-        return "laravel-project"
-    if (target / "composer.json").is_file():
-        return "php-package"
-    return "standalone"
+    """Тип проекта (== имя профиля) — единый детектор core. Каждый возвращаемый id
+    обязан иметь profiles/<id>.json (гейт покрытия в validate.sh)."""
+    return detect_project_type(target)
 
 
 def load_profile(env, name):
@@ -117,6 +115,19 @@ def resolve_selection(env, target, config, flag_profile, flag_items):
     prof = load_profile(env, name)
     items = buckets if prof["buckets"] == ["*"] else prof["buckets"]
     return items, name, "autodetect", "autodetect", prof.get("include_meta", False)
+
+
+def resolve_profile_name(target, config, flag_profile):
+    """Имя профиля по той же иерархии, что resolve_selection: --profile >
+    .swissknife.json project_type > autodetect. None — если выбор задан явными
+    buckets (профиля нет)."""
+    if flag_profile:
+        return flag_profile
+    if config.get("buckets"):
+        return None
+    if config.get("project_type"):
+        return config["project_type"]
+    return autodetect(target)
 
 
 # --- project root discovery ----------------------------------------------------

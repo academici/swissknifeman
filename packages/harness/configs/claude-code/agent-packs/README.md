@@ -26,16 +26,34 @@
 
 ## Установка / upgrade
 
-Через скилл **`system/agent-packs`** (skiller): детект стека → интервью → рендер+копия
-→ lock (`.claude/agent-pack.lock.json`) → пост-проверка
-(`docs/skiller/agent-framework/post-integration-checklist`). Upgrade — по CHANGELOG-дельте
-с 3-way reasoning через sha256 в lock, без diff-движка.
+**Детерминированный путь (рекомендуется)** — CLI `harness agent-packs`: резолвит интервью
+из `detect:`-проб+дефолтов БЕЗ агента, рендерит, пишет lock. Так `maind sync`/`maind onboard`
+раскатывают паки автоматически (профиль типа проекта называет `agent_pack`):
+
+```bash
+harness agent-packs list
+harness agent-packs render  --auto --pack <pack> --target . [--answer KEY=VAL ...]
+harness agent-packs upgrade        --pack <pack> --target .
+harness agent-packs doctor  [--pack <pack>]
+```
+
+**Агент-driven путь (фолбэк)** — скилл **`system/agent-packs`** (skiller): для неоднозначных
+случаев (`needs-agent`/`conflict`) или прозовой адаптации. Оба пути пишут ОДИН формат
+`.claude/agent-pack.lock.json` (sha256 отрендеренного) — совместимы. Upgrade — по
+CHANGELOG-дельте с 3-way reasoning через sha256, без diff-движка.
 
 ## Паки
 
 | Пак | Shape | Стек | Версия |
 |---|---|---|---|
-| `backend-laravel` | backend | Laravel/PHP | 0.1.0 |
+| `_common` | agnostic | оркестратор (delegate-only) — общий prerequisite | 0.1.0 |
+| `backend-laravel` | backend | Laravel/PHP | 0.2.0 |
+| `node-frontend` | frontend | Vue/Vite/TS (SPA/Inertia/Nuxt) | 0.1.0 |
+| `dart-flutter` | mobile | Flutter/Dart (mobile/POS/embedded) | 0.1.0 |
+| `python-backend` | backend | Python (FastAPI/Django/Flask) | 0.1.0 |
 
-Fullstack = композиция паков по концерну (`backend-laravel` + будущий `frontend-vue`);
-роли универсальны, стек выбирает профиль.
+Каждый профиль (`packages/skiller/profiles/<type>.json`) называет `agent_pack` (строка ИЛИ
+список — **композиция**: стек-пак + `_common`). Fullstack = композиция по концерну
+(`backend-laravel` + `node-frontend`). Роли универсальны, стек выбирает профиль; модельные
+тиры — из `profile.model_tiers`. PostToolUse-валидаторы (tsc/eslint, dart analyze, ruff) —
+advisory (инжектят ошибки, не блокируют).

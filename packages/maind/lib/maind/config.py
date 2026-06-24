@@ -10,7 +10,7 @@ import json
 import os
 from pathlib import Path
 
-from .common import die, sanitize, warn
+from .common import detect_project_type, die, sanitize, warn
 from .constants import (CODE_GRAPH_DEFAULTS, GRAPH_ADAPTERS, HEARTBEAT_DEFAULT_MS,
                         LEGACY_GRAPH_ADAPTERS, MAX_IDLE_DEFAULT_MS, MEMORY_HTTP_PORT,
                         MEMORY_STREAM_PORT, SERVICE_NAME)
@@ -171,19 +171,14 @@ def merge_defaults(config):
 
 # ── brain .projects.json → maind (реальная схема brain, не из doc'а) ─────────
 def _infer_type(local_path):
-    """Best-effort тип проекта по маркерам в репозитории (если путь существует)."""
+    """Best-effort тип проекта по маркерам — единый детектор core. Отсутствующий
+    путь → 'unknown' (sentinel maind; core всегда отдаёт реальный id)."""
     if not local_path:
         return "unknown"
     p = Path(os.path.expanduser(local_path))
     if not p.is_dir():
         return "unknown"
-    if (p / ".obsidian").is_dir():
-        return "obsidian-vault"
-    if (p / "composer.json").is_file():
-        return "php-package"
-    if (p / "package.json").is_file():
-        return "node-package"
-    return "unknown"
+    return detect_project_type(p)
 
 
 def map_brain_project(bp):

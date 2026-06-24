@@ -1,4 +1,5 @@
 """doctor — диагностика окружения harness (пресеты, скрипт, файлы хуков)."""
+from .agentpacks import list_packs
 from .common import parse_flags
 from .mcp import available_mcp
 
@@ -24,6 +25,7 @@ def cmd_doctor(env, argv):
     line(bool(available_mcp(env)),
          f"MCP-пресеты: {', '.join(available_mcp(env)) or 'нет'}")
     line(env.apply_script.exists(), f"scripts/apply-permissions.sh — {env.apply_script}")
+    line(bool(list_packs(env)), f"agent-packs: {', '.join(list_packs(env)) or 'нет'}")
 
     hooks = env.home / ".claude" / "hooks"
     have = {d: (hooks / d).exists() for d in ("notify", "auto-approve", "memory")}

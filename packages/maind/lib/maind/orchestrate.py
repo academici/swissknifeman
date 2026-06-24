@@ -29,6 +29,12 @@ CAPABILITIES = {
     "env:apply":     ("harness", ["permissions", "--target", "{path}"], True),
     "env:mcp":       ("harness", ["mcp", "--target", "{path}"], True),
     "env:hooks":     ("harness", ["hooks", "--target", "{path}"], True),
+    # детерминированная доставка пака субагентов (--pack приходит в extra):
+    # render --auto резолвит интервью без агента; upgrade — версионный апгрейд.
+    "env:agent-pack":         ("harness",
+                               ["agent-packs", "render", "--auto", "--target", "{path}"], True),
+    "env:agent-pack-upgrade": ("harness",
+                               ["agent-packs", "upgrade", "--target", "{path}"], True),
 }
 
 # sibling → как найти его лаунчер (env-override · проект в config.json · путь · bin).

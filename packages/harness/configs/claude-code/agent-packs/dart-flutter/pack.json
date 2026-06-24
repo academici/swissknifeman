@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "pack": "dart-flutter",
+  "version": "0.1.0",
+  "description": "Dev-loop для Flutter/Dart (mobile / POS / embedded): агенты slice-builder/test-writer/reviewer (POS/embedded-aware)/ffi-reviewer(опц.), последовательный one-branch workflow, SubagentStop review-gate (dart analyze/format) + PostToolUse-валидатор. Знания Flutter/state/FFI — в промптах агентов (бакет mobile тонкий).",
+  "stack": {
+    "shape": "mobile",
+    "language": "dart",
+    "framework": "flutter",
+    "project_type": "dart-flutter",
+    "detect": { "all_of": ["pubspec.yaml"] }
+  },
+  "requires": {
+    "skills": ["figma-to-flutter", "code-simplifier", "test-strategy"],
+    "harness_presets": ["base"]
+  },
+  "interview": [
+    { "id": "PACK_PREFIX", "q": "Префикс имён агентов/воркфлоу?", "default": "{project_dirname}", "kind": "slug" },
+    { "id": "PROJECT_DIR", "q": "Абсолютный путь к проекту?", "detect": "pwd" },
+    { "id": "FLUTTER_BIN", "q": "Бинарь flutter?", "detect": "command -v flutter", "default": "flutter" },
+    { "id": "DART_BIN", "q": "Бинарь dart?", "detect": "command -v dart", "default": "dart" },
+    { "id": "TEST_RUNNER_CMD", "q": "Команда тестов?", "default": "{FLUTTER_BIN} test" },
+    { "id": "ANALYZE_CMD", "q": "Статанализ?", "default": "{DART_BIN} analyze" },
+    { "id": "FORMAT_CMD", "q": "Формат-чек?", "default": "{DART_BIN} format --output=none --set-exit-if-changed ." },
+    { "id": "STATE_MGMT", "q": "Стейт-менеджмент?", "detect": "pubspec.yaml:dependencies.flutter_riverpod", "enum": ["riverpod", "bloc", "provider", "getx", "setstate"], "default": "riverpod" },
+    { "id": "HAS_FFI", "q": "Есть FFI/нативные плагины (POS-периферия)?", "kind": "bool", "default": false, "detect": "grep -rql dart:ffi lib" },
+    { "id": "TARGET_KIND", "q": "Цель: mobile | pos-embedded | desktop?", "enum": ["mobile", "pos-embedded", "desktop"], "default": "mobile" },
+    { "id": "BASE_BRANCH", "q": "Базовая ветка?", "detect": "git symbolic-ref --short refs/remotes/origin/HEAD", "default": "main" },
+    { "id": "CHECK_CMD", "q": "Быстрая review-gate проверка?", "default": "{DART_BIN} analyze" },
+    { "id": "DOCS_DIR", "q": "Куда положить guideline?", "default": "docs/05_AI/guidelines" },
+    { "id": "MODEL_REVIEWER", "q": "Модель reviewer?", "default": "inherit", "enum": ["inherit", "opus", "sonnet", "haiku"] },
+    { "id": "MODEL_FFI_REVIEWER", "q": "Модель ffi-reviewer?", "default": "inherit", "enum": ["inherit", "opus", "sonnet", "haiku"] },
+    { "id": "MODEL_SLICE_BUILDER", "q": "Модель slice-builder?", "default": "inherit", "enum": ["inherit", "opus", "sonnet", "haiku"] },
+    { "id": "MODEL_TEST_WRITER", "q": "Модель test-writer?", "default": "inherit", "enum": ["inherit", "opus", "sonnet", "haiku"] },
+    { "id": "MODEL_SPEC_WRITER", "q": "Модель spec-writer?", "default": "inherit", "enum": ["inherit", "opus", "sonnet", "haiku"] },
+    { "id": "GATE_COVERAGE_MIN", "q": "Мин. покрытие (%)?", "default": "70" },
+    { "id": "GATE_MAX_CRITICAL", "q": "Допустимо critical-находок?", "default": "0" }
+  ],
+  "files": [
+    { "src": "agents/slice-builder.md", "target": ".claude/agents/{PACK_PREFIX}-slice-builder.md", "kind": "template", "role": "agent" },
+    { "src": "agents/test-writer.md", "target": ".claude/agents/{PACK_PREFIX}-test-writer.md", "kind": "template", "role": "agent" },
+    { "src": "agents/reviewer.md", "target": ".claude/agents/{PACK_PREFIX}-reviewer.md", "kind": "template", "role": "agent" },
+    { "src": "agents/ffi-reviewer.md", "target": ".claude/agents/{PACK_PREFIX}-ffi-reviewer.md", "kind": "template", "role": "agent", "optional": true },
+    { "src": "agents/spec-writer.md", "target": ".claude/agents/{PACK_PREFIX}-spec-writer.md", "kind": "template", "role": "agent", "optional": true },
+    { "src": "workflows/dev-loop.js", "target": ".claude/workflows/{PACK_PREFIX}-dev-loop.js", "kind": "template", "role": "workflow" },
+    { "src": "hooks/review-gate.sh", "target": ".claude/hooks/review-gate.sh", "kind": "verbatim", "role": "hook", "chmod": "+x" },
+    { "src": "hooks/review-gate.env.ini", "target": ".claude/review-gate.env.ini", "kind": "template", "role": "config", "user_owned": true },
+    { "src": "hooks/validate-flutter.sh", "target": ".claude/hooks/validate-flutter.sh", "kind": "verbatim", "role": "hook", "chmod": "+x" },
+    { "src": "settings/settings.fragment.json", "target": ".claude/settings.json", "kind": "merge", "role": "settings", "merge": "hooks.SubagentStop[]+hooks.PostToolUse[] append-if-absent" },
+    { "src": "rules/widgets.md", "target": ".claude/rules/widgets.md", "kind": "verbatim", "role": "rule" },
+    { "src": "rules/state.md", "target": ".claude/rules/state.md", "kind": "template", "role": "rule" },
+    { "src": "rules/ffi.md", "target": ".claude/rules/ffi.md", "kind": "verbatim", "role": "rule" },
+    { "src": "rules/tests.md", "target": ".claude/rules/tests.md", "kind": "template", "role": "rule" },
+    { "src": "docs/subagents-and-workflows.md", "target": "{DOCS_DIR}/subagents-and-workflows.md", "kind": "template", "role": "doc" }
+  ],
+  "notes": {
+    "verify_workflow": "dev-loop.js — top-level return/await, node --check НЕ применять.",
+    "skill_gap": "Бакет mobile = 1 скилл (figma-to-flutter). Архитектура/state/FFI/POS — в промптах агентов и rules/, НЕ новые портируемые скиллы (анти-bloat).",
+    "pos_ffi": "POS/embedded и FFI-специфика — в reviewer.md (prose по {{TARGET_KIND}}) + ffi-reviewer.md/rules/ffi.md под pack:if HAS_FFI.",
+    "orchestrator": "Общий оркестратор — пак _common (тот же PACK_PREFIX)."
+  }
+}

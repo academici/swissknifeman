@@ -15,9 +15,9 @@ from pathlib import Path
 # Общий core (подключается через PYTHONPATH лаунчером/test.sh). Реэкспорт для
 # модулей пакета, которые исторически берут эти имена из .common.
 from core import (  # noqa: F401
-    HOME, BaseEnv, atomic_write_json, atomic_write_text, confirm, die,
-    find_monorepo_root, now_iso, parse_args, run_cmd, safe_load_json,
-    sanitize, warn,
+    HOME, BaseEnv, atomic_write_json, atomic_write_text, confirm,
+    detect_project_type, die, find_monorepo_root, now_iso, parse_args,
+    run_cmd, safe_load_json, sanitize, warn,
 )
 # Выделенные модули — реэкспорт ради `from .common import ...` (back-compat).
 from .blocks import content_hash, managed_block, upsert_block  # noqa: F401

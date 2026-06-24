@@ -4,6 +4,38 @@
 запись помечает затронутый install-файл, чтобы апгрейдящий агент сопоставил
 изменение с конкретным файлом проекта.
 
+## [0.2.0] - 2026-06-24
+
+### Added
+
+- Канонические `description` всех агентов в формате авто-делегирования Claude Code
+  («Use this agent when…» + 2–3 `<example>` Context/user/assistant/`<commentary>`,
+  placeholder-safe) — `agents/{reviewer,slice-builder,test-writer,spec-writer}.md`.
+- Поле `color` каждому агенту (reviewer=yellow, slice-builder=green, test-writer=cyan,
+  spec-writer=magenta) и стек-агностичному оркестратору (пак `_common`, blue).
+- Модельные тиры через плейсхолдеры: `model: {{MODEL_REVIEWER|MODEL_SLICE_BUILDER|`
+  `MODEL_TEST_WRITER|MODEL_SPEC_WRITER}}` (дефолт каждого — `inherit`, поведение не
+  меняется; профиль типа проекта пре-заполняет тиры через `model_tiers`).
+- Квантованные гейты в `agents/reviewer.md`: `{{GATE_MAX_CRITICAL}}`/
+  `{{GATE_COVERAGE_MIN}}`/`{{GATE_MAX_COMPLEXITY}}` — вердикт по порогам, не «на глаз».
+- `stack.project_type: "laravel-project"` — канонический детект по ссылке на
+  `core.project` (legacy `detect.all_of` сохранён для агент-driven скилла).
+
+### Changed
+
+- `hooks/review-gate.sh` — обобщённый missing-tool guard (путь → исполняемость,
+  bare-команда → PATH), теперь verbatim-переиспользуем любым стек-паком.
+
+### Migration notes (agent-facing)
+
+- WATCH на 4 файлах агентов: если frontmatter правлен локально (изменён `model`/добавлены
+  скиллы) — апгрейд пометит `conflict`, новый рендер ляжет рядом `*.pack-new`, оригинал не
+  затирается; смержи вручную.
+- Новые интервью-поля `MODEL_*` (default `inherit`) и `GATE_*` (80/0/10) — на апгрейде
+  доспрашиваются авто из дефолтов; рекомендованный профильный пресет: reviewer/spec=opus,
+  slice/test=sonnet (его выставляет `profiles/laravel-project.json:model_tiers`).
+- `review-gate.sh` (verbatim) — safe-apply, если не правлен локально.
+
 ## [0.1.0] - 2026-06-23
 
 ### Added

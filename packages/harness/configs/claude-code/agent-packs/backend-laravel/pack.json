@@ -1,12 +1,13 @@
 {
   "schema": 1,
   "pack": "backend-laravel",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Backend dev-loop для Laravel: агенты slice-builder/test-writer/reviewer (преднагружены архитектурными скиллами), последовательный одно-веточный workflow dev-loop (срез→impl→test→review), SubagentStop review-gate. Обобщено из проверенных overnight-артефактов memster.",
   "stack": {
     "shape": "backend",
     "language": "php",
     "framework": "laravel",
+    "project_type": "laravel-project",
     "detect": { "all_of": ["artisan", "composer.json"] }
   },
   "requires": {
@@ -27,7 +28,14 @@
     { "id": "BASE_BRANCH", "q": "Базовая ветка прогонов?", "detect": "git symbolic-ref --short refs/remotes/origin/HEAD", "default": "main" },
     { "id": "CHECK_CMD", "q": "Быстрая команда review-gate (статика)?", "default": "vendor/bin/pint --parallel --test -q" },
     { "id": "ACCESS_LAYER", "q": "Канон access-layer (тонкий контроллер, Action/Repository)?", "kind": "bool", "default": true },
-    { "id": "DOCS_DIR", "q": "Куда положить guideline?", "default": "docs/05_AI/guidelines" }
+    { "id": "DOCS_DIR", "q": "Куда положить guideline?", "default": "docs/05_AI/guidelines" },
+    { "id": "MODEL_REVIEWER", "q": "Модель reviewer-агента?", "default": "inherit", "enum": ["inherit", "opus", "sonnet", "haiku"] },
+    { "id": "MODEL_SLICE_BUILDER", "q": "Модель slice-builder?", "default": "inherit", "enum": ["inherit", "opus", "sonnet", "haiku"] },
+    { "id": "MODEL_TEST_WRITER", "q": "Модель test-writer?", "default": "inherit", "enum": ["inherit", "opus", "sonnet", "haiku"] },
+    { "id": "MODEL_SPEC_WRITER", "q": "Модель spec-writer?", "default": "inherit", "enum": ["inherit", "opus", "sonnet", "haiku"] },
+    { "id": "GATE_COVERAGE_MIN", "q": "Мин. покрытие изменённого поведения (%)?", "default": "80" },
+    { "id": "GATE_MAX_CRITICAL", "q": "Допустимо critical-находок?", "default": "0" },
+    { "id": "GATE_MAX_COMPLEXITY", "q": "Порог цикломатической сложности метода?", "default": "10" }
   ],
   "files": [
     { "src": "agents/slice-builder.md", "target": ".claude/agents/{PACK_PREFIX}-slice-builder.md", "kind": "template", "role": "agent" },

@@ -46,10 +46,13 @@ fi
 
 [[ "$MODE" == "off" ]] && exit 0
 
-# Нет инструмента (vendor не установлен) — не наказываем, тихо выходим.
+# Нет инструмента — не наказываем, тихо выходим (универсально по стекам:
+# путь vendor/bin/* | bin/* проверяем на исполняемость, bare-команду — на PATH).
 FIRST_BIN="$(printf '%s' "$CMD" | awk '{print $1}')"
-if [[ "$FIRST_BIN" == vendor/bin/* && ! -x "$PROJECT_DIR/$FIRST_BIN" ]]; then
-  exit 0
+if [[ "$FIRST_BIN" == */* ]]; then
+  [[ -x "$PROJECT_DIR/$FIRST_BIN" || -x "$FIRST_BIN" ]] || exit 0
+else
+  command -v "$FIRST_BIN" >/dev/null 2>&1 || exit 0
 fi
 
 # --- проверка ---------------------------------------------------------------

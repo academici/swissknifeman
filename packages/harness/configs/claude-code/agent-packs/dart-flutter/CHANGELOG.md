@@ -1,0 +1,29 @@
+# Changelog — dart-flutter pack
+
+Формат — [Keep a Changelog](https://keepachangelog.com/ru/1.0.0/); версии — per-PACK (semver).
+
+## [0.1.0] - 2026-06-24
+
+### Added
+
+- Начальный пак для Flutter/Dart (mobile / POS / embedded):
+  - `agents/slice-builder.md`, `agents/test-writer.md`, `agents/reviewer.md`
+    (POS/embedded-aware), `agents/ffi-reviewer.md` (опц., под FFI), `agents/spec-writer.md`
+    (опц.) — канонические `description` с `<example>`, `color`, `model: {{MODEL_*}}`
+    (default `inherit`).
+  - `workflows/dev-loop.js`, `hooks/review-gate.sh` (verbatim) +
+    `hooks/review-gate.env.ini` (template, user_owned), `hooks/validate-flutter.sh`
+    (PostToolUse `dart analyze` → additionalContext, не блокирует).
+  - `settings/settings.fragment.json` (SubagentStop+PostToolUse),
+    `rules/{widgets,state,ffi,tests}.md`, `docs/subagents-and-workflows.md`.
+- Интервью: `STATE_MGMT`, `HAS_FFI`, `TARGET_KIND` (mobile/pos-embedded/desktop),
+  `FLUTTER_BIN`/`DART_BIN`/`ANALYZE_CMD`/`FORMAT_CMD`. FFI-блоки под `pack:if HAS_FFI`.
+
+### Migration notes (agent-facing)
+
+- Первая версия — апгрейда нет.
+- Бакет `mobile` тонкий (1 скилл): архитектура/state/FFI/POS — в промптах агентов и
+  `rules/`, без новых портируемых скиллов (анти-bloat). Кандидат на будущее (по реальному
+  переиспользованию): `mobile/flutter-testing`.
+- Рекомендованный профильный пресет тиров: reviewer/spec=opus, slice/test=sonnet.
+- Оркестратор — отдельный пак `_common`.

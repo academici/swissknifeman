@@ -3,15 +3,17 @@
 Покрывают: резолв правил (include/buckets/exclude), sync (install/update/prune),
 безопасное удаление по managed (чужие скиллы не трогаются), обновление по sha256,
 dry-run без записи."""
+import contextlib
+import io
 import json
 import tempfile
 import unittest
 from pathlib import Path
 
 from skiller.registry import build_registry
-from skiller.skillset import (load_lock, load_skillset_config, plan_sync,
-                                    resolve_skillset, skillset_config_path,
-                                    sync_skillset)
+from skiller.skillset import (_registry_index, load_lock, load_skillset_config,
+                                    plan_sync, resolve_skillset,
+                                    skillset_config_path, sync_skillset)
 
 from skiller.common import MANIFEST
 
@@ -318,6 +320,12 @@ class TestCoreAndManifest(unittest.TestCase):
             self.assertTrue(mf.is_file())
             data = json.loads(mf.read_text(encoding="utf-8"))
             self.assertEqual(data["layout"], "flat")
+            self.assertEqual(data["version"], 1)  # версия схемы манифеста
+            # installed_at — ISO с временем (now_iso), не голая дата
+            self.assertIn("T", data["installed_at"])
+            self.assertTrue(data["installed_at"].endswith("Z"))
+            # атомарная запись не оставляет .tmp-хвоста
+            self.assertFalse((mf.parent / (MANIFEST + ".tmp")).exists())
             names = {s["flat_name"] for s in data["skills"]}
             self.assertEqual(names, {"laravel-conventions", "code-style"})
             self.assertTrue(all(s["source_path"].startswith("skills/")
@@ -331,6 +339,49 @@ class TestCoreAndManifest(unittest.TestCase):
             target = make_laravel_project(tmp)
             sync_skillset(env, target, {"buckets": ["php"]}, dry_run=True)
             self.assertFalse((target / ".claude" / "skills" / MANIFEST).exists())
+
+
+class TestRegistryIndexWarns(unittest.TestCase):
+    """_registry_index больше не теряет записи молча: warn при пропуске
+    (нет name/path) и при дубле имени между бакетами."""
+
+    def _index(self, env, skills):
+        (env.root / "skills.json").write_text(
+            json.dumps({"skills": skills}), encoding="utf-8")
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            by_key, by_name = _registry_index(env)
+        return by_key, by_name, err.getvalue()
+
+    def test_skips_entry_without_name_or_path_with_warn(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            root, env = make_registry(tmp)
+            by_key, by_name, err = self._index(env, [
+                {"name": "good", "bucket": "php",
+                 "path": "skills/php/good/SKILL.md"},
+                {"bucket": "php", "path": "skills/php/ghost/SKILL.md"},  # нет name
+                {"name": "no-path", "bucket": "php"},                   # нет path
+            ])
+            self.assertIn("good", by_name)
+            self.assertNotIn("no-path", by_name)
+            self.assertEqual(err.count("пропущена"), 2)
+
+    def test_duplicate_name_warns_keeps_first(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            root, env = make_registry(tmp)
+            by_key, by_name, err = self._index(env, [
+                {"name": "dup", "bucket": "php",
+                 "path": "skills/php/dup/SKILL.md"},
+                {"name": "dup", "bucket": "devops",
+                 "path": "skills/devops/dup/SKILL.md"},
+            ])
+            # по полному пути доступны оба, по короткому имени — первый (php)
+            self.assertIn("php/dup", by_key)
+            self.assertIn("devops/dup", by_key)
+            self.assertEqual(by_name["dup"]["bucket"], "php")
+            self.assertIn("дубль имени", err)
 
 
 if __name__ == "__main__":

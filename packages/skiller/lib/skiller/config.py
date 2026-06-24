@@ -6,7 +6,7 @@ from pathlib import Path
 from core import detect_project_type
 
 from .common import (AGENT_DEFAULTS, CONFIG_KEYS, confirm, die,
-                     parse_frontmatter_fields)
+                     parse_frontmatter_fields, warn)
 
 # CORE-политика раздачи: токен-экономные скиллы, которые swissknifeman кладёт в
 # КАЖДЫЙ проект по умолчанию (см. deep_analysis §5–§6). Каналы разной гранулярности:
@@ -61,6 +61,11 @@ def validate_config(env, config, cfg_file):
     if config.get("agent") and config["agent"] not in AGENT_DEFAULTS:
         die(f"{cfg_file}: unknown agent '{config['agent']}' "
             f"(available: {', '.join(AGENT_DEFAULTS)})")
+    # skills_map объявлен в CONFIG_KEYS, но ещё не читается логикой — не молчим,
+    # иначе пользователь пропишет его и не поймёт, почему нет эффекта.
+    if config.get("skills_map"):
+        warn(f"{cfg_file}: 'skills_map' зарезервирован, но ещё не реализован "
+             f"— игнорируется")
 
 
 def load_config(env, target):

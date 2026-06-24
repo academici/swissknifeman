@@ -2,6 +2,28 @@
 
 ## [Unreleased]
 
+### Fixed (третий аудит skiller — харденинг тихих отказов)
+
+- **`_registry_index` больше не теряет скиллы молча**: запись в `skills.json` без `name`/`path` и дубль
+  короткого имени между бакетами теперь логируются `warn` — раньше немой `continue`/`setdefault` ронял скилл
+  из синка без следа (по полному пути `bucket/rel` дубль доступен, по короткому имени — первый). +тесты.
+- **subprocess в harness с таймаутом** (`common.apply_permissions`, `integrate._run_harness`): `timeout=30`
+  + stderr в `warn` — зависший harness (NFS/сеть) больше не морозит `skiller sync` молча; stdout оставлен
+  живым (прогресс harness виден). Дополняет returncode-проверку из прошлого аудита.
+- **манифест атомарен и трассируем** (`skillset._write_manifest`): запись через `core.io.atomic_write_json`
+  (tmp+`os.replace` вместо raw `write_text` — нет полузаписанного файла при крахе) + `installed_at` через
+  `now_iso()` (время, не голая дата) + `version` схемы. +тест.
+- **frontmatter читает YAML-блок-скаляры** (`common.parse_frontmatter`): `description: |`/`>` (многострочные)
+  больше не теряются молча — stdlib-разбор без `pyyaml`, с защитой от значений, начинающихся с `|`/`>`. +тесты.
+- **`skills_map` не молчит** (`config.validate_config`): зарезервированный, но нереализованный ключ
+  помечается `warn` вместо тихого игнора.
+
+> Отклонено как ложное (проверено по исходнику): path-traversal в `contained()` — код уже добавляет
+> `+ os.sep`, пример `/skills_extra` не проходит против `/skills/`; «обрезанная `parse_inline_list`» — функция
+> целая; «ввести профили как first-class» — 8 профилей + флаг `--profile` уже есть; рекурсивный `_dir_sha256`
+> — намеренно зеркалит per-file хеш реестра (рекурсия рассинхронит lock с `skills.json`); `import yaml` —
+> нарушает stdlib-only, заменён stdlib-хендлером.
+
 ### Fixed (второй аудит skiller — реальные баги)
 
 - **`integrate` больше не глушит ошибки harness**: `_run_harness` проверяет returncode и `warn`-ит при

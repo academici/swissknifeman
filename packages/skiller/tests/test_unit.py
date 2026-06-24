@@ -37,6 +37,28 @@ class TestFrontmatter(unittest.TestCase):
         self.assertEqual(fm["name"], "quoted")
         self.assertEqual(fm["description"], "single")
 
+    def test_block_scalar_literal(self):
+        # `description: |` — многострочный литерал собирается с переносами
+        f = self._write(
+            "---\nname: foo\ndescription: |\n  line one\n  line two\n---\nbody\n")
+        fm = parse_frontmatter(f)
+        self.assertEqual(fm["name"], "foo")
+        self.assertEqual(fm["description"], "line one\nline two")
+
+    def test_block_scalar_folded_then_next_key(self):
+        # `description: >` — фолдинг через пробел; ключ после блока не потерян
+        f = self._write("---\ndescription: >\n  a\n  b\nrisk: low\n---\n")
+        fm = parse_frontmatter(f)
+        self.assertEqual(fm["description"], "a b")
+        self.assertEqual(fm["risk"], "low")
+
+    def test_value_starting_with_gt_is_not_block_scalar(self):
+        # описание, начинающееся с '>', НЕ должно съедаться как блок-скаляр
+        f = self._write("---\ndescription: > see the docs\nname: foo\n---\n")
+        fm = parse_frontmatter(f)
+        self.assertEqual(fm["description"], "> see the docs")
+        self.assertEqual(fm["name"], "foo")
+
     def test_body_lines_ignored(self):
         f = self._write("---\nname: foo\n---\nkey: should-not-parse\n")
         self.assertNotIn("key", parse_frontmatter(f))

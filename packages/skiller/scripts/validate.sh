@@ -509,8 +509,18 @@ for start in sorted(all_names):
 # Внутренние скиллы разработки реестра: НЕ экспортируются и НЕ попадают в
 # skills.json — линтуются мягко (только name+description, без полей реестра).
 registry_names = set(seen_names)
-for skill_md in sorted(root.glob(".claude/skills/*/SKILL.md")):
-    rel = skill_md.relative_to(root)
+# Локальные dev-скиллы могут жить и в .claude/skills пакета, и в КОРНЕ МОНОРЕПО
+# (перенесены туда ради видимости из корня). Линтуем оба места (standalone-safe).
+_skill_roots = [root]
+_mono = root.parent.parent          # packages/<pkg> → корень монорепо
+if _mono != root and (_mono / ".claude" / "skills").is_dir():
+    _skill_roots.append(_mono)
+_internal_skills = []
+for _sr in _skill_roots:
+    for _p in sorted(_sr.glob(".claude/skills/*/SKILL.md")):
+        _internal_skills.append((_sr, _p))
+for _sr, skill_md in _internal_skills:
+    rel = skill_md.relative_to(_sr)
     fm = parse_frontmatter(skill_md)
     if fm is None:
         errors.append(f"{rel}: missing frontmatter block")

@@ -1,0 +1,5 @@
+{
+  "buckets": ["general", "php", "laravel-testing"],
+  "exclude": ["botkit", "azguard"],
+  "agent": "claude"
+}

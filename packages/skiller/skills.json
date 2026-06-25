@@ -14,6 +14,11 @@
       "count": 12,
       "status": "active"
     },
+    "azguard": {
+      "description": "azguard package usage: code-first RBAC, panels, scoped roles, abilities (academici package — skill will relocate into the package repo)",
+      "count": 1,
+      "status": "active"
+    },
     "blender": {
       "description": "Universal Blender bpy+MCP tooling: MCP workflow primitives, viewport modes, camera helper, version gotchas",
       "count": 2,
@@ -22,6 +27,11 @@
     "blender-modeling": {
       "description": "Parametric CAD modeling in Blender for FDM/SLA: config-driven dataclasses, profile/revolve geometry, threading clearances, config & scene conventions, model-rules template, generic build loop",
       "count": 6,
+      "status": "active"
+    },
+    "botkit": {
+      "description": "botkit package usage: bot framework patterns — BotDefinition, service provider, webhooks (academici package — skill will relocate into the package repo)",
+      "count": 1,
       "status": "active"
     },
     "creative": {
@@ -45,13 +55,103 @@
       "status": "active"
     },
     "frontend": {
-      "description": "Frontend development: Vite, Vue Composition API, Tailwind CSS, Inertia",
-      "count": 35,
+      "description": "Frontend core: общие фронт-скиллы (web design guidelines, document writer, file upload)",
+      "count": 3,
+      "status": "active"
+    },
+    "frontend-animations": {
+      "description": "Animations with Motion Vue (motion-v)",
+      "count": 1,
+      "status": "active"
+    },
+    "frontend-backend": {
+      "description": "Backend integration layer: Inertia+Vue, Laravel Echo realtime client, backend→frontend type sync",
+      "count": 3,
+      "status": "active"
+    },
+    "frontend-figma": {
+      "description": "Figma Dev Mode MCP → Vue mapping (uses architect/figma-mcp-core)",
+      "count": 1,
+      "status": "active"
+    },
+    "frontend-linting": {
+      "description": "JS/TS tooling and style: antfu config, ESLint flat config, Spatie JS style, TS library authoring",
+      "count": 4,
+      "status": "active"
+    },
+    "frontend-naive-ui": {
+      "description": "Naive UI component library theming (GlobalThemeOverrides)",
+      "count": 1,
+      "status": "active"
+    },
+    "frontend-nuxt": {
+      "description": "Nuxt 4+: server routes, modules, SEO meta-module",
+      "count": 3,
+      "status": "active"
+    },
+    "frontend-reka": {
+      "description": "Reka UI headless primitives + CVA variants",
+      "count": 1,
+      "status": "active"
+    },
+    "frontend-tailwind": {
+      "description": "Tailwind CSS v4 conventions and dark-mode theming",
+      "count": 2,
+      "status": "active"
+    },
+    "frontend-vite": {
+      "description": "Vite build tooling: config/plugins/SSR, project module loader, multi-build, VitePress",
+      "count": 4,
+      "status": "active"
+    },
+    "frontend-vue": {
+      "description": "Vue 3 ecosystem: Composition API, best practices, router, VueUse, Pinia state, Vitest testing",
+      "count": 11,
+      "status": "active"
+    },
+    "frontend-wayfinder": {
+      "description": "Laravel Wayfinder: type-safe routes/controller actions in the frontend",
+      "count": 1,
       "status": "active"
     },
     "general": {
       "description": "General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists",
       "count": 15,
+      "status": "active"
+    },
+    "laravel-architecture": {
+      "description": "Scaling architecture: modular monolith/DDD, enum state machines, enum attributes, subagent orchestration",
+      "count": 4,
+      "status": "active"
+    },
+    "laravel-auth": {
+      "description": "Authorization & security: permissions/RBAC, attribute-based gates, security audit",
+      "count": 3,
+      "status": "active"
+    },
+    "laravel-data-layer": {
+      "description": "Typed data + realtime: spatie/laravel-data DTOs (TS export), Echo/Reverb broadcasting",
+      "count": 2,
+      "status": "active"
+    },
+    "laravel-extras": {
+      "description": "Optional Laravel runtime packages: media library, typed settings, Pennant feature flags",
+      "count": 3,
+      "status": "active"
+    },
+    "laravel-filament": {
+      "description": "Filament admin panels: resources, schemas, tables, widgets, actions, tenancy",
+      "count": 1,
+      "status": "active"
+    },
+    "laravel-livewire": {
+      "description": "Livewire 3 UI: dynamic Blade attributes (ComponentAttributeBag)",
+      "count": 1,
+      "status": "active"
+    },
+    "laravel-testing": {
+      "description": "Laravel testing: Pest feature/unit, DB isolation guard, Dusk browser tests, health checks",
+      "count": 4,
       "status": "active"
     },
     "legal": {
@@ -80,8 +180,13 @@
       "status": "active"
     },
     "php": {
-      "description": "PHP and Laravel: applications, packages, Filament, permissions, testing, patterns",
-      "count": 42,
+      "description": "PHP and Laravel core: architecture, structure, conventions, DI, database, repositories, patterns, static analysis",
+      "count": 13,
+      "status": "active"
+    },
+    "php-packages": {
+      "description": "Laravel package development: scaffold, service provider, testing, compatibility, docs, releases",
+      "count": 9,
       "status": "active"
     },
     "pm": {
@@ -127,15 +232,24 @@
   },
   "skills": [
     {
-      "name": "ai-agent-super-skill",
+      "name": "ai-agents",
       "bucket": "ai",
       "path": "skills/ai/ai-agents/SKILL.md",
-      "version": "0.1.0",
-      "description": "Comprehensive AI agent building skill merging Perplexity Computer's skill creation, webserver, and automation capabilities with Claude Code's agent orchestration, MCP server building, RAG system construction, subagent coordination, parallel agent dispatching, prompt optimization, and execution planning. Covers designing AI agents, building MCP servers, creating RAG pipelines, orchestrating multi-agent systems, optimizing prompts, and deploying AI-powered workflows. Use when building AI agents, creating MCP servers, designing RAG systems, coordinating subagents, optimizing prompts, or architecting any AI-powered automation.",
-      "sha256": "57ae961f51ff2b1e554353abe147408f93aeb7b0cc86cff413b9325377874dbf",
+      "version": "0.2.0",
+      "description": "Навигатор по справочнику построения AI-агентов (vendored super-skill get-zeked): паттерны агентов, MCP-серверы, RAG, координация субагентов, промпт-инжиниринг, деплой. Активируй при проектировании AI-агентов, создании MCP-серверов, RAG-конвейеров, оркестрации мультиагентных систем, оптимизации промптов.",
+      "sha256": "e3aacac9cf0007f2f180d2a93d125362d8ec0c9e294690f59e7ef88e337f138b",
+      "tags": [
+        "ai",
+        "agents",
+        "mcp",
+        "rag",
+        "orchestration",
+        "prompt-engineering",
+        "subagents"
+      ],
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/get-zeked/ai-agent-super-skill/main/SKILL.md",
-      "fetched_at": "2026-06-11"
+      "fetched_at": "2026-06-25"
     },
     {
       "name": "agent-design",
@@ -401,6 +515,25 @@
       "source": "local"
     },
     {
+      "name": "azguard",
+      "bucket": "azguard",
+      "path": "skills/azguard/azguard/SKILL.md",
+      "version": "0.1.0",
+      "description": "Роли и контроль доступа на базе пакета azguard: code-first RBAC, панели, scoped roles, direct grants, abilities для фронтенда",
+      "sha256": "31b906c193c20985a72ae970ba80c1a67b0b383db2762a28a17a2bf6c2194520",
+      "tags": [
+        "php",
+        "laravel",
+        "permissions",
+        "azguard",
+        "rbac",
+        "authorization",
+        "gate",
+        "enum"
+      ],
+      "source": "local"
+    },
+    {
       "name": "mcp-blender",
       "bucket": "blender",
       "path": "skills/blender/mcp-blender/SKILL.md",
@@ -593,6 +726,24 @@
       "produces_for": [
         "parametric-config",
         "build-loop"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "botkit",
+      "bucket": "botkit",
+      "path": "skills/botkit/botkit/SKILL.md",
+      "version": "0.2.0",
+      "description": "Bot framework patterns: BotDefinition contract, package service provider, webhook handling",
+      "sha256": "f0628659930dd0d6c50d5cecb8e5768846cfe03ba9f85e458e81305eed2daac5",
+      "tags": [
+        "php",
+        "laravel",
+        "bots",
+        "botkit"
+      ],
+      "requires": [
+        "laravel"
       ],
       "source": "local"
     },
@@ -1011,62 +1162,6 @@
       "source": "local"
     },
     {
-      "name": "antfu",
-      "bucket": "frontend",
-      "path": "skills/frontend/antfu/SKILL.md",
-      "version": "0.1.0",
-      "description": "Anthony Fu's opinionated tooling and conventions for JavaScript/TypeScript projects. Use when setting up new projects, configuring ESLint/Prettier alternatives, monorepos, library publishing, or when the user mentions Anthony Fu's preferences.",
-      "sha256": "bf1badde2a7b0ac941613adaa3694cab11a258d589dbc8b31b42045ecbcfa0c1",
-      "source": "github",
-      "upstream": "https://raw.githubusercontent.com/antfu/skills/main/skills/antfu/SKILL.md",
-      "fetched_at": "2026-06-17"
-    },
-    {
-      "name": "backend-type-sync",
-      "bucket": "frontend",
-      "path": "skills/frontend/backend-type-sync/SKILL.md",
-      "version": "0.1.0",
-      "description": "Синхронизация типов backend→frontend через spatie/laravel-typescript-transformer: #[TypeScript] на enum/DTO/Spatie-Data, php artisan typescript:transform → generated.d.ts, использование App.Enums.* / App.Data.* в Vue/TS. Активировать: новый enum/DTO нужен на фронте, рассинхрон типов фронта с бэком, настройка type-sync. Граница с wayfinder (роуты ≠ типы).",
-      "sha256": "cb869adde3e8f2a881ee939ff893996aacd7cf76497f234b2c31c7241812dfce",
-      "tags": [
-        "typescript",
-        "laravel",
-        "spatie",
-        "types",
-        "enum",
-        "dto",
-        "frontend",
-        "type-sync",
-        "ci"
-      ],
-      "requires": [
-        "wayfinder"
-      ],
-      "source": "local"
-    },
-    {
-      "name": "dark-mode",
-      "bucket": "frontend",
-      "path": "skills/frontend/dark-mode/SKILL.md",
-      "version": "0.1.0",
-      "description": "Тёмная тема light|dark|system на Vue 3: composable useDarkMode (matchMedia prefers-color-scheme, localStorage + cookie для SSR, toggle класса .dark на documentElement, слушатель change для system), инициализация до маунта без вспышки темы, мини-переключатель. Активировать при добавлении переключения темы, борьбе со вспышкой светлой темы (FOUC), синхронизации темы с системой или восстановлении темы при SSR.",
-      "sha256": "8f25a9ab18f1f891682bee4e4da88c1561651ad465bcfc39b311e72d239e22ea",
-      "tags": [
-        "dark-mode",
-        "theme",
-        "vue",
-        "composable",
-        "ssr",
-        "tailwind",
-        "matchmedia",
-        "localstorage"
-      ],
-      "requires": [
-        "tailwind-conventions"
-      ],
-      "source": "local"
-    },
-    {
       "name": "document-writer",
       "bucket": "frontend",
       "path": "skills/frontend/document-writer/SKILL.md",
@@ -1076,54 +1171,6 @@
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/onmax/nuxt-skills/main/skills/document-writer/SKILL.md",
       "fetched_at": "2026-06-17"
-    },
-    {
-      "name": "eslint-flat-config",
-      "bucket": "frontend",
-      "path": "skills/frontend/eslint-flat-config/SKILL.md",
-      "version": "0.1.0",
-      "description": "ESLint flat config (eslint.config.js) для Vue 3 + TypeScript: defineConfigWithVueTs/typescript-eslint + eslint-plugin-vue, @stylistic, import/order и границы импортов, padding-line-between-statements, цепочка Prettier (eslint-config-prettier + tailwindcss + organize-imports), скрипты lint/lint:fix. Триггеры: настройка/правка eslint или prettier, новый Vue/TS проект.",
-      "sha256": "d77301313f3ac4b83793fb4b7c8293c8e90103cc9c18c3d1bfd75fa3386b37fe",
-      "tags": [
-        "eslint",
-        "prettier",
-        "flat-config",
-        "vue",
-        "typescript",
-        "stylistic",
-        "tooling",
-        "code-style",
-        "frontend"
-      ],
-      "source": "local"
-    },
-    {
-      "name": "figma-to-vue",
-      "bucket": "frontend",
-      "path": "skills/frontend/figma-to-vue/SKILL.md",
-      "version": "0.1.0",
-      "description": "Маппинг дизайна из Figma Dev Mode MCP в Vue + Tailwind v4: Auto-layout → flexbox/grid, tokens.json → @theme-токены (CSS-first), Variants → class-variance-authority (cva), Variable Modes → тёмная тема (.dark), переиспользование компонентов через Code Connect. Активировать при реализации Vue-экранов/компонентов по Figma; работает поверх figma-mcp-core.",
-      "sha256": "823ca1b282790b9f78c1c99e3dfa94ae833698c907c5086d04a22e73ef7ffbba",
-      "tags": [
-        "figma",
-        "vue",
-        "tailwind",
-        "tailwindcss-v4",
-        "cva",
-        "design-tokens",
-        "dark-mode",
-        "auto-layout"
-      ],
-      "requires": [
-        "figma-mcp-core"
-      ],
-      "produces_for": [
-        "tailwind-conventions",
-        "reka-ui-cva",
-        "naive-ui-theming",
-        "dark-mode"
-      ],
-      "source": "local"
     },
     {
       "name": "filepond-upload",
@@ -1146,12 +1193,57 @@
       "source": "local"
     },
     {
-      "name": "inertia-vue",
+      "name": "web-design-guidelines",
       "bucket": "frontend",
-      "path": "skills/frontend/inertia-vue/SKILL.md",
+      "path": "skills/frontend/web-design-guidelines/SKILL.md",
+      "version": "0.1.0",
+      "description": "Review UI code for Web Interface Guidelines compliance. Use when asked to \"review my UI\", \"check accessibility\", \"audit design\", \"review UX\", or \"check my site against best practices\".",
+      "sha256": "f4647ca866a3accf763777f83e7682954f0187cd6bea7eea0399796652414e8f",
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/antfu/skills/main/skills/web-design-guidelines/SKILL.md",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "name": "motion",
+      "bucket": "frontend-animations",
+      "path": "skills/frontend-animations/motion/SKILL.md",
+      "version": "0.1.0",
+      "description": "Use when adding animations with Motion Vue (motion-v) - provides motion component API, gesture animations, scroll-linked effects, layout transitions, and composables for Vue 3/Nuxt",
+      "sha256": "f0e7a7749a2eed534f115c551b6ff27c17c9f38c25689302b7032fe583e41a60",
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/onmax/nuxt-skills/main/skills/motion/SKILL.md",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "name": "backend-type-sync",
+      "bucket": "frontend-backend",
+      "path": "skills/frontend-backend/backend-type-sync/SKILL.md",
+      "version": "0.1.0",
+      "description": "Синхронизация типов backend→frontend через spatie/laravel-typescript-transformer: #[TypeScript] на enum/DTO/Spatie-Data, php artisan typescript:transform → generated.d.ts, использование App.Enums.* / App.Data.* в Vue/TS. Активировать: новый enum/DTO нужен на фронте, рассинхрон типов фронта с бэком, настройка type-sync. Граница с wayfinder (роуты ≠ типы).",
+      "sha256": "80a456d06ba59a412938f7cb5b47c4dcc21e6dfe7bcc5344f9e8a9f9e5195231",
+      "tags": [
+        "typescript",
+        "laravel",
+        "spatie",
+        "types",
+        "enum",
+        "dto",
+        "frontend",
+        "type-sync",
+        "ci"
+      ],
+      "requires": [
+        "wayfinder"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "inertia-vue",
+      "bucket": "frontend-backend",
+      "path": "skills/frontend-backend/inertia-vue/SKILL.md",
       "version": "0.3.0",
       "description": "Inertia + Vue в Laravel: страницы, формы, навигация и слоистая организация resources/js (pages, layouts, components, composables, stores, features, events, types, actions/wayfinder).",
-      "sha256": "af44be6c253d4922f19cc5955c76ae8143f528c40108429084d1fbaaaebe2c1f",
+      "sha256": "a5fc4fef95d5bf997e81eeb2556af413e56f3dd7689850f0565b7221d20b6e4c",
       "tags": [
         "inertia",
         "vue",
@@ -1163,31 +1255,12 @@
       "source": "local"
     },
     {
-      "name": "js-code-style",
-      "bucket": "frontend",
-      "path": "skills/frontend/js-code-style/SKILL.md",
-      "version": "0.1.0",
-      "description": "Стиль JS/TS по Spatie: 4 пробела, ширина 120, одинарные кавычки, const-first, строгое ===, function для именованных функций, деструктуризация, именованные импорты.",
-      "sha256": "f4b3ac6c1106000e4412a3c9c71c66f0a513eae983f150084456c669f6aa5192",
-      "tags": [
-        "javascript",
-        "typescript",
-        "code-style",
-        "spatie",
-        "prettier",
-        "vue"
-      ],
-      "source": "github",
-      "upstream": "https://raw.githubusercontent.com/spatie/guidelines.spatie.be/master/content/code-style/javascript.md",
-      "fetched_at": "2026-06-12"
-    },
-    {
       "name": "laravel-echo-client",
-      "bucket": "frontend",
-      "path": "skills/frontend/laravel-echo-client/SKILL.md",
+      "bucket": "frontend-backend",
+      "path": "skills/frontend-backend/laravel-echo-client/SKILL.md",
       "version": "0.1.0",
       "description": "Фронтовый realtime-клиент Laravel Echo (Reverb/Pusher) во Vue 3: настройка Echo из runtime-конфига/env, подписка на private/presence-каналы, listen на broadcastAs-события, отписка в onUnmounted, проброс X-Socket-ID в axios. Активировать когда: подключаешь websockets на фронте, делаешь useEcho/useChannel-composable, слушаешь .broadcastAs-событие, видишь window.echo / Echo / laravel-echo / реактивный realtime в Vue.",
-      "sha256": "668e41ca54944db472cb477c6ff90b215de96abc51a88824cb6da64ae24f3ea8",
+      "sha256": "1fd04d3b3d4ab7f49cf357d5a9afb146262edc6098b2fa9194804019f603a04a",
       "tags": [
         "laravel-echo",
         "reverb",
@@ -1201,23 +1274,101 @@
       "source": "local"
     },
     {
-      "name": "motion",
-      "bucket": "frontend",
-      "path": "skills/frontend/motion/SKILL.md",
+      "name": "figma-to-vue",
+      "bucket": "frontend-figma",
+      "path": "skills/frontend-figma/figma-to-vue/SKILL.md",
       "version": "0.1.0",
-      "description": "Use when adding animations with Motion Vue (motion-v) - provides motion component API, gesture animations, scroll-linked effects, layout transitions, and composables for Vue 3/Nuxt",
-      "sha256": "f0e7a7749a2eed534f115c551b6ff27c17c9f38c25689302b7032fe583e41a60",
+      "description": "Маппинг дизайна из Figma Dev Mode MCP в Vue + Tailwind v4: Auto-layout → flexbox/grid, tokens.json → @theme-токены (CSS-first), Variants → class-variance-authority (cva), Variable Modes → тёмная тема (.dark), переиспользование компонентов через Code Connect. Активировать при реализации Vue-экранов/компонентов по Figma; работает поверх figma-mcp-core.",
+      "sha256": "cb82312f636931fc0e672e319043fac19ee2f0ff7ff097400f87411f2051b9a3",
+      "tags": [
+        "figma",
+        "vue",
+        "tailwind",
+        "tailwindcss-v4",
+        "cva",
+        "design-tokens",
+        "dark-mode",
+        "auto-layout"
+      ],
+      "requires": [
+        "figma-mcp-core"
+      ],
+      "produces_for": [
+        "tailwind-conventions",
+        "reka-ui-cva",
+        "naive-ui-theming",
+        "dark-mode"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "antfu",
+      "bucket": "frontend-linting",
+      "path": "skills/frontend-linting/antfu/SKILL.md",
+      "version": "0.1.0",
+      "description": "Anthony Fu's opinionated tooling and conventions for JavaScript/TypeScript projects. Use when setting up new projects, configuring ESLint/Prettier alternatives, monorepos, library publishing, or when the user mentions Anthony Fu's preferences.",
+      "sha256": "bf1badde2a7b0ac941613adaa3694cab11a258d589dbc8b31b42045ecbcfa0c1",
       "source": "github",
-      "upstream": "https://raw.githubusercontent.com/onmax/nuxt-skills/main/skills/motion/SKILL.md",
+      "upstream": "https://raw.githubusercontent.com/antfu/skills/main/skills/antfu/SKILL.md",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "name": "eslint-flat-config",
+      "bucket": "frontend-linting",
+      "path": "skills/frontend-linting/eslint-flat-config/SKILL.md",
+      "version": "0.1.0",
+      "description": "ESLint flat config (eslint.config.js) для Vue 3 + TypeScript: defineConfigWithVueTs/typescript-eslint + eslint-plugin-vue, @stylistic, import/order и границы импортов, padding-line-between-statements, цепочка Prettier (eslint-config-prettier + tailwindcss + organize-imports), скрипты lint/lint:fix. Триггеры: настройка/правка eslint или prettier, новый Vue/TS проект.",
+      "sha256": "43f4ed9b4e6b2754879dc7e08d817309a840bce5ffe6f58f54f3f928cfc83f41",
+      "tags": [
+        "eslint",
+        "prettier",
+        "flat-config",
+        "vue",
+        "typescript",
+        "stylistic",
+        "tooling",
+        "code-style",
+        "frontend"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "js-code-style",
+      "bucket": "frontend-linting",
+      "path": "skills/frontend-linting/js-code-style/SKILL.md",
+      "version": "0.1.0",
+      "description": "Стиль JS/TS по Spatie: 4 пробела, ширина 120, одинарные кавычки, const-first, строгое ===, function для именованных функций, деструктуризация, именованные импорты.",
+      "sha256": "a1af7a713c7ada52f2902df67bf9ace9a0a615712434c2b408060d520c676462",
+      "tags": [
+        "javascript",
+        "typescript",
+        "code-style",
+        "spatie",
+        "prettier",
+        "vue"
+      ],
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/spatie/guidelines.spatie.be/master/content/code-style/javascript.md",
+      "fetched_at": "2026-06-12"
+    },
+    {
+      "name": "ts-library",
+      "bucket": "frontend-linting",
+      "path": "skills/frontend-linting/ts-library/SKILL.md",
+      "version": "0.1.0",
+      "description": "Use when authoring TypeScript libraries or npm packages - covers project setup, package.json exports, build tooling (tsdown/unbuild), API design patterns, type inference tricks, testing, and publishing to npm. Use when bundling, configuring dual CJS/ESM output, or setting up release workflows.",
+      "sha256": "eb47397d20c8ca098fb8d3188fe44be08e726cd323f003b9fb2e1f279628d768",
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/onmax/nuxt-skills/main/skills/ts-library/SKILL.md",
       "fetched_at": "2026-06-17"
     },
     {
       "name": "naive-ui-theming",
-      "bucket": "frontend",
-      "path": "skills/frontend/naive-ui-theming/SKILL.md",
+      "bucket": "frontend-naive-ui",
+      "path": "skills/frontend-naive-ui/naive-ui-theming/SKILL.md",
       "version": "0.1.0",
       "description": "Глобальная тема Naive UI: GlobalThemeOverrides (common + Button/Card/Form/Input/Tag/Tabs…), NConfigProvider в точке входа, тёмная тема naive (darkTheme), связь токенов с Tailwind/CSS-переменными. Активировать при правке config/naive-ui.ts, темы Naive, themeOverrides, NConfigProvider, primaryColor/borderRadius, dark mode под Naive UI.",
-      "sha256": "bfda773ef070e4c25268e8362fde3a88a160d1629bc9e2b7f9fb407694228fa8",
+      "sha256": "888eee9d05ce8e6c8bf4df02435602c80c7b2fea0b1dba6f3f1f07302839c437",
       "tags": [
         "naive-ui",
         "vue",
@@ -1236,8 +1387,8 @@
     },
     {
       "name": "nuxt",
-      "bucket": "frontend",
-      "path": "skills/frontend/nuxt/SKILL.md",
+      "bucket": "frontend-nuxt",
+      "path": "skills/frontend-nuxt/nuxt/SKILL.md",
       "version": "0.1.0",
       "description": "Use when working on Nuxt 4+ projects - provides server routes, file-based routing, middleware patterns, Nuxt-specific composables, and configuration with latest docs. Covers h3 v1 helpers (validation, WebSocket, SSE) and nitropack v2 patterns. Updated for Nuxt 4.3+.",
       "sha256": "d80787f1f777b476bb1e6662e9665b730145cb522e394cf02ac0fd25248705b5",
@@ -1247,8 +1398,8 @@
     },
     {
       "name": "nuxt-modules",
-      "bucket": "frontend",
-      "path": "skills/frontend/nuxt-modules/SKILL.md",
+      "bucket": "frontend-nuxt",
+      "path": "skills/frontend-nuxt/nuxt-modules/SKILL.md",
       "version": "0.1.0",
       "description": "Use when creating Nuxt modules: (1) Published npm modules (@nuxtjs/, nuxt-), (2) Local project modules (modules/ directory), (3) Runtime extensions (components, composables, plugins), (4) Server extensions (API routes, middleware), (5) Releasing/publishing modules to npm, (6) Setting up CI/CD workflows for modules. Provides defineNuxtModule patterns, Kit utilities, hooks, E2E testing, and release automation.",
       "sha256": "c658ddf775c683d87fed12144a941e6c718ba0a0470b7af82037ad38a33d5c3c",
@@ -1258,8 +1409,8 @@
     },
     {
       "name": "nuxt-seo",
-      "bucket": "frontend",
-      "path": "skills/frontend/nuxt-seo/SKILL.md",
+      "bucket": "frontend-nuxt",
+      "path": "skills/frontend-nuxt/nuxt-seo/SKILL.md",
       "version": "0.1.0",
       "description": "Nuxt SEO meta-module with robots, sitemap, og-image, schema-org. Use when configuring SEO, generating sitemaps, creating OG images, or adding structured data.",
       "sha256": "254b902fbdd467b08ff7c2556f02dec2afc99fcd47583e02d1f31f9c30e8fbb3",
@@ -1268,40 +1419,12 @@
       "fetched_at": "2026-06-17"
     },
     {
-      "name": "pinia",
-      "bucket": "frontend",
-      "path": "skills/frontend/pinia/SKILL.md",
-      "version": "0.1.0",
-      "description": "Pinia official Vue state management library, type-safe and extensible. Use when defining stores, working with state/getters/actions, or implementing store patterns in Vue apps.",
-      "sha256": "fba52570068a715fef7d306e582a5993bf08a838b55465d3c3c7bff8ba70f731",
-      "source": "github",
-      "upstream": "https://raw.githubusercontent.com/antfu/skills/main/skills/pinia/SKILL.md",
-      "fetched_at": "2026-06-17"
-    },
-    {
-      "name": "pinia-stores",
-      "bucket": "frontend",
-      "path": "skills/frontend/pinia-stores/SKILL.md",
-      "version": "0.1.0",
-      "description": "Pinia (Vue 3) — глобальное состояние: setup-сторы (defineStore с функцией), ref=state/computed=getters/function=actions, именование use*Store, композиция сторов, доступ к стору вне компонента, hydration из props, persist. Активировать при создании/правке файла под resources/js/stores/**, defineStore, useXxxStore, при вопросах «как хранить глобальное состояние / шарить данные между компонентами / куда вынести состояние из компонента».",
-      "sha256": "ab188889693ea7a112d98683daf2f0f5d8e8da464b00b74cb06718224e9a8bd0",
-      "tags": [
-        "pinia",
-        "vue",
-        "frontend",
-        "state-management",
-        "store",
-        "architecture"
-      ],
-      "source": "local"
-    },
-    {
       "name": "reka-ui-cva",
-      "bucket": "frontend",
-      "path": "skills/frontend/reka-ui-cva/SKILL.md",
+      "bucket": "frontend-reka",
+      "path": "skills/frontend-reka/reka-ui-cva/SKILL.md",
       "version": "0.1.0",
       "description": "Библиотека UI-компонентов на headless-примитивах Reka UI + варианты class-variance-authority (cva). Активировать при добавлении/правке компонента в components/ui/, при заведении cva-вариантов, обёртке reka-ui примитива в свой компонент, составном Root/Trigger/Content (Dialog/Dropdown/Tooltip), слиянии классов cn() и связке с Tailwind.",
-      "sha256": "70ca76dc1f049714d827c0a69c0744850e839eeb2dde709a408d44d0f72df1d1",
+      "sha256": "627c82341b46e192d1b04add93e44c7ab0932be6f56b4ba7a76893ea0b8e81b7",
       "tags": [
         "reka-ui",
         "cva",
@@ -1320,12 +1443,34 @@
       "source": "local"
     },
     {
+      "name": "dark-mode",
+      "bucket": "frontend-tailwind",
+      "path": "skills/frontend-tailwind/dark-mode/SKILL.md",
+      "version": "0.1.0",
+      "description": "Тёмная тема light|dark|system на Vue 3: composable useDarkMode (matchMedia prefers-color-scheme, localStorage + cookie для SSR, toggle класса .dark на documentElement, слушатель change для system), инициализация до маунта без вспышки темы, мини-переключатель. Активировать при добавлении переключения темы, борьбе со вспышкой светлой темы (FOUC), синхронизации темы с системой или восстановлении темы при SSR.",
+      "sha256": "0f37e689fb469c236e4eb0ab865538eab287fc518e407aed99130c27c64b9aa6",
+      "tags": [
+        "dark-mode",
+        "theme",
+        "vue",
+        "composable",
+        "ssr",
+        "tailwind",
+        "matchmedia",
+        "localstorage"
+      ],
+      "requires": [
+        "tailwind-conventions"
+      ],
+      "source": "local"
+    },
+    {
       "name": "tailwind-conventions",
-      "bucket": "frontend",
-      "path": "skills/frontend/tailwind-conventions/SKILL.md",
+      "bucket": "frontend-tailwind",
+      "path": "skills/frontend-tailwind/tailwind-conventions/SKILL.md",
       "version": "0.1.0",
       "description": "Конвенции Tailwind CSS v4 для Laravel/Vue: CSS-first конфиг (@import tailwindcss, @theme-токены вместо tailwind.config.js), дизайн-токены, тёмная тема (.dark + dark:* + useAppearance), cn() (clsx+tailwind-merge), prettier-plugin-tailwindcss + tailwindFunctions, дисциплина отступов. Активировать при правке *.vue/*.css с Tailwind, настройке tailwind/postcss/prettier под Tailwind, работе с тёмной темой.",
-      "sha256": "fd68109be22a17bbee2678dcaaed6f86da53bac47386ab5034bbdf65c9101c22",
+      "sha256": "23c99e1151bf8fb5b5dc4ab460ca84f9b1e72faf04fb2362d6c57eb8a8646185",
       "tags": [
         "tailwind",
         "tailwindcss-v4",
@@ -1339,20 +1484,9 @@
       "source": "local"
     },
     {
-      "name": "ts-library",
-      "bucket": "frontend",
-      "path": "skills/frontend/ts-library/SKILL.md",
-      "version": "0.1.0",
-      "description": "Use when authoring TypeScript libraries or npm packages - covers project setup, package.json exports, build tooling (tsdown/unbuild), API design patterns, type inference tricks, testing, and publishing to npm. Use when bundling, configuring dual CJS/ESM output, or setting up release workflows.",
-      "sha256": "eb47397d20c8ca098fb8d3188fe44be08e726cd323f003b9fb2e1f279628d768",
-      "source": "github",
-      "upstream": "https://raw.githubusercontent.com/onmax/nuxt-skills/main/skills/ts-library/SKILL.md",
-      "fetched_at": "2026-06-17"
-    },
-    {
       "name": "vite",
-      "bucket": "frontend",
-      "path": "skills/frontend/vite/SKILL.md",
+      "bucket": "frontend-vite",
+      "path": "skills/frontend-vite/vite/SKILL.md",
       "version": "0.1.0",
       "description": "Vite build tool configuration, plugin API, SSR, and Vite 8 Rolldown migration. Use when working with Vite projects, vite.config.ts, Vite plugins, or building libraries/SSR apps with Vite.",
       "sha256": "3cb7a75336e338faa9be15dd8b97479721ac8ceac6f1ff4061c9b9eefccd9983",
@@ -1362,11 +1496,11 @@
     },
     {
       "name": "vite-module-loader",
-      "bucket": "frontend",
-      "path": "skills/frontend/vite-module-loader/SKILL.md",
+      "bucket": "frontend-vite",
+      "path": "skills/frontend-vite/vite-module-loader/SKILL.md",
       "version": "0.1.0",
       "description": "Vite как основной сборщик Frontend-проектов: базовая конфигурация, алиасы, build-практики",
-      "sha256": "4fd51e9eb146179f6366029674620a4a329e514348d20d54964cf1be75177a82",
+      "sha256": "e91bc7ac931d024c27e75dd0bc259a533d155e4384ad154da82c6d6be064d22f",
       "tags": [
         "vite",
         "frontend",
@@ -1378,11 +1512,11 @@
     },
     {
       "name": "vite-multi-build",
-      "bucket": "frontend",
-      "path": "skills/frontend/vite-multi-build/SKILL.md",
+      "bucket": "frontend-vite",
+      "path": "skills/frontend-vite/vite-multi-build/SKILL.md",
       "version": "0.1.0",
       "description": "Две независимые Vite-сборки в одном Laravel-проекте: основное приложение и Filament-админка с раздельными конфигами Vite/Tailwind, hotfile и build-директориями.",
-      "sha256": "d652f1e2da9976d6d2695f812f876592b0219e20a1cd4aad00d5c3f108cbe1f1",
+      "sha256": "7a5a0a618003380be54eecb37e57473b52793a505cbe4e261f35a0ffdd03ee12",
       "tags": [
         "vite",
         "laravel",
@@ -1399,8 +1533,8 @@
     },
     {
       "name": "vitepress",
-      "bucket": "frontend",
-      "path": "skills/frontend/vitepress/SKILL.md",
+      "bucket": "frontend-vite",
+      "path": "skills/frontend-vite/vitepress/SKILL.md",
       "version": "0.1.0",
       "description": "VitePress static site generator powered by Vite and Vue. Use when building documentation sites, configuring themes, or writing Markdown with Vue components.",
       "sha256": "eba57687640159cd74333a6d0abcc1c6e7967883b978bc801b9a8fb461021d8c",
@@ -1409,12 +1543,40 @@
       "fetched_at": "2026-06-17"
     },
     {
+      "name": "pinia",
+      "bucket": "frontend-vue",
+      "path": "skills/frontend-vue/pinia/SKILL.md",
+      "version": "0.1.0",
+      "description": "Pinia official Vue state management library, type-safe and extensible. Use when defining stores, working with state/getters/actions, or implementing store patterns in Vue apps.",
+      "sha256": "fba52570068a715fef7d306e582a5993bf08a838b55465d3c3c7bff8ba70f731",
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/antfu/skills/main/skills/pinia/SKILL.md",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "name": "pinia-stores",
+      "bucket": "frontend-vue",
+      "path": "skills/frontend-vue/pinia-stores/SKILL.md",
+      "version": "0.1.0",
+      "description": "Pinia (Vue 3) — глобальное состояние: setup-сторы (defineStore с функцией), ref=state/computed=getters/function=actions, именование use*Store, композиция сторов, доступ к стору вне компонента, hydration из props, persist. Активировать при создании/правке файла под resources/js/stores/**, defineStore, useXxxStore, при вопросах «как хранить глобальное состояние / шарить данные между компонентами / куда вынести состояние из компонента».",
+      "sha256": "98442814038d59241184e3af3278ed225cc1cffdce73d55db1853616ea2da5e1",
+      "tags": [
+        "pinia",
+        "vue",
+        "frontend",
+        "state-management",
+        "store",
+        "architecture"
+      ],
+      "source": "local"
+    },
+    {
       "name": "vitest",
-      "bucket": "frontend",
-      "path": "skills/frontend/vitest/SKILL.md",
+      "bucket": "frontend-vue",
+      "path": "skills/frontend-vue/vitest/SKILL.md",
       "version": "0.1.1",
       "description": "Vitest для Vue/Inertia-проекта на Laravel: jsdom, globals, тесты в resources/js/tests зеркалят исходники, coverage v8 с обязательным exclude автогенерённого кода.",
-      "sha256": "aed40fc15a5cc068622557f10a0f5a843bd1ec27de432973a44d24003a0c70b6",
+      "sha256": "9b5a542c8f021b5ed3413cd22076c2d5320f9a8caadcee63539aab36d8909b66",
       "tags": [
         "vitest",
         "testing",
@@ -1431,8 +1593,8 @@
     },
     {
       "name": "vitest-vue",
-      "bucket": "frontend",
-      "path": "skills/frontend/vitest-vue/SKILL.md",
+      "bucket": "frontend-vue",
+      "path": "skills/frontend-vue/vitest-vue/SKILL.md",
       "version": "0.1.0",
       "description": "Vitest fast unit testing framework powered by Vite with Jest-compatible API. Use when writing tests, mocking, configuring coverage, or working with test filtering and fixtures.",
       "sha256": "7f358d58cdd698f98ad090918e3f95405cfa4050b36473737475d977f80426d9",
@@ -1442,8 +1604,8 @@
     },
     {
       "name": "vue",
-      "bucket": "frontend",
-      "path": "skills/frontend/vue/SKILL.md",
+      "bucket": "frontend-vue",
+      "path": "skills/frontend-vue/vue/SKILL.md",
       "version": "0.1.0",
       "description": "Vue 3 Composition API, script setup macros, reactivity system, and built-in components. Use when writing Vue SFCs, defineProps/defineEmits/defineModel, watchers, or using Transition/Teleport/Suspense/KeepAlive.",
       "sha256": "f6c27e0f1cf037b26ded2a0b3c6a6bb537d7a8fb7cd7745448aa85bc01fc3a76",
@@ -1453,8 +1615,8 @@
     },
     {
       "name": "vue-best-practices",
-      "bucket": "frontend",
-      "path": "skills/frontend/vue-best-practices/SKILL.md",
+      "bucket": "frontend-vue",
+      "path": "skills/frontend-vue/vue-best-practices/SKILL.md",
       "version": "0.1.0",
       "description": "MUST be used for Vue.js tasks. Strongly recommends Composition API with `<script setup>` and TypeScript as the standard approach. Covers Vue 3, SSR, Volar, vue-tsc. Load for any Vue, .vue files, Vue Router, Pinia, or Vite with Vue work. ALWAYS use Composition API unless the project explicitly requires Options API.",
       "sha256": "42466063eb5ba6dd71a146ee726f187d7b0fb252e3f8c4bcbf01a04799c9166b",
@@ -1464,11 +1626,11 @@
     },
     {
       "name": "vue-composition-api",
-      "bucket": "frontend",
-      "path": "skills/frontend/vue-composition-api/SKILL.md",
+      "bucket": "frontend-vue",
+      "path": "skills/frontend-vue/vue-composition-api/SKILL.md",
       "version": "0.2.0",
       "description": "Проектные конвенции Composition API: ref-first и паттерн composables. НЕ справочник API (`<script setup>`, defineProps/Emits, reactivity) — база в `vue`; НЕ общий workflow — в `vue-best-practices`. Здесь только дельта-решения и куда дальше.",
-      "sha256": "c263c2839ff95910e508929fe51706de5f313702104f8dcd004fe7f8d221e39b",
+      "sha256": "b52a359f3b0ce95ff64c1fdbe83661b1d907dc478331d30ceaf3cbb421301b98",
       "tags": [
         "vue",
         "frontend",
@@ -1479,11 +1641,11 @@
     },
     {
       "name": "vue-dynamic-icons",
-      "bucket": "frontend",
-      "path": "skills/frontend/vue-dynamic-icons/SKILL.md",
+      "bucket": "frontend-vue",
+      "path": "skills/frontend-vue/vue-dynamic-icons/SKILL.md",
       "version": "0.1.0",
       "description": "Vue: один компонент-иконка, выбирающий SVG по строковому имени из набора (lucide-vue-next и др.) через <component :is>; активировать при словах динамическая иконка, icon by name, component is icon, проброс size/strokeWidth/color, типобезопасное имя иконки, замена набора иконок.",
-      "sha256": "7e2004f0a2fc1a9343e3c70079491673db39223acb2f0eb01d895fd6e2a55167",
+      "sha256": "45b1af001da556716221728506dab2c2af8a2676cc4afeb65a268c024db83208",
       "tags": [
         "vue",
         "icons",
@@ -1496,11 +1658,11 @@
     },
     {
       "name": "vue-router-best-practices",
-      "bucket": "frontend",
-      "path": "skills/frontend/vue-router-best-practices/SKILL.md",
+      "bucket": "frontend-vue",
+      "path": "skills/frontend-vue/vue-router-best-practices/SKILL.md",
       "version": "0.2.0",
       "description": "Vue Router 4 — маршрутизация и навигация: typed/именованные routes, lazy-loading view-компонентов, route meta, навигационные гварды на ВОЗВРАТ-API (return route/false/path вместо deprecated next()), per-route vs global гварды, beforeEnter, scrollBehavior, обработка NavigationFailure/onError, useRoute/useRouter/useLink. Активировать при создании/правке router/index.ts, маршрутов, гвардов, при вопросах «как защитить роут / редирект в гварде / почему next() висит / lazy-загрузка страницы / восстановить скролл».",
-      "sha256": "bb3ccb1f2941c884d2297d03eb239302195512e629076e3a13e594be966db36a",
+      "sha256": "7203d4d5f507ca9c27a9703eb64d46c92b4771db0d5d01433188e3c6be1672a9",
       "tags": [
         "vue",
         "vue-router",
@@ -1516,11 +1678,11 @@
     },
     {
       "name": "vue-testing-best-practices",
-      "bucket": "frontend",
-      "path": "skills/frontend/vue-testing-best-practices/SKILL.md",
+      "bucket": "frontend-vue",
+      "path": "skills/frontend-vue/vue-testing-best-practices/SKILL.md",
       "version": "1.1.0",
       "description": "Практики тестирования Vue 3-компонентов через Vitest + Vue Test Utils 2: mount vs shallowMount, изоляция композаблов, createTestingPinia, async/flushPromises, устойчивые data-testid, моки детей/слотов/эмитов и что НЕ тестировать.",
-      "sha256": "61bf72ef041adb3629d2074d0371bc306524f4e7928a9b675002851f069b3783",
+      "sha256": "5721d2e0063506cf5680ed436fd0f24becfdaeb36ee5feea2dfaaa4768eb91f3",
       "tags": [
         "vue",
         "testing",
@@ -1540,8 +1702,8 @@
     },
     {
       "name": "vueuse-functions",
-      "bucket": "frontend",
-      "path": "skills/frontend/vueuse-functions/SKILL.md",
+      "bucket": "frontend-vue",
+      "path": "skills/frontend-vue/vueuse-functions/SKILL.md",
       "version": "0.1.0",
       "description": "Apply VueUse composables where appropriate to build concise, maintainable Vue.js / Nuxt features.",
       "sha256": "8c4a245c65d73b6d6e95335c499d214faa85cc10cf5187b0d6132d822f1c7d88",
@@ -1551,11 +1713,11 @@
     },
     {
       "name": "wayfinder",
-      "bucket": "frontend",
-      "path": "skills/frontend/wayfinder/SKILL.md",
+      "bucket": "frontend-wayfinder",
+      "path": "skills/frontend-wayfinder/wayfinder/SKILL.md",
       "version": "0.1.0",
       "description": "Laravel Wayfinder: типобезопасные роуты и controller actions для фронтенда. Генерация, именованные импорты, form(), архитектурные границы импортов через ESLint.",
-      "sha256": "f03ae99807c8565059418d2f4949b7bee38bdb723bdacc91c1e48399bf67731c",
+      "sha256": "3a6db383821349a77f99be529864a82675bcc3cdf37fe0607aad29dc5c67638e",
       "tags": [
         "wayfinder",
         "laravel",
@@ -1566,17 +1728,6 @@
         "frontend"
       ],
       "source": "local"
-    },
-    {
-      "name": "web-design-guidelines",
-      "bucket": "frontend",
-      "path": "skills/frontend/web-design-guidelines/SKILL.md",
-      "version": "0.1.0",
-      "description": "Review UI code for Web Interface Guidelines compliance. Use when asked to \"review my UI\", \"check accessibility\", \"audit design\", \"review UX\", or \"check my site against best practices\".",
-      "sha256": "f4647ca866a3accf763777f83e7682954f0187cd6bea7eea0399796652414e8f",
-      "source": "github",
-      "upstream": "https://raw.githubusercontent.com/antfu/skills/main/skills/web-design-guidelines/SKILL.md",
-      "fetched_at": "2026-06-17"
     },
     {
       "name": "anti-drift",
@@ -1636,7 +1787,7 @@
       "path": "skills/general/context-economy/SKILL.md",
       "version": "1.1.0",
       "description": "Экономия контекста Claude Code в проекте: CLAUDE.md ≤200 строк, path-scoped правила .claude/rules/, /compact vs /clear, паттерн Plan→Clear→Execute, аудит MCP, маршрутизация моделей. Только официально поддерживаемые механизмы — без мифов вроде .claudeignore.",
-      "sha256": "15652b5e658b9f5be0bfc2e0515787027eb546b7cc885f8f953d19e37beed428",
+      "sha256": "0d1c27af7f1c711cdfca318720b7bf0f4065361b0203b5a7cb525a8c48770751",
       "tags": [
         "tokens",
         "context",
@@ -1830,6 +1981,347 @@
         "tests",
         "docs",
         "style"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "enum-attributes",
+      "bucket": "laravel-architecture",
+      "path": "skills/laravel-architecture/enum-attributes/SKILL.md",
+      "version": "0.2.0",
+      "description": "Активируй при работе с метаданными enum: когда match-простыни label()/color()/description() пора заменить на PHP-атрибуты #[Label]/#[Color]/#[Description] над кейсами + Concern-трейты с reflection-резолвером, или когда нужно экспортировать enum как TS-тип через стэк #[TypeScript] (App.Enums.* union в .d.ts). Триггеры: PHP enum, атрибуты на кейсах, getLabel()/getColor(), Filament HasLabel, spatie/laravel-typescript-transformer, локальный enum-concern через path-repository",
+      "sha256": "151a73e5bb4b7cd61def597882a4353ec19ea8307ab0706bc82c7620671a8189",
+      "tags": [
+        "php",
+        "enum",
+        "attributes",
+        "reflection",
+        "laravel",
+        "patterns",
+        "typescript"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "enum-state-machine",
+      "bucket": "laravel-architecture",
+      "path": "skills/laravel-architecture/enum-state-machine/SKILL.md",
+      "version": "0.1.0",
+      "description": "Активируй, когда статус домена (Order/Document/Subscription) растёт в граф переходов: единый граф рёбер как метод enum transitionDefinitions() (from→to + guard + action + label), рантайм-реестр переходов (canTransition/allowedFrom) поверх него, и исполнение перехода в Action под DB::transaction() с доменным событием. Триггеры: PHP enum статусов, разрешённые переходы, StateMachine/workflow, parallel transition graph пора свести в один источник, canTransitionTo, allowedTransitions, нелегальный переход статуса",
+      "sha256": "140b2b14d995c88b55e0747535c0a57bb5274ffc947840c55e0ccd40364c0b54",
+      "tags": [
+        "php",
+        "enum",
+        "state-machine",
+        "workflow",
+        "laravel",
+        "transitions",
+        "domain",
+        "actions"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "laravel-subagents",
+      "bucket": "laravel-architecture",
+      "path": "skills/laravel-architecture/laravel-subagents/SKILL.md",
+      "version": "0.1.0",
+      "description": "Оркестрация субагентов на крупных Laravel-задачах: порог срабатывания, делегирование исследования Explore-агентам, ревью через laravel-reviewer, тесты через laravel-test-writer, worktree-изоляция параллельных правок. Не применять к мелким и средним задачам.",
+      "sha256": "1e9f189d18c99efcd2f4c01429ce12c0af4b920439a0e5d3bf3131386207de04",
+      "tags": [
+        "workflow",
+        "orchestration",
+        "agents",
+        "laravel"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "modular-architecture",
+      "bucket": "laravel-architecture",
+      "path": "skills/laravel-architecture/modular-architecture/SKILL.md",
+      "version": "0.3.0",
+      "description": "Масштабирование Laravel-кода при росте: организация по бизнес-доменам, Модульный Монолит (Modular Monolith) и паттерны DDD; реализация на nwidart/laravel-modules (module:make*, структура модуля, namespace без Modules\\\\, Filament discovery); стартовая структура — php/laravel-structure",
+      "sha256": "4c8bd23555827ad680eed154fe36be0bf90e09b70c0b3d52a45789dd3f63b06b",
+      "tags": [
+        "php",
+        "laravel",
+        "architecture",
+        "nwidart",
+        "laravel-modules",
+        "filament"
+      ],
+      "requires": [
+        "laravel"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "attribute-authorization",
+      "bucket": "laravel-auth",
+      "path": "skills/laravel-auth/attribute-authorization/SKILL.md",
+      "version": "0.1.0",
+      "description": "Декларативная авторизация на уровне методов контроллера через атрибут #[CheckPermission] (enum-право + аргументы маршрута) и reflection-middleware CheckAccess поверх Gate. Активировать когда нужна декларативная проверка прав на экшенах, enum-права вместо строк, рефлексия-middleware.",
+      "sha256": "ed6375eabe5546f132489d223afc214dc2e0242254658109edbab1c6a2fa40d2",
+      "tags": [
+        "php",
+        "laravel",
+        "authorization",
+        "attribute",
+        "reflection",
+        "middleware",
+        "gate",
+        "enum",
+        "permissions",
+        "rbac"
+      ],
+      "requires": [
+        "laravel-permissions"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "laravel-permissions",
+      "bucket": "laravel-auth",
+      "path": "skills/laravel-auth/laravel-permissions/SKILL.md",
+      "version": "0.3.1",
+      "description": "Ручной/нативный Laravel RBAC: policies, gates, entity-scoped permissions без спец-пакета. Когда нужен пакет azguard → скилл azguard; декларативные атрибуты прав на экшенах → attribute-authorization.",
+      "sha256": "da35391df1761ee5d7b61083fa447a84fd4a4d76c7726cad5e46a23662c29cf7",
+      "tags": [
+        "php",
+        "laravel",
+        "permissions",
+        "azguard",
+        "rbac",
+        "authorization"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "laravel-security-audit",
+      "bucket": "laravel-auth",
+      "path": "skills/laravel-auth/laravel-security-audit/SKILL.md",
+      "version": "0.1.0",
+      "description": "Аудит Laravel-кода на «острые грани»: raw-запросы Eloquent, mass assignment, XSS в Blade, CSRF-обходы, open redirect, небезопасная сериализация, дыры авторизации.",
+      "sha256": "f1f94975df40d58c8d69ced5052ae7fddf96cb072f384711608ff1f20f72d971",
+      "tags": [
+        "php",
+        "laravel",
+        "security"
+      ],
+      "requires": [
+        "static-analysis"
+      ],
+      "produces_for": [
+        "security-design"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "laravel-broadcasting",
+      "bucket": "laravel-data-layer",
+      "path": "skills/laravel-data-layer/laravel-broadcasting/SKILL.md",
+      "version": "0.1.0",
+      "description": "Laravel Echo + Reverb/Pusher/Ably: broadcast-события, авторизация каналов, presence/whisper, model broadcasting",
+      "sha256": "88d7fa6db2ae4dddc9453a7cfddd55485981b3f08b2f984747a023b00e709bba",
+      "tags": [
+        "php",
+        "laravel",
+        "broadcasting",
+        "echo",
+        "reverb",
+        "websockets",
+        "realtime"
+      ],
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/laravel/docs/12.x/broadcasting.md",
+      "fetched_at": "2026-06-12"
+    },
+    {
+      "name": "laravel-data",
+      "bucket": "laravel-data-layer",
+      "path": "skills/laravel-data-layer/laravel-data/SKILL.md",
+      "version": "0.1.0",
+      "description": "DTO на spatie/laravel-data: типизированные Data-классы, вложенные DataCollection, casts/transformers, computed-свойства, mapName/mapInputName, создание from(request) с валидацией, отдача в API/Inertia и аннотация #[TypeScript]. Активировать: нужен типобезопасный DTO вместо массива/array-доступа, разбор входящего запроса в объект, единая форма данных между бэком и фронтом, замена ad-hoc JsonResource на Data.",
+      "sha256": "b43c47af559f68f88783eb8932eea1868c0e1887fb110e53af1d578ee1a114dc",
+      "tags": [
+        "php",
+        "laravel",
+        "spatie",
+        "laravel-data",
+        "dto",
+        "data-transfer-object",
+        "casts",
+        "validation",
+        "inertia",
+        "api"
+      ],
+      "produces_for": [
+        "backend-type-sync"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "medialibrary",
+      "bucket": "laravel-extras",
+      "path": "skills/laravel-extras/medialibrary/SKILL.md",
+      "version": "0.1.0",
+      "description": "spatie/laravel-medialibrary: привязка файлов к Eloquent-моделям, коллекции, конверсии, получение URL",
+      "sha256": "8a529205d04347757e9e51c5615861f2821bf6924573c01425625c972bf7c100",
+      "tags": [
+        "php",
+        "laravel",
+        "media",
+        "spatie",
+        "uploads",
+        "images"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "pennant-development",
+      "bucket": "laravel-extras",
+      "path": "skills/laravel-extras/pennant-development/SKILL.md",
+      "version": "0.1.0",
+      "description": "Laravel Pennant — feature-флаги: define/active/for-scope, директива @feature, активация/деактивация, A/B и постепенные раскатки. Адаптировано из laravel/boost (strategy=notify)",
+      "sha256": "41795bf72bd4da3a0e5dc1ed3f7a88c7167b9820ca2a972f2944d18770e56cbc",
+      "tags": [
+        "php",
+        "laravel",
+        "pennant",
+        "feature-flags"
+      ],
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/laravel/boost/main/.ai/pennant/skill/pennant-development/SKILL.md",
+      "fetched_at": "2026-06-13"
+    },
+    {
+      "name": "spatie-settings",
+      "bucket": "laravel-extras",
+      "path": "skills/laravel-extras/spatie-settings/SKILL.md",
+      "version": "0.2.0",
+      "description": "spatie/laravel-settings: типизированные классы настроек (extends Settings, public-свойства, group()), миграции настроек add/migrate/rename, кэш, выбор рантайм-настройки vs config/, привязка к Filament SettingsPage, рантайм-инфраконфиг (websocket/Reverb) из админки во фронт через DTO. Активировать при создании/правке класса настроек, добавлении свойства, settings-миграции, экрана редактирования или вынесения инфра-настройки в рантайм-переопределение.",
+      "sha256": "be51925796e719f5f2e53a17fc50c717b9c31d7381b15234a3baacf38894e6ea",
+      "tags": [
+        "php",
+        "laravel",
+        "spatie",
+        "settings",
+        "filament",
+        "configuration"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "filament",
+      "bucket": "laravel-filament",
+      "path": "skills/laravel-filament/filament/SKILL.md",
+      "version": "1.0.0",
+      "description": "Filament v5 — Panels, Resources, Schemas, Tables, Widgets, Actions: структура файлов, CLI-справочник make:filament-*, корректные namespaces, авторизация, tenancy, типичные ошибки. Scaffold только через artisan.",
+      "sha256": "ec62800b651eb52bda721d30d5c371957e276451b897dc828078221fc81987a6",
+      "tags": [
+        "php",
+        "laravel",
+        "filament",
+        "ui",
+        "admin-panel",
+        "crud",
+        "livewire"
+      ],
+      "requires": [
+        "laravel",
+        "laravel-structure"
+      ],
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/filamentphp/filament/5.x/packages/panels/resources/boost/guidelines/core.blade.php",
+      "fetched_at": "2026-06-12"
+    },
+    {
+      "name": "livewire-blade-attributes",
+      "bucket": "laravel-livewire",
+      "path": "skills/laravel-livewire/livewire-blade-attributes/SKILL.md",
+      "version": "0.1.0",
+      "description": "Дельта-гочизы Livewire 3 по атрибутам Blade-компонентов. Активировать при написании/ревью Blade-разметки Livewire-компонентов, когда атрибут тега должен быть условным или динамическим: НЕ ставить @if/@endif/@js() внутри списка атрибутов (ломает парсинг компонента) — собирать атрибуты заранее в @php через ComponentAttributeBag (->merge, ->class) и разворачивать одним выражением. Триггеры: ошибка парсинга/рендера Blade-компонента, условный wire:model/wire:sortable/step/disabled, @js() в атрибуте, нестабильный wire:key в цикле",
+      "sha256": "62d0c8849fcde93d1cc5ff4a3908db8333eb1a74f93697abef175895cbef837f",
+      "tags": [
+        "livewire",
+        "blade",
+        "laravel",
+        "frontend",
+        "advisory",
+        "gotchas"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "health-checks",
+      "bucket": "laravel-testing",
+      "path": "skills/laravel-testing/health-checks/SKILL.md",
+      "version": "0.1.0",
+      "description": "spatie/laravel-health в Laravel: кастомные Check-классы (диск, очередь, heartbeat шедулера, TCP-порт сервиса, кэш, БД) на Result::ok/failed, регистрация в config/health и Health::checks(), /health endpoint (live/ready, JSON/Filament), расписание прогона и уведомления. Активировать при словах health check, healthcheck, liveness/readiness, /health, spatie health, мониторинг доступности, проверка диска/очереди/кэша/heartbeat, при правке app/Health/** или config/health.php.",
+      "sha256": "d91dd460bea44d5b2c2b426241e3b4653114bbba11e655b0380ff9356a7db84c",
+      "tags": [
+        "laravel",
+        "health",
+        "monitoring",
+        "spatie",
+        "liveness",
+        "readiness",
+        "observability"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "laravel-dusk",
+      "bucket": "laravel-testing",
+      "path": "skills/laravel-testing/laravel-dusk/SKILL.md",
+      "version": "0.1.0",
+      "description": "Laravel Dusk: браузерные E2E-тесты, изолированная тестовая БД, запуск из Docker через host ChromeDriver, Page Objects",
+      "sha256": "3b9f37d6e5368760e51699b2c65d412068546be52cd11c15d9a08fe80f00f03b",
+      "tags": [
+        "php",
+        "laravel",
+        "dusk",
+        "e2e",
+        "browser-testing",
+        "chromedriver",
+        "docker"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "laravel-testing",
+      "bucket": "laravel-testing",
+      "path": "skills/laravel-testing/laravel-testing/SKILL.md",
+      "version": "0.4.1",
+      "description": "Feature/unit/pest testing patterns: изоляция тестовой БД, детект Docker/локального окружения, coverage gate, композиция Pest (setUp-трейты, фикстуры, beforeEach fake/freeze, датасеты)",
+      "sha256": "0dc3b273725f74347ba4d43dfa8dc14dcc4ecc543fef59005ddc4222c88077e9",
+      "tags": [
+        "php",
+        "laravel",
+        "testing"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "test-isolation-guard",
+      "bucket": "laravel-testing",
+      "path": "skills/laravel-testing/test-isolation-guard/SKILL.md",
+      "version": "0.1.0",
+      "description": "Защита тестов Laravel от запуска по боевой/dev БД и медиа-диску: bootstrap.php выставляет DB_DATABASE=*_test и media-test до autoload, класс-страж TestEnvironmentGuard аварийно прерывает createApplication() при нарушении изоляции, безопасный RefreshDatabase. Активировать при настройке тестового окружения, защите CI и подозрении, что тесты бьют по dev/prod БД.",
+      "sha256": "2f1b9eae8f7a76f739aacee7167e978501b8c33dedc44842d405ba9e549c3261",
+      "tags": [
+        "php",
+        "laravel",
+        "testing",
+        "isolation",
+        "safety",
+        "database",
+        "ci",
+        "refreshdatabase"
+      ],
+      "requires": [
+        "laravel-testing"
       ],
       "source": "local"
     },
@@ -2132,67 +2624,6 @@
       "source": "local"
     },
     {
-      "name": "attribute-authorization",
-      "bucket": "php",
-      "path": "skills/php/attribute-authorization/SKILL.md",
-      "version": "0.1.0",
-      "description": "Декларативная авторизация на уровне методов контроллера через атрибут #[CheckPermission] (enum-право + аргументы маршрута) и reflection-middleware CheckAccess поверх Gate. Активировать когда нужна декларативная проверка прав на экшенах, enum-права вместо строк, рефлексия-middleware.",
-      "sha256": "f9fd3b763d730a012a3ed903f167f9c882e58bf1127495899dfbdcaf272094a0",
-      "tags": [
-        "php",
-        "laravel",
-        "authorization",
-        "attribute",
-        "reflection",
-        "middleware",
-        "gate",
-        "enum",
-        "permissions",
-        "rbac"
-      ],
-      "requires": [
-        "laravel-permissions"
-      ],
-      "source": "local"
-    },
-    {
-      "name": "azguard",
-      "bucket": "php",
-      "path": "skills/php/azguard/SKILL.md",
-      "version": "0.1.0",
-      "description": "Роли и контроль доступа на базе пакета azguard: code-first RBAC, панели, scoped roles, direct grants, abilities для фронтенда",
-      "sha256": "16176968a94b2cbc17cca9ea4c765d678124d1d9fc6d5866bd862716e2fdcd7d",
-      "tags": [
-        "php",
-        "laravel",
-        "permissions",
-        "azguard",
-        "rbac",
-        "authorization",
-        "gate",
-        "enum"
-      ],
-      "source": "local"
-    },
-    {
-      "name": "botkit",
-      "bucket": "php",
-      "path": "skills/php/botkit/SKILL.md",
-      "version": "0.2.0",
-      "description": "Bot framework patterns: BotDefinition contract, package service provider, webhook handling",
-      "sha256": "521d82b580916d6101dfd81398ad7c83842e035b191b0a687506a6844b3a8ab5",
-      "tags": [
-        "php",
-        "laravel",
-        "bots",
-        "botkit"
-      ],
-      "requires": [
-        "laravel"
-      ],
-      "source": "local"
-    },
-    {
       "name": "code-style-spatie",
       "bucket": "php",
       "path": "skills/php/code-style-spatie/SKILL.md",
@@ -2243,85 +2674,6 @@
       "source": "local"
     },
     {
-      "name": "enum-attributes",
-      "bucket": "php",
-      "path": "skills/php/enum-attributes/SKILL.md",
-      "version": "0.2.0",
-      "description": "Активируй при работе с метаданными enum: когда match-простыни label()/color()/description() пора заменить на PHP-атрибуты #[Label]/#[Color]/#[Description] над кейсами + Concern-трейты с reflection-резолвером, или когда нужно экспортировать enum как TS-тип через стэк #[TypeScript] (App.Enums.* union в .d.ts). Триггеры: PHP enum, атрибуты на кейсах, getLabel()/getColor(), Filament HasLabel, spatie/laravel-typescript-transformer, локальный enum-concern через path-repository",
-      "sha256": "a87e354bafc52261b1576dd694ab0c6d1554d0318f4fa3ea0a14fcfcb25f3ef0",
-      "tags": [
-        "php",
-        "enum",
-        "attributes",
-        "reflection",
-        "laravel",
-        "patterns",
-        "typescript"
-      ],
-      "source": "local"
-    },
-    {
-      "name": "enum-state-machine",
-      "bucket": "php",
-      "path": "skills/php/enum-state-machine/SKILL.md",
-      "version": "0.1.0",
-      "description": "Активируй, когда статус домена (Order/Document/Subscription) растёт в граф переходов: единый граф рёбер как метод enum transitionDefinitions() (from→to + guard + action + label), рантайм-реестр переходов (canTransition/allowedFrom) поверх него, и исполнение перехода в Action под DB::transaction() с доменным событием. Триггеры: PHP enum статусов, разрешённые переходы, StateMachine/workflow, parallel transition graph пора свести в один источник, canTransitionTo, allowedTransitions, нелегальный переход статуса",
-      "sha256": "f2974ee735d96776a3fbbf77da72be49ac2cd16c3e9da503439b81a30286661d",
-      "tags": [
-        "php",
-        "enum",
-        "state-machine",
-        "workflow",
-        "laravel",
-        "transitions",
-        "domain",
-        "actions"
-      ],
-      "source": "local"
-    },
-    {
-      "name": "filament",
-      "bucket": "php",
-      "path": "skills/php/filament/SKILL.md",
-      "version": "1.0.0",
-      "description": "Filament v5 — Panels, Resources, Schemas, Tables, Widgets, Actions: структура файлов, CLI-справочник make:filament-*, корректные namespaces, авторизация, tenancy, типичные ошибки. Scaffold только через artisan.",
-      "sha256": "85701c4b0d5598ce8311f00630355af97e93c2ee44c73b45f67e13d24f68ff76",
-      "tags": [
-        "php",
-        "laravel",
-        "filament",
-        "ui",
-        "admin-panel",
-        "crud",
-        "livewire"
-      ],
-      "requires": [
-        "laravel",
-        "laravel-structure"
-      ],
-      "source": "github",
-      "upstream": "https://raw.githubusercontent.com/filamentphp/filament/5.x/packages/panels/resources/boost/guidelines/core.blade.php",
-      "fetched_at": "2026-06-12"
-    },
-    {
-      "name": "health-checks",
-      "bucket": "php",
-      "path": "skills/php/health-checks/SKILL.md",
-      "version": "0.1.0",
-      "description": "spatie/laravel-health в Laravel: кастомные Check-классы (диск, очередь, heartbeat шедулера, TCP-порт сервиса, кэш, БД) на Result::ok/failed, регистрация в config/health и Health::checks(), /health endpoint (live/ready, JSON/Filament), расписание прогона и уведомления. Активировать при словах health check, healthcheck, liveness/readiness, /health, spatie health, мониторинг доступности, проверка диска/очереди/кэша/heartbeat, при правке app/Health/** или config/health.php.",
-      "sha256": "0b4412b7fcae9350ab22f935ca7a1fc0f1fcbea0d44e5a296a2640fcabbb6502",
-      "tags": [
-        "laravel",
-        "health",
-        "monitoring",
-        "spatie",
-        "liveness",
-        "readiness",
-        "observability"
-      ],
-      "source": "local"
-    },
-    {
       "name": "laravel",
       "bucket": "php",
       "path": "skills/php/laravel/SKILL.md",
@@ -2361,248 +2713,6 @@
       "fetched_at": "2026-06-12"
     },
     {
-      "name": "laravel-broadcasting",
-      "bucket": "php",
-      "path": "skills/php/laravel-broadcasting/SKILL.md",
-      "version": "0.1.0",
-      "description": "Laravel Echo + Reverb/Pusher/Ably: broadcast-события, авторизация каналов, presence/whisper, model broadcasting",
-      "sha256": "076965c385d32933a47e32bc668fb636629450ea79078095528dfb2e17c8af7f",
-      "tags": [
-        "php",
-        "laravel",
-        "broadcasting",
-        "echo",
-        "reverb",
-        "websockets",
-        "realtime"
-      ],
-      "source": "github",
-      "upstream": "https://raw.githubusercontent.com/laravel/docs/12.x/broadcasting.md",
-      "fetched_at": "2026-06-12"
-    },
-    {
-      "name": "laravel-data",
-      "bucket": "php",
-      "path": "skills/php/laravel-data/SKILL.md",
-      "version": "0.1.0",
-      "description": "DTO на spatie/laravel-data: типизированные Data-классы, вложенные DataCollection, casts/transformers, computed-свойства, mapName/mapInputName, создание from(request) с валидацией, отдача в API/Inertia и аннотация #[TypeScript]. Активировать: нужен типобезопасный DTO вместо массива/array-доступа, разбор входящего запроса в объект, единая форма данных между бэком и фронтом, замена ad-hoc JsonResource на Data.",
-      "sha256": "f3ac446e3c38d5a09f08df6a4cda06d7d0f2d06a0cc691f0d930e7d5ef1f23a2",
-      "tags": [
-        "php",
-        "laravel",
-        "spatie",
-        "laravel-data",
-        "dto",
-        "data-transfer-object",
-        "casts",
-        "validation",
-        "inertia",
-        "api"
-      ],
-      "produces_for": [
-        "backend-type-sync"
-      ],
-      "source": "local"
-    },
-    {
-      "name": "laravel-dusk",
-      "bucket": "php",
-      "path": "skills/php/laravel-dusk/SKILL.md",
-      "version": "0.1.0",
-      "description": "Laravel Dusk: браузерные E2E-тесты, изолированная тестовая БД, запуск из Docker через host ChromeDriver, Page Objects",
-      "sha256": "47bec50f92280eab4bb0c5c6a575566ffc194f03df0ab2bfdfb2c8583916e251",
-      "tags": [
-        "php",
-        "laravel",
-        "dusk",
-        "e2e",
-        "browser-testing",
-        "chromedriver",
-        "docker"
-      ],
-      "source": "local"
-    },
-    {
-      "name": "laravel-package-compatibility",
-      "bucket": "php",
-      "path": "skills/php/laravel-package-compatibility/SKILL.md",
-      "version": "0.3.0",
-      "description": "Use this skill when reviewing Laravel package compatibility across composer constraints, PHP versions, Laravel versions, Testbench versions, dependency stability lanes, Windows CI, or matrix-sensitive code and workflow changes.",
-      "sha256": "717830372593d7df404a98f679f4e4a0efd9bb45e7e86835df2df53ac74d4841",
-      "tags": [
-        "php",
-        "laravel",
-        "package-dev"
-      ],
-      "source": "github",
-      "upstream": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-compatibility/SKILL.md",
-      "fetched_at": "2026-06-12"
-    },
-    {
-      "name": "laravel-package-docs",
-      "bucket": "php",
-      "path": "skills/php/laravel-package-docs/SKILL.md",
-      "version": "0.3.0",
-      "description": "Use this skill when writing or revising package documentation after creating a package from this starter: README content, VitePress pages, contributing docs, upgrade notes, installation, usage, testing, workbench docs, or examples.",
-      "sha256": "410143c04614acf15533c525b8ca5d9b8591e275d9ec456cecc1e0b8a0cb7675",
-      "tags": [
-        "php",
-        "laravel",
-        "package-dev"
-      ],
-      "source": "github",
-      "upstream": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-docs/SKILL.md",
-      "fetched_at": "2026-06-12"
-    },
-    {
-      "name": "laravel-package-expressive",
-      "bucket": "php",
-      "path": "skills/php/laravel-package-expressive/SKILL.md",
-      "version": "0.3.0",
-      "description": "Upstream-скилл для работы НАД самим пакетом WendellAdriel/laravel-expressive (starter kit), не общий скилл пакетной разработки: placeholders, configure flow, starter defaults, root guidance, local skills, temporary phase tests, dist hygiene, scaffold-wide conventions. Do not use for ordinary package feature work after a package has been configured.",
-      "sha256": "3318ee7d5d5240d52a0fa7fbf18e4ef4bb2285de5690f3ba8eddd2167b21d997",
-      "tags": [
-        "php",
-        "laravel",
-        "package-dev"
-      ],
-      "source": "github",
-      "upstream": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/skeleton-development/SKILL.md",
-      "fetched_at": "2026-06-12"
-    },
-    {
-      "name": "laravel-package-generate-skill",
-      "bucket": "php",
-      "path": "skills/php/laravel-package-generate-skill/SKILL.md",
-      "version": "0.3.0",
-      "description": "Use this skill when creating or updating the bundled Laravel Boost skill under resources/boost/skills from the package implementation and documentation. Trigger after public APIs, commands, config, routes, views, publish tags, examples, or docs change.",
-      "sha256": "2eeaf3effaea865b9e8bbe1e5b7e91369ffe58af9be183a851be2d2435f84c46",
-      "tags": [
-        "php",
-        "laravel",
-        "package-dev"
-      ],
-      "source": "github",
-      "upstream": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-generate-skill/SKILL.md",
-      "fetched_at": "2026-06-12"
-    },
-    {
-      "name": "laravel-package-release",
-      "bucket": "php",
-      "path": "skills/php/laravel-package-release/SKILL.md",
-      "version": "0.3.0",
-      "description": "Use this skill when preparing Laravel package releases: generated release notes, GitHub release workflows, version checks, tags, release validation, or release automation changes. Never publish autonomously.",
-      "sha256": "22a0b8e730e25af20d5b40dac8a4096c2a7dcf6c5d20b74645dc2abdd9d3b91d",
-      "tags": [
-        "php",
-        "laravel",
-        "package-dev"
-      ],
-      "source": "github",
-      "upstream": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-release/SKILL.md",
-      "fetched_at": "2026-06-12"
-    },
-    {
-      "name": "laravel-package-scaffold",
-      "bucket": "php",
-      "path": "skills/php/laravel-package-scaffold/SKILL.md",
-      "version": "0.3.0",
-      "description": "Use this skill when adding Laravel package capabilities or package shape changes after creating a package from this starter: commands, migrations, routes, config, views, assets, middleware, workbench files, or new publishable resources.",
-      "sha256": "e91472b285f2ca6cb63b5cfa5047c0a2c88a6ccb46dc3c2e83f778a1c029e204",
-      "tags": [
-        "php",
-        "laravel",
-        "package-dev"
-      ],
-      "source": "github",
-      "upstream": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-scaffold/SKILL.md",
-      "fetched_at": "2026-06-12"
-    },
-    {
-      "name": "laravel-package-service-provider",
-      "bucket": "php",
-      "path": "skills/php/laravel-package-service-provider/SKILL.md",
-      "version": "0.3.0",
-      "description": "Use this skill when changing a Laravel package service provider: config merges, routes, views, translations, publishing, migrations, assets, Blade components, commands, console-only behavior, or package metadata.",
-      "sha256": "af4b58cc9971bf5d7be749788529908885f249f3df038d28498492cf3e608d5f",
-      "tags": [
-        "php",
-        "laravel",
-        "package-dev"
-      ],
-      "source": "github",
-      "upstream": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-service-provider/SKILL.md",
-      "fetched_at": "2026-06-12"
-    },
-    {
-      "name": "laravel-package-testing",
-      "bucket": "php",
-      "path": "skills/php/laravel-package-testing/SKILL.md",
-      "version": "0.3.0",
-      "description": "Use this skill when writing, editing, fixing, or reviewing package tests with Pest 4 and Orchestra Testbench, including TDD, feature tests, unit tests, type coverage, arch tests, workbench behavior, commands, routes, config, migrations, and publishable resources.",
-      "sha256": "cc1eb55341b5c19fc771d7f3b5929b9be090dd2c2c76fd1fc6032ef31be3db67",
-      "tags": [
-        "php",
-        "laravel",
-        "package-dev"
-      ],
-      "source": "github",
-      "upstream": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-testing/SKILL.md",
-      "fetched_at": "2026-06-12"
-    },
-    {
-      "name": "laravel-packages",
-      "bucket": "php",
-      "path": "skills/php/laravel-packages/SKILL.md",
-      "version": "0.3.0",
-      "description": "Создание Laravel-пакетов: scaffold, тесты, публикация скиллов пакета потребителям через vendor:publish",
-      "sha256": "42beb7a51744a20f7c4ce3947348fc4b211a7a695579ea313c62ce1083fe2703",
-      "tags": [
-        "php",
-        "laravel",
-        "package-dev",
-        "skills"
-      ],
-      "source": "local"
-    },
-    {
-      "name": "laravel-permissions",
-      "bucket": "php",
-      "path": "skills/php/laravel-permissions/SKILL.md",
-      "version": "0.3.1",
-      "description": "Ручной/нативный Laravel RBAC: policies, gates, entity-scoped permissions без спец-пакета. Когда нужен пакет azguard → скилл azguard; декларативные атрибуты прав на экшенах → attribute-authorization.",
-      "sha256": "ea8858fc0e9e89b9bebc8330de06585798308a4fa56df682cdeda968dbdadaa2",
-      "tags": [
-        "php",
-        "laravel",
-        "permissions",
-        "azguard",
-        "rbac",
-        "authorization"
-      ],
-      "source": "local"
-    },
-    {
-      "name": "laravel-security-audit",
-      "bucket": "php",
-      "path": "skills/php/laravel-security-audit/SKILL.md",
-      "version": "0.1.0",
-      "description": "Аудит Laravel-кода на «острые грани»: raw-запросы Eloquent, mass assignment, XSS в Blade, CSRF-обходы, open redirect, небезопасная сериализация, дыры авторизации.",
-      "sha256": "d4ba9b32e6de3f29b52c7df94253198615bbd66e74559be680eb2ecb405124e3",
-      "tags": [
-        "php",
-        "laravel",
-        "security"
-      ],
-      "requires": [
-        "static-analysis"
-      ],
-      "produces_for": [
-        "security-design"
-      ],
-      "source": "local"
-    },
-    {
       "name": "laravel-structure",
       "bucket": "php",
       "path": "skills/php/laravel-structure/SKILL.md",
@@ -2614,89 +2724,6 @@
         "laravel",
         "architecture",
         "structure"
-      ],
-      "source": "local"
-    },
-    {
-      "name": "laravel-subagents",
-      "bucket": "php",
-      "path": "skills/php/laravel-subagents/SKILL.md",
-      "version": "0.1.0",
-      "description": "Оркестрация субагентов на крупных Laravel-задачах: порог срабатывания, делегирование исследования Explore-агентам, ревью через laravel-reviewer, тесты через laravel-test-writer, worktree-изоляция параллельных правок. Не применять к мелким и средним задачам.",
-      "sha256": "01374dca2ea33671f069099632f10f377b864aaad288807079642d5d40527423",
-      "tags": [
-        "workflow",
-        "orchestration",
-        "agents",
-        "laravel"
-      ],
-      "source": "local"
-    },
-    {
-      "name": "laravel-testing",
-      "bucket": "php",
-      "path": "skills/php/laravel-testing/SKILL.md",
-      "version": "0.4.1",
-      "description": "Feature/unit/pest testing patterns: изоляция тестовой БД, детект Docker/локального окружения, coverage gate, композиция Pest (setUp-трейты, фикстуры, beforeEach fake/freeze, датасеты)",
-      "sha256": "2f87505f182f1c13ce57da7b76f13034d146202f97a59b7568be26fdddeed4f8",
-      "tags": [
-        "php",
-        "laravel",
-        "testing"
-      ],
-      "source": "local"
-    },
-    {
-      "name": "livewire-blade-attributes",
-      "bucket": "php",
-      "path": "skills/php/livewire-blade-attributes/SKILL.md",
-      "version": "0.1.0",
-      "description": "Дельта-гочизы Livewire 3 по атрибутам Blade-компонентов. Активировать при написании/ревью Blade-разметки Livewire-компонентов, когда атрибут тега должен быть условным или динамическим: НЕ ставить @if/@endif/@js() внутри списка атрибутов (ломает парсинг компонента) — собирать атрибуты заранее в @php через ComponentAttributeBag (->merge, ->class) и разворачивать одним выражением. Триггеры: ошибка парсинга/рендера Blade-компонента, условный wire:model/wire:sortable/step/disabled, @js() в атрибуте, нестабильный wire:key в цикле",
-      "sha256": "5513707cc7302993d03c141dd9f79688397b52000989a80ec4ffc5ebca566523",
-      "tags": [
-        "livewire",
-        "blade",
-        "laravel",
-        "frontend",
-        "advisory",
-        "gotchas"
-      ],
-      "source": "local"
-    },
-    {
-      "name": "medialibrary",
-      "bucket": "php",
-      "path": "skills/php/medialibrary/SKILL.md",
-      "version": "0.1.0",
-      "description": "spatie/laravel-medialibrary: привязка файлов к Eloquent-моделям, коллекции, конверсии, получение URL",
-      "sha256": "187c0aa295e1350eab0190fc5739ff0cac79a3864e5f41c26526ae792ee2255d",
-      "tags": [
-        "php",
-        "laravel",
-        "media",
-        "spatie",
-        "uploads",
-        "images"
-      ],
-      "source": "local"
-    },
-    {
-      "name": "modular-architecture",
-      "bucket": "php",
-      "path": "skills/php/modular-architecture/SKILL.md",
-      "version": "0.3.0",
-      "description": "Масштабирование Laravel-кода при росте: организация по бизнес-доменам, Модульный Монолит (Modular Monolith) и паттерны DDD; реализация на nwidart/laravel-modules (module:make*, структура модуля, namespace без Modules\\\\, Filament discovery); стартовая структура — php/laravel-structure",
-      "sha256": "2f024e5c6e2f3ac70f24a4ba8fceb77e0a244dde8b32f8e6ee6abb17533ff1bb",
-      "tags": [
-        "php",
-        "laravel",
-        "architecture",
-        "nwidart",
-        "laravel-modules",
-        "filament"
-      ],
-      "requires": [
-        "laravel"
       ],
       "source": "local"
     },
@@ -2749,23 +2776,6 @@
       "source": "local"
     },
     {
-      "name": "pennant-development",
-      "bucket": "php",
-      "path": "skills/php/pennant-development/SKILL.md",
-      "version": "0.1.0",
-      "description": "Laravel Pennant — feature-флаги: define/active/for-scope, директива @feature, активация/деактивация, A/B и постепенные раскатки. Адаптировано из laravel/boost (strategy=notify)",
-      "sha256": "086435bfebca39255b0f34afeaad7fd17d875ed20780adfdd1269c4b43fa56f6",
-      "tags": [
-        "php",
-        "laravel",
-        "pennant",
-        "feature-flags"
-      ],
-      "source": "github",
-      "upstream": "https://raw.githubusercontent.com/laravel/boost/main/.ai/pennant/skill/pennant-development/SKILL.md",
-      "fetched_at": "2026-06-13"
-    },
-    {
       "name": "php-patterns",
       "bucket": "php",
       "path": "skills/php/php-patterns/SKILL.md",
@@ -2814,23 +2824,6 @@
       "source": "local"
     },
     {
-      "name": "spatie-settings",
-      "bucket": "php",
-      "path": "skills/php/spatie-settings/SKILL.md",
-      "version": "0.2.0",
-      "description": "spatie/laravel-settings: типизированные классы настроек (extends Settings, public-свойства, group()), миграции настроек add/migrate/rename, кэш, выбор рантайм-настройки vs config/, привязка к Filament SettingsPage, рантайм-инфраконфиг (websocket/Reverb) из админки во фронт через DTO. Активировать при создании/правке класса настроек, добавлении свойства, settings-миграции, экрана редактирования или вынесения инфра-настройки в рантайм-переопределение.",
-      "sha256": "f76fb89d38b591450eca0be6e475b3edbd9e759e6521c8807fdb98b28ae9e47e",
-      "tags": [
-        "php",
-        "laravel",
-        "spatie",
-        "settings",
-        "filament",
-        "configuration"
-      ],
-      "source": "local"
-    },
-    {
       "name": "static-analysis",
       "bucket": "php",
       "path": "skills/php/static-analysis/SKILL.md",
@@ -2845,24 +2838,145 @@
       "source": "local"
     },
     {
-      "name": "test-isolation-guard",
-      "bucket": "php",
-      "path": "skills/php/test-isolation-guard/SKILL.md",
-      "version": "0.1.0",
-      "description": "Защита тестов Laravel от запуска по боевой/dev БД и медиа-диску: bootstrap.php выставляет DB_DATABASE=*_test и media-test до autoload, класс-страж TestEnvironmentGuard аварийно прерывает createApplication() при нарушении изоляции, безопасный RefreshDatabase. Активировать при настройке тестового окружения, защите CI и подозрении, что тесты бьют по dev/prod БД.",
-      "sha256": "ed9eda447a8285e25b64837db4a8462b3c573753988990f1133d225603b402cf",
+      "name": "laravel-package-compatibility",
+      "bucket": "php-packages",
+      "path": "skills/php-packages/laravel-package-compatibility/SKILL.md",
+      "version": "0.3.0",
+      "description": "Use this skill when reviewing Laravel package compatibility across composer constraints, PHP versions, Laravel versions, Testbench versions, dependency stability lanes, Windows CI, or matrix-sensitive code and workflow changes.",
+      "sha256": "db649b76be4852b1e99e2cfa71420027832a59013f19ce570b8d09bcf903cc7d",
       "tags": [
         "php",
         "laravel",
-        "testing",
-        "isolation",
-        "safety",
-        "database",
-        "ci",
-        "refreshdatabase"
+        "package-dev"
       ],
-      "requires": [
-        "laravel-testing"
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-compatibility/SKILL.md",
+      "fetched_at": "2026-06-12"
+    },
+    {
+      "name": "laravel-package-docs",
+      "bucket": "php-packages",
+      "path": "skills/php-packages/laravel-package-docs/SKILL.md",
+      "version": "0.3.0",
+      "description": "Use this skill when writing or revising package documentation after creating a package from this starter: README content, VitePress pages, contributing docs, upgrade notes, installation, usage, testing, workbench docs, or examples.",
+      "sha256": "a02d57434485b91a67cef8aaa2cf642c927886c6d4ecf5ed6c54c212d812b2c3",
+      "tags": [
+        "php",
+        "laravel",
+        "package-dev"
+      ],
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-docs/SKILL.md",
+      "fetched_at": "2026-06-12"
+    },
+    {
+      "name": "laravel-package-expressive",
+      "bucket": "php-packages",
+      "path": "skills/php-packages/laravel-package-expressive/SKILL.md",
+      "version": "0.3.0",
+      "description": "Upstream-скилл для работы НАД самим пакетом WendellAdriel/laravel-expressive (starter kit), не общий скилл пакетной разработки: placeholders, configure flow, starter defaults, root guidance, local skills, temporary phase tests, dist hygiene, scaffold-wide conventions. Do not use for ordinary package feature work after a package has been configured.",
+      "sha256": "d2658ec3e0a102bc40badfd36a2e862033f21278041230c6df491be37cb245f9",
+      "tags": [
+        "php",
+        "laravel",
+        "package-dev"
+      ],
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/skeleton-development/SKILL.md",
+      "fetched_at": "2026-06-12"
+    },
+    {
+      "name": "laravel-package-generate-skill",
+      "bucket": "php-packages",
+      "path": "skills/php-packages/laravel-package-generate-skill/SKILL.md",
+      "version": "0.3.0",
+      "description": "Use this skill when creating or updating the bundled Laravel Boost skill under resources/boost/skills from the package implementation and documentation. Trigger after public APIs, commands, config, routes, views, publish tags, examples, or docs change.",
+      "sha256": "25b6b47bb3fd493ab5801fcc4a147153fd1cbc6968d2b5d732c2298b4360c218",
+      "tags": [
+        "php",
+        "laravel",
+        "package-dev"
+      ],
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-generate-skill/SKILL.md",
+      "fetched_at": "2026-06-12"
+    },
+    {
+      "name": "laravel-package-release",
+      "bucket": "php-packages",
+      "path": "skills/php-packages/laravel-package-release/SKILL.md",
+      "version": "0.3.0",
+      "description": "Use this skill when preparing Laravel package releases: generated release notes, GitHub release workflows, version checks, tags, release validation, or release automation changes. Never publish autonomously.",
+      "sha256": "0c53ac04813e52667a3be52ee32c997b89577527a3d3d7b6db8e0367aef0319a",
+      "tags": [
+        "php",
+        "laravel",
+        "package-dev"
+      ],
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-release/SKILL.md",
+      "fetched_at": "2026-06-12"
+    },
+    {
+      "name": "laravel-package-scaffold",
+      "bucket": "php-packages",
+      "path": "skills/php-packages/laravel-package-scaffold/SKILL.md",
+      "version": "0.3.0",
+      "description": "Use this skill when adding Laravel package capabilities or package shape changes after creating a package from this starter: commands, migrations, routes, config, views, assets, middleware, workbench files, or new publishable resources.",
+      "sha256": "4d15de642d694e4b3e790055689933199acacfafa596f71459e631bf3c5829da",
+      "tags": [
+        "php",
+        "laravel",
+        "package-dev"
+      ],
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-scaffold/SKILL.md",
+      "fetched_at": "2026-06-12"
+    },
+    {
+      "name": "laravel-package-service-provider",
+      "bucket": "php-packages",
+      "path": "skills/php-packages/laravel-package-service-provider/SKILL.md",
+      "version": "0.3.0",
+      "description": "Use this skill when changing a Laravel package service provider: config merges, routes, views, translations, publishing, migrations, assets, Blade components, commands, console-only behavior, or package metadata.",
+      "sha256": "793f06efe195f23b05bd11b1c35d3050efb5fc8da7d536dd9031a56d19a8a228",
+      "tags": [
+        "php",
+        "laravel",
+        "package-dev"
+      ],
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-service-provider/SKILL.md",
+      "fetched_at": "2026-06-12"
+    },
+    {
+      "name": "laravel-package-testing",
+      "bucket": "php-packages",
+      "path": "skills/php-packages/laravel-package-testing/SKILL.md",
+      "version": "0.3.0",
+      "description": "Use this skill when writing, editing, fixing, or reviewing package tests with Pest 4 and Orchestra Testbench, including TDD, feature tests, unit tests, type coverage, arch tests, workbench behavior, commands, routes, config, migrations, and publishable resources.",
+      "sha256": "443ebd67f0fd2a6e6596b5f44f0cb8a6de3d590542bec895e17766ccc966b21d",
+      "tags": [
+        "php",
+        "laravel",
+        "package-dev"
+      ],
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-testing/SKILL.md",
+      "fetched_at": "2026-06-12"
+    },
+    {
+      "name": "laravel-packages",
+      "bucket": "php-packages",
+      "path": "skills/php-packages/laravel-packages/SKILL.md",
+      "version": "0.3.0",
+      "description": "Создание Laravel-пакетов: scaffold, тесты, публикация скиллов пакета потребителям через vendor:publish",
+      "sha256": "6f89e0d676ae45b9fdbd7438f8da2a1f00331a6cbc9d8825fdc445615ae417c8",
+      "tags": [
+        "php",
+        "laravel",
+        "package-dev",
+        "skills"
       ],
       "source": "local"
     },

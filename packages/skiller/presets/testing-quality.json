@@ -1,0 +1,10 @@
+{
+  "name": "testing-quality",
+  "description": "Качество тестов: стратегия (пирамида), мутационное, Playwright E2E, отчёт безопасности правок",
+  "include": [
+    "quality/test-strategy",
+    "quality/mutation-testing",
+    "quality/playwright-e2e",
+    "quality/testing-safety-report"
+  ]
+}

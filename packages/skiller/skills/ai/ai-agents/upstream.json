@@ -2,15 +2,17 @@
   "schema_version": 1,
   "source": "github",
   "repo": "get-zeked/ai-agent-super-skill",
-  "strategy": "notify",
+  "strategy": "fork",
+  "review_pending": false,
+  "last_review": "2026-06-25",
   "license": "MIT",
   "files": [
     {
-      "path": "SKILL.md",
+      "path": "references/source.md",
       "url": "https://raw.githubusercontent.com/get-zeked/ai-agent-super-skill/main/SKILL.md",
       "sha256": "cfd45bc6f0e05cd905072fd5b2826e8a76b5915800ac143990cd1e2976406911",
-      "fetched_at": "2026-06-11"
+      "fetched_at": "2026-06-25"
     }
   ],
-  "notes": "Local copy adapted for swissknifeman (bucket frontmatter added); do not auto-replace."
+  "notes": "Форк get-zeked/ai-agent-super-skill: SKILL.md — тонкая обёртка-навигатор, полный апстрим зеркалится в references/source.md (pristine). Апстрим не накатывать автоматом — на дрейфе ручной перенос (см. docs/guide/upstream-sync.md)."
 }

@@ -24,10 +24,13 @@ Usage: scripts/update-upstreams.sh [--check|--apply] [options]
 
 Modes (default --check):
   --check            Fetch upstreams, compare, report. Never writes to the repo.
-  --apply            strategy=replace + state=update: overwrite local file,
-                     record sha256/fetched_at. strategy=notify: record the seen
-                     upstream sha (file untouched) so future runs only report
-                     new changes.
+  --apply            strategy=replace: overwrite local file, record sha256/fetched_at.
+                     strategy=notify: record the seen upstream sha (file untouched).
+                     strategy=fork: stage upstream as upstream/<name>.incoming and set
+                     review_pending=true (mirror + wrapper SKILL.md untouched) for manual port.
+  --resolve          strategy=fork only: promote the staged incoming to the mirror,
+                     record sha256/fetched_at, clear review_pending, set last_review.
+                     Run AFTER porting upstream changes into the wrapper SKILL.md.
 
 Options:
   --skill PATH       Limit to one skill, e.g. imported/ai-agents (repeatable)
@@ -42,6 +45,7 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --check) MODE="check"; shift ;;
     --apply) MODE="apply"; shift ;;
+    --resolve) MODE="resolve"; shift ;;
     --skill) SKILLS+=("$2"); shift 2 ;;
     --force) FORCE=true; shift ;;
     --json) JSON_OUT=true; shift ;;
@@ -134,7 +138,7 @@ def fetch(url):
 
 
 def line(tag, sid, fname, msg):
-    print(f"[{tag}]".ljust(11) + sid.ljust(28) + fname.ljust(16) + msg, file=report)
+    print(f"[{tag}]".ljust(11) + sid.ljust(28) + fname.ljust(22) + " " + msg, file=report)
 
 
 # --- discover ---------------------------------------------------------------
@@ -160,7 +164,7 @@ for cfg in configs:
     except (json.JSONDecodeError, UnicodeDecodeError) as e:
         print(f"ERROR: {cfg.relative_to(root)}: invalid JSON: {e}", file=sys.stderr)
         sys.exit(1)
-    if data.get("schema_version") != 1 or data.get("strategy") not in ("replace", "notify") \
+    if data.get("schema_version") != 1 or data.get("strategy") not in ("replace", "notify", "fork") \
             or not isinstance(data.get("files"), list) or not data["files"]:
         print(f"ERROR: {cfg.relative_to(root)}: malformed (run scripts/validate.sh)",
               file=sys.stderr)
@@ -180,6 +184,32 @@ for cfg, sid, data in parsed:
         local_path = skill_dir / fname
         stored = entry.get("sha256", "")
         results["checked"] += 1
+
+        # --- fork --resolve: продвинуть заранее заготовленный incoming в зеркало и снять
+        #     флаг. Сеть не нужна (работаем с уже скачанным upstream/<name>.incoming). ---
+        if mode == "resolve":
+            if strategy != "fork":
+                line("skip", sid, fname, "--resolve применим только к strategy=fork")
+                continue
+            incoming_path = skill_dir / "upstream" / \
+                f"{Path(fname).stem}.incoming{Path(fname).suffix}"
+            if not incoming_path.exists():
+                line("skip", sid, fname, "нет staged incoming (сначала --apply)")
+                continue
+            new_bytes = incoming_path.read_bytes()
+            local_path.parent.mkdir(parents=True, exist_ok=True)
+            tmp = local_path.with_suffix(local_path.suffix + ".tmp")
+            tmp.write_bytes(new_bytes); os.replace(tmp, local_path)
+            entry["sha256"] = sha256_bytes(new_bytes)
+            entry["fetched_at"] = today
+            data["review_pending"] = False
+            data["last_review"] = today
+            incoming_path.unlink()
+            changed = True
+            line("resolved", sid, fname, "зеркало обновлено, review_pending снят")
+            results["applied"].append({"skill": sid, "file": fname,
+                                        "new_sha": entry["sha256"], "resolved": True})
+            continue
 
         try:
             remote = fetch(entry["url"])
@@ -201,6 +231,36 @@ for cfg, sid, data in parsed:
             tmp = local_path.with_suffix(local_path.suffix + ".tmp")
             tmp.write_bytes(remote)
             os.replace(tmp, local_path)
+
+        if strategy == "fork":
+            # Зеркало (= files[].path, pristine-копия апстрима) и обёртку SKILL.md НЕ трогаем.
+            # На дрейфе кладём свежий апстрим в upstream/<name>.incoming и поднимаем флаг —
+            # агент сверяет diff, переносит изменения в обёртку, затем --resolve.
+            incoming_path = skill_dir / "upstream" / \
+                f"{Path(fname).stem}.incoming{Path(fname).suffix}"
+            if remote_sha == stored:
+                line("ok", sid, fname, "up-to-date (fork)")
+            else:
+                what = "baseline missing" if not stored \
+                    else f"upstream changed ({stored[:8]}.. -> {remote_sha[:8]}..)"
+                if mode == "apply":
+                    incoming_path.parent.mkdir(parents=True, exist_ok=True)
+                    tmp = incoming_path.with_suffix(incoming_path.suffix + ".tmp")
+                    tmp.write_bytes(remote); os.replace(tmp, incoming_path)
+                    data["review_pending"] = True
+                    changed = True
+                    line("staged", sid, fname,
+                         f"{what}; incoming staged + review_pending=true — "
+                         f"перенеси правки в SKILL.md, затем --resolve")
+                    results["noted"].append({"skill": sid, "file": fname, "new_sha": remote_sha,
+                                             "incoming": str(incoming_path.relative_to(root)),
+                                             "url": entry["url"]})
+                else:  # check
+                    line("notify", sid, fname,
+                         f"{what}; strategy=fork — нужна ручная доработка")
+                    results["notify"].append({"skill": sid, "file": fname,
+                                              "old_sha": stored, "new_sha": remote_sha})
+            continue
 
         if strategy == "notify":
             if remote_sha == stored:

@@ -1,0 +1,9 @@
+{
+  "name": "pm-discovery",
+  "description": "Discovery: BRD, диагностика PMF, критика требований",
+  "include": [
+    "pm/brd",
+    "pm/pmf-diagnostics",
+    "pm/requirement-critic"
+  ]
+}

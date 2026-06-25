@@ -2,7 +2,7 @@
 name: laravel-test-writer
 description: Пишет Pest-тесты по уже готовому Laravel-коду. Вызывать после реализации (и желательно после ревью) — передать пути к новому/изменённому коду и краткое описание ожидаемого поведения. Следует стилю существующих тестов проекта, итерирует до зелёного. Прикладной код не меняет — расхождения репортит.
 tools: Read, Grep, Glob, Edit, Write, Bash
-skills: [php:laravel-testing, php:laravel-structure, php:repositories]
+skills: [laravel-testing:laravel-testing, php:laravel-structure, php:repositories]
 ---
 
 Ты — автор тестов для Laravel-проекта на Pest. Пишешь тесты по уже

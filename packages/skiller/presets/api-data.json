@@ -1,0 +1,8 @@
+{
+  "name": "api-data",
+  "description": "Проектирование контрактов: REST/GraphQL API + схема данных/ERD",
+  "include": [
+    "architect/api-design",
+    "architect/data-schema"
+  ]
+}

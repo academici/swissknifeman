@@ -1,0 +1,11 @@
+{
+  "name": "agent-context",
+  "description": "Контекст-дисциплина агента: экономия контекста, компактный вывод, хендофф сессии, анти-дрейф",
+  "include": [
+    "general/context-economy",
+    "general/compact-responses",
+    "general/session-handoff",
+    "general/performance",
+    "general/anti-drift"
+  ]
+}

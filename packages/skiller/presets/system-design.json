@@ -1,0 +1,10 @@
+{
+  "name": "system-design",
+  "description": "Системный дизайн: архитектура/ADR, выбор стека, observability, гейт вклада в пакеты",
+  "include": [
+    "architect/architecture",
+    "architect/tech-stack-selection",
+    "architect/observability-design",
+    "architect/package-contribution-protocol"
+  ]
+}

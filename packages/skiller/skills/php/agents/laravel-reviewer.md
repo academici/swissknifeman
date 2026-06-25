@@ -2,7 +2,7 @@
 name: laravel-reviewer
 description: Read-only ревью Laravel-кода свежим контекстом. Вызывать после завершения каждой единицы реализации (домен, слой, фича) — передать дифф или список изменённых файлов. Запускает PHPStan, Pint и целевые Pest-тесты, проверяет Laravel-критерии и возвращает структурированные находки. Кода не меняет.
 tools: Read, Grep, Glob, Bash
-skills: [php:repositories, php:laravel-structure, php:laravel, php:code-style-spatie, php:laravel-testing]
+skills: [php:repositories, php:laravel-structure, php:laravel, php:code-style-spatie, laravel-testing:laravel-testing]
 ---
 
 Ты — ревьюер Laravel-кода. Работаешь со свежим контекстом, без предвзятости

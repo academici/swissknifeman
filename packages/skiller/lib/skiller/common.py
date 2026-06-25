@@ -24,7 +24,7 @@ MANIFEST = ".swissknifeman-manifest.json"
 AGENT_DEFAULTS = {"claude": ".claude/skills", "cursor": ".cursor/skills",
                   "generic": ".ai/skills"}
 CONFIG_KEYS = {
-    "project_type": str, "buckets": list, "exclude": list,
+    "project_type": str, "buckets": list, "exclude": list, "presets": list,
     "skills_path": str, "agent": str,
     "memory_brain": str, "coordinator_ignore": list,
     # Профиль каркаса агентов (данные для agent-packs/универсальности, не движок):

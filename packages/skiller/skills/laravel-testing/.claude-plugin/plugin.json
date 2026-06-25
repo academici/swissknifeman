@@ -1,0 +1,5 @@
+{
+  "name": "laravel-testing",
+  "description": "Laravel testing: Pest feature/unit, DB isolation guard, Dusk browser tests, health checks",
+  "skills": "./"
+}

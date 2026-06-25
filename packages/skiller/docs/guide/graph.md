@@ -35,6 +35,9 @@ flowchart LR
     scene_conventions["scene-conventions"]
     threading["threading"]
   end
+  subgraph botkit["botkit"]
+    botkit["botkit"]
+  end
   subgraph devops["devops"]
     ci_cd["ci-cd"]
     db_test_preflight["db-test-preflight"]
@@ -58,19 +61,33 @@ flowchart LR
     risk_assessment["risk-assessment"]
     startup_lifecycle["startup-lifecycle"]
   end
-  subgraph frontend["frontend"]
+  subgraph frontend_backend["frontend-backend"]
     backend_type_sync["backend-type-sync"]
-    dark_mode["dark-mode"]
-    figma_to_vue["figma-to-vue"]
     inertia_vue["inertia-vue"]
+  end
+  subgraph frontend_figma["frontend-figma"]
+    figma_to_vue["figma-to-vue"]
+  end
+  subgraph frontend_naive_ui["frontend-naive-ui"]
     naive_ui_theming["naive-ui-theming"]
+  end
+  subgraph frontend_reka["frontend-reka"]
     reka_ui_cva["reka-ui-cva"]
+  end
+  subgraph frontend_tailwind["frontend-tailwind"]
+    dark_mode["dark-mode"]
     tailwind_conventions["tailwind-conventions"]
+  end
+  subgraph frontend_vite["frontend-vite"]
     vite_module_loader["vite-module-loader"]
     vite_multi_build["vite-multi-build"]
+  end
+  subgraph frontend_vue["frontend-vue"]
     vitest["vitest"]
     vue["vue"]
     vue_testing_best_practices["vue-testing-best-practices"]
+  end
+  subgraph frontend_wayfinder["frontend-wayfinder"]
     wayfinder["wayfinder"]
   end
   subgraph general["general"]
@@ -83,6 +100,24 @@ flowchart LR
     session_handoff["session-handoff"]
     spec_interview["spec-interview"]
     task_brief_template["task-brief-template"]
+  end
+  subgraph laravel_architecture["laravel-architecture"]
+    modular_architecture["modular-architecture"]
+  end
+  subgraph laravel_auth["laravel-auth"]
+    attribute_authorization["attribute-authorization"]
+    laravel_permissions["laravel-permissions"]
+    laravel_security_audit["laravel-security-audit"]
+  end
+  subgraph laravel_data_layer["laravel-data-layer"]
+    laravel_data["laravel-data"]
+  end
+  subgraph laravel_filament["laravel-filament"]
+    filament["filament"]
+  end
+  subgraph laravel_testing["laravel-testing"]
+    laravel_testing["laravel-testing"]
+    test_isolation_guard["test-isolation-guard"]
   end
   subgraph mobile["mobile"]
     figma_to_flutter["figma-to-flutter"]
@@ -104,21 +139,12 @@ flowchart LR
     release_engineering["release-engineering"]
   end
   subgraph php["php"]
-    attribute_authorization["attribute-authorization"]
-    botkit["botkit"]
     database["database"]
     dependency_injection["dependency-injection"]
-    filament["filament"]
     laravel["laravel"]
-    laravel_data["laravel-data"]
-    laravel_permissions["laravel-permissions"]
-    laravel_security_audit["laravel-security-audit"]
     laravel_structure["laravel-structure"]
-    laravel_testing["laravel-testing"]
-    modular_architecture["modular-architecture"]
     repositories["repositories"]
     static_analysis["static-analysis"]
-    test_isolation_guard["test-isolation-guard"]
   end
   subgraph pm["pm"]
     brd["brd"]
@@ -309,17 +335,30 @@ flowchart LR
 
 | Бакет | Скиллы |
 |---|---|
-| ai | `ai-agent-super-skill` |
+| ai | `ai-agents` |
 | architect | `dev-engineering-super-skill` |
+| azguard | `azguard` |
 | creative | `content-creative-super-skill` |
 | devops | `docker` |
 | finance | `finance-super-skill` |
-| frontend | `antfu`, `document-writer`, `eslint-flat-config`, `filepond-upload`, `js-code-style`, `laravel-echo-client`, `motion`, `nuxt`, `nuxt-modules`, `nuxt-seo`, `pinia`, `pinia-stores`, `ts-library`, `vite`, `vitepress`, `vitest-vue`, `vue-best-practices`, `vue-composition-api`, `vue-dynamic-icons`, `vue-router-best-practices`, `vueuse-functions`, `web-design-guidelines` |
+| frontend | `document-writer`, `filepond-upload`, `web-design-guidelines` |
+| frontend-animations | `motion` |
+| frontend-backend | `laravel-echo-client` |
+| frontend-linting | `antfu`, `eslint-flat-config`, `js-code-style`, `ts-library` |
+| frontend-nuxt | `nuxt`, `nuxt-modules`, `nuxt-seo` |
+| frontend-vite | `vite`, `vitepress` |
+| frontend-vue | `pinia`, `pinia-stores`, `vitest-vue`, `vue-best-practices`, `vue-composition-api`, `vue-dynamic-icons`, `vue-router-best-practices`, `vueuse-functions` |
 | general | `compact-responses`, `naming-conventions`, `packages-stack`, `skills-ssot`, `token-efficient`, `writing-style` |
+| laravel-architecture | `enum-attributes`, `enum-state-machine`, `laravel-subagents` |
+| laravel-data-layer | `laravel-broadcasting` |
+| laravel-extras | `medialibrary`, `pennant-development`, `spatie-settings` |
+| laravel-livewire | `livewire-blade-attributes` |
+| laravel-testing | `health-checks`, `laravel-dusk` |
 | legal | `legal-super-skill` |
 | marketing | `marketing-super-skill` |
 | operator | `operations-cx-super-skill` |
-| php | `azguard`, `code-style-spatie`, `enum-attributes`, `enum-state-machine`, `health-checks`, `laravel-best-practices`, `laravel-broadcasting`, `laravel-dusk`, `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages`, `laravel-subagents`, `livewire-blade-attributes`, `medialibrary`, `named-arguments`, `naming-conventions`, `pao`, `pennant-development`, `php-patterns`, `php-upgrade-checklist`, `spatie-settings` |
+| php | `code-style-spatie`, `laravel-best-practices`, `named-arguments`, `naming-conventions`, `pao`, `php-patterns`, `php-upgrade-checklist` |
+| php-packages | `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages` |
 | pm | `pm-super-skill` |
 | research | `research-knowledge-super-skill` |
 | roles | `open-source-maintainer`, `solo-founder`, `startup-cto`, `tech-lead` |

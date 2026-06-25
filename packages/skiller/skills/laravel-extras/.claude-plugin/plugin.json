@@ -1,0 +1,5 @@
+{
+  "name": "laravel-extras",
+  "description": "Optional Laravel runtime packages: media library, typed settings, Pennant feature flags",
+  "skills": "./"
+}

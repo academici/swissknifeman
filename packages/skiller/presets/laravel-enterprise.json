@@ -1,0 +1,9 @@
+{
+  "name": "laravel-enterprise",
+  "description": "Энтерпрайз-Laravel: ядро + модульная архитектура/enum-FSM/субагенты + авторизация",
+  "buckets": [
+    "php",
+    "laravel-architecture",
+    "laravel-auth"
+  ]
+}

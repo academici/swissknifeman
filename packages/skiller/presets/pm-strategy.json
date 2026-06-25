@@ -1,0 +1,8 @@
+{
+  "name": "pm-strategy",
+  "description": "Стратегия: go-to-market, выбор модели монетизации",
+  "include": [
+    "pm/go-to-market",
+    "pm/monetization-design"
+  ]
+}

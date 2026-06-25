@@ -33,7 +33,13 @@ connect → бакеты `general`+`oss-dev`; vendor → skill-level `context-ec
 - `bin/skiller` — тонкий bash-лаунчер → `python3 -m skiller`.
 - `lib/skiller/*.py` — вся логика, **stdlib-only** (без сторонних зависимостей в рантайме).
 - `skills/<bucket>/<name>/SKILL.md` — скиллы; `buckets.json` — метаданные бакетов (description/category/tags).
+  PHP разбит на тонкие бакеты: ядро `php` + `laravel-{testing,filament,livewire,data-layer,auth,architecture,extras}`
+  + `php-packages` (разработка пакетов) + одиночные `azguard`/`botkit` (под перенос внутрь пакетов).
+  Frontend так же: ядро `frontend` + `frontend-{vue,nuxt,tailwind,naive-ui,reka,vite,linting,animations,figma,wayfinder,backend}`.
 - `profiles/*.json` — профили по типу проекта (project-type → buckets).
+- `presets/*.json` — **именованные кластеры скиллов** (vendor): `{name, description, extends?, buckets?, include?}`;
+  раскрываются в `resolve_skillset` ДО формулы `(presets ∪ buckets ∪ include) − exclude`. Сквозные стеки
+  поверх бакетов (часто php+frontend). Валидируются в validate.sh (refs + ацикл `extends`).
 - Настройка окружения Claude Code (пресеты permissions, MCP, хуки) **вынесена в пакет
   [`harness`](../harness/CLAUDE.md)** — skiller делегирует туда через subprocess (`apply_permissions`,
   env-блоки `integrate`). Источник истины пресетов больше не здесь.

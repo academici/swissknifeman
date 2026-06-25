@@ -34,18 +34,25 @@ git-tracked). Любой, кто клонировал проект, сразу �
   "version": 1,
   "mode": "vendor",
   "skills_path": ".claude/skills",
-  "include": ["php/laravel-best-practices", "architect/api-design"],
+  "presets": ["laravel-admin"],
+  "include": ["architect/api-design"],
   "buckets": ["quality"],
-  "exclude": ["quality/mutation-testing"]
+  "exclude": ["php/medialibrary"]
 }
 ```
 
-Правила комбинируются: **набор = (buckets ∪ include) − exclude**.
+Правила комбинируются: **набор = (presets ∪ buckets ∪ include) − exclude**.
 
+- `presets` — именованные кластеры скиллов (`presets/<name>.json`): раскрываются в
+  `buckets`/`include` (с рекурсивным `extends`). Удобные «куски» вместо ручного перечисления —
+  напр. `laravel-admin` = ядро Laravel + Filament/права/медиа. См. [Пресеты](./presets).
 - `include` — конкретные скиллы из любых областей: `"bucket/rel"` или просто `"name"`.
 - `buckets` — бакеты целиком.
-- `exclude` — вычитание (имя или `"bucket/rel"`).
-- Можно задать только `include` — тогда переносятся ровно перечисленные скиллы.
+- `exclude` — вычитание (имя или `"bucket/rel"`); бьёт и пресеты, и зависимости.
+- Можно задать только `presets` или только `include` — переносится ровно нужное.
+
+> Пресеты — концепт **vendor-канала** (раскрываются в per-skill набор). В `connect`
+> бакет атомарен, поэтому пресеты там не действуют (как и skill-level `exclude`).
 
 ## Поток синхронизации
 

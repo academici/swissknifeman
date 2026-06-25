@@ -4,7 +4,7 @@
 
 Источник истины портируемых скиллов (машинный реестр — `skills.json`). Раздача в проекты: `skiller connect` (плагины-бакеты) / `vendor` (физ. перенос). CORE-набор токен-скиллов (`general`/`oss-dev`) раздаётся по умолчанию — см. `connect`/`vendor`.
 
-Всего: 183 скиллов в 24 бакетах.
+Всего: 183 скиллов в 45 бакетах.
 
 ## Скиллы по бакетам
 
@@ -12,7 +12,7 @@
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
-| `ai-agent-super-skill` | Comprehensive AI agent building skill merging Perplexity Computer's skill creation, webse… |  |
+| `ai-agents` | Навигатор по справочнику построения AI-агентов (vendored super-skill get-zeked): паттерны… | `ai`, `agents`, `mcp`, `rag`, `orchestration`, `prompt-engineering`, `subagents` |
 
 ### architect — Architecture, API and data design, security, observability, tech stack selection (12)
 
@@ -31,6 +31,12 @@
 | `security-design` | Классификация данных, auth-стратегия, RBAC/ABAC, OWASP Top 10, GDPR, STRIDE threat modeli… | `security`, `compliance`, `auth`, `owasp`, `threat-modeling`, `rbac`, `gdpr`, `privacy`, `stride` |
 | `tech-stack-selection` | Выбор технологического стека с trade-off матрицей до архитектурного дизайна. ADR-первый ш… | `stack-choice`, `architecture`, `adr`, `trade-off` |
 
+### azguard — azguard package usage: code-first RBAC, panels, scoped roles, abilities (academici package — skill will relocate into the package repo) (1)
+
+| Скилл | Описание | Теги |
+|:--|:--|:--|
+| `azguard` | Роли и контроль доступа на базе пакета azguard: code-first RBAC, панели, scoped roles, di… | `php`, `laravel`, `permissions`, `azguard`, `rbac`, `authorization`, `gate`, `enum` |
+
 ### blender — Universal Blender bpy+MCP tooling: MCP workflow primitives, viewport modes, camera helper, version gotchas (2)
 
 | Скилл | Описание | Теги |
@@ -48,6 +54,12 @@
 | `parametric-config` | Параметрическое 3D-моделирование в Blender (bpy) на основе конфига-данных: dataclass-пара… | `blender`, `bpy`, `parametric`, `dataclass`, `cad`, `fdm`, `sla`, `geometry`, `units`, `python`, `3d` |
 | `scene-conventions` | Соглашения сцены параметрической модели: префиксы объектов (MESH_/CRV_/LGT_/MTL_), иерарх… | `blender`, `cad`, `parametric`, `naming`, `scene`, `materials`, `parenting`, `bpy` |
 | `threading` | Резьба на FDM/SLA-деталях: материал, физика печати, радиальные зазоры по типу посадки | `blender`, `3d`, `fdm`, `sla`, `threading`, `geometry`, `bpy` |
+
+### botkit — botkit package usage: bot framework patterns — BotDefinition, service provider, webhooks (academici package — skill will relocate into the package repo) (1)
+
+| Скилл | Описание | Теги |
+|:--|:--|:--|
+| `botkit` | Bot framework patterns: BotDefinition contract, package service provider, webhook handling | `php`, `laravel`, `bots`, `botkit` |
 
 ### creative — Creative studio: video, design, content production (1)
 
@@ -91,34 +103,85 @@
 | `risk-assessment` | 5 категорий рисков, Risk Matrix, RAID-лог, pre-mortem для критичных рисков | `validation`, `compliance`, `security` |
 | `startup-lifecycle` | 4 стадии AI-native стартапа (Idea→MVP→Launch→Scale) с exit-criteria, failure modes и анти… | `validation`, `requirements`, `market` |
 
-### frontend — Frontend development: Vite, Vue Composition API, Tailwind CSS, Inertia (35)
+### frontend — Frontend core: общие фронт-скиллы (web design guidelines, document writer, file upload) (3)
+
+| Скилл | Описание | Теги |
+|:--|:--|:--|
+| `document-writer` | Use when writing blog posts or documentation markdown files - provides writing style guid… |  |
+| `filepond-upload` | Загрузка файлов через FilePond в Vue + Laravel: регистрация vue-filepond и плагинов (vali… | `filepond`, `vue`, `laravel`, `file-upload`, `frontend`, `forms`, `image-preview`, `inertia`, `uploads` |
+| `web-design-guidelines` | Review UI code for Web Interface Guidelines compliance. Use when asked to "review my UI",… |  |
+
+### frontend-animations — Animations with Motion Vue (motion-v) (1)
+
+| Скилл | Описание | Теги |
+|:--|:--|:--|
+| `motion` | Use when adding animations with Motion Vue (motion-v) - provides motion component API, ge… |  |
+
+### frontend-backend — Backend integration layer: Inertia+Vue, Laravel Echo realtime client, backend→frontend type sync (3)
+
+| Скилл | Описание | Теги |
+|:--|:--|:--|
+| `backend-type-sync` | Синхронизация типов backend→frontend через spatie/laravel-typescript-transformer: #[TypeS… | `typescript`, `laravel`, `spatie`, `types`, `enum`, `dto`, `frontend`, `type-sync`, `ci` |
+| `inertia-vue` | Inertia + Vue в Laravel: страницы, формы, навигация и слоистая организация resources/js (… | `inertia`, `vue`, `laravel`, `frontend`, `architecture`, `structure` |
+| `laravel-echo-client` | Фронтовый realtime-клиент Laravel Echo (Reverb/Pusher) во Vue 3: настройка Echo из runtim… | `laravel-echo`, `reverb`, `pusher`, `websockets`, `realtime`, `vue`, `broadcasting`, `frontend` |
+
+### frontend-figma — Figma Dev Mode MCP → Vue mapping (uses architect/figma-mcp-core) (1)
+
+| Скилл | Описание | Теги |
+|:--|:--|:--|
+| `figma-to-vue` | Маппинг дизайна из Figma Dev Mode MCP в Vue + Tailwind v4: Auto-layout → flexbox/grid, to… | `figma`, `vue`, `tailwind`, `tailwindcss-v4`, `cva`, `design-tokens`, `dark-mode`, `auto-layout` |
+
+### frontend-linting — JS/TS tooling and style: antfu config, ESLint flat config, Spatie JS style, TS library authoring (4)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
 | `antfu` | Anthony Fu's opinionated tooling and conventions for JavaScript/TypeScript projects. Use … |  |
-| `backend-type-sync` | Синхронизация типов backend→frontend через spatie/laravel-typescript-transformer: #[TypeS… | `typescript`, `laravel`, `spatie`, `types`, `enum`, `dto`, `frontend`, `type-sync`, `ci` |
-| `dark-mode` | Тёмная тема light\|dark\|system на Vue 3: composable useDarkMode (matchMedia prefers-colo… | `dark-mode`, `theme`, `vue`, `composable`, `ssr`, `tailwind`, `matchmedia`, `localstorage` |
-| `document-writer` | Use when writing blog posts or documentation markdown files - provides writing style guid… |  |
 | `eslint-flat-config` | ESLint flat config (eslint.config.js) для Vue 3 + TypeScript: defineConfigWithVueTs/types… | `eslint`, `prettier`, `flat-config`, `vue`, `typescript`, `stylistic`, `tooling`, `code-style`, `frontend` |
-| `figma-to-vue` | Маппинг дизайна из Figma Dev Mode MCP в Vue + Tailwind v4: Auto-layout → flexbox/grid, to… | `figma`, `vue`, `tailwind`, `tailwindcss-v4`, `cva`, `design-tokens`, `dark-mode`, `auto-layout` |
-| `filepond-upload` | Загрузка файлов через FilePond в Vue + Laravel: регистрация vue-filepond и плагинов (vali… | `filepond`, `vue`, `laravel`, `file-upload`, `frontend`, `forms`, `image-preview`, `inertia`, `uploads` |
-| `inertia-vue` | Inertia + Vue в Laravel: страницы, формы, навигация и слоистая организация resources/js (… | `inertia`, `vue`, `laravel`, `frontend`, `architecture`, `structure` |
 | `js-code-style` | Стиль JS/TS по Spatie: 4 пробела, ширина 120, одинарные кавычки, const-first, строгое ===… | `javascript`, `typescript`, `code-style`, `spatie`, `prettier`, `vue` |
-| `laravel-echo-client` | Фронтовый realtime-клиент Laravel Echo (Reverb/Pusher) во Vue 3: настройка Echo из runtim… | `laravel-echo`, `reverb`, `pusher`, `websockets`, `realtime`, `vue`, `broadcasting`, `frontend` |
-| `motion` | Use when adding animations with Motion Vue (motion-v) - provides motion component API, ge… |  |
+| `ts-library` | Use when authoring TypeScript libraries or npm packages - covers project setup, package.j… |  |
+
+### frontend-naive-ui — Naive UI component library theming (GlobalThemeOverrides) (1)
+
+| Скилл | Описание | Теги |
+|:--|:--|:--|
 | `naive-ui-theming` | Глобальная тема Naive UI: GlobalThemeOverrides (common + Button/Card/Form/Input/Tag/Tabs…… | `naive-ui`, `vue`, `theming`, `design-tokens`, `dark-mode`, `tailwind`, `frontend`, `components`, `ui` |
+
+### frontend-nuxt — Nuxt 4+: server routes, modules, SEO meta-module (3)
+
+| Скилл | Описание | Теги |
+|:--|:--|:--|
 | `nuxt` | Use when working on Nuxt 4+ projects - provides server routes, file-based routing, middle… |  |
 | `nuxt-modules` | Use when creating Nuxt modules: (1) Published npm modules (@nuxtjs/, nuxt-), (2) Local pr… |  |
 | `nuxt-seo` | Nuxt SEO meta-module with robots, sitemap, og-image, schema-org. Use when configuring SEO… |  |
-| `pinia` | Pinia official Vue state management library, type-safe and extensible. Use when defining … |  |
-| `pinia-stores` | Pinia (Vue 3) — глобальное состояние: setup-сторы (defineStore с функцией), ref=state/com… | `pinia`, `vue`, `frontend`, `state-management`, `store`, `architecture` |
+
+### frontend-reka — Reka UI headless primitives + CVA variants (1)
+
+| Скилл | Описание | Теги |
+|:--|:--|:--|
 | `reka-ui-cva` | Библиотека UI-компонентов на headless-примитивах Reka UI + варианты class-variance-author… | `reka-ui`, `cva`, `vue`, `tailwind`, `headless`, `components`, `variants`, `design-system`, `ui`, `frontend` |
+
+### frontend-tailwind — Tailwind CSS v4 conventions and dark-mode theming (2)
+
+| Скилл | Описание | Теги |
+|:--|:--|:--|
+| `dark-mode` | Тёмная тема light\|dark\|system на Vue 3: composable useDarkMode (matchMedia prefers-colo… | `dark-mode`, `theme`, `vue`, `composable`, `ssr`, `tailwind`, `matchmedia`, `localstorage` |
 | `tailwind-conventions` | Конвенции Tailwind CSS v4 для Laravel/Vue: CSS-first конфиг (@import tailwindcss, @theme-… | `tailwind`, `tailwindcss-v4`, `css`, `vue`, `laravel`, `dark-mode`, `design-tokens`, `prettier` |
-| `ts-library` | Use when authoring TypeScript libraries or npm packages - covers project setup, package.j… |  |
+
+### frontend-vite — Vite build tooling: config/plugins/SSR, project module loader, multi-build, VitePress (4)
+
+| Скилл | Описание | Теги |
+|:--|:--|:--|
 | `vite` | Vite build tool configuration, plugin API, SSR, and Vite 8 Rolldown migration. Use when w… |  |
 | `vite-module-loader` | Vite как основной сборщик Frontend-проектов: базовая конфигурация, алиасы, build-практики | `vite`, `frontend`, `build`, `laravel`, `vue` |
 | `vite-multi-build` | Две независимые Vite-сборки в одном Laravel-проекте: основное приложение и Filament-админ… | `vite`, `laravel`, `filament`, `tailwind`, `build`, `multi-config`, `frontend` |
 | `vitepress` | VitePress static site generator powered by Vite and Vue. Use when building documentation … |  |
+
+### frontend-vue — Vue 3 ecosystem: Composition API, best practices, router, VueUse, Pinia state, Vitest testing (11)
+
+| Скилл | Описание | Теги |
+|:--|:--|:--|
+| `pinia` | Pinia official Vue state management library, type-safe and extensible. Use when defining … |  |
+| `pinia-stores` | Pinia (Vue 3) — глобальное состояние: setup-сторы (defineStore с функцией), ref=state/com… | `pinia`, `vue`, `frontend`, `state-management`, `store`, `architecture` |
 | `vitest` | Vitest для Vue/Inertia-проекта на Laravel: jsdom, globals, тесты в resources/js/tests зер… | `vitest`, `testing`, `vue`, `coverage`, `jsdom`, `laravel`, `frontend` |
 | `vitest-vue` | Vitest fast unit testing framework powered by Vite with Jest-compatible API. Use when wri… |  |
 | `vue` | Vue 3 Composition API, script setup macros, reactivity system, and built-in components. U… |  |
@@ -128,8 +191,12 @@
 | `vue-router-best-practices` | Vue Router 4 — маршрутизация и навигация: typed/именованные routes, lazy-loading view-ком… | `vue`, `vue-router`, `frontend`, `routing`, `navigation-guards`, `lazy-loading`, `typescript` |
 | `vue-testing-best-practices` | Практики тестирования Vue 3-компонентов через Vitest + Vue Test Utils 2: mount vs shallow… | `vue`, `testing`, `vitest`, `vue-test-utils`, `pinia`, `composables`, `frontend` |
 | `vueuse-functions` | Apply VueUse composables where appropriate to build concise, maintainable Vue.js / Nuxt f… |  |
+
+### frontend-wayfinder — Laravel Wayfinder: type-safe routes/controller actions in the frontend (1)
+
+| Скилл | Описание | Теги |
+|:--|:--|:--|
 | `wayfinder` | Laravel Wayfinder: типобезопасные роуты и controller actions для фронтенда. Генерация, им… | `wayfinder`, `laravel`, `typescript`, `routes`, `inertia`, `eslint`, `frontend` |
-| `web-design-guidelines` | Review UI code for Web Interface Guidelines compliance. Use when asked to "review my UI",… |  |
 
 ### general — General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists (15)
 
@@ -150,6 +217,59 @@
 | `task-brief-template` | Шаблон постановки сложных задач для агента: цель, границы, инварианты, явные предположени… | `workflow`, `template`, `requirements`, `context` |
 | `token-efficient` | Reduces Perplexity Computer output verbosity and token waste. Eliminates sycophantic open… |  |
 | `writing-style` | Тон и язык кодовых артефактов: русский по умолчанию для комментариев, тел коммитов, описа… | `writing`, `language`, `russian`, `comments`, `commits`, `tests`, `docs`, `style` |
+
+### laravel-architecture — Scaling architecture: modular monolith/DDD, enum state machines, enum attributes, subagent orchestration (4)
+
+| Скилл | Описание | Теги |
+|:--|:--|:--|
+| `enum-attributes` | Активируй при работе с метаданными enum: когда match-простыни label()/color()/description… | `php`, `enum`, `attributes`, `reflection`, `laravel`, `patterns`, `typescript` |
+| `enum-state-machine` | Активируй, когда статус домена (Order/Document/Subscription) растёт в граф переходов: еди… | `php`, `enum`, `state-machine`, `workflow`, `laravel`, `transitions`, `domain`, `actions` |
+| `laravel-subagents` | Оркестрация субагентов на крупных Laravel-задачах: порог срабатывания, делегирование иссл… | `workflow`, `orchestration`, `agents`, `laravel` |
+| `modular-architecture` | Масштабирование Laravel-кода при росте: организация по бизнес-доменам, Модульный Монолит … | `php`, `laravel`, `architecture`, `nwidart`, `laravel-modules`, `filament` |
+
+### laravel-auth — Authorization & security: permissions/RBAC, attribute-based gates, security audit (3)
+
+| Скилл | Описание | Теги |
+|:--|:--|:--|
+| `attribute-authorization` | Декларативная авторизация на уровне методов контроллера через атрибут #[CheckPermission] … | `php`, `laravel`, `authorization`, `attribute`, `reflection`, `middleware`, `gate`, `enum`, `permissions`, `rbac` |
+| `laravel-permissions` | Ручной/нативный Laravel RBAC: policies, gates, entity-scoped permissions без спец-пакета.… | `php`, `laravel`, `permissions`, `azguard`, `rbac`, `authorization` |
+| `laravel-security-audit` | Аудит Laravel-кода на «острые грани»: raw-запросы Eloquent, mass assignment, XSS в Blade,… | `php`, `laravel`, `security` |
+
+### laravel-data-layer — Typed data + realtime: spatie/laravel-data DTOs (TS export), Echo/Reverb broadcasting (2)
+
+| Скилл | Описание | Теги |
+|:--|:--|:--|
+| `laravel-broadcasting` | Laravel Echo + Reverb/Pusher/Ably: broadcast-события, авторизация каналов, presence/whisp… | `php`, `laravel`, `broadcasting`, `echo`, `reverb`, `websockets`, `realtime` |
+| `laravel-data` | DTO на spatie/laravel-data: типизированные Data-классы, вложенные DataCollection, casts/t… | `php`, `laravel`, `spatie`, `laravel-data`, `dto`, `data-transfer-object`, `casts`, `validation`, `inertia`, `api` |
+
+### laravel-extras — Optional Laravel runtime packages: media library, typed settings, Pennant feature flags (3)
+
+| Скилл | Описание | Теги |
+|:--|:--|:--|
+| `medialibrary` | spatie/laravel-medialibrary: привязка файлов к Eloquent-моделям, коллекции, конверсии, по… | `php`, `laravel`, `media`, `spatie`, `uploads`, `images` |
+| `pennant-development` | Laravel Pennant — feature-флаги: define/active/for-scope, директива @feature, активация/д… | `php`, `laravel`, `pennant`, `feature-flags` |
+| `spatie-settings` | spatie/laravel-settings: типизированные классы настроек (extends Settings, public-свойств… | `php`, `laravel`, `spatie`, `settings`, `filament`, `configuration` |
+
+### laravel-filament — Filament admin panels: resources, schemas, tables, widgets, actions, tenancy (1)
+
+| Скилл | Описание | Теги |
+|:--|:--|:--|
+| `filament` | Filament v5 — Panels, Resources, Schemas, Tables, Widgets, Actions: структура файлов, CLI… | `php`, `laravel`, `filament`, `ui`, `admin-panel`, `crud`, `livewire` |
+
+### laravel-livewire — Livewire 3 UI: dynamic Blade attributes (ComponentAttributeBag) (1)
+
+| Скилл | Описание | Теги |
+|:--|:--|:--|
+| `livewire-blade-attributes` | Дельта-гочизы Livewire 3 по атрибутам Blade-компонентов. Активировать при написании/ревью… | `livewire`, `blade`, `laravel`, `frontend`, `advisory`, `gotchas` |
+
+### laravel-testing — Laravel testing: Pest feature/unit, DB isolation guard, Dusk browser tests, health checks (4)
+
+| Скилл | Описание | Теги |
+|:--|:--|:--|
+| `health-checks` | spatie/laravel-health в Laravel: кастомные Check-классы (диск, очередь, heartbeat шедулер… | `laravel`, `health`, `monitoring`, `spatie`, `liveness`, `readiness`, `observability` |
+| `laravel-dusk` | Laravel Dusk: браузерные E2E-тесты, изолированная тестовая БД, запуск из Docker через hos… | `php`, `laravel`, `dusk`, `e2e`, `browser-testing`, `chromedriver`, `docker` |
+| `laravel-testing` | Feature/unit/pest testing patterns: изоляция тестовой БД, детект Docker/локального окруже… | `php`, `laravel`, `testing` |
+| `test-isolation-guard` | Защита тестов Laravel от запуска по боевой/dev БД и медиа-диску: bootstrap.php выставляет… | `php`, `laravel`, `testing`, `isolation`, `safety`, `database`, `ci`, `refreshdatabase` |
 
 ### legal — Legal operations: contracts, compliance, risk (1)
 
@@ -192,25 +312,28 @@
 | `oss-governance` | LICENSE, CoC, CONTRIBUTING, MAINTAINERS, RFC-процесс, security policy для OSS-проекта | `oss`, `compliance`, `license`, `security`, `documentation` |
 | `release-engineering` | SemVer-стратегия, CHANGELOG, релизный pipeline (CI/CD), pre-releases, deprecation policy … | `oss`, `semver`, `release`, `changelog`, `ci` |
 
-### php — PHP and Laravel: applications, packages, Filament, permissions, testing, patterns (42)
+### php — PHP and Laravel core: architecture, structure, conventions, DI, database, repositories, patterns, static analysis (13)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
-| `attribute-authorization` | Декларативная авторизация на уровне методов контроллера через атрибут #[CheckPermission] … | `php`, `laravel`, `authorization`, `attribute`, `reflection`, `middleware`, `gate`, `enum`, `permissions`, `rbac` |
-| `azguard` | Роли и контроль доступа на базе пакета azguard: code-first RBAC, панели, scoped roles, di… | `php`, `laravel`, `permissions`, `azguard`, `rbac`, `authorization`, `gate`, `enum` |
-| `botkit` | Bot framework patterns: BotDefinition contract, package service provider, webhook handling | `php`, `laravel`, `bots`, `botkit` |
 | `code-style-spatie` | Стиль кода Laravel/PHP по гайдлайнам Spatie: Laravel-конвенции прежде PSR-12, типизация в… | `php`, `laravel`, `code-style`, `spatie` |
 | `database` | Database migrations, models, and table naming. Activate when writing migrations, creating… | `php`, `laravel`, `database`, `migrations` |
 | `dependency-injection` | Взаимодействие слоёв через constructor injection: final readonly + promotion, матрица инъ… | `php`, `laravel`, `di`, `architecture` |
-| `enum-attributes` | Активируй при работе с метаданными enum: когда match-простыни label()/color()/description… | `php`, `enum`, `attributes`, `reflection`, `laravel`, `patterns`, `typescript` |
-| `enum-state-machine` | Активируй, когда статус домена (Order/Document/Subscription) растёт в граф переходов: еди… | `php`, `enum`, `state-machine`, `workflow`, `laravel`, `transitions`, `domain`, `actions` |
-| `filament` | Filament v5 — Panels, Resources, Schemas, Tables, Widgets, Actions: структура файлов, CLI… | `php`, `laravel`, `filament`, `ui`, `admin-panel`, `crud`, `livewire` |
-| `health-checks` | spatie/laravel-health в Laravel: кастомные Check-классы (диск, очередь, heartbeat шедулер… | `laravel`, `health`, `monitoring`, `spatie`, `liveness`, `readiness`, `observability` |
 | `laravel` | Laravel architecture patterns: actions, repositories, resources | `php`, `laravel`, `architecture`, `patterns` |
 | `laravel-best-practices` | Лучшие практики Laravel: 20 категорий правил (Eloquent, валидация, кеш, очереди, безопасн… | `php`, `laravel`, `best-practices` |
-| `laravel-broadcasting` | Laravel Echo + Reverb/Pusher/Ably: broadcast-события, авторизация каналов, presence/whisp… | `php`, `laravel`, `broadcasting`, `echo`, `reverb`, `websockets`, `realtime` |
-| `laravel-data` | DTO на spatie/laravel-data: типизированные Data-классы, вложенные DataCollection, casts/t… | `php`, `laravel`, `spatie`, `laravel-data`, `dto`, `data-transfer-object`, `casts`, `validation`, `inertia`, `api` |
-| `laravel-dusk` | Laravel Dusk: браузерные E2E-тесты, изолированная тестовая БД, запуск из Docker через hos… | `php`, `laravel`, `dusk`, `e2e`, `browser-testing`, `chromedriver`, `docker` |
+| `laravel-structure` | Канон структуры Laravel-проекта для greenfield-проектов и добавления доменов: доменная та… | `php`, `laravel`, `architecture`, `structure` |
+| `named-arguments` | Правило обязательных именованных аргументов в PHP: вызовы методов/функций, исключения, ак… | `php`, `code-style`, `readability`, `conventions` |
+| `naming-conventions` | Именование сущностей Laravel/PHP: методы репозиториев по намерению (а не findByCodeOrFail… | `php`, `laravel`, `naming`, `conventions`, `code-style`, `readability` |
+| `pao` | Laravel PAO — агентно-оптимизированный вывод PHP-инструментов: PHPUnit/Pest/Paratest/PHPS… | `php`, `laravel`, `testing`, `tokens`, `agent-output` |
+| `php-patterns` | PHP domain patterns: VO, DTO, pipeline, specification | `php`, `laravel`, `patterns`, `dto`, `architecture` |
+| `php-upgrade-checklist` | Чеклист апгрейда версии PHP в приложении (минор/мажор): обновить образ/CI, composer updat… | `php`, `upgrade`, `version`, `rector`, `phpstan`, `composer` |
+| `repositories` | Система репозиториев Laravel: read/store split, model scopes, delta-DTO, фасад, Visibilit… | `php`, `laravel`, `repository`, `architecture` |
+| `static-analysis` | Статический анализ и линтинг PHP/Laravel: Laravel Pint, PHPStan и Rector локально и в CI,… | `php`, `laravel`, `quality` |
+
+### php-packages — Laravel package development: scaffold, service provider, testing, compatibility, docs, releases (9)
+
+| Скилл | Описание | Теги |
+|:--|:--|:--|
 | `laravel-package-compatibility` | Use this skill when reviewing Laravel package compatibility across composer constraints, … | `php`, `laravel`, `package-dev` |
 | `laravel-package-docs` | Use this skill when writing or revising package documentation after creating a package fr… | `php`, `laravel`, `package-dev` |
 | `laravel-package-expressive` | Upstream-скилл для работы НАД самим пакетом WendellAdriel/laravel-expressive (starter kit… | `php`, `laravel`, `package-dev` |
@@ -220,24 +343,6 @@
 | `laravel-package-service-provider` | Use this skill when changing a Laravel package service provider: config merges, routes, v… | `php`, `laravel`, `package-dev` |
 | `laravel-package-testing` | Use this skill when writing, editing, fixing, or reviewing package tests with Pest 4 and … | `php`, `laravel`, `package-dev` |
 | `laravel-packages` | Создание Laravel-пакетов: scaffold, тесты, публикация скиллов пакета потребителям через v… | `php`, `laravel`, `package-dev`, `skills` |
-| `laravel-permissions` | Ручной/нативный Laravel RBAC: policies, gates, entity-scoped permissions без спец-пакета.… | `php`, `laravel`, `permissions`, `azguard`, `rbac`, `authorization` |
-| `laravel-security-audit` | Аудит Laravel-кода на «острые грани»: raw-запросы Eloquent, mass assignment, XSS в Blade,… | `php`, `laravel`, `security` |
-| `laravel-structure` | Канон структуры Laravel-проекта для greenfield-проектов и добавления доменов: доменная та… | `php`, `laravel`, `architecture`, `structure` |
-| `laravel-subagents` | Оркестрация субагентов на крупных Laravel-задачах: порог срабатывания, делегирование иссл… | `workflow`, `orchestration`, `agents`, `laravel` |
-| `laravel-testing` | Feature/unit/pest testing patterns: изоляция тестовой БД, детект Docker/локального окруже… | `php`, `laravel`, `testing` |
-| `livewire-blade-attributes` | Дельта-гочизы Livewire 3 по атрибутам Blade-компонентов. Активировать при написании/ревью… | `livewire`, `blade`, `laravel`, `frontend`, `advisory`, `gotchas` |
-| `medialibrary` | spatie/laravel-medialibrary: привязка файлов к Eloquent-моделям, коллекции, конверсии, по… | `php`, `laravel`, `media`, `spatie`, `uploads`, `images` |
-| `modular-architecture` | Масштабирование Laravel-кода при росте: организация по бизнес-доменам, Модульный Монолит … | `php`, `laravel`, `architecture`, `nwidart`, `laravel-modules`, `filament` |
-| `named-arguments` | Правило обязательных именованных аргументов в PHP: вызовы методов/функций, исключения, ак… | `php`, `code-style`, `readability`, `conventions` |
-| `naming-conventions` | Именование сущностей Laravel/PHP: методы репозиториев по намерению (а не findByCodeOrFail… | `php`, `laravel`, `naming`, `conventions`, `code-style`, `readability` |
-| `pao` | Laravel PAO — агентно-оптимизированный вывод PHP-инструментов: PHPUnit/Pest/Paratest/PHPS… | `php`, `laravel`, `testing`, `tokens`, `agent-output` |
-| `pennant-development` | Laravel Pennant — feature-флаги: define/active/for-scope, директива @feature, активация/д… | `php`, `laravel`, `pennant`, `feature-flags` |
-| `php-patterns` | PHP domain patterns: VO, DTO, pipeline, specification | `php`, `laravel`, `patterns`, `dto`, `architecture` |
-| `php-upgrade-checklist` | Чеклист апгрейда версии PHP в приложении (минор/мажор): обновить образ/CI, composer updat… | `php`, `upgrade`, `version`, `rector`, `phpstan`, `composer` |
-| `repositories` | Система репозиториев Laravel: read/store split, model scopes, delta-DTO, фасад, Visibilit… | `php`, `laravel`, `repository`, `architecture` |
-| `spatie-settings` | spatie/laravel-settings: типизированные классы настроек (extends Settings, public-свойств… | `php`, `laravel`, `spatie`, `settings`, `filament`, `configuration` |
-| `static-analysis` | Статический анализ и линтинг PHP/Laravel: Laravel Pint, PHPStan и Rector локально и в CI,… | `php`, `laravel`, `quality` |
-| `test-isolation-guard` | Защита тестов Laravel от запуска по боевой/dev БД и медиа-диску: bootstrap.php выставляет… | `php`, `laravel`, `testing`, `isolation`, `safety`, `database`, `ci`, `refreshdatabase` |
 
 ### pm — Product management: BRD, PRD, roadmap, monetization, unit economics (10)
 
@@ -325,8 +430,8 @@
 | `agent-output` | `pao` |
 | `agent-packs` | `agent-packs` |
 | `agentic` | `agent-design`, `eval-design` |
-| `agents` | `complex-task-orchestrator`, `cross-project-coordinator`, `laravel-subagents` |
-| `ai` | `skills-ssot` |
+| `agents` | `ai-agents`, `complex-task-orchestrator`, `cross-project-coordinator`, `laravel-subagents` |
+| `ai` | `ai-agents`, `skills-ssot` |
 | `ai-act` | `legal-compliance` |
 | `ai-context` | `skills-ssot` |
 | `alerting` | `observability-design` |
@@ -472,7 +577,7 @@
 | `market` | `adversarial-check`, `competitive-analysis`, `customer-discovery`, `defensibility`, `go-to-market`, `idea-discovery`, `monetization-design`, `new-project`, `pitch-deck`, `pmf-diagnostics`, `product-roadmap`, `solo-founder`, `startup-lifecycle` |
 | `matchmedia` | `dark-mode` |
 | `materials` | `scene-conventions` |
-| `mcp` | `build-loop`, `figma-mcp-core`, `mcp-blender` |
+| `mcp` | `ai-agents`, `build-loop`, `figma-mcp-core`, `mcp-blender` |
 | `media` | `medialibrary` |
 | `memory` | `shared-memory` |
 | `meta` | `local-topology` |
@@ -495,7 +600,7 @@
 | `observability` | `capacity-planning`, `health-checks`, `observability-design` |
 | `observer` | `session-observer` |
 | `ops` | `capacity-planning`, `incident-response`, `oncall-rotation`, `postmortem`, `runbook` |
-| `orchestration` | `anti-drift`, `complex-task-orchestrator`, `cross-project-coordinator`, `laravel-subagents`, `mcp-blender`, `tech-lead` |
+| `orchestration` | `ai-agents`, `anti-drift`, `complex-task-orchestrator`, `cross-project-coordinator`, `laravel-subagents`, `mcp-blender`, `tech-lead` |
 | `oss` | `dependency-audit`, `dx-design`, `github-flow`, `open-source-maintainer`, `oss-development`, `oss-governance`, `release-engineering` |
 | `owasp` | `security-design` |
 | `package` | `package-contribution-protocol` |
@@ -517,10 +622,12 @@
 | `preflight` | `db-test-preflight`, `node-pnpm-preflight` |
 | `prettier` | `eslint-flat-config`, `js-code-style`, `tailwind-conventions` |
 | `privacy` | `legal-compliance`, `security-design` |
+| `prompt-engineering` | `ai-agents` |
 | `pusher` | `laravel-echo-client` |
 | `python` | `mcp-blender`, `ml-project-structure`, `parametric-config`, `venv-dependencies`, `version-gotchas` |
 | `quality` | `code-review`, `code-simplifier`, `mutation-testing`, `playwright-e2e`, `refactoring-plan`, `static-analysis`, `tech-debt-audit`, `test-strategy`, `testing-safety-report`, `venv-dependencies` |
 | `queue` | `docker-services` |
+| `rag` | `ai-agents` |
 | `rbac` | `attribute-authorization`, `azguard`, `laravel-permissions`, `security-design` |
 | `readability` | `named-arguments`, `naming-conventions` |
 | `readiness` | `health-checks` |
@@ -572,6 +679,7 @@
 | `structure` | `inertia-vue`, `laravel-structure`, `ml-project-structure`, `project-map` |
 | `style` | `compact-responses`, `writing-style` |
 | `stylistic` | `eslint-flat-config` |
+| `subagents` | `ai-agents` |
 | `tailwind` | `dark-mode`, `figma-to-vue`, `naive-ui-theming`, `reka-ui-cva`, `tailwind-conventions`, `vite-multi-build` |
 | `tailwindcss-v4` | `figma-to-vue`, `tailwind-conventions` |
 | `template` | `brd`, `model-rules`, `prd-from-brd`, `runbook`, `task-brief-template` |

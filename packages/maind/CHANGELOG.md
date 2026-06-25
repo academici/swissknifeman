@@ -6,6 +6,15 @@
 ## [Unreleased]
 
 ### Added
+- **Дерево решений настройки проекта** — канонический док `docs/guide/onboarding-decision-tree.md`
+  (10 слоёв с условными ветками: тип → память → namespaces → канал скиллов → бакеты → окружение →
+  граф → agent-packs → brain → эксплуатация). Принцип «оптимально, не максимально; неочевидно — спроси».
+- **Distributed-скилл `ecosystem-setup`** — раскатывается в проекты (как `ecosystem-mcp`) через новый
+  провиженер `setup-skill` (`skilldoc.apply_setup_skill`, в `sync` ORDER и в `onboard`). Доставляет
+  дерево решений тулинга в т.ч. во ВНЕШНИЕ репо, где governance-скиллы maind вне скоупа. Подстановка
+  `{{TYPE}}` добавлена.
+- `onboard` больше НЕ передаёт `--profile standalone/unknown` в skiller — нераспознанный тип уходит
+  в autodetect-fallback (минимум + warn), а не «ставит всё».
 - **Доставка субагентов по типу проекта (хаб → проект)**: профиль skiller называет
   `agent_pack` (строка или список — композиция), а `maind onboard`/`maind sync` детерминированно
   раскатывают пак(и) в `.claude/agents/` через `harness agent-packs render --auto` — БЕЗ агента в

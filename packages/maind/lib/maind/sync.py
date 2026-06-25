@@ -173,6 +173,12 @@ def _feature_log_hook_run(env, config, projects, mode, dry):
     return [apply_feature_log_hook(env, config, p, mode, dry) for p in projects]
 
 
+def _setup_skill_run(env, config, projects, mode, dry):
+    """Управляемый скилл ecosystem-setup (дерево решений тулинга) на проекты."""
+    from .skilldoc import apply_setup_skill
+    return [apply_setup_skill(env, config, p, mode, dry) for p in projects]
+
+
 def _ecosystem_skill_run(env, config, projects, mode, dry):
     """Управляемый скилл ecosystem-mcp (инструкция про MCP-инструменты и связи) в проекты."""
     from .skilldoc import apply_ecosystem_skill
@@ -263,10 +269,12 @@ PROVISIONERS = {
     "health-doc": _health_doc_run,
     "feature-log-hook": _feature_log_hook_run,
     "ecosystem-skill": _ecosystem_skill_run,
+    "setup-skill": _setup_skill_run,
     "agent-pack": _agent_pack_run,
 }
 ORDER = ["mcp", "code-graph", "graph", "memory", "memory-hook", "health-hook",
-         "health-doc", "feature-log-hook", "ecosystem-skill", "agent-pack"]
+         "health-doc", "feature-log-hook", "ecosystem-skill", "setup-skill",
+         "agent-pack"]
 
 
 def provisioner_names(only=None):
@@ -296,7 +304,8 @@ def cmd_sync(env, argv):
     if opts["help"]:
         print("maind sync [--project ID | --namespace NS | --all] [--only mcp,code-graph,"
               "graph,memory,memory-hook,health-hook,health-doc,feature-log-hook,"
-              "ecosystem-skill,agent-pack] [--mode install|update|auto] [--dry-run] [--json]")
+              "ecosystem-skill,setup-skill,agent-pack] [--mode install|update|auto] "
+              "[--dry-run] [--json]")
         return
     mode = opts["mode"] or "auto"
     if mode not in MODES:

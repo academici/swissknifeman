@@ -275,6 +275,13 @@ def _gather(env, target, opts, bundle, interactive):
     # custom — интерактивный чеклист
     detected = autodetect(target)
     print(f"Проект: {target}  (autodetect: {detected})")
+    # Тип не распознан → НЕ ставим «всё подряд» молча: предлагаем выбрать профиль явно.
+    # Пользователь может оставить standalone (= поставить всё) — но это осознанный выбор.
+    if detected == "standalone" and interactive and not opts.get("profile"):
+        names = sorted(p.stem for p in (env.root / "profiles").glob("*.json"))
+        print("  Тип проекта не распознан. Выбери профиль для оптимального набора\n"
+              "  (или standalone = поставить всё):")
+        prof_name = _ask_choice("  профиль", tuple(names), "standalone", interactive)
     ch = {"settings_file": opts.get("file") or "settings.json",
           "memory_brain": "core", "profile": prof_name}
     ch["skills"] = _ask_choice("Канал скиллов", ("connect", "vendor", "skip"),

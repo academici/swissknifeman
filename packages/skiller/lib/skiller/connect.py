@@ -47,6 +47,11 @@ def do_connect(env, target, opts, register=True, fix_path_drift=False):
     print(f"Profile:  {profile_name or '-'} (via {source})")
     print(f"Source:   {root}")
     print(f"Plugins:  {' '.join(plugins)}")
+    if source == "autodetect-fallback":
+        print("⚠ ВНИМАНИЕ: тип проекта не распознан — поставлен МИНИМАЛЬНЫЙ набор (ядро),\n"
+              "  а не «всё подряд». Для оптимального набора укажи профиль явно:\n"
+              "  skiller connect --profile <node-frontend|laravel-project|php-package|…>\n"
+              "  или точный список: skiller connect --plugins a,b,c")
     if core_added:
         print(f"CORE:     {' '.join(core_added)} (токен-бакеты по умолчанию; --no-core отключает)")
 

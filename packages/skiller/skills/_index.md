@@ -4,7 +4,7 @@
 
 Источник истины портируемых скиллов (машинный реестр — `skills.json`). Раздача в проекты: `skiller connect` (плагины-бакеты) / `vendor` (физ. перенос). CORE-набор токен-скиллов (`general`/`oss-dev`) раздаётся по умолчанию — см. `connect`/`vendor`.
 
-Всего: 181 скиллов в 24 бакетах.
+Всего: 183 скиллов в 24 бакетах.
 
 ## Скиллы по бакетам
 
@@ -131,7 +131,7 @@
 | `wayfinder` | Laravel Wayfinder: типобезопасные роуты и controller actions для фронтенда. Генерация, им… | `wayfinder`, `laravel`, `typescript`, `routes`, `inertia`, `eslint`, `frontend` |
 | `web-design-guidelines` | Review UI code for Web Interface Guidelines compliance. Use when asked to "review my UI",… |  |
 
-### general — General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists (13)
+### general — General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists (15)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
@@ -142,6 +142,8 @@
 | `cross-layer-change-checklist` | Универсальный checklist для изменений, затрагивающих несколько слоев: код, доступы, UI, д… | `checklist`, `workflow`, `validation` |
 | `git-commit-rules` | Правила работы с Git в проекте: подготовка коммита, husky/commitlint, формат сообщений и … | `git`, `conventions`, `conventional-commits`, `gitops` |
 | `naming-conventions` | Дисциплина именования сущностей (язык-агностично): имя раскрывает намерение, а не реализа… | `naming`, `conventions`, `readability`, `code-style`, `discipline`, `clean-code` |
+| `packages-stack` | Методология реестра внешних зависимостей проекта: какие пакеты используются и для чего, п… | `dependencies`, `conventions`, `navigation`, `stack`, `init` |
+| `project-map` | Методология карты структуры проекта: зонирование директорий по ответственности для безопа… | `conventions`, `navigation`, `architecture`, `structure`, `routing` |
 | `session-handoff` | Передача контекста между сессиями и агентами: сжатие сессии в структурированный handoff-д… | `workflow`, `context`, `tokens`, `handoff` |
 | `skills-ssot` | Единый источник истины скиллов для нескольких AI-агентов: .ai/skills + симлинки, gitignor… | `ai-context`, `skills`, `ssot`, `workflow`, `conventions`, `ai` |
 | `spec-interview` | Интервью перед кодом: агент задаёт вопросы по одному, сам читает кодовую базу где может, … | `workflow`, `requirements`, `discovery` |
@@ -330,7 +332,7 @@
 | `alerting` | `observability-design` |
 | `anti-bloat` | `package-contribution-protocol` |
 | `api` | `api-design`, `dx-design`, `laravel-data`, `version-gotchas` |
-| `architecture` | `agent-design`, `api-design`, `architecture`, `data-schema`, `dependency-injection`, `inertia-vue`, `laravel`, `laravel-structure`, `local-topology`, `ml-project-structure`, `modular-architecture`, `oss-development`, `php-patterns`, `pinia-stores`, `repositories`, `startup-cto`, `tech-stack-selection`, `test-strategy` |
+| `architecture` | `agent-design`, `api-design`, `architecture`, `data-schema`, `dependency-injection`, `inertia-vue`, `laravel`, `laravel-structure`, `local-topology`, `ml-project-structure`, `modular-architecture`, `oss-development`, `php-patterns`, `pinia-stores`, `project-map`, `repositories`, `startup-cto`, `tech-stack-selection`, `test-strategy` |
 | `attribute` | `attribute-authorization` |
 | `attributes` | `enum-attributes` |
 | `auth` | `security-design` |
@@ -375,7 +377,7 @@
 | `contracts` | `api-design` |
 | `contribution` | `package-contribution-protocol` |
 | `conventional-commits` | `git-commit-rules` |
-| `conventions` | `compact-responses`, `config-conventions`, `context-economy`, `git-commit-rules`, `ml-project-structure`, `model-rules`, `named-arguments`, `naming-conventions`, `skills-ssot`, `venv-dependencies` |
+| `conventions` | `compact-responses`, `config-conventions`, `context-economy`, `git-commit-rules`, `ml-project-structure`, `model-rules`, `named-arguments`, `naming-conventions`, `packages-stack`, `project-map`, `skills-ssot`, `venv-dependencies` |
 | `coordination` | `cross-project-coordinator`, `shared-memory` |
 | `coverage` | `ci-cd`, `mutation-testing`, `test-strategy`, `vitest` |
 | `cross-config` | `config-conventions` |
@@ -389,7 +391,7 @@
 | `data-transfer-object` | `laravel-data` |
 | `database` | `database`, `test-isolation-guard` |
 | `dataclass` | `config-conventions`, `parametric-config` |
-| `dependencies` | `dependency-audit`, `tech-debt-audit`, `venv-dependencies` |
+| `dependencies` | `dependency-audit`, `packages-stack`, `tech-debt-audit`, `venv-dependencies` |
 | `deployment` | `architecture` |
 | `design-system` | `figma-mcp-core`, `reka-ui-cva` |
 | `design-tokens` | `figma-mcp-core`, `figma-to-flutter`, `figma-to-vue`, `naive-ui-theming`, `tailwind-conventions` |
@@ -445,6 +447,7 @@
 | `incident` | `incident-response`, `oncall-rotation`, `postmortem`, `runbook` |
 | `inertia` | `filepond-upload`, `inertia-vue`, `laravel-data`, `wayfinder` |
 | `infection` | `mutation-testing` |
+| `init` | `packages-stack` |
 | `install` | `agent-packs` |
 | `isolation` | `db-test-preflight`, `test-isolation-guard` |
 | `javascript` | `js-code-style` |
@@ -485,7 +488,7 @@
 | `mutation` | `mutation-testing` |
 | `naive-ui` | `naive-ui-theming` |
 | `naming` | `naming-conventions`, `scene-conventions` |
-| `navigation` | `local-topology` |
+| `navigation` | `local-topology`, `packages-stack`, `project-map` |
 | `navigation-guards` | `vue-router-best-practices` |
 | `node` | `node-pnpm-preflight` |
 | `nwidart` | `modular-architecture` |
@@ -539,7 +542,7 @@
 | `review` | `code-review`, `gh-review`, `open-source-maintainer`, `tech-lead` |
 | `role` | `open-source-maintainer`, `solo-founder`, `startup-cto`, `tech-lead` |
 | `routes` | `wayfinder` |
-| `routing` | `vue-router-best-practices` |
+| `routing` | `project-map`, `vue-router-best-practices` |
 | `rules` | `model-rules` |
 | `runbook` | `observability-design` |
 | `russian` | `writing-style` |
@@ -559,13 +562,14 @@
 | `spatie` | `backend-type-sync`, `code-style-spatie`, `health-checks`, `js-code-style`, `laravel-data`, `medialibrary`, `spatie-settings` |
 | `ssot` | `skills-ssot` |
 | `ssr` | `dark-mode` |
+| `stack` | `packages-stack` |
 | `stack-choice` | `startup-cto`, `tech-stack-selection` |
 | `state-machine` | `enum-state-machine` |
 | `state-management` | `pinia-stores` |
 | `storage-state` | `playwright-e2e` |
 | `store` | `pinia-stores` |
 | `stride` | `security-design` |
-| `structure` | `inertia-vue`, `laravel-structure`, `ml-project-structure` |
+| `structure` | `inertia-vue`, `laravel-structure`, `ml-project-structure`, `project-map` |
 | `style` | `compact-responses`, `writing-style` |
 | `stylistic` | `eslint-flat-config` |
 | `tailwind` | `dark-mode`, `figma-to-vue`, `naive-ui-theming`, `reka-ui-cva`, `tailwind-conventions`, `vite-multi-build` |

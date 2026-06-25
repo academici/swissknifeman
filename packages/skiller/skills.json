@@ -51,7 +51,7 @@
     },
     "general": {
       "description": "General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists",
-      "count": 13,
+      "count": 15,
       "status": "active"
     },
     "legal": {
@@ -1702,6 +1702,22 @@
       "source": "local"
     },
     {
+      "name": "packages-stack",
+      "bucket": "general",
+      "path": "skills/general/packages-stack/SKILL.md",
+      "version": "0.1.0",
+      "description": "Методология реестра внешних зависимостей проекта: какие пакеты используются и для чего, правило-обвязка на каждый (когда применять, чего НЕ делать вручную), опора на ОФИЦИАЛЬНУЮ документацию. Активировать при выборе/добавлении зависимости или составлении карты стека на инициализации проекта; язык-агностично.",
+      "sha256": "6ade0d78bc1a4c5066bc4c57bba0818ef4f0426390c51ebaeb95da345b169862",
+      "tags": [
+        "dependencies",
+        "conventions",
+        "navigation",
+        "stack",
+        "init"
+      ],
+      "source": "local"
+    },
+    {
       "name": "token-efficient",
       "bucket": "general",
       "path": "skills/general/performance/SKILL.md",
@@ -1711,6 +1727,25 @@
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/get-zeked/token-efficient/main/SKILL.md",
       "fetched_at": "2026-06-11"
+    },
+    {
+      "name": "project-map",
+      "bucket": "general",
+      "path": "skills/general/project-map/SKILL.md",
+      "version": "0.1.0",
+      "description": "Методология карты структуры проекта: зонирование директорий по ответственности для безопасного роутинга изменений (где править, в каком слое должна жить логика). Активировать, когда нужно быстро понять, куда вносить изменение, или составить/обновить карту структуры для проекта; язык-агностично.",
+      "sha256": "fac8d8a2b0c47b5a489acc2d455b2ded6052d90a9521c13429a58bfb1a3f8aff",
+      "tags": [
+        "conventions",
+        "navigation",
+        "architecture",
+        "structure",
+        "routing"
+      ],
+      "produces_for": [
+        "cross-layer-change-checklist"
+      ],
+      "source": "local"
     },
     {
       "name": "session-handoff",
@@ -1733,7 +1768,7 @@
       "path": "skills/general/skills-ssot/SKILL.md",
       "version": "0.1.0",
       "description": "Единый источник истины скиллов для нескольких AI-агентов: .ai/skills + симлинки, gitignore, цикл обновления",
-      "sha256": "edbfe9ddf21ef1fdc5d6f29f03436e50589deaca14560bbebd2b8bb4bb68db50",
+      "sha256": "6b8d0347ee4d9197f7ad94512b21e52086c0fff1d738ff3c87b4663ed9e044f8",
       "tags": [
         "ai-context",
         "skills",

@@ -3,8 +3,11 @@
 # проекта в общую память (maind fleet log), чтобы агент-оптимизатор видел «что менялось».
 # Источник: <maind>/templates/health/feature-log-hook.sh — правьте там и `maind sync
 # --only feature-log-hook --all --mode update`, а не в копии проекта.
-MAIND="{{MAIND_BIN}}"
-[ -x "$MAIND" ] || exit 0
+# Лаунчер maind: env MAIND_BIN → PATH (command -v). Без машинно-специфичного пути
+# в артефакте — генерируемый хук одинаков на любой машине. Не нашли → тихий no-op.
+MAIND="${MAIND_BIN:-}"
+[ -n "$MAIND" ] || MAIND="$(command -v maind 2>/dev/null)"
+[ -n "$MAIND" ] && [ -x "$MAIND" ] || exit 0
 command -v git >/dev/null 2>&1 || exit 0
 HEAD="$(git rev-parse --short HEAD 2>/dev/null)" || exit 0
 LAST_FILE=".claude/.maind-feature-log.last"

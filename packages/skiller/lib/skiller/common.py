@@ -86,7 +86,16 @@ def apply_permissions(env, target, presets="", dry_run=False, settings_file=None
     if dry_run:
         cmd.append("--dry-run")
     sys.stdout.flush()
-    subprocess.run(cmd, check=False)
+    # timeout: завис harness (NFS/сеть) не должен морозить `skiller sync` молча.
+    # stderr ловим в warn; stdout оставляем живым (harness печатает прогресс сам).
+    try:
+        result = subprocess.run(cmd, check=False, timeout=30,
+                                stderr=subprocess.PIPE, text=True)
+    except subprocess.TimeoutExpired:
+        warn("harness: превышен таймаут 30s — permissions могли не примениться")
+        return True
+    if result.returncode != 0 and result.stderr:
+        warn(f"harness: {result.stderr.strip()}")
     return True
 
 
@@ -95,20 +104,58 @@ def apply_permissions(env, target, presets="", dry_run=False, settings_file=None
 
 # --- frontmatter --------------------------------------------------------------
 def parse_frontmatter(path):
-    """Keys from the first ----delimited block only (body lines ignored)."""
+    """Keys from the first ----delimited block only (body lines ignored).
+
+    Поддержаны YAML-блок-скаляры `key: |` / `key: >` (с опц. чомпом |-, >-, |+):
+    последующие отступные строки собираются в значение (| — с переносами, > —
+    через пробел). Иначе `description: |` молча терялся бы. Stdlib-only, без pyyaml."""
     # utf-8-sig: срезает BOM, если есть (иначе `﻿---` != `---` и весь
     # frontmatter молча игнорируется); без BOM ведёт себя как обычный utf-8.
     lines = Path(path).read_text(encoding="utf-8-sig").replace("\r\n", "\n").splitlines()
     fm = {}
     if not lines or lines[0].strip() != "---":
         return fm
-    for line in lines[1:]:
+    i = 1
+    while i < len(lines):
+        line = lines[i]
         if line.strip() == "---":
             break
         if ":" in line and not line.startswith((" ", "\t", "-")):
             key, value = line.split(":", 1)
-            fm[key.strip()] = value.strip().strip('"').strip("'")
+            key, value = key.strip(), value.strip()
+            # Блок-скаляр только если value — ровно заголовок |/> (+ опц. чомп/
+            # индент-индикатор), а не описание, начинающееся с этих символов
+            # ("description: > см. ниже" — обычный скаляр, не блок).
+            if value[:1] in ("|", ">") and all(c in "+-0123456789"
+                                               for c in value[1:]):
+                block, i = _collect_block_scalar(lines, i + 1)
+                fm[key] = (" " if value[0] == ">" else "\n").join(block)
+                continue
+            fm[key] = value.strip('"').strip("'")
+        i += 1
     return fm
+
+
+def _collect_block_scalar(lines, start):
+    """Собрать отступные строки YAML-блок-скаляра начиная с lines[start].
+    Возвращает (строки без общего отступа, индекс первой неотступной строки).
+    Пустые строки сохраняются как переносы; хвостовые — обрезаются (clip-чомп)."""
+    block = []
+    i = start
+    while i < len(lines):
+        ln = lines[i]
+        if ln.strip() == "---":
+            break
+        if ln.strip() == "":
+            block.append("")
+        elif ln.startswith((" ", "\t")):
+            block.append(ln.strip())
+        else:
+            break
+        i += 1
+    while block and block[-1] == "":
+        block.pop()
+    return block, i
 
 
 def parse_inline_list(value):

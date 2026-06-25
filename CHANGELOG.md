@@ -2,6 +2,44 @@
 
 ## [Unreleased]
 
+### Security / Fixed (maind — портабельность генерируемых хуков, без утечки пути)
+
+- **Хук-скрипты maind больше не зашивают абсолютный путь к лаунчеру.** Шаблоны
+  `templates/health/*.sh` (memory-digest · session-start · feature-log) резолвят `maind` в рантайме
+  (`env MAIND_BIN → command -v maind`), а не подставляют машинно-специфичный
+  `<…>/packages/maind/bin/maind` через `_maind_bin` (удалён). Генерируемый артефакт теперь одинаков
+  на любой машине; лаунчер не найден → тихий no-op (как при лёгшем демоне). Конфигурируется через
+  env `MAIND_BIN` (можно из `.claude/*.env.ini`). Бэк-совместимо: уже раскатанные хуки работают,
+  `command -v maind` резолвит тот же `~/.local/bin/maind`. +3 теста (нет abs-пути, есть env→PATH).
+- **`.claude/maind-*.sh` (+ `.maind-feature-log.last`, `scheduled_tasks.lock`) в `.gitignore`** —
+  генерируемые per-project хуки/рантайм-state не попадают в репо, как `.mcp.json`. Закрывает утечку
+  абсолютного пути автора при `git add .claude/`.
+- **Аудит MCP** (без изменений — уже чисто): пресеты `packages/harness/configs/claude-code/mcp/*.json`
+  портабельны (`npx`/`uvx`/`http`, без abs-путей); `.mcp.json` (с abs-путём maind) уже gitignored,
+  шаблон — `.mcp.json.example` с `{{REPO_ROOT}}`, реальный файл генерит `maind` на деплое.
+
+### Fixed (третий аудит skiller — харденинг тихих отказов)
+
+- **`_registry_index` больше не теряет скиллы молча**: запись в `skills.json` без `name`/`path` и дубль
+  короткого имени между бакетами теперь логируются `warn` — раньше немой `continue`/`setdefault` ронял скилл
+  из синка без следа (по полному пути `bucket/rel` дубль доступен, по короткому имени — первый). +тесты.
+- **subprocess в harness с таймаутом** (`common.apply_permissions`, `integrate._run_harness`): `timeout=30`
+  + stderr в `warn` — зависший harness (NFS/сеть) больше не морозит `skiller sync` молча; stdout оставлен
+  живым (прогресс harness виден). Дополняет returncode-проверку из прошлого аудита.
+- **манифест атомарен и трассируем** (`skillset._write_manifest`): запись через `core.io.atomic_write_json`
+  (tmp+`os.replace` вместо raw `write_text` — нет полузаписанного файла при крахе) + `installed_at` через
+  `now_iso()` (время, не голая дата) + `version` схемы. +тест.
+- **frontmatter читает YAML-блок-скаляры** (`common.parse_frontmatter`): `description: |`/`>` (многострочные)
+  больше не теряются молча — stdlib-разбор без `pyyaml`, с защитой от значений, начинающихся с `|`/`>`. +тесты.
+- **`skills_map` не молчит** (`config.validate_config`): зарезервированный, но нереализованный ключ
+  помечается `warn` вместо тихого игнора.
+
+> Отклонено как ложное (проверено по исходнику): path-traversal в `contained()` — код уже добавляет
+> `+ os.sep`, пример `/skills_extra` не проходит против `/skills/`; «обрезанная `parse_inline_list`» — функция
+> целая; «ввести профили как first-class» — 8 профилей + флаг `--profile` уже есть; рекурсивный `_dir_sha256`
+> — намеренно зеркалит per-file хеш реестра (рекурсия рассинхронит lock с `skills.json`); `import yaml` —
+> нарушает stdlib-only, заменён stdlib-хендлером.
+
 ### Fixed (второй аудит skiller — реальные баги)
 
 - **`integrate` больше не глушит ошибки harness**: `_run_harness` проверяет returncode и `warn`-ит при

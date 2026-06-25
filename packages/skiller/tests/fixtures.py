@@ -108,3 +108,11 @@ def make_laravel_project(tmp_path, *, boost=False):
     if boost:
         (proj / "boost.json").write_text(json.dumps({"skills": []}) + "\n")
     return proj
+
+
+def make_standalone_project(tmp_path):
+    """Каталог без маркеров стека — autodetect → standalone (тип не распознан)."""
+    proj = tmp_path / "blank"
+    proj.mkdir(parents=True, exist_ok=True)
+    (proj / "README.md").write_text("# blank\n")
+    return proj

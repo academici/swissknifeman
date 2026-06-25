@@ -116,8 +116,10 @@ def onboard(env, config, project_or_path, opts):
         extra = ["--bundle", opts.get("bundle") or "recommended"]
         # тип проекта (== имя профиля skiller) → явный --profile, чтобы выбор
         # скиллов/пресетов/mcp шёл по профилю типа, а не только по дефолтам бандла.
+        # standalone/unknown НЕ передаём явно: пусть skiller сам уйдёт в autodetect-fallback
+        # (минимальный набор + warn), а не «поставит всё» по standalone=["*"].
         ptype = proj.get("type")
-        if ptype and ptype != "unknown":
+        if ptype and ptype not in ("unknown", "standalone"):
             extra += ["--profile", ptype]
         if opts.get("yes"):
             extra.append("--yes")
@@ -178,7 +180,7 @@ def onboard(env, config, project_or_path, opts):
                       "detail": ms.get("detail", ms["status"])})
 
     # 3c. ecosystem-skill: управляемый скилл с инструкцией про MCP-инструменты и связи
-    from .skilldoc import apply_ecosystem_skill
+    from .skilldoc import apply_ecosystem_skill, apply_setup_skill
     try:
         sk = apply_ecosystem_skill(env, config, proj, "auto", dry)
         steps.append({"name": "skill",
@@ -186,6 +188,16 @@ def onboard(env, config, project_or_path, opts):
                       "detail": f"ecosystem-mcp ({sk.get('detail', sk['status'])})"})
     except OSError as e:
         steps.append({"name": "skill", "status": "skipped", "detail": f"шаблон недоступен: {e}"})
+
+    # 3c-bis. setup-skill: дерево решений тулинга (доезжает до внешних репо — governance B)
+    try:
+        ss = apply_setup_skill(env, config, proj, "auto", dry)
+        steps.append({"name": "setup-skill",
+                      "status": "ok" if ss["status"] in ("ok", "dry") else "skipped",
+                      "detail": f"ecosystem-setup ({ss.get('detail', ss['status'])})"})
+    except OSError as e:
+        steps.append({"name": "setup-skill", "status": "skipped",
+                      "detail": f"шаблон недоступен: {e}"})
 
     # 3d. agent-pack профиля проекта — детерминированная доставка субагентов через harness
     # (без агента в цикле). Пак из project.agent_pack или profile.agent_pack по type.

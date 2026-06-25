@@ -10,6 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 from skiller.common import (parse_flags, parse_frontmatter,
                                   parse_frontmatter_fields, parse_inline_list,
                                   sanitize)
+import skiller.config as config_mod
 from skiller.config import autodetect, resolve_selection
 from skiller.vendor import flat_names, resolve_requires, build_requires_index
 import tests.fixtures as fx
@@ -36,6 +37,28 @@ class TestFrontmatter(unittest.TestCase):
         fm = parse_frontmatter(f)
         self.assertEqual(fm["name"], "quoted")
         self.assertEqual(fm["description"], "single")
+
+    def test_block_scalar_literal(self):
+        # `description: |` — многострочный литерал собирается с переносами
+        f = self._write(
+            "---\nname: foo\ndescription: |\n  line one\n  line two\n---\nbody\n")
+        fm = parse_frontmatter(f)
+        self.assertEqual(fm["name"], "foo")
+        self.assertEqual(fm["description"], "line one\nline two")
+
+    def test_block_scalar_folded_then_next_key(self):
+        # `description: >` — фолдинг через пробел; ключ после блока не потерян
+        f = self._write("---\ndescription: >\n  a\n  b\nrisk: low\n---\n")
+        fm = parse_frontmatter(f)
+        self.assertEqual(fm["description"], "a b")
+        self.assertEqual(fm["risk"], "low")
+
+    def test_value_starting_with_gt_is_not_block_scalar(self):
+        # описание, начинающееся с '>', НЕ должно съедаться как блок-скаляр
+        f = self._write("---\ndescription: > see the docs\nname: foo\n---\n")
+        fm = parse_frontmatter(f)
+        self.assertEqual(fm["description"], "> see the docs")
+        self.assertEqual(fm["name"], "foo")
 
     def test_body_lines_ignored(self):
         f = self._write("---\nname: foo\n---\nkey: should-not-parse\n")
@@ -159,10 +182,31 @@ class TestResolveSelection(unittest.TestCase):
         self.assertEqual(src, "autodetect")
 
     def test_star_expands_with_include_meta(self):
+        # ЯВНЫЙ project_type=standalone (в .swissknife.json) → legitimate «поставь всё».
         items, name, _, _, include_meta = resolve_selection(
             self.env, self.proj, {"project_type": "standalone"}, "", [])
         self.assertEqual(set(items), {"php", "quality", "devops"})
         self.assertTrue(include_meta)
+
+    def test_autodetect_fallback_not_all_buckets(self):
+        # Тип НЕ распознан (autodetect → standalone) → минимальный набор, НЕ «всё подряд»,
+        # и маркер источника autodetect-fallback (вызывающий печатает warn).
+        blank = fx.make_standalone_project(self.tmp)
+        items, name, src, _, include_meta = resolve_selection(
+            self.env, blank, {}, "", [])
+        self.assertEqual(src, "autodetect-fallback")
+        self.assertNotEqual(set(items), {"php", "quality", "devops"})
+        self.assertTrue(set(items) <= set(config_mod.MINIMAL_BUCKETS))
+        self.assertFalse(include_meta)
+
+    def test_explicit_standalone_profile_still_expands(self):
+        # Явный --profile standalone остаётся «поставь всё» (не fallback).
+        blank = fx.make_standalone_project(self.tmp)
+        items, name, src, label, _ = resolve_selection(
+            self.env, blank, {}, "standalone", [])
+        self.assertEqual(set(items), {"php", "quality", "devops"})
+        self.assertEqual(src, "flag")
+        self.assertEqual(label, "--profile")
 
 
 class TestRequiresResolution(unittest.TestCase):

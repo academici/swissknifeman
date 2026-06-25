@@ -30,6 +30,7 @@ export default withMermaid(defineConfig({
             { text: 'Решения, трейд-оффы, ограничения', link: '/guide/design-notes' },
             { text: 'Установка', link: '/guide/installation' },
             { text: 'Конфиг config.json', link: '/guide/config' },
+            { text: 'Дерево решений: настройка проекта', link: '/guide/onboarding-decision-tree' },
           ],
         },
         {

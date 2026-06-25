@@ -6,7 +6,7 @@ from pathlib import Path
 from core import detect_project_type
 
 from .common import (AGENT_DEFAULTS, CONFIG_KEYS, confirm, die,
-                     parse_frontmatter_fields)
+                     parse_frontmatter_fields, warn)
 
 # CORE-политика раздачи: токен-экономные скиллы, которые swissknifeman кладёт в
 # КАЖДЫЙ проект по умолчанию (см. deep_analysis §5–§6). Каналы разной гранулярности:
@@ -21,6 +21,10 @@ CORE_SKILLS = [
 ]
 CORE_BUCKETS = ["general", "oss-dev"]
 DEFAULT_EXCLUDE = ["system/shared-memory", "system/cross-project-coordinator"]
+# Минимальный безопасный набор для НЕРАСПОЗНАННОГО типа проекта (autodetect → standalone).
+# НЕ разворачиваем `["*"]` (= все бакеты) по умолчанию — это «бездушный дамп всего». Явный
+# `--profile standalone` («поставь всё») остаётся доступен; авто-фолбэк ставит только ядро.
+MINIMAL_BUCKETS = ["general", "oss-dev", "system"]
 
 
 def core_skill_tuples(env, exclude):
@@ -61,6 +65,11 @@ def validate_config(env, config, cfg_file):
     if config.get("agent") and config["agent"] not in AGENT_DEFAULTS:
         die(f"{cfg_file}: unknown agent '{config['agent']}' "
             f"(available: {', '.join(AGENT_DEFAULTS)})")
+    # skills_map объявлен в CONFIG_KEYS, но ещё не читается логикой — не молчим,
+    # иначе пользователь пропишет его и не поймёт, почему нет эффекта.
+    if config.get("skills_map"):
+        warn(f"{cfg_file}: 'skills_map' зарезервирован, но ещё не реализован "
+             f"— игнорируется")
 
 
 def load_config(env, target):
@@ -113,8 +122,14 @@ def resolve_selection(env, target, config, flag_profile, flag_items):
                 ".swissknife.json project_type", prof.get("include_meta", False))
     name = autodetect(target)
     prof = load_profile(env, name)
-    items = buckets if prof["buckets"] == ["*"] else prof["buckets"]
-    return items, name, "autodetect", "autodetect", prof.get("include_meta", False)
+    # Тип не распознан (фолбэк-профиль standalone = `["*"]`) → НЕ ставим всё подряд:
+    # отдаём минимальное ядро и маркер источника `autodetect-fallback`, чтобы вызывающий
+    # (connect/vendor) предупредил и предложил указать профиль явно. Явный `--profile
+    # standalone` сюда не попадает (обрабатывается веткой flag_profile выше).
+    if prof["buckets"] == ["*"]:
+        items = [b for b in MINIMAL_BUCKETS if b in buckets]
+        return items, name, "autodetect-fallback", "autodetect-fallback", False
+    return prof["buckets"], name, "autodetect", "autodetect", prof.get("include_meta", False)
 
 
 def resolve_profile_name(target, config, flag_profile):

@@ -81,11 +81,18 @@ def _run_harness(env, args):
         warn("  harness не установлен — пропуск (packages/harness/install.sh)")
         return False
     sys.stdout.flush()
-    r = subprocess.run([str(binp)] + args, check=False)
+    try:
+        r = subprocess.run([str(binp)] + args, check=False, timeout=30,
+                           stderr=subprocess.PIPE, text=True)
+    except subprocess.TimeoutExpired:
+        warn(f"  harness: превышен таймаут 30s — блок мог не примениться "
+             f"({args[0] if args else ''})")
+        return True
     if r.returncode != 0:
         # graceful: визард не валим, но НЕ молчим — иначе «готово» при непримен. блоке
+        detail = f": {r.stderr.strip()}" if r.stderr else ""
         warn(f"  harness вернул код {r.returncode} — блок мог не примениться "
-             f"({args[0] if args else ''})")
+             f"({args[0] if args else ''}){detail}")
     return True
 
 
@@ -275,6 +282,13 @@ def _gather(env, target, opts, bundle, interactive):
     # custom — интерактивный чеклист
     detected = autodetect(target)
     print(f"Проект: {target}  (autodetect: {detected})")
+    # Тип не распознан → НЕ ставим «всё подряд» молча: предлагаем выбрать профиль явно.
+    # Пользователь может оставить standalone (= поставить всё) — но это осознанный выбор.
+    if detected == "standalone" and interactive and not opts.get("profile"):
+        names = sorted(p.stem for p in (env.root / "profiles").glob("*.json"))
+        print("  Тип проекта не распознан. Выбери профиль для оптимального набора\n"
+              "  (или standalone = поставить всё):")
+        prof_name = _ask_choice("  профиль", tuple(names), "standalone", interactive)
     ch = {"settings_file": opts.get("file") or "settings.json",
           "memory_brain": "core", "profile": prof_name}
     ch["skills"] = _ask_choice("Канал скиллов", ("connect", "vendor", "skip"),

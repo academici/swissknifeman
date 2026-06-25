@@ -179,6 +179,11 @@ def do_vendor(env, target, opts, register=True):
     # --- report / list -------------------------------------------------------------
     print(f"Target:      {target}")
     print(f"Profile:     {profile_name or '-'} (via {source})")
+    if source == "autodetect-fallback":
+        print("⚠ ВНИМАНИЕ: тип проекта не распознан — перенесён МИНИМАЛЬНЫЙ набор (ядро),\n"
+              "  а не «всё подряд». Для оптимального набора укажи профиль явно:\n"
+              "  skiller vendor --profile <node-frontend|laravel-project|php-package|…>\n"
+              "  или точные бакеты: skiller vendor --buckets a,b,c")
     print(f"Agent:       {agent}")
     print(f"Skills path: {skills_path}")
     print(f"Buckets:     {' '.join(buckets)}")

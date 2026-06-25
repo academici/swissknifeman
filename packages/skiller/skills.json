@@ -36,7 +36,7 @@
     },
     "general": {
       "description": "General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists",
-      "count": 17,
+      "count": 12,
       "status": "active"
     },
     "imported": {
@@ -1500,23 +1500,6 @@
       "fetched_at": "2026-06-17"
     },
     {
-      "name": "ai-context-workflow",
-      "bucket": "general",
-      "path": "skills/general/ai-context-workflow/SKILL.md",
-      "version": "0.1.0",
-      "description": "Редактирование AI-контекста проекта: .ai/guidelines, .ai/skills, boost.json; запрет правки сгенерированных CLAUDE.md/AGENTS.md; обязательный php artisan boost:update; объяснение цикла для Cursor и Claude Code.",
-      "sha256": "d4620697865633357a1048194a138123148c772f684fe023ba2ecb47f3699a34",
-      "tags": [
-        "ai",
-        "workflow",
-        "conventions",
-        "ai-context",
-        "skills",
-        "laravel"
-      ],
-      "source": "local"
-    },
-    {
       "name": "anti-drift",
       "bucket": "general",
       "path": "skills/general/anti-drift/SKILL.md",
@@ -1593,7 +1576,7 @@
       "path": "skills/general/cross-layer-change-checklist/SKILL.md",
       "version": "0.1.0",
       "description": "Универсальный checklist для изменений, затрагивающих несколько слоев: код, доступы, UI, документацию и тесты.",
-      "sha256": "d9cdea380582b5363836c00fec15491f9137df3a3aeecc35b41ccd06dedad90a",
+      "sha256": "67376b60c6dd248304374ed9c3fb41d3175fd984a0ded6a4ae2e9673f43dba0e",
       "tags": [
         "checklist",
         "workflow",
@@ -1607,7 +1590,7 @@
       "path": "skills/general/git-commit-rules/SKILL.md",
       "version": "0.2.0",
       "description": "Правила работы с Git в проекте: подготовка коммита, husky/commitlint, формат сообщений и безопасный порядок действий.",
-      "sha256": "e7af877939831bb58ef92eb0955961550cc1d9d9b90f7d1ec7008930cef5d525",
+      "sha256": "5d9c1d92f98289a3092f340677667a725517f0057b28d2b6596d12d56c3630f9",
       "tags": [
         "git",
         "conventions",
@@ -1640,38 +1623,6 @@
       "source": "local"
     },
     {
-      "name": "packages-stack",
-      "bucket": "general",
-      "path": "skills/general/packages-stack/SKILL.md",
-      "version": "0.1.0",
-      "description": "Реестр используемых внешних NPM и Composer пакетов. Опирайся на официальную документацию этих пакетов при написании кода.",
-      "sha256": "285799557cb113b9d855d1053e8dd48c4dc3f1f15789dc7cba54684f787608f5",
-      "tags": [
-        "dependencies",
-        "conventions",
-        "laravel",
-        "vue",
-        "navigation"
-      ],
-      "source": "local"
-    },
-    {
-      "name": "project-map",
-      "bucket": "general",
-      "path": "skills/general/project-map/SKILL.md",
-      "version": "0.2.0",
-      "description": "Быстрая карта структуры проекта и зон ответственности по директориям для безопасного роутинга изменений.",
-      "sha256": "35b6e45127cd01aadd111f715891386b2c792b5d450a8170157f417615dacfc2",
-      "tags": [
-        "conventions",
-        "navigation",
-        "laravel",
-        "architecture",
-        "structure"
-      ],
-      "source": "local"
-    },
-    {
       "name": "session-handoff",
       "bucket": "general",
       "path": "skills/general/session-handoff/SKILL.md",
@@ -1692,7 +1643,7 @@
       "path": "skills/general/skills-ssot/SKILL.md",
       "version": "0.1.0",
       "description": "Единый источник истины скиллов для нескольких AI-агентов: .ai/skills + симлинки, gitignore, цикл обновления",
-      "sha256": "ee919c8860d8635e0eb7d50cbbc2ad28bd5214547199707a3ab012a7a0fb422a",
+      "sha256": "edbfe9ddf21ef1fdc5d6f29f03436e50589deaca14560bbebd2b8bb4bb68db50",
       "tags": [
         "ai-context",
         "skills",
@@ -1735,52 +1686,6 @@
       ],
       "produces_for": [
         "complex-task-orchestrator"
-      ],
-      "source": "local"
-    },
-    {
-      "name": "ticket-workflow",
-      "bucket": "general",
-      "path": "skills/general/ticket-workflow/SKILL.md",
-      "version": "0.1.0",
-      "description": "Use for ticket domain logic: Actions, Services, Repositories, Observers, Policies, Notifications in the ticket system. Activate when working with Ticket, Participant, History, Message models; TicketStatus transitions via StateMachine; Actions in app/Actions/Ticket/; NotificationService; UserService::getPrimaryRole; or ticket authorization via Gate/Policies.",
-      "sha256": "04dfe7df9b4d59a64d556be08888fec21879da11f33443fb946b0d0d7f114373",
-      "tags": [
-        "workflow",
-        "domain",
-        "laravel",
-        "authorization",
-        "repository",
-        "architecture"
-      ],
-      "requires": [
-        "laravel",
-        "user-roles",
-        "repositories"
-      ],
-      "source": "local"
-    },
-    {
-      "name": "user-roles",
-      "bucket": "general",
-      "path": "skills/general/user-roles/SKILL.md",
-      "version": "0.1.0",
-      "description": "Use when working with UserRole enum, user permissions, role priority resolution, or any code that calls UserService::getPrimaryRole(). Activate when the task involves role-based access, participant roles in tickets, #[Priority] attributes on UserRole enum cases, or determining which role a user has in a given ticket context.",
-      "sha256": "07c786c36973543f530516fddb0d044a8e57cc1b124497c45467d23e90c4ceb1",
-      "tags": [
-        "roles",
-        "authorization",
-        "laravel",
-        "php",
-        "enum",
-        "permissions",
-        "reflection"
-      ],
-      "requires": [
-        "laravel"
-      ],
-      "produces_for": [
-        "ticket-workflow"
       ],
       "source": "local"
     },
@@ -2056,7 +1961,7 @@
       "path": "skills/oss-dev/dependency-audit/SKILL.md",
       "version": "0.2.0",
       "description": "Аудит зависимостей: lockfile sanity, vuln scan, лицензионная совместимость, supply-chain risk, SBOM",
-      "sha256": "da233b5ae44353915d05259ceef2014b096e84a4188fa3d026bbda335d2a036a",
+      "sha256": "3f99e33d4acc26b35c438eb47a123ed8e0b9e1a36f099fb2bc0ff1f7c650188d",
       "tags": [
         "oss",
         "compliance",
@@ -2120,7 +2025,7 @@
       "path": "skills/oss-dev/github-flow/SKILL.md",
       "version": "0.2.0",
       "description": "Цепочка Issue → Branch → PR → Merge → Tag → Release на GitHub: naming, labels, SemVer-оракул по типам коммитов, шаблоны Issue/PR. Формат коммитов — git-commit-rules, changelog и pipeline — release-engineering, ревью PR — gh-review.",
-      "sha256": "1a46a927d0d06b0bf65cfc2228ccbe998a5ed1edea86122bf23fa0ef4d8234d6",
+      "sha256": "97225a443af13ff09dbd40ddabdfaab56ea62774a8b5ae15705066405b7d0731",
       "tags": [
         "oss",
         "github",
@@ -2335,7 +2240,7 @@
       "path": "skills/php/enum-state-machine/SKILL.md",
       "version": "0.1.0",
       "description": "Активируй, когда статус домена (Order/Document/Subscription) растёт в граф переходов: единый граф рёбер как метод enum transitionDefinitions() (from→to + guard + action + label), рантайм-реестр переходов (canTransition/allowedFrom) поверх него, и исполнение перехода в Action под DB::transaction() с доменным событием. Триггеры: PHP enum статусов, разрешённые переходы, StateMachine/workflow, parallel transition graph пора свести в один источник, canTransitionTo, allowedTransitions, нелегальный переход статуса",
-      "sha256": "7e317f71ff70da326376370a09b8092c9361a7a190ea02e8b6ccf5494c45ea07",
+      "sha256": "f2974ee735d96776a3fbbf77da72be49ac2cd16c3e9da503439b81a30286661d",
       "tags": [
         "php",
         "enum",
@@ -2965,7 +2870,7 @@
       "path": "skills/pm/business-process/SKILL.md",
       "version": "0.1.0",
       "description": "Бизнес-процессы, workflow, FSM, sequence/state-диаграммы, обработка ошибок",
-      "sha256": "c5f4ee75152ecfe72fba976df3262b49137dcf9f8b3046856fd4b420a7f67926",
+      "sha256": "152d8d9e0b7499599e289aa427a75772542c5671e188085f3d07cb268c63359f",
       "tags": [
         "requirements",
         "workflow"
@@ -3114,7 +3019,7 @@
       "path": "skills/python/ml-project-structure/SKILL.md",
       "version": "0.1.0",
       "description": "Стандартизированная структура ML/Data Science проектов по подходу Cookiecutter Data Science",
-      "sha256": "ed5e782d8897b64ebc0900902901ae1ab5270cee8571c3db279e623f430b2dd3",
+      "sha256": "f3256dc2528418358d7ab40e4b76cdd0f05df8cb8cd8b030bbbca4b32c3286b6",
       "tags": [
         "python",
         "ml",
@@ -3134,7 +3039,7 @@
       "path": "skills/python/venv-dependencies/SKILL.md",
       "version": "0.1.0",
       "description": "Управление зависимостями и виртуальными окружениями Python для воспроизводимости проектов",
-      "sha256": "eaf772ddbe7de30ad9057fb46c8c2ba8dec1d00aebacc2d0e13704d4e2591475",
+      "sha256": "2063e2ad8e0022ebd6b18468c7e7bf1527f75227cd44207f4ff8357fcae0637a",
       "tags": [
         "python",
         "venv",
@@ -3315,7 +3220,7 @@
       "path": "skills/roles/open-source-maintainer/SKILL.md",
       "version": "0.2.0",
       "description": "OSS Maintainer — triage, review, releases",
-      "sha256": "b860b2ba7a20a79ca4aa7fc5c7dbb6b8678ececb47cf5261ec0e20bb11f6f8b3",
+      "sha256": "1d4dc0fd402d625ef37d01e0f99dfe87b9b5af8e17d3f4c4387b8c07a91d8707",
       "tags": [
         "role",
         "persona",
@@ -3333,7 +3238,7 @@
       "path": "skills/roles/solo-founder/SKILL.md",
       "version": "0.2.0",
       "description": "Solo Founder — weekly review, decision log",
-      "sha256": "4ab48f8974724ccfea96a52b98248f329431ca4e5a3778384830143ae837dc5e",
+      "sha256": "8efa0655c31140c9471504c8bf70b33853e0947c8b3fd2f25ba2265fba09b493",
       "tags": [
         "role",
         "persona",
@@ -3349,7 +3254,7 @@
       "path": "skills/roles/startup-cto/SKILL.md",
       "version": "0.2.0",
       "description": "Startup CTO persona — tech radar, hiring, architecture decisions",
-      "sha256": "b5495299ce9b00aadb1bfe977e1bc3ea80289122fa3f5631e057af64c0772533",
+      "sha256": "b3e4497201a75d78215505af9b83ec6fc9069dbc79d03891eb4888556fceb0ff",
       "tags": [
         "role",
         "persona",
@@ -3365,7 +3270,7 @@
       "path": "skills/roles/tech-lead/SKILL.md",
       "version": "0.2.0",
       "description": "Tech Lead persona — sprint kickoff, 1:1s, team coordination",
-      "sha256": "1e96364448706d0e2b5df0cd939b41a56eb4ae63a5626541e9470cee8c0bac51",
+      "sha256": "d7f69cf756b2805a55e2d6facba9d88fa0f1d169690de6a3e1f9ecfba56e84a6",
       "tags": [
         "role",
         "persona",

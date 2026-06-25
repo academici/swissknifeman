@@ -68,6 +68,4 @@ sha256: ""
 ## Связанные скиллы
 
 - `complex-task-orchestrator` (general) — декомпозиция и DoD; этот чеклист — финальная синхронизация слоёв перед закрытием.
-- `project-map` (general) — куда какой слой ложится (Action/Service/Repository/Policy).
-- `ai-context-workflow` (general) — порядок правок `.ai/*` и `php artisan boost:update` (шаг «Документация и контекст агентов»).
 - `quality/code-review` — финальное ревью изменения по слоям.

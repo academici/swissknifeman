@@ -71,7 +71,7 @@ maind graph --project <id>      # граф проекта и соседи
 
 Демон под systemd стартует при логине; чтобы поднимался **при загрузке ОС** (сервер по SSH) —
 разово включи linger: `loginctl enable-linger $USER` (проверка: `loginctl show-user $USER -p
-Linger` → `yes`). См. [systemd-гайд](../../docs/guide/systemd.md).
+Linger` → `yes`). См. [systemd-гайд](../../../packages/maind/docs/guide/systemd.md).
 
 ## Код-граф (граф кода в проекте) — универсальный
 
@@ -85,7 +85,7 @@ Linger` → `yes`). См. [systemd-гайд](../../docs/guide/systemd.md).
 `maind sync --project myproject --only mcp` допишет сервер `serena` в `.mcp.json` (нужен `uvx`
 в PATH; нет — корректный пропуск `skipped-not-installed`, остальное работает). Движок
 переопределяется на проект (`code_command` / `code_args` с `{root}` / `code_server_name`)
-— например, стек-специфичный сервер. Подробнее — [граф кода](../../docs/guide/code-graph.md).
+— например, стек-специфичный сервер. Подробнее — [граф кода](../../../packages/maind/docs/guide/code-graph.md).
 
 ## Памятка
 

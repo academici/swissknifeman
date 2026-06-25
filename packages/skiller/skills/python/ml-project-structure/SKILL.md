@@ -54,5 +54,4 @@ my_ml_project/
 
 - `python/venv-dependencies` — управление зависимостями и окружениями для папки (`requirements.txt` / `pyproject.toml`, линтеры), которую задаёт эта структура.
 - `php/laravel-structure` — аналогичный канон структуры, но для Laravel-проектов.
-- `general/project-map` — карта структуры произвольного проекта для безопасного роутинга изменений.
 - `oss-dev/oss-development` — структура OSS-репозитория (README, ADR, CI) поверх кода проекта.

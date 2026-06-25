@@ -56,6 +56,39 @@ class TestManagedBlock(unittest.TestCase):
         self.assertIn("hash=", managed_block("x", self.MARK))
 
 
+class TestRoleAgentPacks(unittest.TestCase):
+    """Вариант C: project.roles → config.role_packs[role], аддитивно к профильному паку."""
+    CFG = {"role_packs": {"tech-lead": "role-tech-lead", "solo-founder": "role-founder"}}
+
+    def test_roles_only(self):
+        self.assertEqual(
+            sync._resolve_agent_pack(self.CFG, {"id": "x", "roles": ["tech-lead"]}),
+            ["role-tech-lead"])
+
+    def test_explicit_plus_roles_additive(self):
+        self.assertEqual(
+            sync._resolve_agent_pack(
+                self.CFG,
+                {"id": "y", "agent_pack": ["backend-laravel", "_common"],
+                 "roles": ["tech-lead", "solo-founder"]}),
+            ["backend-laravel", "_common", "role-tech-lead", "role-founder"])
+
+    def test_unknown_role_ignored(self):
+        self.assertEqual(
+            sync._resolve_agent_pack(self.CFG, {"id": "z", "roles": ["nope"]}), [])
+
+    def test_no_roles_unchanged(self):
+        self.assertEqual(
+            sync._resolve_agent_pack(self.CFG, {"id": "w", "agent_pack": "foo"}), ["foo"])
+
+    def test_role_dedup(self):
+        cfg = {"role_packs": {"tech-lead": "role-tech-lead"}}
+        self.assertEqual(
+            sync._resolve_agent_pack(
+                cfg, {"id": "d", "agent_pack": ["role-tech-lead"], "roles": ["tech-lead"]}),
+            ["role-tech-lead"])
+
+
 class TestSync(unittest.TestCase):
     def test_select_projects(self):
         with tempfile.TemporaryDirectory() as tmp:

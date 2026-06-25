@@ -51,4 +51,4 @@ maind fleet duplicates --projects flexcrm,azguard --json            # по яв�
   Решение о выносе — по смыслу, через Serena, а не только по jscpd.
 - **Пиши в общую память** что вынес — чтобы следующий проход видел историю и не дублировал работу.
 - Доступ ко всем репозиториям у тебя уже есть (workspace-доверие хаба). Подробнее —
-  [граф кода](../../docs/guide/code-graph.md), [fleet](../../docs/guide/fleet.md).
+  [граф кода](../../../packages/maind/docs/guide/code-graph.md), [fleet](../../../packages/maind/docs/guide/fleet.md).

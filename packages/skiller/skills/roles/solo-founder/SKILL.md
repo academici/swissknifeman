@@ -5,6 +5,7 @@ version: 0.2.0
 description: "Solo Founder — weekly review, decision log"
 risk: read
 persona: solo-founder
+role_agent_pack: role-founder
 tags: ["role", "persona", "discovery", "market", "validation"]
 requires: []
 produces_for: []

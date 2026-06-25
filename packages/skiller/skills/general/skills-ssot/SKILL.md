@@ -103,7 +103,6 @@ CLAUDE.md / AGENTS.md / GEMINI.md                  # генерируются, �
 
 ## Ссылки
 
-- `general/ai-context-workflow` — регламент правок AI-контекста (что править, запреты, `boost:update`); этот скилл — про **структуру** SSOT, тот — про **workflow правок**, не дублируются.
 - `docs/routing.md` реестра — маршрутизация скиллов по бакетам и агентам.
 - `docs/boost-compatibility.md` реестра — совместимость скиллов реестра с Laravel Boost (пакет: https://github.com/laravel/boost, документация: https://laravel.com/docs/boost).
 - `references/ssot-source-layout.md` — детальное устройство `.ai/`: потоки данных, три слоя приоритета, guidelines vs skills, команды, частые ошибки.

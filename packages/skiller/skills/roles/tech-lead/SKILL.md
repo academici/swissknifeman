@@ -5,6 +5,7 @@ version: 0.2.0
 description: "Tech Lead persona — sprint kickoff, 1:1s, team coordination"
 risk: read
 persona: tech-lead
+role_agent_pack: role-tech-lead
 tags: ["role", "persona", "orchestration", "review", "workflow"]
 requires: []
 produces_for: []

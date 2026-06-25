@@ -82,8 +82,10 @@ description: Раннбук управления инструментами пр
   МИНИМАЛЬНОЕ ядро + печатает warn (а не «всё подряд»); укажи `--profile <type>` явно. «Поставить
   всё» доступно только осознанно — `--profile standalone`.
 
+> **Гранулярность и размещение** (general=кросс-стек/CORE, stack→stack-бакет, project→project-local,
+> connect=грубо/vendor=тонко, lean SKILL.md) — канон в skiller docs `guide/skill-taxonomy.md`.
 > Полное дерево всех слоёв настройки (память/ns/канал/окружение/граф) с ветками — канонический
-> документ maind [«Дерево решений: настройка проекта»](../../docs/guide/onboarding-decision-tree.md).
+> документ maind [«Дерево решений: настройка проекта»](../../../packages/maind/docs/guide/onboarding-decision-tree.md).
 
 CLI — `swissknifeman` (запускать из каталога проекта; корень ищется вверх от CWD):
 

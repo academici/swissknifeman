@@ -34,6 +34,10 @@ SEMVER_RE = re.compile(r"^\d+\.\d+\.\d+$")
 # должны резолвиться. ../ и .agents/.claude (раскладка проекта-потребителя) и
 # прозовые URL'ы НЕ проверяем (ложные срабатывания на upstream/imported).
 INTRA_LINK_RE = re.compile(r"\]\((snippets/[^)#]+|references/[^)#]+)\)")
+# lean SKILL.md: тело — точка входа, детали в references/snippets (progressive disclosure).
+# Мягкий порог: тело сверх него → warn (не error), подсказка вынести детали.
+# См. docs/guide/skill-taxonomy.md.
+LEAN_MAX_BODY_LINES = 150
 
 
 def parse_frontmatter(path):
@@ -134,6 +138,20 @@ for skill_md in skill_files:
         tgt = m.group(1).split("#")[0]
         if not (skill_dir / tgt).exists():
             errors.append(f"{rel}: битая ссылка на {tgt} (файла нет)")
+
+    # lean SKILL.md: тело (без frontmatter) сверх порога → мягкий warn.
+    lines = body.splitlines()
+    body_start = 0
+    if lines and lines[0].strip() == "---":
+        for i in range(1, len(lines)):
+            if lines[i].strip() == "---":
+                body_start = i + 1
+                break
+    body_lines = len([ln for ln in lines[body_start:] if ln.strip()])
+    if body_lines > LEAN_MAX_BODY_LINES:
+        warnings.append(f"{rel}: тело SKILL.md {body_lines} непустых строк "
+                        f"(> {LEAN_MAX_BODY_LINES}) — вынеси детали в references/snippets "
+                        f"(lean SKILL.md, docs/guide/skill-taxonomy.md)")
 
 # --- 2. upstream.json -----------------------------------------------------
 for up_file in sorted(root.glob("skills/**/upstream.json")) + \
@@ -491,8 +509,18 @@ for start in sorted(all_names):
 # Внутренние скиллы разработки реестра: НЕ экспортируются и НЕ попадают в
 # skills.json — линтуются мягко (только name+description, без полей реестра).
 registry_names = set(seen_names)
-for skill_md in sorted(root.glob(".claude/skills/*/SKILL.md")):
-    rel = skill_md.relative_to(root)
+# Локальные dev-скиллы могут жить и в .claude/skills пакета, и в КОРНЕ МОНОРЕПО
+# (перенесены туда ради видимости из корня). Линтуем оба места (standalone-safe).
+_skill_roots = [root]
+_mono = root.parent.parent          # packages/<pkg> → корень монорепо
+if _mono != root and (_mono / ".claude" / "skills").is_dir():
+    _skill_roots.append(_mono)
+_internal_skills = []
+for _sr in _skill_roots:
+    for _p in sorted(_sr.glob(".claude/skills/*/SKILL.md")):
+        _internal_skills.append((_sr, _p))
+for _sr, skill_md in _internal_skills:
+    rel = skill_md.relative_to(_sr)
     fm = parse_frontmatter(skill_md)
     if fm is None:
         errors.append(f"{rel}: missing frontmatter block")

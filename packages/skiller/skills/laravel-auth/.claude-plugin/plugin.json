@@ -1,0 +1,5 @@
+{
+  "name": "laravel-auth",
+  "description": "Authorization & security: permissions/RBAC, attribute-based gates, security audit",
+  "skills": "./"
+}

@@ -1,0 +1,8 @@
+{
+  "name": "compliance-security",
+  "description": "Безопасность и комплаенс: классификация данных/auth/RBAC + регуляторика (GDPR/AI Act/…)",
+  "include": [
+    "architect/security-design",
+    "architect/legal-compliance"
+  ]
+}

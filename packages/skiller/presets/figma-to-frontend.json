@@ -1,0 +1,10 @@
+{
+  "name": "figma-to-frontend",
+  "description": "Дизайн→код: Figma Dev Mode MCP → Vue",
+  "buckets": [
+    "frontend-figma"
+  ],
+  "include": [
+    "architect/figma-mcp-core"
+  ]
+}

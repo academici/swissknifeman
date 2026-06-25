@@ -1,0 +1,10 @@
+{
+  "name": "laravel-admin",
+  "description": "Админка на Filament: ядро + Filament + права/безопасность + опц. пакеты",
+  "buckets": [
+    "php",
+    "laravel-filament",
+    "laravel-auth",
+    "laravel-extras"
+  ]
+}

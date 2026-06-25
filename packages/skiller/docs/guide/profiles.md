@@ -5,12 +5,19 @@
 
 ## Встроенные профили
 
-| Профиль | Автодетект | Bucket-ы |
+| Профиль | Автодетект | Bucket-ы (дефолт) |
 |---|---|---|
-| `obsidian-vault` | `.obsidian/` | architect, pm, founder, operator, roles, imported |
-| `laravel-project` | `artisan` + `composer.json` | architect, php, devops, quality, operator |
-| `php-package` | `composer.json` без `artisan` | oss-dev, php, quality, devops |
+| `obsidian-vault` | `.obsidian/` | system, architect, pm, founder, operator, roles, finance, legal, marketing, sales, research, creative |
+| `laravel-project` | `artisan` + `composer.json` | system, architect, **php** (ядро), laravel-testing, laravel-auth, laravel-data-layer, devops, quality, operator |
+| `php-package` | `composer.json` без `artisan` | system, oss-dev, php, php-packages, laravel-testing, quality, devops |
+| `node-frontend` | `package.json` (Vue/Vite) | system, architect, **frontend** (ядро), frontend-vue, frontend-vite, frontend-linting, frontend-tailwind, quality, devops |
 | `standalone` | нет маркеров | все + generate-skill |
+
+> **`php` и `frontend` разбиты на тонкие бакеты** (Filament/Livewire/Nuxt/Naive-UI и пр. — отдельные
+> плагины, не тянутся по умолчанию). PHP: ядро `php` + `laravel-{testing,filament,livewire,data-layer,
+> auth,architecture,extras}` (+ `php-packages`). Frontend: ядро `frontend` + `frontend-{vue,nuxt,tailwind,
+> naive-ui,reka,vite,linting,animations,figma,wayfinder,backend}`. Профиль даёт линяный дефолт; остальное
+> подключается точечно — отдельным бакетом или [пресетом](./presets) (`laravel-admin`, `vue-spa`, …).
 
 ## Формат профиля
 
@@ -18,7 +25,7 @@
 {
   "name": "laravel-project",
   "description": "Large Laravel application development",
-  "buckets": ["architect", "php", "devops", "quality", "operator"],
+  "buckets": ["system", "architect", "php", "laravel-testing", "laravel-auth", "laravel-data-layer", "devops", "quality", "operator"],
   "include_meta": false
 }
 ```

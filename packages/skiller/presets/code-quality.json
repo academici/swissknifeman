@@ -1,0 +1,10 @@
+{
+  "name": "code-quality",
+  "description": "Качество кода: ревью, упрощение (YAGNI), план рефакторинга, аудит техдолга",
+  "include": [
+    "quality/code-review",
+    "quality/code-simplifier",
+    "quality/refactoring-plan",
+    "quality/tech-debt-audit"
+  ]
+}

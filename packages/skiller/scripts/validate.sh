@@ -24,7 +24,10 @@ errors = []
 warnings = []
 
 UPSTREAM_SOURCES = {"github", "http", "file"}
-UPSTREAM_STRATEGIES = {"replace", "notify"}
+# replace = зеркало (автонакат); notify = адаптированная копия (только сообщать);
+# fork = форк с нашими правками (обёртка + pristine-зеркало в files[].path; на дрейфе
+#        review_pending=true блокирует распространение — ручной перенос, потом --resolve).
+UPSTREAM_STRATEGIES = {"replace", "notify", "fork"}
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 # Допустимые значения enum-полей frontmatter + формат версии (semver).
 RISK_VALUES = {"read", "draft", "write", "external"}
@@ -174,6 +177,21 @@ for up_file in sorted(root.glob("skills/**/upstream.json")) + \
         errors.append(f"{rel}: source must be one of {sorted(UPSTREAM_SOURCES)}")
     if data.get("strategy") not in UPSTREAM_STRATEGIES:
         errors.append(f"{rel}: strategy must be one of {sorted(UPSTREAM_STRATEGIES)}")
+    # fork: форк-скилл с локальными правками. review_pending=true — апстрим разошёлся с
+    # зеркалом, нужна ручная доработка → ГЕЙТ: блокируем валидацию (и тем самым registry/релиз),
+    # пока агент не перенесёт дифф и не сделает update-upstreams.sh --resolve.
+    if data.get("strategy") == "fork":
+        rp = data.get("review_pending")
+        if rp is not None and not isinstance(rp, bool):
+            errors.append(f"{rel}: review_pending must be a boolean")
+        if rp is True:
+            errors.append(
+                f"{rel}: review_pending=true — upstream форка разошёлся с зеркалом; "
+                f"сверь diff и перенеси правки в SKILL.md, затем "
+                f"scripts/update-upstreams.sh --resolve --skill <id>")
+        lr = data.get("last_review", "")
+        if lr and not DATE_RE.match(lr):
+            errors.append(f"{rel}: last_review must be YYYY-MM-DD or empty")
     if data.get("source") == "file":
         warnings.append(f"{rel}: source=file is for local fixtures/tests only")
 
@@ -312,6 +330,80 @@ else:
             errors.append(f"buckets.json: entry without skills/ dir: {b}")
         if not (isinstance(meta, dict) and meta.get("description")):
             errors.append(f"buckets.json: {b}: description must be non-empty")
+
+
+# --- 6b. presets/*.json (именованные кластеры скиллов) ----------------------
+# Пресет = группа скиллов для vendor-выборки: {name, description, extends?,
+# buckets?, include?}. resolve_skillset раскрывает presets → buckets/include.
+# Проверяем: name==файл (kebab), непустой description, extends/buckets/include
+# резолвятся, циклов в extends нет. Каталог опционален (graceful skip).
+presets_dir = root / "presets"
+if presets_dir.is_dir():
+    skill_names, skill_paths = set(), set()
+    for skill_md in skill_files:
+        fm = parse_frontmatter(skill_md) or {}
+        nm = (fm.get("name", "") or "").strip().strip('"').strip("'")
+        if nm:
+            skill_names.add(nm)
+        parts = skill_md.parent.relative_to(root).parts
+        if len(parts) >= 3 and parts[0] == "skills":
+            skill_paths.add("/".join(parts[1:]))  # bucket/rel
+    preset_names = {p.stem for p in presets_dir.glob("*.json")}
+    preset_extends = {}
+    for pf in sorted(presets_dir.glob("*.json")):
+        rel = pf.relative_to(root)
+        try:
+            data = json.loads(pf.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, UnicodeDecodeError) as e:
+            errors.append(f"{rel}: invalid JSON: {e}")
+            continue
+        if data.get("name") != pf.stem:
+            errors.append(f"{rel}: name must match filename ({pf.stem})")
+        if not KEBAB_RE.match(pf.stem):
+            errors.append(f"{rel}: preset name must be kebab-case")
+        if not data.get("description"):
+            errors.append(f"{rel}: description must be non-empty")
+        ext = data.get("extends", []) or []
+        if not isinstance(ext, list):
+            errors.append(f"{rel}: extends must be a list")
+            ext = []
+        for parent in ext:
+            if parent not in preset_names:
+                errors.append(f"{rel}: extends unknown preset '{parent}'")
+        preset_extends[pf.stem] = [e for e in ext if e in preset_names]
+        for b in data.get("buckets", []) or []:
+            if b not in bucket_dirs:
+                errors.append(f"{rel}: unknown bucket '{b}'")
+        for tok in data.get("include", []) or []:
+            if tok not in skill_names and tok not in skill_paths:
+                errors.append(f"{rel}: include '{tok}' не резолвится в скилл "
+                              f"(нужно имя или bucket/rel)")
+    # циклы в extends (iterative DFS, white/grey/black)
+    PW, PG, PB = 0, 1, 2
+    pcol = {n: PW for n in preset_extends}
+    for pstart in sorted(preset_extends):
+        if pcol[pstart] != PW:
+            continue
+        pstack = [(pstart, iter(preset_extends.get(pstart, [])))]
+        pcol[pstart] = PG
+        ppath = [pstart]
+        while pstack:
+            pnode, pit = pstack[-1]
+            padv = False
+            for pdep in pit:
+                if pcol.get(pdep) == PG:
+                    cyc = ppath[ppath.index(pdep):] + [pdep]
+                    errors.append(f"presets: extends cycle: {' -> '.join(cyc)}")
+                elif pcol.get(pdep) == PW:
+                    pcol[pdep] = PG
+                    ppath.append(pdep)
+                    pstack.append((pdep, iter(preset_extends.get(pdep, []))))
+                    padv = True
+                    break
+            if not padv:
+                pcol[pnode] = PB
+                ppath.pop()
+                pstack.pop()
 
 
 # --- 7. plugin manifests (.claude-plugin/) ----------------------------------

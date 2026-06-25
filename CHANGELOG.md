@@ -2,6 +2,61 @@
 
 ## [Unreleased]
 
+### Added (skiller — пресеты/кластеры скиллов + тонкие бакеты для конфиг-управляемого per-project sync)
+
+- **Слой пресетов** — `presets/<name>.json` (`{name, description, extends?, buckets?, include?}`):
+  именованные кластеры скиллов для vendor-выборки. Раскрываются в `resolve_skillset`
+  ([skillset.py](packages/skiller/lib/skiller/skillset.py)) ДО формулы **`(presets ∪ buckets ∪ include) − exclude`**,
+  с рекурсивным `extends`. Конфиг проекта `.swissknifeman/config.json` ссылается на `presets: [...]`
+  (+ `include`/`exclude` оверрайды) → `skiller sync` → `.claude/skills/` + `skills-lock.json`. Только vendor
+  (connect бакет-атомарен). Валидация в [validate.sh](packages/skiller/scripts/validate.sh) (refs резолвятся,
+  ацикл `extends`); +5 unit-тестов (`tests/test_skillset.py::TestPresets`). `presets`-ключ в `SKILLSET_KEYS`/`CONFIG_KEYS`.
+- **Тонкие бакеты вместо монолитного `php`** (44→13 core): `php` стал линяным ядром (laravel, structure,
+  conventions, DI, database, repositories, patterns, static-analysis), а feature-области вынесены в отдельные
+  бакеты-плагины — `laravel-testing`, `laravel-filament`, `laravel-livewire`, `laravel-data-layer`,
+  `laravel-auth`, `laravel-architecture`, `laravel-extras`. Filament/Livewire больше **не тянутся по умолчанию**
+  (включаешь точечно). `php-packages` — разработка Laravel-пакетов (9 скиллов). `azguard`/`botkit` — отдельные
+  одиночные бакеты (под будущий перенос скилла внутрь самого пакета).
+- **Тонкие бакеты вместо монолитного `frontend`** (35→3 core): ядро `frontend` (web-design-guidelines,
+  document-writer, filepond-upload) + feature-бакеты `frontend-{vue,nuxt,tailwind,naive-ui,reka,vite,linting,
+  animations,figma,wayfinder,backend}`. Nuxt/Naive-UI/Figma и пр. — отдельные плагины, не по умолчанию.
+- **19 пресетов** (сквозные стеки): php — `laravel-admin`/`laravel-enterprise`/`laravel-inertia`/`laravel-livewire-stack`;
+  frontend — `vue-spa`/`figma-to-frontend`; + кластеры `architect`/`pm`/`general`/`quality`.
+- **Профили** под линяный дефолт: `laravel-project` = ядро + `laravel-testing`/`laravel-auth`/`laravel-data-layer`;
+  `node-frontend` = ядро + `frontend-vue`/`frontend-vite`/`frontend-linting`/`frontend-tailwind`;
+  `php-package` += `php-packages`/`laravel-testing`. Feature-бакеты (Filament/Livewire/Nuxt/…) — opt-in.
+- **buckets.json** +21 бакет; **docs**: новый `docs/guide/presets.md`, обновлены `vendor-mode.md`/`profiles.md`/
+  `skill-anatomy.md` + раннбук `project-tooling-runbook`. Регенерация `skiller registry` (49 плагинов).
+- *Отклонено (Perplexity, с аргументацией):* skiller как PHP-приложение (`src/*.php`) и `.swissknife.yml`/`.lock`
+  с нуля — механизм уже есть (Python + JSON); мерж `laravel-package-*` — это upstream-скиллы (мерж рвёт трекинг);
+  новые домен-скиллы (fintech/fiscal) — project-local.
+
+### Added (skiller — `strategy: fork`: сопровождение доработанных вендорных скиллов)
+
+- **Новая стратегия `upstream.json` — `fork`** (помимо `replace`/`notify`): внешний скилл с нашими
+  правками, который **нельзя автообновлять**. `files[].path` указывает на **pristine-зеркало**
+  (напр. `references/source.md`), правки живут в тонкой обёртке `SKILL.md`; на дрейфе апстрима
+  ставится `review_pending: true`. Эскалация `replace` (зеркало) → `notify` (сообщить) → `fork`
+  (правки + базлайн + ручной перенос + жёсткий гейт).
+- **`validate.sh`**: enum стратегий расширен `fork`; **гейт** — `review_pending: true` → ERROR
+  (блокирует `skiller registry`/релиз, пока дрейф не перенесён вручную). Проверка bool/`last_review`.
+- **`update-upstreams.sh`**: ветка `fork` — `--check` сообщает о дрейфе (exit 10), `--apply`
+  стейджит свежий апстрим в `upstream/<name>.incoming.md` и поднимает `review_pending` (зеркало и
+  `SKILL.md` НЕ трогаются); новый режим **`--resolve`** — после ручного переноса продвигает incoming
+  в зеркало, обновляет `sha256`/`fetched_at`/`last_review`, снимает флаг (работает оффлайн).
+- **`ai/ai-agents` переведён `notify` → `fork`**: монолит (2722 стр. в `SKILL.md`) → тонкая
+  обёртка-навигатор `SKILL.md` (грузится при активации) + полный апстрим в `references/source.md`
+  (грузится по требованию). Закрывает обе оси: context-economy (lazy-load) и трекинг (1 файл ↔ 1 url,
+  тривиальный перенос диффа). Блокировка дрейфа — **только в реестре**; в проекты по-прежнему
+  вендорится чистая копия (`upstream.json` вырезается). +1 тест (provenance fork через путь
+  `references/source.md`, fallback `files[0]`); `*.incoming.md` в `.gitignore`. Доки:
+  `upstream-sync.md` (раздел fork), `creating-skills.md`.
+
+### Fixed (skiller — мелочь по аудиту)
+
+- **`context-economy`**: перекрёстная ссылка на скилл `pao` приведена к стандартному формату
+  (`` `pao` (bucket: php) `` вместо нестандартного `laravel/pao`).
+
 ### Added (skiller — vendor-канал «опубликовать скиллы в репо» на онбординге)
 
 - **`integrate --skills-channel connect|vendor|skip`** + интерактивный вопрос канала (TTY). Канал

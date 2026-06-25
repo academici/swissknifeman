@@ -1,0 +1,9 @@
+{
+  "name": "pm-delivery",
+  "description": "Доставка: PRD из BRD, роадмап/MVP, бизнес-процессы",
+  "include": [
+    "pm/prd-from-brd",
+    "pm/product-roadmap",
+    "pm/business-process"
+  ]
+}

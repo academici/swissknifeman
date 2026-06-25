@@ -49,9 +49,10 @@ SKILLSET_KEYS = {
     "mode": str,          # пока только "vendor"
     "agent": str,         # информативно; путь задаёт skills_path
     "skills_path": str,   # куда копировать (по умолчанию .claude/skills)
+    "presets": list,      # именованные кластеры (presets/<name>.json) → buckets/include
     "include": list,      # конкретные скиллы: "bucket/rel" или просто "name"
     "buckets": list,      # бакеты целиком
-    "exclude": list,      # вычитание из (buckets ∪ include)
+    "exclude": list,      # вычитание из (presets ∪ buckets ∪ include)
 }
 
 
@@ -106,6 +107,47 @@ def _match(token, by_key, by_name):
     return None
 
 
+# --- presets (именованные кластеры скиллов) -----------------------------------
+def _load_preset(env, name):
+    """presets/<name>.json или None. Невалидный JSON — die."""
+    f = env.root / "presets" / f"{name}.json"
+    if not f.is_file():
+        return None
+    try:
+        return json.loads(f.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError) as e:
+        die(f"presets/{name}.json: невалидный JSON: {e}")
+
+
+def resolve_presets(env, names):
+    """Раскрыть пресеты (рекурсивно `extends`) в (buckets, include, skipped).
+
+    Пресет — именованная группа: `{name, description, extends?, buckets?, include?}`.
+    Возвращает агрегированные buckets/include (с дедупом, родители раньше детей) и
+    skipped — неизвестные пресеты (warning). Цикл `extends` — die."""
+    buckets, include, skipped, seen = [], [], [], set()
+
+    def visit(name, trail):
+        if name in trail:
+            die(f"presets: цикл extends: {' -> '.join(trail + [name])}")
+        if name in seen:
+            return
+        preset = _load_preset(env, name)
+        if preset is None:
+            warn(f"presets: пресет '{name}' не найден в presets/ — пропуск")
+            skipped.append(name)
+            return
+        seen.add(name)
+        for parent in preset.get("extends", []):
+            visit(parent, trail + [name])
+        buckets.extend(preset.get("buckets", []))
+        include.extend(preset.get("include", []))
+
+    for n in names:
+        visit(n, [])
+    return buckets, include, skipped
+
+
 # --- config -------------------------------------------------------------------
 def skillset_config_path(target):
     return Path(target) / CONFIG_DIR / CONFIG_FILE
@@ -149,8 +191,15 @@ def resolve_skillset(env, cfg, include_core=False):
     selected = {}  # name -> entry (имя уникально в раскладке .claude/skills)
     skipped = []
 
+    # пресеты раскрываем в buckets/include ДО формулы (buckets ∪ include) − exclude
+    preset_buckets, preset_include, preset_skipped = \
+        resolve_presets(env, cfg.get("presets", []))
+    skipped.extend(preset_skipped)
+    req_buckets = list(dict.fromkeys(preset_buckets + cfg.get("buckets", [])))
+    req_include = list(dict.fromkeys(preset_include + cfg.get("include", [])))
+
     # бакеты целиком
-    for bucket in cfg.get("buckets", []):
+    for bucket in req_buckets:
         if bucket not in known:
             die(f"неизвестный бакет: {bucket}")
         for entry in by_key.values():
@@ -158,7 +207,7 @@ def resolve_skillset(env, cfg, include_core=False):
                 selected[entry["name"]] = entry
 
     # конкретные скиллы
-    for token in cfg.get("include", []):
+    for token in req_include:
         entry = _match(token, by_key, by_name)
         if entry is None:
             warn(f"include: скилл '{token}' не найден в реестре — пропуск")

@@ -51,6 +51,15 @@ def _write_config(target, cfg):
         json.dumps(cfg, ensure_ascii=False), encoding="utf-8")
 
 
+def _write_preset(root, name, **body):
+    """Положить presets/<name>.json в синтетический реестр."""
+    d = root / "presets"
+    d.mkdir(parents=True, exist_ok=True)
+    obj = {"name": name, "description": f"test preset {name}", **body}
+    (d / f"{name}.json").write_text(
+        json.dumps(obj, ensure_ascii=False), encoding="utf-8")
+
+
 class TestResolve(unittest.TestCase):
     def test_buckets_whole(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -91,6 +100,60 @@ class TestResolve(unittest.TestCase):
                 env, {"include": ["nope/ghost"]})
             self.assertEqual(entries, [])
             self.assertEqual(skipped, ["nope/ghost"])
+
+
+class TestPresets(unittest.TestCase):
+    def test_preset_expands_to_include(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            root, env = make_registry(tmp)
+            _materialize_registry(env)
+            _write_preset(root, "p-core", include=["php/code-style"])
+            entries, skipped = resolve_skillset(env, {"presets": ["p-core"]})
+            self.assertEqual({e["name"] for e in entries}, {"code-style"})
+            self.assertEqual(skipped, [])
+
+    def test_preset_extends_recursive(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            root, env = make_registry(tmp)
+            _materialize_registry(env)
+            _write_preset(root, "p-base", include=["php/code-style"])
+            _write_preset(root, "p-ext", extends=["p-base"],
+                          include=["test-writer"])
+            entries, _ = resolve_skillset(env, {"presets": ["p-ext"]})
+            self.assertEqual({e["name"] for e in entries},
+                             {"code-style", "test-writer"})
+
+    def test_preset_exclude_wins(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            root, env = make_registry(tmp)
+            _materialize_registry(env)
+            _write_preset(root, "p-php", buckets=["php"])
+            entries, _ = resolve_skillset(
+                env, {"presets": ["p-php"], "exclude": ["code-style"]})
+            self.assertEqual({e["name"] for e in entries},
+                             {"laravel-conventions"})
+
+    def test_preset_unknown_skipped(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            root, env = make_registry(tmp)
+            _materialize_registry(env)
+            entries, skipped = resolve_skillset(env, {"presets": ["ghost"]})
+            self.assertEqual(entries, [])
+            self.assertIn("ghost", skipped)
+
+    def test_preset_extends_cycle_dies(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            root, env = make_registry(tmp)
+            _materialize_registry(env)
+            _write_preset(root, "p-a", extends=["p-b"])
+            _write_preset(root, "p-b", extends=["p-a"])
+            with self.assertRaises(SystemExit):
+                resolve_skillset(env, {"presets": ["p-a"]})
 
 
 class TestSync(unittest.TestCase):

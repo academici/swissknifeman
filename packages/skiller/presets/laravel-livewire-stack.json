@@ -1,0 +1,9 @@
+{
+  "name": "laravel-livewire-stack",
+  "description": "Livewire-стек: ядро + Livewire-атрибуты + DTO/realtime",
+  "buckets": [
+    "php",
+    "laravel-livewire",
+    "laravel-data-layer"
+  ]
+}

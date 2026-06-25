@@ -1,5 +1,5 @@
 {
   "name": "frontend",
-  "description": "Frontend development: Vite, Vue Composition API, Tailwind CSS, Inertia",
+  "description": "Frontend core: общие фронт-скиллы (web design guidelines, document writer, file upload)",
   "skills": "./"
 }

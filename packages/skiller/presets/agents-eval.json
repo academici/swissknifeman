@@ -1,0 +1,8 @@
+{
+  "name": "agents-eval",
+  "description": "Проектирование агентов и их оценка: agentic loop, tool contracts, eval-наборы/метрики",
+  "include": [
+    "architect/agent-design",
+    "architect/eval-design"
+  ]
+}

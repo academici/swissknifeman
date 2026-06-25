@@ -1,0 +1,5 @@
+{
+  "name": "frontend-vue",
+  "description": "Vue 3 ecosystem: Composition API, best practices, router, VueUse, Pinia state, Vitest testing",
+  "skills": "./"
+}

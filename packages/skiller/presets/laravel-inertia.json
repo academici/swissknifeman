@@ -1,0 +1,10 @@
+{
+  "name": "laravel-inertia",
+  "description": "Inertia-стек: Laravel ядро + DTO/realtime + frontend Inertia/Echo/Wayfinder/синк-типов",
+  "buckets": [
+    "php",
+    "laravel-data-layer",
+    "frontend-backend",
+    "frontend-wayfinder"
+  ]
+}

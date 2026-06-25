@@ -69,6 +69,20 @@ class RegistryBuildCase(unittest.TestCase):
         self.assertEqual(docker["upstream"], "https://raw.example/SKILL.md")
         self.assertEqual(docker["fetched_at"], "2026-02-02")
 
+    def test_fork_skill_provenance_via_non_skill_path(self):
+        # fork: files[].path указывает на зеркало (references/source.md), а не на
+        # SKILL.md → registry должен взять provenance из files[0] (fallback).
+        fx.write_upstream(self.root / "skills" / "devops" / "docker",
+                          source="github", strategy="fork",
+                          path="references/source.md",
+                          url="https://raw.example/SKILL.md",
+                          fetched_at="2026-03-03")
+        reg, *_ = build_registry(self.env)
+        docker = next(s for s in reg["skills"] if s["name"] == "docker")
+        self.assertEqual(docker["source"], "github")
+        self.assertEqual(docker["upstream"], "https://raw.example/SKILL.md")
+        self.assertEqual(docker["fetched_at"], "2026-03-03")
+
     def test_requires_only_when_present(self):
         reg, *_ = build_registry(self.env)
         conv = next(s for s in reg["skills"] if s["name"] == "laravel-conventions")

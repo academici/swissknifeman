@@ -24,16 +24,23 @@ def write_skill(skill_dir, name, *, version="0.1.0", description="desc",
 
 
 def write_upstream(skill_dir, *, source="github", url="https://example/SKILL.md",
-                   sha256="deadbeef", fetched_at="2026-01-01"):
-    """Положить upstream.json рядом с SKILL.md (метит скилл как внешний)."""
+                   sha256="deadbeef", fetched_at="2026-01-01",
+                   strategy="notify", path="SKILL.md", review_pending=None):
+    """Положить upstream.json рядом с SKILL.md (метит скилл как внешний).
+
+    strategy/path/review_pending — для fork-скиллов (path указывает на зеркало,
+    напр. references/source.md, а не на SKILL.md)."""
     import json as _json
-    (skill_dir / "upstream.json").write_text(_json.dumps({
+    data = {
         "schema_version": 1,
         "source": source,
-        "strategy": "notify",
-        "files": [{"path": "SKILL.md", "url": url, "sha256": sha256,
+        "strategy": strategy,
+        "files": [{"path": path, "url": url, "sha256": sha256,
                    "fetched_at": fetched_at}],
-    }) + "\n", encoding="utf-8")
+    }
+    if review_pending is not None:
+        data["review_pending"] = review_pending
+    (skill_dir / "upstream.json").write_text(_json.dumps(data) + "\n", encoding="utf-8")
 
 
 def make_registry(tmp_path):

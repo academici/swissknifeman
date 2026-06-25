@@ -30,6 +30,18 @@
       "package": "skiller"
     },
     {
+      "name": "azguard",
+      "source": "./packages/skiller/skills/azguard",
+      "description": "azguard package usage: code-first RBAC, panels, scoped roles, abilities (academici package — skill will relocate into the package repo)",
+      "category": "engineering",
+      "tags": [
+        "php",
+        "laravel",
+        "rbac"
+      ],
+      "package": "skiller"
+    },
+    {
       "name": "blender",
       "source": "./packages/skiller/skills/blender",
       "description": "Universal Blender bpy+MCP tooling: MCP workflow primitives, viewport modes, camera helper, version gotchas",
@@ -54,6 +66,18 @@
         "fdm",
         "sla",
         "bpy"
+      ],
+      "package": "skiller"
+    },
+    {
+      "name": "botkit",
+      "source": "./packages/skiller/skills/botkit",
+      "description": "botkit package usage: bot framework patterns — BotDefinition, service provider, webhooks (academici package — skill will relocate into the package repo)",
+      "category": "engineering",
+      "tags": [
+        "php",
+        "laravel",
+        "bot"
       ],
       "package": "skiller"
     },
@@ -106,13 +130,143 @@
     {
       "name": "frontend",
       "source": "./packages/skiller/skills/frontend",
-      "description": "Frontend development: Vite, Vue Composition API, Tailwind CSS, Inertia",
+      "description": "Frontend core: общие фронт-скиллы (web design guidelines, document writer, file upload)",
+      "category": "engineering",
+      "tags": [
+        "frontend",
+        "core"
+      ],
+      "package": "skiller"
+    },
+    {
+      "name": "frontend-animations",
+      "source": "./packages/skiller/skills/frontend-animations",
+      "description": "Animations with Motion Vue (motion-v)",
+      "category": "engineering",
+      "tags": [
+        "animations",
+        "motion",
+        "vue"
+      ],
+      "package": "skiller"
+    },
+    {
+      "name": "frontend-backend",
+      "source": "./packages/skiller/skills/frontend-backend",
+      "description": "Backend integration layer: Inertia+Vue, Laravel Echo realtime client, backend→frontend type sync",
+      "category": "engineering",
+      "tags": [
+        "inertia",
+        "echo",
+        "type-sync"
+      ],
+      "package": "skiller"
+    },
+    {
+      "name": "frontend-figma",
+      "source": "./packages/skiller/skills/frontend-figma",
+      "description": "Figma Dev Mode MCP → Vue mapping (uses architect/figma-mcp-core)",
+      "category": "engineering",
+      "tags": [
+        "figma",
+        "vue",
+        "design"
+      ],
+      "package": "skiller"
+    },
+    {
+      "name": "frontend-linting",
+      "source": "./packages/skiller/skills/frontend-linting",
+      "description": "JS/TS tooling and style: antfu config, ESLint flat config, Spatie JS style, TS library authoring",
+      "category": "engineering",
+      "tags": [
+        "eslint",
+        "typescript",
+        "tooling"
+      ],
+      "package": "skiller"
+    },
+    {
+      "name": "frontend-naive-ui",
+      "source": "./packages/skiller/skills/frontend-naive-ui",
+      "description": "Naive UI component library theming (GlobalThemeOverrides)",
+      "category": "engineering",
+      "tags": [
+        "naive-ui",
+        "vue",
+        "theming"
+      ],
+      "package": "skiller"
+    },
+    {
+      "name": "frontend-nuxt",
+      "source": "./packages/skiller/skills/frontend-nuxt",
+      "description": "Nuxt 4+: server routes, modules, SEO meta-module",
+      "category": "engineering",
+      "tags": [
+        "nuxt",
+        "vue",
+        "ssr"
+      ],
+      "package": "skiller"
+    },
+    {
+      "name": "frontend-reka",
+      "source": "./packages/skiller/skills/frontend-reka",
+      "description": "Reka UI headless primitives + CVA variants",
+      "category": "engineering",
+      "tags": [
+        "reka-ui",
+        "vue",
+        "cva"
+      ],
+      "package": "skiller"
+    },
+    {
+      "name": "frontend-tailwind",
+      "source": "./packages/skiller/skills/frontend-tailwind",
+      "description": "Tailwind CSS v4 conventions and dark-mode theming",
+      "category": "engineering",
+      "tags": [
+        "tailwind",
+        "css",
+        "dark-mode"
+      ],
+      "package": "skiller"
+    },
+    {
+      "name": "frontend-vite",
+      "source": "./packages/skiller/skills/frontend-vite",
+      "description": "Vite build tooling: config/plugins/SSR, project module loader, multi-build, VitePress",
+      "category": "engineering",
+      "tags": [
+        "vite",
+        "build",
+        "vitepress"
+      ],
+      "package": "skiller"
+    },
+    {
+      "name": "frontend-vue",
+      "source": "./packages/skiller/skills/frontend-vue",
+      "description": "Vue 3 ecosystem: Composition API, best practices, router, VueUse, Pinia state, Vitest testing",
       "category": "engineering",
       "tags": [
         "vue",
-        "vite",
-        "tailwind",
-        "inertia"
+        "pinia",
+        "vitest"
+      ],
+      "package": "skiller"
+    },
+    {
+      "name": "frontend-wayfinder",
+      "source": "./packages/skiller/skills/frontend-wayfinder",
+      "description": "Laravel Wayfinder: type-safe routes/controller actions in the frontend",
+      "category": "engineering",
+      "tags": [
+        "wayfinder",
+        "laravel",
+        "routes"
       ],
       "package": "skiller"
     },
@@ -155,6 +309,90 @@
         "ecosystem"
       ],
       "package": "harness"
+    },
+    {
+      "name": "laravel-architecture",
+      "source": "./packages/skiller/skills/laravel-architecture",
+      "description": "Scaling architecture: modular monolith/DDD, enum state machines, enum attributes, subagent orchestration",
+      "category": "engineering",
+      "tags": [
+        "laravel",
+        "architecture",
+        "ddd"
+      ],
+      "package": "skiller"
+    },
+    {
+      "name": "laravel-auth",
+      "source": "./packages/skiller/skills/laravel-auth",
+      "description": "Authorization & security: permissions/RBAC, attribute-based gates, security audit",
+      "category": "engineering",
+      "tags": [
+        "laravel",
+        "auth",
+        "security"
+      ],
+      "package": "skiller"
+    },
+    {
+      "name": "laravel-data-layer",
+      "source": "./packages/skiller/skills/laravel-data-layer",
+      "description": "Typed data + realtime: spatie/laravel-data DTOs (TS export), Echo/Reverb broadcasting",
+      "category": "engineering",
+      "tags": [
+        "laravel",
+        "data",
+        "broadcasting"
+      ],
+      "package": "skiller"
+    },
+    {
+      "name": "laravel-extras",
+      "source": "./packages/skiller/skills/laravel-extras",
+      "description": "Optional Laravel runtime packages: media library, typed settings, Pennant feature flags",
+      "category": "engineering",
+      "tags": [
+        "laravel",
+        "spatie",
+        "packages"
+      ],
+      "package": "skiller"
+    },
+    {
+      "name": "laravel-filament",
+      "source": "./packages/skiller/skills/laravel-filament",
+      "description": "Filament admin panels: resources, schemas, tables, widgets, actions, tenancy",
+      "category": "engineering",
+      "tags": [
+        "laravel",
+        "filament",
+        "admin"
+      ],
+      "package": "skiller"
+    },
+    {
+      "name": "laravel-livewire",
+      "source": "./packages/skiller/skills/laravel-livewire",
+      "description": "Livewire 3 UI: dynamic Blade attributes (ComponentAttributeBag)",
+      "category": "engineering",
+      "tags": [
+        "laravel",
+        "livewire",
+        "blade"
+      ],
+      "package": "skiller"
+    },
+    {
+      "name": "laravel-testing",
+      "source": "./packages/skiller/skills/laravel-testing",
+      "description": "Laravel testing: Pest feature/unit, DB isolation guard, Dusk browser tests, health checks",
+      "category": "engineering",
+      "tags": [
+        "laravel",
+        "testing",
+        "pest"
+      ],
+      "package": "skiller"
     },
     {
       "name": "legal",
@@ -234,12 +472,24 @@
     {
       "name": "php",
       "source": "./packages/skiller/skills/php",
-      "description": "PHP and Laravel: applications, packages, Filament, permissions, testing, patterns",
+      "description": "PHP and Laravel core: architecture, structure, conventions, DI, database, repositories, patterns, static analysis",
       "category": "engineering",
       "tags": [
         "php",
         "laravel",
-        "testing"
+        "core"
+      ],
+      "package": "skiller"
+    },
+    {
+      "name": "php-packages",
+      "source": "./packages/skiller/skills/php-packages",
+      "description": "Laravel package development: scaffold, service provider, testing, compatibility, docs, releases",
+      "category": "engineering",
+      "tags": [
+        "php",
+        "laravel",
+        "packages"
       ],
       "package": "skiller"
     },

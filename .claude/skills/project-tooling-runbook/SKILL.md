@@ -73,13 +73,17 @@ description: Раннбук управления инструментами пр
 | Роль | Бакет | Что внутри (примеры) |
 |:--|:--|:--|
 | **Проектировщик** | `architect` | architecture, api-design, data-schema, security-design, tech-stack-selection, observability-design |
-| **Разработчик (PHP/Laravel)** | `php` | laravel, laravel-best-practices, laravel-testing, database, modular-architecture, repositories, static-analysis |
-| **Фронт** | `frontend` | vue-composition-api, pinia-stores, vitest, tailwind-conventions, inertia-vue, vite-* |
+| **Разработчик (PHP/Laravel)** | `php` (ядро) + `laravel-*` | `php`=laravel/structure/DI/database/repositories/patterns/static-analysis; feature-бакеты: `laravel-testing`, `laravel-filament`, `laravel-livewire`, `laravel-data-layer`, `laravel-auth`, `laravel-architecture`, `laravel-extras`; `php-packages` (разработка пакетов); `azguard`/`botkit` (свои пакеты) |
+| **Фронт** | `frontend` (ядро) + `frontend-*` | ядро: web-design-guidelines/document-writer/filepond; feature-бакеты: `frontend-{vue,nuxt,tailwind,naive-ui,reka,vite,linting,animations,figma,wayfinder,backend}` |
 | Прочее | `quality` `devops` `operator` `system` `founder` `pm` `general` | тесты/CI/инциденты/конвенции/бизнес |
 
-**Профили** (`profiles/*.json`) = готовые наборы бакетов под тип проекта:
-- `laravel-project` → `system, architect, php, devops, quality, operator` (без фронта!)
+**Профили** (`profiles/*.json`) = готовые наборы бакетов под тип проекта (линяный дефолт):
+- `laravel-project` → `system, architect, php, laravel-testing, laravel-auth, laravel-data-layer, devops, quality, operator` (Filament/Livewire — точечно бакетом или пресетом `laravel-admin`).
 - `php-package`, `obsidian-vault`, `standalone`.
+
+**Пресеты** (`presets/*.json`) = именованные сквозные стеки поверх бакетов (vendor): `laravel-admin`,
+`laravel-enterprise`, `laravel-inertia`, `laravel-livewire-stack` + кластеры frontend/architect/pm/general/quality.
+В `.swissknifeman/config.json`: `presets: [...]` (+ `include`/`exclude`). Подробно — `docs/guide/presets.md`.
 
 ### ⚠️ Подбирай ОПТИМАЛЬНЫЙ набор под проект — не дамп «всё подряд»
 

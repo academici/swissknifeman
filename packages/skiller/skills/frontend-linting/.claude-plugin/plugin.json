@@ -1,0 +1,5 @@
+{
+  "name": "frontend-linting",
+  "description": "JS/TS tooling and style: antfu config, ESLint flat config, Spatie JS style, TS library authoring",
+  "skills": "./"
+}

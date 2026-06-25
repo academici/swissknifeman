@@ -22,7 +22,7 @@ skills/php/laravel-testing/
 ```markdown
 ---
 name: skill-name
-bucket: founder|pm|architect|oss-dev|quality|operator|devops|php|roles|imported
+bucket: <имя каталога-бакета>   # должно совпадать с skills/<bucket>/ и иметь запись в buckets.json
 version: 0.1.0
 description: "Краткое описание скилла"
 risk: read|draft|write|external

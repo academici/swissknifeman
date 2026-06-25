@@ -223,7 +223,6 @@ tooling: npm@X, composer@Y, ...
 - `architect/security-design` — потребитель: vuln/supply-chain находки идут в compliance-pipeline.
 - `php/laravel-package-compatibility` — composer-constraints, версии PHP/Laravel/Testbench для PHP-пакетов.
 - `php/static-analysis` — Pint/PHPStan/Rector: качество кода рядом с аудитом зависимостей.
-- `general/packages-stack` — реестр используемых внешних NPM/Composer пакетов проекта.
 
 ---
 

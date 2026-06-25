@@ -98,4 +98,4 @@ stateDiagram-v2
 
 - `pm/brd` — потребитель: функциональные требования и user stories опираются на описанные здесь процессы.
 - `architect/api-design` — FSM-переходы часто становятся эндпоинтами/командами; sequence-диаграмма помогает спроектировать контракт.
-- `general/ticket-workflow` — пример реализации FSM (TicketStatus через StateMachine) в коде Laravel.
+- `php/enum-state-machine` — реализация FSM (enum + переходы) в коде Laravel.

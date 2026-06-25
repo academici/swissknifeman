@@ -18,11 +18,9 @@
         "pest-testing",
         "inertia-vue-development",
         "filament-development",
-        "ai-context-workflow",
         "code-review",
         "cross-layer-change-checklist",
         "git-commit-rules",
-        "project-map",
         "testing-rules"
     ]
 }

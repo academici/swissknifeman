@@ -55,7 +55,7 @@ Issue → Branch → Commits → PR → Review → Merge → SemVer Oracle → T
 
 1. **Тип** — bug | feature | enhancement | security | docs | refactor | chore
 2. **Приоритет** — critical | high | normal | low
-3. **Затронутый компонент** (из карты проекта, если есть `project-map`)
+3. **Затронутый компонент** (из карты структуры проекта)
 4. **Версия пакета**, в которой воспроизводится проблема (для bug/security)
 
 ### Заголовок

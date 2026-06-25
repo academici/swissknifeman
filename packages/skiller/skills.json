@@ -1961,7 +1961,7 @@
       "path": "skills/oss-dev/dependency-audit/SKILL.md",
       "version": "0.2.0",
       "description": "Аудит зависимостей: lockfile sanity, vuln scan, лицензионная совместимость, supply-chain risk, SBOM",
-      "sha256": "da233b5ae44353915d05259ceef2014b096e84a4188fa3d026bbda335d2a036a",
+      "sha256": "3f99e33d4acc26b35c438eb47a123ed8e0b9e1a36f099fb2bc0ff1f7c650188d",
       "tags": [
         "oss",
         "compliance",
@@ -2025,7 +2025,7 @@
       "path": "skills/oss-dev/github-flow/SKILL.md",
       "version": "0.2.0",
       "description": "Цепочка Issue → Branch → PR → Merge → Tag → Release на GitHub: naming, labels, SemVer-оракул по типам коммитов, шаблоны Issue/PR. Формат коммитов — git-commit-rules, changelog и pipeline — release-engineering, ревью PR — gh-review.",
-      "sha256": "1a46a927d0d06b0bf65cfc2228ccbe998a5ed1edea86122bf23fa0ef4d8234d6",
+      "sha256": "97225a443af13ff09dbd40ddabdfaab56ea62774a8b5ae15705066405b7d0731",
       "tags": [
         "oss",
         "github",
@@ -2870,7 +2870,7 @@
       "path": "skills/pm/business-process/SKILL.md",
       "version": "0.1.0",
       "description": "Бизнес-процессы, workflow, FSM, sequence/state-диаграммы, обработка ошибок",
-      "sha256": "c5f4ee75152ecfe72fba976df3262b49137dcf9f8b3046856fd4b420a7f67926",
+      "sha256": "152d8d9e0b7499599e289aa427a75772542c5671e188085f3d07cb268c63359f",
       "tags": [
         "requirements",
         "workflow"

@@ -38,6 +38,7 @@ export default withMermaid(defineConfig({
             { text: 'CLI swissknifeman', link: '/guide/cli' },
             { text: 'Профили и автодетект', link: '/guide/profiles' },
             { text: 'Анатомия скилла', link: '/guide/skill-anatomy' },
+            { text: 'Таксономия и гранулярность', link: '/guide/skill-taxonomy' },
             { text: 'Адаптерные дельты', link: '/guide/adapter-deltas' },
             { text: 'Методология: против раздувания кода', link: '/guide/methodology' },
             { text: 'Семантика loop’ов', link: '/guide/loop-semantics' },

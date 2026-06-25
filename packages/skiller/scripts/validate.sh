@@ -34,6 +34,10 @@ SEMVER_RE = re.compile(r"^\d+\.\d+\.\d+$")
 # должны резолвиться. ../ и .agents/.claude (раскладка проекта-потребителя) и
 # прозовые URL'ы НЕ проверяем (ложные срабатывания на upstream/imported).
 INTRA_LINK_RE = re.compile(r"\]\((snippets/[^)#]+|references/[^)#]+)\)")
+# lean SKILL.md: тело — точка входа, детали в references/snippets (progressive disclosure).
+# Мягкий порог: тело сверх него → warn (не error), подсказка вынести детали.
+# См. docs/guide/skill-taxonomy.md.
+LEAN_MAX_BODY_LINES = 150
 
 
 def parse_frontmatter(path):
@@ -134,6 +138,20 @@ for skill_md in skill_files:
         tgt = m.group(1).split("#")[0]
         if not (skill_dir / tgt).exists():
             errors.append(f"{rel}: битая ссылка на {tgt} (файла нет)")
+
+    # lean SKILL.md: тело (без frontmatter) сверх порога → мягкий warn.
+    lines = body.splitlines()
+    body_start = 0
+    if lines and lines[0].strip() == "---":
+        for i in range(1, len(lines)):
+            if lines[i].strip() == "---":
+                body_start = i + 1
+                break
+    body_lines = len([ln for ln in lines[body_start:] if ln.strip()])
+    if body_lines > LEAN_MAX_BODY_LINES:
+        warnings.append(f"{rel}: тело SKILL.md {body_lines} непустых строк "
+                        f"(> {LEAN_MAX_BODY_LINES}) — вынеси детали в references/snippets "
+                        f"(lean SKILL.md, docs/guide/skill-taxonomy.md)")
 
 # --- 2. upstream.json -----------------------------------------------------
 for up_file in sorted(root.glob("skills/**/upstream.json")) + \

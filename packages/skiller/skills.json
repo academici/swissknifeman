@@ -3220,7 +3220,7 @@
       "path": "skills/roles/open-source-maintainer/SKILL.md",
       "version": "0.2.0",
       "description": "OSS Maintainer — triage, review, releases",
-      "sha256": "b860b2ba7a20a79ca4aa7fc5c7dbb6b8678ececb47cf5261ec0e20bb11f6f8b3",
+      "sha256": "1d4dc0fd402d625ef37d01e0f99dfe87b9b5af8e17d3f4c4387b8c07a91d8707",
       "tags": [
         "role",
         "persona",
@@ -3238,7 +3238,7 @@
       "path": "skills/roles/solo-founder/SKILL.md",
       "version": "0.2.0",
       "description": "Solo Founder — weekly review, decision log",
-      "sha256": "4ab48f8974724ccfea96a52b98248f329431ca4e5a3778384830143ae837dc5e",
+      "sha256": "8efa0655c31140c9471504c8bf70b33853e0947c8b3fd2f25ba2265fba09b493",
       "tags": [
         "role",
         "persona",
@@ -3254,7 +3254,7 @@
       "path": "skills/roles/startup-cto/SKILL.md",
       "version": "0.2.0",
       "description": "Startup CTO persona — tech radar, hiring, architecture decisions",
-      "sha256": "b5495299ce9b00aadb1bfe977e1bc3ea80289122fa3f5631e057af64c0772533",
+      "sha256": "b3e4497201a75d78215505af9b83ec6fc9069dbc79d03891eb4888556fceb0ff",
       "tags": [
         "role",
         "persona",
@@ -3270,7 +3270,7 @@
       "path": "skills/roles/tech-lead/SKILL.md",
       "version": "0.2.0",
       "description": "Tech Lead persona — sprint kickoff, 1:1s, team coordination",
-      "sha256": "1e96364448706d0e2b5df0cd939b41a56eb4ae63a5626541e9470cee8c0bac51",
+      "sha256": "d7f69cf756b2805a55e2d6facba9d88fa0f1d169690de6a3e1f9ecfba56e84a6",
       "tags": [
         "role",
         "persona",

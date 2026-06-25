@@ -27,6 +27,7 @@ TOP_KEYS = {
     "integrations": dict,
     "mcp": dict,
     "observability": dict,
+    "role_packs": dict,        # роль → agent-pack (вариант C: project.roles → авто-доставка пака)
 }
 
 NODE_ROLES = {"primary", "secondary", "mirror"}

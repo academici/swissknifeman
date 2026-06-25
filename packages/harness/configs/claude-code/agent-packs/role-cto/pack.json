@@ -1,0 +1,64 @@
+{
+  "schema": 1,
+  "pack": "role-cto",
+  "version": "0.1.0",
+  "description": "Персона-пак стартап-CTO: набор delegate/read-first субагентов уровня технического лидера — architecture-decision (ADR/C4/границы/scalability + data/api/observability/security), tech-radar-curator (выбор стека и build-vs-buy как trade-off матрица + tech radar adopt/trial/hold с аудитом supply-chain), ai-viability-assessor (реальность vs хайп AI-направления через дизайн агента, eval-метрики и продуктово-рыночные риски). Стек-агностичная роль: подключается явно как компаньон любого стек-пака, не автодетектится.",
+  "stack": {
+    "shape": "role"
+  },
+  "requires": {
+    "skills": [
+      "tech-stack-selection",
+      "architecture",
+      "data-schema",
+      "api-design",
+      "observability-design",
+      "security-design",
+      "agent-design",
+      "eval-design",
+      "dependency-audit",
+      "dx-design",
+      "risk-assessment",
+      "tech-debt-audit",
+      "complex-task-orchestrator",
+      "tech-lead",
+      "solo-founder"
+    ],
+    "harness_presets": [
+      "base"
+    ]
+  },
+  "interview": [
+    {
+      "id": "PACK_PREFIX",
+      "q": "Префикс имён агентов проекта (как у стек-пака-компаньона)?",
+      "default": "{project_dirname}",
+      "kind": "slug"
+    }
+  ],
+  "files": [
+    {
+      "src": "agents/architecture-decision.md",
+      "target": ".claude/agents/{PACK_PREFIX}-architecture-decision.md",
+      "kind": "template",
+      "role": "agent"
+    },
+    {
+      "src": "agents/tech-radar-curator.md",
+      "target": ".claude/agents/{PACK_PREFIX}-tech-radar-curator.md",
+      "kind": "template",
+      "role": "agent"
+    },
+    {
+      "src": "agents/ai-viability-assessor.md",
+      "target": ".claude/agents/{PACK_PREFIX}-ai-viability-assessor.md",
+      "kind": "template",
+      "role": "agent"
+    }
+  ],
+  "notes": {
+    "prerequisite": "Персона-пак уровня CTO/tech-lead: стек-агностичен (shape=role), без detect — подключается явно как компаньон стек-пака. {PACK_PREFIX} должен совпадать с префиксом стек-пака, чтобы @<prefix>-<role> резолвились и оркестратор стек-пака мог маршрутизировать к этим ролям.",
+    "persona": "Роли — это технический лидер/архитектор/CTO-помощник, а не кодер: read-first, выдают ADR/trade-off матрицы/радар/оценки жизнеспособности. Пишут только документы решений (ADR/radar/spec), не реализацию.",
+    "verify_workflow": "Все файлы — агенты (.md frontmatter), не воркфлоу; node --check не применяется."
+  }
+}

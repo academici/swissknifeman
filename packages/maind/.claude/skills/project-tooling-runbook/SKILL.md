@@ -65,6 +65,10 @@ description: Раннбук управления инструментами пр
 - `laravel-project` → `system, architect, php, devops, quality, operator` (без фронта!)
 - `php-package`, `obsidian-vault`, `standalone`.
 
+> **Гранулярность и размещение** (general=кросс-стек/CORE, stack→stack-бакет, project→project-local,
+> connect=грубо/vendor=тонко, lean SKILL.md) — канон в skiller docs `guide/skill-taxonomy.md`.
+> Политика: **тонкую настройку веди через vendor** (connect = бакет целиком).
+
 CLI — `swissknifeman` (запускать из каталога проекта; корень ищется вверх от CWD):
 
 ```bash

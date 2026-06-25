@@ -201,17 +201,24 @@ def _profile_for(config, project):
 
 
 def _resolve_agent_pack(config, project):
-    """Список паков профиля проекта: project.agent_pack (str|list) > profile.agent_pack
-    по project.type. [] — не определилось (онбординг/sync просто пропустят шаг)."""
+    """Паки проекта: project.agent_pack (str|list) > profile.agent_pack по project.type,
+    ПЛЮС роль-паки (вариант C): project.roles → config.role_packs[role] — кросс-стек паки
+    персон поверх стекового пака профиля. [] — ничего не определилось (шаг пропустится)."""
     explicit = project.get("agent_pack")
     if isinstance(explicit, str):
-        return [explicit]
-    if isinstance(explicit, list):
-        return list(explicit)
-    pack = _profile_for(config, project).get("agent_pack")
-    if isinstance(pack, str):
-        return [pack]
-    return list(pack) if isinstance(pack, list) else []
+        packs = [explicit]
+    elif isinstance(explicit, list):
+        packs = list(explicit)
+    else:
+        pack = _profile_for(config, project).get("agent_pack")
+        packs = [pack] if isinstance(pack, str) else (list(pack) if isinstance(pack, list) else [])
+    # роль-паки: project.roles (выбранные роли) → пак из config.role_packs, аддитивно
+    role_map = config.get("role_packs") or {}
+    for role in (project.get("roles") or []):
+        rp = role_map.get(role)
+        if rp and rp not in packs:
+            packs.append(rp)
+    return packs
 
 
 def _profile_answers(config, project):

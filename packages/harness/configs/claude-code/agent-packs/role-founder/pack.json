@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "pack": "role-founder",
+  "version": "0.1.0",
+  "description": "Персона-пак соло-фаундера: три субагента-консультанта — idea-validator (валидация гипотезы до кода: JTBD/discovery/конкуренты/moat/pre-mortem), mvp-scoper (сужение до MVP, roadmap, brd→prd) и founder-cadence (еженедельный ритм + decision-log, монетизация/unit-экономика). Роль-пак: не привязан к стеку, не автодетектится — выбирается явно и ставится с любым стек-паком (PACK_PREFIX совпадает).",
+  "stack": {
+    "shape": "agnostic"
+  },
+  "requires": {
+    "skills": [
+      "founder/idea-discovery",
+      "founder/customer-discovery",
+      "founder/competitive-analysis",
+      "founder/defensibility",
+      "founder/new-project",
+      "founder/startup-lifecycle",
+      "founder/risk-assessment",
+      "pm/product-roadmap",
+      "pm/brd",
+      "pm/prd-from-brd",
+      "pm/monetization-design",
+      "pm/unit-economics",
+      "pm/go-to-market",
+      "pm/pmf-diagnostics",
+      "roles/startup-cto"
+    ],
+    "harness_presets": [
+      "base"
+    ]
+  },
+  "interview": [
+    {
+      "id": "PACK_PREFIX",
+      "q": "Префикс имён агентов проекта (как у стек-пака)?",
+      "default": "{project_dirname}",
+      "kind": "slug"
+    }
+  ],
+  "files": [
+    {
+      "src": "agents/idea-validator.md",
+      "target": ".claude/agents/{PACK_PREFIX}-idea-validator.md",
+      "kind": "template",
+      "role": "agent"
+    },
+    {
+      "src": "agents/mvp-scoper.md",
+      "target": ".claude/agents/{PACK_PREFIX}-mvp-scoper.md",
+      "kind": "template",
+      "role": "agent"
+    },
+    {
+      "src": "agents/founder-cadence.md",
+      "target": ".claude/agents/{PACK_PREFIX}-founder-cadence.md",
+      "kind": "template",
+      "role": "agent"
+    }
+  ],
+  "notes": {
+    "prerequisite": "Персона-пак: ставится поверх любого стек-пака. {PACK_PREFIX} должен совпадать с префиксом стек-пака, чтобы @<prefix>-<role> резолвились в его роли (например, founder-cadence уводит технический стенс в @<prefix>-startup-cto / стек-роли).",
+    "verify_workflow": "Это субагенты (.md), не воркфлоу — node --check не применяется."
+  }
+}

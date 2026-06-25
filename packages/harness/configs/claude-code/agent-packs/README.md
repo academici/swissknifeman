@@ -51,9 +51,25 @@ CHANGELOG-дельте с 3-way reasoning через sha256, без diff-дви�
 | `node-frontend` | frontend | Vue/Vite/TS (SPA/Inertia/Nuxt) | 0.1.0 |
 | `dart-flutter` | mobile | Flutter/Dart (mobile/POS/embedded) | 0.1.0 |
 | `python-backend` | backend | Python (FastAPI/Django/Flask) | 0.1.0 |
+| `role-tech-lead` | role | tech-lead (sprint/делегирование/ревью) | 0.1.0 |
+| `role-cto` | role | startup-CTO (архитектура/tech-radar/AI-viability) | 0.1.0 |
+| `role-founder` | role | solo-founder (discovery/MVP/cadence) | 0.1.0 |
+| `role-maintainer` | role | OSS-maintainer (триаж/ревью/релиз) | 0.1.0 |
 
 Каждый профиль (`packages/skiller/profiles/<type>.json`) называет `agent_pack` (строка ИЛИ
 список — **композиция**: стек-пак + `_common`). Fullstack = композиция по концерну
 (`backend-laravel` + `node-frontend`). Роли универсальны, стек выбирает профиль; модельные
 тиры — из `profile.model_tiers`. PostToolUse-валидаторы (tsc/eslint, dart analyze, ruff) —
 advisory (инжектят ошибки, не блокируют).
+
+### Роль-паки (`role-*`) — кросс-стек, по персоне
+
+`role-*` — **персона-паки** (`shape: role`): субагенты под роль, НЕ под стек. Кросс-стек
+(нет `stack.project_type`/`detect` → НЕ авто-привязываются по типу проекта). Доставка
+(**вариант A+C**): проект объявляет активные роли в `config.json` (`project.roles: ["tech-lead"]`),
+а карта хаба `role_packs` (`{"tech-lead":"role-tech-lead", …}`) маппит роль → пак; `maind sync`
+добавляет пак аддитивно к стековому паку профиля (`maind/lib/maind/sync.py:_resolve_agent_pack`).
+Тонкий выбор одной роли в проект — также через vendor (`roles/<role>`, поле `role_agent_pack`
+во frontmatter скилла). Модельные тиры — **литералами** в `model:` агентов (opus — тяжёлые
+суждения: архитектура/планирование/валидация; sonnet — рутина: триаж/ревью/cadence), т.к.
+standalone-доставка не получает `profile.model_tiers`.

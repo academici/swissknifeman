@@ -15,7 +15,7 @@
 | Self-ref pivot | `<domain>_related` | `ticket_related` |
 | Settings / config | `<domain>_settings` | `ticket_settings` |
 
-**Правило:** если сущность принадлежит домену `Ticket` — все её вспомогательные таблицы начинаются с `ticket_`.
+**Правило:** если сущность принадлежит домену `Order` — все её вспомогательные таблицы начинаются с `ticket_`.
 
 ## Модель как единственный источник имени таблицы
 
@@ -43,7 +43,7 @@ $table->foreignId('participant_id')->constrained('ticket_participants');
 
 declare(strict_types=1);
 
-use App\Models\Ticket\Ticket;
+use App\Models\Order\Order;
 use App\Models\User\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -56,7 +56,7 @@ return new class extends Migration
         Schema::create(table: $this->table(), callback: function (Blueprint $table): void {
             $table->id();
             $table->foreignId(column: 'ticket_id')
-                ->constrained(table: (new Ticket())->getTable())
+                ->constrained(table: (new Order())->getTable())
                 ->cascadeOnDelete();
             $table->foreignId(column: 'user_id')
                 ->constrained(table: (new User())->getTable())

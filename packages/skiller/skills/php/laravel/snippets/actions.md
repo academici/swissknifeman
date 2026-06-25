@@ -25,10 +25,10 @@ app/Dto/Actions/<Domain>/<Subprocess>/VerbNounCommand.php
 
 Пример для ticket-домена:
 ```
-app/Actions/Ticket/Common/StoreAction.php
-app/Actions/Ticket/Question/WrittenReplyAction.php
-app/Dto/Actions/Ticket/Common/StoreCommand.php
-app/Dto/Actions/Ticket/Question/WrittenReplyCommand.php
+app/Actions/Order/Common/StoreAction.php
+app/Actions/Order/Question/WrittenReplyAction.php
+app/Dto/Actions/Order/Common/StoreCommand.php
+app/Dto/Actions/Order/Question/WrittenReplyCommand.php
 ```
 
 ## Шаблон Action
@@ -38,24 +38,24 @@ app/Dto/Actions/Ticket/Question/WrittenReplyCommand.php
 
 declare(strict_types=1);
 
-namespace App\Actions\Ticket\Common;
+namespace App\Actions\Order\Common;
 
-use App\Dto\Actions\Ticket\Common\StoreCommand;
-use App\Models\Ticket\Ticket;
-use App\Repositories\Ticket\TicketStoreRepository;
-use App\Services\Ticket\NotificationService;
+use App\Dto\Actions\Order\Common\StoreCommand;
+use App\Models\Order\Order;
+use App\Repositories\Order\OrderStoreRepository;
+use App\Services\Order\NotificationService;
 use Illuminate\Support\Facades\DB;
 
 final readonly class StoreAction
 {
     public function __construct(
-        private TicketStoreRepository $storeRepository,
+        private OrderStoreRepository $storeRepository,
         private NotificationService $notificationService,
     ) {}
 
-    public function execute(StoreCommand $command): Ticket
+    public function execute(StoreCommand $command): Order
     {
-        return DB::transaction(function () use ($command): Ticket {
+        return DB::transaction(function () use ($command): Order {
             $ticket = $this->storeRepository->create(command: $command);
 
             $this->notificationService->notifyCreated(
@@ -76,9 +76,9 @@ final readonly class StoreAction
 
 declare(strict_types=1);
 
-namespace App\Dto\Actions\Ticket\Common;
+namespace App\Dto\Actions\Order\Common;
 
-use App\Dto\Ticket\Form\Form;
+use App\Dto\Order\Form\Form;
 use App\Models\User\User;
 
 final readonly class StoreCommand
@@ -111,9 +111,9 @@ final readonly class RegisterStoreAction
         private RegisteredAction $registeredAction,
     ) {}
 
-    public function execute(RegisterStoreCommand $command): Ticket
+    public function execute(RegisterStoreCommand $command): Order
     {
-        return DB::transaction(function () use ($command): Ticket {
+        return DB::transaction(function () use ($command): Order {
             $ticket = $this->storeAction->execute(command: $command->storeCommand);
 
             return $this->registeredAction->execute(

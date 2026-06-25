@@ -9,11 +9,11 @@
 
 declare(strict_types=1);
 
-namespace App\Models\Ticket;
+namespace App\Models\Order;
 
-use App\Enums\Ticket\TicketStatus;
+use App\Enums\Order\OrderStatus;
 use App\Models\User\User;
-use App\Observers\Ticket\Observer;
+use App\Observers\Order\Observer;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -22,7 +22,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Table(name: 'tickets')]
 #[ObservedBy(Observer::class)]
-final class Ticket extends Model
+final class Order extends Model
 {
     protected $fillable = [
         'subject',
@@ -34,7 +34,7 @@ final class Ticket extends Model
     protected function casts(): array
     {
         return [
-            'status'     => TicketStatus::class,
+            'status'     => OrderStatus::class,
             'created_at' => 'immutable_datetime',
             'updated_at' => 'immutable_datetime',
         ];
@@ -86,7 +86,7 @@ protected $guarded = [];
 protected function casts(): array
 {
     return [
-        'status'       => TicketStatus::class,     // enum
+        'status'       => OrderStatus::class,     // enum
         'meta'         => 'array',                  // JSON → array
         'is_active'    => 'boolean',
         'published_at' => 'immutable_datetime',     // CarbonImmutable
@@ -95,7 +95,7 @@ protected function casts(): array
 }
 
 // ❌ Устаревший $casts массив
-protected $casts = ['status' => TicketStatus::class];
+protected $casts = ['status' => OrderStatus::class];
 ```
 
 ---
@@ -174,7 +174,7 @@ public function tags(): BelongsToMany
 {
     return $this->belongsToMany(
         related: Tag::class,
-        table: (new TicketTag())->getTable(),
+        table: (new OrderTag())->getTable(),
         foreignPivotKey: 'ticket_id',
         relatedPivotKey: 'tag_id',
     );
@@ -202,7 +202,7 @@ public function scopeActive(Builder $query): Builder
     return $query->where(column: 'is_active', operator: true);
 }
 
-// Использование: Ticket::query()->active()->get()
+// Использование: Order::query()->active()->get()
 ```
 
 ---

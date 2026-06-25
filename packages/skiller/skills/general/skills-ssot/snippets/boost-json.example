@@ -15,12 +15,12 @@
     "sail": false,
     "skills": [
         "laravel-best-practices",
-        "pest-testing",
-        "inertia-vue-development",
-        "filament-development",
+        "laravel-testing",
+        "inertia-vue",
+        "filament",
         "code-review",
         "cross-layer-change-checklist",
         "git-commit-rules",
-        "testing-rules"
+        "test-isolation-guard"
     ]
 }

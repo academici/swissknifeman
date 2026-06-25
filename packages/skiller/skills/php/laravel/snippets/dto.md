@@ -31,7 +31,7 @@ final class ListItemView extends Data {}
 
 // Nested Data вместо raw arrays
 // ✅
-public TicketParticipant $creator;
+public OrderParticipant $creator;
 // ❌
 public array $creator;
 
@@ -50,7 +50,7 @@ public array $participants; // без типизации элементов
 Для сборки DTO внутри приложения (не из user input) — всегда через factory:
 
 ```php
-public static function fromDb(Ticket $ticket): self
+public static function fromDb(Order $ticket): self
 {
     $ticket->load([
         'creator',
@@ -64,7 +64,7 @@ public static function fromDb(Ticket $ticket): self
         ->from(self::buildPayload(ticket: $ticket));
 }
 
-private static function buildPayload(Ticket $ticket): array
+private static function buildPayload(Order $ticket): array
 {
     return [
         'id' => $ticket->id,
@@ -88,13 +88,13 @@ private static function buildPayload(Ticket $ticket): array
 public static function fromModel(Model $model): self { ... }
 
 // Из БД (с eager-load внутри)
-public static function fromDb(Ticket $ticket): self { ... }
+public static function fromDb(Order $ticket): self { ... }
 
 // Пустое состояние (для create-форм)
 public static function fromEmpty(): self { ... }
 
 // Из FormRequest
-public static function fromRequest(TicketRequest $request): self { ... }
+public static function fromRequest(OrderRequest $request): self { ... }
 ```
 
 ---
@@ -110,7 +110,7 @@ final class ListItemView extends Data
     public function __construct(
         public int $id,
         public string $subject,
-        public TicketStatus $status,
+        public OrderStatus $status,
         public UserView $creator,
     ) {}
 }
@@ -176,12 +176,12 @@ final class ListItemView extends Data
         public int $id,
         public string $number,
         public string $subject,
-        public TicketStatus $status,
+        public OrderStatus $status,
         public UserView $creator,
         public \Carbon\CarbonImmutable $createdAt,
     ) {}
 
-    public static function fromModel(Ticket $ticket): self
+    public static function fromModel(Order $ticket): self
     {
         return new self(
             id: $ticket->id,

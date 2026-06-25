@@ -45,7 +45,7 @@ FilePond (process/revert/patch/restore), временный файл идент�
 **Laravel Boost**: FilePond и `rahulhaque/laravel-filepond` **не** входят в Boost
 (нет `.ai/`-каталога в пакете) — это **ours-only** скилл, паттерн описан целиком,
 upstream не нужен. Версионные основы Inertia-форм (`useForm`, навигация) — за
-Boost-скиллом inertia-vue-development; здесь — только нейтральный контракт поля и
+Boost-скиллом inertia-vue; здесь — только нейтральный контракт поля и
 его привязка к форме. Пакет: https://github.com/laravel/boost (скиллы —
 `vendor/laravel/boost/.ai/`).
 

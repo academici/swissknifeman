@@ -971,7 +971,7 @@
       "path": "skills/frontend/dark-mode/SKILL.md",
       "version": "0.1.0",
       "description": "Тёмная тема light|dark|system на Vue 3: composable useDarkMode (matchMedia prefers-color-scheme, localStorage + cookie для SSR, toggle класса .dark на documentElement, слушатель change для system), инициализация до маунта без вспышки темы, мини-переключатель. Активировать при добавлении переключения темы, борьбе со вспышкой светлой темы (FOUC), синхронизации темы с системой или восстановлении темы при SSR.",
-      "sha256": "fc028081ee3e357c7f21ff800ce5bd236682ea62669b798d64606b071a7c81b8",
+      "sha256": "8f25a9ab18f1f891682bee4e4da88c1561651ad465bcfc39b311e72d239e22ea",
       "tags": [
         "dark-mode",
         "theme",
@@ -1052,7 +1052,7 @@
       "path": "skills/frontend/filepond-upload/SKILL.md",
       "version": "0.1.0",
       "description": "Загрузка файлов через FilePond в Vue + Laravel: регистрация vue-filepond и плагинов (validate-type/size, image-preview, file-poster), серверная обработка через rahulhaque/laravel-filepond (process/revert на /filepond), привязка serverId загруженного файла к форме, превью и постеры. Активировать при добавлении/правке загрузки файлов, drag-and-drop аплоада, FilePond-поля, превью изображений в форме, при словах filepond/vue-filepond/laravel-filepond/file upload/process/revert/serverId.",
-      "sha256": "b484f8594f7f185a59a4f2671bbded3904a01487ac40892048088974ebdbb1d6",
+      "sha256": "3a41e42312297e0243e6911e66a489fb5b481521288ae6e7fe9a4efd091b5903",
       "tags": [
         "filepond",
         "vue",
@@ -1072,7 +1072,7 @@
       "path": "skills/frontend/inertia-vue/SKILL.md",
       "version": "0.3.0",
       "description": "Inertia + Vue в Laravel: страницы, формы, навигация и слоистая организация resources/js (pages, layouts, components, composables, stores, features, events, types, actions/wayfinder).",
-      "sha256": "b553fbd25a9b5b31814e52273fce9725b40232e59e16073c6fe202376d52ed16",
+      "sha256": "af44be6c253d4922f19cc5955c76ae8143f528c40108429084d1fbaaaebe2c1f",
       "tags": [
         "inertia",
         "vue",

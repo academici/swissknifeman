@@ -26,13 +26,13 @@
 final readonly class StoreAction
 {
     public function __construct(
-        private TicketStoreRepository $storeRepository,
+        private OrderStoreRepository $storeRepository,
         private NotificationService $notificationService,
     ) {}
 
-    public function execute(StoreCommand $command): Ticket
+    public function execute(StoreCommand $command): Order
     {
-        return DB::transaction(function () use ($command): Ticket {
+        return DB::transaction(function () use ($command): Order {
             $ticket = $this->storeRepository->create(command: $command);
             $this->notificationService->notifyCreated(ticket: $ticket);
             return $ticket;
@@ -52,8 +52,8 @@ final readonly class StoreAction
 ```php
 final class WorkflowService
 {
-    public function canTransition(Ticket $ticket, TicketStatus $to): bool { ... }
-    public function resolveAssignee(Ticket $ticket): User { ... }
+    public function canTransition(Order $ticket, OrderStatus $to): bool { ... }
+    public function resolveAssignee(Order $ticket): User { ... }
 }
 ```
 
@@ -64,7 +64,7 @@ final class WorkflowService
 ```php
 final class StageViewService
 {
-    public function buildStageView(Ticket $ticket): StageView { ... }
+    public function buildStageView(Order $ticket): StageView { ... }
 }
 ```
 
@@ -75,7 +75,7 @@ final class StageViewService
 ```php
 final class NotificationService
 {
-    public function notifyCreated(Ticket $ticket): void { ... }
+    public function notifyCreated(Order $ticket): void { ... }
 }
 ```
 
@@ -99,20 +99,20 @@ final class NotificationService
 
 ```php
 // Read
-final class TicketReadRepository
+final class OrderReadRepository
 {
     public function queryForUser(?User $user = null): Builder
     {
-        return Ticket::query()->where(...)->with([...]);
+        return Order::query()->where(...)->with([...]);
     }
 }
 
 // Write
-final class TicketStoreRepository
+final class OrderStoreRepository
 {
-    public function create(StoreCommand $command): Ticket
+    public function create(StoreCommand $command): Order
     {
-        return Ticket::query()->create([...]);
+        return Order::query()->create([...]);
     }
 }
 ```
@@ -128,7 +128,7 @@ authorize → validate (FormRequest) → call Action → response/redirect
 ```
 
 ```php
-final class TicketsController
+final class OrdersController
 {
     public function store(StoreRequest $request): RedirectResponse
     {
@@ -152,7 +152,7 @@ final class TicketsController
 final class CommonPolicy
 {
     #[GateAbility(permission: CommonPermission::Edit)]
-    public function canEdit(User $user, Ticket $ticket): bool
+    public function canEdit(User $user, Order $ticket): bool
     {
         return $this->accessEvaluator->hasAccess(user: $user, ticket: $ticket)
             && $ticket->status->isEditable();
@@ -181,28 +181,28 @@ final class CommonPolicy
 ```php
 // ❌ Request в Action
 class StoreAction {
-    public function execute(Request $request): Ticket { ... }
+    public function execute(Request $request): Order { ... }
 }
 
 // ❌ Мутация в Service
-class TicketService {
-    public function save(Ticket $ticket): void {
+class OrderService {
+    public function save(Order $ticket): void {
         $ticket->save(); // mutation в Service!
     }
 }
 
 // ❌ Бизнес-логика в Controller
-class TicketsController {
+class OrdersController {
     public function store(Request $request): Response {
         if ($request->user()->hasRole('admin')) { // решение в HTTP-слое!
-            Ticket::create(...);
+            Order::create(...);
         }
     }
 }
 
 // ❌ Два write-вызова из Controller без транзакции
-class TicketsController {
-    public function approve(Ticket $ticket): Response {
+class OrdersController {
+    public function approve(Order $ticket): Response {
         $ticket->update(['status' => 'approved']);     // мутация 1
         $this->historyService->log($ticket, 'approved'); // мутация 2 — не в транзакции!
     }

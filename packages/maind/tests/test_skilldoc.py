@@ -72,5 +72,32 @@ class TestEcosystemSkill(unittest.TestCase):
             self.assertFalse(r["changed"])
 
 
+_SETUP_SKILL = Path(".claude") / "skills" / "ecosystem-setup" / "SKILL.md"
+
+
+class TestSetupSkill(unittest.TestCase):
+    def test_install_substitutes_and_idempotent(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj, pdir = _setup(tmp)
+            r1 = skilldoc.apply_setup_skill(env, config, proj, "auto", dry=False)
+            self.assertEqual(r1["state"], "absent")
+            self.assertTrue(r1["changed"])
+            text = (pdir / _SETUP_SKILL).read_text(encoding="utf-8")
+            self.assertIn("name: ecosystem-setup", text)
+            self.assertIn("flexcrm", text)            # {{PROJECT}}
+            self.assertIn("php-package", text)        # {{TYPE}}
+            self.assertNotIn("{{", text)              # все плейсхолдеры подставлены
+            r2 = skilldoc.apply_setup_skill(env, config, proj, "auto", dry=False)
+            self.assertEqual(r2["state"], "fresh")
+            self.assertFalse(r2["changed"])
+
+    def test_dry_run_does_not_write(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj, pdir = _setup(tmp)
+            r = skilldoc.apply_setup_skill(env, config, proj, "auto", dry=True)
+            self.assertEqual(r["status"], "dry")
+            self.assertFalse((pdir / _SETUP_SKILL).exists())
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -19,6 +19,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
 from skiller.integrate import cmd_integrate, _default_mcp, _gather
+from skiller.registry import build_registry
 import tests.fixtures as fx
 
 
@@ -27,6 +28,13 @@ def run(fn, *a, **kw):
     with contextlib.redirect_stdout(buf):
         fn(*a, **kw)
     return buf.getvalue()
+
+
+def _materialize_registry(env):
+    """skills.json из синтетического реестра — нужен vendor-каналу (sync)."""
+    reg, *_ = build_registry(env)
+    (env.root / "skills.json").write_text(
+        json.dumps(reg, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 class IntegrateCase(unittest.TestCase):
@@ -59,6 +67,49 @@ class IntegrateCase(unittest.TestCase):
         # зарегистрирован в projects.json (в tmp home, не в реальном)
         db = json.loads((self.env.home / ".swissknifeman" / "projects.json").read_text())
         self.assertTrue(any(p["path"] == str(self.proj) for p in db["projects"]))
+
+    # --- skills channel (connect vs vendor) ---------------------------------
+    def test_vendor_channel_syncs_into_claude_skills(self):
+        """--skills-channel vendor → физ. копии в .claude/skills/ через sync
+        (для внешних разработчиков без доступа к реестру), а не плагины."""
+        _materialize_registry(self.env)
+        run(cmd_integrate, self.env,
+            ["--target", str(self.proj), "--bundle", "minimal",
+             "--skills-channel", "vendor", "--yes"])
+        # конфиг vendor-режима материализован из профиля проекта
+        cfg = json.loads(
+            (self.proj / ".swissknifeman" / "config.json").read_text())
+        self.assertEqual(cfg["mode"], "vendor")
+        self.assertIn("php", cfg["buckets"])  # laravel-project профиль фикстуры
+        # скиллы физически в репо, в lock — managed:true, source swissknifeman
+        self.assertTrue(
+            (self.proj / ".claude/skills/code-style/SKILL.md").is_file())
+        lock = json.loads((self.proj / "skills-lock.json").read_text())["skills"]
+        self.assertTrue(lock["code-style"]["managed"])
+        self.assertEqual(lock["code-style"]["source"], "swissknifeman")
+        # vendor НЕ пишет плагины marketplace
+        settings = self.proj / ".claude" / "settings.local.json"
+        if settings.exists():
+            self.assertNotIn("enabledPlugins",
+                             json.loads(settings.read_text()))
+        # зарегистрирован как channel=vendor
+        db = json.loads(
+            (self.env.home / ".swissknifeman" / "projects.json").read_text())
+        rec = next(p for p in db["projects"] if p["path"] == str(self.proj))
+        self.assertEqual(rec["channel"], "vendor")
+
+    def test_skills_channel_skip_installs_nothing(self):
+        _materialize_registry(self.env)
+        run(cmd_integrate, self.env,
+            ["--target", str(self.proj), "--bundle", "minimal",
+             "--skills-channel", "skip", "--yes"])
+        self.assertFalse((self.proj / ".claude" / "skills").exists())
+        self.assertFalse((self.proj / ".swissknifeman").exists())
+
+    def test_invalid_skills_channel_exits(self):
+        with self.assertRaises(SystemExit):
+            run(cmd_integrate, self.env,
+                ["--target", str(self.proj), "--skills-channel", "bogus", "--yes"])
 
     # --- MCP choice policy (остаётся в визарде; исполнение — в harness) ------
     def test_default_mcp_dev_vs_vault(self):

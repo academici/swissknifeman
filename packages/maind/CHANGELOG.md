@@ -6,6 +6,11 @@
 ## [Unreleased]
 
 ### Added
+- **`onboard --skills-channel connect|vendor`** — выбор канала публикации скиллов на онбординге
+  (касается ТОЛЬКО скиллов; память/граф/MCP — как обычно). `onboard` спрашивает канал интерактивно
+  (как механизм памяти), флаг — для неинтерактива (дефолт `connect`); проброс в `skiller integrate
+  --skills-channel`. `vendor` → физ. копии скиллов в `.claude/skills/` (для проектов, отдаваемых
+  внешним разработчикам без доступа к реестру swissknifeman). `swissknifeman setup` форвардит флаг.
 - **Роль-паки субагентов (вариант A+C)**: 4 кросс-стек персона-пака в harness
   (`role-tech-lead`/`role-cto`/`role-founder`/`role-maintainer`, `shape:role`, без
   `stack.project_type`/`detect`). Доставка: `project.roles` в `config.json` → карта `role_packs`

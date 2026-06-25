@@ -8,6 +8,11 @@ allowed-tools: Bash(skiller:*)
 
 ## Шаги
 1. **Bundle**: `recommended` (дефолт) · `full` · `minimal` · `custom`. Если в «$ARGUMENTS» нет — спроси.
-2. **Предпросмотр**: `skiller integrate --dry-run` — покажи чеклист (скиллы / permissions / auto-approve / память / hub / docs-sync).
-3. **Применение** по подтверждению: `skiller integrate --yes --bundle <B>`.
-4. **Отчёт**: что включено по каждому блоку.
+2. **Канал скиллов** (СПРОСИ через AskUserQuestion — касается ТОЛЬКО скиллов):
+   - **connect** — плагины marketplace; файлы не в репо, нужен доступ к реестру swissknifeman;
+   - **vendor** — физ. копии в `.claude/skills/` (через `sync`), коммитятся в репо → работают у
+     внешних разработчиков без swissknifeman. → флаг `--skills-channel connect|vendor`.
+   Рекомендуй **vendor**, если проект отдают сторонним разработчикам.
+3. **Предпросмотр**: `skiller integrate --dry-run [--skills-channel <C>]` — покажи чеклист (скиллы / permissions / auto-approve / память / hub / docs-sync).
+4. **Применение** по подтверждению: `skiller integrate --yes --bundle <B> [--skills-channel <C>]`.
+5. **Отчёт**: что включено по каждому блоку.

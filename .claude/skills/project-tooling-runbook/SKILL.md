@@ -26,17 +26,33 @@ description: Раннбук управления инструментами пр
 
 | Канал | Команда | Что делает | Гранулярность | В репо |
 |:--|:--|:--|:--|:--|
-| **connect** (marketplace) | `skiller connect` | включает плагины-бакеты через `enabledPlugins` в `.claude/settings.local.json` | **только бакет целиком** | файлы скиллов НЕ копируются |
+| **connect** (marketplace) | `skiller connect` | включает плагины-бакеты через `enabledPlugins` в `.claude/settings.local.json`; `extraKnownMarketplaces` указывает на **локальный путь к реестру swissknifeman** | **только бакет целиком** | файлы скиллов НЕ копируются |
 | **vendor** (физ. перенос) | `skiller sync` | копирует выбранные скиллы в `.claude/skills/`, пишет `skills-lock.json` (`managed`) | **отдельные скиллы** (include/buckets/exclude) | да, видно и коммитится |
 
-- **connect** — когда фиксация в репо не нужна и устраивает «весь бакет».
-- **vendor** — когда нужно: видеть скиллы в репо, выбрать ровно нужные позиции из разных областей,
-  обновлять из библиотеки по lock. Конфиг — `.swissknifeman/config.json` (`mode: "vendor"`,
-  `include`/`buckets`/`exclude`). См. swissknifeman docs → гайд «Vendor-режим (sync)».
+- **connect** — когда фиксация в репо не нужна и устраивает «весь бакет». ⚠️ **Требует доступа к
+  реестру swissknifeman** (marketplace = локальный путь): у разработчика без репо swissknifeman
+  плагины не подключатся — скиллов он не увидит. Годится для твоего окружения / внутренней экосистемы.
+- **vendor** — когда нужно: **отдать скиллы внешним разработчикам, у которых нет доступа к
+  swissknifeman** (файлы лежат в самом репо проекта); видеть скиллы в репо; выбрать ровно нужные
+  позиции из разных областей; обновлять из библиотеки по lock. Конфиг — `.swissknifeman/config.json`
+  (`mode: "vendor"`, `include`/`buckets`/`exclude`). См. swissknifeman docs → гайд «Vendor-режим (sync)».
 
-> Спрашивай через AskUserQuestion: «connect (плагины-бакеты, не в репо)» vs «vendor (физический
-> перенос конкретных скиллов в репо + lock)». Рекомендация по умолчанию — **vendor**, если
-> пользователь хочет контроль над набором и фиксацию в репозитории.
+> Спрашивай через AskUserQuestion: «connect (плагины-бакеты, не в репо; нужен доступ к реестру)» vs
+> «vendor (физ. копии скиллов в репо + lock; работает у внешних разработчиков)». Рекомендация по
+> умолчанию — **vendor**, если проект отдают сторонним разработчикам или нужен контроль набора и
+> фиксация в репозитории.
+
+> **Только скиллы.** Выбор канала касается ТОЛЬКО скиллов (у них нет другого функционала, кроме
+> раздачи файлов). Память / граф / MCP-инструменты хаба mAInd настраиваются как обычно независимо
+> от канала скиллов.
+
+**Канал спрашивается и на онбординге** (`swissknifeman setup` / `maind onboard` / `skiller integrate`):
+- `swissknifeman setup <p>` и `maind onboard <p>` интерактивно спрашивают `connect/vendor` (флаг
+  `--skills-channel connect|vendor` для неинтерактива; дефолт `connect`).
+- `skiller integrate` принимает `--skills-channel`; при `vendor` для Claude-проекта **роутится в
+  современный `sync`** (генерит `.swissknifeman/config.json` из профиля → физ. копии в `.claude/skills/`).
+- Канал `vendor` для **Cursor/Gemini** (`.ai/.cursor/skills`) — это отдельная legacy-команда
+  `skiller vendor --agent cursor|generic` (для `--agent claude` deprecated; используй `sync`).
 
 **`skills-lock.json`** (коммитится, как `composer.lock`) пишут **две** команды — какая, зависит от канала:
 - **vendor**: `skiller sync` пишет lock сам — на каждый перенесённый скилл запись
@@ -90,7 +106,8 @@ description: Раннбук управления инструментами пр
 CLI — `swissknifeman` (запускать из каталога проекта; корень ищется вверх от CWD):
 
 ```bash
-skiller status                       # что подключено: профиль, бакеты, канал
+skiller status                       # что подключено: профиль, бакеты, канал; ⚠ ловит ДУБЛЬ КАНАЛОВ
+                                     #   (бакет и в плагинах, и вендорен) — доступно и как swissknifeman skills status
 # --- канал CONNECT (плагины-бакеты, не в репо) ---
 skiller connect --profile laravel-project          # подключить по профилю
 skiller connect --plugins a,b,c                    # точный набор бакетов (перезаписывает enabledPlugins)
@@ -102,6 +119,7 @@ skiller sync                         # применить (managed-скиллы 
 skiller sync --force                 # перетереть занятый чужим путь версией из библиотеки
 # --- общее ---
 skiller integrate --bundle recommended --yes       # визард: спросит канал (connect/vendor) + хуки/память/hub
+skiller integrate --skills-channel vendor --yes    # vendor без вопроса → sync в .claude/skills (для внешних)
 skiller lock [--dry-run]             # карта источников для connect/смешанных (read-only композитор)
 skiller update                       # обновить подключение проекта
 ```

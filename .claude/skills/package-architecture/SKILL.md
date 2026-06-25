@@ -25,9 +25,19 @@ description: "Полная карта пакета swissknifeman: каналы �
    `extraKnownMarketplaces` + `enabledPlugins."<bucket>@swissknifeman"` в
    `.claude/settings(.local).json` проекта; merge-only, явный `false` не
    перетирается, бэкап в `.bak`).
-2. **Vendoring** (Cursor и другие агенты): `skiller vendor` — копирует
-   скиллы в проект (`.cursor/skills` / `.ai/skills`; flat-layout для
-   `--agent claude` deprecated). Профили `profiles/*.json`
+2. **Vendor через `sync`** (физ. перенос в репо — основной для Claude вне
+   marketplace). Конфиг `.swissknifeman/config.json` (`mode: vendor`,
+   `include`/`buckets`/`exclude`) → `skiller sync` копирует скиллы в
+   `.claude/skills/<name>/`, пишет `skills-lock.json` (`managed: true` +
+   sha256) и манифест `.swissknifeman-manifest.json`. **Файлы коммитятся в
+   репо проекта** — канал для проектов, отдаваемых сторонним разработчикам без
+   доступа к реестру swissknifeman (в отличие от `connect`, где marketplace
+   указывает на локальный путь к реестру). Безопасное удаление по `managed`,
+   чужие скиллы не трогаются (`--force` перетирает занятый путь). Реализация —
+   `skillset.py`; `do_sync` — точка входа для `integrate`/`onboard`.
+3. **Legacy vendoring** (Cursor и другие агенты): `skiller vendor` — копирует
+   скиллы в `.cursor/skills` / `.ai/skills` (flat-layout для `--agent claude`
+   **deprecated** — для Claude используй `sync`). Профили `profiles/*.json`
    (laravel-project, obsidian-vault, php-package, standalone), precedence:
    флаги > `.swissknife.json` проекта > autodetect (`.obsidian/` /
    `artisan`+`composer.json` / `composer.json`). Транзитивный резолв
@@ -49,6 +59,13 @@ adopt незарегистрированных, починка path-drift market
 `.claude/` → `.git`. Внутри самого реестра project-команды отказываются работать.
 Лаунчер `bin/skiller` whitelist'ит команды в `case` — новую команду
 добавлять и в `COMMANDS` (`lib/skiller/cli.py`), и в `case`.
+
+**Гигиена каналов (`status.channel_overlap`).** `status` ловит бакет, активный
+ОДНОВРЕМЕННО как плагин (connect, `enabledPlugins`) и вендоренный (vendor, манифест
+`source_path` → бакет) → `⚠ ДУБЛЬ КАНАЛОВ`. Проверка одна, в skiller (владелец
+скиллов); зонтик дёргает её через `swissknifeman skills status`, по пакетам НЕ
+дублируется. Инвариант синка: трогаем только `managed: true` — чужие/ручные записи
+`skills-lock.json` переживают `sync`.
 
 **Топология (`topology`, `lib/skiller/topology.py`).** Глобальная карта
 локальной среды `~/.swissknifeman/topology.json` (version 1): три узла-хаба
@@ -90,6 +107,14 @@ kebab-case == имя каталога); (11) `bash -n` всех скриптов
 Чеклист-обёртка над командами: пререквизиты → скиллы → permissions → **MCP** →
 auto-approve → memory → hub → brain. Бандлы `minimal`/`recommended`/`full`/`custom`
 (`BUNDLES` = пред-ответы). Все записи merge-only, бэкап `*.bak`, `--dry-run`.
+
+**Канал скиллов (`--skills-channel connect|vendor|skip`).** `_resolve_channel`:
+флаг > интерактивный вопрос (TTY) > дефолт бандла (`connect`). Блок скиллов
+роутит: `connect` → `do_connect`; `vendor` + `agent=claude` → **`do_sync`**
+(физ. копии в `.claude/skills/` через `.swissknifeman/config.json`); `vendor` +
+`cursor|generic` → legacy `do_vendor`. `maind onboard`/`swissknifeman setup`
+пробрасывают тот же флаг и тоже спрашивают канал (только для скиллов; память/граф —
+отдельные плоскости, от канала не зависят).
 
 **Окружение делегируется в `harness`.** Блоки permissions / MCP / auto-approve /
 memory не пишут файлы сами — зовут `harness permissions|mcp|hooks` через subprocess

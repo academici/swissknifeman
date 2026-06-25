@@ -191,5 +191,5 @@ draft_action() → preview → user_confirm() → commit_action()
 - `architect/eval-design` — измерение качества agentic-вывода; eval-харнес тестирует harness, не только модель (выход этого скилла).
 - `architect/security-design` — STRIDE, prompt-injection, secrets вне контекста модели — параллельно для агентов с PII/деньгами.
 - `architect/observability-design` — traces, token-cost, latency per model, jailbreak-метрики для прод-агента.
-- `imported/ai-agent-super-skill` — внешний свод по построению агентов/MCP/RAG (анализ, не зеркало).
-- `imported/agent-security-super-skill` — внешний defensive playbook по prompt injection и tool-use safety.
+- `ai/ai-agents` — внешний свод по построению агентов/MCP/RAG (анализ, не зеркало).
+- `security/security` — внешний defensive playbook по prompt injection и tool-use safety.

@@ -196,4 +196,4 @@ requires_lawyer_review: true
 - `architect/security-design` — GDPR privacy-by-design, классификация данных, retention; этот чеклист кормит её требованиями.
 - `architect/eval-design` — для AI Act high/limited-risk: eval-харнес как часть conformity и transparency.
 - `architect/observability-design` — audit trail и retention логов под Article 30 / breach-response.
-- `imported/legal-super-skill` — внешний свод по контрактам/NDA/compliance (анализ, не зеркало).
+- `legal/legal` — внешний свод по контрактам/NDA/compliance (анализ, не зеркало).

@@ -4,11 +4,17 @@
 
 Источник истины портируемых скиллов (машинный реестр — `skills.json`). Раздача в проекты: `skiller connect` (плагины-бакеты) / `vendor` (физ. перенос). CORE-набор токен-скиллов (`general`/`oss-dev`) раздаётся по умолчанию — см. `connect`/`vendor`.
 
-Всего: 181 скиллов в 17 бакетах.
+Всего: 181 скиллов в 24 бакетах.
 
 ## Скиллы по бакетам
 
-### architect — Architecture, API and data design, security, observability, tech stack selection (11)
+### ai — AI agent building: design, tools, evaluation (1)
+
+| Скилл | Описание | Теги |
+|:--|:--|:--|
+| `ai-agent-super-skill` | Comprehensive AI agent building skill merging Perplexity Computer's skill creation, webse… |  |
+
+### architect — Architecture, API and data design, security, observability, tech stack selection (12)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
@@ -16,6 +22,7 @@
 | `api-design` | Проектирование REST/GraphQL API, эндпоинтов, контрактов, версионирования, аутентификации | `api`, `architecture`, `rest`, `contracts` |
 | `architecture` | Архитектура системы, выбор стека, ADR, C4-диаграммы, deployment, scalability | `architecture`, `adr`, `c4`, `scalability`, `deployment` |
 | `data-schema` | Схема данных, сущности, атрибуты, связи. Агностично к СУБД — только markdown-таблицы | `data`, `architecture`, `schema`, `entities`, `erd` |
+| `dev-engineering-super-skill` | Comprehensive full-stack development and engineering skill merging Perplexity Computer's … |  |
 | `eval-design` | Оценка качества LLM/AI-выводов — eval-set, метрики, regression-харнес, automated + human … | `agentic`, `validation`, `llm`, `metrics`, `testing` |
 | `figma-mcp-core` | Дисциплина работы с официальным Figma Dev Mode MCP: реальные инструменты (get_metadata, g… | `figma`, `mcp`, `design-system`, `design-tokens`, `dev-mode`, `code-connect`, `ui` |
 | `legal-compliance` | GDPR, CCPA, AI Act, DMCA, COPPA, DSA — чеклист регуляторных требований до запуска | `compliance`, `gdpr`, `privacy`, `ai-act`, `regulatory` |
@@ -42,6 +49,12 @@
 | `scene-conventions` | Соглашения сцены параметрической модели: префиксы объектов (MESH_/CRV_/LGT_/MTL_), иерарх… | `blender`, `cad`, `parametric`, `naming`, `scene`, `materials`, `parenting`, `bpy` |
 | `threading` | Резьба на FDM/SLA-деталях: материал, физика печати, радиальные зазоры по типу посадки | `blender`, `3d`, `fdm`, `sla`, `threading`, `geometry`, `bpy` |
 
+### creative — Creative studio: video, design, content production (1)
+
+| Скилл | Описание | Теги |
+|:--|:--|:--|
+| `content-creative-super-skill` | Comprehensive creative studio skill merging Perplexity Computer's video production, speec… |  |
+
 ### devops — Docker environments, CI/CD pipelines, GitOps (11)
 
 | Скилл | Описание | Теги |
@@ -57,6 +70,12 @@
 | `gitops` | Командная Git-стратегия: модель веток (main/develop/feature/hotfix), PR-workflow, защита … | `git`, `gitops`, `github` |
 | `makefile` | Makefile как единая точка входа: help, .PHONY, алиасы Docker-команд; паттерн делегирующег… | `make`, `devops`, `docker` |
 | `node-pnpm-preflight` | Проверка доступности Node/pnpm на хосте перед командами и git hooks, которые используют p… | `node`, `pnpm`, `devops`, `preflight`, `ci` |
+
+### finance — Finance and accounting: bookkeeping, reporting, FP&A (1)
+
+| Скилл | Описание | Теги |
+|:--|:--|:--|
+| `finance-super-skill` | Comprehensive finance and accounting skill merging Perplexity Computer's 7 finance skills… |  |
 
 ### founder — Idea discovery, competitive analysis, risk assessment, pitch decks (9)
 
@@ -112,7 +131,7 @@
 | `wayfinder` | Laravel Wayfinder: типобезопасные роуты и controller actions для фронтенда. Генерация, им… | `wayfinder`, `laravel`, `typescript`, `routes`, `inertia`, `eslint`, `frontend` |
 | `web-design-guidelines` | Review UI code for Web Interface Guidelines compliance. Use when asked to "review my UI",… |  |
 
-### general — General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists (12)
+### general — General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists (13)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
@@ -127,24 +146,20 @@
 | `skills-ssot` | Единый источник истины скиллов для нескольких AI-агентов: .ai/skills + симлинки, gitignor… | `ai-context`, `skills`, `ssot`, `workflow`, `conventions`, `ai` |
 | `spec-interview` | Интервью перед кодом: агент задаёт вопросы по одному, сам читает кодовую базу где может, … | `workflow`, `requirements`, `discovery` |
 | `task-brief-template` | Шаблон постановки сложных задач для агента: цель, границы, инварианты, явные предположени… | `workflow`, `template`, `requirements`, `context` |
+| `token-efficient` | Reduces Perplexity Computer output verbosity and token waste. Eliminates sycophantic open… |  |
 | `writing-style` | Тон и язык кодовых артефактов: русский по умолчанию для комментариев, тел коммитов, описа… | `writing`, `language`, `russian`, `comments`, `commits`, `tests`, `docs`, `style` |
 
-### imported — External super-skills tracked via upstream.json (marketing, sales, legal, research and more) (12)
+### legal — Legal operations: contracts, compliance, risk (1)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
-| `agent-security-super-skill` | Comprehensive AI agent security skill covering prompt injection defense, skill/plugin val… |  |
-| `ai-agent-super-skill` | Comprehensive AI agent building skill merging Perplexity Computer's skill creation, webse… |  |
-| `content-creative-super-skill` | Comprehensive creative studio skill merging Perplexity Computer's video production, speec… |  |
-| `dev-engineering-super-skill` | Comprehensive full-stack development and engineering skill merging Perplexity Computer's … |  |
-| `finance-super-skill` | Comprehensive finance and accounting skill merging Perplexity Computer's 7 finance skills… |  |
 | `legal-super-skill` | Comprehensive legal operations skill merging Perplexity Computer's 6 legal skills with Cl… |  |
+
+### marketing — Marketing: strategy, campaigns, content, growth (1)
+
+| Скилл | Описание | Теги |
+|:--|:--|:--|
 | `marketing-super-skill` | Comprehensive end-to-end marketing skill merging Perplexity Computer's 6 built-in marketi… |  |
-| `operations-cx-super-skill` | Comprehensive operations and customer experience skill merging Perplexity Computer's 5 CX… |  |
-| `pm-super-skill` | Comprehensive product management skill merging Perplexity Computer's 6 PM skills with Cla… |  |
-| `research-knowledge-super-skill` | Comprehensive research and knowledge management skill merging Perplexity Computer's resea… |  |
-| `sales-super-skill` | Comprehensive end-to-end sales skill merging Perplexity Computer's 6 built-in sales skill… |  |
-| `token-efficient` | Reduces Perplexity Computer output verbosity and token waste. Eliminates sycophantic open… |  |
 
 ### mobile — Mobile development: Flutter — design-to-code, theming, layout mapping from Figma (1)
 
@@ -152,13 +167,14 @@
 |:--|:--|:--|
 | `figma-to-flutter` | Маппинг дизайна из Figma Dev Mode MCP в Flutter: Auto-layout → Row/Column/Expanded/Paddin… | `figma`, `flutter`, `dart`, `mobile`, `design-tokens`, `theming`, `auto-layout` |
 
-### operator — Incident response, runbooks, postmortems, on-call and capacity planning (5)
+### operator — Incident response, runbooks, postmortems, on-call and capacity planning (6)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
 | `capacity-planning` | Планирование capacity — load forecasting, headroom, autoscaling policy, cost budget, что … | `ops`, `observability`, `monitoring`, `sla` |
 | `incident-response` | Процесс реагирования на инциденты в проде — severity-уровни, роли (IC/Comms/SME), коммуни… | `incident`, `ops`, `workflow`, `sla` |
 | `oncall-rotation` | Дизайн on-call ротации — расписание, primary/secondary, handoff, compensation, defusing b… | `ops`, `incident`, `sla`, `handoff` |
+| `operations-cx-super-skill` | Comprehensive operations and customer experience skill merging Perplexity Computer's 5 CX… |  |
 | `postmortem` | Blameless postmortem после SEV-1/2 инцидента — таймлайн, root cause (5 Whys), contributin… | `incident`, `ops`, `workflow`, `reflection` |
 | `runbook` | Шаблон operational runbook на каждый P1/P2-алерт — symptoms, диагностика, mitigation step… | `ops`, `incident`, `template`, `monitoring` |
 
@@ -221,7 +237,7 @@
 | `static-analysis` | Статический анализ и линтинг PHP/Laravel: Laravel Pint, PHPStan и Rector локально и в CI,… | `php`, `laravel`, `quality` |
 | `test-isolation-guard` | Защита тестов Laravel от запуска по боевой/dev БД и медиа-диску: bootstrap.php выставляет… | `php`, `laravel`, `testing`, `isolation`, `safety`, `database`, `ci`, `refreshdatabase` |
 
-### pm — Product management: BRD, PRD, roadmap, monetization, unit economics (9)
+### pm — Product management: BRD, PRD, roadmap, monetization, unit economics (10)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
@@ -229,6 +245,7 @@
 | `business-process` | Бизнес-процессы, workflow, FSM, sequence/state-диаграммы, обработка ошибок | `requirements`, `workflow` |
 | `go-to-market` | GTM-стратегия, ICP, messaging framework, каналы привлечения, launch plan | `gtm`, `market`, `monetization` |
 | `monetization-design` | Выбор бизнес-модели (SaaS / marketplace / ads / freemium / hybrid) с trade-off матрицей и… | `monetization`, `market` |
+| `pm-super-skill` | Comprehensive product management skill merging Perplexity Computer's 6 PM skills with Cla… |  |
 | `pmf-diagnostics` | Диагностика product-market fit — measurement framework до launch, Sean Ellis test (>40%),… | `validation`, `market` |
 | `prd-from-brd` | Product Requirements Document — разворачивает BRD в детальные user stories с acceptance c… | `requirements`, `template` |
 | `product-roadmap` | MVP definition, Impact/Effort приоритизация, фазы MVP → v1 → v2 → Backlog, метрики перехо… | `requirements`, `gtm`, `market` |
@@ -255,6 +272,12 @@
 | `test-strategy` | Стратегия тестирования: пирамида (unit/integration/e2e), coverage policy, mock vs real, к… | `quality`, `testing`, `coverage`, `validation`, `ci`, `architecture`, `pest` |
 | `testing-safety-report` | Отчёт безопасности после рискованного изменения (миграции, рефакторинг схемы/слоёв, апгре… | `testing`, `safety`, `migrations`, `reporting`, `verification`, `quality`, `refactor` |
 
+### research — Research and knowledge management (1)
+
+| Скилл | Описание | Теги |
+|:--|:--|:--|
+| `research-knowledge-super-skill` | Comprehensive research and knowledge management skill merging Perplexity Computer's resea… |  |
+
 ### roles — Personas: tech lead, startup CTO, solo founder, open-source maintainer (4)
 
 | Скилл | Описание | Теги |
@@ -263,6 +286,18 @@
 | `solo-founder` | Solo Founder — weekly review, decision log | `role`, `persona`, `discovery`, `market`, `validation` |
 | `startup-cto` | Startup CTO persona — tech radar, hiring, architecture decisions | `role`, `persona`, `architecture`, `stack-choice`, `discipline` |
 | `tech-lead` | Tech Lead persona — sprint kickoff, 1:1s, team coordination | `role`, `persona`, `orchestration`, `review`, `workflow` |
+
+### sales — Sales: pipeline, outreach, CRM, negotiation (1)
+
+| Скилл | Описание | Теги |
+|:--|:--|:--|
+| `sales-super-skill` | Comprehensive end-to-end sales skill merging Perplexity Computer's 6 built-in sales skill… |  |
+
+### security — AI agent security: prompt injection defense, hardening (1)
+
+| Скилл | Описание | Теги |
+|:--|:--|:--|
+| `agent-security-super-skill` | Comprehensive AI agent security skill covering prompt injection defense, skill/plugin val… |  |
 
 ### system — Local environment topology: the three hub nodes (Brain vault, swissknifeman, projects base) and how agents navigate between projects and their docs (5)
 

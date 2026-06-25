@@ -212,4 +212,4 @@ Agentic-инструменты генерят код, который **рабо�
 - `oss-dev/dependency-audit` — supply-chain/SBOM/vuln-скан, кормит A06 OWASP (вход этого скилла).
 - `php/laravel-security-audit` — code-level аудит реализации (raw SQL, mass assignment, XSS), кормит этот дизайн (вход).
 - `php/azguard`, `php/laravel-permissions`, `php/attribute-authorization` — RBAC/ABAC-реализация выбранной модели авторизации.
-- `imported/agent-security-super-skill` — внешний defensive playbook (OWASP LLM Top 10, NIST AI RMF).
+- `security/security` — внешний defensive playbook (OWASP LLM Top 10, NIST AI RMF).

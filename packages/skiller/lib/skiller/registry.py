@@ -282,3 +282,8 @@ def cmd_registry(env, argv):
           f"(.claude-plugin/marketplace.json)")
 
     run_cmd([str(root / "scripts" / "generate-graph.sh")])
+
+    # Карта токенового бюджета (трёхъярусная) — in-process, чтобы токен-математика
+    # жила в одном модуле budget.py (а не дублировалась в bash+heredoc, как graph).
+    from .budget import write_budget_map
+    write_budget_map(env)

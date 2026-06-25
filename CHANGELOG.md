@@ -2,6 +2,29 @@
 
 ## [Unreleased]
 
+### Added (skiller — токеновый бюджет + карта-диаграмма + промты + задел переводов)
+
+- **Команда `skiller budget`** — трёхъярусная модель раскрытия контекста: **⊕ always**
+  (`name`+`description`, резидентно в каждом запросе — постоянный «налог»), **↻ on-trigger**
+  (тело `SKILL.md`), **⌥ on-demand** (сниппеты). Режимы: `--config F.json`, `--compare a,b`,
+  `--json`, `--profile/--buckets/--exclude`, `--no-core`, `--write-map`. Модуль
+  [budget.py](packages/skiller/lib/skiller/budget.py) — **единый источник** токен-математики
+  (переиспользует `resolve_selection`/`collect_skills`/`resolve_requires`, без дублирования
+  выборки). +9 unit-тестов (`tests/test_budget.py`).
+- **Карта токенового бюджета** — сгенерированная mermaid-страница
+  [docs/guide/budget.md](packages/skiller/docs/guide/budget.md): узел на скилл (по бакетам),
+  heat-цвет по ⊕ always, рёбра `requires` = транзитивный налог, таблицы по бакетам и топам.
+  Регенерится `skiller registry` (in-process, после графа); пункт в VitePress sidebar.
+- **Строка бюджета в `skiller status`** — ⊕ always/↻ bodies набора проекта + топ-3 описаний.
+- **Промт-библиотека** [prompts/](packages/skiller/prompts/) (audit/review/generate) — шаблоны
+  для сопровождения реестра (то, что `validate.sh` не ловит: пересечения, водность, дубли).
+- **Задел переводов** — `SKILL.<lang>.md` gitignored (агент грузит только `SKILL.md`); чекер
+  покрытия [check-translations.sh](packages/skiller/scripts/check-translations.sh) (`--lang`,
+  `--generate-stubs`).
+- *Из аудита Perplexity — отклонено как дубль:* `generate-graph.ts` (= существующий
+  `generate-graph.sh`) и `drift-check.ts` (= `validate.sh`); токен-модель аудита исправлена
+  (тело ≠ «всегда загружено» → трёхъярусная).
+
 ### Added (skiller — пресеты/кластеры скиллов + тонкие бакеты для конфиг-управляемого per-project sync)
 
 - **Слой пресетов** — `presets/<name>.json` (`{name, description, extends?, buckets?, include?}`):

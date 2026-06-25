@@ -8,3 +8,7 @@ docs/.vitepress/cache/
 .claude/auto-approve.env.ini
 # fork-скиллы: транзиентный staged-апстрим (update-upstreams.sh --apply при дрейфе)
 *.incoming.md
+# Переводы скиллов — справка для человека, агент их НЕ грузит (канон — SKILL.md).
+# Локальные, не коммитятся. Покрытие: scripts/check-translations.sh.
+**/SKILL.*.md
+!**/SKILL.md

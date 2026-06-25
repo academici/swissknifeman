@@ -14,6 +14,7 @@
 #   sync      vendor-режим: применить .swissknifeman/config.json (физ. перенос + lock)
 #   lock      обновить skills-lock.json проекта (карта внешних скиллов: skm + boost)
 #   status    отчёт по текущему проекту (read-only)
+#   budget    токеновый бюджет набора скиллов (⊕ always/↻ on-trigger/⌥ on-demand)
 #   list      зарегистрированные проекты (~/.swissknifeman/projects.json)
 #   topology  карта локальной среды (init|show) — ~/.swissknifeman/topology.json
 #
@@ -39,7 +40,7 @@ if [[ ! -d "$REPO_ROOT/skills" || ! -d "$REPO_ROOT/lib/skiller" ]]; then
 fi
 
 usage() {
-  grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '8,22p'
+  grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '8,25p'
 }
 
 CMD="${1:-help}"
@@ -52,7 +53,7 @@ case "$CMD" in
     sha="$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
     echo "skiller $sha ($REPO_ROOT)"
     exit 0 ;;
-  connect|vendor|integrate|update|sync|lock|status|list|registry|doctor|topology) ;;
+  connect|vendor|integrate|update|sync|lock|status|budget|list|registry|doctor|topology) ;;
   *) echo "Неизвестная команда: $CMD" >&2; usage >&2; exit 1 ;;
 esac
 

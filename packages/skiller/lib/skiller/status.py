@@ -3,6 +3,7 @@ import json
 import os
 from pathlib import Path
 
+from .budget import budget_for_set, resolve_active_set
 from .common import MANIFEST, MARKETPLACE, die, parse_flags
 from .config import find_project_root, load_config, resolve_selection
 from .state import db_records, print_registry_state
@@ -87,6 +88,23 @@ def cmd_status(env, argv):
                   + "  (почистить: skiller update)")
     if not mk_file and not vendor_path:
         print("\nКаналы: не подключён (skiller connect | vendor)")
+
+    # Токеновый бюджет набора (контроль раздувания): ⊕ always — постоянный налог
+    # описаний, резидентный в каждом запросе. Подробности/карта — skiller budget.
+    try:
+        skills, meta = resolve_active_set(env, target, config)
+        b = budget_for_set(skills, meta["pulled"])
+        top = sorted(b["items"], key=lambda i: i["tier0"], reverse=True)[:3]
+        print(f"\nТокеновый бюджет набора (≈, профиль {meta['profile'] or '-'}):")
+        print(f"  ⊕ always {b['tier0']} ток · ↻ bodies {b['tier1']} ток · "
+              f"{b['count']} скиллов  (детали: skiller budget)")
+        if top:
+            print("  Топ ⊕: " + ", ".join(
+                f"{i['name']} ({i['tier0']})" for i in top))
+    except SystemExit:
+        raise
+    except Exception as e:  # бюджет не должен ронять status
+        print(f"\nТокеновый бюджет: недоступен ({e})")
 
     # Гигиена каналов: один бакет не должен раздаваться И плагином, И вендором —
     # иначе скиллы дублируются. Проверка живёт ТОЛЬКО здесь (skiller — владелец

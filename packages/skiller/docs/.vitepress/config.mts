@@ -47,6 +47,7 @@ export default withMermaid(defineConfig({
             { text: 'Upstream-sync', link: '/guide/upstream-sync' },
             { text: 'Реестр skills.json', link: '/guide/registry' },
             { text: 'Граф зависимостей', link: '/guide/graph' },
+            { text: 'Карта токенового бюджета', link: '/guide/budget' },
             { text: 'Сканер сниппетов', link: '/guide/scanner' },
             { text: 'CI/CD', link: '/guide/ci' },
             { text: 'Диагностика и обновление', link: '/guide/troubleshooting' },

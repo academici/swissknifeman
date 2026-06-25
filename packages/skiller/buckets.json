@@ -1,87 +1,216 @@
 {
+  "ai": {
+    "description": "AI agent building: design, tools, evaluation",
+    "category": "engineering",
+    "tags": [
+      "ai",
+      "agents"
+    ]
+  },
   "architect": {
     "description": "Architecture, API and data design, security, observability, tech stack selection",
     "category": "engineering",
-    "tags": ["architecture", "api", "security", "data"]
+    "tags": [
+      "architecture",
+      "api",
+      "security",
+      "data"
+    ]
   },
   "blender": {
     "description": "Universal Blender bpy+MCP tooling: MCP workflow primitives, viewport modes, camera helper, version gotchas",
     "category": "engineering",
-    "tags": ["blender", "3d", "bpy", "mcp"]
+    "tags": [
+      "blender",
+      "3d",
+      "bpy",
+      "mcp"
+    ]
   },
   "blender-modeling": {
     "description": "Parametric CAD modeling in Blender for FDM/SLA: config-driven dataclasses, profile/revolve geometry, threading clearances, config & scene conventions, model-rules template, generic build loop",
     "category": "engineering",
-    "tags": ["blender", "cad", "parametric", "fdm", "sla", "bpy"]
+    "tags": [
+      "blender",
+      "cad",
+      "parametric",
+      "fdm",
+      "sla",
+      "bpy"
+    ]
+  },
+  "creative": {
+    "description": "Creative studio: video, design, content production",
+    "category": "business",
+    "tags": [
+      "creative",
+      "content"
+    ]
   },
   "devops": {
     "description": "Docker environments, CI/CD pipelines, GitOps",
     "category": "infrastructure",
-    "tags": ["docker", "ci-cd", "gitops"]
+    "tags": [
+      "docker",
+      "ci-cd",
+      "gitops"
+    ]
+  },
+  "finance": {
+    "description": "Finance and accounting: bookkeeping, reporting, FP&A",
+    "category": "business",
+    "tags": [
+      "finance",
+      "accounting"
+    ]
   },
   "founder": {
     "description": "Idea discovery, competitive analysis, risk assessment, pitch decks",
     "category": "business",
-    "tags": ["startup", "ideas", "pitch"]
+    "tags": [
+      "startup",
+      "ideas",
+      "pitch"
+    ]
   },
   "frontend": {
     "description": "Frontend development: Vite, Vue Composition API, Tailwind CSS, Inertia",
     "category": "engineering",
-    "tags": ["vue", "vite", "tailwind", "inertia"]
+    "tags": [
+      "vue",
+      "vite",
+      "tailwind",
+      "inertia"
+    ]
   },
   "general": {
     "description": "General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists",
     "category": "workflow",
-    "tags": ["workflow", "conventions", "git"]
+    "tags": [
+      "workflow",
+      "conventions",
+      "git"
+    ]
   },
-  "imported": {
-    "description": "External super-skills tracked via upstream.json (marketing, sales, legal, research and more)",
-    "category": "external",
-    "tags": ["super-skills", "upstream"]
+  "legal": {
+    "description": "Legal operations: contracts, compliance, risk",
+    "category": "business",
+    "tags": [
+      "legal",
+      "compliance"
+    ]
+  },
+  "marketing": {
+    "description": "Marketing: strategy, campaigns, content, growth",
+    "category": "business",
+    "tags": [
+      "marketing",
+      "growth"
+    ]
   },
   "mobile": {
     "description": "Mobile development: Flutter — design-to-code, theming, layout mapping from Figma",
     "category": "engineering",
-    "tags": ["flutter", "mobile", "dart", "figma"]
+    "tags": [
+      "flutter",
+      "mobile",
+      "dart",
+      "figma"
+    ]
   },
   "operator": {
     "description": "Incident response, runbooks, postmortems, on-call and capacity planning",
     "category": "operations",
-    "tags": ["incidents", "runbooks", "sre"]
+    "tags": [
+      "incidents",
+      "runbooks",
+      "sre"
+    ]
   },
   "oss-dev": {
     "description": "Open-source development: releases, governance, DX, dependency audits + language references",
     "category": "engineering",
-    "tags": ["open-source", "releases", "dx"]
+    "tags": [
+      "open-source",
+      "releases",
+      "dx"
+    ]
   },
   "php": {
     "description": "PHP and Laravel: applications, packages, Filament, permissions, testing, patterns",
     "category": "engineering",
-    "tags": ["php", "laravel", "testing"]
+    "tags": [
+      "php",
+      "laravel",
+      "testing"
+    ]
   },
   "pm": {
     "description": "Product management: BRD, PRD, roadmap, monetization, unit economics",
     "category": "product",
-    "tags": ["brd", "prd", "roadmap"]
+    "tags": [
+      "brd",
+      "prd",
+      "roadmap"
+    ]
   },
   "python": {
     "description": "Python: ML project structure, virtualenv and dependency management",
     "category": "engineering",
-    "tags": ["python", "ml", "venv"]
+    "tags": [
+      "python",
+      "ml",
+      "venv"
+    ]
   },
   "quality": {
     "description": "Code review, refactoring plans, tech debt audits, test strategy",
     "category": "engineering",
-    "tags": ["code-review", "refactoring", "tech-debt"]
+    "tags": [
+      "code-review",
+      "refactoring",
+      "tech-debt"
+    ]
+  },
+  "research": {
+    "description": "Research and knowledge management",
+    "category": "business",
+    "tags": [
+      "research",
+      "knowledge"
+    ]
   },
   "roles": {
     "description": "Personas: tech lead, startup CTO, solo founder, open-source maintainer",
     "category": "personas",
-    "tags": ["tech-lead", "cto", "maintainer"]
+    "tags": [
+      "tech-lead",
+      "cto",
+      "maintainer"
+    ]
+  },
+  "sales": {
+    "description": "Sales: pipeline, outreach, CRM, negotiation",
+    "category": "business",
+    "tags": [
+      "sales"
+    ]
+  },
+  "security": {
+    "description": "AI agent security: prompt injection defense, hardening",
+    "category": "engineering",
+    "tags": [
+      "security"
+    ]
   },
   "system": {
     "description": "Local environment topology: the three hub nodes (Brain vault, swissknifeman, projects base) and how agents navigate between projects and their docs",
     "category": "meta",
-    "tags": ["topology", "architecture", "navigation", "meta"]
+    "tags": [
+      "topology",
+      "architecture",
+      "navigation",
+      "meta"
+    ]
   }
 }

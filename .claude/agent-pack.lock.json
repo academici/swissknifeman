@@ -1,0 +1,67 @@
+{
+  "schema": 1,
+  "packs": {
+    "role-maintainer": {
+      "version": "0.1.0",
+      "source": "harness:configs/claude-code/agent-packs/role-maintainer",
+      "answers": {
+        "PACK_PREFIX": "swissknifeman"
+      },
+      "files": [
+        {
+          "src": "agents/issue-triager.md",
+          "target": ".claude/agents/swissknifeman-issue-triager.md",
+          "kind": "template",
+          "base_sha256": "27101bceae792da66ecf70491985e34f74624aa355e83756a2b7c6fa035d2858",
+          "local_modified": false
+        },
+        {
+          "src": "agents/contribution-reviewer.md",
+          "target": ".claude/agents/swissknifeman-contribution-reviewer.md",
+          "kind": "template",
+          "base_sha256": "6d34349c7b864173b39c12bfdfecbe2c3eab7678ac731bdd75ce6ef29236affd",
+          "local_modified": false
+        },
+        {
+          "src": "agents/release-conductor.md",
+          "target": ".claude/agents/swissknifeman-release-conductor.md",
+          "kind": "template",
+          "base_sha256": "0039379b6e0c6953ab12033a99fe08514a90bab8e8fbd33cb980c48905228042",
+          "local_modified": false
+        }
+      ],
+      "removed_optional": []
+    },
+    "role-tech-lead": {
+      "version": "0.1.0",
+      "source": "harness:configs/claude-code/agent-packs/role-tech-lead",
+      "answers": {
+        "PACK_PREFIX": "swissknifeman"
+      },
+      "files": [
+        {
+          "src": "agents/sprint-planner.md",
+          "target": ".claude/agents/swissknifeman-sprint-planner.md",
+          "kind": "template",
+          "base_sha256": "46c2cdd236d2e23fd98943f65c04812f20e95ffb65137e03c4103a1f88e5ca0e",
+          "local_modified": false
+        },
+        {
+          "src": "agents/delegation-triage.md",
+          "target": ".claude/agents/swissknifeman-delegation-triage.md",
+          "kind": "template",
+          "base_sha256": "77ab02cfd7656d57a84b44562124652a2482301bdcdf46a6bbb66de4f902480d",
+          "local_modified": false
+        },
+        {
+          "src": "agents/review-gatekeeper.md",
+          "target": ".claude/agents/swissknifeman-review-gatekeeper.md",
+          "kind": "template",
+          "base_sha256": "06abdb39496d5a73de6c99b8a52bc63a51e514ada3e27378ff9324cb41a89c76",
+          "local_modified": false
+        }
+      ],
+      "removed_optional": []
+    }
+  }
+}

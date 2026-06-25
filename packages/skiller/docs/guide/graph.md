@@ -79,6 +79,7 @@ flowchart LR
     context_economy["context-economy"]
     cross_layer_change_checklist["cross-layer-change-checklist"]
     git_commit_rules["git-commit-rules"]
+    project_map["project-map"]
     session_handoff["session-handoff"]
     spec_interview["spec-interview"]
     task_brief_template["task-brief-template"]
@@ -283,6 +284,7 @@ flowchart LR
   prd_from_brd -.->|feeds| api_design
   prd_from_brd -.->|feeds| architecture
   prd_from_brd -.->|feeds| product_roadmap
+  project_map -.->|feeds| cross_layer_change_checklist
   refactoring_plan -.->|feeds| testing_safety_report
   risk_assessment -.->|feeds| pitch_deck
   runbook -.->|feeds| incident_response
@@ -299,18 +301,28 @@ flowchart LR
   unit_economics -.->|feeds| go_to_market
 ```
 
-**В графе:** 110 скиллов, 81 рёбер requires, 66 рёбер produces_for.
+**В графе:** 111 скиллов, 81 рёбер requires, 67 рёбер produces_for.
 
-## Изолированные скиллы (71)
+## Изолированные скиллы (72)
 
 Скиллы без связей `requires`/`produces_for` — самодостаточны.
 
 | Бакет | Скиллы |
 |---|---|
+| ai | `ai-agent-super-skill` |
+| architect | `dev-engineering-super-skill` |
+| creative | `content-creative-super-skill` |
 | devops | `docker` |
+| finance | `finance-super-skill` |
 | frontend | `antfu`, `document-writer`, `eslint-flat-config`, `filepond-upload`, `js-code-style`, `laravel-echo-client`, `motion`, `nuxt`, `nuxt-modules`, `nuxt-seo`, `pinia`, `pinia-stores`, `ts-library`, `vite`, `vitepress`, `vitest-vue`, `vue-best-practices`, `vue-composition-api`, `vue-dynamic-icons`, `vue-router-best-practices`, `vueuse-functions`, `web-design-guidelines` |
-| general | `compact-responses`, `naming-conventions`, `skills-ssot`, `writing-style` |
-| imported | `agent-security-super-skill`, `ai-agent-super-skill`, `content-creative-super-skill`, `dev-engineering-super-skill`, `finance-super-skill`, `legal-super-skill`, `marketing-super-skill`, `operations-cx-super-skill`, `pm-super-skill`, `research-knowledge-super-skill`, `sales-super-skill`, `token-efficient` |
+| general | `compact-responses`, `naming-conventions`, `packages-stack`, `skills-ssot`, `token-efficient`, `writing-style` |
+| legal | `legal-super-skill` |
+| marketing | `marketing-super-skill` |
+| operator | `operations-cx-super-skill` |
 | php | `azguard`, `code-style-spatie`, `enum-attributes`, `enum-state-machine`, `health-checks`, `laravel-best-practices`, `laravel-broadcasting`, `laravel-dusk`, `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages`, `laravel-subagents`, `livewire-blade-attributes`, `medialibrary`, `named-arguments`, `naming-conventions`, `pao`, `pennant-development`, `php-patterns`, `php-upgrade-checklist`, `spatie-settings` |
+| pm | `pm-super-skill` |
+| research | `research-knowledge-super-skill` |
 | roles | `open-source-maintainer`, `solo-founder`, `startup-cto`, `tech-lead` |
+| sales | `sales-super-skill` |
+| security | `agent-security-super-skill` |
 | system | `agent-packs` |

@@ -4,9 +4,14 @@
   "repository": "https://github.com/academici/swissknifeman",
   "schema": "https://github.com/academici/swissknifeman/blob/main/SKILL_TEMPLATE.md",
   "buckets": {
+    "ai": {
+      "description": "AI agent building: design, tools, evaluation",
+      "count": 1,
+      "status": "active"
+    },
     "architect": {
       "description": "Architecture, API and data design, security, observability, tech stack selection",
-      "count": 11,
+      "count": 12,
       "status": "active"
     },
     "blender": {
@@ -19,9 +24,19 @@
       "count": 6,
       "status": "active"
     },
+    "creative": {
+      "description": "Creative studio: video, design, content production",
+      "count": 1,
+      "status": "active"
+    },
     "devops": {
       "description": "Docker environments, CI/CD pipelines, GitOps",
       "count": 11,
+      "status": "active"
+    },
+    "finance": {
+      "description": "Finance and accounting: bookkeeping, reporting, FP&A",
+      "count": 1,
       "status": "active"
     },
     "founder": {
@@ -36,12 +51,17 @@
     },
     "general": {
       "description": "General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists",
-      "count": 12,
+      "count": 15,
       "status": "active"
     },
-    "imported": {
-      "description": "External super-skills tracked via upstream.json (marketing, sales, legal, research and more)",
-      "count": 12,
+    "legal": {
+      "description": "Legal operations: contracts, compliance, risk",
+      "count": 1,
+      "status": "active"
+    },
+    "marketing": {
+      "description": "Marketing: strategy, campaigns, content, growth",
+      "count": 1,
       "status": "active"
     },
     "mobile": {
@@ -51,7 +71,7 @@
     },
     "operator": {
       "description": "Incident response, runbooks, postmortems, on-call and capacity planning",
-      "count": 5,
+      "count": 6,
       "status": "active"
     },
     "oss-dev": {
@@ -66,7 +86,7 @@
     },
     "pm": {
       "description": "Product management: BRD, PRD, roadmap, monetization, unit economics",
-      "count": 9,
+      "count": 10,
       "status": "active"
     },
     "python": {
@@ -79,9 +99,24 @@
       "count": 8,
       "status": "active"
     },
+    "research": {
+      "description": "Research and knowledge management",
+      "count": 1,
+      "status": "active"
+    },
     "roles": {
       "description": "Personas: tech lead, startup CTO, solo founder, open-source maintainer",
       "count": 4,
+      "status": "active"
+    },
+    "sales": {
+      "description": "Sales: pipeline, outreach, CRM, negotiation",
+      "count": 1,
+      "status": "active"
+    },
+    "security": {
+      "description": "AI agent security: prompt injection defense, hardening",
+      "count": 1,
       "status": "active"
     },
     "system": {
@@ -92,12 +127,23 @@
   },
   "skills": [
     {
+      "name": "ai-agent-super-skill",
+      "bucket": "ai",
+      "path": "skills/ai/ai-agents/SKILL.md",
+      "version": "0.1.0",
+      "description": "Comprehensive AI agent building skill merging Perplexity Computer's skill creation, webserver, and automation capabilities with Claude Code's agent orchestration, MCP server building, RAG system construction, subagent coordination, parallel agent dispatching, prompt optimization, and execution planning. Covers designing AI agents, building MCP servers, creating RAG pipelines, orchestrating multi-agent systems, optimizing prompts, and deploying AI-powered workflows. Use when building AI agents, creating MCP servers, designing RAG systems, coordinating subagents, optimizing prompts, or architecting any AI-powered automation.",
+      "sha256": "57ae961f51ff2b1e554353abe147408f93aeb7b0cc86cff413b9325377874dbf",
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/get-zeked/ai-agent-super-skill/main/SKILL.md",
+      "fetched_at": "2026-06-11"
+    },
+    {
       "name": "agent-design",
       "bucket": "architect",
       "path": "skills/architect/agent-design/SKILL.md",
       "version": "0.1.0",
       "description": "Проектирование агентов, agentic loop, tool contracts, harness, permission gates",
-      "sha256": "160692171a09ecd6d35c1126f86e336827a49d75dd7f2d65313e80a2b7d40e7e",
+      "sha256": "023165b355d45b5d452365c49ee3da43f9cd83ceecc4e6a67e6128928dc0a0d6",
       "tags": [
         "agentic",
         "architecture",
@@ -182,12 +228,23 @@
       "source": "local"
     },
     {
+      "name": "dev-engineering-super-skill",
+      "bucket": "architect",
+      "path": "skills/architect/engineering/SKILL.md",
+      "version": "0.1.0",
+      "description": "Comprehensive full-stack development and engineering skill merging Perplexity Computer's built-in dev tools with Claude Code's engineering team skills. Covers architecture, frontend, backend, fullstack, QA/testing, DevOps/CI-CD, security, debugging, TDD, code review, and more. Use when writing code, debugging, architecting systems, reviewing code, writing tests, deploying, or doing any software engineering work.",
+      "sha256": "9c95110bb957d7fb219303ce19aca5b6ae692ba2d6e4c07d9f8f1ef64dee17f6",
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/get-zeked/dev-engineering-super-skill/main/SKILL.md",
+      "fetched_at": "2026-06-11"
+    },
+    {
       "name": "eval-design",
       "bucket": "architect",
       "path": "skills/architect/eval-design/SKILL.md",
       "version": "0.1.0",
       "description": "Оценка качества LLM/AI-выводов — eval-set, метрики, regression-харнес, automated + human review",
-      "sha256": "88b0df2ba07f66f89b81b864b667535b7911f8bd05004ed2cd682dbbd6598130",
+      "sha256": "5af71d94e6e8631cdc09eb14892bfd169bdcdee9cb17ca8c0aba3719efdc3836",
       "tags": [
         "agentic",
         "validation",
@@ -231,7 +288,7 @@
       "path": "skills/architect/legal-compliance/SKILL.md",
       "version": "0.1.0",
       "description": "GDPR, CCPA, AI Act, DMCA, COPPA, DSA — чеклист регуляторных требований до запуска",
-      "sha256": "c15bf001cc6ea9d76867f9d5b1ca879ede898814269fdbef12435297bbec50a1",
+      "sha256": "4e3c90dc8145ce8a7ac7f2d1c695523b2766e56402823bd009a9f31707cb44ec",
       "tags": [
         "compliance",
         "gdpr",
@@ -303,7 +360,7 @@
       "path": "skills/architect/security-design/SKILL.md",
       "version": "0.2.0",
       "description": "Классификация данных, auth-стратегия, RBAC/ABAC, OWASP Top 10, GDPR, STRIDE threat modeling, операционный чеклист безопасности",
-      "sha256": "e38daffb585e60fc157902bca59ccdd1afcc83513b3ec682c6f6a7d51ad771ef",
+      "sha256": "4b3b9fbfc9cb076fca8f7453b148306a4593fde94ee2aa43432bb3d75617f912",
       "tags": [
         "security",
         "compliance",
@@ -540,6 +597,17 @@
       "source": "local"
     },
     {
+      "name": "content-creative-super-skill",
+      "bucket": "creative",
+      "path": "skills/creative/content-creative/SKILL.md",
+      "version": "1.0.0",
+      "description": "Comprehensive creative studio skill merging Perplexity Computer's video production, speech synthesis, image generation, and website building with Claude Code's canvas design, algorithmic art, brand guidelines, frontend design, artifacts builder, content frameworks, content calendar, and prompt engineering. Use when creating visual content, designing interfaces, building brands, generating videos/images/audio, writing content, planning content calendars, or doing any creative production work.",
+      "sha256": "0f33884a3e46c6b8b0b578f0c420d088d38fa8ba818e8bd001091531b15a9306",
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/get-zeked/content-creative-super-skill/main/SKILL.md",
+      "fetched_at": "2026-06-11"
+    },
+    {
       "name": "ci-cd",
       "bucket": "devops",
       "path": "skills/devops/ci-cd/SKILL.md",
@@ -752,6 +820,17 @@
         "ci"
       ],
       "source": "local"
+    },
+    {
+      "name": "finance-super-skill",
+      "bucket": "finance",
+      "path": "skills/finance/finance/SKILL.md",
+      "version": "1.0.0",
+      "description": "Comprehensive finance and accounting skill merging Perplexity Computer's 7 finance skills plus investment research with Claude Code's data science, data engineering, financial analysis, and invoice management skills. Covers financial statements, journal entries, reconciliation, close management, audit support, variance analysis, market data, investment research, data pipelines, ML forecasting, and invoice processing. Use for financial reporting, month-end close, audit prep, variance analysis, market research, investment thesis, data engineering, or any finance and accounting work.",
+      "sha256": "c24bf53e7005675622c69f3a957c78bee48f469c68af46af8874426516b0f7a2",
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/get-zeked/finance-super-skill/main/SKILL.md",
+      "fetched_at": "2026-06-11"
     },
     {
       "name": "adversarial-check",
@@ -1623,6 +1702,52 @@
       "source": "local"
     },
     {
+      "name": "packages-stack",
+      "bucket": "general",
+      "path": "skills/general/packages-stack/SKILL.md",
+      "version": "0.1.0",
+      "description": "Методология реестра внешних зависимостей проекта: какие пакеты используются и для чего, правило-обвязка на каждый (когда применять, чего НЕ делать вручную), опора на ОФИЦИАЛЬНУЮ документацию. Активировать при выборе/добавлении зависимости или составлении карты стека на инициализации проекта; язык-агностично.",
+      "sha256": "6ade0d78bc1a4c5066bc4c57bba0818ef4f0426390c51ebaeb95da345b169862",
+      "tags": [
+        "dependencies",
+        "conventions",
+        "navigation",
+        "stack",
+        "init"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "token-efficient",
+      "bucket": "general",
+      "path": "skills/general/performance/SKILL.md",
+      "version": "0.1.0",
+      "description": "Reduces Perplexity Computer output verbosity and token waste. Eliminates sycophantic openers, narrated tool usage, redundant summaries, unnecessary formatting, and closing fluff. Adapted from drona23/claude-token-efficient for the Perplexity Computer environment. Use on every session to cut output tokens without losing signal. Works alongside any other skill.",
+      "sha256": "62102da0b09c38685eafd615aff3ceb33752f2a7478a8c6dd26a2664fb05ebd3",
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/get-zeked/token-efficient/main/SKILL.md",
+      "fetched_at": "2026-06-11"
+    },
+    {
+      "name": "project-map",
+      "bucket": "general",
+      "path": "skills/general/project-map/SKILL.md",
+      "version": "0.1.0",
+      "description": "Методология карты структуры проекта: зонирование директорий по ответственности для безопасного роутинга изменений (где править, в каком слое должна жить логика). Активировать, когда нужно быстро понять, куда вносить изменение, или составить/обновить карту структуры для проекта; язык-агностично.",
+      "sha256": "fac8d8a2b0c47b5a489acc2d455b2ded6052d90a9521c13429a58bfb1a3f8aff",
+      "tags": [
+        "conventions",
+        "navigation",
+        "architecture",
+        "structure",
+        "routing"
+      ],
+      "produces_for": [
+        "cross-layer-change-checklist"
+      ],
+      "source": "local"
+    },
+    {
       "name": "session-handoff",
       "bucket": "general",
       "path": "skills/general/session-handoff/SKILL.md",
@@ -1643,7 +1768,7 @@
       "path": "skills/general/skills-ssot/SKILL.md",
       "version": "0.1.0",
       "description": "Единый источник истины скиллов для нескольких AI-агентов: .ai/skills + симлинки, gitignore, цикл обновления",
-      "sha256": "edbfe9ddf21ef1fdc5d6f29f03436e50589deaca14560bbebd2b8bb4bb68db50",
+      "sha256": "6b8d0347ee4d9197f7ad94512b21e52086c0fff1d738ff3c87b4663ed9e044f8",
       "tags": [
         "ai-context",
         "skills",
@@ -1709,135 +1834,25 @@
       "source": "local"
     },
     {
-      "name": "ai-agent-super-skill",
-      "bucket": "imported",
-      "path": "skills/imported/ai-agents/SKILL.md",
-      "version": "0.1.0",
-      "description": "Comprehensive AI agent building skill merging Perplexity Computer's skill creation, webserver, and automation capabilities with Claude Code's agent orchestration, MCP server building, RAG system construction, subagent coordination, parallel agent dispatching, prompt optimization, and execution planning. Covers designing AI agents, building MCP servers, creating RAG pipelines, orchestrating multi-agent systems, optimizing prompts, and deploying AI-powered workflows. Use when building AI agents, creating MCP servers, designing RAG systems, coordinating subagents, optimizing prompts, or architecting any AI-powered automation.",
-      "sha256": "06983df539124bb673239fd6568d58141f3696e05a9aacc2caafd6e74cd6b0d8",
-      "source": "github",
-      "upstream": "https://raw.githubusercontent.com/get-zeked/ai-agent-super-skill/main/SKILL.md",
-      "fetched_at": "2026-06-11"
-    },
-    {
-      "name": "content-creative-super-skill",
-      "bucket": "imported",
-      "path": "skills/imported/content-creative/SKILL.md",
-      "version": "1.0.0",
-      "description": "Comprehensive creative studio skill merging Perplexity Computer's video production, speech synthesis, image generation, and website building with Claude Code's canvas design, algorithmic art, brand guidelines, frontend design, artifacts builder, content frameworks, content calendar, and prompt engineering. Use when creating visual content, designing interfaces, building brands, generating videos/images/audio, writing content, planning content calendars, or doing any creative production work.",
-      "sha256": "c1a249d38bcc9945f6370f0b7a540345525640748fe09ecf0c5be81e5e74324e",
-      "source": "github",
-      "upstream": "https://raw.githubusercontent.com/get-zeked/content-creative-super-skill/main/SKILL.md",
-      "fetched_at": "2026-06-11"
-    },
-    {
-      "name": "dev-engineering-super-skill",
-      "bucket": "imported",
-      "path": "skills/imported/engineering/SKILL.md",
-      "version": "0.1.0",
-      "description": "Comprehensive full-stack development and engineering skill merging Perplexity Computer's built-in dev tools with Claude Code's engineering team skills. Covers architecture, frontend, backend, fullstack, QA/testing, DevOps/CI-CD, security, debugging, TDD, code review, and more. Use when writing code, debugging, architecting systems, reviewing code, writing tests, deploying, or doing any software engineering work.",
-      "sha256": "68867e088c6c59d15afca6ac62b66d49a03ed177730ee3b52d3a1bd5372a793f",
-      "source": "github",
-      "upstream": "https://raw.githubusercontent.com/get-zeked/dev-engineering-super-skill/main/SKILL.md",
-      "fetched_at": "2026-06-11"
-    },
-    {
-      "name": "finance-super-skill",
-      "bucket": "imported",
-      "path": "skills/imported/finance/SKILL.md",
-      "version": "1.0.0",
-      "description": "Comprehensive finance and accounting skill merging Perplexity Computer's 7 finance skills plus investment research with Claude Code's data science, data engineering, financial analysis, and invoice management skills. Covers financial statements, journal entries, reconciliation, close management, audit support, variance analysis, market data, investment research, data pipelines, ML forecasting, and invoice processing. Use for financial reporting, month-end close, audit prep, variance analysis, market research, investment thesis, data engineering, or any finance and accounting work.",
-      "sha256": "76ca093a5647e47beeec29ccd356c631e888965b119a67d787ae016d860fefb4",
-      "source": "github",
-      "upstream": "https://raw.githubusercontent.com/get-zeked/finance-super-skill/main/SKILL.md",
-      "fetched_at": "2026-06-11"
-    },
-    {
       "name": "legal-super-skill",
-      "bucket": "imported",
-      "path": "skills/imported/legal/SKILL.md",
+      "bucket": "legal",
+      "path": "skills/legal/legal/SKILL.md",
       "version": "1.0.0",
       "description": "Comprehensive legal operations skill merging Perplexity Computer's 6 legal skills with Claude Code's writing, communications, and planning skills. Covers contract review, NDA triage, compliance (GDPR/CCPA), risk assessment, meeting briefings, canned responses, legal writing, internal communications, and structured planning. Use for contract analysis, NDA screening, compliance reviews, risk assessments, legal meeting prep, response drafting, or any legal operations work.",
-      "sha256": "d0798e114e51bc45f163589b13b9254fd87fb47811d04b1c5ab759d423752d0c",
+      "sha256": "b2fd99de7e9d8a59e7423e7b9a5111b722938a34e7084995db61eb547c0db155",
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/get-zeked/legal-super-skill/main/SKILL.md",
       "fetched_at": "2026-06-11"
     },
     {
       "name": "marketing-super-skill",
-      "bucket": "imported",
-      "path": "skills/imported/marketing/SKILL.md",
+      "bucket": "marketing",
+      "path": "skills/marketing/marketing/SKILL.md",
       "version": "1.0.0",
       "description": "Comprehensive end-to-end marketing skill merging Perplexity Computer's 6 built-in marketing skills with Claude Code's best community marketing skills. Covers campaign planning, brand voice, competitive analysis, SEO, content creation, performance analytics, copywriting frameworks, and marketing ops. Use when planning campaigns, analyzing competitors, creating content, building brand guidelines, tracking marketing metrics, or optimizing conversion funnels.",
-      "sha256": "9f087758882b3888d35bc085953233b03ba70732f9f9f4bbf8eabd9080b33aa5",
+      "sha256": "0467b8aa30953e0012ea3832a15146ddfbb88cf323064a1b4493f88a2d6be2b9",
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/get-zeked/marketing-super-skill/main/SKILL.md",
-      "fetched_at": "2026-06-11"
-    },
-    {
-      "name": "operations-cx-super-skill",
-      "bucket": "imported",
-      "path": "skills/imported/operations-cx/SKILL.md",
-      "version": "1.0.0",
-      "description": "Comprehensive operations and customer experience skill merging Perplexity Computer's 5 CX skills with Claude Code's project management, file organization, invoice processing, scrum methodology, and verification workflows. Covers ticket triage, customer response drafting, escalation management, knowledge base maintenance, customer research, project management, sprint planning, file organization, and operational quality assurance. Use for support ticket handling, customer communications, escalation workflows, KB article writing, project management, sprint ceremonies, file cleanup, or any operations and CX work.",
-      "sha256": "54c6aa7aa37c9ffc2ddc154c79414755969afc456f9f4ada06c496ee4b666fa9",
-      "source": "github",
-      "upstream": "https://raw.githubusercontent.com/get-zeked/operations-cx-super-skill/main/SKILL.md",
-      "fetched_at": "2026-06-11"
-    },
-    {
-      "name": "token-efficient",
-      "bucket": "imported",
-      "path": "skills/imported/performance/SKILL.md",
-      "version": "0.1.0",
-      "description": "Reduces Perplexity Computer output verbosity and token waste. Eliminates sycophantic openers, narrated tool usage, redundant summaries, unnecessary formatting, and closing fluff. Adapted from drona23/claude-token-efficient for the Perplexity Computer environment. Use on every session to cut output tokens without losing signal. Works alongside any other skill.",
-      "sha256": "a2263ce371cd7adabb4a9b7b1031362f89393aba499b769cd49c835c6f0990c2",
-      "source": "github",
-      "upstream": "https://raw.githubusercontent.com/get-zeked/token-efficient/main/SKILL.md",
-      "fetched_at": "2026-06-11"
-    },
-    {
-      "name": "pm-super-skill",
-      "bucket": "imported",
-      "path": "skills/imported/product/SKILL.md",
-      "version": "0.1.0",
-      "description": "Comprehensive product management skill merging Perplexity Computer's 6 PM skills with Claude Code's product team skills. Covers feature specs, roadmaps, metrics, competitive analysis, stakeholder comms, user research, RICE prioritization, agile ceremonies, UX research, UI design systems, and persistent planning. Use for PRDs, roadmap planning, sprint management, user research synthesis, stakeholder updates, or any product management work.",
-      "sha256": "6b25ec230346f8ea8a632a268b951866d26c587711bd9ebb2f0f61bb216e6a6a",
-      "source": "github",
-      "upstream": "https://raw.githubusercontent.com/get-zeked/pm-super-skill/main/SKILL.md",
-      "fetched_at": "2026-06-11"
-    },
-    {
-      "name": "research-knowledge-super-skill",
-      "bucket": "imported",
-      "path": "skills/imported/research/SKILL.md",
-      "version": "0.1.0",
-      "description": "Comprehensive research and knowledge management skill merging Perplexity Computer's research, data exploration, statistical analysis, and visualization skills with Claude Code's tapestry knowledge graphs, article extraction, content research, brainstorming, RAG system building, and prompt engineering. Covers deep research workflows, knowledge graph construction, academic research, data analysis, statistical methods, content synthesis, and AI-powered information retrieval. Use for research projects, literature reviews, data analysis, knowledge management, competitive research, or any investigation requiring deep synthesis.",
-      "sha256": "06523265da14d33c6393d0e62a9c37e0aa4ea31a7846c7a77fff227f2bc31761",
-      "source": "github",
-      "upstream": "https://raw.githubusercontent.com/get-zeked/research-knowledge-super-skill/main/SKILL.md",
-      "fetched_at": "2026-06-11"
-    },
-    {
-      "name": "sales-super-skill",
-      "bucket": "imported",
-      "path": "skills/imported/sales/SKILL.md",
-      "version": "1.0.0",
-      "description": "Comprehensive end-to-end sales skill merging Perplexity Computer's 6 built-in sales skills with Claude Code's customer interview analysis, brand voice analysis, content research, RICE prioritization, and UX research. Covers the full sales cycle from prospecting to close. Use when doing account research, call prep, competitive intelligence, outreach drafting, asset creation, daily briefings, customer interview analysis, deal prioritization, or prospect research.",
-      "sha256": "9c79c56351ee1b11025d79a2dcb18e74a792e99cdb4d98e6d5a44dfec7e2d676",
-      "source": "github",
-      "upstream": "https://raw.githubusercontent.com/get-zeked/sales-super-skill/main/SKILL.md",
-      "fetched_at": "2026-06-11"
-    },
-    {
-      "name": "agent-security-super-skill",
-      "bucket": "imported",
-      "path": "skills/imported/security/SKILL.md",
-      "version": "0.1.0",
-      "description": "Comprehensive AI agent security skill covering prompt injection defense, skill/plugin validation, memory poisoning prevention, permission auditing, tool-use safety, data exfiltration prevention, and incident response. Use when installing new skills, processing untrusted documents/emails/web content, auditing agent permissions, validating memory integrity, reviewing MCP tool configurations, or hardening agent workflows against adversarial attacks. Merges OWASP LLM Top 10, NIST AI RMF, vendor guidance from Anthropic/Microsoft/Google, and community security skills into one defensive playbook.",
-      "sha256": "5535c03f29c7d1d6b1f897f9503bc460f7c9df989c56b65852cbb0102851125b",
-      "source": "github",
-      "upstream": "https://raw.githubusercontent.com/get-zeked/agent-security-super-skill/main/SKILL.md",
       "fetched_at": "2026-06-11"
     },
     {
@@ -1914,6 +1929,17 @@
         "incident-response"
       ],
       "source": "local"
+    },
+    {
+      "name": "operations-cx-super-skill",
+      "bucket": "operator",
+      "path": "skills/operator/operations-cx/SKILL.md",
+      "version": "1.0.0",
+      "description": "Comprehensive operations and customer experience skill merging Perplexity Computer's 5 CX skills with Claude Code's project management, file organization, invoice processing, scrum methodology, and verification workflows. Covers ticket triage, customer response drafting, escalation management, knowledge base maintenance, customer research, project management, sprint planning, file organization, and operational quality assurance. Use for support ticket handling, customer communications, escalation workflows, KB article writing, project management, sprint ceremonies, file cleanup, or any operations and CX work.",
+      "sha256": "bc766d10db7917cc5cb7fddb6f0d4e7fb8673e1f204e12b1368cca1450ce50ad",
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/get-zeked/operations-cx-super-skill/main/SKILL.md",
+      "fetched_at": "2026-06-11"
     },
     {
       "name": "postmortem",
@@ -2961,6 +2987,17 @@
       "source": "local"
     },
     {
+      "name": "pm-super-skill",
+      "bucket": "pm",
+      "path": "skills/pm/product/SKILL.md",
+      "version": "0.1.0",
+      "description": "Comprehensive product management skill merging Perplexity Computer's 6 PM skills with Claude Code's product team skills. Covers feature specs, roadmaps, metrics, competitive analysis, stakeholder comms, user research, RICE prioritization, agile ceremonies, UX research, UI design systems, and persistent planning. Use for PRDs, roadmap planning, sprint management, user research synthesis, stakeholder updates, or any product management work.",
+      "sha256": "78eea3c9a363089e533be0691d9783ca52c23dbcefd5845d363f595e835c1b60",
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/get-zeked/pm-super-skill/main/SKILL.md",
+      "fetched_at": "2026-06-11"
+    },
+    {
       "name": "product-roadmap",
       "bucket": "pm",
       "path": "skills/pm/product-roadmap/SKILL.md",
@@ -3215,6 +3252,17 @@
       "source": "local"
     },
     {
+      "name": "research-knowledge-super-skill",
+      "bucket": "research",
+      "path": "skills/research/research/SKILL.md",
+      "version": "0.1.0",
+      "description": "Comprehensive research and knowledge management skill merging Perplexity Computer's research, data exploration, statistical analysis, and visualization skills with Claude Code's tapestry knowledge graphs, article extraction, content research, brainstorming, RAG system building, and prompt engineering. Covers deep research workflows, knowledge graph construction, academic research, data analysis, statistical methods, content synthesis, and AI-powered information retrieval. Use for research projects, literature reviews, data analysis, knowledge management, competitive research, or any investigation requiring deep synthesis.",
+      "sha256": "ddd07b9bf8718fd7afcfe04f86cd8e65c047bc89a529e94b225a2e0648355e67",
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/get-zeked/research-knowledge-super-skill/main/SKILL.md",
+      "fetched_at": "2026-06-11"
+    },
+    {
       "name": "open-source-maintainer",
       "bucket": "roles",
       "path": "skills/roles/open-source-maintainer/SKILL.md",
@@ -3279,6 +3327,28 @@
         "workflow"
       ],
       "source": "local"
+    },
+    {
+      "name": "sales-super-skill",
+      "bucket": "sales",
+      "path": "skills/sales/sales/SKILL.md",
+      "version": "1.0.0",
+      "description": "Comprehensive end-to-end sales skill merging Perplexity Computer's 6 built-in sales skills with Claude Code's customer interview analysis, brand voice analysis, content research, RICE prioritization, and UX research. Covers the full sales cycle from prospecting to close. Use when doing account research, call prep, competitive intelligence, outreach drafting, asset creation, daily briefings, customer interview analysis, deal prioritization, or prospect research.",
+      "sha256": "711d1cbf9fff22439c7eca1964cf4d5ccc39d9b7488be4b3390340ef871e0845",
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/get-zeked/sales-super-skill/main/SKILL.md",
+      "fetched_at": "2026-06-11"
+    },
+    {
+      "name": "agent-security-super-skill",
+      "bucket": "security",
+      "path": "skills/security/security/SKILL.md",
+      "version": "0.1.0",
+      "description": "Comprehensive AI agent security skill covering prompt injection defense, skill/plugin validation, memory poisoning prevention, permission auditing, tool-use safety, data exfiltration prevention, and incident response. Use when installing new skills, processing untrusted documents/emails/web content, auditing agent permissions, validating memory integrity, reviewing MCP tool configurations, or hardening agent workflows against adversarial attacks. Merges OWASP LLM Top 10, NIST AI RMF, vendor guidance from Anthropic/Microsoft/Google, and community security skills into one defensive playbook.",
+      "sha256": "719306de134ab117961d6beb3d2f9bf81569ea8eaad1edae9495128ee561021a",
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/get-zeked/agent-security-super-skill/main/SKILL.md",
+      "fetched_at": "2026-06-11"
     },
     {
       "name": "agent-packs",

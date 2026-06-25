@@ -197,4 +197,4 @@ based_on: docs/03_Dev/Agent_Design.md
 - `architect/observability-design` — production-evals и метрики качества кормят прод-мониторинг и алерты (выход этого скилла).
 - `architect/security-design` — анонимизация реальных user-запросов перед добавлением в eval-set.
 - `quality/test-strategy` — общая пирамида тестов; eval — её AI-специфичный слой.
-- `imported/agent-security-super-skill` — внешний справочник по adversarial/jailbreak-сценариям.
+- `security/security` — внешний справочник по adversarial/jailbreak-сценариям.

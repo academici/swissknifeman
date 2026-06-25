@@ -6,6 +6,17 @@
   },
   "plugins": [
     {
+      "name": "ai",
+      "source": "./packages/skiller/skills/ai",
+      "description": "AI agent building: design, tools, evaluation",
+      "category": "engineering",
+      "tags": [
+        "ai",
+        "agents"
+      ],
+      "package": "skiller"
+    },
+    {
       "name": "architect",
       "source": "./packages/skiller/skills/architect",
       "description": "Architecture, API and data design, security, observability, tech stack selection",
@@ -47,6 +58,17 @@
       "package": "skiller"
     },
     {
+      "name": "creative",
+      "source": "./packages/skiller/skills/creative",
+      "description": "Creative studio: video, design, content production",
+      "category": "business",
+      "tags": [
+        "creative",
+        "content"
+      ],
+      "package": "skiller"
+    },
+    {
       "name": "devops",
       "source": "./packages/skiller/skills/devops",
       "description": "Docker environments, CI/CD pipelines, GitOps",
@@ -55,6 +77,17 @@
         "docker",
         "ci-cd",
         "gitops"
+      ],
+      "package": "skiller"
+    },
+    {
+      "name": "finance",
+      "source": "./packages/skiller/skills/finance",
+      "description": "Finance and accounting: bookkeeping, reporting, FP&A",
+      "category": "business",
+      "tags": [
+        "finance",
+        "accounting"
       ],
       "package": "skiller"
     },
@@ -124,13 +157,13 @@
       "package": "harness"
     },
     {
-      "name": "imported",
-      "source": "./packages/skiller/skills/imported",
-      "description": "External super-skills tracked via upstream.json (marketing, sales, legal, research and more)",
-      "category": "external",
+      "name": "legal",
+      "source": "./packages/skiller/skills/legal",
+      "description": "Legal operations: contracts, compliance, risk",
+      "category": "business",
       "tags": [
-        "super-skills",
-        "upstream"
+        "legal",
+        "compliance"
       ],
       "package": "skiller"
     },
@@ -149,6 +182,17 @@
         "ecosystem"
       ],
       "package": "maind"
+    },
+    {
+      "name": "marketing",
+      "source": "./packages/skiller/skills/marketing",
+      "description": "Marketing: strategy, campaigns, content, growth",
+      "category": "business",
+      "tags": [
+        "marketing",
+        "growth"
+      ],
+      "package": "skiller"
     },
     {
       "name": "mobile",
@@ -236,6 +280,17 @@
       "package": "skiller"
     },
     {
+      "name": "research",
+      "source": "./packages/skiller/skills/research",
+      "description": "Research and knowledge management",
+      "category": "business",
+      "tags": [
+        "research",
+        "knowledge"
+      ],
+      "package": "skiller"
+    },
+    {
       "name": "roles",
       "source": "./packages/skiller/skills/roles",
       "description": "Personas: tech lead, startup CTO, solo founder, open-source maintainer",
@@ -244,6 +299,26 @@
         "tech-lead",
         "cto",
         "maintainer"
+      ],
+      "package": "skiller"
+    },
+    {
+      "name": "sales",
+      "source": "./packages/skiller/skills/sales",
+      "description": "Sales: pipeline, outreach, CRM, negotiation",
+      "category": "business",
+      "tags": [
+        "sales"
+      ],
+      "package": "skiller"
+    },
+    {
+      "name": "security",
+      "source": "./packages/skiller/skills/security",
+      "description": "AI agent security: prompt injection defense, hardening",
+      "category": "engineering",
+      "tags": [
+        "security"
       ],
       "package": "skiller"
     },

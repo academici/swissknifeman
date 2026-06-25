@@ -1,0 +1,5 @@
+{
+  "name": "security",
+  "description": "AI agent security: prompt injection defense, hardening",
+  "skills": "./"
+}

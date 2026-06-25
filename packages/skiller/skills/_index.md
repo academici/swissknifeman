@@ -4,7 +4,7 @@
 
 Источник истины портируемых скиллов (машинный реестр — `skills.json`). Раздача в проекты: `skiller connect` (плагины-бакеты) / `vendor` (физ. перенос). CORE-набор токен-скиллов (`general`/`oss-dev`) раздаётся по умолчанию — см. `connect`/`vendor`.
 
-Всего: 186 скиллов в 17 бакетах.
+Всего: 181 скиллов в 17 бакетах.
 
 ## Скиллы по бакетам
 
@@ -112,11 +112,10 @@
 | `wayfinder` | Laravel Wayfinder: типобезопасные роуты и controller actions для фронтенда. Генерация, им… | `wayfinder`, `laravel`, `typescript`, `routes`, `inertia`, `eslint`, `frontend` |
 | `web-design-guidelines` | Review UI code for Web Interface Guidelines compliance. Use when asked to "review my UI",… |  |
 
-### general — General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists (17)
+### general — General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists (12)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
-| `ai-context-workflow` | Редактирование AI-контекста проекта: .ai/guidelines, .ai/skills, boost.json; запрет правк… | `ai`, `workflow`, `conventions`, `ai-context`, `skills`, `laravel` |
 | `anti-drift` | Дисциплина против «закапывания» агента: думай до кода, простота прежде всего, хирургическ… | `workflow`, `discipline`, `orchestration`, `context` |
 | `compact-responses` | Activate to switch Claude into ultra-compact response mode: minimal prose, code-only answ… | `conventions`, `style`, `tokens`, `context`, `workflow` |
 | `complex-task-orchestrator` | Оркестрация сложных задач: декомпозиция, контекст-роутинг, управление рисками, Definition… | `workflow`, `orchestration`, `checklist`, `agents` |
@@ -124,14 +123,10 @@
 | `cross-layer-change-checklist` | Универсальный checklist для изменений, затрагивающих несколько слоев: код, доступы, UI, д… | `checklist`, `workflow`, `validation` |
 | `git-commit-rules` | Правила работы с Git в проекте: подготовка коммита, husky/commitlint, формат сообщений и … | `git`, `conventions`, `conventional-commits`, `gitops` |
 | `naming-conventions` | Дисциплина именования сущностей (язык-агностично): имя раскрывает намерение, а не реализа… | `naming`, `conventions`, `readability`, `code-style`, `discipline`, `clean-code` |
-| `packages-stack` | Реестр используемых внешних NPM и Composer пакетов. Опирайся на официальную документацию … | `dependencies`, `conventions`, `laravel`, `vue`, `navigation` |
-| `project-map` | Быстрая карта структуры проекта и зон ответственности по директориям для безопасного роут… | `conventions`, `navigation`, `laravel`, `architecture`, `structure` |
 | `session-handoff` | Передача контекста между сессиями и агентами: сжатие сессии в структурированный handoff-д… | `workflow`, `context`, `tokens`, `handoff` |
 | `skills-ssot` | Единый источник истины скиллов для нескольких AI-агентов: .ai/skills + симлинки, gitignor… | `ai-context`, `skills`, `ssot`, `workflow`, `conventions`, `ai` |
 | `spec-interview` | Интервью перед кодом: агент задаёт вопросы по одному, сам читает кодовую базу где может, … | `workflow`, `requirements`, `discovery` |
 | `task-brief-template` | Шаблон постановки сложных задач для агента: цель, границы, инварианты, явные предположени… | `workflow`, `template`, `requirements`, `context` |
-| `ticket-workflow` | Use for ticket domain logic: Actions, Services, Repositories, Observers, Policies, Notifi… | `workflow`, `domain`, `laravel`, `authorization`, `repository`, `architecture` |
-| `user-roles` | Use when working with UserRole enum, user permissions, role priority resolution, or any c… | `roles`, `authorization`, `laravel`, `php`, `enum`, `permissions`, `reflection` |
 | `writing-style` | Тон и язык кодовых артефактов: русский по умолчанию для комментариев, тел коммитов, описа… | `writing`, `language`, `russian`, `comments`, `commits`, `tests`, `docs`, `style` |
 
 ### imported — External super-skills tracked via upstream.json (marketing, sales, legal, research and more) (12)
@@ -294,17 +289,17 @@
 | `agent-packs` | `agent-packs` |
 | `agentic` | `agent-design`, `eval-design` |
 | `agents` | `complex-task-orchestrator`, `cross-project-coordinator`, `laravel-subagents` |
-| `ai` | `ai-context-workflow`, `skills-ssot` |
+| `ai` | `skills-ssot` |
 | `ai-act` | `legal-compliance` |
-| `ai-context` | `ai-context-workflow`, `skills-ssot` |
+| `ai-context` | `skills-ssot` |
 | `alerting` | `observability-design` |
 | `anti-bloat` | `package-contribution-protocol` |
 | `api` | `api-design`, `dx-design`, `laravel-data`, `version-gotchas` |
-| `architecture` | `agent-design`, `api-design`, `architecture`, `data-schema`, `dependency-injection`, `inertia-vue`, `laravel`, `laravel-structure`, `local-topology`, `ml-project-structure`, `modular-architecture`, `oss-development`, `php-patterns`, `pinia-stores`, `project-map`, `repositories`, `startup-cto`, `tech-stack-selection`, `test-strategy`, `ticket-workflow` |
+| `architecture` | `agent-design`, `api-design`, `architecture`, `data-schema`, `dependency-injection`, `inertia-vue`, `laravel`, `laravel-structure`, `local-topology`, `ml-project-structure`, `modular-architecture`, `oss-development`, `php-patterns`, `pinia-stores`, `repositories`, `startup-cto`, `tech-stack-selection`, `test-strategy` |
 | `attribute` | `attribute-authorization` |
 | `attributes` | `enum-attributes` |
 | `auth` | `security-design` |
-| `authorization` | `attribute-authorization`, `azguard`, `laravel-permissions`, `ticket-workflow`, `user-roles` |
+| `authorization` | `attribute-authorization`, `azguard`, `laravel-permissions` |
 | `auto-layout` | `figma-to-flutter`, `figma-to-vue` |
 | `azguard` | `azguard`, `laravel-permissions` |
 | `best-practices` | `laravel-best-practices` |
@@ -345,7 +340,7 @@
 | `contracts` | `api-design` |
 | `contribution` | `package-contribution-protocol` |
 | `conventional-commits` | `git-commit-rules` |
-| `conventions` | `ai-context-workflow`, `compact-responses`, `config-conventions`, `context-economy`, `git-commit-rules`, `ml-project-structure`, `model-rules`, `named-arguments`, `naming-conventions`, `packages-stack`, `project-map`, `skills-ssot`, `venv-dependencies` |
+| `conventions` | `compact-responses`, `config-conventions`, `context-economy`, `git-commit-rules`, `ml-project-structure`, `model-rules`, `named-arguments`, `naming-conventions`, `skills-ssot`, `venv-dependencies` |
 | `coordination` | `cross-project-coordinator`, `shared-memory` |
 | `coverage` | `ci-cd`, `mutation-testing`, `test-strategy`, `vitest` |
 | `cross-config` | `config-conventions` |
@@ -359,7 +354,7 @@
 | `data-transfer-object` | `laravel-data` |
 | `database` | `database`, `test-isolation-guard` |
 | `dataclass` | `config-conventions`, `parametric-config` |
-| `dependencies` | `dependency-audit`, `packages-stack`, `tech-debt-audit`, `venv-dependencies` |
+| `dependencies` | `dependency-audit`, `tech-debt-audit`, `venv-dependencies` |
 | `deployment` | `architecture` |
 | `design-system` | `figma-mcp-core`, `reka-ui-cva` |
 | `design-tokens` | `figma-mcp-core`, `figma-to-flutter`, `figma-to-vue`, `naive-ui-theming`, `tailwind-conventions` |
@@ -371,7 +366,7 @@
 | `docker` | `db-test-preflight`, `docker`, `docker-dev-prod`, `docker-php`, `docker-postgres`, `docker-services`, `docker-vite`, `laravel-dusk`, `makefile` |
 | `docs` | `writing-style` |
 | `documentation` | `dx-design`, `oss-development`, `oss-governance` |
-| `domain` | `enum-state-machine`, `ticket-workflow` |
+| `domain` | `enum-state-machine` |
 | `drift` | `session-observer` |
 | `dto` | `backend-type-sync`, `laravel-data`, `php-patterns` |
 | `duplication` | `cross-project-coordinator` |
@@ -380,7 +375,7 @@
 | `e2e` | `laravel-dusk`, `playwright-e2e` |
 | `echo` | `laravel-broadcasting` |
 | `entities` | `data-schema` |
-| `enum` | `attribute-authorization`, `azguard`, `backend-type-sync`, `enum-attributes`, `enum-state-machine`, `user-roles` |
+| `enum` | `attribute-authorization`, `azguard`, `backend-type-sync`, `enum-attributes`, `enum-state-machine` |
 | `erd` | `data-schema` |
 | `eslint` | `eslint-flat-config`, `wayfinder` |
 | `fdm` | `build-loop`, `config-conventions`, `parametric-config`, `threading` |
@@ -421,7 +416,7 @@
 | `jsdom` | `vitest` |
 | `jsonl` | `session-observer` |
 | `language` | `writing-style` |
-| `laravel` | `ai-context-workflow`, `attribute-authorization`, `azguard`, `backend-type-sync`, `botkit`, `ci-cd`, `code-style-spatie`, `database`, `dependency-injection`, `docker-dev-prod`, `docker-php`, `docker-services`, `docker-vite`, `enum-attributes`, `enum-state-machine`, `filament`, `filepond-upload`, `health-checks`, `inertia-vue`, `laravel`, `laravel-best-practices`, `laravel-broadcasting`, `laravel-data`, `laravel-dusk`, `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages`, `laravel-permissions`, `laravel-security-audit`, `laravel-structure`, `laravel-subagents`, `laravel-testing`, `livewire-blade-attributes`, `medialibrary`, `modular-architecture`, `naming-conventions`, `packages-stack`, `pao`, `pennant-development`, `php-patterns`, `project-map`, `repositories`, `spatie-settings`, `static-analysis`, `tailwind-conventions`, `test-isolation-guard`, `ticket-workflow`, `user-roles`, `vite-module-loader`, `vite-multi-build`, `vitest`, `wayfinder` |
+| `laravel` | `attribute-authorization`, `azguard`, `backend-type-sync`, `botkit`, `ci-cd`, `code-style-spatie`, `database`, `dependency-injection`, `docker-dev-prod`, `docker-php`, `docker-services`, `docker-vite`, `enum-attributes`, `enum-state-machine`, `filament`, `filepond-upload`, `health-checks`, `inertia-vue`, `laravel`, `laravel-best-practices`, `laravel-broadcasting`, `laravel-data`, `laravel-dusk`, `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages`, `laravel-permissions`, `laravel-security-audit`, `laravel-structure`, `laravel-subagents`, `laravel-testing`, `livewire-blade-attributes`, `medialibrary`, `modular-architecture`, `naming-conventions`, `pao`, `pennant-development`, `php-patterns`, `repositories`, `spatie-settings`, `static-analysis`, `tailwind-conventions`, `test-isolation-guard`, `vite-module-loader`, `vite-multi-build`, `vitest`, `wayfinder` |
 | `laravel-data` | `laravel-data` |
 | `laravel-echo` | `laravel-echo-client` |
 | `laravel-modules` | `modular-architecture` |
@@ -455,7 +450,7 @@
 | `mutation` | `mutation-testing` |
 | `naive-ui` | `naive-ui-theming` |
 | `naming` | `naming-conventions`, `scene-conventions` |
-| `navigation` | `local-topology`, `packages-stack`, `project-map` |
+| `navigation` | `local-topology` |
 | `navigation-guards` | `vue-router-best-practices` |
 | `node` | `node-pnpm-preflight` |
 | `nwidart` | `modular-architecture` |
@@ -471,10 +466,10 @@
 | `parenting` | `scene-conventions` |
 | `patterns` | `enum-attributes`, `laravel`, `php-patterns`, `vue-composition-api` |
 | `pennant` | `pennant-development` |
-| `permissions` | `attribute-authorization`, `azguard`, `laravel-permissions`, `user-roles` |
+| `permissions` | `attribute-authorization`, `azguard`, `laravel-permissions` |
 | `persona` | `open-source-maintainer`, `solo-founder`, `startup-cto`, `tech-lead` |
 | `pest` | `test-strategy` |
-| `php` | `attribute-authorization`, `azguard`, `botkit`, `code-style-spatie`, `database`, `dependency-audit`, `dependency-injection`, `docker-php`, `enum-attributes`, `enum-state-machine`, `filament`, `laravel`, `laravel-best-practices`, `laravel-broadcasting`, `laravel-data`, `laravel-dusk`, `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages`, `laravel-permissions`, `laravel-security-audit`, `laravel-structure`, `laravel-testing`, `medialibrary`, `modular-architecture`, `mutation-testing`, `named-arguments`, `naming-conventions`, `pao`, `pennant-development`, `php-patterns`, `php-upgrade-checklist`, `repositories`, `spatie-settings`, `static-analysis`, `test-isolation-guard`, `user-roles` |
+| `php` | `attribute-authorization`, `azguard`, `botkit`, `code-style-spatie`, `database`, `dependency-audit`, `dependency-injection`, `docker-php`, `enum-attributes`, `enum-state-machine`, `filament`, `laravel`, `laravel-best-practices`, `laravel-broadcasting`, `laravel-data`, `laravel-dusk`, `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages`, `laravel-permissions`, `laravel-security-audit`, `laravel-structure`, `laravel-testing`, `medialibrary`, `modular-architecture`, `mutation-testing`, `named-arguments`, `naming-conventions`, `pao`, `pennant-development`, `php-patterns`, `php-upgrade-checklist`, `repositories`, `spatie-settings`, `static-analysis`, `test-isolation-guard` |
 | `phpstan` | `php-upgrade-checklist` |
 | `pinia` | `pinia-stores`, `vue-testing-best-practices` |
 | `playwright` | `playwright-e2e` |
@@ -496,19 +491,18 @@
 | `rector` | `php-upgrade-checklist` |
 | `refactor` | `code-simplifier`, `refactoring-plan`, `tech-debt-audit`, `testing-safety-report` |
 | `refactoring` | `code-simplifier`, `cross-project-coordinator`, `refactoring-plan` |
-| `reflection` | `attribute-authorization`, `enum-attributes`, `postmortem`, `user-roles` |
+| `reflection` | `attribute-authorization`, `enum-attributes`, `postmortem` |
 | `refreshdatabase` | `test-isolation-guard` |
 | `regulatory` | `legal-compliance` |
 | `reka-ui` | `reka-ui-cva` |
 | `release` | `ci-cd`, `github-flow`, `open-source-maintainer`, `release-engineering` |
 | `reporting` | `testing-safety-report` |
-| `repository` | `repositories`, `ticket-workflow` |
+| `repository` | `repositories` |
 | `requirements` | `brd`, `business-process`, `idea-discovery`, `new-project`, `prd-from-brd`, `product-roadmap`, `requirement-critic`, `spec-interview`, `startup-lifecycle`, `task-brief-template` |
 | `rest` | `api-design` |
 | `reverb` | `laravel-broadcasting`, `laravel-echo-client` |
 | `review` | `code-review`, `gh-review`, `open-source-maintainer`, `tech-lead` |
 | `role` | `open-source-maintainer`, `solo-founder`, `startup-cto`, `tech-lead` |
-| `roles` | `user-roles` |
 | `routes` | `wayfinder` |
 | `routing` | `vue-router-best-practices` |
 | `rules` | `model-rules` |
@@ -524,7 +518,7 @@
 | `semver` | `github-flow`, `package-contribution-protocol`, `release-engineering` |
 | `session-analysis` | `session-observer` |
 | `settings` | `spatie-settings` |
-| `skills` | `ai-context-workflow`, `laravel-packages`, `skills-ssot` |
+| `skills` | `laravel-packages`, `skills-ssot` |
 | `sla` | `build-loop`, `capacity-planning`, `config-conventions`, `incident-response`, `oncall-rotation`, `parametric-config`, `threading` |
 | `slo` | `observability-design` |
 | `spatie` | `backend-type-sync`, `code-style-spatie`, `health-checks`, `js-code-style`, `laravel-data`, `medialibrary`, `spatie-settings` |
@@ -536,7 +530,7 @@
 | `storage-state` | `playwright-e2e` |
 | `store` | `pinia-stores` |
 | `stride` | `security-design` |
-| `structure` | `inertia-vue`, `laravel-structure`, `ml-project-structure`, `project-map` |
+| `structure` | `inertia-vue`, `laravel-structure`, `ml-project-structure` |
 | `style` | `compact-responses`, `writing-style` |
 | `stylistic` | `eslint-flat-config` |
 | `tailwind` | `dark-mode`, `figma-to-vue`, `naive-ui-theming`, `reka-ui-cva`, `tailwind-conventions`, `vite-multi-build` |
@@ -572,11 +566,11 @@
 | `viewport` | `mcp-blender` |
 | `vite` | `docker-vite`, `vite-module-loader`, `vite-multi-build` |
 | `vitest` | `vitest`, `vue-testing-best-practices` |
-| `vue` | `dark-mode`, `eslint-flat-config`, `figma-to-vue`, `filepond-upload`, `inertia-vue`, `js-code-style`, `laravel-echo-client`, `naive-ui-theming`, `packages-stack`, `pinia-stores`, `reka-ui-cva`, `tailwind-conventions`, `vite-module-loader`, `vitest`, `vue-composition-api`, `vue-dynamic-icons`, `vue-router-best-practices`, `vue-testing-best-practices` |
+| `vue` | `dark-mode`, `eslint-flat-config`, `figma-to-vue`, `filepond-upload`, `inertia-vue`, `js-code-style`, `laravel-echo-client`, `naive-ui-theming`, `pinia-stores`, `reka-ui-cva`, `tailwind-conventions`, `vite-module-loader`, `vitest`, `vue-composition-api`, `vue-dynamic-icons`, `vue-router-best-practices`, `vue-testing-best-practices` |
 | `vue-router` | `vue-router-best-practices` |
 | `vue-test-utils` | `vue-testing-best-practices` |
 | `wayfinder` | `wayfinder` |
 | `websocket` | `docker-services` |
 | `websockets` | `laravel-broadcasting`, `laravel-echo-client` |
-| `workflow` | `ai-context-workflow`, `anti-drift`, `build-loop`, `business-process`, `code-review`, `compact-responses`, `complex-task-orchestrator`, `context-economy`, `cross-layer-change-checklist`, `enum-state-machine`, `incident-response`, `laravel-subagents`, `postmortem`, `refactoring-plan`, `session-handoff`, `skills-ssot`, `spec-interview`, `task-brief-template`, `tech-debt-audit`, `tech-lead`, `ticket-workflow` |
+| `workflow` | `anti-drift`, `build-loop`, `business-process`, `code-review`, `compact-responses`, `complex-task-orchestrator`, `context-economy`, `cross-layer-change-checklist`, `enum-state-machine`, `incident-response`, `laravel-subagents`, `postmortem`, `refactoring-plan`, `session-handoff`, `skills-ssot`, `spec-interview`, `task-brief-template`, `tech-debt-audit`, `tech-lead` |
 | `writing` | `writing-style` |

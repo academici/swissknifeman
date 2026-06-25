@@ -43,7 +43,7 @@ sha256: ""
 - Использовать conventional-стиль проекта.
 - Сообщение — на русском языке.
 - Типовые префиксы: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, `perf`, `style`, `build`, `ci`, `revert` (+ `security`, если проект ведёт такую практику).
-- Scope брать из разрешенного списка проекта (commitlint): `ticket`, `policy`, `actions`, `services`, `workflow`, `filament`, `api`, `auth`, `meeting`, `notification`, `deps`.
+- Scope брать из commitlint-конфига проекта (если есть) или выводить из структуры/слоёв проекта; не выдумывать.
 - Заголовок формулировать как "сделали", а не как "сделать":
   - использовать прошедшее время, чаще множественное число: `добавили`, `исправили`, `убрали`, `обновили`.
   - избегать инфинитивов: `добавить`, `исправить`, `сделать`.
@@ -83,7 +83,7 @@ ci(deps): добавить php-расширения для composer install
 ## Conventional Commits: scopes и breaking changes
 
 - Источник истины для scope — commitlint-конфиг проекта. Если его нет —
-  выводить scope из структуры проекта (`project-map`), а не выдумывать.
+  выводить scope из структуры/слоёв проекта, а не выдумывать.
 - Для PHP-пакетов без конфига разумный дефолт (пример, не догма):
   `middleware`, `provider`, `contract`, `config`, `command`, `policy`,
   `event`, `exception`, `rule`.
@@ -104,4 +104,3 @@ ci(deps): добавить php-расширения для composer install
 - `writing-style` (general) — тон и язык тела коммита (русский, причина вместо механики); формат — здесь.
 - `devops/node-pnpm-preflight` — проверка Node/pnpm перед коммитом с husky/commitlint-хуками.
 - `oss-dev/github-flow` — цепочка Issue → Branch → PR → Merge → Tag и SemVer Oracle (тип коммита → bump версии).
-- `project-map` (general) — откуда брать допустимый scope, если commitlint-конфига нет.

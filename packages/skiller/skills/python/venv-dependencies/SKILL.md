@@ -93,5 +93,4 @@ __pycache__/
 
 - `python/ml-project-structure` — структура проекта, которая определяет, куда кладутся `requirements.txt`/`pyproject.toml` и что попадает в `.gitignore`.
 - `php/static-analysis` — PHP-аналог связки Black/Ruff/Mypy (Pint, PHPStan, Rector) локально и в CI.
-- `general/packages-stack` — реестр внешних зависимостей проекта и опора на их официальную документацию.
 - `oss-dev/dependency-audit` — аудит зависимостей (vuln scan, лицензии, supply-chain, SBOM) поверх зафиксированных версий.

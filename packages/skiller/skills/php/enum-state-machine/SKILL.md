@@ -42,7 +42,7 @@ sha256: ""
 - Задача только про **метаданные кейсов** (label/color/priority) без графа переходов — это
   `php/enum-attributes` (тот скилл явно не про state-machine; этот — дополняет его).
 - Доменно-специфичная реализация одного проекта (имена конкретных статусов/действий) —
-  оформляется как проектный скилл (пример — `general/ticket-workflow`), а не общий реестр.
+  оформляется как **project-local** скилл (`<project>/.ai|.claude/skills/`), а не общий реестр.
 
 ## Алгоритм
 
@@ -109,6 +109,4 @@ sha256: ""
   здесь — граф переходов поверх таких enum (скиллы дополняют друг друга).
 - `php/laravel-broadcasting` — `ShouldDispatchAfterCommit`, broadcast и listeners перехода.
 - `php/laravel`, `php/repositories` — границы Action/Repository, в которых живёт переход.
-- `general/ticket-workflow` — пример **проектно-специфичной** реализации этого паттерна
-  (граф на enum + рантайм-реестр + Action) под конкретный домен.
 - `general/cross-layer-change-checklist` — синхронизация слоёв при добавлении перехода.

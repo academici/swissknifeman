@@ -82,8 +82,6 @@ flowchart LR
     session_handoff["session-handoff"]
     spec_interview["spec-interview"]
     task_brief_template["task-brief-template"]
-    ticket_workflow["ticket-workflow"]
-    user_roles["user-roles"]
   end
   subgraph mobile["mobile"]
     figma_to_flutter["figma-to-flutter"]
@@ -227,11 +225,7 @@ flowchart LR
   shared_memory -->|requires| local_topology
   tech_stack_selection -->|requires| brd
   test_isolation_guard -->|requires| laravel_testing
-  ticket_workflow -->|requires| laravel
-  ticket_workflow -->|requires| repositories
-  ticket_workflow -->|requires| user_roles
   unit_economics -->|requires| monetization_design
-  user_roles -->|requires| laravel
   venv_dependencies -->|requires| ml_project_structure
   vite_multi_build -->|requires| vite_module_loader
   vitest -->|requires| inertia_vue
@@ -305,9 +299,9 @@ flowchart LR
   unit_economics -.->|feeds| go_to_market
 ```
 
-**В графе:** 112 скиллов, 85 рёбер requires, 66 рёбер produces_for.
+**В графе:** 110 скиллов, 81 рёбер requires, 66 рёбер produces_for.
 
-## Изолированные скиллы (74)
+## Изолированные скиллы (71)
 
 Скиллы без связей `requires`/`produces_for` — самодостаточны.
 
@@ -315,7 +309,7 @@ flowchart LR
 |---|---|
 | devops | `docker` |
 | frontend | `antfu`, `document-writer`, `eslint-flat-config`, `filepond-upload`, `js-code-style`, `laravel-echo-client`, `motion`, `nuxt`, `nuxt-modules`, `nuxt-seo`, `pinia`, `pinia-stores`, `ts-library`, `vite`, `vitepress`, `vitest-vue`, `vue-best-practices`, `vue-composition-api`, `vue-dynamic-icons`, `vue-router-best-practices`, `vueuse-functions`, `web-design-guidelines` |
-| general | `ai-context-workflow`, `compact-responses`, `naming-conventions`, `packages-stack`, `project-map`, `skills-ssot`, `writing-style` |
+| general | `compact-responses`, `naming-conventions`, `skills-ssot`, `writing-style` |
 | imported | `agent-security-super-skill`, `ai-agent-super-skill`, `content-creative-super-skill`, `dev-engineering-super-skill`, `finance-super-skill`, `legal-super-skill`, `marketing-super-skill`, `operations-cx-super-skill`, `pm-super-skill`, `research-knowledge-super-skill`, `sales-super-skill`, `token-efficient` |
 | php | `azguard`, `code-style-spatie`, `enum-attributes`, `enum-state-machine`, `health-checks`, `laravel-best-practices`, `laravel-broadcasting`, `laravel-dusk`, `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages`, `laravel-subagents`, `livewire-blade-attributes`, `medialibrary`, `named-arguments`, `naming-conventions`, `pao`, `pennant-development`, `php-patterns`, `php-upgrade-checklist`, `spatie-settings` |
 | roles | `open-source-maintainer`, `solo-founder`, `startup-cto`, `tech-lead` |

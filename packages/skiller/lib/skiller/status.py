@@ -9,6 +9,18 @@ from .state import db_records, print_registry_state
 from .update import detect_marketplace_file, detect_vendor_path
 
 
+def _bucket_of(source_path):
+    """Бакет из source_path вендоренного скилла ('skills/<bucket>/<rel>' → bucket)."""
+    parts = Path(source_path).parts
+    return parts[1] if len(parts) >= 2 and parts[0] == "skills" else None
+
+
+def channel_overlap(enabled, vendored_buckets):
+    """Бакеты, активные ОДНОВРЕМЕННО как плагин (connect) и вендоренные (vendor) —
+    скиллы такого бакета раздаются дважды. Возвращает отсортированный список."""
+    return sorted(set(enabled) & set(vendored_buckets))
+
+
 def cmd_status(env, argv):
     opts = parse_flags(argv, {"--target": "str"})
     if opts["help"]:
@@ -28,6 +40,8 @@ def cmd_status(env, argv):
     print(f"В projects.json: "
           f"{', '.join(sorted(registered)) if registered else 'не зарегистрирован'}")
 
+    enabled = []
+    vendored_buckets = set()
     mk_file = detect_marketplace_file(target)
     if mk_file:
         s = json.loads((target / ".claude" / mk_file).read_text(encoding="utf-8"))
@@ -62,6 +76,8 @@ def cmd_status(env, argv):
         skills = manifest.get("skills", [])
         gone = [e.get("source_path", "") for e in skills
                 if e.get("source_path") and not (env.root / e["source_path"]).exists()]
+        vendored_buckets = {b for e in skills
+                            if (b := _bucket_of(e.get("source_path", "")))}
         print(f"\nКанал vendor ({vendor_path}, layout {manifest.get('layout')}):")
         print(f"  Скиллов: {len(skills)}, установлено {manifest.get('installed_at')}"
               f", агент {manifest.get('agent')}, профиль {manifest.get('profile') or '-'}")
@@ -71,5 +87,15 @@ def cmd_status(env, argv):
                   + "  (почистить: skiller update)")
     if not mk_file and not vendor_path:
         print("\nКаналы: не подключён (skiller connect | vendor)")
+
+    # Гигиена каналов: один бакет не должен раздаваться И плагином, И вендором —
+    # иначе скиллы дублируются. Проверка живёт ТОЛЬКО здесь (skiller — владелец
+    # скиллов); зонтик дёргает её через `swissknifeman skills status`, не дублируя.
+    overlap = channel_overlap(enabled, vendored_buckets)
+    if overlap:
+        print(f"\n⚠ ДУБЛЬ КАНАЛОВ: бакеты [{' '.join(overlap)}] активны ОДНОВРЕМЕННО как "
+              f"плагины (connect) и вендорены (vendor) — скиллы раздаются дважды.")
+        print("  Оставь один канал: убери бакет из enabledPlugins (connect) ИЛИ из "
+              ".swissknifeman/config.json (vendor) + skiller sync.")
     print()
     print_registry_state(env)

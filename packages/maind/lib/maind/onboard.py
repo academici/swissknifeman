@@ -121,6 +121,11 @@ def onboard(env, config, project_or_path, opts):
         ptype = proj.get("type")
         if ptype and ptype not in ("unknown", "standalone"):
             extra += ["--profile", ptype]
+        # Канал публикации скиллов (только скиллы; память/граф — отдельные плоскости):
+        # connect=плагины (не в репо) · vendor=физ.копии в .claude/skills (в репо, для
+        # внешних разработчиков без доступа к реестру swissknifeman).
+        if opts.get("skills_channel"):
+            extra += ["--skills-channel", opts["skills_channel"]]
         if opts.get("yes"):
             extra.append("--yes")
         try:
@@ -235,11 +240,12 @@ def cmd_onboard(env, argv):
     o, pos = parse_args(argv, {"--bundle": "str", "--skip-skills": "bool",
                                "--targets": "str", "--with-code": "bool",
                                "--with-graphify": "bool", "--namespace": "str",
-                               "--memory": "str",
+                               "--memory": "str", "--skills-channel": "str",
                                "--with-brain": "bool", "--dry-run": "bool",
                                "--yes": "bool", "--json": "bool"}, max_pos=1)
     if not pos:
         die("использование: maind onboard <project|path> [--memory maind|native|off] "
+            "[--skills-channel connect|vendor] "
             "[--namespace a,b] [--bundle B --yes --with-code --with-brain --dry-run]")
     config, _src = load_config(env)
     ns = [s.strip() for s in (o["namespace"] or "").split(",") if s.strip()] or None
@@ -252,9 +258,21 @@ def cmd_onboard(env, argv):
         memory = ans or "maind"
         if memory not in ("maind", "native", "off"):
             memory = "maind"
+    # Чек-лист: канал публикации скиллов. КАСАЕТСЯ ТОЛЬКО СКИЛЛОВ — память/граф/MCP
+    # настраиваются как обычно. connect=плагины (не в репо, нужен реестр swissknifeman);
+    # vendor=физ.копии в .claude/skills (коммитятся в репо — для проектов, которые
+    # отдают сторонним разработчикам без доступа к swissknifeman).
+    channel = o["skills_channel"]
+    if channel and channel not in ("connect", "vendor"):
+        die(f"--skills-channel: {channel} (допустимо: connect|vendor)")
+    if not channel and not o["yes"] and not o["skip_skills"] and sys.stdin.isatty():
+        ans = input("Публикация скиллов [connect]/vendor "
+                    "(connect=плагины, не в репо · vendor=физ.копии в репо для "
+                    "внешних разработчиков): ").strip().lower()
+        channel = ans if ans in ("connect", "vendor") else "connect"
     opts = {"bundle": o["bundle"], "skip_skills": o["skip_skills"], "targets": o["targets"],
             "with_code": o["with_code"], "with_graphify": o["with_graphify"],
-            "namespaces": ns, "memory": memory or "maind",
+            "namespaces": ns, "memory": memory or "maind", "skills_channel": channel,
             "with_brain": o["with_brain"], "dry": o["dry_run"], "yes": o["yes"]}
     report = onboard(env, config, pos[0], opts)
     if o["json"]:

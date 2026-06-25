@@ -11,10 +11,14 @@ of truth портируемых скиллов, раздаёт их в прое�
 
 - **connect** — plugin marketplace Claude Code (бакет = плагин). Скиллы НЕ копируются в репо,
   автообновляются из реестра. Пишет `.claude/settings.local.json` (`enabledPlugins`).
-- **vendor** — физический перенос конкретных скиллов в репо (`.ai/skills/` / `.claude/skills/`),
-  управляется `.swissknife.json` (или `.swissknifeman/config.json`) + `skiller sync`.
+- **vendor** — физический перенос скиллов в репо. Для Claude — `skiller sync` (конфиг
+  `.swissknifeman/config.json` `mode:vendor`) → копии в `.claude/skills/` + `skills-lock.json`
+  (`managed`). **Файлы коммитятся** — канал для проектов, отдаваемых сторонним разработчикам без
+  доступа к реестру (у `connect` marketplace указывает на локальный путь к реестру). Legacy
+  `skiller vendor --agent cursor|generic` — для `.ai/.cursor` (для claude deprecated).
 
-Плюс: `integrate` — визард по всему функционалу; `registry` — регенерация выходных артефактов.
+Плюс: `integrate` — визард по всему функционалу (`--skills-channel connect|vendor|skip`; `vendor`
+для Claude роутится в `sync`); `registry` — регенерация выходных артефактов.
 
 ### CORE-политика (раздача по умолчанию)
 

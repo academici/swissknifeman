@@ -17,8 +17,12 @@ from .config import (autodetect, load_config, load_profile, resolve_profile_name
                      resolve_target)
 from .connect import do_connect
 from .vendor import do_vendor
+from .skillset import do_sync
 from .hub import generate_hub
 from .topology import cmd_topology
+
+# Каналы публикации скиллов в проект (только скиллы; память/граф maind — отдельно).
+SKILLS_CHANNELS = ("connect", "vendor", "skip")
 
 # Бандл = пред-ответы на чеклист. custom → спрашиваем интерактивно.
 # mcp=True → раздать dev-дефолтные MCP-серверы (резолв по autodetect в _gather).
@@ -151,9 +155,28 @@ def _block_prereqs(env, dry, interactive):
             _run_harness(env, ["hooks", "--global"])
 
 
+def _resolve_channel(opts, default, interactive):
+    """Канал публикации скиллов: --skills-channel > интерактивный вопрос > дефолт.
+    Возвращает 'connect'/'vendor' или None (skip)."""
+    flag = opts.get("skills_channel")
+    if flag:
+        if flag not in SKILLS_CHANNELS:
+            die(f"--skills-channel: {flag} (допустимо: connect|vendor|skip)")
+        return None if flag == "skip" else flag
+    if interactive:
+        ch = _ask_choice(
+            "Канал публикации скиллов "
+            "(connect=плагины, не в репо · vendor=физ.копии в репо)",
+            SKILLS_CHANNELS, default or "connect", interactive)
+        return None if ch == "skip" else ch
+    return default
+
+
 def _block_skills(env, target, choices, dry):
     ch = choices["skills"]
-    print(f"\n[1] Скиллы: {ch or 'пропуск'}")
+    agent = choices.get("skills_agent") or "claude"
+    print(f"\n[1] Скиллы: {ch or 'пропуск'}"
+          + (f" (agent={agent})" if ch == "vendor" else ""))
     if not ch:
         return
     opts = {"dry_run": dry, "hub": choices["hub"],
@@ -161,8 +184,14 @@ def _block_skills(env, target, choices, dry):
     if ch == "connect":
         do_connect(env, target, opts)
     elif ch == "vendor":
-        opts["agent"] = choices.get("skills_agent") or "cursor"
-        do_vendor(env, target, opts)
+        if agent == "claude":
+            # современный канал: физ. копии в .claude/skills/ через sync (для
+            # внешних разработчиков без доступа к реестру swissknifeman)
+            do_sync(env, target, opts)
+        else:
+            # legacy vendor для Cursor/Gemini (.ai/.cursor)
+            opts["agent"] = agent
+            do_vendor(env, target, opts)
 
 
 def _block_perms(env, target, choices, dry):
@@ -271,6 +300,9 @@ def _gather(env, target, opts, bundle, interactive):
     if bundle != "custom":
         # авто-пресеты permissions (autodetect внутри harness при пустом)
         base["perms_presets"] = ""
+        # Канал публикации скиллов: --skills-channel > вопрос (TTY) > дефолт бандла.
+        base["skills"] = _resolve_channel(opts, base["skills"], interactive)
+        base.setdefault("skills_agent", "claude")
         # mcp=True в бандле → dev-дефолты (context7), но не для obsidian-vault;
         # --mcp <a,b> добавляет opt-in пресеты поверх (явный выбор бьёт dev-гейт)
         base["mcp"] = _add_unique(
@@ -291,13 +323,14 @@ def _gather(env, target, opts, bundle, interactive):
         prof_name = _ask_choice("  профиль", tuple(names), "standalone", interactive)
     ch = {"settings_file": opts.get("file") or "settings.json",
           "memory_brain": "core", "profile": prof_name}
-    ch["skills"] = _ask_choice("Канал скиллов", ("connect", "vendor", "skip"),
-                               "connect", interactive)
-    if ch["skills"] == "skip":
-        ch["skills"] = None
+    ch["skills"] = _resolve_channel(opts, "connect", interactive)
+    ch["skills_agent"] = "claude"
     if ch["skills"] == "vendor":
-        ch["skills_agent"] = _ask_choice("  агент", ("cursor", "generic", "claude"),
-                                         "cursor", interactive)
+        # claude → физ. копии в .claude/skills/ через sync (в репо);
+        # cursor/generic → legacy vendor в .ai/.cursor
+        ch["skills_agent"] = _ask_choice(
+            "  куда (claude=.claude/skills через sync · cursor/generic=.ai/.cursor)",
+            ("claude", "cursor", "generic"), "claude", interactive)
     ch["perms"] = _ask_yn("Применить permissions-пресеты (autodetect)?", True, interactive)
     ch["perms_presets"] = ""
     if detected != "obsidian-vault":
@@ -333,11 +366,14 @@ def cmd_integrate(env, argv):
     opts = parse_flags(argv, {
         "--target": "str", "--dry-run": "bool", "--yes": "bool",
         "--bundle": "str", "--file": "str", "--mcp": "str", "--profile": "str",
+        "--skills-channel": "str",
     })
     if opts["help"]:
         print("skiller integrate [--target P] [--bundle minimal|recommended|full|custom] "
-              "[--profile name] [--yes] [--dry-run] "
-              "[--file settings.json|settings.local.json] [--mcp name1,name2]")
+              "[--profile name] [--skills-channel connect|vendor|skip] [--yes] [--dry-run] "
+              "[--file settings.json|settings.local.json] [--mcp name1,name2]\n"
+              "  --skills-channel: connect=плагины (не в репо) · "
+              "vendor=физ.копии в .claude/skills (в репо, для внешних разработчиков)")
         return
     target, _ = resolve_target(env, opts, allow_home_confirm=True)
     if target == env.root.resolve():

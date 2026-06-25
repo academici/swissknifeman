@@ -27,10 +27,11 @@ from pathlib import Path
 
 from core.io import atomic_write_json
 
-from .common import MANIFEST, die, now_iso, parse_flags, warn
+from .common import MANIFEST, apply_permissions, die, now_iso, parse_flags, warn
 from .config import (DEFAULT_EXCLUDE, all_buckets, core_skill_tuples,
-                     resolve_target)
+                     load_config, resolve_selection, resolve_target)
 from .hub import generate_hub, hub_artifacts_exist
+from .state import upsert_project
 
 # Куда складываем скиллы по умолчанию (Claude находит автоматически).
 DEFAULT_SKILLS_PATH = ".claude/skills"
@@ -379,6 +380,72 @@ def _write_manifest(target, skills_path, locked, entries, cfg):
     # Атомарно (tmp+os.replace) и с version первым ключом — как skills-lock.json;
     # raw write_text здесь оставлял бы шанс на полузаписанный манифест при крахе.
     atomic_write_json(dest_root / MANIFEST, data, version=MANIFEST_VERSION)
+
+
+# --- integrate/onboard entry (vendor-канал «опубликовать в репо») -------------
+def do_sync(env, target, opts, register=True):
+    """Vendor-канал через sync: «опубликовать» скиллы физически в .claude/skills/.
+
+    Это путь для проектов, которые отдают сторонним разработчикам БЕЗ доступа к
+    реестру swissknifeman: файлы скиллов коммитятся в репо проекта (в отличие от
+    connect, где скиллы живут плагинами в реестре). Материализует
+    .swissknifeman/config.json из профиля проекта, если конфига ещё нет; уже
+    существующий курированный конфиг уважается (не перетираем). Паритет с
+    connect/do_vendor: permissions-пресеты, hub, регистрация (channel=vendor)."""
+    dry = opts.get("dry_run", False)
+    force = opts.get("force", False)
+    no_core = opts.get("no_core", False)
+
+    cfg_path = skillset_config_path(target)
+    if cfg_path.is_file():
+        cfg = load_skillset_config(target)
+        profile_name = cfg.get("project_type") or ""
+    else:
+        legacy = load_config(env, target)
+        buckets, profile_name, _psrc, source, _meta = resolve_selection(
+            env, target, legacy, opts.get("profile", ""), [])
+        cfg = {"version": LOCK_VERSION, "mode": "vendor", "agent": "claude",
+               "buckets": list(buckets), "include": [], "exclude": []}
+        if not dry:
+            cfg_path.parent.mkdir(parents=True, exist_ok=True)
+            atomic_write_json(cfg_path, cfg, version=LOCK_VERSION)
+        print(("[dry-run] " if dry else "")
+              + f"конфиг vendor-режима: {CONFIG_DIR}/{CONFIG_FILE} "
+              f"(mode=vendor, buckets: {' '.join(buckets) or '-'})")
+        if source == "autodetect-fallback":
+            print("⚠ тип проекта не распознан — материализовано МИНИМАЛЬНОЕ ядро;\n"
+                  "  для оптимального набора укажи профиль: integrate --profile <type>")
+
+    plan = sync_skillset(env, target, cfg, dry_run=dry, force=force,
+                         include_core=not no_core)
+    print(("[dry-run] " if dry else "")
+          + f"sync: +{len(plan['add'])} ~{len(plan['update'])} "
+          f"-{len(plan['remove'])} ={len(plan['keep'])} "
+          f"(skills_path: {plan['skills_path']})")
+    if plan["conflicts"] and not force:
+        print(f"  конфликты (чужие, пропущены): {', '.join(plan['conflicts'])} "
+              "— --force чтобы заменить")
+    if plan["skipped"]:
+        print(f"  пропущено (нет в реестре): {', '.join(plan['skipped'])}")
+
+    # permissions-пресеты (deny мусора + allow стека) — паритет с connect/do_vendor
+    if not opts.get("no_permissions"):
+        apply_permissions(env, target, dry_run=dry)
+
+    if opts.get("hub") and not dry:
+        generate_hub(env, target)
+
+    record = {
+        "path": str(target),
+        "channel": "vendor",
+        "profile": profile_name,
+        "agent": "claude",
+        "skills_path": plan["skills_path"],
+        "hub": opts.get("hub") or hub_artifacts_exist(target),
+    }
+    if register and not dry:
+        upsert_project(env, record)
+    return record
 
 
 # --- CLI ----------------------------------------------------------------------

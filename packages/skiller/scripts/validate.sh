@@ -140,6 +140,8 @@ for skill_md in skill_files:
             errors.append(f"{rel}: битая ссылка на {tgt} (файла нет)")
 
     # lean SKILL.md: тело (без frontmatter) сверх порога → мягкий warn.
+    # upstream-скиллы (imported/external) пропускаем — их объём интенциональный (адаптированная
+    # копия внешнего документа), lean-стандарт распространяется на АВТОРСКИЕ local-скиллы.
     lines = body.splitlines()
     body_start = 0
     if lines and lines[0].strip() == "---":
@@ -148,7 +150,7 @@ for skill_md in skill_files:
                 body_start = i + 1
                 break
     body_lines = len([ln for ln in lines[body_start:] if ln.strip()])
-    if body_lines > LEAN_MAX_BODY_LINES:
+    if body_lines > LEAN_MAX_BODY_LINES and load_upstream(skill_dir) is None:
         warnings.append(f"{rel}: тело SKILL.md {body_lines} непустых строк "
                         f"(> {LEAN_MAX_BODY_LINES}) — вынеси детали в references/snippets "
                         f"(lean SKILL.md, docs/guide/skill-taxonomy.md)")

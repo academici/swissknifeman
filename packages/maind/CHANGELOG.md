@@ -6,6 +6,12 @@
 ## [Unreleased]
 
 ### Added
+- **Роль-паки субагентов (вариант A+C)**: 4 кросс-стек персона-пака в harness
+  (`role-tech-lead`/`role-cto`/`role-founder`/`role-maintainer`, `shape:role`, без
+  `stack.project_type`/`detect`). Доставка: `project.roles` в `config.json` → карта `role_packs`
+  (новый TOP_KEY) маппит роль → пак; `_resolve_agent_pack` (sync.py) добавляет роль-паки
+  аддитивно к стековому паку профиля. Роль-скиллы skiller получили `role_agent_pack` во
+  frontmatter; тонкий выбор одной роли — через vendor.
 - **Доставка субагентов по типу проекта (хаб → проект)**: профиль skiller называет
   `agent_pack` (строка или список — композиция), а `maind onboard`/`maind sync` детерминированно
   раскатывают пак(и) в `.claude/agents/` через `harness agent-packs render --auto` — БЕЗ агента в

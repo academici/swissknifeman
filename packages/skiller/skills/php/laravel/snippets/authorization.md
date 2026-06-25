@@ -23,7 +23,7 @@ app/Enums/<Domain>/Permissions/<Subprocess>Permission.php
 
 declare(strict_types=1);
 
-namespace App\Enums\Ticket\Permissions;
+namespace App\Enums\Order\Permissions;
 
 enum CommonPermission: string
 {
@@ -56,35 +56,35 @@ app/Policies/<Domain>/<Subprocess>Policy.php
 
 declare(strict_types=1);
 
-namespace App\Policies\Ticket;
+namespace App\Policies\Order;
 
 use App\Attributes\Auth\GateAbility;
-use App\Enums\Ticket\Permissions\CommonPermission;
-use App\Models\Ticket\Ticket;
+use App\Enums\Order\Permissions\CommonPermission;
+use App\Models\Order\Order;
 use App\Models\User\User;
-use App\Services\Ticket\TicketAccessEvaluator;
+use App\Services\Order\OrderAccessEvaluator;
 
 final class CommonPolicy
 {
     public function __construct(
-        private readonly TicketAccessEvaluator $accessEvaluator,
+        private readonly OrderAccessEvaluator $accessEvaluator,
     ) {}
 
     #[GateAbility(permission: CommonPermission::View)]
-    public function canView(User $user, Ticket $ticket): bool
+    public function canView(User $user, Order $ticket): bool
     {
         return $this->accessEvaluator->hasAccess(user: $user, ticket: $ticket);
     }
 
     #[GateAbility(permission: CommonPermission::Edit)]
-    public function canEdit(User $user, Ticket $ticket): bool
+    public function canEdit(User $user, Order $ticket): bool
     {
         return $this->accessEvaluator->hasAccess(user: $user, ticket: $ticket)
             && $ticket->status->isEditable();
     }
 
     #[GateAbility(permission: CommonPermission::Finish)]
-    public function canFinish(User $user, Ticket $ticket): bool
+    public function canFinish(User $user, Order $ticket): bool
     {
         return $this->accessEvaluator->isResponsible(user: $user, ticket: $ticket)
             && $ticket->status->canFinish();
@@ -127,10 +127,10 @@ Serializable DTO с boolean свойствами — транслирует Gate
 
 declare(strict_types=1);
 
-namespace App\Dto\Ticket\Policy;
+namespace App\Dto\Order\Policy;
 
-use App\Enums\Ticket\Permissions\CommonPermission;
-use App\Models\Ticket\Ticket;
+use App\Enums\Order\Permissions\CommonPermission;
+use App\Models\Order\Order;
 use Illuminate\Support\Facades\Gate;
 use Spatie\LaravelData\Data;
 
@@ -145,7 +145,7 @@ final class CommonAbilities extends Data
         public bool $finish,
     ) {}
 
-    public static function fromTicket(Ticket $ticket): self
+    public static function fromOrder(Order $ticket): self
     {
         return new self(
             view: Gate::allows(ability: CommonPermission::View->value, arguments: $ticket),
@@ -162,9 +162,9 @@ final class CommonAbilities extends Data
 
 ```php
 // В Controller
-return Inertia::render('Tickets/Show', [
-    'ticket' => TicketResource::make($ticket),
-    'abilities' => CommonAbilities::fromTicket(ticket: $ticket),
+return Inertia::render('Orders/Show', [
+    'ticket' => OrderResource::make($ticket),
+    'abilities' => CommonAbilities::fromOrder(ticket: $ticket),
 ]);
 ```
 
@@ -183,7 +183,7 @@ if (props.abilities.edit) { /* показать кнопку */ }
 2. Добавить метод `can<Action>()` в Policy + `#[GateAbility]` атрибут
 3. Зарегистрировать в `Gate::define()` (AppServiceProvider или ServiceProvider домена)
 4. Добавить boolean поле в Abilities DTO
-5. Добавить проверку `Gate::allows()` в Abilities DTO `fromTicket()` / `fromModel()`
+5. Добавить проверку `Gate::allows()` в Abilities DTO `fromOrder()` / `fromModel()`
 6. Запустить `php artisan typescript:transform` (если `#[TypeScript]` есть)
 
 ---
@@ -192,15 +192,15 @@ if (props.abilities.edit) { /* показать кнопку */ }
 
 ```
 app/
-├── Enums/Ticket/Permissions/
+├── Enums/Order/Permissions/
 │   ├── CommonPermission.php
 │   ├── QuestionPermission.php
 │   └── ApplicationPermission.php
-├── Policies/Ticket/
+├── Policies/Order/
 │   ├── CommonPolicy.php
 │   ├── QuestionPolicy.php
 │   └── ApplicationPolicy.php
-└── Dto/Ticket/Policy/
+└── Dto/Order/Policy/
     ├── CommonAbilities.php
     ├── QuestionAbilities.php
     └── ApplicationAbilities.php

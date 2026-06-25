@@ -187,7 +187,7 @@
       "path": "skills/architect/eval-design/SKILL.md",
       "version": "0.1.0",
       "description": "Оценка качества LLM/AI-выводов — eval-set, метрики, regression-харнес, automated + human review",
-      "sha256": "02a32a6172642f5ee92dd9bcc0fd7d5f690a730c676776668be888ff53aa1e31",
+      "sha256": "88b0df2ba07f66f89b81b864b667535b7911f8bd05004ed2cd682dbbd6598130",
       "tags": [
         "agentic",
         "validation",
@@ -231,7 +231,7 @@
       "path": "skills/architect/legal-compliance/SKILL.md",
       "version": "0.1.0",
       "description": "GDPR, CCPA, AI Act, DMCA, COPPA, DSA — чеклист регуляторных требований до запуска",
-      "sha256": "3c4800761565de01297e4ae3d4114a85e332a6872f1161139bbda5f15b50ea86",
+      "sha256": "c15bf001cc6ea9d76867f9d5b1ca879ede898814269fdbef12435297bbec50a1",
       "tags": [
         "compliance",
         "gdpr",
@@ -253,7 +253,7 @@
       "path": "skills/architect/observability-design/SKILL.md",
       "version": "0.1.0",
       "description": "Logging, metrics, tracing, alerting. SLO/SLI, error budget, runbooks для прод-готовности",
-      "sha256": "2fdd4bd4856c6e6a53c1fca8838ff2f6495599a72d6fa2128a8f5fe79c64e714",
+      "sha256": "a0c97915651834a4d92b97a2cbecec0057df14b55ec42d4b69917afb3e1b7835",
       "tags": [
         "observability",
         "logging",
@@ -349,7 +349,7 @@
       "path": "skills/blender/mcp-blender/SKILL.md",
       "version": "0.1.0",
       "description": "MCP Blender: инструменты (execute_blender_code, get_object_info, get_viewport_screenshot, get_scene_info), режимы отображения вьюпорта (tech/material/realism/xray), принцип камеры-через-хелпер, паттерн отправки кода и сброса кеша модулей (del sys.modules), скрытие мешающих объектов для скриншота, параллельная работа нескольких агентов. Активировать при работе с Blender через MCP — построение, настройка вьюпорта, скриншоты.",
-      "sha256": "66e57feae0cd8b0aa97951951460a2216c23dc8f02861b0d2722a672c1549edf",
+      "sha256": "2e7a187e44c4277d80e3eddc3a64ad95a07706cf5e9c3040b09758db706b963e",
       "tags": [
         "blender",
         "mcp",
@@ -426,7 +426,7 @@
       "path": "skills/blender-modeling/config-conventions/SKILL.md",
       "version": "0.1.0",
       "description": "Соглашения параметрического CAD-конфига: одна сущность — один dataclass; именование переменных (r_outer/z0/wall/clearance); единицы мм; принцип «всё на формулах» (никаких магических чисел в parts/); межконфигурные (cross-config) зависимости и сквозной пересчёт; паттерн добавления детали. Активировать при правке config.py, добавлении параметра/детали, вопросах про cross-config, хардкод размеров, чтение конфига чужой детали.",
-      "sha256": "aad74bd7fc25a70a79bb2508efee9b909985c98e808714111691dfd09a4d34c7",
+      "sha256": "0b8171e1384b9d41c661874b7ed7b8901593277cc9c6a79e0042ce38dfa66d08",
       "tags": [
         "blender",
         "cad",
@@ -971,7 +971,7 @@
       "path": "skills/frontend/dark-mode/SKILL.md",
       "version": "0.1.0",
       "description": "Тёмная тема light|dark|system на Vue 3: composable useDarkMode (matchMedia prefers-color-scheme, localStorage + cookie для SSR, toggle класса .dark на documentElement, слушатель change для system), инициализация до маунта без вспышки темы, мини-переключатель. Активировать при добавлении переключения темы, борьбе со вспышкой светлой темы (FOUC), синхронизации темы с системой или восстановлении темы при SSR.",
-      "sha256": "fc028081ee3e357c7f21ff800ce5bd236682ea62669b798d64606b071a7c81b8",
+      "sha256": "8f25a9ab18f1f891682bee4e4da88c1561651ad465bcfc39b311e72d239e22ea",
       "tags": [
         "dark-mode",
         "theme",
@@ -1052,7 +1052,7 @@
       "path": "skills/frontend/filepond-upload/SKILL.md",
       "version": "0.1.0",
       "description": "Загрузка файлов через FilePond в Vue + Laravel: регистрация vue-filepond и плагинов (validate-type/size, image-preview, file-poster), серверная обработка через rahulhaque/laravel-filepond (process/revert на /filepond), привязка serverId загруженного файла к форме, превью и постеры. Активировать при добавлении/правке загрузки файлов, drag-and-drop аплоада, FilePond-поля, превью изображений в форме, при словах filepond/vue-filepond/laravel-filepond/file upload/process/revert/serverId.",
-      "sha256": "b484f8594f7f185a59a4f2671bbded3904a01487ac40892048088974ebdbb1d6",
+      "sha256": "3a41e42312297e0243e6911e66a489fb5b481521288ae6e7fe9a4efd091b5903",
       "tags": [
         "filepond",
         "vue",
@@ -1072,7 +1072,7 @@
       "path": "skills/frontend/inertia-vue/SKILL.md",
       "version": "0.3.0",
       "description": "Inertia + Vue в Laravel: страницы, формы, навигация и слоистая организация resources/js (pages, layouts, components, composables, stores, features, events, types, actions/wayfinder).",
-      "sha256": "b553fbd25a9b5b31814e52273fce9725b40232e59e16073c6fe202376d52ed16",
+      "sha256": "af44be6c253d4922f19cc5955c76ae8143f528c40108429084d1fbaaaebe2c1f",
       "tags": [
         "inertia",
         "vue",
@@ -1961,7 +1961,7 @@
       "path": "skills/oss-dev/dependency-audit/SKILL.md",
       "version": "0.2.0",
       "description": "Аудит зависимостей: lockfile sanity, vuln scan, лицензионная совместимость, supply-chain risk, SBOM",
-      "sha256": "3f99e33d4acc26b35c438eb47a123ed8e0b9e1a36f099fb2bc0ff1f7c650188d",
+      "sha256": "e6aa202c7e4f18295b86964826e8d5288435770958aa98b1f8e9ae09406873ff",
       "tags": [
         "oss",
         "compliance",
@@ -1984,7 +1984,7 @@
       "path": "skills/oss-dev/dx-design/SKILL.md",
       "version": "0.1.0",
       "description": "Developer Experience: README, quick-start (≤ 60 сек), API ergonomics, error messages, типы, CLI UX",
-      "sha256": "9c70b0052b18e421f927c2a1fef6670568bdb10b05a4a14ddc9924c7e30f30f7",
+      "sha256": "794245bc25ec88ec92d6653b5383110d77dd0b77c38b6a4dee79ab584f0cff3b",
       "tags": [
         "oss",
         "documentation",
@@ -2046,7 +2046,7 @@
       "path": "skills/oss-dev/oss-development/SKILL.md",
       "version": "0.1.0",
       "description": "OSS-проект: repo structure, README, Architecture, ADR, SemVer, CI/CD. PHP-специфика в ../references/oss-php.md",
-      "sha256": "03c22ff3f965660d8050b2e6d4c777c895eb3ad6210610a3150dc24dcaad167d",
+      "sha256": "863b971dc8c8adc1de51593151c070f85c1ed0404f3ac9dbcf9fb67d0575ea48",
       "tags": [
         "oss",
         "architecture",
@@ -2067,7 +2067,7 @@
       "path": "skills/oss-dev/oss-governance/SKILL.md",
       "version": "0.1.0",
       "description": "LICENSE, CoC, CONTRIBUTING, MAINTAINERS, RFC-процесс, security policy для OSS-проекта",
-      "sha256": "b391753875679b35285039950eef8a6fd268c9ba9e4aa5a72f64f3e06becfcdd",
+      "sha256": "03f32cb4066de3775af032de292ae6635c04c887eb7c377517130cfce2635bf0",
       "tags": [
         "oss",
         "compliance",
@@ -2089,7 +2089,7 @@
       "path": "skills/oss-dev/release-engineering/SKILL.md",
       "version": "0.1.0",
       "description": "SemVer-стратегия, CHANGELOG, релизный pipeline (CI/CD), pre-releases, deprecation policy для OSS-пакета",
-      "sha256": "4b5ec66cf16ceec6daebd464715909330a8dcea4ad5902ed766773a5f923b787",
+      "sha256": "5f5d48a8910f6419c33914a95f796c6f2828cb43578fbc2f89233e61ff4753f0",
       "tags": [
         "oss",
         "semver",
@@ -2945,7 +2945,7 @@
       "path": "skills/pm/prd-from-brd/SKILL.md",
       "version": "0.1.0",
       "description": "Product Requirements Document — разворачивает BRD в детальные user stories с acceptance criteria и приоритизацией",
-      "sha256": "041b09023b7f2eab6b056531906a426cb92a62b01ab928f58727cb62cbcea85b",
+      "sha256": "8b0764b0e7f945c0e0146598b96c7c994f14b33f02e3fe20e4b827ab67871775",
       "tags": [
         "requirements",
         "template"

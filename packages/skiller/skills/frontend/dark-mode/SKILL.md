@@ -83,7 +83,7 @@ sha256: ""
 
 ## Связь с Tailwind
 
-**Laravel Boost**: версионные основы тёмной темы из Tailwind/Inertia стартер-кита (базовый `useAppearance`, инициализация) идут из Boost-скиллов `tailwindcss-development` / `inertia-vue-development`; здесь — авторский трёхрежимный composable, boot без вспышки и SSR-инициализация через cookie. Пакет: https://github.com/laravel/boost (скиллы — `vendor/laravel/boost/.ai/`).
+**Laravel Boost**: версионные основы тёмной темы из Tailwind/Inertia стартер-кита (базовый `useAppearance`, инициализация) идут из Boost-скиллов `tailwindcss-development` / `inertia-vue`; здесь — авторский трёхрежимный composable, boot без вспышки и SSR-инициализация через cookie. Пакет: https://github.com/laravel/boost (скиллы — `vendor/laravel/boost/.ai/`).
 
 Этот скилл только владеет классом `.dark` и состоянием. То, как `.dark` влияет на цвета — `frontend/tailwind-conventions`:
 - Tailwind v4: `@custom-variant dark (&:is(.dark *));` — `dark:*`-утилиты и токены срабатывают по классу `.dark` на предке.

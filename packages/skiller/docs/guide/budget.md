@@ -20,8 +20,10 @@ flowchart LR
     agent_design["agent-design<br/>⊕31 ↻2082"]:::cool
     api_design["api-design<br/>⊕33 ↻1315"]:::cool
     architecture["architecture<br/>⊕30 ↻1371"]:::cool
+    codebase_design["codebase-design<br/>⊕140 ↻2244"]:::hot
     data_schema["data-schema<br/>⊕32 ↻1063"]:::cool
     dev_engineering_super_skill["dev-engineering-super-skill<br/>⊕148 ↻26988"]:::hot
+    domain_modeling["domain-modeling<br/>⊕150 ↻1393"]:::hot
     eval_design["eval-design<br/>⊕36 ↻2118"]:::cool
     figma_mcp_core["figma-mcp-core<br/>⊕171 ↻1995"]:::hot
     legal_compliance["legal-compliance<br/>⊕33 ↻2387"]:::cool
@@ -31,7 +33,7 @@ flowchart LR
     tech_stack_selection["tech-stack-selection<br/>⊕38 ↻2254"]:::cool
   end
   subgraph azguard["azguard"]
-    azguard["azguard<br/>⊕45 ↻1921"]:::mild
+    azguard["azguard<br/>⊕45 ↻1921"]:::cool
   end
   subgraph blender["blender"]
     mcp_blender["mcp-blender<br/>⊕146 ↻1862"]:::hot
@@ -131,7 +133,7 @@ flowchart LR
     vue_composition_api["vue-composition-api<br/>⊕87 ↻622"]:::warm
     vue_dynamic_icons["vue-dynamic-icons<br/>⊕99 ↻1670"]:::warm
     vue_router_best_practices["vue-router-best-practices<br/>⊕180 ↻2943"]:::hot
-    vue_testing_best_practices["vue-testing-best-practices<br/>⊕86 ↻2498"]:::warm
+    vue_testing_best_practices["vue-testing-best-practices<br/>⊕86 ↻2498"]:::mild
     vueuse_functions["vueuse-functions<br/>⊕38 ↻12283"]:::cool
   end
   subgraph frontend_wayfinder["frontend-wayfinder"]
@@ -142,14 +144,17 @@ flowchart LR
     compact_responses["compact-responses<br/>⊕88 ↻509"]:::warm
     complex_task_orchestrator["complex-task-orchestrator<br/>⊕54 ↻774"]:::mild
     context_economy["context-economy<br/>⊕91 ↻1580"]:::warm
-    cross_layer_change_checklist["cross-layer-change-checklist<br/>⊕46 ↻554"]:::mild
-    git_commit_rules["git-commit-rules<br/>⊕45 ↻1159"]:::mild
+    cross_layer_change_checklist["cross-layer-change-checklist<br/>⊕46 ↻554"]:::cool
+    git_commit_rules["git-commit-rules<br/>⊕45 ↻1159"]:::cool
+    git_safety["git-safety<br/>⊕99 ↻643"]:::warm
+    grill_with_docs["grill-with-docs<br/>⊕124 ↻933"]:::warm
+    implement["implement<br/>⊕100 ↻504"]:::warm
     naming_conventions["naming-conventions<br/>⊕103 ↻1909"]:::warm
     packages_stack["packages-stack<br/>⊕108 ↻656"]:::warm
     project_map["project-map<br/>⊕103 ↻784"]:::warm
     session_handoff["session-handoff<br/>⊕57 ↻629"]:::mild
     skills_ssot["skills-ssot<br/>⊕40 ↻2224"]:::cool
-    spec_interview["spec-interview<br/>⊕61 ↻750"]:::mild
+    spec_interview["spec-interview<br/>⊕61 ↻907"]:::mild
     task_brief_template["task-brief-template<br/>⊕92 ↻1318"]:::warm
     token_efficient["token-efficient<br/>⊕126 ↻1593"]:::warm
     writing_style["writing-style<br/>⊕118 ↻2179"]:::warm
@@ -206,16 +211,19 @@ flowchart LR
   subgraph oss_dev["oss-dev"]
     dependency_audit["dependency-audit<br/>⊕39 ↻1385"]:::cool
     dx_design["dx-design<br/>⊕36 ↻1537"]:::cool
-    gh_review["gh-review<br/>⊕86 ↻1499"]:::warm
+    gh_review["gh-review<br/>⊕86 ↻1499"]:::mild
     github_flow["github-flow<br/>⊕81 ↻2508"]:::mild
+    issue_triage["issue-triage<br/>⊕122 ↻2425"]:::warm
     oss_development["oss-development<br/>⊕42 ↻1628"]:::cool
     oss_governance["oss-governance<br/>⊕34 ↻1934"]:::cool
     release_engineering["release-engineering<br/>⊕41 ↻2059"]:::cool
+    resolving_merge_conflicts["resolving-merge-conflicts<br/>⊕123 ↻373"]:::warm
+    to_issues["to-issues<br/>⊕102 ↻1314"]:::warm
   end
   subgraph php["php"]
     code_style_spatie["code-style-spatie<br/>⊕53 ↻1176"]:::mild
     database["database<br/>⊕58 ↻1179"]:::mild
-    dependency_injection["dependency-injection<br/>⊕45 ↻1618"]:::mild
+    dependency_injection["dependency-injection<br/>⊕45 ↻1618"]:::cool
     laravel["laravel<br/>⊕24 ↻1854"]:::cool
     laravel_best_practices["laravel-best-practices<br/>⊕48 ↻1814"]:::mild
     laravel_structure["laravel-structure<br/>⊕56 ↻2354"]:::mild
@@ -228,8 +236,8 @@ flowchart LR
     static_analysis["static-analysis<br/>⊕41 ↻1620"]:::cool
   end
   subgraph php_packages["php-packages"]
-    laravel_package_compatibility["laravel-package-compatibility<br/>⊕86 ↻505"]:::warm
-    laravel_package_docs["laravel-package-docs<br/>⊕84 ↻808"]:::warm
+    laravel_package_compatibility["laravel-package-compatibility<br/>⊕86 ↻505"]:::mild
+    laravel_package_docs["laravel-package-docs<br/>⊕84 ↻808"]:::mild
     laravel_package_expressive["laravel-package-expressive<br/>⊕126 ↻654"]:::warm
     laravel_package_generate_skill["laravel-package-generate-skill<br/>⊕95 ↻911"]:::warm
     laravel_package_release["laravel-package-release<br/>⊕77 ↻433"]:::mild
@@ -256,10 +264,12 @@ flowchart LR
   end
   subgraph quality["quality"]
     code_review["code-review<br/>⊕49 ↻1995"]:::mild
-    code_simplifier["code-simplifier<br/>⊕84 ↻1537"]:::warm
+    code_simplifier["code-simplifier<br/>⊕84 ↻1537"]:::mild
+    diagnosing_bugs["diagnosing-bugs<br/>⊕130 ↻2910"]:::warm
     mutation_testing["mutation-testing<br/>⊕128 ↻3431"]:::warm
     playwright_e2e["playwright-e2e<br/>⊕133 ↻3265"]:::warm
     refactoring_plan["refactoring-plan<br/>⊕42 ↻2336"]:::cool
+    tdd_discipline["tdd-discipline<br/>⊕115 ↻1545"]:::warm
     tech_debt_audit["tech-debt-audit<br/>⊕51 ↻2807"]:::mild
     test_strategy["test-strategy<br/>⊕73 ↻2846"]:::mild
     testing_safety_report["testing-safety-report<br/>⊕98 ↻937"]:::warm
@@ -325,6 +335,11 @@ flowchart LR
   github_flow -->|requires| release_engineering
   go_to_market -->|requires| competitive_analysis
   go_to_market -->|requires| monetization_design
+  grill_with_docs -->|requires| domain_modeling
+  grill_with_docs -->|requires| spec_interview
+  implement -->|requires| code_review
+  implement -->|requires| tdd_discipline
+  issue_triage -->|requires| github_flow
   laravel_security_audit -->|requires| static_analysis
   legal_compliance -->|requires| architecture
   mcp_blender -->|requires| version_gotchas
@@ -356,11 +371,13 @@ flowchart LR
   reka_ui_cva -->|requires| tailwind_conventions
   release_engineering -->|requires| oss_development
   requirement_critic -->|requires| brd
+  resolving_merge_conflicts -->|requires| git_commit_rules
   security_design -->|requires| architecture
   session_observer -->|requires| shared_memory
   shared_memory -->|requires| local_topology
   tech_stack_selection -->|requires| brd
   test_isolation_guard -->|requires| laravel_testing
+  to_issues -->|requires| github_flow
   unit_economics -->|requires| monetization_design
   venv_dependencies -->|requires| ml_project_structure
   vite_multi_build -->|requires| vite_module_loader
@@ -373,18 +390,19 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 183 скиллов · ⊕ always **14798** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 561004 ток · ⌥ snippets 171334 ток.
+**Итого:** 193 скиллов · ⊕ always **16003** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 575445 ток · ⌥ snippets 182735 ток.
 
 ## По бакетам
 
 | Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ snippets |
 |---|--:|--:|--:|--:|
-| `general` | 15 | 1184 | 17828 | 5011 |
+| `general` | 18 | 1507 | 20065 | 5011 |
+| `architect` | 14 | 1048 | 51768 | 8936 |
 | `frontend-vue` | 11 | 1005 | 29397 | 7979 |
+| `quality` | 10 | 903 | 23609 | 8108 |
 | `php-packages` | 9 | 773 | 6187 | 572 |
-| `architect` | 12 | 758 | 48131 | 3295 |
 | `php` | 13 | 713 | 21336 | 31527 |
-| `quality` | 8 | 658 | 19154 | 6554 |
+| `oss-dev` | 10 | 706 | 16662 | 5538 |
 | `blender-modeling` | 6 | 654 | 11074 | 11792 |
 | `devops` | 11 | 621 | 11110 | 18907 |
 | `system` | 5 | 617 | 10036 | 913 |
@@ -394,7 +412,6 @@ flowchart LR
 | `laravel-testing` | 4 | 402 | 10521 | 16843 |
 | `founder` | 9 | 399 | 15052 | 653 |
 | `frontend-linting` | 4 | 373 | 6767 | 3443 |
-| `oss-dev` | 7 | 359 | 12550 | 1332 |
 | `frontend` | 3 | 336 | 4652 | 3829 |
 | `frontend-backend` | 3 | 336 | 7010 | 8609 |
 | `frontend-nuxt` | 3 | 289 | 2904 | 0 |

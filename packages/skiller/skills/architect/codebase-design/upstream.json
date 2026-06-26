@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "source": "github",
+  "repo": "mattpocock/skills",
+  "strategy": "notify",
+  "license": "MIT",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "url": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/codebase-design/SKILL.md",
+      "sha256": "a8d50abac5a4018f60e1d911d4b6f4e36454ca14d6c390c0695a578c7de65dad",
+      "fetched_at": "2026-06-26"
+    },
+    {
+      "path": "snippets/DEEPENING.md",
+      "url": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/codebase-design/DEEPENING.md",
+      "sha256": "125e6b77413ad2bc7cf7a772bc74336d580a50f9e797db2178ed133d62333d06",
+      "fetched_at": "2026-06-26"
+    },
+    {
+      "path": "snippets/DESIGN-IT-TWICE.md",
+      "url": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/codebase-design/DESIGN-IT-TWICE.md",
+      "sha256": "21c3264953bd30ee87b181a3ccaf0e70649f461e5ffd7dc654acee4ba1788b31",
+      "fetched_at": "2026-06-26"
+    },
+    {
+      "path": "snippets/HTML-REPORT.md",
+      "url": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/improve-codebase-architecture/HTML-REPORT.md",
+      "sha256": "0b0936104158abeef7246ff6cbabefa4dc055f17589f2833f2d93001421910a1",
+      "fetched_at": "2026-06-26"
+    }
+  ],
+  "notes": "Из mattpocock/skills engineering/codebase-design + HTML-REPORT.md из engineering/improve-codebase-architecture (свёрнут сюда сниппетом — отдельный скилл не делаем, дубль refactoring-plan). Тело сохранено (англ.), RU description-роутер, под-файлы -> snippets/, добавлены PHP/Dart-эквиваленты в блоке testability, секция «Связанные скиллы». strategy=notify."
+}

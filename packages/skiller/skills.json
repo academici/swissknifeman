@@ -11,7 +11,7 @@
     },
     "architect": {
       "description": "Architecture, API and data design, security, observability, tech stack selection",
-      "count": 12,
+      "count": 14,
       "status": "active"
     },
     "azguard": {
@@ -116,7 +116,7 @@
     },
     "general": {
       "description": "General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists",
-      "count": 15,
+      "count": 18,
       "status": "active"
     },
     "laravel-architecture": {
@@ -176,7 +176,7 @@
     },
     "oss-dev": {
       "description": "Open-source development: releases, governance, DX, dependency audits + language references",
-      "count": 7,
+      "count": 10,
       "status": "active"
     },
     "php": {
@@ -201,7 +201,7 @@
     },
     "quality": {
       "description": "Code review, refactoring plans, tech debt audits, test strategy",
-      "count": 8,
+      "count": 10,
       "status": "active"
     },
     "research": {
@@ -320,6 +320,28 @@
       "source": "local"
     },
     {
+      "name": "codebase-design",
+      "bucket": "architect",
+      "path": "skills/architect/codebase-design/SKILL.md",
+      "version": "0.1.0",
+      "description": "Общий словарь и дисциплина проектирования ГЛУБОКИХ модулей (Ousterhout/Feathers): Module/Interface/Depth/Seam/Adapter/Leverage/Locality; deletion-test; интерфейс = тестовая поверхность; «один адаптер — гипотетический seam, два — реальный». Активировать при проектировании/улучшении интерфейса модуля, поиске deepening-возможностей, выборе места seam, повышении тестируемости или AI-навигабельности кода.",
+      "sha256": "83d3b853eb54d0d99ee0d5b59cc61e5f812accc0e8bd67a696d708b87b46f3a9",
+      "tags": [
+        "design",
+        "deep-modules",
+        "ousterhout",
+        "seam",
+        "testability"
+      ],
+      "produces_for": [
+        "refactoring-plan",
+        "architecture"
+      ],
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/codebase-design/SKILL.md",
+      "fetched_at": "2026-06-26"
+    },
+    {
       "name": "data-schema",
       "bucket": "architect",
       "path": "skills/architect/data-schema/SKILL.md",
@@ -340,6 +362,29 @@
         "api-design"
       ],
       "source": "local"
+    },
+    {
+      "name": "domain-modeling",
+      "bucket": "architect",
+      "path": "skills/architect/domain-modeling/SKILL.md",
+      "version": "0.1.0",
+      "description": "Активная дисциплина доменной модели: бросать вызов терминам, стресс-тестировать сценариями, ФИКСИРОВАТЬ глоссарий (CONTEXT.md — только язык предметной области) и ADR ИНЛАЙН по мере кристаллизации (не батчами). Мульти-контекст — через CONTEXT-MAP.md. Активировать когда уточняют терминологию/ubiquitous language, фиксируют архитектурное решение, или другой скилл строит доменную модель (особенно финтех: банковские API, ОФД, фискалка).",
+      "sha256": "93fcd3865135a230023286caae8a5a8d8106fac630d06afda70f010cf5c5063f",
+      "tags": [
+        "domain",
+        "ddd",
+        "glossary",
+        "adr",
+        "ubiquitous-language"
+      ],
+      "produces_for": [
+        "architecture",
+        "api-design",
+        "data-schema"
+      ],
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/domain-modeling/SKILL.md",
+      "fetched_at": "2026-06-26"
     },
     {
       "name": "dev-engineering-super-skill",
@@ -1836,6 +1881,71 @@
       "source": "local"
     },
     {
+      "name": "git-safety",
+      "bucket": "general",
+      "path": "skills/general/git-safety/SKILL.md",
+      "version": "0.1.0",
+      "description": "Защита от деструктивных git-команд через PreToolUse-хук Claude Code: блокирует push/reset --hard/clean -f/branch -D/checkout ./rebase --onto ДО исполнения. Активировать при инициализации проекта (особенно production/embedded) или просьбе «добавь git-guardrails / запрети опасный git».",
+      "sha256": "8161471f85748fcb03904bb12f34bcad4690ffa2403225065dba1d2e71c325f5",
+      "tags": [
+        "git",
+        "safety",
+        "hooks",
+        "guardrails",
+        "init"
+      ],
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/misc/git-guardrails-claude-code/SKILL.md",
+      "fetched_at": "2026-06-26"
+    },
+    {
+      "name": "grill-with-docs",
+      "bucket": "general",
+      "path": "skills/general/grill-with-docs/SKILL.md",
+      "version": "0.1.0",
+      "description": "Безжалостная грилинг-сессия, которая ОДНОВРЕМЕННО строит доменную модель: уточняет план/дизайн по одному вопросу, сверяясь с кодом И внешней документацией (API/RFC/банковские спеки — СБП/SberBusiness/фискалка), и тут же пишет глоссарий (CONTEXT.md) и ADR. Вызывать ЯВНО, когда расплывчатую идею надо довести до строгого ТЗ с зафиксированной терминологией.",
+      "sha256": "d5c9011784c3b23908d32f52d83350e3f979a35c3e31efd999651f5ec98b0713",
+      "tags": [
+        "grilling",
+        "requirements",
+        "domain",
+        "adr",
+        "docs"
+      ],
+      "requires": [
+        "spec-interview",
+        "domain-modeling"
+      ],
+      "produces_for": [
+        "task-brief-template",
+        "to-issues"
+      ],
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/grill-with-docs/SKILL.md",
+      "fetched_at": "2026-06-26"
+    },
+    {
+      "name": "implement",
+      "bucket": "general",
+      "path": "skills/general/implement/SKILL.md",
+      "version": "0.1.0",
+      "description": "Реализация куска работы по ТЗ/PRD/issue минимальной цепочкой: tdd-discipline на согласованных seam'ах → регулярный typecheck/тесты → полный прогон в конце → code-review → коммит в текущую ветку. Вызывать ЯВНО (пишет код) — это финальный шаг после spec-interview/grill-with-docs/to-issues.",
+      "sha256": "98989f897965fd3b332014a1ec82eed3493600895c77c83264969e4c1c2bc6a6",
+      "tags": [
+        "workflow",
+        "implementation",
+        "tdd",
+        "review"
+      ],
+      "requires": [
+        "tdd-discipline",
+        "code-review"
+      ],
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/implement/SKILL.md",
+      "fetched_at": "2026-06-26"
+    },
+    {
       "name": "naming-conventions",
       "bucket": "general",
       "path": "skills/general/naming-conventions/SKILL.md",
@@ -1936,7 +2046,7 @@
       "path": "skills/general/spec-interview/SKILL.md",
       "version": "0.1.0",
       "description": "Интервью перед кодом: агент задаёт вопросы по одному, сам читает кодовую базу где может, предлагает рекомендованный ответ; итог — заполненное ТЗ по task-brief-template.",
-      "sha256": "9ac272bfc4e46fbf0234241d4fd77840142571b80cb176f2ddd79b800a169e3d",
+      "sha256": "3ba170b1b7f88e4ca8bb3814ec32e47c39f11bc63eb1a0f81c797c651394bf03",
       "tags": [
         "workflow",
         "requirements",
@@ -2559,6 +2669,27 @@
       "source": "local"
     },
     {
+      "name": "issue-triage",
+      "bucket": "oss-dev",
+      "path": "skills/oss-dev/issue-triage/SKILL.md",
+      "version": "0.1.0",
+      "description": "Стейт-машина обработки issue и внешних PR: категория (bug/enhancement) + статус (needs-triage/needs-info/ready-for-agent/ready-for-human/wontfix, +needs-device-access для железа); проверка на дубль и прошлый отказ, верификация заявки, грилинг при необходимости, agent-brief. Вызывать ЯВНО (пишет в трекер через gh) — обычно через агента issue-triager.",
+      "sha256": "6b9583d6a242ccbf6cadc03028863456b02190fbf9ba28df43f1c6d6f31e1619",
+      "tags": [
+        "triage",
+        "issues",
+        "github",
+        "state-machine",
+        "governance"
+      ],
+      "requires": [
+        "github-flow"
+      ],
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/triage/SKILL.md",
+      "fetched_at": "2026-06-26"
+    },
+    {
       "name": "oss-development",
       "bucket": "oss-dev",
       "path": "skills/oss-dev/oss-development/SKILL.md",
@@ -2622,6 +2753,50 @@
         "github-flow"
       ],
       "source": "local"
+    },
+    {
+      "name": "resolving-merge-conflicts",
+      "bucket": "oss-dev",
+      "path": "skills/oss-dev/resolving-merge-conflicts/SKILL.md",
+      "version": "0.1.0",
+      "description": "Дисциплина разрешения активного git merge/rebase-конфликта: понять состояние и первичные источники каждого изменения (коммиты/PR/issue), разрешить каждый hunk сохраняя оба намерения где возможно (не изобретать поведение, никогда --abort), прогнать проверки проекта, завершить merge/rebase. Активировать при конфликте слияния/перебазирования.",
+      "sha256": "ee503085e869f624135516910aefaa86ffa214c6ecd926a07eff3d5ef5ec8ce7",
+      "tags": [
+        "git",
+        "merge",
+        "rebase",
+        "conflicts"
+      ],
+      "requires": [
+        "git-commit-rules"
+      ],
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/resolving-merge-conflicts/SKILL.md",
+      "fetched_at": "2026-06-26"
+    },
+    {
+      "name": "to-issues",
+      "bucket": "oss-dev",
+      "path": "skills/oss-dev/to-issues/SKILL.md",
+      "version": "0.1.0",
+      "description": "Разбить план/спеку/PRD на независимо-«хватаемые» GitHub-issue ВЕРТИКАЛЬНЫМИ срезами (tracer bullets): каждый срез — тонкий сквозной путь через все слои (схема/API/UI/тесты), демонстрируемый сам по себе; публикация через gh в порядке зависимостей (blockers first). Вызывать ЯВНО (постит в трекер).",
+      "sha256": "5512f70c54af84caa89159d0ea1cd6744e3d786ead3a3a1c0de532e5bc9761e5",
+      "tags": [
+        "issues",
+        "github",
+        "vertical-slices",
+        "decomposition",
+        "planning"
+      ],
+      "requires": [
+        "github-flow"
+      ],
+      "produces_for": [
+        "implement"
+      ],
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-issues/SKILL.md",
+      "fetched_at": "2026-06-26"
     },
     {
       "name": "code-style-spatie",
@@ -3240,6 +3415,27 @@
       "source": "local"
     },
     {
+      "name": "diagnosing-bugs",
+      "bucket": "quality",
+      "path": "skills/quality/diagnosing-bugs/SKILL.md",
+      "version": "0.1.0",
+      "description": "Дисциплина диагностики трудных багов и регрессий производительности: СНАЧАЛА строим тугой воспроизводимый feedback-loop (это и есть скилл), только потом 3–5 ранжированных гипотез, точечная инструментация с тегом [DEBUG-xxxx], регресс-тест на корректном seam, очистка. Активировать при «отладь/почини это», воспроизводимом или плавающем баге, «падает/кидает ошибку/тормозит».",
+      "sha256": "244ecc9f4ffed723ae6a957e8a8fcbc7bb6d5bf2719130d7e76e90af70b1ae8e",
+      "tags": [
+        "debugging",
+        "diagnostics",
+        "feedback-loop",
+        "performance",
+        "testing"
+      ],
+      "produces_for": [
+        "code-review"
+      ],
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/diagnosing-bugs/SKILL.md",
+      "fetched_at": "2026-06-26"
+    },
+    {
       "name": "mutation-testing",
       "bucket": "quality",
       "path": "skills/quality/mutation-testing/SKILL.md",
@@ -3304,6 +3500,26 @@
         "testing-safety-report"
       ],
       "source": "local"
+    },
+    {
+      "name": "tdd-discipline",
+      "bucket": "quality",
+      "path": "skills/quality/tdd-discipline/SKILL.md",
+      "version": "0.1.0",
+      "description": "Дисциплина TDD по циклу red-green-refactor ВЕРТИКАЛЬНЫМИ срезами (tracer bullets), а НЕ горизонтально: явный запрет писать все тесты до реализации; тесты проверяют поведение через ПУБЛИЧНЫЙ интерфейс и переживают рефактор. Активировать при разработке фичи/фикса test-first, упоминании red-green-refactor или интеграционных тестов.",
+      "sha256": "4c95f27cb68cc58e4d799381f5a00d79ce780d729d295b20290159ef5bf64837",
+      "tags": [
+        "tdd",
+        "testing",
+        "red-green-refactor",
+        "vertical-slices"
+      ],
+      "produces_for": [
+        "code-review"
+      ],
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/tdd/SKILL.md",
+      "fetched_at": "2026-06-26"
     },
     {
       "name": "tech-debt-audit",

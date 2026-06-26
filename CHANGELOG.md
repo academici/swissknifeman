@@ -2,6 +2,43 @@
 
 ## [Unreleased]
 
+### Added (skiller — внедрение mattpocock/skills: инженерная методология + встраивание в цепочку)
+
+- **9 импортированных скиллов** из [mattpocock/skills](https://github.com/mattpocock/skills) (MIT),
+  fold-in в существующие бакеты (без нового бакета), `strategy: notify`:
+  `quality/diagnosing-bugs` (6-фазная отладка: feedback-loop до гипотез, тег `[DEBUG-xxxx]`),
+  `quality/tdd-discipline` (red-green-refactor вертикальными срезами, не горизонтально),
+  `architect/codebase-design` (глубокие модули Ousterhout/Feathers: depth/seam/deletion-test;
+  свёрнут HTML-report из improve-codebase-architecture),
+  `architect/domain-modeling` (глоссарий `CONTEXT.md` + ADR инлайн, мульти-контекст),
+  `general/implement` (цепочка implement→tdd→review, **user-invoked**),
+  `oss-dev/to-issues` (план→issue вертикальными срезами + поля Affected projects/Environment, **user-invoked**),
+  `oss-dev/issue-triage` (стейт-машина триажа + роль `needs-device-access` для железа, **user-invoked**),
+  `oss-dev/resolving-merge-conflicts`, и центральный `general/grill-with-docs` (грилинг + доменная
+  модель против внешних API/RFC-спек, **user-invoked**).
+- **Уровень + условия активации на каждый скилл** (ответ на «не папки, а в цепочку»): компактный
+  `description`-роутер (ярус-0 always), lean-тело (ярус-1 on-trigger), под-файлы mattpocock →
+  `snippets/` (ярус-2 on-demand); сайд-эффектные (implement/to-issues/issue-triage/grill-with-docs) —
+  `disable-model-invocation: true`; `general/git-safety` — `lifecycle: init`. НЕ в CORE — opt-in.
+- **Встроены в цепочку рёбрами `requires/produces_for`**: grill-with-docs→{spec-interview,domain-modeling};
+  to-issues→github-flow, produces_for→implement; implement→{tdd-discipline,code-review};
+  diagnosing-bugs→code-review; codebase-design→{refactoring-plan,architecture};
+  domain-modeling→{architecture,api-design,data-schema}; resolving-merge-conflicts→git-commit-rules.
+  Плюс секции «Связанные скиллы» в каждом теле.
+- **Раздача через presets** — новый `presets/engineering-workflow.json` (сквозной конвейер) +
+  расширены `agent-tasks` (grill-with-docs/implement/to-issues), `code-quality` (tdd-discipline/
+  diagnosing-bugs), `system-design` (codebase-design/domain-modeling).
+- **Расширен `general/spec-interview`** (наш грилинг) — ссылки на `grill-with-docs`/`to-issues`/`implement`.
+- **git-guardrails → harness, не скилл** (поправка к аудиту): PreToolUse-хук
+  `block-dangerous-git.sh` (+`force-with-lease`/`rebase --onto`) в
+  `packages/harness/configs/claude-code/hooks/git-guardrails/`, обёртка-скилл `general/git-safety`.
+- **Агенты грузят новые скиллы через `skills:`**: `issue-triager`←`issue-triage`,
+  `sprint-planner`←`to-issues`, `review-gatekeeper`←`diagnosing-bugs`/`tdd-discipline`
+  (harness agent-packs `role-maintainer`/`role-tech-lead` → 0.2.0).
+- **Провенанс**: источник зарегистрирован в
+  [references/mattpocock-skills.md](packages/skiller/references/mattpocock-skills.md) (`imported`) +
+  per-skill `upstream.json` (sha256/fetched_at, HEAD `5d78bd09`).
+
 ### Added (skiller — токеновый бюджет + карта-диаграмма + промты + задел переводов)
 
 - **Команда `skiller budget`** — трёхъярусная модель раскрытия контекста: **⊕ always**

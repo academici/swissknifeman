@@ -5,6 +5,8 @@
     "architect/architecture",
     "architect/tech-stack-selection",
     "architect/observability-design",
-    "architect/package-contribution-protocol"
+    "architect/package-contribution-protocol",
+    "architect/codebase-design",
+    "architect/domain-modeling"
   ]
 }

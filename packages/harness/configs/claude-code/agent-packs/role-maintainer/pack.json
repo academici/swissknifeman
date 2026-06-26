@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "pack": "role-maintainer",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Персона-пак open-source-maintainer: дежурный по issues/PR (триаж), ревьюер вкладов внешних контрибьюторов с severity-градацией и проверкой supply-chain/коммитов, дирижёр релизов по SemVer (CHANGELOG, deprecation, анонс). Роль выбирается, не детектится — тянется поверх любого стека с общим PACK_PREFIX.",
   "stack": {
     "shape": "role"
@@ -16,7 +16,8 @@
       "dependency-audit",
       "dx-design",
       "code-review",
-      "git-commit-rules"
+      "git-commit-rules",
+      "issue-triage"
     ],
     "harness_presets": [
       "base"

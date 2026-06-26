@@ -10,6 +10,7 @@ from pathlib import Path
 
 from .common import die, parse_args
 from .config import load_config
+from .constants import SIBLINGS
 from .projects import get as get_project
 
 # Белый список: name → (sibling, argv-шаблон, needs_project). {project}=id, {path}=local_path.
@@ -37,21 +38,7 @@ CAPABILITIES = {
                                ["agent-packs", "upgrade", "--target", "{path}"], True),
 }
 
-# sibling → как найти его лаунчер (env-override · проект в config.json · путь · bin).
-SIBLINGS = {
-    "brain": {"env": "MAIND_BRAIN_BIN", "project_id": "brain",
-              "path_key": "vault_path", "bin": "bin/brain"},
-    # монорепо academici: лаунчер skiller живёт в подпакете packages/skiller/, а
-    # local_path указывает на корень репо (где .git) — отсюда вложенный bin-путь.
-    # Ключ sibling и project_id — "swissknifeman" (id проекта-репо в config.json).
-    "swissknifeman": {"env": "MAIND_SKM_BIN", "project_id": "swissknifeman",
-                      "path_key": "local_path",
-                      "bin": "packages/skiller/bin/skiller"},
-    # harness живёт в том же монорепо (local_path проекта-репо swissknifeman).
-    "harness": {"env": "MAIND_HARNESS_BIN", "project_id": "swissknifeman",
-                "path_key": "local_path",
-                "bin": "packages/harness/bin/harness"},
-}
+# SIBLINGS (как найти лаунчер соседа) — в constants.py (общий с sync, без lazy-импорта).
 
 
 def _sibling_bin(config, which):

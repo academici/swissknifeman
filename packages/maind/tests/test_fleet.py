@@ -128,5 +128,23 @@ class TestSimilar(unittest.TestCase):
             fleet._embed(["x"], None)
 
 
+class TestCosine(unittest.TestCase):
+    def test_identical_vectors(self):
+        self.assertAlmostEqual(fleet._cosine([1.0, 2.0, 3.0], [1.0, 2.0, 3.0]), 1.0)
+
+    def test_orthogonal_is_zero(self):
+        self.assertAlmostEqual(fleet._cosine([1.0, 0.0], [0.0, 1.0]), 0.0)
+
+    def test_opposite_is_minus_one(self):
+        self.assertAlmostEqual(fleet._cosine([1.0, 0.0], [-1.0, 0.0]), -1.0)
+
+    def test_scale_invariant(self):
+        self.assertAlmostEqual(fleet._cosine([1.0, 1.0], [3.0, 3.0]), 1.0)
+
+    def test_zero_vector_no_div_by_zero(self):
+        # нулевая норма заменяется на 1.0 — деления на ноль нет, результат 0.0
+        self.assertEqual(fleet._cosine([0.0, 0.0], [1.0, 1.0]), 0.0)
+
+
 if __name__ == "__main__":
     unittest.main()

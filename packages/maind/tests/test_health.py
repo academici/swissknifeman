@@ -1,4 +1,5 @@
 """Тесты health.py: отчёт о связи, провиженеры health-doc/health-hook, CLI."""
+import copy
 import json
 import shutil
 import tempfile
@@ -216,6 +217,84 @@ class TestCLI(unittest.TestCase):
             rep = json.loads(out)
             self.assertEqual(rep["id"], "flexcrm")
             self.assertIn("status", rep)
+
+
+class TestActPrimitive(unittest.TestCase):
+    """_act(mode, state): какое состояние артефакта чинится в каком режиме."""
+
+    def test_fresh_never_acts(self):
+        for mode in ("install", "update", "auto"):
+            self.assertFalse(health._act(mode, "fresh"))
+
+    def test_install_only_absent(self):
+        self.assertTrue(health._act("install", "absent"))
+        self.assertFalse(health._act("install", "stale"))
+
+    def test_update_only_stale(self):
+        self.assertTrue(health._act("update", "stale"))
+        self.assertFalse(health._act("update", "absent"))
+
+    def test_auto_acts_on_absent_and_stale(self):
+        self.assertTrue(health._act("auto", "absent"))
+        self.assertTrue(health._act("auto", "stale"))
+
+
+class TestFileState(unittest.TestCase):
+    """_file_state(path, content): absent (нет файла) / fresh (совпадает) / stale (дрейф)."""
+
+    def test_absent_when_missing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertEqual(health._file_state(Path(tmp) / "nope.sh", "x"), "absent")
+
+    def test_fresh_when_content_matches(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Path(tmp) / "a.sh"
+            p.write_text("echo hi\n", encoding="utf-8")
+            self.assertEqual(health._file_state(p, "echo hi\n"), "fresh")
+
+    def test_stale_when_content_drifts(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Path(tmp) / "a.sh"
+            p.write_text("echo old\n", encoding="utf-8")
+            self.assertEqual(health._file_state(p, "echo new\n"), "stale")
+
+
+class TestMergeSessionHook(unittest.TestCase):
+    """_merge_session_hook: идемпотентная вставка/обновление хука по marker в событие."""
+
+    def test_inserts_into_empty(self):
+        settings, changed = health._merge_session_hook({}, "bash x maind-health")
+        self.assertTrue(changed)
+        cmds = [h["command"] for g in settings["hooks"]["SessionStart"] for h in g["hooks"]]
+        self.assertIn("bash x maind-health", cmds)
+
+    def test_idempotent_same_command(self):
+        s, _ = health._merge_session_hook({}, "bash x maind-health")
+        _, changed = health._merge_session_hook(s, "bash x maind-health")
+        self.assertFalse(changed)
+        groups = s["hooks"]["SessionStart"]
+        cmds = [h["command"] for g in groups for h in g["hooks"]]
+        self.assertEqual(cmds.count("bash x maind-health"), 1)   # без дублей
+
+    def test_updates_command_same_marker(self):
+        s, _ = health._merge_session_hook({}, "bash OLD maind-health")
+        _, changed = health._merge_session_hook(s, "bash NEW maind-health")
+        self.assertTrue(changed)
+        cmds = [h["command"] for g in s["hooks"]["SessionStart"] for h in g["hooks"]]
+        self.assertEqual(cmds, ["bash NEW maind-health"])        # обновлён на месте
+
+    def test_custom_event_and_marker(self):
+        s, changed = health._merge_session_hook({}, "bash y maind-feature-log",
+                                                event="SessionEnd", marker="maind-feature-log")
+        self.assertTrue(changed)
+        self.assertIn("SessionEnd", s["hooks"])
+
+    def test_caller_copy_isolates_original(self):
+        # _merge_session_hook мутирует вход (потому провиженеры зовут его на copy.deepcopy):
+        # пробный merge по копии не должен трогать оригинал (контракт фикса json→deepcopy).
+        original = {"hooks": {"SessionStart": []}}
+        health._merge_session_hook(copy.deepcopy(original), "bash x maind-health")
+        self.assertEqual(original, {"hooks": {"SessionStart": []}})
 
 
 if __name__ == "__main__":

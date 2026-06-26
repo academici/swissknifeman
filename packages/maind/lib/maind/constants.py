@@ -95,3 +95,23 @@ AGENT_STALE_FACTOR = 3   # пропущенных heartbeat'ов до стату
 
 # ── наблюдаемость ───────────────────────────────────────────────────────────
 SERVICE_NAME = "maind"
+
+# ── соседние пакеты экосистемы (siblings) ────────────────────────────────────
+# Как найти лаунчер соседа: env-override · проект в config.json · path_key · bin.
+# Живёт здесь (нейтральный data-модуль), а не в orchestrate — чтобы и orchestrate
+# (run_capability), и sync (_skiller_profiles_dir) брали один источник без lazy-импорта
+# друг друга. Чистые данные, никаких зависимостей.
+SIBLINGS = {
+    "brain": {"env": "MAIND_BRAIN_BIN", "project_id": "brain",
+              "path_key": "vault_path", "bin": "bin/brain"},
+    # монорепо academici: лаунчер skiller живёт в подпакете packages/skiller/, а
+    # local_path указывает на корень репо (где .git) — отсюда вложенный bin-путь.
+    # Ключ sibling и project_id — "swissknifeman" (id проекта-репо в config.json).
+    "swissknifeman": {"env": "MAIND_SKM_BIN", "project_id": "swissknifeman",
+                      "path_key": "local_path",
+                      "bin": "packages/skiller/bin/skiller"},
+    # harness живёт в том же монорепо (local_path проекта-репо swissknifeman).
+    "harness": {"env": "MAIND_HARNESS_BIN", "project_id": "swissknifeman",
+                "path_key": "local_path",
+                "bin": "packages/harness/bin/harness"},
+}

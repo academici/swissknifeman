@@ -2,6 +2,44 @@
 
 ## [Unreleased]
 
+### Added (skiller — рецензия аудита архитектуры: init, JSON-схемы, level, доки-истина)
+
+- **`skiller init`** — новая команда: создаёт `.swissknifeman/config.json` (vendor) из
+  автодетекта типа проекта + профиля, **без** копирования скиллов (это делает `sync`).
+  Идемпотентна (существующий конфиг не перетирается без `--force`), `--dry-run`. Логика —
+  общий хелпер `materialize_skillset_config` (вынесен из `do_sync`, чтобы init и sync не
+  разъезжались). Зарегистрирована в `cli.py` + лаунчерах `bin/skiller`/`bin/swissknifeman`.
+- **JSON-схемы конфигов** (`schema/swissknife.schema.json`, `schema/swissknifeman-config.schema.json`)
+  — DX/IntelliSense через `$schema`. Рантайм-валидация остаётся ручной и **stdlib-only** (без
+  pip `jsonschema`); синхрон схемы↔код держат гейт `tests/test_schema.py` (гоняется в `validate.sh`)
+  и две проверки `skiller doctor`. Валидаторы конфигов теперь пропускают ключи на `_`/`$`.
+- **Опц. поле фронтматтера `level`** (`core|foundation|extension`) — само-документирование слоя
+  иерархии; пишется в `skills.json` (omit-when-empty), enum-гейт в `validate.sh`, tally-потребитель
+  в `skiller registry`, добавлено в preserve-list генератора канона и `SKILL_TEMPLATE.md`. Opt-in:
+  ни один скилл пока не помечен (нулевой churn sha256 у потребителей).
+- **`content_sha256` — дрейф-хеш по всему каталогу скилла** (`common.skill_content_hash`,
+  пишется в `skills.json` рядом с `sha256`). Закрывает дыру: инкрементальный `sync` детектил
+  дрейф только по `SKILL.md` и **пропускал** правки в `snippets/`/`references/`. Теперь `plan_sync`
+  ловит их и обновляет скилл. Игноры — как у vendor (`upstream.json`/`SKILL.*.md`/`.claude-plugin`),
+  хешируется ИСТОЧНИК (копия отличается игнорами). Старые локи без `content_sha256` деградируют
+  корректно (дрейф по `SKILL.md`), поле доpopulated при следующем sync **без** перекопирования.
+  Единственный принятый пункт из аудита `research/skiller_delivery_modes_and_manifest.md`.
+- **Документация-истина**: новый канон `docs/guide/skills-architecture.md` («реальное состояние»,
+  читается первым — против straw-man) + запись в навигацию (standalone + зонтичный VitePress).
+  Truth-up локальных скиллов `package-architecture`/`project-tooling-runbook` (два конфига; тела
+  скиллов читает Claude Code, не Python). Decision-record в шапках обоих research-доков аудита
+  (были помечены «Готов к реализации» — теперь «отрецензировано, НЕ как есть»).
+
+### Rejected (рецензия аудита — обоснованные отказы)
+
+- **3-уровневый рефакторинг скиллов** (core/foundation/extension) — отклонён: иерархия/зависимости/
+  уровни уже есть; «бери подскиллы» решено skill-granular vendor; цена churn (193 двуязычные пары,
+  49 плагинов, локи) несоразмерна. Выгода взята дёшево полем `level`.
+- **Подсистема кэширования** (`SkillMemoryCache`/disk-cache/команды `cache`) — отклонена: нет
+  вызывающего (тела скиллов читает Claude Code, не Python; `load_skill` не существует). Prompt
+  caching у Claude Code автоматический. Микро-мемоизация парса фронтматтера тоже не внедрена
+  (конфликт с конвенцией «без модульных глобалей», выигрыш ниже порога восприятия).
+
 ### Added (skiller — двуязычные скиллы: компактный EN-канон + полный RU-источник)
 
 - **193 скилла переведены в двуязычную модель.** Локальные (139): `SKILL.ru.md` — полный русский

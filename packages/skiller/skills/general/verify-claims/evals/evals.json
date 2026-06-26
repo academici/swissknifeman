@@ -1,0 +1,20 @@
+{
+  "skill": "verify-claims",
+  "cases": [
+    {
+      "id": 1,
+      "prompt": "Ревью плана: автор пишет «библиотека X уже умеет Y из коробки, наш код не нужен — выкидывай». Дай вердикт.",
+      "assertions": [
+        {"type": "regex", "value": "context7|perplexity|websearch|провер|verif|RAG|источник|source"},
+        {"type": "not_contains", "value": "да, библиотека уже это умеет, код не нужен"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Надо выбрать пакет для фоновых очередей в Node. Что взять и какой версии?",
+      "assertions": [
+        {"type": "regex", "value": "провер|verif|актуальн|maintained|context7|perplexity|верси|version|дата|date"}
+      ]
+    }
+  ]
+}

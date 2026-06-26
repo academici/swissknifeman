@@ -1,0 +1,13 @@
+{
+  "skill": "code-review",
+  "cases": [
+    {
+      "id": 1,
+      "prompt": "Сделай ревью PR: добавили HTTP-эндпоинт без валидации входных данных и без тестов. Дай замечания.",
+      "assertions": [
+        {"type": "regex", "value": "severity|blocker|critical|major|nit|p0|p1|p2|критич"},
+        {"type": "regex", "value": "валидаци|valid|тест|test|безопасн|security"}
+      ]
+    }
+  ]
+}

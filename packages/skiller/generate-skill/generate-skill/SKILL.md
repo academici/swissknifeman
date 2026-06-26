@@ -23,4 +23,12 @@ sha256: ""
 2. Скопируй SKILL_TEMPLATE.md
 3. Заполни frontmatter и секции
 4. Добавь snippets/ с index.json
-5. Запусти `sync.sh --update-registry`
+5. **Заведи evals/** (eval-first): `skiller eval <bucket>/<name> --scaffold` →
+   заполни `evals.json` (кейсы + программные ассершены), `pressure.json`
+   (сценарии-соблазны «пропустить скилл») и `triggers.json` (точность срабатывания
+   описания). Прогон — `skiller eval <bucket>/<name>` (требует CLI `claude`).
+6. Запусти `skiller registry`
+
+> **Eval-first.** Скилл без evals — непроверяемое утверждение. Заведи кейсы
+> вместе со скиллом: что он должен делать (evals) и от чего удерживать под
+> давлением (pressure). `validate.sh` показывает покрытие evals одной строкой.

@@ -1,0 +1,89 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/academici/swissknifeman/main/packages/skiller/schema/evals.schema.json",
+  "title": "skiller skill evals (evals.json / pressure.json / triggers.json)",
+  "description": "Поведенческие тесты скилла реестра (eval-first). Лежат в skills/<bucket>/<name>/evals/. Раннер/грейдер — lib/skiller/eval.py (skiller eval). Рантайм-валидация ручная (validate.sh + eval.validate_*); схема — для DX. evals/ НЕ вендорится и не входит в content-hash.",
+  "oneOf": [
+    { "$ref": "#/$defs/evals" },
+    { "$ref": "#/$defs/pressure" },
+    { "$ref": "#/$defs/triggers" }
+  ],
+  "$defs": {
+    "assertion": {
+      "type": "object",
+      "description": "Детерминированная проверка вывода прогона (без LLM-judge — воспроизводимо в CI).",
+      "required": ["type", "value"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["contains", "not_contains", "regex", "not_regex",
+                   "file_exists", "file_absent", "min_words"]
+        },
+        "value": {
+          "description": "Подстрока/паттерн/путь/число — в зависимости от type."
+        },
+        "flags": {
+          "type": "object",
+          "properties": {
+            "case_sensitive": {
+              "type": "boolean",
+              "description": "По умолчанию сравнение регистронезависимо (естественный язык робастнее)."
+            }
+          }
+        }
+      }
+    },
+    "case": {
+      "type": "object",
+      "required": ["id", "prompt"],
+      "properties": {
+        "id": { "description": "Уникальный в файле идентификатор кейса." },
+        "prompt": { "type": "string", "description": "Запрос на реальном языке пользователя (конкретика: пути, имена)." },
+        "tempts": { "type": "string", "description": "Только для pressure: что подмывает агента сделать, ПРОПУСТИВ скилл." },
+        "files": {
+          "type": "array",
+          "description": "Файлы, записываемые в workspace до прогона.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "path": { "type": "string" },
+              "content": { "type": "string" }
+            }
+          }
+        },
+        "assertions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/assertion" }
+        }
+      }
+    },
+    "evals": {
+      "type": "object",
+      "description": "evals.json — позитивные кейсы (что скилл должен делать).",
+      "required": ["skill", "cases"],
+      "properties": {
+        "skill": { "type": "string" },
+        "cases": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/case" } }
+      }
+    },
+    "pressure": {
+      "type": "object",
+      "description": "pressure.json — сценарии-соблазны (TDD для документации): удержать поведение под давлением.",
+      "required": ["skill", "scenarios"],
+      "properties": {
+        "skill": { "type": "string" },
+        "scenarios": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/case" } }
+      }
+    },
+    "triggers": {
+      "type": "object",
+      "description": "triggers.json — точность срабатывания description (ярус-0): should_trigger vs should_not.",
+      "required": ["should_trigger", "should_not"],
+      "properties": {
+        "skill": { "type": "string" },
+        "should_trigger": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "should_not": { "type": "array", "minItems": 1, "items": { "type": "string" } }
+      }
+    }
+  }
+}

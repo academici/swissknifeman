@@ -26,8 +26,14 @@ warnings = []
 UPSTREAM_SOURCES = {"github", "http", "file"}
 # replace = зеркало (автонакат); notify = адаптированная копия (только сообщать);
 # fork = форк с нашими правками (обёртка + pristine-зеркало в files[].path; на дрейфе
-#        review_pending=true блокирует распространение — ручной перенос, потом --resolve).
-UPSTREAM_STRATEGIES = {"replace", "notify", "fork"}
+#        review_pending=true блокирует распространение — ручной перенос, потом --resolve);
+# merge = композит из ≥2 внешних источников (origins[]: base + supplement/«suggest»),
+#        собранный в единый скилл; синк РУЧНОЙ под управлением агента (на дрейфе любого
+#        origin merge.review_pending=true блокирует — агент пере-мерджит, потом --resolve).
+UPSTREAM_STRATEGIES = {"replace", "notify", "fork", "merge"}
+# Роли источников в composite-скилле (strategy=merge): base — взят за основу;
+# supplement — дополняющий источник-«suggest» (что из него вмерджено — в note/suggest).
+ORIGIN_ROLES = {"base", "supplement"}
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 # Допустимые значения enum-полей frontmatter + формат версии (semver).
 RISK_VALUES = {"read", "draft", "write", "external"}
@@ -197,6 +203,54 @@ for up_file in sorted(root.glob("skills/**/upstream.json")) + \
         lr = data.get("last_review", "")
         if lr and not DATE_RE.match(lr):
             errors.append(f"{rel}: last_review must be YYYY-MM-DD or empty")
+    # merge: композит из ≥2 внешних источников. origins[] фиксирует провенанс с
+    # ролями (base — взят за основу; supplement/«suggest» — что дополнительно
+    # вмерджено). Синк ручной: на дрейфе любого origin merge.review_pending=true
+    # блокирует валидацию (и registry/релиз), пока агент не пере-мерджит и не
+    # снимет гейт (scripts/update-upstreams.sh --resolve).
+    if data.get("strategy") == "merge":
+        origins = data.get("origins")
+        if not isinstance(origins, list) or len(origins) < 2:
+            errors.append(f"{rel}: strategy=merge требует origins[] из ≥2 источников "
+                          f"(base + ≥1 supplement)")
+            origins = []
+        roles = []
+        for k, org in enumerate(origins):
+            if not isinstance(org, dict):
+                errors.append(f"{rel}: origins[{k}] must be an object")
+                continue
+            for key in ("repo", "role", "url", "sha256", "fetched_at"):
+                if not org.get(key):
+                    errors.append(f"{rel}: origins[{k}] missing key: {key}")
+            role = org.get("role", "")
+            if role and role not in ORIGIN_ROLES:
+                errors.append(f"{rel}: origins[{k}].role '{role}' не из "
+                              f"{sorted(ORIGIN_ROLES)}")
+            roles.append(role)
+            of = org.get("fetched_at", "")
+            if of and not DATE_RE.match(of):
+                errors.append(f"{rel}: origins[{k}].fetched_at must be YYYY-MM-DD")
+        if origins and roles.count("base") != 1:
+            errors.append(f"{rel}: strategy=merge требует РОВНО один origin role=base")
+        if origins and "supplement" not in roles:
+            errors.append(f"{rel}: strategy=merge требует ≥1 origin role=supplement")
+        merge = data.get("merge") or {}
+        if not isinstance(merge, dict):
+            errors.append(f"{rel}: merge must be an object")
+            merge = {}
+        rp = merge.get("review_pending")
+        if rp is not None and not isinstance(rp, bool):
+            errors.append(f"{rel}: merge.review_pending must be a boolean")
+        if rp is True:
+            errors.append(
+                f"{rel}: merge.review_pending=true — один из origins разошёлся с "
+                f"зеркалом; пере-мерджи источники в SKILL.md, затем "
+                f"scripts/update-upstreams.sh --resolve --skill <id>")
+        mlr = merge.get("last_review", "")
+        if mlr and not DATE_RE.match(mlr):
+            errors.append(f"{rel}: merge.last_review must be YYYY-MM-DD or empty")
+    elif data.get("origins") is not None:
+        errors.append(f"{rel}: origins[] допустим только при strategy=merge")
     if data.get("source") == "file":
         warnings.append(f"{rel}: source=file is for local fixtures/tests only")
 
@@ -313,6 +367,74 @@ for manifest in sorted(root.glob("skills/**/snippets/index.json")):
         f = manifest.parent / s.get("file", "")
         if not f.exists():
             errors.append(f"{rel}: missing snippet: {s.get('file')}")
+
+# --- 5b. evals/ (поведенческие тесты скиллов) -------------------------------
+# Структурная проверка имеющихся evals.json/pressure.json/triggers.json (если
+# заведены) + сводка покрытия. Глубокая семантика (типы ассершенов, прогон) — в
+# lib/skiller/eval.py + tests/test_eval.py; здесь только мягкий гейт формата.
+# Покрытие — ОДНОЙ строкой (не per-skill warning), чтобы не зашумлять вывод.
+def _check_cases(node, where, key):
+    cases = node.get(key)
+    if not isinstance(cases, list) or not cases:
+        errors.append(f"{where}: '{key}' должен быть непустым массивом")
+        return
+    ids = set()
+    for k, c in enumerate(cases):
+        w = f"{where}.{key}[{k}]"
+        if not isinstance(c, dict):
+            errors.append(f"{w}: кейс должен быть объектом"); continue
+        cid = c.get("id")
+        if cid is None:
+            errors.append(f"{w}: нет id")
+        elif cid in ids:
+            errors.append(f"{w}: дубликат id {cid!r}")
+        else:
+            ids.add(cid)
+        if not c.get("prompt"):
+            errors.append(f"{w}: нет непустого prompt")
+        for j, a in enumerate(c.get("assertions", []) or []):
+            if not isinstance(a, dict) or not a.get("type") or "value" not in a:
+                errors.append(f"{w}.assertions[{j}]: нужен объект с type+value")
+
+local_total = local_with_evals = 0
+for skill_md in sorted(root.glob("skills/*/*/SKILL.md")):
+    sd = skill_md.parent
+    if (sd / "upstream.json").exists():
+        continue                       # eval-стандарт — на авторские (не upstream)
+    local_total += 1
+    ev = sd / "evals" / "evals.json"
+    if ev.exists():
+        local_with_evals += 1
+for ev_file in sorted(root.glob("skills/*/*/evals/evals.json")):
+    rel = ev_file.relative_to(root)
+    try:
+        data = json.loads(ev_file.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError) as e:
+        errors.append(f"{rel}: invalid JSON: {e}"); continue
+    if not isinstance(data, dict) or not data.get("skill"):
+        errors.append(f"{rel}: нужен объект с полем skill")
+    else:
+        _check_cases(data, str(rel), "cases")
+for pr_file in sorted(root.glob("skills/*/*/evals/pressure.json")):
+    rel = pr_file.relative_to(root)
+    try:
+        data = json.loads(pr_file.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError) as e:
+        errors.append(f"{rel}: invalid JSON: {e}"); continue
+    if not isinstance(data, dict) or not data.get("skill"):
+        errors.append(f"{rel}: нужен объект с полем skill")
+    else:
+        _check_cases(data, str(rel), "scenarios")
+for tr_file in sorted(root.glob("skills/*/*/evals/triggers.json")):
+    rel = tr_file.relative_to(root)
+    try:
+        data = json.loads(tr_file.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError) as e:
+        errors.append(f"{rel}: invalid JSON: {e}"); continue
+    for key in ("should_trigger", "should_not"):
+        v = data.get(key) if isinstance(data, dict) else None
+        if not isinstance(v, list) or not v:
+            errors.append(f"{rel}: '{key}' должен быть непустым массивом")
 
 # --- 6. buckets.json --------------------------------------------------------
 KEBAB_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
@@ -679,6 +801,11 @@ for w in warnings:
     print(f"WARN: {w}")
 for e in errors:
     print(f"ERROR: {e}")
+
+if local_total:
+    pct = 100 * local_with_evals // local_total
+    print(f"evals coverage: {local_with_evals}/{local_total} локальных скиллов "
+          f"имеют evals/ ({pct}%) — eval-first для новых (skiller eval <skill>)")
 
 checked = len(skill_files)
 if errors:

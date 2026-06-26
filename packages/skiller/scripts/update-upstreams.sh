@@ -28,9 +28,12 @@ Modes (default --check):
                      strategy=notify: record the seen upstream sha (file untouched).
                      strategy=fork: stage upstream as upstream/<name>.incoming and set
                      review_pending=true (mirror + wrapper SKILL.md untouched) for manual port.
-  --resolve          strategy=fork only: promote the staged incoming to the mirror,
-                     record sha256/fetched_at, clear review_pending, set last_review.
-                     Run AFTER porting upstream changes into the wrapper SKILL.md.
+                     strategy=merge: on ANY origin drift set merge.review_pending=true
+                     (SKILL.md untouched) — composite is re-merged by the agent manually.
+  --resolve          strategy=fork: promote staged incoming to the mirror; strategy=merge:
+                     record fresh sha256/fetched_at for all origins. Both clear
+                     review_pending + set last_review. Run AFTER porting/merging upstream
+                     changes into the (wrapper/composite) SKILL.md.
 
 Options:
   --skill PATH       Limit to one skill, e.g. imported/ai-agents (repeatable)
@@ -164,7 +167,8 @@ for cfg in configs:
     except (json.JSONDecodeError, UnicodeDecodeError) as e:
         print(f"ERROR: {cfg.relative_to(root)}: invalid JSON: {e}", file=sys.stderr)
         sys.exit(1)
-    if data.get("schema_version") != 1 or data.get("strategy") not in ("replace", "notify", "fork") \
+    if data.get("schema_version") != 1 \
+            or data.get("strategy") not in ("replace", "notify", "fork", "merge") \
             or not isinstance(data.get("files"), list) or not data["files"]:
         print(f"ERROR: {cfg.relative_to(root)}: malformed (run scripts/validate.sh)",
               file=sys.stderr)
@@ -179,7 +183,54 @@ for cfg, sid, data in parsed:
     strategy = data["strategy"]
     changed = False
 
-    for entry in data["files"]:
+    # --- merge: композит из origins[] (base + supplement). Дрейф ЛЮБОГО источника →
+    #     ручной agent-merge: --check сообщает, --apply поднимает merge.review_pending
+    #     (гейт в validate.sh), --resolve фиксирует свежие sha и снимает флаг. Зеркало
+    #     одним файлом не перезаписывается — композит склеивает агент вручную. ---
+    if strategy == "merge":
+        mp = data.setdefault("merge", {})
+        for k, org in enumerate(data.get("origins", [])):
+            results["checked"] += 1
+            label = org.get("repo", f"origin{k}")
+            role = org.get("role", "?")
+            try:
+                remote = fetch(org["url"])
+            except Exception as e:
+                code = getattr(e, "code", None)
+                err = f"HTTP {code}" if code else str(e)
+                line("fail", sid, label, f"fetch failed: {err}")
+                results["failures"].append({"skill": sid, "file": label, "error": err})
+                continue
+            remote_sha = sha256_bytes(remote)
+            stored = org.get("sha256", "")
+            if mode == "resolve":
+                org["sha256"] = remote_sha
+                org["fetched_at"] = today
+                changed = True
+                line("resolved", sid, label, f"origin sha обновлён ({role})")
+            elif remote_sha == stored:
+                line("ok", sid, label, f"up-to-date (merge/{role})")
+            else:
+                what = "baseline missing" if not stored \
+                    else f"origin changed ({stored[:8]}.. -> {remote_sha[:8]}..)"
+                if mode == "apply":
+                    mp["review_pending"] = True
+                    changed = True
+                    line("staged", sid, label,
+                         f"{what}; merge.review_pending=true — пере-мерджи "
+                         f"источники в SKILL.md вручную, затем --resolve")
+                    results["noted"].append({"skill": sid, "file": label,
+                                             "new_sha": remote_sha, "url": org["url"]})
+                else:  # check
+                    line("notify", sid, label,
+                         f"{what}; strategy=merge — ручной agent-merge")
+                    results["notify"].append({"skill": sid, "file": label,
+                                              "old_sha": stored, "new_sha": remote_sha})
+        if mode == "resolve" and changed:
+            mp["review_pending"] = False
+            mp["last_review"] = today
+
+    for entry in ([] if strategy == "merge" else data["files"]):
         fname = entry["path"]
         local_path = skill_dir / fname
         stored = entry.get("sha256", "")

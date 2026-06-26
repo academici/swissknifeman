@@ -212,9 +212,12 @@ def do_vendor(env, target, opts, register=True):
         # SKILL.*.md (SKILL.ru.md и пр.) — человеческие альтернаты, НЕ канон:
         # агент их не грузит, в потребляющий проект они не нужны (едет только EN
         # SKILL.md). "SKILL.*.md" не матчит сам "SKILL.md" (нужно два разделителя).
+        # evals/ — поведенческие тесты скилла (формат eval-first), артефакт
+        # разработки реестра: в потребляющий проект не едут (как *.ru.md).
         shutil.copytree(src, dst, dirs_exist_ok=True,
                         ignore=shutil.ignore_patterns("upstream.json",
-                                                      ".claude-plugin", "SKILL.*.md"))
+                                                      ".claude-plugin", "SKILL.*.md",
+                                                      "evals"))
 
     def load_manifest(manifest_file):
         if manifest_file.exists():

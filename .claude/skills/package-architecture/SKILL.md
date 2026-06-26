@@ -44,6 +44,28 @@ description: "Полная карта пакета swissknifeman: каналы �
    frontmatter `requires`; `--exclude` побеждает зависимость. Манифест
    `.swissknifeman-manifest.json` — чистая переустановка без слепых перезаписей.
 
+## Два конфига проекта (не путать, не сливать)
+
+- **`.swissknife.json`** — лёгкий конфиг для **connect** (+ legacy vendor):
+  `project_type/buckets/exclude/presets/agent` (+ agent-framework `shape/stacks/skills_map`).
+  Ключи `CONFIG_KEYS` (`common.py`), валидатор `config.validate_config`. **bucket-granular.**
+- **`.swissknifeman/config.json`** — канонический SoT **vendor-режима** (`sync`):
+  `version/mode/agent/skills_path/presets/include/buckets/exclude`. Ключи `SKILLSET_KEYS`
+  (`skillset.py`), валидатор `load_skillset_config`. **skill-granular.**
+- JSON-схемы обоих — `schema/*.json` (DX/IntelliSense через `$schema`); рантайм-валидация
+  ручная, stdlib-only; синхрон схемы↔код держат `tests/test_schema.py` и `skiller doctor`.
+- Бутстрап vendor-конфига — `skiller init` (из автодетекта, без копий). Мост: `sync`/`init`
+  лениво материализуют `.swissknifeman/config.json` из профиля/legacy, недеструктивно.
+
+## Потребление скиллов в рантайме (анти-straw-man)
+
+Тела скиллов в рантайме читает **сам Claude Code**, а не Python-процесс skiller: vendor →
+с диска `.claude/skills/<name>/SKILL.md`; connect → из реестра через marketplace. **Нет
+`load_skill`/`loader.py`** — skiller только копирует/регистрирует и парсит фронтматтер
+(для метаданных). Поэтому «кэш загрузки скиллов» внутри skiller **не имеет вызывающего**;
+экономию даёт автоматический prompt caching Claude Code. Полный канон —
+`docs/guide/skills-architecture.md`.
+
 ## CLI `bin/skiller`
 
 Устанавливается симлинком в `~/.local/bin` через `./install.sh`; путь к
@@ -52,11 +74,13 @@ description: "Полная карта пакета swissknifeman: каналы �
 (version 1, записи с ключом path+channel) — пополняется автоматически при
 connect/vendor/update; диск всегда источник истины, записи — дефолты replay.
 
-Команды: `connect`, `vendor`, `update [--all]` (детект каналов по маркерам,
-adopt незарегистрированных, починка path-drift marketplace), `status`, `list
-[--prune]`, `topology [init|show]`, `registry` (мейнтейнер), `validate`,
-`doctor`, `version`. Корень проекта ищется вверх от CWD: `.swissknife.json` →
-`.claude/` → `.git`. Внутри самого реестра project-команды отказываются работать.
+Команды: `connect`, `vendor`, `integrate`, `update [--all]` (детект каналов по
+маркерам, adopt незарегистрированных, починка path-drift marketplace),
+`init` (создать `.swissknifeman/config.json` без копирования), `sync` (vendor),
+`lock`, `status`, `budget`, `list [--prune]`, `topology [init|show]`,
+`registry` (мейнтейнер), `validate`, `doctor`, `version`. Корень проекта ищется
+вверх от CWD: `.swissknife.json` → `.claude/` → `.git`. Внутри самого реестра
+project-команды отказываются работать.
 Лаунчер `bin/skiller` whitelist'ит команды в `case` — новую команду
 добавлять и в `COMMANDS` (`lib/skiller/cli.py`), и в `case`.
 
@@ -84,7 +108,7 @@ Brain-sync удалён: brain — обычный потребляющий пр�
 
 | Артефакт | Генератор |
 |---|---|
-| `skills.json` (реестр v5: sha256, provenance, requires/produces_for) | `skiller registry` |
+| `skills.json` (реестр v5: sha256 + content_sha256, provenance, requires/produces_for, опц. `level`) | `skiller registry` |
 | `skills/*/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` | `skiller registry` |
 | `docs/guide/graph.md` (Mermaid-граф зависимостей) | `skiller registry` → `scripts/generate-graph.sh` |
 | Хаб в проекте (managed-блок CLAUDE.md или `.ai/guidelines/swissknifeman-hub.md`) | `scripts/generate-hub.sh` |

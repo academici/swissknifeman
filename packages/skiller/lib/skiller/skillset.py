@@ -85,7 +85,9 @@ def _registry_index(env):
             rel = "/".join(parts[2:-1])
         entry = {
             "name": name, "bucket": bucket, "rel": rel, "path": path,
-            "sha256": s.get("sha256", ""), "skill_dir": skill_dir,
+            "sha256": s.get("sha256", ""),
+            "content_sha256": s.get("content_sha256", ""),
+            "skill_dir": skill_dir,
         }
         full = f"{bucket}/{rel}".rstrip("/") if rel else bucket
         by_key[full] = entry
@@ -164,7 +166,7 @@ def load_skillset_config(target):
         die(f"{cfg_file}: невалидный JSON: {e}")
     import difflib
     for key, value in cfg.items():
-        if key.startswith("_"):
+        if key.startswith(("_", "$")):  # _comment / $schema — DX, не валидируем
             continue
         if key not in SKILLSET_KEYS:
             hint = difflib.get_close_matches(key, list(SKILLSET_KEYS), n=1)
@@ -299,6 +301,11 @@ def plan_sync(env, target, cfg, include_core=False):
             add.append(name)
         elif prev.get("sha256") != entry["sha256"]:
             update.append(name)
+        elif (prev.get("content_sha256")
+              and prev.get("content_sha256") != entry.get("content_sha256", "")):
+            # дрейф в snippets/references при неизменном SKILL.md. Гард на наличие
+            # ключа в локе → старые локи (без content_sha256) не дают ложный update.
+            update.append(name)
         else:
             keep.append(name)
     remove = [n for n in managed_locked if n not in desired]
@@ -376,16 +383,21 @@ def sync_skillset(env, target, cfg, dry_run=False, force=False,
             "managed": True,
             "bucket": entry["bucket"],
             "sha256": _dir_sha256(dst),
+            # content_sha256 — из реестра (хеш ИСТОЧНИКА): копия отличается игнорами,
+            # поэтому хешируем источник, а не dst (иначе ложный дрейф каждый sync).
+            "content_sha256": entry.get("content_sha256", ""),
             "installed_path": f"{plan['skills_path']}/{name}",
         }
 
-    # keep: освежить метаданные на случай ручной правки lock
+    # keep: освежить метаданные на случай ручной правки lock (и доpopulation
+    # content_sha256 в старых локах — без перекопирования неизменённых скиллов)
     for name in plan["keep"]:
         entry = entries[name]
         locked.setdefault(name, {})
         locked[name].update({
             "source": SOURCE, "managed": True, "bucket": entry["bucket"],
             "sha256": entry["sha256"],
+            "content_sha256": entry.get("content_sha256", ""),
             "installed_path": f"{plan['skills_path']}/{name}",
         })
 
@@ -431,6 +443,36 @@ def _write_manifest(target, skills_path, locked, entries, cfg):
     atomic_write_json(dest_root / MANIFEST, data, version=MANIFEST_VERSION)
 
 
+# --- config materialization (общая для init и do_sync) ------------------------
+def materialize_skillset_config(env, target, opts, dry=False, force=False):
+    """Вернуть конфиг vendor-режима; создать `.swissknifeman/config.json` из
+    профиля проекта, если его ещё нет (force=True — пересоздать из автодетекта).
+
+    Существующий курированный конфиг уважается (force=False → читаем как есть, не
+    перетираем). ЕДИНАЯ точка материализации для `cmd_init` и `do_sync` — чтобы
+    набор по умолчанию не разъезжался между «создать конфиг» и «синкнуть».
+    Возвращает (cfg, profile_name, created): created=True, если файл записан."""
+    cfg_path = skillset_config_path(target)
+    if cfg_path.is_file() and not force:
+        cfg = load_skillset_config(target)
+        return cfg, (cfg.get("project_type") or ""), False
+    legacy = load_config(env, target)
+    buckets, profile_name, _psrc, source, _meta = resolve_selection(
+        env, target, legacy, opts.get("profile", ""), [])
+    cfg = {"version": LOCK_VERSION, "mode": "vendor", "agent": "claude",
+           "buckets": list(buckets), "include": [], "exclude": []}
+    if not dry:
+        cfg_path.parent.mkdir(parents=True, exist_ok=True)
+        atomic_write_json(cfg_path, cfg, version=LOCK_VERSION)
+    print(("[dry-run] " if dry else "")
+          + f"конфиг vendor-режима: {CONFIG_DIR}/{CONFIG_FILE} "
+          f"(mode=vendor, buckets: {' '.join(buckets) or '-'})")
+    if source == "autodetect-fallback":
+        print("⚠ тип проекта не распознан — материализовано МИНИМАЛЬНОЕ ядро;\n"
+              "  для оптимального набора укажи профиль: --profile <type>")
+    return cfg, profile_name, True
+
+
 # --- integrate/onboard entry (vendor-канал «опубликовать в репо») -------------
 def do_sync(env, target, opts, register=True):
     """Vendor-канал через sync: «опубликовать» скиллы физически в .claude/skills/.
@@ -445,25 +487,8 @@ def do_sync(env, target, opts, register=True):
     force = opts.get("force", False)
     no_core = opts.get("no_core", False)
 
-    cfg_path = skillset_config_path(target)
-    if cfg_path.is_file():
-        cfg = load_skillset_config(target)
-        profile_name = cfg.get("project_type") or ""
-    else:
-        legacy = load_config(env, target)
-        buckets, profile_name, _psrc, source, _meta = resolve_selection(
-            env, target, legacy, opts.get("profile", ""), [])
-        cfg = {"version": LOCK_VERSION, "mode": "vendor", "agent": "claude",
-               "buckets": list(buckets), "include": [], "exclude": []}
-        if not dry:
-            cfg_path.parent.mkdir(parents=True, exist_ok=True)
-            atomic_write_json(cfg_path, cfg, version=LOCK_VERSION)
-        print(("[dry-run] " if dry else "")
-              + f"конфиг vendor-режима: {CONFIG_DIR}/{CONFIG_FILE} "
-              f"(mode=vendor, buckets: {' '.join(buckets) or '-'})")
-        if source == "autodetect-fallback":
-            print("⚠ тип проекта не распознан — материализовано МИНИМАЛЬНОЕ ядро;\n"
-                  "  для оптимального набора укажи профиль: integrate --profile <type>")
+    cfg, profile_name, _created = materialize_skillset_config(
+        env, target, opts, dry=dry)
 
     plan = sync_skillset(env, target, cfg, dry_run=dry, force=force,
                          include_core=not no_core)
@@ -498,6 +523,34 @@ def do_sync(env, target, opts, register=True):
 
 
 # --- CLI ----------------------------------------------------------------------
+def cmd_init(env, argv):
+    """Создать `.swissknifeman/config.json` (mode=vendor) — без копирования скиллов.
+
+    Парадная, идемпотентная дверь «дай мне конфиг»: автодетект типа проекта +
+    профиль → buckets. Копирование делает `skiller sync`. Раньше конфиг
+    материализовался только как побочный эффект `sync`/`integrate`."""
+    opts = parse_flags(argv, {"--target": "str", "--profile": "str",
+                              "--force": "bool", "--dry-run": "bool"})
+    if opts["help"]:
+        print("skiller init [--target DIR] [--profile TYPE] [--force] [--dry-run]\n"
+              "  Создаёт .swissknifeman/config.json (mode=vendor) из автодетекта "
+              "типа проекта и профиля —\n"
+              "  БЕЗ копирования скиллов (это делает skiller sync). Существующий "
+              "конфиг не перетирается без --force.")
+        return
+    target, via = resolve_target(env, opts, allow_home_confirm=True)
+    cfg_path = skillset_config_path(target)
+    if cfg_path.is_file() and not opts["force"]:
+        print(f"✓ {CONFIG_DIR}/{CONFIG_FILE} уже есть ({via}) — не трогаю "
+              "(--force пересоздаёт). Дальше: skiller sync")
+        return
+    _cfg, profile_name, _created = materialize_skillset_config(
+        env, target, opts, dry=opts["dry_run"], force=True)
+    if not opts["dry_run"]:
+        print(f"  профиль: {profile_name or '-'}. Отредактируй "
+              "include/buckets/exclude и примени: skiller sync")
+
+
 def cmd_sync(env, argv):
     opts = parse_flags(argv, {"--target": "str", "--dry-run": "bool",
                               "--force": "bool", "--hub": "bool",

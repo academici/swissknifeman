@@ -19,7 +19,8 @@
 - Скопируй ВСЕ поля как есть, переведи на английский ТОЛЬКО значение `description`
   (компактно, конкретно — оно резидентно в каждом запросе, ярус ⊕ always).
 - `name`, `bucket`, `version`, `risk`, `persona`, `tags`, `requires`, `produces_for`,
-  `outputs`, `snippets`, `adapters`, `sha256` — НЕ трогай.
+  `outputs`, `snippets`, `adapters`, `sha256`, `level` — НЕ трогай (если присутствуют).
+  `level` (опц., core|foundation|extension) — скаляр, копируй как есть.
 
 ## Маркер источника
 В самый конец файла добавь строку:

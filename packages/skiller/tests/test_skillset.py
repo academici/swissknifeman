@@ -11,12 +11,13 @@ import unittest
 from pathlib import Path
 
 from skiller.registry import build_registry
-from skiller.skillset import (_registry_index, do_sync, load_lock,
-                                    load_skillset_config, plan_sync,
+from skiller.skillset import (_registry_index, cmd_init, do_sync, load_lock,
+                                    load_skillset_config,
+                                    materialize_skillset_config, plan_sync,
                                     resolve_skillset, skillset_config_path,
-                                    sync_skillset)
+                                    sync_skillset, write_lock)
 
-from skiller.common import MANIFEST
+from skiller.common import MANIFEST, Env
 
 from tests.fixtures import make_laravel_project, make_registry, write_skill
 
@@ -569,6 +570,152 @@ class TestRegistryIndexWarns(unittest.TestCase):
             self.assertIn("devops/dup", by_key)
             self.assertEqual(by_name["dup"]["bucket"], "php")
             self.assertIn("дубль имени", err)
+
+
+class TestInit(unittest.TestCase):
+    """materialize_skillset_config — единая материализация конфига для init/do_sync."""
+
+    def _materialize(self, env, target, **kw):
+        with contextlib.redirect_stdout(io.StringIO()):
+            return materialize_skillset_config(env, target, kw.pop("opts", {}), **kw)
+
+    def test_materialize_creates_vendor_config_from_autodetect(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            root, env = make_registry(tmp)
+            _materialize_registry(env)
+            target = make_laravel_project(tmp)  # autodetect → laravel-project
+            cfg, profile, created = self._materialize(env, target)
+            self.assertTrue(created)
+            self.assertEqual(profile, "laravel-project")
+            self.assertEqual(cfg["mode"], "vendor")
+            self.assertEqual(cfg["version"], 1)
+            self.assertEqual(set(cfg["buckets"]), {"php", "quality"})
+            # файл реально записан и валиден как .swissknifeman/config.json
+            self.assertTrue(skillset_config_path(target).is_file())
+            self.assertEqual(load_skillset_config(target)["mode"], "vendor")
+
+    def test_materialize_respects_existing_without_force(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            root, env = make_registry(tmp)
+            _materialize_registry(env)
+            target = make_laravel_project(tmp)
+            _write_config(target, {"mode": "vendor", "buckets": ["devops"]})
+            cfg, _profile, created = self._materialize(env, target)
+            self.assertFalse(created)               # курированный не перетёрт
+            self.assertEqual(cfg["buckets"], ["devops"])
+
+    def test_materialize_force_overwrites_from_profile(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            root, env = make_registry(tmp)
+            _materialize_registry(env)
+            target = make_laravel_project(tmp)
+            _write_config(target, {"mode": "vendor", "buckets": ["devops"]})
+            cfg, _profile, created = self._materialize(env, target, force=True)
+            self.assertTrue(created)
+            self.assertEqual(set(cfg["buckets"]), {"php", "quality"})
+
+    def test_materialize_dry_run_writes_nothing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            root, env = make_registry(tmp)
+            _materialize_registry(env)
+            target = make_laravel_project(tmp)
+            self._materialize(env, target, dry=True, force=True)
+            self.assertFalse(skillset_config_path(target).is_file())
+
+    # --- cmd_init: верхний слой (resolve_target + idempotency + guard) --------
+    def test_cmd_init_idempotent_keeps_existing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            root, env = make_registry(tmp)
+            _materialize_registry(env)
+            target = make_laravel_project(tmp)
+            _write_config(target, {"mode": "vendor", "buckets": ["devops"]})
+            before = skillset_config_path(target).read_text(encoding="utf-8")
+            with contextlib.redirect_stdout(io.StringIO()) as buf:
+                cmd_init(env, ["--target", str(target)])
+            self.assertIn("уже есть", buf.getvalue())
+            self.assertEqual(  # курированный конфиг не перетёрт
+                skillset_config_path(target).read_text(encoding="utf-8"), before)
+
+    def test_cmd_init_force_overwrites_from_profile(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            root, env = make_registry(tmp)
+            _materialize_registry(env)
+            target = make_laravel_project(tmp)
+            _write_config(target, {"mode": "vendor", "buckets": ["devops"]})
+            with contextlib.redirect_stdout(io.StringIO()):
+                cmd_init(env, ["--target", str(target), "--force"])
+            self.assertEqual(set(load_skillset_config(target)["buckets"]),
+                             {"php", "quality"})
+
+    def test_cmd_init_dry_run_writes_nothing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            root, env = make_registry(tmp)
+            _materialize_registry(env)
+            target = make_laravel_project(tmp)
+            with contextlib.redirect_stdout(io.StringIO()):
+                cmd_init(env, ["--target", str(target), "--dry-run"])
+            self.assertFalse(skillset_config_path(target).is_file())
+
+    def test_cmd_init_refuses_registry_root(self):
+        # guard resolve_target: init внутри самого реестра отвергается (как sync)
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            root, env0 = make_registry(tmp)
+            _materialize_registry(env0)
+            env = Env(root, "init", home=env0.home)  # cmd=init для guard'а
+            with self.assertRaises(SystemExit):
+                with contextlib.redirect_stdout(io.StringIO()):
+                    cmd_init(env, ["--target", str(root)])
+            self.assertFalse(skillset_config_path(root).is_file())  # реестр чист
+
+
+class TestContentDrift(unittest.TestCase):
+    """content_sha256: sync ловит дрейф в snippets/references при неизменном SKILL.md."""
+
+    def test_snippet_only_change_triggers_update(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            root, env = make_registry(tmp)
+            _materialize_registry(env)
+            target = make_laravel_project(tmp)
+            cfg = {"mode": "vendor", "include": ["code-style"]}
+            sync_skillset(env, target, cfg)
+            self.assertTrue(
+                load_lock(target)["skills"]["code-style"]["content_sha256"])
+            # правим ТОЛЬКО сниппет в источнике (SKILL.md не трогаем) + реестр
+            snip = root / "skills" / "php" / "code-style" / "snippets"
+            snip.mkdir(parents=True, exist_ok=True)
+            (snip / "ex.md").write_text("v1", encoding="utf-8")
+            _materialize_registry(env)
+            plan = plan_sync(env, target, cfg)
+            self.assertIn("code-style", plan["update"])  # content drift пойман
+
+    def test_legacy_lock_without_content_hash_no_false_update(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            root, env = make_registry(tmp)
+            _materialize_registry(env)
+            target = make_laravel_project(tmp)
+            cfg = {"mode": "vendor", "include": ["code-style"]}
+            sync_skillset(env, target, cfg)
+            # эмулируем СТАРЫЙ lock (без content_sha256)
+            lock = load_lock(target)
+            lock["skills"]["code-style"].pop("content_sha256", None)
+            write_lock(target, lock)
+            plan = plan_sync(env, target, cfg)
+            self.assertEqual(plan["update"], [])        # SKILL.md тот же → не update
+            self.assertIn("code-style", plan["keep"])
+            # очередной sync до-populates content_sha256 БЕЗ перекопирования
+            sync_skillset(env, target, cfg)
+            self.assertTrue(
+                load_lock(target)["skills"]["code-style"]["content_sha256"])
 
 
 if __name__ == "__main__":

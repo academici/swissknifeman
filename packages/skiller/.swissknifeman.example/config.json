@@ -1,5 +1,6 @@
 {
-  "_comment": "Конфиг vendor-режима (физический перенос скиллов в репо). Скопируй в целевой проект как .swissknifeman/config.json. Источник истины: правила ниже разворачиваются в плоский набор, sync копирует скиллы из библиотеки swissknifeman в skills_path и пишет skills-lock.json (managed). Команда: skiller sync [--dry-run].",
+  "$schema": "https://raw.githubusercontent.com/academici/swissknifeman/main/packages/skiller/schema/swissknifeman-config.schema.json",
+  "_comment": "Конфиг vendor-режима (физический перенос скиллов в репо). Скопируй в целевой проект как .swissknifeman/config.json. Источник истины: правила ниже разворачиваются в плоский набор, sync копирует скиллы из библиотеки swissknifeman в skills_path и пишет skills-lock.json (managed). Команда: skiller sync [--dry-run]. $schema даёт автодополнение в редакторе.",
   "version": 1,
   "_comment_mode": "пока только vendor (физический перенос + lock)",
   "mode": "vendor",

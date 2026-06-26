@@ -60,6 +60,7 @@ export default withMermaid(defineConfig({
           text: 'Скиллы (skiller)',
           items: [
             { text: 'Что такое SwissKnifeMan', link: '/skiller/guide/' },
+            { text: 'Архитектура скиллов (реальность)', link: '/skiller/guide/skills-architecture' },
             { text: 'Установка скиллов', link: '/skiller/guide/installation' },
             { text: 'Vendor-режим (sync)', link: '/skiller/guide/vendor-mode' },
             { text: 'Чеклист интеграции', link: '/skiller/guide/integration-checklist' },

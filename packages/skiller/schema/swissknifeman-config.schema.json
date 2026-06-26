@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/academici/swissknifeman/main/packages/skiller/schema/swissknifeman-config.schema.json",
+  "title": "swissknifeman vendor-mode config (.swissknifeman/config.json)",
+  "description": "Источник истины vendor-режима. Правила (presets ∪ buckets ∪ include) − exclude разворачиваются в плоский набор; `skiller sync` копирует скиллы из библиотеки в skills_path и пишет skills-lock.json (managed) + .swissknifeman-manifest.json. Ключи держатся в синхроне с SKILLSET_KEYS (lib/skiller/skillset.py) — гейт tests/test_schema.py и skiller doctor.",
+  "type": "object",
+  "additionalProperties": false,
+  "patternProperties": {
+    "^[_$]": {}
+  },
+  "properties": {
+    "version": {
+      "type": "integer",
+      "description": "Версия схемы конфига (сейчас 1)."
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["vendor"],
+      "description": "Режим раздачи. Пока поддерживается только vendor (физический перенос + lock)."
+    },
+    "agent": {
+      "type": "string",
+      "description": "Информативно (claude|cursor|generic). Путь задаёт skills_path, не agent."
+    },
+    "skills_path": {
+      "type": "string",
+      "description": "Куда копировать скиллы. По умолчанию .claude/skills (Claude находит автоматически)."
+    },
+    "presets": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Именованные кластеры скиллов (presets/<name>.json), раскрываются в buckets/include до формулы выборки."
+    },
+    "include": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Конкретные скиллы из любых областей: 'bucket/rel' или просто 'name'."
+    },
+    "buckets": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Бакеты целиком (объединяются с include)."
+    },
+    "exclude": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Вычитание из (presets ∪ buckets ∪ include): имя скилла или 'bucket/rel'."
+    }
+  }
+}

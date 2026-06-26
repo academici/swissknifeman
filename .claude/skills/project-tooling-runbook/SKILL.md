@@ -37,6 +37,10 @@ description: Раннбук управления инструментами пр
   позиции из разных областей; обновлять из библиотеки по lock. Конфиг — `.swissknifeman/config.json`
   (`mode: "vendor"`, `include`/`buckets`/`exclude`). См. swissknifeman docs → гайд «Vendor-режим (sync)».
 
+> **Два конфига, не путать:** `.swissknife.json` (connect + legacy vendor, bucket-granular) vs
+> `.swissknifeman/config.json` (vendor `sync`, skill-granular). Канон —
+> swissknifeman docs `guide/skills-architecture.md` §6.
+
 > Спрашивай через AskUserQuestion: «connect (плагины-бакеты, не в репо; нужен доступ к реестру)» vs
 > «vendor (физ. копии скиллов в репо + lock; работает у внешних разработчиков)». Рекомендация по
 > умолчанию — **vendor**, если проект отдают сторонним разработчикам или нужен контроль набора и
@@ -117,7 +121,8 @@ skiller connect --profile laravel-project          # подключить по �
 skiller connect --plugins a,b,c                    # точный набор бакетов (перезаписывает enabledPlugins)
 skiller connect --plugins ... --dry-run            # предпросмотр (сохраняет permissions/bypass)
 # --- канал VENDOR (физ. перенос конкретных скиллов в репо) ---
-#   1) создать .swissknifeman/config.json (mode:vendor, include/buckets/exclude)
+skiller init                         # создать .swissknifeman/config.json (mode:vendor) из автодетекта
+#   (или вручную: include/buckets/exclude; $schema даёт автодополнение в редакторе)
 skiller sync --dry-run               # план: +add ~update -remove =keep
 skiller sync                         # применить (managed-скиллы в .claude/skills/ + lock)
 skiller sync --force                 # перетереть занятый чужим путь версией из библиотеки

@@ -91,6 +91,43 @@ class RegistryBuildCase(unittest.TestCase):
         # у скилла без requires поле отсутствует, а не пустой список
         self.assertNotIn("requires", style)
 
+    def test_level_only_when_present(self):
+        # опц. поле level: пишется в skills.json при наличии, иначе ключа нет
+        (self.root / "skills" / "devops" / "docker" / "SKILL.md").write_text(
+            "---\nname: docker\nversion: 0.1.0\ndescription: Docker\n"
+            "level: foundation\n---\n\nBody.\n", encoding="utf-8")
+        reg, *_ = build_registry(self.env)
+        docker = next(s for s in reg["skills"] if s["name"] == "docker")
+        style = next(s for s in reg["skills"] if s["name"] == "code-style")
+        self.assertEqual(docker["level"], "foundation")
+        self.assertNotIn("level", style)  # omit-when-empty
+
+    def test_content_sha256_covers_whole_dir(self):
+        # content_sha256 шире sha256 (по SKILL.md): ловит правки snippets/references
+        docker = self.root / "skills" / "devops" / "docker"
+        reg1, *_ = build_registry(self.env)
+        e1 = next(s for s in reg1["skills"] if s["name"] == "docker")
+        self.assertTrue(e1["content_sha256"])
+        self.assertNotEqual(e1["content_sha256"], e1["sha256"])  # разный охват
+        # правим ТОЛЬКО сниппет (SKILL.md не трогаем)
+        (docker / "snippets").mkdir(exist_ok=True)
+        (docker / "snippets" / "ex.md").write_text("v1", encoding="utf-8")
+        reg2, *_ = build_registry(self.env)
+        e2 = next(s for s in reg2["skills"] if s["name"] == "docker")
+        self.assertEqual(e2["sha256"], e1["sha256"])  # SKILL.md не менялся
+        self.assertNotEqual(e2["content_sha256"], e1["content_sha256"])  # дир иная
+
+    def test_content_sha256_ignores_ru_alternate(self):
+        # SKILL.ru.md (языковой альтернат) не входит в content_sha256
+        docker = self.root / "skills" / "devops" / "docker"
+        e1 = next(s for s in build_registry(self.env)[0]["skills"]
+                  if s["name"] == "docker")
+        (docker / "SKILL.ru.md").write_text("полный русский источник\n",
+                                            encoding="utf-8")
+        e2 = next(s for s in build_registry(self.env)[0]["skills"]
+                  if s["name"] == "docker")
+        self.assertEqual(e2["content_sha256"], e1["content_sha256"])
+
     def test_missing_buckets_json_dies(self):
         (self.root / "buckets.json").unlink()
         with self.assertRaises(SystemExit):

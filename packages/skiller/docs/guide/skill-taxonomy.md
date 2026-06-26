@@ -88,5 +88,5 @@ Tag→Release, SemVer-oracle, шаблоны issue/PR, governance-докумен
 - [ ] Нужен один раз → `lifecycle: init`, вне CORE/дефолта?
 - [ ] Тело lean (≤~150 строк), детали в `references/`/`snippets/`?
 
-Связанное: [skill-authoring](../../) (процедура+ревью), [профили](./profiles.md),
+Связанное: [создание скиллов](./creating-skills.md) (процедура+ревью), [профили](./profiles.md),
 [методология против раздувания](./methodology.md).

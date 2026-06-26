@@ -2,7 +2,7 @@
 name: backend-type-sync
 bucket: frontend-backend
 version: 0.1.0
-description: "Синхронизация типов backend→frontend через spatie/laravel-typescript-transformer: #[TypeScript] на enum/DTO/Spatie-Data, php artisan typescript:transform → generated.d.ts, использование App.Enums.* / App.Data.* в Vue/TS. Активировать: новый enum/DTO нужен на фронте, рассинхрон типов фронта с бэком, настройка type-sync. Граница с wayfinder (роуты ≠ типы)."
+description: "Backend→frontend type sync via spatie/laravel-typescript-transformer: #[TypeScript] on enum/DTO/Spatie-Data, php artisan typescript:transform → generated.d.ts, use App.Enums.* / App.Data.* in Vue/TS. Activate: new enum/DTO needed on frontend, type drift FE↔BE, type-sync setup. Boundary with wayfinder (routes ≠ types)."
 risk: write
 persona: oss-dev
 tags: [typescript, laravel, spatie, types, enum, dto, frontend, type-sync, ci]
@@ -16,76 +16,73 @@ sha256: ""
 
 # Skill: Backend → Frontend type sync
 
-## Контекст
+Single source of truth for types: PHP classes (enum, DTO, Spatie-Data) auto-generate TypeScript declarations imported as `App.Enums.*` / `App.Data.*`. Package: `spatie/laravel-typescript-transformer`.
 
-Один источник правды для типов: PHP-классы на бэке (enum, DTO, Spatie-Data) автоматически превращаются в TypeScript-декларации, которые фронт импортирует как `App.Enums.*` и `App.Data.*`. Пакет — `spatie/laravel-typescript-transformer`. Без этого фронт руками копирует поля DTO и значения enum, и при первой же правке на бэке возникает молчаливый рассинхрон.
+## Activate when
+- Frontend needs an enum/DTO that already exists in PHP — annotate + generate, don't hand-copy types.
+- Frontend missing a new field/case; FE types drift from BE.
+- Setting up type-sync from scratch (install, config, npm script, git-hook, CI).
 
-**Активировать, когда:**
-- на фронте нужен новый enum или DTO, уже существующий в PHP (не дублируй типы руками — аннотируй и генерируй);
-- фронт «не знает» про новое поле/case, типы фронта разошлись с бэком (рассинхрон);
-- настраиваешь type-sync в проекте с нуля (установка, config, npm-скрипт, git-hook, CI).
+## Boundaries
+- **Types (this skill)** — data structure: DTO fields, enum values. Artifact: `resources/js/types/generated.d.ts`, namespace `App.*`.
+- **Routes (`frontend/wayfinder`)** — typed URLs/controller-actions. Artifact: `resources/js/wayfinder/`. Separate generation (`php artisan wayfinder:generate`), separate package (`laravel/wayfinder`). Don't get DTO types from wayfinder or vice versa.
+- **PHP enum internals (`php/enum-attributes`)** — backed values, `#[Label]`/`#[Priority]`, methods. This skill only adds `#[TypeScript]` on a ready enum.
+- Laravel Boost = upstream versioned basics of Spatie-Data/transformer. Package: https://github.com/laravel/boost.
 
-**Границы (важно, чтобы не лезть в чужой скилл):**
-- **Типы (этот скилл)** — структура данных: поля DTO, значения enum. Артефакт: `resources/js/types/generated.d.ts`, неймспейс `App.*`.
-- **Роуты (`frontend/wayfinder`)** — типобезопасные URL и controller-actions. Артефакт: `resources/js/wayfinder/`. Это **отдельная** генерация (`php artisan wayfinder:generate`) и отдельный пакет (`laravel/wayfinder`). Эти два пакета — пара: wayfinder типизирует «куда ходить», typescript-transformer — «какие данные приходят/уходят». Не пытайся получить типы DTO из wayfinder и наоборот.
-- **PHP-сторона enum (`php/enum-attributes`)** — как устроен сам enum: backed-значения, атрибуты `#[Label]`/`#[Priority]`, методы. Этот скилл только добавляет `#[TypeScript]` поверх готового enum и не диктует его внутреннее устройство.
+## Algorithm
 
-**Laravel Boost** даёт версионные основы Spatie-Data/transformer как upstream-скиллы; здесь — проектные конвенции type-sync, git-hook и CI-проверка. Пакет: https://github.com/laravel/boost.
-
-## Алгоритм
-
-1. **Проверь установку.** В `composer.json` должна быть `spatie/laravel-typescript-transformer` (для DTO/Spatie-Data также `spatie/laravel-data`). Если нет:
+1. **Verify install.** `composer.json` must have `spatie/laravel-typescript-transformer` (for DTO/Spatie-Data also `spatie/laravel-data`). If missing:
    ```
    composer require spatie/laravel-typescript-transformer
    php artisan vendor:publish --provider="Spatie\LaravelTypeScriptTransformer\TypeScriptTransformerServiceProvider"
    ```
-   Это создаёт `config/typescript-transformer.php`.
+   Creates `config/typescript-transformer.php`.
 
-2. **Настрой `config/typescript-transformer.php`** (см. `snippets/typescript-transformer.php`). Ключевое:
-   - `auto_discover_types` — пути сканирования (по умолчанию `app_path()`); **неймспейс PHP-класса задаёт неймспейс TS** (`App\Enums\Order\OrderStatus` → `App.Enums.Order.OrderStatus`);
-   - `collectors` — `DefaultCollector` ловит классы с атрибутом `#[TypeScript]`;
-   - `transformers` — включи нужные: `EnumTransformer` (PHP-enum), `SpatieEnumTransformer`, `DtoTransformer` (Spatie-Data), `SpatieStateTransformer` (при использовании States);
-   - `default_type_replacements` — отдай `Carbon`/`DateTimeImmutable` как `string` (на проводе они JSON-строки), иначе на фронте получишь нечитаемый тип;
-   - `output_file` — единый файл `resource_path('types/generated.d.ts')`;
-   - `transform_to_native_enums` — `false` (тип-объединение) по умолчанию; `true` если фронту нужны рантайм-значения как `enum`;
-   - `transform_null_to_optional` — `false` (`null` в union) либо `true` (поле опциональное `?`), выбери одно и держи единообразно.
+2. **Configure `config/typescript-transformer.php`** (see `snippets/typescript-transformer.php`):
+   - `auto_discover_types` — scan paths (default `app_path()`); **PHP namespace sets TS namespace** (`App\Enums\Order\OrderStatus` → `App.Enums.Order.OrderStatus`).
+   - `collectors` — `DefaultCollector` catches `#[TypeScript]` classes.
+   - `transformers` — enable as needed: `EnumTransformer` (PHP-enum), `SpatieEnumTransformer`, `DtoTransformer` (Spatie-Data), `SpatieStateTransformer` (if using States).
+   - `default_type_replacements` — map `Carbon`/`DateTimeImmutable` → `string` (JSON strings on the wire).
+   - `output_file` — single `resource_path('types/generated.d.ts')`.
+   - `transform_to_native_enums` — `false` (union type) default; `true` if frontend needs runtime values as `enum`.
+   - `transform_null_to_optional` — `false` (`null` in union) or `true` (optional `?`); pick one, keep uniform.
 
-3. **Аннотируй PHP-класс** атрибутом `#[TypeScript]` (см. `snippets/annotated-enum.php`):
-   - **enum** (backed) — даёт `App.Enums.*`;
-   - **Spatie-Data DTO** (`extends Spatie\LaravelData\Data`) — даёт `App.Data.*` (или `App.Dto.*` — зависит от неймспейса класса, не от пакета);
-   - типизируй массивы коллекций через PHPDoc `@param Foo[] $items` / `@var Foo[]` — без этого `array` превратится в `any[]`;
-   - вложенные DTO/enum в полях должны быть **тоже** аннотированы, иначе сгенерируется `any`.
+3. **Annotate PHP class** with `#[TypeScript]` (see `snippets/annotated-enum.php`):
+   - **enum** (backed) → `App.Enums.*`.
+   - **Spatie-Data DTO** (`extends Spatie\LaravelData\Data`) → `App.Data.*` (or `App.Dto.*` — depends on class namespace, not package).
+   - Type collection arrays via PHPDoc `@param Foo[] $items` / `@var Foo[]` — else `array` → `any[]`.
+   - Nested DTO/enum fields must **also** be annotated, else `any`.
 
-4. **Сгенерируй типы:**
+4. **Generate:**
    ```
    php artisan typescript:transform
    ```
-   Запиши это в `composer.json` (`"typescript:transform"`) и продублируй npm-скриптом в `package.json` (`"types": "php artisan typescript:transform"`), чтобы фронтендеры звали привычным `npm run`. После генерации проверь diff `generated.d.ts`.
+   Add to `composer.json` (`"typescript:transform"`) and mirror as npm script in `package.json` (`"types": "php artisan typescript:transform"`). Check `generated.d.ts` diff after.
 
-5. **Используй на фронте** через глобальный неймспейс `App.*` (см. `snippets/generated-type-usage.vue`):
-   - enum-значения: `App.Enums.Order.OrderStatus` как тип, литералы — обычные строки (`'paid'`), TS проверит принадлежность;
-   - DTO как пропсы/реактивные данные: `defineProps<{ item: App.Data.Order.OrderListItem }>()`;
-   - `generated.d.ts` подключается как `declare namespace App` — он глобален, **импорт не нужен**; убедись, что файл входит в `include` твоего `tsconfig.json`.
+5. **Use on frontend** via global `App.*` namespace (see `snippets/generated-type-usage.vue`):
+   - enum values: `App.Enums.Order.OrderStatus` as type; literals are plain strings (`'paid'`), TS checks membership.
+   - DTO as props/reactive data: `defineProps<{ item: App.Data.Order.OrderListItem }>()`.
+   - `generated.d.ts` is `declare namespace App` — global, **no import**; ensure file is in `tsconfig.json` `include`.
 
-6. **Защити от рассинхрона** — генерация не должна быть «вручную по памяти»:
-   - **git pre-commit hook** (Husky или нативный) — регенерирует и падает, если `generated.d.ts` изменился, но не закоммичен (см. секцию «Git-hook»);
-   - **CI** — отдельный шаг `php artisan typescript:transform` + `git diff --exit-code resources/js/types/generated.d.ts`: PR краснеет, если автор забыл перегенерировать.
+6. **Guard against drift:**
+   - **git pre-commit hook** (Husky or native) — regenerate, fail if `generated.d.ts` changed but uncommitted (see Git-hook).
+   - **CI** — step `php artisan typescript:transform` + `git diff --exit-code resources/js/types/generated.d.ts`: PR fails if not regenerated.
 
-7. **Коммить сгенерированный файл.** `generated.d.ts` **коммитится в репозиторий** (не в `.gitignore`): он нужен для `tsc`/IDE/CI без запуска PHP, а diff в ревью показывает изменение контракта backend↔frontend. Vendor-артефакты wayfinder (`resources/js/wayfinder/`) — по той же логике коммить, но это зона скилла `frontend/wayfinder`.
+7. **Commit the generated file.** `generated.d.ts` is **committed** (not in `.gitignore`): needed for `tsc`/IDE/CI without PHP; diff shows BE↔FE contract change. wayfinder vendor artifacts (`resources/js/wayfinder/`) — commit too, but that's `frontend/wayfinder`'s zone.
 
-## Аннотируемые цели
+## Annotation targets
 
-| Что аннотируем `#[TypeScript]` | Базовый класс | TS-неймспейс | Что даёт |
+| `#[TypeScript]` on | Base class | TS namespace | Yields |
 |:---|:---|:---|:---|
-| PHP backed-enum | `enum X: string` | `App.Enums.*` | union строк/чисел или native enum |
-| Spatie-Data DTO | `extends Spatie\LaravelData\Data` | `App.Data.*` / `App.Dto.*` | объектный тип с полями |
-| Spatie-Enum (если используется пакет) | `Spatie\Enum\Enum` | `App.Enums.*` | через `SpatieEnumTransformer` |
+| PHP backed-enum | `enum X: string` | `App.Enums.*` | string/number union or native enum |
+| Spatie-Data DTO | `extends Spatie\LaravelData\Data` | `App.Data.*` / `App.Dto.*` | object type with fields |
+| Spatie-Enum (if used) | `Spatie\Enum\Enum` | `App.Enums.*` | via `SpatieEnumTransformer` |
 
-Неймспейс TS = неймспейс PHP-класса под `auto_discover_types`. Хочешь `App.Data.*` — клади DTO в `App\Data\...`; видишь `App.Dto.*` — значит классы лежат в `App\Dto\...`. Пакет на это не влияет.
+TS namespace = PHP class namespace under `auto_discover_types`. Want `App.Data.*` → put DTO in `App\Data\...`; `App.Dto.*` → classes in `App\Dto\...`. Package doesn't affect this.
 
-## Git-hook (защита от рассинхрона)
+## Git-hook
 
-Husky-хук `.husky/pre-commit` (проект уже использует Husky):
+Husky `.husky/pre-commit`:
 ```sh
 php artisan typescript:transform
 if ! git diff --quiet -- resources/js/types/generated.d.ts; then
@@ -93,32 +90,34 @@ if ! git diff --quiet -- resources/js/types/generated.d.ts; then
   echo "types/generated.d.ts перегенерирован и добавлен в коммит"
 fi
 ```
-Вариант для CI (строгий, без авто-`add` — только проверка):
+CI variant (strict, no auto-`add`, check only):
 ```sh
 php artisan typescript:transform
 git diff --exit-code -- resources/js/types/generated.d.ts \
   || { echo "generated.d.ts устарел: запусти 'npm run types' и закоммить"; exit 1; }
 ```
 
-## Чеклист качества
+## Quality checklist
+- [ ] `spatie/laravel-typescript-transformer` in `composer.json`, `config/typescript-transformer.php` published
+- [ ] Needed `transformers` enabled (Enum/SpatieEnum/Dto/State — per actual use)
+- [ ] `default_type_replacements` maps `Carbon`/datetime → `string`
+- [ ] `output_file` single `resources/js/types/generated.d.ts`, file in `tsconfig.json` `include`
+- [ ] PHP class has `#[TypeScript]`; nested DTO/enum fields too
+- [ ] Collections typed via PHPDoc (`@var Foo[]`), no accidental `any[]`
+- [ ] `typescript:transform` in both `composer.json` and `package.json` (npm script)
+- [ ] Frontend uses `App.Enums.*` / `App.Data.*`, DTO types **not** hand-duplicated
+- [ ] git pre-commit hook OR CI step catches stale `generated.d.ts` (`git diff --exit-code`)
+- [ ] `generated.d.ts` committed (not in `.gitignore`)
+- [ ] Zones not confused: routes — `frontend/wayfinder`, enum internals — `php/enum-attributes`
 
-- [ ] `spatie/laravel-typescript-transformer` в `composer.json`, `config/typescript-transformer.php` опубликован
-- [ ] Нужные `transformers` включены (Enum/SpatieEnum/Dto/State — по факту использования)
-- [ ] `default_type_replacements` отдаёт `Carbon`/datetime как `string`
-- [ ] `output_file` — единый `resources/js/types/generated.d.ts`, файл в `include` `tsconfig.json`
-- [ ] PHP-класс помечен `#[TypeScript]`; вложенные DTO/enum в полях — тоже помечены
-- [ ] Коллекции типизированы PHPDoc (`@var Foo[]`), нет случайного `any[]`
-- [ ] `typescript:transform` есть и в `composer.json`, и в `package.json` (npm-скрипт)
-- [ ] Фронт использует `App.Enums.*` / `App.Data.*`, типы DTO **не** продублированы руками
-- [ ] git pre-commit hook ИЛИ CI-шаг ловит устаревший `generated.d.ts` (`git diff --exit-code`)
-- [ ] `generated.d.ts` закоммичен в репозиторий (не в `.gitignore`)
-- [ ] Не перепутаны зоны: роуты — `frontend/wayfinder`, устройство enum — `php/enum-attributes`
-
-## Ссылки
-
-- snippets/typescript-transformer.php — конфиг transformer (collectors, transformers, replacements, output_file)
-- snippets/annotated-enum.php — enum и Spatie-Data DTO с `#[TypeScript]`, типизация коллекций
-- snippets/generated-type-usage.vue — использование `App.Enums.*` / `App.Data.*` в Vue/TS
+## References
+- snippets/typescript-transformer.php — transformer config (collectors, transformers, replacements, output_file)
+- snippets/annotated-enum.php — enum and Spatie-Data DTO with `#[TypeScript]`, collection typing
+- snippets/generated-type-usage.vue — using `App.Enums.*` / `App.Data.*` in Vue/TS
 - https://spatie.be/docs/typescript-transformer
 - https://spatie.be/docs/laravel-data
-- Связанные скиллы: `frontend/wayfinder` (роуты), `php/enum-attributes` (устройство enum), `php/laravel-data` (устройство Spatie-Data DTO, которые аннотируем `#[TypeScript]`), `frontend/inertia-vue` (слой types/), `frontend/vitest` (exclude `generated.d.ts` из coverage)
+- Related skills: `frontend/wayfinder` (routes), `php/enum-attributes` (enum internals), `php/laravel-data` (Spatie-Data DTO internals, annotated with `#[TypeScript]`), `frontend/inertia-vue` (types/ layer), `frontend/vitest` (exclude `generated.d.ts` from coverage)
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: 80a456d06ba59a412938f7cb5b47c4dcc21e6dfe7bcc5344f9e8a9f9e5195231 -->

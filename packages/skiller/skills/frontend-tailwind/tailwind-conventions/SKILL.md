@@ -2,7 +2,7 @@
 name: tailwind-conventions
 bucket: frontend-tailwind
 version: 0.1.0
-description: "Конвенции Tailwind CSS v4 для Laravel/Vue: CSS-first конфиг (@import tailwindcss, @theme-токены вместо tailwind.config.js), дизайн-токены, тёмная тема (.dark + dark:* + useAppearance), cn() (clsx+tailwind-merge), prettier-plugin-tailwindcss + tailwindFunctions, дисциплина отступов. Активировать при правке *.vue/*.css с Tailwind, настройке tailwind/postcss/prettier под Tailwind, работе с тёмной темой."
+description: "Tailwind CSS v4 conventions for Laravel/Vue: CSS-first config (@import tailwindcss, @theme tokens instead of tailwind.config.js), design tokens, dark mode (.dark + dark:* + useAppearance), cn() (clsx+tailwind-merge), prettier-plugin-tailwindcss + tailwindFunctions, spacing discipline. Activate when editing *.vue/*.css with Tailwind, configuring tailwind/postcss/prettier for Tailwind, working with dark mode."
 risk: write
 persona: oss-dev
 tags: [tailwind, tailwindcss-v4, css, vue, laravel, dark-mode, design-tokens, prettier]
@@ -16,94 +16,89 @@ sha256: ""
 
 # Skill: Tailwind CSS conventions
 
-## Контекст
+Tailwind CSS **v4** for Laravel + Vue. v4 config lives in CSS, not `tailwind.config.js`; engine via Vite plugin `@tailwindcss/vite`; tokens/theme via `@theme`, `@source`, `@custom-variant`.
 
-Конвенции Tailwind CSS **v4** для фронтенда Laravel + Vue. Активировать, когда:
+Activate when: editing styles in `*.vue`/`*.blade.php` with Tailwind utilities or `*.css` with `@theme`/`@apply`/`@import 'tailwindcss'`; configuring Tailwind build (vite.config with `@tailwindcss/vite`, `tailwind.config.js` → CSS-first migration, PostCSS); configuring Prettier for Tailwind (class sorting, `tailwindFunctions`); working with dark mode (`.dark` class, `dark:*` utilities, theme-toggle composable); writing conditional/dynamic classes needing `cn()`.
 
-- правишь стили в `*.vue`/`*.blade.php` с Tailwind-утилитами или в `*.css` с `@theme`/`@apply`/`@import 'tailwindcss'`;
-- настраиваешь сборку Tailwind (vite.config с `@tailwindcss/vite`, миграция `tailwind.config.js` → CSS-first, PostCSS);
-- настраиваешь Prettier под Tailwind (сортировка классов, `tailwindFunctions`);
-- работаешь с тёмной темой (класс `.dark`, утилиты `dark:*`, composable переключения темы);
-- пишешь условные/динамические классы и нужно `cn()`.
+**Laravel Boost**: versioned Tailwind basics in Laravel starters = Boost skill `tailwindcss-development`; here = project v4 conventions, tokens, dark mode, class discipline.
 
-Ключевой сдвиг v4: **конфиг живёт в CSS**, а не в `tailwind.config.js`. Движок подключается Vite-плагином `@tailwindcss/vite`, токены и тема описываются директивами `@theme`, `@source`, `@custom-variant`.
+## Algorithm
 
-**Laravel Boost**: версионные основы Tailwind в Laravel-стартерах — Boost-скилл `tailwindcss-development`; здесь — проектные конвенции v4, токены, тёмная тема и дисциплина классов. Контент авторский, из проектных конфигов.
+1. **Detect version.** Open input CSS (`resources/css/app.css`). `@import 'tailwindcss'` → **v4**, CSS-first config, no `tailwind.config.js`. Three `@tailwind base/components/utilities` + `tailwind.config.js` → **v3**. Don't mix; new code → v4.
 
-## Алгоритм
+2. **Config + tokens in CSS (v4).** Edit tokens only in `app.css`; don't create `tailwind.config.js` unless needed (see `snippets/app.css`):
+   - `@import 'tailwindcss';` — replaces three v3 `@tailwind` directives;
+   - `@source '...';` — extra class-scan paths (replaces `content: [...]`);
+   - `@theme { --color-*, --spacing-*, --radius-*, --font-* }` — design tokens; prefixed names generate utilities (`--color-brand` → `bg-brand`/`text-brand`/`border-brand`);
+   - `@plugin '@tailwindcss/forms';` — replaces `plugins: [require(...)]`.
 
-1. **Определи версию.** Открой входной CSS (`resources/css/app.css`). Если там `@import 'tailwindcss'` — это **v4**, конфиг CSS-first, `tailwind.config.js` обычно отсутствует. Если три `@tailwind base/components/utilities` и есть `tailwind.config.js` — это **v3**. Не смешивай подходы; для нового кода — v4.
+3. **Tokens semantic, not raw colors.** Define role tokens (`--color-background`, `--color-foreground`, `--color-primary`, `--color-muted`, `--color-border`…) referencing `:root` CSS vars. In markup use semantic utilities (`bg-background`, `text-muted-foreground`, `border-border`), not `bg-white`/`text-gray-900` directly — else dark mode won't apply.
 
-2. **Конфиг и токены — в CSS (v4).** Правь токены только в `app.css`, не создавай `tailwind.config.js` без необходимости (см. `snippets/app.css`):
-   - `@import 'tailwindcss';` — вместо трёх `@tailwind`-директив v3;
-   - `@source '...';` — добавить пути сканирования классов вне стандартных (заменяет `content: [...]`);
-   - `@theme { --color-*, --spacing-*, --radius-*, --font-* }` — дизайн-токены; имена с префиксами генерируют утилиты (`--color-brand` → `bg-brand`/`text-brand`/`border-brand`);
-   - `@plugin '@tailwindcss/forms';` — вместо `plugins: [require(...)]`.
+4. **Dark mode via class, not media-query:**
+   - CSS: `@custom-variant dark (&:is(.dark *));` — `dark:*` fires when `.dark` is on any ancestor;
+   - set token values twice: light in `:root`, dark in `.dark` (same var names, two palettes; utilities not duplicated);
+   - `.dark` on `<html>` set/cleared by composable `useAppearance`;
+   - prefer semantic tokens over `dark:` variants in markup; theme switch goes through vars, pointwise `dark:bg-…` only for exceptions.
 
-3. **Дизайн-токены — семантические, не «сырые» цвета.** Заводи токены ролей (`--color-background`, `--color-foreground`, `--color-primary`, `--color-muted`, `--color-border`…), ссылающиеся на CSS-переменные `:root`. В разметке используй семантические утилиты (`bg-background`, `text-muted-foreground`, `border-border`), а не `bg-white`/`text-gray-900` напрямую — иначе тёмная тема не подхватится.
+5. **Conditional/dynamic classes only via `cn()`** (see `snippets/cn.ts`):
+   - `cn(...inputs)` = `twMerge(clsx(inputs))`; `clsx` builds classes from strings/objects/arrays, `tailwind-merge` resolves utility conflicts (last wins: `px-2 px-4` → `px-4`);
+   - never concatenate classes via manual template strings — Tailwind conflicts won't resolve;
+   - for overridable components merge base with `props.class` via `cn('base…', props.class)`.
 
-4. **Тёмная тема — через класс, а не media-query:**
-   - в CSS: `@custom-variant dark (&:is(.dark *));` — утилиты `dark:*` срабатывают, когда `.dark` есть на любом предке;
-   - значения токенов задаются дважды: светлые в `:root`, тёмные в `.dark` (одни имена переменных — две палитры; утилиты не дублируются);
-   - класс `.dark` на `<html>` ставит/снимает composable `useAppearance` (см. раздел «Тёмная тема»);
-   - предпочитай семантические токены `dark:`-вариантам в разметке: смена темы должна идти через переменные, точечный `dark:bg-…` — только для исключений.
+6. **Prettier auto-sorts classes** (see `snippets/.prettierrc`):
+   - `plugins: ["prettier-plugin-tailwindcss"]` — canonical-order sorting;
+   - `tailwindFunctions: ["clsx", "cn", "cva", "tv"]` — so classes inside `cn(...)`/`cva(...)` sort too;
+   - v4: set `tailwindStylesheet` (path to input CSS with `@theme`), not `tailwindConfig`;
+   - Tailwind plugin must be last in `plugins`.
 
-5. **Условные/динамические классы — только через `cn()`** (см. `snippets/cn.ts`):
-   - `cn(...inputs)` = `twMerge(clsx(inputs))`; `clsx` собирает классы из строк/объектов/массивов, `tailwind-merge` разрешает конфликты утилит (последняя побеждает: `px-2 px-4` → `px-4`);
-   - никогда не клей классы шаблонными строками вручную — конфликты Tailwind не разрешатся;
-   - для переопределяемых компонентов сливай базовые классы с `props.class` через `cn('base…', props.class)`.
+7. **Spacing discipline** (see below): spacing between elements via `gap`/`space-*` on container, not child outer `margin`; single `spacing` scale (token-step multiples), no magic `px` values.
 
-6. **Prettier — авто-сортировка классов** (см. `snippets/.prettierrc`):
-   - `plugins: ["prettier-plugin-tailwindcss"]` — сортирует классы в каноническом порядке;
-   - `tailwindFunctions: ["clsx", "cn", "cva", "tv"]` — чтобы классы внутри `cn(...)`/`cva(...)` тоже сортировались;
-   - в v4 укажи `tailwindStylesheet` (путь к входному CSS с `@theme`), а не `tailwindConfig`;
-   - плагин Tailwind должен идти последним в массиве `plugins`.
+8. **Organize long class lists** (see below): group order, move repeated static classes to `@apply`/component, dynamic → `cn()`.
 
-7. **Дисциплина отступов** (см. раздел ниже): отступы между элементами — через `gap`/`space-*` на контейнере, не через внешние `margin` детей; единая шкала `spacing` (кратные шага токенов), без «магических» `px`-значений.
+## Dark mode & useAppearance
 
-8. **Длинные списки классов организуй** (см. раздел ниже): порядок групп, перенос статичных классов в `@apply`/компонент при повторении, динамика — в `cn()`.
+`.dark` managed by composable; tokens switch automatically.
 
-## Тёмная тема и useAppearance
+- State type: `'light' | 'dark' | 'system'`. `system` reads `matchMedia('(prefers-color-scheme: dark)')`.
+- `updateAppearance(value)`: saves choice to `localStorage` (client) + cookie (SSR), then calls `updateTheme(value)`.
+- `updateTheme(value)`: set/clear `dark` on `document.documentElement` (`<html>`) — `classList.toggle('dark', isDark)`.
+- On `system`: attach `change` listener on media-query so theme follows OS.
+- `initializeTheme` called before app mount (SSR: from cookie) to avoid wrong-theme flash.
+- In components never touch `document.documentElement.classList` directly — only via `useAppearance().updateAppearance()`. Colors from semantic tokens, so toggling `.dark` repaints UI without per-class `dark:` utilities.
 
-Класс `.dark` управляется composable; токены переключаются автоматически.
+## Spacing discipline
 
-- Тип состояния: `'light' | 'dark' | 'system'`. `system` читает `matchMedia('(prefers-color-scheme: dark)')`.
-- `updateAppearance(value)`: сохраняет выбор в `localStorage` (клиент) и в cookie (для SSR), затем зовёт `updateTheme(value)`.
-- `updateTheme(value)`: ставит/снимает класс `dark` на `document.documentElement` (`<html>`) — `classList.toggle('dark', isDark)`.
-- При `system` навешивается слушатель `change` на media-query, чтобы тема следовала за ОС.
-- Инициализация (`initializeTheme`) вызывается до маунта приложения (в SSR — из cookie), чтобы избежать «вспышки» неправильной темы.
+- **Spacing between elements on container, not children.** Inside flex/grid use `gap-*` (`flex gap-4`, `grid gap-6`); vertical stacks without flex → `space-y-*`. Avoid child outer `margin` (`mt-*`/`mb-*`) — causes collapse and order dependency.
+- **Single spacing scale.** Only token-scale values (`p-2`, `p-4`, `gap-6`…). Arbitrary `p-[13px]`/`mt-[7px]` only as deliberate exception; repeated value → `--spacing-*` token.
+- **Padding on container, gap for gaps.** Section `padding` makes the outer frame, `gap` the inter-element distance. Don't conflate both roles into `margin`.
 
-В компонентах не дёргай `document.documentElement.classList` напрямую — только через `useAppearance().updateAppearance()`. Цвета берутся из семантических токенов, поэтому переключение `.dark` перекрашивает UI без `dark:`-утилит в каждом классе.
+## Organizing long class lists
 
-## Дисциплина отступов
+- **Group order** (Prettier plugin canonicalizes automatically — keep logical order while writing): layout/positioning → display/flex/grid → box (w/h/p/m/gap) → typography → visual (bg/border/rounded/shadow) → states (`hover:`/`focus:`/`dark:`) → animations.
+- **Repeated static set → component or `@apply`.** If the same long set is copied in 3+ places — extract to a Vue component (button, card) or `@layer components { .btn { @apply … } }`. Don't proliferate copies.
+- **Static and dynamic separate.** Constant classes inline in template; conditional via `cn()` object. Don't mix ternaries into the class string.
+- **Variants via `cva`/`tv`** (if used in project): they're in `tailwindFunctions`, inner classes sort too.
 
-- **Отступы между элементами — на контейнере, не на детях.** Внутри flex/grid используй `gap-*` (`flex gap-4`, `grid gap-6`); для вертикальных стопок без flex — `space-y-*`. Внешние `margin` на детях (`mt-*`/`mb-*`) создают «схлопывание» и зависимость от порядка — избегай.
-- **Единая шкала spacing.** Только значения из шкалы токенов (`p-2`, `p-4`, `gap-6`…). Произвольные `p-[13px]`/`mt-[7px]` — только как осознанное исключение; повторяющееся значение заведи токеном `--spacing-*`.
-- **Padding на контейнере, gap для зазоров.** Внешнюю «рамку» делает `padding` секции, расстояние между элементами — `gap`. Не смешивай обе роли в `margin`.
+## Quality checklist
 
-## Организация длинных списков классов
+- [ ] Version detected: v4 → `@import 'tailwindcss'`, config in CSS, no superfluous `tailwind.config.js`
+- [ ] Colors/radii/fonts as `@theme` tokens; markup uses semantic utilities, not raw `bg-white`/`text-gray-*`
+- [ ] Dark mode: `@custom-variant dark (&:is(.dark *))`, values in `:root` and `.dark`, class set by `useAppearance` (not manual `classList`)
+- [ ] Conditional/dynamic classes via `cn()` (twMerge+clsx), not string concat
+- [ ] `.prettierrc`: `prettier-plugin-tailwindcss` last in `plugins`, `tailwindFunctions` includes `cn`/`clsx`/`cva`/`tv`, v4 sets `tailwindStylesheet`
+- [ ] Spacing between elements via `gap`/`space-*` on container, not child outer `margin`; values from single spacing scale
+- [ ] Repeated long class set extracted to component/`@apply`, not copied
+- [ ] Classes sorted by Prettier (including inside `cn(...)`/`cva(...)`)
 
-- **Порядок групп** (плагин Prettier приведёт к канону автоматически — но держи логический порядок при письме): layout/позиционирование → display/flex/grid → box (w/h/p/m/gap) → typography → визуал (bg/border/rounded/shadow) → состояния (`hover:`/`focus:`/`dark:`) → анимации.
-- **Повторяющийся статичный набор → компонент или `@apply`.** Если один и тот же длинный набор копируется в 3+ местах — вынеси в Vue-компонент (кнопка, карточка) либо в `@layer components { .btn { @apply … } }`. Не плоди копии.
-- **Статика и динамика раздельно.** Постоянные классы — строкой в шаблоне; условные — через `cn()` объектом. Не вмешивай тернарники в общую строку класса.
-- **Варианты — через `cva`/`tv`** (если используются в проекте): они в `tailwindFunctions`, классы внутри тоже сортируются.
+## References
 
-## Чеклист качества
+- snippets/app.css — v4 CSS-first config: tokens, dark mode, v4↔v3 differences
+- snippets/cn.ts — `cn()` utility (clsx + tailwind-merge)
+- snippets/.prettierrc — Prettier with plugin and `tailwindFunctions`
+- https://tailwindcss.com/docs/upgrade-guide — v3 → v4 migration guide
+- https://tailwindcss.com/docs/theme — `@theme` directive and tokens
+- Related skills: `frontend/dark-mode` (three-mode `useAppearance` composable, FOUC-free boot, SSR — owner of `.dark` state), `frontend/inertia-vue`, `frontend/vue-composition-api`, `frontend/js-code-style`, `frontend/eslint-flat-config` (where the Prettier-plugin chain is declared), `frontend/reka-ui-cva` (`cn()` and tokens in UI-kit components), `frontend/naive-ui-theming` (shared color source-of-truth via CSS vars)
 
-- [ ] Версия определена: для v4 — `@import 'tailwindcss'`, конфиг в CSS, без лишнего `tailwind.config.js`
-- [ ] Цвета/радиусы/шрифты заведены токенами в `@theme`; в разметке — семантические утилиты, не «сырые» `bg-white`/`text-gray-*`
-- [ ] Тёмная тема: `@custom-variant dark (&:is(.dark *))`, значения в `:root` и `.dark`, класс ставит `useAppearance` (не ручной `classList`)
-- [ ] Условные/динамические классы — через `cn()` (twMerge+clsx), а не склейка строк
-- [ ] `.prettierrc`: `prettier-plugin-tailwindcss` последним в `plugins`, `tailwindFunctions` включает `cn`/`clsx`/`cva`/`tv`, в v4 задан `tailwindStylesheet`
-- [ ] Отступы между элементами — `gap`/`space-*` на контейнере, не внешние `margin` детей; значения из единой шкалы spacing
-- [ ] Повторяющийся длинный набор классов вынесен в компонент/`@apply`, а не скопирован
-- [ ] Классы отсортированы Prettier (включая внутри `cn(...)`/`cva(...)`)
+<!-- ru-source-sha256: PENDING -->
 
-## Ссылки
-
-- snippets/app.css — CSS-first конфиг v4: токены, тёмная тема, отличия v4↔v3
-- snippets/cn.ts — утилита `cn()` (clsx + tailwind-merge)
-- snippets/.prettierrc — Prettier с плагином и `tailwindFunctions`
-- https://tailwindcss.com/docs/upgrade-guide — гайд миграции v3 → v4
-- https://tailwindcss.com/docs/theme — директива `@theme` и токены
-- Связанные скиллы: `frontend/dark-mode` (трёхрежимный composable `useAppearance`, boot без FOUC, SSR — владелец состояния `.dark`), `frontend/inertia-vue`, `frontend/vue-composition-api`, `frontend/js-code-style`, `frontend/eslint-flat-config` (где прописывается цепочка Prettier-плагинов), `frontend/reka-ui-cva` (`cn()` и токены в компонентах UI-кита), `frontend/naive-ui-theming` (общий источник правды цветов через CSS-переменные)
+<!-- ru-source-sha256: 23c99e1151bf8fb5b5dc4ab460ca84f9b1e72faf04fb2362d6c57eb8a8646185 -->

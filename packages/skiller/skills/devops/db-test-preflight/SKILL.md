@@ -2,7 +2,7 @@
 name: db-test-preflight
 bucket: devops
 version: 0.1.0
-description: "Пре-флайт проверка тестовой БД (Postgres в Docker) ПЕРЕД запуском тестов: контейнер поднят (docker compose ps / pg_isready), целевая БД существует и её имя оканчивается на _test (не dev/prod), миграции применены; различает host- и docker-подключение. Активировать при запуске тестов с Postgres, настройке хуков/CI и когда «тесты падают на подключении к БД»."
+description: "Pre-flight check of test DB (Postgres in Docker) BEFORE running tests: container up (docker compose ps / pg_isready), target DB exists and its name ends with _test (not dev/prod), migrations applied; distinguishes host vs docker connection. Activate when running Postgres tests, wiring hooks/CI, or when 'tests fail on DB connection'."
 risk: read
 persona: operator
 tags: [postgres, docker, testing, preflight, devops, ci, isolation]
@@ -16,76 +16,75 @@ sha256: ""
 
 # DB Test Preflight
 
-## Контекст
+Use before any Postgres test suite (`php artisan test`, Pest, PHPUnit, `make test`) and when wiring hooks/CI that hit a real DB in Docker. Analog of `devops/node-pnpm-preflight` for the test DB.
 
-Используйте этот skill перед запуском тестового набора (`php artisan test`, Pest, PHPUnit, любой test-suite поверх Postgres) и при настройке хуков/CI, где тесты бьют в реальную БД в Docker. Аналог `devops/node-pnpm-preflight`, но для тестовой базы данных.
+Triggers:
+- running Postgres tests (`php artisan test`, `pest`, `phpunit`, `make test`);
+- wiring git hook (`pre-push`), composer `test` script, Makefile target, or pre-test CI step;
+- symptom "tests fail on DB connection": `SQLSTATE[08006]` (connection refused), `database "*_test" does not exist`, `no such host`, suite-start timeout.
 
-Явные триггеры активации:
+## Algorithm
 
-- запуск тестов, использующих Postgres (`php artisan test`, `pest`, `phpunit`, `make test`);
-- настройка git-хуков (`pre-push`), composer-скрипта `test`, Makefile-цели или CI-шага перед тестами;
-- симптом «тесты падают на подключении к БД» — `SQLSTATE[08006]` (connection refused), `database "*_test" does not exist`, `no such host`, таймаут на старте suite.
-
-Зачем: тестовый прогон вслепую даёт мусорные ошибки (упавший контейнер выглядит как красный тест), а в худшем случае — пишет в **dev/prod** базу, если изоляция окружения сломалась. Пре-флайт ловит это за секунды до запуска suite.
-
-## Алгоритм
-
-1. **Определи способ подключения — host или docker.** Тесты исполняются либо на хосте (`php artisan test` напрямую), либо в контейнере (`docker compose exec app php artisan test`). От этого зависят и хост БД, и команда проверки:
-   - **docker-режим**: приложение и Postgres — оба в compose-сети, БД доступна по имени сервиса (`pgsql`/`db`); проверки гоняем через `docker compose exec -T pgsql ...`.
-   - **host-режим**: приложение на хосте, Postgres проброшен на `127.0.0.1:<host-port>` (из `.env.docker` / `DB_PORT`); проверки гоняем хостовым `pg_isready -h 127.0.0.1 -p <port>`.
-   Признак docker-режима: команды запуска тестов в Makefile/CI начинаются с `docker compose exec`. Запускай проверки **тем же способом**, каким будут запускаться тесты.
-2. **Проверь, что контейнер тестовой БД поднят.** `docker compose ps` (или с нужными `--env-file`); сервис `pgsql`/`db` должен быть в состоянии `running`/`healthy`. Если контейнера нет — `docker compose up -d` сервиса БД, затем повтори. Если поднять не удалось — остановись и сообщи блокер, не запускай тесты.
-3. **Проверь готовность Postgres принимать соединения** — `pg_isready`:
+1. **Determine connection mode — host or docker.** Run checks the SAME way tests will run.
+   - **docker**: app and Postgres both in compose network; DB reachable by service name (`pgsql`/`db`); run checks via `docker compose exec -T pgsql ...`.
+   - **host**: app on host, Postgres published on `127.0.0.1:<host-port>` (from `.env.docker` / `DB_PORT`); run checks via host `pg_isready -h 127.0.0.1 -p <port>`.
+   - docker-mode marker: test-run commands in Makefile/CI start with `docker compose exec`.
+2. **Container up.** `docker compose ps` (with required `--env-file`); service `pgsql`/`db` must be `running`/`healthy`. If absent — `docker compose up -d` the DB service, retry. If it won't come up — stop, report blocker, do NOT run tests.
+3. **Postgres ready** — `pg_isready` (container can be `running` while Postgres still initializing):
    - docker: `docker compose exec -T pgsql sh -lc 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"'`;
    - host: `pg_isready -h 127.0.0.1 -p "${DB_PORT:-5432}" -U "${DB_USERNAME:-postgres}"`.
-   Код выхода `0` — БД готова. Контейнер может быть `running`, но Postgres внутри ещё инициализируется — `pg_isready` ловит именно это.
-4. **Узнай целевое имя тестовой БД из тестового окружения, а не из `.env`.** Источник истины — `phpunit.xml` (`<env name="DB_DATABASE" value="..._test" force="true"/>`) и/или `tests/bootstrap.php` (принудительная установка `DB_DATABASE`/`APP_ENV=testing`). Не бери `DB_DATABASE` из `.env` — там dev-база.
-5. **GATE по имени БД: оно ДОЛЖНО оканчиваться на `_test`.** Это главная защита от прогона тестов (особенно с `RefreshDatabase`/`migrate:fresh`, которые **дропают таблицы**) по dev/prod базе. Если целевое имя не матчит `*_test` — **жёсткий стоп**, сообщи блокер, не запускай. Регексп проверки: `^[a-z0-9_]+_test$`.
-6. **Проверь, что целевая `*_test` БД существует.** `psql ... -Atqc "SELECT 1 FROM pg_database WHERE datname='<db>_test'"` должен вернуть `1`. Если БД нет (свежий volume без init-скрипта) — создай идемпотентно: `CREATE DATABASE <app>_test OWNER "<user>"` (или вызови существующую цель `make db-create-test` / init-скрипт проекта). НЕ создавай и НЕ трогай dev/prod базу.
-7. **Проверь, что миграции применены к `*_test` БД.** Прогон с `RefreshDatabase` мигрирует сам, но при стратегии без refresh (или для быстрого «тесты падают на схеме») сверь: `php artisan migrate:status --env=testing` не должен показывать `Pending`. Если есть pending — примени `php artisan migrate --env=testing --force` (в docker-режиме — через `docker compose exec app ...`). Никогда не применяй миграции к базе без суффикса `_test` под видом тестовой.
-8. **Только после прохождения всех гейтов — запускай тесты** тем же способом (host/docker), что и проверки. Любой провал шагов 2–7 — это блокер: сообщи причину и команду для починки, тесты не запускай.
+   - exit `0` = ready.
+4. **Get target test DB name from the TEST env, not `.env`.** SSOT: `phpunit.xml` (`<env name="DB_DATABASE" value="..._test" force="true"/>`) and/or `tests/bootstrap.php` (forced `DB_DATABASE`/`APP_ENV=testing`). Do NOT take `DB_DATABASE` from `.env` (dev DB).
+5. **GATE on DB name: MUST end with `_test`.** Main guard against running tests (esp. `RefreshDatabase`/`migrate:fresh`, which DROP tables) on dev/prod. If target name does not match `*_test` — HARD STOP, report blocker, do not run. Regex: `^[a-z0-9_]+_test$`.
+6. **`*_test` DB exists.** `psql ... -Atqc "SELECT 1 FROM pg_database WHERE datname='<db>_test'"` must return `1`. If missing (fresh volume, no init script) — create idempotently: `CREATE DATABASE <app>_test OWNER "<user>"` (or call existing `make db-create-test` / project init script). Do NOT create or touch dev/prod DB.
+7. **Migrations applied to `*_test`.** `RefreshDatabase` migrates itself, but without refresh (or for quick "schema fails") verify: `php artisan migrate:status --env=testing` must show no `Pending`. If pending — `php artisan migrate --env=testing --force` (docker: via `docker compose exec app ...`). Never migrate a non-`_test` DB as if it were the test DB.
+8. **Run tests only after all gates pass**, same way (host/docker) as checks. Any failure of steps 2–7 = blocker: report cause + fix command, do not run tests.
 
-## Host vs Docker — шпаргалка
+## Host vs Docker
 
-| Что проверяем | docker-режим | host-режим |
+| Check | docker | host |
 |:---|:---|:---|
-| Контейнер поднят | `docker compose ps` | `docker compose ps` |
-| Postgres готов | `docker compose exec -T pgsql sh -lc 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"'` | `pg_isready -h 127.0.0.1 -p $DB_PORT -U $DB_USERNAME` |
-| Хост БД для приложения | имя сервиса (`pgsql`) | `127.0.0.1` + проброшенный порт |
-| Существование `*_test` | `docker compose exec -T pgsql psql -U "$POSTGRES_USER" -d postgres -Atqc "..."` | `psql -h 127.0.0.1 -p $DB_PORT -U $DB_USERNAME -d postgres -Atqc "..."` |
-| Запуск тестов | `docker compose exec app php artisan test` | `php artisan test` |
+| Container up | `docker compose ps` | `docker compose ps` |
+| Postgres ready | `docker compose exec -T pgsql sh -lc 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"'` | `pg_isready -h 127.0.0.1 -p $DB_PORT -U $DB_USERNAME` |
+| App DB host | service name (`pgsql`) | `127.0.0.1` + published port |
+| `*_test` exists | `docker compose exec -T pgsql psql -U "$POSTGRES_USER" -d postgres -Atqc "..."` | `psql -h 127.0.0.1 -p $DB_PORT -U $DB_USERNAME -d postgres -Atqc "..."` |
+| Run tests | `docker compose exec app php artisan test` | `php artisan test` |
 
-Правило: проверки и тесты — **одним и тем же способом**. Смешивать (проверил на хосте, а тесты в контейнере) нельзя — это разные БД-эндпоинты.
+Checks and tests use the SAME mode. Never mix (check on host, tests in container) — different DB endpoints.
 
-## Не путать тестовую БД с dev/prod
+## Do not confuse test DB with dev/prod
 
-- Источник имени тестовой БД — `phpunit.xml` + `tests/bootstrap.php` (там `force="true"` и `APP_ENV=testing`), а не `.env`.
-- Команды вне тестового окружения (`tinker`, `migrate`, `db:seed` без `--env=testing`) используют `DB_*` из `.env` и пишут в **dev-базу**. Для тестовых мутаций — только явный `--env=testing` или отдельная `*_test` база.
-- Гейт `^[a-z0-9_]+_test$` (шаг 5) — последний рубеж: даже при сбое порядка конфигурации он не даст `RefreshDatabase` снести dev/prod схему.
+- Test DB name source = `phpunit.xml` + `tests/bootstrap.php` (`force="true"`, `APP_ENV=testing`), not `.env`.
+- Commands outside test env (`tinker`, `migrate`, `db:seed` without `--env=testing`) use `DB_*` from `.env` → write to dev DB. For test mutations: only explicit `--env=testing` or a separate `*_test` DB.
+- Gate `^[a-z0-9_]+_test$` (step 5) is the last line: even on misconfigured order it stops `RefreshDatabase` from wiping dev/prod schema.
 
-## Когда какой сниппет открывать
+## Which snippet
 
-| Ситуация | Файл |
+| Situation | File |
 |:---|:---|
-| Готовый пре-флайт shell-скрипт: ps → pg_isready → гейт имени `*_test` → существование БД → миграции, с поддержкой host/docker | `snippets/preflight.sh` |
-| Встроить пре-флайт в Makefile: цель `test-preflight` как зависимость `test` | `snippets/Makefile.test` |
-| Встроить пре-флайт в composer-скрипт `test` и в git-хук `pre-push` | `snippets/composer-scripts.json` |
+| Ready pre-flight shell script: ps → pg_isready → name gate `*_test` → DB exists → migrations, host/docker | `snippets/preflight.sh` |
+| Wire pre-flight into Makefile: target `test-preflight` as dependency of `test` | `snippets/Makefile.test` |
+| Wire pre-flight into composer `test` script and git hook `pre-push` | `snippets/composer-scripts.json` |
 
-## Чеклист качества
+## Quality checklist
 
-- [ ] Определён способ подключения (host/docker), проверки и тесты запускаются одинаково
-- [ ] `docker compose ps` показывает контейнер БД `running`/`healthy`
-- [ ] `pg_isready` вернул код `0` (Postgres принимает соединения)
-- [ ] Имя целевой БД взято из `phpunit.xml`/`tests/bootstrap.php`, не из `.env`
-- [ ] Имя целевой БД проходит гейт `^[a-z0-9_]+_test$` (жёсткий стоп иначе)
-- [ ] `*_test` БД существует (или создана идемпотентно, dev/prod не тронуты)
-- [ ] Миграции к `*_test` применены (нет `Pending`) либо стратегия `RefreshDatabase` это покрывает
-- [ ] Пре-флайт встроен перед `test` в Makefile/composer/git-хуке, при провале — блокер, не запуск
-- [ ] dev/prod база не создавалась и не мигрировалась под видом тестовой
+- [ ] Connection mode (host/docker) determined; checks and tests run identically
+- [ ] `docker compose ps` shows DB container `running`/`healthy`
+- [ ] `pg_isready` returned `0`
+- [ ] Target DB name taken from `phpunit.xml`/`tests/bootstrap.php`, not `.env`
+- [ ] Target DB name passes gate `^[a-z0-9_]+_test$` (hard stop otherwise)
+- [ ] `*_test` DB exists (or created idempotently, dev/prod untouched)
+- [ ] Migrations applied to `*_test` (no `Pending`) or `RefreshDatabase` covers it
+- [ ] Pre-flight wired before `test` in Makefile/composer/git hook; on failure — blocker, no run
+- [ ] dev/prod DB never created or migrated as the test DB
 
-## Ссылки
+## Links
 
 - snippets/preflight.sh
 - snippets/Makefile.test
 - snippets/composer-scripts.json
-- Связанные скиллы: `devops/docker-postgres` (init-скрипт создаёт `<app>_test`), `devops/makefile` (цель `db-create-test`), `devops/node-pnpm-preflight` (аналог пре-флайта для Node/pnpm), `php/test-isolation-guard` (страж изоляции на уровне bootstrap.php), `php/laravel-testing` (паттерны тестов поверх изолированной БД)
+- Related: `devops/docker-postgres` (init script creates `<app>_test`), `devops/makefile` (target `db-create-test`), `devops/node-pnpm-preflight` (Node/pnpm preflight analog), `php/test-isolation-guard` (bootstrap.php isolation guard), `php/laravel-testing` (test patterns over isolated DB)
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: eb5f4fed5059c0bfd7e15e5427191065ae6d4cf05a6a8ace17ea5fd3d8c90f93 -->

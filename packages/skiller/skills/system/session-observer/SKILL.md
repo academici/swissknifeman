@@ -2,7 +2,7 @@
 name: session-observer
 bucket: system
 version: 0.3.0
-description: "ЭКСПЕРИМЕНТАЛЬНО (включается per-project). Пост-фактум разбор сессии Claude Code по JSONL-логам — ищет слабые места в трёх осях: агенты (skill-skip, drift, циклы), скиллы (пробелы, мёртвый вес, тонкие), настройки (хуки, права). Находки → learnings через memory-хук, промоция человеком. Активировать ПОСЛЕ цикла работы / в конце сессии / по запросу «проанализируй сессию» — только если включён в проекте."
+description: "EXPERIMENTAL (enable per-project). Post-hoc Claude Code session analysis from JSONL logs — finds weak spots on 3 axes: agents (skill-skip, drift, loops), skills (gaps, dead weight, thin), settings (hooks, permissions). Findings → learnings via memory-hook, human promotes. Activate AFTER a work cycle / at session end / on request «analyze session» — only if enabled in project."
 risk: read
 persona: architect
 tags: [observer, session-analysis, learning, jsonl, drift, self-improvement, post-mortem]
@@ -14,125 +14,86 @@ adapters: [claude]
 sha256: ""
 ---
 
-# Observer — пост-фактум разбор сессии
+# Observer — post-hoc session analysis
 
-Замкнутый контур самообучения: после работы прочитать логи сессии, найти
-системные проблемы (drift, пропуски скиллов, циклы, повторяющиеся ошибки),
-выписать learnings и через человека продвинуть их в память/правила/скиллы.
+Read session logs after work, find systemic problems (drift, skill skips, loops, repeated errors), write learnings, human promotes them to memory/rules/skills.
 
-## Когда активировать
+## Activate when
+- After a finished work cycle (implementer + reviewer done).
+- At session end, before `/clear`.
+- On explicit request «analyze session / what went wrong».
 
-- После завершённого цикла работы (implementer + reviewer отработали).
-- В конце рабочей сессии, перед `/clear`.
-- По явному запросу «проанализируй сессию / что пошло не так».
+## Enablement — experimental, per-project
+Default **OFF**. Per-project, nothing global.
+**Before analyzing, check the flag** `.claude/observer.env.ini` → `ENABLED`: if not `true` → say «Observer off; enable — /observe on», do nothing.
 
-## Включение — экспериментально, per-project
-
-Observer по умолчанию **выключен** (экспериментальная фича). Глобально ничего не
-навязывается, у каждого проекта своё. **Перед разбором проверь флаг** (`.claude/
-observer.env.ini` → `ENABLED`): не `true` → скажи «Observer выключен; включить —
-/observe on», ничего не делай.
-
-### `/observe on` — Claude выполняет ВСЕ шаги автоматически
-
-Только `ENABLED=true` логгер НЕ активирует — нужен весь набор. По запросу включить
-сделай по порядку (каждый — merge-only, безопасно повторять):
-
-1. **Файлы хука глобально** — если `~/.claude/hooks/observer/observer.sh` нет:
-   `harness hooks --global` (или `<harness>/scripts/apply-permissions.sh --global`).
-2. **Проводка в проект** — `<harness>/scripts/apply-permissions.sh --target . --preset observer`
-   (добавляет PreToolUse/PostToolUse/Stop → observer.sh в `.claude/settings.local.json`).
-3. **Флаг** — записать `.claude/observer.env.ini` → `ENABLED=true`.
-4. **gitignore** — добавить `.claude/observer/` в `.gitignore` проекта.
-5. **Сказать пользователю про рестарт** — хук активируется при СТАРТЕ сессии, не при
-   `/clear`. Чтобы логгер захватил прогон, **перезапусти сессию** (не только clear).
-   Иначе субагенты отработают, но `runtime.jsonl` будет пуст — тогда разбор post-hoc
-   по session-JSONL (`/observe session` всё равно работает).
+### `/observe on` — Claude runs ALL steps automatically
+`ENABLED=true` alone does NOT activate the logger — full set required. Run in order (each merge-only, safe to repeat):
+1. **Hook files globally** — if `~/.claude/hooks/observer/observer.sh` absent: `harness hooks --global` (or `<harness>/scripts/apply-permissions.sh --global`).
+2. **Wire into project** — `<harness>/scripts/apply-permissions.sh --target . --preset observer` (adds PreToolUse/PostToolUse/Stop → observer.sh in `.claude/settings.local.json`).
+3. **Flag** — write `.claude/observer.env.ini` → `ENABLED=true`.
+4. **gitignore** — add `.claude/observer/` to project `.gitignore`.
+5. **Tell user to restart** — hook activates at session START, not on `/clear`. To capture a run, **restart the session** (not just clear); else subagents run but `runtime.jsonl` stays empty — then do post-hoc analysis on session-JSONL (`/observe session` still works).
 
 ### `/observe off`
+`.claude/observer.env.ini` → `ENABLED=false`. Hook stays wired but instant no-op (writes nothing). No need to remove wiring.
 
-`.claude/observer.env.ini` → `ENABLED=false`. Хук остаётся проведён, но мгновенно
-no-op (ничего не пишет). Снимать проводку не требуется.
+## Can / cannot
+- **Post-hoc only.** Live monitoring of other agents in real time is impossible in Claude Code (no call stream to observer). Analyze already-written JSONL logs. Never promise real-time watching.
+- **Read-only on code.** Writes ONLY learnings (via memory-hook) and, on approval, to `.claude/rules/` or a skill proposal. Never touches app code.
 
-## Что умеет и чего НЕ умеет (честно)
+## Data sources
+Project dir in logs = project path with `/`→`-` (`~/.claude/projects/-home-...-<project>/`):
+- `<proj>/<session-id>.jsonl` — main stream (user/assistant/tool calls, errors).
+- `<proj>/<session-id>/subagents/agent-*.jsonl` — isolated subagent logs.
+- `git -C <project> diff HEAD` — what actually changed in code.
+- `.claude/observer/runtime.jsonl` + `archive/*.jsonl` — if **capture layer** on (harness hook `observer`, PreToolUse/PostToolUse/Stop): compact project-local log with ready alerts (`LOOP`). Enable: `/observe on` + `harness hooks --preset observer`.
 
-- **Только post-hoc.** Live-мониторинг чужих агентов в реальном времени в Claude
-  Code невозможен — нет потока вызовов наблюдателю. Анализ идёт по уже записанным
-  JSONL-логам. Не обещай «слежу в реальном времени».
-- **Read-only по коду.** Пишет ТОЛЬКО learnings (через memory-хук) и, по
-  одобрению, в `.claude/rules/` или предложение скилла. Прикладной код не трогает.
+Exact jq recipes per dimension — `snippets/analyze-session.md`.
 
-## Источники данных
+## Weak-spot analysis — 3 axes
+Use only what JSONL/diffs give reliably (live and «why agent decided» — no; BOOTSTRAP_DRIFT/CONTEXT_LOSS removed by `skills:`-preload). Exact jq recipes — `snippets/analyze-session.md`.
 
-Каталог проекта в логах — путь проекта с `/`→`-`
-(`~/.claude/projects/-home-...-<project>/`):
+### Axis 1 — agents
+- **SKILL_COMPLIANCE** — was a preloaded-skill rule violated. Grep `git diff` for anti-patterns (Laravel: `::query(|::create(` in controller) — catches exactly the failure this exists for.
+- **LOOP_DETECTION** — file read N+ times / one error repeats (counter over Read).
+- **SCOPE_DRIFT** — write outside the task's expected zone.
+- **INTER_AGENT_ERRORS** — reviewer returned `needs-work`; tool_result `is_error`.
 
-- `<proj>/<session-id>.jsonl` — главный поток (user/assistant/tool calls, ошибки).
-- `<proj>/<session-id>/subagents/agent-*.jsonl` — изолированные логи субагентов.
-- `git -C <project> diff HEAD` — что реально изменилось в коде.
-- `.claude/observer/runtime.jsonl` + `archive/*.jsonl` — если включён **capture-слой**
-  (harness-хук `observer`, PreToolUse/PostToolUse/Stop): компактный project-local лог
-  с готовыми алертами (`LOOP`). Включение: `/observe on` + `harness hooks --preset observer`.
+### Axis 2 — skills
+- **SKILL_GAP** — task/domain with no matching skill → candidate for new one.
+- **THIN_SKILL** — skill loaded but failure still happened → content gap (e.g. `php:laravel` was 35 lines). Signal «beef up skill».
+- **DEAD_SKILL** — distributed but never loads → dead weight.
+- **CORRECTION_AFTER_LOAD** — many corrections after loading a skill → unclear/wrong.
 
-Точные jq-рецепты на каждое измерение — `snippets/analyze-session.md`.
+### Axis 3 — settings
+- **HOOK_MISCONFIG** — gate/hook off where needed (review-gate `off`).
+- **PERMISSION_FRICTION** — repeated permission prompts on one pattern → allowlist candidates (pairs with `fewer-permission-prompts`).
+- **CORRECTION_LOG** — user replies («no», «not like that», «use X») as cross-axis signal of a missing rule/setting.
 
-## Аналитика слабых мест — три оси
+**Closed loop:** findings feed back — Axis 1 → strengthen binding/gate, Axis 2 → beef up/create skill, Axis 3 → fix hooks/permissions. System fixes itself.
 
-Берём только то, что JSONL/диффы дают надёжно (live и «почему агент решил» — нет;
-BOOTSTRAP_DRIFT/CONTEXT_LOSS сняты `skills:`-preload). Точные jq-рецепты —
-`snippets/analyze-session.md`.
+## Output & promotion (human decides)
+1. Per-dimension summary with `file:line` where possible (table: critical / warn / observation).
+2. Learnings — NOT a custom file, but via existing memory-hook: `~/.claude/hooks/memory/memory.sh remember --type project "<fact + why>"`. Queue = unpromoted `remember` / project-local staging, viewed on request «show learnings».
+3. Promotion (on user approval, in place):
+   - one-off context → `memory.sh remember` / project memory;
+   - recurring correction → rule `.claude/rules/<topic>.md` (native path-scoped mechanism, loads by `paths:`);
+   - confirmed skill-gap → skill **proposal** under `skill-authoring` / `package-contribution-protocol` (never auto-write a registry skill).
+4. Recall link: promoted items return via `memory.sh recall "<topic>"`.
 
-### Ось 1 — агенты (где проседает работа агента)
-- **SKILL_COMPLIANCE** — нарушено ли правило предзагруженного скилла. Грепни
-  `git diff` по anti-паттернам (Laravel: `::query(|::create(` в контроллере) —
-  ловит ровно тот сбой, ради которого всё затеяно.
-- **LOOP_DETECTION** — файл читался N+ раз / одна ошибка повторяется (счётчик по Read).
-- **SCOPE_DRIFT** — запись вне ожидаемой зоны задачи.
-- **INTER_AGENT_ERRORS** — reviewer вернул `needs-work`; tool_result `is_error`.
+## Checklist
+- [ ] Read main JSONL + subagent + `git diff HEAD`.
+- [ ] Each dimension has a verdict (or explicit «clean»).
+- [ ] SKILL_COMPLIANCE checked by grepping anti-patterns over the diff.
+- [ ] Learnings written via `memory.sh remember`, not a custom file.
+- [ ] Promotion only on human approval; skills not auto-written.
+- [ ] No live-watching promised (post-hoc only).
 
-### Ось 2 — скиллы (где слаб сам реестр/контент)
-- **SKILL_GAP** — задача/домен без подходящего скилла → кандидат на новый.
-- **THIN_SKILL** — скилл загружен, но сбой всё равно произошёл → контент-пробел
-  (как был `php:laravel` 35 строк). Сигнал «дотянуть скилл».
-- **DEAD_SKILL** — раздан, но никогда не грузится → мёртвый вес.
-- **CORRECTION_AFTER_LOAD** — много корректировок после загрузки скилла → он неясен/неверен.
+## Related
+- Shared memory (recall/remember, backends) → `system/shared-memory`.
+- Node topology → `system/local-topology`.
 
-### Ось 3 — настройки (где мисконфиг окружения)
-- **HOOK_MISCONFIG** — гейт/хук выключен там, где нужен (review-gate `off`).
-- **PERMISSION_FRICTION** — повторные permission-промпты на один паттерн →
-  кандидаты в allowlist (связка с `fewer-permission-prompts`).
-- **CORRECTION_LOG** — реплики пользователя («нет», «не так», «use X») как
-  кросс-осевой сигнал недостающего правила/настройки.
+<!-- ru-source-sha256: PENDING -->
 
-**Замкнутый цикл:** находки кормят обратно — Ось 1 → усилить binding/гейт,
-Ось 2 → дотянуть/создать скилл, Ось 3 → поправить хуки/права. Система чинит себя.
-
-## Вывод и промоция (человек решает)
-
-1. Сводка по измерениям с `file:line` где возможно (таблица: критично / warn /
-   наблюдение).
-2. Learnings — НЕ свой формат-файл, а через существующий memory-хук:
-   `~/.claude/hooks/memory/memory.sh remember --type project "<факт + почему>"`.
-   Очередь = непромоченные `remember` / project-local staging, просматриваемый по
-   запросу «покажи learnings».
-3. Промоция (по одобрению пользователя, по месту):
-   - разовый контекст → `memory.sh remember` / память проекта;
-   - повторяющаяся корректировка → правило `.claude/rules/<тема>.md` (нативный
-     path-scoped механизм, грузится по `paths:`);
-   - подтверждённый skill-gap → **предложение** скилла под `skill-authoring` /
-     `package-contribution-protocol` (никогда не авто-пишем скилл реестра).
-4. Recall-связка: продвинутое возвращается `memory.sh recall "<тема>"`.
-
-## Чеклист
-
-- [ ] Прочитаны главный JSONL + субагентские + `git diff HEAD`.
-- [ ] По каждому измерению есть вывод (или явно «чисто»).
-- [ ] SKILL_COMPLIANCE проверен грепом anti-паттернов по диффу.
-- [ ] Learnings записаны через `memory.sh remember`, не в самодельный файл.
-- [ ] Промоция — только по одобрению человека; скиллы не авто-пишутся.
-- [ ] Не обещано live-слежение (только post-hoc).
-
-## Смежные
-
-- Единая память (recall/remember, бэкенды) → `system/shared-memory`.
-- Топология узлов → `system/local-topology`.
+<!-- ru-source-sha256: 4bc93cd73dbbf5e8fb758c0c5dbd0b41ea61b35892a2cb22029b6b2f6bb3cc83 -->

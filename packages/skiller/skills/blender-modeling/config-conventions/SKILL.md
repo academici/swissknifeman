@@ -2,7 +2,7 @@
 name: config-conventions
 bucket: blender-modeling
 version: 0.1.0
-description: "Соглашения параметрического CAD-конфига: одна сущность — один dataclass; именование переменных (r_outer/z0/wall/clearance); единицы мм; принцип «всё на формулах» (никаких магических чисел в parts/); межконфигурные (cross-config) зависимости и сквозной пересчёт; паттерн добавления детали. Активировать при правке config.py, добавлении параметра/детали, вопросах про cross-config, хардкод размеров, чтение конфига чужой детали."
+description: "Parametric CAD config conventions: one entity = one dataclass; variable naming (r_outer/z0/wall/clearance); units mm; everything-from-formulas (no magic numbers in parts/); cross-config dependencies and end-to-end recompute; part-adding pattern. Activate on config.py edits, adding a param/part, cross-config questions, hardcoded sizes, reading another part's config."
 risk: write
 persona: oss-dev
 tags: [blender, cad, parametric, dataclass, config, cross-config, conventions, bpy, fdm, sla]
@@ -14,15 +14,13 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-# Соглашения по конфигам и именованию переменных
+# Config & variable-naming conventions
 
-Применяются ко всем моделям в `models/*/`. Цель — единый язык между конфигами, кодом деталей и комментариями.
+Apply to all models in `models/*/`.
 
----
+## 1. One entity = one dataclass
 
-## 1. Принцип: одна сущность — один dataclass
-
-Каждая физическая сущность (деталь, материал, вставной/покупной элемент) получает **свой `@dataclass`** в `config.py` модели.
+Each physical entity (part, material, insert/purchased element) gets its own `@dataclass` in the model's `config.py`.
 
 ```python
 @dataclass
@@ -37,13 +35,13 @@ class InsertConfig:                # внешний/покупной элеме�
     thickness: float = 3.5        # толщина, мм
 ```
 
-**Правила:**
-- Имя класса: `PascalCase` + суффикс `Config` → `ShellConfig`, `MountConfig`, `InsertConfig`
-- Имя экземпляра: `snake_case` + суффикс `_config` → `shell_config`, `mount_config`
-- Экземпляры объявляются **внизу** `config.py`, после всех классов
-- Все линейные размеры — в **миллиметрах**; цвет — `(R, G, B, A)` 0..1
-- Если параметр вычисляется из других — делать `@property` или метод, не хранить в поле
-- Методы, зависящие от других конфигов, принимают их **аргументами** (не читают глобалы)
+Rules:
+- Class name: `PascalCase` + `Config` suffix → `ShellConfig`, `MountConfig`, `InsertConfig`.
+- Instance name: `snake_case` + `_config` suffix → `shell_config`, `mount_config`.
+- Declare instances at the **bottom** of `config.py`, after all classes.
+- All linear sizes in **mm**; color `(R, G, B, A)` 0..1.
+- If a param is computed from others → `@property`/method, do not store in a field.
+- Methods depending on other configs take them as **arguments** (never read globals).
 
 ```python
 # Правильно: аргументы явные
@@ -56,20 +54,18 @@ def full_stack_height(self):
     return 2 * self.wall + 2 * insert_config.thickness  # хрупко
 ```
 
----
+## 2. Variable naming in part code (`parts/*.py`)
 
-## 2. Именование переменных в коде деталей (`parts/*.py`)
+Full name tables (radii `r_*`, heights/`z*`, thicknesses/clearances) + local config aliases → [references/variable-naming-cross-config.md](references/variable-naming-cross-config.md). Brief:
+- Name says meaning (`r_outer`/`z0`/`wall`), not `r1/r2`.
+- Diameter in config → radius in code (`r = d * 0.5`).
+- At builder start, short config aliases (`m`=model, `sh`=shell).
 
-Полные таблицы имён (радиусы `r_*`, высоты/`z*`, толщины/зазоры) + локальные алиасы конфигов —
-[references/variable-naming-cross-config.md](references/variable-naming-cross-config.md). Кратко: имя
-переменной говорит о смысле (`r_outer`/`z0`/`wall`), не `r1/r2`; диаметр в конфиге → радиус в коде
-(`r = d * 0.5`); в начале строителя — короткие алиасы конфигов (`m`=model, `sh`=shell).
+## 3. Profile `pts`: how to build
 
-## 3. Профиль `pts`: как строить
+Point order, closing rule, non-manifold diagnostics → skill `blender-modeling/parametric-config` (snippet `internals.md`, section «Профиль `pts`»).
 
-Порядок точек, правило замыкания, non-manifold диагностика → скилл `blender-modeling/parametric-config` (сниппет `internals.md`, раздел «Профиль `pts`»).
-
-Правило именования точек в коде: каждая точка сопровождается inline-комментарием с её смыслом:
+Point-naming rule: each point gets an inline comment with its meaning:
 
 ```python
 pts = [
@@ -82,13 +78,9 @@ pts = [
 ]
 ```
 
----
+## 4. Pattern: adding a new entity
 
-## 4. Паттерн добавления новой сущности
-
-Пример: добавляется вставной элемент в модель.
-
-**Шаг 1** — конфиг в `config.py`:
+Step 1 — config in `config.py`:
 ```python
 @dataclass
 class InsertConfig:
@@ -98,7 +90,7 @@ class InsertConfig:
 insert_config = InsertConfig()
 ```
 
-**Шаг 2** — деталь в `parts/insert.py`:
+Step 2 — part in `parts/insert.py`:
 ```python
 from ..config import insert_config, model_config
 from ..common import build_revolved_solid
@@ -109,7 +101,7 @@ def build_insert(col):
     ...
 ```
 
-**Шаг 3** — проверки в `test/check.py` (кросс-деталевые) или `parts/{name}.test.py` (локальные):
+Step 3 — checks in `test/check.py` (cross-part) or `parts/{name}.test.py` (local):
 ```python
 # В test/check.py — если новая деталь взаимодействует с существующей:
 check(ic.outer_diameter <= mt.seat_inner_diameter + 0.4, ...)
@@ -119,30 +111,24 @@ assert ic.outer_diameter > 0
 assert ic.thickness >= 1.0
 ```
 
-**Шаг 4** — вызов в `main()` в `{model}.py`.
+Step 4 — call in `main()` in `{model}.py`.
 
-**Шаг 5** — описание детали в `models/{name}/docs/tech.md`: строка в таблице деталей + раздел конструкции.
+Step 5 — part description in `models/{name}/docs/tech.md`: row in parts table + construction section.
 
----
+## 5. Units
 
-## 5. Единицы измерения
+Full picture (table, `mm()` function, rule, examples) → skill `blender-modeling/parametric-config` (snippet `internals.md`, section «Единицы измерения»).
 
-Полная картина (таблица, функция `mm()`, правило, примеры) → скилл `blender-modeling/parametric-config` (сниппет `internals.md`, раздел «Единицы измерения»).
+Config specifics:
+- All fields in `config.py` — **mm**: `height = 60.0`, `wall = 2.8`.
+- Angles in configs — **degrees** (Blender API — radians via `math.radians(...)`).
+- Color — `(R, G, B, A)` in `0.0..1.0`; type `Color = Tuple[float, float, float, float]` in `config.py`.
 
-Специфика конфигов:
-- Все поля в `config.py` — **мм**: `height = 60.0`, `wall = 2.8`
-- Углы в конфигах — **градусы** (в Blender API — радианы через `math.radians(...)`)
-- Цвет — `(R, G, B, A)` в диапазоне `0.0..1.0`; тип `Color = Tuple[float, float, float, float]` в `config.py`
+## 6. Everything-from-formulas (mandatory)
 
----
+All part geometry params must be **derived from config by formulas**, not literal numbers in code.
 
-## 6. Принцип «всё на формулах» (обязательно)
-
-Все геометрические параметры деталей должны быть **выведены из конфига формулами**, а не задаваться числами в коде.
-
-**Внешние и покупные детали — тоже в конфиг:**
-
-Любая деталь, которая не печатается, но задаёт ограничения на геометрию (вставка, стекло, плата, батарея, крепёж), обязана иметь свой `*Config` с физическими размерами. Эти размеры используются в формулах; менять размер детали = менять одну строку в конфиге, остальное пересчитывается автоматически.
+External/purchased parts also go in config: any part that is not printed but constrains geometry (insert, glass, board, battery, fastener) must have its own `*Config` with physical sizes. Those sizes feed formulas; changing a part's size = one config line, rest recomputes automatically.
 
 ```python
 # Правильно: паз под плату берётся из конфига платы
@@ -152,10 +138,9 @@ board_r = board_config.width * 0.5 + board_config.clearance
 board_r = 17.5   # откуда это число? не очевидно, не обновляется
 ```
 
-**Правила:**
-
-- Если задача говорит «отступить 2 мм от стенки» — в конфиге появляется поле (например `inner_margin: float = 2.0`), в коде — `r = r_wall - conn.inner_margin`.
-- Если деталь должна **совпасть с пазом другой детали** — читать параметры паза из конфига той детали, не дублировать числа:
+Rules:
+- Task says "offset 2 mm from wall" → add config field (e.g. `inner_margin: float = 2.0`); code: `r = r_wall - conn.inner_margin`.
+- Part must **match another part's slot** → read slot params from that part's config, don't duplicate numbers:
 
 ```python
 # Правильно: размер папы берётся из конфига мамы
@@ -170,43 +155,38 @@ r_papa_out = 32.35
 r_papa_in  = 29.85
 ```
 
-- Если задача не описывает явно, **как вычислить** параметр — вывести его из соседних конфигов по физическому смыслу (толщина стенки + зазор + размер элемента + зазор), записать в комментарий формулу.
-- Каждое поле конфига — с комментарием: что это, откуда берётся, в мм.
+- If task doesn't say **how to compute** a param → derive from neighboring configs by physical meaning (wall + clearance + element size + clearance), write the formula in a comment.
+- Every config field — with a comment: what it is, where it comes from, in mm.
 
-**Пример: кольцевой элемент соединения**
-
+Example: connection ring element
 ```
 ring_inner_r = inner_r_mating_part
              - conn.inner_margin        # отступ от внутренней стенки
              - conn.element_diameter/2  # радиус встраиваемого элемента (магнит, штырь)
              - conn.inner_margin        # ещё отступ до края кольца
 ```
+This is a formula, not a number. Change `element_diameter` in config → ring recomputes automatically.
 
-Это формула — не число. Если в конфиге изменится `element_diameter`, кольцо пересчитается автоматически.
+## 7. Cross-config dependencies
 
----
+Parts **may and must** read each other's configs on physical link; single source of truth = one config, others read its params without duplicating numbers. Detailed examples (importing another config, link kinds, end-to-end recompute) → [references/variable-naming-cross-config.md](references/variable-naming-cross-config.md). End-to-end recompute is mandatory: changing a config recomputes the whole linked chain with no manual edits — if a part "drifts", code has a hardcode to replace with a formula.
 
-## 7. Межконфигурные зависимости (cross-config)
+## 8. Don't
 
-Детали **могут и должны** читать конфиги друг друга при физической связи; источник истины — один
-конфиг, остальные читают его параметры, не дублируя числа. Подробные примеры (импорт чужого конфига,
-виды связей, сквозной пересчёт) — [references/variable-naming-cross-config.md](references/variable-naming-cross-config.md).
-Принцип сквозного пересчёта обязателен: при изменении конфига вся связанная цепочка пересчитывается
-без ручной правки — если деталь «поплывёт», в коде есть хардкод, заменяемый формулой.
+- No magic numbers in `parts/*.py` — only via config.
+- No `r1`, `r2`, `r3` — name must say meaning.
+- Don't duplicate diameter/radius computation — compute once at function start.
+- Don't read global configs inside dataclass methods — take as arguments.
+- Don't add a field to an existing config for a new entity — create a separate class.
+- Don't write sizes in part code that already exist in another part's config — read from there.
 
-## 8. Что не делать
+## Related skills
 
-- Не хранить магические числа в `parts/*.py` — только через конфиг
-- Не называть `r1`, `r2`, `r3` — имя должно говорить о смысле
-- Не дублировать вычисление диаметра/радиуса — считать один раз в начале функции
-- Не читать глобальные конфиги внутри методов dataclass — принимать аргументами
-- Не добавлять поле в существующий конфиг если это новая сущность — создавать отдельный класс
-- Не прописывать в коде детали размеры, которые уже есть в конфиге другой детали — читать оттуда
+- `blender-modeling/parametric-config` — `config.py`/`profile.py`/`check.py` layer, units, `spl`/`pts` internals (snippets `config-and-profile.md`, `internals.md`).
+- `blender-modeling/model-rules` — `models/{name}/ai/rules.md` template fixing model-specific cross-config links.
+- `blender-modeling/scene-conventions` — scene object & material naming.
+- `blender-modeling/threading` — thread params (`*_clearance`, `*_thread_*`) set up per these conventions.
 
-## Связанные скиллы
+<!-- ru-source-sha256: PENDING -->
 
-- `blender-modeling/parametric-config` — слой `config.py`/`profile.py`/`check.py`, единицы и внутренности `spl`/`pts` (сниппеты `config-and-profile.md`, `internals.md`).
-- `blender-modeling/model-rules` — шаблон `models/{name}/ai/rules.md`, где фиксируются конкретные cross-config связи модели.
-- `blender-modeling/scene-conventions` — именование объектов сцены и материалов.
-- `blender-modeling/threading` — параметры резьбы (`*_clearance`, `*_thread_*`), заводимые по этим конвенциям.
-
+<!-- ru-source-sha256: 0b8171e1384b9d41c661874b7ed7b8901593277cc9c6a79e0042ce38dfa66d08 -->

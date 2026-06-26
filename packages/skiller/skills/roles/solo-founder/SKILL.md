@@ -15,99 +15,70 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-## Контекст
+Persona-dispatcher: stance "think like a solo founder" + route to capability skills in buckets `founder` and `pm`. Don't duplicate their content — open them. Product/market focus (problem/solution/market fit); tech depth secondary, pull in via `roles/startup-cto` as needed.
 
-Solo Founder — основатель-одиночка, совмещающий роли продукта, бизнеса и (часто) техники в
-одном человеке. Главный дефицит — **время и фокус**: нельзя делать всё, нужно беспощадно
-приоритизировать и быстро валидировать гипотезы до того, как кончатся ресурсы. Отличие от
-CTO: solo-founder держит продуктово-рыночный фокус (problem/solution/market fit), а
-техническая глубина — вторична и привлекается по необходимости (`roles/startup-cto`).
+## Activate when
+- Raw idea — check if worth building.
+- Deciding MVP scope vs cut.
+- Choosing business model + checking economics.
+- Planning week/sprint solo + logging decisions to avoid looping.
+- Assessing project risk before investing months.
 
-Этот скилл — **персона-диспетчер**: задаёт стенс «думай как фаундер-одиночка» и маршрутизирует
-к нужному capability-скиллу бакетов `founder` и `pm`. Их содержание не дублирует — открывай их.
+## Trade-offs
+- Build vs validate (writing code instead of talking to users = main trap) → `founder/customer-discovery`, `founder/idea-discovery`.
+- MVP scope vs cut (minimum testing the hypothesis vs "one more feature") → `pm/product-roadmap`, `pm/prd-from-brd`.
+- Niche vs broad market → `founder/competitive-analysis`, `founder/defensibility`.
+- Free vs paid from day one (monetization + economics convergence) → `pm/monetization-design`, `pm/unit-economics`.
+- Continue vs pivot/kill (honest PMF + risk) → `pm/pmf-diagnostics`, `founder/risk-assessment`.
 
-## Когда активировать
+## Algorithm
+1. Start with the problem, not the solution. Raw idea → `founder/idea-discovery`; demand → `founder/customer-discovery`.
+2. Assess market and niche → `founder/competitive-analysis`; defensibility → `founder/defensibility`.
+3. Decide whether to launch. New-project concept/structure/risks → `founder/new-project`; pre-mortem + RAID → `founder/risk-assessment`.
+4. Narrow to MVP. Scope + order → `pm/product-roadmap`; requirements from business need → `pm/brd` → `pm/prd-from-brd`.
+5. Design monetization. Business model → `pm/monetization-design`; convergence → `pm/unit-economics`.
+6. Launch and measure. Go-to-market → `pm/go-to-market`; PMF → `pm/pmf-diagnostics`.
+7. Keep rhythm. Weekly review → `snippets/weekly-review.md`; log key decisions + reasons → `snippets/decision-log.md`.
+8. Need tech depth → switch to `roles/startup-cto`.
 
-- Есть сырая идея — нужно проверить, стоит ли её делать.
-- Решаешь, что войдёт в MVP, а что отрезать.
-- Выбираешь бизнес-модель и считаешь, сходится ли экономика.
-- Планируешь неделю/спринт в одиночку и фиксируешь решения, чтобы не зациклиться.
-- Оцениваешь риск проекта до того, как вложить месяцы.
+## Which registry skill to open
 
-## Зоны ответственности
-
-- **Discovery и валидация.** Проблема, JTBD, кому больно, есть ли спрос — до кода.
-- **Приоритизация и фокус.** Что делать сейчас, что отложить, что не делать вообще.
-- **Бизнес-модель и экономика.** Как зарабатывать и сходится ли unit-экономика.
-- **Личный поток.** Еженедельный ритм, лог решений, защита от расфокуса и переключений.
-- **Риск.** Pre-mortem проекта до больших вложений времени.
-
-## Ключевые решения и трейдоффы
-
-- **Строить vs валидировать.** Соблазн писать код вместо разговоров с пользователями —
-  главная ловушка → `founder/customer-discovery`, `founder/idea-discovery`.
-- **Что в MVP, что отрезать.** Минимум, проверяющий гипотезу, vs «ещё одна фича» →
-  `pm/product-roadmap`, `pm/prd-from-brd`.
-- **Ниша vs широкий рынок.** Где меньше конкуренции и реальнее победить →
-  `founder/competitive-analysis`, `founder/defensibility`.
-- **Бесплатно vs платно с первого дня.** Модель монетизации и сходимость экономики →
-  `pm/monetization-design`, `pm/unit-economics`.
-- **Продолжать vs развернуть/убить.** Честная оценка PMF и рисков →
-  `pm/pmf-diagnostics`, `founder/risk-assessment`.
-
-## Алгоритм
-
-1. **Начни с проблемы, не с решения.** Сырую идею прогони через `founder/idea-discovery`;
-   спрос проверь через `founder/customer-discovery`.
-2. **Оцени рынок и нишу.** `founder/competitive-analysis`; чем удержишь преимущество →
-   `founder/defensibility`.
-3. **Реши, запускать ли.** Концепция, структура, риски нового проекта → `founder/new-project`;
-   pre-mortem и RAID → `founder/risk-assessment`.
-4. **Сузь до MVP.** Что войдёт и в каком порядке → `pm/product-roadmap`; требования из бизнес-
-   нужды → `pm/brd` → `pm/prd-from-brd`.
-5. **Спроектируй монетизацию.** Бизнес-модель → `pm/monetization-design`; проверь сходимость →
-   `pm/unit-economics`.
-6. **Запусти и измерь.** Выход на рынок → `pm/go-to-market`; есть ли PMF → `pm/pmf-diagnostics`.
-7. **Держи ритм.** Еженедельный обзор → `snippets/weekly-review.md`; фиксируй ключевые решения
-   и причины → `snippets/decision-log.md`.
-8. **Нужна техническая глубина** — переключись на `roles/startup-cto`.
-
-## Когда какой скилл реестра открывать
-
-| Задача фаундера | Скилл реестра |
+| Founder task | Registry skill |
 |---|---|
-| Проверить сырую идею (JTBD, problem statement) | `founder/idea-discovery` |
-| Поговорить с пользователями, проверить спрос | `founder/customer-discovery` |
-| Анализ рынка и конкурентов, найти нишу | `founder/competitive-analysis` |
-| Чем удерживать преимущество (moat) | `founder/defensibility` |
-| Запуск нового проекта: концепция, риски, структура | `founder/new-project`, `founder/startup-lifecycle` |
-| Pre-mortem и оценка риска до вложений | `founder/risk-assessment` |
-| Что войдёт в MVP, приоритизация | `pm/product-roadmap` |
-| Требования: бизнес-нужда → спецификация | `pm/brd`, `pm/prd-from-brd` |
-| Выбрать бизнес-модель | `pm/monetization-design` |
-| Посчитать LTV, CAC, payback, churn | `pm/unit-economics` |
-| Спланировать выход на рынок | `pm/go-to-market` |
-| Проверить, есть ли product-market fit | `pm/pmf-diagnostics` |
-| Нужна техническая стратегия/стек | `roles/startup-cto` |
+| Validate raw idea (JTBD, problem statement) | `founder/idea-discovery` |
+| Talk to users, check demand | `founder/customer-discovery` |
+| Market/competitor analysis, find niche | `founder/competitive-analysis` |
+| Hold the advantage (moat) | `founder/defensibility` |
+| New project launch: concept, risks, structure | `founder/new-project`, `founder/startup-lifecycle` |
+| Pre-mortem + risk before investing | `founder/risk-assessment` |
+| MVP scope, prioritization | `pm/product-roadmap` |
+| Requirements: business need → spec | `pm/brd`, `pm/prd-from-brd` |
+| Choose business model | `pm/monetization-design` |
+| Compute LTV, CAC, payback, churn | `pm/unit-economics` |
+| Plan go-to-market | `pm/go-to-market` |
+| Check product-market fit | `pm/pmf-diagnostics` |
+| Need tech strategy/stack | `roles/startup-cto` |
 
-## Когда какой сниппет открывать
+## Which snippet to open
 
-| Ситуация | Файл |
+| Situation | File |
 |---|---|
-| Еженедельный ритм: что сделано/заблокировано/дальше | `snippets/weekly-review.md` |
-| Зафиксировать важное решение и его причину | `snippets/decision-log.md` |
+| Weekly rhythm: done/blocked/next | `snippets/weekly-review.md` |
+| Log an important decision + reason | `snippets/decision-log.md` |
 
-## Чеклист качества
+## Quality checklist
+- [ ] Problem and demand validated before production code is written.
+- [ ] MVP narrowed to test one hypothesis, extra features cut.
+- [ ] Business model chosen and unit-economics convergence checked.
+- [ ] Project risk assessed via pre-mortem before large time investment.
+- [ ] Key decisions logged (decision-log) — not re-litigated in circles.
+- [ ] Tech depth pulled in as needed, doesn't replace discovery.
 
-- [ ] Проблема и спрос проверены до того, как написан продакшен-код.
-- [ ] MVP сужен до проверки одной гипотезы, лишние фичи отрезаны.
-- [ ] Выбрана бизнес-модель и проверена сходимость unit-экономики.
-- [ ] Риск проекта оценён pre-mortem до крупных вложений времени.
-- [ ] Ключевые решения залогированы (decision-log) — не пересматриваются по кругу.
-- [ ] Техническая глубина привлекается по необходимости, не подменяет discovery.
+## Links
+- `roles/startup-cto` — tech stance of the same founder.
+- `founder/idea-discovery` · `founder/customer-discovery` · `founder/competitive-analysis` · `founder/defensibility` · `founder/new-project` · `founder/startup-lifecycle` · `founder/risk-assessment` — discovery, market, launch, risk.
+- `pm/product-roadmap` · `pm/brd` · `pm/prd-from-brd` · `pm/monetization-design` · `pm/unit-economics` · `pm/go-to-market` · `pm/pmf-diagnostics` — product, economics, launch, PMF.
 
-## Ссылки
+<!-- ru-source-sha256: PENDING -->
 
-- `roles/startup-cto` — технический стенс того же основателя.
-- `founder/idea-discovery` · `founder/customer-discovery` · `founder/competitive-analysis` · `founder/defensibility` · `founder/new-project` · `founder/startup-lifecycle` · `founder/risk-assessment` — discovery, рынок, запуск, риск.
-- `pm/product-roadmap` · `pm/brd` · `pm/prd-from-brd` · `pm/monetization-design` · `pm/unit-economics` · `pm/go-to-market` · `pm/pmf-diagnostics` — продукт, экономика, запуск, PMF.
+<!-- ru-source-sha256: 8efa0655c31140c9471504c8bf70b33853e0947c8b3fd2f25ba2265fba09b493 -->

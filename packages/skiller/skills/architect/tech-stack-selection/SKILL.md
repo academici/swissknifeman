@@ -2,7 +2,7 @@
 name: tech-stack-selection
 bucket: architect
 version: 0.1.0
-description: Выбор технологического стека с trade-off матрицей до архитектурного дизайна. ADR-первый шаг
+description: Tech stack selection with trade-off matrix before architecture design. ADR-first step
 risk: draft
 persona: architect
 tags: [stack-choice, architecture, adr, trade-off]
@@ -15,95 +15,82 @@ adapters: [claude, cursor, fable]
 
 # Skill: Tech Stack Selection
 
-Применять когда: нужно **выбрать** язык / фреймворк / БД / инфра-платформу до начала архитектурного дизайна. Не путать с `architecture` — там уже проектируют компоненты при выбранном стеке.
+Use when: must **select** language / framework / DB / infra-platform before architecture design. Not `architecture` (that designs components on a chosen stack).
 
-Должен быть **выполнен после `brd`** (нужны нефункциональные требования и нагрузка) и **до `architecture`** (без стека нечего проектировать).
+Run **after `brd`** (need NFRs + load) and **before `architecture`**.
 
----
+## Do NOT apply
+- Stack already fixed by user or ADR → refuse, go to `architecture`.
+- OSS project single-platform by definition (JS-only / PHP-only) → stack chosen earlier, don't repeat.
+- Project extends existing code → stack inherited; do ADR on specific submodule if needed.
+- No BRD / NFRs → refuse, send to `brd`.
 
-## Когда НЕ применять
+## 6 selection axes (consider all)
 
-- Стек уже зафиксирован пользователем или ADR — отказать, идти на `architecture`.
-- OSS-проект с одной платформой по определению (BrainKit — JS, AzGuard — PHP) — стек выбран ранее, не повторять.
-- Проект расширяет существующий код — стек унаследован, делать ADR на конкретный субмодуль если нужно.
-- Нет BRD / нефункциональных требований — отказать, отправить на `brd`.
-
----
-
-## 6 осей выбора (рассматривать все)
-
-| Ось | Что выбираем | Влияет на |
+| Axis | Choose among | Affects |
 |:---|:---|:---|
-| **Язык backend** | TS/Node, Python, Go, Rust, PHP, Java | Производительность, найм, экосистема |
-| **Backend-фреймворк** | NestJS, FastAPI, Laravel, Gin, Actix, Spring | Скорость разработки, конвенции |
-| **БД (OLTP)** | Postgres, MySQL, SQLite, MongoDB, DynamoDB | Транзакции, scale, cost |
+| **Backend language** | TS/Node, Python, Go, Rust, PHP, Java | Performance, hiring, ecosystem |
+| **Backend framework** | NestJS, FastAPI, Laravel, Gin, Actix, Spring | Dev speed, conventions |
+| **DB (OLTP)** | Postgres, MySQL, SQLite, MongoDB, DynamoDB | Transactions, scale, cost |
 | **Frontend** | Next.js, Nuxt, SvelteKit, Flutter, native | UX, SEO, time-to-market |
 | **Infra / deployment** | Vercel, Cloudflare, AWS, GCP, VPS, k8s | Cost, latency, ops complexity |
 | **Async / queue** | BullMQ, SQS, RabbitMQ, Temporal, none | Throughput, reliability |
 
-Дополнительные оси при необходимости: cache (Redis/KeyDB/in-memory), search (Meilisearch/Elastic), analytics, ML serving, payments.
+Extra axes if needed: cache (Redis/KeyDB/in-memory), search (Meilisearch/Elastic), analytics, ML serving, payments.
 
----
+## Algorithm (5 steps)
 
-## Алгоритм выбора (5 шагов)
+### Step 1. Hard constraints
+Extract from BRD + project:
+- **Regulation** — e.g. fintech requires data residency; AI-tutoring requires COPPA/age limits.
+- **Team competencies** — solo founder on PHP must not take Rust "because trendy".
+- **Infra budget** — pre-seed: serverless / managed; series-A+: k8s allowed.
+- **Explicit stack requirements from BRD** — e.g. "must work with iOS Live Activities" = Swift native.
 
-### Шаг 1. Жёсткие ограничения
-Из BRD и проекта извлечь:
-- **Регуляторика** — например, fintech требует резидентности данных (Finbrain), AI-tutoring требует COPPA/возрастных ограничений (Edufy)
-- **Существующие компетенции команды** — solo founder с PHP не должен брать Rust «потому что модно»
-- **Бюджет infra** — pre-seed: serverless / managed; series-A+: можно k8s
-- **Конкретные требования к стеку из BRD** — например, «должен работать с iOS Live Activities» = Swift native
+If any axis hard-fixed → record in **Constraints**, exclude alternatives.
 
-Если хоть одна ось зафиксирована жёстко — записать в раздел **Constraints**, исключить альтернативы.
+### Step 2. Trade-off matrix (mandatory)
+For **min 2 options per axis** that passed Step 1, fill:
 
-### Шаг 2. Trade-off матрица (обязательна)
-
-Для **минимум 2 вариантов на каждой оси**, прошедших Шаг 1, заполнить:
-
-| Критерий | Вариант A | Вариант B | Вариант C |
+| Criterion | Option A | Option B | Option C |
 |:---|:---|:---|:---|
-| Производительность (RPS на 1 vCPU) | | | |
-| Time-to-market (1 dev, неделями до MVP) | | | |
-| Стоимость найма (медиана senior $/мес) | | | |
-| Зрелость экосистемы (рейтинг ключевых либ) | | | |
+| Performance (RPS per 1 vCPU) | | | |
+| Time-to-market (1 dev, weeks to MVP) | | | |
+| Hiring cost (senior median $/mo) | | | |
+| Ecosystem maturity (rating of key libs) | | | |
 | Operability (cloud-native? managed?) | | | |
-| Lock-in (можно ли уйти за 2 недели) | | | |
-| Стоимость infra на baseline-нагрузке | | | |
-| Совпадение с другими проектами vault | | | |
+| Lock-in (can leave in 2 weeks?) | | | |
+| Infra cost at baseline load | | | |
+| Match with other vault projects | | | |
 
-Конкретные числа > эпитеты. Если не знаешь — пометь `?` и оставь как открытый вопрос.
+Concrete numbers > epithets. Unknown → mark `?`, leave as open question.
 
-### Шаг 3. Совместимость осей
-Не выбирать оси независимо. Проверить совместимость:
-- **Backend + БД** — есть ли первоклассный ORM/драйвер
-- **Frontend + Backend** — поддерживается ли тип-репликация (tRPC, GraphQL, OpenAPI)
-- **Infra + язык** — холодный старт, runtime support (Cloudflare Workers ≠ Node-only)
-- **Queue + Backend** — нативный SDK или нужен бриджик
+### Step 3. Axis compatibility
+Don't pick axes independently. Check:
+- **Backend + DB** — first-class ORM/driver?
+- **Frontend + Backend** — type-replication supported (tRPC, GraphQL, OpenAPI)?
+- **Infra + language** — cold start, runtime support (Cloudflare Workers ≠ Node-only).
+- **Queue + Backend** — native SDK or bridge needed?
 
-Если стек собирается из «зоопарка» — назвать integration cost явно.
+If stack is a "zoo" → name integration cost explicitly.
 
-### Шаг 4. Рекомендация + миграционный путь
-- **Стартовый стек MVP** — одна конкретная комбинация, явно.
-- **Что заменяемо без переписывания** — компоненты с чистыми интерфейсами (БД, queue, cache).
-- **Что НЕ заменяемо** — обычно язык backend и UI-фреймворк. Это «жёсткое ядро».
-- **Триггеры пересмотра** — конкретные метрики (например, «при > 10k RPS пересмотреть кэш-стратегию»).
+### Step 4. Recommendation + migration path
+- **MVP starting stack** — one concrete combination, explicit.
+- **Replaceable without rewrite** — components with clean interfaces (DB, queue, cache).
+- **NOT replaceable** — usually backend language + UI framework. The "hard core".
+- **Revisit triggers** — concrete metrics (e.g. "at > 10k RPS revisit cache strategy").
 
-### Шаг 5. ADR-001 — фиксация решения
-Создать `docs/03_Dev/ADR/ADR-001_tech_stack.md` сразу. Не «когда-нибудь потом». Это первая ADR проекта.
+### Step 5. ADR-001 — record decision
+Create `docs/03_Dev/ADR/ADR-001_tech_stack.md` now, not "someday". First ADR of project.
 
----
+## Agent adds itself
+- **Stage antipatterns.** Pre-seed solo founder + microservices + k8s = red flag. Name explicitly.
+- **Hidden costs.** SQLite seems free — until horizontal scale needed. Postgres Aurora scales — but serverless v2 cold-start = 12+ s.
+- **Hire-ability.** Stack must be hiring-compatible with project ICP (if team planned).
+- **Vault-project compat.** If another project already on TS/Postgres — insight "don't breed a zoo" and reuse patterns (see `02 - Knowledge/`).
+- **Open-source readiness.** If OSS spin-off planned — account for dependency licenses (see `dependency-audit` in OSS track).
 
-## Что агент добавляет сам
-
-- **Антипаттерны для стадии.** Pre-seed solo founder + микросервисы + k8s = красный флаг. Назвать явно.
-- **Скрытые издержки.** SQLite кажется бесплатным — пока не понадобится горизонтальный scale. Postgres Aurora масштабируется — но cold-start serverless v2 = 12+ секунд.
-- **Hire-ability.** Стек должен быть найм-совместимым на ICP проекта (если планируется команда).
-- **Compat с vault-проектами.** Если другой проект уже на TS/Postgres — есть инсайт «не плодить зоопарк» и переиспользовать паттерны (см. `02 - Knowledge/`).
-- **Open-source readiness.** Если планируется open-source spin-off — учесть лицензии зависимостей (см. `dependency-audit` в OSS-треке).
-
----
-
-## Структура output-файлов
+## Output file structure
 
 ### `docs/03_Dev/Tech_Stack_Selection.md`
 
@@ -186,23 +173,21 @@ Accepted — YYYY-MM-DD
 - Триггеры для следующего ADR: ...
 ```
 
----
+## Hard prohibitions at this stage
+NEVER:
+- Pick stack "because trendy / favorite".
+- Skip trade-off matrix for at least backend and DB.
+- Take k8s/microservices on pre-seed without hard justification.
+- Leave "decide later" — `architecture` will suffer.
+- Not create ADR-001 immediately.
 
-## Жёсткие запреты на этой стадии
+## Related skills
+- `pm/brd` — NFRs + load as precondition.
+- `architect/architecture` — component design on chosen stack (output of this skill).
+- `oss-dev/oss-development`, `oss-dev/release-engineering` — OSS track relying on chosen stack (output).
+- `oss-dev/dependency-audit` — dependency licenses for OSS spin-off.
+- `php/laravel-structure` — if Laravel chosen: project structure canon for next step.
 
-НЕЛЬЗЯ:
-- Выбирать стек «потому что модно / любимый»
-- Пропустить trade-off матрицу хотя бы для backend и БД
-- Брать k8s/микросервисы на pre-seed без жёсткого обоснования
-- Оставлять «решим потом» — это `architecture` будет страдать
-- Не создавать ADR-001 сразу
+<!-- ru-source-sha256: PENDING -->
 
----
-
-## Связанные скиллы
-
-- `pm/brd` — нефункциональные требования и нагрузка как предусловие.
-- `architect/architecture` — проектирование компонентов при уже выбранном стеке (выход этого скилла).
-- `oss-dev/oss-development`, `oss-dev/release-engineering` — OSS-трек, опирающийся на выбранный стек (выход).
-- `oss-dev/dependency-audit` — лицензии зависимостей для open-source spin-off.
-- `php/laravel-structure` — если выбран Laravel: канон структуры проекта на следующем шаге.
+<!-- ru-source-sha256: 148e883551005b30103f5fbb3b2e15a4edbbb64550975b306b598b0b059c7613 -->

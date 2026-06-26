@@ -2,7 +2,7 @@
 name: complex-task-orchestrator
 bucket: general
 version: 0.1.0
-description: "Оркестрация сложных задач: декомпозиция, контекст-роутинг, управление рисками, Definition of Done и минимальный верификационный контур."
+description: "Complex-task orchestration: decomposition, context routing, risk management, Definition of Done, minimal verification loop."
 risk: write
 persona: oss-dev
 tags: [workflow, orchestration, checklist, agents]
@@ -16,34 +16,28 @@ sha256: ""
 
 # Complex Task Orchestrator
 
-## Когда активировать
+## Activate when task
+- touches >1 layer (backend + frontend + policy + tests);
+- involves rename/move/remove or refactor with regression risk;
+- needs sequential multi-step delivery;
+- has ambiguous spec + high misinterpretation risk.
 
-Используйте этот skill, если задача:
+## Forbidden
+- No edits before fixing task boundaries and invariants.
+- Do not edit generated/ignored artifacts instead of source paths.
+- Do not close task without explicit checklist and remaining risks.
 
-- затрагивает более одного слоя (backend + frontend + policy + tests);
-- включает rename/move/remove или рефакторинг с риском регрессии;
-- требует последовательной поставки в несколько шагов;
-- содержит неоднозначную постановку и высокий риск неправильной интерпретации.
+## Algorithm
+1. Fix goal in one sentence: "what changes and for whom".
+2. Define boundaries: in-scope vs out-of-scope.
+3. Define invariants: what must not break.
+4. Gather minimal context (1-2 files), then expand via `navigation.md`.
+5. Split work into subtasks by layer.
+6. Per subtask, record expected artifact (code, test, doc, migration).
+7. Define minimal test-gate and run order.
+8. After edits: check contracts, tests, risks, open questions.
 
-## Что нельзя делать
-
-- Не начинать правки до фиксации границ задачи и инвариантов.
-- Не изменять generated/ignored артефакты вместо source-путей.
-- Не закрывать задачу без явного списка проверок и оставшихся рисков.
-
-## Алгоритм выполнения
-
-1. Зафиксировать цель в одном предложении: "что меняется и для кого".
-2. Выделить границы: что входит и что не входит в текущую задачу.
-3. Определить инварианты: что нельзя сломать.
-4. Собрать минимальный контекст (1-2 файла), затем расширять по `navigation.md`.
-5. Разбить работу на подзадачи по слоям.
-6. Для каждой подзадачи записать ожидаемый артефакт (код, тест, док, миграция).
-7. Определить минимальный test-gate и порядок запуска.
-8. После правок: проверить контракты, тесты, риски и незакрытые вопросы.
-
-## Шаблон декомпозиции
-
+## Decomposition template
 ```text
 Цель:
 Границы:
@@ -57,19 +51,21 @@ sha256: ""
 ```
 
 ## Definition of Done
+- Changes only in relevant source files.
+- If project architecture line shifted — update relevant `docs/*` and if needed `.ai/*`, run `php artisan boost:update`.
+- All touched layers synced (no "halfway").
+- Tests added/updated for changed behavior.
+- Minimal test-gate run, results recorded.
+- Final report includes: what done, what verified, remaining constraints.
 
-- Изменения внесены только в релевантные source-файлы.
-- Если архитектурная линия проекта сместилась — обновлены релевантные `docs/*` и при необходимости `.ai/*`, выполнена генерация `php artisan boost:update`.
-- Все затронутые слои синхронизированы (без "полупути").
-- Добавлены/обновлены тесты для измененного поведения.
-- Запущен минимальный test-gate, результаты зафиксированы.
-- В финальном отчете есть: что сделано, что проверено, какие ограничения остались.
+## Related skills
+- `task-brief-template` (general) — spec template (goal, boundaries, invariants, DoD) where decomposition lands.
+- `spec-interview` (general) — if spec unclear, interview first, then decompose.
+- `cross-layer-change-checklist` (general) — mandatory layer sync before finalize.
+- `anti-drift` (general) — iteration discipline + circuit-breaker during execution.
+- `php/laravel-subagents` — delegate subtasks to subagents on large Laravel tasks.
+- `session-handoff` (general) — hand off unfinished task to next session.
 
-## Связанные скиллы
+<!-- ru-source-sha256: PENDING -->
 
-- `task-brief-template` (general) — шаблон постановки (цель, границы, инварианты, DoD), куда ложится декомпозиция отсюда.
-- `spec-interview` (general) — если постановка нечёткая, сначала интервью, потом декомпозиция.
-- `cross-layer-change-checklist` (general) — обязательная синхронизация слоёв перед финализацией.
-- `anti-drift` (general) — дисциплина итераций и circuit-breaker внутри выполнения.
-- `php/laravel-subagents` — делегирование подзадач субагентам на крупных Laravel-задачах.
-- `session-handoff` (general) — передача незакрытой задачи в следующую сессию.
+<!-- ru-source-sha256: 508d97629f79c9a29bbc6f17175ef248ea7001398ee0e304dca3f15546d485df -->

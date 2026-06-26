@@ -2,7 +2,7 @@
 name: customer-discovery
 bucket: founder
 version: 0.1.0
-description: Систематическое discovery — target profile, interview framework (прошлое не будущее), post-interview анализ 2 списков, asymmetry-check каждые 5 интервью, outreach-автоматизация
+description: Systematic discovery — target profile, interview framework (past not future), post-interview 2-list analysis, asymmetry-check every 5 interviews, outreach automation
 risk: draft
 persona: founder
 tags: [discovery, validation, market]
@@ -15,76 +15,60 @@ adapters: [claude, cursor, fable]
 
 # Skill: Customer Discovery
 
-Применять когда: гипотеза из `idea-discovery` сформулирована и прогнана через `adversarial-check`, и нужно **подтвердить её живыми разговорами** до строительства. Idea-стадия, основной источник доказательств problem-solution fit.
+Apply when: hypothesis from `idea-discovery` is formulated and run through `adversarial-check`, and you must confirm it with live conversations before building. Idea-stage; primary source of problem-solution fit evidence. Extends Mom-Test core of `idea-discovery`: **who** to ask, **what** to ask, **how** to analyze. Learning quality = (1) question quality × (2) right people.
 
-Расширяет Mom-Test ядро `idea-discovery` до полного протокола: **кого** спрашивать, **что** спрашивать, **как** анализировать. Качество того, что узнаёшь = (1) качество вопросов × (2) правильность людей.
+## Do NOT apply when
+- No testable hypothesis (do `idea-discovery` first).
+- Solution already validated, MVP underway — that's `pmf-diagnostics`, not discovery.
+- Hypothesis failed `adversarial-check` (KILL) — discovery won't save a dead idea.
 
----
+## 1. Who to ask (target profile)
+Precise profile > long contact list.
+- **Job titles** — concrete roles feeling the problem acutely (not "business", but "SMB CFO, 50–200 ppl").
+- **Company type / size** — segment, size, industry.
+- **Team structure / seniority** — who decides, who suffers (not always same person).
+- **Where reachable** — communities, events, LinkedIn groups, Slack/Telegram, subreddits.
+- **Prioritization** — first by closeness to problem.
+- Hypothesis touching >1 role (e.g. finance manager + CFO) → **separate question sets** per role; one framework would blur the difference.
 
-## Когда НЕ применять
+## 2. What to ask (interview framework)
+**Core rule: past, not future.** Rookie mistake — broad future question ("would you use a product that…") instead of concrete past ask ("tell me about the last time you hit this").
 
-- Нет проверяемой гипотезы (сначала `idea-discovery`).
-- Решение уже валидировано, идёт MVP — это `pmf-diagnostics`, не discovery.
-- Гипотеза не пережила `adversarial-check` (KILL) — discovery не спасёт мёртвую идею.
+**Opening (context):**
+1. Tell me about your role — typical day?
+2. What tools do you use for [problem area]?
 
----
+**Core (past behavior):**
+3. Tell me about the **last time** you hit [problem].
+4. How often? How painful?
+5. What do you do now to cope? (workaround)
+6. What's most annoying about the current approach?
 
-## 1. Кого спрашивать (target profile)
+**Probe (on deflection / vagueness):**
+7. [Vague] "Can you give a concrete example?"
+8. ["Not a problem"] "How do others on the team cope?"
 
-Точный профиль ценнее длинного списка контактов.
-
-- **Job titles** — конкретные роли, переживающие проблему остро (не «бизнес», а «финдир МСБ 50–200 чел»).
-- **Company type / size** — сегмент, размер, индустрия.
-- **Team structure / seniority** — кто принимает решение, кто страдает (не всегда один человек).
-- **Где досягаемы** — сообщества, события, LinkedIn-группы, Slack/Telegram, субреддиты.
-- **Prioritization** — кого первым, по близости к проблеме.
-
-Если гипотеза затрагивает >1 роли (например finance manager и CFO) — **разные наборы вопросов** для каждой; единый фреймворк сгладит различие.
-
-## 2. Что спрашивать (interview framework)
-
-**Главное правило: прошлое, не будущее.** Rookie-ошибка — общий вопрос про будущее («использовал бы ты продукт, который…») вместо конкретного запроса прошлого («расскажи про последний раз, когда столкнулся с этим»).
-
-**Открывающие (контекст):**
-1. Расскажи про свою роль — как выглядит типичный день?
-2. Какие инструменты используешь для [проблемная область]?
-
-**Core (прошлое поведение):**
-3. Расскажи про **последний раз**, когда столкнулся с [проблема].
-4. Как часто это? Насколько болезненно?
-5. Что делаешь сейчас, чтобы справиться? (workaround)
-6. Что больше всего раздражает в текущем подходе?
-
-**Probe (на deflection / расплывчатость):**
-7. [Расплывчато] «Можешь привести конкретный пример?»
-8. [«Не проблема»] «А как другие в команде справляются?»
-
-**❌ Под запретом:**
-- «Использовал бы ты…» (future-facing)
-- «Насколько важна тебе фича X?» (social desirability)
-- «Согласен, что [проблема] существует?» (leading)
+**❌ Forbidden:**
+- "Would you use…" (future-facing)
+- "How important is feature X to you?" (social desirability)
+- "Do you agree [problem] exists?" (leading)
 
 ## 3. Post-interview analysis
+After **every** conversation — debrief: what **confirmed** the hypothesis, what **refuted**, what **surprised**.
 
-После **каждого** разговора — дебриф: что **подтвердило** гипотезу, что **опровергло**, что **удивило**.
+**Every 5 interviews — synthesis + asymmetry check:**
+- Two lists: evidence FOR hypothesis, evidence AGAINST.
+- Recurring themes (heard 3+ times), surprises, contradictions.
+- **If FOR significantly longer than AGAINST — ask: is this real in the data, or what I wanted to hear?** (see `adversarial-check`).
 
-**После каждых 5 интервью — synthesis + asymmetry check:**
-- Два списка: evidence FOR гипотезы и evidence AGAINST.
-- Recurring themes (звучало 3+ раз), surprises, противоречия.
-- **Если FOR значительно длиннее AGAINST — спросить: это реально в данных, или это то, что я хотел услышать?** (см. `adversarial-check`).
+## 4. Outreach & schedule (automation)
+Offload ops to tools (in Brain: MCP / Claude Code; in Cowork: connectors):
+- From target profile → prospect list with verified contacts.
+- Personalized outreach emails per role/context.
+- Schedule (Gmail/Calendar via MCP), day-7 follow-up, status tracking table.
+- Founder focuses on the **conversations**, not coordination.
 
-## 4. Outreach и расписание (автоматизация)
-
-Операционку — на инструменты (в Brain: MCP / Claude Code; в Cowork: connectors):
-- Из target profile → prospect-список с verified-контактами.
-- Персонализированные outreach-письма под роль/контекст.
-- Расписание (Gmail/Calendar via MCP), follow-up на day-7, tracking-таблица статусов.
-- Фаундер фокусируется на **самих разговорах**, не на координации.
-
----
-
-## Структура output-файла
-
+## Output file structure
 `docs/01_Business/00_Customer_Discovery.md`:
 
 ```markdown
@@ -119,20 +103,18 @@ interviews_done: 0
 → problem-solution fit достигнут? (вход в startup-lifecycle idea-gate)
 ```
 
----
+## Agent adds
+- **Draft-questions audit.** Flags leading / future-facing / too-broad; suggests follow-up probe for 2–3 deflection-prone moments.
+- **Recruit logic.** Min interviews, which segments, where to find.
+- **Pattern-matching warning.** Flags where own reading of data may be bent to wishful thinking.
 
-## Что агент добавляет сам
+## Related skills
+- `founder/idea-discovery` — **requires**: supplies hypothesis and target sketch
+- `founder/adversarial-check` — synthesis/asymmetry check relies on it
+- `founder/competitive-analysis` — consumer: confirmed pains set the competitive frame
+- `founder/startup-lifecycle` — discovery closes Idea-exit (problem-solution fit)
+- `pm/pmf-diagnostics` — next validation in time (already at MVP, not Idea)
 
-- **Аудит черновика вопросов.** Помечает leading / future-facing / too-broad; предлагает follow-up probe для 2–3 моментов, склонных к deflection.
-- **Recruit-логика.** Сколько интервью минимум, какие сегменты, где искать.
-- **Pattern-matching warning.** Флажит, где собственное прочтение данных может подгоняться под желаемое.
+<!-- ru-source-sha256: PENDING -->
 
----
-
-## Связанные скиллы
-
-- `founder/idea-discovery` — **requires**: поставляет гипотезу и target-намётку
-- `founder/adversarial-check` — synthesis/asymmetry check опирается на него
-- `founder/competitive-analysis` — потребитель: подтверждённые боли задают конкурентный фрейм
-- `founder/startup-lifecycle` — discovery закрывает Idea-exit (problem-solution fit)
-- `pm/pmf-diagnostics` — следующая по времени валидация (уже на MVP, не Idea)
+<!-- ru-source-sha256: cf27d0750d0296d26ff048e9994b32153f0cd6989a29249e0bb9ea8c4d0ec2ea -->

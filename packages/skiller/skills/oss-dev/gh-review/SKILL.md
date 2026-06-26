@@ -2,7 +2,7 @@
 name: gh-review
 bucket: oss-dev
 version: 0.1.0
-description: "Ревью и хендофф изменений через GitHub CLI (gh) с экономией контекста: gh pr diff/view/comment/review, gh api для точечного чтения файлов вместо загрузки целиком. Активировать при ревью PR, передаче работы dev'у, чтении чужих изменений на GitHub."
+description: "Review and handoff changes via GitHub CLI (gh) with context economy: gh pr diff/view/comment/review, gh api for targeted file reads instead of loading whole files. Activate when reviewing PRs, handing off to a dev, reading others' changes on GitHub."
 risk: write
 persona: oss-dev
 tags: [github, gh, review, handoff, tokens, context]
@@ -14,111 +14,96 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-# Skill: GitHub Review через gh
+# Skill: GitHub Review via gh
 
-## Контекст
+Platform-layer work on changes (PRs, review threads, others' code on GitHub) goes through **`gh`**, not whole-file reads, not web UI. Not a `git` replacement — split:
 
-Платформенный слой работы с изменениями (PR, ревью-треды, чужой код на GitHub)
-проходит через **`gh`**, а не через чтение файлов целиком и не через веб-UI.
-Это не замена `git`: локальный VCS (`commit`, `branch`, `diff` рабочего дерева,
-`log`, `rebase`) остаётся за `git` — `gh` его не умеет. Разделение:
+- **Local** → `git` (history, branches, working-tree state: `commit`, `branch`, `diff`, `log`, `rebase`). `gh` does not do these.
+- **Platform / collaboration** → `gh` (PR, issue, review, release, `gh api`).
 
-- **Локально** → `git` (история, ветки, состояние рабочего дерева).
-- **Платформа / совместная работа** → `gh` (PR, issue, review, release,
-  `gh api`).
+## When to activate
 
-**Почему это экономит токены.** `gh pr diff 12` отдаёт *только* дифф;
-`gh pr view 12 --comments` — *только* треды ревью; `gh api .../contents/<path>`
-— *один* файл. Альтернатива — загрузить весь файл/каталог/историю в контекст —
-тратит токены на то, что не относится к задаче. Контекст — постоянный налог
-(см. `context-economy`); ревью через `gh` держит в окне только релевантный срез.
+- Review a pull request (yours or someone else's).
+- Handoff to a dev / accept others' work on GitHub.
+- Read others' changes, a discussion thread, check status.
+- Import/compare an external skill from a GitHub repo (targeted fetch).
 
-## Когда активировать
+Anti-trigger: purely local ops (commit, branch, working-tree conflict resolution) → `git`, not `gh`.
 
-- Ревью pull request (свой или чужой).
-- Передача работы dev'у / приём чужой работы (handoff) на GitHub.
-- Нужно прочитать чужие изменения, тред обсуждения, статус проверок.
-- Импорт/сверка внешнего скилла из GitHub-репозитория (точечный fetch).
+## Algorithm
 
-Анти-триггер: чисто локальные операции (коммит, ветка, разрешение конфликтов
-рабочего дерева) — это `git`, не `gh`.
+### 1. Read review context surgically, not by files
 
-## Алгоритм
-
-### 1. Читай ревью-контекст точечно, не файлами
-
-Вместо «прочитать весь PR/файлы» — минимальный срез под задачу:
+Minimal slice for the task, not "read the whole PR/files":
 
 ```bash
-gh pr view <N>                      # заголовок, описание, статус, чеклисты
-gh pr view <N> --comments           # только треды ревью/обсуждения
-gh pr diff <N>                      # только дифф (не файлы целиком)
-gh pr diff <N> -- path/to/file      # дифф одного пути
-gh pr checks <N>                    # статусы CI без логов целиком
-gh pr view <N> --json files -q '.files[].path'   # список затронутых путей
+gh pr view <N>                      # title, description, status, checklists
+gh pr view <N> --comments           # only review/discussion threads
+gh pr diff <N>                      # only the diff (not whole files)
+gh pr diff <N> -- path/to/file      # diff of one path
+gh pr checks <N>                    # CI statuses without full logs
+gh pr view <N> --json files -q '.files[].path'   # list of touched paths
 ```
 
-Файл целиком тяни **только если diff недостаточен** — и точечно через `gh api`
-(см. шаг 3), а не загрузкой локального файла, если он не в рабочем дереве.
+Pull a whole file **only if the diff is insufficient** — and targeted via `gh api` (step 3), not by loading a local file if it's not in the working tree.
 
-### 2. Постит ревью через gh, не вручную в UI
+### 2. Post review via gh, not manually in UI
 
 ```bash
-gh pr comment <N> --body "..."                      # одиночный комментарий
-gh pr review <N> --comment -b "..."                 # ревью без вердикта
-gh pr review <N> --approve -b "LGTM: ..."           # апрув
-gh pr review <N> --request-changes -b "..."         # запрос правок
+gh pr comment <N> --body "..."                      # single comment
+gh pr review <N> --comment -b "..."                 # review without verdict
+gh pr review <N> --approve -b "LGTM: ..."           # approve
+gh pr review <N> --request-changes -b "..."         # request changes
 ```
 
-Находки группируй по severity (как в `quality/code-review`); в теле — путь и
-строка, не пересказ файла.
+Group findings by severity (as in `quality/code-review`); body = path + line, not a file retelling.
 
-### 3. Точечное чтение файлов из чужого репозитория
+### 3. Targeted file reads from someone else's repo
 
-Для импорта/сверки внешнего кода без клонирования:
+For import/compare of external code without cloning:
 
 ```bash
-# содержимое одного файла на ветке/теге (base64 в .content)
+# one file's content on a branch/tag (base64 in .content)
 gh api repos/{owner}/{repo}/contents/{path}?ref={ref} \
   -q '.content' | base64 -d
 
-# список файлов каталога без скачивания содержимого
+# list a dir's files without downloading content
 gh api repos/{owner}/{repo}/contents/{dir}?ref={ref} -q '.[].path'
 
-# метаданные коммита/тега (когда менялся файл) — для upstream-дрейфа
+# commit/tag metadata (when a file changed) — for upstream drift
 gh api repos/{owner}/{repo}/commits?path={path}\&per_page=1 -q '.[0].sha'
 ```
 
-Это канал для **импортируемых скиллов**: `gh api` авто-аутентифицируется
-(токен из `gh auth`), уважает rate-limit и отдаёт один файл — против загрузки
-всего репозитория. Связка с `scripts/update-upstreams.sh` и `upstream.json`
-(`source: github`) — см. `docs/guide/upstream-sync.md`.
+Channel for **imported skills**: `gh api` auto-authenticates (token from `gh auth`), respects rate-limit, returns one file. Ties to `scripts/update-upstreams.sh` and `upstream.json` (`source: github`) — see `docs/guide/upstream-sync.md`.
 
-### 4. Handoff: оставляй ссылку, не дамп
+### 4. Handoff: leave a link, not a dump
 
-Передавая работу — ссылайся на артефакт через `gh`, не вставляй его телом:
+When handing off — reference the artifact via `gh`, don't paste it as body:
 
 ```bash
-gh pr view <N> --json url -q .url           # ссылка на PR
-gh issue view <N> --json url -q .url        # ссылка на issue
+gh pr view <N> --json url -q .url           # PR link
+gh issue view <N> --json url -q .url        # issue link
 ```
 
-Следующий агент/разработчик подтянет нужный срез сам тем же `gh`, не неся
-весь контекст из предыдущей сессии (см. `session-handoff`).
+Next agent/dev pulls the needed slice themselves via the same `gh` (see `session-handoff`).
 
-## Чеклист качества
+## Quality checklist
 
-- [ ] Ревью-контекст взят точечно (`gh pr diff`/`--comments`), не загрузкой файлов целиком
-- [ ] Чужой файл прочитан через `gh api .../contents`, а не клонированием/полной загрузкой
-- [ ] Находки запостены через `gh pr comment`/`gh pr review`, а не в веб-UI
-- [ ] Локальные VCS-операции оставлены за `git` (gh их не дублирует)
-- [ ] Handoff — ссылкой на PR/issue через `gh`, не дампом артефакта в контекст
+- [ ] Review context taken surgically (`gh pr diff`/`--comments`), not by loading whole files
+- [ ] External file read via `gh api .../contents`, not cloning/full load
+- [ ] Findings posted via `gh pr comment`/`gh pr review`, not the web UI
+- [ ] Local VCS ops left to `git` (gh does not duplicate them)
+- [ ] Handoff via PR/issue link through `gh`, not an artifact dump into context
 
-## Ссылки
+## Links
 
-- snippets/gh-review-commands.md — шпаргалка команд
-- `general/context-economy` — общая дисциплина расхода токенов (раздел про gh)
-- `oss-dev/github-flow` — процесс Issue→PR→Merge→Release (ревью-шаг ссылается сюда)
-- `quality/code-review` — критерии и severity находок
-- `general/session-handoff` — передача контекста между сессиями (handoff ссылкой, не дампом)
-- `docs/guide/upstream-sync.md` — gh-fetch при импорте внешних скиллов
+- snippets/gh-review-commands.md — command cheat sheet
+- `general/context-economy` — general token-spend discipline (gh section)
+- `oss-dev/github-flow` — Issue→PR→Merge→Release process (review step links here)
+- `quality/code-review` — finding criteria and severity
+- `general/session-handoff` — context handoff between sessions (handoff by link, not dump)
+- `docs/guide/upstream-sync.md` — gh-fetch when importing external skills
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: 3f44712c7bcdf1191b9826ee89a68460b476be9149bfb9e6d4d3c08bf42c713d -->

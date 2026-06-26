@@ -2,7 +2,7 @@
 name: shared-memory
 bucket: system
 version: 0.3.0
-description: "Единый «мозг» (общая память) проектов констелляции через хук ~/.claude/hooks/memory/ + демон mAInd. Recall перед работой, remember после. Канон для проектов — MODE=maind (демон :4111, изоляция по scope на стороне maind): приватный project:<id> + общее по тегам ns:<namespace> + global; recall их объединяет; на старте сессии авто-инжект дайджеста (native-память выключается). Правило роутинга: один факт в один стор. Бэкенд сменный: maind|native|file|federation|off."
+description: "Constellation shared brain via hook ~/.claude/hooks/memory/ + mAInd daemon. Recall before work, remember after. Project canon = MODE=maind (daemon :4111, scope isolation maind-side): private project:<id> + tag-shared ns:<namespace> + global; recall unions them; SessionStart auto-injects digest (native memory off). Routing rule: one fact in one store. Swappable backend: maind|native|file|federation|off."
 risk: write
 persona: architect
 tags: [memory, cross-project, topology, recall, context, coordination]
@@ -14,105 +14,74 @@ adapters: [claude]
 sha256: ""
 ---
 
-# Shared Memory (единый «мозг» констелляции)
+# Shared Memory (constellation shared brain)
 
-## Контекст
+Hook `~/.claude/hooks/memory/` = shared brain for one group (`brain`) only. Structure like `auto-approve`: switch `memory.sh`, mode in `env.ini` (`MODE`), groups/members in `config.json`, backends in `modes/`. Member resolution via topology (`local-topology`).
 
-Память по проектам разрознена: что выучено в одном проекте, не вспоминается в
-связанном. Хук `~/.claude/hooks/memory/` даёт **общий «мозг»** — но не всем
-подряд, а **только участникам одной группы** (`brain`). Это решает силос, не
-смешивая несвязанные проекты.
+## When to use
 
-Структура хука — как у `auto-approve`: переключатель `memory.sh`, режим в
-`env.ini` (`MODE`), группы и участники в `config.json`, бэкенды в `modes/`.
-Резолв участников опирается на топологию (см. `local-topology`).
-
-## Когда использовать
-
-- **Recall перед работой.** В начале содержательной задачи спроси общий мозг —
-  не решалось ли похожее в связанных проектах:
+- **Recall before work** — at start of a substantive task:
   ```bash
-  ~/.claude/hooks/memory/memory.sh recall "<тема задачи: домен, паттерн, баг>"
+  ~/.claude/hooks/memory/memory.sh recall "<task topic: domain, pattern, bug>"
   ```
-- **Remember после.** Зафиксируй межпроектно-полезный факт (решение, расхождение,
-  кандидат в общий пакет) — он станет виден другим участникам группы:
+- **Remember after** — record a cross-project-useful fact (decision, divergence, shared-package candidate):
   ```bash
-  ~/.claude/hooks/memory/memory.sh remember --type project "<факт одной фразой + почему>"
+  ~/.claude/hooks/memory/memory.sh remember --type project "<fact in one phrase + why>"
   ```
-- **Осмотреться:** `memory.sh status` (режим, группа, участники, число фактов),
-  `memory.sh members` (кто в группе).
+- **Inspect:** `memory.sh status` (mode, group, members, fact count), `memory.sh members` (who's in group).
 
-Не каждую мелочь: в общий мозг — только то, что полезно **другому** проекту
-группы (дубли, расходящиеся реализации, общие решения, кандидаты в общий пакет).
-Локальное и одноразовое — мимо.
+Only what's useful to **another** project in the group (dups, divergent impls, shared decisions, shared-package candidates). Local/one-off → skip.
 
-## Режимы (бэкенды) — `env.ini` MODE
+## Modes (backends) — `env.ini` MODE
 
-- **maind** ← **канон для прикладных проектов.** Делегирует в `maind memory` (демон
-  :4111). Та же память, что у MCP `maind_memory_*`: приватный `project:<id>` + общее по
-  тегам `ns:<namespace>` + `global`, recall объединяет. **Изоляция — на стороне maind**
-  (демон-пул один и `namespace` он игнорирует; maind встраивает scope-маркер в контент и
-  фильтрует на чтении). brain не нужен — scope берётся из проекта. `maind onboard` сам
-  ставит `MODE=maind` и namespaces (общий `axioma` + свой, см. [namespaces]).
-- **file** — один общий store на группу (markdown). Просто и предсказуемо.
-- **federation** — файловый: свои `memory/` участников + общий store. Git-прозрачно, без
-  демона. Оставлен для **инфра-узлов** (brain/swissknifeman); НЕ путать с graph-federation maind.
-- **agentmemory** — старый прямой proxy к демону (бил мимо API/scope) — **не использовать**,
-  заменён режимом `maind`.
-- **off** — выключено.
+- **maind** ← **canon for application projects.** Delegates to `maind memory` (daemon :4111). Same memory as MCP `maind_memory_*`: private `project:<id>` + tag-shared `ns:<namespace>` + `global`, recall unions them. **Isolation is maind-side** (single daemon pool, ignores `namespace`; maind embeds scope-marker in content and filters on read). No brain needed — scope from project. `maind onboard` sets `MODE=maind` and namespaces (shared `axioma` + own, see [namespaces]).
+- **file** — one shared store per group (markdown).
+- **federation** — file-based: per-member `memory/` + shared store. Git-transparent, no daemon. For **infra nodes** (brain/swissknifeman) only; NOT the same as maind graph-federation.
+- **agentmemory** — old direct daemon proxy (bypassed API/scope) — **do not use**, replaced by `maind`.
+- **off** — disabled.
 
-> ⚠️ Пиши/читай память проекта только через `maind memory` (хук в `MODE=maind`) или MCP
-> `maind_memory_*` — записи в обход (raw agentmemory) идут без scope-маркера и не находятся
-> scoped-recall'ом. Подробности изоляции — `docs/maind/guide/memory.md`.
+> ⚠️ Write/read project memory only via `maind memory` (hook in `MODE=maind`) or MCP `maind_memory_*` — bypass writes (raw agentmemory) lack the scope-marker and aren't found by scoped-recall. Isolation details: `docs/maind/guide/memory.md`.
 
-## Группы и участники (membership)
+## Groups & members (membership)
 
-- **MODE=maind (канон):** членство — через **namespaces проекта** в `config.json`
-  (`projects[].namespaces`), не через brains. Общий дом — `axioma` (все свои проекты);
-  у проекта плюс свой/продуктовый namespace (memster → `[axioma, memster]`); сторонним
-  клиентам — namespace без `axioma`. Видимость = `project:<id>` + его `ns:<…>` + `global`.
-- **MODE=file/federation (инфра):** `brains` → `{ имя: { members, store, agentmemory } }`;
-  участник видит мозг, только если он в `members`.
+- **MODE=maind (canon):** membership via project **namespaces** in `config.json` (`projects[].namespaces`), not via brains. Shared home = `axioma` (all own projects); project adds own/product namespace (memster → `[axioma, memster]`); external clients → namespace without `axioma`. Visibility = `project:<id>` + its `ns:<…>` + `global`.
+- **MODE=file/federation (infra):** `brains` → `{ name: { members, store, agentmemory } }`; member sees a brain only if in its `members`.
 
-## Per-project override (как auto-approve)
+## Per-project override (like auto-approve)
 
-Глобально: `~/.claude/hooks/memory/env.ini` (MODE) + `config.json`. В проекте:
-`<project>/.claude/memory.env.ini` (MODE) и `<project>/.claude/memory.config.json`
-(группа/участники); плюс `memory_brain` в `<project>/.swissknife.json` — какую
-группу проект использует по умолчанию.
+Global: `~/.claude/hooks/memory/env.ini` (MODE) + `config.json`. In project: `<project>/.claude/memory.env.ini` (MODE) and `<project>/.claude/memory.config.json` (group/members); plus `memory_brain` in `<project>/.swissknife.json` — project's default group.
 
-## Авто-загрузка на старте (digest) и роутинг native vs maind
+## SessionStart auto-load (digest) & native-vs-maind routing
 
-`MODE=maind` ставит SessionStart-хук, который инжектит **дайджест** памяти проекта в контекст
-(`maind memory digest` → `additionalContext`), и выключает нативную авто-память
-(`autoMemoryEnabled:false`) — демон становится единым источником и памяти, и стартового контекста.
-Гибко per-project: `maind onboard <id> --memory maind|native|off` (дефолт `maind`).
+`MODE=maind` installs a SessionStart hook injecting project memory **digest** into context (`maind memory digest` → `additionalContext`) and disables native auto-memory (`autoMemoryEnabled:false`). Per-project: `maind onboard <id> --memory maind|native|off` (default `maind`).
 
-**Правило роутинга — один факт в один стор, без дублей:**
-- **maind** (`maind memory` / `maind_memory_*`) — память проекта и дома (приватное `project:<id>`,
-  общее `--share`, кросс-проект/кросс-агент, авто-дайджест на старте). ← дефолт.
-- **native MEMORY.md** — выключена при `MODE=maind`. Если `--memory native`: только мелкие
-  инварианты «всегда под рукой», **без копий** maind-фактов.
-- **file-federation (`MODE=file/federation`)** — legacy, только инфра-узлы (brain/swissknifeman).
+**Routing rule — one fact in one store, no dups:**
+- **maind** (`maind memory` / `maind_memory_*`) — project + home memory (private `project:<id>`, shared `--share`, cross-project/cross-agent, start digest). ← default.
+- **native MEMORY.md** — off when `MODE=maind`. If `--memory native`: only small always-handy invariants, **no copies** of maind facts.
+- **file-federation (`MODE=file/federation`)** — legacy, infra nodes only (brain/swissknifeman).
 
-## Дисциплина
+## Discipline
 
-- Recall **до** работы, remember **после** — но только межпроектно-полезное.
-- Факт — одной фразой + **почему** (суть + зачем).
-- **Не дублируй** факт в native и maind — пиши в один стор по правилу роутинга выше.
-- Хук только дописывает; чужие факты не трогает. Секреты в память не кладём.
+- Recall **before**, remember **after** — cross-project-useful only.
+- Fact = one phrase + **why**.
+- **Don't duplicate** a fact across native and maind — one store per routing rule above.
+- Hook only appends; never touches others' facts. No secrets in memory.
 
-## Чеклист качества
+## Quality checklist
 
-- [ ] Перед содержательной задачей сделан `recall` по теме.
-- [ ] Зафиксирован только межпроектно-полезный факт (не локальная мелочь), с «почему».
-- [ ] Факт ушёл в правильный scope (приватный по умолчанию; `--share`/общий — только если полезен дому).
-- [ ] Для проекта режим `MODE=maind` (демон); `maind health` проходит round-trip.
+- [ ] `recall` on topic done before substantive task.
+- [ ] Only cross-project-useful fact recorded (not local trivia), with "why".
+- [ ] Fact in correct scope (private by default; `--share`/shared only if useful to home).
+- [ ] Project uses `MODE=maind` (daemon); `maind health` round-trip passes.
 
-## Ссылки
+## Links
 
-- `~/.claude/hooks/memory/` — сам хук (`memory.sh`, `env.ini`, `config.json`, `modes/`, `CREDITS.md`).
-- `local-topology` (бакет system) — резолв участников через `~/.swissknifeman/topology.json`.
-- `cross-project-coordinator` (бакет system) — поставщик межпроектных находок (дубли/расхождения/кандидаты в общий пакет), которые стоит `remember` для группы.
-- `general/session-handoff` — смежная тема: передача контекста между сессиями (разово), тогда как shared-memory — постоянный общий store группы.
-- Установка файлов хука: `harness hooks --global` (пакет harness).
+- `~/.claude/hooks/memory/` — the hook (`memory.sh`, `env.ini`, `config.json`, `modes/`, `CREDITS.md`).
+- `local-topology` (system bucket) — member resolution via `~/.swissknifeman/topology.json`.
+- `cross-project-coordinator` (system bucket) — source of cross-project findings (dups/divergences/shared-package candidates) worth `remember` for the group.
+- `general/session-handoff` — adjacent: one-off context handoff between sessions, vs shared-memory = persistent shared group store.
+- Install hook files: `harness hooks --global` (harness package).
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: 5624f36811f16981ae52f710294f3351a32f2ed48b2dcacc944bf4fd4dcb72c3 -->

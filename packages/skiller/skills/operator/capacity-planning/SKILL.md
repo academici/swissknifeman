@@ -2,7 +2,7 @@
 name: capacity-planning
 bucket: operator
 version: 0.1.0
-description: Планирование capacity — load forecasting, headroom, autoscaling policy, cost budget, что мониторить, когда масштабироваться вверх/вниз
+description: Capacity planning — load forecasting, headroom, autoscaling policy, cost budget, what to monitor, when to scale up/down
 risk: draft
 persona: operator
 tags: [ops, observability, monitoring, sla]
@@ -15,141 +15,114 @@ adapters: [claude, cursor, fable]
 
 # Skill: Capacity Planning
 
-Применять когда: сервис в проде, есть метрики нагрузки за ≥ 1 месяц, и стоит вопрос «выдержим ли мы next quarter / Black Friday / маркетинговую кампанию». Также — при подозрении на дорогую недогрузку (плати́м за idle железо).
+Apply when: service in prod, load metrics for ≥1 month, question is "will we survive next quarter / Black Friday / marketing campaign". Also: suspected expensive under-utilization (paying for idle hardware).
 
-Не применять: pre-prod, MVP без realistic traffic, либо при наличии корпоративного capacity-management процесса (используем, не дублируем).
+## Do NOT apply
+- < 1 month of prod data (unreliable statistics)
+- pre-prod / MVP without realistic traffic
+- MVP with manual scaling once per half-year (overhead not justified)
+- fully serverless, pay-per-request, no downstream bottlenecks (capacity = money, not resources)
+- internal tool with predictable load (10 users, same pattern) — one estimate is enough
+- existing corporate capacity-management process exists (use it, don't duplicate)
 
----
+## Step 1. What to measure
+Capacity is multi-dimensional, not just CPU.
 
-## Когда НЕ применять
-
-- < 1 месяц данных в проде (статистика ненадёжна)
-- MVP с ручным масштабированием раз в полгода — overhead не оправдан
-- Полностью serverless с pay-per-request и без bottleneck'ов от downstream (capacity = деньги, не ресурсы)
-- Внутренний tool с предсказуемой нагрузкой (10 юзеров, одинаковый паттерн) — достаточно одной оценки
-
----
-
-## Шаг 1. Что вообще измерять
-
-Capacity ≠ «сколько CPU». Это N измерений одновременно.
-
-| Ресурс | Что меряем | Bottleneck признак |
+| Resource | Measure | Bottleneck signal |
 |:---|:---|:---|
-| **CPU** | % утилизации (avg + p95) | > 70% sustained |
-| **Memory** | RSS / heap utilization | > 80% либо OOM kills |
-| **Network** | bandwidth in/out, connections | > 70% NIC, либо port exhaustion |
-| **Disk I/O** | IOPS, throughput, queue depth | queue depth растёт |
+| **CPU** | % utilization (avg + p95) | > 70% sustained |
+| **Memory** | RSS / heap utilization | > 80% or OOM kills |
+| **Network** | bandwidth in/out, connections | > 70% NIC, or port exhaustion |
+| **Disk I/O** | IOPS, throughput, queue depth | queue depth growing |
 | **Disk space** | free GB + growth rate | < 30 days runway |
 | **DB connections** | active / max | > 80% |
 | **External rate limits** | requests vs quota | > 70% quota |
-| **Latency under load** | p50/p95/p99 vs RPS | p99 нелинейно растёт |
+| **Latency under load** | p50/p95/p99 vs RPS | p99 grows non-linearly |
 
-**Правило:** capacity всегда multi-dimensional. Авто-scaling по одной метрике (CPU) — частая ошибка.
+Rule: capacity is always multi-dimensional. Autoscaling on a single metric (CPU) is a common error.
 
----
+## Step 2. Headroom
 
-## Шаг 2. Headroom — сколько запаса
-
-| Тип нагрузки | Headroom | Обоснование |
+| Load type | Headroom | Rationale |
 |:---|:---:|:---|
-| Steady predictable | 30% | Защита от minor spike |
-| Bursty (B2C, ритейл) | 50-70% | Burst может быть x3-5 |
-| Сезонный (Black Friday, налоговый период) | 100%+ за 2 недели до | Не растягиваем масштабирование на день X |
-| Critical (платежи, login) | ≥ 50% всегда | Цена downtime > цена headroom |
-| Background / batch | 10-20% | Не критично, перезапустится |
+| Steady predictable | 30% | minor spike protection |
+| Bursty (B2C, retail) | 50-70% | burst can be x3-5 |
+| Seasonal (Black Friday, tax period) | 100%+ starting 2 weeks before | don't stretch scaling onto day X |
+| Critical (payments, login) | ≥ 50% always | downtime cost > headroom cost |
+| Background / batch | 10-20% | non-critical, will restart |
 
-**Trade-off:** headroom = деньги. Слишком много — жжём бюджет. Слишком мало — page on-call.
+Trade-off: headroom = money. Too much burns budget; too little pages on-call.
 
----
+## Step 3. Load forecasting
+3 horizons:
 
-## Шаг 3. Load forecasting
-
-3 горизонта прогноза:
-
-| Горизонт | Метод | Источники |
+| Horizon | Method | Sources |
 |:---|:---|:---|
-| **Tactical** (1-2 недели) | Тренд + сезонность из метрик | Дашборд + business calendar |
-| **Quarterly** | Growth rate × current peak | Метрики + sales / marketing pipeline |
-| **Annual** | Бизнес-план + capacity per unit | Business plan + per-user resource cost |
+| **Tactical** (1-2 weeks) | trend + seasonality from metrics | dashboard + business calendar |
+| **Quarterly** | growth rate × current peak | metrics + sales/marketing pipeline |
+| **Annual** | business plan + capacity per unit | business plan + per-user resource cost |
 
-**Простая модель:**
+Simple model:
 ```
 forecast_peak = current_peak × (1 + monthly_growth)^months × seasonal_factor
 required_capacity = forecast_peak × (1 + headroom)
 ```
+`seasonal_factor` for known events (BF, Q4, launches) — from history or conservative x2-x3 estimate.
 
-Где `seasonal_factor` для известных событий (BF, Q4, launches) — из истории либо консервативная оценка x2-x3.
+## Step 4. Autoscaling policy
 
----
-
-## Шаг 4. Autoscaling policy
-
-| Policy | Когда | Подводные камни |
+| Policy | When | Pitfalls |
 |:---|:---|:---|
-| **Manual** | Стабильная нагрузка, малые амплитуды | Page on-call при spike |
-| **Reactive (HPA по CPU/mem)** | Стандартный B2C | Лаг масштабирования + cold start |
-| **Predictive scheduled** | Известные паттерны (рабочий день, BF) | Не помогает при unexpected spike |
-| **Predictive ML** | Большие amplitudes, есть данные | Сложно поддерживать |
-| **Гибрид (scheduled + reactive)** | Production-серьёзный | Самый сложный для дебага |
+| **Manual** | stable load, small amplitudes | pages on-call on spike |
+| **Reactive (HPA on CPU/mem)** | standard B2C | scaling lag + cold start |
+| **Predictive scheduled** | known patterns (workday, BF) | useless for unexpected spike |
+| **Predictive ML** | large amplitudes, data available | hard to maintain |
+| **Hybrid (scheduled + reactive)** | production-grade | hardest to debug |
 
-**Параметры autoscaling — обязательно фиксировать:**
-- Trigger metric (что замеряем)
-- Threshold (когда срабатывает)
-- Cooldown (между scale events)
-- Min replicas / max replicas (защита от runaway scaling — и вниз, и вверх)
-- Scale-down policy жёстче чем scale-up (не дёргать)
+Autoscaling params — MUST fix:
+- Trigger metric (what we measure)
+- Threshold (when it fires)
+- Cooldown (between scale events)
+- Min replicas / max replicas (runaway protection — both down and up)
+- Scale-down policy stricter than scale-up (don't flap)
 
-**Runaway risks:**
-- Авто-scale без max limit → один кривой запрос даст $10K в час AWS bill
-- Авто-scale-down при метрике, которая drop'ается из-за инцидента → cascading failure
-- HPA + cluster autoscaler без quota → выедают availability zone
+Runaway risks:
+- Autoscale without max limit → one bad request = $10K/hr AWS bill
+- Autoscale-down on a metric that drops due to incident → cascading failure
+- HPA + cluster autoscaler without quota → exhausts availability zone
 
----
+## Step 5. Cost budget — tied to capacity
+Capacity planning without budget is academic.
 
-## Шаг 5. Cost budget — связка с capacity
-
-Capacity-планирование без бюджета — академия.
-
-| Стоит замерять | Зачем |
+| Measure | Why |
 |:---|:---|
-| Cost per request / cost per user | Unit economics для PM/founder |
-| Cost per service per month | Bottom-up бюджет |
-| Cost share idle vs working | Headroom efficiency |
-| Cost growth rate vs revenue growth rate | Здоровье бизнес-модели |
+| Cost per request / cost per user | unit economics for PM/founder |
+| Cost per service per month | bottom-up budget |
+| Cost share idle vs working | headroom efficiency |
+| Cost growth rate vs revenue growth rate | business-model health |
 
-**Связка:** capacity_plan → required spend → должно укладываться в budget от founder/PM. Если не укладывается — вверх по эскалации (это решение о бизнес-модели, не операционное).
+Link: capacity_plan → required spend → must fit founder/PM budget. If not → escalate up (business-model decision, not operational).
 
----
+## Step 6. Pre-event protocol (launch, BF, marketing push)
+**2 weeks before** expected spike:
+1. **Forecast:** expected peak load x2 of forecast (buffer)
+2. **Pre-scale:** raise capacity to forecast level ahead of time (don't trust autoscale on cold start)
+3. **Load test:** run synthetic load on realistic data
+4. **Failure injection:** chaos engineering on key components
+5. **Game day:** tabletop walkthrough of scenarios with team
+6. **War room:** at launch — dedicated channel, IC assigned ahead, runbooks ready
+7. **Stand-by autoscaling:** max replicas temporarily raised
+8. **Post-event review:** actual vs forecast — for next-time calibration
 
-## Шаг 6. Pre-event protocol (запуск, BF, marketing push)
+## Agent adds itself
+- Concrete forecast formula with current metrics substituted (if provided)
+- Autoscaling policy recommendation per stack (Kubernetes HPA / AWS ASG / serverless)
+- Link to `observability-design`: which SLO metrics drive capacity decisions
+- Link to `incident-response`: capacity-caused incidents → separate classification in postmortem
+- "Pre-event readiness" checklist (8 items above — ready checkbox)
+- Cost monitoring hint: AWS Cost Explorer / GCP Billing / Datadog Cost Management — choose by stack
 
-За **2 недели до** ожидаемого spike:
-
-1. **Forecast:** ожидаемая пиковая нагрузка x2 от прогноза (запас)
-2. **Pre-scale:** поднять capacity до forecast уровня заранее (не доверять авто-скейлу на cold start)
-3. **Load test:** прогнать synthetic нагрузку на realistic данных
-4. **Failure injection:** chaos engineering на ключевых компонентах
-5. **Game day:** табличный обход сценариев с командой
-6. **War room:** на момент запуска — выделенный channel, IC заранее, runbook'и под рукой
-7. **Stand-by autoscaling:** max replicas повышен временно
-8. **Post-event review:** что фактически случилось vs прогноз — для калибровки следующего раза
-
----
-
-## Что агент добавляет сам
-
-- Конкретная формула forecast с подстановкой текущих метрик (если переданы)
-- Рекомендация autoscaling policy под стек (Kubernetes HPA / AWS ASG / serverless)
-- Связка с `observability-design`: какие SLO метрики используем для capacity decisions
-- Связка с `incident-response`: incident'ы из-за capacity issues — отдельная классификация в postmortem
-- Чек-лист «pre-event readiness» (8 пунктов выше — готовый чек-бокс)
-- Подсказка про cost monitoring: AWS Cost Explorer / GCP Billing / Datadog Cost Management — выбор по стеку
-
----
-
-## Структура output-файла `Capacity_Plan.md`
-
+## Output file structure `Capacity_Plan.md`
 ```markdown
 # Capacity Plan: [ProjectName] — [Quarter/Year]
 
@@ -164,26 +137,23 @@ Capacity-планирование без бюджета — академия.
 ## 9. Open risks / known limits (что не сможем масштабировать — например, monolithic DB)
 ```
 
----
+## Hard prohibitions
+DO NOT:
+- Autoscaling without `max replicas` (runaway cost)
+- Capacity planning without cost component (tech-only)
+- Forecast based on a single month of data (no seasonality)
+- Make a capacity decision that violates SLO (if headroom smaller — flag as risk)
+- Predict with ML models without a stable baseline model first (overfitting)
+- Pre-event without load test (hope is not a plan)
+- Ignore downstream rate limits (scaled own service horizontally → vendor kills us with rate limit)
+- Assume serverless = "no capacity problems" (there are: concurrent executions, downstream connections, cost)
 
-## Жёсткие запреты
+## Links
+- `architect/observability-design` — source of metrics/SLO/SLI and error budget that capacity decisions build on (prerequisite)
+- `php/health-checks` — availability monitoring impl (disk/queue/heartbeat), signals for bottleneck analysis
+- `operator/incident-response` — capacity incidents classified here; pre-event war room takes roles from here
+- `operator/oncall-rotation` — headroom affects page frequency; lack of capacity = on-call burnout
+- `operator/runbook` — scale-up as runbook mitigation relies on autoscaling policy from this skill
+<!-- ru-source-sha256: PENDING -->
 
-НЕЛЬЗЯ:
-- Авто-scaling без `max replicas` (runaway cost)
-- Capacity planning без cost component (только техническая часть)
-- Forecast на основе одного месяца данных (нет сезонности)
-- Принимать capacity-решение которое нарушает SLO (если headroom меньше — обозначить как risk)
-- Пытаться предсказать ML-моделями без устойчивой baseline-модели сначала (overfitting)
-- Pre-event без load test (надежда — не план)
-- Игнорировать downstream rate limits (свой сервис горизонтально масштабировали — vendor нас прибьёт rate limit'ом)
-- Считать что serverless = «нет capacity-проблем» (есть: concurrent executions, downstream connections, cost)
-
----
-
-## Ссылки
-
-- `architect/observability-design` — источник метрик/SLO/SLI и error budget, на которых строится capacity-решение (предпосылка)
-- `php/health-checks` — реализация мониторинга доступности (диск/очередь/heartbeat), сигналы для bottleneck-анализа
-- `operator/incident-response` — capacity-инциденты классифицируются здесь; pre-event war room берёт роли отсюда
-- `operator/oncall-rotation` — headroom влияет на частоту page'ей; недостаток capacity = выгорание on-call
-- `operator/runbook` — scale-up как митигация в runbook'е опирается на autoscaling policy из этого скилла
+<!-- ru-source-sha256: 2056a9bd3d543b60fb49313848d284e0945e31aa2603d49f01fbb5c8f855b815 -->

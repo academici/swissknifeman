@@ -2,7 +2,7 @@
 name: laravel-packages
 bucket: php-packages
 version: 0.3.0
-description: "Создание Laravel-пакетов: scaffold, тесты, публикация скиллов пакета потребителям через vendor:publish"
+description: "Build Laravel packages: scaffold, tests, publish package skills to consumers via vendor:publish"
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "package-dev", "skills"]
@@ -14,61 +14,47 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-## Контекст
+Scope: create a Laravel package from scratch or extend one. Scaffold (composer.json, ServiceProvider, config, tests); if the package carries domain expertise, publish its own skills to consumers via `vendor:publish`. A domain package ships its skills with itself; consumer installs the package and gets agent skills via one artisan command.
 
-Создание Laravel-пакета с нуля или доработка существующего: scaffold
-(composer.json, ServiceProvider, config, тесты) и — если пакет несёт доменную
-экспертизу — публикация собственных скиллов потребителям через `vendor:publish`.
+## Inputs
 
-Принцип vendor-skills: пакет, который решает доменную задачу (безопасность,
-биллинг, интеграции), знает о своей предметной области больше, чем универсальный
-реестр. Такой пакет возит свои скиллы с собой — потребитель ставит пакет и
-одной artisan-командой получает скиллы для работы AI-агента с этим пакетом.
+- Package name (`vendor/package`) and purpose
+- Target PHP/Laravel versions
+- Whether the package has domain knowledge useful to the consumer's agent (usage patterns, migration scenarios, common errors)
 
-## Входные данные
+## Algorithm
 
-- Название пакета (`vendor/package`) и его назначение
-- Целевые версии PHP/Laravel
-- Есть ли у пакета доменные знания, полезные агенту потребителя
-  (паттерны использования, миграционные сценарии, типовые ошибки)
+1. Scaffold from snippets: `composer.json.stub`, `ServiceProvider.stub.php`, `config.stub.php`, `TestCase.stub.php`. Replace placeholders with package name.
+2. If the package publishes skills:
+   - create `resources/skills/<package>-<skill>/SKILL.md` (+ `snippets/`). Skill folder name **must be prefixed with the package name** (avoid consumer collisions with other sources);
+   - add publishing to ServiceProvider per `boost-skill-publisher.php`: agent-neutral layout (`.ai/skills/vendor/<package>/`) and/or flat for Claude Code (`.claude/skills/`);
+   - publish tag is `<package>-skills`.
+3. Full-cycle test: `composer install` in a test app → `php artisan vendor:publish --tag=<package>-skills` → verify `SKILL.md` landed at the expected path and the agent sees it.
+4. Run package tests and linters (pest/phpunit, pint, phpstan).
 
-## Алгоритм
+## Outputs
 
-1. Scaffold по сниппетам: `composer.json.stub`, `ServiceProvider.stub.php`,
-   `config.stub.php`, `TestCase.stub.php`. Заменить плейсхолдеры на имя пакета.
-2. Если пакет публикует скиллы:
-   - создать `resources/skills/<package>-<skill>/SKILL.md` (+ `snippets/`).
-     Имя папки скилла — **с префиксом пакета**, чтобы у потребителя не было
-     коллизий с другими источниками;
-   - добавить в ServiceProvider публикацию по `boost-skill-publisher.php`:
-     агент-нейтральная раскладка (`.ai/skills/vendor/<package>/`) и/или плоская
-     для Claude Code (`.claude/skills/`);
-   - тег публикации — `<package>-skills`.
-3. Тест полного цикла: `composer install` в тестовом приложении →
-   `php artisan vendor:publish --tag=<package>-skills` → проверить, что
-   `SKILL.md` лёг по ожидаемому пути и агент его видит.
-4. Прогнать тесты пакета и линтеры (pest/phpunit, pint, phpstan).
+- Working package scaffold
+- `resources/skills/` with published skills (if applicable)
+- ServiceProvider publishing with tag `<package>-skills`
 
-## Выходные данные
+## Quality checklist
 
-- Рабочий scaffold пакета
-- `resources/skills/` с публикуемыми скиллами (если применимо)
-- Публикация в ServiceProvider с тегом `<package>-skills`
+- [ ] composer.json: PSR-4, supported PHP/Laravel versions, extra.laravel
+- [ ] Published skills have valid frontmatter (`name`, `description`)
+- [ ] Skill folder names prefixed with package name
+- [ ] `vendor:publish --tag=<package>-skills` verified in a clean app
+- [ ] Tests and static analysis green
 
-## Чеклист качества
-
-- [ ] composer.json: PSR-4, поддерживаемые версии PHP/Laravel, extra.laravel
-- [ ] Публикуемые скиллы имеют валидный frontmatter (`name`, `description`)
-- [ ] Имена папок скиллов префиксованы именем пакета
-- [ ] `vendor:publish --tag=<package>-skills` проверен в чистом приложении
-- [ ] Тесты и статанализ зелёные
-
-## Ссылки
+## Links
 
 - snippets/boost-skill-publisher.php
 - snippets/ServiceProvider.stub.php
 - snippets/composer.json.stub
-- Связанные скиллы (upstream-скиллы по работе над пакетом из стартеров): `php/laravel-package-scaffold`, `php/laravel-package-service-provider`, `php/laravel-package-testing`, `php/laravel-package-docs`, `php/laravel-package-release`, `php/laravel-package-compatibility` (все external)
-- `php/laravel` — архитектурные паттерны внутри пакета; `php/laravel-structure` — размещение классов
-- `php/botkit` — пример доменного пакета, публикующего скиллы потребителям
-- `general/skills-ssot` — единый источник истины скиллов для нескольких агентов
+- Related (upstream package-work skills from starters): `php/laravel-package-scaffold`, `php/laravel-package-service-provider`, `php/laravel-package-testing`, `php/laravel-package-docs`, `php/laravel-package-release`, `php/laravel-package-compatibility` (all external)
+- `php/laravel` — architecture patterns inside the package; `php/laravel-structure` — class placement
+- `php/botkit` — example domain package publishing skills to consumers
+- `general/skills-ssot` — single source of truth for skills across multiple agents
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: 6f89e0d676ae45b9fdbd7438f8da2a1f00331a6cbc9d8825fdc445615ae417c8 -->

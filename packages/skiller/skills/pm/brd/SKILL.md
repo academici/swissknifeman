@@ -2,7 +2,7 @@
 name: brd
 bucket: pm
 version: 0.1.0
-description: Business Requirements Document: функциональные требования, user stories, acceptance criteria
+description: Business Requirements Document: functional requirements, user stories, acceptance criteria
 risk: draft
 persona: pm
 tags: [requirements, template]
@@ -15,69 +15,50 @@ adapters: [claude, cursor, fable]
 
 # Skill: BRD Writing
 
-Применять когда: задача на написание или обновление BRD (`docs/03_Dev/BRD.md`).
+Apply when: task is to write or update BRD (`docs/03_Dev/BRD.md`).
 
----
+BRD = WHAT the system does, not HOW. Audience: developers, in-repo AI agents, technically-literate investors.
 
-## Что такое BRD в этом vault
+## Ask BEFORE writing (only if not already known from `docs/02_Workflow/`)
+- Key scenarios: who, what, when
+- Exceptions and edge cases
+- Integrations with external systems
+- User roles and permissions
+- Availability / performance requirements
 
-BRD = **ЧТО** система делает. Не КАК.
-
-Аудитория документа: разработчики, ИИ-агенты в репозитории, инвесторы с техническим бэкграундом.
-
----
-
-## Обязательные вопросы ПЕРЕД написанием
-
-Задать пользователю (только если ещё не известно из `docs/02_Workflow/`):
-- Ключевые сценарии: кто, что, когда делает
-- Исключения и граничные случаи
-- Интеграции с внешними системами
-- Роли и права пользователей
-- Требования к доступности / производительности
-
----
-
-## Структура BRD
-
+## BRD structure
 ```
-1. Цель документа и контекст
-2. Акторы и роли
-3. Функциональные требования (по модулям)
-   - User stories: "Как [роль], я хочу [действие], чтобы [цель]"
-   - Acceptance criteria для каждой story
-   - Граничные случаи (агент добавляет сам)
-4. Нефункциональные требования
-5. Интеграции
-6. Открытые вопросы (ссылка на [[Открытые вопросы]])
+1. Document goal and context
+2. Actors and roles
+3. Functional requirements (by module)
+   - User stories: "As a [role], I want [action], so that [goal]"
+   - Acceptance criteria per story
+   - Edge cases (agent adds these)
+4. Non-functional requirements
+5. Integrations
+6. Open questions (link to [[Открытые вопросы]])
 ```
 
----
+## Agent adds itself
+- User stories the user didn't mention but that logically follow
+- Edge cases: user offline? data invalid? concurrent request?
+- Requirement conflicts — name them explicitly, propose a resolution
 
-## Что агент добавляет сам
+## Hard prohibitions at BRD stage — FORBIDDEN
+- SQL table schemas
+- Classes, methods, function signatures
+- In-code data structures
+- Concrete implementation patterns (Repository, CQRS, etc.)
+- Technology choices (except where it is a business requirement)
 
-- User stories, которые пользователь не упомянул, но логически вытекают
-- Граничные случаи: что если пользователь офлайн? данные невалидны? конкурентный запрос?
-- Конфликты требований — явно называть и предлагать решение
+## Related skills
+- `pm/business-process` — input for BRD: FSM/workflow underpinning functional requirements (required BEFORE BRD).
+- `pm/requirement-critic` — audit finished BRD (completeness, conflicts, MoSCoW) before moving to architecture.
+- `pm/prd-from-brd` — next layer: expands BRD into detailed user stories with AC and UX.
+- `pm/product-roadmap` — phasing requirements (MVP → v1 → v2) on top of BRD.
+- `architect/architecture`, `architect/data-schema`, `architect/tech-stack-selection` — third layer (HOW), consume BRD.
+- `general/spec-interview` — one-question-at-a-time interview technique to gather missing requirements before BRD.
 
----
+<!-- ru-source-sha256: PENDING -->
 
-## Жёсткие запреты на стадии BRD
-
-НЕЛЬЗЯ:
-- SQL-схемы таблиц
-- Классы, методы, сигнатуры функций
-- Структуры данных в коде
-- Конкретные паттерны реализации (Repository, CQRS и т.д.)
-- Выбор технологий (кроме случаев, где это бизнес-требование)
-
----
-
-## Связанные скиллы
-
-- `pm/business-process` — вход для BRD: FSM/workflow, на которые опираются функциональные требования (требуется ДО BRD).
-- `pm/requirement-critic` — аудит готового BRD (полнота, конфликты, MoSCoW) перед переходом в архитектуру.
-- `pm/prd-from-brd` — следующий слой: разворачивает BRD в детальные user stories с AC и UX.
-- `pm/product-roadmap` — фазирование требований (MVP → v1 → v2) поверх BRD.
-- `architect/architecture`, `architect/data-schema`, `architect/tech-stack-selection` — третий слой (КАК), потребляют BRD.
-- `general/spec-interview` — техника интервью «по одному вопросу» для сбора недостающих требований перед BRD.
+<!-- ru-source-sha256: a56d6f35e68ab49fc39eda0b5bc2cfacbbdaf920fba88b8f421f7dbc21d1602d -->

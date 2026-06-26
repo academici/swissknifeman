@@ -2,7 +2,7 @@
 name: context-economy
 bucket: general
 version: 1.1.0
-description: "Экономия контекста Claude Code в проекте: CLAUDE.md ≤200 строк, path-scoped правила .claude/rules/, /compact vs /clear, паттерн Plan→Clear→Execute, аудит MCP, маршрутизация моделей. Только официально поддерживаемые механизмы — без мифов вроде .claudeignore."
+description: "Claude Code context economy in a project: CLAUDE.md ≤200 lines, path-scoped .claude/rules/, /compact vs /clear, Plan→Clear→Execute, MCP audit, model routing. Officially-supported mechanisms only — no myths like .claudeignore."
 risk: draft
 persona: oss-dev
 tags: [tokens, context, claude-code, workflow, conventions]
@@ -19,75 +19,75 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-# Context Economy — дисциплина расхода токенов
+# Context Economy — token-spend discipline
 
-## Контекст
+Reference: https://code.claude.com/docs/en/memory. Do NOT exist / do NOT work: `.claudeignore` (not a thing in Claude Code); `@import` in CLAUDE.md = organization not economy (imports load fully at start).
 
-CLAUDE.md и правила инжектируются в каждую сессию — каждые 100 лишних строк это постоянный налог на всю разработку. История сессии растёт с каждым ходом, MCP-схемы грузятся даже без использования. Этот скилл — проверенный по официальной документации набор приёмов (https://code.claude.com/docs/en/memory). Чего здесь нет, потому что оно не работает: `.claudeignore` не существует в Claude Code; `@import` в CLAUDE.md — организация, не экономия (импортированные файлы грузятся при старте целиком).
+## 1. CLAUDE.md — ≤200 lines (Anthropic official target)
 
-## Алгоритм
+- Keep: non-standard build/test commands, architecture decisions against framework defaults, prohibitions, paths to skills/rules.
+- Remove: what the model knows from training (standard Laravel/TS), aspirational rules ("write clean code"), contacts, schedules.
+- Per-line test: "would this rule surprise an experienced dev new to the repo?" No → remove.
+- Human notes → HTML comments `<!-- ... -->`: stripped before context injection (preserved inside code blocks).
+- Audit checklist: snippets/claude-md-checklist.md.
 
-### 1. CLAUDE.md — ≤200 строк (официальный ориентир Anthropic)
+## 2. Path-scoped rules — `.claude/rules/*.md`
 
-- Оставлять: нестандартные команды сборки/тестов, архитектурные решения против дефолта фреймворка, запреты, пути к скиллам/правилам.
-- Удалять: то, что модель знает из обучения (стандартный Laravel/TS), aspirational-правила («пиши чистый код»), контакты и расписания.
-- Тест на строку: «удивит ли это правило опытного разработчика, нового в репо?» Нет → удалить.
-- Заметки для людей — в HTML-комментарии `<!-- ... -->`: они вырезаются до инжекции в контекст (внутри code-блоков — сохраняются).
-- Чеклист аудита: snippets/claude-md-checklist.md.
-
-### 2. Path-scoped правила — `.claude/rules/*.md`
-
-Тематические правила с `paths:` frontmatter грузятся только когда Claude читает совпадающие файлы; без `paths:` — каждую сессию наравне с CLAUDE.md:
+Rules with `paths:` frontmatter load only when Claude reads matching files; without `paths:` → every session like CLAUDE.md:
 
 ```markdown
 ---
 paths:
   - "app/Filament/**"
 ---
-# Filament rules — грузятся только при работе с Filament-файлами
+# Filament rules — load only when working with Filament files
 ```
 
-Шаблон: snippets/rules-example.md. Не путать со скиллами: SKILL.md и так лениво загружается (в контексте сессии живут только name+description), `paths:` для скиллов не нужен и не существует.
+Template: snippets/rules-example.md. Not skills: SKILL.md already loads lazily (only name+description live in session context); `paths:` for skills is unneeded and does not exist.
 
-### 3. Сессии: /compact, /clear, Plan→Clear→Execute
+## 3. Sessions: /compact, /clear, Plan→Clear→Execute
 
-- `/compact` — после завершения фичи (суммирует историю, сохраняет решения).
-- `/clear` — при смене темы (полный сброс).
-- Большие задачи — раздельные сессии: план в файл (`/plan` → `.claude/plans/<task>.md`) → `/clear` → выполнение с загрузкой только плана (`/execute`). Промежуточные попытки планирования не тянутся в контекст выполнения. Шаблоны команд: snippets/command-{prime,plan,execute}.md → скопировать в `.claude/commands/` проекта.
+- `/compact` — after finishing a feature (summarizes history, keeps decisions).
+- `/clear` — on topic switch (full reset).
+- Large tasks → separate sessions: plan to file (`/plan` → `.claude/plans/<task>.md`) → `/clear` → execute loading only the plan (`/execute`). Intermediate planning attempts don't carry into execution context. Command templates: snippets/command-{prime,plan,execute}.md → copy into project `.claude/commands/`.
 
-### 4. Вывод инструментов
+## 4. Tool output
 
-В PHP-проектах — скилл `pao` (bucket: php): тесты/статанализ сжимаются до ~20 токенов JSON.
+PHP projects → skill `pao` (bucket: php): tests/static-analysis compressed to ~20 tokens JSON.
 
-### 5. Аудит MCP и моделей
+## 5. MCP & model audit
 
-- MCP-сервер не использовался 7 дней → отключить (его схема грузится в каждый запрос). CLI вместо MCP, где возможно.
-- Модель — нативно через `/model`: рутина/разведка — Haiku, архитектура/дебаг — старшая модель. Сторонние прокси-роутеры (claude-code-router) не использовать: лишний слой риска без нативных гарантий.
+- MCP server unused 7 days → disable (its schema loads in every request). CLI instead of MCP where possible.
+- Model — natively via `/model`: routine/recon → Haiku, architecture/debug → senior model. Don't use third-party proxy routers (claude-code-router): extra risk layer without native guarantees.
 
-### 6. Платформенный слой — через `gh`, не файлами
+## 6. Platform layer — via `gh`, not files
 
-GitHub-операции (PR, ревью-треды, чужой код, релизы) — через **GitHub CLI**, а не чтением файлов целиком и не веб-UI. Это **не** замена `git`: локальный VCS (commit, branch, diff рабочего дерева, log, rebase) остаётся за `git`, `gh` его не умеет. Разделение: локально → `git`; платформа → `gh`. Экономия в том, что `gh` отдаёт минимальный срез: `gh pr diff <N>` — только дифф, `gh pr view <N> --comments` — только треды, `gh api .../contents/{path}` — один файл (а не клонирование репо). Детальный алгоритм и команды — скилл `oss-dev/gh-review`.
+GitHub ops (PRs, review threads, others' code, releases) → **GitHub CLI**, not whole-file reads, not web UI. NOT a `git` replacement: local VCS (commit, branch, working-tree diff, log, rebase) stays with `git`, `gh` can't do it. Split: local → `git`; platform → `gh`. `gh` returns minimal slice: `gh pr diff <N>` — diff only; `gh pr view <N> --comments` — threads only; `gh api .../contents/{path}` — one file (not a repo clone). Full algorithm/commands → skill `oss-dev/gh-review`.
 
-### 7. Жёсткая блокировка шума — permissions.deny
+## 7. Hard noise block — permissions.deny
 
-`permissions.deny: Read(...)` в `.claude/settings.json` — аппаратный блок чтения (`storage/logs/**`, `node_modules/**`, `*.lock`). Готовые пресеты: `configs/claude-code/` + `scripts/apply-permissions.sh`. В Laravel-проектах с Boost НЕ блокировать `vendor/**` — гайдлайны живут в `vendor/laravel/boost/.ai/`.
+`permissions.deny: Read(...)` in `.claude/settings.json` — hardware read block (`storage/logs/**`, `node_modules/**`, `*.lock`). Presets: `configs/claude-code/` + `scripts/apply-permissions.sh`. In Laravel+Boost projects do NOT block `vendor/**` — guidelines live in `vendor/laravel/boost/.ai/`.
 
-## Чеклист качества
+## Quality checklist
 
-- [ ] CLAUDE.md ≤200 строк, каждая строка проходит тест «удивит ли опытного»
-- [ ] Тематические/локальные правила вынесены в `.claude/rules/` с `paths:`
-- [ ] deny-пресет шума применён; `vendor/**` не заблокирован в Boost-проектах
-- [ ] Команды prime/plan/execute скопированы в `.claude/commands/`
-- [ ] MCP-серверы проверены за последние 30 дней
-- [ ] Платформенные операции (PR/ревью/чужой код) идут через `gh`, не загрузкой файлов целиком
+- [ ] CLAUDE.md ≤200 lines, each line passes "would it surprise an experienced dev"
+- [ ] Topic/local rules moved to `.claude/rules/` with `paths:`
+- [ ] deny noise preset applied; `vendor/**` not blocked in Boost projects
+- [ ] prime/plan/execute commands copied into `.claude/commands/`
+- [ ] MCP servers checked within last 30 days
+- [ ] Platform ops (PR/review/others' code) go via `gh`, not whole-file loading
 
-## Ссылки
+## References
 
 - snippets/rules-example.md, snippets/claude-md-checklist.md
 - snippets/command-prime.md, snippets/command-plan.md, snippets/command-execute.md
 - https://code.claude.com/docs/en/memory — CLAUDE.md, rules, auto memory
-- Скилл `pao` (php) — сжатие вывода PHP-инструментов
-- Скилл `oss-dev/gh-review` — gh-driven ревью/хендофф (раздел 6, полный алгоритм)
-- Скилл `compact-responses` (general) — лаконичность вывода модели (другая ось экономии: ответ, а не контекст)
-- Скилл `task-brief-template` (general) — паттерн Plan→Clear→Execute и шаблоны команд `/plan`, `/execute`
-- Скилл `session-handoff` (general) — сжатие сессии в handoff перед `/clear`
+- Skill `pao` (php) — compress PHP tool output
+- Skill `oss-dev/gh-review` — gh-driven review/handoff (section 6, full algorithm)
+- Skill `compact-responses` (general) — terse model output (different economy axis: the answer, not the context)
+- Skill `task-brief-template` (general) — Plan→Clear→Execute pattern and `/plan`, `/execute` command templates
+- Skill `session-handoff` (general) — compress session into a handoff before `/clear`
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: 0d1c27af7f1c711cdfca318720b7bf0f4065361b0203b5a7cb525a8c48770751 -->

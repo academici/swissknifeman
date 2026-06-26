@@ -2,7 +2,7 @@
 name: git-commit-rules
 bucket: general
 version: 0.2.0
-description: "Правила работы с Git в проекте: подготовка коммита, husky/commitlint, формат сообщений и безопасный порядок действий."
+description: "Git workflow: commit prep, husky/commitlint, message format, safe action order."
 risk: write
 persona: oss-dev
 tags: [git, conventions, conventional-commits, gitops]
@@ -16,43 +16,35 @@ sha256: ""
 
 # Git Commit Rules
 
-Используйте этот skill, когда задача включает:
+Use when task involves:
+- `git commit`, `git add`, `git status`, PR prep
+- diagnosing git hook failures
+- checking commit message format
 
-- `git commit`, `git add`, `git status`, подготовку PR
-- разбор ошибок git hooks
-- проверку формата commit message
+## Mandatory order before commit
 
-## Обязательный порядок перед коммитом
-
-1. Проверить состояние: `git status --short`.
-2. Проверить изменения: `git diff` (и `git diff --staged`, если нужно).
-3. Перед запуском коммита применить preflight для Node/pnpm: `.ai/skills/node-pnpm-preflight/SKILL.md`.
-4. Убедиться, что hooks не обходятся (`--no-verify` запрещен без явного запроса пользователя).
-5. Выполнить `git commit` только после успешных локальных проверок.
+1. `git status --short`.
+2. `git diff` (and `git diff --staged` if needed).
+3. Apply Node/pnpm preflight before committing: `.ai/skills/node-pnpm-preflight/SKILL.md`.
+4. Don't bypass hooks (`--no-verify` forbidden without explicit user request).
+5. Run `git commit` only after local checks pass.
 
 ## Husky + Commitlint
 
-- `commit-msg` hook считается обязательной проверкой.
-- Если hook падает из-за окружения (`pnpm`/`node` недоступны):
-  - не отключать hook;
-  - сначала восстановить окружение через `node-pnpm-preflight`;
-  - только после этого повторять коммит.
+- `commit-msg` hook is a mandatory check.
+- If hook fails due to environment (`pnpm`/`node` unavailable): don't disable hook; first restore environment via `node-pnpm-preflight`; only then retry commit.
 
-## Формат сообщения коммита
+## Commit message format
 
-- Использовать conventional-стиль проекта.
-- Сообщение — на русском языке.
-- Типовые префиксы: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, `perf`, `style`, `build`, `ci`, `revert` (+ `security`, если проект ведёт такую практику).
-- Scope брать из commitlint-конфига проекта (если есть) или выводить из структуры/слоёв проекта; не выдумывать.
-- Заголовок формулировать как "сделали", а не как "сделать":
-  - использовать прошедшее время, чаще множественное число: `добавили`, `исправили`, `убрали`, `обновили`.
-  - избегать инфинитивов: `добавить`, `исправить`, `сделать`.
-- Стиль: короткий заголовок + при необходимости 1-2 строки с причиной изменений.
-- Формулировка должна выглядеть как сообщение от человека, а не шаблон ИИ:
-  - конкретный результат + зачем это нужно;
-  - без канцеляризмов и без "универсальных" фраз.
+- Use project's conventional style.
+- Message in Russian.
+- Type prefixes: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, `perf`, `style`, `build`, `ci`, `revert` (+ `security` if project uses it).
+- Scope from project commitlint config (if present), else derive from project structure/layers; don't invent.
+- Subject as "done", not "to do": past tense, usually plural — `добавили`, `исправили`, `убрали`, `обновили`; avoid infinitives `добавить`, `исправить`, `сделать`.
+- Style: short subject + 1-2 lines with reason if needed.
+- Read as human-written, not AI template: concrete result + why; no bureaucratese, no generic phrases.
 
-Пример:
+Example:
 
 ```text
 refactor(workflow): унифицировать кэш policy abilities
@@ -60,7 +52,7 @@ refactor(workflow): унифицировать кэш policy abilities
 Убрал дубли в DTO и вынес общий helper для кэширования.
 ```
 
-Дополнительные примеры для "человеческого" стиля:
+More "human-style" examples:
 
 ```text
 ci(deps): добавили php-расширения для composer install
@@ -74,33 +66,31 @@ fix(api): исправили проверку роли в ответе тике�
 Убрали ложный 403 для участников без роли исполнителя.
 ```
 
-Антипример:
+Anti-example:
 
 ```text
 ci(deps): добавить php-расширения для composer install
 ```
 
-## Conventional Commits: scopes и breaking changes
+## Conventional Commits: scopes and breaking changes
 
-- Источник истины для scope — commitlint-конфиг проекта. Если его нет —
-  выводить scope из структуры/слоёв проекта, а не выдумывать.
-- Для PHP-пакетов без конфига разумный дефолт (пример, не догма):
-  `middleware`, `provider`, `contract`, `config`, `command`, `policy`,
-  `event`, `exception`, `rule`.
-- Breaking change помечать одним из способов:
-  - footer `BREAKING CHANGE: <что сломалось и как мигрировать>`;
-  - `!` после типа/scope: `feat!: ...`, `feat(api)!: ...`.
-- Интерпретация типов для версионирования (тип → SemVer bump) — в
-  `oss-dev/github-flow` (SemVer Oracle), здесь не дублируется.
+- Scope source of truth — project commitlint config. If none — derive scope from project structure/layers, don't invent.
+- For PHP packages without config, reasonable default (example, not dogma): `middleware`, `provider`, `contract`, `config`, `command`, `policy`, `event`, `exception`, `rule`.
+- Mark breaking change one of two ways: footer `BREAKING CHANGE: <what broke and how to migrate>`; or `!` after type/scope: `feat!: ...`, `feat(api)!: ...`.
+- Type→SemVer bump interpretation lives in `oss-dev/github-flow` (SemVer Oracle), not duplicated here.
 
-## Безопасность
+## Safety
 
-- Не выполнять destructive git-команды без явного запроса пользователя.
-- Не смешивать в коммите несвязанные изменения.
-- Не править generated AI-артефакты (`CLAUDE.md`, `AGENTS.md`) вручную.
+- No destructive git commands without explicit user request.
+- Don't mix unrelated changes in one commit.
+- Don't manually edit generated AI artifacts (`CLAUDE.md`, `AGENTS.md`).
 
-## Связанные скиллы
+## Related skills
 
-- `writing-style` (general) — тон и язык тела коммита (русский, причина вместо механики); формат — здесь.
-- `devops/node-pnpm-preflight` — проверка Node/pnpm перед коммитом с husky/commitlint-хуками.
-- `oss-dev/github-flow` — цепочка Issue → Branch → PR → Merge → Tag и SemVer Oracle (тип коммита → bump версии).
+- `writing-style` (general) — tone/language of commit body (Russian, reason over mechanics); format — here.
+- `devops/node-pnpm-preflight` — Node/pnpm check before commit with husky/commitlint hooks.
+- `oss-dev/github-flow` — Issue → Branch → PR → Merge → Tag chain and SemVer Oracle (commit type → version bump).
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: 5d9c1d92f98289a3092f340677667a725517f0057b28d2b6596d12d56c3630f9 -->

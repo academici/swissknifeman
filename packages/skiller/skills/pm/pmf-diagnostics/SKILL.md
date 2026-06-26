@@ -2,7 +2,7 @@
 name: pmf-diagnostics
 bucket: pm
 version: 0.1.0
-description: Диагностика product-market fit — measurement framework до launch, Sean Ellis test (>40%), effort test, retention D1/7/30, false-positive паттерны, pivot-диагностика
+description: Product-market fit diagnostics — pre-launch measurement framework, Sean Ellis test (>40%), effort test, retention D1/7/30, false-positive patterns, pivot diagnosis
 risk: draft
 persona: pm
 tags: [validation, market]
@@ -15,62 +15,56 @@ adapters: [claude, cursor, fable]
 
 # Skill: PMF Diagnostics
 
-Применять когда: MVP в руках реальных пользователей и нужно понять, **достигнут ли PMF** (exit-критерий MVP-стадии) — или это false positive. Также: настроить measurement framework **до** первого пользователя.
+Apply when: MVP is in real users' hands and you must judge whether **PMF is reached** (MVP-stage exit criterion) — or it's a false positive. Also: set up the measurement framework **before** the first user.
 
-Главная ловушка: те, кто mis-identify early traction как PMF — обычно те, кто начал мерить **после** launch, выбрав метрики «что работало», а не «что нет». **Antidote: measurement framework до первого юзера.**
+Main trap: those who mis-identify early traction as PMF usually started measuring **after** launch, picking metrics for "what worked" not "what didn't". **Antidote: measurement framework before the first user.**
 
----
+## Do NOT apply when
 
-## Когда НЕ применять
+- No working MVP with real users yet (idea stage) → `customer-discovery`.
+- Need roadmap/scope, not diagnostics → `product-roadmap`.
 
-- Ещё нет работающего MVP с реальными юзерами (стадия idea) — это `customer-discovery`.
-- Нужен roadmap/scope, а не диагностика — это `product-roadmap`.
+## 1. Measurement framework (set BEFORE launch)
 
----
+Before first user, define:
+- **Retention benchmarks** for the product type.
+- **Activation criteria** — what counts as "activated".
+- **Day 1 / Day 7 / Day 30 targets** — concrete numbers in advance.
+- **What a false positive is for this specific product** (see below).
 
-## 1. Measurement framework (ставить ДО launch)
+When data arrives — ask AI to build an **adversarial case against** your own traction: "what would a skeptic say about these numbers?" (`adversarial-check`).
 
-До первого пользователя определить:
-- **Retention benchmarks** под тип продукта.
-- **Activation criteria** — что считается «активирован».
-- **Day 1 / Day 7 / Day 30 targets** — конкретные числа заранее.
-- **Что есть false positive именно для этого продукта** (см. ниже).
+## 2. PMF signals (real)
 
-Когда данные придут — попросить AI построить **adversarial-кейс против** собственной traction: «что сказал бы скептик про эти числа?» (`adversarial-check`).
+- **Sean Ellis test:** "how would you feel if you could no longer use the product?" → **>40% "very disappointed"** = meaningful PMF indicator.
+- **Effort test:** pre-PMF retention needs constant intervention (frequent outreach, incentives, personal follow-up, founder heroics). Post-PMF the product **pulls itself** (pulling, not pushing). Shift from push to pull = one of the cleanest signals.
+- **Retention plateau:** retention curve flattens to a plateau (not falling to zero) across several cohorts.
+- Organic referral without incentive; users find unplanned use cases.
 
-## 2. Сигналы PMF (настоящие)
-
-- **Sean Ellis test:** «как бы ты себя чувствовал, если бы больше не мог пользоваться продуктом?» → **>40% "very disappointed"** = осмысленный PMF-индикатор.
-- **Effort test:** pre-PMF retention требует constant intervention (частый outreach, incentives, личный follow-up, героическая энергия фаундера). Post-PMF — продукт **тянет сам** (pulling, не pushing). Сдвиг от push к pull = один из чистейших сигналов.
-- **Retention plateau:** кривая удержания выходит на плато (а не падает в ноль) на нескольких когортах.
-- Organic referral без incentive; пользователи находят use cases, которых не планировали.
-
-> Ни одна точка не подтверждает PMF — это **паттерн через несколько iteration-циклов**.
+> No single data point confirms PMF — it's a **pattern across several iteration cycles**.
 
 ## 3. False positives (anti-patterns)
 
-- **Signups без activation.**
-- **Revenue без retention** (single-purchase, нет повтора).
-- **Enthusiasm без repeat usage.**
-- **Launch spike ≠ sustained interest** — энергия от друзей фаундера, portfolio-компаний инвестора, Hacker News headline. Ничто из этого не предсказывает неделю 6/12.
+- **Signups without activation.**
+- **Revenue without retention** (single-purchase, no repeat).
+- **Enthusiasm without repeat usage.**
+- **Launch spike ≠ sustained interest** — energy from founder's friends, investor's portfolio companies, Hacker News headline. None predicts week 6/12.
 
 ## 4. Iterate toward evidence, not completeness
 
-MVP-стадия кончается при genuine evidence PMF — независимо от того, насколько «законченным» ощущается продукт. Декларация PMF = judgement, комбинирующий founder intuition с собранными доказательствами, через **несколько** iteration cycles.
+MVP stage ends at genuine evidence of PMF — regardless of how "finished" the product feels. PMF declaration = judgement combining founder intuition with collected evidence, across **several** iteration cycles.
 
-## 5. Pivot-диагностика (если 3+ итерации без движения к PMF)
+## 5. Pivot diagnosis (if 3+ iterations with no movement toward PMF)
 
-Скормить retention-данные + user feedback + исходную гипотезу проблемы и задать **3 вопроса**:
-1. Есть ли сегмент, реагирующий **иначе** остальных? (может, правильная аудитория уже в данных, просто underweighted)
-2. Gap между designed value и experienced value — это **positioning** проблема или **product** проблема? (разные стратегии fix)
-3. Что должно быть правдой, чтобы текущий продукт нашёл genuine PMF — и реалистично ли это?
+Feed retention data + user feedback + original problem hypothesis and ask **3 questions**:
+1. Is there a segment reacting **differently** from the rest? (the right audience may already be in the data, just underweighted)
+2. Gap between designed value and experienced value — is it a **positioning** problem or a **product** problem? (different fix strategies)
+3. What must be true for the current product to find genuine PMF — and is that realistic?
 
-Ответы определяют: **adjust** (onboarding/messaging/emphasis) / **pivot** (сегмент или гипотеза) / **return to Idea stage**.
-Несовпадение результатов с ожиданием — **не провал, а работающая система**: MVP-стадия для того и спроектирована, чтобы вскрыть это до over-invest в неверный ответ.
+Answers determine: **adjust** (onboarding/messaging/emphasis) / **pivot** (segment or hypothesis) / **return to Idea stage**.
+Mismatch between results and expectation is **not failure but a working system**: MVP stage is designed to surface this before over-investing in the wrong answer.
 
----
-
-## Структура output-файла
+## Output file structure
 
 `docs/01_Business/PMF_Diagnostics.md`:
 
@@ -83,41 +77,41 @@ created: YYYY-MM-DD
 
 # PMF Diagnostics — [ProjectName]
 
-## Measurement framework (до launch)
+## Measurement framework (pre-launch)
 - Activation: … | Retention D1/D7/D30 targets: … | False positive = …
 
-## Текущие данные
-| Метрика | Target | Факт | Вердикт |
+## Current data
+| Metric | Target | Actual | Verdict |
 |---|---|---|---|
 | Sean Ellis "very disappointed" | >40% | … | … |
 | Effort: push vs pull | pull | … | … |
 | Retention D30 | … | … | … |
 
 ## False-positive check
-- signups без activation? revenue без retention? launch spike? → …
+- signups without activation? revenue without retention? launch spike? → …
 
-## Adversarial (скептик про эти числа)
+## Adversarial (skeptic on these numbers)
 - …
 
-## Вердикт
-PMF достигнут / не достигнут / нужна pivot-диагностика
-[если 3+ итерации без движения — 3 вопроса + adjust/pivot/return]
+## Verdict
+PMF reached / not reached / pivot diagnosis needed
+[if 3+ iterations with no movement — 3 questions + adjust/pivot/return]
 ```
 
----
+## Agent adds on its own
 
-## Что агент добавляет сам
+- **Realistic benchmarks by product type** (B2B SaaS vs consumer vs marketplace — different retention norms).
+- **Flag vanity metrics.** If focus is on signups/downloads — redirect to retention/activation.
+- **Link to roadmap.** If PMF not reached — what scope experiment is next (`product-roadmap`).
 
-- **Realistic benchmarks по типу продукта** (B2B SaaS vs consumer vs marketplace — разные нормы retention).
-- **Flag метрик тщеславия.** Если фокус на signups/downloads — переориентировать на retention/activation.
-- **Связь с roadmap.** Если PMF не достигнут — какой scope-эксперимент следующий (`product-roadmap`).
+## Related skills
 
----
+- `pm/product-roadmap` — **requires**: phase gates and success metrics; pmf-diagnostics refines MVP-exit
+- `founder/customer-discovery` — predecessor (Idea validation); pmf-diagnostics is its MVP analog
+- `founder/adversarial-check` — adversarial case against your own traction
+- `founder/startup-lifecycle` — pmf-diagnostics closes the MVP→Launch gate
+- `pm/unit-economics` — adjacent metrics (LTV/CAC) for Launch readiness
 
-## Связанные скиллы
+<!-- ru-source-sha256: PENDING -->
 
-- `pm/product-roadmap` — **requires**: фазовые ворота и success-метрики; pmf-diagnostics уточняет MVP-exit
-- `founder/customer-discovery` — предшественник (Idea-валидация); pmf-diagnostics — её MVP-аналог
-- `founder/adversarial-check` — adversarial-кейс против собственной traction
-- `founder/startup-lifecycle` — pmf-diagnostics закрывает MVP→Launch gate
-- `pm/unit-economics` — смежные метрики (LTV/CAC) для Launch-готовности
+<!-- ru-source-sha256: 979ea32378112f61894b75b84797e83929003491325e0aa2f7966d398809f5e6 -->

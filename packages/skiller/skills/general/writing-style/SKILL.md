@@ -2,7 +2,7 @@
 name: writing-style
 bucket: general
 version: 0.1.0
-description: "Тон и язык кодовых артефактов: русский по умолчанию для комментариев, тел коммитов, описаний тестов it()/test(), docstring и внутренних доков; живой язык без канцелярита, объяснять ПОЧЕМУ, а не ЧТО. Активировать при написании комментариев, тел коммитов, описаний тестов и внутренней документации (формат/механика git — в git-commit-rules)."
+description: "Tone & language of code artifacts: Russian by default for comments, commit bodies, test descriptions it()/test(), docstrings, internal docs; live language, no bureaucratese, explain WHY not WHAT. Activate when writing comments, commit bodies, test descriptions, internal docs (git format/mechanics → git-commit-rules)."
 risk: read
 persona: oss-dev
 tags: [writing, language, russian, comments, commits, tests, docs, style]
@@ -16,73 +16,36 @@ sha256: ""
 
 # Writing Style
 
-## Контекст
+Advisory (risk: read): shapes wording, not format. Applies when writing: code comments (`//`, `#`, `/* */`); commit message body (subject + body); test descriptions `it('...')`, `test('...')`, `describe('...')`, method names `test_...`; docstring / PHPDoc / JSDoc and internal docs (module README, `docs/`).
 
-Комментарии, тела коммитов, описания тестов и внутренние доки читают люди, а агент
-по умолчанию сбивается на канцелярит, пересказ кода и английский. Этот скилл задаёт
-**тон и язык** кодовых артефактов: русский по умолчанию, живая речь, акцент на причине.
+Split vs `git-commit-rules` (general): that = git FORMAT & MECHANICS (Conventional Commits, types, scope, breaking, husky/commitlint, action order). Here = TONE & LANGUAGE. Take format from `git-commit-rules`, wording from here.
 
-Это advisory-скилл (risk: read) — он не диктует формат, а влияет на формулировки.
-Активируй его, когда пишешь:
+## Algorithm
 
-- комментарии в коде (`//`, `#`, блоки `/* */`);
-- тело сообщения коммита (заголовок + body);
-- описания тестов: `it('...')`, `test('...')`, `describe('...')`, имена методов `test_...`;
-- docstring / PHPDoc / JSDoc и внутреннюю документацию (README модуля, доки в `docs/`).
+1. Determine artifact language. Default Russian for anything team members read: comments, commit bodies, test descriptions, docstrings, internal docs. Exceptions → "When English fits".
+2. Decide if a comment is needed at all. Justified only when WHY is non-obvious without it. If text restates what the code shows — delete it, don't rewrite.
+3. State reason, not action. Write intent and consequence ("so the archive isn't pulled into the public list"), not mechanics ("performs a selection"). If a phrase starts with "this code / method performs / produces" — rewrite.
+4. Tense: present or past — "проверяем", "ограничили", "оставили". No infinitives, no verbal nouns ("осуществление проверки").
+5. Commit subject — completed action, past tense, usually plural: "добавили", "исправили", "убрали", "обновили". Not a bare infinitive ("добавить", "исправить"). Body — reason + effect in 1–2 lines. Structure (type, scope, breaking) from `git-commit-rules`.
+6. Test descriptions — human-readable Russian phrase describing checked behavior: what the system does and under what conditions. Not a restatement of the method name, not transliteration. See "Test descriptions".
+7. Docstrings & internal docs — Russian, concrete: why the class/method exists, non-obvious constraints and side effects. Don't restate the signature in words.
+8. Run the quality checklist before leaving the text.
 
-**Разграничение с `git-commit-rules`** (general): там — ФОРМАТ и МЕХАНИКА git
-(Conventional Commits, типы, scope, breaking, husky/commitlint, порядок действий).
-Здесь — ТОН и ЯЗЫК сообщения. Они дополняют друг друга: формат бери из
-`git-commit-rules`, формулировку — отсюда.
+## Russian by default
 
-## Алгоритм
+- Code comments — Russian.
+- Commit message (subject + body) — Russian.
+- Test descriptions & human-readable args (`it('...')`, `test('...')`, `describe('...')`) — Russian.
+- Docstring / PHPDoc / JSDoc and internal docs (module docs, team `docs/`) — Russian.
+- Identifiers, API keys, method/class names, enum values, format tokens — stay English; translate only user-facing wording, not the contract.
 
-1. **Определи язык артефакта.** По умолчанию — русский для всего, что читают
-   члены команды: комментарии, тела коммитов, описания тестов, docstring,
-   внутренние доки. Исключения — в секции «Когда уместен английский».
-2. **Реши, нужен ли вообще комментарий.** Комментарий оправдан, только когда без
-   него неочевидно **почему** так сделано. Если текст пересказывает то, что видно
-   из кода, — удали его, а не переписывай.
-3. **Сформулируй причину, а не действие.** Пиши о намерении и последствии
-   («чтобы не тянуть архив в публичный список»), а не о механике («осуществляет
-   выборку»). Если фраза начинается с «данный код / метод выполняет / производит»
-   — переписывай.
-4. **Выбери время.** Настоящее или прошедшее: «проверяем», «ограничили»,
-   «оставили». Без инфинитивов и без отглагольных существительных
-   («осуществление проверки»).
-5. **Для заголовка коммита** — завершённое действие в прошедшем времени, чаще
-   множественном: «добавили», «исправили», «убрали», «обновили». Не голый
-   инфинитив («добавить», «исправить»). В body — причина и эффект в 1–2 строках.
-   Структуру (тип, scope, breaking) задаёт `git-commit-rules`.
-6. **Для описаний тестов** — человекочитаемая фраза по-русски, описывающая
-   проверяемое поведение: что делает система и при каких условиях. Не пересказ
-   имени метода и не транслитерация. См. секцию «Описания тестов».
-7. **Для docstring и внутренних доков** — по-русски, предметно: зачем нужен
-   класс/метод, какие неочевидные ограничения и побочные эффекты. Не дублируй
-   сигнатуру словами.
-8. **Прогони себя по чеклисту качества** ниже перед тем, как оставить текст.
+## Live language, no bureaucratese
 
-## Русский по умолчанию
-
-- Комментарии в коде — по-русски.
-- Тело сообщения коммита (заголовок и body) — по-русски.
-- Описания тестов и человекочитаемые аргументы (`it('...')`, `test('...')`,
-  `describe('...')`) — по-русски.
-- Docstring / PHPDoc / JSDoc и внутренняя документация (доки модуля, `docs/`
-  для команды) — по-русски.
-- Идентификаторы, ключи API, имена методов и классов, значения enum, форматные
-  токены — остаются на английском; на русский переводится только
-  пользовательская формулировка, не контракт.
-
-## Живой язык без канцелярита
-
-- Объясняй **почему**, а не **что**: код уже показывает, что он делает; комментарий
-  добавляет недостающее намерение или контекст.
-- Настоящее/прошедшее время: «ограничили», «проверяем», «оставили как есть».
-- Под запретом канцелярит и шаблоны ИИ: «данный код», «осуществляет»,
-  «производит выборку», «выполняет операцию», «в рамках», «является».
-- Без жаргона и «универсальных» фраз, которые подойдут к любому коду.
-- Коротко: одна-две строки причины ценнее абзаца пересказа.
+- Explain WHY, not WHAT: code already shows what it does; the comment adds missing intent/context.
+- Present/past tense: "ограничили", "проверяем", "оставили как есть".
+- Forbidden — bureaucratese and AI templates: "данный код", "осуществляет", "производит выборку", "выполняет операцию", "в рамках", "является".
+- No jargon or "universal" phrases that fit any code.
+- Short: one or two lines of reason beat a paragraph of restatement.
 
 ```php
 // Хорошо — причина:
@@ -92,11 +55,11 @@ sha256: ""
 // Данный код осуществляет выборку записей из таблицы.
 ```
 
-## Тела коммитов: тон и язык
+## Commit bodies: tone & language
 
-- Заголовок — завершённое действие по-русски: «добавили», «исправили», «убрали».
-- В body — конкретный результат и зачем он нужен, без шаблонных фраз.
-- Формат (тип, scope, breaking, hooks) — целиком из `git-commit-rules`.
+- Subject — completed action in Russian: "добавили", "исправили", "убрали".
+- Body — concrete result and why it's needed, no template phrases.
+- Format (type, scope, breaking, hooks) — entirely from `git-commit-rules`.
 
 ```text
 fix(api): исправили ложный 403 для участников без роли исполнителя
@@ -104,10 +67,10 @@ fix(api): исправили ложный 403 для участников без
 Добавили guard по статусу, чтобы не отклонять запросы тех, у кого доступ есть.
 ```
 
-## Описания тестов
+## Test descriptions
 
-- Описывай **поведение**, а при каких условиях — по-русски и предметно.
-- Не транслитерируй имя метода и не пересказывай сигнатуру.
+- Describe BEHAVIOR and under what conditions — Russian, concrete.
+- Don't transliterate the method name or restate the signature.
 
 ```php
 // Хорошо:
@@ -123,34 +86,33 @@ it('test user role check returns forbidden', function () { /* ... */ });
 public function archived_document_is_hidden_from_public_list(): void { /* ... */ }
 ```
 
-## Когда уместен английский
+## When English fits
 
-Английский — осознанный выбор, а не значение по умолчанию. Он уместен, когда
-текст читают вне команды или он часть внешнего контракта:
+Deliberate choice, not default. Fits when text is read outside the team or is part of an external contract:
 
-- Публичный API библиотеки/пакета: PHPDoc/JSDoc и docstring публичных
-  классов и методов, которые увидят внешние потребители.
-- Документация под публикацию: `docs-public`, README репозитория с внешней
-  аудиторией, тексты для маркетплейса/реестра пакета.
-- Сообщения и тексты для международной аудитории, где русский исключает читателей.
+- Public API of a library/package: PHPDoc/JSDoc and docstrings of public classes/methods external consumers see.
+- Docs for publication: `docs-public`, repo README with external audience, marketplace/registry texts.
+- Messages for international audience where Russian excludes readers.
 
-Если артефакт остаётся внутри команды — русский. Сомневаешься, кто читатель, —
-по умолчанию русский.
+Stays inside the team → Russian. Unsure who the reader is → default Russian.
 
-## Чеклист качества
+## Quality checklist
 
-- [ ] Комментарии/тела коммитов/описания тестов/docstring внутреннего кода — по-русски.
-- [ ] Английский оставлен только для публичного API, docs-public и внешней аудитории.
-- [ ] Комментарий объясняет «почему», а не пересказывает «что»; лишних комментариев нет.
-- [ ] Нет канцелярита и шаблонов ИИ («данный код», «осуществляет», «производит», «является»).
-- [ ] Время настоящее/прошедшее, без инфинитивов и отглагольных существительных.
-- [ ] Заголовок коммита — завершённое действие, не голый инфинитив; в body причина и эффект.
-- [ ] Описание теста — про поведение и условия, без транслитерации имени метода.
-- [ ] Идентификаторы, ключи и контракты не переведены — переведена только проза.
+- [ ] Comments/commit bodies/test descriptions/internal-code docstrings — Russian.
+- [ ] English kept only for public API, docs-public, external audience.
+- [ ] Comment explains WHY, not WHAT; no redundant comments.
+- [ ] No bureaucratese / AI templates ("данный код", "осуществляет", "производит", "является").
+- [ ] Present/past tense, no infinitives or verbal nouns.
+- [ ] Commit subject — completed action, not bare infinitive; body has reason + effect.
+- [ ] Test description — about behavior and conditions, no method-name transliteration.
+- [ ] Identifiers, keys, contracts not translated — only prose translated.
 
-## Ссылки
+## References
 
-- `git-commit-rules` (general) — формат и механика git: Conventional Commits,
-  типы, scope, breaking, husky/commitlint, порядок действий.
-- `compact-responses` (general) — лаконичность вывода модели (когда сколько текста); этот скилл — про тон и язык, когда текст всё же нужен.
-- snippets/before-after.md — пары «плохо/хорошо» для комментария и заголовка коммита.
+- `git-commit-rules` (general) — git format & mechanics: Conventional Commits, types, scope, breaking, husky/commitlint, action order.
+- `compact-responses` (general) — model output brevity (how much text, when); this skill is tone & language when text IS needed.
+- snippets/before-after.md — bad/good pairs for a comment and a commit subject.
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: 9899b632120cd656f4c789b2b0fa8899aa4df7e042e1021ea7790c48628872b9 -->

@@ -2,7 +2,7 @@
 name: test-isolation-guard
 bucket: laravel-testing
 version: 0.1.0
-description: "Защита тестов Laravel от запуска по боевой/dev БД и медиа-диску: bootstrap.php выставляет DB_DATABASE=*_test и media-test до autoload, класс-страж TestEnvironmentGuard аварийно прерывает createApplication() при нарушении изоляции, безопасный RefreshDatabase. Активировать при настройке тестового окружения, защите CI и подозрении, что тесты бьют по dev/prod БД."
+description: "Guard Laravel tests against running on prod/dev DB and prod media disk: bootstrap.php sets DB_DATABASE=*_test and media-test before autoload, TestEnvironmentGuard aborts createApplication() on isolation breach, safe RefreshDatabase. Activate when setting up the test environment, protecting CI, or suspecting tests hit dev/prod DB."
 risk: write
 persona: oss-dev
 tags: [php, laravel, testing, isolation, safety, database, ci, refreshdatabase]
@@ -16,68 +16,59 @@ sha256: ""
 
 # Skill: Test isolation guard
 
-## Контекст
+Triggers: setting up test env for new project/package; protecting CI (runner must fail with clear message, not silently wipe data); suspecting tests hit dev/prod DB. Three defense lines: bootstrap before autoload, guard on `createApplication()`, safe `RefreshDatabase`. Version-agnostic testing basics (Feature/Unit/Pest, Docker/local detect) live in `php/laravel-testing` (`requires`).
 
-Активировать, когда нужно гарантировать, что тесты Laravel (PHPUnit/Pest) физически не могут выполниться по боевой или dev БД и не пишут файлы в боевой медиа-стор. Прямые триггеры:
+## Algorithm
 
-- **Настройка тестового окружения** нового проекта/пакета — закладываем изоляцию с первого дня.
-- **Защита CI** — раннер должен падать с понятным сообщением, а не молча сносить данные.
-- **Подозрение, что тесты бьют по dev/prod БД** — после инцидента, странных пропаж данных или когда `RefreshDatabase` подозрительно «почистил» рабочую базу.
+1. **Define test resources:** test DB name by convention `<app>_test` (MUST end with `_test`); test media disk `media-test` with isolated local `root`; ensure test DB and disk exist (or document how to create them).
 
-Корень проблемы: `RefreshDatabase` выполняет `migrate:fresh` на активном подключении. Если активная БД — основная (из `.env`), один прогон тестов уничтожит данные. Аналогично загрузки в тестах уходят на боевой медиа-диск, если диск не подменён. Скилл строит **три рубежа защиты**: bootstrap до autoload, страж на `createApplication()`, безопасный `RefreshDatabase`.
+2. **Line 1 — `phpunit.xml`.** In `<php>` set: `APP_ENV=testing`, `DB_CONNECTION`, `DB_DATABASE=<app>_test`, `MEDIA_DISK=media-test`, plus `CACHE_STORE=array`, `SESSION_DRIVER=array`, `QUEUE_CONNECTION=sync`.
 
-Версионные основы тестирования (Feature/Unit/Pest, детект Docker/локального окружения) — в скилле `php/laravel-testing` (`requires`); здесь — именно слой жёсткой изоляции и аварийного прерывания.
+3. **Line 1.5 — `tests/bootstrap.php`** (see `snippets/bootstrap.php`). Wire via `phpunit.xml` attr `bootstrap="tests/bootstrap.php"`. Sets same `DB_DATABASE=*_test` and `MEDIA_DISK=media-test` **before** `require vendor/autoload.php`, writing to `$_SERVER`, `$_ENV` AND via `putenv()`. `env()` source priority: `$_SERVER` > `$_ENV`; `putenv()` covers `getenv()` — write all three.
 
-## Алгоритм
+4. **Line 2 — guard class `Tests\Support\TestEnvironmentGuard`** (see `snippets/TestEnvironmentGuard.php`). Read via `config` container (not raw `env`):
+   - `assertIsolatedTestDatabase()`: take `database.default`, then `database.connections.{default}.database`, check `str_ends_with($database, '_test')`. Else throw `RuntimeException` with clear Russian message + instructions (what to check in `phpunit.xml`/`bootstrap.php`, how to create test DB).
+   - `assertIsolatedTestMediaDisk()`: take `media-library.disk_name`, check it is `media-test` and `filesystems.disks.media-test` is described as array. Else `RuntimeException` with instructions.
+   - Messages MUST be self-sufficient: fixable from CI log without reading sources.
 
-1. **Определи целевые тестовые ресурсы** проекта:
-   - имя тестовой БД — по конвенции `<app>_test` (обязан заканчиваться на `_test`);
-   - имя тестового медиа-диска — `media-test` с изолированным локальным `root`;
-   - убедись, что тестовая БД и диск реально существуют (или задокументируй, как их создать).
+5. **Line 2 — wire guard in `Tests\TestCase`** (see `snippets/TestCase.php`). Override `createApplication()`: call `parent::createApplication()`, then both `assert*` guards, only then return `$app`. Fires on EVERY app boot — before first DB query and before file writes; on breach test fails instantly, `migrate:fresh` never runs.
 
-2. **Рубеж 1 — `phpunit.xml`.** Пропиши в `<php>` серверные/окруженческие значения: `APP_ENV=testing`, `DB_CONNECTION`, `DB_DATABASE=<app>_test`, `MEDIA_DISK=media-test`, плюс `CACHE_STORE=array`, `SESSION_DRIVER=array`, `QUEUE_CONNECTION=sync`. Это первичный источник изоляции для штатного раннера.
+6. **Line 3 — safe `RefreshDatabase`.** Only after lines 1–2 in place, add trait `Illuminate\Foundation\Testing\RefreshDatabase` to DB tests (or `pest()->extend(...)->use(RefreshDatabase::class)->in('Feature')`).
 
-3. **Рубеж 1.5 — `tests/bootstrap.php`** (см. `snippets/bootstrap.php`). Подключи его в `phpunit.xml` атрибутом `bootstrap="tests/bootstrap.php"`. Файл выставляет те же `DB_DATABASE=*_test` и `MEDIA_DISK=media-test` **до** `require vendor/autoload.php`, записывая в `$_SERVER`, `$_ENV` и через `putenv()`. Это страхует от регресса порядка инструментов (IDE-раннер, CI, кривой `.env`): Laravel при загрузке гарантированно видит тестовые значения. Помни приоритет источников в `env()`: `$_SERVER` > `$_ENV`, `putenv()` закрывает `getenv()` — поэтому пишем во все три.
+7. **Forbid commands outside test env.** Fix in project/agent rules: without explicit `APP_ENV=testing` AND `DB_DATABASE=*_test`, do NOT run `migrate:fresh`, `db:wipe`, `db:seed`, `migrate`, nor `tinker` with mutations.
 
-4. **Рубеж 2 — класс-страж `Tests\Support\TestEnvironmentGuard`** (см. `snippets/TestEnvironmentGuard.php`). Через контейнер `config` (не через прямое чтение `env`, чтобы проверять именно итоговую разрешённую конфигурацию):
-   - `assertIsolatedTestDatabase()`: берёт `database.default`, затем `database.connections.{default}.database`, и проверяет `str_ends_with($database, '_test')`. Если нет — бросает `RuntimeException` с понятным русским сообщением и инструкцией: что проверить в `phpunit.xml`/`bootstrap.php` и как создать тестовую БД.
-   - `assertIsolatedTestMediaDisk()`: берёт `media-library.disk_name`, проверяет, что это `media-test` и что `filesystems.disks.media-test` описан массивом. Иначе — `RuntimeException` с инструкцией.
-   - Сообщения должны быть **самодостаточными**: получив их в CI-логе, инженер чинит окружение без чтения исходников.
+8. **Verify the guard fires.** Temporarily point env at a non-test DB (or run with empty `phpunit.xml`), confirm run fails with clear message before `migrate:fresh`. Restore correct env.
 
-5. **Рубеж 2 — подключение стража в `Tests\TestCase`** (см. `snippets/TestCase.php`). Переопредели `createApplication()`: вызови `parent::createApplication()`, затем оба `assert*` стража, и только потом верни `$app`. Страж срабатывает на КАЖДОМ поднятии приложения — до первого запроса к БД и до записи файлов. Если изоляция нарушена, тест падает мгновенно, `migrate:fresh` не запускается.
+## Isolation rules
 
-6. **Рубеж 3 — безопасный `RefreshDatabase`.** Только после того, как рубежи 1–2 на месте, подключай трейт `Illuminate\Foundation\Testing\RefreshDatabase` в тестах с БД (или через `pest()->extend(...)->use(RefreshDatabase::class)->in('Feature')`). К этому моменту активная БД заведомо `*_test`, поэтому `migrate:fresh` безопасен.
+- **`config`, not `env`** — guard reads final resolved config (what framework uses); `env()` may differ due to config cache + source priority.
+- **`str_ends_with(..., '_test')`, not exact name** — portable; only `_test` suffix required.
+- **Three env sources** — `bootstrap.php` writes `$_SERVER`, `$_ENV`, `putenv()` simultaneously.
+- **Guard is last line, not the only one** — does not replace `phpunit.xml`/`bootstrap.php`, catches their regression; do not drop first lines.
+- **Media disk = separate check** — DB and files isolated independently; test disk has own `root` non-overlapping with prod.
+- **Messages in Russian + instructions** — each exception explains what broke and how to fix (where to look, how to create resource).
 
-7. **Запрет команд вне тестового окружения.** Зафиксируй (в правилах проекта/агента): без явного `APP_ENV=testing` и `DB_DATABASE=*_test` нельзя выполнять `migrate:fresh`, `db:wipe`, `db:seed`, `migrate`, а также `tinker` с мутациями — иначе удар идёт по dev/prod БД из обычного `.env`.
+## Quality checklist
 
-8. **Проверь срабатывание стража.** Временно укажи в окружении нетестовую БД (или запусти тест с пустым `phpunit.xml`) и убедись, что прогон падает с понятным сообщением, а не доходит до `migrate:fresh`. Верни корректное окружение.
+- [ ] `phpunit.xml` sets `APP_ENV=testing`, `DB_DATABASE=*_test`, `MEDIA_DISK=media-test` and wires `tests/bootstrap.php`
+- [ ] `tests/bootstrap.php` sets test `DB_DATABASE`/`MEDIA_DISK` in `$_SERVER`, `$_ENV`, `putenv()` BEFORE `require vendor/autoload.php`
+- [ ] `TestEnvironmentGuard::assertIsolatedTestDatabase()` checks `_test` suffix via `config`, not `env`
+- [ ] `TestEnvironmentGuard::assertIsolatedTestMediaDisk()` checks `media-test` disk and presence of its config
+- [ ] Both exceptions are `RuntimeException` with Russian message + fix instructions
+- [ ] `TestCase::createApplication()` calls both guards before returning `$app`
+- [ ] `RefreshDatabase` added only after lines 1–2; run on non-test DB impossible
+- [ ] Guard fire verified manually: non-test DB aborts before `migrate:fresh`
+- [ ] Ban on `migrate:fresh`/`db:wipe`/`db:seed`/`tinker`-mutations outside `APP_ENV=testing` recorded
 
-## Доменные правила изоляции
+## References
 
-- **`config`, а не `env`.** Страж читает итоговую конфигурацию через контейнер, потому что именно её использует фреймворк; `env()` может отличаться из-за кэша конфигурации и приоритетов источников.
-- **`str_ends_with(..., '_test')` вместо точного имени.** Гард переносим между проектами: он не зашит на конкретное имя БД, требует лишь суффикс `_test`.
-- **Три источника окружения.** В `bootstrap.php` пишем в `$_SERVER`, `$_ENV` и `putenv()` одновременно — иначе часть кода прочитает не то значение.
-- **Страж — последний рубеж, а не единственный.** Он не заменяет `phpunit.xml`/`bootstrap.php`, а ловит их регресс. Не убирай первые рубежи, опираясь только на гард.
-- **Медиа-диск — отдельная проверка.** БД и файлы изолируются независимо; тестовый диск должен иметь собственный `root`, не пересекающийся с боевым.
-- **Сообщения по-русски и с инструкцией.** Каждое исключение объясняет, что нарушено и как починить (где смотреть, как создать ресурс).
-
-## Чеклист качества
-
-- [ ] `phpunit.xml` задаёт `APP_ENV=testing`, `DB_DATABASE=*_test`, `MEDIA_DISK=media-test` и подключает `tests/bootstrap.php`
-- [ ] `tests/bootstrap.php` выставляет тестовые `DB_DATABASE`/`MEDIA_DISK` в `$_SERVER`, `$_ENV` и `putenv()` ДО `require vendor/autoload.php`
-- [ ] `TestEnvironmentGuard::assertIsolatedTestDatabase()` проверяет суффикс `_test` через `config`, не через `env`
-- [ ] `TestEnvironmentGuard::assertIsolatedTestMediaDisk()` проверяет диск `media-test` и наличие его конфигурации
-- [ ] Оба исключения — `RuntimeException` с русским сообщением и инструкцией, как починить
-- [ ] `TestCase::createApplication()` вызывает оба стража до возврата `$app`
-- [ ] `RefreshDatabase` подключён только после рубежей 1–2; прогон по нетестовой БД невозможен
-- [ ] Срабатывание стража проверено вручную: нетестовая БД даёт аварийное падение до `migrate:fresh`
-- [ ] Зафиксирован запрет `migrate:fresh`/`db:wipe`/`db:seed`/`tinker`-мутаций вне `APP_ENV=testing`
-
-## Ссылки
-
-- snippets/bootstrap.php — `tests/bootstrap.php` с изоляцией до autoload
-- snippets/TestEnvironmentGuard.php — класс-страж БД и медиа-диска
-- snippets/TestCase.php — подключение стража в `createApplication()` + безопасный `RefreshDatabase`
+- snippets/bootstrap.php — `tests/bootstrap.php` with isolation before autoload
+- snippets/TestEnvironmentGuard.php — DB + media disk guard class
+- snippets/TestCase.php — guard in `createApplication()` + safe `RefreshDatabase`
 - https://laravel.com/docs/database-testing#resetting-the-database-after-each-test
 - https://github.com/laravel/framework/blob/master/src/Illuminate/Foundation/Testing/RefreshDatabase.php
-- Связанные скиллы: `php/laravel-testing` (база, requires), `php/medialibrary` (тестовый медиа-диск), `php/laravel-dusk` (изоляция в браузерных тестах — отдельная схема без `RefreshDatabase`), `devops/db-test-preflight` (пре-флайт контейнера/БД перед прогоном)
+- Related skills: `php/laravel-testing` (base, requires), `php/medialibrary` (test media disk), `php/laravel-dusk` (browser-test isolation — separate scheme without `RefreshDatabase`), `devops/db-test-preflight` (container/DB preflight before run)
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: 2f1b9eae8f7a76f739aacee7167e978501b8c33dedc44842d405ba9e549c3261 -->

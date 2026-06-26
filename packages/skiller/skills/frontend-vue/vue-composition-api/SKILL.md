@@ -2,7 +2,7 @@
 name: vue-composition-api
 bucket: frontend-vue
 version: 0.2.0
-description: "Проектные конвенции Composition API: ref-first и паттерн composables. НЕ справочник API (`<script setup>`, defineProps/Emits, reactivity) — база в `vue`; НЕ общий workflow — в `vue-best-practices`. Здесь только дельта-решения и куда дальше."
+description: "Project Composition API conventions: ref-first and composables pattern. NOT an API reference (`<script setup>`, defineProps/Emits, reactivity) — that's in `vue`; NOT general workflow — that's in `vue-best-practices`. Only delta-decisions and pointers."
 risk: write
 persona: oss-dev
 tags: [vue, frontend, composable, patterns]
@@ -14,24 +14,20 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-# Vue Composition API — конвенции проекта
+# Vue Composition API — project conventions
 
-Дельта-скилл: только наши решения по Composition API. Базовый синтаксис `<script setup>`,
-`defineProps`/`defineEmits`, reactivity и встроенные компоненты — в скилле `vue` (API-референс);
-рабочий workflow и архитектура компонентов — в `vue-best-practices`. Грузить эту тройку вместе.
+Delta skill. Base syntax (`<script setup>`, `defineProps`/`defineEmits`, reactivity, built-ins) → `vue`. Workflow + component architecture → `vue-best-practices`. Load all three together.
 
-## Конвенция 1: ref-first
+## Convention 1: ref-first
+- Default to **`ref`** for any data (primitives, objects, arrays); access via `.value`.
+- `reactive` — only for an object never reassigned wholesale (else reactivity is lost).
 
-- По умолчанию — **`ref`** для любых данных (примитивы, объекты, массивы): единообразно, доступ через `.value`.
-- `reactive` — только для объекта, который не переназначается целиком (иначе теряется реактивность).
-
-## Конвенция 2: composables
-
-Логика, переиспользуемая между компонентами, выносится в `use*`-функции (`composables/`).
-Сигнал к composable: одно и то же реактивное состояние + методы нужны в 2+ компонентах.
+## Convention 2: composables
+- Reuse logic across components in `use*` functions (`composables/`).
+- Signal: same reactive state + methods needed in 2+ components.
 
 ```javascript
-// composables/useFetch.js — composable принимает ref-аргумент и сам перезапрашивает
+// composables/useFetch.js — composable takes a ref arg and refetches itself
 import { ref, isRef, unref, watchEffect } from 'vue'
 
 export function useFetch(url) {
@@ -49,9 +45,12 @@ export function useFetch(url) {
 }
 ```
 
-## Связанные скиллы
+## Related skills
+- `vue` (frontend) — API reference (base, load together); `vue-best-practices` (frontend) — workflow + architecture.
+- `frontend/pinia-stores` — global state when composable `ref` is no longer enough.
+- `frontend/inertia-vue` — where `composables/` live in project layers.
+- `frontend/dark-mode` — real composable example; `frontend/reka-ui-cva`, `frontend/vue-dynamic-icons` — `<script setup>` components.
 
-- `vue` (frontend) — справочник API (база, грузить вместе); `vue-best-practices` (frontend) — workflow и архитектура.
-- `frontend/pinia-stores` — глобальное состояние, когда `ref` в composable уже мало.
-- `frontend/inertia-vue` — где живут `composables/` в слоях проекта.
-- `frontend/dark-mode` — пример боевого composable; `frontend/reka-ui-cva`, `frontend/vue-dynamic-icons` — компоненты на `<script setup>`.
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: b52a359f3b0ce95ff64c1fdbe83661b1d907dc478331d30ceaf3cbb421301b98 -->

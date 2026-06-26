@@ -2,7 +2,7 @@
 name: security-design
 bucket: architect
 version: 0.2.0
-description: "Классификация данных, auth-стратегия, RBAC/ABAC, OWASP Top 10, GDPR, STRIDE threat modeling, операционный чеклист безопасности"
+description: "Data classification, auth strategy, RBAC/ABAC, OWASP Top 10, GDPR, STRIDE threat modeling, ops security checklist"
 risk: draft
 persona: architect
 tags: [security, compliance, auth, owasp, threat-modeling, rbac, gdpr, privacy, stride]
@@ -16,143 +16,118 @@ adapters: [claude, cursor, fable]
 
 # Skill: Security Design
 
-Применять когда: проектирование системы с пользовательскими данными, финансами, аутентификацией, API. Запускать **параллельно с** `architecture.md`, не после.
+Use when: designing a system with user data, finances, authentication, APIs. Run **in parallel with** `architecture.md`, not after.
 
----
+Rule: **if the product handles PII, money, or third-party integrations → this skill is mandatory.**
 
-## Принцип
+## MVP-gate: security review before first user
 
-Security — это не список фич, которые добавят в конце. Это ограничения, которые влияют на архитектуру с самого начала.
+- Vulnerabilities are invisible until exploited. Shipping a live MVP to real users = real data/exposure/consequences.
+- **Security review before any user touches the app = minimum responsible threshold** (MVP-stage exit criterion, not "later"). First-pass:
+  - code review: authentication & session handling, data exposure in API responses, input validation & injection, dependencies with known vulnerabilities;
+  - any finding touching auth / secrets / data handling → mandatory human review;
+  - AI scan (e.g. Claude Code Security) = aid, **not a replacement** for qualified security review at high stakes.
 
-Правило: **если продукт работает с PII, деньгами или сторонними интеграциями → этот скилл обязателен.**
+## Step 1. Data classification
 
-### MVP-gate: security review до первого юзера
+Identify what is stored and its class:
 
-Agentic-инструменты генерят код, который **работает**, но не код, который **безопасен**: фича работает или нет (видно), а уязвимость невидима, пока её не проэксплуатируют — обратной связи, что что-то не так, у first-time фаундера нет. Отгрузка живого MVP реальным юзерам = реальные данные, реальная экспозиция, реальные последствия.
-
-**Security review before any user touches the app = минимальный ответственный порог** (exit-критерий MVP-стадии, не «потом»). First-pass:
-- review кода: authentication & session handling, data exposure в API-ответах, input validation & injection, зависимости с известными уязвимостями;
-- любая находка, касающаяся auth / secrets / data handling — обязательный human review;
-- AI-скан (напр. Claude Code Security) — помощь, **не замена** qualified security review на высоких ставках.
-
----
-
-## Шаг 1. Классификация данных
-
-Определить что хранится и какого класса:
-
-| Класс | Примеры | Требования |
+| Class | Examples | Requirements |
 |:---|:---|:---|
-| **Public** | Публичный контент, описания | Без ограничений |
-| **Internal** | Логи, метрики, агрегаты | Доступ только внутри системы |
-| **PII** | Email, имя, телефон, IP | Шифрование at rest, минимальное хранение |
-| **Sensitive PII** | Паспорт, адрес, дата рождения | Шифрование + аудит + right-to-delete |
-| **Financial** | Карты, банк. счета, транзакции | PCI DSS scope, никогда не хранить raw |
-| **Credentials** | Пароли, токены, API keys | Только хэш/vault, никогда в логах |
+| **Public** | Public content, descriptions | No restrictions |
+| **Internal** | Logs, metrics, aggregates | Access only within the system |
+| **PII** | Email, name, phone, IP | Encryption at rest, minimal storage |
+| **Sensitive PII** | Passport, address, date of birth | Encryption + audit + right-to-delete |
+| **Financial** | Cards, bank accounts, transactions | PCI DSS scope, never store raw |
+| **Credentials** | Passwords, tokens, API keys | Hash/vault only, never in logs |
 
----
+## Step 2. Auth strategy
 
-## Шаг 2. Auth-стратегия
+Choose and justify the authentication scheme:
 
-Выбрать и аргументировать схему аутентификации:
-
-| Схема | Когда подходит | Когда не подходит |
+| Scheme | Fits when | Does not fit when |
 |:---|:---|:---|
-| **JWT (stateless)** | Микросервисы, мобильные клиенты, API | Нужен немедленный revoke токена |
-| **Session cookie** | Монолит, web-first, SSR | Масштабирование без sticky session |
-| **OAuth2 + OIDC** | "Войти через Google/GitHub", B2B SSO | Простые внутренние инструменты |
-| **API Key** | Machine-to-machine, webhooks | Пользовательский доступ с браузера |
-| **mTLS** | Сервис-сервис внутри инфраструктуры | Клиентские приложения |
+| **JWT (stateless)** | Microservices, mobile clients, API | Immediate token revoke needed |
+| **Session cookie** | Monolith, web-first, SSR | Scaling without sticky session |
+| **OAuth2 + OIDC** | "Sign in with Google/GitHub", B2B SSO | Simple internal tools |
+| **API Key** | Machine-to-machine, webhooks | User access from browser |
+| **mTLS** | Service-to-service inside infrastructure | Client applications |
 
-**Правило:** для каждого типа клиента (web, mobile, API, сервис-сервис) — своя схема. Не мешать.
+**Rule:** each client type (web, mobile, API, service-to-service) gets its own scheme. Do not mix.
 
----
+## Step 3. Authorization
 
-## Шаг 3. Авторизация
+Pick the model:
 
-Определить модель:
+- **RBAC** (Role-Based): user has role → role has permissions. Fits most SaaS.
+- **ABAC** (Attribute-Based): access depends on object and subject attributes. For complex multi-tenant scenarios.
+- **Ownership-based**: user sees only their own. Simplest, works for B2C MVP.
 
-- **RBAC** (Role-Based): пользователь имеет роль → роль имеет права. Подходит для большинства SaaS.
-- **ABAC** (Attribute-Based): доступ зависит от атрибутов объекта и субъекта. Для сложных multi-tenant сценариев.
-- **Ownership-based**: пользователь видит только своё. Простейший вариант, работает для B2C MVP.
+Check: any scenario where `User A` can get `User B`'s data via direct ID in URL or API param? → **IDOR** (Insecure Direct Object Reference) — most common vulnerability.
 
-Проверить: есть ли сценарии где `User A` может получить данные `User B` через прямой ID в URL или API параметре? → **IDOR** (Insecure Direct Object Reference) — самая частая уязвимость.
+## Step 4. OWASP Top 10 — quick checklist
 
----
+Apply to the specific product type:
 
-## Шаг 4. OWASP Top 10 — быстрый чеклист
-
-Применить к конкретному типу продукта:
-
-| # | Угроза | Проверка для этого продукта |
+| # | Threat | Check for this product |
 |:---|:---|:---|
-| A01 | Broken Access Control | IDOR проверен? Роли покрывают все эндпоинты? |
-| A02 | Cryptographic Failures | PII зашифрован at rest? TLS везде? |
-| A03 | Injection | SQL через ORM? Input валидируется? |
-| A04 | Insecure Design | Threat model сделан до кода? |
-| A05 | Security Misconfiguration | Default credentials изменены? Debug off в prod? |
-| A06 | Vulnerable Components | Зависимости проверяются (Dependabot/Snyk)? |
-| A07 | Auth Failures | Brute-force защита? Password reset безопасен? |
-| A08 | Software Integrity | CI подписан? Supply chain проверен? |
-| A09 | Logging Failures | Логи не содержат PII/credentials? Есть аудит trail? |
-| A10 | SSRF | Внешние URL запросы валидируются? |
+| A01 | Broken Access Control | IDOR checked? Roles cover all endpoints? |
+| A02 | Cryptographic Failures | PII encrypted at rest? TLS everywhere? |
+| A03 | Injection | SQL via ORM? Input validated? |
+| A04 | Insecure Design | Threat model done before code? |
+| A05 | Security Misconfiguration | Default credentials changed? Debug off in prod? |
+| A06 | Vulnerable Components | Dependencies scanned (Dependabot/Snyk)? |
+| A07 | Auth Failures | Brute-force protection? Password reset secure? |
+| A08 | Software Integrity | CI signed? Supply chain verified? |
+| A09 | Logging Failures | Logs free of PII/credentials? Audit trail exists? |
+| A10 | SSRF | External URL requests validated? |
 
----
+## Step 5. Privacy-by-Design (GDPR minimum)
 
-## Шаг 5. Privacy-by-Design (GDPR minimum)
+Mandatory if the product handles EU users or PII:
 
-Обязателен если продукт работает с EU-пользователями или PII:
+- [ ] **Consent:** explicit consent before collecting data (not pre-checked checkbox)
+- [ ] **Data minimization:** collect only what the function actually needs
+- [ ] **Right to delete:** endpoint/flow to delete account + all data
+- [ ] **Data portability:** user can download their data
+- [ ] **Retention policy:** after how many days delete inactive data?
+- [ ] **Third-party sharing:** which data goes to analytics, ads, partners?
+- [ ] **Privacy policy:** honestly describes real data collection
 
-- [ ] **Consent:** явное согласие перед сбором данных (не pre-checked checkbox)
-- [ ] **Data minimization:** собирать только то, что реально нужно для функции
-- [ ] **Right to delete:** есть endpoint/flow для удаления аккаунта + всех данных
-- [ ] **Data portability:** пользователь может скачать свои данные
-- [ ] **Retention policy:** через сколько дней удалять inactive данные?
-- [ ] **Third-party sharing:** какие данные идут в аналитику, рекламу, партнёров?
-- [ ] **Privacy policy:** честно описывает реальный сбор данных
+## Step 6. Secrets Management
 
----
-
-## Шаг 6. Secrets Management
-
-| Где НЕ хранить | Где хранить |
+| Where NOT to store | Where to store |
 |:---|:---|
-| `.env` в git репозитории | `.env` только локально + `.gitignore` |
-| Хардкод в коде | Environment variables в deployment |
+| `.env` in git repo | `.env` local only + `.gitignore` |
+| Hardcoded in code | Environment variables in deployment |
 | CI/CD logs | Secrets manager (Vault, AWS SSM, GitHub Secrets) |
-| Клиентский код (JS) | Только серверная сторона |
+| Client code (JS) | Server side only |
 
-**API keys третьих сторон:** ротировать минимум раз в год. Scope — минимальные права.
+**Third-party API keys:** rotate at least once a year. Scope — minimal permissions.
 
----
+## Step 7. Threat Modeling (simplified STRIDE)
 
-## Шаг 7. Threat Modeling (упрощённый STRIDE)
+For each critical component go through:
 
-Для каждого критического компонента пройти:
-
-| Угроза | Вопрос |
+| Threat | Question |
 |:---|:---|
-| **S**poofing | Может ли злоумышленник притвориться легитимным пользователем? |
-| **T**ampering | Может ли кто-то изменить данные в transit или at rest? |
-| **R**epudiation | Можно ли доказать кто сделал действие? (аудит лог) |
-| **I**nformation Disclosure | Какие данные могут утечь и через какой канал? |
-| **D**enial of Service | Есть ли rate limiting? Защита от flood? |
-| **E**levation of Privilege | Может ли User получить Admin-права? |
+| **S**poofing | Can an attacker impersonate a legitimate user? |
+| **T**ampering | Can someone alter data in transit or at rest? |
+| **R**epudiation | Can you prove who performed an action? (audit log) |
+| **I**nformation Disclosure | What data can leak and through which channel? |
+| **D**enial of Service | Rate limiting present? Flood protection? |
+| **E**levation of Privilege | Can a User gain Admin rights? |
 
----
+## Which snippet to open
 
-## Когда какой сниппет открывать
-
-| Ситуация | Файл |
+| Situation | File |
 |:---|:---|
-| Прохожу STRIDE по компонентам (Шаг 7) — нужен развёрнутый шаблон | `snippets/stride-threat-model.md` |
-| Настройка/ревью приложения, БД, серверов, кредов, бэкапов — операционные правила (по Spatie) | `snippets/ops-security-checklist.md` |
+| Going through STRIDE per component (Step 7) — need full template | `snippets/stride-threat-model.md` |
+| Setting up/reviewing app, DB, servers, creds, backups — operational rules (per Spatie) | `snippets/ops-security-checklist.md` |
 
----
+## Output format in the document
 
-## Формат вывода в документе
-
-Создавать в `docs/03_Dev/Security_Design.md`:
+Create in `docs/03_Dev/Security_Design.md`:
 
 ```markdown
 # Security Design: ProjectName
@@ -182,34 +157,32 @@ Agentic-инструменты генерят код, который **рабо�
 [что ещё не решено]
 ```
 
----
+## What the agent adds itself
 
-## Что агент добавляет сам
+- IDOR scenarios not mentioned but implied by the API structure
+- Warning if the chosen auth method does not match the client type
+- Flag if BRD mentions data falling under GDPR but Privacy section is missing
 
-- IDOR-сценарии, которые не упомянуты, но вытекают из структуры API
-- Предупреждение если выбранный auth-метод не соответствует типу клиента
-- Флаг если в BRD упомянуты данные, которые попадают под GDPR, но Privacy section отсутствует
+## Hard prohibitions
 
----
+DO NOT:
+- Skip Security Design for products with users
+- Propose storing passwords in plaintext or MD5
+- Recommend storing API keys in client code
+- Skip IDOR check for APIs with user resources
+- Mix Auth (who are you?) with Authz (what may you do?)
 
-## Жёсткие запреты
+## Related skills
 
-НЕЛЬЗЯ:
-- Игнорировать Security Design для продуктов с пользователями
-- Предлагать хранить пароли в plaintext или MD5
-- Рекомендовать хранить API keys в клиентском коде
-- Пропускать IDOR проверку для API с пользовательскими ресурсами
-- Смешивать Auth (кто ты?) с Authz (что тебе можно?)
+- `architect/architecture` — run in parallel: security = constraints affecting architecture from the start.
+- `architect/legal-compliance` — GDPR/AI Act checklist that feeds requirements here (input of this skill).
+- `architect/api-design` — auth scheme by client type and rate limiting for API contracts.
+- `architect/observability-design` — PII policy in logs, masking, audit trail.
+- `oss-dev/dependency-audit` — supply-chain/SBOM/vuln scan, feeds OWASP A06 (input of this skill).
+- `php/laravel-security-audit` — code-level implementation audit (raw SQL, mass assignment, XSS), feeds this design (input).
+- `php/azguard`, `php/laravel-permissions`, `php/attribute-authorization` — RBAC/ABAC implementation of the chosen authorization model.
+- `security/security` — external defensive playbook (OWASP LLM Top 10, NIST AI RMF).
 
----
+<!-- ru-source-sha256: PENDING -->
 
-## Связанные скиллы
-
-- `architect/architecture` — запускать параллельно: security — ограничения, влияющие на архитектуру с самого начала.
-- `architect/legal-compliance` — GDPR/AI Act-чеклист, который кормит требования сюда (вход этого скилла).
-- `architect/api-design` — auth-схема под тип клиента и rate limiting для контрактов API.
-- `architect/observability-design` — PII-policy в логах, маскировка, audit trail.
-- `oss-dev/dependency-audit` — supply-chain/SBOM/vuln-скан, кормит A06 OWASP (вход этого скилла).
-- `php/laravel-security-audit` — code-level аудит реализации (raw SQL, mass assignment, XSS), кормит этот дизайн (вход).
-- `php/azguard`, `php/laravel-permissions`, `php/attribute-authorization` — RBAC/ABAC-реализация выбранной модели авторизации.
-- `security/security` — внешний defensive playbook (OWASP LLM Top 10, NIST AI RMF).
+<!-- ru-source-sha256: 4b3b9fbfc9cb076fca8f7453b148306a4593fde94ee2aa43432bb3d75617f912 -->

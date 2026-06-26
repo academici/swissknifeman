@@ -17,25 +17,24 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-## Контекст
+Laravel Botkit bot-package patterns: bot definition, ServiceProvider registration, webhook intake.
 
-Паттерны для Laravel bot-пакетов на базе Botkit: определение бота, регистрация через ServiceProvider, приём webhook.
+Steps:
+1. Implement `BotDefinition` with unique slug.
+2. Extend `AbstractBotPackageServiceProvider` in the package.
+3. Add webhook route with signature verification.
+4. Register bot in `BotDefinitionRegistry`.
 
-## Алгоритм
+Quality checklist:
+- slug unique, lowercase-hyphenated.
+- capabilities declared explicitly.
+- webhook validates provider signature.
 
-1. Реализуй `BotDefinition` с уникальным slug
-2. Наследуй `AbstractBotPackageServiceProvider` в пакете
-3. Добавь webhook route с верификацией подписи
-4. Зарегистрируй бота в `BotDefinitionRegistry`
+Refs:
+- `php/laravel` — architectural patterns (actions, resources) bot logic builds on.
+- `php/laravel-packages` — package scaffold, ServiceProvider, resource publishing.
+- `php/laravel-structure` — placement of bot classes in the project tree.
 
-## Чеклист качества
+<!-- ru-source-sha256: PENDING -->
 
-- [ ] slug уникален и lowercase-hyphenated
-- [ ] capabilities объявлены явно
-- [ ] webhook валидирует подпись провайдера
-
-## Ссылки
-
-- `php/laravel` — архитектурные паттерны (actions, resources), на которых строится bot-логика.
-- `php/laravel-packages` — scaffold пакета, ServiceProvider, публикация ресурсов.
-- `php/laravel-structure` — размещение классов бота в дереве проекта.
+<!-- ru-source-sha256: f0628659930dd0d6c50d5cecb8e5768846cfe03ba9f85e458e81305eed2daac5 -->

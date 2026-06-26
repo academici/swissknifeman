@@ -2,7 +2,7 @@
 name: azguard
 bucket: azguard
 version: 0.1.0
-description: "Роли и контроль доступа на базе пакета azguard: code-first RBAC, панели, scoped roles, direct grants, abilities для фронтенда"
+description: "Roles & access control via azguard package: code-first RBAC, panels, scoped roles, direct grants, frontend abilities"
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "permissions", "azguard", "rbac", "authorization", "gate", "enum"]
@@ -23,75 +23,79 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-## Контекст
+## Context
 
-RBAC для Laravel-проектов на базе пакета **azguard** (`azguard/azguard`) — code-first подход: права и роли живут в коде, версионируются в git и ревьюятся в PR, а не дрейфуют в БД (в отличие от spatie/permission). Монорепо пакета: `core` (основной RBAC), `filament` (интеграция с Filament), `context` (контекстные права).
+RBAC for Laravel via package **azguard** (`azguard/azguard`). Code-first: perms/roles live in code, versioned in git, reviewed in PR (not drifting in DB like spatie/permission). Package monorepo: `core` (RBAC), `filament` (Filament integration), `context` (contextual perms).
 
-Ключевые принципы:
+Principles:
 
-- **Роли = PHP-классы** `RoleInterface` с методами `getName()` / `getLevel()` / `permissions()`. Уровни (`getLevel()`) — для сравнений (`$user->hasRoleLevel('>= 50')`), не для наследования прав. Wildcard `['*']` в `permissions()` = super-admin (срабатывает в `Gate::before`).
-- **Permissions = backed enum** с атрибутами `#[GateAbility]` (регистрируется в Gate) и `#[RoleOnly]` (только `hasPermission()`, в Gate не попадает). Один enum на ресурс, ключи `{panel}.{resource}.{action}` — префикс панели добавляется автоматически.
-- **Трейт `HasAzGuard` на User** (+ `HasDirectGrants` для прямых грантов): `assignRole()`, `hasRole()`, `hasPermission()`, `syncRoles()`, query scopes `User::role()` / `User::permission()`.
-- **Панели = изолированные namespace** прав (`app`, `admin`, `api`). Объявляются классом `PanelProvider` (`id`, `path`, `permissionEnums`, `roleClasses`), регистрируются в `config/az-guard.php` → `panels`. Один пользователь может иметь разные роли в разных панелях.
-- **Порядок резолва прав**: class roles → db roles (DynamicRole) → direct grants (`EffectivePermissionResolver` агрегирует GrantSources по приоритету).
-- **Gate-first**: в PHP-коде всегда `Gate::allows(DocumentsPermission::View)` с enum-кейсом, никогда сырые строки (опечатка = тихая дыра в безопасности). Строки — только в middleware/Blade через `->value`.
-- **Авторегистрация политик**: класс с `#[GuardPolicy(model: Document::class)]`, методы с `#[GateAbility(permission: Enum::Case)]` — PanelProvider сканирует `**/Policies/**/*Policy.php` и сам вызывает `Gate::define()` / `Gate::policy()`.
-- **Scoped roles**: роль на конкретную сущность (`assignScopedRole(EditorRole::class, $project)`), `Gate::allows('app.documents.edit', $project)` использует scoped-резолв автоматически.
-- **Direct grants с TTL**: исключение, не основной паттерн — `AzGuard::forUser($user)->on('app')->ttl(3600)->give(...)`; истёкшие гранты чистит `az-guard:prune-grants`.
-- **Кеш**: по умолчанию in-memory на запрос; cross-request — `config/az-guard.php` → `cache.store = redis`. Сброс: `php artisan azguard:cache-reset`, в коде — `$user->flushPermissions()`.
+- **Roles = PHP classes** implementing `RoleInterface` with `getName()` / `getLevel()` / `permissions()`. `getLevel()` is for comparisons (`$user->hasRoleLevel('>= 50')`), not permission inheritance. Wildcard `['*']` in `permissions()` = super-admin (fires in `Gate::before`).
+- **Permissions = backed enum** with attributes `#[GateAbility]` (registered in Gate) and `#[RoleOnly]` (only `hasPermission()`, never in Gate). One enum per resource; keys `{panel}.{resource}.{action}` — panel prefix added automatically.
+- **Trait `HasAzGuard` on User** (+ `HasDirectGrants` for direct grants): `assignRole()`, `hasRole()`, `hasPermission()`, `syncRoles()`; query scopes `User::role()` / `User::permission()`.
+- **Panels = isolated permission namespaces** (`app`, `admin`, `api`). Declared by a `PanelProvider` class (`id`, `path`, `permissionEnums`, `roleClasses`), registered in `config/az-guard.php` → `panels`. One user can hold different roles in different panels.
+- **Permission resolution order**: class roles → db roles (DynamicRole) → direct grants (`EffectivePermissionResolver` aggregates GrantSources by priority).
+- **Gate-first**: in PHP always `Gate::allows(DocumentsPermission::View)` with enum case, never raw strings (typo = silent security hole). Strings only in middleware/Blade via `->value`.
+- **Policy auto-registration**: class with `#[GuardPolicy(model: Document::class)]`, methods with `#[GateAbility(permission: Enum::Case)]` — PanelProvider scans `**/Policies/**/*Policy.php` and calls `Gate::define()` / `Gate::policy()` itself.
+- **Scoped roles**: role on a concrete entity (`assignScopedRole(EditorRole::class, $project)`); `Gate::allows('app.documents.edit', $project)` uses scoped resolution automatically.
+- **Direct grants with TTL**: exception, not the main pattern — `AzGuard::forUser($user)->on('app')->ttl(3600)->give(...)`; expired grants cleaned by `az-guard:prune-grants`.
+- **Cache**: default in-memory per-request; cross-request — `config/az-guard.php` → `cache.store = redis`. Reset: `php artisan azguard:cache-reset`; in code — `$user->flushPermissions()`.
 
-Установка:
+Install:
 
 ```bash
 composer require azguard/azguard
 php artisan vendor:publish --tag=az-guard-config
 php artisan migrate
-# затем трейт HasAzGuard на User
+# then trait HasAzGuard on User
 ```
 
-## Алгоритм
+## Algorithm
 
-1. Установи пакет, опубликуй конфиг, прогони миграции, добавь `HasAzGuard` на User.
-2. Создай панель: `panel-provider.php` + регистрация в `config/az-guard.php`.
-3. Опиши permissions enum'ами (`permission-enum.php`) и роли классами (`role-class.php`), зарегистрируй их в PanelProvider.
-4. Для проверок с моделью — политики с авторегистрацией (`policy-gateability.php`).
-5. Роли на конкретную сущность (multi-tenant, команды) — `scoped-roles.php`.
-6. Точечные/временные права одному пользователю — `direct-grants.php` (если грантишь одно право 5+ юзерам — пора делать роль).
-7. Фронтенд: пер-ресурсные флаги — `abilities-dto.php`; глобальная карта прав — `inertia-share.php`.
-8. Тесты на оба исхода (есть право / нет права) — `testing.php`.
-9. Проверь конфигурацию: `php artisan azguard:doctor`.
+1. Install package, publish config, run migrations, add `HasAzGuard` to User.
+2. Create panel: `panel-provider.php` + register in `config/az-guard.php`.
+3. Define permissions as enums (`permission-enum.php`) and roles as classes (`role-class.php`); register them in PanelProvider.
+4. Model-aware checks → policies with auto-registration (`policy-gateability.php`).
+5. Roles on a concrete entity (multi-tenant, teams) → `scoped-roles.php`.
+6. Pointwise/temporary perms for one user → `direct-grants.php` (granting one perm to 5+ users = make a role).
+7. Frontend: per-resource flags → `abilities-dto.php`; global permission map → `inertia-share.php`.
+8. Test both outcomes (has perm / lacks perm) → `testing.php`.
+9. Verify config: `php artisan azguard:doctor`.
 
-## Когда какой сниппет открывать
+## Snippet selection
 
-| Ситуация | Файл |
+| Situation | File |
 |---|---|
-| Нужна новая роль (статический класс, уровни, wildcard) | `snippets/role-class.php` |
-| Нужны новые права (enum, `#[GateAbility]`/`#[RoleOnly]`, проверки) | `snippets/permission-enum.php` |
-| Новая панель / регистрация enum'ов и ролей | `snippets/panel-provider.php` |
-| Проверка права с учётом модели, авторегистрация политики | `snippets/policy-gateability.php` |
-| Роль на конкретную сущность (Project/Team/Document) | `snippets/scoped-roles.php` |
-| Временное/одноразовое право одному пользователю | `snippets/direct-grants.php` |
-| Передать «что можно с этим ресурсом» во фронтенд (Inertia) | `snippets/abilities-dto.php` |
-| Глобальная карта прав на фронте, TS-константы, Vue | `snippets/inertia-share.php` |
-| Тесты ролей, прав, грантов (Pest) | `snippets/testing.php` |
+| New role (static class, levels, wildcard) | `snippets/role-class.php` |
+| New perms (enum, `#[GateAbility]`/`#[RoleOnly]`, checks) | `snippets/permission-enum.php` |
+| New panel / register enums and roles | `snippets/panel-provider.php` |
+| Model-aware perm check, policy auto-registration | `snippets/policy-gateability.php` |
+| Role on a concrete entity (Project/Team/Document) | `snippets/scoped-roles.php` |
+| Temporary/one-off perm for one user | `snippets/direct-grants.php` |
+| Pass "what's allowed on this resource" to frontend (Inertia) | `snippets/abilities-dto.php` |
+| Global permission map on frontend, TS constants, Vue | `snippets/inertia-share.php` |
+| Tests for roles, perms, grants (Pest) | `snippets/testing.php` |
 
-## Чеклист качества
+## Quality checklist
 
-- [ ] В PHP-коде только enum-кейсы, сырые строки прав — только в middleware/Blade через `->value`
-- [ ] Проверяются permissions, а не роли (`hasPermission()` / `Gate::allows()`, не `hasRole()`)
-- [ ] Один enum на ресурс; CRUD-набор `view/create/edit/delete` как база
-- [ ] `#[GateAbility]` указан явно даже там, где он default
-- [ ] Direct grant вместо роли только для разовых исключений; TTL для временного доступа; `az-guard:prune-grants` в scheduler
-- [ ] Abilities передаются на уровне страницы, не в глобальных shared props; фронтенд-проверки — только UX, сервер валидирует всегда
-- [ ] Для каждого «разрешено» есть тест «запрещено»; между сменами состояния в тесте — `$user->flushPermissions()`
-- [ ] `php artisan azguard:doctor` зелёный после изменений
+- [ ] PHP code uses only enum cases; raw permission strings only in middleware/Blade via `->value`
+- [ ] Check permissions, not roles (`hasPermission()` / `Gate::allows()`, not `hasRole()`)
+- [ ] One enum per resource; CRUD set `view/create/edit/delete` as baseline
+- [ ] `#[GateAbility]` stated explicitly even where it's the default
+- [ ] Direct grant instead of role only for one-off exceptions; TTL for temporary access; `az-guard:prune-grants` in scheduler
+- [ ] Abilities passed at page level, not in global shared props; frontend checks are UX only — server always validates
+- [ ] Every "allowed" has an "denied" test; between state changes in a test — `$user->flushPermissions()`
+- [ ] `php artisan azguard:doctor` green after changes
 
-## Ссылки
+## Links
 
-- Исходник: `/home/vostrikov/projects/packages/azguard` (docs/guide: basic-usage, permissions, roles, panels, entity-scopes, direct-grants, policies-and-gates, abilities-frontend, testing)
-- Ручная реализация RBAC без пакета — скилл `php/laravel-permissions`
-- Filament-интеграция — пакет `azguard/filament`, скилл `php/filament`
-- Декларативная проверка прав на экшенах через атрибут — `php/attribute-authorization` (ортогональный слой поверх Gate)
-- Enum-права как метаданные/типобезопасный слой — `php/enum-attributes`
-- Abilities во фронтенд (Inertia/TS) — `frontend/backend-type-sync`
-- Auth-стратегия и threat modeling на уровне архитектуры — `architect/security-design`
+- Source: `/home/vostrikov/projects/packages/azguard` (docs/guide: basic-usage, permissions, roles, panels, entity-scopes, direct-grants, policies-and-gates, abilities-frontend, testing)
+- Manual RBAC without package — skill `php/laravel-permissions`
+- Filament integration — package `azguard/filament`, skill `php/filament`
+- Declarative perm checks on actions via attribute — `php/attribute-authorization` (orthogonal layer over Gate)
+- Enum perms as metadata/type-safe layer — `php/enum-attributes`
+- Abilities to frontend (Inertia/TS) — `frontend/backend-type-sync`
+- Auth strategy & threat modeling at architecture level — `architect/security-design`
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: 31b906c193c20985a72ae970ba80c1a67b0b383db2762a28a17a2bf6c2194520 -->

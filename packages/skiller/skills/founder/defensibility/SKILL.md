@@ -2,7 +2,7 @@
 name: defensibility
 bucket: founder
 version: 0.1.0
-description: Moat-анализ для Scale-стадии — accumulated depth, data flywheel, workflow lock-in, domain-as-context, moat narrative one-pager
+description: Moat analysis for Scale stage — accumulated depth, data flywheel, workflow lock-in, domain-as-context, moat narrative one-pager
 risk: draft
 persona: founder
 tags: [market, validation]
@@ -15,40 +15,25 @@ adapters: [claude, cursor, fable]
 
 # Skill: Defensibility / Moat
 
-Применять когда: продукт нашёл PMF и масштабируется; нужно построить **defensible moat через accumulated depth**. Scale-стадия. Лакмус Founder's Playbook: *«Если бы well-funded incumbent скопировал продукт сегодня — пользователи остались бы?»*
+Use when: product found PMF and is scaling; build defensible moat via accumulated depth. Scale stage.
+Litmus (Founder's Playbook): *"If a well-funded incumbent copied the product today — would users stay?"*
+AI-era shift: functionality alone is no longer a moat. Moat = what compounds over time and can't be bought.
 
-Ключевой сдвиг эпохи AI: построить продукт легко и быстро (для всех) → **сама по себе функциональность больше не моат**. Моат = то, что компаундируется со временем и что нельзя купить.
+## Do NOT use when
 
----
+- No PMF (idea/mvp stage) — premature; do `pmf-diagnostics` first. Moat without retention = fantasy.
+- One-off competitive overview needed — that's `competitive-analysis`, not moat strategy.
 
-## Когда НЕ применять
+## 4 moat sources (audit each)
 
-- Нет PMF (стадия idea/mvp) — преждевременно; сначала `pmf-diagnostics`. Моат без retention — фантазия.
-- Нужен разовый конкурентный обзор — это `competitive-analysis`, не moat-стратегия.
-
----
-
-## 4 источника моата (аудит по каждому)
-
-### 1. Accumulated depth
-Глубина, накопленная в продукте: интеграция с инструментами/платформами, на которые опираются пользователи; проприетарные системные данные и workflow. Фаундеры, кто строил последовательно в одном направлении на consistent-инфраструктуре, получают то, что **структурно трудно повторить**.
-
-### 2. Data flywheel (compounding user data)
-Пользователи генерят поведенческие сигналы (что приняли / что отвергли) → это кормит roadmap. Со временем узнаёшь специфические паттерны, предпочтения, edge cases своей базы. **Каждое улучшение делает продукт полезнее → больше usage → больше feedback → больше улучшений.**
-Эти данные time-locked, context-specific и невоспроизводимы копикэтом: нельзя купить поведенческий отпечаток тысяч юзеров, шлифовавших workflow внутри продукта.
-
-### 3. Workflow lock-in
-Compounding data делает продукт труднее повторить; workflow lock-in делает труднее **уйти**. Чем дольше пользователи гоняют продукт в daily-операциях — тем глубже он вшит: автоматизации поверх, обученные люди, подключённые источники данных, отлаженные prompts/workflows/outputs. Switching → из «product decision» в «full-scale operational project».
-**Аудит integration depth:** по топ-N клиентам — какие workflow построили поверх, от каких интеграций зависят, оценка switching cost. Где залипли, где на поверхности → что построить/включить, чтобы углубить.
-
-### 4. Domain expertise → AI context
-Externalize знание основателя (industry jargon, регуляторные gotchas, edge cases, почему «очевидные» решения не работают) в structured, searchable context. Skills кодифицируют повторяющиеся workflow в reusable-рутины. За месяцы это становится proprietary knowledge substrate, который generalist-AI не повторит. Пример: «medical billing ломается на 340B-claims» → специальный test case в продукте.
-
----
+1. **Accumulated depth** — depth built into product: integration with tools/platforms users rely on; proprietary system data and workflows. Built consistently in one direction on consistent infra → structurally hard to replicate.
+2. **Data flywheel (compounding user data)** — users generate behavioral signals (accepted/rejected) → feeds roadmap. Over time you learn your base's specific patterns, preferences, edge cases. Each improvement → more usage → more feedback → more improvements. Data is time-locked, context-specific, non-reproducible by a copycat: can't buy the behavioral fingerprint of thousands of users who refined workflows inside the product.
+3. **Workflow lock-in** — compounding data makes product harder to replicate; lock-in makes it harder to leave. Longer in daily ops → deeper embedded: automations on top, trained people, connected data sources, tuned prompts/workflows/outputs. Switching → from "product decision" to "full-scale operational project". **Audit integration depth:** per top-N clients — workflows built on top, integrations depended on, switching-cost estimate. Where stuck vs surface → what to build/enable to deepen.
+4. **Domain expertise → AI context** — externalize founder knowledge (industry jargon, regulatory gotchas, edge cases, why "obvious" solutions fail) into structured, searchable context. Skills codify recurring workflows into reusable routines. Over months → proprietary knowledge substrate a generalist AI can't replicate. Example: "medical billing breaks on 340B claims" → dedicated test case in product.
 
 ## Output: moat narrative
 
-One-pager для product marketing / инвесторов:
+One-pager for product marketing / investors:
 
 ```markdown
 ---
@@ -60,40 +45,40 @@ created: YYYY-MM-DD
 # Defensibility / Moat — [ProjectName]
 
 ## Accumulated depth
-Что построено последовательно, что трудно повторить: …
+What was built consistently, what's hard to replicate: …
 
 ## Data flywheel
-Какие сигналы собираем, как долго, какие 3 highest-signal паттерна → как кормят улучшение: …
+Signals collected, for how long, the 3 highest-signal patterns → how they feed improvement: …
 
 ## Workflow lock-in (integration depth)
-| Клиент | Workflow поверх | Зависимые интеграции | Switching cost |
+| Client | Workflow on top | Dependent integrations | Switching cost |
 |---|---|---|---|
-Что построить, чтобы углубить: …
+What to build to deepen: …
 
 ## Domain moat
-Edge cases / regulatory gotchas, закодированные в продукт (которых нет у generic-конкурента): …
+Edge cases / regulatory gotchas encoded into product (absent in generic competitor): …
 
-## Moat narrative (для GTM/инвесторов)
-История data flywheel: как работает, как долго крутится, почему well-resourced конкурент, стартующий сегодня, не повторит за <2 года.
+## Moat narrative (for GTM/investors)
+Data-flywheel story: how it works, how long it's been spinning, why a well-resourced competitor starting today can't replicate it in <2 years.
 
-## Лакмус
-«Incumbent скопировал сегодня — пользователи остались бы?» → ответ + почему.
+## Litmus
+"Incumbent copied today — would users stay?" → answer + why.
 ```
 
----
+## Agent adds
 
-## Что агент добавляет сам
+- **Moat realism.** If "moat" = just features — say so directly: it doesn't defend.
+- **Link to portfolio domain projects.** Agelto (EIS edge cases), CoreX (integration lock-in), AxiomaErpSdk (domain depth) — candidates where domain→context is especially strong.
+- **Time-to-replicate estimate.** How long it'd really take a competitor — honest, not marketing.
 
-- **Реализм моата.** Если «моат» = просто фичи — назвать прямо: это не защищает.
-- **Связь с domain-проектами портфеля.** Agelto (ЕИС edge cases), CoreX (integration lock-in), AxiomaErpSdk (domain depth) — кандидаты, где domain→context особенно силён.
-- **Time-to-replicate оценка.** Сколько реально займёт у конкурента — честно, не маркетингово.
+## Related skills
 
----
+- `founder/startup-lifecycle` — Scale stage; defensibility is its core work
+- `founder/competitive-analysis` — supplies landscape; defensibility answers "why we hold"
+- `pm/go-to-market` — consumer: moat narrative feeds investor/enterprise messaging
+- `founder/pitch-deck` — consumer: moat slide
+- `pm/pmf-diagnostics` — precondition: moat only meaningful after PMF
 
-## Связанные скиллы
+<!-- ru-source-sha256: PENDING -->
 
-- `founder/startup-lifecycle` — Scale-стадия; defensibility — её основная работа
-- `founder/competitive-analysis` — поставляет ландшафт; defensibility отвечает «почему мы держимся»
-- `pm/go-to-market` — потребитель: moat narrative кормит messaging для инвесторов/enterprise
-- `founder/pitch-deck` — потребитель: moat-слайд
-- `pm/pmf-diagnostics` — предусловие: моат имеет смысл только после PMF
+<!-- ru-source-sha256: a9660c7b7094de46daec335b6e05969d0df701806bd693c1a1b5b105b5b70088 -->

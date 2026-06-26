@@ -9,292 +9,292 @@
 - **↻ on-trigger** — тело `SKILL.md`: грузится, только когда скилл сработал.
 - **⌥ on-demand** — сниппеты: по ссылке из тела, опционально.
 
-Цвет узла — heat по **⊕ always** (краснее = дороже постоянный налог описания). Метка `name<br/>⊕always ↻body`. Сплошная стрелка `requires` показывает транзитивный налог: ставишь скилл — тянешь always-цену зависимости. Оценка токенов грубая (`len/3`), для сравнения наборов, не точного учёта.
+Цвет узла — heat по **⊕ always** (краснее = дороже постоянный налог описания). Метка `name<br/>⊕always ↻body`. Сплошная стрелка `requires` показывает транзитивный налог: ставишь скилл — тянешь always-цену зависимости. Оценка токенов грубая и языко-зависимая (кириллица ~2.2 chars/tok, латиница/код ~4) — для сравнения наборов, не точного учёта.
 
 ```mermaid
 flowchart LR
   subgraph ai["ai"]
-    ai_agents["ai-agents<br/>⊕105 ↻652"]:::warm
+    ai_agents["ai-agents<br/>⊕123 ↻639"]:::hot
   end
   subgraph architect["architect"]
-    agent_design["agent-design<br/>⊕31 ↻2082"]:::cool
-    api_design["api-design<br/>⊕33 ↻1315"]:::cool
-    architecture["architecture<br/>⊕30 ↻1371"]:::cool
-    codebase_design["codebase-design<br/>⊕140 ↻2244"]:::hot
-    data_schema["data-schema<br/>⊕32 ↻1063"]:::cool
-    dev_engineering_super_skill["dev-engineering-super-skill<br/>⊕148 ↻26988"]:::hot
-    domain_modeling["domain-modeling<br/>⊕150 ↻1393"]:::hot
-    eval_design["eval-design<br/>⊕36 ↻2118"]:::cool
-    figma_mcp_core["figma-mcp-core<br/>⊕171 ↻1995"]:::hot
-    legal_compliance["legal-compliance<br/>⊕33 ↻2387"]:::cool
-    observability_design["observability-design<br/>⊕37 ↻1671"]:::cool
-    package_contribution_protocol["package-contribution-protocol<br/>⊕121 ↻2275"]:::warm
-    security_design["security-design<br/>⊕48 ↻2612"]:::mild
-    tech_stack_selection["tech-stack-selection<br/>⊕38 ↻2254"]:::cool
+    agent_design["agent-design<br/>⊕21 ↻1505"]:::cool
+    api_design["api-design<br/>⊕22 ↻1009"]:::cool
+    architecture["architecture<br/>⊕23 ↻987"]:::cool
+    codebase_design["codebase-design<br/>⊕155 ↻1746"]:::hot
+    data_schema["data-schema<br/>⊕23 ↻833"]:::cool
+    dev_engineering_super_skill["dev-engineering-super-skill<br/>⊕111 ↻20241"]:::hot
+    domain_modeling["domain-modeling<br/>⊕178 ↻1173"]:::hot
+    eval_design["eval-design<br/>⊕27 ↻1374"]:::cool
+    figma_mcp_core["figma-mcp-core<br/>⊕116 ↻1394"]:::hot
+    legal_compliance["legal-compliance<br/>⊕22 ↻1628"]:::cool
+    observability_design["observability-design<br/>⊕27 ↻1146"]:::cool
+    package_contribution_protocol["package-contribution-protocol<br/>⊕90 ↻1587"]:::warm
+    security_design["security-design<br/>⊕33 ↻1862"]:::mild
+    tech_stack_selection["tech-stack-selection<br/>⊕27 ↻1660"]:::cool
   end
   subgraph azguard["azguard"]
-    azguard["azguard<br/>⊕45 ↻1921"]:::cool
+    azguard["azguard<br/>⊕31 ↻1422"]:::cool
   end
   subgraph blender["blender"]
-    mcp_blender["mcp-blender<br/>⊕146 ↻1862"]:::hot
-    version_gotchas["version-gotchas<br/>⊕23 ↻970"]:::cool
+    mcp_blender["mcp-blender<br/>⊕100 ↻1286"]:::warm
+    version_gotchas["version-gotchas<br/>⊕19 ↻675"]:::cool
   end
   subgraph blender_modeling["blender-modeling"]
-    build_loop["build-loop<br/>⊕178 ↻2747"]:::hot
-    config_conventions["config-conventions<br/>⊕149 ↻2631"]:::hot
-    model_rules["model-rules<br/>⊕37 ↻917"]:::cool
-    parametric_config["parametric-config<br/>⊕140 ↻2803"]:::hot
-    scene_conventions["scene-conventions<br/>⊕118 ↻1134"]:::warm
-    threading["threading<br/>⊕32 ↻842"]:::cool
+    build_loop["build-loop<br/>⊕108 ↻1825"]:::warm
+    config_conventions["config-conventions<br/>⊕97 ↻2008"]:::warm
+    model_rules["model-rules<br/>⊕26 ↻656"]:::cool
+    parametric_config["parametric-config<br/>⊕94 ↻1882"]:::warm
+    scene_conventions["scene-conventions<br/>⊕81 ↻786"]:::warm
+    threading["threading<br/>⊕23 ↻570"]:::cool
   end
   subgraph botkit["botkit"]
-    botkit["botkit<br/>⊕33 ↻249"]:::cool
+    botkit["botkit<br/>⊕25 ↻205"]:::cool
   end
   subgraph creative["creative"]
-    content_creative_super_skill["content-creative-super-skill<br/>⊕175 ↻29738"]:::hot
+    content_creative_super_skill["content-creative-super-skill<br/>⊕132 ↻22304"]:::hot
   end
   subgraph devops["devops"]
-    ci_cd["ci-cd<br/>⊕61 ↻1339"]:::mild
-    db_test_preflight["db-test-preflight<br/>⊕125 ↻2327"]:::warm
-    docker["docker<br/>⊕59 ↻121"]:::mild
-    docker_dev_prod["docker-dev-prod<br/>⊕48 ↻1184"]:::mild
-    docker_php["docker-php<br/>⊕47 ↻1056"]:::mild
-    docker_postgres["docker-postgres<br/>⊕49 ↻991"]:::mild
-    docker_services["docker-services<br/>⊕57 ↻999"]:::mild
-    docker_vite["docker-vite<br/>⊕44 ↻932"]:::cool
-    gitops["gitops<br/>⊕34 ↻925"]:::cool
-    makefile["makefile<br/>⊕50 ↻935"]:::mild
-    node_pnpm_preflight["node-pnpm-preflight<br/>⊕47 ↻301"]:::mild
+    ci_cd["ci-cd<br/>⊕46 ↻981"]:::mild
+    db_test_preflight["db-test-preflight<br/>⊕88 ↻1451"]:::warm
+    docker["docker<br/>⊕44 ↻100"]:::mild
+    docker_dev_prod["docker-dev-prod<br/>⊕36 ↻818"]:::mild
+    docker_php["docker-php<br/>⊕34 ↻681"]:::mild
+    docker_postgres["docker-postgres<br/>⊕36 ↻712"]:::mild
+    docker_services["docker-services<br/>⊕41 ↻754"]:::mild
+    docker_vite["docker-vite<br/>⊕33 ↻607"]:::mild
+    gitops["gitops<br/>⊕25 ↻640"]:::cool
+    makefile["makefile<br/>⊕36 ↻654"]:::mild
+    node_pnpm_preflight["node-pnpm-preflight<br/>⊕32 ↻226"]:::cool
   end
   subgraph finance["finance"]
-    finance_super_skill["finance-super-skill<br/>⊕203 ↻24370"]:::hot
+    finance_super_skill["finance-super-skill<br/>⊕152 ↻18278"]:::hot
   end
   subgraph founder["founder"]
-    adversarial_check["adversarial-check<br/>⊕66 ↻1337"]:::mild
-    competitive_analysis["competitive-analysis<br/>⊕39 ↻1615"]:::cool
-    customer_discovery["customer-discovery<br/>⊕65 ↻1566"]:::mild
-    defensibility["defensibility<br/>⊕47 ↻1421"]:::mild
-    idea_discovery["idea-discovery<br/>⊕40 ↻1885"]:::cool
-    new_project["new-project<br/>⊕32 ↻1717"]:::cool
-    pitch_deck["pitch-deck<br/>⊕33 ↻1904"]:::cool
-    risk_assessment["risk-assessment<br/>⊕30 ↻1590"]:::cool
-    startup_lifecycle["startup-lifecycle<br/>⊕47 ↻2017"]:::mild
+    adversarial_check["adversarial-check<br/>⊕47 ↻875"]:::mild
+    competitive_analysis["competitive-analysis<br/>⊕26 ↻1155"]:::cool
+    customer_discovery["customer-discovery<br/>⊕46 ↻1156"]:::mild
+    defensibility["defensibility<br/>⊕36 ↻988"]:::mild
+    idea_discovery["idea-discovery<br/>⊕29 ↻1399"]:::cool
+    new_project["new-project<br/>⊕23 ↻1191"]:::cool
+    pitch_deck["pitch-deck<br/>⊕22 ↻1405"]:::cool
+    risk_assessment["risk-assessment<br/>⊕22 ↻1051"]:::cool
+    startup_lifecycle["startup-lifecycle<br/>⊕35 ↻1447"]:::mild
   end
   subgraph frontend["frontend"]
-    document_writer["document-writer<br/>⊕99 ↻1453"]:::warm
-    filepond_upload["filepond-upload<br/>⊕168 ↻2893"]:::hot
-    web_design_guidelines["web-design-guidelines<br/>⊕69 ↻306"]:::mild
+    document_writer["document-writer<br/>⊕74 ↻1090"]:::warm
+    filepond_upload["filepond-upload<br/>⊕116 ↻1907"]:::hot
+    web_design_guidelines["web-design-guidelines<br/>⊕52 ↻229"]:::mild
   end
   subgraph frontend_animations["frontend-animations"]
-    motion["motion<br/>⊕63 ↻1043"]:::mild
+    motion["motion<br/>⊕47 ↻782"]:::mild
   end
   subgraph frontend_backend["frontend-backend"]
-    backend_type_sync["backend-type-sync<br/>⊕125 ↻2692"]:::warm
-    inertia_vue["inertia-vue<br/>⊕65 ↻1819"]:::mild
-    laravel_echo_client["laravel-echo-client<br/>⊕146 ↻2499"]:::hot
+    backend_type_sync["backend-type-sync<br/>⊕85 ↻1752"]:::warm
+    inertia_vue["inertia-vue<br/>⊕49 ↻1282"]:::mild
+    laravel_echo_client["laravel-echo-client<br/>⊕110 ↻1636"]:::hot
   end
   subgraph frontend_figma["frontend-figma"]
-    figma_to_vue["figma-to-vue<br/>⊕122 ↻968"]:::warm
+    figma_to_vue["figma-to-vue<br/>⊕84 ↻700"]:::warm
   end
   subgraph frontend_linting["frontend-linting"]
-    antfu["antfu<br/>⊕83 ↻1453"]:::mild
-    eslint_flat_config["eslint-flat-config<br/>⊕129 ↻2880"]:::warm
-    js_code_style["js-code-style<br/>⊕59 ↻897"]:::mild
-    ts_library["ts-library<br/>⊕102 ↻1537"]:::warm
+    antfu["antfu<br/>⊕63 ↻1090"]:::mild
+    eslint_flat_config["eslint-flat-config<br/>⊕95 ↻2031"]:::warm
+    js_code_style["js-code-style<br/>⊕65 ↻972"]:::warm
+    ts_library["ts-library<br/>⊕77 ↻1153"]:::warm
   end
   subgraph frontend_naive_ui["frontend-naive-ui"]
-    naive_ui_theming["naive-ui-theming<br/>⊕118 ↻2567"]:::warm
+    naive_ui_theming["naive-ui-theming<br/>⊕87 ↻1731"]:::warm
   end
   subgraph frontend_nuxt["frontend-nuxt"]
-    nuxt["nuxt<br/>⊕91 ↻1240"]:::warm
-    nuxt_modules["nuxt-modules<br/>⊕142 ↻729"]:::hot
-    nuxt_seo["nuxt-seo<br/>⊕56 ↻935"]:::mild
+    nuxt["nuxt<br/>⊕68 ↻930"]:::warm
+    nuxt_modules["nuxt-modules<br/>⊕106 ↻547"]:::warm
+    nuxt_seo["nuxt-seo<br/>⊕42 ↻702"]:::mild
   end
   subgraph frontend_reka["frontend-reka"]
-    reka_ui_cva["reka-ui-cva<br/>⊕116 ↻2528"]:::warm
+    reka_ui_cva["reka-ui-cva<br/>⊕90 ↻1706"]:::warm
   end
   subgraph frontend_tailwind["frontend-tailwind"]
-    dark_mode["dark-mode<br/>⊕140 ↻2850"]:::hot
-    tailwind_conventions["tailwind-conventions<br/>⊕142 ↻2778"]:::hot
+    dark_mode["dark-mode<br/>⊕96 ↻1870"]:::warm
+    tailwind_conventions["tailwind-conventions<br/>⊕108 ↻1908"]:::warm
   end
   subgraph frontend_vite["frontend-vite"]
-    vite["vite<br/>⊕64 ↻697"]:::mild
-    vite_module_loader["vite-module-loader<br/>⊕36 ↻945"]:::cool
-    vite_multi_build["vite-multi-build<br/>⊕59 ↻1201"]:::mild
-    vitepress["vitepress<br/>⊕56 ↻940"]:::mild
+    vite["vite<br/>⊕48 ↻523"]:::mild
+    vite_module_loader["vite-module-loader<br/>⊕23 ↻602"]:::cool
+    vite_multi_build["vite-multi-build<br/>⊕40 ↻864"]:::mild
+    vitepress["vitepress<br/>⊕42 ↻705"]:::mild
   end
   subgraph frontend_vue["frontend-vue"]
-    pinia["pinia<br/>⊕61 ↻783"]:::mild
-    pinia_stores["pinia-stores<br/>⊕150 ↻2467"]:::hot
-    vitest["vitest<br/>⊕57 ↻1085"]:::mild
-    vitest_vue["vitest-vue<br/>⊕63 ↻1177"]:::mild
-    vue["vue<br/>⊕72 ↻976"]:::mild
-    vue_best_practices["vue-best-practices<br/>⊕112 ↻2893"]:::warm
-    vue_composition_api["vue-composition-api<br/>⊕87 ↻622"]:::warm
-    vue_dynamic_icons["vue-dynamic-icons<br/>⊕99 ↻1670"]:::warm
-    vue_router_best_practices["vue-router-best-practices<br/>⊕180 ↻2943"]:::hot
-    vue_testing_best_practices["vue-testing-best-practices<br/>⊕86 ↻2498"]:::mild
-    vueuse_functions["vueuse-functions<br/>⊕38 ↻12283"]:::cool
+    pinia["pinia<br/>⊕46 ↻587"]:::mild
+    pinia_stores["pinia-stores<br/>⊕109 ↻1642"]:::hot
+    vitest["vitest<br/>⊕40 ↻697"]:::mild
+    vitest_vue["vitest-vue<br/>⊕47 ↻923"]:::mild
+    vue["vue<br/>⊕54 ↻793"]:::mild
+    vue_best_practices["vue-best-practices<br/>⊕84 ↻2198"]:::warm
+    vue_composition_api["vue-composition-api<br/>⊕68 ↻455"]:::warm
+    vue_dynamic_icons["vue-dynamic-icons<br/>⊕64 ↻1110"]:::mild
+    vue_router_best_practices["vue-router-best-practices<br/>⊕181 ↻2963"]:::hot
+    vue_testing_best_practices["vue-testing-best-practices<br/>⊕86 ↻2484"]:::warm
+    vueuse_functions["vueuse-functions<br/>⊕29 ↻9212"]:::cool
   end
   subgraph frontend_wayfinder["frontend-wayfinder"]
-    wayfinder["wayfinder<br/>⊕57 ↻1168"]:::mild
+    wayfinder["wayfinder<br/>⊕41 ↻847"]:::mild
   end
   subgraph general["general"]
-    anti_drift["anti-drift<br/>⊕52 ↻1210"]:::mild
-    compact_responses["compact-responses<br/>⊕88 ↻509"]:::warm
-    complex_task_orchestrator["complex-task-orchestrator<br/>⊕54 ↻774"]:::mild
-    context_economy["context-economy<br/>⊕91 ↻1580"]:::warm
-    cross_layer_change_checklist["cross-layer-change-checklist<br/>⊕46 ↻554"]:::cool
-    git_commit_rules["git-commit-rules<br/>⊕45 ↻1159"]:::cool
-    git_safety["git-safety<br/>⊕99 ↻643"]:::warm
-    grill_with_docs["grill-with-docs<br/>⊕124 ↻933"]:::warm
-    implement["implement<br/>⊕100 ↻504"]:::warm
-    naming_conventions["naming-conventions<br/>⊕103 ↻1909"]:::warm
-    packages_stack["packages-stack<br/>⊕108 ↻656"]:::warm
-    project_map["project-map<br/>⊕103 ↻784"]:::warm
-    session_handoff["session-handoff<br/>⊕57 ↻629"]:::mild
-    skills_ssot["skills-ssot<br/>⊕40 ↻2224"]:::cool
-    spec_interview["spec-interview<br/>⊕61 ↻907"]:::mild
-    task_brief_template["task-brief-template<br/>⊕92 ↻1318"]:::warm
-    token_efficient["token-efficient<br/>⊕126 ↻1593"]:::warm
-    writing_style["writing-style<br/>⊕118 ↻2179"]:::warm
+    anti_drift["anti-drift<br/>⊕37 ↻854"]:::mild
+    compact_responses["compact-responses<br/>⊕51 ↻385"]:::mild
+    complex_task_orchestrator["complex-task-orchestrator<br/>⊕38 ↻539"]:::mild
+    context_economy["context-economy<br/>⊕61 ↻1085"]:::mild
+    cross_layer_change_checklist["cross-layer-change-checklist<br/>⊕31 ↻403"]:::cool
+    git_commit_rules["git-commit-rules<br/>⊕24 ↻843"]:::cool
+    git_safety["git-safety<br/>⊕101 ↻615"]:::warm
+    grill_with_docs["grill-with-docs<br/>⊕147 ↻1053"]:::hot
+    implement["implement<br/>⊕106 ↻515"]:::warm
+    naming_conventions["naming-conventions<br/>⊕73 ↻1336"]:::warm
+    packages_stack["packages-stack<br/>⊕72 ↻458"]:::warm
+    project_map["project-map<br/>⊕70 ↻558"]:::warm
+    session_handoff["session-handoff<br/>⊕35 ↻441"]:::mild
+    skills_ssot["skills-ssot<br/>⊕30 ↻1514"]:::cool
+    spec_interview["spec-interview<br/>⊕49 ↻649"]:::mild
+    task_brief_template["task-brief-template<br/>⊕67 ↻1187"]:::warm
+    token_efficient["token-efficient<br/>⊕95 ↻1195"]:::warm
+    writing_style["writing-style<br/>⊕83 ↻1565"]:::warm
   end
   subgraph laravel_architecture["laravel-architecture"]
-    enum_attributes["enum-attributes<br/>⊕164 ↻2404"]:::hot
-    enum_state_machine["enum-state-machine<br/>⊕177 ↻2024"]:::hot
-    laravel_subagents["laravel-subagents<br/>⊕92 ↻1715"]:::warm
-    modular_architecture["modular-architecture<br/>⊕102 ↻4055"]:::warm
+    enum_attributes["enum-attributes<br/>⊕111 ↻1674"]:::hot
+    enum_state_machine["enum-state-machine<br/>⊕135 ↻1340"]:::hot
+    laravel_subagents["laravel-subagents<br/>⊕65 ↻1112"]:::warm
+    modular_architecture["modular-architecture<br/>⊕71 ↻2668"]:::warm
   end
   subgraph laravel_auth["laravel-auth"]
-    attribute_authorization["attribute-authorization<br/>⊕103 ↻2498"]:::warm
-    laravel_permissions["laravel-permissions<br/>⊕73 ↻476"]:::mild
-    laravel_security_audit["laravel-security-audit<br/>⊕62 ↻947"]:::mild
+    attribute_authorization["attribute-authorization<br/>⊕71 ↻1805"]:::warm
+    laravel_permissions["laravel-permissions<br/>⊕58 ↻362"]:::mild
+    laravel_security_audit["laravel-security-audit<br/>⊕43 ↻686"]:::mild
   end
   subgraph laravel_data_layer["laravel-data-layer"]
-    laravel_broadcasting["laravel-broadcasting<br/>⊕44 ↻1349"]:::cool
-    laravel_data["laravel-data<br/>⊕141 ↻2666"]:::hot
+    laravel_broadcasting["laravel-broadcasting<br/>⊕39 ↻1279"]:::mild
+    laravel_data["laravel-data<br/>⊕102 ↻1745"]:::warm
   end
   subgraph laravel_extras["laravel-extras"]
-    medialibrary["medialibrary<br/>⊕38 ↻1203"]:::cool
-    pennant_development["pennant-development<br/>⊕66 ↻535"]:::mild
-    spatie_settings["spatie-settings<br/>⊕157 ↻3370"]:::hot
+    medialibrary["medialibrary<br/>⊕28 ↻889"]:::cool
+    pennant_development["pennant-development<br/>⊕63 ↻535"]:::mild
+    spatie_settings["spatie-settings<br/>⊕114 ↻2288"]:::hot
   end
   subgraph laravel_filament["laravel-filament"]
-    filament["filament<br/>⊕73 ↻2587"]:::mild
+    filament["filament<br/>⊕70 ↻2311"]:::warm
   end
   subgraph laravel_livewire["laravel-livewire"]
-    livewire_blade_attributes["livewire-blade-attributes<br/>⊕185 ↻1530"]:::hot
+    livewire_blade_attributes["livewire-blade-attributes<br/>⊕132 ↻1095"]:::hot
   end
   subgraph laravel_testing["laravel-testing"]
-    health_checks["health-checks<br/>⊕163 ↻3080"]:::hot
-    laravel_dusk["laravel-dusk<br/>⊕44 ↻1272"]:::cool
-    laravel_testing["laravel-testing<br/>⊕67 ↻3803"]:::mild
-    test_isolation_guard["test-isolation-guard<br/>⊕128 ↻2366"]:::warm
+    health_checks["health-checks<br/>⊕118 ↻1983"]:::hot
+    laravel_dusk["laravel-dusk<br/>⊕29 ↻858"]:::cool
+    laravel_testing["laravel-testing<br/>⊕48 ↻2642"]:::mild
+    test_isolation_guard["test-isolation-guard<br/>⊕88 ↻1356"]:::warm
   end
   subgraph legal["legal"]
-    legal_super_skill["legal-super-skill<br/>⊕164 ↻33086"]:::hot
+    legal_super_skill["legal-super-skill<br/>⊕123 ↻24815"]:::hot
   end
   subgraph marketing["marketing"]
-    marketing_super_skill["marketing-super-skill<br/>⊕161 ↻18832"]:::hot
+    marketing_super_skill["marketing-super-skill<br/>⊕121 ↻14124"]:::hot
   end
   subgraph mobile["mobile"]
-    figma_to_flutter["figma-to-flutter<br/>⊕128 ↻1042"]:::warm
+    figma_to_flutter["figma-to-flutter<br/>⊕91 ↻746"]:::warm
   end
   subgraph operator["operator"]
-    capacity_planning["capacity-planning<br/>⊕51 ↻2487"]:::mild
-    incident_response["incident-response<br/>⊕49 ↻2291"]:::mild
-    oncall_rotation["oncall-rotation<br/>⊕42 ↻2033"]:::cool
-    operations_cx_super_skill["operations-cx-super-skill<br/>⊕214 ↻25225"]:::hot
-    postmortem["postmortem<br/>⊕48 ↻2357"]:::mild
-    runbook["runbook<br/>⊕42 ↻2207"]:::cool
+    capacity_planning["capacity-planning<br/>⊕35 ↻1795"]:::mild
+    incident_response["incident-response<br/>⊕35 ↻1577"]:::mild
+    oncall_rotation["oncall-rotation<br/>⊕32 ↻1515"]:::cool
+    operations_cx_super_skill["operations-cx-super-skill<br/>⊕161 ↻18919"]:::hot
+    postmortem["postmortem<br/>⊕37 ↻1722"]:::mild
+    runbook["runbook<br/>⊕30 ↻1489"]:::cool
   end
   subgraph oss_dev["oss-dev"]
-    dependency_audit["dependency-audit<br/>⊕39 ↻1385"]:::cool
-    dx_design["dx-design<br/>⊕36 ↻1537"]:::cool
-    gh_review["gh-review<br/>⊕86 ↻1499"]:::mild
-    github_flow["github-flow<br/>⊕81 ↻2508"]:::mild
-    issue_triage["issue-triage<br/>⊕122 ↻2425"]:::warm
-    oss_development["oss-development<br/>⊕42 ↻1628"]:::cool
-    oss_governance["oss-governance<br/>⊕34 ↻1934"]:::cool
-    release_engineering["release-engineering<br/>⊕41 ↻2059"]:::cool
-    resolving_merge_conflicts["resolving-merge-conflicts<br/>⊕123 ↻373"]:::warm
-    to_issues["to-issues<br/>⊕102 ↻1314"]:::warm
+    dependency_audit["dependency-audit<br/>⊕28 ↻1001"]:::cool
+    dx_design["dx-design<br/>⊕27 ↻1058"]:::cool
+    gh_review["gh-review<br/>⊕65 ↻997"]:::warm
+    github_flow["github-flow<br/>⊕60 ↻1785"]:::mild
+    issue_triage["issue-triage<br/>⊕125 ↻1914"]:::hot
+    oss_development["oss-development<br/>⊕32 ↻1273"]:::cool
+    oss_governance["oss-governance<br/>⊕26 ↻1365"]:::cool
+    release_engineering["release-engineering<br/>⊕32 ↻1418"]:::cool
+    resolving_merge_conflicts["resolving-merge-conflicts<br/>⊕143 ↻302"]:::hot
+    to_issues["to-issues<br/>⊕116 ↻1083"]:::hot
   end
   subgraph php["php"]
-    code_style_spatie["code-style-spatie<br/>⊕53 ↻1176"]:::mild
-    database["database<br/>⊕58 ↻1179"]:::mild
-    dependency_injection["dependency-injection<br/>⊕45 ↻1618"]:::cool
-    laravel["laravel<br/>⊕24 ↻1854"]:::cool
-    laravel_best_practices["laravel-best-practices<br/>⊕48 ↻1814"]:::mild
-    laravel_structure["laravel-structure<br/>⊕56 ↻2354"]:::mild
-    named_arguments["named-arguments<br/>⊕65 ↻1042"]:::mild
-    naming_conventions["naming-conventions<br/>⊕98 ↻1791"]:::warm
-    pao["pao<br/>⊕77 ↻782"]:::mild
-    php_patterns["php-patterns<br/>⊕22 ↻3259"]:::cool
-    php_upgrade_checklist["php-upgrade-checklist<br/>⊕89 ↻927"]:::warm
-    repositories["repositories<br/>⊕37 ↻1920"]:::cool
-    static_analysis["static-analysis<br/>⊕41 ↻1620"]:::cool
+    code_style_spatie["code-style-spatie<br/>⊕54 ↻1237"]:::mild
+    database["database<br/>⊕44 ↻820"]:::mild
+    dependency_injection["dependency-injection<br/>⊕33 ↻1102"]:::mild
+    laravel["laravel<br/>⊕18 ↻1333"]:::cool
+    laravel_best_practices["laravel-best-practices<br/>⊕53 ↻1868"]:::mild
+    laravel_structure["laravel-structure<br/>⊕37 ↻1710"]:::mild
+    named_arguments["named-arguments<br/>⊕42 ↻598"]:::mild
+    naming_conventions["naming-conventions<br/>⊕67 ↻1221"]:::warm
+    pao["pao<br/>⊕50 ↻562"]:::mild
+    php_patterns["php-patterns<br/>⊕21 ↻2151"]:::cool
+    php_upgrade_checklist["php-upgrade-checklist<br/>⊕61 ↻577"]:::mild
+    repositories["repositories<br/>⊕26 ↻1329"]:::cool
+    static_analysis["static-analysis<br/>⊕29 ↻961"]:::cool
   end
   subgraph php_packages["php-packages"]
-    laravel_package_compatibility["laravel-package-compatibility<br/>⊕86 ↻505"]:::mild
-    laravel_package_docs["laravel-package-docs<br/>⊕84 ↻808"]:::mild
-    laravel_package_expressive["laravel-package-expressive<br/>⊕126 ↻654"]:::warm
-    laravel_package_generate_skill["laravel-package-generate-skill<br/>⊕95 ↻911"]:::warm
-    laravel_package_release["laravel-package-release<br/>⊕77 ↻433"]:::mild
-    laravel_package_scaffold["laravel-package-scaffold<br/>⊕87 ↻697"]:::warm
-    laravel_package_service_provider["laravel-package-service-provider<br/>⊕82 ↻624"]:::mild
-    laravel_package_testing["laravel-package-testing<br/>⊕96 ↻610"]:::warm
-    laravel_packages["laravel-packages<br/>⊕40 ↻945"]:::cool
+    laravel_package_compatibility["laravel-package-compatibility<br/>⊕65 ↻379"]:::warm
+    laravel_package_docs["laravel-package-docs<br/>⊕63 ↻606"]:::mild
+    laravel_package_expressive["laravel-package-expressive<br/>⊕107 ↻491"]:::warm
+    laravel_package_generate_skill["laravel-package-generate-skill<br/>⊕71 ↻684"]:::warm
+    laravel_package_release["laravel-package-release<br/>⊕58 ↻325"]:::mild
+    laravel_package_scaffold["laravel-package-scaffold<br/>⊕66 ↻523"]:::warm
+    laravel_package_service_provider["laravel-package-service-provider<br/>⊕62 ↻468"]:::mild
+    laravel_package_testing["laravel-package-testing<br/>⊕72 ↻463"]:::warm
+    laravel_packages["laravel-packages<br/>⊕28 ↻665"]:::cool
   end
   subgraph pm["pm"]
-    brd["brd<br/>⊕32 ↻705"]:::cool
-    business_process["business-process<br/>⊕31 ↻639"]:::cool
-    go_to_market["go-to-market<br/>⊕29 ↻1696"]:::cool
-    monetization_design["monetization-design<br/>⊕41 ↻1610"]:::cool
-    pm_super_skill["pm-super-skill<br/>⊕153 ↻25963"]:::hot
-    pmf_diagnostics["pmf-diagnostics<br/>⊕60 ↻1605"]:::mild
-    prd_from_brd["prd-from-brd<br/>⊕42 ↻1774"]:::cool
-    product_roadmap["product-roadmap<br/>⊕36 ↻1462"]:::cool
-    requirement_critic["requirement-critic<br/>⊕38 ↻1457"]:::cool
-    unit_economics["unit-economics<br/>⊕27 ↻996"]:::cool
+    brd["brd<br/>⊕24 ↻514"]:::cool
+    business_process["business-process<br/>⊕23 ↻512"]:::cool
+    go_to_market["go-to-market<br/>⊕22 ↻1136"]:::cool
+    monetization_design["monetization-design<br/>⊕31 ↻1245"]:::cool
+    pm_super_skill["pm-super-skill<br/>⊕115 ↻19473"]:::hot
+    pmf_diagnostics["pmf-diagnostics<br/>⊕45 ↻1210"]:::mild
+    prd_from_brd["prd-from-brd<br/>⊕32 ↻1234"]:::cool
+    product_roadmap["product-roadmap<br/>⊕30 ↻1171"]:::cool
+    requirement_critic["requirement-critic<br/>⊕27 ↻1020"]:::cool
+    unit_economics["unit-economics<br/>⊕20 ↻722"]:::cool
   end
   subgraph python["python"]
-    ml_project_structure["ml-project-structure<br/>⊕38 ↻865"]:::cool
-    venv_dependencies["venv-dependencies<br/>⊕36 ↻886"]:::cool
+    ml_project_structure["ml-project-structure<br/>⊕24 ↻531"]:::cool
+    venv_dependencies["venv-dependencies<br/>⊕25 ↻483"]:::cool
   end
   subgraph quality["quality"]
-    code_review["code-review<br/>⊕49 ↻1995"]:::mild
-    code_simplifier["code-simplifier<br/>⊕84 ↻1537"]:::mild
-    diagnosing_bugs["diagnosing-bugs<br/>⊕130 ↻2910"]:::warm
-    mutation_testing["mutation-testing<br/>⊕128 ↻3431"]:::warm
-    playwright_e2e["playwright-e2e<br/>⊕133 ↻3265"]:::warm
-    refactoring_plan["refactoring-plan<br/>⊕42 ↻2336"]:::cool
-    tdd_discipline["tdd-discipline<br/>⊕115 ↻1545"]:::warm
-    tech_debt_audit["tech-debt-audit<br/>⊕51 ↻2807"]:::mild
-    test_strategy["test-strategy<br/>⊕73 ↻2846"]:::mild
-    testing_safety_report["testing-safety-report<br/>⊕98 ↻937"]:::warm
+    code_review["code-review<br/>⊕31 ↻1410"]:::cool
+    code_simplifier["code-simplifier<br/>⊕57 ↻1080"]:::mild
+    diagnosing_bugs["diagnosing-bugs<br/>⊕156 ↻2221"]:::hot
+    mutation_testing["mutation-testing<br/>⊕90 ↻2199"]:::warm
+    playwright_e2e["playwright-e2e<br/>⊕91 ↻2163"]:::warm
+    refactoring_plan["refactoring-plan<br/>⊕28 ↻1605"]:::cool
+    tdd_discipline["tdd-discipline<br/>⊕132 ↻1201"]:::hot
+    tech_debt_audit["tech-debt-audit<br/>⊕38 ↻1879"]:::mild
+    test_strategy["test-strategy<br/>⊕52 ↻1960"]:::mild
+    testing_safety_report["testing-safety-report<br/>⊕66 ↻665"]:::warm
   end
   subgraph research["research"]
-    research_knowledge_super_skill["research-knowledge-super-skill<br/>⊕220 ↻23138"]:::hot
+    research_knowledge_super_skill["research-knowledge-super-skill<br/>⊕165 ↻17354"]:::hot
   end
   subgraph roles["roles"]
-    open_source_maintainer["open-source-maintainer<br/>⊕22 ↻1603"]:::cool
-    solo_founder["solo-founder<br/>⊕19 ↻1745"]:::cool
-    startup_cto["startup-cto<br/>⊕26 ↻1878"]:::cool
-    tech_lead["tech-lead<br/>⊕23 ↻1740"]:::cool
+    open_source_maintainer["open-source-maintainer<br/>⊕16 ↻1059"]:::cool
+    solo_founder["solo-founder<br/>⊕14 ↻1018"]:::cool
+    startup_cto["startup-cto<br/>⊕19 ↻1213"]:::cool
+    tech_lead["tech-lead<br/>⊕18 ↻1210"]:::cool
   end
   subgraph sales["sales"]
-    sales_super_skill["sales-super-skill<br/>⊕161 ↻29005"]:::hot
+    sales_super_skill["sales-super-skill<br/>⊕121 ↻21754"]:::hot
   end
   subgraph security["security"]
-    agent_security_super_skill["agent-security-super-skill<br/>⊕208 ↻34162"]:::hot
+    agent_security_super_skill["agent-security-super-skill<br/>⊕156 ↻25622"]:::hot
   end
   subgraph system["system"]
-    agent_packs["agent-packs<br/>⊕139 ↻2768"]:::warm
-    cross_project_coordinator["cross-project-coordinator<br/>⊕107 ↻1678"]:::warm
-    local_topology["local-topology<br/>⊕71 ↻1693"]:::mild
-    session_observer["session-observer<br/>⊕140 ↻2042"]:::hot
-    shared_memory["shared-memory<br/>⊕160 ↻1855"]:::hot
+    agent_packs["agent-packs<br/>⊕102 ↻1987"]:::warm
+    cross_project_coordinator["cross-project-coordinator<br/>⊕70 ↻1216"]:::warm
+    local_topology["local-topology<br/>⊕53 ↻1072"]:::mild
+    session_observer["session-observer<br/>⊕99 ↻1411"]:::warm
+    shared_memory["shared-memory<br/>⊕105 ↻1242"]:::warm
   end
   agent_design -->|requires| architecture
   api_design -->|requires| data_schema
@@ -390,57 +390,57 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 193 скиллов · ⊕ always **16003** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 575445 ток · ⌥ snippets 182735 ток.
+**Итого:** 193 скиллов · ⊕ always **12237** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 422181 ток · ⌥ snippets 157306 ток.
 
 ## По бакетам
 
 | Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ snippets |
 |---|--:|--:|--:|--:|
-| `general` | 18 | 1507 | 20065 | 5011 |
-| `architect` | 14 | 1048 | 51768 | 8936 |
-| `frontend-vue` | 11 | 1005 | 29397 | 7979 |
-| `quality` | 10 | 903 | 23609 | 8108 |
-| `php-packages` | 9 | 773 | 6187 | 572 |
-| `php` | 13 | 713 | 21336 | 31527 |
-| `oss-dev` | 10 | 706 | 16662 | 5538 |
-| `blender-modeling` | 6 | 654 | 11074 | 11792 |
-| `devops` | 11 | 621 | 11110 | 18907 |
-| `system` | 5 | 617 | 10036 | 913 |
-| `laravel-architecture` | 4 | 535 | 10198 | 7977 |
-| `pm` | 10 | 489 | 37907 | 262 |
-| `operator` | 6 | 446 | 36600 | 120 |
-| `laravel-testing` | 4 | 402 | 10521 | 16843 |
-| `founder` | 9 | 399 | 15052 | 653 |
-| `frontend-linting` | 4 | 373 | 6767 | 3443 |
-| `frontend` | 3 | 336 | 4652 | 3829 |
-| `frontend-backend` | 3 | 336 | 7010 | 8609 |
-| `frontend-nuxt` | 3 | 289 | 2904 | 0 |
-| `frontend-tailwind` | 2 | 282 | 5628 | 5719 |
-| `laravel-extras` | 3 | 261 | 5108 | 3691 |
-| `laravel-auth` | 3 | 238 | 3921 | 3608 |
-| `research` | 1 | 220 | 23138 | 0 |
-| `frontend-vite` | 4 | 215 | 3783 | 1651 |
-| `security` | 1 | 208 | 34162 | 0 |
-| `finance` | 1 | 203 | 24370 | 0 |
-| `laravel-data-layer` | 2 | 185 | 4015 | 4363 |
-| `laravel-livewire` | 1 | 185 | 1530 | 1220 |
-| `creative` | 1 | 175 | 29738 | 0 |
-| `blender` | 2 | 169 | 2832 | 330 |
-| `legal` | 1 | 164 | 33086 | 0 |
-| `marketing` | 1 | 161 | 18832 | 0 |
-| `sales` | 1 | 161 | 29005 | 0 |
-| `mobile` | 1 | 128 | 1042 | 1102 |
-| `frontend-figma` | 1 | 122 | 968 | 1199 |
-| `frontend-naive-ui` | 1 | 118 | 2567 | 1467 |
-| `frontend-reka` | 1 | 116 | 2528 | 2781 |
-| `ai` | 1 | 105 | 652 | 0 |
-| `roles` | 4 | 90 | 6966 | 197 |
-| `python` | 2 | 74 | 1751 | 0 |
-| `laravel-filament` | 1 | 73 | 2587 | 3590 |
-| `frontend-animations` | 1 | 63 | 1043 | 0 |
-| `frontend-wayfinder` | 1 | 57 | 1168 | 1944 |
-| `azguard` | 1 | 45 | 1921 | 8064 |
-| `botkit` | 1 | 33 | 249 | 790 |
+| `general` | 18 | 1170 | 15195 | 5120 |
+| `architect` | 14 | 875 | 38145 | 7503 |
+| `frontend-vue` | 11 | 808 | 23064 | 7058 |
+| `quality` | 10 | 741 | 16383 | 7091 |
+| `oss-dev` | 10 | 654 | 12196 | 4313 |
+| `php-packages` | 9 | 592 | 4604 | 489 |
+| `php` | 13 | 535 | 15469 | 26763 |
+| `devops` | 11 | 451 | 7624 | 15385 |
+| `blender-modeling` | 6 | 429 | 7727 | 11772 |
+| `system` | 5 | 429 | 6928 | 797 |
+| `laravel-architecture` | 4 | 382 | 6794 | 6779 |
+| `pm` | 10 | 369 | 28237 | 197 |
+| `operator` | 6 | 330 | 27017 | 90 |
+| `frontend-linting` | 4 | 300 | 5246 | 2914 |
+| `founder` | 9 | 286 | 10667 | 494 |
+| `laravel-testing` | 4 | 283 | 6839 | 14531 |
+| `frontend-backend` | 3 | 244 | 4670 | 7454 |
+| `frontend` | 3 | 242 | 3226 | 3393 |
+| `frontend-nuxt` | 3 | 216 | 2179 | 0 |
+| `laravel-extras` | 3 | 205 | 3712 | 3192 |
+| `frontend-tailwind` | 2 | 204 | 3778 | 4980 |
+| `laravel-auth` | 3 | 172 | 2853 | 3020 |
+| `research` | 1 | 165 | 17354 | 0 |
+| `security` | 1 | 156 | 25622 | 0 |
+| `frontend-vite` | 4 | 153 | 2694 | 1351 |
+| `finance` | 1 | 152 | 18278 | 0 |
+| `laravel-data-layer` | 2 | 141 | 3024 | 3785 |
+| `creative` | 1 | 132 | 22304 | 0 |
+| `laravel-livewire` | 1 | 132 | 1095 | 1079 |
+| `ai` | 1 | 123 | 639 | 0 |
+| `legal` | 1 | 123 | 24815 | 0 |
+| `marketing` | 1 | 121 | 14124 | 0 |
+| `sales` | 1 | 121 | 21754 | 0 |
+| `blender` | 2 | 119 | 1961 | 325 |
+| `mobile` | 1 | 91 | 746 | 884 |
+| `frontend-reka` | 1 | 90 | 1706 | 2414 |
+| `frontend-naive-ui` | 1 | 87 | 1731 | 1270 |
+| `frontend-figma` | 1 | 84 | 700 | 949 |
+| `laravel-filament` | 1 | 70 | 2311 | 2749 |
+| `roles` | 4 | 67 | 4500 | 148 |
+| `python` | 2 | 49 | 1014 | 0 |
+| `frontend-animations` | 1 | 47 | 782 | 0 |
+| `frontend-wayfinder` | 1 | 41 | 847 | 1658 |
+| `azguard` | 1 | 31 | 1422 | 6767 |
+| `botkit` | 1 | 25 | 205 | 592 |
 
 ## Топ ⊕ always (постоянный налог)
 
@@ -448,16 +448,16 @@ flowchart LR
 
 | Скилл | Бакет | ток |
 |---|---|--:|
-| `research-knowledge-super-skill` | research | 220 |
-| `operations-cx-super-skill` | operator | 214 |
-| `agent-security-super-skill` | security | 208 |
-| `finance-super-skill` | finance | 203 |
-| `livewire-blade-attributes` | laravel-livewire | 185 |
-| `vue-router-best-practices` | frontend-vue | 180 |
-| `build-loop` | blender-modeling | 178 |
-| `enum-state-machine` | laravel-architecture | 177 |
-| `content-creative-super-skill` | creative | 175 |
-| `figma-mcp-core` | architect | 171 |
+| `vue-router-best-practices` | frontend-vue | 181 |
+| `domain-modeling` | architect | 178 |
+| `research-knowledge-super-skill` | research | 165 |
+| `operations-cx-super-skill` | operator | 161 |
+| `diagnosing-bugs` | quality | 156 |
+| `agent-security-super-skill` | security | 156 |
+| `codebase-design` | architect | 155 |
+| `finance-super-skill` | finance | 152 |
+| `grill-with-docs` | general | 147 |
+| `resolving-merge-conflicts` | oss-dev | 143 |
 
 ## Топ ↻ on-trigger (цена срабатывания)
 
@@ -465,13 +465,13 @@ flowchart LR
 
 | Скилл | Бакет | ток |
 |---|---|--:|
-| `agent-security-super-skill` | security | 34162 |
-| `legal-super-skill` | legal | 33086 |
-| `content-creative-super-skill` | creative | 29738 |
-| `sales-super-skill` | sales | 29005 |
-| `dev-engineering-super-skill` | architect | 26988 |
-| `pm-super-skill` | pm | 25963 |
-| `operations-cx-super-skill` | operator | 25225 |
-| `finance-super-skill` | finance | 24370 |
-| `research-knowledge-super-skill` | research | 23138 |
-| `marketing-super-skill` | marketing | 18832 |
+| `agent-security-super-skill` | security | 25622 |
+| `legal-super-skill` | legal | 24815 |
+| `content-creative-super-skill` | creative | 22304 |
+| `sales-super-skill` | sales | 21754 |
+| `dev-engineering-super-skill` | architect | 20241 |
+| `pm-super-skill` | pm | 19473 |
+| `operations-cx-super-skill` | operator | 18919 |
+| `finance-super-skill` | finance | 18278 |
+| `research-knowledge-super-skill` | research | 17354 |
+| `marketing-super-skill` | marketing | 14124 |

@@ -2,7 +2,7 @@
 name: laravel-testing
 bucket: laravel-testing
 version: 0.4.1
-description: "Feature/unit/pest testing patterns: изоляция тестовой БД, детект Docker/локального окружения, coverage gate, композиция Pest (setUp-трейты, фикстуры, beforeEach fake/freeze, датасеты)"
+description: "Feature/unit/pest testing patterns: test DB isolation, Docker/local env detection, coverage gate, Pest composition (setUp traits, fixtures, beforeEach fake/freeze, datasets)"
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "testing"]
@@ -14,40 +14,39 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-## Контекст
+## Scope
 
-Тестирование Laravel-приложений (Pest/PHPUnit): паттерны Feature/Unit-тестов, безопасная изоляция тестовой БД от рабочей, детект окружения (Docker vs локальный PHP), порог покрытия (coverage gate) для CI. Базовые ожидания: **Feature по умолчанию**, Unit — только для чистой логики без БД; ассерты про поведение (HTTP-код, состояние БД, уведомления), а не про внутреннюю реализацию; данные — через фабрики моделей.
+Laravel testing (Pest/PHPUnit): Feature/Unit patterns, test-DB isolation from working DB, env detection (Docker vs local PHP), CI coverage gate. Defaults:
+- Feature by default; Unit only for pure logic without DB.
+- Assert behavior (HTTP code, DB state, notifications), not internal implementation.
+- Data via model factories.
 
-**Когда активировать**: пишу или правлю тесты Laravel (`tests/Feature`, `tests/Unit`, `*Test.php`, Pest `it()/test()`); настраиваю `phpunit.xml`, изоляцию тестовой БД, фабрики моделей; собираю coverage gate в CI; запускаю `php artisan test` / `vendor/bin/pest` и нужно определить окружение (Docker vs локально); переиспользую setUp-логику через трейты/`beforeEach`/датасеты. Не активировать для архитектуры приложения (скилл `laravel`) и общей стратегии пирамиды (скилл `quality/test-strategy`).
+Activate when: writing/editing Laravel tests (`tests/Feature`, `tests/Unit`, `*Test.php`, Pest `it()/test()`); configuring `phpunit.xml`, test-DB isolation, model factories; building CI coverage gate; running `php artisan test` / `vendor/bin/pest` needing env detection; reusing setUp via traits/`beforeEach`/datasets. Do NOT activate for app architecture (skill `laravel`) or pyramid strategy (skill `quality/test-strategy`).
 
-**Laravel Boost**: синтаксис и приёмы Pest — Boost-скилл pest-testing; здесь — изоляция тестовой БД, coverage gate и окружение. Пакет: https://github.com/laravel/boost (скиллы — `vendor/laravel/boost/.ai/`).
+Laravel Boost: Pest syntax/idioms = Boost skill `pest-testing`; here = test-DB isolation, coverage gate, env. Package: https://github.com/laravel/boost (skills in `vendor/laravel/boost/.ai/`).
 
-## Алгоритм
+## Algorithm
 
-### 1. Изоляция тестовой БД (дуальная схема)
+### 1. Test DB isolation (dual-DB scheme)
+Two DBs: main `<app>` (`.env` `DB_DATABASE`) and test `<app>_test`. Tests hit ONLY `<app>_test`.
+- `phpunit.xml` sets `DB_DATABASE=<app>_test` and `APP_ENV=testing` TWICE: via `<server>` (Laravel/Dotenv reads `$_SERVER` first — ServerConstAdapter) AND via `<env force="true">` (`force` overrides vars Docker/host inject via `getenv`). Without `force="true"` tests may hit main DB.
+- DB host/port/user/password inherited from env; only DB name is swapped.
+- Light drivers: `CACHE_STORE=array`, `SESSION_DRIVER=array`, `QUEUE_CONNECTION=sync`, `MAIL_MAILER=array`, separate disk `MEDIA_DISK=media-test` (all with `force="true"` where env may override).
+- Template: snippet `phpunit.xml`.
 
-В проекте две базы: основная `<app>` (из `.env`, `DB_DATABASE`) и тестовая `<app>_test`. Тесты ходят **только** в `<app>_test`:
+### 2. Env detection: Docker vs local PHP
+Do NOT pick mode by `DB_CONNECTION` (it is `pgsql` in both). Use `DB_HOST`:
 
-- `phpunit.xml` задаёт `DB_DATABASE=<app>_test` и `APP_ENV=testing` **дважды**: через `<server>` (Laravel/Dotenv читает `$_SERVER` первым — ServerConstAdapter) и через `<env force="true">` — `force` перебивает переменные, которые Docker/хост инжектят через `getenv`. Без `force="true"` тесты могут уехать в основную БД.
-- Хост/порт/пользователь/пароль БД наследуются из окружения — подменяется только имя базы.
-- Лёгкие драйверы: `CACHE_STORE=array`, `SESSION_DRIVER=array`, `QUEUE_CONNECTION=sync`, `MAIL_MAILER=array`, отдельный диск `MEDIA_DISK=media-test` (всё с `force="true"` там, где окружение может перебить).
-- Шаблон: сниппет `phpunit.xml`.
-
-### 2. Детект окружения: Docker или локальный PHP
-
-Не выбирай режим по `DB_CONNECTION` (он `pgsql` в обоих случаях). Смотри `DB_HOST`:
-
-| `DB_HOST` | Режим | Команды |
+| `DB_HOST` | Mode | Commands |
 |:---|:---|:---|
-| `pgsql` (имя сервиса compose) | Docker | `docker compose exec app php artisan test`, `docker compose exec app composer ...` |
-| `127.0.0.1` / `localhost` / IP | Локально | `php artisan test`, `vendor/bin/pest` |
+| `pgsql` (compose service name) | Docker | `docker compose exec app php artisan test`, `docker compose exec app composer ...` |
+| `127.0.0.1` / `localhost` / IP | Local | `php artisan test`, `vendor/bin/pest` |
 
-При сомнении — `docker compose ps`: если контейнеры запущены, работай через Docker. Детали и таблица команд — сниппет `testing-rules.md`.
+If unsure: `docker compose ps` — if containers up, use Docker. Details/command table: snippet `testing-rules.md`.
 
-### 3. Запрет разрушающих команд на основной БД
-
-- **Никогда** не выполнять `migrate:fresh` / `db:wipe` без явного тестового окружения (`--env=testing` / `APP_ENV=testing`): `RefreshDatabase` и эти команды стирают базу, на которую смотрит текущее окружение.
-- Guard в `TestCase`: перед прогоном ассертить, что подключена именно `<app>_test`:
+### 3. Forbid destructive commands on main DB
+- NEVER run `migrate:fresh` / `db:wipe` without explicit test env (`--env=testing` / `APP_ENV=testing`): `RefreshDatabase` and these commands wipe the DB the current env points at.
+- Guard in `TestCase` — before run, assert connected to `<app>_test`:
 
 ```php
 // tests/TestCase.php
@@ -61,26 +60,22 @@ protected function assertIsolatedTestDatabase(): void
 }
 ```
 
-- **Опасные зоны вне PHPUnit/Pest** (guard их не ловит, т.к. приложение поднимается из обычного `.env`): `php artisan tinker` (фабрики/`create()` мутируют основную БД), `db:seed`, любые ad-hoc скрипты — только с `APP_ENV=testing`. Полный разбор — сниппеты `testing-rules.md` и `testing-safety-report.md`.
+- Danger zones outside PHPUnit/Pest (guard does NOT catch — app boots from normal `.env`): `php artisan tinker` (factories/`create()` mutate main DB), `db:seed`, any ad-hoc scripts — only with `APP_ENV=testing`. Full breakdown: snippets `testing-rules.md`, `testing-safety-report.md`.
 
 ### 4. Coverage gate
+- Config `coverage.php` at root: baseline 70% global line minimum, 55% for critical paths (`app/Actions`, `app/Policies`, `app/Services`, `app/Http/Middleware`); overridden by env vars `COVERAGE_GLOBAL_MIN` / `COVERAGE_CRITICAL_MIN` — snippet `coverage-gate-config.php`.
+- Gate script reads `coverage/clover.xml` after `php artisan test --coverage --coverage-clover=...`; modes `COVERAGE_GATE_MODE=report|soft|hard` — snippet `check-coverage-gate.php`.
+- Composer pipeline: `test` (config:clear → lint:check → artisan test), `test:coverage`, `test:coverage:clover`, `test:coverage:gate`, `test:critical` (named list of critical suites) — snippet `composer-test-scripts.json`.
 
-- Конфиг `coverage.php` в корне: baseline **70%** общий минимум по строкам, **55%** для критических путей (`app/Actions`, `app/Policies`, `app/Services`, `app/Http/Middleware`); пороги переопределяются env-переменными `COVERAGE_GLOBAL_MIN` / `COVERAGE_CRITICAL_MIN` — сниппет `coverage-gate-config.php`.
-- Скрипт-гейт читает `coverage/clover.xml` после `php artisan test --coverage --coverage-clover=...`, режимы `COVERAGE_GATE_MODE=report|soft|hard` — сниппет `check-coverage-gate.php`.
-- Composer-конвейер: `test` (config:clear → lint:check → artisan test), `test:coverage`, `test:coverage:clover`, `test:coverage:gate`, `test:critical` (поимённый список критичных сьютов) — сниппет `composer-test-scripts.json`.
+## Pest composition: traits + fixtures
+Boost owns base Pest syntax (test, `expect`, `pest()` nav). Here = delta: reuse setUp logic and keep suite deterministic via COMPOSITION, not inheritance. Do NOT spawn `TestCase` subclasses (`AdminTestCase`, `ApiTestCase`, `OrderTestCase`). Compose behavior from small traits + helpers.
 
-## Композиция Pest: трейты + фикстуры
+### 1. Reusable setUp traits (concerns), not subclasses
+Each repeated test prefix = one trait in `tests/Support/Concerns/` with a narrow responsibility:
+- `ActsAsUser` — `makeUserWithRole($role)` / `actingAsRole($role)`: create user via factory, assign role, authorize.
+- `SeedsUserRoles` (or `SeedsLookupData`) — `seedUserRoles()`: load narrow lookup (roles/statuses/types) that access asserts depend on; does NOT duplicate `DatabaseSeeder`.
 
-Boost владеет базовым синтаксисом Pest (тест, `expect`, навигация по `pest()`). Здесь — **дельта**: как переиспользовать setUp-логику и держать сьют детерминированным **композицией, а не наследованием**. Не плоди подклассы `TestCase` (`AdminTestCase`, `ApiTestCase`, `OrderTestCase`) — глубокая иерархия хрупкая и тащит лишнее в каждый тест. Собирай поведение из мелких трейтов и хелперов.
-
-### 1. Переиспользуемые setUp-трейты (concerns) вместо подклассов
-
-Каждый кусок повторяющегося префикса теста — отдельный трейт в `tests/Support/Concerns/` с **узкой ответственностью**:
-
-- `ActsAsUser` — `makeUserWithRole($role)` / `actingAsRole($role)`: создать пользователя фабрикой, назначить роль, авторизовать. Убирает копипасту «создал юзера → assignRole → actingAs» из десятков тестов.
-- `SeedsUserRoles` (или `SeedsLookupData`) — `seedUserRoles()`: загрузить узкий справочник (роли/статусы/типы), на который завязаны ассерты доступа; не дублирует общий `DatabaseSeeder`.
-
-`TestCase` остаётся тонким и **подключает трейты**, а не наследует поведение через цепочку классов:
+`TestCase` stays thin and USES traits (no class-chain inheritance):
 
 ```php
 // tests/TestCase.php
@@ -92,11 +87,10 @@ abstract class TestCase extends BaseTestCase
 }
 ```
 
-Хелперы трейтов доступны во **всех Pest-замыканиях** автоматически — Pest биндит замыкание на класс `TestCase`, так что `$this->actingAsRole(...)` работает внутри `it(...)`. Новая потребность — новый трейт, а не новый подкласс. Где конкретное поведение нужно лишь части сьютов — подключай трейт в `Pest.php` точечно: `pest()->extend(TestCase::class)->use(SeedsLookupData::class)->in('Feature/Admin')`.
+Trait helpers are available in ALL Pest closures automatically (Pest binds closure to `TestCase`, so `$this->actingAsRole(...)` works inside `it(...)`). New need = new trait, not new subclass. For behavior needed by only some suites, bind the trait in `Pest.php` precisely: `pest()->extend(TestCase::class)->use(SeedsLookupData::class)->in('Feature/Admin')`.
 
-### 2. Единая гигиена окружения через `beforeEach` в `tests/Pest.php`
-
-Детерминизм сети и времени задаётся **один раз на директорию**, а не повторяется в каждом файле. Привязка к папкам через `->in('Feature')` / `->in('Unit')`:
+### 2. Single env hygiene via `beforeEach` in `tests/Pest.php`
+Set net/time determinism ONCE per directory, not per file. Bind via `->in('Feature')` / `->in('Unit')`:
 
 ```php
 pest()->extend(Tests\TestCase::class)
@@ -112,11 +106,10 @@ pest()->extend(Tests\TestCase::class)
     ->in('Feature');
 ```
 
-Три кита детерминизма: **`Http::preventStrayRequests()`** превращает молчаливый поход во внешний API в явное падение; **`Sleep::fake()`** убирает реальные паузы; **`freezeTime()`** стабилизирует ассерты времени. Для `Unit` — тот же блок, но **без** `RefreshDatabase` (чистая логика без БД). Кастомные `expect()->extend(...)` и глобальные хелперы тоже живут в `Pest.php` — расширение API вместо наследования.
+Three pillars: `Http::preventStrayRequests()` turns silent external call into explicit failure; `Sleep::fake()` removes real pauses; `freezeTime()` stabilizes time asserts. For `Unit` — same block but WITHOUT `RefreshDatabase` (pure logic, no DB). Custom `expect()->extend(...)` and global helpers also live in `Pest.php`.
 
-### 3. Датасеты `->with()` — параметризация вместо копипасты тел
-
-Один сценарий × множество входов задаётся датасетом, а не N почти одинаковыми тестами. Именованный `dataset()` (ключи строками) делает вывод падений читабельным (`with data set "orders.cancel"`):
+### 3. Datasets `->with()` — parametrize, not copy-paste bodies
+One scenario × many inputs = dataset, not N near-identical tests. Named `dataset()` (string keys) makes failure output readable (`with data set "orders.cancel"`):
 
 ```php
 dataset('order_guest_endpoints', [
@@ -130,55 +123,57 @@ it('закрывает endpoint от гостя', function (string $route, array
 })->with('order_guest_endpoints');
 ```
 
-Локальный набор — инлайн `->with([...])` прямо в тесте; общий, переиспользуемый между файлами — именованный `dataset()`. Данные всегда через **фабрики моделей** (`Model::factory()->state()->create()`) и фабрики-хелперы тестов (`tests/Support/Factories/`), собирающие связный граф (`Order` + участники + позиции), — не через ручные `INSERT` и не через хардкод id.
+Local set = inline `->with([...])` in the test; shared/cross-file = named `dataset()`. Data ALWAYS via model factories (`Model::factory()->state()->create()`) and test factory-helpers (`tests/Support/Factories/`) building a coherent graph (`Order` + participants + items) — never manual `INSERT`, never hardcoded ids.
 
-### Граница с Boost
+### Boundary with Boost
 
-| Тема | Где |
+| Topic | Where |
 |:---|:---|
-| Базовый Pest: `it/test`, `expect`, `pest()`, навигация по тесту | Boost-скилл `pest-testing` |
-| Изоляция тестовой БД, coverage gate, Docker/локальный детект | этот скилл, секции выше |
-| Композиция: setUp-трейты, фикстуры, `beforeEach` fake/freeze, датасеты | **этот скилл, эта секция** |
+| Base Pest: `it/test`, `expect`, `pest()`, test nav | Boost skill `pest-testing` |
+| Test-DB isolation, coverage gate, Docker/local detect | this skill, sections above |
+| Composition: setUp traits, fixtures, `beforeEach` fake/freeze, datasets | this skill, this section |
 
-Полный пример (два concern-трейта, `Pest.php` с `beforeEach` для Feature и Unit, кастомный expectation, именованный и инлайн датасеты) — сниппет `pest-composition.php`.
+Full example (two concern traits, `Pest.php` with `beforeEach` for Feature and Unit, custom expectation, named + inline datasets) — snippet `pest-composition.php`.
 
-## Когда какой сниппет открывать
+## Which snippet to open
 
-| Ситуация | Файл |
+| Situation | File |
 |:---|:---|
-| Пишу Feature-тест (HTTP, API, доступ) | `feature-test.php` |
-| Пишу Unit-тест чистой логики без БД | `unit-test.php` |
-| Нужна фабрика модели / states | `factory-pattern.php` |
-| Пишу тест в Pest-синтаксисе | `pest-test.php` |
-| Переиспользую setUp-трейты/фикстуры, `beforeEach` fake/freeze, датасеты `->with()` | `pest-composition.php` |
-| Сценарий работы агента с Pest, выбор Feature/Unit, отладка падений | `pest-testing.md` |
-| Перед запуском тестов: Docker vs локально, таблица команд, запреты | `testing-rules.md` |
-| Разбираюсь, как устроена изоляция БД, создание `<app>_test` | `testing-safety-report.md` |
-| Настраиваю phpunit.xml с изолированной тестовой БД | `phpunit.xml` |
-| Задаю пороги покрытия проекта | `coverage-gate-config.php` |
-| Нужен CI-гейт по clover.xml | `check-coverage-gate.php` |
-| Настраиваю composer-скрипты test/coverage | `composer-test-scripts.json` |
+| Feature test (HTTP, API, access) | `feature-test.php` |
+| Unit test, pure logic, no DB | `unit-test.php` |
+| Model factory / states | `factory-pattern.php` |
+| Test in Pest syntax | `pest-test.php` |
+| Reuse setUp traits/fixtures, `beforeEach` fake/freeze, `->with()` datasets | `pest-composition.php` |
+| Agent workflow with Pest, Feature/Unit choice, debugging failures | `pest-testing.md` |
+| Before running tests: Docker vs local, command table, prohibitions | `testing-rules.md` |
+| How DB isolation works, creating `<app>_test` | `testing-safety-report.md` |
+| phpunit.xml with isolated test DB | `phpunit.xml` |
+| Project coverage thresholds | `coverage-gate-config.php` |
+| CI gate over clover.xml | `check-coverage-gate.php` |
+| composer test/coverage scripts | `composer-test-scripts.json` |
 
-## Чеклист качества
+## Quality checklist
+- [ ] `phpunit.xml`: `DB_DATABASE=<app>_test` and `APP_ENV=testing` via `<server>` + `<env force="true">`
+- [ ] cache/session = array, queue = sync, media = separate test disk
+- [ ] `TestCase` has guard assert on test-DB name
+- [ ] No `migrate:fresh`/`db:wipe`/`db:seed`/`tinker` against main DB
+- [ ] Mode (Docker/local) determined by `DB_HOST`, commands run from that same env
+- [ ] Feature by default; Unit = pure logic; data via factories; asserts behavioral
+- [ ] Coverage gate in CI: global ≥ 70%, critical paths ≥ 55%
+- [ ] Repeated setUp extracted to trait `tests/Support/Concerns/`, not a new `TestCase` subclass (composition, not inheritance)
+- [ ] `Pest.php`: `beforeEach` with `Http::preventStrayRequests()` + `Sleep::fake()` + `freezeTime()`; `RefreshDatabase` only in Feature
+- [ ] Multiple inputs via `->with()`/`dataset()`, not copy-pasted bodies; data via model factories
 
-- [ ] `phpunit.xml`: `DB_DATABASE=<app>_test` и `APP_ENV=testing` через `<server>` + `<env force="true">`
-- [ ] cache/session — array, queue — sync, media — отдельный тестовый диск
-- [ ] В `TestCase` есть guard-ассерт на имя тестовой БД
-- [ ] Ни одной команды `migrate:fresh`/`db:wipe`/`db:seed`/`tinker` против основной БД
-- [ ] Режим (Docker/локально) определён по `DB_HOST`, команды запущены из того же окружения
-- [ ] Feature по умолчанию; Unit — чистая логика; данные через фабрики; ассерты поведенческие
-- [ ] Coverage gate подключён в CI: общий ≥ 70%, критические пути ≥ 55%
-- [ ] Повторяющийся setUp вынесен в трейт `tests/Support/Concerns/`, а не в новый подкласс `TestCase` (композиция, не наследование)
-- [ ] `Pest.php`: `beforeEach` с `Http::preventStrayRequests()` + `Sleep::fake()` + `freezeTime()`; `RefreshDatabase` только в Feature
-- [ ] Множественные входы — через `->with()`/`dataset()`, а не копипаста тел; данные через фабрики моделей
+## References
+- Skill `quality/test-strategy` — pyramid strategy and coverage policy
+- Skill `static-analysis` (bucket php) — pipeline rector → pint → phpstan → tests
+- Skill `laravel` (bucket php) — architectural patterns covered by tests
+- Skill `php/test-isolation-guard` — hard isolation (bootstrap + `createApplication` guard), layered on top of this skill
+- Skill `php/laravel-dusk` — browser E2E tests (own isolation, no `RefreshDatabase`)
+- Skill `php/pao` — compact JSON PHPUnit/Pest output for AI agent
+- Skill `devops/db-test-preflight` — test Postgres DB pre-flight before run
+- https://pestphp.com/docs — Pest documentation
 
-## Ссылки
+<!-- ru-source-sha256: PENDING -->
 
-- Скилл `quality/test-strategy` — стратегия пирамиды и coverage policy
-- Скилл `static-analysis` (bucket php) — конвейер rector → pint → phpstan → tests
-- Скилл `laravel` (bucket php) — архитектурные паттерны, которые покрываются тестами
-- Скилл `php/test-isolation-guard` — жёсткая изоляция (bootstrap + страж `createApplication`), надстройка над этим скиллом
-- Скилл `php/laravel-dusk` — браузерные E2E-тесты (там своя изоляция, без `RefreshDatabase`)
-- Скилл `php/pao` — компактный JSON-вывод PHPUnit/Pest для AI-агента
-- Скилл `devops/db-test-preflight` — пре-флайт тестовой Postgres-БД перед прогоном
-- https://pestphp.com/docs — документация Pest
+<!-- ru-source-sha256: 0dc3b273725f74347ba4d43dfa8dc14dcc4ecc543fef59005ddc4222c88077e9 -->

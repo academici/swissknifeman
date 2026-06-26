@@ -2,7 +2,7 @@
 name: laravel-echo-client
 bucket: frontend-backend
 version: 0.1.0
-description: "Фронтовый realtime-клиент Laravel Echo (Reverb/Pusher) во Vue 3: настройка Echo из runtime-конфига/env, подписка на private/presence-каналы, listen на broadcastAs-события, отписка в onUnmounted, проброс X-Socket-ID в axios. Активировать когда: подключаешь websockets на фронте, делаешь useEcho/useChannel-composable, слушаешь .broadcastAs-событие, видишь window.echo / Echo / laravel-echo / реактивный realtime в Vue."
+description: "Frontend realtime client Laravel Echo (Reverb/Pusher) in Vue 3: configure Echo from runtime-config/env, subscribe to private/presence channels, listen on broadcastAs events, unsubscribe in onUnmounted, inject X-Socket-ID into axios. Activate when: wiring websockets on frontend, writing useEcho/useChannel composable, listening to .broadcastAs event, seeing window.echo / Echo / laravel-echo / reactive realtime in Vue."
 risk: write
 persona: oss-dev
 tags: [laravel-echo, reverb, pusher, websockets, realtime, vue, broadcasting, frontend]
@@ -14,42 +14,32 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-# Skill: Laravel Echo realtime-клиент (фронт)
+# Skill: Laravel Echo realtime client (frontend)
 
-## Контекст
+Browser side of Laravel broadcasting: connect to Reverb/Pusher via `laravel-echo`, subscribe to private/presence channels, react to server events in Vue 3.
 
-Фронтовая (browser) сторона Laravel-broadcasting: подключение к Reverb/Pusher через `laravel-echo`, подписка на private/presence-каналы и реакция на серверные события в Vue 3. Применять когда:
+**Boundary**: backend (events, `ShouldBroadcast`, channel definitions in `routes/channels.php`, channel auth) → skill `php/laravel-broadcasting`, NOT here. Here = frontend composable + client config only. Versioned broadcasting basics → Laravel Boost.
 
-- подключаешь websockets на фронте впервые (есть `laravel-echo` в зависимостях, нет/сломан клиент);
-- пишешь composable вида `useEcho` / `useChannel` / `use<Домен>Realtime`, который должен подписаться при монтировании и **гарантированно отписаться** при размонтировании;
-- слушаешь серверное событие, у которого backend задаёт `broadcastAs()` — имя на фронте начинается с точки (`.order.updated`);
-- видишь в коде `window.echo`, `new Echo(...)`, `.private(...)`, `.listen(...)` и нужно понять/починить жизненный цикл подписки;
-- realtime «дублируется у инициатора» — нужен `X-Socket-ID` + `toOthers()` на backend.
+## Rules
 
-**Граница**: backend-сторона (события, `ShouldBroadcast`, определение каналов в `routes/channels.php`, авторизация каналов) — это скилл `php/laravel-broadcasting`, не здесь. Здесь — только фронт-композабл и конфиг клиента.
+- **One Echo instance per session.** Create `window.echo = new Echo({...})` exactly once per page lifetime (guard flag `isEchoInitialized`). Never create Echo inside a composable — composable only subscribes to ready `window.echo`.
+- **Runtime config > env.** Connection params (key, host, port, scheme, path) from two layers, priority runtime → env → default:
+  - **env** (`import.meta.env.VITE_REVERB_*`) — build-time defaults;
+  - **runtime** — object passed from server to browser (Inertia prop `page.props`, shared data, or inline `<script>`); changes environment without rebuilding frontend.
+  Each runtime field overrides env only if non-empty (`if (runtime.host) config.wsHost = runtime.host`). See `snippets/echo-config.ts`.
+- **broadcaster per backend.** `broadcaster: 'reverb'` for Reverb, `'pusher'` for Pusher/compatible. Derive `forceTLS` from scheme (`scheme === 'https'`); `enabledTransports: ['ws', 'wss']`.
+- **Subscribe via composable, not in component.** Component calls `use<Domain>Realtime(id)`; all `window.echo` work hidden in composable/adapter. Inside:
+  - `const channel = window.echo.private(channelName)` for private; `.encryptedPrivate(...)` / `.join(...)` (presence) per channel type;
+  - **guard `if (!window.echo) return () => {}`** — Echo may be off (guest, disabled mode); subscription degrades to no-op, not crash.
+- **listen on broadcastAs name.** If backend declares `public function broadcastAs(): string { return 'order.updated'; }`, listen on frontend **with leading dot**: `channel.listen('.order.updated', handler)`. Without `broadcastAs()` the name is event FQCN (`.App\\Events\\OrderUpdated`) — fragile; insist on `broadcastAs()` on backend.
+- **Named handler required for unsubscribe.** Pass a named function reference to `.listen()`, not inline lambda — otherwise can't remove listener via `stopListening(eventName, handler)`.
+- **Deterministic unsubscribe.** Per subscription return a `dispose` fn that: `channel.stopListening('.event', handler)` per listener, then `window.echo.leave(channelName)`. Call it in `onUnmounted`. See `snippets/useEcho.ts`.
+- **Ref-count for shared channels.** If one channel (board channel, user notifications channel) is listened by multiple components at once — keep a subscriber counter per channel name: subscribe increments, dispose decrements, real `leave()` only when counter hits 0. Else unmounting one component breaks realtime for the rest.
+- **Presence = same rules + participants.** `window.echo.join(channelName)` gives `.here(users => ...)`, `.joining(user => ...)`, `.leaving(user => ...)`, plus normal `.listen(...)`. Unsubscribe same — `leave(channelName)`. Keep "who is online" state in a `ref`, fill from `here/joining/leaving`.
+- **X-Socket-ID in every request.** In axios interceptor set `config.headers['X-Socket-ID'] = window.echo?.socketId?.()` if socketId exists. Lets backend `broadcast(...)->toOthers()` exclude initiator from broadcast (avoid own event twice: optimistic UI + echo). See `snippets/axios-socket-id.ts`. Pass same value to Inertia visits via `headers: { 'X-Socket-ID': ... }`.
+- **Cleanup on logout.** On logout / switch to guest context call `window.echo.disconnect()` and reset guard flag, so re-login recreates connection with new auth.
 
-**Laravel Boost**: версионные основы broadcasting — за Boost; здесь — фронт-композабл.
-
-## Алгоритм
-
-1. **Один Echo-инстанс на сессию.** Создавай `window.echo = new Echo({...})` ровно один раз за жизнь страницы (флаг-гард `isEchoInitialized`). Не создавай Echo внутри composable — composable только подписывается на уже готовый `window.echo`.
-2. **Runtime-конфиг важнее env.** Параметры подключения (key, host, port, scheme, path) бери из двух слоёв с приоритетом runtime → env → дефолт:
-   - **env** (`import.meta.env.VITE_REVERB_*`) — дефолты на этапе сборки;
-   - **runtime** — объект, переданный с сервера в браузер (Inertia-проп `page.props`, shared-данные или встроенный `<script>`), позволяет менять окружение **без пересборки фронта**.
-   Каждое поле runtime-конфига перекрывает env, только если оно непустое (`if (runtime.host) config.wsHost = runtime.host`). См. `snippets/echo-config.ts`.
-3. **broadcaster по бэкенду.** `broadcaster: 'reverb'` для Laravel Reverb, `'pusher'` для Pusher/совместимого. `forceTLS` выводи из scheme (`scheme === 'https'`), `enabledTransports: ['ws', 'wss']`.
-4. **Подписка — через composable, не в компоненте.** Компонент вызывает `use<Домен>Realtime(id)`; вся работа с `window.echo` спрятана в composable/адаптере. Внутри:
-   - `const channel = window.echo.private(channelName)` для private, `.encryptedPrivate(...)` / `.join(...)` (presence) по типу канала;
-   - **гард `if (!window.echo) return () => {}`** — Echo может быть выключен (guest, disabled-режим), подписка должна деградировать в no-op, а не падать.
-5. **listen на broadcastAs-имя.** Если backend объявил `public function broadcastAs(): string { return 'order.updated'; }`, на фронте слушай **с ведущей точкой**: `channel.listen('.order.updated', handler)`. Без `broadcastAs()` имя — FQCN-класс события (`.App\\Events\\OrderUpdated`) — хрупко; настаивай на `broadcastAs()` на backend.
-6. **Именованный handler — обязателен для отписки.** Передавай в `.listen()` именованную функцию-ссылку, а не инлайн-лямбду, иначе нельзя точечно снять слушатель через `stopListening(eventName, handler)`.
-7. **Отписка детерминирована.** На каждую подписку возвращай `dispose`-функцию, которая: `channel.stopListening('.event', handler)` для каждого слушателя, затем `window.echo.leave(channelName)`. Вызывай её в `onUnmounted`. См. `snippets/useEcho.ts`.
-8. **Ref-count для разделяемых каналов.** Если один канал (канал доски, канал уведомлений пользователя) слушают несколько компонентов одновременно — веди счётчик подписчиков на имя канала: подписка увеличивает, dispose уменьшает, реальный `leave()` — только когда счётчик дошёл до 0. Иначе размонтирование одного компонента оборвёт realtime у остальных.
-9. **Presence — те же правила + участники.** `window.echo.join(channelName)` даёт `.here(users => ...)`, `.joining(user => ...)`, `.leaving(user => ...)`, плюс обычный `.listen(...)`. Отписка та же — `leave(channelName)`. Состояние «кто онлайн» держи в `ref`, наполняй из `here/joining/leaving`.
-10. **X-Socket-ID в каждый запрос.** В axios-интерсепторе подставляй `config.headers['X-Socket-ID'] = window.echo?.socketId?.()`, если socketId есть. Это позволяет backend через `broadcast(...)->toOthers()` исключить инициатора из рассылки, чтобы он не получил собственное событие дважды (оптимистичный UI + echo). См. `snippets/axios-socket-id.ts`. То же значение прокидывай в Inertia-визиты через `headers: { 'X-Socket-ID': ... }`.
-11. **Очистка при выходе.** При логауте / переходе в guest-контекст вызывай `window.echo.disconnect()` и сбрасывай флаг-гард, чтобы при повторном входе пересоздать соединение с новой авторизацией.
-
-## Жизненный цикл подписки (минимальный контракт)
+## Subscription lifecycle (minimal contract)
 
 ```
 mount/setup ──▶ acquire(channelName): if (!window.echo) return no-op
@@ -57,40 +47,44 @@ mount/setup ──▶ acquire(channelName): if (!window.echo) return no-op
                   channel.listen('.event', namedHandler)
                   return dispose
 onUnmounted ──▶ dispose(): channel.stopListening('.event', namedHandler)
-                           window.echo.leave(channelName)   // при ref-count: только на 0
+                           window.echo.leave(channelName)   // with ref-count: only at 0
 ```
 
-Нарушение любого звена даёт классические баги: подписка падает у guest (нет гарда), realtime «утекает» после ухода со страницы (нет `leave`), двойные события (инлайн-лямбда не снимается / нет `X-Socket-ID`), мёртвый канал у соседнего компонента (нет ref-count).
+Breaking any link → classic bugs: subscription crashes for guest (no guard), realtime "leaks" after leaving page (no `leave`), double events (inline lambda not removed / no `X-Socket-ID`), dead channel for sibling component (no ref-count).
 
-## Типы каналов
+## Channel types
 
-| Тип | Метод | Когда |
+| Type | Method | When |
 |:---|:---|:---|
-| public | `window.echo.channel(name)` | данные без авторизации (редко) |
-| private | `window.echo.private(name)` | данные конкретного пользователя/ресурса; авторизация на backend |
-| presence | `window.echo.join(name)` | private + список участников (онлайн, «кто печатает») |
-| encrypted private | `window.echo.encryptedPrivate(name)` | private с E2E-шифрованием payload |
+| public | `window.echo.channel(name)` | data without auth (rare) |
+| private | `window.echo.private(name)` | data of specific user/resource; auth on backend |
+| presence | `window.echo.join(name)` | private + participant list (online, "who is typing") |
+| encrypted private | `window.echo.encryptedPrivate(name)` | private with E2E-encrypted payload |
 
-Имя канала строй из нейтральной доменной модели: `order.${orderId}`, `notifications.user.${userId}`, `documents.board` — без имён реального проекта/клиента.
+Build channel name from neutral domain model: `order.${orderId}`, `notifications.user.${userId}`, `documents.board` — no real project/client names.
 
-## Чеклист качества
+## Quality checklist
 
-- [ ] `new Echo(...)` создаётся один раз за сессию (флаг-гард), а не в каждом composable
-- [ ] Конфиг собран по приоритету runtime → env → дефолт; runtime перекрывает env только непустыми полями
-- [ ] `broadcaster` соответствует backend (`reverb`/`pusher`); `forceTLS` выведен из scheme
-- [ ] Подписка инкапсулирована в composable/адаптере, компонент не трогает `window.echo` напрямую
-- [ ] Есть гард `if (!window.echo) return () => {}` — деградация в no-op без исключений
-- [ ] `listen` использует broadcastAs-имя с ведущей точкой (`.order.updated`)
-- [ ] Handler — именованная функция (снимается через `stopListening(event, handler)`)
-- [ ] `onUnmounted` вызывает dispose: `stopListening` + `leave(channelName)`
-- [ ] Разделяемые каналы под ref-count: `leave()` только когда счётчик подписчиков = 0
-- [ ] `X-Socket-ID` подставляется в axios-интерсептор и в Inertia-визиты
-- [ ] Никаких имён реального проекта/клиента в именах каналов и payload-типах
+- [ ] `new Echo(...)` created once per session (guard flag), not per composable
+- [ ] Config built priority runtime → env → default; runtime overrides env only with non-empty fields
+- [ ] `broadcaster` matches backend (`reverb`/`pusher`); `forceTLS` derived from scheme
+- [ ] Subscription encapsulated in composable/adapter, component never touches `window.echo` directly
+- [ ] Guard `if (!window.echo) return () => {}` — degrades to no-op without exceptions
+- [ ] `listen` uses broadcastAs name with leading dot (`.order.updated`)
+- [ ] Handler is named function (removable via `stopListening(event, handler)`)
+- [ ] `onUnmounted` calls dispose: `stopListening` + `leave(channelName)`
+- [ ] Shared channels under ref-count: `leave()` only when subscriber counter = 0
+- [ ] `X-Socket-ID` injected into axios interceptor and Inertia visits
+- [ ] No real project/client names in channel names and payload types
 
-## Ссылки
+## Links
 
 - https://laravel.com/docs/broadcasting (Receiving Broadcasts / Presence Channels)
 - https://github.com/laravel/echo
 - https://reverb.laravel.com/
 - snippets/useEcho.ts, snippets/echo-config.ts, snippets/axios-socket-id.ts
-- Связанные скиллы: `php/laravel-broadcasting` (backend: события, каналы, ShouldBroadcast), `frontend/inertia-vue`, `frontend/vue-composition-api`, `frontend/pinia-stores` (realtime-состояние «кто онлайн»/уведомления в сторе, доступ к стору из ws-адаптера вне компонента)
+- Related skills: `php/laravel-broadcasting` (backend: events, channels, ShouldBroadcast), `frontend/inertia-vue`, `frontend/vue-composition-api`, `frontend/pinia-stores` (realtime "who is online"/notifications state in store, store access from ws-adapter outside component)
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: 1fd04d3b3d4ab7f49cf357d5a9afb146262edc6098b2fa9194804019f603a04a -->

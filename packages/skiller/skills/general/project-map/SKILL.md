@@ -2,7 +2,7 @@
 name: project-map
 bucket: general
 version: 0.1.0
-description: "Методология карты структуры проекта: зонирование директорий по ответственности для безопасного роутинга изменений (где править, в каком слое должна жить логика). Активировать, когда нужно быстро понять, куда вносить изменение, или составить/обновить карту структуры для проекта; язык-агностично."
+description: "Project structure map methodology: zone directories by responsibility for safe change routing (where to edit, which layer logic belongs in). Activate when you need to quickly find where to put a change, or build/update a structure map for a project; language-agnostic."
 risk: read
 persona: oss-dev
 tags: [conventions, navigation, architecture, structure, routing]
@@ -14,49 +14,50 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-# Карта структуры проекта (методология)
+# Project structure map (methodology)
 
-Цель — за минуту понять, **куда** вносить изменение и в **каком слое** должна жить логика, не
-читая весь репозиторий. Это методология построения такой карты для **любого** стека; конкретная
-карта проекта живёт в его доках/`.ai`, не в реестре.
+Methodology to build a map for **any** stack; the concrete project map lives in its docs/`.ai`, not in the registry.
 
-## Когда активировать
+## When to activate
 
-- Нужно быстро сориентироваться, где править, в незнакомом или большом проекте.
-- Составить/обновить карту структуры (онбординг, рефактор раскладки).
-- Перед сквозным изменением — свериться, какие слои затронуты (→ `cross-layer-change-checklist`).
+- Quickly orient where to edit in an unfamiliar or large project.
+- Build/update a structure map (onboarding, layout refactor).
+- Before a cross-cutting change — check which layers are touched (→ `cross-layer-change-checklist`).
 
-## Алгоритм построения карты
+## Map-building algorithm
 
-1. **Найди точки входа** — где приложение стартует (роуты/CLI/handlers/main) и куда приходят запросы.
-2. **Выдели слои по ответственности** (типовой набор, адаптируй под стек):
-   - вход/транспорт (HTTP/CLI/UI) — только приём, валидация, делегирование;
-   - бизнес-операции/use-case — изменение состояния, транзакционная граница;
-   - доменная логика/сервисы — вычисления, оркестрация, без транспорта;
-   - доступ к данным (репозитории/ORM) — чтение/запись;
-   - доступ/политики — правила авторизации;
-   - модели/типы/enum — данные и инварианты;
-   - конфиг, тесты, доки.
-3. **Сопоставь слой → директорию** проекта (одна зона ответственности — одно место).
-4. **Зафиксируй правило размещения**: для каждого типа изменения — в какой слой оно ложится
-   (новая операция с изменением состояния → use-case-слой, не в транспорт).
-5. **Сохрани карту** в доках проекта (`docs/`/`.ai/`), держи рядом с кодом — не в общем реестре.
+1. **Find entry points** — where the app starts (routes/CLI/handlers/main) and where requests arrive.
+2. **Identify layers by responsibility** (typical set, adapt to stack):
+   - transport/entry (HTTP/CLI/UI) — only intake, validation, delegation;
+   - business operations/use-case — state change, transactional boundary;
+   - domain logic/services — computation, orchestration, no transport;
+   - data access (repositories/ORM) — read/write;
+   - access/policies — authorization rules;
+   - models/types/enum — data and invariants;
+   - config, tests, docs.
+3. **Map layer → project directory** (one responsibility — one place).
+4. **Fix placement rule**: for each change type — which layer it lands in (new state-changing operation → use-case layer, not transport).
+5. **Save the map** in project docs (`docs/`/`.ai/`), next to code — not in the shared registry.
 
-## Принцип роутинга изменения
+## Change-routing principle
 
-- Изменение состояния/бизнес-операция → слой use-case (Action/Command/Service-операция).
-- Чистое вычисление без побочных эффектов → доменный сервис/функция.
-- Только приём запроса → транспортный слой (контроллер/handler), без оркестрации мутаций.
-- Правило доступа → слой политик/авторизации, синхронно с тестами.
+- State change/business operation → use-case layer (Action/Command/Service operation).
+- Pure computation, no side effects → domain service/function.
+- Request intake only → transport layer (controller/handler), no mutation orchestration.
+- Access rule → policy/authorization layer, in sync with tests.
 
-## Чеклист
+## Checklist
 
-- [ ] Найдены точки входа и перечислены слои ответственности.
-- [ ] Каждый слой сопоставлен конкретной директории (одна зона — одно место).
-- [ ] Зафиксировано правило «тип изменения → слой».
-- [ ] Карта лежит в доках проекта, без имён конкретных проектов в общем скилле.
+- [ ] Entry points found and responsibility layers listed.
+- [ ] Each layer mapped to a concrete directory (one zone — one place).
+- [ ] "Change type → layer" rule fixed.
+- [ ] Map lives in project docs, no concrete project names in the shared skill.
 
-## Связанные скиллы
+## Related skills
 
-- `cross-layer-change-checklist` (general) — когда изменение задевает несколько слоёв сразу.
-- `php/laravel-structure`, `python/ml-project-structure` — стек-специфичные каноны раскладки.
+- `cross-layer-change-checklist` (general) — when a change touches several layers at once.
+- `php/laravel-structure`, `python/ml-project-structure` — stack-specific layout canons.
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: fac8d8a2b0c47b5a489acc2d455b2ded6052d90a9521c13429a58bfb1a3f8aff -->

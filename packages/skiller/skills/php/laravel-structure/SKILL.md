@@ -2,7 +2,7 @@
 name: laravel-structure
 bucket: php
 version: 0.2.0
-description: "Канон структуры Laravel-проекта для greenfield-проектов и добавления доменов: доменная таксономия, правило зеркала слоёв, размещение и нейминг классов"
+description: "Laravel project structure canon for greenfield and adding domains: domain taxonomy, layer-mirror rule, class placement and naming"
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "architecture", "structure"]
@@ -16,90 +16,94 @@ sha256: ""
 
 # Laravel Structure
 
-## Контекст
+Canon for where to put files and how to name them (implementation skills answer "how to write the class"). Apply at project start, when adding a domain/subprocess, and in placement reviews. For greenfield + adding domains; at tens of domains / multiple teams switch to `php/modular-architecture` (`app/Modules/`).
 
-Флагманский скилл-канон: как формировать основу Laravel-проекта — папки, имена, размещение классов. Новый проект начинается со структуры; скиллы реализации (actions, repositories, DTO, Filament) опираются на этот канон и отвечают «как написать класс», этот скилл отвечает «куда его положить и как назвать». Применяй при старте проекта, добавлении домена/подпроцесса и в ревью размещения файлов. Это канон для greenfield-проектов и добавления доменов; при росте до десятков доменов / нескольких команд переходи на `php/modular-architecture` (`app/Modules/`).
+## Principles
 
-## Принципы
+1. **Two organization axes.**
+   - Domain axis (business code): in `Actions/`, `Models/`, `Enums/`, `Dto/`, `Events/`, `Exceptions/`, `Policies/`, `Repositories/`, `Services/`, `Http/{Controllers,Requests,Resources}/`, `Filament/Resources/`, `Notifications/`, `Observers/`, `Listeners/`, `Jobs/` — always domain subfolders (`Order/`, `Document/`, `User/`).
+   - Technical axis (infra): `Concerns/<Tech>`, `Attributes/Common`, `Support/<Tech>`, `Utils/`, `TypeScript/`, `MediaLibrary/`, `Health/`, `Services/<Tech>` (Broadcast/Log/Layout). Technical axis must not know about domains.
+2. **Mirror rule.** One domain taxonomy across all layers: `Models/Order` ↔ `Enums/Order` ↔ `Policies/Order` ↔ `Repositories/Order` ↔ `factories/Order` ↔ `tests/Feature/Order`. Subprocesses (`Common/`, `Review/`, `Application/`) — identical subfolders in `Actions/`, `Dto/Actions/`, `Enums/<Domain>/Permissions/`, `Policies/<Domain>/`.
+3. **No consumer level.** NOT `Enums/Models/<Domain>`. Exception — single-consumer rule: `Dto/Actions/<Domain>` mirrors `Actions/<Domain>` (Command DTO has exactly one consumer — its Action); Mapper lives next to View DTO.
+4. **Grow inward.** Semantic subfolders inside the domain (`Enums/Order/Workflow/`, `Enums/Order/Permissions/`, `Services/Order/Access/`, `Services/Order/Store/`), not new root axes. No empty "for-growth" folders.
 
-1. **Две оси организации.** Доменная ось для бизнес-кода: в `Actions/`, `Models/`, `Enums/`, `Dto/`, `Events/`, `Exceptions/`, `Policies/`, `Repositories/`, `Services/`, `Http/{Controllers,Requests,Resources}/`, `Filament/Resources/`, `Notifications/`, `Observers/`, `Listeners/`, `Jobs/` — везде доменные подпапки (`Order/`, `Document/`, `User/`). Техническая ось для инфраструктуры: `Concerns/<Tech>`, `Attributes/Common`, `Support/<Tech>`, `Utils/`, `TypeScript/`, `MediaLibrary/`, `Health/`, `Services/<Tech>` (Broadcast/Log/Layout). Техническая ось не знает о доменах.
-2. **Правило зеркала.** Одна таксономия доменов во всех слоях: `Models/Order` ↔ `Enums/Order` ↔ `Policies/Order` ↔ `Repositories/Order` ↔ `factories/Order` ↔ `tests/Feature/Order`. Подпроцессы (`Common/`, `Review/`, `Application/`) — одинаковые подпапки в `Actions/`, `Dto/Actions/`, `Enums/<Домен>/Permissions/`, `Policies/<Домен>/`.
-3. **Без уровня потребителя.** НЕ `Enums/Models/<Домен>` — у enum много потребителей, домен стабилен. Исключение — правило одного потребителя: `Dto/Actions/<Домен>` зеркалит `Actions/<Домен>` (Command DTO имеет ровно одного потребителя — свой Action); Mapper живёт рядом с View DTO.
-4. **Рост — внутрь домена.** Смысловые подпапки внутри домена (`Enums/Order/Workflow/`, `Enums/Order/Permissions/`, `Services/Order/Access/`, `Services/Order/Store/`), а не новые корневые оси. Пустых папок «на вырост» не держим.
+## Class placement
 
-## Куда класть новый класс
-
-| Что создаю | Куда | Пример |
+| What | Where | Example |
 |---|---|---|
-| Модель | `app/Models/<Домен>/` | `Models/Order/Order.php` |
-| Enum-статус / код события | `app/Enums/<Домен>/` | `Enums/Order/OrderStatus.php` |
-| Права домена (permission-enum) | `app/Enums/<Домен>/Permissions/` | `Enums/Order/Permissions/CommonPermission.php` |
-| Use-case (Action) | `app/Actions/<Домен>/<Подпроцесс>/` | `Actions/Order/Common/StoreAction.php` |
-| Command DTO | `app/Dto/Actions/<Домен>/<Подпроцесс>/` | `Dto/Actions/Order/Common/StoreCommand.php` |
-| View DTO | `app/Dto/<Домен>/View/` | `Dto/Order/View/ListItemView.php` |
-| Маппер DTO | `app/Dto/<Домен>/Mapper/` | `Dto/Order/Mapper/ViewMapper.php` |
-| Form DTO | `app/Dto/<Домен>/Form/` | `Dto/Order/Form/Form.php` |
-| Сервис доменный | `app/Services/<Домен>/[<Аспект>/]` | `Services/Order/Access/OrderAccessEvaluator.php` |
-| Сервис инфраструктурный | `app/Services/<Tech>/` | `Services/Broadcast/ChannelManager.php` |
-| Репозиторий чтения | `app/Repositories/<Домен>/` | `Repositories/Order/OrderReadRepository.php` |
-| Репозиторий записи | `app/Repositories/<Домен>/` | `Repositories/Order/OrderStoreRepository.php` |
-| Политика | `app/Policies/<Домен>/` | `Policies/Order/CommonPolicy.php` |
-| Событие | `app/Events/<Домен>/` | `Events/Order/StatusChanged.php` |
-| Слушатель | `app/Listeners/<Домен>/[<Назначение>/]` | `Listeners/Order/Notifications/SendStatusChanged.php` |
-| Исключение | `app/Exceptions/<Домен>/` | `Exceptions/Order/OrderAccessException.php` |
-| Job | `app/Jobs/<Домен>/` | `Jobs/User/SyncProfileJob.php` |
-| Нотификация | `app/Notifications/<Домен>/` | `Notifications/Order/Notification.php` |
-| Observer | `app/Observers/<Домен>/` | `Observers/Order/Observer.php` |
-| Filament-ресурс | `app/Filament/Resources/<Домен>/<Models>/` | `Filament/Resources/Order/Orders/OrderResource.php` |
-| Трейт-примесь | `app/Concerns/<Tech>/` | `Concerns/Enums/HasLabelAttribute.php` |
-| PHP-атрибут | `app/Attributes/Common/` или `Attributes/<Домен>/` | `Attributes/Common/Label.php` |
-| Хелпер статичный | `app/Support/<Tech>/` или `app/Utils/` | `Support/Enums/EnumCaseAttributeResolver.php` |
-| UI-DTO оболочки страницы | `app/Dto/Layout/View/` (псевдодомен UI) | `Dto/Layout/View/SharedPageProps.php` |
-| Фабрика | `database/factories/<Домен>/` | `factories/Order/OrderFactory.php` |
-| Сидер | `database/seeders/` (префикс = домен) | `seeders/OrderSeeder.php` |
-| Feature-тест | `tests/Feature/<Домен>/` | `Feature/Order/StoreOrderTest.php` |
-| Unit-тест | `tests/Unit/<Домен>/` | `Unit/Order/WorkflowServiceTest.php` |
+| Model | `app/Models/<Domain>/` | `Models/Order/Order.php` |
+| Enum status / event code | `app/Enums/<Domain>/` | `Enums/Order/OrderStatus.php` |
+| Domain permissions (permission-enum) | `app/Enums/<Domain>/Permissions/` | `Enums/Order/Permissions/CommonPermission.php` |
+| Use-case (Action) | `app/Actions/<Domain>/<Subprocess>/` | `Actions/Order/Common/StoreAction.php` |
+| Command DTO | `app/Dto/Actions/<Domain>/<Subprocess>/` | `Dto/Actions/Order/Common/StoreCommand.php` |
+| View DTO | `app/Dto/<Domain>/View/` | `Dto/Order/View/ListItemView.php` |
+| DTO Mapper | `app/Dto/<Domain>/Mapper/` | `Dto/Order/Mapper/ViewMapper.php` |
+| Form DTO | `app/Dto/<Domain>/Form/` | `Dto/Order/Form/Form.php` |
+| Domain service | `app/Services/<Domain>/[<Aspect>/]` | `Services/Order/Access/OrderAccessEvaluator.php` |
+| Infra service | `app/Services/<Tech>/` | `Services/Broadcast/ChannelManager.php` |
+| Read repository | `app/Repositories/<Domain>/` | `Repositories/Order/OrderReadRepository.php` |
+| Store repository | `app/Repositories/<Domain>/` | `Repositories/Order/OrderStoreRepository.php` |
+| Policy | `app/Policies/<Domain>/` | `Policies/Order/CommonPolicy.php` |
+| Event | `app/Events/<Domain>/` | `Events/Order/StatusChanged.php` |
+| Listener | `app/Listeners/<Domain>/[<Purpose>/]` | `Listeners/Order/Notifications/SendStatusChanged.php` |
+| Exception | `app/Exceptions/<Domain>/` | `Exceptions/Order/OrderAccessException.php` |
+| Job | `app/Jobs/<Domain>/` | `Jobs/User/SyncProfileJob.php` |
+| Notification | `app/Notifications/<Domain>/` | `Notifications/Order/Notification.php` |
+| Observer | `app/Observers/<Domain>/` | `Observers/Order/Observer.php` |
+| Filament resource | `app/Filament/Resources/<Domain>/<Models>/` | `Filament/Resources/Order/Orders/OrderResource.php` |
+| Trait mixin | `app/Concerns/<Tech>/` | `Concerns/Enums/HasLabelAttribute.php` |
+| PHP attribute | `app/Attributes/Common/` or `Attributes/<Domain>/` | `Attributes/Common/Label.php` |
+| Static helper | `app/Support/<Tech>/` or `app/Utils/` | `Support/Enums/EnumCaseAttributeResolver.php` |
+| Page-shell UI DTO | `app/Dto/Layout/View/` (UI pseudo-domain) | `Dto/Layout/View/SharedPageProps.php` |
+| Factory | `database/factories/<Domain>/` | `factories/Order/OrderFactory.php` |
+| Seeder | `database/seeders/` (prefix = domain) | `seeders/OrderSeeder.php` |
+| Feature test | `tests/Feature/<Domain>/` | `Feature/Order/StoreOrderTest.php` |
+| Unit test | `tests/Unit/<Domain>/` | `Unit/Order/WorkflowServiceTest.php` |
 
-## Нейминг
+## Naming
 
-| Тип | Шаблон | Пример |
+| Type | Pattern | Example |
 |---|---|---|
 | Action | `VerbNounAction` | `StoreAction`, `TakeInWorkAction` |
 | Command DTO | `VerbNounCommand` | `StoreCommand`, `ReplyCommand` |
 | View DTO | `XxxView` | `ListItemView`, `DetailExtraView` |
-| Form DTO | `Form` (+ части) | `Form`, `Items` |
+| Form DTO | `Form` (+ parts) | `Form`, `Items` |
 | Service | `XxxService` / `XxxEvaluator` | `WorkflowService`, `OrderAccessEvaluator` |
 | Repository | `XxxReadRepository` / `XxxStoreRepository` | `OrderReadRepository`, `OrderStoreRepository` |
-| Policy | `<Подпроцесс>Policy`, методы `canXxx` | `CommonPolicy::canEdit` |
+| Policy | `<Subprocess>Policy`, methods `canXxx` | `CommonPolicy::canEdit` |
 | Exception | `XxxException` | `OrderAccessException` |
-| Event | прошедшее время, без префикса домена | `StatusChanged`, `Created` |
+| Event | past tense, no domain prefix | `StatusChanged`, `Created` |
 | Concern | `HasXxx` | `HasLabelAttribute` |
 
-## Когда какой reference открывать
+## Which reference to open
 
-| Ситуация | Файл |
+| Situation | File |
 |---|---|
-| Полное дерево `app/`, правила и ошибки по каждой папке, Filament-канон | `references/app-structure.md` |
-| Принцип «домен → слой», подпроцессы, запреты, рост домена | `references/domain-structure.md` |
-| Все файлы одной сущности по слоям, зеркало `database/` и `tests/`, чеклисты «новый домен» / «новый подпроцесс» | `references/mirroring.md` |
-| Куда выносить общий код: scope → Concern → атрибут → Support → Utils → DTO → пакет | `references/shared-code.md` |
+| Full `app/` tree, per-folder rules and errors, Filament canon | `references/app-structure.md` |
+| "domain → layer" principle, subprocesses, prohibitions, domain growth | `references/domain-structure.md` |
+| All files of one entity across layers, `database/` & `tests/` mirror, "new domain" / "new subprocess" checklists | `references/mirroring.md` |
+| Where to extract shared code: scope → Concern → attribute → Support → Utils → DTO → package | `references/shared-code.md` |
 
-## Чеклист качества
+## Quality checklist
 
-- [ ] Новый класс лежит по таблице размещения; имя — по таблице нейминга
-- [ ] Доменная таксономия зеркальна: тот же домен в `Models/`, `Enums/`, `Policies/`, `factories/`, `tests/`
-- [ ] Нет уровня потребителя (`Enums/Models/...`) — кроме `Dto/Actions/`
-- [ ] Техническая ось (`Concerns/`, `Support/`, `Utils/`) не упоминает домены
-- [ ] Нет пустых папок и файлов в плоских корнях (`app/Models/X.php`, `app/Exceptions/XException.php`)
-- [ ] Подпроцесс добавлен синхронно в `Actions/`, `Dto/Actions/`, `Enums/Permissions/`, `Policies/`
+- [ ] New class placed per placement table; named per naming table
+- [ ] Domain taxonomy mirrored: same domain in `Models/`, `Enums/`, `Policies/`, `factories/`, `tests/`
+- [ ] No consumer level (`Enums/Models/...`) — except `Dto/Actions/`
+- [ ] Technical axis (`Concerns/`, `Support/`, `Utils/`) mentions no domains
+- [ ] No empty folders/files in flat roots (`app/Models/X.php`, `app/Exceptions/XException.php`)
+- [ ] Subprocess added in sync across `Actions/`, `Dto/Actions/`, `Enums/Permissions/`, `Policies/`
 
-## Смежные скиллы
+## Related skills
 
-- Реализация Action/DTO/слоёв: `php/laravel` → `snippets/layer-boundaries.md`, `snippets/dto.md`, `snippets/actions.md`
-- Репозитории Read/Store: `php/repositories`
-- Внедрение зависимостей и связывание: `php/dependency-injection`
-- Атрибуты, Concern-трейты, резолвер, локальный пакет: `php/enum-attributes`
-- Общие правила архитектуры: `php/laravel-best-practices` → `references/architecture.md`
-- Рост до модулей (десятки доменов, несколько команд): `php/modular-architecture`
-- Миграции, модели, нейминг таблиц: `php/database`
-- Тесты по доменам (зеркало `tests/`): `php/laravel-testing`
+- Action/DTO/layer implementation: `php/laravel` → `snippets/layer-boundaries.md`, `snippets/dto.md`, `snippets/actions.md`
+- Read/Store repositories: `php/repositories`
+- Dependency injection and binding: `php/dependency-injection`
+- Attributes, Concern traits, resolver, local package: `php/enum-attributes`
+- General architecture rules: `php/laravel-best-practices` → `references/architecture.md`
+- Growth to modules (tens of domains, multiple teams): `php/modular-architecture`
+- Migrations, models, table naming: `php/database`
+- Per-domain tests (`tests/` mirror): `php/laravel-testing`
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: d37695a9b629cfb1451babcb00294af545a99c0c94540f3fc2dee80b04e7b24e -->

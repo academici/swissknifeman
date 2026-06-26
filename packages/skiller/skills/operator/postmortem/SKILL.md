@@ -2,7 +2,7 @@
 name: postmortem
 bucket: operator
 version: 0.1.0
-description: Blameless postmortem после SEV-1/2 инцидента — таймлайн, root cause (5 Whys), contributing factors, action items, дистрибуция знаний
+description: Blameless postmortem after SEV-1/2 incident — timeline, root cause (5 Whys), contributing factors, action items, knowledge distribution
 risk: draft
 persona: operator
 tags: [incident, ops, workflow, reflection]
@@ -15,49 +15,39 @@ adapters: [claude, cursor, fable]
 
 # Skill: Postmortem
 
-Применять когда: инцидент SEV-1 или SEV-2 закрыт (`incident-response` → RESOLVE), и требуется зафиксировать **что произошло, почему, и что меняем**. Постмортем — обязательная часть incident lifecycle, не опциональная.
+Apply when: SEV-1/SEV-2 incident closed (`incident-response` → RESOLVE); capture **what happened, why, what changes**. Mandatory part of incident lifecycle, not optional.
 
-Не применять: для SEV-3/4 (избыточно), либо когда инцидент явно повторяет уже разобранный кейс (вместо нового PM — обновить старый + action items).
+## When NOT to apply
+- SEV-3/4 (backlog ticket suffices)
+- Repeat of already-analyzed incident → update existing PM + raise unresolved action items
+- External incident (vendor outage) with no reaction from us → short note suffices
+- "Near miss" unnoticed by users → optional, usually useful
 
----
+## Step 1. Blameless principle
+Analyze **systems and processes**, not people. Forbidden:
+- Name a person as root cause ("Alice deployed broken code")
+- "should have known", "should have checked"
+- Personal performance discussion (separate channel)
 
-## Когда НЕ применять
+Allowed:
+- Describe people's actions neutrally ("engineer deployed")
+- Discuss what in the system made the error possible (no staging, no canary, no smoke tests)
 
-- SEV-3/4 (тикет в backlog достаточно)
-- Повторение уже разобранного инцидента — обновить существующий PM + поднять unresolved action items
-- Внешний инцидент (vendor outage) без нашей реакции — короткая заметка достаточна
-- «Near miss» который остался незамеченным юзерами — опционально, но обычно полезно
+Goal: a second identical incident must be impossible regardless of who is on shift.
 
----
-
-## Шаг 1. Blameless principle
-
-Постмортем разбирает **системы и процессы**, не людей. Запрещено:
-- Указывать конкретное имя как root cause («Alice deployed broken code»)
-- Формулировки «должен был знать», «следовало проверить»
-- Personal performance discussion (это отдельный канал)
-
-Разрешено:
-- Описывать действия людей нейтрально («engineer deployed»)
-- Обсуждать что в системе сделало эту ошибку возможной (отсутствие staging, нет canary, нет смоук-тестов)
-
-**Цель:** второй такой же инцидент должен быть невозможен независимо от того, кто на смене.
-
----
-
-## Шаг 2. Структура — обязательные секции
+## Step 2. Structure — mandatory sections
 
 ```markdown
 # Postmortem: <ShortName> — <Date>
 
 **Severity:** SEV-X
-**Duration:** HH:MM (от detect до resolve)
+**Duration:** HH:MM (detect → resolve)
 **Impact:** N users affected, $X revenue lost / Y errors / Z downtime min
 **Owner:** @person
 **Status:** Draft / In Review / Finalized
 
 ## Summary
-2-3 предложения. Что произошло, какой эффект, что починили.
+2-3 sentences. What happened, what effect, what was fixed.
 
 ## Timeline (UTC)
 | Time | Event | Source |
@@ -70,7 +60,7 @@ adapters: [claude, cursor, fable]
 | HH:MM | SEV закрыт | IC |
 
 ## Root Cause
-Что **на самом деле** сломалось. Технический + системный уровень.
+What **actually** broke. Technical + systemic level.
 **Технический:** запрос N+1 в новой версии checkout-service вызвал DB connection pool exhaustion.
 **Системный:** PR прошёл review без нагрузочного теста; staging не имел нагрузки приближённой к prod.
 
@@ -98,83 +88,65 @@ adapters: [claude, cursor, fable]
 | Add staging load test для checkout | @bob | 1 month | P2 |
 
 ## Lessons
-1-3 урока в формате «правила». Подходят для перенесения в `tech-debt-audit` если структурные.
+1-3 lessons as "rules". Structural ones move to `tech-debt-audit`.
 ```
 
----
+## Step 3. Root Cause Analysis — 5 Whys (or variant)
+Don't stop at first "why" — dig to the system.
 
-## Шаг 3. Root Cause Analysis — 5 Whys (или вариант)
+Example:
+1. Why: checkout 5xx → connection pool exhausted
+2. Why: pool exhausted → new code did N+1 query
+3. Why: code passed review → no load test, N+1 invisible on small dataset
+4. Why: no load test → staging env without realistic data volume
+5. Why: staging without volume → historically dev-only, never reached prod-parity
 
-Не останавливаемся на первом «why» — копаем до системы.
+Rule: ≥ 3 levels of "why", else action items become cosmetic.
 
-**Пример:**
-1. Why: чекаут падал в 5xx → connection pool исчерпан
-2. Why: pool исчерпан → новый код делал N+1 запрос
-3. Why: код прошёл review → нагрузочного теста не было, на small dataset N+1 не виден
-4. Why: нет нагрузочного теста → staging-окружение без realistic data volume
-5. Why: staging без volume → исторически dev-only, не дотянули до prod-parity
+Alternative: Fishbone diagram, Causal map — for very complex multi-system incidents.
 
-**Правило:** ≥ 3 уровней «why», иначе action items получатся косметическими.
+## Step 4. Action Items — quality criteria
+Every AI must have:
+- **Owner** (one person, not "team")
+- **Due date** (concrete, not "when we can")
+- **Priority** (P1 = before next deploy, P2 = this quarter, P3 = backlog)
+- **Verifiable** — how we know it's done
 
-**Альтернатива:** Fishbone diagram, Causal map — для очень сложных multi-system инцидентов.
+Anti-pattern AI:
+- "Будем внимательнее" (not verifiable)
+- "Документировать процесс" (no owner / due)
+- "Обсудить с командой" (not an action)
 
----
+Rule: AI without owner+due is not an AI, it's a wish. Return to draft.
 
-## Шаг 4. Action Items — критерии качества
-
-Каждый AI обязан иметь:
-- **Owner** (один человек, не «команда»)
-- **Due date** (конкретная, не «когда сможем»)
-- **Priority** (P1 = до следующего деплоя, P2 = в этот квартал, P3 = backlog)
-- **Verifiable** — как поймём что сделано
-
-**Anti-pattern AI:**
-- «Будем внимательнее» (не verifiable)
-- «Документировать процесс» (нет owner'а / due)
-- «Обсудить с командой» (это не action)
-
-**Правило:** AI без owner+due — это не AI, это wish. Возвращаем в черновик.
-
----
-
-## Шаг 5. Review process
-
-| Этап | Кто | Срок |
+## Step 5. Review process
+| Stage | Who | Deadline |
 |:---|:---|:---|
-| Draft | IC или назначенный owner | 48 часов после resolve |
-| Internal review | Тех. команда | 1 неделя |
-| Cross-team broadcast (если impact > одной команды) | Owner | 2 недели |
-| Action items tracked | Owner + team lead | До закрытия всех P1 |
+| Draft | IC or assigned owner | 48h after resolve |
+| Internal review | Tech team | 1 week |
+| Cross-team broadcast (if impact > one team) | Owner | 2 weeks |
+| Action items tracked | Owner + team lead | Until all P1 closed |
 
-**Опубликовать постмортем:** в репо (этот скилл), и линкнуть в incident channel. Search-able. Не Notion-only, не «потерялось в Slack».
+Publish: in repo (this skill), link in incident channel. Search-able. Not Notion-only, not "lost in Slack".
 
----
-
-## Шаг 6. Метрики постмортем-процесса
-
-| Метрика | Цель | Что значит превышение |
+## Step 6. Postmortem-process metrics
+| Metric | Target | Meaning if exceeded |
 |:---|:---|:---|
-| Drafted within 48h | ≥ 90% | Процесс умирает |
-| Action items P1 closed within deadline | ≥ 80% | AI пишутся «на бумаге» |
-| Repeat incidents same root cause | < 10% | Lessons не работают |
-| Postmortem reviewed by ≥ 2 people | 100% | Нужен внешний взгляд |
+| Drafted within 48h | ≥ 90% | Process dying |
+| Action items P1 closed within deadline | ≥ 80% | AI written "on paper" |
+| Repeat incidents same root cause | < 10% | Lessons not working |
+| Postmortem reviewed by ≥ 2 people | 100% | Need external view |
 
----
+## What the agent adds
+- Markdown template ready to copy
+- File naming convention: `YYYY-MM-DD_<ShortName>.md` (chronological sort)
+- Action items import to issue tracker — leave a hook (don't do it ourselves; anchor link in template)
+- Link to `tech-debt-audit`: "structural problem" lessons → Tech_Debt_Register rows, impact high
+- Link to `runbook`: if runbook outdated/missing → AI to update/create runbook
+- Blameless checklist: verify timeline has no names in negative context, no "should have" phrasing
 
-## Что агент добавляет сам
-
-- Шаблон Markdown готов к копированию
-- Подсказка по naming convention файла: `YYYY-MM-DD_<ShortName>.md` (хронологическая сортировка)
-- Импорт action items в issue tracker — оставить hook (не делаем сами, но в шаблоне есть ссылка-якорь)
-- Связка с `tech-debt-audit`: lessons формата «структурная проблема» → строки в Tech_Debt_Register с импактом high
-- Связка с `runbook`: если runbook устарел / отсутствовал → AI на update/create runbook
-- Чек-лист blameless: проверить что в timeline нет имён в негативном контексте, нет формулировок «должен был»
-
----
-
-## Структура output-файла `[YYYY-MM-DD]_[ShortName].md`
-
-См. Шаг 2 (полная структура). Папка:
+## Output file structure `[YYYY-MM-DD]_[ShortName].md`
+See Step 2 (full structure). Folder:
 
 ```
 docs/03_Dev/Postmortems/
@@ -183,26 +155,22 @@ docs/03_Dev/Postmortems/
 └── _index.md  ← перечень + статус action items
 ```
 
----
+## Hard prohibitions
+- Name a person as root cause / contributing factor
+- Close SEV-1/2 without postmortem (process violation)
+- Action items without owner+due+priority
+- Action items like "be more careful" / "communicate better"
+- Hide postmortem in internal chat — must be in repo
+- Finalize without at least one external reviewer (min 2 eyes)
+- Ignore `What went well` — part of the culture; without it PM becomes only punishment
+- Close postmortem without 5 Whys (or alternative RCA method) to structural level
 
-## Жёсткие запреты
+## Links
+- `operator/incident-response` — postmortem input: action log, severity, timeline (lifecycle RESOLVE → POSTMORTEM)
+- `operator/runbook` — outdated/missing runbook → action item to update/create (produces_for)
+- `quality/tech-debt-audit` — structural lessons → Tech_Debt_Register rows, impact high (produces_for)
+- `operator/capacity-planning` — capacity incidents: root cause often = lack of headroom/forecast
+- `architect/observability-design` — contributing factor "alert fired late" → tune thresholds/SLO
+<!-- ru-source-sha256: PENDING -->
 
-НЕЛЬЗЯ:
-- Указывать конкретное имя как root cause / contributing factor
-- Закрывать SEV-1/2 без постмортема (process violation)
-- Action items без owner+due+priority
-- Action items уровня «be more careful» / «communicate better»
-- Прятать постмортем во внутреннем чате — обязательно в репо
-- Финализировать без хотя бы одного external reviewer (минимум 2 глаза)
-- Игнорировать `What went well` — это часть культуры, без неё постмортем становится только наказанием
-- Закрывать постмортем без 5 Whys (или альтернативного RCA метода) до структурного уровня
-
----
-
-## Ссылки
-
-- `operator/incident-response` — вход постмортема: action log, severity, таймлайн (lifecycle RESOLVE → POSTMORTEM)
-- `operator/runbook` — устаревший/отсутствующий runbook → action item на update/create (produces_for)
-- `quality/tech-debt-audit` — структурные lessons → строки в Tech_Debt_Register с impact high (produces_for)
-- `operator/capacity-planning` — capacity-инциденты: root cause часто = недостаток headroom/forecast
-- `architect/observability-design` — contributing factor «алерт сработал поздно» → правка порогов/SLO
+<!-- ru-source-sha256: 0e4a3de231ff381cf4bc850c07710a6d81e6c3ef9c4b2edeffdfb07a5d672567 -->

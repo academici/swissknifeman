@@ -2,7 +2,7 @@
 name: figma-mcp-core
 bucket: architect
 version: 0.1.0
-description: "Дисциплина работы с официальным Figma Dev Mode MCP: реальные инструменты (get_metadata, get_variable_defs, get_code, get_code_connect_map, get_screenshot, search_design_system), запрет извлечения значений из скриншотов, selection-driven алгоритм, извлечение design tokens в W3C tokens.json, переиспользование компонентов через Code Connect, аудит design-system, антипаттерны. Активировать при любой задаче по реализации UI из Figma через подключённый MCP-сервер, до маппинга в конкретный фреймворк."
+description: "Discipline for the official Figma Dev Mode MCP: real tools (get_metadata, get_variable_defs, get_code, get_code_connect_map, get_screenshot, search_design_system), no extracting values from screenshots, selection-driven algorithm, design-token extraction to W3C tokens.json, component reuse via Code Connect, design-system audit, antipatterns. Activate for any UI-from-Figma task via a connected MCP server, before mapping to a concrete framework."
 risk: read
 persona: architect
 tags: [figma, mcp, design-system, design-tokens, dev-mode, code-connect, ui]
@@ -14,106 +14,80 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-# Skill: Figma Dev Mode MCP — структурная дисциплина
+# Skill: Figma Dev Mode MCP — structural discipline
 
-## Контекст
+Framework-agnostic base skill for the **official Figma Dev Mode MCP server**. Read data via MCP tools, do not guess from the picture. Framework mapping lives in derived skills `figma-to-vue` (Vue/Tailwind), `figma-to-flutter` (Flutter).
 
-Базовый, фреймворк-агностичный скилл работы с **официальным Figma Dev Mode MCP-сервером**. Задаёт
-агенту дисциплину: читать данные через MCP-инструменты, а не угадывать по картинке. Конкретный
-маппинг в код — в производных скиллах `figma-to-vue` (Vue/Tailwind) и `figma-to-flutter` (Flutter).
+Activate when:
+- Figma MCP is connected (Dev Mode desktop server or remote) and a screen/component must be implemented;
+- extracting design tokens (colors, typography, spacing) from Figma to code;
+- auditing a Figma file's design-system before development;
+- agent starts guessing colors/sizes from a screenshot instead of reading variables.
 
-Активировать, когда:
+Dev Mode MCP is **selection-driven and code-first**: it returns context for the *current selection in Figma desktop* or a node-id from a pasted link, NOT a tree walk over `fileKey` (that is REST API, not MCP). The algorithm is built from the selection.
 
-- в проекте подключён Figma MCP (Dev Mode desktop-сервер или remote) и нужно реализовать экран/компонент;
-- нужно извлечь design tokens (цвета, типографику, отступы) из Figma в код;
-- нужен аудит design-system Figma-файла перед разработкой;
-- агент начал «угадывать» цвета/размеры по скриншоту вместо чтения переменных.
+## Real Figma Dev Mode MCP tools
 
-**Ключевой факт об инструменте.** Dev Mode MCP — **selection-driven и code-first**: он отдаёт контекст
-по *текущему выделению в Figma desktop* или по node-id из вставленной ссылки, а НЕ обходит дерево
-документа по `fileKey` (это модель REST API, не MCP). Алгоритм ниже построен от выделения.
-
-## Реальные инструменты Figma Dev Mode MCP
-
-| Инструмент | Что возвращает | Когда вызывать |
+| Tool | Returns | When |
 |:--|:--|:--|
-| `get_metadata` | разреженное дерево выделения: layer id, name, type, position, size | первый шаг — карта структуры экрана, дешёвый по токенам |
-| `get_variable_defs` | переменные и стили (design tokens), использованные в выделении | извлечение токенов; до генерации кода |
-| `get_code` (синоним `get_design_context`) | код по выделению; по умолчанию React+Tailwind, подхватывает фреймворк проекта | как **черновик-референс** структуры/значений, не как финальный код |
-| `get_code_connect_map` | маппинг Figma node id → компоненты Code Connect в кодовой базе | проверить, есть ли уже готовый компонент под этот узел |
-| `get_screenshot` | скриншот выделения | **только** визуальная сверка результата; НЕ источник значений |
-| `search_design_system` (remote) | поиск компонентов/переменных в подключённых библиотеках | найти canonical-компонент/токен вместо дублирования |
+| `get_metadata` | sparse selection tree: layer id, name, type, position, size | step 1 — screen structure map, token-cheap |
+| `get_variable_defs` | variables and styles (design tokens) used in selection | token extraction; before code generation |
+| `get_code` (synonym `get_design_context`) | code for selection; defaults React+Tailwind, picks up project framework | as **draft reference** for structure/values, not final code |
+| `get_code_connect_map` | Figma node id → Code Connect components in codebase | check if a component already exists for this node |
+| `get_screenshot` | screenshot of selection | **only** visual verification of result; NOT a source of values |
+| `search_design_system` (remote) | search components/variables in connected libraries | find canonical component/token instead of duplicating |
 
-## Принципиальная позиция: NO SCREENSHOT FOR VALUES
+## NO SCREENSHOT FOR VALUES
 
-`get_screenshot` допустим **исключительно** для финальной визуальной сверки «похоже/не похоже».
-Извлекать из него значения — антипаттерн: скриншот не содержит точных токенов (цвета и размеры
-округляются визуально), не передаёт иерархию и override-цепочки, не отдаёт auto-layout-параметры.
-Все значения берутся из `get_variable_defs` и `get_metadata`.
+`get_screenshot` allowed **only** for final visual "match/no-match" check. Extracting values from it is an antipattern: no exact tokens (colors/sizes rounded visually), no hierarchy or override chains, no auto-layout params. All values come from `get_variable_defs` and `get_metadata`.
 
-## Алгоритм
+## Algorithm
 
-1. **Получить выделение.** Попросить пользователя выделить нужный фрейм/компонент в Figma desktop
-   (или дать ссылку с node-id). Без выделения MCP не имеет контекста.
+1. **Get selection.** Ask user to select the frame/component in Figma desktop (or give a link with node-id). Without selection MCP has no context.
+2. **Structure map.** `get_metadata` → node tree (id, name, type, position, size). Identify root screen frame, child components, text nodes. Nodes with meaningful names (`card/surface`, not `Rectangle 42`) are component candidates.
+3. **Reuse.** `get_code_connect_map` on selection → if node already links to a codebase component, **use the existing component**, do not regenerate. For library elements — `search_design_system`.
+4. **Tokens.** `get_variable_defs` → all selection variables/styles. Structure into `tokens.json` per W3C Design Token Format (see `snippets/tokens.json`). If variables have Modes (light/dark) — record value per mode.
+5. **Code draft.** `get_code` → read as reference for structure and token wiring, do NOT copy verbatim. Final code is written by the derived skill per project conventions (`figma-to-vue`/`figma-to-flutter`).
+6. **Verify.** After generation — one `get_screenshot` for visual comparison. Fix discrepancies via data (steps 2–4), not by eyeballing.
 
-2. **Карта структуры.** `get_metadata` → дерево узлов (id, name, type, position, size). Определить
-   корневой фрейм экрана, дочерние компоненты, текстовые узлы. Узлы с осмысленными именами
-   (`card/surface`, а не `Rectangle 42`) — кандидаты в компоненты.
+## tokens.json format
 
-3. **Переиспользование.** `get_code_connect_map` по выделению → если узел уже связан с компонентом
-   кодовой базы, **использовать существующий компонент**, не генерировать заново. Для библиотечных
-   элементов — `search_design_system`.
+W3C Design Token Format — single intermediate artifact for all platforms. Full example with color/spacing/typography/border-radius and multi-mode in `snippets/tokens.json`. Token name keeps Figma semantics (`figma:variable/Primary/Blue-500` in `$description`).
 
-4. **Токены.** `get_variable_defs` → все переменные/стили выделения. Структурировать в `tokens.json`
-   по W3C Design Token Format (см. `snippets/tokens.json`). Если переменные имеют Modes (light/dark) —
-   зафиксировать значение по каждому моду.
+## Design-system audit
 
-5. **Черновик кода.** `get_code` → читать как референс структуры и связей токенов, НЕ копировать
-   дословно. Финальный код пишет производный скилл под конвенции проекта (`figma-to-vue`/`figma-to-flutter`).
+Before developing against an unfamiliar file — run the readiness checklist (`snippets/design-system-checklist.md`): all colors in Variables, typography only via styles, spacing multiple of base grid, interactive components have all Variants, dark mode as Variable Mode, etc.
 
-6. **Сверка.** После генерации — один `get_screenshot` для визуального сравнения. Расхождения чинить
-   через данные (шаги 2–4), не подгонкой «на глаз».
+## Figma antipatterns and agent actions
 
-## Формат tokens.json
+- **Color without variable** (`fills` with raw `color`, not bound to a Variable): create token `color/unnamed/hex-XXXXXX`, flag in audit "needs naming by designer".
+- **Fixed sizes instead of Auto-layout** (`layoutMode: NONE`): record as constant, flag "not responsive", do NOT generate flex/Expanded.
+- **Absolute positioning of children**: read x/y/w/h, map to Stack/absolute (see derived skills).
+- **Image fills** (`type: IMAGE`): do NOT download for analysis; use ref as placeholder-asset.
 
-W3C Design Token Format — единый промежуточный артефакт для всех платформ. Полный пример с color/
-spacing/typography/border-radius и multi-mode — в `snippets/tokens.json`. Имя токена сохраняет
-семантику из Figma (`figma:variable/Primary/Blue-500` в `$description`).
+## Outputs
 
-## Аудит design-system
+- `docs/design/tokens.json` — extracted tokens (W3C).
+- `docs/design/figma-audit.md` — design-system audit report (on file review).
 
-Перед разработкой по незнакомому файлу — пройти чеклист готовности design-system
-(`snippets/design-system-checklist.md`): все цвета в Variables, типографика только стилями, spacing
-кратен базовой сетке, интерактивные компоненты имеют все Variants, dark mode как Variable Mode и т.д.
+## Quality checklist
 
-## Типичные антипаттерны Figma и действия агента
+- [ ] Structure via `get_metadata`, not guessed from picture.
+- [ ] Tokens via `get_variable_defs`, not from `get_screenshot`.
+- [ ] `get_code_connect_map` checked — existing components reused.
+- [ ] `get_screenshot` used only for final verification.
+- [ ] `tokens.json` valid per W3C format, token names semantic.
+- [ ] Code mapping delegated to `figma-to-vue` / `figma-to-flutter`.
 
-- **Цвет без переменной** (`fills` с сырым `color`, не привязанным к Variable): создать токен
-  `color/unnamed/hex-XXXXXX`, пометить в аудите «требует именования дизайнером».
-- **Фиксированные размеры вместо Auto-layout** (`layoutMode: NONE`): зафиксировать как константу,
-  пометить «not responsive», НЕ генерировать flex/Expanded.
-- **Абсолютное позиционирование детей**: читать x/y/w/h, маппить в Stack/absolute (см. производные скиллы).
-- **Image fills** (`type: IMAGE`): НЕ скачивать для анализа; использовать ref как placeholder-asset.
+## Links
 
-## Выходные данные
-
-- `docs/design/tokens.json` — извлечённые токены (W3C).
-- `docs/design/figma-audit.md` — отчёт аудита design-system (при ревизии файла).
-
-## Чеклист качества
-
-- [ ] Структура получена через `get_metadata`, не угадана по картинке.
-- [ ] Токены извлечены через `get_variable_defs`, не из `get_screenshot`.
-- [ ] Проверён `get_code_connect_map` — существующие компоненты переиспользованы.
-- [ ] `get_screenshot` использован только для финальной сверки.
-- [ ] `tokens.json` валиден по W3C-формату, имена токенов семантичны.
-- [ ] Маппинг в код делегирован `figma-to-vue` / `figma-to-flutter`.
-
-## Ссылки
-
-- snippets/tokens.json — W3C-пример с multi-mode.
-- snippets/design-system-checklist.md — чеклист готовности design-system.
+- snippets/tokens.json — W3C example with multi-mode.
+- snippets/design-system-checklist.md — design-system readiness checklist.
 - [Figma Dev Mode MCP — Tools and prompts](https://developers.figma.com/docs/figma-mcp-server/tools-and-prompts/)
 - [Guide to the Figma MCP server](https://help.figma.com/hc/en-us/articles/32132100833559-Guide-to-the-Figma-MCP-server)
 - [W3C Design Tokens Format](https://design-tokens.github.io/community-group/format/)
-- Связанные скиллы: `figma-to-vue`, `figma-to-flutter`.
+- Related skills: `figma-to-vue`, `figma-to-flutter`.
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: 81030b43e4c2156f6fd2163d5ea679e8add5c45a7bfb1b8d70b7c207b2e867a2 -->

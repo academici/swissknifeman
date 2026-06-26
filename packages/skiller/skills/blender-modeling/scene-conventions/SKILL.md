@@ -2,7 +2,7 @@
 name: scene-conventions
 bucket: blender-modeling
 version: 0.1.0
-description: "Соглашения сцены параметрической модели: префиксы объектов (MESH_/CRV_/LGT_/MTL_), иерархия parenting по физической принадлежности, коллекции, назначение материала из поля color конфига. Активировать при создании объектов/материалов в сцене, настройке parenting подчастей составной детали, вопросах про имена объектов и серый материал."
+description: "Parametric-model scene conventions: object prefixes (MESH_/CRV_/LGT_/MTL_), parenting hierarchy by physical belonging, collections, material assignment from config color field. Activate when creating scene objects/materials, setting parenting of subparts, questions about object names and grey material."
 risk: write
 persona: oss-dev
 tags: [blender, cad, parametric, naming, scene, materials, parenting, bpy]
@@ -14,64 +14,61 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-# Именование объектов и сцена
+# Object naming & scene
 
-## Префиксы объектов
+## Object prefixes
 
-| Префикс | Тип |
-|---------|-----|
-| `MESH_` | Меши |
-| `CRV_` | Кривые |
-| `LGT_` | Свет |
-| `MTL_` | Материалы |
+| Prefix | Type |
+|--------|------|
+| `MESH_` | Meshes |
+| `CRV_` | Curves |
+| `LGT_` | Lights |
+| `MTL_` | Materials |
 
-Коллекция: константа `COLLECTION_NAME` в `config.py` (например `"Model"`).
+- Collection: constant `COLLECTION_NAME` in `config.py` (e.g. `"Model"`).
 
-## Иерархия объектов (parenting)
+## Parenting hierarchy
 
-Составная деталь строится по схеме **Вариант A**: основная оболочка — родитель, подчасти — дочерние.
+Composite part → **Variant A**: main shell = parent, subparts = children.
 
 ```
-MESH_Model_Body                    ← родитель
-└── MESH_Model_Body_ConnRing       ← дочерний
+MESH_Model_Body                    ← parent
+└── MESH_Model_Body_ConnRing       ← child
 
-MESH_Model_Nose                    ← родитель
-└── MESH_Model_Nose_ConnRing       ← дочерний
-    ├── MESH_Model_Nose_Pin_1      ← дочерний к кольцу (не к носу!)
+MESH_Model_Nose                    ← parent
+└── MESH_Model_Nose_ConnRing       ← child
+    ├── MESH_Model_Nose_Pin_1      ← child of ring (not nose!)
     ├── MESH_Model_Nose_Pin_3
     └── MESH_Model_Nose_Pin_5
 ```
 
-Принцип: **объект привязывается к тому родителю, без которого он не может существовать физически.** Штыри — часть соединительного кольца, поэтому дочерние к кольцу, а не к носу.
+- Object parents to the one it cannot exist without physically. Pins belong to the connector ring → children of ring, not nose.
 
-Установка через `set_parent(child, parent)` из `{model}.common`:
+Set via `set_parent(child, parent)` from `{model}.common`:
 
 ```python
 from {model}.common import set_parent
 set_parent(ring, body)
-set_parent(pin, ring)   # не set_parent(pin, nose)!
+set_parent(pin, ring)   # not set_parent(pin, nose)!
 ```
 
-**Правила:**
-- `set_parent` вызывается **после всех boolean-операций** над дочерним объектом
-- Каждая подчасть, становящаяся дочерним объектом, строится в **отдельной `_build_*` функции** — не inline в оркестраторе
-- Оркестратор `build_*` только вызывает `_build_*` / `_cut_*` и выставляет parenting перед `return`
+- Call `set_parent` **after all boolean ops** on the child object.
+- Each subpart that becomes a child built in a **separate `_build_*` function** — not inline in orchestrator.
+- Orchestrator `build_*` only calls `_build_*` / `_cut_*` and sets parenting before `return`.
 
-**Зачем:** глазик в Outliner скрывает всю деталь вместе с подчастями; иерархия отражает физическую принадлежность деталей.
+## Materials from config
 
-## Материалы: назначение через конфиг
-
-Каждая деталь получает материал из поля `color: Color` своего `*Config`. Паттерн создания и назначения — через `common.py` (функция `apply_material` должна быть реализована в `common.py` модели):
+Each part gets material from `color: Color` field of its `*Config`. Create/assign via `common.py` (`apply_material` must be implemented in model's `common.py`):
 
 ```python
 from {model}.common import apply_material
 
-# В build_*() после revolve_profile:
+# In build_*() after revolve_profile:
 obj = revolve_profile("MESH_Model_Part", pts, col, seg)
 apply_material(obj, "MTL_Model_Part", cfg.color)
 ```
 
-Если `apply_material` ещё не реализована — добавить в `common.py`:
+If `apply_material` not yet implemented — add to `common.py`:
 ```python
 def apply_material(obj, name: str, color):
     import bpy
@@ -85,21 +82,24 @@ def apply_material(obj, name: str, color):
         obj.data.materials.append(mat)
 ```
 
-**Правила:**
-- Имя материала: `MTL_` + имя объекта без префикса `MESH_` (например `MTL_Model_Body`)
-- Цвет — `(R, G, B, A)` 0..1, хранится в `*Config.color`
-- Один материал на один объект; подчасти (`ConnRing`, `Pin`) получают тот же материал что родитель
-- Объект без материала в режиме `MATERIAL` выглядит серым — всегда назначать явно
-- В Blender 5.0: `mat.surface_render_method = 'DITHERED'` (не `blend_method`) → скилл `blender/version-gotchas`
+- Material name: `MTL_` + object name without `MESH_` prefix (e.g. `MTL_Model_Body`).
+- Color: `(R, G, B, A)` 0..1, stored in `*Config.color`.
+- One material per object; subparts (`ConnRing`, `Pin`) get same material as parent.
+- Object with no material renders grey in `MATERIAL` mode — always assign explicitly.
+- Blender 5.0: `mat.surface_render_method = 'DITHERED'` (not `blend_method`) → skill `blender/version-gotchas`.
 
-## Код Python
+## Python code
 
-- Пакет: `models/{name}/`, точка входа `{name}.py`, функция `main()`
-- Деталь: один файл в `parts/`, экспорт `build_*`
-- Импорты внутри пакета относительные: `from .config import ...`
+- Package: `models/{name}/`, entry `{name}.py`, function `main()`.
+- Part: one file in `parts/`, export `build_*`.
+- Intra-package imports relative: `from .config import ...`.
 
-## Связанные скиллы
+## Related skills
 
-- `blender-modeling/config-conventions` — именование переменных и конфигов, из чьего поля `color` берётся материал.
-- `blender-modeling/parametric-config` — построение меша (`revolve_profile`), к выходу которого применяются эти имена и материалы.
-- `blender/version-gotchas` — `surface_render_method` вместо `blend_method` в Blender 5.0.
+- `blender-modeling/config-conventions` — variable/config naming, which `color` field feeds the material.
+- `blender-modeling/parametric-config` — mesh build (`revolve_profile`), output these names/materials apply to.
+- `blender/version-gotchas` — `surface_render_method` instead of `blend_method` in Blender 5.0.
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: b6952f75b2d573ead06bbd2b5e23173fe8f556355dbd46f059d2a50cff4e6b06 -->

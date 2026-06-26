@@ -2,7 +2,7 @@
 name: docker-services
 bucket: devops
 version: 0.1.0
-description: "Полный сервисный стек Laravel из одного образа: app (fpm-nginx), queue, scheduler, reverb, опционально docs; healthcheck /up и depends_on service_healthy"
+description: "Full Laravel service stack from one image: app (fpm-nginx), queue, scheduler, reverb, optional docs; healthcheck /up and depends_on service_healthy"
 risk: write
 persona: operator
 tags: ["docker", "devops", "compose", "laravel", "queue", "websocket"]
@@ -14,52 +14,49 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-## Контекст
+Full Laravel stack from **one image** (`docker-php`, serversideup fpm-nginx pattern): each process is its own container, differing only by `command`.
 
-Полный сервисный стек Laravel из **одного образа** (`docker-php`, паттерн serversideup fpm-nginx): каждый процесс — отдельный контейнер, различается только `command`.
-
-| Сервис | Команда | Порт |
+| Service | Command | Port |
 |---|---|---|
-| app | дефолт образа (FPM + Nginx) | 8080 |
+| app | image default (FPM + Nginx) | 8080 |
 | queue | `php artisan queue:work --sleep=3 --tries=3 --max-time=3600` | — |
 | scheduler | `php artisan schedule:work` | — |
 | reverb | `php artisan reverb:start --host=0.0.0.0 --port=8000` (websocket) | 8000 |
-| docs (опц.) | init-контейнер сборки (`restart: "no"`) + nginx:alpine раздаёт статику | 4173 |
+| docs (opt.) | build init-container (`restart: "no"`) + nginx:alpine serves static | 4173 |
 
-Связность стека:
+Stack wiring:
+- **app healthcheck** via Laravel endpoint: `curl -fsS http://127.0.0.1:8080/up` with `start_period: 40s`.
+- **Start order** via `depends_on: { pgsql: { condition: service_healthy } }`; workers additionally wait for healthy app. docs-nginx waits init-container via `condition: service_completed_successfully`.
+- **Shared env** — YAML anchor `&app_env` on app; other services use `environment: *app_env` (extend with `<<: *app_env`).
 
-- **healthcheck app** по Laravel-эндпоинту: `curl -fsS http://127.0.0.1:8080/up` с `start_period: 40s`.
-- **Порядок старта** через `depends_on: { pgsql: { condition: service_healthy } }`; воркеры дополнительно ждут healthy app. Docs-nginx ждёт init-контейнер через `condition: service_completed_successfully`.
-- **Общее окружение** — YAML-якорь `&app_env` на app, остальные сервисы — `environment: *app_env` (расширение — `<<: *app_env`).
+## Algorithm
+1. Build app service: image from `docker-php`, healthcheck `/up`, `stop_signal: SIGTERM`, declare anchor `&app_env`.
+2. Add queue/scheduler/reverb per `services.yml`: same build/image, own `command`, `environment: *app_env`, `depends_on` on healthy app+pgsql(+redis).
+3. For reverb expose `${REVERB_SERVER_PORT:-8000}` outward (websocket clients connect from host).
+4. Optional docs: init-container builds static (`restart: "no"`), nginx-alpine serves it read-only.
+5. For prod add worker healthchecks (`pgrep -af 'artisan queue:work'`) — see `healthchecks.yml`.
+6. Manage via make targets `logs:core`, `*-restart`, `workers:restart` (skill `makefile`).
 
-## Алгоритм
-
-1. Собрать app-сервис: образ из `docker-php`, healthcheck `/up`, `stop_signal: SIGTERM`, объявить якорь `&app_env`.
-2. Добавить queue/scheduler/reverb по `services.yml`: тот же build/image, свой `command`, `environment: *app_env`, `depends_on` на healthy app+pgsql(+redis).
-3. Для reverb пробросить `${REVERB_SERVER_PORT:-8000}` наружу (websocket-клиенты ходят с хоста).
-4. Опционально docs: init-контейнер собирает статику (`restart: "no"`), nginx-alpine раздаёт её read-only.
-5. Для prod добавить healthcheck'и воркерам (`pgrep -af 'artisan queue:work'`) — см. `healthchecks.yml`.
-6. Управление — make-цели `logs:core`, `*-restart`, `workers:restart` (скилл `makefile`).
-
-## Когда какой сниппет открывать
-
-| Ситуация | Файл |
+## Which snippet
+| Situation | File |
 |---|---|
-| Поднять стек целиком (app+queue+scheduler+reverb+docs) | `snippets/services.yml` |
-| Паттерны healthcheck и depends_on (app, воркеры, init-контейнер) | `snippets/healthchecks.yml` |
+| Bring up whole stack (app+queue+scheduler+reverb+docs) | `snippets/services.yml` |
+| healthcheck and depends_on patterns (app, workers, init-container) | `snippets/healthchecks.yml` |
 
-## Чеклист качества
+## Quality checklist
+- [ ] one image for all PHP services, difference only in `command`
+- [ ] app: healthcheck on `/up`, `start_period` sufficient for warmup
+- [ ] workers depend on healthy app/pgsql/redis, not just "started"
+- [ ] env via anchor `&app_env`, no duplicated blocks
+- [ ] `stop_signal: SIGTERM` on app/reverb — graceful shutdown
+- [ ] init-containers: `restart: "no"` + `service_completed_successfully` on consumers
+- [ ] queue:work with `--max-time` — worker periodically restarts and picks up new code
 
-- [ ] один образ для всех PHP-сервисов, различие только в `command`
-- [ ] app: healthcheck на `/up`, `start_period` достаточен для прогрева
-- [ ] воркеры зависят от healthy app/pgsql/redis, не просто от «запущен»
-- [ ] окружение через якорь `&app_env`, без дублирования блоков
-- [ ] `stop_signal: SIGTERM` у app/reverb — корректное завершение
-- [ ] init-контейнеры: `restart: "no"` + `service_completed_successfully` у потребителей
-- [ ] queue:work с `--max-time` — воркер периодически перезапускается и подхватывает новый код
+## Links
+- https://docs.docker.com/reference/compose-file/services/#depends_on — depends_on conditions
+- https://laravel.com/docs/queues#running-the-queue-worker, https://laravel.com/docs/reverb — workers and Reverb
+- Related skills: `docker-php` (image), `docker-dev-prod` (dev/prod layout), `docker-postgres` (healthy pgsql), `makefile` (stack management), `php/health-checks` (`/up` content, liveness/readiness), `php/laravel-broadcasting` (reverb service, websockets)
 
-## Ссылки
+<!-- ru-source-sha256: PENDING -->
 
-- https://docs.docker.com/reference/compose-file/services/#depends_on — условия depends_on
-- https://laravel.com/docs/queues#running-the-queue-worker, https://laravel.com/docs/reverb — воркеры и Reverb
-- Смежные скиллы: `docker-php` (образ), `docker-dev-prod` (dev/prod раскладка), `docker-postgres` (healthy pgsql), `makefile` (управление стеком), `php/health-checks` (содержимое `/up`, liveness/readiness), `php/laravel-broadcasting` (сервис reverb, websockets)
+<!-- ru-source-sha256: 095820533155cf172e0443d95088ed389239a43fe54f7f7b3d951c7ca759f3d1 -->

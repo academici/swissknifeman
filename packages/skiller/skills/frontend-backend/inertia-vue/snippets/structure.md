@@ -57,4 +57,4 @@ resources/js/
 
 - Доменные подпапки внутри каждого слоя; общее — `shared/`.
 - `actions/`, `routes/`, `wayfinder/` генерируются `php artisan wayfinder:generate` / vite-плагином — любые ручные правки будут перезаписаны.
-- Доменные компоненты не импортируют `@/wayfinder/routes/*` напрямую — через composables/actions (см. скилл `frontend/wayfinder`).
+- Доменные компоненты не импортируют `@/wayfinder/routes/*` напрямую — через composables/actions (см. скилл `frontend-wayfinder/wayfinder`).

@@ -58,4 +58,4 @@ sha256: ""
 
 - https://laravel.com/docs/vite
 - https://filamentphp.com/docs (раздел про кастомные темы / vite theme)
-- Связанные скиллы: `frontend/vite-module-loader` (базовый конфиг Vite: алиасы, чанки, laravel-vite-plugin), `frontend/wayfinder` (плагин в основной сборке), `frontend/tailwind-conventions` (тема приложения на Tailwind v4), `devops/docker-vite` (Vite dev-сервер в compose, HMR в Docker); версионные гайдлайны Tailwind — Boost-скилл `tailwindcss` (v3/v4)
+- Связанные скиллы: `frontend-vite/vite-module-loader` (базовый конфиг Vite: алиасы, чанки, laravel-vite-plugin), `frontend-wayfinder/wayfinder` (плагин в основной сборке), `frontend-tailwind/tailwind-conventions` (тема приложения на Tailwind v4), `devops/docker-vite` (Vite dev-сервер в compose, HMR в Docker); версионные гайдлайны Tailwind — Boost-скилл `tailwindcss` (v3/v4)

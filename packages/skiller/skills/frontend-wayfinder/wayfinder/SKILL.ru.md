@@ -60,4 +60,4 @@ Wayfinder автогенерирует типизированные TS-функ�
 
 - https://github.com/laravel/wayfinder
 - https://laravel.com/docs/wayfinder (актуальную версию проверить)
-- Связанные скиллы: `frontend/inertia-vue` (слои resources/js, actions-слой), `frontend/vitest` (exclude автогена из coverage), `frontend/eslint-flat-config` (где живёт `no-restricted-imports`-граница), `frontend/backend-type-sync` (парная генерация: роуты ≠ типы DTO/enum)
+- Связанные скиллы: `frontend-backend/inertia-vue` (слои resources/js, actions-слой), `frontend-vue/vitest` (exclude автогена из coverage), `frontend-linting/eslint-flat-config` (где живёт `no-restricted-imports`-граница), `frontend-backend/backend-type-sync` (парная генерация: роуты ≠ типы DTO/enum)

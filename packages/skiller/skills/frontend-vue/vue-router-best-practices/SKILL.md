@@ -32,8 +32,8 @@ sha256: ""
   «как лениво грузить компонент страницы», «как восстановить позицию скролла», «как типизировать маршруты».
 
 **ГРАНИЦЫ.** Здесь — только маршрутизация. Синтаксис `<script setup>`, `ref`/`computed`/`watch` — в
-`frontend/vue`. Архитектура компонентов и where-to-split — в `frontend/vue-best-practices`. Глобальное
-состояние (в т.ч. флаг авторизации, который читает гвард) — в `frontend/pinia-stores`. Гвард только
+`frontend-vue/vue`. Архитектура компонентов и where-to-split — в `frontend-vue/vue-best-practices`. Глобальное
+состояние (в т.ч. флаг авторизации, который читает гвард) — в `frontend-vue/pinia-stores`. Гвард только
 **спрашивает** стор, но не реализует логику стора.
 
 ## Алгоритм
@@ -131,9 +131,9 @@ sha256: ""
 
 ## Ссылки
 
-- `frontend/vue` — справочник API Composition API (`<script setup>`, `ref`/`computed`/`watch`): база, грузить вместе
-- `frontend/vue-composition-api` — проектные конвенции composables (где живёт логика загрузки данных по `route.params`)
-- `frontend/pinia-stores` — глобальное состояние, которое читает гвард (флаг авторизации, текущий пользователь, роли)
-- `frontend/vue-best-practices` — архитектура view-компонентов и разбиение на части
+- `frontend-vue/vue` — справочник API Composition API (`<script setup>`, `ref`/`computed`/`watch`): база, грузить вместе
+- `frontend-vue/vue-composition-api` — проектные конвенции composables (где живёт логика загрузки данных по `route.params`)
+- `frontend-vue/pinia-stores` — глобальное состояние, которое читает гвард (флаг авторизации, текущий пользователь, роли)
+- `frontend-vue/vue-best-practices` — архитектура view-компонентов и разбиение на части
 - https://router.vuejs.org/guide/advanced/navigation-guards.html · https://router.vuejs.org/guide/advanced/lazy-loading.html · https://router.vuejs.org/guide/advanced/scroll-behavior.html
 - Провенанс импорта (antfu/vuejs-ai) — `upstream.json` (strategy=notify), `SYNC.md`; reference/ — оригинальные gotcha-заметки

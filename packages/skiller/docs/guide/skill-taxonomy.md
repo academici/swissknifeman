@@ -21,7 +21,7 @@
 | Уровень | Что туда | Канал |
 |:--|:--|:--|
 | **general** (кросс-стек) | Применимо к ЛЮБОМу стеку/проекту: дисциплина, токен-экономия, конвенции именования, handoff | CORE — раздаётся всем |
-| **stack-бакет** (`php`/`frontend`/`devops`/…) | Специфика стека/фреймворка: Laravel, Vue, Docker, конкретные пакеты (`php/azguard`, `php/laravel-broadcasting`) | по профилю типа проекта |
+| **stack-бакет** (`php`/`frontend`/`devops`/…) | Специфика стека/фреймворка: Laravel, Vue, Docker, конкретные пакеты (`azguard/azguard`, `laravel-data-layer/laravel-broadcasting`) | по профилю типа проекта |
 | **project-local** (`<project>/.claude/skills/`) | Бизнес-логика конкретного проекта: доменные классы, enum'ы, `App\…`, проектные workflow | не в реестре вообще |
 
 > **Правило general.** `general` входит в **CORE** (раздаётся в КАЖДЫЙ проект и грузится в КАЖДОЙ

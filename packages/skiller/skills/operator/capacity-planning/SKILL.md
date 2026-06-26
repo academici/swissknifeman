@@ -150,10 +150,10 @@ DO NOT:
 
 ## Links
 - `architect/observability-design` — source of metrics/SLO/SLI and error budget that capacity decisions build on (prerequisite)
-- `php/health-checks` — availability monitoring impl (disk/queue/heartbeat), signals for bottleneck analysis
+- `laravel-testing/health-checks` — availability monitoring impl (disk/queue/heartbeat), signals for bottleneck analysis
 - `operator/incident-response` — capacity incidents classified here; pre-event war room takes roles from here
 - `operator/oncall-rotation` — headroom affects page frequency; lack of capacity = on-call burnout
 - `operator/runbook` — scale-up as runbook mitigation relies on autoscaling policy from this skill
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 2056a9bd3d543b60fb49313848d284e0945e31aa2603d49f01fbb5c8f855b815 -->
+<!-- ru-source-sha256: 759e15a6f25d663fa0d2caba26402c6e9a24e2d426c5ad28e0002bae7d8c83ff -->

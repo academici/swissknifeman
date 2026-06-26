@@ -27,8 +27,8 @@ sha256: ""
 
 **Границы (важно, чтобы не лезть в чужой скилл):**
 - **Типы (этот скилл)** — структура данных: поля DTO, значения enum. Артефакт: `resources/js/types/generated.d.ts`, неймспейс `App.*`.
-- **Роуты (`frontend/wayfinder`)** — типобезопасные URL и controller-actions. Артефакт: `resources/js/wayfinder/`. Это **отдельная** генерация (`php artisan wayfinder:generate`) и отдельный пакет (`laravel/wayfinder`). Эти два пакета — пара: wayfinder типизирует «куда ходить», typescript-transformer — «какие данные приходят/уходят». Не пытайся получить типы DTO из wayfinder и наоборот.
-- **PHP-сторона enum (`php/enum-attributes`)** — как устроен сам enum: backed-значения, атрибуты `#[Label]`/`#[Priority]`, методы. Этот скилл только добавляет `#[TypeScript]` поверх готового enum и не диктует его внутреннее устройство.
+- **Роуты (`frontend-wayfinder/wayfinder`)** — типобезопасные URL и controller-actions. Артефакт: `resources/js/wayfinder/`. Это **отдельная** генерация (`php artisan wayfinder:generate`) и отдельный пакет (`laravel/wayfinder`). Эти два пакета — пара: wayfinder типизирует «куда ходить», typescript-transformer — «какие данные приходят/уходят». Не пытайся получить типы DTO из wayfinder и наоборот.
+- **PHP-сторона enum (`laravel-architecture/enum-attributes`)** — как устроен сам enum: backed-значения, атрибуты `#[Label]`/`#[Priority]`, методы. Этот скилл только добавляет `#[TypeScript]` поверх готового enum и не диктует его внутреннее устройство.
 
 **Laravel Boost** даёт версионные основы Spatie-Data/transformer как upstream-скиллы; здесь — проектные конвенции type-sync, git-hook и CI-проверка. Пакет: https://github.com/laravel/boost.
 
@@ -71,7 +71,7 @@ sha256: ""
    - **git pre-commit hook** (Husky или нативный) — регенерирует и падает, если `generated.d.ts` изменился, но не закоммичен (см. секцию «Git-hook»);
    - **CI** — отдельный шаг `php artisan typescript:transform` + `git diff --exit-code resources/js/types/generated.d.ts`: PR краснеет, если автор забыл перегенерировать.
 
-7. **Коммить сгенерированный файл.** `generated.d.ts` **коммитится в репозиторий** (не в `.gitignore`): он нужен для `tsc`/IDE/CI без запуска PHP, а diff в ревью показывает изменение контракта backend↔frontend. Vendor-артефакты wayfinder (`resources/js/wayfinder/`) — по той же логике коммить, но это зона скилла `frontend/wayfinder`.
+7. **Коммить сгенерированный файл.** `generated.d.ts` **коммитится в репозиторий** (не в `.gitignore`): он нужен для `tsc`/IDE/CI без запуска PHP, а diff в ревью показывает изменение контракта backend↔frontend. Vendor-артефакты wayfinder (`resources/js/wayfinder/`) — по той же логике коммить, но это зона скилла `frontend-wayfinder/wayfinder`.
 
 ## Аннотируемые цели
 
@@ -112,7 +112,7 @@ git diff --exit-code -- resources/js/types/generated.d.ts \
 - [ ] Фронт использует `App.Enums.*` / `App.Data.*`, типы DTO **не** продублированы руками
 - [ ] git pre-commit hook ИЛИ CI-шаг ловит устаревший `generated.d.ts` (`git diff --exit-code`)
 - [ ] `generated.d.ts` закоммичен в репозиторий (не в `.gitignore`)
-- [ ] Не перепутаны зоны: роуты — `frontend/wayfinder`, устройство enum — `php/enum-attributes`
+- [ ] Не перепутаны зоны: роуты — `frontend-wayfinder/wayfinder`, устройство enum — `laravel-architecture/enum-attributes`
 
 ## Ссылки
 
@@ -121,4 +121,4 @@ git diff --exit-code -- resources/js/types/generated.d.ts \
 - snippets/generated-type-usage.vue — использование `App.Enums.*` / `App.Data.*` в Vue/TS
 - https://spatie.be/docs/typescript-transformer
 - https://spatie.be/docs/laravel-data
-- Связанные скиллы: `frontend/wayfinder` (роуты), `php/enum-attributes` (устройство enum), `php/laravel-data` (устройство Spatie-Data DTO, которые аннотируем `#[TypeScript]`), `frontend/inertia-vue` (слой types/), `frontend/vitest` (exclude `generated.d.ts` из coverage)
+- Связанные скиллы: `frontend-wayfinder/wayfinder` (роуты), `laravel-architecture/enum-attributes` (устройство enum), `laravel-data-layer/laravel-data` (устройство Spatie-Data DTO, которые аннотируем `#[TypeScript]`), `frontend-backend/inertia-vue` (слой types/), `frontend-vue/vitest` (exclude `generated.d.ts` из coverage)

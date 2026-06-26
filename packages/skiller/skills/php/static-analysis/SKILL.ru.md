@@ -94,7 +94,7 @@ Rector автоматически обновляет код до новых ве
 - Скилл `code-style-spatie` (bucket php) — стиль кода, конфликт `final_class`
 - Скилл `laravel-testing` (bucket php) — тесты и coverage gate в конце конвейера
 - Скилл `php/php-upgrade-checklist` — тот же rector/phpstan-конвейер при апгрейде версии PHP
-- Скилл `php/laravel-security-audit` — аудит «острых граней» поверх сигналов статанализа (requires этот скилл)
+- Скилл `laravel-auth/laravel-security-audit` — аудит «острых граней» поверх сигналов статанализа (requires этот скилл)
 - Скилл `php/pao` — компактный JSON-вывод PHPStan/Rector/тестов для AI-агента
 - Скилл `php/named-arguments` — стиль вызовов, который проверяет/правит конвейер
 - https://laravel.com/docs/pint, https://phpstan.org, https://getrector.com

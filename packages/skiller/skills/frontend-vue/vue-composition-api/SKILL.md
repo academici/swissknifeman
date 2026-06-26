@@ -47,10 +47,10 @@ export function useFetch(url) {
 
 ## Related skills
 - `vue` (frontend) — API reference (base, load together); `vue-best-practices` (frontend) — workflow + architecture.
-- `frontend/pinia-stores` — global state when composable `ref` is no longer enough.
-- `frontend/inertia-vue` — where `composables/` live in project layers.
-- `frontend/dark-mode` — real composable example; `frontend/reka-ui-cva`, `frontend/vue-dynamic-icons` — `<script setup>` components.
+- `frontend-vue/pinia-stores` — global state when composable `ref` is no longer enough.
+- `frontend-backend/inertia-vue` — where `composables/` live in project layers.
+- `frontend-tailwind/dark-mode` — real composable example; `frontend-reka/reka-ui-cva`, `frontend-vue/vue-dynamic-icons` — `<script setup>` components.
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: b52a359f3b0ce95ff64c1fdbe83661b1d907dc478331d30ceaf3cbb421301b98 -->
+<!-- ru-source-sha256: cc745be18a203110e3bb163489de1a0f6e7befece5878e096f89306bd470e2a4 -->

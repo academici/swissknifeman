@@ -55,8 +55,8 @@ Stack wiring:
 ## Links
 - https://docs.docker.com/reference/compose-file/services/#depends_on — depends_on conditions
 - https://laravel.com/docs/queues#running-the-queue-worker, https://laravel.com/docs/reverb — workers and Reverb
-- Related skills: `docker-php` (image), `docker-dev-prod` (dev/prod layout), `docker-postgres` (healthy pgsql), `makefile` (stack management), `php/health-checks` (`/up` content, liveness/readiness), `php/laravel-broadcasting` (reverb service, websockets)
+- Related skills: `docker-php` (image), `docker-dev-prod` (dev/prod layout), `docker-postgres` (healthy pgsql), `makefile` (stack management), `laravel-testing/health-checks` (`/up` content, liveness/readiness), `laravel-data-layer/laravel-broadcasting` (reverb service, websockets)
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 095820533155cf172e0443d95088ed389239a43fe54f7f7b3d951c7ca759f3d1 -->
+<!-- ru-source-sha256: dc2386642d9adeb0ca39ec01c5505cf1bb6e5bfd8050662dcbc20312d9a8caa9 -->

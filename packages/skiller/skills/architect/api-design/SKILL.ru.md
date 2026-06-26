@@ -177,6 +177,6 @@ API = контракт. Контракт сложно изменить посл�
 - `architect/data-schema` — сущности и связи, на которых строятся ресурсы API (предусловие).
 - `architect/security-design` — auth-схема под тип клиента, IDOR, rate limiting (auth-раздел тут — лишь верхний слой).
 - `architect/architecture` — общий контекст, где API — один из контейнеров.
-- `frontend/wayfinder` — типобезопасные роуты/actions на фронте для Laravel-реализации этого контракта.
-- `php/laravel-data` — DTO-форма запроса/ответа при реализации контракта на Laravel.
+- `frontend-wayfinder/wayfinder` — типобезопасные роуты/actions на фронте для Laravel-реализации этого контракта.
+- `laravel-data-layer/laravel-data` — DTO-форма запроса/ответа при реализации контракта на Laravel.
 - `architect/package-contribution-protocol` — эволюция контракта общего пакета: SemVer, «это breaking?», migration guide, гейт против раздувания.

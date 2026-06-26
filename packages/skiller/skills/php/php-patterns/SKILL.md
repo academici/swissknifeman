@@ -57,13 +57,13 @@ Patterns **combine**, not compete: DTO may hold VO fields; Pipeline stage takes/
 **Value Object** (`snippets/value-object.php`)
 - Use when: primitive has rules (email, phone, money, date range, percent) AND those rules/operations occur more than once.
 - Marks: `final readonly`; invariant in constructor (throws on invalid input); value equality (`equals`); domain behavior (`Money::add`, `Email::domain`).
-- Anti-patterns: **anemic VO** — wrapper without invariant/behavior (then just `string`, no VO); setters/mutators (VO is immutable — operation returns new instance); validation *outside* VO while VO exists (invariant MUST live IN constructor); `-VO`/`-Object` name suffix (name = domain noun, see `php/naming-conventions`).
+- Anti-patterns: **anemic VO** — wrapper without invariant/behavior (then just `string`, no VO); setters/mutators (VO is immutable — operation returns new instance); validation *outside* VO while VO exists (invariant MUST live IN constructor); `-VO`/`-Object` name suffix (name = domain noun, see `general/naming-conventions`).
 
 **DTO** (`snippets/dto.php`)
 - Use when: a set of fields passes between layers (controller→Action→repository) and you want a typed contract instead of an associative array; sync-operation result → delta-DTO.
 - Marks: `final readonly`; promoted properties; **no methods with logic**; no deps on `Request`/Eloquent/DB; created via named arguments (`php/named-arguments`).
 - Anti-patterns: **God-DTO** — DTO grows methods (`save()`, `calculate()`), becomes a service (logic → Action/Service, DTO stays data); mixing with VO — field with invariant → make it a VO, DTO carries it; DTO for its own sake where an in-method array suffices.
-- **Package boundary:** need validation-from-request, casts, `DataCollection`, `#[TypeScript]` → `spatie/laravel-data` (`php/laravel-data`), not a bare DTO. Bare = when package dep is undesirable (domain core, library code) or structure is purely internal.
+- **Package boundary:** need validation-from-request, casts, `DataCollection`, `#[TypeScript]` → `spatie/laravel-data` (`laravel-data-layer/laravel-data`), not a bare DTO. Bare = when package dep is undesirable (domain core, library code) or structure is purely internal.
 
 **Pipeline** (`snippets/pipeline.php`)
 - Use when: processing splits into 3+ independent stages (normalize → enrich → compute → check) you want to test and reorder separately.
@@ -78,7 +78,7 @@ Patterns **combine**, not compete: DTO may hold VO fields; Pipeline stage takes/
 ### Step 4 — place & name correctly
 
 - Tree placement → `php/laravel-structure`.
-- Names (VO = domain noun, no suffix; DTO = `Data`/`Form`) → `php/naming-conventions`.
+- Names (VO = domain noun, no suffix; DTO = `Data`/`Form`) → `general/naming-conventions`.
 - Pipeline/Specification assembly via DI → `php/dependency-injection`.
 - Construction (concrete VO/DTO constructors) via named args → `php/named-arguments`.
 - NB: named arg = concrete signature only; polymorphic call via interface (`handle`/`isSatisfiedBy`) → positional only.
@@ -97,23 +97,23 @@ Patterns **combine**, not compete: DTO may hold VO fields; Pipeline stage takes/
 - [ ] Before introducing a pattern, verified it removes duplication/protects an invariant, not added "for the future" (anti-bloat).
 - [ ] **VO** has invariant in constructor + behavior; not anemic wrapper; immutable (`final readonly`, no setters); value equality.
 - [ ] **DTO** has no business logic, no deps on `Request`/Eloquent/DB; `final readonly`, promoted properties; not a God-object.
-- [ ] "Bare DTO vs `spatie/laravel-data`" choice is deliberate: need casts/validation-from-request/`#[TypeScript]` → package (`php/laravel-data`), else bare.
+- [ ] "Bare DTO vs `spatie/laravel-data`" choice is deliberate: need casts/validation-from-request/`#[TypeScript]` → package (`laravel-data-layer/laravel-data`), else bare.
 - [ ] **Pipeline** not reinvented when `Illuminate\Pipeline` available; steps independent, no side effects on others' data; order = data, not code.
 - [ ] **Specification** used for in-memory rules, not query filtering (filter → scope/`queryForUser`, see `php/repositories`); predicate only, no actions.
 - [ ] Polymorphic interface calls (`PipeStage::handle`, `Specification::isSatisfiedBy`) — positional, not named (impl param name not fixed by interface → `Unknown named parameter`).
 - [ ] Value fields with invariant extracted into VO; DTO only carries them (patterns combine, don't duplicate responsibility).
-- [ ] Domain names: VO without `-VO/-Object` suffix, DTO = `Data`/`Form` (see `php/naming-conventions`); constructors called via named arguments (`php/named-arguments`).
+- [ ] Domain names: VO without `-VO/-Object` suffix, DTO = `Data`/`Form` (see `general/naming-conventions`); constructors called via named arguments (`php/named-arguments`).
 - [ ] Namespaces/names neutral (`App\Domain\...`), no project-specific business terms.
 
 ## Links
 
-- `php/laravel-data` — DTO on `spatie/laravel-data` (typed data layer, validation from request, casts, `#[TypeScript]`); this skill is bare VO/DTO/pipeline/specification without a package and choosing between them.
+- `laravel-data-layer/laravel-data` — DTO on `spatie/laravel-data` (typed data layer, validation from request, casts, `#[TypeScript]`); this skill is bare VO/DTO/pipeline/specification without a package and choosing between them.
 - `php/repositories` — where "specification over DB" goes (model scopes, `queryForUser`) and delta-DTO as a store-repository sync result.
 - `php/named-arguments` — calling VO/DTO constructors via named arguments.
-- `php/naming-conventions` — entity names: VO (domain noun, no suffix), DTO (`Data`/`Form`), and why a `findByX…OrFail` explosion is replaced by criterion/specification.
+- `general/naming-conventions` — entity names: VO (domain noun, no suffix), DTO (`Data`/`Form`), and why a `findByX…OrFail` explosion is replaced by criterion/specification.
 - `php/laravel-structure` — where VO/DTO/Pipeline/Specification sit in the project tree.
 - `php/dependency-injection` — assembling Pipeline/Specification via constructor injection.
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 5e9c3d66b8726cc79de61cf8b32a2f9e3c587dd9f7a589e000588485a1eef6f9 -->
+<!-- ru-source-sha256: 3a744b0259e00f61ccf72b86706abb7fe4e8ab2ac3a9f4cd8c6cbd892ac58775 -->

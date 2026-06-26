@@ -42,11 +42,11 @@ Activate before raising minor/major PHP version (constraint in `composer.json`, 
 
 - `static-analysis` (php) — phpstan/pint/rector config.
 - `laravel-package-compatibility` (php) — multi-version support in a package (adjacent: package, not app upgrade).
-- `php/laravel-testing` — full suite run on new version after bump.
+- `laravel-testing/laravel-testing` — full suite run on new version after bump.
 - `devops/docker-php` — PHP image & extensions update.
 - `php/pao` — compact rector/phpstan/test output when running upgrade from agent.
 - Version-specific PHP/framework rules — Laravel Boost (`boost:update`).
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 1cd839ad08b78db8e56885011f3ceb478708eaf85734da938dcf7b57931e01ba -->
+<!-- ru-source-sha256: 4445b853daddb72282c157e7d22277f54c5f4a4c00530a0992c27691075d689d -->

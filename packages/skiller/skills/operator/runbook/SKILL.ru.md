@@ -189,6 +189,6 @@ docs/03_Dev/Runbooks/
 - `operator/postmortem` — устаревший runbook вскрывается в постмортеме → AI на update (postmortem produces_for runbook)
 - `operator/capacity-planning` — scale-up как опция митигации опирается на autoscaling policy и max replicas
 - `architect/observability-design` — алертинг определяет, на какие алерты нужны runbook'и (runbook_url в payload)
-- `php/health-checks` — /health (live/ready) как источник symptoms и diagnostic steps
-- `php/pennant-development` — feature-flag off как приоритетная (реверсивная) митигация
+- `laravel-testing/health-checks` — /health (live/ready) как источник symptoms и diagnostic steps
+- `laravel-extras/pennant-development` — feature-flag off как приоритетная (реверсивная) митигация
 - `quality/tech-debt-audit` — структурная проблема из post-actions → строка в Tech_Debt_Register

@@ -25,7 +25,7 @@ sha256: ""
 - Пользователь упоминает читаемость, конвенции именования, «как назвать».
 
 Это **политика**, а не паттерн: язык-агностичные правила, на которые опираются стек-специфичные
-скиллы (`php/naming-conventions` и т.п.). Конкретику стека бери там; здесь — принципы.
+скиллы (`general/naming-conventions` и т.п.). Конкретику стека бери там; здесь — принципы.
 
 ## Главный принцип
 
@@ -96,7 +96,7 @@ arr / arr2 / tmp / data / obj          pendingInvoices / recipient / payload
 
 ## Связанные скиллы
 
-- `php/naming-conventions` — Laravel-конкретика (Actions/Repository/DTO/VO/Enum, разбор `findByXOrFail`).
+- `general/naming-conventions` — Laravel-конкретика (Actions/Repository/DTO/VO/Enum, разбор `findByXOrFail`).
 - `general/writing-style` — стиль прозы и сообщений; именование — про идентификаторы кода.
 - `quality/code-review` — где проверка имён встраивается в ревью (P2/P3-находки).
 - `general/anti-drift` — «простота прежде всего»: имя проще = меньше дрейфа.

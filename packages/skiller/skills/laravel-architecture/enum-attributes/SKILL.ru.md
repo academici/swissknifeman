@@ -27,7 +27,7 @@ sha256: ""
 - Нужно отдать enum как TypeScript-тип на фронт (`#[TypeScript]`, `spatie/laravel-typescript-transformer`, `App.Enums.*` union в `.d.ts`).
 - Подключаешь локальный пакет (`enum-concern`) как `repositories: [{type: path, ...}]` с `symlink`.
 
-Не активировать: простые enum без метаданных, где хватает backing-значения; задачи чисто о фронтенд-потреблении типов — там `frontend/backend-type-sync`.
+Не активировать: простые enum без метаданных, где хватает backing-значения; задачи чисто о фронтенд-потреблении типов — там `frontend-backend/backend-type-sync`.
 
 ## Алгоритм
 
@@ -65,7 +65,7 @@ sha256: ""
 3. **Экспорт на фронт**: `spatie/laravel-typescript-transformer`. В `config/typescript-transformer.php` — `DefaultCollector` собирает классы с `#[TypeScript]`, `EnumTransformer` превращает enum в union-тип, `auto_discover_types => [app_path()]`, `output_file => resource_path('types/generated.d.ts')`. Генерация: `php artisan typescript:transform`.
 4. **Namespace на выходе**: путь PHP-класса проецируется в TS-namespace — `App\Enums\User\UserRole` → `App.Enums.User.UserRole`. При `transform_to_native_enums => false` (дефолт) получается union строковых литералов: `export type UserRole = 'admin' | 'secretary' | ...`.
 5. **Граница экспорта**: `#[TypeScript]` отдаёт на фронт ТОЛЬКО backing-значения кейсов. Метки из `#[Label]` в `.d.ts` НЕ попадают — если в UI нужны человекочитаемые названия, отдавайте отдельную мапу значение→label через DTO/ресурс (тоже под `#[TypeScript]`) либо кастомный writer.
-6. **Frontend-сторона потребления** (импорт `App.Enums.*`, синхронизация типов, разбиение на модули вместо одного `generated.d.ts`) — связанный скилл `frontend/backend-type-sync`. Здесь только бэкенд-источник типа.
+6. **Frontend-сторона потребления** (импорт `App.Enums.*`, синхронизация типов, разбиение на модули вместо одного `generated.d.ts`) — связанный скилл `frontend-backend/backend-type-sync`. Здесь только бэкенд-источник типа.
 
 ## Чеклист качества
 
@@ -86,4 +86,4 @@ sha256: ""
 - https://getcomposer.org/doc/05-repositories.md#path
 - https://github.com/spatie/laravel-typescript-transformer
 - `snippets/enum-typescript.php` — enum со стэком #[TypeScript]+#[Label], Label-атрибут и concern, фрагмент config
-- Связанные скиллы: `frontend/backend-type-sync` (потребление App.Enums.* на фронте), `php/filament`, `php/attribute-authorization` (тот же приём reflection+атрибут, но для enum-прав на экшенах), `php/laravel-data` (enum-кейсы как свойства DTO), `php/laravel-structure` (размещение Enums/Concerns/Attributes/Support в дереве)
+- Связанные скиллы: `frontend-backend/backend-type-sync` (потребление App.Enums.* на фронте), `laravel-filament/filament`, `laravel-auth/attribute-authorization` (тот же приём reflection+атрибут, но для enum-прав на экшенах), `laravel-data-layer/laravel-data` (enum-кейсы как свойства DTO), `php/laravel-structure` (размещение Enums/Concerns/Attributes/Support в дереве)

@@ -168,12 +168,12 @@ Full example (two concern traits, `Pest.php` with `beforeEach` for Feature and U
 - Skill `quality/test-strategy` — pyramid strategy and coverage policy
 - Skill `static-analysis` (bucket php) — pipeline rector → pint → phpstan → tests
 - Skill `laravel` (bucket php) — architectural patterns covered by tests
-- Skill `php/test-isolation-guard` — hard isolation (bootstrap + `createApplication` guard), layered on top of this skill
-- Skill `php/laravel-dusk` — browser E2E tests (own isolation, no `RefreshDatabase`)
+- Skill `laravel-testing/test-isolation-guard` — hard isolation (bootstrap + `createApplication` guard), layered on top of this skill
+- Skill `laravel-testing/laravel-dusk` — browser E2E tests (own isolation, no `RefreshDatabase`)
 - Skill `php/pao` — compact JSON PHPUnit/Pest output for AI agent
 - Skill `devops/db-test-preflight` — test Postgres DB pre-flight before run
 - https://pestphp.com/docs — Pest documentation
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 0dc3b273725f74347ba4d43dfa8dc14dcc4ecc543fef59005ddc4222c88077e9 -->
+<!-- ru-source-sha256: d67c0894907f8665d97e5de1bd0a6c8f69ce4c22b6231e650cb6ef2b2cc6f929 -->

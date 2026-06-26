@@ -32,7 +32,8 @@ stdlib-only; синхрон держат `tests/test_schema.py` + `skiller docto
 
 Токен-экономный CORE раздаётся в КАЖДЫЙ проект по умолчанию (`--no-core` отключает):
 connect → бакеты `general`+`oss-dev`; vendor → skill-level `context-economy`, `anti-drift`,
-`compact-responses`, `session-handoff`, `gh-review`. `permissions.deny`-пресеты применяются в
+`compact-responses`, `session-handoff`, `mcp-advisor`, `verify-claims`, `gh-review` (7 скиллов,
+== `CORE_SKILLS`). `permissions.deny`-пресеты применяются в
 `connect`/`vendor` (`--no-permissions` отключает). Дубли хаба maind (`shared-memory`,
 `cross-project-coordinator`) — default-exclude.
 
@@ -68,7 +69,8 @@ connect → бакеты `general`+`oss-dev`; vendor → skill-level `context-ec
 | `integrate.py` | визард: скиллы + hub (свои) + permissions/MCP/auto-approve/memory (делегируются в `harness`) + brain |
 | `registry.py` | `skills.json` + `skills/_index.md` (tag matrix) + marketplace/plugin-манифесты + граф + карта бюджета |
 | `budget.py` | трёхъярусный токеновый бюджет (⊕ always / ↻ on-trigger / ⌥ on-demand): команда `skiller budget`, генератор `docs/guide/budget.md`, строка в `status`. ЕДИНЫЙ источник токен-математики |
-| `update.py` / `sync.py`* | обновление подключения; vendor-синк из конфига |
+| `skillset.py` | **vendor-канал `sync`** (`do_sync`): `.swissknifeman/config.json` → копии в `.claude/skills/` + `skills-lock.json` (managed); резолв `requires`/presets, prune по managed |
+| `update.py` | обновление подключения; на sync-проекте роутит в `skillset.do_sync`, иначе legacy `vendor.do_vendor` |
 | `lock.py` | `skills-lock.json` (карта внешних скиллов: skm + boost) |
 | `status.py` / `listing.py` / `state.py` | отчёт по проекту; реестр проектов (`~/.swissknifeman/projects.json`) |
 | `hub.py` | генерация хаба скиллов (CLAUDE.md/.ai) в потребляющем проекте |
@@ -76,7 +78,8 @@ connect → бакеты `general`+`oss-dev`; vendor → skill-level `context-ec
 | `topology.py` | `~/.swissknifeman/topology.json` (расположение узлов) |
 | `doctor.py` | диагностика окружения |
 
-\* `sync` реализован в `update.py`/`vendor.py` (отдельного `sync.py` нет — команда роутится в cli.py).
+Команда `sync` реализована в `skillset.py` (`do_sync`); `cli.py` роутит её туда. Отдельного
+`sync.py` нет. `integrate`/`onboard` и `update` (на sync-проекте) тоже зовут `skillset.do_sync`.
 
 ## Конвенции (соблюдай при правках)
 

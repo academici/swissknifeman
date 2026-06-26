@@ -55,4 +55,4 @@ Vite dev server как **отдельный сервис compose** рядом с
 
 - https://vite.dev/config/server-options — server.host / server.hmr
 - https://laravel.com/docs/vite — laravel-vite-plugin
-- Смежные скиллы: `docker-php` (Node в PHP-образе), `docker-dev-prod` (override для WSL2), `frontend/vite-module-loader` (базовая конфигурация Vite/алиасы), `frontend/vite-multi-build` (несколько Vite-сборок в одном проекте), `devops/node-pnpm-preflight` (доступность Node/pnpm на хосте)
+- Смежные скиллы: `docker-php` (Node в PHP-образе), `docker-dev-prod` (override для WSL2), `frontend-vite/vite-module-loader` (базовая конфигурация Vite/алиасы), `frontend-vite/vite-multi-build` (несколько Vite-сборок в одном проекте), `devops/node-pnpm-preflight` (доступность Node/pnpm на хосте)

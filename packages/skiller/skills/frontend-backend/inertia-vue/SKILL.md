@@ -43,7 +43,7 @@ Laravel Boost: versioned Inertia basics (forms, navigation, API) = Boost skill i
 | `tests/` | Vitest tests, mirror of source structure |
 
 4. Domain org inside layer: inside `components/`, `composables/`, `features/`, `pages/` — subfolders by domain (`document/`, `order/`, `auth/`, `notifications/`); shared → `shared/`.
-5. Boundaries: pages and domain components reach backend via composables/actions layer (see skill `frontend/wayfinder`); logic in composables/features, components stay thin.
+5. Boundaries: pages and domain components reach backend via composables/actions layer (see skill `frontend-wayfinder/wayfinder`); logic in composables/features, components stay thin.
 
 ## Domain slices `features/<domain>/`
 
@@ -68,7 +68,7 @@ Vue-компонент / page  →  composables (или model)  →  actions  �
 3. `composables/` import only `../actions`, not `@/wayfinder/routes/*`.
 4. Each layer re-exports public API via `index.ts` — only re-exported functions are visible outward.
 
-Boundary is enforced via ESLint flat-config `no-restricted-imports`: pattern `@/wayfinder/routes/*` forbidden in domain Vue files, pointwise whitelist exempts few legacy files. ESLint flat-config setup + boundary rule → skill `frontend/js-code-style`; full slice tree, example domain composable and boundary config → `snippets/feature-structure.md`.
+Boundary is enforced via ESLint flat-config `no-restricted-imports`: pattern `@/wayfinder/routes/*` forbidden in domain Vue files, pointwise whitelist exempts few legacy files. ESLint flat-config setup + boundary rule → skill `frontend-linting/js-code-style`; full slice tree, example domain composable and boundary config → `snippets/feature-structure.md`.
 
 ## Which snippet to open
 
@@ -94,8 +94,8 @@ Boundary is enforced via ESLint flat-config `no-restricted-imports`: pattern `@/
 
 - https://inertiajs.com/
 - https://vuejs.org/guide/reusability/composables
-- Related skills: `frontend/wayfinder`, `frontend/vitest`, `frontend/vue-composition-api`, `frontend/js-code-style`, `frontend/pinia-stores` (layer `stores/`), `frontend/eslint-flat-config` (enforce import boundary `no-restricted-imports`), `frontend/tailwind-conventions`
+- Related skills: `frontend-wayfinder/wayfinder`, `frontend-vue/vitest`, `frontend-vue/vue-composition-api`, `frontend-linting/js-code-style`, `frontend-vue/pinia-stores` (layer `stores/`), `frontend-linting/eslint-flat-config` (enforce import boundary `no-restricted-imports`), `frontend-tailwind/tailwind-conventions`
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: a5fc4fef95d5bf997e81eeb2556af413e56f3dd7689850f0565b7221d20b6e4c -->
+<!-- ru-source-sha256: d9cd8f1d1c17651367f223be62a1f7f30a559d93839e181bf888bb01f2e57d25 -->

@@ -55,11 +55,11 @@ Apply when: setting up Vitest in a Laravel/Inertia project; writing component/co
 - https://vitest.dev/config/
 - https://vitest.dev/guide/coverage
 - https://test-utils.vuejs.org/
-- Related: `frontend/inertia-vue` (resources/js layout), `frontend/wayfinder` (what counts as autogen), `frontend/vue-composition-api` (composables tested as functions)
-- `frontend/vitest-vue` — generic Vitest API reference (test/describe/mock/coverage, upstream). This skill = config recipe for Laravel/Inertia; go there for general API.
+- Related: `frontend-backend/inertia-vue` (resources/js layout), `frontend-wayfinder/wayfinder` (what counts as autogen), `frontend-vue/vue-composition-api` (composables tested as functions)
+- `frontend-vue/vitest-vue` — generic Vitest API reference (test/describe/mock/coverage, upstream). This skill = config recipe for Laravel/Inertia; go there for general API.
 - `quality/test-strategy` — pyramid strategy and coverage policy
 - `quality/playwright-e2e` — browser/E2E scenarios (what Vitest doesn't cover)
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 9b5a542c8f021b5ed3413cd22076c2d5320f9a8caadcee63539aab36d8909b66 -->
+<!-- ru-source-sha256: 0aedb4bb44afe678b9e46ad47b67cf6b72f923932ae61a09489e14e9d4e98a45 -->

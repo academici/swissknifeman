@@ -74,11 +74,11 @@ Wrap chain in composer scripts (snippet `qa-composer-scripts.json`: `lint`, `lin
 - Skill `code-style-spatie` (bucket php) — code style, `final_class` conflict
 - Skill `laravel-testing` (bucket php) — tests + coverage gate at pipeline end
 - Skill `php/php-upgrade-checklist` — same rector/phpstan pipeline on PHP version upgrade
-- Skill `php/laravel-security-audit` — "sharp edges" audit over static-analysis signals (requires this skill)
+- Skill `laravel-auth/laravel-security-audit` — "sharp edges" audit over static-analysis signals (requires this skill)
 - Skill `php/pao` — compact JSON output of PHPStan/Rector/tests for AI agent
 - Skill `php/named-arguments` — call style this pipeline checks/fixes
 - https://laravel.com/docs/pint, https://phpstan.org, https://getrector.com
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: ec82a415d3fea7a40a58de1cd94a8c3031282c30f6a3825a7ffcef0d54e670e7 -->
+<!-- ru-source-sha256: 35cf3f9d8501d708903fff38e2f4ce69e35cc06439f812b2133a3c6341d6bac2 -->

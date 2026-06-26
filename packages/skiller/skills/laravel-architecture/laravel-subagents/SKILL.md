@@ -70,10 +70,10 @@ Implemented feature + `laravel-reviewer` reports (per-unit verdicts) and `larave
 
 - `agents/laravel-reviewer.md`, `agents/laravel-test-writer.md` — plugin agents (available only in Claude Code plugin channel).
 - `general/complex-task-orchestrator` — general decomposition template, if connected in project.
-- `php/laravel-testing` — tests written by `laravel-test-writer`; `php/static-analysis` — checks run by `laravel-reviewer`.
+- `laravel-testing/laravel-testing` — tests written by `laravel-test-writer`; `php/static-analysis` — checks run by `laravel-reviewer`.
 - `oss-dev/gh-review` — review and handoff via `gh` with context economy.
 - `general/context-economy`, `general/session-handoff` — main session context management when delegating.
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 1e9f189d18c99efcd2f4c01429ce12c0af4b920439a0e5d3bf3131386207de04 -->
+<!-- ru-source-sha256: 782e9612ba40e12bdb5aa8981fcb8b4c271c686600a2d2d9f8788851eefdb224 -->

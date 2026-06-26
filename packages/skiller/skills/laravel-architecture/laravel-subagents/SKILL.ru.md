@@ -120,6 +120,6 @@ sha256: ""
 
 - `agents/laravel-reviewer.md`, `agents/laravel-test-writer.md` — агенты плагина (доступны только в plugin-канале Claude Code).
 - `general/complex-task-orchestrator` — общий шаблон декомпозиции, если подключён в проекте.
-- `php/laravel-testing` — тесты, которые пишет `laravel-test-writer`; `php/static-analysis` — проверки, которые гоняет `laravel-reviewer`.
+- `laravel-testing/laravel-testing` — тесты, которые пишет `laravel-test-writer`; `php/static-analysis` — проверки, которые гоняет `laravel-reviewer`.
 - `oss-dev/gh-review` — ревью и хендофф через `gh` с экономией контекста.
 - `general/context-economy` и `general/session-handoff` — управление контекстом основной сессии при делегировании.

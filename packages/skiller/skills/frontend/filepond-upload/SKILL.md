@@ -16,7 +16,7 @@ sha256: ""
 
 # Skill: FilePond file upload (Vue + Laravel)
 
-Stack: `filepond` (core) + `vue-filepond` (Vue wrapper) + `filepond-plugin-*` + `rahulhaque/laravel-filepond` (backend). One route `/filepond` serves all FilePond callbacks (process/revert/patch/restore); temp file identified by `serverId`, later bound to a domain model. Field integrates as a normal input via `v-model` — compatible with Inertia forms (see `frontend/inertia-vue`).
+Stack: `filepond` (core) + `vue-filepond` (Vue wrapper) + `filepond-plugin-*` + `rahulhaque/laravel-filepond` (backend). One route `/filepond` serves all FilePond callbacks (process/revert/patch/restore); temp file identified by `serverId`, later bound to a domain model. Field integrates as a normal input via `v-model` — compatible with Inertia forms (see `frontend-backend/inertia-vue`).
 
 ## Activate when
 - Adding/editing file-upload field, drag-and-drop upload, image preview, attachment posters in a form.
@@ -102,8 +102,8 @@ Stack: `filepond` (core) + `vue-filepond` (Vue wrapper) + `filepond-plugin-*` + 
 - https://pqina.nl/filepond/ — FilePond + plugins docs
 - https://github.com/pqina/vue-filepond — Vue wrapper
 - https://github.com/rahulhaque/laravel-filepond — server-side (process/revert, `Filepond::field()`)
-- Related skills: `frontend/inertia-vue` (forms/pages), `frontend/vue-composition-api`, `frontend/wayfinder`
+- Related skills: `frontend-backend/inertia-vue` (forms/pages), `frontend-vue/vue-composition-api`, `frontend-wayfinder/wayfinder`
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 3a41e42312297e0243e6911e66a489fb5b481521288ae6e7fe9a4efd091b5903 -->
+<!-- ru-source-sha256: 2340c044aa11f3661ec5d7a06799d2530c32461427987c3655ae0057ed41c4e3 -->

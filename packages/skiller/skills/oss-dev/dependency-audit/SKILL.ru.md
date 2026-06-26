@@ -113,7 +113,7 @@ tooling: npm@X, composer@Y, ...
 - `oss-dev/release-engineering` — потребитель: SBOM публикуется как release artefact.
 - `oss-dev/oss-governance` — LICENSE-выбор проекта; лицензионная совместимость зависимостей — здесь.
 - `architect/security-design` — потребитель: vuln/supply-chain находки идут в compliance-pipeline.
-- `php/laravel-package-compatibility` — composer-constraints, версии PHP/Laravel/Testbench для PHP-пакетов.
+- `php-packages/laravel-package-compatibility` — composer-constraints, версии PHP/Laravel/Testbench для PHP-пакетов.
 - `php/static-analysis` — Pint/PHPStan/Rector: качество кода рядом с аудитом зависимостей.
 
 ---

@@ -196,7 +196,7 @@ CONTRIBUTING.md должен содержать:
 - `architect/tech-stack-selection` — выбор стека ДО структуры репо (ADR-первый шаг).
 - `architect/architecture` — C4/ADR-детализация (здесь — только базовый уровень).
 - `devops/ci-cd` — GitHub Actions pipelines (здесь — только минимум CI).
-- `php/laravel-packages` — scaffold/публикация Laravel-пакетов (язык-специфика).
+- `php-packages/laravel-packages` — scaffold/публикация Laravel-пакетов (язык-специфика).
 
 ---
 

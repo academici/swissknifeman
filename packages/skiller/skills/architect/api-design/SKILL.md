@@ -153,10 +153,10 @@ FORBIDDEN:
 - `architect/data-schema` — entities/relations API resources build on (precondition).
 - `architect/security-design` — auth scheme per client type, IDOR, rate limiting (auth section here is only top layer).
 - `architect/architecture` — broader context where API is one container.
-- `frontend/wayfinder` — typesafe routes/actions on frontend for Laravel impl of this contract.
-- `php/laravel-data` — DTO shape of request/response when implementing contract on Laravel.
+- `frontend-wayfinder/wayfinder` — typesafe routes/actions on frontend for Laravel impl of this contract.
+- `laravel-data-layer/laravel-data` — DTO shape of request/response when implementing contract on Laravel.
 - `architect/package-contribution-protocol` — shared-package contract evolution: SemVer, "is this breaking?", migration guide, bloat gate.
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: e3e059b65e603048fd60ff0a48384af9e62281d565ad932cc4ea7135ec8d1080 -->
+<!-- ru-source-sha256: 74456f4765b3c8ec0871eadc003be5a1e567fca9249ab83836b2b6ca44aeaffb -->

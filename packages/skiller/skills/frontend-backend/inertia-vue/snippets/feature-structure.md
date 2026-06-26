@@ -45,7 +45,7 @@ Vue-компонент / page  →  composables (или model)  →  actions  �
 `no-restricted-imports`: паттерн `@/wayfinder/routes/*` запрещён в доменных
 Vue-файлах, точечный whitelist выводит из-под правила немногие легаси-файлы.
 Конфигурация ESLint flat-config и правило-граница — в скилле
-`frontend/js-code-style`.
+`frontend-linting/js-code-style`.
 
 ```js
 // eslint.config.cjs — граница импортов для домена order

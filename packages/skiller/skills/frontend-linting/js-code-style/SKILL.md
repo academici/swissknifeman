@@ -57,4 +57,4 @@ sha256: ""
 - https://spatie.be/guidelines/javascript
 - https://prettier.io/docs/options
 - https://eslint.org/docs/latest/rules/eqeqeq
-- Связанные скиллы: `frontend/vue-composition-api`, `frontend/inertia-vue`
+- Связанные скиллы: `frontend-vue/vue-composition-api`, `frontend-backend/inertia-vue`

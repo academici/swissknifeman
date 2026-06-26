@@ -136,7 +136,7 @@ Created/rewritten per structure above. Primary DX artifact.
 - `oss-dev/oss-development` — prerequisite: base structure + understanding what package does.
 - `oss-dev/release-engineering` — DX metrics in release notes; TS types as public API (breaking).
 - `oss-dev/oss-governance` — CONTRIBUTING/CoC + issue/PR templates — also DX.
-- `php/laravel-package-docs` — README/VitePress/usage docs for PHP packages (language-specific).
+- `php-packages/laravel-package-docs` — README/VitePress/usage docs for PHP packages (language-specific).
 - `general/writing-style` — tone/language of README, error messages, docs.
 
 ## Hard prohibitions
@@ -151,4 +151,4 @@ FORBIDDEN:
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 794245bc25ec88ec92d6653b5383110d77dd0b77c38b6a4dee79ab584f0cff3b -->
+<!-- ru-source-sha256: dd919ed4e8fa452853e01603cab9054c43cc2b42484205a11960412aa56a5683 -->

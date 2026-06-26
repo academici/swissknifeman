@@ -24,7 +24,7 @@ Declarative enum-case metadata: PHP attributes `#[Label('...')]`, `#[Color('...'
 - Export enum as a TS type (`#[TypeScript]`, `spatie/laravel-typescript-transformer`, `App.Enums.*` union in `.d.ts`).
 - Wiring local pkg (`enum-concern`) as `repositories: [{type: path, ...}]` with `symlink`.
 
-Do NOT activate: plain enums with no metadata (backing value is enough); pure frontend type consumption → `frontend/backend-type-sync`.
+Do NOT activate: plain enums with no metadata (backing value is enough); pure frontend type consumption → `frontend-backend/backend-type-sync`.
 
 ## Algorithm
 1. **Attribute**: `final readonly class Label` with `#[Attribute(Attribute::TARGET_CLASS_CONSTANT)]` + public constructor value. One attribute = one metadata axis (Label, Color, Description, Priority...).
@@ -57,7 +57,7 @@ Two independent metadata layers coexist on one enum: domain custom attributes on
 3. **Export to front**: `spatie/laravel-typescript-transformer`. In `config/typescript-transformer.php`: `DefaultCollector` collects classes with `#[TypeScript]`, `EnumTransformer` turns enum into a union type, `auto_discover_types => [app_path()]`, `output_file => resource_path('types/generated.d.ts')`. Generate: `php artisan typescript:transform`.
 4. **Output namespace**: PHP class path → TS namespace — `App\Enums\User\UserRole` → `App.Enums.User.UserRole`. With `transform_to_native_enums => false` (default) → union of string literals: `export type UserRole = 'admin' | 'secretary' | ...`.
 5. **Export boundary**: `#[TypeScript]` exports ONLY case backing values. `#[Label]` labels do NOT reach `.d.ts` — for human-readable names in UI, expose a separate value→label map via DTO/resource (also under `#[TypeScript]`) or a custom writer.
-6. **Frontend consumption** (importing `App.Enums.*`, type sync, splitting into modules vs one `generated.d.ts`) → `frontend/backend-type-sync`. Here: backend type source only.
+6. **Frontend consumption** (importing `App.Enums.*`, type sync, splitting into modules vs one `generated.d.ts`) → `frontend-backend/backend-type-sync`. Here: backend type source only.
 
 ## Quality checklist
 - [ ] `#[TypeScript]` on enum class, domain attributes on cases; non-conflicting
@@ -76,7 +76,7 @@ Two independent metadata layers coexist on one enum: domain custom attributes on
 - https://getcomposer.org/doc/05-repositories.md#path
 - https://github.com/spatie/laravel-typescript-transformer
 - `snippets/enum-typescript.php` — enum with #[TypeScript]+#[Label] stack, Label attribute + concern, config fragment
-- Related: `frontend/backend-type-sync` (consuming App.Enums.* on front), `php/filament`, `php/attribute-authorization` (same reflection+attribute trick for enum action perms), `php/laravel-data` (enum cases as DTO props), `php/laravel-structure` (placing Enums/Concerns/Attributes/Support in the tree)
+- Related: `frontend-backend/backend-type-sync` (consuming App.Enums.* on front), `laravel-filament/filament`, `laravel-auth/attribute-authorization` (same reflection+attribute trick for enum action perms), `laravel-data-layer/laravel-data` (enum cases as DTO props), `php/laravel-structure` (placing Enums/Concerns/Attributes/Support in the tree)
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 151a73e5bb4b7cd61def597882a4353ec19ea8307ab0706bc82c7620671a8189 -->
+<!-- ru-source-sha256: 15a601eafa77f1e0858b46647393f942404b63d95fb8096a6b55e71a6fc0f018 -->

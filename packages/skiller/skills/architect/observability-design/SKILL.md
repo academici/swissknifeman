@@ -156,8 +156,8 @@ NEVER:
 - `operator/runbook` — detailed operational runbook per P1/P2 alert designed here (output).
 - `operator/incident-response` — response process relying on severity + alerts here (output).
 - `operator/capacity-planning` — what to monitor for scaling, based on USE-metrics here.
-- `php/health-checks` — Laravel liveness/readiness (spatie/laravel-health) for design here.
+- `laravel-testing/health-checks` — Laravel liveness/readiness (spatie/laravel-health) for design here.
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: a0c97915651834a4d92b97a2cbecec0057df14b55ec42d4b69917afb3e1b7835 -->
+<!-- ru-source-sha256: 652348b32c37677c634dd0dba0cc63dc9e1843df2c6f5be60e94b91db1b73eda -->

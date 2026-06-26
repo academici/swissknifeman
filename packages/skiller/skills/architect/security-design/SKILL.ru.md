@@ -210,6 +210,6 @@ Agentic-инструменты генерят код, который **рабо�
 - `architect/api-design` — auth-схема под тип клиента и rate limiting для контрактов API.
 - `architect/observability-design` — PII-policy в логах, маскировка, audit trail.
 - `oss-dev/dependency-audit` — supply-chain/SBOM/vuln-скан, кормит A06 OWASP (вход этого скилла).
-- `php/laravel-security-audit` — code-level аудит реализации (raw SQL, mass assignment, XSS), кормит этот дизайн (вход).
-- `php/azguard`, `php/laravel-permissions`, `php/attribute-authorization` — RBAC/ABAC-реализация выбранной модели авторизации.
+- `laravel-auth/laravel-security-audit` — code-level аудит реализации (raw SQL, mass assignment, XSS), кормит этот дизайн (вход).
+- `azguard/azguard`, `laravel-auth/laravel-permissions`, `laravel-auth/attribute-authorization` — RBAC/ABAC-реализация выбранной модели авторизации.
 - `security/security` — внешний defensive playbook (OWASP LLM Top 10, NIST AI RMF).

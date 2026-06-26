@@ -69,21 +69,21 @@ Each class knows its altitude, never reaches into another's. Full map + forbidde
 - [ ] No class below Controller/FormRequest accepts `Illuminate\Http\Request`.
 - [ ] Resource does no queries and no authorization — only transforms already-loaded data.
 - [ ] Reusable where-chains extracted into model scopes (see `eloquent-model.md` / `php/repositories`).
-- [ ] Placement/naming cross-checked with `php/laravel-structure` and `php/naming-conventions` (not guessed).
+- [ ] Placement/naming cross-checked with `php/laravel-structure` and `general/naming-conventions` (not guessed).
 - [ ] Code style conforms to `php/code-style-spatie` (`final`, typing, named arguments).
 
 ## References
 
 - Project structure & class placement (domain taxonomy, mirror rule) → `php/laravel-structure`
 - Repositories (Read/Store split, scopes, visibility) → `php/repositories`
-- Class/method naming by intent → `php/naming-conventions`
+- Class/method naming by intent → `general/naming-conventions`
 - Code style (final, typing, named arguments, Spatie conventions) → `php/code-style-spatie`
 - DI and component interaction → `php/dependency-injection`
-- DTO on the package → `php/laravel-data`; "bare" domain patterns (VO/pipeline/specification) → `php/php-patterns`
-- Migrations & models → `php/database`; growth into modules → `php/modular-architecture`
-- Tests for architecture layers → `php/laravel-testing`
+- DTO on the package → `laravel-data-layer/laravel-data`; "bare" domain patterns (VO/pipeline/specification) → `php/php-patterns`
+- Migrations & models → `php/database`; growth into modules → `laravel-architecture/modular-architecture`
+- Tests for architecture layers → `laravel-testing/laravel-testing`
 - General Laravel best practices → `php/laravel-best-practices` (external)
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: c4bb6ed85334db1926388dc3783b02bc0bec4d1c50e4218ac6f61a5f76605f01 -->
+<!-- ru-source-sha256: e097cfa2333db63da2a87d4005133dea1d88cbd3e79bae72329ec538084a46f6 -->

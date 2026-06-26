@@ -152,7 +152,7 @@ Keep a Changelog format above. Created empty with `[Unreleased]` section if miss
 - `oss-dev/dx-design` — what break/feature/fix means to user; TS-types as public API.
 - `general/git-commit-rules` — commit format the SemVer oracle uses to determine bump.
 - `devops/ci-cd` — GitHub Actions release-pipeline (tag → test → build → publish).
-- `php/laravel-package-release` — release notes/tags/validation for PHP packages (language-specific).
+- `php-packages/laravel-package-release` — release notes/tags/validation for PHP packages (language-specific).
 
 ## Hard prohibitions
 NEVER:
@@ -165,4 +165,4 @@ NEVER:
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 5f5d48a8910f6419c33914a95f796c6f2828cb43578fbc2f89233e61ff4753f0 -->
+<!-- ru-source-sha256: 67b5fb2ec501e1513827c65048930ded2f719d6f56c2728e722e375000995d63 -->

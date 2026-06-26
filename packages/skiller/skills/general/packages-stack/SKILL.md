@@ -44,8 +44,8 @@ Keep a short **stack registry**: which external packages are used, **for what**,
 
 ## Related skills
 - `oss-dev/dependency-audit` — dependency audit (vuln, licenses, supply-chain) over the registry.
-- `python/venv-dependencies`, `php/laravel-packages` — stack-specific dependency management.
+- `python/venv-dependencies`, `php-packages/laravel-packages` — stack-specific dependency management.
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 6ade0d78bc1a4c5066bc4c57bba0818ef4f0426390c51ebaeb95da345b169862 -->
+<!-- ru-source-sha256: 9ccfa51915603b94de2fdc773d4a91d8a6f6e2b84cfe20e4592b413b3cb376a7 -->

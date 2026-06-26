@@ -171,10 +171,10 @@ Detailed tree, `module.json`, `composer.json`/`config/modules.php` snippets, `vi
 - snippets/nwidart-module.md — module tree, module.json, composer namespace, module:make* commands, vite.config.js, Filament discovery
 - https://github.com/nWidart/laravel-modules
 - Starting structure of a new project: skill `php/laravel-structure`
-- Module Filament resources and discovery: `php/filament`
-- Module frontend build (Vite): `frontend/vite-module-loader`, `frontend/vite-multi-build`
-- Layers inside a module: `php/repositories`, `php/dependency-injection`, DTO between modules — `php/laravel-data`
+- Module Filament resources and discovery: `laravel-filament/filament`
+- Module frontend build (Vite): `frontend-vite/vite-module-loader`, `frontend-vite/vite-multi-build`
+- Layers inside a module: `php/repositories`, `php/dependency-injection`, DTO between modules — `laravel-data-layer/laravel-data`
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 4c8bd23555827ad680eed154fe36be0bf90e09b70c0b3d52a45789dd3f63b06b -->
+<!-- ru-source-sha256: dbacbc8495e29a32ca08b53bf6d3ad063ef1f66a11bb1820f17259088f564243 -->

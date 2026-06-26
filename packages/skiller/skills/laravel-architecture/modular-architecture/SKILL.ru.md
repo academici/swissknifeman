@@ -193,6 +193,6 @@ nwidart не генерирует Filament-ресурсы прямо в моду
 - snippets/nwidart-module.md — дерево модуля, module.json, composer namespace, команды module:make*, vite.config.js, Filament discovery
 - https://github.com/nWidart/laravel-modules
 - Стартовая структура нового проекта: скилл `php/laravel-structure`
-- Filament-ресурсы модуля и discovery: `php/filament`
-- Сборка фронта модуля (Vite): `frontend/vite-module-loader`, `frontend/vite-multi-build`
-- Слои внутри модуля: `php/repositories`, `php/dependency-injection`, DTO между модулями — `php/laravel-data`
+- Filament-ресурсы модуля и discovery: `laravel-filament/filament`
+- Сборка фронта модуля (Vite): `frontend-vite/vite-module-loader`, `frontend-vite/vite-multi-build`
+- Слои внутри модуля: `php/repositories`, `php/dependency-injection`, DTO между модулями — `laravel-data-layer/laravel-data`

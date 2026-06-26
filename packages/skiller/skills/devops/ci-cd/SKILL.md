@@ -38,7 +38,7 @@ Gate rule: `exit-code: 1` only on HIGH/CRITICAL; LOW/MEDIUM → report, not bloc
 
 Coverage threshold checked in a **separate job**, doesn't block fast test run: first `lint`+`tests` (fast fail), then coverage-job collects Clover and runs the gate. Two independent thresholds — global (`COVERAGE_GLOBAL_MIN`, typically 70%) and stricter for critical dirs (`COVERAGE_CRITICAL_MIN`, typically 55%; covers `Actions/Policies/Services/Middleware`).
 
-**Don't rewrite the parser.** Config (`coverage.php`), gate script (`check-coverage-gate.php`, modes `report|soft|hard`, per-file critical-zone check) and composer scripts (`test:coverage`, `test:coverage:gate`, `test:critical`) live in skill `php/laravel-testing` (its snippets `coverage-gate-config.php`, `check-coverage-gate.php`, `composer-test-scripts.json`). CI only **calls** them.
+**Don't rewrite the parser.** Config (`coverage.php`), gate script (`check-coverage-gate.php`, modes `report|soft|hard`, per-file critical-zone check) and composer scripts (`test:coverage`, `test:coverage:gate`, `test:critical`) live in skill `laravel-testing/laravel-testing` (its snippets `coverage-gate-config.php`, `check-coverage-gate.php`, `composer-test-scripts.json`). CI only **calls** them.
 
 CI-job algorithm:
 
@@ -55,11 +55,11 @@ Gate mode: `hard` (blocks merge) on default branch and MR; `report`/`soft` for i
 
 ## Links
 
-- Related skills: `oss-dev/github-flow` (Issue→PR→Tag→Release chain), `oss-dev/release-engineering` (release pipeline, CHANGELOG, SemVer), `devops/gitops` (branch model, protection), `php/static-analysis` (Pint/PHPStan/Rector + taint in CI), `oss-dev/dependency-audit` (dependency audit, SBOM, update policy), `php/laravel-testing` (test run **+ coverage-gate config/script**, reused by this job), `quality/test-strategy` (coverage policy and pyramid the threshold relies on), `quality/mutation-testing` (Infection gate in CI), `quality/playwright-e2e` (E2E in CI), `devops/docker-php` (image for build/scan step)
+- Related skills: `oss-dev/github-flow` (Issue→PR→Tag→Release chain), `oss-dev/release-engineering` (release pipeline, CHANGELOG, SemVer), `devops/gitops` (branch model, protection), `php/static-analysis` (Pint/PHPStan/Rector + taint in CI), `oss-dev/dependency-audit` (dependency audit, SBOM, update policy), `laravel-testing/laravel-testing` (test run **+ coverage-gate config/script**, reused by this job), `quality/test-strategy` (coverage policy and pyramid the threshold relies on), `quality/mutation-testing` (Infection gate in CI), `quality/playwright-e2e` (E2E in CI), `devops/docker-php` (image for build/scan step)
 - snippets/github-actions-security.yml — security-job: composer/npm audit + Trivy image scan
 - snippets/github-actions-coverage-gate.yml — coverage-job: pcov + `test --coverage` + gate script with global and critical-dir thresholds
 - snippets/gitlab-ci-practices.md — `.gitlab-ci.yml` practices + `.php-base`/`php-coverage` job for coverage-gate
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 8dbb69abfc82c5e151faec1293028b2ccd663dcbe15d815c4ac61793c7c9bfed -->
+<!-- ru-source-sha256: c7e46c0ea646c7417cd176c55cf66fac16b266caeaf509910751145e6c2934dd -->

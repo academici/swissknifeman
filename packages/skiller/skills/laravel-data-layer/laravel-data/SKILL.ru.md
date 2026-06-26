@@ -23,7 +23,7 @@ sha256: ""
 **Активировать, когда:**
 - вместо передачи массива `['title' => ..., 'items' => [...]]` между слоями нужен типобезопасный объект с автодополнением;
 - входящий запрос надо превратить в объект с валидацией (`OrderData::from($request)` вместо ручного `$request->validate()` + сборки массива);
-- одна структура нужна и на бэке, и на фронте (Data → `#[TypeScript]` → `App.Data.*`, см. `frontend/backend-type-sync`);
+- одна структура нужна и на бэке, и на фронте (Data → `#[TypeScript]` → `App.Data.*`, см. `frontend-backend/backend-type-sync`);
 - старый `JsonResource` оброс ручными хелперами рендера связей/enum/дат — это сигнал перейти на Data, где связи и касты декларативны;
 - нужна вложенная коллекция дочерних DTO (заказ → позиции, документ → строки) с типизацией каждого элемента.
 
@@ -72,7 +72,7 @@ sha256: ""
    - Inertia: `Inertia::render('Order/Show', ['order' => OrderData::from($order)])` — фронт получает ровно ту форму, что описана в Data;
    - частичная отдача/ленивые поля — `Lazy::create(...)` для тяжёлых вложенных коллекций (грузятся только при запросе).
 
-9. **Синхронизация типов с фронтом**: пометь Data-класс `#[TypeScript]` (из `spatie/typescript-transformer`), чтобы он попал в `generated.d.ts` как `App.Data.OrderData`. Дальнейшее (`artisan typescript:transform`, импорт на фронте) — скилл `frontend/backend-type-sync`; этот скилл лишь корректно объявляет Data, пригодный для экспорта (явные типы, типизированные коллекции, без «сырых» `array`).
+9. **Синхронизация типов с фронтом**: пометь Data-класс `#[TypeScript]` (из `spatie/typescript-transformer`), чтобы он попал в `generated.d.ts` как `App.Data.OrderData`. Дальнейшее (`artisan typescript:transform`, импорт на фронте) — скилл `frontend-backend/backend-type-sync`; этот скилл лишь корректно объявляет Data, пригодный для экспорта (явные типы, типизированные коллекции, без «сырых» `array`).
 
 10. **Не превращай Data в God-object**: Data описывает форму данных и преобразования вход/выход. Бизнес-логику (изменение состояния, запись в БД, побочные эффекты) держи в сервисах/действиях, которые принимают и возвращают Data. Контроллер: `from(request)` → передать в сервис → вернуть Data.
 
@@ -103,11 +103,11 @@ sha256: ""
 - [ ] Расхождение имён решено `MapName`/`MapInputName`/`MapOutputName` (или классовым маппером), а не переименованием свойств
 - [ ] Вход создаётся через `from()`, валидация — на свойствах Data, без дублирующего `$request->validate()`
 - [ ] Бизнес-логика не утекла в Data: состояние меняют сервисы/действия, Data описывает только форму и преобразования
-- [ ] Если тип нужен на фронте — класс помечен `#[TypeScript]` (дальше см. `frontend/backend-type-sync`)
+- [ ] Если тип нужен на фронте — класс помечен `#[TypeScript]` (дальше см. `frontend-backend/backend-type-sync`)
 - [ ] Домены/неймспейсы нейтральны (`App\Data\...`), без бизнес-терминов конкретного проекта
 
 ## Ссылки
 
 - https://spatie.be/docs/laravel-data
 - https://spatie.be/docs/laravel-data/advanced-usage/typescript
-- Связанные скиллы: `frontend/backend-type-sync` (Data → TS-типы), `php/enum-attributes` (enum в свойствах Data), `php/named-arguments` (создание Data явными именованными аргументами), `php/php-patterns` («голый» DTO/VO без пакета — когда зависимость нежелательна), `php/laravel-structure` (где живут Dto/View/Form/Command в дереве проекта)
+- Связанные скиллы: `frontend-backend/backend-type-sync` (Data → TS-типы), `laravel-architecture/enum-attributes` (enum в свойствах Data), `php/named-arguments` (создание Data явными именованными аргументами), `php/php-patterns` («голый» DTO/VO без пакета — когда зависимость нежелательна), `php/laravel-structure` (где живут Dto/View/Form/Command в дереве проекта)

@@ -68,7 +68,7 @@ sha256: ""
 - snippets/boost-skill-publisher.php
 - snippets/ServiceProvider.stub.php
 - snippets/composer.json.stub
-- Связанные скиллы (upstream-скиллы по работе над пакетом из стартеров): `php/laravel-package-scaffold`, `php/laravel-package-service-provider`, `php/laravel-package-testing`, `php/laravel-package-docs`, `php/laravel-package-release`, `php/laravel-package-compatibility` (все external)
+- Связанные скиллы (upstream-скиллы по работе над пакетом из стартеров): `php-packages/laravel-package-scaffold`, `php-packages/laravel-package-service-provider`, `php-packages/laravel-package-testing`, `php-packages/laravel-package-docs`, `php-packages/laravel-package-release`, `php-packages/laravel-package-compatibility` (все external)
 - `php/laravel` — архитектурные паттерны внутри пакета; `php/laravel-structure` — размещение классов
-- `php/botkit` — пример доменного пакета, публикующего скиллы потребителям
+- `botkit/botkit` — пример доменного пакета, публикующего скиллы потребителям
 - `general/skills-ssot` — единый источник истины скиллов для нескольких агентов

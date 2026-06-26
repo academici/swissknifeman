@@ -124,13 +124,13 @@ $settings->save();
 3. **Отдача во фронт — через DTO, не «сырые настройки»**. В рантайме резолвим класс настроек,
    собираем **публичный** DTO (например `WebsocketClientData`) и прокидываем во фронт (Inertia
    `share`/middleware, либо `<script>`-конфиг). Фронт: при `enabled` берёт значения из DTO,
-   иначе — из build-time env/Vite. Echo-клиентская сторона — `frontend/laravel-echo-client`.
+   иначе — из build-time env/Vite. Echo-клиентская сторона — `frontend-backend/laravel-echo-client`.
 4. **Граница секретов.** Во фронт уходят **только публичные** значения (host/port/scheme/app_key
    для клиента). Приватные креды (app_secret и т.п.) — НЕ в этот класс настроек/DTO: они
    остаются в env/`config/`, при необходимости в БД — через `addEncrypted` (шаг 4), и во фронт
    не отдаются никогда.
 5. **Типизация DTO → TS** (если на фронте TypeScript) — DTO под `#[TypeScript]`, см.
-   `frontend/backend-type-sync`.
+   `frontend-backend/backend-type-sync`.
 
 Когда это оправдано: значение должен менять администратор без деплоя, и оно нужно фронту в
 рантайме. Когда нет: чистый build-time параметр или секрет — оставить в `config/`/env (шаг 1).
@@ -172,4 +172,4 @@ $settings->save();
 - snippets/ExampleSettings.php — класс настроек
 - snippets/create_example_settings.php — settings-миграция (дефолты + эволюция)
 - snippets/filament-settings-page.php — привязка к Filament-форме
-- Связанные скиллы: `php/filament` (SettingsPage и плагин), `php/laravel-data` (Data как тип свойства настройки и публичный DTO во фронт), `php/enum-attributes` (enum-касты настроек), `php/database` (settings-миграции рядом с обычными), `frontend/laravel-echo-client` (потребление websocket-настроек на клиенте), `frontend/backend-type-sync` (DTO настройки → TS-тип)
+- Связанные скиллы: `laravel-filament/filament` (SettingsPage и плагин), `laravel-data-layer/laravel-data` (Data как тип свойства настройки и публичный DTO во фронт), `laravel-architecture/enum-attributes` (enum-касты настроек), `php/database` (settings-миграции рядом с обычными), `frontend-backend/laravel-echo-client` (потребление websocket-настроек на клиенте), `frontend-backend/backend-type-sync` (DTO настройки → TS-тип)

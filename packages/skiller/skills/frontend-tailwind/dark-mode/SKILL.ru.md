@@ -18,7 +18,7 @@ sha256: ""
 
 ## Контекст
 
-Переключение оформления приложения между тремя состояниями — `light`, `dark` и `system` (следовать системной настройке ОС). Тёмное состояние выражается классом `.dark` на корневом `<html>` (`document.documentElement`); Tailwind и дизайн-токены реагируют на этот класс (см. `frontend/tailwind-conventions`). Выбор пользователя сохраняется и переживает перезагрузку.
+Переключение оформления приложения между тремя состояниями — `light`, `dark` и `system` (следовать системной настройке ОС). Тёмное состояние выражается классом `.dark` на корневом `<html>` (`document.documentElement`); Tailwind и дизайн-токены реагируют на этот класс (см. `frontend-tailwind/tailwind-conventions`). Выбор пользователя сохраняется и переживает перезагрузку.
 
 **Когда активировать:**
 - добавляешь переключатель темы или пункт настроек «оформление»;
@@ -67,7 +67,7 @@ sha256: ""
    - `updateAppearance(value)`: записать `ref`, сохранить в localStorage + cookie (шаг 3), вызвать `updateTheme(value)`;
    - вернуть `{ appearance, resolvedAppearance, updateAppearance }`.
 6. **Boot без вспышки** — критичный шаг, см. ниже. На клиенте — `initializeTheme()` в точке входа до маунта. При SSR — inline-скрипт в `<head>` шаблона.
-7. **Разметка** реагирует на `.dark` через семантические токены / `dark:*`-утилиты Tailwind — это зона `frontend/tailwind-conventions`, здесь только переключаем класс.
+7. **Разметка** реагирует на `.dark` через семантические токены / `dark:*`-утилиты Tailwind — это зона `frontend-tailwind/tailwind-conventions`, здесь только переключаем класс.
 
 ## Инициализация без вспышки темы (FOUC)
 
@@ -85,7 +85,7 @@ sha256: ""
 
 **Laravel Boost**: версионные основы тёмной темы из Tailwind/Inertia стартер-кита (базовый `useAppearance`, инициализация) идут из Boost-скиллов `tailwindcss-development` / `inertia-vue`; здесь — авторский трёхрежимный composable, boot без вспышки и SSR-инициализация через cookie. Пакет: https://github.com/laravel/boost (скиллы — `vendor/laravel/boost/.ai/`).
 
-Этот скилл только владеет классом `.dark` и состоянием. То, как `.dark` влияет на цвета — `frontend/tailwind-conventions`:
+Этот скилл только владеет классом `.dark` и состоянием. То, как `.dark` влияет на цвета — `frontend-tailwind/tailwind-conventions`:
 - Tailwind v4: `@custom-variant dark (&:is(.dark *));` — `dark:*`-утилиты и токены срабатывают по классу `.dark` на предке.
 - Предпочитай семантические токены (значения переменных переопределяются в `.dark`) точечным `dark:bg-…` в разметке.
 - Имя класса (`dark`) и контракт «класс на `<html>`» — общие для обоих скиллов; не расходись.
@@ -108,11 +108,11 @@ sha256: ""
 - [ ] `initializeTheme()` вызван в точке входа ДО маунта — клиентской вспышки нет
 - [ ] При SSR класс приходит из cookie + inline-скрипт в `<head>` закрывает режим `system` — серверной вспышки нет
 - [ ] Подписка `matchMedia change` обновляет тему только когда выбран `system`
-- [ ] Имя класса и контракт `.dark`-на-`<html>` совпадают с `frontend/tailwind-conventions`; цвета не хардкодятся, идут через токены/`dark:*`
+- [ ] Имя класса и контракт `.dark`-на-`<html>` совпадают с `frontend-tailwind/tailwind-conventions`; цвета не хардкодятся, идут через токены/`dark:*`
 
 ## Ссылки
 
 - https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme
 - https://developer.mozilla.org/en-US/docs/Web/API/Window/matchMedia
 - https://vuejs.org/guide/reusability/composables
-- Связанные скиллы: `frontend/tailwind-conventions` (как `.dark` влияет на цвета/токены), `frontend/inertia-vue` (где живёт composable в слоях), `frontend/vue-composition-api` (паттерн composable), `frontend/naive-ui-theming` (тот же флаг `.dark` выбирает `darkTheme` Naive)
+- Связанные скиллы: `frontend-tailwind/tailwind-conventions` (как `.dark` влияет на цвета/токены), `frontend-backend/inertia-vue` (где живёт composable в слоях), `frontend-vue/vue-composition-api` (паттерн composable), `frontend-naive-ui/naive-ui-theming` (тот же флаг `.dark` выбирает `darkTheme` Naive)

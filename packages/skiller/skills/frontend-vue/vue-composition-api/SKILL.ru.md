@@ -52,6 +52,6 @@ export function useFetch(url) {
 ## Связанные скиллы
 
 - `vue` (frontend) — справочник API (база, грузить вместе); `vue-best-practices` (frontend) — workflow и архитектура.
-- `frontend/pinia-stores` — глобальное состояние, когда `ref` в composable уже мало.
-- `frontend/inertia-vue` — где живут `composables/` в слоях проекта.
-- `frontend/dark-mode` — пример боевого composable; `frontend/reka-ui-cva`, `frontend/vue-dynamic-icons` — компоненты на `<script setup>`.
+- `frontend-vue/pinia-stores` — глобальное состояние, когда `ref` в composable уже мало.
+- `frontend-backend/inertia-vue` — где живут `composables/` в слоях проекта.
+- `frontend-tailwind/dark-mode` — пример боевого composable; `frontend-reka/reka-ui-cva`, `frontend-vue/vue-dynamic-icons` — компоненты на `<script setup>`.

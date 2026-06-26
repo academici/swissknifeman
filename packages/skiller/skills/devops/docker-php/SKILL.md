@@ -56,8 +56,8 @@ serversideup `/etc/entrypoint.d/` hooks: executable `NN-*.sh` copied here auto-r
 
 - https://serversideup.net/open-source/docker-php/docs — serversideup/php (entrypoint.d, PUID/PGID, S6-overlay)
 - https://laravel.com/docs/deployment#the-health-route — Laravel `/up`
-- Related skills: `docker-dev-prod` (compose layout), `docker-services` (stack from one image), `docker-vite` (Node+pnpm in same image for frontend), `php/health-checks` (what `/up` returns, liveness/readiness)
+- Related skills: `docker-dev-prod` (compose layout), `docker-services` (stack from one image), `docker-vite` (Node+pnpm in same image for frontend), `laravel-testing/health-checks` (what `/up` returns, liveness/readiness)
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 973bb6b6f18799755e1b6cbf3a1386844323a96b28f3c2467203aa6bc574c693 -->
+<!-- ru-source-sha256: 2858a4cd0fbb02d661a80c028e85e7f6539ed00a4c58055bb8a9078f4ad33e3c -->

@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+### Fixed (аудит — свод дрейфа документации после раскола бакетов php/frontend)
+
+- **862 протухших ссылки `php/<skill>` / `frontend/<skill>` переписаны** на актуальные бакеты по
+  `skills.json` (`laravel-*`/`frontend-*`/`php-packages`/`azguard`/`botkit`/`general`) — после раскола
+  ядер `php`/`frontend` на тонкие бакеты сотни кросс-ссылок в `routing.md`, `boost-compatibility.md`,
+  `guide/*`, телах скиллов и `snippets/`/`references/` указывали в несуществующие пути. Свод name-driven
+  (только известные скиллы, словные границы → без ложных замен), бакеты — соседние каталоги, поэтому
+  относительные ссылки переписываются корректно. SKILL.ru.md правились синхронно с SKILL.md,
+  ru-source-sha256 перепроставлен (`check-translations` чист). **Регресс-гейт** в `validate.sh` (секция
+  13): протухшие `php/<skill>`/`frontend/<skill>` в `skills/`+`docs/` пакета → ошибка.
+- **Счётчики и hero-ссылки выправлены:** корневой `CLAUDE.md` «20 плагинов» → «49»; `docs/index.md`
+  hero `/guide/`→`/skiller/guide/` (был 404), «65+ скиллов в 10 bucket-ах» → «195 скиллов в 45».
+- **skiller `CLAUDE.md`:** добавлен модуль `skillset.py` (vendor-канал `sync`/`do_sync`), исправлена
+  атрибуция `sync` (была `update.py`/`vendor.py` — реально `skillset.py`), CORE-список vendor доведён
+  до 7 (== `CORE_SKILLS`: добавлены `mcp-advisor`, `verify-claims`).
+- **Governance-скиллы (always-loaded):** `ecosystem-integration` — починен битый канонический линк на
+  `onboarding-decision-tree.md` (`../../../packages/maind/docs/guide/`); `release-discipline` — `./scripts/
+  validate.sh` (в корне нет) → пер-пакетный `packages/<пакет>/scripts/validate.sh`.
+
 ### Changed (аудит — дедуп реестра: token-efficient вне CORE)
 
 - **`general/performance` (`token-efficient`) перенесён `general` → `ai`** (`skills/ai/performance/`).

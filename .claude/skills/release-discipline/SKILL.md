@@ -16,7 +16,8 @@ Releases & Tagging — в `CONTRIBUTING.md`.
 
 ## Алгоритм завершения изменения
 
-1. `./scripts/validate.sh` зелёный (CI гоняет тот же скрипт).
+1. `bash packages/<пакет>/scripts/validate.sh` зелёный для затронутого пакета
+   (`skiller`/`harness`/`maind`; CI гоняет те же скрипты). В корне общего `scripts/validate.sh` нет.
 2. Изменялось что-то под `skills/`, `generate-skill/`, `buckets.json` →
    `skiller registry`; регенерированные артефакты коммитятся **вместе**
    с изменением (валидатор падает на устаревших манифестах).

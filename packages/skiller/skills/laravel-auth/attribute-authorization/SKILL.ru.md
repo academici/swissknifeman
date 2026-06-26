@@ -26,7 +26,7 @@ sha256: ""
 - проектируется или правится **reflection-middleware**, читающий атрибуты метода контроллера;
 - на одном экшене нужно **несколько** проверок с разными abort-статусами (403 для отказа, 404 для маскировки чужого ресурса).
 
-### Граница с `php/laravel-permissions`
+### Граница с `laravel-auth/laravel-permissions`
 
 Это **ортогональный слой поверх** Gate, а не замена политик/гейтов:
 
@@ -37,7 +37,7 @@ sha256: ""
 | Точка применения | `Gate::allows`, `$user->can`, политики в сервис-слое | атрибут над методом + middleware-исполнитель |
 | Механизм | контейнер, policy-резолвер, контекст | `ReflectionMethod::getAttributes()` |
 
-Связка на практике: ability-логику (что значит «может ли») держим в Gate/policy по скиллу `laravel-permissions`; `enum::value` каждого права = строка ability там. Этот скилл лишь декларативно вешает вызов нужного ability на экшен. Enum-права как метаданные/типобезопасный слой — см. `php/enum-attributes`.
+Связка на практике: ability-логику (что значит «может ли») держим в Gate/policy по скиллу `laravel-permissions`; `enum::value` каждого права = строка ability там. Этот скилл лишь декларативно вешает вызов нужного ability на экшен. Enum-права как метаданные/типобезопасный слой — см. `laravel-architecture/enum-attributes`.
 
 ## Алгоритм
 
@@ -109,4 +109,4 @@ Route::middleware(['auth', 'check-access'])->group(function (): void {
 - snippets/OrderController.php — контроллер с `#[CheckPermission]`
 - https://www.php.net/manual/en/language.attributes.php
 - https://laravel.com/docs/authorization (Gate::allows)
-- Связанные скиллы: `php/laravel-permissions` (определение прав/политик/гейтов — граница выше), `php/azguard` (пакетный code-first RBAC как источник abilities), `php/enum-attributes` (enum как метаданные), `php/named-arguments` (стиль вызовов в сниппетах), `architect/security-design` (auth-стратегия на уровне архитектуры)
+- Связанные скиллы: `laravel-auth/laravel-permissions` (определение прав/политик/гейтов — граница выше), `azguard/azguard` (пакетный code-first RBAC как источник abilities), `laravel-architecture/enum-attributes` (enum как метаданные), `php/named-arguments` (стиль вызовов в сниппетах), `architect/security-design` (auth-стратегия на уровне архитектуры)

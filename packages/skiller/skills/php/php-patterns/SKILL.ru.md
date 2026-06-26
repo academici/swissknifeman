@@ -75,7 +75,7 @@ sha256: ""
 - Анти-паттерны: **анемичный VO** — обёртка без инварианта и поведения (тогда это просто `string`,
   VO не нужен); сеттеры/мутаторы (VO иммутабелен — операция возвращает новый экземпляр); валидация
   «снаружи» VO при том, что VO заведён (инвариант обязан жить В конструкторе); суффикс `-VO`/`-Object`
-  в имени (имя — доменное существительное, см. `php/naming-conventions`).
+  в имени (имя — доменное существительное, см. `general/naming-conventions`).
 
 **DTO** (`snippets/dto.php`)
 - Бери, когда: между слоями (контроллер→Action→репозиторий) передаётся набор полей, и хочется
@@ -86,7 +86,7 @@ sha256: ""
   сервис (логика → Action/Service, DTO остаётся данными); смешение с VO — поле с инвариантом
   лучше сделать VO, а DTO его переносит; DTO ради DTO там, где хватает массива в пределах метода.
 - **Граница с пакетом:** нужны валидация-из-запроса, касты, `DataCollection`, `#[TypeScript]` —
-  это `spatie/laravel-data` (`php/laravel-data`), а не «голый» DTO. «Голый» — когда зависимость
+  это `spatie/laravel-data` (`laravel-data-layer/laravel-data`), а не «голый» DTO. «Голый» — когда зависимость
   от пакета нежелательна (домен-ядро, library-код) или структура чисто внутренняя.
 
 **Pipeline** (`snippets/pipeline.php`)
@@ -115,7 +115,7 @@ sha256: ""
 ### Шаг 4. Размести и назови правильно
 
 Размещение в дереве проекта — `php/laravel-structure`; имена (VO — доменное существительное без
-суффикса, DTO — `Data`/`Form`) — `php/naming-conventions`; сборка Pipeline/Specification через
+суффикса, DTO — `Data`/`Form`) — `general/naming-conventions`; сборка Pipeline/Specification через
 DI — `php/dependency-injection`; конструирование (конкретные конструкторы VO/DTO) именованными
 аргументами — `php/named-arguments`. NB: именованный аргумент — для конкретной сигнатуры;
 полиморфный вызов через интерфейс (`handle`/`isSatisfiedBy`) — только позиционно.
@@ -134,19 +134,19 @@ DI — `php/dependency-injection`; конструирование (конкре�
 - [ ] Перед введением паттерна проверено, что он убирает дублирование/защищает инвариант, а не добавлен «на будущее» (анти-bloat).
 - [ ] **VO** имеет инвариант в конструкторе и поведение; не анемичная обёртка; иммутабелен (`final readonly`, без сеттеров); равенство по значению.
 - [ ] **DTO** не содержит бизнес-логики и зависимостей от `Request`/Eloquent/DB; `final readonly`, promoted properties; не превратился в God-object.
-- [ ] Выбор «голый DTO vs `spatie/laravel-data`» осознан: нужны касты/валидация-из-запроса/`#[TypeScript]` → пакет (`php/laravel-data`), иначе «голый».
+- [ ] Выбор «голый DTO vs `spatie/laravel-data`» осознан: нужны касты/валидация-из-запроса/`#[TypeScript]` → пакет (`laravel-data-layer/laravel-data`), иначе «голый».
 - [ ] **Pipeline** не изобретён заново при доступном `Illuminate\Pipeline`; шаги самостоятельны, без побочных эффектов на чужие данные; порядок — данные, не код.
 - [ ] **Specification** применена для in-memory правил, а не для фильтрации выборки (фильтрация → scope/`queryForUser`, см. `php/repositories`); только предикат, без действий.
 - [ ] Полиморфные вызовы через интерфейс (`PipeStage::handle`, `Specification::isSatisfiedBy`) — позиционные, не именованные (имя параметра реализации интерфейсом не зафиксировано → `Unknown named parameter`).
 - [ ] Поля-значения с инвариантом вынесены в VO, а DTO их лишь переносит (паттерны сочетаются, не дублируют ответственность).
-- [ ] Имена доменные: VO без суффикса `-VO/-Object`, DTO — `Data`/`Form` (см. `php/naming-conventions`); конструкторы вызываются именованными аргументами (`php/named-arguments`).
+- [ ] Имена доменные: VO без суффикса `-VO/-Object`, DTO — `Data`/`Form` (см. `general/naming-conventions`); конструкторы вызываются именованными аргументами (`php/named-arguments`).
 - [ ] Неймспейсы/имена нейтральны (`App\Domain\...`), без бизнес-терминов конкретного проекта.
 
 ## Ссылки
 
-- `php/laravel-data` — DTO на `spatie/laravel-data` (типизированный слой данных, валидация из запроса, касты, `#[TypeScript]`); этот скилл — про «голые» VO/DTO/pipeline/specification без пакета и про выбор между ними.
+- `laravel-data-layer/laravel-data` — DTO на `spatie/laravel-data` (типизированный слой данных, валидация из запроса, касты, `#[TypeScript]`); этот скилл — про «голые» VO/DTO/pipeline/specification без пакета и про выбор между ними.
 - `php/repositories` — куда уходит «specification поверх БД» (model scopes, `queryForUser`) и delta-DTO как результат sync-операции store-репозитория.
 - `php/named-arguments` — стиль вызова конструкторов VO/DTO именованными аргументами.
-- `php/naming-conventions` — имена сущностей: VO (доменное существительное без суффикса), DTO (`Data`/`Form`), и почему `findByX…OrFail`-взрыв заменяется критерием/спецификацией.
+- `general/naming-conventions` — имена сущностей: VO (доменное существительное без суффикса), DTO (`Data`/`Form`), и почему `findByX…OrFail`-взрыв заменяется критерием/спецификацией.
 - `php/laravel-structure` — где в дереве проекта лежат VO/DTO/Pipeline/Specification.
 - `php/dependency-injection` — как Pipeline/Specification собираются через constructor injection.

@@ -68,7 +68,7 @@ Eloquent сам по себе — уже repository + active record, поэто�
 - [ ] Репозиторий **НЕ принимает авторизационных решений** — видимость только через инжектируемый `VisibilityService` с явной сигнатурой `apply(Builder, ?User, bool $ignorePermissions): Builder`.
 - [ ] Повторяемые предикаты вынесены в model scopes с доменными именами; репозиторий не дублирует where-цепочки.
 - [ ] Sync-операции идемпотентны (updateOrCreate + удаление выпавших) и возвращают delta-DTO, а не `void`/`bool`.
-- [ ] «Не найдено» и «нет доступа» неразличимы для потребителя (`findByIdOrFail` ищет поверх `queryForUser`). Это **единственный канонический** lookup; НЕ плоди `findByCodeOrFail`/`findBySlugOrFail` на каждое поле — см. `php/naming-conventions`.
+- [ ] «Не найдено» и «нет доступа» неразличимы для потребителя (`findByIdOrFail` ищет поверх `queryForUser`). Это **единственный канонический** lookup; НЕ плоди `findByCodeOrFail`/`findBySlugOrFail` на каждое поле — см. `general/naming-conventions`.
 - [ ] Фасад — чистое делегирование, без логики; классы `final`, store-репозитории `final readonly`.
 - [ ] Delta-DTO — `final readonly`, лежит в `app/Dto/<Домен>/Repository/`.
 
@@ -77,7 +77,7 @@ Eloquent сам по себе — уже repository + active record, поэто�
 - `php/laravel-structure` — размещение слоёв (`app/Repositories/<Домен>/`, `app/Dto/<Домен>/Repository/`, `app/Services/<Домен>/Access/`).
 - `php/dependency-injection` — кто кого инжектит: VisibilityService → ReadRepository → Repository(фасад) → контроллер; StoreRepository → Action.
 - `php/laravel` → `layer-boundaries.md` — границы слоёв: что разрешено Action, что репозиторию, что модели.
-- `php/laravel-data` — DTO-команды (`Form`), которые принимает write-side; `php/php-patterns` — delta-DTO и specification.
-- `php/naming-conventions` — как называть методы репозитория по намерению (вместо `findByX...OrFail`-взрыва) и scopes.
+- `laravel-data-layer/laravel-data` — DTO-команды (`Form`), которые принимает write-side; `php/php-patterns` — delta-DTO и specification.
+- `general/naming-conventions` — как называть методы репозитория по намерению (вместо `findByX...OrFail`-взрыва) и scopes.
 - `php/database` — модели и scopes, поверх которых строятся выборки.
-- `php/laravel-permissions` / `php/azguard` — где определяются права, которые читает `VisibilityService`.
+- `laravel-auth/laravel-permissions` / `azguard/azguard` — где определяются права, которые читает `VisibilityService`.

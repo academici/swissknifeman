@@ -8,10 +8,10 @@ hero:
   actions:
     - theme: brand
       text: Начать
-      link: /guide/
+      link: /skiller/guide/
     - theme: alt
       text: Установка
-      link: /guide/installation
+      link: /skiller/guide/installation
     - theme: alt
       text: GitHub
       link: https://github.com/academici/swissknifeman
@@ -19,7 +19,7 @@ hero:
 features:
   - icon: 🧰
     title: Всё в одном месте
-    details: 65+ скиллов в 10 bucket-ах, пресеты permissions, профили проектов, адаптеры под IDE. Один источник истины вместо копипасты между проектами.
+    details: 195 скиллов в 45 bucket-ах, пресеты permissions, профили проектов, адаптеры под IDE. Один источник истины вместо копипасты между проектами.
   - icon: 🎯
     title: Контекстная установка
     details: CLI swissknifeman сам определяет тип проекта — Laravel, PHP-пакет, Obsidian vault — и подключает подходящий набор скиллов. Одна команда — и проект готов к работе с AI.

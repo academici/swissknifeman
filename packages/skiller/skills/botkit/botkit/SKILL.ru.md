@@ -37,5 +37,5 @@ sha256: ""
 ## Ссылки
 
 - `php/laravel` — архитектурные паттерны (actions, resources), на которых строится bot-логика.
-- `php/laravel-packages` — scaffold пакета, ServiceProvider, публикация ресурсов.
+- `php-packages/laravel-packages` — scaffold пакета, ServiceProvider, публикация ресурсов.
 - `php/laravel-structure` — размещение классов бота в дереве проекта.

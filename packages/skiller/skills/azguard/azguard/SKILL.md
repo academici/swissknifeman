@@ -89,13 +89,13 @@ php artisan migrate
 ## Links
 
 - Source: `/home/vostrikov/projects/packages/azguard` (docs/guide: basic-usage, permissions, roles, panels, entity-scopes, direct-grants, policies-and-gates, abilities-frontend, testing)
-- Manual RBAC without package — skill `php/laravel-permissions`
-- Filament integration — package `azguard/filament`, skill `php/filament`
-- Declarative perm checks on actions via attribute — `php/attribute-authorization` (orthogonal layer over Gate)
-- Enum perms as metadata/type-safe layer — `php/enum-attributes`
-- Abilities to frontend (Inertia/TS) — `frontend/backend-type-sync`
+- Manual RBAC without package — skill `laravel-auth/laravel-permissions`
+- Filament integration — package `azguard/filament`, skill `laravel-filament/filament`
+- Declarative perm checks on actions via attribute — `laravel-auth/attribute-authorization` (orthogonal layer over Gate)
+- Enum perms as metadata/type-safe layer — `laravel-architecture/enum-attributes`
+- Abilities to frontend (Inertia/TS) — `frontend-backend/backend-type-sync`
 - Auth strategy & threat modeling at architecture level — `architect/security-design`
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 31b906c193c20985a72ae970ba80c1a67b0b383db2762a28a17a2bf6c2194520 -->
+<!-- ru-source-sha256: a5def4bc03213589301918e9f48acbcfc89d3cf6f4a006a42d92eea4832a8882 -->

@@ -97,8 +97,8 @@ Activate when: editing styles in `*.vue`/`*.blade.php` with Tailwind utilities o
 - snippets/.prettierrc — Prettier with plugin and `tailwindFunctions`
 - https://tailwindcss.com/docs/upgrade-guide — v3 → v4 migration guide
 - https://tailwindcss.com/docs/theme — `@theme` directive and tokens
-- Related skills: `frontend/dark-mode` (three-mode `useAppearance` composable, FOUC-free boot, SSR — owner of `.dark` state), `frontend/inertia-vue`, `frontend/vue-composition-api`, `frontend/js-code-style`, `frontend/eslint-flat-config` (where the Prettier-plugin chain is declared), `frontend/reka-ui-cva` (`cn()` and tokens in UI-kit components), `frontend/naive-ui-theming` (shared color source-of-truth via CSS vars)
+- Related skills: `frontend-tailwind/dark-mode` (three-mode `useAppearance` composable, FOUC-free boot, SSR — owner of `.dark` state), `frontend-backend/inertia-vue`, `frontend-vue/vue-composition-api`, `frontend-linting/js-code-style`, `frontend-linting/eslint-flat-config` (where the Prettier-plugin chain is declared), `frontend-reka/reka-ui-cva` (`cn()` and tokens in UI-kit components), `frontend-naive-ui/naive-ui-theming` (shared color source-of-truth via CSS vars)
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 23c99e1151bf8fb5b5dc4ab460ca84f9b1e72faf04fb2362d6c57eb8a8646185 -->
+<!-- ru-source-sha256: 0bf8d46d456d50025555ce96ecf80685a083ed82e0a4a73e4b7d2998824d6e5c -->

@@ -25,7 +25,7 @@ sha256: ""
 - в коде есть `defineStore(...)`, импорт `from 'pinia'`, вызов `useXxxStore()`;
 - вопрос «как шарить данные между несвязанными компонентами», «куда вынести состояние из компонента», «как обратиться к состоянию из обычного `.ts`-модуля (вне компонента)».
 
-**ГРАНИЦА со скиллом `frontend/vue-composition-api`:** там — `<script setup>`, локальное состояние **одного** компонента (`ref`/`computed`/`watch` внутри компонента). Здесь — **глобальное** состояние, живущее в Pinia и доступное отовсюду. Если состояние нужно только текущему компоненту — это НЕ стор, оставляй `ref` в компоненте или выноси в composable. Стор заводят, когда состояние читают/меняют минимум из двух несвязанных мест либо оно должно пережить навигацию.
+**ГРАНИЦА со скиллом `frontend-vue/vue-composition-api`:** там — `<script setup>`, локальное состояние **одного** компонента (`ref`/`computed`/`watch` внутри компонента). Здесь — **глобальное** состояние, живущее в Pinia и доступное отовсюду. Если состояние нужно только текущему компоненту — это НЕ стор, оставляй `ref` в компоненте или выноси в composable. Стор заводят, когда состояние читают/меняют минимум из двух несвязанных мест либо оно должно пережить навигацию.
 
 ## Алгоритм
 
@@ -94,4 +94,4 @@ export const useCounterStore = defineStore('counter', () => {
 - https://pinia.vuejs.org/cookbook/composing-stores.html
 - https://pinia.vuejs.org/ssr/ (hydration, per-request instance)
 - https://prazdevs.github.io/pinia-plugin-persistedstate/
-- Связанные скиллы: `frontend/vue-composition-api` (локальное состояние компонента), `frontend/inertia-vue` (где `stores/` в слоистой `resources/js`), `frontend/laravel-echo-client` (живые обновления стора через realtime-события)
+- Связанные скиллы: `frontend-vue/vue-composition-api` (локальное состояние компонента), `frontend-backend/inertia-vue` (где `stores/` в слоистой `resources/js`), `frontend-backend/laravel-echo-client` (живые обновления стора через realtime-события)

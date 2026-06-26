@@ -12,10 +12,10 @@
 1. Понять границы изменения: один слой или несколько (см. **`cross-layer-change-checklist`** при multi-layer).
 2. Проверить границы **Action ↔ Service**, контроллер, политики — по архитектурным договорённостям проекта.
 3. Если затронуты доменные переходы/abilities — проверить согласованность enum/policy/route/UI
-   (доменный FSM — **`php/enum-state-machine`**).
-4. Тесты: покрытие, человекочитаемые имена сценариев, изоляция БД — **`php/laravel-testing`**,
-   **`php/test-isolation-guard`**.
-5. Безопасность — раздел ниже (**`php/laravel-security-audit`**).
+   (доменный FSM — **`laravel-architecture/enum-state-machine`**).
+4. Тесты: покрытие, человекочитаемые имена сценариев, изоляция БД — **`laravel-testing/laravel-testing`**,
+   **`laravel-testing/test-isolation-guard`**.
+5. Безопасность — раздел ниже (**`laravel-auth/laravel-security-audit`**).
 
 ## Архитектура слоёв
 
@@ -24,13 +24,13 @@
 - Контроллер: HTTP → validate → Action → ответ; без оркестрации мутаций через «use-case Service».
 - Именованные аргументы PHP везде, где применимо правило проекта (**`php/named-arguments`**).
 
-Подробности границ слоёв — **`php/repositories`**, **`php/modular-architecture`**.
+Подробности границ слоёв — **`php/repositories`**, **`laravel-architecture/modular-architecture`**.
 
 ## Доменные переходы (FSM)
 
 - Переходы статусов и политики не расходятся с определением переходов доменного enum и гейтами.
 - При смене перехода/permission синхронно: enums, policies, routes, фронт.
-- Реализация и сверка — **`php/enum-state-machine`**.
+- Реализация и сверка — **`laravel-architecture/enum-state-machine`**.
 
 ## Многослойные изменения
 
@@ -40,16 +40,16 @@
 
 - Feature-тесты для HTTP и сценариев доступа; для чистой логики — unit.
 - Имена тестов и описания — по языковому правилу проекта.
-- Изоляция БД (`RefreshDatabase` / отдельная тест-схема) — **`php/test-isolation-guard`**.
-- Минимальный набор команд и Docker vs хост — **`php/laravel-testing`**.
+- Изоляция БД (`RefreshDatabase` / отдельная тест-схема) — **`laravel-testing/test-isolation-guard`**.
+- Минимальный набор команд и Docker vs хост — **`laravel-testing/laravel-testing`**.
 
 ## Security pass
 
-Опирайся на **`php/laravel-security-audit`** (практики безопасности Laravel и аудит кода).
+Опирайся на **`laravel-auth/laravel-security-audit`** (практики безопасности Laravel и аудит кода).
 
 - **Авторизация:** согласованность Permission enum, методов Policy и вызовов `Gate`; негативные
-  кейсы в тестах там, где меняется доступ (**`php/laravel-permissions`**).
-- **Загрузки и медиа:** коллекции, видимость файлов, конверсии — **`php/medialibrary`**.
+  кейсы в тестах там, где меняется доступ (**`laravel-auth/laravel-permissions`**).
+- **Загрузки и медиа:** коллекции, видимость файлов, конверсии — **`laravel-extras/medialibrary`**.
 - **Конфигурация:** секреты и окружение только через `config/*`, не `env()` снаружи конфигов.
 - **Ввод пользователя:** валидация в Form Request; массовое присвоение — только разрешённые поля.
 

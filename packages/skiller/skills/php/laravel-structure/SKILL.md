@@ -16,7 +16,7 @@ sha256: ""
 
 # Laravel Structure
 
-Canon for where to put files and how to name them (implementation skills answer "how to write the class"). Apply at project start, when adding a domain/subprocess, and in placement reviews. For greenfield + adding domains; at tens of domains / multiple teams switch to `php/modular-architecture` (`app/Modules/`).
+Canon for where to put files and how to name them (implementation skills answer "how to write the class"). Apply at project start, when adding a domain/subprocess, and in placement reviews. For greenfield + adding domains; at tens of domains / multiple teams switch to `laravel-architecture/modular-architecture` (`app/Modules/`).
 
 ## Principles
 
@@ -98,12 +98,12 @@ Canon for where to put files and how to name them (implementation skills answer 
 - Action/DTO/layer implementation: `php/laravel` → `snippets/layer-boundaries.md`, `snippets/dto.md`, `snippets/actions.md`
 - Read/Store repositories: `php/repositories`
 - Dependency injection and binding: `php/dependency-injection`
-- Attributes, Concern traits, resolver, local package: `php/enum-attributes`
+- Attributes, Concern traits, resolver, local package: `laravel-architecture/enum-attributes`
 - General architecture rules: `php/laravel-best-practices` → `references/architecture.md`
-- Growth to modules (tens of domains, multiple teams): `php/modular-architecture`
+- Growth to modules (tens of domains, multiple teams): `laravel-architecture/modular-architecture`
 - Migrations, models, table naming: `php/database`
-- Per-domain tests (`tests/` mirror): `php/laravel-testing`
+- Per-domain tests (`tests/` mirror): `laravel-testing/laravel-testing`
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: d37695a9b629cfb1451babcb00294af545a99c0c94540f3fc2dee80b04e7b24e -->
+<!-- ru-source-sha256: cf7fc91ba352b8207643f50c29ec75481e665cfbb89deddc947d9a668a320be0 -->

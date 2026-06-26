@@ -38,7 +38,7 @@ Walk linked projects to find what's duplicated/diverging across repos and propos
 
 1. **Scope.** Take projects from prompt; else discover via topology. If many — name a subset (most linked / most changed) and say so.
 2. **List files.** Per project: `git ls-files` minus base exclusions and `coordinator_ignore`. Record order of magnitude (files counted).
-3. **Dispatch to Explore subagents per concern.** For a broad pass, give each concern/domain (DTO, HTTP clients, retry, enum, validation, config, deps) its own read-only `code-coordinator` agent. They return findings, not file bodies — context economy (per `php/laravel-subagents`). No worktree needed: all read-only, no edits.
+3. **Dispatch to Explore subagents per concern.** For a broad pass, give each concern/domain (DTO, HTTP clients, retry, enum, validation, config, deps) its own read-only `code-coordinator` agent. They return findings, not file bodies — context economy (per `laravel-architecture/laravel-subagents`). No worktree needed: all read-only, no edits.
 4. **Correlate BETWEEN projects.** Main context dedups findings, collapses "one concept in N places", drops intra-project noise (out of scope here), assigns type and impact×effort.
 5. **Prioritize & format.** Top = quick wins; per dup name the target and extraction strategy. Report format per `agents/code-coordinator.md`.
 
@@ -68,10 +68,10 @@ Prioritized report: findings (type, `file:line` per project, unification, impact
 - `agents/code-coordinator.md` — read-only cross-project analysis agent (Claude Code plugin channel only).
 - `local-topology` (system bucket) — resolves nodes and projects via `~/.swissknifeman/topology.json`.
 - `quality/tech-debt-audit`, `quality/refactoring-plan`, `quality/code-simplifier`, `quality/code-review` — criteria and extraction strategies.
-- `php/laravel-subagents` — pattern of dispatching concerns to Explore subagents (return findings, not file bodies).
+- `laravel-architecture/laravel-subagents` — pattern of dispatching concerns to Explore subagents (return findings, not file bodies).
 - `shared-memory` (system bucket) — where to record cross-project findings (dups, divergence, shared-package candidates) so other projects in the group see them.
 - `scan-skills.sh` — if the pattern is worth promoting INTO the skill registry.
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 8c9da4e95aba70b64c40767e36bff1a10ca75383bf3081f55ff82d0c6efe29d9 -->
+<!-- ru-source-sha256: 0de141c691f82026cf5a1aaab72a5f8b85e655a286074561c85863d11a51a1fc -->

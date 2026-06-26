@@ -111,7 +111,7 @@ Encode boundaries/invariants as executable rules. Don't replace unit; protect ar
 - **Contracts** are interfaces (`->toBeInterfaces()`).
 - **Actions and Repositories don't depend on HTTP** (`->not->toUse(Request::class)`).
 
-See `snippets/pest-arch-test.php`. Laravel implementation — `php/laravel-testing` and `php/laravel-package-testing`; layer boundaries — `php/laravel-structure`.
+See `snippets/pest-arch-test.php`. Laravel implementation — `laravel-testing/laravel-testing` and `php-packages/laravel-package-testing`; layer boundaries — `php/laravel-structure`.
 
 ## Step 8. CI Integration
 
@@ -159,11 +159,11 @@ FORBIDDEN:
 - Running tests against production environment
 
 ## Links
-- Strategy implementations: `php/laravel-testing` (app), `php/laravel-package-testing` (packages), `php/laravel-dusk` (E2E), `frontend/vitest` (frontend), `quality/playwright-e2e` (native TS E2E)
+- Strategy implementations: `laravel-testing/laravel-testing` (app), `php-packages/laravel-package-testing` (packages), `laravel-testing/laravel-dusk` (E2E), `frontend-vue/vitest` (frontend), `quality/playwright-e2e` (native TS E2E)
 - `quality/mutation-testing` — measure test quality (MSI) on top of coverage policy
 - `quality/code-review` — "are there tests on new logic" criterion relies on this strategy
 - `quality/tech-debt-audit` — where ice-cream cone and coverage debt are logged
-- `php/test-isolation-guard`, `devops/db-test-preflight` — test DB isolation and preflight
+- `laravel-testing/test-isolation-guard`, `devops/db-test-preflight` — test DB isolation and preflight
 - `devops/ci-cd` — coverage gate as separate CI job (threshold from this coverage policy), running suites per job
 - `php/laravel-structure` — layer boundaries checked by Arch invariants
 - snippets/pest-arch-test.php — Pest Arch rules set (strict types, no-debug, final actions, readonly DTO/VO/Events, contracts=interfaces, no Request in Actions/Repositories)
@@ -171,4 +171,4 @@ FORBIDDEN:
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 0dd93d2abb540a1dbaeb2d599e35affeef0e75e5e6708d50c599bc2eb2ded088 -->
+<!-- ru-source-sha256: 55764298eae5df06136709b1a3a23b456b312712a1ff9ef209ab00366b21a8bc -->

@@ -130,7 +130,7 @@ Arch-тесты кодируют **границы и инварианты** ка
 - **Contracts** — это интерфейсы (`->toBeInterfaces()`).
 - **Actions и Repositories не зависят от HTTP** (`->not->toUse(Request::class)`) — мутации и запросы не должны тащить транспортный слой.
 
-Это самый дешёвый барьер против дрейфа архитектуры: правило пишется один раз, держит весь слой. См. `snippets/pest-arch-test.php`. Реализация в Laravel-проектах/пакетах — `php/laravel-testing` и `php/laravel-package-testing`; границы слоёв описывает `php/laravel-structure`.
+Это самый дешёвый барьер против дрейфа архитектуры: правило пишется один раз, держит весь слой. См. `snippets/pest-arch-test.php`. Реализация в Laravel-проектах/пакетах — `laravel-testing/laravel-testing` и `php-packages/laravel-package-testing`; границы слоёв описывает `php/laravel-structure`.
 
 ---
 
@@ -188,11 +188,11 @@ stages:
 
 ## Ссылки
 
-- Реализации стратегии: `php/laravel-testing` (приложение), `php/laravel-package-testing` (пакеты), `php/laravel-dusk` (E2E), `frontend/vitest` (фронтенд), `quality/playwright-e2e` (нативный TS E2E)
+- Реализации стратегии: `laravel-testing/laravel-testing` (приложение), `php-packages/laravel-package-testing` (пакеты), `laravel-testing/laravel-dusk` (E2E), `frontend-vue/vitest` (фронтенд), `quality/playwright-e2e` (нативный TS E2E)
 - `quality/mutation-testing` — измерить качество тестов (MSI) поверх coverage-политики
 - `quality/code-review` — критерий «есть ли тесты на новую логику» опирается на эту стратегию
 - `quality/tech-debt-audit` — куда списывается ice-cream cone и coverage-долг
-- `php/test-isolation-guard`, `devops/db-test-preflight` — изоляция и пре-флайт тестовой БД
+- `laravel-testing/test-isolation-guard`, `devops/db-test-preflight` — изоляция и пре-флайт тестовой БД
 - `devops/ci-cd` — coverage-gate как отдельный CI-job (порог из этой coverage policy), запуск сюитов по job'ам
 - `php/laravel-structure` — границы слоёв, которые проверяют Arch-инварианты
 - snippets/pest-arch-test.php — набор Pest Arch-правил (strict types, no-debug, final actions, readonly DTO/VO/Events, contracts=interfaces, no Request в Actions/Repositories)

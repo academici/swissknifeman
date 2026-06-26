@@ -168,7 +168,7 @@ Adjacent (entry/detail):
 - `architect/tech-stack-selection` — stack choice BEFORE repo structure (ADR-first step).
 - `architect/architecture` — C4/ADR detail (here — base level only).
 - `devops/ci-cd` — GitHub Actions pipelines (here — CI minimum only).
-- `php/laravel-packages` — scaffold/publish Laravel packages (language specifics).
+- `php-packages/laravel-packages` — scaffold/publish Laravel packages (language specifics).
 
 ## Hard forbidden
 
@@ -182,4 +182,4 @@ NEVER:
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 863b971dc8c8adc1de51593151c070f85c1ed0404f3ac9dbcf9fb67d0575ea48 -->
+<!-- ru-source-sha256: 78aafbf7b840f661273b7f63ed1570fba04581829450601fab4635909c5295f3 -->

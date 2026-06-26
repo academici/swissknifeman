@@ -25,8 +25,8 @@ Single source of truth for types: PHP classes (enum, DTO, Spatie-Data) auto-gene
 
 ## Boundaries
 - **Types (this skill)** — data structure: DTO fields, enum values. Artifact: `resources/js/types/generated.d.ts`, namespace `App.*`.
-- **Routes (`frontend/wayfinder`)** — typed URLs/controller-actions. Artifact: `resources/js/wayfinder/`. Separate generation (`php artisan wayfinder:generate`), separate package (`laravel/wayfinder`). Don't get DTO types from wayfinder or vice versa.
-- **PHP enum internals (`php/enum-attributes`)** — backed values, `#[Label]`/`#[Priority]`, methods. This skill only adds `#[TypeScript]` on a ready enum.
+- **Routes (`frontend-wayfinder/wayfinder`)** — typed URLs/controller-actions. Artifact: `resources/js/wayfinder/`. Separate generation (`php artisan wayfinder:generate`), separate package (`laravel/wayfinder`). Don't get DTO types from wayfinder or vice versa.
+- **PHP enum internals (`laravel-architecture/enum-attributes`)** — backed values, `#[Label]`/`#[Priority]`, methods. This skill only adds `#[TypeScript]` on a ready enum.
 - Laravel Boost = upstream versioned basics of Spatie-Data/transformer. Package: https://github.com/laravel/boost.
 
 ## Algorithm
@@ -68,7 +68,7 @@ Single source of truth for types: PHP classes (enum, DTO, Spatie-Data) auto-gene
    - **git pre-commit hook** (Husky or native) — regenerate, fail if `generated.d.ts` changed but uncommitted (see Git-hook).
    - **CI** — step `php artisan typescript:transform` + `git diff --exit-code resources/js/types/generated.d.ts`: PR fails if not regenerated.
 
-7. **Commit the generated file.** `generated.d.ts` is **committed** (not in `.gitignore`): needed for `tsc`/IDE/CI without PHP; diff shows BE↔FE contract change. wayfinder vendor artifacts (`resources/js/wayfinder/`) — commit too, but that's `frontend/wayfinder`'s zone.
+7. **Commit the generated file.** `generated.d.ts` is **committed** (not in `.gitignore`): needed for `tsc`/IDE/CI without PHP; diff shows BE↔FE contract change. wayfinder vendor artifacts (`resources/js/wayfinder/`) — commit too, but that's `frontend-wayfinder/wayfinder`'s zone.
 
 ## Annotation targets
 
@@ -108,7 +108,7 @@ git diff --exit-code -- resources/js/types/generated.d.ts \
 - [ ] Frontend uses `App.Enums.*` / `App.Data.*`, DTO types **not** hand-duplicated
 - [ ] git pre-commit hook OR CI step catches stale `generated.d.ts` (`git diff --exit-code`)
 - [ ] `generated.d.ts` committed (not in `.gitignore`)
-- [ ] Zones not confused: routes — `frontend/wayfinder`, enum internals — `php/enum-attributes`
+- [ ] Zones not confused: routes — `frontend-wayfinder/wayfinder`, enum internals — `laravel-architecture/enum-attributes`
 
 ## References
 - snippets/typescript-transformer.php — transformer config (collectors, transformers, replacements, output_file)
@@ -116,8 +116,8 @@ git diff --exit-code -- resources/js/types/generated.d.ts \
 - snippets/generated-type-usage.vue — using `App.Enums.*` / `App.Data.*` in Vue/TS
 - https://spatie.be/docs/typescript-transformer
 - https://spatie.be/docs/laravel-data
-- Related skills: `frontend/wayfinder` (routes), `php/enum-attributes` (enum internals), `php/laravel-data` (Spatie-Data DTO internals, annotated with `#[TypeScript]`), `frontend/inertia-vue` (types/ layer), `frontend/vitest` (exclude `generated.d.ts` from coverage)
+- Related skills: `frontend-wayfinder/wayfinder` (routes), `laravel-architecture/enum-attributes` (enum internals), `laravel-data-layer/laravel-data` (Spatie-Data DTO internals, annotated with `#[TypeScript]`), `frontend-backend/inertia-vue` (types/ layer), `frontend-vue/vitest` (exclude `generated.d.ts` from coverage)
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 80a456d06ba59a412938f7cb5b47c4dcc21e6dfe7bcc5344f9e8a9f9e5195231 -->
+<!-- ru-source-sha256: c85417544186ac421d0f576f1ea528cb8520f1b3a7e24829beb6d34f8e1aec2b -->

@@ -140,8 +140,8 @@ FORBIDDEN:
 - `architect/observability-design` — prod observability (SLO/SLI/runbooks) on top of approved architecture.
 - `architect/agent-design` — Agent Design section for products with agents.
 - `architect/legal-compliance` — regulatory checklist based on architecture (where data is stored).
-- `php/laravel-structure`, `php/modular-architecture` — implementing architecture in concrete Laravel code.
+- `php/laravel-structure`, `laravel-architecture/modular-architecture` — implementing architecture in concrete Laravel code.
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 023b734bb0a71f0da5e919f52b0cdd213e2ca0598f06cf434d5bacae953975e4 -->
+<!-- ru-source-sha256: df2f8d14bde6743d9f89396203b7b62bd55ec55cdb8f0d35ebd8d41a663c1c7d -->

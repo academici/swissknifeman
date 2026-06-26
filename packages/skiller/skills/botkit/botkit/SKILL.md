@@ -32,9 +32,9 @@ Quality checklist:
 
 Refs:
 - `php/laravel` — architectural patterns (actions, resources) bot logic builds on.
-- `php/laravel-packages` — package scaffold, ServiceProvider, resource publishing.
+- `php-packages/laravel-packages` — package scaffold, ServiceProvider, resource publishing.
 - `php/laravel-structure` — placement of bot classes in the project tree.
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: f0628659930dd0d6c50d5cecb8e5768846cfe03ba9f85e458e81305eed2daac5 -->
+<!-- ru-source-sha256: 44c4e0db7dc7edd8875869556a134e6a7e0536b8bb413af88ad6fd4c03f31126 -->

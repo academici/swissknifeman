@@ -37,8 +37,8 @@ sha256: ""
   Tailwind/CSS-переменными.
 
 **Не про это:** утилитарные классы и дизайн-токены Tailwind как таковые — в
-`frontend/tailwind-conventions`; организация `resources/js/` по слоям — в
-`frontend/inertia-vue`. Naive UI — **не** часть Laravel Boost, upstream не нужен.
+`frontend-tailwind/tailwind-conventions`; организация `resources/js/` по слоям — в
+`frontend-backend/inertia-vue`. Naive UI — **не** часть Laravel Boost, upstream не нужен.
 
 ## Модель темизации Naive UI
 
@@ -154,4 +154,4 @@ sha256: ""
 - https://www.naiveui.com/en-US/os-theme/docs/customize-theme
 - https://www.naiveui.com/en-US/os-theme/docs/theme — общая модель тем и `darkTheme`
 - Переменные компонента: `node_modules/naive-ui/es/<component>/styles/light.ts`
-- Связанные скиллы: `frontend/tailwind-conventions` (токены/CSS-переменные, флаг `.dark`), `frontend/inertia-vue` (где живёт `config/naive-ui.ts`), `frontend/vue-composition-api`, `frontend/dark-mode` (тот же флаг `.dark` выбирает `darkTheme`), `frontend/reka-ui-cva` (альтернатива: свой UI-кит на headless-примитивах вместо готового Naive)
+- Связанные скиллы: `frontend-tailwind/tailwind-conventions` (токены/CSS-переменные, флаг `.dark`), `frontend-backend/inertia-vue` (где живёт `config/naive-ui.ts`), `frontend-vue/vue-composition-api`, `frontend-tailwind/dark-mode` (тот же флаг `.dark` выбирает `darkTheme`), `frontend-reka/reka-ui-cva` (альтернатива: свой UI-кит на headless-примитивах вместо готового Naive)

@@ -37,7 +37,7 @@ git-tracked). Любой, кто клонировал проект, сразу �
   "presets": ["laravel-admin"],
   "include": ["architect/api-design"],
   "buckets": ["quality"],
-  "exclude": ["php/medialibrary"]
+  "exclude": ["laravel-extras/medialibrary"]
 }
 ```
 
@@ -156,8 +156,8 @@ Laravel Boost — это **MCP-сервер** (database-query, tinker, logs, doc
   `.mcp.json`) и может оставлять свои guidelines (`"guidelines": true`).
 - Boost **перестаёт быть каналом скиллов**: `boost.json::skills` → `[]`. Его прежние
   скиллы заменяются **прямыми аналогами из библиотеки** (`managed`, через config) —
-  напр. `inertia-vue-development`→`frontend/inertia-vue`,
-  `tailwindcss-development`→`frontend/tailwind-conventions`.
+  напр. `inertia-vue-development`→`frontend-backend/inertia-vue`,
+  `tailwindcss-development`→`frontend-tailwind/tailwind-conventions`.
 - нужный, но отсутствующий в библиотеке Boost-скилл **импортируется в неё** как внешний
   (`source: external`), проходит валидацию реестра и дальше живёт как обычный.
 - собственные скиллы проекта (git-tracked, напр. в `.ai/skills/`) остаются нетронутыми —

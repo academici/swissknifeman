@@ -55,4 +55,4 @@ sha256: ""
 ## Связанные скиллы
 
 - `oss-dev/dependency-audit` — аудит зависимостей (vuln, лицензии, supply-chain) поверх реестра.
-- `python/venv-dependencies`, `php/laravel-packages` — стек-специфичное управление зависимостями.
+- `python/venv-dependencies`, `php-packages/laravel-packages` — стек-специфичное управление зависимостями.

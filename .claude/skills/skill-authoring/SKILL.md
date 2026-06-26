@@ -97,19 +97,74 @@ EN не регенерён). Свежесть метит `<!-- ru-source-sha256 
 `// Source: {project}/{file} (anonymized)`), перечислены в `snippets/index.json`.
 Адаптерные отличия — только в `adapters/`, никогда дублированным SKILL.md.
 
+## Eval-first: поведенческие тесты скилла (evals/)
+
+Структурная валидация не отвечает на главный вопрос — *скилл работает и срабатывает
+к месту?* Поэтому к КАЖДОМУ авторскому (не-upstream) скиллу заводи `evals/` рядом со
+SKILL.md (скаффолд: `skiller eval <bucket>/<name> --scaffold`):
+
+- **`evals.json`** — кейсы `{id, prompt, assertions[]}`; ассершены ТОЛЬКО
+  детерминированные (`contains`/`not_contains`/`regex`/`not_regex`/`file_exists`/
+  `file_absent`/`min_words`) — грейд воспроизводим без LLM-judge. Промпты — на
+  реальном языке пользователя, с конкретикой.
+- **`pressure.json`** — сценарии-соблазны (из методики «TDD для документации»):
+  что подмывает агента сделать, ПРОПУСТИВ скилл, и ассершены на соблюдение/нарушение.
+- **`triggers.json`** — `should_trigger` / `should_not` запросы для точности
+  срабатывания `description` (ярус-0). Оптимизация: `skiller eval … --triggers`
+  предлагает описание ≤150 симв.; правка идёт в `SKILL.ru.md` → регенерация EN.
+
+Прогон `skiller eval <bucket>/<name>` (with-skill vs `--baseline`) пишет
+`evals/benchmark.json`. Требует CLI `claude`; без него — офлайн-валидация формата.
+`evals/` НЕ вендорится (как `*.ru.md`) и не входит в content-hash. Покрытие видно
+строкой `evals coverage:` в `validate.sh`. Канон — `docs/guide/evals.md`.
+
 ## Внешний/производный скилл → upstream.json обязателен
 
 Любой скилл, заимствованный или производный от внешнего источника, обязан
 иметь `upstream.json` рядом со SKILL.md:
 
 - `schema_version: 1`; `source: github|http|file` (file — только локальные
-  фикстуры/тесты); `strategy: replace` (зеркало, у апстрима валидный
-  frontmatter) или `notify` (адаптированная копия, апстрим только репортится);
-  `files[]` — каждый с `path`/`url`/`sha256`/`fetched_at` (YYYY-MM-DD); `notes`.
+  фикстуры/тесты); `strategy`:
+  - `replace` — зеркало (у апстрима валидный frontmatter, автонакат);
+  - `notify` — адаптированная копия (апстрим только репортится);
+  - `fork` — форк с нашими правками (pristine-зеркало в `files[].path`; на дрейфе
+    `review_pending=true` блокирует распространение — ручной перенос, потом `--resolve`);
+  - `merge` — **композит из ≥2 внешних источников**, собранный в единый целиковый скилл.
+- `files[]` — каждый с `path`/`url`/`sha256`/`fetched_at` (YYYY-MM-DD); `notes`.
+
+**Composite (`strategy: merge`) — скилл из нескольких источников.** Когда скилл
+фактически слеплен из двух+ внешних скиллов, фиксируй провенанс с ролями в `origins[]`:
+
+```json
+{
+  "schema_version": 1, "source": "github", "strategy": "merge",
+  "origins": [
+    {"repo": "antfu/skills", "role": "base", "url": "…", "ref": "main",
+     "sha256": "…", "fetched_at": "2026-06-26", "note": "взята структура и ядро"},
+    {"repo": "onmax/nuxt-skills", "role": "supplement", "url": "…",
+     "sha256": "…", "fetched_at": "2026-06-26", "suggest": "добавлены разделы SEO/модули"}
+  ],
+  "merge": {"review_pending": false, "last_review": "2026-06-26"},
+  "files": [ … ]
+}
+```
+
+- Роли: ровно один `base` (взят за основу) + ≥1 `supplement` (дополняющий
+  источник-«suggest»; чем именно дополнил — в `note`/`suggest`).
+- **Синк ручной, под управлением агента.** На дрейфе любого `origin` ставь
+  `merge.review_pending=true` — это блокирует `validate.sh`/`registry`/релиз, пока
+  агент не пере-мерджит источники в SKILL.md вручную и не снимет гейт
+  (`scripts/update-upstreams.sh --resolve --skill <id>`). Авто-overwrite для merge запрещён.
 - Workflow: каталог → upstream.json с пустыми sha →
   `./scripts/update-upstreams.sh --apply --skill <bucket>/<name>` → статус
   в `references/<source>.md` → imported.
 - Эталон: `skills/php/laravel-best-practices/upstream.json` (multi-file, notify).
+
+**Внешний ресурс как ориентир → `docs/reference.md`.** Если при проектировании использовал внешний
+ресурс (репо, фреймворк, чужой скилл, статью, спецификацию) — **даже как reference/вдохновение, без
+переноса файлов** — отметь его в корневом `docs/reference.md`: строка в таблице (что · зрелость ·
+вердикт adopt/reference/skip · что взято), при значимости — карточка. `upstream.json` — паспорт
+КОНКРЕТНОГО вендоренного файла; `docs/reference.md` — единый каталог провенанса ВСЕХ внешних влияний.
 
 ## requires / produces_for
 
@@ -149,6 +204,7 @@ EN не регенерён). Свежесть метит `<!-- ru-source-sha256 
 - [ ] Frontmatter полный, name == каталог, inline-списки.
 - [ ] Есть «Когда активировать», полный алгоритм, чеклист.
 - [ ] Внешний скилл — upstream.json с заполненными sha256/fetched_at.
+- [ ] Внешние ресурсы/ориентиры, использованные при проектировании, отмечены в `docs/reference.md`.
 - [ ] requires/produces_for валидны; новый бакет — в buckets.json.
 - [ ] validate зелёный, registry регенерирован и закоммичен.
 

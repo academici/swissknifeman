@@ -1,8 +1,13 @@
 # Референсы: внешние фреймворки и каталоги агентов Claude Code
 
-Карта внешних источников, изученных при проектировании слоя субагентов/шаблонов swissknifeman
-(глубокий research-аудит, июнь 2026). Для каждого — что это, зрелость, **плюсы/минусы**, вердикт
-и что именно взято в swissknifeman. Цель — чтобы дальше можно было возвращаться к ним адресно.
+Карта внешних источников, изученных при проектировании swissknifeman (слой субагентов/шаблонов —
+research-аудит июнь 2026; skill-реестр и eval — рецензия skill-фреймворков июнь 2026). Для каждого —
+что это, зрелость, **плюсы/минусы**, вердикт и что именно взято в swissknifeman. Цель — чтобы дальше
+можно было возвращаться к ним адресно.
+
+> **Правило:** использовал внешний ресурс при проектировании (репо, фреймворк, чужой скилл, статью,
+> спецификацию) — **отметь его здесь** (строка в таблице + при значимости карточка: что, зрелость,
+> вердикт, что взято). Это единый каталог провенанса; per-skill паспорта живут в `upstream.json`.
 
 > Вердикты: **adopt** — взято; **reference** — паттерн/ориентир (не зависимость); **skip** — не
 > подходит. Конвенция репо — stdlib-only Python, без JS/pip-рантайма: любой код извне берём как
@@ -21,6 +26,9 @@
 | [langchain-ai/langgraph](https://github.com/langchain-ai/langgraph) | multi-agent runtime | 35k★, MIT | **skip** (reference) | только словарь оркестрации (supervisor/swarm) для прозы — иной слой |
 | [itgoyo/awesome-agent-skills](https://github.com/itgoyo/awesome-agent-skills) | каталог скиллов | 138★, CC-BY | reference → [roadmap](../roadmap/skill-rules-sidecar.md) | паттерн `skill-rules.json` сайдкар (отложен) |
 | [wshobson/agents](https://github.com/wshobson/agents) | стек-бандлы + model-tiers | 37k★, MIT, активный | reference | блюпринт профилей: стек→бандл, per-agent model-tiers |
+| [anthropics/skills](https://github.com/anthropics/skills) | официальные skills (skill-creator, mcp-builder, doc/creative) | first-party, Apache-2.0 (docx/pdf/pptx — Proprietary) | **adopt** (метод) | eval-харнес скиллов из `skill-creator` (evals/benchmark, оптимизация описания); docx/pdf/pptx — **skip** (Proprietary); `mcp-builder` — reference (отложено) |
+| [obra/superpowers](https://github.com/obra/superpowers) | process/discipline-скиллы + каркас (hooks-bootstrap) | MIT, активный, мульти-harness | **adopt** (метод) | pressure-тесты (`writing-skills` — TDD для документации) в eval-формат; iron-law/red-flag/SessionStart-bootstrap — reference (отложено) |
+| [affaan-m/ECC](https://github.com/affaan-m/ECC) | кросс-harness фреймворк (skills/agents/hooks/security) | ~221k★, MIT, активный | reference | supply-chain-скан вендоринга, hook-профили, PreCompact, fact-force gate — **отложено**; инфраструктура (память/граф) уже у `maind` |
 
 ## Карточки
 
@@ -88,6 +96,31 @@ model-tiers. **Плюсы:** почти готовый блюпринт для `
 берём **форму, не масштаб** (нам нужны только claude+cursor). **Взято:** идея per-agent model-tiers
 (реализована как `profile.model_tiers` → `MODEL_*`-плейсхолдеры).
 
+### anthropics/skills — adopt (методология)
+Официальные демонстрационные skills. **Плюсы:** `skill-creator` даёт ровно то, чего у нас не было —
+**eval/benchmark** скиллов и оптимизацию триггера описания; его 3-ярусная модель раскрытия совпадает
+с нашим `budget.py` (у нас даже строже — ≤150 строк тела). `mcp-builder` — эталон дизайна MCP-серверов
+(релевантно `maind`/бакету `ai`). **Минусы:** `docx/pdf/pptx` под **Proprietary**-лицензией (вендорить
+нельзя); прочие — Apache-2.0 «for demonstration only»; код тащить не надо (stdlib-only) — берём метод.
+**Взято:** eval-харнес скиллов (`lib/skiller/eval.py`, `skiller eval`, формат `evals/`); `mcp-builder`
+и doc/creative — reference/skip.
+
+### obra/superpowers — adopt (методология)
+Каркас process-скиллов (TDD/debugging/brainstorming) + SessionStart-bootstrap, инжектящий «скиллы
+существуют». **Плюсы:** `writing-skills` = **TDD для документации** (pressure-тесты: сценарии-соблазны,
+прогон субагентами до соблюдения) — прямой донор нашего `pressure.json`; iron-law и red-flag-таблицы
+рационализаций — сильные приёмы принуждения. **Минусы:** список process-скиллов у нас уже покрыт
+(`general`/`quality`); bootstrap/хуки — отдельный слой `harness`. **Взято:** pressure-тесты в
+eval-формат; bootstrap/iron-law/hook-механизмы — reference (отложено, см. план).
+
+### affaan-m/ECC — reference
+Крупный кросс-harness фреймворк (~221k★): 271 скилл, 67 агентов, 20+ хуков, безопасность, memory.
+**Плюсы:** боевые паттерны supply-chain-гигиены вендоринга (IOC-скан, санитизация prompt-injection),
+hook-профили (minimal/standard/strict), PreCompact memory-save, fact-force gate. **Минусы:** инфраструктура
+(память/граф/install-профили/кросс-harness) у нас уже закрыта `maind`/`harness`/`skiller`; массовый
+импорт скиллов не нужен (домен у́же, курируется). **Взято:** ничего сразу — supply-chain-скан и
+hook-механизмы **отложены** (реальный пробел: вендорим 54 внешних скилла лишь с sha256).
+
 ## Как это легло в архитектуру
 
 - Канон субагентов (спек, Volt, vijay) → **agent-packs** с каноническими `description`+`<example>`.
@@ -96,3 +129,8 @@ model-tiers. **Плюсы:** почти готовый блюпринт для `
 - Model-tiers (wshobson) → `profile.model_tiers` → `MODEL_*`-плейсхолдеры.
 - Router/self-learning/skill-rules (Rio, session-hooks, itgoyo) → **отложены в `roadmap/`** —
   внедрять по факту измеренной проблемы, не спекулятивно.
+- Eval скиллов (anthropics `skill-creator` + superpowers `writing-skills`) → **`skiller eval` +
+  формат `evals/`** (поведенческое тестирование: evals/pressure/triggers, with-skill vs baseline).
+  Composite-провенанс (несколько источников в одном скилле) → **`upstream.json strategy=merge`**
+  (`origins[]` base+supplement, ручной agent-merge). Supply-chain-скан/bootstrap/hook-профили (ECC,
+  superpowers) → **отложены** — см. план.

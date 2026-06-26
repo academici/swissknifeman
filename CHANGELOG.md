@@ -2,6 +2,33 @@
 
 ## [Unreleased]
 
+### Added (skiller — eval-харнес скиллов + composite-upstream `merge`)
+
+- **`skiller eval <bucket>/<name>`** (`lib/skiller/eval.py`) — поведенческое тестирование скиллов,
+  которого не было (валидация была только структурной). Формат `evals/`: `evals.json` (кейсы +
+  **детерминированные** ассершены `contains`/`not_contains`/`regex`/`not_regex`/`file_exists`/
+  `file_absent`/`min_words`), `pressure.json` (сценарии-соблазны «пропустить скилл» — TDD для
+  документации), `triggers.json` (точность срабатывания `description`). Прогон with-skill vs
+  `--baseline` через `claude -p` → `benchmark.json` (pass-rate, токены/тайминги mean±stddev, Δ);
+  `--static` пишет HTML-отчёт; `--scaffold` создаёт стабы; `--triggers` — оптимизация описания
+  (≤150 симв., правка через `SKILL.ru.md`→EN). Адаптировано (методология, не код) из Anthropic
+  `skill-creator` + obra/superpowers `writing-skills`. **CI офлайн:** нет `claude` → мягкая деградация.
+- **Гейт и покрытие в `validate.sh`** — жёсткая валидация формата заведённых `evals/*.json` + сводка
+  `evals coverage: X/Y` одной строкой (без per-skill шума). `generate-skill` и root-скилл
+  `skill-authoring` переведены на **eval-first**. `evals/` НЕ вендорится (`vendor.copy_skill`) и
+  исключён из `skill_content_hash`. Сиды: `general/verify-claims`, `general/anti-drift`,
+  `quality/code-review`. Юнит-тесты — `tests/test_eval.py` (офлайн).
+- **upstream.json `strategy: merge`** — скилл, собранный из **нескольких внешних источников**:
+  `origins[]` с ролями (ровно один `base` + ≥1 `supplement`/«suggest», с подсказкой `note`/`suggest`
+  чем дополнил). Синк **ручной под управлением агента**: на дрейфе любого origin
+  `merge.review_pending=true` блокирует `validate.sh`/`registry`/релиз до ручного пере-merge
+  (как гейт `fork`), авто-overwrite запрещён. Валидация в `validate.sh`; DX-схемы
+  `schema/{evals,upstream}.schema.json`; доки `docs/guide/evals.md` + `upstream-sync.md`.
+
+> Контекст: рецензия трёх внешних skill-репозиториев (anthropics/skills, obra/superpowers,
+> affaan-m/ECC) — закрыт крупнейший пробел реестра (поведенческое тестирование скиллов) и добавлен
+> провенанс composite-скиллов из нескольких источников с ручным agent-merge.
+
 ### Added (verify-claims — RAG-верификация внешних фактов в ревью и планировании)
 
 - **Скилл `general/verify-claims`** (CORE, двуязычный RU→EN) — эпистемический гейт против решений по

@@ -195,6 +195,10 @@ def skill_content_hash(skill_dir):
             continue
         if ".claude-plugin" in f.parts:
             continue
+        # evals/ — поведенческие тесты (eval-first), НЕ вендорятся (см. vendor.copy_skill);
+        # исключаем из хеша, чтобы правка теста не считалась дрейфом вендоренного скилла.
+        if "evals" in f.relative_to(skill_dir).parts:
+            continue
         h.update(str(f.relative_to(skill_dir)).encode("utf-8"))
         h.update(b"\0")
         h.update(f.read_bytes())

@@ -2,6 +2,27 @@
 
 ## [Unreleased]
 
+### Added (аудит — покрытие локальных скиллов + сценарные рецепты архетипов)
+
+- **Новый governance-скилл `harness-operations`** (`.claude/skills/`) — у пакета `harness` не было ни
+  одного операционного скилла. Карта команд (`permissions`/`mcp`/`hooks`/`agent-packs`/`doctor`),
+  каталог пресетов (`settings.*` по стекам, `mcp/<name>.json`, режимы auto-approve), и недокументированная
+  подсистема **agent-packs** (4 стек- + 4 роль-пака с `pack:if`-шаблонизацией). Чтобы агент не гадал
+  при задаче на окружение Claude Code.
+- **`maind-overview` расширен:** `maind verify` (пруф-оф-лайф vs `health`), команды реестров/оркестрации
+  (`projects`/`agents`/`namespaces`/`workspace`/`run`/`fleet`/`migrate`/`deploy`), таблица 11 MCP-инструментов
+  с заметкой об изоляции scope (per-project сервер ограничен своим проектом).
+- **Архетип Blender** — был пробел: `.blend`/`bpy`-проект детектился как `standalone`. Добавлены
+  `blender` в `core.PROJECT_TYPES`/`LANGUAGE_BY_TYPE` (python) + детект (`*.blend`/`blender_manifest.toml`/
+  `import bpy`, раньше python-backend) + `profiles/blender.json` (бакеты blender/blender-modeling/python/
+  quality). Тесты — `core/tests/test_core.py` (+3).
+- **`docs/guide/archetypes.md`** — рецепты 9 архетипов (детект → бакеты/MCP/пресеты/agent-pack) +
+  **неочевидные развилки** (connect vs vendor, CORE, память, namespace, Serena, Nuxt-vs-Vue-SPA) — чтобы
+  онбординг типового проекта не порождал вопросов. В nav skiller-доков.
+- **Сценарные тексто-кейсы (eval-харнес)** заведены для CORE-скилла `general/compact-responses`
+  (`evals/{evals,pressure,triggers}.json` — типовые задачи + соблазны + точность триггера). Покрытие
+  `evals/` 3→4; механизм и расширение задокументированы в `archetypes.md`.
+
 ### Fixed (аудит — свод дрейфа документации после раскола бакетов php/frontend)
 
 - **862 протухших ссылки `php/<skill>` / `frontend/<skill>` переписаны** на актуальные бакеты по

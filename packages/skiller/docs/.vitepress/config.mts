@@ -38,6 +38,7 @@ export default withMermaid(defineConfig({
             { text: 'Чеклист интеграции', link: '/guide/integration-checklist' },
             { text: 'CLI swissknifeman', link: '/guide/cli' },
             { text: 'Профили и автодетект', link: '/guide/profiles' },
+            { text: 'Архетипы: рецепты и развилки', link: '/guide/archetypes' },
             { text: 'Анатомия скилла', link: '/guide/skill-anatomy' },
             { text: 'Таксономия и гранулярность', link: '/guide/skill-taxonomy' },
             { text: 'Адаптерные дельты', link: '/guide/adapter-deltas' },

@@ -22,12 +22,12 @@ author: github.com/vuejs-ai
 
 Скилл — про **что и как тестировать в Vue-компонентах**: чёрный ящик (вход = props/слоты/события
 пользователя, выход = DOM/эмиты/вызовы стора), а не внутренности. Стек: Vitest как раннер
-(`frontend/vitest`, `frontend/vitest-vue`), Vue Test Utils 2 (VTU) как монтировщик, опционально
+(`frontend-vue/vitest`, `frontend-vue/vitest-vue`), Vue Test Utils 2 (VTU) как монтировщик, опционально
 `@testing-library/vue` для user-centric стиля. Пишем на Composition API (`<script setup lang="ts">`),
 Pinia — через `@pinia/testing`, async — через `flushPromises`/`nextTick`.
 
-Конфиг Vitest (jsdom, алиасы, coverage) — НЕ здесь, он в `frontend/vitest`. Общий API
-expect/mock/vi — в `frontend/vitest-vue`. Этот скилл их не дублирует, а надстраивает Vue-специфику.
+Конфиг Vitest (jsdom, алиасы, coverage) — НЕ здесь, он в `frontend-vue/vitest`. Общий API
+expect/mock/vi — в `frontend-vue/vitest-vue`. Этот скилл их не дублирует, а надстраивает Vue-специфику.
 
 ## Когда активировать
 
@@ -122,12 +122,12 @@ expect/mock/vi — в `frontend/vitest-vue`. Этот скилл их не ду�
 
 ## Ссылки
 
-- `frontend/vitest` — конфиг Vitest именно для Laravel/Inertia/Vue (jsdom, алиасы, coverage exclude).
+- `frontend-vue/vitest` — конфиг Vitest именно для Laravel/Inertia/Vue (jsdom, алиасы, coverage exclude).
   Настройку раннера бери там, здесь — практики тестов.
-- `frontend/vitest-vue` — generic справочник API Vitest (test/describe/expect/mock/vi, coverage).
+- `frontend-vue/vitest-vue` — generic справочник API Vitest (test/describe/expect/mock/vi, coverage).
   Общий API не дублируем — за ним туда.
-- `frontend/vue` — Composition API / `<script setup>` / реактивность: что именно тестируем.
-- `frontend/vue-best-practices` — архитектура (когда composable, когда store), влияет на тестируемость.
-- `frontend/pinia` / `frontend/pinia-stores` — устройство сторов, которые мокаем через `createTestingPinia`.
+- `frontend-vue/vue` — Composition API / `<script setup>` / реактивность: что именно тестируем.
+- `frontend-vue/vue-best-practices` — архитектура (когда composable, когда store), влияет на тестируемость.
+- `frontend-vue/pinia` / `frontend-vue/pinia-stores` — устройство сторов, которые мокаем через `createTestingPinia`.
 - https://test-utils.vuejs.org/ · https://testing-library.com/docs/vue-testing-library/intro/ · https://pinia.vuejs.org/cookbook/testing.html
 - `reference/` — детальные заметки по частным случаям (импорт из antfu/skills, см. `upstream.json`).

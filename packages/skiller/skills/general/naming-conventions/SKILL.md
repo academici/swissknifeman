@@ -16,7 +16,7 @@ sha256: ""
 
 # Naming discipline
 
-Language-agnostic **policy** (not a pattern); stack-specific skills (`php/naming-conventions` etc.) build on it.
+Language-agnostic **policy** (not a pattern); stack-specific skills (`general/naming-conventions` etc.) build on it.
 
 ## Activate when
 
@@ -82,11 +82,11 @@ Don't spawn a method per field. Allowed:
 
 ## Related skills
 
-- `php/naming-conventions` — Laravel specifics (Actions/Repository/DTO/VO/Enum, `findByXOrFail` breakdown).
+- `general/naming-conventions` — Laravel specifics (Actions/Repository/DTO/VO/Enum, `findByXOrFail` breakdown).
 - `general/writing-style` — prose & message style; naming is about code identifiers.
 - `quality/code-review` — where name checks fit into review (P2/P3 findings).
 - `general/anti-drift` — "simplicity first": simpler name = less drift.
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 8877fc2656e42fb4dec4095e14d878cb78a0358bbe401a8c0e77999218efc03d -->
+<!-- ru-source-sha256: fa860d2c16747dee89bb959a04f353de4646d59f7c29465b7373e6f238dd632a -->

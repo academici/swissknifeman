@@ -158,4 +158,4 @@ adapters: [claude, cursor, fable]
 - `architect/observability-design` — прод-наблюдаемость (SLO/SLI/runbooks) поверх утверждённой архитектуры.
 - `architect/agent-design` — секция Agent Design для продуктов с агентами.
 - `architect/legal-compliance` — регуляторный чеклист на основе архитектуры (где хранятся данные).
-- `php/laravel-structure`, `php/modular-architecture` — реализация архитектуры в конкретном Laravel-коде.
+- `php/laravel-structure`, `laravel-architecture/modular-architecture` — реализация архитектуры в конкретном Laravel-коде.

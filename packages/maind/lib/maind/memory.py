@@ -258,6 +258,25 @@ def export(url, scope):
     return res.get("memories", []) if isinstance(res, dict) else []
 
 
+def memory_owner_scope(url, memory_id, scopes):
+    """Best-effort: scope-владелец факта `memory_id` среди `scopes` — по маркеру
+    `[[s:<scope>]]` в контенте (а нет маркера → бакету, в котором найден), или None,
+    если факт не найден ни в одном scope. Нужен forget'у: memoryId глобально уникален,
+    демон удаляет по нему БЕЗ оглядки на scope, поэтому до удаления подтверждаем, что
+    факт действительно принадлежит разрешённому проекту (защита кросс-namespace
+    удаления). Устойчив к форме элемента дампа (raw `content` или observation)."""
+    for sc in scopes:
+        for m in export(url, sc):
+            if str(m.get("id")) != str(memory_id):
+                continue
+            obs = m.get("observation") or m
+            raw = (m.get("content") or obs.get("narrative") or obs.get("title")
+                   or " ".join(obs.get("facts") or []))
+            marker, _ = split_scope(raw)
+            return marker or sc
+    return None
+
+
 # ── CLI ─────────────────────────────────────────────────────────────────────
 def cmd_memory(env, argv):
     if not argv or argv[0] in ("-h", "--help"):

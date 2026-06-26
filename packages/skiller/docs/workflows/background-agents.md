@@ -16,7 +16,7 @@ PR-комментарий или Issue.
 | Шаблон | Скилл-носитель | Триггер | Результат |
 |---|---|---|---|
 | `simplify-on-push.yml` | `quality/code-simplifier` | pull_request (PHP-файлы) | Предложения по упрощению комментарием к PR |
-| `security-audit-scheduled.yml` | `php/laravel-security-audit` | cron (еженедельно) + ручной | Issue с находками по severity |
+| `security-audit-scheduled.yml` | `laravel-auth/laravel-security-audit` | cron (еженедельно) + ручной | Issue с находками по severity |
 
 После установки скиллов через `skiller vendor` сниппеты лежат в
 `<skills-path>/<skill>/snippets/`; в самом реестре swissknifeman эти

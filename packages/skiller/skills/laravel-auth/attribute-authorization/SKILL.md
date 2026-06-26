@@ -24,7 +24,7 @@ Activate when:
 - designing/editing **reflection-middleware** reading controller-method attributes;
 - one action needs **multiple** checks with different abort statuses (403 deny, 404 to mask others' resource).
 
-## Boundary vs `php/laravel-permissions`
+## Boundary vs `laravel-auth/laravel-permissions`
 
 Orthogonal layer **on top of** Gate, not a replacement for policies/gates:
 
@@ -35,7 +35,7 @@ Orthogonal layer **on top of** Gate, not a replacement for policies/gates:
 | Application point | `Gate::allows`, `$user->can`, policies in service layer | attribute over method + middleware executor |
 | Mechanism | container, policy resolver, context | `ReflectionMethod::getAttributes()` |
 
-Linkage: keep ability logic ("can it") in Gate/policy per `laravel-permissions`; each permission's `enum::value` = ability string there. This skill only declaratively attaches the ability call to the action. Enum permissions as metadata/type-safe layer — see `php/enum-attributes`.
+Linkage: keep ability logic ("can it") in Gate/policy per `laravel-permissions`; each permission's `enum::value` = ability string there. This skill only declaratively attaches the ability call to the action. Enum permissions as metadata/type-safe layer — see `laravel-architecture/enum-attributes`.
 
 ## Algorithm
 
@@ -107,8 +107,8 @@ Order: `CheckAccess` must run **after** `auth` (Gate relies on current user) and
 - snippets/OrderController.php — controller with `#[CheckPermission]`
 - https://www.php.net/manual/en/language.attributes.php
 - https://laravel.com/docs/authorization (Gate::allows)
-- Related skills: `php/laravel-permissions` (permission/policy/gate definition — boundary above), `php/azguard` (package code-first RBAC as ability source), `php/enum-attributes` (enum as metadata), `php/named-arguments` (call style in snippets), `architect/security-design` (architecture-level auth strategy)
+- Related skills: `laravel-auth/laravel-permissions` (permission/policy/gate definition — boundary above), `azguard/azguard` (package code-first RBAC as ability source), `laravel-architecture/enum-attributes` (enum as metadata), `php/named-arguments` (call style in snippets), `architect/security-design` (architecture-level auth strategy)
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: ed6375eabe5546f132489d223afc214dc2e0242254658109edbab1c6a2fa40d2 -->
+<!-- ru-source-sha256: da624216d2b7291cfb512a4cefa1f52044511f77c02b82ad79ce0abe45e4370a -->

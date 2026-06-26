@@ -170,5 +170,5 @@ harness agent-packs doctor  [--pack <pack>]
 
 - `harness/configs/claude-code/agent-packs/` — базы паков (источник истины).
 - `docs/skiller/agent-framework/` — модель каркаса; `post-integration-checklist` — пост-проверка.
-- `php/laravel-subagents` — протокол оркестрации, который реализуют роли пака.
+- `laravel-architecture/laravel-subagents` — протокол оркестрации, который реализуют роли пака.
 - `general/context-economy`, `general/session-handoff` — контекст основной сессии при делегировании.

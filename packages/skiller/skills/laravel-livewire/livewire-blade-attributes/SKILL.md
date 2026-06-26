@@ -70,8 +70,8 @@ Do NOT activate: static attributes without conditions; Livewire lifecycle/bindin
 - https://laravel.com/docs/blade#default-merged-attributes (ComponentAttributeBag, `merge`, `class`)
 - Laravel Boost (`livewire/*`) — versioned Livewire 2/3/4 rules; not duplicated here.
 - `snippets/blade-attributes.blade.php` — before/after pairs.
-- Related skills: `php/filament` (Livewire-based UI — same Blade components), `frontend/laravel-echo-client` (realtime frontend when Livewire is augmented with websockets).
+- Related skills: `laravel-filament/filament` (Livewire-based UI — same Blade components), `frontend-backend/laravel-echo-client` (realtime frontend when Livewire is augmented with websockets).
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 62d0c8849fcde93d1cc5ff4a3908db8333eb1a74f93697abef175895cbef837f -->
+<!-- ru-source-sha256: afe4063a41f96e4504a12cd5f1235fdfc1cea24b3ab769fb2c71e456c3859546 -->

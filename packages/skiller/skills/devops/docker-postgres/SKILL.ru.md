@@ -55,4 +55,4 @@ sha256: ""
 
 - https://hub.docker.com/_/postgres — раздел Initialization scripts (`/docker-entrypoint-initdb.d`)
 - https://www.postgresql.org/docs/current/app-pg-isready.html — pg_isready
-- Смежные скиллы: `docker-services` (depends_on-паттерны), `docker-dev-prod` (раскладка dev/prod compose), `makefile` (цель db-create-test), `db-test-preflight` (проверка `<app>_test` перед прогоном тестов), `php/test-isolation-guard` (страж изоляции тестовой БД), `php/laravel-testing` (тесты поверх `<app>_test`)
+- Смежные скиллы: `docker-services` (depends_on-паттерны), `docker-dev-prod` (раскладка dev/prod compose), `makefile` (цель db-create-test), `db-test-preflight` (проверка `<app>_test` перед прогоном тестов), `laravel-testing/test-isolation-guard` (страж изоляции тестовой БД), `laravel-testing/laravel-testing` (тесты поверх `<app>_test`)

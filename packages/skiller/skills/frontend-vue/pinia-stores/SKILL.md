@@ -25,7 +25,7 @@ Activate when:
 - code has `defineStore(...)`, import `from 'pinia'`, `useXxxStore()` call;
 - question "share data between unrelated components", "where to move state out of a component", "access state from a plain `.ts` module (outside a component)".
 
-BOUNDARY vs skill `frontend/vue-composition-api`: there = `<script setup>`, local state of ONE component (`ref`/`computed`/`watch` inside component). Here = GLOBAL state living in Pinia, accessible everywhere. State needed only by current component is NOT a store — keep `ref` in component or extract a composable. Create a store when state is read/changed from ≥2 unrelated places or must survive navigation.
+BOUNDARY vs skill `frontend-vue/vue-composition-api`: there = `<script setup>`, local state of ONE component (`ref`/`computed`/`watch` inside component). Here = GLOBAL state living in Pinia, accessible everywhere. State needed only by current component is NOT a store — keep `ref` in component or extract a composable. Create a store when state is read/changed from ≥2 unrelated places or must survive navigation.
 
 ## Rules
 
@@ -94,8 +94,8 @@ Easy-to-break rules:
 - https://pinia.vuejs.org/cookbook/composing-stores.html
 - https://pinia.vuejs.org/ssr/ (hydration, per-request instance)
 - https://prazdevs.github.io/pinia-plugin-persistedstate/
-- Related skills: `frontend/vue-composition-api` (local component state), `frontend/inertia-vue` (where `stores/` sits in layered `resources/js`), `frontend/laravel-echo-client` (live store updates via realtime events)
+- Related skills: `frontend-vue/vue-composition-api` (local component state), `frontend-backend/inertia-vue` (where `stores/` sits in layered `resources/js`), `frontend-backend/laravel-echo-client` (live store updates via realtime events)
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 98442814038d59241184e3af3278ed225cc1cffdce73d55db1853616ea2da5e1 -->
+<!-- ru-source-sha256: bcc37bd335ca074eb71a38c5e19c16475021b2916df2ce8a7a8034e5c73fef49 -->

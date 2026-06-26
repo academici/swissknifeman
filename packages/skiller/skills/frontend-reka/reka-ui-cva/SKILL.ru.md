@@ -107,4 +107,4 @@ sha256: ""
 - https://reka-ui.com/
 - https://cva.style/docs
 - https://github.com/dcastil/tailwind-merge
-- Связанные скиллы: `frontend/tailwind-conventions` (`cn()`, дизайн-токены, `cva` в `tailwindFunctions`), `frontend/inertia-vue` (где живёт `components/ui/`), `frontend/js-code-style`, `frontend/vue-composition-api` (`<script setup>` компонентов), `frontend/naive-ui-theming` (альтернатива: готовый UI-кит Naive вместо своего на примитивах)
+- Связанные скиллы: `frontend-tailwind/tailwind-conventions` (`cn()`, дизайн-токены, `cva` в `tailwindFunctions`), `frontend-backend/inertia-vue` (где живёт `components/ui/`), `frontend-linting/js-code-style`, `frontend-vue/vue-composition-api` (`<script setup>` компонентов), `frontend-naive-ui/naive-ui-theming` (альтернатива: готовый UI-кит Naive вместо своего на примитивах)

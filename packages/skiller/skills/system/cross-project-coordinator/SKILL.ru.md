@@ -69,7 +69,7 @@ named extraction target (куда выносить); приоритет impact×
 3. **Раздай Explore-субагентам по концерну.** Для широкого прохода — отдай каждый
    концерн/домен (DTO, HTTP-клиенты, retry, enum, валидация, конфиг, зависимости)
    отдельному агенту `code-coordinator` (read-only). Возвращают находки, не тела
-   файлов — экономия контекста (как в `php/laravel-subagents`). Worktree не нужен:
+   файлов — экономия контекста (как в `laravel-architecture/laravel-subagents`). Worktree не нужен:
    всё read-only, правок нет.
 4. **Скоррелируй МЕЖДУ проектами.** Главный контекст дедуплицирует находки,
    сводит «один концепт в N местах», отбрасывает внутрипроектный шум (это не
@@ -105,6 +105,6 @@ impact×effort) + итог (топ-возможности, предлагаем�
 - `agents/code-coordinator.md` — read-only агент межпроектного анализа (только plugin-канал Claude Code).
 - `local-topology` (бакет system) — резолв узлов и проектов через `~/.swissknifeman/topology.json`.
 - `quality/tech-debt-audit`, `quality/refactoring-plan`, `quality/code-simplifier`, `quality/code-review` — критерии и стратегии вынесения.
-- `php/laravel-subagents` — паттерн раздачи концернов Explore-субагентам (возвращают находки, не тела файлов).
+- `laravel-architecture/laravel-subagents` — паттерн раздачи концернов Explore-субагентам (возвращают находки, не тела файлов).
 - `shared-memory` (бакет system) — куда зафиксировать межпроектные находки (дубли, расхождения, кандидаты в общий пакет), чтобы их увидели другие проекты группы.
 - `scan-skills.sh` — если паттерн стоит поднять В реестр скиллов.

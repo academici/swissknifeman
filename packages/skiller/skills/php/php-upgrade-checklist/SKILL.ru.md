@@ -65,7 +65,7 @@ sha256: ""
 - `static-analysis` (php) — конфигурация phpstan/pint/rector.
 - `laravel-package-compatibility` (php) — поддержка нескольких версий в пакете
   (смежная, но иная задача — там про пакет, тут про апгрейд приложения).
-- `php/laravel-testing` — полный прогон suite на новой версии после bump.
+- `laravel-testing/laravel-testing` — полный прогон suite на новой версии после bump.
 - `devops/docker-php` — обновление PHP-образа и расширений.
 - `php/pao` — компактный вывод rector/phpstan/тестов при прогоне апгрейда из агента.
 - Версионные правила PHP/фреймворка — Laravel Boost (`boost:update`).

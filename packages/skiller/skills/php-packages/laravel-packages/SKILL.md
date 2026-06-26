@@ -51,10 +51,10 @@ Scope: create a Laravel package from scratch or extend one. Scaffold (composer.j
 - snippets/boost-skill-publisher.php
 - snippets/ServiceProvider.stub.php
 - snippets/composer.json.stub
-- Related (upstream package-work skills from starters): `php/laravel-package-scaffold`, `php/laravel-package-service-provider`, `php/laravel-package-testing`, `php/laravel-package-docs`, `php/laravel-package-release`, `php/laravel-package-compatibility` (all external)
+- Related (upstream package-work skills from starters): `php-packages/laravel-package-scaffold`, `php-packages/laravel-package-service-provider`, `php-packages/laravel-package-testing`, `php-packages/laravel-package-docs`, `php-packages/laravel-package-release`, `php-packages/laravel-package-compatibility` (all external)
 - `php/laravel` — architecture patterns inside the package; `php/laravel-structure` — class placement
-- `php/botkit` — example domain package publishing skills to consumers
+- `botkit/botkit` — example domain package publishing skills to consumers
 - `general/skills-ssot` — single source of truth for skills across multiple agents
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 6f89e0d676ae45b9fdbd7438f8da2a1f00331a6cbc9d8825fdc445615ae417c8 -->
+<!-- ru-source-sha256: 4a22ad75ab97ca2de92770710741e2fad32b1393ad33199a7da86e59bfdb82e7 -->

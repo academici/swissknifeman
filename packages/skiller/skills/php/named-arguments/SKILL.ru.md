@@ -90,5 +90,5 @@ $model->save(['touch' => false]);
 - `php/dependency-injection` — конструкторы и method injection с именованными аргументами.
 - `php/repositories` — DTO-команды и вызовы store-методов с именованными аргументами.
 - `php/code-style-spatie` (external) — общий стиль кода Laravel/PHP, в который вписывается это правило.
-- `php/naming-conventions` — это правило про стиль *вызова*; naming-conventions — про имена *самих сущностей* (классы, методы, поля).
+- `general/naming-conventions` — это правило про стиль *вызова*; naming-conventions — про имена *самих сущностей* (классы, методы, поля).
 - `php/static-analysis` — конвейер pint/rector, частично подчищающий стиль вызовов.

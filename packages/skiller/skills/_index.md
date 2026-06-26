@@ -8,11 +8,12 @@
 
 ## Скиллы по бакетам
 
-### ai — AI agent building: design, tools, evaluation (1)
+### ai — AI agent building: design, tools, evaluation (2)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
 | `ai-agents` | Навигатор по справочнику построения AI-агентов (vendored super-skill get-zeked): паттерны… | `ai`, `agents`, `mcp`, `rag`, `orchestration`, `prompt-engineering`, `subagents` |
+| `token-efficient` | Reduces Perplexity Computer output verbosity and token waste. Eliminates sycophantic open… |  |
 
 ### architect — Architecture, API and data design, security, observability, tech stack selection (14)
 
@@ -23,7 +24,7 @@
 | `architecture` | System architecture, stack choice, ADR, C4 diagrams, deployment, scalability | `architecture`, `adr`, `c4`, `scalability`, `deployment` |
 | `codebase-design` | Общий словарь и дисциплина проектирования ГЛУБОКИХ модулей (Ousterhout/Feathers): Module/… | `design`, `deep-modules`, `ousterhout`, `seam`, `testability` |
 | `data-schema` | Data schema, entities, attributes, relations. DB-agnostic — markdown tables only | `data`, `architecture`, `schema`, `entities`, `erd` |
-| `dev-engineering-super-skill` | Comprehensive full-stack development and engineering skill merging Perplexity Computer's … |  |
+| `dev-engineering-super-skill` | Broad engineering-bucket navigator (composite of external dev skills). For specific work … |  |
 | `domain-modeling` | Активная дисциплина доменной модели: бросать вызов терминам, стресс-тестировать сценариям… | `domain`, `ddd`, `glossary`, `adr`, `ubiquitous-language` |
 | `eval-design` | Evaluate LLM/AI output quality — eval-set, metrics, regression harness, automated + human… | `agentic`, `validation`, `llm`, `metrics`, `testing` |
 | `figma-mcp-core` | Discipline for the official Figma Dev Mode MCP: real tools (get_metadata, get_variable_de… | `figma`, `mcp`, `design-system`, `design-tokens`, `dev-mode`, `code-connect`, `ui` |
@@ -200,7 +201,7 @@
 |:--|:--|:--|
 | `wayfinder` | Laravel Wayfinder: typesafe routes and controller actions for the frontend. Generation, n… | `wayfinder`, `laravel`, `typescript`, `routes`, `inertia`, `eslint`, `frontend` |
 
-### general — General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists (20)
+### general — General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists (19)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
@@ -221,7 +222,6 @@
 | `skills-ssot` | Single source of truth for skills across multiple AI agents: .ai/skills + symlinks, gitig… | `ai-context`, `skills`, `ssot`, `workflow`, `conventions`, `ai` |
 | `spec-interview` | Pre-code interview: agent asks one question at a time, reads the codebase itself where it… | `workflow`, `requirements`, `discovery` |
 | `task-brief-template` | Brief template for complex agent tasks: goal, scope, invariants, explicit assumptions, ou… | `workflow`, `template`, `requirements`, `context` |
-| `token-efficient` | Reduces Perplexity Computer output verbosity and token waste. Eliminates sycophantic open… |  |
 | `verify-claims` | Before a decision/verdict that rests on an EXTERNAL fact (library version/API, 'still cur… | `verification`, `rag`, `research`, `planning`, `context`, `claude-code` |
 | `writing-style` | Tone & language of code artifacts: Russian by default for comments, commit bodies, test d… | `writing`, `language`, `russian`, `comments`, `commits`, `tests`, `docs`, `style` |
 
@@ -303,7 +303,7 @@
 | `capacity-planning` | Capacity planning — load forecasting, headroom, autoscaling policy, cost budget, what to … | `ops`, `observability`, `monitoring`, `sla` |
 | `incident-response` | Prod incident response process — severity levels, roles (IC/Comms/SME), communication, ac… | `incident`, `ops`, `workflow`, `sla` |
 | `oncall-rotation` | On-call rotation design — schedule, primary/secondary, handoff, compensation, burnout def… | `ops`, `incident`, `sla`, `handoff` |
-| `operations-cx-super-skill` | Comprehensive operations and customer experience skill merging Perplexity Computer's 5 CX… |  |
+| `operations-cx-super-skill` | Broad operations/CX-bucket navigator (composite of external CX skills). For specific work… |  |
 | `postmortem` | Blameless postmortem after SEV-1/2 incident — timeline, root cause (5 Whys), contributing… | `incident`, `ops`, `workflow`, `reflection` |
 | `runbook` | Operational runbook template per P1/P2 alert — symptoms, diagnostics, mitigation steps, e… | `ops`, `incident`, `template`, `monitoring` |
 
@@ -362,7 +362,7 @@
 | `business-process` | Business processes, workflow, FSM, sequence/state diagrams, error handling | `requirements`, `workflow` |
 | `go-to-market` | GTM strategy, ICP, messaging framework, acquisition channels, launch plan | `gtm`, `market`, `monetization` |
 | `monetization-design` | Pick business model (SaaS / marketplace / ads / freemium / hybrid) with trade-off matrix … | `monetization`, `market` |
-| `pm-super-skill` | Comprehensive product management skill merging Perplexity Computer's 6 PM skills with Cla… |  |
+| `pm-super-skill` | Broad PM-bucket navigator (composite of external PM skills). For specific work prefer the… |  |
 | `pmf-diagnostics` | Product-market fit diagnostics — pre-launch measurement framework, Sean Ellis test (>40%)… | `validation`, `market` |
 | `prd-from-brd` | Product Requirements Document — expands BRD into detailed user stories with acceptance cr… | `requirements`, `template` |
 | `product-roadmap` | MVP definition, Impact/Effort prioritization, MVP → v1 → v2 → Backlog phases, phase-trans… | `requirements`, `gtm`, `market` |

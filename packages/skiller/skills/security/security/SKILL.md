@@ -14,6 +14,9 @@ sha256: ""
 # Agent Security Super-Skill
 
 > **Defensive security playbook for AI agents — Claude Code, Codex, Cursor, Copilot, Perplexity Computer, and any LLM-powered autonomous system.**
+>
+> **Related:** for design-time secure-by-design / threat-modeling during architecture work, see
+> `architect/security-design` (this skill is run-time/agent-ops; that one is design-side).
 
 This skill is an operations manual. Every section contains actionable checklists, detection patterns, and response procedures that an AI agent can follow directly. It synthesizes OWASP LLM Top 10 (2025), OWASP Agentic Top 10 (2026), NIST AI RMF, vendor guidance from Anthropic/Microsoft/Google/Meta, real-world incident data from Unit 42/Elastic/Snyk, and community security skills from Trail of Bits, Ghost Security, ClawSec, and others.
 

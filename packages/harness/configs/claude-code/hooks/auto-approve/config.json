@@ -1,7 +1,9 @@
 {
   "$comment": "Конструкции для auto-approve хука (lib/analyze.sh). В коде только логика — все списки и паттерны здесь. Per-project override: <project>/.claude/auto-approve.config.json.",
 
-  "trust_inline_interpreters": true,
+  "$comment_security": "trust_inline_interpreters ВЫКЛ по умолчанию: _normalize вырезает тела в кавычках, поэтому 'python -c \"…\"' виден анализатору лишь головой 'python' — авто-одобрять интерпретаторы = одобрять произвольный код. awk/sed по той же причине НЕ в allow (awk system()/print>file, sed e/w/-i исполняют/пишут, тело скрыто). Включать inline-интерпретаторы — осознанный per-project выбор.",
+
+  "trust_inline_interpreters": false,
   "use_shfmt_ast": true,
 
   "inline_interpreters": ["python", "python3", "node", "deno", "ruby", "perl", "php"],
@@ -12,7 +14,7 @@
     "dirname", "realpath", "readlink", "date", "sleep", "test", "true", "false",
     "sort", "uniq", "cut", "tr", "comm", "diff", "cmp", "od", "xxd", "hexdump",
     "nl", "tac", "column", "fold", "fmt", "expand", "unexpand", "paste", "join",
-    "seq", "yes", "printf", "echo", "jq", "yq", "awk", "sed", "cd", "pushd",
+    "seq", "yes", "printf", "echo", "jq", "yq", "cd", "pushd",
     "popd", "dirs", "env", "printenv", "id", "whoami", "hostname", "uname",
     "uptime", "df", "du", "free", "ps", "grep"
   ],

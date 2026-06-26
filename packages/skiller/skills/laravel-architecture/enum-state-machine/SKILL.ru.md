@@ -40,7 +40,7 @@ sha256: ""
 
 - Простой статус без правил переходов (любой→любой) — хватит backing-enum.
 - Задача только про **метаданные кейсов** (label/color/priority) без графа переходов — это
-  `php/enum-attributes` (тот скилл явно не про state-machine; этот — дополняет его).
+  `laravel-architecture/enum-attributes` (тот скилл явно не про state-machine; этот — дополняет его).
 - Доменно-специфичная реализация одного проекта (имена конкретных статусов/действий) —
   оформляется как **project-local** скилл (`<project>/.ai|.claude/skills/`), а не общий реестр.
 
@@ -65,7 +65,7 @@ sha256: ""
    `php/laravel`, `general/cross-layer-change-checklist`). См. `snippets/transition-action.php`.
 5. **Событие после коммита.** Доменное событие реализует `ShouldDispatchAfterCommit`, чтобы
    слушатели/broadcast не увидели несохранённое состояние при откате транзакции. Детали
-   broadcast/listener — `php/laravel-broadcasting` (не дублировать здесь).
+   broadcast/listener — `laravel-data-layer/laravel-broadcasting` (не дублировать здесь).
 6. **UI-доступные действия.** Кнопки/экшены на фронте строятся из `allowedFrom($current)` +
    `label`/`guard` каждого ребра — UI не хардкодит переходы, а читает граф.
 7. **Эволюция графа.** Новый переход = новая строка в `transitionDefinitions()` (+ Action,
@@ -105,8 +105,8 @@ sha256: ""
 
 ## Ссылки
 
-- `php/enum-attributes` — метаданные кейсов (label/color/priority) через атрибуты+Concern;
+- `laravel-architecture/enum-attributes` — метаданные кейсов (label/color/priority) через атрибуты+Concern;
   здесь — граф переходов поверх таких enum (скиллы дополняют друг друга).
-- `php/laravel-broadcasting` — `ShouldDispatchAfterCommit`, broadcast и listeners перехода.
+- `laravel-data-layer/laravel-broadcasting` — `ShouldDispatchAfterCommit`, broadcast и listeners перехода.
 - `php/laravel`, `php/repositories` — границы Action/Repository, в которых живёт переход.
 - `general/cross-layer-change-checklist` — синхронизация слоёв при добавлении перехода.

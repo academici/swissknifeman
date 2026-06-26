@@ -32,7 +32,7 @@
 ## Роли и оркестрация
 
 - ✅ **Плагин-агенты**: `laravel-reviewer`, `laravel-test-writer` (php), `code-coordinator` (system).
-- ✅ **Скилл оркестрации** `php/laravel-subagents` (порог делегирования, ревью/тесты, worktree).
+- ✅ **Скилл оркестрации** `laravel-architecture/laravel-subagents` (порог делегирования, ревью/тесты, worktree).
 - 🔜 **Универсальные роли** (Фаза 3): reviewer/implementer/test-writer/explore/plan/spec-writer
   как seed-агенты в паке; общие, стек — из профиля. `skills:` preload + self-load fallback.
 - 🔜 **path-scoped rules** (`.claude/rules/`, нативно) — тонкие правила по путям, индекс в hub.

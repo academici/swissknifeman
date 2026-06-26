@@ -163,7 +163,7 @@ based_on: oss-development.md
 - `oss-dev/dx-design` — что break/feature/fix значит для пользователя; TS-типы как публичный API.
 - `general/git-commit-rules` — формат коммитов, по которым SemVer-оракул определяет bump.
 - `devops/ci-cd` — GitHub Actions release-pipeline (тег → test → build → publish).
-- `php/laravel-package-release` — release-нотки/теги/валидация для PHP-пакетов (язык-специфика).
+- `php-packages/laravel-package-release` — release-нотки/теги/валидация для PHP-пакетов (язык-специфика).
 
 ---
 

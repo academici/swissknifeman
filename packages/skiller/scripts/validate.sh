@@ -835,3 +835,46 @@ MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
 PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}" python3 -c "import skiller.cli" || {
   echo "ERROR: lib/skiller fails to import" >&2; exit 1; }
 "$REPO_ROOT/scripts/test.sh" || { echo "ERROR: tests failed" >&2; exit 1; }
+
+# --- 13. bucket-path drift lint (после раскола php/frontend) --------------------
+# Ловит протухшие ссылки `php/<skill>` / `frontend/<skill>` в телах скиллов и доках
+# пакета, где <skill> по skills.json уже живёт в другом бакете (laravel-*/frontend-*).
+# Защищает от регресса свода путей (аудит). Только within-package (skiller); корневые
+# docs/ — зонтичные, вне scope пакета.
+python3 - "$REPO_ROOT" <<'PY'
+import json, re, sys, pathlib
+root = pathlib.Path(sys.argv[1])
+sj = root / "skills.json"
+if not sj.is_file():
+    print("bucket-path lint: skills.json нет — пропуск"); sys.exit(0)
+skills = json.loads(sj.read_text(encoding="utf-8"))
+skills = skills["skills"] if isinstance(skills, dict) else skills
+name2bucket = {}
+for s in skills:
+    name2bucket.setdefault(s.get("name"), s.get("bucket"))
+pat = re.compile(r'\b(php|frontend)/([a-z0-9][a-z0-9-]+)\b')
+GENERATED = {"_index.md", "graph.md", "budget.md"}
+stale = []
+for base in ("skills", "docs"):
+    for f in (root / base).rglob("*.md"):
+        if f.name in GENERATED:
+            continue
+        for ln, line in enumerate(f.read_text(encoding="utf-8", errors="replace").splitlines(), 1):
+            for m in pat.finditer(line):
+                cur = name2bucket.get(m.group(2))
+                if cur and cur != m.group(1):
+                    stale.append(f"{f.relative_to(root)}:{ln}: {m.group(0)} → {cur}/{m.group(2)}")
+if stale:
+    print(f"ERROR: протухшие bucket-пути после раскола ({len(stale)}):", file=sys.stderr)
+    for s in stale[:40]:
+        print("  " + s, file=sys.stderr)
+    sys.exit(1)
+print("bucket-path drift: нет протухших php/<skill>|frontend/<skill> ссылок")
+PY
+
+# --- 14. двуязычная свежесть (SKILL.ru.md → SKILL.md) ---------------------------
+# Гейт: RU-источник правлен, EN-канон не регенерён (или нет ru-source-sha256). Без
+# claude (чистая sha-сверка) — безопасно в CI. Чинить: regen SKILL.md + check-translations --stamp.
+"$REPO_ROOT/scripts/check-translations.sh" --strict || {
+  echo "ERROR: протухшие переводы SKILL.ru.md→SKILL.md (regen + check-translations.sh --stamp)" >&2
+  exit 1; }

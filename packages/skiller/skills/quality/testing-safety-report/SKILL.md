@@ -63,10 +63,10 @@ Safety Report: <short change name>
 - `refactoring-plan` (quality) — plan of the change itself and its steps (this report records its execution).
 - `php/php-upgrade-checklist` — PHP upgrade checklist; report records the run result.
 - `php/static-analysis` — phpstan/linter whose outcomes go into the "Прогнано" line.
-- `php/test-isolation-guard`, `devops/db-test-preflight` — safe test DB guarantees during the run.
+- `laravel-testing/test-isolation-guard`, `devops/db-test-preflight` — safe test DB guarantees during the run.
 - `oss-dev/dependency-audit` — dependency upgrade as a trigger for the report.
 - `quality/code-review` — report attached to PR so reviewer sees safety boundaries.
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: dac5a7b8d34e4df8d0759c4583c6afeab97c393f8719d0e04e8e826398c923c5 -->
+<!-- ru-source-sha256: 5f75df054ca78538a5269e293da9e7305800e10875744708450a7f93480d0f67 -->

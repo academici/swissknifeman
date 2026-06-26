@@ -26,7 +26,7 @@ sha256: ""
 - видишь в коде `window.echo`, `new Echo(...)`, `.private(...)`, `.listen(...)` и нужно понять/починить жизненный цикл подписки;
 - realtime «дублируется у инициатора» — нужен `X-Socket-ID` + `toOthers()` на backend.
 
-**Граница**: backend-сторона (события, `ShouldBroadcast`, определение каналов в `routes/channels.php`, авторизация каналов) — это скилл `php/laravel-broadcasting`, не здесь. Здесь — только фронт-композабл и конфиг клиента.
+**Граница**: backend-сторона (события, `ShouldBroadcast`, определение каналов в `routes/channels.php`, авторизация каналов) — это скилл `laravel-data-layer/laravel-broadcasting`, не здесь. Здесь — только фронт-композабл и конфиг клиента.
 
 **Laravel Boost**: версионные основы broadcasting — за Boost; здесь — фронт-композабл.
 
@@ -93,4 +93,4 @@ onUnmounted ──▶ dispose(): channel.stopListening('.event', namedHandler)
 - https://github.com/laravel/echo
 - https://reverb.laravel.com/
 - snippets/useEcho.ts, snippets/echo-config.ts, snippets/axios-socket-id.ts
-- Связанные скиллы: `php/laravel-broadcasting` (backend: события, каналы, ShouldBroadcast), `frontend/inertia-vue`, `frontend/vue-composition-api`, `frontend/pinia-stores` (realtime-состояние «кто онлайн»/уведомления в сторе, доступ к стору из ws-адаптера вне компонента)
+- Связанные скиллы: `laravel-data-layer/laravel-broadcasting` (backend: события, каналы, ShouldBroadcast), `frontend-backend/inertia-vue`, `frontend-vue/vue-composition-api`, `frontend-vue/pinia-stores` (realtime-состояние «кто онлайн»/уведомления в сторе, доступ к стору из ws-адаптера вне компонента)

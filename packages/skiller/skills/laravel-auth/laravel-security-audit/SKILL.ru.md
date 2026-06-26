@@ -65,5 +65,5 @@ sha256: ""
 - `php/static-analysis` (requires) — PHPStan/Larastan, на чьи сигналы опирается аудит.
 - `oss-dev/dependency-audit` — аудит зависимостей (composer audit, SBOM) — смежная, иная задача.
 - `architect/security-design` (produces_for) — куда уходит отчёт: auth-стратегия, OWASP, STRIDE.
-- `php/laravel-permissions`, `php/azguard`, `php/attribute-authorization` — дыры авторизации (IDOR, отсутствие Policy) проверяются против этих слоёв.
+- `laravel-auth/laravel-permissions`, `azguard/azguard`, `laravel-auth/attribute-authorization` — дыры авторизации (IDOR, отсутствие Policy) проверяются против этих слоёв.
 - `php/database` — mass assignment и raw-запросы в контексте миграций/моделей.

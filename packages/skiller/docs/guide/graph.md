@@ -366,7 +366,7 @@ flowchart LR
 
 | Бакет | Скиллы |
 |---|---|
-| ai | `ai-agents` |
+| ai | `ai-agents`, `token-efficient` |
 | architect | `dev-engineering-super-skill` |
 | azguard | `azguard` |
 | creative | `content-creative-super-skill` |
@@ -379,7 +379,7 @@ flowchart LR
 | frontend-nuxt | `nuxt`, `nuxt-modules`, `nuxt-seo` |
 | frontend-vite | `vite`, `vitepress` |
 | frontend-vue | `pinia`, `pinia-stores`, `vitest-vue`, `vue-best-practices`, `vue-composition-api`, `vue-dynamic-icons`, `vue-router-best-practices`, `vueuse-functions` |
-| general | `compact-responses`, `git-safety`, `naming-conventions`, `packages-stack`, `skills-ssot`, `token-efficient`, `writing-style` |
+| general | `compact-responses`, `git-safety`, `naming-conventions`, `packages-stack`, `skills-ssot`, `writing-style` |
 | laravel-architecture | `enum-attributes`, `enum-state-machine`, `laravel-subagents` |
 | laravel-data-layer | `laravel-broadcasting` |
 | laravel-extras | `medialibrary`, `pennant-development`, `spatie-settings` |

@@ -26,7 +26,7 @@ sha256: ""
 
 Корень проблемы: `RefreshDatabase` выполняет `migrate:fresh` на активном подключении. Если активная БД — основная (из `.env`), один прогон тестов уничтожит данные. Аналогично загрузки в тестах уходят на боевой медиа-диск, если диск не подменён. Скилл строит **три рубежа защиты**: bootstrap до autoload, страж на `createApplication()`, безопасный `RefreshDatabase`.
 
-Версионные основы тестирования (Feature/Unit/Pest, детект Docker/локального окружения) — в скилле `php/laravel-testing` (`requires`); здесь — именно слой жёсткой изоляции и аварийного прерывания.
+Версионные основы тестирования (Feature/Unit/Pest, детект Docker/локального окружения) — в скилле `laravel-testing/laravel-testing` (`requires`); здесь — именно слой жёсткой изоляции и аварийного прерывания.
 
 ## Алгоритм
 
@@ -80,4 +80,4 @@ sha256: ""
 - snippets/TestCase.php — подключение стража в `createApplication()` + безопасный `RefreshDatabase`
 - https://laravel.com/docs/database-testing#resetting-the-database-after-each-test
 - https://github.com/laravel/framework/blob/master/src/Illuminate/Foundation/Testing/RefreshDatabase.php
-- Связанные скиллы: `php/laravel-testing` (база, requires), `php/medialibrary` (тестовый медиа-диск), `php/laravel-dusk` (изоляция в браузерных тестах — отдельная схема без `RefreshDatabase`), `devops/db-test-preflight` (пре-флайт контейнера/БД перед прогоном)
+- Связанные скиллы: `laravel-testing/laravel-testing` (база, requires), `laravel-extras/medialibrary` (тестовый медиа-диск), `laravel-testing/laravel-dusk` (изоляция в браузерных тестах — отдельная схема без `RefreshDatabase`), `devops/db-test-preflight` (пре-флайт контейнера/БД перед прогоном)

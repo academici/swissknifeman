@@ -18,7 +18,7 @@ sha256: ""
 
 Browser side of Laravel broadcasting: connect to Reverb/Pusher via `laravel-echo`, subscribe to private/presence channels, react to server events in Vue 3.
 
-**Boundary**: backend (events, `ShouldBroadcast`, channel definitions in `routes/channels.php`, channel auth) → skill `php/laravel-broadcasting`, NOT here. Here = frontend composable + client config only. Versioned broadcasting basics → Laravel Boost.
+**Boundary**: backend (events, `ShouldBroadcast`, channel definitions in `routes/channels.php`, channel auth) → skill `laravel-data-layer/laravel-broadcasting`, NOT here. Here = frontend composable + client config only. Versioned broadcasting basics → Laravel Boost.
 
 ## Rules
 
@@ -83,8 +83,8 @@ Build channel name from neutral domain model: `order.${orderId}`, `notifications
 - https://github.com/laravel/echo
 - https://reverb.laravel.com/
 - snippets/useEcho.ts, snippets/echo-config.ts, snippets/axios-socket-id.ts
-- Related skills: `php/laravel-broadcasting` (backend: events, channels, ShouldBroadcast), `frontend/inertia-vue`, `frontend/vue-composition-api`, `frontend/pinia-stores` (realtime "who is online"/notifications state in store, store access from ws-adapter outside component)
+- Related skills: `laravel-data-layer/laravel-broadcasting` (backend: events, channels, ShouldBroadcast), `frontend-backend/inertia-vue`, `frontend-vue/vue-composition-api`, `frontend-vue/pinia-stores` (realtime "who is online"/notifications state in store, store access from ws-adapter outside component)
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 1fd04d3b3d4ab7f49cf357d5a9afb146262edc6098b2fa9194804019f603a04a -->
+<!-- ru-source-sha256: 4a5947895cb34935f0a62ee86595651ab8691517835ac6d0a76abf213f963bec -->

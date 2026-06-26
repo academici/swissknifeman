@@ -53,7 +53,7 @@ app/Support/Enums/EnumCaseAttributeResolver.php ← единый резолве�
 app/Concerns/Enums/HasLabelAttribute.php        ← трейт-фасад над резолвером
 ```
 
-Полный паттерн (атрибут, резолвер, трейт, доменные оси) — скилл `php/enum-attributes`.
+Полный паттерн (атрибут, резолвер, трейт, доменные оси) — скилл `laravel-architecture/enum-attributes`.
 
 ## Ступень 4: Support/<Tech>-хелпер
 
@@ -107,7 +107,7 @@ app/Utils/EnumHelper.php
 ]
 ```
 
-Шаблон подключения — `php/enum-attributes` → `snippets/composer-path-repo.json`; устройство пакета — скиллы `php/laravel-package-*`.
+Шаблон подключения — `laravel-architecture/enum-attributes` → `snippets/composer-path-repo.json`; устройство пакета — скиллы `php/laravel-package-*`.
 
 ## Анти-паттерны выноса
 

@@ -112,4 +112,4 @@ sha256: ""
 - https://spatie.be/docs/laravel-health/v1/basic-usage/getting-results
 - snippets/ExampleCheck.php
 - snippets/config-health.php
-- Связанные скиллы: `architect/observability-design` (logging/metrics/tracing, SLO/SLI — health как часть прод-готовности), `operator/runbook` и `operator/incident-response` (что делать при падении проверки), `devops/docker-services` (healthcheck `/up` и `depends_on: service_healthy`), `php/spatie-settings` (другой spatie-конфиг-слой)
+- Связанные скиллы: `architect/observability-design` (logging/metrics/tracing, SLO/SLI — health как часть прод-готовности), `operator/runbook` и `operator/incident-response` (что делать при падении проверки), `devops/docker-services` (healthcheck `/up` и `depends_on: service_healthy`), `laravel-extras/spatie-settings` (другой spatie-конфиг-слой)

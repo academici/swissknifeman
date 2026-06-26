@@ -17,8 +17,8 @@ Filament-админка, другой — пакет, третий — чист�
   "name": "laravel-admin",
   "description": "Админка на Filament: ресурсы/панели, права, авторизация-атрибуты, медиа, настройки",
   "extends": ["laravel-core"],
-  "include": ["php/filament", "php/laravel-permissions", "php/attribute-authorization",
-              "php/medialibrary", "php/spatie-settings"]
+  "include": ["laravel-filament/filament", "laravel-auth/laravel-permissions", "laravel-auth/attribute-authorization",
+              "laravel-extras/medialibrary", "laravel-extras/spatie-settings"]
 }
 ```
 
@@ -32,7 +32,7 @@ Filament-админка, другой — пакет, третий — чист�
 В проектном `.swissknifeman/config.json`:
 
 ```json
-{ "mode": "vendor", "presets": ["laravel-admin"], "exclude": ["php/medialibrary"] }
+{ "mode": "vendor", "presets": ["laravel-admin"], "exclude": ["laravel-extras/medialibrary"] }
 ```
 
 Итоговый набор = **(presets ∪ buckets ∪ include) − exclude**. Пресеты раскрываются в

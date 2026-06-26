@@ -4,7 +4,7 @@
 лежат сниппеты и адаптерные delta-файлы.
 
 ```
-skills/php/laravel-testing/
+skills/laravel-testing/laravel-testing/
 ├── SKILL.md          # обязательный: frontmatter + инструкции для агента
 ├── snippets/         # примеры кода, шаблоны, справочные файлы
 │   ├── index.json    # манифест сниппетов

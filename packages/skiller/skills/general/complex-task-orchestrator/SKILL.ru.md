@@ -71,5 +71,5 @@ sha256: ""
 - `spec-interview` (general) — если постановка нечёткая, сначала интервью, потом декомпозиция.
 - `cross-layer-change-checklist` (general) — обязательная синхронизация слоёв перед финализацией.
 - `anti-drift` (general) — дисциплина итераций и circuit-breaker внутри выполнения.
-- `php/laravel-subagents` — делегирование подзадач субагентам на крупных Laravel-задачах.
+- `laravel-architecture/laravel-subagents` — делегирование подзадач субагентам на крупных Laravel-задачах.
 - `session-handoff` (general) — передача незакрытой задачи в следующую сессию.

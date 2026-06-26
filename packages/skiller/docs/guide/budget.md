@@ -15,32 +15,33 @@
 flowchart LR
   subgraph ai["ai"]
     ai_agents["ai-agents<br/>⊕123 ↻639"]:::hot
+    token_efficient["token-efficient<br/>⊕95 ↻1195"]:::warm
   end
   subgraph architect["architect"]
     agent_design["agent-design<br/>⊕21 ↻1505"]:::cool
-    api_design["api-design<br/>⊕22 ↻1009"]:::cool
-    architecture["architecture<br/>⊕23 ↻1016"]:::cool
+    api_design["api-design<br/>⊕22 ↻1016"]:::cool
+    architecture["architecture<br/>⊕23 ↻1020"]:::cool
     codebase_design["codebase-design<br/>⊕155 ↻1746"]:::hot
     data_schema["data-schema<br/>⊕23 ↻833"]:::cool
-    dev_engineering_super_skill["dev-engineering-super-skill<br/>⊕111 ↻20241"]:::hot
+    dev_engineering_super_skill["dev-engineering-super-skill<br/>⊕113 ↻20367"]:::hot
     domain_modeling["domain-modeling<br/>⊕178 ↻1173"]:::hot
     eval_design["eval-design<br/>⊕27 ↻1374"]:::cool
     figma_mcp_core["figma-mcp-core<br/>⊕116 ↻1394"]:::hot
     legal_compliance["legal-compliance<br/>⊕22 ↻1628"]:::cool
-    observability_design["observability-design<br/>⊕27 ↻1146"]:::cool
+    observability_design["observability-design<br/>⊕27 ↻1149"]:::cool
     package_contribution_protocol["package-contribution-protocol<br/>⊕90 ↻1587"]:::warm
-    security_design["security-design<br/>⊕33 ↻1862"]:::cool
+    security_design["security-design<br/>⊕33 ↻1870"]:::cool
     tech_stack_selection["tech-stack-selection<br/>⊕27 ↻1689"]:::cool
   end
   subgraph azguard["azguard"]
-    azguard["azguard<br/>⊕31 ↻1422"]:::cool
+    azguard["azguard<br/>⊕31 ↻1436"]:::cool
   end
   subgraph blender["blender"]
     mcp_blender["mcp-blender<br/>⊕100 ↻1286"]:::warm
     version_gotchas["version-gotchas<br/>⊕19 ↻675"]:::cool
   end
   subgraph blender_modeling["blender-modeling"]
-    build_loop["build-loop<br/>⊕108 ↻1825"]:::warm
+    build_loop["build-loop<br/>⊕108 ↻1825"]:::hot
     config_conventions["config-conventions<br/>⊕97 ↻2008"]:::warm
     model_rules["model-rules<br/>⊕26 ↻656"]:::cool
     parametric_config["parametric-config<br/>⊕94 ↻1882"]:::warm
@@ -48,20 +49,20 @@ flowchart LR
     threading["threading<br/>⊕23 ↻570"]:::cool
   end
   subgraph botkit["botkit"]
-    botkit["botkit<br/>⊕25 ↻205"]:::cool
+    botkit["botkit<br/>⊕25 ↻208"]:::cool
   end
   subgraph creative["creative"]
     content_creative_super_skill["content-creative-super-skill<br/>⊕132 ↻22304"]:::hot
   end
   subgraph devops["devops"]
-    ci_cd["ci-cd<br/>⊕46 ↻981"]:::mild
-    db_test_preflight["db-test-preflight<br/>⊕88 ↻1451"]:::warm
+    ci_cd["ci-cd<br/>⊕46 ↻987"]:::mild
+    db_test_preflight["db-test-preflight<br/>⊕88 ↻1457"]:::warm
     docker["docker<br/>⊕44 ↻100"]:::mild
     docker_dev_prod["docker-dev-prod<br/>⊕36 ↻818"]:::mild
-    docker_php["docker-php<br/>⊕34 ↻681"]:::mild
-    docker_postgres["docker-postgres<br/>⊕36 ↻712"]:::mild
-    docker_services["docker-services<br/>⊕41 ↻754"]:::mild
-    docker_vite["docker-vite<br/>⊕33 ↻607"]:::cool
+    docker_php["docker-php<br/>⊕34 ↻684"]:::mild
+    docker_postgres["docker-postgres<br/>⊕36 ↻718"]:::mild
+    docker_services["docker-services<br/>⊕41 ↻761"]:::mild
+    docker_vite["docker-vite<br/>⊕33 ↻609"]:::cool
     gitops["gitops<br/>⊕25 ↻640"]:::cool
     makefile["makefile<br/>⊕36 ↻654"]:::mild
     node_pnpm_preflight["node-pnpm-preflight<br/>⊕32 ↻226"]:::cool
@@ -82,28 +83,28 @@ flowchart LR
   end
   subgraph frontend["frontend"]
     document_writer["document-writer<br/>⊕74 ↻1090"]:::warm
-    filepond_upload["filepond-upload<br/>⊕116 ↻1907"]:::hot
+    filepond_upload["filepond-upload<br/>⊕116 ↻1915"]:::hot
     web_design_guidelines["web-design-guidelines<br/>⊕52 ↻229"]:::mild
   end
   subgraph frontend_animations["frontend-animations"]
     motion["motion<br/>⊕47 ↻782"]:::mild
   end
   subgraph frontend_backend["frontend-backend"]
-    backend_type_sync["backend-type-sync<br/>⊕85 ↻1752"]:::warm
-    inertia_vue["inertia-vue<br/>⊕49 ↻1282"]:::mild
-    laravel_echo_client["laravel-echo-client<br/>⊕110 ↻1636"]:::hot
+    backend_type_sync["backend-type-sync<br/>⊕85 ↻1781"]:::warm
+    inertia_vue["inertia-vue<br/>⊕49 ↻1298"]:::mild
+    laravel_echo_client["laravel-echo-client<br/>⊕110 ↻1647"]:::hot
   end
   subgraph frontend_figma["frontend-figma"]
     figma_to_vue["figma-to-vue<br/>⊕84 ↻700"]:::warm
   end
   subgraph frontend_linting["frontend-linting"]
     antfu["antfu<br/>⊕63 ↻1090"]:::mild
-    eslint_flat_config["eslint-flat-config<br/>⊕95 ↻2031"]:::warm
-    js_code_style["js-code-style<br/>⊕65 ↻972"]:::mild
+    eslint_flat_config["eslint-flat-config<br/>⊕95 ↻2058"]:::warm
+    js_code_style["js-code-style<br/>⊕65 ↻975"]:::mild
     ts_library["ts-library<br/>⊕77 ↻1153"]:::warm
   end
   subgraph frontend_naive_ui["frontend-naive-ui"]
-    naive_ui_theming["naive-ui-theming<br/>⊕87 ↻1731"]:::warm
+    naive_ui_theming["naive-ui-theming<br/>⊕87 ↻1744"]:::warm
   end
   subgraph frontend_nuxt["frontend-nuxt"]
     nuxt["nuxt<br/>⊕68 ↻930"]:::warm
@@ -111,38 +112,38 @@ flowchart LR
     nuxt_seo["nuxt-seo<br/>⊕42 ↻702"]:::mild
   end
   subgraph frontend_reka["frontend-reka"]
-    reka_ui_cva["reka-ui-cva<br/>⊕90 ↻1706"]:::warm
+    reka_ui_cva["reka-ui-cva<br/>⊕90 ↻1715"]:::warm
   end
   subgraph frontend_tailwind["frontend-tailwind"]
-    dark_mode["dark-mode<br/>⊕96 ↻1870"]:::warm
-    tailwind_conventions["tailwind-conventions<br/>⊕108 ↻1908"]:::warm
+    dark_mode["dark-mode<br/>⊕96 ↻1887"]:::warm
+    tailwind_conventions["tailwind-conventions<br/>⊕108 ↻1920"]:::hot
   end
   subgraph frontend_vite["frontend-vite"]
     vite["vite<br/>⊕48 ↻523"]:::mild
-    vite_module_loader["vite-module-loader<br/>⊕23 ↻602"]:::cool
-    vite_multi_build["vite-multi-build<br/>⊕40 ↻864"]:::mild
+    vite_module_loader["vite-module-loader<br/>⊕23 ↻608"]:::cool
+    vite_multi_build["vite-multi-build<br/>⊕40 ↻870"]:::mild
     vitepress["vitepress<br/>⊕42 ↻705"]:::mild
   end
   subgraph frontend_vue["frontend-vue"]
     pinia["pinia<br/>⊕46 ↻587"]:::mild
-    pinia_stores["pinia-stores<br/>⊕109 ↻1642"]:::hot
-    vitest["vitest<br/>⊕40 ↻697"]:::mild
+    pinia_stores["pinia-stores<br/>⊕109 ↻1648"]:::hot
+    vitest["vitest<br/>⊕40 ↻703"]:::mild
     vitest_vue["vitest-vue<br/>⊕47 ↻923"]:::mild
     vue["vue<br/>⊕54 ↻793"]:::mild
     vue_best_practices["vue-best-practices<br/>⊕84 ↻2198"]:::warm
-    vue_composition_api["vue-composition-api<br/>⊕68 ↻455"]:::warm
-    vue_dynamic_icons["vue-dynamic-icons<br/>⊕64 ↻1110"]:::mild
-    vue_router_best_practices["vue-router-best-practices<br/>⊕181 ↻2963"]:::hot
-    vue_testing_best_practices["vue-testing-best-practices<br/>⊕86 ↻2484"]:::warm
+    vue_composition_api["vue-composition-api<br/>⊕68 ↻462"]:::warm
+    vue_dynamic_icons["vue-dynamic-icons<br/>⊕64 ↻1116"]:::mild
+    vue_router_best_practices["vue-router-best-practices<br/>⊕181 ↻2970"]:::hot
+    vue_testing_best_practices["vue-testing-best-practices<br/>⊕86 ↻2494"]:::warm
     vueuse_functions["vueuse-functions<br/>⊕29 ↻9212"]:::cool
   end
   subgraph frontend_wayfinder["frontend-wayfinder"]
-    wayfinder["wayfinder<br/>⊕41 ↻847"]:::mild
+    wayfinder["wayfinder<br/>⊕41 ↻854"]:::mild
   end
   subgraph general["general"]
     anti_drift["anti-drift<br/>⊕37 ↻854"]:::mild
     compact_responses["compact-responses<br/>⊕51 ↻385"]:::mild
-    complex_task_orchestrator["complex-task-orchestrator<br/>⊕38 ↻539"]:::mild
+    complex_task_orchestrator["complex-task-orchestrator<br/>⊕38 ↻543"]:::mild
     context_economy["context-economy<br/>⊕61 ↻1146"]:::mild
     cross_layer_change_checklist["cross-layer-change-checklist<br/>⊕31 ↻403"]:::cool
     git_commit_rules["git-commit-rules<br/>⊕24 ↻843"]:::cool
@@ -150,51 +151,50 @@ flowchart LR
     grill_with_docs["grill-with-docs<br/>⊕147 ↻1053"]:::hot
     implement["implement<br/>⊕106 ↻515"]:::warm
     mcp_advisor["mcp-advisor<br/>⊕91 ↻1599"]:::warm
-    naming_conventions["naming-conventions<br/>⊕73 ↻1336"]:::warm
-    packages_stack["packages-stack<br/>⊕72 ↻458"]:::warm
+    naming_conventions["naming-conventions<br/>⊕73 ↻1338"]:::warm
+    packages_stack["packages-stack<br/>⊕72 ↻460"]:::warm
     project_map["project-map<br/>⊕70 ↻558"]:::warm
     session_handoff["session-handoff<br/>⊕35 ↻441"]:::mild
     skills_ssot["skills-ssot<br/>⊕30 ↻1514"]:::cool
     spec_interview["spec-interview<br/>⊕49 ↻649"]:::mild
     task_brief_template["task-brief-template<br/>⊕67 ↻1187"]:::warm
-    token_efficient["token-efficient<br/>⊕95 ↻1195"]:::warm
     verify_claims["verify-claims<br/>⊕136 ↻1408"]:::hot
     writing_style["writing-style<br/>⊕83 ↻1565"]:::warm
   end
   subgraph laravel_architecture["laravel-architecture"]
-    enum_attributes["enum-attributes<br/>⊕111 ↻1674"]:::hot
-    enum_state_machine["enum-state-machine<br/>⊕135 ↻1340"]:::hot
-    laravel_subagents["laravel-subagents<br/>⊕65 ↻1112"]:::mild
-    modular_architecture["modular-architecture<br/>⊕71 ↻2668"]:::warm
+    enum_attributes["enum-attributes<br/>⊕111 ↻1690"]:::hot
+    enum_state_machine["enum-state-machine<br/>⊕135 ↻1356"]:::hot
+    laravel_subagents["laravel-subagents<br/>⊕65 ↻1115"]:::mild
+    modular_architecture["modular-architecture<br/>⊕71 ↻2677"]:::warm
   end
   subgraph laravel_auth["laravel-auth"]
-    attribute_authorization["attribute-authorization<br/>⊕71 ↻1805"]:::warm
-    laravel_permissions["laravel-permissions<br/>⊕58 ↻362"]:::mild
-    laravel_security_audit["laravel-security-audit<br/>⊕43 ↻686"]:::mild
+    attribute_authorization["attribute-authorization<br/>⊕71 ↻1819"]:::warm
+    laravel_permissions["laravel-permissions<br/>⊕58 ↻371"]:::mild
+    laravel_security_audit["laravel-security-audit<br/>⊕43 ↻691"]:::mild
   end
   subgraph laravel_data_layer["laravel-data-layer"]
     laravel_broadcasting["laravel-broadcasting<br/>⊕39 ↻1279"]:::mild
-    laravel_data["laravel-data<br/>⊕102 ↻1745"]:::warm
+    laravel_data["laravel-data<br/>⊕102 ↻1758"]:::warm
   end
   subgraph laravel_extras["laravel-extras"]
-    medialibrary["medialibrary<br/>⊕28 ↻889"]:::cool
+    medialibrary["medialibrary<br/>⊕28 ↻899"]:::cool
     pennant_development["pennant-development<br/>⊕63 ↻535"]:::mild
-    spatie_settings["spatie-settings<br/>⊕114 ↻2288"]:::hot
+    spatie_settings["spatie-settings<br/>⊕114 ↻2307"]:::hot
   end
   subgraph laravel_filament["laravel-filament"]
     filament["filament<br/>⊕70 ↻2311"]:::warm
   end
   subgraph laravel_livewire["laravel-livewire"]
-    livewire_blade_attributes["livewire-blade-attributes<br/>⊕132 ↻1095"]:::hot
+    livewire_blade_attributes["livewire-blade-attributes<br/>⊕132 ↻1100"]:::hot
   end
   subgraph laravel_testing["laravel-testing"]
-    health_checks["health-checks<br/>⊕118 ↻1983"]:::hot
-    laravel_dusk["laravel-dusk<br/>⊕29 ↻858"]:::cool
-    laravel_testing["laravel-testing<br/>⊕48 ↻2642"]:::mild
-    test_isolation_guard["test-isolation-guard<br/>⊕88 ↻1356"]:::warm
+    health_checks["health-checks<br/>⊕118 ↻1986"]:::hot
+    laravel_dusk["laravel-dusk<br/>⊕29 ↻866"]:::cool
+    laravel_testing["laravel-testing<br/>⊕48 ↻2648"]:::mild
+    test_isolation_guard["test-isolation-guard<br/>⊕88 ↻1368"]:::warm
   end
   subgraph legal["legal"]
-    legal_super_skill["legal-super-skill<br/>⊕123 ↻24815"]:::hot
+    legal_super_skill["legal-super-skill<br/>⊕123 ↻24861"]:::hot
   end
   subgraph marketing["marketing"]
     marketing_super_skill["marketing-super-skill<br/>⊕121 ↻14124"]:::hot
@@ -203,39 +203,39 @@ flowchart LR
     figma_to_flutter["figma-to-flutter<br/>⊕91 ↻746"]:::warm
   end
   subgraph operator["operator"]
-    capacity_planning["capacity-planning<br/>⊕35 ↻1795"]:::mild
+    capacity_planning["capacity-planning<br/>⊕35 ↻1798"]:::mild
     incident_response["incident-response<br/>⊕35 ↻1577"]:::mild
     oncall_rotation["oncall-rotation<br/>⊕32 ↻1515"]:::cool
-    operations_cx_super_skill["operations-cx-super-skill<br/>⊕161 ↻18919"]:::hot
+    operations_cx_super_skill["operations-cx-super-skill<br/>⊕83 ↻19002"]:::warm
     postmortem["postmortem<br/>⊕37 ↻1722"]:::mild
-    runbook["runbook<br/>⊕30 ↻1489"]:::cool
+    runbook["runbook<br/>⊕30 ↻1494"]:::cool
   end
   subgraph oss_dev["oss-dev"]
-    dependency_audit["dependency-audit<br/>⊕28 ↻1001"]:::cool
-    dx_design["dx-design<br/>⊕27 ↻1058"]:::cool
+    dependency_audit["dependency-audit<br/>⊕28 ↻1003"]:::cool
+    dx_design["dx-design<br/>⊕27 ↻1060"]:::cool
     gh_review["gh-review<br/>⊕65 ↻997"]:::mild
     github_flow["github-flow<br/>⊕60 ↻1785"]:::mild
     issue_triage["issue-triage<br/>⊕125 ↻1914"]:::hot
-    oss_development["oss-development<br/>⊕32 ↻1273"]:::cool
+    oss_development["oss-development<br/>⊕32 ↻1275"]:::cool
     oss_governance["oss-governance<br/>⊕26 ↻1365"]:::cool
-    release_engineering["release-engineering<br/>⊕32 ↻1418"]:::cool
+    release_engineering["release-engineering<br/>⊕32 ↻1420"]:::cool
     resolving_merge_conflicts["resolving-merge-conflicts<br/>⊕143 ↻302"]:::hot
     to_issues["to-issues<br/>⊕116 ↻1083"]:::hot
   end
   subgraph php["php"]
-    code_style_spatie["code-style-spatie<br/>⊕54 ↻1237"]:::mild
-    database["database<br/>⊕44 ↻820"]:::mild
+    code_style_spatie["code-style-spatie<br/>⊕54 ↻1238"]:::mild
+    database["database<br/>⊕44 ↻826"]:::mild
     dependency_injection["dependency-injection<br/>⊕33 ↻1102"]:::cool
-    laravel["laravel<br/>⊕18 ↻1333"]:::cool
+    laravel["laravel<br/>⊕18 ↻1346"]:::cool
     laravel_best_practices["laravel-best-practices<br/>⊕53 ↻1868"]:::mild
-    laravel_structure["laravel-structure<br/>⊕37 ↻1710"]:::mild
-    named_arguments["named-arguments<br/>⊕42 ↻598"]:::mild
+    laravel_structure["laravel-structure<br/>⊕37 ↻1726"]:::mild
+    named_arguments["named-arguments<br/>⊕42 ↻599"]:::mild
     naming_conventions["naming-conventions<br/>⊕67 ↻1221"]:::warm
-    pao["pao<br/>⊕50 ↻562"]:::mild
-    php_patterns["php-patterns<br/>⊕21 ↻2151"]:::cool
-    php_upgrade_checklist["php-upgrade-checklist<br/>⊕61 ↻577"]:::mild
-    repositories["repositories<br/>⊕26 ↻1329"]:::cool
-    static_analysis["static-analysis<br/>⊕29 ↻961"]:::cool
+    pao["pao<br/>⊕50 ↻565"]:::mild
+    php_patterns["php-patterns<br/>⊕21 ↻2166"]:::cool
+    php_upgrade_checklist["php-upgrade-checklist<br/>⊕61 ↻580"]:::mild
+    repositories["repositories<br/>⊕26 ↻1338"]:::cool
+    static_analysis["static-analysis<br/>⊕29 ↻963"]:::cool
   end
   subgraph php_packages["php-packages"]
     laravel_package_compatibility["laravel-package-compatibility<br/>⊕65 ↻379"]:::mild
@@ -246,14 +246,14 @@ flowchart LR
     laravel_package_scaffold["laravel-package-scaffold<br/>⊕66 ↻523"]:::warm
     laravel_package_service_provider["laravel-package-service-provider<br/>⊕62 ↻468"]:::mild
     laravel_package_testing["laravel-package-testing<br/>⊕72 ↻463"]:::warm
-    laravel_packages["laravel-packages<br/>⊕28 ↻665"]:::cool
+    laravel_packages["laravel-packages<br/>⊕28 ↻679"]:::cool
   end
   subgraph pm["pm"]
     brd["brd<br/>⊕24 ↻514"]:::cool
-    business_process["business-process<br/>⊕23 ↻512"]:::cool
+    business_process["business-process<br/>⊕23 ↻517"]:::cool
     go_to_market["go-to-market<br/>⊕22 ↻1136"]:::cool
     monetization_design["monetization-design<br/>⊕31 ↻1245"]:::cool
-    pm_super_skill["pm-super-skill<br/>⊕115 ↻19473"]:::hot
+    pm_super_skill["pm-super-skill<br/>⊕102 ↻19581"]:::warm
     pmf_diagnostics["pmf-diagnostics<br/>⊕45 ↻1210"]:::mild
     prd_from_brd["prd-from-brd<br/>⊕32 ↻1234"]:::cool
     product_roadmap["product-roadmap<br/>⊕30 ↻1171"]:::cool
@@ -268,16 +268,16 @@ flowchart LR
     code_review["code-review<br/>⊕31 ↻1410"]:::cool
     code_simplifier["code-simplifier<br/>⊕57 ↻1080"]:::mild
     diagnosing_bugs["diagnosing-bugs<br/>⊕156 ↻2221"]:::hot
-    mutation_testing["mutation-testing<br/>⊕90 ↻2199"]:::warm
-    playwright_e2e["playwright-e2e<br/>⊕91 ↻2163"]:::warm
+    mutation_testing["mutation-testing<br/>⊕90 ↻2202"]:::warm
+    playwright_e2e["playwright-e2e<br/>⊕91 ↻2171"]:::warm
     refactoring_plan["refactoring-plan<br/>⊕28 ↻1605"]:::cool
     tdd_discipline["tdd-discipline<br/>⊕132 ↻1201"]:::hot
     tech_debt_audit["tech-debt-audit<br/>⊕38 ↻1879"]:::mild
-    test_strategy["test-strategy<br/>⊕52 ↻1960"]:::mild
-    testing_safety_report["testing-safety-report<br/>⊕66 ↻665"]:::warm
+    test_strategy["test-strategy<br/>⊕52 ↻1978"]:::mild
+    testing_safety_report["testing-safety-report<br/>⊕66 ↻668"]:::warm
   end
   subgraph research["research"]
-    research_knowledge_super_skill["research-knowledge-super-skill<br/>⊕165 ↻17354"]:::hot
+    research_knowledge_super_skill["research-knowledge-super-skill<br/>⊕165 ↻17401"]:::hot
   end
   subgraph roles["roles"]
     open_source_maintainer["open-source-maintainer<br/>⊕16 ↻1059"]:::cool
@@ -289,11 +289,11 @@ flowchart LR
     sales_super_skill["sales-super-skill<br/>⊕121 ↻21754"]:::hot
   end
   subgraph security["security"]
-    agent_security_super_skill["agent-security-super-skill<br/>⊕156 ↻25622"]:::hot
+    agent_security_super_skill["agent-security-super-skill<br/>⊕156 ↻25669"]:::hot
   end
   subgraph system["system"]
-    agent_packs["agent-packs<br/>⊕102 ↻1987"]:::warm
-    cross_project_coordinator["cross-project-coordinator<br/>⊕70 ↻1216"]:::warm
+    agent_packs["agent-packs<br/>⊕102 ↻1991"]:::warm
+    cross_project_coordinator["cross-project-coordinator<br/>⊕70 ↻1224"]:::warm
     local_topology["local-topology<br/>⊕53 ↻1072"]:::mild
     session_observer["session-observer<br/>⊕99 ↻1411"]:::warm
     shared_memory["shared-memory<br/>⊕105 ↻1242"]:::warm
@@ -392,57 +392,57 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 195 скиллов · ⊕ always **12464** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 425307 ток · ⌥ snippets 157306 ток.
+**Итого:** 195 скиллов · ⊕ always **12375** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 426343 ток · ⌥ snippets 157348 ток.
 
 ## По бакетам
 
 | Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ snippets |
 |---|--:|--:|--:|--:|
-| `general` | 20 | 1397 | 18263 | 5120 |
-| `architect` | 14 | 875 | 38203 | 7503 |
-| `frontend-vue` | 11 | 808 | 23064 | 7058 |
-| `quality` | 10 | 741 | 16383 | 7091 |
-| `oss-dev` | 10 | 654 | 12196 | 4313 |
-| `php-packages` | 9 | 592 | 4604 | 489 |
-| `php` | 13 | 535 | 15469 | 26763 |
-| `devops` | 11 | 451 | 7624 | 15385 |
+| `general` | 19 | 1302 | 17076 | 5120 |
+| `architect` | 14 | 877 | 38351 | 7503 |
+| `frontend-vue` | 11 | 808 | 23106 | 7058 |
+| `quality` | 10 | 741 | 16415 | 7125 |
+| `oss-dev` | 10 | 654 | 12204 | 4313 |
+| `php-packages` | 9 | 592 | 4618 | 489 |
+| `php` | 13 | 535 | 15538 | 26763 |
+| `devops` | 11 | 451 | 7654 | 15388 |
 | `blender-modeling` | 6 | 429 | 7727 | 11772 |
-| `system` | 5 | 429 | 6928 | 797 |
-| `laravel-architecture` | 4 | 382 | 6794 | 6779 |
-| `pm` | 10 | 369 | 28237 | 197 |
-| `operator` | 6 | 330 | 27017 | 90 |
-| `frontend-linting` | 4 | 300 | 5246 | 2914 |
+| `system` | 5 | 429 | 6940 | 797 |
+| `laravel-architecture` | 4 | 382 | 6838 | 6779 |
+| `pm` | 10 | 356 | 28350 | 197 |
+| `frontend-linting` | 4 | 300 | 5276 | 2914 |
 | `founder` | 9 | 286 | 10667 | 494 |
-| `laravel-testing` | 4 | 283 | 6839 | 14531 |
-| `frontend-backend` | 3 | 244 | 4670 | 7454 |
-| `frontend` | 3 | 242 | 3226 | 3393 |
+| `laravel-testing` | 4 | 283 | 6868 | 14531 |
+| `operator` | 6 | 252 | 27108 | 90 |
+| `frontend-backend` | 3 | 244 | 4726 | 7459 |
+| `frontend` | 3 | 242 | 3234 | 3393 |
+| `ai` | 2 | 218 | 1834 | 0 |
 | `frontend-nuxt` | 3 | 216 | 2179 | 0 |
-| `laravel-extras` | 3 | 205 | 3712 | 3192 |
-| `frontend-tailwind` | 2 | 204 | 3778 | 4980 |
-| `laravel-auth` | 3 | 172 | 2853 | 3020 |
-| `research` | 1 | 165 | 17354 | 0 |
-| `security` | 1 | 156 | 25622 | 0 |
-| `frontend-vite` | 4 | 153 | 2694 | 1351 |
+| `laravel-extras` | 3 | 205 | 3741 | 3192 |
+| `frontend-tailwind` | 2 | 204 | 3807 | 4980 |
+| `laravel-auth` | 3 | 172 | 2881 | 3020 |
+| `research` | 1 | 165 | 17401 | 0 |
+| `security` | 1 | 156 | 25669 | 0 |
+| `frontend-vite` | 4 | 153 | 2706 | 1351 |
 | `finance` | 1 | 152 | 18278 | 0 |
-| `laravel-data-layer` | 2 | 141 | 3024 | 3785 |
+| `laravel-data-layer` | 2 | 141 | 3037 | 3785 |
 | `creative` | 1 | 132 | 22304 | 0 |
-| `laravel-livewire` | 1 | 132 | 1095 | 1079 |
-| `ai` | 1 | 123 | 639 | 0 |
-| `legal` | 1 | 123 | 24815 | 0 |
+| `laravel-livewire` | 1 | 132 | 1100 | 1079 |
+| `legal` | 1 | 123 | 24861 | 0 |
 | `marketing` | 1 | 121 | 14124 | 0 |
 | `sales` | 1 | 121 | 21754 | 0 |
 | `blender` | 2 | 119 | 1961 | 325 |
 | `mobile` | 1 | 91 | 746 | 884 |
-| `frontend-reka` | 1 | 90 | 1706 | 2414 |
-| `frontend-naive-ui` | 1 | 87 | 1731 | 1270 |
+| `frontend-reka` | 1 | 90 | 1715 | 2414 |
+| `frontend-naive-ui` | 1 | 87 | 1744 | 1270 |
 | `frontend-figma` | 1 | 84 | 700 | 949 |
 | `laravel-filament` | 1 | 70 | 2311 | 2749 |
 | `roles` | 4 | 67 | 4500 | 148 |
 | `python` | 2 | 49 | 1014 | 0 |
 | `frontend-animations` | 1 | 47 | 782 | 0 |
-| `frontend-wayfinder` | 1 | 41 | 847 | 1658 |
-| `azguard` | 1 | 31 | 1422 | 6767 |
-| `botkit` | 1 | 25 | 205 | 592 |
+| `frontend-wayfinder` | 1 | 41 | 854 | 1658 |
+| `azguard` | 1 | 31 | 1436 | 6767 |
+| `botkit` | 1 | 25 | 208 | 592 |
 
 ## Топ ⊕ always (постоянный налог)
 
@@ -453,13 +453,13 @@ flowchart LR
 | `vue-router-best-practices` | frontend-vue | 181 |
 | `domain-modeling` | architect | 178 |
 | `research-knowledge-super-skill` | research | 165 |
-| `operations-cx-super-skill` | operator | 161 |
 | `diagnosing-bugs` | quality | 156 |
 | `agent-security-super-skill` | security | 156 |
 | `codebase-design` | architect | 155 |
 | `finance-super-skill` | finance | 152 |
 | `grill-with-docs` | general | 147 |
 | `resolving-merge-conflicts` | oss-dev | 143 |
+| `verify-claims` | general | 136 |
 
 ## Топ ↻ on-trigger (цена срабатывания)
 
@@ -467,13 +467,13 @@ flowchart LR
 
 | Скилл | Бакет | ток |
 |---|---|--:|
-| `agent-security-super-skill` | security | 25622 |
-| `legal-super-skill` | legal | 24815 |
+| `agent-security-super-skill` | security | 25669 |
+| `legal-super-skill` | legal | 24861 |
 | `content-creative-super-skill` | creative | 22304 |
 | `sales-super-skill` | sales | 21754 |
-| `dev-engineering-super-skill` | architect | 20241 |
-| `pm-super-skill` | pm | 19473 |
-| `operations-cx-super-skill` | operator | 18919 |
+| `dev-engineering-super-skill` | architect | 20367 |
+| `pm-super-skill` | pm | 19581 |
+| `operations-cx-super-skill` | operator | 19002 |
 | `finance-super-skill` | finance | 18278 |
-| `research-knowledge-super-skill` | research | 17354 |
+| `research-knowledge-super-skill` | research | 17401 |
 | `marketing-super-skill` | marketing | 14124 |

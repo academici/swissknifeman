@@ -98,7 +98,7 @@ Generated file, not hand-edited. Regenerated on every release.
 - `oss-dev/release-engineering` — consumer: SBOM published as release artefact.
 - `oss-dev/oss-governance` — project LICENSE choice; dependency license compatibility is here.
 - `architect/security-design` — consumer: vuln/supply-chain findings go to compliance pipeline.
-- `php/laravel-package-compatibility` — composer constraints, PHP/Laravel/Testbench versions for PHP packages.
+- `php-packages/laravel-package-compatibility` — composer constraints, PHP/Laravel/Testbench versions for PHP packages.
 - `php/static-analysis` — Pint/PHPStan/Rector: code quality alongside dependency audit.
 
 ## Hard prohibitions
@@ -113,4 +113,4 @@ NEVER:
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: e6aa202c7e4f18295b86964826e8d5288435770958aa98b1f8e9ae09406873ff -->
+<!-- ru-source-sha256: 8af7db936e3aad76b45e08d5cbf27fe0be1da64d840fdf688e63efaa9f9b4205 -->

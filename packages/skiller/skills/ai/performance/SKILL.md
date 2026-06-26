@@ -1,6 +1,6 @@
 ---
 name: token-efficient
-bucket: general
+bucket: ai
 version: 0.1.0
 description: Reduces Perplexity Computer output verbosity and token waste. Eliminates sycophantic openers, narrated tool usage, redundant summaries, unnecessary formatting, and closing fluff. Adapted from drona23/claude-token-efficient for the Perplexity Computer environment. Use on every session to cut output tokens without losing signal. Works alongside any other skill.
 license: MIT

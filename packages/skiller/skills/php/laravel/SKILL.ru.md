@@ -79,17 +79,17 @@ sha256: ""
 - [ ] Ни один класс ниже Controller/FormRequest не принимает `Illuminate\Http\Request`.
 - [ ] Resource не делает выборок и не решает авторизацию — только трансформация уже загруженного.
 - [ ] Повторяемые where-цепочки вынесены в model scopes (см. `eloquent-model.md` / `php/repositories`).
-- [ ] Размещение и нейминг сверены с `php/laravel-structure` и `php/naming-conventions` (не угаданы).
+- [ ] Размещение и нейминг сверены с `php/laravel-structure` и `general/naming-conventions` (не угаданы).
 - [ ] Стиль кода соответствует `php/code-style-spatie` (`final`, типизация, именованные аргументы).
 
 ## Ссылки
 
 - Структура проекта и размещение классов (доменная таксономия, правило зеркала) → `php/laravel-structure`
 - Репозитории (Read/Store split, scopes, visibility) → `php/repositories`
-- Нейминг классов и методов по намерению → `php/naming-conventions`
+- Нейминг классов и методов по намерению → `general/naming-conventions`
 - Стиль кода (final, типизация, именованные аргументы, Spatie-конвенции) → `php/code-style-spatie`
 - DI и взаимодействие компонентов → `php/dependency-injection`
-- DTO на пакете → `php/laravel-data`; «голые» доменные паттерны (VO/pipeline/specification) → `php/php-patterns`
-- Миграции и модели → `php/database`; рост до модулей → `php/modular-architecture`
-- Тесты архитектурных слоёв → `php/laravel-testing`
+- DTO на пакете → `laravel-data-layer/laravel-data`; «голые» доменные паттерны (VO/pipeline/specification) → `php/php-patterns`
+- Миграции и модели → `php/database`; рост до модулей → `laravel-architecture/modular-architecture`
+- Тесты архитектурных слоёв → `laravel-testing/laravel-testing`
 - Общие лучшие практики Laravel → `php/laravel-best-practices` (external)

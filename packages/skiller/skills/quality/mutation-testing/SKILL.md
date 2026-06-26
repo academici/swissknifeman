@@ -122,10 +122,10 @@ Increment needs full git history (`fetch-depth: 0`) and available compare base (
   - `quality/test-strategy` — strategy and coverage policy (what to cover; MSI catches weak asserts in already-covered)
   - `quality/code-review` — MSI as objective test-quality gate at review
   - `php/static-analysis` — neighboring PHP-quality CI gate (Pint/PHPStan/Rector); mutations check tests, static analysis checks code
-  - `php/laravel-testing` — Pest suite and coverage driver (Xdebug/PCOV) Infection runs on
+  - `laravel-testing/laravel-testing` — Pest suite and coverage driver (Xdebug/PCOV) Infection runs on
   - `php/pao` — compact PHP-tool output (incl. Infection) for in-agent work
   - `devops/ci-cd` — where the mutation workflow lives in the pipeline
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 67ba544cb95b03c304ef893837cb156d4a461ef9230bacdf7f6b3fbc6e10437a -->
+<!-- ru-source-sha256: c02cdf0dcd6da1db9c549656b6ab0c37995cbd3f2b24870344dd371c660ea3a9 -->

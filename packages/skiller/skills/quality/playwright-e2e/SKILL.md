@@ -26,7 +26,7 @@ Activate when:
 - flakes because runs share DB/media/uploads → need per-run data isolation.
 
 NOT here:
-- unit/component frontend tests (jsdom, component mount) → skill `frontend/vitest`;
+- unit/component frontend tests (jsdom, component mount) → skill `frontend-vue/vitest`;
 - test-level choice, pyramid, coverage policy, what to cover with E2E → skill `quality/test-strategy`;
 - only what runs in a **real browser** via Playwright.
 
@@ -137,12 +137,12 @@ playwright.config.ts
 - snippets/playwright.config.ts, snippets/example.spec.ts, snippets/ci-step.yml
 - Related skills:
   - `quality/test-strategy` — what to cover with E2E (pyramid, ~10% top)
-  - `frontend/vitest` — unit/component frontend tests (pyramid bottom layer)
-  - `php/laravel-dusk` — browser E2E in Laravel stack via Dusk/ChromeDriver; this skill is native TS `@playwright/test`. Choice: Playwright for a separate JS/TS layer, Dusk when E2E live in PHP
-  - `php/test-isolation-guard` — test DB/media-disk guard (same isolation task as step 7)
+  - `frontend-vue/vitest` — unit/component frontend tests (pyramid bottom layer)
+  - `laravel-testing/laravel-dusk` — browser E2E in Laravel stack via Dusk/ChromeDriver; this skill is native TS `@playwright/test`. Choice: Playwright for a separate JS/TS layer, Dusk when E2E live in PHP
+  - `laravel-testing/test-isolation-guard` — test DB/media-disk guard (same isolation task as step 7)
   - `devops/db-test-preflight` — test DB preflight before E2E run in CI
   - `devops/ci-cd` — where the E2E step mounts in the pipeline
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: c0ef832129e311f3f1b8112bd3a334e6675e48b507d30e848dafd9cb87e432cd -->
+<!-- ru-source-sha256: 852e60cf9404329cce15c8a0d976fc8ec0457ab97f51d22f89e64db0a1801a3b -->

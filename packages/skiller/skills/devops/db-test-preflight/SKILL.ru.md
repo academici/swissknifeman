@@ -88,4 +88,4 @@ sha256: ""
 - snippets/preflight.sh
 - snippets/Makefile.test
 - snippets/composer-scripts.json
-- Связанные скиллы: `devops/docker-postgres` (init-скрипт создаёт `<app>_test`), `devops/makefile` (цель `db-create-test`), `devops/node-pnpm-preflight` (аналог пре-флайта для Node/pnpm), `php/test-isolation-guard` (страж изоляции на уровне bootstrap.php), `php/laravel-testing` (паттерны тестов поверх изолированной БД)
+- Связанные скиллы: `devops/docker-postgres` (init-скрипт создаёт `<app>_test`), `devops/makefile` (цель `db-create-test`), `devops/node-pnpm-preflight` (аналог пре-флайта для Node/pnpm), `laravel-testing/test-isolation-guard` (страж изоляции на уровне bootstrap.php), `laravel-testing/laravel-testing` (паттерны тестов поверх изолированной БД)

@@ -259,6 +259,23 @@ class TestProjectDetect(unittest.TestCase):
             root = self._mk(tmp, files=[("package.json", "{}"), ("vite.config.ts", "")])
             self.assertEqual(detect_project_type(root), "node-frontend")
 
+    def test_blender_by_blend_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = self._mk(tmp, files=[("scene.blend", "")])
+            self.assertEqual(detect_project_type(root), "blender")
+
+    def test_blender_by_bpy_import_beats_python(self):
+        # addon с requirements.txt: import bpy → blender, не python-backend
+        with tempfile.TemporaryDirectory() as tmp:
+            root = self._mk(tmp, files=[("addon.py", "import bpy\n"),
+                                        ("requirements.txt", "")])
+            self.assertEqual(detect_project_type(root), "blender")
+
+    def test_blender_by_manifest(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = self._mk(tmp, files=[("blender_manifest.toml", "")])
+            self.assertEqual(detect_project_type(root), "blender")
+
     def test_standalone_default_never_unknown(self):
         with tempfile.TemporaryDirectory() as tmp:
             self.assertEqual(detect_project_type(tmp), "standalone")

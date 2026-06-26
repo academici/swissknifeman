@@ -183,7 +183,7 @@ Capacity-планирование без бюджета — академия.
 ## Ссылки
 
 - `architect/observability-design` — источник метрик/SLO/SLI и error budget, на которых строится capacity-решение (предпосылка)
-- `php/health-checks` — реализация мониторинга доступности (диск/очередь/heartbeat), сигналы для bottleneck-анализа
+- `laravel-testing/health-checks` — реализация мониторинга доступности (диск/очередь/heartbeat), сигналы для bottleneck-анализа
 - `operator/incident-response` — capacity-инциденты классифицируются здесь; pre-event war room берёт роли отсюда
 - `operator/oncall-rotation` — headroom влияет на частоту page'ей; недостаток capacity = выгорание on-call
 - `operator/runbook` — scale-up как митигация в runbook'е опирается на autoscaling policy из этого скилла

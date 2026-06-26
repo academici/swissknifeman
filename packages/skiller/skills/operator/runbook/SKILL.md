@@ -150,10 +150,10 @@ docs/03_Dev/Runbooks/
 - `operator/postmortem` — stale runbook surfaces in postmortem → AI to update (postmortem produces_for runbook).
 - `operator/capacity-planning` — scale-up mitigation relies on autoscaling policy and max replicas.
 - `architect/observability-design` — alerting defines which alerts need runbooks (runbook_url in payload).
-- `php/health-checks` — /health (live/ready) as source of symptoms and diagnostic steps.
-- `php/pennant-development` — feature-flag off as priority (reversible) mitigation.
+- `laravel-testing/health-checks` — /health (live/ready) as source of symptoms and diagnostic steps.
+- `laravel-extras/pennant-development` — feature-flag off as priority (reversible) mitigation.
 - `quality/tech-debt-audit` — structural problem from post-actions → row in Tech_Debt_Register.
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 13cae39b6b2a11c8f9b484e2e569bd18c90339e3929113b1f823321a56081d78 -->
+<!-- ru-source-sha256: aa551b67f4f0da103e2b60079d7b6b18d3a9d88b4dfe1e851049098da16658f3 -->

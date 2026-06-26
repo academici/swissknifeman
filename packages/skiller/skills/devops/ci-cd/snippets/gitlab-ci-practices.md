@@ -81,7 +81,7 @@ test_backend:
 ## Coverage-gate job
 
 Порог покрытия — отдельный job поверх общего `.php-base` (сборка PHP-расширений,
-ожидание Postgres, миграции). Парсер/конфиг порога — в скилле `php/laravel-testing`
+ожидание Postgres, миграции). Парсер/конфиг порога — в скилле `laravel-testing/laravel-testing`
 (`coverage.php` + `check-php-coverage-gate.php`); CI лишь вызывает их с env-порогами.
 
 ```yaml

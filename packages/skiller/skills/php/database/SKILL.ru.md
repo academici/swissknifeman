@@ -131,6 +131,6 @@ php artisan make:model ModelName -m --no-interaction
 
 - `php/laravel` — архитектурные паттерны (модели, связи, Eloquent).
 - `php/laravel-structure` — размещение моделей и фабрик по доменам (`Models/<Домен>`, `database/factories/<Домен>`).
-- `php/laravel-testing`, `php/test-isolation-guard` — изоляция тестовой БД при прогоне миграций.
+- `laravel-testing/laravel-testing`, `laravel-testing/test-isolation-guard` — изоляция тестовой БД при прогоне миграций.
 - `architect/data-schema` — проектирование схемы данных (сущности, связи) до миграций.
 - `devops/docker-postgres`, `devops/db-test-preflight` — Postgres в Docker и пре-флайт тестовой БД.

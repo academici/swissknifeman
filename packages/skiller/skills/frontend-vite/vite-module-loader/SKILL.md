@@ -93,8 +93,8 @@ export default defineConfig({
 ## Links
 - https://vitejs.dev/config/
 - https://github.com/laravel/vite-plugin
-- Related: `frontend/vite-multi-build` (two independent builds: app + Filament), `devops/docker-vite` (Vite dev server as separate compose service, HMR in Docker), `frontend/wayfinder` (`wayfinder()` vite plugin in build), `frontend/tailwind-conventions` (`@tailwindcss/vite` plugin, Tailwind v4 build)
+- Related: `frontend-vite/vite-multi-build` (two independent builds: app + Filament), `devops/docker-vite` (Vite dev server as separate compose service, HMR in Docker), `frontend-wayfinder/wayfinder` (`wayfinder()` vite plugin in build), `frontend-tailwind/tailwind-conventions` (`@tailwindcss/vite` plugin, Tailwind v4 build)
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: e91bc7ac931d024c27e75dd0bc259a533d155e4384ad154da82c6d6be064d22f -->
+<!-- ru-source-sha256: 3101147779e30b27aefa2597806d24a4b6e6d6339367360294c079b3ca87a590 -->

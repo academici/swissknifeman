@@ -20,7 +20,7 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-RBAC for Laravel: standard policies/gates + entity-scoped permissions (workspace/project context). Snippets here = manual impl without a package; use when external dep is unwanted. New projects: prefer package **azguard** (code-first RBAC, skill `php/azguard`).
+RBAC for Laravel: standard policies/gates + entity-scoped permissions (workspace/project context). Snippets here = manual impl without a package; use when external dep is unwanted. New projects: prefer package **azguard** (code-first RBAC, skill `azguard/azguard`).
 
 ## Steps
 
@@ -36,12 +36,12 @@ RBAC for Laravel: standard policies/gates + entity-scoped permissions (workspace
 
 ## Links
 
-- `php/azguard` — ready code-first RBAC package (preferred for new projects); this skill = manual impl without dep.
-- `php/attribute-authorization` — declarative permission check on actions via `#[CheckPermission]` over Gate (orthogonal layer; permissions defined here).
-- `php/enum-attributes` — enum permissions as typesafe layer instead of string abilities.
+- `azguard/azguard` — ready code-first RBAC package (preferred for new projects); this skill = manual impl without dep.
+- `laravel-auth/attribute-authorization` — declarative permission check on actions via `#[CheckPermission]` over Gate (orthogonal layer; permissions defined here).
+- `laravel-architecture/enum-attributes` — enum permissions as typesafe layer instead of string abilities.
 - `php/laravel-structure` — placement of Policies/Enums/Permissions in the project tree.
 - `architect/security-design` — auth strategy, RBAC/ABAC, threat modeling at architecture level.
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: da35391df1761ee5d7b61083fa447a84fd4a4d76c7726cad5e46a23662c29cf7 -->
+<!-- ru-source-sha256: d3b8b5b421b1dd5d7d6590f475498bb3da1c829e657552bd23b91e3ee3263aac -->

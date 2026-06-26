@@ -27,7 +27,7 @@ Single source of truth: edge graph as a static enum method `transitionDefinition
 ## Do NOT activate
 
 - Plain status without transition rules (any→any) — backing-enum suffices.
-- Task only about **case metadata** (label/color/priority) without transition graph — that's `php/enum-attributes` (it complements this skill, not state-machine).
+- Task only about **case metadata** (label/color/priority) without transition graph — that's `laravel-architecture/enum-attributes` (it complements this skill, not state-machine).
 - Domain-specific single-project impl (concrete status/action names) — make it a **project-local** skill (`<project>/.ai|.claude/skills/`), not the shared registry.
 
 ## Algorithm
@@ -36,7 +36,7 @@ Single source of truth: edge graph as a static enum method `transitionDefinition
 2. **Runtime registry.** `final class XxxStatusTransitions` builds adjacency (`array<string, list<Status>>`) **lazily, cached in static** (reflection/array walk expensive on hot paths). Public: `allowedFrom(Status $from): array`, `canTransition(Status $from, Status $to): bool`. Data source — only `transitionDefinitions()`. See `snippets/transitions-registry.php`.
 3. **Guard before transition.** Before mutation check `canTransition($from, $to)` (edge legality) **and** the domain predicate/policy from `guard` (the specific user/context right). Illegal transition → `ValidationException`/`abort`, not a silent no-op.
 4. **Execute in Action.** Transition is a use-case: `final readonly` Action with one `execute()`, opens `DB::transaction()`, writes new status (+ history/related models), then `dispatch()` the domain event. Action takes no `Request` (boundaries — `php/laravel`, `general/cross-layer-change-checklist`). See `snippets/transition-action.php`.
-5. **Event after commit.** Domain event implements `ShouldDispatchAfterCommit` so listeners/broadcast don't see unsaved state on rollback. Broadcast/listener details — `php/laravel-broadcasting` (don't duplicate here).
+5. **Event after commit.** Domain event implements `ShouldDispatchAfterCommit` so listeners/broadcast don't see unsaved state on rollback. Broadcast/listener details — `laravel-data-layer/laravel-broadcasting` (don't duplicate here).
 6. **UI-available actions.** Frontend buttons/actions built from `allowedFrom($current)` + each edge's `label`/`guard` — UI reads the graph, doesn't hardcode transitions.
 7. **Graph evolution.** New transition = new row in `transitionDefinitions()` (+ Action if needed). Graph test (see checklist) catches dangling edges and unreachable statuses.
 
@@ -70,11 +70,11 @@ Single source of truth: edge graph as a static enum method `transitionDefinition
 
 ## Links
 
-- `php/enum-attributes` — case metadata (label/color/priority) via attributes+Concern; here — transition graph over such enums (skills complement each other).
-- `php/laravel-broadcasting` — `ShouldDispatchAfterCommit`, broadcast and transition listeners.
+- `laravel-architecture/enum-attributes` — case metadata (label/color/priority) via attributes+Concern; here — transition graph over such enums (skills complement each other).
+- `laravel-data-layer/laravel-broadcasting` — `ShouldDispatchAfterCommit`, broadcast and transition listeners.
 - `php/laravel`, `php/repositories` — Action/Repository boundaries the transition lives in.
 - `general/cross-layer-change-checklist` — layer sync when adding a transition.
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 140b2b14d995c88b55e0747535c0a57bb5274ffc947840c55e0ccd40364c0b54 -->
+<!-- ru-source-sha256: 69d1b401f6134a5bb2f89c40b48aa5d662799ae0ccb4317eb4825f2e6469ba7a -->

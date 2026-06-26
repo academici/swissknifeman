@@ -1,0 +1,23 @@
+{
+  "skill": "compact-responses",
+  "scenarios": [
+    {
+      "id": 1,
+      "tempts": "На простой фактический вопрос обвесить ответ преамбулой, повтором вопроса и резюме в конце.",
+      "prompt": "Спасибо, очень помогло! А ещё подскажи: в каком файле живёт корневой роутер swissknifeman?",
+      "assertions": [
+        {"type": "contains", "value": "bin/swissknifeman"},
+        {"type": "not_regex", "value": "(?i)(рад помочь|pleasure|обращайтесь|feel free|надеюсь|hope this)"},
+        {"type": "not_regex", "value": "(?i)(подводя итог|to summarize|итак,|in summary|как я уже)"}
+      ]
+    },
+    {
+      "id": 2,
+      "tempts": "Нарративно проговаривать каждый шаг работы с инструментами вместо результата.",
+      "prompt": "Проверь, есть ли в репо файл ruff.toml, и скажи да/нет.",
+      "assertions": [
+        {"type": "not_regex", "value": "(?i)(сейчас я запущу|let me run|i'll check by|давай(те)? я посмотрю|i am going to)"}
+      ]
+    }
+  ]
+}

@@ -125,10 +125,10 @@ php artisan make:model ModelName -m --no-interaction
 
 - `php/laravel` — architectural patterns (models, relations, Eloquent).
 - `php/laravel-structure` — placing models and factories per domain (`Models/<Domain>`, `database/factories/<Domain>`).
-- `php/laravel-testing`, `php/test-isolation-guard` — test DB isolation when running migrations.
+- `laravel-testing/laravel-testing`, `laravel-testing/test-isolation-guard` — test DB isolation when running migrations.
 - `architect/data-schema` — data schema design (entities, relations) before migrations.
 - `devops/docker-postgres`, `devops/db-test-preflight` — Postgres in Docker and test DB pre-flight.
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 32aa2c99c08d94a9a8e392d0f69bf021b5bea413acfe7940b51c81d9f421e882 -->
+<!-- ru-source-sha256: be85a74d97166220389678a7dabf4411a78b2c2c0ff2d72e80fe0957d3689094 -->

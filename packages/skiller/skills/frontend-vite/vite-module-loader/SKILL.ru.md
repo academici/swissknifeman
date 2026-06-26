@@ -101,4 +101,4 @@ export default defineConfig({
 
 - https://vitejs.dev/config/
 - https://github.com/laravel/vite-plugin
-- Связанные скиллы: `frontend/vite-multi-build` (две независимые сборки: приложение + Filament), `devops/docker-vite` (Vite dev-сервер отдельным compose-сервисом, HMR в Docker), `frontend/wayfinder` (vite-плагин `wayfinder()` в сборке), `frontend/tailwind-conventions` (плагин `@tailwindcss/vite` и сборка Tailwind v4)
+- Связанные скиллы: `frontend-vite/vite-multi-build` (две независимые сборки: приложение + Filament), `devops/docker-vite` (Vite dev-сервер отдельным compose-сервисом, HMR в Docker), `frontend-wayfinder/wayfinder` (vite-плагин `wayfinder()` в сборке), `frontend-tailwind/tailwind-conventions` (плагин `@tailwindcss/vite` и сборка Tailwind v4)

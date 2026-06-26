@@ -12,6 +12,7 @@ PROJECT_TYPES (дефолт `standalone`, НИКОГДА `unknown` — sentinel 
 строки `php-package`/`node-package` несущие (maind `language_by_type`, `codegraph`), их не
 переименовывать. stdlib-only."""
 import json
+import re
 from pathlib import Path
 
 # Упорядочено специфичное → общее; id == имя профиля skiller.
@@ -20,6 +21,7 @@ PROJECT_TYPES = (
     "laravel-project",
     "php-package",
     "dart-flutter",
+    "blender",
     "python-backend",
     "node-frontend",
     "node-package",
@@ -31,6 +33,7 @@ LANGUAGE_BY_TYPE = {
     "laravel-project": "php",
     "php-package": "php",
     "dart-flutter": "dart",
+    "blender": "python",
     "python-backend": "python",
     "node-frontend": "typescript",
     "node-package": "typescript",
@@ -54,6 +57,28 @@ def _load_json(path):
         return json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return {}
+
+
+_BPY_RE = re.compile(r'^\s*(?:import\s+bpy|from\s+bpy\b)', re.M)
+
+
+def _is_blender(path):
+    """Blender-проект: манифест расширения 4.2+, файлы `.blend`, или top-level `.py`
+    с `import bpy` (addon/скрипт). Поверхностно (без рекурсии) — детектор быстрый."""
+    if (path / "blender_manifest.toml").is_file():
+        return True
+    try:
+        if any(path.glob("*.blend")):
+            return True
+        for py in list(path.glob("*.py"))[:20]:
+            try:
+                if _BPY_RE.search(py.read_text(encoding="utf-8", errors="ignore")[:2000]):
+                    return True
+            except OSError:
+                continue
+    except OSError:
+        return False
+    return False
 
 
 def _is_node_frontend(path):
@@ -84,6 +109,9 @@ def detect_project_type(path):
         return "php-package"
     if (p / "pubspec.yaml").is_file():
         return "dart-flutter"
+    # blender раньше python: addon/скрипт может нести requirements.txt/pyproject.
+    if _is_blender(p):
+        return "blender"
     # python раньше node: package.json часто лишь сборочный тулинг python-проекта.
     if ((p / "pyproject.toml").is_file() or (p / "requirements.txt").is_file()
             or (p / "setup.py").is_file()):

@@ -12,7 +12,7 @@
 #   -V, --version   → версия зонтика (git describe)
 #
 # Back-compat: исторические команды swissknifeman = skiller (алиас сохранён):
-#   connect vendor integrate update init sync lock status list registry topology validate
+#   connect vendor integrate update init sync lock status list registry topology
 set -euo pipefail
 
 SELF="$(readlink -f "${BASH_SOURCE[0]}")"
@@ -53,7 +53,7 @@ case "$CMD" in
     done
     exit "$rc" ;;
   # back-compat: старый алиас swissknifeman → skiller (онбордженные проекты/привычка)
-  connect|vendor|integrate|update|init|sync|lock|status|list|registry|topology|validate)
+  connect|vendor|integrate|update|init|sync|lock|status|list|registry|topology)
     need "$SKILLER"; exec "$SKILLER" "$@" ;;
   *) echo "Неизвестная команда: $CMD" >&2; usage >&2; exit 1 ;;
 esac

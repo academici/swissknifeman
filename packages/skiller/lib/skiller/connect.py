@@ -1,12 +1,11 @@
 """connect — канал plugin marketplace Claude Code."""
 import json
-import os
 import shutil
 
-from core import atomic_write_text
+from core import atomic_write_text, find_repo_root
 
 from .common import (AGENT_DEFAULTS, MANIFEST, MARKETPLACE, apply_permissions,
-                     die, parse_flags)
+                     die, is_within, parse_flags)
 from .config import (CORE_BUCKETS, all_buckets, load_config, resolve_selection,
                      resolve_target)
 from .hub import generate_hub, hub_artifacts_exist
@@ -72,13 +71,17 @@ def do_connect(env, target, opts, register=True, fix_path_drift=False):
             die(f"{dest}: invalid JSON: {e}")
 
     marketplaces = settings.setdefault("extraKnownMarketplaces", {})
-    our_source = {"source": "directory", "path": str(root)}
+    # marketplace.json лежит в КОРНЕ монорепо (registry пишет туда же, source-пути
+    # относительны корня), а не в каталоге пакета env.root — иначе Claude Code ищет
+    # .claude-plugin/marketplace.json под packages/skiller и не находит плагины.
+    mp_root = find_repo_root(root) or root
+    our_source = {"source": "directory", "path": str(mp_root)}
     if MARKETPLACE in marketplaces:
         existing = marketplaces[MARKETPLACE].get("source", {})
         if existing != our_source:
             if fix_path_drift and existing.get("source") == "directory":
                 print(f"NOTE: путь marketplace устарел ({existing.get('path')}) — "
-                      f"обновляю на {root}")
+                      f"обновляю на {mp_root}")
                 marketplaces[MARKETPLACE] = {"source": our_source}
             else:
                 print(f"NOTE: marketplace '{MARKETPLACE}' already declared with a "
@@ -131,8 +134,7 @@ def do_connect(env, target, opts, register=True, fix_path_drift=False):
         for entry in manifest.get("skills", []):
             name = entry.get("flat_name") or entry.get("path", "")
             d = dest_root / name
-            if name and d.is_dir() and \
-                    str(d.resolve()).startswith(str(dest_root.resolve()) + os.sep):
+            if name and d.is_dir() and is_within(d, dest_root):
                 stale.append(d)
         if opts.get("cleanup_vendored") and not dry_run:
             for d in stale:
@@ -172,12 +174,13 @@ def cmd_connect(env, argv):
         "--target": "str", "--profile": "str", "--plugins": "str",
         "--file": "str", "--cleanup-vendored": "bool", "--list": "bool",
         "--dry-run": "bool", "--hub": "bool", "--no-core": "bool",
-        "--no-permissions": "bool",
+        "--no-permissions": "bool", "--fix-path": "bool",
     })
     if opts["help"]:
         print("skiller connect [--profile P|--plugins a,b] "
               "[--file settings.json|settings.local.json] [--cleanup-vendored] "
-              "[--list] [--dry-run] [--hub] [--no-core] [--no-permissions]")
+              "[--list] [--dry-run] [--hub] [--no-core] [--no-permissions] "
+              "[--fix-path]")
         return
     target, _ = resolve_target(env, opts, allow_home_confirm=True)
-    do_connect(env, target, opts)
+    do_connect(env, target, opts, fix_path_drift=opts.get("fix_path", False))

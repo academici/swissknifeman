@@ -66,8 +66,8 @@ sha256: ""
 
 - `references/medialibrary-guide.md` — full package API reference
 - https://spatie.be/docs/laravel-medialibrary
-- Related skills: `frontend/filepond-upload` (frontend file upload, server-side model binding), `php/test-isolation-guard` (isolated `media-test` disk in tests), `php/laravel-data` (media URLs in DTOs/resources), `php/filament` (media fields in admin)
+- Related skills: `frontend/filepond-upload` (frontend file upload, server-side model binding), `laravel-testing/test-isolation-guard` (isolated `media-test` disk in tests), `laravel-data-layer/laravel-data` (media URLs in DTOs/resources), `laravel-filament/filament` (media fields in admin)
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 8a529205d04347757e9e51c5615861f2821bf6924573c01425625c972bf7c100 -->
+<!-- ru-source-sha256: e74c686ad0625207e437530170742d46abbd7b6fa16ff5dfa0608c045e99c523 -->

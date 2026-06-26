@@ -89,9 +89,9 @@ php artisan migrate
 ## Ссылки
 
 - Исходник: `/home/vostrikov/projects/packages/azguard` (docs/guide: basic-usage, permissions, roles, panels, entity-scopes, direct-grants, policies-and-gates, abilities-frontend, testing)
-- Ручная реализация RBAC без пакета — скилл `php/laravel-permissions`
-- Filament-интеграция — пакет `azguard/filament`, скилл `php/filament`
-- Декларативная проверка прав на экшенах через атрибут — `php/attribute-authorization` (ортогональный слой поверх Gate)
-- Enum-права как метаданные/типобезопасный слой — `php/enum-attributes`
-- Abilities во фронтенд (Inertia/TS) — `frontend/backend-type-sync`
+- Ручная реализация RBAC без пакета — скилл `laravel-auth/laravel-permissions`
+- Filament-интеграция — пакет `azguard/filament`, скилл `laravel-filament/filament`
+- Декларативная проверка прав на экшенах через атрибут — `laravel-auth/attribute-authorization` (ортогональный слой поверх Gate)
+- Enum-права как метаданные/типобезопасный слой — `laravel-architecture/enum-attributes`
+- Abilities во фронтенд (Inertia/TS) — `frontend-backend/backend-type-sync`
 - Auth-стратегия и threat modeling на уровне архитектуры — `architect/security-design`

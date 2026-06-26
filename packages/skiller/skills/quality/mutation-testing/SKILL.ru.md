@@ -134,6 +134,6 @@ sha256: ""
   - `quality/test-strategy` — стратегия и политика покрытия (что покрывать; MSI ловит слабые ассерты в уже покрытом)
   - `quality/code-review` — MSI как объективный гейт качества тестов на ревью
   - `php/static-analysis` — соседний CI-гейт качества PHP (Pint/PHPStan/Rector); мутации проверяют тесты, статанализ — код
-  - `php/laravel-testing` — Pest-набор и драйвер покрытия (Xdebug/PCOV), на котором запускается Infection
+  - `laravel-testing/laravel-testing` — Pest-набор и драйвер покрытия (Xdebug/PCOV), на котором запускается Infection
   - `php/pao` — компактный вывод PHP-инструментов (включая Infection) для работы внутри агента
   - `devops/ci-cd` — где живёт мутационный workflow в пайплайне

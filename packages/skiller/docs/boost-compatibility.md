@@ -55,19 +55,19 @@
 | Наш скилл | Boost-источник | Наша дельта |
 |:---|:---|:---|
 | `php/laravel-best-practices` | laravel-best-practices (Boost) | полный свод для проектов **без** Boost; с Boost — используем Boost-версию |
-| `frontend/inertia-vue` | inertia-vue-development | слоистая организация `resources/js/`, проектные конвенции размещения файлов |
-| `frontend/wayfinder` | wayfinder-development | ESLint-границы импортов, слой actions/composables |
-| `php/filament` | filament/filament (third-party) | структура ресурсов, проектные паттерны админки |
-| `php/medialibrary` | spatie/laravel-medialibrary (third-party) | самодостаточный вариант для проектов без Boost |
-| `php/laravel-testing` | pest-testing | изоляция тестовой БД, детект окружения, coverage gate |
-| `frontend/tailwind-conventions` | tailwindcss 3/4 | v4 CSS-first: токены `@theme`, тёмная тема `.dark`+`useAppearance`, `cn()` (clsx+tailwind-merge), сортировка классов Prettier, дисциплина отступов |
-| `php/laravel-data` | spatie/laravel-data (third-party) | авторский паттерн поверх версионного API: вложенные `DataCollection`, casts, `from(request)`, отдача в Inertia/API, `#[TypeScript]` |
-| `php/spatie-settings` | spatie/laravel-settings (third-party) | самодостаточно для проектов без Boost; привязка формы (Filament) к классу настроек |
-| `php/livewire-blade-attributes` | livewire 2/3/4 | дельта-гочизы: атрибуты Blade-компонентов (нет `@if`/`@js()` в списке атрибутов, `ComponentAttributeBag`) |
+| `frontend-backend/inertia-vue` | inertia-vue-development | слоистая организация `resources/js/`, проектные конвенции размещения файлов |
+| `frontend-wayfinder/wayfinder` | wayfinder-development | ESLint-границы импортов, слой actions/composables |
+| `laravel-filament/filament` | filament/filament (third-party) | структура ресурсов, проектные паттерны админки |
+| `laravel-extras/medialibrary` | spatie/laravel-medialibrary (third-party) | самодостаточный вариант для проектов без Boost |
+| `laravel-testing/laravel-testing` | pest-testing | изоляция тестовой БД, детект окружения, coverage gate |
+| `frontend-tailwind/tailwind-conventions` | tailwindcss 3/4 | v4 CSS-first: токены `@theme`, тёмная тема `.dark`+`useAppearance`, `cn()` (clsx+tailwind-merge), сортировка классов Prettier, дисциплина отступов |
+| `laravel-data-layer/laravel-data` | spatie/laravel-data (third-party) | авторский паттерн поверх версионного API: вложенные `DataCollection`, casts, `from(request)`, отдача в Inertia/API, `#[TypeScript]` |
+| `laravel-extras/spatie-settings` | spatie/laravel-settings (third-party) | самодостаточно для проектов без Boost; привязка формы (Filament) к классу настроек |
+| `laravel-livewire/livewire-blade-attributes` | livewire 2/3/4 | дельта-гочизы: атрибуты Blade-компонентов (нет `@if`/`@js()` в списке атрибутов, `ComponentAttributeBag`) |
 
 ### ours-only — аналога в Boost нет
 
-`php/laravel-structure`, `php/repositories`, `php/dependency-injection`, `php/azguard`, `php/database`, `php/enum-attributes`, `php/laravel-broadcasting`, `php/laravel-dusk`, `php/code-style-spatie`, `php/static-analysis`, `php/laravel`, `php/laravel-permissions`, `php/php-patterns`, `php/modular-architecture`, `php/botkit`, все `php/laravel-package-*` (scaffold, testing, docs, release, service-provider, compatibility, generate-skill, expressive) и `php/laravel-packages`, `php/test-isolation-guard`, `php/attribute-authorization`, `php/health-checks`, все `devops/docker-*` (а также `devops/ci-cd`, `devops/gitops`, `devops/makefile`, `devops/node-pnpm-preflight`, `devops/db-test-preflight`), `frontend/vite-multi-build`, `frontend/vite-module-loader`, `frontend/vitest`, `frontend/js-code-style`, `frontend/vue-composition-api`, `frontend/backend-type-sync`, `frontend/eslint-flat-config`, `frontend/reka-ui-cva`, `frontend/dark-mode`, `frontend/naive-ui-theming`, `frontend/laravel-echo-client`, `frontend/filepond-upload`, `frontend/vue-dynamic-icons`, `frontend/pinia-stores`, и все не-Laravel бакеты целиком: `architect/*`, `blender/*`, `founder/*`, `general/*`, `imported/*`, `operator/*`, `oss-dev/*`, `pm/*`, `python/*`, `quality/*`, `roles/*`.
+`php/laravel-structure`, `php/repositories`, `php/dependency-injection`, `azguard/azguard`, `php/database`, `laravel-architecture/enum-attributes`, `laravel-data-layer/laravel-broadcasting`, `laravel-testing/laravel-dusk`, `php/code-style-spatie`, `php/static-analysis`, `php/laravel`, `laravel-auth/laravel-permissions`, `php/php-patterns`, `laravel-architecture/modular-architecture`, `botkit/botkit`, все `php/laravel-package-*` (scaffold, testing, docs, release, service-provider, compatibility, generate-skill, expressive) и `php-packages/laravel-packages`, `laravel-testing/test-isolation-guard`, `laravel-auth/attribute-authorization`, `laravel-testing/health-checks`, все `devops/docker-*` (а также `devops/ci-cd`, `devops/gitops`, `devops/makefile`, `devops/node-pnpm-preflight`, `devops/db-test-preflight`), `frontend-vite/vite-multi-build`, `frontend-vite/vite-module-loader`, `frontend-vue/vitest`, `frontend-linting/js-code-style`, `frontend-vue/vue-composition-api`, `frontend-backend/backend-type-sync`, `frontend-linting/eslint-flat-config`, `frontend-reka/reka-ui-cva`, `frontend-tailwind/dark-mode`, `frontend-naive-ui/naive-ui-theming`, `frontend-backend/laravel-echo-client`, `frontend/filepond-upload`, `frontend-vue/vue-dynamic-icons`, `frontend-vue/pinia-stores`, и все не-Laravel бакеты целиком: `architect/*`, `blender/*`, `founder/*`, `general/*`, `imported/*`, `operator/*`, `oss-dev/*`, `pm/*`, `python/*`, `quality/*`, `roles/*`.
 
 ## Как применять
 

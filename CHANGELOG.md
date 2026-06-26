@@ -2,6 +2,175 @@
 
 ## [Unreleased]
 
+### Fixed (skiller — drift-устойчивость путей и корень marketplace)
+
+- **`connect`: source marketplace указывает на КОРЕНЬ монорепо**, а не на каталог пакета
+  (`env.root`). `marketplace.json` генерируется в корне репо с относительными `source`-путями;
+  раньше `connect` объявлял marketplace под `packages/skiller`, где Claude Code не находил
+  `.claude-plugin/marketplace.json` и плагины не подключались. Добавлен флаг `--fix-path` для
+  обновления протухшего пути в существующих настройках.
+- **`resolve_skillset`/`_match`: drift-устойчивость после раскола бакетов** — старый путь
+  `oldbucket/skill` (напр. `frontend/vue` → `frontend-vue/vue`) больше не теряется молча: при
+  промахе по полному ключу токен-путь добивается по базовому имени, а вызывающий печатает
+  migration-warning со старым→новым путём (`обновите .swissknifeman/config.json`). Регресс-тест.
+
+### Changed (аудит — добивка отложенного: super-skill + Serena-пин)
+
+- **3 vendored super-skill демотированы в «навигаторы»** (`pm/product`, `architect/engineering`,
+  `operator/operations-cx`) — они дублировали зрелые гранулярные нативные скиллы (9/13/5) и
+  перехватывали весь бакет over-broad триггером («any … work»). `description` сужен до «обзор
+  бакета; для конкретной задачи → granular skill», в тело добавлен блок обратных ссылок на
+  гранулярные. Конфликт триггеров устранён, провенанс (upstream `notify`) сохранён.
+- **Односторонние границы Group B закрыты:** `research/research`→`general/verify-claims` (RAG),
+  `legal/legal`→`architect/legal-compliance`, `security/security`→`architect/security-design`
+  (run-time ↔ design-time). 7 super-skill-only бакетов (creative/finance/legal/…) оставлены —
+  они единственное покрытие домена.
+- **Serena запиннована на тег релиза** (`constants.SERENA_SRC = git+…/oraios/serena@v1.5.3`,
+  было bare-main) — breaking-изменение в main не сломает код-граф у всех проектов внезапно. Один
+  bump-пойнт. Версия **верифицирована через RAG** (последний релиз v1.5.3, 2026-05-26;
+  `@agentmemory/agentmemory ^0.9.26` и jscpd-`npx --yes` проверены — актуальны, действий не нужно).
+
+## [0.5.0] - 2026-06-26
+
+### Fixed (аудит — устойчивость фан-аута, гейты CI, хвосты)
+
+- **maind sync — fail-soft фан-аут** (`sync.run_sync`): падение одного провиженера больше НЕ валит всю
+  раскатку — остальные отрабатывают, упавший помечается `status=failed` per-project (виден в выводе,
+  код возврата `cmd_sync` ненулевой). `_agent_pack_run`: `rc!=0` → `failed` (был `skip` — провал
+  рендера пака был невидим); `harness недоступен` остаётся graceful `skip`.
+- **validate.sh: гейт двуязычной свежести** (секция 14) — `check-translations.sh --strict`: правленый
+  `SKILL.ru.md` без регенерации `SKILL.md` (или без `ru-source-sha256`) теперь падает в CI, а не молчит.
+- **bin/swissknifeman:** убран мёртвый алиас `validate` (skiller-команды такой нет — роутинг давал
+  «Неизвестная команда»).
+- _Проверено, НЕ баг:_ `config.example.json` `type=node-package` + `code_language=python` — намеренная
+  демонстрация override смешанного репо (есть `_comment_code_graph`), не дефект.
+- _Отложено (tracked):_ RAG-верификация актуальности внешних пинов (`@agentmemory/agentmemory ^0.9.26`,
+  Serena git-pin, jscpd, ruff) — по методологии `decision-verification` делается ПЕРЕД bump'ом
+  зависимости; bump'а здесь нет. Аудит upstream-super-skill (name=dir, обратные ссылки) — отдельный
+  per-skill пасс.
+
+### Added (аудит — покрытие локальных скиллов + сценарные рецепты архетипов)
+
+- **Новый governance-скилл `harness-operations`** (`.claude/skills/`) — у пакета `harness` не было ни
+  одного операционного скилла. Карта команд (`permissions`/`mcp`/`hooks`/`agent-packs`/`doctor`),
+  каталог пресетов (`settings.*` по стекам, `mcp/<name>.json`, режимы auto-approve), и недокументированная
+  подсистема **agent-packs** (4 стек- + 4 роль-пака с `pack:if`-шаблонизацией). Чтобы агент не гадал
+  при задаче на окружение Claude Code.
+- **`maind-overview` расширен:** `maind verify` (пруф-оф-лайф vs `health`), команды реестров/оркестрации
+  (`projects`/`agents`/`namespaces`/`workspace`/`run`/`fleet`/`migrate`/`deploy`), таблица 11 MCP-инструментов
+  с заметкой об изоляции scope (per-project сервер ограничен своим проектом).
+- **Архетип Blender** — был пробел: `.blend`/`bpy`-проект детектился как `standalone`. Добавлены
+  `blender` в `core.PROJECT_TYPES`/`LANGUAGE_BY_TYPE` (python) + детект (`*.blend`/`blender_manifest.toml`/
+  `import bpy`, раньше python-backend) + `profiles/blender.json` (бакеты blender/blender-modeling/python/
+  quality). Тесты — `core/tests/test_core.py` (+3).
+- **`docs/guide/archetypes.md`** — рецепты 9 архетипов (детект → бакеты/MCP/пресеты/agent-pack) +
+  **неочевидные развилки** (connect vs vendor, CORE, память, namespace, Serena, Nuxt-vs-Vue-SPA) — чтобы
+  онбординг типового проекта не порождал вопросов. В nav skiller-доков.
+- **Сценарные тексто-кейсы (eval-харнес)** заведены для CORE-скилла `general/compact-responses`
+  (`evals/{evals,pressure,triggers}.json` — типовые задачи + соблазны + точность триггера). Покрытие
+  `evals/` 3→4; механизм и расширение задокументированы в `archetypes.md`.
+
+### Fixed (аудит — свод дрейфа документации после раскола бакетов php/frontend)
+
+- **862 протухших ссылки `php/<skill>` / `frontend/<skill>` переписаны** на актуальные бакеты по
+  `skills.json` (`laravel-*`/`frontend-*`/`php-packages`/`azguard`/`botkit`/`general`) — после раскола
+  ядер `php`/`frontend` на тонкие бакеты сотни кросс-ссылок в `routing.md`, `boost-compatibility.md`,
+  `guide/*`, телах скиллов и `snippets/`/`references/` указывали в несуществующие пути. Свод name-driven
+  (только известные скиллы, словные границы → без ложных замен), бакеты — соседние каталоги, поэтому
+  относительные ссылки переписываются корректно. SKILL.ru.md правились синхронно с SKILL.md,
+  ru-source-sha256 перепроставлен (`check-translations` чист). **Регресс-гейт** в `validate.sh` (секция
+  13): протухшие `php/<skill>`/`frontend/<skill>` в `skills/`+`docs/` пакета → ошибка.
+- **Счётчики и hero-ссылки выправлены:** корневой `CLAUDE.md` «20 плагинов» → «49»; `docs/index.md`
+  hero `/guide/`→`/skiller/guide/` (был 404), «65+ скиллов в 10 bucket-ах» → «195 скиллов в 45».
+- **skiller `CLAUDE.md`:** добавлен модуль `skillset.py` (vendor-канал `sync`/`do_sync`), исправлена
+  атрибуция `sync` (была `update.py`/`vendor.py` — реально `skillset.py`), CORE-список vendor доведён
+  до 7 (== `CORE_SKILLS`: добавлены `mcp-advisor`, `verify-claims`).
+- **Governance-скиллы (always-loaded):** `ecosystem-integration` — починен битый канонический линк на
+  `onboarding-decision-tree.md` (`../../../packages/maind/docs/guide/`); `release-discipline` — `./scripts/
+  validate.sh` (в корне нет) → пер-пакетный `packages/<пакет>/scripts/validate.sh`.
+
+### Changed (аудит — дедуп реестра: token-efficient вне CORE)
+
+- **`general/performance` (`token-efficient`) перенесён `general` → `ai`** (`skills/ai/performance/`).
+  Это Perplexity-environment super-skill (get-zeked, `notify`), дублирующий нативный
+  `general/compact-responses` и сидевший в бакете `general` = CORE → раздавался плагином в КАЖДЫЙ
+  connect-проект. `general` обязан быть минимальным/кросс-стек (skill-taxonomy); среда-специфичный
+  дубль там не место. Перенос непокусочный (провенанс `upstream.json` сохранён, путь относительный),
+  `presets/agent-context.json` перенаправлен на `ai/performance`, реестр перегенерирован
+  (`skills.json`/`_index.md`/`graph.md`/`budget.md`).
+- _Отложено отдельным upstream-проходом:_ 10 vendored super-skill имеют `name != каталог`
+  (`pm-super-skill` vs `pm/product` и пр.) и не линкуются на гранулярные нативные скиллы. Правка
+  затрагивает upstream-канон + провенанс каждого — это аккуратный per-skill пасс (и, возможно,
+  отдельное решение, нужны ли эти композитные super-skill в реестре наряду с гранулярными), а не
+  быстрый свод. `reka-ui-cva` уже `requires: [tailwind-conventions]` (находка аудита неактуальна).
+
+### Fixed (аудит — логика раздачи скиллов: requires / update / CORE)
+
+- **`sync` теперь резолвит транзитивные `requires`** (`skillset.resolve_skillset`). Skill-granular
+  `include` молча терял зависимости (64/195 скиллов их объявляют): `include: [api-design]` копировал
+  api-design, но не его `requires: [data-schema]`. Добавлен транзитивный обход (паритет с
+  `vendor.resolve_requires`): `exclude` по-прежнему побеждает зависимость с warning. Регрессия —
+  `test_skillset.py::{test_sync_pulls_transitive_requires,test_sync_exclude_beats_requires}`.
+- **`skiller update` распознаёт sync-канал** (`update.update_one`). sync и legacy-vendor пишут
+  ОДИН `.swissknifeman-manifest.json`, поэтому на sync-проекте `update` уходил в legacy `do_vendor`
+  (bucket-granular из `.swissknife.json`/профиля), игнорируя skill-granular `.swissknifeman/config.json`.
+  Теперь при наличии sync-конфига `update` пере-применяет его через `do_sync` (как уже делает
+  `integrate`). Регрессия — `test_update.py::test_update_routes_sync_config_to_sync`.
+- **CORE-фолбэк канал-независим** — `MINIMAL_BUCKETS` (набор для нераспознанного типа проекта) втягивал
+  бакет `system` целиком, включая `system/{shared-memory,cross-project-coordinator}` — ровно дубли
+  хаба maind, что CORE-политика гонит через `DEFAULT_EXCLUDE`. Теперь `MINIMAL_BUCKETS == CORE_BUCKETS`
+  (general+oss-dev) — фолбэк не противоречит политике.
+- **Зарезервированные ключи `.swissknife.json` честно помечены** (`config.validate_config`) — `shape`/
+  `stacks`/`coordinator_ignore`/`presets` валидировались, но не читались connect/vendor; теперь
+  предупреждают «зарезервирован/не действует» (как `skills_map`), а не молчат. Удаление ключей не
+  делаем (валидация строгая — сломало бы существующие конфиги); `memory_brain` реально потребляется
+  (integrate↔harness) и не трогается.
+
+### Fixed (аудит — фундамент-дедуп раздачи скиллов: единые примитивы)
+
+- **Утечка `SKILL.ru.md` (русский SSOT) в downstream-проекты через `sync`** — канонический
+  Claude-канал `skillset.sync_skillset` копировал каталог скилла, исключая лишь
+  `upstream.json`/`.claude-plugin`, но НЕ `SKILL.*.md`/`evals/` (в отличие от `vendor.copy_skill`).
+  Полный русский источник и поведенческие тесты ехали в каждый из 195 скиллов потребляющего
+  проекта. Введён ЕДИНЫЙ `common.SKILL_IGNORE = (upstream.json, .claude-plugin, SKILL.*.md, evals)`
+  — `vendor` и `sync` теперь игнорируют один список (раньше дублировали и разъехались). Регрессия —
+  `tests/test_skillset.py::test_sync_excludes_ru_source_and_evals`.
+- **Дедуп containment-хелпера** — `connect`/`vendor`/`skillset`/`doctor` дублировали
+  `str(p.resolve()).startswith(str(root.resolve()) + os.sep)`. Сведено к `common.is_within`
+  (резолвит symlink — для prune) и `common.is_within_lexical` (без резолва финального symlink —
+  для install-гейта против traversal через `../` в имени скилла). `vendor.copy_skill` теперь снимает
+  symlink на месте назначения до `copytree` (иначе писал бы сквозь него в чужую цель).
+- **Атомарная запись JSON** — `vendor.write_manifest` писал манифест сырым `write_text` (краш
+  оставлял битый файл, ломающий `update`/`connect`/`status`); `skillset.write_lock`/`lock.cmd_lock`/
+  `topology.save_topology` вручную дублировали `tmp+os.replace` без подчистки `.tmp`. Все переведены
+  на `core.io.atomic_write_json`. `harness/apply-permissions.sh` пишет settings атомарно (tmp+`mv -f`)
+  и падает с русской ошибкой (а не traceback) на битом входном JSON.
+
+### Security (аудит — закрыты 2 бреши: RCE и обход namespace-изоляции памяти)
+
+- **maind MCP: серверный энфорс изоляции namespace** (`lib/maind/mcp.py`, `memory.py`). Раньше
+  `scope = args.get("scope") or default_scope` отдавал приоритет КЛИЕНТУ: агент проекта A,
+  передав `{"scope":"project:B"}`, читал/писал/удалял приватную память проекта B (а графовые
+  инструменты — топологию по произвольным `from`/`project`), хотя сервер раскатан запинненным к
+  своему проекту (`maind mcp --scope project:<id>`). Теперь сервер, запинненный к проекту,
+  ограничен бакетами СВОЕГО проекта (`recall_scopes`: приватный + `ns:<его группы>` + `global`);
+  графовые инструменты режут доступ к проектам, не делящим namespace (`namespaces.shares`);
+  `forget` подтверждает владение фактом по маркеру `[[s:<scope>]]` до удаления (memoryId глобален).
+  Хаб-режим (`default_scope=global`) и явный `MAIND_MCP_ALLOW_CROSS_SCOPE=1` — без ограничений
+  (back-compat/админ). Регрессия — `tests/test_mcp.py::TestScopeIsolation` (+9).
+- **harness review-gate: устранён RCE при открытии чужого репо** (`configs/claude-code/hooks/review-gate/review-gate.sh`).
+  Хук на `SubagentStop` (ставится глобально) исполнял `check_command` из project-local
+  `.claude/review-gate.config.json` через `bash -c` — любой посторонний репозиторий получал
+  произвольное исполнение кода. Теперь `check_command` берётся ТОЛЬКО из machine-owned
+  `$HOOK_DIR/config.json`; project-local конфиг честно исполняется лишь при явном opt-in владельца
+  машины (`ALLOW_PROJECT_CONFIG=1` в `$HOOK_DIR/env.ini`).
+- **harness auto-approve strict: интерпретаторы и awk/sed больше не авто-одобряются**
+  (`configs/claude-code/hooks/auto-approve/config.json`). `_normalize` вырезает тело в кавычках,
+  поэтому `python -c "<код>"` / `awk 'BEGIN{system(…)}'` виден анализатору лишь головой команды —
+  одобрять её = одобрять произвольный код. `trust_inline_interpreters` → `false` по умолчанию;
+  `awk`/`sed` убраны из `allow` (включение inline-интерпретаторов — осознанный per-project выбор).
+  Регрессия — `harness/tests/test_security_hooks.py` (+5, реальные хуки через subprocess).
+
 ### Added (skiller — eval-харнес скиллов + composite-upstream `merge`)
 
 - **`skiller eval <bucket>/<name>`** (`lib/skiller/eval.py`) — поведенческое тестирование скиллов,

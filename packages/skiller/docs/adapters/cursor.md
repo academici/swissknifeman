@@ -7,7 +7,7 @@
 skiller vendor --agent cursor
 
 # Точечно — скопируйте нужный SKILL.md в .cursor/skills/ проекта
-cp -r skills/php/laravel-testing ~/projects/my-app/.cursor/skills/
+cp -r skills/laravel-testing/laravel-testing ~/projects/my-app/.cursor/skills/
 ```
 
 ## Delta-файлы

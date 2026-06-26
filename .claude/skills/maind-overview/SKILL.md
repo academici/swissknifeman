@@ -30,13 +30,44 @@ description: Краткая схема работы хаба mAInd — что э
 ## Ключевые команды
 
 ```bash
+# онбординг / провижининг
 maind onboard <project>            # подключить проект: скиллы + память + граф + MCP
+maind deploy <project>             # MCP-серверы хаба в .mcp.json (agentmemory + maind [+ код-граф])
 maind sync --all                   # раскатать управляемые артефакты (mcp/graph/memory/health-*)
-maind health --cwd [--fix]         # проверить связь проекта с хабом (не блокирует)
-maind graph --project <id>         # граф одного проекта;  --cross [--namespace NS]
+# здоровье / пруф-оф-лайф
+maind health --cwd [--fix]         # связь проекта с хабом (не блокирует; --fix авто-чинит)
+maind verify [--cwd]               # ПРУФ-ОФ-ЛАЙФ 3 плоскостей: реально ли ПИШУТ память,
+                                   #   покрытие графа, поднята ли Serena — отличает «поднято» от «живёт»
+maind doctor                       # диагностика узла (python/Node/agentmemory/конфиг/демон)
+# граф / память
+maind graph --project <id>         # граф одного проекта;  --cross [--namespace NS];  derive — пересборка
+maind memory <recall|remember|forget|status>   # прямая работа с памятью по scope
+# реестры / оркестрация
 maind status                       # сводка узла (память/граф/агенты/проекты)
-maind mcp                          # запустить как MCP-сервер (stdio JSON-RPC, 11 tools)
+maind projects | agents | namespaces           # реестры узла (read-only листинги)
+maind workspace <project>          # доверие Claude к проекту (.claude/settings.local.json)
+maind run <…>                      # оркестрация (subprocess к skiller и пр.)
+maind fleet <manifest|duplicates|similar|log>  # межпроектный слой (jscpd/эмбеддинги/feature-log)
+maind migrate <…>                  # миграции состояния
+maind mcp [--scope project:<id>]   # запустить как MCP-сервер (stdio JSON-RPC, 11 tools)
 ```
+
+`health` vs `verify`: health отвечает «связь поднята/настроена», verify — «реально ли по этим
+каналам ИДУТ данные» (seed vs last-write памяти, покрытие графа, живая Serena). Диагностируешь
+«вроде подключили, а не работает» — это `verify`.
+
+## MCP-инструменты хаба (11; per-project сервер `maind` из `.mcp.json`)
+
+`maind mcp --scope project:<id>` (так раскатывает `deploy`) **изолирован к своему проекту**:
+память/граф других проектов недоступны (scope сводится к `recall_scopes`: приватный + `ns:группы` +
+`global`; графовые — только проекты, делящие namespace). Хаб-режим (`--scope global`) или
+`MAIND_MCP_ALLOW_CROSS_SCOPE=1` снимают изоляцию (админ).
+
+| Группа | Инструменты |
+|:--|:--|
+| память (3) | `maind_memory_store` · `maind_memory_recall` · `maind_memory_forget` (по `scope`) |
+| граф (4) | `maind_graph_query` · `maind_graph_neighbors` · `maind_graph_path` · `maind_graph_project` |
+| смешанные/реестры (4) | `maind_memory_links` (связи+ecosystem-link память) · `maind_agents_list` · `maind_projects_list` · `maind_projects_status` |
 
 ## Где смотреть в коде
 

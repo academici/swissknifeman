@@ -21,13 +21,13 @@ Boost, скиллы из другого хаба) синк не удаляет. 
 """
 import hashlib
 import json
-import os
 import shutil
 from pathlib import Path
 
 from core.io import atomic_write_json
 
-from .common import MANIFEST, apply_permissions, die, now_iso, parse_flags, warn
+from .common import (MANIFEST, SKILL_IGNORE, apply_permissions, die, is_within,
+                     is_within_lexical, now_iso, parse_flags, warn)
 from .config import (DEFAULT_EXCLUDE, all_buckets, core_skill_tuples,
                      load_config, resolve_selection, resolve_target)
 from .hub import generate_hub, hub_artifacts_exist
@@ -87,6 +87,7 @@ def _registry_index(env):
             "name": name, "bucket": bucket, "rel": rel, "path": path,
             "sha256": s.get("sha256", ""),
             "content_sha256": s.get("content_sha256", ""),
+            "requires": s.get("requires", []) or [],
             "skill_dir": skill_dir,
         }
         full = f"{bucket}/{rel}".rstrip("/") if rel else bucket
@@ -101,11 +102,21 @@ def _registry_index(env):
 
 
 def _match(token, by_key, by_name):
-    """Разрешить токен правила в entry: сначала по полному пути, потом по имени."""
+    """Разрешить токен правила в entry: сначала по полному пути, потом по имени.
+
+    Drift-устойчивость: после раскола бакетов старый путь 'oldbucket/skill'
+    (напр. 'frontend/vue' → 'frontend-vue/vue') промахивается по by_key. Если
+    токен — путь, добиваем по базовому имени (последний сегмент). Иначе sync
+    молча терял переехавшие скиллы (warn+skip). Вызывающий печатает
+    migration-warning со старым→новым путём."""
     if token in by_key:
         return by_key[token]
     if token in by_name:
         return by_name[token]
+    if "/" in token:
+        base = token.rsplit("/", 1)[1]
+        if base in by_name:
+            return by_name[base]
     return None
 
 
@@ -180,8 +191,33 @@ def load_skillset_config(target):
     return cfg
 
 
+def _pull_requires(selected, by_name, exclude):
+    """Транзитивно дотянуть `requires` выбранных скиллов в `selected` (name->entry).
+    Паритет с vendor.resolve_requires (но на entry реестра): exclude ПОБЕЖДАЕТ
+    зависимость (с warning), неизвестная зависимость — warning и пропуск. Без этого
+    skill-granular include молча терял зависимости (64/195 скиллов имеют requires)."""
+    queue = [(dep, e["name"]) for e in list(selected.values())
+             for dep in e.get("requires", [])]
+    while queue:
+        dep, requester = queue.pop(0)
+        if dep in selected:
+            continue
+        dep_entry = by_name.get(dep)
+        if dep_entry is None:
+            warn(f"'{requester}' requires неизвестный скилл '{dep}' — пропуск")
+            continue
+        full = (f"{dep_entry['bucket']}/{dep_entry['rel']}".rstrip("/")
+                if dep_entry["rel"] else dep_entry["bucket"])
+        if {dep, dep_entry["name"], full, dep_entry["bucket"]} & exclude:
+            warn(f"'{requester}' requires '{dep}', но он в exclude — зависимость пропущена")
+            continue
+        selected[dep_entry["name"]] = dep_entry
+        queue.extend((d, dep) for d in dep_entry.get("requires", []))
+
+
 def resolve_skillset(env, cfg, include_core=False):
-    """Развернуть правила конфига в набор entry: (buckets ∪ include) − exclude.
+    """Развернуть правила конфига в набор entry: (buckets ∪ include) − exclude,
+    затем транзитивно дотянуть `requires` (exclude по-прежнему побеждает).
 
     include_core=True добавляет CORE_SKILLS (как vendor/connect) и применяет
     DEFAULT_EXCLUDE — токен-скиллы раздаются в каждый проект по умолчанию.
@@ -215,6 +251,11 @@ def resolve_skillset(env, cfg, include_core=False):
             warn(f"include: скилл '{token}' не найден в реестре — пропуск")
             skipped.append(token)
             continue
+        full = (f"{entry['bucket']}/{entry['rel']}".rstrip("/")
+                if entry["rel"] else entry["bucket"])
+        if "/" in token and token != full:
+            warn(f"include: '{token}' переехал → '{full}' (раскол бакетов) — "
+                 f"обновите .swissknifeman/config.json")
         selected[entry["name"]] = entry
 
     # CORE-политика: токен-скиллы по умолчанию + DEFAULT_EXCLUDE дублей хаба
@@ -234,6 +275,10 @@ def resolve_skillset(env, cfg, include_core=False):
             if {name, full, entry["bucket"], entry["rel"]} & exclude:
                 del selected[name]
 
+    # транзитивные requires выбранных скиллов (после вычитания: тянем зависимости
+    # только тех, что реально останутся). exclude по-прежнему побеждает зависимость.
+    _pull_requires(selected, by_name, exclude)
+
     entries = sorted(selected.values(),
                      key=lambda e: (e["bucket"], e["name"]))
     return entries, skipped
@@ -251,11 +296,7 @@ def load_lock(target):
 
 
 def write_lock(target, lock):
-    f = Path(target) / LOCK_FILE
-    tmp = f.with_name(LOCK_FILE + ".tmp")
-    tmp.write_text(json.dumps(lock, ensure_ascii=False, indent=2) + "\n",
-                   encoding="utf-8")
-    os.replace(tmp, f)
+    atomic_write_json(Path(target) / LOCK_FILE, lock)
 
 
 def _dir_sha256(skill_dir):
@@ -339,8 +380,7 @@ def sync_skillset(env, target, cfg, dry_run=False, force=False,
     locked = dict(lock.get("skills", {}))
 
     def contained(path):
-        return str(Path(path).resolve()).startswith(
-            str(dest_root.resolve()) + os.sep)
+        return is_within(path, dest_root)
 
     # Конфликты с чужими путями: без force — пропуск; с force — добавить к install.
     install = list(plan["add"]) + list(plan["update"])
@@ -373,11 +413,13 @@ def sync_skillset(env, target, cfg, dry_run=False, force=False,
                 ("replace" if name in plan["conflicts"] else "update")
             print(f"[dry-run] {verb} {entry['bucket']}/{entry['name']} -> {dst}")
             continue
+        if not is_within_lexical(dst, dest_root):  # traversal через '../' в имени → стоп
+            warn(f"пропуск '{name}': путь вне каталога назначения")
+            continue
         if dst.is_symlink() or dst.exists():
             _remove_path(dst)
         shutil.copytree(src, dst, dirs_exist_ok=True,
-                        ignore=shutil.ignore_patterns("upstream.json",
-                                                      ".claude-plugin"))
+                        ignore=shutil.ignore_patterns(*SKILL_IGNORE))
         locked[name] = {
             "source": SOURCE,
             "managed": True,

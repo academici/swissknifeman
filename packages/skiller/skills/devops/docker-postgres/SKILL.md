@@ -55,8 +55,8 @@ Caveat: scripts in `/docker-entrypoint-initdb.d/` run **only on first volume cre
 
 - https://hub.docker.com/_/postgres — Initialization scripts section (`/docker-entrypoint-initdb.d`)
 - https://www.postgresql.org/docs/current/app-pg-isready.html — pg_isready
-- Related skills: `docker-services` (depends_on patterns), `docker-dev-prod` (dev/prod compose layout), `makefile` (db-create-test target), `db-test-preflight` (check `<app>_test` before test run), `php/test-isolation-guard` (test DB isolation guard), `php/laravel-testing` (tests on `<app>_test`)
+- Related skills: `docker-services` (depends_on patterns), `docker-dev-prod` (dev/prod compose layout), `makefile` (db-create-test target), `db-test-preflight` (check `<app>_test` before test run), `laravel-testing/test-isolation-guard` (test DB isolation guard), `laravel-testing/laravel-testing` (tests on `<app>_test`)
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 3910cb63b82beb5ef240fbd4fa2bac03efb1d9b71d38789c4a78ea2938f44e36 -->
+<!-- ru-source-sha256: 26171c63271e9b7cecda199654490b1944e3e43e1fd5f6249ac2f47b48250577 -->

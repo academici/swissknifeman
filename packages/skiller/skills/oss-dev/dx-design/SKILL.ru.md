@@ -156,7 +156,7 @@ based_on: oss-development.md
 - `oss-dev/oss-development` — предпосылка: базовая структура и понимание, что делает пакет.
 - `oss-dev/release-engineering` — DX-метрики в release notes; TS-типы как публичный API (breaking).
 - `oss-dev/oss-governance` — CONTRIBUTING/CoC и issue/PR-шаблоны — тоже часть DX.
-- `php/laravel-package-docs` — README/VitePress/usage-доки для PHP-пакетов (язык-специфика).
+- `php-packages/laravel-package-docs` — README/VitePress/usage-доки для PHP-пакетов (язык-специфика).
 - `general/writing-style` — тон и язык текстов README, error-messages и доков.
 
 ---

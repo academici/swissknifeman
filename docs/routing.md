@@ -45,41 +45,41 @@ swissknifeman — **зонтик из трёх пакетов**, а не одн�
 |:---|:---|
 | Пишу миграцию, модель, схему БД | `php/database` |
 | Новый домен / новый Laravel-проект (структура папок) | `php/laravel-structure` |
-| Проект вырос: десятки доменов, несколько команд | `php/modular-architecture` |
+| Проект вырос: десятки доменов, несколько команд | `laravel-architecture/modular-architecture` |
 | Use-case / бизнес-операция | `php/laravel` (actions.md) + `php/dependency-injection` |
 | Выборки данных, query-слой | `php/repositories` |
-| Права, роли, RBAC | `php/azguard` (универсальный) / `php/laravel-permissions` (policies, gates) |
-| Метаданные enum (label, color) | `php/enum-attributes` |
+| Права, роли, RBAC | `azguard/azguard` (универсальный) / `laravel-auth/laravel-permissions` (policies, gates) |
+| Метаданные enum (label, color) | `laravel-architecture/enum-attributes` |
 | Value Object, DTO, pipeline | `php/php-patterns` |
 | Ревью/рефакторинг Laravel-кода (без Boost) | `php/laravel-best-practices` |
 | Код-стайл PHP | `php/code-style-spatie` |
 | Pint / PHPStan / Rector, конвейер качества | `php/static-analysis` |
-| Feature/Unit-тесты приложения, изоляция БД, coverage gate | `php/laravel-testing` |
-| Браузерные E2E-тесты | `php/laravel-dusk` |
-| WebSocket / Echo / Reverb | `php/laravel-broadcasting` |
-| Admin-панель Filament | `php/filament` |
-| Загрузка файлов, медиа, конверсии | `php/medialibrary` |
-| Telegram/чат-бот | `php/botkit` |
-| Новый Laravel-пакет (scaffold) | `php/laravel-packages`, `php/laravel-package-scaffold` |
-| Service provider пакета | `php/laravel-package-service-provider` |
-| Тесты пакета (Pest + Testbench) | `php/laravel-package-testing` |
-| Документация пакета | `php/laravel-package-docs` |
-| Релиз пакета | `php/laravel-package-release` |
-| Матрица совместимости пакета (PHP/Laravel/Testbench) | `php/laravel-package-compatibility` |
-| Boost-скилл внутри пакета | `php/laravel-package-generate-skill` |
-| Правки самого starter kit laravel-expressive | `php/laravel-package-expressive` |
+| Feature/Unit-тесты приложения, изоляция БД, coverage gate | `laravel-testing/laravel-testing` |
+| Браузерные E2E-тесты | `laravel-testing/laravel-dusk` |
+| WebSocket / Echo / Reverb | `laravel-data-layer/laravel-broadcasting` |
+| Admin-панель Filament | `laravel-filament/filament` |
+| Загрузка файлов, медиа, конверсии | `laravel-extras/medialibrary` |
+| Telegram/чат-бот | `botkit/botkit` |
+| Новый Laravel-пакет (scaffold) | `php-packages/laravel-packages`, `php-packages/laravel-package-scaffold` |
+| Service provider пакета | `php-packages/laravel-package-service-provider` |
+| Тесты пакета (Pest + Testbench) | `php-packages/laravel-package-testing` |
+| Документация пакета | `php-packages/laravel-package-docs` |
+| Релиз пакета | `php-packages/laravel-package-release` |
+| Матрица совместимости пакета (PHP/Laravel/Testbench) | `php-packages/laravel-package-compatibility` |
+| Boost-скилл внутри пакета | `php-packages/laravel-package-generate-skill` |
+| Правки самого starter kit laravel-expressive | `php-packages/laravel-package-expressive` |
 
 ### Frontend
 
 | Задача | Скилл |
 |:---|:---|
-| Страница/форма Inertia, куда положить файл в `resources/js/` | `frontend/inertia-vue` |
-| Vue-компонент, Composition API | `frontend/vue-composition-api` |
-| Типобезопасные роуты на фронте | `frontend/wayfinder` |
-| Базовая конфигурация Vite | `frontend/vite-module-loader` |
-| Две Vite-сборки (приложение + Filament) | `frontend/vite-multi-build` |
-| Тесты фронтенда | `frontend/vitest` |
-| Код-стайл JS/TS | `frontend/js-code-style` |
+| Страница/форма Inertia, куда положить файл в `resources/js/` | `frontend-backend/inertia-vue` |
+| Vue-компонент, Composition API | `frontend-vue/vue-composition-api` |
+| Типобезопасные роуты на фронте | `frontend-wayfinder/wayfinder` |
+| Базовая конфигурация Vite | `frontend-vite/vite-module-loader` |
+| Две Vite-сборки (приложение + Filament) | `frontend-vite/vite-multi-build` |
+| Тесты фронтенда | `frontend-vue/vitest` |
+| Код-стайл JS/TS | `frontend-linting/js-code-style` |
 
 ### DevOps
 
@@ -127,7 +127,7 @@ swissknifeman — **зонтик из трёх пакетов**, а не одн�
 | Карта проекта, зоны ответственности | `general/project-map` |
 | Реестр используемых пакетов | `general/packages-stack` |
 | Тикетная доменная логика (проектный) | `general/ticket-workflow` |
-| UserRole/Priority (проектный; новый RBAC → `php/azguard`) | `general/user-roles` |
+| UserRole/Priority (проектный; новый RBAC → `azguard/azguard`) | `general/user-roles` |
 | Персона: CTO / tech lead / maintainer / solo founder | `roles/*` |
 
 ### PM / Founder / Operator

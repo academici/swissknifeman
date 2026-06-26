@@ -2,7 +2,7 @@
 
 Дополнение к `github-flow` для PHP-стека: что проверить в `composer.json`
 и в каком порядке деплоить на Packagist. Laravel-специфика релиза —
-`php/laravel-package-release`; audit-команды — `dependency-audit/references/composer.md`.
+`php-packages/laravel-package-release`; audit-команды — `dependency-audit/references/composer.md`.
 
 ## composer.json gate
 

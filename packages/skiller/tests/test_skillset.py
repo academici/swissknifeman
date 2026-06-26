@@ -82,6 +82,19 @@ class TestResolve(unittest.TestCase):
             names = {e["name"] for e in entries}
             self.assertEqual(names, {"code-style", "test-writer"})
 
+    def test_include_drifted_path_resolves_by_basename(self):
+        # после раскола бакетов старый путь 'oldbucket/code-style' промахивается
+        # по полному ключу, но добивается по базовому имени (а не молча теряется).
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            root, env = make_registry(tmp)
+            _materialize_registry(env)
+            entries, skipped = resolve_skillset(
+                env, {"include": ["oldbucket/code-style"]})
+            names = {e["name"] for e in entries}
+            self.assertIn("code-style", names)
+            self.assertEqual(skipped, [])
+
     def test_buckets_minus_exclude(self):
         with tempfile.TemporaryDirectory() as tmp:
             tmp = Path(tmp)
@@ -175,6 +188,60 @@ class TestSync(unittest.TestCase):
             self.assertEqual(lock["code-style"]["bucket"], "php")
             self.assertTrue(lock["code-style"]["sha256"])
 
+    def test_sync_excludes_ru_source_and_evals(self):
+        # Регрессия: sync (канонический Claude-канал) НЕ копирует SKILL.ru.md (русский
+        # SSOT), evals/, upstream.json, .claude-plugin — иначе утечка RU-источника во
+        # все downstream-проекты. Едет только EN-канон SKILL.md (common.SKILL_IGNORE).
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            root, env = make_registry(tmp)
+            _materialize_registry(env)
+            src = next((root / "skills").glob("**/code-style/SKILL.md")).parent
+            (src / "SKILL.ru.md").write_text("# РУССКИЙ ИСТОЧНИК\n", encoding="utf-8")
+            (src / "upstream.json").write_text("{}", encoding="utf-8")
+            (src / "evals").mkdir(exist_ok=True)
+            (src / "evals" / "evals.json").write_text("[]", encoding="utf-8")
+            (src / ".claude-plugin").mkdir(exist_ok=True)
+            (src / ".claude-plugin" / "plugin.json").write_text("{}", encoding="utf-8")
+
+            target = make_laravel_project(tmp)
+            sync_skillset(env, target, {"mode": "vendor", "include": ["code-style"]})
+
+            dst = target / ".claude/skills/code-style"
+            self.assertTrue((dst / "SKILL.md").is_file())      # EN-канон едет
+            self.assertFalse((dst / "SKILL.ru.md").exists())   # RU-источник НЕ едет
+            self.assertFalse((dst / "evals").exists())
+            self.assertFalse((dst / "upstream.json").exists())
+            self.assertFalse((dst / ".claude-plugin").exists())
+
+    def test_sync_pulls_transitive_requires(self):
+        # skill-granular include тянет зависимость по requires (паритет с vendor);
+        # без этого include скилла с requires молча терял зависимость.
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            root, env = make_registry(tmp)
+            _materialize_registry(env)
+            target = make_laravel_project(tmp)
+            # laravel-conventions requires code-style (см. make_registry)
+            sync_skillset(env, target,
+                          {"mode": "vendor", "include": ["laravel-conventions"]})
+            self.assertTrue((target / ".claude/skills/laravel-conventions/SKILL.md").is_file())
+            self.assertTrue((target / ".claude/skills/code-style/SKILL.md").is_file())
+            self.assertIn("code-style", load_lock(target)["skills"])
+
+    def test_sync_exclude_beats_requires(self):
+        # exclude побеждает зависимость: code-style не приедет, даже будучи requires.
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            root, env = make_registry(tmp)
+            _materialize_registry(env)
+            target = make_laravel_project(tmp)
+            sync_skillset(env, target, {"mode": "vendor",
+                                        "include": ["laravel-conventions"],
+                                        "exclude": ["code-style"]})
+            self.assertTrue((target / ".claude/skills/laravel-conventions").is_dir())
+            self.assertFalse((target / ".claude/skills/code-style").is_dir())
+
     def test_prune_removes_managed_dropped_from_config(self):
         with tempfile.TemporaryDirectory() as tmp:
             tmp = Path(tmp)
@@ -182,14 +249,15 @@ class TestSync(unittest.TestCase):
             _materialize_registry(env)
             target = make_laravel_project(tmp)
             sync_skillset(env, target, {"mode": "vendor", "buckets": ["php"]})
-            self.assertTrue((target / ".claude/skills/code-style").is_dir())
-
-            # сузили конфиг: только одна позиция
-            sync_skillset(env, target,
-                          {"mode": "vendor", "include": ["laravel-conventions"]})
             self.assertTrue((target / ".claude/skills/laravel-conventions").is_dir())
-            self.assertFalse((target / ".claude/skills/code-style").is_dir())
-            self.assertNotIn("code-style", load_lock(target)["skills"])
+
+            # сузили конфиг: только code-style (laravel-conventions им НЕ требуется →
+            # выбывает и прунится; code-style зависимостей не имеет).
+            sync_skillset(env, target,
+                          {"mode": "vendor", "include": ["code-style"]})
+            self.assertTrue((target / ".claude/skills/code-style").is_dir())
+            self.assertFalse((target / ".claude/skills/laravel-conventions").is_dir())
+            self.assertNotIn("laravel-conventions", load_lock(target)["skills"])
 
     def test_foreign_skill_untouched(self):
         with tempfile.TemporaryDirectory() as tmp:

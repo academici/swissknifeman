@@ -64,7 +64,7 @@ Laravel Dusk — браузерные E2E-тесты через ChromeDriver. С
 - https://laravel.com/docs/dusk
 - https://github.com/php-webdriver/php-webdriver
 - Скилл `quality/test-strategy` — стратегия пирамиды и coverage policy
-- Скилл `php/laravel-testing` — Feature/Unit/Pest, изоляция тестовой БД, coverage gate (база тестирования; у Dusk своя изоляция без `RefreshDatabase`)
-- Скилл `php/test-isolation-guard` — жёсткая защита от прогона по dev/prod БД и медиа-диску
+- Скилл `laravel-testing/laravel-testing` — Feature/Unit/Pest, изоляция тестовой БД, coverage gate (база тестирования; у Dusk своя изоляция без `RefreshDatabase`)
+- Скилл `laravel-testing/test-isolation-guard` — жёсткая защита от прогона по dev/prod БД и медиа-диску
 - Скилл `devops/db-test-preflight` — пре-флайт тестовой Postgres-БД в Docker
-- Скилл `frontend/vite-module-loader` — сборка ассетов, нужная Dusk перед прогоном
+- Скилл `frontend-vite/vite-module-loader` — сборка ассетов, нужная Dusk перед прогоном

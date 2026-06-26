@@ -45,7 +45,7 @@ sha256: ""
 | `tests/` | Vitest-тесты, **зеркало структуры исходников** |
 
 4. **Доменная организация внутри слоя**: внутри `components/`, `composables/`, `features/`, `pages/` — подпапки по домену (`document/`, `order/`, `auth/`, `notifications/`); общее — в `shared/`.
-5. **Границы**: страницы и доменные компоненты ходят к backend через composables/actions-слой (см. скилл `frontend/wayfinder`); логика — в composables/features, компоненты остаются тонкими.
+5. **Границы**: страницы и доменные компоненты ходят к backend через composables/actions-слой (см. скилл `frontend-wayfinder/wayfinder`); логика — в composables/features, компоненты остаются тонкими.
 
 ## Доменные срезы `features/<домен>/`
 
@@ -70,7 +70,7 @@ Vue-компонент / page  →  composables (или model)  →  actions  �
 3. **`composables/` импортируют только `../actions`**, не `@/wayfinder/routes/*`: бизнес-логика отвязана от того, как именно вызывается backend.
 4. **Каждый слой реэкспортит публичное API через `index.ts`** — наружу видны только реэкспортированные функции.
 
-Граница держится не на доверии, а **enforced ESLint flat-config** через `no-restricted-imports`: паттерн `@/wayfinder/routes/*` запрещён в доменных Vue-файлах, точечный whitelist выводит из-под правила немногие легаси-файлы. Настройка ESLint flat-config и правила-границы — в скилле `frontend/js-code-style`; полное дерево среза, пример доменного composable и конфиг границы — в `snippets/feature-structure.md`.
+Граница держится не на доверии, а **enforced ESLint flat-config** через `no-restricted-imports`: паттерн `@/wayfinder/routes/*` запрещён в доменных Vue-файлах, точечный whitelist выводит из-под правила немногие легаси-файлы. Настройка ESLint flat-config и правила-границы — в скилле `frontend-linting/js-code-style`; полное дерево среза, пример доменного composable и конфиг границы — в `snippets/feature-structure.md`.
 
 ## Когда какой сниппет открывать
 
@@ -96,4 +96,4 @@ Vue-компонент / page  →  composables (или model)  →  actions  �
 
 - https://inertiajs.com/
 - https://vuejs.org/guide/reusability/composables
-- Связанные скиллы: `frontend/wayfinder`, `frontend/vitest`, `frontend/vue-composition-api`, `frontend/js-code-style`, `frontend/pinia-stores` (слой `stores/`), `frontend/eslint-flat-config` (enforce границы импортов `no-restricted-imports`), `frontend/tailwind-conventions`
+- Связанные скиллы: `frontend-wayfinder/wayfinder`, `frontend-vue/vitest`, `frontend-vue/vue-composition-api`, `frontend-linting/js-code-style`, `frontend-vue/pinia-stores` (слой `stores/`), `frontend-linting/eslint-flat-config` (enforce границы импортов `no-restricted-imports`), `frontend-tailwind/tailwind-conventions`

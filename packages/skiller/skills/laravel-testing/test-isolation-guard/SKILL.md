@@ -16,7 +16,7 @@ sha256: ""
 
 # Skill: Test isolation guard
 
-Triggers: setting up test env for new project/package; protecting CI (runner must fail with clear message, not silently wipe data); suspecting tests hit dev/prod DB. Three defense lines: bootstrap before autoload, guard on `createApplication()`, safe `RefreshDatabase`. Version-agnostic testing basics (Feature/Unit/Pest, Docker/local detect) live in `php/laravel-testing` (`requires`).
+Triggers: setting up test env for new project/package; protecting CI (runner must fail with clear message, not silently wipe data); suspecting tests hit dev/prod DB. Three defense lines: bootstrap before autoload, guard on `createApplication()`, safe `RefreshDatabase`. Version-agnostic testing basics (Feature/Unit/Pest, Docker/local detect) live in `laravel-testing/laravel-testing` (`requires`).
 
 ## Algorithm
 
@@ -67,8 +67,8 @@ Triggers: setting up test env for new project/package; protecting CI (runner mus
 - snippets/TestCase.php — guard in `createApplication()` + safe `RefreshDatabase`
 - https://laravel.com/docs/database-testing#resetting-the-database-after-each-test
 - https://github.com/laravel/framework/blob/master/src/Illuminate/Foundation/Testing/RefreshDatabase.php
-- Related skills: `php/laravel-testing` (base, requires), `php/medialibrary` (test media disk), `php/laravel-dusk` (browser-test isolation — separate scheme without `RefreshDatabase`), `devops/db-test-preflight` (container/DB preflight before run)
+- Related skills: `laravel-testing/laravel-testing` (base, requires), `laravel-extras/medialibrary` (test media disk), `laravel-testing/laravel-dusk` (browser-test isolation — separate scheme without `RefreshDatabase`), `devops/db-test-preflight` (container/DB preflight before run)
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 2f1b9eae8f7a76f739aacee7167e978501b8c33dedc44842d405ba9e549c3261 -->
+<!-- ru-source-sha256: 62fa8640b4775e87da13d24fd0bdd64c21ead4e670dabf14ee1d369d80f49308 -->

@@ -92,7 +92,7 @@ php artisan vendor:publish --tag=my-package-skills-claude --force
 
 ## Как добавить публикацию скиллов в свой пакет
 
-Готовый рецепт — скилл `php/laravel-packages` (ставится с профилями
+Готовый рецепт — скилл `php-packages/laravel-packages` (ставится с профилями
 `php-package` и `laravel-project`): scaffold пакета, сниппет
 `boost-skill-publisher.php` и чеклист с проверкой полного цикла
 `composer install → vendor:publish → агент видит SKILL.md`.

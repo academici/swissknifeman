@@ -179,10 +179,10 @@ DO NOT:
 - `architect/api-design` — auth scheme by client type and rate limiting for API contracts.
 - `architect/observability-design` — PII policy in logs, masking, audit trail.
 - `oss-dev/dependency-audit` — supply-chain/SBOM/vuln scan, feeds OWASP A06 (input of this skill).
-- `php/laravel-security-audit` — code-level implementation audit (raw SQL, mass assignment, XSS), feeds this design (input).
-- `php/azguard`, `php/laravel-permissions`, `php/attribute-authorization` — RBAC/ABAC implementation of the chosen authorization model.
+- `laravel-auth/laravel-security-audit` — code-level implementation audit (raw SQL, mass assignment, XSS), feeds this design (input).
+- `azguard/azguard`, `laravel-auth/laravel-permissions`, `laravel-auth/attribute-authorization` — RBAC/ABAC implementation of the chosen authorization model.
 - `security/security` — external defensive playbook (OWASP LLM Top 10, NIST AI RMF).
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 4b3b9fbfc9cb076fca8f7453b148306a4593fde94ee2aa43432bb3d75617f912 -->
+<!-- ru-source-sha256: d5700bc88f4010de93d868d9541d766081a95971a9fa85cba964a10a1e80ef85 -->

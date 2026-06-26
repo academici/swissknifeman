@@ -65,7 +65,7 @@ Canon — lightweight-CQRS split in `app/Repositories/<Domain>/`:
 - [ ] Repository makes **NO authorization decisions** — visibility only via injected `VisibilityService` with explicit signature `apply(Builder, ?User, bool $ignorePermissions): Builder`.
 - [ ] Repeated predicates moved to model scopes with domain names; repository does not duplicate where-chains.
 - [ ] Sync ops idempotent (updateOrCreate + delete dropped) and return delta-DTO, not `void`/`bool`.
-- [ ] "Not found" and "no access" indistinguishable to consumer (`findByIdOrFail` searches atop `queryForUser`). This is the **only canonical** lookup; do NOT breed `findByCodeOrFail`/`findBySlugOrFail` per field — see `php/naming-conventions`.
+- [ ] "Not found" and "no access" indistinguishable to consumer (`findByIdOrFail` searches atop `queryForUser`). This is the **only canonical** lookup; do NOT breed `findByCodeOrFail`/`findBySlugOrFail` per field — see `general/naming-conventions`.
 - [ ] Facade — pure delegation, no logic; classes `final`, store-repos `final readonly`.
 - [ ] Delta-DTO — `final readonly`, in `app/Dto/<Domain>/Repository/`.
 
@@ -74,11 +74,11 @@ Canon — lightweight-CQRS split in `app/Repositories/<Domain>/`:
 - `php/laravel-structure` — layer placement (`app/Repositories/<Domain>/`, `app/Dto/<Domain>/Repository/`, `app/Services/<Domain>/Access/`).
 - `php/dependency-injection` — who injects whom: VisibilityService → ReadRepository → Repository(facade) → controller; StoreRepository → Action.
 - `php/laravel` → `layer-boundaries.md` — layer boundaries: what's allowed to Action, repository, model.
-- `php/laravel-data` — DTO commands (`Form`) accepted by write-side; `php/php-patterns` — delta-DTO and specification.
-- `php/naming-conventions` — naming repository methods by intent (vs `findByX...OrFail`-explosion) and scopes.
+- `laravel-data-layer/laravel-data` — DTO commands (`Form`) accepted by write-side; `php/php-patterns` — delta-DTO and specification.
+- `general/naming-conventions` — naming repository methods by intent (vs `findByX...OrFail`-explosion) and scopes.
 - `php/database` — models and scopes the queries build on.
-- `php/laravel-permissions` / `php/azguard` — where rights read by `VisibilityService` are defined.
+- `laravel-auth/laravel-permissions` / `azguard/azguard` — where rights read by `VisibilityService` are defined.
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: d524219d3ee88c49d2604d825693360dd5c8722bbd06435bb7452332adec053c -->
+<!-- ru-source-sha256: 1d285385a8437272f357a835012184306c8490d13873c8f5f7371b5dd9cb03fa -->

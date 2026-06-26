@@ -26,7 +26,7 @@ sha256: ""
 - видишь флейки из-за того, что прогоны делят БД/медиа/загрузки, и нужно изолировать данные между запусками.
 
 **Граница (что НЕ здесь):**
-- unit/компонентные тесты фронта (jsdom, монтирование компонента) — скилл `frontend/vitest`;
+- unit/компонентные тесты фронта (jsdom, монтирование компонента) — скилл `frontend-vue/vitest`;
 - выбор уровня тестов, пирамида, coverage-политика, что вообще покрывать E2E — скилл `quality/test-strategy`;
 - здесь только то, что бегает в **реальном браузере** через Playwright.
 
@@ -138,8 +138,8 @@ playwright.config.ts
 - snippets/playwright.config.ts, snippets/example.spec.ts, snippets/ci-step.yml
 - Связанные скиллы:
   - `quality/test-strategy` — что вообще покрывать E2E (пирамида, ~10% сверху)
-  - `frontend/vitest` — unit/компонентные тесты фронта (нижний слой пирамиды)
-  - `php/laravel-dusk` — браузерный E2E в Laravel-стеке через Dusk/ChromeDriver; этот скилл — нативный TS-стек `@playwright/test`. Выбор: Playwright для отдельного JS/TS-слоя, Dusk — когда E2E живут в PHP
-  - `php/test-isolation-guard` — страж тестовой БД/медиа-диска (та же задача изоляции, что и шаг 7)
+  - `frontend-vue/vitest` — unit/компонентные тесты фронта (нижний слой пирамиды)
+  - `laravel-testing/laravel-dusk` — браузерный E2E в Laravel-стеке через Dusk/ChromeDriver; этот скилл — нативный TS-стек `@playwright/test`. Выбор: Playwright для отдельного JS/TS-слоя, Dusk — когда E2E живут в PHP
+  - `laravel-testing/test-isolation-guard` — страж тестовой БД/медиа-диска (та же задача изоляции, что и шаг 7)
   - `devops/db-test-preflight` — пре-флайт тестовой БД перед прогоном E2E в CI
   - `devops/ci-cd` — где монтируется E2E-шаг в пайплайне

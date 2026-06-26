@@ -58,4 +58,4 @@ Production-ready PHP Docker образ для Laravel/PHP приложений. 
 
 - https://serversideup.net/open-source/docker-php/docs — serversideup/php (entrypoint.d, PUID/PGID, S6-overlay)
 - https://laravel.com/docs/deployment#the-health-route — Laravel health-эндпоинт `/up`
-- Смежные скиллы: `docker-dev-prod` (раскладка compose), `docker-services` (стек из одного образа), `docker-vite` (Node+pnpm в этом же образе для фронта), `php/health-checks` (что отдаёт `/up`, liveness/readiness)
+- Смежные скиллы: `docker-dev-prod` (раскладка compose), `docker-services` (стек из одного образа), `docker-vite` (Node+pnpm в этом же образе для фронта), `laravel-testing/health-checks` (что отдаёт `/up`, liveness/readiness)

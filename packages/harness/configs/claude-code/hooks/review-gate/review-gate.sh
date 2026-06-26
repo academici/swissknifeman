@@ -11,10 +11,12 @@
 #   warn   — проверка не прошла → подсказка в контекст (additionalContext), НЕ блок.
 #   strict — проверка не прошла → блок субагента (exit 2 + причина в stderr).
 #
-# Безопасно по умолчанию: без check_command хук — no-op. Проект включает гейт,
-# задав проверку в .claude/review-gate.config.json (или config.json хука):
+# Безопасно по умолчанию: без check_command хук — no-op. check_command берётся
+# ТОЛЬКО из machine-owned config хука ($HOOK_DIR/config.json):
 #   { "check_command": "! git -C \"$PWD\" diff --name-only | grep -q ..." }
 # Проверка обязана возвращать 0 = чисто, ≠0 = нарушение; stdout идёт в подсказку.
+# Project-local .claude/review-gate.config.json НЕ исполняется (RCE при открытии чужого
+# репо), пока машина-владелец явно не выставит ALLOW_PROJECT_CONFIG=1 в $HOOK_DIR/env.ini.
 
 set -uo pipefail
 HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -39,10 +41,17 @@ done
 case "$MODE" in off|warn|strict) ;; *) MODE=warn ;; esac
 [ "$MODE" = off ] && exit 0
 
-# check_command: per-project config → hookdir config
+# check_command: ТОЛЬКО machine-owned config ($HOOK_DIR/config.json) по умолчанию.
+# Хук стоит глобально на SubagentStop → исполнять команду из project-local
+# .claude/review-gate.config.json чужого репо = произвольное исполнение кода (RCE)
+# при открытии любого репозитория. Per-project config честно исполняем ТОЛЬКО если
+# машина-владелец явно разрешил это в machine-owned env.ini (ALLOW_PROJECT_CONFIG=1).
+allow_project="$(read_ini "$HOOK_DIR/env.ini" ALLOW_PROJECT_CONFIG 2>/dev/null || true)"
+config_files=("$HOOK_DIR/config.json")
+[ "$allow_project" = "1" ] && config_files=("$cwd/.claude/review-gate.config.json" "$HOOK_DIR/config.json")
 CHECK=""
 if command -v jq >/dev/null 2>&1; then
-  for f in "$cwd/.claude/review-gate.config.json" "$HOOK_DIR/config.json"; do
+  for f in "${config_files[@]}"; do
     [ -f "$f" ] && { CHECK="$(jq -r '.check_command // empty' "$f" 2>/dev/null)"; [ -n "$CHECK" ] && break; }
   done
 fi

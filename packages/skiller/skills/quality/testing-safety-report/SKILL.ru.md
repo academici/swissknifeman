@@ -75,6 +75,6 @@ Safety Report: <краткое имя изменения>
 - `refactoring-plan` (quality) — план самого изменения и его шагов (его исполнение фиксирует этот отчёт).
 - `php/php-upgrade-checklist` — чеклист апгрейда PHP; отчёт фиксирует результат прогона.
 - `php/static-analysis` — phpstan/линтер, чьи итоги попадают в строку «Прогнано».
-- `php/test-isolation-guard`, `devops/db-test-preflight` — гарантии безопасной тестовой БД при прогоне.
+- `laravel-testing/test-isolation-guard`, `devops/db-test-preflight` — гарантии безопасной тестовой БД при прогоне.
 - `oss-dev/dependency-audit` — апгрейд зависимостей как триггер для отчёта.
 - `quality/code-review` — отчёт прикладывается к PR, чтобы ревьюер видел границы безопасности.

@@ -2,7 +2,7 @@
 name: operations-cx-super-skill
 bucket: operator
 version: 1.0.0
-description: Comprehensive operations and customer experience skill merging Perplexity Computer's 5 CX skills with Claude Code's project management, file organization, invoice processing, scrum methodology, and verification workflows. Covers ticket triage, customer response drafting, escalation management, knowledge base maintenance, customer research, project management, sprint planning, file organization, and operational quality assurance. Use for support ticket handling, customer communications, escalation workflows, KB article writing, project management, sprint ceremonies, file cleanup, or any operations and CX work.
+description: Broad operations/CX-bucket navigator (composite of external CX skills). For specific work prefer the granular skill — incidents→incident-response, postmortem→postmortem, on-call→oncall-rotation, capacity→capacity-planning, runbooks→runbook. Use only for a cross-cutting overview when no single skill fits.
 license: MIT
 metadata:
   author: get-zeked
@@ -12,6 +12,11 @@ sha256: ""
 ---
 
 # Operations & CX Super-Skill
+
+> **Navigator skill.** Broad composite overview of the operator bucket. For a specific task, open
+> the granular native skill instead: `operator/incident-response` · `operator/postmortem` ·
+> `operator/oncall-rotation` · `operator/capacity-planning` · `operator/runbook`. Use the sections
+> below only for a cross-cutting overview.
 
 A unified operations and customer experience reference covering support excellence, project delivery, agile execution, file and financial document management, and quality verification. Merge of Perplexity Computer's five CX skills and five Claude Code operations skills.
 

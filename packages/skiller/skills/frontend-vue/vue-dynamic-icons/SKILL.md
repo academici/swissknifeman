@@ -66,8 +66,8 @@ Switch sets by editing **only Icon.vue**; the `<Icon name size ...>` contract st
 - https://vuejs.org/guide/essentials/component-basics#dynamic-components
 - https://lucide.dev/guide/packages/lucide-vue-next
 - `snippets/Icon.vue`, `snippets/icon-name.type.ts`
-- Related skills: `frontend/inertia-vue` (where `components/shared/Icon.vue` lives), `frontend/vue-composition-api` (`<script setup>`, `computed`), `frontend/tailwind-conventions` (`cn()` for merging icon classes), `frontend/reka-ui-cva` (icons inside UI-kit components)
+- Related skills: `frontend-backend/inertia-vue` (where `components/shared/Icon.vue` lives), `frontend-vue/vue-composition-api` (`<script setup>`, `computed`), `frontend-tailwind/tailwind-conventions` (`cn()` for merging icon classes), `frontend-reka/reka-ui-cva` (icons inside UI-kit components)
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 45b1af001da556716221728506dab2c2af8a2676cc4afeb65a268c024db83208 -->
+<!-- ru-source-sha256: 9109d8927b5caa73fdb63a4a1aeba28686442a8d1bdb0afe6cf1989600941dfc -->

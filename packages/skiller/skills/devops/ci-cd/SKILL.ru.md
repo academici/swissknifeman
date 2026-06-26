@@ -53,7 +53,7 @@ sha256: ""
 **Не переписывать парсер.** Конфиг (`coverage.php`), скрипт-гейт
 (`check-coverage-gate.php`, режимы `report|soft|hard`, пофайловая проверка критичных
 зон) и composer-скрипты (`test:coverage`, `test:coverage:gate`, `test:critical`) — в
-скилле `php/laravel-testing` (его сниппеты `coverage-gate-config.php`,
+скилле `laravel-testing/laravel-testing` (его сниппеты `coverage-gate-config.php`,
 `check-coverage-gate.php`, `composer-test-scripts.json`). CI лишь **вызывает** их.
 
 Алгоритм CI-job:
@@ -77,7 +77,7 @@ sha256: ""
 
 ## Ссылки
 
-- Смежные скиллы: `oss-dev/github-flow` (Issue→PR→Tag→Release цепочка), `oss-dev/release-engineering` (релизный pipeline, CHANGELOG, SemVer), `devops/gitops` (модель веток, защита), `php/static-analysis` (Pint/PHPStan/Rector + taint в CI), `oss-dev/dependency-audit` (аудит зависимостей, SBOM, политика обновлений), `php/laravel-testing` (тестовый прогон **+ конфиг/скрипт coverage-gate**, переиспользуется этим job), `quality/test-strategy` (coverage policy и пирамида, на которую опирается порог), `quality/mutation-testing` (Infection-гейт в CI), `quality/playwright-e2e` (E2E в CI), `devops/docker-php` (образ для шага build и скана)
+- Смежные скиллы: `oss-dev/github-flow` (Issue→PR→Tag→Release цепочка), `oss-dev/release-engineering` (релизный pipeline, CHANGELOG, SemVer), `devops/gitops` (модель веток, защита), `php/static-analysis` (Pint/PHPStan/Rector + taint в CI), `oss-dev/dependency-audit` (аудит зависимостей, SBOM, политика обновлений), `laravel-testing/laravel-testing` (тестовый прогон **+ конфиг/скрипт coverage-gate**, переиспользуется этим job), `quality/test-strategy` (coverage policy и пирамида, на которую опирается порог), `quality/mutation-testing` (Infection-гейт в CI), `quality/playwright-e2e` (E2E в CI), `devops/docker-php` (образ для шага build и скана)
 - snippets/github-actions-security.yml — security-job: composer/npm audit + Trivy скан образа
 - snippets/github-actions-coverage-gate.yml — coverage-job: pcov + `test --coverage` + gate-скрипт с глобальным и critical-dir порогами
 - snippets/gitlab-ci-practices.md — практики `.gitlab-ci.yml` + `.php-base`/`php-coverage` job для coverage-gate

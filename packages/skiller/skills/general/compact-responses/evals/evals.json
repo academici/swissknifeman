@@ -1,0 +1,22 @@
+{
+  "skill": "compact-responses",
+  "cases": [
+    {
+      "id": 1,
+      "prompt": "Какой командой запустить тесты пакета skiller?",
+      "assertions": [
+        {"type": "contains", "value": "scripts/test.sh"},
+        {"type": "not_regex", "value": "(?i)^(great|отличный вопрос|конечно|sure|of course|happy to|с радостью)"},
+        {"type": "not_regex", "value": "(?i)(надеюсь, это помогло|hope this helps|let me know if|дайте знать, если)"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Где лежит источник истины пресетов permissions?",
+      "assertions": [
+        {"type": "contains", "value": "configs/claude-code"},
+        {"type": "not_regex", "value": "(?i)(как вы можете видеть|as you can see|в этом ответе я|in this response i)"}
+      ]
+    }
+  ]
+}

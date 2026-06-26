@@ -20,11 +20,11 @@ sha256: ""
 
 Сборка и правка тулинга линтинга/форматирования для Vue 3 + TypeScript проекта: файл `eslint.config.js` (flat config, ESLint 9+), `.prettierrc` с цепочкой плагинов и npm-скрипты `lint`/`lint:fix`. Активировать при: настройке или правке `eslint.config.*` / `.prettierrc`, бутстрапе нового Vue/TS проекта, добавлении/обновлении ESLint- или Prettier-плагина, появлении конфликта правил ESLint vs Prettier.
 
-**Граница с `frontend/js-code-style`** — разделение жёсткое:
+**Граница с `frontend-linting/js-code-style`** — разделение жёсткое:
 
 | | Скилл | Отвечает на вопрос |
 |:---|:---|:---|
-| **ЧТО** | `frontend/js-code-style` | какие правила стиля (Spatie): 4 пробела, ширина 120, одинарные кавычки, `const`-first, `===`, `function` для именованных |
+| **ЧТО** | `frontend-linting/js-code-style` | какие правила стиля (Spatie): 4 пробела, ширина 120, одинарные кавычки, `const`-first, `===`, `function` для именованных |
 | **ЧЕМ/КАК** | `eslint-flat-config` (этот) | каким тулингом это включается: flat-config структура, набор плагинов, цепочка Prettier, скрипты |
 
 То есть значения `tabWidth`/`printWidth`/`singleQuote` берутся из `js-code-style`, а *куда* их записать и *чем* проверять — здесь. Не дублируй обоснование стиля — ссылайся на `js-code-style`.
@@ -46,7 +46,7 @@ sha256: ""
    - `import/order`: группы `['builtin', 'external', 'internal', 'parent', 'sibling', 'index']`, `alphabetize: { order: 'asc', caseInsensitive: true }`, опционально `newlines-between: 'always'`.
    - `import/consistent-type-specifier-style: 'prefer-top-level'` — связка с `consistent-type-imports` из п. 2.
    - Резолвер: `settings['import/resolver'].typescript = { alwaysTryTypes: true, project: './tsconfig.json' }` (пакет `eslint-import-resolver-typescript`), чтобы алиасы `@/...` разрешались.
-   - **Семантические границы** через `no-restricted-imports` для конкретных `files`-глобов: например доменные Vue-компоненты не импортируют `@/wayfinder/routes/*` напрямую — только через actions/composables-слой (связка с `frontend/inertia-vue` feature-слоями). Точечный whitelist легитимных исключений — **отдельным блоком ПОСЛЕ** ограничивающего (flat config применяет блоки по порядку). Сам паттерн границы wayfinder — см. скилл `frontend/wayfinder`.
+   - **Семантические границы** через `no-restricted-imports` для конкретных `files`-глобов: например доменные Vue-компоненты не импортируют `@/wayfinder/routes/*` напрямую — только через actions/composables-слой (связка с `frontend-backend/inertia-vue` feature-слоями). Точечный whitelist легитимных исключений — **отдельным блоком ПОСЛЕ** ограничивающего (flat config применяет блоки по порядку). Сам паттерн границы wayfinder — см. скилл `frontend-wayfinder/wayfinder`.
 
 6. **`padding-line-between-statements`**. Не выписывать руками десятки пар — сгенерировать: список управляющих конструкций (`if/return/for/while/do/switch/try/throw`) развернуть в пары `{ blankLine: 'always', prev: '*', next: stmt }` и обратную через `flatMap`. См. `snippets/eslint.config.js`.
 
@@ -55,7 +55,7 @@ sha256: ""
 8. **Цепочка плагинов Prettier** (`.prettierrc`). Порядок плагинов в массиве `plugins` имеет значение:
    - `prettier-plugin-organize-imports` — сортировка/чистка импортов на уровне форматтера (TS language service);
    - `prettier-plugin-tailwindcss` — **строго последним** (требование плагина: должен идти после всех остальных), сортирует Tailwind-классы. Указать `tailwindFunctions: ['clsx', 'cn', 'cva']` и `tailwindStylesheet` (путь к `app.css`) для Tailwind v4.
-   - Значения форматирования (`tabWidth`, `printWidth`, `singleQuote`, `semi`) — из `frontend/js-code-style`. `overrides` для `*.yml` → `tabWidth: 2`.
+   - Значения форматирования (`tabWidth`, `printWidth`, `singleQuote`, `semi`) — из `frontend-linting/js-code-style`. `overrides` для `*.yml` → `tabWidth: 2`.
 
 9. **npm-скрипты**. В `package.json` (`"type": "module"`):
    - `"lint": "eslint . --fix"` (или явно `"lint:fix"`),
@@ -64,7 +64,7 @@ sha256: ""
    - `"types:check": "vue-tsc --noEmit"`.
    Закрепить devDependencies: `eslint`, `@eslint/js`, `typescript-eslint`, `@vue/eslint-config-typescript`, `eslint-plugin-vue`, `@stylistic/eslint-plugin`, `eslint-plugin-import`, `eslint-import-resolver-typescript`, `eslint-config-prettier`, `prettier`, `prettier-plugin-tailwindcss`, `prettier-plugin-organize-imports`.
 
-10. **`ignores`**. Отдельным блоком: `vendor`, `node_modules`, `public`, `bootstrap/ssr`, генерируемые `resources/js/{actions,routes,wayfinder}/**`, UI-китовые `resources/js/components/ui/*`, конфиги сборки (`vite.config.ts`, `tailwind.config.js`). Автоген руками не линтуем (связка с `frontend/wayfinder` и `frontend/inertia-vue`).
+10. **`ignores`**. Отдельным блоком: `vendor`, `node_modules`, `public`, `bootstrap/ssr`, генерируемые `resources/js/{actions,routes,wayfinder}/**`, UI-китовые `resources/js/components/ui/*`, конфиги сборки (`vite.config.ts`, `tailwind.config.js`). Автоген руками не линтуем (связка с `frontend-wayfinder/wayfinder` и `frontend-backend/inertia-vue`).
 
 ## Когда какой сниппет открывать
 
@@ -84,7 +84,7 @@ sha256: ""
 - [ ] `padding-line-between-statements` сгенерирован хелпером, а не выписан вручную
 - [ ] `eslint-config-prettier` (`/flat`) — последним в массиве; ESLint не форматирует
 - [ ] В `.prettierrc` `prettier-plugin-tailwindcss` — последний плагин; `organize-imports` перед ним
-- [ ] Значения форматирования взяты из `frontend/js-code-style`, не переобоснованы здесь
+- [ ] Значения форматирования взяты из `frontend-linting/js-code-style`, не переобоснованы здесь
 - [ ] `ignores` исключает автоген (actions/routes/wayfinder), UI-кит и конфиги сборки
 - [ ] Скрипты `lint`/`lint:check`/`format`/`types:check` и devDependencies прописаны
 
@@ -97,4 +97,4 @@ sha256: ""
 - https://github.com/prettier/eslint-config-prettier
 - https://github.com/tailwindlabs/prettier-plugin-tailwindcss
 - snippets/eslint.config.js, snippets/prettierrc.json, snippets/package-scripts.json
-- Связанные скиллы: `frontend/js-code-style` (ЧТО — правила стиля), `frontend/wayfinder` (паттерн границ импортов), `frontend/inertia-vue` (feature-слои), `frontend/vitest`, `frontend/tailwind-conventions` (цепочка `prettier-plugin-tailwindcss` и `tailwindFunctions`)
+- Связанные скиллы: `frontend-linting/js-code-style` (ЧТО — правила стиля), `frontend-wayfinder/wayfinder` (паттерн границ импортов), `frontend-backend/inertia-vue` (feature-слои), `frontend-vue/vitest`, `frontend-tailwind/tailwind-conventions` (цепочка `prettier-plugin-tailwindcss` и `tailwindFunctions`)

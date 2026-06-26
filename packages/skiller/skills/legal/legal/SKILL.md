@@ -13,6 +13,9 @@ sha256: ""
 
 # Legal Super-Skill
 
+> **Related:** for design-time legal/compliance checklists during architecture/feature work, see
+> `architect/legal-compliance` (this skill is operations-side; that one is design-side).
+
 ## Overview
 
 This skill is the unified legal operations reference for in-house legal teams. It merges six Perplexity Computer legal skills (contract review, NDA triage, compliance, risk assessment, meeting briefings, canned responses) with Claude Code's writing quality, internal communications, structured planning, and verification-before-completion disciplines.

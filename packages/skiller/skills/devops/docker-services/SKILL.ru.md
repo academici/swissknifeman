@@ -62,4 +62,4 @@ sha256: ""
 
 - https://docs.docker.com/reference/compose-file/services/#depends_on — условия depends_on
 - https://laravel.com/docs/queues#running-the-queue-worker, https://laravel.com/docs/reverb — воркеры и Reverb
-- Смежные скиллы: `docker-php` (образ), `docker-dev-prod` (dev/prod раскладка), `docker-postgres` (healthy pgsql), `makefile` (управление стеком), `php/health-checks` (содержимое `/up`, liveness/readiness), `php/laravel-broadcasting` (сервис reverb, websockets)
+- Смежные скиллы: `docker-php` (образ), `docker-dev-prod` (dev/prod раскладка), `docker-postgres` (healthy pgsql), `makefile` (управление стеком), `laravel-testing/health-checks` (содержимое `/up`, liveness/readiness), `laravel-data-layer/laravel-broadcasting` (сервис reverb, websockets)

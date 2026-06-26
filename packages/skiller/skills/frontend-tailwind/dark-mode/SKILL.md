@@ -16,7 +16,7 @@ sha256: ""
 
 # Skill: Dark theme (light | dark | system)
 
-Three states: `light`, `dark`, `system` (follow OS). Dark = `.dark` class on root `<html>` (`document.documentElement`); Tailwind/tokens react to it (see `frontend/tailwind-conventions`). User choice persists across reload.
+Three states: `light`, `dark`, `system` (follow OS). Dark = `.dark` class on root `<html>` (`document.documentElement`); Tailwind/tokens react to it (see `frontend-tailwind/tailwind-conventions`). User choice persists across reload.
 
 Activate when:
 - adding a theme toggle / "appearance" setting;
@@ -63,7 +63,7 @@ Rules:
    - `updateAppearance(value)`: write `ref`, persist to localStorage + cookie (step 3), call `updateTheme(value)`;
    - return `{ appearance, resolvedAppearance, updateAppearance }`.
 6. Boot without flash — critical, see below. Client: `initializeTheme()` in entry point pre-mount. SSR: inline script in `<head>`.
-7. Markup reacts to `.dark` via semantic tokens / Tailwind `dark:*` — that's `frontend/tailwind-conventions`; here we only toggle the class.
+7. Markup reacts to `.dark` via semantic tokens / Tailwind `dark:*` — that's `frontend-tailwind/tailwind-conventions`; here we only toggle the class.
 
 ## No-flash init (FOUC)
 
@@ -81,7 +81,7 @@ Principle: cookie covers explicit `light`/`dark` on server, inline script covers
 
 Laravel Boost: versioned dark-theme foundations from the Tailwind/Inertia starter kit (base `useAppearance`, init) come from Boost skills `tailwindcss-development` / `inertia-vue`; here = the authored three-mode composable, no-flash boot, SSR init via cookie. Package: https://github.com/laravel/boost (skills — `vendor/laravel/boost/.ai/`).
 
-This skill owns only the `.dark` class and state. How `.dark` affects colors → `frontend/tailwind-conventions`:
+This skill owns only the `.dark` class and state. How `.dark` affects colors → `frontend-tailwind/tailwind-conventions`:
 - Tailwind v4: `@custom-variant dark (&:is(.dark *));` — `dark:*` utilities/tokens fire on ancestor `.dark`.
 - Prefer semantic tokens (var values overridden in `.dark`) over inline `dark:bg-…`.
 - Class name (`dark`) and "class on `<html>`" contract — shared by both skills; don't diverge.
@@ -104,15 +104,15 @@ This skill owns only the `.dark` class and state. How `.dark` affects colors →
 - [ ] `initializeTheme()` called in entry point BEFORE mount — no client flash
 - [ ] Under SSR class comes from cookie + inline script in `<head>` covers `system` — no server flash
 - [ ] `matchMedia change` subscription updates theme only when `system` selected
-- [ ] Class name and `.dark`-on-`<html>` contract match `frontend/tailwind-conventions`; colors not hardcoded, via tokens/`dark:*`
+- [ ] Class name and `.dark`-on-`<html>` contract match `frontend-tailwind/tailwind-conventions`; colors not hardcoded, via tokens/`dark:*`
 
 ## Links
 
 - https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme
 - https://developer.mozilla.org/en-US/docs/Web/API/Window/matchMedia
 - https://vuejs.org/guide/reusability/composables
-- Related skills: `frontend/tailwind-conventions` (how `.dark` affects colors/tokens), `frontend/inertia-vue` (where the composable lives in layers), `frontend/vue-composition-api` (composable pattern), `frontend/naive-ui-theming` (same `.dark` flag selects Naive `darkTheme`)
+- Related skills: `frontend-tailwind/tailwind-conventions` (how `.dark` affects colors/tokens), `frontend-backend/inertia-vue` (where the composable lives in layers), `frontend-vue/vue-composition-api` (composable pattern), `frontend-naive-ui/naive-ui-theming` (same `.dark` flag selects Naive `darkTheme`)
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 0f37e689fb469c236e4eb0ab865538eab287fc518e407aed99130c27c64b9aa6 -->
+<!-- ru-source-sha256: 603eefd7d53d415e9dbdee762c75f74383df8837ab75de97bc683e7b44bae70f -->

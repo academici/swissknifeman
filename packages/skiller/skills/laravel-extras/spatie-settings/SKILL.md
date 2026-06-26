@@ -101,9 +101,9 @@ Infra parameter normally fixed at deploy (`config/*.php` + env) must be overrida
 Pattern (on top of steps 2–7):
 1. **Settings class for infra group** — `final class WebsocketClientSettings extends Settings`, `group(): 'broadcast'`, public typed properties (`bool $enabled`, `string $host`, `int $port`, …). Flag `enabled` = toggle "use these settings vs env/Vite".
 2. **Filament page** (`SettingsPage`, step 7) lets admin edit values; fields with validation (`regex` on host/path, port range) and `required(fn (Get $get) => $get('enabled'))` so a disabled flag doesn't require filling.
-3. **Expose to frontend via DTO, not raw settings.** At runtime resolve the settings class, build a **public** DTO (e.g. `WebsocketClientData`), pass to frontend (Inertia `share`/middleware, or `<script>` config). Frontend: when `enabled` use DTO values, else build-time env/Vite. Echo client side — `frontend/laravel-echo-client`.
+3. **Expose to frontend via DTO, not raw settings.** At runtime resolve the settings class, build a **public** DTO (e.g. `WebsocketClientData`), pass to frontend (Inertia `share`/middleware, or `<script>` config). Frontend: when `enabled` use DTO values, else build-time env/Vite. Echo client side — `frontend-backend/laravel-echo-client`.
 4. **Secret boundary.** Frontend gets **only public** values (host/port/scheme/app_key for client). Private creds (app_secret etc.) — NOT in this settings class/DTO: stay in env/`config/`, in DB if needed via `addEncrypted` (step 4), never sent to frontend.
-5. **DTO → TS typing** (if frontend TypeScript) — DTO under `#[TypeScript]`, see `frontend/backend-type-sync`.
+5. **DTO → TS typing** (if frontend TypeScript) — DTO under `#[TypeScript]`, see `frontend-backend/backend-type-sync`.
 
 Justified when: admin must change value without deploy and frontend needs it at runtime. Not when: pure build-time param or secret — keep in `config/`/env (step 1).
 
@@ -140,8 +140,8 @@ Justified when: admin must change value without deploy and frontend needs it at 
 - snippets/ExampleSettings.php — settings class
 - snippets/create_example_settings.php — settings migration (defaults + evolution)
 - snippets/filament-settings-page.php — Filament form binding
-- Related skills: `php/filament` (SettingsPage and plugin), `php/laravel-data` (Data as settings property type and public frontend DTO), `php/enum-attributes` (enum casts for settings), `php/database` (settings migrations alongside normal ones), `frontend/laravel-echo-client` (consuming websocket settings on client), `frontend/backend-type-sync` (settings DTO → TS type)
+- Related skills: `laravel-filament/filament` (SettingsPage and plugin), `laravel-data-layer/laravel-data` (Data as settings property type and public frontend DTO), `laravel-architecture/enum-attributes` (enum casts for settings), `php/database` (settings migrations alongside normal ones), `frontend-backend/laravel-echo-client` (consuming websocket settings on client), `frontend-backend/backend-type-sync` (settings DTO → TS type)
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: be51925796e719f5f2e53a17fc50c717b9c31d7381b15234a3baacf38894e6ea -->
+<!-- ru-source-sha256: 4dd5d7740b4e409a916dc7174d94a7ff206f78152af879e42ff05c5b3da34df3 -->

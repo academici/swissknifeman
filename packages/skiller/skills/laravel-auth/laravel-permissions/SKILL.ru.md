@@ -24,7 +24,7 @@ sha256: ""
 
 RBAC для Laravel: стандартные policies/gates + entity-scoped permissions (контекст workspace/project).
 
-Базовый вариант для новых проектов — пакет **azguard** (code-first RBAC, см. скилл `php/azguard`). Сниппеты этого скилла — ручная реализация без пакета: используй их, когда внешняя зависимость нежелательна.
+Базовый вариант для новых проектов — пакет **azguard** (code-first RBAC, см. скилл `azguard/azguard`). Сниппеты этого скилла — ручная реализация без пакета: используй их, когда внешняя зависимость нежелательна.
 
 ## Алгоритм
 
@@ -40,8 +40,8 @@ RBAC для Laravel: стандартные policies/gates + entity-scoped permi
 
 ## Ссылки
 
-- `php/azguard` — готовый code-first RBAC-пакет (предпочтительный путь для новых проектов); этот скилл — ручная реализация без зависимости.
-- `php/attribute-authorization` — декларативная проверка прав на экшенах через атрибут `#[CheckPermission]` поверх Gate (ортогональный слой; права определяются здесь).
-- `php/enum-attributes` — enum-права как типобезопасный слой вместо строковых abilities.
+- `azguard/azguard` — готовый code-first RBAC-пакет (предпочтительный путь для новых проектов); этот скилл — ручная реализация без зависимости.
+- `laravel-auth/attribute-authorization` — декларативная проверка прав на экшенах через атрибут `#[CheckPermission]` поверх Gate (ортогональный слой; права определяются здесь).
+- `laravel-architecture/enum-attributes` — enum-права как типобезопасный слой вместо строковых abilities.
 - `php/laravel-structure` — размещение Policies/Enums/Permissions в дереве проекта.
 - `architect/security-design` — auth-стратегия, RBAC/ABAC, threat modeling на уровне архитектуры.

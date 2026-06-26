@@ -1,0 +1,8 @@
+{
+  "name": "blender",
+  "description": "Blender 3D modeling / addon development (Python bpy)",
+  "buckets": ["blender", "blender-modeling", "python", "quality"],
+  "include_meta": false,
+  "harness_presets": ["base", "python"],
+  "mcp": ["context7"]
+}

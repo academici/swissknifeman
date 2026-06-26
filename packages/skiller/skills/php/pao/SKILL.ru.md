@@ -66,4 +66,4 @@ sha256: ""
 - https://github.com/nunomaduro/pao
 - https://laravel.com/blog/introducing-laravel-pao-cleaner-output-for-ai-agents
 - https://laravel-news.com/pao-agent-optimized-output-for-php-testing-tools
-- Связанные скиллы: `php/laravel-testing` (PHPUnit/Pest, вывод которых сжимает PAO), `php/static-analysis` (PHPStan/Rector — тоже под обёрткой PAO), `general/context-economy` (общая экономия контекста агента)
+- Связанные скиллы: `laravel-testing/laravel-testing` (PHPUnit/Pest, вывод которых сжимает PAO), `php/static-analysis` (PHPStan/Rector — тоже под обёрткой PAO), `general/context-economy` (общая экономия контекста агента)

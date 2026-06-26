@@ -63,9 +63,9 @@ sha256: ""
 - `spec-interview` (general) — if spec unclear, interview first, then decompose.
 - `cross-layer-change-checklist` (general) — mandatory layer sync before finalize.
 - `anti-drift` (general) — iteration discipline + circuit-breaker during execution.
-- `php/laravel-subagents` — delegate subtasks to subagents on large Laravel tasks.
+- `laravel-architecture/laravel-subagents` — delegate subtasks to subagents on large Laravel tasks.
 - `session-handoff` (general) — hand off unfinished task to next session.
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 508d97629f79c9a29bbc6f17175ef248ea7001398ee0e304dca3f15546d485df -->
+<!-- ru-source-sha256: 0d8d3068314be9e27fc452eabdf07b5bea5a07056ae30a9d0de64423c160ccac -->

@@ -40,7 +40,7 @@ FilePond (process/revert/patch/restore), временный файл идент�
 Стек, который покрывает скилл: `filepond` (core) + `vue-filepond` (Vue-обёртка)
 + плагины `filepond-plugin-*` + `rahulhaque/laravel-filepond` (бэк). Поле
 интегрируется как обычный input через `v-model` — совместимо с Inertia-формами
-(см. скилл `frontend/inertia-vue`).
+(см. скилл `frontend-backend/inertia-vue`).
 
 **Laravel Boost**: FilePond и `rahulhaque/laravel-filepond` **не** входят в Boost
 (нет `.ai/`-каталога в пакете) — это **ours-only** скилл, паттерн описан целиком,
@@ -170,4 +170,4 @@ Boost-скиллом inertia-vue; здесь — только нейтральн
 - https://pqina.nl/filepond/ — документация FilePond и плагинов
 - https://github.com/pqina/vue-filepond — Vue-обёртка
 - https://github.com/rahulhaque/laravel-filepond — серверная обработка (process/revert, `Filepond::field()`)
-- Связанные скиллы: `frontend/inertia-vue` (формы/страницы), `frontend/vue-composition-api`, `frontend/wayfinder`
+- Связанные скиллы: `frontend-backend/inertia-vue` (формы/страницы), `frontend-vue/vue-composition-api`, `frontend-wayfinder/wayfinder`

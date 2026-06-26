@@ -18,9 +18,9 @@ sha256: ""
 
 Tooling for lint/format of a Vue 3 + TS project: `eslint.config.js` (flat config, ESLint 9+), `.prettierrc` plugin chain, npm scripts `lint`/`lint:fix`. Activate on: setup/edit of `eslint.config.*` / `.prettierrc`, new Vue/TS bootstrap, add/update ESLint or Prettier plugin, ESLint-vs-Prettier rule conflict.
 
-## Boundary with `frontend/js-code-style` (hard split)
+## Boundary with `frontend-linting/js-code-style` (hard split)
 
-- WHAT (style rules, Spatie): `frontend/js-code-style` — 4 spaces, width 120, single quotes, `const`-first, `===`, `function` for named.
+- WHAT (style rules, Spatie): `frontend-linting/js-code-style` — 4 spaces, width 120, single quotes, `const`-first, `===`, `function` for named.
 - HOW/WITH-WHAT (tooling that enables it): `eslint-flat-config` (this) — flat-config structure, plugin set, Prettier chain, scripts.
 - `tabWidth`/`printWidth`/`singleQuote` values come FROM `js-code-style`; *where* to write them and *what* checks them is here. Do not re-justify style — link to `js-code-style`.
 - Laravel Boost: versioned Vite/Inertia/Tailwind starter-kit foundations come from Boost; here is the authored flat-config on top of project conventions. Package: https://github.com/laravel/boost.
@@ -40,7 +40,7 @@ Tooling for lint/format of a Vue 3 + TS project: `eslint.config.js` (flat config
    - `import/order`: groups `['builtin', 'external', 'internal', 'parent', 'sibling', 'index']`, `alphabetize: { order: 'asc', caseInsensitive: true }`, optionally `newlines-between: 'always'`.
    - `import/consistent-type-specifier-style: 'prefer-top-level'` — pairs with `consistent-type-imports` (step 2).
    - Resolver: `settings['import/resolver'].typescript = { alwaysTryTypes: true, project: './tsconfig.json' }` (package `eslint-import-resolver-typescript`), so `@/...` aliases resolve.
-   - Semantic boundaries via `no-restricted-imports` for specific `files` globs: e.g. domain Vue components don't import `@/wayfinder/routes/*` directly — only via actions/composables layer (pairs with `frontend/inertia-vue` feature layers). A targeted whitelist of legit exceptions is a SEPARATE block AFTER the restricting one (flat config applies blocks in order). Wayfinder boundary pattern — see skill `frontend/wayfinder`.
+   - Semantic boundaries via `no-restricted-imports` for specific `files` globs: e.g. domain Vue components don't import `@/wayfinder/routes/*` directly — only via actions/composables layer (pairs with `frontend-backend/inertia-vue` feature layers). A targeted whitelist of legit exceptions is a SEPARATE block AFTER the restricting one (flat config applies blocks in order). Wayfinder boundary pattern — see skill `frontend-wayfinder/wayfinder`.
 
 6. `padding-line-between-statements`. Don't write dozens of pairs by hand — generate: expand the list of control statements (`if/return/for/while/do/switch/try/throw`) into pairs `{ blankLine: 'always', prev: '*', next: stmt }` plus the reverse via `flatMap`. See `snippets/eslint.config.js`.
 
@@ -49,7 +49,7 @@ Tooling for lint/format of a Vue 3 + TS project: `eslint.config.js` (flat config
 8. Prettier plugin chain (`.prettierrc`). Order in `plugins` array matters:
    - `prettier-plugin-organize-imports` — sort/clean imports at formatter level (TS language service);
    - `prettier-plugin-tailwindcss` — STRICTLY LAST (plugin requirement: after all others), sorts Tailwind classes. Set `tailwindFunctions: ['clsx', 'cn', 'cva']` and `tailwindStylesheet` (path to `app.css`) for Tailwind v4.
-   - Formatting values (`tabWidth`, `printWidth`, `singleQuote`, `semi`) — from `frontend/js-code-style`. `overrides` for `*.yml` → `tabWidth: 2`.
+   - Formatting values (`tabWidth`, `printWidth`, `singleQuote`, `semi`) — from `frontend-linting/js-code-style`. `overrides` for `*.yml` → `tabWidth: 2`.
 
 9. npm scripts. In `package.json` (`"type": "module"`):
    - `"lint": "eslint . --fix"` (or explicit `"lint:fix"`),
@@ -58,7 +58,7 @@ Tooling for lint/format of a Vue 3 + TS project: `eslint.config.js` (flat config
    - `"types:check": "vue-tsc --noEmit"`.
    Pin devDependencies: `eslint`, `@eslint/js`, `typescript-eslint`, `@vue/eslint-config-typescript`, `eslint-plugin-vue`, `@stylistic/eslint-plugin`, `eslint-plugin-import`, `eslint-import-resolver-typescript`, `eslint-config-prettier`, `prettier`, `prettier-plugin-tailwindcss`, `prettier-plugin-organize-imports`.
 
-10. `ignores`. Separate block: `vendor`, `node_modules`, `public`, `bootstrap/ssr`, generated `resources/js/{actions,routes,wayfinder}/**`, UI-kit `resources/js/components/ui/*`, build configs (`vite.config.ts`, `tailwind.config.js`). Don't lint generated code by hand (pairs with `frontend/wayfinder` and `frontend/inertia-vue`).
+10. `ignores`. Separate block: `vendor`, `node_modules`, `public`, `bootstrap/ssr`, generated `resources/js/{actions,routes,wayfinder}/**`, UI-kit `resources/js/components/ui/*`, build configs (`vite.config.ts`, `tailwind.config.js`). Don't lint generated code by hand (pairs with `frontend-wayfinder/wayfinder` and `frontend-backend/inertia-vue`).
 
 ## Which snippet to open
 
@@ -78,7 +78,7 @@ Tooling for lint/format of a Vue 3 + TS project: `eslint.config.js` (flat config
 - [ ] `padding-line-between-statements` generated by helper, not written by hand
 - [ ] `eslint-config-prettier` (`/flat`) last in array; ESLint doesn't format
 - [ ] In `.prettierrc`, `prettier-plugin-tailwindcss` last plugin; `organize-imports` before it
-- [ ] Formatting values taken from `frontend/js-code-style`, not re-justified here
+- [ ] Formatting values taken from `frontend-linting/js-code-style`, not re-justified here
 - [ ] `ignores` excludes generated code (actions/routes/wayfinder), UI-kit, build configs
 - [ ] Scripts `lint`/`lint:check`/`format`/`types:check` and devDependencies set
 
@@ -91,8 +91,8 @@ Tooling for lint/format of a Vue 3 + TS project: `eslint.config.js` (flat config
 - https://github.com/prettier/eslint-config-prettier
 - https://github.com/tailwindlabs/prettier-plugin-tailwindcss
 - snippets/eslint.config.js, snippets/prettierrc.json, snippets/package-scripts.json
-- Related skills: `frontend/js-code-style` (WHAT — style rules), `frontend/wayfinder` (import boundary pattern), `frontend/inertia-vue` (feature layers), `frontend/vitest`, `frontend/tailwind-conventions` (`prettier-plugin-tailwindcss` chain and `tailwindFunctions`)
+- Related skills: `frontend-linting/js-code-style` (WHAT — style rules), `frontend-wayfinder/wayfinder` (import boundary pattern), `frontend-backend/inertia-vue` (feature layers), `frontend-vue/vitest`, `frontend-tailwind/tailwind-conventions` (`prettier-plugin-tailwindcss` chain and `tailwindFunctions`)
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 43f4ed9b4e6b2754879dc7e08d817309a840bce5ffe6f58f54f3f928cfc83f41 -->
+<!-- ru-source-sha256: 12f69cdb60c360a307fdaa7e5287a4d4cc8f235fab71f11a2723782f70c80f27 -->

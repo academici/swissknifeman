@@ -70,9 +70,9 @@ Positional call with 2+ unclear args → request rewrite to named. Don't block o
 - `php/dependency-injection` — constructors and method injection with named arguments.
 - `php/repositories` — DTO commands and store-method calls with named arguments.
 - `php/code-style-spatie` (external) — general Laravel/PHP code style this rule fits into.
-- `php/naming-conventions` — this rule is about *call* style; naming-conventions is about names of *entities* (classes, methods, fields).
+- `general/naming-conventions` — this rule is about *call* style; naming-conventions is about names of *entities* (classes, methods, fields).
 - `php/static-analysis` — pint/rector pipeline that partially cleans up call style.
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: f6c1e8b5f1c035edfd9c4958b7893ed7a3191f196051e92c1f91326a2d7166fe -->
+<!-- ru-source-sha256: 50e08ed5596fffd2b743be75d7314aeb06b07366459b5d2f4a71227b0ffecd63 -->

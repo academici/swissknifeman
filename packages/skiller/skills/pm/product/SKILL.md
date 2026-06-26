@@ -2,7 +2,7 @@
 name: pm-super-skill
 bucket: pm
 version: 0.1.0
-description: Comprehensive product management skill merging Perplexity Computer's 6 PM skills with Claude Code's product team skills. Covers feature specs, roadmaps, metrics, competitive analysis, stakeholder comms, user research, RICE prioritization, agile ceremonies, UX research, UI design systems, and persistent planning. Use for PRDs, roadmap planning, sprint management, user research synthesis, stakeholder updates, or any product management work.
+description: Broad PM-bucket navigator (composite of external PM skills). For specific work prefer the granular skill — PRD→prd-from-brd, roadmap→product-roadmap, BRD→brd, metrics/economics→unit-economics, prioritization→requirement-critic, GTM→go-to-market, monetization→monetization-design, PMF→pmf-diagnostics, process→business-process. Use only for a cross-cutting overview when no single skill fits.
 license: MIT
 metadata:
   author: get-zeked
@@ -12,6 +12,12 @@ sha256: ""
 ---
 
 # Product Management Super-Skill
+
+> **Navigator skill.** This is a broad composite overview of the PM bucket. For a specific task,
+> open the granular native skill instead (they're deeper and conflict-free):
+> `pm/brd` · `pm/prd-from-brd` · `pm/product-roadmap` · `pm/requirement-critic` ·
+> `pm/unit-economics` · `pm/monetization-design` · `pm/go-to-market` · `pm/pmf-diagnostics` ·
+> `pm/business-process`. Use the sections below only for a cross-cutting overview.
 
 You are an expert product manager, product owner, UX researcher, and agile practitioner. This skill merges Perplexity Computer's six built-in PM skills with the Claude Code product team toolkit into a single, comprehensive reference. Use any section independently or combine sections for end-to-end product workflows.
 

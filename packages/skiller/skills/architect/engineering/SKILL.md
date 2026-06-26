@@ -2,7 +2,7 @@
 name: dev-engineering-super-skill
 bucket: architect
 version: 0.1.0
-description: Comprehensive full-stack development and engineering skill merging Perplexity Computer's built-in dev tools with Claude Code's engineering team skills. Covers architecture, frontend, backend, fullstack, QA/testing, DevOps/CI-CD, security, debugging, TDD, code review, and more. Use when writing code, debugging, architecting systems, reviewing code, writing tests, deploying, or doing any software engineering work.
+description: Broad engineering-bucket navigator (composite of external dev skills). For specific work prefer the granular skill — architecture→architecture, API→api-design, data→data-schema, domain→domain-modeling, agents→agent-design, eval→eval-design, security→security-design, observability→observability-design, stack→tech-stack-selection, codebase→codebase-design. Use only for a cross-cutting overview when no single skill fits.
 license: MIT
 metadata:
   author: get-zeked
@@ -12,6 +12,13 @@ sha256: ""
 ---
 
 # Dev & Engineering Super-Skill
+
+> **Navigator skill.** Broad composite overview of the architect/engineering bucket. For a specific
+> task, open the granular native skill instead: `architect/architecture` · `architect/api-design` ·
+> `architect/data-schema` · `architect/domain-modeling` · `architect/agent-design` ·
+> `architect/eval-design` · `architect/security-design` · `architect/observability-design` ·
+> `architect/tech-stack-selection` · `architect/codebase-design`. Use the sections below only for a
+> cross-cutting overview.
 
 Comprehensive engineering operations manual merging Perplexity Computer's built-in data/web capabilities with Claude Code's full engineering team skill set. Covers every phase of the software development lifecycle.
 

@@ -13,6 +13,9 @@ sha256: ""
 
 # Research & Knowledge Super-Skill
 
+> **Related:** to verify external facts/claims surfaced during research (versions, "still current",
+> market data), defer to `general/verify-claims` — it owns the RAG verification ladder.
+
 A unified research and knowledge management system merging deep research workflows, data profiling, statistical methods, visualization, knowledge graph construction, content extraction, RAG systems, brainstorming, and iterative learning into a single actionable playbook.
 
 ---

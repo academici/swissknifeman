@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Changed (аудит — добивка отложенного: super-skill + Serena-пин)
+
+- **3 vendored super-skill демотированы в «навигаторы»** (`pm/product`, `architect/engineering`,
+  `operator/operations-cx`) — они дублировали зрелые гранулярные нативные скиллы (9/13/5) и
+  перехватывали весь бакет over-broad триггером («any … work»). `description` сужен до «обзор
+  бакета; для конкретной задачи → granular skill», в тело добавлен блок обратных ссылок на
+  гранулярные. Конфликт триггеров устранён, провенанс (upstream `notify`) сохранён.
+- **Односторонние границы Group B закрыты:** `research/research`→`general/verify-claims` (RAG),
+  `legal/legal`→`architect/legal-compliance`, `security/security`→`architect/security-design`
+  (run-time ↔ design-time). 7 super-skill-only бакетов (creative/finance/legal/…) оставлены —
+  они единственное покрытие домена.
+- **Serena запиннована на тег релиза** (`constants.SERENA_SRC = git+…/oraios/serena@v1.5.3`,
+  было bare-main) — breaking-изменение в main не сломает код-граф у всех проектов внезапно. Один
+  bump-пойнт. Версия **верифицирована через RAG** (последний релиз v1.5.3, 2026-05-26;
+  `@agentmemory/agentmemory ^0.9.26` и jscpd-`npx --yes` проверены — актуальны, действий не нужно).
+
 ## [0.5.0] - 2026-06-26
 
 ### Fixed (аудит — устойчивость фан-аута, гейты CI, хвосты)

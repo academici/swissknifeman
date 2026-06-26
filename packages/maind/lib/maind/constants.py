@@ -45,19 +45,23 @@ GRAPH_VERSION = 1
 # workspace_ignores: для монорепо/консьюмера, где пакеты под packages/* — их НЕ игнорим
 #   (единый граф app↔пакеты), но режем vendor и ВЛОЖЕННЫЕ **/vendor.
 # initial_prompt/workspace_prompt: нативно даются модели при активации проекта Serena.
+# Serena пиннована на тег релиза (НЕ bare-main): breaking-изменение в main не сломает
+# код-граф у всех проектов внезапно. Бамп — здесь, в ОДНОМ месте; актуальный релиз сверять
+# на github.com/oraios/serena/releases. (verified 2026-06-26: последний v1.5.3)
+SERENA_SRC = "git+https://github.com/oraios/serena@v1.5.3"
 CODE_GRAPH_DEFAULTS = {
     "enabled_default": False,
     "engine": "serena",
     "command": "uvx",
     "args": [
-        "--from", "git+https://github.com/oraios/serena",
+        "--from", SERENA_SRC,
         "serena", "start-mcp-server",
         "--context", "ide-assistant",
         "--project", "{root}",
         "--enable-web-dashboard", "false",
     ],
     "index_args": [
-        "--from", "git+https://github.com/oraios/serena",
+        "--from", SERENA_SRC,
         "serena", "project", "index", "{root}",
     ],
     "server_name": "serena",

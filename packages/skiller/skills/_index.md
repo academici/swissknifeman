@@ -4,7 +4,7 @@
 
 Источник истины портируемых скиллов (машинный реестр — `skills.json`). Раздача в проекты: `skiller connect` (плагины-бакеты) / `vendor` (физ. перенос). CORE-набор токен-скиллов (`general`/`oss-dev`) раздаётся по умолчанию — см. `connect`/`vendor`.
 
-Всего: 193 скиллов в 45 бакетах.
+Всего: 194 скиллов в 45 бакетах.
 
 ## Скиллы по бакетам
 
@@ -200,7 +200,7 @@
 |:--|:--|:--|
 | `wayfinder` | Laravel Wayfinder: typesafe routes and controller actions for the frontend. Generation, n… | `wayfinder`, `laravel`, `typescript`, `routes`, `inertia`, `eslint`, `frontend` |
 
-### general — General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists (18)
+### general — General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists (19)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
@@ -213,6 +213,7 @@
 | `git-safety` | Защита от деструктивных git-команд через PreToolUse-хук Claude Code: блокирует push/reset… | `git`, `safety`, `hooks`, `guardrails`, `init` |
 | `grill-with-docs` | Безжалостная грилинг-сессия, которая ОДНОВРЕМЕННО строит доменную модель: уточняет план/д… | `grilling`, `requirements`, `domain`, `adr`, `docs` |
 | `implement` | Реализация куска работы по ТЗ/PRD/issue минимальной цепочкой: tdd-discipline на согласова… | `workflow`, `implementation`, `tdd`, `review` |
+| `mcp-advisor` | Pick MCP servers for a project at onboarding/sync: which to connect (context7/playwright/… | `mcp`, `onboarding`, `tooling`, `context`, `claude-code` |
 | `naming-conventions` | Naming discipline (language-agnostic): name reveals intent, not implementation; fight noi… | `naming`, `conventions`, `readability`, `code-style`, `discipline`, `clean-code` |
 | `packages-stack` | Project external-dependency registry methodology: which packages are used and for what, a… | `dependencies`, `conventions`, `navigation`, `stack`, `init` |
 | `project-map` | Project structure map methodology: zone directories by responsibility for safe change rou… | `conventions`, `navigation`, `architecture`, `structure`, `routing` |
@@ -473,7 +474,7 @@
 | `checklist` | `complex-task-orchestrator`, `cross-layer-change-checklist` |
 | `chromedriver` | `laravel-dusk` |
 | `ci` | `backend-type-sync`, `ci-cd`, `code-simplifier`, `db-test-preflight`, `mutation-testing`, `node-pnpm-preflight`, `oss-development`, `playwright-e2e`, `release-engineering`, `test-isolation-guard`, `test-strategy` |
-| `claude-code` | `agent-packs`, `context-economy` |
+| `claude-code` | `agent-packs`, `context-economy`, `mcp-advisor` |
 | `clean-code` | `naming-conventions` |
 | `cli` | `dx-design` |
 | `code-connect` | `figma-mcp-core` |
@@ -489,7 +490,7 @@
 | `config` | `config-conventions` |
 | `configuration` | `spatie-settings` |
 | `conflicts` | `resolving-merge-conflicts` |
-| `context` | `anti-drift`, `compact-responses`, `context-economy`, `gh-review`, `session-handoff`, `shared-memory`, `task-brief-template` |
+| `context` | `anti-drift`, `compact-responses`, `context-economy`, `gh-review`, `mcp-advisor`, `session-handoff`, `shared-memory`, `task-brief-template` |
 | `contracts` | `api-design` |
 | `contribution` | `package-contribution-protocol` |
 | `conventional-commits` | `git-commit-rules` |
@@ -601,7 +602,7 @@
 | `market` | `adversarial-check`, `competitive-analysis`, `customer-discovery`, `defensibility`, `go-to-market`, `idea-discovery`, `monetization-design`, `new-project`, `pitch-deck`, `pmf-diagnostics`, `product-roadmap`, `solo-founder`, `startup-lifecycle` |
 | `matchmedia` | `dark-mode` |
 | `materials` | `scene-conventions` |
-| `mcp` | `ai-agents`, `build-loop`, `figma-mcp-core`, `mcp-blender` |
+| `mcp` | `ai-agents`, `build-loop`, `figma-mcp-core`, `mcp-advisor`, `mcp-blender` |
 | `media` | `medialibrary` |
 | `memory` | `shared-memory` |
 | `merge` | `resolving-merge-conflicts` |
@@ -624,6 +625,7 @@
 | `nwidart` | `modular-architecture` |
 | `observability` | `capacity-planning`, `health-checks`, `observability-design` |
 | `observer` | `session-observer` |
+| `onboarding` | `mcp-advisor` |
 | `ops` | `capacity-planning`, `incident-response`, `oncall-rotation`, `postmortem`, `runbook` |
 | `orchestration` | `ai-agents`, `anti-drift`, `complex-task-orchestrator`, `cross-project-coordinator`, `laravel-subagents`, `mcp-blender`, `tech-lead` |
 | `oss` | `dependency-audit`, `dx-design`, `github-flow`, `open-source-maintainer`, `oss-development`, `oss-governance`, `release-engineering` |
@@ -724,7 +726,7 @@
 | `threading` | `threading` |
 | `threat-modeling` | `security-design` |
 | `tokens` | `compact-responses`, `context-economy`, `cross-project-coordinator`, `gh-review`, `pao`, `session-handoff` |
-| `tooling` | `eslint-flat-config`, `venv-dependencies` |
+| `tooling` | `eslint-flat-config`, `mcp-advisor`, `venv-dependencies` |
 | `topology` | `cross-project-coordinator`, `local-topology`, `shared-memory` |
 | `tracing` | `observability-design` |
 | `trade-off` | `tech-stack-selection` |

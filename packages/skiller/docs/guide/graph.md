@@ -100,6 +100,7 @@ flowchart LR
     git_commit_rules["git-commit-rules"]
     grill_with_docs["grill-with-docs"]
     implement["implement"]
+    mcp_advisor["mcp-advisor"]
     project_map["project-map"]
     session_handoff["session-handoff"]
     spec_interview["spec-interview"]
@@ -323,6 +324,7 @@ flowchart LR
   legal_compliance -.->|feeds| security_design
   makefile -.->|feeds| docker_dev_prod
   makefile -.->|feeds| docker_services
+  mcp_advisor -.->|feeds| context_economy
   monetization_design -.->|feeds| brd
   mutation_testing -.->|feeds| code_review
   observability_design -.->|feeds| incident_response
@@ -353,7 +355,7 @@ flowchart LR
   unit_economics -.->|feeds| go_to_market
 ```
 
-**В графе:** 120 скиллов, 88 рёбер requires, 77 рёбер produces_for.
+**В графе:** 121 скиллов, 88 рёбер requires, 78 рёбер produces_for.
 
 ## Изолированные скиллы (73)
 

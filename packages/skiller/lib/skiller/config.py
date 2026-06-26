@@ -17,7 +17,7 @@ from .common import (AGENT_DEFAULTS, CONFIG_KEYS, confirm, die,
 # Отключается флагом --no-core у connect/vendor.
 CORE_SKILLS = [
     "general/context-economy", "general/anti-drift", "general/compact-responses",
-    "general/session-handoff", "oss-dev/gh-review",
+    "general/session-handoff", "general/mcp-advisor", "oss-dev/gh-review",
 ]
 CORE_BUCKETS = ["general", "oss-dev"]
 DEFAULT_EXCLUDE = ["system/shared-memory", "system/cross-project-coordinator"]

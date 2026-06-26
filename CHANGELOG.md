@@ -2,6 +2,28 @@
 
 ## [Unreleased]
 
+### Fixed (аудит — логика раздачи скиллов: requires / update / CORE)
+
+- **`sync` теперь резолвит транзитивные `requires`** (`skillset.resolve_skillset`). Skill-granular
+  `include` молча терял зависимости (64/195 скиллов их объявляют): `include: [api-design]` копировал
+  api-design, но не его `requires: [data-schema]`. Добавлен транзитивный обход (паритет с
+  `vendor.resolve_requires`): `exclude` по-прежнему побеждает зависимость с warning. Регрессия —
+  `test_skillset.py::{test_sync_pulls_transitive_requires,test_sync_exclude_beats_requires}`.
+- **`skiller update` распознаёт sync-канал** (`update.update_one`). sync и legacy-vendor пишут
+  ОДИН `.swissknifeman-manifest.json`, поэтому на sync-проекте `update` уходил в legacy `do_vendor`
+  (bucket-granular из `.swissknife.json`/профиля), игнорируя skill-granular `.swissknifeman/config.json`.
+  Теперь при наличии sync-конфига `update` пере-применяет его через `do_sync` (как уже делает
+  `integrate`). Регрессия — `test_update.py::test_update_routes_sync_config_to_sync`.
+- **CORE-фолбэк канал-независим** — `MINIMAL_BUCKETS` (набор для нераспознанного типа проекта) втягивал
+  бакет `system` целиком, включая `system/{shared-memory,cross-project-coordinator}` — ровно дубли
+  хаба maind, что CORE-политика гонит через `DEFAULT_EXCLUDE`. Теперь `MINIMAL_BUCKETS == CORE_BUCKETS`
+  (general+oss-dev) — фолбэк не противоречит политике.
+- **Зарезервированные ключи `.swissknife.json` честно помечены** (`config.validate_config`) — `shape`/
+  `stacks`/`coordinator_ignore`/`presets` валидировались, но не читались connect/vendor; теперь
+  предупреждают «зарезервирован/не действует» (как `skills_map`), а не молчат. Удаление ключей не
+  делаем (валидация строгая — сломало бы существующие конфиги); `memory_brain` реально потребляется
+  (integrate↔harness) и не трогается.
+
 ### Fixed (аудит — фундамент-дедуп раздачи скиллов: единые примитивы)
 
 - **Утечка `SKILL.ru.md` (русский SSOT) в downstream-проекты через `sync`** — канонический

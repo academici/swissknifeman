@@ -15,6 +15,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
 from skiller.common import MANIFEST, MARKETPLACE
 from skiller.connect import do_connect
+from skiller.registry import build_registry
+from skiller.skillset import do_sync, skillset_config_path
 from skiller.vendor import do_vendor
 from skiller.update import cmd_update, replay_opts
 import tests.fixtures as fx
@@ -23,6 +25,18 @@ import tests.fixtures as fx
 def silently(fn, *a, **kw):
     with contextlib.redirect_stdout(io.StringIO()):
         return fn(*a, **kw)
+
+
+def _materialize(env):
+    reg, *_ = build_registry(env)
+    (env.root / "skills.json").write_text(json.dumps(reg, ensure_ascii=False),
+                                          encoding="utf-8")
+
+
+def _write_sync_config(target, cfg):
+    p = skillset_config_path(target)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(json.dumps(cfg, ensure_ascii=False), encoding="utf-8")
 
 
 class UpdateCase(unittest.TestCase):
@@ -70,6 +84,22 @@ class UpdateCase(unittest.TestCase):
         self.assertTrue((dest / "devops" / "docker" / "SKILL.md").exists())
         manifest = json.loads((dest / MANIFEST).read_text())
         self.assertEqual(manifest["agent"], "generic")
+
+    def test_update_routes_sync_config_to_sync(self):
+        # sync-проект (.swissknifeman/config.json) обновляется sync'ом, а НЕ legacy
+        # vendor: update должен пере-применить skill-granular include из конфига.
+        _materialize(self.env)
+        proj = fx.make_laravel_project(self.tmp)
+        _write_sync_config(proj, {"mode": "vendor", "include": ["code-style"]})
+        silently(do_sync, self.env, proj, {})
+        skills = proj / ".claude" / "skills"
+        self.assertTrue((skills / "code-style" / "SKILL.md").exists())
+        self.assertFalse((skills / "test-writer").exists())
+        # расширяем конфиг → update должен пере-sync'нуть из него
+        _write_sync_config(proj, {"mode": "vendor",
+                                  "include": ["code-style", "test-writer"]})
+        silently(cmd_update, self.env, ["--target", str(proj)])
+        self.assertTrue((skills / "test-writer" / "SKILL.md").exists())
 
     def test_update_unconnected_dies(self):
         proj = fx.make_laravel_project(self.tmp)

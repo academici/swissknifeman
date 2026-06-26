@@ -201,6 +201,34 @@ class TestSync(unittest.TestCase):
             self.assertFalse((dst / "upstream.json").exists())
             self.assertFalse((dst / ".claude-plugin").exists())
 
+    def test_sync_pulls_transitive_requires(self):
+        # skill-granular include тянет зависимость по requires (паритет с vendor);
+        # без этого include скилла с requires молча терял зависимость.
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            root, env = make_registry(tmp)
+            _materialize_registry(env)
+            target = make_laravel_project(tmp)
+            # laravel-conventions requires code-style (см. make_registry)
+            sync_skillset(env, target,
+                          {"mode": "vendor", "include": ["laravel-conventions"]})
+            self.assertTrue((target / ".claude/skills/laravel-conventions/SKILL.md").is_file())
+            self.assertTrue((target / ".claude/skills/code-style/SKILL.md").is_file())
+            self.assertIn("code-style", load_lock(target)["skills"])
+
+    def test_sync_exclude_beats_requires(self):
+        # exclude побеждает зависимость: code-style не приедет, даже будучи requires.
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            root, env = make_registry(tmp)
+            _materialize_registry(env)
+            target = make_laravel_project(tmp)
+            sync_skillset(env, target, {"mode": "vendor",
+                                        "include": ["laravel-conventions"],
+                                        "exclude": ["code-style"]})
+            self.assertTrue((target / ".claude/skills/laravel-conventions").is_dir())
+            self.assertFalse((target / ".claude/skills/code-style").is_dir())
+
     def test_prune_removes_managed_dropped_from_config(self):
         with tempfile.TemporaryDirectory() as tmp:
             tmp = Path(tmp)
@@ -208,14 +236,15 @@ class TestSync(unittest.TestCase):
             _materialize_registry(env)
             target = make_laravel_project(tmp)
             sync_skillset(env, target, {"mode": "vendor", "buckets": ["php"]})
-            self.assertTrue((target / ".claude/skills/code-style").is_dir())
-
-            # сузили конфиг: только одна позиция
-            sync_skillset(env, target,
-                          {"mode": "vendor", "include": ["laravel-conventions"]})
             self.assertTrue((target / ".claude/skills/laravel-conventions").is_dir())
-            self.assertFalse((target / ".claude/skills/code-style").is_dir())
-            self.assertNotIn("code-style", load_lock(target)["skills"])
+
+            # сузили конфиг: только code-style (laravel-conventions им НЕ требуется →
+            # выбывает и прунится; code-style зависимостей не имеет).
+            sync_skillset(env, target,
+                          {"mode": "vendor", "include": ["code-style"]})
+            self.assertTrue((target / ".claude/skills/code-style").is_dir())
+            self.assertFalse((target / ".claude/skills/laravel-conventions").is_dir())
+            self.assertNotIn("laravel-conventions", load_lock(target)["skills"])
 
     def test_foreign_skill_untouched(self):
         with tempfile.TemporaryDirectory() as tmp:

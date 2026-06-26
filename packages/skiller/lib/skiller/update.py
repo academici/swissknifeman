@@ -6,6 +6,7 @@ from .common import AGENT_DEFAULTS, MANIFEST, MARKETPLACE, die, parse_flags, war
 from .config import load_config, resolve_target
 from .connect import do_connect
 from .hub import hub_artifacts_exist
+from .skillset import do_sync, load_skillset_config
 from .state import db_records, load_db, print_registry_state
 from .vendor import do_vendor
 
@@ -52,10 +53,14 @@ def replay_opts(record):
 def update_one(env, target, dry_run=False):
     config = load_config(env, target)
     mk_file = detect_marketplace_file(target)
-    vendor_path = detect_vendor_path(target, config)
+    # sync-канал (.swissknifeman/config.json) владеет тем же .swissknifeman-manifest.json,
+    # что и legacy vendor — поэтому при наличии sync-конфига обновляем sync'ом (он
+    # уважает skill-granular include/exclude), а detect_vendor_path не трогаем.
+    sync_cfg = load_skillset_config(target)
+    vendor_path = None if sync_cfg else detect_vendor_path(target, config)
     records = {r["channel"]: r for r in db_records(env, target)}
 
-    if not mk_file and not vendor_path:
+    if not mk_file and not sync_cfg and not vendor_path:
         if records:
             warn(f"{target}: записан в projects.json, но маркеры подключения "
                  f"не найдены — забыть: skiller list --prune")
@@ -76,7 +81,15 @@ def update_one(env, target, dry_run=False):
         print(f"--- update (marketplace): {target} ---")
         do_connect(env, target, opts, fix_path_drift=True)
         print_registry_state(env)
-    if vendor_path:
+    if sync_cfg:
+        # канонический Claude-канал: пере-sync из .swissknifeman/config.json (skill-granular)
+        rec = records.get("vendor", {})
+        if not rec:
+            print(f"NOTE: {target} не был в projects.json — регистрирую (adopt)")
+        print(f"--- update (sync): {target} ---")
+        do_sync(env, target, {"dry_run": dry_run,
+                              "hub": bool(rec.get("hub")) or hub_artifacts_exist(target)})
+    elif vendor_path:
         rec = records.get("vendor", {})
         manifest = {}
         mf = target / vendor_path / MANIFEST

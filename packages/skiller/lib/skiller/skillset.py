@@ -87,6 +87,7 @@ def _registry_index(env):
             "name": name, "bucket": bucket, "rel": rel, "path": path,
             "sha256": s.get("sha256", ""),
             "content_sha256": s.get("content_sha256", ""),
+            "requires": s.get("requires", []) or [],
             "skill_dir": skill_dir,
         }
         full = f"{bucket}/{rel}".rstrip("/") if rel else bucket
@@ -180,8 +181,33 @@ def load_skillset_config(target):
     return cfg
 
 
+def _pull_requires(selected, by_name, exclude):
+    """Транзитивно дотянуть `requires` выбранных скиллов в `selected` (name->entry).
+    Паритет с vendor.resolve_requires (но на entry реестра): exclude ПОБЕЖДАЕТ
+    зависимость (с warning), неизвестная зависимость — warning и пропуск. Без этого
+    skill-granular include молча терял зависимости (64/195 скиллов имеют requires)."""
+    queue = [(dep, e["name"]) for e in list(selected.values())
+             for dep in e.get("requires", [])]
+    while queue:
+        dep, requester = queue.pop(0)
+        if dep in selected:
+            continue
+        dep_entry = by_name.get(dep)
+        if dep_entry is None:
+            warn(f"'{requester}' requires неизвестный скилл '{dep}' — пропуск")
+            continue
+        full = (f"{dep_entry['bucket']}/{dep_entry['rel']}".rstrip("/")
+                if dep_entry["rel"] else dep_entry["bucket"])
+        if {dep, dep_entry["name"], full, dep_entry["bucket"]} & exclude:
+            warn(f"'{requester}' requires '{dep}', но он в exclude — зависимость пропущена")
+            continue
+        selected[dep_entry["name"]] = dep_entry
+        queue.extend((d, dep) for d in dep_entry.get("requires", []))
+
+
 def resolve_skillset(env, cfg, include_core=False):
-    """Развернуть правила конфига в набор entry: (buckets ∪ include) − exclude.
+    """Развернуть правила конфига в набор entry: (buckets ∪ include) − exclude,
+    затем транзитивно дотянуть `requires` (exclude по-прежнему побеждает).
 
     include_core=True добавляет CORE_SKILLS (как vendor/connect) и применяет
     DEFAULT_EXCLUDE — токен-скиллы раздаются в каждый проект по умолчанию.
@@ -233,6 +259,10 @@ def resolve_skillset(env, cfg, include_core=False):
                 if entry["rel"] else entry["bucket"]
             if {name, full, entry["bucket"], entry["rel"]} & exclude:
                 del selected[name]
+
+    # транзитивные requires выбранных скиллов (после вычитания: тянем зависимости
+    # только тех, что реально останутся). exclude по-прежнему побеждает зависимость.
+    _pull_requires(selected, by_name, exclude)
 
     entries = sorted(selected.values(),
                      key=lambda e: (e["bucket"], e["name"]))

@@ -25,7 +25,11 @@ DEFAULT_EXCLUDE = ["system/shared-memory", "system/cross-project-coordinator"]
 # Минимальный безопасный набор для НЕРАСПОЗНАННОГО типа проекта (autodetect → standalone).
 # НЕ разворачиваем `["*"]` (= все бакеты) по умолчанию — это «бездушный дамп всего». Явный
 # `--profile standalone` («поставь всё») остаётся доступен; авто-фолбэк ставит только ядро.
-MINIMAL_BUCKETS = ["general", "oss-dev", "system"]
+# == CORE_BUCKETS (канал-независимая консистентность): раньше сюда входил бакет `system`
+# целиком, но он несёт system/shared-memory и system/cross-project-coordinator — ровно те
+# дубли хаба maind, что CORE-политика гонит через DEFAULT_EXCLUDE. Фолбэк не должен втягивать
+# их обратно, поэтому он совпадает с CORE_BUCKETS.
+MINIMAL_BUCKETS = list(CORE_BUCKETS)
 
 
 def core_skill_tuples(env, exclude):
@@ -66,11 +70,21 @@ def validate_config(env, config, cfg_file):
     if config.get("agent") and config["agent"] not in AGENT_DEFAULTS:
         die(f"{cfg_file}: unknown agent '{config['agent']}' "
             f"(available: {', '.join(AGENT_DEFAULTS)})")
-    # skills_map объявлен в CONFIG_KEYS, но ещё не читается логикой — не молчим,
-    # иначе пользователь пропишет его и не поймёт, почему нет эффекта.
-    if config.get("skills_map"):
-        warn(f"{cfg_file}: 'skills_map' зарезервирован, но ещё не реализован "
-             f"— игнорируется")
+    # Ключи объявлены в CONFIG_KEYS (валидируются для back-compat .swissknife.json),
+    # но НЕ читаются логикой connect/vendor — не молчим, иначе пользователь пропишет
+    # и не поймёт, почему нет эффекта. (project_type/buckets/exclude/agent/skills_path/
+    # memory_brain — реально потребляются, сюда не входят.)
+    _RESERVED = {
+        "skills_map": "зарезервирован, но ещё не реализован — игнорируется",
+        "shape": "зарезервирован под agent-packs, ещё не реализован — игнорируется",
+        "stacks": "зарезервирован под agent-packs, ещё не реализован — игнорируется",
+        "coordinator_ignore": "legacy-ключ без потребителя — игнорируется",
+        "presets": "резолвятся только в .swissknifeman/config.json (sync-канал); "
+                   "в .swissknife.json не действуют",
+    }
+    for _key, _msg in _RESERVED.items():
+        if config.get(_key):
+            warn(f"{cfg_file}: '{_key}' {_msg}")
 
 
 def load_config(env, target):

@@ -5,6 +5,9 @@
     "general/complex-task-orchestrator",
     "general/task-brief-template",
     "general/spec-interview",
-    "general/cross-layer-change-checklist"
+    "general/grill-with-docs",
+    "general/cross-layer-change-checklist",
+    "general/implement",
+    "oss-dev/to-issues"
   ]
 }

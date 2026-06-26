@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "source": "github",
+  "repo": "mattpocock/skills",
+  "strategy": "notify",
+  "license": "MIT",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "url": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/resolving-merge-conflicts/SKILL.md",
+      "sha256": "c7c9ba81362a786aac05d2223123bf1bd2f8a99c3243a72882ede9c68bedfb24",
+      "fetched_at": "2026-06-26"
+    }
+  ],
+  "notes": "Из mattpocock/skills engineering/resolving-merge-conflicts. Тело сохранено (англ.) + RU description-роутер; в шаг 4 добавлены команды нашего стека; секция «Связанные скиллы». strategy=notify."
+}

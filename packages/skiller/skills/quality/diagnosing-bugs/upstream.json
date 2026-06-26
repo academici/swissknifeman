@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "source": "github",
+  "repo": "mattpocock/skills",
+  "strategy": "notify",
+  "license": "MIT",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "url": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/diagnosing-bugs/SKILL.md",
+      "sha256": "7a0779480f323a66d109404646bcc1a14bf0232b45b3e3ea93b652a035718acb",
+      "fetched_at": "2026-06-26"
+    },
+    {
+      "path": "snippets/hitl-loop.template.sh",
+      "url": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/diagnosing-bugs/scripts/hitl-loop.template.sh",
+      "sha256": "b2932630950e5210075bcd6f850e5accf30c101c5367b29eac3a29b4dd8084c8",
+      "fetched_at": "2026-06-26"
+    }
+  ],
+  "notes": "Из mattpocock/skills engineering/diagnosing-bugs. Тело сохранено (англ., faithful-first); добавлен RU description-роутер, ссылка scripts/ -> snippets/, /improve-codebase-architecture -> architect/codebase-design, embedded-HITL пункт (POS/libfptr10), секция «Связанные скиллы». strategy=notify — апстрим репортится, локальная копия не перетирается."
+}

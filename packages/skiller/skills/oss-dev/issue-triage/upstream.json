@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "source": "github",
+  "repo": "mattpocock/skills",
+  "strategy": "notify",
+  "license": "MIT",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "url": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/triage/SKILL.md",
+      "sha256": "d45827c299c021f77b0f146fefa3ee679b13f99e9a2ffdf48e8de2347adeefe1",
+      "fetched_at": "2026-06-26"
+    },
+    {
+      "path": "snippets/AGENT-BRIEF.md",
+      "url": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/triage/AGENT-BRIEF.md",
+      "sha256": "5b78d347cc53f6bcf7b875106005ccf5315055fa4cf75eb28d41e96ee426d27b",
+      "fetched_at": "2026-06-26"
+    },
+    {
+      "path": "snippets/OUT-OF-SCOPE.md",
+      "url": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/triage/OUT-OF-SCOPE.md",
+      "sha256": "2526f998fd7ca5e956d3f6f234bcc2431a5971ee769f1148ddc60b92f04d5914",
+      "fetched_at": "2026-06-26"
+    }
+  ],
+  "notes": "Из mattpocock/skills engineering/triage (имя -> issue-triage; disable-model-invocation сохранён). Тело сохранено (англ.) + RU description-роутер; /setup-matt-pocock-skills -> конфиг gh+лейблы; /grilling+/domain-modeling -> grill-with-docs; добавлена роль needs-device-access + переходы для embedded (POS/libfptr10); disclaimer на русском; под-файлы -> snippets/; «Связанные скиллы» + привязка к агенту issue-triager. strategy=notify."
+}

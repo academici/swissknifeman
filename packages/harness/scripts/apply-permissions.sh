@@ -149,10 +149,14 @@ import json, os, sys
 dest_path, preset_paths = sys.argv[1], sys.argv[2:]
 
 def load(path):
-    if os.path.exists(path):
-        with open(path) as fh:
+    if not os.path.exists(path):
+        return {}
+    try:
+        with open(path, encoding="utf-8") as fh:
             return json.load(fh)
-    return {}
+    except (json.JSONDecodeError, OSError) as e:
+        sys.stderr.write(f"ОШИБКА: не удалось прочитать JSON {path}: {e}\n")
+        sys.exit(1)
 
 result = load(dest_path)
 perms = result.setdefault("permissions", {})
@@ -184,6 +188,7 @@ fi
 
 mkdir -p "$DEST_DIR"
 [[ -f "$DEST" ]] && cp "$DEST" "$DEST.bak"
-printf '%s\n' "$MERGED" > "$DEST"
+# Атомарно: tmp рядом → mv -f (краш в момент записи не оставит полузаписанный settings).
+printf '%s\n' "$MERGED" > "$DEST.tmp" && mv -f "$DEST.tmp" "$DEST"
 echo "Записано: $DEST (пресеты: $PRESETS)"
 if [[ -f "$DEST.bak" ]]; then echo "Бэкап:    $DEST.bak"; fi

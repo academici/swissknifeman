@@ -21,13 +21,13 @@ Boost, скиллы из другого хаба) синк не удаляет. 
 """
 import hashlib
 import json
-import os
 import shutil
 from pathlib import Path
 
 from core.io import atomic_write_json
 
-from .common import MANIFEST, apply_permissions, die, now_iso, parse_flags, warn
+from .common import (MANIFEST, SKILL_IGNORE, apply_permissions, die, is_within,
+                     is_within_lexical, now_iso, parse_flags, warn)
 from .config import (DEFAULT_EXCLUDE, all_buckets, core_skill_tuples,
                      load_config, resolve_selection, resolve_target)
 from .hub import generate_hub, hub_artifacts_exist
@@ -251,11 +251,7 @@ def load_lock(target):
 
 
 def write_lock(target, lock):
-    f = Path(target) / LOCK_FILE
-    tmp = f.with_name(LOCK_FILE + ".tmp")
-    tmp.write_text(json.dumps(lock, ensure_ascii=False, indent=2) + "\n",
-                   encoding="utf-8")
-    os.replace(tmp, f)
+    atomic_write_json(Path(target) / LOCK_FILE, lock)
 
 
 def _dir_sha256(skill_dir):
@@ -339,8 +335,7 @@ def sync_skillset(env, target, cfg, dry_run=False, force=False,
     locked = dict(lock.get("skills", {}))
 
     def contained(path):
-        return str(Path(path).resolve()).startswith(
-            str(dest_root.resolve()) + os.sep)
+        return is_within(path, dest_root)
 
     # Конфликты с чужими путями: без force — пропуск; с force — добавить к install.
     install = list(plan["add"]) + list(plan["update"])
@@ -373,11 +368,13 @@ def sync_skillset(env, target, cfg, dry_run=False, force=False,
                 ("replace" if name in plan["conflicts"] else "update")
             print(f"[dry-run] {verb} {entry['bucket']}/{entry['name']} -> {dst}")
             continue
+        if not is_within_lexical(dst, dest_root):  # traversal через '../' в имени → стоп
+            warn(f"пропуск '{name}': путь вне каталога назначения")
+            continue
         if dst.is_symlink() or dst.exists():
             _remove_path(dst)
         shutil.copytree(src, dst, dirs_exist_ok=True,
-                        ignore=shutil.ignore_patterns("upstream.json",
-                                                      ".claude-plugin"))
+                        ignore=shutil.ignore_patterns(*SKILL_IGNORE))
         locked[name] = {
             "source": SOURCE,
             "managed": True,

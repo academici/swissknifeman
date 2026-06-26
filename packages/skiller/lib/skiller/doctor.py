@@ -6,7 +6,7 @@ import re
 import sys
 from pathlib import Path
 
-from .common import DB_VERSION, parse_flags
+from .common import DB_VERSION, is_within, parse_flags
 from .state import registry_git_state
 
 
@@ -30,7 +30,7 @@ def cmd_doctor(env, argv):
 
     link = Path(os.path.expanduser("~/.local/bin/skiller"))
     resolved = Path(os.path.realpath(link)) if link.exists() else None
-    check(resolved is not None and str(resolved).startswith(str(root) + os.sep),
+    check(resolved is not None and is_within(resolved, root),
           f"симлинк {link}",
           "перезапустите install.sh из репозитория реестра")
     on_path = any(Path(p or ".").resolve() == link.parent.resolve()

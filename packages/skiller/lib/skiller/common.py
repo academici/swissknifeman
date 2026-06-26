@@ -13,8 +13,9 @@ from pathlib import Path
 # Общий core (подключается через PYTHONPATH лаунчером/test.sh). Реэкспорт для
 # модулей пакета, которые исторически берут эти имена из .common.
 from core import (  # noqa: F401
-    HOME, BaseEnv, confirm, die, find_monorepo_root, now_iso, parse_flags,
-    run_cmd, safe_load_json, sanitize, warn,
+    HOME, BaseEnv, atomic_write_json, atomic_write_text, confirm, die,
+    find_monorepo_root, now_iso, parse_flags, run_cmd, safe_load_json,
+    sanitize, warn,
 )
 
 STATE_DIR = HOME / ".swissknifeman"
@@ -24,6 +25,13 @@ MARKETPLACE = "swissknifeman"
 MANIFEST = ".swissknifeman-manifest.json"
 AGENT_DEFAULTS = {"claude": ".claude/skills", "cursor": ".cursor/skills",
                   "generic": ".ai/skills"}
+# Файлы каталога скилла, которые НЕ едут в потребляющий проект ни одним каналом
+# физ.переноса (vendor/sync): upstream.json и .claude-plugin — служебные реестра;
+# SKILL.*.md (SKILL.ru.md и пр.) — человеческий ИСТОЧНИК (агент грузит лишь EN
+# SKILL.md, "SKILL.*.md" не матчит сам "SKILL.md"); evals/ — поведенческие тесты
+# скилла. ЕДИНЫЙ источник истины: vendor.copy_skill и skillset.sync копируют через
+# него (раньше дублировали и skillset терял SKILL.*.md/evals → утечка RU-источника).
+SKILL_IGNORE = ("upstream.json", ".claude-plugin", "SKILL.*.md", "evals")
 CONFIG_KEYS = {
     "project_type": str, "buckets": list, "exclude": list, "presets": list,
     "skills_path": str, "agent": str,
@@ -34,6 +42,31 @@ CONFIG_KEYS = {
     "shape": str, "stacks": list, "skills_map": dict,
 }
 HUB_MARKER = "<!-- swissknifeman:hub:start -->"
+
+
+def is_within(path, root):
+    """Безопасное containment: `path` лежит ВНУТРИ `root` (или совпадает). Резолвит
+    обе стороны (снимает symlink → защита от traversal/symlink-escape за пределы
+    цели). Для PRUNE (удаление): symlink, указывающий наружу, → False, то есть не
+    трогаем чужую цель. Ошибка резолва → False (fail-closed). ЕДИНЫЙ источник истины:
+    connect/vendor/skillset/doctor дублировали startswith(resolve()+os.sep)."""
+    try:
+        return Path(path).resolve().is_relative_to(Path(root).resolve())
+    except (OSError, ValueError):
+        return False
+
+
+def is_within_lexical(path, root):
+    """Containment МЕСТА `path` под `root` БЕЗ резолва symlink самого `path` (родитель
+    резолвится). Для INSTALL-гейта: ловит traversal через '../' в имени скилла, но НЕ
+    отвергает symlink, лежащий в `path` (его install удалит и заменит копией). Ошибка
+    резолва → False (fail-closed)."""
+    try:
+        base = Path(root).resolve()
+        full = Path(path).parent.resolve() / Path(path).name
+        return full == base or base in full.parents
+    except (OSError, ValueError):
+        return False
 
 
 @dataclass(frozen=True)

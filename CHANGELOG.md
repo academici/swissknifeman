@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+### Fixed (аудит — фундамент-дедуп раздачи скиллов: единые примитивы)
+
+- **Утечка `SKILL.ru.md` (русский SSOT) в downstream-проекты через `sync`** — канонический
+  Claude-канал `skillset.sync_skillset` копировал каталог скилла, исключая лишь
+  `upstream.json`/`.claude-plugin`, но НЕ `SKILL.*.md`/`evals/` (в отличие от `vendor.copy_skill`).
+  Полный русский источник и поведенческие тесты ехали в каждый из 195 скиллов потребляющего
+  проекта. Введён ЕДИНЫЙ `common.SKILL_IGNORE = (upstream.json, .claude-plugin, SKILL.*.md, evals)`
+  — `vendor` и `sync` теперь игнорируют один список (раньше дублировали и разъехались). Регрессия —
+  `tests/test_skillset.py::test_sync_excludes_ru_source_and_evals`.
+- **Дедуп containment-хелпера** — `connect`/`vendor`/`skillset`/`doctor` дублировали
+  `str(p.resolve()).startswith(str(root.resolve()) + os.sep)`. Сведено к `common.is_within`
+  (резолвит symlink — для prune) и `common.is_within_lexical` (без резолва финального symlink —
+  для install-гейта против traversal через `../` в имени скилла). `vendor.copy_skill` теперь снимает
+  symlink на месте назначения до `copytree` (иначе писал бы сквозь него в чужую цель).
+- **Атомарная запись JSON** — `vendor.write_manifest` писал манифест сырым `write_text` (краш
+  оставлял битый файл, ломающий `update`/`connect`/`status`); `skillset.write_lock`/`lock.cmd_lock`/
+  `topology.save_topology` вручную дублировали `tmp+os.replace` без подчистки `.tmp`. Все переведены
+  на `core.io.atomic_write_json`. `harness/apply-permissions.sh` пишет settings атомарно (tmp+`mv -f`)
+  и падает с русской ошибкой (а не traceback) на битом входном JSON.
+
 ### Security (аудит — закрыты 2 бреши: RCE и обход namespace-изоляции памяти)
 
 - **maind MCP: серверный энфорс изоляции namespace** (`lib/maind/mcp.py`, `memory.py`). Раньше

@@ -1,12 +1,11 @@
 """connect — канал plugin marketplace Claude Code."""
 import json
-import os
 import shutil
 
 from core import atomic_write_text
 
 from .common import (AGENT_DEFAULTS, MANIFEST, MARKETPLACE, apply_permissions,
-                     die, parse_flags)
+                     die, is_within, parse_flags)
 from .config import (CORE_BUCKETS, all_buckets, load_config, resolve_selection,
                      resolve_target)
 from .hub import generate_hub, hub_artifacts_exist
@@ -131,8 +130,7 @@ def do_connect(env, target, opts, register=True, fix_path_drift=False):
         for entry in manifest.get("skills", []):
             name = entry.get("flat_name") or entry.get("path", "")
             d = dest_root / name
-            if name and d.is_dir() and \
-                    str(d.resolve()).startswith(str(dest_root.resolve()) + os.sep):
+            if name and d.is_dir() and is_within(d, dest_root):
                 stale.append(d)
         if opts.get("cleanup_vendored") and not dry_run:
             for d in stale:

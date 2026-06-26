@@ -14,7 +14,7 @@ import os
 import shutil
 import sys
 
-from .common import die, now_iso, parse_flags, warn
+from .common import atomic_write_json, die, now_iso, parse_flags, warn
 from .state import load_db
 
 TOPOLOGY_VERSION = 1
@@ -52,10 +52,7 @@ def save_topology(env, data):
     f = env.topology_file
     if f.exists():
         shutil.copy2(f, f.with_suffix(".json.bak"))
-    tmp = f.with_suffix(".json.tmp")
-    tmp.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n",
-                   encoding="utf-8")
-    os.replace(tmp, f)
+    atomic_write_json(f, data)   # tmp+os.replace с подчисткой .tmp (core.io)
 
 
 # --- detection ----------------------------------------------------------------

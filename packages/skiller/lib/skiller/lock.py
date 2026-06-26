@@ -10,9 +10,8 @@
 Universe = реально установленные скиллы (агентские раскладки) ∪ `boost.json::skills`.
 Файл коммитится в проект — это lock-карта внешних скиллов (как composer.lock)."""
 import json
-import os
 
-from .common import die, parse_flags
+from .common import atomic_write_json, die, parse_flags
 from .config import resolve_target
 
 # Раскладки, куда агенты ставят скиллы (claude — плоско, прочие — по своим путям).
@@ -103,10 +102,7 @@ def cmd_lock(env, argv):
               f"(swissknifeman {n_skm}, laravel-boost {n_boost}, конфликтов {overlap})")
         return
 
-    tmp = lock_file.with_name("skills-lock.json.tmp")
-    tmp.write_text(json.dumps(lock, ensure_ascii=False, indent=2) + "\n",
-                   encoding="utf-8")
-    os.replace(tmp, lock_file)
+    atomic_write_json(lock_file, lock)
     print(f"skills-lock.json ({via}): {len(skills)} скиллов — "
           f"swissknifeman {n_skm}, laravel-boost {n_boost}, конфликтов {overlap} "
           f"(swissknifeman wins, см. also_in)")

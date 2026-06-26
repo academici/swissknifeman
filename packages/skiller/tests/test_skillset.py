@@ -175,6 +175,32 @@ class TestSync(unittest.TestCase):
             self.assertEqual(lock["code-style"]["bucket"], "php")
             self.assertTrue(lock["code-style"]["sha256"])
 
+    def test_sync_excludes_ru_source_and_evals(self):
+        # Регрессия: sync (канонический Claude-канал) НЕ копирует SKILL.ru.md (русский
+        # SSOT), evals/, upstream.json, .claude-plugin — иначе утечка RU-источника во
+        # все downstream-проекты. Едет только EN-канон SKILL.md (common.SKILL_IGNORE).
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            root, env = make_registry(tmp)
+            _materialize_registry(env)
+            src = next((root / "skills").glob("**/code-style/SKILL.md")).parent
+            (src / "SKILL.ru.md").write_text("# РУССКИЙ ИСТОЧНИК\n", encoding="utf-8")
+            (src / "upstream.json").write_text("{}", encoding="utf-8")
+            (src / "evals").mkdir(exist_ok=True)
+            (src / "evals" / "evals.json").write_text("[]", encoding="utf-8")
+            (src / ".claude-plugin").mkdir(exist_ok=True)
+            (src / ".claude-plugin" / "plugin.json").write_text("{}", encoding="utf-8")
+
+            target = make_laravel_project(tmp)
+            sync_skillset(env, target, {"mode": "vendor", "include": ["code-style"]})
+
+            dst = target / ".claude/skills/code-style"
+            self.assertTrue((dst / "SKILL.md").is_file())      # EN-канон едет
+            self.assertFalse((dst / "SKILL.ru.md").exists())   # RU-источник НЕ едет
+            self.assertFalse((dst / "evals").exists())
+            self.assertFalse((dst / "upstream.json").exists())
+            self.assertFalse((dst / ".claude-plugin").exists())
+
     def test_prune_removes_managed_dropped_from_config(self):
         with tempfile.TemporaryDirectory() as tmp:
             tmp = Path(tmp)

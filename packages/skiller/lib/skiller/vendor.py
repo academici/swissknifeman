@@ -6,7 +6,8 @@ import sys
 from datetime import date
 
 from .boost import sync_boost_json
-from .common import (AGENT_DEFAULTS, MANIFEST, apply_permissions, die,
+from .common import (AGENT_DEFAULTS, MANIFEST, SKILL_IGNORE, apply_permissions,
+                     atomic_write_json, die, is_within, is_within_lexical,
                      parse_flags, parse_frontmatter_fields, sanitize, warn)
 from .config import (DEFAULT_EXCLUDE, all_buckets, core_skill_tuples,
                      load_config, resolve_selection, resolve_target)
@@ -209,15 +210,17 @@ def do_vendor(env, target, opts, register=True):
         if dry_run:
             print(f"[dry-run] {src.relative_to(root)} -> {dst}")
             return
-        # SKILL.*.md (SKILL.ru.md и пр.) — человеческие альтернаты, НЕ канон:
-        # агент их не грузит, в потребляющий проект они не нужны (едет только EN
-        # SKILL.md). "SKILL.*.md" не матчит сам "SKILL.md" (нужно два разделителя).
-        # evals/ — поведенческие тесты скилла (формат eval-first), артефакт
-        # разработки реестра: в потребляющий проект не едут (как *.ru.md).
+        if not is_within_lexical(dst, dest_root):    # traversal через имя → стоп
+            warn(f"пропуск: путь вне каталога назначения: {dst}")
+            return
+        # Symlink на месте dst снимаем явно: иначе copytree(dirs_exist_ok=True) пишет
+        # СКВОЗЬ него в чужую цель (symlink-follow). Удаляем сам линк, не цель.
+        if dst.is_symlink():
+            dst.unlink()
+        # Что НЕ едет в потребляющий проект (SKILL.*.md/evals/upstream.json/.claude-plugin) —
+        # единый список common.SKILL_IGNORE (тот же у skillset.sync, чтобы не разъезжались).
         shutil.copytree(src, dst, dirs_exist_ok=True,
-                        ignore=shutil.ignore_patterns("upstream.json",
-                                                      ".claude-plugin", "SKILL.*.md",
-                                                      "evals"))
+                        ignore=shutil.ignore_patterns(*SKILL_IGNORE))
 
     def load_manifest(manifest_file):
         if manifest_file.exists():
@@ -225,7 +228,7 @@ def do_vendor(env, target, opts, register=True):
         return {}
 
     def contained(path):
-        return str(path.resolve()).startswith(str(dest_root.resolve()) + os.sep)
+        return is_within(path, dest_root)
 
     def write_manifest(manifest_file, layout, installed, support_files=None):
         data = {
@@ -237,8 +240,7 @@ def do_vendor(env, target, opts, register=True):
         }
         if support_files is not None:
             data["support_files"] = support_files
-        manifest_file.write_text(json.dumps(data, indent=2, ensure_ascii=False)
-                                 + "\n", encoding="utf-8")
+        atomic_write_json(manifest_file, data)   # tmp+os.replace: краш не оставит битый манифест
 
     if flat_layout:
         if agent == "claude":

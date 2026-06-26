@@ -6,6 +6,7 @@ description: "Краткое описание скилла"
 risk: read|draft|write|external
 persona: founder
 tags: []
+level: ""
 requires: []
 produces_for: []
 outputs: []

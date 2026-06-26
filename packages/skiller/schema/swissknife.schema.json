@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/academici/swissknifeman/main/packages/skiller/schema/swissknife.schema.json",
+  "title": "swissknifeman project config (.swissknife.json)",
+  "description": "Лёгкий конфиг проекта: выбор бакетов/исключений/профиля для каналов connect (bucket-granular) и legacy vendor. Vendor-режим `skiller sync` использует отдельный, расширенный .swissknifeman/config.json (см. swissknifeman-config.schema.json). Ключи держатся в синхроне с CONFIG_KEYS (lib/skiller/common.py) — гейт tests/test_schema.py и skiller doctor.",
+  "type": "object",
+  "additionalProperties": false,
+  "patternProperties": {
+    "^[_$]": {}
+  },
+  "properties": {
+    "project_type": {
+      "type": "string",
+      "description": "Профиль типа проекта (profiles/<id>.json): laravel-project, php-package, obsidian-vault, standalone и т.д. Валидируется по фактическому набору профилей."
+    },
+    "buckets": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Бакеты скиллов для раздачи."
+    },
+    "exclude": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Исключить скиллы. Skill-granular в vendor; в connect (плагины) игнорируется."
+    },
+    "presets": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Именованные кластеры скиллов (presets/<name>.json)."
+    },
+    "skills_path": {
+      "type": "string",
+      "description": "Override каталога скиллов (напр. .cursor/skills для Cursor)."
+    },
+    "agent": {
+      "type": "string",
+      "enum": ["claude", "cursor", "generic"],
+      "description": "Целевой агент. Дефолтный skills_path: claude→.claude/skills, cursor→.cursor/skills, generic→.ai/skills."
+    },
+    "memory_brain": {
+      "type": "string",
+      "description": "Путь к Brain-валту (опционально)."
+    },
+    "coordinator_ignore": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Опционально."
+    },
+    "shape": {
+      "type": "string",
+      "enum": ["backend", "frontend", "fullstack"],
+      "description": "Форма проекта (профиль каркаса агентов)."
+    },
+    "stacks": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Стеки проекта, напр. ['laravel', 'vue']."
+    },
+    "skills_map": {
+      "type": "object",
+      "description": "Зарезервировано: домен→скиллы для преднагрузки ролей под стек (ещё не реализовано)."
+    }
+  }
+}

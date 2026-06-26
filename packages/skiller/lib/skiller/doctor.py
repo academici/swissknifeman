@@ -72,6 +72,32 @@ def cmd_doctor(env, argv):
     check(profiles and not bad, f"профили загружаются ({len(profiles)})",
           f"битые: {', '.join(bad)}")
 
+    # JSON-схемы конфигов (schema/*.json) — DX-артефакт (IntelliSense). Рантайм-
+    # валидация ручная (CONFIG_KEYS/SKILLSET_KEYS); схема не должна расходиться с
+    # кодом, иначе редактор подсказывает не то, что принимает skiller. Тот же гейт
+    # держит tests/test_schema.py; doctor даёт его как интерактивную проверку.
+    from .common import CONFIG_KEYS
+    from .skillset import SKILLSET_KEYS
+    for fname, keys, label in (
+            ("swissknife.schema.json", CONFIG_KEYS, ".swissknife.json"),
+            ("swissknifeman-config.schema.json", SKILLSET_KEYS,
+             ".swissknifeman/config.json")):
+        sf = root / "schema" / fname
+        if not sf.is_file():
+            check(False, f"схема {fname}", "нет файла в schema/")
+            continue
+        try:
+            data = json.loads(sf.read_text(encoding="utf-8"))
+            if not isinstance(data, dict):
+                raise ValueError("корень схемы должен быть объектом")
+            props = set(data.get("properties", {}))
+        except (json.JSONDecodeError, ValueError) as e:
+            check(False, f"схема {fname} парсится", str(e))
+            continue
+        check(props == set(keys), f"схема {fname} ⇄ ключи {label}",
+              f"разошлись: лишние в схеме {sorted(props - set(keys))}, "
+              f"нет в схеме {sorted(set(keys) - props)} — обнови schema/{fname}")
+
     # freshness хабов: штамп <!-- swissknifeman:registry sha=… --> в хабе проекта
     # сверяем с текущим sha реестра (тот же расчёт, что в generate-hub.sh). Проекты
     # без штампа (старый хаб) — пропускаем: получат штамп при следующей перегенерации.

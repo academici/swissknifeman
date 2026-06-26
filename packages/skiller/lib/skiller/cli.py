@@ -9,7 +9,7 @@ from .integrate import cmd_integrate
 from .listing import cmd_list
 from .lock import cmd_lock
 from .registry import cmd_registry
-from .skillset import cmd_sync
+from .skillset import cmd_init, cmd_sync
 from .status import cmd_status
 from .topology import cmd_topology
 from .update import cmd_update
@@ -20,6 +20,7 @@ COMMANDS = {
     "vendor": cmd_vendor,
     "integrate": cmd_integrate,
     "update": cmd_update,
+    "init": cmd_init,
     "sync": cmd_sync,
     "lock": cmd_lock,
     "status": cmd_status,

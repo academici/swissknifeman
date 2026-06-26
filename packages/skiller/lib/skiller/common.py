@@ -3,6 +3,7 @@
 Дословно общий с maind/brain код (die/warn/now_iso/confirm/sanitize + ядро Env)
 вынесен в общий core; здесь — только специфика swissknifeman (path-property,
 parse_flags, frontmatter, делегирование окружения в harness, константы реестра)."""
+import hashlib
 import os
 import subprocess
 import sys
@@ -171,3 +172,30 @@ def parse_frontmatter_fields(skill_md):
     fm = parse_frontmatter(skill_md)
     return {"name": fm.get("name", ""),
             "requires": parse_inline_list(fm.get("requires", ""))}
+
+
+def skill_content_hash(skill_dir):
+    """SHA-256 по содержимому ВСЕХ файлов каталога скилла — детект дрейфа sync шире,
+    чем по одному SKILL.md: ловит правки в snippets/ и references/ (которые SKILL.md
+    может не двигать). Игнорируем то же, что НЕ вендорится: upstream.json, языковые
+    альтернаты SKILL.*.md (кроме SKILL.md), .claude-plugin/. Относительный путь файла
+    входит в хеш (защита от переименований/перемещений). Порядок стабилен (sorted).
+
+    Полный hexdigest, как у остальных sha256 в реестре/локе. Дополняет, а НЕ заменяет
+    поле sha256 (по SKILL.md) — старые локи без content_sha256 деградируют корректно."""
+    h = hashlib.sha256()
+    skill_dir = Path(skill_dir)
+    for f in sorted(skill_dir.rglob("*")):
+        if not f.is_file():
+            continue
+        name = f.name
+        if name == "upstream.json":
+            continue
+        if name.startswith("SKILL.") and name.endswith(".md") and name != "SKILL.md":
+            continue
+        if ".claude-plugin" in f.parts:
+            continue
+        h.update(str(f.relative_to(skill_dir)).encode("utf-8"))
+        h.update(b"\0")
+        h.update(f.read_bytes())
+    return h.hexdigest()

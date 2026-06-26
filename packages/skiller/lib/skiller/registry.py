@@ -4,7 +4,8 @@ import json
 
 from core import atomic_write_text, find_repo_root, run_cmd
 
-from .common import MARKETPLACE, die, parse_flags, parse_frontmatter, parse_inline_list
+from .common import (MARKETPLACE, die, parse_flags, parse_frontmatter,
+                     parse_inline_list, skill_content_hash)
 
 OWNER = {"name": "Dmitry Vostrikov", "email": "dv.vostrikov@gmail.com"}
 
@@ -37,12 +38,21 @@ def build_registry(env):
             "version": fm.get("version") or "0.1.0",
             "description": fm.get("description", ""),
             "sha256": sha,
+            # Хеш ВСЕГО каталога скилла (sync ловит дрейф snippets/references, не
+            # только SKILL.md). Дополняет sha256, см. common.skill_content_hash.
+            "content_sha256": skill_content_hash(skill_md.parent),
         }
         # Graph/meta fields: optional, omitted when empty (same as upstream fields)
         for list_key in ("tags", "requires", "produces_for"):
             vals = parse_inline_list(fm.get(list_key, ""))
             if vals:
                 entry[list_key] = vals
+        # Уровень иерархии (опц.): core|foundation|extension — само-документирование
+        # слоя скилла. Скаляр, omit-when-empty; дополняет requires/produces_for и
+        # неявные CORE_BUCKETS, НЕ заменяет их. Значение валидируется в validate.sh.
+        level = (fm.get("level") or "").strip()
+        if level:
+            entry["level"] = level
         # Provenance: upstream.json next to SKILL.md marks an external skill
         upstream_file = skill_md.parent / "upstream.json"
         if upstream_file.exists():
@@ -272,6 +282,21 @@ def cmd_registry(env, argv):
                       json.dumps(registry, indent=2, ensure_ascii=False) + "\n")
     print(f"Updated skills.json: {len(registry['skills'])} skills, "
           f"{len(registry['references'])} references")
+
+    # Потребитель поля level: распределение по уровням иерархии. Молчит, пока ни
+    # один скилл не помечен (level — opt-in), загорается по мере проставления.
+    levels = {}
+    for s in registry["skills"]:
+        lv = s.get("level")
+        if lv:
+            levels[lv] = levels.get(lv, 0) + 1
+    if levels:
+        order = ["core", "foundation", "extension"]
+        parts = [f"{lv} {levels[lv]}" for lv in order if lv in levels]
+        parts += [f"{lv} {n}" for lv, n in sorted(levels.items())
+                  if lv not in order]
+        untagged = len(registry["skills"]) - sum(levels.values())
+        print(f"  уровни (level): {', '.join(parts)}; без уровня: {untagged}")
 
     atomic_write_text(root / "skills" / "_index.md",
                       render_index(registry, bucket_meta))

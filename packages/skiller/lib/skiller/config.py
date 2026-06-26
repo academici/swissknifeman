@@ -48,7 +48,7 @@ def validate_config(env, config, cfg_file):
     import difflib
     profile_names = sorted(p.stem for p in (env.root / "profiles").glob("*.json"))
     for key, value in config.items():
-        if key.startswith("_"):
+        if key.startswith(("_", "$")):  # _comment / $schema — DX, не валидируем
             continue
         if key not in CONFIG_KEYS:
             hint = difflib.get_close_matches(key, CONFIG_KEYS, n=1)
@@ -183,7 +183,7 @@ def resolve_target(env, opts, allow_home_confirm=False):
             print("Корень проекта определился как домашняя директория.")
             if not confirm(f"Продолжить с {target}?"):
                 die("отменено — перейдите в проект или укажите --target")
-    if target == env.root.resolve() and env.cmd in ("connect", "vendor", "update", "sync"):
+    if target == env.root.resolve() and env.cmd in ("connect", "vendor", "update", "sync", "init"):
         die("вы внутри самого реестра swissknifeman — перейдите в "
             "потребляющий проект")
     return target, via

@@ -32,6 +32,7 @@ DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 # Допустимые значения enum-полей frontmatter + формат версии (semver).
 RISK_VALUES = {"read", "draft", "write", "external"}
 ADAPTER_VALUES = {"claude", "cursor", "fable"}
+LEVEL_VALUES = {"core", "foundation", "extension"}  # опц. поле level (иерархия)
 SEMVER_RE = re.compile(r"^\d+\.\d+\.\d+$")
 # Внутрискилловые относительные ссылки (snippets/…, references/…) в теле SKILL.md —
 # должны резолвиться. ../ и .agents/.claude (раскладка проекта-потребителя) и
@@ -113,6 +114,10 @@ for skill_md in skill_files:
     risk = fm.get("risk", "")
     if risk and risk not in RISK_VALUES:
         errors.append(f"{rel}: risk '{risk}' не из {sorted(RISK_VALUES)}")
+
+    level = fm.get("level", "")
+    if level and level not in LEVEL_VALUES:
+        errors.append(f"{rel}: level '{level}' не из {sorted(LEVEL_VALUES)}")
 
     bad_adapters = [a for a in parse_inline_list(fm.get("adapters", ""))
                     if a not in ADAPTER_VALUES]

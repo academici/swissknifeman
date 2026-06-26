@@ -5,7 +5,7 @@
     "general/context-economy",
     "general/compact-responses",
     "general/session-handoff",
-    "general/performance",
+    "ai/performance",
     "general/anti-drift"
   ]
 }

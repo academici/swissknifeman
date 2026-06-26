@@ -6,7 +6,7 @@
   "buckets": {
     "ai": {
       "description": "AI agent building: design, tools, evaluation",
-      "count": 1,
+      "count": 2,
       "status": "active"
     },
     "architect": {
@@ -116,7 +116,7 @@
     },
     "general": {
       "description": "General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists",
-      "count": 20,
+      "count": 19,
       "status": "active"
     },
     "laravel-architecture": {
@@ -251,6 +251,18 @@
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/get-zeked/ai-agent-super-skill/main/SKILL.md",
       "fetched_at": "2026-06-25"
+    },
+    {
+      "name": "token-efficient",
+      "bucket": "ai",
+      "path": "skills/ai/performance/SKILL.md",
+      "version": "0.1.0",
+      "description": "Reduces Perplexity Computer output verbosity and token waste. Eliminates sycophantic openers, narrated tool usage, redundant summaries, unnecessary formatting, and closing fluff. Adapted from drona23/claude-token-efficient for the Perplexity Computer environment. Use on every session to cut output tokens without losing signal. Works alongside any other skill.",
+      "sha256": "f287c272ed9af2902aeb8f9a0d8b1fd345cdda85e9df830b08f1d40bec3b1e75",
+      "content_sha256": "2442b891e9d150ddde181aa56bf7c2a2a297df924b0989e701884051d9cf6a92",
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/get-zeked/token-efficient/main/SKILL.md",
+      "fetched_at": "2026-06-11"
     },
     {
       "name": "agent-design",
@@ -2090,18 +2102,6 @@
         "init"
       ],
       "source": "local"
-    },
-    {
-      "name": "token-efficient",
-      "bucket": "general",
-      "path": "skills/general/performance/SKILL.md",
-      "version": "0.1.0",
-      "description": "Reduces Perplexity Computer output verbosity and token waste. Eliminates sycophantic openers, narrated tool usage, redundant summaries, unnecessary formatting, and closing fluff. Adapted from drona23/claude-token-efficient for the Perplexity Computer environment. Use on every session to cut output tokens without losing signal. Works alongside any other skill.",
-      "sha256": "62102da0b09c38685eafd615aff3ceb33752f2a7478a8c6dd26a2664fb05ebd3",
-      "content_sha256": "7db8fce821594c0da24e3dc6417ddba9824641a14ec87d889222511ec2ade250",
-      "source": "github",
-      "upstream": "https://raw.githubusercontent.com/get-zeked/token-efficient/main/SKILL.md",
-      "fetched_at": "2026-06-11"
     },
     {
       "name": "project-map",

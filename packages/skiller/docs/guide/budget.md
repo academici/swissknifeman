@@ -15,6 +15,7 @@
 flowchart LR
   subgraph ai["ai"]
     ai_agents["ai-agents<br/>⊕123 ↻639"]:::hot
+    token_efficient["token-efficient<br/>⊕95 ↻1195"]:::warm
   end
   subgraph architect["architect"]
     agent_design["agent-design<br/>⊕21 ↻1505"]:::cool
@@ -157,7 +158,6 @@ flowchart LR
     skills_ssot["skills-ssot<br/>⊕30 ↻1514"]:::cool
     spec_interview["spec-interview<br/>⊕49 ↻649"]:::mild
     task_brief_template["task-brief-template<br/>⊕67 ↻1187"]:::warm
-    token_efficient["token-efficient<br/>⊕95 ↻1195"]:::warm
     verify_claims["verify-claims<br/>⊕136 ↻1408"]:::hot
     writing_style["writing-style<br/>⊕83 ↻1565"]:::warm
   end
@@ -398,7 +398,7 @@ flowchart LR
 
 | Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ snippets |
 |---|--:|--:|--:|--:|
-| `general` | 20 | 1397 | 18263 | 5120 |
+| `general` | 19 | 1302 | 17068 | 5120 |
 | `architect` | 14 | 875 | 38203 | 7503 |
 | `frontend-vue` | 11 | 808 | 23064 | 7058 |
 | `quality` | 10 | 741 | 16383 | 7091 |
@@ -416,6 +416,7 @@ flowchart LR
 | `laravel-testing` | 4 | 283 | 6839 | 14531 |
 | `frontend-backend` | 3 | 244 | 4670 | 7454 |
 | `frontend` | 3 | 242 | 3226 | 3393 |
+| `ai` | 2 | 218 | 1834 | 0 |
 | `frontend-nuxt` | 3 | 216 | 2179 | 0 |
 | `laravel-extras` | 3 | 205 | 3712 | 3192 |
 | `frontend-tailwind` | 2 | 204 | 3778 | 4980 |
@@ -427,7 +428,6 @@ flowchart LR
 | `laravel-data-layer` | 2 | 141 | 3024 | 3785 |
 | `creative` | 1 | 132 | 22304 | 0 |
 | `laravel-livewire` | 1 | 132 | 1095 | 1079 |
-| `ai` | 1 | 123 | 639 | 0 |
 | `legal` | 1 | 123 | 24815 | 0 |
 | `marketing` | 1 | 121 | 14124 | 0 |
 | `sales` | 1 | 121 | 21754 | 0 |

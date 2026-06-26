@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### Changed (аудит — дедуп реестра: token-efficient вне CORE)
+
+- **`general/performance` (`token-efficient`) перенесён `general` → `ai`** (`skills/ai/performance/`).
+  Это Perplexity-environment super-skill (get-zeked, `notify`), дублирующий нативный
+  `general/compact-responses` и сидевший в бакете `general` = CORE → раздавался плагином в КАЖДЫЙ
+  connect-проект. `general` обязан быть минимальным/кросс-стек (skill-taxonomy); среда-специфичный
+  дубль там не место. Перенос непокусочный (провенанс `upstream.json` сохранён, путь относительный),
+  `presets/agent-context.json` перенаправлен на `ai/performance`, реестр перегенерирован
+  (`skills.json`/`_index.md`/`graph.md`/`budget.md`).
+- _Отложено отдельным upstream-проходом:_ 10 vendored super-skill имеют `name != каталог`
+  (`pm-super-skill` vs `pm/product` и пр.) и не линкуются на гранулярные нативные скиллы. Правка
+  затрагивает upstream-канон + провенанс каждого — это аккуратный per-skill пасс (и, возможно,
+  отдельное решение, нужны ли эти композитные super-skill в реестре наряду с гранулярными), а не
+  быстрый свод. `reka-ui-cva` уже `requires: [tailwind-conventions]` (находка аудита неактуальна).
+
 ### Fixed (аудит — логика раздачи скиллов: requires / update / CORE)
 
 - **`sync` теперь резолвит транзитивные `requires`** (`skillset.resolve_skillset`). Skill-granular

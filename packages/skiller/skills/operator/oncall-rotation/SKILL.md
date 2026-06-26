@@ -2,7 +2,7 @@
 name: oncall-rotation
 bucket: operator
 version: 0.1.0
-description: Дизайн on-call ротации — расписание, primary/secondary, handoff, compensation, defusing burnout, paging policy
+description: On-call rotation design — schedule, primary/secondary, handoff, compensation, burnout defusing, paging policy
 risk: draft
 persona: operator
 tags: [ops, incident, sla, handoff]
@@ -15,70 +15,54 @@ adapters: [claude, cursor, fable]
 
 # Skill: On-Call Rotation
 
-Применять когда: сервис требует 24/7 (или хотя бы business-hours) reaction time, и нужно зафиксировать **кто и когда** отвечает за инциденты. Команда ≥ 2 инженера, есть SLA или хотя бы внутренние ожидания по reaction time.
+Apply when: service needs 24/7 (or at least business-hours) reaction time and you must fix **who & when** owns incidents. Team ≥ 2 engineers; SLA or at least internal reaction-time expectations exist.
 
-Не применять: соло-разработчик (он on-call всегда), либо нет SLA и инциденты разбираются «когда заметим».
+## Do NOT apply
+- Solo developer (always on-call) / no SLA, incidents handled "whenever noticed"
+- One engineer in project — no rotation, just "him"
+- No prod / no users — nothing to react to
+- Fully managed service where provider is on-call (e.g. pure no-code Bubble + Stripe)
+- Internal-only tool with tolerance > 1 working day
 
----
+## Step 1. Coverage — what we protect
+Define **reaction window** first, then rotation.
 
-## Когда НЕ применять
-
-- Один инженер в проекте — нет ротации, есть «он»
-- Нет prod / нет пользователей — реагировать не на что
-- Полностью managed-сервис где провайдер сам on-call (например, чистый no-code Bubble + Stripe)
-- Internal-only tool с tolerance > 1 рабочий день
-
----
-
-## Шаг 1. Покрытие — что защищаем
-
-Сначала определить **окно реагирования**, потом ротацию.
-
-| Сервис | Окно реагирования | Обоснование |
+| Service | Reaction window | Rationale |
 |:---|:---|:---|
-| B2C SaaS с глобальной аудиторией | 24/7 | Юзеры в разных TZ |
-| B2B SaaS, US-only | 24/7 рабочих дней, выходные best-effort | SLA в контрактах |
-| Internal tool | Business hours команды | Нет внешнего давления |
-| MVP в beta | Business hours + критичные алерты | Балансируем burnout / риск |
+| B2C SaaS, global audience | 24/7 | Users across TZs |
+| B2B SaaS, US-only | 24/7 on working days, weekends best-effort | SLA in contracts |
+| Internal tool | Team business hours | No external pressure |
+| MVP in beta | Business hours + critical alerts | Balance burnout / risk |
 
-**Anti-pattern:** делать 24/7 ротацию для сервиса, которому она не нужна — выжигает команду без выигрыша для бизнеса.
+**Anti-pattern:** 24/7 rotation for a service that doesn't need it — burns team without business gain.
 
----
+## Step 2. Rotation size
 
-## Шаг 2. Размер ротации
-
-| Размер команды | Ротация | Длина смены | Комментарий |
+| Team size | Rotation | Shift length | Note |
 |:---:|:---|:---|:---|
-| 2 чел | Не делать 24/7 | — | Burnout-машина. Альтернатива: business-hours only + best-effort после |
-| 3 чел | Min 1 неделя на человека, ≥ 2 недели «отдыха» | 1 неделя | Жёстко, но возможно |
-| 4-5 чел | Стандарт: 1 неделя on / 3-4 недели off | 1 неделя | Sustainable |
-| 6+ чел | Можно follow-the-sun (по TZ) | 12 часов либо 1 неделя | Идеал |
+| 2 | Don't do 24/7 | — | Burnout machine. Alt: business-hours only + best-effort after |
+| 3 | Min 1 week/person, ≥ 2 weeks "rest" | 1 week | Tough but possible |
+| 4-5 | Standard: 1 week on / 3-4 weeks off | 1 week | Sustainable |
+| 6+ | Can do follow-the-sun (by TZ) | 12 hours or 1 week | Ideal |
 
-**Правило:** ≥ 4 человек в ротации — порог устойчивости. Меньше = планируем как временную меру.
+**Rule:** ≥ 4 people in rotation = sustainability threshold. Fewer = plan as temporary measure.
 
----
+## Step 3. Primary / Secondary
 
-## Шаг 3. Primary / Secondary
-
-| Роль | Реакция | Зачем |
+| Role | Reaction | Why |
 |:---|:---|:---|
-| **Primary** | Отвечает на page в течение SLA (типично 5-15 мин) | Первый удар |
-| **Secondary** | Резерв если primary не отвечает за X мин, либо при SEV-1 | Защита от единой точки отказа |
+| **Primary** | Answers page within SLA (typically 5-15 min) | First strike |
+| **Secondary** | Backup if primary doesn't answer within X min, or on SEV-1 | SPOF protection |
 
 **Paging policy:**
-- SEV-1: primary + secondary параллельно (или primary, через 5 мин — secondary)
-- SEV-2: primary, через 15 мин — secondary
-- SEV-3: тикет, ждёт business hours
+- SEV-1: primary + secondary in parallel (or primary, then secondary after 5 min)
+- SEV-2: primary, secondary after 15 min
+- SEV-3: ticket, waits for business hours
 
-**Secondary ≠ дублёр который тоже всё бросает.** Secondary включается **только если primary не ответил**.
+Secondary engages **only if primary didn't answer** — not a stand-in who also drops everything.
 
----
-
-## Шаг 4. Handoff
-
-Передача смены — отдельный артефакт. Без handoff ротация становится «у каждого свой ад».
-
-Шаблон handoff-записки (5 мин в конце смены):
+## Step 4. Handoff
+Shift handoff = separate artifact. Without it rotation becomes "everyone's own hell". Handoff note (5 min at shift end):
 
 ```markdown
 ## On-Call Handoff: [Date]
@@ -99,51 +83,41 @@ adapters: [claude, cursor, fable]
 - [ ] Vendor Z объявил maintenance window 14:00 UTC
 ```
 
-Handoff приклеить в incident channel либо в общую doc, **не в DM**.
+Post handoff in incident channel or shared doc, **not in DM**.
 
----
+## Step 5. Compensation & politics
 
-## Шаг 5. Compensation & politics
-
-| Подход | Описание | Когда |
+| Approach | Description | When |
 |:---|:---|:---|
-| **Time off** | День отгула за дежурную неделю | EU команды, дефолт |
-| **Pay** | $X/смена + $Y/page | US команды |
-| **Comp time** | Накопительный отгул | Гибрид |
-| **None** | Часть базовых обязанностей | Спорный, только если команда согласна письменно |
+| **Time off** | Day off per on-call week | EU teams, default |
+| **Pay** | $X/shift + $Y/page | US teams |
+| **Comp time** | Accumulated day off | Hybrid |
+| **None** | Part of base duties | Contentious, only if team agrees in writing |
 
-**Жёсткий минимум:**
-- Кого позвали ночью — может прийти позже либо взять день
-- Page'ы > N в смену → разбор: что-то сломалось в paging policy
-- Никогда не давать on-call к фичевым задачам параллельно (focus killer)
+**Hard minimum:**
+- Whoever was paged at night may come later or take a day
+- Pages > N per shift → review: paging policy broke
+- Never give on-call feature tasks in parallel (focus killer)
 
----
+## Step 6. Rotation health — metrics
+Review monthly / quarterly:
 
-## Шаг 6. Здоровье ротации — метрики
-
-Раз в месяц / квартал смотрим:
-
-| Метрика | Цель | Что значит превышение |
+| Metric | Target | Exceeding means |
 |:---|:---|:---|
-| Pages per shift | ≤ 2-3 | Шум, alert tuning нужен |
-| Pages вне рабочих часов / шифт | ≤ 1 | Пора усилить self-healing |
-| % смен с эскалацией к secondary | < 10% | Primary не справляется (тренинг? шум?) |
-| MTTR (mean time to resolve) | соответствует SLA | Иначе runbook'и не работают |
-| Burnout signal (опрос) | «комфортно» от 80%+ | Иначе пересмотреть ротацию |
+| Pages per shift | ≤ 2-3 | Noise, alert tuning needed |
+| Pages outside working hours / shift | ≤ 1 | Strengthen self-healing |
+| % shifts with secondary escalation | < 10% | Primary not coping (training? noise?) |
+| MTTR (mean time to resolve) | matches SLA | Else runbooks don't work |
+| Burnout signal (survey) | "comfortable" from 80%+ | Else revise rotation |
 
----
+## Agent adds itself
+- Scheduling tool recommendation (PagerDuty / Opsgenie / Grafana OnCall / Google Calendar — fallback)
+- Markdown handoff note template (copy-ready)
+- Min headcount calc for desired window (account vacations/sick — usually +1 over calculated)
+- Junior-on-call warning: minimum 3 mo experience in team + shadowing 2 shifts before solo
+- Link to `incident-response` — who Primary is in incident-response.IC terms
 
-## Что агент добавляет сам
-
-- Рекомендация инструмента для расписания (PagerDuty / Opsgenie / Grafana OnCall / Google Calendar — fallback)
-- Шаблон handoff-записки в виде Markdown (готов к копированию)
-- Расчёт минимальной численности под желаемое окно (с учётом отпусков и заболеваний — обычно +1 к расчётному)
-- Предупреждение о junior-on-call: minimum 3 мес опыта в команде + shadowing 2 смены перед самостоятельной
-- Связка с `incident-response` — кто такой Primary в терминах incident-response.IC
-
----
-
-## Структура output-файла `OnCall_Rotation.md`
+## Output file structure `OnCall_Rotation.md`
 
 ```markdown
 # On-Call Rotation: [ProjectName]
@@ -159,24 +133,21 @@ Handoff приклеить в incident channel либо в общую doc, **н�
 ## 9. Метрики здоровья ротации (что измеряем, как часто смотрим)
 ```
 
----
+## Hard prohibitions — NEVER
+- 24/7 rotation on 2 people as permanent scheme (only bridge for 1-2 months)
+- Primary simultaneously loaded with a feature task on deadline (double context-switch)
+- Page without runbook — page must say what to do (see `runbook`)
+- Change schedule on day of shift without consent of both participants
+- Treat on-call as "free add-on to work" (fix comp in writing)
+- Junior on-call without shadowing ≥ 2 shifts
+- Use DM to summon on-call — only paging channel/tool (DMs get lost)
 
-## Жёсткие запреты
+## Links
+- `operator/incident-response` — Primary = IC in incident-response terms; severity matrix defines paging policy
+- `operator/runbook` — page MUST point to a runbook; without it rotation is pointless
+- `operator/capacity-planning` — lack of headroom = more pages = burnout; rotation health depends on capacity
+- `architect/observability-design` — alert tuning & self-healing cut the noise that rotation health is measured by
 
-НЕЛЬЗЯ:
-- 24/7 ротация на 2 человек как постоянная схема (только bridge на 1-2 мес)
-- Primary одновременно загружен фичевой задачей с дедлайном (двойной контекст-свич)
-- Page без runbook'а — page должен указывать что делать (см. `runbook`)
-- Менять расписание в день смены без согласия обоих участников
-- Smolить on-call как «бесплатное приложение к работе» (письменно зафиксировать comp)
-- Junior on-call без shadowing'а ≥ 2 смен
-- Использовать DM как способ позвать on-call — только paging-канал/инструмент (DM теряются)
+<!-- ru-source-sha256: PENDING -->
 
----
-
-## Ссылки
-
-- `operator/incident-response` — Primary = IC в терминах incident-response; severity-матрица определяет paging policy
-- `operator/runbook` — page обязан указывать на runbook; без него ротация бессмысленна
-- `operator/capacity-planning` — недостаток headroom = рост числа page'ей = выгорание; здоровье ротации зависит от capacity
-- `architect/observability-design` — alert tuning и self-healing снижают шум, по которому считается здоровье ротации
+<!-- ru-source-sha256: b315495bcabbab0701de183ce0faaea7b3cc2640cd3357ee7b9e612888f117b2 -->

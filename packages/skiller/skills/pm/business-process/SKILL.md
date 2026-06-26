@@ -2,7 +2,7 @@
 name: business-process
 bucket: pm
 version: 0.1.0
-description: Бизнес-процессы, workflow, FSM, sequence/state-диаграммы, обработка ошибок
+description: Business processes, workflow, FSM, sequence/state diagrams, error handling
 risk: draft
 persona: pm
 tags: [requirements, workflow]
@@ -15,50 +15,42 @@ adapters: [claude, cursor, fable]
 
 # Skill: Business Process (FSM)
 
-Применять когда: задача на описание бизнес-процесса, workflow, пайплайна.
+Apply when: task to describe a business process, workflow, or pipeline.
 
----
+## Principle: each process = Finite State Machine
 
-## Принцип: каждый процесс = Finite State Machine
-
-Структура каждого файла в `docs/02_Workflow/`:
+Structure of each file in `docs/02_Workflow/`:
 
 ```
-1. Название процесса
-2. Акторы (кто участвует)
-3. Триггер (что запускает процесс)
-4. Состояния и переходы
-5. Обработчики ошибок / rollback
-6. Mermaid-диаграмма
+1. Process name
+2. Actors (who participates)
+3. Trigger (what starts the process)
+4. States and transitions
+5. Error handlers / rollback
+6. Mermaid diagram
 ```
 
----
-
-## Формат переходов
+## Transition format
 
 ```
-[Текущее состояние] → [Триггер] → [Новое состояние]
+[Current state] → [Trigger] → [New state]
 ```
 
-Пример:
+Example:
 ```
 [Заявка создана] → [Оператор принял] → [В обработке]
 [В обработке] → [Данные невалидны] → [Отклонена] + уведомление
 [В обработке] → [Успех] → [Завершена]
 ```
 
----
+## Required for each state
 
-## Обязательно для каждого состояния
+- What happens in this state
+- Responsible actor
+- Possible exits (transitions)
+- **Error handler**: what to do if something goes wrong
 
-- Что происходит в этом состоянии
-- Кто ответственный актор
-- Возможные выходы (переходы)
-- **Обработчик ошибки**: что делать если что-то пошло не так
-
----
-
-## Mermaid-диаграмма (обязательна)
+## Mermaid diagram (mandatory)
 
 ```mermaid
 sequenceDiagram
@@ -72,7 +64,7 @@ sequenceDiagram
     System-->>User: Результат
 ```
 
-Или stateDiagram-v2 для FSM:
+Or stateDiagram-v2 for FSM:
 
 ```mermaid
 stateDiagram-v2
@@ -84,18 +76,18 @@ stateDiagram-v2
     Done --> [*]
 ```
 
----
+## One-file rule
 
-## Правило одного файла
+One file = one isolated process. If a process depends on another — link via `[[Process name]]`, do not copy.
 
-Один файл = один изолированный процесс. Если процесс зависит от другого — ссылка через `[[Имя процесса]]`, не копирование.
+After creating a file — update `docs/02_Workflow/_index.md`.
 
-После создания файла — обновить `docs/02_Workflow/_index.md`.
+## Related skills
 
----
+- `pm/brd` — consumer: functional requirements and user stories rely on the processes described here.
+- `architect/api-design` — FSM transitions often become endpoints/commands; sequence diagram helps design the contract.
+- `php/enum-state-machine` — FSM implementation (enum + transitions) in Laravel code.
 
-## Связанные скиллы
+<!-- ru-source-sha256: PENDING -->
 
-- `pm/brd` — потребитель: функциональные требования и user stories опираются на описанные здесь процессы.
-- `architect/api-design` — FSM-переходы часто становятся эндпоинтами/командами; sequence-диаграмма помогает спроектировать контракт.
-- `php/enum-state-machine` — реализация FSM (enum + переходы) в коде Laravel.
+<!-- ru-source-sha256: 152d8d9e0b7499599e289aa427a75772542c5671e188085f3d07cb268c63359f -->

@@ -3,7 +3,7 @@ name: packages-stack
 bucket: general
 version: 0.1.0
 lifecycle: init
-description: "Методология реестра внешних зависимостей проекта: какие пакеты используются и для чего, правило-обвязка на каждый (когда применять, чего НЕ делать вручную), опора на ОФИЦИАЛЬНУЮ документацию. Активировать при выборе/добавлении зависимости или составлении карты стека на инициализации проекта; язык-агностично."
+description: "Project external-dependency registry methodology: which packages are used and for what, a per-package rule (when to use, what NOT to do by hand), reliance on OFFICIAL docs. Activate when choosing/adding a dependency or mapping the stack at project init; language-agnostic."
 risk: read
 persona: oss-dev
 tags: [dependencies, conventions, navigation, stack, init]
@@ -15,44 +15,37 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-# Реестр внешних зависимостей (методология)
+# External dependency registry (methodology)
 
-Чтобы агент не изобретал то, что уже решено пакетом, и не путал версии — у проекта должен быть
-короткий **реестр стека**: какие внешние пакеты используются, **для чего**, и какое правило с
-каждым связано. Это методология ведения такого реестра для **любого** стека; сам список пакетов
-конкретного проекта — в его доках/`.ai`, не в реестре скиллов.
+Keep a short **stack registry**: which external packages are used, **for what**, and the rule tied to each. Language-agnostic; the concrete package list lives in the project's docs/`.ai`, not in the skill registry.
 
-> **lifecycle: init** — нужен в основном при инициализации проекта/выборе стека и при добавлении
-> зависимости, а не на постоянку. Не держать в CORE/дефолтной раздаче «навсегда».
+> **lifecycle: init** — for project init / stack choice / adding a dependency, not permanent. Do not keep in CORE/default distribution "forever".
 
-## Когда активировать
+## When to activate
+- Choosing or adding an external dependency (composer/npm/pip/…).
+- Building/updating the stack map at project start.
+- "Which package solves this and how to use it correctly".
 
-- Выбор или добавление внешней зависимости (composer/npm/pip/…).
-- Составление/обновление карты стека на старте проекта.
-- Вопрос «каким пакетом это решается и как им правильно пользоваться».
+## Record per package
+1. **Name + purpose** — why it's in the project (one line).
+2. **Rule** — how to use it here and **what NOT to do by hand** (e.g. "files via the media package, not `Storage::put()` directly").
+3. **Link to OFFICIAL docs** — source of truth for API/version.
 
-## Что фиксировать на каждый пакет
+## Rules
+- If the knowledge base lacks current package info — **go to official docs** before writing code (API changes across majors).
+- Don't duplicate package functionality with your own code — first check it isn't already solved.
+- Versions/constraints — single source (lock file), not "from memory".
+- Keep the registry **short**: only actually-used packages with a non-obvious rule.
 
-1. **Имя и назначение** — зачем он в проекте (одна строка).
-2. **Правило-обвязка** — как им пользоваться в этом проекте и **чего НЕ делать вручную**
-   (например: «файлы — через медиа-пакет, не `Storage::put()` напрямую»).
-3. **Ссылка на ОФИЦИАЛЬНУЮ документацию** — источник истины по API/версии.
+## Checklist
+- [ ] Each key dependency: purpose + rule + official-docs link.
+- [ ] No hand-rolled duplicate of what the package does.
+- [ ] Registry in project docs; no concrete project names in the shared skill.
 
-## Правила
+## Related skills
+- `oss-dev/dependency-audit` — dependency audit (vuln, licenses, supply-chain) over the registry.
+- `python/venv-dependencies`, `php/laravel-packages` — stack-specific dependency management.
 
-- Если в базе знаний нет актуальной информации по пакету — **сходи в офиц. документацию**
-  перед написанием кода (API меняется между мажорами).
-- Не дублируй функциональность пакета своим кодом — сперва проверь, не решено ли это им.
-- Версии и ограничения — единый источник (lock-файл), не «на память».
-- Реестр держи **коротким**: только реально используемые пакеты с неочевидным правилом.
+<!-- ru-source-sha256: PENDING -->
 
-## Чеклист
-
-- [ ] Для каждой ключевой зависимости: назначение + правило + ссылка на офиц. доки.
-- [ ] Нет ручного дубля того, что делает пакет.
-- [ ] Реестр в доках проекта; без имён конкретных проектов в общем скилле.
-
-## Связанные скиллы
-
-- `oss-dev/dependency-audit` — аудит зависимостей (vuln, лицензии, supply-chain) поверх реестра.
-- `python/venv-dependencies`, `php/laravel-packages` — стек-специфичное управление зависимостями.
+<!-- ru-source-sha256: 6ade0d78bc1a4c5066bc4c57bba0818ef4f0426390c51ebaeb95da345b169862 -->

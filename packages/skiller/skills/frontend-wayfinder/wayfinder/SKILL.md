@@ -2,7 +2,7 @@
 name: wayfinder
 bucket: frontend-wayfinder
 version: 0.1.0
-description: "Laravel Wayfinder: типобезопасные роуты и controller actions для фронтенда. Генерация, именованные импорты, form(), архитектурные границы импортов через ESLint."
+description: "Laravel Wayfinder: typesafe routes and controller actions for the frontend. Generation, named imports, form(), import architecture boundaries via ESLint."
 risk: write
 persona: oss-dev
 tags: [wayfinder, laravel, typescript, routes, inertia, eslint, frontend]
@@ -16,48 +16,49 @@ sha256: ""
 
 # Skill: Laravel Wayfinder
 
-## Контекст
+Wayfinder generates typed TS functions per Laravel route and controller action. Call `show(1)` instead of hardcoding `/documents/1`; TS catches route mismatches at compile time.
 
-Wayfinder автогенерирует типизированные TS-функции для каждого Laravel-роута и controller action. Фронтенд вызывает `show(1)` вместо хардкода `/documents/1` — TypeScript ловит несоответствия при изменении роутов на этапе компиляции.
+Apply when: frontend calls backend routes; building forms/links to endpoints; route-related TS errors; imports from `@/actions` or `@/routes`.
 
-Применять когда: фронтенд вызывает backend-роуты, верстаются формы/ссылки на endpoints, падают route-related TS-ошибки, встречаются импорты из `@/actions` или `@/routes`.
+**Laravel Boost**: Wayfinder base = Boost skill wayfinder-development; here = architectural add-ons (ESLint boundaries + actions/composables layer). Package: https://github.com/laravel/boost (skills in `vendor/laravel/boost/.ai/`).
 
-**Laravel Boost**: база Wayfinder — Boost-скилл wayfinder-development; здесь — архитектурные надстройки: ESLint-границы и слой actions/composables. Пакет: https://github.com/laravel/boost (скиллы — `vendor/laravel/boost/.ai/`).
+## Algorithm
 
-## Алгоритм
+1. **Generate**: `php artisan wayfinder:generate --no-interaction` (add `--with-form` for form helpers). In dev install vite plugin `wayfinder()` — autogen on route change, no manual regen needed.
+2. **Imports — NAMED ONLY** (tree-shaking): `import { show, store } from '@/actions/App/Http/Controllers/DocumentController'`. Default imports forbidden — pull whole file into bundle.
+3. **Usage**: `show(1)` → `{ url, method }`; `show.url(1)` → string; `show.get(1)` / `store.post()` / `update.patch(1)` / `destroy.delete(1)`; `store.form()` → `{ action, method }` for `<Form v-bind="store.form()">`; query: `show(1, { query: { page: 1 } })`.
+4. **Architecture boundary**: domain Vue components do NOT import `@/wayfinder/routes/*` directly — only via actions/composables layer. Enforce via ESLint `no-restricted-imports` (targeted whitelist for legit exceptions). Catch string literals instead of enum in domain code via `no-restricted-syntax`.
+5. **Route model binding**: if route expects a model, pass object keyed by param (`show({ document: 1 })`), not a bare id — TS hints exact signature.
+6. **After route changes**: without vite plugin — regenerate manually; verify TS imports resolve and URLs match expectations.
 
-1. **Генерация**: `php artisan wayfinder:generate --no-interaction` (для form-хелперов добавить `--with-form`). В dev поставить vite-плагин `wayfinder()` — автоген при изменении роутов, ручная регенерация не нужна.
-2. **Импорты — ТОЛЬКО именованные** (tree-shaking):
-   `import { show, store } from '@/actions/App/Http/Controllers/DocumentController'`. Default-импорты запрещены — тянут весь файл в бандл.
-3. **Использование**: `show(1)` → `{ url, method }`; `show.url(1)` → строка; `show.get(1)` / `store.post()` / `update.patch(1)` / `destroy.delete(1)`; `store.form()` → `{ action, method }` для `<Form v-bind="store.form()">`; query: `show(1, { query: { page: 1 } })`.
-4. **Архитектурная граница**: доменные Vue-компоненты НЕ импортируют `@/wayfinder/routes/*` напрямую — только через слой actions/composables. Закрепить ESLint-правилом `no-restricted-imports` (точечный whitelist для легитимных исключений). Строковые литералы вместо enum в доменном коде ловить через `no-restricted-syntax`.
-5. **Route model binding**: если роут ждёт модель, передавать объект с ключом параметра (`show({ document: 1 })`), а не «голый» id, — TypeScript подскажет точную сигнатуру.
-6. **После изменения роутов**: без vite-плагина — регенерировать вручную; проверить, что TS-импорты резолвятся и URL соответствуют ожиданиям.
+## Do NOT apply
 
-## Когда НЕ применять
+- Backend-only tasks without frontend route calls.
+- Project without Wayfinder — install package and generate types first, then apply patterns.
 
-- Backend-only задачи без фронтенд-вызовов роутов.
-- Проект без Wayfinder — сначала установить пакет и сгенерировать типы, потом применять паттерны.
+## Which snippet to open
 
-## Когда какой сниппет открывать
-
-| Ситуация | Файл |
+| Situation | File |
 |:---|:---|
-| Импорты, методы, query-параметры, `<Form>` — примеры использования | `snippets/wayfinder-usage.ts` |
-| Настроить ESLint-границы: запрет прямых wayfinder-импортов и строковых литералов вместо enum | `snippets/eslint-boundaries.cjs` |
-| Подключить vite-плагин wayfinder() и алиасы `@/routes`, `@` | `snippets/vite-wayfinder.js` |
+| Imports, methods, query params, `<Form>` — usage examples | `snippets/wayfinder-usage.ts` |
+| Configure ESLint boundaries: forbid direct wayfinder imports and string literals instead of enum | `snippets/eslint-boundaries.cjs` |
+| Wire vite plugin wayfinder() and aliases `@/routes`, `@` | `snippets/vite-wayfinder.js` |
 
-## Чеклист качества
+## Quality checklist
 
-- [ ] Нет хардкода URL — все обращения к backend через wayfinder-функции
-- [ ] Только именованные импорты из `@/actions/...` и `@/routes/...`
-- [ ] Доменные Vue-компоненты не импортируют `@/wayfinder/routes/*` напрямую (есть ESLint-правило)
-- [ ] Vite-плагин `wayfinder()` подключён, либо после изменения роутов выполнен `wayfinder:generate`
-- [ ] Формы используют `store.form()` / `update.form(id)` вместо ручных `action`/`method`
-- [ ] Автогенерённые `@/actions`, `@/routes`, `@/wayfinder` не редактируются руками
+- [ ] No hardcoded URLs — all backend access via wayfinder functions
+- [ ] Named imports only from `@/actions/...` and `@/routes/...`
+- [ ] Domain Vue components don't import `@/wayfinder/routes/*` directly (ESLint rule present)
+- [ ] Vite plugin `wayfinder()` wired, or `wayfinder:generate` run after route changes
+- [ ] Forms use `store.form()` / `update.form(id)` instead of manual `action`/`method`
+- [ ] Autogenerated `@/actions`, `@/routes`, `@/wayfinder` not hand-edited
 
-## Ссылки
+## Links
 
 - https://github.com/laravel/wayfinder
-- https://laravel.com/docs/wayfinder (актуальную версию проверить)
-- Связанные скиллы: `frontend/inertia-vue` (слои resources/js, actions-слой), `frontend/vitest` (exclude автогена из coverage), `frontend/eslint-flat-config` (где живёт `no-restricted-imports`-граница), `frontend/backend-type-sync` (парная генерация: роуты ≠ типы DTO/enum)
+- https://laravel.com/docs/wayfinder (check current version)
+- Related skills: `frontend/inertia-vue` (resources/js layers, actions layer), `frontend/vitest` (exclude autogen from coverage), `frontend/eslint-flat-config` (where `no-restricted-imports` boundary lives), `frontend/backend-type-sync` (paired generation: routes ≠ DTO/enum types)
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: 3a6db383821349a77f99be529864a82675bcc3cdf37fe0607aad29dc5c67638e -->

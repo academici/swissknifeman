@@ -2,7 +2,7 @@
 name: data-schema
 bucket: architect
 version: 0.1.0
-description: Схема данных, сущности, атрибуты, связи. Агностично к СУБД — только markdown-таблицы
+description: Data schema, entities, attributes, relations. DB-agnostic — markdown tables only
 risk: draft
 persona: architect
 tags: [data, architecture, schema, entities, erd]
@@ -15,45 +15,36 @@ adapters: [claude, cursor, fable]
 
 # Skill: Data Schema Design
 
-Применять когда: задача на проектирование схемы данных, сущностей, атрибутов, связей.
+Apply when: task is designing data schema, entities, attributes, relations.
 
----
+## Principle
 
-## Принцип
+- DB-agnostic. No SQL, no CREATE TABLE, no engines. Only entities, attributes, types, relations — in markdown tables.
+- Place in `docs/03_Dev/Database_Schema.md` or `docs/03_Dev/Database_*.md`.
 
-Схема данных **агностична к БД**. Никакого SQL, никаких CREATE TABLE, никаких движков.
-Только сущности, атрибуты, типы и связи — в markdown-таблицах.
+## Entity format
 
-Размещать в `docs/03_Dev/Database_Schema.md` или `docs/03_Dev/Database_*.md`.
+```
+### `table_name` (Human-readable name)
 
----
+Short description: what this entity stores and why.
 
-## Формат сущности
-
-### `table_name` (Человекочитаемое название)
-
-Краткое описание: что хранит эта сущность и зачем.
-
-| Поле | Тип | Описание |
+| Field | Type | Description |
 |:---|:---|:---|
-| `id` | uuid / bigint | Первичный ключ |
-| `field_name` | string | Назначение поля |
-| `foreign_id` | uuid | → [[#linked_table]] Связь с сущностью X |
-| `created_at` | timestamp | Дата создания |
-
----
-
-## Формат связей
-
-Связи указываются двумя способами:
-
-**1. Inline в таблице** — для FK-полей:
-```
-| `user_id` | uuid | → [[#users]] Владелец записи |
+| `id` | uuid / bigint | Primary key |
+| `field_name` | string | Field purpose |
+| `foreign_id` | uuid | → [[#linked_table]] Relation to entity X |
+| `created_at` | timestamp | Creation date |
 ```
 
-**2. Отдельный раздел** в конце файла — для полной картины:
+## Relations format
 
+**1. Inline in table** — for FK fields:
+```
+| `user_id` | uuid | → [[#users]] Record owner |
+```
+
+**2. Separate section** at end of file — full picture:
 ```markdown
 ## Связи между сущностями
 
@@ -64,28 +55,24 @@ adapters: [claude, cursor, fable]
 | `products` | many-to-many | `tags` | Через `product_tags` |
 ```
 
-Типы связей: `one-to-one`, `one-to-many`, `many-to-one`, `many-to-many`
+Relation types: `one-to-one`, `one-to-many`, `many-to-one`, `many-to-many`
 
----
+## Data types (agnostic)
 
-## Типы данных (агностичные)
-
-| Обозначение | Смысл |
+| Token | Meaning |
 |:---|:---|
-| `uuid` | Уникальный идентификатор |
-| `bigint` | Целое большое число |
-| `string` | Строка (длину указывать если критично: `string(255)`) |
-| `text` | Длинный текст |
-| `boolean` | Флаг true/false |
-| `decimal` | Число с плавающей точкой (деньги, координаты) |
-| `timestamp` | Дата и время |
-| `date` | Только дата |
-| `json` | Произвольная структура |
-| `enum` | Перечисление — значения указывать явно |
+| `uuid` | Unique identifier |
+| `bigint` | Large integer |
+| `string` | String (specify length if critical: `string(255)`) |
+| `text` | Long text |
+| `boolean` | true/false flag |
+| `decimal` | Floating-point number (money, coordinates) |
+| `timestamp` | Date and time |
+| `date` | Date only |
+| `json` | Arbitrary structure |
+| `enum` | Enumeration — specify values explicitly |
 
----
-
-## Структура файла Database_Schema.md
+## Database_Schema.md file structure
 
 ```markdown
 # Схема данных: ProjectName
@@ -105,30 +92,28 @@ adapters: [claude, cursor, fable]
 (только логические, не SQL: "поле X должно быть проиндексировано для поиска по Y")
 ```
 
----
+## Add proactively
 
-## Что добавлять самостоятельно
+- `created_at`, `updated_at` — if not explicitly given, add everywhere.
+- `deleted_at` (soft delete) — propose if entity is critical and deletion undesirable.
+- Versioning (`version` / `revision`) — propose for documents and financial records.
+- Name m2m tables explicitly (don't guess from context).
 
-- Поля `created_at`, `updated_at` — если не указаны явно, добавить везде
-- Поле `deleted_at` (soft delete) — предложить если сущность критичная и удаление нежелательно
-- Версионирование (`version` / `revision`) — предложить для документов и финансовых записей
-- Явно называть m2m-таблицы (не угадывать из контекста)
+## Hard prohibitions
 
----
+- No SQL (CREATE TABLE, ALTER, INDEX, CONSTRAINT).
+- No specific DBMS mentions (PostgreSQL, MySQL, SQLite).
+- No ORM patterns (migrations, models, repositories).
+- No storage engines (InnoDB, TimescaleDB hypertables — those go in Architecture.md).
 
-## Жёсткие запреты
+## Related skills
 
-- Никакого SQL (CREATE TABLE, ALTER, INDEX, CONSTRAINT)
-- Никаких упоминаний конкретной СУБД (PostgreSQL, MySQL, SQLite)
-- Никаких ORM-паттернов (миграции, модели, репозитории)
-- Никаких движков хранения (InnoDB, TimescaleDB гипертаблицы — это в Architecture.md)
+- `pm/brd` — source of entities and requirements (precondition).
+- `architect/api-design` — API built on top of this schema (output of this skill).
+- `architect/architecture` — DBMS and storage engine choice lives there, not here.
+- `php/database` — schema implementation in Laravel migrations/models (boundary: design vs implementation).
+- `php/repositories` — data access layer over implemented schema.
 
----
+<!-- ru-source-sha256: PENDING -->
 
-## Связанные скиллы
-
-- `pm/brd` — источник сущностей и требований (предусловие).
-- `architect/api-design` — API строится поверх этой схемы (выход этого скилла).
-- `architect/architecture` — выбор СУБД и движков хранения живёт там, не здесь.
-- `php/database` — реализация схемы в Laravel-миграциях/моделях (граница: дизайн vs реализация).
-- `php/repositories` — слой доступа к данным поверх реализованной схемы.
+<!-- ru-source-sha256: 2b7f7d894ecfe970bdb5fb73b4c7b0a78418b4ab40be309f01b9e3f2721024fe -->

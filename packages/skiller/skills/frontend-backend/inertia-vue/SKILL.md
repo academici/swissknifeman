@@ -2,7 +2,7 @@
 name: inertia-vue
 bucket: frontend-backend
 version: 0.3.0
-description: "Inertia + Vue в Laravel: страницы, формы, навигация и слоистая организация resources/js (pages, layouts, components, composables, stores, features, events, types, actions/wayfinder)."
+description: "Inertia + Vue in Laravel: pages, forms, navigation and layered resources/js organization (pages, layouts, components, composables, stores, features, events, types, actions/wayfinder)."
 risk: write
 persona: oss-dev
 tags: [inertia, vue, laravel, frontend, architecture, structure]
@@ -16,40 +16,38 @@ sha256: ""
 
 # Skill: Inertia + Vue development
 
-## Контекст
+Apply on any edit under `resources/js/` and for "where does this file go?".
 
-Разработка Inertia + Vue фронтенда в Laravel-приложении: страницы, компоненты, формы, навигация — и слоистая организация `resources/js/`, чтобы каждый новый файл попадал в правильный слой, а не в свалку. Применять при любой правке под `resources/js/` и при вопросе «куда положить этот файл».
+Laravel Boost: versioned Inertia basics (forms, navigation, API) = Boost skill inertia-vue; here = layered resources/js org + project conventions. Package: https://github.com/laravel/boost (skills in `vendor/laravel/boost/.ai/`).
 
-**Laravel Boost**: версионные основы Inertia (формы, навигация, API) — Boost-скилл inertia-vue; здесь — слоистая организация resources/js и проектные конвенции. Пакет: https://github.com/laravel/boost (скиллы — `vendor/laravel/boost/.ai/`).
+## Algorithm
 
-## Алгоритм
+1. Navigation: only `<Link>` / `router.visit()` — no `<a href>` or `window.location` inside the app.
+2. Forms: Inertia form helpers — `useForm` or `<Form>` component (with wayfinder `store.form()`); take errors and submit state from the helper, do not duplicate manually.
+3. New file — pick layer per table:
 
-1. **Навигация**: только `<Link>` / `router.visit()` — никаких `<a href>` и `window.location` внутри приложения.
-2. **Формы**: Inertia form-хелперы — `useForm` или компонент `<Form>` (с wayfinder `store.form()`); ошибки и состояние отправки берутся из хелпера, не дублируются вручную.
-3. **Новый файл — определить слой** по таблице:
-
-| Слой | Что кладём |
+| Layer | What goes in |
 |:---|:---|
-| `pages/` | Роутабельные Inertia-страницы; доменные подпапки (`Documents/`, `Orders/`) |
-| `layouts/` | Layout-компоненты страниц |
-| `components/` | Vue-компоненты: доменные подпапки (`document/`, `order/`) + `shared/` для переиспользуемых |
-| `composables/` | `use*`-функции; доменные подпапки + `shared/` |
-| `stores/` | Pinia-сторы |
-| `features/` | Фичеспецифичная логика, не влезающая в один composable (доменные подпапки) |
-| `events/` | Шина событий + `adapters/`, `sideEffects/`, `plugins/` |
-| `types/` | TS-типы и декларации |
-| `actions/`, `routes/`, `wayfinder/` | **Автоген Wayfinder — не редактировать руками** |
-| `shared/` | Кросс-доменные модули, не являющиеся компонентами/composables |
-| `utils/` | Чистые функции-хелперы без состояния |
-| `config/` | Конфигурационные константы фронтенда |
-| `tests/` | Vitest-тесты, **зеркало структуры исходников** |
+| `pages/` | Routable Inertia pages; domain subfolders (`Documents/`, `Orders/`) |
+| `layouts/` | Page layout components |
+| `components/` | Vue components: domain subfolders (`document/`, `order/`) + `shared/` for reusable |
+| `composables/` | `use*` functions; domain subfolders + `shared/` |
+| `stores/` | Pinia stores |
+| `features/` | Feature-specific logic not fitting one composable (domain subfolders) |
+| `events/` | Event bus + `adapters/`, `sideEffects/`, `plugins/` |
+| `types/` | TS types and declarations |
+| `actions/`, `routes/`, `wayfinder/` | Wayfinder autogen — do not edit by hand |
+| `shared/` | Cross-domain modules that are not components/composables |
+| `utils/` | Pure stateless helper functions |
+| `config/` | Frontend config constants |
+| `tests/` | Vitest tests, mirror of source structure |
 
-4. **Доменная организация внутри слоя**: внутри `components/`, `composables/`, `features/`, `pages/` — подпапки по домену (`document/`, `order/`, `auth/`, `notifications/`); общее — в `shared/`.
-5. **Границы**: страницы и доменные компоненты ходят к backend через composables/actions-слой (см. скилл `frontend/wayfinder`); логика — в composables/features, компоненты остаются тонкими.
+4. Domain org inside layer: inside `components/`, `composables/`, `features/`, `pages/` — subfolders by domain (`document/`, `order/`, `auth/`, `notifications/`); shared → `shared/`.
+5. Boundaries: pages and domain components reach backend via composables/actions layer (see skill `frontend/wayfinder`); logic in composables/features, components stay thin.
 
-## Доменные срезы `features/<домен>/`
+## Domain slices `features/<domain>/`
 
-Крупный домен (заявка, заказ, документ) собирается не в глобальных `components/` и `composables/`, а в один вертикальный срез `resources/js/features/<домен>/` со слоями фиксированных ролей:
+Large domain (request, order, document) goes in one vertical slice `resources/js/features/<domain>/`, not global `components/`/`composables/`, with fixed-role layers:
 
 ```
 features/order/
@@ -59,41 +57,45 @@ features/order/
 └── config/        # доменные константы, дефолты, карты статусов/вкладок
 ```
 
-**Правило границ импортов** — зависимости строго в одну сторону, снаружи внутрь:
+Import boundary rule — dependencies strictly one-way, outside → inside:
 
 ```
 Vue-компонент / page  →  composables (или model)  →  actions  →  @/wayfinder/routes/*
 ```
 
-1. **Только `actions/` знает про wayfinder**: все импорты `@/wayfinder/routes/*` живут в `features/<домен>/actions/` и нигде больше.
-2. **Компоненты и страницы НЕ дёргают wayfinder-роуты напрямую** — они вызывают `use*`-функции из `composables/` (или `model/`), а те идут в `actions/`.
-3. **`composables/` импортируют только `../actions`**, не `@/wayfinder/routes/*`: бизнес-логика отвязана от того, как именно вызывается backend.
-4. **Каждый слой реэкспортит публичное API через `index.ts`** — наружу видны только реэкспортированные функции.
+1. Only `actions/` knows wayfinder: all `@/wayfinder/routes/*` imports live in `features/<domain>/actions/` and nowhere else.
+2. Components and pages do NOT call wayfinder routes directly — they call `use*` from `composables/` (or `model/`), which go to `actions/`.
+3. `composables/` import only `../actions`, not `@/wayfinder/routes/*`.
+4. Each layer re-exports public API via `index.ts` — only re-exported functions are visible outward.
 
-Граница держится не на доверии, а **enforced ESLint flat-config** через `no-restricted-imports`: паттерн `@/wayfinder/routes/*` запрещён в доменных Vue-файлах, точечный whitelist выводит из-под правила немногие легаси-файлы. Настройка ESLint flat-config и правила-границы — в скилле `frontend/js-code-style`; полное дерево среза, пример доменного composable и конфиг границы — в `snippets/feature-structure.md`.
+Boundary is enforced via ESLint flat-config `no-restricted-imports`: pattern `@/wayfinder/routes/*` forbidden in domain Vue files, pointwise whitelist exempts few legacy files. ESLint flat-config setup + boundary rule → skill `frontend/js-code-style`; full slice tree, example domain composable and boundary config → `snippets/feature-structure.md`.
 
-## Когда какой сниппет открывать
+## Which snippet to open
 
-| Ситуация | Файл |
+| Situation | File |
 |:---|:---|
-| «Куда положить файл?» — полная карта слоёв с примерами путей | `snippets/structure.md` |
-| Написать доменный composable (use*-функция, форма, навигация) | `snippets/composable-example.ts` |
-| Создать новую Inertia-страницу с layout, формой и `<Link>` | `snippets/page-example.vue` |
-| Завести доменный срез `features/<домен>/` с границей импортов | `snippets/feature-structure.md` |
+| "Where does this file go?" — full layer map with example paths | `snippets/structure.md` |
+| Write a domain composable (use* function, form, navigation) | `snippets/composable-example.ts` |
+| Create a new Inertia page with layout, form and `<Link>` | `snippets/page-example.vue` |
+| Set up a domain slice `features/<domain>/` with import boundary | `snippets/feature-structure.md` |
 
-## Чеклист качества
+## Quality checklist
 
-- [ ] Навигация через `<Link>`/`router.visit()`, формы через `useForm`/`<Form>`
-- [ ] Файл лежит в правильном слое и доменной подпапке (таблица выше)
-- [ ] `actions/`, `routes/`, `wayfinder/` не редактировались руками
-- [ ] Логика вынесена в composables/features, компонент тонкий
-- [ ] Общие компоненты/composables — в `shared/`, а не скопированы между доменами
-- [ ] Тест нового модуля лежит в зеркальной подпапке `tests/`
-- [ ] Импорты `@/wayfinder/routes/*` есть только в `features/<домен>/actions/`; компоненты/composables домена идут через `actions`-слой
-- [ ] Граница импортов домена закреплена `no-restricted-imports` в ESLint flat-config, а не «на словах»
+- [ ] Navigation via `<Link>`/`router.visit()`, forms via `useForm`/`<Form>`
+- [ ] File in correct layer and domain subfolder (table above)
+- [ ] `actions/`, `routes/`, `wayfinder/` not hand-edited
+- [ ] Logic in composables/features, component thin
+- [ ] Shared components/composables in `shared/`, not copied between domains
+- [ ] New module's test in mirror subfolder of `tests/`
+- [ ] `@/wayfinder/routes/*` imports only in `features/<domain>/actions/`; domain components/composables go via `actions` layer
+- [ ] Domain import boundary enforced by `no-restricted-imports` in ESLint flat-config, not "by convention"
 
-## Ссылки
+## Links
 
 - https://inertiajs.com/
 - https://vuejs.org/guide/reusability/composables
-- Связанные скиллы: `frontend/wayfinder`, `frontend/vitest`, `frontend/vue-composition-api`, `frontend/js-code-style`, `frontend/pinia-stores` (слой `stores/`), `frontend/eslint-flat-config` (enforce границы импортов `no-restricted-imports`), `frontend/tailwind-conventions`
+- Related skills: `frontend/wayfinder`, `frontend/vitest`, `frontend/vue-composition-api`, `frontend/js-code-style`, `frontend/pinia-stores` (layer `stores/`), `frontend/eslint-flat-config` (enforce import boundary `no-restricted-imports`), `frontend/tailwind-conventions`
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: a5fc4fef95d5bf997e81eeb2556af413e56f3dd7689850f0565b7221d20b6e4c -->

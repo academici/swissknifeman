@@ -2,7 +2,7 @@
 name: dependency-audit
 bucket: oss-dev
 version: 0.2.0
-description: Аудит зависимостей: lockfile sanity, vuln scan, лицензионная совместимость, supply-chain risk, SBOM
+description: Dependency audit — lockfile sanity, vuln scan, license compatibility, supply-chain risk, SBOM
 risk: draft
 persona: oss-dev
 tags: [oss, compliance, security, dependencies, php]
@@ -15,38 +15,28 @@ adapters: [claude, cursor, fable]
 
 # Skill: Dependency Audit
 
-Применять когда: **перед первой публикацией** OSS-пакета, **перед MAJOR-релизом**, или **по триггеру** — security advisory, license question от потенциального enterprise-потребителя, supply-chain alert.
+Apply when: **before first OSS publish**, **before MAJOR release**, or **on trigger** — security advisory, license question from a potential enterprise consumer, supply-chain alert.
 
-Должен быть **выполнен после `oss-development`** (есть `package.json` / `composer.json` / `pubspec.yaml`). Производит вход для `security-design` (compliance-pipeline) и для `release-engineering` (SBOM в release artefact).
+Must run **after `oss-development`** (has `package.json` / `composer.json` / `pubspec.yaml`). Produces input for `security-design` (compliance pipeline) and `release-engineering` (SBOM as release artefact).
 
----
+## When NOT to apply
+- Pet-project with no deps or 1–2 stdlib deps — overkill.
+- Audit ran < 7 days ago and lockfile unchanged — reuse previous report.
+- Closed package without publish — simplified check, not full audit.
 
-## Когда НЕ применять
+## 5 audit dimensions
+5 dimensions (vuln-scan, licenses, supply-chain, freshness, SBOM) detailed in [references/audit-dimensions.md](references/audit-dimensions.md).
 
-- Pet-project без зависимостей или с 1–2 stdlib зависимостями — overkill.
-- Только что прогнали аудит < 7 дней назад и lockfile не менялся — переиспользовать предыдущий отчёт.
-- Закрытый пакет без публикации — упрощённая проверка, не полный audit.
+## Agent adds itself
+- **Renovate / Dependabot config.** Min: `.github/dependabot.yml` with group for minor/patch updates.
+- **Provenance.** npm `--provenance` (via GitHub OIDC) — outside audit scope but tied to CI release pipeline. Mention in report.
+- **Reproducible builds.** Lockfile + frozen install (`npm ci` / `composer install --no-dev --prefer-dist --no-progress`).
+- **License-of-licenses.** Check direct AND **transitive** deps — typical GPL leak.
+- **Update version policy.** Auto-merge for patches from trusted maintainers OK; majors — manual review.
 
----
-
-## 5 измерений аудита
-
-5 измерений аудита зависимостей (vuln-scan, лицензии, supply-chain, freshness, SBOM) подробно — [references/audit-dimensions.md](references/audit-dimensions.md).
-
-## Что агент добавляет сам
-
-- **Renovate / Dependabot конфиг.** Без bot-driven updates аудит застаёт устаревший lockfile. Минимум: `.github/dependabot.yml` с group для minor/patch updates.
-- **Provenance.** npm `--provenance` (через GitHub OIDC) — выходит за рамки audit, но завязан на CI release pipeline. Упомянуть в отчёте.
-- **Reproducible builds.** Lockfile + frozen install (`npm ci` / `composer install --no-dev --prefer-dist --no-progress`) — для verifiable artefacts.
-- **License-of-licenses.** Проверять не только direct deps, но и **транзитивные** — типичная утечка GPL.
-- **Версионная политика обновлений.** Auto-merge для patches от trusted maintainers ОК; для majors — ручной review.
-
----
-
-## Структура output-файлов
+## Output files
 
 ### `ProjectName/Dependency_Audit.md`
-
 ```markdown
 ---
 project: [ProjectName]
@@ -100,31 +90,27 @@ tooling: npm@X, composer@Y, ...
 ```
 
 ### `ProjectName/SBOM.json`
-Сгенерированный файл, не редактируется вручную. Регенерируется при каждом релизе.
+Generated file, not hand-edited. Regenerated on every release.
 
----
+## Links
+- [references/composer.md](references/composer.md) — composer specifics: commands per dimension, roave/security-advisories, reproducible installs, composer pitfalls, SBOM for PHP.
+- `oss-dev/oss-development` — prerequisite: gives manifest (`composer.json`/`package.json`) being audited.
+- `oss-dev/release-engineering` — consumer: SBOM published as release artefact.
+- `oss-dev/oss-governance` — project LICENSE choice; dependency license compatibility is here.
+- `architect/security-design` — consumer: vuln/supply-chain findings go to compliance pipeline.
+- `php/laravel-package-compatibility` — composer constraints, PHP/Laravel/Testbench versions for PHP packages.
+- `php/static-analysis` — Pint/PHPStan/Rector: code quality alongside dependency audit.
 
-## Ссылки
+## Hard prohibitions
+NEVER:
+- Release `v1.0+` without audit report
+- Ignore `critical`/`high` vulnerabilities
+- Accept GPL/AGPL/BUSL packages as deps without explicit justification and approval
+- Use a package without explicit SPDX license
+- Allow postinstall scripts from untrusted maintainers without allowlist
+- Skip committing lockfile in an app (for libraries — see discussion above)
+- Rely on `npm audit` as the only tool — it does not catch supply-chain
 
-- [references/composer.md](references/composer.md) — composer-специфика:
-  команды по измерениям, roave/security-advisories, reproducible installs,
-  composer-грабли, SBOM для PHP.
-- `oss-dev/oss-development` — предпосылка: даёт манифест (`composer.json`/`package.json`), по которому идёт аудит.
-- `oss-dev/release-engineering` — потребитель: SBOM публикуется как release artefact.
-- `oss-dev/oss-governance` — LICENSE-выбор проекта; лицензионная совместимость зависимостей — здесь.
-- `architect/security-design` — потребитель: vuln/supply-chain находки идут в compliance-pipeline.
-- `php/laravel-package-compatibility` — composer-constraints, версии PHP/Laravel/Testbench для PHP-пакетов.
-- `php/static-analysis` — Pint/PHPStan/Rector: качество кода рядом с аудитом зависимостей.
+<!-- ru-source-sha256: PENDING -->
 
----
-
-## Жёсткие запреты
-
-НЕЛЬЗЯ:
-- Релиз `v1.0+` без audit-отчёта
-- Игнорировать `critical`/`high` уязвимости
-- Принимать в зависимости GPL/AGPL/BUSL пакеты без явного обоснования и approval
-- Использовать пакет без явной SPDX-лицензии
-- Допускать postinstall-скрипты от untrusted мейнтейнеров без allowlist
-- Не коммитить lockfile в приложении (для библиотек — см. дискуссию выше)
-- Полагаться на `npm audit` как единственный инструмент — он не ловит supply-chain
+<!-- ru-source-sha256: e6aa202c7e4f18295b86964826e8d5288435770958aa98b1f8e9ae09406873ff -->

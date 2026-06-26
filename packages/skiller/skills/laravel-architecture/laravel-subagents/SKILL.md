@@ -2,7 +2,7 @@
 name: laravel-subagents
 bucket: laravel-architecture
 version: 0.1.0
-description: "Оркестрация субагентов на крупных Laravel-задачах: порог срабатывания, делегирование исследования Explore-агентам, ревью через laravel-reviewer, тесты через laravel-test-writer, worktree-изоляция параллельных правок. Не применять к мелким и средним задачам."
+description: "Subagent orchestration on large Laravel tasks: activation threshold, delegating research to Explore agents, review via laravel-reviewer, tests via laravel-test-writer, worktree isolation of parallel edits. Do not apply to small/medium tasks."
 risk: write
 persona: oss-dev
 tags: [workflow, orchestration, agents, laravel]
@@ -16,43 +16,19 @@ sha256: ""
 
 # Laravel Subagents
 
-## Контекст
+Orchestrator (main Claude Code session) protocol with subagents on large Laravel tasks. Subagents give context isolation + fresh view, not parallelism per se. Plugin ships two agents: `laravel-reviewer` (read-only review + PHPStan/Pint/Pest), `laravel-test-writer` (Pest tests for finished code).
 
-Протокол работы оркестратора (основной сессии Claude Code) с субагентами на
-крупных Laravel-задачах. Ценность субагентов — **изоляция контекста и свежий
-взгляд**, а не параллелизм сам по себе: каждый субагент стартует с чистым
-контекстом, заново читает файлы и возвращает только финальный результат.
-Поэтому делегирование окупается только там, где основной контекст иначе
-утонул бы в шуме (широкое исследование) или где нужна непредвзятость (ревью).
+## Activate only if at least one holds
 
-Рядом с этим скиллом плагин поставляет двух агентов:
-`laravel-reviewer` (read-only ревью + PHPStan/Pint/Pest) и
-`laravel-test-writer` (Pest-тесты по готовому коду).
+- Task spans **three or more domains/layers** (e.g. migrations + models + actions + HTTP + Filament).
+- Spec describes a whole feature: migrations, models, business logic, routes, tests in one task.
+- Before implementation a wide investigation of a large codebase is needed (dozens of files just to understand).
 
-## Когда активировать
+**Anti-trigger (outweighs triggers):** small/medium tasks — editing one or two domains, bugfix, adding a field, refactoring one layer — do directly, no decomposition, no subagents. Exception: `laravel-reviewer` may be called on medium tasks too if the change is risky (authorization, money, data migrations).
 
-Только если выполняется хотя бы одно:
+## Algorithm
 
-- задача затрагивает **три и более доменов/слоёв** (например миграции +
-  модели + actions + HTTP + Filament);
-- ТЗ описывает целую фичу: миграции, модели, бизнес-логика, маршруты,
-  тесты в одном задании;
-- перед реализацией нужно широкое исследование большой кодовой базы
-  (десятки файлов только на понимание).
-
-**Анти-триггер (важнее триггеров):** мелкие и средние задачи — правка
-одного-двух доменов, багфикс, добавление поля, рефакторинг одного слоя —
-выполняй напрямую, без декомпозиции и субагентов. Принудительная
-декомпозиция мелочи — чистый налог: токены растут, контекст теряется,
-качество не выигрывает. Исключение: `laravel-reviewer` можно звать и на
-средних задачах, если изменение рискованное (авторизация, деньги, миграции
-с данными).
-
-## Алгоритм
-
-1. **Декомпозиция.** Разбей ТЗ на подзадачи по слоям/доменам, для каждой
-   зафиксируй ожидаемый артефакт. Если в проекте доступен скилл
-   `complex-task-orchestrator` — используй его шаблон; иначе минимум:
+1. **Decompose.** Split spec into subtasks by layer/domain; fix expected artifact for each. If skill `complex-task-orchestrator` is available, use its template; else minimum:
 
    ```text
    Цель:
@@ -61,65 +37,43 @@ sha256: ""
    Зависимости между подзадачами:
    ```
 
-2. **Исследование — субагентам.** Понимание существующей структуры,
-   поиск точек интеграции, инвентаризация затронутых файлов — делегируй
-   Explore-агентам (read-only). В основной контекст возвращаются выводы,
-   а не содержимое десятков файлов.
+2. **Research → subagents.** Understanding existing structure, finding integration points, inventorying affected files — delegate to Explore agents (read-only). Return conclusions to main context, not contents of dozens of files.
+3. **Write architectural code yourself.** Contracts, models, key actions/services — orchestrator's work in main context. Do not pin cheap models on architectural pieces.
+4. **Parallel only for independent.** Subtasks with no shared files (different domains, independent console commands, seeders) may go to parallel subagents. If edits may collide on files (shared models, routes, service providers, composer.json) — run sequentially or isolate each agent in a git worktree. If unsure about independence, treat as dependent.
+5. **Review after each unit.** Finished an implementation unit (domain, layer, feature) — call agent `laravel-reviewer`, passing the diff or file list. Do not defer review.
+6. **Tests → for finished code.** After review call `laravel-test-writer` with paths + brief description of expected behavior. Resolve discrepancies in its report: either code bug or spec inaccuracy.
+7. **Fix findings pointwise.** Apply review notes directly in existing code — do not regenerate the unit from scratch, do not hand the fix to a new agent without the finding's context.
 
-3. **Архитектурный код пиши сам.** Контракты, модели, ключевые
-   actions/сервисы — работа оркестратора в основном контексте: здесь
-   сосредоточено всё знание ТЗ. Не пинь дешёвые модели на архитектурные
-   куски «ради экономии» — переделка после ревью съест экономию.
+## Anti-patterns
 
-4. **Параллель — только для независимого.** Подзадачи без общих файлов
-   (разные домены, независимые консольные команды, сидеры) можно отдавать
-   параллельным субагентам. Если правки могут пересечься по файлам
-   (общие модели, маршруты, service providers, composer.json) —
-   либо выполняй последовательно, либо изолируй каждого агента в git
-   worktree. Сомневаешься в независимости — считай зависимым.
+- Decomposition/subagents on small/medium task (see anti-trigger).
+- Role-agent pipeline (planner → generator → reviewer → ...) where one context suffices: each break loses spec knowledge.
+- Pinning a cheap model on architectural code.
+- Parallel agents over dependent files without worktree isolation.
+- Reviewing own code instead of calling `laravel-reviewer`.
 
-5. **Ревью после каждой единицы.** Завершил единицу реализации (домен,
-   слой, фичу) — вызови агента `laravel-reviewer`, передав дифф или список
-   файлов. Не копи ревью «на потом»: находка в фундаменте дешевле до того,
-   как на нём построены три слоя.
+## Output
 
-6. **Тесты — по готовому коду.** После ревью вызови `laravel-test-writer`
-   с путями и кратким описанием ожидаемого поведения. Расхождения из его
-   отчёта разбери: это либо баг кода, либо неточность ТЗ.
+Implemented feature + `laravel-reviewer` reports (per-unit verdicts) and `laravel-test-writer` report (coverage, run) in orchestrator's final answer.
 
-7. **Находки правь точечно.** Замечания ревью исправляй адресно в
-   существующем коде — не перегенерируй единицу с нуля и не отдавай
-   исправление новому агенту без контекста находки.
+## Quality checklist
 
-## Анти-паттерны
+- [ ] Activation threshold checked: task truly large (≥3 layers/domains or whole feature), else skill not applied.
+- [ ] Wide research done by Explore agents, not main context.
+- [ ] Architectural code written by orchestrator, not delegated.
+- [ ] Parallel ran only subtasks with no shared files (or in worktree).
+- [ ] Each finished unit passed `laravel-reviewer`; verdicts in report.
+- [ ] `laravel-test-writer` called for finished code; discrepancies resolved.
+- [ ] Review findings fixed pointwise, no from-scratch regeneration.
 
-- Декомпозиция и субагенты на мелкой/средней задаче (см. анти-триггер).
-- Конвейер ролевых агентов (planner → generator → reviewer → ...) там,
-  где хватает одного контекста: каждый разрыв — потеря знания ТЗ.
-- Пин дешёвой модели на архитектурный код.
-- Параллельные агенты по зависимым файлам без worktree-изоляции.
-- Ревью собственного кода вместо вызова `laravel-reviewer`: смысл агента —
-  свежий контекст.
+## Links
 
-## Выходные данные
+- `agents/laravel-reviewer.md`, `agents/laravel-test-writer.md` — plugin agents (available only in Claude Code plugin channel).
+- `general/complex-task-orchestrator` — general decomposition template, if connected in project.
+- `php/laravel-testing` — tests written by `laravel-test-writer`; `php/static-analysis` — checks run by `laravel-reviewer`.
+- `oss-dev/gh-review` — review and handoff via `gh` with context economy.
+- `general/context-economy`, `general/session-handoff` — main session context management when delegating.
 
-Реализованная фича + отчёты `laravel-reviewer` (вердикты по единицам) и
-`laravel-test-writer` (покрытие, прогон) в финальном ответе оркестратора.
+<!-- ru-source-sha256: PENDING -->
 
-## Чеклист качества
-
-- [ ] Порог срабатывания проверен: задача действительно крупная (≥3 слоёв/доменов или целая фича), иначе скилл не применялся.
-- [ ] Широкое исследование выполнено Explore-агентами, не основным контекстом.
-- [ ] Архитектурный код написан оркестратором, не делегирован.
-- [ ] Параллельно выполнялись только подзадачи без общих файлов (или в worktree).
-- [ ] Каждая завершённая единица прошла `laravel-reviewer`; вердикты в отчёте.
-- [ ] По готовому коду вызван `laravel-test-writer`; расхождения разобраны.
-- [ ] Находки ревью исправлены точечно, без перегенерации с нуля.
-
-## Ссылки
-
-- `agents/laravel-reviewer.md`, `agents/laravel-test-writer.md` — агенты плагина (доступны только в plugin-канале Claude Code).
-- `general/complex-task-orchestrator` — общий шаблон декомпозиции, если подключён в проекте.
-- `php/laravel-testing` — тесты, которые пишет `laravel-test-writer`; `php/static-analysis` — проверки, которые гоняет `laravel-reviewer`.
-- `oss-dev/gh-review` — ревью и хендофф через `gh` с экономией контекста.
-- `general/context-economy` и `general/session-handoff` — управление контекстом основной сессии при делегировании.
+<!-- ru-source-sha256: 1e9f189d18c99efcd2f4c01429ce12c0af4b920439a0e5d3bf3131386207de04 -->

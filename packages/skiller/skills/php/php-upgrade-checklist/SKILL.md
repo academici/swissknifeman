@@ -2,7 +2,7 @@
 name: php-upgrade-checklist
 bucket: php
 version: 0.1.0
-description: "Чеклист апгрейда версии PHP в приложении (минор/мажор): обновить образ/CI, composer update и устранение deprecations, phpstan-baseline, полный suite, обновить rector-наборы, просмотреть RFC на несовместимости. Активировать перед bump версии PHP."
+description: "PHP version upgrade checklist (minor/major): sync image/CI, composer update + clear deprecations, phpstan baseline, full suite, update rector sets, review RFCs for incompatibilities. Activate before bumping PHP version."
 risk: draft
 persona: oss-dev
 tags: [php, upgrade, version, rector, phpstan, composer]
@@ -16,56 +16,37 @@ sha256: ""
 
 # PHP Upgrade Checklist
 
-## Контекст
+Activate before raising minor/major PHP version (constraint in `composer.json`, image, CI). Not for one-off extension install. Version-neutral (procedure, not specific version; version-specific PHP/framework rules → Laravel Boost `boost:update`).
 
-Апгрейд версии PHP ломается не на «не компилируется», а на тихих
-несовместимостях: deprecated-поведение ядра, изменения типов, расхождение
-версии в образе/CI/`composer.json`. Этот чеклист проводит bump по шагам, чтобы
-расхождений и сюрпризов на проде не было. Версионно-нейтрален — про процедуру,
-не про конкретную версию (конкретные правила версий PHP даёт Laravel Boost).
+## Steps
 
-## Когда активировать
+1. **Sync version everywhere.** `composer.json` (`require.php`), image (Dockerfile / base image), CI matrix — same minimum version.
+2. **Image & extensions.** Update PHP image; rebuild extensions if needed (`docker-php-ext-install` / `pecl`); verify all required extensions present in new version.
+3. **Dependencies.** `composer update` (in target environment); clear package deprecations; packages without new-version support — update or replace; commit `composer.lock`.
+4. **Static analysis.** Run phpstan/psalm. Drop baseline entries **only together with a code fix** — do not zero out baseline for green.
+5. **Full test run.** Whole suite on new version (not only targeted) — type/core-behavior changes surface in integration tests.
+6. **Rector.** Update sets (incl. Laravel sets for the new version), run, review autofix diff.
+7. **RFCs & incompatibilities.** Review target-version changelog/RFC: type changes, deprecated core behavior, dependency incompatibilities (incl. framework components). Record findings in the task.
 
-Перед поднятием минорной или мажорной версии PHP в приложении (constraint в
-`composer.json`, образ, CI). Не для разовой установки расширения.
+## Quality checklist
 
-## Алгоритм
+- [ ] PHP version synced in `composer.json`, image, CI.
+- [ ] Image/extensions updated and build.
+- [ ] `composer update` passed, package deprecations cleared, lock committed.
+- [ ] phpstan/psalm: baseline dropped only with code fix.
+- [ ] Full suite green on new version.
+- [ ] Rector sets updated and run.
+- [ ] Target-version RFCs/incompatibilities reviewed and accounted for.
 
-1. **Синхронизировать версию везде.** `composer.json` (`require.php`), образ
-   (Dockerfile / базовый image), матрица CI — одна и та же минимальная версия.
-   Разъехавшаяся версия — источник «у меня работает».
-2. **Образ и расширения.** Обновить образ PHP, при необходимости пересобрать
-   расширения (`docker-php-ext-install` / `pecl`); проверить, что все нужные
-   расширения присутствуют в новой версии.
-3. **Зависимости.** `composer update` (в целевом окружении), устранить
-   deprecations пакетов; пакеты без поддержки новой версии — обновить или
-   заменить. Зафиксировать `composer.lock`.
-4. **Статический анализ.** Прогнать phpstan/psalm. Пункты с baseline снимать
-   **только вместе с исправлением кода**, не «занулять» baseline ради зелёного.
-5. **Полный прогон тестов.** Весь suite на новой версии (не только целевые) —
-   изменения типов и поведения ядра ловятся именно интеграционными тестами.
-6. **Rector.** Обновить наборы (включая Laravel-наборы под новую версию),
-   прогнать, проверить дифф автоправок.
-7. **RFC и несовместимости.** Просмотреть changelog/RFC целевой версии: изменения
-   в типах, deprecated-поведение ядра, несовместимости в зависимостях
-   (в т.ч. компонентах фреймворка). Зафиксировать найденное в задаче.
+## Links
 
-## Чеклист качества
+- `static-analysis` (php) — phpstan/pint/rector config.
+- `laravel-package-compatibility` (php) — multi-version support in a package (adjacent: package, not app upgrade).
+- `php/laravel-testing` — full suite run on new version after bump.
+- `devops/docker-php` — PHP image & extensions update.
+- `php/pao` — compact rector/phpstan/test output when running upgrade from agent.
+- Version-specific PHP/framework rules — Laravel Boost (`boost:update`).
 
-- [ ] Версия PHP синхронизирована в `composer.json`, образе и CI.
-- [ ] Образ/расширения обновлены и собираются.
-- [ ] `composer update` прошёл, deprecations пакетов устранены, lock зафиксирован.
-- [ ] phpstan/psalm: baseline снят только с исправлением кода.
-- [ ] Полный suite зелёный на новой версии.
-- [ ] Rector-наборы обновлены и прогнаны.
-- [ ] RFC/несовместимости целевой версии просмотрены и учтены.
+<!-- ru-source-sha256: PENDING -->
 
-## Ссылки
-
-- `static-analysis` (php) — конфигурация phpstan/pint/rector.
-- `laravel-package-compatibility` (php) — поддержка нескольких версий в пакете
-  (смежная, но иная задача — там про пакет, тут про апгрейд приложения).
-- `php/laravel-testing` — полный прогон suite на новой версии после bump.
-- `devops/docker-php` — обновление PHP-образа и расширений.
-- `php/pao` — компактный вывод rector/phpstan/тестов при прогоне апгрейда из агента.
-- Версионные правила PHP/фреймворка — Laravel Boost (`boost:update`).
+<!-- ru-source-sha256: 1cd839ad08b78db8e56885011f3ceb478708eaf85734da938dcf7b57931e01ba -->

@@ -2,7 +2,7 @@
 name: oss-development
 bucket: oss-dev
 version: 0.1.0
-description: OSS-проект: repo structure, README, Architecture, ADR, SemVer, CI/CD. PHP-специфика в ../references/oss-php.md
+description: "OSS project: repo structure, README, Architecture, ADR, SemVer, CI/CD. PHP specifics in ../references/oss-php.md"
 risk: write
 persona: oss-dev
 tags: [oss, architecture, documentation, ci]
@@ -15,34 +15,27 @@ adapters: [claude, cursor, fable]
 
 # Skill: OSS Development
 
-Применять когда: задача на OpenSource проект (BrainKit, AzGuard, ThemeOn и другие OSS).
-Это инженерный трек — упор на архитектуру, код, документацию для разработчиков.
+Apply when: task on an OpenSource project (BrainKit, AzGuard, ThemeOn, other OSS). Engineering track — architecture, code, developer docs.
 
----
+## Startup track vs OSS track
 
-## Отличие от стартап-трека
-
-| | Стартап-трек | OSS-трек |
+| | Startup | OSS |
 |:---|:---|:---|
-| Аудитория | Инвесторы, пользователи, команда | Разработчики, контрибьюторы |
-| Документация | BRD, GTM, Unit Economics | README, API docs, Contributing guide |
-| Фокус | Бизнес-ценность | Техническая корректность |
-| Метрики | MAU, Revenue, Churn | GitHub stars, forks, npm downloads, contributors |
+| Audience | Investors, users, team | Developers, contributors |
+| Docs | BRD, GTM, Unit Economics | README, API docs, Contributing guide |
+| Focus | Business value | Technical correctness |
+| Metrics | MAU, Revenue, Churn | GitHub stars, forks, npm downloads, contributors |
 
----
+## Step 1. Repo Structure
 
-## Шаг 1. Repo Structure
+Detailed OSS repo structure (dirs, required files) → [references/repo-structure.md](references/repo-structure.md).
 
-Детальная структура OSS-репозитория (директории, обязательные файлы) — [references/repo-structure.md](references/repo-structure.md).
-
-## Шаг 2. README структура
-
-README — лицо проекта. Структура:
+## Step 2. README structure
 
 ```markdown
 # ProjectName
 
-[Одна строка: что делает + для кого]
+[One line: what it does + for whom]
 
 [![npm version](badge)] [![license](badge)] [![CI](badge)]
 
@@ -71,38 +64,31 @@ README — лицо проекта. Структура:
 [Тип лицензии]
 ```
 
----
+## Step 3. Architecture
 
-## Шаг 3. Архитектура
+Use C4 model (text variant):
+- **Level 1 — Context:** who uses it, what external systems.
+- **Level 2 — Container:** main components and their interaction.
+- **Level 3 — Component:** details of key components.
+- **ADR:** each non-trivial decision → separate ADR file.
 
-Использовать C4 model (текстовый вариант):
+Mermaid diagrams mandatory in Architecture.md.
 
-**Level 1 — Context:** Кто использует, какие внешние системы
-**Level 2 — Container:** Основные компоненты и их взаимодействие
-**Level 3 — Component:** Детали ключевых компонентов
-**ADR:** Каждое нетривиальное решение → отдельный ADR файл
-
-Mermaid-диаграммы для визуализации — обязательны в Architecture.md.
-
----
-
-## Шаг 4. Versioning Strategy
+## Step 4. Versioning Strategy
 
 **SemVer:** `MAJOR.MINOR.PATCH`
 - MAJOR: breaking changes
-- MINOR: новые фичи, обратная совместимость
+- MINOR: new features, backward compatible
 - PATCH: bug fixes
 
-**Правила:**
-- `0.x.x` — экспериментальная стадия, любые breaking changes допустимы
-- `1.0.0` — стабильный публичный API, breaking changes только в MAJOR
-- Всегда обновлять CHANGELOG.md перед релизом
+Rules:
+- `0.x.x` — experimental, any breaking changes allowed.
+- `1.0.0` — stable public API, breaking changes only in MAJOR.
+- Always update CHANGELOG.md before release.
 
----
+## Step 5. Contributing Guide
 
-## Шаг 5. Contributing Guide
-
-CONTRIBUTING.md должен содержать:
+CONTRIBUTING.md must contain:
 
 ```markdown
 ## Как запустить локально
@@ -125,9 +111,7 @@ CONTRIBUTING.md должен содержать:
 [Линтер, форматтер, pre-commit hooks]
 ```
 
----
-
-## Шаг 6. CI/CD минимум
+## Step 6. CI/CD minimum
 
 ```yaml
 # .github/workflows/ci.yml
@@ -138,9 +122,7 @@ CONTRIBUTING.md должен содержать:
 - (опционально) Publish на npm/crates.io при теге
 ```
 
----
-
-## Форматы файлов в vault (OSS проект)
+## Vault file formats (OSS project)
 
 ```
 05 - Projects/03 - OpenSource/ProjectName/
@@ -152,60 +134,52 @@ CONTRIBUTING.md должен содержать:
 └── _index.md
 ```
 
----
+## OSS health metrics
 
-## Метрики здоровья OSS-проекта
-
-| Метрика | Цель |
+| Metric | Target |
 |:---|:---|
 | Test coverage | ≥ 80% |
 | CI pass rate | ≥ 95% |
-| Issue response time | < 48 часов |
-| PR review time | < 1 недели |
-| Документация актуальна | Обновляется с каждым MINOR |
+| Issue response time | < 48 hours |
+| PR review time | < 1 week |
+| Docs current | Updated with every MINOR |
 
----
+## Agent adds on its own
 
-## Что агент добавляет сам
+- License rec (MIT for max adoption, Apache 2.0 if patent protection needed).
+- Security policy (`SECURITY.md`) if project relates to security.
+- README badges (npm version, CI status, coverage, license).
+- Semver warning if API changes without versioning.
 
-- License рекомендация (MIT для максимального adoption, Apache 2.0 если нужна patent protection)
-- Security policy (`SECURITY.md`) если проект имеет отношение к безопасности
-- Badges для README (npm version, CI status, coverage, license)
-- Предупреждение о semver если API меняется без версионирования
+## PHP specifics
 
----
+See [[../references/oss-php]] (file `../references/oss-php.md` relative to this skill) — composer.json, PSR standards, PHPStan, PHPUnit, Packagist, CI matrix.
 
-## PHP-специфика
+## Links
 
-См. [[../references/oss-php]] (файл `../references/oss-php.md` относительно этого скилла) — composer.json, PSR-стандарты, PHPStan, PHPUnit, Packagist, CI matrix.
-
----
-
-## Ссылки
-
-Этот скилл — корень OSS-трека; от него отходят:
-
-- `oss-dev/release-engineering` — SemVer-контракт, CHANGELOG, релизный pipeline.
-- `oss-dev/dx-design` — README/quick-start, API-эргономика, error-messages.
+Root of OSS track; branches off:
+- `oss-dev/release-engineering` — SemVer contract, CHANGELOG, release pipeline.
+- `oss-dev/dx-design` — README/quick-start, API ergonomics, error messages.
 - `oss-dev/oss-governance` — LICENSE, CoC, CONTRIBUTING, SECURITY, RFC.
-- `oss-dev/dependency-audit` — vuln/license/supply-chain аудит зависимостей.
-- `oss-dev/github-flow` — процессная цепочка Issue→PR→Tag→Release на GitHub.
+- `oss-dev/dependency-audit` — vuln/license/supply-chain dependency audit.
+- `oss-dev/github-flow` — Issue→PR→Tag→Release process chain on GitHub.
 
-Смежное (вход/детализация):
+Adjacent (entry/detail):
+- `architect/tech-stack-selection` — stack choice BEFORE repo structure (ADR-first step).
+- `architect/architecture` — C4/ADR detail (here — base level only).
+- `devops/ci-cd` — GitHub Actions pipelines (here — CI minimum only).
+- `php/laravel-packages` — scaffold/publish Laravel packages (language specifics).
 
-- `architect/tech-stack-selection` — выбор стека ДО структуры репо (ADR-первый шаг).
-- `architect/architecture` — C4/ADR-детализация (здесь — только базовый уровень).
-- `devops/ci-cd` — GitHub Actions pipelines (здесь — только минимум CI).
-- `php/laravel-packages` — scaffold/публикация Laravel-пакетов (язык-специфика).
+## Hard forbidden
 
----
+NEVER:
+- Business docs (BRD, GTM, Unit Economics) in OSS track.
+- Commits directly to main (PR only).
+- Merge without green CI.
+- Breaking changes without MAJOR version (if ≥ 1.0.0).
+- PHP package without PSR-4 autoloading.
+- Publish to Packagist without tests (coverage < 80%).
 
-## Жёсткие запреты
+<!-- ru-source-sha256: PENDING -->
 
-НЕЛЬЗЯ:
-- Бизнес-документы (BRD, GTM, Unit Economics) в OSS-треке
-- Коммиты напрямую в main (только PR)
-- Merge без зелёного CI
-- Breaking changes без MAJOR версии (если ≥ 1.0.0)
-- PHP-пакет без PSR-4 autoloading
-- Публиковать на Packagist без тестов (coverage < 80%)
+<!-- ru-source-sha256: 863b971dc8c8adc1de51593151c070f85c1ed0404f3ac9dbcf9fb67d0575ea48 -->

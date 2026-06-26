@@ -2,7 +2,7 @@
 name: code-simplifier
 bucket: quality
 version: 0.3.0
-description: "Упрощение свеженаписанного кода без изменения поведения: мёртвый код, лишние абстракции, дубли, выравнивание с паттернами проекта; лесенка YAGNI до кода и delete-list по диффу (адаптация дисциплины ponytail). Поведение фиксируют тесты."
+description: "Simplify freshly written code without changing behavior: dead code, needless abstractions, dups, align to project patterns; YAGNI ladder before coding + diff delete-list (ponytail discipline). Tests pin behavior."
 risk: write
 persona: quality
 tags: [quality, refactoring, refactor, ci, validation]
@@ -16,101 +16,76 @@ sha256: ""
 
 # Code Simplifier
 
-## Когда активировать
+## When to activate
+- Right after implementing a feature/fix — to the **fresh diff** of current branch/PR, not legacy.
+- Planned refactor of old code → `refactoring-plan`. Debt inventory → `tech-debt-audit`.
 
-Сразу после имплементации фичи или фикса — к **свежему диффу** текущей
-ветки/PR, не к легаси. Для планового рефакторинга старого кода используйте
-`refactoring-plan`, для инвентаризации долга — `tech-debt-audit`.
+## Hard constraints
+- **No behavior change.** Tests are the gate: green before, green after, no test edited. No test on the touched area → don't simplify.
+- **No business-logic changes.** Form only, not meaning.
+- **No new dependencies.** Simplifying via a new package is not simplification.
+- **No public-contract changes:** public method signatures, API, data format, event names.
 
-## Жёсткие ограничения
+## Simplification checklist (per diff)
+1. **Dead code:** unused vars, imports, branches, params, commented-out blocks.
+2. **Needless abstractions:** interface with one impl "for the future", one-line wrapper, indirection with no second consumer.
+3. **Dups:** fragment repeated within diff, or copy of an existing project util — use the existing one, don't create new.
+4. **Conditionals:** early returns over nesting, invert guard conditions, merge identical branches.
+5. **Project patterns:** diff follows surrounding-code conventions (style, naming, layers), not its own.
+6. **Comments:** drop comments that restate code; keep only those explaining non-obvious constraints.
 
-- **Поведение не меняется.** Тесты — гейт: зелёные до, зелёные после,
-  ни один тест не правится. Нет тестов на изменяемый участок — не упрощать.
-- **Бизнес-логика не трогается.** Только форма, не смысл.
-- **Зависимости не добавляются.** Упрощение через новый пакет — не упрощение.
-- **Публичные контракты не меняются:** сигнатуры публичных методов, API,
-  формат данных, имена событий.
+## Speculative-generality checklist (YAGNI)
+Separate diff pass against grow-into abstractions. Any "yes" → simplify (remove abstraction / inline / keep in one place):
+- Interface/contract with a **single** impl and no second consumer?
+- Param/option never passed with a value other than default?
+- `abstract`/base class with **one** subclass?
+- New public method/hook/event used in **only one** place?
+- Indirection layer (factory/builder/adapter) added with no second variant?
 
-## Чек-лист упрощения (по диффу)
+Same markers = reason NOT to extract into a shared package (see `architect/package-contribution-protocol`, Rule of Three): generalize on the third repeat, not an imagined future.
 
-1. **Мёртвый код:** неиспользуемые переменные, импорты, ветки, параметры,
-   закомментированные блоки.
-2. **Лишние абстракции:** интерфейс с одной реализацией «на будущее»,
-   обёртка из одной строки, индирекция без второго потребителя.
-3. **Дубли:** повторённый фрагмент внутри диффа или копия уже существующей
-   в проекте утилиты — использовать существующую, не создавать новую.
-4. **Условия:** ранние возвраты вместо вложенности, инверсия guard-условий,
-   слияние одинаковых веток.
-5. **Паттерны проекта:** дифф следует конвенциям окружающего кода
-   (стиль, именование, слои), а не привносит свой.
-6. **Комментарии:** убрать комментарии, пересказывающие код; оставить
-   только объясняющие неочевидные ограничения.
+## YAGNI ladder — BEFORE coding (ponytail discipline)
+Before adding code, stop at the FIRST rung that holds — don't climb higher:
+1. Needed at all? No → skip (YAGNI).
+2. Already in the codebase? → reuse.
+3. Does stdlib do it? → use stdlib.
+4. Native platform/framework feature? → use it.
+5. Solved by an already-installed dependency? → use it (do NOT add a new one).
+6. One line? → one line.
+7. Only then — the minimum that works.
 
-## Чеклист speculative-generality (YAGNI)
+Ladder applies AFTER understanding the task, not instead of it. Bug → find root cause: grep every caller of the touched function, fix the shared cause once, not the symptom.
 
-Отдельный проход по диффу против абстракций «на вырост». Если на любой вопрос
-ответ «да» — упрости (убери абстракцию / встрой обратно / оставь в одном месте):
-
-- Есть интерфейс/контракт с **единственной** реализацией без второго потребителя?
-- Есть параметр/опция, который нигде не передаётся со значением, отличным от
-  дефолта?
-- Есть `abstract`-класс / базовый класс с **одним** наследником?
-- Новый публичный метод/хук/событие используется **только в одном** месте?
-- Добавлен слой индирекции (фабрика/билдер/адаптер) без второго варианта?
-
-Эти же маркеры — повод не выносить код в общий пакет (см.
-`architect/package-contribution-protocol`, Rule of Three): обобщаем на третьем
-повторении, а не на воображаемом будущем.
-
-## Лесенка YAGNI — ДО кода (адаптация дисциплины ponytail)
-
-Прежде чем добавить код, остановись на ПЕРВОЙ ступени, которая держит — выше не лезь:
-
-1. Это вообще нужно? Нет → пропусти (YAGNI).
-2. Уже есть в кодовой базе? → переиспользуй.
-3. Это умеет stdlib? → используй stdlib.
-4. Нативная фича платформы/фреймворка? → используй её.
-5. Решает уже установленная зависимость? → используй её (новую НЕ добавляй).
-6. Это одна строка? → одна строка.
-7. Только тогда — минимум, который работает.
-
-Лесенка применяется ПОСЛЕ понимания задачи, не вместо него. Баг — ищи корневую
-причину: grep каждого вызывающего затронутую функцию, чини общую один раз, не симптом.
-
-## Формат вывода — delete-list
-
-По диффу верни помеченный список (что убрать/упростить и на что заменить):
+## Output format — delete-list
+Per diff, return a tagged list (what to remove/simplify and what replaces it):
 
 ```
-L12-38: stdlib: 27-строчный валидатор email → нативная проверка, 1 строка.
-L4: native: импорт библиотеки ради одного вызова → нативный API, 0 зависимостей.
-L88: yagni: абстракция с одной реализацией → встрой до появления второй.
-L52-71: delete: обёртка-ретрай вокруг идемпотентного локального вызова → удалить.
-net: -47 строк возможно.
+L12-38: stdlib: 27-line email validator → native check, 1 line.
+L4: native: library import for one call → native API, 0 deps.
+L88: yagni: abstraction with one impl → inline until a second appears.
+L52-71: delete: retry wrapper around an idempotent local call → remove.
+net: -47 lines possible.
 ```
 
-Теги: `delete:` / `stdlib:` / `native:` / `yagni:` / `shrink:`. Принцип: «удаление >
-добавление, скучное > умное» — меньше кода при сохранении поведения и безопасности.
+Tags: `delete:` / `stdlib:` / `native:` / `yagni:` / `shrink:`. Principle: "deletion > addition, boring > clever" — less code, behavior and safety preserved.
 
-## Процесс
+## Process
+1. Get diff: `git diff <base>...HEAD` (or files from task).
+2. Run checklist, collect edits each with rationale.
+3. Apply edits, run tests and lint.
+4. If an edit is debatable (could read as behavior change) — don't apply; propose separately.
 
-1. Получить дифф: `git diff <base>...HEAD` (или файлы из задачи).
-2. Прогнать чек-лист, собрать список правок с обоснованием каждой.
-3. Применить правки, прогнать тесты и линт.
-4. Если изменение спорное (можно прочитать как смену поведения) — не
-   применять, а предложить отдельно.
+## Background mode
+`snippets/simplify-on-push.yml` — GitHub Actions template: agent runs this checklist on the push diff and leaves suggestions as a PR comment. Background agent **suggests**, does not merge. See docs/workflows/background-agents.
 
-## Фоновый режим
+## Links
+- `quality/refactoring-plan` — planned refactor of old (legacy) code, not fresh diff
+- `quality/tech-debt-audit` — inventory and prioritize debt before refactoring
+- `quality/code-review` — fresh-diff simplification feeds `[suggestion]`/`[nit]` into review
+- `quality/test-strategy` — tests as gate: no coverage of touched area → don't simplify
+- `system/cross-project-coordinator` — cross-project dups (util copy living in another repo)
+- `architect/package-contribution-protocol` — same YAGNI/Rule-of-Three for extracting code into a shared package
 
-`snippets/simplify-on-push.yml` — шаблон GitHub Actions: агент прогоняет
-этот чек-лист по диффу пуша и оставляет предложения как PR-комментарий.
-Фоновый агент **предлагает**, но не мержит. См. docs/workflows/background-agents.
+<!-- ru-source-sha256: PENDING -->
 
-## Ссылки
-
-- `quality/refactoring-plan` — плановый рефакторинг старого кода (legacy), а не свежего диффа
-- `quality/tech-debt-audit` — инвентаризация и приоритизация долга до рефакторинга
-- `quality/code-review` — упрощение свежего диффа подаёт предложения `[suggestion]`/`[nit]` в ревью
-- `quality/test-strategy` — тесты как гейт: без покрытия изменяемого участка не упрощать
-- `system/cross-project-coordinator` — дубли между проектами (когда копия утилиты живёт в другом репо)
-- `architect/package-contribution-protocol` — тот же YAGNI/Rule-of-Three применительно к выносу кода в общий пакет
+<!-- ru-source-sha256: bc79740ce9c5c59c6036b54fc0c7a2f9ffa51e3b4d11b647d64973afbd93adaa -->

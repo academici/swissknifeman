@@ -2,7 +2,7 @@
 name: dx-design
 bucket: oss-dev
 version: 0.1.0
-description: Developer Experience: README, quick-start (≤ 60 сек), API ergonomics, error messages, типы, CLI UX
+description: "Developer Experience: README, quick-start (≤60s), API ergonomics, error messages, types, CLI UX"
 risk: draft
 persona: oss-dev
 tags: [oss, documentation, api, cli]
@@ -15,44 +15,31 @@ adapters: [claude, cursor, fable]
 
 # Skill: Developer Experience Design
 
-Применять когда: OSS-проект **готовится к публикации** или **получает фидбэк уровня "сложно начать"**. DX — основная причина почему один пакет растёт, а технически равный — нет.
+Apply when: OSS project is **preparing to publish** OR gets **"hard to get started" feedback**. Must run **after `oss-development`**. Often paired with `release-engineering` + `oss-governance`.
 
-Должен быть **выполнен после `oss-development`** (есть базовая структура и понимание что делает пакет). Часто пара с `release-engineering` (DX-метрики в release notes) и `oss-governance` (CoC / CONTRIBUTING.md — тоже часть DX).
+## When NOT to apply
+- Internal-only package, no external consumers — minimal README suffices.
+- Already mature README + examples + types — refuse, don't redo.
+- Package doesn't yet do what it promises — function first, DX later. Polish nothing.
 
----
-
-## Когда НЕ применять
-
-- Internal-only пакет без внешних потребителей — DX-инвестиция не окупится. Минимальный README достаточен.
-- Уже есть зрелое README + примеры + типы — отказать, не переделывать ради переделывания.
-- Пакет ещё не делает то, что обещает — сначала функционал, потом DX. Не полировать ничего.
-
----
-
-## 6 осей DX
+## 6 DX axes
 
 ### 1. Time-to-First-Success (TTFS)
-**Цель:** новый пользователь должен получить **рабочий результат за ≤ 60 секунд** от посадки на README.
+Goal: new user gets a **working result in ≤60s** from landing on README. Time each step:
+- Read first README paragraph → understand what it is
+- Find install command → run
+- Find minimal example → copy → run
+- See success
 
-Засекать пошагово:
-- Прочитать первый параграф README → понять что это
-- Найти install-команду → выполнить
-- Найти minimal example → скопировать → запустить
-- Увидеть успех
+**Any step >15s = DX problem.** Typical causes: README long, install at bottom; minimal example needs a config file; API key / env var needed but no source explained.
 
-**Если хоть один шаг > 15 сек** — DX-проблема. Типичные причины:
-- README длинный, install внизу
-- Минимальный пример требует config-файл
-- Нужен API-ключ или env-переменная — не объяснено где взять
-
-### 2. README structure (обязательная)
-
-Порядок секций (НЕ менять):
+### 2. README structure (mandatory)
+Section order (do NOT change):
 
 ```markdown
 # ProjectName
 
-> Одна строка: что это и для кого. **Без маркетинга.**
+> One line: what it is and for whom. **No marketing.**
 
 [![ci](badge)] [![npm](badge)] [![license](badge)]
 
@@ -78,29 +65,26 @@ console.log(r);
 - Anti-case 2
 
 ## Features
-[список из 5–8 буллетов]
+[5–8 bullets]
 
 ## Documentation
-→ [полная документация](link)
+→ [full docs](link)
 
 ## License
 
-Выбор и применение лицензии (MIT/Apache-2.0/BSD/…), их различия и когда что — [references/license-guidance.md](references/license-guidance.md).
+License choice/application (MIT/Apache-2.0/BSD/…), differences and when — [references/license-guidance.md](references/license-guidance.md).
+```
 
-## Что агент добавляет сам
+Agent adds itself:
+- **DX metrics.** Measure TTFS on a clean VM. If package has npm stats — track `time-from-install-to-first-import` via telemetry (opt-in).
+- **Public dogfooding.** Maintainer must use own package in a non-trivial project; else DX bugs invisible.
+- **Issue templates.** `bug_report.yml`, `feature_request.yml`, `question.yml` — reduce noise, structured bugs. (Overlaps `oss-governance`.)
+- **Performance baseline.** README one figure: «cold start: X ms, query: Y ms». No deceptive competitor benchmarks; **own** baseline honestly.
+- **TypeScript: source of truth.** For JS packages types = public API. Any type change = breaking. See `release-engineering`.
 
-- **DX-метрики.** Считать TTFS на чистой VM. Если пакет имеет npm stats — отслеживать `time-from-install-to-first-import` через telemetry (opt-in).
-- **Public dogfooding.** Мейнтейнер сам должен использовать свой пакет в нетривиальном проекте. Без этого DX-баги не видны.
-- **Issue templates.** `bug_report.yml`, `feature_request.yml`, `question.yml` — снижают шум, дают структурированные баги. (Пересекается с `oss-governance`).
-- **Performance baseline.** В README — одна цифра: «cold start: X ms, query: Y ms». Без deceptive benchmarks с конкурентами, но **своя** baseline честно.
-- **TypeScript: source of truth.** Для JS-пакетов типы — публичный API. Любое изменение типа = breaking. См. `release-engineering`.
-
----
-
-## Структура output-файла
+## Output files
 
 ### `ProjectName/DX_Design.md`
-
 ```markdown
 ---
 project: [ProjectName]
@@ -110,64 +94,61 @@ based_on: oss-development.md
 
 # DX Design — [ProjectName]
 
-## TTFS-цель
-- Текущий TTFS на чистой VM: X сек
-- Целевой: ≤ 60 сек
+## TTFS goal
+- Current TTFS on clean VM: X s
+- Target: ≤ 60 s
 
-## README структура
-- [принятый порядок секций]
+## README structure
+- [accepted section order]
 
 ## API ergonomics
-- Главный entry-point: ...
+- Main entry-point: ...
 - Defaults: ...
 - Error class: ...
 - Type-safety: ...
 
 ## Error message contract
-- Шаблон: [What] / Why / Fix / Docs
-- Каталог error codes: [...]
+- Template: [What] / Why / Fix / Docs
+- Error codes catalog: [...]
 
-## CLI UX (если есть)
+## CLI UX (if any)
 - Help: ...
 - Color/TTY: ...
 - Exit codes: ...
 
-## Документация
-- Структура: ...
+## Documentation
+- Structure: ...
 - Tooling: TypeDoc / phpDocumentor / dartdoc
 - Hosting: GitHub Pages / docs/ in-repo
 
-## DX-метрики и проверки
-- [ ] README ≤ 200 строк
-- [ ] Quick example работает копипастом
-- [ ] Все error messages имеют docs URL
-- [ ] CLI `--help` информативен
-- [ ] `npm install && import` работает без config
+## DX metrics & checks
+- [ ] README ≤ 200 lines
+- [ ] Quick example works by copy-paste
+- [ ] All error messages have docs URL
+- [ ] CLI `--help` is informative
+- [ ] `npm install && import` works without config
 ```
 
 ### `ProjectName/README.md`
+Created/rewritten per structure above. Primary DX artifact.
 
-Создаётся / переписывается по структуре выше. Это основной артефакт DX.
+## References
+- `oss-dev/oss-development` — prerequisite: base structure + understanding what package does.
+- `oss-dev/release-engineering` — DX metrics in release notes; TS types as public API (breaking).
+- `oss-dev/oss-governance` — CONTRIBUTING/CoC + issue/PR templates — also DX.
+- `php/laravel-package-docs` — README/VitePress/usage docs for PHP packages (language-specific).
+- `general/writing-style` — tone/language of README, error messages, docs.
 
----
+## Hard prohibitions
+FORBIDDEN:
+- Publish `v1.0+` without README in the structure above
+- Error messages without a `Fix:` hint
+- Public functions API with `any` types
+- Long README (>300 lines) — move to docs/
+- Marketing text in README («revolutionary», «AI-powered» without substance)
+- Quick example requiring a config file
+- Hiding install behind a «requirements» section
 
-## Ссылки
+<!-- ru-source-sha256: PENDING -->
 
-- `oss-dev/oss-development` — предпосылка: базовая структура и понимание, что делает пакет.
-- `oss-dev/release-engineering` — DX-метрики в release notes; TS-типы как публичный API (breaking).
-- `oss-dev/oss-governance` — CONTRIBUTING/CoC и issue/PR-шаблоны — тоже часть DX.
-- `php/laravel-package-docs` — README/VitePress/usage-доки для PHP-пакетов (язык-специфика).
-- `general/writing-style` — тон и язык текстов README, error-messages и доков.
-
----
-
-## Жёсткие запреты
-
-НЕЛЬЗЯ:
-- Публиковать `v1.0+` без README со структурой выше
-- Error messages без `Fix:` подсказки
-- API с `any` типами для публичных функций
-- Длинный README (> 300 строк) — выносить в docs/
-- Маркетинговые тексты в README («revolutionary», «AI-powered» без сути)
-- Quick example, требующий config-файла
-- Прятать install за разделом «требования»
+<!-- ru-source-sha256: 794245bc25ec88ec92d6653b5383110d77dd0b77c38b6a4dee79ab584f0cff3b -->

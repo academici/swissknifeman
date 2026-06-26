@@ -1,0 +1,78 @@
+---
+name: threading
+bucket: blender-modeling
+version: 0.1.0
+description: "Резьба на FDM/SLA-деталях: материал, физика печати, радиальные зазоры по типу посадки"
+risk: write
+persona: oss-dev
+tags: [blender, 3d, fdm, sla, threading, geometry, bpy]
+requires: []
+produces_for: [parametric-config, build-loop]
+outputs: []
+snippets: ["snippets-threading.md"]
+adapters: [claude, cursor, fable]
+sha256: ""
+---
+
+# Навык: резьба на FDM/SLA-деталях
+
+## Материал и технология производства
+
+Детали с резьбой печатаются на **FDM/SLA-принтере из PG-пластика** (фотополимер или PETG).
+
+Физические свойства, влияющие на геометрию:
+- Резьба **не нарезается**, а **печатается** — точность ограничена разрешением принтера (~0.1–0.2 мм)
+- Пластик имеет **упругость**: при затяжке витки слегка деформируются и самоцентрируются
+- Поверхность после печати не идеально гладкая → дополнительное трение
+
+**Вывод:** математически точная резьба (зазор = 0) в реальности не вкрутится. Всегда нужен радиальный зазор.
+
+---
+
+## Зазоры для PG-пластика (FDM/SLA)
+
+| Применение | `thread_clearance` (на сторону) | По диаметру |
+|---|---|---|
+| Ручное завинчивание без инструмента | **0.15 мм** | 0.3 мм |
+| Плотная посадка (с усилием) | 0.05–0.10 мм | 0.1–0.2 мм |
+| Свободное скольжение | 0.20–0.25 мм | 0.4–0.5 мм |
+
+При смене материала или принтера — пересчитать `thread_clearance` под реальный замер после первой печати.
+
+---
+
+## Реализация резьбы в Blender 5.x (SCREW-модификатор)
+
+Треугольный профиль зубца (упрощённая метрическая резьба):
+
+```python
+# Профиль одного витка (r, z) — равнобедренный треугольник
+thread_pts = [
+    (r_base,  0.0),
+    (r_tip,   pitch / 2),
+    (r_base,  pitch),
+]
+# SCREW-модификатор:
+scr.screw_offset = mm(pitch)   # подъём за один оборот
+scr.iterations   = turns       # число витков
+```
+
+Для деталей из PG треугольного профиля достаточно: витки самозацентрируются при завинчивании.
+
+Конкретные параметры резьбы для пар деталей текущей модели — в `models/{name}/ai/rules.md`.
+
+**Вариант с трапециевидным профилем** — если треугольник даёт заедание после печати (добавить по результатам замера).
+
+---
+
+## Внешняя документация
+
+- [Blender SCREW modifier](https://docs.blender.org/manual/en/latest/modeling/modifiers/generate/screw.html)
+- [FDM thread tolerances — Prusa Knowledge Base](https://help.prusa3d.com/article/tolerances_n_of_fdm_3d_printing)
+
+## Связанные скиллы
+
+- `blender-modeling/parametric-config` — параметры `*_thread_*` и `*_clearance` заводятся в `config.py` как dataclass-поля и проверяются инвариантом `thread_depth > thread_clearance` в `check.py`.
+- `blender-modeling/model-rules` — таблица «Параметры резьбы» в `models/{name}/ai/rules.md` хранит pitch/depth/turns/clearance для конкретных пар деталей.
+- `blender-modeling/build-loop` — общий цикл построения и проверки модели, в который встроена печать резьбы.
+- `blender/version-gotchas` — ловушки SCREW-модификатора и `temp_override` в Blender 5.0.

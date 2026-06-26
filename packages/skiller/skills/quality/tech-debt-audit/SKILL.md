@@ -2,7 +2,7 @@
 name: tech-debt-audit
 bucket: quality
 version: 0.1.0
-description: Инвентаризация техдолга, классификация (architectural/code/dependency/test/process), приоритизация по impact × effort, расчёт payback ROI
+description: Tech-debt inventory, classification (architectural/code/dependency/test/process), prioritization by impact × effort, payback ROI calc
 risk: draft
 persona: quality
 tags: [quality, validation, refactor, dependencies, workflow]
@@ -15,98 +15,73 @@ adapters: [claude, cursor, fable]
 
 # Skill: Tech Debt Audit
 
-Применять когда: команда говорит «у нас всё медленно», скорость доставки фич падает, новые баги возникают в старых местах, онбординг junior'а занимает > 2 недель. Также — раз в квартал планово, даже если «всё хорошо». При смене tech lead — обязательно.
+Apply when: team says "everything is slow", feature delivery velocity drops, new bugs recur in old places, junior onboarding > 2 weeks. Also: quarterly, even if "all good". On tech-lead change — mandatory.
 
-Не применять: до первого MVP (там «весь код — техдолг», бессмысленно), для прототипа.
+## When NOT to apply
+- Pre-MVP stage (too early to classify debt; "all code is debt")
+- One-off scripts, migrations
+- Auto-generated code (regenerate, don't audit)
+- < 3 months since last audit — premature
 
----
+## Principle
+Tech debt = not a bug, not bad code — a (conscious or unconscious) trade-off between speed-now and cost-of-change-later. Goal: not fix everything, but make debt **visible** + **manageable**. 70% of debt should stay unfixed — fine if risk/cost is understood.
 
-## Когда НЕ применять
+## Step 1 — Classification (5 types)
+Each register entry gets exactly **one** primary type (optional secondary).
 
-- Pre-MVP стадия (рано классифицировать долг)
-- One-off скрипты, миграции
-- Auto-generated code (выкинуть и перегенерить, не аудитить)
-- Спустя < 3 месяцев после последнего аудита — преждевременно
-
----
-
-## Принцип
-
-Tech debt — это **не баг и не плохой код**. Это **осознанный или неосознанный компромисс** между скоростью сейчас и стоимостью изменений потом.
-
-Цель аудита — **не починить всё**, а сделать долг **видимым** и **управляемым**. 70% долга должно остаться неисправленным — это нормально, если risk/cost понятен.
-
----
-
-## Шаг 1. Классификация — 5 типов
-
-| Тип | Что | Симптом | Кто видит |
+| Type | What | Symptom | Who sees |
 |:---|:---|:---|:---|
-| **Architectural** | Неправильные границы модулей, циклические зависимости, монолит вместо сервисов (или наоборот) | Изменение одной фичи трогает 5+ файлов | Архитектор, tech lead |
-| **Code-level** | Длинные функции, копипаста, магия, dead code | Junior не понимает за 30 мин | Все разработчики |
-| **Dependency** | Устаревшие библиотеки, известные CVE, deprecated API, abandoned packages | `dependency-audit` срабатывает | DevOps, security |
-| **Test** | Нет тестов / flaky / медленные / coverage gaps в критичных местах | CI красный / нестабильный, страх рефакторинга | Все |
-| **Process** | Нет CI, ручные деплои, нет ревью, hardcoded конфиги, secrets в репо | Время до прода > 1 день, частые откаты | Tech lead, ops |
+| **Architectural** | Wrong module boundaries, cyclic deps, monolith-vs-services (or reverse) | One feature change touches 5+ files | Architect, tech lead |
+| **Code-level** | Long functions, copy-paste, magic, dead code | Junior can't grasp in 30 min | All devs |
+| **Dependency** | Outdated libs, known CVE, deprecated API, abandoned packages | `dependency-audit` fires | DevOps, security |
+| **Test** | No tests / flaky / slow / coverage gaps in critical spots | CI red/unstable, fear of refactor | All |
+| **Process** | No CI, manual deploys, no review, hardcoded configs, secrets in repo | Time-to-prod > 1 day, frequent rollbacks | Tech lead, ops |
 
-Каждая запись в реестре долга получает **только один** primary type (плюс secondary опционально).
+## Agentic technical debt (AI-era special case)
+Compounding subtype of `architectural` debt, specific to AI-built codebases. Normal debt is linear/slow; **agentic debt compounds**: without specs + architectural constraints written where AI can read, every session re-derives fundamental decisions and they drift → codebase with no coherent mental model. Surfaces late (at scale), forces rewrite-from-scratch.
 
----
+**Antidote (record as process/architectural debt if absent):**
+- **CLAUDE.md / persistent context** — architectural decisions, forbidden dependencies, conscious trade-offs, fixed before production code. Persistent context from day one.
+- **Session-log pattern** — session start: revisit scope + CLAUDE.md; end: log entry (what built, which decisions, which assumptions). ~5 min docs/session = cheap insurance vs architectural drift.
+- Debt marker: new AI session needs codebase re-explained; AI changes drift from original vision.
 
-## Agentic technical debt (особый случай AI-эпохи)
+> Concept detail: `02-Knowledge/Agentic-Technical-Debt` (Brain-vault).
 
-Отдельный, компаундирующийся подвид `architectural`-долга, специфичный для AI-built кодовых баз. Обычный долг линеен и копится медленно. **Agentic debt компаундируется:** без specs и architectural constraints, записанных туда, где AI может прочитать, **каждая сессия выводит фундаментальные решения заново**, и они дрейфуют. Получается кодовая база без coherent mental model — не потому что какой-то кусок плох, а потому что куски никогда не проектировались, чтобы стыковаться. Всплывает поздно (на scale) и заставляет переписывать с нуля.
+## Step 2 — Signal sources (where to find debt)
+Use **min 4 of 8** sources, else picture is skewed.
 
-**Антидот (записать в реестр как process/architectural debt, если отсутствует):**
-- **CLAUDE.md / persistent context** — architectural decisions, запрещённые зависимости, осознанные trade-offs, зафиксированные до production-кода. Persistent context с первого дня — это то, что держит AI force-multiplier'ом, а не источником энтропии.
-- **Session-log pattern** — начало сессии: revisit scope + CLAUDE.md; конец: log-запись (что построено, какие решения, какие допущения). «5 минут документации на сессию — дешёвая страховка от architectural drift».
-- Маркер наличия долга: новая AI-сессия требует переобъяснять кодовую базу; AI-изменения дрейфуют от исходного видения.
-
-> Подробнее как концепт: `02-Knowledge/Agentic-Technical-Debt` (в Brain-vault).
-
----
-
-## Шаг 2. Источники сигналов — где искать долг
-
-| Источник | Что вытаскивать |
+| Source | Extract |
 |:---|:---|
-| **Git log analytics** | Файлы, которые меняются чаще всего (`git log --pretty=format: --name-only \| sort \| uniq -c \| sort -rn \| head`) — кандидаты на рефакторинг |
-| **Static analysis report** | Топ-20 функций по cyclomatic complexity, файлы > 500 LOC, дубликаты (jscpd, pylint) |
-| **Coverage report** | Модули с coverage < 40% при > 100 LOC |
-| **`dependency-audit` (если есть)** | Список outdated/vulnerable deps |
-| **PR review comments** | Поиск по архиву `[issue]` / `[blocker]` — что часто всплывает |
-| **Incident postmortems** | Root cause `infrastructure` / `code` — прямой источник долга |
-| **Team retro** | «Что больно?» — субъективно, но даёт сигналы которые метрики не ловят |
-| **Onboarding feedback** | Новичок через 2 недели — где спотыкался |
+| **Git log analytics** | Most-changed files (`git log --pretty=format: --name-only \| sort \| uniq -c \| sort -rn \| head`) — refactor candidates |
+| **Static analysis report** | Top-20 functions by cyclomatic complexity, files > 500 LOC, duplicates (jscpd, pylint) |
+| **Coverage report** | Modules with coverage < 40% at > 100 LOC |
+| **`dependency-audit` (if present)** | outdated/vulnerable deps |
+| **PR review comments** | Search archive `[issue]` / `[blocker]` — recurring items |
+| **Incident postmortems** | Root cause `infrastructure` / `code` — direct debt source |
+| **Team retro** | "What hurts?" — subjective, catches what metrics miss |
+| **Onboarding feedback** | Newcomer after 2 weeks — where they stumbled |
 
-Минимум 4 из 8 источников использовать — иначе картинка перекошена.
-
----
-
-## Шаг 3. Запись в реестре — формат
-
-Один debt item = одна запись:
+## Step 3 — Register entry format
+One debt item = one entry:
 
 ```markdown
-### TD-001: [короткое название]
+### TD-001: [short title]
 
-- **Тип:** architectural | code | dependency | test | process
-- **Локация:** путь / модуль / весь репо
-- **Описание:** что именно не так, 2-3 строки
-- **Impact** (если не починить):
-  - Скорость разработки: high | medium | low
-  - Риск инцидента: high | medium | low
-  - Команда (onboarding, frustration): high | medium | low
-- **Effort на починку:** XS (< 1 дня) | S (1-3 дня) | M (1-2 недели) | L (1 месяц) | XL (квартал+)
-- **Стоимость не-починки:** часов/месяц команды (оценка)
-- **Trigger to fix:** что должно произойти, чтобы это починили (например: «когда coverage упадёт ниже 50%», «при следующем major upgrade фреймворка»)
-- **Owner:** кто хранит контекст
+- **Type:** architectural | code | dependency | test | process
+- **Location:** path / module / whole repo
+- **Description:** what's wrong, 2-3 lines
+- **Impact** (if unfixed):
+  - Dev speed: high | medium | low
+  - Incident risk: high | medium | low
+  - Team (onboarding, frustration): high | medium | low
+- **Fix effort:** XS (< 1 day) | S (1-3 days) | M (1-2 weeks) | L (1 month) | XL (quarter+)
+- **Cost of not fixing:** team hours/month (estimate)
+- **Trigger to fix:** what must happen to fix it (e.g. "when coverage drops below 50%", "at next major framework upgrade")
+- **Owner:** who holds context
 - **Created:** YYYY-MM-DD
 ```
 
----
-
-## Шаг 4. Приоритизация — impact × effort матрица
-
+## Step 4 — Prioritization (impact × effort matrix)
 ```
                 effort
                 XS    S    M    L    XL
@@ -114,107 +89,88 @@ impact  high    🔴   🔴   🟡   🟡   ⚪
         medium  🔴   🟡   🟡   ⚪   ⚪
         low     🟡   ⚪   ⚪   ⚪   ⚪
 
-🔴 = делать сейчас (quick win или критичная боль)
-🟡 = планировать в спринт-roadmap, 20-30% capacity
-⚪ = жить с этим, перепроверить через квартал
+🔴 = do now (quick win or critical pain)
+🟡 = plan into sprint-roadmap, 20-30% capacity
+⚪ = live with it, recheck next quarter
 ```
+Rule: **≤ 30% engineering capacity** on tech debt. Else no features → business unhappy → next debt iteration guaranteed.
 
-Правило: **не более 30% engineering capacity** на техдолг. Иначе фич нет → бизнес недоволен → следующая итерация долга гарантирована.
-
----
-
-## Шаг 5. Payback ROI — когда стоит чинить
-
-Формула:
-
+## Step 5 — Payback ROI (when to fix)
 ```
-ROI = (стоимость не-починки за период) / (стоимость починки)
+ROI = (cost-of-not-fixing over period) / (cost-of-fixing)
 
-- стоимость не-починки = часов/месяц × месяцев до следующего пересмотра
-- стоимость починки = effort estimate × средняя ставка часа
+- cost-of-not-fixing = hours/month × months to next review
+- cost-of-fixing = effort estimate × avg hourly rate
 
-ROI > 3  → делать
-ROI 1-3 → планировать
-ROI < 1 → отложить (терпеть дешевле)
+ROI > 3  → do it
+ROI 1-3 → plan
+ROI < 1 → defer (tolerating is cheaper)
 ```
+Example:
+- TD-007: outdated ORM, 4 hours/month on workarounds
+- Per year: 4 × 12 = 48 hours "tax"
+- Migration: ~80 hours
+- ROI = 48 / 80 = 0.6 → **don't fix now**, recheck in a year
 
-Пример:
-- TD-007: устаревшая ORM, 4 часа/месяц на воркэраунды
-- За год: 4 × 12 = 48 часов «налога»
-- Миграция: оценка 80 часов
-- ROI = 48 / 80 = 0.6 → **не чинить сейчас**, перепроверить через год
-
----
-
-## Шаг 6. Жизненный цикл записи
-
+## Step 6 — Entry lifecycle
 ```
 [new] → triaged → planned → in-progress → resolved
-                ↘ accepted (живём с этим, осознанно) ↗
-                ↘ obsolete (контекст изменился, неактуально)
+                ↘ accepted (live with it, consciously) ↗
+                ↘ obsolete (context changed, irrelevant)
 ```
+Quarterly: review register — what moved, appeared, became obsolete.
 
-Раз в квартал — review реестра: что переехало, что появилось, что устарело.
+## Agent adds on its own
+- Run `git log` analytics on repo → top-20 hot-spots
+- Cross-check with `dependency-audit` if present in project
+- "Debt density" metric: total fix effort / total repo LOC — for tracking over time
+- Warn: if 70%+ entries have `impact: low` → register cluttered, clean up
+- Propose pushing found `architectural` debts to `refactoring-plan` (via `produces_for`)
 
----
-
-## Что агент добавляет сам
-
-- Запуск `git log` analytics на репозитории и выдача топ-20 hot-spots
-- Cross-check с `dependency-audit` если он есть в проекте
-- Метрика «debt density»: total effort на починку / общий LOC репо — для tracking во времени
-- Предупреждение: если 70%+ записей имеют `impact: low` — реестр захламлён, нужно почистить
-- Предложение списать обнаруженные `architectural`-долги в `refactoring-plan` (через `produces_for`)
-
----
-
-## Структура output-файла `Tech_Debt_Register.md`
-
+## Output file structure `Tech_Debt_Register.md`
 ```markdown
 # Tech Debt Register: [ProjectName]
 
-> Дата аудита: YYYY-MM-DD
-> Следующий пересмотр: YYYY-MM-DD (+3 мес)
+> Audit date: YYYY-MM-DD
+> Next review: YYYY-MM-DD (+3 mo)
 
-## Сводка
-| Тип | Кол-во | Total effort |
+## Summary
+| Type | Count | Total effort |
 |:---|:---:|:---:|
-| architectural | N | XX дней |
+| architectural | N | XX days |
 | code | ... | ... |
 
-## Топ-10 по impact × effort (matrix)
+## Top-10 by impact × effort (matrix)
 
-## Реестр (TD-001 … TD-NNN)
-[Записи по формату из Шага 3, отсортированы по приоритету]
+## Register (TD-001 … TD-NNN)
+[Entries per Step 3 format, sorted by priority]
 
-## Принятые компромиссы (accepted debt)
-[Что осознанно не чиним и почему]
+## Accepted trade-offs (accepted debt)
+[What we consciously won't fix and why]
 
-## Метрики
+## Metrics
 - Debt density: X effort-days / 1000 LOC
-- % capacity на debt: Y%
-- Resolved за квартал: Z items
+- % capacity on debt: Y%
+- Resolved this quarter: Z items
 ```
 
----
+## Links
+- `quality/refactoring-plan` — where `architectural`/large `code` debts go (produces_for)
+- `oss-dev/dependency-audit` — signal source for `dependency` type (outdated/CVE/abandoned)
+- `quality/test-strategy` — signal source for `test` type (coverage gaps, ice-cream cone)
+- `operator/postmortem` — incident postmortems as root-cause debt source
+- `quality/code-review` — archive of `[issue]`/`[blocker]` comments as signal source
+- `system/cross-project-coordinator` — cross-project duplicates as debt/shared-package candidates
 
-## Ссылки
+## Hard prohibitions
+NEVER:
+- Record "refactor X" without impact + effort — that's wishful thinking, not a debt item
+- Plan > 30% capacity on debt at once
+- Fix debt without trigger / ROI justification — path to over-engineering
+- Delete register entries — only move to status `resolved` / `accepted` / `obsolete` (history audit)
+- Audit someone else's code without team context (what they already know vs don't)
+- Use tech debt as a weapon in internal disputes ("everything's bad because of [name]")
 
-- `quality/refactoring-plan` — куда списываются `architectural`/крупные `code`-долги (produces_for)
-- `oss-dev/dependency-audit` — источник сигналов по `dependency`-типу (outdated/CVE/abandoned)
-- `quality/test-strategy` — источник сигналов по `test`-типу (coverage gaps, ice-cream cone)
-- `operator/postmortem` — incident postmortems как источник root-cause долга
-- `quality/code-review` — архив `[issue]`/`[blocker]` комментов как источник сигналов
-- `system/cross-project-coordinator` — межпроектные дубли как кандидаты в долг/общий пакет
+<!-- ru-source-sha256: PENDING -->
 
----
-
-## Жёсткие запреты
-
-НЕЛЬЗЯ:
-- Записывать в реестр «refactor X» без impact и effort — это не debt item, а wishful thinking
-- Планировать > 30% capacity на debt одновременно
-- Чинить debt без trigger / ROI обоснования — путь к over-engineering
-- Удалять записи из реестра — только переводить в статус `resolved` / `accepted` / `obsolete` (для аудита истории)
-- Аудитить чужой код без контекста команды (что они уже знают, что — нет)
-- Использовать tech debt как оружие во внутренних спорах («у нас всё плохо потому что [имя]»)
+<!-- ru-source-sha256: 5e8736c18d0b8249181fb6fd057d007bbf071bbcc29fea4780622f4d43ff5e6f -->

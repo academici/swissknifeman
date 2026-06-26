@@ -2,7 +2,7 @@
 name: runbook
 bucket: operator
 version: 0.1.0
-description: Шаблон operational runbook на каждый P1/P2-алерт — symptoms, диагностика, mitigation steps, escalation, post-actions
+description: Operational runbook template per P1/P2 alert — symptoms, diagnostics, mitigation steps, escalation, post-actions
 risk: draft
 persona: operator
 tags: [ops, incident, template, monitoring]
@@ -15,123 +15,99 @@ adapters: [claude, cursor, fable]
 
 # Skill: Runbook
 
-Применять когда: появился алерт в проде, который может разбудить on-call. Каждый P1/P2-алерт **обязан** иметь runbook — иначе разбуженный в 3 ночи человек гадает что делать. Runbook = пошаговая инструкция от «увидел алерт» до «починил или эскалировал».
+Apply when: a prod alert exists that may page on-call. Every P1/P2 alert **must** have a runbook. Runbook = step-by-step from "saw alert" to "fixed or escalated".
 
-Не применять: для алертов которые не пейджатся (SEV-3/SEV-4 тикеты), либо для алертов которые планируется выключить (тогда — выключайте, а не пишите runbook).
+## When NOT to apply
+- Non-paging alerts (SEV-3/SEV-4 tickets).
+- Informational / notify-only alerts — runbook redundant.
+- Alerts still being tuned ("checking it doesn't spam") — validate first, then runbook.
+- Single-user issue (that's support flow, not runbook).
+- Alerts you plan to disable — disable them, don't write a runbook.
+- No incident-response process → pointless; do `incident-response` first.
 
----
+## Step 1. One alert = one runbook
+- Per alert: separate file `docs/03_Dev/Runbooks/<alert_name>.md`. Filename = alert name in the system (Prometheus rule name, Datadog monitor name, etc.). Alert → runbook link straight from the page → one click.
+- Anti-pattern: one "general runbook" with sections for 30 alerts.
 
-## Когда НЕ применять
-
-- Информационные алерты (notify-only) — runbook избыточен
-- Алерты в стадии «настраиваем, проверяем что не шумит» — сначала валидируйте, потом runbook
-- Алерты на single-user issue (это не runbook, это support flow)
-- Если нет процесса incident-response — нет смысла, см. `incident-response` сначала
-
----
-
-## Шаг 1. Один алерт = один runbook
-
-**Не валим всё в один документ.** На каждый алерт — отдельный файл `docs/03_Dev/Runbooks/<alert_name>.md`. Имя файла = имя алерта в системе (Prometheus rule name, Datadog monitor name, etc.). Это критично для on-call: алерт пришёл → ссылка на runbook прямо из page'а → один клик.
-
-**Anti-pattern:** «общий runbook» с разделами на 30 алертов. Никто не будет в 3 ночи листать оглавление.
-
----
-
-## Шаг 2. Структура runbook'а — обязательные секции
-
+## Step 2. Mandatory runbook sections
 ```markdown
 # Runbook: <AlertName>
 
 **Severity:** SEV-X
 **Owner:** team / @person
 **Last updated:** YYYY-MM-DD by @author
-**Linked alert:** <ссылка на правило в Prometheus/Datadog/etc>
+**Linked alert:** <link to rule in Prometheus/Datadog/etc>
 
 ## Symptoms
-Что видит юзер / что в дашборде. Чёткий критерий «это — оно».
+What the user sees / what's on the dashboard. Clear criterion "this is it".
 
 ## Likely causes
-Топ-3 причины по частоте за последние N месяцев. Если новый алерт — гипотезы.
+Top-3 causes by frequency over last N months. If new alert — hypotheses.
 
 ## Diagnostic steps
-1. Открыть дашборд X → проверить Y
-2. Запросить логи `query: ...`
-3. Проверить статус апстрима / зависимости Z
+1. Open dashboard X → check Y
+2. Query logs `query: ...`
+3. Check upstream / dependency Z status
 
 ## Mitigation
-Что сделать чтобы юзеру стало лучше **сейчас**.
-- Опция A: rollback deploy (команда: ...)
-- Опция B: scale up replicas (команда: ...)
-- Опция C: feature flag off (команда: ...)
+What to do to make the user better **now**.
+- Option A: rollback deploy (command: ...)
+- Option B: scale up replicas (command: ...)
+- Option C: feature flag off (command: ...)
 
 ## Verification
-Как убедиться что mitigation сработал. Конкретный сигнал, не «посмотрите вроде ок».
+How to confirm mitigation worked. Concrete signal, not "looks ok".
 
 ## Escalation
-Когда эскалировать и к кому.
-- Если diagnostic не выявил причину за 15 мин → @team-X
-- Если затронут платёжный flow → @payments + Comms Lead
+When to escalate and to whom.
+- If diagnostics didn't find cause in 15 min → @team-X
+- If payment flow affected → @payments + Comms Lead
 
 ## Post-actions
-Что сделать **после** resolve:
-- Открыть postmortem ticket (если SEV-1/2)
-- Создать issue на root cause
-- Записать в `tech-debt-audit` если структурная проблема
+What to do **after** resolve:
+- Open postmortem ticket (if SEV-1/2)
+- Create root-cause issue
+- Record in `tech-debt-audit` if structural problem
 ```
 
----
+## Step 3. Diagnostic steps — what to write
+Rule: concrete commands, links, queries — not "check service health".
 
-## Шаг 3. Diagnostic steps — что писать
-
-**Правило:** конкретные команды, ссылки, queries — не «проверьте здоровье сервиса».
-
-| Хорошо | Плохо |
+| Good | Bad |
 |:---|:---|
-| `kubectl get pods -n api -l app=checkout` | «посмотрите статус подов» |
-| Открыть дашборд: <ссылка> панель "p99 latency" | «проверьте метрики» |
-| Datadog: `service:checkout status:error` за 15 мин | «логи» |
-| `psql -c "SELECT count(*) FROM jobs WHERE status='stuck'"` | «глянуть в БД» |
+| `kubectl get pods -n api -l app=checkout` | "check pod status" |
+| Open dashboard: <link> panel "p99 latency" | "check metrics" |
+| Datadog: `service:checkout status:error` over 15 min | "logs" |
+| `psql -c "SELECT count(*) FROM jobs WHERE status='stuck'"` | "look in DB" |
 
-Если шаг требует доступа к prod — указать **какого уровня** доступ и что делать если нет (быстрый эскалейт).
+If a step needs prod access — state **which level** and what to do if you lack it (fast escalate).
 
----
+## Step 4. Mitigation — reversibility priority
+Preference order:
+1. **Feature flag off** — instant, reversible, doesn't touch deploy.
+2. **Rollback deploy** — fast, relatively safe.
+3. **Scale (out/up)** — if capacity issue.
+4. **Hotfix** — last option, raises risk of second-order incident.
 
-## Шаг 4. Mitigation — приоритет реверсивности
+Per mitigation:
+- Command / procedure (exact copy-paste).
+- What confirms success.
+- What confirms failure → next option.
 
-Порядок предпочтения митигаций:
+## Step 5. Keeping it current
+Runbooks rot fastest in the repo.
 
-1. **Feature flag off** — мгновенно, реверсивно, не трогает деплой
-2. **Rollback deploy** — быстро, относительно безопасно
-3. **Scale (out/up)** — если capacity issue
-4. **Hotfix** — последняя опция, повышает риск second-order incident
-
-Для каждой mitigation:
-- Команда / процедура (точно скопировать-вставить)
-- Что подтверждает успех
-- Что подтверждает провал → следующая опция
-
----
-
-## Шаг 5. Поддержание актуальности
-
-Runbook **протухает быстрее всего** в репозитории. Правила:
-
-| Триггер | Действие |
+| Trigger | Action |
 |:---|:---|
-| Использовали runbook в инциденте | После постмортема — review, update |
-| Изменился сервис (новая зависимость, миграция) | Owner проходит свои runbooks |
-| Алерт молчит > 6 мес | Review: всё ещё актуален? Возможно — удалить |
-| Runbook не помог в инциденте | Постмортем явно указывает что fix'ить в runbook |
+| Used runbook in incident | After postmortem — review, update |
+| Service changed (new dependency, migration) | Owner walks their runbooks |
+| Alert silent > 6 months | Review: still relevant? Possibly delete |
+| Runbook didn't help in incident | Postmortem states explicitly what to fix in runbook |
 
-**Метрика здоровья:** % использований runbook'а где он реально помог (опрос после инцидента: helpful / partially / not at all).
+Health metric: % of runbook uses where it actually helped (post-incident survey: helpful / partially / not at all).
 
----
-
-## Шаг 6. Связь с алертом — операционная связка
-
-Алерт **обязан** содержать ссылку на runbook в самом payload:
-
+## Step 6. Alert↔runbook linkage
+Alert **must** carry runbook link in its payload:
 ```yaml
 # Prometheus alert example
 - alert: HighErrorRate
@@ -139,56 +115,45 @@ Runbook **протухает быстрее всего** в репозитори
     summary: "5xx rate > 5%"
     runbook_url: "https://github.com/org/repo/blob/main/docs/03_Dev/Runbooks/HighErrorRate.md"
 ```
+No `runbook_url` → alert must not page (policy). CI check optional (linter over Prometheus rules).
 
-Без `runbook_url` алерт не должен пэйджить — это policy. CI проверка опционально (linter поверх Prometheus rules).
+## Agent adds
+- Runbook template (ready markdown, copy-replace).
+- Link to `incident-response`: state in runbook which severity/IC roles apply.
+- Directory hint: `docs/03_Dev/Runbooks/<AlertName>.md` (one filename = one alert name).
+- "Runbook ready" checklist: has symptoms / diagnostics ≥ 3 steps / mitigation ≥ 2 options / concrete verification.
+- PII warning: no real user data in examples — masks only.
 
----
-
-## Что агент добавляет сам
-
-- Шаблон runbook (готовый markdown, скопировать-заменить)
-- Связка с `incident-response`: указать в Runbook'е какие severity/IC роли применимы
-- Подсказка по структуре каталога: `docs/03_Dev/Runbooks/<AlertName>.md` (одно имя файла = одно имя алерта)
-- Чек-лист «runbook ready»: есть symptoms / diagnostic ≥ 3 шагов / mitigation ≥ 2 опций / verification конкретный
-- Предупреждение про PII в runbook'ах: не вставлять реальные пользовательские данные в примеры — только маски
-
----
-
-## Структура output-файла `[AlertName].md`
-
-См. Шаг 2 — это и есть структура файла. Файл назван по имени алерта:
-
+## Output dir structure
+Structure of `[AlertName].md` = Step 2. File named after the alert:
 ```
 docs/03_Dev/Runbooks/
 ├── HighErrorRate.md
 ├── DatabaseConnectionsExhausted.md
 ├── PaymentWebhookFailure.md
-└── _README.md  ← оглавление, кто owner, когда review
+└── _README.md  ← index, owners, review dates
 ```
 
----
+## Hard forbiddens
+- Pageable alert without runbook (CI should catch if present).
+- One runbook for many alerts ("general troubleshooting").
+- Diagnostic steps like "google it" / "ask the architect".
+- Mitigation without `verification` section.
+- Hotfix as first mitigation option.
+- Real PII / secrets in example commands.
+- Silent staleness: runbook untouched > 6 months → review mark.
+- Storing runbooks outside repo (Confluence-only, Notion-only) — lost on tooling rotation.
 
-## Жёсткие запреты
+## Links
+- `operator/incident-response` — prerequisite; without an incident process a runbook is meaningless; severity/IC roles come from here.
+- `operator/oncall-rotation` — page must link to runbook; runbook = what to do when paged.
+- `operator/postmortem` — stale runbook surfaces in postmortem → AI to update (postmortem produces_for runbook).
+- `operator/capacity-planning` — scale-up mitigation relies on autoscaling policy and max replicas.
+- `architect/observability-design` — alerting defines which alerts need runbooks (runbook_url in payload).
+- `php/health-checks` — /health (live/ready) as source of symptoms and diagnostic steps.
+- `php/pennant-development` — feature-flag off as priority (reversible) mitigation.
+- `quality/tech-debt-audit` — structural problem from post-actions → row in Tech_Debt_Register.
 
-НЕЛЬЗЯ:
-- Pageable алерт без runbook'а (CI должен ловить — если есть)
-- Один runbook на множество алертов («общий troubleshooting»)
-- Diagnostic steps формата «погуглите» / «спросите архитектора»
-- Mitigation без `verification` секции (как понять что починили?)
-- Hotfix как первая опция mitigation (риск-проблема)
-- Реальные PII / секреты в примерах команд
-- Молчаливое устаревание: если runbook не трогали > 6 мес — review-метка
-- Хранить runbook'и вне репо (Confluence-only, Notion-only) — теряются при ротации tooling
+<!-- ru-source-sha256: PENDING -->
 
----
-
-## Ссылки
-
-- `operator/incident-response` — предпосылка: без процесса инцидентов runbook бессмысленен; severity/IC-роли берутся отсюда
-- `operator/oncall-rotation` — page обязан ссылаться на runbook; runbook = что делать разбуженному on-call
-- `operator/postmortem` — устаревший runbook вскрывается в постмортеме → AI на update (postmortem produces_for runbook)
-- `operator/capacity-planning` — scale-up как опция митигации опирается на autoscaling policy и max replicas
-- `architect/observability-design` — алертинг определяет, на какие алерты нужны runbook'и (runbook_url в payload)
-- `php/health-checks` — /health (live/ready) как источник symptoms и diagnostic steps
-- `php/pennant-development` — feature-flag off как приоритетная (реверсивная) митигация
-- `quality/tech-debt-audit` — структурная проблема из post-actions → строка в Tech_Debt_Register
+<!-- ru-source-sha256: 13cae39b6b2a11c8f9b484e2e569bd18c90339e3929113b1f823321a56081d78 -->

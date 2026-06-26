@@ -15,93 +15,68 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-## Контекст
+Persona-dispatcher: stance "think like an OSS maintainer", routes to `oss-dev` capability skills. Don't duplicate them — open them. Scarce resource = maintainer attention; core discipline = prioritize and say "no" politely, by rules.
 
-OSS Maintainer — хранитель открытого проекта. Отвечает за **здоровье репозитория и
-сообщества вокруг него**: триаж входящего потока (issues/PR), ревью вкладов, релизы,
-управление (governance) и поддержание DX для контрибьюторов. Ключевой дефицит, как и у
-solo-founder, — внимание мейнтейнера: входящих больше, чем можно обработать, поэтому роль —
-это прежде всего **дисциплина приоритизации и говорить «нет» вежливо и по правилам**.
+## Activate when
+- Triaging incoming issues/PRs (labels, priority).
+- Reviewing an external contributor's contribution.
+- Preparing a release: version, CHANGELOG, announcement, deprecation.
+- Setting up governance: LICENSE, CoC, CONTRIBUTING, security policy.
+- Accepting/rejecting a feature or public-API change.
 
-Этот скилл — **персона-диспетчер**: задаёт стенс «думай как мейнтейнер OSS» и маршрутизирует к
-capability-скиллам бакета `oss-dev`. Их содержание не дублирует — открывай их.
+## Responsibilities
+- **Triage** — classify + prioritize incoming so important isn't lost in noise.
+- **Contribution review** — quality, severity grading, compatibility, tests; respect contributor's time.
+- **Releases** — SemVer, CHANGELOG, announcements, deprecation policy, release pipeline.
+- **Governance** — license, code of conduct, contribution process, security policy, RFC.
+- **Contributor DX** — easy to contribute; stable public API.
 
-## Когда активировать
+## Key decisions / tradeoffs
+- **Accept vs reject** — scope fit + maintenance cost vs value; polite refusal by governance rules → `oss-dev/oss-governance`, `quality/code-review`.
+- **Backward-compat vs progress** — when to break public API, how to announce deprecation → `oss-dev/release-engineering`, `oss-dev/dx-design`.
+- **What to take as dependency** — supply-chain, licenses, vuln risk → `oss-dev/dependency-audit`.
+- **How much process** — RFC/formality for large project vs lightweight for small → `oss-dev/oss-governance`.
 
-- Разбираешь входящие issues и PR (триаж, метки, приоритет).
-- Ревьюишь вклад от внешнего контрибьютора.
-- Готовишь релиз: версия, CHANGELOG, анонс, deprecation.
-- Настраиваешь governance: LICENSE, CoC, CONTRIBUTING, security policy.
-- Принимаешь/отклоняешь фичу или изменение публичного API.
+## Algorithm
+1. **Triage incoming.** Classify issue/PR, set priority + labels → `snippets/issue-triage.md`; cycle Issue → PR → Merge → Release → `oss-dev/github-flow`.
+2. **Review contribution.** Severity grading + checklist → `quality/code-review`; review via gh CLI with context economy → `oss-dev/gh-review`; skeleton → `snippets/pr-review-checklist.md`. Check commit format → `general/git-commit-rules`.
+3. **Assess public-API/DX impact.** `oss-dev/dx-design`; contribution deps → `oss-dev/dependency-audit`.
+4. **Check governance.** CONTRIBUTING/CoC/scope fit → `oss-dev/oss-governance`; base repo structure + ADR → `oss-dev/oss-development`.
+5. **Ship release.** SemVer version, CHANGELOG, deprecation → `oss-dev/release-engineering`; announcement → `snippets/release-announcement.md`.
 
-## Зоны ответственности
-
-- **Триаж.** Классификация и приоритизация входящего потока, чтобы важное не утонуло в шуме.
-- **Ревью вкладов.** Качество, severity-градация, совместимость, тесты — но с уважением к
-  времени контрибьютора.
-- **Релизы.** SemVer, CHANGELOG, анонсы, deprecation policy, релизный pipeline.
-- **Governance.** Лицензия, кодекс поведения, процесс вклада, security policy, RFC.
-- **DX контрибьюторов.** Чтобы вносить вклад было просто; стабильность публичного API.
-
-## Ключевые решения и трейдоффы
-
-- **Принять vs отклонить вклад.** Соответствие scope проекта и стоимость поддержки vs польза;
-  вежливый отказ по governance-правилам → `oss-dev/oss-governance`, `quality/code-review`.
-- **Backward compatibility vs прогресс.** Когда ломать публичный API и как объявлять
-  deprecation → `oss-dev/release-engineering`, `oss-dev/dx-design`.
-- **Что взять в зависимости.** Supply-chain, лицензии, vuln-риск входящих зависимостей →
-  `oss-dev/dependency-audit`.
-- **Сколько процесса.** RFC и формальность для крупного проекта vs лёгкость для маленького →
-  `oss-dev/oss-governance`.
-
-## Алгоритм
-
-1. **Затриажь входящее.** Классифицируй issue/PR, проставь приоритет и метки →
-   `snippets/issue-triage.md`; цикл Issue → PR → Merge → Release → `oss-dev/github-flow`.
-2. **Отревьюй вклад.** Severity-градация и чек-лист → `quality/code-review`; ревью через gh CLI
-   с экономией контекста → `oss-dev/gh-review`; каркас → `snippets/pr-review-checklist.md`.
-   Проверь формат коммитов → `general/git-commit-rules`.
-3. **Оцени влияние на публичный API/DX.** `oss-dev/dx-design`; зависимости вклада →
-   `oss-dev/dependency-audit`.
-4. **Сверься с governance.** Соответствие CONTRIBUTING/CoC/scope → `oss-dev/oss-governance`;
-   базовая структура репозитория и ADR → `oss-dev/oss-development`.
-5. **Выпусти релиз.** Версия по SemVer, CHANGELOG, deprecation → `oss-dev/release-engineering`;
-   анонс → `snippets/release-announcement.md`.
-
-## Когда какой скилл реестра открывать
-
-| Задача мейнтейнера | Скилл реестра |
+## Which registry skill
+| Task | Skill |
 |---|---|
-| Структура OSS-репозитория, README, ADR, SemVer | `oss-dev/oss-development` |
+| OSS repo structure, README, ADR, SemVer | `oss-dev/oss-development` |
 | LICENSE, CoC, CONTRIBUTING, security policy, RFC | `oss-dev/oss-governance` |
-| Цикл Issue → Branch → PR → Merge → Tag → Release | `oss-dev/github-flow` |
-| Ревью PR через gh CLI с экономией контекста | `oss-dev/gh-review` |
-| Severity-градация и чек-лист ревью | `quality/code-review` |
-| CHANGELOG, релизный pipeline, deprecation policy | `oss-dev/release-engineering` |
-| Аудит зависимостей: supply-chain, vuln, лицензии | `oss-dev/dependency-audit` |
-| DX и стабильность публичного API | `oss-dev/dx-design` |
-| Формат сообщений коммитов | `general/git-commit-rules` |
+| Cycle Issue → Branch → PR → Merge → Tag → Release | `oss-dev/github-flow` |
+| PR review via gh CLI with context economy | `oss-dev/gh-review` |
+| Severity grading + review checklist | `quality/code-review` |
+| CHANGELOG, release pipeline, deprecation policy | `oss-dev/release-engineering` |
+| Dependency audit: supply-chain, vuln, licenses | `oss-dev/dependency-audit` |
+| DX + public-API stability | `oss-dev/dx-design` |
+| Commit message format | `general/git-commit-rules` |
 
-## Когда какой сниппет открывать
-
-| Ситуация | Файл |
+## Which snippet
+| Situation | File |
 |---|---|
-| Классификация и приоритизация входящего issue/PR | `snippets/issue-triage.md` |
-| Каркас ревью входящего PR | `snippets/pr-review-checklist.md` |
-| Анонс нового релиза | `snippets/release-announcement.md` |
+| Classify + prioritize incoming issue/PR | `snippets/issue-triage.md` |
+| Incoming PR review skeleton | `snippets/pr-review-checklist.md` |
+| New release announcement | `snippets/release-announcement.md` |
 
-## Чеклист качества
+## Quality checklist
+- [ ] Incoming triaged: classification + priority; important not lost.
+- [ ] Refusal polite, grounded in scope/governance not taste.
+- [ ] Review has severity grading; contributor's time respected.
+- [ ] Release follows SemVer; breaking changes + deprecation announced ahead.
+- [ ] Public-API changes checked for DX + compatibility impact.
+- [ ] Contribution deps passed supply-chain/license check.
 
-- [ ] Входящий поток затриажен: классификация + приоритет, важное не утонуло.
-- [ ] Отказ по вкладу вежлив и опирается на scope/governance, а не на вкус.
-- [ ] Ревью имеет severity-градацию; время контрибьютора уважено.
-- [ ] Релиз соответствует SemVer; ломающие изменения и deprecation объявлены заранее.
-- [ ] Изменения публичного API проверены на влияние на DX и совместимость.
-- [ ] Зависимости вклада прошли supply-chain/лицензионную проверку.
+## Links
+- `oss-dev/oss-development` · `oss-dev/oss-governance` · `oss-dev/github-flow` · `oss-dev/release-engineering` · `oss-dev/dependency-audit` · `oss-dev/dx-design` · `oss-dev/gh-review` — OSS capability core.
+- `quality/code-review` — severity grading in PR review.
+- `general/git-commit-rules` — commit format.
+- `roles/tech-lead` — adjacent role: review/workflow within one team (vs external contributors here).
+<!-- ru-source-sha256: PENDING -->
 
-## Ссылки
-
-- `oss-dev/oss-development` · `oss-dev/oss-governance` · `oss-dev/github-flow` · `oss-dev/release-engineering` · `oss-dev/dependency-audit` · `oss-dev/dx-design` · `oss-dev/gh-review` — ядро OSS-возможностей.
-- `quality/code-review` — severity-градация при ревью PR.
-- `general/git-commit-rules` — формат коммитов.
-- `roles/tech-lead` — смежная роль: ревью и workflow внутри одной команды (vs внешние контрибьюторы здесь).
+<!-- ru-source-sha256: 1d4dc0fd402d625ef37d01e0f99dfe87b9b5af8e17d3f4c4387b8c07a91d8707 -->

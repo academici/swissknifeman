@@ -2,7 +2,7 @@
 name: incident-response
 bucket: operator
 version: 0.1.0
-description: Процесс реагирования на инциденты в проде — severity-уровни, роли (IC/Comms/SME), коммуникация, action log, переход к postmortem
+description: Prod incident response process — severity levels, roles (IC/Comms/SME), communication, action log, handoff to postmortem
 risk: draft
 persona: operator
 tags: [incident, ops, workflow, sla]
@@ -15,164 +15,139 @@ adapters: [claude, cursor, fable]
 
 # Skill: Incident Response
 
-Применять когда: сервис работает в проде и стоит вопрос «как мы реагируем когда что-то ломается». Нужен документированный процесс — severity, кто принимает решения, как общаемся с пользователями, как фиксируем действия. Обычно — сразу после первого реального инцидента, либо когда команда выросла до 3+ инженеров.
+Apply when: service in prod, need documented response process (severity, decision-makers, user comms, action capture). Typically after first real incident, or team grown to 3+ engineers.
 
-Не применять: до прода, для прототипов, либо если уже есть зрелый incident management в материнской компании (наследуем оттуда).
+## Do NOT apply
+- Pre-prod / prototype
+- Solo dev without SLA
+- Internal team tool with no dependent users
+- Corporate incident process already exists — don't duplicate, only adapt
 
----
+## Step 1. Severity levels
 
-## Когда НЕ применять
-
-- Pre-prod / прототип — некого спасать
-- Соло-разработчик без SLA — incident-response = «чиню когда замечу»
-- Внутренний инструмент команды без зависимых пользователей
-- Если уже есть корпоративный incident process — не дублировать, только адаптировать
-
----
-
-## Шаг 1. Severity-уровни
-
-| Severity | Описание | Пример | Реакция |
+| Severity | Description | Example | Reaction |
 |:---:|:---|:---|:---|
-| **SEV-1** | Полный outage критичного сервиса, потеря данных, security breach | Сайт не открывается, БД корраптится | Page всех on-call, IC назначен в 5 мин, статус-страница обновлена в 15 мин |
-| **SEV-2** | Деградация значительной части пользователей / функций | Checkout не работает, 30% запросов 5xx | Page on-call, IC в 15 мин, статус обновлён в 30 мин |
-| **SEV-3** | Деградация некритичной функции либо проблема для < 5% юзеров | Поиск медленный, фоновая job застряла | Тикет в очередь, разбираем в рабочее время |
-| **SEV-4** | Косметика / single-user issue | Лейбл криво | Обычный bug-flow |
+| **SEV-1** | Full outage of critical service, data loss, security breach | Site down, DB corrupting | Page all on-call, IC assigned in 5 min, status page updated in 15 min |
+| **SEV-2** | Degradation of significant share of users/functions | Checkout broken, 30% of requests 5xx | Page on-call, IC in 15 min, status updated in 30 min |
+| **SEV-3** | Degradation of non-critical function or issue for < 5% users | Search slow, background job stuck | Ticket to queue, handle in business hours |
+| **SEV-4** | Cosmetic / single-user issue | Label misaligned | Normal bug-flow |
 
-**Правило:** severity определяет **скорость**, не **важность**. SEV-3 баг может быть критичным для бизнеса, но это backlog, не инцидент.
+Severity defines **speed**, not **importance**. A SEV-3 bug can be business-critical but it's backlog, not incident.
 
----
+## Step 2. Incident roles
 
-## Шаг 2. Роли в инциденте
-
-| Роль | Ответственность | Когда назначается |
+| Role | Responsibility | Assigned when |
 |:---|:---|:---|
-| **Incident Commander (IC)** | Принимает решения, не чинит сам. Координирует. | Сразу при объявлении SEV-1/2 |
-| **Subject Matter Expert (SME)** | Тот, кто чинит. Может быть несколько. | По мере привлечения |
-| **Communications Lead (Comms)** | Статус-страница, юзеры, внутренние стейкхолдеры | SEV-1, либо если инцидент > 30 мин |
-| **Scribe** | Ведёт action log в реальном времени | SEV-1, опционально SEV-2 |
+| **Incident Commander (IC)** | Makes decisions, doesn't fix. Coordinates. | Immediately on SEV-1/2 declaration |
+| **Subject Matter Expert (SME)** | The one who fixes. Can be several. | As pulled in |
+| **Communications Lead (Comms)** | Status page, users, internal stakeholders | SEV-1, or incident > 30 min |
+| **Scribe** | Real-time action log | SEV-1, optional SEV-2 |
 
-**Правило:** IC ≠ SME. Если человек чинит — он не может одновременно координировать. Для маленькой команды (≤ 3 чел) — IC и Comms может быть один.
+IC ≠ SME. If a person fixes, they can't coordinate simultaneously. Small team (≤ 3) — IC and Comms may be one.
 
----
-
-## Шаг 3. Lifecycle инцидента
+## Step 3. Incident lifecycle
 
 ```
-1. DETECT      — алерт сработал / юзер сообщил / увидели метрику
+1. DETECT      — alert fired / user reported / saw metric
    ↓
-2. DECLARE     — IC объявляет инцидент, severity, открывает channel
+2. DECLARE     — IC declares incident, severity, opens channel
    ↓
-3. INVESTIGATE — SME ищут root cause, IC координирует, Scribe пишет лог
+3. INVESTIGATE — SMEs find root cause, IC coordinates, Scribe logs
    ↓
-4. MITIGATE    — восстановили сервис (не обязательно вылечили — могли откатить, отключить фичу)
+4. MITIGATE    — service restored (not necessarily cured — may rollback, disable feature)
    ↓
-5. RESOLVE     — корневая причина устранена либо подтверждено что митигация надёжна
+5. RESOLVE     — root cause fixed or mitigation confirmed reliable
    ↓
-6. POSTMORTEM  — см. скилл postmortem (обязательно для SEV-1/2)
+6. POSTMORTEM  — see postmortem skill (mandatory for SEV-1/2)
 ```
 
-**Mitigate vs Resolve:** митигировали ≠ пофиксили. Откат деплоя — митигация, фикс бага в коде — resolve. Постмортем пишется после resolve.
+Mitigate ≠ fixed. Deploy rollback = mitigation, code bug fix = resolve. Postmortem written after resolve.
 
----
+## Step 4. Channels & communication
 
-## Шаг 4. Channels & communication
-
-| Канал | Когда | Кто пишет |
+| Channel | When | Who writes |
 |:---|:---|:---|
-| `#incident-<id>` в Slack/Discord | SEV-1/2 — выделенный канал на инцидент | Все участники |
-| Status page (statuspage.io / instatus / самописная) | SEV-1/2 — публичная | Comms Lead |
-| Внутренняя рассылка / channel announce | SEV-1 — каждые 30 мин | IC |
-| Postmortem doc | После resolve | Owner назначается IC'ом |
+| `#incident-<id>` in Slack/Discord | SEV-1/2 — dedicated channel per incident | All participants |
+| Status page (statuspage.io / instatus / homegrown) | SEV-1/2 — public | Comms Lead |
+| Internal mailing / channel announce | SEV-1 — every 30 min | IC |
+| Postmortem doc | After resolve | Owner assigned by IC |
 
-**Правило:** один источник правды — incident channel. Не плодим обсуждения в DM. Всё в канал.
+Single source of truth = incident channel. No discussions in DM. Everything in channel.
 
-**Шаблон статус-страницы:**
+Status page template:
 - `Investigating`: «We're aware of [problem] affecting [scope]. Investigating.»
 - `Identified`: «Cause identified as [X]. Working on fix.»
 - `Monitoring`: «Fix deployed. Monitoring.»
 - `Resolved`: «Resolved at HH:MM. Postmortem to follow.»
 
----
+## Step 5. Action Log
 
-## Шаг 5. Action Log
-
-В incident channel — обязательно с таймстампами. Каждое действие, гипотеза, наблюдение.
+In incident channel — mandatory with timestamps. Every action, hypothesis, observation.
 
 ```
-14:32 [Алерт] api-5xx-rate > 5% за 5 мин
-14:34 [IC] @anna объявляю SEV-2, IC=я
-14:35 [SME] @boris посмотрю метрики api-server
-14:38 [SME] boris: 5xx идут из /checkout, остальное ок
-14:40 [Гипотеза] последний деплой 14:20 затронул checkout
-14:42 [Действие] откатываю деплой → SHA abc123
-14:45 [Митигация] 5xx упал до baseline
-14:50 [Решение] оставляем откаченную версию, фикс отдельно
-15:10 [Resolve] SEV-2 закрыт
+14:32 [Alert] api-5xx-rate > 5% over 5 min
+14:34 [IC] @anna declaring SEV-2, IC=me
+14:35 [SME] @boris checking api-server metrics
+14:38 [SME] boris: 5xx from /checkout, rest ok
+14:40 [Hypothesis] last deploy 14:20 touched checkout
+14:42 [Action] rolling back deploy → SHA abc123
+14:45 [Mitigation] 5xx dropped to baseline
+14:50 [Decision] keep rolled-back version, fix separately
+15:10 [Resolve] SEV-2 closed
 ```
 
-Зачем: основа для postmortem, тайм-линия фактов без интерпретации.
+Basis for postmortem; timeline of facts without interpretation.
 
----
+## Step 6. Escalation
 
-## Шаг 6. Эскалация
+When to wake the second/third person.
 
-**Critical decision: когда будить второго / третьего человека.**
-
-| Условие | Действие |
+| Condition | Action |
 |:---|:---|
-| SEV-1 объявлен | Page primary on-call немедленно |
-| Primary on-call не ответил за 15 мин | Page secondary |
-| SEV-1 > 1 часа без митигации | Эскалация к management |
-| Затрагивает legal / compliance / PII | Comms Lead уведомляет legal/security сразу |
-| Требуется решение за пределами полномочий on-call (например, оплата сторонней услуги) | Эскалация к management |
+| SEV-1 declared | Page primary on-call immediately |
+| Primary on-call no response in 15 min | Page secondary |
+| SEV-1 > 1 hour without mitigation | Escalate to management |
+| Affects legal / compliance / PII | Comms Lead notifies legal/security immediately |
+| Decision beyond on-call authority (e.g. paying for third-party service) | Escalate to management |
 
----
+## Agent adds
+- "First 5 minutes" checklist for on-call (pinned in Runbooks)
+- Incident channel topic template: `SEV-X | IC: @name | Status: investigating | Started: HH:MM`
+- Paging tool recommendation (PagerDuty / Opsgenie / Grafana OnCall) — chosen by budget and stack
+- Blameless culture warning: action log and postmortem hold actions and facts, not judgments of people
+- Link to architectural artifacts: every alert references a runbook (see `runbook`), runbook → architectural context
 
-## Что агент добавляет сам
-
-- Чек-лист «первые 5 минут инцидента» для on-call (закреплён в Runbook'ах)
-- Шаблон incident channel topic: `SEV-X | IC: @name | Status: investigating | Started: HH:MM`
-- Рекомендация инструмента для page'инга (PagerDuty / Opsgenie / Grafana OnCall) — выбор по бюджету и стеку
-- Предупреждение про blameless culture: в action log и постмортеме — действия и факты, не оценки людей
-- Связка с архитектурными артефактами: каждый алерт должен ссылаться на runbook (см. `runbook`), runbook — на architectural context
-
----
-
-## Структура output-файла `Incident_Response.md`
+## Output file `Incident_Response.md` structure
 
 ```markdown
 # Incident Response Process: [ProjectName]
 
-## 1. Severity matrix (SEV-1..4 с примерами под этот продукт)
-## 2. Роли (IC/SME/Comms/Scribe) + кто может быть IC
+## 1. Severity matrix (SEV-1..4 with examples for this product)
+## 2. Roles (IC/SME/Comms/Scribe) + who can be IC
 ## 3. Lifecycle (DETECT → POSTMORTEM)
-## 4. Channels & communication (где что пишем)
-## 5. Status page (URL + кто обновляет)
-## 6. Escalation matrix (когда будим кого)
+## 4. Channels & communication (where to write what)
+## 5. Status page (URL + who updates)
+## 6. Escalation matrix (when to wake whom)
 ## 7. Action log template
-## 8. Связь с on-call rotation и runbooks
+## 8. Link to on-call rotation and runbooks
 ```
 
----
+## Hard forbidden
+- IC fixing by hand simultaneously (loses coordination)
+- Discussing incident in DM bypassing channel (incomplete action log)
+- Declaring SEV-1 without clear criteria (devalues severity)
+- Closing incident without recording postmortem owner (SEV-1/2)
+- Naming people's blame in action log ("X screwed up") — actions and facts only
+- Lowering severity without IC's consent (easy to hide SEV-2 as SEV-3)
+- Deploying fix to prod without code review during SEV-1 "because it's burning" (one disaster breeds the next) — except explicit rollbacks
 
-## Жёсткие запреты
+## Links
+- `operator/runbook` — per pageable alert; SME takes first diagnostic/mitigation steps from here
+- `operator/oncall-rotation` — Primary/Secondary definition, paging policy by severity, escalation
+- `operator/postmortem` — mandatory step after RESOLVE for SEV-1/2 (lifecycle → POSTMORTEM)
+- `operator/capacity-planning` — capacity incidents as separate classification; pre-event war room
+- `architect/observability-design` — alerting/SLO/error budget on which DETECT and severity matrix are built
 
-НЕЛЬЗЯ:
-- IC одновременно фиксит руками (теряет координацию)
-- Обсуждать инцидент в DM минуя channel (action log неполный)
-- Объявлять SEV-1 без четких критериев (devalues severity)
-- Закрывать инцидент без записи postmortem owner'а (SEV-1/2)
-- Указывать вину людей в action log («Х накосячил») — только действия и факты
-- Менять severity вниз без согласия IC (легко скрыть SEV-2 как SEV-3)
-- Деплоить fix в прод без code review во время SEV-1 «потому что горит» (одна катастрофа порождает следующую) — кроме явных rollback'ов
+<!-- ru-source-sha256: PENDING -->
 
----
-
-## Ссылки
-
-- `operator/runbook` — на каждый pageable алерт; первые шаги диагностики/митигации SME берёт отсюда
-- `operator/oncall-rotation` — кто такой Primary/Secondary, paging policy по severity, эскалация
-- `operator/postmortem` — обязательный шаг после RESOLVE для SEV-1/2 (lifecycle → POSTMORTEM)
-- `operator/capacity-planning` — capacity-инциденты как отдельная классификация; pre-event war room
-- `architect/observability-design` — алертинг/SLO/error budget, на которых строится DETECT и severity-матрица
+<!-- ru-source-sha256: 188b534da19a9575bb20d47b8645a3830c4b787dee22a3c5e3ac8be4c83373b8 -->

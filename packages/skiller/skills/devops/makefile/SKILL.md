@@ -2,7 +2,7 @@
 name: makefile
 bucket: devops
 version: 0.2.0
-description: "Makefile как единая точка входа: help, .PHONY, алиасы Docker-команд; паттерн делегирующего корневого Makefile с catch-all в docker/Makefile"
+description: "Makefile as single entrypoint: help, .PHONY, Docker command aliases; delegating root Makefile pattern with catch-all to docker/Makefile"
 risk: write
 persona: operator
 tags: ["make", "devops", "docker"]
@@ -14,52 +14,54 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-## Контекст
+Makefile = single entrypoint for local project management; hides long Docker/Composer/pnpm commands.
 
-Makefile — единая точка входа для управления проектом в локальной среде: скрывает длинные команды Docker, Composer, pnpm.
+## Rules
 
-Основные правила:
+- **Documented**: `make help` (default first target) lists commands with descriptions.
+- **Declarative**: targets are simple aliases; put complex logic in bash scripts.
+- **`.PHONY`**: declare all targets so Make doesn't confuse them with same-named files.
+- **`.env`**: `ifneq (,$(wildcard ./.env)) include .env / export endif` — env vars available in commands.
 
-1. **Документированность**: цель `make help` (первая по умолчанию) выводит список команд с описанием.
-2. **Декларативность**: цели — простые алиасы; сложную логику выносить в bash-скрипты.
-3. **`.PHONY`**: объявлять все цели, чтобы Make не путал их с одноимёнными файлами.
-4. **`.env` в Make**: `ifneq (,$(wildcard ./.env)) include .env / export endif` — переменные окружения доступны в командах.
-
-**Паттерн «делегирующий Makefile»**: корневой Makefile содержит только `help` и catch-all:
+**Delegating Makefile pattern**: root Makefile holds only `help` + catch-all:
 
 ```makefile
 %:
 	@$(MAKE) -f docker/Makefile $@
 ```
 
-Вся docker-логика изолирована в `docker/Makefile`, но любая команда (`make up`, `make migrate`, `make test`) запускается из корня репозитория. Корень остаётся чистым, docker-обвязка живёт рядом с Dockerfile/конфигами в `docker/`.
+All docker logic isolated in `docker/Makefile`; any command (`make up`, `make migrate`, `make test`) runs from repo root.
 
-## Алгоритм
+## Steps
 
-1. Создать корневой Makefile по `Makefile.root`: `MAKEFLAGS += --no-print-directory`, `help`, catch-all `%`.
-2. Создать `docker/Makefile` по `Makefile.docker`: переменная `DOCKER_COMPOSE_DEV` с подключением env-файлов (`--env-file .env --env-file .env.docker`, если второй существует; при явном `--env-file` compose перестаёт читать `.env` автоматически).
-3. Завести типовые цели: `up/down/build/restart/ps/logs/shell/artisan/migrate/test/db-create-test`; prod-цели — с явным `-f docker-compose.prod.yml` и префиксом `prod:` (в .PHONY и целях двоеточие экранируется: `prod\:migrate`).
-4. Все цели перечислить в `.PHONY`; `help` — первой.
-5. Параметризованные вызовы — через `ARGS`: `make artisan ARGS="migrate --seed"`.
+1. Root Makefile per `Makefile.root`: `MAKEFLAGS += --no-print-directory`, `help`, catch-all `%`.
+2. `docker/Makefile` per `Makefile.docker`: var `DOCKER_COMPOSE_DEV` wires env-files (`--env-file .env --env-file .env.docker` if second exists; with explicit `--env-file` compose stops auto-reading `.env`).
+3. Standard targets: `up/down/build/restart/ps/logs/shell/artisan/migrate/test/db-create-test`; prod targets with explicit `-f docker-compose.prod.yml` and `prod:` prefix (escape colon in .PHONY and targets: `prod\:migrate`).
+4. List all targets in `.PHONY`; `help` first.
+5. Parameterized calls via `ARGS`: `make artisan ARGS="migrate --seed"`.
 
-## Когда какой сниппет открывать
+## Snippet selection
 
-| Ситуация | Файл |
+| Situation | File |
 |---|---|
-| Корневой делегирующий Makefile (help + catch-all) | `snippets/Makefile.root` |
-| Docker-логика: up/down/build/shell/logs/migrate/test/db-create-test, env-файлы | `snippets/Makefile.docker` |
+| Root delegating Makefile (help + catch-all) | `snippets/Makefile.root` |
+| Docker logic: up/down/build/shell/logs/migrate/test/db-create-test, env-files | `snippets/Makefile.docker` |
 
-## Чеклист качества
+## Quality checklist
 
-- [ ] `make help` — первая цель, описывает все команды
-- [ ] все цели в `.PHONY` (включая экранированные `prod\:*`)
-- [ ] корневой Makefile не содержит docker-логики — только делегирование
-- [ ] `--env-file` перечисляет и `.env`: с явным флагом compose не читает его сам
-- [ ] prod-цели всегда с явным `-f docker-compose.prod.yml`
-- [ ] сложная логика (создание тестовой БД и т.п.) — в bash-скриптах, Make лишь вызывает их
+- [ ] `make help` first target, describes all commands
+- [ ] all targets in `.PHONY` (including escaped `prod\:*`)
+- [ ] root Makefile has no docker logic — only delegation
+- [ ] `--env-file` also lists `.env`: with explicit flag compose won't read it itself
+- [ ] prod targets always with explicit `-f docker-compose.prod.yml`
+- [ ] complex logic (test DB creation etc.) in bash scripts, Make only calls them
 
-## Ссылки
+## Links
 
 - https://www.gnu.org/software/make/manual/make.html#Phony-Targets — .PHONY
-- https://www.gnu.org/software/make/manual/make.html#Last-Resort — match-anything (catch-all) правила
-- Смежные скиллы: `docker-dev-prod` (compose-файлы, которые дергает Makefile), `docker-services` (управление стеком: logs/restart/workers), `docker-postgres` (цель db-create-test), `db-test-preflight` (цель `test-preflight` как зависимость `test`)
+- https://www.gnu.org/software/make/manual/make.html#Last-Resort — match-anything (catch-all) rules
+- Related skills: `docker-dev-prod` (compose files Makefile invokes), `docker-services` (stack mgmt: logs/restart/workers), `docker-postgres` (db-create-test target), `db-test-preflight` (`test-preflight` target as `test` dependency)
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: bb9cd82ebe20fe672ec61fd1c528b1b996e3e66d8cfa92b01c9eb53f722e89d4 -->

@@ -78,7 +78,7 @@ connect → бакеты `general`+`oss-dev`; vendor → skill-level `context-ec
 - **Запись в проекты — merge-only**, существующее не затирается, бэкап `*.bak`.
 - **Два канала раздачи** (connect/vendor) — не дублируй логику; общий выбор — `config.resolve_selection`.
 - **Скилл** = каталог с `SKILL.md`; frontmatter: `name·bucket·version·description·risk·persona·tags·requires·produces_for·outputs`.
-- **Грузить только `SKILL.md`.** Варианты `SKILL.<lang>.md` (напр. `SKILL.ru.md`) — справка для человека, gitignored, агент их игнорирует; канон один — `SKILL.md`. Покрытие переводов — `scripts/check-translations.sh`.
+- **Двуязычная модель скиллов.** `SKILL.ru.md` — ПОЛНЫЙ русский ИСТОЧНИК (его правит человек, коммитится, SSOT). `SKILL.md` — КОМПАКТНЫЙ английский канон, **генерируется из RU**, передаёт все условия минимумом текста — его и только его грузит агент (русский в контекст не попадает). Поток правок локального скилла: **правишь `SKILL.ru.md` → регенеришь `SKILL.md`** (промт `prompts/generate/claude-canon-from-ru.md`) → `check-translations.sh --stamp`. Свежесть EN метит `<!-- ru-source-sha256: … -->`; когерентность — `scripts/check-translations.sh`. `*.ru.md` НЕ вендорится в проекты (vendor их игнорит). Внешние (upstream) скиллы — канон EN от upstream (не трогаем), `SKILL.ru.md` для них лишь справка.
 - **Бюджет токенов** — единственный источник математики `budget.py` (не дублируй `len/N` по месту). `description` резидентно в каждом запросе (ярус-0) — держи его конкретным и компактным.
 - **После правок скиллов/бакетов** — `skiller registry` (перегенерит реестр/индекс/манифесты).
 - connect — **bucket-granular** (skill-level exclude игнорируется); vendor — **skill-granular**.

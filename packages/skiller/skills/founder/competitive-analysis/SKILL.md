@@ -2,7 +2,7 @@
 name: competitive-analysis
 bucket: founder
 version: 0.1.0
-description: Анализ рынка, конкурентов, JTBD, незанятая ниша, вектор атаки. Использует Perplexity search_deep
+description: Market, competitors, JTBD, open niche, attack vector. Uses Perplexity search_deep
 risk: external
 persona: founder
 tags: [discovery, market, gtm]
@@ -15,105 +15,97 @@ adapters: [claude, cursor, fable]
 
 # Skill: Competitive Analysis
 
-Применять когда: нужен анализ рынка, конкурентов, позиционирование продукта.
+Apply when: need market/competitor analysis or product positioning.
 
----
+## Analysis structure
 
-## Структура анализа
+### 0. JTBD frame (before analyzing competitors)
 
-### 0. JTBD-фрейм (делать до анализа конкурентов)
+State the job first:
 
-Прежде чем смотреть на конкурентов — понять job:
+> "User hires this product to [make progress X] in situation [Y], instead of [alternative Z]."
 
-> "Пользователь нанимает этот продукт, чтобы [сделать прогресс X] в ситуации [Y], вместо того чтобы [альтернатива Z]."
+This defines the real competitive landscape. A competitor is not only a direct analog but any solution the user uses now for that job.
 
-Это определяет реальный конкурентный ландшафт. Конкурент — не только прямой аналог, но и любое решение, которое пользователь использует сейчас для этого job.
+### 1. Competitor map (3–5 players)
 
----
-
-### 1. Карта конкурентов (3–5 игроков)
-
-Для каждого:
-| Поле | Содержание |
+Per competitor:
+| Field | Content |
 |:---|:---|
-| Название | + URL |
-| Сегмент | Кому продают, какой размер компании |
-| Бизнес-модель | Freemium / SaaS / marketplace / etc |
-| Сильные стороны | Конкретно, с данными |
-| Слабые места | Конкретные уязвимости — UX, цена, охват, технический долг |
-| Угроза для нас | Низкая / Средняя / Высокая + почему |
+| Name | + URL |
+| Segment | who they sell to, company size |
+| Business model | Freemium / SaaS / marketplace / etc |
+| Strengths | concrete, with data |
+| Weaknesses | concrete vulnerabilities — UX, price, reach, tech debt |
+| Threat to us | Low / Medium / High + why |
 
-### 2. Незанятая ниша
+### 2. Open niche
 
-Явно сформулировать: "Ниша X не занята потому что [причина]. Наш продукт может войти через [вектор атаки]."
+State explicitly: "Niche X is unoccupied because [reason]. Our product can enter via [attack vector]."
 
-### 3. Вектор атаки
+### 3. Attack vector
 
-Конкретная стратегия: что делать лучше, чем конкуренты, с первого дня. Не "быть лучше" — а конкретно: "выигрываем по цене на сегменте SMB" / "единственные с offline-режимом" и т.д.
+Concrete strategy: what to do better than competitors from day one. Not "be better" — concrete: "win on price in SMB segment" / "only one with offline mode" etc.
 
-Типовые векторы атаки:
-- **Цена:** дешевле для нижнего сегмента, которым крупные игроки не занимаются
-- **Вертикаль:** горизонтальный продукт → вертикальное решение для одной отрасли
-- **UX:** сложный инструмент → простой для неэкспертов
-- **Интеграция:** standalone → встроенный в экосистему, которую уже использует ICP
-- **Бизнес-модель:** лицензия → SaaS, или наоборот
+Typical attack vectors:
+- **Price:** cheaper for lower segment big players ignore
+- **Vertical:** horizontal product → vertical solution for one industry
+- **UX:** complex tool → simple for non-experts
+- **Integration:** standalone → embedded in ecosystem ICP already uses
+- **Business model:** license → SaaS, or vice versa
 
----
+## Competitor neglect (antidote)
 
-## Competitor neglect (антидот)
+Startup-specific: founder so focused on own vision that they **systematically underrate** competitors. Antidote — build the **most convincing** case why a competitor in this space succeeds and you don't.
 
-Стартап-специфичный феномен: фаундер так сфокусирован на своём видении, что **систематически недооценивает** конкурентов. Антидот — построить **самый убедительный** кейс, почему конкурент в этом пространстве преуспеет, а ты нет.
+- **Exercise:** per tier-1 competitor — argument for its **real** threat, not the convenient one that's easy to rebut. Why its approach is genuinely better, why customers pick it, why your differentiators may be less defensible than they seem.
+- This is `adversarial-check` aimed at the landscape. If positioning didn't survive it → revise positioning.
 
-- **Exercise:** по каждому tier-1 конкуренту — аргумент за его **настоящую** угрозу, не за удобную, которую легко отбить. Почему его подход реально лучше, почему клиенты выберут его, почему твои дифференциаторы могут оказаться менее defensible, чем кажется.
-- Это `adversarial-check`, направленный на ландшафт. Если не пережил — позиционирование требует ревизии.
+## Extended landscape (tiers)
 
-## Расширенный ландшафт (tiers)
-
-Картировать не только прямых:
-- **Direct** — лобовые аналоги (секция 1 выше).
-- **Indirect** — другое решение того же job (включая «Excel + ручками», «ничего не делать»).
-- **Adjacent players** — соседи, кто может войти в твоё пространство.
-- **Potential acquirers** — кто купил бы (и кого это делает уязвимым/защищённым).
+Map beyond direct:
+- **Direct** — head-on analogs (section 1 above).
+- **Indirect** — another solution to same job (incl. "Excel + by hand", "do nothing").
+- **Adjacent players** — neighbors who could enter your space.
+- **Potential acquirers** — who'd buy (and what that makes vulnerable/protected).
 
 ## TAM / SAM / SOM
 
-Построить и **pressure-test допущения** под ними. Рынок расширяется, консолидируется или зрелый? — это влияет на timing и дифференциацию. Buyer landscape: кто держит бюджет, кто влияет на решение, кто пользуется — это **одни и те же** люди или разные?
+Build and **pressure-test the assumptions** under them. Market expanding, consolidating, or mature? — affects timing and differentiation. Buyer landscape: who holds budget, who influences the decision, who uses — **same** people or different?
 
-> ⚠️ Confirmation bias × AI: попросишь посчитать TAM — AI найдёт число, делающее рынок fundable. Считать с `adversarial-check`, не для подтверждения.
+> ⚠️ Confirmation bias × AI: ask to compute TAM → AI finds a number that makes the market fundable. Compute with `adversarial-check`, not to confirm.
 
 ## Trend analysis
 
-Назвать **3 внешних тренда** (regulatory / technological / demographic), которые значимо повлияют на рынок в ближайшие 2 года, и для каждого — это **tailwind или headwind** для конкретной гипотезы. Слушать ранние индикаторы: субреддиты, LinkedIn-группы, точный язык, которым пользователи описывают проблему; аналогичные рынки, где похожую проблему уже решали — что сработало, что нет.
+Name **3 external trends** (regulatory / technological / demographic) that will materially affect the market in the next 2 years; per trend — is it a **tailwind or headwind** for the specific hypothesis. Listen to early indicators: subreddits, LinkedIn groups, the exact language users use for the problem; analogous markets where a similar problem was already solved — what worked, what didn't.
 
----
+## Quality rules
 
-## Правила качества
+- Use real data: ProductHunt, G2, App Store reviews, LinkedIn, Crunchbase
+- Don't invent competitors — only real ones
+- If a competitor is unknown — search via WebSearch before writing
+- Name concrete weaknesses (not "clunky UI" — "no bulk actions, users complain in G2 reviews")
 
-- Использовать реальные данные: ProductHunt, G2, App Store reviews, LinkedIn, Crunchbase
-- Не придумывать конкурентов — только реально существующие
-- Если конкурент неизвестен — искать через WebSearch перед написанием
-- Называть конкретные слабые места (не "неудобный интерфейс" — а "нет bulk actions, пользователи жалуются в отзывах G2")
+## Document format
 
----
+Place in `docs/01_Business/02_Competitive_Analysis.md` or `docs/01_Business/03_Competitive_Analysis.md` depending on project numbering.
 
-## Формат в документе
-
-Размещать в `docs/01_Business/02_Competitive_Analysis.md` или `docs/01_Business/03_Competitive_Analysis.md` в зависимости от нумерации проекта.
-
-Обязательно добавить таблицу позиционирования в конце:
+Mandatory positioning table at the end:
 ```
 Наш продукт vs рынок:
 [ось X] vs [ось Y] — где мы стоим
 ```
 
----
+## Related skills
 
-## Связанные скиллы
+- `founder/adversarial-check` — competitor neglect and "argue why competitor wins" is it, aimed at the landscape
+- `founder/defensibility` — consumer: at Scale, tiered landscape and trends feed moat strategy
+- `founder/idea-discovery` — prior step: JTBD and problem statement that set the competitive landscape (who counts as competitor)
+- `pm/go-to-market` — consumer: ICP and messaging build on the found attack vector
+- `founder/pitch-deck` — consumer: Competition and Why-now slides take the market map from here
+- `founder/new-project` — orchestrator: calls this skill at stage 2 of the launch chain
+- `pm/monetization-design` — adjacent: business-model choice relies on competitors' segment and models
 
-- `founder/adversarial-check` — competitor neglect и «argue why competitor wins» — это он, наведённый на ландшафт
-- `founder/defensibility` — потребитель: на Scale tiered-ландшафт и тренды кормят moat-стратегию
-- `founder/idea-discovery` — предшествующий шаг: JTBD и problem statement, которые задают конкурентный ландшафт (кого считать конкурентом)
-- `pm/go-to-market` — потребитель: ICP и messaging строятся поверх найденного вектора атаки
-- `founder/pitch-deck` — потребитель: слайды Competition и Why-now берут карту рынка отсюда
-- `founder/new-project` — оркестратор: вызывает этот скилл на этапе 2 цепочки запуска
-- `pm/monetization-design` — смежный: выбор бизнес-модели опирается на сегмент и модели конкурентов
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: 7779347c7e6ac3bd8369f92b71206b95c8f220a523fcddb8fa0245bf06efd807 -->

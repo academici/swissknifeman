@@ -2,7 +2,7 @@
 name: task-brief-template
 bucket: general
 version: 0.4.0
-description: "Шаблон постановки сложных задач для агента: цель, границы, инварианты, явные предположения, out of scope, критерии приемки, definition of done. Плюс паттерн Plan→Clear→Execute и поля для итеративного (loop) исполнения: verifier, exit condition, hard-stop."
+description: "Brief template for complex agent tasks: goal, scope, invariants, explicit assumptions, out of scope, acceptance criteria, definition of done. Plus Plan→Clear→Execute pattern and loop fields for iterative runs: verifier, exit condition, hard-stop."
 risk: draft
 persona: oss-dev
 tags: [workflow, template, requirements, context]
@@ -16,11 +16,9 @@ sha256: ""
 
 # Task Brief Template
 
-## Когда активировать
+Activate when the task is ambiguous or spans multiple subsystems.
 
-Используйте этот skill, когда задача неоднозначна или затрагивает несколько подсистем.
-
-## Шаблон постановки
+## Brief template
 
 ```text
 Контекст:
@@ -77,48 +75,41 @@ Definition of Done:
 - Срок, риски, legacy-ограничения, обратная совместимость.
 ```
 
-## Мини-чеклист качества постановки
+## Brief-quality checklist
 
-- Цель описывает результат, а не только действия.
-- Есть явные не-цели (out of scope) и запрет на правки вне scope.
-- Предположения выписаны явно, а не сделаны молча.
-- Перечислены инварианты домена и безопасности.
-- Указан минимальный test-gate.
-- Definition of Done отличим от критериев приемки: процессные условия
-  (тесты, линт, диф в границах scope), а не поведение фичи.
-- Зафиксирован формат финального отчета по задаче.
-- Для итеративных задач заполнены поля Loop: без Exit condition loop не стартует.
+- Goal describes the result, not just actions.
+- Explicit non-goals (out of scope) + ban on edits outside scope.
+- Assumptions written out explicitly, not made silently.
+- Domain + security invariants listed.
+- Minimal test-gate specified.
+- Definition of Done distinct from acceptance criteria: process conditions (tests, lint, diff within scope), not feature behavior.
+- Final task-report format fixed.
+- For iterative tasks Loop fields filled: loop does not start without Exit condition.
 
-Заполнять шаблон по нечёткой идее помогает скилл `spec-interview`
-(bucket general): интервью с вопросами по одному до старта кода.
+To fill the template from a fuzzy idea use skill `spec-interview` (bucket general): one-question-at-a-time interview before any code.
 
 ## Plan → Clear → Execute
 
-Для крупных задач бриф и выполнение разносятся по сессиям:
+For large tasks split brief and execution across sessions:
 
-1. **Сессия плана**: обсудить задачу по шаблону выше, сохранить готовый бриф/план
-   в файл (`.claude/plans/<task>.md`). План — самодостаточный: исполнитель не увидит
-   текущее обсуждение.
-2. `/clear` — промежуточные попытки планирования не тянутся в контекст выполнения.
-3. **Сессия выполнения**: загрузить только файл плана и выполнять по шагам.
+1. **Plan session**: discuss via template above, save the finished brief/plan to file (`.claude/plans/<task>.md`). Plan is self-contained: the executor will not see the current discussion.
+2. `/clear` — intermediate planning attempts must not bleed into execution context.
+3. **Execution session**: load only the plan file and execute step by step.
 
-Готовые шаблоны команд `/plan` и `/execute` и остальная дисциплина экономии
-контекста — в скилле `context-economy` (bucket general).
+Ready `/plan` and `/execute` command templates + rest of context-saving discipline — in skill `context-economy` (bucket general).
 
-## Итеративное (loop) исполнение
+## Iterative (loop) execution
 
-Если задача требует нескольких кругов с промежуточной проверкой — заполни поля
-Loop в шаблоне и запускай через встроенный `/loop` (self-paced) или `/schedule`
-(cron). Стоп-контроллер круга — `anti-drift` (circuit breaker), verifier между
-кругами — `cross-layer-change-checklist`. Готовый стартовый шаблон —
-`snippets/loop-kickoff.md` (скопировать в `.claude/commands/` проекта). Полная
-модель и почему нет отдельного реестра `loops/` — гайд
-[Семантика loop'ов](https://github.com/academici/swissknifeman/blob/main/docs/guide/loop-semantics.md).
+If the task needs several rounds with intermediate checks — fill the Loop fields in the template and run via built-in `/loop` (self-paced) or `/schedule` (cron). Round stop-controller — `anti-drift` (circuit breaker); between-rounds verifier — `cross-layer-change-checklist`. Ready starter template — `snippets/loop-kickoff.md` (copy into project `.claude/commands/`). Full model and why there is no separate `loops/` registry — guide [Loop semantics](https://github.com/academici/swissknifeman/blob/main/docs/guide/loop-semantics.md).
 
-## Связанные скиллы
+## Related skills
 
-- `spec-interview` (general) — заполнение этого шаблона по нечёткой идее через интервью.
-- `complex-task-orchestrator` (general) — декомпозиция готового брифа на подзадачи по слоям.
-- `cross-layer-change-checklist` (general) — синхронизация слоёв при выполнении.
-- `context-economy` (general) — Plan→Clear→Execute и команды `/plan`, `/execute`.
-- `anti-drift` (general) — дисциплина итераций, опирается на зафиксированный scope.
+- `spec-interview` (general) — fill this template from a fuzzy idea via interview.
+- `complex-task-orchestrator` (general) — decompose a finished brief into per-layer subtasks.
+- `cross-layer-change-checklist` (general) — sync layers during execution.
+- `context-economy` (general) — Plan→Clear→Execute and `/plan`, `/execute` commands.
+- `anti-drift` (general) — iteration discipline, relies on fixed scope.
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: 6dd47e2132667db488088bd0aa5dd4bf06254ef04d59523dea1876353f3fb44a -->

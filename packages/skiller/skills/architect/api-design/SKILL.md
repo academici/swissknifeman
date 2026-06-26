@@ -2,7 +2,7 @@
 name: api-design
 bucket: architect
 version: 0.1.1
-description: Проектирование REST/GraphQL API, эндпоинтов, контрактов, версионирования, аутентификации
+description: Designing REST/GraphQL APIs, endpoints, contracts, versioning, authentication
 risk: draft
 persona: architect
 tags: [api, architecture, rest, contracts]
@@ -15,32 +15,24 @@ adapters: [claude, cursor, fable]
 
 # Skill: API Design
 
-Применять когда: задача на проектирование API, REST/GraphQL эндпоинтов, API-контрактов, интеграций.
+Apply when: task involves designing API, REST/GraphQL endpoints, API contracts, integrations.
 
----
+## Principle
 
-## Принцип
+- API = contract; hard to change after release.
+- Design API as a product: think developer experience, not only functionality.
 
-API = контракт. Контракт сложно изменить после релиза.
-Проектировать API как продукт: думать о developer experience, не только о функциональности.
+## API style choice
 
----
-
-## Выбор стиля API
-
-| Стиль | Когда использовать |
+| Style | Use when |
 |:---|:---|
-| **REST** | CRUD-операции, публичный API, простые интеграции |
-| **GraphQL** | Сложные вложенные данные, разные клиенты с разными потребностями |
-| **WebSocket** | Реал-тайм: чат, уведомления, live updates |
-| **gRPC** | Внутренние микросервисы, высокая производительность |
-| **Webhooks** | Асинхронные уведомления: события → внешние системы |
+| **REST** | CRUD ops, public API, simple integrations |
+| **GraphQL** | Complex nested data, different clients with different needs |
+| **WebSocket** | Real-time: chat, notifications, live updates |
+| **gRPC** | Internal microservices, high performance |
+| **Webhooks** | Async notifications: events → external systems |
 
----
-
-## Структура эндпоинта (REST)
-
-### Формат документирования
+## Endpoint structure (REST) — doc format
 
 ```markdown
 ### POST /api/v1/resource
@@ -69,21 +61,17 @@ API = контракт. Контракт сложно изменить посл�
 | 422 | Бизнес-ошибка: [условие] |
 ```
 
----
+## Naming rules
 
-## Правила именования
+- Plural nouns: `/users`, `/orders`, `/products`
+- Nesting max 2 levels: `/users/{id}/orders` ok; `/users/{id}/orders/{id}/items/{id}` bad
+- Verbs only for non-standard actions: `/orders/{id}/cancel`
+- Versioning in URL: `/api/v1/` — mandatory from day one
+- Consistency: snake_case for JSON fields, kebab-case in URL
 
-- **Существительные во множественном числе:** `/users`, `/orders`, `/products`
-- **Вложенность только 2 уровня:** `/users/{id}/orders` — ок, `/users/{id}/orders/{id}/items/{id}` — плохо
-- **Глаголы — только для нестандартных действий:** `/orders/{id}/cancel`
-- **Версионирование в URL:** `/api/v1/` — обязательно с первого дня
-- **Консистентность:** snake_case для полей в JSON, kebab-case в URL
+## Mandatory API elements
 
----
-
-## Обязательные элементы API
-
-**Pagination:**
+Pagination:
 ```json
 {
   "data": [...],
@@ -96,7 +84,7 @@ API = контракт. Контракт сложно изменить посл�
 }
 ```
 
-**Error response:**
+Error response:
 ```json
 {
   "error": {
@@ -107,25 +95,19 @@ API = контракт. Контракт сложно изменить посл�
 }
 ```
 
-**Идемпотентность:** POST-запросы с side effects должны принимать `Idempotency-Key` header.
+- Idempotency: POST requests with side effects must accept `Idempotency-Key` header.
 
----
+## Authentication
 
-## Аутентификация
-
-| Тип | Когда |
+| Type | When |
 |:---|:---|
-| Bearer JWT | Пользовательские запросы (stateless) |
-| API Key | Серверные интеграции |
-| OAuth 2.0 | Если нужен доступ к данным других пользователей |
+| Bearer JWT | User requests (stateless) |
+| API Key | Server integrations |
+| OAuth 2.0 | When access to other users' data needed |
 
----
+## Document format
 
-## Формат в документе
-
-Размещать в `docs/03_Dev/API_Endpoints.md`
-
-Структура файла:
+Place in `docs/03_Dev/API_Endpoints.md`. File structure:
 ```markdown
 # API: ProjectName
 
@@ -150,33 +132,31 @@ API = контракт. Контракт сложно изменить посл�
 [политика]
 ```
 
----
+## Agent adds itself
 
-## Что агент добавляет сам
+- Rate limiting recommendations per endpoint
+- Webhooks — if events exist that external systems would want to subscribe to
+- Caching headers — for GET requests
+- Explicit edge cases: "what if id doesn't exist", "what if body is empty"
 
-- Rate limiting рекомендации для каждого эндпоинта
-- Webhooks — если есть события, которые внешние системы захотят слушать
-- Caching headers — для GET-запросов
-- Явные граничные случаи: "что если id не существует", "что если body пустой"
+## Hard prohibitions
 
----
+FORBIDDEN:
+- API without versioning (even MVP)
+- Business logic in URL (verbs instead of nouns)
+- Different error formats across endpoints
+- Passwords / tokens in URL (only in body or headers)
+- GET requests with side effects
 
-## Жёсткие запреты
+## Related skills
 
-НЕЛЬЗЯ:
-- API без версионирования (даже MVP)
-- Бизнес-логика в URL (глаголы вместо существительных)
-- Разные форматы ошибок в разных эндпоинтах
-- Пароли / токены в URL (только в body или headers)
-- GET-запросы с side effects
+- `architect/data-schema` — entities/relations API resources build on (precondition).
+- `architect/security-design` — auth scheme per client type, IDOR, rate limiting (auth section here is only top layer).
+- `architect/architecture` — broader context where API is one container.
+- `frontend/wayfinder` — typesafe routes/actions on frontend for Laravel impl of this contract.
+- `php/laravel-data` — DTO shape of request/response when implementing contract on Laravel.
+- `architect/package-contribution-protocol` — shared-package contract evolution: SemVer, "is this breaking?", migration guide, bloat gate.
 
----
+<!-- ru-source-sha256: PENDING -->
 
-## Связанные скиллы
-
-- `architect/data-schema` — сущности и связи, на которых строятся ресурсы API (предусловие).
-- `architect/security-design` — auth-схема под тип клиента, IDOR, rate limiting (auth-раздел тут — лишь верхний слой).
-- `architect/architecture` — общий контекст, где API — один из контейнеров.
-- `frontend/wayfinder` — типобезопасные роуты/actions на фронте для Laravel-реализации этого контракта.
-- `php/laravel-data` — DTO-форма запроса/ответа при реализации контракта на Laravel.
-- `architect/package-contribution-protocol` — эволюция контракта общего пакета: SemVer, «это breaking?», migration guide, гейт против раздувания.
+<!-- ru-source-sha256: e3e059b65e603048fd60ff0a48384af9e62281d565ad932cc4ea7135ec8d1080 -->

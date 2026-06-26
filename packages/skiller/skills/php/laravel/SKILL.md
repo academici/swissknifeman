@@ -14,82 +14,76 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-## Контекст
+Hub-navigator over Laravel architecture patterns. Thin skill; specifics live in 14 snippets (`.php` class skeletons, `.md` rule breakdowns). Placement/naming → sibling skills (Links), not duplicated.
 
-Хаб-навигатор по архитектурным паттернам Laravel: actions, repositories, resources, модели,
-авторизация, маршруты. Сам скилл тонкий — вся конкретика в 14 сниппетах: `.php`-скелеты
-(минимальный каркас класса) и `.md`-разборы (правила, границы, антипаттерны). Тело здесь
-служит одной цели — быстро привести тебя к нужному сниппету. Размещение классов и нейминг —
-в соседних скиллах (см. `## Ссылки`), тут не дублируются.
+## When to activate
 
-## Когда активировать
+- Creating a new layer class (Action / Repository / Resource / FormRequest / Middleware / Listener / Policy / Service Provider) and need the canonical skeleton.
+- Unsure **which layer** logic belongs to (mutation, business decision, query, side-effect).
+- Configuring an Eloquent model, migration, authorization, or route organization.
 
-- Создаёшь новый класс слоя (Action / Repository / Resource / FormRequest / Middleware / Listener /
-  Policy / Service Provider) и нужен канонический каркас.
-- Сомневаешься, **в каком слое** должна жить логика (мутация, бизнес-решение, выборка, side-effect).
-- Настраиваешь Eloquent-модель, миграцию, авторизацию или организацию маршрутов.
+## Algorithm
 
-## Алгоритм
+1. **Pick the layer first** (wrong layer = costliest mistake): open `snippets/layer-boundaries.md`, decide where logic belongs (see Layer boundaries below).
+2. **Take the skeleton:** matching `.php` skeleton from the table below.
+3. **Pull rules:** for non-trivial topics (action, authorization, DTO, model, DB, routes) read the `.md` breakdown — rules, antipatterns, forbidden-matrices.
+4. **Cross-check siblings** for naming/placement/style (Links) — not repeated here.
 
-1. **Сначала определи слой.** Прежде чем писать класс — открой `snippets/layer-boundaries.md` и
-   реши, куда логика принадлежит (см. ниже «Границы слоёв»). Неправильный слой — самая дорогая ошибка.
-2. **Возьми каркас.** Для типового класса открой соответствующий `.php`-скелет из таблицы ниже.
-3. **Добери правила.** Для нетривиальных тем (action, авторизация, DTO, модель, БД, маршруты)
-   читай `.md`-разбор — там правила, антипаттерны и forbidden-матрицы.
-4. **Сверься с соседями** по нейминг/размещение/стиль (`## Ссылки`) — этот скилл их не повторяет.
+## Layer boundaries (altitude)
 
-## Границы слоёв (altitude)
+Each class knows its altitude, never reaches into another's. Full map + forbidden-matrix + antipatterns: `snippets/layer-boundaries.md`.
 
-Корневое правило экосистемы: каждый класс знает свою высоту и не лезет в чужую.
-Полная карта, forbidden-матрица и антипаттерны — в `snippets/layer-boundaries.md`.
-
-| Слой | Путь | Живёт здесь | НЕ его дело |
+| Layer | Path | Lives here | NOT its job |
 |:---|:---|:---|:---|
-| **Action** | `app/Actions/` | use-case, **единственная** граница `DB::transaction()`, мутация entity, dispatch событий | принимать `Request`, выборки-для-UI |
-| **Repository** | `app/Repositories/` | data-access: `*ReadRepository` (Builder/фильтры) + `*StoreRepository` (мутации) | открывать транзакцию use-case, бизнес-решения, история/события → подробно `php/repositories` |
-| **Model** | `app/Models/` | casts, отношения, scopes (повторяемые предикаты), accessors | бизнес-сценарии, HTTP |
-| **Resource** | `app/Http/Resources/` | форма JSON-ответа API (read-only трансформация) | выборки, мутации, авторизация |
-| **Service** | `app/Services/` | evaluator (read-only) · read-side facade · side-effect без бизнес-решения | мутация entity, `Request`, `abort()` |
-| **Controller** | `app/Http/Controllers/` | HTTP-only: authorize → validate (FormRequest) → Action → respond | бизнес-логика, прямые мутации |
-| **Policy** | `app/Policies/` | проверки авторизации | persistence, side-effects |
+| **Action** | `app/Actions/` | use-case, the **only** `DB::transaction()` boundary, entity mutation, event dispatch | accepting `Request`, queries-for-UI |
+| **Repository** | `app/Repositories/` | data-access: `*ReadRepository` (Builder/filters) + `*StoreRepository` (mutations) | opening a use-case transaction, business decisions, history/events → details `php/repositories` |
+| **Model** | `app/Models/` | casts, relations, scopes (reusable predicates), accessors | business scenarios, HTTP |
+| **Resource** | `app/Http/Resources/` | shape of API JSON response (read-only transformation) | queries, mutations, authorization |
+| **Service** | `app/Services/` | evaluator (read-only) · read-side facade · side-effect without business decision | entity mutation, `Request`, `abort()` |
+| **Controller** | `app/Http/Controllers/` | HTTP-only: authorize → validate (FormRequest) → Action → respond | business logic, direct mutations |
+| **Policy** | `app/Policies/` | authorization checks | persistence, side-effects |
 
-## Когда какой сниппет открывать
+## Which snippet to open
 
-| Ситуация | Файл |
+| Situation | File |
 |---|---|
-| Решаю, в каком слое жить логике; нужна forbidden-матрица «кому что нельзя» | `snippets/layer-boundaries.md` |
-| Пишу use-case с мутацией: каркас Action-класса | `snippets/action-class.php` |
-| Правила Action: `final readonly`, Command-DTO, `DB::transaction()`, ValidationException | `snippets/actions.md` |
-| Каркас репозитория (interface + Eloquent-реализация) | `snippets/repository-pattern.php` |
-| Настраиваю Eloquent-модель: PHP-атрибуты, fillable, casts, accessors, relations | `snippets/eloquent-model.md` |
-| Именование таблиц (domain prefix), миграции через model reference | `snippets/db-conventions.md` |
-| Валидация входа HTTP: каркас FormRequest | `snippets/form-request.php` |
-| Форма JSON-ответа API: каркас Resource | `snippets/api-resource.php` |
-| DTO на Spatie LaravelData: Form/View/Policy/Mapper/Command + генерация TypeScript | `snippets/dto.md` |
-| Авторизация: PermissionEnum + Policy с `#[GateAbility]` + Abilities-DTO для фронта | `snippets/authorization.md` |
-| Регистрирую/бутстраплю сервис: каркас ServiceProvider | `snippets/service-provider.php` |
-| HTTP-фильтр на запрос: каркас Middleware | `snippets/custom-middleware.php` |
-| Реакция на доменное событие: каркас Listener | `snippets/event-listener.php` |
-| Организация `routes/web.php`/`api.php`: `Route::controller()->prefix()->name()->group()`, доменные подпрефиксы, precognitive, `throttle:30,1` | `snippets/routes-organization.md` |
+| Deciding which layer logic lives in; need forbidden-matrix "who can't do what" | `snippets/layer-boundaries.md` |
+| Use-case with mutation: Action class skeleton | `snippets/action-class.php` |
+| Action rules: `final readonly`, Command-DTO, `DB::transaction()`, ValidationException | `snippets/actions.md` |
+| Repository skeleton (interface + Eloquent impl) | `snippets/repository-pattern.php` |
+| Eloquent model: PHP attributes, fillable, casts, accessors, relations | `snippets/eloquent-model.md` |
+| Table naming (domain prefix), migrations via model reference | `snippets/db-conventions.md` |
+| HTTP input validation: FormRequest skeleton | `snippets/form-request.php` |
+| API JSON response shape: Resource skeleton | `snippets/api-resource.php` |
+| DTO on Spatie LaravelData: Form/View/Policy/Mapper/Command + TypeScript generation | `snippets/dto.md` |
+| Authorization: PermissionEnum + Policy with `#[GateAbility]` + Abilities-DTO for frontend | `snippets/authorization.md` |
+| Registering/bootstrapping a service: ServiceProvider skeleton | `snippets/service-provider.php` |
+| Per-request HTTP filter: Middleware skeleton | `snippets/custom-middleware.php` |
+| Reacting to a domain event: Listener skeleton | `snippets/event-listener.php` |
+| Organizing `routes/web.php`/`api.php`: `Route::controller()->prefix()->name()->group()`, domain subprefixes, precognitive, `throttle:30,1` | `snippets/routes-organization.md` |
 
-## Чеклист качества
+## Quality checklist
 
-- [ ] Слой выбран по `layer-boundaries.md`: мутация → Action, выборка → Repository, JSON → Resource.
-- [ ] Action — единственная транзакционная граница; репозиторий транзакцию не открывает.
-- [ ] Ни один класс ниже Controller/FormRequest не принимает `Illuminate\Http\Request`.
-- [ ] Resource не делает выборок и не решает авторизацию — только трансформация уже загруженного.
-- [ ] Повторяемые where-цепочки вынесены в model scopes (см. `eloquent-model.md` / `php/repositories`).
-- [ ] Размещение и нейминг сверены с `php/laravel-structure` и `php/naming-conventions` (не угаданы).
-- [ ] Стиль кода соответствует `php/code-style-spatie` (`final`, типизация, именованные аргументы).
+- [ ] Layer chosen per `layer-boundaries.md`: mutation → Action, query → Repository, JSON → Resource.
+- [ ] Action is the only transactional boundary; repository opens no transaction.
+- [ ] No class below Controller/FormRequest accepts `Illuminate\Http\Request`.
+- [ ] Resource does no queries and no authorization — only transforms already-loaded data.
+- [ ] Reusable where-chains extracted into model scopes (see `eloquent-model.md` / `php/repositories`).
+- [ ] Placement/naming cross-checked with `php/laravel-structure` and `php/naming-conventions` (not guessed).
+- [ ] Code style conforms to `php/code-style-spatie` (`final`, typing, named arguments).
 
-## Ссылки
+## References
 
-- Структура проекта и размещение классов (доменная таксономия, правило зеркала) → `php/laravel-structure`
-- Репозитории (Read/Store split, scopes, visibility) → `php/repositories`
-- Нейминг классов и методов по намерению → `php/naming-conventions`
-- Стиль кода (final, типизация, именованные аргументы, Spatie-конвенции) → `php/code-style-spatie`
-- DI и взаимодействие компонентов → `php/dependency-injection`
-- DTO на пакете → `php/laravel-data`; «голые» доменные паттерны (VO/pipeline/specification) → `php/php-patterns`
-- Миграции и модели → `php/database`; рост до модулей → `php/modular-architecture`
-- Тесты архитектурных слоёв → `php/laravel-testing`
-- Общие лучшие практики Laravel → `php/laravel-best-practices` (external)
+- Project structure & class placement (domain taxonomy, mirror rule) → `php/laravel-structure`
+- Repositories (Read/Store split, scopes, visibility) → `php/repositories`
+- Class/method naming by intent → `php/naming-conventions`
+- Code style (final, typing, named arguments, Spatie conventions) → `php/code-style-spatie`
+- DI and component interaction → `php/dependency-injection`
+- DTO on the package → `php/laravel-data`; "bare" domain patterns (VO/pipeline/specification) → `php/php-patterns`
+- Migrations & models → `php/database`; growth into modules → `php/modular-architecture`
+- Tests for architecture layers → `php/laravel-testing`
+- General Laravel best practices → `php/laravel-best-practices` (external)
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: c4bb6ed85334db1926388dc3783b02bc0bec4d1c50e4218ac6f61a5f76605f01 -->

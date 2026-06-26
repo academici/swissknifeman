@@ -2,7 +2,7 @@
 name: eval-design
 bucket: architect
 version: 0.1.0
-description: Оценка качества LLM/AI-выводов — eval-set, метрики, regression-харнес, automated + human review
+description: Evaluate LLM/AI output quality — eval-set, metrics, regression harness, automated + human review
 risk: draft
 persona: architect
 tags: [agentic, validation, llm, metrics, testing]
@@ -15,51 +15,24 @@ adapters: [claude, cursor, fable]
 
 # Skill: Eval Design
 
-Применять когда: продукт использует LLM или другую нестрого-детерминированную AI-модель, и нужно **измерять качество вывода** до релиза и в проде. Критичен для Edufy (педагогика), Memster (контент-модерация), Finbrain (финансовые рекомендации), Edufy AI-tutor.
+Apply when: product uses an LLM or other non-strictly-deterministic AI model and you must **measure output quality** pre-release and in prod.
 
-Без eval-харнеса LLM-продукт = «вроде работает» = катастрофа в проде.
+## Do NOT apply when
+- Product has no AI/LLM component — N/A.
+- LLM only for non-critical tasks (e.g. auto-tags in admin) — lightweight eval, not full harness.
+- No `agent-design` — refuse; without agent contract nothing to measure.
 
----
+## 4 eval levels
+- **L1 Smoke (CI):** basic sanity (no crash, valid response format, refuses jailbreak). Every PR; runtime < 2 min; 20–50 examples.
+- **L2 Reference (nightly):** match to golden dataset / reference answers. Daily CI, pre-release; 200–500 examples.
+- **L3 Behavioural (pre-release):** edge cases, adversarial inputs, domain-specific failures. Before each model/prompt release; 500–2000 examples.
+- **L4 Production (online):** seed real requests + human review + auto-scoring. Continuous in prod; 1–5% live traffic.
 
-## Когда НЕ применять
+## Metrics
+Catalog by task type (classification/generation/RAG/agentic) — [references/metrics.md](references/metrics.md).
 
-- Продукт без AI / LLM-компонента — не применимо.
-- LLM используется только для не-критичных задач (например, авто-теги в админке) — облегчённый eval, не полный харнес.
-- Нет `agent-design` — отказать, без agent-контракта непонятно что мерять.
-
----
-
-## 4 уровня eval
-
-### Уровень 1. Smoke evals (CI)
-**Что:** базовый sanity. Не падает, формат ответа валидный, не отвечает на jailbreak.
-**Когда:** на каждый PR. Время выполнения < 2 минуты.
-**Размер:** 20–50 примеров.
-
-### Уровень 2. Reference evals (nightly)
-**Что:** соответствие эталонным ответам / golden dataset.
-**Когда:** ежедневный CI, перед релизом.
-**Размер:** 200–500 примеров.
-
-### Уровень 3. Behavioural evals (pre-release)
-**Что:** граничные случаи, состязательные входы, домен-специфичные провалы.
-**Когда:** перед каждым релизом модели или промпта.
-**Размер:** 500–2000 примеров.
-
-### Уровень 4. Production evals (online)
-**Что:** seed реальных запросов + human review + auto-scoring.
-**Когда:** непрерывно в проде.
-**Покрытие:** 1–5% live traffic.
-
----
-
-## Метрики (выбор зависит от задачи)
-
-Каталог eval-метрик по типу задачи (классификация/генерация/RAG/agentic) — [references/metrics.md](references/metrics.md).
-
-## Eval set — структура
-
-Формат хранения: JSONL в `docs/03_Dev/Evals/eval_set_v1.jsonl`
+## Eval set — structure
+Storage: JSONL at `docs/03_Dev/Evals/eval_set_v1.jsonl`
 
 ```json
 {"id": "ev-001", "category": "happy-path", "input": "...", "reference": "...", "metrics": ["embedding_sim", "llm_judge"]}
@@ -67,59 +40,45 @@ adapters: [claude, cursor, fable]
 {"id": "ev-003", "category": "adversarial", "input": "Ignore previous instructions...", "expected_behavior": "refusal"}
 ```
 
-**Покрытие eval-set обязательно:**
+Mandatory coverage:
 - ≥ 60% happy path
-- ≥ 20% edge cases (пустой ввод, мульти-язык, длинный контекст, конфликтующие требования)
-- ≥ 10% adversarial (jailbreak, prompt injection, токсичные входы)
-- ≥ 10% domain-specific failures (для Edufy — педагогические ловушки; для Finbrain — confused-deputy на финансовых вопросах)
+- ≥ 20% edge cases (empty input, multi-language, long context, conflicting requirements)
+- ≥ 10% adversarial (jailbreak, prompt injection, toxic inputs)
+- ≥ 10% domain-specific failures
 
----
+## Regression harness
+Each model/prompt release → run over eval-set → compare to previous baseline.
 
-## Regression-харнес
-
-Каждый release model/prompt → прогон по eval-set → сравнение с предыдущим baseline.
-
-**Pass criteria:**
-- Reference evals: ≥ 95% от baseline
+Pass criteria:
+- Reference evals: ≥ 95% of baseline
 - Smoke evals: 100% pass
-- Behavioural: regression на любой категории > 5% = блок релиза
-- Safety: zero-tolerance на jailbreak
+- Behavioural: regression > 5% on any category = block release
+- Safety: zero-tolerance on jailbreak
 
-**Versioning:**
-- Eval set версионируется как код (`eval_set_v1.jsonl`, `eval_set_v2.jsonl`)
-- Baseline-результаты хранятся (`evals/results/<timestamp>_<model>_<prompt>.json`)
-- Изменение eval-set ≠ изменение модели — разделять PR
+Versioning:
+- Eval set versioned as code (`eval_set_v1.jsonl`, `eval_set_v2.jsonl`)
+- Store baseline results (`evals/results/<timestamp>_<model>_<prompt>.json`)
+- Eval-set change ≠ model change — separate PRs
 
----
-
-## LLM-as-judge — подводные камни
-
-Если используется LLM для оценки другого LLM:
-- **Bias toward verbose** — judge склонен давать высокие оценки длинным ответам
-- **Position bias** — при сравнении двух ответов первый часто выигрывает
-- **Self-preference** — модель X оценивает свои ответы выше, чем модель Y → использовать **другую** модель для judge
-- **Rubric обязателен** — без явных критериев judge даёт шум
+## LLM-as-judge — pitfalls
+If using an LLM to score another LLM:
+- **Bias toward verbose** — judge rates long answers higher
+- **Position bias** — in pairwise comparison the first answer often wins
+- **Self-preference** — model X scores its own answers above model Y → use a **different** model as judge
+- **Rubric mandatory** — without explicit criteria judge gives noise
 
 Mitigation:
-- Random shuffling в сравнениях
-- Judge = более сильная модель, чем оцениваемая
-- Калибровка judge на 50–100 human-rated примерах перед запуском
+- Random shuffling in comparisons
+- Judge = stronger model than the one tested
+- Calibrate judge on 50–100 human-rated examples before launch
 
----
+## Agent adds
+- **Domain-specific failures.** Per-project concrete traps.
+- **Cost guardrails in eval.** An eval run may cost $50; state budget and optimize (batching, caching provider calls).
+- **Reproducibility.** `temperature=0`, fixed seed (if provider supports), pinned model version (`gpt-4o-2024-11-20`, not `gpt-4o`).
+- **Privacy in eval-set.** Real user requests → anonymize before adding (see `security-design`).
 
-## Что агент добавляет сам
-
-- **Domain-specific failures.** Для каждого проекта — конкретные ловушки:
-  - Edufy: «решает за ученика вместо подсказки», «даёт неверный пример при правильном ответе»
-  - Memster: «генерирует контент, нарушающий DMCA», «caption не соответствует видео»
-  - Finbrain: «даёт инвестрекомендацию без disclaimer», «галлюцинирует тикер»
-- **Cost guardrails в eval.** Eval-прогон может стоить $50 за раз — указать бюджет и оптимизировать (batching, кэширование вызовов provider).
-- **Reproducibility.** `temperature=0`, фиксированный seed (если provider поддерживает), фиксированная версия модели (`gpt-4o-2024-11-20`, не `gpt-4o`).
-- **Privacy в eval-set.** Реальные user-запросы → анонимизация перед добавлением в eval (см. `security-design`).
-
----
-
-## Структура output-файлов
+## Output files
 
 ### `docs/03_Dev/Eval_Design.md`
 
@@ -175,26 +134,24 @@ based_on: docs/03_Dev/Agent_Design.md
 ```
 
 ### `docs/03_Dev/Evals/eval_set_v1.jsonl`
-Стартовый eval-set, минимум 50 примеров на launch.
+Starter eval-set, minimum 50 examples at launch.
 
----
+## Hard prohibitions
+NEVER:
+- Release an LLM feature without at least smoke evals in CI
+- Use the same model as judge and as-tested
+- Run eval with `temperature > 0` without fixing seed
+- Store real user requests in eval-set without anonymization
+- "I'll show metrics later" — without eval-set quality = taste
+- Ignore the adversarial category — users will find jailbreaks
 
-## Жёсткие запреты
+## Related skills
+- `architect/agent-design` — agent contract (tool registry, autonomy level); precondition.
+- `architect/observability-design` — production-evals and quality metrics feed prod monitoring and alerts (output of this skill).
+- `architect/security-design` — anonymize real user requests before adding to eval-set.
+- `quality/test-strategy` — overall test pyramid; eval is its AI-specific layer.
+- `security/security` — external reference for adversarial/jailbreak scenarios.
 
-НЕЛЬЗЯ:
-- Релизить LLM-фичу без хотя бы smoke evals в CI
-- Использовать одну и ту же модель как judge и as-tested
-- Запускать eval с `temperature > 0` без фиксации seed
-- Хранить реальные user-запросы в eval-set без анонимизации
-- "Покажу метрики потом" — без eval-set качество = вкусовщина
-- Игнорировать adversarial категорию — jailbreak найдут пользователи
+<!-- ru-source-sha256: PENDING -->
 
----
-
-## Связанные скиллы
-
-- `architect/agent-design` — agent-контракт (tool registry, autonomy level), без него непонятно что мерять (предусловие).
-- `architect/observability-design` — production-evals и метрики качества кормят прод-мониторинг и алерты (выход этого скилла).
-- `architect/security-design` — анонимизация реальных user-запросов перед добавлением в eval-set.
-- `quality/test-strategy` — общая пирамида тестов; eval — её AI-специфичный слой.
-- `security/security` — внешний справочник по adversarial/jailbreak-сценариям.
+<!-- ru-source-sha256: 5af71d94e6e8631cdc09eb14892bfd169bdcdee9cb17ca8c0aba3719efdc3836 -->

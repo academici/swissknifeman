@@ -2,7 +2,7 @@
 name: medialibrary
 bucket: laravel-extras
 version: 0.1.0
-description: "spatie/laravel-medialibrary: привязка файлов к Eloquent-моделям, коллекции, конверсии, получение URL"
+description: "spatie/laravel-medialibrary: attach files to Eloquent models, collections, conversions, get URLs"
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "media", "spatie", "uploads", "images"]
@@ -16,55 +16,58 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-## Контекст
+## Scope
 
-`spatie/laravel-medialibrary` — привязка файлов к Eloquent-моделям: коллекции, конверсии изображений (через spatie/image), responsive images, разные диски. Скилл активируется при работе с загрузкой файлов, аватарами, превью, `HasMedia`/`InteractsWithMedia`.
+`spatie/laravel-medialibrary`: attach files to Eloquent models — collections, image conversions (via spatie/image), responsive images, multiple disks. Trigger on file uploads, avatars, previews, `HasMedia`/`InteractsWithMedia`.
 
-**Laravel Boost**: при подключённом Boost гайдлайны spatie/laravel-medialibrary приходят из пакета; этот скилл самодостаточен для проектов без Boost. Пакет: https://github.com/laravel/boost (скиллы — `vendor/laravel/boost/.ai/`).
+- Laravel Boost: when Boost is connected, spatie/laravel-medialibrary guidelines come from the package; this skill is self-sufficient without Boost. Package: https://github.com/laravel/boost (skills — `vendor/laravel/boost/.ai/`).
 
-## Алгоритм
+## Steps
 
-1. **Установка**: `composer require spatie/laravel-medialibrary`, затем обязательно опубликовать миграции:
-   `php artisan vendor:publish --provider="Spatie\MediaLibrary\MediaLibraryServiceProvider" --tag="medialibrary-migrations"` и `php artisan migrate`.
-2. **Модель**: `implements HasMedia` + `use InteractsWithMedia` — интерфейс и трейт всегда вместе.
-3. **Коллекции** в `registerMediaCollections()`: `addMediaCollection('avatar')->singleFile()`, `->useDisk('s3')`, `->acceptsMimeTypes([...])`, `->useFallbackUrl(...)`.
-4. **Конверсии** в `registerMediaConversions(?Media $media = null)`: `addMediaConversion('thumb')->fit(Fit::Contain, 300, 300)->nonQueued()`. Fit — enum `Spatie\Image\Enums\Fit`.
-5. **Добавление**: `$model->addMedia($file)->toMediaCollection('images')` — без завершающего `toMediaCollection()` файл НЕ сохранится. Варианты: `addMediaFromRequest()`, `addMediaFromUrl()`, `addMediaFromDisk()`.
-6. **Получение**: `getFirstMediaUrl('collection')`, `getFirstMediaUrl('collection', 'conversion')`, `getMedia()`, `hasMedia()`.
-7. Детали (FileAdder-опции, custom properties, responsive images, события, кастомные PathGenerator/FileNamer) — в `references/medialibrary-guide.md`.
+1. Install: `composer require spatie/laravel-medialibrary`, then publish migrations (mandatory): `php artisan vendor:publish --provider="Spatie\MediaLibrary\MediaLibraryServiceProvider" --tag="medialibrary-migrations"` and `php artisan migrate`.
+2. Model: `implements HasMedia` + `use InteractsWithMedia` — interface and trait always together.
+3. Collections in `registerMediaCollections()`: `addMediaCollection('avatar')->singleFile()`, `->useDisk('s3')`, `->acceptsMimeTypes([...])`, `->useFallbackUrl(...)`.
+4. Conversions in `registerMediaConversions(?Media $media = null)`: `addMediaConversion('thumb')->fit(Fit::Contain, 300, 300)->nonQueued()`. Fit — enum `Spatie\Image\Enums\Fit`.
+5. Add: `$model->addMedia($file)->toMediaCollection('images')` — without trailing `toMediaCollection()` the file is NOT saved. Variants: `addMediaFromRequest()`, `addMediaFromUrl()`, `addMediaFromDisk()`.
+6. Get: `getFirstMediaUrl('collection')`, `getFirstMediaUrl('collection', 'conversion')`, `getMedia()`, `hasMedia()`.
+7. Details (FileAdder options, custom properties, responsive images, events, custom PathGenerator/FileNamer) — in `references/medialibrary-guide.md`.
 
-## Когда какой сниппет открывать
+## Which snippet
 
-| Ситуация | Файл |
+| Situation | File |
 |---|---|
-| Настраиваю модель: коллекции + конверсии | `snippets/model-media.php` |
-| Добавляю/получаю/удаляю медиа в контроллере или ресурсе | `snippets/media-usage.php` |
-| Нужны редкие фичи: responsive, custom properties, события, конфиг | `references/medialibrary-guide.md` |
+| Configure model: collections + conversions | `snippets/model-media.php` |
+| Add/get/delete media in controller or resource | `snippets/media-usage.php` |
+| Rare features: responsive, custom properties, events, config | `references/medialibrary-guide.md` |
 
-## Do / Don't
+## Do
 
-**Do:**
-- Всегда `implements HasMedia` вместе с `use InteractsWithMedia`.
-- Сигнатура конверсий строго `registerMediaConversions(?Media $media = null)`.
-- `->nonQueued()` для конверсий, которые нужны сразу (по умолчанию они уходят в очередь).
-- `->singleFile()` для коллекций с одним файлом (аватар) — новая загрузка заменяет старую.
+- Always `implements HasMedia` together with `use InteractsWithMedia`.
+- Conversion signature strictly `registerMediaConversions(?Media $media = null)`.
+- `->nonQueued()` for conversions needed immediately (default = queued).
+- `->singleFile()` for single-file collections (avatar) — new upload replaces old.
 
-**Don't:**
-- Не забывать `vendor:publish` миграций перед `migrate` — без таблицы `media` ничего не работает.
-- Не использовать `env()` для диска — только `config()` или `config/media-library.php` (env() пустой при закешированном конфиге).
-- Не вызывать `addMedia()` без `toMediaCollection()` — медиа не сохранится.
-- Не ссылаться на конверсии, которые не зарегистрированы в `registerMediaConversions()` — получите пустой URL.
+## Don't
 
-## Чеклист качества
+- Don't skip `vendor:publish` of migrations before `migrate` — without `media` table nothing works.
+- Don't use `env()` for disk — only `config()` or `config/media-library.php` (env() is empty when config is cached).
+- Don't call `addMedia()` without `toMediaCollection()` — media not saved.
+- Don't reference conversions not registered in `registerMediaConversions()` — yields empty URL.
 
-- [ ] Миграции опубликованы и применены, таблица `media` существует
-- [ ] Модель: интерфейс + трейт, конверсии с `?Media $media = null`
-- [ ] Каждая цепочка `addMedia()` завершается `toMediaCollection()`
-- [ ] Диск задан через config, очередь учтена (`nonQueued()` или работающий worker)
-- [ ] В API-ресурсах URL берутся через `getFirstMediaUrl()`, не руками из путей
+## Quality checklist
 
-## Ссылки
+- [ ] Migrations published and applied, `media` table exists
+- [ ] Model: interface + trait, conversions with `?Media $media = null`
+- [ ] Every `addMedia()` chain ends with `toMediaCollection()`
+- [ ] Disk set via config, queue handled (`nonQueued()` or working worker)
+- [ ] In API resources URLs taken via `getFirstMediaUrl()`, not built from paths by hand
 
-- `references/medialibrary-guide.md` — полный справочник по API пакета
+## Links
+
+- `references/medialibrary-guide.md` — full package API reference
 - https://spatie.be/docs/laravel-medialibrary
-- Связанные скиллы: `frontend/filepond-upload` (загрузка файлов на фронте, серверная привязка к модели), `php/test-isolation-guard` (изолированный медиа-диск `media-test` в тестах), `php/laravel-data` (URL медиа в DTO/ресурсах), `php/filament` (media-поля в админке)
+- Related skills: `frontend/filepond-upload` (frontend file upload, server-side model binding), `php/test-isolation-guard` (isolated `media-test` disk in tests), `php/laravel-data` (media URLs in DTOs/resources), `php/filament` (media fields in admin)
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: 8a529205d04347757e9e51c5615861f2821bf6924573c01425625c972bf7c100 -->

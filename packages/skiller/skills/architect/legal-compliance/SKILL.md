@@ -2,7 +2,7 @@
 name: legal-compliance
 bucket: architect
 version: 0.1.0
-description: GDPR, CCPA, AI Act, DMCA, COPPA, DSA — чеклист регуляторных требований до запуска
+description: GDPR, CCPA, AI Act, DMCA, COPPA, DSA — pre-launch regulatory checklist
 risk: draft
 persona: architect
 tags: [compliance, gdpr, privacy, ai-act, regulatory]
@@ -15,90 +15,68 @@ adapters: [claude, cursor, fable]
 
 # Skill: Legal Compliance
 
-Применять когда: продукт работает с пользовательскими данными, AI-моделями, UGC, детской аудиторией, финансами или платежами — и нужен чеклист регуляторных требований **до** запуска.
+Apply when: product handles user data, AI models, UGC, child audience, finance or payments — and needs a regulatory checklist **before** launch.
 
-**Не заменяет юриста.** Скилл готовит структурированный чеклист и черновики, которые потом проверяет юрист. Без юриста — не релизить.
+**Does not replace a lawyer.** Prepares a structured checklist + drafts for later lawyer review. No lawyer → no release.
 
----
+## When NOT to apply
+- Pure OSS package, no data/service (library) — N/A. With telemetry — applicable.
+- B2B exclusively via signed contracts + DPA — covered by contract, not public policy.
+- Internal tool, no external users — minimal scope.
+- No architecture → refuse (can't assess compliance without knowing where data is stored).
 
-## Когда НЕ применять
+## 6 regulatory regimes (consider all)
 
-- Чистый OSS-пакет без данных и сервиса (BrainKit как библиотека) — не применимо. Для AzGuard если есть телеметрия — применимо.
-- B2B-продукт исключительно через подписанные контракты + DPA — все требования закрываются договором, не публичной политикой.
-- Внутренний инструмент без внешних пользователей — minimal scope.
-- Нет архитектуры → отказать, без знания где хранятся данные нельзя оценить compliance.
+| Regime | Applies when |
+|:---|:---|
+| **GDPR** (EU) | ≥1 EU user |
+| **CCPA / CPRA** (California) | > 100k California users OR > $25M revenue |
+| **AI Act** (EU) | AI system with risk classification |
+| **DMCA** (US) | UGC with potential copyright infringement |
+| **COPPA** (US) | Users < 13 |
+| **DSA** (EU) | UGC platform, > 45M EU users or just a platform |
 
----
+Additional if needed: PSD2 (EU payments), PCI-DSS (card storage), HIPAA (medical), SOC 2 (B2B SaaS requirement).
 
-## 6 регуляторных режимов (рассматривать все)
+## GDPR standard checklist (minimum baseline)
+Full GDPR baseline checklist (legal bases, subject rights, retention, DPA) — [references/gdpr-checklist.md](references/gdpr-checklist.md).
 
-| Режим | Применим когда | Project примеры |
+## AI Act — classification (for AI projects)
+
+| Class | What | Requirements |
 |:---|:---|:---|
-| **GDPR** (EU) | Хоть один пользователь из EU | Все vault-проекты |
-| **CCPA / CPRA** (California) | > 100k California-users или > $25M revenue | Memster, Edufy при scale |
-| **AI Act** (EU) | AI-система с риск-классификацией | Edufy (high-risk: education), Finbrain (limited-risk: financial advice) |
-| **DMCA** (US) | UGC с потенциальным copyright-инфрингментом | Memster (видео-мемы) |
-| **COPPA** (US) | Пользователи < 13 лет | Edufy при targeting детей |
-| **DSA** (EU) | Платформа с UGC, > 45M EU users или просто платформа | Memster, GetChat |
+| **Unacceptable risk** | Social scoring, manipulation | Prohibited |
+| **High risk** | Education, employment, credit | Conformity assessment, registration, human oversight, transparency |
+| **Limited risk** | Chatbots, deepfakes | Transparency: "you're talking to AI" |
+| **Minimal risk** | Spam filters, recommendations | Voluntary codes of conduct |
 
-Дополнительные при необходимости: PSD2 (платежи в EU), PCI-DSS (хранение карт), HIPAA (медицина), SOC 2 (B2B SaaS требование).
+High-risk → separate doc `docs/03_Dev/AI_Act_Conformity.md` (not covered here; separate lawyer scenario).
 
----
+## DMCA (for UGC platforms) — mandatory minimum
+- **Designated DMCA agent** registered in US Copyright Office ($6 fee, renew every 3 years)
+- **Takedown notice flow** — UI/email for rights holders
+- **Counter-notice flow** — for users to contest takedown
+- **Repeat infringer policy** — auto-ban after N strikes, published in ToS
+- **Logging** — who, when, what removed — for litigation
 
-## Стандартный чеклист GDPR (minimum baseline)
+## COPPA (if users < 13)
+If **not** targeting children and no "actual knowledge" of their presence → may block <13 at registration.
+If targeting children:
+- Verifiable parental consent (parent's payment card, ID scan, video-call — limited options)
+- Child data minimization
+- No behavioural ads to children
+- Specific Privacy Policy for child audience
 
-Полный GDPR baseline-чеклист (правовые основания, права субъектов, хранение, DPA) — [references/gdpr-checklist.md](references/gdpr-checklist.md).
+Alternative to overhead: age gate at 13+.
 
-## AI Act — классификация (для проектов с AI)
+## Agent adds itself
+- **Risk-rating per project** — overall risk: low / medium / high / critical (e.g. PSD2+AI Act+GDPR = high; GDPR+affiliate disclosure = medium; OSS package = low).
+- **Data flow diagram** — from architecture, Mermaid, mark EU/US borders.
+- **Sub-processor list** — extract all external vendors (AWS, Stripe, OpenAI, Twilio) from architecture → future public list for GDPR.
+- **Cross-border transfer mechanism** — if data flows EU → US, state mechanism (SCC / EU-US Data Privacy Framework).
+- **Country-specific checklist** — RU (152-FZ, PD localization), Brazil (LGPD), UK (UK GDPR + ICO) — if ICP includes.
 
-| Класс | Что это | Требования | Project примеры |
-|:---|:---|:---|:---|
-| **Unacceptable risk** | Social scoring, manipulation | Запрещено | — |
-| **High risk** | Education, employment, credit | Conformity assessment, registration, human oversight, transparency | Edufy (если выдаёт оценки), Finbrain (если делает credit scoring) |
-| **Limited risk** | Chatbots, deepfakes | Transparency: «вы общаетесь с AI» | Edufy tutor, Memster (caption generator), GetChat |
-| **Minimal risk** | Spam-фильтры, рекомендации | Voluntary codes of conduct | большинство фич |
-
-Для high-risk: отдельный документ `docs/03_Dev/AI_Act_Conformity.md` (не покрывается этим скиллом, отдельный сценарий с юристом).
-
----
-
-## DMCA (для UGC-платформ)
-
-Обязательный минимум:
-- **Designated DMCA agent** зарегистрирован в US Copyright Office ($6 fee, обновление раз в 3 года)
-- **Takedown notice flow** — UI/email для правообладателей
-- **Counter-notice flow** — для пользователей оспорить takedown
-- **Repeat infringer policy** — авто-бан после N strikes, опубликовано в ToS
-- **Logging** — кто, когда, что снято — на случай судебного процесса
-
-Для Memster это критично (видео-мемы = miner field). Без DMCA-инфры = риск shutdown.
-
----
-
-## COPPA (если есть пользователи < 13)
-
-Если **не** targeting детей и нет «actual knowledge» о их присутствии — можно блокировать <13 на регистрации.
-Если targeting детей:
-- Verifiable parental consent (платёжная карта родителя, скан ID, video-call — варианты ограничены)
-- Минимизация данных детей
-- Отказ от behavioural ads на детей
-- Specific Privacy Policy для детской аудитории
-
-Для Edufy: если ICP включает школьников < 13 — серьёзный compliance overhead. Альтернатива: возрастной gate на 13+.
-
----
-
-## Что агент добавляет сам
-
-- **Risk-rating per проект.** Для каждого vault-проекта оценить overall risk: low / medium / high / critical. Пример: Finbrain = high (PSD2 + AI Act + GDPR), TcenZor = medium (GDPR + affiliate disclosure), BrainKit = low (OSS-пакет).
-- **Data flow diagram.** На основе архитектуры — нарисовать (Mermaid) как данные движутся через систему, отметить EU/US-границы.
-- **Sub-processor list.** Из архитектуры извлечь всех external vendors (AWS, Stripe, OpenAI, Twilio) — это будущий public list для GDPR.
-- **Cross-border transfer mechanism.** Если данные текут EU → US — указать механизм (SCC / EU-US Data Privacy Framework).
-- **Чеклист для country-specific** — РФ (152-ФЗ, локализация ПДн), Бразилия (LGPD), UK (UK GDPR + ICO) — если ICP включает.
-
----
-
-## Структура output-файлов
+## Output file structure
 
 ### `docs/03_Dev/Legal_Compliance.md`
 
@@ -169,31 +147,28 @@ requires_lawyer_review: true
 ```
 
 ### `docs/01_Business/Privacy_Policy_Draft.md`
-Стандартный шаблон GDPR-compliant Privacy Policy с placeholder'ами для контактов и юрисдикции. **Помечен как DRAFT** — без юриста не публиковать.
+Standard GDPR-compliant Privacy Policy template with placeholders for contacts + jurisdiction. **Marked DRAFT** — don't publish without lawyer.
 
 ### `docs/01_Business/Terms_of_Service_Draft.md`
-Базовый ToS draft. Аналогично — DRAFT до юриста.
+Basic ToS draft. Same — DRAFT until lawyer.
 
----
+## Hard prohibitions — NEVER
+- Publish Privacy Policy / ToS without lawyer
+- Launch high-risk AI without conformity assessment
+- Ignore GDPR "because we just started" — fine €20M / 4% turnover
+- Claim "no PII" if collecting email or IP — already PII in EU
+- Launch UGC without DMCA flow in US
+- Store data of children < 13 without COPPA flow in US
+- Do crypto/fintech without legal consultation on AML/KYC
+- "Compliance later" — retrofit usually 10× design-time cost
 
-## Жёсткие запреты
+## Related skills
+- `architect/architecture` — data storage + vendor map as compliance basis (precondition).
+- `architect/security-design` — GDPR privacy-by-design, data classification, retention; this checklist feeds its requirements.
+- `architect/eval-design` — for AI Act high/limited-risk: eval harness as part of conformity + transparency.
+- `architect/observability-design` — audit trail + log retention under Article 30 / breach-response.
+- `legal/legal` — external body on contracts/NDA/compliance (analysis, not mirror).
 
-НЕЛЬЗЯ:
-- Публиковать Privacy Policy / ToS без юриста
-- Запускать high-risk AI без conformity assessment
-- Игнорировать GDPR «потому что мы только начали» — штраф €20M / 4% оборота
-- Заявлять «no PII» если собираем email или IP — это уже PII в EU
-- Запускать UGC без DMCA-flow в US
-- Хранить данные детей < 13 без COPPA-flow в US
-- Делать crypto/fintech без юр-консультации по AML/KYC
-- "Compliance потом" — retrofit обычно стоит в 10× дороже design-time
+<!-- ru-source-sha256: PENDING -->
 
----
-
-## Связанные скиллы
-
-- `architect/architecture` — карта хранения данных и vendors как основа для compliance (предусловие).
-- `architect/security-design` — GDPR privacy-by-design, классификация данных, retention; этот чеклист кормит её требованиями.
-- `architect/eval-design` — для AI Act high/limited-risk: eval-харнес как часть conformity и transparency.
-- `architect/observability-design` — audit trail и retention логов под Article 30 / breach-response.
-- `legal/legal` — внешний свод по контрактам/NDA/compliance (анализ, не зеркало).
+<!-- ru-source-sha256: 4e3c90dc8145ce8a7ac7f2d1c695523b2766e56402823bd009a9f31707cb44ec -->

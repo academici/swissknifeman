@@ -2,7 +2,7 @@
 name: filepond-upload
 bucket: frontend
 version: 0.1.0
-description: "Загрузка файлов через FilePond в Vue + Laravel: регистрация vue-filepond и плагинов (validate-type/size, image-preview, file-poster), серверная обработка через rahulhaque/laravel-filepond (process/revert на /filepond), привязка serverId загруженного файла к форме, превью и постеры. Активировать при добавлении/правке загрузки файлов, drag-and-drop аплоада, FilePond-поля, превью изображений в форме, при словах filepond/vue-filepond/laravel-filepond/file upload/process/revert/serverId."
+description: "File upload via FilePond in Vue + Laravel: register vue-filepond + plugins (validate-type/size, image-preview, file-poster), server-side via rahulhaque/laravel-filepond (process/revert on /filepond), bind uploaded file serverId to form, previews and posters. Activate when adding/editing file upload, drag-and-drop upload, FilePond field, image preview in form, on words filepond/vue-filepond/laravel-filepond/file upload/process/revert/serverId."
 risk: write
 persona: oss-dev
 tags: [filepond, vue, laravel, file-upload, frontend, forms, image-preview, inertia, uploads]
@@ -14,160 +14,96 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-# Skill: Загрузка файлов через FilePond (Vue + Laravel)
+# Skill: FilePond file upload (Vue + Laravel)
 
-## Контекст
+Stack: `filepond` (core) + `vue-filepond` (Vue wrapper) + `filepond-plugin-*` + `rahulhaque/laravel-filepond` (backend). One route `/filepond` serves all FilePond callbacks (process/revert/patch/restore); temp file identified by `serverId`, later bound to a domain model. Field integrates as a normal input via `v-model` — compatible with Inertia forms (see `frontend/inertia-vue`).
 
-Загрузка файлов в форму Vue/Inertia-приложения на Laravel через **FilePond**:
-drag-and-drop, мгновенная загрузка на сервер (instant upload), превью изображений
-и постеры файлов, клиентская валидация типа/размера. Серверная часть — пакет
-`rahulhaque/laravel-filepond`: один маршрут `/filepond` обслуживает все колбэки
-FilePond (process/revert/patch/restore), временный файл идентифицируется
-`serverId`, который потом привязывается к доменной модели.
+## Activate when
+- Adding/editing file-upload field, drag-and-drop upload, image preview, attachment posters in a form.
+- Code/task mentions: `filepond`, `vue-filepond`, `laravel-filepond`, `registerPlugin`, `processfile`/`removefile`, `serverId`, endpoints `process`/`revert`, `Filepond::field()`.
+- Need to bind uploaded files to a form (`useForm`) and handle them on backend.
 
-**Когда активировать:**
-- Добавляете/правите поле загрузки файлов, drag-and-drop аплоад, превью картинок
-  или постеры вложений в форме.
-- В коде/задаче встречаются: `filepond`, `vue-filepond`, `laravel-filepond`,
-  `registerPlugin`, `processfile`/`removefile`, `serverId`, endpoints
-  `process`/`revert`, `Filepond::field()`.
-- Нужно связать загруженные файлы с формой (`useForm`) и обработать их на бэке.
+## Do NOT activate
+- Upload done otherwise: native `<input type=file>` + manual `FormData`, Uppy, Dropzone, direct S3-presigned — different stack.
 
-**Не активировать**, если в проекте загрузка файлов сделана иначе (нативный
-`<input type=file>` + ручной `FormData`, Uppy, Dropzone, прямой S3-presigned) —
-это другой стек, скилл про FilePond.
+## Laravel Boost
+- FilePond and `rahulhaque/laravel-filepond` are NOT in Boost (no `.ai/` dir in package) — ours-only skill, no upstream. Versioned Inertia form basics (`useForm`, navigation) belong to Boost skill inertia-vue; here only neutral field contract + form binding. Package: https://github.com/laravel/boost (skills — `vendor/laravel/boost/.ai/`).
 
-Стек, который покрывает скилл: `filepond` (core) + `vue-filepond` (Vue-обёртка)
-+ плагины `filepond-plugin-*` + `rahulhaque/laravel-filepond` (бэк). Поле
-интегрируется как обычный input через `v-model` — совместимо с Inertia-формами
-(см. скилл `frontend/inertia-vue`).
-
-**Laravel Boost**: FilePond и `rahulhaque/laravel-filepond` **не** входят в Boost
-(нет `.ai/`-каталога в пакете) — это **ours-only** скилл, паттерн описан целиком,
-upstream не нужен. Версионные основы Inertia-форм (`useForm`, навигация) — за
-Boost-скиллом inertia-vue; здесь — только нейтральный контракт поля и
-его привязка к форме. Пакет: https://github.com/laravel/boost (скиллы —
-`vendor/laravel/boost/.ai/`).
-
-## Архитектура потока
+## Flow
 
 ```
-[register-filepond.ts]  vueFilePond(...plugins) + CSS        → один раз на приложение
-        │ регистрирует Vue-компонент <FilePond>
+[register-filepond.ts]  vueFilePond(...plugins) + CSS        → once per app
+        │ registers Vue component <FilePond>
         ▼
 [FilePondField.vue]  server: /filepond, v-model { id?, serverId? }[]
         │  instant upload  → POST /filepond → serverId (process)
         │  remove          → DELETE /filepond            (revert)
-        │  restore постеров → GET /filepond              (load/restore)
-        ▼ v-model (список ссылок)
-[форма useForm]  attachment_files: UploadedFileRef[]      → form.post()
+        │  restore posters → GET /filepond               (load/restore)
+        ▼ v-model (list of refs)
+[form useForm]  attachment_files: UploadedFileRef[]        → form.post()
         ▼ payload
-[Laravel]  Filepond::field($serverId)->getFile()         → привязка к модели
+[Laravel]  Filepond::field($serverId)->getFile()          → bind to model
 ```
 
-Главный принцип: **поле не знает про форму, форма не знает про FilePond**. Связь
-— только через сериализуемый список ссылок `{ id?, serverId? }[]`. Это делает
-поле переносимым между формами и проектами.
+- Principle: field does not know the form, form does not know FilePond. Link only via serializable ref list `{ id?, serverId? }[]` → field portable across forms/projects.
 
-## Алгоритм
+## Algorithm
 
-1. **Установка.** Фронт: `npm i filepond vue-filepond` + нужные плагины
-   (`filepond-plugin-file-validate-type`, `-file-validate-size`,
-   `-image-preview`, `-file-poster`). Бэк: `composer require rahulhaque/laravel-filepond`,
-   опубликовать конфиг (`php artisan vendor:publish --tag=filepond-config`),
-   настроить временный диск и TTL временных файлов.
+1. **Install.** Front: `npm i filepond vue-filepond` + needed plugins (`filepond-plugin-file-validate-type`, `-file-validate-size`, `-image-preview`, `-file-poster`). Back: `composer require rahulhaque/laravel-filepond`, publish config (`php artisan vendor:publish --tag=filepond-config`), configure temp disk + temp-file TTL.
 
-2. **Регистрация один раз** (`resources/js/app.ts` или модуль `components/forms/filepond.ts`):
-   вызвать `vueFilePond(...plugins)` — он внутри делает `registerPlugin(...)` и
-   возвращает Vue-компонент. Импортировать CSS ядра **и** CSS каждого плагина,
-   у которого он есть (`image-preview`, `file-poster`) — без стилей превью/постер
-   не отрисуются. Зарегистрировать компонент глобально либо реэкспортить фабрику.
-   Подключайте только нужные плагины — каждый утяжеляет бандл. См.
-   `snippets/register-filepond.ts` (варианты: published-пакет `vue-filepond` и
-   локальная типизированная обёртка над `filepond` core).
+2. **Register once** (`resources/js/app.ts` or module `components/forms/filepond.ts`): call `vueFilePond(...plugins)` (internally does `registerPlugin(...)`, returns Vue component). Import core CSS AND each plugin's CSS that has one (`image-preview`, `file-poster`) — without styles preview/poster won't render. Register component globally or re-export the factory. Include only needed plugins (each adds to bundle). See `snippets/register-filepond.ts` (variants: published `vue-filepond`, and local typed wrapper over `filepond` core).
 
-3. **Поле `FilePondField.vue`** (`snippets/FilePondField.vue`):
-   - `server`-конфиг на endpoints laravel-filepond: `url`/`process`/`revert`/`patch`
-     на `/filepond`, `withCredentials: true`, заголовки `X-CSRF-TOKEN` и
-     `X-Requested-With: XMLHttpRequest` (иначе Laravel вернёт 419/redirect);
-   - `v-model` — список ссылок `{ id?, serverId? }[]`: `{ id }` — уже сохранённый
-     файл, `{ serverId }` — новый временный;
-   - уже сохранённые файлы восстанавливаются как `defaultFiles` с
-     `options.type: "local"` (постеры/имена) — source = их `id`;
-   - обработчик `@processfile` добавляет в модель `{ serverId }`, `@removefile`
-     убирает запись по `id` или `serverId`;
-   - props-фасад поля: `name`, `multiple`, `acceptedFileTypes`, `maxFileSize`,
-     `files` (существующие) — нейтральны, без доменной специфики.
+3. **Field `FilePondField.vue`** (`snippets/FilePondField.vue`):
+   - `server` config to laravel-filepond endpoints: `url`/`process`/`revert`/`patch` on `/filepond`, `withCredentials: true`, headers `X-CSRF-TOKEN` and `X-Requested-With: XMLHttpRequest` (else Laravel returns 419/redirect);
+   - `v-model` — ref list `{ id?, serverId? }[]`: `{ id }` = already-saved file, `{ serverId }` = new temp;
+   - already-saved files restored as `defaultFiles` with `options.type: "local"` (posters/names) — source = their `id`;
+   - `@processfile` adds `{ serverId }` to model, `@removefile` removes entry by `id` or `serverId`;
+   - props facade: `name`, `multiple`, `acceptedFileTypes`, `maxFileSize`, `files` (existing) — neutral, no domain specifics.
 
-4. **Привязка к форме** (`snippets/form-binding.md`): список ссылок кладётся в
-   `useForm` как обычное поле (`attachment_files`), инициализируется `{ id }`
-   существующих файлов; на `form.post()` уходят и сохранённые, и новые. Ошибки
-   валидации — из `form.errors`. Логику «существующие vs ожидающие» при
-   необходимости выносить в composable, а не в компонент.
+4. **Bind to form** (`snippets/form-binding.md`): ref list goes into `useForm` as a normal field (`attachment_files`), initialized from `{ id }` of existing files; on `form.post()` both saved and new are sent. Validation errors from `form.errors`. Push "existing vs pending" logic into a composable, not the component.
 
-5. **Серверная обработка** (`snippets/form-binding.md`, раздел backend): маршрут
-   `/filepond` регистрируется сервис-провайдером пакета — руками не писать. По
-   `serverId` забрать файл: `Filepond::field($serverId)->getFile()` (→ `UploadedFile`),
-   при необходимости `->validate([...])`, затем привязать к модели (media-library
-   и т.п.). Для множественного поля передавать массив serverId. Сохранённые `{ id }`
-   синхронизировать отдельно (оставить/удалить). Временные файлы после `getFile()`
-   очищаются — не оставлять «висящих» загрузок.
+5. **Backend** (`snippets/form-binding.md`, backend section): `/filepond` route registered by package service-provider — do not write by hand. Get file by `serverId`: `Filepond::field($serverId)->getFile()` (→ `UploadedFile`), optionally `->validate([...])`, then bind to model (media-library etc.). For multiple field pass array of serverIds. Sync saved `{ id }` separately (keep/delete). Temp files cleared after `getFile()` — leave no dangling uploads.
 
-6. **Валидация в двух местах.** Клиент: плагины `file-validate-type`
-   (`acceptedFileTypes`) и `file-validate-size` (`maxFileSize`). Сервер:
-   `->validate()` или FormRequest — клиентская валидация удобство, не защита.
+6. **Validate in two places.** Client: plugins `file-validate-type` (`acceptedFileTypes`) + `file-validate-size` (`maxFileSize`). Server: `->validate()` or FormRequest — client validation is convenience, not protection.
 
-7. **Большие файлы.** Включить `:chunk-uploads="true"` — FilePond шлёт чанки
-   через `PATCH /filepond`; laravel-filepond это поддерживает из коробки.
+7. **Large files.** Set `:chunk-uploads="true"` — FilePond sends chunks via `PATCH /filepond`; laravel-filepond supports it out of the box.
 
-## Превью и постеры
+## Previews & posters
+- `filepond-plugin-image-preview` — inline image preview right after select. Needs both JS plugin and its CSS.
+- `filepond-plugin-file-poster` + `:allow-file-poster="true"` — poster card for non-images and restored files; poster set via `metadata.poster` or restore `type: "local"`.
+- Restore saved files: `defaultFiles` array with `{ source: <id|url>, options: { type: "local", file: { name, size, type } } }` — FilePond loads via `load`/`restore` (GET `/filepond`) and shows poster without re-uploading.
 
-- **`filepond-plugin-image-preview`** — инлайн-превью изображений сразу после
-  выбора. Нужен и JS-плагин, и его CSS.
-- **`filepond-plugin-file-poster`** + `:allow-file-poster="true"` — карточка-постер
-  для не-картинок и для восстановленных файлов; постер задаётся через
-  `metadata.poster` или восстановлением `type: "local"`.
-- Восстановление сохранённых файлов: массив `defaultFiles` с
-  `{ source: <id|url>, options: { type: "local", file: { name, size, type } } }`
-  — FilePond подтянет их через `load`/`restore` (GET `/filepond`) и покажет
-  постером, не загружая заново.
+## Common errors
+- **419 / redirect on process** — missing `X-CSRF-TOKEN` or `X-Requested-With` in `server.headers`, or `withCredentials` not set.
+- **Preview/poster not visible** — forgot plugin CSS import (need both JS and CSS).
+- **File not bound to model** — `serverId` in payload but backend didn't handle it via `Filepond::field()`, or temp file expired (config TTL).
+- **Duplicates on edit** — existing files added both in `defaultFiles` and again as new; model must distinguish `{ id }` (keep) vs `{ serverId }` (add).
+- **Hard domain coupling** — field carries entity business types; keep contract neutral (`{ id?, serverId? }`), domain logic outside.
 
-## Типичные ошибки
-
-- **419 / redirect на process** — нет `X-CSRF-TOKEN` или `X-Requested-With`
-  в `server.headers`, либо `withCredentials` не выставлен.
-- **Превью/постер не видны** — забыт импорт CSS плагина (нужен и JS, и CSS).
-- **Файл не привязался к модели** — в payload ушёл `serverId`, но бэк его не
-  обработал через `Filepond::field()`, либо временный файл протух (TTL конфига).
-- **Дубли при редактировании** — существующие файлы добавлены и в `defaultFiles`,
-  и повторно как новые; модель должна различать `{ id }` (оставить) и `{ serverId }`
-  (добавить).
-- **Жёсткая привязка к домену** — поле тащит бизнес-типы конкретной сущности;
-  держите контракт нейтральным (`{ id?, serverId? }`), доменное — снаружи.
-
-## Когда какой сниппет открывать
-
-| Ситуация | Файл |
+## Which snippet
+| Case | File |
 |:---|:---|
-| Подключить FilePond и плагины, настроить CSS (точка входа) | `snippets/register-filepond.ts` |
-| Написать переиспользуемое поле загрузки с server-конфигом и v-model | `snippets/FilePondField.vue` |
-| Связать поле с формой и обработать файлы на сервере (serverId → модель) | `snippets/form-binding.md` |
+| Register FilePond + plugins, set up CSS (entry point) | `snippets/register-filepond.ts` |
+| Write reusable upload field with server config + v-model | `snippets/FilePondField.vue` |
+| Bind field to form + handle files server-side (serverId → model) | `snippets/form-binding.md` |
 
-## Чеклист качества
+## Quality checklist
+- [ ] FilePond + plugins registered once; core CSS + each used plugin's CSS imported.
+- [ ] `server` config points to `/filepond` with `withCredentials` + headers `X-CSRF-TOKEN` + `X-Requested-With`.
+- [ ] Field driven via `v-model` neutral list `{ id?, serverId? }[]`; form unaware of FilePond.
+- [ ] Existing files restored via `defaultFiles` (`type: "local"`), not re-uploaded.
+- [ ] `@processfile` adds `{ serverId }`, `@removefile` cleans entry by id/serverId.
+- [ ] Backend handles `serverId` via `Filepond::field()->getFile()`, temp files don't leak.
+- [ ] Type and size validated on both client (plugins) and server.
+- [ ] Large files use `chunk-uploads` (PATCH `/filepond`).
+- [ ] Field and contract free of domain/project specifics — portable.
 
-- [ ] FilePond и плагины зарегистрированы один раз; импортирован CSS ядра и каждого используемого плагина.
-- [ ] `server`-конфиг указывает на `/filepond` с `withCredentials` и заголовками `X-CSRF-TOKEN` + `X-Requested-With`.
-- [ ] Поле управляется через `v-model` нейтральным списком `{ id?, serverId? }[]`; форма про FilePond не знает.
-- [ ] Существующие файлы восстановлены через `defaultFiles` (`type: "local"`), не загружаются повторно.
-- [ ] `@processfile` добавляет `{ serverId }`, `@removefile` чистит запись по id/serverId.
-- [ ] На бэке `serverId` обработан `Filepond::field()->getFile()`, временные файлы не утекают.
-- [ ] Тип и размер валидируются и на клиенте (плагины), и на сервере.
-- [ ] Для крупных файлов включён `chunk-uploads` (PATCH `/filepond`).
-- [ ] Поле и контракт без доменной/проектной специфики — переносимы.
+## Links
+- https://pqina.nl/filepond/ — FilePond + plugins docs
+- https://github.com/pqina/vue-filepond — Vue wrapper
+- https://github.com/rahulhaque/laravel-filepond — server-side (process/revert, `Filepond::field()`)
+- Related skills: `frontend/inertia-vue` (forms/pages), `frontend/vue-composition-api`, `frontend/wayfinder`
 
-## Ссылки
+<!-- ru-source-sha256: PENDING -->
 
-- https://pqina.nl/filepond/ — документация FilePond и плагинов
-- https://github.com/pqina/vue-filepond — Vue-обёртка
-- https://github.com/rahulhaque/laravel-filepond — серверная обработка (process/revert, `Filepond::field()`)
-- Связанные скиллы: `frontend/inertia-vue` (формы/страницы), `frontend/vue-composition-api`, `frontend/wayfinder`
+<!-- ru-source-sha256: 3a41e42312297e0243e6911e66a489fb5b481521288ae6e7fe9a4efd091b5903 -->

@@ -2,7 +2,7 @@
 name: cross-project-coordinator
 bucket: system
 version: 0.1.0
-description: "Оркестрация межпроектного анализа кода: обойти связанные проекты (через топологию), найти дубли/расхождения/кандидатов в общий пакет и выдать приоритизированные рекомендации по унификации. Read-only — правок и PR не делает. Запускать для широкой межпроектной задачи, не для одного репозитория."
+description: "Orchestrate cross-project code analysis: walk linked projects (via topology), find dups/divergence/shared-package candidates, emit prioritized unification recommendations. Read-only — no edits, no PRs. Run for broad cross-project work, not a single repo."
 risk: read
 persona: architect
 tags: [cross-project, coordination, refactoring, duplication, topology, orchestration, agents, tokens]
@@ -16,95 +16,62 @@ sha256: ""
 
 # Cross-Project Coordinator
 
-## Контекст
+Walk linked projects to find what's duplicated/diverging across repos and propose where to extract it. Value = the cross-project axis (single-repo reviews miss it). Plugin ships read-only agent `code-coordinator`.
 
-Протокол обхода **связанных проектов** ради унификации: найти, что дублируется
-или разъезжается между репозиториями констелляции, и предложить, куда это
-вынести. Ценность — **межпроектная ось**: одно-репозиторные ревью этого не видят.
-Рядом со скиллом плагин поставляет агента `code-coordinator` (read-only анализ).
+**Read-only.** This skill and the agent change nothing and open no PRs — output is a prioritized report; extraction is done separately by a human.
 
-**Read-only.** Скилл и агент ничего не меняют и не открывают PR — на выходе
-отчёт с приоритетами; правки и вынесение в общий пакет делает человек отдельно.
+## When to activate
 
-## Когда активировать
+- Explicit cross-project request: "find common code between projects", "what to extract to a shared package", "where implementations diverged".
+- Periodic constellation review (every N weeks).
 
-- Явный запрос на межпроектный обзор: «найди общее между проектами», «что
-  вынести в общий пакет», «где разъехались реализации».
-- Периодическая ревизия констелляции (раз в N недель).
+**Anti-trigger:** single-repo work → `quality/code-review`, `quality/tech-debt-audit`, `quality/code-simplifier`, not this skill. Cross-project walk is expensive (reads multiple repos) — run only when the question is genuinely about links BETWEEN projects.
 
-**Анти-триггер:** работа в одном репозитории — это `quality/code-review`,
-`quality/tech-debt-audit`, `quality/code-simplifier`, не этот скилл. Межпроектный
-обход дорог (читает несколько репо) — запускай только когда вопрос действительно
-про связь МЕЖДУ проектами.
+## Principles
 
-## Принципы
+- **Discovery.** Nodes and projects from topology (see `local-topology`): `~/.swissknifeman/topology.json` (`projects_base`/`brain`/`swissknifeman`) + `~/.swissknifeman/projects.json`. Brain gives doc-level links.
+- **Exclusions & `.gitignore`.** List only git-tracked files — `git -C <proj> ls-files` respects `.gitignore`/`.git/info/exclude`/global ignore by construction; never read vendor/generated. Non-git tree → base hardcoded exclusion list. Never read secrets (`.env*`, `*.pem`, `*.key`, `**/secrets/**`). Details in `agents/code-coordinator.md`.
+- **Criteria (seven types):** dup · divergence · drift (from registry) · copy-vs-dep · convention · docs · dep-skew. Don't reinvent single-repo criteria — take from `quality/`: `tech-debt-audit` (git-churn, impact×effort, ≤30%-of-capacity-on-debt rule), `code-review` (P0–P3), `code-simplifier` (dups/abstractions), `refactoring-plan` (Strangler Fig / Branch by Abstraction for extraction).
+- **Discipline.** Evidence (`file:line` in each project, fragments adjacent); named extraction target; impact×effort priority and cap (~10 findings); no silent truncation.
 
-**Обнаружение.** Узлы и проекты — из топологии (см. `local-topology`):
-`~/.swissknifeman/topology.json` (`projects_base`/`brain`/`swissknifeman`) +
-`~/.swissknifeman/projects.json`. Brain даёт связь по документации.
+## Algorithm
 
-**Исключения и `.gitignore`.** Перечисляй только git-отслеживаемые файлы —
-`git -C <proj> ls-files` уважает `.gitignore`/`.git/info/exclude`/глобальный
-ignore по построению; вендор/генерёжку не читаем. Не-git дерево → базовый
-хардкод-список исключений. Секреты (`.env*`, `*.pem`, `*.key`, `**/secrets/**`)
-не читаем никогда. Подробности — в `agents/code-coordinator.md`.
+1. **Scope.** Take projects from prompt; else discover via topology. If many — name a subset (most linked / most changed) and say so.
+2. **List files.** Per project: `git ls-files` minus base exclusions and `coordinator_ignore`. Record order of magnitude (files counted).
+3. **Dispatch to Explore subagents per concern.** For a broad pass, give each concern/domain (DTO, HTTP clients, retry, enum, validation, config, deps) its own read-only `code-coordinator` agent. They return findings, not file bodies — context economy (per `php/laravel-subagents`). No worktree needed: all read-only, no edits.
+4. **Correlate BETWEEN projects.** Main context dedups findings, collapses "one concept in N places", drops intra-project noise (out of scope here), assigns type and impact×effort.
+5. **Prioritize & format.** Top = quick wins; per dup name the target and extraction strategy. Report format per `agents/code-coordinator.md`.
 
-**Критерии (семь типов).** dup · divergence · drift (от реестра) · copy-vs-dep ·
-convention · docs · dep-skew. Одно-репозиторные критерии не переизобретаем —
-берём из `quality/`: `tech-debt-audit` (git-churn, impact×effort, правило
-≤30% ёмкости на долг), `code-review` (P0–P3), `code-simplifier` (дубли/абстракции),
-`refactoring-plan` (Strangler Fig / Branch by Abstraction для вынесения).
+## Anti-patterns
 
-**Дисциплина.** Доказательность (`file:line` в каждом проекте, фрагменты рядом);
-named extraction target (куда выносить); приоритет impact×effort и кап (~10
-находок); без тихого усечения.
+- Running on a single repo (that's `quality/*`, not a cross-project walk).
+- Reading vendored/generated (always via `git ls-files`).
+- Findings without `file:line` and without a named target — "this should probably be refactored".
+- Report bloat: 5 proven opportunities beat 30 guesses.
+- Any edits/PRs from this skill — it's read-only; extraction is a human's job.
 
-## Алгоритм
+## Output
 
-1. **Определи объём.** Возьми проекты из промпта; иначе обнаружь через топологию.
-   Если их много — назови подмножество (самые связанные/часто меняющиеся) и
-   скажи об этом.
-2. **Перечисли файлы.** Для каждого проекта — `git ls-files` минус базовые
-   исключения и `coordinator_ignore`. Зафиксируй порядок величины (файлов учтено).
-3. **Раздай Explore-субагентам по концерну.** Для широкого прохода — отдай каждый
-   концерн/домен (DTO, HTTP-клиенты, retry, enum, валидация, конфиг, зависимости)
-   отдельному агенту `code-coordinator` (read-only). Возвращают находки, не тела
-   файлов — экономия контекста (как в `php/laravel-subagents`). Worktree не нужен:
-   всё read-only, правок нет.
-4. **Скоррелируй МЕЖДУ проектами.** Главный контекст дедуплицирует находки,
-   сводит «один концепт в N местах», отбрасывает внутрипроектный шум (это не
-   сюда), проставляет тип и impact×effort.
-5. **Приоритизируй и оформи.** Топ — quick wins; для каждого дубля назови target
-   и стратегию вынесения. Отчёт — в формате из `agents/code-coordinator.md`.
+Prioritized report: findings (type, `file:line` per project, unification, impact×effort) + summary (top opportunities, proposed packages to extract to, what to align with the registry). Format per `agents/code-coordinator.md`.
 
-## Анти-паттерны
+## Quality checklist
 
-- Запуск на одном репозитории (это `quality/*`, не межпроектный обход).
-- Чтение вендоренного/сгенерированного (всегда через `git ls-files`).
-- Находки без `file:line` и без named target — «вообще-то стоит отрефакторить».
-- Раздувание отчёта: лучше 5 доказанных возможностей, чем 30 догадок.
-- Любые правки/PR из этого скилла — он read-only; вынесение делает человек.
+- [ ] Scope set via topology; if a subset was taken — said explicitly.
+- [ ] Files listed only via `git ls-files` (vendor/generated/secrets not read).
+- [ ] Broad pass dispatched to Explore subagents per concern, not one context.
+- [ ] Each finding has `file:line` in each project and a named extraction target.
+- [ ] impact×effort priority assigned; list capped (~10), top = quick wins.
+- [ ] No edits/PRs — report only.
 
-## Выходные данные
+## Links
 
-Приоритизированный отчёт: находки (тип, `file:line` по проектам, унификация,
-impact×effort) + итог (топ-возможности, предлагаемые пакеты для вынесения, что
-выровнять с реестром). Формат — в `agents/code-coordinator.md`.
+- `agents/code-coordinator.md` — read-only cross-project analysis agent (Claude Code plugin channel only).
+- `local-topology` (system bucket) — resolves nodes and projects via `~/.swissknifeman/topology.json`.
+- `quality/tech-debt-audit`, `quality/refactoring-plan`, `quality/code-simplifier`, `quality/code-review` — criteria and extraction strategies.
+- `php/laravel-subagents` — pattern of dispatching concerns to Explore subagents (return findings, not file bodies).
+- `shared-memory` (system bucket) — where to record cross-project findings (dups, divergence, shared-package candidates) so other projects in the group see them.
+- `scan-skills.sh` — if the pattern is worth promoting INTO the skill registry.
 
-## Чеклист качества
+<!-- ru-source-sha256: PENDING -->
 
-- [ ] Объём определён через топологию; если взято подмножество — сказано явно.
-- [ ] Файлы перечислены только через `git ls-files` (вендор/генерёжка/секреты не читались).
-- [ ] Широкий проход роздан Explore-субагентам по концернам, не одним контекстом.
-- [ ] Каждая находка с `file:line` в каждом проекте и named extraction target.
-- [ ] Приоритет impact×effort проставлен; список капнут (~10), верх — quick wins.
-- [ ] Никаких правок/PR — только отчёт.
-
-## Ссылки
-
-- `agents/code-coordinator.md` — read-only агент межпроектного анализа (только plugin-канал Claude Code).
-- `local-topology` (бакет system) — резолв узлов и проектов через `~/.swissknifeman/topology.json`.
-- `quality/tech-debt-audit`, `quality/refactoring-plan`, `quality/code-simplifier`, `quality/code-review` — критерии и стратегии вынесения.
-- `php/laravel-subagents` — паттерн раздачи концернов Explore-субагентам (возвращают находки, не тела файлов).
-- `shared-memory` (бакет system) — куда зафиксировать межпроектные находки (дубли, расхождения, кандидаты в общий пакет), чтобы их увидели другие проекты группы.
-- `scan-skills.sh` — если паттерн стоит поднять В реестр скиллов.
+<!-- ru-source-sha256: 8c9da4e95aba70b64c40767e36bff1a10ca75383bf3081f55ff82d0c6efe29d9 -->

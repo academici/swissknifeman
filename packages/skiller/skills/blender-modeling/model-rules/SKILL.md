@@ -2,7 +2,7 @@
 name: model-rules
 bucket: blender-modeling
 version: 0.1.0
-description: "Шаблон models/{name}/ai/rules.md — моделе-специфичные правила, читаемые агентом перед любой задачей"
+description: "Template models/{name}/ai/rules.md — model-specific rules read by the agent before any task"
 risk: write
 persona: oss-dev
 tags: [blender, template, rules, 3d, cad, conventions]
@@ -14,88 +14,89 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-# Шаблон: `models/{name}/ai/rules.md`
+# Template: `models/{name}/ai/rules.md`
 
-Каждая модель обязана иметь файл `models/{name}/ai/rules.md`. Он читается агентом перед любой задачей и дополняет общие конвенции моделирования (`blender-modeling/config-conventions`, `blender-modeling/scene-conventions`) моделе-специфичными данными.
-
-## Минимально необходимое содержимое
-
-Скопировать шаблон ниже в `models/{name}/ai/rules.md` и заполнить все секции.
+- Every model MUST have `models/{name}/ai/rules.md`. Read by agent before any task; augments `blender-modeling/config-conventions` and `blender-modeling/scene-conventions` with model-specific data.
+- Copy template below into `models/{name}/ai/rules.md`; fill every section.
 
 ---
 
 ```markdown
-# {ModelName} — правила модели
+# {ModelName} — model rules
 
-## Форма и симметрия
+## Shape and symmetry
 
-<Тип геометрии: тело вращения / параллелепипед / произвольная форма. Ось симметрии.>
-<Исключения из симметрии: какие детали несимметричны и почему.>
+<Geometry type: solid of revolution / box / arbitrary. Symmetry axis.>
+<Symmetry exceptions: which parts are asymmetric and why.>
 
-## Разрез / сечение (если применимо)
+## Cut / cross-section (if applicable)
 
-<Как модель отображается в режиме разреза: плоскость разреза, что видно внутри.>
-<Типичные артефакты режима разреза для этой модели (если есть).>
-<Правило проверки диаметра в разрезе.>
+<How model renders in cut mode: cut plane, what's visible inside.>
+<Typical cut-mode artifacts for this model (if any).>
+<Diameter-in-cut verification rule.>
 
-## Стек деталей (снизу вверх / по компоновке)
+## Part stack (bottom-up / by layout)
 
-| Позиция | Деталь | Файл |
+| Position | Part | File |
 |---------|--------|------|
-| <z или описание> | <Название> | `parts/{name}.py` |
+| <z or description> | <Name> | `parts/{name}.py` |
 | ... | | |
 
-## Соединения между деталями
+## Connections between parts
 
-- **<Деталь A> → <Деталь B>**: <тип соединения, зазор, способ крепления>
+- **<Part A> → <Part B>**: <connection type, clearance, fastening method>
 - ...
 
-## Межконфигурные зависимости
+## Cross-config dependencies
 
-| Деталь | Читает конфиг |
+| Part | Reads config |
 |--------|---------------|
 | `{part}.py` | `{XxxConfig}.{field}` |
 | ... | |
 
-## Параметры резьбы
+## Thread parameters
 
-| Пара деталей | pitch | depth | turns | clearance |
+| Part pair | pitch | depth | turns | clearance |
 |---|---|---|---|---|
-| <папа → мама> | мм | мм | шт | мм |
+| <male → female> | mm | mm | count | mm |
 
-## Параметры — только в config.py
+## Parameters — config.py only
 
-<Напоминание: числа не хардкодить в `parts/`. Любой новый параметр → в `config.py`.>
+<Reminder: don't hardcode numbers in `parts/`. Any new parameter → into `config.py`.>
 
-## Отдельные объекты в сцене (если есть)
+## Separate objects in scene (if any)
 
-<Какие детали показываются со смещением от основной сборки (для печати отдельно).>
-<Как учитывать смещение при анализе bounding box.>
+<Which parts shown offset from main assembly (for separate printing).>
+<How to account for offset in bounding-box analysis.>
 
-## Камера: готовые значения зон
+## Camera: ready zone values
 
 ```python
 from {name}.common import set_viewport_camera
 
-set_viewport_camera()                         # вся модель
-set_viewport_camera(z_mm=<z>,  distance=<d>)  # <зона 1>
-set_viewport_camera(z_mm=<z>,  distance=<d>)  # <зона 2>
+set_viewport_camera()                         # whole model
+set_viewport_camera(z_mm=<z>,  distance=<d>)  # <zone 1>
+set_viewport_camera(z_mm=<z>,  distance=<d>)  # <zone 2>
 # ...
 ```
 ```
 
 ---
 
-## Когда обновлять
+## When to update
 
-- При добавлении новой детали → обновить таблицу стека и соединений.
-- При изменении резьбы → обновить таблицу параметров резьбы.
-- При изменении компоновки или зон камеры → обновить готовые значения.
-- При обнаружении новой межконфигурной зависимости → обновить таблицу зависимостей.
+- New part → update stack and connections tables.
+- Thread change → update thread parameters table.
+- Layout / camera zone change → update ready values.
+- New cross-config dependency found → update dependencies table.
 
-## Связанные скиллы
+## Related skills
 
-- `blender-modeling/build-loop` — читает этот файл перед любой задачей; общий цикл построения модели.
-- `blender-modeling/parametric-config` — реализация межконфигурных зависимостей и зон камеры из этого шаблона в `config.py`/`profile.py`/`common.py`.
-- `blender-modeling/threading` — источник значений для таблицы «Параметры резьбы».
-- `blender-modeling/config-conventions` — правила cross-config зависимостей, фиксируемых в этом файле.
+- `blender-modeling/build-loop` — reads this file before any task; general model build loop.
+- `blender-modeling/parametric-config` — implements cross-config deps and camera zones from this template in `config.py`/`profile.py`/`common.py`.
+- `blender-modeling/threading` — source of values for "Thread parameters" table.
+- `blender-modeling/config-conventions` — rules for cross-config deps recorded in this file.
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: a18a01b91220535dacac4149950b73e3f457a4c6708b62e147e9c64c3a2f580d -->

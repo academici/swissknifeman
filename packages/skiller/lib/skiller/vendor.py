@@ -209,9 +209,12 @@ def do_vendor(env, target, opts, register=True):
         if dry_run:
             print(f"[dry-run] {src.relative_to(root)} -> {dst}")
             return
+        # SKILL.*.md (SKILL.ru.md и пр.) — человеческие альтернаты, НЕ канон:
+        # агент их не грузит, в потребляющий проект они не нужны (едет только EN
+        # SKILL.md). "SKILL.*.md" не матчит сам "SKILL.md" (нужно два разделителя).
         shutil.copytree(src, dst, dirs_exist_ok=True,
                         ignore=shutil.ignore_patterns("upstream.json",
-                                                      ".claude-plugin"))
+                                                      ".claude-plugin", "SKILL.*.md"))
 
     def load_manifest(manifest_file):
         if manifest_file.exists():
@@ -269,6 +272,9 @@ def do_vendor(env, target, opts, register=True):
             bucket_dir = root / "skills" / bucket
             for item in sorted(bucket_dir.rglob("*")):
                 if item.is_dir() or item.name in ("SKILL.md", "upstream.json"):
+                    continue
+                # SKILL.ru.md и прочие языковые альтернаты — не канон, не вендорим
+                if item.name.startswith("SKILL.") and item.name.endswith(".md"):
                     continue
                 rel_item = item.relative_to(bucket_dir)
                 if ".claude-plugin" in rel_item.parts:

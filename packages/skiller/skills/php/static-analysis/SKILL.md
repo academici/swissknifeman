@@ -2,7 +2,7 @@
 name: static-analysis
 bucket: php
 version: 0.2.0
-description: "Статический анализ и линтинг PHP/Laravel: Laravel Pint, PHPStan и Rector локально и в CI, эталонные конфиги"
+description: "PHP/Laravel static analysis & linting: Laravel Pint, PHPStan, Rector locally + CI, reference configs"
 risk: write
 persona: oss-dev
 tags: [php, laravel, quality]
@@ -14,87 +14,71 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-## Контекст
+Three tools, used together locally + in CI: **Laravel Pint**, **PHPStan**, **Rector**. Reference configs in `snippets/`.
 
-Для обеспечения высокого качества кода на Backend используются три основных инструмента: **Laravel Pint**, **PHPStan** и **Rector**.
-Они должны использоваться совместно в локальной разработке и запускаться в CI пайплайнах. Эталонные конфиги — в `snippets/`.
+## 1. Laravel Pint (code style)
 
-## Алгоритм
+- Run: `./vendor/bin/pint`
+- CI: `./vendor/bin/pint --test` (fails on style violation).
+- Config `pint.json`: base preset `laravel` + reference rules (snippet `pint.json`): `declare_strict_types`, `date_time_immutable`, `final_class`, `fully_qualified_strict_types`, `global_namespace_import`, `mb_str_functions`, `ordered_class_elements`, `strict_comparison`, `protected_to_private`. Avoid further over-customization.
+- `final_class` conflicts with Spatie guidelines ("no `final` by default", skill `code-style-spatie`): project picks one approach, applies consistently.
 
-### 1. Laravel Pint (Code Styling)
+## 2. PHPStan (static analysis)
 
-Pint — это opinionated PHP code style fixer для Laravel на базе PHP-CS-Fixer.
+Laravel wrapper: `larastan/larastan`.
+- Run: `./vendor/bin/phpstan analyse`
+- Config `phpstan.neon` (snippet):
+  - Level: existing projects may start at Level 5 and raise. Greenfield: set `level: max` immediately.
+  - Reference: include larastan, `paths: [app]`, `inferPrivatePropertyTypeFromConstructor: true`.
+  - Enable type checks + undefined-variable check.
+  - Use PHPDoc (`@var`, `@return`, `@param`) where native typing is insufficient (array shapes, collection generics). On `level: max` main work: narrow `array` in public APIs via `@return array{...}`, `@phpstan-type`, typed DTOs.
 
-**Использование:**
--   Запуск: `./vendor/bin/pint`
--   В CI: `./vendor/bin/pint --test` (чтобы падал, если стиль нарушен).
+## 3. Rector (instant upgrades & refactoring)
 
-**Конфигурация (`pint.json`):**
-База — пресет `laravel`. Эталонная надстройка (сниппет `pint.json`): `declare_strict_types`, `date_time_immutable`, `final_class`, `fully_qualified_strict_types`, `global_namespace_import`, `mb_str_functions`, `ordered_class_elements`, `strict_comparison`, `protected_to_private`. Избегайте дальнейшей избыточной кастомизации.
+- Analyze (dry): `vendor/bin/rector process --dry-run`
+- Apply: `vendor/bin/rector process`
+- Config `rector.php` (snippet):
+  - `withSetProviders(LaravelSetProvider::class)` + `withComposerBased(laravel: true)` (plugin `driftingly/rector-laravel`).
+  - Sets: `SetList::TYPE_DECLARATION` + Laravel sets (`LARAVEL_CODE_QUALITY`, `LARAVEL_COLLECTION`, `LARAVEL_FACTORIES`, `LARAVEL_IF_HELPERS`, etc.).
+  - `withPreparedSets(deadCode, codeQuality, typeDeclarations, privatization, earlyReturn)` + `withPhpSets()` for current language version.
 
-> Правило `final_class` конфликтует с гайдлайнами Spatie («не использовать `final` по умолчанию», скилл `code-style-spatie`): проект выбирает один подход и следует ему консистентно.
+## Workflow — strict order, before each commit/push
 
-### 2. PHPStan (Static Analysis)
+1. `vendor/bin/rector process` — refactor/modernize
+2. `vendor/bin/pint` — format (cleans up after Rector)
+3. `vendor/bin/phpstan analyse` — verify nothing broke
+4. Tests (`phpunit` / `pest`)
 
-PHPStan находит ошибки в коде без его выполнения. В Laravel используется обертка `larastan/larastan`.
+Wrap chain in composer scripts (snippet `qa-composer-scripts.json`: `lint`, `lint:check`, `analyse`, `refactor`, `qa`, `ci:check`) or `Makefile` alias.
 
-**Использование:**
--   Запуск: `./vendor/bin/phpstan analyse`
+## Which snippet to open
 
-**Конфигурация (`phpstan.neon`, сниппет):**
--   **Level:** для существующих проектов можно начинать с Level 5 и подниматься. Для новых (Greenfield) проектов **сразу устанавливайте `level: max`** — поднимать уровень на живом проекте дороже, чем держать max с первого коммита.
--   Эталон: include larastan, `paths: [app]`, `inferPrivatePropertyTypeFromConstructor: true`.
--   Обязательно включите проверку типов и отсутствие неопределенных переменных.
--   Всегда используйте PHPDoc (`@var`, `@return`, `@param`) там, где стандартная типизация PHP недостаточно описывает структуру данных (например, структуры массивов или генерики коллекций). На `level: max` основная работа — сужать `array` в публичных API: `@return array{...}`, `@phpstan-type`, типизированные DTO.
-
-### 3. Rector (Instant Upgrades & Refactoring)
-
-Rector автоматически обновляет код до новых версий PHP или фреймворка, а также применяет архитектурные улучшения (Dead Code elimination, Type Declaration).
-
-**Использование:**
--   Анализ (что будет изменено): `vendor/bin/rector process --dry-run`
--   Применение изменений: `vendor/bin/rector process`
-
-**Конфигурация (`rector.php`, сниппет):**
--   `withSetProviders(LaravelSetProvider::class)` + `withComposerBased(laravel: true)` (плагин `driftingly/rector-laravel`).
--   Сеты: `SetList::TYPE_DECLARATION` + Laravel-сеты (`LARAVEL_CODE_QUALITY`, `LARAVEL_COLLECTION`, `LARAVEL_FACTORIES`, `LARAVEL_IF_HELPERS` и др.).
--   `withPreparedSets(deadCode, codeQuality, typeDeclarations, privatization, earlyReturn)` и `withPhpSets()` для актуальной версии языка.
-
-### Workflow разработчика: rector → pint → phpstan → tests
-
-Перед каждым коммитом или пушем выполняется строго в этом порядке:
-
-1.  `vendor/bin/rector process` — рефакторинг/модернизация кода
-2.  `vendor/bin/pint` — форматирование (подчищает за Rector)
-3.  `vendor/bin/phpstan analyse` — убеждаемся, что ничего не сломали
-4.  Запуск тестов (`phpunit` / `pest`)
-
-*Подсказка:* цепочка оформляется composer-скриптами (сниппет `qa-composer-scripts.json`: `lint`, `lint:check`, `analyse`, `refactor`, `qa`, `ci:check`) или алиасом в `Makefile`.
-
-## Когда какой сниппет открывать
-
-| Ситуация | Файл |
+| Situation | File |
 |:---|:---|
-| Настраиваю стиль кода / правила Pint | `pint.json` |
-| Подключаю PHPStan/Larastan, выбираю level | `phpstan.neon` |
-| Настраиваю Rector с Laravel-сетами | `rector.php` |
-| Оформляю QA-конвейер в composer scripts / CI | `qa-composer-scripts.json` |
+| Code style / Pint rules | `pint.json` |
+| PHPStan/Larastan, pick level | `phpstan.neon` |
+| Rector with Laravel sets | `rector.php` |
+| QA pipeline in composer scripts / CI | `qa-composer-scripts.json` |
 
-## Чеклист качества
+## Quality checklist
 
-- [ ] Pint: пресет `laravel` + строгие правила из эталона; в CI — `pint --test`
-- [ ] PHPStan: `level: max` для greenfield (для legacy — план повышения уровня)
-- [ ] Rector: TYPE_DECLARATION + Laravel-сеты + prepared sets (deadCode/codeQuality/typeDeclarations/privatization/earlyReturn)
-- [ ] Порядок прогона: rector → pint → phpstan → tests (и локально, и в CI)
-- [ ] Решение по `final_class` согласовано со стилем проекта (см. `code-style-spatie`)
-- [ ] Composer-скрипты `lint` / `lint:check` / `analyse` / `refactor` заведены
+- [ ] Pint: preset `laravel` + strict reference rules; CI `pint --test`
+- [ ] PHPStan: `level: max` for greenfield (legacy: level-raise plan)
+- [ ] Rector: TYPE_DECLARATION + Laravel sets + prepared sets (deadCode/codeQuality/typeDeclarations/privatization/earlyReturn)
+- [ ] Run order: rector → pint → phpstan → tests (local + CI)
+- [ ] `final_class` decision aligned with project style (see `code-style-spatie`)
+- [ ] Composer scripts `lint` / `lint:check` / `analyse` / `refactor` defined
 
-## Ссылки
+## Links
 
-- Скилл `code-style-spatie` (bucket php) — стиль кода, конфликт `final_class`
-- Скилл `laravel-testing` (bucket php) — тесты и coverage gate в конце конвейера
-- Скилл `php/php-upgrade-checklist` — тот же rector/phpstan-конвейер при апгрейде версии PHP
-- Скилл `php/laravel-security-audit` — аудит «острых граней» поверх сигналов статанализа (requires этот скилл)
-- Скилл `php/pao` — компактный JSON-вывод PHPStan/Rector/тестов для AI-агента
-- Скилл `php/named-arguments` — стиль вызовов, который проверяет/правит конвейер
+- Skill `code-style-spatie` (bucket php) — code style, `final_class` conflict
+- Skill `laravel-testing` (bucket php) — tests + coverage gate at pipeline end
+- Skill `php/php-upgrade-checklist` — same rector/phpstan pipeline on PHP version upgrade
+- Skill `php/laravel-security-audit` — "sharp edges" audit over static-analysis signals (requires this skill)
+- Skill `php/pao` — compact JSON output of PHPStan/Rector/tests for AI agent
+- Skill `php/named-arguments` — call style this pipeline checks/fixes
 - https://laravel.com/docs/pint, https://phpstan.org, https://getrector.com
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: ec82a415d3fea7a40a58de1cd94a8c3031282c30f6a3825a7ffcef0d54e670e7 -->

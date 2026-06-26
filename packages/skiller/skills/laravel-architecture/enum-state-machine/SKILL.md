@@ -2,7 +2,7 @@
 name: enum-state-machine
 bucket: laravel-architecture
 version: 0.1.0
-description: "Активируй, когда статус домена (Order/Document/Subscription) растёт в граф переходов: единый граф рёбер как метод enum transitionDefinitions() (from→to + guard + action + label), рантайм-реестр переходов (canTransition/allowedFrom) поверх него, и исполнение перехода в Action под DB::transaction() с доменным событием. Триггеры: PHP enum статусов, разрешённые переходы, StateMachine/workflow, parallel transition graph пора свести в один источник, canTransitionTo, allowedTransitions, нелегальный переход статуса"
+description: "Activate when a domain status (Order/Document/Subscription) grows into a transition graph: single edge graph as enum method transitionDefinitions() (from→to + guard + action + label), a runtime transition registry (canTransition/allowedFrom) over it, and transition execution in an Action under DB::transaction() with a domain event. Triggers: PHP status enum, allowed transitions, StateMachine/workflow, parallel transition graph to unify into one source, canTransitionTo, allowedTransitions, illegal status transition"
 risk: write
 persona: oss-dev
 tags: ["php", "enum", "state-machine", "workflow", "laravel", "transitions", "domain", "actions"]
@@ -14,99 +14,67 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-## Контекст
+Single source of truth: edge graph as a static enum method `transitionDefinitions(): array`; thin runtime registry (`*StatusTransitions`) builds adjacency and answers `canTransition(from, to)` / `allowedFrom(from)`. Transition executes in an `Action` under `DB::transaction()` and publishes a domain event.
 
-Доменный статус (`OrderStatus`, `DocumentStatus`, `SubscriptionStatus`) перестаёт быть
-плоским списком значений и обрастает **правилами переходов**: из какого статуса в какой
-можно перейти, кто/что это разрешает, какое действие исполняется. Антипаттерн — размазать
-эти правила: где-то `if ($status === ...)` в контроллере, где-то отдельный массив в
-сервисе, где-то проверка в политике. Граф рассыпается на параллельные неконсистентные
-копии.
+## Activate when
 
-Паттерн: **один источник истины — граф рёбер как статический метод enum**
-(`transitionDefinitions(): array`), а поверх — тонкий **рантайм-реестр** (`*StatusTransitions`),
-который строит из него adjacency и отвечает на `canTransition(from, to)` / `allowedFrom(from)`.
-Сам переход исполняется в `Action` под `DB::transaction()` и публикует доменное событие.
+- Status enum is growing/has `match`/`if` about "from A can go to B" — move to edge graph.
+- A second copy of the transition list appeared (in service/policy/frontend) — unify.
+- Need "which transitions are available from current status" for UI (action buttons).
+- Transition must be atomic with side effects (history, notification, broadcast).
+- Need edge metadata: button label, required policy, Action class.
 
-### Когда активировать
+## Do NOT activate
 
-- В enum статусов назревает/есть `match`/`if` про «из A можно в B» — пора в граф рёбер.
-- Появилась вторая копия списка переходов (в сервисе, политике, фронте) — свести в один.
-- Нужен ответ «какие переходы доступны из текущего статуса» для UI (кнопки действий).
-- Переход должен быть атомарным и с побочными эффектами (история, уведомление, broadcast).
-- Нужно навесить на ребро метаданные: подпись кнопки, требуемая политика, класс Action.
+- Plain status without transition rules (any→any) — backing-enum suffices.
+- Task only about **case metadata** (label/color/priority) without transition graph — that's `php/enum-attributes` (it complements this skill, not state-machine).
+- Domain-specific single-project impl (concrete status/action names) — make it a **project-local** skill (`<project>/.ai|.claude/skills/`), not the shared registry.
 
-### Не активировать
+## Algorithm
 
-- Простой статус без правил переходов (любой→любой) — хватит backing-enum.
-- Задача только про **метаданные кейсов** (label/color/priority) без графа переходов — это
-  `php/enum-attributes` (тот скилл явно не про state-machine; этот — дополняет его).
-- Доменно-специфичная реализация одного проекта (имена конкретных статусов/действий) —
-  оформляется как **project-local** скилл (`<project>/.ai|.claude/skills/`), а не общий реестр.
+1. **Edge graph on enum.** Static `public static function transitionDefinitions(): array` returns edge list. Min: `from`/`to` (enum cases); optional: `guard` (predicate/ability name), `action` (Action FQCN), `label` (UI), domain axes (`role`, `process`, `condition`). This is the **only** graph source — no parallel copies. See `snippets/enum-with-transitions.php`.
+2. **Runtime registry.** `final class XxxStatusTransitions` builds adjacency (`array<string, list<Status>>`) **lazily, cached in static** (reflection/array walk expensive on hot paths). Public: `allowedFrom(Status $from): array`, `canTransition(Status $from, Status $to): bool`. Data source — only `transitionDefinitions()`. See `snippets/transitions-registry.php`.
+3. **Guard before transition.** Before mutation check `canTransition($from, $to)` (edge legality) **and** the domain predicate/policy from `guard` (the specific user/context right). Illegal transition → `ValidationException`/`abort`, not a silent no-op.
+4. **Execute in Action.** Transition is a use-case: `final readonly` Action with one `execute()`, opens `DB::transaction()`, writes new status (+ history/related models), then `dispatch()` the domain event. Action takes no `Request` (boundaries — `php/laravel`, `general/cross-layer-change-checklist`). See `snippets/transition-action.php`.
+5. **Event after commit.** Domain event implements `ShouldDispatchAfterCommit` so listeners/broadcast don't see unsaved state on rollback. Broadcast/listener details — `php/laravel-broadcasting` (don't duplicate here).
+6. **UI-available actions.** Frontend buttons/actions built from `allowedFrom($current)` + each edge's `label`/`guard` — UI reads the graph, doesn't hardcode transitions.
+7. **Graph evolution.** New transition = new row in `transitionDefinitions()` (+ Action if needed). Graph test (see checklist) catches dangling edges and unreachable statuses.
 
-## Алгоритм
+## Which snippet
 
-1. **Граф рёбер на enum.** Статический `public static function transitionDefinitions(): array`
-   возвращает список рёбер. Минимум — `from`/`to` (кейсы enum); по необходимости —
-   `guard` (имя предиката/ability), `action` (FQCN Action-класса), `label` (для UI),
-   и доменные оси (`role`, `process`, `condition`). Это **единственный** источник графа —
-   никаких параллельных копий. См. `snippets/enum-with-transitions.php`.
-2. **Рантайм-реестр.** `final class XxxStatusTransitions` строит из определений adjacency
-   (`array<string, list<Status>>`) **лениво и кэширует** в статике (reflection/обход
-   массива — на горячих путях дорого). Публично: `allowedFrom(Status $from): array`,
-   `canTransition(Status $from, Status $to): bool`. Источник данных — только
-   `transitionDefinitions()`. См. `snippets/transitions-registry.php`.
-3. **Guard перед переходом.** Перед мутацией проверяй `canTransition($from, $to)` (легальность
-   ребра) **и** доменный предикат/политику из `guard` (право конкретного пользователя/контекста).
-   Нелегальный переход → `ValidationException`/`abort`, не молчаливый no-op.
-4. **Исполнение в Action.** Переход — это use-case: `final readonly` Action с одним
-   `execute()`, открывает `DB::transaction()`, пишет новый статус (+ историю/связанные
-   модели), затем `dispatch()` доменного события. Action не принимает `Request` (границы —
-   `php/laravel`, `general/cross-layer-change-checklist`). См. `snippets/transition-action.php`.
-5. **Событие после коммита.** Доменное событие реализует `ShouldDispatchAfterCommit`, чтобы
-   слушатели/broadcast не увидели несохранённое состояние при откате транзакции. Детали
-   broadcast/listener — `php/laravel-broadcasting` (не дублировать здесь).
-6. **UI-доступные действия.** Кнопки/экшены на фронте строятся из `allowedFrom($current)` +
-   `label`/`guard` каждого ребра — UI не хардкодит переходы, а читает граф.
-7. **Эволюция графа.** Новый переход = новая строка в `transitionDefinitions()` (+ Action,
-   если нужен). Тест на графе (см. чеклист) ловит висячие рёбра и недостижимые статусы.
-
-## Когда какой сниппет открывать
-
-| Ситуация | Файл |
+| Situation | File |
 |---|---|
-| Описываю граф переходов на самом enum | `snippets/enum-with-transitions.php` |
-| Пишу рантайм-реестр (adjacency, canTransition, allowedFrom) | `snippets/transitions-registry.php` |
-| Исполняю переход в Action (transaction + событие after-commit) | `snippets/transition-action.php` |
+| Describing transition graph on the enum itself | `snippets/enum-with-transitions.php` |
+| Writing runtime registry (adjacency, canTransition, allowedFrom) | `snippets/transitions-registry.php` |
+| Executing transition in Action (transaction + after-commit event) | `snippets/transition-action.php` |
 
-## Типичные грабли
+## Pitfalls
 
-- **Параллельный граф.** Любой второй список переходов (в сервисе/политике/фронте) —
-  источник рассинхрона. Всё читает `transitionDefinitions()`.
-- **Reflection/обход на каждый вызов.** `allowedFrom` дёргается в списках/таблицах —
-  кэшировать adjacency в статике, инвалидация не нужна (граф статичен на рантайме).
-- **Молчаливый no-op при нелегальном переходе.** Должно быть исключение, иначе баг прячется.
-- **Событие без `ShouldDispatchAfterCommit`.** Слушатель в той же транзакции увидит
-  незакоммиченное состояние; при откате — фантомный side-effect.
-- **Логика перехода в контроллере/сервисе.** Мутация и транзакционная граница — в Action.
-- **Guard ⊆ canTransition.** `canTransition` проверяет легальность ребра, `guard` — право
-  субъекта; это разные проверки, нужны обе.
+- **Parallel graph.** Any second transition list (service/policy/frontend) = desync source. Everything reads `transitionDefinitions()`.
+- **Reflection/walk per call.** `allowedFrom` hit in lists/tables — cache adjacency in static; no invalidation needed (graph static at runtime).
+- **Silent no-op on illegal transition.** Must throw, else the bug hides.
+- **Event without `ShouldDispatchAfterCommit`.** Listener in same transaction sees uncommitted state; on rollback — phantom side-effect.
+- **Transition logic in controller/service.** Mutation and transactional boundary go in the Action.
+- **Guard ⊆ canTransition.** `canTransition` checks edge legality, `guard` checks subject right; different checks, both needed.
 
-## Чеклист качества
+## Quality checklist
 
-- [ ] Граф переходов — единственный, в `transitionDefinitions()` на enum
-- [ ] Рантайм-реестр читает только `transitionDefinitions()`, adjacency закэширована
-- [ ] `canTransition()` вызывается перед мутацией; нелегальный переход → исключение
-- [ ] Право субъекта (`guard`/policy) проверяется отдельно от легальности ребра
-- [ ] Переход исполняется в `final readonly` Action под `DB::transaction()`, без `Request`
-- [ ] Доменное событие реализует `ShouldDispatchAfterCommit`
-- [ ] UI-действия строятся из `allowedFrom($current)`, а не хардкодом
-- [ ] Есть тест графа: нет висячих рёбер (from/to существуют), нет недостижимых статусов
+- [ ] Transition graph is the only one, in `transitionDefinitions()` on enum
+- [ ] Runtime registry reads only `transitionDefinitions()`, adjacency cached
+- [ ] `canTransition()` called before mutation; illegal transition → exception
+- [ ] Subject right (`guard`/policy) checked separately from edge legality
+- [ ] Transition executed in `final readonly` Action under `DB::transaction()`, no `Request`
+- [ ] Domain event implements `ShouldDispatchAfterCommit`
+- [ ] UI actions built from `allowedFrom($current)`, not hardcoded
+- [ ] Graph test exists: no dangling edges (from/to exist), no unreachable statuses
 
-## Ссылки
+## Links
 
-- `php/enum-attributes` — метаданные кейсов (label/color/priority) через атрибуты+Concern;
-  здесь — граф переходов поверх таких enum (скиллы дополняют друг друга).
-- `php/laravel-broadcasting` — `ShouldDispatchAfterCommit`, broadcast и listeners перехода.
-- `php/laravel`, `php/repositories` — границы Action/Repository, в которых живёт переход.
-- `general/cross-layer-change-checklist` — синхронизация слоёв при добавлении перехода.
+- `php/enum-attributes` — case metadata (label/color/priority) via attributes+Concern; here — transition graph over such enums (skills complement each other).
+- `php/laravel-broadcasting` — `ShouldDispatchAfterCommit`, broadcast and transition listeners.
+- `php/laravel`, `php/repositories` — Action/Repository boundaries the transition lives in.
+- `general/cross-layer-change-checklist` — layer sync when adding a transition.
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: 140b2b14d995c88b55e0747535c0a57bb5274ffc947840c55e0ccd40364c0b54 -->

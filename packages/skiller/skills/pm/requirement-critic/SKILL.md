@@ -2,7 +2,7 @@
 name: requirement-critic
 bucket: pm
 version: 0.1.0
-description: Аудит BRD: полнота, конфликты, допущения, gap-анализ, MoSCoW. Только в чат, файл не создаётся
+description: BRD audit: completeness, conflicts, assumptions, gap analysis, MoSCoW. Chat-only, no file
 risk: read
 persona: pm
 tags: [requirements, validation]
@@ -15,101 +15,70 @@ adapters: [claude, cursor, fable]
 
 # Skill: Requirement Critic
 
-Применять когда: нужно проверить/аудировать BRD или набор требований перед переходом к архитектурной фазе.
+Use when: audit a BRD / requirement set before the architecture phase.
 
----
+Role: skeptical technical reviewer, not author. Find problems expensive to fix after development starts.
 
-## Роль
+## Step 1 — Completeness
+Check each functional requirement:
+- **Who**: actor specified? user role defined?
+- **What**: action unambiguous? no double meaning?
+- **When**: trigger present? what initiates the action?
+- **Acceptance criteria**: measurable acceptance criteria present?
+- **Edge cases**: data invalid / empty / concurrent request?
+- **Negative scenario**: what does the system do on error?
 
-Агент выступает как скептичный технический рецензент, а не как автор требований.
-Задача — найти проблемы, которые дорого исправлять после начала разработки.
+## Step 2 — MoSCoW
+Assign priority to each requirement:
+- **Must**: product doesn't work without it / MVP impossible
+- **Should**: important, but workaround exists at start
+- **Could**: desirable if time permits
+- **Won't**: explicitly out of scope (record it so it doesn't resurface later)
 
----
+Rule: >60% requirements marked Must = red flag (no prioritization).
 
-## Шаг 1. Полнота требований
+## Step 3 — Conflicts
+Find contradictions inside the doc:
+- **Logical**: req A assumes X, req B assumes not-X
+- **Resource**: two reqs cannot be done simultaneously
+- **Role**: one req grants a right, another forbids it
+- **Temporal**: operation order contradicts across scenarios
 
-Проверить каждое функциональное требование по чеклисту:
+Format: `⚠️ Конфликт: [Требование A] vs [Требование B] — [суть проблемы]`
 
-| Проверка | Вопрос |
-|:---|:---|
-| **Кто** | Указан актор? Роль пользователя определена? |
-| **Что** | Действие однозначно? Нет ли двоесмыслия? |
-| **Когда** | Есть триггер? Что запускает действие? |
-| **Критерий приёмки** | Есть ли measurable acceptance criteria? |
-| **Граничные случаи** | Что если данные невалидны / пустые / конкурентный запрос? |
-| **Негативный сценарий** | Что система делает при ошибке? |
+## Step 4 — Implicit assumptions
+Surface what's taken for granted but not recorded:
+- Expected load (users / RPS?)
+- Languages and locales (RU only? multilingual?)
+- Platforms (web only? mobile? PWA?)
+- Offline mode (needed?)
+- Response time (unmentioned → dev decides → expectation conflict)
+- Data access rights (who sees other users' data?)
 
----
+Format: `❓ Допущение: [что не сказано, но подразумевается]`
 
-## Шаг 2. MoSCoW-классификация
+## Step 5 — Gap analysis
+Walk typical modules for the product type, check nothing is missed:
 
-Для каждого требования определить приоритет:
+### SaaS / web app
+- [ ] Authentication and authorization — described?
+- [ ] Session management — specified?
+- [ ] Email notifications — mentioned?
+- [ ] List pagination — required?
+- [ ] Search and filtering — covered?
+- [ ] Data deletion — what happens to dependent records?
+- [ ] Soft delete vs hard delete — defined?
+- [ ] Data export — needed?
+- [ ] Audit log (who did what) — needed?
 
-| Приоритет | Критерий |
-|:---|:---|
-| **Must** | Без этого продукт не работает / MVP невозможен |
-| **Should** | Важно, но есть workaround на старте |
-| **Could** | Желательно, если позволит время |
-| **Won't** | Явно вне скоупа (фиксировать, чтобы не всплыло позже) |
+### API / library
+- [ ] API versioning — strategy described?
+- [ ] Rate limiting — mentioned?
+- [ ] Error response format — standardized?
+- [ ] Authentication scheme — specified?
+- [ ] Deprecation policy — present?
 
-**Правило:** если более 60% требований отмечены Must — это red flag. Означает отсутствие приоритизации.
-
----
-
-## Шаг 3. Поиск противоречий
-
-Найти конфликты внутри документа:
-
-- **Логические:** требование A предполагает X, требование B предполагает не-X
-- **Ресурсные:** два требования не могут быть выполнены одновременно
-- **Ролевые:** одно требование даёт пользователю право, другое — запрещает
-- **Временные:** порядок операций в разных сценариях противоречит друг другу
-
-Формат фиксации: `⚠️ Конфликт: [Требование A] vs [Требование B] — [суть проблемы]`
-
----
-
-## Шаг 4. Неявные допущения
-
-Выявить что принято как само собой разумеющееся, но не зафиксировано:
-
-- Ожидаемая нагрузка (сколько пользователей / RPS?)
-- Языки и локали (только RU? мультиязычность?)
-- Платформы (web только? мобильный? PWA?)
-- Offline-режим (нужен ли?)
-- Время отклика (нет упоминания → разработчик решит сам → конфликт ожиданий)
-- Права доступа к данным (кто видит данные других пользователей?)
-
-Формат: `❓ Допущение: [что не сказано, но подразумевается]`
-
----
-
-## Шаг 5. Недосказанность (gap analysis)
-
-Пройтись по типичным модулям для данного типа продукта и проверить, что не пропущено:
-
-### Для SaaS / веб-приложения
-- [ ] Аутентификация и авторизация — описана?
-- [ ] Управление сессиями — указано?
-- [ ] Email-уведомления — упомянуты?
-- [ ] Пагинация списков — есть требование?
-- [ ] Поиск и фильтрация — покрыты?
-- [ ] Удаление данных — что происходит с зависимыми записями?
-- [ ] Soft delete vs hard delete — определено?
-- [ ] Экспорт данных — нужен?
-- [ ] Аудит лог (кто что сделал) — нужен?
-
-### Для API / библиотеки
-- [ ] Версионирование API — стратегия описана?
-- [ ] Rate limiting — упомянут?
-- [ ] Error response формат — стандартизирован?
-- [ ] Authentication scheme — указан?
-- [ ] Deprecation policy — есть?
-
----
-
-## Формат вывода
-
+## Output format
 ```markdown
 # Requirement Critique: [ProjectName / BRD]
 
@@ -139,29 +108,24 @@ adapters: [claude, cursor, fable]
 3.
 ```
 
----
+## Agent adds itself
+- Edge cases the user didn't mention (typical for the product type)
+- Technical assumptions invisible to business but blocking development
+- A flag on requirements that will need far more resources than they seem
 
-## Что агент добавляет сам
+## Hard prohibitions
+NEVER:
+- Propose solutions during critique — only record problems
+- Rewrite requirements — only state what's wrong
+- Skip any of the 5 checks
+- Give a blanket "BRD is good" without specifics
 
-- Граничные случаи, которые пользователь не упомянул (типичные для данного типа продукта)
-- Технические допущения, которые невидимы бизнесу, но блокируют разработку
-- Пометку о требованиях, которые потребуют значительно больше ресурсов, чем кажется
+## Related skills
+- `pm/brd` — audit target: critic checks a finished BRD (required BEFORE critique).
+- `pm/prd-from-brd` — run AFTER closing found gaps, to avoid carrying them into PRD.
+- `founder/risk-assessment` — assumptions and gaps from critique often become RAID-log entries.
+- `architect/architecture` — critic is the last gate before the architecture phase (HOW).
 
----
+<!-- ru-source-sha256: PENDING -->
 
-## Жёсткие запреты
-
-НЕЛЬЗЯ:
-- Предлагать решения на стадии критики — только фиксировать проблемы
-- Переписывать требования — только указывать что не так
-- Пропускать ни одну из 5 проверок
-- Давать общую оценку "BRD хороший" без конкретики
-
----
-
-## Связанные скиллы
-
-- `pm/brd` — объект аудита: критик проверяет готовый BRD (требуется ДО критики).
-- `pm/prd-from-brd` — запускать ПОСЛЕ закрытия найденных пробелов, чтобы не тащить их в PRD.
-- `founder/risk-assessment` — допущения и пробелы из критики часто становятся записями RAID-лога.
-- `architect/architecture` — критик — последний гейт перед переходом в архитектурную фазу (КАК).
+<!-- ru-source-sha256: 9772f86cb54d88168d3b9f8943183ce14c90d6ec539f3ca24fda4b642413db4d -->

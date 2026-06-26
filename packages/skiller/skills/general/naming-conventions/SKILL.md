@@ -2,7 +2,7 @@
 name: naming-conventions
 bucket: general
 version: 0.1.0
-description: "Дисциплина именования сущностей (язык-агностично): имя раскрывает намерение, а не реализацию; борьба с шумовыми словами (Manager/Helper/data/process) и комбинаторным взрывом методов (findByXOrFail/getOrNull). Активировать при именовании или ревью имён функций, классов, переменных, методов."
+description: "Naming discipline (language-agnostic): name reveals intent, not implementation; fight noise words (Manager/Helper/data/process) and combinatorial method explosion (findByXOrFail/getOrNull). Activate when naming or reviewing names of functions, classes, variables, methods."
 risk: read
 persona: oss-dev
 tags: [naming, conventions, readability, code-style, discipline, clean-code]
@@ -14,89 +14,79 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-# Дисциплина именования
+# Naming discipline
 
-## Когда активировать
+Language-agnostic **policy** (not a pattern); stack-specific skills (`php/naming-conventions` etc.) build on it.
 
-- Придумываешь имя функции, метода, класса, переменной, файла, флага.
-- Ревьюишь чужой/свой код и видишь имя, по которому не понять *что делает* без чтения тела.
-- Замечаешь генерацию имён-«мусора» (типичный след ИИ): `findByCodeOrFail`,
-  `getDataProcessor`, `handleStuff`, `UserManager`, `result2`, `tmpArr`.
-- Пользователь упоминает читаемость, конвенции именования, «как назвать».
+## Activate when
 
-Это **политика**, а не паттерн: язык-агностичные правила, на которые опираются стек-специфичные
-скиллы (`php/naming-conventions` и т.п.). Конкретику стека бери там; здесь — принципы.
+- Naming a function, method, class, variable, file, flag.
+- Reviewing code where a name doesn't reveal *what it does* without reading the body.
+- Spotting AI-junk names: `findByCodeOrFail`, `getDataProcessor`, `handleStuff`, `UserManager`, `result2`, `tmpArr`.
+- User mentions readability, naming conventions, "what to call it".
 
-## Главный принцип
+## Core principle
 
-**Имя раскрывает намерение (intent), а не реализацию и не тип.** Читатель должен понять
-*что* и *зачем*, не открывая тело и не зная внутренней механики. Если для понимания имени
-нужен комментарий — имя плохое.
+Name reveals **intent**, not implementation, not type. Reader understands *what* and *why* without opening the body. If a name needs a comment, it's bad.
 
 ```
-# плохо: реализация течёт в имя        # хорошо: намерение
-loopThroughUsersAndFilter()            activeUsers()
-recordWithStatusEqual2()               publishedRecords()
-arr / arr2 / tmp / data / obj          pendingInvoices / recipient / payload
+# bad: implementation leaks into name     # good: intent
+loopThroughUsersAndFilter()               activeUsers()
+recordWithStatusEqual2()                  publishedRecords()
+arr / arr2 / tmp / data / obj             pendingInvoices / recipient / payload
 ```
 
-## Семь правил
+## Seven rules
 
-1. **Глаголы для действий, существительные для данных.** Функция/метод с эффектом —
-   глагольная фраза (`sendInvoice`, `archive`); чистый запрос — существительное или `get`-без-побочек
-   (`totalPrice`, `nextAvailableSlot`). Класс/переменная — существительное (`Invoice`, `recipient`).
-2. **Булевы — вопрос:** префиксы `is` / `has` / `can` / `should` / `needs`
-   (`isActive`, `hasAccess`, `canPublish`), не `active`/`flag`/`status` для bool.
-3. **CQS в именах:** команда меняет состояние и обычно `void` (`open`, `cancel`); запрос
-   возвращает данные без эффектов (`status`, `findOpenOrders`). Имя не должно врать про эффекты.
-4. **Одно слово на один концепт.** Не мешай `fetch`/`get`/`retrieve`/`load` для одной операции —
-   выбери одно и держи по всей кодовой базе. То же для `delete`/`remove`/`destroy`.
-5. **Симметрия противоположностей:** `open`/`close`, `begin`/`end`, `show`/`hide`,
-   `create`/`delete` — не `open`/`terminate`, не `add`/`destroy`.
-6. **Длина ∝ области видимости.** Индекс цикла `i` — норма; поле класса или публичный API —
-   полное осмысленное имя. Чем шире виден символ, тем описательнее имя.
-7. **Произносимо и искабельно.** Никаких `genymdhms`, `dtaRcrd102`. Аббревиатуры — только
-   общеизвестные (`id`, `url`, `http`); никакого венгерского нотейшна (`strName`, `iCount`).
+1. **Verbs for actions, nouns for data.** Function/method with effect = verb phrase (`sendInvoice`, `archive`); pure query = noun or side-effect-free `get` (`totalPrice`, `nextAvailableSlot`). Class/variable = noun (`Invoice`, `recipient`).
+2. **Booleans = question:** prefixes `is`/`has`/`can`/`should`/`needs` (`isActive`, `hasAccess`, `canPublish`); not `active`/`flag`/`status` for bool.
+3. **CQS in names:** command changes state, usually `void` (`open`, `cancel`); query returns data with no effects (`status`, `findOpenOrders`). Name must not lie about effects.
+4. **One word per concept.** Don't mix `fetch`/`get`/`retrieve`/`load` for one operation — pick one across the codebase. Same for `delete`/`remove`/`destroy`.
+5. **Symmetric opposites:** `open`/`close`, `begin`/`end`, `show`/`hide`, `create`/`delete` — not `open`/`terminate`, not `add`/`destroy`.
+6. **Length ∝ scope.** Loop index `i` fine; class field or public API = full meaningful name. Wider visibility → more descriptive.
+7. **Pronounceable & searchable.** No `genymdhms`, `dtaRcrd102`. Abbreviations only well-known (`id`, `url`, `http`); no Hungarian notation (`strName`, `iCount`).
 
-## Галерея анти-паттернов (то, что генерит ИИ — и чем заменить)
+## Anti-pattern gallery (AI-generated → replacement)
 
-| Анти-паттерн | Почему плохо | Замена |
+| Anti-pattern | Why bad | Replacement |
 |:--|:--|:--|
-| **Комбинаторный взрыв** `findByCodeOrFail`, `findByEmailOrFail`, `findBySlugOrFail`… | метод-на-поле — экспоненциальный рост API; дублирование | один аксессор + критерий/спецификация: `find(criteria)`, либо именованный запрос по *намерению* (`activeBySlug`) — см. правило ниже |
-| **Хвосты `…OrNull` / `…OrFail` / `…OrThrow` на каждом методе** | политика ошибок зашита в имя N раз | политика ошибок — один раз (тип результата `Optional`/исключение по контракту слоя), имя про *что ищем* |
-| **Шумовые суффиксы** `UserManager`, `OrderHelper`, `DataProcessor`, `*Util`, `*Info`, `*Handler` | «менеджер чего и зачем?» — класс без ответственности, помойка методов | имя по *роли*: `OrderRepository`, `PriceCalculator`, `InvoiceMailer`. Нет роли — нет класса |
-| **Шумовые имена данных** `data`, `info`, `obj`, `item`, `temp`, `value`, `result`, `arr`, `list` | не несут смысла, не ищутся | по содержимому: `invoice`, `recipients`, `parsedPayload`, `dueDate` |
-| **Лишний `get`/префикс типа** `getUserById`, `getAllUsers`, `OrderObject`, `OrderClass`, `IUserInterface` | `get`+аргумент уже ясен; суффикс типа — шум | `user(id)` / `users()`; `Order`; `UserRepository` (роль, не «Interface») |
-| **Числовые/механические суффиксы** `user2`, `tempList`, `handleData2`, `processX` | копипаст без переосмысления | разведи по смыслу: `existingUser`/`incomingUser` |
-| **Имя врёт про эффекты** `getUser()` шлёт письмо; `isValid()` мутирует | нарушает CQS, ловушка для читателя | `getUser` без эффектов; эффект — отдельная команда `notifyUser` |
+| **Combinatorial explosion** `findByCodeOrFail`, `findByEmailOrFail`, `findBySlugOrFail`… | method-per-field → exponential API growth; duplication | one accessor + criteria/specification: `find(criteria)`, or named query by *intent* (`activeBySlug`) — see rule below |
+| **`…OrNull`/`…OrFail`/`…OrThrow` tails on every method** | error policy baked into name N times | error policy once (result type `Optional`/exception by layer contract), name about *what* you look for |
+| **Noise suffixes** `UserManager`, `OrderHelper`, `DataProcessor`, `*Util`, `*Info`, `*Handler` | "manager of what, why?" — class with no responsibility, method dump | name by *role*: `OrderRepository`, `PriceCalculator`, `InvoiceMailer`. No role → no class |
+| **Noise data names** `data`, `info`, `obj`, `item`, `temp`, `value`, `result`, `arr`, `list` | meaningless, unsearchable | by content: `invoice`, `recipients`, `parsedPayload`, `dueDate` |
+| **Redundant `get`/type prefix** `getUserById`, `getAllUsers`, `OrderObject`, `OrderClass`, `IUserInterface` | `get`+arg already clear; type suffix is noise | `user(id)` / `users()`; `Order`; `UserRepository` (role, not "Interface") |
+| **Numeric/mechanical suffixes** `user2`, `tempList`, `handleData2`, `processX` | copy-paste without rethinking | split by meaning: `existingUser`/`incomingUser` |
+| **Name lies about effects** `getUser()` sends email; `isValid()` mutates | breaks CQS, reader trap | `getUser` no effects; effect = separate command `notifyUser` |
 
-### Правило про `findByXOrFail` (частый кейс)
+### `findByXOrFail` rule
 
-Не плоди метод на каждое поле. Допустимы:
-- **Один канонический lookup** по первичному ключу/единому критерию (`find(id)`, `findOrFail(id)`).
-- **Именованные запросы по намерению**, когда выборка осмысленна в домене (`activeBySlug`,
-  `pendingForReview`) — но это про *бизнес-смысл*, а не «по каждой колонке».
-- В остальном — параметр-критерий / спецификация / query-объект, а не новый метод.
+Don't spawn a method per field. Allowed:
+- **One canonical lookup** by primary key / single criterion (`find(id)`, `findOrFail(id)`).
+- **Named queries by intent** when the selection is domain-meaningful (`activeBySlug`, `pendingForReview`) — *business meaning*, not "per column".
+- Otherwise — criteria param / specification / query object, not a new method.
 
-## Чеклист качества
+## Quality checklist
 
-- [ ] По имени понятно *что делает*, без чтения тела и комментария.
-- [ ] Действие — глагол, данные — существительное; булево — `is/has/can/should`.
-- [ ] Нет шумовых слов: `data/info/obj/temp/result` и суффиксов `Manager/Helper/Util/Handler/Processor` без чёткой роли.
-- [ ] Нет метода-на-поле (`findByX…OrFail` × N); политика ошибок выражена один раз.
-- [ ] Один глагол на один концепт во всей базе (не `get`/`fetch`/`load` вперемешку).
-- [ ] Противоположные операции названы симметрично.
-- [ ] Длина имени соответствует области видимости; имя произносимо и искабельно.
-- [ ] Имя не врёт про побочные эффекты (CQS).
+- [ ] Name reveals *what it does* without reading body or comment.
+- [ ] Action = verb, data = noun; boolean = `is/has/can/should`.
+- [ ] No noise words: `data/info/obj/temp/result` and suffixes `Manager/Helper/Util/Handler/Processor` without a clear role.
+- [ ] No method-per-field (`findByX…OrFail` × N); error policy expressed once.
+- [ ] One verb per concept across the base (no `get`/`fetch`/`load` mix).
+- [ ] Opposite operations named symmetrically.
+- [ ] Name length matches scope; pronounceable and searchable.
+- [ ] Name doesn't lie about side effects (CQS).
 
-## Сниппет
+## Snippet
 
-`snippets/naming-gallery.md` — расширенная кросс-языковая таблица «плохо → хорошо»
-(функции, классы, переменные, булевы, коллекции, тесты) для вставки в ревью/CLAUDE.md.
+`snippets/naming-gallery.md` — extended cross-language "bad → good" table (functions, classes, variables, booleans, collections, tests) for review/CLAUDE.md.
 
-## Связанные скиллы
+## Related skills
 
-- `php/naming-conventions` — Laravel-конкретика (Actions/Repository/DTO/VO/Enum, разбор `findByXOrFail`).
-- `general/writing-style` — стиль прозы и сообщений; именование — про идентификаторы кода.
-- `quality/code-review` — где проверка имён встраивается в ревью (P2/P3-находки).
-- `general/anti-drift` — «простота прежде всего»: имя проще = меньше дрейфа.
+- `php/naming-conventions` — Laravel specifics (Actions/Repository/DTO/VO/Enum, `findByXOrFail` breakdown).
+- `general/writing-style` — prose & message style; naming is about code identifiers.
+- `quality/code-review` — where name checks fit into review (P2/P3 findings).
+- `general/anti-drift` — "simplicity first": simpler name = less drift.
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: 8877fc2656e42fb4dec4095e14d878cb78a0358bbe401a8c0e77999218efc03d -->

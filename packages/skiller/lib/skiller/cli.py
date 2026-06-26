@@ -5,6 +5,7 @@ from .budget import cmd_budget
 from .common import Env
 from .connect import cmd_connect
 from .doctor import cmd_doctor
+from .eval import cmd_eval
 from .integrate import cmd_integrate
 from .listing import cmd_list
 from .lock import cmd_lock
@@ -25,6 +26,7 @@ COMMANDS = {
     "lock": cmd_lock,
     "status": cmd_status,
     "budget": cmd_budget,
+    "eval": cmd_eval,
     "list": cmd_list,
     "registry": cmd_registry,
     "doctor": cmd_doctor,

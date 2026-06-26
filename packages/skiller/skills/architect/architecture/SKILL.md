@@ -129,6 +129,7 @@ FORBIDDEN:
 - Leave SLO/load undefined ("figure out later")
 - Create architecture doc without Mermaid diagram
 - Skip Security Gate for products with PII
+- Commit external facts (library versions, API behavior, SLA, pricing) from memory — verify via `verify-claims` first
 
 ## Related skills
 
@@ -143,4 +144,4 @@ FORBIDDEN:
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 4b71048c1a836e7456dab8af6db8b6c3218e03d1821e3bdffefc072cbf1cd533 -->
+<!-- ru-source-sha256: 023b734bb0a71f0da5e919f52b0cdd213e2ca0598f06cf434d5bacae953975e4 -->

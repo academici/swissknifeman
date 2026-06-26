@@ -180,6 +180,7 @@ NEVER:
 - Take k8s/microservices on pre-seed without hard justification.
 - Leave "decide later" — `architecture` will suffer.
 - Not create ADR-001 immediately.
+- Pick a stack/library on stale memory — verify current versions/maintenance/best-practice via `verify-claims` first.
 
 ## Related skills
 - `pm/brd` — NFRs + load as precondition.
@@ -190,4 +191,4 @@ NEVER:
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 148e883551005b30103f5fbb3b2e15a4edbbb64550975b306b598b0b059c7613 -->
+<!-- ru-source-sha256: b73375020d4506bf293154b9d82c430ac4d98d3c4392f798b079b64c0504c93d -->

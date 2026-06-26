@@ -97,3 +97,11 @@ PYTHONPATH=. python3 -m unittest discover -s core/tests       # smoke-тесты
 
 Конвенции пакетов — в их CLAUDE.md. Общее: **stdlib-only** в python, `Env` явно, atomic JSON,
 сообщения на русском. Коммиты — Conventional Commits на русском.
+
+## Методология решений (always-on)
+
+Решения/вердикты на **внешних** фактах (версии/API библиотек, «ещё актуально», рынок, возможности чужого
+сервиса/MCP, какой пакет/команда актуальны) — **верифицировать через RAG** (`context7` → Perplexity →
+`WebSearch`) до фиксации; **repo-grounded** факты — подтверждать чтением кода. Канон: root-скилл
+`decision-verification` → реестровый `general/verify-claims`. Особенно при разборе аудитов в `research/`:
+даже «полный» аудит — внешние вердикты до-проверять, а не отклонять по устаревшему знанию.

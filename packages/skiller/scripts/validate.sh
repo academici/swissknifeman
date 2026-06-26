@@ -871,3 +871,10 @@ if stale:
     sys.exit(1)
 print("bucket-path drift: нет протухших php/<skill>|frontend/<skill> ссылок")
 PY
+
+# --- 14. двуязычная свежесть (SKILL.ru.md → SKILL.md) ---------------------------
+# Гейт: RU-источник правлен, EN-канон не регенерён (или нет ru-source-sha256). Без
+# claude (чистая sha-сверка) — безопасно в CI. Чинить: regen SKILL.md + check-translations --stamp.
+"$REPO_ROOT/scripts/check-translations.sh" --strict || {
+  echo "ERROR: протухшие переводы SKILL.ru.md→SKILL.md (regen + check-translations.sh --stamp)" >&2
+  exit 1; }

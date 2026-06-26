@@ -13,7 +13,7 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
-from .common import die, parse_args, safe_load_json
+from .common import die, parse_args, safe_load_json, warn
 from .config import load_config
 from .constants import SIBLINGS
 from .namespaces import in_namespace
@@ -257,7 +257,9 @@ def _agent_pack_run(env, config, projects, mode, dry):
                      + (["--install-only"] if mode == "install" else []))
             try:
                 rc = run_capability(env, config, p["id"], cap, extra, dry=dry)
-                results.append(_result("agent-pack", p["id"], "ok" if rc == 0 else "skip",
+                # rc!=0 — провал рендера пака (НЕ 'skip', иначе провал невидим); harness
+                # недоступен ловится отдельно ниже как graceful skip.
+                results.append(_result("agent-pack", p["id"], "ok" if rc == 0 else "failed",
                                        changed=rc == 0, detail=f"pack={pack} rc={rc}"))
             except SystemExit:
                 results.append(_result("agent-pack", p["id"], "skip",
@@ -298,10 +300,17 @@ def provisioner_names(only=None):
 
 
 def run_sync(env, config, projects, *, only=None, mode="auto", dry=False):
-    """Применить выбранные провиженеры к проектам. Возвращает плоский список результатов."""
+    """Применить выбранные провиженеры к проектам. Возвращает плоский список результатов.
+    Fail-soft: падение одного провиженера НЕ валит весь фан-аут — остальные отрабатывают,
+    упавший помечается status=failed per-project (видно в выводе и коде возврата)."""
     results = []
     for name in provisioner_names(only):
-        results.extend(PROVISIONERS[name](env, config, projects, mode, dry))
+        try:
+            results.extend(PROVISIONERS[name](env, config, projects, mode, dry))
+        except Exception as e:
+            warn(f"провиженер '{name}' упал: {e}")
+            results.extend(_result(name, p.get("id", "?"), "failed", detail=str(e))
+                           for p in projects)
     return results
 
 
@@ -330,7 +339,7 @@ def cmd_sync(env, argv):
     print(f"{tag}sync (mode={mode}, проектов {len(projects)}, "
           f"провиженеры: {', '.join(provisioner_names(opts['only']))})")
     for r in results:
-        mark = {"ok": "✓", "skip": "○", "dry": "·"}.get(r["status"], "·")
+        mark = {"ok": "✓", "skip": "○", "dry": "·", "failed": "✗"}.get(r["status"], "·")
         if r["status"] == "dry":
             note = f" (план: {r.get('state') or 'apply'})"
         elif r["status"] == "ok" and not r.get("changed", True):
@@ -338,3 +347,8 @@ def cmd_sync(env, argv):
         else:
             note = ""
         print(f"  {mark} {r['provisioner']:<11} {r['id']:<18} {r.get('detail', '')}{note}")
+    failed = [r for r in results if r["status"] == "failed"]
+    if failed:
+        import sys
+        warn(f"провиженеров упало: {len(failed)} (см. ✗ выше)")
+        sys.exit(1)

@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Fixed (аудит — устойчивость фан-аута, гейты CI, хвосты)
+
+- **maind sync — fail-soft фан-аут** (`sync.run_sync`): падение одного провиженера больше НЕ валит всю
+  раскатку — остальные отрабатывают, упавший помечается `status=failed` per-project (виден в выводе,
+  код возврата `cmd_sync` ненулевой). `_agent_pack_run`: `rc!=0` → `failed` (был `skip` — провал
+  рендера пака был невидим); `harness недоступен` остаётся graceful `skip`.
+- **validate.sh: гейт двуязычной свежести** (секция 14) — `check-translations.sh --strict`: правленый
+  `SKILL.ru.md` без регенерации `SKILL.md` (или без `ru-source-sha256`) теперь падает в CI, а не молчит.
+- **bin/swissknifeman:** убран мёртвый алиас `validate` (skiller-команды такой нет — роутинг давал
+  «Неизвестная команда»).
+- _Проверено, НЕ баг:_ `config.example.json` `type=node-package` + `code_language=python` — намеренная
+  демонстрация override смешанного репо (есть `_comment_code_graph`), не дефект.
+- _Отложено (tracked):_ RAG-верификация актуальности внешних пинов (`@agentmemory/agentmemory ^0.9.26`,
+  Serena git-pin, jscpd, ruff) — по методологии `decision-verification` делается ПЕРЕД bump'ом
+  зависимости; bump'а здесь нет. Аудит upstream-super-skill (name=dir, обратные ссылки) — отдельный
+  per-skill пасс.
+
 ### Added (аудит — покрытие локальных скиллов + сценарные рецепты архетипов)
 
 - **Новый governance-скилл `harness-operations`** (`.claude/skills/`) — у пакета `harness` не было ни

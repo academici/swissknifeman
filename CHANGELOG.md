@@ -2,6 +2,29 @@
 
 ## [Unreleased]
 
+### Added (verify-claims — RAG-верификация внешних фактов в ревью и планировании)
+
+- **Скилл `general/verify-claims`** (CORE, двуязычный RU→EN) — эпистемический гейт против решений по
+  устаревшему знанию. Классифицирует заявление: **repo/code-grounded** (читаю код — без проверки) ·
+  **стабильное общее знание** (без проверки) · **внешнее + staleness-чувствительное** (версии/API,
+  «ещё актуально», best practice, рынок, возможности чужого сервиса/MCP, цены) → **верифицировать через
+  RAG**. Лестница движков (дешёвый первым): **context7** (доки библиотек) → **Perplexity** (native MCP при
+  `PERPLEXITY_API_KEY`, иначе keyless `perplexity-web`) → **WebSearch/WebFetch** → эскалация в `research/research`.
+  Цитата + confidence (high/medium/low). Спец-клауза: при разборе чужого аудита внешне-мировые вердикты
+  до-проверять **даже если аудит «полный»**. Добавлен в `CORE_SKILLS`.
+- **`general/mcp-advisor`**: строка `perplexity` в карте серверов + кросс-ссылка на `verify-claims`
+  (комплементарны: *что подключить* ↔ *когда/как доставать факт*).
+- **Каталог harness**: `configs/claude-code/mcp/perplexity.json` (`@perplexity-ai/mcp-server` + env
+  `PERPLEXITY_API_KEY`). Имя пакета **верифицировано через RAG** (текущий официальный `@perplexity-ai/mcp-server`,
+  не legacy `server-perplexity-ask` — ровно та staleness, что ловит `verify-claims`).
+- **Цепочки планирования**: `verify-claims` `produces_for: [architecture, tech-stack-selection]` (граф-рёбра) +
+  house-style запрет «фиксировать внешние факты по памяти — сначала `verify-claims`» в `architect/architecture`
+  и `architect/tech-stack-selection`.
+
+> Контекст: запрос — встроить проверку внешних фактов через RAG (знание модели имеет порог, бывает неполным/
+> ошибочным) в **ревью аудитов** и **большое планирование**. Repo-grounded вердикты (чтение кода) безопасны;
+> внешние факты — верифицировать движком по лестнице. Дисциплина зафиксирована скиллом и применяется в процессе.
+
 ### Added (skiller — рецензия плана Perplexity: mcp-advisor, github-ops, слои)
 
 - **Скилл `general/mcp-advisor`** (CORE, двуязычный RU-источник→EN-канон) — чеклист **подбора

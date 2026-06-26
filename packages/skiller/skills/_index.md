@@ -4,7 +4,7 @@
 
 Источник истины портируемых скиллов (машинный реестр — `skills.json`). Раздача в проекты: `skiller connect` (плагины-бакеты) / `vendor` (физ. перенос). CORE-набор токен-скиллов (`general`/`oss-dev`) раздаётся по умолчанию — см. `connect`/`vendor`.
 
-Всего: 194 скиллов в 45 бакетах.
+Всего: 195 скиллов в 45 бакетах.
 
 ## Скиллы по бакетам
 
@@ -200,7 +200,7 @@
 |:--|:--|:--|
 | `wayfinder` | Laravel Wayfinder: typesafe routes and controller actions for the frontend. Generation, n… | `wayfinder`, `laravel`, `typescript`, `routes`, `inertia`, `eslint`, `frontend` |
 
-### general — General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists (19)
+### general — General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists (20)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
@@ -222,6 +222,7 @@
 | `spec-interview` | Pre-code interview: agent asks one question at a time, reads the codebase itself where it… | `workflow`, `requirements`, `discovery` |
 | `task-brief-template` | Brief template for complex agent tasks: goal, scope, invariants, explicit assumptions, ou… | `workflow`, `template`, `requirements`, `context` |
 | `token-efficient` | Reduces Perplexity Computer output verbosity and token waste. Eliminates sycophantic open… |  |
+| `verify-claims` | Before a decision/verdict that rests on an EXTERNAL fact (library version/API, 'still cur… | `verification`, `rag`, `research`, `planning`, `context`, `claude-code` |
 | `writing-style` | Tone & language of code artifacts: Russian by default for comments, commit bodies, test d… | `writing`, `language`, `russian`, `comments`, `commits`, `tests`, `docs`, `style` |
 
 ### laravel-architecture — Scaling architecture: modular monolith/DDD, enum state machines, enum attributes, subagent orchestration (4)
@@ -474,7 +475,7 @@
 | `checklist` | `complex-task-orchestrator`, `cross-layer-change-checklist` |
 | `chromedriver` | `laravel-dusk` |
 | `ci` | `backend-type-sync`, `ci-cd`, `code-simplifier`, `db-test-preflight`, `mutation-testing`, `node-pnpm-preflight`, `oss-development`, `playwright-e2e`, `release-engineering`, `test-isolation-guard`, `test-strategy` |
-| `claude-code` | `agent-packs`, `context-economy`, `mcp-advisor` |
+| `claude-code` | `agent-packs`, `context-economy`, `mcp-advisor`, `verify-claims` |
 | `clean-code` | `naming-conventions` |
 | `cli` | `dx-design` |
 | `code-connect` | `figma-mcp-core` |
@@ -490,7 +491,7 @@
 | `config` | `config-conventions` |
 | `configuration` | `spatie-settings` |
 | `conflicts` | `resolving-merge-conflicts` |
-| `context` | `anti-drift`, `compact-responses`, `context-economy`, `gh-review`, `mcp-advisor`, `session-handoff`, `shared-memory`, `task-brief-template` |
+| `context` | `anti-drift`, `compact-responses`, `context-economy`, `gh-review`, `mcp-advisor`, `session-handoff`, `shared-memory`, `task-brief-template`, `verify-claims` |
 | `contracts` | `api-design` |
 | `contribution` | `package-contribution-protocol` |
 | `conventional-commits` | `git-commit-rules` |
@@ -644,7 +645,7 @@
 | `php` | `attribute-authorization`, `azguard`, `botkit`, `code-style-spatie`, `database`, `dependency-audit`, `dependency-injection`, `docker-php`, `enum-attributes`, `enum-state-machine`, `filament`, `laravel`, `laravel-best-practices`, `laravel-broadcasting`, `laravel-data`, `laravel-dusk`, `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages`, `laravel-permissions`, `laravel-security-audit`, `laravel-structure`, `laravel-testing`, `medialibrary`, `modular-architecture`, `mutation-testing`, `named-arguments`, `naming-conventions`, `pao`, `pennant-development`, `php-patterns`, `php-upgrade-checklist`, `repositories`, `spatie-settings`, `static-analysis`, `test-isolation-guard` |
 | `phpstan` | `php-upgrade-checklist` |
 | `pinia` | `pinia-stores`, `vue-testing-best-practices` |
-| `planning` | `to-issues` |
+| `planning` | `to-issues`, `verify-claims` |
 | `playwright` | `playwright-e2e` |
 | `pnpm` | `node-pnpm-preflight` |
 | `post-mortem` | `session-observer` |
@@ -657,7 +658,7 @@
 | `python` | `mcp-blender`, `ml-project-structure`, `parametric-config`, `venv-dependencies`, `version-gotchas` |
 | `quality` | `code-review`, `code-simplifier`, `mutation-testing`, `playwright-e2e`, `refactoring-plan`, `static-analysis`, `tech-debt-audit`, `test-strategy`, `testing-safety-report`, `venv-dependencies` |
 | `queue` | `docker-services` |
-| `rag` | `ai-agents` |
+| `rag` | `ai-agents`, `verify-claims` |
 | `rbac` | `attribute-authorization`, `azguard`, `laravel-permissions`, `security-design` |
 | `readability` | `named-arguments`, `naming-conventions` |
 | `readiness` | `health-checks` |
@@ -676,6 +677,7 @@
 | `reporting` | `testing-safety-report` |
 | `repository` | `repositories` |
 | `requirements` | `brd`, `business-process`, `grill-with-docs`, `idea-discovery`, `new-project`, `prd-from-brd`, `product-roadmap`, `requirement-critic`, `spec-interview`, `startup-lifecycle`, `task-brief-template` |
+| `research` | `verify-claims` |
 | `rest` | `api-design` |
 | `reverb` | `laravel-broadcasting`, `laravel-echo-client` |
 | `review` | `code-review`, `gh-review`, `implement`, `open-source-maintainer`, `tech-lead` |
@@ -743,7 +745,7 @@
 | `validation` | `adversarial-check`, `agent-design`, `code-review`, `code-simplifier`, `cross-layer-change-checklist`, `customer-discovery`, `defensibility`, `eval-design`, `laravel-data`, `pmf-diagnostics`, `refactoring-plan`, `requirement-critic`, `risk-assessment`, `solo-founder`, `startup-lifecycle`, `tech-debt-audit`, `test-strategy` |
 | `variants` | `reka-ui-cva` |
 | `venv` | `venv-dependencies` |
-| `verification` | `testing-safety-report` |
+| `verification` | `testing-safety-report`, `verify-claims` |
 | `version` | `php-upgrade-checklist`, `version-gotchas` |
 | `versioning` | `agent-packs` |
 | `vertical-slices` | `tdd-discipline`, `to-issues` |

@@ -55,6 +55,7 @@ Where a CLI suffices (`gh`, `git`), prefer the CLI over a server.
 | **playwright** | npx `@playwright/mcp --headless` | frontend with UI, E2E tests, page screenshots | browser control, layout checks | backend/CLI/library without UI | Node + browser download |
 | **github** | http | active GitHub work: PR/issue/Actions/releases, maintainer/reviewer role | rich platform integration as tools | not on GitHub; routine review (`gh` CLI is enough — cheaper, see `gh-review`) | auth token + permissions |
 | **fetch** | uvx `mcp-server-fetch` | need fresh web docs/external API not covered by context7 | load URLs/pages into context | context7 already covers the docs | uvx deps, network |
+| **perplexity** | npx `@perplexity-ai/mcp-server` (+`PERPLEXITY_API_KEY`) | verify 'current facts/market/still-current/modern approach' beyond library docs; research | web search with synthesis and citations | context7 (docs) or a known URL (fetch) suffices; no key → keyless `perplexity-web` | Node + API key |
 | **sequential-thinking** | npx | complex multi-step planning/reasoning | structured "reasoning scratchpad" | routine/short tasks | Node + tokens per call |
 | **filesystem** | npx | rare: multi-root / special FS access | extended file access | **usually redundant** — Claude Code has native FS access | Node |
 | **memory (generic)** | npx `server-memory` | **in the academici ecosystem — do NOT use** | — | always: memory goes through the `maind` hub | conflicts with the memory canon |
@@ -91,7 +92,8 @@ docs/API are needed; `sequential-thinking` — for complex tasks. Keep the base 
 - `ai/ai-agents` — when the task is not "connect a ready MCP" but **designing your own** MCP server.
 - `security/security` — review MCP tool configs for injection/exfiltration before connecting.
 - `architect/figma-mcp-core` — a domain special case (Figma Dev Mode MCP), outside general selection.
+- `verify-claims` (general) — complementary: this skill is about *what to connect* to a project, that one about *when and how to fetch/verify a fact* via the connected engines (context7/perplexity/web).
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 82c209a46558ed1aab1fd47ffb038043033f650c15db1cbcee7ca865a3638b11 -->
+<!-- ru-source-sha256: 102b4cf6069dc4c9e821d140405dee2939d3b7fc39797dc054cb43fd7dc5b090 -->

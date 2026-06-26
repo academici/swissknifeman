@@ -19,7 +19,7 @@ flowchart LR
   subgraph architect["architect"]
     agent_design["agent-design<br/>⊕21 ↻1505"]:::cool
     api_design["api-design<br/>⊕22 ↻1009"]:::cool
-    architecture["architecture<br/>⊕23 ↻987"]:::cool
+    architecture["architecture<br/>⊕23 ↻1016"]:::cool
     codebase_design["codebase-design<br/>⊕155 ↻1746"]:::hot
     data_schema["data-schema<br/>⊕23 ↻833"]:::cool
     dev_engineering_super_skill["dev-engineering-super-skill<br/>⊕111 ↻20241"]:::hot
@@ -30,7 +30,7 @@ flowchart LR
     observability_design["observability-design<br/>⊕27 ↻1146"]:::cool
     package_contribution_protocol["package-contribution-protocol<br/>⊕90 ↻1587"]:::warm
     security_design["security-design<br/>⊕33 ↻1862"]:::cool
-    tech_stack_selection["tech-stack-selection<br/>⊕27 ↻1660"]:::cool
+    tech_stack_selection["tech-stack-selection<br/>⊕27 ↻1689"]:::cool
   end
   subgraph azguard["azguard"]
     azguard["azguard<br/>⊕31 ↻1422"]:::cool
@@ -40,7 +40,7 @@ flowchart LR
     version_gotchas["version-gotchas<br/>⊕19 ↻675"]:::cool
   end
   subgraph blender_modeling["blender-modeling"]
-    build_loop["build-loop<br/>⊕108 ↻1825"]:::hot
+    build_loop["build-loop<br/>⊕108 ↻1825"]:::warm
     config_conventions["config-conventions<br/>⊕97 ↻2008"]:::warm
     model_rules["model-rules<br/>⊕26 ↻656"]:::cool
     parametric_config["parametric-config<br/>⊕94 ↻1882"]:::warm
@@ -99,7 +99,7 @@ flowchart LR
   subgraph frontend_linting["frontend-linting"]
     antfu["antfu<br/>⊕63 ↻1090"]:::mild
     eslint_flat_config["eslint-flat-config<br/>⊕95 ↻2031"]:::warm
-    js_code_style["js-code-style<br/>⊕65 ↻972"]:::warm
+    js_code_style["js-code-style<br/>⊕65 ↻972"]:::mild
     ts_library["ts-library<br/>⊕77 ↻1153"]:::warm
   end
   subgraph frontend_naive_ui["frontend-naive-ui"]
@@ -115,7 +115,7 @@ flowchart LR
   end
   subgraph frontend_tailwind["frontend-tailwind"]
     dark_mode["dark-mode<br/>⊕96 ↻1870"]:::warm
-    tailwind_conventions["tailwind-conventions<br/>⊕108 ↻1908"]:::hot
+    tailwind_conventions["tailwind-conventions<br/>⊕108 ↻1908"]:::warm
   end
   subgraph frontend_vite["frontend-vite"]
     vite["vite<br/>⊕48 ↻523"]:::mild
@@ -149,7 +149,7 @@ flowchart LR
     git_safety["git-safety<br/>⊕101 ↻615"]:::warm
     grill_with_docs["grill-with-docs<br/>⊕147 ↻1053"]:::hot
     implement["implement<br/>⊕106 ↻515"]:::warm
-    mcp_advisor["mcp-advisor<br/>⊕91 ↻1470"]:::warm
+    mcp_advisor["mcp-advisor<br/>⊕91 ↻1599"]:::warm
     naming_conventions["naming-conventions<br/>⊕73 ↻1336"]:::warm
     packages_stack["packages-stack<br/>⊕72 ↻458"]:::warm
     project_map["project-map<br/>⊕70 ↻558"]:::warm
@@ -158,12 +158,13 @@ flowchart LR
     spec_interview["spec-interview<br/>⊕49 ↻649"]:::mild
     task_brief_template["task-brief-template<br/>⊕67 ↻1187"]:::warm
     token_efficient["token-efficient<br/>⊕95 ↻1195"]:::warm
+    verify_claims["verify-claims<br/>⊕136 ↻1408"]:::hot
     writing_style["writing-style<br/>⊕83 ↻1565"]:::warm
   end
   subgraph laravel_architecture["laravel-architecture"]
     enum_attributes["enum-attributes<br/>⊕111 ↻1674"]:::hot
     enum_state_machine["enum-state-machine<br/>⊕135 ↻1340"]:::hot
-    laravel_subagents["laravel-subagents<br/>⊕65 ↻1112"]:::warm
+    laravel_subagents["laravel-subagents<br/>⊕65 ↻1112"]:::mild
     modular_architecture["modular-architecture<br/>⊕71 ↻2668"]:::warm
   end
   subgraph laravel_auth["laravel-auth"]
@@ -212,7 +213,7 @@ flowchart LR
   subgraph oss_dev["oss-dev"]
     dependency_audit["dependency-audit<br/>⊕28 ↻1001"]:::cool
     dx_design["dx-design<br/>⊕27 ↻1058"]:::cool
-    gh_review["gh-review<br/>⊕65 ↻997"]:::warm
+    gh_review["gh-review<br/>⊕65 ↻997"]:::mild
     github_flow["github-flow<br/>⊕60 ↻1785"]:::mild
     issue_triage["issue-triage<br/>⊕125 ↻1914"]:::hot
     oss_development["oss-development<br/>⊕32 ↻1273"]:::cool
@@ -237,7 +238,7 @@ flowchart LR
     static_analysis["static-analysis<br/>⊕29 ↻961"]:::cool
   end
   subgraph php_packages["php-packages"]
-    laravel_package_compatibility["laravel-package-compatibility<br/>⊕65 ↻379"]:::warm
+    laravel_package_compatibility["laravel-package-compatibility<br/>⊕65 ↻379"]:::mild
     laravel_package_docs["laravel-package-docs<br/>⊕63 ↻606"]:::mild
     laravel_package_expressive["laravel-package-expressive<br/>⊕107 ↻491"]:::warm
     laravel_package_generate_skill["laravel-package-generate-skill<br/>⊕71 ↻684"]:::warm
@@ -391,14 +392,14 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 194 скиллов · ⊕ always **12328** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 423712 ток · ⌥ snippets 157306 ток.
+**Итого:** 195 скиллов · ⊕ always **12464** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 425307 ток · ⌥ snippets 157306 ток.
 
 ## По бакетам
 
 | Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ snippets |
 |---|--:|--:|--:|--:|
-| `general` | 19 | 1261 | 16726 | 5120 |
-| `architect` | 14 | 875 | 38145 | 7503 |
+| `general` | 20 | 1397 | 18263 | 5120 |
+| `architect` | 14 | 875 | 38203 | 7503 |
 | `frontend-vue` | 11 | 808 | 23064 | 7058 |
 | `quality` | 10 | 741 | 16383 | 7091 |
 | `oss-dev` | 10 | 654 | 12196 | 4313 |

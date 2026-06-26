@@ -116,7 +116,7 @@
     },
     "general": {
       "description": "General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists",
-      "count": 19,
+      "count": 20,
       "status": "active"
     },
     "laravel-architecture": {
@@ -300,8 +300,8 @@
       "path": "skills/architect/architecture/SKILL.md",
       "version": "0.1.0",
       "description": "System architecture, stack choice, ADR, C4 diagrams, deployment, scalability",
-      "sha256": "64baf96ceef5b00cf547254161850060755030ed029e96378577d4170ad846c8",
-      "content_sha256": "d8541d0a3c36ce199858c13656d781a07db34f703bfe7c78a5cb84da6d0ac153",
+      "sha256": "fcb6456ee114c8d81164a3499c777ad0e67cf5cb9ad725167a573214f899de53",
+      "content_sha256": "4a9fe75120cda7b326469e02a636d3356060bf2e6a6c76ac4370c5ab29ee8451",
       "tags": [
         "architecture",
         "adr",
@@ -556,8 +556,8 @@
       "path": "skills/architect/tech-stack-selection/SKILL.md",
       "version": "0.1.0",
       "description": "Tech stack selection with trade-off matrix before architecture design. ADR-first step",
-      "sha256": "80346e91d541a3d17ad2f2c8f895ac80848b493a16812370d920e6ce3c4d14be",
-      "content_sha256": "bbfbc09367770f9331d7a4e966f200277d751993c941d577ca2677703db6e7eb",
+      "sha256": "f22d13e1c2fa5dc73ed6dd84c00da054f8b915bfdb705cca123de2c392e2338a",
+      "content_sha256": "9b8b864a8a3eab66ebbb4b4d403a7c7eeec5a4c3d9db0815b73e01664d2889c4",
       "tags": [
         "stack-choice",
         "architecture",
@@ -2042,8 +2042,8 @@
       "path": "skills/general/mcp-advisor/SKILL.md",
       "version": "0.1.0",
       "description": "Pick MCP servers for a project at onboarding/sync: which to connect (context7/playwright/github/fetch/sequential-thinking + maind hub), why, when NOT to, and the cost in context/permissions/Node-deps. Activate when adding/onboarding/syncing a project, editing .mcp.json, or choosing MCP — emits a justified connection plan, not a dump of every server.",
-      "sha256": "11d0ec29a29b5047ea659832af6675a98a2de3bd8a6637ff7d509f91f123c4e6",
-      "content_sha256": "7b650eba8b5730ca83fbba7b87123c20582eef1a71afd8116409f6f1c6934988",
+      "sha256": "01cd62459a13292c6e97763368e54cd719bf1f3bdd4dc398c4e3de3526f36256",
+      "content_sha256": "ffbb1513ac36742fcb1cb42029cdbb6d2d50acfb590c70d427c618b5a6f787f3",
       "tags": [
         "mcp",
         "onboarding",
@@ -2191,6 +2191,28 @@
       ],
       "produces_for": [
         "complex-task-orchestrator"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "verify-claims",
+      "bucket": "general",
+      "path": "skills/general/verify-claims/SKILL.md",
+      "version": "0.1.0",
+      "description": "Before a decision/verdict that rests on an EXTERNAL fact (library version/API, 'still current', best practice, market, another service's/MCP's capabilities) — verify via RAG, don't assert from memory (knowledge cutoff goes stale). Ladder: context7 (docs) → Perplexity (native MCP if API key, else perplexity-web) → WebSearch → research for deep. Activate on audit/plan review, big planning, library/stack/dependency choice, claiming 'this is standard/modern'. Repo-grounded facts (read the code) and stable knowledge — no check.",
+      "sha256": "6363c0f67fd0947b6b0aeb9b3cb80d3042f909714d53da99137a87a95c4d0cf2",
+      "content_sha256": "0b57b3717756b802d95e82545685efa0e3359c25e2bf8744e35c72fb9ecce10c",
+      "tags": [
+        "verification",
+        "rag",
+        "research",
+        "planning",
+        "context",
+        "claude-code"
+      ],
+      "produces_for": [
+        "architecture",
+        "tech-stack-selection"
       ],
       "source": "local"
     },

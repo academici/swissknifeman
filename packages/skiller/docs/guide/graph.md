@@ -105,6 +105,7 @@ flowchart LR
     session_handoff["session-handoff"]
     spec_interview["spec-interview"]
     task_brief_template["task-brief-template"]
+    verify_claims["verify-claims"]
   end
   subgraph laravel_architecture["laravel-architecture"]
     modular_architecture["modular-architecture"]
@@ -353,9 +354,11 @@ flowchart LR
   test_strategy -.->|feeds| playwright_e2e
   to_issues -.->|feeds| implement
   unit_economics -.->|feeds| go_to_market
+  verify_claims -.->|feeds| architecture
+  verify_claims -.->|feeds| tech_stack_selection
 ```
 
-**В графе:** 121 скиллов, 88 рёбер requires, 78 рёбер produces_for.
+**В графе:** 122 скиллов, 88 рёбер requires, 80 рёбер produces_for.
 
 ## Изолированные скиллы (73)
 

@@ -6,6 +6,8 @@
 Config.load(env) — обёртка над тем же, инкапсулирует path/source/save и доступ к секциям,
 чтобы менять логику конфига в одном месте. Config — подкласс dict (старый доступ
 config["projects"] продолжает работать)."""
+import copy
+import difflib
 import json
 import os
 from pathlib import Path
@@ -59,7 +61,6 @@ def _check_section(cfg_file, section, value, types, enums=None):
 def validate_config(config, cfg_file):
     """Бросает die при ошибке схемы. Неизвестные топ-ключи — фатальны (с подсказкой);
     неизвестные вложенные — предупреждение."""
-    import difflib
     if not isinstance(config, dict):
         die(f"{cfg_file}: корень конфига должен быть объектом")
     for key in config:
@@ -123,10 +124,11 @@ def validate_config(config, cfg_file):
 # ── дефолты ─────────────────────────────────────────────────────────────────
 def merge_defaults(config):
     """Заполняет обязательные дефолты, чтобы вызывающий код не ловил KeyError.
-    Не мутирует переданный config (секции пересобираются в новые объекты)."""
-    config = dict(config)
+    Не мутирует переданный config (глубокая копия в начале) и не делит вложенные
+    объекты ни с входом, ни с module-level дефолтами."""
+    config = copy.deepcopy(config)
 
-    mem = dict(config.get("memory") or {})
+    mem = config.get("memory") or {}
     mem.setdefault("enabled", True)
     mem.setdefault("http_port", MEMORY_HTTP_PORT)
     mem.setdefault("stream_port", MEMORY_STREAM_PORT)
@@ -134,7 +136,7 @@ def merge_defaults(config):
     mem.setdefault("data_dir", "./data")
     config["memory"] = mem
 
-    gr = dict(config.get("graph") or {})
+    gr = config.get("graph") or {}
     gr.setdefault("enabled", True)
     gr.setdefault("adapter", "federation")
     # legacy adapter → федерация (единственная раскладка; движок всегда stdlib)
@@ -143,30 +145,32 @@ def merge_defaults(config):
     config["graph"] = gr
 
     # code_graph: политика код-графа из конфига поверх fallback-дефолтов (top-level ключи).
-    cg = dict(config.get("code_graph") or {})
+    # copy.deepcopy(v) — чтобы списки/словари дефолтов не делились с CODE_GRAPH_DEFAULTS.
+    cg = config.get("code_graph") or {}
     for k, v in CODE_GRAPH_DEFAULTS.items():
-        cg.setdefault(k, v)
+        if k not in cg:
+            cg[k] = copy.deepcopy(v)
     config["code_graph"] = cg
 
-    ag = dict(config.get("agents") or {})
+    ag = config.get("agents") or {}
     ag.setdefault("registry_enabled", True)
     ag.setdefault("heartbeat_interval_ms", HEARTBEAT_DEFAULT_MS)
     ag.setdefault("max_idle_ms", MAX_IDLE_DEFAULT_MS)
     ag.setdefault("definitions", [])
     config["agents"] = ag
 
-    obs = dict(config.get("observability") or {})
+    obs = config.get("observability") or {}
     obs.setdefault("service_name", SERVICE_NAME)
     obs.setdefault("log_level", "info")
     obs.setdefault("metrics_enabled", True)
     obs.setdefault("traces_enabled", False)
     config["observability"] = obs
 
-    config["node"] = dict(config.get("node") or {})
-    config["projects"] = list(config.get("projects") or [])
-    config["namespaces"] = dict(config.get("namespaces") or {})
-    config["integrations"] = dict(config.get("integrations") or {})
-    config["mcp"] = dict(config.get("mcp") or {})
+    config["node"] = config.get("node") or {}
+    config["projects"] = config.get("projects") or []
+    config["namespaces"] = config.get("namespaces") or {}
+    config["integrations"] = config.get("integrations") or {}
+    config["mcp"] = config.get("mcp") or {}
     return config
 
 
@@ -280,7 +284,10 @@ class Config(dict):
         return cls(data, source=source, path=path)
 
     def save(self, env):
-        """Atomic-запись конфига обратно (через единственного писателя projects.write_config)."""
+        """Atomic-запись конфига обратно (через единственного писателя projects.write_config).
+        Перед записью — валидация схемы (Config — подкласс dict, прямые мутации снаружи могли
+        нарушить инварианты): не пишем заведомо испорченный state."""
+        validate_config(self, str(self.path) if self.path else "in-memory")
         from .projects import write_config
         write_config(env, self)
 

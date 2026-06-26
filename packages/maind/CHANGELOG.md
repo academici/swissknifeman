@@ -5,6 +5,36 @@
 
 ## [Unreleased]
 
+### Changed
+- **Качество ядра по рецензии аудита (Perplexity)** — поведенчески-нейтральные правки `lib/maind/`
+  с проверкой каждого пункта по коду (часть замечаний аудита отклонена как фактически неверная или
+  противоречащая `stdlib-only`; см. `research/swissknifeman_audit.md`):
+  - `sync.py`: единый builder `_result(...)` — все провиженеры возвращают ОДНУ форму результата
+    (`provisioner/id/status/changed/state/detail`, все ключи всегда есть), 9 inline-словарей сведены
+    к нему; CLI больше не зависит от `.get()`-умолчаний. Над `PROVISIONERS` — сигнатура провиженера.
+  - `health.py`: 3 почти одинаковых hook-провиженера (`health`/`feature-log`/`memory`) сведены к
+    общему скелету `_apply_script_hook(...)`; `json.loads(json.dumps())` → `copy.deepcopy()` (намерение
+    явное, быстрее); `ok = lambda` → модульная `def _status(...)` (E731).
+  - `config.py`: `merge_defaults` — `copy.deepcopy` входа (не делит вложенные объекты ни со входом, ни
+    с `CODE_GRAPH_DEFAULTS`); `Config.save()` валидирует схему перед записью (не пишем испорченный
+    state); `import difflib` поднят на уровень модуля.
+  - `constants.py`/`orchestrate.py`/`sync.py`: `SIBLINGS` перенесён в нейтральный `constants.py` —
+    `sync._skiller_profiles_dir` больше не делает lazy-import `orchestrate` (устранён coupling-smell).
+  - `fleet.py`: `extract_chunks` читает/джойнит файл один раз (а не на каждое совпадение); добавлено
+    предупреждение при `>2000` чанках перед O(N²)-сравнением; уточнён комментарий `_DECL_RE` (языки).
+
+### Fixed
+- **`fleet duplicates`/`similar`**: `jscpd` и внешний эмбеддер проверяются по `returncode` — реальная
+  причина (нет `npx`/сети, ошибка бэкенда) попадает в сообщение вместо «нет файла отчёта».
+- **`load_json_db`**: при битом файле в `warn` теперь полный путь к бэкапу `.corrupt.<date>`, а не
+  только имя (видно, куда смотреть в `~/.maind/`).
+
+### Tests
+- Прямые юнит-тесты ранее косвенно покрытых чистых утилит (опровержение п. 5.1 аудита — тесты есть,
+  это добор пробелов): `fleet._cosine` (идентичные/ортогональные/нулевые векторы), `health._act`
+  (матрица mode×state), `health._file_state` (absent/fresh/stale), `health._merge_session_hook`
+  (идемпотентность, обновление по marker, изоляция входа через копию). +17 тестов (267 → 284).
+
 ### Added
 - **`onboard --skills-channel connect|vendor`** — выбор канала публикации скиллов на онбординге
   (касается ТОЛЬКО скиллов; память/граф/MCP — как обычно). `onboard` спрашивает канал интерактивно

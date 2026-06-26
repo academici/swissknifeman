@@ -139,7 +139,7 @@ def load_json_db(path, default):
     except json.JSONDecodeError:
         backup = path.with_name(f"{path.name}.corrupt.{date.today().isoformat()}")
         path.rename(backup)
-        warn(f"{path} повреждён — переименован в {backup.name}, начинаю заново")
+        warn(f"{path} повреждён → сохранён в {backup} (начинаю заново)")
         return copy.deepcopy(default)
     if isinstance(db, dict) and db.get("version", 1) > DB_VERSION:
         die(f"{path} записан более новой версией maind — обновите репозиторий (git pull)")

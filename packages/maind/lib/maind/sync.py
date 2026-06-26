@@ -15,6 +15,7 @@ from pathlib import Path
 
 from .common import die, parse_args, safe_load_json
 from .config import load_config
+from .constants import SIBLINGS
 from .namespaces import in_namespace
 from .projects import get as get_project
 from .projects import listing
@@ -71,6 +72,13 @@ def contexts(env, config, projects):
     return [ProjectContext(env, config, p) for p in projects]
 
 
+def _result(provisioner, project_id, status, *, changed=False, state="", detail=""):
+    """Единая форма результата провиженера (та же, что у health._result): ВСЕ ключи всегда
+    присутствуют, поэтому CLI и тесты не зависят от .get()-умолчаний. status: ok|skip|dry."""
+    return {"provisioner": provisioner, "id": project_id, "status": status,
+            "changed": changed, "state": state, "detail": detail}
+
+
 # ── провиженеры ──────────────────────────────────────────────────────────────
 def _mcp_run(env, config, projects, mode, dry):
     """MCP-серверы хаба (agent-memory + maind [+ код-граф/Serena]) в конфиги проектов."""
@@ -80,16 +88,14 @@ def _mcp_run(env, config, projects, mode, dry):
     for p in projects:
         res = deploy_project(env, config, p, dry=dry)  # with_code=None → из политики/полей проекта
         if res is None:
-            results.append({"provisioner": "mcp", "id": p["id"], "status": "skip",
-                            "detail": "нет/нет пути проекта"})
+            results.append(_result("mcp", p["id"], "skip", detail="нет/нет пути проекта"))
             continue
         changed = any(w["changed"] for w in res["written"])
         if not dry:
             mark_deployed(config, p["id"], res)
             applied = True
-        results.append({"provisioner": "mcp", "id": p["id"],
-                        "status": "ok", "changed": changed,
-                        "detail": ", ".join(res["targets"])})
+        results.append(_result("mcp", p["id"], "ok", changed=changed,
+                               detail=", ".join(res["targets"])))
     if applied:
         write_config(env, config)
     return results
@@ -109,17 +115,16 @@ def _graph_run(env, config, projects, mode, dry):
     from .federation import rebuild_index, store_path
     results = []
     if dry:
-        return [{"provisioner": "graph", "id": p["id"], "status": "dry"} for p in projects]
+        return [_result("graph", p["id"], "dry") for p in projects]
     providers = build_provider_index(env, config)
     for p in projects:
         sp = Path(store_path(env, config, p))
         before = sp.read_bytes() if sp.exists() else None
         d = derive_project_graph(env, config, p, providers)
         after = sp.read_bytes() if sp.exists() else None
-        results.append({"provisioner": "graph", "id": p["id"], "status": "ok",
-                        "changed": before != after,
-                        "detail": f"{d['nodes']}n/{d['edges']}e "
-                                  f"(code {d['by_via']['code']}, doc {d['by_via']['doc']})"})
+        results.append(_result("graph", p["id"], "ok", changed=before != after,
+                               detail=f"{d['nodes']}n/{d['edges']}e "
+                                      f"(code {d['by_via']['code']}, doc {d['by_via']['doc']})"))
     rebuild_index(env, config)
     return results
 
@@ -150,9 +155,8 @@ def _memory_hook_run(env, config, projects, mode, dry):
         elif hmode is not None:                       # off/native — вернуть нативную память
             results.append(revert_memory_hook(env, config, p, dry))
         else:                                         # память проекта не сконфигурирована
-            results.append({"provisioner": "memory-hook", "id": p["id"], "status": "skip",
-                            "changed": False, "state": "absent",
-                            "detail": "нет MODE в .claude/memory.env.ini — пропуск"})
+            results.append(_result("memory-hook", p["id"], "skip", state="absent",
+                                   detail="нет MODE в .claude/memory.env.ini — пропуск"))
     return results
 
 
@@ -166,9 +170,8 @@ def _feature_log_hook_run(env, config, projects, mode, dry):
     """SessionEnd-хук фиксации коммитов в общую память (если code_graph.feature_log_hook)."""
     from .codegraph import settings
     if not settings(config).get("feature_log_hook", True):
-        return [{"provisioner": "feature-log-hook", "id": p["id"], "status": "skip",
-                 "changed": False, "state": "disabled", "detail": "выключен в конфиге"}
-                for p in projects]
+        return [_result("feature-log-hook", p["id"], "skip", state="disabled",
+                        detail="выключен в конфиге") for p in projects]
     from .health import apply_feature_log_hook
     return [apply_feature_log_hook(env, config, p, mode, dry) for p in projects]
 
@@ -188,7 +191,6 @@ def _ecosystem_skill_run(env, config, projects, mode, dry):
 def _skiller_profiles_dir(config):
     """Каталог профилей skiller (<repo>/packages/skiller/profiles) или None.
     Резолв корня репо — как у orchestrate._sibling_bin (проект 'swissknifeman')."""
-    from .orchestrate import SIBLINGS
     spec = SIBLINGS["swissknifeman"]
     proj = get_project(config, spec["project_id"])
     root = proj.get(spec["path_key"]) if proj else None
@@ -245,8 +247,8 @@ def _agent_pack_run(env, config, projects, mode, dry):
     for p in projects:
         packs = _resolve_agent_pack(config, p)
         if not packs or not p.get("local_path"):
-            results.append({"provisioner": "agent-pack", "id": p["id"], "status": "skip",
-                            "changed": False, "detail": "нет профиля/agent_pack или пути"})
+            results.append(_result("agent-pack", p["id"], "skip",
+                                   detail="нет профиля/agent_pack или пути"))
             continue
         answers = _profile_answers(config, p)
         for pack in packs:
@@ -255,17 +257,17 @@ def _agent_pack_run(env, config, projects, mode, dry):
                      + (["--install-only"] if mode == "install" else []))
             try:
                 rc = run_capability(env, config, p["id"], cap, extra, dry=dry)
-                results.append({"provisioner": "agent-pack", "id": p["id"],
-                                "status": "ok" if rc == 0 else "skip",
-                                "detail": f"pack={pack} rc={rc}"})
+                results.append(_result("agent-pack", p["id"], "ok" if rc == 0 else "skip",
+                                       changed=rc == 0, detail=f"pack={pack} rc={rc}"))
             except SystemExit:
-                results.append({"provisioner": "agent-pack", "id": p["id"],
-                                "status": "skip", "changed": False,
-                                "detail": f"pack={pack}: harness недоступен"})
+                results.append(_result("agent-pack", p["id"], "skip",
+                                       detail=f"pack={pack}: harness недоступен"))
     return results
 
 
 # Реестр провиженеров и порядок применения (ORDER задаёт последовательность).
+# Сигнатура каждого: run(env, config, projects, mode, dry) -> list[_result(...)]
+# (форма результата — _result выше: provisioner/id/status/changed/state/detail).
 PROVISIONERS = {
     "mcp": _mcp_run,
     "code-graph": _codegraph_run,
@@ -330,7 +332,7 @@ def cmd_sync(env, argv):
     for r in results:
         mark = {"ok": "✓", "skip": "○", "dry": "·"}.get(r["status"], "·")
         if r["status"] == "dry":
-            note = f" (план: {r.get('state', 'apply')})"
+            note = f" (план: {r.get('state') or 'apply'})"
         elif r["status"] == "ok" and not r.get("changed", True):
             note = " (без изменений)"
         else:

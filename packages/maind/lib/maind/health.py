@@ -7,6 +7,7 @@ connected|partial|standalone и подсказки. --fix поднимает п�
 - health-doc  — управляемый блок priority-block.md в <project>/CLAUDE.md (idempotent, по хэшу);
 - health-hook — SessionStart-хук в <project>/.claude/settings.json + копия скрипта (синкается).
 Источник истины — templates/health/* в самом maind; mode install/update/auto задаёт «область»."""
+import copy
 import json
 import os
 import stat
@@ -28,6 +29,13 @@ from .workspace import load_settings
 
 BLOCK_MARKER = "maind:healthcheck"
 HOOK_SCRIPT = ".claude/maind-health.sh"
+FEATURE_HOOK_SCRIPT = ".claude/maind-feature-log.sh"
+MEMORY_HOOK_SCRIPT = ".claude/maind-memory.sh"
+
+
+def _status(ok: bool) -> str:
+    """Метка чек-строки для cmd_health."""
+    return "ok  " if ok else "FAIL"
 
 
 # ── шаблоны ──────────────────────────────────────────────────────────────────
@@ -214,78 +222,70 @@ def _merge_session_hook(settings, command, event="SessionStart", marker="maind-h
     return settings, True
 
 
-def apply_health_hook(env, config, project, mode, dry):
-    """SessionStart-скрипт + запись хука в <project>/.claude/settings.json."""
+def _apply_script_hook(env, project, mode, dry, *, name, template, script_rel, detail,
+                       skip_detail=".claude/", subst=None, event="SessionStart",
+                       marker="maind-health", render_safe=False, extra_stale=None,
+                       on_settings=None):
+    """Идемпотентный скелет hook-провиженера: рендер шаблона → состояние (absent/stale/fresh
+    с учётом наличия/дрейфа хука в .claude/settings.json) → _act(mode) → backup+запись скрипта
+    (chmod +x) → merge хука в settings. Опции под расхождения провиженеров:
+    render_safe — шаблон может отсутствовать (standalone-safe → absent);
+    extra_stale(settings)->bool — доп. триггер устаревания (напр. native-память не выключена);
+    on_settings(merged)->bool — правка settings перед записью + признак «грязно» (форсит запись)."""
     pid = project["id"]
     local = project.get("local_path")
     path = Path(os.path.expanduser(local)) if local else None
     if not path or not path.is_dir():
-        return _result(pid, "health-hook", "absent", False, dry, "нет пути")
-    script = _render(env, "health/session-start-hook.sh", {})
-    script_path = path / HOOK_SCRIPT
+        return _result(pid, name, "absent", False, dry, "нет пути")
+    try:
+        script = _render(env, template, subst or {})
+    except OSError as e:                         # шаблон недоступен (standalone-safe)
+        if render_safe:
+            return _result(pid, name, "absent", False, dry, f"шаблон недоступен: {e}")
+        raise
+    script_path = path / script_rel
     state = _file_state(script_path, script)
     settings_path = path / ".claude" / "settings.json"
     command = f"bash {script_path}"
     settings, _existed = load_settings(settings_path)
-    _, hook_changed = _merge_session_hook(json.loads(json.dumps(settings)), command)
-    # состояние = скрипт устарел ИЛИ хука ещё нет в настройках
-    if state == "fresh" and hook_changed:
+    # пробная (на копии) запись хука: состояние = скрипт устарел ИЛИ хука ещё нет в настройках
+    _, hook_changed = _merge_session_hook(copy.deepcopy(settings), command,
+                                          event=event, marker=marker)
+    if state == "fresh" and (hook_changed or (extra_stale(settings) if extra_stale else False)):
         state = "stale"
     if not _act(mode, state):
-        return _result(pid, "health-hook", state, False, dry, ".claude/")
+        return _result(pid, name, state, False, dry, skip_detail)
     if not dry:
         script_path.parent.mkdir(parents=True, exist_ok=True)
         if script_path.is_file():
             backup_file(script_path)
         atomic_write_text(script_path, script)
         script_path.chmod(script_path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP)
-        merged, changed = _merge_session_hook(settings, command)
+        merged, changed = _merge_session_hook(settings, command, event=event, marker=marker)
+        if on_settings and on_settings(merged):
+            changed = True
         if changed:
             if settings_path.is_file():
                 backup_file(settings_path)
             atomic_write_json(settings_path, merged)
-    return _result(pid, "health-hook", state, True, dry, ".claude/maind-health.sh + settings")
+    return _result(pid, name, state, True, dry, detail)
 
 
-FEATURE_HOOK_SCRIPT = ".claude/maind-feature-log.sh"
+def apply_health_hook(env, config, project, mode, dry):
+    """SessionStart-скрипт + запись хука в <project>/.claude/settings.json."""
+    return _apply_script_hook(
+        env, project, mode, dry, name="health-hook",
+        template="health/session-start-hook.sh", script_rel=HOOK_SCRIPT,
+        detail=".claude/maind-health.sh + settings")
 
 
 def apply_feature_log_hook(env, config, project, mode, dry):
     """SessionEnd-скрипт фиксации нового коммита в общую память (maind fleet log) + хук."""
-    pid = project["id"]
-    local = project.get("local_path")
-    path = Path(os.path.expanduser(local)) if local else None
-    if not path or not path.is_dir():
-        return _result(pid, "feature-log-hook", "absent", False, dry, "нет пути")
-    script = _render(env, "health/feature-log-hook.sh", {"PROJECT": pid})
-    script_path = path / FEATURE_HOOK_SCRIPT
-    state = _file_state(script_path, script)
-    settings_path = path / ".claude" / "settings.json"
-    command = f"bash {script_path}"
-    settings, _existed = load_settings(settings_path)
-    _, hook_changed = _merge_session_hook(json.loads(json.dumps(settings)), command,
-                                          event="SessionEnd", marker="maind-feature-log")
-    if state == "fresh" and hook_changed:
-        state = "stale"
-    if not _act(mode, state):
-        return _result(pid, "feature-log-hook", state, False, dry, ".claude/")
-    if not dry:
-        script_path.parent.mkdir(parents=True, exist_ok=True)
-        if script_path.is_file():
-            backup_file(script_path)
-        atomic_write_text(script_path, script)
-        script_path.chmod(script_path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP)
-        merged, changed = _merge_session_hook(settings, command, event="SessionEnd",
-                                              marker="maind-feature-log")
-        if changed:
-            if settings_path.is_file():
-                backup_file(settings_path)
-            atomic_write_json(settings_path, merged)
-    return _result(pid, "feature-log-hook", state, True, dry,
-                   ".claude/maind-feature-log.sh + settings")
-
-
-MEMORY_HOOK_SCRIPT = ".claude/maind-memory.sh"
+    return _apply_script_hook(
+        env, project, mode, dry, name="feature-log-hook",
+        template="health/feature-log-hook.sh", script_rel=FEATURE_HOOK_SCRIPT,
+        subst={"PROJECT": project["id"]}, event="SessionEnd", marker="maind-feature-log",
+        detail=".claude/maind-feature-log.sh + settings")
 
 
 def apply_memory_hook(env, config, project, mode, dry):
@@ -293,40 +293,16 @@ def apply_memory_hook(env, config, project, mode, dry):
     авто-памяти (`autoMemoryEnabled:false`). Ставится для проектов на `MODE=maind`: maind
     становится источником контекста вместо native MEMORY.md (даёт авто-загрузку, которой у
     демона иначе нет). Идемпотентно. Парный «не-maind» путь делает revert — `revert_memory_hook`."""
-    pid = project["id"]
-    local = project.get("local_path")
-    path = Path(os.path.expanduser(local)) if local else None
-    if not path or not path.is_dir():
-        return _result(pid, "memory-hook", "absent", False, dry, "нет пути")
-    try:
-        script = _render(env, "health/memory-digest-hook.sh", {})
-    except OSError as e:                         # шаблон недоступен (standalone-safe)
-        return _result(pid, "memory-hook", "absent", False, dry, f"шаблон недоступен: {e}")
-    script_path = path / MEMORY_HOOK_SCRIPT
-    state = _file_state(script_path, script)
-    settings_path = path / ".claude" / "settings.json"
-    command = f"bash {script_path}"
-    settings, _existed = load_settings(settings_path)
-    _, hook_changed = _merge_session_hook(json.loads(json.dumps(settings)), command,
-                                          marker="maind-memory")
-    native_off = settings.get("autoMemoryEnabled") is False
-    if state == "fresh" and (hook_changed or not native_off):
-        state = "stale"
-    if not _act(mode, state):
-        return _result(pid, "memory-hook", state, False, dry, ".claude/ (native off + digest)")
-    if not dry:
-        script_path.parent.mkdir(parents=True, exist_ok=True)
-        if script_path.is_file():
-            backup_file(script_path)
-        atomic_write_text(script_path, script)
-        script_path.chmod(script_path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP)
-        merged, _ = _merge_session_hook(settings, command, marker="maind-memory")
+    def _disable_native(merged):
         merged["autoMemoryEnabled"] = False          # выключить нативную авто-память
-        if settings_path.is_file():
-            backup_file(settings_path)
-        atomic_write_json(settings_path, merged)
-    return _result(pid, "memory-hook", state, True, dry,
-                   ".claude/maind-memory.sh + autoMemoryEnabled:false")
+        return True                                  # settings всегда дописываются
+    return _apply_script_hook(
+        env, project, mode, dry, name="memory-hook",
+        template="health/memory-digest-hook.sh", script_rel=MEMORY_HOOK_SCRIPT,
+        marker="maind-memory", render_safe=True,
+        extra_stale=lambda s: s.get("autoMemoryEnabled") is not False,
+        on_settings=_disable_native, skip_detail=".claude/ (native off + digest)",
+        detail=".claude/maind-memory.sh + autoMemoryEnabled:false")
 
 
 def revert_memory_hook(env, config, project, dry):
@@ -383,15 +359,14 @@ def cmd_health(env, argv):
         _, _, url = resolve_ports(env, config)
         icon = {"connected": "✓", "partial": "⚠", "standalone": "✗"}.get(rep["status"], "·")
         print(f"{icon} mAInd health — project:{rep['id']} (scope {rep['scope']})")
-        ok = lambda b: "ok  " if b else "FAIL"
-        print(f"  [{ok(rep['memory_daemon'])}] демон памяти ({url})")
-        print(f"  [{ok(rep['maind_mcp'])}] maind MCP в проекте")
-        print(f"  [{ok(rep['hook_memory_mode'] == 'maind')}] хук памяти MODE=maind "
+        print(f"  [{_status(rep['memory_daemon'])}] демон памяти ({url})")
+        print(f"  [{_status(rep['maind_mcp'])}] maind MCP в проекте")
+        print(f"  [{_status(rep['hook_memory_mode'] == 'maind')}] хук памяти MODE=maind "
               f"({rep['hook_memory_mode'] or 'не задан'})")
         if rep['hook_memory_mode'] == 'maind':
-            print(f"  [{ok(rep['native_memory_off'] and rep['digest_hook'])}] native off + "
+            print(f"  [{_status(rep['native_memory_off'] and rep['digest_hook'])}] native off + "
                   "digest-инжект (SessionStart)")
-        print(f"  [{ok(rep['memory_roundtrip'])}] память round-trip (write→recall→forget)")
+        print(f"  [{_status(rep['memory_roundtrip'])}] память round-trip (write→recall→forget)")
         print(f"  ns: [{', '.join(rep['namespaces'])}]  статус: {rep['status']}")
         for h in rep["hints"]:
             print(f"    → {h}")

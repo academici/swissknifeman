@@ -22,7 +22,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from .common import die, parse_args
+from .common import die, parse_args, warn
 from .config import load_config
 from .federation import federated_graph, graph_disabled
 from .memory import health as mem_health
@@ -146,8 +146,11 @@ def find_duplicates(env, config, opts):
     pattern = opts.get("pattern") or "**/*.php"
     ignore = opts.get("ignore") or "**/vendor/**,**/node_modules/**,**/packages/**"
     with tempfile.TemporaryDirectory() as out:
-        subprocess.run(_jscpd_cmd(paths, out, min_tokens=min_tokens, pattern=pattern,
-                                  ignore=ignore), capture_output=True, text=True)
+        proc = subprocess.run(_jscpd_cmd(paths, out, min_tokens=min_tokens, pattern=pattern,
+                                         ignore=ignore), capture_output=True, text=True)
+        if proc.returncode != 0:
+            die(f"jscpd завершился с кодом {proc.returncode} — проверьте npx/сеть "
+                f"(первый запуск ставит пакет):\n{(proc.stderr or '').strip()[:500]}")
         rp = Path(out) / "jscpd-report.json"
         if not rp.is_file():
             die("jscpd не создал отчёт — проверьте npx/сеть (первый запуск ставит пакет)")
@@ -192,8 +195,10 @@ def features(env, config, *, namespace=None):
 
 # ── семантическая похожесть (эмбеддинги) ─────────────────────────────────────
 # Чанк кода = объявление функции/класса/метода + следующие строки (контекст). Простой
-# language-agnostic-ish захват (PHP/JS/TS/Python). Глубокий разбор не нужен — для эмбеддинга
-# важен текст фрагмента, а не точный AST.
+# language-agnostic-ish захват по ключевым словам: function (PHP/JS/TS), class/interface/trait
+# (PHP/TS), def (Python) — ровно языки расширений по умолчанию (.php/.py/.ts/.js, см.
+# extract_chunks(exts=...)). Глубокий разбор не нужен — для эмбеддинга важен текст фрагмента,
+# а не точный AST; межъязыковые ложные пары отсекаются порогом косинуса в cross_project_pairs.
 _DECL_RE = re.compile(
     r"^\s*(?:(?:public|private|protected|static|final|abstract|async)\s+)*"
     r"(?:function|class|interface|trait|def)\s+(\w+)", re.MULTILINE)
@@ -217,11 +222,12 @@ def extract_chunks(pmap, exts=(".php", ".py", ".ts", ".js"), context=24, min_cha
                 lines = Path(fp).read_text(encoding="utf-8", errors="ignore").splitlines()
             except OSError:
                 continue
-            for m in _DECL_RE.finditer("\n".join(lines)):
-                start = "\n".join(lines).count("\n", 0, m.start())
-                text = "\n".join(lines[start:start + context]).strip()
-                if len(text) >= min_chars:
-                    out.append({"project": pid, "file": fp, "name": m.group(1), "text": text})
+            text = "\n".join(lines)  # один раз на файл (а не на каждое совпадение)
+            for m in _DECL_RE.finditer(text):
+                start = text.count("\n", 0, m.start())
+                chunk = "\n".join(lines[start:start + context]).strip()
+                if len(chunk) >= min_chars:
+                    out.append({"project": pid, "file": fp, "name": m.group(1), "text": chunk})
     return out
 
 
@@ -234,6 +240,10 @@ def _cosine(a, b):
 
 def cross_project_pairs(chunks, vectors, threshold):
     """Пары чанков из РАЗНЫХ проектов с косинусом ≥ threshold (по убыванию)."""
+    n = len(chunks)
+    if n > 2000:  # чистый python O(N²): предупредить до зависания (numpy/faiss — вне stdlib-only)
+        warn(f"fleet similar: {n} чанков → ~{n * n // 2:,} сравнений в чистом python; "
+             "сузьте набор через --projects/--group")
     pairs = []
     for i in range(len(chunks)):
         for j in range(i + 1, len(chunks)):
@@ -261,7 +271,10 @@ def _embed(texts, embed_cfg):
                        encoding="utf-8")
         argv = [a.replace("{input}", str(inp)).replace("{output}", str(outp))
                 for a in embed_cfg["command"]]
-        subprocess.run(argv, capture_output=True, text=True)
+        proc = subprocess.run(argv, capture_output=True, text=True)
+        if proc.returncode != 0:
+            die(f"эмбеддер завершился с кодом {proc.returncode} "
+                f"(code_graph.embed.command):\n{(proc.stderr or '').strip()[:500]}")
         if not outp.is_file():
             die("эмбеддер не создал {output} — проверьте code_graph.embed.command")
         vecs = json.loads(outp.read_text(encoding="utf-8"))

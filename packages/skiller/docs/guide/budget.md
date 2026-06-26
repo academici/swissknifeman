@@ -29,7 +29,7 @@ flowchart LR
     legal_compliance["legal-compliance<br/>⊕22 ↻1628"]:::cool
     observability_design["observability-design<br/>⊕27 ↻1146"]:::cool
     package_contribution_protocol["package-contribution-protocol<br/>⊕90 ↻1587"]:::warm
-    security_design["security-design<br/>⊕33 ↻1862"]:::mild
+    security_design["security-design<br/>⊕33 ↻1862"]:::cool
     tech_stack_selection["tech-stack-selection<br/>⊕27 ↻1660"]:::cool
   end
   subgraph azguard["azguard"]
@@ -40,7 +40,7 @@ flowchart LR
     version_gotchas["version-gotchas<br/>⊕19 ↻675"]:::cool
   end
   subgraph blender_modeling["blender-modeling"]
-    build_loop["build-loop<br/>⊕108 ↻1825"]:::warm
+    build_loop["build-loop<br/>⊕108 ↻1825"]:::hot
     config_conventions["config-conventions<br/>⊕97 ↻2008"]:::warm
     model_rules["model-rules<br/>⊕26 ↻656"]:::cool
     parametric_config["parametric-config<br/>⊕94 ↻1882"]:::warm
@@ -61,7 +61,7 @@ flowchart LR
     docker_php["docker-php<br/>⊕34 ↻681"]:::mild
     docker_postgres["docker-postgres<br/>⊕36 ↻712"]:::mild
     docker_services["docker-services<br/>⊕41 ↻754"]:::mild
-    docker_vite["docker-vite<br/>⊕33 ↻607"]:::mild
+    docker_vite["docker-vite<br/>⊕33 ↻607"]:::cool
     gitops["gitops<br/>⊕25 ↻640"]:::cool
     makefile["makefile<br/>⊕36 ↻654"]:::mild
     node_pnpm_preflight["node-pnpm-preflight<br/>⊕32 ↻226"]:::cool
@@ -115,7 +115,7 @@ flowchart LR
   end
   subgraph frontend_tailwind["frontend-tailwind"]
     dark_mode["dark-mode<br/>⊕96 ↻1870"]:::warm
-    tailwind_conventions["tailwind-conventions<br/>⊕108 ↻1908"]:::warm
+    tailwind_conventions["tailwind-conventions<br/>⊕108 ↻1908"]:::hot
   end
   subgraph frontend_vite["frontend-vite"]
     vite["vite<br/>⊕48 ↻523"]:::mild
@@ -143,12 +143,13 @@ flowchart LR
     anti_drift["anti-drift<br/>⊕37 ↻854"]:::mild
     compact_responses["compact-responses<br/>⊕51 ↻385"]:::mild
     complex_task_orchestrator["complex-task-orchestrator<br/>⊕38 ↻539"]:::mild
-    context_economy["context-economy<br/>⊕61 ↻1085"]:::mild
+    context_economy["context-economy<br/>⊕61 ↻1146"]:::mild
     cross_layer_change_checklist["cross-layer-change-checklist<br/>⊕31 ↻403"]:::cool
     git_commit_rules["git-commit-rules<br/>⊕24 ↻843"]:::cool
     git_safety["git-safety<br/>⊕101 ↻615"]:::warm
     grill_with_docs["grill-with-docs<br/>⊕147 ↻1053"]:::hot
     implement["implement<br/>⊕106 ↻515"]:::warm
+    mcp_advisor["mcp-advisor<br/>⊕91 ↻1470"]:::warm
     naming_conventions["naming-conventions<br/>⊕73 ↻1336"]:::warm
     packages_stack["packages-stack<br/>⊕72 ↻458"]:::warm
     project_map["project-map<br/>⊕70 ↻558"]:::warm
@@ -223,7 +224,7 @@ flowchart LR
   subgraph php["php"]
     code_style_spatie["code-style-spatie<br/>⊕54 ↻1237"]:::mild
     database["database<br/>⊕44 ↻820"]:::mild
-    dependency_injection["dependency-injection<br/>⊕33 ↻1102"]:::mild
+    dependency_injection["dependency-injection<br/>⊕33 ↻1102"]:::cool
     laravel["laravel<br/>⊕18 ↻1333"]:::cool
     laravel_best_practices["laravel-best-practices<br/>⊕53 ↻1868"]:::mild
     laravel_structure["laravel-structure<br/>⊕37 ↻1710"]:::mild
@@ -390,13 +391,13 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 193 скиллов · ⊕ always **12237** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 422181 ток · ⌥ snippets 157306 ток.
+**Итого:** 194 скиллов · ⊕ always **12328** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 423712 ток · ⌥ snippets 157306 ток.
 
 ## По бакетам
 
 | Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ snippets |
 |---|--:|--:|--:|--:|
-| `general` | 18 | 1170 | 15195 | 5120 |
+| `general` | 19 | 1261 | 16726 | 5120 |
 | `architect` | 14 | 875 | 38145 | 7503 |
 | `frontend-vue` | 11 | 808 | 23064 | 7058 |
 | `quality` | 10 | 741 | 16383 | 7091 |

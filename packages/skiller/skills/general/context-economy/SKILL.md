@@ -58,6 +58,7 @@ PHP projects → skill `pao` (bucket: php): tests/static-analysis compressed to 
 ## 5. MCP & model audit
 
 - MCP server unused 7 days → disable (its schema loads in every request). CLI instead of MCP where possible.
+- Selection (what to connect, not what to trim) at onboarding/sync — skill `mcp-advisor` (the reverse axis of this audit).
 - Model — natively via `/model`: routine/recon → Haiku, architecture/debug → senior model. Don't use third-party proxy routers (claude-code-router): extra risk layer without native guarantees.
 
 ## 6. Platform layer — via `gh`, not files
@@ -87,7 +88,8 @@ GitHub ops (PRs, review threads, others' code, releases) → **GitHub CLI**, not
 - Skill `compact-responses` (general) — terse model output (different economy axis: the answer, not the context)
 - Skill `task-brief-template` (general) — Plan→Clear→Execute pattern and `/plan`, `/execute` command templates
 - Skill `session-handoff` (general) — compress session into a handoff before `/clear`
+- Skill `mcp-advisor` (general) — pick MCP for a project at onboarding (the reverse side of the audit: what to connect)
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 0d1c27af7f1c711cdfca318720b7bf0f4065361b0203b5a7cb525a8c48770751 -->
+<!-- ru-source-sha256: 699a674f99a471a04cb378e7f6c1581150fa056a2d7dc78dd794d8f347fa1ae6 -->

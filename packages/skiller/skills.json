@@ -116,7 +116,7 @@
     },
     "general": {
       "description": "General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists",
-      "count": 18,
+      "count": 19,
       "status": "active"
     },
     "laravel-architecture": {
@@ -1917,8 +1917,8 @@
       "path": "skills/general/context-economy/SKILL.md",
       "version": "1.1.0",
       "description": "Claude Code context economy in a project: CLAUDE.md ≤200 lines, path-scoped .claude/rules/, /compact vs /clear, Plan→Clear→Execute, MCP audit, model routing. Officially-supported mechanisms only — no myths like .claudeignore.",
-      "sha256": "d2da351199904492910f79a0b5dee9ac28448dbf5dd03bf3ba513ab0b9a469dc",
-      "content_sha256": "db824fd4ee1000120ae3d70e7b6617870eabc166802fccb01d33e8122876327d",
+      "sha256": "6e1bafda816f8c6c31c73a2bb1bac9314337df92ff95a87d82066528cb0203a8",
+      "content_sha256": "5004cfaf639e3d6a37e2f0a15d2e1f26b627f4d9eb513a4663feb7b38c61cbf4",
       "tags": [
         "tokens",
         "context",
@@ -2035,6 +2035,26 @@
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/implement/SKILL.md",
       "fetched_at": "2026-06-26"
+    },
+    {
+      "name": "mcp-advisor",
+      "bucket": "general",
+      "path": "skills/general/mcp-advisor/SKILL.md",
+      "version": "0.1.0",
+      "description": "Pick MCP servers for a project at onboarding/sync: which to connect (context7/playwright/github/fetch/sequential-thinking + maind hub), why, when NOT to, and the cost in context/permissions/Node-deps. Activate when adding/onboarding/syncing a project, editing .mcp.json, or choosing MCP — emits a justified connection plan, not a dump of every server.",
+      "sha256": "11d0ec29a29b5047ea659832af6675a98a2de3bd8a6637ff7d509f91f123c4e6",
+      "content_sha256": "7b650eba8b5730ca83fbba7b87123c20582eef1a71afd8116409f6f1c6934988",
+      "tags": [
+        "mcp",
+        "onboarding",
+        "tooling",
+        "context",
+        "claude-code"
+      ],
+      "produces_for": [
+        "context-economy"
+      ],
+      "source": "local"
     },
     {
       "name": "naming-conventions",

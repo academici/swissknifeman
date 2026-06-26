@@ -2,6 +2,29 @@
 
 ## [Unreleased]
 
+### Added (skiller — рецензия плана Perplexity: mcp-advisor, github-ops, слои)
+
+- **Скилл `general/mcp-advisor`** (CORE, двуязычный RU-источник→EN-канон) — чеклист **подбора
+  MCP-серверов под проект** при онбординге/синке. Закрывает пробел: профили/онбординг прикручивают
+  MCP статично (почти всем — только `context7`), без предложений что подключать. Меню = каталог
+  harness (context7/playwright/github/fetch/sequential-thinking/filesystem) + хаб `maind`; по каждому —
+  когда нужен/не нужен и цена (схема в каждом запросе + permissions + Node/uvx-деп). Правила: память/граф
+  через `maind` (не generic `memory`-MCP), рутинный GitHub-review через `gh` CLI (не тяжёлый `github` MCP).
+  Добавлен в `CORE_SKILLS`; кросс-ссылка с `context-economy` (подбор ↔ обрезка).
+- **Пресет `github-ops`** — бандл разбросанного GitHub-набора: `roles/open-source-maintainer` +
+  `oss-dev/{github-flow,gh-review,issue-triage,release-engineering,oss-governance}` + `devops/ci-cd`.
+  Единственный реальный пробел из «Этапа 3» плана (скиллы были, единого пресета — нет).
+- **Доки**: `routing.md` — секция «Архитектурные слои: что куда» (4-слойное правило-стоп на реальном
+  3-пакетном сплите skiller/maind/harness, ссылки на канон пакетов); `skiller/docs/guide/upstream-sync.md`
+  — кросс-ссылка на каталог источников `references/README.md` (дискаверабилити каталога из сайта доков).
+
+> Контекст: рецензия `research/swissknifeman_final_plan.md` (внешний аудит Perplexity). Большинство
+> «этапов» оказались уже сделаны (MCP-façade `maind` 11 tools, профили/пресеты, upstream-каталог, качество
+> кода `cde47b8`) или переосмыслены на 3-пакетный сплит; форма-дубликаты (`config.engines/packs`, `swiss.*`
+> переименование MCP, ручной `capability-matrix`, `docs/upstream/`) **отклонены** как параллельные реестры.
+> Взяты только не-дублирующие слайсы (этот блок). Полный разбор с фаворитами —
+> `research/swissknifeman_final_plan_review.md`.
+
 ### Added (skiller — рецензия аудита архитектуры: init, JSON-схемы, level, доки-истина)
 
 - **`skiller init`** — новая команда: создаёт `.swissknifeman/config.json` (vendor) из

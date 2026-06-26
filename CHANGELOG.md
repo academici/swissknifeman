@@ -2,6 +2,31 @@
 
 ## [Unreleased]
 
+### Security (аудит — закрыты 2 бреши: RCE и обход namespace-изоляции памяти)
+
+- **maind MCP: серверный энфорс изоляции namespace** (`lib/maind/mcp.py`, `memory.py`). Раньше
+  `scope = args.get("scope") or default_scope` отдавал приоритет КЛИЕНТУ: агент проекта A,
+  передав `{"scope":"project:B"}`, читал/писал/удалял приватную память проекта B (а графовые
+  инструменты — топологию по произвольным `from`/`project`), хотя сервер раскатан запинненным к
+  своему проекту (`maind mcp --scope project:<id>`). Теперь сервер, запинненный к проекту,
+  ограничен бакетами СВОЕГО проекта (`recall_scopes`: приватный + `ns:<его группы>` + `global`);
+  графовые инструменты режут доступ к проектам, не делящим namespace (`namespaces.shares`);
+  `forget` подтверждает владение фактом по маркеру `[[s:<scope>]]` до удаления (memoryId глобален).
+  Хаб-режим (`default_scope=global`) и явный `MAIND_MCP_ALLOW_CROSS_SCOPE=1` — без ограничений
+  (back-compat/админ). Регрессия — `tests/test_mcp.py::TestScopeIsolation` (+9).
+- **harness review-gate: устранён RCE при открытии чужого репо** (`configs/claude-code/hooks/review-gate/review-gate.sh`).
+  Хук на `SubagentStop` (ставится глобально) исполнял `check_command` из project-local
+  `.claude/review-gate.config.json` через `bash -c` — любой посторонний репозиторий получал
+  произвольное исполнение кода. Теперь `check_command` берётся ТОЛЬКО из machine-owned
+  `$HOOK_DIR/config.json`; project-local конфиг честно исполняется лишь при явном opt-in владельца
+  машины (`ALLOW_PROJECT_CONFIG=1` в `$HOOK_DIR/env.ini`).
+- **harness auto-approve strict: интерпретаторы и awk/sed больше не авто-одобряются**
+  (`configs/claude-code/hooks/auto-approve/config.json`). `_normalize` вырезает тело в кавычках,
+  поэтому `python -c "<код>"` / `awk 'BEGIN{system(…)}'` виден анализатору лишь головой команды —
+  одобрять её = одобрять произвольный код. `trust_inline_interpreters` → `false` по умолчанию;
+  `awk`/`sed` убраны из `allow` (включение inline-интерпретаторов — осознанный per-project выбор).
+  Регрессия — `harness/tests/test_security_hooks.py` (+5, реальные хуки через subprocess).
+
 ### Added (skiller — eval-харнес скиллов + composite-upstream `merge`)
 
 - **`skiller eval <bucket>/<name>`** (`lib/skiller/eval.py`) — поведенческое тестирование скиллов,

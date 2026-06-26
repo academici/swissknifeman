@@ -130,6 +130,65 @@ def _recall_union(config, url, scope, query):
     return out
 
 
+def _cross_scope_allowed():
+    """Админ/хаб-режим: явный env-флаг снимает изоляцию (кросс-проектный доступ)."""
+    return bool(os.environ.get("MAIND_MCP_ALLOW_CROSS_SCOPE"))
+
+
+def _allowed_scopes(config, default_scope):
+    """Scope'ы, разрешённые этому MCP-серверу. Сервер, запинненный к проекту
+    (`maind mcp --scope project:<id>` — так его раскатывает deploy), ограничен бакетами
+    СВОЕГО проекта: приватный + ns:<его группы> + global (recall_scopes). Не-project
+    default (global/хаб) или env MAIND_MCP_ALLOW_CROSS_SCOPE → None = без ограничений
+    (хаб/админ, back-compat). Это серверный энфорс изоляции namespace: клиент не может
+    подменить scope и прочитать/записать/удалить чужую приватную память."""
+    if _cross_scope_allowed():
+        return None
+    if not (isinstance(default_scope, str) and default_scope.startswith("project:")):
+        return None
+    from .namespaces import find, recall_scopes
+    proj = find(config, default_scope.split(":", 1)[1])
+    return recall_scopes(proj) if proj else [default_scope]
+
+
+def _scope_error(scope, allowed):
+    """isError-ответ, если scope вне разрешённых (allowed=None → без ограничений)."""
+    if allowed is not None and scope not in allowed:
+        return _content({"error": f"scope '{scope}' вне разрешённых для этого проекта "
+                                  f"(изоляция namespace); разрешено: {allowed}"}, is_error=True)
+    return None
+
+
+def _node_pid(node):
+    """pid из узла графа вида 'project:<id>', иначе None."""
+    if isinstance(node, str) and node.startswith("project:"):
+        return node.split(":", 1)[1]
+    return None
+
+
+def _project_blocked(config, default_scope, target_pid):
+    """Запрещён ли запинненному к проекту серверу доступ к данным проекта target_pid:
+    True, если проекты не делят namespace. Незарегистрированный target → не режем
+    (внешний узел, namespace неизвестен). Хаб-режим (allowed=None) → не режем."""
+    if target_pid is None or _cross_scope_allowed():
+        return False
+    if not (isinstance(default_scope, str) and default_scope.startswith("project:")):
+        return False
+    from .namespaces import find, shares
+    pinned = default_scope.split(":", 1)[1]
+    if target_pid == pinned:
+        return False
+    src, dst = find(config, pinned), find(config, target_pid)
+    if src is None or dst is None:
+        return False
+    return not shares(src, dst)
+
+
+def _graph_error():
+    return _content({"error": "доступ к графу другого проекта запрещён "
+                              "(изоляция namespace)"}, is_error=True)
+
+
 def _run_tool(env, config, name, args, default_scope):
     if name in ("maind_memory_store", "maind_memory_recall", "maind_memory_forget"):
         _, _, url = memory_mod.resolve_ports(env, config)
@@ -137,26 +196,49 @@ def _run_tool(env, config, name, args, default_scope):
             return _content({"error": "демон памяти не запущен (maind start --only memory)"},
                             is_error=True)
         scope = args.get("scope") or default_scope
+        allowed = _allowed_scopes(config, default_scope)
+        denied = _scope_error(scope, allowed)
+        if denied:
+            return denied
         if name == "maind_memory_store":
             return _content(memory_mod.store(url, scope, args.get("key", "fact"), args["value"]))
         if name == "maind_memory_recall":
             return _content(_recall_union(config, url, scope, args["query"]))
+        # forget: scope-арг разрешён, но memoryId глобален — подтверждаем владение по маркеру,
+        # иначе клиент удалил бы чужой факт по известному id, не выходя за свой scope.
+        if allowed is not None:
+            owner = memory_mod.memory_owner_scope(url, args["key"], allowed)
+            if owner is None or owner not in allowed:
+                return _content({"error": "forget отклонён: факт не принадлежит разрешённым "
+                                          "scope этого проекта (изоляция namespace)"},
+                                is_error=True)
         return _content(memory_mod.forget(url, scope, args["key"]))
     if name == "maind_graph_query":
+        if _project_blocked(config, default_scope, _node_pid(args["from"])):
+            return _graph_error()
         res = _graph_reader(env, config).query(args["from"], int(args.get("depth", 1)),
                                                _edge_types(args.get("edge_types")))
         return _content(res)
     if name == "maind_graph_neighbors":
+        if _project_blocked(config, default_scope, _node_pid(args["node"])):
+            return _graph_error()
         res = _graph_reader(env, config).neighbors(args["node"], int(args.get("depth", 1)),
                                                    None, args.get("direction", "out"))
         return _content(res)
     if name == "maind_graph_path":
+        if (_project_blocked(config, default_scope, _node_pid(args["from"]))
+                or _project_blocked(config, default_scope, _node_pid(args["to"]))):
+            return _graph_error()
         res = _graph_reader(env, config).path(args["from"], args["to"])
         return _content({"from": args["from"], "to": args["to"], "path": res})
     if name == "maind_graph_project":
+        if _project_blocked(config, default_scope, args["project"]):
+            return _graph_error()
         from .federation import Federation
         return _content(Federation(env, config).project_view(args["project"]))
     if name == "maind_memory_links":
+        if _project_blocked(config, default_scope, args["project"]):
+            return _graph_error()
         from .federation import Federation
         from .namespaces import find, recall_scopes
         pid = args["project"]

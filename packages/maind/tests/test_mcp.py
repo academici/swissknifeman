@@ -211,6 +211,118 @@ class TestToolCalls(unittest.TestCase):
             self.assertTrue(r["result"]["isError"])
 
 
+def scoped_call(env, config, name, arguments, default_scope, req_id=1):
+    """tools/call с явным default_scope (как у запинненного к проекту сервера)."""
+    return mcp.dispatch(env, config, {
+        "jsonrpc": "2.0", "id": req_id, "method": "tools/call",
+        "params": {"name": name, "arguments": arguments or {}}}, default_scope=default_scope)
+
+
+class TestScopeIsolation(unittest.TestCase):
+    """Серверный энфорс namespace-изоляции: сервер, запинненный к project:a, не должен
+    читать/писать/удалять память и граф другого проекта (регрессия на 2 бреши blocker)."""
+
+    NS = property(lambda self: [{"id": "a", "namespaces": ["x"]},
+                                {"id": "b", "namespaces": ["y"]}])  # a и b НЕ делят namespace
+
+    def test_recall_foreign_scope_denied(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            with FakeMemoryServer() as url:
+                memory_mod.store(url, "project:b", "fact", "секрет проекта b")
+                config = cfg(projects=self.NS, memory={"url": url})
+                r = scoped_call(env, config, "maind_memory_recall",
+                                {"scope": "project:b", "query": "секрет"}, "project:a")
+                self.assertTrue(r["result"].get("isError"))
+                self.assertIn("изоляция namespace", r["result"]["content"][0]["text"])
+
+    def test_store_foreign_scope_denied(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            with FakeMemoryServer() as url:
+                config = cfg(projects=self.NS, memory={"url": url})
+                r = scoped_call(env, config, "maind_memory_store",
+                                {"scope": "project:b", "value": "впрыск"}, "project:a")
+                self.assertTrue(r["result"].get("isError"))
+                self.assertEqual(len(memory_mod.export(url, "project:b")), 0)  # в чужой scope не записано
+
+    def test_forget_foreign_memory_denied(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            with FakeMemoryServer() as url:
+                stored = memory_mod.store(url, "project:b", "fact", "удали меня")
+                mid = stored["memory"]["id"]
+                config = cfg(projects=self.NS, memory={"url": url})
+                # scope=project:a разрешён, но memoryId принадлежит project:b → отказ по владению
+                r = scoped_call(env, config, "maind_memory_forget",
+                                {"scope": "project:a", "key": mid}, "project:a")
+                self.assertTrue(r["result"].get("isError"))
+                self.assertEqual(len(memory_mod.export(url, "project:b")), 1)  # факт b цел
+
+    def test_graph_project_foreign_denied(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            config = cfg(projects=self.NS)
+            fed_edge(env, config, "b", "project:c")
+            r = scoped_call(env, config, "maind_graph_project", {"project": "b"}, "project:a")
+            self.assertTrue(r["result"].get("isError"))
+            self.assertIn("изоляция namespace", r["result"]["content"][0]["text"])
+
+    def test_graph_query_foreign_node_denied(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            config = cfg(projects=self.NS)
+            fed_edge(env, config, "b", "project:c")
+            r = scoped_call(env, config, "maind_graph_query", {"from": "project:b"}, "project:a")
+            self.assertTrue(r["result"].get("isError"))
+
+    def test_own_scope_still_works(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            with FakeMemoryServer() as url:
+                memory_mod.store(url, "project:a", "fact", "своя память")
+                config = cfg(projects=self.NS, memory={"url": url})
+                r = scoped_call(env, config, "maind_memory_recall",
+                                {"scope": "project:a", "query": "своя"}, "project:a")
+                self.assertFalse(r["result"].get("isError"))
+                self.assertEqual(json.loads(r["result"]["content"][0]["text"])[0]["text"],
+                                 "своя память")
+
+    def test_shared_namespace_allowed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            shared = [{"id": "a", "namespaces": ["x"]}, {"id": "b", "namespaces": ["x"]}]
+            config = cfg(projects=shared)
+            fed_edge(env, config, "b", "project:c")
+            r = scoped_call(env, config, "maind_graph_project", {"project": "b"}, "project:a")
+            self.assertFalse(r["result"].get("isError"))  # делят namespace x → доступ разрешён
+
+    def test_cross_scope_env_flag_disables_enforcement(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            with FakeMemoryServer() as url:
+                memory_mod.store(url, "project:b", "fact", "админ-доступ")
+                config = cfg(projects=self.NS, memory={"url": url})
+                os.environ["MAIND_MCP_ALLOW_CROSS_SCOPE"] = "1"
+                try:
+                    r = scoped_call(env, config, "maind_memory_recall",
+                                    {"scope": "project:b", "query": "админ"}, "project:a")
+                finally:
+                    del os.environ["MAIND_MCP_ALLOW_CROSS_SCOPE"]
+                self.assertFalse(r["result"].get("isError"))  # явный админ-режим снимает изоляцию
+
+    def test_hub_global_default_unrestricted(self):
+        # default_scope=global (хаб-сервер без --scope) → энфорс выключен, back-compat
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            with FakeMemoryServer() as url:
+                memory_mod.store(url, "project:b", "fact", "хаб видит всё")
+                config = cfg(projects=self.NS, memory={"url": url})
+                r = scoped_call(env, config, "maind_memory_recall",
+                                {"scope": "project:b", "query": "хаб"}, "global")
+                self.assertFalse(r["result"].get("isError"))
+
+
 class TestFraming(unittest.TestCase):
     def test_roundtrip(self):
         buf = io.BytesIO()

@@ -2,7 +2,7 @@
 name: figma-to-vue
 bucket: frontend-figma
 version: 0.1.0
-description: "Маппинг дизайна из Figma Dev Mode MCP в Vue + Tailwind v4: Auto-layout → flexbox/grid, tokens.json → @theme-токены (CSS-first), Variants → class-variance-authority (cva), Variable Modes → тёмная тема (.dark), переиспользование компонентов через Code Connect. Активировать при реализации Vue-экранов/компонентов по Figma; работает поверх figma-mcp-core."
+description: "Map Figma Dev Mode MCP design to Vue + Tailwind v4: Auto-layout → flexbox/grid, tokens.json → @theme tokens (CSS-first), Variants → class-variance-authority (cva), Variable Modes → dark theme (.dark), component reuse via Code Connect. Activate when building Vue screens/components from Figma; runs on top of figma-mcp-core."
 risk: write
 persona: oss-dev
 tags: [figma, vue, tailwind, tailwindcss-v4, cva, design-tokens, dark-mode, auto-layout]
@@ -16,55 +16,45 @@ sha256: ""
 
 # Skill: Figma → Vue + Tailwind
 
-## Контекст
+Map Figma Dev Mode MCP design into **Vue 3 + Tailwind CSS v4**. Figma data extraction (tools, tokens, no-screenshot discipline) lives in `figma-mcp-core`; here = structure/token → Vue + Tailwind conversion.
 
-Маппинг дизайна, извлечённого через Figma Dev Mode MCP, в код **Vue 3 + Tailwind CSS v4**. Получение
-данных из Figma (инструменты, токены, дисциплина no-screenshot) — в `figma-mcp-core`; здесь —
-конвертация структуры и токенов в Vue-компоненты и Tailwind-тему.
+Activate when:
+- building a Vue screen/component from a Figma selection via connected MCP;
+- porting `tokens.json` (from `figma-mcp-core`) into Tailwind v4 `@theme`;
+- mapping Figma Variants → component variants via `cva`;
+- mapping Variable Modes (light/dark) → `.dark` dark theme.
 
-Активировать, когда:
+Tailwind v4, cva, dark-theme conventions live in `tailwind-conventions`, `reka-ui-cva`, `naive-ui-theming`, `dark-mode`.
 
-- реализуешь Vue-экран/компонент по выделению в Figma через подключённый MCP;
-- переносишь `tokens.json` (из `figma-mcp-core`) в Tailwind v4 `@theme`;
-- маппишь Figma Variants в варианты компонента через `cva`;
-- маппишь Variable Modes (light/dark) в тёмную тему `.dark`.
+## Algorithm
 
-Конвенции Tailwind v4, cva и тёмной темы — в скиллах `tailwind-conventions`, `reka-ui-cva`,
-`naive-ui-theming`, `dark-mode`; этот скилл — мост от Figma к ним.
+1. **Figma data.** Run `figma-mcp-core`: `get_metadata` (structure), `get_variable_defs` (tokens → `tokens.json`), `get_code_connect_map` (ready components).
+2. **Tokens → `@theme`.** Port `tokens.json` to Tailwind v4 CSS-first `@theme` (see `snippets/theme.css`): prefixed names generate utilities (`--color-primary` → `bg-primary`). Do NOT create `tailwind.config.js` — tokens live in CSS (see `tailwind-conventions`).
+3. **Structure → markup.** Map Auto-layout → flexbox/grid per `snippets/auto-layout-mapping.md`. Do not hardcode spacing — use spacing utilities from tokens.
+4. **Variants → cva.** Figma Component Set (Default/Hover/Active/Disabled) → `cva` variants (see `snippets/variant-component.vue`), classes via `cn()`.
+5. **Modes → dark theme.** Variable Modes light/dark → token values under `.dark` in `@theme`, `dark:*` utilities (see `dark-mode`).
+6. **Verify.** One `get_screenshot` — visually compare result; fix discrepancies via tokens.
 
-## Алгоритм
+## Auto-layout → Tailwind/flexbox mapping
 
-1. **Данные из Figma.** Отработать `figma-mcp-core`: `get_metadata` (структура), `get_variable_defs`
-   (токены → `tokens.json`), `get_code_connect_map` (готовые компоненты).
-2. **Токены → `@theme`.** Перенести `tokens.json` в Tailwind v4 CSS-first `@theme` (см.
-   `snippets/theme.css`): имена с префиксами генерируют утилиты (`--color-primary` → `bg-primary`).
-   НЕ создавать `tailwind.config.js` — токены живут в CSS (см. `tailwind-conventions`).
-3. **Структура → разметка.** Маппить Auto-layout в flexbox/grid по таблице
-   `snippets/auto-layout-mapping.md`. Не хардкодить отступы — использовать spacing-утилиты из токенов.
-4. **Variants → cva.** Figma Component Set (Default/Hover/Active/Disabled) → варианты `cva`
-   (см. `snippets/variant-component.vue`), классы через `cn()`.
-5. **Modes → тёмная тема.** Variable Modes light/dark → значения токенов под `.dark` в `@theme`,
-   утилиты `dark:*` (см. `dark-mode`).
-6. **Сверка.** Один `get_screenshot` — визуально сравнить результат, расхождения чинить через токены.
+Full table — `snippets/auto-layout-mapping.md`. Brief: `layoutMode: HORIZONTAL/VERTICAL` → `flex flex-row/flex-col`; `itemSpacing` → `gap-*`; `padding*` → `p*`; `primaryAxisSizingMode: FILL` → `flex-1`; `AUTO` → `w-fit`; axis alignment → `justify-*` / `items-*`.
 
-## Маппинг Auto-layout → Tailwind/flexbox
+## Quality checklist
 
-Полная таблица — `snippets/auto-layout-mapping.md`. Кратко: `layoutMode: HORIZONTAL/VERTICAL` →
-`flex flex-row/flex-col`; `itemSpacing` → `gap-*`; `padding*` → `p*`; `primaryAxisSizingMode: FILL` →
-`flex-1`; `AUTO` → `w-fit`; выравнивание по осям → `justify-*` / `items-*`.
+- [ ] Tokens ported to `@theme` (CSS-first), no `tailwind.config.js`.
+- [ ] Spacing/colors via token utilities, no magic numbers.
+- [ ] Auto-layout mapped to flex/grid per table, not by eye.
+- [ ] Variants via `cva` + `cn()`, not duplicated components.
+- [ ] Variable Modes light/dark mapped to `.dark`/`dark:*`.
+- [ ] Existing components from `get_code_connect_map` reused.
 
-## Чеклист качества
+## Links
 
-- [ ] Токены перенесены в `@theme` (CSS-first), без `tailwind.config.js`.
-- [ ] Отступы/цвета — через утилиты токенов, без магических чисел.
-- [ ] Auto-layout смаппен в flex/grid по таблице, не «на глаз».
-- [ ] Variants реализованы через `cva` + `cn()`, не дублированием компонентов.
-- [ ] Variable Modes light/dark смаппены в `.dark`/`dark:*`.
-- [ ] Существующие компоненты из `get_code_connect_map` переиспользованы.
+- snippets/theme.css — Tailwind v4 `@theme` from tokens.json (+ `.dark` modes).
+- snippets/variant-component.vue — component with cva variants and cn().
+- snippets/auto-layout-mapping.md — Figma Auto-layout → Tailwind table.
+- Related skills: `figma-mcp-core`, `tailwind-conventions`, `reka-ui-cva`, `naive-ui-theming`, `dark-mode`.
 
-## Ссылки
+<!-- ru-source-sha256: PENDING -->
 
-- snippets/theme.css — Tailwind v4 `@theme` из tokens.json (+ `.dark` модов).
-- snippets/variant-component.vue — компонент с cva-вариантами и cn().
-- snippets/auto-layout-mapping.md — таблица Figma Auto-layout → Tailwind.
-- Связанные скиллы: `figma-mcp-core`, `tailwind-conventions`, `reka-ui-cva`, `naive-ui-theming`, `dark-mode`.
+<!-- ru-source-sha256: cb82312f636931fc0e672e319043fac19ee2f0ff7ff097400f87411f2051b9a3 -->

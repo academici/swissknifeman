@@ -2,7 +2,7 @@
 name: adversarial-check
 bucket: founder
 version: 0.1.0
-description: Структурированный «адвокат дьявола» — 3 сильнейших контраргумента, failed competitors, негативные сигналы, structural obstacles. Антидот против confirmation bias × AI. Cross-stage.
+description: Structured devil's advocate — 3 strongest counterarguments, failed competitors, negative signals, structural obstacles. Antidote to confirmation bias × AI. Cross-stage.
 risk: read
 persona: founder
 tags: [validation, market]
@@ -15,91 +15,71 @@ adapters: [claude, cursor, fable]
 
 # Skill: Adversarial Check
 
-Применять когда: сформулирована любая гипотеза / идея / значимое решение и нужно **проверить её на прочность до коммита ресурсов**. Founder's Playbook: *"Using Claude as structured devil's advocate is a core use case at **every** stage of the AI startup life cycle."*
+Apply when: any hypothesis / idea / significant decision is formulated and must be pressure-tested before committing resources. Founder's Playbook: *"Using Claude as structured devil's advocate is a core use case at **every** stage of the AI startup life cycle."* AI follows the direction of the prompt — point it the opposite way.
 
-**Зачем это критично именно с AI.** AI следует за направлением запроса. Попросишь подтвердить гипотезу — подтвердит. Попросишь посчитать TAM — найдёт число, делающее рынок fundable. Возникает **иллюзия due diligence**: elaborate, well-researched-looking кейс для плохой идеи при полной уверенности в правильности процесса. Антидот — тот же инструмент, направленный в обратную сторону.
+## Do NOT apply when
 
----
+- No concrete thesis to attack (formulate hypothesis first — `idea-discovery`).
+- Pure execution task, no choice (refactor per plan).
+- A `risk-assessment` pre-mortem is already running — that's the broader procedure; adversarial-check is more targeted and faster.
 
-## Когда НЕ применять
+## Principles
 
-- Нет конкретного тезиса для атаки (сначала сформулировать гипотезу — `idea-discovery`).
-- Чисто исполнительская задача без выбора (рефакторинг по плану) — не нужно.
-- Уже идёт `risk-assessment` с pre-mortem — это смежная, более широкая процедура; adversarial-check точечнее и быстрее.
+1. Attack the **strongest** version of the threat, not the convenient one.
+2. **Steelman** the opponent — frame the case against as the smartest skeptic with money would.
+3. Facts, not taste — anchor each counterargument to a signal/precedent.
+4. **Default to refuted** under uncertainty: no data = weakness of the hypothesis, not neutral.
 
----
+## 4 attack vectors — run thesis through all four
 
-## Принципы
+1. **Strongest counterarguments (≥3)** — 3 strongest arguments **against**. Per each: why dangerous + what must be true to neutralize it.
+2. **Failed competitors** — who tried this and **failed**? Why exactly? How does your approach structurally differ — or are you repeating the same mistake re-sauced? (antidote to "competitor neglect": `competitive-analysis`).
+3. **Negative market signals** — what in data/trends **contradicts** the thesis? Falling demand, regulatory headwind, behavioral patterns against — what a supportive analysis would quietly deprioritize.
+4. **Structural obstacles** — what blocks structurally, independent of execution? Distribution barriers, incumbent switching costs, unit economics, laws, competitor network effects.
 
-1. **Атаковать сильнейшую версию угрозы, не удобную.** Не «вот наивное возражение, которое легко отбить», а самое опасное.
-2. **Steelman оппонента.** Сформулировать позицию против так, как сделал бы умнейший скептик с деньгами.
-3. **Факты, не вкусовщина.** Каждый контраргумент опереть на сигнал/прецедент, а не на «мне кажется».
-4. **Default to refuted при неопределённости.** Если данных нет — это слабость гипотезы, а не нейтраль.
+**Bonus — "argue why competitor wins":** build the **most convincing** case why the competitor in this space succeeds and you don't. Not the convenient version of the threat.
 
----
-
-## 4 вектора атаки
-
-Прогнать тезис по всем четырём:
-
-### 1. Сильнейшие контраргументы (≥3)
-Три самых сильных аргумента **против** гипотезы. По каждому — почему он опасен и что должно быть правдой, чтобы его нейтрализовать.
-
-### 2. Failed competitors
-Кто уже пытался решить это и **провалился**? Почему именно? Чем твой подход структурно отличается — и не повторяешь ли ту же ошибку под другим соусом? (антидот «competitor neglect»: см. `competitive-analysis`).
-
-### 3. Негативные рыночные сигналы
-Что в данных/трендах **противоречит** тезису? Падающий спрос, регуляторный ветер встречный, поведенческие паттерны против. То, что supportive-анализ тихо деприоритизировал бы.
-
-### 4. Structural obstacles
-Что мешает структурно, независимо от исполнения? Distribution-барьеры, switching costs у инкумбента, экономика юнита, законы, сетевые эффекты конкурента.
-
-### Bonus — «argue why competitor wins»
-Заставить себя построить **самый убедительный** кейс, почему конкурент в этом пространстве преуспеет, а ты — нет. Не самую удобную версию угрозы.
-
----
-
-## Вывод
+## Output
 
 ```
-## Adversarial check: [тезис]
+## Adversarial check: [thesis]
 
-### Сильнейшие контраргументы
-1. [arg] — опасен потому что… нейтрализуется если…
+### Strongest counterarguments
+1. [arg] — dangerous because… neutralized if…
 2. …
 3. …
 
 ### Failed competitors
-- [кто] провалился потому что… мы отличаемся / повторяем: …
+- [who] failed because… we differ / repeat: …
 
-### Негативные сигналы
+### Negative signals
 - …
 
 ### Structural obstacles
 - …
 
-### Вердикт
-SURVIVES (гипотеза держит удар, named risks под наблюдением) /
-REVISE (нужна правка позиционирования/сегмента) /
-KILL (структурно несостоятельна) — обоснование.
+### Verdict
+SURVIVES (hypothesis holds, named risks monitored) /
+REVISE (positioning/segment fix needed) /
+KILL (structurally unsound) — with rationale.
 ```
 
-**Когда выводы вскрывают, что идея требует ревизии — это и есть сигнал к pivot, не провал.**
+When findings show the idea needs revision — that's the signal to pivot, not a failure.
 
----
+## Agent adds
 
-## Что агент добавляет сам
+- **Catch own confirmation bias** — if prior analysis was suspiciously confirming, name it and re-attack harder.
+- **Asymmetry check** — if "pro" far outweighs "con", ask: is this data or what we want to hear?
+- **Web-grounding** — for failed competitors / signals, pull `perplexity-web` / real sources, don't invent.
 
-- **Ловит свой confirmation bias.** Если предыдущий анализ был подозрительно подтверждающим — назвать это и переатаковать жёстче.
-- **Asymmetry check.** Если «за» сильно перевешивает «против» — спросить: это данные или то, что мы хотим услышать?
-- **Web-grounding.** Для failed competitors / сигналов — поднять `perplexity-web` / реальные источники, а не выдумывать.
+## Related skills
 
----
+- `founder/idea-discovery` — supplies the hypothesis; adversarial-check follows right after formulation
+- `founder/competitive-analysis` — uses "failed competitors" + "argue why competitor wins" vectors (antidote to competitor neglect)
+- `founder/risk-assessment` — broader pre-mortem/RAID; adversarial-check is the fast targeted pressure-test
+- `founder/startup-lifecycle` — gate-review mandatorily runs adversarial before a PROCEED verdict
+- `pm/requirement-critic` — same spirit (skeptic, not author), for BRD requirements
 
-## Связанные скиллы
+<!-- ru-source-sha256: PENDING -->
 
-- `founder/idea-discovery` — поставщик гипотезы; adversarial-check идёт сразу после формулировки
-- `founder/competitive-analysis` — использует вектор «failed competitors» и «argue why competitor wins» (антидот competitor neglect)
-- `founder/risk-assessment` — более широкий pre-mortem/RAID; adversarial-check — быстрый точечный pressure-test
-- `founder/startup-lifecycle` — gate-review обязательно прогоняет adversarial перед вердиктом PROCEED
-- `pm/requirement-critic` — тот же дух (скептик, не автор), но для BRD-требований
+<!-- ru-source-sha256: ba8ffefce0acb052bd0a4404095c64990d889dd8f3a8f2bb443a8d53e0260a3a -->

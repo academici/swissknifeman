@@ -2,7 +2,7 @@
 name: github-flow
 bucket: oss-dev
 version: 0.2.0
-description: "Цепочка Issue → Branch → PR → Merge → Tag → Release на GitHub: naming, labels, SemVer-оракул по типам коммитов, шаблоны Issue/PR. Формат коммитов — git-commit-rules, changelog и pipeline — release-engineering, ревью PR — gh-review."
+description: "Chain Issue → Branch → PR → Merge → Tag → Release on GitHub: naming, labels, SemVer oracle by commit types, Issue/PR templates. Commit format — git-commit-rules; changelog & pipeline — release-engineering; PR review — gh-review."
 risk: write
 persona: oss-dev
 tags: [oss, github, git, semver, release]
@@ -16,59 +16,49 @@ sha256: ""
 
 # Skill: GitHub Flow
 
-Применять когда: изменения в OSS-репозитории на GitHub ведутся **от Issue до релиза** и агент участвует в этой цепочке: создаёт Issue/PR через `gh`, именует ветки, назначает labels, определяет следующую версию по коммитам, создаёт тег и GitHub Release.
+Apply when: GitHub OSS repo changes run **from Issue to release** and the agent participates in the chain (creates Issue/PR via `gh`, names branches, assigns labels, computes next version from commits, creates tag + GitHub Release).
 
-Разделение ответственности с соседями:
-- **формат и стиль commit message** (типы, scopes, BREAKING CHANGE) — `general/git-commit-rules`;
-- **SemVer-контракт пакета, CHANGELOG-формат, release pipeline, pre-releases, deprecation** — `oss-dev/release-engineering`;
-- этот скилл — **процессная цепочка между ними**: как Issue превращается в ветку, ветка в PR, PR в тег и релиз.
+Boundary with neighbors:
+- commit message format/style (types, scopes, BREAKING CHANGE) — `general/git-commit-rules`;
+- package SemVer contract, CHANGELOG format, release pipeline, pre-releases, deprecation — `oss-dev/release-engineering`;
+- this skill — the process chain between them (Issue→branch→PR→tag→release).
 
----
-
-## Когда НЕ применять
-
-- Репозиторий не на GitHub (GitLab, внутренний git без Issues) — взять только `git-commit-rules`.
-- Нужно формализовать сам релизный процесс (что считается MAJOR, политика deprecation) — это `release-engineering`.
-- Разовый фикс в чужом форке без права на Issues/labels — обычный PR по правилам апстрима, не этот flow.
-
----
+## Do NOT apply when
+- Repo not on GitHub (GitLab, internal git without Issues) — use only `git-commit-rules`.
+- Need to formalize the release process itself (what counts as MAJOR, deprecation policy) — `release-engineering`.
+- One-off fix in someone's fork without Issues/labels rights — plain upstream PR, not this flow.
 
 ## Lifecycle
 
 ```
 Issue → Branch → Commits → PR → Review → Merge → SemVer Oracle → Tag → GitHub Release
   ▲                          ▲                        ▲             ▲
-  вопросы агента             вопросы агента           подтверждение  только после
-  (тип/приоритет)            (issues/changelog)       версии         merge
+  agent questions            agent questions          version       only after
+  (type/priority)            (issues/changelog)       confirmation   merge
 ```
 
-Контрольные точки, где агент **обязан остановиться и спросить**:
-1. Перед созданием Issue — тип, приоритет, компонент, версия воспроизведения.
-2. Перед созданием PR — связанные Issues, тип изменения, нужен ли CHANGELOG-entry.
-3. Перед тегом — подтверждение версии, предложенной SemVer-оракулом.
-
----
+Checkpoints where agent **MUST stop and ask**:
+1. Before creating Issue — type, priority, component, reproduction version.
+2. Before creating PR — related Issues, change type, whether CHANGELOG entry needed.
+3. Before tag — confirm version proposed by SemVer oracle.
 
 ## Issues
 
-### Обязательные вопросы перед созданием
+Mandatory questions before creating:
+1. **Type** — bug | feature | enhancement | security | docs | refactor | chore
+2. **Priority** — critical | high | normal | low
+3. **Affected component** (from project structure map)
+4. **Package version** where issue reproduces (for bug/security)
 
-1. **Тип** — bug | feature | enhancement | security | docs | refactor | chore
-2. **Приоритет** — critical | high | normal | low
-3. **Затронутый компонент** (из карты структуры проекта)
-4. **Версия пакета**, в которой воспроизводится проблема (для bug/security)
-
-### Заголовок
-
+Title:
 ```
-[type] Краткое описание в повелительном наклонении (до 72 символов)
+[type] Short imperative description (≤72 chars)
 ```
+Examples: `[bug] Fix config cache invalidation on publish`, `[feature] Add scoped token resolution`.
 
-Примеры: `[bug] Fix config cache invalidation on publish`, `[feature] Add scoped token resolution`.
+Labels by type:
 
-### Labels по типу
-
-| Тип Issue | Labels |
+| Issue type | Labels |
 |:---|:---|
 | bug | `bug`, `needs-triage` |
 | feature / enhancement | `enhancement` |
@@ -77,17 +67,14 @@ Issue → Branch → Commits → PR → Review → Merge → SemVer Oracle → T
 | refactor | `refactor`, `tech-debt` |
 | chore | `chore` |
 
-Meta-labels `semver:patch` / `semver:minor` / `semver:major` агент проставляет по оценке влияния (см. SemVer Oracle), `semver:major` — только после подтверждения пользователем.
-
----
+Meta-labels `semver:patch` / `semver:minor` / `semver:major` set by impact assessment (see SemVer Oracle); `semver:major` only after user confirmation.
 
 ## Branch Naming
 
-Формат: `<type>/<issue-number>-<slug>`
-
-- slug: строчные буквы, цифры, дефисы; до 50 символов после `<type>/`.
-- Типы веток: `feat/`, `fix/`, `hotfix/`, `docs/`, `refactor/`, `chore/`, `security/`.
-- Ветка создаётся после подтверждения Issue; заголовок брать из `gh issue view <N>`.
+Format: `<type>/<issue-number>-<slug>`
+- slug: lowercase letters, digits, hyphens; ≤50 chars after `<type>/`.
+- Branch types: `feat/`, `fix/`, `hotfix/`, `docs/`, `refactor/`, `chore/`, `security/`.
+- Create branch after Issue confirmed; take title from `gh issue view <N>`.
 
 ```
 feat/42-scoped-token-resolution
@@ -95,116 +82,92 @@ fix/17-config-cache-invalidation
 security/38-path-traversal-loader
 ```
 
----
-
 ## Pull Requests
 
-### Перед созданием агент запрашивает или вычисляет
+Before creating, agent asks or computes:
+1. Related Issues (`Closes #N` / `Refs #N`)
+2. Change type — bugfix | feature | breaking | security | docs
+3. Affected components (from diff)
+4. Whether CHANGELOG entry needed (section rules — `release-engineering`)
 
-1. Связанные Issues (`Closes #N` / `Refs #N`)
-2. Тип изменения — bugfix | feature | breaking | security | docs
-3. Затронутые компоненты (из diff)
-4. Нужен ли CHANGELOG-entry (правила секций — `release-engineering`)
-
-### Заголовок
-
+Title:
 ```
 <type>(<scope>): <description> (#<issue>)
 ```
+Example: `feat(provider): scoped token resolution (#42)`. Type/scope format — per `git-commit-rules`.
 
-Пример: `feat(provider): scoped token resolution (#42)`. Формат типа/scope — по `git-commit-rules`.
+Body & labels:
+- Body — per `snippets/pull-request-template.md` (copied to `.github/PULL_REQUEST_TEMPLATE.md`). Labels mirror Issue, plus:
+- `ready-for-review` — when PR leaves draft;
+- `needs-changelog` — CHANGELOG not updated;
+- `breaking-change` — has `BREAKING CHANGE` footer or `!` in type.
 
-### Тело и labels
+Review: do it via `gh`, not by loading whole files: `gh pr diff <N>`, `gh pr view <N> --comments`, `gh pr review <N> --approve|--request-changes -b "..."`. Full algorithm & context economy — skill **`oss-dev/gh-review`**; finding criteria & severity — `quality/code-review`.
 
-Тело PR — по шаблону `snippets/pull-request-template.md` (копируется в `.github/PULL_REQUEST_TEMPLATE.md`). Labels зеркалятся с Issue, плюс:
+## SemVer Oracle — next version from commits
 
-- `ready-for-review` — когда PR выходит из draft;
-- `needs-changelog` — CHANGELOG не обновлён;
-- `breaking-change` — есть `BREAKING CHANGE` footer или `!` в типе.
+Analyze commits between last tag and HEAD: `git log $(git describe --tags --abbrev=0)..HEAD --pretty=format:"%s" --no-merges`.
 
-### Review
-
-Сам шаг ревью (чтение диффа, треды, публикация находок) — через `gh`, не
-загрузкой файлов целиком: `gh pr diff <N>`, `gh pr view <N> --comments`,
-`gh pr review <N> --approve|--request-changes -b "..."`. Полный алгоритм и
-экономия контекста — скилл **`oss-dev/gh-review`**; критерии и severity находок
-— `quality/code-review`.
-
----
-
-## SemVer Oracle — следующая версия по коммитам
-
-Анализ коммитов между последним тегом и HEAD: `git log $(git describe --tags --abbrev=0)..HEAD --pretty=format:"%s" --no-merges`.
-
-| Найдено в коммитах | Bump |
+| Found in commits | Bump |
 |:---|:---|
-| `BREAKING CHANGE` footer или `!` после типа (`feat!:`) | MAJOR |
-| `feat` (без breaking) | MINOR |
+| `BREAKING CHANGE` footer or `!` after type (`feat!:`) | MAJOR |
+| `feat` (no breaking) | MINOR |
 | `fix`, `perf`, `security` | PATCH |
-| только `docs`, `style`, `refactor`, `test`, `build`, `ci`, `chore` | нет (релиз не нужен) |
+| only `docs`, `style`, `refactor`, `test`, `build`, `ci`, `chore` | none (no release) |
 
-Берётся максимальный bump по всем коммитам. Что именно считается breaking **для этого пакета** — определяет SemVer-контракт из `release-engineering` (RELEASING.md); при конфликте контракт важнее типа коммита.
+Take max bump across all commits. What counts as breaking **for this package** — the SemVer contract in `release-engineering` (RELEASING.md); on conflict, contract beats commit type.
 
-### Диалог подтверждения
-
+Confirmation dialog:
 ```
-Текущая версия: 1.4.2 (последний тег)
-Коммиты с тега: feat(2), fix(1), docs(3)
-Предлагаемая версия: 1.5.0
-Подтвердить / указать вручную / отменить?
+Current version: 1.4.2 (last tag)
+Commits since tag: feat(2), fix(1), docs(3)
+Proposed version: 1.5.0
+Confirm / specify manually / cancel?
 ```
 
-### Формат тегов
-
-`vX.Y.Z` — stable; `vX.Y.Z-alpha.N` / `-beta.N` / `-rc.N` — pre-releases (политика pre-release и dist-tags — `release-engineering`).
-
----
+Tag format: `vX.Y.Z` stable; `vX.Y.Z-alpha.N` / `-beta.N` / `-rc.N` pre-releases (pre-release policy & dist-tags — `release-engineering`).
 
 ## Merge → Tag → Release
 
-Тег создаётся **только после**: подтверждения версии пользователем, обновления CHANGELOG (секция новой версии с датой), merge PR в default-ветку.
+Tag created **only after**: user version confirmation, CHANGELOG updated (new version section with date), PR merged to default branch.
 
 ```
 1. git checkout main && git pull
-2. секция [Unreleased] → [X.Y.Z] - YYYY-MM-DD в CHANGELOG.md
-3. bump версии в манифесте пакета (если поле version используется)
-4. git commit -m "chore(release): ..." (стиль — git-commit-rules)
+2. [Unreleased] section → [X.Y.Z] - YYYY-MM-DD in CHANGELOG.md
+3. bump version in package manifest (if version field used)
+4. git commit -m "chore(release): ..." (style — git-commit-rules)
 5. git tag vX.Y.Z -m "Release vX.Y.Z" && git push origin main --tags
-6. gh release create vX.Y.Z --notes-file <CHANGELOG-секция>
-7. publish в registry — через CI по тегу, не руками
+6. gh release create vX.Y.Z --notes-file <CHANGELOG-section>
+7. publish to registry — via CI on tag, not by hand
 ```
 
-Готовый workflow — `devops/ci-cd/snippets/github-actions-release.yml`; правила pipeline (только из тегов, provenance, 2FA) — `release-engineering`.
+Ready workflow — `devops/ci-cd/snippets/github-actions-release.yml`; pipeline rules (tags-only, provenance, 2FA) — `release-engineering`.
 
----
+## Agent adds itself
+- **`.github/PULL_REQUEST_TEMPLATE.md` and `ISSUE_TEMPLATE/`** from snippets if absent — propose adding on first PR/Issue.
+- **Issue ↔ PR link.** `Closes #N` in commit footer or PR body — Issue auto-closes on merge.
+- **Branch cleanup.** After merge propose deleting branch (`gh pr merge --delete-branch`).
+- **Release language specifics.** For PHP packages — pass gate from `references/php-package-gate.md` before tag.
 
-## Что агент добавляет сам
+## Links
+- [references/php-package-gate.md](references/php-package-gate.md) — composer.json gate, keywords, Packagist deploy
+- [snippets/](snippets/) — PR & Issue templates
+- `../release-engineering/SKILL.md` — SemVer contract, CHANGELOG, pipeline, deprecation
+- `../gh-review/SKILL.md` — PR review/handoff via gh with context economy
+- `../../general/git-commit-rules/SKILL.md` — commit format, scopes, BREAKING CHANGE
+- `../../devops/ci-cd/snippets/github-actions-release.yml` — release workflow on tag
+- `devops/gitops` — team branch model (main/develop/feature/hotfix) & branch protection; github-flow — GitHub projection of it (Issue→PR→Release).
 
-- **`.github/PULL_REQUEST_TEMPLATE.md` и `ISSUE_TEMPLATE/`** из snippets, если их нет в репо — предложить добавить при первом PR/Issue.
-- **Связку Issue ↔ PR.** `Closes #N` в footer коммита или тело PR — Issue закроется при merge автоматически.
-- **Чистку веток.** После merge предложить удалить ветку (`gh pr merge --delete-branch`).
-- **Языковую специфику релиза.** Для PHP-пакетов — пройти gate из `references/php-package-gate.md` перед тегом.
+## Hard prohibitions
 
----
+NEVER:
+- Create Issue/PR without answers to mandatory questions (type, priority, related Issues).
+- Push tag before PR merged to default branch.
+- Assign `semver:major` / do MAJOR bump without explicit user confirmation.
+- Bump package version inside a feature/fix PR — only in the release commit.
+- Duplicate the package SemVer contract — it lives in RELEASING.md (`release-engineering`).
+- Force-push to a branch with open review without warning reviewers.
 
-## Ссылки
+<!-- ru-source-sha256: PENDING -->
 
-- [references/php-package-gate.md](references/php-package-gate.md) — composer.json gate, keywords, Packagist-деплой
-- [snippets/](snippets/) — шаблоны PR и Issue
-- `../release-engineering/SKILL.md` — SemVer-контракт, CHANGELOG, pipeline, deprecation
-- `../gh-review/SKILL.md` — ревью/хендофф PR через gh с экономией контекста
-- `../../general/git-commit-rules/SKILL.md` — формат коммитов, scopes, BREAKING CHANGE
-- `../../devops/ci-cd/snippets/github-actions-release.yml` — release workflow по тегу
-- `devops/gitops` — командная модель веток (main/develop/feature/hotfix) и защита веток; github-flow — GitHub-проекция этого процесса (Issue→PR→Release).
-
----
-
-## Жёсткие запреты
-
-НЕЛЬЗЯ:
-- Создавать Issue/PR, не получив ответы на обязательные вопросы (тип, приоритет, связанные Issues).
-- Пушить тег до merge PR в default-ветку.
-- Назначать `semver:major` / делать MAJOR-bump без явного подтверждения пользователя.
-- Бампить версию пакета внутри feature/fix-PR — только в релизном коммите.
-- Дублировать SemVer-контракт пакета — он живёт в RELEASING.md (`release-engineering`).
-- Force-push в ветку с открытым review без предупреждения ревьюеров.
+<!-- ru-source-sha256: 97225a443af13ff09dbd40ddabdfaab56ea62774a8b5ae15705066405b7d0731 -->

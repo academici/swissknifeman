@@ -46,7 +46,7 @@ connect → бакеты `general`+`oss-dev`; vendor → skill-level `context-ec
 - `generate-skill/` — meta-скилл создания скиллов; `skm/` — management-плагин (slash-команды CLI).
 - `tests/` — `unittest` против синтетического реестра (`tests/fixtures.py`), tmpdir.
 - **Генерёжка (не править руками):** `skills.json`, `skills/_index.md`, `.claude-plugin/marketplace.json`,
-  `skills/*/.claude-plugin/plugin.json`, `docs/guide/graph.md` — всё из `skiller registry`.
+  `skills/*/.claude-plugin/plugin.json`, `docs/guide/graph.md`, `docs/guide/budget.md` — всё из `skiller registry`.
 
 ### Ключевые модули
 
@@ -58,7 +58,8 @@ connect → бакеты `general`+`oss-dev`; vendor → skill-level `context-ec
 | `connect.py` | канал marketplace (плагины-бакеты) |
 | `vendor.py` | канал физ. переноса (сбор скиллов, `requires`, flat/bucket-раскладка, boost.json) |
 | `integrate.py` | визард: скиллы + hub (свои) + permissions/MCP/auto-approve/memory (делегируются в `harness`) + brain |
-| `registry.py` | `skills.json` + `skills/_index.md` (tag matrix) + marketplace/plugin-манифесты + граф |
+| `registry.py` | `skills.json` + `skills/_index.md` (tag matrix) + marketplace/plugin-манифесты + граф + карта бюджета |
+| `budget.py` | трёхъярусный токеновый бюджет (⊕ always / ↻ on-trigger / ⌥ on-demand): команда `skiller budget`, генератор `docs/guide/budget.md`, строка в `status`. ЕДИНЫЙ источник токен-математики |
 | `update.py` / `sync.py`* | обновление подключения; vendor-синк из конфига |
 | `lock.py` | `skills-lock.json` (карта внешних скиллов: skm + boost) |
 | `status.py` / `listing.py` / `state.py` | отчёт по проекту; реестр проектов (`~/.swissknifeman/projects.json`) |
@@ -77,6 +78,8 @@ connect → бакеты `general`+`oss-dev`; vendor → skill-level `context-ec
 - **Запись в проекты — merge-only**, существующее не затирается, бэкап `*.bak`.
 - **Два канала раздачи** (connect/vendor) — не дублируй логику; общий выбор — `config.resolve_selection`.
 - **Скилл** = каталог с `SKILL.md`; frontmatter: `name·bucket·version·description·risk·persona·tags·requires·produces_for·outputs`.
+- **Двуязычная модель скиллов.** `SKILL.ru.md` — ПОЛНЫЙ русский ИСТОЧНИК (его правит человек, коммитится, SSOT). `SKILL.md` — КОМПАКТНЫЙ английский канон, **генерируется из RU**, передаёт все условия минимумом текста — его и только его грузит агент (русский в контекст не попадает). Поток правок локального скилла: **правишь `SKILL.ru.md` → регенеришь `SKILL.md`** (промт `prompts/generate/claude-canon-from-ru.md`) → `check-translations.sh --stamp`. Свежесть EN метит `<!-- ru-source-sha256: … -->`; когерентность — `scripts/check-translations.sh`. `*.ru.md` НЕ вендорится в проекты (vendor их игнорит). Внешние (upstream) скиллы — канон EN от upstream (не трогаем), `SKILL.ru.md` для них лишь справка.
+- **Бюджет токенов** — единственный источник математики `budget.py` (не дублируй `len/N` по месту). `description` резидентно в каждом запросе (ярус-0) — держи его конкретным и компактным.
 - **После правок скиллов/бакетов** — `skiller registry` (перегенерит реестр/индекс/манифесты).
 - connect — **bucket-granular** (skill-level exclude игнорируется); vendor — **skill-granular**.
 - **Анти-bloat при создании скиллов** — новый скилл только без пересечений (иначе расширяй существующий), без имён конкретных проектов/пакетов в теле. Гейты: `anti-drift` («спроси перед расширением»), `code-simplifier` (YAGNI-чеклист), `architecture` (ADR), `package-contribution-protocol` (граница «проект↔пакет»). Полная методология — `docs/guide/methodology.md`.

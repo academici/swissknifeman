@@ -2,7 +2,7 @@
 name: pao
 bucket: php
 version: 1.0.0
-description: "Laravel PAO — агентно-оптимизированный вывод PHP-инструментов: PHPUnit/Pest/Paratest/PHPStan/Rector/Artisan сжимаются в компактный JSON (~20 токенов вместо тысяч) при работе внутри AI-агента. Установка, проверка, ограничения."
+description: "Laravel PAO — agent-optimized PHP tool output: PHPUnit/Pest/Paratest/PHPStan/Rector/Artisan collapse to compact JSON (~20 tokens vs thousands) when run inside an AI agent. Install, verify, limits."
 risk: write
 persona: oss-dev
 tags: [php, laravel, testing, tokens, agent-output]
@@ -16,28 +16,22 @@ sha256: ""
 
 # Laravel PAO — Agent-Optimized Output
 
-## Контекст
+PAO (https://github.com/nunomaduro/pao) detects runs inside an AI agent (ENV: `CLAUDE_CODE`, `CURSOR_AGENT`, etc.) and replaces output with compact JSON (~20 tokens regardless of suite size). Human terminal sees normal output; only the agent env changes. Works with any PHP project (Laravel, Symfony, vanilla): PHPUnit, Pest, Paratest, PHPStan, Rector, Laravel Artisan.
 
-Полный вывод PHPUnit на большом прогоне — ~10 000 токенов, и он накапливается с каждой итерацией «правка → тест». PAO (https://github.com/nunomaduro/pao) детектирует запуск внутри AI-агента (ENV: `CLAUDE_CODE`, `CURSOR_AGENT` и др.) и заменяет вывод компактным JSON (~20 токенов независимо от размера сьюта). Человек в терминале видит обычный вывод — меняется только агентская среда.
+## Input
+- PHP ≥ 8.3 (hard package requirement).
+- Composer project; activates via autoloader — no config needed.
 
-Работает с любым PHP-проектом (Laravel, Symfony, vanilla): PHPUnit, Pest, Paratest, PHPStan, Rector, Laravel Artisan.
-
-## Входные данные
-
-- PHP ≥ 8.3 (жёсткое требование пакета).
-- Composer-проект; активация через autoloader — конфиг не нужен.
-
-## Алгоритм
-
-1. Проверь версию PHP: `php -v` (≥ 8.3, иначе PAO не ставить).
+## Steps
+1. Check PHP version: `php -v` (≥ 8.3, else do NOT install PAO).
 2. `composer require laravel/pao --dev`
-3. Проверь: запусти тесты из агентской сессии — вывод должен стать JSON:
+3. Verify: run tests from an agent session — output must become JSON:
 
 ```json
 {"result": "passed", "tests": 1002, "passed": 1002, "failed": 0, "duration_ms": 321}
 ```
 
-При падении PAO сохраняет всё нужное для исправления — файл, строку, сообщение:
+On failure PAO keeps everything needed to fix — file, line, message:
 
 ```json
 {
@@ -49,21 +43,22 @@ sha256: ""
 }
 ```
 
-4. Если вывод не сжался — проверь, что инструмент запущен через composer/vendor/bin (не через глобальный бинарь) и что ENV агента присутствует (`env | grep CLAUDE`).
+4. If output not collapsed — verify tool ran via composer/vendor/bin (not global binary) and agent ENV present (`env | grep CLAUDE`).
 
-## Чеклист качества
+## Quality checklist
+- [ ] PHP ≥ 8.3 confirmed before install
+- [ ] Agent test run returns JSON; terminal run returns normal output
+- [ ] waaseyaa/agent-output NOT installed in parallel (duplicate output wrappers)
 
-- [ ] PHP ≥ 8.3 подтверждён до установки
-- [ ] Тестовый прогон из агента возвращает JSON, из терминала — обычный вывод
-- [ ] Не установлен параллельно waaseyaa/agent-output (дублирование обёрток вывода)
+## Limits
+- Custom `bin/check-*` scripts NOT covered by PAO — for those use waaseyaa/agent-output (NDJSON, −94.7%): https://jonesrussell.github.io/blog/agent-output-php-ci-tools/. Not adopted as a registry standard — PAO covers the main stack.
 
-## Ограничения
-
-- Кастомные `bin/check-*` скрипты PAO не покрывает — для них есть waaseyaa/agent-output (NDJSON, −94.7%): https://jonesrussell.github.io/blog/agent-output-php-ci-tools/. Как стандарт реестра не внедряется — PAO покрывает основной стек.
-
-## Ссылки
-
+## Links
 - https://github.com/nunomaduro/pao
 - https://laravel.com/blog/introducing-laravel-pao-cleaner-output-for-ai-agents
 - https://laravel-news.com/pao-agent-optimized-output-for-php-testing-tools
-- Связанные скиллы: `php/laravel-testing` (PHPUnit/Pest, вывод которых сжимает PAO), `php/static-analysis` (PHPStan/Rector — тоже под обёрткой PAO), `general/context-economy` (общая экономия контекста агента)
+- Related skills: `php/laravel-testing` (PHPUnit/Pest, output collapsed by PAO), `php/static-analysis` (PHPStan/Rector — also under PAO wrapper), `general/context-economy` (general agent context economy)
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: 9afab66381bfa495fbed122cf266bf5ddd2b93a6e8badf8e4692f2ee4684034f -->

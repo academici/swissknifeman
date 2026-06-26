@@ -2,7 +2,7 @@
 name: dependency-injection
 bucket: php
 version: 0.1.0
-description: "Взаимодействие слоёв через constructor injection: final readonly + promotion, матрица инъекций, композиция Actions"
+description: "Layer interaction via constructor injection: final readonly + promotion, injection matrix, Action composition"
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "di", "architecture"]
@@ -14,11 +14,11 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-## Контекст
+## Context
 
-Система взаимодействия кода в Laravel-приложении: **constructor injection — единственный канал зависимостей доменного кода**. Конструктор объявляет коллабораторов (сервисы, репозитории, другие Actions), параметры метода несут данные (модели, DTO, примитивы). Контейнер Laravel резолвит конкретные классы zero-config — биндинги в провайдере по умолчанию не нужны.
+Laravel: **constructor injection = the only dependency channel for domain code**. Constructor declares collaborators (services, repositories, other Actions); method params carry data (models, DTOs, primitives). Laravel container resolves concrete classes zero-config — no provider bindings by default.
 
-Канон класса с зависимостями:
+Class canon:
 
 ```php
 final readonly class StoreAction
@@ -29,68 +29,66 @@ final readonly class StoreAction
 }
 ```
 
-`final readonly` + **promoted properties**. Эталонный проект местами пишет отдельные свойства с `private readonly` в обычном классе — канон упрощает: promotion в конструкторе, `readonly` на уровне класса.
+`final readonly` + **promoted properties**, empty constructor body.
 
-## Алгоритм
+## Algorithm
 
-### 1. Определи слой и сверь направление инъекции
+### 1. Identify layer, check injection direction
+Open `di-matrix.md`, verify dependency allowed for layer: Controller → Action; Action → Service / Repository / other Actions; Service → Repository / Service; Repository → only narrow filter-services; Policy → read-only services. **Nobody injects Controller or Request.** Wrong direction → rethink class boundary, not "add a binding".
 
-Открой `di-matrix.md` и проверь, что зависимость разрешена для слоя: Controller → Action; Action → Service / Repository / другие Actions; Service → Repository / Service; Repository → только узкие сервисы-фильтры; Policy → read-only сервисы. **Никто не инжектит Controller или Request.** Нарушение направления — не «добавить биндинг», а пересмотреть границу классов.
+### 2. Declare deps in constructor
+- `final readonly class` + promoted `private` props, no constructor body.
+- Concrete classes only. Interface + bind only on real implementation variance (drivers, external integrations, swapping a complex dep in tests) — see `provider-bindings.php`.
+- Data (Document, DTO, flags) → `execute()`/method params, not constructor.
 
-### 2. Объяви зависимости в конструкторе
+### 3. Pick form by scenario
+- One write step → Action with 1-2 deps, Command DTO, `DB::transaction` (`action-di.php`).
+- Coordinate several repos/services → orchestrator service without its own transaction (`service-orchestrator.php`).
+- Multi-step scenario → **composite Action** injecting atomic Actions, one `execute()`, one outer transaction (`composite-action.php`). No "use-case Service".
+- Call from HTTP → thin controller: Action via method injection in the action-method (one method needs it) or constructor (several) (`controller-action.php`).
 
-- `final readonly class` + promoted `private`-свойства, без тела конструктора.
-- Только конкретные классы. Интерфейс + bind — лишь при реальной вариативности реализаций (драйверы, внешние интеграции, подмена сложной зависимости в тестах) — см. `provider-bindings.php`.
-- Данные (Document, DTO, флаги) — параметрами `execute()`/метода, не в конструктор.
+### 4. Collaborators vs infrastructure
+Inject what has logic and gets swapped in tests. Infra statics allowed as-is: `DB::transaction`, `Event::dispatch` / `SomethingChanged::dispatch`, `Gate`. Forbidden: `app()` / `resolve()` / facade resolution of **dependencies** in domain code (hidden dep, untestable).
 
-### 3. Выбери форму по сценарию
+### 5. Validate business rules
+Business-rule violation in Action → `ValidationException::withMessages([...])`, not `abort()`. Checks before opening transaction where possible.
 
-- Один шаг записи → Action с 1-2 зависимостями, Command DTO, `DB::transaction` (`action-di.php`).
-- Координация нескольких репозиториев/сервисов → сервис-оркестратор без своей транзакции (`service-orchestrator.php`).
-- Многошаговый сценарий → **composite Action**, инжектирующий атомарные Actions, один `execute()`, одна внешняя транзакция (`composite-action.php`). Не заводить «use-case Service».
-- Вызов из HTTP → тонкий контроллер: Action через method injection в экшен-метод (нужен одному методу) или constructor (нескольким) (`controller-action.php`).
+### 6. Bad-boundary signals
+- Circular dependency → extract a third class with shared logic.
+- 6+ constructor deps → class does too much, split.
+- Dependency needed by one method of ten → rethink class boundaries.
 
-### 4. Различай коллабораторов и инфраструктуру
+## Snippet map
 
-Инжектируется то, у чего есть своя логика и что подменяется в тестах. Инфраструктурные статики допустимы как есть: `DB::transaction`, `Event::dispatch` / `SomethingChanged::dispatch`, `Gate`. Запрещены `app()` / `resolve()` / фасадный резолв **зависимостей** в доменном коде — скрытая зависимость, нетестируемо.
-
-### 5. Валидируй бизнес-правила правильно
-
-Нарушение бизнес-правила в Action → `ValidationException::withMessages([...])`, не `abort()`. Проверки — до открытия транзакции, где возможно.
-
-### 6. Реагируй на сигналы плохих границ
-
-- Циклическая зависимость — выделяй третий класс с общей логикой.
-- 6+ зависимостей в конструкторе — класс делает слишком много, дели.
-- Зависимость нужна одному методу из десяти — пересмотри границы класса.
-
-## Когда какой сниппет открывать
-
-| Задача | Сниппет |
+| Task | Snippet |
 |:---|:---|
-| Новый Action: одна зависимость или StateMachine + репозиторий, валидация | `action-di.php` |
-| Сервис, координирующий несколько репозиториев/сервисов, события, broadcast | `service-orchestrator.php` |
-| Многошаговый сценарий из существующих Actions, одна транзакция | `composite-action.php` |
-| Как контроллер получает и вызывает Action, method vs constructor injection | `controller-action.php` |
-| Кажется, что нужен интерфейс/bind/контекстуальный биндинг | `provider-bindings.php` |
-| Проверка направления инъекции, разбор антипаттерна | `di-matrix.md` |
+| New Action: one dep, or StateMachine + repo, validation | `action-di.php` |
+| Service coordinating several repos/services, events, broadcast | `service-orchestrator.php` |
+| Multi-step scenario from existing Actions, one transaction | `composite-action.php` |
+| Controller obtaining and calling an Action, method vs constructor injection | `controller-action.php` |
+| Seems to need interface/bind/contextual binding | `provider-bindings.php` |
+| Check injection direction, antipattern breakdown | `di-matrix.md` |
 
-## Чеклист качества
+## Quality checklist
 
-- [ ] Класс с зависимостями — `final readonly`, promoted properties, пустое тело конструктора
-- [ ] В конструкторе только коллабораторы; данные — параметрами метода
-- [ ] Зависимости — конкретные классы; интерфейс только при реальной вариативности (и тогда bind в провайдере)
-- [ ] Направление инъекции разрешено матрицей слоёв; Request/Controller никуда не инжектятся
-- [ ] Нет `app()` / `resolve()` / фасадного резолва зависимостей в Action/Service/Repository
-- [ ] Многошаговый сценарий — composite Action с одной внешней транзакцией, не use-case Service
-- [ ] Бизнес-валидация в Action — `ValidationException`, не `abort()`
-- [ ] Конструктор ≤ 5 зависимостей; нет циклов; нет зависимостей «для одного метода»
-- [ ] PHP-сниппеты проходят `php -l`
+- [ ] Class with deps — `final readonly`, promoted properties, empty constructor body
+- [ ] Constructor holds only collaborators; data via method params
+- [ ] Deps are concrete classes; interface only on real variance (then bind in provider)
+- [ ] Injection direction allowed by layer matrix; Request/Controller never injected
+- [ ] No `app()` / `resolve()` / facade dependency resolution in Action/Service/Repository
+- [ ] Multi-step scenario — composite Action with one outer transaction, not use-case Service
+- [ ] Business validation in Action — `ValidationException`, not `abort()`
+- [ ] Constructor ≤ 5 deps; no cycles; no "one-method" deps
+- [ ] PHP snippets pass `php -l`
 
-## Ссылки
+## Links
 
-- `php/laravel-structure` — где живут Actions/Services/Repositories, правила размещения файлов.
-- `php/repositories` — что разрешено инжектить репозиториям и как они устроены внутри.
-- `php/laravel` → `layer-boundaries.md` — границы слоёв и направления вызовов; `actions.md` — анатомия Action и Command DTO.
-- `php/named-arguments` — конструкторы и method injection с именованными аргументами.
-- `php/php-patterns` — VO/DTO/pipeline, собираемые через инъекцию.
+- `php/laravel-structure` — where Actions/Services/Repositories live, file placement rules.
+- `php/repositories` — what repositories may inject, their internals.
+- `php/laravel` → `layer-boundaries.md` — layer boundaries and call directions; `actions.md` — Action anatomy and Command DTO.
+- `php/named-arguments` — constructors and method injection with named arguments.
+- `php/php-patterns` — VO/DTO/pipeline assembled via injection.
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: 506f411b383f884e8829644559eef0a406b9dbab12053e9b5cb7341db636eba1 -->

@@ -2,7 +2,7 @@
 name: product-roadmap
 bucket: pm
 version: 0.1.0
-description: MVP definition, Impact/Effort приоритизация, фазы MVP → v1 → v2 → Backlog, метрики перехода
+description: MVP definition, Impact/Effort prioritization, MVP → v1 → v2 → Backlog phases, phase-transition metrics
 risk: draft
 persona: pm
 tags: [requirements, gtm, market]
@@ -15,24 +15,16 @@ adapters: [claude, cursor, fable]
 
 # Skill: Product Roadmap
 
-Применять когда: задача на roadmap, MVP, фазы продукта, приоритизация фич, scope v1/v2.
+Apply when: task is roadmap, MVP, product phases, feature prioritization, v1/v2 scope.
 
----
+Principle: Roadmap = strategic bets in chronology, not a wishlist. MVP = minimum at which the user gets value (not "minimum work for the team").
 
-## Принцип
+## Step 1. MVP Definition
 
-Roadmap ≠ список всего что хочется. Roadmap = стратегические ставки в хронологии.
-MVP = минимум, при котором пользователь получает ценность. Не "минимум работы для команды".
-
----
-
-## Шаг 1. MVP Definition
-
-Ответить на три вопроса:
-
-1. **Кто** получает ценность от MVP? (конкретный ICP из `[[Go_To_Market]]`)
-2. **Какую ценность** — один конкретный job-to-be-done
-3. **Как будем знать, что MVP работает?** — метрика успеха
+Answer three questions:
+1. **Who** gets value from MVP? (specific ICP from `[[Go_To_Market]]`)
+2. **What value** — one specific job-to-be-done
+3. **How will we know MVP works?** — success metric
 
 ```markdown
 ## MVP Definition
@@ -44,15 +36,11 @@ MVP = минимум, при котором пользователь получ�
 **Out of scope MVP:** [Что явно не входит в MVP]
 ```
 
----
+## Step 1.5. Scope guard: feature-amendment criteria
 
-## Шаг 1.5. Scope guard: feature-amendment criteria
-
-В эпоху agentic coding исчез традиционный forcing function против scope creep — стоимость engineering time. Фича теперь стоит afternoon вместо sprint, поэтому **zero-friction scope creep**: каждое добавление по отдельности защитимо, но продукт расползается за границы → потеря direction и momentum.
-
-Антидот — **scope document до первой строки кода**, сдвигающий decision point:
-- ❌ «Стоит ли это добавить?» (на это всегда «ну да, полезно»)
-- ✅ «Критическая масса реальных пользователей сказала, что не получает ценности без этого?»
+Agentic coding removed the traditional anti-scope-creep forcing function (engineering cost); feature now costs an afternoon → zero-friction scope creep. Antidote: scope document before first line of code, shifting the decision point:
+- ❌ "Should we add this?" (answer is always "sure, useful")
+- ✅ "Has a critical mass of real users said they get no value without it?"
 
 ```markdown
 ## Scope guard
@@ -62,13 +50,11 @@ MVP = минимум, при котором пользователь получ�
   (конкретное доказательство от реальных пользователей, не founder-энтузиазм под видом product thinking)
 ```
 
-Когда всплывает новая идея фичи — прогнать через критерий: это genuine signal от юзеров или энтузиазм? `adversarial-check` помогает отличить.
+When a new feature idea surfaces — run it through the criterion: genuine user signal or enthusiasm? Use `adversarial-check` to distinguish.
 
----
+## Step 2. Feature prioritization
 
-## Шаг 2. Приоритизация фич
-
-Использовать матрицу Impact/Effort:
+Impact/Effort matrix:
 
 | Фича | Impact (1-5) | Effort (1-5) | Ratio | Фаза |
 |:---|:---|:---|:---|:---|
@@ -77,11 +63,9 @@ MVP = минимум, при котором пользователь получ�
 | [Фича C] | 3 | 4 | 0.75 | 🔜 v1 |
 | [Фича D] | 2 | 5 | 0.4 | ❌ Backlog |
 
-**Правило:** MVP = всё с Ratio ≥ 2 и Impact ≥ 4.
+**Rule:** MVP = everything with Ratio ≥ 2 and Impact ≥ 4.
 
----
-
-## Шаг 3. Фазы
+## Step 3. Phases
 
 ```markdown
 ## MVP (0 → первый платящий пользователь)
@@ -115,40 +99,36 @@ MVP = минимум, при котором пользователь получ�
 - [Всё остальное]
 ```
 
----
+## Document format
 
-## Формат в документе
+Place in `docs/01_Business/07_Product_Roadmap.md`
 
-Размещать в `docs/01_Business/07_Product_Roadmap.md`
+## Agent adds proactively
 
----
+- "Quick wins" — high-impact, minimal-effort features the user didn't mention
+- Explicit warning if MVP too big: "This isn't MVP, it's v1. MVP is [less]"
+- Link to `[[Risk Register]]` — if a phase depends on an external factor
+- Phase-transition metrics (when to consider a phase done)
 
-## Что агент добавляет сам
+## Hard prohibitions
 
-- "Quick wins" — фичи с высоким impact и минимальными усилиями, которые пользователь не упомянул
-- Явное предупреждение если MVP слишком большой: "Это не MVP, это v1. MVP — это [меньше]"
-- Связь с `[[Risk Register]]` — если фаза зависит от внешнего фактора
-- Метрики перехода между фазами (когда считать фазу выполненной)
+NEVER:
+- Roadmap without a success metric for each phase
+- "Build everything first, then launch" — launch with MVP, iterate fast
+- Features without justification (why, for whom, what it improves)
+- Work on retention AND growth simultaneously — strictly sequential
 
----
+## Related skills
 
-## Жёсткие запреты
+- `pm/brd` — input: functional requirements from which MVP features are selected (required BEFORE roadmap).
+- `pm/go-to-market` — source of ICP for MVP Definition and phase-transition metrics (required BEFORE roadmap).
+- `pm/prd-from-brd` — RICE prioritization and story versions feed the phase breakdown.
+- `pm/unit-economics` — phase-transition metrics (retention, CAC, LTV) at phase boundaries verified from here.
+- `pm/pmf-diagnostics` — refines MVP-exit: MVP→v1 transition metric = genuine PMF (Sean Ellis, retention), not just "first paying".
+- `founder/startup-lifecycle` — frame: MVP scope guard and phase gates = mechanics of Idea→MVP→Launch transition.
+- `founder/adversarial-check` — feature-amendment filter: genuine signal vs founder enthusiasm.
+- `founder/risk-assessment` — `[[Risk Register]]`: if a phase depends on an external risk, link explicitly.
 
-НЕЛЬЗЯ:
-- Roadmap без метрики успеха для каждой фазы
-- "Сначала сделаем всё, потом запустим" — запуск с MVP, итерации быстро
-- Фичи без обоснования (зачем, для кого, что улучшает)
-- Одновременно работать над retention И growth — строго последовательно
+<!-- ru-source-sha256: PENDING -->
 
----
-
-## Связанные скиллы
-
-- `pm/brd` — вход: функциональные требования, из которых отбираются фичи MVP (требуется ДО roadmap).
-- `pm/go-to-market` — источник ICP для MVP Definition и метрик перехода между фазами (требуется ДО roadmap).
-- `pm/prd-from-brd` — RICE-приоритизация и версии stories питают разбивку по фазам.
-- `pm/unit-economics` — метрики перехода (retention, CAC, LTV) на границах фаз сверять отсюда.
-- `pm/pmf-diagnostics` — уточняет MVP-exit: метрика перехода MVP→v1 = genuine PMF (Sean Ellis, retention), не просто «первый платящий».
-- `founder/startup-lifecycle` — рамка: MVP scope guard и фазовые ворота = механика Idea→MVP→Launch перехода.
-- `founder/adversarial-check` — фильтр feature-amendment: genuine signal vs founder enthusiasm.
-- `founder/risk-assessment` — `[[Risk Register]]`: если фаза зависит от внешнего риска, связать явно.
+<!-- ru-source-sha256: 82d9416165c7afeefc9eadc231b0fb94da658003333b194e50cc68e440cc3067 -->

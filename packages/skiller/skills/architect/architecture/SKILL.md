@@ -2,7 +2,7 @@
 name: architecture
 bucket: architect
 version: 0.1.0
-description: Архитектура системы, выбор стека, ADR, C4-диаграммы, deployment, scalability
+description: System architecture, stack choice, ADR, C4 diagrams, deployment, scalability
 risk: draft
 persona: architect
 tags: [architecture, adr, c4, scalability, deployment]
@@ -15,146 +15,132 @@ adapters: [claude, cursor, fable]
 
 # Skill: Architecture Design
 
-Применять когда: задача на архитектуру, выбор стека, ADR, техническое проектирование.
+Apply when: task on architecture, stack choice, ADR, technical design.
 
----
+## Precondition
 
-## Предусловие
+Write architecture ONLY after approved BRD. No BRD → first read `.ai/skills/pm/brd.md`.
 
-Архитектура пишется **только после утверждённого BRD**. Если BRD нет — сначала прочитать `.ai/skills/pm/brd.md`.
-
----
-
-## Формат архитектурного документа
+## Architecture doc format
 
 ```
-1. Контекст и ограничения (из BRD)
-2. Рассмотренные варианты (минимум 2–3)
-   - Вариант A: [название]
-     - Плюсы: ...
-     - Минусы: ...
-     - Стоимость / сложность: ...
-   - Вариант B: ...
-3. Выбранное решение + аргументация
-   - Почему именно это, а не остальные
-   - Какие риски принимаем осознанно
-4. Компонентная схема (Mermaid)
-5. Интеграции и внешние зависимости
-6. ADR-записи для нетривиальных решений → `docs/03_Dev/ADR/`
+1. Context & constraints (from BRD)
+2. Options considered (min 2–3)
+   - Option A: [name]
+     - Pros: ...
+     - Cons: ...
+     - Cost / complexity: ...
+   - Option B: ...
+3. Chosen solution + rationale
+   - Why this one, not the others
+   - Which risks we accept consciously
+4. Component diagram (Mermaid)
+5. Integrations & external dependencies
+6. ADR records for non-trivial decisions → `docs/03_Dev/ADR/`
 ```
 
----
+## Rationale rule
 
-## Правило обоснования
-
-Каждое архитектурное решение содержит:
-- **Что выбрано**
-- **Почему** (через бизнес-логику, не просто "это популярно")
-- **Что отклонено и почему**
-
----
+Each architectural decision contains:
+- **What chosen**
+- **Why** (via business logic, not just "it's popular")
+- **What rejected and why**
 
 ## ADR (Architecture Decision Record)
 
-Создавать ADR в `docs/03_Dev/ADR/ADR-NNN_название.md` когда:
-- Решение нетривиально и может быть оспорено
-- Есть реальные альтернативы с похожими trade-off
-- Решение влияет на несколько компонентов
+Create ADR in `docs/03_Dev/ADR/ADR-NNN_name.md` when:
+- Decision is non-trivial and can be contested
+- Real alternatives with similar trade-offs exist
+- Decision affects multiple components
 
-Формат ADR:
+ADR format:
 ```
-## Контекст
-## Решение
-## Альтернативы
-## Последствия
+## Context
+## Decision
+## Alternatives
+## Consequences
 ```
 
----
+## Cross-project check
 
-## Межпроектная проверка
+Before designing, check `02 - Knowledge/` and vault map:
+- Similar architecture in another project → reuse pattern
+- Reference in `95 - References/` → link via `[[file]]`
 
-Перед проектированием проверить `02 - Knowledge/` и карту vault:
-- Есть ли аналогичная архитектура в другом проекте → переиспользовать паттерн
-- Есть ли референс в `95 - References/` → связать через `[[файл]]`
+## Full architecture doc template
 
----
-
-## Полный шаблон архитектурного документа
-
-Создавать в `docs/03_Dev/Architecture_[Name].md`:
+Create in `docs/03_Dev/Architecture_[Name].md`:
 
 ```markdown
-# Architecture: [ProjectName] — [компонент/контекст]
+# Architecture: [ProjectName] — [component/context]
 
-## 1. Контекст и ограничения
-[Из BRD: цель, актёры, ключевые нефункциональные требования]
-- Нагрузка: [RPS / DAU]
-- Latency SLO: [мс для p95]
-- Доступность: [% uptime]
-- Бюджет: [infra cost target]
+## 1. Context & constraints
+[From BRD: goal, actors, key non-functional requirements]
+- Load: [RPS / DAU]
+- Latency SLO: [ms for p95]
+- Availability: [% uptime]
+- Budget: [infra cost target]
 
-## 2. Рассмотренные варианты
+## 2. Options considered
 
-### Вариант A: [название]
-- Плюсы: ...
-- Минусы: ...
-- Сложность: [Low / Medium / High]
+### Option A: [name]
+- Pros: ...
+- Cons: ...
+- Complexity: [Low / Medium / High]
 
-### Вариант B: [название]
+### Option B: [name]
 - ...
 
-## 3. Выбранное решение
-[Что выбрано и почему — через бизнес-логику, не "это популярно"]
-Риски, которые принимаем осознанно: ...
+## 3. Chosen solution
+[What chosen and why — via business logic, not "it's popular"]
+Risks accepted consciously: ...
 
-## 4. Компонентная схема (Mermaid)
-[C4 Level 2 — контейнеры]
+## 4. Component diagram (Mermaid)
+[C4 Level 2 — containers]
 
 ## 5. Deployment Architecture
-[Где запускается: cloud/VPS, контейнеры, serverless, регион]
-[Infra схема: LB → App → DB → Cache → Queue]
+[Where it runs: cloud/VPS, containers, serverless, region]
+[Infra diagram: LB → App → DB → Cache → Queue]
 
-## 6. Интеграции и внешние зависимости
-| Система | Назначение | Тип интеграции | SLA зависимости |
+## 6. Integrations & external dependencies
+| System | Purpose | Integration type | Dependency SLA |
 |:---|:---|:---|:---|
-| [Название] | [зачем] | REST/webhook/SDK | [uptime] |
+| [Name] | [why] | REST/webhook/SDK | [uptime] |
 
 ## 7. Scalability
-- [ ] Stateless app-серверы? (горизонтальный scale)
-- [ ] Bottleneck определён? (DB / external API / computation)
-- [ ] Caching стратегия? (что кешируем, TTL, invalidation)
-- [ ] Async для долгих операций? (queue / background jobs)
+- [ ] Stateless app servers? (horizontal scale)
+- [ ] Bottleneck identified? (DB / external API / computation)
+- [ ] Caching strategy? (what we cache, TTL, invalidation)
+- [ ] Async for long operations? (queue / background jobs)
 
 ## 8. ADR
-[Ссылки на записи в docs/03_Dev/ADR/]
+[Links to records in docs/03_Dev/ADR/]
 ```
-
----
 
 ## Security Gate
 
-**Если продукт работает с пользовательскими данными, финансами или сторонними интеграциями** → читать `.ai/skills/architect/security-design.md` параллельно с этим скиллом. Результат — `docs/03_Dev/Security_Design.md`.
+**If product handles user data, finances or third-party integrations** → read `.ai/skills/architect/security-design.md` in parallel with this skill. Output — `docs/03_Dev/Security_Design.md`.
 
----
+## Hard prohibitions
 
-## Жёсткие запреты
+FORBIDDEN:
+- Design architecture without approved BRD
+- Choose technology without comparing min 2 options
+- Leave SLO/load undefined ("figure out later")
+- Create architecture doc without Mermaid diagram
+- Skip Security Gate for products with PII
 
-НЕЛЬЗЯ:
-- Проектировать архитектуру без утверждённого BRD
-- Выбирать технологию без сравнения минимум 2 вариантов
-- Оставлять SLO/нагрузку неопределёнными ("потом разберёмся")
-- Создавать архитектурный документ без Mermaid-схемы
-- Пропускать Security Gate для продуктов с PII
+## Related skills
 
----
+- `pm/brd` — approved BRD as mandatory precondition.
+- `architect/tech-stack-selection` — stack choice with trade-off matrix goes BEFORE this skill.
+- `architect/data-schema`, `architect/api-design` — data & contract detailing after architecture.
+- `architect/security-design` — Security Gate, run in parallel for products with PII/money.
+- `architect/observability-design` — prod observability (SLO/SLI/runbooks) on top of approved architecture.
+- `architect/agent-design` — Agent Design section for products with agents.
+- `architect/legal-compliance` — regulatory checklist based on architecture (where data is stored).
+- `php/laravel-structure`, `php/modular-architecture` — implementing architecture in concrete Laravel code.
 
-## Связанные скиллы
+<!-- ru-source-sha256: PENDING -->
 
-- `pm/brd` — утверждённый BRD как обязательное предусловие.
-- `architect/tech-stack-selection` — выбор стека с trade-off матрицей идёт ДО этого скилла.
-- `architect/data-schema`, `architect/api-design` — детализация данных и контрактов после архитектуры.
-- `architect/security-design` — Security Gate, запускать параллельно для продуктов с PII/деньгами.
-- `architect/observability-design` — прод-наблюдаемость (SLO/SLI/runbooks) поверх утверждённой архитектуры.
-- `architect/agent-design` — секция Agent Design для продуктов с агентами.
-- `architect/legal-compliance` — регуляторный чеклист на основе архитектуры (где хранятся данные).
-- `php/laravel-structure`, `php/modular-architecture` — реализация архитектуры в конкретном Laravel-коде.
+<!-- ru-source-sha256: 4b71048c1a836e7456dab8af6db8b6c3218e03d1821e3bdffefc072cbf1cd533 -->

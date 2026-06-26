@@ -2,7 +2,7 @@
 name: skills-ssot
 bucket: general
 version: 0.1.0
-description: "Единый источник истины скиллов для нескольких AI-агентов: .ai/skills + симлинки, gitignore, цикл обновления"
+description: "Single source of truth for skills across multiple AI agents: .ai/skills + symlinks, gitignore, update cycle"
 risk: write
 persona: oss-dev
 tags: [ai-context, skills, ssot, workflow, conventions, ai]
@@ -14,108 +14,106 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-# Skills SSOT — единый источник истины скиллов
+# Skills SSOT — single source of truth for skills
 
-## Контекст
+One source: `.ai/skills/` (+ `.ai/guidelines/` for permanent rules). Everything else = generated symlinks/copies, listed in `.gitignore`.
 
-Когда в проекте работают несколько AI-агентов (Claude Code, Cursor, прочие), у каждого свой каталог скиллов: `.claude/skills/`, `.cursor/skills/` и т.д. Если вести их независимо, правила расползаются по копиям и начинают противоречить друг другу. Решение: **один источник** — `.ai/skills/` (плюс `.ai/guidelines/` для постоянных правил), всё остальное — генерируемые симлинки/копии, перечисленные в `.gitignore`.
-
-### Схема
+## Layout
 
 ```text
 .ai/
-  guidelines/                  # постоянные правила (коммитится)
-  skills/<name>/SKILL.md       # источник скиллов проекта (коммитится)
-.agents/skills/<name>/         # внешние vendor-скиллы (коммитятся)
-skills-lock.json               # source + hash vendor-скиллов (коммитится)
-boost.json                     # конфиг генерации Laravel Boost (коммитится)
-.claude/skills/<name> -> ../../.ai/skills/<name>   # генерируется, в .gitignore
-.cursor/skills/<name> -> ../../.ai/skills/<name>   # генерируется, в .gitignore
-CLAUDE.md / AGENTS.md / GEMINI.md                  # генерируются, в .gitignore
+  guidelines/                  # permanent rules (committed)
+  skills/<name>/SKILL.md       # project skills source (committed)
+.agents/skills/<name>/         # external vendor skills (committed)
+skills-lock.json               # source + hash of vendor skills (committed)
+boost.json                     # Laravel Boost generation config (committed)
+.claude/skills/<name> -> ../../.ai/skills/<name>   # generated, in .gitignore
+.cursor/skills/<name> -> ../../.ai/skills/<name>   # generated, in .gitignore
+CLAUDE.md / AGENTS.md / GEMINI.md                  # generated, in .gitignore
 ```
 
-Кто генерирует:
+Generators:
+- **Laravel Boost present**: `boost.json` = config (agents, guidelines, mcp, packages, skills); `php artisan boost:update` = generator; it also regenerates `CLAUDE.md`/`AGENTS.md` → they are generated and ignored.
+- **No Boost**: snippet `symlink-sync.sh` — idempotent generation of symlinks from `.ai/skills/` into `.claude/skills/` and `.cursor/skills/`.
 
-- **Есть Laravel Boost**: `boost.json` — конфиг (agents, guidelines, mcp, packages, skills), `php artisan boost:update` — генератор; он же пересоздаёт `CLAUDE.md`/`AGENTS.md`, поэтому они тоже генерируемые и игнорируются.
-- **Boost нет**: сниппет `symlink-sync.sh` — идемпотентная генерация симлинков из `.ai/skills/` в `.claude/skills/` и `.cursor/skills/`.
+## Committed
 
-### Что коммитится
-
-| Путь | Зачем |
+| Path | Why |
 |---|---|
-| `.ai/guidelines/*.md` | постоянные правила проекта |
-| `.ai/skills/*/SKILL.md` | источник скиллов |
-| `.agents/skills/*` | внешние vendor-скиллы (после ревью) |
-| `skills-lock.json` | фиксация source/hash vendor-скиллов |
-| `boost.json` | конфиг генерации (если используется Boost) |
-| `scripts/symlink-sync.sh` | генератор симлинков (если Boost нет) |
+| `.ai/guidelines/*.md` | permanent project rules |
+| `.ai/skills/*/SKILL.md` | skills source |
+| `.agents/skills/*` | external vendor skills (after review) |
+| `skills-lock.json` | pin source/hash of vendor skills |
+| `boost.json` | generation config (if Boost used) |
+| `scripts/symlink-sync.sh` | symlink generator (if no Boost) |
 
-### Что в .gitignore
+## In .gitignore
 
-| Путь | Почему |
+| Path | Why |
 |---|---|
-| `/CLAUDE.md`, `/AGENTS.md`, `/GEMINI.md` | генерируются из `.ai/` |
-| `/.claude/settings.json` | локальные настройки агента |
-| `/.claude/skills/` | симлинки/копии, восстанавливаются генератором |
-| `/.cursor/skills/` | симлинки/копии, восстанавливаются генератором |
+| `/CLAUDE.md`, `/AGENTS.md`, `/GEMINI.md` | generated from `.ai/` |
+| `/.claude/settings.json` | local agent settings |
+| `/.claude/skills/` | symlinks/copies, restored by generator |
+| `/.cursor/skills/` | symlinks/copies, restored by generator |
 
-### Цикл обновления
+## Update cycle
 
-1. Правки **только** в `.ai/skills/` и `.ai/guidelines/` (и `boost.json`, если меняется состав).
-2. Regen: `php artisan boost:update` (Boost) или `scripts/symlink-sync.sh` (без Boost).
-3. Коммит источников: `.ai/*`, `boost.json`, `skills-lock.json`.
+1. Edit **only** `.ai/skills/` and `.ai/guidelines/` (and `boost.json` if composition changes).
+2. Regen: `php artisan boost:update` (Boost) or `scripts/symlink-sync.sh` (no Boost).
+3. Commit sources: `.ai/*`, `boost.json`, `skills-lock.json`.
 
-**Запрещено** редактировать руками `CLAUDE.md`, `AGENTS.md`, содержимое `.claude/skills/` — правки сотрёт следующая генерация.
+**Forbidden** to hand-edit `CLAUDE.md`, `AGENTS.md`, contents of `.claude/skills/` — next generation wipes edits.
 
-### Интеграция со swissknifeman
+## swissknifeman integration
 
-- **Claude Code** — через нативный plugin marketplace: `scripts/connect-claude.sh`; скиллы реестра **не копируются** в проект и не попадают в `.ai/skills/`.
-- **Остальные агенты** — `./install.sh --agent generic --target <project>` ставит выбранные бакеты в `.ai/skills/`, дальше обычный regen (`symlink-sync.sh` или `boost:update`).
-- **Корневой хаб** генерируется `scripts/generate-hub.sh`; в Boost-проектах хаб подключается через `.ai/guidelines/swissknifeman-hub.md`, чтобы пережить регенерацию `CLAUDE.md`.
+- **Claude Code** — native plugin marketplace: `scripts/connect-claude.sh`; registry skills are **not copied** into project, not placed in `.ai/skills/`.
+- **Other agents** — `./install.sh --agent generic --target <project>` installs selected buckets into `.ai/skills/`, then normal regen (`symlink-sync.sh` or `boost:update`).
+- **Root hub** generated by `scripts/generate-hub.sh`; in Boost projects the hub is attached via `.ai/guidelines/swissknifeman-hub.md` to survive `CLAUDE.md` regeneration.
 
-## Алгоритм (внедрение с нуля)
+## Algorithm (from scratch)
 
-1. Создать `.ai/skills/` и `.ai/guidelines/`; перенести в `.ai/skills/` существующие скиллы из каталогов агентов (один каталог `<name>/SKILL.md` на скилл, дубликаты слить).
-2. Добавить в `.gitignore` блок из сниппета `gitignore-ai.txt`; убрать уже закоммиченные генерируемые файлы из индекса: `git rm -r --cached CLAUDE.md AGENTS.md .claude/skills .cursor/skills` (что есть по факту).
-3. Внешние vendor-скиллы положить в `.agents/skills/` и зафиксировать в `skills-lock.json` (`npx skills add <owner/repo@skill>`, `npx skills check`) — см. `skills-lock.example.json`.
-4. Если проект на Laravel Boost — заполнить `boost.json` (см. `boost-json.example`: каждый скилл из `.ai/skills/` должен быть в массиве `skills`) и выполнить `php artisan boost:update`. Иначе — положить `symlink-sync.sh` в `scripts/` и запустить.
-5. Проверить результат: `ls -la .claude/skills/` — симлинки ведут в `../../.ai/skills/*`, битых нет, реальные каталоги остались только у vendor-копий.
-6. Подключить swissknifeman: для Claude Code — `connect-claude.sh`; для остальных — `install.sh --agent generic`, затем повторный regen из шага 4.
-7. Закоммитить источники (`.ai/`, `.agents/skills/`, `skills-lock.json`, `boost.json`, `.gitignore`, `scripts/symlink-sync.sh`); сгенерированное не коммитить.
+1. Create `.ai/skills/` and `.ai/guidelines/`; move existing skills from agent dirs into `.ai/skills/` (one `<name>/SKILL.md` dir per skill, merge duplicates).
+2. Add `.gitignore` block from snippet `gitignore-ai.txt`; un-stage already-committed generated files: `git rm -r --cached CLAUDE.md AGENTS.md .claude/skills .cursor/skills` (whatever actually exists).
+3. Put external vendor skills in `.agents/skills/` and pin in `skills-lock.json` (`npx skills add <owner/repo@skill>`, `npx skills check`) — see `skills-lock.example.json`.
+4. Laravel Boost project → fill `boost.json` (see `boost-json.example`: every skill from `.ai/skills/` must be in the `skills` array) and run `php artisan boost:update`. Else → put `symlink-sync.sh` in `scripts/` and run it.
+5. Verify: `ls -la .claude/skills/` — symlinks point to `../../.ai/skills/*`, none broken, real dirs remain only for vendor copies.
+6. Connect swissknifeman: Claude Code → `connect-claude.sh`; others → `install.sh --agent generic`, then re-run regen from step 4.
+7. Commit sources (`.ai/`, `.agents/skills/`, `skills-lock.json`, `boost.json`, `.gitignore`, `scripts/symlink-sync.sh`); do not commit generated.
 
-## Когда какой сниппет открывать
+## Which snippet
 
-| Ситуация | Сниппет |
+| Situation | Snippet |
 |---|---|
-| Настраиваете `.gitignore` под SSOT | `gitignore-ai.txt` |
-| Проект без Laravel Boost — нужны симлинки агентов | `symlink-sync.sh` |
-| Проект на Laravel Boost — настройка генерации | `boost-json.example` |
-| Подключаете внешний vendor-скилл с фиксацией хеша | `skills-lock.example.json` |
+| Configuring `.gitignore` for SSOT | `gitignore-ai.txt` |
+| No Laravel Boost — need agent symlinks | `symlink-sync.sh` |
+| Laravel Boost — generation setup | `boost-json.example` |
+| Connecting external vendor skill with hash pin | `skills-lock.example.json` |
 
-## Цикл правок AI-контекста (workflow)
+## AI-context edit cycle (workflow)
 
-Правило: меняем только **источники**, генерируемое — не трогаем руками.
+Rule: change only **sources**, never hand-edit generated.
 
-1. Правка идёт **только** в `.ai/guidelines/*` / `.ai/skills/*` / `boost.json` (или эквивалент стека).
-2. **Не править** сгенерированные `CLAUDE.md`/`AGENTS.md`/`GEMINI.md` в корне и игнорируемые копии —
-   они перезатрутся регенерацией.
-3. После правки — **регенерация**: на Laravel Boost `php artisan boost:update` (или `composer ai:sync`);
-   на других стеках — соответствующий sync/симлинк-скрипт.
-4. Сменилась архитектурная договорённость в коде → синхронно обнови доковую базу проекта (`docs/`)
-   и правила в `.ai/`, затем регенерация — иначе агенты разъедутся с репозиторием.
+1. Edit **only** `.ai/guidelines/*` / `.ai/skills/*` / `boost.json` (or stack equivalent).
+2. **Do not edit** generated `CLAUDE.md`/`AGENTS.md`/`GEMINI.md` in root and ignored copies — regen overwrites them.
+3. After edit — **regen**: Laravel Boost `php artisan boost:update` (or `composer ai:sync`); other stacks — matching sync/symlink script.
+4. Architectural convention changed in code → sync project docs (`docs/`) and `.ai/` rules together, then regen — else agents diverge from repo.
 
-## Чеклист качества
+## Quality checklist
 
-- [ ] Каждый скилл существует ровно в одном экземпляре — в `.ai/skills/`; в `.claude/skills/` и `.cursor/skills/` только симлинки (плюс vendor-копии из `.agents/skills/`).
-- [ ] `.gitignore` содержит блок генерируемых файлов; `git status` чист после regen.
-- [ ] У каждого `SKILL.md` заполнен `description` с реальными триггерами (классы, сценарии), а не абстракцией.
-- [ ] Все скиллы из `.ai/skills/` перечислены в `boost.json` → `skills` (если Boost используется).
-- [ ] Внешние скиллы зафиксированы в `skills-lock.json`; `npx skills check` проходит.
-- [ ] В PR с правками контекста — только источники, ни одного сгенерированного файла.
+- [ ] Each skill exists exactly once — in `.ai/skills/`; in `.claude/skills/` and `.cursor/skills/` only symlinks (plus vendor copies from `.agents/skills/`).
+- [ ] `.gitignore` contains generated-files block; `git status` clean after regen.
+- [ ] Every `SKILL.md` has `description` with real triggers (classes, scenarios), not abstraction.
+- [ ] All skills from `.ai/skills/` listed in `boost.json` → `skills` (if Boost used).
+- [ ] External skills pinned in `skills-lock.json`; `npx skills check` passes.
+- [ ] PR with context edits — sources only, zero generated files.
 
-## Ссылки
+## Links
 
-- `docs/routing.md` реестра — маршрутизация скиллов по бакетам и агентам.
-- `docs/boost-compatibility.md` реестра — совместимость скиллов реестра с Laravel Boost (пакет: https://github.com/laravel/boost, документация: https://laravel.com/docs/boost).
-- `references/ssot-source-layout.md` — детальное устройство `.ai/`: потоки данных, три слоя приоритета, guidelines vs skills, команды, частые ошибки.
-- `references/ssot-scenarios.md` — таблица «сценарий → скилл» для типовых задач агента.
+- registry `docs/routing.md` — skill routing by bucket and agent.
+- registry `docs/boost-compatibility.md` — registry-skill compatibility with Laravel Boost (package: https://github.com/laravel/boost, docs: https://laravel.com/docs/boost).
+- `references/ssot-source-layout.md` — detailed `.ai/` design: data flows, three priority layers, guidelines vs skills, commands, common errors.
+- `references/ssot-scenarios.md` — "scenario → skill" table for typical agent tasks.
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: 6b8d0347ee4d9197f7ad94512b21e52086c0fff1d738ff3c87b4663ed9e044f8 -->

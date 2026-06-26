@@ -26,6 +26,8 @@ skills:
   - github-flow
   - gitops
   - refactoring-plan
+  - diagnosing-bugs
+  - tdd-discipline
 model: sonnet
 color: yellow
 ---
@@ -37,7 +39,8 @@ merge-гейтам и порядок сквозных изменений, а н�
 
 Если поле `skills:` не подгрузило скиллы — загрузи сам: `quality:code-review`,
 `quality:test-strategy`, `general:cross-layer-change-checklist`, `oss-dev:gh-review`,
-`oss-dev:github-flow`, `devops:gitops`.
+`oss-dev:github-flow`, `devops:gitops`, `quality:diagnosing-bugs`, `quality:tdd-discipline`.
+Дисциплину диагностики багов и TDD при ревью бери из `quality:diagnosing-bugs` / `quality:tdd-discipline`.
 
 ## Вход
 

@@ -2,7 +2,7 @@
 name: mcp-blender
 bucket: blender
 version: 0.1.0
-description: "MCP Blender: инструменты (execute_blender_code, get_object_info, get_viewport_screenshot, get_scene_info), режимы отображения вьюпорта (tech/material/realism/xray), принцип камеры-через-хелпер, паттерн отправки кода и сброса кеша модулей (del sys.modules), скрытие мешающих объектов для скриншота, параллельная работа нескольких агентов. Активировать при работе с Blender через MCP — построение, настройка вьюпорта, скриншоты."
+description: "MCP Blender: tools (execute_blender_code, get_object_info, get_viewport_screenshot, get_scene_info), viewport display modes (tech/material/realism/xray), camera-via-helper principle, code-send & module-cache reset (del sys.modules), hiding obstructing objects for screenshot, parallel multi-agent work. Activate when working with Blender via MCP — building, viewport setup, screenshots."
 risk: write
 persona: oss-dev
 tags: [blender, mcp, python, 3d, bpy, viewport, camera, screenshot, orchestration]
@@ -14,72 +14,64 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-# MCP Blender — инструменты, вьюпорт, камера
+# MCP Blender — tools, viewport, camera
 
-Универсальный слой работы с Blender через MCP (любой bpy-проект). Дисциплину конкретного цикла
-построения параметрической модели см. в скилле `blender-modeling/build-loop`.
+Universal layer for Blender via MCP (any bpy project). Parametric-model build-loop discipline → skill `blender-modeling/build-loop`.
 
-## MCP-инструменты
+## MCP tools
 
-| Инструмент | Назначение | Когда использовать |
+| Tool | Purpose | When |
 |---|---|---|
-| `execute_blender_code` | Выполнить Python в Blender | основной инструмент для построения и настройки |
-| `get_viewport_screenshot` | Скриншот вьюпорта | только после установки камеры |
-| `get_object_info` | Bounding box, вершины, материалы | проверка каждой изменённой детали до скриншота |
-| `get_scene_info` | Список всех объектов сцены | см. ниже |
+| `execute_blender_code` | Run Python in Blender | main tool for building & setup |
+| `get_viewport_screenshot` | Viewport screenshot | only after camera set |
+| `get_object_info` | Bounding box, vertices, materials | check every changed part before screenshot |
+| `get_scene_info` | List all scene objects | see below |
 
-**`get_scene_info` — когда вызывать:**
-- **После пересоздания сцены** — убедиться, что старые `MESH_*` объекты удалены и коллекция пересоздана чисто
-- **После boolean DIFFERENCE** — проверить, что временный инструмент (имена начинаются с `_`) исчез из сцены (если остался — `apply_bool` не отработал)
-- **При неожиданном поведении** — понять, что вообще есть в сцене перед отладкой
+`get_scene_info` — call:
+- After scene recreation — confirm old `MESH_*` objects removed and collection recreated clean.
+- After boolean DIFFERENCE — confirm temp tool (names start with `_`) gone from scene (if present → `apply_bool` failed).
+- On unexpected behavior — see what exists in scene before debugging.
 
-Polyhaven / Sketchfab / Hyper3D — не для parametric-моделей.
+Polyhaven / Sketchfab / Hyper3D — not for parametric models.
 
----
+## Code send & module-cache reset
 
-## Отправка кода и сброс кеша модулей
-
-Blender **кеширует Python-модули** между запусками скриптов. Перед импортом своих модулей сбрасывать кеш, иначе правки файлов не подхватятся:
+Blender caches Python modules between script runs. Reset cache before importing your modules, else file edits won't apply:
 
 ```python
 import sys, os
-_root = '<абсолютный путь к корню проекта>'   # подставить перед отправкой
-_pkg  = '<имя пакета модели>'
+_root = '<absolute path to project root>'   # substitute before sending
+_pkg  = '<model package name>'
 for _k in list(sys.modules):
     if _k == _pkg or _k.startswith(_pkg + '.') or _k in ('lib', 'config') or _k.startswith(('lib.', 'config.')):
         del sys.modules[_k]
 if _root not in sys.path: sys.path.insert(0, _root)
 ```
 
-**Причина подстановки путей вручную:** Blender не наследует переменные окружения из shell — `os.environ` в Blender-скрипте, как правило, пуст. Абсолютные пути агент подставляет в код перед отправкой.
+- Paths substituted manually: Blender doesn't inherit shell env vars — `os.environ` is usually empty in Blender scripts. Agent substitutes absolute paths into code before sending.
+- On error in `execute_blender_code` — STOP. Read traceback, fix, resend (typical parametric-part build errors → diagnostics table in `blender-modeling/build-loop`).
 
-**При ошибке в `execute_blender_code` — стоп.** Прочитать traceback, исправить, повторить отправку (типовые ошибки сборки параметрической детали — таблица диагностики в `blender-modeling/build-loop`).
-
----
-
-## Камера: универсальный принцип
+## Camera: universal principle
 
 ```python
 from {model}.common import set_viewport_camera
 
-# z_mm  — центр изменённой зоны в мм (из bounding box)
-# distance — высота_зоны_мм × 0.001 × 1.5, минимум 0.05
+# z_mm  — center of changed zone in mm (from bounding box)
+# distance — zone_height_mm × 0.001 × 1.5, min 0.05
 set_viewport_camera(z_mm=<z_centre>, distance=<distance>)
-set_viewport_camera()  # вся модель целиком (distance по умолчанию из model_config)
+set_viewport_camera()  # whole model (default distance from model_config)
 ```
 
-- `z_mm=None` → центр модели (из `model_config`)
-- `distance` — чем меньше, тем крупнее план
-- Ракурс: `ORTHO`, вид на разрез `X=0`, наклон ~15° (`Euler(75°, 0°, -90°)`)
-- **ЗАПРЕЩЕНО** задавать `view_rotation` вручную через Quaternion/Euler — модель перевернётся. Только `set_viewport_camera()`.
+- `z_mm=None` → model center (from `model_config`).
+- `distance` — smaller = closer view.
+- Angle: `ORTHO`, view on cut `X=0`, tilt ~15° (`Euler(75°, 0°, -90°)`).
+- FORBIDDEN: setting `view_rotation` manually via Quaternion/Euler — model flips. Only `set_viewport_camera()`.
 
-Готовые значения `z_mm` / `distance` для конкретной модели — в `models/{name}/ai/rules.md` (см. `blender-modeling/model-rules`).
+Ready `z_mm` / `distance` values per model → `models/{name}/ai/rules.md` (see `blender-modeling/model-rules`).
 
----
+## Size check
 
-## Проверка размеров
-
-`world_bounding_box` из `get_object_info` → габариты в мм. Паттерн печати высоты/диаметра сразу после построения (до скриншота):
+`world_bounding_box` from `get_object_info` → dimensions in mm. Print height/diameter right after build (before screenshot):
 
 ```python
 def _bb(obj):
@@ -88,58 +80,56 @@ def _bb(obj):
           f"z=[{min(zs)*1000:.1f},{max(zs)*1000:.1f}]mm  x_max={max(xs)*1000:.1f}mm")
 ```
 
-Если `vertices_count == 0` или bounding box вырожден (все координаты одинаковые) — деталь не построилась.
+If `vertices_count == 0` or bounding box degenerate (all coords equal) — part didn't build.
 
----
+## Viewport display modes
 
-## Режимы отображения вьюпорта
+Full table of viewport display modes (shading/overlay, wireframe/solid/material/rendered) and screenshot usage → [references/viewport-display-modes.md](references/viewport-display-modes.md).
 
-Полная таблица режимов отображения вьюпорта (shading/overlay, wireframe/solid/material/rendered) и их применение для скриншотов — [references/viewport-display-modes.md](references/viewport-display-modes.md).
+## Hiding obstructing objects for screenshot
 
-## Скрытие мешающих объектов для скриншота
-
-Если нужная зона перекрыта соседними объектами — скрыть их на время скриншота, затем восстановить:
+If target zone is occluded by neighbors — hide them for screenshot, then restore:
 
 ```python
 import bpy
 
-hidden = ["MESH_Model_Part", "MESH_Model_Part_SubPart"]   # имена подставить по текущей модели
+hidden = ["MESH_Model_Part", "MESH_Model_Part_SubPart"]   # substitute names for current model
 for name in hidden:
     if name in bpy.data.objects:
         bpy.data.objects[name].hide_viewport = True
 
 # ... get_viewport_screenshot() ...
 
-for name in hidden:        # ВСЕГДА восстанавливать после скриншота
+for name in hidden:        # ALWAYS restore after screenshot
     if name in bpy.data.objects:
         bpy.data.objects[name].hide_viewport = False
 ```
 
-Когда скрывать — спросить пользователя или скрыть самостоятельно, если очевидно (верхняя деталь закрывает кольцо, корпус закрывает внутреннюю трубу).
+When to hide — ask user, or hide yourself if obvious (top part covers ring, body covers inner tube).
 
----
+## Parallel multi-agent work
 
-## Параллельная работа нескольких агентов
+Multiple agents (e.g. Cursor + Claude Code) may run the full flow via MCP simultaneously. To avoid overwriting each other:
 
-Несколько агентов (например Cursor и Claude Code) могут выполнять полный флоу через MCP одновременно. Чтобы не затирать правки друг друга:
+Before editing code:
+- Re-read affected `parts/*.py` and `config.py` — another agent may have changed the file.
+- If file changed since last read — apply edits on top of current version.
 
-**Перед правкой кода:**
-- Перечитать затрагиваемые `parts/*.py` и `config.py` — другой агент мог изменить файл.
-- Если файл изменился с момента последнего чтения — применять правки поверх актуальной версии.
+Before sending to Blender:
+- Re-read all files that will be imported in the Blender script.
+- `del sys.modules` mandatory — Blender caches modules between script runs.
 
-**Перед отправкой в Blender:**
-- Перечитать все файлы, которые будут импортированы в Blender-скрипте.
-- `del sys.modules` обязателен — Blender кеширует модули между запусками скриптов.
+One-object rule:
+- Two agents must not edit the same `parts/{name}.py` simultaneously.
+- If tasks target one part — run sequentially, not in parallel.
 
-**Правило одного объекта:**
-- Два агента не должны одновременно изменять один и тот же `parts/{name}.py`.
-- Если задачи на одну деталь — выполнять последовательно, не параллельно.
+## Related skills
 
----
+- `blender/version-gotchas` — Blender 5.0 API traps: `temp_override`, normals after boolean, `surface_render_method`; `realism` mode already includes normal recompute.
+- `blender-modeling/build-loop` — parametric-model build-loop discipline over these tools.
+- `blender-modeling/parametric-config` — architecture of `config.py`/`profile.py`/`parts/*`/`check.py`.
+- `blender-modeling/model-rules` — `models/{name}/ai/rules.md`: ready camera zones and model specifics.
 
-## Связанные скиллы
+<!-- ru-source-sha256: PENDING -->
 
-- `blender/version-gotchas` — ловушки Blender 5.0 API: `temp_override`, нормали после boolean, `surface_render_method`; режим `realism` уже включает пересчёт нормалей.
-- `blender-modeling/build-loop` — дисциплина цикла построения параметрической модели поверх этих инструментов.
-- `blender-modeling/parametric-config` — архитектура `config.py`/`profile.py`/`parts/*`/`check.py`.
-- `blender-modeling/model-rules` — `models/{name}/ai/rules.md`: готовые зоны камеры и специфика модели.
+<!-- ru-source-sha256: 2e7a187e44c4277d80e3eddc3a64ad95a07706cf5e9c3040b09758db706b963e -->

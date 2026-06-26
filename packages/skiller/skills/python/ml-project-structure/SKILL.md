@@ -2,7 +2,7 @@
 name: ml-project-structure
 bucket: python
 version: 0.1.0
-description: "Стандартизированная структура ML/Data Science проектов по подходу Cookiecutter Data Science"
+description: "Standardized ML/Data Science project structure (Cookiecutter Data Science)"
 risk: write
 persona: oss-dev
 tags: [python, ml, structure, architecture, data, conventions]
@@ -14,44 +14,48 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-# Структура ML Проектов на Python
+# Python ML Project Structure
 
-Для проектов машинного обучения и Data Science важно поддерживать стандартизированную структуру. Мы используем подход, вдохновленный **Cookiecutter Data Science**.
+Use Cookiecutter Data Science layout for ML/DS projects.
 
-## Стандартная Структура Директорий
+## Directory Layout
 
 ```text
 my_ml_project/
 ├── data/
-│   ├── raw/            # Исходные, неизменяемые данные (никогда не коммитятся в git!)
-│   ├── interim/        # Промежуточные данные (после первичной очистки)
-│   └── processed/      # Финальные данные, готовые для обучения моделей
-├── models/             # Обученные модели и сериализованные объекты (pickle, onnx)
-├── notebooks/          # Jupyter notebooks. Именование: 1.0-jdoe-initial_exploration.ipynb
-├── src/                # Исходный код проекта (основные модули)
+│   ├── raw/            # Source, immutable data (never commit to git!)
+│   ├── interim/        # Intermediate data (after initial cleaning)
+│   └── processed/      # Final data, ready for model training
+├── models/             # Trained models and serialized objects (pickle, onnx)
+├── notebooks/          # Jupyter notebooks. Naming: 1.0-jdoe-initial_exploration.ipynb
+├── src/                # Project source code (core modules)
 │   ├── __init__.py
-│   ├── data/           # Скрипты для загрузки и генерации данных
-│   ├── features/       # Скрипты для преобразования фичей (Feature Engineering)
-│   ├── models/         # Скрипты для обучения и инференса (predict.py, train.py)
-│   └── visualization/  # Скрипты для построения графиков
-├── requirements.txt    # Файл зависимостей (или pyproject.toml / poetry.lock)
-├── .env                # Локальные переменные окружения (пароли от БД, API ключи)
+│   ├── data/           # Scripts to load and generate data
+│   ├── features/       # Scripts to transform features (Feature Engineering)
+│   ├── models/         # Scripts to train and infer (predict.py, train.py)
+│   └── visualization/  # Scripts to build plots
+├── requirements.txt    # Dependencies file (or pyproject.toml / poetry.lock)
+├── .env                # Local env vars (DB passwords, API keys)
 ├── .gitignore
 └── README.md
 ```
 
-## Основные Принципы
+## Rules
 
-1.  **Данные неизменны (Data is Immutable):** Никогда не модифицируйте данные в папке `data/raw`. Все скрипты должны читать оттуда и сохранять результаты работы в `data/interim` или `data/processed`.
-2.  **Ноутбуки — для исследований, Скрипты — для продакшена:**
-    - Jupyter Notebooks отлично подходят для разведочного анализа данных (EDA) и прототипирования.
-    - Однако, как только код стабилизировался (например, функция очистки данных), он должен быть перенесен в Python-модули внутри папки `src/`.
-    - Из ноутбука вы должны вызывать импортированные функции из `src/`, а не писать длинные простыни кода в самом ноутбуке.
-3.  **Логирование:** Используйте модуль `logging` вместо обилия `print()`. Это позволит легко отключать логи, перенаправлять их в файл или менять уровень детализации (INFO, DEBUG).
-4.  **Конфиги:** Выносите гиперпараметры, пути к файлам и настройки в конфигурационные файлы (YAML, JSON или `.env`), а не хардкодьте их прямо в скриптах.
+- **Data is immutable:** never modify `data/raw`. Scripts read from there, write results to `data/interim` or `data/processed`.
+- **Notebooks = research, scripts = production:**
+  - Jupyter notebooks for EDA and prototyping.
+  - Once code stabilizes (e.g. a data-cleaning function), move it to Python modules under `src/`.
+  - From notebooks call imported functions from `src/`; do not write long code blobs in the notebook.
+- **Logging:** use `logging` module, not many `print()`.
+- **Config:** put hyperparameters, file paths, settings in config files (YAML, JSON, or `.env`); do not hardcode in scripts.
 
-## Связанные скиллы
+## Related skills
 
-- `python/venv-dependencies` — управление зависимостями и окружениями для папки (`requirements.txt` / `pyproject.toml`, линтеры), которую задаёт эта структура.
-- `php/laravel-structure` — аналогичный канон структуры, но для Laravel-проектов.
-- `oss-dev/oss-development` — структура OSS-репозитория (README, ADR, CI) поверх кода проекта.
+- `python/venv-dependencies` — dependency/environment management for the folder this structure defines (`requirements.txt` / `pyproject.toml`, linters).
+- `php/laravel-structure` — analogous structure canon for Laravel projects.
+- `oss-dev/oss-development` — OSS-repo structure (README, ADR, CI) on top of project code.
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: f3256dc2528418358d7ab40e4b76cdd0f05df8cb8cd8b030bbbca4b32c3286b6 -->

@@ -2,7 +2,7 @@
 name: vite-module-loader
 bucket: frontend-vite
 version: 0.1.0
-description: "Vite как основной сборщик Frontend-проектов: базовая конфигурация, алиасы, build-практики"
+description: "Vite as primary frontend bundler: base config, aliases, build practices"
 risk: write
 persona: oss-dev
 tags: [vite, frontend, build, laravel, vue]
@@ -16,14 +16,13 @@ sha256: ""
 
 # Vite Module Loader & Build Practices
 
-Vite используется как основной сборщик для Frontend проектов (вместо Webpack). Он обеспечивает моментальный запуск дев-сервера за счет нативных ES-модулей.
+Vite = primary frontend bundler (not Webpack); native ESM dev server.
 
-## Базовая Конфигурация (`vite.config.js` / `vite.config.ts`)
+## Base config (`vite.config.js` / `vite.config.ts`)
 
-### 1. Алиасы (Aliases)
-
-Используйте алиасы для предотвращения глубоких относительных путей (типа `../../../../components/Button.vue`).
-Стандартный паттерн — использовать `@` для указания на папку `src/` (или `resources/js/` в Laravel).
+### 1. Aliases
+- Use aliases to avoid deep relative paths (`../../../../components/Button.vue`).
+- Standard: `@` → `src/` (or `resources/js/` in Laravel).
 
 ```typescript
 import { defineConfig } from 'vite'
@@ -39,11 +38,10 @@ export default defineConfig({
   },
 })
 ```
-*Не забудьте продублировать алиасы в `tsconfig.json` (или `jsconfig.json`), чтобы IDE их понимала.*
+- Duplicate aliases in `tsconfig.json` (or `jsconfig.json`) for IDE.
 
-### 2. Разделение Чанков (Chunk Splitting)
-
-По умолчанию Vite собирает всё приложение в один или несколько больших файлов. Для оптимизации загрузки (особенно при обновлениях) вендорные библиотеки (Vue, Vue Router, Pinia) лучше выносить в отдельный чанк.
+### 2. Chunk splitting
+- Split vendor libs (Vue, Vue Router, Pinia) into a separate chunk.
 
 ```typescript
 export default defineConfig({
@@ -61,25 +59,20 @@ export default defineConfig({
 })
 ```
 
-### 3. Динамические Импорты (Lazy Loading)
+### 3. Dynamic imports (lazy loading)
+- Don't import all components/pages eagerly. Use `import()` → separate chunks loaded on navigation. Critical for `vue-router`.
 
-Не импортируйте все компоненты и страницы сразу. Используйте динамический импорт `import()`, чтобы Vite создал для них отдельные чанки, которые загрузятся только при переходе пользователя на эту страницу.
-
-**Плохо:**
+Bad:
 ```javascript
 import Dashboard from './views/Dashboard.vue'
 ```
-
-**Хорошо:**
+Good:
 ```javascript
 const Dashboard = () => import('./views/Dashboard.vue')
 ```
-Это критически важно при настройке `vue-router`.
 
-## Интеграция с Laravel
-
-Если Vite используется внутри Laravel проекта, используется плагин `laravel-vite-plugin`.
-В `vite.config.js` мы указываем точки входа (entry points).
+## Laravel integration
+- Inside Laravel: use `laravel-vite-plugin`; declare entry points (`input`).
 
 ```javascript
 import { defineConfig } from 'vite';
@@ -97,8 +90,11 @@ export default defineConfig({
 });
 ```
 
-## Ссылки
-
+## Links
 - https://vitejs.dev/config/
 - https://github.com/laravel/vite-plugin
-- Связанные скиллы: `frontend/vite-multi-build` (две независимые сборки: приложение + Filament), `devops/docker-vite` (Vite dev-сервер отдельным compose-сервисом, HMR в Docker), `frontend/wayfinder` (vite-плагин `wayfinder()` в сборке), `frontend/tailwind-conventions` (плагин `@tailwindcss/vite` и сборка Tailwind v4)
+- Related: `frontend/vite-multi-build` (two independent builds: app + Filament), `devops/docker-vite` (Vite dev server as separate compose service, HMR in Docker), `frontend/wayfinder` (`wayfinder()` vite plugin in build), `frontend/tailwind-conventions` (`@tailwindcss/vite` plugin, Tailwind v4 build)
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: e91bc7ac931d024c27e75dd0bc259a533d155e4384ad154da82c6d6be064d22f -->

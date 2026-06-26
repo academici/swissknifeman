@@ -2,7 +2,7 @@
 name: naming-conventions
 bucket: php
 version: 0.1.0
-description: "Именование сущностей Laravel/PHP: методы репозиториев по намерению (а не findByCodeOrFail-взрыв), Action/DTO/VO/Enum/Event/Job, таблицы/колонки/роуты. Борьба с мусорными именами, которые любит генерить ИИ. Активировать при создании или ревью имён классов, методов, миграций."
+description: "Naming Laravel/PHP entities: repository methods by intent (not findByCodeOrFail-explosion), Action/DTO/VO/Enum/Event/Job, tables/columns/routes. Kills junk names AI loves to generate. Activate when creating or reviewing class/method/migration names."
 risk: read
 persona: oss-dev
 tags: ["php", "laravel", "naming", "conventions", "code-style", "readability"]
@@ -14,97 +14,85 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-# Именование сущностей в Laravel/PHP
+# Laravel/PHP Entity Naming
 
-## Контекст
+Name = intent, not implementation. Base + cross-language rules: `general/naming-conventions`. Here: PHP/Laravel specifics. Not `code-style-spatie` (route/controller style), not `named-arguments` (call style); this is entity names (classes, methods, fields).
 
-ИИ систематически генерит «мусорные» имена: `findByCodeOrFail`, `findByEmailOrFail`,
-`getUserDataById`, `OrderManager`, `handleData`. Этот скилл задаёт дисциплину именования по
-типам сущностей Laravel-проекта. Базовый принцип (имя = намерение, не реализация) и
-кросс-языковые правила — в `general/naming-conventions`; здесь — PHP/Laravel-конкретика и
-разбор частых анти-паттернов.
+## Activate when
 
-Не путать с соседями: `code-style-spatie` задаёт стиль кода и именование **роутов/контроллеров**;
-`named-arguments` — стиль *вызова*; этот скилл — про имена *самих сущностей* (классы, методы, поля).
+- Creating/reviewing a class name (Action, Repository, DTO, VO, Service, Enum, Event, Job).
+- Naming a repository/service/model method or scope.
+- Writing a migration (tables, columns, keys).
+- A generated name doesn't reveal intent.
 
-## Когда активировать
+## Anti-pattern: `findByX…OrFail` explosion
 
-- Создаёшь/ревьюишь имя класса (Action, Repository, DTO, VO, Service, Enum, Event, Job).
-- Называешь метод репозитория/сервиса/модели или scope.
-- Пишешь миграцию (таблицы, колонки, ключи).
-- Видишь сгенерированное имя, по которому не ясно намерение.
-
-## Главный анти-паттерн: `findByX…OrFail`-взрыв
-
-Метод-на-каждое-поле — экспоненциальный рост и дублирование репозитория:
+Method-per-field = exponential growth + duplication:
 
 ```php
-// ❌ мусор: один метод на колонку, политика ошибок продублирована в имени N раз
+// ❌ junk: one method per column, error policy duplicated N times in the name
 public function findByCodeOrFail(string $code): Order { /* … */ }
 public function findByEmailOrFail(string $email): Order { /* … */ }
 public function findBySlugOrFail(string $slug): Order { /* … */ }
 ```
 
-Чем заменить (по убыванию предпочтения):
+Replace with (preference order):
 
-1. **Route model binding** — для контроллеров поиск по ключу делает Laravel
-   (`getRouteKeyName()` для не-id), метод репозитория вообще не нужен.
-2. **Model scope по намерению** — повторяемый предикат → `scopeActive`, `scopeForUser`;
-   репозиторий их компонует. Имя scope про *бизнес-смысл*, не про колонку.
-3. **Один метод поиска + критерий**: `findBy(Criteria $c)` / спецификация, а не метод-на-поле.
-4. **Eloquent уже умеет** `firstWhere('code', $code)`, `findOrFail($id)`,
-   `where(...)->firstOrFail()` — не оборачивай тривиальное.
+1. **Route model binding** — controllers: Laravel finds by key (`getRouteKeyName()` for non-id); no repo method needed.
+2. **Model scope by intent** — repeated predicate → `scopeActive`, `scopeForUser`; repo composes them. Scope name = business meaning, not column.
+3. **One finder + criterion**: `findBy(Criteria $c)` / specification, not method-per-field.
+4. **Eloquent already does** `firstWhere('code', $code)`, `findOrFail($id)`, `where(...)->firstOrFail()` — don't wrap the trivial.
 
-Допустимо: **один канонический** `findByIdOrFail` поверх `queryForUser()` (см. скилл
-`repositories`) и **именованные доменные** запросы (`pendingForReview()`), когда выборка
-осмысленна в домене. Грань: «по намерению/бизнес-смыслу» — да; «по каждой колонке» — нет.
+Allowed: a single canonical `findByIdOrFail` over `queryForUser()` (see `repositories`) and named domain queries (`pendingForReview()`) when the selection is domain-meaningful. Line: by intent/business meaning — yes; per column — no.
 
-## Именование по типам сущностей
+## Naming by entity type
 
-| Сущность | Правило | Пример |
+| Entity | Rule | Example |
 |:--|:--|:--|
-| **Action** | императив + объект, один публичный `__invoke`/`execute`; без `Manager`/`Service`-хвоста | `CreateOrder`, `PublishDocument`, `CancelSubscription` |
-| **Repository** | `<Домен>ReadRepository` / `<Домен>StoreRepository`; методы по *намерению* | `forUser()`, `pendingForReview()`, `withListRelations()` |
-| **DTO / Form** | суффикс `Data` (данные) или `Form` (вход команды); не `DTO`/`Object` | `OrderData`, `CreateOrderForm` |
-| **Value Object** | доменное существительное, без суффикса | `Money`, `EmailAddress`, `DateRange` |
-| **Service** | `<Роль>Service` только при реальной ответственности; иначе — Action/Repository | `VisibilityService`, `PriceCalculator` (не `OrderManager`) |
-| **Enum** | имя в единственном числе, кейсы PascalCase | `OrderStatus::Pending`, `Role::Admin` |
-| **Event** | прошедшее время (факт случился) | `OrderShipped`, `InvoicePaid` |
-| **Listener / Job** | императив (что сделать) | `SendShipmentNotification`, `ProcessPayment` |
-| **Model scope** | `scope` + доменное намерение | `scopeActive`, `scopeForUser`, `scopeWithStatus` |
-| **Policy** | `<Model>Policy`, методы = ability (`view`, `update`, `delete`) | `OrderPolicy::update()` |
-| **Контроллер/роут** | см. `code-style-spatie` (ресурс во мн.ч., kebab URL, camelCase route) | `OrdersController` |
+| **Action** | imperative + object, one public `__invoke`/`execute`; no `Manager`/`Service` tail | `CreateOrder`, `PublishDocument`, `CancelSubscription` |
+| **Repository** | `<Domain>ReadRepository` / `<Domain>StoreRepository`; methods by *intent* | `forUser()`, `pendingForReview()`, `withListRelations()` |
+| **DTO / Form** | suffix `Data` (data) or `Form` (command input); not `DTO`/`Object` | `OrderData`, `CreateOrderForm` |
+| **Value Object** | domain noun, no suffix | `Money`, `EmailAddress`, `DateRange` |
+| **Service** | `<Role>Service` only with real responsibility; else Action/Repository | `VisibilityService`, `PriceCalculator` (not `OrderManager`) |
+| **Enum** | singular name, cases PascalCase | `OrderStatus::Pending`, `Role::Admin` |
+| **Event** | past tense (fact happened) | `OrderShipped`, `InvoicePaid` |
+| **Listener / Job** | imperative (what to do) | `SendShipmentNotification`, `ProcessPayment` |
+| **Model scope** | `scope` + domain intent | `scopeActive`, `scopeForUser`, `scopeWithStatus` |
+| **Policy** | `<Model>Policy`, methods = ability (`view`, `update`, `delete`) | `OrderPolicy::update()` |
+| **Controller/route** | see `code-style-spatie` (resource plural, kebab URL, camelCase route) | `OrdersController` |
 
-## База данных (миграции)
+## Database (migrations)
 
-- Таблицы — snake_case **во множественном** (`orders`, `order_items`); pivot — две модели
-  в единственном по алфавиту (`role_user`).
-- Колонки — snake_case; FK — `<single>_id` (`user_id`); булевы — `is_`/`has_` (`is_active`);
-  даты/время — `_at` (`published_at`), `_date`/`_on` для дат.
-- Без `tbl_`/`col_`-префиксов и венгерской нотации.
+- Tables — snake_case **plural** (`orders`, `order_items`); pivot — two models singular, alphabetical (`role_user`).
+- Columns — snake_case; FK — `<single>_id` (`user_id`); booleans — `is_`/`has_` (`is_active`); date/time — `_at` (`published_at`), `_date`/`_on` for dates.
+- No `tbl_`/`col_` prefixes, no Hungarian notation.
 
-## Чеклист качества
+## Quality checklist
 
-- [ ] Нет `findByX…OrFail` на каждое поле; поиск — через binding/scope/критерий или один канонический lookup.
-- [ ] Action — императив + объект, один публичный метод; нет `Manager`/`Helper`/`Util`/`Processor`-классов без роли.
-- [ ] DTO — `Data`/`Form`; VO — доменное существительное без суффикса типа.
-- [ ] Enum в единственном числе, кейсы PascalCase; Event — прошедшее время; Job/Listener — императив.
-- [ ] Методы репозитория названы по *намерению* (что выбираем), а не по механике SQL.
-- [ ] Таблицы во мн.ч. snake_case; FK `_id`, булевы `is_/has_`, время `_at`.
-- [ ] Лишний `get`/суффикс типа убран (`user(id)`, не `getUserObjectById`).
+- [ ] No `findByX…OrFail` per field; lookup via binding/scope/criterion or one canonical lookup.
+- [ ] Action — imperative + object, one public method; no `Manager`/`Helper`/`Util`/`Processor` classes without a role.
+- [ ] DTO — `Data`/`Form`; VO — domain noun without type suffix.
+- [ ] Enum singular, cases PascalCase; Event — past tense; Job/Listener — imperative.
+- [ ] Repository methods named by *intent* (what we select), not SQL mechanics.
+- [ ] Tables plural snake_case; FK `_id`, booleans `is_/has_`, time `_at`.
+- [ ] Drop redundant `get`/type suffix (`user(id)`, not `getUserObjectById`).
 
-## Когда какой сниппет открывать
+## Which snippet to open
 
-| Ситуация | Файл |
+| Situation | File |
 |:--|:--|
-| Нужна сводная таблица «плохо → хорошо» по всем типам Laravel-сущностей | `snippets/naming-antipatterns.php` |
-| Рефакторишь репозиторий с россыпью `findByX` в scope/критерий | `snippets/repository-method-naming.php` |
+| Need a summary "bad → good" table across all Laravel entity types | `snippets/naming-antipatterns.php` |
+| Refactoring a repository with scattered `findByX` into scope/criterion | `snippets/repository-method-naming.php` |
 
-## Ссылки
+## Links
 
-- `general/naming-conventions` — язык-агностичные принципы (intent, шумовые слова, CQS).
-- `php/repositories` — read/store split, `queryForUser`, scopes (где живут именованные запросы).
-- `php/code-style-spatie` — стиль кода и именование роутов/контроллеров/конфигов.
-- `php/named-arguments` — именованные аргументы на стороне вызова.
-- `php/php-patterns` — VO/DTO/specification (куда уходит «критерий» вместо `findByX`).
-- `php/laravel-structure` — где какие классы лежат в дереве проекта.
+- `general/naming-conventions` — language-agnostic principles (intent, noise words, CQS).
+- `php/repositories` — read/store split, `queryForUser`, scopes (where named queries live).
+- `php/code-style-spatie` — code style and route/controller/config naming.
+- `php/named-arguments` — named arguments on the call side.
+- `php/php-patterns` — VO/DTO/specification (where the "criterion" goes instead of `findByX`).
+- `php/laravel-structure` — where classes live in the project tree.
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: e4703277685deb698c5574453cd41cd7d08ebc7458852679aa1f4f21dd1081e3 -->

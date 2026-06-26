@@ -2,7 +2,7 @@
 name: repositories
 bucket: php
 version: 0.1.0
-description: "Система репозиториев Laravel: read/store split, model scopes, delta-DTO, фасад, VisibilityService"
+description: "Laravel repositories: read/store split, model scopes, delta-DTO, facade, VisibilityService"
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "repository", "architecture"]
@@ -14,70 +14,71 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-# Репозитории в Laravel: read/store split
+# Laravel repositories: read/store split
 
-## Контекст
+Eloquent is already repository + active record; a wrapper over `find`/`create` is an antipattern. Add a repository layer only when:
+- **repeated queries**: same query reused across controller / Livewire / command;
+- **write-side isolation**: nontrivial mutations (pivot sync, pair normalization, prioritized updateOrCreate) belong in repository, not Action (Action = business scenario, repository = row work);
+- **testability**: Action tested with mocked repository; query logic tested separately (integration);
+- **data visibility**: rights filtering unforgettable via single entry `queryForUser()`.
 
-Eloquent сам по себе — уже repository + active record, поэтому «репозиторий ради репозитория» (обёртка над `find`/`create`) — антипаттерн. Слой репозиториев оправдан, когда:
+Canon — lightweight-CQRS split in `app/Repositories/<Domain>/`:
 
-- **повторяемые выборки**: один и тот же запрос «документы пользователя со статусом X и связями для списка» нужен в контроллере, Livewire-компоненте и команде — без репозитория where-цепочки расползаются и расходятся;
-- **изоляция write-side**: мутации с нетривиальной механикой (sync пивотов, нормализация пар, updateOrCreate с приоритетами) не должны жить в Action — Action описывает бизнес-сценарий, репозиторий — работу со строками;
-- **тестируемость**: Action тестируется с замоканным репозиторием; запросная логика тестируется отдельно интеграционно;
-- **видимость данных**: фильтрация по правам должна быть невозможной для забывания — единая точка входа `queryForUser()` это гарантирует.
-
-Канон — **CQRS-облегчённый split** в `app/Repositories/<Домен>/`:
-
-| Класс | Сторона | Отвечает за |
+| Class | Side | Responsibility |
 |---|---|---|
-| `XxxReadRepository` | read | запросы, фильтры, пагинация, eager load |
-| `XxxStoreRepository` | write | мутации, sync-операции |
-| `Repository` (фасад) | read | делегирование, единая точка для контроллеров (опционален) |
+| `XxxReadRepository` | read | queries, filters, pagination, eager load |
+| `XxxStoreRepository` | write | mutations, sync ops |
+| `Repository` (facade) | read | delegation, single entry for controllers (optional) |
 
-## Алгоритм
+## Algorithm
 
-1. **Определи сторону.** Выборка → `XxxReadRepository`; мутация → `XxxStoreRepository`. Не смешивай в одном классе.
-2. **Read-side: начни с видимости.** Каждый публичный read-метод строится поверх `queryForUser(?User $user, bool $ignorePermissions = false)`, который делегирует в `XxxVisibilityService::apply()`. Сигнатура явно сообщает потребителю, что выборка фильтруется по правам.
-3. **Вынеси повторяемые предикаты в model scopes** с доменными именами (`withStatus`, `withListRelations`, `forUser`). Репозиторий их КОМПОНУЕТ — если пишешь вторую одинаковую where-цепочку, это сигнал создать scope.
-4. **Выбери возвращаемый тип:**
-   - `Builder` — когда потребитель докомпонует запрос (счётчики, секции, доп. фильтры);
-   - `Model` / `Collection` / `Paginator` — когда запрос терминальный;
-   - **delta-DTO** (`added`/`removed`) — для sync-операций write-side: Action узнаёт, кого уведомлять, не перечитывая базу.
-5. **Write-side принимает DTO-команды** (`Form`), не массивы и не `Request`. `persistFromForm(Form $form, User $user): Model` — типовая точка входа.
-6. **Не открывай транзакций** в репозитории: `DB::transaction()` принадлежит Action, репозиторий работает внутри неё. Несколько вызовов store-репозиториев в одном Action атомарны автоматически.
-7. **Фасад добавляй по необходимости:** когда read-методов стало много и контроллеры инжектят репозиторий повсеместно — заведи `Repository` с чистым делегированием. При 2-3 методах — инжекти read-репозиторий напрямую.
+1. **Pick side.** Query → `XxxReadRepository`; mutation → `XxxStoreRepository`. Never mix in one class.
+2. **Read-side: start from visibility.** Every public read method builds atop `queryForUser(?User $user, bool $ignorePermissions = false)`, delegating to `XxxVisibilityService::apply()`. Signature signals filtering by rights.
+3. **Move repeated predicates into model scopes** with domain names (`withStatus`, `withListRelations`, `forUser`). Repository COMPOSES them — a second identical where-chain = create a scope.
+4. **Choose return type:**
+   - `Builder` — consumer composes further (counters, sections, extra filters);
+   - `Model` / `Collection` / `Paginator` — terminal query;
+   - **delta-DTO** (`added`/`removed`) — for write-side sync ops: Action learns whom to notify without re-reading DB.
+5. **Write-side accepts DTO commands** (`Form`), not arrays nor `Request`. `persistFromForm(Form $form, User $user): Model` — typical entry.
+6. **Open no transactions** in repository: `DB::transaction()` belongs to Action; repository runs inside it. Multiple store-repo calls in one Action are atomic automatically.
+7. **Add facade only when needed:** many read methods + controllers inject repository everywhere → add `Repository` with pure delegation. At 2-3 methods — inject read-repository directly.
 
-## Когда какой сниппет открывать
+## Which snippet to open
 
-| Ситуация | Файл |
+| Situation | File |
 |---|---|
-| Новая выборка/список/поиск, нужна фильтрация по правам | `snippets/read-repository.php` |
-| Создание/обновление модели по DTO-форме, sync отношения | `snippets/store-repository.php` |
-| Sync участников/ролей, Action должен узнать кто добавлен/удалён | `snippets/member-store-repository.php` |
-| Нужен тип результата sync-операции | `snippets/members-delta.php` |
-| Read-методов много, контроллерам нужна единая точка | `snippets/repository-facade.php` |
-| Where-цепочка повторяется второй раз | `snippets/model-scopes.php` |
-| Правила «кто какие записи видит» (роли, статусы, владение) | `snippets/visibility-service.php` |
+| New query/list/search, needs rights filtering | `snippets/read-repository.php` |
+| Create/update model from DTO-form, sync relation | `snippets/store-repository.php` |
+| Sync members/roles, Action must learn who added/removed | `snippets/member-store-repository.php` |
+| Need sync-op result type | `snippets/members-delta.php` |
+| Many read methods, controllers need single entry | `snippets/repository-facade.php` |
+| Where-chain repeats a second time | `snippets/model-scopes.php` |
+| Rules "who sees which records" (roles, statuses, ownership) | `snippets/visibility-service.php` |
 
-## Чеклист качества
+## Quality checklist
 
-- [ ] Read и store разделены: в `ReadRepository` нет мутаций, в `StoreRepository` нет выборок-для-отображения.
-- [ ] Каждый публичный read-метод проходит через `queryForUser()`; обход прав — только явным `ignorePermissions: true`.
-- [ ] Репозиторий **НЕ открывает транзакций** — работает внутри транзакции Action.
-- [ ] Репозиторий **НЕ пишет историю и НЕ диспатчит события**. Типичная ошибка: `recordHistory()` внутри `persistFromForm()` — это утечка бизнес-логики; история и события принадлежат Action/StateMachine.
-- [ ] Репозиторий **НЕ принимает `Request`** — только DTO-команды (write) и скаляры/енумы/модели (read).
-- [ ] Репозиторий **НЕ принимает авторизационных решений** — видимость только через инжектируемый `VisibilityService` с явной сигнатурой `apply(Builder, ?User, bool $ignorePermissions): Builder`.
-- [ ] Повторяемые предикаты вынесены в model scopes с доменными именами; репозиторий не дублирует where-цепочки.
-- [ ] Sync-операции идемпотентны (updateOrCreate + удаление выпавших) и возвращают delta-DTO, а не `void`/`bool`.
-- [ ] «Не найдено» и «нет доступа» неразличимы для потребителя (`findByIdOrFail` ищет поверх `queryForUser`). Это **единственный канонический** lookup; НЕ плоди `findByCodeOrFail`/`findBySlugOrFail` на каждое поле — см. `php/naming-conventions`.
-- [ ] Фасад — чистое делегирование, без логики; классы `final`, store-репозитории `final readonly`.
-- [ ] Delta-DTO — `final readonly`, лежит в `app/Dto/<Домен>/Repository/`.
+- [ ] Read and store separated: no mutations in `ReadRepository`, no display-queries in `StoreRepository`.
+- [ ] Every public read method goes through `queryForUser()`; bypass rights only via explicit `ignorePermissions: true`.
+- [ ] Repository opens **NO transactions** — runs inside Action's transaction.
+- [ ] Repository does **NOT write history and does NOT dispatch events**. Typical bug: `recordHistory()` inside `persistFromForm()` — business-logic leak; history and events belong to Action/StateMachine.
+- [ ] Repository does **NOT accept `Request`** — only DTO commands (write) and scalars/enums/models (read).
+- [ ] Repository makes **NO authorization decisions** — visibility only via injected `VisibilityService` with explicit signature `apply(Builder, ?User, bool $ignorePermissions): Builder`.
+- [ ] Repeated predicates moved to model scopes with domain names; repository does not duplicate where-chains.
+- [ ] Sync ops idempotent (updateOrCreate + delete dropped) and return delta-DTO, not `void`/`bool`.
+- [ ] "Not found" and "no access" indistinguishable to consumer (`findByIdOrFail` searches atop `queryForUser`). This is the **only canonical** lookup; do NOT breed `findByCodeOrFail`/`findBySlugOrFail` per field — see `php/naming-conventions`.
+- [ ] Facade — pure delegation, no logic; classes `final`, store-repos `final readonly`.
+- [ ] Delta-DTO — `final readonly`, in `app/Dto/<Domain>/Repository/`.
 
-## Ссылки
+## Links
 
-- `php/laravel-structure` — размещение слоёв (`app/Repositories/<Домен>/`, `app/Dto/<Домен>/Repository/`, `app/Services/<Домен>/Access/`).
-- `php/dependency-injection` — кто кого инжектит: VisibilityService → ReadRepository → Repository(фасад) → контроллер; StoreRepository → Action.
-- `php/laravel` → `layer-boundaries.md` — границы слоёв: что разрешено Action, что репозиторию, что модели.
-- `php/laravel-data` — DTO-команды (`Form`), которые принимает write-side; `php/php-patterns` — delta-DTO и specification.
-- `php/naming-conventions` — как называть методы репозитория по намерению (вместо `findByX...OrFail`-взрыва) и scopes.
-- `php/database` — модели и scopes, поверх которых строятся выборки.
-- `php/laravel-permissions` / `php/azguard` — где определяются права, которые читает `VisibilityService`.
+- `php/laravel-structure` — layer placement (`app/Repositories/<Domain>/`, `app/Dto/<Domain>/Repository/`, `app/Services/<Domain>/Access/`).
+- `php/dependency-injection` — who injects whom: VisibilityService → ReadRepository → Repository(facade) → controller; StoreRepository → Action.
+- `php/laravel` → `layer-boundaries.md` — layer boundaries: what's allowed to Action, repository, model.
+- `php/laravel-data` — DTO commands (`Form`) accepted by write-side; `php/php-patterns` — delta-DTO and specification.
+- `php/naming-conventions` — naming repository methods by intent (vs `findByX...OrFail`-explosion) and scopes.
+- `php/database` — models and scopes the queries build on.
+- `php/laravel-permissions` / `php/azguard` — where rights read by `VisibilityService` are defined.
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: d524219d3ee88c49d2604d825693360dd5c8722bbd06435bb7452332adec053c -->

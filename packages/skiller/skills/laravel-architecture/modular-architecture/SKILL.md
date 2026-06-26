@@ -2,7 +2,7 @@
 name: modular-architecture
 bucket: laravel-architecture
 version: 0.3.0
-description: "Масштабирование Laravel-кода при росте: организация по бизнес-доменам, Модульный Монолит (Modular Monolith) и паттерны DDD; реализация на nwidart/laravel-modules (module:make*, структура модуля, namespace без Modules\\, Filament discovery); стартовая структура — php/laravel-structure"
+description: "Scale Laravel code as it grows: organize by business domain, Modular Monolith and DDD patterns; implement with nwidart/laravel-modules (module:make*, module structure, namespace without Modules\\, Filament discovery); starting structure — php/laravel-structure"
 risk: write
 persona: oss-dev
 tags: [php, laravel, architecture, nwidart, laravel-modules, filament]
@@ -14,90 +14,68 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-# Модульная Архитектура (Laravel)
+# Modular Architecture (Laravel)
 
-## Контекст
+## When to activate
 
-Скилл для масштабирования при росте: десятки доменов, несколько команд, кодовая база, где стандартной структуры Laravel (`app/Http`, `app/Models`) уже недостаточно. Для сложных проектов мы применяем концепцию **Модульного Монолита (Modular Monolith)** или паттерны **Domain-Driven Design (DDD)**. Стартовая структура нового проекта — канон `php/laravel-structure`; сюда переходи, когда он перестаёт вмещать рост.
+- Asks to "split monolith into modules", "organize code by domains", "extract domain/bounded context", "modular monolith", "DDD structure" in a Laravel project.
+- Flat `app/Http`, `app/Models` bloated: dozens of controllers/models in one folder, multiple teams editing one dir, cross-domain deps appearing.
+- Mentions `nwidart/laravel-modules`, `module:make*` commands, `Modules/` dir, per-module isolation of migrations/configs/frontend.
+- Need to register Filament resources from modules (`discoverResources` per module) or configure separate per-module Vite build.
+- NOT for a new empty project without growth signs — use `php/laravel-structure` there.
 
-**Когда активировать:**
+## Core idea
 
-- Просят «разбить монолит на модули», «организовать код по доменам», «выделить домен/bounded context», «модульный монолит», «DDD-структура» в Laravel-проекте.
-- Плоская структура `app/Http`, `app/Models` распухла: десятки контроллеров/моделей в одной папке, несколько команд правят один каталог, появляются cross-домен зависимости.
-- Упоминают `nwidart/laravel-modules`, команды `module:make*`, каталог `Modules/`, изоляцию миграций/конфигов/фронта по модулям.
-- Нужно подключить Filament-ресурсы из модулей (`discoverResources` по модулям) или настроить раздельную Vite-сборку модуля.
+Organize code by **business domain** (everything for Invoices in one place), not by technical type (all controllers in one folder, all models in another).
 
-Не активировать для нового пустого проекта без признаков роста — там стартовая структура `php/laravel-structure`.
+## Algorithm
 
-## Основная Идея
+1. **Define domain boundaries (bounded contexts).** Group entities/logic by business meaning (Invoices, Users, Wallets, Notifications), not technical type. One domain = one module. Avoid a "common" dumping-ground module.
+2. **Choose module organization:**
+   - *Lightweight (no package):* `app/Modules/<Domain>/` with subfolders `Controllers/`, `DTOs/`, `Jobs/`, `Models/`, `Providers/`, `Repositories/`, `Services/`. Register via custom `ModuleServiceProvider` scanning folders; if needed PSR-4 `"Modules\\": "app/Modules/"` in root `composer.json`.
+   - *Full (`nwidart/laravel-modules`):* when generators, migration/config isolation, separate per-module frontend build are needed. Modules live in root `Modules/`, each a self-sufficient unit.
+3. **Create module (nwidart):** `php artisan module:make <Name>` — generates full skeleton (`app/`, `database/`, `routes/`, `tests/`, `config/`, `module.json`, `composer.json`, `vite.config.js`). Files inside a module — only via `module:make-*` generators (module name as last arg), not by hand.
+4. **Namespace without `Modules\` prefix:** in module `composer.json` map PSR-4 `<Name>\` to `app/` (and `<Name>\Database\Factories|Seeders|Migrations`, `<Name>\Tests`); set `'namespace' => ''` in `config/modules.php`; in `module.json` set provider as `"<Name>\\Providers\\<Name>ServiceProvider"`. Root `composer.json` merges module ones via `wikimedia/composer-merge-plugin` — then one `composer dump-autoload` at root.
+5. **Module isolation:** forbid cross-DB join between modules — communication only via Contracts/public Services or Events. Data between modules and layers — via DTO, not raw arrays. Keep controllers thin: validation → DTO → call Service/Action → Response/Resource.
+6. **Register module Filament resources (if any):** generate normally `make:filament-resource <Name> --generate`, move to `Modules/<Name>/app/Filament/Resources`, fix namespace `App\Filament\Resources\...` → `<Name>\Filament\Resources\...` in all files (Resource, Pages, RelationManagers), then register `discoverResources(in: base_path('Modules/<Name>/app/Filament/Resources'), for: '<Name>\\Filament\\Resources')` in `AdminPanelProvider`.
+7. **Module frontend (if any):** own `vite.config.js` with unique `buildDirectory` (e.g. `build-<name>`), entries `resources/css/app.css` and `resources/js/app.js` of the module; export `paths` for the shared entry aggregator `vite-module-loader.js`.
+8. **Run quality checklist** and run `composer dump-autoload`, module migrations, module tests (`Modules/<Name>/tests/`).
 
-Код должен быть организован не по техническому типу (все контроллеры в одной папке, все модели в другой), а по **Бизнес-Доменам** (например, всё, что связано со Счетами (Invoices), лежит в одном месте).
+Ready snippets for steps 3–7 (tree, `module.json`, `composer.json`, `config/modules.php`, commands, `vite.config.js`, discovery block) — in `snippets/nwidart-module.md`.
 
-## Алгоритм
+## Directory structure (lightweight)
 
-Полная процедура перехода к модульной архитектуре и работы с ней.
-
-1. **Определи границы доменов (bounded contexts).** Сгруппируй сущности и логику по бизнес-смыслу (Invoices, Users, Wallets, Notifications), а не по техническому типу. Один домен = один модуль. Избегай «общего» модуля-свалки.
-
-2. **Выбери способ организации модулей:**
-   - *Лёгкий путь (без пакета):* каталог `app/Modules/<Domain>/` с подпапками `Controllers/`, `DTOs/`, `Jobs/`, `Models/`, `Providers/`, `Repositories/`, `Services/` (см. «Структура Директорий»). Регистрация — кастомный `ModuleServiceProvider`, сканирующий папки; при необходимости PSR-4 `"Modules\\": "app/Modules/"` в корневом `composer.json` (см. «Автозагрузка»).
-   - *Полноценный путь (`nwidart/laravel-modules`):* когда нужны генераторы, изоляция миграций/конфигов и отдельная сборка фронта на модуль. Модули живут в корневом `Modules/`, каждый — самодостаточная единица (см. «Реализация на `nwidart/laravel-modules`»).
-
-3. **Создай модуль (nwidart):** `php artisan module:make <Name>` — генерирует весь скелет (`app/`, `database/`, `routes/`, `tests/`, `config/`, `module.json`, `composer.json`, `vite.config.js`). Файлы внутри модуля — только генераторами `module:make-*` (имя модуля последним аргументом), не руками.
-
-4. **Настрой namespace без префикса `Modules\`:** в `composer.json` модуля маппни PSR-4 `<Name>\` на `app/` (и `<Name>\Database\Factories|Seeders|Migrations`, `<Name>\Tests`); в `config/modules.php` выставь `'namespace' => ''`; в `module.json` укажи провайдер как `"<Name>\\Providers\\<Name>ServiceProvider"`. Корневой `composer.json` сливает модульные через `wikimedia/composer-merge-plugin` — затем один `composer dump-autoload` в корне.
-
-5. **Обеспечь изоляцию модулей:** запрети cross-DB join между модулями — общение только через Contracts/публичные Services или Events (см. «Правила Изоляции Модулей» и «События»). Данные между модулями и слоями — через DTO, не сырыми массивами. Контроллеры держи тонкими: валидация → DTO → вызов Service/Action → Response/Resource.
-
-6. **Подключи Filament-ресурсы модуля (если есть):** сгенерируй штатно `make:filament-resource <Name> --generate`, перенеси в `Modules/<Name>/app/Filament/Resources`, поправь namespace `App\Filament\Resources\...` → `<Name>\Filament\Resources\...` во всех файлах (Resource, Pages, RelationManagers), затем зарегистрируй `discoverResources(in: base_path('Modules/<Name>/app/Filament/Resources'), for: '<Name>\\Filament\\Resources')` в `AdminPanelProvider`.
-
-7. **Настрой фронт модуля (если есть):** свой `vite.config.js` с уникальным `buildDirectory` (например `build-<name>`), входы `resources/css/app.css` и `resources/js/app.js` модуля; экспортируй `paths` для общего агрегатора входов `vite-module-loader.js`.
-
-8. **Проверь по чеклисту качества** и прогони `composer dump-autoload`, миграции модуля и тесты модуля (`Modules/<Name>/tests/`).
-
-Готовые фрагменты для шагов 3–7 (дерево, `module.json`, `composer.json`, `config/modules.php`, команды, `vite.config.js`, блок discovery) — в `snippets/nwidart-module.md`.
-
-## Структура Директорий
-
-Обычно мы создаем директорию `app/Modules` (или `src/Modules`).
+Create `app/Modules` (or `src/Modules`):
 
 ```text
 app/
   Modules/
     Invoices/
-      Controllers/    # HTTP слой
+      Controllers/    # HTTP layer
       DTOs/           # Data Transfer Objects
-      Jobs/           # Фоновые задачи
-      Models/         # Eloquent модели домена
-      Providers/      # Service Providers модуля
-      Repositories/   # Доступ к данным (если используется)
-      Services/       # Бизнес-логика
+      Jobs/           # background jobs
+      Models/         # domain Eloquent models
+      Providers/      # module Service Providers
+      Repositories/   # data access (if used)
+      Services/       # business logic
     Users/
       ...
 ```
 
-## Правила Изоляции Модулей
+## Module isolation rules
 
-1.  **Отсутствие перекрестных зависимостей БД:** Модуль `Invoices` не должен напрямую делать SQL Join с таблицами модуля `Users`. Вместо этого модули должны общаться через интерфейсы или публичные Сервисы (Contracts).
-2.  **Использование DTO:** При передаче данных между модулями (или от контроллера к сервису) используйте Data Transfer Objects. Никаких сырых массивов.
-3.  **Тонкие Контроллеры:** Контроллер должен только:
-    - Валидировать Request.
-    - Сформировать DTO.
-    - Вызвать метод Сервиса или Action-класса.
-    - Вернуть Response/Resource.
-    Вся бизнес-логика должна жить в слое Services или Actions.
+1. **No cross-DB dependencies:** module `Invoices` must not directly SQL-join `Users` tables; modules communicate via interfaces or public Services (Contracts).
+2. **Use DTOs:** passing data between modules (or controller→service) — use DTOs, no raw arrays.
+3. **Thin controllers** — only: validate Request; build DTO; call Service/Action method; return Response/Resource. All business logic lives in Services or Actions.
 
-## События (Events)
+## Events
 
-Для максимальной слабой связности (loose coupling) между модулями используйте Event-Driven подход.
-Если при регистрации пользователя нужно отправить письмо и создать кошелек, модуль `Users` просто кидает событие `UserRegistered`.
-Модуль `Notifications` и модуль `Wallets` слушают это событие и выполняют свою логику независимо.
+For loose coupling between modules use Event-Driven approach. On user registration, module `Users` fires `UserRegistered`; modules `Notifications` and `Wallets` listen and run their logic independently.
 
-## Автозагрузка (Autoloading)
+## Autoloading
 
-Для регистрации провайдеров, роутов и миграций модулей можно использовать пакеты (например, `nWidart/laravel-modules`) или делать это вручную через кастомный `ModuleServiceProvider`, который сканирует папки модулей.
+Register module providers/routes/migrations via a package (e.g. `nWidart/laravel-modules`) or manually via a custom `ModuleServiceProvider` scanning module folders. PSR-4 in `composer.json` may be needed (inside `app/` Laravel resolves everything under `App\` by default):
 
-В `composer.json` может потребоваться настройка PSR-4 (хотя внутри `app/` Laravel по умолчанию резолвит всё под неймспейсом `App\`):
 ```json
 "autoload": {
     "psr-4": {
@@ -107,92 +85,96 @@ app/
 }
 ```
 
-## Реализация на `nwidart/laravel-modules`
+## Implementation with `nwidart/laravel-modules`
 
-Когда ручной `ModuleServiceProvider` перестаёт окупаться (нужны генераторы, отдельная сборка фронта, изоляция миграций/конфигов на модуль) — переходим на пакет `nwidart/laravel-modules`. Модули живут в корневой директории `Modules/` (а не в `app/Modules/`), каждый — самодостаточная единица со своим `composer.json`, провайдерами, роутами, тестами и Vite-конфигом.
+When the manual `ModuleServiceProvider` no longer pays off (need generators, separate frontend build, per-module migration/config isolation) — switch to `nwidart/laravel-modules`. Modules live in root `Modules/` (not `app/Modules/`), each self-sufficient with own `composer.json`, providers, routes, tests, Vite config.
 
-### Структура модуля
+### Module structure
 
-Скелет, который генерирует `module:make`, повторяет структуру Laravel-приложения внутри модуля:
+`module:make` generates a Laravel-app-like structure inside the module:
 
 ```text
 Modules/Billing/
   app/
-    Filament/Resources/   # Filament-ресурсы модуля
+    Filament/Resources/   # module Filament resources
     Http/Controllers/
-    Models/Invoice/       # группировка по сущности (Invoice.php, InvoiceItem.php)
+    Models/Invoice/       # group by entity (Invoice.php, InvoiceItem.php)
     Providers/            # BillingServiceProvider, RouteServiceProvider, EventServiceProvider
     Repositories/
-  config/config.php       # сливается в config('billing.*')
+  config/config.php       # merged into config('billing.*')
   database/{factories,migrations,seeders}/
   resources/{css,js,views}/
   routes/{web.php,api.php}
   tests/{Feature,Unit}/
-  module.json             # манифест: имя, alias, приоритет, провайдеры
-  composer.json           # PSR-4 модуля (сливается merge-plugin'ом в корень)
-  vite.config.js          # отдельная сборка фронта модуля (build-billing)
+  module.json             # manifest: name, alias, priority, providers
+  composer.json           # module PSR-4 (merged into root by merge-plugin)
+  vite.config.js          # separate module frontend build (build-billing)
 ```
 
-### Команды генерации
+### Generation commands
 
-- `php artisan module:make Billing` — создать модуль (весь скелет выше: `app/`, `database/`, `routes/`, `tests/`, `config/`, `module.json`, `composer.json`, `vite.config.js`).
-- `php artisan list module` — посмотреть все доступные `module:*` команды.
-- Файлы **внутри** модуля: имя модуля — последний аргумент:
+- `php artisan module:make Billing` — create module (full skeleton above: `app/`, `database/`, `routes/`, `tests/`, `config/`, `module.json`, `composer.json`, `vite.config.js`).
+- `php artisan list module` — list all `module:*` commands.
+- Files **inside** module: module name is last arg:
   - `php artisan module:make-model Invoice Billing`
   - `php artisan module:make-controller InvoiceController Billing`
   - `php artisan module:make-migration create_invoices_table Billing`
-  - `php artisan module:make-provider`, `module:make-seeder`, `module:make-test` — аналогично.
-- Группировка сущностей в подпапки — путь прямо в имени: `php artisan module:make-model Invoice/Invoice Billing` → `Billing\Models\Invoice\Invoice`.
+  - `php artisan module:make-provider`, `module:make-seeder`, `module:make-test` — same.
+- Group entities into subfolders — path in the name: `php artisan module:make-model Invoice/Invoice Billing` → `Billing\Models\Invoice\Invoice`.
 
-### Конвенция маппинга namespace (без префикса `Modules\`)
+### Namespace mapping convention (no `Modules\` prefix)
 
-По умолчанию nwidart раскладывает классы под `Modules\Billing\Models\Invoice`. Конвенция проекта: **неймспейс начинается с имени модуля** — `Billing\Models\Invoice` вместо `Modules\Billing\Models\Invoice` (короче, читаемее, симметрично `App\`). Достигается двумя настройками:
+nwidart defaults to `Modules\Billing\Models\Invoice`. Project convention: **namespace starts with module name** — `Billing\Models\Invoice` instead of `Modules\Billing\Models\Invoice`. Achieved by:
 
-1. **PSR-4 в `composer.json` модуля** маппит `Billing\` на `app/` (а также `Billing\Database\Factories\`, `...\Seeders\`, `...\Migrations\`, `Billing\Tests\`).
-2. **`'namespace' => ''` в `config/modules.php`** — пустой префикс, чтобы пакет резолвил классы модуля как `Billing\...`, а не `Modules\Billing\...` (это влияет на генераторы, Blade-компоненты и т.п.).
-3. Провайдер в `module.json` указывается без `Modules\`: `"providers": ["Billing\\Providers\\BillingServiceProvider"]`.
+1. **PSR-4 in module `composer.json`** maps `Billing\` to `app/` (also `Billing\Database\Factories\`, `...\Seeders\`, `...\Migrations\`, `Billing\Tests\`).
+2. **`'namespace' => ''` in `config/modules.php`** — empty prefix so package resolves module classes as `Billing\...`, not `Modules\Billing\...` (affects generators, Blade components, etc.).
+3. Provider in `module.json` without `Modules\`: `"providers": ["Billing\\Providers\\BillingServiceProvider"]`.
 
-Корневой `composer.json` сливает все модульные `composer.json` через `wikimedia/composer-merge-plugin` (`"merge-plugin": { "include": ["Modules/*/composer.json"] }`), поэтому отдельный `dump-autoload` на модуль не нужен — после создания модуля достаточно одного `composer dump-autoload` в корне.
+Root `composer.json` merges all module `composer.json` via `wikimedia/composer-merge-plugin` (`"merge-plugin": { "include": ["Modules/*/composer.json"] }`), so no per-module `dump-autoload` — after creating a module one `composer dump-autoload` at root suffices.
 
-### Сборка фронта модуля (Vite)
+### Module frontend build (Vite)
 
-У каждого модуля свой `vite.config.js` с отдельным `buildDirectory` (`build-billing`), чтобы ассеты модулей не перетирали друг друга; входы — `resources/css/app.css` и `resources/js/app.js` модуля. Конфиг экспортирует `paths` для общего агрегатора входов (`vite-module-loader.js`).
+Each module has own `vite.config.js` with separate `buildDirectory` (`build-billing`) so module assets don't overwrite each other; entries — module `resources/css/app.css` and `resources/js/app.js`. Config exports `paths` for the shared entry aggregator (`vite-module-loader.js`).
 
-### Регистрация и discovery Filament-ресурсов по модулям
+### Registering and discovering module Filament resources
 
-nwidart не генерирует Filament-ресурсы прямо в модуль. Рабочий цикл:
+nwidart does not generate Filament resources into a module. Workflow:
 
-1. Сгенерировать ресурс штатной командой Filament: `php artisan make:filament-resource Invoice --generate` (попадает в `app/Filament/Resources`).
-2. Перенести файлы в `Modules/Billing/app/Filament/Resources`.
-3. Поправить namespace во **всех** перенесённых файлах (Resource, Pages, RelationManagers): `App\Filament\Resources\...` → `Billing\Filament\Resources\...`.
+1. Generate resource via Filament command: `php artisan make:filament-resource Invoice --generate` (lands in `app/Filament/Resources`).
+2. Move files to `Modules/Billing/app/Filament/Resources`.
+3. Fix namespace in **all** moved files (Resource, Pages, RelationManagers): `App\Filament\Resources\...` → `Billing\Filament\Resources\...`.
 
-Регистрация (discovery) в панели — в `app/Providers/Filament/AdminPanelProvider.php`: каждый модуль добавляет свой `discoverResources` с базовым путём и неймспейсом модуля:
+Discovery in `app/Providers/Filament/AdminPanelProvider.php`: each module adds its `discoverResources` with module base path and namespace:
 
 ```php
 ->discoverResources(
     in: base_path('Modules/Billing/app/Filament/Resources'),
-    for: 'Billing\\Filament\\Resources',   // namespace БЕЗ префикса Modules\
+    for: 'Billing\\Filament\\Resources',   // namespace WITHOUT Modules\ prefix
 )
 ```
 
-Подробное дерево, `module.json`, фрагменты `composer.json`/`config/modules.php`, `vite.config.js` и блок discovery — в `snippets/nwidart-module.md`.
+Detailed tree, `module.json`, `composer.json`/`config/modules.php` snippets, `vite.config.js`, discovery block — in `snippets/nwidart-module.md`.
 
-## Чеклист качества
+## Quality checklist
 
-- [ ] Код организован по бизнес-доменам, а не по техническому типу
-- [ ] Между модулями нет cross-DB join'ов; общение через Contracts/Services или Events
-- [ ] Данные между модулями/слоями передаются через DTO, не сырыми массивами
-- [ ] Контроллеры тонкие, бизнес-логика в Services/Actions
-- [ ] (nwidart) Файлы модуля созданы через `php artisan module:make*`, а не руками
-- [ ] (nwidart) Namespace модуля — `Module\...` без префикса `Modules\` (PSR-4 + `config/modules.php` `namespace => ''`)
-- [ ] (nwidart) Каждый Filament-ресурс модуля зарегистрирован через `discoverResources` с путём `base_path('Modules/{Name}/app/Filament/Resources')` и неймспейсом модуля
-- [ ] (nwidart) У модуля с фронтом свой `vite.config.js` с уникальным `buildDirectory`
+- [ ] Code organized by business domain, not technical type
+- [ ] No cross-DB joins between modules; communication via Contracts/Services or Events
+- [ ] Data between modules/layers passed via DTO, not raw arrays
+- [ ] Controllers thin, business logic in Services/Actions
+- [ ] (nwidart) Module files created via `php artisan module:make*`, not by hand
+- [ ] (nwidart) Module namespace — `Module\...` without `Modules\` prefix (PSR-4 + `config/modules.php` `namespace => ''`)
+- [ ] (nwidart) Each module Filament resource registered via `discoverResources` with path `base_path('Modules/{Name}/app/Filament/Resources')` and module namespace
+- [ ] (nwidart) Module with frontend has own `vite.config.js` with unique `buildDirectory`
 
-## Ссылки
+## Links
 
-- snippets/nwidart-module.md — дерево модуля, module.json, composer namespace, команды module:make*, vite.config.js, Filament discovery
+- snippets/nwidart-module.md — module tree, module.json, composer namespace, module:make* commands, vite.config.js, Filament discovery
 - https://github.com/nWidart/laravel-modules
-- Стартовая структура нового проекта: скилл `php/laravel-structure`
-- Filament-ресурсы модуля и discovery: `php/filament`
-- Сборка фронта модуля (Vite): `frontend/vite-module-loader`, `frontend/vite-multi-build`
-- Слои внутри модуля: `php/repositories`, `php/dependency-injection`, DTO между модулями — `php/laravel-data`
+- Starting structure of a new project: skill `php/laravel-structure`
+- Module Filament resources and discovery: `php/filament`
+- Module frontend build (Vite): `frontend/vite-module-loader`, `frontend/vite-multi-build`
+- Layers inside a module: `php/repositories`, `php/dependency-injection`, DTO between modules — `php/laravel-data`
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: 4c8bd23555827ad680eed154fe36be0bf90e09b70c0b3d52a45789dd3f63b06b -->

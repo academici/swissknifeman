@@ -2,6 +2,80 @@
 
 ## [Unreleased]
 
+### Added (skiller — двуязычные скиллы: компактный EN-канон + полный RU-источник)
+
+- **193 скилла переведены в двуязычную модель.** Локальные (139): `SKILL.ru.md` — полный русский
+  ИСТОЧНИК (его правит человек, SSOT), `SKILL.md` — компактный английский канон (генерируется из RU,
+  грузит только его агент; русский в контекст не попадает). Внешние (54): EN-канон от upstream не
+  тронут, добавлена `SKILL.ru.md`-справка. Все 139 EN-канонов прошли adversarial-верификацию фиделити
+  (ни одно правило/условие/порог/код/путь не потеряно, ничего не добавлено).
+- **Экономия ~32% токенов** на телах локальных скиллов (≈268K→182K ток): английский у токенайзера
+  Claude плотнее кириллицы. `budget.py` — языко-зависимая оценка (кириллица ~2.2 / латиница ~4.0
+  chars/tok); карта `docs/guide/budget.md` показывает эффект.
+- Поток правок: правишь `SKILL.ru.md` → регенеришь `SKILL.md` (`prompts/generate/claude-canon-from-ru.md`)
+  → `check-translations.sh --stamp`. Когерентность канона метит `<!-- ru-source-sha256 -->`.
+- `*.ru.md` НЕ вендорятся в проекты (едет только EN-канон); генерация выполнена многоагентным Workflow.
+
+### Added (skiller — внедрение mattpocock/skills: инженерная методология + встраивание в цепочку)
+
+- **9 импортированных скиллов** из [mattpocock/skills](https://github.com/mattpocock/skills) (MIT),
+  fold-in в существующие бакеты (без нового бакета), `strategy: notify`:
+  `quality/diagnosing-bugs` (6-фазная отладка: feedback-loop до гипотез, тег `[DEBUG-xxxx]`),
+  `quality/tdd-discipline` (red-green-refactor вертикальными срезами, не горизонтально),
+  `architect/codebase-design` (глубокие модули Ousterhout/Feathers: depth/seam/deletion-test;
+  свёрнут HTML-report из improve-codebase-architecture),
+  `architect/domain-modeling` (глоссарий `CONTEXT.md` + ADR инлайн, мульти-контекст),
+  `general/implement` (цепочка implement→tdd→review, **user-invoked**),
+  `oss-dev/to-issues` (план→issue вертикальными срезами + поля Affected projects/Environment, **user-invoked**),
+  `oss-dev/issue-triage` (стейт-машина триажа + роль `needs-device-access` для железа, **user-invoked**),
+  `oss-dev/resolving-merge-conflicts`, и центральный `general/grill-with-docs` (грилинг + доменная
+  модель против внешних API/RFC-спек, **user-invoked**).
+- **Уровень + условия активации на каждый скилл** (ответ на «не папки, а в цепочку»): компактный
+  `description`-роутер (ярус-0 always), lean-тело (ярус-1 on-trigger), под-файлы mattpocock →
+  `snippets/` (ярус-2 on-demand); сайд-эффектные (implement/to-issues/issue-triage/grill-with-docs) —
+  `disable-model-invocation: true`; `general/git-safety` — `lifecycle: init`. НЕ в CORE — opt-in.
+- **Встроены в цепочку рёбрами `requires/produces_for`**: grill-with-docs→{spec-interview,domain-modeling};
+  to-issues→github-flow, produces_for→implement; implement→{tdd-discipline,code-review};
+  diagnosing-bugs→code-review; codebase-design→{refactoring-plan,architecture};
+  domain-modeling→{architecture,api-design,data-schema}; resolving-merge-conflicts→git-commit-rules.
+  Плюс секции «Связанные скиллы» в каждом теле.
+- **Раздача через presets** — новый `presets/engineering-workflow.json` (сквозной конвейер) +
+  расширены `agent-tasks` (grill-with-docs/implement/to-issues), `code-quality` (tdd-discipline/
+  diagnosing-bugs), `system-design` (codebase-design/domain-modeling).
+- **Расширен `general/spec-interview`** (наш грилинг) — ссылки на `grill-with-docs`/`to-issues`/`implement`.
+- **git-guardrails → harness, не скилл** (поправка к аудиту): PreToolUse-хук
+  `block-dangerous-git.sh` (+`force-with-lease`/`rebase --onto`) в
+  `packages/harness/configs/claude-code/hooks/git-guardrails/`, обёртка-скилл `general/git-safety`.
+- **Агенты грузят новые скиллы через `skills:`**: `issue-triager`←`issue-triage`,
+  `sprint-planner`←`to-issues`, `review-gatekeeper`←`diagnosing-bugs`/`tdd-discipline`
+  (harness agent-packs `role-maintainer`/`role-tech-lead` → 0.2.0).
+- **Провенанс**: источник зарегистрирован в
+  [references/mattpocock-skills.md](packages/skiller/references/mattpocock-skills.md) (`imported`) +
+  per-skill `upstream.json` (sha256/fetched_at, HEAD `5d78bd09`).
+
+### Added (skiller — токеновый бюджет + карта-диаграмма + промты + задел переводов)
+
+- **Команда `skiller budget`** — трёхъярусная модель раскрытия контекста: **⊕ always**
+  (`name`+`description`, резидентно в каждом запросе — постоянный «налог»), **↻ on-trigger**
+  (тело `SKILL.md`), **⌥ on-demand** (сниппеты). Режимы: `--config F.json`, `--compare a,b`,
+  `--json`, `--profile/--buckets/--exclude`, `--no-core`, `--write-map`. Модуль
+  [budget.py](packages/skiller/lib/skiller/budget.py) — **единый источник** токен-математики
+  (переиспользует `resolve_selection`/`collect_skills`/`resolve_requires`, без дублирования
+  выборки). +9 unit-тестов (`tests/test_budget.py`).
+- **Карта токенового бюджета** — сгенерированная mermaid-страница
+  [docs/guide/budget.md](packages/skiller/docs/guide/budget.md): узел на скилл (по бакетам),
+  heat-цвет по ⊕ always, рёбра `requires` = транзитивный налог, таблицы по бакетам и топам.
+  Регенерится `skiller registry` (in-process, после графа); пункт в VitePress sidebar.
+- **Строка бюджета в `skiller status`** — ⊕ always/↻ bodies набора проекта + топ-3 описаний.
+- **Промт-библиотека** [prompts/](packages/skiller/prompts/) (audit/review/generate) — шаблоны
+  для сопровождения реестра (то, что `validate.sh` не ловит: пересечения, водность, дубли).
+- **Задел переводов** — `SKILL.<lang>.md` gitignored (агент грузит только `SKILL.md`); чекер
+  покрытия [check-translations.sh](packages/skiller/scripts/check-translations.sh) (`--lang`,
+  `--generate-stubs`).
+- *Из аудита Perplexity — отклонено как дубль:* `generate-graph.ts` (= существующий
+  `generate-graph.sh`) и `drift-check.ts` (= `validate.sh`); токен-модель аудита исправлена
+  (тело ≠ «всегда загружено» → трёхъярусная).
+
 ### Added (skiller — пресеты/кластеры скиллов + тонкие бакеты для конфиг-управляемого per-project sync)
 
 - **Слой пресетов** — `presets/<name>.json` (`{name, description, extends?, buckets?, include?}`):

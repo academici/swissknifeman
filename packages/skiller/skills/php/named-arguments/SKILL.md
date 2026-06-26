@@ -2,7 +2,7 @@
 name: named-arguments
 bucket: php
 version: 0.1.0
-description: "Правило обязательных именованных аргументов в PHP: вызовы методов/функций, исключения, активировать при написании или ревью вызовов и при упоминании читаемости/порядка параметров"
+description: "PHP rule: method/function calls use named arguments; exceptions; activate when writing/reviewing calls or when readability/parameter order is mentioned"
 risk: read
 persona: oss-dev
 tags: ["php", "code-style", "readability", "conventions"]
@@ -14,31 +14,18 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-## Контекст
+## Activate when
 
-Правило стиля: **вызовы методов и функций используют именованные аргументы**
-(`foo(name: $value)`), а не позиционные. Это политика, а не паттерн: реестровые
-скиллы (`php/laravel`, `php/dependency-injection`, `php/repositories`) уже пишут
-примеры с именованными аргументами — этот скилл формулирует правило явно и задаёт
-границы его применения.
+- Writing/reviewing a method/function call with 2+ arguments.
+- User mentions named arguments, call readability, or parameter order.
+- Refactoring legacy positional calls.
 
-Зачем: устойчивость к изменению порядка/добавлению параметров, читаемость на
-месте вызова (видно назначение каждого аргумента без перехода к сигнатуре),
-безопаснее при рефакторинге чужого API.
+## Rules
 
-## Когда активировать
-
-- Пишешь или ревьюишь вызов метода/функции с двумя и более аргументами.
-- Пользователь упоминает «именованные аргументы», читаемость вызовов или порядок
-  параметров.
-- Рефакторишь legacy-вызовы с позиционными аргументами.
-
-## Алгоритм
-
-### 1. По умолчанию — именованные аргументы
+### 1. Default: named arguments
 
 ```php
-// ✅ Именованные аргументы
+// ✅ Named arguments
 $user = User::query()->updateOrCreate(
     attributes: ['email' => $email],
     values: ['name' => $name],
@@ -51,44 +38,41 @@ $collection = $this->addMediaCollection(name: 'avatar')
 ```
 
 ```php
-// ❌ Позиционные аргументы там, где назначение неочевидно
+// ❌ Positional where intent is unclear
 $user = User::query()->updateOrCreate(['email' => $email], ['name' => $name]);
 $model->save(['touch' => false]);
 ```
 
-### 2. Применяй ко всем вызовам прикладного кода
+### 2. Apply to all application-code calls
 
-Вызовы методов объектов и статических методов, функций фреймворка
-(`config`, `app`, …), Eloquent, билдеров (Filament, query builder), сторонних
-пакетов — везде, где сигнатура имеет имена параметров.
+Object/static methods, framework functions (`config`, `app`, …), Eloquent, builders (Filament, query builder), third-party packages — anywhere the signature has parameter names.
 
-### 3. Исключения (именованные не обязательны)
+### 3. Exceptions (named not required)
 
-- **Один очевидный аргумент**, где имя не добавляет ясности и не страхует от
-  ошибок: `strtolower($s)`, `count($items)`, `$str->trim()`. Именовать можно, но
-  не обязательно.
-- **Встроенные PHP-функции** с устоявшейся сигнатурой (`array_map`,
-  `array_filter`, `implode`) — по желанию; имена параметров PHP-функций иногда
-  меняются между версиями, поэтому здесь правило мягче.
-- **Вариативные/сплат-аргументы** (`...$args`) — именовать нечего.
+- **Single obvious arg** where the name adds no clarity: `strtolower($s)`, `count($items)`, `$str->trim()`. Naming optional.
+- **Built-in PHP functions** with established signatures (`array_map`, `array_filter`, `implode`) — optional (PHP param names sometimes change between versions).
+- **Variadic/splat args** (`...$args`) — nothing to name.
 
-### 4. На ревью
+### 4. On review
 
-Позиционный вызов с 2+ неочевидными аргументами — попроси переписать на
-именованные. Не блокируй на исключениях из шага 3.
+Positional call with 2+ unclear args → request rewrite to named. Don't block on step-3 exceptions.
 
-## Чеклист качества
+## Quality checklist
 
-- [ ] Вызовы с 2+ аргументами используют именованные аргументы
-- [ ] Eloquent / билдеры / вызовы пакетов — именованные
-- [ ] Исключения применены осознанно (один аргумент, встроенные функции, сплат)
-- [ ] Имена аргументов совпадают с сигнатурой (проверено по объявлению метода)
+- [ ] Calls with 2+ args use named arguments
+- [ ] Eloquent / builders / package calls — named
+- [ ] Exceptions applied deliberately (single arg, built-ins, splat)
+- [ ] Argument names match the signature (checked against method declaration)
 
-## Ссылки
+## Links
 
-- `php/laravel` — примеры именованных аргументов в Eloquent, связях, DI.
-- `php/dependency-injection` — конструкторы и method injection с именованными аргументами.
-- `php/repositories` — DTO-команды и вызовы store-методов с именованными аргументами.
-- `php/code-style-spatie` (external) — общий стиль кода Laravel/PHP, в который вписывается это правило.
-- `php/naming-conventions` — это правило про стиль *вызова*; naming-conventions — про имена *самих сущностей* (классы, методы, поля).
-- `php/static-analysis` — конвейер pint/rector, частично подчищающий стиль вызовов.
+- `php/laravel` — named-argument examples in Eloquent, relations, DI.
+- `php/dependency-injection` — constructors and method injection with named arguments.
+- `php/repositories` — DTO commands and store-method calls with named arguments.
+- `php/code-style-spatie` (external) — general Laravel/PHP code style this rule fits into.
+- `php/naming-conventions` — this rule is about *call* style; naming-conventions is about names of *entities* (classes, methods, fields).
+- `php/static-analysis` — pint/rector pipeline that partially cleans up call style.
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: f6c1e8b5f1c035edfd9c4958b7893ed7a3191f196051e92c1f91326a2d7166fe -->

@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "source": "github",
+  "repo": "mattpocock/skills",
+  "strategy": "notify",
+  "license": "MIT",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "url": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/implement/SKILL.md",
+      "sha256": "6e79ad337b162393ec5bd4334c37c468a7f18281856d8b15b1b9e6fb4246c252",
+      "fetched_at": "2026-06-26"
+    }
+  ],
+  "notes": "Из mattpocock/skills engineering/implement (disable-model-invocation сохранён). Тело адаптировано (RU) и конкретизировано под наш стек: /tdd -> tdd-discipline, /review -> code-review, typecheck -> php artisan test / dart analyze / vitest, проверка миграций перед схемой БД. strategy=notify."
+}

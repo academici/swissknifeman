@@ -2,7 +2,7 @@
 name: gitops
 bucket: devops
 version: 0.3.0
-description: "Командная Git-стратегия: модель веток (main/develop/feature/hotfix), PR-workflow, защита веток"
+description: "Team Git strategy: branch model (main/develop/feature/hotfix), PR workflow, branch protection"
 risk: read
 persona: operator
 tags: ["git", "gitops", "github"]
@@ -14,55 +14,53 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-## Контекст
+Scope: gitops = *team strategy* (which branches exist, how code reaches `main`, who/how merges). Commit-message format + local pre-commit order → skill `general/git-commit-rules` (husky/commitlint, safe `git add`/`git commit` order).
 
-Стандартизация Git workflow для команды: модель веток, PR-процесс, защита веток.
+## Branch model
 
-**Границы скилла**: gitops — это *командная стратегия* (какие ветки существуют, как код попадает в `main`, кто и как мержит). Формат сообщений коммитов и порядок локальных действий перед коммитом — скилл `general/git-commit-rules` (husky/commitlint, безопасный порядок `git add`/`git commit`).
-
-## Модель веток
-
-| Ветка | Назначение | Откуда | Куда мержится |
+| Branch | Purpose | From | Merges into |
 |:---|:---|:---|:---|
-| `main` | production, всегда деплоябельна | — | — |
-| `develop` | интеграция (если используется gitflow-lite) | `main` | `main` через release-PR |
-| `feat/*` | новая функциональность | `develop` (или `main` при trunk-based) | `develop`/`main` через PR |
-| `fix/*` | исправление бага | `develop`/`main` | через PR |
-| `chore/*` | обслуживание (CI, зависимости, конфиги) | `develop`/`main` | через PR |
-| `hotfix/*` | срочный фикс прода | `main` | `main` + обратный мерж в `develop` |
+| `main` | production, always deployable | — | — |
+| `develop` | integration (if gitflow-lite used) | `main` | `main` via release-PR |
+| `feat/*` | new functionality | `develop` (or `main` for trunk-based) | `develop`/`main` via PR |
+| `fix/*` | bug fix | `develop`/`main` | via PR |
+| `chore/*` | maintenance (CI, deps, configs) | `develop`/`main` | via PR |
+| `hotfix/*` | urgent production fix | `main` | `main` + back-merge into `develop` |
 
-Именование: `feat/<ticket>-short-description`, kebab-case, без личных префиксов.
+- Naming: `feat/<ticket>-short-description`, kebab-case, no personal prefixes.
 
-## PR-workflow
+## PR workflow
 
-1. Ветка от актуального `main`/`develop` (`git fetch` + `git switch -c feat/... origin/develop`).
-2. Небольшие атомарные коммиты (формат — `general/git-commit-rules`).
-3. PR: заголовок в стиле conventional commit, описание «что/зачем/как проверить», линк на тикет.
-4. CI зелёный + минимум один аппрув → merge. Стратегия merge: squash для feature-веток (одна логическая единица в истории), merge-commit для release/hotfix.
-5. Ветка удаляется после мержа.
+1. Branch from up-to-date `main`/`develop` (`git fetch` + `git switch -c feat/... origin/develop`).
+2. Small atomic commits (format → `general/git-commit-rules`).
+3. PR: conventional-commit-style title; description "what/why/how to verify"; link to ticket.
+4. Green CI + ≥1 approval → merge. Merge strategy: squash for feature branches (one logical unit in history), merge-commit for release/hotfix.
+5. Delete branch after merge.
 
-## Защита веток
+## Branch protection
 
-- `main` (и `develop`): запрет прямых пушей, обязательный PR, обязательный зелёный CI, минимум 1 review, запрет force-push.
-- Hotfix не обходит защиту — тот же PR-процесс, но с ускоренным ревью.
+- `main` (and `develop`): forbid direct pushes, require PR, require green CI, min 1 review, forbid force-push.
+- Hotfix does NOT bypass protection — same PR process, expedited review.
 
-## Когда какой сниппет
+## Snippets
 
-| Сниппет | Когда открывать |
-|:---|:---|
-| `branch-strategy.md` | настройка веточной модели нового репозитория, спор «откуда ветвиться» |
-| `commit-conventions.md` | быстрая шпаргалка по типам conventional commits (детали — `general/git-commit-rules`) |
+- `branch-strategy.md` → set up branch model for new repo, "where to branch from" debate.
+- `commit-conventions.md` → conventional-commit-types cheatsheet (details → `general/git-commit-rules`).
 
-## Чеклист
+## Checklist
 
-- [ ] Ветка названа по конвенции (`feat/*`, `fix/*`, `chore/*`, `hotfix/*`)
-- [ ] Ветка создана от актуального базового бранча
-- [ ] Изменения попадают в защищённые ветки только через PR
-- [ ] CI зелёный, есть аппрув, выбрана правильная merge-стратегия
-- [ ] Hotfix смержен и в `main`, и обратно в `develop` (если develop используется)
-- [ ] Ветка удалена после мержа
+- [ ] Branch named per convention (`feat/*`, `fix/*`, `chore/*`, `hotfix/*`)
+- [ ] Branch created from up-to-date base branch
+- [ ] Changes reach protected branches only via PR
+- [ ] CI green, approval present, correct merge strategy chosen
+- [ ] Hotfix merged into both `main` and back into `develop` (if develop used)
+- [ ] Branch deleted after merge
 
-## Ссылки
+## Links
 
-- Формат сообщений коммитов и pre-commit-порядок: скилл `general/git-commit-rules`
-- Смежные скиллы: `oss-dev/github-flow` (полная цепочка Issue→Branch→PR→Merge→Tag→Release поверх этой веточной модели), `oss-dev/gh-review` (ревью PR через gh CLI), `oss-dev/release-engineering` (релизный pipeline и SemVer), `devops/ci-cd` (зелёный CI как условие мержа в защищённые ветки)
+- Commit-message format + pre-commit order: skill `general/git-commit-rules`
+- Related: `oss-dev/github-flow` (full Issue→Branch→PR→Merge→Tag→Release chain over this branch model), `oss-dev/gh-review` (PR review via gh CLI), `oss-dev/release-engineering` (release pipeline + SemVer), `devops/ci-cd` (green CI as merge gate for protected branches)
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: 7dba8d0cde349e12a3353e6ddf3b1f71fa8da27f0394c6bcdb3eadd711f3d722 -->

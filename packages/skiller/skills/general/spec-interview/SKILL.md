@@ -2,7 +2,7 @@
 name: spec-interview
 bucket: general
 version: 0.1.0
-description: "Интервью перед кодом: агент задаёт вопросы по одному, сам читает кодовую базу где может, предлагает рекомендованный ответ; итог — заполненное ТЗ по task-brief-template."
+description: "Pre-code interview: agent asks one question at a time, reads the codebase itself where it can, proposes a recommended answer; output — a filled task brief per task-brief-template."
 risk: draft
 persona: oss-dev
 tags: [workflow, requirements, discovery]
@@ -16,51 +16,50 @@ sha256: ""
 
 # Spec Interview
 
-## Когда активировать
+## When to activate
 
-Используйте этот skill, когда пользователь приходит с нечёткой идеей
-(«добавь экспорт», «сделай быстрее»), а не с готовой постановкой. Для
-тривиальных задач (очевидный однофайловый фикс) интервью — overhead,
-пропустите его.
+- User arrives with a fuzzy idea ("add export", "make it faster"), not a finished spec.
+- Skip for trivial tasks (obvious single-file fix) — interview is overhead.
+- Need to also check external docs (API/RFC/bank specs) and capture a domain glossary/ADR in parallel → use extension `grill-with-docs` (grilling + `domain-modeling`).
 
-## Правила интервью
+## Interview rules
 
-1. **Вопросы по одному.** Не список из десяти пунктов, а один вопрос —
-   ответ — следующий вопрос. Ветка зависит от ответа.
-2. **Сначала кодовая база, потом пользователь.** Если ответ можно найти
-   чтением кода (есть ли уже валидация, какой паттерн используется,
-   где живёт похожая фича) — агент читает сам и не спрашивает.
-3. **Рекомендованный ответ к каждому вопросу.** Агент предлагает свой
-   вариант с коротким обоснованием — пользователь говорит «да» или
-   поправляет. Это экономит время и выявляет несогласие рано.
-4. **Зависимости вопросов.** Нельзя переходить к «как» (реализация),
-   пока не закрыто «что» (поведение) и «где» (границы).
+1. **One question at a time.** Not a list of ten — question → answer → next question. Branch on the answer.
+2. **Codebase before user.** If the answer is findable by reading code (validation already exists, pattern in use, where a similar feature lives) — agent reads it, doesn't ask.
+3. **Recommended answer per question.** Agent proposes its option with a short rationale; user says "yes" or corrects.
+4. **Question dependencies.** Don't move to "how" (implementation) until "what" (behavior) and "where" (boundaries) are closed.
 
-## Категории вопросов (порядок прохода)
+## Question categories (pass order)
 
-| # | Категория | Что выясняем |
+| # | Category | What to determine |
 |---|---|---|
-| 1 | Цель | Какой результат нужен пользователю/бизнесу, как поймём что готово |
-| 2 | Границы | Что входит, что явно НЕ входит, какие файлы/модули можно трогать |
-| 3 | Инварианты | Какие контракты, форматы, поведение нельзя ломать |
-| 4 | Edge cases | Пустые данные, конкурентный доступ, ошибки внешних систем |
-| 5 | Данные | Откуда берутся, куда пишутся, миграции, объёмы |
-| 6 | Верификация | Какие тесты/проверки подтвердят результат |
+| 1 | Goal | Result needed by user/business, how we know it's done |
+| 2 | Boundaries | What's in, what's explicitly NOT in, which files/modules may be touched |
+| 3 | Invariants | Which contracts, formats, behavior must not break |
+| 4 | Edge cases | Empty data, concurrent access, external-system errors |
+| 5 | Data | Where sourced, where written, migrations, volumes |
+| 6 | Verification | Which tests/checks confirm the result |
 
-## Итог интервью
+## Output
 
-Все принятые решения сводятся в заполненный шаблон из `task-brief-template`
-(включая секции «Явные предположения», «Out of Scope», «Definition of Done»).
-Невыясненные пункты фиксируются как явные предположения — не замалчиваются.
+- All accepted decisions → filled `task-brief-template` (incl. sections "Explicit Assumptions", "Out of Scope", "Definition of Done").
+- Unresolved items → recorded as explicit assumptions, not silently dropped.
 
-## Анти-паттерны
+## Anti-patterns
 
-- Задавать вопрос, ответ на который есть в кодовой базе.
-- Спрашивать всё списком — пользователь ответит на половину.
-- Начинать реализацию до того, как закрыты категории 1–3.
+- Asking a question whose answer is in the codebase.
+- Asking everything as a list — user answers half.
+- Starting implementation before categories 1–3 are closed.
 
-## Связанные скиллы
+## Related skills
 
-- `task-brief-template` (general) — итог интервью ложится в этот шаблон постановки.
-- `complex-task-orchestrator` (general) — после фиксации ТЗ — декомпозиция сложной задачи.
-- `pm/requirement-critic` — аудит более крупного BRD на полноту и конфликты (другой масштаб: продуктовые требования, не разовая задача).
+- `task-brief-template` (general) — interview output lands in this spec template.
+- `grill-with-docs` (general) — same interview + external-doc cross-check + inline domain glossary/ADR.
+- `complex-task-orchestrator` (general) — after the spec is fixed, decompose a complex task.
+- `to-issues` (oss-dev) — split a finished spec into independent issues by vertical slices.
+- `implement` (general) — implement per fixed spec/issue (explicit invocation).
+- `pm/requirement-critic` — audit a larger BRD for completeness and conflicts (different scale: product requirements, not a one-off task).
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: 3ba170b1b7f88e4ca8bb3814ec32e47c39f11bc63eb1a0f81c797c651394bf03 -->

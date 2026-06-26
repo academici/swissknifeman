@@ -1,0 +1,17 @@
+{
+  "name": "engineering-workflow",
+  "description": "Инженерный конвейер mattpocock: грилинг+домен → issue вертикальными срезами → реализация (TDD) → ревью → диагностика багов → разрешение конфликтов. Сквозная цепочка дисциплины для агентного workflow.",
+  "include": [
+    "general/spec-interview",
+    "general/grill-with-docs",
+    "architect/domain-modeling",
+    "architect/codebase-design",
+    "oss-dev/to-issues",
+    "general/implement",
+    "quality/tdd-discipline",
+    "quality/code-review",
+    "quality/diagnosing-bugs",
+    "oss-dev/issue-triage",
+    "oss-dev/resolving-merge-conflicts"
+  ]
+}

@@ -2,7 +2,7 @@
 name: local-topology
 bucket: system
 version: 0.1.0
-description: Корневая карта локальной среды разработки — три узла-хаба (Brain-волт, swissknifeman, база проектов) и навигация между проектами, их кодом и документацией. Читается из ~/.swissknifeman/topology.json
+description: Root map of the local dev environment — three hub nodes (Brain vault, swissknifeman, projects base) and navigation between projects, their code and docs. Read from ~/.swissknifeman/topology.json
 risk: read
 persona: architect
 tags: [topology, architecture, navigation, meta, cross-project]
@@ -12,38 +12,26 @@ sha256: ""
 adapters: [claude, cursor, fable]
 ---
 
-# Skill: Local Topology (корневая карта среды)
+# Skill: Local Topology
 
-Применять когда: нужно понять, **где** в этой системе лежат узлы, дойти до
-**соседнего проекта** (его кода или документации), либо объяснить пользователю
-общую схему. Это корневой скилл — точка входа в навигацию по всей локальной
-среде. Любой агент в любом подключённом проекте может через него понять, что
-где работает.
+Use when: locate **where** nodes live, reach a **neighboring project** (code or docs), or explain the overall scheme. Root navigation entry point for any agent in any connected project.
 
----
+## Three hub nodes
 
-## Топология: три узла-хаба
+Linked along two lines (docs and skills/hooks):
 
-Локальная среда — это **три ключевых узла**, соединённых по двум линиям
-(документация и скиллы/хуки):
-
-| Узел | Роль | Что даёт |
+| Node | Role | Provides |
 |:---|:---|:---|
-| **Brain-волт** (`docs-hub`) | Единая точка документации | Obsidian-волт; CLI `brain` + `docs-watcher` синкают `docs/`/`docs-public` между волтом и репозиториями в обе стороны (git-merge) |
-| **swissknifeman** (`skills-hub`) | Единая точка скиллов/хуков | Реестр скиллов; раздаёт их в проекты (marketplace/vendor), несёт глобальные хуки и пресеты permissions |
-| **База проектов** (`workspace`) | Где лежит код | Каталог с репозиториями всех проектов (структура произвольная) |
+| **Brain vault** (`docs-hub`) | Single docs point | Obsidian vault; CLI `brain` + `docs-watcher` sync `docs/`/`docs-public` between vault and repos both ways (git-merge) |
+| **swissknifeman** (`skills-hub`) | Single skills/hooks point | Skill registry; distributes to projects (marketplace/vendor), carries global hooks and permission presets |
+| **Projects base** (`workspace`) | Where code lives | Directory with all project repos (arbitrary structure) |
 
-Узлы **не знают друг про друга** напрямую — связующим звеном служит
-конфиг топологии (см. ниже). Brain находит проекты по frontmatter `repo:` в
-своих заметках; swissknifeman — по `~/.swissknifeman/projects.json`. Карта
-топологии даёт верхнеуровневую точку, от которой можно дойти до любого узла.
+- Nodes don't know each other directly — topology config (below) links them.
+- Brain finds projects via `repo:` frontmatter in its notes; swissknifeman via `~/.swissknifeman/projects.json`.
 
----
+## Node resolution: `~/.swissknifeman/topology.json`
 
-## Резолв узлов: `~/.swissknifeman/topology.json`
-
-Единственный источник истины о расположении узлов — файл
-**`~/.swissknifeman/topology.json`**. Схема:
+Sole source of truth for node locations. Schema:
 
 ```json
 {
@@ -58,102 +46,76 @@ adapters: [claude, cursor, fable]
 }
 ```
 
-Прочитать пути (примеры `jq`):
+Read paths (`jq`):
 
 ```bash
-# все узлы
+# all nodes
 jq -r '.nodes | to_entries[] | "\(.key)\t\(.value.path)\t(\(.value.role))"' \
   ~/.swissknifeman/topology.json
 
-# отдельный узел
+# single node
 jq -r '.nodes.brain.path'         ~/.swissknifeman/topology.json
 jq -r '.nodes.projects_base.path' ~/.swissknifeman/topology.json
 ```
 
-Или через CLI (человекочитаемо / JSON):
+Or via CLI:
 
 ```bash
 skiller topology show
 skiller topology show --json
 ```
 
-**Если файла нет** — топология ещё не настроена на этой машине. Создать
-интерактивно (спросит пути к Brain-волту, swissknifeman и базе проектов,
-с авто-детектом дефолтов):
+**No file** → topology not set up on this machine. Create interactively (asks paths to Brain vault, swissknifeman, projects base; auto-detects defaults):
 
 ```bash
 skiller topology init
 ```
 
----
+## Navigation
 
-## Навигация
-
-Имея пути узлов, можно дойти до чего угодно:
-
-**До соседнего проекта (код).** `projects_base` → каталог проекта. Список
-проектов, известных swissknifeman:
+**Neighboring project (code).** `projects_base` → project dir. Projects known to swissknifeman:
 
 ```bash
-jq -r '.projects[].path' ~/.swissknifeman/projects.json   # подключённые к реестру
+jq -r '.projects[].path' ~/.swissknifeman/projects.json   # connected to registry
 ls "$(jq -r '.nodes.projects_base.path' ~/.swissknifeman/topology.json)"
 ```
 
-**До документации любого проекта.** Brain — единая точка. Документация живёт
-и в репозитории проекта (`<repo>/docs`, `<repo>/docs-public`), и зеркалом в
-волте; `brain` держит их синхронными:
+**Any project's docs.** Brain is the single point. Docs live both in repo (`<repo>/docs`, `<repo>/docs-public`) and mirrored in vault; `brain` keeps them in sync:
 
 ```bash
-brain list                  # все проекты волта и их связь с репозиториями
-brain status <project>      # есть ли расхождения docs ↔ репозиторий
-brain sync <project>        # синхронизировать (двусторонний git-merge)
+brain list                  # all vault projects and their repo links
+brain status <project>      # docs ↔ repo divergence?
+brain sync <project>        # sync (two-way git-merge)
 ```
 
-**До скиллов/хуков/конфигов.** Узел swissknifeman:
+**Skills/hooks/configs.** swissknifeman node:
 
 ```bash
-skiller list          # какие проекты к чему подключены
-skiller status        # состояние текущего проекта
-# скиллы — пакет skiller (skills/<bucket>/); хуки и пресеты — пакет harness
+skiller list          # which projects connected to what
+skiller status        # current project state
+# skills — skiller package (skills/<bucket>/); hooks and presets — harness package
 ```
 
-Подключение нового проекта к раздаче скиллов — `skiller connect`
-(Claude Code, plugin marketplace) или `skiller vendor` (Cursor и др.).
+Connect a new project to skill distribution: `skiller connect` (Claude Code, plugin marketplace) or `skiller vendor` (Cursor etc.).
 
----
+## Principles
 
-## Принципы
+- **Map is read-only.** This skill explains the scheme and reads `topology.json`; it does **not** mutate nodes or rewrite config. Create/edit config only via `skiller topology init`.
+- **Paths are machine-specific.** `topology.json` lives in `$HOME`, not in repo; per-machine (like Brain's `.projects.json`). Don't commit it into projects.
+- **Nodes are autonomous.** Brain and swissknifeman work without the map; map just gives agents a shared point to see the scheme and hop between nodes.
 
-- **Карта — read-only ориентир.** Этот скилл объясняет схему и читает
-  `topology.json`; он **не меняет** узлы и не переписывает конфиг. Создание/
-  правка конфига — только через `skiller topology init`.
-- **Пути машинно-специфичны.** `topology.json` живёт в `$HOME`, не в
-  репозитории, и у каждой машины свой — как `.projects.json` у Brain. Не
-  коммить его в проекты.
-- **Узлы автономны.** Brain и swissknifeman работают и без карты; карта лишь
-  даёт агентам общую точку, чтобы видеть всю схему и переходить между узлами.
+## Checklist
 
----
+- [ ] Read `~/.swissknifeman/topology.json` (or suggested `topology init` if absent)
+- [ ] Used real node paths, not hardcoded
+- [ ] For docs — went through Brain (`brain status/sync`), didn't edit mirrors by hand
+- [ ] Didn't commit `topology.json` into project
 
-## Roadmap
+## Links
 
-**Межпроектный агент-оптимизатор** уже реализован поверх этой карты —
-см. `cross-project-coordinator` (бакет system): обходит связанные через
-топологию проекты, ищет дубли/расхождения и рекомендует унификацию (read-only).
-Карта топологии — фундамент для такого обхода. Дальнейшие планы — `docs/roadmap.md`.
+- `cross-project-coordinator` (system bucket) — traversal of linked projects on this map (read-only duplicate/divergence analysis). Already implemented on top of this map; further plans — `docs/roadmap.md`.
+- `shared-memory` (system bucket) — shared group "brain"; resolves members via the same topology.
 
----
+<!-- ru-source-sha256: PENDING -->
 
-## Чеклист
-
-- [ ] Прочитал `~/.swissknifeman/topology.json` (или предложил `topology init`, если его нет)
-- [ ] Использовал реальные пути узлов, а не захардкоженные
-- [ ] Для документации — шёл через Brain (`brain status/sync`), не правил зеркала вручную
-- [ ] Не коммитил `topology.json` в проект
-
----
-
-## Ссылки
-
-- `cross-project-coordinator` (бакет system) — обход связанных проектов на базе этой карты (read-only анализ дублей/расхождений).
-- `shared-memory` (бакет system) — общий «мозг» группы; резолвит участников через ту же топологию.
+<!-- ru-source-sha256: 266fbc7ec2665e91e3d8bd2f9ba4477eef717bab9cc20a3cabb918146ff2fe4a -->

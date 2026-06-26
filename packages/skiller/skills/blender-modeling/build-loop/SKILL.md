@@ -2,7 +2,7 @@
 name: build-loop
 bucket: blender-modeling
 version: 0.1.0
-description: "Дисциплина цикла параметрического моделирования через MCP Blender: анализ задачи → проверка гибкости/сквозного пересчёта (cross-config) → инкрементальная сборка детали → проверка геометрии через get_object_info ДО скриншота → камера на изменённую зону → скриншот в нужном режиме → предложить доработки правил. Включает шаблон docstring детали и таблицу диагностики типовых ошибок. Активировать при любой задаче построения/правки детали модели в Blender. Механику инструментов и пресетов брать из скилла blender/mcp-blender."
+description: "Parametric-modeling build loop via MCP Blender: analyze task → check flexibility/cross-config recompute → incremental part build → verify geometry via get_object_info BEFORE screenshot → camera on changed zone → screenshot in right mode → propose rule fixes. Includes part docstring template and error-diagnosis table. Activate on any part build/edit task in Blender. Tool/preset mechanics from skill blender/mcp-blender."
 risk: write
 persona: oss-dev
 tags: [blender, cad, parametric, workflow, bpy, mcp, 3d, fdm, sla]
@@ -14,158 +14,129 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-# Цикл построения параметрической модели
+# Parametric model build loop
 
-Дисциплина действий при любой задаче «построить/изменить деталь» в параметрической модели Blender.
-Это **процедура** (что и в каком порядке делать); **механику** инструментов, пресетов вьюпорта и камеры
-бери из скилла `blender/mcp-blender` — не дублируй её здесь.
+Procedure for any "build/edit part" task. Tool/viewport-preset/camera mechanics live in `blender/mcp-blender` — do not duplicate here.
 
----
+## Step 1. Analyze task
 
-## Шаг 1. Анализ задачи
+Before any code:
+- Which parts are affected? (`parts/*.py`, `config.py`)
+- Role of each affected part (purpose, material, fits).
+- Target geometry (shape, sizes, joints with neighbors).
+- Inter-part dependencies (mating radii, slots, threads).
+- Which **foreign configs** to read in this part (fit → mating part's config; cup → inserted part's config).
 
-Перед любым кодом — понять контекст:
+**Flexibility check before code (mandatory):** for each number you'd write in `parts/*.py` ask "what if user changes an adjacent config param?":
+- Size depends on another part → **take from its config**, don't duplicate.
+- Structural offset/thickness/clearance → **add config field**, don't hardcode.
+- Computed value (e.g. joint z-position) → **formula from configs**, not a number.
 
-- Какие детали затрагивает задача? (`parts/*.py`, `config.py`)
-- Какова роль каждой затронутой детали в конструкции? (назначение, материал, посадки)
-- Какая геометрия должна получиться? (форма, размеры, стыки с соседними деталями)
-- Есть ли зависимости между деталями? (стыковочные радиусы, пазы, резьба)
-- Какие **чужие конфиги** нужно читать в этой детали? (посадка → конфиг ответной детали, чаша → конфиг вставляемой детали)
+Goal: changing any single `config.py` param must not break other parts' geometry. Full cross-config/recompute methodology — `blender-modeling/config-conventions`.
 
-**Проверка гибкости перед кодом (обязательно):**
+**Mental recompute check (mandatory before code):** for each param the task depends on, run: "if this value changes → what shifts in neighbors → do they adjust correctly?" If chain breaks → there's a hardcode; find and replace with formula before sending to Blender.
 
-Для каждого числа, которое собираешься написать в `parts/*.py`, задать вопрос: «Что произойдёт, если пользователь изменит смежный параметр конфига?»
+**For composite parts and new profiles — describe the algorithm in words before code.** For each subpart (`_build_*`, `_attach_*`, `_cut_*`) record:
+1. **Shape**: what it is geometrically (tube, disk, cylinder, slotted ring...).
+2. **Profile `pts`**: key points in traversal order and meaning of each.
+3. **Joints**: where/how the subpart meets neighbors (at which radius, at which height).
+4. **Operation**: `revolve_profile` → standalone object, or UNION/DIFFERENCE against what.
 
-- Если размер зависит от другой детали — **брать из её конфига**, не дублировать.
-- Если это конструктивный отступ / толщина / зазор — **добавить поле в конфиг**, не хардкодить.
-- Если это вычисляемая величина (например, z-позиция стыка) — **формула из конфигов**, не число.
+## Step 2. Edit code
 
-Цель: изменение любого одного параметра в `config.py` не должно ломать геометрию остальных деталей. Полная методология cross-config и сквозного пересчёта — скилл `blender-modeling/config-conventions`.
+- Numbers only in `config.py`, never hardcode in `parts/` (see `blender-modeling/config-conventions`).
+- New part → separate file in `parts/`, relative imports (`from .config import ...`).
+- On construction/param change → update docstring and adjacent comments.
 
-**Мысленная проверка сквозного пересчёта (обязательно перед кодом):**
-
-Для каждого параметра, от которого зависит задача, прогнать цепочку:
-
-> «Если это значение изменится → что сдвинется в соседних деталях → они корректно подстроятся?»
-
-Если цепочка рвётся — в коде есть хардкод; найти и заменить формулой до отправки в Blender.
-
-**Для составных деталей и новых профилей — перед кодом описать алгоритм словами.** Для каждой подчасти (`_build_*`, `_attach_*`, `_cut_*`) записать:
-1. **Форма**: что это геометрически (труба, диск, цилиндр, кольцо с пазом...)
-2. **Профиль `pts`**: ключевые точки по порядку обхода и что каждая означает
-3. **Стыки**: где и как подчасть примыкает к соседним (по какому радиусу, на какой высоте)
-4. **Операция**: `revolve_profile` → самостоятельный объект, или UNION/DIFFERENCE к чему
-
-Это занимает 2–3 строки и предотвращает ошибки обхода и самопересечения до написания кода.
-
----
-
-## Шаг 2. Внести правку в код
-
-- Числа — только в `config.py`, не хардкодить в `parts/` (см. `blender-modeling/config-conventions`)
-- Новая деталь → отдельный файл в `parts/`, импорты относительные (`from .config import ...`)
-- При изменении конструкции/параметров — обновить docstring и комментарии рядом с кодом
-
-**Стандарт документирования файла детали (обязательно):** каждый `parts/{name}.py` начинается с модульного docstring:
+**File docstring standard (mandatory):** each `parts/{name}.py` starts with a module docstring:
 
 ```python
 """
-<Название детали> (<имена Blender-объектов через запятую>).
+<Part name> (<comma-separated Blender object names>).
 
-Назначение:
-  Что это физически, зачем существует, какую роль играет в сборке.
+Purpose:
+  What it physically is, why it exists, its role in the assembly.
 
-Конструкция (снизу вверх / изнутри наружу):
-  1. <подчасть>: <форма, материал, геометрический принцип>
-  2. <подчасть>: ...
+Construction (bottom-up / inside-out):
+  1. <subpart>: <shape, material, geometric principle>
+  2. <subpart>: ...
 
-Связи с другими деталями:
-  - <деталь A>: <тип связи — стык, посадка, резьба, Г-паз, содержит внутри...>
-    Конфиг: <откуда берутся параметры — XxxConfig.поле>
+Links to other parts:
+  - <part A>: <link type — joint, fit, thread, L-slot, contains inside...>
+    Config: <where params come from — XxxConfig.field>
 
-Содержит / вмещает:
-  - <внешний элемент>: <что это, как вставляется, конфиг — XxxConfig>
+Contains / holds:
+  - <external element>: <what it is, how inserted, config — XxxConfig>
 
-Технические особенности:
-  - <особенность печати, материал, зазоры, порядок boolean-операций, что нельзя менять>
+Technical notes:
+  - <print specifics, material, clearances, boolean-op order, what must not change>
 
-Разрез (если модель смотрят в сечении):
-  <что видно в разрезе, есть ли артефакты, на что обратить внимание>
+Section (if model viewed in cross-section):
+  <what's visible in section, any artifacts, what to watch>
 
-Скриншот:
-  <какие соседние объекты перекрывают деталь и их нужно скрывать для проверки>
-  <рекомендуемый режим отображения: tech / material / xray>
+Screenshot:
+  <which neighboring objects occlude the part and must be hidden for inspection>
+  <recommended display mode: tech / material / xray>
 """
 ```
 
-**Правила обновления:** при любом изменении детали — обновить затронутые разделы docstring; если выяснилась новая связь A↔B — добавить запись в «Связи» **обеих** деталей.
+**Update rules:** on any part change update affected docstring sections; if a new link A↔B is found — add a "Links" entry in **both** parts.
 
----
+## Step 3. Check invariants without Blender
 
-## Шаг 3. Проверить инварианты без Blender
+Before sending to Blender, validate params in plain Python (no bpy): heights > 0, adjacent-segment radii match, nonzero wall thickness, clearance greater than thread profile depth. `check.py` architecture and two-level tests — `blender-modeling/parametric-config`.
 
-Перед отправкой в Blender прогнать валидацию параметров обычным Python (без bpy): высоты > 0, стыковка радиусов соседних сегментов, ненулевая толщина стенки, зазор больше глубины профиля резьбы. Архитектура `check.py` и двухуровневых тестов — скилл `blender-modeling/parametric-config`.
+## Step 4. Send model to Blender (incremental)
 
----
+If task touches one part — rebuild **only it**, not the whole model (faster, leaves neighbors). Full build — when verifying joints of several parts. Send pattern, module-cache reset (`del sys.modules`), and `execute_blender_code` — `blender/mcp-blender`.
 
-## Шаг 4. Отправить модель в Blender (инкрементально)
+**On `execute_blender_code` error — stop.** Do not proceed to geometry check. Read traceback, find error line, fix, retry.
 
-Если задача затрагивает одну деталь — пересобирать **только её**, не всю модель (быстрее, не трогает соседей). Полная сборка — когда нужна проверка стыков нескольких деталей. Паттерн отправки кода, сброс кеша модулей (`del sys.modules`) и инструмент `execute_blender_code` — скилл `blender/mcp-blender`.
+**Diagnosis by error type:**
 
-**При ошибке в `execute_blender_code` — стоп.** Не переходить к проверке геометрии. Прочитать traceback, найти строку ошибки, исправить, повторить.
-
-**Диагностика по типу ошибки:**
-
-| Ошибка | Причина | Действие |
+| Error | Cause | Action |
 |--------|---------|----------|
-| `ImportError: No module named '...'` | Модули не сброшены или неверный путь | Проверить блок `del sys.modules`; проверить `sys.path` |
-| `ModuleNotFoundError` после правки файла | Старый `.pyc` в кеше | Добавить `del sys.modules` для нужного пакета |
-| `AttributeError: '...Config' has no attribute '...'` | Поле переименовано или удалено | Открыть `config.py`, найти актуальное имя |
-| Нарушен геометрический инвариант | Ошибка формулы в конфиге | Читать сообщение валидации, исправить формулу |
-| `z[0] != 0` или `z[-1] != height` в профиле | Последний узел профиля не приведён к высоте сегмента | Привести последний узел `profile_knots` к `height` |
-| Объект создан, но `vertices_count = 0` | Профиль `pts` вырожден (все r=0 или самопересечение) | `print(pts)` перед `revolve_profile`, проверить r |
-| Тёмные пятна / вывернутые нормали | Неправильный обход `pts` | Перевернуть список: `pts[::-1]` и скорректировать стартовую точку |
-| `RuntimeError: Calling operator ... context is incorrect` | `bpy.ops.*` без `temp_override` в Blender 5.0 | Обернуть в `temp_override` (см. `blender/version-gotchas`) |
-| Полупрозрачная перегородка на плоскости разреза | `pts[-1] == pts[0]` — дублирующее ребро | Убрать последнюю точку профиля |
+| `ImportError: No module named '...'` | Modules not reset or wrong path | Check `del sys.modules` block; check `sys.path` |
+| `ModuleNotFoundError` after editing file | Stale `.pyc` in cache | Add `del sys.modules` for the package |
+| `AttributeError: '...Config' has no attribute '...'` | Field renamed or removed | Open `config.py`, find current name |
+| Geometric invariant violated | Formula error in config | Read validation message, fix formula |
+| `z[0] != 0` or `z[-1] != height` in profile | Last profile node not brought to segment height | Bring last `profile_knots` node to `height` |
+| Object created but `vertices_count = 0` | Profile `pts` degenerate (all r=0 or self-intersection) | `print(pts)` before `revolve_profile`, check r |
+| Dark spots / flipped normals | Wrong `pts` traversal | Reverse list: `pts[::-1]` and fix start point |
+| `RuntimeError: Calling operator ... context is incorrect` | `bpy.ops.*` without `temp_override` in Blender 5.0 | Wrap in `temp_override` (see `blender/version-gotchas`) |
+| Semi-transparent partition on section plane | `pts[-1] == pts[0]` — duplicate edge | Drop last profile point |
 
----
+## Step 5. Verify geometry via `get_object_info` (before screenshot)
 
-## Шаг 5. Проверить геометрию через `get_object_info` (до скриншота)
+**Before screenshot** call `get_object_info` for each changed part:
+1. **Sizes**: `world_bounding_box` → height and diameter in mm.
+2. **Defect signs**: `vertices_count == 0` or degenerate bounding box → part didn't build, return to Step 2.
+3. **Compute part z-center** for camera: `z_mm = (z_min + z_max) / 2 * 1000`.
 
-**До скриншота** — вызвать `get_object_info` для каждой изменённой детали:
+Tool semantics and bounding-box formulas — `blender/mcp-blender`.
 
-1. **Размеры**: `world_bounding_box` → высота и диаметр в мм.
-2. **Признаки брака**: `vertices_count == 0` или вырожденный bounding box → деталь не построилась, вернуться к Шагу 2.
-3. **Вычислить z-центр детали** для камеры: `z_mm = (z_min + z_max) / 2 * 1000`.
+## Step 6. Camera on changed zone (mandatory before screenshot)
 
-Семантика инструмента и формулы bounding box — `blender/mcp-blender`.
+**Never screenshot without first setting the camera.** Aim camera at the changed part/zone using `z_mm` from Step 5. Camera-via-helper principle and `distance` formula — `blender/mcp-blender`. Ready zone values for a specific model — in `models/{name}/ai/rules.md` (see `blender-modeling/model-rules`).
 
----
+## Step 7. Screenshot in suitable mode
 
-## Шаг 6. Камера на изменённую зону (обязательно перед скриншотом)
+Pick **one mode** by task (geometry → `tech`; part colors → `material`; presentation → `realism`; cavities/hidden → `xray`). Preset code and rule for hiding occluding objects — `blender/mcp-blender`.
 
-**Никогда не делать скриншот без предварительной установки камеры.** Камеру направлять именно на изменённую деталь/зону, используя `z_mm` из Шага 5. Принцип камеры-через-хелпер и формула `distance` — `blender/mcp-blender`. Готовые значения зон для конкретной модели — в `models/{name}/ai/rules.md` (см. `blender-modeling/model-rules`).
+## Step 8. Propose rule fixes (if needed)
 
----
+If mismatches, gaps, or inaccuracies found in model rules/skills — formulate a proposal, apply the fix, **tell the user** (what changed, where, rationale). Don't stay silent about noticed mismatches.
 
-## Шаг 7. Скриншот в подходящем режиме
+## Related skills
 
-Выбрать **один режим** по задаче (геометрия → `tech`; цвета деталей → `material`; презентация → `realism`; полости/скрытое → `xray`). Код пресетов и правило скрытия мешающих объектов — `blender/mcp-blender`.
+- `blender/mcp-blender` — MCP tools, viewport modes, camera, send/reload pattern (all mechanics).
+- `blender/version-gotchas` — Blender 5.0 API traps from Step 4 diagnosis table.
+- `blender-modeling/parametric-config` — `config.py`/`profile.py`/`check.py` layer the loop rests on.
+- `blender-modeling/config-conventions` — cross-config and recompute (Step 1).
+- `blender-modeling/scene-conventions` — object names and materials of created parts.
+- `blender-modeling/model-rules` — `models/{name}/ai/rules.md`: part stack, camera zones, thread params.
+- `blender-modeling/threading` — thread printing and radial clearances (Steps 2–7).
 
----
+<!-- ru-source-sha256: PENDING -->
 
-## Шаг 8. Предложить доработки правил (при необходимости)
-
-Если в ходе работы замечены несостыковки, пробелы или неточности в правилах модели/скиллах — сформулировать предложение, внести правку, **сообщить пользователю** (что изменено, где, обоснование). Не молчать о замеченных несостыковках.
-
----
-
-## Связанные скиллы
-
-- `blender/mcp-blender` — инструменты MCP, режимы вьюпорта, камера, паттерн отправки/reload (вся механика).
-- `blender/version-gotchas` — ловушки Blender 5.0 API из таблицы диагностики Шага 4.
-- `blender-modeling/parametric-config` — слой `config.py`/`profile.py`/`check.py`, на котором держится цикл.
-- `blender-modeling/config-conventions` — cross-config и сквозной пересчёт (Шаг 1).
-- `blender-modeling/scene-conventions` — имена объектов и материалы создаваемых деталей.
-- `blender-modeling/model-rules` — `models/{name}/ai/rules.md`: стек деталей, зоны камеры, параметры резьбы.
-- `blender-modeling/threading` — печать резьбы и радиальные зазоры (Шаги 2–7).
+<!-- ru-source-sha256: a347ddcbac6cc2f53fd0b80c42663c7406bb6a18f2e2f27d1b9885f45f766daa -->

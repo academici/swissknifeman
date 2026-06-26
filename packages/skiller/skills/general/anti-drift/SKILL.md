@@ -2,7 +2,7 @@
 name: anti-drift
 bucket: general
 version: 0.2.0
-description: "Дисциплина против «закапывания» агента: думай до кода, простота прежде всего, хирургические правки, circuit-breaker при затянувшихся итерациях."
+description: "Discipline against agent rabbit-holing: think before coding, simplicity first, surgical edits, circuit-breaker on dragging iterations."
 risk: read
 persona: oss-dev
 tags: [workflow, discipline, orchestration, context]
@@ -16,85 +16,48 @@ sha256: ""
 
 # Anti-Drift
 
-## Когда активировать
+## When to activate
 
-Используйте этот skill в любой сессии написания или правки кода, особенно когда:
+Any code-writing/editing session, especially when:
+- task already took >2–3 "try another way" iterations;
+- solution accretes new layers/flags/dependencies;
+- session is long, early decisions risk being forgotten.
 
-- задача потребовала больше 2–3 итераций «попробуем иначе»;
-- решение начинает обрастать новыми слоями, флагами или зависимостями;
-- сессия длинная и ранние решения рискуют «забыться».
+## Four principles (Karpathy)
 
-## Четыре принципа (по Karpathy)
+1. **Think Before Coding** — before editing state: what changes, why, which assumptions. On ambiguity ask ONE clarifying question, don't guess. Check: can you explain the plan in one paragraph? If not, plan isn't ready.
+2. **Simplicity First** — minimal code for the current task; not one line "for the future" (YAGNI). Check: "could I write this simpler?" If yes, rewrite before committing.
+3. **Surgical Changes** — touch only files named in the task; don't improve neighboring code unrequested. Check: `git diff` — any out-of-scope change? Revert it.
+4. **Goal-Driven Execution** — success criterion (test/check) first, then code. Check: is there a check that fails BEFORE and passes AFTER?
 
-### 1. Think Before Coding — думай до кода
+## Circuit Breaker — stop thresholds
 
-- Перед правками явно сформулируй: что меняем, почему, какие предположения.
-- При неоднозначности — задай ОДИН уточняющий вопрос, не угадывай.
-- Проверка: можешь ли ты в одном абзаце объяснить план? Если нет — план не готов.
+Catches three degradation patterns: layered edits (new layer atop old instead of removing it), symptomatic fixes (treat the log not the cause), context saturation (conflict with early session decisions).
 
-### 2. Simplicity First — простота прежде всего
+- **Soft (warning):** codebase investigation >~10 tool-calls without a conclusion → stop, formulate a decision from current data; ask for what's missing.
+- **Hard stop:** after ~20 iterations with no working result → stop, describe what you tried and why it failed. Then `session-handoff` + new session with clean context, or ask the user.
+- **Complexity-escalation ban:**
+  - Needs a new package or abstraction layer → ASK first.
+  - Touches >5 files → describe plan first, then edit.
+  - Second fix of the same symptom → stop, find root cause (reproduction → root cause → fix → verification), not a third patch.
+- **Dependent-package boundary — ask before extending.** A dependent package (`vendor/**`, path-repo `packages/**`, shared package) is **read-only** by default. Before adding a class/provider/interface/abstraction:
+  - Survey package structure first for an existing extension point (contract, event, config, trait) — often nothing new is needed.
+  - When in doubt, hand the go/no-go to a **separate small task/subagent** (survey reuse → judge by YAGNI/Rule of Three → verdict); don't mix recon with implementation.
+  - Missing package functionality → **issue against the package**, temporary impl on consumer side (`app/`/`Modules/`) + `TODO`; don't edit the package "along the way".
+  - Deep protocol (proposal → ADR → SemVer) → `package-contribution-protocol`.
 
-- Минимальный код для текущей задачи. Ни одной строки «на будущее» (YAGNI).
-- Проверка: «мог бы я написать это проще?» Если да — перепиши до коммита.
+## Related skills
 
-### 3. Surgical Changes — хирургические правки
+- `task-brief-template` — scope and acceptance criteria fixed before start.
+- `session-handoff` — exit session after the hard threshold.
+- `complex-task-orchestrator` — decomposition and DoD for complex tasks; this skill = iteration discipline within them.
+- `context-economy` — context economy on a dragging session (`/compact`, `/clear`, Plan→Clear→Execute).
+- `package-contribution-protocol` — deep gate against dependent-package bloat (proposal → ADR → SemVer), when editing the package is agreed.
 
-- Трогай только файлы, указанные в задаче. Не улучшай соседний код без запроса.
-- Проверка: открой `git diff` — есть ли изменения вне scope? Если есть — откати их.
+## Snippet
 
-### 4. Goal-Driven Execution — от критерия успеха
+`snippets/claude-md-anti-drift.md` — ready-made rules block for the target project's CLAUDE.md (agent applies thresholds without an explicit skill call).
 
-- Сначала критерий успеха (тест/проверка), потом код.
-- Проверка: есть ли проверка, которая падает ДО изменения и проходит ПОСЛЕ?
+<!-- ru-source-sha256: PENDING -->
 
-## Circuit Breaker — пороги остановки
-
-Три паттерна деградации, которые ловит circuit breaker: слоевые правки (новый
-слой поверх старого вместо удаления), симптоматические фиксы (лечим лог,
-а не причину), context saturation (конфликт с ранними решениями сессии).
-
-### Мягкий порог (warning)
-
-Если исследование кодовой базы превысило ~10 tool-calls без вывода:
-остановись и сформулируй решение с текущими данными. Недостающее — спроси.
-
-### Жёсткий порог (hard stop)
-
-Если после ~20 итераций нет работающего результата: остановись, опиши
-что пробовал и почему не сработало. Дальше — `session-handoff` и новая
-сессия с чистым контекстом, либо вопрос пользователю.
-
-### Запрет эскалации сложности
-
-- Решение требует нового пакета или слоя абстракции — сначала СПРОСИ.
-- Изменение затрагивает >5 файлов — сначала опиши план, потом правь.
-- Второй фикс одного и того же симптома — стоп: ищи корневую причину
-  (репродукция → root cause → фикс → верификация), а не третий патч.
-
-### Граница зависимого пакета — спроси перед расширением
-
-Зависимый пакет (`vendor/**`, path-репо `packages/**`, общий пакет) — по
-умолчанию **read-only**. Прежде чем добавить в него класс/провайдер/интерфейс/
-абстракцию:
-
-- Сначала обзор структуры пакета: нет ли уже точки расширения (контракт,
-  событие, конфиг, trait). Часто новое не нужно.
-- При сомнении — отдай **отдельной маленькой таске/субагенту** решение go/no-go
-  (survey reuse → суд по YAGNI/Rule of Three → вердикт), не смешивая разведку с
-  реализацией.
-- Нехватка функциональности пакета → **issue в пакет**, временная реализация на
-  стороне потребителя (`app/`/`Modules/`) + `TODO`; не правь пакет «по ходу».
-- Глубокий протокол (proposal → ADR → SemVer) — в `package-contribution-protocol`.
-
-## Связанные скиллы
-
-- `task-brief-template` — scope и критерии приёмки фиксируются до старта.
-- `session-handoff` — выход из сессии после жёсткого порога.
-- `complex-task-orchestrator` — декомпозиция и DoD для сложных задач; этот скилл — про дисциплину итераций внутри них.
-- `context-economy` — экономия контекста при затянувшейся сессии (`/compact`, `/clear`, Plan→Clear→Execute).
-- `package-contribution-protocol` — глубокий гейт против раздувания зависимого пакета (proposal → ADR → SemVer), когда правка пакета всё же согласована.
-
-## Сниппет
-
-`snippets/claude-md-anti-drift.md` — готовый блок правил для CLAUDE.md
-целевого проекта (агент применяет пороги без явного вызова скилла).
+<!-- ru-source-sha256: dc8219fe6a5ae3497c54448cb699f2e67849c1e8bed4730f306ca8fc985873b2 -->

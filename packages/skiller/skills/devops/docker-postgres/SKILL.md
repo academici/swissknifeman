@@ -2,57 +2,61 @@
 name: docker-postgres
 bucket: devops
 version: 0.3.0
-description: "PostgreSQL в Docker: healthcheck pg_isready, named volume данных, init-скрипт создания тестовой БД <app>_test для изоляции тестов"
+description: "PostgreSQL in Docker: pg_isready healthcheck, named volume for data, init script creating test DB <app>_test for test isolation"
 risk: write
 persona: operator
 tags: ["docker", "devops", "postgres", "testing"]
 requires: []
 produces_for: ["docker-dev-prod", "docker-services", "db-test-preflight"]
-outputs: ["docker-compose.yml (сервис pgsql)", "docker/postgres/init/01-test-db.sh"]
+outputs: ["docker-compose.yml (pgsql service)", "docker/postgres/init/01-test-db.sh"]
 snippets: ["postgres.conf", "init.sql", "pgsql-service.yml", "init-test-db.sh"]
 adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-## Контекст
+## Context
 
-Сервис `pgsql` (`postgres:16-alpine`) для Laravel-стека:
+Service `pgsql` (`postgres:16-alpine`) for Laravel stack:
 
-- **healthcheck `pg_isready`** — остальные сервисы стартуют только после готовности БД (`depends_on: pgsql: { condition: service_healthy }`); в compose-тесте экранировать `$$POSTGRES_USER`.
-- **named volume** `pgsql_data:/var/lib/postgresql/data` — данные переживают пересоздание контейнера.
-- **КЛЮЧЕВОЕ — вторая БД `<app>_test`** через init-скрипт в `/docker-entrypoint-initdb.d/`: фундамент изоляции тестов. Pest/PHPUnit (через `phpunit.xml: DB_DATABASE=<app>_test`) гоняют `migrate:fresh` в отдельной базе и не трогают dev-данные.
+- **healthcheck `pg_isready`** — other services start only after DB ready (`depends_on: pgsql: { condition: service_healthy }`); in compose test escape `$$POSTGRES_USER`.
+- **named volume** `pgsql_data:/var/lib/postgresql/data` — data survives container recreation.
+- **Second DB `<app>_test`** via init script in `/docker-entrypoint-initdb.d/` (test isolation foundation). Pest/PHPUnit (via `phpunit.xml: DB_DATABASE=<app>_test`) run `migrate:fresh` in separate DB, never touching dev data.
 
-**Подводный камень**: скрипты из `/docker-entrypoint-initdb.d/` выполняются **только при первом создании volume**. Если volume `pgsql_data` уже существует — init молча не запустится. Для этого случая нужна отдельная make-цель `db-create-test`, идемпотентно создающая базу в работающем контейнере (см. `init-test-db.sh`, режим backfill, и скилл `makefile`).
+Caveat: scripts in `/docker-entrypoint-initdb.d/` run **only on first volume creation**. If volume `pgsql_data` already exists, init silently skips. For that case use make target `db-create-test` — idempotently creates DB in running container (see `init-test-db.sh` backfill mode, skill `makefile`).
 
-## Алгоритм
+## Algorithm
 
-1. Добавить сервис `pgsql` по `pgsql-service.yml`: образ, healthcheck, named volume, порт на `127.0.0.1` (не наружу).
-2. Смонтировать каталог init-скриптов: `./docker/postgres/init:/docker-entrypoint-initdb.d:ro`.
-3. Положить `docker/postgres/init/01-test-db.sh` (из `init-test-db.sh`) — создаёт `<app>_test` владельцем `${POSTGRES_USER}`.
-4. Добавить make-цель `db-create-test` для существующих volume (идемпотентный psql внутрь контейнера).
-5. В `phpunit.xml` прописать `DB_DATABASE=<app>_test`; убедиться, что тесты ходят в `DB_HOST=pgsql`.
-6. При необходимости тюнинга — `postgres.conf`; расширения — `init.sql`.
+1. Add `pgsql` service per `pgsql-service.yml`: image, healthcheck, named volume, port on `127.0.0.1` (not exposed).
+2. Mount init scripts dir: `./docker/postgres/init:/docker-entrypoint-initdb.d:ro`.
+3. Place `docker/postgres/init/01-test-db.sh` (from `init-test-db.sh`) — creates `<app>_test` owned by `${POSTGRES_USER}`.
+4. Add make target `db-create-test` for existing volumes (idempotent psql into container).
+5. In `phpunit.xml` set `DB_DATABASE=<app>_test`; ensure tests use `DB_HOST=pgsql`.
+6. Tuning → `postgres.conf`; extensions → `init.sql`.
 
-## Когда какой сниппет открывать
+## Snippet selection
 
-| Ситуация | Файл |
+| Situation | File |
 |---|---|
-| Сервис pgsql в compose (healthcheck, volume, init-mount) | `snippets/pgsql-service.yml` |
-| Создание тестовой БД `<app>_test` (init + backfill для старого volume) | `snippets/init-test-db.sh` |
-| Расширения/SQL при инициализации | `snippets/init.sql` |
-| Тюнинг параметров PostgreSQL | `snippets/postgres.conf` |
+| pgsql service in compose (healthcheck, volume, init-mount) | `snippets/pgsql-service.yml` |
+| Test DB `<app>_test` (init + backfill for old volume) | `snippets/init-test-db.sh` |
+| Extensions/SQL at init | `snippets/init.sql` |
+| PostgreSQL param tuning | `snippets/postgres.conf` |
 
-## Чеклист качества
+## Quality checklist
 
-- [ ] healthcheck через `pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB`
-- [ ] данные в named volume, не в контейнере и не в bind-mount
-- [ ] порт опубликован только на `127.0.0.1` (доступ снаружи — туннель/exec)
-- [ ] init-каталог смонтирован `:ro`, скрипты `set -eu` + `ON_ERROR_STOP=1`
-- [ ] тестовая БД `<app>_test` создаётся init-скриптом; для существующего volume есть `make db-create-test`
-- [ ] потребители БД используют `depends_on … condition: service_healthy`
+- [ ] healthcheck via `pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB`
+- [ ] data in named volume, not in container, not bind-mount
+- [ ] port published only on `127.0.0.1` (external access — tunnel/exec)
+- [ ] init dir mounted `:ro`, scripts `set -eu` + `ON_ERROR_STOP=1`
+- [ ] test DB `<app>_test` created by init script; for existing volume `make db-create-test` exists
+- [ ] DB consumers use `depends_on … condition: service_healthy`
 
-## Ссылки
+## Links
 
-- https://hub.docker.com/_/postgres — раздел Initialization scripts (`/docker-entrypoint-initdb.d`)
+- https://hub.docker.com/_/postgres — Initialization scripts section (`/docker-entrypoint-initdb.d`)
 - https://www.postgresql.org/docs/current/app-pg-isready.html — pg_isready
-- Смежные скиллы: `docker-services` (depends_on-паттерны), `docker-dev-prod` (раскладка dev/prod compose), `makefile` (цель db-create-test), `db-test-preflight` (проверка `<app>_test` перед прогоном тестов), `php/test-isolation-guard` (страж изоляции тестовой БД), `php/laravel-testing` (тесты поверх `<app>_test`)
+- Related skills: `docker-services` (depends_on patterns), `docker-dev-prod` (dev/prod compose layout), `makefile` (db-create-test target), `db-test-preflight` (check `<app>_test` before test run), `php/test-isolation-guard` (test DB isolation guard), `php/laravel-testing` (tests on `<app>_test`)
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: 3910cb63b82beb5ef240fbd4fa2bac03efb1d9b71d38789c4a78ea2938f44e36 -->

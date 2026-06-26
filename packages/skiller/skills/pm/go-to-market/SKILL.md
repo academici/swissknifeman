@@ -2,7 +2,7 @@
 name: go-to-market
 bucket: pm
 version: 0.1.0
-description: GTM-стратегия, ICP, messaging framework, каналы привлечения, launch plan
+description: GTM strategy, ICP, messaging framework, acquisition channels, launch plan
 risk: draft
 persona: pm
 tags: [gtm, market, monetization]
@@ -15,139 +15,117 @@ adapters: [claude, cursor, fable]
 
 # Skill: Go-To-Market (GTM)
 
-Применять когда: задача на GTM-стратегию, выход на рынок, каналы привлечения, launch plan, ICP, messaging.
+Apply when: GTM strategy, market entry, acquisition channels, launch plan, ICP, messaging.
 
----
+GTM = who, through what, with what message, in what order. No sharp ICP (Ideal Customer Profile) = shotgun.
 
-## Принцип
+## Step 1. ICP
 
-GTM = кому, через что, с каким сообщением, в каком порядке.
-Без чёткого ICP (Ideal Customer Profile) GTM — это стрельба из дробовика.
-
----
-
-## Шаг 1. ICP (Ideal Customer Profile)
-
-Не "все пользователи" — а максимально конкретный первый сегмент.
+Not "all users" — the most concrete first segment.
 
 ```markdown
 ## ICP v1
 
-**Тип:** [B2B / B2C / B2B2C]
-**Сегмент:** [Малый бизнес / Фрилансеры / Студенты / ...]
-**Размер компании:** [1-10 / 10-50 / 50-200 сотрудников] (для B2B)
-**Гео:** [Страна / Регион]
-**Проблема:** [Конкретная боль одной строкой]
-**Триггер покупки:** [Что заставляет искать решение прямо сейчас]
-**Альтернатива:** [Что используют сейчас вместо нашего продукта]
-**Причина переключиться:** [Почему выберут нас, а не останутся на текущем]
+**Type:** [B2B / B2C / B2B2C]
+**Segment:** [Small business / Freelancers / Students / ...]
+**Company size:** [1-10 / 10-50 / 50-200 employees] (for B2B)
+**Geo:** [Country / Region]
+**Problem:** [Specific pain, one line]
+**Buying trigger:** [What makes them search for a solution right now]
+**Alternative:** [What they use now instead of our product]
+**Reason to switch:** [Why pick us vs stay on current]
 ```
 
----
+## Step 2. Messaging Framework
 
-## Шаг 2. Messaging Framework
-
-| Элемент | Содержание |
+| Element | Content |
 |:---|:---|
-| **Value proposition** | [Что делает продукт + для кого + результат] одна строка |
-| **Tagline** | < 10 слов, запоминаемо |
-| **Elevator pitch** | 2-3 предложения для инвестора |
-| **Боли (Pain)** | Топ-3 боли, которые решаем |
-| **Выгоды (Gain)** | Топ-3 конкретных результата |
-| **Proof points** | Конкретные цифры или кейсы (или [placeholder]) |
+| **Value proposition** | [What product does + for whom + result] one line |
+| **Tagline** | < 10 words, memorable |
+| **Elevator pitch** | 2-3 sentences for investor |
+| **Pain** | Top-3 pains solved |
+| **Gain** | Top-3 concrete results |
+| **Proof points** | Concrete numbers/cases (or [placeholder]) |
 
----
+## Step 3. Acquisition Channels
 
-## Шаг 3. Каналы привлечения
+Score by matrix:
 
-Оценить по матрице:
-
-| Канал | Стоимость | Скорость | Масштаб | Приоритет |
+| Channel | Cost | Speed | Scale | Priority |
 |:---|:---|:---|:---|:---|
-| Organic SEO | Низкая | Медленно | Высокий | 🟡 Средний |
-| Paid ads (Meta/Google) | Высокая | Быстро | Высокий | 🔴 Только после PMF |
-| Content / Community | Низкая | Медленно | Средний | 🟢 Старт |
-| Partnerships | Средняя | Средне | Средний | 🟢 Если есть нетворк |
-| Product-led growth | Низкая | Средне | Высокий | 🟢 При наличии freemium |
-| Direct sales / outreach | Средняя | Быстро | Низкий | 🟢 На старте для B2B |
+| Organic SEO | Low | Slow | High | 🟡 Medium |
+| Paid ads (Meta/Google) | High | Fast | High | 🔴 Only after PMF |
+| Content / Community | Low | Slow | Medium | 🟢 Start |
+| Partnerships | Medium | Medium | Medium | 🟢 If network exists |
+| Product-led growth | Low | Medium | High | 🟢 If freemium |
+| Direct sales / outreach | Medium | Fast | Low | 🟢 At start for B2B |
 
----
-
-## Шаг 4. Launch Plan
-
-Фазы:
+## Step 4. Launch Plan
 
 ```
-Phase 0: Pre-launch (до релиза)
+Phase 0: Pre-launch (before release)
 - Waitlist / landing page
-- Seeding сообщества (Reddit, Telegram, ProductHunt)
-- 10-20 beta-пользователей из ICP
+- Community seeding (Reddit, Telegram, ProductHunt)
+- 10-20 beta users from ICP
 
-Phase 1: Soft launch (неделя 1-4)
-- Закрытый бета-доступ
-- Сбор feedback
-- Итерация продукта
+Phase 1: Soft launch (week 1-4)
+- Closed beta access
+- Collect feedback
+- Iterate product
 
 Phase 2: Public launch
-- ProductHunt / Hacker News / AppSumo (если подходит)
+- ProductHunt / Hacker News / AppSumo (if fit)
 - PR / Media outreach
-- Первые платящие
+- First paying
 
 Phase 3: Growth
-- Включение платных каналов только после: CAC < LTV и Retention ≥ 40% (Day 30)
+- Enable paid channels only after: CAC < LTV and Retention ≥ 40% (Day 30)
 ```
 
----
+## Step 5. GTM as a function (Launch/Scale)
 
-## Шаг 5. GTM как функция (Launch/Scale)
+Launch plan above = the launch. At Launch/Scale: build a **repeatable growth engine**, not a one-off launch. Organic growth (founder-led selling, Product Hunt, personal connections) has a ceiling.
 
-Launch-plan выше — это запуск. На Launch/Scale-стадии задача другая: **построить repeatable growth engine**, а не разовый launch. Organic growth (founder-led selling, Product Hunt, личные связи) имеет потолок, и большинство фаундеров упираются в него до того, как впервые построили настоящую GTM-функцию.
+**Repeatable & channel-driven (Launch-exit):** growth predictable via concrete channels with clear economics — **CAC, LTV, payback** (numbers you know and can defend), not "got lucky with a post". Cross-check with `unit-economics`.
 
-**Repeatable & channel-driven (Launch-exit):** рост предсказуем через конкретные каналы с понятной экономикой — **CAC, LTV, payback** (числа, которые знаешь и можешь защитить), а не «повезло с постом». Сверять с `unit-economics`.
+**Audience-segmented voice (Scale):** reach new users plus **investors** and **enterprise buyers**. Each audience has its own vocabulary and criteria:
 
-**Audience-segmented voice (Scale):** на Scale нужно достучаться не только до новых юзеров, но и до **инвесторов** и **enterprise-байеров**. У каждой аудитории свой словарь и свои критерии оценки:
-| Аудитория | Что хочет слышать |
+| Audience | What they want to hear |
 |---|---|
-| Пользователи | боль → результат, time-to-value |
-| Enterprise-байеры | reliability, security/compliance, SLA, support, integration depth |
-| Инвесторы/аналитики | moat narrative, growth-механика, TAM, unit economics |
+| Users | pain → result, time-to-value |
+| Enterprise buyers | reliability, security/compliance, SLA, support, integration depth |
+| Investors/analysts | moat narrative, growth mechanics, TAM, unit economics |
 
-Создать **brand voice & story** + product-marketing инфраструктуру (interactive demo, integration docs, API-references, sandbox), чтобы GTM-motion работал асинхронно. Moat narrative для инвесторов/enterprise берётся из `defensibility`.
+Build **brand voice & story** + product-marketing infra (interactive demo, integration docs, API references, sandbox) so GTM motion runs async. Moat narrative for investors/enterprise comes from `defensibility`.
 
-> GTM-функция не обязана быть большой, чтобы быть эффективной — та же AI-инфраструктура, что построила продукт, bootstrap'ит и вывод на рынок.
+## Document format
 
----
+Place in `docs/01_Business/06_Go_To_Market.md`
 
-## Формат в документе
+## Agent adds itself
 
-Размещать в `docs/01_Business/06_Go_To_Market.md`
+- Channel specifics for the vertical (SaaS vs Consumer vs Marketplace)
+- Red flags: "No retention → ads only accelerate budget burn"
+- Synergies with other vault projects if audience overlaps
+- Concrete launch venues (not abstract "social media")
 
----
+## Hard prohibitions
 
-## Что агент добавляет сам
+DO NOT:
+- ICP "everyone who needs [product]" — too broad
+- Launch paid channels before retention proven
+- GTM without a concrete success metric (what "successful launch" means)
 
-- Специфику каналов для данной вертикали (SaaS vs Consumer vs Marketplace)
-- Red flags: "Если нет retention — реклама только ускорит слив бюджета"
-- Синергии с другими проектами vault если есть пересечение аудитории
-- Конкретные площадки для launch (не абстрактно "социальные сети")
+## Related skills
 
----
+- `founder/competitive-analysis` — input for GTM: market, competitors, JTBD, open niche (required BEFORE GTM).
+- `pm/monetization-design` — chosen monetization model sets channels and messaging (required BEFORE GTM).
+- `pm/unit-economics` — source of paid-channel launch gates (CAC < LTV, payback); cross-check with metrics here.
+- `pm/product-roadmap` — consumer: ICP and launch phases feed product phasing.
+- `founder/startup-lifecycle` — frame: launch-plan = entry to Launch, repeatable channel-driven growth = Launch-exit.
+- `founder/defensibility` — supplier of moat narrative for investor/enterprise voice at Scale.
+- `founder/pitch-deck` — consumer: deck GTM section comes from here.
 
-## Жёсткие запреты
+<!-- ru-source-sha256: PENDING -->
 
-НЕЛЬЗЯ:
-- ICP "все, кому нужен [продукт]" — слишком широко
-- Запускать платные каналы до проверки retention
-- GTM без конкретной метрики успеха (что значит "успешный launch")
-
----
-
-## Связанные скиллы
-
-- `founder/competitive-analysis` — вход для GTM: рынок, конкуренты, JTBD, незанятая ниша (требуется ДО GTM).
-- `pm/monetization-design` — выбранная модель монетизации задаёт каналы и messaging (требуется ДО GTM).
-- `pm/unit-economics` — источник гейтов запуска платных каналов (CAC < LTV, payback); сверять с метриками отсюда.
-- `pm/product-roadmap` — потребитель: ICP и фазы launch ложатся в фазирование продукта.
-- `founder/startup-lifecycle` — рамка: launch-plan = вход в Launch, repeatable channel-driven growth = Launch-exit.
-- `founder/defensibility` — поставщик moat narrative для investor/enterprise voice на Scale.
-- `founder/pitch-deck` — потребитель: GTM-секция деки берётся отсюда.
+<!-- ru-source-sha256: 23940414311fab6ab75f8d64dc0d488e413a80070f58682e4796b9f485d6438b -->

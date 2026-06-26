@@ -16,28 +16,22 @@ sha256: ""
 
 # Database
 
-## Модели и таблицы
+## Models & tables
 
-В {{project_name}} модели используют PHP-атрибут `#[Table(name: '...')]` для явного указания таблицы:
+- Models declare table via PHP attribute `#[Table(name: '...')]`:
 
 ```php
 #[Table(name: 'tickets')]
 final class Ticket extends Model { ... }
 ```
 
-Благодаря этому `(new Ticket())->getTable()` всегда возвращает имя таблицы из модели — **не хардкод-строку**.
+- `(new Ticket())->getTable()` returns the table name from the model — never a hardcoded string.
 
-## Паттерн миграций: имена таблиц через Model
+## Migrations: table names via Model
 
-**Никогда не хардкодить имена таблиц строками в миграциях.** Всегда получать имя через `(new Model())->getTable()`.
+- NEVER hardcode table-name strings in migrations. Always get the name via `(new Model())->getTable()`.
 
-### Почему
-
-- Если таблица переименуется — исправляем только `#[Table]` в модели, миграции обновятся автоматически
-- Нет расхождений между моделью и миграцией
-- Рефакторинг безопаснее
-
-### Шаблон миграции
+### Migration template
 
 ```php
 <?php
@@ -57,7 +51,7 @@ return new class extends Migration
         Schema::create($this->table(), function (Blueprint $table): void {
             $table->id();
 
-            // FK через getTable() — не строку
+            // FK via getTable() — not a string
             $table->foreignId('meeting_agenda_item_id')
                 ->nullable()
                 ->index()
@@ -84,7 +78,7 @@ return new class extends Migration
 ### Self-referencing FK
 
 ```php
-// Таблица ссылается на себя (related_ticket_id → tickets.id)
+// Table references itself (related_ticket_id → tickets.id)
 $table->foreignId('related_ticket_id')
     ->nullable()
     ->index()
@@ -92,7 +86,7 @@ $table->foreignId('related_ticket_id')
     ->nullOnDelete();
 ```
 
-### Миграции изменения таблицы (alter)
+### Alter migrations
 
 ```php
 public function up(): void
@@ -111,26 +105,30 @@ private function table(): string
 }
 ```
 
-## Именование таблиц
+## Table naming
 
-Таблицы именуются во множественном числе. При необходимости группировки — короткие префиксы (`meeting_`, `ticket_`). Имя всегда задаётся в `#[Table(name: '...')]` на модели.
+- Plural. Group via short prefixes when needed (`meeting_`, `ticket_`). Name always set in `#[Table(name: '...')]` on the model.
 
-## Создание модели и миграции
+## Create model + migration
 
 ```bash
 php artisan make:model ModelName -m --no-interaction
 ```
 
-Сразу добавить `#[Table(name: 'table_name')]` на созданную модель, затем писать миграцию через паттерн выше.
+- Immediately add `#[Table(name: 'table_name')]` to the model, then write the migration using the template above.
 
-## Текущее состояние в {{project_name}}
+## Existing migrations
 
-Существующие миграции (до внедрения этого паттерна) используют хардкод-строки. **При написании новых миграций — всегда применять паттерн через `getTable()`**. При редактировании старых миграций — при удобном случае приводить к новому стилю.
+- Pre-existing migrations use hardcoded strings. New migrations: always use the `getTable()` pattern. When editing old migrations, migrate them to the new style when convenient.
 
-## Ссылки
+## References
 
-- `php/laravel` — архитектурные паттерны (модели, связи, Eloquent).
-- `php/laravel-structure` — размещение моделей и фабрик по доменам (`Models/<Домен>`, `database/factories/<Домен>`).
-- `php/laravel-testing`, `php/test-isolation-guard` — изоляция тестовой БД при прогоне миграций.
-- `architect/data-schema` — проектирование схемы данных (сущности, связи) до миграций.
-- `devops/docker-postgres`, `devops/db-test-preflight` — Postgres в Docker и пре-флайт тестовой БД.
+- `php/laravel` — architectural patterns (models, relations, Eloquent).
+- `php/laravel-structure` — placing models and factories per domain (`Models/<Domain>`, `database/factories/<Domain>`).
+- `php/laravel-testing`, `php/test-isolation-guard` — test DB isolation when running migrations.
+- `architect/data-schema` — data schema design (entities, relations) before migrations.
+- `devops/docker-postgres`, `devops/db-test-preflight` — Postgres in Docker and test DB pre-flight.
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: 32aa2c99c08d94a9a8e392d0f69bf021b5bea413acfe7940b51c81d9f421e882 -->

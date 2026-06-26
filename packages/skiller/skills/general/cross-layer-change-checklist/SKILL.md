@@ -2,7 +2,7 @@
 name: cross-layer-change-checklist
 bucket: general
 version: 0.1.0
-description: "Универсальный checklist для изменений, затрагивающих несколько слоев: код, доступы, UI, документацию и тесты."
+description: "Universal checklist for changes spanning multiple layers: code, authorization, UI, docs, tests."
 risk: read
 persona: oss-dev
 tags: [checklist, workflow, validation]
@@ -16,43 +16,41 @@ sha256: ""
 
 # Cross-layer Change Checklist
 
-## Когда активировать
+Use for changes spanning multiple system layers.
 
-Используйте этот skill при изменениях, которые проходят через несколько слоев системы.
+## Mandatory verification chain
 
-## Обязательная цепочка проверки
+1. **Domain & contracts**
+   - Enum/DTO/signatures synced.
+   - No hidden meaning changes in names.
 
-1. **Домен и контракты**
-   - Enum/DTO/сигнатуры синхронизированы.
-   - Нет скрытого изменения смыслов в названиях.
-
-2. **Авторизация**
-   - Permission enum ↔ policy method ↔ gate definition согласованы.
-   - Негативные кейсы доступа покрыты.
+2. **Authorization**
+   - Permission enum ↔ policy method ↔ gate definition aligned.
+   - Negative access cases covered.
 
 3. **HTTP/API**
-   - Route → Controller → Action/Service цепочка целостна.
-   - Контроллер остался тонким.
+   - Route → Controller → Action/Service chain intact.
+   - Controller stays thin.
 
 4. **Frontend**
-   - UI-триггеры обновлены.
-   - Нет хардкода URL при наличии route/action helpers.
-   - Обработаны состояния ошибок и запрета доступа.
+   - UI triggers updated.
+   - No hardcoded URLs when route/action helpers exist.
+   - Error and access-denied states handled.
 
-5. **Данные/миграции**
-   - Схема и модельные контракты согласованы.
-   - Переименования/переносы не ломают существующие связи.
+5. **Data/migrations**
+   - Schema and model contracts aligned.
+   - Renames/moves don't break existing relations.
 
-6. **Документация и контекст агентов**
-   - Обновлены релевантные docs (`docs/workflow/*`, `docs/dev/*`, глоссарий и т.д.), если меняется поведение или термины.
-   - Если меняются архитектурные договорённости или правила для ИИ: правки в `.ai/guidelines/` и при узком контексте в `.ai/skills/*` (в т.ч. триггеры в `description`), затем `php artisan boost:update`.
+6. **Docs & agent context**
+   - Update relevant docs (`docs/workflow/*`, `docs/dev/*`, glossary, etc.) if behavior or terms change.
+   - If architectural agreements or AI rules change: edit `.ai/guidelines/` and, on narrow context, `.ai/skills/*` (incl. `description` triggers), then `php artisan boost:update`.
 
-7. **Тесты**
+7. **Tests**
    - Happy path.
    - Forbidden/validation path.
-   - Контрактные тесты на измененные переходы/правила.
+   - Contract tests for changed transitions/rules.
 
-## Формат финальной самопроверки
+## Final self-check format
 
 ```text
 [x] Domain
@@ -65,7 +63,11 @@ sha256: ""
 Остаточные риски:
 ```
 
-## Связанные скиллы
+## Related skills
 
-- `complex-task-orchestrator` (general) — декомпозиция и DoD; этот чеклист — финальная синхронизация слоёв перед закрытием.
-- `quality/code-review` — финальное ревью изменения по слоям.
+- `complex-task-orchestrator` (general) — decomposition & DoD; this checklist = final layer sync before closing.
+- `quality/code-review` — final per-layer change review.
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: 67376b60c6dd248304374ed9c3fb41d3175fd984a0ded6a4ae2e9673f43dba0e -->

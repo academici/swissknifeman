@@ -2,7 +2,7 @@
 name: vue-dynamic-icons
 bucket: frontend-vue
 version: 0.1.0
-description: "Vue: один компонент-иконка, выбирающий SVG по строковому имени из набора (lucide-vue-next и др.) через <component :is>; активировать при словах динамическая иконка, icon by name, component is icon, проброс size/strokeWidth/color, типобезопасное имя иконки, замена набора иконок."
+description: "Vue: one icon component rendering SVG by string name from a set (lucide-vue-next etc.) via <component :is>; activate on dynamic icon, icon by name, component is icon, passing size/strokeWidth/color, type-safe icon name, swapping icon set."
 risk: write
 persona: oss-dev
 tags: [vue, icons, dynamic-component, lucide, typescript, frontend]
@@ -16,62 +16,58 @@ sha256: ""
 
 # Skill: Vue dynamic icon component
 
-## Контекст
+One reusable `<Icon name="...">` rendering an SVG by string name from a set (`lucide-vue-next`, `@heroicons/vue`, own registry), forwarding `size` / `strokeWidth` / `color` / `class`, no per-icon manual import per page.
 
-Нужен **один** переиспользуемый компонент `<Icon name="...">`, который рендерит SVG-иконку по строковому имени из набора (например `lucide-vue-next`, `@heroicons/vue`, собственный реестр), пробрасывает `size` / `strokeWidth` / `color` / `class` и не требует ручного импорта каждой иконки на каждой странице.
+## Activate when
+- Template needs icon "by name from data/config" (`type`, `status`, `category` arrive as string from backend).
+- Scattered `import { Plus, Trash, ... } from 'lucide-vue-next'` across many components — centralize.
+- "dynamic icon", "icon by name", "`<component :is>` for icon", "type-safe icon name", "how to swap icon set".
 
-**Когда активировать:**
-- В шаблоне просят иконку «по имени из данных/конфига» (`type`, `status`, `category` приходят строкой с backend).
-- Видишь россыпь `import { Plus, Trash, ... } from 'lucide-vue-next'` в десятках компонентов — пора централизовать.
-- Звучит «динамическая иконка», «icon by name», «`<component :is>` для иконки», «типобезопасное имя иконки», «как поменять набор иконок».
+Pattern is set-agnostic: a set = any module exporting Vue icon components by name. Swap set = change one `import * as icons` and (optionally) the union-type source.
 
-Паттерн **универсален** и не привязан к конкретному набору: набор — это любой модуль, экспортирующий Vue-компоненты-иконки по именам. Сменить набор = поменять один `import * as icons` и (опционально) источник union-типа имён.
-
-## Алгоритм
-
-1. **Создай единый компонент** `components/shared/Icon.vue` (`<script setup lang="ts">`). Все остальные места используют только его, не импортируя иконки напрямую.
-2. **Импортируй набор как namespace**: `import * as icons from '<icon-set>'` — получаешь словарь `{ ИмяИконки: Component }`. Это единственная точка привязки к набору.
-3. **Объяви пропсы** через `defineProps<Props>` + `withDefaults`:
-   - `name: IconName` — имя иконки (типобезопасный union, см. шаг 6; на старте допустимо `string`);
-   - `size?: number | string` (дефолт, напр. `16`), `strokeWidth?: number | string` (дефолт `2`), `color?: string`, `class?: string`.
-4. **Нормализуй имя под соглашение набора.** В `lucide-vue-next` экспорт в PascalCase (`ArrowRight`), а данные часто в kebab/lower (`arrow-right`, `plus`). Приведи имя к нужному регистру в `computed`, а не в шаблоне. Простейший случай (lower → Pascal первой буквы) показан в сниппете; для kebab-case добавь конвертацию каждого сегмента.
-5. **Выбирай компонент лениво через `computed`** — резолв иконки пересчитывается только при смене `name`:
+## Algorithm
+1. Create single component `components/shared/Icon.vue` (`<script setup lang="ts">`). All other places use only it, never import icons directly.
+2. Import set as namespace: `import * as icons from '<icon-set>'` → dict `{ IconName: Component }`. Only binding point to the set.
+3. Props via `defineProps<Props>` + `withDefaults`:
+   - `name: IconName` — icon name (type-safe union, see step 6; `string` allowed at start);
+   - `size?: number | string` (default e.g. `16`), `strokeWidth?: number | string` (default `2`), `color?: string`, `class?: string`.
+4. Normalize name to the set's convention. `lucide-vue-next` exports PascalCase (`ArrowRight`); data is often kebab/lower (`arrow-right`, `plus`). Cast case in `computed`, not in template. Snippet shows the simplest case (lower → first-letter Pascal); for kebab-case convert each segment.
+5. Resolve component lazily via `computed` — recomputes only on `name` change:
    ```ts
    const icon = computed(() => (icons as Record<string, Component>)[normalize(props.name)]);
    ```
-   Никаких сетов `if/switch` по именам — словарь набора и есть карта.
-6. **Сделай имя типобезопасным.** Выведи union допустимых имён из самого набора (`keyof typeof icons`) или объяви явный `IconName` для подмножества используемых иконок (см. `snippets/icon-name.type.ts`). Это даёт автокомплит и ловит опечатки в имени на этапе сборки, а не в рантайме.
-7. **Обработай промах.** Если `icons[name]` не найден — `<component :is>` с `undefined` ничего не рендерит. По желанию: верни фолбэк-иконку (`HelpCircle`/`Square`) или выведи `console.warn` в dev. Типобезопасный `name` (шаг 6) убирает большинство промахов заранее.
-8. **Пробрось пропсы в `<component :is="icon">`**: `:size`, `:stroke-width`, `:color`, `:class`. `class` мерджи с базовыми классами (`cn(...)` / `clsx` / ручная конкатенация), чтобы вызывающий мог дополнять, а не затирать стиль.
-9. **Используй везде одинаково**: `<Icon :name="row.icon" :size="20" class="text-muted" />`. Имя может приходить из props/стора/ответа API.
+   No `if/switch` over names — the set dict is the map.
+6. Make name type-safe. Derive union from the set (`keyof typeof icons`) or declare explicit `IconName` for the used subset (see `snippets/icon-name.type.ts`). Gives autocomplete and catches typos at build time, not runtime.
+7. Handle miss. If `icons[name]` not found, `<component :is>` with `undefined` renders nothing. Optionally: return fallback icon (`HelpCircle`/`Square`) or `console.warn` in dev. Type-safe `name` (step 6) removes most misses upfront.
+8. Forward props into `<component :is="icon">`: `:size`, `:stroke-width`, `:color`, `:class`. Merge `class` with base classes (`cn(...)` / `clsx` / manual concat) so caller can extend, not overwrite, style.
+9. Use uniformly everywhere: `<Icon :name="row.icon" :size="20" class="text-muted" />`. Name may come from props/store/API response.
 
-## Замена набора иконок
+## Swapping the icon set
+Switch sets by editing **only Icon.vue**; the `<Icon name size ...>` contract stays:
 
-Чтобы перейти на другой набор, меняешь **только Icon.vue**, контракт `<Icon name size ...>` остаётся:
-
-| Шаг | Что меняешь |
+| Step | Change |
 |:---|:---|
-| Импорт набора | `import * as icons from '@heroicons/vue/24/outline'` вместо `lucide-vue-next` |
-| Нормализация имени | под соглашение нового набора (suffix `Icon`, kebab→Pascal, и т.п.) |
-| Союз-тип имён | `IconName = keyof typeof icons` пересчитается сам, либо обнови явный список |
-| Пробрасываемые пропсы | у разных наборов разный API (lucide — `strokeWidth`; heroicons — без него): пробрось то, что поддерживает набор |
+| Set import | `import * as icons from '@heroicons/vue/24/outline'` instead of `lucide-vue-next` |
+| Name normalization | to the new set's convention (suffix `Icon`, kebab→Pascal, etc.) |
+| Name union type | `IconName = keyof typeof icons` recomputes itself, or update the explicit list |
+| Forwarded props | sets have different APIs (lucide — `strokeWidth`; heroicons — none): forward what the set supports |
 
-Поскольку набор изолирован в одном файле, цена миграции — один компонент, а не правка всех мест вызова.
+## Quality checklist
+- [ ] Icons imported manually nowhere except the single `Icon.vue` (`import * as icons`)
+- [ ] Component selection is lazy `computed` by `name`, no `if/switch` chains
+- [ ] Name cast to set convention in `computed`/function, not in template
+- [ ] `name` is type-safe (`IconName` from `keyof typeof icons` or explicit union), not bare `string`
+- [ ] `size`, `strokeWidth`, `color` forwarded with defaults via `withDefaults`
+- [ ] `class` merged with base classes, caller can extend style
+- [ ] Miss strategy exists (fallback icon or dev-warn)
+- [ ] Set swap touches only `Icon.vue`, `<Icon>` contract unchanged
 
-## Чеклист качества
-
-- [ ] Иконки нигде не импортируются вручную, кроме единственного `Icon.vue` (`import * as icons`)
-- [ ] Выбор компонента — ленивый `computed` по `name`, без `if/switch`-цепочек
-- [ ] Имя приводится к соглашению набора в `computed`/функции, а не в шаблоне
-- [ ] `name` типобезопасен (`IconName` из `keyof typeof icons` или явный union), а не голый `string`
-- [ ] Пробрасываются `size`, `strokeWidth`, `color` с дефолтами через `withDefaults`
-- [ ] `class` мерджится с базовыми классами, вызывающий может дополнять стиль
-- [ ] Есть стратегия на промах имени (фолбэк-иконка или dev-warn)
-- [ ] Смена набора затрагивает только `Icon.vue`, контракт `<Icon>` не меняется
-
-## Ссылки
-
+## Links
 - https://vuejs.org/guide/essentials/component-basics#dynamic-components
 - https://lucide.dev/guide/packages/lucide-vue-next
 - `snippets/Icon.vue`, `snippets/icon-name.type.ts`
-- Связанные скиллы: `frontend/inertia-vue` (где живёт `components/shared/Icon.vue`), `frontend/vue-composition-api` (`<script setup>`, `computed`), `frontend/tailwind-conventions` (`cn()` для мерджа классов иконки), `frontend/reka-ui-cva` (иконки внутри компонентов UI-кита)
+- Related skills: `frontend/inertia-vue` (where `components/shared/Icon.vue` lives), `frontend/vue-composition-api` (`<script setup>`, `computed`), `frontend/tailwind-conventions` (`cn()` for merging icon classes), `frontend/reka-ui-cva` (icons inside UI-kit components)
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: 45b1af001da556716221728506dab2c2af8a2676cc4afeb65a268c024db83208 -->

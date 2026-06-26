@@ -2,7 +2,7 @@
 name: release-engineering
 bucket: oss-dev
 version: 0.1.0
-description: SemVer-стратегия, CHANGELOG, релизный pipeline (CI/CD), pre-releases, deprecation policy для OSS-пакета
+description: SemVer strategy, CHANGELOG, release pipeline (CI/CD), pre-releases, deprecation policy for an OSS package
 risk: draft
 persona: oss-dev
 tags: [oss, semver, release, changelog, ci]
@@ -15,53 +15,48 @@ adapters: [claude, cursor, fable]
 
 # Skill: Release Engineering
 
-Применять когда: OSS-проект нужно довести до **первого публичного релиза** (`v0.1.0` / `v1.0.0`) или **формализовать релизный процесс** для уже существующего пакета. Решает вопросы: версионирование, changelog, теги, pre-releases, deprecation, hotfix-flow.
+Apply when: OSS project needs its **first public release** (`v0.1.0` / `v1.0.0`), or to **formalize the release process** for an existing package. Covers: versioning, changelog, tags, pre-releases, deprecation, hotfix-flow.
 
-Должен быть **выполнен после `oss-development`** (нужна базовая структура репо и `Architecture.md`). Часто идёт в паре с `dependency-audit` (определить SBOM перед публикацией) и `dx-design` (определить, что break/feature/fix значит для пользователя).
+Run **after `oss-development`** (needs base repo structure + `Architecture.md`). Often paired with `dependency-audit` (SBOM before publish) and `dx-design` (what break/feature/fix means to the user).
 
----
+## Do NOT apply when
+- Internal/private project, no public consumers — version by date, not SemVer; use simplified process.
+- Stable release-flow already exists and need not change — decline.
+- First `v0.1.0` not out and no README yet — do `oss-development` + `dx-design` first.
 
-## Когда НЕ применять
+## 5 decisions
 
-- Проект внутренний / приватный без публичных потребителей — версионирование можно делать по дате, не SemVer. Использовать упрощённый процесс.
-- Уже есть устойчивый release-flow и его не нужно менять — отказать, не плодить процесс.
-- Первый `v0.1.0` ещё не вышел и нет даже README — сначала `oss-development` и `dx-design`.
+### 1. SemVer contract
+Fix **what counts as** `MAJOR`/`MINOR`/`PATCH` for this package:
 
----
-
-## 5 решений на этом этапе
-
-### 1. SemVer-контракт
-Зафиксировать **что для этого пакета считается** `MAJOR`/`MINOR`/`PATCH`:
-
-| Тип изменения | Класс | Пример |
+| Change | Class | Example |
 |:---|:---|:---|
-| Удаление публичного API / breaking signature | MAJOR | удалён `Brain.query()`, переименован параметр |
-| Изменение поведения существующего API (но контракт сохранён) | MINOR или MAJOR? | **Зависит от пакета. Зафиксировать** |
-| Новый публичный API, не ломающий существующее | MINOR | добавлен `Brain.stream()` |
-| Bug-fix без изменения публичного API | PATCH | исправлен race в `Brain.query()` |
-| Изменение приватного кода / refactor | PATCH или skip | внутренние правки |
-| Добавление experimental API под флагом | MINOR | `experimental.stream()` |
-| Зависимости: обновление minor/patch | PATCH | bumped lodash |
-| Зависимости: обновление major транзитивной зависимости | MINOR или MAJOR | **если в peerDeps → MAJOR** |
+| Remove public API / breaking signature | MAJOR | removed `Brain.query()`, renamed param |
+| Change behavior of existing API (contract kept) | MINOR or MAJOR? | **Depends on package. Fix it** |
+| New public API, non-breaking | MINOR | added `Brain.stream()` |
+| Bug-fix, no public API change | PATCH | fixed race in `Brain.query()` |
+| Private code / refactor | PATCH or skip | internal edits |
+| Experimental API behind flag | MINOR | `experimental.stream()` |
+| Deps: minor/patch update | PATCH | bumped lodash |
+| Deps: major update of transitive dep | MINOR or MAJOR | **if in peerDeps → MAJOR** |
 
-Что **отдельно зафиксировать в RELEASING.md**:
-- Что считается публичным API (всё ли экспортируемое? только то, что в `index.ts`?)
-- Считается ли изменение `engines.node` MAJOR (рекомендую — да)
-- Считается ли изменение TS-типов MAJOR (если используют как библиотеку — да; если internal — нет)
-- Платформенные требования (минимальный PHP/Node/Dart) — MAJOR при изменении
+Also fix in RELEASING.md:
+- What counts as public API (everything exported? only `index.ts`?)
+- Is `engines.node` change MAJOR (recommend: yes)
+- Are TS-type changes MAJOR (used as library → yes; internal → no)
+- Platform requirements (min PHP/Node/Dart) — MAJOR on change
 
-### 2. Pre-release стратегия
-Перед `1.0.0` — `0.x.y`. После `1.0.0`:
-- `1.2.0-alpha.1` — внутренние эксперименты, **нет** обещаний стабильности
-- `1.2.0-beta.1` — публичные тесты, API заморожен, ловим баги
-- `1.2.0-rc.1` — кандидат, только blocker-фиксы
-- `1.2.0` — стабильный
+### 2. Pre-release strategy
+Before `1.0.0` — `0.x.y`. After `1.0.0`:
+- `1.2.0-alpha.1` — internal experiments, **no** stability promise
+- `1.2.0-beta.1` — public tests, API frozen, catching bugs
+- `1.2.0-rc.1` — candidate, blocker-fixes only
+- `1.2.0` — stable
 
-**Правило тэгов npm/Packagist/pub.dev**: alpha/beta/rc публикуются под dist-tag `next` или `beta`, **не на `latest`**.
+**npm/Packagist/pub.dev tag rule**: alpha/beta/rc publish under dist-tag `next` or `beta`, **not `latest`**.
 
-### 3. CHANGELOG.md формат
-**Keep a Changelog** (https://keepachangelog.com) — стандарт:
+### 3. CHANGELOG.md format
+**Keep a Changelog** (https://keepachangelog.com):
 
 ```markdown
 ## [Unreleased]
@@ -80,25 +75,23 @@ adapters: [claude, cursor, fable]
 
 ## [1.2.0] - 2026-01-15
 ### Added
-- `Brain.stream()` — стриминг ответов агента ([#42](link))
+- `Brain.stream()` — agent response streaming ([#42](link))
 ### Fixed
-- Race в `Brain.query()` при concurrent calls ([#51](link))
+- Race in `Brain.query()` on concurrent calls ([#51](link))
 
 ## [1.1.0] - 2025-12-10
+```
 
-Пример заполненного CHANGELOG (Keep a Changelog) с разбором секций — [references/changelog-example.md](references/changelog-example.md).
+Filled-in CHANGELOG example (Keep a Changelog) with section breakdown — [references/changelog-example.md](references/changelog-example.md).
 
-## Что агент добавляет сам
+### Agent adds itself
+- **Min Node/PHP/Dart version.** Set in `engines.node` / `composer.json:require.php` / `pubspec.yaml:environment.sdk`. No "works on any version".
+- **`provenance` / signed releases.** Mandatory for `v1.0+`. Explain OIDC setup.
+- **`peerDependencies` traps.** If package is a plugin (for a framework), `peerDeps` defines MAJOR coupling.
+- **Hotfix-flow.** What to do on critical bug in `1.2.3` when main is on `1.3-alpha`: branch `release/1.2.x`, fix, `1.2.4`, backport to main.
+- **LTS strategy (if applicable).** Library-level (BrainKit) — no. Core infrastructure — yes, 1 LTS parallel to current.
 
-- **Минимальная Node/PHP/Dart версия.** Указать в `engines.node` / `composer.json:require.php` / `pubspec.yaml:environment.sdk`. Никаких «работает на любой версии».
-- **`provenance` / `signed releases.`** Для `v1.0+` без вариантов. Объяснить как настроить OIDC.
-- **`peerDependencies` ловушки.** Если пакет — плагин (для фреймворка), `peerDeps` определяет MAJOR-сцепку.
-- **Hotfix-flow.** Описать что делать при критическом баге в `1.2.3` если main уже на `1.3-alpha`: ветка `release/1.2.x`, fix, `1.2.4`, backport в main.
-- **LTS-стратегия (если применимо).** Для библиотек уровня BrainKit — нет. Для core-инфраструктуры — да, 1 LTS параллельно с current.
-
----
-
-## Структура output-файла
+## Output files
 
 ### `ProjectName/RELEASING.md`
 
@@ -111,25 +104,25 @@ based_on: oss-development.md
 
 # Releasing [ProjectName]
 
-## SemVer-контракт
-[таблица «что является MAJOR/MINOR/PATCH» для этого пакета]
+## SemVer contract
+[MAJOR/MINOR/PATCH table for this package]
 
-## Публичный API
-- Что считается публичным: [...]
-- Что приватно: [...]
-- Платформенные требования (min runtime): [...]
+## Public API
+- Public: [...]
+- Private: [...]
+- Platform requirements (min runtime): [...]
 
 ## Pre-release
 - alpha / beta / rc → dist-tag
-- Когда публиковать на `latest`
+- When to publish to `latest`
 
 ## CHANGELOG
-- Стандарт: Keep a Changelog
-- Автоматизация: [changesets / release-please / manual]
+- Standard: Keep a Changelog
+- Automation: [changesets / release-please / manual]
 
 ## Release pipeline
-- Триггер: push tag `v*`
-- Шаги: test → build → publish → sign → changelog
+- Trigger: push tag `v*`
+- Steps: test → build → publish → sign → changelog
 - Secrets: [...]
 - 2FA: [...]
 
@@ -137,42 +130,39 @@ based_on: oss-development.md
 - Mark → Wait (≥ 1 MAJOR) → Remove
 
 ## Hotfix flow
-- ветка `release/X.Y.x` → fix → tag `X.Y.Z+1` → backport в main
+- branch `release/X.Y.x` → fix → tag `X.Y.Z+1` → backport to main
 
-## Чек-лист для нового релиза
-- [ ] Все тесты зелёные на всех платформах
-- [ ] CHANGELOG [Unreleased] → новая версия
-- [ ] Версия в `package.json`/`composer.json`/`pubspec.yaml` поднята
-- [ ] Тэг `vX.Y.Z` создан
-- [ ] GitHub Release с release notes опубликован
-- [ ] Артефакт опубликован на registry с provenance
-- [ ] Twitter / Discord / mailing list уведомлены (для MAJOR)
+## New-release checklist
+- [ ] All tests green on all platforms
+- [ ] CHANGELOG [Unreleased] → new version
+- [ ] Version bumped in `package.json`/`composer.json`/`pubspec.yaml`
+- [ ] Tag `vX.Y.Z` created
+- [ ] GitHub Release with release notes published
+- [ ] Artifact published to registry with provenance
+- [ ] Twitter / Discord / mailing list notified (for MAJOR)
 ```
 
 ### `ProjectName/CHANGELOG.md`
+Keep a Changelog format above. Created empty with `[Unreleased]` section if missing.
 
-См. формат Keep a Changelog выше. Создаётся пустым с секцией `[Unreleased]` если её нет.
+## Links
+- `oss-dev/oss-development` — prerequisite: base repo structure + `Architecture.md`.
+- `oss-dev/github-flow` — consumer: Issue→PR→Tag→Release chain executes this SemVer contract + CHANGELOG format.
+- `oss-dev/dependency-audit` — SBOM as release artifact; vuln-fixes affect version.
+- `oss-dev/dx-design` — what break/feature/fix means to user; TS-types as public API.
+- `general/git-commit-rules` — commit format the SemVer oracle uses to determine bump.
+- `devops/ci-cd` — GitHub Actions release-pipeline (tag → test → build → publish).
+- `php/laravel-package-release` — release notes/tags/validation for PHP packages (language-specific).
 
----
+## Hard prohibitions
+NEVER:
+- Publish `1.0.0` without RELEASING.md and CHANGELOG.md
+- Do MAJOR without migration guide in release notes
+- Remove public API in MINOR (even "nobody uses it" — no)
+- Force-push a tag (release tags immutable)
+- Publish without 2FA / provenance for `v1.0+`
+- Use "git log dump" instead of changelog
 
-## Ссылки
+<!-- ru-source-sha256: PENDING -->
 
-- `oss-dev/oss-development` — предпосылка: базовая структура репо и `Architecture.md`.
-- `oss-dev/github-flow` — потребитель: процессная цепочка Issue→PR→Tag→Release исполняет этот SemVer-контракт и CHANGELOG-формат.
-- `oss-dev/dependency-audit` — SBOM как release artefact; vuln-фиксы влияют на версию.
-- `oss-dev/dx-design` — что break/feature/fix значит для пользователя; TS-типы как публичный API.
-- `general/git-commit-rules` — формат коммитов, по которым SemVer-оракул определяет bump.
-- `devops/ci-cd` — GitHub Actions release-pipeline (тег → test → build → publish).
-- `php/laravel-package-release` — release-нотки/теги/валидация для PHP-пакетов (язык-специфика).
-
----
-
-## Жёсткие запреты
-
-НЕЛЬЗЯ:
-- Публиковать `1.0.0` без RELEASING.md и CHANGELOG.md
-- Делать MAJOR без миграционного гайда в release notes
-- Удалять публичный API в MINOR (даже «никто не использует» — нет)
-- Force-push в тэг (релизные тэги immutable)
-- Публиковать без 2FA / provenance для `v1.0+`
-- Использовать «git log dump» вместо changelog
+<!-- ru-source-sha256: 5f5d48a8910f6419c33914a95f796c6f2828cb43578fbc2f89233e61ff4753f0 -->

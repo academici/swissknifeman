@@ -2,7 +2,7 @@
 name: parametric-config
 bucket: blender-modeling
 version: 0.1.0
-description: "Параметрическое 3D-моделирование в Blender (bpy) на основе конфига-данных: dataclass-параметры детали (размеры/допуски/материал/единицы mm), построение профиля и revolve/extrude, валидация инвариантов без запуска Blender. Активировать при правке models/*/config.py, profile.py, parts/*, check.py, при добавлении параметра детали, при вопросах про допуски/единицы/стыковку радиусов для FDM/SLA-печати."
+description: "Data-config-driven parametric 3D modeling in Blender (bpy): dataclass part params (dims/tolerances/material/units mm), profile + revolve/extrude, invariant validation without launching Blender. Activate when editing models/*/config.py, profile.py, parts/*, check.py; adding a part param; questions about tolerances/units/radius matching for FDM/SLA printing."
 risk: write
 persona: oss-dev
 tags: [blender, bpy, parametric, dataclass, cad, fdm, sla, geometry, units, python, 3d]
@@ -14,134 +14,95 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-# Навык: параметрическое моделирование детали на конфиге-данных
+# Skill: parametric part modeling on a data-config
 
-## Контекст
+Part = data, not procedure. All dims/tolerances/material/units in `config.py` as dataclass params; geometry code only reads them and builds mesh.
 
-Деталь (Part) описывается **данными**, а не процедурой: все размеры, допуски, материал и
-единицы лежат в `config.py` как dataclass-параметры, а код геометрии только читает их и строит
-меш. Это даёт быстрый цикл «правка числа → проверка инвариантов → ребилд» без ручной возни в
-вьюпорте Blender.
+## When to activate
 
-**Когда активировать:**
+- Editing `models/<part>/config.py`, `profile.py`, `parts/*.py`, `check.py`.
+- Adding a new part param (diameter, wall thickness, clearance, thread pitch).
+- Questions: units (mm <-> Blender meters), tolerances, segment-radius matching, min wall thickness for FDM/SLA.
+- Revolve or extrude from a 2D profile/spline.
 
-- Правка `models/<part>/config.py`, `profile.py`, `parts/*.py`, `check.py`.
-- Добавление нового параметра детали (диаметр, толщина стенки, зазор, шаг резьбы).
-- Вопросы про единицы (mm ↔ метры Blender), допуски, стыковку радиусов сегментов, минимальную
-  толщину стенки под FDM/SLA-печать.
-- Построение тела вращения (revolve) или выдавливания (extrude) из 2D-профиля/сплайна.
+## Core principle
 
-**Ключевой принцип:** числа живут только в `config.py`. В `parts/*.py` и `profile.py` —
-никаких «магических» констант; любой новый размер заводится параметром dataclass.
+Numbers live ONLY in `config.py`. No magic constants in `parts/*.py` or `profile.py`; every new dimension becomes a dataclass param.
 
-**Связанные навыки:** `blender-modeling/model-rules` (моделе-специфичные правила `ai/rules.md` —
-стек деталей, соединения, зоны камеры), `blender-modeling/threading` (зазоры и профиль резьбы для
-FDM/SLA — параметры `*_thread_*` в этом конфиге берутся оттуда).
+## Related skills
 
-## Архитектура слоёв
+- `blender-modeling/model-rules` — model-specific `ai/rules.md` rules (part stack, joints, camera zones).
+- `blender-modeling/threading` — clearances + thread profile for FDM/SLA; `*_thread_*` params here come from there.
 
-Раскладка переносима на любую параметрическую деталь. Граница: всё, что считается **без bpy**,
-отделено от всего, что **требует Blender**.
+## Layer architecture
 
-| Файл / слой | Назначение | Нужен bpy? |
+Boundary: everything computed WITHOUT bpy is separated from everything requiring Blender.
+
+| File / layer | Purpose | bpy? |
 |:---|:---|:---|
-| `config.py` | dataclass-параметры детали: размеры, допуски, материал, цвет; экземпляры внизу файла | нет |
-| `lib/units.py` | конвертация единиц: модель хранит mm, Blender работает в метрах (`mm(v) = v*0.001`) | нет |
-| `profile.py` | построение 2D-профиля/сплайна из узлов + `derive_all()` (пересчёт зависимых размеров) | нет (revolve — отдельно) |
-| `lib/geometry.py` | геом-хелперы: `revolve_profile`, `make_cylinder`, `revolve_ring`, boolean/join | **да** (ленивый импорт bpy) |
-| `parts/<part>.py` | сборка конкретной детали: читает config → строит меш через хелперы | **да** |
-| `check.py` | валидация инвариантов параметров; печатает `[ OK ]`/`[ FAIL ]`, exit-код | **нет** (быстрый прогон) |
-| `parts/<part>.test.py` | двухуровневые тесты: `test_config()` без bpy + `test_mesh()` внутри Blender | смешанный |
+| `config.py` | dataclass part params: dims, tolerances, material, color; instances at bottom of file | no |
+| `lib/units.py` | unit conversion: model stores mm, Blender works in meters (`mm(v) = v*0.001`) | no |
+| `profile.py` | build 2D profile/spline from knots + `derive_all()` (recompute dependent dims) | no (revolve separate) |
+| `lib/geometry.py` | geom helpers: `revolve_profile`, `make_cylinder`, `revolve_ring`, boolean/join | **yes** (lazy bpy import) |
+| `parts/<part>.py` | assemble concrete part: read config -> build mesh via helpers | **yes** |
+| `check.py` | validate param invariants; prints `[ OK ]`/`[ FAIL ]`, exit code | **no** (fast run) |
+| `parts/<part>.test.py` | two-level tests: `test_config()` without bpy + `test_mesh()` inside Blender | mixed |
 
-**Правило ленивого `import bpy`:** в `lib/geometry.py` и `parts/*.py` импорт `bpy`/`bmesh`
-делается **внутри функций**, а не на верхнем уровне модуля. Так модуль импортируется обычным
-Python (для `check.py`, тестов уровня 1, CI), а тяжёлый Blender подтягивается только при реальном
-построении меша.
+**Lazy `import bpy` rule:** in `lib/geometry.py` and `parts/*.py`, import `bpy`/`bmesh` INSIDE functions, not at module top level. Module then imports under plain Python (for `check.py`, level-1 tests, CI); Blender pulled only on real mesh build.
 
-## Алгоритм
+## Algorithm
 
-1. **Единицы — один источник.** Все линейные размеры в конфиге — в **миллиметрах**. На границе
-   с Blender (который в метрах) каждое значение пропускается через `units.mm()`. Никогда не
-   умножай на `0.001` вручную в геометрии — только через хелпер. Документируй единицу в
-   комментарии каждого поля (`# мм`, `# градусы`, `# шт`).
+1. **Units — single source.** All linear dims in config = millimeters. At Blender boundary (meters) pass each value through `units.mm()`. Never multiply by `0.001` by hand in geometry — only via the helper. Document unit in each field comment (`# мм`, `# градусы`, `# шт`).
+2. **Param — in dataclass.** Each dim/tolerance/material = `@dataclass` config field with default + unit comment. Group related params into own dataclass (`PartConfig`, `JointConfig`, `MaterialConfig`). Instances created AT BOTTOM OF FILE — user edits those.
+3. **Profile — knots, not coords in code.** Revolve silhouette = list of knots `(z, r)` (local z from 0 to segment height). Type alias `ProfileKnot = Tuple[float, float]` makes intent explicit. Intermediate points interpolated (linear or spline) in `profile.py`, not hand-written.
+4. **Dependent dims — in `derive_all()`.** Dims derived from others (segment height = `model.height − bottom − top`; last-knot-to-height match; joint PCD) computed once in `derive_all(...)`, called right after config instances created. Do not duplicate a formula in several places — compute in `derive_all`, read the result.
+5. **Build geometry from profile.** Revolve: assemble closed `bmesh` profile in XZ plane, apply `SCREW` modifier on Z axis (`steps = segments`, `use_merge_vertices`), apply. Extrude: build 2D section, apply `SOLIDIFY`/`Screw` with zero angle or `bmesh.ops.extrude_*`. Feed each bmesh point through `mm(...)`.
+6. **Validate invariants without Blender.** All geometric correctness conditions in `check.py`, run via plain Python (`python models/<part>/check.py`), no bpy, no render. Check: positive heights; adjacent-segment radius matching (`|r_a − r_b| ≤ tol`); nonzero wall thickness (`r_outer > r_inner`); clearance greater than thread profile depth (`thread_depth > thread_clearance`); geometry in valid range (angles 0..360 etc).
+7. **Two-level part tests.** `parts/<part>.test.py` has `test_config()` (math only, imported from `check.py`) and `test_mesh(obj)` (manifold, volume, bounding box — inside Blender). Level 1 runs in CI without Blender; level 2 on real rebuild.
+8. **Printing (FDM/SLA) — budget tolerances.** Fit + thread clearances = separate params (`*_clearance`), not "tight". Min printable wall thickness = invariant in `check.py` (typically `≥ 0.8–1.5 мм`). Thread params + clearances come from `blender-modeling/threading`.
 
-2. **Параметр — в dataclass.** Каждый размер/допуск/материал детали — поле `@dataclass`-конфига
-   с дефолтом и комментарием-единицей. Логически связанные параметры группируются в отдельный
-   dataclass (`PartConfig`, `JointConfig`, `MaterialConfig`). Экземпляры создаются **внизу файла**
-   — их и правит пользователь.
+## Param conventions
 
-3. **Профиль — узлы, а не координаты в коде.** Силуэт тела вращения задаётся списком узлов
-   `(z, r)` (локальный z от 0 до высоты сегмента). Тип-алиас `ProfileKnot = Tuple[float, float]`
-   делает намерение явным. Промежуточные точки профиля интерполируются (линейно или сплайном) в
-   `profile.py`, а не прописываются руками.
+- **Unit in name/comment.** Field without explicit unit in comment = review error. Linear = mm, angle = degrees (convert to radians on use), counter = `# шт`.
+- **Clearances — per side.** Radial/axial clearance is per single side; diametral formula applies ×2. Document in field comment (`# зазор на сторону, мм`).
+- **Match tolerance — named constant.** In `check.py` `tol = 0.5` (mm) for comparing adjacent-segment radii; never compare float radii for exact equality.
+- **Color/material — also a param.** `Color = Tuple[float, float, float, float]` (RGBA 0..1) in part config, not hardcoded in material code.
+- **Derived functions — next to config.** Pure functions like `joint_outer_radius(joint)` live in `config.py` (no bpy), reused in both `check.py` and `parts/*.py`.
 
-4. **Зависимые размеры — в `derive_all()`.** Размеры, выводимые из других (высота сегмента =
-   `model.height − низ − верх`; согласование последнего узла профиля с высотой; PCD соединения),
-   вычисляются один раз в `derive_all(...)`, вызываемой сразу после создания экземпляров конфига.
-   Не дублируй формулу в нескольких местах — вычисли в `derive_all`, читай результат.
+## Which snippet when
 
-5. **Построй геометрию из профиля.** Тело вращения: собери замкнутый `bmesh`-профиль в плоскости
-   XZ, навесь `SCREW`-модификатор по оси Z (`steps = segments`, `use_merge_vertices`), примени.
-   Выдавливание (extrude): построй 2D-сечение, навесь `SOLIDIFY`/`Screw` с нулевым углом или
-   `bmesh.ops.extrude_*`. Каждую точку в bmesh подавай через `mm(...)`.
-
-6. **Валидируй инварианты без Blender.** Все геометрические условия корректности — в `check.py`,
-   который запускается **обычным Python** (`python models/<part>/check.py`), без bpy и без рендера.
-   Проверяй: положительность высот; стыковку радиусов соседних сегментов (`|r_a − r_b| ≤ tol`);
-   ненулевую толщину стенки (`r_outer > r_inner`); зазор больше глубины профиля резьбы
-   (`thread_depth > thread_clearance`); геометрию в допустимом диапазоне (углы 0..360 и т.п.).
-
-7. **Двухуровневые тесты детали.** `parts/<part>.test.py` содержит `test_config()` (только
-   математика, импортируется из `check.py`) и `test_mesh(obj)` (manifold, объём, bounding box —
-   внутри Blender). Уровень 1 запускается в CI без Blender, уровень 2 — при реальном ребилде.
-
-8. **Печать (FDM/SLA) — заложи допуски.** Зазоры посадки и резьбы — отдельные параметры
-   (`*_clearance`), а не «впритык». Минимальная печатаемая толщина стенки — инвариант в `check.py`
-   (типично `≥ 0.8–1.5 мм`). Параметры резьбы и зазоры берутся из навыка `blender-modeling/threading`.
-
-## Конвенции параметров
-
-- **Единицы в имени/комментарии.** Поле без явной единицы в комментарии — ошибка ревью.
-  Линейное — мм, угол — градусы (конверсия в радианы при использовании), счётчик — `# шт`.
-- **Зазоры — «на сторону».** Радиальный/осевой зазор задаётся на одну сторону; в формуле
-  диаметрального применяется ×2. Документируй это в комментарии поля (`# зазор на сторону, мм`).
-- **Допуск стыковки — именованная константа.** В `check.py` `tol = 0.5` (мм) для сравнения
-  радиусов соседних сегментов; не сравнивай float-радиусы на точное равенство.
-- **Цвет/материал — тоже параметр.** `Color = Tuple[float, float, float, float]` (RGBA 0..1)
-  в конфиге детали, не хардкод в коде материала.
-- **Производные функции — рядом с конфигом.** Чистые функции вроде `joint_outer_radius(joint)`
-  живут в `config.py` (без bpy) и переиспользуются и в `check.py`, и в `parts/*.py`.
-
-## Когда какой сниппет открывать
-
-| Ситуация | Файл |
+| Situation | File |
 |:---|:---|
-| Завести/расширить dataclass-параметры детали, единицы, производные функции | `snippets/config.py` |
-| Написать валидацию инвариантов без запуска Blender (`[OK]`/`[FAIL]`, exit-код) | `snippets/check.py` |
-| Построить профиль из узлов и revolve по оси Z (через SCREW), `derive_all` | `snippets/profile.py` |
+| Add/extend dataclass part params, units, derived functions | `snippets/config.py` |
+| Write invariant validation without Blender (`[OK]`/`[FAIL]`, exit code) | `snippets/check.py` |
+| Build profile from knots and revolve on Z (via SCREW), `derive_all` | `snippets/profile.py` |
 
-## Чеклист качества
+## Quality checklist
 
-- [ ] Все линейные размеры в мм; на границе с Blender — только через `units.mm()`
-- [ ] Каждое поле конфига имеет комментарий-единицу (мм / градусы / шт)
-- [ ] Числа только в `config.py`; в `parts/*.py` и `profile.py` нет магических констант
-- [ ] Зависимые размеры вычислены один раз в `derive_all()`, а не продублированы
-- [ ] `import bpy`/`bmesh` ленивый (внутри функций) — модуль импортируется без Blender
-- [ ] `check.py` запускается обычным Python, без bpy, и даёт ненулевой exit при FAIL
-- [ ] Проверены инварианты: высоты > 0, стыковка радиусов (по `tol`), стенка > 0, зазор > 0
-- [ ] Зазоры посадки/резьбы — отдельные `*_clearance`-параметры, не «впритык»
-- [ ] Минимальная толщина стенки под FDM/SLA — инвариант в `check.py`
-- [ ] Профиль задан узлами `(z, r)`, промежуточные точки интерполируются, не хардкод
-- [ ] Тест детали двухуровневый: `test_config()` (без bpy) + `test_mesh()` (в Blender)
+- [ ] All linear dims in mm; at Blender boundary — only via `units.mm()`
+- [ ] Each config field has unit comment (мм / градусы / шт)
+- [ ] Numbers only in `config.py`; no magic constants in `parts/*.py`, `profile.py`
+- [ ] Dependent dims computed once in `derive_all()`, not duplicated
+- [ ] `import bpy`/`bmesh` lazy (inside functions) — module imports without Blender
+- [ ] `check.py` runs under plain Python, no bpy, nonzero exit on FAIL
+- [ ] Invariants checked: heights > 0, radius matching (by `tol`), wall > 0, clearance > 0
+- [ ] Fit/thread clearances = separate `*_clearance` params, not "tight"
+- [ ] Min wall thickness for FDM/SLA = invariant in `check.py`
+- [ ] Profile given by knots `(z, r)`, intermediate points interpolated, not hardcoded
+- [ ] Part test two-level: `test_config()` (no bpy) + `test_mesh()` (in Blender)
 
-## Ссылки
+## Links
 
-- snippets/config.py — dataclass-параметры детали, единицы, производные функции
-- snippets/check.py — валидация инвариантов без Blender
-- snippets/profile.py — профиль из узлов + revolve через SCREW + `derive_all`
-- snippets/config-and-profile.md — именование конфигов, `profile_knots`, локальный/мировой Z, `derive_all`
-- snippets/internals.md — устройство `spl`, порядок точек `pts`, non-manifold, единицы, тест-файлы
-- Связанные навыки: `blender-modeling/model-rules`, `blender-modeling/threading`, `blender-modeling/build-loop` (общий цикл построения и проверки), `blender/mcp-blender` (инструменты MCP/вьюпорт), `blender/version-gotchas` (5.0-API правила для `bmesh`/SCREW)
+- snippets/config.py — dataclass part params, units, derived functions
+- snippets/check.py — invariant validation without Blender
+- snippets/profile.py — profile from knots + revolve via SCREW + `derive_all`
+- snippets/config-and-profile.md — config naming, `profile_knots`, local/world Z, `derive_all`
+- snippets/internals.md — `spl` structure, `pts` point order, non-manifold, units, test files
+- Related skills: `blender-modeling/model-rules`, `blender-modeling/threading`, `blender-modeling/build-loop` (shared build+check loop), `blender/mcp-blender` (MCP/viewport tools), `blender/version-gotchas` (5.0-API rules for `bmesh`/SCREW)
 - https://docs.blender.org/api/current/bpy.html
 - https://docs.blender.org/manual/en/latest/modeling/modifiers/generate/screw.html
 - https://help.prusa3d.com/article/tolerances_n_of_fdm_3d_printing
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: 1be4b02c6b471b1d6cdb0e4d1c421161e203cd5b495b7ef519a1312d7364162f -->

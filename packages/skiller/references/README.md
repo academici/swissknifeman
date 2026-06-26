@@ -46,3 +46,4 @@
 | [adr/madr](adr-madr.md) | MADR шаблоны ADR | planned |
 | [nicholasjconn/docker-best-practices](nicholasjconn-docker-best-practices.md) | Docker паттерны | planned |
 | [DenisSergeevitch/agents-best-practices](denissergeevitch-agents-best-practices.md) | Агентные workflow-паттерны | planned |
+| [mattpocock/skills](mattpocock-skills.md) | Инженерная методология (debug/TDD/deep-modules/grilling/triage) | imported |

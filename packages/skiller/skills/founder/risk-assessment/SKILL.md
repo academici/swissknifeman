@@ -2,7 +2,7 @@
 name: risk-assessment
 bucket: founder
 version: 0.1.0
-description: 5 категорий рисков, Risk Matrix, RAID-лог, pre-mortem для критичных рисков
+description: 5 risk categories, Risk Matrix, RAID log, pre-mortem for critical risks
 risk: read
 persona: founder
 tags: [validation, compliance, security]
@@ -15,138 +15,122 @@ adapters: [claude, cursor, fable]
 
 # Skill: Risk Assessment
 
-Применять когда: задача на оценку рисков, pre-mortem, RAID-лог, анализ блокеров, уязвимости продукта.
+Use when: risk assessment, pre-mortem, RAID log, blocker analysis, product vulnerabilities.
 
----
+## Principle
 
-## Принцип
+- Name risks explicitly, with specifics. No "maybe there will be problems".
+- Format each risk: **"If [condition] → then [consequence] → because [cause]"**
 
-Риски называть явно, с конкретикой. Никаких "возможно, будут проблемы".
-Формат каждого риска: **"Если [условие] → то [последствие] → потому что [причина]"**
+## Step 1. Automatic analysis (no questions)
 
----
+Analyze 5 risk categories yourself:
 
-## Шаг 1. Автоматический анализ (без вопросов)
-
-Агент самостоятельно анализирует 5 категорий рисков:
-
-| Категория | Что проверять |
+| Category | Check |
 |:---|:---|
-| **Технические** | Зависимости от 3rd-party, scalability, single point of failure, security |
-| **Рыночные** | Размер рынка, timing, конкуренты с глубокими карманами, смена поведения пользователей |
-| **Регуляторные** | GDPR, лицензирование, App Store / Play Market политики, законодательство страны |
-| **Финансовые** | Runway, burn rate, зависимость от одного канала монетизации, CAC > LTV |
-| **Команда/Операции** | Key person dependency, знания сосредоточены у одного человека, нет резервных процессов |
+| **Technical** | 3rd-party deps, scalability, single point of failure, security |
+| **Market** | Market size, timing, deep-pocketed competitors, user behavior shift |
+| **Regulatory** | GDPR, licensing, App Store / Play Market policies, country legislation |
+| **Financial** | Runway, burn rate, single monetization channel dependency, CAC > LTV |
+| **Team/Operations** | Key person dependency, knowledge in one person, no backup processes |
 
----
+## Step 2. Risk Matrix
 
-## Шаг 2. Risk Matrix
+Rate each risk:
 
-Для каждого риска оценить:
-
-| Риск | Вероятность (1-5) | Влияние (1-5) | Score | Статус |
+| Risk | Probability (1-5) | Impact (1-5) | Score | Status |
 |:---|:---|:---|:---|:---|
-| [Название] | 3 | 5 | 15 | 🔴 Критично |
-| [Название] | 2 | 3 | 6 | 🟡 Средний |
-| [Название] | 1 | 2 | 2 | 🟢 Низкий |
+| [Name] | 3 | 5 | 15 | 🔴 Critical |
+| [Name] | 2 | 3 | 6 | 🟡 Medium |
+| [Name] | 1 | 2 | 2 | 🟢 Low |
 
-**Score = Вероятность × Влияние**
-- 15-25 → 🔴 Критично (план митигации обязателен)
-- 6-14 → 🟡 Средний (мониторинг)
-- 1-5 → 🟢 Низкий (принимаем)
+**Score = Probability × Impact**
+- 15-25 → 🔴 Critical (mitigation plan mandatory)
+- 6-14 → 🟡 Medium (monitor)
+- 1-5 → 🟢 Low (accept)
 
----
-
-## Шаг 3. RAID-лог
+## Step 3. RAID log
 
 ```
-## Risks (Риски)
-- R1: [Описание] | Score: X | Митигация: [действие]
+## Risks
+- R1: [Description] | Score: X | Mitigation: [action]
 
-## Assumptions (Допущения)
-- A1: [Что принимается как факт без проверки]
+## Assumptions
+- A1: [Taken as fact without verification]
 
-## Issues (Текущие проблемы — уже горят)
-- I1: [Что уже является проблемой сейчас]
+## Issues (already on fire)
+- I1: [Already a problem now]
 
-## Dependencies (Зависимости)
-- D1: [От чего зависит успех, что вне контроля команды]
+## Dependencies
+- D1: [What success depends on, outside team control]
 ```
 
----
+## Step 4. Pre-mortem (mandatory for critical risks)
 
-## Шаг 4. Pre-mortem (обязателен для критичных рисков)
+For each 🔴 risk:
 
-Для каждого 🔴 риска:
+> "Imagine 12 months from now the product failed precisely due to [risk X].
+> What exactly happened? Which decisions led to it?"
 
-> "Представь, что через 12 месяцев продукт провалился именно из-за [риска X].
-> Что конкретно произошло? Какие решения привели к этому?"
+Surfaces hidden assumptions never spoken aloud.
 
-Это выявляет скрытые предположения, которые кажутся очевидными, но никто не проговорил вслух.
+## AI era: premature scaling (distinct market risk)
 
----
+**Scaling execution far ahead of what the business requires** — committing to a product path before validating it's worth committing to. Agentic coding makes it easy to scale execution past problem-solution fit without consciously choosing to. AI builds/tests/refactors around a flawed premise as eagerly as a great one.
 
-## AI-эпоха: premature scaling (отдельный рыночный риск)
+- Add explicit Risk Matrix risk: "building/scaling before validation".
+- Mitigation — keep `sense-making` (validation) **ahead** of building; gate stages (`startup-lifecycle`).
 
-Когда строить стало почти бесплатно, появился риск, которого раньше не было в такой форме: **scaling execution далеко впереди того, что требует бизнес** — коммит к продуктовому пути до того, как валидировано, что путь стоит коммита. Agentic coding настолько мощно, что легко начать масштабировать исполнение далеко за пределами problem-solution fit, ни разу сознательно не решив сойти с курса. AI сгенерит, оттестит и отрефакторит кодовую базу вокруг фундаментально ошибочной посылки с тем же энтузиазмом, что и вокруг великой идеи.
+> For market risks and any critical assumptions (RAID Assumptions) — run `adversarial-check`: AI supports what you believe; need a reverse-directed pressure-test.
 
-- В Risk Matrix завести явный риск: «строим/масштабируем раньше валидации».
-- Митигация — держать `sense-making` (валидацию) **впереди** building; gate стадии (`startup-lifecycle`).
+## Document format
 
-> При оценке рыночных рисков и любых критичных допущений (Assumptions в RAID) — прогнать `adversarial-check`: AI поддержит то, во что веришь; нужен направленный в обратную сторону pressure-test.
+Place in:
+- `docs/01_Business/Risk_Register.md` — startups
+- `docs/03_Dev/Risk_Register.md` — technical risks of a specific project
 
----
-
-## Формат в документе
-
-Размещать в:
-- `docs/01_Business/Risk_Register.md` — для стартапов
-- `docs/03_Dev/Risk_Register.md` — для технических рисков конкретного проекта
-
-Структура файла:
+File structure:
 
 ```markdown
 # Risk Register: ProjectName
 
 ## Risk Matrix
-[таблица]
+[table]
 
-## RAID-лог
-[секции R/A/I/D]
+## RAID log
+[R/A/I/D sections]
 
-## Plan митигации критичных рисков
-### R1: [Название]
-- Триггер: [когда этот риск реализуется]
-- Действие: [что делать]
-- Ответственный: [кто]
-- Дедлайн: [когда решить или принять]
+## Critical risk mitigation plan
+### R1: [Name]
+- Trigger: [when this risk materializes]
+- Action: [what to do]
+- Owner: [who]
+- Deadline: [when to resolve or accept]
 ```
 
----
+## Agent adds itself
 
-## Что агент добавляет сам
+- Risks user didn't mention (typical for industry/product)
+- Hidden dependencies between risks ("if R1 → automatically R3")
+- Clarifying question ONLY if risk is blocking and info missing: "Is a legal entity in RF planned? — regulatory risk assessment depends on it"
 
-- Риски, которые пользователь не упомянул (типичные для отрасли/продукта)
-- Скрытые зависимости между рисками ("если R1 реализуется → автоматически R3")
-- Уточняющий вопрос ТОЛЬКО если риск блокирующий и информации нет: "Планируется ли юридическое лицо в РФ? — от этого зависит оценка регуляторного риска"
+## Hard prohibitions
 
----
+DON'T:
+- Vague wording ("there may be problems")
+- Invented risks without justification
+- Ignore categories — all 5 must be checked
 
-## Жёсткие запреты
+## Related skills
 
-НЕЛЬЗЯ:
-- Расплывчатые формулировки ("могут быть проблемы")
-- Выдуманные риски без обоснования
-- Игнорировать категории — все 5 должны быть проверены
+- `founder/adversarial-check` — fast pointed pressure-test of assumptions; risk-assessment — broader RAID/pre-mortem
+- `founder/startup-lifecycle` — premature scaling = Idea/MVP failure mode; gate keeps validation ahead of building
+- `founder/new-project` — orchestrator: runs risk-assessment at stage 3 of launch chain
+- `founder/pitch-deck` — consumer: risk-acknowledgement slide addresses key risk from this register
+- `architect/legal-compliance` — deepens regulatory category (GDPR, AI Act, DSA, licensing)
+- `architect/security-design` — deepens technical category (auth, OWASP, STRIDE threat modeling)
+- `quality/tech-debt-audit` — adjacent for technical risks of existing code (impact × effort)
 
----
+<!-- ru-source-sha256: PENDING -->
 
-## Связанные скиллы
-
-- `founder/adversarial-check` — быстрый точечный pressure-test допущений; risk-assessment — более широкий RAID/pre-mortem
-- `founder/startup-lifecycle` — premature scaling = failure mode Idea/MVP; gate держит валидацию впереди building
-- `founder/new-project` — оркестратор: прогоняет risk-assessment на этапе 3 цепочки запуска
-- `founder/pitch-deck` — потребитель: risk-acknowledgement слайд адресует ключевой риск из этого реестра
-- `architect/legal-compliance` — углубляет регуляторную категорию (GDPR, AI Act, DSA, лицензирование)
-- `architect/security-design` — углубляет техническую категорию (auth, OWASP, STRIDE threat modeling)
-- `quality/tech-debt-audit` — смежный для технических рисков уже существующего кода (impact × effort)
+<!-- ru-source-sha256: bbe992eaec6b06118fc1cf086d2d2a7aa665718ae060106b47c09c82a67f46ae -->

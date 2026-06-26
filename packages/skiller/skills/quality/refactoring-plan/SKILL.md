@@ -2,7 +2,7 @@
 name: refactoring-plan
 bucket: quality
 version: 0.1.0
-description: План безопасного рефакторинга: scope, Mikado / strangler pattern, atomic шаги, критерии готовности, rollback
+description: Safe refactoring plan: scope, Mikado / strangler pattern, atomic steps, done criteria, rollback
 risk: draft
 persona: quality
 tags: [quality, refactor, refactoring, validation, workflow]
@@ -15,187 +15,152 @@ adapters: [claude, cursor, fable]
 
 # Skill: Refactoring Plan
 
-Применять когда: из `tech-debt-audit` выбрана конкретная архитектурная или крупная code-level задолженность для починки (`architectural` или большой `code` со статусом 🔴/🟡 в impact × effort матрице). Не для мелких правок — те делаются «в проходе» при работе над фичей.
+Use when: `tech-debt-audit` picked a concrete architectural or large code-level debt to fix (`architectural`, or big `code` with status 🔴/🟡 in impact × effort matrix).
 
-Не применять: для одиночных fix'ов < 1 дня (делай и иди дальше), переписывания «с нуля» (это не рефакторинг, а replatform — отдельный процесс).
+## Do NOT use when
+- Small cleanup < 1 day → just do it in the current PR
+- Rewrite to new language/framework (replatform/rewrite — different methodology)
+- No `tech-debt-audit` context (risk refactoring the wrong thing)
+- Code freeze (near major release, before demo) → defer
 
----
+## Principle
+- Safe refactoring = **system behavior unchanged**, only internal structure changes.
+- Core rule: **code always green between steps**. No "week in a broken branch". If a step breaks the system for more than a day → step is **too big**, split it.
 
-## Когда НЕ применять
+## Step 1. Scope — in / NOT in
 
-- Мелкий cleanup < 1 дня (просто делай в текущем PR)
-- Переписать на новый язык/фреймворк (replatform / rewrite — другая методология)
-- Без `tech-debt-audit` контекста (рискуешь рефакторить «не туда»)
-- Заморозка кода (близко к major релизу, перед demo) — отложить
-
----
-
-## Принцип
-
-Безопасный рефакторинг = **поведение системы не меняется**, меняется только внутренняя структура.
-
-Главное правило: **код всегда green** между шагами. Никаких «недели в сломанной ветке». Если шаг ломает систему дольше чем на день — шаг **слишком большой**, разбить.
-
----
-
-## Шаг 1. Scope — что входит / что НЕ входит
-
-| | Включено | Исключено |
+| | Included | Excluded |
 |:---|:---|:---|
-| Модули | конкретные пути | всё остальное |
-| Поведение | без изменений | изменения API/UX — отдельный PR |
-| Зависимости | можно обновлять если требуется | major upgrade — отдельный план |
-| Тесты | добавление недостающих | изменение существующего поведения |
-| Документация | обновляется параллельно | не блокирует merge |
+| Modules | specific paths | everything else |
+| Behavior | unchanged | API/UX changes — separate PR |
+| Dependencies | can update if required | major upgrade — separate plan |
+| Tests | add missing | change existing behavior |
+| Documentation | updated in parallel | does not block merge |
 
-**Правило:** scope фиксируется письменно до старта. Любое расширение — пересмотр плана, не «по ходу».
+- Scope fixed in writing before start. Any expansion → revise the plan, not "on the fly".
 
----
+## Step 2. Strategy — 3 patterns
 
-## Шаг 2. Выбор стратегии — 3 паттерна
-
-| Паттерн | Когда | Как |
+| Pattern | When | How |
 |:---|:---|:---|
-| **Mikado Method** | Сложная переплетённая зависимость, не ясно с чего начать | Делаешь желаемое изменение → ломается → откатываешь → записываешь «что мешает» → делаешь это сначала. Рекурсивно. Получается граф предпосылок (Mikado tree) |
-| **Strangler Fig** | Замена legacy-модуля на новый, нельзя остановить систему | Новая реализация рядом со старой, постепенно перенаправляешь traffic / вызовы. Старое удаляешь когда ничего не зовёт |
-| **Branch by Abstraction** | Замена внутри одного класса/модуля без остановки | Вводишь интерфейс над старой реализацией → пишешь новую → переключаешь по feature flag → удаляешь старую |
+| **Mikado Method** | Tangled dependency, unclear where to start | Make desired change → breaks → revert → record "what blocks it" → do that first. Recursive. Yields prerequisite graph (Mikado tree) |
+| **Strangler Fig** | Replace legacy module with new one, system can't stop | New impl alongside old, gradually redirect traffic/calls. Delete old when nothing calls it |
+| **Branch by Abstraction** | Replace inside one class/module without stopping | Introduce interface over old impl → write new → switch via feature flag → delete old |
 
-**Запрещённый паттерн:** «long-lived refactor branch» — ветка > 2 недель в отрыве от main. Конфликты сожрут всю экономию.
+- **Forbidden pattern:** "long-lived refactor branch" — branch > 2 weeks detached from main. Conflicts eat all the savings.
 
----
+## Step 3. Atomic steps — format
+Each step = one PR. Each PR must:
+- Be **green** (CI green)
+- Preserve behavior (existing tests pass)
+- Be **reversible** (one-button revert)
+- Have **independent value** (even if next step is cancelled, this merge does no harm)
 
-## Шаг 3. Atomic шаги — формат
-
-Каждый шаг = один PR. Каждый PR должен:
-
-- Быть **green** (CI зелёный)
-- Сохранять поведение (existing tests — pass)
-- Быть **обратимым** (revert одной кнопкой)
-- Иметь **независимую ценность** (даже если следующий шаг отменят — этот merge не вредит)
-
-Формат шага:
-
+Step format:
 ```markdown
-### Шаг N: [короткое название]
+### Step N: [short name]
 
-- **Цель шага:** что станет лучше после merge (одна строка)
-- **Изменения:** список файлов / модулей
-- **Тесты:** какие добавляются / меняются
-- **Поведенческая проверка:** конкретный сценарий который должен работать ДО и ПОСЛЕ одинаково
-- **Rollback:** revert PR / feature flag off / ничего (если шаг чисто-additive)
-- **Effort:** часов
-- **Depends on:** Шаг N-1 (или —)
+- **Step goal:** what gets better after merge (one line)
+- **Changes:** list of files / modules
+- **Tests:** what is added / changed
+- **Behavioral check:** concrete scenario that must work identically BEFORE and AFTER
+- **Rollback:** revert PR / feature flag off / nothing (if step is purely additive)
+- **Effort:** hours
+- **Depends on:** Step N-1 (or —)
 ```
+- Average: 4–12 steps per plan. Fewer than 3 → not a plan, just a PR. More than 15 → scope too big, split into 2 plans.
 
-Среднее: 4-12 шагов на план. Меньше 3 — это не план, это просто PR. Больше 15 — scope слишком большой, разбить на 2 плана.
+## Step 4. Definition of Done
 
----
-
-## Шаг 4. Критерии готовности (Definition of Done)
-
-| Критерий | Метрика | Как проверить |
+| Criterion | Metric | How to check |
 |:---|:---|:---|
-| Поведение сохранено | E2E happy paths green | smoke run на staging |
-| Тесты на месте | coverage не упал | coverage diff в CI |
-| Старый код удалён | grep по старому имени = 0 | manual grep + linter rule |
-| Документация обновлена | Architecture.md / ADR | review |
-| Производительность не деградировала | p95 latency дельта < 5% | benchmark before/after |
-| Зависимости обновлены | dep tree почищен | `dependency-audit` |
-| Феатур-флаги убраны | если использовался branch-by-abstraction | grep |
+| Behavior preserved | E2E happy paths green | smoke run on staging |
+| Tests in place | coverage not dropped | coverage diff in CI |
+| Old code deleted | grep on old name = 0 | manual grep + linter rule |
+| Documentation updated | Architecture.md / ADR | review |
+| Performance not degraded | p95 latency delta < 5% | benchmark before/after |
+| Dependencies updated | dep tree cleaned | `dependency-audit` |
+| Feature flags removed | if branch-by-abstraction used | grep |
 
-Старый код **должен быть удалён** в рамках плана. «Оставим на пару спринтов на всякий» = новый техдолг.
+- Old code **must be deleted** within the plan. "Leave it a couple sprints just in case" = new tech debt.
 
----
+## Step 5. Rollback strategy
 
-## Шаг 5. Rollback стратегия
-
-| Что произошло | Действие |
+| What happened | Action |
 |:---|:---|
-| Один шаг сломал staging | revert PR этого шага, продолжаем со следующего |
-| Серия шагов вызвала каскадные баги в prod | freeze, revert последних N шагов до зелёного состояния, post-mortem |
-| Целиком рефакторинг оказался ошибкой (новый подход хуже старого) | оставить разделение на ветку Branch-by-Abstraction, удалить новую реализацию, оставить интерфейс (полезен) |
+| One step broke staging | revert that step's PR, continue with next |
+| Series of steps caused cascading prod bugs | freeze, revert last N steps to green state, post-mortem |
+| Whole refactor was a mistake (new approach worse than old) | keep Branch-by-Abstraction split, delete new impl, keep interface (useful) |
 
-**Запрет:** rollback всего рефакторинга через revert 10 PR подряд — слишком хрупко. Если такая опция нужна, значит шаги были не atomic.
+- **Forbidden:** rolling back the whole refactor via reverting 10 PRs in a row — too fragile. If you need that, the steps weren't atomic.
 
----
-
-## Шаг 6. Метрики мониторинга во время
-
+## Step 6. Monitoring metrics during
 ```
-- CI build time — не должен расти (рефакторинг должен упрощать)
-- Test count / coverage — растёт или стабилен
-- Bug rate в затронутых модулях — не растёт после каждого шага
-- PR review time — не растёт (если растёт → шаги слишком большие)
+- CI build time — must not grow (refactoring should simplify)
+- Test count / coverage — grows or stable
+- Bug rate in affected modules — does not grow after each step
+- PR review time — does not grow (if it grows → steps too big)
 ```
+- Check weekly. If degradation 2 weeks in a row → pause, investigate.
 
-Сверка раз в неделю. Если 2 недели подряд деградация — приостановить, разобраться.
+## Agent adds itself
+- Link to `tech-debt-audit` entries: which TD-NNN this plan closes
+- `[refactor]` PR description template with mandatory sections (scope / strategy / rollback / DoD checklist)
+- Warning if plan > 15 steps or > 8 weeks — high abandoned risk
+- Recommend feature flag tool for the stack if Branch by Abstraction chosen
+- Backlinks in `Refactoring_Plan.md` → `Tech_Debt_Register.md`
 
----
+## Links
+- `quality/tech-debt-audit` — scope source: which TD-NNN the plan closes (requires)
+- `quality/testing-safety-report` — post-hoc summary after executing refactor steps
+- `quality/code-simplifier` — small cleanup of fresh diff (what does NOT need a plan)
+- `quality/test-strategy` — Definition of Done relies on coverage policy and happy-path E2E
+- `system/cross-project-coordinator` — when refactor touches duplicates across multiple projects
+- `php/php-upgrade-checklist` — major framework upgrade goes as a separate plan, not "along the way"
 
-## Что агент добавляет сам
-
-- Связь с `tech-debt-audit` записями: какие TD-NNN закрываются этим планом
-- Шаблон `[refactor]` PR description с обязательными секциями (scope / strategy / rollback / DoD checklist)
-- Предупреждение если план > 15 шагов или > 8 недель — высокий риск abandoned
-- Рекомендация feature flag tool под стек, если выбран Branch by Abstraction
-- Backlinks в `Refactoring_Plan.md` → `Tech_Debt_Register.md`
-
----
-
-## Ссылки
-
-- `quality/tech-debt-audit` — источник scope: какие TD-NNN закрывает план (requires)
-- `quality/testing-safety-report` — пост-фактум сводка после исполнения шагов рефакторинга
-- `quality/code-simplifier` — мелкий cleanup свежего диффа (то, что НЕ требует плана)
-- `quality/test-strategy` — Definition of Done опирается на coverage-политику и happy-path E2E
-- `system/cross-project-coordinator` — когда рефакторинг затрагивает дубли в нескольких проектах
-- `php/php-upgrade-checklist` — мажорный апгрейд фреймворка ведётся отдельным планом, не «заодно»
-
----
-
-## Структура output-файла `Refactoring_Plan.md`
-
+## Output file structure `Refactoring_Plan.md`
 ```markdown
-# Refactoring Plan: [короткое название]
+# Refactoring Plan: [short name]
 
-## 1. Контекст
-- Связанные TD из `Tech_Debt_Register.md`: TD-007, TD-012
-- Бизнес-обоснование (одна строка)
+## 1. Context
+- Related TD from `Tech_Debt_Register.md`: TD-007, TD-012
+- Business rationale (one line)
 
 ## 2. Scope
-- ✅ Включено
-- ❌ Исключено
+- ✅ Included
+- ❌ Excluded
 
 ## 3. Strategy
-- Выбранный паттерн (Mikado / Strangler / Branch-by-Abstraction)
-- Обоснование выбора
+- Chosen pattern (Mikado / Strangler / Branch-by-Abstraction)
+- Choice rationale
 
-## 4. Atomic шаги (4–12)
-[Каждый шаг по формату из Шага 3]
+## 4. Atomic steps (4–12)
+[Each step per format from Step 3]
 
-## 5. Definition of Done (чек-лист)
+## 5. Definition of Done (checklist)
 
-## 6. Rollback план
+## 6. Rollback plan
 
-## 7. Метрики мониторинга
+## 7. Monitoring metrics
 
 ## 8. Owner / Reviewers / Timeline
 - Owner:
 - Reviewers:
-- Estimate: N недель
-- Не позднее: YYYY-MM-DD
+- Estimate: N weeks
+- Not later than: YYYY-MM-DD
 ```
 
----
+## Hard prohibitions
+MUST NOT:
+- Change system behavior within a refactoring PR (separate PR/plan)
+- Long-lived refactor branch > 2 weeks without merge into main
+- Steps breaking CI for more than one day
+- Leave "old code for a couple sprints" — that's new tech debt
+- Refactoring without a rollback plan for each step
+- Start without scope fixed in writing
+- Plans > 15 steps or > 8 weeks without splitting
+- "Along the way" bump a major framework version — separate plan
 
-## Жёсткие запреты
+<!-- ru-source-sha256: PENDING -->
 
-НЕЛЬЗЯ:
-- Менять поведение системы в рамках refactoring PR (отдельный PR/план)
-- Long-lived refactor branch > 2 недель без merge в main
-- Шаги, ломающие CI больше чем на один день
-- Оставлять «старый код на пару спринтов» — это новый техдолг
-- Refactoring без roll-back плана для каждого шага
-- Стартовать без зафиксированного scope письменно
-- Планы > 15 шагов или > 8 недель без разбиения
-- «Заодно» обновить мажорную версию фреймворка — отдельный план
+<!-- ru-source-sha256: 7c4b2f0f9463f55b6b73fa6f3a11c0497ac41ca9542c46f6aee0ab937f612e73 -->

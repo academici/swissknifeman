@@ -2,7 +2,7 @@
 name: package-contribution-protocol
 bucket: architect
 version: 0.1.0
-description: "Гейт против раздувания зависимого пакета из проекта-потребителя: Rule of Three, proposal→ADR, минимальный контракт, направление зависимостей, SemVer и граница read-only. Активировать, когда задача в проекте требует правки общего пакета, при «вынести общее» и при добавлении класса/провайдера/интерфейса/абстракции в зависимый пакет."
+description: "Gate against bloating a depended-on package from a consumer project: Rule of Three, proposal→ADR, minimal contract, dependency direction, SemVer, read-only boundary. Activate when a project task needs editing a shared package, on 'extract common', and when adding a class/provider/interface/abstraction to a depended-on package."
 risk: read
 persona: architect
 tags: [governance, package, monorepo, contribution, semver, anti-bloat, boundary]
@@ -16,146 +16,110 @@ sha256: ""
 
 # Package Contribution Protocol
 
-Дисциплина для экосистемы «проект-потребитель ↔ зависимый пакет»: как
-одновременно вести продукт и общий пакет, **не раздувая** пакет спекулятивными
-абстракциями. Любой проект потребляет свои пакеты как **read-only зависимость**;
-изменение пакета — отдельное, осознанное, согласованное действие, а не побочный
-эффект продуктовой задачи.
+Consumer project consumes its packages as a **read-only dependency**. Editing a package = separate, deliberate, agreed action — never a side effect of a product task. Universal: "package" = any shared package (composer/npm/…); "consumer" = any dependent project. No concrete package/project names in body — principles only.
 
-Скилл универсален: «пакет» — любой общий пакет (composer/npm/…), «потребитель» —
-любой проект, который от него зависит. Имена конкретных пакетов/проектов сюда не
-зашиваются — только принципы.
+## When to activate
 
-## Когда активировать
+- Consumer task blocked by missing package functionality.
+- Phrasing "extract common", "make reusable", "into core/into package".
+- Adding to a depended-on package: a new class, service provider, interface, base class, parameter, or public method.
+- `git diff` touched a depended-on package dir (`vendor/**`, path-repo `packages/**`, monorepo package) within a product task.
 
-- Задача в проекте-потребителе упирается в нехватку функциональности пакета.
-- Формулировка «вынести общее», «сделать переиспользуемым», «в ядро/в пакет».
-- Добавление в зависимый пакет нового класса, сервис-провайдера, интерфейса,
-  базового класса, параметра или публичного метода.
-- `git diff` затронул каталог зависимого пакета (`vendor/**`, path-репо
-  `packages/**`, монорепо-пакет) в рамках продуктовой задачи.
+## Main question (ask before ANY package edit)
 
-## Главный вопрос (задать до любой правки пакета)
+> Is this used in **two or more independent consumers right now**, AND **can no consumer** solve it on its own?
 
-> Используется ли это в **двух и более независимых потребителях прямо сейчас**, и
-> **не может ли каждый потребитель** решить это самостоятельно?
+If "no" to either part → code stays in the consumer with a `TODO` + issue link. Rule of Three (Fowler) + YAGNI: generalize on the third repetition, not on imagined future.
 
-Если «нет» хотя бы на одну часть — код остаётся в проекте-потребителе с `TODO` и
-ссылкой на issue. Это Rule of Three (Fowler) + YAGNI: обобщаем на третьем
-повторении, а не на воображаемом будущем.
+## Stop and ask / delegate to subagent
 
-## Остановись и спроси / отдай субагенту
+Default: **ask, don't extend**. Before introducing a new class/provider/interface/abstraction:
 
-По умолчанию — **спрашивать, а не расширять**. Прежде чем ввести в пакет новый
-класс/провайдер/интерфейс/абстракцию:
+1. **Structure survey.** Find an existing extension point in the package (contract, event, config, trait). Often nothing new is needed.
+2. **If in doubt — small task/subagent go/no-go.** Run one narrow step (or subagent) with a single goal: (a) survey — what in the package already solves it; (b) judge by YAGNI / Rule of Three / Law of Demeter; (c) verdict **go/no-go** with one-line rationale. Do not mix recon with implementation.
+3. **Verdict `no-go`** → solve consumer-side (see "Local workaround").
+4. **Verdict `go`** → two-stage gate below.
 
-1. **Обзор структуры.** Найди в пакете существующую точку расширения (контракт,
-   событие, конфиг, trait). Часто новое не нужно — есть способ через имеющееся.
-2. **При сомнении — маленькая таска/субагент go/no-go.** Запусти отдельный
-   узкий шаг (или субагента) с одной целью: (a) survey — что в пакете уже
-   решает задачу; (b) суд по YAGNI / Rule of Three / закону Деметры; (c)
-   вердикт **go/no-go** с одной строкой обоснования. Не смешивай разведку с
-   реализацией — это и есть контроль через малые шаги.
-3. **Вердикт `no-go`** → решай на стороне потребителя (см. «Локальный обход»).
-4. **Вердикт `go`** → двухступенчатый gate ниже.
+## Two-stage gate
 
-## Двухступенчатый gate
+**Stage 1 — Proposal issue** in the package repo (template `snippets/proposal-issue.md`): which consumer initiates, source task, why it can't be solved in the consumer, contract sketch, alternatives considered (minimum 2 — e.g. "event" instead of "new method", "trait" instead of "base class", "config" instead of "new parameter").
 
-**Шаг 1 — Proposal issue** в репозитории пакета (шаблон
-`snippets/proposal-issue.md`): какой потребитель инициирует, задача-источник,
-почему нельзя решить в потребителе, набросок контракта, рассмотренные
-альтернативы (минимум 2 — например «событие» вместо «нового метода», «trait»
-вместо «базового класса», «конфиг» вместо «нового параметра»).
+**Stage 2 — Review + ADR** (only after proposal approval): branch in the package → ADR (`snippets/adr-template.md`) → implement the **minimal** contract → PR with mandatory manual review by the package maintainer.
 
-**Шаг 2 — Review + ADR** (только после одобрения proposal): ветка в пакете → ADR
-(`snippets/adr-template.md`) → реализация **минимального** контракта → PR с
-обязательным ручным ревью мейнтейнера пакета.
+## What does NOT go into the package
 
-## Что НЕ идёт в пакет
-
-| Антипаттерн | Симптом | Правильное место |
+| Antipattern | Symptom | Correct place |
 |---|---|---|
-| «Общий BaseService» | класс без инварианта, только convenience | trait/helper в потребителе |
-| Конфигурация потребителя | параметры специфичны для одного проекта | config потребителя |
-| Прокси-метод | оборачивает один метод пакета без логики | вызов напрямую |
-| Временное хранилище | код «пока не придумаем где» | issue + refactor backlog |
-| God-interface | >5–7 методов без явной cohesion | разбить на контракты |
+| "Shared BaseService" | class without invariant, convenience only | trait/helper in consumer |
+| Consumer configuration | params specific to one project | consumer config |
+| Proxy method | wraps one package method without logic | call directly |
+| Temporary storage | code "until we figure out where" | issue + refactor backlog |
+| God-interface | >5–7 methods without clear cohesion | split into contracts |
 
-## Направление зависимостей
+## Dependency direction
 
-- Пакет **не импортирует** потребителей (Dependency Inversion: потребители
-  зависят от абстракций пакета, не наоборот).
-- Нет reverse-dependency «потребитель → потребитель через пакет»: пакет не должен
-  становиться скрытым каналом связи между продуктами.
-- Изменение в `Contracts/` (публичные интерфейсы) без major-версии — запрещено.
+- Package **does not import** consumers (Dependency Inversion: consumers depend on package abstractions, not vice versa).
+- No reverse-dependency "consumer → consumer via package": package must not become a hidden channel between products.
+- Changing `Contracts/` (public interfaces) without a major version — forbidden.
 
-## Локальный обход без правки пакета
+## Local workaround without editing the package
 
-Пока потребность не подтверждена в 2+ потребителях:
+Until need is confirmed in 2+ consumers:
 
-1. Реализуй нужное на стороне потребителя (`app/`, `Modules/`) через `extends`,
-   события/Observer или точку расширения пакета.
-2. Заведи issue в пакете по шаблону proposal.
-3. Поставь `TODO` со ссылкой на issue в месте локальной реализации.
+1. Implement consumer-side (`app/`, `Modules/`) via `extends`, events/Observer, or a package extension point.
+2. File an issue in the package using the proposal template.
+3. Put a `TODO` with the issue link at the local implementation site.
 
-## SemVer контрактов пакета
+## Package contract SemVer
 
-Если правка пакета всё же согласована:
+If a package edit is agreed:
 
-- **patch** — багфикс без изменения публичного API.
-- **minor** — новые публичные API; обратная совместимость сохранена.
-- **major** — breaking change: потребители обязаны адаптировать код.
-- Чеклист «это breaking?»: удалён/переименован публичный метод/класс? изменилась
-  сигнатура/тип возврата? ужесточён ввод или ослаблен вывод? изменён формат
-  данных/имя события? удалён/переименован конфиг-ключ? Любое «да» → major.
-- Deprecation: помечай старое (`@deprecated` + срок), не удаляй в minor; удаляй в
-  следующий major с migration guide.
-- Каждый major сопровождается ADR + записью CHANGELOG («Breaking:») + кратким
-  migration guide.
+- **patch** — bugfix, no public API change.
+- **minor** — new public APIs; backward compatibility preserved.
+- **major** — breaking change: consumers must adapt code.
+- "Is it breaking?" checklist: public method/class removed/renamed? signature/return type changed? input tightened or output weakened? data format/event name changed? config key removed/renamed? Any "yes" → major.
+- Deprecation: mark old (`@deprecated` + deadline), do not remove in minor; remove in next major with a migration guide.
+- Every major: ADR + CHANGELOG entry ("Breaking:") + short migration guide.
 
-## Пять маркеров здорового пакета
+## Five markers of a healthy package
 
-1. Каждый публичный метод используется в 2+ потребителях.
-2. Каждый breaking change имеет ADR и major-bump.
-3. Пакет не импортирует ничего из потребителей.
-4. Все расширения — через контракты/события, не monkey-patching.
-5. `git log` пакета — только явно согласованные PR (нет «тихих» правок из
-   продуктовых задач).
+1. Every public method used in 2+ consumers.
+2. Every breaking change has an ADR and a major bump.
+3. Package imports nothing from consumers.
+4. All extensions via contracts/events, not monkey-patching.
+5. Package `git log` — only explicitly agreed PRs (no "silent" edits from product tasks).
 
-## Чеклист качества
+## Quality checklist
 
-- [ ] Задан главный вопрос (2+ потребителя + не решается локально).
-- [ ] Перед новой абстракцией — обзор структуры пакета; при сомнении go/no-go
-      малым шагом/субагентом.
-- [ ] `no-go` → локальная реализация + issue + TODO; `go` → proposal → ADR → PR.
-- [ ] Рассмотрено ≥2 альтернативы (событие/trait/конфиг vs новый контракт).
-- [ ] Контракт минимальный; направление зависимостей не нарушено.
-- [ ] Версия пакета по SemVer; breaking → ADR + CHANGELOG + migration guide.
+- [ ] Main question asked (2+ consumers + not solvable locally).
+- [ ] Before a new abstraction — package structure survey; if in doubt, go/no-go via small step/subagent.
+- [ ] `no-go` → local implementation + issue + TODO; `go` → proposal → ADR → PR.
+- [ ] ≥2 alternatives considered (event/trait/config vs new contract).
+- [ ] Contract minimal; dependency direction not violated.
+- [ ] Package version per SemVer; breaking → ADR + CHANGELOG + migration guide.
 
-## Раздача (гибрид)
+## Distribution (hybrid)
 
-- Базовый рефлекс «спроси перед расширением» уже едет во все проекты через
-  CORE-скилл `anti-drift` — отдельной установки не требует.
-- Этот скилл (глубокий протокол) подключается **выборочно** в проекты, которые
-  дорабатывают свои пакеты, и усиливается ручным «первым приоритетом» в корневом
-  CLAUDE.md потребителя — готовый generic-блок в `snippets/claude-md-priority.md`.
-- Аппаратная граница записи в пакет — permissions-пресет `product-boundary`
-  (`harness permissions --preset product-boundary`); фрагмент и вариант
-  для path-репо — в `snippets/permissions-deny.md`.
+- Base reflex "ask before extending" already ships to all projects via CORE skill `anti-drift` — no separate install.
+- This skill (deep protocol) connects **selectively** to projects that work on their packages, reinforced by a manual "top priority" in the consumer's root CLAUDE.md — generic block ready in `snippets/claude-md-priority.md`.
+- Hard write boundary to package — permissions preset `product-boundary` (`harness permissions --preset product-boundary`); fragment and path-repo variant in `snippets/permissions-deny.md`.
 
-## Связанные скиллы
+## Related skills
 
-- `general/anti-drift` — базовый рефлекс «спроси перед расширением», YAGNI,
-  хирургические правки (CORE, во всех проектах).
-- `quality/code-simplifier` — чеклист speculative-generality по свежему диффу.
-- `architect/architecture` — ADR и сравнение ≥2 вариантов для нетривиальных решений.
-- `architect/api-design` — проектирование и эволюция публичного контракта.
-- `general/task-brief-template` — scope/out-of-scope/DoD до старта правки пакета.
-- `system/cross-project-coordinator` — поиск дублей-кандидатов в общий пакет.
+- `general/anti-drift` — base reflex "ask before extending", YAGNI, surgical edits (CORE, all projects).
+- `quality/code-simplifier` — speculative-generality checklist on the fresh diff.
+- `architect/architecture` — ADR and ≥2-variant comparison for non-trivial decisions.
+- `architect/api-design` — designing and evolving the public contract.
+- `general/task-brief-template` — scope/out-of-scope/DoD before starting a package edit.
+- `system/cross-project-coordinator` — finding duplicate candidates for the shared package.
 
-## Ссылки
+## Links
 
 - snippets/proposal-issue.md
 - snippets/adr-template.md
 - snippets/claude-md-priority.md
 - snippets/permissions-deny.md
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: 3473f0852ccf085d0c86891d013c073593549014b5c8d77d5a04d9841234e0f3 -->

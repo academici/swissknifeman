@@ -2,7 +2,7 @@
 name: idea-discovery
 bucket: founder
 version: 0.1.0
-description: Структурированный опрос по сырой идее — JTBD, problem statement, hypothesis, перед competitive-analysis
+description: Structured interview of a raw idea — JTBD, problem statement, hypothesis, before competitive-analysis
 risk: draft
 persona: founder
 tags: [discovery, requirements, market]
@@ -15,88 +15,55 @@ adapters: [claude, cursor, fable]
 
 # Skill: Idea Discovery
 
-Применять когда: пользователь приходит с сырой идеей («хочу сделать X», «есть мысль про Y») и **ещё нет** ни competitive-analysis, ни BRD, ни даже однострочника продукта. Цель — превратить идею в структурированный артефакт, на который опираются все следующие скиллы.
+Apply when: user brings a raw idea ("want to build X", "thought about Y") and there is no competitive-analysis, BRD, or even one-line product statement yet. Turn idea into a structured artifact downstream skills rely on.
 
-Это **первый шаг** Founder-цепочки: `idea-discovery → adversarial-check → customer-discovery → competitive-analysis → risk-assessment → new-project`.
+First step of Founder chain: `idea-discovery → adversarial-check → customer-discovery → competitive-analysis → risk-assessment → new-project`.
 
----
+## Do NOT apply when
 
-## Когда НЕ применять
+- Idea already in `docs/01_Business/01_Concept_and_Monetization.md` or BRD → skip, go to `competitive-analysis`.
+- User asks for a specific doc (BRD, GTM, risks) → not discovery; load the target skill.
+- Technical question about an existing project → Founder mode does not activate.
 
-- Идея уже описана в `docs/01_Business/01_Concept_and_Monetization.md` или BRD — пропустить, идти на `competitive-analysis`.
-- Пользователь просит конкретный документ (BRD, GTM, риски) — это не discovery, грузить целевой скилл.
-- Технический вопрос про существующий проект — Founder-режим не активируется.
+## Interview principles
 
----
+1. **Socratic, not survey.** One question at a time, wait for answer, dig deeper. Don't dump a checklist.
+2. **JTBD frame.** Not "what's the product?" but "when [situation], person wants [outcome], so that [benefit]".
+3. **No solutions.** Don't drift into stack, features, UI. Problem and context only.
+4. **Mom Test.** Never ask "do you like the idea?" — only past behavior and facts.
+5. **Caveman style.** Short replies. No preambles.
 
-## Принципы опроса
+## Interview — 5 sections (in order)
 
-1. **Сократ, не интервью.** Один вопрос за раз, ждать ответ, копать глубже. Не вываливать чек-лист.
-2. **JTBD-фрейм.** Не «что за продукт?», а «когда [ситуация], человек хочет [результат], чтобы [польза]».
-3. **Запрет на решения.** Не уходить в стек, фичи, UI. Только проблема и контекст.
-4. **Mom Test.** Никогда не спрашивать «нравится ли вам идея?» — только про прошлое поведение и факты.
-5. **Caveman-стиль.** Короткие реплики. Никаких вступлений.
-
----
-
-## Опрос — 5 секций (по порядку)
-
-### 1. Триггер
-- Откуда взялась идея? (свой боль, чужой запрос, рыночный сигнал)
-- Был ли конкретный случай, который её спровоцировал?
-
-### 2. JTBD
-- **Когда** (контекст, ситуация)
-- **кто** (роль/сегмент, не «все»)
-- **хочет** (job, действие)
-- **чтобы** (outcome, реальная польза)
-
-Записать одной строкой по канону: `When [situation], [persona] wants to [job], so that [outcome].`
-
-### 3. Problem statement
-- Как сейчас люди решают эту задачу? (workaround'ы)
-- Что именно болит в текущем решении? (3 конкретных пункта)
-- Какова частота проблемы? (раз в день / неделю / месяц / редко)
-- Какова стоимость нерешения? (деньги / время / упущенная польза)
-
-### 4. Hypothesis
-Сформулировать в виде проверяемой гипотезы:
+1. **Trigger** — Where did idea come from? (own pain / someone's request / market signal). Was there a specific incident that sparked it?
+2. **JTBD** — **When** (context, situation), **who** (role/segment, not "everyone"), **wants** (job, action), **so that** (outcome, real benefit). Record one line per canon: `When [situation], [persona] wants to [job], so that [outcome].`
+3. **Problem statement** — How solved now? (workarounds). What exactly hurts in current solution? (3 concrete points). Frequency? (daily / weekly / monthly / rare). Cost of not solving? (money / time / forgone benefit).
+4. **Hypothesis** — formulate as testable:
 ```
 Мы верим, что [сегмент] нуждается в [решение]
 потому что [инсайт о боли].
 Узнаем, что правы, когда [метрика валидации].
 ```
+5. **Kill-criteria** — at what market signal do we close the idea before dev starts? Min 2 criteria — usually "nobody pays" + "does not reproduce across other segments".
 
-### 5. Kill-criteria
-- При каком сигнале от рынка идею **закрываем** до старта разработки?
-- Минимум 2 критерия — обычно: «никто не платит» + «не воспроизводится у других сегментов».
+## Problem-solution fit (exit of Idea stage)
 
----
+Leave Idea stage when all **three** (Founder's Playbook) are "yes":
 
-## Problem-solution fit (exit Idea-стадии)
+1. **Problem real, specific, frequent?** — name who faces it, how often, how painful, what they do now.
+2. **Solution hits the real problem?** — the one validation uncovered, not the original assumption (sometimes matches, sometimes not).
+3. **Signal enough to justify MVP?** — reasoned decision vs act of faith, not a certificate.
 
-Discovery — не самоцель, а сбор доказательств до строительства. Idea-стадию покидаем, когда на **все три** вопроса (Founder's Playbook) — «да»:
+Evidence is gathered in `customer-discovery` (live conversations), not here; this skill sets the **hypothesis** they test. Before fixing the hypothesis → `adversarial-check` (AI confirms anything; pressure-test needed). Stage risk: **mistaking building for validating** — a working prototype is only a reason for conversation; proof is the conversation itself.
 
-1. **Проблема реальна, специфична и частотна?** — можешь назвать, кто именно сталкивается, как часто, насколько больно, что делает сейчас.
-2. **Решение бьёт по реальной проблеме?** — по той, что вскрыла валидация, а не по исходному предположению (иногда совпадает, иногда нет).
-3. **Сигнала достаточно, чтобы оправдать MVP?** — не сертификат, а обоснованное решение vs акт веры.
+## What the agent adds itself
 
-Доказательства собираются не здесь, а в `customer-discovery` (живые разговоры). Этот скилл задаёт **гипотезу**, которую они проверяют. Перед фиксацией гипотезы — `adversarial-check` (AI подтвердит что угодно; нужен pressure-test).
+- **Alternative segments.** If user said "for everyone" — propose 2–3 narrow ICPs.
+- **Adjacent JTBD.** If idea is a special case of a larger job, name it explicitly.
+- **Synergies with vault.** Check project map in `CLAUDE.md §3` — overlap with TcenZor / Memster / Edufy / Finbrain.
+- **Anti-patterns.** If idea smells like "solution in search of a problem" — name it directly before competitive-analysis.
 
-> Главный риск стадии: **mistaking building for validating** — рабочий прототип легко принять за доказательство, но он лишь повод для разговора, а доказательство — сам разговор.
-
----
-
-## Что агент добавляет сам
-
-- **Альтернативные сегменты.** Если пользователь сказал «для всех» — предложить 2–3 узких ICP.
-- **Смежные JTBD.** Если идея — частный случай большего job, назвать это явно.
-- **Синергии с vault.** Проверить карту проектов в `CLAUDE.md §3` — есть ли пересечение с TcenZor / Memster / Edufy / Finbrain.
-- **Anti-patterns.** Если идея пахнет «решением в поисках проблемы» — назвать это прямо до перехода к competitive-analysis.
-
----
-
-## Структура output-файла
+## Output-file structure
 
 `docs/01_Business/00_Idea_Discovery.md`:
 
@@ -143,28 +110,26 @@ When [situation], [persona] wants to [job], so that [outcome].
 → `.ai/skills/founder/competitive-analysis.md`
 ```
 
----
+## Hard prohibitions at this stage
 
-## Жёсткие запреты на этой стадии
+FORBIDDEN (all are later chain steps, not now):
+- Discussing stack, technologies, architecture
+- Detailing features or UX
+- Computing unit-economics (no ICP and price yet)
+- Writing BRD fragments
+- Drifting into roadmap
 
-НЕЛЬЗЯ:
-- Обсуждать стек, технологии, архитектуру
-- Расписывать фичи или UX
-- Считать unit-economics (нет ещё ICP и цены)
-- Писать BRD-фрагменты
-- Уходить в roadmap
+## Related skills
 
-Всё это — следующие шаги цепочки, не текущий.
+- `founder/adversarial-check` — right after formulating hypothesis: pressure-test before committing resources
+- `founder/customer-discovery` — chain continuation: turns hypothesis into evidence via live interviews
+- `founder/startup-lifecycle` — frame: idea-discovery opens Idea stage, problem-solution fit = its exit
+- `founder/competitive-analysis` — next chain step: JTBD here sets the competitive landscape
+- `pm/monetization-design` — consumer: business-model choice relies on segment and pain from discovery
+- `founder/new-project` — orchestrator: launches discovery as first step when setting up a project
+- `general/spec-interview` — kindred interview method (one question at a time, agent reads context itself), but for a technical spec before code, not a business idea
+- `founder/risk-assessment` — adjacent: kill-criteria and red flags overlap with market risks
 
----
+<!-- ru-source-sha256: PENDING -->
 
-## Связанные скиллы
-
-- `founder/adversarial-check` — сразу после формулировки гипотезы: pressure-test до коммита ресурсов
-- `founder/customer-discovery` — продолжение цепочки: превращает гипотезу в доказательства живыми интервью
-- `founder/startup-lifecycle` — рамка: idea-discovery открывает Idea-стадию, problem-solution fit = её exit
-- `founder/competitive-analysis` — следующий шаг цепочки: JTBD отсюда задаёт конкурентный ландшафт
-- `pm/monetization-design` — потребитель: выбор бизнес-модели опирается на сегмент и боль из discovery
-- `founder/new-project` — оркестратор: запускает discovery как первый шаг при заведении проекта
-- `general/spec-interview` — родственная методика опроса (один вопрос за раз, агент сам читает контекст), но для технического ТЗ перед кодом, а не для бизнес-идеи
-- `founder/risk-assessment` — смежный: kill-criteria и red flags перекликаются с рыночными рисками
+<!-- ru-source-sha256: be5133f629cb39b045a62dd05172c65d5b93e9c1363e4cb806e45446c3d705b2 -->

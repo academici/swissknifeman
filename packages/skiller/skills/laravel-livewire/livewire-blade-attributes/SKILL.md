@@ -2,7 +2,7 @@
 name: livewire-blade-attributes
 bucket: laravel-livewire
 version: 0.1.0
-description: "Дельта-гочизы Livewire 3 по атрибутам Blade-компонентов. Активировать при написании/ревью Blade-разметки Livewire-компонентов, когда атрибут тега должен быть условным или динамическим: НЕ ставить @if/@endif/@js() внутри списка атрибутов (ломает парсинг компонента) — собирать атрибуты заранее в @php через ComponentAttributeBag (->merge, ->class) и разворачивать одним выражением. Триггеры: ошибка парсинга/рендера Blade-компонента, условный wire:model/wire:sortable/step/disabled, @js() в атрибуте, нестабильный wire:key в цикле"
+description: "Livewire 3 delta gotchas for Blade-component attributes. Activate when writing/reviewing Livewire Blade markup where a tag attribute must be conditional or dynamic: do NOT put @if/@endif/@js() inside the attribute list (breaks component parsing) — pre-build attributes in @php via ComponentAttributeBag (->merge, ->class) and spread as one expression. Triggers: Blade component parse/render error, conditional wire:model/wire:sortable/step/disabled, @js() in an attribute, unstable wire:key in a loop"
 risk: read
 persona: oss-dev
 tags: ["livewire", "blade", "laravel", "frontend", "advisory", "gotchas"]
@@ -14,66 +14,64 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-## Контекст
+Advisory scope: conditional/dynamic Blade-component attribute gotchas in Livewire 3. Control directives *inside a tag's attribute list* break parsing (attribute lost or component renders with error). Rule: no logic between tag attributes — pre-build all conditional/dynamic attributes in a `@php` block via `Illuminate\View\ComponentAttributeBag` (`->merge([...])`, `->class([...])`) and spread as one `{{ $bag }}`. Laravel Boost (`livewire/*`) owns versioned Livewire 2/3/4 rules; this skill is only the Blade-attribute deltas not in Boost.
 
-Узкий advisory-скилл: **грабли при условных и динамических атрибутах Blade-компонентов в Livewire 3**. В Livewire 3 разметка компонента парсится отдельным движком (компиляция тега `<x-...>` любого UI-kit в обычный Blade), и управляющие директивы *внутри списка атрибутов тега* ломают этот разбор: атрибут не выделяется, компонент рендерится с ошибкой или молча теряет атрибут.
+## Activate when
 
-Решение одно: **никакой логики между атрибутами тега**. Все условные/динамические атрибуты собираются заранее в `@php`-блоке через `Illuminate\View\ComponentAttributeBag` (`->merge([...])`, `->class([...])`) и разворачиваются одним `{{ $bag }}`.
+- Writing/reviewing Livewire Blade markup where a tag attribute must be conditional or dynamic.
+- `@if`/`@endif`, `@js()`, ternary, or concatenation **inside the attribute list** of `<x-...>` or a plain tag with `wire:` attributes.
+- Component parse/render error, "eaten" or duplicated attribute.
+- Conditional `wire:model`/`wire:sortable`/`step`/`disabled`/`class`.
+- Loop with `wire:model`/`wire:key` where DOM desyncs after reorder/delete.
 
-> Laravel Boost владеет версионными правилами Livewire 2/3/4; здесь — только дельта-гочизы по Blade-атрибутам, которых в Boost нет.
+Do NOT activate: static attributes without conditions; Livewire lifecycle/binding/validation questions — that's Boost (`livewire/*`).
 
-### Когда активировать
+## Algorithm
 
-- Пишешь или ревьюишь Blade-разметку Livewire-компонента, где атрибут тега должен быть условным или динамическим.
-- Видишь `@if`/`@endif`, `@js()`, тернарник или конкатенацию **внутри списка атрибутов** `<x-...>` или обычного тега с `wire:`-атрибутами.
-- Ловишь ошибку парсинга/рендера компонента, «съеденный» или продублированный атрибут.
-- Нужен условный `wire:model`/`wire:sortable`/`step`/`disabled`/`class`.
-- Цикл с `wire:model`/`wire:key`, где после reorder/delete рассинхронизируется DOM.
+1. Find logic in attributes. Any `@if/@endif`, `@js()`, ternary, or interpolation *between* tag attributes is a candidate to extract. Attribute value via `{{ }}` or `:attr="$expr"` is fine; a block-opening/closing directive between attributes is not.
+2. Lift assembly into a `@php` block before the tag. Start from a base set as array or `new \Illuminate\View\ComponentAttributeBag([...])`.
+3. Conditional attributes via `->merge([...])` (or add the key to the array before the Bag constructor). One `if` = one `merge`/key.
+4. Classes via `->class([...])` with conditional keys (`'font-semibold' => $isActive`), not string concatenation in `class="..."`.
+5. Spread the Bag as one expression: `<x-ui.input {{ $inputAttributes }} />`. No directives after it inside the tag.
+6. Boolean/optional attribute via plain PHP, not `@js()`: `:disabled="$disabled"`; "present/absent" → `:disabled="$disabled ? true : null"` (`null` value → attribute omitted entirely).
+7. `wire:model` modifiers go in the attribute name (`wire:model.live.debounce.300ms="..."`), not assembled via conditional directives inside the string.
+8. `wire:key` static and stable: type prefix + immutable model id (`wire:key="order-{{ $order->id }}"`), not the loop index — else reorder/delete breaks DOM binding.
 
-Не активировать: статичные атрибуты без условий; вопросы про сам жизненный цикл Livewire, биндинг, валидацию — это Boost (`livewire/*`).
+## Anti-patterns → replacement
 
-## Алгоритм
-
-1. **Найди логику в атрибутах.** Любая `@if/@endif`, `@js()`, тернарник или интерполяция, стоящая *между атрибутами* тега, — кандидат на вынос. Значение атрибута через `{{ }}` или `:attr="$expr"` — допустимо; директива, открывающая/закрывающая блок между атрибутами, — нет.
-2. **Подними сборку в `@php`-блок** перед тегом. Стартуй с базового набора как массив или `new \Illuminate\View\ComponentAttributeBag([...])`.
-3. **Условные атрибуты — через `->merge([...])`** (или дописывание ключа в массив до конструктора Bag). Один `if` — один `merge`/ключ.
-4. **Классы — через `->class([...])`** с условными ключами (`'font-semibold' => $isActive`), а не строковой конкатенацией в `class="..."`.
-5. **Разверни Bag одним выражением**: `<x-ui.input {{ $inputAttributes }} />`. Никаких директив после этого внутри тега.
-6. **Булев/опциональный атрибут — обычным PHP**, не `@js()`: `:disabled="$disabled"`; «атрибут есть/нет» — `:disabled="$disabled ? true : null"` (значение `null` → атрибут не выводится вовсе).
-7. **`wire:model` модификаторы пиши в имени атрибута** (`wire:model.live.debounce.300ms="..."`), а не собирай имя условными директивами внутри строки.
-8. **`wire:key` — статичный и стабильный**: префикс по типу + неизменный id модели (`wire:key="order-{{ $order->id }}"`), не индекс цикла — иначе reorder/delete рвёт привязку DOM.
-
-## Анти-паттерны → замена
-
-| Анти-паттерн в атрибутах | Замена |
+| Anti-pattern in attributes | Replacement |
 |---|---|
-| `@if ($step) step="{{ $step }}" @endif` | `->merge(['step' => $step])` в `@php` |
-| `@if ($sortable) wire:sortable="..." @endif` | условный ключ массива → `ComponentAttributeBag` |
+| `@if ($step) step="{{ $step }}" @endif` | `->merge(['step' => $step])` in `@php` |
+| `@if ($sortable) wire:sortable="..." @endif` | conditional array key → `ComponentAttributeBag` |
 | `:disabled="@js($disabled)"` | `:disabled="$disabled"` |
-| строковая склейка классов в `class="..."` | `->class(['base', 'active' => $isActive])` |
-| `wire:model="@if($live) live @endif='...'"` | `wire:model.live="..."` (модификатор в имени) |
+| string class concatenation in `class="..."` | `->class(['base', 'active' => $isActive])` |
+| `wire:model="@if($live) live @endif='...'"` | `wire:model.live="..."` (modifier in name) |
 | `wire:key="row-{{ $loop->index }}"` | `wire:key="order-{{ $order->id }}"` |
 
-## Когда какой сниппет открывать
+## Which snippet
 
-| Ситуация | Файл |
+| Situation | File |
 |---|---|
-| Условный/динамический атрибут, классы, wire:model, wire:key — пары до/после | `snippets/blade-attributes.blade.php` |
+| Conditional/dynamic attribute, classes, wire:model, wire:key — before/after pairs | `snippets/blade-attributes.blade.php` |
 
-## Чеклист качества
+## Quality checklist
 
-- [ ] Внутри списка атрибутов тега нет `@if/@endif`, `@js()` и блок-директив
-- [ ] Условные атрибуты собраны в `@php` через `ComponentAttributeBag` (`->merge`) и развёрнуты одним `{{ $bag }}`
-- [ ] Условные классы — через `->class([...])`, а не конкатенация строки
-- [ ] Булев атрибут — `:attr="$expr"`; «есть/нет» — тернарник с `null`, без `@js()`
-- [ ] Модификаторы `wire:model` (`.live`, `.debounce`) — в имени атрибута
-- [ ] `wire:key` уникален, стабилен и не основан на индексе цикла
-- [ ] Компонент рендерится без ошибок парсинга
+- [ ] No `@if/@endif`, `@js()`, or block directives inside the tag's attribute list
+- [ ] Conditional attributes built in `@php` via `ComponentAttributeBag` (`->merge`) and spread as one `{{ $bag }}`
+- [ ] Conditional classes via `->class([...])`, not string concatenation
+- [ ] Boolean attribute `:attr="$expr"`; "present/absent" via ternary with `null`, no `@js()`
+- [ ] `wire:model` modifiers (`.live`, `.debounce`) in the attribute name
+- [ ] `wire:key` unique, stable, not based on loop index
+- [ ] Component renders without parse errors
 
-## Ссылки
+## Links
 
 - https://livewire.laravel.com/docs/components
 - https://laravel.com/docs/blade#default-merged-attributes (ComponentAttributeBag, `merge`, `class`)
-- Laravel Boost (`livewire/*`) — версионные правила Livewire 2/3/4; этот скилл их не дублирует.
-- `snippets/blade-attributes.blade.php` — пары до/после.
-- Связанные скиллы: `php/filament` (UI на Livewire — те же Blade-компоненты), `frontend/laravel-echo-client` (realtime во фронте, если Livewire дополняется websockets).
+- Laravel Boost (`livewire/*`) — versioned Livewire 2/3/4 rules; not duplicated here.
+- `snippets/blade-attributes.blade.php` — before/after pairs.
+- Related skills: `php/filament` (Livewire-based UI — same Blade components), `frontend/laravel-echo-client` (realtime frontend when Livewire is augmented with websockets).
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: 62d0c8849fcde93d1cc5ff4a3908db8333eb1a74f93697abef175895cbef837f -->

@@ -2,7 +2,7 @@
 name: laravel-permissions
 bucket: laravel-auth
 version: 0.3.1
-description: "Ручной/нативный Laravel RBAC: policies, gates, entity-scoped permissions без спец-пакета. Когда нужен пакет azguard → скилл azguard; декларативные атрибуты прав на экшенах → attribute-authorization."
+description: "Manual/native Laravel RBAC: policies, gates, entity-scoped permissions without a dedicated package. Need azguard package → skill azguard; declarative permission attributes on actions → attribute-authorization."
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "permissions", "azguard", "rbac", "authorization"]
@@ -20,28 +20,28 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-## Контекст
+RBAC for Laravel: standard policies/gates + entity-scoped permissions (workspace/project context). Snippets here = manual impl without a package; use when external dep is unwanted. New projects: prefer package **azguard** (code-first RBAC, skill `php/azguard`).
 
-RBAC для Laravel: стандартные policies/gates + entity-scoped permissions (контекст workspace/project).
+## Steps
 
-Базовый вариант для новых проектов — пакет **azguard** (code-first RBAC, см. скилл `php/azguard`). Сниппеты этого скилла — ручная реализация без пакета: используй их, когда внешняя зависимость нежелательна.
+1. Simple RBAC → `rbac-setup.php`, `policy-class.php`, `gate-definition.php`.
+2. Entity-scoped roles → `authorization-context.php` + `context-middleware.php` + `contextual-grant-source.php`.
+3. Middleware sets context from route params; GrantSource reads permissions from `context_roles`.
 
-## Алгоритм
+## Quality checklist
 
-1. Для простого RBAC — `rbac-setup.php`, `policy-class.php`, `gate-definition.php`
-2. Для entity-scoped roles — `authorization-context.php` + `context-middleware.php` + `contextual-grant-source.php`
-3. Middleware устанавливает контекст из route params, GrantSource читает права из context_roles
+- [ ] Context resets after request.
+- [ ] Policy checks both global and contextual permissions.
+- [ ] `context_roles` table indexed on `(context_type, context_id, model_id)`.
 
-## Чеклист качества
+## Links
 
-- [ ] Контекст сбрасывается после request
-- [ ] Policy проверяет и глобальные, и контекстные права
-- [ ] Таблица context_roles индексирована по (context_type, context_id, model_id)
+- `php/azguard` — ready code-first RBAC package (preferred for new projects); this skill = manual impl without dep.
+- `php/attribute-authorization` — declarative permission check on actions via `#[CheckPermission]` over Gate (orthogonal layer; permissions defined here).
+- `php/enum-attributes` — enum permissions as typesafe layer instead of string abilities.
+- `php/laravel-structure` — placement of Policies/Enums/Permissions in the project tree.
+- `architect/security-design` — auth strategy, RBAC/ABAC, threat modeling at architecture level.
 
-## Ссылки
+<!-- ru-source-sha256: PENDING -->
 
-- `php/azguard` — готовый code-first RBAC-пакет (предпочтительный путь для новых проектов); этот скилл — ручная реализация без зависимости.
-- `php/attribute-authorization` — декларативная проверка прав на экшенах через атрибут `#[CheckPermission]` поверх Gate (ортогональный слой; права определяются здесь).
-- `php/enum-attributes` — enum-права как типобезопасный слой вместо строковых abilities.
-- `php/laravel-structure` — размещение Policies/Enums/Permissions в дереве проекта.
-- `architect/security-design` — auth-стратегия, RBAC/ABAC, threat modeling на уровне архитектуры.
+<!-- ru-source-sha256: da35391df1761ee5d7b61083fa447a84fd4a4d76c7726cad5e46a23662c29cf7 -->

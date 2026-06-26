@@ -2,7 +2,7 @@
 name: oss-governance
 bucket: oss-dev
 version: 0.1.0
-description: LICENSE, CoC, CONTRIBUTING, MAINTAINERS, RFC-процесс, security policy для OSS-проекта
+description: LICENSE, CoC, CONTRIBUTING, MAINTAINERS, RFC process, security policy for an OSS project
 risk: draft
 persona: oss-dev
 tags: [oss, compliance, license, security, documentation]
@@ -15,26 +15,20 @@ adapters: [claude, cursor, fable]
 
 # Skill: OSS Governance
 
-Применять когда: OSS-проект публикуется впервые **или** начинает принимать внешние контрибьюции. Governance — это про **прозрачность правил и границ ответственности**: кто решает, как контрибьютить, как сообщать уязвимости, что разрешено сообществу.
+Apply when: OSS project published for the first time **or** starts accepting external contributions. Must run **after `oss-development`** (base structure exists). Pairs with `dependency-audit` (compliance) and `dx-design` (issue/PR templates).
 
-Должен быть **выполнен после `oss-development`** (есть базовая структура). Парится с `dependency-audit` (compliance) и `dx-design` (issue/PR templates — стык DX и governance).
+## Do NOT apply when
+- Personal pet-project not accepting PRs — LICENSE + minimal README is enough.
+- Internal company package — governance replaced by internal code-review process.
+- Mature governance files already exist — refuse, don't rewrite.
 
----
+## 6 governance artifacts (by priority)
+LICENSE / CoC / CONTRIBUTING / SECURITY / MAINTAINERS / RFC — see [references/governance-artifacts.md](references/governance-artifacts.md).
 
-## Когда НЕ применять
-
-- Личный pet-project, не принимающий PR — достаточно LICENSE + минимального README. Не плодить процесс.
-- Внутренний пакет компании — governance заменяется внутренним процессом code review.
-- Уже есть зрелые governance-файлы — отказать, не переписывать.
-
----
-
-## 6 артефактов governance (по приоритету)
-
-6 governance-артефактов по приоритету (LICENSE/CoC/CONTRIBUTING/SECURITY/MAINTAINERS/RFC) — [references/governance-artifacts.md](references/governance-artifacts.md).
-
+### CONTRIBUTING.md
+```
 ## Quick start (dev)
-[install + run tests за 3 команды]
+[install + run tests in 3 commands]
 
 ## Code style
 - Linter: ...
@@ -51,28 +45,25 @@ adapters: [claude, cursor, fable]
 ## Tests
 - Unit, integration, e2e
 - Coverage threshold: X%
-- Что обязательно покрывать
+- What must be covered
 
 ## Documentation
-- Любое изменение публичного API → обновить docs/ + CHANGELOG
-- Скриншоты для UI-изменений
+- Any public API change → update docs/ + CHANGELOG
+- Screenshots for UI changes
 
-## Что МЫ ПРИНИМАЕМ
+## What WE ACCEPT
 - bug fixes
 - documentation
-- new features ПОСЛЕ согласования в issue / RFC
+- new features AFTER agreement in issue / RFC
 
-## Что МЫ НЕ ПРИНИМАЕМ
-- Refactor без обоснования
-- Breaking changes без RFC
-- Code style PR (это автоматизируем)
+## What WE DON'T ACCEPT
+- Refactor without justification
+- Breaking changes without RFC
+- Code style PR (we automate this)
 ```
+**Goal:** contributor understands "how to help" in 2 minutes of reading.
 
-**Цель:** контрибьютор должен понять «как помочь» за 2 минуты чтения.
-
-### 4. MAINTAINERS.md
-Кто принимает решения и где их найти:
-
+### MAINTAINERS.md
 ```markdown
 # Maintainers
 
@@ -84,17 +75,16 @@ adapters: [claude, cursor, fable]
 
 ## Decision process
 - Bug fixes / docs: 1 maintainer approval
-- New features: 2 approvals + RFC если major
+- New features: 2 approvals + RFC if major
 - Breaking changes: lazy consensus 7 days
 - Security: maintainer + 1 reviewer, expedited
 
 ## Becoming a maintainer
-[критерии: X merged PRs, Y месяцев активности, etc.]
+[criteria: X merged PRs, Y months of activity, etc.]
 ```
 
-### 5. SECURITY.md
-**GitHub-стандарт.** Структура:
-
+### SECURITY.md
+**GitHub standard.**
 ```markdown
 # Security Policy
 
@@ -102,93 +92,72 @@ adapters: [claude, cursor, fable]
 | Version | Supported |
 |:---|:---|
 | 2.x | ✅ |
-| 1.x | ✅ (security fixes only, до YYYY-MM) |
+| 1.x | ✅ (security fixes only, until YYYY-MM) |
 | < 1.0 | ❌ |
 
 ## Reporting a vulnerability
-- **Не открывать публичный issue.**
-- Email: security@[domain] (или privately disclosed GitHub Security Advisory)
-- PGP key: [ссылка]
-- Ожидаемый response: 48 часов
-- Disclosure timeline: 90 дней по умолчанию (negotiable)
+- **Do not open a public issue.**
+- Email: security@[domain] (or privately disclosed GitHub Security Advisory)
+- PGP key: [link]
+- Expected response: 48 hours
+- Disclosure timeline: 90 days by default (negotiable)
 
 ## Scope
-- В scope: [...]
-- Не в scope: [...]
+- In scope: [...]
+- Not in scope: [...]
 ```
 
-### 6. RFC-процесс (для проектов с активным community)
-Когда применять: feature affects > 1 публичный API surface, или меняет dx-контракт, или break-change.
-
+### RFC process (projects with active community)
+Apply when: feature affects > 1 public API surface, OR changes dx-contract, OR break-change.
 ```
 docs/rfcs/
 ├── 0000-template.md
 ├── 0001-streaming-api.md
 └── 0002-deprecation-of-foo.md
 ```
+**RFC template:** Summary → Motivation → Detailed design → Drawbacks → Alternatives → Open questions → Migration path.
 
-**Шаблон RFC**: Summary → Motivation → Detailed design → Drawbacks → Alternatives → Open questions → Migration path.
+**Process:**
+1. PR with RFC into `docs/rfcs/` (status `draft`)
+2. Discussion ≥ 14 days
+3. Lazy consensus or vote from maintainers
+4. Accepted → status `accepted` + issue for implementation
+5. Implemented → status `implemented` + link to release
 
-**Процесс:**
-1. PR с RFC в `docs/rfcs/` (статус `draft`)
-2. Discussion ≥ 14 дней
-3. Lazy consensus или vote от maintainers
-4. Принят → статус `accepted` + issue для implementation
-5. Реализован → статус `implemented` + ссылка на release
+Small-team: simplifies to "RFC = GitHub Discussion with a template".
 
-Для small-team проектов — упрощается до «RFC = GitHub Discussion с шаблоном».
+## Agent adds on its own
+- **DCO vs CLA.** Most OSS projects: **DCO suffices** (Developer Certificate of Origin — `git commit -s`). CLA only if potential commercialization / re-licensing planned.
+- **Bus factor.** In `MAINTAINERS.md` — what to do if an active maintainer disappears (repo inheritance, fallback contact).
+- **Funding.** `.github/FUNDING.yml` if applicable (GitHub Sponsors, OpenCollective). Not for every project.
+- **Issue / PR templates.** `.github/ISSUE_TEMPLATE/*.yml`, `.github/PULL_REQUEST_TEMPLATE.md`. Partially overlaps `dx-design`.
+- **Branch protection** (admin task): require review, require CI, forbid force-push to main and release/.
 
----
+## Output file structure
+- `ProjectName/LICENSE` — full text of chosen license from https://choosealicense.com. Do NOT edit the text.
+- `ProjectName/CODE_OF_CONDUCT.md` — Contributor Covenant 2.1 with reports email substituted.
+- `ProjectName/CONTRIBUTING.md` — structure above.
+- `ProjectName/MAINTAINERS.md` — structure above with real people.
+- `ProjectName/SECURITY.md` — structure above.
+- (optional) `ProjectName/docs/rfcs/0000-template.md` — RFC template if process enabled.
 
-## Что агент добавляет сам
+## Links
+- `oss-dev/oss-development` — prerequisite: base repo structure.
+- `oss-dev/dependency-audit` — consumer: project LICENSE/SPDX sets license-compatibility criterion for dependencies.
+- `oss-dev/dx-design` — overlap: issue/PR templates and CONTRIBUTING are part of both DX and governance.
+- `oss-dev/github-flow` — where ISSUE_TEMPLATE/PR templates go and how PR-flow runs.
+- `architect/legal-compliance` — regulation (GDPR/CCPA/AI Act/DMCA) for product; here — only OSS licensing/CoC.
 
-- **DCO vs CLA.** Для большинства OSS-проектов **достаточно DCO** (Developer Certificate of Origin — `git commit -s`). CLA — только если планируется потенциальная коммерциализация / re-licensing.
-- **Bus factor.** В `MAINTAINERS.md` — указать что делать, если активный мейнтейнер пропадёт (наследование репо, fallback контакт).
-- **Funding.** `.github/FUNDING.yml` — если применимо (GitHub Sponsors, OpenCollective). Не для всех проектов.
-- **Issue / PR templates.** `.github/ISSUE_TEMPLATE/*.yml`, `.github/PULL_REQUEST_TEMPLATE.md`. Частично пересекается с `dx-design`.
-- **Branch protection.** Не забыть включить (admin task): требовать review, требовать CI, запретить force-push в main и release/.
+## Hard prohibitions
+NEVER:
+- Publish without LICENSE (legally a repo without license = "all rights reserved", nobody may use it).
+- Invent your own CoC — Contributor Covenant covers 99% of cases.
+- Merge LICENSE.md into README (separate files by convention).
+- Use AGPL/BUSL without explicit business justification (sharp adoption loss).
+- Omit SPDX in `package.json`/`composer.json` (hurts consumers' dependency-audit).
+- Accept PR without CONTRIBUTING.md (no rules → every PR review negotiated from scratch).
+- Ignore SECURITY.md (without it vulnerabilities arrive in public issues).
 
----
+<!-- ru-source-sha256: PENDING -->
 
-## Структура output-файлов
-
-### `ProjectName/LICENSE`
-Полный текст выбранной лицензии (берётся из https://choosealicense.com). Не редактировать сам текст.
-
-### `ProjectName/CODE_OF_CONDUCT.md`
-Contributor Covenant 2.1 с подставленным email для reports.
-
-### `ProjectName/CONTRIBUTING.md`
-По структуре выше.
-
-### `ProjectName/MAINTAINERS.md`
-По структуре выше с указанием реальных людей.
-
-### `ProjectName/SECURITY.md`
-По структуре выше.
-
-### (опционально) `ProjectName/docs/rfcs/0000-template.md`
-Шаблон RFC если включён процесс.
-
----
-
-## Ссылки
-
-- `oss-dev/oss-development` — предпосылка: базовая структура репо.
-- `oss-dev/dependency-audit` — потребитель: LICENSE/SPDX проекта задаёт критерий лицензионной совместимости зависимостей.
-- `oss-dev/dx-design` — стык: issue/PR-шаблоны и CONTRIBUTING — часть и DX, и governance.
-- `oss-dev/github-flow` — куда кладутся ISSUE_TEMPLATE/PR-шаблоны и как идёт PR-flow.
-- `architect/legal-compliance` — регуляторика (GDPR/CCPA/AI Act/DMCA) для продукта; здесь — только OSS-лицензирование/CoC.
-
----
-
-## Жёсткие запреты
-
-НЕЛЬЗЯ:
-- Публиковать без LICENSE (юридически репо без лицензии = "all rights reserved", никто не может использовать)
-- Сочинять свой CoC — Contributor Covenant покрывает 99% случаев
-- Smешивать LICENSE.md с README (это отдельные файлы по конвенции)
-- Использовать AGPL/BUSL без явного бизнес-обоснования (резкая потеря adopt)
-- Не указывать SPDX в `package.json`/`composer.json` (бьёт по dependency-audit потребителей)
-- Принимать PR без CONTRIBUTING.md (нет правил → каждый PR review — переговоры с нуля)
-- Игнорировать SECURITY.md (без него уязвимости приходят в публичные issues)
+<!-- ru-source-sha256: 03f32cb4066de3775af032de292ae6635c04c887eb7c377517130cfce2635bf0 -->

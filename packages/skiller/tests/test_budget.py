@@ -1,0 +1,124 @@
+"""Тесты токенового бюджета (budget.py) против синтетического реестра.
+
+Проверяем: грубую оценку токенов, раздельный подсчёт ярусов, транзитивное
+раскрытие requires (метка transitive), генерацию карты docs/guide/budget.md."""
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
+
+from skiller.budget import (budget_for_set, estimate_tokens, resolve_active_set,
+                            skill_budget, write_budget_map)
+from skiller.registry import build_registry
+import tests.fixtures as fx
+from core import atomic_write_text
+import json
+
+
+class EstimateTokensCase(unittest.TestCase):
+    def test_empty_is_zero(self):
+        self.assertEqual(estimate_tokens(""), 0)
+        self.assertEqual(estimate_tokens(None), 0)
+
+    def test_deterministic_and_monotonic(self):
+        a, b = estimate_tokens("x" * 30), estimate_tokens("x" * 60)
+        self.assertEqual(a, estimate_tokens("x" * 30))  # детерминизм
+        self.assertLess(a, b)                            # монотонность
+
+    def test_len_based(self):
+        # ceil(len/CHARS_PER_TOKEN), грубая, но > 0 для непустого
+        self.assertGreater(estimate_tokens("hello world"), 0)
+
+
+class SkillBudgetCase(unittest.TestCase):
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.tmp = Path(self._tmp.name)
+        self.root, self.env = fx.make_registry(self.tmp)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def test_tiers_split(self):
+        d = self.root / "skills" / "quality" / "big-body"
+        fx.write_skill(d, "big-body", description="short",
+                       body="word " * 500)
+        b = skill_budget(d)
+        self.assertEqual(b["name"], "big-body")
+        # короткое описание (ярус-0) << длинное тело (ярус-1)
+        self.assertLess(b["tier0"], b["tier1"])
+
+    def test_missing_skill_md(self):
+        self.assertIsNone(skill_budget(self.root / "skills" / "nope"))
+
+    def test_snippets_counted_on_demand(self):
+        d = self.root / "skills" / "quality" / "with-snip"
+        fx.write_skill(d, "with-snip", description="d")
+        (d / "snippets").mkdir()
+        (d / "snippets" / "ex.md").write_text("x" * 90, encoding="utf-8")
+        (d / "snippets" / "index.json").write_text("{}", encoding="utf-8")
+        b = skill_budget(d)
+        self.assertEqual(b["snippets"], 1)   # index.json не считаем
+        self.assertGreater(b["tier2"], 0)
+
+
+class ResolveActiveSetCase(unittest.TestCase):
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.tmp = Path(self._tmp.name)
+        self.root, self.env = fx.make_registry(self.tmp)
+        # кросс-бакетная зависимость: quality/needs-docker requires docker(devops)
+        fx.write_skill(self.root / "skills" / "quality" / "needs-docker",
+                       "needs-docker", requires=["docker"], description="needs docker")
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def test_transitive_pulled_and_marked(self):
+        skills, meta = resolve_active_set(
+            self.env, self.tmp, {"buckets": ["quality"]})
+        names = {fm for _, _, _, fm in skills}
+        self.assertIn("needs-docker", names)
+        self.assertIn("docker", names)            # подтянут транзитивно из devops
+        self.assertIn("docker", meta["pulled"])   # помечен как pulled
+        self.assertEqual(meta["pulled"]["docker"], "needs-docker")
+
+    def test_budget_aggregates_by_bucket(self):
+        skills, meta = resolve_active_set(
+            self.env, self.tmp, {"buckets": ["quality"]})
+        b = budget_for_set(skills, meta["pulled"])
+        self.assertEqual(b["count"], len(skills))
+        self.assertEqual(b["if_all_triggered"], b["tier0"] + b["tier1"])
+        # docker учтён в бакете devops (его родной), а не в quality
+        self.assertIn("devops", b["by_bucket"])
+        self.assertEqual(b["transitive"], 1)
+
+
+class WriteBudgetMapCase(unittest.TestCase):
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.tmp = Path(self._tmp.name)
+        self.root, self.env = fx.make_registry(self.tmp)
+        (self.root / "docs" / "guide").mkdir(parents=True)
+        registry, _, _ = build_registry(self.env)
+        atomic_write_text(self.root / "skills.json",
+                          json.dumps(registry, ensure_ascii=False))
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def test_map_generated(self):
+        write_budget_map(self.env)
+        out = self.root / "docs" / "guide" / "budget.md"
+        self.assertTrue(out.is_file())
+        text = out.read_text(encoding="utf-8")
+        self.assertIn("flowchart LR", text)
+        self.assertIn("classDef hot", text)
+        self.assertIn("⊕", text)               # легенда яруса-0
+        self.assertIn("laravel-conventions", text)  # скилл из фикстуры на карте
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -2,7 +2,7 @@
 name: testing-safety-report
 bucket: quality
 version: 0.1.0
-description: "Отчёт безопасности после рискованного изменения (миграции, рефакторинг схемы/слоёв, апгрейд зависимостей): что структурно изменено, какие тесты прогнаны и с каким результатом, какие риски и контрольные проверки остаются. Делать после изменения, чтобы оно было аудируемым."
+description: "Safety report after a risky change (migrations, schema/layer refactor, dependency upgrade): what changed structurally, which tests ran and with what result, what risks and control checks remain. Do it after the change to make it auditable."
 risk: read
 persona: architect
 tags: [testing, safety, migrations, reporting, verification, quality, refactor]
@@ -16,41 +16,29 @@ sha256: ""
 
 # Testing Safety Report
 
-## Контекст
+Post-fact summary making a risky change auditable. Complements `test-strategy` (test planning) and `refactoring-plan` (change plan).
 
-После рискованного изменения недостаточно «тесты зелёные» — нужно зафиксировать,
-**что именно** поменялось, **что проверено** и **что осталось под риском**. Этот
-отчёт делает изменение аудируемым: ревьюер и будущая сессия видят границы
-безопасности, не перечитывая весь дифф. Дополняет `test-strategy` (планирование
-тестов) и `refactoring-plan` (план изменения) — это пост-фактум-сводка.
+## When to activate
 
-## Когда активировать
+After a change that may silently break behavior:
+- DB migrations (new/changed fields, indexes, backfills, dropped columns);
+- data schema / layers / contracts refactor;
+- dependency / language / framework version upgrade;
+- mass replace (rename, module move, internal API change).
 
-После изменения, которое может незаметно сломать поведение:
-- миграции БД (новые/изменённые поля, индексы, бэкофилы, удаление колонок);
-- рефакторинг схемы данных, слоёв или контрактов;
-- апгрейд зависимостей / версии языка/фреймворка;
-- массовая замена (rename, перенос модулей, смена API внутри кодовой базы).
+Skip for small local edits with obvious coverage.
 
-Не нужен для мелкой локальной правки с очевидным покрытием.
+## Algorithm
 
-## Алгоритм
+1. **Structural changes.** List what changed in substance (not line-by-line diff): which entities/tables/contracts/layers affected, is migration reversible (`down()` correct?), is backward compatibility preserved.
+2. **Checks run.** Which tests/analyzers ran and with what result: targeted tests of affected domains, full suite (if relevant), static analysis, linter. Give command and outcome (ok / N failed / not run).
+3. **Risks & uncovered.** What is NOT covered by tests, which scenarios stayed manual, where regression is possible (data, concurrency, external integrations).
+4. **Control checks.** Concrete follow-up: what to verify on staging, what data to migrate, what to monitor after deploy, rollback plan.
 
-1. **Структурные изменения.** Перечисли, что изменилось по сути (не построчный
-   дифф): какие сущности/таблицы/контракты/слои затронуты, обратима ли миграция
-   (`down()` корректен?), сохранена ли обратная совместимость.
-2. **Прогнанные проверки.** Какие тесты/анализаторы запускались и с каким
-   результатом: целевые тесты затронутых доменов, полный suite (если уместно),
-   статический анализ, линтер. Указывай команду и итог (ok / N упало / не гонял).
-3. **Риски и непокрытое.** Что НЕ покрыто тестами, какие сценарии остались
-   ручными, где возможна регрессия (данные, конкурентность, внешние интеграции).
-4. **Контрольные проверки.** Конкретные follow-up: что проверить на staging,
-   какие данные смигрировать, что мониторить после деплоя, план отката.
-
-## Формат отчёта
+## Report format
 
 ```text
-Safety Report: <краткое имя изменения>
+Safety Report: <short change name>
 Изменено структурно:
   - ...
 Прогнано: тесты (<команда> → ok/N упало), phpstan (ok/N), линтер (ok)
@@ -61,20 +49,24 @@ Safety Report: <краткое имя изменения>
 Откат: <revert | миграция down | feature flag | нечего>
 ```
 
-## Чеклист качества
+## Quality checklist
 
-- [ ] Структурные изменения описаны по сути, не построчным диффом.
-- [ ] Указаны конкретные прогнанные проверки с командами и результатом.
-- [ ] Явно названо непокрытое и потенциальные регрессии.
-- [ ] Есть follow-up и план отката.
-- [ ] Отчёт короткий и аудируемый, без воды.
+- [ ] Structural changes described in substance, not line-by-line diff.
+- [ ] Concrete checks run listed with commands and result.
+- [ ] Uncovered parts and potential regressions explicitly named.
+- [ ] Follow-up and rollback plan present.
+- [ ] Report short and auditable, no fluff.
 
-## Ссылки
+## Links
 
-- `test-strategy` (quality) — планирование тестов до изменения.
-- `refactoring-plan` (quality) — план самого изменения и его шагов (его исполнение фиксирует этот отчёт).
-- `php/php-upgrade-checklist` — чеклист апгрейда PHP; отчёт фиксирует результат прогона.
-- `php/static-analysis` — phpstan/линтер, чьи итоги попадают в строку «Прогнано».
-- `php/test-isolation-guard`, `devops/db-test-preflight` — гарантии безопасной тестовой БД при прогоне.
-- `oss-dev/dependency-audit` — апгрейд зависимостей как триггер для отчёта.
-- `quality/code-review` — отчёт прикладывается к PR, чтобы ревьюер видел границы безопасности.
+- `test-strategy` (quality) — test planning before the change.
+- `refactoring-plan` (quality) — plan of the change itself and its steps (this report records its execution).
+- `php/php-upgrade-checklist` — PHP upgrade checklist; report records the run result.
+- `php/static-analysis` — phpstan/linter whose outcomes go into the "Прогнано" line.
+- `php/test-isolation-guard`, `devops/db-test-preflight` — safe test DB guarantees during the run.
+- `oss-dev/dependency-audit` — dependency upgrade as a trigger for the report.
+- `quality/code-review` — report attached to PR so reviewer sees safety boundaries.
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: dac5a7b8d34e4df8d0759c4583c6afeab97c393f8719d0e04e8e826398c923c5 -->

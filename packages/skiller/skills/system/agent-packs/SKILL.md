@@ -2,7 +2,7 @@
 name: agent-packs
 bucket: system
 version: 0.1.0
-description: "Установка и ВЕРСИОНИРОВАННЫЙ апгрейд agent-packs (агенты/воркфлоу/хуки Claude Code) из harness в проект-потребитель: детект стека -> интервью -> рендер+копия -> lock; апгрейд по CHANGELOG-дельте с 3-way reasoning через sha256 в lock, без diff-движка. Активировать при словах: внедрить/обновить agent-pack, поставить роли+dev-loop+review-gate в проект, версионный upgrade шаблонов агентов, agent-pack.lock."
+description: "Install and VERSIONED upgrade of agent-packs (Claude Code agents/workflows/hooks) from harness into a consumer project: stack detect -> interview -> render+copy -> lock; upgrade via CHANGELOG delta with 3-way reasoning over sha256 in lock, no diff engine. Activate on: install/upgrade agent-pack, add roles+dev-loop+review-gate to project, versioned upgrade of agent templates, agent-pack.lock."
 risk: write
 persona: architect
 tags: [agent-packs, templates, versioning, upgrade, install, claude-code, harness, lock]
@@ -14,31 +14,18 @@ adapters: [claude]
 sha256: ""
 ---
 
-# Agent Packs — установка и версионный апгрейд
+# Agent Packs — install & versioned upgrade
 
-## Контекст
+**Pack** = versioned bundle of Claude Code artifacts (agents `.claude/agents/`, workflows `.claude/workflows/`, hooks, `settings` fragment, guideline docs) living in `harness/configs/claude-code/agent-packs/<pack>/`, installed by the agent into a consumer project. DATA is distributed (`pack.json` + `CHANGELOG.md` + templates); agent does install/adapt/upgrade from metadata — NO Python/Mustache generator engine. Project stores install state in `.claude/agent-pack.lock.json` (committed, like `composer.lock`).
 
-**Пак** — версионируемый бандл артефактов Claude Code (агенты `.claude/agents/`,
-воркфлоу `.claude/workflows/`, хуки, фрагмент `settings`, guideline-доки), который
-живёт в `harness/configs/claude-code/agent-packs/<pack>/` и **устанавливается агентом**
-в проект-потребитель. Раздаются ДАННЫЕ (`pack.json` + `CHANGELOG.md` + шаблоны), а
-установку/адаптацию/upgrade выполняет агент по понятным метаданным — **без
-Python/Mustache движка-генератора**.
+## Activate when
+- "Install agent-pack / add roles + dev-loop + review-gate to project."
+- "Upgrade agent-pack" (new pack version in harness).
+- Need versioned set of agents/workflows/hooks instead of manual copy.
 
-Ценность версионности: правишь пак в одном месте, а проекты обновляются по changelog
-с сохранением локальных адаптаций. Состояние внедрения проект хранит в
-`.claude/agent-pack.lock.json` (коммитится с проектом, как `composer.lock`).
+**Anti-trigger:** editing ONE agent/workflow for a specific task — edit the file directly, don't touch the pack (packs = versioned SET, not one-off edits).
 
-## Когда активировать
-
-- «Внедри agent-pack / поставь роли + dev-loop + review-gate в проект».
-- «Обнови agent-pack» (вышла новая версия пака в harness).
-- Нужен версионируемый набор агентов/воркфлоу/хуков вместо ручного копирования.
-
-**Анти-триггер:** правка ОДНОГО агента/воркфлоу под конкретную задачу — правь файл
-напрямую, пак не трогай (паки — про версионируемый НАБОР, не про разовую правку).
-
-## Манифест пака (`pack.json`)
+## Manifest (`pack.json`)
 
 ```jsonc
 {
@@ -55,18 +42,15 @@ Python/Mustache движка-генератора**.
 }
 ```
 
-`kind`: **template** — подставить `{{PLACEHOLDER}}` из ответов + разрешить блоки
-`<!-- pack:if KEY -->...<!-- pack:endif -->` по булеву ответу, записать. **verbatim** —
-скопировать без правок (+ chmod, если задан). **merge** — JSON-merge в существующий
-файл проекта append-if-absent. `user_owned: true` — файл правит пользователь
-(например `.env.ini`): на апгрейде НИКОГДА не перезаписывается молча.
+`kind`:
+- **template** — substitute `{{PLACEHOLDER}}` from answers + resolve `<!-- pack:if KEY -->...<!-- pack:endif -->` blocks by bool answer, write.
+- **verbatim** — copy unchanged (+ chmod if set).
+- **merge** — JSON-merge into existing project file, append-if-absent.
+- `user_owned: true` — user edits this file (e.g. `.env.ini`): NEVER silently overwrite on upgrade.
 
-## Делегирование детерминированному CLI (предпочтительно)
+## Delegate to deterministic CLI (preferred)
 
-Если доступен `harness agent-packs` (резолв лаунчера как в orchestrate/SIBLINGS),
-для install/upgrade **вызови его** — детерминированный stdlib-рендер: резолвит интервью
-из `detect:`-проб+дефолтов БЕЗ участия агента, подставляет плейсхолдеры, пишет lock в
-той же схеме, что описана ниже. Команды:
+If `harness agent-packs` is available (resolve launcher as in orchestrate/SIBLINGS), CALL it for install/upgrade — deterministic stdlib render: resolves interview from `detect:` probes+defaults WITHOUT the agent, substitutes placeholders, writes lock in the same schema below. Commands:
 
 ```bash
 harness agent-packs render  --auto --pack <pack> --target . [--answer KEY=VAL ...]
@@ -74,30 +58,16 @@ harness agent-packs upgrade        --pack <pack> --target .
 harness agent-packs doctor  [--pack <pack>]
 ```
 
-Агент-driven рендер (ниже) — **фолбэк** только когда CLI вернул `needs-agent`/`assumed`/
-`conflict` (неоднозначный enum без detect, локально-правленые файлы при апгрейде) или
-когда нужна прозовая адаптация под нестандартную инфру. Оба пути пишут ОДИН формат lock
-(`base_sha256` = sha отрендеренного, `atomic_write_json`), поэтому совместимы: агент
-дочитывает то, что CLI пометил нерезолвенным/конфликтным, и наоборот.
+Agent-driven render (below) = FALLBACK only when CLI returns `needs-agent`/`assumed`/`conflict` (ambiguous enum without detect, locally-edited files on upgrade) or when prose adaptation for non-standard infra is needed. Both paths write ONE lock format (`base_sha256` = sha of rendered, `atomic_write_json`), so they're compatible: agent finishes what CLI flagged unresolved/conflicting, and vice versa.
 
-## Install — алгоритм (агент-driven фолбэк)
+## Install algorithm (agent-driven fallback)
 
-1. **Детект стека.** Выполни `stack.detect` (например `test -f artisan && test -f
-   composer.json`); подбери подходящий(е) пак(и). Префилл дефолтов из детекта.
-2. **Интервью — только проектное.** Спрашивай лишь `interview[]`, что не определилось
-   детектом; покажи дефолт, дай принять. (Неоднозначный `TEST_FRAMEWORK` —
-   спрашивай явно: неверная догадка тихо портит вывод агентов.)
-3. **Предусловия.** Проверь `requires.harness_presets` (предложи
-   `harness permissions --target . --preset ...`) и `requires.skills` (через
-   `skm:skills`/профиль). Warn, не hard-fail.
-4. **Рендер + копия.** Для каждого `files[]`: подставь `{PLACEHOLDER}` в `target` и
-   (для `template`) в контент; разреши `pack:if`-блоки; запиши. `verbatim` — копия +
-   chmod. `merge` — JSON-merge фрагмента append-if-absent (бэкап `.bak`, не затирай
-   чужие хуки).
-5. **Lock.** Создай `.claude/agent-pack.lock.json` (схема ниже): версия, ответы,
-   `files[]` с `base_sha256` ОТРЕНДЕРЕННОГО контента.
-6. **Пост-проверка.** Прогони чеклист `docs/skiller/agent-framework/post-integration-checklist.md`.
-   Воркфлоу проверяй балансом скобок/непустотой (top-level return/await — `node --check` НЕ применять).
+1. **Detect stack.** Run `stack.detect` (e.g. `test -f artisan && test -f composer.json`); pick matching pack(s). Prefill defaults from detect.
+2. **Interview — project-only.** Ask only `interview[]` not resolved by detect; show default, allow accept. (Ambiguous `TEST_FRAMEWORK` — ask explicitly: a wrong guess silently corrupts agent output.)
+3. **Preconditions.** Check `requires.harness_presets` (suggest `harness permissions --target . --preset ...`) and `requires.skills` (via `skm:skills`/profile). Warn, no hard-fail.
+4. **Render + copy.** For each `files[]`: substitute `{PLACEHOLDER}` in `target` and (for `template`) in content; resolve `pack:if` blocks; write. `verbatim` — copy + chmod. `merge` — JSON-merge fragment append-if-absent (backup `.bak`, don't clobber foreign hooks).
+5. **Lock.** Create `.claude/agent-pack.lock.json` (schema below): version, answers, `files[]` with `base_sha256` of RENDERED content.
+6. **Post-check.** Run checklist `docs/skiller/agent-framework/post-integration-checklist.md`. Validate workflows by brace balance/non-empty (top-level return/await — do NOT use `node --check`).
 
 ## Lock (`.claude/agent-pack.lock.json`)
 
@@ -110,65 +80,56 @@ harness agent-packs doctor  [--pack <pack>]
       "files": [ { "src": "agents/reviewer.md",
                    "target": ".claude/agents/<prefix>-reviewer.md",
                    "kind": "template",
-                   "base_sha256": "<sha256 ОТРЕНДЕРЕННОГО при install>",
+                   "base_sha256": "<sha256 of RENDERED at install>",
                    "local_modified": false } ],
       "removed_optional": [] } } }
 ```
 
-Три поля делают апгрейд возможным БЕЗ diff-движка: **version** (откуда дельта),
-**answers** (детерминированный ре-рендер новой версии), **files[].base_sha256**
-(хэш того, что мы записали → расхождение = одно сравнение хэшей).
+Three fields enable upgrade with NO diff engine: **version** (delta source), **answers** (deterministic re-render of new version), **files[].base_sha256** (hash of what we wrote → divergence = one hash compare).
 
-## Upgrade — алгоритм (сердце)
+## Upgrade algorithm (core)
 
-1. **Дельта.** Из `CHANGELOG.md` собери версии `(V_old, V_new]`: их «Migration notes»
-   + изменения по файлам.
-2. **Ре-интервью только нового.** Если notes объявили новый `interview`-ответ —
-   спроси только его; иначе используй `lock.answers`.
-3. **3-way по файлу (без diff-движка):**
-   - `local_modified` = `sha256(файл_на_диске) != lock.base_sha256` (правлен локально).
-   - `base_changed` = `sha256(ре-рендер V_new с answers) != lock.base_sha256` (изменилось вверху).
-4. **Категории:**
-   - **safe-apply** (`base_changed && !local_modified`) → перезаписать ре-рендером.
-   - **conflict** (`base_changed && local_modified`) → НЕ перезаписывать; показать
-     дельту из CHANGELOG; опц. положить `<target>.pack-new` для ручного merge.
-   - **new-optional** (файл новый, в CHANGELOG помечен OPTIONAL) → предложить опт-ин.
-   - **removed** (был в lock, нет в `V_new.files`) → НЕ удалять авто; спросить.
-   - **user_owned** — даже при `base_changed` не перезаписывать; лишь упомянуть новый дефолт.
-5. **План → подтверждение → применить.** Покажи categorized-план, дождись согласия,
-   применяй (бэкап `.bak`), затем **bump lock**: `version=V_new`, пересчитай все
-   `base_sha256`, обнови `local_modified` и `answers`. Conflict-файлы оставь с
-   `local_modified:true` и пометкой отложенного апгрейда.
+1. **Delta.** From `CHANGELOG.md` collect versions `(V_old, V_new]`: their "Migration notes" + per-file changes.
+2. **Re-interview new only.** If notes declare a new `interview` answer — ask only it; else use `lock.answers`.
+3. **3-way per file (no diff engine):**
+   - `local_modified` = `sha256(file_on_disk) != lock.base_sha256` (locally edited).
+   - `base_changed` = `sha256(re-render V_new with answers) != lock.base_sha256` (upstream changed).
+4. **Categories:**
+   - **safe-apply** (`base_changed && !local_modified`) → overwrite with re-render.
+   - **conflict** (`base_changed && local_modified`) → do NOT overwrite; show CHANGELOG delta; optionally drop `<target>.pack-new` for manual merge.
+   - **new-optional** (new file, marked OPTIONAL in CHANGELOG) → offer opt-in.
+   - **removed** (was in lock, absent in `V_new.files`) → do NOT auto-delete; ask.
+   - **user_owned** — even on `base_changed` don't overwrite; only mention new default.
+5. **Plan → confirm → apply.** Show categorized plan, await consent, apply (backup `.bak`), then **bump lock**: `version=V_new`, recompute all `base_sha256`, update `local_modified` and `answers`. Leave conflict files with `local_modified:true` and a deferred-upgrade mark.
 
-## Безопасность от конфликтов
+## Conflict safety
+- settings — merge-only append-if-absent (event,matcher,command); don't duplicate a hook.
+- Boost project — do NOT touch generated CLAUDE.md/AGENTS.md (all in `.ai/guidelines/` + `boost:update`).
+- Agent names under `{PACK_PREFIX}` — check collisions with existing and with plugin agents.
+- Multiple packs — detect path collisions (shared verbatim with identical content → skip).
+- Never auto-delete project files or overwrite locally-edited ones.
 
-- settings — merge-only append-if-absent (event,matcher,command); не плодить дубль хука.
-- Boost-проект — НЕ трогать сгенерённые CLAUDE.md/AGENTS.md (всё в `.ai/guidelines/` +
-  `boost:update`).
-- Имена агентов под `{PACK_PREFIX}` — проверить коллизии с существующими и с агентами плагина.
-- Несколько паков — детект коллизий путей (общий verbatim с идентичным контентом → skip).
-- Никогда не авто-удалять файлы проекта и не перезаписывать локально-правленые.
+## Anti-patterns
+- Engine generation (Mustache/Python) instead of agent-driven render.
+- Auto-overwrite of locally-edited file or auto-delete of removed file.
+- Re-interviewing answers unchanged between versions.
+- Per-template versions (version is per-PACK).
+- `node --check` on dev-loop workflow (top-level return/await — false fail).
 
-## Анти-паттерны
+## Quality checklist
+- [ ] Stack detected; interview only on project-specific (not auto-resolved).
+- [ ] All `template` files rendered (no leftover `{{...}}`); `verbatim` copied + chmod.
+- [ ] `merge` applied append-if-absent with `.bak`; foreign hooks intact.
+- [ ] Lock written/updated; `base_sha256` = hash of rendered; `answers` complete.
+- [ ] Upgrade: conflict files shown, NOT overwritten; removed not auto-deleted.
+- [ ] Post-check passed (post-integration-checklist).
 
-- Движок-генерация (Mustache/Python) вместо агент-driven рендера.
-- Авто-перезапись локально-правленого файла или авто-удаление removed-файла.
-- Ре-интервью ответов, которые не менялись между версиями.
-- Per-template версии (версия — per-PACK).
-- `node --check` к dev-loop-воркфлоу (top-level return/await — ложно падает).
+## Links
+- `harness/configs/claude-code/agent-packs/` — pack bases (source of truth).
+- `docs/skiller/agent-framework/` — framework model; `post-integration-checklist` — post-check.
+- `php/laravel-subagents` — orchestration protocol the pack roles implement.
+- `general/context-economy`, `general/session-handoff` — main-session context on delegation.
 
-## Чеклист качества
+<!-- ru-source-sha256: PENDING -->
 
-- [ ] Стек определён детектом; интервью только по проектному (не доопределённому).
-- [ ] Все `template`-файлы отрендерены (нет остаточных `{{...}}`); `verbatim` скопированы + chmod.
-- [ ] `merge` влит append-if-absent с `.bak`; чужие хуки целы.
-- [ ] Lock записан/обновлён; `base_sha256` = хэш отрендеренного; `answers` полны.
-- [ ] Upgrade: conflict-файлы показаны, НЕ перезаписаны; removed не удалён авто.
-- [ ] Пройдена пост-проверка (post-integration-checklist).
-
-## Ссылки
-
-- `harness/configs/claude-code/agent-packs/` — базы паков (источник истины).
-- `docs/skiller/agent-framework/` — модель каркаса; `post-integration-checklist` — пост-проверка.
-- `php/laravel-subagents` — протокол оркестрации, который реализуют роли пака.
-- `general/context-economy`, `general/session-handoff` — контекст основной сессии при делегировании.
+<!-- ru-source-sha256: e8ce9af628138c4a08f0e1d4ce097e919313273653c3323690e759514bbbaea5 -->

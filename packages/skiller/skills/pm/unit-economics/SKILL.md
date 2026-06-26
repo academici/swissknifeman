@@ -2,7 +2,7 @@
 name: unit-economics
 bucket: pm
 version: 0.1.0
-description: Unit economics: LTV, CAC, payback, churn, break-even, 3 сценария
+description: "Unit economics: LTV, CAC, payback, churn, break-even, 3 scenarios"
 risk: draft
 persona: pm
 tags: [monetization]
@@ -15,112 +15,88 @@ adapters: [claude, cursor, fable]
 
 # Skill: Unit Economics
 
-Применять когда: задача на unit economics, финансовую модель, LTV/CAC, break-even, монетизацию.
+Apply when: task on unit economics, financial model, LTV/CAC, break-even, monetization.
 
----
+Principle: unit economics = economics of one unit (1 user, 1 order, 1 subscription). If negative, scaling only accelerates losing money.
 
-## Принцип
+## Required metrics by monetization model
 
-Unit economics = экономика одной единицы (1 пользователь, 1 заказ, 1 подписка).
-Если unit economics отрицательная — масштабирование только ускоряет потерю денег.
-
----
-
-## Обязательные метрики по модели монетизации
-
-### SaaS / Подписка
-| Метрика | Формула | Цель |
+### SaaS / Subscription
+| Metric | Formula | Target |
 |:---|:---|:---|
-| MRR | Платящих × ARPU | Рост MoM |
+| MRR | Paying × ARPU | Growth MoM |
 | LTV | ARPU × (1 / Churn%) | LTV > 3×CAC |
-| CAC | Расходы на привлечение / Новые клиенты | Как можно ниже |
-| LTV/CAC | LTV ÷ CAC | Цель: ≥ 3:1 |
-| Payback period | CAC ÷ (ARPU × Gross margin%) | Цель: < 12 мес |
-| Churn | Отток / База × 100 | < 5% monthly для SMB |
+| CAC | Acquisition spend / New customers | As low as possible |
+| LTV/CAC | LTV ÷ CAC | Target: ≥ 3:1 |
+| Payback period | CAC ÷ (ARPU × Gross margin%) | Target: < 12 mo |
+| Churn | Lost / Base × 100 | < 5% monthly for SMB |
 
 ### Marketplace
-| Метрика | Формула |
+| Metric | Formula |
 |:---|:---|
-| GMV | Объём транзакций |
-| Take rate | Комиссия / GMV |
+| GMV | Transaction volume |
+| Take rate | Commission / GMV |
 | Net revenue | GMV × Take rate |
-| CAC (supply / demand) | Отдельно для каждой стороны |
+| CAC (supply / demand) | Separately for each side |
 
 ### Freemium / Consumer
-| Метрика | Формула |
+| Metric | Formula |
 |:---|:---|
-| Conversion rate | Платящие / Все пользователи |
+| Conversion rate | Paying / All users |
 | ARPU | Revenue / MAU |
-| Revenue per cohort | Сколько приносит каждая когорта за 12 мес |
+| Revenue per cohort | What each cohort brings over 12 mo |
 
----
+## Steps
 
-## Шаг 1. Текущее состояние
-
-Заполнить таблицу с тем, что известно. Неизвестные = гипотезы с пометкой [оценка].
-
----
-
-## Шаг 2. Break-even анализ
-
+1. Current state — fill table with what's known. Unknowns = hypotheses marked [estimate].
+2. Break-even analysis:
 ```
 Break-even = Fixed costs / (Unit price - Variable cost per unit)
 ```
+   Show at what user/transaction count project hits 0. Add timeline — how many months at current growth rate.
+3. Scenarios:
 
-Показать: при каком числе пользователей/транзакций проект выходит в 0.
-Добавить временную шкалу — через сколько месяцев при текущем темпе роста.
-
----
-
-## Шаг 3. Сценарии
-
-| Сценарий | Churn | CAC | Conversion | Break-even |
+| Scenario | Churn | CAC | Conversion | Break-even |
 |:---|:---|:---|:---|:---|
-| Пессимистичный | +50% | +50% | -30% | [мес] |
-| Базовый | [текущее] | [текущее] | [текущее] | [мес] |
-| Оптимистичный | -30% | -20% | +50% | [мес] |
+| Pessimistic | +50% | +50% | -30% | [mo] |
+| Base | [current] | [current] | [current] | [mo] |
+| Optimistic | -30% | -20% | +50% | [mo] |
 
----
+## Document format
 
-## Формат в документе
-
-Размещать в `docs/01_Business/04_Unit_Economics.md`
-
-Структура:
+Place in `docs/01_Business/04_Unit_Economics.md`. Structure:
 ```markdown
 # Unit Economics: ProjectName
 
-## Бизнес-модель: [тип]
-## Ключевые метрики (текущие / прогноз)
-[таблица]
-## Break-even анализ
-## Сценарный анализ
-## Выводы: что нужно сделать для улучшения unit economics
+## Business model: [type]
+## Key metrics (current / forecast)
+[table]
+## Break-even analysis
+## Scenario analysis
+## Conclusions: what to do to improve unit economics
 ```
 
----
+## Red flags (name explicitly)
 
-## Красные флаги (называть явно)
+- LTV < CAC → unprofitable growth
+- Payback period > 18 months → cash flow problems
+- Churn > 10% monthly → "leaky bucket"
+- Gross margin < 40% → no room for sales and marketing
+- Single acquisition channel → dependency risk
 
-- LTV < CAC → убыточный рост
-- Payback period > 18 месяцев → проблемы с cash flow
-- Churn > 10% monthly → "дырявое ведро"
-- Gross margin < 40% → нет места для продаж и маркетинга
-- Единственный канал привлечения → риск зависимости
+## Agent adds itself
 
----
+- Comparison with industry benchmarks (SaaS: LTV/CAC ≥ 3, Churn < 5%)
+- Proposal: which metric to improve first and how
+- Link to risk: if unit economics negative → link to `[[Risk Register]]`
 
-## Что агент добавляет сам
+## Related skills
 
-- Сравнение с бенчмарками отрасли (SaaS: LTV/CAC ≥ 3, Churn < 5%)
-- Предложение: какую метрику улучшить в первую очередь и как
-- Связь с риском: если unit economics отрицательная → ссылка на `[[Risk Register]]`
+- `pm/monetization-design` — input: chosen business model sets the metric set (required BEFORE calculation).
+- `pm/go-to-market` — consumer: paid-channel launch gates (CAC < LTV, payback) taken from here.
+- `founder/pitch-deck` — consumer: financial slide of deck relies on these numbers.
+- `founder/risk-assessment` — negative unit economics → entry in Risk Register.
 
----
+<!-- ru-source-sha256: PENDING -->
 
-## Связанные скиллы
-
-- `pm/monetization-design` — вход: выбранная бизнес-модель задаёт набор метрик (требуется ДО расчёта).
-- `pm/go-to-market` — потребитель: гейты запуска платных каналов (CAC < LTV, payback) берутся отсюда.
-- `founder/pitch-deck` — потребитель: финансовый слайд деки опирается на эти цифры.
-- `founder/risk-assessment` — отрицательная unit economics → запись в Risk Register.
+<!-- ru-source-sha256: 5f24a65cf9afec41fa348376b1ea6e13c55e3da2735cb6ecc97b10d370a95646 -->

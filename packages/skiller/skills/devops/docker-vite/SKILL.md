@@ -2,57 +2,59 @@
 name: docker-vite
 bucket: devops
 version: 0.3.0
-description: "Vite dev server отдельным compose-сервисом для Laravel: named volume для node_modules, HMR через localhost, host 0.0.0.0"
+description: "Vite dev server as separate compose service for Laravel: named volume for node_modules, HMR via localhost, host 0.0.0.0"
 risk: write
 persona: operator
 tags: ["docker", "devops", "vite", "frontend", "laravel"]
 requires: []
 produces_for: ["docker-dev-prod"]
-outputs: ["docker-compose.yml (сервис vite)", "vite.config.js (server-блок)"]
+outputs: ["docker-compose.yml (vite service)", "vite.config.js (server block)"]
 snippets: ["Dockerfile.node", "vite.config.docker.ts", "vite-service.yml", "vite-server-config.js"]
 adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-## Контекст
+Vite dev server = separate compose service next to Laravel app. Runs from same PHP image (if Node+pnpm installed, see `docker-php`) or separate node image.
 
-Vite dev server как **отдельный сервис compose** рядом с Laravel-app. Может работать из того же PHP-образа (если в него поставлены Node+pnpm, см. `docker-php`) или из отдельного node-образа.
+## Rules
 
-Три критичных момента:
+- Command: `pnpm install && pnpm run dev --host=0.0.0.0 --port=${VITE_PORT:-5173}` — install on every start (node_modules in volume); `--host=0.0.0.0` mandatory (else dev-server listens only on container loopback).
+- node_modules = named volume, NOT bind-mount: `vite_node_modules:/var/www/html/node_modules` over the sources bind-mount.
+- HMR: in-container `server.host: "0.0.0.0"`, browser hits from host → `hmr.host: "localhost"`. Port symmetric (`5173:5173`), `strictPort: true`. CORS = app `APP_URL`.
 
-1. **Команда**: `pnpm install && pnpm run dev --host=0.0.0.0 --port=${VITE_PORT:-5173}` — install при каждом старте (node_modules живёт в volume), `--host=0.0.0.0` обязателен, иначе dev-server слушает только loopback внутри контейнера.
-2. **node_modules — named volume, НЕ bind-mount**: `vite_node_modules:/var/www/html/node_modules` поверх bind-mount исходников. Иначе — медленный I/O (особенно WSL2/macOS), конфликты бинарных зависимостей хост/контейнер и мусор в рабочей копии.
-3. **HMR-конфиг**: внутри контейнера `server.host: "0.0.0.0"`, но браузер ходит с хоста — `hmr.host: "localhost"`. Порт пробрасывается симметрично (`5173:5173`), `strictPort: true` чтобы не уехать на другой порт молча. CORS — на `APP_URL` приложения.
+## Steps
 
-## Алгоритм
+1. Add `vite` service to dev-compose per `vite-service.yml` (same Dockerfile as app, or `Dockerfile.node`).
+2. Declare named volume `vite_node_modules` in compose `volumes:`.
+3. Map port `${VITE_PORT:-5173}:${VITE_PORT:-5173}`; reuse env-block via anchor `*app_env`.
+4. Configure `vite.config.js` server block per `vite-server-config.js` (host/hmr/cors, port from `VITE_PORT`).
+5. `depends_on: app: { condition: service_healthy }`.
+6. WSL2/Linux Permission denied → local override `user: "1000:1000"` (see `docker-dev-prod`).
 
-1. Добавить сервис `vite` в dev-compose по `vite-service.yml` (тот же Dockerfile, что и app, либо `Dockerfile.node`).
-2. Объявить named volume `vite_node_modules` в секции `volumes:` compose-файла.
-3. Пробросить порт `${VITE_PORT:-5173}:${VITE_PORT:-5173}`; env-блок переиспользовать через якорь `*app_env`.
-4. Настроить server-блок `vite.config.js` по `vite-server-config.js` (host/hmr/cors, порт из `VITE_PORT`).
-5. `depends_on: app: { condition: service_healthy }` — vite стартует после готовности приложения.
-6. На WSL2/Linux при Permission denied — локальный override `user: "1000:1000"` (см. `docker-dev-prod`).
+## Snippet map
 
-## Когда какой сниппет открывать
-
-| Ситуация | Файл |
+| Situation | File |
 |---|---|
-| Сервис vite в docker-compose | `snippets/vite-service.yml` |
-| server-блок vite.config.js (host/HMR/CORS/порт) | `snippets/vite-server-config.js` |
-| Отдельный node-образ для фронтенда | `snippets/Dockerfile.node` |
-| Минимальный vite-конфиг под Docker (TS, базовая версия) | `snippets/vite.config.docker.ts` |
+| vite service in docker-compose | `snippets/vite-service.yml` |
+| vite.config.js server block (host/HMR/CORS/port) | `snippets/vite-server-config.js` |
+| Separate node image for frontend | `snippets/Dockerfile.node` |
+| Minimal Docker vite config (TS, base) | `snippets/vite.config.docker.ts` |
 
-## Чеклист качества
+## Quality checklist
 
-- [ ] `--host=0.0.0.0` в команде dev-server
-- [ ] node_modules в named volume, не в bind-mount
-- [ ] `hmr.host: "localhost"` — HMR-сокет доступен браузеру с хоста
-- [ ] порт параметризован `${VITE_PORT:-5173}` и проброшен симметрично, `strictPort: true`
-- [ ] CORS ограничен origin приложения (`APP_URL`), не `*`
-- [ ] vite зависит от healthy app (`depends_on … service_healthy`)
+- [ ] `--host=0.0.0.0` in dev-server command
+- [ ] node_modules in named volume, not bind-mount
+- [ ] `hmr.host: "localhost"`
+- [ ] port parametrized `${VITE_PORT:-5173}`, symmetric mapping, `strictPort: true`
+- [ ] CORS limited to app origin (`APP_URL`), not `*`
+- [ ] vite depends on healthy app (`depends_on … service_healthy`)
 
-## Ссылки
+## Links
 
 - https://vite.dev/config/server-options — server.host / server.hmr
 - https://laravel.com/docs/vite — laravel-vite-plugin
-- Смежные скиллы: `docker-php` (Node в PHP-образе), `docker-dev-prod` (override для WSL2), `frontend/vite-module-loader` (базовая конфигурация Vite/алиасы), `frontend/vite-multi-build` (несколько Vite-сборок в одном проекте), `devops/node-pnpm-preflight` (доступность Node/pnpm на хосте)
+- Related: `docker-php` (Node in PHP image), `docker-dev-prod` (WSL2 override), `frontend/vite-module-loader` (base Vite config/aliases), `frontend/vite-multi-build` (multiple Vite builds in one project), `devops/node-pnpm-preflight` (Node/pnpm on host)
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: 9958f55d4518897c31d0487f9e6a0cd763166b998d9124f63d83cf71a9a70ce7 -->

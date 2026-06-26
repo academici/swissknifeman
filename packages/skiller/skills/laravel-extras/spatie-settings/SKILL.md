@@ -2,7 +2,7 @@
 name: spatie-settings
 bucket: laravel-extras
 version: 0.2.0
-description: "spatie/laravel-settings: типизированные классы настроек (extends Settings, public-свойства, group()), миграции настроек add/migrate/rename, кэш, выбор рантайм-настройки vs config/, привязка к Filament SettingsPage, рантайм-инфраконфиг (websocket/Reverb) из админки во фронт через DTO. Активировать при создании/правке класса настроек, добавлении свойства, settings-миграции, экрана редактирования или вынесения инфра-настройки в рантайм-переопределение."
+description: "spatie/laravel-settings: typed settings classes (extends Settings, public properties, group()), settings migrations add/migrate/rename, cache, runtime-settings vs config/ choice, Filament SettingsPage binding, runtime infra-config (websocket/Reverb) from admin to frontend via DTO. Activate when creating/editing a settings class, adding a property, a settings migration, an edit screen, or moving an infra setting to a runtime override."
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "spatie", "settings", "filament", "configuration"]
@@ -16,160 +16,132 @@ sha256: ""
 
 # Skill: spatie/laravel-settings
 
-## Контекст
+Settings = typed PHP class; properties map to DB rows (repo `database`) or Redis; runtime-editable in admin (no release), vs `config/*.php` (static from env, fixed at deploy).
 
-`spatie/laravel-settings` хранит настройки приложения как **типизированный PHP-класс**: свойства маппятся на строки в БД (репозиторий `database`) или Redis, читаются/пишутся через обычные свойства объекта и редактируются нетехническими пользователями в админке. В отличие от `config/*.php` (статика из env, фиксируется на деплое), значения здесь меняются **в рантайме** без релиза.
+## When to activate
+- New settings class (`extends Settings`) or add/delete/rename a property.
+- Settings migration (`SettingsMigration` with `migrator->add/rename/delete`).
+- Deciding storage: `config/` vs settings class.
+- Settings edit screen (Filament `SettingsPage` or custom form).
+- Cache, class registration, or `MissingSettings` error.
 
-**Когда активировать:**
+Portable: neutral domains (`Order`, `Article`, `Notification`), namespace `App\Settings\...`.
 
-- Создаёте новый класс настроек (`extends Settings`) или добавляете/удаляете/переименовываете свойство существующего.
-- Пишете settings-миграцию (`SettingsMigration` с `migrator->add/rename/delete`).
-- Решаете, где хранить значение: `config/` vs класс настроек.
-- Делаете экран редактирования настроек (Filament `SettingsPage` или произвольная форма).
-- Разбираетесь с кэшем настроек, регистрацией класса или ошибкой «missing settings».
+**Laravel Boost**: with Boost, `spatie/laravel-settings` guidelines come from the package; this skill is self-sufficient without Boost. Version rules for Filament/Livewire `SettingsPage` (step 7) → defer to Boost; here only form↔settings-class binding. Package: https://github.com/laravel/boost (skills: `vendor/laravel/boost/.ai/`).
 
-Скилл переносимый: домены в примерах нейтральные (`Order`, `Article`, `Notification`), namespace `App\Settings\...`.
+## Algorithm
 
-**Laravel Boost**: при подключённом Boost гайдлайны `spatie/laravel-settings` приходят из пакета; этот скилл самодостаточен для проектов без Boost. Версионные правила Filament/Livewire для `SettingsPage` (шаг 7) тоже отдаём Boost — здесь только привязка формы к классу настроек. Пакет: https://github.com/laravel/boost (скиллы — `vendor/laravel/boost/.ai/`).
-
-## Алгоритм
-
-### 1. Решить: настройка или config?
-
-| Признак | Куда |
+### 1. Setting or config?
+| Sign | Where |
 |:---|:---|
-| Значение меняет администратор без деплоя, через UI | **класс настроек** |
-| Значение фиксируется средой/деплоем (`APP_*`, креды, драйверы) | `config/*.php` + `env()` |
-| Нужна типизация, дефолты в БД, история через миграции | **класс настроек** |
-| Секрет, который не должен попасть в БД-дамп | `config/` + env / vault |
+| Admin changes via UI, no deploy | **settings class** |
+| Fixed by env/deploy (`APP_*`, creds, drivers) | `config/*.php` + `env()` |
+| Need typing, defaults in DB, history via migrations | **settings class** |
+| Secret that must not land in DB dump | `config/` + env / vault |
 
-Правило: `config()` читать **только в config-файлах и провайдерах**; в коде приложения для рантайм-значений резолвить класс настроек, а не `config()`.
+Rule: read `config()` **only in config files and providers**; in app code resolve the settings class for runtime values, not `config()`.
 
-### 2. Создать класс настроек
-
-- Каталог `app/Settings/` (можно доменные подпапки: `app/Settings/Order/`), namespace `App\Settings\...`.
+### 2. Create settings class
+- Dir `app/Settings/` (domain subdirs allowed: `app/Settings/Order/`), namespace `App\Settings\...`.
 - `final class XxxSettings extends Spatie\LaravelSettings\Settings`.
-- **Public typed properties** — каждое свойство = одна строка в БД. Имена в `snake_case` (совпадают с ключами в миграции). Nullable (`?string`) для опциональных.
-- Обязательный `public static function group(): string` — префикс группы (например `order`); полный ключ строки = `group.property`.
-- Не объявлять конструктор, не задавать значения по умолчанию в свойствах — дефолты живут в миграции (см. шаг 4).
-- Зарегистрировать класс в `config/settings.php → 'settings' => [...]` (если `auto_discover_settings` не включён).
+- **Public typed properties** — each property = one DB row. Names in `snake_case` (match migration keys). Nullable (`?string`) for optional.
+- Required `public static function group(): string` — group prefix (e.g. `order`); full row key = `group.property`.
+- No constructor, no property default values — defaults live in the migration (step 4).
+- Register class in `config/settings.php → 'settings' => [...]` (unless `auto_discover_settings` on).
 
-См. `snippets/ExampleSettings.php`.
+See `snippets/ExampleSettings.php`.
 
-### 3. Кастомные типы (casts)
+### 3. Custom casts
+- Scalar types (`int`, `bool`, `string`, `array`, `float`, `?T`) work out of the box.
+- For `DateTime`, enum, DTO — global casts in `config/settings.php → global_casts`, or `public static function casts(): array` in class. Package already knows `DateTimeInterface`, `DateTimeZone`, `Spatie\LaravelData\Data`.
 
-- Скалярные типы (`int`, `bool`, `string`, `array`, `float`, `?T`) работают из коробки.
-- Для `DateTime`, enum, DTO — глобальные касты в `config/settings.php → global_casts`, либо метод `public static function casts(): array` в классе. По умолчанию пакет уже знает `DateTimeInterface`, `DateTimeZone`, `Spatie\LaravelData\Data`.
+### 4. Settings migration (defaults + schema evolution)
+- File in `database/settings/` (path from `migrations_paths`), command `php artisan make:settings-migration`.
+- Anonymous class `extends Spatie\LaravelSettings\Migrations\SettingsMigration`, method `up()`.
+- **Every class property must have a matching `add()`** — else read throws `Spatie\LaravelSettings\Exceptions\MissingSettings`.
+- Key = `group.property` (exactly `group()` + property name). Value = default.
+- Schema evolution in a separate migration:
+  - `add('group.prop', $default)` — new property;
+  - `rename('group.old', 'group.new')` — rename (in sync with class property edit);
+  - `delete('group.prop')` — delete;
+  - `addEncrypted` / `encrypt` / `decrypt` — for sensitive values.
+- `migrate()` idempotent at the "migration ran once" level (tracked like normal migrations). Run via `php artisan migrate` (settings migrations run together) or the package's own command.
 
-### 4. Settings-миграция (значения по умолчанию + эволюция схемы)
+See `snippets/create_example_settings.php`.
 
-- Файл в `database/settings/` (путь из `migrations_paths`), команда `php artisan make:settings-migration`.
-- Анонимный класс `extends Spatie\LaravelSettings\Migrations\SettingsMigration`, метод `up()`.
-- **Каждое свойство класса обязано иметь соответствующий `add()`** — иначе при чтении упадёт `Spatie\LaravelSettings\Exceptions\MissingSettings`.
-- Ключ = `group.property` (точно как `group()` + имя свойства). Значение = дефолт.
-- Эволюция схемы — отдельной миграцией:
-  - `add('group.prop', $default)` — новое свойство;
-  - `rename('group.old', 'group.new')` — переименование (синхронно с правкой свойства класса);
-  - `delete('group.prop')` — удаление;
-  - `addEncrypted` / `encrypt` / `decrypt` — для чувствительных значений.
-- `migrate()` идемпотентен на уровне «миграция запущена один раз» (трекается, как обычные миграции). Запуск — `php artisan migrate` (settings-миграции прогоняются вместе) либо отдельной командой пакета.
-
-См. `snippets/create_example_settings.php`.
-
-### 5. Чтение и запись в рантайме
-
+### 5. Runtime read/write
 ```php
-// Резолв через контейнер (синглтон в рамках запроса)
-$settings = app(\App\Settings\Order\OrderSettings::class); // или resolve(...), или DI в конструктор
+// Resolve via container (singleton within request)
+$settings = app(\App\Settings\Order\OrderSettings::class); // or resolve(...), or ctor DI
 $limit = $settings->max_items_per_order;
 
-// Запись
+// Write
 $settings->max_items_per_order = 50;
 $settings->save();
 ```
+- Prefer **constructor injection** (typed dependency) — testable and explicit.
+- Safe to mutate properties of a resolved object **without `save()`** for a one-off override within a request (e.g. override default with a current-entity value) — DB untouched.
 
-- Предпочитать **внедрение через конструктор** (typed dependency) — тестируемо и явно.
-- Можно безопасно мутировать свойства резолвнутого объекта **без `save()`** для разовой подмены в рамках запроса (например, переопределить дефолт значением из текущей сущности) — БД не трогается.
+### 6. Cache
+- Enable via `SETTINGS_CACHE_ENABLED=true` (+ optional store/prefix/ttl; on Laravel 12.9+ `SETTINGS_CACHE_MEMO`).
+- With cache on, after editing DB rows directly (bypassing `save()`) — clear settings cache. After `make:settings-migration`/`migrate` the package invalidates cache.
+- In tests keep cache off.
 
-### 6. Кэш
+### 7. Form binding (Filament SettingsPage)
+- Page class `extends Filament\Pages\SettingsPage`, `protected static string $settings = XxxSettings::class;`.
+- `form(Schema $schema)` describes fields; **each field's `name` = class property name** (rows save to group automatically).
+- Validation and conditional `required(fn (Get $get) => ...)` — on form fields; package reads/writes settings on save.
+- Requires plugin `filament/spatie-laravel-settings-plugin`.
 
-- Включается `SETTINGS_CACHE_ENABLED=true` (+ опционально store/prefix/ttl, на Laravel 12.9+ `SETTINGS_CACHE_MEMO`).
-- При включённом кэше после прямой правки строк в БД (минуя `save()`) — сбросить кэш настроек. После `make:settings-migration`/`migrate` кэш инвалидируется пакетом.
-- В тестах кэш обычно держать выключенным.
+See `snippets/filament-settings-page.php`. For non-Filament forms: on save manually assign properties and call `->save()`.
 
-### 7. Привязка к форме (Filament SettingsPage)
+### 7a. Runtime infra-config from admin → frontend
+Infra parameter normally fixed at deploy (`config/*.php` + env) must be overridable **at runtime from admin** without release. E.g. websocket-client params (Reverb/Pusher: `host`, `port`, `scheme`, `app_key`, `path`) the frontend needs to connect Echo.
 
-- Класс-страница `extends Filament\Pages\SettingsPage`, `protected static string $settings = XxxSettings::class;`.
-- Метод `form(Schema $schema)` описывает поля; **`name` каждого поля = имя свойства класса** (строки сохранятся в группу автоматически).
-- Валидация и условные `required(fn (Get $get) => ...)` — на полях формы; пакет сам читает/пишет настройки при сохранении.
-- Требует плагин `filament/spatie-laravel-settings-plugin`.
+Pattern (on top of steps 2–7):
+1. **Settings class for infra group** — `final class WebsocketClientSettings extends Settings`, `group(): 'broadcast'`, public typed properties (`bool $enabled`, `string $host`, `int $port`, …). Flag `enabled` = toggle "use these settings vs env/Vite".
+2. **Filament page** (`SettingsPage`, step 7) lets admin edit values; fields with validation (`regex` on host/path, port range) and `required(fn (Get $get) => $get('enabled'))` so a disabled flag doesn't require filling.
+3. **Expose to frontend via DTO, not raw settings.** At runtime resolve the settings class, build a **public** DTO (e.g. `WebsocketClientData`), pass to frontend (Inertia `share`/middleware, or `<script>` config). Frontend: when `enabled` use DTO values, else build-time env/Vite. Echo client side — `frontend/laravel-echo-client`.
+4. **Secret boundary.** Frontend gets **only public** values (host/port/scheme/app_key for client). Private creds (app_secret etc.) — NOT in this settings class/DTO: stay in env/`config/`, in DB if needed via `addEncrypted` (step 4), never sent to frontend.
+5. **DTO → TS typing** (if frontend TypeScript) — DTO under `#[TypeScript]`, see `frontend/backend-type-sync`.
 
-См. `snippets/filament-settings-page.php`. Для не-Filament форм: на сохранении вручную присвоить свойства и вызвать `->save()`.
+Justified when: admin must change value without deploy and frontend needs it at runtime. Not when: pure build-time param or secret — keep in `config/`/env (step 1).
 
-### 7a. Рантайм-инфраконфиг из админки → во фронт
+### 8. Verify
+1. Class registered (in `config/settings.php` or auto-discover) — else won't resolve.
+2. Every public property has `add()` in migration; groups match.
+3. `php artisan migrate` runs settings migration without errors; reading settings doesn't throw `MissingSettings`.
+4. App-code runtime values come from settings class, not `config()`.
 
-Частный, но мощный случай: **инфраструктурный параметр**, который обычно фиксируется на
-деплое (`config/*.php` + env), нужно уметь переопределять **в рантайме из админки** — без
-релиза. Типичный пример: параметры websocket-клиента (Reverb/Pusher: `host`, `port`,
-`scheme`, `app_key`, `path`), которые фронту нужно знать, чтобы подключиться к Echo.
+## Anti-patterns
+- Property in class without `add()` in migration → `MissingSettings` on first read.
+- Defaults set by property initialization in class instead of migration (default won't reach DB).
+- Storing secrets (tokens, passwords) in plain properties instead of `addEncrypted`/env.
+- Reading settings via `config()` wrapper or facade where a typed class exists — loses typing and DI.
+- Desync `group()` ↔ migration key prefix ↔ form field `name`.
+- Editing values directly in DB with cache on without clearing it.
 
-Паттерн (поверх шагов 2–7):
+## Quality checklist
+- [ ] Class `final`, `extends Settings`, only public typed properties, has `group()`
+- [ ] Every property has `add()` in settings migration; keys = `group.property`
+- [ ] Defaults in migration, not property initialization
+- [ ] Class registered in `config/settings.php` (or auto-discover on)
+- [ ] Setting-vs-config choice deliberate (runtime/UI → setting; env/deploy → config)
+- [ ] Non-typed types covered by `global_casts`/`casts()`
+- [ ] Secrets via `addEncrypted`/env, not plain property
+- [ ] Schema evolution in a separate migration (`add`/`rename`/`delete`), in sync with class
+- [ ] Form: field `name` == property names; validation on fields
+- [ ] Cache: `SETTINGS_CACHE_ENABLED` behavior handled, off in tests
+- [ ] Runtime infra-config: public DTO to frontend not raw settings; secrets don't leak; `enabled` flag present (setting vs env)
 
-1. **Класс настроек инфра-группы** — `final class WebsocketClientSettings extends Settings`,
-   `group(): 'broadcast'`, public typed-свойства (`bool $enabled`, `string $host`, `int $port`,
-   …). Флаг `enabled` — переключатель «брать значения из этих настроек vs из env/Vite».
-2. **Filament-страница** (`SettingsPage`, шаг 7) даёт админу редактировать значения; поля с
-   валидацией (`regex` на host/path, диапазон портов) и `required(fn (Get $get) => $get('enabled'))`,
-   чтобы при выключенном флаге не требовать заполнения.
-3. **Отдача во фронт — через DTO, не «сырые настройки»**. В рантайме резолвим класс настроек,
-   собираем **публичный** DTO (например `WebsocketClientData`) и прокидываем во фронт (Inertia
-   `share`/middleware, либо `<script>`-конфиг). Фронт: при `enabled` берёт значения из DTO,
-   иначе — из build-time env/Vite. Echo-клиентская сторона — `frontend/laravel-echo-client`.
-4. **Граница секретов.** Во фронт уходят **только публичные** значения (host/port/scheme/app_key
-   для клиента). Приватные креды (app_secret и т.п.) — НЕ в этот класс настроек/DTO: они
-   остаются в env/`config/`, при необходимости в БД — через `addEncrypted` (шаг 4), и во фронт
-   не отдаются никогда.
-5. **Типизация DTO → TS** (если на фронте TypeScript) — DTO под `#[TypeScript]`, см.
-   `frontend/backend-type-sync`.
-
-Когда это оправдано: значение должен менять администратор без деплоя, и оно нужно фронту в
-рантайме. Когда нет: чистый build-time параметр или секрет — оставить в `config/`/env (шаг 1).
-
-### 8. Проверка
-
-1. Класс зарегистрирован (в `config/settings.php` или auto-discover) — иначе не резолвится.
-2. Каждое public-свойство имеет `add()` в миграции; группы совпадают.
-3. `php artisan migrate` прогоняет settings-миграцию без ошибок; чтение настроек не кидает `MissingSettings`.
-4. В коде приложения рантайм-значения берутся из класса настроек, а не из `config()`.
-
-## Анти-паттерны
-
-- Свойство в классе без `add()` в миграции → `MissingSettings` при первом чтении.
-- Значения по умолчанию заданы инициализацией свойства в классе вместо миграции (дефолт не попадёт в БД).
-- Хранение секретов (токены, пароли) в обычных свойствах вместо `addEncrypted`/env.
-- Чтение настроек через `config()`-обёртку или фасад там, где есть типизированный класс — теряется типизация и DI.
-- Рассинхрон `group()` ↔ префикса ключей в миграции ↔ `name` полей формы.
-- Правка значений напрямую в БД при включённом кэше без его сброса.
-
-## Чеклист качества
-
-- [ ] Класс `final`, `extends Settings`, только public typed properties, есть `group()`
-- [ ] Каждое свойство имеет `add()` в settings-миграции; ключи = `group.property`
-- [ ] Дефолты заданы в миграции, а не инициализацией свойств класса
-- [ ] Класс зарегистрирован в `config/settings.php` (или включён auto-discover)
-- [ ] Выбор настройка-vs-config осознан (рантайм/UI → настройка; env/деплой → config)
-- [ ] Нетипизированные типы покрыты `global_casts`/`casts()`
-- [ ] Секреты — через `addEncrypted`/env, не открытым свойством
-- [ ] Эволюция схемы — отдельной миграцией (`add`/`rename`/`delete`), синхронно с классом
-- [ ] Форма: `name` полей == имена свойств; валидация на полях
-- [ ] Кэш: поведение при `SETTINGS_CACHE_ENABLED` учтено, в тестах выключен
-- [ ] Рантайм-инфраконфиг: во фронт отдаётся публичный DTO, не сырые настройки; секреты не уходят; есть флаг `enabled` (настройка vs env)
-
-## Ссылки
-
+## Links
 - https://github.com/spatie/laravel-settings
 - https://filamentphp.com/plugins/filament-spatie-settings
-- snippets/ExampleSettings.php — класс настроек
-- snippets/create_example_settings.php — settings-миграция (дефолты + эволюция)
-- snippets/filament-settings-page.php — привязка к Filament-форме
-- Связанные скиллы: `php/filament` (SettingsPage и плагин), `php/laravel-data` (Data как тип свойства настройки и публичный DTO во фронт), `php/enum-attributes` (enum-касты настроек), `php/database` (settings-миграции рядом с обычными), `frontend/laravel-echo-client` (потребление websocket-настроек на клиенте), `frontend/backend-type-sync` (DTO настройки → TS-тип)
+- snippets/ExampleSettings.php — settings class
+- snippets/create_example_settings.php — settings migration (defaults + evolution)
+- snippets/filament-settings-page.php — Filament form binding
+- Related skills: `php/filament` (SettingsPage and plugin), `php/laravel-data` (Data as settings property type and public frontend DTO), `php/enum-attributes` (enum casts for settings), `php/database` (settings migrations alongside normal ones), `frontend/laravel-echo-client` (consuming websocket settings on client), `frontend/backend-type-sync` (settings DTO → TS type)
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: be51925796e719f5f2e53a17fc50c717b9c31d7381b15234a3baacf38894e6ea -->

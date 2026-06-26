@@ -2,7 +2,7 @@
 name: startup-lifecycle
 bucket: founder
 version: 0.1.0
-description: 4 стадии AI-native стартапа (Idea→MVP→Launch→Scale) с exit-criteria, failure modes и антидотами + метод stage-gate review
+description: 4 AI-native startup stages (Idea→MVP→Launch→Scale) with exit-criteria, failure modes, antidotes + stage-gate review method
 risk: draft
 persona: founder
 tags: [validation, requirements, market]
@@ -15,88 +15,63 @@ adapters: [claude, cursor, fable]
 
 # Skill: Startup Lifecycle
 
-Применять когда: нужно понять, **на какой стадии** находится проект, какие скиллы релевантны сейчас, и **готов ли он перейти** в следующую стадию (stage-gate review). Каноническая рамка из Founder's Playbook (Anthropic 2026) — спина, на которую опираются все остальные founder/pm-скиллы.
+Apply when: identify **which stage** a project is at, which skills are relevant now, and **whether it's ready to advance** (stage-gate review). Canonical frame from Founder's Playbook (Anthropic 2026); backbone for all other founder/pm skills.
 
-Базовый принцип эпохи agentic coding: **бутылочное горлышко больше не «что можешь построить», а «что выбираешь строить».** AI стёр стоимость строительства → дисциплина валидации важнее, чем когда-либо.
+Core principle of agentic coding: bottleneck is no longer "what you can build" but "what you choose to build" — AI erased build cost → validation discipline matters more than ever.
 
----
+## Do NOT apply when
+- A concrete artifact is needed (BRD, GTM, risks) — load the target skill, not the frame.
+- Purely technical code question — not a lifecycle decision.
+- Project is not a startup (OSS package, agency) — validation stages don't apply.
 
-## Когда НЕ применять
-
-- Нужен конкретный артефакт (BRD, GTM, риски) — грузить целевой скилл, не рамку.
-- Чисто технический вопрос по коду — это не lifecycle-решение.
-- Проект — не стартап (OSS-пакет, агентство) — стадии валидации к нему не применяются.
-
----
-
-## 4 стадии
+## 4 stages
 
 ### 1. Idea — `stage: idea`
-**Goal:** research-oriented validation → **problem-solution fit**. Собрать качественные доказательства (прежде всего из живых разговоров), что реальная проблема существует и решение её адресует — **до** первой строки production-кода.
-
-**Exit (3 «да»):**
-1. Проблема реальна, специфична и достаточно частотна? (кто именно сталкивается, как часто, насколько больно, что делают сейчас)
-2. Решение бьёт по **реальной** проблеме, которую вскрыла валидация (а не по той, что предполагали на входе)?
-3. Сигнала достаточно, чтобы оправдать MVP? (не сертификат, а обоснованное решение vs акт веры)
-
+**Goal:** research-oriented validation → **problem-solution fit**. Gather qualitative evidence (mainly from live conversations) that a real problem exists and the solution addresses it — **before** the first line of production code.
+**Exit (3 "yes"):**
+1. Problem real, specific, frequent enough? (who exactly hits it, how often, how painful, what they do now)
+2. Solution hits the **real** problem validation uncovered (not the assumed one)?
+3. Enough signal to justify MVP? (not a certificate — a reasoned decision vs act of faith)
 **Failure modes:** mistaking building for validating · premature scaling · loss of objectivity (confirmation bias × AI).
-**Скиллы:** `idea-discovery` → `adversarial-check` → `customer-discovery` → `competitive-analysis` → `risk-assessment`.
+**Skills:** `idea-discovery` → `adversarial-check` → `customer-discovery` → `competitive-analysis` → `risk-assessment`.
 
 ### 2. MVP — `stage: mvp`
-**Goal:** превратить валидированную проблему в **работающий продукт** (наименьшая сфокусированная итерация, не полный roadmap); двигаться быстро **без** накопления tech debt; инвестировать в persistent context (CLAUDE.md) с первого дня.
-
-**Exit:** genuine PMF — доказательство, что конкретная идентифицируемая группа достаточно ценит продукт, чтобы **возвращаться** (retention), **платить** (revenue) или **рассказывать** (referral). Паттерн через несколько итераций, не одна точка.
-
+**Goal:** turn validated problem into a **working product** (smallest focused iteration, not full roadmap); move fast **without** accruing tech debt; invest in persistent context (CLAUDE.md) from day one.
+**Exit:** genuine PMF — proof that a specific identifiable group values the product enough to **return** (retention), **pay** (revenue), or **tell others** (referral). Pattern across several iterations, not one point.
 **Failure modes:** agentic technical debt · false PMF · zero-friction scope creep · insecure by inexperience.
-**Скиллы:** `architecture` (+CLAUDE.md) → `product-roadmap` (scope + amendment-criteria) → `security-design` (gate до первого юзера) → `pmf-diagnostics` → `tech-debt-audit`.
+**Skills:** `architecture` (+CLAUDE.md) → `product-roadmap` (scope + amendment-criteria) → `security-design` (gate before first user) → `pmf-diagnostics` → `tech-debt-audit`.
 
 ### 3. Launch — `stage: launch`
-**Goal:** превратить early traction в **повторяемый устойчивый growth engine**; закалить инфраструктуру; построить компанию вокруг продукта.
-
-**Exit (3 части):**
-1. Рост повторяем и channel-driven (известные CAC, LTV, payback).
-2. Продукт держит production-нагрузку (hardened, security, compliance, reliability — не только тестовые условия).
-3. Операции идут **без** founder-bottleneck (процессы и автоматизация на месте).
-
-**Failure modes:** technical debt comes due · founder = bottleneck · security/compliance не отложить · expansion раньше готовности.
-**Скиллы:** `go-to-market` (как функция) · `tech-debt-audit` (architectural audit) · `security-design` (SOC2/GDPR/HIPAA workstream) · `capacity-planning` · `oncall-rotation`.
+**Goal:** turn early traction into a **repeatable sustainable growth engine**; harden infrastructure; build company around product.
+**Exit (3 parts):**
+1. Growth repeatable and channel-driven (known CAC, LTV, payback).
+2. Product holds production load (hardened, security, compliance, reliability — not just test conditions).
+3. Operations run **without** founder-bottleneck (processes and automation in place).
+**Failure modes:** technical debt comes due · founder = bottleneck · security/compliance can't be deferred · expansion before readiness.
+**Skills:** `go-to-market` (as function) · `tech-debt-audit` (architectural audit) · `security-design` (SOC2/GDPR/HIPAA workstream) · `capacity-planning` · `oncall-rotation`.
 
 ### 4. Scale — `stage: scale`
-**Goal:** systematic growth + **defensible moat через accumulated depth**; роль фаундера → public-facing executive.
+**Goal:** systematic growth + **defensible moat through accumulated depth**; founder role → public-facing executive.
+**Exit (threshold, not milestone):** sustainable profitability (no external capital) / IPO-readiness / acquisition. Litmus: *"If a well-funded incumbent copied the product today — would users stay?"*
+**Failure modes:** delegating the operational layer (psychologically and structurally) · scaling org functions · no GTM function.
+**Skills:** `defensibility` (data flywheel, workflow lock-in, domain-as-context) · `capacity-planning` · `go-to-market` (analyst/investor/enterprise voice).
 
-**Exit (threshold, не milestone):** sustainable profitability (без внешнего капитала) / IPO-readiness / acquisition. Лакмус: *«Если бы well-funded incumbent скопировал продукт сегодня — пользователи остались бы?»*
+## Method: stage-gate review
+On "ready to advance?" — run current stage's exit-criteria as a checklist:
+1. Determine current `stage:` from control-tower frontmatter.
+2. Take this stage's exit-condition (above) → decompose into checkable items.
+3. Per item: ✅ done / ⚠️ partial (what's missing) / ❌ no (what to do).
+4. **Before a "ready" verdict — mandatory [[adversarial-check]]:** "what here is real signal vs wishful thinking?" (see failure mode loss-of-objectivity).
+5. Verdict: `PROCEED` (all ✅) / `HOLD` (any ⚠️/❌ + action list) / `PIVOT` (exit unreachable on current hypothesis).
+On `PROCEED` — bump `stage:` in project frontmatter.
 
-**Failure modes:** delegating the operational layer (психологически и структурно) · scaling org functions · нет GTM-функции.
-**Скиллы:** `defensibility` (data flywheel, workflow lock-in, domain-as-context) · `capacity-planning` · `go-to-market` (analyst/investor/enterprise voice).
+## Agent adds on its own
+- **Activity↔stage mismatch.** If `stage: idea` but already writing production code — name it: "this is building before validating".
+- **Stage-aware routing.** By stage, name relevant persona + skill set (idea→Founder, mvp→Architect+Quality, launch→PM+Operator, scale→Operator+PM).
+- **Portfolio context.** If many projects in registry are `idea` — flag portfolio risk "building unvalidated".
 
----
-
-## Метод: stage-gate review
-
-При запросе «готов ли перейти дальше?» — прогнать exit-criteria текущей стадии как чеклист:
-
-1. Определить текущую `stage:` из frontmatter control tower.
-2. Взять exit-condition этой стадии (выше) → разложить на проверяемые пункты.
-3. По каждому: ✅ выполнено / ⚠️ частично (чего не хватает) / ❌ нет (что сделать).
-4. **Перед вердиктом «готов» — обязательный [[adversarial-check]]:** «что в этих данных — реальный сигнал, а что wishful thinking?» (см. failure mode loss-of-objectivity).
-5. Вердикт: `PROCEED` (все ✅) / `HOLD` (есть ⚠️/❌ + список действий) / `PIVOT` (exit недостижим на текущей гипотезе).
-
-При вердикте `PROCEED` — поднять `stage:` в frontmatter проекта.
-
----
-
-## Что агент добавляет сам
-
-- **Несоответствие activity↔stage.** Если на `stage: idea` уже пишут production-код — назвать прямо: «это building раньше validating».
-- **Stage-aware маршрутизация.** По стадии назвать релевантную персону и набор скиллов (idea→Founder, mvp→Architect+Quality, launch→PM+Operator, scale→Operator+PM).
-- **Портфельный контекст.** Если в реестре проектов много `idea` — напомнить о портфельном риске «строим непроверенное».
-
----
-
-## Структура output-файла
-
+## Output file structure
 `docs/01_Business/Stage_Gate_Review.md`:
-
 ```markdown
 ---
 project: [ProjectName]
@@ -108,25 +83,26 @@ verdict: PROCEED | HOLD | PIVOT
 # Stage-Gate Review — [ProjectName]: idea → mvp
 
 ## Exit-criteria
-| Критерий | Статус | Чего не хватает / действие |
+| Criterion | Status | Missing / action |
 |---|---|---|
-| 1. Проблема реальна+специфична+частотна | ✅/⚠️/❌ | ... |
-| 2. Решение бьёт по реальной проблеме | ... | ... |
-| 3. Сигнала достаточно для MVP | ... | ... |
+| 1. Problem real+specific+frequent | ✅/⚠️/❌ | ... |
+| 2. Solution hits real problem | ... | ... |
+| 3. Enough signal for MVP | ... | ... |
 
-## Adversarial check (обязательно)
-- Что здесь реальный сигнал vs wishful thinking: ...
+## Adversarial check (mandatory)
+- Real signal vs wishful thinking: ...
 
-## Вердикт
-PROCEED / HOLD / PIVOT — обоснование.
+## Verdict
+PROCEED / HOLD / PIVOT — rationale.
 ```
 
----
-
-## Связанные скиллы
-
-- `founder/new-project` — выставляет `stage: idea` и прогоняет idea-gate при заведении проекта
-- `founder/idea-discovery`, `founder/customer-discovery`, `founder/adversarial-check` — инструменты Idea-стадии
-- `pm/pmf-diagnostics` — измеряет MVP-exit (PMF)
-- `founder/defensibility` — moat-работа Scale-стадии
+## Related skills
+- `founder/new-project` — sets `stage: idea`, runs idea-gate on project creation
+- `founder/idea-discovery`, `founder/customer-discovery`, `founder/adversarial-check` — Idea-stage tools
+- `pm/pmf-diagnostics` — measures MVP-exit (PMF)
+- `founder/defensibility` — Scale-stage moat work
 - `quality/tech-debt-audit` — agentic debt (MVP/Launch failure mode)
+
+<!-- ru-source-sha256: PENDING -->
+
+<!-- ru-source-sha256: 1ba2c78008f4ac7111940ef27db23d4dd1892d6ec5c9e3b58ff6bb796dfd9fb9 -->

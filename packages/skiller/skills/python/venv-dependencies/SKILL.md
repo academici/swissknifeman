@@ -2,7 +2,7 @@
 name: venv-dependencies
 bucket: python
 version: 0.1.0
-description: "Управление зависимостями и виртуальными окружениями Python для воспроизводимости проектов"
+description: "Python dependency management and virtual environments for project reproducibility"
 risk: write
 persona: oss-dev
 tags: [python, venv, dependencies, tooling, quality, conventions]
@@ -14,52 +14,36 @@ adapters: [claude, cursor, fable]
 sha256: ""
 ---
 
-# Управление Зависимостями и Окружениями (Python)
+# Dependency & Environment Management (Python)
 
-Для обеспечения воспроизводимости ML и Python проектов необходимо строго контролировать версии зависимостей и изолировать окружения.
+## Virtual environments
+- Always use a venv. NEVER install packages globally into the system.
+- Standard `venv` (simple projects):
+  ```bash
+  python3 -m venv .venv
+  ```
+  Activate (Linux/macOS):
+  ```bash
+  source .venv/bin/activate
+  ```
+  Activate (Windows):
+  ```bash
+  .venv\Scripts\activate
+  ```
+- Alternatives (complex projects):
+  - Poetry: complex deps + package builds. Uses `pyproject.toml` + `poetry.lock`.
+  - Conda: Data Science with binary deps (e.g. specific CUDA for TensorFlow/PyTorch) hard to build via plain `pip`.
 
-## Виртуальные Окружения
+## Dependencies (`requirements.txt`) — with `pip`+`venv`
+- Pin exact versions:
+  ```bash
+  pip freeze > requirements.txt
+  ```
+- Split deps (optional): prod vs dev.
+  - `requirements.txt` — core (pandas, scikit-learn, fastapi)
+  - `requirements-dev.txt` — testing/linters/notebooks (pytest, black, jupyter)
 
-Всегда используйте виртуальное окружение. **Никогда не устанавливайте пакеты глобально в систему.**
-
-### Использование стандартного `venv` (Рекомендуется для простых проектов)
-
-Создание окружения:
-```bash
-python3 -m venv .venv
-```
-
-Активация (Linux/macOS):
-```bash
-source .venv/bin/activate
-```
-
-Активация (Windows):
-```bash
-.venv\Scripts\activate
-```
-
-### Альтернативы (Для сложных проектов)
-- **Poetry:** Отлично подходит для управления сложными зависимостями и сборки пакетов. Использует `pyproject.toml` и `poetry.lock`.
-- **Conda:** Часто используется в Data Science, если требуются бинарные зависимости (например, специфичные версии CUDA для TensorFlow/PyTorch), которые тяжело собрать через обычный `pip`.
-
-## Управление Зависимостями (`requirements.txt`)
-
-Если вы используете `pip` и `venv`:
-
-1. **Фиксация версий:** Всегда фиксируйте точные версии пакетов, с которыми проект гарантированно работает.
-   ```bash
-   pip freeze > requirements.txt
-   ```
-2. **Разделение зависимостей (Опционально):**
-   Часто полезно разделять зависимости для продакшена и для разработки.
-   - `requirements.txt` (основные пакеты: pandas, scikit-learn, fastapi)
-   - `requirements-dev.txt` (тестирование, линтеры, ноутбуки: pytest, black, jupyter)
-
-## .gitignore
-
-Обязательно убедитесь, что в вашем `.gitignore` добавлены папки виртуальных окружений и скомпилированные байт-коды Python:
-
+## .gitignore — must include venvs + compiled bytecode
 ```gitignore
 # Виртуальные окружения
 .env/
@@ -82,15 +66,16 @@ __pycache__/
 .env
 ```
 
-## Линтеры и Форматтеры
+## Linters & formatters
+- Black: uncompromising formatter (`black .`).
+- Ruff: fast Rust linter (replaces Flake8, Isort, others).
+- Mypy: static type checker (optional; useful for complex logic and Python backends).
 
-Для поддержания чистоты кода рекомендуются следующие инструменты:
-- **Black:** Бескомпромиссный форматтер кода. Спорить о стиле больше не нужно, Black сам всё отформатирует (`black .`).
-- **Ruff:** Современный, невероятно быстрый линтер на Rust (заменяет Flake8, Isort и многие другие).
-- **Mypy:** Статический анализатор типов (опционально, но крайне полезно при написании сложной логики и Backend-а на Python).
+## Related skills
+- `python/ml-project-structure` — project layout deciding where `requirements.txt`/`pyproject.toml` go and what enters `.gitignore`.
+- `php/static-analysis` — PHP analog of Black/Ruff/Mypy (Pint, PHPStan, Rector) locally and in CI.
+- `oss-dev/dependency-audit` — dependency audit (vuln scan, licenses, supply-chain, SBOM) on top of pinned versions.
 
-## Связанные скиллы
+<!-- ru-source-sha256: PENDING -->
 
-- `python/ml-project-structure` — структура проекта, которая определяет, куда кладутся `requirements.txt`/`pyproject.toml` и что попадает в `.gitignore`.
-- `php/static-analysis` — PHP-аналог связки Black/Ruff/Mypy (Pint, PHPStan, Rector) локально и в CI.
-- `oss-dev/dependency-audit` — аудит зависимостей (vuln scan, лицензии, supply-chain, SBOM) поверх зафиксированных версий.
+<!-- ru-source-sha256: 2063e2ad8e0022ebd6b18468c7e7bf1527f75227cd44207f4ff8357fcae0637a -->

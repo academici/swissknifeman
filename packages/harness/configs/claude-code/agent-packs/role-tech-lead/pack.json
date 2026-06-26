@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "pack": "role-tech-lead",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Персона-пак tech-lead (роль, не стек): субагенты sprint-planner (kickoff/декомпозиция/распределение контекста), delegation-triage (делать-самому-vs-делегировать + бриф с DoD + учёт техдолга), review-gatekeeper (процесс ревью с severity-градацией, сверка с веточной моделью, эскалация архитектуры на CTO). Delegate-only/координация — кода роли не пишут. Тянется как companion к стек-паку с тем же PACK_PREFIX.",
   "stack": {
     "shape": "role"
@@ -20,7 +20,10 @@
       "gitops",
       "github-flow",
       "gh-review",
-      "startup-cto"
+      "startup-cto",
+      "to-issues",
+      "diagnosing-bugs",
+      "tdd-discipline"
     ],
     "harness_presets": [
       "base"

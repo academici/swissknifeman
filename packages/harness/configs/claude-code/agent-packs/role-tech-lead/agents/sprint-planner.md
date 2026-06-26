@@ -23,6 +23,7 @@ skills:
   - task-brief-template
   - cross-layer-change-checklist
   - session-handoff
+  - to-issues
 model: opus
 color: blue
 ---
@@ -33,7 +34,8 @@ Edit/Write/Bash) — твой выход это структурированны
 основной сессии и ролей-субагентов пака.
 
 Если поле `skills:` не подгрузило скиллы — загрузи сам: `general:complex-task-orchestrator`,
-`general:task-brief-template`, `general:cross-layer-change-checklist`, `general:session-handoff`.
+`general:task-brief-template`, `general:cross-layer-change-checklist`, `general:session-handoff`,
+`oss-dev:to-issues`. Декомпозицию плана в вертикальные срезы-issue делегируй `oss-dev:to-issues`.
 Каркас kickoff и формат бриф-карточки бери из их snippets (`sprint-kickoff.md`).
 
 ## Разведка

@@ -14,7 +14,9 @@ flowchart LR
     agent_design["agent-design"]
     api_design["api-design"]
     architecture["architecture"]
+    codebase_design["codebase-design"]
     data_schema["data-schema"]
+    domain_modeling["domain-modeling"]
     eval_design["eval-design"]
     figma_mcp_core["figma-mcp-core"]
     legal_compliance["legal-compliance"]
@@ -96,6 +98,8 @@ flowchart LR
     context_economy["context-economy"]
     cross_layer_change_checklist["cross-layer-change-checklist"]
     git_commit_rules["git-commit-rules"]
+    grill_with_docs["grill-with-docs"]
+    implement["implement"]
     project_map["project-map"]
     session_handoff["session-handoff"]
     spec_interview["spec-interview"]
@@ -134,9 +138,12 @@ flowchart LR
     dx_design["dx-design"]
     gh_review["gh-review"]
     github_flow["github-flow"]
+    issue_triage["issue-triage"]
     oss_development["oss-development"]
     oss_governance["oss-governance"]
     release_engineering["release-engineering"]
+    resolving_merge_conflicts["resolving-merge-conflicts"]
+    to_issues["to-issues"]
   end
   subgraph php["php"]
     database["database"]
@@ -164,9 +171,11 @@ flowchart LR
   subgraph quality["quality"]
     code_review["code-review"]
     code_simplifier["code-simplifier"]
+    diagnosing_bugs["diagnosing-bugs"]
     mutation_testing["mutation-testing"]
     playwright_e2e["playwright-e2e"]
     refactoring_plan["refactoring-plan"]
+    tdd_discipline["tdd-discipline"]
     tech_debt_audit["tech-debt-audit"]
     test_strategy["test-strategy"]
     testing_safety_report["testing-safety-report"]
@@ -216,6 +225,11 @@ flowchart LR
   github_flow -->|requires| release_engineering
   go_to_market -->|requires| competitive_analysis
   go_to_market -->|requires| monetization_design
+  grill_with_docs -->|requires| domain_modeling
+  grill_with_docs -->|requires| spec_interview
+  implement -->|requires| code_review
+  implement -->|requires| tdd_discipline
+  issue_triage -->|requires| github_flow
   laravel_security_audit -->|requires| static_analysis
   legal_compliance -->|requires| architecture
   mcp_blender -->|requires| version_gotchas
@@ -247,11 +261,13 @@ flowchart LR
   reka_ui_cva -->|requires| tailwind_conventions
   release_engineering -->|requires| oss_development
   requirement_critic -->|requires| brd
+  resolving_merge_conflicts -->|requires| git_commit_rules
   security_design -->|requires| architecture
   session_observer -->|requires| shared_memory
   shared_memory -->|requires| local_topology
   tech_stack_selection -->|requires| brd
   test_isolation_guard -->|requires| laravel_testing
+  to_issues -->|requires| github_flow
   unit_economics -->|requires| monetization_design
   venv_dependencies -->|requires| ml_project_structure
   vite_multi_build -->|requires| vite_module_loader
@@ -270,6 +286,8 @@ flowchart LR
   architecture -.->|feeds| data_schema
   ci_cd -.->|feeds| release_engineering
   code_simplifier -.->|feeds| code_review
+  codebase_design -.->|feeds| architecture
+  codebase_design -.->|feeds| refactoring_plan
   complex_task_orchestrator -.->|feeds| cross_layer_change_checklist
   config_conventions -.->|feeds| parametric_config
   cross_project_coordinator -.->|feeds| refactoring_plan
@@ -282,16 +300,22 @@ flowchart LR
   defensibility -.->|feeds| pitch_deck
   dependency_audit -.->|feeds| release_engineering
   dependency_audit -.->|feeds| security_design
+  diagnosing_bugs -.->|feeds| code_review
   docker_dev_prod -.->|feeds| docker_services
   docker_php -.->|feeds| docker_vite
   docker_postgres -.->|feeds| docker_dev_prod
   docker_vite -.->|feeds| docker_dev_prod
+  domain_modeling -.->|feeds| api_design
+  domain_modeling -.->|feeds| architecture
+  domain_modeling -.->|feeds| data_schema
   eval_design -.->|feeds| observability_design
   figma_to_vue -.->|feeds| dark_mode
   figma_to_vue -.->|feeds| naive_ui_theming
   figma_to_vue -.->|feeds| reka_ui_cva
   figma_to_vue -.->|feeds| tailwind_conventions
   gitops -.->|feeds| github_flow
+  grill_with_docs -.->|feeds| task_brief_template
+  grill_with_docs -.->|feeds| to_issues
   laravel -.->|feeds| dependency_injection
   laravel -.->|feeds| repositories
   laravel_data -.->|feeds| backend_type_sync
@@ -320,16 +344,18 @@ flowchart LR
   startup_lifecycle -.->|feeds| new_project
   startup_lifecycle -.->|feeds| pmf_diagnostics
   task_brief_template -.->|feeds| complex_task_orchestrator
+  tdd_discipline -.->|feeds| code_review
   tech_stack_selection -.->|feeds| oss_development
   tech_stack_selection -.->|feeds| release_engineering
   test_strategy -.->|feeds| code_review
   test_strategy -.->|feeds| playwright_e2e
+  to_issues -.->|feeds| implement
   unit_economics -.->|feeds| go_to_market
 ```
 
-**В графе:** 111 скиллов, 81 рёбер requires, 67 рёбер produces_for.
+**В графе:** 120 скиллов, 88 рёбер requires, 77 рёбер produces_for.
 
-## Изолированные скиллы (72)
+## Изолированные скиллы (73)
 
 Скиллы без связей `requires`/`produces_for` — самодостаточны.
 
@@ -348,7 +374,7 @@ flowchart LR
 | frontend-nuxt | `nuxt`, `nuxt-modules`, `nuxt-seo` |
 | frontend-vite | `vite`, `vitepress` |
 | frontend-vue | `pinia`, `pinia-stores`, `vitest-vue`, `vue-best-practices`, `vue-composition-api`, `vue-dynamic-icons`, `vue-router-best-practices`, `vueuse-functions` |
-| general | `compact-responses`, `naming-conventions`, `packages-stack`, `skills-ssot`, `token-efficient`, `writing-style` |
+| general | `compact-responses`, `git-safety`, `naming-conventions`, `packages-stack`, `skills-ssot`, `token-efficient`, `writing-style` |
 | laravel-architecture | `enum-attributes`, `enum-state-machine`, `laravel-subagents` |
 | laravel-data-layer | `laravel-broadcasting` |
 | laravel-extras | `medialibrary`, `pennant-development`, `spatie-settings` |

@@ -160,6 +160,12 @@ SKILL.md (скаффолд: `skiller eval <bucket>/<name> --scaffold`):
   в `references/<source>.md` → imported.
 - Эталон: `skills/php/laravel-best-practices/upstream.json` (multi-file, notify).
 
+**Внешний ресурс как ориентир → `docs/reference.md`.** Если при проектировании использовал внешний
+ресурс (репо, фреймворк, чужой скилл, статью, спецификацию) — **даже как reference/вдохновение, без
+переноса файлов** — отметь его в корневом `docs/reference.md`: строка в таблице (что · зрелость ·
+вердикт adopt/reference/skip · что взято), при значимости — карточка. `upstream.json` — паспорт
+КОНКРЕТНОГО вендоренного файла; `docs/reference.md` — единый каталог провенанса ВСЕХ внешних влияний.
+
 ## requires / produces_for
 
 - Только существующие frontmatter-`name`; без self-reference; без циклов по
@@ -198,6 +204,7 @@ SKILL.md (скаффолд: `skiller eval <bucket>/<name> --scaffold`):
 - [ ] Frontmatter полный, name == каталог, inline-списки.
 - [ ] Есть «Когда активировать», полный алгоритм, чеклист.
 - [ ] Внешний скилл — upstream.json с заполненными sha256/fetched_at.
+- [ ] Внешние ресурсы/ориентиры, использованные при проектировании, отмечены в `docs/reference.md`.
 - [ ] requires/produces_for валидны; новый бакет — в buckets.json.
 - [ ] validate зелёный, registry регенерирован и закоммичен.
 

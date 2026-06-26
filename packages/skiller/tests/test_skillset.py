@@ -82,6 +82,19 @@ class TestResolve(unittest.TestCase):
             names = {e["name"] for e in entries}
             self.assertEqual(names, {"code-style", "test-writer"})
 
+    def test_include_drifted_path_resolves_by_basename(self):
+        # после раскола бакетов старый путь 'oldbucket/code-style' промахивается
+        # по полному ключу, но добивается по базовому имени (а не молча теряется).
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            root, env = make_registry(tmp)
+            _materialize_registry(env)
+            entries, skipped = resolve_skillset(
+                env, {"include": ["oldbucket/code-style"]})
+            names = {e["name"] for e in entries}
+            self.assertIn("code-style", names)
+            self.assertEqual(skipped, [])
+
     def test_buckets_minus_exclude(self):
         with tempfile.TemporaryDirectory() as tmp:
             tmp = Path(tmp)

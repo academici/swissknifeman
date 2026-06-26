@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Fixed (skiller — drift-устойчивость путей и корень marketplace)
+
+- **`connect`: source marketplace указывает на КОРЕНЬ монорепо**, а не на каталог пакета
+  (`env.root`). `marketplace.json` генерируется в корне репо с относительными `source`-путями;
+  раньше `connect` объявлял marketplace под `packages/skiller`, где Claude Code не находил
+  `.claude-plugin/marketplace.json` и плагины не подключались. Добавлен флаг `--fix-path` для
+  обновления протухшего пути в существующих настройках.
+- **`resolve_skillset`/`_match`: drift-устойчивость после раскола бакетов** — старый путь
+  `oldbucket/skill` (напр. `frontend/vue` → `frontend-vue/vue`) больше не теряется молча: при
+  промахе по полному ключу токен-путь добивается по базовому имени, а вызывающий печатает
+  migration-warning со старым→новым путём (`обновите .swissknifeman/config.json`). Регресс-тест.
+
 ### Changed (аудит — добивка отложенного: super-skill + Serena-пин)
 
 - **3 vendored super-skill демотированы в «навигаторы»** (`pm/product`, `architect/engineering`,

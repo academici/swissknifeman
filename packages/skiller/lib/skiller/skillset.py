@@ -102,11 +102,21 @@ def _registry_index(env):
 
 
 def _match(token, by_key, by_name):
-    """Разрешить токен правила в entry: сначала по полному пути, потом по имени."""
+    """Разрешить токен правила в entry: сначала по полному пути, потом по имени.
+
+    Drift-устойчивость: после раскола бакетов старый путь 'oldbucket/skill'
+    (напр. 'frontend/vue' → 'frontend-vue/vue') промахивается по by_key. Если
+    токен — путь, добиваем по базовому имени (последний сегмент). Иначе sync
+    молча терял переехавшие скиллы (warn+skip). Вызывающий печатает
+    migration-warning со старым→новым путём."""
     if token in by_key:
         return by_key[token]
     if token in by_name:
         return by_name[token]
+    if "/" in token:
+        base = token.rsplit("/", 1)[1]
+        if base in by_name:
+            return by_name[base]
     return None
 
 
@@ -241,6 +251,11 @@ def resolve_skillset(env, cfg, include_core=False):
             warn(f"include: скилл '{token}' не найден в реестре — пропуск")
             skipped.append(token)
             continue
+        full = (f"{entry['bucket']}/{entry['rel']}".rstrip("/")
+                if entry["rel"] else entry["bucket"])
+        if "/" in token and token != full:
+            warn(f"include: '{token}' переехал → '{full}' (раскол бакетов) — "
+                 f"обновите .swissknifeman/config.json")
         selected[entry["name"]] = entry
 
     # CORE-политика: токен-скиллы по умолчанию + DEFAULT_EXCLUDE дублей хаба

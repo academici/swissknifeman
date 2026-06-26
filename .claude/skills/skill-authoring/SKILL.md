@@ -1,6 +1,6 @@
 ---
 name: skill-authoring
-description: "Правила создания и изменения скиллов реестра в этом репозитории (skills/**, generate-skill/): проверка на пересечение, требования полноты, frontmatter, обязательный upstream.json для внешних, requires/produces_for. Активировать при любом добавлении, правке, переносе или удалении скилла."
+description: "Правила создания и изменения скиллов реестра в этом репозитории (skills/**, generate-skill/): ДВУЯЗЫЧНАЯ модель SKILL.ru.md (полный русский ИСТОЧНИК, правит человек) → SKILL.md (компактный EN-канон, генерируется из RU, грузит агент), проверка на пересечение, требования полноты, frontmatter, обязательный upstream.json для внешних, requires/produces_for. Активировать при любом добавлении, правке, переносе, удалении скилла И при правке SKILL.ru.md / регенерации SKILL.md."
 ---
 
 # Авторинг скиллов реестра
@@ -12,7 +12,9 @@ description: "Правила создания и изменения скилло
 ## Когда активировать
 
 - Создание, правка, перенос или удаление любого `skills/<bucket>/<name>/SKILL.md`,
-  его snippets/, references/, adapters/ или upstream.json.
+  его `SKILL.ru.md`, snippets/, references/, adapters/ или upstream.json.
+- **Правка `SKILL.ru.md`** (русский источник) — после неё ОБЯЗАТЕЛЬНА регенерация
+  `SKILL.md` (см. «Двуязычная модель»).
 - Правка внутренних скиллов `.claude/skills/` (правило «без пересечений»
   действует и для них).
 
@@ -26,9 +28,32 @@ description: "Правила создания и изменения скилло
 не создавай новый. Одинаковое имя в одном бакете — ошибка валидатора; в разных
 бакетах — warning (коллизия при вендоринге), допускается только осознанно.
 
+## Двуязычная модель: `SKILL.ru.md` (источник) → `SKILL.md` (EN-канон)
+
+КАЖДЫЙ локальный скилл реестра двуязычен:
+- **`SKILL.ru.md`** — полный русский ИСТОЧНИК. Его правит человек, это SSOT: вся
+  полнота (контекст, «почему», примеры).
+- **`SKILL.md`** — компактный английский КАНОН, **генерируется** из RU. Только его
+  грузит агент; русский в контекст не попадает.
+
+**Создание:** сначала пиши `SKILL.ru.md` (полный, по «Требованию полноты» ниже) →
+сгенерируй `SKILL.md` промтом `packages/skiller/prompts/generate/claude-canon-from-ru.md`
+(компактный EN, сохраняет ВСЕ правила/условия/пороги/код/пути; frontmatter копируется,
+переводится только `description`) → `bash packages/skiller/scripts/check-translations.sh --stamp`.
+
+**Изменение:** правь ТОЛЬКО `SKILL.ru.md` → регенерируй `SKILL.md` тем же промтом →
+`--stamp`. **НЕ правь `SKILL.md` напрямую** — он перезапишется из RU и правка потеряется.
+
+**Контроль:** `check-translations.sh` (без флагов) → список «EN протух» (RU правлен,
+EN не регенерён). Свежесть метит `<!-- ru-source-sha256 -->` в конце `SKILL.md`.
+`*.ru.md` коммитятся, но НЕ вендорятся в проекты.
+
+**Внешние (upstream) — исключение:** их `SKILL.md` (EN) приходит от upstream и НЕ
+генерируется из RU; `SKILL.ru.md` у них — лишь справка для человека, канон не трогаем.
+
 ## Локальный скилл
 
-1. Скопировать `SKILL_TEMPLATE.md`, заполнить **полный** frontmatter:
+1. Заполни **полный** frontmatter (в `SKILL.ru.md`; при генерации EN он копируется):
    `name` (kebab-case, == имени каталога), `bucket`, `version`, `description`,
    `risk: read|draft|write|external`, `persona`, `tags`, `requires`,
    `produces_for`, `outputs`, `snippets`, `adapters`, `sha256: ""`.
@@ -111,13 +136,16 @@ description: "Правила создания и изменения скилло
 
 ## Завершение
 
-`./scripts/validate.sh` → `skiller registry` → закоммитить
-регенерированные `skills.json`, `.claude-plugin/*`, `docs/guide/graph.md`
-вместе с изменением → далее по `release-discipline`.
+Правил `SKILL.ru.md` → регенерь `SKILL.md` (промт `claude-canon-from-ru.md`) →
+`scripts/check-translations.sh --stamp` → `./scripts/validate.sh` → `skiller registry` →
+закоммитить `SKILL.ru.md` + регенерированный `SKILL.md` + `skills.json`,
+`.claude-plugin/*`, `docs/guide/graph.md`/`budget.md` вместе с изменением →
+далее по `release-discipline`.
 
 ## Чеклист качества
 
 - [ ] Шаг 0 выполнен, пересечений нет (или расширен существующий скилл).
+- [ ] Двуязычие: `SKILL.ru.md` (источник) обновлён; `SKILL.md` регенерён из него (НЕ правлен напрямую); `check-translations.sh` без stale.
 - [ ] Frontmatter полный, name == каталог, inline-списки.
 - [ ] Есть «Когда активировать», полный алгоритм, чеклист.
 - [ ] Внешний скилл — upstream.json с заполненными sha256/fetched_at.

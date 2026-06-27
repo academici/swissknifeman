@@ -2,7 +2,7 @@
 name: code-style-spatie
 bucket: php
 version: 0.1.0
-description: "Стиль кода Laravel/PHP по гайдлайнам Spatie: Laravel-конвенции прежде PSR-12, типизация вместо докблоков, early returns, happy path последним"
+description: "Laravel/PHP code style per Spatie guidelines: Laravel conventions over PSR-12, typing instead of docblocks, early returns, happy path last."
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "code-style", "spatie"]

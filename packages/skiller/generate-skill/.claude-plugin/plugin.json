@@ -1,5 +1,5 @@
 {
   "name": "generate-skill",
-  "description": "Meta-skill для создания новых скиллов по SKILL_TEMPLATE",
+  "description": "Meta-skill for creating new skills from SKILL_TEMPLATE",
   "skills": "./"
 }

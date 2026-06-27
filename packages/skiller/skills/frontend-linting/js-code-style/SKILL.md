@@ -2,7 +2,7 @@
 name: js-code-style
 bucket: frontend-linting
 version: 0.1.0
-description: "Стиль JS/TS по Spatie: 4 пробела, ширина 120, одинарные кавычки, const-first, строгое ===, function для именованных функций, деструктуризация, именованные импорты."
+description: "JS/TS style per Spatie: 4 spaces, width 120, single quotes, const-first, strict ===, function for named functions, destructuring, named imports."
 risk: write
 persona: oss-dev
 tags: [javascript, typescript, code-style, spatie, prettier, vue]

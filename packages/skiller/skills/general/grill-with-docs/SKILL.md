@@ -2,7 +2,7 @@
 name: grill-with-docs
 bucket: general
 version: 0.1.0
-description: "Безжалостная грилинг-сессия, которая ОДНОВРЕМЕННО строит доменную модель: уточняет план/дизайн по одному вопросу, сверяясь с кодом И внешней документацией (API/RFC/банковские спеки — СБП/SberBusiness/фискалка), и тут же пишет глоссарий (CONTEXT.md) и ADR. Вызывать ЯВНО, когда расплывчатую идею надо довести до строгого ТЗ с зафиксированной терминологией."
+description: "Ruthless grilling session that SIMULTANEOUSLY builds a domain model: refines a plan/design one question at a time, cross-checking code AND external docs (API/RFC/banking specs), and writes the glossary (CONTEXT.md) and ADRs as it goes. Invoke EXPLICITLY to turn a vague idea into a strict spec with fixed terminology."
 risk: draft
 persona: oss-dev
 tags: [grilling, requirements, domain, adr, docs]

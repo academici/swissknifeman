@@ -48,6 +48,14 @@ INTRA_LINK_RE = re.compile(r"\]\((snippets/[^)#]+|references/[^)#]+)\)")
 # Мягкий порог: тело сверх него → warn (не error), подсказка вынести детали.
 # См. docs/guide/skill-taxonomy.md.
 LEAN_MAX_BODY_LINES = 150
+# Кириллица в загружаемом каноне SKILL.md. EN-канон дешевле RU у токенайзера Claude и
+# именно он попадает в контекст; русский держим в SKILL.ru.md. Жёсткий гейт на frontmatter
+# `description` (резидентный ⊕ tier-0 — постоянный налог в КАЖДОМ запросе).
+CYRILLIC_RE = re.compile(r"[Ѐ-ӿ]")
+# Порог мягкого warn на длину description (резидентный tier-0). Высокий, чтобы ловить только
+# ЯВНО раздутые (триггеро-богатые описания ~200-400 симв — норма; навигаторы-суперскиллы
+# на 450+ — кандидаты в сокращение), без шума на каждое второе описание.
+DESC_WARN_MAX = 450
 
 
 def parse_frontmatter(path):
@@ -112,6 +120,17 @@ for skill_md in skill_files:
     for field in required:
         if not fm.get(field):
             errors.append(f"{rel}: missing required frontmatter field: {field}")
+
+    # --- 1·токены: description — EN-канон (резидентный ⊕ tier-0), без кириллицы, не раздут ---
+    desc = fm.get("description", "")
+    if CYRILLIC_RE.search(desc):
+        errors.append(f"{rel}: frontmatter description содержит кириллицу — SKILL.md это "
+                      f"EN-канон (резидентный tier-0 в КАЖДОМ запросе); русский держи в SKILL.ru.md")
+    if CYRILLIC_RE.search(fm.get("name", "")):
+        errors.append(f"{rel}: frontmatter name содержит кириллицу (имя скилла — EN-kebab)")
+    if len(desc) > DESC_WARN_MAX:
+        warnings.append(f"{rel}: description {len(desc)} симв (> {DESC_WARN_MAX}) — резидентный "
+                        f"tier-0 налог; сократи (триггеры можно ужать), см. skiller budget")
 
     # --- 1a. enum / semver / bucket-vs-dir / declared snippets / intra-links ---
     parts = rel.parts

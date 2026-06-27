@@ -2,7 +2,7 @@
 name: pennant-development
 bucket: laravel-extras
 version: 0.1.0
-description: "Laravel Pennant — feature-флаги: define/active/for-scope, директива @feature, активация/деактивация, A/B и постепенные раскатки. Адаптировано из laravel/boost (strategy=notify)"
+description: "Laravel Pennant feature flags: define/active/for-scope, the @feature directive, activation/deactivation, A/B and gradual rollouts. Adapted from laravel/boost (strategy=notify)."
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "pennant", "feature-flags"]

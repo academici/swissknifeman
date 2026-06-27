@@ -2,7 +2,7 @@
 name: to-issues
 bucket: oss-dev
 version: 0.1.0
-description: "Разбить план/спеку/PRD на независимо-«хватаемые» GitHub-issue ВЕРТИКАЛЬНЫМИ срезами (tracer bullets): каждый срез — тонкий сквозной путь через все слои (схема/API/UI/тесты), демонстрируемый сам по себе; публикация через gh в порядке зависимостей (blockers first). Вызывать ЯВНО (постит в трекер)."
+description: "Split a plan/spec/PRD into independently-grabbable GitHub issues by VERTICAL slices (tracer bullets): each slice is a thin end-to-end path through all layers (schema/API/UI/tests), demonstrable on its own; publish via gh in dependency order (blockers first). Invoke EXPLICITLY (posts to the tracker)."
 risk: write
 persona: oss-dev
 tags: [issues, github, vertical-slices, decomposition, planning]

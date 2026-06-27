@@ -2,7 +2,7 @@
 name: implement
 bucket: general
 version: 0.1.0
-description: "Реализация куска работы по ТЗ/PRD/issue минимальной цепочкой: tdd-discipline на согласованных seam'ах → регулярный typecheck/тесты → полный прогон в конце → code-review → коммит в текущую ветку. Вызывать ЯВНО (пишет код) — это финальный шаг после spec-interview/grill-with-docs/to-issues."
+description: "Implement a chunk of work from a spec/PRD/issue via a minimal chain: tdd-discipline on agreed seams, regular typecheck/tests, a full run at the end, code-review, commit to the current branch. Invoke EXPLICITLY (writes code) — the final step after spec-interview/grill-with-docs/to-issues."
 risk: write
 persona: oss-dev
 tags: [workflow, implementation, tdd, review]

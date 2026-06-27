@@ -2,7 +2,7 @@
 name: tdd-discipline
 bucket: quality
 version: 0.1.0
-description: "Дисциплина TDD по циклу red-green-refactor ВЕРТИКАЛЬНЫМИ срезами (tracer bullets), а НЕ горизонтально: явный запрет писать все тесты до реализации; тесты проверяют поведение через ПУБЛИЧНЫЙ интерфейс и переживают рефактор. Активировать при разработке фичи/фикса test-first, упоминании red-green-refactor или интеграционных тестов."
+description: "TDD discipline via red-green-refactor by VERTICAL slices (tracer bullets), NOT horizontally: explicit ban on writing all tests before implementation; tests verify behavior through the PUBLIC interface and survive refactors. Activate when building a feature/fix test-first, mentioning red-green-refactor, or integration tests."
 risk: draft
 persona: oss-dev
 tags: [tdd, testing, red-green-refactor, vertical-slices]

@@ -3,7 +3,7 @@ name: git-safety
 bucket: general
 version: 0.1.0
 lifecycle: init
-description: "Защита от деструктивных git-команд через PreToolUse-хук Claude Code: блокирует push/reset --hard/clean -f/branch -D/checkout ./rebase --onto ДО исполнения. Активировать при инициализации проекта (особенно production/embedded) или просьбе «добавь git-guardrails / запрети опасный git»."
+description: "Guard against destructive git commands via a Claude Code PreToolUse hook: blocks push/reset --hard/clean -f/branch -D/checkout ./rebase --onto BEFORE execution. Activate on project init (esp. production/embedded) or when asked to add git guardrails / forbid dangerous git."
 risk: write
 persona: oss-dev
 tags: [git, safety, hooks, guardrails, init]

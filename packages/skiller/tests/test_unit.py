@@ -232,7 +232,7 @@ class TestRequiresResolution(unittest.TestCase):
         d = self.root / "skills" / "php" / "laravel-conventions"
         skills = [("php", "laravel-conventions", d, "laravel-conventions")]
         index = build_requires_index(self.env)
-        pulled = resolve_requires(skills, index, {"code-style"})
+        resolve_requires(skills, index, {"code-style"})  # мутирует skills на месте
         names = {fm for _, _, _, fm in skills}
         self.assertNotIn("code-style", names)
 

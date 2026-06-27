@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Added (аудит 2026-06 — Phase 6: тесты и CI)
+
+- **Юнит-тесты на новое поведение:** `core.load_json_db` (missing/corrupt-backup/version-die),
+  `core.is_within`/`is_within_lexical` (traversal), `core.atomic_write_*` mode=0600;
+  `maind.split_scope` (strip-all маркеров, неподделываемый владелец); `harness.categorize_file_change`
+  (матрица new/user-owned/conflict/safe-apply/nochange); skiller registry эмитит курируемый `core`-плагин;
+  connect пушит `core` (не бакеты), `--no-core`, graceful-skip без core в marketplace. (+18 тестов.)
+- **CI ruff теперь линтует и `tests/`** (раньше — только `lib/`, в тестах копился мусор: F401/F841).
+  Прежний долг вычищен; планка теперь едина для тестового кода.
+
 ### Fixed (аудит 2026-06 — Phase 5: корректность и изоляция maind)
 
 - **`memory.split_scope` — больше не утекают marker-артефакты:** снимаем ВСЕ ведущие `[[s:…]]`

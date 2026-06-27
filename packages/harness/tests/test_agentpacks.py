@@ -100,5 +100,43 @@ class TestAgentPacks(unittest.TestCase):
         self.assertEqual(ap.do_doctor(self.env, self.pack), 0)
 
 
+class TestCategorizeFileChange(unittest.TestCase):
+    """Чистая логика категоризации (выделена из do_upgrade) — матрица случаев."""
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        self.tgt = self.tmp / "f.txt"
+
+    def _pf(self, sha):
+        return {"base_sha256": sha}
+
+    def test_new_and_new_optional(self):
+        self.assertEqual(ap.categorize_file_change({}, None, "sha", self.tgt), "new")
+        self.assertEqual(
+            ap.categorize_file_change({"optional": True}, None, "sha", self.tgt),
+            "new-optional")
+
+    def test_user_owned_short_circuits(self):
+        self.assertEqual(
+            ap.categorize_file_change({"user_owned": True}, self._pf("old"), "new", self.tgt),
+            "user-owned")
+
+    def test_nochange_when_base_same(self):
+        self.assertEqual(
+            ap.categorize_file_change({}, self._pf("same"), "same", self.tgt), "nochange")
+
+    def test_safe_apply_base_changed_disk_untouched(self):
+        # на диске = прежняя база (не правлена локально), база сменилась → safe-apply
+        self.tgt.write_text("body", encoding="utf-8")
+        disk = ap.sha256_text("body")
+        self.assertEqual(
+            ap.categorize_file_change({}, self._pf(disk), "newsha", self.tgt), "safe-apply")
+
+    def test_conflict_base_and_local_both_changed(self):
+        self.tgt.write_text("locally edited", encoding="utf-8")
+        self.assertEqual(
+            ap.categorize_file_change({}, self._pf("orig"), "newsha", self.tgt), "conflict")
+
+
 if __name__ == "__main__":
     unittest.main()

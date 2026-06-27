@@ -1,7 +1,6 @@
 """Тесты service.py (systemd-юнит демона памяти) и foreground-запуска memory.run."""
 import tempfile
 import unittest
-from pathlib import Path
 from unittest import mock
 
 from maind import memory, service

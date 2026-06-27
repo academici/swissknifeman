@@ -5,7 +5,6 @@ buckets.json) — не против настоящих 125 скиллов, чт�
 правке контента. Это покрывает логику connect/vendor/registry/selection,
 а не конкретный набор скиллов."""
 import json
-from pathlib import Path
 
 from skiller.common import Env
 

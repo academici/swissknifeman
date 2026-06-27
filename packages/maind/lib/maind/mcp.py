@@ -278,7 +278,8 @@ def _tools_call(env, config, name, args, default_scope):
     except SystemExit as e:               # die() внутри инструмента (напр. граф отключён)
         return _content({"error": f"инструмент недоступен: {e}"}, is_error=True)
     except Exception as e:                 # любая ошибка инструмента — не роняем сервер
-        _log(f"ошибка инструмента {name}: {e!r}")
+        # Логируем КЛЮЧИ аргументов (не значения — в них может быть содержимое памяти/секреты)
+        _log(f"ошибка инструмента {name} args={sorted(args)}: {e!r}")
         return _content({"error": f"ошибка инструмента: {e}"}, is_error=True)
 
 

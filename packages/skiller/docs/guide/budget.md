@@ -230,8 +230,8 @@ flowchart LR
     laravel_best_practices["laravel-best-practices<br/>⊕53 ↻1868"]:::mild
     laravel_structure["laravel-structure<br/>⊕37 ↻1726"]:::mild
     named_arguments["named-arguments<br/>⊕42 ↻599"]:::mild
-    naming_conventions["naming-conventions<br/>⊕67 ↻1221"]:::warm
     pao["pao<br/>⊕50 ↻565"]:::mild
+    php_naming_conventions["php-naming-conventions<br/>⊕68 ↻1221"]:::warm
     php_patterns["php-patterns<br/>⊕21 ↻2166"]:::cool
     php_upgrade_checklist["php-upgrade-checklist<br/>⊕61 ↻580"]:::mild
     repositories["repositories<br/>⊕26 ↻1338"]:::cool
@@ -392,7 +392,7 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 195 скиллов · ⊕ always **12375** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 426343 ток · ⌥ snippets 157348 ток.
+**Итого:** 195 скиллов · ⊕ always **12376** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 426343 ток · ⌥ snippets 157348 ток.
 
 ## По бакетам
 
@@ -404,7 +404,7 @@ flowchart LR
 | `quality` | 10 | 741 | 16415 | 7125 |
 | `oss-dev` | 10 | 654 | 12204 | 4313 |
 | `php-packages` | 9 | 592 | 4618 | 489 |
-| `php` | 13 | 535 | 15538 | 26763 |
+| `php` | 13 | 536 | 15538 | 26763 |
 | `devops` | 11 | 451 | 7654 | 15388 |
 | `blender-modeling` | 6 | 429 | 7727 | 11772 |
 | `system` | 5 | 429 | 6940 | 797 |

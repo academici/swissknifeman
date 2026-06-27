@@ -2,6 +2,27 @@
 
 ## [Unreleased]
 
+### Fixed (аудит 2026-06 — Phase 1: quick wins)
+
+- **Коллизия имён скиллов устранена:** `php/naming-conventions` → frontmatter `name:
+  php-naming-conventions`. Реестровая by-name карта (`lock._registry_map`,
+  `vendor.build_requires_index` через `setdefault`) молча роняла один из двух скиллов с именем
+  `naming-conventions` (general+php). Обновлена ссылка в агенте `php/agents/laravel-implementer`,
+  реестр перегенерён, EN-маркер перештампован.
+- **Валидация `project.id` (maind):** id ограничен `[A-Za-z0-9._-]` (`config.PROJECT_ID_RE`) —
+  он идёт в scope-маркер памяти `[[s:project:<id>]]` и namespace; спецсимволы (`]`, пробел,
+  перевод строки) ломали парсинг scope при recall/forget и могли подменить чужой scope.
+- **`config.json` пишется с правами `0o600`** (секреты узла): `core.atomic_write_text/json`
+  получили опц. `mode=` (chmod на `.tmp` ДО `os.replace` — без окна world-readable);
+  `projects.write_config` применяет `0o600`.
+- **eval-ассершены `file_exists`/`file_absent` защищены от traversal** (`is_within`): `value`
+  из `evals.json` (в т.ч. внешних скиллов) не вырвется за каталог прогона (fail-closed).
+- **MCP-обработчик ошибок логирует КЛЮЧИ аргументов** инструмента (не значения — память/секреты)
+  для диагностики; голые `except: pass` в `probe`/`memory` снабжены поясняющими комментариями.
+- **`agentpacks.do_upgrade`:** логика категоризации файла вынесена в чистую `categorize_file_change`
+  (тестируемая матрица new/user-owned/conflict/safe-apply/nochange).
+- **Маркер ручных счётчиков** в `docs/index.md` («195/45» — сверять с `skiller registry`).
+
 ### Fixed (skiller — drift-устойчивость путей и корень marketplace)
 
 - **`connect`: source marketplace указывает на КОРЕНЬ монорепо**, а не на каталог пакета

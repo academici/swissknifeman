@@ -69,10 +69,12 @@ def sync_from_brain(env, config, brain_path):
 
 
 def write_config(env, config):
-    """Единственный писатель config.json (atomic). _version проставляется первым ключом."""
+    """Единственный писатель config.json (atomic). _version проставляется первым ключом.
+    mode=0o600: config.json держит секреты узла (токены интеграций) — не должен быть
+    world-readable даже на короткое окно записи."""
     out = {"_version": str(config.get("_version", "1"))}
     out.update({k: v for k, v in config.items() if k != "_version"})
-    atomic_write_json(env.default_config, out)
+    atomic_write_json(env.default_config, out, mode=0o600)
 
 
 def brain_path(config):

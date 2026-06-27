@@ -1,5 +1,5 @@
 ---
-name: naming-conventions
+name: php-naming-conventions
 bucket: php
 version: 0.1.0
 description: "Naming Laravel/PHP entities: repository methods by intent (not findByCodeOrFail-explosion), Action/DTO/VO/Enum/Event/Job, tables/columns/routes. Kills junk names AI loves to generate. Activate when creating or reviewing class/method/migration names."
@@ -95,4 +95,4 @@ Allowed: a single canonical `findByIdOrFail` over `queryForUser()` (see `reposit
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: e4703277685deb698c5574453cd41cd7d08ebc7458852679aa1f4f21dd1081e3 -->
+<!-- ru-source-sha256: 7976420e69ed3fe3f9196b80da57a1230b8808b8a779c336cd8fc315306df125 -->

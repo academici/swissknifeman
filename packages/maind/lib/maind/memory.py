@@ -155,7 +155,7 @@ def stop(env, config, *, timeout_s=5):
         try:
             os.kill(pid, signal.SIGKILL)
         except (ProcessLookupError, OSError):
-            pass
+            pass  # процесс уже исчез между health-проверкой и SIGKILL — это и была цель
     env.memory_pidfile.unlink(missing_ok=True)
     print(f"память остановлена (pid {pid})")
     return 0

@@ -1,5 +1,5 @@
 ---
-name: naming-conventions
+name: php-naming-conventions
 bucket: php
 version: 0.1.0
 description: "Именование сущностей Laravel/PHP: методы репозиториев по намерению (а не findByCodeOrFail-взрыв), Action/DTO/VO/Enum/Event/Job, таблицы/колонки/роуты. Борьба с мусорными именами, которые любит генерить ИИ. Активировать при создании или ревью имён классов, методов, миграций."

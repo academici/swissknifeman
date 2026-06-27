@@ -388,7 +388,7 @@ flowchart LR
 | legal | `legal-super-skill` |
 | marketing | `marketing-super-skill` |
 | operator | `operations-cx-super-skill` |
-| php | `code-style-spatie`, `laravel-best-practices`, `named-arguments`, `naming-conventions`, `pao`, `php-patterns`, `php-upgrade-checklist` |
+| php | `code-style-spatie`, `laravel-best-practices`, `named-arguments`, `pao`, `php-naming-conventions`, `php-patterns`, `php-upgrade-checklist` |
 | php-packages | `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages` |
 | pm | `pm-super-skill` |
 | research | `research-knowledge-super-skill` |

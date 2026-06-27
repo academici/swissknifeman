@@ -3104,13 +3104,13 @@
       "source": "local"
     },
     {
-      "name": "naming-conventions",
+      "name": "php-naming-conventions",
       "bucket": "php",
       "path": "skills/php/naming-conventions/SKILL.md",
       "version": "0.1.0",
       "description": "Naming Laravel/PHP entities: repository methods by intent (not findByCodeOrFail-explosion), Action/DTO/VO/Enum/Event/Job, tables/columns/routes. Kills junk names AI loves to generate. Activate when creating or reviewing class/method/migration names.",
-      "sha256": "d4cd93ce722417ceb766b7f6f9488e1c15f19382ff156531969c7d256db72b06",
-      "content_sha256": "5cdf1507dea6c306b0af8c8a151b36dd9e09181bc15d7139b6fd7b3b4da674e1",
+      "sha256": "73ccc4d112d7bb98f94b1ca157ea5d42467da45ae29362d92c167a0ea177bcf6",
+      "content_sha256": "94d28416132d2242e39eaac0e834343aabc5de1507c409fd2b8cece5d27a2ee5",
       "tags": [
         "php",
         "laravel",

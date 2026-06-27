@@ -341,6 +341,30 @@ def do_render(env, pack, target, *, auto, overrides, dry, install_only, shell_po
     return 0 if status == "ok" else 0  # needs-agent не фейл: ставим что смогли
 
 
+def categorize_file_change(f, pf, new_sha, tgt):
+    """Категория файла при upgrade agent-pack'а. Чистая логика решения (без записи на
+    диск) — выделена из do_upgrade ради юнит-тестов матрицы случаев.
+
+    f — описание файла из манифеста (флаги optional/user_owned); pf — запись файла из
+    прежнего lock (None, если файл новый); new_sha — sha отрендеренного нового содержимого;
+    tgt — путь файла на диске (для детекта локальной правки). Возврат:
+      new / new-optional — файла не было; user-owned — отдан пользователю, не трогаем;
+      conflict — изменились и база, и локальная копия; safe-apply — изменилась только база;
+      nochange — база не менялась."""
+    if pf is None:
+        return "new-optional" if f.get("optional") else "new"
+    if f.get("user_owned"):
+        return "user-owned"
+    disk_sha = sha256_text(tgt.read_text(encoding="utf-8")) if tgt.exists() else ""
+    local_mod = disk_sha != pf.get("base_sha256")
+    base_changed = new_sha != pf.get("base_sha256")
+    if base_changed and local_mod:
+        return "conflict"
+    if base_changed:
+        return "safe-apply"
+    return "nochange"
+
+
 def do_upgrade(env, pack, target, *, overrides, dry, shell_policy):
     manifest = load_manifest(env, pack)
     lock = load_lock(target)
@@ -373,22 +397,7 @@ def do_upgrade(env, pack, target, *, overrides, dry, shell_policy):
         rendered = (_render_template_text(sfile.read_text(encoding="utf-8"), answers)
                     if kind == "template" else sfile.read_text(encoding="utf-8"))
         new_sha = sha256_text(rendered)
-        pf = prior_files.get(src)
-        if pf is None:
-            cat = "new-optional" if f.get("optional") else "new"
-        else:
-            disk_sha = (sha256_text(tgt.read_text(encoding="utf-8"))
-                        if tgt.exists() else "")
-            local_mod = disk_sha != pf.get("base_sha256")
-            base_changed = new_sha != pf.get("base_sha256")
-            if f.get("user_owned"):
-                cat = "user-owned"
-            elif base_changed and local_mod:
-                cat = "conflict"
-            elif base_changed:
-                cat = "safe-apply"
-            else:
-                cat = "nochange"
+        cat = categorize_file_change(f, prior_files.get(src), new_sha, tgt)
         plan.append((cat, src, tgt_rel))
         if cat == "safe-apply" and not dry:
             tgt.parent.mkdir(parents=True, exist_ok=True)

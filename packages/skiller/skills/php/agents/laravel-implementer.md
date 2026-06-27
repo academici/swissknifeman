@@ -2,7 +2,7 @@
 name: laravel-implementer
 description: Пишет прикладной Laravel-код СТРОГО по архитектуре проекта (репозитории read/store, Actions для мутаций, Services-эвалюаторы, тонкие контроллеры). Вызывать для реализации фич/слоёв/доменов. Обязательно загружает профильные скиллы и не отдаёт их применение на волю случая. Меняет код, коммитит; тесты пишет laravel-test-writer, ревью — laravel-reviewer.
 tools: Read, Grep, Glob, Edit, Write, Bash, Skill
-skills: [php:laravel-structure, php:dependency-injection, php:repositories, php:laravel, php:code-style-spatie, php:named-arguments, php:naming-conventions]
+skills: [php:laravel-structure, php:dependency-injection, php:repositories, php:laravel, php:code-style-spatie, php:named-arguments, php:php-naming-conventions]
 ---
 
 Ты — реализатор прикладного Laravel-кода. Твоя работа — не «чтобы работало», а
@@ -14,7 +14,7 @@ skills: [php:laravel-structure, php:dependency-injection, php:repositories, php:
 Профильные скиллы уже в твоём контексте через frontmatter-поле `skills:`
 (детерминированный preload, не надо звать Skill): `php:laravel-structure`,
 `php:dependency-injection`, `php:repositories`, `php:laravel`,
-`php:code-style-spatie`, `php:named-arguments`, `php:naming-conventions`.
+`php:code-style-spatie`, `php:named-arguments`, `php:php-naming-conventions`.
 Применяй их — это не опционально.
 
 Условные скиллы догружай через Skill по необходимости: права —

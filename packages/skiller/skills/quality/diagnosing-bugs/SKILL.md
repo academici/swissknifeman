@@ -2,7 +2,7 @@
 name: diagnosing-bugs
 bucket: quality
 version: 0.1.0
-description: "Дисциплина диагностики трудных багов и регрессий производительности: СНАЧАЛА строим тугой воспроизводимый feedback-loop (это и есть скилл), только потом 3–5 ранжированных гипотез, точечная инструментация с тегом [DEBUG-xxxx], регресс-тест на корректном seam, очистка. Активировать при «отладь/почини это», воспроизводимом или плавающем баге, «падает/кидает ошибку/тормозит»."
+description: "Discipline for diagnosing hard bugs and performance regressions: FIRST build a tight reproducible feedback loop (that IS the skill), only then 3–5 ranked hypotheses, targeted instrumentation tagged [DEBUG-xxxx], a regression test on the right seam, cleanup. Activate on 'debug/fix this', a reproducible or flaky bug, 'crashes/throws/is slow'."
 risk: draft
 persona: oss-dev
 tags: [debugging, diagnostics, feedback-loop, performance, testing]

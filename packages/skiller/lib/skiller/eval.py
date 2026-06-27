@@ -34,6 +34,8 @@ from pathlib import Path
 from core import (atomic_write_json, atomic_write_text, die, parse_args,
                   safe_load_json, warn)
 
+from .common import is_within
+
 # --- константы ----------------------------------------------------------------
 # Типы ассершенов — ТОЛЬКО детерминированные (без LLM-judge), чтобы grade был
 # воспроизводим в CI. LLM-judge — отдельный online-режим, не для гейта.
@@ -80,7 +82,14 @@ def grade_assertion(assertion, output, workspace):
         ok = re.search(str(value), text, reflags) is None
         return ok, f"not_regex {value!r}: {'нет совпадений' if ok else 'СОВПАЛО (плохо)'}"
     if atype in ("file_exists", "file_absent"):
-        exists = (Path(workspace) / str(value)).exists() if workspace else False
+        if not workspace:
+            return False, f"{atype} {value!r}: нет workspace"
+        cand = Path(workspace) / str(value)
+        # value берётся из evals.json (могут быть и внешние/upstream скиллы) — '../'
+        # не должен вырваться за каталог прогона. fail-closed: путь вне workspace → нарушено.
+        if not is_within(cand, workspace):
+            return False, f"{atype} {value!r}: путь вне workspace (traversal запрещён)"
+        exists = cand.exists()
         ok = exists if atype == "file_exists" else not exists
         return ok, f"{atype} {value!r}: {'ок' if ok else 'нарушено'}"
     if atype == "min_words":

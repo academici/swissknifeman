@@ -2,7 +2,7 @@
 name: codebase-design
 bucket: architect
 version: 0.1.0
-description: "Общий словарь и дисциплина проектирования ГЛУБОКИХ модулей (Ousterhout/Feathers): Module/Interface/Depth/Seam/Adapter/Leverage/Locality; deletion-test; интерфейс = тестовая поверхность; «один адаптер — гипотетический seam, два — реальный». Активировать при проектировании/улучшении интерфейса модуля, поиске deepening-возможностей, выборе места seam, повышении тестируемости или AI-навигабельности кода."
+description: "Shared vocabulary and discipline for designing DEEP modules (Ousterhout/Feathers): Module/Interface/Depth/Seam/Adapter/Leverage/Locality; deletion-test; interface = test surface; 'one adapter is a hypothetical seam, two is a real one'. Activate when designing/improving a module interface, finding deepening opportunities, choosing a seam, or raising testability/AI-navigability."
 risk: draft
 persona: architect
 tags: [design, deep-modules, ousterhout, seam, testability]

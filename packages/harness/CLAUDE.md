@@ -47,8 +47,15 @@ harness permissions --target . [--preset a,b] [--file F] [--dry-run] [--list] [-
 harness mcp         --target . --mcp context7,playwright [--list] [--dry-run]
 harness hooks       --global            # файлы хуков в ~/.claude/hooks (один раз на машину)
 harness hooks       --target . --auto-approve strict --memory core:federation
+harness agent-packs <list|render|upgrade|doctor> [--pack P] [--target .] [--auto]
+        [--dry-run] [--install-only] [--allow-shell M] [KEY=VALUE …]   # см. agentpacks.py
 harness doctor
 ```
+
+`agent-packs` — подсистема персона/стек-паков (шаблоны `.claude/agents|hooks|settings` под проект):
+`render` ставит пак (интервью → подстановка `{{TOKEN}}`), `upgrade` накатывает новую версию пака
+бережно (категории new/safe-apply/conflict/user-owned — `conflict` пишет `*.pack-new`, локальные
+правки не затирает), `list`/`doctor` — каталог и диагностика. Lock — `.claude/agent-pack.lock.json`.
 
 ## Конвенции (соблюдай при правках)
 

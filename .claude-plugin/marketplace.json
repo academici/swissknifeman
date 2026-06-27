@@ -82,6 +82,27 @@
       "package": "skiller"
     },
     {
+      "name": "core",
+      "source": "./",
+      "skills": [
+        "./packages/skiller/skills/general/context-economy",
+        "./packages/skiller/skills/general/anti-drift",
+        "./packages/skiller/skills/general/compact-responses",
+        "./packages/skiller/skills/general/session-handoff",
+        "./packages/skiller/skills/general/mcp-advisor",
+        "./packages/skiller/skills/general/verify-claims",
+        "./packages/skiller/skills/oss-dev/gh-review"
+      ],
+      "description": "Curated always-on core: token-economy skills (context-economy, anti-drift, verify-claims, …) — lean replacement for the general+oss-dev buckets in every project",
+      "category": "meta",
+      "tags": [
+        "core",
+        "token-economy",
+        "always-on"
+      ],
+      "package": "skiller"
+    },
+    {
       "name": "creative",
       "source": "./packages/skiller/skills/creative",
       "description": "Creative studio: video, design, content production",
@@ -285,7 +306,7 @@
     {
       "name": "generate-skill",
       "source": "./packages/skiller/generate-skill",
-      "description": "Meta-skill для создания новых скиллов по SKILL_TEMPLATE",
+      "description": "Meta-skill for creating new skills from SKILL_TEMPLATE",
       "category": "meta",
       "tags": [
         "meta",

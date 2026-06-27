@@ -13,7 +13,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
-from skiller.common import Env, MARKETPLACE
+from skiller.common import MARKETPLACE
 from skiller.registry import build_registry, write_plugin_manifests
 from skiller.state import (db_records, load_db, save_db, upsert_project)
 from skiller.doctor import cmd_doctor
@@ -57,6 +57,29 @@ class RegistryBuildCase(unittest.TestCase):
         docker = next(s for s in reg["skills"] if s["name"] == "docker")
         self.assertEqual(docker["source"], "local")
         self.assertNotIn("upstream", docker)
+
+    def test_marketplace_emits_curated_core_plugin(self):
+        # Умное подключение: registry эмитит курируемый плагин `core` (source:"./" + skills[]
+        # из существующих CORE_SKILLS), грузящий РОВНО эти скиллы вместо целых бакетов.
+        from skiller.config import CORE_PLUGIN
+        skills = self.root / "skills"
+        fx.write_skill(skills / "general" / "context-economy", "context-economy")
+        fx.write_skill(skills / "oss-dev" / "gh-review", "gh-review")
+        bj = json.loads((self.root / "buckets.json").read_text())
+        bj["general"] = {"description": "General", "category": "eng", "tags": []}
+        bj["oss-dev"] = {"description": "OSS", "category": "eng", "tags": []}
+        (self.root / "buckets.json").write_text(json.dumps(bj))
+        _reg, meta, dirs = build_registry(self.env)
+        write_plugin_manifests(self.env, meta, dirs)
+        mp = json.loads(
+            (self.root / ".claude-plugin" / "marketplace.json").read_text())
+        core = next((p for p in mp["plugins"] if p["name"] == CORE_PLUGIN), None)
+        self.assertIsNotNone(core, "marketplace должен содержать курируемый core-плагин")
+        self.assertEqual(core["source"], "./")
+        self.assertIn("./skills/general/context-economy", core["skills"])
+        self.assertIn("./skills/oss-dev/gh-review", core["skills"])
+        # курируемый core не имеет каталога-плагина на диске (ссылки, не копии)
+        self.assertFalse((skills / CORE_PLUGIN).exists())
 
     def test_upstream_skill_carries_provenance(self):
         fx.write_upstream(self.root / "skills" / "devops" / "docker",

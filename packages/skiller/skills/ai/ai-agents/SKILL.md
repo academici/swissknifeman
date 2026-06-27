@@ -2,7 +2,7 @@
 name: ai-agents
 bucket: ai
 version: 0.2.0
-description: "Навигатор по справочнику построения AI-агентов (vendored super-skill get-zeked): паттерны агентов, MCP-серверы, RAG, координация субагентов, промпт-инжиниринг, деплой. Активируй при проектировании AI-агентов, создании MCP-серверов, RAG-конвейеров, оркестрации мультиагентных систем, оптимизации промптов."
+description: "Navigator for the AI-agent building reference (vendored super-skill): agent patterns, MCP servers, RAG, subagent coordination, prompt engineering, deployment. Activate when designing AI agents, building MCP servers/RAG pipelines, orchestrating multi-agent systems, or optimizing prompts."
 risk: read
 persona: architect
 tags: [ai, agents, mcp, rag, orchestration, prompt-engineering, subagents]

@@ -2,7 +2,7 @@
 name: domain-modeling
 bucket: architect
 version: 0.1.0
-description: "Активная дисциплина доменной модели: бросать вызов терминам, стресс-тестировать сценариями, ФИКСИРОВАТЬ глоссарий (CONTEXT.md — только язык предметной области) и ADR ИНЛАЙН по мере кристаллизации (не батчами). Мульти-контекст — через CONTEXT-MAP.md. Активировать когда уточняют терминологию/ubiquitous language, фиксируют архитектурное решение, или другой скилл строит доменную модель (особенно финтех: банковские API, ОФД, фискалка)."
+description: "Active domain-model discipline: challenge terms, stress-test with scenarios, RECORD the glossary (CONTEXT.md — domain language only) and ADRs INLINE as they crystallize (not in batches). Multi-context via CONTEXT-MAP.md. Activate when clarifying terminology/ubiquitous language, recording an architectural decision, or when another skill builds a domain model (esp. fintech: banking APIs, fiscal)."
 risk: draft
 persona: architect
 tags: [domain, ddd, glossary, adr, ubiquitous-language]

@@ -2,7 +2,7 @@
 name: generate-skill
 bucket: meta
 version: 0.1.0
-description: "Meta-skill для создания новых скиллов по SKILL_TEMPLATE"
+description: "Meta-skill for creating new skills from SKILL_TEMPLATE"
 risk: write
 persona: architect
 tags: [meta, scaffolding]

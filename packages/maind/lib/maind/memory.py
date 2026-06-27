@@ -155,7 +155,7 @@ def stop(env, config, *, timeout_s=5):
         try:
             os.kill(pid, signal.SIGKILL)
         except (ProcessLookupError, OSError):
-            pass
+            pass  # процесс уже исчез между health-проверкой и SIGKILL — это и была цель
     env.memory_pidfile.unlink(missing_ok=True)
     print(f"память остановлена (pid {pid})")
     return 0
@@ -193,7 +193,10 @@ def status(env, config):
 # результаты по маркеру и снимаем его. Это единственный надёжный канал на этой версии
 # движка (см. docs/maind/guide/federation.md — «изоляция на стороне maind»).
 SCOPE_MARK_RE = re.compile(r"^\[\[s:(?P<scope>[^\]]+)\]\]\s?")
-RECALL_LIMIT = 50  # кандидатов из глобального пула до фильтра по scope
+# Кандидатов из ГЛОБАЛЬНОГО пула до фильтра по scope. Пул общий на все проекты экосистемы
+# (17+), поэтому маленькое окно вытесняло релевантные факты нужного scope чужими (crowding).
+# Берём шире; при насыщении (демон вернул ровно лимит) предупреждаем — факты могли не влезть.
+RECALL_LIMIT = 200
 
 
 def mark_scope(scope, value):
@@ -203,11 +206,19 @@ def mark_scope(scope, value):
 
 
 def split_scope(text):
-    """(scope|None, чистый_текст) из контента. Немаркированный (старый/чужой) → (None, text)."""
+    """(scope|None, чистый_текст) из контента. scope — ВЛАДЕЛЕЦ (первый маркер; его ставит
+    mark_scope при записи, подделать нельзя). Снимаем ВСЕ ведущие маркеры `[[s:…]]` — на случай
+    вложенных/повторных в контенте, чтобы marker-артефакты не утекали в выдачу. Немаркированный
+    (легаси/чужой) → (None, text)."""
     m = SCOPE_MARK_RE.match(text or "")
     if not m:
         return None, text
-    return m.group("scope"), text[m.end():]
+    owner, rest = m.group("scope"), text[m.end():]
+    while True:                       # снять остаточные ведущие маркеры (владельца не меняем)
+        m2 = SCOPE_MARK_RE.match(rest)
+        if not m2:
+            return owner, rest
+        rest = rest[m2.end():]
 
 
 def store(url, scope, key, value):
@@ -236,6 +247,11 @@ def recall(url, scope, query, limit=RECALL_LIMIT):
         if sc != scope:           # чужой scope или немаркированный легаси → изолируем
             continue
         out.append({"score": r.get("score"), "text": text, "id": obs.get("id")})
+    # Насыщение: демон вернул ровно весь candidate-пул (общий на все проекты) — релевантные
+    # факты scope могли не попасть в окно. Сообщаем, чтобы сузить запрос/поднять лимит.
+    if len(results) >= limit:
+        warn(f"recall: candidate-пул насыщен ({limit}) — часть фактов scope '{scope}' могла "
+             f"не влезть; сузьте запрос или поднимите limit.")
     return out
 
 

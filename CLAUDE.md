@@ -17,7 +17,7 @@ router к пакетам + кросс-пакетный `setup` (онбордин
 │   ├── harness/               # настройка окружения Claude Code (configs/, lib/, bin/, commands/) — CLI harness
 │   └── maind/                 # хаб памяти/графа/координации (lib/, bin/, commands/) — CLI maind
 ├── .claude-plugin/
-│   └── marketplace.json       # ЕДИНЫЙ marketplace репо (генерируется), 49 плагинов
+│   └── marketplace.json       # ЕДИНЫЙ marketplace репо (генерируется), ~50 плагинов
 └── docs/                      # зонтичный VitePress: общее (index/routing/roadmap) + агрегат
                                # per-package доков (источник — packages/<pkg>/docs,
                                # scripts/docs-sync.sh копирует в docs/<pkg>/, gitignored)
@@ -77,8 +77,10 @@ Bash-лаунчеры и heredoc в `validate.sh` определяют коре�
 ## Единый marketplace
 
 Один `.claude-plugin/marketplace.json` в корне репо объявляет все плагины (бакеты скиллов +
-`skm` + `generate-skill` + `harness` + `maind`). Генерируется `skiller registry`: бакеты — из
-`skills/**/SKILL.md`; соседние пакеты (`harness`, `maind`) — из их `packages/<name>/.claude-plugin/plugin.json`.
+курируемый `core` + `skm` + `generate-skill` + `harness` + `maind`). Генерируется `skiller registry`:
+бакеты — из `skills/**/SKILL.md`; курируемый `core` — `source:"./"` + `skills[]` из `CORE_SKILLS`
+(7 скиллов из разных бакетов по ссылкам, без своего каталога — «умное подключение», лёгкая замена
+бакетам general+oss-dev); соседние пакеты (`harness`, `maind`) — из их `packages/<name>/.claude-plugin/plugin.json`.
 `source`-пути относительны корня репо (`./packages/...`). Имя marketplace — `swissknifeman` (= зонтик).
 У каждой записи плагина есть поле **`package`** (провенанс: `skiller`/`harness`/`maind`) — имена
 плагинов НЕ префиксуются (back-compat: плагины подключены как `<plugin>@swissknifeman`).

@@ -6,9 +6,9 @@ import sys
 from datetime import date
 
 from .boost import sync_boost_json
-from .common import (AGENT_DEFAULTS, MANIFEST, SKILL_IGNORE, apply_permissions,
-                     atomic_write_json, die, is_within, is_within_lexical,
-                     parse_flags, parse_frontmatter_fields, sanitize, warn)
+from .common import (AGENT_DEFAULTS, MANIFEST, apply_permissions,
+                     atomic_write_json, die, is_within, parse_flags,
+                     parse_frontmatter_fields, safe_copy_skill, sanitize, warn)
 from .config import (DEFAULT_EXCLUDE, all_buckets, core_skill_tuples,
                      load_config, resolve_selection, resolve_target)
 from .hub import generate_hub, hub_artifacts_exist
@@ -210,17 +210,10 @@ def do_vendor(env, target, opts, register=True):
         if dry_run:
             print(f"[dry-run] {src.relative_to(root)} -> {dst}")
             return
-        if not is_within_lexical(dst, dest_root):    # traversal через имя → стоп
-            warn(f"пропуск: путь вне каталога назначения: {dst}")
-            return
-        # Symlink на месте dst снимаем явно: иначе copytree(dirs_exist_ok=True) пишет
-        # СКВОЗЬ него в чужую цель (symlink-follow). Удаляем сам линк, не цель.
-        if dst.is_symlink():
-            dst.unlink()
-        # Что НЕ едет в потребляющий проект (SKILL.*.md/evals/upstream.json/.claude-plugin) —
-        # единый список common.SKILL_IGNORE (тот же у skillset.sync, чтобы не разъезжались).
-        shutil.copytree(src, dst, dirs_exist_ok=True,
-                        ignore=shutil.ignore_patterns(*SKILL_IGNORE))
+        # Единый безопасный copy (containment + снятие symlink/файла/каталога + TOCTOU-
+        # перепроверка + SKILL_IGNORE) — общий с skillset.sync, чтобы детали безопасности не
+        # разъезжались. Чужой SKILL.*.md/evals/upstream.json/.claude-plugin не едет в проект.
+        safe_copy_skill(src, dst, dest_root)
 
     def load_manifest(manifest_file):
         if manifest_file.exists():

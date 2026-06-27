@@ -20,6 +20,15 @@ CORE_SKILLS = [
     "general/session-handoff", "general/mcp-advisor", "general/verify-claims",
     "oss-dev/gh-review",
 ]
+# Имя курируемого marketplace-плагина (connect-канал), несущего РОВНО CORE_SKILLS.
+# «Умное подключение»: вместо целых бакетов general(19)+oss-dev(10) ≈ 1956 резидентных
+# токенов в КАЖДОМ проекте connect пушит этот лёгкий плагин (7 скиллов ≈ 480 ток) — экономия
+# ~1.5K ток/проект на каждый запрос. Скиллы физически остаются в своих бакетах (плагин ссылается
+# на них путём, без копий — marketplace-запись source:"./" + явный skills[]). См. registry.py.
+CORE_PLUGIN = "core"
+# Бакеты, которые раньше пушила CORE-политика connect целиком (теперь — лёгкий CORE_PLUGIN).
+# Сохранены для back-compat/миграции: connect видит их в settings онбордженных проектов и
+# подсказывает снять (иначе двойная загрузка). Vendor-канал по-прежнему берёт CORE_SKILLS пофайлово.
 CORE_BUCKETS = ["general", "oss-dev"]
 DEFAULT_EXCLUDE = ["system/shared-memory", "system/cross-project-coordinator"]
 # Минимальный безопасный набор для НЕРАСПОЗНАННОГО типа проекта (autodetect → standalone).

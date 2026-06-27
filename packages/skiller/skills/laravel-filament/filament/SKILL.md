@@ -3,7 +3,7 @@ name: filament
 bucket: laravel-filament
 version: 1.0.0
 filament_version: "5.x"
-description: "Filament v5 — Panels, Resources, Schemas, Tables, Widgets, Actions: структура файлов, CLI-справочник make:filament-*, корректные namespaces, авторизация, tenancy, типичные ошибки. Scaffold только через artisan."
+description: "Filament v5 — Panels, Resources, Schemas, Tables, Widgets, Actions: file structure, make:filament-* CLI reference, correct namespaces, authorization, tenancy, common pitfalls. Scaffold only via artisan."
 risk: write
 persona: oss-dev
 tags: [php, laravel, filament, ui, admin-panel, crud, livewire]

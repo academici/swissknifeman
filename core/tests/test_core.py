@@ -12,8 +12,9 @@ from unittest import mock
 
 from core import (PROJECT_TYPES, BaseEnv, atomic_write_json,
                   atomic_write_text, detect_project_type, find_monorepo_root,
-                  find_repo_root, now_iso, parse_args, parse_flags, run_cmd,
-                  safe_load_json, sanitize)
+                  find_repo_root, is_within, is_within_lexical, load_json_db,
+                  now_iso, parse_args, parse_flags, run_cmd, safe_load_json,
+                  sanitize)
 
 
 class TestText(unittest.TestCase):
@@ -97,6 +98,70 @@ class TestAtomicIO(unittest.TestCase):
             p = Path(tmp) / "x.json"
             atomic_write_json(p, {"k": "v"}, indent=4)
             self.assertIn('\n    "k"', p.read_text(encoding="utf-8"))
+
+    def test_write_mode_0600(self):
+        # mode= ставит права атомарно (на .tmp до replace) — для конфигов с секретами.
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Path(tmp) / "secret.json"
+            atomic_write_json(p, {"token": "x"}, mode=0o600)
+            self.assertEqual(p.stat().st_mode & 0o777, 0o600)
+
+
+class TestLoadJsonDb(unittest.TestCase):
+    DEFAULT = {"version": 1, "items": []}
+
+    def test_missing_returns_deepcopy_default(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = load_json_db(Path(tmp) / "nope.json", self.DEFAULT)
+            self.assertEqual(out, self.DEFAULT)
+            out["items"].append("x")                      # не мутирует исходный default
+            self.assertEqual(self.DEFAULT["items"], [])
+
+    def test_corrupt_backs_up_and_returns_default(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Path(tmp) / "db.json"
+            p.write_text("{ broken", encoding="utf-8")
+            out = load_json_db(p, self.DEFAULT)
+            self.assertEqual(out, self.DEFAULT)
+            self.assertFalse(p.exists())                   # переименован в .corrupt.<date>
+            self.assertTrue(list(Path(tmp).glob("db.json.corrupt.*")))
+
+    def test_version_too_new_dies(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Path(tmp) / "db.json"
+            p.write_text(json.dumps({"version": 99}), encoding="utf-8")
+            with self.assertRaises(SystemExit):
+                load_json_db(p, self.DEFAULT, max_version=1)
+
+    def test_valid_passthrough(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Path(tmp) / "db.json"
+            p.write_text(json.dumps({"version": 1, "items": [1]}), encoding="utf-8")
+            self.assertEqual(load_json_db(p, self.DEFAULT, max_version=1)["items"], [1])
+
+
+class TestPaths(unittest.TestCase):
+    def test_is_within_true_for_child(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            child = root / "a" / "b"
+            child.mkdir(parents=True)
+            self.assertTrue(is_within(child, root))
+            self.assertTrue(is_within(root, root))         # совпадение
+
+    def test_is_within_false_for_traversal(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "root"
+            root.mkdir()
+            self.assertFalse(is_within(root.parent / "other", root))
+
+    def test_is_within_lexical_blocks_dotdot(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "dest"
+            root.mkdir()
+            # имя с '../' лексически вырывается за dest → False
+            self.assertFalse(is_within_lexical(root / ".." / "evil", root))
+            self.assertTrue(is_within_lexical(root / "skill", root))
 
 
 class TestRepoRoot(unittest.TestCase):

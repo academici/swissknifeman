@@ -90,14 +90,14 @@ def detect_docs_watcher(env):
             os.kill(pid, 0)
             return {"running": True, "via": "pidfile", "pid": pid}
         except (ValueError, ProcessLookupError, PermissionError, OSError):
-            pass
+            pass  # pidfile битый/процесс мёртв — падаем в проверку через systemd ниже
     try:
         r = subprocess.run(["systemctl", "--user", "is-active", "docs-watcher.service"],
                            capture_output=True, text=True, check=False, timeout=3)
         if r.stdout.strip() == "active":
             return {"running": True, "via": "systemd", "pid": None}
     except (FileNotFoundError, OSError, subprocess.SubprocessError):
-        pass
+        pass  # нет systemctl / таймаут — считаем watcher не запущенным
     return {"running": False, "via": None, "pid": None}
 
 

@@ -2,6 +2,125 @@
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-06-27
+
+**Аудит репозитория (многоагентный, 122 подтверждённые находки) → ремедиация в 7 фаз.**
+Headline — **умное подключение**: connect раздаёт курируемый плагин `core` (РОВНО 7 `CORE_SKILLS`
+по ссылкам, без копий) вместо целых бакетов general+oss-dev → резидентный ⊕ tier-0 **~1956 → ~480
+ток/проект** на каждый запрос; budget-aware connect показывает цену набора; кириллица убрана из
+EN-описаний (−643 ток) + CI-гейт. Плюс: надёжность логики подключения (TOCTOU, валидация lock,
+действенный дрейф пути), кросс-пакетный дедуп примитивов в `core`, изоляция maind (scope-маркеры,
+recall-crowding, рабочий graph-namespace), +18 тестов и ruff на `tests/`, доки приведены в
+соответствие коду. Совместимость сохранена (онбордженным проектам — миграц.-подсказка, merge-only).
+
+### Docs (аудит 2026-06 — Phase 7: точность доков и DX)
+
+- **Доки больше не врут про CORE-политику.** `skiller/CLAUDE.md`, `docs/guide/skills-architecture.md`,
+  `docs/guide/archetypes.md` и корневой `CLAUDE.md` обновлены под умное подключение: connect раздаёт
+  курируемый плагин `core` (а НЕ бакеты general+oss-dev). Счётчик плагинов marketplace ~50.
+- **Задокументирована команда `harness agent-packs`** (`list|render|upgrade|doctor` + флаги) в
+  `harness/CLAUDE.md` — раньше отсутствовала в справке CLI.
+- **`research/README.md`** (новый): индекс рабочих записей с явной пометкой «НЕ канон» и указателем
+  на источники истины (docs/CHANGELOG/CLAUDE.md) + напоминание методологии (до-проверять аудиты).
+
+### Added (аудит 2026-06 — Phase 6: тесты и CI)
+
+- **Юнит-тесты на новое поведение:** `core.load_json_db` (missing/corrupt-backup/version-die),
+  `core.is_within`/`is_within_lexical` (traversal), `core.atomic_write_*` mode=0600;
+  `maind.split_scope` (strip-all маркеров, неподделываемый владелец); `harness.categorize_file_change`
+  (матрица new/user-owned/conflict/safe-apply/nochange); skiller registry эмитит курируемый `core`-плагин;
+  connect пушит `core` (не бакеты), `--no-core`, graceful-skip без core в marketplace. (+18 тестов.)
+- **CI ruff теперь линтует и `tests/`** (раньше — только `lib/`, в тестах копился мусор: F401/F841).
+  Прежний долг вычищен; планка теперь едина для тестового кода.
+
+### Fixed (аудит 2026-06 — Phase 5: корректность и изоляция maind)
+
+- **`memory.split_scope` — больше не утекают marker-артефакты:** снимаем ВСЕ ведущие `[[s:…]]`
+  (на случай вложенных/повторных в контенте), владелец scope = первый маркер (подделать нельзя).
+- **`memory` RECALL_LIMIT 50 → 200 + предупреждение о насыщении:** пул общий на все проекты
+  экосистемы, узкое окно вытесняло релевантные факты scope чужими (crowding). При насыщении
+  (демон вернул весь пул) — `warn`, что факты scope могли не влезть.
+- **MCP `maind_graph_query`/`neighbors`: параметр `namespace` ТЕПЕРЬ работает** — раньше был
+  объявлен в схеме, но молча игнорировался, и обход федерировал ВСЕ проекты (узлы чужих namespace
+  утекали на depth>1). Теперь сужает union; стартовый узел по-прежнему под `_project_blocked`.
+- Проверено и НЕ менялось (находки переоценены/уже закрыты): `cmd_sync` уже fail-soft с ненулевым
+  rc и видимостью провалов (per-project `failed`); `deploy` уже health-WARN'ит (блокировать нельзя —
+  `.mcp.json` статичен и валиден независимо от демона); абсолютные пути в `.mcp.json` —
+  намеренны (CLAUDE.md «не ломать», 17 проектов), env-индирекция — отдельный аддитивный PR.
+
+### Changed (аудит 2026-06 — Phase 4: кросс-пакетный дедуп → core)
+
+- **`core.paths`** (новый): `is_within`/`is_within_lexical` — единый containment-примитив
+  (был только в `skiller.common`, дублировал паттерн в connect/vendor/skillset/eval). Экспортирован
+  из `core`; `skiller.common` реэкспортит для back-compat.
+- **`core.io.load_json_db`** (новый): JSON-БД с восстановлением (битый → бэкап `.corrupt.<date>` +
+  warn; version > max → die). Свёл дословные копии `skiller.state.load_db` и
+  `maind.common.load_json_db` (расходились в имени бэкапа/тексте) к одному источнику.
+- **`skiller.common.safe_copy_skill`** (новый): единый безопасный copy скилла (containment +
+  снятие symlink/файла/каталога + TOCTOU-перепроверка + `SKILL_IGNORE`) — общий для
+  `vendor.copy_skill` и `skillset.sync_skillset` (раньше дублировались, расходясь в безопасности;
+  TOCTOU-фикс Phase 3 теперь и в vendor). Legacy `vendor` re-copy стал clean-replace (как skillset).
+- Осознанно НЕ тронуто: `apply_permissions` (skiller→harness — это граница делегирования через
+  subprocess, не дубль); консолидация 3 валидаторов конфигов (schema-расходящиеся — отдельный
+  риск/PR).
+
+### Fixed (аудит 2026-06 — Phase 3: надёжность логики подключения)
+
+- **TOCTOU в `skillset.sync_skillset`:** между удалением `dst` и `copytree` чужой процесс мог
+  пересоздать путь симлинком наружу (copytree пошёл бы по нему). Добавлена пере-проверка после
+  удаления: `dst` существует → гонка, пропуск (fail-closed).
+- **Валидация `skills-lock.json` (`load_lock`):** битый/неструктурный lock больше не трактуется
+  МОЛЧА как пустой (это вело к перекопированию всех managed-скиллов). Теперь `warn` + пересборка
+  из конфига; проверяется наличие dict `skills`.
+- **`connect`: дрейф пути marketplace — действенная подсказка.** Directory-источник с ДРУГИМ путём
+  (репозиторий переехал → плагины не грузятся) теперь даёт `⚠` с командой `--fix-path`/`update`,
+  а не молчаливый «keeping it». Иной тип источника (github/…) оставляем как осознанный выбор.
+- **`apply_permissions`: видимость провала.** Ненулевой rc harness с ПУСТЫМ stderr раньше молчал
+  (пресеты deny/allow не легли незаметно) — теперь `warn` всегда, с командой перезапуска.
+- **Порядок lock→manifest задокументирован как намеренный** (lock — источник истины детекта
+  `plan_sync`, пишется авторитетно; manifest — производная): защита от «починки наоборот».
+
+### Added (аудит 2026-06 — Phase 2: умное подключение, экономия токенов)
+
+- **Курируемый лёгкий `core`-плагин (connect-канал).** CORE-политика `connect` теперь раздаёт в
+  каждый проект ОДИН лёгкий плагин `core` (== `CORE_SKILLS`, 7 скиллов) ВМЕСТО целых бакетов
+  `general`(19)+`oss-dev`(10). marketplace-запись `source:"./"` + явный `skills[]` грузит РОВНО
+  эти 7 скиллов (скиллы физически остаются в своих бакетах — без копий/симлинков; механизм
+  подтверждён докой Claude Code). **Экономия резидентного ⊕ tier-0: 1956 → 476 ток ≈ −1480
+  ток/проект на КАЖДЫЙ запрос.** `--no-core` отключает; `registry.py` эмитит плагин, `validate.sh`
+  гейтит (skills-пути существуют). Миграция: онбордженным проектам со старыми `general/oss-dev`
+  `connect` подсказывает снять их (merge-only, сами не трогаем).
+- **Budget-aware connect.** `connect` печатает строку `Резидент: ~N ток ⊕ tier-0 (M скиллов)` —
+  цена набора видна ДО записи (источник математики — единый `budget.skill_budget`). «Умное
+  подключение»: меньше плагинов / `--no-core` → дешевле.
+- **Кириллица убрана из 21 EN-описания** (резидентный tier-0): 20 скиллов + `generate-skill`
+  переведены на английский канон (RU-источник остаётся в `SKILL.ru.md`), триггеры активации
+  сохранены. tier-0 по всем 195: 12375 → 11732 ток (−643). EN дешевле RU у токенайзера.
+- **CI-гейт описаний** (`validate.sh`): кириллица в `description`/`name` SKILL.md → ERROR
+  (SKILL.md — EN-канон, резидентный tier-0); `description` > 450 симв → WARN (раздутый налог).
+  Предотвращает регресс — экономия закрепляется.
+
+### Fixed (аудит 2026-06 — Phase 1: quick wins)
+
+- **Коллизия имён скиллов устранена:** `php/naming-conventions` → frontmatter `name:
+  php-naming-conventions`. Реестровая by-name карта (`lock._registry_map`,
+  `vendor.build_requires_index` через `setdefault`) молча роняла один из двух скиллов с именем
+  `naming-conventions` (general+php). Обновлена ссылка в агенте `php/agents/laravel-implementer`,
+  реестр перегенерён, EN-маркер перештампован.
+- **Валидация `project.id` (maind):** id ограничен `[A-Za-z0-9._-]` (`config.PROJECT_ID_RE`) —
+  он идёт в scope-маркер памяти `[[s:project:<id>]]` и namespace; спецсимволы (`]`, пробел,
+  перевод строки) ломали парсинг scope при recall/forget и могли подменить чужой scope.
+- **`config.json` пишется с правами `0o600`** (секреты узла): `core.atomic_write_text/json`
+  получили опц. `mode=` (chmod на `.tmp` ДО `os.replace` — без окна world-readable);
+  `projects.write_config` применяет `0o600`.
+- **eval-ассершены `file_exists`/`file_absent` защищены от traversal** (`is_within`): `value`
+  из `evals.json` (в т.ч. внешних скиллов) не вырвется за каталог прогона (fail-closed).
+- **MCP-обработчик ошибок логирует КЛЮЧИ аргументов** инструмента (не значения — память/секреты)
+  для диагностики; голые `except: pass` в `probe`/`memory` снабжены поясняющими комментариями.
+- **`agentpacks.do_upgrade`:** логика категоризации файла вынесена в чистую `categorize_file_change`
+  (тестируемая матрица new/user-owned/conflict/safe-apply/nochange).
+- **Маркер ручных счётчиков** в `docs/index.md` («195/45» — сверять с `skiller registry`).
+
 ### Fixed (skiller — drift-устойчивость путей и корень marketplace)
 
 - **`connect`: source marketplace указывает на КОРЕНЬ монорепо**, а не на каталог пакета

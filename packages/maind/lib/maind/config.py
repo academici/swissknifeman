@@ -10,12 +10,18 @@ import copy
 import difflib
 import json
 import os
+import re
 from pathlib import Path
 
 from .common import detect_project_type, die, sanitize, warn
 from .constants import (CODE_GRAPH_DEFAULTS, GRAPH_ADAPTERS, HEARTBEAT_DEFAULT_MS,
                         LEGACY_GRAPH_ADAPTERS, MAX_IDLE_DEFAULT_MS, MEMORY_HTTP_PORT,
                         MEMORY_STREAM_PORT, SERVICE_NAME)
+
+# project.id попадает в scope-маркер памяти `[[s:project:<id>]]` (memory.mark_scope) и в
+# имя namespace — поэтому ограничиваем безопасным алфавитом, иначе спецсимволы (']', пробел,
+# перевод строки) ломают парсинг scope при recall/forget и могут подменить чужой scope.
+PROJECT_ID_RE = re.compile(r"^[A-Za-z0-9._-]+$")
 
 # Топ-ключи .maind.json (кроме _-мета). Значение — ожидаемый Python-тип.
 TOP_KEYS = {
@@ -108,6 +114,10 @@ def validate_config(config, cfg_file):
         for fld in ("id", "name"):
             if fld in proj and not isinstance(proj[fld], str):
                 die(f"{cfg_file}: projects[{i}].{fld} должно быть строкой")
+        pid = proj.get("id")
+        if isinstance(pid, str) and not PROJECT_ID_RE.match(pid):
+            die(f"{cfg_file}: projects[{i}].id = '{pid}' — недопустимый id; разрешены "
+                f"только [A-Za-z0-9._-] (id идёт в scope-маркер памяти и namespace)")
         if "status" in proj and proj["status"] not in PROJECT_STATUSES:
             die(f"{cfg_file}: projects[{i}].status = '{proj['status']}' — допустимо: "
                 f"{', '.join(sorted(PROJECT_STATUSES))}")

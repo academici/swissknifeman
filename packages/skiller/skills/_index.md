@@ -12,7 +12,7 @@
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
-| `ai-agents` | Навигатор по справочнику построения AI-агентов (vendored super-skill get-zeked): паттерны… | `ai`, `agents`, `mcp`, `rag`, `orchestration`, `prompt-engineering`, `subagents` |
+| `ai-agents` | Navigator for the AI-agent building reference (vendored super-skill): agent patterns, MCP… | `ai`, `agents`, `mcp`, `rag`, `orchestration`, `prompt-engineering`, `subagents` |
 | `token-efficient` | Reduces Perplexity Computer output verbosity and token waste. Eliminates sycophantic open… |  |
 
 ### architect — Architecture, API and data design, security, observability, tech stack selection (14)
@@ -22,10 +22,10 @@
 | `agent-design` | Agent design, agentic loop, tool contracts, harness, permission gates | `agentic`, `architecture`, `security`, `validation` |
 | `api-design` | Designing REST/GraphQL APIs, endpoints, contracts, versioning, authentication | `api`, `architecture`, `rest`, `contracts` |
 | `architecture` | System architecture, stack choice, ADR, C4 diagrams, deployment, scalability | `architecture`, `adr`, `c4`, `scalability`, `deployment` |
-| `codebase-design` | Общий словарь и дисциплина проектирования ГЛУБОКИХ модулей (Ousterhout/Feathers): Module/… | `design`, `deep-modules`, `ousterhout`, `seam`, `testability` |
+| `codebase-design` | Shared vocabulary and discipline for designing DEEP modules (Ousterhout/Feathers): Module… | `design`, `deep-modules`, `ousterhout`, `seam`, `testability` |
 | `data-schema` | Data schema, entities, attributes, relations. DB-agnostic — markdown tables only | `data`, `architecture`, `schema`, `entities`, `erd` |
 | `dev-engineering-super-skill` | Broad engineering-bucket navigator (composite of external dev skills). For specific work … |  |
-| `domain-modeling` | Активная дисциплина доменной модели: бросать вызов терминам, стресс-тестировать сценариям… | `domain`, `ddd`, `glossary`, `adr`, `ubiquitous-language` |
+| `domain-modeling` | Active domain-model discipline: challenge terms, stress-test with scenarios, RECORD the g… | `domain`, `ddd`, `glossary`, `adr`, `ubiquitous-language` |
 | `eval-design` | Evaluate LLM/AI output quality — eval-set, metrics, regression harness, automated + human… | `agentic`, `validation`, `llm`, `metrics`, `testing` |
 | `figma-mcp-core` | Discipline for the official Figma Dev Mode MCP: real tools (get_metadata, get_variable_de… | `figma`, `mcp`, `design-system`, `design-tokens`, `dev-mode`, `code-connect`, `ui` |
 | `legal-compliance` | GDPR, CCPA, AI Act, DMCA, COPPA, DSA — pre-launch regulatory checklist | `compliance`, `gdpr`, `privacy`, `ai-act`, `regulatory` |
@@ -140,7 +140,7 @@
 |:--|:--|:--|
 | `antfu` | Anthony Fu's opinionated tooling and conventions for JavaScript/TypeScript projects. Use … |  |
 | `eslint-flat-config` | ESLint flat config (eslint.config.js) for Vue 3 + TypeScript: defineConfigWithVueTs/types… | `eslint`, `prettier`, `flat-config`, `vue`, `typescript`, `stylistic`, `tooling`, `code-style`, `frontend` |
-| `js-code-style` | Стиль JS/TS по Spatie: 4 пробела, ширина 120, одинарные кавычки, const-first, строгое ===… | `javascript`, `typescript`, `code-style`, `spatie`, `prettier`, `vue` |
+| `js-code-style` | JS/TS style per Spatie: 4 spaces, width 120, single quotes, const-first, strict ===, func… | `javascript`, `typescript`, `code-style`, `spatie`, `prettier`, `vue` |
 | `ts-library` | Use when authoring TypeScript libraries or npm packages - covers project setup, package.j… |  |
 
 ### frontend-naive-ui — Naive UI component library theming (GlobalThemeOverrides) (1)
@@ -191,8 +191,8 @@
 | `vue-best-practices` | MUST be used for Vue.js tasks. Strongly recommends Composition API with `<script setup>` … |  |
 | `vue-composition-api` | Project Composition API conventions: ref-first and composables pattern. NOT an API refere… | `vue`, `frontend`, `composable`, `patterns` |
 | `vue-dynamic-icons` | Vue: one icon component rendering SVG by string name from a set (lucide-vue-next etc.) vi… | `vue`, `icons`, `dynamic-component`, `lucide`, `typescript`, `frontend` |
-| `vue-router-best-practices` | Vue Router 4 — маршрутизация и навигация: typed/именованные routes, lazy-loading view-ком… | `vue`, `vue-router`, `frontend`, `routing`, `navigation-guards`, `lazy-loading`, `typescript` |
-| `vue-testing-best-practices` | Практики тестирования Vue 3-компонентов через Vitest + Vue Test Utils 2: mount vs shallow… | `vue`, `testing`, `vitest`, `vue-test-utils`, `pinia`, `composables`, `frontend` |
+| `vue-router-best-practices` | Vue Router 4 routing and navigation: typed/named routes, lazy-loaded views, route meta, R… | `vue`, `vue-router`, `frontend`, `routing`, `navigation-guards`, `lazy-loading`, `typescript` |
+| `vue-testing-best-practices` | Testing practices for Vue 3 components with Vitest + Vue Test Utils 2: mount vs shallowMo… | `vue`, `testing`, `vitest`, `vue-test-utils`, `pinia`, `composables`, `frontend` |
 | `vueuse-functions` | Apply VueUse composables where appropriate to build concise, maintainable Vue.js / Nuxt f… |  |
 
 ### frontend-wayfinder — Laravel Wayfinder: type-safe routes/controller actions in the frontend (1)
@@ -211,9 +211,9 @@
 | `context-economy` | Claude Code context economy in a project: CLAUDE.md ≤200 lines, path-scoped .claude/rules… | `tokens`, `context`, `claude-code`, `workflow`, `conventions` |
 | `cross-layer-change-checklist` | Universal checklist for changes spanning multiple layers: code, authorization, UI, docs, … | `checklist`, `workflow`, `validation` |
 | `git-commit-rules` | Git workflow: commit prep, husky/commitlint, message format, safe action order. | `git`, `conventions`, `conventional-commits`, `gitops` |
-| `git-safety` | Защита от деструктивных git-команд через PreToolUse-хук Claude Code: блокирует push/reset… | `git`, `safety`, `hooks`, `guardrails`, `init` |
-| `grill-with-docs` | Безжалостная грилинг-сессия, которая ОДНОВРЕМЕННО строит доменную модель: уточняет план/д… | `grilling`, `requirements`, `domain`, `adr`, `docs` |
-| `implement` | Реализация куска работы по ТЗ/PRD/issue минимальной цепочкой: tdd-discipline на согласова… | `workflow`, `implementation`, `tdd`, `review` |
+| `git-safety` | Guard against destructive git commands via a Claude Code PreToolUse hook: blocks push/res… | `git`, `safety`, `hooks`, `guardrails`, `init` |
+| `grill-with-docs` | Ruthless grilling session that SIMULTANEOUSLY builds a domain model: refines a plan/desig… | `grilling`, `requirements`, `domain`, `adr`, `docs` |
+| `implement` | Implement a chunk of work from a spec/PRD/issue via a minimal chain: tdd-discipline on ag… | `workflow`, `implementation`, `tdd`, `review` |
 | `mcp-advisor` | Pick MCP servers for a project at onboarding/sync: which to connect (context7/playwright/… | `mcp`, `onboarding`, `tooling`, `context`, `claude-code` |
 | `naming-conventions` | Naming discipline (language-agnostic): name reveals intent, not implementation; fight noi… | `naming`, `conventions`, `readability`, `code-style`, `discipline`, `clean-code` |
 | `packages-stack` | Project external-dependency registry methodology: which packages are used and for what, a… | `dependencies`, `conventions`, `navigation`, `stack`, `init` |
@@ -246,7 +246,7 @@
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
-| `laravel-broadcasting` | Laravel Echo + Reverb/Pusher/Ably: broadcast-события, авторизация каналов, presence/whisp… | `php`, `laravel`, `broadcasting`, `echo`, `reverb`, `websockets`, `realtime` |
+| `laravel-broadcasting` | Laravel Echo + Reverb/Pusher/Ably: broadcast events, channel authorization, presence/whis… | `php`, `laravel`, `broadcasting`, `echo`, `reverb`, `websockets`, `realtime` |
 | `laravel-data` | DTOs with spatie/laravel-data: typed Data classes, nested DataCollection, casts/transform… | `php`, `laravel`, `spatie`, `laravel-data`, `dto`, `data-transfer-object`, `casts`, `validation`, `inertia`, `api` |
 
 ### laravel-extras — Optional Laravel runtime packages: media library, typed settings, Pennant feature flags (3)
@@ -254,14 +254,14 @@
 | Скилл | Описание | Теги |
 |:--|:--|:--|
 | `medialibrary` | spatie/laravel-medialibrary: attach files to Eloquent models, collections, conversions, g… | `php`, `laravel`, `media`, `spatie`, `uploads`, `images` |
-| `pennant-development` | Laravel Pennant — feature-флаги: define/active/for-scope, директива @feature, активация/д… | `php`, `laravel`, `pennant`, `feature-flags` |
+| `pennant-development` | Laravel Pennant feature flags: define/active/for-scope, the @feature directive, activatio… | `php`, `laravel`, `pennant`, `feature-flags` |
 | `spatie-settings` | spatie/laravel-settings: typed settings classes (extends Settings, public properties, gro… | `php`, `laravel`, `spatie`, `settings`, `filament`, `configuration` |
 
 ### laravel-filament — Filament admin panels: resources, schemas, tables, widgets, actions, tenancy (1)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
-| `filament` | Filament v5 — Panels, Resources, Schemas, Tables, Widgets, Actions: структура файлов, CLI… | `php`, `laravel`, `filament`, `ui`, `admin-panel`, `crud`, `livewire` |
+| `filament` | Filament v5 — Panels, Resources, Schemas, Tables, Widgets, Actions: file structure, make:… | `php`, `laravel`, `filament`, `ui`, `admin-panel`, `crud`, `livewire` |
 
 ### laravel-livewire — Livewire 3 UI: dynamic Blade attributes (ComponentAttributeBag) (1)
 
@@ -315,26 +315,26 @@
 | `dx-design` | Developer Experience: README, quick-start (≤60s), API ergonomics, error messages, types, … | `oss`, `documentation`, `api`, `cli` |
 | `gh-review` | Review and handoff changes via GitHub CLI (gh) with context economy: gh pr diff/view/comm… | `github`, `gh`, `review`, `handoff`, `tokens`, `context` |
 | `github-flow` | Chain Issue → Branch → PR → Merge → Tag → Release on GitHub: naming, labels, SemVer oracl… | `oss`, `github`, `git`, `semver`, `release` |
-| `issue-triage` | Стейт-машина обработки issue и внешних PR: категория (bug/enhancement) + статус (needs-tr… | `triage`, `issues`, `github`, `state-machine`, `governance` |
+| `issue-triage` | State machine for handling issues and external PRs: category (bug/enhancement) + status (… | `triage`, `issues`, `github`, `state-machine`, `governance` |
 | `oss-development` | OSS project: repo structure, README, Architecture, ADR, SemVer, CI/CD. PHP specifics in .… | `oss`, `architecture`, `documentation`, `ci` |
 | `oss-governance` | LICENSE, CoC, CONTRIBUTING, MAINTAINERS, RFC process, security policy for an OSS project | `oss`, `compliance`, `license`, `security`, `documentation` |
 | `release-engineering` | SemVer strategy, CHANGELOG, release pipeline (CI/CD), pre-releases, deprecation policy fo… | `oss`, `semver`, `release`, `changelog`, `ci` |
-| `resolving-merge-conflicts` | Дисциплина разрешения активного git merge/rebase-конфликта: понять состояние и первичные … | `git`, `merge`, `rebase`, `conflicts` |
-| `to-issues` | Разбить план/спеку/PRD на независимо-«хватаемые» GitHub-issue ВЕРТИКАЛЬНЫМИ срезами (trac… | `issues`, `github`, `vertical-slices`, `decomposition`, `planning` |
+| `resolving-merge-conflicts` | Discipline for resolving an active git merge/rebase conflict: understand the state and th… | `git`, `merge`, `rebase`, `conflicts` |
+| `to-issues` | Split a plan/spec/PRD into independently-grabbable GitHub issues by VERTICAL slices (trac… | `issues`, `github`, `vertical-slices`, `decomposition`, `planning` |
 
 ### php — PHP and Laravel core: architecture, structure, conventions, DI, database, repositories, patterns, static analysis (13)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
-| `code-style-spatie` | Стиль кода Laravel/PHP по гайдлайнам Spatie: Laravel-конвенции прежде PSR-12, типизация в… | `php`, `laravel`, `code-style`, `spatie` |
+| `code-style-spatie` | Laravel/PHP code style per Spatie guidelines: Laravel conventions over PSR-12, typing ins… | `php`, `laravel`, `code-style`, `spatie` |
 | `database` | Database migrations, models, and table naming. Activate when writing migrations, creating… | `php`, `laravel`, `database`, `migrations` |
 | `dependency-injection` | Layer interaction via constructor injection: final readonly + promotion, injection matrix… | `php`, `laravel`, `di`, `architecture` |
 | `laravel` | Laravel architecture patterns: actions, repositories, resources | `php`, `laravel`, `architecture`, `patterns` |
-| `laravel-best-practices` | Лучшие практики Laravel: 20 категорий правил (Eloquent, валидация, кеш, очереди, безопасн… | `php`, `laravel`, `best-practices` |
+| `laravel-best-practices` | Laravel best practices: 20 rule categories (Eloquent, validation, cache, queues, security… | `php`, `laravel`, `best-practices` |
 | `laravel-structure` | Laravel project structure canon for greenfield and adding domains: domain taxonomy, layer… | `php`, `laravel`, `architecture`, `structure` |
 | `named-arguments` | PHP rule: method/function calls use named arguments; exceptions; activate when writing/re… | `php`, `code-style`, `readability`, `conventions` |
-| `naming-conventions` | Naming Laravel/PHP entities: repository methods by intent (not findByCodeOrFail-explosion… | `php`, `laravel`, `naming`, `conventions`, `code-style`, `readability` |
 | `pao` | Laravel PAO — agent-optimized PHP tool output: PHPUnit/Pest/Paratest/PHPStan/Rector/Artis… | `php`, `laravel`, `testing`, `tokens`, `agent-output` |
+| `php-naming-conventions` | Naming Laravel/PHP entities: repository methods by intent (not findByCodeOrFail-explosion… | `php`, `laravel`, `naming`, `conventions`, `code-style`, `readability` |
 | `php-patterns` | PHP domain patterns: VO, DTO, pipeline, specification — selection guide | `php`, `laravel`, `patterns`, `dto`, `architecture` |
 | `php-upgrade-checklist` | PHP version upgrade checklist (minor/major): sync image/CI, composer update + clear depre… | `php`, `upgrade`, `version`, `rector`, `phpstan`, `composer` |
 | `repositories` | Laravel repositories: read/store split, model scopes, delta-DTO, facade, VisibilityService | `php`, `laravel`, `repository`, `architecture` |
@@ -346,7 +346,7 @@
 |:--|:--|:--|
 | `laravel-package-compatibility` | Use this skill when reviewing Laravel package compatibility across composer constraints, … | `php`, `laravel`, `package-dev` |
 | `laravel-package-docs` | Use this skill when writing or revising package documentation after creating a package fr… | `php`, `laravel`, `package-dev` |
-| `laravel-package-expressive` | Upstream-скилл для работы НАД самим пакетом WendellAdriel/laravel-expressive (starter kit… | `php`, `laravel`, `package-dev` |
+| `laravel-package-expressive` | Upstream skill for working ON the WendellAdriel/laravel-expressive package itself (starte… | `php`, `laravel`, `package-dev` |
 | `laravel-package-generate-skill` | Use this skill when creating or updating the bundled Laravel Boost skill under resources/… | `php`, `laravel`, `package-dev` |
 | `laravel-package-release` | Use this skill when preparing Laravel package releases: generated release notes, GitHub r… | `php`, `laravel`, `package-dev` |
 | `laravel-package-scaffold` | Use this skill when adding Laravel package capabilities or package shape changes after cr… | `php`, `laravel`, `package-dev` |
@@ -382,11 +382,11 @@
 |:--|:--|:--|
 | `code-review` | Code review process & checklist: mandatory checks, comment severity grades, async vs sync… | `quality`, `validation`, `review`, `github`, `workflow` |
 | `code-simplifier` | Simplify freshly written code without changing behavior: dead code, needless abstractions… | `quality`, `refactoring`, `refactor`, `ci`, `validation` |
-| `diagnosing-bugs` | Дисциплина диагностики трудных багов и регрессий производительности: СНАЧАЛА строим тугой… | `debugging`, `diagnostics`, `feedback-loop`, `performance`, `testing` |
+| `diagnosing-bugs` | Discipline for diagnosing hard bugs and performance regressions: FIRST build a tight repr… | `debugging`, `diagnostics`, `feedback-loop`, `performance`, `testing` |
 | `mutation-testing` | PHP mutation testing via Infection: infection.json5 (source/excludes, mutators, logs, min… | `quality`, `testing`, `mutation`, `infection`, `php`, `ci`, `coverage` |
 | `playwright-e2e` | Browser E2E with Playwright for a web app (frontend-agnostic: Vue/Inertia/Livewire): play… | `playwright`, `e2e`, `browser`, `testing`, `storage-state`, `ci`, `quality`, `frontend`, `typescript` |
 | `refactoring-plan` | Safe refactoring plan: scope, Mikado / strangler pattern, atomic steps, done criteria, ro… | `quality`, `refactor`, `refactoring`, `validation`, `workflow` |
-| `tdd-discipline` | Дисциплина TDD по циклу red-green-refactor ВЕРТИКАЛЬНЫМИ срезами (tracer bullets), а НЕ г… | `tdd`, `testing`, `red-green-refactor`, `vertical-slices` |
+| `tdd-discipline` | TDD discipline via red-green-refactor by VERTICAL slices (tracer bullets), NOT horizontal… | `tdd`, `testing`, `red-green-refactor`, `vertical-slices` |
 | `tech-debt-audit` | Tech-debt inventory, classification (architectural/code/dependency/test/process), priorit… | `quality`, `validation`, `refactor`, `dependencies`, `workflow` |
 | `test-strategy` | Test strategy: pyramid (unit/integration/e2e), coverage policy, mock vs real, which featu… | `quality`, `testing`, `coverage`, `validation`, `ci`, `architecture`, `pest` |
 | `testing-safety-report` | Safety report after a risky change (migrations, schema/layer refactor, dependency upgrade… | `testing`, `safety`, `migrations`, `reporting`, `verification`, `quality`, `refactor` |
@@ -479,7 +479,7 @@
 | `clean-code` | `naming-conventions` |
 | `cli` | `dx-design` |
 | `code-connect` | `figma-mcp-core` |
-| `code-style` | `code-style-spatie`, `eslint-flat-config`, `js-code-style`, `named-arguments`, `naming-conventions` |
+| `code-style` | `code-style-spatie`, `eslint-flat-config`, `js-code-style`, `named-arguments`, `naming-conventions`, `php-naming-conventions` |
 | `comments` | `writing-style` |
 | `commits` | `writing-style` |
 | `compliance` | `dependency-audit`, `legal-compliance`, `oss-governance`, `risk-assessment`, `security-design` |
@@ -495,7 +495,7 @@
 | `contracts` | `api-design` |
 | `contribution` | `package-contribution-protocol` |
 | `conventional-commits` | `git-commit-rules` |
-| `conventions` | `compact-responses`, `config-conventions`, `context-economy`, `git-commit-rules`, `ml-project-structure`, `model-rules`, `named-arguments`, `naming-conventions`, `packages-stack`, `project-map`, `skills-ssot`, `venv-dependencies` |
+| `conventions` | `compact-responses`, `config-conventions`, `context-economy`, `git-commit-rules`, `ml-project-structure`, `model-rules`, `named-arguments`, `naming-conventions`, `packages-stack`, `php-naming-conventions`, `project-map`, `skills-ssot`, `venv-dependencies` |
 | `coordination` | `cross-project-coordinator`, `shared-memory` |
 | `coverage` | `ci-cd`, `mutation-testing`, `test-strategy`, `vitest` |
 | `cross-config` | `config-conventions` |
@@ -585,7 +585,7 @@
 | `jsdom` | `vitest` |
 | `jsonl` | `session-observer` |
 | `language` | `writing-style` |
-| `laravel` | `attribute-authorization`, `azguard`, `backend-type-sync`, `botkit`, `ci-cd`, `code-style-spatie`, `database`, `dependency-injection`, `docker-dev-prod`, `docker-php`, `docker-services`, `docker-vite`, `enum-attributes`, `enum-state-machine`, `filament`, `filepond-upload`, `health-checks`, `inertia-vue`, `laravel`, `laravel-best-practices`, `laravel-broadcasting`, `laravel-data`, `laravel-dusk`, `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages`, `laravel-permissions`, `laravel-security-audit`, `laravel-structure`, `laravel-subagents`, `laravel-testing`, `livewire-blade-attributes`, `medialibrary`, `modular-architecture`, `naming-conventions`, `pao`, `pennant-development`, `php-patterns`, `repositories`, `spatie-settings`, `static-analysis`, `tailwind-conventions`, `test-isolation-guard`, `vite-module-loader`, `vite-multi-build`, `vitest`, `wayfinder` |
+| `laravel` | `attribute-authorization`, `azguard`, `backend-type-sync`, `botkit`, `ci-cd`, `code-style-spatie`, `database`, `dependency-injection`, `docker-dev-prod`, `docker-php`, `docker-services`, `docker-vite`, `enum-attributes`, `enum-state-machine`, `filament`, `filepond-upload`, `health-checks`, `inertia-vue`, `laravel`, `laravel-best-practices`, `laravel-broadcasting`, `laravel-data`, `laravel-dusk`, `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages`, `laravel-permissions`, `laravel-security-audit`, `laravel-structure`, `laravel-subagents`, `laravel-testing`, `livewire-blade-attributes`, `medialibrary`, `modular-architecture`, `pao`, `pennant-development`, `php-naming-conventions`, `php-patterns`, `repositories`, `spatie-settings`, `static-analysis`, `tailwind-conventions`, `test-isolation-guard`, `vite-module-loader`, `vite-multi-build`, `vitest`, `wayfinder` |
 | `laravel-data` | `laravel-data` |
 | `laravel-echo` | `laravel-echo-client` |
 | `laravel-modules` | `modular-architecture` |
@@ -619,7 +619,7 @@
 | `multi-config` | `vite-multi-build` |
 | `mutation` | `mutation-testing` |
 | `naive-ui` | `naive-ui-theming` |
-| `naming` | `naming-conventions`, `scene-conventions` |
+| `naming` | `naming-conventions`, `php-naming-conventions`, `scene-conventions` |
 | `navigation` | `local-topology`, `packages-stack`, `project-map` |
 | `navigation-guards` | `vue-router-best-practices` |
 | `node` | `node-pnpm-preflight` |
@@ -642,7 +642,7 @@
 | `permissions` | `attribute-authorization`, `azguard`, `laravel-permissions` |
 | `persona` | `open-source-maintainer`, `solo-founder`, `startup-cto`, `tech-lead` |
 | `pest` | `test-strategy` |
-| `php` | `attribute-authorization`, `azguard`, `botkit`, `code-style-spatie`, `database`, `dependency-audit`, `dependency-injection`, `docker-php`, `enum-attributes`, `enum-state-machine`, `filament`, `laravel`, `laravel-best-practices`, `laravel-broadcasting`, `laravel-data`, `laravel-dusk`, `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages`, `laravel-permissions`, `laravel-security-audit`, `laravel-structure`, `laravel-testing`, `medialibrary`, `modular-architecture`, `mutation-testing`, `named-arguments`, `naming-conventions`, `pao`, `pennant-development`, `php-patterns`, `php-upgrade-checklist`, `repositories`, `spatie-settings`, `static-analysis`, `test-isolation-guard` |
+| `php` | `attribute-authorization`, `azguard`, `botkit`, `code-style-spatie`, `database`, `dependency-audit`, `dependency-injection`, `docker-php`, `enum-attributes`, `enum-state-machine`, `filament`, `laravel`, `laravel-best-practices`, `laravel-broadcasting`, `laravel-data`, `laravel-dusk`, `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages`, `laravel-permissions`, `laravel-security-audit`, `laravel-structure`, `laravel-testing`, `medialibrary`, `modular-architecture`, `mutation-testing`, `named-arguments`, `pao`, `pennant-development`, `php-naming-conventions`, `php-patterns`, `php-upgrade-checklist`, `repositories`, `spatie-settings`, `static-analysis`, `test-isolation-guard` |
 | `phpstan` | `php-upgrade-checklist` |
 | `pinia` | `pinia-stores`, `vue-testing-best-practices` |
 | `planning` | `to-issues`, `verify-claims` |
@@ -660,7 +660,7 @@
 | `queue` | `docker-services` |
 | `rag` | `ai-agents`, `verify-claims` |
 | `rbac` | `attribute-authorization`, `azguard`, `laravel-permissions`, `security-design` |
-| `readability` | `named-arguments`, `naming-conventions` |
+| `readability` | `named-arguments`, `naming-conventions`, `php-naming-conventions` |
 | `readiness` | `health-checks` |
 | `realtime` | `laravel-broadcasting`, `laravel-echo-client` |
 | `rebase` | `resolving-merge-conflicts` |

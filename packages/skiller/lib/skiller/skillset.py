@@ -26,8 +26,8 @@ from pathlib import Path
 
 from core.io import atomic_write_json
 
-from .common import (MANIFEST, SKILL_IGNORE, apply_permissions, die, is_within,
-                     is_within_lexical, now_iso, parse_flags, warn)
+from .common import (MANIFEST, apply_permissions, die, is_within, now_iso,
+                     parse_flags, safe_copy_skill, warn)
 from .config import (DEFAULT_EXCLUDE, all_buckets, core_skill_tuples,
                      load_config, resolve_selection, resolve_target)
 from .hub import generate_hub, hub_artifacts_exist
@@ -290,9 +290,18 @@ def load_lock(target):
     if not f.is_file():
         return {}
     try:
-        return json.loads(f.read_text(encoding="utf-8"))
+        data = json.loads(f.read_text(encoding="utf-8"))
     except json.JSONDecodeError:
+        # Битый lock молча трактовался как пустой → ВСЕ managed-скиллы считались новыми и
+        # перекопировались (лишняя работа + путаный вывод). Предупреждаем: пересоберём из
+        # конфига, но пусть это будет видно (проверить git-историю файла).
+        warn(f"{f}: битый JSON skills-lock — игнорирую и пересоберу из конфига "
+             f"(managed-скиллы могут перекопироваться). См. git-историю файла.")
         return {}
+    if not isinstance(data, dict) or not isinstance(data.get("skills"), dict):
+        warn(f"{f}: неожиданная структура skills-lock (нет dict 'skills') — игнорирую, пересоберу.")
+        return {}
+    return data
 
 
 def write_lock(target, lock):
@@ -413,13 +422,10 @@ def sync_skillset(env, target, cfg, dry_run=False, force=False,
                 ("replace" if name in plan["conflicts"] else "update")
             print(f"[dry-run] {verb} {entry['bucket']}/{entry['name']} -> {dst}")
             continue
-        if not is_within_lexical(dst, dest_root):  # traversal через '../' в имени → стоп
-            warn(f"пропуск '{name}': путь вне каталога назначения")
+        # Единый безопасный copy (containment + снятие symlink/файла/каталога + TOCTOU-
+        # перепроверка + SKILL_IGNORE) — общий с vendor.copy_skill (не разъезжаться).
+        if not safe_copy_skill(src, dst, dest_root):
             continue
-        if dst.is_symlink() or dst.exists():
-            _remove_path(dst)
-        shutil.copytree(src, dst, dirs_exist_ok=True,
-                        ignore=shutil.ignore_patterns(*SKILL_IGNORE))
         locked[name] = {
             "source": SOURCE,
             "managed": True,
@@ -450,6 +456,12 @@ def sync_skillset(env, target, cfg, dry_run=False, force=False,
                     SOURCE: {"ref": "registry", "mode": "vendor"}},
     }
     if not dry_run:
+        # Порядок НАМЕРЕННЫЙ: skills-lock.json — источник истины детекта (plan_sync читает
+        # load_lock, НЕ манифест), поэтому пишем его авторитетно ПОСЛЕ того, как файлы уже на
+        # диске (copytree выше). Манифест — производная (контракт реинсталла/индекс для hub),
+        # регенерится каждый успешный sync. Краш после lock, до манифеста → детект на след.
+        # sync корректен (по lock), манифест добьётся. (Не переставлять: манифест-первым сделал
+        # бы lock устаревшим при краше и сломал бы детект.)
         write_lock(target, new_lock)
         _write_manifest(target, plan["skills_path"], new_lock["skills"],
                         entries, cfg)

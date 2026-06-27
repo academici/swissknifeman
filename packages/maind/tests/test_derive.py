@@ -6,7 +6,6 @@ from pathlib import Path
 
 from maind import derive, federation
 from maind.config import load_config
-from maind.graph import Graph
 from tests.fixtures import make_repo, write_maind_config
 
 

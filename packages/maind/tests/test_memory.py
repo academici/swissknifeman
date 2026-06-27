@@ -26,6 +26,29 @@ class TestWrapper(unittest.TestCase):
         self.assertFalse(memory.health("http://127.0.0.1:1"))
 
 
+class TestScopeMarker(unittest.TestCase):
+    def test_roundtrip_single(self):
+        marked = memory.mark_scope("project:brain", "hello")
+        self.assertEqual(memory.split_scope(marked), ("project:brain", "hello"))
+
+    def test_unmarked_is_none(self):
+        self.assertEqual(memory.split_scope("plain text"), (None, "plain text"))
+
+    def test_strips_all_leading_markers(self):
+        # владелец = ПЕРВЫЙ маркер; остаточные вложенные/повторные снимаются (не утекают в выдачу)
+        scope, text = memory.split_scope("[[s:project:a]] [[s:project:b]] secret")
+        self.assertEqual(scope, "project:a")
+        self.assertNotIn("[[s:", text)
+        self.assertEqual(text, "secret")
+
+    def test_owner_is_unforgeable_first_marker(self):
+        # значение пользователя содержит фейковый маркер — store пишет владельца ПЕРВЫМ
+        stored = memory.mark_scope("project:a", "[[s:project:victim]] x")
+        scope, text = memory.split_scope(stored)
+        self.assertEqual(scope, "project:a")        # владелец — реальный scope, не фейк
+        self.assertEqual(text, "x")
+
+
 class TestLifecycle(unittest.TestCase):
     def test_resolve_ports_precedence(self):
         with tempfile.TemporaryDirectory() as tmp:

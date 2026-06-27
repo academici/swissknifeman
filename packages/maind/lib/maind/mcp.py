@@ -216,14 +216,19 @@ def _run_tool(env, config, name, args, default_scope):
     if name == "maind_graph_query":
         if _project_blocked(config, default_scope, _node_pid(args["from"])):
             return _graph_error()
+        # namespace объявлен в схеме, но РАНЬШЕ молча игнорировался → обход федерировал ВСЕ
+        # проекты (узлы чужих namespace утекали на depth>1, хотя стартовый узел гейтился).
+        # Теперь сужаем union до запрошенного namespace (стартовый узел по-прежнему под _project_blocked).
         res = _graph_reader(env, config).query(args["from"], int(args.get("depth", 1)),
-                                               _edge_types(args.get("edge_types")))
+                                               _edge_types(args.get("edge_types")),
+                                               namespace=args.get("namespace"))
         return _content(res)
     if name == "maind_graph_neighbors":
         if _project_blocked(config, default_scope, _node_pid(args["node"])):
             return _graph_error()
         res = _graph_reader(env, config).neighbors(args["node"], int(args.get("depth", 1)),
-                                                   None, args.get("direction", "out"))
+                                                   None, args.get("direction", "out"),
+                                                   namespace=args.get("namespace"))
         return _content(res)
     if name == "maind_graph_path":
         if (_project_blocked(config, default_scope, _node_pid(args["from"]))
@@ -278,7 +283,8 @@ def _tools_call(env, config, name, args, default_scope):
     except SystemExit as e:               # die() внутри инструмента (напр. граф отключён)
         return _content({"error": f"инструмент недоступен: {e}"}, is_error=True)
     except Exception as e:                 # любая ошибка инструмента — не роняем сервер
-        _log(f"ошибка инструмента {name}: {e!r}")
+        # Логируем КЛЮЧИ аргументов (не значения — в них может быть содержимое памяти/секреты)
+        _log(f"ошибка инструмента {name} args={sorted(args)}: {e!r}")
         return _content({"error": f"ошибка инструмента: {e}"}, is_error=True)
 
 

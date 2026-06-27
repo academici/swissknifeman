@@ -2,7 +2,7 @@
 name: laravel-best-practices
 bucket: php
 version: 0.1.0
-description: "Лучшие практики Laravel: 20 категорий правил (Eloquent, валидация, кеш, очереди, безопасность) с маршрутизацией по задаче"
+description: "Laravel best practices: 20 rule categories (Eloquent, validation, cache, queues, security) with routing by task."
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "best-practices"]

@@ -5,6 +5,7 @@
 parse_flags, frontmatter, делегирование окружения в harness, константы реестра)."""
 import hashlib
 import os
+import shutil
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -14,8 +15,8 @@ from pathlib import Path
 # модулей пакета, которые исторически берут эти имена из .common.
 from core import (  # noqa: F401
     HOME, BaseEnv, atomic_write_json, atomic_write_text, confirm, die,
-    find_monorepo_root, now_iso, parse_flags, run_cmd, safe_load_json,
-    sanitize, warn,
+    find_monorepo_root, is_within, is_within_lexical, now_iso, parse_flags,
+    run_cmd, safe_load_json, sanitize, warn,
 )
 
 STATE_DIR = HOME / ".swissknifeman"
@@ -44,29 +45,27 @@ CONFIG_KEYS = {
 HUB_MARKER = "<!-- swissknifeman:hub:start -->"
 
 
-def is_within(path, root):
-    """Безопасное containment: `path` лежит ВНУТРИ `root` (или совпадает). Резолвит
-    обе стороны (снимает symlink → защита от traversal/symlink-escape за пределы
-    цели). Для PRUNE (удаление): symlink, указывающий наружу, → False, то есть не
-    трогаем чужую цель. Ошибка резолва → False (fail-closed). ЕДИНЫЙ источник истины:
-    connect/vendor/skillset/doctor дублировали startswith(resolve()+os.sep)."""
-    try:
-        return Path(path).resolve().is_relative_to(Path(root).resolve())
-    except (OSError, ValueError):
+def safe_copy_skill(src, dst, dest_root):
+    """Безопасно скопировать каталог скилла src→dst внутри dest_root. ЕДИНЫЙ путь копии
+    для vendor.do_vendor и skillset.sync_skillset (раньше дублировались, расходясь в
+    деталях безопасности). Шаги: лексич. containment (traversal через '../' в имени → стоп),
+    снять существующий dst (symlink/файл/dir, symlink НЕ разыменовываем), пере-проверка
+    против гонки (TOCTOU: чужой процесс мог пересоздать dst симлинком наружу), copytree с
+    SKILL_IGNORE. Возврат True при копировании, False при пропуске (с warn). is_within/
+    is_within_lexical — теперь из core (реэкспорт выше)."""
+    if not is_within_lexical(dst, dest_root):
+        warn(f"пропуск: путь вне каталога назначения: {dst}")
         return False
-
-
-def is_within_lexical(path, root):
-    """Containment МЕСТА `path` под `root` БЕЗ резолва symlink самого `path` (родитель
-    резолвится). Для INSTALL-гейта: ловит traversal через '../' в имени скилла, но НЕ
-    отвергает symlink, лежащий в `path` (его install удалит и заменит копией). Ошибка
-    резолва → False (fail-closed)."""
-    try:
-        base = Path(root).resolve()
-        full = Path(path).parent.resolve() / Path(path).name
-        return full == base or base in full.parents
-    except (OSError, ValueError):
+    if dst.is_symlink() or dst.is_file():
+        dst.unlink()
+    elif dst.is_dir():
+        shutil.rmtree(dst)
+    if dst.is_symlink() or dst.exists():
+        warn(f"пропуск '{dst.name}': путь пересоздан между удалением и копированием (гонка)")
         return False
+    shutil.copytree(src, dst, dirs_exist_ok=True,
+                    ignore=shutil.ignore_patterns(*SKILL_IGNORE))
+    return True
 
 
 @dataclass(frozen=True)

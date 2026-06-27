@@ -4,8 +4,10 @@ tmp-файл рядом с целью → `os.replace` (атомарная по�
 swissknifeman (`state.save_db`) и maind (`common.atomic_write_json`) скопировали
 независимо байт-в-байт; вынесен сюда, чтобы оба пакета писали через один источник
 истины и краш в момент записи не оставлял полузаписанного файла. stdlib-only."""
+import copy
 import json
 import os
+from datetime import date
 from pathlib import Path
 from typing import Callable, Optional
 
@@ -24,6 +26,31 @@ def safe_load_json(path, default=None, *, on_error: Optional[Callable] = None):
         if on_error is not None:
             on_error(e)
         return default
+
+
+def load_json_db(path, default, *, max_version=None):
+    """JSON-«БД» с восстановлением: нет файла → deepcopy(default); БИТЫЙ файл → бэкап
+    `<name>.corrupt.<date>` + warn + deepcopy(default); version > max_version → die.
+
+    Единый источник истины вместо дословных копий в skiller.state.load_db и
+    maind.common.load_json_db (расходились в имени бэкапа и тексте ошибки). `default` НЕ
+    мутируется (возвращается deepcopy). die/warn — из core.term (лениво, без цикла импорта).
+    stdlib-only."""
+    from .term import die, warn
+    path = Path(path)
+    if not path.exists():
+        return copy.deepcopy(default)
+    try:
+        db = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError, UnicodeDecodeError):
+        backup = path.with_name(f"{path.name}.corrupt.{date.today().isoformat()}")
+        path.rename(backup)
+        warn(f"{path} повреждён → сохранён в {backup.name} (начинаю заново)")
+        return copy.deepcopy(default)
+    if max_version is not None and isinstance(db, dict) and db.get("version", 1) > max_version:
+        die(f"{path} записан более новой версией — обновите репозиторий (git pull) и "
+            f"перезапустите установку")
+    return db
 
 
 def atomic_write_text(path, text, *, encoding="utf-8", mode=None):

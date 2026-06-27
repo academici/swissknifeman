@@ -4,12 +4,9 @@
 ядро Env, parse_args, run_cmd, atomic/safe JSON) вынесен в общий core; HTTP-клиент
 вынесен в `maind.http`, управляемый markdown-блок — в `maind.blocks` (реэкспорт ниже
 для обратной совместимости импортов `from .common import ...`)."""
-import copy
-import json
 import os
 import shutil
 from dataclasses import dataclass
-from datetime import date
 from pathlib import Path
 
 # Общий core (подключается через PYTHONPATH лаунчером/test.sh). Реэкспорт для
@@ -19,6 +16,7 @@ from core import (  # noqa: F401
     detect_project_type, die, find_monorepo_root, now_iso, parse_args,
     run_cmd, safe_load_json, sanitize, warn,
 )
+from core import load_json_db as _core_load_json_db
 # Выделенные модули — реэкспорт ради `from .common import ...` (back-compat).
 from .blocks import content_hash, managed_block, upsert_block  # noqa: F401
 from .http import http_get_json, http_post_json, ping  # noqa: F401
@@ -127,20 +125,8 @@ def backup_file(path):
 # http_get_json/http_post_json/ping — в maind.http (реэкспорт выше).
 
 
-# ── JSON-хранилища (atomic write — из core; устойчивое чтение — здесь) ───────
+# ── JSON-хранилища (atomic write + устойчивое чтение — общий core) ───────────
 def load_json_db(path, default):
-    """Читает JSON-БД. Битый файл → бэкап .corrupt.<date> + warn + копия default.
-    Версия новее DB_VERSION → die. default не мутируется (возвращается deepcopy)."""
-    path = Path(path)
-    if not path.exists():
-        return copy.deepcopy(default)
-    try:
-        db = json.loads(path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError:
-        backup = path.with_name(f"{path.name}.corrupt.{date.today().isoformat()}")
-        path.rename(backup)
-        warn(f"{path} повреждён → сохранён в {backup} (начинаю заново)")
-        return copy.deepcopy(default)
-    if isinstance(db, dict) and db.get("version", 1) > DB_VERSION:
-        die(f"{path} записан более новой версией maind — обновите репозиторий (git pull)")
-    return db
+    """JSON-БД узла с восстановлением — общий core.load_json_db (битый → бэкап
+    .corrupt.<date> + warn + deepcopy(default); version > DB_VERSION → die)."""
+    return _core_load_json_db(path, default, max_version=DB_VERSION)

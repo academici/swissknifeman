@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Changed (аудит 2026-06 — Phase 4: кросс-пакетный дедуп → core)
+
+- **`core.paths`** (новый): `is_within`/`is_within_lexical` — единый containment-примитив
+  (был только в `skiller.common`, дублировал паттерн в connect/vendor/skillset/eval). Экспортирован
+  из `core`; `skiller.common` реэкспортит для back-compat.
+- **`core.io.load_json_db`** (новый): JSON-БД с восстановлением (битый → бэкап `.corrupt.<date>` +
+  warn; version > max → die). Свёл дословные копии `skiller.state.load_db` и
+  `maind.common.load_json_db` (расходились в имени бэкапа/тексте) к одному источнику.
+- **`skiller.common.safe_copy_skill`** (новый): единый безопасный copy скилла (containment +
+  снятие symlink/файла/каталога + TOCTOU-перепроверка + `SKILL_IGNORE`) — общий для
+  `vendor.copy_skill` и `skillset.sync_skillset` (раньше дублировались, расходясь в безопасности;
+  TOCTOU-фикс Phase 3 теперь и в vendor). Legacy `vendor` re-copy стал clean-replace (как skillset).
+- Осознанно НЕ тронуто: `apply_permissions` (skiller→harness — это граница делегирования через
+  subprocess, не дубль); консолидация 3 валидаторов конфигов (schema-расходящиеся — отдельный
+  риск/PR).
+
 ### Fixed (аудит 2026-06 — Phase 3: надёжность логики подключения)
 
 - **TOCTOU в `skillset.sync_skillset`:** между удалением `dst` и `copytree` чужой процесс мог

@@ -14,7 +14,9 @@ swissknifeman/maind/brain байт-в-байт: вывод (die/warn/now_iso/con
 Без сторонних зависимостей."""
 from .cli import parse_args, parse_flags, run_cmd
 from .env import HOME, BaseEnv
-from .io import atomic_write_json, atomic_write_text, safe_load_json
+from .io import (atomic_write_json, atomic_write_text, load_json_db,
+                 safe_load_json)
+from .paths import is_within, is_within_lexical
 from .project import LANGUAGE_BY_TYPE, PROJECT_TYPES, detect_project_type
 from .repo import find_monorepo_root, find_repo_root
 from .term import confirm, die, now_iso, warn
@@ -22,7 +24,8 @@ from .text import sanitize
 
 __all__ = [
     "HOME", "BaseEnv", "die", "warn", "now_iso", "confirm", "sanitize",
-    "atomic_write_text", "atomic_write_json", "safe_load_json",
+    "atomic_write_text", "atomic_write_json", "safe_load_json", "load_json_db",
+    "is_within", "is_within_lexical",
     "find_repo_root", "find_monorepo_root",
     "detect_project_type", "PROJECT_TYPES", "LANGUAGE_BY_TYPE",
     "parse_flags", "parse_args", "run_cmd",

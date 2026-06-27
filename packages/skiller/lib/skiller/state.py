@@ -1,31 +1,18 @@
 """~/.swissknifeman/projects.json и git-состояние реестра."""
 import json
 import subprocess
-from datetime import date
 from pathlib import Path
 
-from core import atomic_write_text
+from core import atomic_write_text, load_json_db
 
-from .common import DB_VERSION, die, now_iso, warn
+from .common import DB_VERSION, now_iso
 
 
 def load_db(env):
-    db_file = env.db_file
-    if not db_file.exists():
-        return {"version": DB_VERSION, "projects": []}
-    try:
-        db = json.loads(db_file.read_text(encoding="utf-8"))
-    except json.JSONDecodeError:
-        backup = db_file.with_name(
-            f"projects.json.corrupt.{date.today().isoformat()}")
-        db_file.rename(backup)
-        warn(f"{db_file} повреждён — переименован в {backup.name}, начинаю заново "
-             f"(записи восстановятся при skiller update в проектах)")
-        return {"version": DB_VERSION, "projects": []}
-    if db.get("version", 1) > DB_VERSION:
-        die(f"{db_file} записан более новой версией swissknifeman — обновите "
-            f"репозиторий реестра (git pull) и перезапустите install.sh")
-    return db
+    """projects.json с восстановлением битого файла — общий core.load_json_db
+    (бэкап .corrupt.<date> + warn; version > DB_VERSION → die)."""
+    return load_json_db(env.db_file, {"version": DB_VERSION, "projects": []},
+                        max_version=DB_VERSION)
 
 
 def save_db(env, db):

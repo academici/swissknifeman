@@ -32,6 +32,13 @@ class CoreCase(unittest.TestCase):
         fx.write_skill(skills / "system" / "cross-project-coordinator",
                        "cross-project-coordinator")
         fx.write_skill(skills / "system" / "local-topology", "local-topology")
+        # marketplace должен ОБЪЯВЛЯТЬ курируемый core-плагин, иначе connect-CORE его не пушит
+        # (защита _marketplace_declares: на старом marketplace/в тестах плагина может не быть).
+        (self.root / ".claude-plugin" / "marketplace.json").write_text(json.dumps({
+            "name": "swissknifeman",
+            "plugins": [{"name": "core", "source": "./",
+                         "skills": ["./skills/general/context-economy"]}],
+        }) + "\n")
 
     def tearDown(self):
         self._tmp.cleanup()
@@ -73,23 +80,35 @@ class CoreCase(unittest.TestCase):
         # default-exclude снят -> дубли на месте
         self.assertTrue((dest / "system" / "shared-memory").exists())
 
-    def test_connect_adds_core_buckets(self):
+    def test_connect_adds_core_plugin(self):
+        # Умное подключение: CORE-политика пушит ЛЁГКИЙ курируемый плагин `core`,
+        # а НЕ целые бакеты general+oss-dev (экономия резидентных токенов).
         proj = fx.make_laravel_project(self.tmp)
         do_connect(self.env, proj, {})
         settings = json.loads(
             (proj / ".claude" / "settings.local.json").read_text())
         enabled = {k.split("@")[0] for k, v in settings["enabledPlugins"].items() if v}
-        self.assertIn("general", enabled)
-        self.assertIn("oss-dev", enabled)
+        self.assertIn("core", enabled)
+        self.assertNotIn("general", enabled)   # целые бакеты больше не пушим
+        self.assertNotIn("oss-dev", enabled)
 
-    def test_connect_no_core_omits_core_buckets(self):
+    def test_connect_no_core_omits_core_plugin(self):
         proj = fx.make_laravel_project(self.tmp)
         do_connect(self.env, proj, {"no_core": True})
         settings = json.loads(
             (proj / ".claude" / "settings.local.json").read_text())
         enabled = {k.split("@")[0] for k, v in settings["enabledPlugins"].items() if v}
-        self.assertNotIn("general", enabled)
-        self.assertNotIn("oss-dev", enabled)
+        self.assertNotIn("core", enabled)
+
+    def test_connect_core_skipped_when_marketplace_lacks_it(self):
+        # Защита: marketplace не объявляет core (старый/пустой) → CORE тихо не пушит.
+        (self.root / ".claude-plugin" / "marketplace.json").write_text("{}\n")
+        proj = fx.make_laravel_project(self.tmp)
+        do_connect(self.env, proj, {})
+        settings = json.loads(
+            (proj / ".claude" / "settings.local.json").read_text())
+        enabled = {k.split("@")[0] for k, v in settings["enabledPlugins"].items() if v}
+        self.assertNotIn("core", enabled)
 
 
 if __name__ == "__main__":

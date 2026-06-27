@@ -6,6 +6,7 @@ from core import atomic_write_text, find_repo_root, run_cmd
 
 from .common import (MARKETPLACE, die, parse_flags, parse_frontmatter,
                      parse_inline_list, skill_content_hash)
+from .config import CORE_PLUGIN, CORE_SKILLS
 
 OWNER = {"name": "Dmitry Vostrikov", "email": "dv.vostrikov@gmail.com"}
 
@@ -157,6 +158,26 @@ def write_plugin_manifests(env, bucket_meta, bucket_dirs):
             "description": meta["description"],
             "category": meta.get("category", ""),
             "tags": meta.get("tags", []),
+            "package": "skiller",
+        })
+
+    # Курируемый лёгкий core-плагин: токен-экономное ALWAYS-ON ядро (== CORE_SKILLS),
+    # которое connect раздаёт в каждый проект ВМЕСТО целых бакетов general+oss-dev.
+    # marketplace-запись source:"./" (корень репо) + явный skills[] = ПОЛНЫЙ набор плагина:
+    # грузятся РОВНО эти 7 скиллов (заменяет дефолтный скан — подтверждено докой Claude Code
+    # v2.1.x). Скиллы физически живут в своих бакетах — здесь только ссылки по пути, без копий.
+    core_skill_paths = [src(f"skills/{cs}") for cs in CORE_SKILLS
+                        if (root / "skills" / cs / "SKILL.md").is_file()]
+    if core_skill_paths:
+        marketplace_plugins.append({
+            "name": CORE_PLUGIN,
+            "source": "./",   # корень репо = корень marketplace; skills[] — пути от него
+            "skills": core_skill_paths,
+            "description": "Curated always-on core: token-economy skills (context-economy, "
+                           "anti-drift, verify-claims, …) — lean replacement for the "
+                           "general+oss-dev buckets in every project",
+            "category": "meta",
+            "tags": ["core", "token-economy", "always-on"],
             "package": "skiller",
         })
 

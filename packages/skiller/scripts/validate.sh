@@ -608,14 +608,18 @@ else:
         names = [p.get("name", "") for p in entries]
         if len(names) != len(set(names)):
             errors.append(".claude-plugin/marketplace.json: duplicate plugin names")
-        expected_names = list(plugin_roots) + sibling_plugin_names
+        # Курируемые (не-бакетные) плагины: каталога-плагина на диске НЕТ — плагин ссылается на
+        # скиллы из РАЗНЫХ бакетов через skills[] (source:"./"). Имя мирроит config.CORE_PLUGIN;
+        # сами пути skills[] проверяем на существование ниже. (Дубль имени — stdlib-only heredoc.)
+        curated_plugin_names = ["core"]
+        expected_names = list(plugin_roots) + sibling_plugin_names + curated_plugin_names
         if sorted(names) != sorted(expected_names):
             errors.append(
                 f".claude-plugin/marketplace.json: plugins must match dirs on disk "
                 f"({STALE_HINT})")
         for p in entries:
             src = p.get("source", "")
-            # source-пути относительны корня репо (./packages/skiller/...)
+            # source-пути относительны корня репо (./packages/skiller/... или ./ для curated)
             if not (repo_root / src).is_dir():
                 errors.append(
                     f".claude-plugin/marketplace.json: {p.get('name')}: "
@@ -624,6 +628,13 @@ else:
                 errors.append(
                     f".claude-plugin/marketplace.json: {p.get('name')}: "
                     f"description must be non-empty")
+            # курируемый плагин: каждый путь skills[] (от корня репо) должен существовать
+            if p.get("name") in curated_plugin_names:
+                for sk in (p.get("skills") or []):
+                    if not (repo_root / sk).is_dir():
+                        errors.append(
+                            f".claude-plugin/marketplace.json: {p.get('name')}: "
+                            f"skills path not found: {sk} ({STALE_HINT})")
 
 # --- 7b. no skills nested inside a skill dir ---------------------------------
 # Claude Code discovers a dir with SKILL.md as a leaf skill; SKILL.md deeper

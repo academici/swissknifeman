@@ -3109,8 +3109,8 @@
       "path": "skills/php/naming-conventions/SKILL.md",
       "version": "0.1.0",
       "description": "Naming Laravel/PHP entities: repository methods by intent (not findByCodeOrFail-explosion), Action/DTO/VO/Enum/Event/Job, tables/columns/routes. Kills junk names AI loves to generate. Activate when creating or reviewing class/method/migration names.",
-      "sha256": "73ccc4d112d7bb98f94b1ca157ea5d42467da45ae29362d92c167a0ea177bcf6",
-      "content_sha256": "94d28416132d2242e39eaac0e834343aabc5de1507c409fd2b8cece5d27a2ee5",
+      "sha256": "1a490c1d39f672824a62a59116557d49ec7311e5fee1f6a4a39bd4f323c91173",
+      "content_sha256": "d2033680283ad707cb17517fe027ecc59ceb13db3279604a433ef28d7b97ac86",
       "tags": [
         "php",
         "laravel",

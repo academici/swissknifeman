@@ -122,9 +122,17 @@ def do_connect(env, target, opts, register=True, fix_path_drift=False):
                 print(f"NOTE: путь marketplace устарел ({existing.get('path')}) — "
                       f"обновляю на {mp_root}")
                 marketplaces[MARKETPLACE] = {"source": our_source}
+            elif existing.get("source") == "directory":
+                # directory-источник с ДРУГИМ путём — вероятно репозиторий переехал: плагины
+                # не подхватятся. Подсказку делаем действенной (а не молча оставляем старый путь).
+                print(f"⚠ marketplace '{MARKETPLACE}' указывает на ДРУГОЙ каталог: "
+                      f"{existing.get('path')}\n  реестр сейчас здесь: {mp_root}. Если "
+                      f"репозиторий переехал — плагины не загрузятся. Исправить: "
+                      f"skiller connect --fix-path (или skiller update).")
             else:
-                print(f"NOTE: marketplace '{MARKETPLACE}' already declared with a "
-                      f"different source — keeping it: {json.dumps(existing)}")
+                # Иной тип источника (github/…) — осознанный выбор пользователя, не трогаем.
+                print(f"NOTE: marketplace '{MARKETPLACE}' объявлен с другим источником "
+                      f"({json.dumps(existing)}) — оставляю как есть.")
     else:
         marketplaces[MARKETPLACE] = {"source": our_source}
 

@@ -128,8 +128,12 @@ def apply_permissions(env, target, presets="", dry_run=False, settings_file=None
     except subprocess.TimeoutExpired:
         warn("harness: превышен таймаут 30s — permissions могли не примениться")
         return True
-    if result.returncode != 0 and result.stderr:
-        warn(f"harness: {result.stderr.strip()}")
+    if result.returncode != 0:
+        # Раньше warn был только при непустом stderr → молчаливый ненулевой rc прятал, что
+        # permissions-пресеты (deny мусора/allow стека) НЕ легли. Сообщаем всегда.
+        detail = result.stderr.strip() if result.stderr else f"exit {result.returncode}"
+        warn(f"harness permissions не применились ({detail}) — пресеты deny/allow могли не лечь; "
+             f"перезапустите: harness permissions --target {target}")
     return True
 
 

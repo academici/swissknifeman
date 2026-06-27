@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Docs (аудит 2026-06 — Phase 7: точность доков и DX)
+
+- **Доки больше не врут про CORE-политику.** `skiller/CLAUDE.md`, `docs/guide/skills-architecture.md`,
+  `docs/guide/archetypes.md` и корневой `CLAUDE.md` обновлены под умное подключение: connect раздаёт
+  курируемый плагин `core` (а НЕ бакеты general+oss-dev). Счётчик плагинов marketplace ~50.
+- **Задокументирована команда `harness agent-packs`** (`list|render|upgrade|doctor` + флаги) в
+  `harness/CLAUDE.md` — раньше отсутствовала в справке CLI.
+- **`research/README.md`** (новый): индекс рабочих записей с явной пометкой «НЕ канон» и указателем
+  на источники истины (docs/CHANGELOG/CLAUDE.md) + напоминание методологии (до-проверять аудиты).
+
 ### Added (аудит 2026-06 — Phase 6: тесты и CI)
 
 - **Юнит-тесты на новое поведение:** `core.load_json_db` (missing/corrupt-backup/version-die),

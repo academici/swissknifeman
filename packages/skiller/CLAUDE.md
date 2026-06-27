@@ -28,14 +28,22 @@ stdlib-only; синхрон держат `tests/test_schema.py` + `skiller docto
 читает **сам Claude Code**, не Python (нет `load_skill`) → кэш «загрузки» внутри skiller не нужен.
 Канон — `docs/guide/skills-architecture.md`.
 
-### CORE-политика (раздача по умолчанию)
+### CORE-политика (раздача по умолчанию) — «умное подключение»
 
-Токен-экономный CORE раздаётся в КАЖДЫЙ проект по умолчанию (`--no-core` отключает):
-connect → бакеты `general`+`oss-dev`; vendor → skill-level `context-economy`, `anti-drift`,
-`compact-responses`, `session-handoff`, `mcp-advisor`, `verify-claims`, `gh-review` (7 скиллов,
-== `CORE_SKILLS`). `permissions.deny`-пресеты применяются в
-`connect`/`vendor` (`--no-permissions` отключает). Дубли хаба maind (`shared-memory`,
-`cross-project-coordinator`) — default-exclude.
+Токен-экономный CORE (== `CORE_SKILLS`: `context-economy`, `anti-drift`, `compact-responses`,
+`session-handoff`, `mcp-advisor`, `verify-claims`, `gh-review` — 7 скиллов) раздаётся в КАЖДЫЙ
+проект по умолчанию (`--no-core` отключает):
+
+- **connect → курируемый плагин `core`** (`CORE_PLUGIN`). marketplace-запись `source:"./"` +
+  явный `skills[]` грузит РОВНО эти 7 скиллов (скиллы физически в своих бакетах — ссылки, без
+  копий). Это вместо прежней раздачи целых бакетов `general`(19)+`oss-dev`(10): **резидентный
+  ⊕ tier-0 ~1956 → ~480 ток/проект**. Плагин эмитит `registry.py`; gate — `validate.sh`. `connect`
+  печатает строку `Резидент: ~N ток` (budget-aware) и подсказывает онбордженным снять старые
+  `general/oss-dev` (миграция, merge-only). `CORE_BUCKETS` оставлен только для этой подсказки.
+- **vendor → skill-level** те же 7 `CORE_SKILLS` пофайлово (канал и так skill-granular).
+
+`permissions.deny`-пресеты применяются в `connect`/`vendor` (`--no-permissions` отключает). Дубли
+хаба maind (`shared-memory`, `cross-project-coordinator`) — default-exclude.
 
 ## Раскладка
 

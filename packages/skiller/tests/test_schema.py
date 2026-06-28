@@ -13,7 +13,7 @@ from skiller.common import AGENT_DEFAULTS, CONFIG_KEYS
 from skiller.skillset import SKILLSET_KEYS
 
 SCHEMA_DIR = Path(__file__).resolve().parents[1] / "schema"
-JSON_TYPE = {str: "string", list: "array", int: "integer", dict: "object"}
+JSON_TYPE = {str: "string", list: "array", int: "integer", dict: "object", bool: "boolean"}
 
 
 def _load(name):

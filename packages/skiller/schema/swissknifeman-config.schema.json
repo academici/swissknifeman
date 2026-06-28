@@ -45,6 +45,10 @@
       "type": "array",
       "items": { "type": "string" },
       "description": "Вычитание из (presets ∪ buckets ∪ include): имя скилла или 'bucket/rel'."
+    },
+    "gitignore_managed": {
+      "type": "boolean",
+      "description": "true → sync эмитит <skills_path>/.gitignore со списком managed-скиллов (держим вне git, воспроизводимы `skiller sync`); локальные/кастомные скиллы остаются в репозитории. Корневой .gitignore не трогается. ⚠ managed-скиллы перестают коммититься — подходит, когда у всех разработчиков есть доступ к реестру swissknifeman."
     }
   }
 }

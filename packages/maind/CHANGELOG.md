@@ -5,6 +5,17 @@
 
 ## [Unreleased]
 
+### Fixed
+- **MCP-провижининг устойчив к битому sibling-каналу.** Раньше `load_mcp` на битом JSON одного
+  канала (напр. `.cursor/mcp.json`) звал `die()` и валил **весь** `maind sync`/`deploy` (хотя
+  `.mcp.json` был валиден). Теперь `load_mcp` поднимает `MCPConfigError`, а `deploy_project` ловит
+  его **поканально**: битый файл не трогаем, печатаем warn и пропускаем только этот канал —
+  остальные каналы и проекты фан-аута отрабатывают (`result["skipped"]`, видно в выводе sync/deploy).
+  Недеструктивный мерж чужих серверов (`merge_server` сохраняет напр. `playwright`/`laravel-boost`)
+  как и был — добавлены регресс-тесты (`test_preserves_foreign_server_in_mcp_json`,
+  `test_broken_channel_skipped_others_continue`, `test_broken_json_raises`). Поймано на полевом
+  онбординге agelto через `field-feedback-loop`.
+
 ### Changed
 - **Качество ядра по рецензии аудита (Perplexity)** — поведенчески-нейтральные правки `lib/maind/`
   с проверкой каждого пункта по коду (часть замечаний аудита отклонена как фактически неверная или

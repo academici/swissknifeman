@@ -121,7 +121,7 @@
     },
     "laravel-architecture": {
       "description": "Scaling architecture: modular monolith/DDD, enum state machines, enum attributes, subagent orchestration",
-      "count": 4,
+      "count": 5,
       "status": "active"
     },
     "laravel-auth": {
@@ -2259,6 +2259,25 @@
         "tests",
         "docs",
         "style"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "eloquent-accessors",
+      "bucket": "laravel-architecture",
+      "path": "skills/laravel-architecture/eloquent-accessors/SKILL.md",
+      "version": "0.1.0",
+      "description": "Activate when writing/refactoring Eloquent accessors and mutators: when you see legacy getXxxAttribute()/setXxxAttribute() and should move to modern Attribute::make() (get/set), or when deciding where to place and how to type a computed model property. Triggers: getFooAttribute, Attribute::make, accessor, mutator, computed attribute, Illuminate\\\\Database\\\\Eloquent\\\\Casts\\\\Attribute",
+      "sha256": "9b95bbdf4525b3666bb9d424ed91b73666d1b6b17e60ffda6dc2bbde2ebb4a55",
+      "content_sha256": "42206658fe8f71bb5a6e7972041da5e53bae33b78e14484bf6454d1580ed84a0",
+      "tags": [
+        "php",
+        "laravel",
+        "eloquent",
+        "attributes",
+        "accessors",
+        "mutators",
+        "patterns"
       ],
       "source": "local"
     },

@@ -6,7 +6,7 @@ laravel-boost). Слияние идемпотентно (повторный за
 import json
 from pathlib import Path
 
-from .common import atomic_write_json, backup_file, die
+from .common import atomic_write_json, backup_file
 
 # Куда какие агенты кладут MCP-серверы.
 MCP_FILES = {
@@ -16,21 +16,29 @@ MCP_FILES = {
 }
 
 
+class MCPConfigError(Exception):
+    """Битый/некорректный MCP-конфиг канала. load_mcp поднимает его вместо die, чтобы
+    ВЫЗЫВАЮЩИЙ решал: уронить команду целиком или пропустить только этот канал (один
+    битый sibling-файл вроде .cursor/mcp.json не должен валить весь фан-аут sync)."""
+
+
 def mcp_path(project_path, channel):
     return Path(project_path) / MCP_FILES[channel]
 
 
 def load_mcp(path):
-    """(data, existed). Отсутствует → ({"mcpServers":{}}, False). Битый JSON → die (не трогаем)."""
+    """(data, existed). Отсутствует → ({"mcpServers":{}}, False). Битый JSON / не-объект →
+    MCPConfigError (файл НЕ трогаем; вызывающий решает фатальность)."""
     path = Path(path)
     if not path.exists():
         return {"mcpServers": {}}, False
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as e:
-        die(f"{path}: битый JSON MCP-конфига — не трогаю, исправьте вручную: {e}")
+        raise MCPConfigError(
+            f"{path}: битый JSON MCP-конфига — не трогаю, исправьте вручную: {e}")
     if not isinstance(data, dict):
-        die(f"{path}: ожидался объект MCP-конфига")
+        raise MCPConfigError(f"{path}: ожидался объект MCP-конфига")
     data.setdefault("mcpServers", {})
     return data, True
 

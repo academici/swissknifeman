@@ -163,6 +163,7 @@ flowchart LR
     writing_style["writing-style<br/>⊕83 ↻1565"]:::warm
   end
   subgraph laravel_architecture["laravel-architecture"]
+    eloquent_accessors["eloquent-accessors<br/>⊕101 ↻1067"]:::hot
     enum_attributes["enum-attributes<br/>⊕111 ↻1690"]:::hot
     enum_state_machine["enum-state-machine<br/>⊕135 ↻1356"]:::hot
     laravel_subagents["laravel-subagents<br/>⊕65 ↻1115"]:::warm
@@ -394,7 +395,7 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 196 скиллов · ⊕ always **11727** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 429331 ток · ⌥ snippets 157348 ток.
+**Итого:** 197 скиллов · ⊕ always **11828** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 430398 ток · ⌥ snippets 158029 ток.
 
 ## По бакетам
 
@@ -407,10 +408,10 @@ flowchart LR
 | `php-packages` | 9 | 582 | 4618 | 489 |
 | `oss-dev` | 10 | 532 | 12204 | 4313 |
 | `php` | 13 | 503 | 15538 | 26763 |
+| `laravel-architecture` | 5 | 483 | 7905 | 7460 |
 | `devops` | 11 | 451 | 7654 | 15388 |
 | `blender-modeling` | 6 | 429 | 7727 | 11772 |
 | `system` | 5 | 429 | 6940 | 797 |
-| `laravel-architecture` | 4 | 382 | 6838 | 6779 |
 | `pm` | 10 | 373 | 28759 | 197 |
 | `founder` | 10 | 343 | 13127 | 494 |
 | `laravel-testing` | 4 | 283 | 6868 | 14531 |

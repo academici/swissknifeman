@@ -4,7 +4,7 @@
 
 Источник истины портируемых скиллов (машинный реестр — `skills.json`). Раздача в проекты: `skiller connect` (плагины-бакеты) / `vendor` (физ. перенос). CORE-набор токен-скиллов (`general`/`oss-dev`) раздаётся по умолчанию — см. `connect`/`vendor`.
 
-Всего: 196 скиллов в 45 бакетах.
+Всего: 197 скиллов в 45 бакетах.
 
 ## Скиллы по бакетам
 
@@ -226,10 +226,11 @@
 | `verify-claims` | Before a decision/verdict that rests on an EXTERNAL fact (library version/API, 'still cur… | `verification`, `rag`, `research`, `planning`, `context`, `claude-code` |
 | `writing-style` | Tone & language of code artifacts: Russian by default for comments, commit bodies, test d… | `writing`, `language`, `russian`, `comments`, `commits`, `tests`, `docs`, `style` |
 
-### laravel-architecture — Scaling architecture: modular monolith/DDD, enum state machines, enum attributes, subagent orchestration (4)
+### laravel-architecture — Scaling architecture: modular monolith/DDD, enum state machines, enum attributes, subagent orchestration (5)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
+| `eloquent-accessors` | Activate when writing/refactoring Eloquent accessors and mutators: when you see legacy ge… | `php`, `laravel`, `eloquent`, `attributes`, `accessors`, `mutators`, `patterns` |
 | `enum-attributes` | Use for enum metadata: replace label()/color()/description() match-ladders with PHP attri… | `php`, `enum`, `attributes`, `reflection`, `laravel`, `patterns`, `typescript` |
 | `enum-state-machine` | Activate when a domain status (Order/Document/Subscription) grows into a transition graph… | `php`, `enum`, `state-machine`, `workflow`, `laravel`, `transitions`, `domain`, `actions` |
 | `laravel-subagents` | Subagent orchestration on large Laravel tasks: activation threshold, delegating research … | `workflow`, `orchestration`, `agents`, `laravel` |
@@ -436,6 +437,7 @@
 | Тег | Скиллы |
 |:--|:--|
 | `3d` | `build-loop`, `mcp-blender`, `model-rules`, `parametric-config`, `threading`, `version-gotchas` |
+| `accessors` | `eloquent-accessors` |
 | `actions` | `enum-state-machine` |
 | `admin-panel` | `filament` |
 | `adr` | `architecture`, `domain-modeling`, `grill-with-docs`, `tech-stack-selection` |
@@ -452,7 +454,7 @@
 | `api` | `api-design`, `dx-design`, `laravel-data`, `version-gotchas` |
 | `architecture` | `agent-design`, `api-design`, `architecture`, `data-schema`, `dependency-injection`, `idea-audit`, `inertia-vue`, `laravel`, `laravel-structure`, `local-topology`, `ml-project-structure`, `modular-architecture`, `oss-development`, `php-patterns`, `pinia-stores`, `project-map`, `repositories`, `startup-cto`, `tech-stack-selection`, `test-strategy` |
 | `attribute` | `attribute-authorization` |
-| `attributes` | `enum-attributes` |
+| `attributes` | `eloquent-accessors`, `enum-attributes` |
 | `auth` | `security-design` |
 | `authorization` | `attribute-authorization`, `azguard`, `laravel-permissions` |
 | `auto-layout` | `figma-to-flutter`, `figma-to-vue` |
@@ -536,6 +538,7 @@
 | `dynamic-component` | `vue-dynamic-icons` |
 | `e2e` | `laravel-dusk`, `playwright-e2e` |
 | `echo` | `laravel-broadcasting` |
+| `eloquent` | `eloquent-accessors` |
 | `entities` | `data-schema` |
 | `enum` | `attribute-authorization`, `azguard`, `backend-type-sync`, `enum-attributes`, `enum-state-machine` |
 | `erd` | `data-schema` |
@@ -586,7 +589,7 @@
 | `jsdom` | `vitest` |
 | `jsonl` | `session-observer` |
 | `language` | `writing-style` |
-| `laravel` | `attribute-authorization`, `azguard`, `backend-type-sync`, `botkit`, `ci-cd`, `code-style-spatie`, `database`, `dependency-injection`, `docker-dev-prod`, `docker-php`, `docker-services`, `docker-vite`, `enum-attributes`, `enum-state-machine`, `filament`, `filepond-upload`, `health-checks`, `inertia-vue`, `laravel`, `laravel-best-practices`, `laravel-broadcasting`, `laravel-data`, `laravel-dusk`, `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages`, `laravel-permissions`, `laravel-security-audit`, `laravel-structure`, `laravel-subagents`, `laravel-testing`, `livewire-blade-attributes`, `medialibrary`, `modular-architecture`, `pao`, `pennant-development`, `php-naming-conventions`, `php-patterns`, `repositories`, `spatie-settings`, `static-analysis`, `tailwind-conventions`, `test-isolation-guard`, `vite-module-loader`, `vite-multi-build`, `vitest`, `wayfinder` |
+| `laravel` | `attribute-authorization`, `azguard`, `backend-type-sync`, `botkit`, `ci-cd`, `code-style-spatie`, `database`, `dependency-injection`, `docker-dev-prod`, `docker-php`, `docker-services`, `docker-vite`, `eloquent-accessors`, `enum-attributes`, `enum-state-machine`, `filament`, `filepond-upload`, `health-checks`, `inertia-vue`, `laravel`, `laravel-best-practices`, `laravel-broadcasting`, `laravel-data`, `laravel-dusk`, `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages`, `laravel-permissions`, `laravel-security-audit`, `laravel-structure`, `laravel-subagents`, `laravel-testing`, `livewire-blade-attributes`, `medialibrary`, `modular-architecture`, `pao`, `pennant-development`, `php-naming-conventions`, `php-patterns`, `repositories`, `spatie-settings`, `static-analysis`, `tailwind-conventions`, `test-isolation-guard`, `vite-module-loader`, `vite-multi-build`, `vitest`, `wayfinder` |
 | `laravel-data` | `laravel-data` |
 | `laravel-echo` | `laravel-echo-client` |
 | `laravel-modules` | `modular-architecture` |
@@ -619,6 +622,7 @@
 | `monorepo` | `package-contribution-protocol` |
 | `multi-config` | `vite-multi-build` |
 | `mutation` | `mutation-testing` |
+| `mutators` | `eloquent-accessors` |
 | `naive-ui` | `naive-ui-theming` |
 | `naming` | `naming-conventions`, `php-naming-conventions`, `scene-conventions` |
 | `navigation` | `local-topology`, `packages-stack`, `project-map` |
@@ -637,13 +641,13 @@
 | `package-dev` | `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages` |
 | `parametric` | `build-loop`, `config-conventions`, `parametric-config`, `scene-conventions` |
 | `parenting` | `scene-conventions` |
-| `patterns` | `enum-attributes`, `laravel`, `php-patterns`, `vue-composition-api` |
+| `patterns` | `eloquent-accessors`, `enum-attributes`, `laravel`, `php-patterns`, `vue-composition-api` |
 | `pennant` | `pennant-development` |
 | `performance` | `diagnosing-bugs` |
 | `permissions` | `attribute-authorization`, `azguard`, `laravel-permissions` |
 | `persona` | `open-source-maintainer`, `solo-founder`, `startup-cto`, `tech-lead` |
 | `pest` | `test-strategy` |
-| `php` | `attribute-authorization`, `azguard`, `botkit`, `code-style-spatie`, `database`, `dependency-audit`, `dependency-injection`, `docker-php`, `enum-attributes`, `enum-state-machine`, `filament`, `laravel`, `laravel-best-practices`, `laravel-broadcasting`, `laravel-data`, `laravel-dusk`, `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages`, `laravel-permissions`, `laravel-security-audit`, `laravel-structure`, `laravel-testing`, `medialibrary`, `modular-architecture`, `mutation-testing`, `named-arguments`, `pao`, `pennant-development`, `php-naming-conventions`, `php-patterns`, `php-upgrade-checklist`, `repositories`, `spatie-settings`, `static-analysis`, `test-isolation-guard` |
+| `php` | `attribute-authorization`, `azguard`, `botkit`, `code-style-spatie`, `database`, `dependency-audit`, `dependency-injection`, `docker-php`, `eloquent-accessors`, `enum-attributes`, `enum-state-machine`, `filament`, `laravel`, `laravel-best-practices`, `laravel-broadcasting`, `laravel-data`, `laravel-dusk`, `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages`, `laravel-permissions`, `laravel-security-audit`, `laravel-structure`, `laravel-testing`, `medialibrary`, `modular-architecture`, `mutation-testing`, `named-arguments`, `pao`, `pennant-development`, `php-naming-conventions`, `php-patterns`, `php-upgrade-checklist`, `repositories`, `spatie-settings`, `static-analysis`, `test-isolation-guard` |
 | `phpstan` | `php-upgrade-checklist` |
 | `pinia` | `pinia-stores`, `vue-testing-best-practices` |
 | `planning` | `to-issues`, `verify-claims` |

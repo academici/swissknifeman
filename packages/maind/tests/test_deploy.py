@@ -66,6 +66,37 @@ class TestDeploy(unittest.TestCase):
             self.assertIn("maind", cursor)
             self.assertTrue((ppath / ".mcp.json").exists())  # cursor auto-detected → both
 
+    def test_preserves_foreign_server_in_mcp_json(self):
+        # Ручной сторонний сервер (playwright) в .mcp.json НЕ выкидывается при деплое.
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            ppath = _project(tmp)
+            (ppath / ".mcp.json").write_text(
+                json.dumps({"mcpServers": {
+                    "playwright": {"command": "bash", "args": ["scripts/playwright-mcp.sh"]}}}),
+                encoding="utf-8")
+            cfg = _config(ppath)
+            deploy.deploy_project(env, cfg, cfg["projects"][0])
+            servers = json.loads((ppath / ".mcp.json").read_text())["mcpServers"]
+            self.assertIn("playwright", servers)            # чужой сохранён
+            self.assertEqual(servers["playwright"]["args"], ["scripts/playwright-mcp.sh"])
+            self.assertIn("maind", servers)
+
+    def test_broken_channel_skipped_others_continue(self):
+        # Битый .cursor/mcp.json НЕ валит деплой: его пропускаем (не трогаем), .mcp.json пишем.
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            ppath = _project(tmp)
+            (ppath / ".cursor").mkdir()
+            broken = ppath / ".cursor" / "mcp.json"
+            broken.write_text("{ broken json", encoding="utf-8")
+            cfg = _config(ppath)
+            res = deploy.deploy_project(env, cfg, cfg["projects"][0])  # не бросает
+            self.assertIn(".cursor/mcp.json", res["skipped"])
+            self.assertEqual(broken.read_text(encoding="utf-8"), "{ broken json")  # не тронут
+            servers = json.loads((ppath / ".mcp.json").read_text())["mcpServers"]
+            self.assertIn("maind", servers)                 # валидный канал отработал
+
     def test_idempotent(self):
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)

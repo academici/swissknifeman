@@ -1,0 +1,10 @@
+{
+  "skill": "eloquent-accessors",
+  "snippets": [
+    {
+      "file": "accessor.php",
+      "description": "Эталоны Attribute::make(): getter (стрелочная), getter+setter с нормализацией email, многострочный аксессор из нескольких атрибутов, размещение в классе и миграция legacy getXxxAttribute()",
+      "tags": ["laravel", "eloquent", "accessor", "mutator", "attribute"]
+    }
+  ]
+}

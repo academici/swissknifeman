@@ -1,6 +1,6 @@
 ---
 name: project-tooling-runbook
-description: Раннбук управления инструментами проектов экосистемы — мультиисточниковая система скиллов (swissknifeman ДВУМЯ каналами — connect/marketplace и vendor/физ.перенос через .swissknifeman/config.json — + собственные local-скиллы; Laravel Boost только как MCP, не как канал скиллов; карта в skills-lock.json) и двусторонний синк документации с Brain-валтом. Используй, когда нужно «добавить проекту скиллы разработчика/проектировщика», установить/выбрать скиллы (ВСЕГДА спрашивай канал connect vs vendor), поменять набор, разрулить источники, или синхронизировать docs/ с Brain. Дополняет ecosystem-integration (онбординг в хаб) операционным слоем skills+docs.
+description: Раннбук управления инструментами проектов экосистемы — мультиисточниковая система скиллов (swissknifeman ДВУМЯ каналами — connect/marketplace и vendor/физ.перенос через .swissknifeman/config.json — + собственные local-скиллы; Laravel Boost только как MCP, не как канал скиллов; карта в skills-lock.json) и двусторонний синк документации с Brain-валтом. Используй, когда нужно «добавить проекту скиллы разработчика/проектировщика», установить/выбрать скиллы (ВСЕГДА спрашивай канал connect vs vendor), поменять набор, разрулить источники, настроить роли/агенты проекта (agent-packs: субагенты + workflow + review-gate через harness — ОТДЕЛЬНО от скиллов), или синхронизировать docs/ с Brain. Дополняет ecosystem-integration (онбординг в хаб) операционным слоем skills+docs.
 ---
 
 # Раннбук: скиллы проекта (мультиисточник) + doc-sync (brain)
@@ -150,6 +150,41 @@ inertia-vue`, `frontend/tailwind-conventions`, `frontend/wayfinder` и т.п.). 
 > Типичный кейс «дай проекту скиллы разработчика+проектировщика»: laravel-project уже даёт `php`
 > (разработчик) + `architect` (проектировщик). Если фронт на Vue/Nuxt — добавь `frontend`.
 
+## Агенты/роли проекта (agent-packs) — ОТДЕЛЬНО от скиллов
+
+Скиллы (connect/vendor) дают **знания**, но НЕ ставят **субагентов и workflow**. Роли/агенты — это
+отдельная подсистема **`harness agent-packs`**: ставит `.claude/agents/*`, `.claude/workflows/*`,
+review-gate хук (SubagentStop) и `.claude/rules/*`. **Без этого шага большая задача НЕ развернётся
+в ролевое «slice → test → review»** — будет только встроенный `/code-review` и ad-hoc субагенты.
+Поэтому «настроить проект» = скиллы **И** agent-packs (не одно вместо другого).
+
+| Тип пака | Паки | Что ставит |
+|:--|:--|:--|
+| **стек** (детект по стеку) | `backend-laravel` (artisan/composer), `node-frontend` (vite/nuxt), `python-backend` (pyproject), `dart-flutter` (pubspec) | dev-loop субагенты slice-builder/test-writer/reviewer (+component-builder/type-checker), workflow, review-gate, rules |
+| **роль** (поверх стека) | `role-tech-lead`, `role-maintainer`, `role-cto`, `role-founder` | персона-субагенты (review-gatekeeper/sprint-planner; issue-triager/contribution-reviewer/release-conductor; …) |
+
+```bash
+harness agent-packs list                          # каталог паков + detect
+harness agent-packs render --pack <stack> --target . --auto      # детект стека → субагенты + review-gate
+harness agent-packs render --pack backend-laravel --pack role-tech-lead --target . --auto \
+        --answer TEST_DB=<имя> --answer CHECK_CMD='<статик-чек>'  # стек+роль, override интервью
+harness agent-packs doctor  --target .            # проверка; lock — .claude/agent-pack.lock.json
+harness agent-packs upgrade --pack <p> --target . # бережный апгрейд (conflict → *.pack-new)
+```
+
+> **Автоматический путь:** полный `maind onboard` / `swissknifeman setup` с **типом проекта**
+> (`laravel-project`/`node-frontend`/`python-backend`/`dart-flutter`) ставит стек-пак САМ из профиля
+> (`packages/skiller/profiles/<type>.json: agent_pack`; роли — `config.role_packs` по `project.roles`).
+> Ручной `harness agent-packs render` нужен, когда проект настраивали ВНЕ полного онбординга (напр.
+> ручным `connect`) или у его записи в `projects.json` нет `type` — тогда шаг agent-packs легко
+> пропустить (типичная причина «у проекта нет ролей/код-ревью»).
+
+> **Стек-пак ≠ полное совпадение инфры.** Отрендеренные агенты несут допущения origin-пака (PHP-бинарь,
+> тип БД, защищённый `.env`, Pest/PHPUnit). После install **сверь и поправь** отрендеренные
+> `.claude/agents/*` + `workflow` + `rules/tests.md` под реальную инфру проекта (раннер, MySQL/Postgres,
+> тестовая БД, фреймворк тестов). `requires.skills` пака должны быть покрыты подключённым набором
+> (connect/vendor). Деталь подсистемы (структура пака, шаблонизация, lock/upgrade) — скилл [harness-operations].
+
 ## Doc-sync: документация проекта ↔ Brain-валт
 
 Двусторонний синк `docs/` и `docs-public/` между Brain-валтом и код-репо — CLI `~/Vaults/Brain/bin/brain`
@@ -166,19 +201,46 @@ inertia-vue`, `frontend/tailwind-conventions`, `frontend/wayfinder` и т.п.). 
 
 ## Порядок «дать проекту всё» (полный)
 
+Настройка проекта = **четыре слоя**: скиллы (знания) **+ agent-packs (роли/агенты)** + окружение
+harness (permissions/mcp/hooks) + maind (память/граф). Порядок обязан коснуться всех четырёх:
+
 1. Онбординг в хаб — [ecosystem-integration] (`maind onboard …`, namespace, health=connected).
+   Раскатывает слои **MCP + память/граф** (демон, серверы в `.mcp.json`, граф/код-граф).
 2. Скиллы ролей — **спроси канал** (connect/vendor), затем:
    - connect: `connect --plugins …` (architect+php[+frontend]); или
    - vendor: `.swissknifeman/config.json` (include/buckets) → `skiller sync`.
-3. (Laravel) Boost — как **MCP** (`composer require laravel/boost --dev`, `boost.json: mcp:true,
-   skills:[]`); скиллы Boost НЕ ставим — берём аналоги из библиотеки (vendor).
-4. Зафиксировать карту — vendor: уже в `skills-lock.json` от `sync`; connect/смешанный: `skiller lock`.
-5. Doc-sync — `repo:` в control-ноту + `brain sync all <proj>`.
-6. Авто-аппрув без промптов — bypass, см. [[auto-approve-bypass]].
-7. Проверка: `skiller status` · `cat skills-lock.json` · `maind health --project <id>` · `brain status <proj>`.
+3. **Агенты/роли** — `harness agent-packs render --pack <stack> [--pack <role>] --target . --auto`
+   (детект стека → субагенты + workflow + review-gate). **Сверь отрендеренные агенты с инфрой проекта.**
+   Без этого шага ролевого «slice→test→review» не будет — см. раздел «Агенты/роли» выше.
+4. **MCP / память / граф** — раскатаны онбордингом; пере-раскатать точечно:
+   `maind sync --only mcp,memory,graph,code-graph --project <id>`. (Laravel) Boost — как **MCP**
+   (`composer require laravel/boost --dev`, `boost.json: mcp:true, skills:[]`); скиллы Boost НЕ ставим.
+5. Зафиксировать карту — vendor: уже в `skills-lock.json` от `sync`; connect/смешанный: `skiller lock`.
+6. Doc-sync — `repo:` в control-ноту + `brain sync all <proj>`.
+7. Авто-аппрув без промптов — bypass, см. [[auto-approve-bypass]].
+8. **Проверка — одной командой:** `swissknifeman status <id>` (единый 4-слойный инвентарь + drift→fix);
+   `--all --json` для агента. Плюс `brain status <proj>` (doc-sync).
+
+## Control-surface: статус → точечный re-sync
+
+Состояние всех 4 слоёв проекта — одной командой, и точечная починка каждого. Канон —
+[Control-surface проекта](../../../docs/control-surface.md) (умбрелла-док).
+
+```bash
+swissknifeman status <id>            # 4 слоя: status·mcp[a/m/c]·skills·packs·trust + drift→fix
+swissknifeman status --all --json    # весь флот машиночитаемо (агент читает .projects[].fixes)
+maind sync --project <id> --only <cap>   # точечный re-sync: mcp|memory|graph|code-graph|agent-pack|…
+```
+
+Цикл: `status --json` → читаешь `fixes[]` (каждый = `{layer, issue, fix}`) → выполняешь точную
+команду (обычно `maind sync --only <cap>`), а **не** «пере-настрой всё». Машиночитаемо по слоям:
+`skiller status --json` (скиллы) · `harness agent-packs doctor --target . --json` (роли) ·
+`maind verify --json` (пруф памяти/графа).
 
 ## Ссылки
 
+- [Control-surface проекта](../../../docs/control-surface.md) — единый статус 4 слоёв + точечный re-sync.
 - [ecosystem-integration] — подключение проекта к хабу mAInd (память/граф/MCP).
+- [harness-operations] — подсистема agent-packs (роли/агенты), пресеты permissions/mcp/hooks.
 - [maind-overview] — устройство хаба и namespace'ов.
 - память: [[brain-doc-sync]] · [[auto-approve-bypass]].

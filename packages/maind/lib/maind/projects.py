@@ -108,7 +108,7 @@ def cmd_projects(env, argv):
 
 
 def _cmd_status(env, argv):
-    from .probe import probe_hub, probe_project
+    from .probe import drift_hints, probe_hub, probe_project
     from .workspace import trusted_dirs
     opts, _ = parse_args(argv, {"--json": "bool", "--project": "str", "--all": "bool",
                                 "--namespace": "str"})
@@ -123,24 +123,28 @@ def _cmd_status(env, argv):
         projs = [p for p in projs if in_namespace(p, opts["namespace"])]
     reports = [probe_project(env, config, p, memory_reachable=reach, trusted=trusted)
                for p in projs]
-    snapshot = {"hub": hub, "projects": reports}
+    for r in reports:                       # B: drift-подсказки «слой X → команда починки»
+        r["fixes"] = drift_hints(env, config, r)
     if opts["json"]:
-        print(json.dumps(snapshot, ensure_ascii=False, indent=2))
+        print(json.dumps({"hub": hub, "projects": reports}, ensure_ascii=False, indent=2))
         return
     m, g, dw = hub["memory"], hub["graph"], hub["docs_watcher"]
     print(f"Хаб: память {'up' if m['running'] else 'down'} ({m['url']}) · "
           f"граф {g['nodes']}n/{g['edges']}e · docs-watcher "
           f"{'up' if dw['running'] else 'down'}")
-    print(f"Проекты ({len(reports)}):")
+    print(f"Проекты ({len(reports)}) — слои: mcp[a/m/c] · skills · packs(роли) · trust:")
     for r in reports:
         c = r.get("configured", {})
         mcp = ("a" if c.get("agentmemory_mcp") else "-") \
             + ("m" if c.get("maind_mcp") else "-") \
             + ("c" if c.get("code_mcp") else "-")
         sk = r.get("skills", {}).get("total", 0)
+        ap = (r.get("agent_packs") or {}).get("count", 0)
         trust = "trust✓" if r.get("trusted") else "trust·"
-        print(f"  {r['status']:<11} {r['id']:<18} mcp[{mcp}] {trust} skills={sk:<3} "
-              f"{r.get('memory_scope', '')}")
+        print(f"  {r['status']:<11} {r['id']:<18} mcp[{mcp}] {trust} "
+              f"skills={sk:<3} packs={ap:<2} {r.get('memory_scope', '')}")
+        for h in r.get("fixes", []):
+            print(f"      ⚠ {h['layer']}: {h['issue']} → {h['fix']}")
 
 
 def _cmd_list(env, argv):

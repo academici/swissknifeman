@@ -9,6 +9,8 @@
 #   maind <args>    → maind    (хаб: memory, graph, onboard, deploy, sync, health, …)
 #   setup <project> → maind onboard (полный онбординг: скиллы+окружение+память+граф)
 #   doctor          → диагностика всех трёх (fan-out)
+#   status [<id>]   → единый 4-слойный инвентарь проекта/флота (maind projects status:
+#                     skills+packs+mcp+память + drift→fix); bare/--target → skiller status
 #   -V, --version   → версия зонтика (git describe)
 #
 # Back-compat: исторические команды swissknifeman = skiller (алиас сохранён):
@@ -52,8 +54,18 @@ case "$CMD" in
       echo
     done
     exit "$rc" ;;
+  status)
+    # Зонтичный status: <project-id> или --all/--namespace/--project → единый 4-слойный
+    # инвентарь (maind projects status: skills+packs+mcp+память + drift→fix). Без аргумента
+    # или со skiller-флагом (--target/--json) → skiller status (back-compat: скиллы проекта).
+    shift; first="${1:-}"
+    case "$first" in
+      --all|--namespace|--project) need "$MAIND"; exec "$MAIND" projects status "$@" ;;
+      ""|-*)                       need "$SKILLER"; exec "$SKILLER" status "$@" ;;
+      *) need "$MAIND"; shift; exec "$MAIND" projects status --project "$first" "$@" ;;
+    esac ;;
   # back-compat: старый алиас swissknifeman → skiller (онбордженные проекты/привычка)
-  connect|vendor|integrate|update|init|sync|lock|status|list|registry|topology)
+  connect|vendor|integrate|update|init|sync|lock|list|registry|topology)
     need "$SKILLER"; exec "$SKILLER" "$@" ;;
   *) echo "Неизвестная команда: $CMD" >&2; usage >&2; exit 1 ;;
 esac

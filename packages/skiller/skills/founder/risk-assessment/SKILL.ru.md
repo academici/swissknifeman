@@ -2,10 +2,10 @@
 name: risk-assessment
 bucket: founder
 version: 0.1.0
-description: 5 категорий рисков, Risk Matrix, RAID-лог, pre-mortem для критичных рисков
+description: 6 категорий рисков (вкл. AI/Agentic), Risk Matrix, RAID-лог, pre-mortem для критичных рисков
 risk: read
 persona: founder
-tags: [validation, compliance, security]
+tags: [validation, compliance, security, agentic]
 requires: []
 produces_for: [new-project, pitch-deck]
 outputs: [chat, "docs/01_Business/Risk_Register.md"]
@@ -28,7 +28,7 @@ adapters: [claude, cursor, fable]
 
 ## Шаг 1. Автоматический анализ (без вопросов)
 
-Агент самостоятельно анализирует 5 категорий рисков:
+Агент самостоятельно анализирует 6 категорий рисков:
 
 | Категория | Что проверять |
 |:---|:---|
@@ -37,6 +37,7 @@ adapters: [claude, cursor, fable]
 | **Регуляторные** | GDPR, лицензирование, App Store / Play Market политики, законодательство страны |
 | **Финансовые** | Runway, burn rate, зависимость от одного канала монетизации, CAC > LTV |
 | **Команда/Операции** | Key person dependency, знания сосредоточены у одного человека, нет резервных процессов |
+| **AI/Agentic** | Hallucination в критическом пути, agentic drift (выход за рамки), prompt injection, cost creep (рост стоимости инференса при масштабе), пробелы в eval/guardrails, зависимость от одного LLM-провайдера |
 
 ---
 
@@ -137,7 +138,7 @@ adapters: [claude, cursor, fable]
 НЕЛЬЗЯ:
 - Расплывчатые формулировки ("могут быть проблемы")
 - Выдуманные риски без обоснования
-- Игнорировать категории — все 5 должны быть проверены
+- Игнорировать категории — все 6 должны быть проверены (для AI-продуктов категория AI/Agentic обязательна)
 
 ---
 

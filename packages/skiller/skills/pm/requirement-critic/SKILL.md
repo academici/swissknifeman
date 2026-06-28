@@ -2,7 +2,7 @@
 name: requirement-critic
 bucket: pm
 version: 0.1.0
-description: BRD audit: completeness, conflicts, assumptions, gap analysis, MoSCoW. Chat-only, no file
+description: Audit of a written spec/BRD: completeness, conflicts, assumptions, gap analysis, MoSCoW + optimism-bias detector and [UNVERIFIED] tags. Chat-only, no file
 risk: read
 persona: pm
 tags: [requirements, validation]
@@ -78,6 +78,22 @@ Walk typical modules for the product type, check nothing is missed:
 - [ ] Authentication scheme — specified?
 - [ ] Deprecation policy — present?
 
+### Product / startup spec
+- [ ] Target customer named concretely (not "everyone")?
+- [ ] Kill-criteria / falsification signals present (when to close the product/feature)?
+- [ ] Clear PMF / success metric defined?
+- [ ] Technical constraints and non-functional requirements described?
+- [ ] At least one external demand signal (not "we're sure")?
+
+## Step 6 — Optimism Bias Detector
+Docs under proximity bias hide risks. Specifically hunt:
+- **Sections with no risks, only upside** → suspicious: flag and demand a contra-scenario.
+- **Numbers without a source** (market, load, conversion, deadlines) → tag `[UNVERIFIED]` next to the claim; treat as unproven until sourced.
+- **All competitors weaker** / "we have no competitors" → almost always confirmation bias.
+- **Asymmetry** "pro ≫ con" → signal of writing what they want to hear.
+
+Format: `🔶 Optimism: [claim] — no risk/source → [UNVERIFIED] / needs contra-scenario`
+
 ## Output format
 ```markdown
 # Requirement Critique: [ProjectName / BRD]
@@ -96,6 +112,9 @@ Walk typical modules for the product type, check nothing is missed:
 ## 🕳️ Пробелы (Gap)
 - [Что не покрыто]
 
+## 🔶 Оптимизм-байас / [UNVERIFIED]
+- [утверждение без риска или без источника] → [UNVERIFIED] / нужен contra-сценарий
+
 ## 📊 MoSCoW
 | Требование | Приоритет | Комментарий |
 |:---|:---|:---|
@@ -113,19 +132,25 @@ Walk typical modules for the product type, check nothing is missed:
 - Technical assumptions invisible to business but blocking development
 - A flag on requirements that will need far more resources than they seem
 
+## Web-grounding / RAG
+Sourced numbers (market/load/conversion/deadlines) tagged `[UNVERIFIED]` — verify via external search when needed; discipline `general/verify-claims` (resident in every project). Never assert external facts from memory.
+
 ## Hard prohibitions
 NEVER:
 - Propose solutions during critique — only record problems
 - Rewrite requirements — only state what's wrong
-- Skip any of the 5 checks
+- Skip any of the 6 checks
 - Give a blanket "BRD is good" without specifics
+- Accept numbers without a source as fact — tag `[UNVERIFIED]`
 
 ## Related skills
 - `pm/brd` — audit target: critic checks a finished BRD (required BEFORE critique).
 - `pm/prd-from-brd` — run AFTER closing found gaps, to avoid carrying them into PRD.
 - `founder/risk-assessment` — assumptions and gaps from critique often become RAID-log entries.
 - `architect/architecture` — critic is the last gate before the architecture phase (HOW).
+- `founder/idea-audit` — sibling: same skepticism but on a raw idea/concept (pre-BRD); requirement-critic works on the written spec/BRD doc.
+- `general/verify-claims` — discipline for checking `[UNVERIFIED]` claims via external search.
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 9772f86cb54d88168d3b9f8943183ce14c90d6ec539f3ca24fda4b642413db4d -->
+<!-- ru-source-sha256: 271d3e0a2e4a7554a97827b2041b98e546530d52c5d8ef3eca5551938d7ba05c -->

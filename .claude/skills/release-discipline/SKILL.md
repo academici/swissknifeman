@@ -49,7 +49,8 @@ Releases & Tagging — в `CONTRIBUTING.md`.
 ## Связанные скиллы
 
 `package-architecture` (карта), `skill-authoring` (авторинг),
-`docs-maintenance` (handoff).
+`docs-maintenance` (handoff), `field-feedback-loop` (частый источник
+изменения — отклонение, пойманное в полевой работе).
 
 ## Ссылки
 

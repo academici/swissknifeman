@@ -2,10 +2,10 @@
 name: risk-assessment
 bucket: founder
 version: 0.1.0
-description: 5 risk categories, Risk Matrix, RAID log, pre-mortem for critical risks
+description: 6 risk categories (incl. AI/Agentic), Risk Matrix, RAID log, pre-mortem for critical risks
 risk: read
 persona: founder
-tags: [validation, compliance, security]
+tags: [validation, compliance, security, agentic]
 requires: []
 produces_for: [new-project, pitch-deck]
 outputs: [chat, "docs/01_Business/Risk_Register.md"]
@@ -24,7 +24,7 @@ Use when: risk assessment, pre-mortem, RAID log, blocker analysis, product vulne
 
 ## Step 1. Automatic analysis (no questions)
 
-Analyze 5 risk categories yourself:
+Analyze 6 risk categories yourself:
 
 | Category | Check |
 |:---|:---|
@@ -33,6 +33,7 @@ Analyze 5 risk categories yourself:
 | **Regulatory** | GDPR, licensing, App Store / Play Market policies, country legislation |
 | **Financial** | Runway, burn rate, single monetization channel dependency, CAC > LTV |
 | **Team/Operations** | Key person dependency, knowledge in one person, no backup processes |
+| **AI/Agentic** | Hallucination on the critical path, agentic drift (out-of-bounds), prompt injection, cost creep (inference cost growth at scale), eval/guardrail gaps, single-LLM-provider dependency |
 
 ## Step 2. Risk Matrix
 
@@ -119,7 +120,7 @@ File structure:
 DON'T:
 - Vague wording ("there may be problems")
 - Invented risks without justification
-- Ignore categories — all 5 must be checked
+- Ignore categories — all 6 must be checked (for AI products the AI/Agentic category is mandatory)
 
 ## Related skills
 
@@ -133,4 +134,4 @@ DON'T:
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: bbe992eaec6b06118fc1cf086d2d2a7aa665718ae060106b47c09c82a67f46ae -->
+<!-- ru-source-sha256: dc1c0898b6a2be6b12d99937ae58c645e4578c2c520e1b425a78ef5172814e43 -->

@@ -30,6 +30,7 @@ Write architecture ONLY after approved BRD. No BRD → first read `.ai/skills/pm
      - Pros: ...
      - Cons: ...
      - Cost / complexity: ...
+     - business_rationale: how the option serves the BRD goal/constraint
    - Option B: ...
 3. Chosen solution + rationale
    - Why this one, not the others
@@ -45,6 +46,8 @@ Each architectural decision contains:
 - **What chosen**
 - **Why** (via business logic, not just "it's popular")
 - **What rejected and why**
+
+**Mandatory:** every Options block carries a `business_rationale` field — how the option serves the BRD goal/constraint. An option without `business_rationale` is not admitted to the comparison (don't pick a stack "because popular/familiar").
 
 ## ADR (Architecture Decision Record)
 
@@ -87,6 +90,7 @@ Create in `docs/03_Dev/Architecture_[Name].md`:
 - Pros: ...
 - Cons: ...
 - Complexity: [Low / Medium / High]
+- business_rationale: [how the option serves the BRD goal/constraint]
 
 ### Option B: [name]
 - ...
@@ -126,6 +130,7 @@ Risks accepted consciously: ...
 FORBIDDEN:
 - Design architecture without approved BRD
 - Choose technology without comparing min 2 options
+- Leave an Options block without `business_rationale` (choosing by "popularity/habit")
 - Leave SLO/load undefined ("figure out later")
 - Create architecture doc without Mermaid diagram
 - Skip Security Gate for products with PII
@@ -144,4 +149,4 @@ FORBIDDEN:
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: df2f8d14bde6743d9f89396203b7b62bd55ec55cdb8f0d35ebd8d41a663c1c7d -->
+<!-- ru-source-sha256: 5b933f598e9ad4f143807e017be3b16bdc8b6309cae5ec1a8c1562376642a21a -->

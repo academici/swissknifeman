@@ -13,8 +13,8 @@ from pathlib import Path
 from . import codegraph
 from .common import die, now_iso, parse_args, warn
 from .config import load_config
-from .mcpconfig import (MCP_FILES, load_mcp, mcp_path, merge_server,
-                        remove_server, write_mcp)
+from .mcpconfig import (MCP_FILES, MCPConfigError, load_mcp, mcp_path,
+                        merge_server, remove_server, write_mcp)
 from .memory import health, resolve_ports
 from .projects import get as get_project
 from .projects import listing, write_config
@@ -96,8 +96,17 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
                  f"(установите, напр. uvx для Serena, или задайте code_command)")
 
     written = []
+    skipped = []
     for _channel, path in _resolve_targets(project_path, targets):
-        data, _existed = load_mcp(path)
+        rel = str(path.relative_to(project_path))
+        try:
+            data, _existed = load_mcp(path)
+        except MCPConfigError as e:
+            # Битый конфиг ОДНОГО канала (напр. .cursor/mcp.json) не должен валить весь
+            # деплой/sync — файл не трогаем, предупреждаем и идём к следующему каналу.
+            warn(f"проект '{pid}': {e} — канал пропущен")
+            skipped.append(rel)
+            continue
         changed_any = False
         for name, entry in entries.items():
             data, changed = merge_server(data, name, entry)
@@ -107,11 +116,10 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
             changed_any = changed_any or changed
         if changed_any:
             write_mcp(path, data, dry=dry)
-        written.append({"file": str(path.relative_to(project_path)),
-                        "servers": list(entries), "changed": changed_any})
+        written.append({"file": rel, "servers": list(entries), "changed": changed_any})
 
-    return {"id": pid, "scope": scope, "written": written, "code": code_state,
-            "code_server": codegraph.server_name(project, st),
+    return {"id": pid, "scope": scope, "written": written, "skipped": skipped,
+            "code": code_state, "code_server": codegraph.server_name(project, st),
             "servers": list(entries), "targets": [w["file"] for w in written]}
 
 
@@ -178,5 +186,6 @@ def cmd_deploy(env, argv):
         return
     for r in results:
         gf = "" if r["code"] == "disabled" else f", code:{r['code']}"
+        sk = f"  ⚠ пропущено битых: {', '.join(r['skipped'])}" if r.get("skipped") else ""
         print(f"  {r['id']:<18} scope={r['scope']:<24} → {', '.join(r['targets'])} "
-              f"({', '.join(r['servers'])}{gf})")
+              f"({', '.join(r['servers'])}{gf}){sk}")

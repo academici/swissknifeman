@@ -94,8 +94,10 @@ def _mcp_run(env, config, projects, mode, dry):
         if not dry:
             mark_deployed(config, p["id"], res)
             applied = True
-        results.append(_result("mcp", p["id"], "ok", changed=changed,
-                               detail=", ".join(res["targets"])))
+        detail = ", ".join(res["targets"])
+        if res.get("skipped"):
+            detail += f" (пропущено битых каналов: {', '.join(res['skipped'])})"
+        results.append(_result("mcp", p["id"], "ok", changed=changed, detail=detail))
     if applied:
         write_config(env, config)
     return results

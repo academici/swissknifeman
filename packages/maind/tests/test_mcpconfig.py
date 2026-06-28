@@ -4,7 +4,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from maind.mcpconfig import has_server, load_mcp, merge_server, write_mcp
+from maind.mcpconfig import (MCPConfigError, has_server, load_mcp,
+                             merge_server, write_mcp)
 
 
 class TestMcpConfig(unittest.TestCase):
@@ -42,11 +43,19 @@ class TestMcpConfig(unittest.TestCase):
         self.assertTrue(c1)
         self.assertFalse(c2)
 
-    def test_broken_json_dies(self):
+    def test_broken_json_raises(self):
+        # Битый JSON → MCPConfigError (вызывающий решает фатальность), файл не трогаем.
         with tempfile.TemporaryDirectory() as tmp:
             p = Path(tmp) / ".mcp.json"
             p.write_text("{ broken", encoding="utf-8")
-            with self.assertRaises(SystemExit):
+            with self.assertRaises(MCPConfigError):
+                load_mcp(p)
+
+    def test_non_object_raises(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Path(tmp) / ".mcp.json"
+            p.write_text("[1, 2, 3]", encoding="utf-8")
+            with self.assertRaises(MCPConfigError):
                 load_mcp(p)
 
     def test_backup_and_dry_run(self):

@@ -2,6 +2,36 @@
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-06-28
+
+### Added
+
+- **`founder/idea-audit`** — сквозной деструктивный аудит идеи / концепта / готового ТЗ: First-Principles
+  Decomposition → рыночный скептицизм (5 векторов) → архитектурный pre-mortem (вкл. AI-specific) →
+  Kill-or-Build Scoring + вердикт. Мост idea→architecture между `idea-discovery` и `brd`/`architecture`.
+  Двуязычно (SKILL.ru.md → SKILL.md). Внешние факты выверены через RAG (Founder's Playbook — реальн.;
+  CB Insights ~42% — классика, 2026 ~43% PMF); провенанс — `docs/reference.md`.
+- **`provider-skills/` — SSOT навыков-капабилити для внешних агентов (paste-in).** Текст, который
+  человек копирует в UI провайдера (Perplexity → My Skills), а не доставляет реестром connect/vendor;
+  канон versioned здесь, потребители (Brain) держат provenance-linked копию. Первый навык —
+  `perplexity/idea-architect.md` (режимы Idea/Spec/Architecture). Реестр учитывает их как `references`.
+- **Внутренний скилл `field-feedback-loop`** (`.claude/skills/`, не экспортируется) — петля обратной
+  связи из полевой работы: отклонение тулинга/раннбука от обещанного при внедрении/синхронизации
+  проекта маршрутизируется в очевидный-баг→фикс-сразу либо новое/сомнительное→предложение
+  (`roadmap/`/issue + захват в память), а не глотается. Механизм принципа «по факту измеренной
+  проблемы» (`roadmap/README.md`); связан с `release-discipline`/`decision-verification`.
+
+### Changed
+
+- **`pm/requirement-critic`** — режим Spec Audit: Optimism Bias Detector, `[UNVERIFIED]`-метки для цифр без
+  источника, чеклист полноты для продукта/стартап-ТЗ (target customer, kill-criteria, метрика PMF).
+- **`founder/adversarial-check`** — секция **stage-context** (idea→рынок, mvp→retention, launch→CAC/LTV).
+- **`founder/idea-discovery`** — **falsification signals** (измеримый порог) к каждому kill-criterion.
+- **`architect/architecture`** — обязательное поле **`business_rationale`** в каждом Options-блоке.
+- **`founder/startup-lifecycle`** — гейт доказательности: **≥1 внешний сигнал** на каждый exit-criterion.
+- **`founder/risk-assessment`** — 6-я категория рисков **AI/Agentic** (hallucination/drift/injection/cost
+  creep/eval-gaps/single-provider); тег `agentic`.
+
 ## [0.7.0] - 2026-06-28
 
 ### Added

@@ -51,7 +51,7 @@
     },
     "founder": {
       "description": "Idea discovery, competitive analysis, risk assessment, pitch decks",
-      "count": 9,
+      "count": 10,
       "status": "active"
     },
     "frontend": {
@@ -312,8 +312,8 @@
       "path": "skills/architect/architecture/SKILL.md",
       "version": "0.1.0",
       "description": "System architecture, stack choice, ADR, C4 diagrams, deployment, scalability",
-      "sha256": "fdee7a70688b639cc8ff195b36acbd35f2506fce94aaa70aa48be4de1aaf1960",
-      "content_sha256": "43ef55b5f0fe02c64d5245c433e6c786d5c79f76ba8e7a60f1cc0151fa0b7b3d",
+      "sha256": "084d250ae3d20f257c01af18f7f9837e8e93c13507622b8a48a7aaa922fe4a9c",
+      "content_sha256": "14d54a6965154e6770b63c4cccd711d26f0f42837e600459ba8f723f018b923f",
       "tags": [
         "architecture",
         "adr",
@@ -1084,8 +1084,8 @@
       "path": "skills/founder/adversarial-check/SKILL.md",
       "version": "0.1.0",
       "description": "Structured devil's advocate — 3 strongest counterarguments, failed competitors, negative signals, structural obstacles. Antidote to confirmation bias × AI. Cross-stage.",
-      "sha256": "4cabf040c4786a3fbdf5c938724fe0010168cfe9bdcb082e3872e3a4514f67c9",
-      "content_sha256": "59708c6b3f0330f2f0677152cf9c57b1567b77b2d6c7bdc87715fae6d34f9a1a",
+      "sha256": "ff4a0d1b9040660f3e50fdf82e2c792620203e871c521eeb2f7ccebb1f0b6f37",
+      "content_sha256": "7adbce29ff8b88463217fb47ec6881da81a3686f862a909e51a18b896f367be2",
       "tags": [
         "validation",
         "market"
@@ -1165,13 +1165,38 @@
       "source": "local"
     },
     {
+      "name": "idea-audit",
+      "bucket": "founder",
+      "path": "skills/founder/idea-audit/SKILL.md",
+      "version": "0.1.0",
+      "description": "Full destructive audit of an idea / concept / spec — first-principles → market skepticism → architectural pre-mortem → kill/build verdict. Antidote to confirmation-bias × AI × speed. Cross-stage.",
+      "sha256": "d504944091ea1c14f498a90655b47e645580f28c4da6dc94a992f5129958e0ee",
+      "content_sha256": "5f9a69da4cf223c6453470a46ff8ef3c84ba2bea0f4aa7ca14c0d6cc865e4236",
+      "tags": [
+        "validation",
+        "market",
+        "architecture"
+      ],
+      "requires": [
+        "idea-discovery"
+      ],
+      "produces_for": [
+        "brd",
+        "competitive-analysis",
+        "architecture",
+        "risk-assessment",
+        "new-project"
+      ],
+      "source": "local"
+    },
+    {
       "name": "idea-discovery",
       "bucket": "founder",
       "path": "skills/founder/idea-discovery/SKILL.md",
       "version": "0.1.0",
       "description": "Structured interview of a raw idea — JTBD, problem statement, hypothesis, before competitive-analysis",
-      "sha256": "ad3f0fa82050d11b2fa040534027497e276998fb96dfc4499ccf7784e6193d21",
-      "content_sha256": "b8610831162173387e6590eb84e60f914973d4b7f48af5fa2cec6847ac53c2e0",
+      "sha256": "561b07b32f0d4fb55b16cab56b9438eddc2c4a408c3b2a4de4e48f6ca90de7b3",
+      "content_sha256": "5f2feac1501412eeef331a4edd040f4349bf03510369690419b41073849df9e1",
       "tags": [
         "discovery",
         "requirements",
@@ -1230,13 +1255,14 @@
       "bucket": "founder",
       "path": "skills/founder/risk-assessment/SKILL.md",
       "version": "0.1.0",
-      "description": "5 risk categories, Risk Matrix, RAID log, pre-mortem for critical risks",
-      "sha256": "9cd8044846f0eed790e3aadcbace25b26fe9e7ba2e279f00172d55accf6ec7e7",
-      "content_sha256": "90d8542f4b0c5b6317d4a3ca49176ee699ed04ed40822da010001e5436720387",
+      "description": "6 risk categories (incl. AI/Agentic), Risk Matrix, RAID log, pre-mortem for critical risks",
+      "sha256": "3a523bbb0bc9ddb154d4b28942d7e636fdf52402b3f791e937491bb9ed694b75",
+      "content_sha256": "6f60f3b148583de8a3d6cda836f68901f4e01dbd06004e9920896fdfb9499901",
       "tags": [
         "validation",
         "compliance",
-        "security"
+        "security",
+        "agentic"
       ],
       "produces_for": [
         "new-project",
@@ -1250,8 +1276,8 @@
       "path": "skills/founder/startup-lifecycle/SKILL.md",
       "version": "0.1.0",
       "description": "4 AI-native startup stages (Idea→MVP→Launch→Scale) with exit-criteria, failure modes, antidotes + stage-gate review method",
-      "sha256": "c05f2171b20c1028e53cc47c8ecaf7f5718a4067bcc56565d4df4da392f82330",
-      "content_sha256": "e15f0412de197fc785675ffceaee50a465643b1d8c5ce8481c28becaab91a991",
+      "sha256": "4a1915d0d9d844020a732b2f2eeb6c46d84267b950c6562d631462faadceefc0",
+      "content_sha256": "6bf0e8642bb836588a0cb1ace03d440d8fedc7bb1c6e6776832cb57d4de52613",
       "tags": [
         "validation",
         "requirements",
@@ -3518,9 +3544,9 @@
       "bucket": "pm",
       "path": "skills/pm/requirement-critic/SKILL.md",
       "version": "0.1.0",
-      "description": "BRD audit: completeness, conflicts, assumptions, gap analysis, MoSCoW. Chat-only, no file",
-      "sha256": "63f5c306ad95a57d06a0a5704ed07261020ee8084c30a7d939401d425e8fcd05",
-      "content_sha256": "ddc6b8848a4e692936aaca5cb7c6d104a7f8182363d63dccfc6beedc96d40d58",
+      "description": "Audit of a written spec/BRD: completeness, conflicts, assumptions, gap analysis, MoSCoW + optimism-bias detector and [UNVERIFIED] tags. Chat-only, no file",
+      "sha256": "a25f22efb134a2b9babbcaa6b463b6c0f372606259e0309a6b4a83f857cebac0",
+      "content_sha256": "acb0d92bf89018d17777c13367d8f29d8d89b30bfef79bac1729ae08be45257b",
       "tags": [
         "requirements",
         "validation"

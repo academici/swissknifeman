@@ -57,6 +57,7 @@ flowchart LR
     competitive_analysis["competitive-analysis"]
     customer_discovery["customer-discovery"]
     defensibility["defensibility"]
+    idea_audit["idea-audit"]
     idea_discovery["idea-discovery"]
     new_project["new-project"]
     pitch_deck["pitch-deck"]
@@ -229,6 +230,7 @@ flowchart LR
   go_to_market -->|requires| monetization_design
   grill_with_docs -->|requires| domain_modeling
   grill_with_docs -->|requires| spec_interview
+  idea_audit -->|requires| idea_discovery
   implement -->|requires| code_review
   implement -->|requires| tdd_discipline
   issue_triage -->|requires| github_flow
@@ -318,6 +320,11 @@ flowchart LR
   gitops -.->|feeds| github_flow
   grill_with_docs -.->|feeds| task_brief_template
   grill_with_docs -.->|feeds| to_issues
+  idea_audit -.->|feeds| architecture
+  idea_audit -.->|feeds| brd
+  idea_audit -.->|feeds| competitive_analysis
+  idea_audit -.->|feeds| new_project
+  idea_audit -.->|feeds| risk_assessment
   laravel -.->|feeds| dependency_injection
   laravel -.->|feeds| repositories
   laravel_data -.->|feeds| backend_type_sync
@@ -358,7 +365,7 @@ flowchart LR
   verify_claims -.->|feeds| tech_stack_selection
 ```
 
-**В графе:** 122 скиллов, 88 рёбер requires, 80 рёбер produces_for.
+**В графе:** 123 скиллов, 89 рёбер requires, 85 рёбер produces_for.
 
 ## Изолированные скиллы (73)
 

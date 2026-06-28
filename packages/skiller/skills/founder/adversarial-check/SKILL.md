@@ -39,6 +39,18 @@ Apply when: any hypothesis / idea / significant decision is formulated and must 
 
 **Bonus — "argue why competitor wins":** build the **most convincing** case why the competitor in this space succeeds and you don't. Not the convenient version of the threat.
 
+## Stage-context (adapt focus per stage)
+
+Vectors are static — attack priority shifts by stage. Amplify the matching target:
+
+| Stage | Primary attack target |
+|:---|:---|
+| **idea** | market: is pain real? "no market need"? Why-now? (vectors 1 and 3) |
+| **mvp** | retention: do users return or churn after first use? retention > acquisition |
+| **launch / scale** | unit economics: CAC < LTV? channel payback? does it scale with growth? |
+
+If stage not given — ask; default `idea`.
+
 ## Output
 
 ```
@@ -82,4 +94,4 @@ When findings show the idea needs revision — that's the signal to pivot, not a
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: ba8ffefce0acb052bd0a4404095c64990d889dd8f3a8f2bb443a8d53e0260a3a -->
+<!-- ru-source-sha256: 30a2108f0df2990ba87a3e209d7dec43672e83c6964f11c522bfbe7f856f6b4a -->

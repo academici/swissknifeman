@@ -20,7 +20,7 @@ flowchart LR
   subgraph architect["architect"]
     agent_design["agent-design<br/>⊕21 ↻1505"]:::cool
     api_design["api-design<br/>⊕22 ↻1016"]:::cool
-    architecture["architecture<br/>⊕23 ↻1020"]:::cool
+    architecture["architecture<br/>⊕23 ↻1139"]:::cool
     codebase_design["codebase-design<br/>⊕99 ↻1746"]:::hot
     data_schema["data-schema<br/>⊕23 ↻833"]:::cool
     dev_engineering_super_skill["dev-engineering-super-skill<br/>⊕113 ↻20367"]:::hot
@@ -71,15 +71,16 @@ flowchart LR
     finance_super_skill["finance-super-skill<br/>⊕152 ↻18278"]:::hot
   end
   subgraph founder["founder"]
-    adversarial_check["adversarial-check<br/>⊕47 ↻875"]:::mild
+    adversarial_check["adversarial-check<br/>⊕47 ↻996"]:::mild
     competitive_analysis["competitive-analysis<br/>⊕26 ↻1155"]:::cool
     customer_discovery["customer-discovery<br/>⊕46 ↻1156"]:::mild
     defensibility["defensibility<br/>⊕36 ↻988"]:::mild
-    idea_discovery["idea-discovery<br/>⊕29 ↻1399"]:::cool
+    idea_audit["idea-audit<br/>⊕52 ↻2135"]:::mild
+    idea_discovery["idea-discovery<br/>⊕29 ↻1467"]:::cool
     new_project["new-project<br/>⊕23 ↻1191"]:::cool
     pitch_deck["pitch-deck<br/>⊕22 ↻1405"]:::cool
-    risk_assessment["risk-assessment<br/>⊕22 ↻1051"]:::cool
-    startup_lifecycle["startup-lifecycle<br/>⊕35 ↻1447"]:::mild
+    risk_assessment["risk-assessment<br/>⊕27 ↻1116"]:::cool
+    startup_lifecycle["startup-lifecycle<br/>⊕35 ↻1518"]:::mild
   end
   subgraph frontend["frontend"]
     document_writer["document-writer<br/>⊕74 ↻1090"]:::warm
@@ -257,7 +258,7 @@ flowchart LR
     pmf_diagnostics["pmf-diagnostics<br/>⊕45 ↻1210"]:::mild
     prd_from_brd["prd-from-brd<br/>⊕32 ↻1234"]:::cool
     product_roadmap["product-roadmap<br/>⊕30 ↻1171"]:::cool
-    requirement_critic["requirement-critic<br/>⊕27 ↻1020"]:::cool
+    requirement_critic["requirement-critic<br/>⊕44 ↻1429"]:::mild
     unit_economics["unit-economics<br/>⊕20 ↻722"]:::cool
   end
   subgraph python["python"]
@@ -339,6 +340,7 @@ flowchart LR
   go_to_market -->|requires| monetization_design
   grill_with_docs -->|requires| domain_modeling
   grill_with_docs -->|requires| spec_interview
+  idea_audit -->|requires| idea_discovery
   implement -->|requires| code_review
   implement -->|requires| tdd_discipline
   issue_triage -->|requires| github_flow
@@ -392,14 +394,14 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 195 скиллов · ⊕ always **11653** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 426343 ток · ⌥ snippets 157348 ток.
+**Итого:** 196 скиллов · ⊕ always **11727** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 429331 ток · ⌥ snippets 157348 ток.
 
 ## По бакетам
 
 | Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ snippets |
 |---|--:|--:|--:|--:|
 | `general` | 19 | 1178 | 17076 | 5120 |
-| `architect` | 14 | 747 | 38351 | 7503 |
+| `architect` | 14 | 747 | 38470 | 7503 |
 | `frontend-vue` | 11 | 726 | 23106 | 7058 |
 | `quality` | 10 | 628 | 16415 | 7125 |
 | `php-packages` | 9 | 582 | 4618 | 489 |
@@ -409,8 +411,8 @@ flowchart LR
 | `blender-modeling` | 6 | 429 | 7727 | 11772 |
 | `system` | 5 | 429 | 6940 | 797 |
 | `laravel-architecture` | 4 | 382 | 6838 | 6779 |
-| `pm` | 10 | 356 | 28350 | 197 |
-| `founder` | 9 | 286 | 10667 | 494 |
+| `pm` | 10 | 373 | 28759 | 197 |
+| `founder` | 10 | 343 | 13127 | 494 |
 | `laravel-testing` | 4 | 283 | 6868 | 14531 |
 | `frontend-linting` | 4 | 275 | 5276 | 2914 |
 | `operator` | 6 | 252 | 27108 | 90 |

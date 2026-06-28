@@ -61,6 +61,7 @@ On "ready to advance?" — run current stage's exit-criteria as a checklist:
 1. Determine current `stage:` from control-tower frontmatter.
 2. Take this stage's exit-condition (above) → decompose into checkable items.
 3. Per item: ✅ done / ⚠️ partial (what's missing) / ❌ no (what to do).
+   **Evidence gate:** each ✅ must rest on at least **1 external signal** — market data / live conversation / experiment (not internal opinion or AI inference). No external signal → status caps at ⚠️, not ✅.
 4. **Before a "ready" verdict — mandatory [[adversarial-check]]:** "what here is real signal vs wishful thinking?" (see failure mode loss-of-objectivity).
 5. Verdict: `PROCEED` (all ✅) / `HOLD` (any ⚠️/❌ + action list) / `PIVOT` (exit unreachable on current hypothesis).
 On `PROCEED` — bump `stage:` in project frontmatter.
@@ -83,11 +84,11 @@ verdict: PROCEED | HOLD | PIVOT
 # Stage-Gate Review — [ProjectName]: idea → mvp
 
 ## Exit-criteria
-| Criterion | Status | Missing / action |
-|---|---|---|
-| 1. Problem real+specific+frequent | ✅/⚠️/❌ | ... |
-| 2. Solution hits real problem | ... | ... |
-| 3. Enough signal for MVP | ... | ... |
+| Criterion | Status | External signal (source) | Missing / action |
+|---|---|---|---|
+| 1. Problem real+specific+frequent | ✅/⚠️/❌ | [data/conversation/experiment] | ... |
+| 2. Solution hits real problem | ... | ... | ... |
+| 3. Enough signal for MVP | ... | ... | ... |
 
 ## Adversarial check (mandatory)
 - Real signal vs wishful thinking: ...
@@ -105,4 +106,4 @@ PROCEED / HOLD / PIVOT — rationale.
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 1ba2c78008f4ac7111940ef27db23d4dd1892d6ec5c9e3b58ff6bb796dfd9fb9 -->
+<!-- ru-source-sha256: 739486ff7537b82dc648ecacbe7cab42986b5e89fa67b98463b2a1415471e305 -->

@@ -44,7 +44,7 @@ First step of Founder chain: `idea-discovery → adversarial-check → customer-
 потому что [инсайт о боли].
 Узнаем, что правы, когда [метрика валидации].
 ```
-5. **Kill-criteria** — at what market signal do we close the idea before dev starts? Min 2 criteria — usually "nobody pays" + "does not reproduce across other segments".
+5. **Kill-criteria** — at what market signal do we close the idea before dev starts? Min 2 criteria — usually "nobody pays" + "does not reproduce across other segments". **Falsification signal per criterion**: a concrete measurable metric and threshold at which it counts as triggered (not "low interest" but "<N of 20 interviews willing to pay $X"). Without a measurable threshold, kill-criteria don't work — they're easy to rationalize away.
 
 ## Problem-solution fit (exit of Idea stage)
 
@@ -132,4 +132,4 @@ FORBIDDEN (all are later chain steps, not now):
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: be5133f629cb39b045a62dd05172c65d5b93e9c1363e4cb806e45446c3d705b2 -->
+<!-- ru-source-sha256: d62b32515e2695e8fb78be38679cf7489d964cec56d1d9cef678a2426f151f09 -->

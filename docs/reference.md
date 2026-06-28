@@ -29,6 +29,9 @@ research-аудит июнь 2026; skill-реестр и eval — рецензи
 | [anthropics/skills](https://github.com/anthropics/skills) | официальные skills (skill-creator, mcp-builder, doc/creative) | first-party, Apache-2.0 (docx/pdf/pptx — Proprietary) | **adopt** (метод) | eval-харнес скиллов из `skill-creator` (evals/benchmark, оптимизация описания); docx/pdf/pptx — **skip** (Proprietary); `mcp-builder` — reference (отложено) |
 | [obra/superpowers](https://github.com/obra/superpowers) | process/discipline-скиллы + каркас (hooks-bootstrap) | MIT, активный, мульти-harness | **adopt** (метод) | pressure-тесты (`writing-skills` — TDD для документации) в eval-формат; iron-law/red-flag/SessionStart-bootstrap — reference (отложено) |
 | [affaan-m/ECC](https://github.com/affaan-m/ECC) | кросс-harness фреймворк (skills/agents/hooks/security) | ~221k★, MIT, активный | reference | supply-chain-скан вендоринга, hook-профили, PreCompact, fact-force gate — **отложено**; инфраструктура (память/граф) уже у `maind` |
+| [Anthropic — Founder's Playbook](https://www.anthropic.com/) | методология AI-native стартапа (Idea/MVP/Launch/Scale, Claude как structured devil's advocate) | first-party, май 2026 | **reference** | каркас founder-трека + `idea-audit` (4 модуля, stage-context, premature scaling); эпиграф = парафраз, не verbatim |
+| [CB Insights — Why Startups Fail](https://www.cbinsights.com/research/report/startup-failure-reasons-top/) | пост-мортемы стартапов, «no market need» | классика ~2014, апдейт 2026 | **reference** | аргумент зоны idea-validation в `idea-audit`; цитировать как классику (~42%), 2026 реформулирует ~43% poor PMF |
+| [Anthropic — Effective context engineering for AI agents](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents) | context engineering для агентов | first-party, сен 2025 | **reference** | основа Perplexity-навыка `idea-architect` (роль/режимы/правила веб-поиска/антипаттерны) |
 
 ## Карточки
 
@@ -120,6 +123,19 @@ hook-профили (minimal/standard/strict), PreCompact memory-save, fact-forc
 (память/граф/install-профили/кросс-harness) у нас уже закрыта `maind`/`harness`/`skiller`; массовый
 импорт скиллов не нужен (домен у́же, курируется). **Взято:** ничего сразу — supply-chain-скан и
 hook-механизмы **отложены** (реальный пробел: вендорим 54 внешних скилла лишь с sha256).
+
+### Founder/idea-audit — методология (Founder's Playbook · CB Insights · context-engineering) — reference
+Внешний каркас для founder-трека и нового скилла `idea-audit` (из Perplexity-аудита, факты выверены через
+RAG перед фиксацией). **Anthropic Founder's Playbook** (май 2026) — реальный first-party гайд по AI-native
+стартапу (стадии Idea/MVP/Launch/Scale; «structured devil's advocate» — ядро стадии Idea); уже цитируется
+в `adversarial-check`/`startup-lifecycle`. **CB Insights «42% no market need»** — реальная, но классическая
+(~2014) цифра; апдейт 2026 переформулирует как «poor PMF ~43%» → цитировать как классику, не как свежак.
+**Anthropic «Effective context engineering for AI agents»** (сен 2025) — реальная статья, основа
+Perplexity-навыка `idea-architect`. **Плюсы:** авторитетная рамка скептической работы с AI на стадии идеи;
+**минусы:** эпиграф аудита — парафраз (не verbatim), цифру CB Insights легко подать устаревшей. **Взято:**
+4 модуля `idea-audit` (first-principles → рынок → арх-pre-mortem → kill/build), stage-context в
+`adversarial-check`, AI/Agentic-категория в `risk-assessment`, business_rationale в `architecture`,
+falsification-signals в `idea-discovery`, external-signal-гейт в `startup-lifecycle`.
 
 ## Как это легло в архитектуру
 

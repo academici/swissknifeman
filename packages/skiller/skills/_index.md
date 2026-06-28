@@ -4,7 +4,7 @@
 
 Источник истины портируемых скиллов (машинный реестр — `skills.json`). Раздача в проекты: `skiller connect` (плагины-бакеты) / `vendor` (физ. перенос). CORE-набор токен-скиллов (`general`/`oss-dev`) раздаётся по умолчанию — см. `connect`/`vendor`.
 
-Всего: 195 скиллов в 45 бакетах.
+Всего: 196 скиллов в 45 бакетах.
 
 ## Скиллы по бакетам
 
@@ -92,7 +92,7 @@
 |:--|:--|:--|
 | `finance-super-skill` | Comprehensive finance and accounting skill merging Perplexity Computer's 7 finance skills… |  |
 
-### founder — Idea discovery, competitive analysis, risk assessment, pitch decks (9)
+### founder — Idea discovery, competitive analysis, risk assessment, pitch decks (10)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
@@ -100,10 +100,11 @@
 | `competitive-analysis` | Market, competitors, JTBD, open niche, attack vector. Uses Perplexity search_deep | `discovery`, `market`, `gtm` |
 | `customer-discovery` | Systematic discovery — target profile, interview framework (past not future), post-interv… | `discovery`, `validation`, `market` |
 | `defensibility` | Moat analysis for Scale stage — accumulated depth, data flywheel, workflow lock-in, domai… | `market`, `validation` |
+| `idea-audit` | Full destructive audit of an idea / concept / spec — first-principles → market skepticism… | `validation`, `market`, `architecture` |
 | `idea-discovery` | Structured interview of a raw idea — JTBD, problem statement, hypothesis, before competit… | `discovery`, `requirements`, `market` |
 | `new-project` | Launch a new startup project: concept, competitors, risks, full folder structure | `discovery`, `requirements`, `market`, `gtm` |
 | `pitch-deck` | 10-slide investor deck per YC/Sequoia canon from existing project artifacts | `gtm`, `market`, `monetization` |
-| `risk-assessment` | 5 risk categories, Risk Matrix, RAID log, pre-mortem for critical risks | `validation`, `compliance`, `security` |
+| `risk-assessment` | 6 risk categories (incl. AI/Agentic), Risk Matrix, RAID log, pre-mortem for critical risks | `validation`, `compliance`, `security`, `agentic` |
 | `startup-lifecycle` | 4 AI-native startup stages (Idea→MVP→Launch→Scale) with exit-criteria, failure modes, ant… | `validation`, `requirements`, `market` |
 
 ### frontend — Frontend core: общие фронт-скиллы (web design guidelines, document writer, file upload) (3)
@@ -366,7 +367,7 @@
 | `pmf-diagnostics` | Product-market fit diagnostics — pre-launch measurement framework, Sean Ellis test (>40%)… | `validation`, `market` |
 | `prd-from-brd` | Product Requirements Document — expands BRD into detailed user stories with acceptance cr… | `requirements`, `template` |
 | `product-roadmap` | MVP definition, Impact/Effort prioritization, MVP → v1 → v2 → Backlog phases, phase-trans… | `requirements`, `gtm`, `market` |
-| `requirement-critic` | BRD audit: completeness, conflicts, assumptions, gap analysis, MoSCoW. Chat-only, no file | `requirements`, `validation` |
+| `requirement-critic` | Audit of a written spec/BRD: completeness, conflicts, assumptions, gap analysis, MoSCoW +… | `requirements`, `validation` |
 | `unit-economics` | Unit economics: LTV, CAC, payback, churn, break-even, 3 scenarios | `monetization` |
 
 ### python — Python: ML project structure, virtualenv and dependency management (2)
@@ -441,7 +442,7 @@
 | `advisory` | `livewire-blade-attributes`, `version-gotchas` |
 | `agent-output` | `pao` |
 | `agent-packs` | `agent-packs` |
-| `agentic` | `agent-design`, `eval-design` |
+| `agentic` | `agent-design`, `eval-design`, `risk-assessment` |
 | `agents` | `ai-agents`, `complex-task-orchestrator`, `cross-project-coordinator`, `laravel-subagents` |
 | `ai` | `ai-agents`, `skills-ssot` |
 | `ai-act` | `legal-compliance` |
@@ -449,7 +450,7 @@
 | `alerting` | `observability-design` |
 | `anti-bloat` | `package-contribution-protocol` |
 | `api` | `api-design`, `dx-design`, `laravel-data`, `version-gotchas` |
-| `architecture` | `agent-design`, `api-design`, `architecture`, `data-schema`, `dependency-injection`, `inertia-vue`, `laravel`, `laravel-structure`, `local-topology`, `ml-project-structure`, `modular-architecture`, `oss-development`, `php-patterns`, `pinia-stores`, `project-map`, `repositories`, `startup-cto`, `tech-stack-selection`, `test-strategy` |
+| `architecture` | `agent-design`, `api-design`, `architecture`, `data-schema`, `dependency-injection`, `idea-audit`, `inertia-vue`, `laravel`, `laravel-structure`, `local-topology`, `ml-project-structure`, `modular-architecture`, `oss-development`, `php-patterns`, `pinia-stores`, `project-map`, `repositories`, `startup-cto`, `tech-stack-selection`, `test-strategy` |
 | `attribute` | `attribute-authorization` |
 | `attributes` | `enum-attributes` |
 | `auth` | `security-design` |
@@ -600,7 +601,7 @@
 | `logging` | `observability-design` |
 | `lucide` | `vue-dynamic-icons` |
 | `make` | `makefile` |
-| `market` | `adversarial-check`, `competitive-analysis`, `customer-discovery`, `defensibility`, `go-to-market`, `idea-discovery`, `monetization-design`, `new-project`, `pitch-deck`, `pmf-diagnostics`, `product-roadmap`, `solo-founder`, `startup-lifecycle` |
+| `market` | `adversarial-check`, `competitive-analysis`, `customer-discovery`, `defensibility`, `go-to-market`, `idea-audit`, `idea-discovery`, `monetization-design`, `new-project`, `pitch-deck`, `pmf-diagnostics`, `product-roadmap`, `solo-founder`, `startup-lifecycle` |
 | `matchmedia` | `dark-mode` |
 | `materials` | `scene-conventions` |
 | `mcp` | `ai-agents`, `build-loop`, `figma-mcp-core`, `mcp-advisor`, `mcp-blender` |
@@ -742,7 +743,7 @@
 | `units` | `parametric-config` |
 | `upgrade` | `agent-packs`, `php-upgrade-checklist` |
 | `uploads` | `filepond-upload`, `medialibrary` |
-| `validation` | `adversarial-check`, `agent-design`, `code-review`, `code-simplifier`, `cross-layer-change-checklist`, `customer-discovery`, `defensibility`, `eval-design`, `laravel-data`, `pmf-diagnostics`, `refactoring-plan`, `requirement-critic`, `risk-assessment`, `solo-founder`, `startup-lifecycle`, `tech-debt-audit`, `test-strategy` |
+| `validation` | `adversarial-check`, `agent-design`, `code-review`, `code-simplifier`, `cross-layer-change-checklist`, `customer-discovery`, `defensibility`, `eval-design`, `idea-audit`, `laravel-data`, `pmf-diagnostics`, `refactoring-plan`, `requirement-critic`, `risk-assessment`, `solo-founder`, `startup-lifecycle`, `tech-debt-audit`, `test-strategy` |
 | `variants` | `reka-ui-cva` |
 | `venv` | `venv-dependencies` |
 | `verification` | `testing-safety-report`, `verify-claims` |

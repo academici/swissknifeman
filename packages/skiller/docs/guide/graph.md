@@ -367,7 +367,7 @@ flowchart LR
 
 **В графе:** 123 скиллов, 89 рёбер requires, 85 рёбер produces_for.
 
-## Изолированные скиллы (73)
+## Изолированные скиллы (74)
 
 Скиллы без связей `requires`/`produces_for` — самодостаточны.
 
@@ -387,7 +387,7 @@ flowchart LR
 | frontend-vite | `vite`, `vitepress` |
 | frontend-vue | `pinia`, `pinia-stores`, `vitest-vue`, `vue-best-practices`, `vue-composition-api`, `vue-dynamic-icons`, `vue-router-best-practices`, `vueuse-functions` |
 | general | `compact-responses`, `git-safety`, `naming-conventions`, `packages-stack`, `skills-ssot`, `writing-style` |
-| laravel-architecture | `enum-attributes`, `enum-state-machine`, `laravel-subagents` |
+| laravel-architecture | `eloquent-accessors`, `enum-attributes`, `enum-state-machine`, `laravel-subagents` |
 | laravel-data-layer | `laravel-broadcasting` |
 | laravel-extras | `medialibrary`, `pennant-development`, `spatie-settings` |
 | laravel-livewire | `livewire-blade-attributes` |

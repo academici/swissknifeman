@@ -183,6 +183,7 @@ export default withMermaid(defineConfig({
           items: [
             { text: 'Обзор', link: '/' },
             { text: 'Роутинг источников и задач', link: '/routing' },
+            { text: 'Control-surface проектов', link: '/control-surface' },
             { text: 'Roadmap', link: '/roadmap' },
           ],
         },

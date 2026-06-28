@@ -423,9 +423,10 @@ def do_upgrade(env, pack, target, *, overrides, dry, shell_policy):
     return 0
 
 
-def do_doctor(env, pack=None, target=None):
+def do_doctor(env, pack=None, target=None, json_out=False):
     packs = [pack] if pack else list_packs(env)
     rc = 0
+    catalog = []
     for pk in packs:
         manifest = load_manifest(env, pk)
         pdir = pack_dir(env, pk)
@@ -456,16 +457,32 @@ def do_doctor(env, pack=None, target=None):
                 sfile.read_text(encoding="utf-8"), defaults))
             if left:
                 problems.append(f"{f['src']}: остаточные {{{{{','.join(sorted(set(left)))}}}}}")
-        mark = "OK " if not problems else "BAD"
-        print(f"[{mark}] {pk} v{manifest['version']}")
-        for p in problems:
-            print(f"      - {p}")
+        if problems:
             rc = 1
+        catalog.append({"pack": pk, "version": manifest["version"],
+                        "ok": not problems, "problems": problems})
+        if not json_out:
+            print(f"[{'OK ' if not problems else 'BAD'}] {pk} v{manifest['version']}")
+            for p in problems:
+                print(f"      - {p}")
+    installed = None
     if target:
         lock = load_lock(target)
-        if lock.get("schema") != 1:
-            print("[BAD] lock: schema != 1")
+        lock_ok = lock.get("schema") == 1
+        installed = {name: {"version": pk.get("version"),
+                            "files": len(pk.get("files") or []),
+                            "modified": any(f.get("local_modified")
+                                            for f in (pk.get("files") or []))}
+                     for name, pk in (lock.get("packs") or {}).items()}
+        if not lock_ok:
             rc = 1
+            if not json_out:
+                print("[BAD] lock: schema != 1")
+        elif installed and not json_out:
+            print(f"Установлено в {target.name}: {', '.join(sorted(installed))}")
+    if json_out:
+        print(json.dumps({"catalog": catalog, "installed": installed, "rc": rc},
+                         ensure_ascii=False, indent=2))
     return rc
 
 
@@ -492,12 +509,12 @@ def cmd_agent_packs(env, argv):
     rest, answers = _pop_answers(rest)
     opts = parse_flags(rest, {
         "--pack": "str", "--target": "str", "--auto": "bool", "--dry-run": "bool",
-        "--install-only": "bool", "--allow-shell": "str", "--list": "bool",
+        "--install-only": "bool", "--allow-shell": "str", "--list": "bool", "--json": "bool",
     })
     if opts.get("help"):
         print("harness agent-packs <list|render|upgrade|doctor> "
               "[--pack P] [--target DIR] [--auto] [--answer K=V] "
-              "[--install-only] [--allow-shell off|safe|full] [--dry-run]")
+              "[--install-only] [--allow-shell off|safe|full] [--dry-run] [--json]")
         return
     shell_policy = opts.get("allow_shell") or "safe"
 
@@ -511,7 +528,7 @@ def cmd_agent_packs(env, argv):
     if sub == "doctor":
         from pathlib import Path
         target = Path(opts["target"]).resolve() if opts.get("target") else None
-        raise SystemExit(do_doctor(env, opts.get("pack"), target))
+        raise SystemExit(do_doctor(env, opts.get("pack"), target, json_out=opts.get("json")))
 
     if sub in ("render", "install", "upgrade"):
         if not opts.get("pack") or not opts.get("target"):

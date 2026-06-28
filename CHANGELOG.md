@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-06-28
+
+### Added
+
+- **Единый control-surface проектов (4 слоя, строго + машиночитаемо).** Одной командой — полный
+  инвентарь проекта/флота по слоям *скиллы · роли/agent-packs · MCP · память-граф* с drift→fix
+  подсказками; точечный re-sync уже даёт `maind sync --only <cap>`.
+  - `maind projects status` теперь инвентаризует **слой ролей** (`probe_project` читает
+    `.claude/agent-pack.lock.json` → поле `agent_packs`) и печатает **drift→fix** (`probe.drift_hints`:
+    `{layer, issue, fix}` — напр. «профиль ожидает пак X → `maind sync --only agent-pack`»). `--json`
+    несёт `agent_packs` + `fixes` по каждому проекту.
+  - **`swissknifeman status [<id>|--all] [--json]`** — зонтичный фасад единого 4-слойного статуса
+    (→ `maind projects status`); bare/`--target` → `skiller status` (back-compat сохранён).
+  - **`--json`** добавлен в `skiller status` (каналы/профиль/бюджет/overlap) и
+    `harness agent-packs doctor` (каталог паков + установленные) — машиночитаемо для агента.
+
 ### Docs
 
 - **Корневой `CLAUDE.md` — раздел «Философия и рамки»:** разрозненные по тексту принципы сведены в
@@ -12,6 +28,16 @@
 - **Раздел «Референсы и провенанс»:** `CLAUDE.md` теперь указывает на каталог провенанса
   [`docs/reference.md`](docs/reference.md) (изученные внешние источники: вердикт adopt/reference/skip
   + что взято) и per-skill паспорта `upstream.json`, с правилом «использовал внешний ресурс — отметь».
+- **Раннбук `project-tooling-runbook` — раздел «Агенты/роли (agent-packs)»:** настройка проекта
+  теперь явно = скиллы **И** agent-packs (роли/агенты — отдельная подсистема `harness agent-packs`:
+  субагенты + workflow + review-gate). В «Порядок „дать проекту всё“» добавлен шаг agent-packs;
+  зафиксирован авто-путь (`maind onboard`/`setup` с типом проекта ставит пак из `profiles/<type>.json`)
+  и причина пропуска при ручном `connect`/нетипизированной записи. Закрывает пробел «у проекта нет
+  ролей/код-ревью при большой задаче».
+- **Новая умбрелла-страница [`docs/control-surface.md`](docs/control-surface.md):** таблица
+  «слой → статус-команда → fix/re-sync → lock» + операционный цикл `status --json → fixes[] →
+  maind sync --only <cap>`. Раннбук `project-tooling-runbook` дополнен секцией «Control-surface»,
+  явными шагами MCP/память/граф, а «Проверка» сведена к `swissknifeman status <id>`.
 
 ## [0.6.0] - 2026-06-27
 

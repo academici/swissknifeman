@@ -32,6 +32,7 @@ research-аудит июнь 2026; skill-реестр и eval — рецензи
 | [Anthropic — Founder's Playbook](https://www.anthropic.com/) | методология AI-native стартапа (Idea/MVP/Launch/Scale, Claude как structured devil's advocate) | first-party, май 2026 | **reference** | каркас founder-трека + `idea-audit` (4 модуля, stage-context, premature scaling); эпиграф = парафраз, не verbatim |
 | [CB Insights — Why Startups Fail](https://www.cbinsights.com/research/report/startup-failure-reasons-top/) | пост-мортемы стартапов, «no market need» | классика ~2014, апдейт 2026 | **reference** | аргумент зоны idea-validation в `idea-audit`; цитировать как классику (~42%), 2026 реформулирует ~43% poor PMF |
 | [Anthropic — Effective context engineering for AI agents](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents) | context engineering для агентов | first-party, сен 2025 | **reference** | основа Perplexity-навыка `idea-architect` (роль/режимы/правила веб-поиска/антипаттерны) |
+| [Perplexity — Prompt Guide](https://docs.perplexity.ai/guides/prompt-guide) + Help Center | официальные правила формулировки запросов (specificity, version+context, cap result counts, separate concerns, grounding-rules) | first-party, верифиц. 2026-06-29 | **reference** | факт-основа CORE-скилла `research/query-craft` (5 слотов запроса, анти-паттерны, режимы search/advanced/deep); верифицировано RAG (WebSearch+WebFetch), не по памяти |
 
 ## Карточки
 

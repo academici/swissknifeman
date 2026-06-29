@@ -89,13 +89,14 @@ Reviewing someone's audit/plan, for EACH item decide: is the verdict repo-ground
 ## Related skills
 
 - `mcp-advisor` (general) — complementary: that one is about **what to connect** to a project
-  (context7/perplexity/web as servers), this one about **when and how to fetch a fact**. Before verifying, make
+  (context7/perplexity/web as servers), this one about **when** to fetch a fact. Before verifying, make
   sure the needed engine is connected.
+- `research/query-craft` — about **how to phrase** the query (detail: version/stack/mode search·advanced·deep/sources;
+  reliability of the keyless `perplexity-web` bridge). Kicks in AFTER the "must verify" decision: this trio
+  (mcp-advisor=what · verify-claims=when · query-craft=how) is one RAG discipline.
 - `research/research` — deep RAG: source-tiers, faithfulness-check, multi-step deep-research; ladder step 4 escalates here.
 - `general/grill-with-docs` — a heavy special case: grilling REQUIREMENTS against code + external specs (API/RFC/bank) with glossary+ADR.
 - `general/anti-drift` — iteration discipline; this skill is knowledge discipline (don't assert stale facts).
 - `general/context-economy` — each RAG engine costs context/permissions; don't keep unused ones connected.
 
-<!-- ru-source-sha256: PENDING -->
-
-<!-- ru-source-sha256: 6209747735d8d71d56ca4316547010ad1b06839d55ccc3fc0ee6794afdb24fba -->
+<!-- ru-source-sha256: f59ab4d1763acf5318c9c9e712858c74191d661c035e6ef427a50fda245c6879 -->

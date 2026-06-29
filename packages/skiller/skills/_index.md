@@ -4,7 +4,7 @@
 
 Источник истины портируемых скиллов (машинный реестр — `skills.json`). Раздача в проекты: `skiller connect` (плагины-бакеты) / `vendor` (физ. перенос). CORE-набор токен-скиллов (`general`/`oss-dev`) раздаётся по умолчанию — см. `connect`/`vendor`.
 
-Всего: 199 скиллов в 45 бакетах.
+Всего: 200 скиллов в 45 бакетах.
 
 ## Скиллы по бакетам
 
@@ -393,10 +393,11 @@
 | `test-strategy` | Test strategy: pyramid (unit/integration/e2e), coverage policy, mock vs real, which featu… | `quality`, `testing`, `coverage`, `validation`, `ci`, `architecture`, `pest` |
 | `testing-safety-report` | Safety report after a risky change (migrations, schema/layer refactor, dependency upgrade… | `testing`, `safety`, `migrations`, `reporting`, `verification`, `quality`, `refactor` |
 
-### research — Research and knowledge management (1)
+### research — Research and knowledge management (2)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
+| `query-craft` | How to FORMULATE a search/doc-engine query (Perplexity Web · WebSearch · context7): maxim… | `research`, `perplexity`, `search`, `query`, `rag`, `context7`, `claude-code` |
 | `research-knowledge-super-skill` | Comprehensive research and knowledge management skill merging Perplexity Computer's resea… |  |
 
 ### roles — Personas: tech lead, startup CTO, solo founder, open-source maintainer (4)
@@ -481,7 +482,7 @@
 | `checklist` | `complex-task-orchestrator`, `cross-layer-change-checklist` |
 | `chromedriver` | `laravel-dusk` |
 | `ci` | `backend-type-sync`, `ci-cd`, `code-simplifier`, `db-test-preflight`, `mutation-testing`, `node-pnpm-preflight`, `oss-development`, `playwright-e2e`, `release-engineering`, `test-isolation-guard`, `test-strategy` |
-| `claude-code` | `agent-packs`, `context-economy`, `mcp-advisor`, `verify-claims` |
+| `claude-code` | `agent-packs`, `context-economy`, `mcp-advisor`, `query-craft`, `verify-claims` |
 | `clean-code` | `naming-conventions` |
 | `cli` | `dx-design` |
 | `code-connect` | `figma-mcp-core` |
@@ -498,6 +499,7 @@
 | `configuration` | `spatie-settings` |
 | `conflicts` | `resolving-merge-conflicts` |
 | `context` | `anti-drift`, `compact-responses`, `context-economy`, `gh-review`, `mcp-advisor`, `session-handoff`, `shared-memory`, `task-brief-template`, `verify-claims` |
+| `context7` | `query-craft` |
 | `contracts` | `api-design` |
 | `contribution` | `package-contribution-protocol` |
 | `conventional-commits` | `git-commit-rules` |
@@ -651,6 +653,7 @@
 | `pennant` | `pennant-development` |
 | `performance` | `diagnosing-bugs` |
 | `permissions` | `attribute-authorization`, `azguard`, `laravel-permissions` |
+| `perplexity` | `query-craft` |
 | `persona` | `open-source-maintainer`, `solo-founder`, `startup-cto`, `tech-lead` |
 | `pest` | `test-strategy` |
 | `php` | `attribute-authorization`, `azguard`, `botkit`, `code-style-spatie`, `database`, `dependency-audit`, `dependency-injection`, `docker-php`, `eloquent-accessors`, `enum-attributes`, `enum-state-machine`, `filament`, `laravel`, `laravel-best-practices`, `laravel-broadcasting`, `laravel-data`, `laravel-dusk`, `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages`, `laravel-permissions`, `laravel-security-audit`, `laravel-structure`, `laravel-testing`, `medialibrary`, `modular-architecture`, `mutation-testing`, `named-arguments`, `pao`, `pennant-development`, `php-naming-conventions`, `php-patterns`, `php-upgrade-checklist`, `repositories`, `spatie-settings`, `static-analysis`, `test-isolation-guard` |
@@ -668,8 +671,9 @@
 | `pusher` | `laravel-echo-client` |
 | `python` | `mcp-blender`, `ml-project-structure`, `parametric-config`, `venv-dependencies`, `version-gotchas` |
 | `quality` | `code-review`, `code-simplifier`, `mutation-testing`, `playwright-e2e`, `refactoring-plan`, `static-analysis`, `tech-debt-audit`, `test-strategy`, `testing-safety-report`, `venv-dependencies` |
+| `query` | `query-craft` |
 | `queue` | `docker-services` |
-| `rag` | `ai-agents`, `verify-claims` |
+| `rag` | `ai-agents`, `query-craft`, `verify-claims` |
 | `rbac` | `attribute-authorization`, `azguard`, `laravel-permissions`, `security-design` |
 | `readability` | `named-arguments`, `naming-conventions`, `php-naming-conventions` |
 | `readiness` | `health-checks` |
@@ -689,7 +693,7 @@
 | `reporting` | `testing-safety-report` |
 | `repository` | `repositories` |
 | `requirements` | `brd`, `business-process`, `grill-with-docs`, `idea-discovery`, `new-project`, `prd-from-brd`, `product-roadmap`, `requirement-critic`, `spec-interview`, `startup-lifecycle`, `task-brief-template` |
-| `research` | `verify-claims` |
+| `research` | `query-craft`, `verify-claims` |
 | `rest` | `api-design` |
 | `reverb` | `laravel-broadcasting`, `laravel-echo-client` |
 | `review` | `code-review`, `gh-review`, `implement`, `open-source-maintainer`, `tech-lead` |
@@ -705,6 +709,7 @@
 | `schema` | `data-schema` |
 | `screenshot` | `mcp-blender` |
 | `seam` | `codebase-design` |
+| `search` | `query-craft` |
 | `security` | `agent-design`, `ci-cd`, `dependency-audit`, `laravel-security-audit`, `oss-governance`, `risk-assessment`, `security-design` |
 | `self-improvement` | `session-observer` |
 | `semver` | `github-flow`, `package-contribution-protocol`, `release-engineering` |

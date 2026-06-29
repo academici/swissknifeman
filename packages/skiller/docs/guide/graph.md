@@ -183,6 +183,9 @@ flowchart LR
     test_strategy["test-strategy"]
     testing_safety_report["testing-safety-report"]
   end
+  subgraph research["research"]
+    query_craft["query-craft"]
+  end
   subgraph system["system"]
     brain_locator["brain-locator"]
     cross_project_coordinator["cross-project-coordinator"]
@@ -349,6 +352,7 @@ flowchart LR
   prd_from_brd -.->|feeds| architecture
   prd_from_brd -.->|feeds| product_roadmap
   project_map -.->|feeds| cross_layer_change_checklist
+  query_craft -.->|feeds| verify_claims
   refactoring_plan -.->|feeds| testing_safety_report
   risk_assessment -.->|feeds| pitch_deck
   runbook -.->|feeds| incident_response
@@ -369,7 +373,7 @@ flowchart LR
   verify_claims -.->|feeds| tech_stack_selection
 ```
 
-**В графе:** 125 скиллов, 91 рёбер requires, 85 рёбер produces_for.
+**В графе:** 126 скиллов, 91 рёбер requires, 86 рёбер produces_for.
 
 ## Изолированные скиллы (74)
 

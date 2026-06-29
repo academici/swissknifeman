@@ -206,7 +206,7 @@
     },
     "research": {
       "description": "Research and knowledge management",
-      "count": 1,
+      "count": 2,
       "status": "active"
     },
     "roles": {
@@ -2226,8 +2226,8 @@
       "path": "skills/general/verify-claims/SKILL.md",
       "version": "0.1.0",
       "description": "Before a decision/verdict that rests on an EXTERNAL fact (library version/API, 'still current', best practice, market, another service's/MCP's capabilities) — verify via RAG, don't assert from memory (knowledge cutoff goes stale). Ladder: context7 (docs) → Perplexity (native MCP if API key, else perplexity-web) → WebSearch → research for deep. Activate on audit/plan review, big planning, library/stack/dependency choice, claiming 'this is standard/modern'. Repo-grounded facts (read the code) and stable knowledge — no check.",
-      "sha256": "6363c0f67fd0947b6b0aeb9b3cb80d3042f909714d53da99137a87a95c4d0cf2",
-      "content_sha256": "0b57b3717756b802d95e82545685efa0e3359c25e2bf8744e35c72fb9ecce10c",
+      "sha256": "711828940339242644b1f0394f658b63510ea5e238ef457ba011a34b4785e6a6",
+      "content_sha256": "aa643ce2be6f46c7e31b3160a1104e0b744129be3d76b549862bb0f2d42a9596",
       "tags": [
         "verification",
         "rag",
@@ -3846,6 +3846,28 @@
         "verification",
         "quality",
         "refactor"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "query-craft",
+      "bucket": "research",
+      "path": "skills/research/query-craft/SKILL.md",
+      "version": "0.1.0",
+      "description": "How to FORMULATE a search/doc-engine query (Perplexity Web · WebSearch · context7): maximize detail (exact version/stack/'min Filament 4', timeframe, format, result limit), pick engine+mode (search/advanced/deep), set sources (web/academic/social). Activate BEFORE any external search, esp. a library/framework (Laravel/Filament/Vue): ban bare 'Laravel how to X?'. Not when-to-verify (verify-claims) nor what-to-connect (mcp-advisor) — only HOW to ask.",
+      "sha256": "47aafd9759d0bf84adbc8e63906c8f9f3b0c8735ee3ae72db53511c05b118448",
+      "content_sha256": "d73a171515245f7c155d1d566df4cf9a45e72a6657260d81e3ba8678e82f9eee",
+      "tags": [
+        "research",
+        "perplexity",
+        "search",
+        "query",
+        "rag",
+        "context7",
+        "claude-code"
+      ],
+      "produces_for": [
+        "verify-claims"
       ],
       "source": "local"
     },

@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Added (skiller — CORE-скилл `research/query-craft`: дисциплина формулировки поисковых запросов)
+
+- **Новый скилл `research/query-craft`** — как ФОРМУЛИРОВАТЬ запрос к поисковому/доковому движку
+  (Perplexity Web · WebSearch · context7): железное правило «никогда не голый запрос по библиотеке
+  без версии+контекста» (анти-паттерн «Laravel как сделать X?» → «Laravel 11: … на 2025»); 5 слотов
+  запроса (глагол · субъект+версия · контекст · конкретика · формат/лимит); выбор движка и режима
+  Perplexity (`search`/`search_advanced`/`search_deep`, `sources` web/academic/social); раздел
+  «Надёжность keyless-моста» (lock/таймаут на тяжёлых запросах → не параллелить, дробить, эскалация
+  на WebSearch/context7, системно — API-key вариант).
+- **Завершает RAG-дисциплину-трио в `CORE_SKILLS`** (раздаётся в каждый проект, on-trigger):
+  `mcp-advisor` (что подключить) · `verify-claims` (когда/что верифицировать) · `query-craft` (как
+  спросить). Скилл физически в бакете `research`, в CORE — по ссылке. `verify-claims`/`mcp-advisor`
+  получили back-reference на него, роли разрезаны (verify-claims = «когда», query-craft = «как»).
+- Двуязычный (RU-источник → EN-канон); факт-основа — официальный Perplexity Prompt Guide,
+  верифицирована RAG (WebSearch+WebFetch) 2026-06-29 (см. `docs/reference.md`). 200 unit-тестов OK,
+  `validate.sh` зелёный (201 скилл).
+
 ### Added (skiller — локаторы экосистемы: навигация агента к узлам Brain/swissknifeman)
 
 - **Два скилла-локатора** в бакете `system` (on-trigger, НЕ в CORE — резидентный токен-бюджет не растёт):

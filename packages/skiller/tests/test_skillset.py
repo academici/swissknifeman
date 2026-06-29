@@ -188,6 +188,31 @@ class TestSync(unittest.TestCase):
             self.assertEqual(lock["code-style"]["bucket"], "php")
             self.assertTrue(lock["code-style"]["sha256"])
 
+    def test_gitignore_managed_emits_ignore_for_managed_only(self):
+        # gitignore_managed: managed-скиллы попадают в <skills_path>/.gitignore
+        # (держим вне git, воспроизводимы sync); локальный/кастомный — НЕ попадает.
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            root, env = make_registry(tmp)
+            _materialize_registry(env)
+            target = make_laravel_project(tmp)
+            local = target / ".claude/skills/my-custom"
+            local.mkdir(parents=True)
+            (local / "SKILL.md").write_text("# custom\n", encoding="utf-8")
+
+            sync_skillset(env, target, {"mode": "vendor", "buckets": ["php"],
+                                        "gitignore_managed": True})
+            gi = target / ".claude/skills/.gitignore"
+            self.assertTrue(gi.is_file())
+            body = gi.read_text(encoding="utf-8")
+            self.assertIn("/code-style/", body)       # managed → игнорится
+            self.assertNotIn("/my-custom/", body)     # локальный → остаётся в репо
+            self.assertTrue((local / "SKILL.md").is_file())  # локальный не тронут
+
+            # выключение флага убирает НАШ .gitignore (managed снова коммитятся)
+            sync_skillset(env, target, {"mode": "vendor", "buckets": ["php"]})
+            self.assertFalse(gi.exists())
+
     def test_sync_excludes_ru_source_and_evals(self):
         # Регрессия: sync (канонический Claude-канал) НЕ копирует SKILL.ru.md (русский
         # SSOT), evals/, upstream.json, .claude-plugin — иначе утечка RU-источника во

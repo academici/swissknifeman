@@ -14,7 +14,8 @@ from . import codegraph
 from .common import die, now_iso, parse_args, warn
 from .config import load_config
 from .mcpconfig import (MCP_FILES, MCPConfigError, load_mcp, mcp_path,
-                        merge_server, remove_server, write_mcp)
+                        merge_server, reconcile_gitignore, remove_server,
+                        write_example, write_mcp)
 from .memory import health, resolve_ports
 from .projects import get as get_project
 from .projects import listing, write_config
@@ -76,6 +77,7 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
         warn(f"проект '{pid}': путь не найден — {project_path}")
         return None
     scope = project.get("memory_scope") or f"project:{pid}"
+    emit_example = bool((config.get("mcp") or {}).get("emit_example"))  # opt-in: .example + .gitignore
 
     st = codegraph.settings(config)
     if with_code is None:
@@ -120,6 +122,9 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
             changed_any = changed_any or changed
         if changed_any:
             write_mcp(path, data, dry=dry)
+        if emit_example:                                     # портируемый .example + гигиена .gitignore
+            write_example(path, data, project_path, dry=dry)
+            reconcile_gitignore(project_path, rel, dry=dry)
         written.append({"file": rel, "servers": list(entries), "changed": changed_any})
 
     return {"id": pid, "scope": scope, "written": written, "skipped": skipped,

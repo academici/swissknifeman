@@ -4,9 +4,13 @@
 laravel-boost). Слияние идемпотентно (повторный запуск ничего не меняет), перед записью —
 .bak. Это самый чувствительный к безопасности примитив — выделен и покрыт тестами."""
 import json
+import os
+import subprocess
 from pathlib import Path
 
-from .common import atomic_write_json, backup_file
+from .common import atomic_write_json, backup_file, warn
+
+EXAMPLE_SUFFIX = ".example"
 
 # Куда какие агенты кладут MCP-серверы.
 MCP_FILES = {
@@ -70,6 +74,73 @@ def write_mcp(path, data, *, dry=False, backup=True):
     if backup and path.exists():
         backup_file(path)
     atomic_write_json(path, data)
+
+
+def _placeholderize(obj, project_root, home):
+    """Рекурсивно заменить machine-specific абсолютные пути на плейсхолдеры (для .example):
+    путь проекта → <ABS_PATH_TO_PROJECT> (специфичнее, заменяем первым), домашний префикс
+    → <HOME> (ловит остальные home-based пути чужих серверов). Индирекция вроде
+    ${MAIND_BIN:-maind} не трогается — она и так портируема."""
+    if isinstance(obj, str):
+        s = obj
+        if project_root:
+            s = s.replace(project_root, "<ABS_PATH_TO_PROJECT>")
+        if home:
+            s = s.replace(home, "<HOME>")
+        return s
+    if isinstance(obj, list):
+        return [_placeholderize(x, project_root, home) for x in obj]
+    if isinstance(obj, dict):
+        return {k: _placeholderize(v, project_root, home) for k, v in obj.items()}
+    return obj
+
+
+def write_example(real_path, data, project_root, *, dry=False):
+    """Эмитит <real_path>.example с плейсхолдерами вместо machine-specific абс. путей —
+    портируемая карта MCP-структуры (коммитится, в отличие от реального файла). Один
+    генератор → два выхода из одного `data`: расхождение real↔.example невозможно by design."""
+    home = os.path.expanduser("~")
+    example = _placeholderize(data, str(project_root), home)
+    ex_path = Path(str(real_path) + EXAMPLE_SUFFIX)
+    if dry:
+        print(f"[dry-run] {ex_path} (плейсхолдеры machine-specific путей)")
+        return
+    atomic_write_json(ex_path, example)
+
+
+def reconcile_gitignore(project_root, rel_real, *, dry=False):
+    """Гигиена .gitignore для пары real↔.example: реальный MCP-конфиг — В .gitignore
+    (append-if-absent, у него machine-specific пути), его `.example` — НЕ в .gitignore
+    (remove-if-present, иначе портируемый шаблон не закоммитится). Идемпотентно. Если
+    реальный файл уже трекается git — warn (не делаем `git rm` молча). Возвращает changed."""
+    gi = Path(project_root) / ".gitignore"
+    rel_example = rel_real + EXAMPLE_SUFFIX
+    lines = gi.read_text(encoding="utf-8").splitlines() if gi.exists() else []
+    out, changed = [], False
+    for ln in lines:
+        if ln.strip() == rel_example:          # .example НЕ должен игнориться
+            changed = True
+            continue
+        out.append(ln)
+    if rel_real not in [ln.strip() for ln in out]:   # реальный — должен
+        out.append(rel_real)
+        changed = True
+    if not changed:
+        return False
+    if dry:
+        print(f"[dry-run] {gi}: + {rel_real}, − {rel_example}")
+        return True
+    try:
+        tracked = subprocess.run(
+            ["git", "-C", str(project_root), "ls-files", "--error-unmatch", rel_real],
+            capture_output=True).returncode == 0
+        if tracked:
+            warn(f"{rel_real} уже трекается git в {project_root} — добавил в .gitignore, "
+                 f"но `git rm --cached {rel_real}` сделай сам")
+    except OSError:
+        pass
+    gi.write_text("\n".join(out) + "\n", encoding="utf-8")
+    return True
 
 
 def has_server(path, name):

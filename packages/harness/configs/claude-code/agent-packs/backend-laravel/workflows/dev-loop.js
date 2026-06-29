@@ -32,9 +32,9 @@ const ALL_SLICES = (args && Array.isArray(args.slices)) ? args.slices : []
 const SLICES = ALL_SLICES.slice(0, MAX)
 
 const HARD_GATES = `ЖЁСТКИЕ ГЕЙТЫ {{PACK_PREFIX}} (не нарушать):
-- Хост php8.5 без pgsql — PHP/artisan/тесты ТОЛЬКО через '{{PHP_RUNNER}}' ({{TEST_RUNNER_CMD}}), не bare 'php'.
-- .env залочен хуком — не читать и не править; конфиг тестовой БД в phpunit.xml/tests/bootstrap.php; {{TEST_DB}} уже создана, Postgres поднят.
-- Проект на PHPUnit-native, НЕ Pest. Миграции не добавлять (схема полная). phpstan не установлен — не звать.
+- PHP/тесты ТОЛЬКО через '{{PHP_RUNNER}}' ({{TEST_RUNNER_CMD}}), не bare 'php'.
+- Если .env залочен хуком — не читать и не править; конфиг тестовой БД в phpunit.xml/tests/bootstrap.php ({{TEST_DB}}).
+- Тест-фреймворк проекта — {{TEST_FRAMEWORK}}: зеркаль стиль существующих тестов. Схему/миграции меняй только если того требует срез. Статическая проверка (если настроена) — {{CHECK_CMD}}.
 - НЕ git push, НЕ открывать/мержить PR, НЕ release. НЕ migrate:fresh/drop по чему-либо кроме тестовой БД.
 - Все срезы строятся на ОДНОЙ ветке ${BRANCH}. Агенты НЕ создают и не переключают ветки — коммитят в текущую и оставляют дерево чистым.
 - Работать строго внутри ${PROJECT_DIR}.`
@@ -101,12 +101,12 @@ ${HARD_GATES}`,
     { label: `impl:${slice.id}`, phase: 'Build', agentType: '{{PACK_PREFIX}}-slice-builder', effort: 'high' }
   )
 
-  // 2) Тесты до зелёного (или чистая отсрочка). PHPUnit-native, {{PHP_RUNNER}}.
+  // 2) Тесты до зелёного (или чистая отсрочка). {{TEST_FRAMEWORK}}, {{PHP_RUNNER}}.
   const result = await agent(
     `Ты в текущей ветке ${BRANCH} в ${PROJECT_DIR}; срез уже реализован:
 ${JSON.stringify(slice, null, 2)}
 
-Напиши PHPUnit-тесты (НЕ Pest), доказывающие acceptance_criteria, и итерируй '{{TEST_RUNNER_CMD}}' до ЗЕЛЁНОГО.
+Напиши тесты ({{TEST_FRAMEWORK}}), доказывающие acceptance_criteria, и итерируй '{{TEST_RUNNER_CMD}}' до ЗЕЛЁНОГО.
 - Зелено → закоммить тесты в ${BRANCH}, status='green', заполни test_output финальной строкой.
 - Не достиг зелёного честно → НЕ ослабляй тесты: оставь дерево чистым, status='deferred', объясни в summary+open_questions (реализация остаётся в ${BRANCH}).
 Дерево всегда оставляй ЧИСТЫМ. Зафиксируй допущения.

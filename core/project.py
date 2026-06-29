@@ -39,6 +39,30 @@ LANGUAGE_BY_TYPE = {
     "node-package": "typescript",
 }
 
+# Дефолт видимости папки `docs` по типу проекта. У РАСПРОСТРАНЯЕМОГО пакета/библиотеки
+# `docs/` — публичная документация (VitePress и т.п.); у ПРОДУКТА (закрытый сервис/фронт)
+# `docs/` — внутренняя. Источник истины статуса — control-нота Brain; это лишь дефолт при
+# отсутствии явного указания. Безопасный fallback — `private` («не опубликовать лишнее»).
+DEFAULT_DOCS_VISIBILITY = "private"
+DOCS_VISIBILITY_BY_TYPE = {
+    "php-package": "public",
+    "node-package": "public",
+    "dart-flutter": "public",
+    "laravel-project": "private",
+    "node-frontend": "private",
+    "python-backend": "private",
+    "blender": "private",
+    "obsidian-vault": "private",
+    "standalone": "private",
+}
+
+
+def docs_visibility_for(ptype):
+    """Дефолтная видимость папки `docs` по типу проекта (`public`|`private`).
+    Неизвестный тип → DEFAULT_DOCS_VISIBILITY (private)."""
+    return DOCS_VISIBILITY_BY_TYPE.get(ptype, DEFAULT_DOCS_VISIBILITY)
+
+
 # package.json-проект → frontend, если есть UI-фреймворк/сборщик (иначе node-package:
 # библиотека/CLI/бэкенд-node).
 _FRONTEND_DEP_HINTS = (

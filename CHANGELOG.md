@@ -2,6 +2,57 @@
 
 ## [Unreleased]
 
+### Added
+
+- **`laravel-architecture/eloquent-accessors`** (новый скилл) — канон современных Eloquent
+  accessors/mutators через `Attribute::make(get:, set:)` вместо legacy `getXxxAttribute()`:
+  синтаксис/именование/видимость/типизация, размещение в классе (после relations, перед scopes),
+  миграция legacy, граница с `casts()`. Сниппет `accessor.php` (getter, getter+setter с
+  нормализацией, многострочный, миграция). Промоут project-local скилла из проекта agelto
+  (анонимизирован, поднят в реестр по правилу универсальности) через `field-feedback-loop`.
+
+### Changed
+
+- **`project-tooling-runbook`** — новая секция «Гигиена machine-specific конфигов»: конфиг с
+  абсолютными локальными путями или секретами (`.mcp.json` любого провайдера, `.cursor/.vscode/mcp.json`,
+  `.claude/*`) не коммитить как есть. Двухуровневое правило: индирекция через `.env` (предпочтительно,
+  конфиг остаётся портируемым) либо gitignore реального + **синхронный** `.example` с плейсхолдерами
+  (как `.env`↔`.env.example`). Кросс-ссылка из `ecosystem-integration` (шаг deploy: `.mcp.json` несёт
+  абс.пути maind/Serena). Триггеры обоих скиллов расширены.
+
+- **`harness` agent-pack `backend-laravel` 0.2.0 → 0.3.0** — деуниверсализация шаблонов: убрана
+  зашитая среда одного проекта (machine-specific `php8.5`/`pgsql`/`Postgres`/`/usr/bin/php8.4` и ложные
+  для большинства «phpstan не установлен», «миграции не добавлять — схема полная»). Тест-фреймворк
+  теперь параметричен (`{{TEST_FRAMEWORK}}` — раньше интервью-переменная игнорировалась, хардкод
+  «PHPUnit-native, НЕ Pest»); идентичность slice-builder смягчена до «Laravel/REST API **или пакет**».
+  Поймано на полевом онбординге azguard (Pest+Testbench-пакет) → `field-feedback-loop` путь 1 (фикс
+  генератора, не артефакта). Затронуты agents/rules/workflow/docs пака.
+
+- **Doc-папки: имя ↔ видимость развязаны (Brain doc-sync + maind + core).** Раньше «публичность»
+  папки кодировалась её именем (хардкод `docs-public`), имена сторон vault/repo были жёстко
+  симметричны. Теперь — единая модель папки `{id, vault, repo, visibility}`: имена сторон могут
+  отличаться (в валте `docs-public` ↔ в репо `docs`), статус `public|private` независим от имени,
+  wikilink-гейт публикации — по `visibility`. Дефолт видимости **по типу проекта**
+  (`core.docs_visibility_for`): пакет/библиотека → `docs` public, продукт → private. Источник
+  истины — frontmatter control-ноты Brain; maind кэширует `docs_folders` (нормализация плоского
+  legacy-списка на лету, полная back-compat). Поймано на онбординге пакета chatom →
+  `field-feedback-loop`. Затронуты `core/project.py`, `maind/{config,onboard,common}`, Brain
+  `lib/brain/{folders,engine,config,status,listing,syncing,watch,discovery}` + доки/тесты.
+
+- **`harness` agent-pack `backend-laravel` 0.3.0 → 0.4.0** + `python-backend`/`node-frontend`/
+  `dart-flutter` 0.1.0 → 0.2.0 — **AI-гайд `subagents-and-workflows.md` переехал из публичного
+  `docs/05_AI/guidelines/` в `.claude/guidelines/`** (дефолт `DOCS_DIR`). Это внутренний артефакт
+  для агентов, не публичная VitePress-документация пакета (иначе утекал в публикацию и в Brain-валт).
+  Из шаблона backend-laravel убран ошибочный Brain-frontmatter (`parent: [[05_AI]]`) и вики-ссылка.
+  Миграция установленных проектов: новый гайд в `.claude/guidelines/`, старый путь удалить вручную.
+
+### Roadmap
+
+- **`roadmap/mcp-config-example-emit.md`** — отложено: научить `maind deploy/sync` самому эмитить
+  `.mcp.json.example` (плейсхолдеры) + вести `.gitignore` (механизм вместо дисциплины агента).
+  Критерий внедрения — повторная утечка абс.путей/секретов или невозможность поднять MCP без `.example`.
+  Маршрутизировано через `field-feedback-loop` из полевого кейса agelto (настройка playwright-MCP).
+
 ## [0.7.1] - 2026-06-28
 
 ### Added

@@ -9,7 +9,8 @@ import os
 import sys
 from pathlib import Path
 
-from .common import detect_project_type, die, parse_args, sanitize
+from .common import (detect_project_type, die, docs_visibility_for, parse_args,
+                     sanitize)
 from .config import load_config
 from .deploy import deploy_project, mark_deployed
 from .orchestrate import run_capability
@@ -33,10 +34,14 @@ def _ensure_project(env, config, project_or_path, namespaces=None, dry=False):
     if not path.is_dir():
         die(f"проект не найден: '{project_or_path}' — ни id в config.json, ни каталог")
     pid = sanitize(path.name)
+    ptype = _infer_type(path)
+    vis = docs_visibility_for(ptype)            # package→public, product→private
     proj = {"id": pid, "name": path.name, "local_path": str(path), "repo": None,
-            "type": _infer_type(path), "enabled": True,
+            "type": ptype, "enabled": True,
             "memory_scope": f"project:{pid}",
             "namespaces": list(namespaces) if namespaces else ["axioma", pid],
+            "docs_folders": [{"id": "docs", "vault": "docs", "repo": "docs",
+                              "visibility": vis}],
             "agents": [], "skills": [], "tags": [], "status": "active", "dependencies": []}
     config["projects"] = list(config.get("projects") or []) + [proj]
     if not dry:

@@ -13,8 +13,8 @@ from pathlib import Path
 # модулей пакета, которые исторически берут эти имена из .common.
 from core import (  # noqa: F401
     HOME, BaseEnv, atomic_write_json, atomic_write_text, confirm,
-    detect_project_type, die, find_monorepo_root, now_iso, parse_args,
-    run_cmd, safe_load_json, sanitize, warn,
+    detect_project_type, die, docs_visibility_for, find_monorepo_root,
+    now_iso, parse_args, run_cmd, safe_load_json, sanitize, warn,
 )
 from core import load_json_db as _core_load_json_db
 # Выделенные модули — реэкспорт ради `from .common import ...` (back-compat).

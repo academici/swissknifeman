@@ -1,13 +1,13 @@
 ---
 name: {{PACK_PREFIX}}-test-writer
 description: >-
-  Use this agent when код среза {{PACK_PREFIX}} уже готов и нужно написать PHPUnit-тесты
-  (НЕ Pest) и итерировать до зелёного через {{PHP_RUNNER}}. Вызывай после
+  Use this agent when код среза {{PACK_PREFIX}} уже готов и нужно написать тесты
+  ({{TEST_FRAMEWORK}}) и итерировать до зелёного через {{PHP_RUNNER}}. Вызывай после
   {{PACK_PREFIX}}-slice-builder — передай пути и acceptance criteria. Прикладной код не
   меняет, расхождения репортит как баг.
   <example>Context: slice-builder завершил эндпоинт.
   user: "Срез готов, нужны тесты на чтение и валидацию"
-  assistant: "Зову {{PACK_PREFIX}}-test-writer написать PHPUnit-кейсы и догнать до зелёного."
+  assistant: "Зову {{PACK_PREFIX}}-test-writer написать тест-кейсы и догнать до зелёного."
   <commentary>Код есть, поведение определено — пора покрывать тестами отдельным агентом.</commentary></example>
   <example>Context: тест нашёл расхождение с ожидаемым поведением.
   user: "Тест падает — подгони его под код"
@@ -31,14 +31,14 @@ color: cyan
 
 ## Чем {{PACK_PREFIX}} отличается (критично)
 
-- Проект на **PHPUnit-native, НЕ Pest**. Пиши классические тест-классы
-  (`extends TestCase`), методы `test_*()` или `#[Test]` — как в существующих
-  тестах проекта. Сначала прочитай пару готовых тестов и зеркаль их стиль.
-- Тесты гонять **только** `{{TEST_RUNNER_CMD}}` (host php8.5 без pgsql), никогда
-  не bare `php`. Можно `{{TEST_RUNNER_CMD}} --filter=<Класс>` для быстрого цикла.
-- Изоляция: `RefreshDatabase`, тестовая БД `{{TEST_DB}}` (уже создана, Postgres
-  поднят), существующие фабрики (`database/factories`). НЕ трогай `.env`
-  (залочен), конфиг тестовой БД — в `phpunit.xml`/`tests/bootstrap.php`.
+- Тест-фреймворк проекта — **{{TEST_FRAMEWORK}}**. Сначала прочитай пару готовых
+  тестов и зеркаль их стиль: PHPUnit — классы `extends TestCase`, методы `test_*()`/`#[Test]`;
+  Pest — `it()/test()`-функции и `expect()`.
+- Тесты гонять **только** `{{TEST_RUNNER_CMD}}`, никогда не bare `php`. Можно
+  `{{TEST_RUNNER_CMD}} --filter=<Класс>` для быстрого цикла.
+- Изоляция: `RefreshDatabase`, тестовая БД `{{TEST_DB}}`, существующие фабрики
+  (`database/factories`). Если `.env` залочен хуком — не трогай; конфиг тестовой
+  БД — в `phpunit.xml`/`tests/bootstrap.php`.
 - НЕ `git push`, НЕ release. Коммить тесты в ТЕКУЩУЮ ветку (не создавай ветки).
 
 ## Алгоритм

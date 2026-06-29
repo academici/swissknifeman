@@ -1,4 +1,6 @@
 """Тесты projects.py: синк из brain (маппинг, идемпотентность, сохранение полей)."""
+import contextlib
+import io
 import os
 import tempfile
 import unittest
@@ -28,6 +30,26 @@ class TestSync(unittest.TestCase):
             # идемпотентность: второй синк ничего не добавляет
             cfg, stats2 = sync_from_brain(env, cfg, bpath)
             self.assertEqual(stats2["added"], 0)
+
+    def test_brain_visibility_wins_and_warns(self):
+        """visibility — из frontmatter Brain → .projects.json; синк её обновляет (brain
+        «выигрывает», owner-of-fact) и предупреждает о смене (защита от протухшего кэша)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root, env = make_repo(tmp)
+            write_maind_config(root, projects=[
+                {"id": "botkit", "name": "Botkit", "type": "php-package", "status": "active",
+                 "docs_folders": [{"id": "docs", "vault": "docs", "repo": "docs",
+                                   "visibility": "public"}]}])
+            cfg, _ = load_config(env)
+            bpath = write_brain_projects(root, projects=[
+                {"name": "Botkit", "enabled": True, "vault_path": "/v/Botkit",
+                 "repo": "/r/botkit", "folders": [{"vault": "docs", "visibility": "private"}]}])
+            buf = io.StringIO()
+            with contextlib.redirect_stderr(buf):
+                cfg, _ = sync_from_brain(env, cfg, bpath)
+            docs = next(f for f in get(cfg, "botkit")["docs_folders"] if f["id"] == "docs")
+            self.assertEqual(docs["visibility"], "private")   # brain выиграл (owner-of-fact)
+            self.assertIn("public→private", buf.getvalue())   # предупреждение было
 
     def test_write_config_roundtrip(self):
         with tempfile.TemporaryDirectory() as tmp:

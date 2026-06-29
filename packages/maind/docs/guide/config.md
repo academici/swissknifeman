@@ -51,6 +51,27 @@ difflib), неизвестный вложенный — предупрежден
 Обязательные для совместимости с brain поля: `id`, `name`, `repo`, `local_path`, `type`.
 Остальное — расширения maind (brain их игнорирует при чтении fallback).
 
+### Три слоя каталога и владелец факта
+
+Каталог проектов существует в **трёх представлениях** с одним направлением синка
+(`integrations.brain.sync_direction:"import"`):
+
+| Слой | Файл | Владеет фактом |
+|:--|:--|:--|
+| **Источник** | frontmatter control-нот Brain (`<Name>.md`) | какие проекты есть, `repo:` (путь к коду), doc-папки, **`visibility`** (`docs_public`) |
+| **Кэш** | `<vault>/.projects.json` (генерируется brain, gitignored) | машинная проекция frontmatter — руками не править |
+| **Реестр тулинга** | этот `config.json` | импортирует каталог + добавляет maind-поля (`namespaces`/`type`/`graph`/`mcp`) |
+
+Каталожные поля (`name`, `local_path`, `vault_path`, `type`, `enabled`, `docs_folders`) приходят
+в `config.json` **импортом** (`maind projects sync --from brain`) — меняй их во frontmatter Brain,
+не здесь (синк перетрёт; смена `visibility` существующего проекта сопровождается warn).
+maind-only проекты (которых нет в Brain) владеют этими полями сами.
+
+**`repo` ≠ `local_path`** (намеренный мост между схемами, не путать): в `config.json` `repo` —
+GitHub-slug `owner/name`, путь к коду — `local_path`. В brain-схеме `.projects.json` `repo` = **путь
+к коду** (slug'а там нет); при импорте maind кладёт его в `local_path`, а `repo` оставляет под slug.
+`visibility` в `docs_folders` — **кэш** из frontmatter Brain (maind его для поведения не читает).
+
 ## Секция `code_graph` (политика графа кода)
 
 Вся политика графа кода — **в конфиге, не в коде** (правишь здесь, а не в исходниках maind).

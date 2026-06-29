@@ -7,7 +7,7 @@ risk: read
 persona: architect
 tags: [topology, architecture, navigation, meta, cross-project]
 requires: []
-produces_for: [cross-project-coordinator, shared-memory]
+produces_for: [cross-project-coordinator, shared-memory, brain-locator, swissknifeman-locator]
 sha256: ""
 adapters: [claude, cursor, fable]
 ---
@@ -71,6 +71,8 @@ skiller topology show --json
 skiller topology init
 ```
 
+Or reach a specific node **without** the map: per-node locators resolve their node via `maind`/`$HOME` even when `topology.json` is absent — `brain-locator` (node `docs-hub`) and `swissknifeman-locator` (node `skills-hub`).
+
 ## Navigation
 
 **Neighboring project (code).** `projects_base` → project dir. Projects known to swissknifeman:
@@ -115,7 +117,9 @@ Connect a new project to skill distribution: `skiller connect` (Claude Code, plu
 
 - `cross-project-coordinator` (system bucket) — traversal of linked projects on this map (read-only duplicate/divergence analysis). Already implemented on top of this map; further plans — `docs/roadmap.md`.
 - `shared-memory` (system bucket) — shared group "brain"; resolves members via the same topology.
+- `brain-locator` (system bucket) — drill-down into node `docs-hub` (Brain vault) with map-less fallback resolution.
+- `swissknifeman-locator` (system bucket) — drill-down into node `skills-hub` (swissknifeman) with map-less fallback resolution.
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 266fbc7ec2665e91e3d8bd2f9ba4477eef717bab9cc20a3cabb918146ff2fe4a -->
+<!-- ru-source-sha256: 9cec59ba30369843ebffa6f7304dfbd00fe6449702f0ef455f7ca494b41781f7 -->

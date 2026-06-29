@@ -21,7 +21,7 @@ flowchart LR
     agent_design["agent-design<br/>⊕21 ↻1505"]:::cool
     api_design["api-design<br/>⊕22 ↻1016"]:::cool
     architecture["architecture<br/>⊕23 ↻1139"]:::cool
-    codebase_design["codebase-design<br/>⊕99 ↻1746"]:::hot
+    codebase_design["codebase-design<br/>⊕99 ↻1746"]:::warm
     data_schema["data-schema<br/>⊕23 ↻833"]:::cool
     dev_engineering_super_skill["dev-engineering-super-skill<br/>⊕113 ↻20367"]:::hot
     domain_modeling["domain-modeling<br/>⊕104 ↻1173"]:::hot
@@ -59,7 +59,7 @@ flowchart LR
     db_test_preflight["db-test-preflight<br/>⊕88 ↻1457"]:::warm
     docker["docker<br/>⊕44 ↻100"]:::mild
     docker_dev_prod["docker-dev-prod<br/>⊕36 ↻818"]:::mild
-    docker_php["docker-php<br/>⊕34 ↻684"]:::mild
+    docker_php["docker-php<br/>⊕34 ↻684"]:::cool
     docker_postgres["docker-postgres<br/>⊕36 ↻718"]:::mild
     docker_services["docker-services<br/>⊕41 ↻761"]:::mild
     docker_vite["docker-vite<br/>⊕33 ↻609"]:::cool
@@ -159,7 +159,7 @@ flowchart LR
     skills_ssot["skills-ssot<br/>⊕30 ↻1514"]:::cool
     spec_interview["spec-interview<br/>⊕49 ↻649"]:::mild
     task_brief_template["task-brief-template<br/>⊕67 ↻1187"]:::warm
-    verify_claims["verify-claims<br/>⊕136 ↻1408"]:::hot
+    verify_claims["verify-claims<br/>⊕136 ↻1475"]:::hot
     writing_style["writing-style<br/>⊕83 ↻1565"]:::warm
   end
   subgraph laravel_architecture["laravel-architecture"]
@@ -175,7 +175,7 @@ flowchart LR
     laravel_security_audit["laravel-security-audit<br/>⊕43 ↻691"]:::mild
   end
   subgraph laravel_data_layer["laravel-data-layer"]
-    laravel_broadcasting["laravel-broadcasting<br/>⊕34 ↻1279"]:::mild
+    laravel_broadcasting["laravel-broadcasting<br/>⊕34 ↻1279"]:::cool
     laravel_data["laravel-data<br/>⊕102 ↻1758"]:::hot
   end
   subgraph laravel_extras["laravel-extras"]
@@ -229,7 +229,7 @@ flowchart LR
     database["database<br/>⊕44 ↻826"]:::mild
     dependency_injection["dependency-injection<br/>⊕33 ↻1102"]:::cool
     laravel["laravel<br/>⊕18 ↻1346"]:::cool
-    laravel_best_practices["laravel-best-practices<br/>⊕34 ↻1868"]:::mild
+    laravel_best_practices["laravel-best-practices<br/>⊕34 ↻1868"]:::cool
     laravel_structure["laravel-structure<br/>⊕37 ↻1726"]:::mild
     named_arguments["named-arguments<br/>⊕42 ↻599"]:::mild
     pao["pao<br/>⊕50 ↻565"]:::mild
@@ -279,6 +279,7 @@ flowchart LR
     testing_safety_report["testing-safety-report<br/>⊕66 ↻668"]:::warm
   end
   subgraph research["research"]
+    query_craft["query-craft<br/>⊕116 ↻2616"]:::hot
     research_knowledge_super_skill["research-knowledge-super-skill<br/>⊕165 ↻17401"]:::hot
   end
   subgraph roles["roles"]
@@ -295,10 +296,12 @@ flowchart LR
   end
   subgraph system["system"]
     agent_packs["agent-packs<br/>⊕102 ↻1991"]:::hot
+    brain_locator["brain-locator<br/>⊕40 ↻1145"]:::mild
     cross_project_coordinator["cross-project-coordinator<br/>⊕70 ↻1224"]:::warm
-    local_topology["local-topology<br/>⊕53 ↻1072"]:::mild
-    session_observer["session-observer<br/>⊕99 ↻1411"]:::hot
+    local_topology["local-topology<br/>⊕53 ↻1190"]:::mild
+    session_observer["session-observer<br/>⊕99 ↻1411"]:::warm
     shared_memory["shared-memory<br/>⊕105 ↻1242"]:::hot
+    swissknifeman_locator["swissknifeman-locator<br/>⊕46 ↻1220"]:::mild
   end
   agent_design -->|requires| architecture
   api_design -->|requires| data_schema
@@ -307,6 +310,7 @@ flowchart LR
   attribute_authorization -->|requires| laravel_permissions
   backend_type_sync -->|requires| wayfinder
   botkit -->|requires| laravel
+  brain_locator -->|requires| local_topology
   brd -->|requires| business_process
   build_loop -->|requires| config_conventions
   build_loop -->|requires| mcp_blender
@@ -380,6 +384,7 @@ flowchart LR
   security_design -->|requires| architecture
   session_observer -->|requires| shared_memory
   shared_memory -->|requires| local_topology
+  swissknifeman_locator -->|requires| local_topology
   tech_stack_selection -->|requires| brd
   test_isolation_guard -->|requires| laravel_testing
   to_issues -->|requires| github_flow
@@ -395,26 +400,27 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 197 скиллов · ⊕ always **11828** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 430398 ток · ⌥ snippets 158029 ток.
+**Итого:** 200 скиллов · ⊕ always **12030** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 435564 ток · ⌥ snippets 158029 ток.
 
 ## По бакетам
 
 | Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ snippets |
 |---|--:|--:|--:|--:|
-| `general` | 19 | 1178 | 17076 | 5120 |
+| `general` | 19 | 1178 | 17143 | 5120 |
 | `architect` | 14 | 747 | 38470 | 7503 |
 | `frontend-vue` | 11 | 726 | 23106 | 7058 |
 | `quality` | 10 | 628 | 16415 | 7125 |
 | `php-packages` | 9 | 582 | 4618 | 489 |
 | `oss-dev` | 10 | 532 | 12204 | 4313 |
+| `system` | 7 | 515 | 9423 | 797 |
 | `php` | 13 | 503 | 15538 | 26763 |
 | `laravel-architecture` | 5 | 483 | 7905 | 7460 |
 | `devops` | 11 | 451 | 7654 | 15388 |
 | `blender-modeling` | 6 | 429 | 7727 | 11772 |
-| `system` | 5 | 429 | 6940 | 797 |
 | `pm` | 10 | 373 | 28759 | 197 |
 | `founder` | 10 | 343 | 13127 | 494 |
 | `laravel-testing` | 4 | 283 | 6868 | 14531 |
+| `research` | 2 | 281 | 20017 | 0 |
 | `frontend-linting` | 4 | 275 | 5276 | 2914 |
 | `operator` | 6 | 252 | 27108 | 90 |
 | `frontend-backend` | 3 | 244 | 4726 | 7459 |
@@ -424,7 +430,6 @@ flowchart LR
 | `laravel-extras` | 3 | 191 | 3741 | 3192 |
 | `laravel-auth` | 3 | 172 | 2881 | 3020 |
 | `ai` | 2 | 170 | 1834 | 0 |
-| `research` | 1 | 165 | 17401 | 0 |
 | `security` | 1 | 156 | 25669 | 0 |
 | `frontend-vite` | 4 | 153 | 2706 | 1351 |
 | `finance` | 1 | 152 | 18278 | 0 |

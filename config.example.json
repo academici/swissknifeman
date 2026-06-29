@@ -64,7 +64,7 @@
     "flexcrm": { "name": "FlexCRM", "description": "Продуктовая группа FlexCRM" }
   },
 
-  "_comment_projects": "Проекты экосистемы. Минимум для совместимости с brain: id, name, repo, local_path, type. Остальные поля — расширения maind. namespaces: список групп проекта — связи изолируются группой; нет/пусто → неявный 'default' (всё связано, как раньше); ['*'] → общая инфраструктура, связывается со ВСЕМИ namespace. Доп. опции федерации: graph_store=local (граф проекта в <local_path>/.maind/graph.db, а не на хабе); vault_path — для derive doc-связей из Brain frontmatter; межпроектные связи, не выводимые из кода/доков, объявляй в <local_path>/.maind.graph.json: {\"links\":[{\"to\":\"getchat\",\"type\":\"relates_to\",\"plane\":\"runtime\",\"note\":\"REST\"}]}.",
+  "_comment_projects": "Проекты экосистемы. Минимум для совместимости с brain: id, name, repo, local_path, type. Остальные поля — расширения maind. namespaces: список групп проекта — связи изолируются группой; нет/пусто → неявный 'default' (всё связано, как раньше); ['*'] → общая инфраструктура, связывается со ВСЕМИ namespace. Доп. опции федерации: graph_store=local (граф проекта в <local_path>/.maind/graph.db, а не на хабе); vault_path — для derive doc-связей из Brain frontmatter; межпроектные связи, не выводимые из кода/доков, объявляй в <local_path>/.maind.graph.json: {\"links\":[{\"to\":\"getchat\",\"type\":\"relates_to\",\"plane\":\"runtime\",\"note\":\"REST\"}]}. docs_folders: doc-папки {id,vault,repo,visibility} — кэш из frontmatter Brain (источник истины visibility — там, не здесь; имена сторон vault/repo могут отличаться). repo = GitHub-slug owner/name; путь к коду — local_path (в brain-схеме .projects.json repo = путь, при импорте → local_path).",
   "projects": [
     {
       "id": "brain",
@@ -86,6 +86,11 @@
       "local_path": "~/projects/packages/swissknifeman",
       "type": "node-package",
       "code_language": "python",
+      "vault_path": "~/Vaults/Brain/05-Projects/03-Packages/Swissknifeman",
+      "docs_folders": [
+        { "id": "docs", "vault": "docs", "repo": "docs", "visibility": "private" },
+        { "id": "docs-public", "vault": "docs-public", "repo": "docs-public", "visibility": "public" }
+      ],
       "memory_scope": "project:swissknifeman",
       "agents": [],
       "tags": ["package", "skills"],

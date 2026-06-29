@@ -15,9 +15,14 @@ from .common import (AGENT_DEFAULTS, CONFIG_KEYS, confirm, die,
 # DEFAULT_EXCLUDE убирает из авто-раздачи скиллы, дублирующие хаб maind
 # (shared-memory ← agent-memory MCP) и ручные инструменты (cross-project-coordinator).
 # Отключается флагом --no-core у connect/vendor.
+# RAG-дисциплина — трио: mcp-advisor (что подключить) · verify-claims (когда/что
+# верифицировать) · query-craft (как сформулировать запрос). Все три — CORE: внешний поиск
+# нужен в любом проекте, а размытый запрос (без версии/контекста) — частая полевая проблема
+# (см. SKILL research/query-craft). Скилл физически в бакете research, в CORE — по ссылке.
 CORE_SKILLS = [
     "general/context-economy", "general/anti-drift", "general/compact-responses",
     "general/session-handoff", "general/mcp-advisor", "general/verify-claims",
+    "research/query-craft",
     "oss-dev/gh-review",
 ]
 # Имя курируемого marketplace-плагина (connect-канал), несущего РОВНО CORE_SKILLS.

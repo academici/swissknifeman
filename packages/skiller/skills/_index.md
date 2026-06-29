@@ -4,7 +4,7 @@
 
 Источник истины портируемых скиллов (машинный реестр — `skills.json`). Раздача в проекты: `skiller connect` (плагины-бакеты) / `vendor` (физ. перенос). CORE-набор токен-скиллов (`general`/`oss-dev`) раздаётся по умолчанию — см. `connect`/`vendor`.
 
-Всего: 197 скиллов в 45 бакетах.
+Всего: 200 скиллов в 45 бакетах.
 
 ## Скиллы по бакетам
 
@@ -393,10 +393,11 @@
 | `test-strategy` | Test strategy: pyramid (unit/integration/e2e), coverage policy, mock vs real, which featu… | `quality`, `testing`, `coverage`, `validation`, `ci`, `architecture`, `pest` |
 | `testing-safety-report` | Safety report after a risky change (migrations, schema/layer refactor, dependency upgrade… | `testing`, `safety`, `migrations`, `reporting`, `verification`, `quality`, `refactor` |
 
-### research — Research and knowledge management (1)
+### research — Research and knowledge management (2)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
+| `query-craft` | How to FORMULATE a search/doc-engine query (Perplexity Web · WebSearch · context7): maxim… | `research`, `perplexity`, `search`, `query`, `rag`, `context7`, `claude-code` |
 | `research-knowledge-super-skill` | Comprehensive research and knowledge management skill merging Perplexity Computer's resea… |  |
 
 ### roles — Personas: tech lead, startup CTO, solo founder, open-source maintainer (4)
@@ -420,15 +421,17 @@
 |:--|:--|:--|
 | `agent-security-super-skill` | Comprehensive AI agent security skill covering prompt injection defense, skill/plugin val… |  |
 
-### system — Local environment topology: the three hub nodes (Brain vault, swissknifeman, projects base) and how agents navigate between projects and their docs (5)
+### system — Local environment topology: the three hub nodes (Brain vault, swissknifeman, projects base) and how agents navigate between projects and their docs (7)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
 | `agent-packs` | Install and VERSIONED upgrade of agent-packs (Claude Code agents/workflows/hooks) from ha… | `agent-packs`, `templates`, `versioning`, `upgrade`, `install`, `claude-code`, `harness`, `lock` |
+| `brain-locator` | Reach the Brain vault (ecosystem Obsidian docs) from a project — non-hardcoded path resol… | `brain`, `vault`, `docs`, `navigation`, `locator`, `obsidian` |
 | `cross-project-coordinator` | Orchestrate cross-project code analysis: walk linked projects (via topology), find dups/d… | `cross-project`, `coordination`, `refactoring`, `duplication`, `topology`, `orchestration`, `agents`, `tokens` |
 | `local-topology` | Root map of the local dev environment — three hub nodes (Brain vault, swissknifeman, proj… | `topology`, `architecture`, `navigation`, `meta`, `cross-project` |
 | `session-observer` | EXPERIMENTAL (enable per-project). Post-hoc Claude Code session analysis from JSONL logs … | `observer`, `session-analysis`, `learning`, `jsonl`, `drift`, `self-improvement`, `post-mortem` |
 | `shared-memory` | Constellation shared brain via hook ~/.claude/hooks/memory/ + mAInd daemon. Recall before… | `memory`, `cross-project`, `topology`, `recall`, `context`, `coordination` |
+| `swissknifeman-locator` | Reach swissknifeman (skills node) from an external repo — non-hardcoded path resolution, … | `swissknifeman`, `skills`, `registry`, `navigation`, `locator`, `ecosystem` |
 
 ## Tag matrix
 
@@ -466,6 +469,7 @@
 | `bots` | `botkit` |
 | `boundary` | `package-contribution-protocol` |
 | `bpy` | `build-loop`, `config-conventions`, `mcp-blender`, `parametric-config`, `scene-conventions`, `threading`, `version-gotchas` |
+| `brain` | `brain-locator` |
 | `broadcasting` | `laravel-broadcasting`, `laravel-echo-client` |
 | `browser` | `playwright-e2e` |
 | `browser-testing` | `laravel-dusk` |
@@ -478,7 +482,7 @@
 | `checklist` | `complex-task-orchestrator`, `cross-layer-change-checklist` |
 | `chromedriver` | `laravel-dusk` |
 | `ci` | `backend-type-sync`, `ci-cd`, `code-simplifier`, `db-test-preflight`, `mutation-testing`, `node-pnpm-preflight`, `oss-development`, `playwright-e2e`, `release-engineering`, `test-isolation-guard`, `test-strategy` |
-| `claude-code` | `agent-packs`, `context-economy`, `mcp-advisor`, `verify-claims` |
+| `claude-code` | `agent-packs`, `context-economy`, `mcp-advisor`, `query-craft`, `verify-claims` |
 | `clean-code` | `naming-conventions` |
 | `cli` | `dx-design` |
 | `code-connect` | `figma-mcp-core` |
@@ -495,6 +499,7 @@
 | `configuration` | `spatie-settings` |
 | `conflicts` | `resolving-merge-conflicts` |
 | `context` | `anti-drift`, `compact-responses`, `context-economy`, `gh-review`, `mcp-advisor`, `session-handoff`, `shared-memory`, `task-brief-template`, `verify-claims` |
+| `context7` | `query-craft` |
 | `contracts` | `api-design` |
 | `contribution` | `package-contribution-protocol` |
 | `conventional-commits` | `git-commit-rules` |
@@ -528,7 +533,7 @@
 | `discipline` | `anti-drift`, `naming-conventions`, `startup-cto` |
 | `discovery` | `competitive-analysis`, `customer-discovery`, `idea-discovery`, `new-project`, `solo-founder`, `spec-interview` |
 | `docker` | `db-test-preflight`, `docker`, `docker-dev-prod`, `docker-php`, `docker-postgres`, `docker-services`, `docker-vite`, `laravel-dusk`, `makefile` |
-| `docs` | `grill-with-docs`, `writing-style` |
+| `docs` | `brain-locator`, `grill-with-docs`, `writing-style` |
 | `documentation` | `dx-design`, `oss-development`, `oss-governance` |
 | `domain` | `domain-modeling`, `enum-state-machine`, `grill-with-docs` |
 | `drift` | `session-observer` |
@@ -538,6 +543,7 @@
 | `dynamic-component` | `vue-dynamic-icons` |
 | `e2e` | `laravel-dusk`, `playwright-e2e` |
 | `echo` | `laravel-broadcasting` |
+| `ecosystem` | `swissknifeman-locator` |
 | `eloquent` | `eloquent-accessors` |
 | `entities` | `data-schema` |
 | `enum` | `attribute-authorization`, `azguard`, `backend-type-sync`, `enum-attributes`, `enum-state-machine` |
@@ -600,6 +606,7 @@
 | `livewire` | `filament`, `livewire-blade-attributes` |
 | `llm` | `eval-design` |
 | `localstorage` | `dark-mode` |
+| `locator` | `brain-locator`, `swissknifeman-locator` |
 | `lock` | `agent-packs` |
 | `logging` | `observability-design` |
 | `lucide` | `vue-dynamic-icons` |
@@ -625,12 +632,13 @@
 | `mutators` | `eloquent-accessors` |
 | `naive-ui` | `naive-ui-theming` |
 | `naming` | `naming-conventions`, `php-naming-conventions`, `scene-conventions` |
-| `navigation` | `local-topology`, `packages-stack`, `project-map` |
+| `navigation` | `brain-locator`, `local-topology`, `packages-stack`, `project-map`, `swissknifeman-locator` |
 | `navigation-guards` | `vue-router-best-practices` |
 | `node` | `node-pnpm-preflight` |
 | `nwidart` | `modular-architecture` |
 | `observability` | `capacity-planning`, `health-checks`, `observability-design` |
 | `observer` | `session-observer` |
+| `obsidian` | `brain-locator` |
 | `onboarding` | `mcp-advisor` |
 | `ops` | `capacity-planning`, `incident-response`, `oncall-rotation`, `postmortem`, `runbook` |
 | `orchestration` | `ai-agents`, `anti-drift`, `complex-task-orchestrator`, `cross-project-coordinator`, `laravel-subagents`, `mcp-blender`, `tech-lead` |
@@ -645,6 +653,7 @@
 | `pennant` | `pennant-development` |
 | `performance` | `diagnosing-bugs` |
 | `permissions` | `attribute-authorization`, `azguard`, `laravel-permissions` |
+| `perplexity` | `query-craft` |
 | `persona` | `open-source-maintainer`, `solo-founder`, `startup-cto`, `tech-lead` |
 | `pest` | `test-strategy` |
 | `php` | `attribute-authorization`, `azguard`, `botkit`, `code-style-spatie`, `database`, `dependency-audit`, `dependency-injection`, `docker-php`, `eloquent-accessors`, `enum-attributes`, `enum-state-machine`, `filament`, `laravel`, `laravel-best-practices`, `laravel-broadcasting`, `laravel-data`, `laravel-dusk`, `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages`, `laravel-permissions`, `laravel-security-audit`, `laravel-structure`, `laravel-testing`, `medialibrary`, `modular-architecture`, `mutation-testing`, `named-arguments`, `pao`, `pennant-development`, `php-naming-conventions`, `php-patterns`, `php-upgrade-checklist`, `repositories`, `spatie-settings`, `static-analysis`, `test-isolation-guard` |
@@ -662,8 +671,9 @@
 | `pusher` | `laravel-echo-client` |
 | `python` | `mcp-blender`, `ml-project-structure`, `parametric-config`, `venv-dependencies`, `version-gotchas` |
 | `quality` | `code-review`, `code-simplifier`, `mutation-testing`, `playwright-e2e`, `refactoring-plan`, `static-analysis`, `tech-debt-audit`, `test-strategy`, `testing-safety-report`, `venv-dependencies` |
+| `query` | `query-craft` |
 | `queue` | `docker-services` |
-| `rag` | `ai-agents`, `verify-claims` |
+| `rag` | `ai-agents`, `query-craft`, `verify-claims` |
 | `rbac` | `attribute-authorization`, `azguard`, `laravel-permissions`, `security-design` |
 | `readability` | `named-arguments`, `naming-conventions`, `php-naming-conventions` |
 | `readiness` | `health-checks` |
@@ -676,13 +686,14 @@
 | `refactoring` | `code-simplifier`, `cross-project-coordinator`, `refactoring-plan` |
 | `reflection` | `attribute-authorization`, `enum-attributes`, `postmortem` |
 | `refreshdatabase` | `test-isolation-guard` |
+| `registry` | `swissknifeman-locator` |
 | `regulatory` | `legal-compliance` |
 | `reka-ui` | `reka-ui-cva` |
 | `release` | `ci-cd`, `github-flow`, `open-source-maintainer`, `release-engineering` |
 | `reporting` | `testing-safety-report` |
 | `repository` | `repositories` |
 | `requirements` | `brd`, `business-process`, `grill-with-docs`, `idea-discovery`, `new-project`, `prd-from-brd`, `product-roadmap`, `requirement-critic`, `spec-interview`, `startup-lifecycle`, `task-brief-template` |
-| `research` | `verify-claims` |
+| `research` | `query-craft`, `verify-claims` |
 | `rest` | `api-design` |
 | `reverb` | `laravel-broadcasting`, `laravel-echo-client` |
 | `review` | `code-review`, `gh-review`, `implement`, `open-source-maintainer`, `tech-lead` |
@@ -698,12 +709,13 @@
 | `schema` | `data-schema` |
 | `screenshot` | `mcp-blender` |
 | `seam` | `codebase-design` |
+| `search` | `query-craft` |
 | `security` | `agent-design`, `ci-cd`, `dependency-audit`, `laravel-security-audit`, `oss-governance`, `risk-assessment`, `security-design` |
 | `self-improvement` | `session-observer` |
 | `semver` | `github-flow`, `package-contribution-protocol`, `release-engineering` |
 | `session-analysis` | `session-observer` |
 | `settings` | `spatie-settings` |
-| `skills` | `laravel-packages`, `skills-ssot` |
+| `skills` | `laravel-packages`, `skills-ssot`, `swissknifeman-locator` |
 | `sla` | `build-loop`, `capacity-planning`, `config-conventions`, `incident-response`, `oncall-rotation`, `parametric-config`, `threading` |
 | `slo` | `observability-design` |
 | `spatie` | `backend-type-sync`, `code-style-spatie`, `health-checks`, `js-code-style`, `laravel-data`, `medialibrary`, `spatie-settings` |
@@ -720,6 +732,7 @@
 | `style` | `compact-responses`, `writing-style` |
 | `stylistic` | `eslint-flat-config` |
 | `subagents` | `ai-agents` |
+| `swissknifeman` | `swissknifeman-locator` |
 | `tailwind` | `dark-mode`, `figma-to-vue`, `naive-ui-theming`, `reka-ui-cva`, `tailwind-conventions`, `vite-multi-build` |
 | `tailwindcss-v4` | `figma-to-vue`, `tailwind-conventions` |
 | `tdd` | `implement`, `tdd-discipline` |
@@ -749,6 +762,7 @@
 | `uploads` | `filepond-upload`, `medialibrary` |
 | `validation` | `adversarial-check`, `agent-design`, `code-review`, `code-simplifier`, `cross-layer-change-checklist`, `customer-discovery`, `defensibility`, `eval-design`, `idea-audit`, `laravel-data`, `pmf-diagnostics`, `refactoring-plan`, `requirement-critic`, `risk-assessment`, `solo-founder`, `startup-lifecycle`, `tech-debt-audit`, `test-strategy` |
 | `variants` | `reka-ui-cva` |
+| `vault` | `brain-locator` |
 | `venv` | `venv-dependencies` |
 | `verification` | `testing-safety-report`, `verify-claims` |
 | `version` | `php-upgrade-checklist`, `version-gotchas` |

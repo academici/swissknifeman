@@ -2,6 +2,64 @@
 
 ## [Unreleased]
 
+### Added (skiller — CORE-скилл `research/query-craft`: дисциплина формулировки поисковых запросов)
+
+- **Новый скилл `research/query-craft`** — как ФОРМУЛИРОВАТЬ запрос к поисковому/доковому движку
+  (Perplexity Web · WebSearch · context7): железное правило «никогда не голый запрос по библиотеке
+  без версии+контекста» (анти-паттерн «Laravel как сделать X?» → «Laravel 11: … на 2025»); 5 слотов
+  запроса (глагол · субъект+версия · контекст · конкретика · формат/лимит); выбор движка и режима
+  Perplexity (`search`/`search_advanced`/`search_deep`, `sources` web/academic/social); раздел
+  «Надёжность keyless-моста» (lock/таймаут на тяжёлых запросах → не параллелить, дробить, эскалация
+  на WebSearch/context7, системно — API-key вариант).
+- **Завершает RAG-дисциплину-трио в `CORE_SKILLS`** (раздаётся в каждый проект, on-trigger):
+  `mcp-advisor` (что подключить) · `verify-claims` (когда/что верифицировать) · `query-craft` (как
+  спросить). Скилл физически в бакете `research`, в CORE — по ссылке. `verify-claims`/`mcp-advisor`
+  получили back-reference на него, роли разрезаны (verify-claims = «когда», query-craft = «как»).
+- Двуязычный (RU-источник → EN-канон); факт-основа — официальный Perplexity Prompt Guide,
+  верифицирована RAG (WebSearch+WebFetch) 2026-06-29 (см. `docs/reference.md`). 200 unit-тестов OK,
+  `validate.sh` зелёный (201 скилл).
+
+### Added (skiller — локаторы экосистемы: навигация агента к узлам Brain/swissknifeman)
+
+- **Два скилла-локатора** в бакете `system` (on-trigger, НЕ в CORE — резидентный токен-бюджет не растёт):
+  `system/brain-locator` (из любого проекта дойти до Brain-волта) и `system/swissknifeman-locator`
+  (из внешнего репо дойти до управляющего монорепо). Цель — агент больше не угадывает, где узлы экосистемы.
+- **Нехардкод-резолюция пути.** brain-locator повторяет канон `maind` (`projects.py::brain_path`):
+  `integrations.brain.path` → проект `id==brain` → `$MAIND_BRAIN_VAULT` → кандидаты от `$HOME`
+  (`~/Vaults/Brain` первым); swissknifeman-locator — через установленный бинарь (`readlink` до репо) →
+  `$SWISSKNIFEMAN_ROOT` → `$HOME`-кандидаты. У каждого готовая `cd`-команда и проверка-признак узла.
+- **Тезисы связи.** brain-locator несёт маркер «скилл подключён → проект синхронен на Brain», объясняет
+  каталог `.projects.json` / control-ноты / `CLAUDE.md` / wikilinks; swissknifeman-locator — `config.json`
+  как реестр связанных проектов (двусторонность) и опознание связи по
+  `.swissknifeman/config.json` / `skills-lock.json` / `enabledPlugins`.
+- **Связаны с картой.** `requires: [local-topology]`; `local-topology` получил их в `produces_for` +
+  заметку про fallback-резолюцию узла без `~/.swissknifeman/topology.json`.
+
+### Added (maind — синк-защита visibility + явная модель владения каталогом)
+
+- **`sync_from_brain` предупреждает о смене visibility** doc-папки существующего проекта
+  (`_warn_visibility_changes`) — частый признак протухшего brain `.projects.json` (его надо
+  регенерировать из frontmatter перед синком). brain по-прежнему «выигрывает» (поле затирается):
+  источник истины каталога/visibility — frontmatter control-нот → `.projects.json` → `config.json`.
+- **Явная модель «три слоя + владелец факта»** в `docs/guide/config.md`: frontmatter Brain (источник)
+  → `.projects.json` (gitignored кэш) → `config.json` (импорт + maind-поля). Разведена семантика
+  `repo` (GitHub-slug) ≠ `local_path` (путь к коду) и инверсия brain-схемы (`repo` = путь → `local_path`
+  при импорте). `config.example.json` — каноничный `docs_folders` `{id,vault,repo,visibility}`.
+
+### Changed (maind — индирекция бинарника в `.mcp.json` вместо абсолютного пути)
+
+- **`deploy.py::_maind_entry` пишет `"${MAIND_BIN:-maind}"`** вместо `<abs>/packages/maind/bin/maind`.
+  Claude Code раскрывает индирекцию из окружения процесса (дефолт `maind` по PATH — `~/.local/bin`
+  от `install.sh`); тот же `MAIND_BIN`, что у health-хуков. Переносимо на другую машину/CI и при
+  переносе репо — в `.mcp.json` больше нет захардкоженного `/home/...`. Тест-замок на `command`
+  (`test_deploy.py`), пример в `docs/guide/mcp.md` обновлён.
+- Уже онбордженные проекты мигрируются идемпотентно: `maind sync --only mcp --all` (недеструктивный
+  merge + `.bak`). Серена-путь `--project <abs>` остаётся машинно-специфичным — отдельная фаза
+  (`roadmap/mcp-config-example-emit.md`).
+- Гайды приведены в соответствие реальности: `project-tooling-runbook` §«Гигиена» (нюанс
+  `${VAR:-default}` — Claude Code раскрывает из окружения процесса, не из проектного `.env`; maind-путь
+  индиректирован, остаётся серена-путь) и `roadmap/mcp-config-example-emit.md` (проблема сужена до серена-пути).
+
 ### Added
 
 - **`laravel-architecture/eloquent-accessors`** (новый скилл) — канон современных Eloquent

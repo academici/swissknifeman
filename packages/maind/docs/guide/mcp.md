@@ -15,10 +15,14 @@ maind mcp [--scope project:<id>]   # stdio: NDJSON из stdin → ответы �
 ```json
 {
   "mcpServers": {
-    "maind": { "command": "/path/to/maind/bin/maind", "args": ["mcp", "--scope", "project:flexcrm"] }
+    "maind": { "command": "${MAIND_BIN:-maind}", "args": ["mcp", "--scope", "project:flexcrm"] }
   }
 }
 ```
+
+`command` — **индирекция** `${MAIND_BIN:-maind}`: Claude Code раскрывает её из окружения процесса
+(дефолт `maind` по PATH — `~/.local/bin` от `install.sh`), без машинно-специфичного пути; явный
+бинарь — `export MAIND_BIN=/abs/maind` (CI / нестандартная установка).
 
 ::: tip Авто-scope
 `--scope` (или env `MAIND_SCOPE`) задаёт scope **по умолчанию** для memory-инструментов: агент

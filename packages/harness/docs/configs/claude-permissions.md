@@ -12,7 +12,7 @@
 
 | Пресет | Файл | Что разрешает |
 |---|---|---|
-| `base` | `settings.base.json` | git (push — с подтверждением), gh, файловые операции, curl/wget, jq/rg/sed/awk, make; deny на секреты и `sudo` |
+| `base` | `settings.base.json` | git (push — с подтверждением), gh, файловые операции, curl/wget, jq/rg/sed/awk, make, оркестрация (`Workflow`/`Agent`/`TodoWrite`); deny на секреты и `sudo` |
 | `laravel` | `settings.laravel.json` | `php artisan`, composer, pest/phpunit/pint/phpstan/rector, sail, npm/vite |
 | `php-package` | `settings.php-package.json` | composer, тесты и линтеры — без artisan |
 | `node` | `settings.node.json` | node/npm/npx/pnpm/yarn, tsc, vitest, eslint, prettier |
@@ -34,6 +34,26 @@
   `docker system prune`, `npm publish`) требует подтверждения;
 - **deny** — секреты (`.env`, `*.pem`, `*.key`, `~/.ssh`, `~/.aws`) и `sudo`
   заблокированы всегда.
+
+## Оркестрация: `Workflow` / `Agent` / `TodoWrite`
+
+В `allow` пресетов `base` **и** `global` добавлены три инструмента оркестрации —
+`Workflow`, `Agent`, `TodoWrite`. Они не привязаны к стеку: доступны в любом
+проекте, поэтому живут в универсальном слое (а не в `laravel`/`node`/`python`).
+
+Зачем: при запуске `Workflow` каждый прогон спавнит субагентов (`Agent`),
+ведёт план (`TodoWrite`) и сам по себе — вызов инструмента `Workflow`. Без этих
+правил Claude Code просил подтверждение **после каждой фазы/стадии**, и длинный
+многофазный воркфлоу превращался в череду промптов. Авто-allow снимает эту боль.
+
+Безопасность не страдает: разрешён лишь сам факт вызова инструмента. Субагент,
+порождённый `Agent`/`Workflow`, исполняет свои Bash/Read/Edit-вызовы **через тот
+же permission-слой** — широкий allow тут ничего не открывает, а `TodoWrite`
+правит только локальный список задач. Точечное правило на конкретного субагента
+(`Agent(Explore)`) по-прежнему работает поверх (см. раздел «Синтаксис правил»).
+
+Источник истины — пресеты; чтобы правило долетело до уже онбордженного проекта,
+перекати его (`harness permissions --target .` или `--global`).
 
 ## CLI `harness permissions`
 
@@ -178,7 +198,8 @@ VM, devcontainer-ах, где агент не может навредить ос
       "Bash(* --version)", "Bash(* --help)",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "WebFetch(domain:api.github.com)"
+      "WebFetch(domain:api.github.com)",
+      "Workflow", "Agent", "TodoWrite"
     ],
     "ask": [
       "Bash(git push *)", "Bash(git reset --hard *)", "Bash(git clean *)",

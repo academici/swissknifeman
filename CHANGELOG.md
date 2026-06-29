@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Added (harness — авто-allow инструментов оркестрации `Workflow`/`Agent`/`TodoWrite`)
+
+- **Пресеты `base` и `global` теперь авто-разрешают `Workflow`, `Agent`, `TodoWrite`.** Это
+  универсальные (вне-стековые) инструменты оркестрации, поэтому добавлены в оба общих слоя:
+  `settings.base.json` (накатывается в `.claude/settings.local.json` каждого проекта) и
+  `settings.global.json` (машинный `~/.claude/settings.json` — действует во всех проектах сразу).
+  Первопричина: запуск `Workflow` на каждой фазе спавнит субагентов (`Agent`) и ведёт план
+  (`TodoWrite`), и без правил Claude Code просил подтверждение **после каждой стадии** —
+  многофазный воркфлоу превращался в череду промптов. Безопасность не страдает: разрешён лишь
+  сам вызов инструмента, субагент исполняет свои Bash/Read/Edit через тот же permission-слой.
+  Затронуты `packages/harness/configs/claude-code/settings.{base,global}.json`, доки
+  `docs/configs/claude-permissions.md` и `docs/setup/claude.md`.
+
 ### Changed (maind — переименование проекта экосистемы DocVault → Vaulter)
 
 - **Проект `docvault` переименован в `vaulter`** (продукт DocVault → Vaulter). `derive.py`:

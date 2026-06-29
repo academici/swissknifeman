@@ -13,7 +13,8 @@ import os
 import re
 from pathlib import Path
 
-from .common import detect_project_type, die, sanitize, warn
+from .common import (detect_project_type, die, docs_visibility_for, sanitize,
+                     warn)
 from .constants import (CODE_GRAPH_DEFAULTS, GRAPH_ADAPTERS, HEARTBEAT_DEFAULT_MS,
                         LEGACY_GRAPH_ADAPTERS, MAX_IDLE_DEFAULT_MS, MEMORY_HTTP_PORT,
                         MEMORY_STREAM_PORT, SERVICE_NAME)
@@ -22,6 +23,41 @@ from .constants import (CODE_GRAPH_DEFAULTS, GRAPH_ADAPTERS, HEARTBEAT_DEFAULT_M
 # имя namespace — поэтому ограничиваем безопасным алфавитом, иначе спецсимволы (']', пробел,
 # перевод строки) ломают парсинг scope при recall/forget и могут подменить чужой scope.
 PROJECT_ID_RE = re.compile(r"^[A-Za-z0-9._-]+$")
+
+# Имена doc-папок по умолчанию (когда проект не задал явно).
+DEFAULT_DOCS_FOLDER_NAMES = ("docs", "docs-public")
+
+
+def normalize_docs_folders(raw, default_visibility="private"):
+    """Старый плоский список ['docs','docs-public'] И новый список объектов
+    {id,vault,repo,visibility} → единый список нормализованных объектов. Зеркало
+    brain.folders.normalize_folders (brain — отдельный репо, импортировать нельзя).
+    Правило статуса при миграции голого имени: 'docs-public' → public (старый хардкод),
+    иначе → default_visibility (по типу проекта). Дубли по id схлопываются."""
+    if not raw:
+        raw = list(DEFAULT_DOCS_FOLDER_NAMES)
+    out, seen = [], set()
+    for item in raw:
+        if isinstance(item, str):
+            name = item.strip()
+            vis = "public" if name == "docs-public" else (default_visibility or "private")
+            fo = {"id": name, "vault": name, "repo": name, "visibility": vis}
+        elif isinstance(item, dict):
+            vault = (item.get("vault") or item.get("id") or "").strip()
+            repo = (item.get("repo") or vault).strip()
+            fid = (item.get("id") or vault).strip()
+            vis = item.get("visibility")
+            if vis not in ("public", "private"):
+                vis = "public" if vault == "docs-public" else (default_visibility or "private")
+            fo = {"id": fid, "vault": vault, "repo": repo, "visibility": vis}
+        else:
+            continue
+        if fo["id"] in seen:
+            continue
+        seen.add(fo["id"])
+        out.append(fo)
+    return out
+
 
 # Топ-ключи .maind.json (кроме _-мета). Значение — ожидаемый Python-тип.
 TOP_KEYS = {
@@ -129,6 +165,21 @@ def validate_config(config, cfg_file):
                 if registry and n not in registry and n not in ("*", "default"):
                     warn(f"{cfg_file}: projects[{i}] ссылается на незарегистрированный "
                          f"namespace '{n}' (нет в секции namespaces)")
+        if "docs_folders" in proj:
+            df = proj["docs_folders"]
+            if not isinstance(df, list):
+                die(f"{cfg_file}: projects[{i}].docs_folders должно быть списком")
+            for j, it in enumerate(df):
+                if isinstance(it, str):
+                    continue                   # плоская форма (back-compat)
+                if not isinstance(it, dict) or not (it.get("vault") or it.get("id")):
+                    die(f"{cfg_file}: projects[{i}].docs_folders[{j}] — строка или "
+                        f"объект с 'vault' (опц. repo/visibility/id)")
+                vis = it.get("visibility")
+                if vis is not None and vis not in ("public", "private"):
+                    # forward-compat: не валим конфиг, лишь предупреждаем
+                    warn(f"{cfg_file}: projects[{i}].docs_folders[{j}].visibility="
+                         f"'{vis}' — ожидалось public|private (взят дефолт)")
 
 
 # ── дефолты ─────────────────────────────────────────────────────────────────
@@ -212,7 +263,9 @@ def map_brain_project(bp):
         "repo": None,                       # GitHub slug owner/repo — нет в brain-кэше
         "type": _infer_type(local_path),
         "enabled": bp.get("enabled", True),
-        "docs_folders": bp.get("folders", []),
+        # нормализуем в объектную модель; дефолт видимости — по типу проекта
+        "docs_folders": normalize_docs_folders(
+            bp.get("folders"), docs_visibility_for(_infer_type(local_path))),
         "memory_scope": f"project:{slug}" if slug else None,
         "agents": [],
         "skills": [],

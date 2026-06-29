@@ -2,6 +2,18 @@
 
 Формат — [Keep a Changelog](https://keepachangelog.com/ru/1.0.0/); версии — per-PACK (semver).
 
+## [0.2.0] - 2026-06-29
+
+### Changed
+
+- **AI-гайд переехал из публичного `docs/` в `.claude/guidelines/`.** `DOCS_DIR` по
+  умолчанию теперь `.claude/guidelines` (было `docs/05_AI/guidelines`):
+  `subagents-and-workflows.md` — внутренний артефакт для агентов, не публичная
+  документация проекта. Затронут install-файл `{DOCS_DIR}/subagents-and-workflows.md`.
+
+> **Миграция (upgrade):** новый гайд в `.claude/guidelines/`; старый файл в
+> `docs/05_AI/guidelines/` не удаляется автоматически — удалите вручную.
+
 ## [0.1.0] - 2026-06-24
 
 ### Added

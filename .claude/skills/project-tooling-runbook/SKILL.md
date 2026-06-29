@@ -1,6 +1,6 @@
 ---
 name: project-tooling-runbook
-description: Раннбук управления инструментами проектов экосистемы — мультиисточниковая система скиллов (swissknifeman ДВУМЯ каналами — connect/marketplace и vendor/физ.перенос через .swissknifeman/config.json — + собственные local-скиллы; Laravel Boost только как MCP, не как канал скиллов; карта в skills-lock.json) и двусторонний синк документации с Brain-валтом. Используй, когда нужно «добавить проекту скиллы разработчика/проектировщика», установить/выбрать скиллы (ВСЕГДА спрашивай канал connect vs vendor), поменять набор, разрулить источники, настроить роли/агенты проекта (agent-packs: субагенты + workflow + review-gate через harness — ОТДЕЛЬНО от скиллов), или синхронизировать docs/ с Brain. Дополняет ecosystem-integration (онбординг в хаб) операционным слоем skills+docs.
+description: Раннбук управления инструментами проектов экосистемы — мультиисточниковая система скиллов (swissknifeman ДВУМЯ каналами — connect/marketplace и vendor/физ.перенос через .swissknifeman/config.json — + собственные local-скиллы; Laravel Boost только как MCP, не как канал скиллов; карта в skills-lock.json) и двусторонний синк документации с Brain-валтом. Используй, когда нужно «добавить проекту скиллы разработчика/проектировщика», установить/выбрать скиллы (ВСЕГДА спрашивай канал connect vs vendor), поменять набор, разрулить источники, настроить роли/агенты проекта (agent-packs: субагенты + workflow + review-gate через harness — ОТДЕЛЬНО от скиллов), синхронизировать docs/ с Brain, ИЛИ когда пишешь/правишь конфиг с локальными абсолютными путями или секретами (.mcp.json любого провайдера, .cursor/.vscode/mcp.json, .claude/*) — гигиена: индирекция через .env либо gitignore реального + синхронный .example с плейсхолдерами (как .env↔.env.example). Дополняет ecosystem-integration (онбординг в хаб) операционным слоем skills+docs.
 ---
 
 # Раннбук: скиллы проекта (мультиисточник) + doc-sync (brain)
@@ -199,6 +199,65 @@ harness agent-packs upgrade --pack <p> --target . # бережный апгре�
 Условие: в control-ноте валта (`<Name>.md`) должен быть frontmatter `repo: ~/projects/<path>` —
 иначе `brain` не видит проект.
 
+### Doc-папки: имя ↔ видимость развязаны (читается из конфига, не из имени)
+
+Папка документации — модель `{id, vault, repo, visibility}`: имена сторон vault/repo могут
+отличаться, а **статус** (`public`|`private`) независим от имени. Источник истины — frontmatter
+control-ноты Brain; maind кэширует в `docs_folders`. Дефолт `visibility` **по типу проекта**:
+**пакет/библиотека** → `docs` public (публичная VitePress-док-ция); **продукт** (закрытый
+сервис/фронт) → `docs` private (внутренняя). Публичная папка не несёт `[[wikilinks]]` (гейт).
+
+Задать/переопределить — плоские ключи во frontmatter (parser наивный, вариант A):
+```yaml
+docs_folders: docs-public        # CSV vault-имён (нет → дефолт docs+docs-public)
+docs_public:  docs-public        # CSV vault-имён, что публичны (опц.)
+docs_repo_map: docs-public=docs  # CSV пар vault=repo: в валте docs-public, в репо публикуем docs
+```
+Старый плоский `["docs","docs-public"]` мигрируется на лету. Деталь — Brain
+`docs/workflow/docs-watcher.md` (модель папки) + `brain-cli.md` (wikilink-гейт по visibility).
+
+> **Внутренний AI-гайд агент-пака** (`subagents-and-workflows.md`) кладётся в **`.claude/guidelines/`**,
+> НЕ в `docs/`: это артефакт для агентов, не публичная документация (иначе утёк бы в публикацию и
+> в Brain-валт). Стек-паки harness (backend-laravel и пр.) пишут его туда по дефолту (`DOCS_DIR`).
+> `.claude/guidelines/` — коммитится (не gitignore); `docs/` остаётся под реальную документацию.
+
+## Гигиена machine-specific конфигов (gitignore + синхронный `.example`)
+
+Конфиг, в который «запекается» **абсолютный локальный путь** (`/home/<user>/…/bin/maind`, путь
+проекта в Serena), **секрет** (прокси-креды, токен) или **личный хост:порт**, нельзя коммитить как
+есть: у другого разработчика/на CI путь иной, секрет утечёт в историю git. Касается **всех** MCP-конфигов
+любого провайдера (`.mcp.json`, `.cursor/mcp.json`, `.vscode/mcp.json`) и machine-specific содержимого
+в `.claude/` (`settings.local.json` и т.п.). Две стратегии, в порядке предпочтения:
+
+**1) Индирекция (предпочтительно) — конфиг остаётся портируемым и коммитится.** Machine-specific
+значение выноси в `.env` (gitignored), а в конфиге ссылайся на него: `${VAR}` (Claude Code раскрывает
+env в `.mcp.json`) или тонкий враппер, читающий `.env` на старте. Тогда сам конфиг не содержит ни
+путей, ни секретов → его можно коммитить, `.example` не нужен.
+> Пример (playwright-прокси): секрет — только в `.env` (`PLAYWRIGHT_MCP_PROXY_SERVER=…`), а сервер в
+> `.mcp.json` грузит его враппером `bash -c 'export …=$(grep … .env); exec npx @playwright/mcp'`.
+> Переменную документируй в `.env.example` (пустой плейсхолдер).
+
+**2) gitignore + `.example` (fallback) — когда значение обязано лежать прямо в файле** (индирекция
+невозможна):
+- реальный файл → в `.gitignore` (уже трекался — `git rm --cached <файл>`);
+- рядом коммитится `<файл>.example` с **плейсхолдерами**: `<ABS_PATH_TO_SWISSKNIFEMAN>/packages/maind/bin/maind`,
+  `<REPO_ROOT>`, `<TOKEN>`;
+- **синхронизация обязательна и одновременна**: меняешь реальный файл (добавил MCP-сервер, поменял
+  аргументы/путь) — в **том же** изменении правишь `.example`. Та же дисциплина, что `.env` ↔
+  `.env.example`, не «когда-нибудь потом».
+
+**Что machine-specific** (→ индирекция или `.example`): абсолютные пути `/home/<user>/…`, `/Users/…`;
+секреты/токены/креды; личные хост:порт. **Что портируемо** (коммить как есть): относительные команды
+(`php artisan boost:mcp`), значения, одинаковые у всех.
+
+> Перед коммитом: `git diff --cached` по `*.json`/`.mcp.json`/`.claude/*` на абсолютные пути (`/home/`,
+> `/Users/`) и секреты. Нашёл — вынеси в `.env` (стратегия 1) либо gitignore + обнови `.example` (стратегия 2).
+
+> **Механизм vs дисциплина.** Пока это **дисциплина агента**: maind при `deploy`/`sync` пишет реальный
+> `.mcp.json` с абсолютными путями, но `.example`/gitignore сам не ведёт. Если ловишь это повторно —
+> кандидат на доработку maind (`lib/maind/mcpconfig.py`/`deploy.py`: эмитить `.example` + дописывать
+> `.gitignore`), маршрутизируй через [field-feedback-loop].
+
 ## Порядок «дать проекту всё» (полный)
 
 Настройка проекта = **четыре слоя**: скиллы (знания) **+ agent-packs (роли/агенты)** + окружение
@@ -218,7 +277,9 @@ harness (permissions/mcp/hooks) + maind (память/граф). Порядок 
 5. Зафиксировать карту — vendor: уже в `skills-lock.json` от `sync`; connect/смешанный: `skiller lock`.
 6. Doc-sync — `repo:` в control-ноту + `brain sync all <proj>`.
 7. Авто-аппрув без промптов — bypass, см. [[auto-approve-bypass]].
-8. **Проверка — одной командой:** `swissknifeman status <id>` (единый 4-слойный инвентарь + drift→fix);
+8. **Коммит-гигиена конфигов** — `.mcp.json`/`.claude/*` с абсолютными путями или секретами:
+   индирекция через `.env` либо gitignore + синхронный `.example` (см. «Гигиена machine-specific конфигов»).
+9. **Проверка — одной командой:** `swissknifeman status <id>` (единый 4-слойный инвентарь + drift→fix);
    `--all --json` для агента. Плюс `brain status <proj>` (doc-sync).
 
 ## Control-surface: статус → точечный re-sync

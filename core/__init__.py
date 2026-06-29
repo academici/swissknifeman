@@ -17,7 +17,9 @@ from .env import HOME, BaseEnv
 from .io import (atomic_write_json, atomic_write_text, load_json_db,
                  safe_load_json)
 from .paths import is_within, is_within_lexical
-from .project import LANGUAGE_BY_TYPE, PROJECT_TYPES, detect_project_type
+from .project import (DEFAULT_DOCS_VISIBILITY, DOCS_VISIBILITY_BY_TYPE,
+                      LANGUAGE_BY_TYPE, PROJECT_TYPES, detect_project_type,
+                      docs_visibility_for)
 from .repo import find_monorepo_root, find_repo_root
 from .term import confirm, die, now_iso, warn
 from .text import sanitize
@@ -28,5 +30,6 @@ __all__ = [
     "is_within", "is_within_lexical",
     "find_repo_root", "find_monorepo_root",
     "detect_project_type", "PROJECT_TYPES", "LANGUAGE_BY_TYPE",
+    "docs_visibility_for", "DOCS_VISIBILITY_BY_TYPE", "DEFAULT_DOCS_VISIBILITY",
     "parse_flags", "parse_args", "run_cmd",
 ]

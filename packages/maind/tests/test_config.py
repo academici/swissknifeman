@@ -93,9 +93,40 @@ class TestBrainMapping(unittest.TestCase):
         self.assertEqual(m["name"], "My Proj")
         self.assertEqual(m["local_path"], "/r/x")        # repo → local_path
         self.assertEqual(m["vault_path"], "/v/x")
-        self.assertEqual(m["docs_folders"], ["docs"])    # folders → docs_folders
+        # folders → docs_folders, нормализованы в объектную модель (standalone → private)
+        self.assertEqual(m["docs_folders"], [
+            {"id": "docs", "vault": "docs", "repo": "docs", "visibility": "private"}])
         self.assertFalse(m["enabled"])
         self.assertEqual(m["memory_scope"], "project:my-proj")
+
+
+class TestNormalizeDocsFolders(unittest.TestCase):
+    def test_flat_back_compat(self):
+        from maind.config import normalize_docs_folders
+        out = normalize_docs_folders(["docs", "docs-public"])
+        self.assertEqual(out, [
+            {"id": "docs", "vault": "docs", "repo": "docs", "visibility": "private"},
+            {"id": "docs-public", "vault": "docs-public", "repo": "docs-public",
+             "visibility": "public"}])
+
+    def test_empty_uses_default_visibility(self):
+        from maind.config import normalize_docs_folders
+        out = normalize_docs_folders(None, default_visibility="public")
+        self.assertEqual(out[0]["visibility"], "public")   # docs → дефолт по типу
+        self.assertEqual(out[1]["visibility"], "public")   # docs-public всегда public
+
+    def test_object_different_names(self):
+        from maind.config import normalize_docs_folders
+        out = normalize_docs_folders(
+            [{"vault": "docs-public", "repo": "docs", "visibility": "public"}])
+        self.assertEqual(out, [{"id": "docs-public", "vault": "docs-public",
+                                "repo": "docs", "visibility": "public"}])
+
+    def test_bad_visibility_falls_back(self):
+        from maind.config import normalize_docs_folders
+        out = normalize_docs_folders([{"vault": "docs", "visibility": "weird"}],
+                                     default_visibility="private")
+        self.assertEqual(out[0]["visibility"], "private")
 
 
 if __name__ == "__main__":

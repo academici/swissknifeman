@@ -4,6 +4,39 @@
 запись помечает затронутый install-файл, чтобы апгрейдящий агент сопоставил
 изменение с конкретным файлом проекта.
 
+## [0.4.0] - 2026-06-29
+
+### Changed
+
+- **AI-гайд переехал из публичного `docs/` в `.claude/guidelines/`.** `DOCS_DIR` по
+  умолчанию теперь `.claude/guidelines` (было `docs/05_AI/guidelines`). Гайд
+  `subagents-and-workflows.md` — внутренний артефакт для агентов, не публичная
+  VitePress-документация пакета: в open-source PHP-пакете `docs/` публикуется, и
+  машинному гайду там не место (а doc-sync затягивал его в Brain-валт). Затронут
+  install-файл `{DOCS_DIR}/subagents-and-workflows.md`.
+- **Убран ошибочный Brain-frontmatter из шаблона** `docs/subagents-and-workflows.md`
+  (`parent: [[05_AI]]`, tags, created) и вики-ссылка `[[agent-system-references]]` —
+  Obsidian-вики-ссылки сломали бы wikilink-гейт, попади гайд в публичную `docs/`.
+
+> **Миграция (upgrade установленных проектов):** новый гайд появится в
+> `.claude/guidelines/`; **старый файл в `docs/05_AI/guidelines/` не удаляется
+> автоматически** (движок не чистит при смене target) — удалите его вручную.
+
+## [0.3.0] - 2026-06-28
+
+### Changed
+
+- **Шаблоны деуниверсализованы — убрана зашитая среда одного проекта** (agents/slice-builder,
+  agents/test-writer, rules/tests, workflows/dev-loop, docs/subagents-and-workflows). Тест-фреймворк
+  теперь параметричен через `{{TEST_FRAMEWORK}}` (раньше игнорировался — хардкод «PHPUnit-native, НЕ
+  Pest»). Удалены machine-specific утверждения (`php8.5`/`pgsql`/`Postgres поднят`/`/usr/bin/php8.4`)
+  и ложные для большинства проектов («phpstan не установлен — не звать», «миграции не добавлять —
+  схема полная»). Идентичность slice-builder смягчена до «Laravel/REST API или пакет поверх моделей
+  проекта» (раньше — «поверх готового 8-доменного слоя моделей»). Статическая проверка теперь
+  ссылается на `{{CHECK_CMD}}`. Затронуты install-файлы: `.claude/agents/{prefix}-slice-builder.md`,
+  `{prefix}-test-writer.md`, `.claude/rules/tests.md`, `.claude/workflows/{prefix}-dev-loop.js`,
+  `docs/.../subagents-and-workflows.md` — апгрейд перерендерит их.
+
 ## [0.2.0] - 2026-06-24
 
 ### Added

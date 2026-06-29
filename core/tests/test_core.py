@@ -10,11 +10,11 @@ from dataclasses import FrozenInstanceError
 from pathlib import Path
 from unittest import mock
 
-from core import (PROJECT_TYPES, BaseEnv, atomic_write_json,
-                  atomic_write_text, detect_project_type, find_monorepo_root,
-                  find_repo_root, is_within, is_within_lexical, load_json_db,
-                  now_iso, parse_args, parse_flags, run_cmd, safe_load_json,
-                  sanitize)
+from core import (DEFAULT_DOCS_VISIBILITY, PROJECT_TYPES, BaseEnv,
+                  atomic_write_json, atomic_write_text, detect_project_type,
+                  docs_visibility_for, find_monorepo_root, find_repo_root,
+                  is_within, is_within_lexical, load_json_db, now_iso,
+                  parse_args, parse_flags, run_cmd, safe_load_json, sanitize)
 
 
 class TestText(unittest.TestCase):
@@ -349,6 +349,27 @@ class TestProjectDetect(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = self._mk(tmp, files=[("package.json", "{not json")])
             self.assertEqual(detect_project_type(root), "node-package")
+
+
+class TestDocsVisibility(unittest.TestCase):
+    def test_packages_public(self):
+        for t in ("php-package", "node-package", "dart-flutter"):
+            self.assertEqual(docs_visibility_for(t), "public", t)
+
+    def test_products_private(self):
+        for t in ("laravel-project", "node-frontend", "python-backend",
+                  "blender", "obsidian-vault", "standalone"):
+            self.assertEqual(docs_visibility_for(t), "private", t)
+
+    def test_unknown_falls_back_to_default_private(self):
+        self.assertEqual(docs_visibility_for("nope"), DEFAULT_DOCS_VISIBILITY)
+        self.assertEqual(DEFAULT_DOCS_VISIBILITY, "private")
+
+    def test_every_project_type_has_default(self):
+        # каждый известный тип имеет явную видимость (не упадёт на дефолт молча)
+        from core import DOCS_VISIBILITY_BY_TYPE
+        for t in PROJECT_TYPES:
+            self.assertIn(t, DOCS_VISIBILITY_BY_TYPE, t)
 
 
 if __name__ == "__main__":

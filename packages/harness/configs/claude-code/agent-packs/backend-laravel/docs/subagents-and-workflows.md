@@ -1,15 +1,8 @@
----
-parent: "[[05_AI]]"
-type: guideline
-tags: [{{PACK_PREFIX}}, ai, agents, subagents, workflow, guideline]
-created: 2026-06-23
----
-
 # Guideline: субагенты и workflow в {{PACK_PREFIX}}
 
 Как {{PACK_PREFIX}} использует субагентов и Workflow-оркестрацию. Операционализирует
 скилл `php:laravel-subagents` + уроки overnight-прогона под канон проекта.
-Контекст и референсы — [[agent-system-references]].
+Контекст и референсы — скилл `php:laravel-subagents`.
 
 > [!info] Артефакты в репозитории
 > - Агенты: `.claude/agents/{{PACK_PREFIX}}-{slice-builder,test-writer,reviewer}.md`
@@ -35,12 +28,12 @@ created: 2026-06-23
 
 Преднагружены архитектурными скиллами через нативное поле `skills:` (Claude Code
 ≥2.0.43, детерминированный preload). Тюнингованы под {{PACK_PREFIX}}: {{PHP_RUNNER}},
-PHPUnit-native (НЕ Pest), канон access-layer, phpstan отсутствует.
+тест-фреймворк {{TEST_FRAMEWORK}}, канон access-layer.
 
 | Агент | Роль | Когда звать |
 |:--|:--|:--|
 | `{{PACK_PREFIX}}-slice-builder` | реализатор среза (route→Action/Repository→DTO→policy), коммитит в текущую ветку, тесты не пишет | на реализацию вертикального среза |
-| `{{PACK_PREFIX}}-test-writer` | PHPUnit-тесты по готовому коду, итерирует до зелёного через {{PHP_RUNNER}} | после реализации среза |
+| `{{PACK_PREFIX}}-test-writer` | тесты ({{TEST_FRAMEWORK}}) по готовому коду, итерирует до зелёного через {{PHP_RUNNER}} | после реализации среза |
 | `{{PACK_PREFIX}}-reviewer` | read-only ревью с упором на слой доступа + корректность/авторизация | после каждой единицы реализации |
 
 Плагин swissknifeman даёт ещё `Explore` (read-only исследование), `Plan`
@@ -101,9 +94,9 @@ args = {
 
 ## Жёсткие гейты {{PACK_PREFIX}} (для агентов и workflow)
 
-- Тесты/artisan — только `{{PHP_RUNNER}}` (host php8.5 без pgsql), не bare `php`.
-- `.env` залочен хуком — не читать/не править; тестовая БД `{{TEST_DB}}` уже есть.
-- PHPUnit-native, НЕ Pest. Миграции не добавлять (схема полная). phpstan нет.
+- Тесты/PHP — только `{{PHP_RUNNER}}` ({{TEST_RUNNER_CMD}}), не bare `php`.
+- Если `.env` залочен хуком — не читать/не править; тестовая БД `{{TEST_DB}}`.
+- Тест-фреймворк проекта — {{TEST_FRAMEWORK}}. Схему/миграции меняй по необходимости среза. Статика (если есть) — {{CHECK_CMD}}.
 - Канон access-layer: тонкий контроллер → Action (запись) / Repository (чтение) →
   DTO/Resource; мутации под `DB::transaction()`; авторизация через policy/gate.
 - НЕ push, НЕ PR-merge, НЕ release. Каждый прогон — на своей ветке.

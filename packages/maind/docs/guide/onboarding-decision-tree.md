@@ -106,6 +106,20 @@ python→`python-backend`, frontend→`node-frontend`. Профиль без `ag
 `--with-brain` → подсказка по двустороннему синку `docs/` с Brain-валтом (нужен `repo:` во
 frontmatter control-ноты). Команды — `~/Vaults/Brain/bin/brain status|sync <proj>`.
 
+**Doc-папки и их видимость** считываются из конфига, не угадываются по имени. Модель папки —
+`{id, vault, repo, visibility}` (имя сторон и статус развязаны): источник истины — frontmatter
+control-ноты Brain, maind кэширует в `docs_folders`. Дефолт `visibility` по типу проекта
+(`core.docs_visibility_for`): **пакет/библиотека** (`php-package`/`node-package`/`dart-flutter`)
+→ `docs` **public** (публичная VitePress-документация); **продукт** (`laravel-project`/
+`node-frontend`/`python-backend`/…) → `docs` **private** (внутренняя). При онбординге
+`_ensure_project` проставляет дефолт по типу; переопределяется во frontmatter (плоские ключи
+`docs_folders`/`docs_public`/`docs_repo_map` — вариант A, parser наивный). Публичная папка не
+несёт `[[wikilinks]]` (гейт brain). Деталь — Brain `docs/workflow/docs-watcher.md`.
+
+> **Внутренний AI-гайд агент-пака** (`subagents-and-workflows.md`) живёт в `.claude/guidelines/`,
+> НЕ в `docs/` — это артефакт для агентов, не публичная документация (иначе утёк бы в публикацию
+> и в Brain-валт). agent-pack стек-паки (backend-laravel и пр.) пишут его туда по дефолту.
+
 ## Слой 10 — Эксплуатация (ongoing)
 
 | Задача | Команда | Ветки |

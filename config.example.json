@@ -126,8 +126,9 @@
     }
   },
 
-  "_comment_mcp": "MCP-серверы, к которым подключается узел (и которые он публикует).",
+  "_comment_mcp": "MCP-серверы, к которым подключается узел (и которые он публикует). emit_example (opt-in, по умолчанию false): при deploy/sync рядом с реальным .mcp.json эмитить .mcp.json.example с плейсхолдерами (<ABS_PATH_TO_PROJECT>/<HOME>) вместо machine-specific путей + вести .gitignore (реальный файл — в .gitignore, .example — вне, чтобы коммитился).",
   "mcp": {
+    "emit_example": false,
     "servers": [
       {
         "name": "agentmemory",

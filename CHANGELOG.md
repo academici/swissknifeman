@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Added (maind — opt-in эмит `.mcp.json.example` + гигиена `.gitignore`)
+
+- **`maind deploy`/`sync` при `mcp.emit_example: true`** эмитит рядом с реальным `.mcp.json`
+  портируемый `.mcp.json.example`: machine-specific абс. пути → плейсхолдеры (`<ABS_PATH_TO_PROJECT>`,
+  `<HOME>`), индирекция `${MAIND_BIN:-maind}` сохранена. Один генератор → два выхода из одного `data`
+  (`mcpconfig.write_example`) — расхождение real↔.example невозможно by design.
+- **Гигиена `.gitignore`** (`reconcile_gitignore`): реальный конфиг → в `.gitignore` (append-if-absent),
+  его `.example` → вне (remove-if-present, чтобы шаблон коммитился); идемпотентно; warn, если реальный
+  файл уже трекается git. **Opt-in** (по умолчанию выключено — не трогаем чужие репо без флага).
+  Закрывает машинно-специфичный серена-путь `--project <abs>`, который индирекция `maind` (PR #94) не
+  решала. +тесты `test_mcpconfig`; статус `roadmap/mcp-config-example-emit.md` → реализовано (opt-in).
+
 ### Added (skiller — CORE-скилл `research/query-craft`: дисциплина формулировки поисковых запросов)
 
 - **Новый скилл `research/query-craft`** — как ФОРМУЛИРОВАТЬ запрос к поисковому/доковому движку

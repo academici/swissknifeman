@@ -4,8 +4,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from maind.mcpconfig import (MCPConfigError, has_server, load_mcp,
-                             merge_server, write_mcp)
+from maind.mcpconfig import (EXAMPLE_SUFFIX, MCPConfigError, has_server,
+                             load_mcp, merge_server, reconcile_gitignore,
+                             write_example, write_mcp)
 
 
 class TestMcpConfig(unittest.TestCase):
@@ -77,6 +78,38 @@ class TestMcpConfig(unittest.TestCase):
             p.write_text(json.dumps({"mcpServers": {"x": {}}}), encoding="utf-8")
             self.assertTrue(has_server(p, "x"))
             self.assertFalse(has_server(p, "y"))
+
+    def test_write_example_placeholders(self):
+        """write_example: путь проекта → <ABS_PATH_TO_PROJECT>, домашний префикс → <HOME>;
+        реальных абс. путей в .example не остаётся; индирекция ${MAIND_BIN:-maind} сохранена."""
+        import os
+        with tempfile.TemporaryDirectory() as tmp:
+            proj = Path(tmp) / "proj"
+            proj.mkdir()
+            home = os.path.expanduser("~")
+            data = {"mcpServers": {
+                "maind": {"command": "${MAIND_BIN:-maind}", "args": ["mcp"]},
+                "serena": {"command": "uvx", "args": ["--project", str(proj)]},
+                "x": {"command": f"{home}/tools/x.sh"}}}
+            write_example(proj / ".mcp.json", data, proj)
+            ex = json.loads((proj / (".mcp.json" + EXAMPLE_SUFFIX)).read_text())
+            self.assertIn("<ABS_PATH_TO_PROJECT>", ex["mcpServers"]["serena"]["args"])
+            self.assertEqual(ex["mcpServers"]["x"]["command"], "<HOME>/tools/x.sh")
+            self.assertEqual(ex["mcpServers"]["maind"]["command"], "${MAIND_BIN:-maind}")
+            self.assertNotIn(str(proj), json.dumps(ex))
+
+    def test_reconcile_gitignore(self):
+        """real MCP-конфиг → В .gitignore; его .example → НЕ в .gitignore (даже если был);
+        чужие правила не тронуты; идемпотентно."""
+        with tempfile.TemporaryDirectory() as tmp:
+            proj = Path(tmp)
+            (proj / ".gitignore").write_text(".env\n.mcp.json.example\n", encoding="utf-8")
+            self.assertTrue(reconcile_gitignore(proj, ".mcp.json"))
+            lines = (proj / ".gitignore").read_text().splitlines()
+            self.assertIn(".mcp.json", lines)
+            self.assertNotIn(".mcp.json.example", lines)
+            self.assertIn(".env", lines)
+            self.assertFalse(reconcile_gitignore(proj, ".mcp.json"))  # идемпотентно
 
 
 if __name__ == "__main__":

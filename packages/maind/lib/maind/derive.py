@@ -19,12 +19,13 @@ from .graph import Graph
 from .namespaces import link_allowed
 
 # Вендоры первых сторон экосистемы (фильтр composer-зависимостей от laravel/symfony/…).
-FIRST_PARTY_VENDORS = {"axioma-studio", "botkit", "corex", "azguard", "docvault",
+FIRST_PARTY_VENDORS = {"axioma-studio", "botkit", "corex", "azguard", "vaulter",
                        "academici", "flex", "flexcrm", "getchat"}
 
 # Алиасы doc-имён (frontmatter/wikilinks) → id проекта для незарегистрированных в .maind.json.
 DOC_ALIASES = {
-    "corex": "corex", "azguard": "azguard", "docvault": "docvault", "botkit": "botkit",
+    "corex": "corex", "azguard": "azguard", "vaulter": "vaulter", "botkit": "botkit",
+    "docvault": "vaulter",  # back-compat: старые doc-backlinks DocVault → проект vaulter
     "getchat": "getchat", "getchatcore": "getchatcore", "flexcrm": "flexcrm",
     "flexcms": "flexcms", "flexstore": "flexstore", "axiomaerpsdk": "axiomaerpsdk",
 }

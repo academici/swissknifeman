@@ -8,7 +8,7 @@
 Семантика:
 - нет поля / пусто  → неявный namespace `default` (= прежнее поведение: всё связано);
 - `["*"]` (wildcard) → связывается со ВСЕМИ namespace (escape для общей инфраструктуры:
-  azguard, docvault, botkit, erp-sdk, swissknifeman);
+  azguard, vaulter, botkit, erp-sdk, swissknifeman);
 - незарегистрированный таргет (нет записи в projects[], напр. doc-алиас getchat) —
   связь сохраняется: namespace внешнего узла неизвестен, не режем.
 

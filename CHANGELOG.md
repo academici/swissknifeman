@@ -14,6 +14,15 @@
   Закрывает машинно-специфичный серена-путь `--project <abs>`, который индирекция `maind` (PR #94) не
   решала. +тесты `test_mcpconfig`; статус `roadmap/mcp-config-example-emit.md` → реализовано (opt-in).
 
+### Fixed (skiller — ложный `[ПЕРЕЕХАЛ]` в `skiller status` на монорепо-реестре)
+
+- **`skiller status` сравнивал источник marketplace с `env.root` (каталог пакета), а не с корнем
+  монорепо.** В монорепо `marketplace.json` лежит в КОРНЕ (туда же `connect`/`update` пишут
+  `source` через `find_repo_root`), поэтому сравнение с `env.root` (`packages/skiller`) давало
+  вечный ложный флаг `[ПЕРЕЕХАЛ — починить: skiller update]`, который `skiller update` физически
+  не способен погасить (он пишет корректный корень репо). Теперь `status` резолвит ожидаемый
+  источник так же — `find_repo_root(env.root) or env.root`. Затронут `lib/skiller/status.py`.
+
 ### Added (skiller — CORE-скилл `research/query-craft`: дисциплина формулировки поисковых запросов)
 
 - **Новый скилл `research/query-craft`** — как ФОРМУЛИРОВАТЬ запрос к поисковому/доковому движку

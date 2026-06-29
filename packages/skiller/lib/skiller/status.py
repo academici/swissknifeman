@@ -3,6 +3,8 @@ import json
 import os
 from pathlib import Path
 
+from core import find_repo_root
+
 from .budget import budget_for_set, resolve_active_set
 from .common import MANIFEST, MARKETPLACE, die, parse_flags
 from .config import find_project_root, load_config, resolve_selection
@@ -56,7 +58,11 @@ def cmd_status(env, argv):
     if mk_file:
         s = json.loads((target / ".claude" / mk_file).read_text(encoding="utf-8"))
         src = s["extraKnownMarketplaces"][MARKETPLACE].get("source", {})
-        moved = src != {"source": "directory", "path": str(env.root)}
+        # marketplace.json лежит в КОРНЕ монорепо (туда же connect/update пишут source),
+        # а не в каталоге пакета env.root — сравниваем с тем же корнем, иначе в монорепо
+        # вечный ложный [ПЕРЕЕХАЛ], который skiller update не способен погасить.
+        mp_root = find_repo_root(env.root) or env.root
+        moved = src != {"source": "directory", "path": str(mp_root)}
         out(f"\nКанал marketplace ({mk_file}):")
         out(f"  Источник: {src.get('path', json.dumps(src))}"
             + ("  [ПЕРЕЕХАЛ — починить: skiller update]" if moved else ""))

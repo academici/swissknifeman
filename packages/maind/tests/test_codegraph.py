@@ -125,6 +125,17 @@ class TestSerenaConfig(unittest.TestCase):
             self.assertIn("- python", txt)
             self.assertIn("- typescript", txt)
 
+    def test_languages_key_always_present_when_undetected(self):
+        # standalone-тип + пустой репо: язык не определить → ключ languages ВСЁ РАВНО
+        # пишется (пустым списком). Текущая Serena требует ключ как обязательный и падает
+        # KeyError на его отсутствии — этот тест охраняет от регресса (онбординг chatom).
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj, pdir = _setup(tmp, code=True, type="standalone")
+            codegraph.apply_serena_config(env, config, proj, "auto", dry=False)
+            txt = (pdir / _CFG).read_text()
+            self.assertIn("languages:", txt)
+            self.assertIn("languages: []", txt)
+
 
 class TestConfigDriven(unittest.TestCase):
     def test_code_alias_equals_graphify(self):

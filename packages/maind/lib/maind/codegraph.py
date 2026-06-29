@@ -87,16 +87,36 @@ def _infer_language(project, path, st):
 
 
 def render_project_yaml(name, language, ignores, initial_prompt, gitignore=True):
-    """Минимальный валидный .serena/project.yml (Serena дополнит шаблон при активации).
-    language: str | список str | None — None опускает секцию (Serena автодетектит сама)."""
-    lines = [f'project_name: "{name}"']
+    """Полный валидный .serena/project.yml под текущую схему Serena.
+    language: str | список str | None.
+
+    Serena `_from_dict` читает РЯД ключей без `.get()` (FIELDS_WITHOUT_DEFAULTS +
+    обязательные): languages, symbol_info_budget, ignored_paths, fixed_tools,
+    excluded_tools, included_optional_tools, read_only, ignore_all_files_in_gitignore,
+    initial_prompt, encoding, added_modes, default_modes — отсутствие ЛЮБОГО → KeyError
+    при загрузке (НЕ автодетект). Поэтому пишем ПОЛНЫЙ набор с дефолтами Serena, сохраняя
+    свои курированные ignored_paths/initial_prompt/languages. Дефолты сверены с
+    serena/resources/project.template.yml. `languages` всегда присутствует (пустой
+    список при нераспознанном языке — standalone-тип + пустой репо)."""
     langs = [language] if isinstance(language, str) else (language or [])
+    lines = [f'project_name: "{name}"']
     if langs:
         lines += ["languages:"] + [f"  - {lang}" for lang in langs]
-    lines += [f"ignore_all_files_in_gitignore: {'true' if gitignore else 'false'}",
+    else:
+        lines += ["languages: []"]  # Serena сама определит язык при активации (без KeyError)
+    lines += ['encoding: "utf-8"',
+              f"ignore_all_files_in_gitignore: {'true' if gitignore else 'false'}",
               "ignored_paths:"]
     lines += [f'  - "{p}"' for p in ignores]
-    lines += ["read_only: false", f'initial_prompt: "{initial_prompt}"', ""]
+    lines += ["read_only: false",
+              # обязательные у текущей Serena — дефолты из её project.template.yml:
+              "excluded_tools: []",
+              "included_optional_tools: []",
+              "fixed_tools: []",
+              "default_modes:",
+              "added_modes:",
+              "symbol_info_budget:",
+              f'initial_prompt: "{initial_prompt}"', ""]
     return "\n".join(lines)
 
 

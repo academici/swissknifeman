@@ -29,6 +29,17 @@
   `repo` (GitHub-slug) ≠ `local_path` (путь к коду) и инверсия brain-схемы (`repo` = путь → `local_path`
   при импорте). `config.example.json` — каноничный `docs_folders` `{id,vault,repo,visibility}`.
 
+### Changed (maind — индирекция бинарника в `.mcp.json` вместо абсолютного пути)
+
+- **`deploy.py::_maind_entry` пишет `"${MAIND_BIN:-maind}"`** вместо `<abs>/packages/maind/bin/maind`.
+  Claude Code раскрывает индирекцию из окружения процесса (дефолт `maind` по PATH — `~/.local/bin`
+  от `install.sh`); тот же `MAIND_BIN`, что у health-хуков. Переносимо на другую машину/CI и при
+  переносе репо — в `.mcp.json` больше нет захардкоженного `/home/...`. Тест-замок на `command`
+  (`test_deploy.py`), пример в `docs/guide/mcp.md` обновлён.
+- Уже онбордженные проекты мигрируются идемпотентно: `maind sync --only mcp --all` (недеструктивный
+  merge + `.bak`). Серена-путь `--project <abs>` остаётся машинно-специфичным — отдельная фаза
+  (`roadmap/mcp-config-example-emit.md`).
+
 ### Added
 
 - **`laravel-architecture/eloquent-accessors`** (новый скилл) — канон современных Eloquent

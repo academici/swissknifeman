@@ -27,8 +27,12 @@ def _agentmemory_entry(env, config, scope):
             "env": {"AGENTMEMORY_URL": url, "AGENTMEMORY_NAMESPACE": scope}}
 
 
-def _maind_entry(env, scope):
-    return {"command": str(env.root / "bin" / "maind"),
+def _maind_entry(scope):
+    # Индирекция вместо абсолютного пути: `${MAIND_BIN:-maind}` раскрывается Claude Code из
+    # ОКРУЖЕНИЯ процесса (проектный .env он не читает) → дефолт `maind` резолвится по PATH
+    # (~/.local/bin кладёт install.sh). Тот же MAIND_BIN, что у health-хуков. Переносимо на
+    # другую машину/CI и при переносе репо — в .mcp.json не остаётся захардкоженного /home/...
+    return {"command": "${MAIND_BIN:-maind}",
             "args": ["mcp", "--scope", scope]}
 
 
@@ -78,7 +82,7 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
         with_code = codegraph.enabled(project, st)
     entries = {}
     if maind_server:
-        entries["maind"] = _maind_entry(env, scope)          # память через maind (изоляция)
+        entries["maind"] = _maind_entry(scope)               # память через maind (изоляция)
     if with_agentmemory:                                     # legacy/opt-in raw-сервер
         entries["agentmemory"] = _agentmemory_entry(env, config, scope)
     drop = [] if with_agentmemory else ["agentmemory"]       # чистим raw-сервер из старых .mcp.json

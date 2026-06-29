@@ -41,6 +41,9 @@ class TestDeploy(unittest.TestCase):
             self.assertNotIn("agentmemory", servers)   # raw-сервер больше не раскатывается
             self.assertEqual(res["scope"], "project:flexcrm")
             self.assertEqual(servers["maind"]["args"], ["mcp", "--scope", "project:flexcrm"])
+            # индирекция, не абсолютный путь (защита от регресса хардкода /home/...)
+            self.assertEqual(servers["maind"]["command"], "${MAIND_BIN:-maind}")
+            self.assertNotIn("/", servers["maind"]["command"])
 
     def test_removes_stale_agentmemory(self):
         # старый .mcp.json с raw-сервером agentmemory → деплой его убирает (footgun)

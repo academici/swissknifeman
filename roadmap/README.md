@@ -14,6 +14,8 @@
 | [`agent-command-router-hook.md`](agent-command-router-hook.md) | UserPromptSubmit-хук, подсказывающий нужного субагента/команду | Скиллы уже автозагружаются по `description`; ценность только для агентов/команд; риск vendor-lock/латентности | Замеренные мисроуты агентов/команд на практике |
 | [`self-learning-memory.md`](self-learning-memory.md) | Самообучение через namespace-память maind (не перезапись CLAUDE.md) | Нет канонической реализации; нужны guardrails (confidence-gating + ручное промо); ортогонально цели | Появится потребность в авто-накоплении уроков + готовность к ревью-гейту |
 | [`skill-rules-sidecar.md`](skill-rules-sidecar.md) | Генерируемый `skill-rules.json` сайдкар для роутинга скиллов | Нативная автозагрузка скиллов обычно достаточна | Замеренные мис-активации скиллов |
+| [`mcp-config-example-emit.md`](mcp-config-example-emit.md) | maind deploy/sync сам эмитит `.mcp.json.example` (плейсхолдеры) + ведёт `.gitignore` | Кейс покрыт дисциплиной агента (скилл `project-tooling-runbook`); генератор-механизм пока избыточен | Повторная утечка абс.путей/секретов в репо ИЛИ внешний разработчик не поднял MCP без `.example` |
+| [`php-package-stack-pack.md`](php-package-stack-pack.md) | Отдельный стек-пак `php-package` (dev-loop под Testbench/Pest/публичный API), не app-ориентированный `backend-laravel` | `backend-laravel` v0.3.0 после фикса рабочий и для пакета; новый пак — только при повторном трении | Несколько онбордингов пакетов упёрлись в app-допущения `backend-laravel` (не один azguard) |
 
 ## Принцип
 

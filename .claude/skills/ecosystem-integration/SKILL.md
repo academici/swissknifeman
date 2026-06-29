@@ -34,6 +34,9 @@ maind onboard <path|id> [--with-code] [--with-brain] [--yes]
    **Спроси у пользователя канал** перед установкой (визард `integrate` тоже спрашивает). Операционные
    детали и Boost-как-MCP — в [project-tooling-runbook].
 3. **deploy** — MCP-серверы хаба в `.mcp.json` проекта: `agentmemory` + `maind` [+ код-граф].
+   ⚠️ `.mcp.json` несёт **абсолютные локальные пути** (`bin/maind`, путь проекта Serena) → коммитить
+   как есть нельзя. Гигиена (индирекция через `.env` либо gitignore + синхронный `.example`) —
+   [project-tooling-runbook] §«Гигиена machine-specific конфигов».
 4. **graph** — `derive` графа топологии из composer/доков + пересборка индекса.
 5. **memory** — seed-факт о связях в общей памяти.
 6. **ecosystem-skill** — раскатать скилл `ecosystem-mcp` в проект (ориентир для его агента).

@@ -22,10 +22,15 @@ const PROJECT_DIR = '{{PROJECT_DIR}}'
 // долететь → дефолт держим литералом В СКРИПТЕ, а не только в args.
 const DEFAULT_MAX = 3
 
-const BRANCH = (args && args.branch) || 'feat/dev-loop'
-const BASE = (args && args.base) || 'main'
-const MAX = (args && args.max_slices) || DEFAULT_MAX
-const ALL_SLICES = (args && Array.isArray(args.slices)) ? args.slices : []
+// Урок: named-workflow ({ name, args }) может доставить args СТРОКОЙ (JSON) — тогда
+// args.slices не массив и прогон тихо «no slices provided». Нормализуем до объекта.
+let A = args || {}
+if (typeof A === 'string') { try { A = JSON.parse(A) } catch { A = {} } }
+
+const BRANCH = A.branch || 'feat/dev-loop'
+const BASE = A.base || 'main'
+const MAX = A.max_slices || DEFAULT_MAX
+const ALL_SLICES = Array.isArray(A.slices) ? A.slices : []
 
 // Урок: один branch на весь прогон. Кап применяем ЗДЕСЬ (slice), а не через
 // необязательный arg внутри агентов.
@@ -33,8 +38,8 @@ const SLICES = ALL_SLICES.slice(0, MAX)
 
 const HARD_GATES = `ЖЁСТКИЕ ГЕЙТЫ {{PACK_PREFIX}} (не нарушать):
 - PHP/тесты ТОЛЬКО через '{{PHP_RUNNER}}' ({{TEST_RUNNER_CMD}}), не bare 'php'.
-- Если .env залочен хуком — не читать и не править; конфиг тестовой БД в phpunit.xml/tests/bootstrap.php ({{TEST_DB}}).
-- Тест-фреймворк проекта — {{TEST_FRAMEWORK}}: зеркаль стиль существующих тестов. Схему/миграции меняй только если того требует срез. Статическая проверка (если настроена) — {{CHECK_CMD}}.
+<!-- pack:ifnot IS_LARAVEL_PACKAGE -->- Если .env залочен хуком — не читать и не править; конфиг тестовой БД в phpunit.xml/tests/bootstrap.php ({{TEST_DB}}).<!-- pack:endif --><!-- pack:if IS_LARAVEL_PACKAGE -->- Пакет: тесты через Orchestra Testbench (без php artisan/.env); БД и драйверы — в TestCase/phpunit.xml пакета.<!-- pack:endif -->
+- Тест-фреймворк проекта — {{TEST_FRAMEWORK}}: зеркаль стиль существующих тестов. <!-- pack:if SCAFFOLDS_SCHEMA -->Заводи недостающие миграции/модели по требованию среза.<!-- pack:endif --><!-- pack:ifnot SCAFFOLDS_SCHEMA -->Схему/миграции меняй только если того требует срез.<!-- pack:endif --> Статическая проверка (если настроена) — {{CHECK_CMD}}.
 - НЕ git push, НЕ открывать/мержить PR, НЕ release. НЕ migrate:fresh/drop по чему-либо кроме тестовой БД.
 - Все срезы строятся на ОДНОЙ ветке ${BRANCH}. Агенты НЕ создают и не переключают ветки — коммитят в текущую и оставляют дерево чистым.
 - Работать строго внутри ${PROJECT_DIR}.`
@@ -136,7 +141,7 @@ phase('Verify')
 const verify = await agent(
   `Финальная проверка прогона в ${PROJECT_DIR}, ветка ${BRANCH}:
 1. 'git status' — дерево чистое, текущая ветка ${BRANCH}.
-2. grep -rnE '::query\\(|::create\\(|::where\\(|::all\\(|::find\\(' по app/Http/Controllers/Api и app/Actions — перечисли оставшиеся попадания (в контроллерах должно быть 0).
+2. grep -rnE '::query\\(|::create\\(|::where\\(|::all\\(|::find\\(' по <!-- pack:if IS_LARAVEL_PACKAGE -->src/Http/Controllers и src/Actions<!-- pack:endif --><!-- pack:ifnot IS_LARAVEL_PACKAGE -->app/Http/Controllers/Api и app/Actions<!-- pack:endif --> — перечисли оставшиеся попадания (в контроллерах должно быть 0).
 3. Полный '{{TEST_RUNNER_CMD}}' — число/статус.
 4. 'vendor/bin/pint --test' — чисто.
 Краткий итог: чист ли слой доступа, тесты (число/упало), что осталось. Файлы не меняй, не push.

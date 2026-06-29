@@ -37,6 +37,8 @@ _SINGLE_RE = re.compile(r"\{([A-Z_][A-Z0-9_]*)\}")
 _DOUBLE_RE = re.compile(r"\{\{([A-Z_][A-Z0-9_]*)\}\}")
 _IF_RE = re.compile(r"<!--\s*pack:if\s+(\w+)\s*-->(.*?)<!--\s*pack:endif\s*-->",
                     re.DOTALL)
+_IFNOT_RE = re.compile(r"<!--\s*pack:ifnot\s+(\w+)\s*-->(.*?)<!--\s*pack:endif\s*-->",
+                       re.DOTALL)
 
 
 # ── discovery ────────────────────────────────────────────────────────────────
@@ -183,9 +185,14 @@ def _subst_double(text, answers):
 
 
 def _apply_conditionals(text, answers):
-    """Блоки <!-- pack:if KEY -->...<!-- pack:endif --> — оставить при truthy answer."""
+    """Условные блоки. <!-- pack:if KEY -->...<!-- pack:endif --> — оставить при truthy
+    answer; <!-- pack:ifnot KEY -->...<!-- pack:endif --> — при falsy/отсутствующем.
+    Движок без логических операторов: пары if/ifnot держи ПЛОСКО (последовательно, не
+    вложенно) — non-greedy парит каждый open с ближайшим endif."""
     for _ in range(10):  # вложенность: повторяем, пока есть изменения
         new = _IF_RE.sub(lambda m: m.group(2) if answers.get(m.group(1)) else "", text)
+        new = _IFNOT_RE.sub(lambda m: m.group(2) if not answers.get(m.group(1)) else "",
+                            new)
         if new == text:
             return new
         text = new

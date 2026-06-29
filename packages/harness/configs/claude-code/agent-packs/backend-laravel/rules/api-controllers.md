@@ -1,7 +1,8 @@
 ---
 paths:
-  - "app/Http/Controllers/**"
-  - "routes/api.php"
+<!-- pack:if IS_LARAVEL_PACKAGE -->  - "src/Http/Controllers/**"
+<!-- pack:endif --><!-- pack:ifnot IS_LARAVEL_PACKAGE -->  - "app/Http/Controllers/**"
+<!-- pack:endif -->  - "routes/api.php"
 ---
 
 Канон access-layer (глубина — скилл `php:repositories`):

@@ -99,6 +99,19 @@ class TestAgentPacks(unittest.TestCase):
     def test_doctor_clean_pack(self):
         self.assertEqual(ap.do_doctor(self.env, self.pack), 0)
 
+    def test_conditional_if_and_ifnot(self):
+        # pack:if держит блок при truthy, pack:ifnot — при falsy/отсутствующем.
+        t = ("<!-- pack:if K -->yes<!-- pack:endif -->"
+             "<!-- pack:ifnot K -->no<!-- pack:endif -->")
+        self.assertEqual(ap._apply_conditionals(t, {"K": True}), "yes")
+        self.assertEqual(ap._apply_conditionals(t, {"K": False}), "no")
+        self.assertEqual(ap._apply_conditionals(t, {}), "no")   # отсутствует → falsy
+        # соседние плоские блоки разных типов парятся независимо
+        flat = ("A<!-- pack:if P -->-pkg<!-- pack:endif -->"
+                "<!-- pack:ifnot P -->-app<!-- pack:endif -->B")
+        self.assertEqual(ap._apply_conditionals(flat, {"P": True}), "A-pkgB")
+        self.assertEqual(ap._apply_conditionals(flat, {"P": False}), "A-appB")
+
 
 class TestCategorizeFileChange(unittest.TestCase):
     """Чистая логика категоризации (выделена из do_upgrade) — матрица случаев."""

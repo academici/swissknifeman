@@ -4,6 +4,47 @@
 запись помечает затронутый install-файл, чтобы апгрейдящий агент сопоставил
 изменение с конкретным файлом проекта.
 
+## [0.5.0] - 2026-06-29
+
+### Added
+
+- **Режим Laravel-ПАКЕТА и greenfield.** Две авто-детектящиеся интервью-переменные:
+  `IS_LARAVEL_PACKAGE` (код в `src/` vs `app/`, детект `test -d app/Http`) и
+  `SCAFFOLDS_SCHEMA` (агенты заводят миграции/модели vs пишут поверх готовой схемы,
+  детект `test -d app/Models`). Пути access-layer (`src/Http/Controllers`·`src/Actions`
+  vs `app/Http/Controllers/Api`·`app/Actions`), инфра тестов (Orchestra Testbench +
+  SQLite/Null-драйверы vs `.env`/`phpunit.xml`/`{{TEST_DB}}`) и язык миграций разведены
+  условными блоками. Раньше пак ложился только как established-app: на Laravel-пакет
+  (напр. `chatom/core`) попадали `app/`-пути (ложно-зелёный access-gate, греп по
+  несуществующим каталогам) и запрет миграций (ломал greenfield-scaffold).
+- **Движок `agentpacks.py`: условие `<!-- pack:ifnot KEY -->…<!-- pack:endif -->`**
+  (зеркало `pack:if`, держит блок при falsy/отсутствующем answer) — без него
+  «иначе»-ветку нельзя выразить (логических операторов в условиях нет). Тест на
+  if/ifnot — `tests/test_agentpacks.py::test_conditional_if_and_ifnot`.
+
+### Changed
+
+- **reviewer.md доведён до деуниверсализации 0.3.0** (был пропущен в её файл-листе):
+  убран зашитый литерал «есть PHPUnit-тест (проект НЕ на Pest)» → `{{TEST_FRAMEWORK}}`;
+  ложное «phpstan не установлен — не звать» → ссылка на `{{CHECK_CMD}}` (хук тихо
+  пропускает отсутствующий инструмент); «миграции не добавляются» → условно по
+  `SCAFFOLDS_SCHEMA`. Затронут `.claude/agents/{prefix}-reviewer.md`.
+- **`workflows/dev-loop.js`: guard от args-строки.** `Workflow({ name, args })` может
+  доставить `args` JSON-строкой → `args.slices` не массив → прогон тихо «no slices
+  provided». Добавлен `typeof args === 'string' ? JSON.parse` в начало. Греп
+  access-layer в финальном verify — условный (`src/` vs `app/`). Затронут
+  `.claude/workflows/{prefix}-dev-loop.js`.
+- **`rules/api-controllers.md` → kind `template`**, `paths:` условный (`src/` vs `app/`)
+  — раньше verbatim с `app/Http/Controllers/**`, в пакете правило не срабатывало.
+
+### Migration notes (agent-facing)
+
+- Новые интервью-поля `IS_LARAVEL_PACKAGE`/`SCAFFOLDS_SCHEMA` доспрашиваются на
+  апгрейде из дефолтов (детект `app/Http`/`app/Models`). Для greenfield-пакета
+  переопредели явно: `--answer IS_LARAVEL_PACKAGE=true --answer SCAFFOLDS_SCHEMA=true`.
+- Апгрейд перерендерит reviewer/slice-builder/test-writer/dev-loop/api-controllers/docs;
+  локально правленные пометятся `conflict` (рендер ляжет рядом `*.pack-new`).
+
 ## [0.4.0] - 2026-06-29
 
 ### Changed

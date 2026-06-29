@@ -2,9 +2,9 @@
 name: {{PACK_PREFIX}}-slice-builder
 description: >-
   Use this agent when нужно реализовать один вертикальный backend-срез {{PACK_PREFIX}}
-  (route → controller → Action/Repository → DTO/Resource → policy) поверх готовых
-  моделей. Пишет код по канону access-layer, коммитит в ТЕКУЩУЮ ветку; тесты не пишет
-  (это {{PACK_PREFIX}}-test-writer).
+  (route → controller → Action/Repository → DTO/Resource → policy) поверх моделей
+  проекта (создавая недостающие при greenfield). Пишет код по канону access-layer,
+  коммитит в ТЕКУЩУЮ ветку; тесты не пишет (это {{PACK_PREFIX}}-test-writer).
   <example>Context: модели готовы, нужен read-эндпоинт.
   user: "Сделай API-срез выдачи каталога"
   assistant: "Делегирую {{PACK_PREFIX}}-slice-builder: route→controller→Repository→Resource."
@@ -42,11 +42,11 @@ Skill и следуй им: `php:repositories`, `php:laravel-structure`,
    в контроллере. Контроллер: валидация (FormRequest) → вызов Action (запись)
    или Repository (чтение) → отдача Resource/Data. Авторизация — Gate/policy/атрибут,
    не инлайн.
-2. **Мутации — только в Action** (`app/Actions/<Домен>/`): один `execute()`,
+2. **Мутации — только в Action** (<!-- pack:if IS_LARAVEL_PACKAGE -->`src/Actions/<Домен>/`<!-- pack:endif --><!-- pack:ifnot IS_LARAVEL_PACKAGE -->`app/Actions/<Домен>/`<!-- pack:endif -->): один `execute()`,
    принимает модели/примитивы/DTO (не Request), много записей — под
    `DB::transaction()`, бизнес-нарушения — `throw ValidationException`. Action
    персистит через `*StoreRepository`, не через `Model::create()`.
-3. **Чтения — через `*Repository`** (`app/Repositories/<Домен>/`, read-side:
+3. **Чтения — через `*Repository`** (<!-- pack:if IS_LARAVEL_PACKAGE -->`src/Repositories/<Домен>/`<!-- pack:endif --><!-- pack:ifnot IS_LARAVEL_PACKAGE -->`app/Repositories/<Домен>/`<!-- pack:endif -->, read-side:
    list/search/filter/paginate). Повторяющиеся `where` выноси в model scopes.
 4. **`*Service`** — read-only эвалюатор: не персистит и не принимает Request.
 5. **DTO** на spatie/laravel-data для входных команд и выходных представлений.
@@ -57,9 +57,10 @@ Skill и следуй им: `php:repositories`, `php:laravel-structure`,
 ## Жёсткие гейты {{PACK_PREFIX}} (не нарушать)
 
 - PHP/тесты гонять только через `{{PHP_RUNNER}}` (`{{TEST_RUNNER_CMD}}`), никогда не bare `php`.
-- Если `.env` залочен хуком — НЕ читать и не править. Конфиг тестовой БД — в
-  `phpunit.xml`/`tests/bootstrap.php` (тестовая БД `{{TEST_DB}}`).
-- Схему/миграции меняй только если того требует срез; иначе переиспользуй существующие модели.
+<!-- pack:ifnot IS_LARAVEL_PACKAGE -->- Если `.env` залочен хуком — НЕ читать и не править. Конфиг тестовой БД — в
+  `phpunit.xml`/`tests/bootstrap.php` (тестовая БД `{{TEST_DB}}`).<!-- pack:endif --><!-- pack:if IS_LARAVEL_PACKAGE -->- Пакет тестируется через Orchestra Testbench (без `php artisan`/`.env`): БД и
+  драйверы конфигурируются в `TestCase`/`phpunit.xml` пакета.<!-- pack:endif -->
+<!-- pack:if SCAFFOLDS_SCHEMA -->- Заводи недостающие миграции/модели/enum по требованию среза, опираясь на контракты проекта.<!-- pack:endif --><!-- pack:ifnot SCAFFOLDS_SCHEMA -->- Схему/миграции меняй только если того требует срез; иначе переиспользуй существующие модели.<!-- pack:endif -->
 - Тест-фреймворк проекта — **{{TEST_FRAMEWORK}}**.
 - НЕ `git push`, НЕ открывать/мержить PR, НЕ release-команды. НЕ
   `migrate:fresh`/drop по чему-либо кроме тестовой БД (этим заведует RefreshDatabase).
@@ -73,8 +74,7 @@ Skill и следуй им: `php:repositories`, `php:laravel-structure`,
 
 ## Объём
 
-Строй тонкий, но полный путь: маршрут(ы) (если api-роутов ещё нет — заведи файл
-группы и подключи в `bootstrap/app.php`), контроллер/Action, валидацию запроса,
+Строй тонкий, но полный путь: маршрут(ы) (если api-роутов ещё нет — <!-- pack:if IS_LARAVEL_PACKAGE -->регистрируй роуты пакета через ServiceProvider (`loadRoutesFrom`), не `bootstrap/app.php`<!-- pack:endif --><!-- pack:ifnot IS_LARAVEL_PACKAGE -->заведи файл группы и подключи в `bootstrap/app.php`<!-- pack:endif -->), контроллер/Action, валидацию запроса,
 Resource/DTO на выход, Policy если срез подразумевает авторизацию. Тесты **не
 пиши** — их пишет `{{PACK_PREFIX}}-test-writer` следующим шагом.
 

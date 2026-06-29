@@ -49,12 +49,12 @@ git diff/log).
 ## Главное — слой доступа к данным (специфика {{PACK_PREFIX}})
 
 - `grep -nE '::query\(|::create\(|::where\(|::all\(|::find\('` по контроллерам
-  затронутого домена (`app/Http/Controllers/Api/<Домен>`) — должно быть ПУСТО,
+  затронутого домена (<!-- pack:if IS_LARAVEL_PACKAGE -->`src/Http/Controllers/<Домен>`<!-- pack:endif --><!-- pack:ifnot IS_LARAVEL_PACKAGE -->`app/Http/Controllers/Api/<Домен>`<!-- pack:endif -->) — должно быть ПУСТО,
   иначе **major**.
 - Мутации идут через **Action + `*StoreRepository`** (не `Model::create()` в
   Action/контроллере); чтения — через **`*Repository`**; `*Service` не персистит
   и не принимает Request.
-- `app/Repositories/<Домен>/` реально создан и используется, а не в обход.
+- <!-- pack:if IS_LARAVEL_PACKAGE -->`src/Repositories/<Домен>/`<!-- pack:endif --><!-- pack:ifnot IS_LARAVEL_PACKAGE -->`app/Repositories/<Домен>/`<!-- pack:endif --> реально создан и используется, а не в обход.
 
 ## Прочие Laravel-критерии
 
@@ -64,10 +64,9 @@ git diff/log).
 - **Валидация**: вход через FormRequest/DTO, нет доверия сырому `request()->input()`.
 - **Авторизация**: на новые действия есть policy/gate и она реально вызывается;
   маршруты под нужным middleware.
-- **Миграции vs модели**: новые поля в `$fillable`/casts (миграции в {{PACK_PREFIX}} не
-  добавляются — проверь, что их и нет).
+- **Миграции vs модели**: <!-- pack:if SCAFFOLDS_SCHEMA -->новые таблицы/поля заводятся отдельной миграцией; каждое новое поле отражено в `$fillable`/casts модели; `down()` обратим.<!-- pack:endif --><!-- pack:ifnot SCAFFOLDS_SCHEMA -->новые поля в `$fillable`/casts (новые миграции в {{PACK_PREFIX}} не предполагаются — проверь, что их и нет).<!-- pack:endif -->
 - **Транзакции**: множественные записи под транзакцией; события/джобы после коммита.
-- **Тесты**: на изменённое поведение есть PHPUnit-тест (проект НЕ на Pest); тесты
+- **Тесты**: на изменённое поведение есть {{TEST_FRAMEWORK}}-тест; тесты
   не ослаблены.
 - **Over-engineering** (дисциплина `quality:code-simplifier`): лишние абстракции «на
   вырост», обёртки в одну строку, дубли существующих утилит, индирекция без второго
@@ -75,8 +74,8 @@ git diff/log).
 
 ## Проверки ({{PACK_PREFIX}})
 
-- `vendor/bin/pint --test` на изменённых файлах (phpstan в проекте НЕ установлен —
-  не пытайся его звать).
+- `vendor/bin/pint --test` на изменённых файлах (статическая проверка проекта —
+  `{{CHECK_CMD}}`, если настроена и установлена; не зови отсутствующий инструмент).
 - Целевые тесты: `{{TEST_RUNNER_CMD}} --filter=<Домен>` (только `{{PHP_RUNNER}}`, не bare `php`).
 - НЕ push, НЕ release, дерево оставь чистым на той же ветке.
 

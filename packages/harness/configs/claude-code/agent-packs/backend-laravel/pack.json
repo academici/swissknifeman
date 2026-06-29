@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "pack": "backend-laravel",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Backend dev-loop для Laravel: агенты slice-builder/test-writer/reviewer (преднагружены архитектурными скиллами), последовательный одно-веточный workflow dev-loop (срез→impl→test→review), SubagentStop review-gate. Обобщено из проверенных overnight-артефактов memster.",
   "stack": {
     "shape": "backend",
@@ -28,6 +28,8 @@
     { "id": "BASE_BRANCH", "q": "Базовая ветка прогонов?", "detect": "git symbolic-ref --short refs/remotes/origin/HEAD", "default": "main" },
     { "id": "CHECK_CMD", "q": "Быстрая команда review-gate (статика)?", "default": "vendor/bin/pint --parallel --test -q" },
     { "id": "ACCESS_LAYER", "q": "Канон access-layer (тонкий контроллер, Action/Repository)?", "kind": "bool", "default": true },
+    { "id": "IS_LARAVEL_PACKAGE", "q": "Composer-пакет (код в src/, без app/)?", "kind": "bool", "detect": "test -d app/Http && echo false || echo true", "default": false },
+    { "id": "SCAFFOLDS_SCHEMA", "q": "Агенты создают миграции/модели (greenfield/пакет), а не пишут поверх готовой схемы?", "kind": "bool", "detect": "test -d app/Models && echo false || echo true", "default": true },
     { "id": "DOCS_DIR", "q": "Куда положить guideline (внутренний AI-гайд, не публичная docs/)?", "default": ".claude/guidelines" },
     { "id": "MODEL_REVIEWER", "q": "Модель reviewer-агента?", "default": "inherit", "enum": ["inherit", "opus", "sonnet", "haiku"] },
     { "id": "MODEL_SLICE_BUILDER", "q": "Модель slice-builder?", "default": "inherit", "enum": ["inherit", "opus", "sonnet", "haiku"] },
@@ -47,12 +49,13 @@
     { "src": "hooks/review-gate.env.ini", "target": ".claude/review-gate.env.ini", "kind": "template", "role": "config", "user_owned": true },
     { "src": "settings/settings.fragment.json", "target": ".claude/settings.json", "kind": "merge", "role": "settings", "merge": "hooks.SubagentStop[] append-if-absent" },
     { "src": "docs/subagents-and-workflows.md", "target": "{DOCS_DIR}/subagents-and-workflows.md", "kind": "template", "role": "doc" },
-    { "src": "rules/api-controllers.md", "target": ".claude/rules/api-controllers.md", "kind": "verbatim", "role": "rule" },
+    { "src": "rules/api-controllers.md", "target": ".claude/rules/api-controllers.md", "kind": "template", "role": "rule" },
     { "src": "rules/migrations.md", "target": ".claude/rules/migrations.md", "kind": "verbatim", "role": "rule" },
     { "src": "rules/tests.md", "target": ".claude/rules/tests.md", "kind": "template", "role": "rule" }
   ],
   "notes": {
-    "project_specific_prose": "Агенты несут инфра-предположения memster-происхождения (защищённый .env, заранее созданная Postgres тестовая БД). Проекты с иной инфрой — отредактируй отрендеренные агенты после install.",
+    "project_type": "Ось проекта — IS_LARAVEL_PACKAGE (код в src/ vs app/) и SCAFFOLDS_SCHEMA (агенты заводят миграции/модели vs пишут поверх готовой схемы). Обе авто-детектятся (app/Http, app/Models) и переопределяются --answer. Пути access-layer, инфра тестов (.env/phpunit.xml vs Testbench) и язык миграций разведены условными блоками pack:if/pack:ifnot.",
+    "project_specific_prose": "Остаточные инфра-предположения (защищённый .env, заранее созданная тестовая БД) актуальны только для laravel-app (IS_LARAVEL_PACKAGE=false). Проекты с иной инфрой — переопредели интервью или отредактируй отрендеренные агенты после install.",
     "verify_workflow": "dev-loop.js использует top-level return/await (Workflow-рантайм) — node --check к нему НЕ применять; проверяй балансом скобок и непустотой.",
     "access_layer": "Для backend-laravel access-layer интринсивен (default true). Отключение (ACCESS_LAYER=false) — ручная правка отрендеренных агентов; placeholder-разводка придёт версией пака."
   }

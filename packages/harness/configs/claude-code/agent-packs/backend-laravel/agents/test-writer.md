@@ -36,9 +36,11 @@ color: cyan
   Pest — `it()/test()`-функции и `expect()`.
 - Тесты гонять **только** `{{TEST_RUNNER_CMD}}`, никогда не bare `php`. Можно
   `{{TEST_RUNNER_CMD}} --filter=<Класс>` для быстрого цикла.
-- Изоляция: `RefreshDatabase`, тестовая БД `{{TEST_DB}}`, существующие фабрики
+<!-- pack:ifnot IS_LARAVEL_PACKAGE -->- Изоляция: `RefreshDatabase`, тестовая БД `{{TEST_DB}}`, существующие фабрики
   (`database/factories`). Если `.env` залочен хуком — не трогай; конфиг тестовой
-  БД — в `phpunit.xml`/`tests/bootstrap.php`.
+  БД — в `phpunit.xml`/`tests/bootstrap.php`.<!-- pack:endif --><!-- pack:if IS_LARAVEL_PACKAGE -->- Изоляция (пакет): тесты через Orchestra Testbench, БД — SQLite in-memory,
+  бизнес-сервисы на Null-драйверах (без реального Redis/S3/`.env`); `RefreshDatabase`
+  поверх Testbench. Конфиг — в `TestCase`/`phpunit.xml` пакета, не в `.env`.<!-- pack:endif -->
 - НЕ `git push`, НЕ release. Коммить тесты в ТЕКУЩУЮ ветку (не создавай ветки).
 
 ## Алгоритм

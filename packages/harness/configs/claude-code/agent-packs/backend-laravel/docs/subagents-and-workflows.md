@@ -88,14 +88,15 @@ args = {
 
 `.claude/hooks/review-gate.sh` гоняет лёгкую проверку на завершении субагента.
 Режим в `.claude/review-gate.env.ini`: `off | warn | strict` (по умолчанию
-**warn** — advisory, не блокирует). Дефолтная проверка — `pint --test` (phpstan в
-{{PACK_PREFIX}} не установлен). `strict` блокирует завершение (exit 2) до починки.
+**warn** — advisory, не блокирует). Дефолтная проверка — `{{CHECK_CMD}}` (быстрая
+статика, обычно `pint --test`; отсутствующий инструмент хук тихо пропускает).
+`strict` блокирует завершение (exit 2) до починки.
 Это deterministic-страховка поверх агента-ревьюера, не замена ему.
 
 ## Жёсткие гейты {{PACK_PREFIX}} (для агентов и workflow)
 
 - Тесты/PHP — только `{{PHP_RUNNER}}` ({{TEST_RUNNER_CMD}}), не bare `php`.
-- Если `.env` залочен хуком — не читать/не править; тестовая БД `{{TEST_DB}}`.
+<!-- pack:ifnot IS_LARAVEL_PACKAGE -->- Если `.env` залочен хуком — не читать/не править; тестовая БД `{{TEST_DB}}`.<!-- pack:endif --><!-- pack:if IS_LARAVEL_PACKAGE -->- Пакет: тесты через Orchestra Testbench (без `php artisan`/`.env`); БД/драйверы — в `TestCase`/`phpunit.xml` пакета.<!-- pack:endif -->
 - Тест-фреймворк проекта — {{TEST_FRAMEWORK}}. Схему/миграции меняй по необходимости среза. Статика (если есть) — {{CHECK_CMD}}.
 - Канон access-layer: тонкий контроллер → Action (запись) / Repository (чтение) →
   DTO/Resource; мутации под `DB::transaction()`; авторизация через policy/gate.

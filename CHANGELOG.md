@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Changed (maind — переименование проекта экосистемы DocVault → Vaulter)
+
+- **Проект `docvault` переименован в `vaulter`** (продукт DocVault → Vaulter). `derive.py`:
+  `FIRST_PARTY_VENDORS` `docvault`→`vaulter`; `DOC_ALIASES` — новый канон `vaulter`,
+  плюс **back-compat алиас `docvault` → `vaulter`** (старые doc-backlinks Brain резолвятся).
+  Примеры/комментарии (`namespaces.py`, `design-notes.md`, скилл `cross-project-optimizer`)
+  обновлены. Хаб-состояние (`config.json` id/scope/path, граф, `.mcp.json` scope `project:vaulter`,
+  память, agent-pack `vaulter-*`) перекатано вне VCS; потребитель `flexcrm` и сам пакет —
+  отдельными репозиториями/PR.
+
 ### Added (maind — opt-in эмит `.mcp.json.example` + гигиена `.gitignore`)
 
 - **`maind deploy`/`sync` при `mcp.emit_example: true`** эмитит рядом с реальным `.mcp.json`

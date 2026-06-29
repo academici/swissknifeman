@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 
 from .common import atomic_write_json, die, parse_args, warn
-from .config import load_brain_projects, load_config
+from .config import load_brain_projects, load_config, normalize_docs_folders
 from .namespaces import in_namespace, namespaces_of
 
 # Поля, которые обновляются из brain при синке (остальное — maind-only, сохраняем).
@@ -42,9 +42,25 @@ def match_cwd(env, config, cwd=None):
     return None
 
 
+def _warn_visibility_changes(pid, cur_folders, inc_folders):
+    """Предупредить, если синк меняет visibility doc-папки существующего проекта. Частый
+    признак — протухший brain `.projects.json` (его надо регенерировать из frontmatter
+    control-нот перед синком; источник истины visibility — именно frontmatter). brain при
+    этом всё равно «выигрывает» (поле затирается) — warn лишь делает изменение заметным."""
+    cur_vis = {f["id"]: f["visibility"] for f in normalize_docs_folders(cur_folders)}
+    for f in normalize_docs_folders(inc_folders):
+        old = cur_vis.get(f["id"])
+        if old is not None and old != f["visibility"]:
+            warn(f"проект '{pid}': docs-папка '{f['id']}' visibility {old}→{f['visibility']} "
+                 f"— если неожиданно, регенерируйте brain .projects.json из frontmatter")
+
+
 def sync_from_brain(env, config, brain_path):
     """Импорт/обновление проектов из brain .projects.json. Идемпотентно, мерджит по
-    id. Возвращает (config, stats); config НЕ записывается (это делает write_config)."""
+    id. Возвращает (config, stats); config НЕ записывается (это делает write_config).
+    Источник истины каталога/visibility — frontmatter control-нот Brain → `.projects.json`;
+    maind лишь отражает их (brain-поля затираются). При смене visibility существующего
+    проекта — warn (защита от синка из протухшего кэша; см. `_warn_visibility_changes`)."""
     incoming = load_brain_projects(brain_path)
     existing = {p.get("id"): p for p in (config.get("projects") or [])}
     order = [p.get("id") for p in (config.get("projects") or [])]
@@ -53,6 +69,8 @@ def sync_from_brain(env, config, brain_path):
         pid = inc["id"]
         if pid in existing:
             cur = existing[pid]
+            if inc.get("docs_folders") is not None:
+                _warn_visibility_changes(pid, cur.get("docs_folders"), inc["docs_folders"])
             for f in BRAIN_SOURCED:
                 if inc.get(f) is not None:
                     cur[f] = inc[f]

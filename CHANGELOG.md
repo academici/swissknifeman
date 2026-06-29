@@ -18,6 +18,17 @@
 - **Связаны с картой.** `requires: [local-topology]`; `local-topology` получил их в `produces_for` +
   заметку про fallback-резолюцию узла без `~/.swissknifeman/topology.json`.
 
+### Added (maind — синк-защита visibility + явная модель владения каталогом)
+
+- **`sync_from_brain` предупреждает о смене visibility** doc-папки существующего проекта
+  (`_warn_visibility_changes`) — частый признак протухшего brain `.projects.json` (его надо
+  регенерировать из frontmatter перед синком). brain по-прежнему «выигрывает» (поле затирается):
+  источник истины каталога/visibility — frontmatter control-нот → `.projects.json` → `config.json`.
+- **Явная модель «три слоя + владелец факта»** в `docs/guide/config.md`: frontmatter Brain (источник)
+  → `.projects.json` (gitignored кэш) → `config.json` (импорт + maind-поля). Разведена семантика
+  `repo` (GitHub-slug) ≠ `local_path` (путь к коду) и инверсия brain-схемы (`repo` = путь → `local_path`
+  при импорте). `config.example.json` — каноничный `docs_folders` `{id,vault,repo,visibility}`.
+
 ### Added
 
 - **`laravel-architecture/eloquent-accessors`** (новый скилл) — канон современных Eloquent

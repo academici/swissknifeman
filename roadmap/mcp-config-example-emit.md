@@ -8,8 +8,9 @@
 ## Проблема
 
 `maind deploy`/`sync` (`lib/maind/mcpconfig.py`, `lib/maind/deploy.py`) пишет реальные
-`.mcp.json` / `.cursor/mcp.json` / `.vscode/mcp.json` с **machine-specific абсолютными путями**
-(`<abs>/packages/maind/bin/maind`, путь проекта в Serena). Сейчас тулинг:
+`.mcp.json` / `.cursor/mcp.json` / `.vscode/mcp.json`. Путь к бинарю `maind` уже **индиректирован**
+(`${MAIND_BIN:-maind}`, см. `deploy.py::_maind_entry`) — остаётся **machine-specific абсолютный путь
+Serena** `--project <abs>`. Сейчас тулинг:
 
 - НЕ создаёт парный `<файл>.example` с плейсхолдерами;
 - НЕ дописывает реальный файл в `.gitignore`.

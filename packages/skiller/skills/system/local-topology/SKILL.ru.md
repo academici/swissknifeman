@@ -7,7 +7,7 @@ risk: read
 persona: architect
 tags: [topology, architecture, navigation, meta, cross-project]
 requires: []
-produces_for: [cross-project-coordinator, shared-memory]
+produces_for: [cross-project-coordinator, shared-memory, brain-locator, swissknifeman-locator]
 sha256: ""
 adapters: [claude, cursor, fable]
 ---
@@ -85,6 +85,10 @@ skiller topology show --json
 skiller topology init
 ```
 
+Либо дойти до конкретного узла **без** карты: per-node локаторы резолвят свой узел
+через `maind`/`$HOME` даже при отсутствии `topology.json` — `brain-locator`
+(узел `docs-hub`) и `swissknifeman-locator` (узел `skills-hub`).
+
 ---
 
 ## Навигация
@@ -157,3 +161,5 @@ skiller status        # состояние текущего проекта
 
 - `cross-project-coordinator` (бакет system) — обход связанных проектов на базе этой карты (read-only анализ дублей/расхождений).
 - `shared-memory` (бакет system) — общий «мозг» группы; резолвит участников через ту же топологию.
+- `brain-locator` (бакет system) — drill-down в узел `docs-hub` (Brain-волт) с fallback-резолюцией без карты.
+- `swissknifeman-locator` (бакет system) — drill-down в узел `skills-hub` (swissknifeman) с fallback-резолюцией без карты.

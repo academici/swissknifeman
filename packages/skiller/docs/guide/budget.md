@@ -295,10 +295,12 @@ flowchart LR
   end
   subgraph system["system"]
     agent_packs["agent-packs<br/>⊕102 ↻1991"]:::hot
+    brain_locator["brain-locator<br/>⊕40 ↻1145"]:::mild
     cross_project_coordinator["cross-project-coordinator<br/>⊕70 ↻1224"]:::warm
-    local_topology["local-topology<br/>⊕53 ↻1072"]:::mild
+    local_topology["local-topology<br/>⊕53 ↻1190"]:::mild
     session_observer["session-observer<br/>⊕99 ↻1411"]:::hot
     shared_memory["shared-memory<br/>⊕105 ↻1242"]:::hot
+    swissknifeman_locator["swissknifeman-locator<br/>⊕46 ↻1220"]:::mild
   end
   agent_design -->|requires| architecture
   api_design -->|requires| data_schema
@@ -307,6 +309,7 @@ flowchart LR
   attribute_authorization -->|requires| laravel_permissions
   backend_type_sync -->|requires| wayfinder
   botkit -->|requires| laravel
+  brain_locator -->|requires| local_topology
   brd -->|requires| business_process
   build_loop -->|requires| config_conventions
   build_loop -->|requires| mcp_blender
@@ -380,6 +383,7 @@ flowchart LR
   security_design -->|requires| architecture
   session_observer -->|requires| shared_memory
   shared_memory -->|requires| local_topology
+  swissknifeman_locator -->|requires| local_topology
   tech_stack_selection -->|requires| brd
   test_isolation_guard -->|requires| laravel_testing
   to_issues -->|requires| github_flow
@@ -395,7 +399,7 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 197 скиллов · ⊕ always **11828** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 430398 ток · ⌥ snippets 158029 ток.
+**Итого:** 199 скиллов · ⊕ always **11914** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 432881 ток · ⌥ snippets 158029 ток.
 
 ## По бакетам
 
@@ -407,11 +411,11 @@ flowchart LR
 | `quality` | 10 | 628 | 16415 | 7125 |
 | `php-packages` | 9 | 582 | 4618 | 489 |
 | `oss-dev` | 10 | 532 | 12204 | 4313 |
+| `system` | 7 | 515 | 9423 | 797 |
 | `php` | 13 | 503 | 15538 | 26763 |
 | `laravel-architecture` | 5 | 483 | 7905 | 7460 |
 | `devops` | 11 | 451 | 7654 | 15388 |
 | `blender-modeling` | 6 | 429 | 7727 | 11772 |
-| `system` | 5 | 429 | 6940 | 797 |
 | `pm` | 10 | 373 | 28759 | 197 |
 | `founder` | 10 | 343 | 13127 | 494 |
 | `laravel-testing` | 4 | 283 | 6868 | 14531 |

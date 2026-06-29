@@ -226,7 +226,7 @@
     },
     "system": {
       "description": "Local environment topology: the three hub nodes (Brain vault, swissknifeman, projects base) and how agents navigate between projects and their docs",
-      "count": 5,
+      "count": 7,
       "status": "active"
     }
   },
@@ -3976,6 +3976,27 @@
       "source": "local"
     },
     {
+      "name": "brain-locator",
+      "bucket": "system",
+      "path": "skills/system/brain-locator/SKILL.md",
+      "version": "0.1.0",
+      "description": "Reach the Brain vault (ecosystem Obsidian docs) from a project — non-hardcoded path resolution (maind/$HOME), own and linked-project docs, sync",
+      "sha256": "ee2f87df7e3c7d2391dbb41168c9b70c048bf43899f8a3383423834777eaf1f5",
+      "content_sha256": "c65206e4f05be4e7eefae6c3007929c815fc1a5f25fb4f1c8d2516e2d865c719",
+      "tags": [
+        "brain",
+        "vault",
+        "docs",
+        "navigation",
+        "locator",
+        "obsidian"
+      ],
+      "requires": [
+        "local-topology"
+      ],
+      "source": "local"
+    },
+    {
       "name": "cross-project-coordinator",
       "bucket": "system",
       "path": "skills/system/cross-project-coordinator/SKILL.md",
@@ -4007,8 +4028,8 @@
       "path": "skills/system/local-topology/SKILL.md",
       "version": "0.1.0",
       "description": "Root map of the local dev environment — three hub nodes (Brain vault, swissknifeman, projects base) and navigation between projects, their code and docs. Read from ~/.swissknifeman/topology.json",
-      "sha256": "a199f6e87d6cd0a45c59554355986574df4504f96b42d1b55fd395d46842a8f4",
-      "content_sha256": "3426a71ee68a123066527871fcbb19bf811cf470a313fbefccd763168ef34aac",
+      "sha256": "7dfeb15b3da7a9eb201b3407893b36511acabce473494e6ee6adeaf11ded9f89",
+      "content_sha256": "5300e0f1e05a65f5cf06dbfc1a94079d37859cc564ccbdabe2de461c4e9d6589",
       "tags": [
         "topology",
         "architecture",
@@ -4018,7 +4039,9 @@
       ],
       "produces_for": [
         "cross-project-coordinator",
-        "shared-memory"
+        "shared-memory",
+        "brain-locator",
+        "swissknifeman-locator"
       ],
       "source": "local"
     },
@@ -4059,6 +4082,27 @@
         "recall",
         "context",
         "coordination"
+      ],
+      "requires": [
+        "local-topology"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "swissknifeman-locator",
+      "bucket": "system",
+      "path": "skills/system/swissknifeman-locator/SKILL.md",
+      "version": "0.1.0",
+      "description": "Reach swissknifeman (skills node) from an external repo — non-hardcoded path resolution, root config.json as registry of linked projects, project↔hub link scheme",
+      "sha256": "f1cf7d6069a44d1d995db7cd6dece6661a569ae366e064023a76ad68019a49b1",
+      "content_sha256": "b7ef6bdc8ae817ad1be0d400e70e70fa2965b635cf1f75002436acb0cfff7281",
+      "tags": [
+        "swissknifeman",
+        "skills",
+        "registry",
+        "navigation",
+        "locator",
+        "ecosystem"
       ],
       "requires": [
         "local-topology"

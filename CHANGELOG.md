@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Added (skiller — локаторы экосистемы: навигация агента к узлам Brain/swissknifeman)
+
+- **Два скилла-локатора** в бакете `system` (on-trigger, НЕ в CORE — резидентный токен-бюджет не растёт):
+  `system/brain-locator` (из любого проекта дойти до Brain-волта) и `system/swissknifeman-locator`
+  (из внешнего репо дойти до управляющего монорепо). Цель — агент больше не угадывает, где узлы экосистемы.
+- **Нехардкод-резолюция пути.** brain-locator повторяет канон `maind` (`projects.py::brain_path`):
+  `integrations.brain.path` → проект `id==brain` → `$MAIND_BRAIN_VAULT` → кандидаты от `$HOME`
+  (`~/Vaults/Brain` первым); swissknifeman-locator — через установленный бинарь (`readlink` до репо) →
+  `$SWISSKNIFEMAN_ROOT` → `$HOME`-кандидаты. У каждого готовая `cd`-команда и проверка-признак узла.
+- **Тезисы связи.** brain-locator несёт маркер «скилл подключён → проект синхронен на Brain», объясняет
+  каталог `.projects.json` / control-ноты / `CLAUDE.md` / wikilinks; swissknifeman-locator — `config.json`
+  как реестр связанных проектов (двусторонность) и опознание связи по
+  `.swissknifeman/config.json` / `skills-lock.json` / `enabledPlugins`.
+- **Связаны с картой.** `requires: [local-topology]`; `local-topology` получил их в `produces_for` +
+  заметку про fallback-резолюцию узла без `~/.swissknifeman/topology.json`.
+
 ### Added
 
 - **`laravel-architecture/eloquent-accessors`** (новый скилл) — канон современных Eloquent

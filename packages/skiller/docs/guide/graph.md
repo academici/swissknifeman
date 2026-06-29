@@ -184,10 +184,12 @@ flowchart LR
     testing_safety_report["testing-safety-report"]
   end
   subgraph system["system"]
+    brain_locator["brain-locator"]
     cross_project_coordinator["cross-project-coordinator"]
     local_topology["local-topology"]
     session_observer["session-observer"]
     shared_memory["shared-memory"]
+    swissknifeman_locator["swissknifeman-locator"]
   end
   agent_design -->|requires| architecture
   api_design -->|requires| data_schema
@@ -196,6 +198,7 @@ flowchart LR
   attribute_authorization -->|requires| laravel_permissions
   backend_type_sync -->|requires| wayfinder
   botkit -->|requires| laravel
+  brain_locator -->|requires| local_topology
   brd -->|requires| business_process
   build_loop -->|requires| config_conventions
   build_loop -->|requires| mcp_blender
@@ -269,6 +272,7 @@ flowchart LR
   security_design -->|requires| architecture
   session_observer -->|requires| shared_memory
   shared_memory -->|requires| local_topology
+  swissknifeman_locator -->|requires| local_topology
   tech_stack_selection -->|requires| brd
   test_isolation_guard -->|requires| laravel_testing
   to_issues -->|requires| github_flow
@@ -365,7 +369,7 @@ flowchart LR
   verify_claims -.->|feeds| tech_stack_selection
 ```
 
-**В графе:** 123 скиллов, 89 рёбер requires, 85 рёбер produces_for.
+**В графе:** 125 скиллов, 91 рёбер requires, 85 рёбер produces_for.
 
 ## Изолированные скиллы (74)
 

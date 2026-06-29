@@ -2,6 +2,24 @@
 
 ## [Unreleased]
 
+### Changed (harness — agent-pack `backend-laravel` 0.5.0: режим Laravel-пакета/greenfield)
+
+- **Пак `backend-laravel` теперь ложится и на Laravel-ПАКЕТ, и на greenfield, не только на
+  established-app.** Две авто-детектящиеся интервью-переменные: `IS_LARAVEL_PACKAGE` (код в `src/`
+  vs `app/`, детект `test -d app/Http`) и `SCAFFOLDS_SCHEMA` (агенты заводят миграции/модели vs
+  пишут поверх готовой схемы, детект `test -d app/Models`). Пути access-layer, инфра тестов
+  (Testbench + SQLite/Null vs `.env`/`phpunit.xml`/`TEST_DB`) и язык миграций разведены условными
+  блоками. Первопричина инцидента: пак раскатали в greenfield-пакет `chatom` — на него попали
+  `app/`-пути (ложно-зелёный access-gate: греп по несуществующим каталогам) и запрет миграций
+  (ломал scaffold). Затронуты `packages/harness/configs/claude-code/agent-packs/backend-laravel/**`.
+- **Движок `agentpacks.py`: условие `<!-- pack:ifnot KEY -->…<!-- pack:endif -->`** (зеркало
+  `pack:if`, держит блок при falsy/отсутствующем answer) — нужно для «иначе»-ветки (логических
+  операторов в условиях нет). Тест `tests/test_agentpacks.py::test_conditional_if_and_ifnot`.
+- **reviewer.md доведён до деуниверсализации 0.3.0** (был пропущен): зашитое «есть PHPUnit-тест
+  (проект НЕ на Pest)» → `{{TEST_FRAMEWORK}}`; ложное «phpstan не установлен» → `{{CHECK_CMD}}`.
+- **`dev-loop.js`: guard от args-строки** (`typeof args === 'string' ? JSON.parse`) — named-workflow
+  мог доставить `args` JSON-строкой → тихо «no slices provided».
+
 ### Added (skiller — CORE-скилл `research/query-craft`: дисциплина формулировки поисковых запросов)
 
 - **Новый скилл `research/query-craft`** — как ФОРМУЛИРОВАТЬ запрос к поисковому/доковому движку

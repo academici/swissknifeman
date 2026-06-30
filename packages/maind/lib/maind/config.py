@@ -17,7 +17,7 @@ from .common import (detect_project_type, die, docs_visibility_for, sanitize,
                      warn)
 from .constants import (CODE_GRAPH_DEFAULTS, GRAPH_ADAPTERS, HEARTBEAT_DEFAULT_MS,
                         LEGACY_GRAPH_ADAPTERS, MAX_IDLE_DEFAULT_MS, MEMORY_HTTP_PORT,
-                        MEMORY_STREAM_PORT, SERVICE_NAME)
+                        MEMORY_STREAM_PORT, PERPLEXITY_WEB_DEFAULTS, SERVICE_NAME)
 
 # project.id попадает в scope-маркер памяти `[[s:project:<id>]]` (memory.mark_scope) и в
 # имя namespace — поэтому ограничиваем безопасным алфавитом, иначе спецсимволы (']', пробел,
@@ -231,7 +231,14 @@ def merge_defaults(config):
     config["projects"] = config.get("projects") or []
     config["namespaces"] = config.get("namespaces") or {}
     config["integrations"] = config.get("integrations") or {}
-    config["mcp"] = config.get("mcp") or {}
+    mcp = config.get("mcp") or {}
+    # perplexity_web — фолбэк-дефолты ТОЛЬКО если секция задана (иначе не раздуваем конфиг
+    # тем, кто perplexity-web не включал; disabled-by-default через PERPLEXITY_WEB_DEFAULTS).
+    if isinstance(mcp.get("perplexity_web"), dict):
+        pw = mcp["perplexity_web"]
+        for k, v in PERPLEXITY_WEB_DEFAULTS.items():
+            pw.setdefault(k, v)
+    config["mcp"] = mcp
     return config
 
 

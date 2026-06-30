@@ -39,6 +39,10 @@
   `.claude/handoffs/YYYY-MM-DD-<topic>.md` (индексируется maind). RU→EN перестамплены, `skiller registry` прогнан.
   Аудит рекомендовал `risk:draft→stable` — **отклонено** по верификации (`stable` не в
   `RISK_VALUES={read,draft,write,external}` → сломал бы validate; зрелость — отдельное поле `level`, не `risk`).
+- **F8 budget-governance — `skiller budget --check-core`** (+ `--strict` для CI) и константа
+  `RESIDENT_BUDGET_TARGET=600` (config.py): гейт резидентного ⊕ tier-0-бюджета `CORE_SKILLS` (грузится в КАЖДЫЙ
+  запрос) против таргета; выведен в хвост `validate.sh` (информационно). Замер вскрыл: резидент CORE сейчас
+  **592/600 ток** — у потолка (комментарий обещал ~480), так что гейт против тихого роста ядра предметен.
 
 ### Changed (skiller — `perplexity-web-mcp` v1.3.0: демон-конкурентность в скиллах)
 

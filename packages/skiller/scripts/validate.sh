@@ -908,3 +908,8 @@ PY
 "$REPO_ROOT/scripts/check-translations.sh" --strict || {
   echo "ERROR: протухшие переводы SKILL.ru.md→SKILL.md (regen + check-translations.sh --stamp)" >&2
   exit 1; }
+
+# --- 15. CORE резидентный бюджет (информационно, не валит сборку) ---------------
+# ⊕ tier-0 CORE_SKILLS грузится в КАЖДЫЙ запрос — видимость роста ядра против target.
+# Жёсткий гейт для CI: `skiller budget --check-core --strict`.
+bash "$REPO_ROOT/bin/skiller" budget --check-core 2>/dev/null || true

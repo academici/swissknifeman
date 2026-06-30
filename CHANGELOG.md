@@ -43,6 +43,14 @@
   `RESIDENT_BUDGET_TARGET=600` (config.py): гейт резидентного ⊕ tier-0-бюджета `CORE_SKILLS` (грузится в КАЖДЫЙ
   запрос) против таргета; выведен в хвост `validate.sh` (информационно). Замер вскрыл: резидент CORE сейчас
   **592/600 ток** — у потолка (комментарий обещал ~480), так что гейт против тихого роста ядра предметен.
+- **D4 — 5 новых production-readiness-скиллов** (из ретроспективы chatom; локальные, двуязычные RU→EN, 205 скиллов):
+  `php:transactional-outbox-relay` (persist+outbox в одной tx, единственный владелец retry, идемпотентность,
+  after-commit), `php:production-readiness-checklist` (атомарность/гонки/config-honesty/cursor/queue-семантика —
+  класс дефектов, который маскируют зелёные тесты), `php:cursor-pagination-design` (keyset по non-nullable ключу,
+  composite-tiebreak), `php:namespace-refactor-safety` (трёхфаза alias→use→rename, префиксные ловушки, контракт-seam),
+  `laravel-architecture:config-driven-abstraction` (Registry+Builder, config:cache-safe, per-variant ≠ runtime `$table`).
+  Ретроспективные #5 (state-machine-race) и #6 (env-driven-test) **свёрнуты** в production-readiness-checklist +
+  dev-loop env-preflight (анти-bloat: не дублировать существующие `enum-state-machine`/`db-test-preflight`).
 
 ### Changed (skiller — `perplexity-web-mcp` v1.3.0: демон-конкурентность в скиллах)
 

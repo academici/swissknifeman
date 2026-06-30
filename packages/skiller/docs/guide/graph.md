@@ -375,7 +375,7 @@ flowchart LR
 
 **В графе:** 126 скиллов, 91 рёбер requires, 86 рёбер produces_for.
 
-## Изолированные скиллы (74)
+## Изолированные скиллы (79)
 
 Скиллы без связей `requires`/`produces_for` — самодостаточны.
 
@@ -395,7 +395,7 @@ flowchart LR
 | frontend-vite | `vite`, `vitepress` |
 | frontend-vue | `pinia`, `pinia-stores`, `vitest-vue`, `vue-best-practices`, `vue-composition-api`, `vue-dynamic-icons`, `vue-router-best-practices`, `vueuse-functions` |
 | general | `compact-responses`, `git-safety`, `naming-conventions`, `packages-stack`, `skills-ssot`, `writing-style` |
-| laravel-architecture | `eloquent-accessors`, `enum-attributes`, `enum-state-machine`, `laravel-subagents` |
+| laravel-architecture | `config-driven-abstraction`, `eloquent-accessors`, `enum-attributes`, `enum-state-machine`, `laravel-subagents` |
 | laravel-data-layer | `laravel-broadcasting` |
 | laravel-extras | `medialibrary`, `pennant-development`, `spatie-settings` |
 | laravel-livewire | `livewire-blade-attributes` |
@@ -403,7 +403,7 @@ flowchart LR
 | legal | `legal-super-skill` |
 | marketing | `marketing-super-skill` |
 | operator | `operations-cx-super-skill` |
-| php | `code-style-spatie`, `laravel-best-practices`, `named-arguments`, `pao`, `php-naming-conventions`, `php-patterns`, `php-upgrade-checklist` |
+| php | `code-style-spatie`, `cursor-pagination-design`, `laravel-best-practices`, `named-arguments`, `namespace-refactor-safety`, `pao`, `php-naming-conventions`, `php-patterns`, `php-upgrade-checklist`, `production-readiness-checklist`, `transactional-outbox-relay` |
 | php-packages | `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages` |
 | pm | `pm-super-skill` |
 | research | `research-knowledge-super-skill` |

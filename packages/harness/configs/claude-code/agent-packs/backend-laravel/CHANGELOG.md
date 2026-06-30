@@ -4,6 +4,18 @@
 запись помечает затронутый install-файл, чтобы апгрейдящий агент сопоставил
 изменение с конкретным файлом проекта.
 
+## [0.6.0] - 2026-06-30
+
+### Added
+
+- **Read-only recon-субагенты** (изолированная разведка → main-контекст не пухнет, наверх только сводка;
+  чтения субагента не считаются в окно оркестратора): `{prefix}-route-mapper` (роуты→контроллеры→Action),
+  `{prefix}-db-impact` (затронутые модели/миграции/связи/индексы), `{prefix}-blade-review` (экранирование/N+1
+  во вьюхах), `{prefix}-test-verifier` (прогон тестов → СЖАТАЯ сводка, verbose-вывод остаётся в субагенте),
+  `{prefix}-security-review` (auth/policy/инъекции/секреты/IDOR). Все `optional`, модель `{{MODEL_RECON}}`
+  (дефолт `haiku`). Операционализирует «тяжёлое чтение — в субагент» (skill `context-economy` §8). Новые
+  install-файлы `.claude/agents/{prefix}-{route-mapper,db-impact,blade-review,test-verifier,security-review}.md`.
+
 ## [0.5.0] - 2026-06-30
 
 ### Added

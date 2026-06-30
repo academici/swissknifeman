@@ -151,7 +151,7 @@ flowchart LR
     git_safety["git-safety<br/>⊕71 ↻615"]:::warm
     grill_with_docs["grill-with-docs<br/>⊕84 ↻1053"]:::warm
     implement["implement<br/>⊕75 ↻515"]:::warm
-    mcp_advisor["mcp-advisor<br/>⊕91 ↻1599"]:::warm
+    mcp_advisor["mcp-advisor<br/>⊕91 ↻1618"]:::warm
     naming_conventions["naming-conventions<br/>⊕73 ↻1338"]:::warm
     packages_stack["packages-stack<br/>⊕72 ↻460"]:::warm
     project_map["project-map<br/>⊕70 ↻558"]:::warm
@@ -279,7 +279,7 @@ flowchart LR
     testing_safety_report["testing-safety-report<br/>⊕66 ↻668"]:::warm
   end
   subgraph research["research"]
-    query_craft["query-craft<br/>⊕116 ↻2616"]:::hot
+    query_craft["query-craft<br/>⊕116 ↻3066"]:::hot
     research_knowledge_super_skill["research-knowledge-super-skill<br/>⊕165 ↻17401"]:::hot
   end
   subgraph roles["roles"]
@@ -400,13 +400,13 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 200 скиллов · ⊕ always **12030** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 435564 ток · ⌥ snippets 158029 ток.
+**Итого:** 200 скиллов · ⊕ always **12030** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 436033 ток · ⌥ snippets 158029 ток.
 
 ## По бакетам
 
 | Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ snippets |
 |---|--:|--:|--:|--:|
-| `general` | 19 | 1178 | 17143 | 5120 |
+| `general` | 19 | 1178 | 17162 | 5120 |
 | `architect` | 14 | 747 | 38470 | 7503 |
 | `frontend-vue` | 11 | 726 | 23106 | 7058 |
 | `quality` | 10 | 628 | 16415 | 7125 |
@@ -420,7 +420,7 @@ flowchart LR
 | `pm` | 10 | 373 | 28759 | 197 |
 | `founder` | 10 | 343 | 13127 | 494 |
 | `laravel-testing` | 4 | 283 | 6868 | 14531 |
-| `research` | 2 | 281 | 20017 | 0 |
+| `research` | 2 | 281 | 20467 | 0 |
 | `frontend-linting` | 4 | 275 | 5276 | 2914 |
 | `operator` | 6 | 252 | 27108 | 90 |
 | `frontend-backend` | 3 | 244 | 4726 | 7459 |

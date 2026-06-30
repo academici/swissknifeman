@@ -55,7 +55,7 @@ Where a CLI suffices (`gh`, `git`), prefer the CLI over a server.
 | **playwright** | npx `@playwright/mcp --headless` | frontend with UI, E2E tests, page screenshots | browser control, layout checks | backend/CLI/library without UI | Node + browser download |
 | **github** | http | active GitHub work: PR/issue/Actions/releases, maintainer/reviewer role | rich platform integration as tools | not on GitHub; routine review (`gh` CLI is enough — cheaper, see `gh-review`) | auth token + permissions |
 | **fetch** | uvx `mcp-server-fetch` | need fresh web docs/external API not covered by context7 | load URLs/pages into context | context7 already covers the docs | uvx deps, network |
-| **perplexity** | npx `@perplexity-ai/mcp-server` (+`PERPLEXITY_API_KEY`) | verify 'current facts/market/still-current/modern approach' beyond library docs; research | web search with synthesis and citations | context7 (docs) or a known URL (fetch) suffices; no key → keyless `perplexity-web` | Node + API key |
+| **perplexity** | npx `@perplexity-ai/mcp-server` (+`PERPLEXITY_API_KEY`) | verify 'current facts/market/still-current/modern approach' beyond library docs; research | web search with synthesis and citations | context7 (docs) or a known URL (fetch) suffices; no key → keyless `perplexity-web` (daemon v1.3.0: parallel tabs, per-project isolation via `--pool=<project>`) | Node + API key |
 | **sequential-thinking** | npx | complex multi-step planning/reasoning | structured "reasoning scratchpad" | routine/short tasks | Node + tokens per call |
 | **filesystem** | npx | rare: multi-root / special FS access | extended file access | **usually redundant** — Claude Code has native FS access | Node |
 | **memory (generic)** | npx `server-memory` | **in the academici ecosystem — do NOT use** | — | always: memory goes through the `maind` hub | conflicts with the memory canon |
@@ -96,4 +96,4 @@ docs/API are needed; `sequential-thinking` — for complex tasks. Keep the base 
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 102b4cf6069dc4c9e821d140405dee2939d3b7fc39797dc054cb43fd7dc5b090 -->
+<!-- ru-source-sha256: 648d8c8e5996400d33fe904340851348e4ac1822c394292ce8437048a613bf01 -->

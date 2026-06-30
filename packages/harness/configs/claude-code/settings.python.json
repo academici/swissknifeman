@@ -20,6 +20,16 @@
     "ask": [
       "Bash(pip uninstall *)",
       "Bash(poetry publish *)"
+    ],
+    "deny": [
+      "Read(**/__pycache__/**)",
+      "Read(**/.venv/**)",
+      "Read(**/.mypy_cache/**)",
+      "Read(**/.pytest_cache/**)",
+      "Read(**/.ruff_cache/**)",
+      "Read(**/*.egg-info/**)",
+      "Read(dist/**)",
+      "Read(build/**)"
     ]
   }
 }

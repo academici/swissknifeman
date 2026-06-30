@@ -57,7 +57,7 @@ flowchart LR
   subgraph devops["devops"]
     ci_cd["ci-cd<br/>⊕46 ↻987"]:::mild
     db_test_preflight["db-test-preflight<br/>⊕88 ↻1457"]:::warm
-    docker["docker<br/>⊕44 ↻100"]:::mild
+    docker["docker<br/>⊕56 ↻340"]:::mild
     docker_dev_prod["docker-dev-prod<br/>⊕36 ↻818"]:::mild
     docker_php["docker-php<br/>⊕34 ↻684"]:::cool
     docker_postgres["docker-postgres<br/>⊕36 ↻718"]:::mild
@@ -145,7 +145,7 @@ flowchart LR
     anti_drift["anti-drift<br/>⊕37 ↻1078"]:::mild
     compact_responses["compact-responses<br/>⊕51 ↻385"]:::mild
     complex_task_orchestrator["complex-task-orchestrator<br/>⊕38 ↻543"]:::mild
-    context_economy["context-economy<br/>⊕61 ↻1146"]:::mild
+    context_economy["context-economy<br/>⊕61 ↻1447"]:::mild
     cross_layer_change_checklist["cross-layer-change-checklist<br/>⊕31 ↻403"]:::cool
     git_commit_rules["git-commit-rules<br/>⊕24 ↻843"]:::cool
     git_safety["git-safety<br/>⊕71 ↻615"]:::warm
@@ -155,7 +155,7 @@ flowchart LR
     naming_conventions["naming-conventions<br/>⊕73 ↻1338"]:::warm
     packages_stack["packages-stack<br/>⊕72 ↻460"]:::warm
     project_map["project-map<br/>⊕70 ↻558"]:::warm
-    session_handoff["session-handoff<br/>⊕35 ↻441"]:::mild
+    session_handoff["session-handoff<br/>⊕35 ↻447"]:::mild
     skills_ssot["skills-ssot<br/>⊕30 ↻1514"]:::cool
     spec_interview["spec-interview<br/>⊕49 ↻649"]:::mild
     task_brief_template["task-brief-template<br/>⊕67 ↻1187"]:::warm
@@ -400,13 +400,13 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 200 скиллов · ⊕ always **12030** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 436344 ток · ⌥ snippets 158029 ток.
+**Итого:** 200 скиллов · ⊕ always **12042** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 436891 ток · ⌥ snippets 158029 ток.
 
 ## По бакетам
 
 | Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ snippets |
 |---|--:|--:|--:|--:|
-| `general` | 19 | 1178 | 17386 | 5120 |
+| `general` | 19 | 1178 | 17693 | 5120 |
 | `architect` | 14 | 747 | 38470 | 7503 |
 | `frontend-vue` | 11 | 726 | 23106 | 7058 |
 | `quality` | 10 | 628 | 16415 | 7125 |
@@ -415,7 +415,7 @@ flowchart LR
 | `system` | 7 | 515 | 9423 | 797 |
 | `php` | 13 | 503 | 15538 | 26763 |
 | `laravel-architecture` | 5 | 483 | 7905 | 7460 |
-| `devops` | 11 | 451 | 7654 | 15388 |
+| `devops` | 11 | 463 | 7894 | 15388 |
 | `blender-modeling` | 6 | 429 | 7727 | 11772 |
 | `pm` | 10 | 373 | 28759 | 197 |
 | `founder` | 10 | 343 | 13127 | 494 |

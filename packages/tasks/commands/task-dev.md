@@ -1,0 +1,24 @@
+---
+description: "Задача РАЗРАБОТКИ: адаптивный dev-loop (срез→impl→tests-to-green→risk-адаптивный review) на Lean-tiered моделях. Пинит Opus/high для планирования; субагенты — по риску среза."
+argument-hint: "[что строим: бриф / срезы / ссылка на план]"
+model: opus
+effort: high
+---
+Это задача РАЗРАБОТКИ. Ввод пользователя: «$ARGUMENTS».
+
+Профиль `dev` (token-экономный, Lean-tiered). Модель/effort этой команды уже запинены (Opus/high) —
+не переключай вручную.
+
+1. **Планируй** на текущей (Opus) модели: разложи задачу на вертикальные срезы
+   (model→service→controller→test), каждый со своим риском `LOW|MED|HIGH` (blast-radius: concurrency /
+   transactions / data-integrity / queue-semantics / connectors). Срез = завершённая вертикаль с проводкой
+   и тестом, а не горизонтальная нарезка.
+2. **Если установлен agent-pack** (`.claude/workflows/*-dev-loop.js` + агенты `*-slice-builder/test-writer/
+   reviewer`) — гони срезы через него: impl→tests-to-green→risk-адаптивный review-gate. Модель/effort
+   субагентов уже заданы по риску (Sonnet impl, Opus+xhigh на HIGH-review, Haiku тривиал) и перебивают сессию.
+   Передай срезы как `args.slices`.
+3. **Нет пака** — работай последовательно сам, ОДИН срез за раз на ОДНОЙ ветке: impl → тесты до зелёного →
+   self-review под риск (на HIGH — adversarial: перечисли failure-modes → построй сценарий сбоя).
+4. **Fan-out НЕ используй на coding** (только на research-фазе — он ≈15× токенов и оправдан лишь на
+   breadth-first research). Гейты строгие; любая обходка в тесте → `[POSSIBLE-DEFECT]`.
+5. Дерево чистое; durable план-файл — primary source. НЕ git push / PR без явной просьбы.

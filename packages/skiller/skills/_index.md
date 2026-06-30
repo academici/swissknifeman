@@ -76,7 +76,7 @@
 |:--|:--|:--|
 | `ci-cd` | GitHub Actions / GitLab CI pipelines for Laravel: lint, tests, build, release + security … | `ci`, `github-actions`, `gitlab-ci`, `laravel`, `devops`, `release`, `security`, `coverage` |
 | `db-test-preflight` | Pre-flight check of test DB (Postgres in Docker) BEFORE running tests: container up (dock… | `postgres`, `docker`, `testing`, `preflight`, `devops`, `ci`, `isolation` |
-| `docker` | Advanced Docker containerization expertise: container optimization, security hardening, m… | `docker`, `devops` |
+| `docker` | Router for Dockerizing a Laravel/PHP app: directs to the right sub-skill (PHP image, Post… | `docker`, `devops`, `router` |
 | `docker-dev-prod` | Split docker-compose into dev (build + bind-mount) and prod (prebuilt image + named volum… | `docker`, `devops`, `compose`, `laravel` |
 | `docker-php` | Production PHP Docker image: alpine-fpm or all-in-one serversideup/php (FPM+Nginx), entry… | `docker`, `php`, `devops`, `laravel` |
 | `docker-postgres` | PostgreSQL in Docker: pg_isready healthcheck, named volume for data, init script creating… | `docker`, `devops`, `postgres`, `testing` |
@@ -698,6 +698,7 @@
 | `reverb` | `laravel-broadcasting`, `laravel-echo-client` |
 | `review` | `code-review`, `gh-review`, `implement`, `open-source-maintainer`, `tech-lead` |
 | `role` | `open-source-maintainer`, `solo-founder`, `startup-cto`, `tech-lead` |
+| `router` | `docker` |
 | `routes` | `wayfinder` |
 | `routing` | `project-map`, `vue-router-best-practices` |
 | `rules` | `model-rules` |

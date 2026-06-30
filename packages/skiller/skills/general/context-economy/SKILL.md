@@ -1,7 +1,7 @@
 ---
 name: context-economy
 bucket: general
-version: 1.1.0
+version: 1.2.0
 description: "Claude Code context economy in a project: CLAUDE.md ≤200 lines, path-scoped .claude/rules/, /compact vs /clear, Plan→Clear→Execute, MCP audit, model routing. Officially-supported mechanisms only — no myths like .claudeignore."
 risk: draft
 persona: oss-dev
@@ -59,7 +59,7 @@ PHP projects → skill `pao` (bucket: php): tests/static-analysis compressed to 
 
 - MCP server unused 7 days → disable (its schema loads in every request). CLI instead of MCP where possible.
 - Selection (what to connect, not what to trim) at onboarding/sync — skill `mcp-advisor` (the reverse axis of this audit).
-- Model — natively via `/model`: routine/recon → Haiku, architecture/debug → senior model. Don't use third-party proxy routers (claude-code-router): extra risk layer without native guarantees.
+- Model — natively via `/model`: routine/recon → Haiku, architecture/debug → senior model. Don't use third-party proxy routers (claude-code-router): extra risk layer without native guarantees. Or via the `tasks` plugin: `/task:design|dev|review|research|fix` pins model+effort per intent (no manual switching).
 
 ## 6. Platform layer — via `gh`, not files
 
@@ -69,9 +69,16 @@ GitHub ops (PRs, review threads, others' code, releases) → **GitHub CLI**, not
 
 `permissions.deny: Read(...)` in `.claude/settings.json` — hardware read block (`storage/logs/**`, `node_modules/**`, `*.lock`). Presets: `configs/claude-code/` + `scripts/apply-permissions.sh`. In Laravel+Boost projects do NOT block `vendor/**` — guidelines live in `vendor/laravel/boost/.ai/`.
 
+## 8. Subagent recon, selective input, cost visibility
+
+- **Recon via subagents.** Read-heavy investigation (route map, DB/migration impact, large-file exploration) → a read-only subagent: it reads in its OWN context window and only a summary returns, so the main context stays lean (subagent reads don't count against it). Officially recommended for token economy. NOT parallel agent-teams for cost (those ~7× tokens).
+- **Selective input (5–50× saving).** Don't `Read` a whole file — a slice (function/class/route ±context); logs → `tail -n`/`grep` by identifier, not the whole file; errors → last stack-frame; PR/diff → `git diff`/`gh pr diff`. "Point, don't paste." Caveat: a `deny` rule on a path also blocks `cat/head/tail/sed` on it — don't deny dirs you legitimately need to tail.
+- **Cost visibility.** `/usage` after long recon → if bloated: handoff (`.claude/handoffs/…`) + `/clear`, or `/compact "focus on modified files + test commands"`. (Command is `/usage`, not `/cost`.)
+
 ## Quality checklist
 
 - [ ] CLAUDE.md ≤200 lines, each line passes "would it surprise an experienced dev"
+- [ ] Read-heavy recon delegated to subagents; files/logs read as slices (tail/rg/diff), not whole
 - [ ] Topic/local rules moved to `.claude/rules/` with `paths:`
 - [ ] deny noise preset applied; `vendor/**` not blocked in Boost projects
 - [ ] prime/plan/execute commands copied into `.claude/commands/`
@@ -92,4 +99,4 @@ GitHub ops (PRs, review threads, others' code, releases) → **GitHub CLI**, not
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 699a674f99a471a04cb378e7f6c1581150fa056a2d7dc78dd794d8f347fa1ae6 -->
+<!-- ru-source-sha256: b1c9ace774909fc9335347960dc9200e90dfc35053e1c1badcca75c84d17a0ca -->

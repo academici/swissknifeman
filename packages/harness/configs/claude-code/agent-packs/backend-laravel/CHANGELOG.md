@@ -4,6 +4,37 @@
 запись помечает затронутый install-файл, чтобы апгрейдящий агент сопоставил
 изменение с конкретным файлом проекта.
 
+## [0.5.0] - 2026-06-30
+
+### Added
+
+- **Risk-адаптивный review-gate.** `SLICE_RESULT_SCHEMA` (`workflows/dev-loop.js`) расширена:
+  `risk_level` (LOW|MED|HIGH, required), `risk_markers` (concurrency/transactions/data-integrity/
+  queue-semantics/connectors), `workarounds`, `test_coverage_pct`. Глубина ревью масштабируется под
+  РИСК, не размер: LOW→spot-check, MED→контракты/auth, HIGH→adversarial (перечисли failure-modes →
+  построй сценарий сбоя) + fresh-context. **Детект ≠ гейтинг**: репорт ВСЕХ находок с severity-enum
+  {LOW,MED,HIGH,CRITICAL} + `failure_scenario`, фильтрация/merge — по гейтам пакета. Затронуты
+  install-файлы `.claude/workflows/<prefix>-dev-loop.js`, `.claude/agents/<prefix>-reviewer.md`,
+  `.claude/agents/<prefix>-test-writer.md`. (Источник: ретроспектива chatom — 78% major маскированы
+  зелёными тестами.)
+- **Lean-tiered model/effort-лейны.** Per-slice модель/effort под риск среза (Haiku тривиал / Sonnet
+  impl / Opus+xhigh на HIGH-review), перебивают окружение через `agent()`. Дефолты `MODEL_*` (pack.json):
+  slice-builder=sonnet, test-writer=sonnet, reviewer=opus, spec-writer=opus (было `inherit`).
+- **Честность тестов.** test-writer помечает обходки/форс-конфиги как `[POSSIBLE-DEFECT]` и непокрытую
+  queue-семантику ShouldQueue (`handle()` напрямую); `.claude/rules/tests.md` дублирует правило.
+- **Env-preflight** в Setup-фазе dev-loop: версия PHP + `PDO::getAvailableDrivers()` + пробный прогон
+  ДО раздачи срезов; блокер окружения останавливает прогон (chatom F3: php без рабочего pdo_sqlite).
+
+### Fixed
+
+- **Ложная инструкция «проект НЕ на Pest»** убрана из `agents/reviewer.md` (chatom F2) →
+  `{{TEST_FRAMEWORK}}`. Хардкод `vendor/bin/pint --test` + «phpstan не установлен» →
+  параметризованный `{{CHECK_CMD}}`.
+- **Layout-agnostic globs правил** (chatom F4): `app/Http/Controllers/**`→`**/Http/Controllers/**`,
+  `database/migrations/**`→`**/database/migrations/**`, `tests/**`→`**/tests/**` (+`**/database/factories/**`) —
+  матчат package-layout `packages/*/src/...`. Затронуты `.claude/rules/{api-controllers,migrations,tests}.md`
+  (+ per-layer risk-аннотации для conditional-чек-листов ревьюера).
+
 ## [0.4.0] - 2026-06-29
 
 ### Changed

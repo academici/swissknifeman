@@ -1,7 +1,7 @@
 ---
 name: anti-drift
 bucket: general
-version: 0.2.0
+version: 0.2.1
 description: "Discipline against agent rabbit-holing: think before coding, simplicity first, surgical edits, circuit-breaker on dragging iterations."
 risk: read
 persona: oss-dev
@@ -46,6 +46,14 @@ Catches three degradation patterns: layered edits (new layer atop old instead of
   - Missing package functionality → **issue against the package**, temporary impl on consumer side (`app/`/`Modules/`) + `TODO`; don't edit the package "along the way".
   - Deep protocol (proposal → ADR → SemVer) → `package-contribution-protocol`.
 
+## Shared resources & flaky tools
+
+Long-lived daemons/servers (browser pools like perplexity-web-mcp, dev servers, LSP) serve OTHER agents concurrently.
+
+- **No unneeded/destructive ops.** Never `pkill`/`kill -9`/`rm` a daemon's profile, socket, or Singleton lock. Prefer the gentlest path: reuse the live process, wait for it to free up. Rebuild/restart a shared service ONLY after confirming it's idle (no live agents) — else you crash others' sessions.
+- **Respect concurrency.** Several tasks may hit one tool in parallel; that's expected — let them queue (or one tab/context per task), don't force-clear the resource.
+- **Flaky tool → retry, don't panic.** An external tool (web search, network) can blip. Retry with backoff before giving up or changing the plan; a solid plan shouldn't collapse on one transient error. Configure retries/log/notify on the tool side, don't route around it.
+
 ## Related skills
 
 - `task-brief-template` — scope and acceptance criteria fixed before start.
@@ -60,4 +68,4 @@ Catches three degradation patterns: layered edits (new layer atop old instead of
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: dc8219fe6a5ae3497c54448cb699f2e67849c1e8bed4730f306ca8fc985873b2 -->
+<!-- ru-source-sha256: 7ebaee24e5cac6c4e6ead03b0c8ac9447682ca0e8fea575d1724ad4efa0a0b3f -->

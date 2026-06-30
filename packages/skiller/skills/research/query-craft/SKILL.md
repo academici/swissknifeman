@@ -184,4 +184,4 @@ don't know", don't guess`.
      Concurrency (daemon/pools/error codes BROWSER_BUSY·TIMEOUT·LOGIN_REQUIRED·PROTOCOL_MISMATCH) —
      from the perplexity-web-mcp v1.3.0 integration note, checked 2026-06-30. -->
 
-<!-- ru-source-sha256: 8c40e9cc116e7ae47bfd5d69a15057d18e6c522109bb0c1810776f5d7c48ec73 -->
+<!-- ru-source-sha256: 04c20f0607085c8de74629c648ce59b8a98b531cae4a6fc69f77bf3dfe653e1e -->

@@ -283,5 +283,55 @@ class StatusCase(unittest.TestCase):
         self.assertIn("не подключён", out)
 
 
+class DownstreamAuditCase(unittest.TestCase):
+    """skiller doctor --downstream: гигиена publish-surface онбордженных проектов."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.tmp = Path(self._tmp.name)
+        self.root, self.env = fx.make_registry(self.tmp)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _make_project(self, name, *, claude_lines, scoped, unscoped, deny):
+        pdir = self.tmp / name
+        (pdir / ".claude" / "rules").mkdir(parents=True, exist_ok=True)
+        (pdir / "CLAUDE.md").write_text(
+            "\n".join(f"line {i}" for i in range(claude_lines)), encoding="utf-8")
+        for i in range(scoped):
+            (pdir / ".claude" / "rules" / f"s{i}.md").write_text(
+                '---\npaths:\n  - "app/**"\n---\nscoped rule\n', encoding="utf-8")
+        for i in range(unscoped):
+            (pdir / ".claude" / "rules" / f"u{i}.md").write_text(
+                "unscoped rule, no frontmatter\n", encoding="utf-8")
+        perms = {"deny": ["Read(storage/logs/**)"]} if deny else {}
+        (pdir / ".claude" / "settings.json").write_text(
+            json.dumps({"permissions": perms}), encoding="utf-8")
+        return pdir
+
+    def test_audit_flags_oversize_unscoped_and_missing_deny(self):
+        big = self._make_project("bigproj", claude_lines=300, scoped=1,
+                                  unscoped=2, deny=False)
+        lean = self._make_project("leanproj", claude_lines=50, scoped=2,
+                                   unscoped=0, deny=True)
+        save_db(self.env, {"projects": [
+            {"id": "bigproj", "path": str(big)},
+            {"id": "leanproj", "path": str(lean)},
+        ]})
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            with contextlib.suppress(SystemExit):
+                cmd_doctor(self.env, ["--downstream"])
+        out = buf.getvalue()
+        self.assertIn("Downstream publish-surface", out)
+        # over-budget project flagged on all three axes
+        self.assertIn("CLAUDE.md 300>200", out)
+        self.assertIn("2 unscoped-rules", out)
+        self.assertIn("нет deny", out)
+        # lean project is clean
+        self.assertRegex(out, r"\[ok \] leanproj:")
+
+
 if __name__ == "__main__":
     unittest.main()

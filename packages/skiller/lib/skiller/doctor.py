@@ -10,10 +10,72 @@ from .common import DB_VERSION, is_within, parse_flags
 from .state import registry_git_state
 
 
+def _audit_downstream(env):
+    """Гигиена publish-surface онбордженных проектов: always-loaded слой, который Claude Code
+    читает в КАЖДОЙ сессии целевого проекта (CLAUDE.md ≤200, scoped/unscoped rules, deny-пресет).
+    Это и есть основной runtime-расход токенов — он в ЦЕЛЕВОМ проекте, не в реестре."""
+    print("\nDownstream publish-surface (always-loaded слой в проектах):")
+    db_file = env.db_file
+    projects = []
+    if db_file.exists():
+        try:
+            projects = json.loads(db_file.read_text(encoding="utf-8")).get("projects", [])
+        except json.JSONDecodeError:
+            pass
+    seen = 0
+    for p in projects:
+        pdir = Path(p.get("path", ""))
+        if not pdir.is_dir():
+            continue
+        seen += 1
+        name = p.get("id") or pdir.name
+        cmd_md = pdir / "CLAUDE.md"
+        if not cmd_md.is_file():
+            cmd_md = pdir / ".claude" / "CLAUDE.md"
+        lines = (len(cmd_md.read_text(encoding="utf-8", errors="ignore").splitlines())
+                 if cmd_md.is_file() else 0)
+        scoped = unscoped = 0
+        rules_dir = pdir / ".claude" / "rules"
+        if rules_dir.is_dir():
+            for r in sorted(rules_dir.glob("*.md")):
+                head = r.read_text(encoding="utf-8", errors="ignore")[:400]
+                parts = head.split("---", 2)
+                if head.lstrip().startswith("---") and len(parts) >= 3 and "paths:" in parts[1]:
+                    scoped += 1
+                else:
+                    unscoped += 1
+        deny = False
+        for sf in (pdir / ".claude" / "settings.json",
+                   pdir / ".claude" / "settings.local.json"):
+            if sf.is_file():
+                try:
+                    s = json.loads(sf.read_text(encoding="utf-8"))
+                    if (s.get("permissions") or {}).get("deny"):
+                        deny = True
+                except json.JSONDecodeError:
+                    pass
+        flags = []
+        if lines > 200:
+            flags.append(f"CLAUDE.md {lines}>200")
+        if unscoped:
+            flags.append(f"{unscoped} unscoped-rules (always-loaded)")
+        if not deny:
+            flags.append("нет deny-пресета шума")
+        mark = "ok " if not flags else "warn"
+        tail = (" — " + "; ".join(flags)) if flags else ""
+        print(f"  [{mark}] {name}: CLAUDE.md={lines} строк, "
+              f"rules={scoped} scoped/{unscoped} unscoped, "
+              f"deny={'да' if deny else 'НЕТ'}{tail}")
+    if seen == 0:
+        print("  (нет онбордженных проектов на диске)")
+
+
 def cmd_doctor(env, argv):
-    opts = parse_flags(argv, {})
+    opts = parse_flags(argv, {"--downstream": "bool"})
     if opts["help"]:
-        print("skiller doctor")
+        print("skiller doctor [--downstream]\n"
+              "  --downstream: гигиена publish-surface онбордженных проектов "
+              "(CLAUDE.md ≤200, scoped/unscoped rules, deny-пресет).")
         return
     root = env.root
     issues = 0
@@ -127,6 +189,9 @@ def cmd_doctor(env, argv):
         check(not stale_hubs, f"хабы проектов свежие (реестр sha {reg_sha})",
               f"{len(stale_hubs)} устарел(и): {', '.join(stale_hubs)} — перегенерируй "
               "(skiller update / generate-hub.sh)")
+
+    if opts.get("downstream"):
+        _audit_downstream(env)
 
     print(f"\n{'Все проверки пройдены.' if issues == 0 else f'Проблем: {issues}'}")
     if issues:

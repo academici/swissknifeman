@@ -51,6 +51,11 @@
   `laravel-architecture:config-driven-abstraction` (Registry+Builder, config:cache-safe, per-variant ≠ runtime `$table`).
   Ретроспективные #5 (state-machine-race) и #6 (env-driven-test) **свёрнуты** в production-readiness-checklist +
   dev-loop env-preflight (анти-bloat: не дублировать существующие `enum-state-machine`/`db-test-preflight`).
+- **F2 — `skiller doctor --downstream`** (аудит publish-surface онбордженных проектов — там основной runtime-расход
+  токенов, не в реестре): per-project гигиена always-loaded слоя — `CLAUDE.md` ≤200 строк, scoped vs unscoped
+  `.claude/rules`, наличие `permissions.deny`-пресета. Замер по реальным проектам вскрыл over-budget CLAUDE.md
+  (sova 1214, cms 813, flexcrm 738 строк, …) против здоровых (chatom 123, corex 169) — операционализирует
+  ключевой тезис аудита (мерять сгенерированный артефакт, не шаблоны). +unit-тест (202 теста).
 
 ### Changed (skiller — `perplexity-web-mcp` v1.3.0: демон-конкурентность в скиллах)
 

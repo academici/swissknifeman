@@ -2080,8 +2080,8 @@
       "path": "skills/general/mcp-advisor/SKILL.md",
       "version": "0.1.0",
       "description": "Pick MCP servers for a project at onboarding/sync: which to connect (context7/playwright/github/fetch/sequential-thinking + maind hub), why, when NOT to, and the cost in context/permissions/Node-deps. Activate when adding/onboarding/syncing a project, editing .mcp.json, or choosing MCP — emits a justified connection plan, not a dump of every server.",
-      "sha256": "01cd62459a13292c6e97763368e54cd719bf1f3bdd4dc398c4e3de3526f36256",
-      "content_sha256": "ffbb1513ac36742fcb1cb42029cdbb6d2d50acfb590c70d427c618b5a6f787f3",
+      "sha256": "ab676f63308b8d7ae400e157ec721d4d411b15937295f91f85d30255adee1573",
+      "content_sha256": "2fe9f604462ed1b81e8b390d2c2332a68534e6e3db7d77634309268c48132753",
       "tags": [
         "mcp",
         "onboarding",
@@ -3855,8 +3855,8 @@
       "path": "skills/research/query-craft/SKILL.md",
       "version": "0.1.0",
       "description": "How to FORMULATE a search/doc-engine query (Perplexity Web · WebSearch · context7): maximize detail (exact version/stack/'min Filament 4', timeframe, format, result limit), pick engine+mode (search/advanced/deep), set sources (web/academic/social). Activate BEFORE any external search, esp. a library/framework (Laravel/Filament/Vue): ban bare 'Laravel how to X?'. Not when-to-verify (verify-claims) nor what-to-connect (mcp-advisor) — only HOW to ask.",
-      "sha256": "47aafd9759d0bf84adbc8e63906c8f9f3b0c8735ee3ae72db53511c05b118448",
-      "content_sha256": "d73a171515245f7c155d1d566df4cf9a45e72a6657260d81e3ba8678e82f9eee",
+      "sha256": "0b479870bf93b4aa2db8671fed00f80d8d8741e0aaaee9f62108b1cea9891cda",
+      "content_sha256": "d762078cec582944fef255d7a5d23af616269eeb8c7c96678d61601c22cbd24c",
       "tags": [
         "research",
         "perplexity",

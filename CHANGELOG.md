@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Changed (skiller — `perplexity-web-mcp` v1.3.0: демон-конкурентность в скиллах)
+
+- **`research/query-craft`**: раздел «Надёжность keyless-моста» (lock/сериализация, запрет
+  «не параллелить») переписан в «Конкурентность и устойчивость `perplexity-web` (демон v1.3.0)».
+  Параллель разрешена до `maxConcurrency` (дефолт 3); пулы (`--pool`) как конфиг MCP; таблица кодов
+  ошибок (`BROWSER_BUSY`/`TIMEOUT`/`LOGIN_REQUIRED`/`PROTOCOL_MISMATCH`); не-контрактные обрывы
+  (`ECONNRESET`/«connection closed» → недокачанный Chromium → `npx playwright install`); `search_deep`
+  до ~10 мин и не блокирует параллельные `search`; чеклист обновлён. Прежний обход «не параллелить»
+  снят как legacy.
+- **`general/mcp-advisor`**: пул-нота к keyless `perplexity-web` (демон v1.3.0, изоляция через
+  `--pool=<проект>`).
+- **`docs/reference.md`**: строка про integration-note `perplexity-web-mcp` v1.3.0 (вердикт **adopt**).
+- RU→EN регенерирован + `check-translations.sh --stamp`; `skiller registry` (`skills.json`, `budget.md`).
+  Контракт сверен end-to-end вживую: 3 параллельных `search` изолированы (no cross-read), фикс
+  анти-троттлинга фоновых вкладок подтверждён.
+
 ### Changed (maind — переименование проекта экосистемы DocVault → Vaulter)
 
 - **Проект `docvault` переименован в `vaulter`** (продукт DocVault → Vaulter). `derive.py`:

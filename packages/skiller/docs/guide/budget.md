@@ -142,7 +142,7 @@ flowchart LR
     wayfinder["wayfinder<br/>⊕41 ↻854"]:::mild
   end
   subgraph general["general"]
-    anti_drift["anti-drift<br/>⊕37 ↻854"]:::mild
+    anti_drift["anti-drift<br/>⊕37 ↻1078"]:::mild
     compact_responses["compact-responses<br/>⊕51 ↻385"]:::mild
     complex_task_orchestrator["complex-task-orchestrator<br/>⊕38 ↻543"]:::mild
     context_economy["context-economy<br/>⊕61 ↻1146"]:::mild
@@ -279,7 +279,7 @@ flowchart LR
     testing_safety_report["testing-safety-report<br/>⊕66 ↻668"]:::warm
   end
   subgraph research["research"]
-    query_craft["query-craft<br/>⊕116 ↻3066"]:::hot
+    query_craft["query-craft<br/>⊕116 ↻3153"]:::hot
     research_knowledge_super_skill["research-knowledge-super-skill<br/>⊕165 ↻17401"]:::hot
   end
   subgraph roles["roles"]
@@ -400,13 +400,13 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 200 скиллов · ⊕ always **12030** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 436033 ток · ⌥ snippets 158029 ток.
+**Итого:** 200 скиллов · ⊕ always **12030** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 436344 ток · ⌥ snippets 158029 ток.
 
 ## По бакетам
 
 | Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ snippets |
 |---|--:|--:|--:|--:|
-| `general` | 19 | 1178 | 17162 | 5120 |
+| `general` | 19 | 1178 | 17386 | 5120 |
 | `architect` | 14 | 747 | 38470 | 7503 |
 | `frontend-vue` | 11 | 726 | 23106 | 7058 |
 | `quality` | 10 | 628 | 16415 | 7125 |
@@ -420,7 +420,7 @@ flowchart LR
 | `pm` | 10 | 373 | 28759 | 197 |
 | `founder` | 10 | 343 | 13127 | 494 |
 | `laravel-testing` | 4 | 283 | 6868 | 14531 |
-| `research` | 2 | 281 | 20467 | 0 |
+| `research` | 2 | 281 | 20554 | 0 |
 | `frontend-linting` | 4 | 275 | 5276 | 2914 |
 | `operator` | 6 | 252 | 27108 | 90 |
 | `frontend-backend` | 3 | 244 | 4726 | 7459 |

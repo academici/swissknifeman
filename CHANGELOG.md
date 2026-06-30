@@ -56,6 +56,11 @@
   `.claude/rules`, наличие `permissions.deny`-пресета. Замер по реальным проектам вскрыл over-budget CLAUDE.md
   (sova 1214, cms 813, flexcrm 738 строк, …) против здоровых (chatom 123, corex 169) — операционализирует
   ключевой тезис аудита (мерять сгенерированный артефакт, не шаблоны). +unit-тест (202 теста).
+- **A2/A3 — thin-orchestrator + skill-on-demand задокументированы/проброшены:** `docs/guide/skill-taxonomy.md`
+  получил раздел «Router-скилл» (тонкий оркестратор фонового кластера — образец docker); orchestrator-агент паков
+  (`_common/orchestrator.md`) — поля `risk:`+`skills:` в PLAN (минимальный набор под тип задачи + risk→модель/
+  effort/глубина ревью), вместо полного preload. (C — durable per-phase handover: реализован «лёгкой» версией —
+  компактные сводки в брифах + plan-file-primary + нативный resume воркфлоу; on-disk-дубль избыточен, не вводим.)
 
 ### Changed (skiller — `perplexity-web-mcp` v1.3.0: демон-конкурентность в скиллах)
 

@@ -49,7 +49,7 @@ color: blue
 ```text
 PLAN
 mode: Sequential | Parallel-max2 | Gated
-Task 1 -> @{{PACK_PREFIX}}-slice-builder : <одна строка цели> ; deps: none ; files: app/...
+Task 1 -> @{{PACK_PREFIX}}-slice-builder : <одна строка цели> ; deps: none ; files: app/... ; risk: LOW|MED|HIGH ; skills: a,b
 Task 2 -> @{{PACK_PREFIX}}-test-writer  : <цель> ; deps: 1 ; files: tests/...
 Task 3 -> @{{PACK_PREFIX}}-reviewer     : <цель> ; deps: 2 ; gate: acceptance
 END
@@ -61,6 +61,12 @@ END
 - `deps:` — номера задач-предшественников или `none`.
 - `files:` — ожидаемые пути (для оценки независимости при Parallel-max2).
 - `gate: acceptance` — задача требует approve от reviewer перед следующей.
+- `risk:` — blast-radius среза (`LOW|MED|HIGH`: concurrency/transactions/data-integrity/queue-semantics/
+  connectors). Задаёт глубину ревью и модель/effort (Lean-tiered: Sonnet impl / Opus+xhigh на HIGH-review /
+  Haiku тривиал), а НЕ размер.
+- `skills:` — МИНИМАЛЬНЫЙ набор скиллов под тип задачи (skill-on-demand): роль грузит их сама, а не тащит
+  полный preload. LOW-срез — ядро; access-layer — `+repositories,laravel`; миграции — `+database`. Фоновые
+  кластеры (docker, …) подтягиваются через свой router-скилл по нужде, не резидентно.
 - Каждая задача — одна цель; не сливай несколько ролей в одну строку.
 
 После плана коротко объясни выбор режима и зависимостей. Не начинай реализацию — это

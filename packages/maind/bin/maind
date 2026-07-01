@@ -23,6 +23,7 @@
 #   mcp       запустить maind как MCP-сервер (stdio JSON-RPC)
 #   doctor    диагностика окружения
 #   verify    пруф работы: пишут ли в память/граф/код-граф или вхолостую (--json)
+#   analyze   пост-ран разбор прогона: run-report+bash-лог+git+health → GREEN/ATTENTION/RED
 #   version   версия (git SHA) и путь к узлу
 set -euo pipefail
 
@@ -39,7 +40,7 @@ if [[ ! -d "$REPO_ROOT/lib/maind" ]]; then
   exit 1
 fi
 
-usage() { grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '2,26p'; }
+usage() { grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '2,27p'; }
 
 CMD="${1:-help}"
 [[ $# -gt 0 ]] && shift
@@ -50,7 +51,7 @@ case "$CMD" in
     sha="$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
     echo "maind $sha ($REPO_ROOT)"
     exit 0 ;;
-  start|status|memory|service|graph|agents|projects|namespaces|deploy|sync|health|workspace|run|fleet|onboard|migrate|mcp|doctor|verify) ;;
+  start|status|memory|service|graph|agents|projects|namespaces|deploy|sync|health|workspace|run|fleet|onboard|migrate|mcp|doctor|verify|analyze) ;;
   *) echo "Неизвестная команда: $CMD" >&2; usage >&2; exit 1 ;;
 esac
 

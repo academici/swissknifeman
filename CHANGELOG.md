@@ -2,6 +2,30 @@
 
 ## [Unreleased]
 
+### Added (maind analyze — пост-ран разбор прогона «всё ли сработало» + SessionEnd-хук run-report)
+
+Field-feedback: после задачи-с-планом (напр. на azguard) нужно через логи проверить, всё ли отработало,
+но источники исхода читались по отдельности — единой команды не было. Верификация механизма захвата —
+целиком через `perplexity-web` (нашла 2 ошибки первого черновика: транскрипт — first-class артефакт,
+парс поддерживаем; SessionEnd-хук может писать отчёт generic'ом → правка `dev-loop.js`/паков НЕ нужна).
+
+- **Хук `run-report` (SessionEnd, harness)** — `configs/claude-code/hooks/run-report/`
+  (`run-report.py` + `_lib.py`): строчно (без слурпа) и защитно парсит транскрипт → пишет
+  `<project>/.claude/runs/<sid>.json` (тесты/линт с `ok` из `is_error`, изменённые файлы, tool-провалы,
+  воркфлоу, best-effort dev-loop `tool_failures`/`deferred`/`workarounds`). Generic — любая задача, не
+  только dev-loop. Никогда не барьер (ошибка/битый stdin → exit 0). Ретеншн `RUNS_KEEP`.
+- **`harness hooks --run-report on|off`** (`block_run_report`) — env.ini (ENABLED/RUNS_KEEP) + merge-only
+  регистрация SessionEnd. `apply-permissions.sh --global` копирует `run-report/` в `~/.claude/hooks`.
+- **`maind analyze [--project|--cwd] [--session] [--base] [--json] [--no-health]`** (новый
+  `lib/maind/analyze.py` + `cli.py` + `bin/maind` whitelist + `commands/analyze.md`): агрегирует
+  run-report (первично) + bash-лог (форензика, БЕЗ кодов возврата — честно) + observer + git + health →
+  вердикт **GREEN/ATTENTION/RED** (+`confidence` low, если run-report нет). Смычка с RAG: dev-loop
+  `tool_failures` → блок «**Непроверено → ПОВТОРНЫЙ ПРОХОД**». RED → exit 1 (гейт для скриптов).
+- Тесты: `harness/tests/test_run_report.py` (+12: парсер, поведение хука, ретеншн, block_run_report),
+  `maind/tests/test_analyze.py` (+11: вердикт, поиск run-report, форензика, сборка+JSON).
+  **Честные лимиты:** схема транскрипта не заморожена → парс защитный; bash-лог без pass/fail;
+  SessionEnd = 1 запись/сессия; `devloop`/observer — best-effort.
+
 ### Added (intent-router — свободный текст → оптимальная команда; активация roadmap-хука)
 
 Field-feedback: владелец забывает ставить задачи через `/task:*` (замеренный мисроут → триггер

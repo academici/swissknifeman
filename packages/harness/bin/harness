@@ -8,7 +8,7 @@
 #                [--target P] [--preset a,b] [--file F] [--dry-run] [--list] [--global]
 #   mcp          влить MCP-пресеты в .mcp.json, merge-only [--target P] [--mcp a,b] [--list] [--dry-run]
 #   hooks        включить хуки по проекту / поставить файлы хуков глобально
-#                [--target P] [--auto-approve MODE] [--memory BRAIN:MODE] [--router MODE] [--file F] [--global] [--dry-run]
+#                [--target P] [--auto-approve MODE] [--memory BRAIN:MODE] [--router MODE] [--run-report on|off] [--file F] [--global] [--dry-run]
 #   router       сгенерить каталог возможностей intent-router в .claude/agent-router.config.json
 #                --generate --target P [--dry-run]
 #   agent-packs  детерминированный рендер/апгрейд пака субагентов в проект (без агента)

@@ -24,6 +24,7 @@ export default withMermaid(defineConfig({
       { text: 'Окружение', link: '/harness/', activeMatch: '/harness/' },
       { text: 'Скиллы', link: '/skiller/guide/', activeMatch: '/skiller/' },
       { text: 'Память и граф', link: '/maind/', activeMatch: '/maind/' },
+      { text: 'Обучение', link: '/analyst/', activeMatch: '/analyst/' },
       { text: 'Референсы', link: '/reference', activeMatch: '/reference' },
     ],
 
@@ -178,6 +179,29 @@ export default withMermaid(defineConfig({
         },
       ],
 
+      '/analyst/': [
+        {
+          text: 'Обучение (analyst)',
+          items: [
+            { text: 'Обзор analyst', link: '/analyst/' },
+            { text: 'Что такое analyst', link: '/analyst/guide/' },
+            { text: 'Архитектура пакета', link: '/analyst/architecture' },
+          ],
+        },
+        {
+          text: 'Как это работает',
+          items: [
+            { text: 'CLI и команды', link: '/analyst/guide/cli' },
+            { text: 'Жизненный цикл урока', link: '/analyst/guide/lifecycle' },
+            { text: 'suggest — черновик скилла (P4)', link: '/analyst/guide/suggest' },
+          ],
+        },
+        {
+          text: 'Roadmap',
+          items: [{ text: 'Отложенное (P5)', link: '/analyst/roadmap' }],
+        },
+      ],
+
       '/': [
         {
           text: 'Экосистема',
@@ -195,6 +219,7 @@ export default withMermaid(defineConfig({
             { text: 'Скиллы — skiller', link: '/skiller/guide/' },
             { text: 'Окружение — harness', link: '/harness/' },
             { text: 'Память и граф — maind', link: '/maind/' },
+            { text: 'Обучение — analyst', link: '/analyst/' },
           ],
         },
       ],

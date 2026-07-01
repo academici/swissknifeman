@@ -19,3 +19,4 @@ echo "docs-sync:"
 sync_pkg skiller
 sync_pkg harness
 sync_pkg maind   # внутренние ссылки maind-доков относительные → работают и standalone, и в агрегате
+sync_pkg analyst # continuous learning; внутренние ссылки относительные (standalone + агрегат)

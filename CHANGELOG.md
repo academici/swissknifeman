@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Added (skiller — пост-ран наблюдаемость: `skiller analyze-run`)
+
+- **`skiller analyze-run`** (`lib/skiller/analyze.py` + `cli.py`) — детерминированный
+  разбор прогона по JSONL-логам Claude Code, **без запуска агентов/трат токенов**.
+  По агентам: факт-токены `in/out`, **cache-hit%** (из поля `usage`), модель,
+  wall-clock, инструменты, ретраи, tool-ошибки. Скиллы: активный набор
+  (`resolve_active_set`/`budget_for_set`) × реально загруженные (`Skill`-вызовы) →
+  **эффективные / DEAD** (в наборе, 0 загрузок → чинить триггеры/снять) / вне набора.
+  Плюс скан рантайм-отказов (`Rate limited`/`SingletonLock`/…, эвристика).
+  Флаги `--last|--session|--project|--json|--store` (`--store` → JSON в
+  `.claude/analyze/`, задел под кросс-сессионный тренд). Закрывает разрыв
+  «budget (теория) ↔ eval (синтетика) ↔ реальный прогон». Дополняет качественный
+  скилл `system/session-observer` (числа vs «почему»). +14 офлайн-тестов
+  (`tests/test_analyze.py`); гайд `docs/guide/analyze-run.md`. Честное ограничение:
+  детект загрузки скиллов частичный (только `Skill`-tool; нативный `skills:`-preload
+  не виден).
+
 ### Added/Changed (harness — токен-экономия: downstream `deny` + agent-pack backend-laravel 0.5.0)
 
 > План: `~/.claude/plans/idempotent-snacking-nest.md` (свод ретроспективы chatom + ответа Perplexity +

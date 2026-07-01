@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Added (token-economy — base deny-rules для крупных артефактов; трек A план-A ROI-1)
+
+Токен-экономия (аудит `research/swissknifeman-token-audit.md`): большие низкоценные файлы не должны
+попадать в контекст через случайный `Read`/glob. Расширен `permissions.deny` в
+`configs/claude-code/settings.base.json` (был только `.env`/keys/ssh/sudo): добавлены
+`Read(**/CHANGELOG.md)`, `Read(**/skills.json)`, `Read(**/package-lock.json)`,
+`Read(**/composer.lock)`, `Read(**/*.lock)` — анкорены `**/` (матч на любой глубине downstream).
+- **Behavior change:** `**/*.lock` теперь запрещён на уровне base (subsumes laravel-пресетный дубль;
+  merge аддитивен и дедуплит точные совпадения). Пресеты стеков без изменений.
+
 ### Added (maind analyze — пост-ран разбор прогона «всё ли сработало» + SessionEnd-хук run-report)
 
 Field-feedback: после задачи-с-планом (напр. на azguard) нужно через логи проверить, всё ли отработало,

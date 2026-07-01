@@ -55,6 +55,11 @@
       "Read(~/.ssh/**)",
       "Read(~/.aws/**)",
       "Read(~/.claude/logs/**)",
+      "Read(**/CHANGELOG.md)",
+      "Read(**/skills.json)",
+      "Read(**/package-lock.json)",
+      "Read(**/composer.lock)",
+      "Read(**/*.lock)",
       "Bash(sudo *)"
     ]
   }

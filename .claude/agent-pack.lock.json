@@ -2,7 +2,7 @@
   "schema": 1,
   "packs": {
     "role-maintainer": {
-      "version": "0.1.0",
+      "version": "0.2.0",
       "source": "harness:configs/claude-code/agent-packs/role-maintainer",
       "answers": {
         "PACK_PREFIX": "swissknifeman"
@@ -12,7 +12,7 @@
           "src": "agents/issue-triager.md",
           "target": ".claude/agents/swissknifeman-issue-triager.md",
           "kind": "template",
-          "base_sha256": "27101bceae792da66ecf70491985e34f74624aa355e83756a2b7c6fa035d2858",
+          "base_sha256": "5cf8e810200de0f9fd81279e5a4f164b1e7a39dd29dcf5383927584eccbf9487",
           "local_modified": false
         },
         {
@@ -33,7 +33,7 @@
       "removed_optional": []
     },
     "role-tech-lead": {
-      "version": "0.1.0",
+      "version": "0.2.0",
       "source": "harness:configs/claude-code/agent-packs/role-tech-lead",
       "answers": {
         "PACK_PREFIX": "swissknifeman"
@@ -43,7 +43,7 @@
           "src": "agents/sprint-planner.md",
           "target": ".claude/agents/swissknifeman-sprint-planner.md",
           "kind": "template",
-          "base_sha256": "46c2cdd236d2e23fd98943f65c04812f20e95ffb65137e03c4103a1f88e5ca0e",
+          "base_sha256": "ad417cc1f6d3ddae77b3fbb1c1e064d8c6b1e58e920ebcbda82456736911093d",
           "local_modified": false
         },
         {
@@ -57,7 +57,7 @@
           "src": "agents/review-gatekeeper.md",
           "target": ".claude/agents/swissknifeman-review-gatekeeper.md",
           "kind": "template",
-          "base_sha256": "06abdb39496d5a73de6c99b8a52bc63a51e514ada3e27378ff9324cb41a89c76",
+          "base_sha256": "127302fc2b824a6a81585c974edbdbf6dca48c021c1ccab826e85db3c7bf3a44",
           "local_modified": false
         }
       ],

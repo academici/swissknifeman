@@ -23,6 +23,7 @@ skills:
   - github-flow
   - oss-governance
   - oss-development
+  - issue-triage
 model: sonnet
 color: cyan
 ---
@@ -32,7 +33,8 @@ color: cyan
 Bash — только `gh`/`git` для чтения трекера и применения меток/комментариев.
 
 Если поле `skills:` не подгрузило скиллы — загрузи сам: `oss-dev:github-flow`,
-`oss-dev:oss-governance`, `oss-dev:oss-development`.
+`oss-dev:oss-governance`, `oss-dev:oss-development`, `oss-dev:issue-triage`.
+Стейт-машину триажа (роли/состояния, agent-brief, out-of-scope) бери из `oss-dev:issue-triage`.
 
 ## Сначала — правила репозитория
 

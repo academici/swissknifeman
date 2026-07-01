@@ -399,7 +399,12 @@ def do_upgrade(env, pack, target, *, overrides, dry, shell_policy):
         new_sha = sha256_text(rendered)
         cat = categorize_file_change(f, prior_files.get(src), new_sha, tgt)
         plan.append((cat, src, tgt_rel))
-        if cat == "safe-apply" and not dry:
+        # Новые файлы версии (напр. recon-агенты) ставим на upgrade так же, как render:
+        # цель не существует → запись безопасна (нечего затирать). Опциональные, которые
+        # пользователь ЯВНО удалил (removed_optional), не возвращаем.
+        install_new = cat == "new" or (
+            cat == "new-optional" and src not in prior.get("removed_optional", []))
+        if (cat == "safe-apply" or install_new) and not dry:
             tgt.parent.mkdir(parents=True, exist_ok=True)
             write_text(tgt, rendered, dry)
             if f.get("chmod") == "+x":

@@ -4,6 +4,75 @@
 запись помечает затронутый install-файл, чтобы апгрейдящий агент сопоставил
 изменение с конкретным файлом проекта.
 
+## [0.7.0] - 2026-07-01
+
+### Changed
+
+- **dev-loop resilience (rate-limit incident 2026-07-01).** Затронут install-файл
+  `.claude/workflows/{PACK_PREFIX}-dev-loop.js`:
+  - Статус среза `infra-failed` в enum схемы — инфра-отказ (rate-limit/timeout/
+    `agent()`=null) больше НЕ маскируется под `deferred` (честная телеметрия).
+  - Fail-fast: терминальный `agent()===null` → `infra-failed` + СТОП прогона
+    (throttling сам не пройдёт от перехода к следующему срезу).
+  - Дефолт батча `DEFAULT_MAX` 3 → 2 — меньше retry-поверхности под throttling.
+  - Heartbeat `log()` на каждом шаге среза (сигнал живости для supervisor/человека).
+  - Текст-маркер `===SLICE-RESULT=== status=…` как запасной путь возврата (обход
+    StructuredOutput retry-cap рантайма на длинных/сложных возвратах).
+  - Итоговый `log()` показывает число `infra-failed`.
+
+### Не добавлено (сознательно)
+
+- In-script wall-clock / `withDeadline` — песочница Workflow не даёт `Date.now()`/
+  надёжного `setTimeout`, `agent()` не отменяем. Затяжной hang ловит **внешний
+  supervisor** (доклад оркестратора ~30 мин + `PushNotification`; см. пак `_common`
+  и `docs/skiller/workflows/background-agents.md` → «Устойчивость»).
+
+## [0.6.0] - 2026-06-30
+
+### Added
+
+- **Read-only recon-субагенты** (изолированная разведка → main-контекст не пухнет, наверх только сводка;
+  чтения субагента не считаются в окно оркестратора): `{prefix}-route-mapper` (роуты→контроллеры→Action),
+  `{prefix}-db-impact` (затронутые модели/миграции/связи/индексы), `{prefix}-blade-review` (экранирование/N+1
+  во вьюхах), `{prefix}-test-verifier` (прогон тестов → СЖАТАЯ сводка, verbose-вывод остаётся в субагенте),
+  `{prefix}-security-review` (auth/policy/инъекции/секреты/IDOR). Все `optional`, модель `{{MODEL_RECON}}`
+  (дефолт `haiku`). Операционализирует «тяжёлое чтение — в субагент» (skill `context-economy` §8). Новые
+  install-файлы `.claude/agents/{prefix}-{route-mapper,db-impact,blade-review,test-verifier,security-review}.md`.
+- **Гайд `subagents-and-workflows.md` обновлён**: раздел «Как ставятся задачи» (`/task:*` + `args.slices`),
+  **mermaid-диаграмма процесса dev-loop** (Setup→Build[impl→test→risk-review]→Verify + recon-делегирование),
+  recon-агенты и risk-адаптивный reviewer в таблице агентов; хардкод `pint`/phpstan → `{{CHECK_CMD}}`.
+
+## [0.5.0] - 2026-06-30
+
+### Added
+
+- **Risk-адаптивный review-gate.** `SLICE_RESULT_SCHEMA` (`workflows/dev-loop.js`) расширена:
+  `risk_level` (LOW|MED|HIGH, required), `risk_markers` (concurrency/transactions/data-integrity/
+  queue-semantics/connectors), `workarounds`, `test_coverage_pct`. Глубина ревью масштабируется под
+  РИСК, не размер: LOW→spot-check, MED→контракты/auth, HIGH→adversarial (перечисли failure-modes →
+  построй сценарий сбоя) + fresh-context. **Детект ≠ гейтинг**: репорт ВСЕХ находок с severity-enum
+  {LOW,MED,HIGH,CRITICAL} + `failure_scenario`, фильтрация/merge — по гейтам пакета. Затронуты
+  install-файлы `.claude/workflows/<prefix>-dev-loop.js`, `.claude/agents/<prefix>-reviewer.md`,
+  `.claude/agents/<prefix>-test-writer.md`. (Источник: ретроспектива chatom — 78% major маскированы
+  зелёными тестами.)
+- **Lean-tiered model/effort-лейны.** Per-slice модель/effort под риск среза (Haiku тривиал / Sonnet
+  impl / Opus+xhigh на HIGH-review), перебивают окружение через `agent()`. Дефолты `MODEL_*` (pack.json):
+  slice-builder=sonnet, test-writer=sonnet, reviewer=opus, spec-writer=opus (было `inherit`).
+- **Честность тестов.** test-writer помечает обходки/форс-конфиги как `[POSSIBLE-DEFECT]` и непокрытую
+  queue-семантику ShouldQueue (`handle()` напрямую); `.claude/rules/tests.md` дублирует правило.
+- **Env-preflight** в Setup-фазе dev-loop: версия PHP + `PDO::getAvailableDrivers()` + пробный прогон
+  ДО раздачи срезов; блокер окружения останавливает прогон (chatom F3: php без рабочего pdo_sqlite).
+
+### Fixed
+
+- **Ложная инструкция «проект НЕ на Pest»** убрана из `agents/reviewer.md` (chatom F2) →
+  `{{TEST_FRAMEWORK}}`. Хардкод `vendor/bin/pint --test` + «phpstan не установлен» →
+  параметризованный `{{CHECK_CMD}}`.
+- **Layout-agnostic globs правил** (chatom F4): `app/Http/Controllers/**`→`**/Http/Controllers/**`,
+  `database/migrations/**`→`**/database/migrations/**`, `tests/**`→`**/tests/**` (+`**/database/factories/**`) —
+  матчат package-layout `packages/*/src/...`. Затронуты `.claude/rules/{api-controllers,migrations,tests}.md`
+  (+ per-layer risk-аннотации для conditional-чек-листов ревьюера).
+
 ## [0.4.0] - 2026-06-29
 
 ### Changed

@@ -20,7 +20,7 @@ difflib), неизвестный вложенный — предупрежден
 | `projects[]` | проекты (см. ниже) |
 | `namespaces` | необязательный реестр namespace-групп: `{ id: { name, description } }` |
 | `integrations` | `swissknifeman`, `brain` (синк) |
-| `mcp` | `servers[]` — внешние MCP-серверы узла |
+| `mcp` | `servers[]` — внешние MCP-серверы узла; `emit_example` (opt-in `.mcp.json.example`); `perplexity_web` — hub-managed раскатка keyless-моста perplexity-web (см. ниже) |
 | `observability` | `service_name`, `log_level`, `metrics_enabled`, `traces_enabled` |
 
 ## Проект
@@ -91,6 +91,38 @@ GitHub-slug `owner/name`, путь к коду — `local_path`. В brain-схе
 ```
 
 Игноры `vendor`/`packages` и пр. — **здесь**, а не захардкожены. См. [Граф кода](./code-graph).
+
+## Секция `mcp.perplexity_web` (раскатка keyless-моста)
+
+Keyless-мост **perplexity-web** (отдельный Node-пакет, поиск Perplexity через браузерный профиль)
+раздаётся в проекты тем же `deploy`/`sync`, что `maind` и Serena — единым источником истины, а не
+ручной хардкод-записью в каждом `.mcp.json`. **opt-in, disabled-by-default**: без секции сервер не
+раскатывается.
+
+```jsonc
+"mcp": {
+  "perplexity_web": {
+    "enabled": true,                     // глобальный фан-аут на все проекты
+    "pool": "default",                   // модель пулов браузера (см. ниже)
+    "bin": "/abs/path/to/perplexity-web-mcp/start.sh"  // fallback-путь к start.sh
+  }
+}
+```
+
+**Пул** = демон + профиль + окно браузера. Только `default` переиспользует текущий логин; любой
+другой пул получает свой профиль и требует **отдельного логина** в Perplexity. Демон уже гонит до
+`maxConcurrency` поисков параллельно (вкладки), поэтому изоляция нужна лишь под раздельные аккаунты:
+
+| `pool` | Пул проекта | Логины |
+|:--|:--|:--|
+| `"default"` (или любой литерал) | общий пул для всех | один (текущий) |
+| `"per-namespace"` | `ns-<первый namespace>` | по логину на группу |
+| `"per-project"` | `<id проекта>` | по логину на проект |
+
+Per-project override: `projects[].perplexity_web` (`true`/`false` — форс вкл/выкл) и
+`projects[].perplexity_web_pool` (литеральное имя пула). Команда пишется через индирекцию
+`${PERPLEXITY_WEB_MCP_BIN:-<bin>}` (как `${MAIND_BIN:-maind}`) — переносимо между машинами/CI,
+без захардкоженного `/home/...` в `.mcp.json`.
 
 ## Namespaces
 

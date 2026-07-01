@@ -5,9 +5,49 @@
 Контекст и референсы — скилл `php:laravel-subagents`.
 
 > [!info] Артефакты в репозитории
-> - Агенты: `.claude/agents/{{PACK_PREFIX}}-{slice-builder,test-writer,reviewer}.md`
+> - Агенты (build): `.claude/agents/{{PACK_PREFIX}}-{slice-builder,test-writer,reviewer}.md` (+ опц. `spec-writer`)
+> - Агенты (recon, read-only): `.claude/agents/{{PACK_PREFIX}}-{route-mapper,db-impact,blade-review,test-verifier,security-review}.md`
 > - Workflow: `.claude/workflows/{{PACK_PREFIX}}-dev-loop.js`
 > - Review-gate хук: `.claude/hooks/review-gate.sh` + `.claude/review-gate.env.ini`
+
+## Как ставятся задачи
+
+Два входа. **Через плагин `tasks`** (интент-команды — пинят модель+effort под задачу, чтобы не
+переключать вручную):
+
+| Команда | Профиль | Модель/effort (команды) |
+|:--|:--|:--|
+| `/task:dev` | адаптивный dev-loop (срез→impl→test→risk-review) | Opus/high (планирование); субагенты — по риску |
+| `/task:design` | проектирование: research-fanout + план/ADR, кода нет | Opus/high |
+| `/task:review` | read-only adversarial-ревью, severity-enum | Opus/xhigh |
+| `/task:research` | многоисточниковый research (RAG) | Opus/high |
+| `/task:fix` | мелкая правка: single-agent, без fan-out | Sonnet/medium |
+
+**Или напрямую:** оркестратор строит машиночитаемый PLAN (срезы + `risk` + `skills`) и запускает
+Workflow `{{PACK_PREFIX}}-dev-loop` с `args.slices` (см. ниже). Скоуп срезов решает человек.
+
+### Процесс workflow (dev-loop)
+
+```mermaid
+flowchart TD
+  U["/task:dev «что строим»"] --> O["Оркестратор → PLAN:<br/>срезы + risk + model/effort/skills"]
+  O -. "тяжёлое чтение по нужде" .-> REC["recon-субагенты (read-only, изолированы):<br/>route-mapper · db-impact · blade-review<br/>test-verifier · security-review<br/>→ наверх только сводка, main не пухнет"]
+  O --> SET["Setup: env-preflight<br/>(драйверы БД, версия PHP) + одна ветка"]
+  SET --> BUILD{"Build: следующий срез"}
+  BUILD -->|"есть срез"| IMPL["impl · slice-builder<br/>Lean-tiered: Haiku/Sonnet по risk"]
+  IMPL --> TEST["test · test-writer<br/>tests-to-green + risk_level<br/>обходка → POSSIBLE-DEFECT"]
+  TEST -->|"green"| REV["risk-adaptive review · reviewer<br/>LOW→spot · MED→контракты · HIGH→adversarial+fresh-context<br/>severity-enum, детект≠гейтинг"]
+  TEST -->|"deferred/failed"| CB
+  REV --> CB{"circuit-breaker:<br/>2 фейла подряд?"}
+  CB -->|"нет"| BUILD
+  CB -->|"стоп"| VER
+  BUILD -->|"срезы кончились"| VER["Verify: полный сюит + {{CHECK_CMD}}"]
+  VER --> DONE["Отчёт · дерево чистое · без push/PR"]
+```
+
+Ключ: **модель/effort субагентов заданы по риску среза и перебивают сессию** (Sonnet impl / Opus+xhigh
+на HIGH-review / Haiku тривиал); **fan-out — только на research-фазе** (`/task:design|research`), не на
+coding. Тяжёлую разведку делегируй recon-субагентам — они читают в своём окне, наверх отдают сводку.
 
 ## Когда вообще звать субагентов
 
@@ -34,7 +74,11 @@
 |:--|:--|:--|
 | `{{PACK_PREFIX}}-slice-builder` | реализатор среза (route→Action/Repository→DTO→policy), коммитит в текущую ветку, тесты не пишет | на реализацию вертикального среза |
 | `{{PACK_PREFIX}}-test-writer` | тесты ({{TEST_FRAMEWORK}}) по готовому коду, итерирует до зелёного через {{PHP_RUNNER}} | после реализации среза |
-| `{{PACK_PREFIX}}-reviewer` | read-only ревью с упором на слой доступа + корректность/авторизация | после каждой единицы реализации |
+| `{{PACK_PREFIX}}-reviewer` | risk-адаптивное read-only ревью (LOW→spot / MED→контракты / HIGH→adversarial+fresh-context), severity-enum, детект≠гейтинг | после каждой зелёной единицы |
+| `{{PACK_PREFIX}}-{route-mapper,db-impact,blade-review,test-verifier,security-review}` | **read-only recon** (карта роутов / БД-импакт / вьюхи / прогон тестов→сводка / security) в ИЗОЛИРОВАННОМ контексте — наверх только сводка | тяжёлая разведка перед правкой (main-контекст не пухнет); модель `{{MODEL_RECON}}` (дешёвая) |
+
+> Модели build-агентов — Lean-tiered по умолчанию (slice-builder/test-writer `sonnet`, reviewer/spec-writer
+> `opus`), а per-slice ещё уточняются по `risk`. Фундамент (контракты/модели) пиши сам — не пинь дешёвые модели.
 
 Плагин swissknifeman даёт ещё `Explore` (read-only исследование), `Plan`
 (архитектурный план), `system:code-coordinator` (межпроектный анализ),
@@ -88,8 +132,8 @@ args = {
 
 `.claude/hooks/review-gate.sh` гоняет лёгкую проверку на завершении субагента.
 Режим в `.claude/review-gate.env.ini`: `off | warn | strict` (по умолчанию
-**warn** — advisory, не блокирует). Дефолтная проверка — `pint --test` (phpstan в
-{{PACK_PREFIX}} не установлен). `strict` блокирует завершение (exit 2) до починки.
+**warn** — advisory, не блокирует). Дефолтная проверка — `{{CHECK_CMD}}` (статика
+проекта). `strict` блокирует завершение (exit 2) до починки.
 Это deterministic-страховка поверх агента-ревьюера, не замена ему.
 
 ## Жёсткие гейты {{PACK_PREFIX}} (для агентов и workflow)

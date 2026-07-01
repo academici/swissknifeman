@@ -46,6 +46,17 @@
 | 2026-06-23 | ponytail (YAGNI-лесенка + over-engineering ревью) | ✅ absorb (дисциплину) | без внешнего плагина; в reviewer-роль + опц. `quality/lean-code` |
 | 2026-06-23 | Agent Teams (Mesh, teammates) | ✅ accept v1 | эксперимент; CC ≥2.1.178; Фаза 6; роли = teammates |
 
+## Из аудита #3 (workflow resilience / rate-limit, 2026-07-01)
+
+| Дата | Идея | Вердикт | Обоснование / куда |
+|---|---|---|---|
+| 2026-07-01 | Честные статусы `green/deferred/infra-failed` (не маскировать инфра под дефект) | ✅ accept | dev-loop.js ×4 + доки; P4 — первый сплит CI-таксономии «infra-flake vs code-deterministic» |
+| 2026-07-01 | Fail-fast на терминальный `agent()===null` + меньший батч (дефолт 2) | ✅ accept | dev-loop.js; throttling сам не пройдёт от перехода к следующему срезу; большой батч множит retry-поверхность |
+| 2026-07-01 | Liveness через **внешний supervisor** (доклад оркестратора ~30 мин + `PushNotification`; опц. GHA cron-watchdog) | ✅ accept | orchestrator.md + background-agents.md; главный предохранитель, вне песочницы |
+| 2026-07-01 | In-script wall-clock / agent-timeout (`withDeadline`/`setTimeout`) | ❌ reject (костыль) | `Date.now()`/`setTimeout` в песочнице недоступны/ненадёжны, `agent()` не отменяем (нет `AbortController`) → не даёт гарантии; hang → эскалация человеку |
+| 2026-07-01 | Текст-маркер возврата вместо строгой схемы на длинных возвратах | ✅ accept | dev-loop.js; StructuredOutput retry-cap (5) рантайма обрывал прогон — обходим, не переживаем |
+| 2026-07-01 | `perplexity-web` — bounded concurrency (не «sequential only») | ✅ accept | background-agents.md таблица; репо-доки `query-craft` уже описывают daemon v1.3.0 pools; инцидентный 13-way fan-out просто превысил лимит |
+
 ## Проверенные факты Claude Code (офиц. доки, 2026-06-23)
 
 | Факт | Вердикт |

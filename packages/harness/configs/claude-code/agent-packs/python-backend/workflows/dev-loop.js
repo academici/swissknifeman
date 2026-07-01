@@ -9,7 +9,9 @@ export const meta = {
 }
 
 const PROJECT_DIR = '{{PROJECT_DIR}}'
-const DEFAULT_MAX = 3
+// хард-кап литералом (переживает resume). Урок throttling: большой батч множит
+// retry-поверхность под rate-limit → дефолт 2, не 3+ (solo-fallback — дисциплина оркестратора).
+const DEFAULT_MAX = 2
 
 const BRANCH = (args && args.branch) || 'feat/dev-loop'
 const BASE = (args && args.base) || '{{BASE_BRANCH}}'
@@ -45,7 +47,7 @@ const SLICE_RESULT_SCHEMA = {
   required: ['id', 'status', 'summary', 'assumptions', 'open_questions'],
   properties: {
     id: { type: 'string' },
-    status: { type: 'string', enum: ['green', 'deferred', 'failed'] },
+    status: { type: 'string', enum: ['green', 'deferred', 'failed', 'infra-failed'], description: 'green=зелёные; deferred=честно не зелёный (дефект); failed=агент отчитался о сбое; infra-failed=инфра-отказ (rate-limit/timeout/null) — НЕ маскировать под deferred' },
     summary: { type: 'string' },
     files_changed: { type: 'array', items: { type: 'string' } },
     tests_added: { type: 'array', items: { type: 'string' } },
@@ -59,6 +61,9 @@ const results = []
 let consecutiveFails = 0
 
 for (const slice of SLICES) {
+  const sliceNo = results.length + 1
+  // Durable-прогресс = число green (в песочнице нет shell → не git rev-list). Затяжной hang
+  // одного agent() тут НЕ ловится — это забота внешнего supervisor (доклад ~30 мин + PushNotification).
   if (consecutiveFails >= 2) {
     log(`Circuit-breaker: ${consecutiveFails} среза подряд не дошли до зелёного — стоп.`)
     break
@@ -74,6 +79,7 @@ ${JSON.stringify(slice, null, 2)}
 ${HARD_GATES}`,
     { label: `impl:${slice.id}`, phase: 'Build', agentType: '{{PACK_PREFIX}}-slice-builder', effort: 'high' }
   )
+  log(`срез ${sliceNo}/${SLICES.length}: ${slice.id} impl-ok`)  // heartbeat
 
   const result = await agent(
     `Ты в ветке ${BRANCH} в ${PROJECT_DIR}; срез реализован:
@@ -81,9 +87,11 @@ ${JSON.stringify(slice, null, 2)}
 Напиши pytest по acceptance_criteria и итерируй '{{TEST_RUNNER_CMD}}' до ЗЕЛЁНОГО.
 - Зелено → закоммить, status='green', test_output = финальная строка.
 - Честно не достиг → НЕ ослабляй: status='deferred', объясни; дерево чистое.
+ЗАПАСНОЙ ПУТЬ (если строгую схему возврата 5× не удаётся заполнить — не срывай прогон): последней строкой выведи ровно '===SLICE-RESULT=== status=green' или '===SLICE-RESULT=== status=deferred'.
 ${HARD_GATES}`,
     { label: `test:${slice.id}`, phase: 'Build', agentType: '{{PACK_PREFIX}}-test-writer', schema: SLICE_RESULT_SCHEMA, effort: 'high' }
   )
+  log(`срез ${sliceNo}/${SLICES.length}: ${slice.id} test=${result ? result.status : 'infra-failed(null)'}`)  // heartbeat
 
   let review = null
   if (result && result.status === 'green') {
@@ -98,10 +106,18 @@ ${HARD_GATES}`,
 ${HARD_GATES}`,
       { label: `review:${slice.id}`, phase: 'Build', agentType: '{{PACK_PREFIX}}-reviewer', effort: 'high' }
     )
+    log(`срез ${sliceNo}/${SLICES.length}: ${slice.id} review-ok (${results.filter((r) => r.status === 'green').length + 1}/${SLICES.length} зелёных)`)
   } else {
     consecutiveFails++
   }
-  results.push({ ...(result || { id: slice.id, status: 'failed', summary: 'agent вернул null', assumptions: [], open_questions: [] }), review_findings: review })
+  results.push({ ...(result || { id: slice.id, status: 'infra-failed', summary: 'agent вернул null (терминальный infra-сбой рантайма)', assumptions: [], open_questions: [] }), review_findings: review })
+
+  // Fail-fast на инфра-отказ: agent() вернул null = терминальный сбой (rate-limit/timeout,
+  // ретраи исчерпаны). Дальше бессмысленно. НЕ маскируем под deferred (P4). Затяжной hang → supervisor.
+  if (!result) {
+    log(`Fail-fast: срез ${slice.id} infra-failed (agent вернул null) — стоп прогона, иду в Verify/отчёт.`)
+    break
+  }
 }
 
 phase('Verify')
@@ -117,5 +133,6 @@ ${HARD_GATES}`,
 )
 
 const built = results.map((r) => ({ id: r.id, status: r.status }))
-log(`Готово: ${built.filter((b) => b.status === 'green').length}/${SLICES.length} зелёных. Ветка ${BRANCH}, ничего не запушено.`)
+const infraN = built.filter((b) => b.status === 'infra-failed').length
+log(`Готово: ${built.filter((b) => b.status === 'green').length}/${SLICES.length} зелёных${infraN ? `, ${infraN} infra-failed (инфра-отказ, НЕ дефект — см. <failures>)` : ''}. Ветка ${BRANCH}, ничего не запушено.`)
 return { branch: BRANCH, base: BASE, max: MAX, results, verify }

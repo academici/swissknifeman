@@ -54,6 +54,7 @@
       "Read(**/*.key)",
       "Read(~/.ssh/**)",
       "Read(~/.aws/**)",
+      "Read(~/.claude/logs/**)",
       "Bash(sudo *)"
     ]
   }

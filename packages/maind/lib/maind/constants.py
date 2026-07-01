@@ -88,6 +88,26 @@ CODE_GRAPH_DEFAULTS = {
     "feature_log_hook": True,
 }
 
+# perplexity-web — keyless-мост (браузерный профиль) как hub-managed MCP-сервер.
+# Раскатывается в проекты как `maind`/Serena (deploy/sync), а не вписывается вручную
+# хардкод-путём в каждый .mcp.json. Политика — секция mcp.perplexity_web конфига:
+#   enabled  — глобальный фан-аут (per-project override `perplexity_web: true|false`);
+#   pool     — модель пулов (один пул = демон+профиль+окно браузера, README пакета):
+#              "default"|<литерал> → общий пул (переиспользует текущий логин);
+#              "per-project"       → пул = id проекта (свой логин на проект);
+#              "per-namespace"     → пул = "ns-<namespace>" (логин на группу);
+#              per-project override — `perplexity_web_pool: "<имя>"`;
+#   bin      — fallback-путь к start.sh пакета (machine-specific → живёт в хаб-конфиге,
+#              НЕ в коде); оборачивается индирекцией `${PERPLEXITY_WEB_MCP_BIN:-<bin>}`,
+#              как `${MAIND_BIN:-maind}` — переносимо между машинами/CI.
+PERPLEXITY_WEB_DEFAULTS = {
+    "enabled": False,
+    "pool": "default",
+    "bin": "",
+    "env_var": "PERPLEXITY_WEB_MCP_BIN",
+    "server_name": "perplexity-web",
+}
+
 # Планы графа (природа связи) и источник, из которого ребро/узел получены (derive).
 GRAPH_PLANES = {"code", "doc", "meta", "runtime"}
 LINK_VIA = {"code", "doc", "override", "skills"}

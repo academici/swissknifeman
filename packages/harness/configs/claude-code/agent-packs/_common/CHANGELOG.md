@@ -2,6 +2,18 @@
 
 Формат — [Keep a Changelog](https://keepachangelog.com/ru/1.0.0/); версии — per-PACK (semver).
 
+## [0.2.0] - 2026-07-01
+
+### Added
+
+- **Директива liveness-supervision в `orchestrator.md`** (rate-limit incident
+  2026-07-01). Для фонового `dev-loop` оркестратор допиши блок `SUPERVISION` —
+  контракт основной сессии: доклад статуса каждые ~30 мин (`Monitor`/`ScheduleWakeup`
+  на `git log <base>..HEAD`), `PushNotification` на застой/`<failures>`, `TaskStop`
+  при нужде. Затронут install-файл `.claude/agents/{PACK_PREFIX}-orchestrator.md`.
+  Мотивация: рантайм `agent()` авто-ретраит rate-limit до высокого капа → затяжной
+  hang не виден изнутри скрипта; надёжный предохранитель — только внешний supervisor.
+
 ## [0.1.0] - 2026-06-24
 
 ### Added

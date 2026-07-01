@@ -77,6 +77,10 @@
         "hooks": [
           {
             "type": "command",
+            "command": "~/.claude/hooks/daemon-safety/block-daemon-ops.sh"
+          },
+          {
+            "type": "command",
             "command": "~/.claude/hooks/log-bash-command.sh"
           }
         ]

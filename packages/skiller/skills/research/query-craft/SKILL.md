@@ -82,7 +82,7 @@ Tools of the `perplexity-web` server (keyless bridge). Mode choice = depth/speed
 |:--|:--|:--|:--|
 | `mcp__perplexity-web__search` | default: one verifiable fact, fast cited answer | fast | one focused 5-slot query |
 | `mcp__perplexity-web__search_advanced` (`sources: web\|academic\|social`) | when **source control** matters: `academic` for papers/research, `social` (Reddit/forums) for lived experience/edge-cases, or a combo | as search | same query + **explicit `sources`** by fact type |
-| `mcp__perplexity-web__search_deep` | deep: market, competitive landscape, topic overview across 20+ sources | **slow, up to ~5 min** | broad query with explicit goals and desired answer structure; NOT for one fact |
+| `mcp__perplexity-web__search_deep` | deep: market, competitive landscape, topic overview across 20+ sources | **slow, up to ~10 min** (daemon v1.3.0: does NOT block parallel `search`) | broad query with explicit goals and desired answer structure; NOT for one fact |
 
 **Choosing `sources` in `search_advanced`:**
 - `web` — general default (docs, blogs, news).
@@ -90,35 +90,55 @@ Tools of the `perplexity-web` server (keyless bridge). Mode choice = depth/speed
 - `social` — Reddit and forums: lived experience, gotchas, "who else hit this".
 - combine (`web+academic`) when you need both official docs and formal confirmation.
 
-> **Don't fire `search_deep` needlessly.** Up to ~5 min/query. For one fact/version/comparison `search` or
+> **Don't fire `search_deep` needlessly.** Up to ~10 min/query (daemon v1.3.0 no longer lets it block
+> parallel `search`, but `deep` itself is still slow). For one fact/version/comparison `search` or
 > `search_advanced` suffices. `deep` — only for synthesis across many sources (see "cost" in
-> `verify-claims`/`context-economy`).
+> `verify-claims`/`context-economy`). Concurrency, pools and server error codes — section below.
 
-## Reliability of the keyless bridge `perplexity-web` (lock / timeout on heavy queries)
+## Concurrency & resilience of `perplexity-web` (daemon v1.3.0)
 
-`perplexity-web` is a **keyless bridge through a browser profile** (one shared profile). Hence two observed
-failures, especially on complex/long queries:
+`perplexity-web` is a keyless bridge through a browser profile. **As of v1.3.0** queries are served by a
+shared background **daemon** (owns Chromium): each query gets its own tab, up to `maxConcurrency` (default
+**3**) in parallel. The daemon spawns on first call and shuts itself down on idle — the skill does NOT
+start/stop it. The old "one shared profile, everything serialized" behavior remains as `--mode=legacy` (and
+the old no-parallel ban applied only to it).
 
-- **`Profile is locked by another … instance`** — profile held by another/hung session. You cannot send two
-  `perplexity-web` queries in parallel.
-- **Browser closes on "thinking" → timeout**, though the answer was actually being generated. A heavy query
-  (especially `search_deep`, up to ~5 min) outgrows the bridge timeout — result is lost.
+- **Parallel is now ALLOWED** — up to `maxConcurrency` (default 3) `perplexity-web` queries at once;
+  `search_deep` (up to ~10 min) no longer **blocks** regular `search`. Above the limit — see `BROWSER_BUSY`
+  below. (Other engines — context7/WebSearch — parallelize as before.) Tab isolation (each query reads its
+  own tab, no cross-read/focus-steal) is covered by a daemon smoke test in `perplexity-web-mcp`.
+- **Pools (`--pool`) are MCP config, not the query's concern** (pool choice — `mcp-advisor`): same pool
+  across projects → shared daemon/window (parallel tabs); different pool → full isolation (own
+  window/profile/daemon, each needs its own `login`). Pool `default` reuses the profile — login is not lost.
 
-**What to do (in order):**
-1. **No parallel** to `perplexity-web` — one query at a time; don't batch it with another `perplexity-web`
-   call. (Other engines — context7/WebSearch — can be parallelized.)
-2. **Heavy query → split or switch engine.** Instead of one `search_deep` — several narrow `search` (see "one
-   query = one fact"); or for deep synthesis escalate to `research/research` over WebSearch/WebFetch.
-3. **Lock won't clear / repeated timeout → switch engine:** `WebSearch`+`WebFetch` (Claude-native, no browser
-   profile) for the same fact; for library docs — `context7`. Don't get stuck on the locked bridge.
-4. **Systemically (for heavy/frequent queries): move to the API-key variant** — native
-   `@perplexity-ai/mcp-server` with `PERPLEXITY_API_KEY` (more precise/faster, no browser profile or its
-   timeouts; catalog — `harness configs/claude-code/mcp/perplexity.json`). The keyless bridge is for light
-   keyless queries; "complex queries timing out" is the signal it's time for the key.
+**Error semantics** (handle the error response, don't hang):
 
-> This is an **operational workaround**, not a server fix (the bridge is external, not in this repo). A
-> recurring bridge failure → route via `field-feedback-loop` (candidate: default to the API-key variant in the
-> harness catalog for research-heavy projects).
+| In error text | Meaning | What to do |
+|:--|:--|:--|
+| `BROWSER_BUSY` | all tabs busy (saturation) | **retry after a few seconds**; appears only with `saturation` = `fail-fast`\|`hybrid` (with `queue` the request waits itself) |
+| `TIMEOUT` | answer didn't make the timeout | retry / raise `--timeout` / split the heavy query |
+| `LOGIN_REQUIRED` | login needed | call `login` |
+| `PROTOCOL_MISMATCH` | a daemon of another version is running | let it idle-shut-down or restart the MCP server; do **NOT** fall back to legacy |
+
+**Non-contract drop** (`ECONNRESET`, "Daemon connection closed before result") — NOT a table code but a
+daemon crash: usually it couldn't launch Chromium (ms-playwright cache bumped → the pinned browser build was
+pruned). `start.sh` now auto-falls-back to the newest installed ms-playwright Chromium, so this **self-heals
+when any Chromium is installed**; you only need `npx playwright install chromium` in the `perplexity-web-mcp`
+package when **none** is. Diagnose via the pool log `$XDG_RUNTIME_DIR/perplexity-web-mcp/<pool>.log`
+(`Executable doesn't exist…`). Retry after the fix spawns a fresh daemon.
+
+**Heavy query.** `search_deep` — up to ~10 min, but the daemon doesn't let it block parallel `search`. If the
+answer still outgrows the timeout — split into narrow `search` (see "one query = one fact") or for deep
+synthesis escalate to `research/research`. On a repeated `TIMEOUT`/`PROTOCOL_MISMATCH` — switch to
+`WebSearch`+`WebFetch` (Claude-native) or `context7` for docs; don't get stuck on the server.
+
+**API-key variant** (`@perplexity-ai/mcp-server`, `PERPLEXITY_API_KEY`; catalog —
+`harness configs/claude-code/mcp/perplexity.json`) — still an alternative for heavy/frequent research with no
+browser profile. With the daemon the keyless bridge closed the old lock/serialization — the key is taken for
+speed/precision, not as a workaround for a locked profile.
+
+> Contract — `perplexity-web-mcp` v1.3.0 (daemon, pools, error codes). The old "no parallel" workaround
+> applied to the legacy bridge and is dropped. Route bridge-contract drift via `field-feedback-loop`.
 
 ## Phrasing anti-patterns (fix before sending)
 
@@ -148,7 +168,7 @@ don't know", don't guess`.
 - [ ] **Engine** chosen by fact type (context7 for API · Perplexity for practices/freshness · Web for a known URL) and **mode** (`search`/`advanced`/`deep`) by depth; `deep` not fired for one fact.
 - [ ] In `search_advanced` `sources` chosen by fact type (academic/social/web).
 - [ ] Fresh fact has a **timeframe**.
-- [ ] On `perplexity-web` lock/timeout — not parallelized; heavy query split or switched to WebSearch/context7; persistent heavy use → API-key variant.
+- [ ] `perplexity-web`: parallelized within `maxConcurrency` (default 3); on `BROWSER_BUSY`/`TIMEOUT` — retry/split, on `PROTOCOL_MISMATCH` — don't fall back to legacy; raw drop (`ECONNRESET`) → self-heals via `start.sh` if any Chromium is installed, else `npx playwright install chromium`; heavy synthesis → `research/research` or API-key variant.
 
 ## Related skills
 
@@ -160,6 +180,8 @@ don't know", don't guess`.
 <!-- provenance: phrasing rules cross-checked with Perplexity's official prompt guide
      (docs.perplexity.ai/guides/prompt-guide) + help-center "getting better answers",
      verified 2026-06-29 (WebSearch+WebFetch; perplexity-web profile was locked).
-     search/advanced/deep modes — from the perplexity-web server tool schemas. -->
+     search/advanced/deep modes — from the perplexity-web server tool schemas.
+     Concurrency (daemon/pools/error codes BROWSER_BUSY·TIMEOUT·LOGIN_REQUIRED·PROTOCOL_MISMATCH) —
+     from the perplexity-web-mcp v1.3.0 integration note, checked 2026-06-30. -->
 
-<!-- ru-source-sha256: b953867ae9ba3040c3623fca30d6dda227a1e4d8ee3f29cb732be2b7df4535f1 -->
+<!-- ru-source-sha256: 04c20f0607085c8de74629c648ce59b8a98b531cae4a6fc69f77bf3dfe653e1e -->

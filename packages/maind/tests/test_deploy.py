@@ -189,6 +189,85 @@ class TestDeploy(unittest.TestCase):
             servers = json.loads((ppath / ".mcp.json").read_text())["mcpServers"]
             self.assertIn("4211", servers["agentmemory"]["env"]["AGENTMEMORY_URL"])
 
+    def test_perplexity_web_disabled_by_default(self):
+        # Без секции mcp.perplexity_web сервер не раскатывается (opt-in).
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            ppath = _project(tmp)
+            cfg = _config(ppath)
+            deploy.deploy_project(env, cfg, cfg["projects"][0])
+            servers = json.loads((ppath / ".mcp.json").read_text())["mcpServers"]
+            self.assertNotIn("perplexity-web", servers)
+
+    def _config_pw(self, path, pid="flexcrm", pool="default", **pw):
+        return merge_defaults({
+            "mcp": {"perplexity_web": {"enabled": True, "pool": pool,
+                                       "bin": "/opt/pplx/start.sh", **pw}},
+            "projects": [{"id": pid, "name": pid.title(), "local_path": str(path),
+                          "namespaces": ["axioma"], "memory_scope": f"project:{pid}"}]})
+
+    def test_perplexity_web_enabled_default_pool(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            ppath = _project(tmp)
+            cfg = self._config_pw(ppath)
+            res = deploy.deploy_project(env, cfg, cfg["projects"][0])
+            servers = json.loads((ppath / ".mcp.json").read_text())["mcpServers"]
+            self.assertIn("perplexity-web", servers)
+            self.assertIn("perplexity-web", res["servers"])
+            self.assertEqual(servers["perplexity-web"]["args"], ["--pool=default"])
+            # индирекция через env (как у maind), bin — лишь fallback
+            self.assertEqual(servers["perplexity-web"]["command"],
+                             "${PERPLEXITY_WEB_MCP_BIN:-/opt/pplx/start.sh}")
+
+    def test_perplexity_web_per_project_pool(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            ppath = _project(tmp)
+            cfg = self._config_pw(ppath, pool="per-project")
+            deploy.deploy_project(env, cfg, cfg["projects"][0])
+            servers = json.loads((ppath / ".mcp.json").read_text())["mcpServers"]
+            self.assertEqual(servers["perplexity-web"]["args"], ["--pool=flexcrm"])
+
+    def test_perplexity_web_per_namespace_pool(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            ppath = _project(tmp)
+            cfg = self._config_pw(ppath, pool="per-namespace")
+            deploy.deploy_project(env, cfg, cfg["projects"][0])
+            servers = json.loads((ppath / ".mcp.json").read_text())["mcpServers"]
+            self.assertEqual(servers["perplexity-web"]["args"], ["--pool=ns-axioma"])
+
+    def test_perplexity_web_per_project_override(self):
+        # per-project override отключает сервер даже при глобальном enabled.
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            ppath = _project(tmp)
+            cfg = self._config_pw(ppath)
+            cfg["projects"][0]["perplexity_web"] = False
+            deploy.deploy_project(env, cfg, cfg["projects"][0])
+            servers = json.loads((ppath / ".mcp.json").read_text())["mcpServers"]
+            self.assertNotIn("perplexity-web", servers)
+
+    def test_perplexity_web_pool_override(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            ppath = _project(tmp)
+            cfg = self._config_pw(ppath, pool="per-project")
+            cfg["projects"][0]["perplexity_web_pool"] = "research"
+            deploy.deploy_project(env, cfg, cfg["projects"][0])
+            servers = json.loads((ppath / ".mcp.json").read_text())["mcpServers"]
+            self.assertEqual(servers["perplexity-web"]["args"], ["--pool=research"])
+
+    def test_perplexity_web_mark_deployed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            ppath = _project(tmp)
+            cfg = self._config_pw(ppath)
+            res = deploy.deploy_project(env, cfg, cfg["projects"][0])
+            cfg = deploy.mark_deployed(cfg, "flexcrm", res)
+            self.assertTrue(get(cfg, "flexcrm")["mcp"]["perplexity_web"])
+
     def test_missing_path_skipped(self):
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)

@@ -126,9 +126,14 @@
     }
   },
 
-  "_comment_mcp": "MCP-серверы, к которым подключается узел (и которые он публикует). emit_example (opt-in, по умолчанию false): при deploy/sync рядом с реальным .mcp.json эмитить .mcp.json.example с плейсхолдерами (<ABS_PATH_TO_PROJECT>/<HOME>) вместо machine-specific путей + вести .gitignore (реальный файл — в .gitignore, .example — вне, чтобы коммитился).",
+  "_comment_mcp": "MCP-серверы, к которым подключается узел (и которые он публикует). emit_example (opt-in, по умолчанию false): при deploy/sync рядом с реальным .mcp.json эмитить .mcp.json.example с плейсхолдерами (<ABS_PATH_TO_PROJECT>/<HOME>) вместо machine-specific путей + вести .gitignore (реальный файл — в .gitignore, .example — вне, чтобы коммитился). perplexity_web (opt-in, disabled-by-default): hub-managed keyless-мост perplexity-web — раскатывается в проекты тем же deploy/sync, что maind/Serena, вместо ручной хардкод-записи в каждом .mcp.json. enabled — глобальный фан-аут (per-project override projects[].perplexity_web:true|false). pool — модель пулов браузера (пул=демон+профиль+окно): 'default'/литерал → общий пул (переиспользует текущий логин); 'per-project' → пул=id (свой логин на проект); 'per-namespace' → пул=ns-<namespace> (логин на группу); per-project override projects[].perplexity_web_pool. bin — fallback-путь к start.sh пакета (machine-specific; оборачивается индирекцией ${PERPLEXITY_WEB_MCP_BIN:-<bin>}, как ${MAIND_BIN:-maind}).",
   "mcp": {
     "emit_example": false,
+    "perplexity_web": {
+      "enabled": false,
+      "pool": "default",
+      "bin": "/abs/path/to/perplexity-web-mcp/start.sh"
+    },
     "servers": [
       {
         "name": "agentmemory",

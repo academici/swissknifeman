@@ -5,6 +5,22 @@
 
 ## [Unreleased]
 
+### Added
+- **`perplexity-web` — hub-managed MCP-сервер (раскатка из конфига, не вручную).** Keyless-мост
+  `perplexity-web` (отдельный Node-пакет) раздаётся в проекты тем же `deploy`/`sync`, что `maind`
+  и Serena, — единым источником истины вместо ручных хардкод-записей в каждом `.mcp.json`
+  (как было у `swissknifeman`/`edufy`/`botkit`). Политика — секция `mcp.perplexity_web` конфига:
+  `enabled` (глобальный фан-аут; per-project override `perplexity_web: true|false`), `pool`
+  (модель пулов браузера: общий литерал вроде `default` — переиспользует текущий логин;
+  `per-project` — пул=id; `per-namespace` — пул=`ns-<namespace>`; per-project override
+  `perplexity_web_pool`), `bin` (fallback-путь к `start.sh`, оборачивается индирекцией
+  `${PERPLEXITY_WEB_MCP_BIN:-<bin>}` — переносимо, без захардкоженного `/home/...`). Новый резолвер
+  `pplxweb.py` (зеркало `codegraph.py`), `PERPLEXITY_WEB_DEFAULTS` (disabled-by-default), запись в
+  `deploy_project`/`mark_deployed` (`proj.mcp.perplexity_web`), фолбэк-дефолты в `merge_defaults`
+  (только если секция задана). Заодно чинит «битый» `--pool=swissknifeman` (пул без логина) →
+  каноничный `--pool=default` при ближайшем деплое. Тесты: `test_deploy.py` (+7, модели пулов и
+  override). Поймано на онбординге через `field-feedback-loop`.
+
 ### Fixed
 - **MCP-провижининг устойчив к битому sibling-каналу.** Раньше `load_mcp` на битом JSON одного
   канала (напр. `.cursor/mcp.json`) звал `die()` и валил **весь** `maind sync`/`deploy` (хотя

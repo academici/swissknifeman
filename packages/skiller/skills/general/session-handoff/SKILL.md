@@ -8,7 +8,7 @@ persona: oss-dev
 tags: [workflow, context, tokens, handoff]
 requires: []
 produces_for: []
-outputs: []
+outputs: [".claude/handoffs/*.md"]
 snippets: ["handoff-template.md"]
 adapters: [claude, cursor, fable]
 sha256: ""
@@ -30,7 +30,7 @@ sha256: ""
 5. **Read-from-scratch check.** Reread as a context-less agent: understandable without this session? Codenames/abbreviations introduced this session — expand or remove.
 
 ## Doc structure
-Template: `snippets/handoff-template.md`. Save per project convention (e.g. `docs/handoff/YYYY-MM-DD-<topic>.md`) or pass in first message of new session.
+Template: `snippets/handoff-template.md`. Save to the standard path `.claude/handoffs/YYYY-MM-DD-<topic>.md` (auto-indexable by maind) or pass in first message of new session.
 
 ## Anti-patterns
 - Summary from memory without `git status`/`git diff`.
@@ -45,4 +45,4 @@ Template: `snippets/handoff-template.md`. Save per project convention (e.g. `doc
 
 <!-- ru-source-sha256: PENDING -->
 
-<!-- ru-source-sha256: 3ae40e6a17d3f0633f39f51043afdc0c37c62389693ff079bd87515c517e7423 -->
+<!-- ru-source-sha256: 1d83d08a24d814d98494c501881cffd01bade622b9b625c6d5298d291ef26a6f -->

@@ -10,7 +10,7 @@ import os
 import shutil
 from pathlib import Path
 
-from . import codegraph
+from . import codegraph, pplxweb
 from .common import die, now_iso, parse_args, warn
 from .config import load_config
 from .mcpconfig import (MCP_FILES, MCPConfigError, load_mcp, mcp_path,
@@ -101,6 +101,10 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
             warn(f"проект '{pid}': команда '{gcmd}' код-графа не найдена в PATH — пропускаю "
                  f"(установите, напр. uvx для Serena, или задайте code_command)")
 
+    pw = pplxweb.settings(config)                            # hub-managed perplexity-web
+    if pplxweb.enabled(project, pw):                         # opt-in: mcp.perplexity_web.enabled
+        entries[pplxweb.server_name(pw)] = pplxweb.entry(project, pw)
+
     written = []
     skipped = []
     for _channel, path in _resolve_targets(project_path, targets):
@@ -144,6 +148,7 @@ def mark_deployed(config, project_id, result):
         "maind": "maind" in result["servers"],
         "code": result["code"] == "written",
         "code_server": result.get("code_server"),
+        "perplexity_web": pplxweb.server_name(pplxweb.settings(config)) in result["servers"],
         "targets": result["targets"],
         "scope": result["scope"],
     }

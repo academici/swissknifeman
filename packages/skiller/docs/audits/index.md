@@ -12,6 +12,7 @@ ledger-строка — в `packages/skiller/references/framework-audits.md`.
 |---|---|---|---|---|
 | 2026-06-23 | Universal framework (профили, генерация, AI Skills Index, rules, spec-first, task-graph) | [raw](./2026-06-23-universal-framework.raw) | [триаж](./2026-06-23-universal-framework) | absorb: hub-index, rules, spec-writer(опц), validate-agents; reject: движок, нумерация, file-lock, complexity |
 | 2026-06-23 | Agent Teams + ponytail | [raw](./2026-06-23-agent-teams-ponytail.raw) | [триаж](./2026-06-23-agent-teams-ponytail) | accept: Agent Teams(v1), ponytail-дисциплина; reject: `extends:`/`@include`, skill-enforcement хук |
+| 2026-07-01 | Инцидент: устойчивость workflow к rate-limit (single-browser, StructuredOutput-cap, server throttling) | — (пост-мортем) | [разбор](./2026-07-01-workflow-resilience-ratelimit) | absorb: wall-clock-дедлайн + no-progress watchdog, fail-fast на rate-limit, liveness-проверка оркестратором, малые батчи/solo-fallback, реестр single-instance MCP, честная телеметрия (deferred vs infra-failed) |
 
 ## Как добавить прогон
 

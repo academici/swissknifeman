@@ -16,6 +16,7 @@
 | [`skill-rules-sidecar.md`](skill-rules-sidecar.md) | Генерируемый `skill-rules.json` сайдкар для роутинга скиллов | Нативная автозагрузка скиллов обычно достаточна | Замеренные мис-активации скиллов |
 | [`mcp-config-example-emit.md`](mcp-config-example-emit.md) | maind deploy/sync сам эмитит `.mcp.json.example` (плейсхолдеры) + ведёт `.gitignore` | Кейс покрыт дисциплиной агента (скилл `project-tooling-runbook`); генератор-механизм пока избыточен | Повторная утечка абс.путей/секретов в репо ИЛИ внешний разработчик не поднял MCP без `.example` |
 | [`php-package-stack-pack.md`](php-package-stack-pack.md) | Отдельный стек-пак `php-package` (dev-loop под Testbench/Pest/публичный API), не app-ориентированный `backend-laravel` | `backend-laravel` v0.3.0 после фикса рабочий и для пакета; новый пак — только при повторном трении | Несколько онбордингов пакетов упёрлись в app-допущения `backend-laravel` (не один azguard) |
+| [`analyst-suggest-draft-skill.md`](analyst-suggest-draft-skill.md) | `analyst suggest` (P4): cross-project паттерн → ЧЕРНОВИК `SKILL.ru.md` в staging, человек промоутит | Спроектировано, не реализовано; ждёт накопленных cross-project паттернов (`scan`) + повторяющегося трения ручного оформления скилла | Непустой `index/by_pattern/` И ручное оформление черновика «с нуля» стало трением |
 
 ## Принцип
 

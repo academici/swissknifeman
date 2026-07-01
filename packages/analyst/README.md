@@ -7,7 +7,10 @@
 
 > Реализованный контур: **P1 (MVP)** — `digest` + lessons-store + human `review`/`promote`;
 > **P2** — cross-project агрегатор `scan`; **P3** — confidence-арифметика (Beta/decay) +
-> числовая state-machine `recompute` + mem0-таксономия. Дальше по roadmap: draft-скилл (P4), `observe.sh` (P5).
+> числовая state-machine `recompute` + mem0-таксономия; **P4** — `suggest` → ЧЕРНОВИК скилла
+> (`SKILL.ru.md` в staging, промоут — человек). Дальше по roadmap: `analyst-capture` + `observe.sh` (P5).
+>
+> 📖 Документация: [`docs/`](docs/) (VitePress — standalone + зонтичный агрегат).
 
 ## Почему так (анти-collapse)
 

@@ -2,6 +2,54 @@
 
 ## [Unreleased]
 
+### Added (intent-router — свободный текст → оптимальная команда; активация roadmap-хука)
+
+Field-feedback: владелец забывает ставить задачи через `/task:*` (замеренный мисроут → триггер
+активации отложенного `roadmap/agent-command-router-hook.md`). Верификация капабилити — целиком через
+`perplexity-web` (нашла 2 ошибки в исходном плане: auto-run первоклассный через `SlashCommand`;
+SessionStart-политику слать через `additionalContext`, не `systemMessage`).
+
+- **Пара Python-хуков `agent-router`** (первый Python-хук репо):
+  `configs/claude-code/hooks/agent-router/` — `session-policy.py` (SessionStart инжектит статическую
+  политику роутинга через `additionalContext`) + `router.py` (UserPromptSubmit: keyword-прескор →
+  крошечная idempotent-подсказка при score≥THRESHOLD, иначе тишина; escape-hatch `~`). Гибрид:
+  прескор — bias, финальную классификацию (вопрос vs задача) делает модель. Никогда не барьер.
+- **`harness hooks --router propose|auto_dispatch|off`** (`block_router`) — включает пару хуков
+  per-project (env.ini + merge-only регистрация UserPromptSubmit+SessionStart).
+- **`harness router --generate --target P`** (новый модуль `lib/harness/router.py` + `cli.py`) —
+  генерит `.claude/agent-router.config.json` из `/task:*` + `.claude/agents/*.md` + локальных
+  `.claude/skills/*/SKILL.md` (низкий вес — бэкстоп). Зонтичный `swissknifeman env router` даром.
+- **maind:** `env:router` capability + провиженер `router-config` в `maind sync` (opt-in: генерит
+  каталог только для проектов с включённым хуком; идёт после `agent-pack`).
+- **Глобальная раздача:** `apply-permissions.sh --global` копирует `agent-router/` в `~/.claude/hooks`
+  (env.ini не затирает). `validate.sh` получил py_compile-шаг для Python-хуков конфигов.
+- Тесты: `harness/tests/test_router.py` (+10: block_router, --generate, поведенческие хуков),
+  `maind` `TestRouterConfigProvisioner` (+4). roadmap помечен активированным + исправлен устаревший
+  тезис про авто-активацию команд. **Честный лимит:** хук команду не запускает; `auto_dispatch`
+  может оверфайрить → дефолт `propose`; marketplace-команды пакетов — follow-up (в README).
+
+### Added (RAG-дисциплина формирования плана — агрессивный perplexity-web + footer «Проверка» + честность)
+
+Field-feedback: агенты неохотно жмут RAG при формировании плана, хотя план 100% должен стоять на свежих
+данных; отказ движка (perplexity-web залочен/timeout, MCP лёг) не выносился на повторный проход; не было
+клаузы честности «костыль называть костылём». Scope: CORE-скиллы + CLAUDE.md + docs + агент-паки (зубы).
+
+- **CORE-скилл `verify-claims` 0.2.0** (раздаётся в каждый проект): лестница — токен-экономия
+  (`perplexity-web` flat-rate → **агрессивный дефолт**; на промах context7 фолбэк на perplexity-web, НЕ на
+  WebSearch); новый **footer «Проверка»** (RAG · непроверенное→**ПОВТОРНЫЙ ПРОХОД** · обходки-`[POSSIBLE-DEFECT]`);
+  клауза честности «не правки ради правок, костыль называть костылём». RU-источник правлен → EN-канон регенерён.
+- **CORE-скилл `query-craft`**: нота токен-экономии (жать `perplexity-web` агрессивно) + как записать отказ
+  движка в footer «Проверка» (кросс-реф на `verify-claims`).
+- **Root `CLAUDE.md`**: «Методология решений» переписана под агрессивный perplexity-web + footer «Проверка»;
+  новый тезис философии **«RAG-делегирование (токен-экономия)»**.
+- **Root-скилл `decision-verification`**: триггер «формирование плана» + footer «Проверка» + честность.
+- **Агент-паки (зубы): `_common` 0.3.0** — `orchestrator.md` получил RAG-правило плана + выходной блок
+  `VERIFICATION`; **`backend-laravel` 0.10.0** — `dev-loop.js` `SLICE_RESULT_SCHEMA` получил опциональный
+  `tool_failures[]` (движок недоступен → повторный проход, не маскировать).
+- Провенанс — `docs/reference.md` (industry prompt-engineering RAG-forcing/verification-footer, верифиц.
+  `perplexity-web` 2026-07-01). **Честное ограничение:** интерактивный plan mode не хардгейтится (нет хука) —
+  фикс поведенческий; зубы только в workflow-слое `dev-loop.js`.
+
 ### Added/Changed (harness — agent-pack мигратор: монорепо-детект + анти-false-green)
 
 - **Движок `agentpacks.py` — пост-рендер валидация путей (`expect_globs`).** Новое поле

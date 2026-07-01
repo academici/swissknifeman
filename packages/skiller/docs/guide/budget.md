@@ -159,7 +159,7 @@ flowchart LR
     skills_ssot["skills-ssot<br/>⊕30 ↻1514"]:::cool
     spec_interview["spec-interview<br/>⊕49 ↻649"]:::mild
     task_brief_template["task-brief-template<br/>⊕67 ↻1187"]:::warm
-    verify_claims["verify-claims<br/>⊕136 ↻1475"]:::hot
+    verify_claims["verify-claims<br/>⊕136 ↻2083"]:::hot
     writing_style["writing-style<br/>⊕83 ↻1565"]:::warm
   end
   subgraph laravel_architecture["laravel-architecture"]
@@ -284,7 +284,7 @@ flowchart LR
     testing_safety_report["testing-safety-report<br/>⊕66 ↻668"]:::warm
   end
   subgraph research["research"]
-    query_craft["query-craft<br/>⊕116 ↻3153"]:::hot
+    query_craft["query-craft<br/>⊕116 ↻3339"]:::hot
     research_knowledge_super_skill["research-knowledge-super-skill<br/>⊕165 ↻17401"]:::hot
   end
   subgraph roles["roles"]
@@ -405,13 +405,13 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 205 скиллов · ⊕ always **12713** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 438951 ток · ⌥ snippets 158029 ток.
+**Итого:** 205 скиллов · ⊕ always **12713** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 439745 ток · ⌥ snippets 158029 ток.
 
 ## По бакетам
 
 | Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ snippets |
 |---|--:|--:|--:|--:|
-| `general` | 19 | 1178 | 17693 | 5120 |
+| `general` | 19 | 1178 | 18301 | 5120 |
 | `php` | 17 | 1029 | 17184 | 26763 |
 | `architect` | 14 | 747 | 38470 | 7503 |
 | `frontend-vue` | 11 | 726 | 23106 | 7058 |
@@ -425,7 +425,7 @@ flowchart LR
 | `pm` | 10 | 373 | 28759 | 197 |
 | `founder` | 10 | 343 | 13127 | 494 |
 | `laravel-testing` | 4 | 283 | 6868 | 14531 |
-| `research` | 2 | 281 | 20554 | 0 |
+| `research` | 2 | 281 | 20740 | 0 |
 | `frontend-linting` | 4 | 275 | 5276 | 2914 |
 | `operator` | 6 | 252 | 27108 | 90 |
 | `frontend-backend` | 3 | 244 | 4726 | 7459 |

@@ -2,6 +2,17 @@
 
 Формат — [Keep a Changelog](https://keepachangelog.com/ru/1.0.0/); версии — per-PACK (semver).
 
+## [0.3.0] - 2026-07-01
+
+### Added
+
+- **Footer `VERIFICATION` + RAG-правило плана в `orchestrator.md`** (field-feedback: агенты
+  неохотно жмут RAG при формировании плана). Оркестратор теперь: (1) верифицирует внешние факты
+  плана ДО финализации — сначала `perplexity-web` (flat-rate, токен-дёшево), `context7` для API;
+  (2) правок ради правок не плодит; (3) допиши в конец плана блок `VERIFICATION` (RAG-движки ·
+  **непроверенное → ПОВТОРНЫЙ ПРОХОД** при отказе движка · обходки-`[POSSIBLE-DEFECT]`). Затронут
+  install-файл `.claude/agents/{PACK_PREFIX}-orchestrator.md`. Формат — канон-скилл `verify-claims`.
+
 ## [0.2.0] - 2026-07-01
 
 ### Added

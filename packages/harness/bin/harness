@@ -8,7 +8,9 @@
 #                [--target P] [--preset a,b] [--file F] [--dry-run] [--list] [--global]
 #   mcp          влить MCP-пресеты в .mcp.json, merge-only [--target P] [--mcp a,b] [--list] [--dry-run]
 #   hooks        включить хуки по проекту / поставить файлы хуков глобально
-#                [--target P] [--auto-approve MODE] [--memory BRAIN:MODE] [--file F] [--global] [--dry-run]
+#                [--target P] [--auto-approve MODE] [--memory BRAIN:MODE] [--router MODE] [--file F] [--global] [--dry-run]
+#   router       сгенерить каталог возможностей intent-router в .claude/agent-router.config.json
+#                --generate --target P [--dry-run]
 #   agent-packs  детерминированный рендер/апгрейд пака субагентов в проект (без агента)
 #                <list|render|upgrade|doctor> [--pack P] [--target P] [--auto] [--answer K=V] [--dry-run]
 #   doctor       диагностика окружения (пресеты, скрипт, файлы хуков в ~/.claude)
@@ -28,7 +30,7 @@ if [[ ! -d "$REPO_ROOT/lib/harness" || ! -d "$REPO_ROOT/configs/claude-code" ]];
   exit 1
 fi
 
-usage() { grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '2,17p'; }
+usage() { grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '2,19p'; }
 
 CMD="${1:-help}"
 [[ $# -gt 0 ]] && shift
@@ -39,7 +41,7 @@ case "$CMD" in
     sha="$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
     echo "harness $sha ($REPO_ROOT)"
     exit 0 ;;
-  permissions|apply|mcp|hooks|agent-packs|doctor) ;;
+  permissions|apply|mcp|hooks|router|agent-packs|doctor) ;;
   *) echo "Неизвестная команда: $CMD" >&2; usage >&2; exit 1 ;;
 esac
 

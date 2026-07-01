@@ -79,6 +79,7 @@ const SLICE_RESULT_SCHEMA = {
     test_output: { type: 'string', description: 'финальная строка {{TEST_RUNNER_CMD}}' },
     test_coverage_pct: { type: 'number', description: 'покрытие изменённого поведения, % (оценка)' },
     workarounds: { type: 'array', items: { type: 'string' }, description: 'обходки/форс-конфиги ради зелёного — каждая = [POSSIBLE-DEFECT] для ревьюера' },
+    tool_failures: { type: 'array', items: { type: 'string' }, description: 'движок/инструмент был недоступен при проверке внешнего факта (perplexity-web залочен/TIMEOUT, context7 пусто, MCP лёг) → факт остался непроверенным, нужен ПОВТОРНЫЙ ПРОХОД. НЕ угадывать, НЕ маскировать' },
     assumptions: { type: 'array', items: { type: 'string' }, description: 'решения там, где ТЗ молчало' },
     open_questions: { type: 'array', items: { type: 'string' } },
   },
@@ -145,7 +146,7 @@ ${JSON.stringify(slice, null, 2)}
 - Зелено → закоммить тесты в ${BRANCH}, status='green', заполни test_output финальной строкой.
 - Не достиг зелёного честно → НЕ ослабляй тесты: оставь дерево чистым, status='deferred', объясни в summary+open_questions (реализация остаётся в ${BRANCH}).
 ОБЯЗАТЕЛЬНО заполни risk_level (LOW|MED|HIGH) и risk_markers (concurrency/transactions/data-integrity/queue-semantics/connectors) — оцени blast-radius среза; test_coverage_pct — оценку покрытия изменённого поведения.
-ЧЕСТНОСТЬ (критично): любую обходку/форс-конфиг ради зелёного (форс config(...), штамповка timestamp перед пагинацией, sibling-класс в обход final) занеси в workarounds как [POSSIBLE-DEFECT] — за обходкой почти всегда реальный баг. ShouldQueue-job: если тест зовёт handle() напрямую — занеси в open_questions «queue-семантика (release/backoff/конкурентные воркеры) не покрыта».
+ЧЕСТНОСТЬ (критично): любую обходку/форс-конфиг ради зелёного (форс config(...), штамповка timestamp перед пагинацией, sibling-класс в обход final) занеси в workarounds как [POSSIBLE-DEFECT] — за обходкой почти всегда реальный баг. ShouldQueue-job: если тест зовёт handle() напрямую — занеси в open_questions «queue-семантика (release/backoff/конкурентные воркеры) не покрыта». Если для проверки внешнего факта (версия/API библиотеки, поведение пакета) движок был недоступен (perplexity-web залочен/TIMEOUT, context7 пусто) — занеси в tool_failures, НЕ угадывай: факт непроверен, нужен ПОВТОРНЫЙ ПРОХОД.
 Дерево всегда оставляй ЧИСТЫМ. Зафиксируй допущения.
 ЗАПАСНОЙ ПУТЬ (если строгую схему возврата 5× не удаётся заполнить — не срывай прогон): последней строкой ответа выведи ровно '===SLICE-RESULT=== status=green' или '===SLICE-RESULT=== status=deferred'; коммит-дисциплина та же.
 ${HARD_GATES}`,
@@ -209,6 +210,7 @@ ${HARD_GATES}`,
 
 const built = results.map((r) => ({ id: r.id, status: r.status }))
 const infraN = built.filter((b) => b.status === 'infra-failed').length
-log(`Готово: ${built.filter((b) => b.status === 'green').length}/${SLICES.length} зелёных${infraN ? `, ${infraN} infra-failed (инфра-отказ, НЕ дефект — см. <failures>)` : ''}. Кап MAX=${MAX}, ветка ${BRANCH} (off ${BASE}). Ничего не запушено.`)
+const toolFailN = results.reduce((n, r) => n + ((r.tool_failures || []).length), 0)
+log(`Готово: ${built.filter((b) => b.status === 'green').length}/${SLICES.length} зелёных${infraN ? `, ${infraN} infra-failed (инфра-отказ, НЕ дефект — см. <failures>)` : ''}${toolFailN ? `, ${toolFailN} tool_failures (движок был недоступен → факт непроверен, нужен ПОВТОРНЫЙ ПРОХОД)` : ''}. Кап MAX=${MAX}, ветка ${BRANCH} (off ${BASE}). Ничего не запушено.`)
 
 return { branch: BRANCH, base: BASE, max: MAX, results, verify }

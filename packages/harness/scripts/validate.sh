@@ -20,6 +20,10 @@ done
 while IFS= read -r -d '' sh; do
   bash -n "$sh" || err "bash -n $sh"
 done < <(find configs/claude-code -name '*.sh' -print0)
+# Python-хуки конфигов (agent-router — первый Python-хук репо) — компиляция
+while IFS= read -r -d '' py; do
+  python3 -m py_compile "$py" || err "py_compile $py"
+done < <(find configs/claude-code -name '*.py' -print0)
 
 echo "[3/6] JSON (плагин + пресеты)"
 python3 - <<'PY' || err "битый JSON"

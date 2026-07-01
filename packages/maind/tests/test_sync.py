@@ -219,5 +219,47 @@ class TestMemoryHookProvisioner(unittest.TestCase):
             self.assertFalse(any("maind-memory" in c for c in cmds))
 
 
+class TestRouterConfigProvisioner(unittest.TestCase):
+    """router-config: opt-in по .claude/agent-router.env.ini (POLICY!=off). Нет файла/off →
+    skip; включён → генерит каталог intent-router через harness (env:router). Идёт в ORDER."""
+    _HARNESS = Path(__file__).resolve().parents[2] / "harness" / "bin" / "harness"
+
+    def test_in_default_order(self):
+        self.assertIn("router-config", sync.provisioner_names())
+
+    def test_skip_when_not_enabled(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj = _setup(tmp)
+            projs = sync.select_projects(env, config, {"all": True})
+            r = sync.run_sync(env, config, projs, only="router-config")
+            self.assertEqual(r[0]["status"], "skip")
+            self.assertIn("не включён", r[0]["detail"])
+
+    def test_skip_when_policy_off(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj = _setup(tmp)
+            (proj / ".claude" / "agent-router.env.ini").write_text("POLICY=off\n")
+            projs = sync.select_projects(env, config, {"all": True})
+            r = sync.run_sync(env, config, projs, only="router-config")
+            self.assertEqual(r[0]["status"], "skip")
+
+    def test_generate_when_enabled_dry(self):
+        import os
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj = _setup(tmp)
+            (proj / ".claude" / "agent-router.env.ini").write_text("POLICY=propose\n")
+            projs = sync.select_projects(env, config, {"all": True})
+            old = os.environ.get("MAIND_HARNESS_BIN")
+            os.environ["MAIND_HARNESS_BIN"] = str(self._HARNESS)
+            try:
+                r = sync.run_sync(env, config, projs, only="router-config", dry=True)
+            finally:
+                if old is None:
+                    os.environ.pop("MAIND_HARNESS_BIN", None)
+                else:
+                    os.environ["MAIND_HARNESS_BIN"] = old
+            self.assertEqual(r[0]["status"], "ok")
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -18,6 +18,9 @@
   bypass; порядок deny_hard→deny_block→allow).
 - `hooks/memory/` — единая память (file/federation/agentmemory).
 - `hooks/notify/`, `hooks/log-bash-command.sh` — ОС-уведомления и лог Bash-команд.
+- `hooks/agent-router/` — **intent-router** (первый Python-хук репо): пара `session-policy.py`
+  (SessionStart — статическая политика) + `router.py` (UserPromptSubmit — keyword-подсказка) роутит
+  свободный текст к оптимальной `/task:*`/агенту/скиллу. Каталог генерит `harness router --generate`.
 
 ## Раскладка
 
@@ -46,7 +49,8 @@
 harness permissions --target . [--preset a,b] [--file F] [--dry-run] [--list] [--global]
 harness mcp         --target . --mcp context7,playwright [--list] [--dry-run]
 harness hooks       --global            # файлы хуков в ~/.claude/hooks (один раз на машину)
-harness hooks       --target . --auto-approve strict --memory core:federation
+harness hooks       --target . --auto-approve strict --memory core:federation --router propose
+harness router      --generate --target .   # каталог intent-router (.claude/agent-router.config.json)
 harness agent-packs <list|render|upgrade|doctor> [--pack P] [--target .] [--auto]
         [--dry-run] [--install-only] [--allow-shell M] [KEY=VALUE …]   # см. agentpacks.py
 harness doctor

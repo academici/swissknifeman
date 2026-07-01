@@ -70,6 +70,37 @@ def _audit_downstream(env):
         print("  (нет онбордженных проектов на диске)")
 
 
+def _downstream_claude_md_summary(env):
+    """Компактная summary-строка для дефолтного doctor: сколько онбордженных проектов имеют
+    CLAUDE.md > 200 строк (always-loaded → резидентный токен-расход). Детали — --downstream."""
+    db_file = env.db_file
+    if not db_file.exists():
+        return
+    try:
+        projects = json.loads(db_file.read_text(encoding="utf-8")).get("projects", [])
+    except json.JSONDecodeError:
+        return
+    seen = over = 0
+    for p in projects:
+        pdir = Path(p.get("path", ""))
+        if not pdir.is_dir():
+            continue
+        seen += 1
+        cmd_md = pdir / "CLAUDE.md"
+        if not cmd_md.is_file():
+            cmd_md = pdir / ".claude" / "CLAUDE.md"
+        if (cmd_md.is_file()
+                and len(cmd_md.read_text(encoding="utf-8", errors="ignore").splitlines()) > 200):
+            over += 1
+    if not seen:
+        return
+    if over:
+        print(f"  [warn] downstream CLAUDE.md: {over}/{seen} проектов > 200 строк "
+              "(always-loaded; детали: skiller doctor --downstream)")
+    else:
+        print(f"  [ok ] downstream CLAUDE.md: все {seen} ≤ 200 строк")
+
+
 def cmd_doctor(env, argv):
     opts = parse_flags(argv, {"--downstream": "bool"})
     if opts["help"]:
@@ -192,6 +223,8 @@ def cmd_doctor(env, argv):
 
     if opts.get("downstream"):
         _audit_downstream(env)
+    else:
+        _downstream_claude_md_summary(env)
 
     print(f"\n{'Все проверки пройдены.' if issues == 0 else f'Проблем: {issues}'}")
     if issues:

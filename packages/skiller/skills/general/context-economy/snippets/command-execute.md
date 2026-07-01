@@ -3,6 +3,7 @@
 ```markdown
 ---
 description: Выполнение готового плана из файла (вторая сессия паттерна Plan→Clear→Execute)
+model: sonnet
 argument-hint: <путь к плану из .claude/plans/>
 ---
 

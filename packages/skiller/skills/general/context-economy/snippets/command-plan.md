@@ -3,6 +3,7 @@
 ```markdown
 ---
 description: План задачи в файл — без выполнения (первая сессия паттерна Plan→Clear→Execute)
+model: opus
 argument-hint: <описание задачи>
 ---
 

@@ -146,10 +146,12 @@ Field-feedback: агенты неохотно жмут RAG при формиро
   т.к. `maind sync` зовёт именно `upgrade`. +unit-тест. Гайд пака дополнен разделом «Как ставятся задачи» +
   **mermaid-диаграммой** процесса dev-loop.
 
-### Added/Changed (skiller — токен-экономия: плагин `tasks` + docker-router + context-economy/session-handoff)
+### Added/Changed (skiller — токен-экономия: плагин `task` + docker-router + context-economy/session-handoff)
 
-- **Новый плагин `tasks`** (`packages/tasks/`, commands-only, авто-регистрация в marketplace, 51 плагин):
-  интент-команды `/task:design|dev|review|research|fix`. Каждая пинит `model:`+`effort:` (frontmatter) под
+- **Новый плагин `task`** (`packages/task/`, commands-only, авто-регистрация в marketplace, 51 плагин):
+  интент-команды `/task:design|dev|review|research|fix`. Имя плагина `task` + файлы `commands/dev.md`
+  и т.д. дают ровно `/task:<verb>` (Claude Code именует команды плагина как `<plugin>:<file>`; вариант
+  `tasks`+`task-dev.md` дал бы `/tasks:task-dev` — исправлено). Каждая пинит `model:`+`effort:` (frontmatter) под
   профиль, перебивая настройки сессии — закрывает «забыл переключить модель/effort/режим». dev→Opus/high
   (планирование) + Lean-tiered субагенты по риску; fix→Sonnet/medium single-agent; review→Opus/xhigh adversarial;
   design/research→Opus/high + research-fanout.

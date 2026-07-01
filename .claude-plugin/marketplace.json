@@ -620,9 +620,9 @@
       "package": "skiller"
     },
     {
-      "name": "tasks",
-      "source": "./packages/tasks",
-      "description": "tasks — интент-команды постановки задач для Claude Code: /task:design|dev|review|research|fix. Каждая команда пинит свою модель + reasoning effort + профиль workflow (перебивая настройки сессии), чтобы не помнить про ручное переключение модели/effort/режима. Тонкое лицо над agent-packs/workflow экосистемы academici.",
+      "name": "task",
+      "source": "./packages/task",
+      "description": "task — интент-команды постановки задач для Claude Code: /task:design|dev|review|research|fix. Каждая команда пинит свою модель + reasoning effort + профиль workflow (перебивая настройки сессии), чтобы не помнить про ручное переключение модели/effort/режима. Тонкое лицо над agent-packs/workflow экосистемы academici.",
       "category": "ecosystem",
       "tags": [
         "tasks",
@@ -634,7 +634,7 @@
         "academici",
         "ecosystem"
       ],
-      "package": "tasks"
+      "package": "task"
     }
   ]
 }

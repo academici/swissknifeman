@@ -19,26 +19,49 @@ from .common import (AGENT_DEFAULTS, CONFIG_KEYS, confirm, die,
 # верифицировать) · query-craft (как сформулировать запрос). Все три — CORE: внешний поиск
 # нужен в любом проекте, а размытый запрос (без версии/контекста) — частая полевая проблема
 # (см. SKILL research/query-craft). Скилл физически в бакете research, в CORE — по ссылке.
-CORE_SKILLS = [
-    "general/context-economy", "general/anti-drift", "general/compact-responses",
-    "general/session-handoff", "general/mcp-advisor", "general/verify-claims",
-    "research/query-craft",
-    "oss-dev/gh-review",
-]
+def _load_core_policy():
+    """CORE-политика из configs/core-policy.json (декларативно) с фолбэком на встроенные дефолты.
+    Самолокация через __file__ → работает на import-time (потребители budget/connect/vendor/registry
+    берут константы модульного уровня). Standalone-safe, stdlib-only: нет файла/битый → дефолты."""
+    defaults = {
+        "skills": ["general/context-economy", "general/anti-drift", "general/compact-responses",
+                   "general/session-handoff", "general/mcp-advisor", "general/verify-claims",
+                   "research/query-craft", "oss-dev/gh-review"],
+        "resident_budget_target": 600,
+        "core_plugin": "core",
+        "core_buckets": ["general", "oss-dev"],
+        "default_command_plugins": ["task"],
+        "default_exclude": ["system/shared-memory", "system/cross-project-coordinator"],
+    }
+    try:
+        p = Path(__file__).resolve().parents[2] / "configs" / "core-policy.json"
+        data = json.loads(p.read_text(encoding="utf-8"))
+        if isinstance(data, dict):
+            for k in defaults:
+                if k in data:
+                    defaults[k] = data[k]
+    except Exception:
+        pass  # standalone/битый файл → встроенные дефолты
+    return defaults
+
+
+_CORE_POLICY = _load_core_policy()
+
+CORE_SKILLS = list(_CORE_POLICY["skills"])
 # Имя курируемого marketplace-плагина (connect-канал), несущего РОВНО CORE_SKILLS.
 # «Умное подключение»: вместо целых бакетов general(19)+oss-dev(10) ≈ 1956 резидентных
 # токенов в КАЖДОМ проекте connect пушит этот лёгкий плагин (7 скиллов ≈ 480 ток) — экономия
 # ~1.5K ток/проект на каждый запрос. Скиллы физически остаются в своих бакетах (плагин ссылается
 # на них путём, без копий — marketplace-запись source:"./" + явный skills[]). См. registry.py.
-CORE_PLUGIN = "core"
+CORE_PLUGIN = _CORE_POLICY["core_plugin"]
 # Целевой потолок РЕЗИДЕНТНОГО (⊕ tier-0) бюджета CORE_SKILLS: name+description каждого CORE-скилла
 # грузится в КАЖДЫЙ запрос (постоянный налог). `skiller budget --check-core` сверяет фактический резидент
 # с этим таргетом — гейт против тихого роста ядра (добавил скилл в CORE → раздул резидент → сигнал).
-RESIDENT_BUDGET_TARGET = 600
+RESIDENT_BUDGET_TARGET = _CORE_POLICY["resident_budget_target"]
 # Бакеты, которые раньше пушила CORE-политика connect целиком (теперь — лёгкий CORE_PLUGIN).
 # Сохранены для back-compat/миграции: connect видит их в settings онбордженных проектов и
 # подсказывает снять (иначе двойная загрузка). Vendor-канал по-прежнему берёт CORE_SKILLS пофайлово.
-CORE_BUCKETS = ["general", "oss-dev"]
+CORE_BUCKETS = list(_CORE_POLICY["core_buckets"])
 # Командные плагины (НЕ бакеты скиллов), которые connect включает в КАЖДЫЙ проект по умолчанию.
 # `task` — интент-команды /task:design|dev|review|research|fix (пакет task, commands-only): раздаём
 # везде, т.к. intent-router политика предлагает именно их — без плагина предложение не резолвится.
@@ -46,8 +69,8 @@ CORE_BUCKETS = ["general", "oss-dev"]
 # (там marketplace.json = {}). Резидентного tier-0 налога у команд нет (описания команд не инжектятся
 # в каждый запрос, в отличие от description скиллов). Отключить точечно — enabledPlugins[...]=false
 # (connect уважает явный false, как и для бакетов).
-DEFAULT_COMMAND_PLUGINS = ["task"]
-DEFAULT_EXCLUDE = ["system/shared-memory", "system/cross-project-coordinator"]
+DEFAULT_COMMAND_PLUGINS = list(_CORE_POLICY["default_command_plugins"])
+DEFAULT_EXCLUDE = list(_CORE_POLICY["default_exclude"])
 # Минимальный безопасный набор для НЕРАСПОЗНАННОГО типа проекта (autodetect → standalone).
 # НЕ разворачиваем `["*"]` (= все бакеты) по умолчанию — это «бездушный дамп всего». Явный
 # `--profile standalone` («поставь всё») остаётся доступен; авто-фолбэк ставит только ядро.

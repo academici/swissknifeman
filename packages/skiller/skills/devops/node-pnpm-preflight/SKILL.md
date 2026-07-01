@@ -35,6 +35,4 @@ Before `git commit`, ensure `pnpm` and `node` available in current shell session
 - `devops/docker-vite` (Vite/pnpm in Docker service)
 - `general/git-commit-rules` (husky/commitlint — the reason pnpm is needed in shell)
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: da30f1c895ef48ad3868e4c59d81eb908e57dd1bff031f98263219fa5faf9fa6 -->

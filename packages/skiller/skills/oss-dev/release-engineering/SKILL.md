@@ -163,6 +163,4 @@ NEVER:
 - Publish without 2FA / provenance for `v1.0+`
 - Use "git log dump" instead of changelog
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 67b5fb2ec501e1513827c65048930ded2f719d6f56c2728e722e375000995d63 -->

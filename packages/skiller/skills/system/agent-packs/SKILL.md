@@ -130,6 +130,4 @@ Three fields enable upgrade with NO diff engine: **version** (delta source), **a
 - `laravel-architecture/laravel-subagents` — orchestration protocol the pack roles implement.
 - `general/context-economy`, `general/session-handoff` — main-session context on delegation.
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: c82c16069c361b8f89f5f5e6909ed7ac71242f73ae70b075a417c2ea6e90c1eb -->

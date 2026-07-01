@@ -1,9 +1,9 @@
 ---
 name: session-handoff
 bucket: general
-version: 0.1.0
+version: 0.2.0
 description: "Cross-session/agent context handoff: compress a session into a structured doc — state, decisions, open items, next steps."
-risk: draft
+risk: read
 persona: oss-dev
 tags: [workflow, context, tokens, handoff]
 requires: []
@@ -43,6 +43,4 @@ Template: `snippets/handoff-template.md`. Save to the standard path `.claude/han
 - `complex-task-orchestrator` (general) — open subtasks and risks go into the handoff.
 - `system/shared-memory` — if projects share memory, key facts go there (remember), not only the handoff file.
 
-<!-- ru-source-sha256: PENDING -->
-
-<!-- ru-source-sha256: 1d83d08a24d814d98494c501881cffd01bade622b9b625c6d5298d291ef26a6f -->
+<!-- ru-source-sha256: 541061152cdbdced154b65885da1d48d08167c225fc500625ba9222932e1b806 -->

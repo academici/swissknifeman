@@ -113,6 +113,4 @@ Stays inside the team → Russian. Unsure who the reader is → default Russian.
 - `compact-responses` (general) — model output brevity (how much text, when); this skill is tone & language when text IS needed.
 - snippets/before-after.md — bad/good pairs for a comment and a commit subject.
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 9899b632120cd656f4c789b2b0fa8899aa4df7e042e1021ea7790c48628872b9 -->

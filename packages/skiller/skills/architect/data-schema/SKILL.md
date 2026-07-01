@@ -114,6 +114,4 @@ Relation types: `one-to-one`, `one-to-many`, `many-to-one`, `many-to-many`
 - `php/database` — schema implementation in Laravel migrations/models (boundary: design vs implementation).
 - `php/repositories` — data access layer over implemented schema.
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 2b7f7d894ecfe970bdb5fb73b4c7b0a78418b4ab40be309f01b9e3f2721024fe -->

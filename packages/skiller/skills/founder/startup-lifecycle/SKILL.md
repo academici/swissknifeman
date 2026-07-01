@@ -104,6 +104,4 @@ PROCEED / HOLD / PIVOT — rationale.
 - `founder/defensibility` — Scale-stage moat work
 - `quality/tech-debt-audit` — agentic debt (MVP/Launch failure mode)
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 739486ff7537b82dc648ecacbe7cab42986b5e89fa67b98463b2a1415471e305 -->

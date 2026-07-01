@@ -97,6 +97,4 @@ Place in `docs/01_Business/04_Unit_Economics.md`. Structure:
 - `founder/pitch-deck` — consumer: financial slide of deck relies on these numbers.
 - `founder/risk-assessment` — negative unit economics → entry in Risk Register.
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 5f24a65cf9afec41fa348376b1ea6e13c55e3da2735cb6ecc97b10d370a95646 -->

@@ -66,6 +66,4 @@ sha256: ""
 - `laravel-architecture/laravel-subagents` — delegate subtasks to subagents on large Laravel tasks.
 - `session-handoff` (general) — hand off unfinished task to next session.
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 0d8d3068314be9e27fc452eabdf07b5bea5a07056ae30a9d0de64423c160ccac -->

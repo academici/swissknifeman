@@ -115,6 +115,4 @@ interviews_done: 0
 - `founder/startup-lifecycle` — discovery closes Idea-exit (problem-solution fit)
 - `pm/pmf-diagnostics` — next validation in time (already at MVP, not Idea)
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: cf27d0750d0296d26ff048e9994b32153f0cd6989a29249e0bb9ea8c4d0ec2ea -->

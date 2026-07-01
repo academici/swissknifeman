@@ -69,6 +69,4 @@ for obj in bpy.data.objects:
 - `blender-modeling/parametric-config` — mesh build via `bmesh`/SCREW where these 5.0-API rules apply.
 - `blender-modeling/threading` — SCREW thread modifier, sensitive to API changes.
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 21f87e4580de4e17251bd8a179f4239b6ba0f8f42b6c848ab0f952f057e5cfa4 -->

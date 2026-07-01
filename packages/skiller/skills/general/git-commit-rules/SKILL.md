@@ -91,6 +91,4 @@ ci(deps): добавить php-расширения для composer install
 - `devops/node-pnpm-preflight` — Node/pnpm check before commit with husky/commitlint hooks.
 - `oss-dev/github-flow` — Issue → Branch → PR → Merge → Tag chain and SemVer Oracle (commit type → version bump).
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 5d9c1d92f98289a3092f340677667a725517f0057b28d2b6596d12d56c3630f9 -->

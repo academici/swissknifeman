@@ -96,6 +96,4 @@ Easy-to-break rules:
 - https://prazdevs.github.io/pinia-plugin-persistedstate/
 - Related skills: `frontend-vue/vue-composition-api` (local component state), `frontend-backend/inertia-vue` (where `stores/` sits in layered `resources/js`), `frontend-backend/laravel-echo-client` (live store updates via realtime events)
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: bcc37bd335ca074eb71a38c5e19c16475021b2916df2ce8a7a8034e5c73fef49 -->

@@ -104,6 +104,4 @@ Next agent/dev pulls the needed slice themselves via the same `gh` (see `session
 - `general/session-handoff` — context handoff between sessions (handoff by link, not dump)
 - `docs/guide/upstream-sync.md` — gh-fetch when importing external skills
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 3f44712c7bcdf1191b9826ee89a68460b476be9149bfb9e6d4d3c08bf42c713d -->

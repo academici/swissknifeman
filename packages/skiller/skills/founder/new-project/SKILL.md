@@ -99,6 +99,4 @@ Orchestrator: does not duplicate domain skills, calls them by stage. Chain:
 - `pm/monetization-design` — adjacent: business-model choice before unit-economics
 - `roles/solo-founder`, `roles/startup-cto` — personas that activate this chain
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: eb1ec818130461d67030f402e8b586e758e06172fdf3c83cd97dab1c49553b0c -->

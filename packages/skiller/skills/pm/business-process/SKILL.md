@@ -88,6 +88,4 @@ After creating a file — update `docs/02_Workflow/_index.md`.
 - `architect/api-design` — FSM transitions often become endpoints/commands; sequence diagram helps design the contract.
 - `laravel-architecture/enum-state-machine` — FSM implementation (enum + transitions) in Laravel code.
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: afe67d528cdb1b06fab7649820ca0fcac99f00b84dab9eac851e604643001a9b -->

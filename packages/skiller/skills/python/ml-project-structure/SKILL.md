@@ -56,6 +56,4 @@ my_ml_project/
 - `php/laravel-structure` — analogous structure canon for Laravel projects.
 - `oss-dev/oss-development` — OSS-repo structure (README, ADR, CI) on top of project code.
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: f3256dc2528418358d7ab40e4b76cdd0f05df8cb8cd8b030bbbca4b32c3286b6 -->

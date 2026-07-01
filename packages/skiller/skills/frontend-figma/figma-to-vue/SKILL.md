@@ -55,6 +55,4 @@ Full table — `snippets/auto-layout-mapping.md`. Brief: `layoutMode: HORIZONTAL
 - snippets/auto-layout-mapping.md — Figma Auto-layout → Tailwind table.
 - Related skills: `figma-mcp-core`, `tailwind-conventions`, `reka-ui-cva`, `naive-ui-theming`, `dark-mode`.
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: cb82312f636931fc0e672e319043fac19ee2f0ff7ff097400f87411f2051b9a3 -->

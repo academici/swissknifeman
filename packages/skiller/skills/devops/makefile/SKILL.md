@@ -62,6 +62,4 @@ All docker logic isolated in `docker/Makefile`; any command (`make up`, `make mi
 - https://www.gnu.org/software/make/manual/make.html#Last-Resort — match-anything (catch-all) rules
 - Related skills: `docker-dev-prod` (compose files Makefile invokes), `docker-services` (stack mgmt: logs/restart/workers), `docker-postgres` (db-create-test target), `db-test-preflight` (`test-preflight` target as `test` dependency)
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: bb9cd82ebe20fe672ec61fd1c528b1b996e3e66d8cfa92b01c9eb53f722e89d4 -->

@@ -79,6 +79,4 @@ Persona-dispatcher: stance "think like a solo founder" + route to capability ski
 - `founder/idea-discovery` · `founder/customer-discovery` · `founder/competitive-analysis` · `founder/defensibility` · `founder/new-project` · `founder/startup-lifecycle` · `founder/risk-assessment` — discovery, market, launch, risk.
 - `pm/product-roadmap` · `pm/brd` · `pm/prd-from-brd` · `pm/monetization-design` · `pm/unit-economics` · `pm/go-to-market` · `pm/pmf-diagnostics` — product, economics, launch, PMF.
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 8efa0655c31140c9471504c8bf70b33853e0947c8b3fd2f25ba2265fba09b493 -->

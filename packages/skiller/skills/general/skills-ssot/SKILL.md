@@ -114,6 +114,4 @@ Rule: change only **sources**, never hand-edit generated.
 - `references/ssot-source-layout.md` — detailed `.ai/` design: data flows, three priority layers, guidelines vs skills, commands, common errors.
 - `references/ssot-scenarios.md` — "scenario → skill" table for typical agent tasks.
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 6b8d0347ee4d9197f7ad94512b21e52086c0fff1d738ff3c87b4663ed9e044f8 -->

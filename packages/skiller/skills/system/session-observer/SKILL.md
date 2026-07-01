@@ -94,6 +94,4 @@ Use only what JSONL/diffs give reliably (live and «why agent decided» — no; 
 - Shared memory (recall/remember, backends) → `system/shared-memory`.
 - Node topology → `system/local-topology`.
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 4bc93cd73dbbf5e8fb758c0c5dbd0b41ea61b35892a2cb22029b6b2f6bb3cc83 -->

@@ -126,6 +126,4 @@ Increment needs full git history (`fetch-depth: 0`) and available compare base (
   - `php/pao` — compact PHP-tool output (incl. Infection) for in-agent work
   - `devops/ci-cd` — where the mutation workflow lives in the pipeline
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: c02cdf0dcd6da1db9c549656b6ab0c37995cbd3f2b24870344dd371c660ea3a9 -->

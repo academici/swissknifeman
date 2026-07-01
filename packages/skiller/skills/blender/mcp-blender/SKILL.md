@@ -130,6 +130,4 @@ One-object rule:
 - `blender-modeling/parametric-config` — architecture of `config.py`/`profile.py`/`parts/*`/`check.py`.
 - `blender-modeling/model-rules` — `models/{name}/ai/rules.md`: ready camera zones and model specifics.
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 2e7a187e44c4277d80e3eddc3a64ad95a07706cf5e9c3040b09758db706b963e -->

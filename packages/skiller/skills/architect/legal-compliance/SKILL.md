@@ -169,6 +169,4 @@ Basic ToS draft. Same — DRAFT until lawyer.
 - `architect/observability-design` — audit trail + log retention under Article 30 / breach-response.
 - `legal/legal` — external body on contracts/NDA/compliance (analysis, not mirror).
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 4e3c90dc8145ce8a7ac7f2d1c695523b2766e56402823bd009a9f31707cb44ec -->

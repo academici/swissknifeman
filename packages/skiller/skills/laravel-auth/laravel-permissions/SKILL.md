@@ -42,6 +42,4 @@ RBAC for Laravel: standard policies/gates + entity-scoped permissions (workspace
 - `php/laravel-structure` — placement of Policies/Enums/Permissions in the project tree.
 - `architect/security-design` — auth strategy, RBAC/ABAC, threat modeling at architecture level.
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: d3b8b5b421b1dd5d7d6590f475498bb3da1c829e657552bd23b91e3ee3263aac -->

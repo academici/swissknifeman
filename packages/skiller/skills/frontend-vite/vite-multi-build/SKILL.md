@@ -58,6 +58,4 @@ Apply when: adding Filament with a custom theme to a Laravel project, OR any sec
 - https://filamentphp.com/docs (custom themes / vite theme section)
 - Related skills: `frontend-vite/vite-module-loader` (base Vite config: aliases, chunks, laravel-vite-plugin), `frontend-wayfinder/wayfinder` (plugin in main build), `frontend-tailwind/tailwind-conventions` (app theme on Tailwind v4), `devops/docker-vite` (Vite dev server in compose, HMR in Docker); Tailwind version guidelines — Boost skill `tailwindcss` (v3/v4)
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: ead87f279b72c5cc8596870f2f0a4f5b082ac6af172a88803439ec830567d0ab -->

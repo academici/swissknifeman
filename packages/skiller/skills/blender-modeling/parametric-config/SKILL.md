@@ -103,6 +103,4 @@ Boundary: everything computed WITHOUT bpy is separated from everything requiring
 - https://docs.blender.org/manual/en/latest/modeling/modifiers/generate/screw.html
 - https://help.prusa3d.com/article/tolerances_n_of_fdm_3d_printing
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 1be4b02c6b471b1d6cdb0e4d1c421161e203cd5b495b7ef519a1312d7364162f -->

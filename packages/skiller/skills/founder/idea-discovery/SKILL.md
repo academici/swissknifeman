@@ -130,6 +130,4 @@ FORBIDDEN (all are later chain steps, not now):
 - `general/spec-interview` — kindred interview method (one question at a time, agent reads context itself), but for a technical spec before code, not a business idea
 - `founder/risk-assessment` — adjacent: kill-criteria and red flags overlap with market risks
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: d62b32515e2695e8fb78be38679cf7489d964cec56d1d9cef678a2426f151f09 -->

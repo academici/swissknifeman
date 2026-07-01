@@ -111,6 +111,4 @@ NEVER:
 - Skip committing lockfile in an app (for libraries — see discussion above)
 - Rely on `npm audit` as the only tool — it does not catch supply-chain
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 8af7db936e3aad76b45e08d5cbf27fe0be1da64d840fdf688e63efaa9f9b4205 -->

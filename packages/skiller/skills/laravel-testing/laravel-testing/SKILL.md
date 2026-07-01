@@ -174,6 +174,4 @@ Full example (two concern traits, `Pest.php` with `beforeEach` for Feature and U
 - Skill `devops/db-test-preflight` — test Postgres DB pre-flight before run
 - https://pestphp.com/docs — Pest documentation
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: d67c0894907f8665d97e5de1bd0a6c8f69ce4c22b6231e650cb6ef2b2cc6f929 -->

@@ -106,6 +106,4 @@ Mandatory positioning table at the end:
 - `founder/new-project` — orchestrator: calls this skill at stage 2 of the launch chain
 - `pm/monetization-design` — adjacent: business-model choice relies on competitors' segment and models
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 7779347c7e6ac3bd8369f92b71206b95c8f220a523fcddb8fa0245bf06efd807 -->

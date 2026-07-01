@@ -91,6 +91,4 @@ Tech Lead = engineering lead of one team. Owns team technical health + workflow 
 - `devops/gitops` · `oss-dev/github-flow` · `oss-dev/gh-review` · `general/git-commit-rules` — workflow and review.
 - `general/session-handoff` — context handoff.
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: d7f69cf756b2805a55e2d6facba9d88fa0f1d169690de6a3e1f9ecfba56e84a6 -->

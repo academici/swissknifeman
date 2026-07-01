@@ -72,6 +72,4 @@ Do NOT activate: static attributes without conditions; Livewire lifecycle/bindin
 - `snippets/blade-attributes.blade.php` — before/after pairs.
 - Related skills: `laravel-filament/filament` (Livewire-based UI — same Blade components), `frontend-backend/laravel-echo-client` (realtime frontend when Livewire is augmented with websockets).
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: afe4063a41f96e4504a12cd5f1235fdfc1cea24b3ab769fb2c71e456c3859546 -->

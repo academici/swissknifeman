@@ -60,6 +60,4 @@ sha256: ""
 - `implement` (general) — implement per fixed spec/issue (explicit invocation).
 - `pm/requirement-critic` — audit a larger BRD for completeness and conflicts (different scale: product requirements, not a one-off task).
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 3ba170b1b7f88e4ca8bb3814ec32e47c39f11bc63eb1a0f81c797c651394bf03 -->

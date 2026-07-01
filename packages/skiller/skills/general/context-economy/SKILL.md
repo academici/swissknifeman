@@ -1,9 +1,9 @@
 ---
 name: context-economy
 bucket: general
-version: 1.2.0
+version: 1.2.1
 description: "Claude Code context economy in a project: CLAUDE.md ≤200 lines, path-scoped .claude/rules/, /compact vs /clear, Plan→Clear→Execute, MCP audit, model routing. Officially-supported mechanisms only — no myths like .claudeignore."
-risk: draft
+risk: read
 persona: oss-dev
 tags: [tokens, context, claude-code, workflow, conventions]
 requires: []
@@ -97,6 +97,4 @@ GitHub ops (PRs, review threads, others' code, releases) → **GitHub CLI**, not
 - Skill `session-handoff` (general) — compress session into a handoff before `/clear`
 - Skill `mcp-advisor` (general) — pick MCP for a project at onboarding (the reverse side of the audit: what to connect)
 
-<!-- ru-source-sha256: PENDING -->
-
-<!-- ru-source-sha256: b1c9ace774909fc9335347960dc9200e90dfc35053e1c1badcca75c84d17a0ca -->
+<!-- ru-source-sha256: 29db1351ed00e80ceca873fe605aaf68878705a8faab37df54c2196187006d67 -->

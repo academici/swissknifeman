@@ -154,6 +154,4 @@ docs/03_Dev/Runbooks/
 - `laravel-extras/pennant-development` — feature-flag off as priority (reversible) mitigation.
 - `quality/tech-debt-audit` — structural problem from post-actions → row in Tech_Debt_Register.
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: aa551b67f4f0da103e2b60079d7b6b18d3a9d88b4dfe1e851049098da16658f3 -->

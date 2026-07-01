@@ -96,6 +96,4 @@ php artisan migrate
 - Abilities to frontend (Inertia/TS) — `frontend-backend/backend-type-sync`
 - Auth strategy & threat modeling at architecture level — `architect/security-design`
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: a5def4bc03213589301918e9f48acbcfc89d3cf6f4a006a42d92eea4832a8882 -->

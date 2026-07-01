@@ -149,6 +149,4 @@ FORBIDDEN:
 - Quick example requiring a config file
 - Hiding install behind a «requirements» section
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: dd919ed4e8fa452853e01603cab9054c43cc2b42484205a11960412aa56a5683 -->

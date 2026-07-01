@@ -62,6 +62,4 @@ scr.iterations   = turns       # number of turns
 - `blender-modeling/build-loop` — overall build/check cycle with thread printing embedded.
 - `blender/version-gotchas` — SCREW modifier and `temp_override` gotchas in Blender 5.0.
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 410a05a99ebde51362cd683f2b94d9394b3ed61f5fcf4497b868a8a06c1d95e0 -->

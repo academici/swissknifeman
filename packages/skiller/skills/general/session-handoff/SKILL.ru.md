@@ -1,9 +1,9 @@
 ---
 name: session-handoff
 bucket: general
-version: 0.1.0
+version: 0.2.0
 description: "Передача контекста между сессиями и агентами: сжатие сессии в структурированный handoff-документ — состояние, решения, незакрытые вопросы, следующие шаги."
-risk: draft
+risk: read
 persona: oss-dev
 tags: [workflow, context, tokens, handoff]
 requires: []

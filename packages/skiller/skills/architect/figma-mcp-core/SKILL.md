@@ -88,6 +88,4 @@ Before developing against an unfamiliar file — run the readiness checklist (`s
 - [W3C Design Tokens Format](https://design-tokens.github.io/community-group/format/)
 - Related skills: `figma-to-vue`, `figma-to-flutter`.
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 81030b43e4c2156f6fd2163d5ea679e8add5c45a7bfb1b8d70b7c207b2e867a2 -->

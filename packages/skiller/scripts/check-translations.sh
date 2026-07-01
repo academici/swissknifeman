@@ -70,7 +70,18 @@ for md in sorted(skills_root.rglob("SKILL.md")):
         set_marker(md, sha(ru))
         stamped += 1
         continue
-    m = MARKER.search(md.read_text(encoding="utf-8"))
+    md_text = md.read_text(encoding="utf-8")
+    # defense-in-depth: маркер должен быть РОВНО один и без stale-плейсхолдера
+    marker_lines = [ln for ln in md_text.splitlines() if "ru-source-sha256:" in ln]
+    if any("PENDING" in ln for ln in marker_lines):
+        stale += 1
+        problems.append(f"❌ stale-плейсхолдер ru-source-sha256: PENDING: {rel}/SKILL.md "
+                        f"(удали строку-заглушку, оставь реальный хеш)")
+    if len(marker_lines) > 1:
+        stale += 1
+        problems.append(f"❌ несколько маркеров ru-source-sha256 ({len(marker_lines)}): "
+                        f"{rel}/SKILL.md (должен быть ровно один)")
+    m = MARKER.search(md_text)
     if not m:
         stale += 1
         problems.append(f"⚠️  EN без маркера ru-source-sha256: {rel}/SKILL.md "

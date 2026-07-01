@@ -183,6 +183,4 @@ DO NOT:
 - `azguard/azguard`, `laravel-auth/laravel-permissions`, `laravel-auth/attribute-authorization` — RBAC/ABAC implementation of the chosen authorization model.
 - `security/security` — external defensive playbook (OWASP LLM Top 10, NIST AI RMF).
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: d5700bc88f4010de93d868d9541d766081a95971a9fa85cba964a10a1e80ef85 -->

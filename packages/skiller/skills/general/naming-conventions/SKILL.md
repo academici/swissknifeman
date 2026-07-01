@@ -87,6 +87,4 @@ Don't spawn a method per field. Allowed:
 - `quality/code-review` — where name checks fit into review (P2/P3 findings).
 - `general/anti-drift` — "simplicity first": simpler name = less drift.
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: fa860d2c16747dee89bb959a04f353de4646d59f7c29465b7373e6f238dd632a -->

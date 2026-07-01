@@ -86,6 +86,4 @@ Tags: `delete:` / `stdlib:` / `native:` / `yagni:` / `shrink:`. Principle: "dele
 - `system/cross-project-coordinator` — cross-project dups (util copy living in another repo)
 - `architect/package-contribution-protocol` — same YAGNI/Rule-of-Three for extracting code into a shared package
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: bc79740ce9c5c59c6036b54fc0c7a2f9ffa51e3b4d11b647d64973afbd93adaa -->

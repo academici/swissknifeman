@@ -85,6 +85,4 @@ Checks and tests use the SAME mode. Never mix (check on host, tests in container
 - snippets/composer-scripts.json
 - Related: `devops/docker-postgres` (init script creates `<app>_test`), `devops/makefile` (target `db-create-test`), `devops/node-pnpm-preflight` (Node/pnpm preflight analog), `laravel-testing/test-isolation-guard` (bootstrap.php isolation guard), `laravel-testing/laravel-testing` (test patterns over isolated DB)
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 0e0a4200aaf39492b75b611286e31b5bb8baf6a717cacf648501b2b34f77a35f -->

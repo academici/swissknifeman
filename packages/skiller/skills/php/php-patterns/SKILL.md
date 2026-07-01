@@ -114,6 +114,4 @@ Patterns **combine**, not compete: DTO may hold VO fields; Pipeline stage takes/
 - `php/laravel-structure` — where VO/DTO/Pipeline/Specification sit in the project tree.
 - `php/dependency-injection` — assembling Pipeline/Specification via constructor injection.
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 3a744b0259e00f61ccf72b86706abb7fe4e8ab2ac3a9f4cd8c6cbd892ac58775 -->

@@ -66,6 +66,4 @@ Long-lived daemons/servers (browser pools like perplexity-web-mcp, dev servers, 
 
 `snippets/claude-md-anti-drift.md` — ready-made rules block for the target project's CLAUDE.md (agent applies thresholds without an explicit skill call).
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 7ebaee24e5cac6c4e6ead03b0c8ac9447682ca0e8fea575d1724ad4efa0a0b3f -->

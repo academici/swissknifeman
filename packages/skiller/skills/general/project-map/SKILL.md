@@ -58,6 +58,4 @@ Methodology to build a map for **any** stack; the concrete project map lives in 
 - `cross-layer-change-checklist` (general) — when a change touches several layers at once.
 - `php/laravel-structure`, `python/ml-project-structure` — stack-specific layout canons.
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: fac8d8a2b0c47b5a489acc2d455b2ded6052d90a9521c13429a58bfb1a3f8aff -->

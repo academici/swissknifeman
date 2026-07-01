@@ -89,6 +89,4 @@ Business-rule violation in Action → `ValidationException::withMessages([...])`
 - `php/named-arguments` — constructors and method injection with named arguments.
 - `php/php-patterns` — VO/DTO/pipeline assembled via injection.
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 506f411b383f884e8829644559eef0a406b9dbab12053e9b5cb7341db636eba1 -->

@@ -96,6 +96,4 @@ Exact names and size suffixes (`Small`/`Medium`/`Large`) differ per component â€
 - Component variables: `node_modules/naive-ui/es/<component>/styles/light.ts`
 - Related skills: `frontend-tailwind/tailwind-conventions` (tokens/CSS-variables, `.dark` flag), `frontend-backend/inertia-vue` (where `config/naive-ui.ts` lives), `frontend-vue/vue-composition-api`, `frontend-tailwind/dark-mode` (same `.dark` flag selects `darkTheme`), `frontend-reka/reka-ui-cva` (alternative: own UI-kit on headless primitives instead of Naive)
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 96d9609e2182fedfe32ac997873b08ca22c24e6fd9c34890008355d541c8db3d -->

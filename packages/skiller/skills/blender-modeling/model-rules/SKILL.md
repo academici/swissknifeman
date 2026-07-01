@@ -97,6 +97,4 @@ set_viewport_camera(z_mm=<z>,  distance=<d>)  # <zone 2>
 - `blender-modeling/threading` — source of values for "Thread parameters" table.
 - `blender-modeling/config-conventions` — rules for cross-config deps recorded in this file.
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: a18a01b91220535dacac4149950b73e3f457a4c6708b62e147e9c64c3a2f580d -->

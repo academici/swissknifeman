@@ -177,6 +177,4 @@ PRD stays a product document — hold boundary between **what's needed** and **h
 - `architect/architecture`, `architect/api-design` — third layer (HOW), consume PRD.
 - `architect/data-schema` — entities from user stories feed data schema.
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 8b0764b0e7f945c0e0146598b96c7c994f14b33f02e3fe20e4b827ab67871775 -->

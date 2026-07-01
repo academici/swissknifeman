@@ -157,6 +157,4 @@ FORBIDDEN:
 - `laravel-data-layer/laravel-data` — DTO shape of request/response when implementing contract on Laravel.
 - `architect/package-contribution-protocol` — shared-package contract evolution: SemVer, "is this breaking?", migration guide, bloat gate.
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 74456f4765b3c8ec0871eadc003be5a1e567fca9249ab83836b2b6ca44aeaffb -->

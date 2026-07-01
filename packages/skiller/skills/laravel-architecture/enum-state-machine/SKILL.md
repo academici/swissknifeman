@@ -75,6 +75,4 @@ Single source of truth: edge graph as a static enum method `transitionDefinition
 - `php/laravel`, `php/repositories` — Action/Repository boundaries the transition lives in.
 - `general/cross-layer-change-checklist` — layer sync when adding a transition.
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 69d1b401f6134a5bb2f89c40b48aa5d662799ae0ccb4317eb4825f2e6469ba7a -->

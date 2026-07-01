@@ -61,6 +61,4 @@ Scope: gitops = *team strategy* (which branches exist, how code reaches `main`, 
 - Commit-message format + pre-commit order: skill `general/git-commit-rules`
 - Related: `oss-dev/github-flow` (full Issue→Branch→PR→Merge→Tag→Release chain over this branch model), `oss-dev/gh-review` (PR review via gh CLI), `oss-dev/release-engineering` (release pipeline + SemVer), `devops/ci-cd` (green CI as merge gate for protected branches)
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 7dba8d0cde349e12a3353e6ddf3b1f71fa8da27f0394c6bcdb3eadd711f3d722 -->

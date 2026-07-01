@@ -142,6 +142,4 @@ Justified when: admin must change value without deploy and frontend needs it at 
 - snippets/filament-settings-page.php — Filament form binding
 - Related skills: `laravel-filament/filament` (SettingsPage and plugin), `laravel-data-layer/laravel-data` (Data as settings property type and public frontend DTO), `laravel-architecture/enum-attributes` (enum casts for settings), `php/database` (settings migrations alongside normal ones), `frontend-backend/laravel-echo-client` (consuming websocket settings on client), `frontend-backend/backend-type-sync` (settings DTO → TS type)
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 4dd5d7740b4e409a916dc7174d94a7ff206f78152af879e42ff05c5b3da34df3 -->

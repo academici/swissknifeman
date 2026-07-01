@@ -94,6 +94,4 @@ docs/API are needed; `sequential-thinking` — for complex tasks. Keep the base 
 - `architect/figma-mcp-core` — a domain special case (Figma Dev Mode MCP), outside general selection.
 - `verify-claims` (general) — complementary: this skill is about *what to connect* to a project, that one about *when and how to fetch/verify a fact* via the connected engines (context7/perplexity/web).
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 648d8c8e5996400d33fe904340851348e4ac1822c394292ce8437048a613bf01 -->

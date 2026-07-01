@@ -110,6 +110,4 @@ Global (all props of a type) → `config/data.php`; targeted → attribute on pr
 - https://spatie.be/docs/laravel-data/advanced-usage/typescript
 - Related skills: `frontend-backend/backend-type-sync` (Data → TS types), `laravel-architecture/enum-attributes` (enums in Data props), `php/named-arguments` (create Data via explicit named args), `php/php-patterns` (bare DTO/VO without package — when dependency unwanted), `php/laravel-structure` (where Dto/View/Form/Command live in project tree)
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 0cdbb2b6d1ec9196b38a52eaaaea002e0b7c08a9ba43da114d707f65be08186f -->

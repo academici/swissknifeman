@@ -59,6 +59,4 @@ BRD = WHAT the system does, not HOW. Audience: developers, in-repo AI agents, te
 - `architect/architecture`, `architect/data-schema`, `architect/tech-stack-selection` — third layer (HOW), consume BRD.
 - `general/spec-interview` — one-question-at-a-time interview technique to gather missing requirements before BRD.
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: a56d6f35e68ab49fc39eda0b5bc2cfacbbdaf920fba88b8f421f7dbc21d1602d -->

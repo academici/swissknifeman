@@ -169,6 +169,4 @@ FORBIDDEN:
 - snippets/pest-arch-test.php — Pest Arch rules set (strict types, no-debug, final actions, readonly DTO/VO/Events, contracts=interfaces, no Request in Actions/Repositories)
 - snippets/phpunit-testsuites.xml — `<testsuites>` Arch/Feature/Context/Unit + strict run flags
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 55764298eae5df06136709b1a3a23b456b312712a1ff9ef209ab00366b21a8bc -->

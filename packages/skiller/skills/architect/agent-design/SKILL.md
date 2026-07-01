@@ -171,6 +171,4 @@ DO NOT:
 - `ai/ai-agents` — external compendium on building agents/MCP/RAG (analysis, not mirror).
 - `security/security` — external defensive playbook on prompt injection and tool-use safety.
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 023165b355d45b5d452365c49ee3da43f9cd83ceecc4e6a67e6128928dc0a0d6 -->

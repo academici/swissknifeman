@@ -76,6 +76,4 @@ __pycache__/
 - `php/static-analysis` — PHP analog of Black/Ruff/Mypy (Pint, PHPStan, Rector) locally and in CI.
 - `oss-dev/dependency-audit` — dependency audit (vuln scan, licenses, supply-chain, SBOM) on top of pinned versions.
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 2063e2ad8e0022ebd6b18468c7e7bf1527f75227cd44207f4ff8357fcae0637a -->

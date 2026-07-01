@@ -84,6 +84,4 @@ Each class knows its altitude, never reaches into another's. Full map + forbidde
 - Tests for architecture layers → `laravel-testing/laravel-testing`
 - General Laravel best practices → `php/laravel-best-practices` (external)
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: e097cfa2333db63da2a87d4005133dea1d88cbd3e79bae72329ec538084a46f6 -->

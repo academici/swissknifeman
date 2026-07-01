@@ -100,6 +100,4 @@ def apply_material(obj, name: str, color):
 - `blender-modeling/parametric-config` — mesh build (`revolve_profile`), output these names/materials apply to.
 - `blender/version-gotchas` — `surface_render_method` instead of `blend_method` in Blender 5.0.
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: b6952f75b2d573ead06bbd2b5e23173fe8f556355dbd46f059d2a50cff4e6b06 -->

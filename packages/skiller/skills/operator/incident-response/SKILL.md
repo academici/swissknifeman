@@ -148,6 +148,4 @@ When to wake the second/third person.
 - `operator/capacity-planning` — capacity incidents as separate classification; pre-event war room
 - `architect/observability-design` — alerting/SLO/error budget on which DETECT and severity matrix are built
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 188b534da19a9575bb20d47b8645a3830c4b787dee22a3c5e3ac8be4c83373b8 -->

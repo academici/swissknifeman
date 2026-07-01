@@ -152,6 +152,4 @@ NEVER:
 - `quality/test-strategy` — overall test pyramid; eval is its AI-specific layer.
 - `security/security` — external reference for adversarial/jailbreak scenarios.
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 5af71d94e6e8631cdc09eb14892bfd169bdcdee9cb17ca8c0aba3719efdc3836 -->

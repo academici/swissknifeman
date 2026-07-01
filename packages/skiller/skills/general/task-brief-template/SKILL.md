@@ -110,6 +110,4 @@ If the task needs several rounds with intermediate checks — fill the Loop fiel
 - `context-economy` (general) — Plan→Clear→Execute and `/plan`, `/execute` commands.
 - `anti-drift` (general) — iteration discipline, relies on fixed scope.
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 6dd47e2132667db488088bd0aa5dd4bf06254ef04d59523dea1876353f3fb44a -->

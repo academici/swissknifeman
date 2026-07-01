@@ -60,6 +60,4 @@ One Laravel project, two compose files at repo root:
 - https://docs.docker.com/reference/compose-file/fragments/ — YAML anchors in compose
 - Related skills: `docker-php` (Dockerfile), `docker-services` (full service stack), `docker-postgres` (DB service + named volume), `docker-vite` (override for node_modules/WSL2), `makefile` (delegating Makefile)
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 2610e9e60aafce0d0dd34b991c8f874a05951d56ebb5db68794b1a9e7da6bfa2 -->

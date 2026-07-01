@@ -60,6 +60,4 @@ Apply when: setting up Vitest in a Laravel/Inertia project; writing component/co
 - `quality/test-strategy` — pyramid strategy and coverage policy
 - `quality/playwright-e2e` — browser/E2E scenarios (what Vitest doesn't cover)
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 0aedb4bb44afe678b9e46ad47b67cf6b72f923932ae61a09489e14e9d4e98a45 -->

@@ -147,6 +147,4 @@ FORBIDDEN:
 - `architect/legal-compliance` — regulatory checklist based on architecture (where data is stored).
 - `php/laravel-structure`, `laravel-architecture/modular-architecture` — implementing architecture in concrete Laravel code.
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 5b933f598e9ad4f143807e017be3b16bdc8b6309cae5ec1a8c1562376642a21a -->

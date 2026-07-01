@@ -158,6 +158,4 @@ Deck consumes ready artifacts, recomputes nothing. Slide sources:
 - `pm/product-roadmap` — Product slide + optional Roadmap.
 - `founder/risk-assessment` — optional Risk-acknowledgement slide in appendix.
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: f7292354956c8efc9870985459cf8cd1c4af6ed4c7e7175a81915eb2aee832cc -->

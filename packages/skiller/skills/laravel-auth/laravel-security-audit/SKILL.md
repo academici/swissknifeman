@@ -53,6 +53,4 @@ Method: "sharp edges" — find bugs AND innocuous-looking patterns that invite v
 - `laravel-auth/laravel-permissions`, `azguard/azguard`, `laravel-auth/attribute-authorization` — authz holes (IDOR, missing Policy) checked against these layers.
 - `php/database` — mass assignment and raw queries in migration/model context.
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 3078de842c8e7fa329ccff22a316deadfcdfe27b3b1f7b1564b2bc1611ef9294 -->

@@ -189,6 +189,4 @@ NEVER:
 - `oss-dev/dependency-audit` — dependency licenses for OSS spin-off.
 - `php/laravel-structure` — if Laravel chosen: project structure canon for next step.
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: b73375020d4506bf293154b9d82c430ac4d98d3c4392f798b079b64c0504c93d -->

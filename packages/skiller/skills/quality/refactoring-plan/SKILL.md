@@ -161,6 +161,4 @@ MUST NOT:
 - Plans > 15 steps or > 8 weeks without splitting
 - "Along the way" bump a major framework version — separate plan
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 7c4b2f0f9463f55b6b73fa6f3a11c0497ac41ca9542c46f6aee0ab937f612e73 -->

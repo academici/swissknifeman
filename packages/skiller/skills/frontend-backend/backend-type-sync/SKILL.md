@@ -118,6 +118,4 @@ git diff --exit-code -- resources/js/types/generated.d.ts \
 - https://spatie.be/docs/laravel-data
 - Related skills: `frontend-wayfinder/wayfinder` (routes), `laravel-architecture/enum-attributes` (enum internals), `laravel-data-layer/laravel-data` (Spatie-Data DTO internals, annotated with `#[TypeScript]`), `frontend-backend/inertia-vue` (types/ layer), `frontend-vue/vitest` (exclude `generated.d.ts` from coverage)
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: c85417544186ac421d0f576f1ea528cb8520f1b3a7e24829beb6d34f8e1aec2b -->

@@ -132,6 +132,4 @@ DON'T:
 - `architect/security-design` — deepens technical category (auth, OWASP, STRIDE threat modeling)
 - `quality/tech-debt-audit` — adjacent for technical risks of existing code (impact × effort)
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: dc1c0898b6a2be6b12d99937ae58c645e4578c2c520e1b425a78ef5172814e43 -->

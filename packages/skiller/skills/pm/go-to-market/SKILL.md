@@ -126,6 +126,4 @@ DO NOT:
 - `founder/defensibility` — supplier of moat narrative for investor/enterprise voice at Scale.
 - `founder/pitch-deck` — consumer: deck GTM section comes from here.
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 23940414311fab6ab75f8d64dc0d488e413a80070f58682e4796b9f485d6438b -->

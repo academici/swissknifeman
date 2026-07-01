@@ -50,6 +50,4 @@ Mode stays active rest of conversation unless user says "normal mode" or "под
 - `pao` (php) — compress PHP-tool output (tests/static-analysis) to compact JSON.
 - `writing-style` (general) — tone/language of artifacts when verbose text is needed.
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: e63d862c664b52cf1470389d6f32b9e7447f3d38e8b77b06b6df54eff720e60b -->

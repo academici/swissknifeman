@@ -148,6 +148,4 @@ Review monthly / quarterly:
 - `operator/capacity-planning` — lack of headroom = more pages = burnout; rotation health depends on capacity
 - `architect/observability-design` — alert tuning & self-healing cut the noise that rotation health is measured by
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: b315495bcabbab0701de183ce0faaea7b3cc2640cd3357ee7b9e612888f117b2 -->

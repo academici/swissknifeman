@@ -51,6 +51,4 @@ export function useFetch(url) {
 - `frontend-backend/inertia-vue` — where `composables/` live in project layers.
 - `frontend-tailwind/dark-mode` — real composable example; `frontend-reka/reka-ui-cva`, `frontend-vue/vue-dynamic-icons` — `<script setup>` components.
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: cc745be18a203110e3bb163489de1a0f6e7befece5878e096f89306bd470e2a4 -->

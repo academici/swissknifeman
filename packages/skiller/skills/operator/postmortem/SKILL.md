@@ -171,6 +171,4 @@ docs/03_Dev/Postmortems/
 - `quality/tech-debt-audit` — structural lessons → Tech_Debt_Register rows, impact high (produces_for)
 - `operator/capacity-planning` — capacity incidents: root cause often = lack of headroom/forecast
 - `architect/observability-design` — contributing factor "alert fired late" → tune thresholds/SLO
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 0e4a3de231ff381cf4bc850c07710a6d81e6c3ef9c4b2edeffdfb07a5d672567 -->

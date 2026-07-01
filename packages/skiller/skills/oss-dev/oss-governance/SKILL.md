@@ -158,6 +158,4 @@ NEVER:
 - Accept PR without CONTRIBUTING.md (no rules → every PR review negotiated from scratch).
 - Ignore SECURITY.md (without it vulnerabilities arrive in public issues).
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 03f32cb4066de3775af032de292ae6635c04c887eb7c377517130cfce2635bf0 -->

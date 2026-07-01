@@ -175,6 +175,4 @@ Detailed tree, `module.json`, `composer.json`/`config/modules.php` snippets, `vi
 - Module frontend build (Vite): `frontend-vite/vite-module-loader`, `frontend-vite/vite-multi-build`
 - Layers inside a module: `php/repositories`, `php/dependency-injection`, DTO between modules — `laravel-data-layer/laravel-data`
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: dbacbc8495e29a32ca08b53bf6d3ad063ef1f66a11bb1820f17259088f564243 -->

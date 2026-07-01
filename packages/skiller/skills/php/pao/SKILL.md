@@ -59,6 +59,4 @@ On failure PAO keeps everything needed to fix — file, line, message:
 - https://laravel-news.com/pao-agent-optimized-output-for-php-testing-tools
 - Related skills: `laravel-testing/laravel-testing` (PHPUnit/Pest, output collapsed by PAO), `php/static-analysis` (PHPStan/Rector — also under PAO wrapper), `general/context-economy` (general agent context economy)
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 74053d2166b1c13b18453e1643fca94f8d2c911d217468349f26f47d55f6898e -->

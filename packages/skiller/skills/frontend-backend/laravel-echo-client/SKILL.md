@@ -85,6 +85,4 @@ Build channel name from neutral domain model: `order.${orderId}`, `notifications
 - snippets/useEcho.ts, snippets/echo-config.ts, snippets/axios-socket-id.ts
 - Related skills: `laravel-data-layer/laravel-broadcasting` (backend: events, channels, ShouldBroadcast), `frontend-backend/inertia-vue`, `frontend-vue/vue-composition-api`, `frontend-vue/pinia-stores` (realtime "who is online"/notifications state in store, store access from ws-adapter outside component)
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 4a5947895cb34935f0a62ee86595651ab8691517835ac6d0a76abf213f963bec -->

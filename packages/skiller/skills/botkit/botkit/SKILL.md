@@ -35,6 +35,4 @@ Refs:
 - `php-packages/laravel-packages` — package scaffold, ServiceProvider, resource publishing.
 - `php/laravel-structure` — placement of bot classes in the project tree.
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 44c4e0db7dc7edd8875869556a134e6a7e0536b8bb413af88ad6fd4c03f31126 -->

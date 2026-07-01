@@ -109,6 +109,4 @@ Order: `CheckAccess` must run **after** `auth` (Gate relies on current user) and
 - https://laravel.com/docs/authorization (Gate::allows)
 - Related skills: `laravel-auth/laravel-permissions` (permission/policy/gate definition — boundary above), `azguard/azguard` (package code-first RBAC as ability source), `laravel-architecture/enum-attributes` (enum as metadata), `php/named-arguments` (call style in snippets), `architect/security-design` (architecture-level auth strategy)
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: da624216d2b7291cfb512a4cefa1f52044511f77c02b82ad79ce0abe45e4370a -->

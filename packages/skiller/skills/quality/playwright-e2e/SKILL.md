@@ -143,6 +143,4 @@ playwright.config.ts
   - `devops/db-test-preflight` — test DB preflight before E2E run in CI
   - `devops/ci-cd` — where the E2E step mounts in the pipeline
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 852e60cf9404329cce15c8a0d976fc8ec0457ab97f51d22f89e64db0a1801a3b -->

@@ -158,6 +158,4 @@ NEVER:
 - `operator/capacity-planning` — what to monitor for scaling, based on USE-metrics here.
 - `laravel-testing/health-checks` — Laravel liveness/readiness (spatie/laravel-health) for design here.
 
-<!-- ru-source-sha256: PENDING -->
-
 <!-- ru-source-sha256: 652348b32c37677c634dd0dba0cc63dc9e1843df2c6f5be60e94b91db1b73eda -->

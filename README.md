@@ -22,7 +22,7 @@
 | **📋 Управление задачами** | Плагин `task` (default-on): `/task:design\|dev\|review\|research\|fix` — каждая **пинит модель + effort + профиль** под интент, без ручного переключения |
 | **🪙 Токен-рычаги** | Дисциплина расхода: лестница `context-economy` (трим CLAUDE.md до ~92%, роутинг моделей до ~75%, аудит MCP, selective-input 5–50×), лаконичный вывод (`compact-responses`, output-style `lean`), **PAO** для PHP (вывод тестов → ~20 токенов JSON) |
 | **🧠 Память и граф** | Хаб **mAInd**: общая память экосистемы (agentmemory-демон, изоляция по namespace) + код-граф (Serena, навигация по символам вместо чтения файлов) + топология между проектами. Наблюдаемость — `maind analyze`/`verify`/`health` |
-| **📈 Аналитика и обучение** | Захват прогона хуком `run-report` → пост-ран разбор `maind analyze` (вердикт GREEN/ATTENTION/RED + метрики использования памяти/графа). Пакет **`analyst`** (P1 MVP): `analyst digest` детерминированно извлекает кандидат-уроки из прогона → `review`/`promote` с **человеком в гейте** (авто-запись запрещена) → curated всплывает в память mAInd. Кросс-проектный агрегатор + confidence-жизненный цикл — [следующие фазы](research/analyst-self-learning-system.md) |
+| **📈 Аналитика и обучение** | Захват прогона хуком `run-report` → пост-ран разбор `maind analyze` (вердикт GREEN/ATTENTION/RED + метрики использования памяти/графа). Пакет **`analyst`** (P1 MVP): `analyst digest` детерминированно извлекает кандидат-уроки из прогона → `review`/`promote` с **человеком в гейте** (авто-запись запрещена) → curated всплывает в память mAInd. Есть кросс-проектный агрегатор (`scan`) и confidence-жизненный цикл (`recompute`, Beta/decay + числовая state-machine) |
 | **⚙️ Окружение** | `harness` настраивает Claude Code: пресеты permissions по стекам, MCP-серверы, хуки (auto-approve/memory/notify/run-report) |
 | **🔎 RAG-дисциплина** | Верификация внешних фактов до фиксации: лестница context7 → perplexity-web → WebSearch (скиллы `verify-claims`, `query-craft`, `mcp-advisor`) |
 
@@ -75,8 +75,7 @@ analyst <cmd>                 # continuous learning (digest, scan, review, promo
   [роутинг источников/задач](docs/routing.md) · [референсы](docs/reference.md).
 - Пакеты: [скиллы](packages/skiller/docs/) · [окружение](packages/harness/docs/) ·
   [память и граф](packages/maind/docs/) · [continuous learning](packages/analyst/README.md).
-- Развитие: [`roadmap/`](roadmap/) (напр. [Continuous Learning / самообучение](roadmap/self-learning-memory.md));
-  дизайн пакета `analyst` — [`research/analyst-self-learning-system.md`](research/analyst-self-learning-system.md).
+- Развитие: [`roadmap/`](roadmap/) (напр. [Continuous Learning / самообучение](roadmap/self-learning-memory.md)).
 
 ## Разработка
 

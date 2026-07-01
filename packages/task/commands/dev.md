@@ -9,6 +9,9 @@ effort: high
 Профиль `dev` (token-экономный, Lean-tiered). Модель/effort этой команды уже запинены (Opus/high) —
 не переключай вручную.
 
+**Вход — КОРОТКИЙ:** ссылка на durable план-файл (primary source) + что делаем. Детали, якоря и текст
+правок бери ИЗ плана; не жди и не проси бриф на 2 страницы — вся подробность живёт в плане, не в промпте.
+
 1. **Планируй** на текущей (Opus) модели: разложи задачу на вертикальные срезы
    (model→service→controller→test), каждый со своим риском `LOW|MED|HIGH` (blast-radius: concurrency /
    transactions / data-integrity / queue-semantics / connectors). Срез = завершённая вертикаль с проводкой

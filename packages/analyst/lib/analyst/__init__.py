@@ -5,6 +5,5 @@
 провенансом и жизненным циклом, показывает человеку и — только с человеком в гейте —
 продвигает в переиспользуемое знание (память mAInd → скиллы). Не авто-запись.
 
-Полный дизайн — `research/analyst-self-learning-system.md`. Этот пакет реализует P1 (MVP):
-digest + lessons-store + human review/promote. Cross-project агрегатор и confidence-арифметика
-(Beta/decay) — последующие фазы (P2/P3)."""
+Контур: digest + lessons-store + human review/promote (P1); cross-project агрегатор `scan`
+(P2); confidence-арифметика (Beta/decay) + числовая state-machine `recompute` (P3)."""

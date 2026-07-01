@@ -37,6 +37,7 @@ config.json
 docs/skiller/
 docs/harness/
 docs/maind/
+docs/analyst/
 
 # Внутренние research-доки (аудиты/трекеры) — локально, не публиковать
 # (анкор к корню: НЕ затрагивать бакет skills/research реестра)

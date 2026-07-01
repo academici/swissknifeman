@@ -95,6 +95,112 @@ class TestScan(unittest.TestCase):
         self.assertEqual(data["weight"], 3)
         self.assertIn("Не скилл", sug.read_text(encoding="utf-8"))
 
+    # ── reconcile / prune осиротевших артефактов (P2-долг) ───────────────────
+    def _seed_pattern(self, env, pid, namespace):
+        """Засеять на диск index+suggestion существующего паттерна (namespace — в ПОЛЕ)."""
+        idx = env.state_dir / "index" / "by_pattern" / f"{pid}.json"
+        sug = env.state_dir / "suggestions" / f"{pid}.md"
+        idx.parent.mkdir(parents=True, exist_ok=True)
+        sug.parent.mkdir(parents=True, exist_ok=True)
+        idx.write_text(json.dumps({"pattern_id": pid, "namespace": namespace}), encoding="utf-8")
+        sug.write_text("# stale draft", encoding="utf-8")
+        return idx, sug
+
+    def _run_json(self, env, argv):
+        import io
+        from contextlib import redirect_stdout
+        out = io.StringIO()
+        with redirect_stdout(out):
+            scan.cmd_scan(env, argv + ["--json"])
+        return json.loads(out.getvalue())
+
+    def test_stale_scope_excludes_foreign_namespace(self):
+        # Adversarial S2: scan --namespace A (written пуст, паттерн исчез) НЕ помечает ns B устаревшим.
+        existing = [
+            {"pattern_id": "axioma-x", "namespace": "axioma", "index_path": None, "suggestion_path": None},
+            {"pattern_id": "other-y", "namespace": "other", "index_path": None, "suggestion_path": None},
+        ]
+        stale = scan.stale_pattern_ids(existing, written_ids=set(), scanned_namespaces={"axioma"})
+        self.assertEqual(stale, {"axioma-x"})   # other-y ВНЕ scope прогона → не сирота
+
+    def test_stale_written_kept(self):
+        existing = [{"pattern_id": "axioma-live", "namespace": "axioma",
+                     "index_path": None, "suggestion_path": None}]
+        stale = scan.stale_pattern_ids(existing, {"axioma-live"}, {"axioma"})
+        self.assertEqual(stale, set())          # регенерён этим прогоном → живой
+
+    def test_list_existing_patterns_skips_broken(self):
+        env = Env(self.base, "scan", home=self.home)
+        self._seed_pattern(env, "good-1", "axioma")
+        (env.state_dir / "index" / "by_pattern" / "bad.json").write_text("{oops", encoding="utf-8")
+        (env.state_dir / "index" / "by_pattern" / "noname.json").write_text(
+            json.dumps({"pattern_id": "noname"}), encoding="utf-8")   # без namespace
+        existing = scan.list_existing_patterns(env)
+        self.assertEqual([e["pattern_id"] for e in existing], ["good-1"])
+
+    def test_prune_artifacts_removes_both_missing_ok(self):
+        env = Env(self.base, "scan", home=self.home)
+        idx, sug = self._seed_pattern(env, "p-1", "axioma")
+        sug.unlink()   # suggestion уже отсутствует — missing_ok не должен падать
+        removed = scan.prune_artifacts(env, {"p-1", "absent"})
+        self.assertEqual(removed, ["absent", "p-1"])
+        self.assertFalse(idx.exists())
+
+    def test_orphan_pruned_on_rescan(self):
+        # реестр: 1 enabled-проект ns axioma, паттернов нет (<min) → осиротевший файл ns axioma снимается
+        self._write_config([self._project("p1", ["axioma"], "solo lesson trig", "solo action")])
+        env = Env(self.base, "scan", home=self.home)
+        idx, sug = self._seed_pattern(env, "axioma-orphan", "axioma")
+        payload = self._run_json(env, [])
+        self.assertEqual(payload["pruned"], ["axioma-orphan"])
+        self.assertFalse(idx.exists() or sug.exists())   # index+suggestion синхронно сняты
+
+    def test_scoped_scan_does_not_prune_foreign_namespace(self):
+        # Adversarial S2 (end-to-end): scan --namespace axioma не трогает файлы ns other
+        self._write_config([self._project("p1", ["axioma"], "trig words", "act words")])
+        env = Env(self.base, "scan", home=self.home)
+        a_idx, a_sug = self._seed_pattern(env, "axioma-orphan", "axioma")
+        b_idx, b_sug = self._seed_pattern(env, "other-keep", "other")
+        payload = self._run_json(env, ["--namespace", "axioma"])
+        self.assertEqual(payload["pruned"], ["axioma-orphan"])
+        self.assertFalse(a_idx.exists() or a_sug.exists())
+        self.assertTrue(b_idx.exists() and b_sug.exists())   # чужой ns не рескан → нетронут
+
+    def test_dry_run_reports_but_does_not_delete(self):
+        self._write_config([self._project("p1", ["axioma"], "trig words", "act words")])
+        env = Env(self.base, "scan", home=self.home)
+        idx, sug = self._seed_pattern(env, "axioma-orphan", "axioma")
+        payload = self._run_json(env, ["--dry-run"])
+        self.assertEqual(payload["pruned"], ["axioma-orphan"])   # would-prune
+        self.assertTrue(idx.exists() and sug.exists())            # но ничего не удалено
+
+    def test_no_prune_keeps_orphans(self):
+        self._write_config([self._project("p1", ["axioma"], "trig words", "act words")])
+        env = Env(self.base, "scan", home=self.home)
+        idx, sug = self._seed_pattern(env, "axioma-orphan", "axioma")
+        payload = self._run_json(env, ["--no-prune"])
+        self.assertEqual(payload["pruned"], [])
+        self.assertTrue(idx.exists() and sug.exists())
+
+    def test_broken_index_not_deleted_and_scan_survives(self):
+        self._write_config([self._project("p1", ["axioma"], "trig words", "act words")])
+        env = Env(self.base, "scan", home=self.home)
+        bad = env.state_dir / "index" / "by_pattern" / "broken.json"
+        bad.parent.mkdir(parents=True, exist_ok=True)
+        bad.write_text("{ not json", encoding="utf-8")
+        payload = self._run_json(env, [])           # не роняет scan
+        self.assertNotIn("broken", payload["pruned"])
+        self.assertTrue(bad.exists())               # неклассифицированное не удаляем
+
+    def test_nondefault_params_skip_autoprune(self):
+        # [POSSIBLE-DEFECT] нестандартные параметры → авто-прун пропущен (защита от churn)
+        self._write_config([self._project("p1", ["axioma"], "trig words", "act words")])
+        env = Env(self.base, "scan", home=self.home)
+        idx, sug = self._seed_pattern(env, "axioma-orphan", "axioma")
+        payload = self._run_json(env, ["--min-projects", "5"])
+        self.assertEqual(payload["pruned"], [])
+        self.assertTrue(idx.exists() and sug.exists())
+
     def test_cmd_scan_json_and_isolation_endtoend(self):
         trig, act = "cross project shared lesson", "the shared resolution action"
         projs = [self._project(pid, ["axioma"], trig, act) for pid in ("p1", "p2", "p3")]

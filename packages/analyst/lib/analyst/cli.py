@@ -12,10 +12,12 @@ from .promote import cmd_deprecate, cmd_promote
 from .recompute import cmd_recompute
 from .review import cmd_review
 from .scan import cmd_scan
+from .suggest import cmd_suggest
 
 COMMANDS = {
     "digest": cmd_digest,
     "scan": cmd_scan,
+    "suggest": cmd_suggest,
     "review": cmd_review,
     "recompute": cmd_recompute,
     "promote": cmd_promote,

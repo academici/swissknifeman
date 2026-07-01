@@ -2,12 +2,55 @@
 
 ## [Unreleased]
 
+### Changed (дисциплина: RAG-делегирование + подробность плана/хендоффа)
+
+- **RAG-ступень не делегируется тул-бедному субагенту** (канон `general/verify-claims` — новый
+  подраздел «Делегирование: не ронять ступень»; указатель в root-скилле `decision-verification`;
+  клауза в `CLAUDE.md` «Методология решений»). Первопричина: верификация внешнего факта была
+  делегирована субагенту `claude-code-guide` (тулсет без `perplexity-web`) → лестница молча
+  просела до `WebSearch`. Правило: RAG-ступень исполняется там, где доступен приоритетный движок;
+  делегируешь — делегат обязан нести `perplexity-web`/`context7`, иначе держи проверку в основном
+  контексте (делегировать МОЖНО, ронять ступень молча — нельзя). **Регресс-гарант** — новый
+  pressure-кейс в `verify-claims/evals/pressure.json` (ловит соблазн через `skiller eval`).
+- **Контракт `task`-пакета: план максимально подробный, хендофф короткий** (`task/design.md`,
+  `task/dev.md`). План — самодостаточный (всё для исполнения В ФАЙЛЕ, переживает падение сессии),
+  не «коротко по фазам»; спорное → отдельный блок `## Обсуждение` в плане (плюсы/минусы + явная
+  рекомендация), а не popup; хендофф на `/task:dev` — короткая ссылка на план, не бриф на 2 страницы;
+  `AskUserQuestion` — крайний случай и всегда с рекомендованным вариантом.
+
+### Added (пакет `analyst` — P4: cross-project паттерн → ЧЕРНОВИК скилла)
+
+- **`analyst suggest <pattern_id> | --all [--bucket B] [--min-weight N] [--dry-run] [--json] [--force]`**
+  — детерминированный (stdlib, on-demand) мост `scan` → переиспользуемый скилл: читает **только**
+  абстрагированный индекс `index/by_pattern/<id>.json` и генерит staged-ЧЕРНОВИК
+  `~/.swissknifeman/analyst/drafts/<pattern_id>/` = `SKILL.ru.md` (RU-источник-заготовка с
+  frontmatter-скелетом + инертный провенанс-штамп) + `draft.meta.json` (паспорт + `seed_sha256`).
+  **Инвариант удержан:** НЕ пишет в `skills/`, НЕ генерит EN-канон, НЕ регистрирует, НЕ раскрывает
+  raw/секреты (приватность СТРУКТУРНА — индекс уже абстрагирован). Промоут в бакет — человек; вывод
+  печатает **точную** repo-grounded последовательность skiller (mkdir → `claude-canon-from-ru.md` →
+  `check-translations.sh --stamp` → `validate.sh` → `skiller registry`).
+- **Edit-safety (идемпотентность):** ре-suggest не затирает ручные правки — `seed_sha256`-детект
+  (тело == последнего сгенерённого → перегенерим; правлено руками → тело не трогаем, освежаем лишь
+  провенанс meta; `--force` перезаписывает). Осиротевшие черновики (паттерн исчез) — **WARN, не
+  delete** (≠ scan-prune: черновик человеко-редактируем).
+- **Гейты:** `name`-кандидат по офиц. правилам скиллов (≤64, `[a-z0-9-]`, без ведущих/хвостовых
+  дефисов и reserved `claude`/`anthropic`; кириллица не образует name → латинский токен/`skill`,
+  финализирует человек); `--min-weight` (индекс не несёт confidence → `--min-tier` отложен, D7).
+  Чистые генераторы (`build_skill_ru`/`build_meta`/`_slug_name`) + writer с I/O в `cmd_suggest`;
+  +13 offline-тестов. Дизайн: [`roadmap/analyst-suggest-draft-skill.md`](roadmap/analyst-suggest-draft-skill.md).
+  Заодно исправлены устаревшие указатели «промоут = `skiller integrate`» в `scan.py`/CHANGELOG
+  (integrate вшивает скиллы В проект, не регистрирует новый).
+- **Документация пакета `analyst`** — добавлен `packages/analyst/docs/` (VitePress: index + guide
+  cli/lifecycle/suggest + architecture + roadmap) и линковка в зонтичный сайт (`scripts/docs-sync.sh`,
+  корневой `docs/.vitepress/config.mts` nav+sidebar+Пакеты, `docs/routing.md` слой «Обучение»,
+  `.gitignore`). Standalone и агрегатный build зелёные. Раньше analyst был единственным пакетом без
+  своих доков.
+
 ### Added (пакет `analyst` — P1 MVP + P2 scan: continuous learning, слой-1)
 
 Новый четвёртый пакет монорепо **`analyst`** (CLI `analyst`, плагин-только-команды) — детерминированный
 (stdlib-only, **on-demand, без демона**) слой захвата «выстраданных уроков» из прогонов Claude Code с
-**человеком в гейте** (авто-запись в скиллы запрещена). Реализует P1 из
-[`research/analyst-self-learning-system.md`](research/analyst-self-learning-system.md) §9:
+**человеком в гейте** (авто-запись в скиллы запрещена). Реализует P1 контура continuous learning:
 
 - **`analyst digest`** — детерминированно извлекает КАНДИДАТ-уроки из свежего `run-report` прогона по
   высокоточным сигналам (resolved-failure «сработало после N попыток»; явные dev-loop workarounds) →
@@ -24,17 +67,23 @@
   проектах** (по умолчанию 3) → draft-**предложения** (не скиллы!) в `~/.swissknifeman/analyst/suggestions/`
   + индекс `index/by_pattern/`. **Namespace-изоляция** (наследуется от maind): уроки кластеризуются
   только среди проектов, делящих namespace — паттерн из `ns:axioma` не течёт в чужой. Детерминизм
-  (сортировка по id). Промоут предложения в скилл — человек (`skiller integrate`, P4).
+  (сортировка по id). Черновик скилла из предложения — `analyst suggest` (P4); промоут в бакет — человек.
 - **Обвязка:** root-router `swissknifeman analyst …` + `doctor` fan-out; зонтичный `install.sh`;
   marketplace-запись (авто-подхват `skiller registry`). `Env(BaseEnv)`, atomic JSON, тесты offline (37).
-- Отложено на P4/P5 (по дизайну, не долг): `analyst suggest`→draft SKILL.ru.md + скилл `analyst-capture`
-  (P4), `observe.sh` PostToolUse (P5). Известное ограничение P2: устаревшие suggestion-файлы не прунятся
-  (re-scan перезаписывает актуальные, но не удаляет исчезнувшие паттерны) — чистка вручную.
+- **Реконсиляция `analyst scan` (P2-долг закрыт)** — после записи артефактов детерминированный прун
+  осиротевших `index/by_pattern/<id>.json` + `suggestions/<id>.md` (паттерн исчез: проект disabled/удалён,
+  урок deprecated, кластер упал ниже порога). Прун СТРОГО в scope прогона: `scanned_namespaces` =
+  `{--namespace}` если задан, иначе union namespace всех enabled-проектов; чужой namespace не рескан →
+  его файлы не трогаются (классификация — из ПОЛЯ `namespace` индекса, не из имени файла; битый индекс →
+  SKIP, не удаляем и не роняем scan). Флаги: `--no-prune` (прун по умолчанию ВКЛ), `--dry-run` (только
+  would-prune, ничего не удаляет); `pruned:[…]` в `--json`, «снято сирот: N» в human. Нестандартные
+  `--min-projects/--threshold` авто-прун пропускают (защита от churn). Чистые `stale_pattern_ids` (тесты
+  без I/O) + `list_existing_patterns`/`prune_artifacts`; +11 offline-тестов (adversarial S2).
+- Отложено на P5 (по дизайну, не долг): скилл `analyst-capture` + `observe.sh` PostToolUse-поток.
 
 ### Added (пакет `analyst` — P3: confidence-жизненный цикл)
 
-Реализует **P3** из [`research/analyst-self-learning-system.md`](research/analyst-self-learning-system.md)
-§5/§9 (план — [`research/analyst-P3-plan.md`](research/analyst-P3-plan.md)): детерминированный,
+Реализует **P3** контура continuous learning: детерминированный,
 **восстановимый-из-логов** пересчёт уверенности урока + **числовая** state-machine, **без демона**
 (on-demand) и **без нарушения инварианта** «`candidate→curated` — только человек».
 

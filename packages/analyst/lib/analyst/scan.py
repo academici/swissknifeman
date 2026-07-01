@@ -136,7 +136,8 @@ def _suggestion_md(pattern):
         f"# Предложение (draft) — паттерн `{pattern['pattern_id']}`",
         "",
         f"> **Не скилл.** Черновик на промоушен: паттерн повторился в **{pattern['weight']} проектах** "
-        f"namespace `{pattern['namespace']}`. Промоут в скилл — человек (`skiller integrate`, фаза P4).",
+        f"namespace `{pattern['namespace']}`. Черновик скилла — `analyst suggest {pattern['pattern_id']}`; "
+        f"промоут в бакет — человек.",
         "",
         f"- **kind:** {rep.get('kind') or '—'}",
         f"- **trigger:** {rep.get('trigger') or '—'}",
@@ -166,17 +167,72 @@ def write_artifacts(env, patterns):
     return written
 
 
+# ── reconcile: прун осиротевших артефактов (строго в scope прогона) ───────────
+def list_existing_patterns(env):
+    """Существующие артефакты паттернов на диске: [{pattern_id, namespace, index_path,
+    suggestion_path}]. namespace берётся из ПОЛЯ 'namespace' индекса (имя файла не реверсим).
+    Битый/непрочитанный индекс либо без pattern_id/namespace → SKIP (не удаляем
+    неклассифицированное). Отсортировано по pattern_id — детерминизм."""
+    idx_dir = env.state_dir / "index" / "by_pattern"
+    sug_dir = env.state_dir / "suggestions"
+    out = []
+    if not idx_dir.is_dir():
+        return out
+    for idx_path in sorted(idx_dir.glob("*.json")):
+        data = safe_load_json(idx_path, None)
+        if not isinstance(data, dict):
+            continue                       # битый JSON → SKIP
+        pid = data.get("pattern_id")
+        ns = data.get("namespace")
+        if not pid or not ns:
+            continue                       # без классифицирующих полей → SKIP
+        out.append({
+            "pattern_id": pid,
+            "namespace": ns,
+            "index_path": idx_path,
+            "suggestion_path": sug_dir / f"{pid}.md",
+        })
+    return out
+
+
+def stale_pattern_ids(existing, written_ids, scanned_namespaces):
+    """ЧИСТАЯ (без I/O): id артефактов-сирот к снятию. Сирота = существующий паттерн, чей
+    namespace ВХОДИТ в отсканированный этим прогоном scope, но которого НЕТ среди written
+    (регенерённых). namespace ВНЕ scope → НЕ трогаем: чужой ns не рескан → его отсутствие
+    в written ≠ 'устарело'. Так scoped-прогон (scan --namespace X) прунит только ns X."""
+    written = set(written_ids)
+    scoped = set(scanned_namespaces)
+    return {e["pattern_id"] for e in existing
+            if e["namespace"] in scoped and e["pattern_id"] not in written}
+
+
+def prune_artifacts(env, stale_ids):
+    """Снять index+suggestion файлы для stale_ids — ОБА вместе (missing_ok, синхронно).
+    Возвращает removed[] — отсортированный список снятых pattern_id. Детерминированно."""
+    idx_dir = env.state_dir / "index" / "by_pattern"
+    sug_dir = env.state_dir / "suggestions"
+    removed = []
+    for pid in sorted(stale_ids):
+        (idx_dir / f"{pid}.json").unlink(missing_ok=True)
+        (sug_dir / f"{pid}.md").unlink(missing_ok=True)
+        removed.append(pid)
+    return removed
+
+
 # ── CLI ──────────────────────────────────────────────────────────────────────
 def cmd_scan(env, argv):
-    """analyst scan [--min-projects N] [--namespace NS] [--threshold T] [--dry-run] [--json]
+    """analyst scan [--min-projects N] [--namespace NS] [--threshold T] [--no-prune] [--dry-run] [--json]
     — межпроектные паттерны уроков (config.json) → suggestions/ (namespace-изолированно)."""
     from .common import die, parse_args, warn
     opts, _ = parse_args(argv, {"--min-projects": "str", "--namespace": "str",
-                                "--threshold": "str", "--dry-run": "bool", "--json": "bool"})
+                                "--threshold": "str", "--no-prune": "bool",
+                                "--dry-run": "bool", "--json": "bool"})
     if opts["help"]:
-        print("analyst scan [--min-projects N] [--namespace NS] [--threshold T] [--dry-run] [--json]\n"
+        print("analyst scan [--min-projects N] [--namespace NS] [--threshold T] [--no-prune] [--dry-run] [--json]\n"
               "  Обход config.json:projects[] → per-project уроки → Jaccard-кластеры → паттерны в ≥N\n"
-              "  проектах (namespace-изолированно) → draft-предложения в ~/.swissknifeman/analyst/.")
+              "  проектах (namespace-изолированно) → draft-предложения в ~/.swissknifeman/analyst/.\n"
+              "  Реконсиляция: осиротевшие index+suggestion файлы (исчезнувшие паттерны) снимаются\n"
+              "  СТРОГО в scope прогона (--no-prune выключает; --dry-run только показывает).")
         return
 
     try:
@@ -199,8 +255,29 @@ def cmd_scan(env, argv):
 
     buckets = gather_by_namespace(projects)
     patterns = detect_patterns(buckets, min_projects=min_projects, threshold=threshold)
+    current_ids = {p["pattern_id"] for p in patterns}   # что ДОЛЖНО существовать в scope прогона
 
     written = [] if opts["dry_run"] else write_artifacts(env, patterns)
+
+    # ── reconcile: снять осиротевшие артефакты СТРОГО в scope этого прогона ──
+    # scope: {namespace} при --namespace X (регенерён только он), ИНАЧЕ union ns всех
+    # enabled-проектов (полный обход). Чужой ns не рескан → его файлы не трогаем.
+    scanned_namespaces = ({opts["namespace"]} if opts["namespace"]
+                          else {ns for pr in projects for ns in pr["namespaces"]})
+    prune_enabled = not opts["no_prune"]
+    params_default = (min_projects == DEFAULT_MIN_PROJECTS and threshold == DEFAULT_THRESHOLD)
+    pruned = []
+    if prune_enabled and not params_default:
+        # [POSSIBLE-DEFECT] нестандартные параметры делают written строже → авто-прун снял бы
+        # то, что дефолтный scan оставит (churn: удалил сейчас — пересоздал следующим дефолтом).
+        # Осознанно ограничиваем авто-прун дефолтными параметрами (данные важнее авточистки).
+        warn("[POSSIBLE-DEFECT] нестандартные --min-projects/--threshold — авто-прун сирот пропущен "
+             "(риск churn). Прогоните scan с дефолтными параметрами для чистки сирот.")
+    elif prune_enabled:
+        # list_existing_patterns — ПОСЛЕ write_artifacts: актуальные попадут в current_ids
+        # (не стухнут), сироты — нет. В dry-run write не было → показываем would-prune.
+        stale = stale_pattern_ids(list_existing_patterns(env), current_ids, scanned_namespaces)
+        pruned = sorted(stale) if opts["dry_run"] else prune_artifacts(env, stale)
 
     if opts["json"]:
         print(json.dumps({"projects_scanned": len(projects),
@@ -208,6 +285,7 @@ def cmd_scan(env, argv):
                           "min_projects": min_projects,
                           "patterns": patterns,
                           "written": written,
+                          "pruned": pruned,
                           "dry_run": bool(opts["dry_run"])}, ensure_ascii=False, indent=2))
         return
 
@@ -216,14 +294,18 @@ def cmd_scan(env, argv):
           f"порог ≥{min_projects} проектов\n")
     if not patterns:
         print("  ✓ GREEN — межпроектных паттернов не найдено "
-              "(мало уроков / не повторяются в ≥N проектах). Собери больше: analyst digest по проектам.\n")
-        return
-    for p in patterns:
-        print(f"  ⚑ [{p['namespace']}] {p['pattern_id']}  · {p['weight']} проект(ов), "
-              f"{p['lessons']} урок(ов)")
-        print(f"      {p['representative']['trigger']}")
-        print(f"      проекты: {', '.join(p['projects'])}")
-    dest = env.state_dir / "suggestions"
-    print(f"\n  {len(patterns)} паттерн(ов) → {'(dry-run, не записано)' if opts['dry_run'] else dest}")
-    print("  Промоут в скилл — человек (skiller integrate, P4). Не авто-запись.\n")
+              "(мало уроков / не повторяются в ≥N проектах). Собери больше: analyst digest по проектам.")
+    else:
+        for p in patterns:
+            print(f"  ⚑ [{p['namespace']}] {p['pattern_id']}  · {p['weight']} проект(ов), "
+                  f"{p['lessons']} урок(ов)")
+            print(f"      {p['representative']['trigger']}")
+            print(f"      проекты: {', '.join(p['projects'])}")
+        dest = env.state_dir / "suggestions"
+        print(f"\n  {len(patterns)} паттерн(ов) → {'(dry-run, не записано)' if opts['dry_run'] else dest}")
+        print("  Черновик скилла: analyst suggest <pattern_id> (P4). Промоут в бакет — человек, не авто-запись.")
+    if pruned:
+        label = "сирот к снятию (dry-run)" if opts["dry_run"] else "снято сирот"
+        print(f"  {label}: {len(pruned)}")
+    print()
 

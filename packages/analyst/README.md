@@ -5,9 +5,12 @@
 **с человеком в гейте** — превращает их в переиспользуемое знание (память mAInd → скиллы).
 Не отдельный анализатор в каждом проекте, а ОДИН слой поверх многих пакетов и проектов.
 
-> Полный дизайн: [`research/analyst-self-learning-system.md`](../../research/analyst-self-learning-system.md).
-> Этот пакет реализует **P1 (MVP)**: `digest` + lessons-store + human `review`/`promote`.
-> Cross-project агрегатор (`scan`) и confidence-арифметика (Beta/decay) — фазы P2/P3.
+> Реализованный контур: **P1 (MVP)** — `digest` + lessons-store + human `review`/`promote`;
+> **P2** — cross-project агрегатор `scan`; **P3** — confidence-арифметика (Beta/decay) +
+> числовая state-machine `recompute` + mem0-таксономия; **P4** — `suggest` → ЧЕРНОВИК скилла
+> (`SKILL.ru.md` в staging, промоут — человек). Дальше по roadmap: `analyst-capture` + `observe.sh` (P5).
+>
+> 📖 Документация: [`docs/`](docs/) (VitePress — standalone + зонтичный агрегат).
 
 ## Почему так (анти-collapse)
 

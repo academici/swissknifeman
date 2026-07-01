@@ -1,0 +1,16 @@
+{
+  "name": "@academici/analyst",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "description": "analyst — continuous learning экосистемы academici: детерминированный захват уроков из прогонов Claude Code с человеком в гейте. Ядро — Python stdlib; npm нужен только для документации (VitePress).",
+  "type": "module",
+  "scripts": {
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
+  },
+  "devDependencies": {
+    "vitepress": "^1.6.3"
+  }
+}

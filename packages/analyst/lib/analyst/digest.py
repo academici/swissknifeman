@@ -2,7 +2,7 @@
 
 Первичный источник — run-report (SessionEnd-хук harness пишет <project>/.claude/runs/<sid>.json,
 уже дистиллировав транскрипт). digest берёт ТОЛЬКО высокоточные сигналы (не «угадывает инсайты»
-— это осознанная граница MVP, см. research/analyst-self-learning-system.md §11):
+— это осознанная граница MVP):
 
   A. resolved-failure — проверка (тест/линт) падала и затем прошла в том же прогоне
      («сработало после N попыток») → урок-gotcha с evidence test-pass;

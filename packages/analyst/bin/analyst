@@ -6,6 +6,7 @@
 # Команды (корень пакета = каталог установки analyst):
 #   digest    извлечь кандидат-уроки из run-report прогона (--project ID | --cwd | --session UUID)
 #   scan      cross-project паттерны уроков (config.json) → suggestions (namespace-изолированно)
+#   suggest   cross-project паттерн → ЧЕРНОВИК скилла (drafts/); промоут — человек (<id>|--all|--bucket|--force)
 #   review    показать уроки по состояниям + diff против активных (--state S | --project ID)
 #   recompute пересчитать confidence из events.ndjson + числовая state-machine (--now | --dry-run)
 #   promote   продвинуть урок по конвейеру: ephemeral→candidate→curated (человек в гейте)
@@ -27,7 +28,7 @@ if [[ ! -d "$REPO_ROOT/lib/analyst" ]]; then
   exit 1
 fi
 
-usage() { grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '2,13p'; }
+usage() { grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '2,14p'; }
 
 CMD="${1:-help}"
 [[ $# -gt 0 ]] && shift
@@ -38,7 +39,7 @@ case "$CMD" in
     sha="$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
     echo "analyst $sha ($REPO_ROOT)"
     exit 0 ;;
-  digest|scan|review|recompute|promote|deprecate|doctor) ;;
+  digest|scan|suggest|review|recompute|promote|deprecate|doctor) ;;
   *) echo "Неизвестная команда: $CMD" >&2; usage >&2; exit 1 ;;
 esac
 

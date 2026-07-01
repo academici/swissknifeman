@@ -1,6 +1,6 @@
 """analyst promote / deprecate — человеко-гейт жизненного цикла урока.
 
-Инвариант (research/analyst-self-learning-system.md §5/§6): переход в CURATED — ВСЕГДА явное
+Инвариант: переход в CURATED — ВСЕГДА явное
 согласие человека (confirm на tty либо --yes на CLI = осознанный ввод). Авто-запись запрещена.
 Каждый переход — запись в audit.ndjson (append-only провенанс). При выходе в curated урок
 всплывает в память mAInd (subprocess, graceful: демон лёг / нет CLI → урок остаётся на диске,

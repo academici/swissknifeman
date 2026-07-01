@@ -165,6 +165,14 @@ Field-feedback: агенты неохотно жмут RAG при формиро
   профиль, перебивая настройки сессии — закрывает «забыл переключить модель/effort/режим». dev→Opus/high
   (планирование) + Lean-tiered субагенты по риску; fix→Sonnet/medium single-agent; review→Opus/xhigh adversarial;
   design/research→Opus/high + research-fanout.
+- **`task` — default-on в КАЖДОМ проекте** (`skiller.config.DEFAULT_COMMAND_PLUGINS = ["task"]`): connect
+  включает плагин `task` автоматически (как курируемый `core`) — marketplace-guarded (на старом
+  marketplace / в тест-реестре тихо пропускается), `--no-core` его НЕ трогает, точечный opt-out —
+  `enabledPlugins["task@swissknifeman"]=false`. Новые онбордженные проекты получают `/task:*` без ручной
+  правки. Резидентного tier-0 налога нет (описания команд не инжектятся в каждый запрос).
+- **Доктор фиксирует пропуск** (`maind doctor --audit core`): дименсия `core` теперь помимо CORE-скиллов
+  проверяет и командные плагины по умолчанию — `cmd⚠(нет: /task:*)` на проектах без `task`. Чеклист
+  интеграции (`integration-checklist.md`) дополнен пунктом про `core`/`task` в connect.
 - **`devops/docker` → тонкий router-скилл** (v0.2.0, `risk: read`): description-триггер + маршрутная таблица по
   всем 6 под-скиллам (docker-php/postgres/dev-prod/services/vite/makefile) + порядок сборки (DAG в
   requires/produces_for); глубокая экспертиза — в `snippets/docker-expert.md` on-demand (progressive disclosure).

@@ -6,7 +6,8 @@ from core import atomic_write_text, find_repo_root, safe_load_json
 
 from .common import (AGENT_DEFAULTS, MANIFEST, MARKETPLACE, apply_permissions,
                      die, is_within, parse_flags)
-from .config import (CORE_BUCKETS, CORE_PLUGIN, CORE_SKILLS, all_buckets,
+from .config import (CORE_BUCKETS, CORE_PLUGIN, CORE_SKILLS,
+                     DEFAULT_COMMAND_PLUGINS, all_buckets,
                      load_config, resolve_selection, resolve_target)
 from .hub import generate_hub, hub_artifacts_exist
 from .state import upsert_project
@@ -54,7 +55,8 @@ def do_connect(env, target, opts, register=True, fix_path_drift=False):
         profile_source = "plugins"
 
     buckets = all_buckets(env)
-    known_plugins = set(buckets) | {"generate-skill", CORE_PLUGIN}
+    known_plugins = (set(buckets) | {"generate-skill", CORE_PLUGIN}
+                     | set(DEFAULT_COMMAND_PLUGINS))
     # CORE-политика (умное подключение): вместо целых бакетов general(19)+oss-dev(10) ≈ 1956
     # резидентных токенов пушим лёгкий курируемый плагин `core` (== CORE_SKILLS, 7 ≈ 480 ток) —
     # экономия ~1.5K ток/проект на КАЖДЫЙ запрос. --no-core отключает. Плагин объявлен в
@@ -65,6 +67,15 @@ def do_connect(env, target, opts, register=True, fix_path_drift=False):
             and _marketplace_declares(env, CORE_PLUGIN)):
         core_added = [CORE_PLUGIN]
         plugins = list(plugins) + core_added
+
+    # Командные плагины по умолчанию (task): включаем в КАЖДЫЙ проект, как core. Marketplace-guarded
+    # (на старом marketplace / в тест-реестре тихо пропускаем). --no-core их НЕ трогает — это не
+    # CORE-скиллы; отключить точечно можно enabledPlugins[...]=false.
+    cmd_added = []
+    for cp in DEFAULT_COMMAND_PLUGINS:
+        if cp not in plugins and _marketplace_declares(env, cp):
+            cmd_added.append(cp)
+    plugins = list(plugins) + cmd_added
 
     for p in plugins:
         if p not in known_plugins:
@@ -92,6 +103,9 @@ def do_connect(env, target, opts, register=True, fix_path_drift=False):
     if core_added:
         print(f"CORE:     {CORE_PLUGIN} (лёгкое токен-экономное ядро, {len(CORE_SKILLS)} скиллов "
               f"вместо бакетов general+oss-dev; --no-core отключает)")
+    if cmd_added:
+        print(f"COMMANDS: {' '.join(cmd_added)} (интент-команды /task:*, раздаются по умолчанию; "
+              f"отключить точечно — enabledPlugins[...]=false)")
 
     list_only = opts.get("list", False)
     dry_run = opts.get("dry_run", False)

@@ -70,6 +70,17 @@ data. Cheaper to re-check than to ship a wrong verdict.
 Economy: context7 for exact library API; everything else aggressively via `perplexity-web` (flat-rate, compact
 synthesis); WebSearch/WebFetch = narrow known-URL/fallback; don't fire deep-research for nothing.
 
+## Delegation: don't drop a rung
+
+The ladder is an obligation on the RESULT, not just engine order. Run the RAG rung where the priority engine is
+AVAILABLE (usually the main context). **Before delegating "verify X" to a subagent — confirm its toolset has
+`perplexity-web` (and `context7`).** A topically-matching agent (e.g. a Claude-Code one) is often WebSearch-only
+→ delegating there SILENTLY downgrades the ladder to WebSearch. If the delegate lacks the priority engine:
+(a) keep the check in the main context; (b) grant the subagent the `perplexity-web` tool; (c) have the subagent
+return WHAT to verify and run the ladder yourself. Delegating verification is fine (e.g. `research/research` fans
+out deliberately) — only silent rung-dropping is not. If the rung ran degraded anyway — that's an engine failure:
+put it in the "Непроверено → ПОВТОРНЫЙ ПРОХОД" footer.
+
 ## Citation and confidence
 
 - State **source + date** of the fact in output.
@@ -130,4 +141,4 @@ Reviewing someone's audit/plan, for EACH item decide: is the verdict repo-ground
 - `general/anti-drift` — iteration discipline; this skill is knowledge discipline (don't assert stale facts).
 - `general/context-economy` — each RAG engine costs context/permissions; don't keep unused ones connected.
 
-<!-- ru-source-sha256: 88b888b6f6aad5259c2429d6a503c4be83355c053c82444090e386a160c2e674 -->
+<!-- ru-source-sha256: f34c7be9d9653fdc23dd109dd7fa9fdae11094f4a3cac8823d387d88ea17596e -->

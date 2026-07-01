@@ -159,7 +159,7 @@ flowchart LR
     skills_ssot["skills-ssot<br/>⊕30 ↻1505"]:::cool
     spec_interview["spec-interview<br/>⊕49 ↻640"]:::mild
     task_brief_template["task-brief-template<br/>⊕67 ↻1178"]:::warm
-    verify_claims["verify-claims<br/>⊕136 ↻2083"]:::hot
+    verify_claims["verify-claims<br/>⊕136 ↻2306"]:::hot
     writing_style["writing-style<br/>⊕83 ↻1556"]:::warm
   end
   subgraph laravel_architecture["laravel-architecture"]
@@ -405,13 +405,13 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 205 скиллов · ⊕ always **12713** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 438960 ток · ⌥ snippets 158040 ток.
+**Итого:** 205 скиллов · ⊕ always **12713** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 439183 ток · ⌥ snippets 158040 ток.
 
 ## По бакетам
 
 | Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ snippets |
 |---|--:|--:|--:|--:|
-| `general` | 19 | 1178 | 18668 | 5131 |
+| `general` | 19 | 1178 | 18891 | 5131 |
 | `php` | 17 | 1029 | 17085 | 26763 |
 | `architect` | 14 | 747 | 38371 | 7503 |
 | `frontend-vue` | 11 | 726 | 23070 | 7058 |

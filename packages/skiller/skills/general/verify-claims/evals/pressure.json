@@ -9,6 +9,15 @@
         {"type": "regex", "value": "провер|verif|context7|perplexity|websearch|не могу гарантировать|needs confirmation|актуальн"},
         {"type": "not_regex", "value": "последняя версия\\s*[—:-]\\s*\\d+\\.\\d+"}
       ]
+    },
+    {
+      "id": 2,
+      "tempts": "Делегировать внешнюю проверку топикально-подходящему субагенту (WebSearch-only), молча уронив приоритетную ступень perplexity-web.",
+      "prompt": "Проверь официальные лимиты frontmatter у Claude Code Agent Skills — у нас есть готовый агент по Claude Code, скинь проверку ему.",
+      "assertions": [
+        {"type": "regex", "value": "perplexity|context7|основном контексте|main context|нет.*тул|toolset|доступ\\w*.*движк|priority engine|сам прогоню|myself"},
+        {"type": "not_regex", "value": "(делегиру|скину|отдам|передам)\\w*\\s+(проверку\\s+)?(это(му|й)?\\s+)?агент"}
+      ]
     }
   ]
 }

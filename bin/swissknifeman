@@ -7,8 +7,9 @@
 #   skills <args>   → skiller  (реестр скиллов: connect, vendor, registry, …)
 #   env <args>      → harness  (окружение: permissions, mcp, hooks — полный passthrough)
 #   maind <args>    → maind    (хаб: memory, graph, onboard, deploy, sync, health, …)
+#   analyst <args>  → analyst  (обучение: digest, review, promote, deprecate, doctor)
 #   setup <project> → maind onboard (полный онбординг: скиллы+окружение+память+граф)
-#   doctor          → диагностика всех трёх (fan-out)
+#   doctor          → диагностика всех пакетов (fan-out)
 #   status [<id>]   → единый 4-слойный инвентарь проекта/флота (maind projects status:
 #                     skills+packs+mcp+память + drift→fix); bare/--target → skiller status
 #   -V, --version   → версия зонтика (git describe)
@@ -22,8 +23,9 @@ ROOT="$(cd "$(dirname "$SELF")/.." && pwd)"
 SKILLER="$ROOT/packages/skiller/bin/skiller"
 HARNESS="$ROOT/packages/harness/bin/harness"
 MAIND="$ROOT/packages/maind/bin/maind"
+ANALYST="$ROOT/packages/analyst/bin/analyst"
 
-usage() { grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '2,18p'; }
+usage() { grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '2,19p'; }
 
 need() {  # $1 — путь к лаунчеру пакета
   [[ -x "$1" ]] || { echo "ERROR: не найден лаунчер пакета: $1" >&2
@@ -41,12 +43,13 @@ case "$CMD" in
   skills)  shift; need "$SKILLER"; exec "$SKILLER" "$@" ;;
   env)     shift; need "$HARNESS"; exec "$HARNESS" "$@" ;;
   maind|hub) shift; need "$MAIND"; exec "$MAIND" "$@" ;;
+  analyst) shift; need "$ANALYST"; exec "$ANALYST" "$@" ;;
   setup)   shift; need "$MAIND"; exec "$MAIND" onboard "$@" ;;
   doctor)
-    # fan-out на все три пакета. НЕ через need() — он бьёт exit 1 на первом же
+    # fan-out на все пакеты. НЕ через need() — он бьёт exit 1 на первом же
     # отсутствующем лаунчере и не даёт проверить остальные; здесь агрегируем rc.
     rc=0
-    for entry in "skiller:$SKILLER" "harness:$HARNESS" "maind:$MAIND"; do
+    for entry in "skiller:$SKILLER" "harness:$HARNESS" "maind:$MAIND" "analyst:$ANALYST"; do
       name="${entry%%:*}"; pkg="${entry#*:}"
       echo "== $name =="
       if [[ -x "$pkg" ]]; then "$pkg" doctor || rc=$?

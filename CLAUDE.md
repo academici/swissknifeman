@@ -15,7 +15,8 @@ router к пакетам + кросс-пакетный `setup` (онбордин
 ├── packages/
 │   ├── skiller/               # реестр AI-скиллов (skills/, skm/, generate-skill/, lib/, bin/) — CLI skiller
 │   ├── harness/               # настройка окружения Claude Code (configs/, lib/, bin/, commands/) — CLI harness
-│   └── maind/                 # хаб памяти/графа/координации (lib/, bin/, commands/) — CLI maind
+│   ├── maind/                 # хаб памяти/графа/координации (lib/, bin/, commands/) — CLI maind
+│   └── analyst/               # continuous learning: захват уроков из прогонов (lib/, bin/, commands/) — CLI analyst
 ├── .claude-plugin/
 │   └── marketplace.json       # ЕДИНЫЙ marketplace репо (генерируется), ~50 плагинов
 └── docs/                      # зонтичный VitePress: общее (index/routing/roadmap) + агрегат
@@ -35,30 +36,33 @@ router к пакетам + кросс-пакетный `setup` (онбордин
 | [`packages/skiller`](packages/skiller/CLAUDE.md) | реестр скиллов (раздаёт навыки в проекты) | `skiller` (алиас `swissknifeman`) | source истины скиллов; 2 канала connect/vendor |
 | [`packages/harness`](packages/harness/CLAUDE.md) | настройка окружения Claude Code | `harness` | пресеты permissions, auto-approve/bypass, MCP-серверы, хуки (memory/notify). Source истины — `configs/claude-code/`. skiller делегирует сюда через subprocess |
 | [`packages/maind`](packages/maind/CLAUDE.md) | память + граф + координация (хаб/шина) | `maind` | MCP-хаб, namespace-память, федерация графа. **Единый** — память (`agentmemory`) и graphify (граф кода) уже отдельные MCP-серверы; дробить maind не нужно |
+| [`packages/analyst`](packages/analyst/CLAUDE.md) | continuous learning (захват уроков из прогонов) | `analyst` | детерминированный (stdlib, on-demand — без демона) слой-1: `digest` (run-report → кандидаты) · `review`/`promote` с **человеком в гейте** (авто-запись запрещена) · провенанс/audit · curated всплывает в память mAInd. P1 (MVP); cross-project scan + confidence-lifecycle — P2/P3 |
 
 Это **один монорепозиторий, не «соседние пакеты»**: maind координирует skiller через
 `subprocess` (см. `packages/maind/lib/maind/orchestrate.py`); skiller так же делегирует окружение
 в harness (`apply_permissions`/integrate → `harness permissions|mcp|hooks`). Все используют `core/`.
 
-## CLI: корневой router + три пакета
+## CLI: корневой router + пакеты
 
 ```bash
 swissknifeman <group> …    # корневой управляющий слой (bin/swissknifeman): router + setup-фасад
   swissknifeman skills …   #   → skiller   (connect, vendor, registry, …)
   swissknifeman env …      #   → harness   (permissions, mcp, hooks, …)
   swissknifeman maind …    #   → maind     (memory, graph, onboard, deploy, …)
+  swissknifeman analyst …  #   → analyst   (digest, scan, review, promote, deprecate, doctor)
   swissknifeman setup <p>  #   → maind onboard (скиллы+окружение+память+граф одной командой)
-  swissknifeman doctor     #   диагностика всех трёх (fan-out)
+  swissknifeman doctor     #   диагностика всех пакетов (fan-out)
 # back-compat: swissknifeman <skiller-cmd> (connect/vendor/integrate/…) → skiller (старый алиас)
 
 skiller <cmd>              # реестр скиллов: connect, vendor, integrate, registry, status, …
 harness <cmd>              # окружение Claude Code: permissions, mcp, hooks, doctor
 maind <cmd>                # хаб: memory, graph, onboard, deploy, sync, health, doctor, …
+analyst <cmd>              # continuous learning: digest, scan, review, promote, deprecate, doctor
 ```
 
 Корневой `swissknifeman` — тонкий диспетчер: логику не реализует, делегирует пакетам;
 кросс-пакетный онбординг живёт ОДИН — в `maind/onboard.py` (его зовёт `swissknifeman setup`).
-Установка: зонтичный `install.sh` ставит `skiller`/`harness`/`maind` (их `install.sh`) + симлинк
+Установка: зонтичный `install.sh` ставит `skiller`/`harness`/`maind`/`analyst` (их `install.sh`) + симлинк
 `swissknifeman`→`bin/swissknifeman`; **алиасом `swissknifeman` владеет зонтик** (не skiller — иначе
 re-run skiller install затирал бы router). Пути maind зашиты в `.mcp.json` онбордженных — не ломать.
 

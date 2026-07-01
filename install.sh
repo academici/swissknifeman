@@ -30,7 +30,7 @@ mkdir -p "$BIN_DIR"
 fwd=(); $FORCE && fwd+=(--force); fwd+=(--bin-dir "$BIN_DIR")
 echo "Установка CLI пакетов (bin-dir: $BIN_DIR):"
 failed=()  # пакеты, чей install.sh упал — для итогового статуса (иначе «Готово» врёт)
-for pkg in skiller harness maind; do
+for pkg in skiller harness maind analyst; do
   inst="$REPO_ROOT/packages/$pkg/install.sh"
   [[ -x "$inst" ]] || continue
   echo "— $pkg:"
@@ -68,4 +68,4 @@ if (( ${#failed[@]} )); then
   echo "ОШИБКА: не установлены пакеты: ${failed[*]} — установка неполна, см. лог выше." >&2
   exit 1
 fi
-echo "Готово. CLI: swissknifeman (router) · skiller · harness · maind"
+echo "Готово. CLI: swissknifeman (router) · skiller · harness · maind · analyst"

@@ -22,7 +22,7 @@
 | **📋 Управление задачами** | Плагин `task` (default-on): `/task:design\|dev\|review\|research\|fix` — каждая **пинит модель + effort + профиль** под интент, без ручного переключения |
 | **🪙 Токен-рычаги** | Дисциплина расхода: лестница `context-economy` (трим CLAUDE.md до ~92%, роутинг моделей до ~75%, аудит MCP, selective-input 5–50×), лаконичный вывод (`compact-responses`, output-style `lean`), **PAO** для PHP (вывод тестов → ~20 токенов JSON) |
 | **🧠 Память и граф** | Хаб **mAInd**: общая память экосистемы (agentmemory-демон, изоляция по namespace) + код-граф (Serena, навигация по символам вместо чтения файлов) + топология между проектами. Наблюдаемость — `maind analyze`/`verify`/`health` |
-| **📈 Аналитика и обучение** | Захват прогона хуком `run-report` → пост-ран разбор `maind analyze` (вердикт GREEN/ATTENTION/RED + метрики использования памяти/графа); экспериментальный `session-observer` (разбор сессии по JSONL-логам); петля обратной связи `field-feedback-loop` (наблюдение → урок → **человек** промоутит в скилл). Кросс-проектный **Continuous Learning** (детекция паттернов по многим проектам → авто-черновики скиллов) — спроектирован, в [roadmap](roadmap/self-learning-memory.md) |
+| **📈 Аналитика и обучение** | Захват прогона хуком `run-report` → пост-ран разбор `maind analyze` (вердикт GREEN/ATTENTION/RED + метрики использования памяти/графа). Пакет **`analyst`** (P1 MVP): `analyst digest` детерминированно извлекает кандидат-уроки из прогона → `review`/`promote` с **человеком в гейте** (авто-запись запрещена) → curated всплывает в память mAInd. Кросс-проектный агрегатор + confidence-жизненный цикл — [следующие фазы](research/analyst-self-learning-system.md) |
 | **⚙️ Окружение** | `harness` настраивает Claude Code: пресеты permissions по стекам, MCP-серверы, хуки (auto-approve/memory/notify/run-report) |
 | **🔎 RAG-дисциплина** | Верификация внешних фактов до фиксации: лестница context7 → perplexity-web → WebSearch (скиллы `verify-claims`, `query-craft`, `mcp-advisor`) |
 
@@ -33,6 +33,7 @@
 | [`packages/skiller`](packages/skiller/) | реестр AI-скиллов — раздаёт навыки в проекты (connect/vendor) | `skiller` (алиас `swissknifeman`) |
 | [`packages/harness`](packages/harness/) | настройка окружения Claude Code (permissions, MCP, хуки, agent-packs) | `harness` |
 | [`packages/maind`](packages/maind/) | хаб памяти, графа и координации экосистемы (MCP-шина) | `maind` |
+| [`packages/analyst`](packages/analyst/) | continuous learning: захват уроков из прогонов, человеко-гейт, провенанс | `analyst` |
 | [`packages/task`](packages/task/) | плагин интент-команд задач (`/task:*`) | плагин Claude Code |
 
 Общий фундамент — пакет [`core`](core/) (stdlib-only: `Env`, вывод, slug).
@@ -40,7 +41,7 @@
 ## Установка
 
 ```bash
-./install.sh                  # ставит skiller, harness, maind + корневой роутер swissknifeman в PATH
+./install.sh                  # ставит skiller, harness, maind, analyst + корневой роутер swissknifeman в PATH
 ```
 
 `install.sh` делегирует пакетную пост-настройку их собственным установщикам
@@ -52,17 +53,18 @@
 ## CLI
 
 ```bash
-swissknifeman <group> …       # корневой роутер: skills→skiller, env→harness, maind→maind; + setup, doctor
+swissknifeman <group> …       # корневой роутер: skills→skiller, env→harness, maind→maind, analyst→analyst; + setup, doctor
 swissknifeman setup <project> # кросс-пакетный онбординг (скиллы+окружение+память+граф) → maind onboard
 skiller <cmd>                 # реестр скиллов (connect, vendor, integrate, registry, …) — алиас swissknifeman
 harness <cmd>                 # окружение Claude Code (permissions, mcp, hooks, agent-packs, doctor)
 maind <cmd>                   # хаб (memory, graph, onboard, deploy, sync, health, analyze, verify, …)
+analyst <cmd>                 # continuous learning (digest, scan, review, promote, deprecate, doctor)
 ```
 
 ## Плагины Claude Code
 
 Один marketplace (`.claude-plugin/marketplace.json`, имя `swissknifeman` = зонтик) объявляет все
-плагины репо: бакеты скиллов, кураторский `core`, `task`, `skm`, `generate-skill` и `maind`.
+плагины репо: бакеты скиллов, кураторский `core`, `task`, `skm`, `generate-skill`, `maind` и `analyst`.
 Генерируется `skiller registry`. Плагин `maind` — только команды `/maind:*` (MCP-инструменты хаба
 приходят per-project сервером `maind` из `.mcp.json` проекта, не из плагина).
 
@@ -72,9 +74,9 @@ maind <cmd>                   # хаб (memory, graph, onboard, deploy, sync, he
 - [Обзор экосистемы](docs/index.md) · [control-surface проектов](docs/control-surface.md) ·
   [роутинг источников/задач](docs/routing.md) · [референсы](docs/reference.md).
 - Пакеты: [скиллы](packages/skiller/docs/) · [окружение](packages/harness/docs/) ·
-  [память и граф](packages/maind/docs/).
-- Развитие: [`roadmap/`](roadmap/) (напр. [Continuous Learning / самообучение](roadmap/self-learning-memory.md),
-  дизайн — [`research/analyst-package-design.md`](research/analyst-package-design.md)).
+  [память и граф](packages/maind/docs/) · [continuous learning](packages/analyst/README.md).
+- Развитие: [`roadmap/`](roadmap/) (напр. [Continuous Learning / самообучение](roadmap/self-learning-memory.md));
+  дизайн пакета `analyst` — [`research/analyst-self-learning-system.md`](research/analyst-self-learning-system.md).
 
 ## Разработка
 

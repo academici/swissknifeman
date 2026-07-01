@@ -74,6 +74,7 @@ GitHub ops (PRs, review threads, others' code, releases) → **GitHub CLI**, not
 - **Recon via subagents.** Read-heavy investigation (route map, DB/migration impact, large-file exploration) → a read-only subagent: it reads in its OWN context window and only a summary returns, so the main context stays lean (subagent reads don't count against it). Officially recommended for token economy. NOT parallel agent-teams for cost (those ~7× tokens).
 - **Selective input (5–50× saving).** Don't `Read` a whole file — a slice (function/class/route ±context); logs → `tail -n`/`grep` by identifier, not the whole file; errors → last stack-frame; PR/diff → `git diff`/`gh pr diff`. "Point, don't paste." Caveat: a `deny` rule on a path also blocks `cat/head/tail/sed` on it — don't deny dirs you legitimately need to tail.
 - **Cost visibility.** `/usage` after long recon → if bloated: handoff (`.claude/handoffs/…`) + `/clear`, or `/compact "focus on modified files + test commands"`. (Command is `/usage`, not `/cost`.)
+- **Code navigation — graph/symbols, not grep.** Before broad multi-file search — structure first: `serena` (`get_symbols_overview`/`find_symbol`) or cross-project `maind graph` (node neighbors), instead of whole-file reads. Details + graph-staleness caveat → skill `ecosystem-mcp` (maind).
 
 ## 9. Ladder — measured magnitudes (what saves most)
 
@@ -110,5 +111,6 @@ Numbers are "up to, workload-dependent," not SLAs; they compound.
 - Skill `task-brief-template` (general) — Plan→Clear→Execute pattern and `/plan`, `/execute` command templates
 - Skill `session-handoff` (general) — compress session into a handoff before `/clear`
 - Skill `mcp-advisor` (general) — pick MCP for a project at onboarding (the reverse side of the audit: what to connect)
+- Skill `ecosystem-mcp` (maind) — project memory/graph MCP tools: when to call graph/Serena instead of file search
 
-<!-- ru-source-sha256: 5a3258211364a31e8922fbdb242b6d9ea71b48f5e3800e781a5b805a4584427f -->
+<!-- ru-source-sha256: b26072cd5ba5ad50ac4403b59cd3c584e5fcae17a862ba197911740edc75ba48 -->

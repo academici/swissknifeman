@@ -42,7 +42,10 @@
       "Bash(cp *)",
       "Bash(mv *)",
       "Bash(touch *)",
-      "Bash(chmod +x *)"
+      "Bash(chmod +x *)",
+      "Workflow",
+      "Agent",
+      "TodoWrite"
     ],
     "ask": [
       "Bash(git push *)",

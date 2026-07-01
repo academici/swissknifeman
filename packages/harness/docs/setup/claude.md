@@ -36,7 +36,10 @@
 
 - **allow** — весь read-only (grep/find/ls/cat/head/tail/jq/awk…),
   read-only git (diff/log/status/show/branch), безопасный git
-  (add/commit/checkout/stash), файловые операции (mkdir/cp/mv/touch);
+  (add/commit/checkout/stash), файловые операции (mkdir/cp/mv/touch),
+  оркестрация (`Workflow`/`Agent`/`TodoWrite` — чтобы многофазный воркфлоу не
+  просил подтверждение после каждой стадии; разбор — в
+  [пресетах permissions](../configs/claude-permissions));
 - **ask** — необратимое: `git push`, `git reset --hard`, `rm -rf`;
 - **deny** — заблокировано всегда: `sudo`, force-push, `git config --global`,
   `chmod 777`, чтение секретов (`.env`, `*.pem`, `*.key`, `~/.ssh`, `~/.aws`).

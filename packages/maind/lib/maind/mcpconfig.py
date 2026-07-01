@@ -40,7 +40,7 @@ def load_mcp(path):
         data = json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as e:
         raise MCPConfigError(
-            f"{path}: битый JSON MCP-конфига — не трогаю, исправьте вручную: {e}")
+            f"{path}: битый JSON MCP-конфига — не трогаю, исправьте вручную: {e}") from e
     if not isinstance(data, dict):
         raise MCPConfigError(f"{path}: ожидался объект MCP-конфига")
     data.setdefault("mcpServers", {})

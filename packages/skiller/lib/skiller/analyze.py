@@ -319,7 +319,7 @@ def render_report(r):
                f"wall ~{_dur(r['wall_seconds'])}")
     out.append(f"tokens:  in {_k(t['in'])} · out {_k(t['out'])} · "
                f"cache-read {_k(t['cache_read'])} (hit {hit:.0f}%)")
-    out.append(f"модели:  " + " ".join(f"{k}×{v}" for k, v in sorted(models.items())))
+    out.append("модели:  " + " ".join(f"{k}×{v}" for k, v in sorted(models.items())))
 
     out.append("")
     out.append("─── Агенты (токены in/out · cache · инструменты) ───────")

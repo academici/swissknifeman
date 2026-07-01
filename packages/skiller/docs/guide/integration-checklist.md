@@ -36,6 +36,11 @@ skiller integrate --yes --bundle recommended   # без вопросов, гот
 - **vendor** — Cursor и другие агенты (копирует скиллы в `.cursor/skills` / `.ai/skills`).
 - Профиль/бакеты — autodetect (`.obsidian/` → vault, `artisan`+`composer.json` → laravel,
   `composer.json` → php-package, иначе standalone), переопределяется флагами.
+- **По умолчанию в КАЖДЫЙ проект** (connect) добавляются, помимо профиля:
+  - курируемый плагин `core` (лёгкое токен-экономное ядро CORE-скиллов; `--no-core` отключает);
+  - командный плагин **`task`** — интент-команды `/task:design|dev|review|research|fix` (пинят
+    модель/effort под задачу; их предлагает intent-router). Отключить точечно —
+    `enabledPlugins["task@swissknifeman"]=false`. Наличие проверяет `maind audit` (дименсия `core`).
 - Ручками: `skiller connect` / `skiller vendor --agent cursor`.
 
 ### 2. Permissions-пресеты

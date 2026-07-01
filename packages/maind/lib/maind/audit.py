@@ -5,7 +5,8 @@
           грузится в КАЖДЫЙ запрос, см. context-economy §MCP-аудит);
 - claude: размер CLAUDE.md (>200 строк — постоянный налог на контекст сессии);
 - deny:   есть ли permissions.deny (блок мусора _ide_helper/*.lock из контекста);
-- core:   доехали ли CORE-скиллы токен-экономии (раздаёт swissknifeman).
+- core:   доехали ли CORE-скиллы токен-экономии + командные плагины по умолчанию
+          (task → /task:*) — их раздаёт skiller connect в каждый проект.
 
 Ничего не пишет на диск — только читает файлы проектов. Источник списка —
 projects.listing (та же модель, что projects/status)."""
@@ -28,6 +29,10 @@ CORE_SKILL_BUCKET = {
     "compact-responses": "general", "session-handoff": "general",
     "gh-review": "oss-dev",
 }
+# Командные плагины, которые skiller connect раздаёт в КАЖДЫЙ проект по умолчанию
+# (зеркало skiller.config.DEFAULT_COMMAND_PLUGINS; дублируем локально — maind не импортит skiller).
+# Доезжают ТОЛЬКО connect-каналом (marketplace-плагин) → ключ enabledPlugins '<name>@<marketplace>'.
+DEFAULT_COMMAND_PLUGINS = ("task",)
 # Серверы, которые maind раскатывает штатно — не кандидаты на ревизию.
 HUB_MCP = {"agentmemory", "maind"}
 
@@ -128,10 +133,13 @@ def audit_project(env, project, dims, code_st):
         row["deny"] = _deny_present(path)
     if "core" in dims:
         present = _present_skills(path)          # vendor: физ. файлы
-        enabled = _enabled_buckets(path)         # connect: бакет-плагины
-        row["core"] = {"missing": [
-            s for s in CORE_SKILLS
-            if s not in present and CORE_SKILL_BUCKET.get(s) not in enabled]}
+        enabled = _enabled_buckets(path)         # connect: бакет/командные плагины
+        row["core"] = {
+            "missing": [s for s in CORE_SKILLS
+                        if s not in present and CORE_SKILL_BUCKET.get(s) not in enabled],
+            # Командные плагины (task) доезжают только connect-каналом → проверяем enabledPlugins.
+            "missing_cmds": [c for c in DEFAULT_COMMAND_PLUGINS if c not in enabled],
+        }
     return row
 
 
@@ -174,5 +182,9 @@ def run_audit(env, config, dim, as_json=False):
             parts.append("deny" + ("✓" if r["deny"] else "✗"))
         if "core" in dims:
             miss = r["core"]["missing"]
-            parts.append("core✓" if not miss else f"core⚠(нет: {', '.join(miss)})")
+            seg = "core✓" if not miss else f"core⚠(нет: {', '.join(miss)})"
+            miss_cmds = r["core"].get("missing_cmds") or []
+            if miss_cmds:
+                seg += " cmd⚠(нет: " + ", ".join("/" + c + ":*" for c in miss_cmds) + ")"
+            parts.append(seg)
         print(f"  {r['id']:<18} " + "  ".join(parts))

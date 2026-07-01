@@ -39,6 +39,14 @@ RESIDENT_BUDGET_TARGET = 600
 # Сохранены для back-compat/миграции: connect видит их в settings онбордженных проектов и
 # подсказывает снять (иначе двойная загрузка). Vendor-канал по-прежнему берёт CORE_SKILLS пофайлово.
 CORE_BUCKETS = ["general", "oss-dev"]
+# Командные плагины (НЕ бакеты скиллов), которые connect включает в КАЖДЫЙ проект по умолчанию.
+# `task` — интент-команды /task:design|dev|review|research|fix (пакет task, commands-only): раздаём
+# везде, т.к. intent-router политика предлагает именно их — без плагина предложение не резолвится.
+# Как и CORE_PLUGIN: объявлены в marketplace и тихо пропускаются на старом marketplace / в тест-реестре
+# (там marketplace.json = {}). Резидентного tier-0 налога у команд нет (описания команд не инжектятся
+# в каждый запрос, в отличие от description скиллов). Отключить точечно — enabledPlugins[...]=false
+# (connect уважает явный false, как и для бакетов).
+DEFAULT_COMMAND_PLUGINS = ["task"]
 DEFAULT_EXCLUDE = ["system/shared-memory", "system/cross-project-coordinator"]
 # Минимальный безопасный набор для НЕРАСПОЗНАННОГО типа проекта (autodetect → standalone).
 # НЕ разворачиваем `["*"]` (= все бакеты) по умолчанию — это «бездушный дамп всего». Явный

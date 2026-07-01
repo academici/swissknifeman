@@ -1,7 +1,7 @@
 ---
 name: verify-claims
 bucket: general
-version: 0.1.0
+version: 0.2.0
 description: "Before a decision/verdict that rests on an EXTERNAL fact (library version/API, 'still current', best practice, market, another service's/MCP's capabilities) — verify via RAG, don't assert from memory (knowledge cutoff goes stale). Ladder: context7 (docs) → Perplexity (native MCP if API key, else perplexity-web) → WebSearch → research for deep. Activate on audit/plan review, big planning, library/stack/dependency choice, claiming 'this is standard/modern'. Repo-grounded facts (read the code) and stable knowledge — no check."
 risk: read
 persona: oss-dev
@@ -32,8 +32,9 @@ building a decision/verdict on it** — and verify external, staleness-sensitive
 - **Audit/plan review:** any verdict/**rejection** resting on an external fact ("library Y already does this",
   "this is deprecated", "the modern way is Z", "server X already returns this") — **even if the audit looked
   complete**. Repo-grounded verdicts (read the code — implemented or not) are exempt.
-- **Big planning/design:** stack choice, architecture, choosing a library/service/integration — verify current
-  versions/API/SLA/pricing/"is it maintained" BEFORE committing.
+- **Big planning/design (forming a plan):** stack choice, architecture, choosing a library/service/integration —
+  verify current versions/API/SLA/pricing/"is it maintained" BEFORE committing. **A plan stands 100% on fresh
+  data**; close it with a "Verification" footer (below): what's checked, what stayed unverified → re-pass.
 - **Claiming "current best practice" / "this is the standard" / "nobody does this anymore"** — verify it's still current.
 - **Recommending/adopting a dependency, tool, MCP server** — verify it exists, is maintained, does what's claimed,
   and which package name/command is current.
@@ -53,15 +54,21 @@ data. Cheaper to re-check than to ship a wrong verdict.
 1. **Library/framework/API fact** (does a method exist, current signature, config option, version behavior)?
    → **context7 first** — live versioned docs, cheapest and most authoritative for libraries:
    `resolve-library-id` → `query-docs`. If the project has connected docs, those first.
+   **Library/API absent from context7** (not indexed / empty answer) → fall back to **`perplexity-web`** (step 2), NOT WebSearch.
 2. **Fact not in library docs** (best practice, "still recommended/maintained", market, comparison, recent
-   change, security advisory, "which package/command now") → **Perplexity**:
+   change, security advisory, "which package/command now") → **Perplexity — the aggressive default**:
    - `PERPLEXITY_API_KEY` present → **native Perplexity MCP** (more precise/faster; tools `perplexity_ask`/`perplexity_research`);
    - no key → **`perplexity-web`** (keyless bridge: `mcp__perplexity-web__search` / `search_advanced` / `search_deep`).
-3. **Simple/quick lookup** (one known page/URL, trivial check) → **WebFetch/WebSearch** (Claude-native).
+   **Why aggressive:** `perplexity-web` is keyless, runs through a browser profile on a **flat-rate subscription**
+   (spends no API tokens) and returns a **compact synthesis** instead of raw pages. Offload retrieval+synthesis onto
+   it **to the max** — cheaper in context tokens than pulling results through WebSearch/WebFetch (raw into context).
+3. **One known page/URL, trivial check** → **WebFetch/WebSearch** (Claude-native) — **last-resort fallback**: they
+   pull raw content into context (token-heavier). Use only for a concrete known-URL or when Perplexity is down.
 4. **Deep/high-stakes** (needs synthesis + cross-checking sources) → escalate to skill `research/research`
    (deep-research, source-tiers, faithfulness-check).
 
-Economy: don't fire heavy search where context7 or a single `WebFetch` of a known URL suffices.
+Economy: context7 for exact library API; everything else aggressively via `perplexity-web` (flat-rate, compact
+synthesis); WebSearch/WebFetch = narrow known-URL/fallback; don't fire deep-research for nothing.
 
 ## Citation and confidence
 
@@ -70,6 +77,29 @@ Economy: don't fire heavy search where context7 or a single `WebFetch` of a know
   `low` (secondary/forums only). A single low-tier source → provisional.
 - An external decision at `low` confidence — **do not finalize without an explicit flag** "needs confirmation".
 - Sources conflict → don't pick silently: surface the discrepancy and ask/escalate.
+
+## "Verification" footer (bottom of a plan/design/verdict)
+
+Any plan/design/verdict that touched external facts — close with a **"Verification"** block, so the owner sees
+what the plan stands on and can order a **re-pass** if data didn't get through:
+
+```
+## Проверка (verification status)
+- RAG: <engines + N queries + ok/degraded> (e.g. "perplexity-web ×3 OK, context7 ×1 OK")
+- Непроверено → ПОВТОРНЫЙ ПРОХОД: <fact> — <engine was down: lock/timeout/MCP down>
+- Обходки/[POSSIBLE-DEFECT]: <what was patched with a workaround, no real fix — honestly>
+```
+
+- An engine was down/degraded (`perplexity-web` locked/`TIMEOUT`, MCP down, `context7` empty) and a fact stayed
+  unverified → **don't mask it, don't finalize silently**: put it under "Непроверено → ПОВТОРНЫЙ ПРОХОД".
+- Write empty sections explicitly ("nothing unverified", "no workarounds") — silence ≠ "all verified".
+
+## Honesty: no edits for the sake of edits; call a kludge a kludge
+
+- Verification showed the edit **isn't needed** (fact already correct, "the library already does this") → **drop it
+  from the plan**, don't ship it for activity's sake.
+- No real solution, only a workaround remains → tag it `[POSSIBLE-DEFECT]` / "workaround, no real fix" and surface
+  it in the "Verification" footer. **Don't dress a kludge as a solution.**
 
 ## Audit review — special clause
 
@@ -81,9 +111,10 @@ Reviewing someone's audit/plan, for EACH item decide: is the verdict repo-ground
 ## Quality checklist
 
 - [ ] Every decision-bearing claim classified (repo-grounded / stable / external-staleness).
-- [ ] External facts checked via the ladder (context7 → perplexity native/web → websearch → research), not from memory.
-- [ ] Cheapest sufficient engine chosen (context7 for docs; didn't fire deep-research for nothing).
+- [ ] External facts checked via the ladder (context7 for API → **aggressively `perplexity-web`** → websearch fallback → research), not from memory.
+- [ ] Synthesis/beyond-docs offloaded to `perplexity-web` (flat-rate, token-cheap), not pulled raw via WebSearch/WebFetch.
 - [ ] Source + date + confidence stated; `low` facts flagged "needs confirmation".
+- [ ] A plan/design/verdict with external facts carries the "Verification" footer (RAG + unverified→re-pass + workarounds).
 - [ ] In audit review, external-world verdicts double-checked; repo-grounded confirmed by code.
 
 ## Related skills
@@ -99,4 +130,4 @@ Reviewing someone's audit/plan, for EACH item decide: is the verdict repo-ground
 - `general/anti-drift` — iteration discipline; this skill is knowledge discipline (don't assert stale facts).
 - `general/context-economy` — each RAG engine costs context/permissions; don't keep unused ones connected.
 
-<!-- ru-source-sha256: f59ab4d1763acf5318c9c9e712858c74191d661c035e6ef427a50fda245c6879 -->
+<!-- ru-source-sha256: 88b888b6f6aad5259c2429d6a503c4be83355c053c82444090e386a160c2e674 -->

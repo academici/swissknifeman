@@ -74,6 +74,11 @@ already-chosen engine.)
 > id+version** at `resolve-library-id`. Resolve → confirm the right major was picked → then ask a specific
 > `query-docs` (method/option name), not a general question.
 
+> **Token-economy — push `perplexity-web` aggressively.** The bridge is flat-rate (browser profile/subscription,
+> spends no API tokens) and returns a **compact synthesis**, not raw content into context. Offload retrieval+synthesis
+> onto it **to the max**; WebSearch/WebFetch = known-URL/fallback only (pull raw → token-heavier). Engine priority
+> (context7 API → aggressively perplexity-web → web fallback) lives in `verify-claims`.
+
 ## Perplexity Web MCP modes (three tools)
 
 Tools of the `perplexity-web` server (keyless bridge). Mode choice = depth/speed balance:
@@ -140,6 +145,10 @@ speed/precision, not as a workaround for a locked profile.
 > Contract — `perplexity-web-mcp` v1.3.0 (daemon, pools, error codes). The old "no parallel" workaround
 > applied to the legacy bridge and is dropped. Route bridge-contract drift via `field-feedback-loop`.
 
+> **Engine down → into the "Verification" footer.** If `perplexity-web` is locked/`TIMEOUT`/`PROTOCOL_MISMATCH`
+> (or `context7` is empty) and a fact stayed unverified — don't swallow it silently: put it in the plan's
+> "Verification" footer (format — `verify-claims`) so the owner can order a **re-pass**.
+
 ## Phrasing anti-patterns (fix before sending)
 
 - **Bare subject, no version** — `Filament how to...` → add `v4`/range.
@@ -184,4 +193,4 @@ don't know", don't guess`.
      Concurrency (daemon/pools/error codes BROWSER_BUSY·TIMEOUT·LOGIN_REQUIRED·PROTOCOL_MISMATCH) —
      from the perplexity-web-mcp v1.3.0 integration note, checked 2026-06-30. -->
 
-<!-- ru-source-sha256: 04c20f0607085c8de74629c648ce59b8a98b531cae4a6fc69f77bf3dfe653e1e -->
+<!-- ru-source-sha256: 9f7dec477ba97f73e3c9015ec0d62a75d54c8743e06b3d3f77b805523219f05b -->

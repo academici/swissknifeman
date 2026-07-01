@@ -43,6 +43,13 @@ CAPABILITIES = {
 
 # SIBLINGS (как найти лаунчер соседа) — в constants.py (общий с sync, без lazy-импорта).
 
+# Возможности, чей сосед-лаунчер поддерживает СВОЙ `--dry-run` (harness env:*): при dry
+# прокидываем флаг и запускаем ПО-НАСТОЯЩЕМУ → честный превью (версии/конфликты пака,
+# что реально запишется), а не print+rc0. Для прочих (нет своего dry) — печать намерения.
+# Причина: `maind sync --dry-run` давал ложно-зелёный превью апгрейда паков (field-feedback).
+DRY_CAPABLE = {"env:apply", "env:mcp", "env:hooks",
+               "env:agent-pack", "env:agent-pack-upgrade", "env:router"}
+
 
 def _sibling_bin(config, which):
     spec = SIBLINGS[which]
@@ -86,6 +93,9 @@ def run_capability(env, config, project_id, capability, extra=None, *, dry=False
                  "path": os.path.expanduser(proj.get("local_path") or "")}
     argv = [str(binp)] + [a.format(**subst) for a in template] + list(extra or [])
     if dry:
+        if capability in DRY_CAPABLE:
+            # сосед умеет свой --dry-run → честный превью (реальный rc/конфликты), не rc0
+            return subprocess.run(argv + ["--dry-run"], check=False).returncode
         print("[dry-run] " + " ".join(argv))
         return 0
     return subprocess.run(argv, check=False).returncode

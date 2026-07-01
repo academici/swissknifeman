@@ -20,6 +20,7 @@ export default withMermaid(defineConfig({
   themeConfig: {
     nav: [
       { text: 'Обзор', link: '/' },
+      { text: 'Разработка', link: '/develop', activeMatch: '/develop' },
       { text: 'Окружение', link: '/harness/', activeMatch: '/harness/' },
       { text: 'Скиллы', link: '/skiller/guide/', activeMatch: '/skiller/' },
       { text: 'Память и граф', link: '/maind/', activeMatch: '/maind/' },
@@ -182,6 +183,7 @@ export default withMermaid(defineConfig({
           text: 'Экосистема',
           items: [
             { text: 'Обзор', link: '/' },
+            { text: 'Разработка с Claude Code', link: '/develop' },
             { text: 'Роутинг источников и задач', link: '/routing' },
             { text: 'Control-surface проектов', link: '/control-surface' },
             { text: 'Roadmap', link: '/roadmap' },

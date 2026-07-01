@@ -24,6 +24,9 @@
 - `hooks/run-report/` — **архивный захват прогона** (SessionEnd, `run-report.py` + `_lib.py`):
   строчно парсит транскрипт → пишет `<project>/.claude/runs/<sid>.json` (тесты/линт/файлы/
   tool-провалы/dev-loop-сигнал). Generic (любая задача, не только dev-loop). Читает `maind analyze`.
+- `output-styles/<name>.md` — **терсе-«голос» вывода** (токен-экономия: output-токены ~4-5× input).
+  `lean` — телеграфный (только выжимка+код), `keep-coding-instructions:true` (инж-правила живут).
+  Включается per-project: `harness hooks --output-style lean` (пишет `outputStyle` в settings.local.json).
 
 ## Раскладка
 
@@ -52,7 +55,7 @@
 harness permissions --target . [--preset a,b] [--file F] [--dry-run] [--list] [--global]
 harness mcp         --target . --mcp context7,playwright [--list] [--dry-run]
 harness hooks       --global            # файлы хуков в ~/.claude/hooks (один раз на машину)
-harness hooks       --target . --auto-approve strict --memory core:federation --router propose --run-report on
+harness hooks       --target . --auto-approve strict --memory core:federation --router propose --run-report on --output-style lean
 harness router      --generate --target .   # каталог intent-router (.claude/agent-router.config.json)
 harness agent-packs <list|render|upgrade|doctor> [--pack P] [--target .] [--auto]
         [--dry-run] [--install-only] [--allow-shell M] [KEY=VALUE …]   # см. agentpacks.py

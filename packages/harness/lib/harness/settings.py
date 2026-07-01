@@ -52,6 +52,16 @@ def add_hook(settings, event, matcher, command):
     return True
 
 
+def set_setting_key(target, fname, key, value, dry):
+    """Merge-only writer одного top-level ключа в .claude/<fname> (напр. outputStyle). Бэкап *.bak."""
+    settings, f = load_settings(target, fname)
+    if settings.get(key) == value:
+        print(f"  {fname}:{key} уже = {value}")
+        return
+    settings[key] = value
+    write_json(f, settings, dry)
+
+
 def set_swissknife(target, key, value, dry):
     f = target / ".swissknife.json"
     data = {}

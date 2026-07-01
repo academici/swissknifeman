@@ -3,7 +3,6 @@
 Проверяем чистые функции разбора транскрипта: агрегат токенов/инструментов/скиллов,
 cache-hit, wall-clock, skill-usage (effective/dead), скан рантайм-маркеров,
 нормализацию имени скилла, метку задачи, толерантный парсер. Без сети/реестра."""
-import json
 import sys
 import tempfile
 import unittest

@@ -37,6 +37,8 @@ _SINGLE_RE = re.compile(r"\{([A-Z_][A-Z0-9_]*)\}")
 _DOUBLE_RE = re.compile(r"\{\{([A-Z_][A-Z0-9_]*)\}\}")
 _IF_RE = re.compile(r"<!--\s*pack:if\s+(\w+)\s*-->(.*?)<!--\s*pack:endif\s*-->",
                     re.DOTALL)
+_IFNOT_RE = re.compile(r"<!--\s*pack:ifnot\s+(\w+)\s*-->(.*?)<!--\s*pack:endif\s*-->",
+                       re.DOTALL)
 
 
 # ── discovery ────────────────────────────────────────────────────────────────
@@ -183,9 +185,14 @@ def _subst_double(text, answers):
 
 
 def _apply_conditionals(text, answers):
-    """Блоки <!-- pack:if KEY -->...<!-- pack:endif --> — оставить при truthy answer."""
-    for _ in range(10):  # вложенность: повторяем, пока есть изменения
+    """Условные блоки. <!-- pack:if KEY -->...<!-- pack:endif --> — оставить при truthy
+    answer; <!-- pack:ifnot KEY -->...<!-- pack:endif --> — при falsy/отсутствующем
+    (движок без логических операторов — «иначе»-ветка). Пары if/ifnot держи ПЛОСКО
+    (последовательно, не вложенно) — non-greedy парит каждый open с ближайшим endif."""
+    for _ in range(10):  # вложенность/множественность: повторяем, пока есть изменения
         new = _IF_RE.sub(lambda m: m.group(2) if answers.get(m.group(1)) else "", text)
+        new = _IFNOT_RE.sub(
+            lambda m: m.group(2) if not answers.get(m.group(1)) else "", new)
         if new == text:
             return new
         text = new
@@ -194,6 +201,27 @@ def _apply_conditionals(text, answers):
 
 def _render_template_text(src_text, answers):
     return _subst_double(_apply_conditionals(src_text, answers), answers)
+
+
+def validate_expect_globs(manifest, target, answers):
+    """Пост-рендер проверка: критичные пути пака (`expect_globs`, single-brace-глобы,
+    интерполируются `answers`) реально существуют в проекте. Возвращает список
+    не-совпавших глобов (пусто = ок). Детерминированно ловит layout-mismatch —
+    напр. хардкод `app/`-путей в монорепо (`packages/*/src`) → 0 совпадений →
+    иначе молчаливый ложно-зелёный access-layer. Сеть безопасности НЕЗАВИСИМО от
+    корректности detect-проб."""
+    misses = []
+    for pattern in manifest.get("expect_globs", []):
+        pat = _subst_single(pattern, answers).strip()
+        if not pat:
+            continue
+        try:
+            hit = any(True for _ in target.glob(pat))
+        except (ValueError, OSError):
+            hit = False
+        if not hit:
+            misses.append(pat)
+    return misses
 
 
 def _chmod_x(path):
@@ -336,6 +364,9 @@ def do_render(env, pack, target, *, auto, overrides, dry, install_only, shell_po
     lock.setdefault("packs", {})[pack] = _pack_lock_entry(env, pack, answers, report)
     if report["changed"] or prior is None:
         write_lock(target, lock, dry)
+    for pat in validate_expect_globs(manifest, target, answers):
+        warn(f"  ожидаемый путь '{pat}' матчит 0 файлов — проверь layout/answers "
+             f"(риск ложно-зелёного access-layer)")
     status = "needs-agent" if rep["unresolved"] else "ok"
     print(f"=== {status} (changed={report['changed']}) ===")
     return 0 if status == "ok" else 0  # needs-agent не фейл: ставим что смогли
@@ -418,6 +449,13 @@ def do_upgrade(env, pack, target, *, overrides, dry, shell_policy):
     print(f"=== upgrade {pack}: {v_old} → {v_new} ===")
     for cat, _src, tgt_rel in plan:
         print(f"  [{cat}] {tgt_rel}")
+    conflicts = [t for c, _s, t in plan if c == "conflict"]
+    if conflicts:
+        warn(f"  ⚠ {len(conflicts)} conflict → ручной мерж из .pack-new: "
+             + ", ".join(t + ".pack-new" for t in conflicts))
+    for pat in validate_expect_globs(manifest, target, answers):
+        warn(f"  ожидаемый путь '{pat}' матчит 0 файлов — проверь layout/answers "
+             f"(риск ложно-зелёного access-layer)")
     removed = sorted(set(prior_files) - {f["src"] for f in manifest.get("files", [])})
     for src in removed:
         warn(f"  removed в {v_new}: {src} — не удаляю авто (удали вручную при желании)")

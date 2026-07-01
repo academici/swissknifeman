@@ -4,6 +4,35 @@
 запись помечает затронутый install-файл, чтобы апгрейдящий агент сопоставил
 изменение с конкретным файлом проекта.
 
+## [0.9.0] - 2026-07-01
+
+Свод двух осей проекта в один пак (**supersedes PR #96**): `ACCESS_ROOT` (layout-путь,
+включая монорепо) вытеснил `IS_LARAVEL_PACKAGE` (app-vs-src, монорепо не умел);
+`SCAFFOLDS_SCHEMA` из #96 сохранён (ортогональная ось).
+
+### Changed
+
+- **Layout-aware access-layer пути (монорепо-поддержка).** Авто-детектящаяся
+  интервью-переменная `ACCESS_ROOT` (`app` | `src` | `packages/*/src`, проба
+  `test -d app/Http … ; ls -d packages/*/src/Http …`). Захардкоженные `app/`-пути
+  заменены на `{{ACCESS_ROOT}}/…` в install-файлах: `.claude/workflows/{PACK_PREFIX}-dev-loop.js`
+  (Verify-grep), `.claude/agents/{PACK_PREFIX}-reviewer.md`, `.claude/agents/{PACK_PREFIX}-slice-builder.md`.
+  Причина: монорепо Laravel-пакетов (код в `packages/*/src/Http`) грепался по
+  несуществующему пути → ложно-зелёный access-layer (класс F-инцидента).
+- **Дроп `/Api`-сегмента** в grep/прозе: `{{ACCESS_ROOT}}/Http/Controllers` (рекурсивный
+  grep покрывает `Api/`-подпапку app и плоские контроллеры пакета/монорепо; chatom
+  держит контроллеры в `packages/*/src/Http/Controllers` без `Api/`).
+- **`expect_globs: ["{ACCESS_ROOT}/Http/Controllers"]`** — задействует пост-рендер
+  валидацию движка: путь матчит 0 файлов → `render`/`upgrade` печатают WARN
+  (сеть безопасности против ложно-зелёного, независимо от detect).
+
+### Added (из #96, ортогонально ACCESS_ROOT)
+
+- **`SCAFFOLDS_SCHEMA`** (bool, детект `test -d app/Models && echo false || echo true`,
+  default true) — агенты заводят миграции/модели (greenfield/пакет) vs пишут поверх
+  готовой схемы (established-app). Разведено `pack:if/pack:ifnot`-блоками в install-файлах:
+  `slice-builder.md`, `reviewer.md`, `dev-loop.js` (HARD_GATES). Ось независима от `ACCESS_ROOT`.
+
 ## [0.7.0] - 2026-07-01
 
 ### Changed

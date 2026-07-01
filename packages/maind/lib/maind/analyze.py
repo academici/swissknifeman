@@ -169,6 +169,22 @@ def compute_verdict(run_report, git, observer):
         for item in (dl.get("tool_failures") or []):
             repass.append(item if isinstance(item, str) else json.dumps(item, ensure_ascii=False))
 
+        # наблюдаемость памяти/графа (ключ run-report.maind — аддитивный; старый отчёт → пусто).
+        maind = run_report.get("maind") or {}
+        graph_calls = sum(v.get("calls", 0) for k, v in maind.items() if k.startswith("graph_"))
+        by_name = (run_report.get("tools") or {}).get("by_name") or {}
+        scan = sum(by_name.get(t, 0) for t in ("Read", "Grep", "Glob"))
+        # КОСВЕННАЯ эвристика: тяжёлое файловое сканирование при нуле обращений к графу.
+        # Формулировка «не использовался», НЕ «бесполезен» — прямой корреляции «граф спас grep» нет.
+        if scan >= 30 and graph_calls == 0:
+            reasons.append(f"код-граф не использовался при тяжёлом сканировании "
+                           f"({scan} Read/Grep/Glob, граф ×0) — граф/Serena дешевле; "
+                           f"устарел → maind sync --only graph")
+        recall = maind.get("memory_recall") or {}
+        if recall.get("calls", 0) >= 2 and recall.get("found_total", 0) == 0:
+            reasons.append(f"память опрашивалась (recall ×{recall['calls']}), но пуста/не по адресу "
+                           f"— проверь scope/наполнение (maind memory count)")
+
     if git and git.get("dirty"):
         reasons.append(f"рабочее дерево не чисто: {git.get('working_files', '?')} файл(ов)")
     if observer and observer.get("alerts"):
@@ -231,6 +247,15 @@ def _print_human(rep):
         print(f"  сессия:     {rr.get('session_id', '?')}  ({gen})")
         print(f"  инструментов: {tools.get('total', 0)}  · файлов изменено: "
               f"{len(rr.get('files_changed') or [])}")
+        md = rr.get("maind") or {}
+        if md:
+            mem_calls = sum(v.get("calls", 0) for k, v in md.items() if k.startswith("memory_"))
+            graph_calls = sum(v.get("calls", 0) for k, v in md.items() if k.startswith("graph_"))
+            graph_found = sum(v.get("found_total", 0) for k, v in md.items() if k.startswith("graph_"))
+            recall = md.get("memory_recall") or {}
+            print(f"  mAInd:      память ×{mem_calls} "
+                  f"(recall ×{recall.get('calls', 0)}→{recall.get('found_total', 0)} фактов) · "
+                  f"граф ×{graph_calls}→{graph_found} соседей")
         print(f"  тесты:      {tpass} ok / {tfail} FAIL     линт: {lpass} ok / {lfail} FAIL")
         if rr.get("workflows"):
             for wf in rr["workflows"]:

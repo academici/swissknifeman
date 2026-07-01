@@ -2,6 +2,9 @@
 
 Настоящий Node-демон не запускается: start short-circuit'ится живым FakeMemoryServer,
 а status/обёртка работают против него же."""
+import contextlib
+import io
+import json
 import os
 import tempfile
 import unittest
@@ -89,6 +92,39 @@ class TestLifecycle(unittest.TestCase):
             self.assertFalse(st["running"])
             self.assertEqual(st["pid"], 2147483646)
             self.assertTrue(st["pidfile_stale"])
+
+
+class TestCount(unittest.TestCase):
+    def test_count_by_scope_marker(self):
+        # count фильтрует пул по scope-МАРКЕРУ, а не считает весь глобальный пул демона
+        pool = [
+            {"content": memory.mark_scope("project:brain", "sky is blue")},
+            {"content": memory.mark_scope("project:brain", "grass is green")},
+            {"content": memory.mark_scope("project:other", "hidden")},   # чужой scope — не считать
+            {"content": "unmarked legacy"},                              # без маркера — не считать
+        ]
+        with FakeMemoryServer() as url:
+            with tempfile.TemporaryDirectory() as tmp:
+                _, env = make_repo(tmp)
+                cfg = {"memory": {"url": url}}
+                orig = memory.export
+                memory.export = lambda _u, _s: pool
+                try:
+                    buf = io.StringIO()
+                    with contextlib.redirect_stdout(buf):
+                        memory._cmd_count(env, cfg, ["--scope", "project:brain", "--json"])
+                finally:
+                    memory.export = orig
+        data = json.loads(buf.getvalue())
+        self.assertEqual(data["scopes"], {"project:brain": 2})
+        self.assertEqual(data["total_unique"], 2)
+
+    def test_count_dies_when_daemon_down(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            with self.assertRaises(SystemExit):
+                memory._cmd_count(env, {"memory": {"url": "http://127.0.0.1:1"}},
+                                  ["--scope", "project:brain"])
 
 
 if __name__ == "__main__":

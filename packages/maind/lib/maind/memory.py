@@ -296,7 +296,7 @@ def memory_owner_scope(url, memory_id, scopes):
 # ── CLI ─────────────────────────────────────────────────────────────────────
 def cmd_memory(env, argv):
     if not argv or argv[0] in ("-h", "--help"):
-        print("maind memory <start|run|stop|status|remember|recall|forget> ...")
+        print("maind memory <start|run|stop|status|remember|recall|forget|count|digest> ...")
         return
     sub, rest = argv[0], argv[1:]
     config, _src = load_config(env)
@@ -314,11 +314,13 @@ def cmd_memory(env, argv):
         _cmd_recall(env, config, rest)
     elif sub == "forget":
         _cmd_forget(env, config, rest)
+    elif sub == "count":
+        _cmd_count(env, config, rest)
     elif sub == "digest":
         _cmd_digest(env, config, rest)
     else:
         die(f"неизвестная подкоманда memory: {sub} "
-            "(start|stop|status|remember|recall|forget|digest)")
+            "(start|stop|status|remember|recall|forget|count|digest)")
 
 
 # ── память: scope-aware CLI (единый путь для хука и человека) ─────────────────
@@ -474,6 +476,41 @@ def _cmd_digest(env, config, argv):
     print(f"Память проекта {pid} (mAInd — детали: `maind memory recall \"<тема>\"`):")
     for t in items:
         print(f"- {t}")
+
+
+def _cmd_count(env, config, argv):
+    """Сколько фактов в памяти проекта по scope'ам (приватный + ns:<тег> + global) — наблюдаемость
+    «наполнена ли память». Считаем по scope-МАРКЕРУ в контенте, как recall/digest: демон-пул общий и
+    namespace не фильтрует, поэтому export('') даёт весь пул, а принадлежность scope'у решает маркер
+    (иначе посчитали бы факты всех проектов экосистемы)."""
+    opts, _ = parse_args(argv, {"--project": "str", "--scope": "str", "--json": "bool"}, max_pos=0)
+    if opts["help"]:
+        print("maind memory count [--project ID | --scope S] [--json]  "
+              "# сколько фактов в памяти по scope")
+        return
+    url = _require_daemon(env, config)
+    proj, _write, read_scopes = _memory_target(env, config, opts)
+    try:
+        raw = export(url, "")                    # весь пул (namespace игнор) → фильтр по маркеру
+    except RuntimeError as e:
+        die(f"не прочитать память: {e}")
+    per = {sc: 0 for sc in read_scopes}
+    seen = set()
+    for m in raw:
+        text = m.get("content") or m.get("narrative") or m.get("title") or ""
+        sc, clean = split_scope(text)
+        if sc in per:
+            per[sc] += 1
+            clean = (clean or "").strip()
+            if clean:
+                seen.add(clean)
+    total_unique = len(seen)
+    if opts["json"]:
+        print(json.dumps({"scopes": per, "total_unique": total_unique}, ensure_ascii=False))
+        return
+    pid = proj["id"] if proj else (opts.get("scope") or "?")
+    parts = ", ".join(f"{sc}={n}" for sc, n in per.items())
+    print(f"Память проекта {pid}: {parts} (уникальных {total_unique})")
 
 
 def _cmd_status(env, config, argv):

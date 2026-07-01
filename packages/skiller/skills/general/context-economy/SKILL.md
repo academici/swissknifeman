@@ -75,6 +75,20 @@ GitHub ops (PRs, review threads, others' code, releases) → **GitHub CLI**, not
 - **Selective input (5–50× saving).** Don't `Read` a whole file — a slice (function/class/route ±context); logs → `tail -n`/`grep` by identifier, not the whole file; errors → last stack-frame; PR/diff → `git diff`/`gh pr diff`. "Point, don't paste." Caveat: a `deny` rule on a path also blocks `cat/head/tail/sed` on it — don't deny dirs you legitimately need to tail.
 - **Cost visibility.** `/usage` after long recon → if bloated: handoff (`.claude/handoffs/…`) + `/clear`, or `/compact "focus on modified files + test commands"`. (Command is `/usage`, not `/cost`.)
 
+## 9. Ladder — measured magnitudes (what saves most)
+
+Prioritize by ROI (verified 2026-07):
+
+- Empty session already carries ~20–30k hidden tokens (system prompt + tool schemas + CLAUDE.md + skills meta) — measure with `/usage`/`/context` FIRST.
+- CLAUDE.md trim — up to ~92% of injected context; highest per-repo ROI (resident every turn).
+- MCP ~10–20k tokens/server resident — keep 1–2 per task, CLI otherwise; lazy tool-search cuts schemas ~84%.
+- Model routing up to ~75%: Haiku (recon/routine) · Sonnet (default) · Opus (architecture/hard debug). Via `/model` or `tasks`.
+- Prompt caching 0.1× on the cached prefix (system/CLAUDE.md/tool schemas); pays off on repeat turns.
+- English ≈ 2–3× denser than Russian in tokens: keep static wiring (agents/rules/policies) in EN, human-facing in Russian (~60–67% saving on translated content).
+- Output tokens bill at output rate (~4–5× input) — cut verbose output: skill `compact-responses`; "lean" output-style via harness (session-wide, ~65% for caveman-ultra-class styles).
+
+Numbers are "up to, workload-dependent," not SLAs; they compound.
+
 ## Quality checklist
 
 - [ ] CLAUDE.md ≤200 lines, each line passes "would it surprise an experienced dev"
@@ -97,4 +111,4 @@ GitHub ops (PRs, review threads, others' code, releases) → **GitHub CLI**, not
 - Skill `session-handoff` (general) — compress session into a handoff before `/clear`
 - Skill `mcp-advisor` (general) — pick MCP for a project at onboarding (the reverse side of the audit: what to connect)
 
-<!-- ru-source-sha256: 29db1351ed00e80ceca873fe605aaf68878705a8faab37df54c2196187006d67 -->
+<!-- ru-source-sha256: 5a3258211364a31e8922fbdb242b6d9ea71b48f5e3800e781a5b805a4584427f -->

@@ -1918,10 +1918,10 @@
       "name": "compact-responses",
       "bucket": "general",
       "path": "skills/general/compact-responses/SKILL.md",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "description": "Activate ultra-compact response mode: minimal prose, code-only, no explanations unless asked. Use for terse output — quick edits, code reviews, repeated tasks with established context.",
-      "sha256": "34ce338096ead4cfefd79cb756388fd8dd68a0e4d092133b71c9ad6917497445",
-      "content_sha256": "89199bcf56384adaefcf4251ae5816f98debcca103e3b34f56ea46aba78596e6",
+      "sha256": "afd38c18697b7b170557936647e5b92bb74c5352f0b0636bb2c721ecd810e5c2",
+      "content_sha256": "05d2ceb7937e20d657bab975844aba1caa92061634df31ca8a8bcbb51cd831ab",
       "tags": [
         "conventions",
         "style",
@@ -1957,7 +1957,7 @@
       "version": "1.2.1",
       "description": "Claude Code context economy in a project: CLAUDE.md ≤200 lines, path-scoped .claude/rules/, /compact vs /clear, Plan→Clear→Execute, MCP audit, model routing. Officially-supported mechanisms only — no myths like .claudeignore.",
       "sha256": "833c80c85f6898c6d43347a73b053417c86724a837209c03ce4a85c591584474",
-      "content_sha256": "4145a59ff8fc4fe0399d080ee7f8952c5b6c31ed0a7a85e7babd6f0a25345829",
+      "content_sha256": "37039370ee73fbfbe96e486c312ac36098cbfebd296af09bde7c3f4cb08086ad",
       "tags": [
         "tokens",
         "context",

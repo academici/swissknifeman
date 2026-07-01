@@ -143,7 +143,7 @@ flowchart LR
   end
   subgraph general["general"]
     anti_drift["anti-drift<br/>⊕37 ↻1069"]:::mild
-    compact_responses["compact-responses<br/>⊕51 ↻376"]:::mild
+    compact_responses["compact-responses<br/>⊕51 ↻503"]:::mild
     complex_task_orchestrator["complex-task-orchestrator<br/>⊕38 ↻534"]:::mild
     context_economy["context-economy<br/>⊕61 ↻1712"]:::mild
     cross_layer_change_checklist["cross-layer-change-checklist<br/>⊕31 ↻394"]:::cool
@@ -405,13 +405,13 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 205 скиллов · ⊕ always **12713** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 438732 ток · ⌥ snippets 158029 ток.
+**Итого:** 205 скиллов · ⊕ always **12713** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 438859 ток · ⌥ snippets 158040 ток.
 
 ## По бакетам
 
 | Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ snippets |
 |---|--:|--:|--:|--:|
-| `general` | 19 | 1178 | 18440 | 5120 |
+| `general` | 19 | 1178 | 18567 | 5131 |
 | `php` | 17 | 1029 | 17085 | 26763 |
 | `architect` | 14 | 747 | 38371 | 7503 |
 | `frontend-vue` | 11 | 726 | 23070 | 7058 |

@@ -1,7 +1,7 @@
 ---
 name: compact-responses
 bucket: general
-version: 0.2.0
+version: 0.2.1
 description: "Activate ultra-compact response mode: minimal prose, code-only, no explanations unless asked. Use for terse output — quick edits, code reviews, repeated tasks with established context."
 risk: read
 persona: oss-dev
@@ -33,6 +33,12 @@ When active:
 - Don't echo the task back in any form.
 - Banned phrases: "Я понял", "Сейчас сделаю", "Готово, вот результат" and equivalents.
 
+## Structured reports (reviews/findings) — compact
+
+- Findings/review: **one line per item** — `[SEV] file:line — issue. fix: …`; no repeated section headers, no prose beyond `failure_scenario`.
+- Verdict / gates / "not verified": compact `key: val`, not paragraphs.
+- Don't reorder or restate what was already said in prior turns.
+
 ## Final task report — only verbose moment (required)
 
 ```text
@@ -49,5 +55,6 @@ Mode stays active rest of conversation unless user says "normal mode" or "под
 - `context-economy` (general) — session **context** economy (CLAUDE.md, rules, /compact, MCP-audit); this skill = **output** terseness, no overlap.
 - `pao` (php) — compress PHP-tool output (tests/static-analysis) to compact JSON.
 - `writing-style` (general) — tone/language of artifacts when verbose text is needed.
+- Output-style `lean` (harness) — session-wide enforcement of the same voice at system-prompt level; this skill = portable SSOT of the phrasings (the output-style distills it).
 
-<!-- ru-source-sha256: e63d862c664b52cf1470389d6f32b9e7447f3d38e8b77b06b6df54eff720e60b -->
+<!-- ru-source-sha256: f99e7994b55f460553f0bfe9330f19be7e96479398cb70987458ce32faa930ae -->

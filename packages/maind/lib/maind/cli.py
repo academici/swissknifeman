@@ -6,6 +6,7 @@ argv ([repo_root, cmd, *args], которые передаёт bin/maind) и п�
 import sys
 
 from .agents import cmd_agents
+from .analyze import cmd_analyze
 from .common import Env
 from .deploy import cmd_deploy
 from .doctor import cmd_doctor
@@ -44,6 +45,7 @@ COMMANDS = {
     "mcp": cmd_mcp,
     "doctor": cmd_doctor,
     "verify": cmd_verify,
+    "analyze": cmd_analyze,
 }
 
 

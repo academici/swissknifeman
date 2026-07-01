@@ -51,6 +51,7 @@
 | `codegraph.py` | политика графа кода (секция `code_graph` конфига) + провиженер `.serena/project.yml` (Serena); alias `graphify_*`→`code_*` |
 | `health.py` / `probe.py` | healthcheck связи проекта с хабом / read-only снимки |
 | `verify.py` | пруф-оф-лайф 3 плоскостей: память (seed vs реал/last-write), покрытие графа, Serena — отличает «поднято» от «реально пишут» |
+| `analyze.py` | пост-ран разбор прогона «всё ли сработало»: run-report (SessionEnd-хук harness) + bash-лог + observer + git + health → вердикт GREEN/ATTENTION/RED (repass = dev-loop `tool_failures` → ПОВТОРНЫЙ ПРОХОД) |
 | `skilldoc.py` | провиженер скилла `ecosystem-mcp` (инструкция про MCP-инструменты/связи) в проекты |
 | `workspace.py` | доверие Claude к проектам (`.claude/settings.local.json`) |
 | `agents.py` / `projects.py` / `orchestrate.py` / `onboard.py` / `migrate.py` / `doctor.py` / `start.py` | реестры, оркестрация, онбординг, миграция, диагностика, запуск |

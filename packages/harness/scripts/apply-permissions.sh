@@ -109,8 +109,15 @@ if [[ "$GLOBAL" -eq 1 ]]; then
     cp "$AR_SRC/config.json" "$AR_SRC/README.md" "$AR_DST/"
     chmod +x "$AR_DST/router.py" "$AR_DST/session-policy.py"
     [[ -f "$AR_DST/env.ini" ]] || cp "$AR_SRC/env.ini" "$AR_DST/"
-    echo "Установлено глобально: log-bash-command + notify (активны) + файлы auto-approve/ + memory/ + agent-router/ (НЕ активны)."
-    echo "auto-approve, memory и agent-router включаются ПО ПРОЕКТУ / по вызову (см. README)."
+    # run-report: SessionEnd-хук архивного захвата исхода прогона (→ .claude/runs/).
+    # Код/_lib/README обновляем; env.ini не перезатираем (там ENABLED/RUNS_KEEP проекта).
+    RR_SRC="$PRESETS_DIR/hooks/run-report"; RR_DST="$HOME/.claude/hooks/run-report"
+    mkdir -p "$RR_DST"
+    cp "$RR_SRC/run-report.py" "$RR_SRC/_lib.py" "$RR_SRC/README.md" "$RR_DST/"
+    chmod +x "$RR_DST/run-report.py"
+    [[ -f "$RR_DST/env.ini" ]] || cp "$RR_SRC/env.ini" "$RR_DST/"
+    echo "Установлено глобально: log-bash-command + notify (активны) + файлы auto-approve/ + memory/ + agent-router/ + run-report/ (НЕ активны)."
+    echo "auto-approve, memory, agent-router и run-report включаются ПО ПРОЕКТУ / по вызову (см. README)."
   fi
 fi
 

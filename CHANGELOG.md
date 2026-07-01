@@ -20,6 +20,18 @@
   **Монорепо Laravel-пакетов рендерится верно на автомате** (пилот chatom вскрыл пробел).
   Принцип: каждая ручная итерация апгрейда флота дорабатывает базовый мигратор.
 
+### Added (harness — авто-allow инструментов оркестрации `Workflow`/`Agent`/`TodoWrite`)
+
+- **Пресеты `base` и `global` теперь авто-разрешают `Workflow`, `Agent`, `TodoWrite`.** Это
+  универсальные (вне-стековые) инструменты оркестрации, поэтому добавлены в оба общих слоя:
+  `settings.base.json` (накатывается в `.claude/settings.local.json` каждого проекта) и
+  `settings.global.json` (машинный `~/.claude/settings.json` — действует во всех проектах сразу).
+  Первопричина: запуск `Workflow` на каждой фазе спавнит субагентов (`Agent`) и ведёт план
+  (`TodoWrite`), и без правил Claude Code просил подтверждение **после каждой стадии** —
+  многофазный воркфлоу превращался в череду промптов. Безопасность не страдает: разрешён лишь
+  сам вызов инструмента, субагент исполняет свои Bash/Read/Edit через тот же permission-слой.
+  Затронуты `packages/harness/configs/claude-code/settings.{base,global}.json`, доки
+  `docs/configs/claude-permissions.md` и `docs/setup/claude.md`.
 ### Added (skiller — пост-ран наблюдаемость: `skiller analyze-run`)
 
 - **`skiller analyze-run`** (`lib/skiller/analyze.py` + `cli.py`) — детерминированный
@@ -140,6 +152,15 @@
   файл уже трекается git. **Opt-in** (по умолчанию выключено — не трогаем чужие репо без флага).
   Закрывает машинно-специфичный серена-путь `--project <abs>`, который индирекция `maind` (PR #94) не
   решала. +тесты `test_mcpconfig`; статус `roadmap/mcp-config-example-emit.md` → реализовано (opt-in).
+
+### Fixed (skiller — ложный `[ПЕРЕЕХАЛ]` в `skiller status` на монорепо-реестре)
+
+- **`skiller status` сравнивал источник marketplace с `env.root` (каталог пакета), а не с корнем
+  монорепо.** В монорепо `marketplace.json` лежит в КОРНЕ (туда же `connect`/`update` пишут
+  `source` через `find_repo_root`), поэтому сравнение с `env.root` (`packages/skiller`) давало
+  вечный ложный флаг `[ПЕРЕЕХАЛ — починить: skiller update]`, который `skiller update` физически
+  не способен погасить (он пишет корректный корень репо). Теперь `status` резолвит ожидаемый
+  источник так же — `find_repo_root(env.root) or env.root`. Затронут `lib/skiller/status.py`.
 
 ### Added (skiller — CORE-скилл `research/query-craft`: дисциплина формулировки поисковых запросов)
 

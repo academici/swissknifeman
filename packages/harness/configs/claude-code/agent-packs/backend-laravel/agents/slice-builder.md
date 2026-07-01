@@ -42,7 +42,7 @@ Skill и следуй им: `php:repositories`, `php:laravel-structure`,
    в контроллере. Контроллер: валидация (FormRequest) → вызов Action (запись)
    или Repository (чтение) → отдача Resource/Data. Авторизация — Gate/policy/атрибут,
    не инлайн.
-2. **Мутации — только в Action** (`app/Actions/<Домен>/`): один `execute()`,
+2. **Мутации — только в Action** (`{{ACCESS_ROOT}}/Actions/<Домен>/`): один `execute()`,
    принимает модели/примитивы/DTO (не Request), много записей — под
    `DB::transaction()`, бизнес-нарушения — `throw ValidationException`. Action
    персистит через `*StoreRepository`, не через `Model::create()`.
@@ -59,7 +59,7 @@ Skill и следуй им: `php:repositories`, `php:laravel-structure`,
 - PHP/тесты гонять только через `{{PHP_RUNNER}}` (`{{TEST_RUNNER_CMD}}`), никогда не bare `php`.
 - Если `.env` залочен хуком — НЕ читать и не править. Конфиг тестовой БД — в
   `phpunit.xml`/`tests/bootstrap.php` (тестовая БД `{{TEST_DB}}`).
-- Схему/миграции меняй только если того требует срез; иначе переиспользуй существующие модели.
+<!-- pack:if SCAFFOLDS_SCHEMA -->- Заводи недостающие миграции/модели/enum по требованию среза, опираясь на контракты проекта.<!-- pack:endif --><!-- pack:ifnot SCAFFOLDS_SCHEMA -->- Схему/миграции меняй только если того требует срез; иначе переиспользуй существующие модели.<!-- pack:endif -->
 - Тест-фреймворк проекта — **{{TEST_FRAMEWORK}}**.
 - НЕ `git push`, НЕ открывать/мержить PR, НЕ release-команды. НЕ
   `migrate:fresh`/drop по чему-либо кроме тестовой БД (этим заведует RefreshDatabase).

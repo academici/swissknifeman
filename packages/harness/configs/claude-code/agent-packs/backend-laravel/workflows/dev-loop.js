@@ -36,7 +36,7 @@ const SLICES = ALL_SLICES.slice(0, MAX)
 const HARD_GATES = `ЖЁСТКИЕ ГЕЙТЫ {{PACK_PREFIX}} (не нарушать):
 - PHP/тесты ТОЛЬКО через '{{PHP_RUNNER}}' ({{TEST_RUNNER_CMD}}), не bare 'php'.
 - Если .env залочен хуком — не читать и не править; конфиг тестовой БД в phpunit.xml/tests/bootstrap.php ({{TEST_DB}}).
-- Тест-фреймворк проекта — {{TEST_FRAMEWORK}}: зеркаль стиль существующих тестов. Схему/миграции меняй только если того требует срез. Статическая проверка (если настроена) — {{CHECK_CMD}}.
+- Тест-фреймворк проекта — {{TEST_FRAMEWORK}}: зеркаль стиль существующих тестов. <!-- pack:if SCAFFOLDS_SCHEMA -->Заводи недостающие миграции/модели по требованию среза.<!-- pack:endif --><!-- pack:ifnot SCAFFOLDS_SCHEMA -->Схему/миграции меняй только если того требует срез.<!-- pack:endif --> Статическая проверка (если настроена) — {{CHECK_CMD}}.
 - НЕ git push, НЕ открывать/мержить PR, НЕ release. НЕ migrate:fresh/drop по чему-либо кроме тестовой БД.
 - Все срезы строятся на ОДНОЙ ветке ${BRANCH}. Агенты НЕ создают и не переключают ветки — коммитят в текущую и оставляют дерево чистым.
 - Работать строго внутри ${PROJECT_DIR}.`
@@ -199,7 +199,7 @@ phase('Verify')
 const verify = await agent(
   `Финальная проверка прогона в ${PROJECT_DIR}, ветка ${BRANCH}:
 1. 'git status' — дерево чистое, текущая ветка ${BRANCH}.
-2. grep -rnE '::query\\(|::create\\(|::where\\(|::all\\(|::find\\(' по app/Http/Controllers/Api и app/Actions — перечисли оставшиеся попадания (в контроллерах должно быть 0).
+2. grep -rnE '::query\\(|::create\\(|::where\\(|::all\\(|::find\\(' по {{ACCESS_ROOT}}/Http/Controllers и {{ACCESS_ROOT}}/Actions — перечисли оставшиеся попадания (в контроллерах должно быть 0).
 3. Полный '{{TEST_RUNNER_CMD}}' — число/статус.
 4. 'vendor/bin/pint --test' — чисто.
 Краткий итог: чист ли слой доступа, тесты (число/упало), что осталось. Файлы не меняй, не push.

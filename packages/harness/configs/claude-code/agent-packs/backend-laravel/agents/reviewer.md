@@ -63,7 +63,7 @@ git diff/log).
 ## Главное — слой доступа к данным (специфика {{PACK_PREFIX}})
 
 - `grep -nE '::query\(|::create\(|::where\(|::all\(|::find\('` по контроллерам
-  затронутого домена (`app/Http/Controllers/Api/<Домен>`) — должно быть ПУСТО,
+  затронутого домена (`{{ACCESS_ROOT}}/Http/Controllers/<Домен>`) — должно быть ПУСТО,
   иначе **major**.
 - Мутации идут через **Action + `*StoreRepository`** (не `Model::create()` в
   Action/контроллере); чтения — через **`*Repository`**; `*Service` не персистит
@@ -78,8 +78,7 @@ git diff/log).
 - **Валидация**: вход через FormRequest/DTO, нет доверия сырому `request()->input()`.
 - **Авторизация**: на новые действия есть policy/gate и она реально вызывается;
   маршруты под нужным middleware.
-- **Миграции vs модели**: новые поля в `$fillable`/casts (миграции в {{PACK_PREFIX}} не
-  добавляются — проверь, что их и нет).
+- **Миграции vs модели**: <!-- pack:if SCAFFOLDS_SCHEMA -->новые таблицы/поля заводятся отдельной миграцией; каждое новое поле отражено в `$fillable`/casts модели; `down()` обратим.<!-- pack:endif --><!-- pack:ifnot SCAFFOLDS_SCHEMA -->новые поля в `$fillable`/casts (новые миграции в {{PACK_PREFIX}} не предполагаются — проверь, что их и нет).<!-- pack:endif -->
 - **Транзакции**: множественные записи под транзакцией; события/джобы ПОСЛЕ коммита
   (after-commit listener / `dispatchAfterCommit`), не внутри транзакции.
 - **Config-honesty**: дефолт работает из коробки ИЛИ явно `null` + `throw` при

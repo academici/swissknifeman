@@ -2,6 +2,24 @@
 
 ## [Unreleased]
 
+### Added/Changed (harness — agent-pack мигратор: монорепо-детект + анти-false-green)
+
+- **Движок `agentpacks.py` — пост-рендер валидация путей (`expect_globs`).** Новое поле
+  манифеста пака: список single-brace-глобов критичных путей; `render`/`upgrade` после
+  рендера проверяют `target.glob(...)` и **печатают WARN на 0 совпадений** —
+  детерминированная сеть безопасности против **ложно-зелёного** access-layer (когда
+  захардкоженные пути не матчат раскладку проекта), независимо от detect-проб.
+- **Движок — итоговая сводка conflict/.pack-new в `do_upgrade`** (`⚠ N conflict → ручной
+  мерж: …`) — повышает видимость незаехавших правок (был только per-файловый warn).
+- **Движок — условие `<!-- pack:ifnot KEY -->…<!-- pack:endif -->`** (зеркало `pack:if`,
+  «иначе»-ветка; из PR #96) — нужно для двух-режимных блоков (`SCAFFOLDS_SCHEMA`).
+- **`backend-laravel` 0.9.0** (детали — в его CHANGELOG, **supersedes PR #96**): `ACCESS_ROOT`
+  авто-детект (`app`/`src`/`packages/*/src`) — вытеснил `IS_LARAVEL_PACKAGE` (тот не умел
+  монорепо) + layout-aware пути (дроп `/Api`-сегмента) + `expect_globs`; **сохранён
+  `SCAFFOLDS_SCHEMA`** из #96 (ортогональная ось: scaffold vs готовая схема, `pack:if/ifnot`).
+  **Монорепо Laravel-пакетов рендерится верно на автомате** (пилот chatom вскрыл пробел).
+  Принцип: каждая ручная итерация апгрейда флота дорабатывает базовый мигратор.
+
 ### Added (skiller — пост-ран наблюдаемость: `skiller analyze-run`)
 
 - **`skiller analyze-run`** (`lib/skiller/analyze.py` + `cli.py`) — детерминированный

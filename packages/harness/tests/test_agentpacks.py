@@ -91,6 +91,19 @@ class TestAgentPacks(unittest.TestCase):
         self.assertEqual(ap._run_detect("pwd", self.proj, "safe", {}),
                          str(self.proj))
 
+    def test_conditional_if_and_ifnot(self):
+        # pack:if держит блок при truthy, pack:ifnot — при falsy/отсутствующем.
+        t = ("<!-- pack:if K -->yes<!-- pack:endif -->"
+             "<!-- pack:ifnot K -->no<!-- pack:endif -->")
+        self.assertEqual(ap._apply_conditionals(t, {"K": True}), "yes")
+        self.assertEqual(ap._apply_conditionals(t, {"K": False}), "no")
+        self.assertEqual(ap._apply_conditionals(t, {}), "no")   # отсутствует → falsy
+        # соседние плоские блоки разных типов парятся независимо
+        flat = ("A<!-- pack:if P -->-pkg<!-- pack:endif -->"
+                "<!-- pack:ifnot P -->-app<!-- pack:endif -->B")
+        self.assertEqual(ap._apply_conditionals(flat, {"P": True}), "A-pkgB")
+        self.assertEqual(ap._apply_conditionals(flat, {"P": False}), "A-appB")
+
     def test_install_only_skips_installed(self):
         self._render(overrides={"PACK_PREFIX": "x"})
         rc = self._render(overrides={"PACK_PREFIX": "x"}, install_only=True)

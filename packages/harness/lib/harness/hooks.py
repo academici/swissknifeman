@@ -3,12 +3,14 @@
 per-project: пишет <project>/.claude/auto-approve.env.ini + memory.env.ini и
 регистрирует хук auto-approve в settings (merge-only). global: ставит файлы хуков
 в ~/.claude/hooks/ через scripts/apply-permissions.sh --global."""
+import shutil
 import subprocess
 import sys
 from pathlib import Path
 
 from .common import die, parse_flags
-from .settings import add_hook, load_settings, set_swissknife, write_json, write_text
+from .settings import (add_hook, load_settings, set_setting_key, set_swissknife,
+                       write_json, write_text)
 
 AA_MODES = ("strict", "permissive", "bypass", "off")
 MEM_MODES = ("file", "federation", "agentmemory", "off")
@@ -105,6 +107,30 @@ def block_run_report(target, mode, settings_file, dry):
         print(f"  хук run-report уже зарегистрирован в {f}")
 
 
+def block_output_style(env, target, name, dry):
+    """Скопировать output-style в проект + поставить top-level outputStyle в settings.local.json
+    (машинно-локальная преференция голоса). off → не ставить (снять вручную — kill-switch).
+    Активируется после /clear/новой сессии (стиль вшивается в system prompt на старте)."""
+    print(f"output-style: {name or 'пропуск'}")
+    if not name:
+        return
+    if name == "off":
+        print("  outputStyle не ставится; снять существующий — вручную в .claude/settings.local.json")
+        return
+    src = env.configs_dir / "output-styles" / f"{name}.md"
+    if not src.exists():
+        die(f"неизвестный output-style: {name} (нет {src})")
+    dst = target / ".claude" / "output-styles" / f"{name}.md"
+    if dry:
+        print(f"  [dry-run] скопировал бы {src} → {dst}")
+    else:
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(src, dst)
+        print(f"  записано: {dst}")
+    set_setting_key(target, "settings.local.json", "outputStyle", name, dry)
+    print("  (outputStyle применится после /clear или новой сессии)")
+
+
 def install_global(env, dry):
     """Поставить файлы хуков (auto-approve/memory/notify/log) в ~/.claude/hooks/."""
     script = env.apply_script
@@ -130,7 +156,7 @@ def _parse_memory_flag(raw):
 def cmd_hooks(env, argv):
     opts = parse_flags(argv, {
         "--target": "str", "--auto-approve": "str", "--memory": "str",
-        "--router": "str", "--run-report": "str", "--file": "str",
+        "--router": "str", "--run-report": "str", "--output-style": "str", "--file": "str",
         "--global": "bool", "--dry-run": "bool",
     })
     if opts["help"]:
@@ -138,6 +164,7 @@ def cmd_hooks(env, argv):
               f"{'|'.join(AA_MODES)}] [--memory BRAIN:{'|'.join(MEM_MODES)}] "
               f"[--router {'|'.join(ROUTER_MODES)}] "
               f"[--run-report {'|'.join(RUNREPORT_MODES)}] "
+              "[--output-style lean|off] "
               "[--file settings.json|settings.local.json] [--dry-run]")
         return
     if opts["global"]:
@@ -146,9 +173,10 @@ def cmd_hooks(env, argv):
     if not opts["target"]:
         die("нужен --target P (или --global)")
     target = Path(opts["target"]).expanduser()
-    if not (opts["auto_approve"] or opts["memory"] or opts["router"] or opts["run_report"]):
+    if not (opts["auto_approve"] or opts["memory"] or opts["router"]
+            or opts["run_report"] or opts["output_style"]):
         die("нужен хотя бы один из: --auto-approve MODE / --memory BRAIN:MODE / "
-            "--router MODE / --run-report on|off / --global")
+            "--router MODE / --run-report on|off / --output-style lean|off / --global")
     settings_file = opts["file"] or "settings.json"
     if opts["auto_approve"]:
         block_autoapprove(target, opts["auto_approve"], settings_file, opts["dry_run"])
@@ -159,3 +187,5 @@ def cmd_hooks(env, argv):
         block_router(target, opts["router"], settings_file, opts["dry_run"])
     if opts["run_report"]:
         block_run_report(target, opts["run_report"], settings_file, opts["dry_run"])
+    if opts["output_style"]:
+        block_output_style(env, target, opts["output_style"], opts["dry_run"])

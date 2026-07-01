@@ -116,8 +116,12 @@ if [[ "$GLOBAL" -eq 1 ]]; then
     cp "$RR_SRC/run-report.py" "$RR_SRC/_lib.py" "$RR_SRC/README.md" "$RR_DST/"
     chmod +x "$RR_DST/run-report.py"
     [[ -f "$RR_DST/env.ini" ]] || cp "$RR_SRC/env.ini" "$RR_DST/"
-    echo "Установлено глобально: log-bash-command + notify (активны) + файлы auto-approve/ + memory/ + agent-router/ + run-report/ (НЕ активны)."
-    echo "auto-approve, memory, agent-router и run-report включаются ПО ПРОЕКТУ / по вызову (см. README)."
+    # output-styles: телеграфный «голос» вывода для токен-экономии (session-wide). Чистый
+    # контент (нет env-state) → всегда overwrite. Включается per-project: harness hooks --output-style.
+    OS_SRC="$PRESETS_DIR/output-styles"; OS_DST="$HOME/.claude/output-styles"
+    if [[ -d "$OS_SRC" ]]; then mkdir -p "$OS_DST"; cp "$OS_SRC/"*.md "$OS_DST/"; fi
+    echo "Установлено глобально: log-bash-command + notify (активны) + файлы auto-approve/ + memory/ + agent-router/ + run-report/ + output-styles/ (НЕ активны)."
+    echo "auto-approve, memory, agent-router, run-report и output-style включаются ПО ПРОЕКТУ / по вызову (см. README)."
   fi
 fi
 

@@ -17,6 +17,21 @@
       "package": "skiller"
     },
     {
+      "name": "analyst",
+      "source": "./packages/analyst",
+      "description": "analyst — continuous learning экосистемы: детерминированный захват кандидат-уроков из прогонов (digest), человеко-гейт (review/promote), провенанс. Только команды.",
+      "category": "ecosystem",
+      "tags": [
+        "analyst",
+        "continuous-learning",
+        "lessons",
+        "provenance",
+        "academici",
+        "ecosystem"
+      ],
+      "package": "analyst"
+    },
+    {
       "name": "architect",
       "source": "./packages/skiller/skills/architect",
       "description": "Architecture, API and data design, security, observability, tech stack selection",

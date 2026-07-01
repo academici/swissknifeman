@@ -2,6 +2,63 @@
 
 ## [Unreleased]
 
+### Added (пакет `analyst` — P1 MVP + P2 scan: continuous learning, слой-1)
+
+Новый четвёртый пакет монорепо **`analyst`** (CLI `analyst`, плагин-только-команды) — детерминированный
+(stdlib-only, **on-demand, без демона**) слой захвата «выстраданных уроков» из прогонов Claude Code с
+**человеком в гейте** (авто-запись в скиллы запрещена). Реализует P1 из
+[`research/analyst-self-learning-system.md`](research/analyst-self-learning-system.md) §9:
+
+- **`analyst digest`** — детерминированно извлекает КАНДИДАТ-уроки из свежего `run-report` прогона по
+  высокоточным сигналам (resolved-failure «сработало после N попыток»; явные dev-loop workarounds) →
+  `.claude/analyst/lessons/ephemeral/` (LOCAL). Не «угадывает инсайты» — осознанная граница MVP.
+- **`analyst review`** — уроки по состояниям (ephemeral/candidate/curated/deprecated) + structured diff
+  против активных (Jaccard, stdlib). Read-only.
+- **`analyst promote <id>` / `deprecate <id>`** — конвейер `ephemeral→candidate→curated` с **человеко-гейтом**
+  (переход в curated — только явное согласие: confirm на tty либо `--yes`); curated всплывает в память
+  mAInd (`maind memory remember`, graceful — демон лёг → урок на диске, повторим позже). Soft-деприкейт.
+- **Провенанс:** каждый урок несёт `source`/`session_id`/`scope`/`evidence`; каждый переход — запись в
+  append-only `.claude/analyst/audit.ndjson`.
+- **`analyst scan` (P2)** — cross-project агрегатор: пакет сам обходит реестр `config.json:projects[]`,
+  читает per-project уроки, greedy-Jaccard-кластеризует и детектит паттерны, повторяющиеся в **≥N
+  проектах** (по умолчанию 3) → draft-**предложения** (не скиллы!) в `~/.swissknifeman/analyst/suggestions/`
+  + индекс `index/by_pattern/`. **Namespace-изоляция** (наследуется от maind): уроки кластеризуются
+  только среди проектов, делящих namespace — паттерн из `ns:axioma` не течёт в чужой. Детерминизм
+  (сортировка по id). Промоут предложения в скилл — человек (`skiller integrate`, P4).
+- **Обвязка:** root-router `swissknifeman analyst …` + `doctor` fan-out; зонтичный `install.sh`;
+  marketplace-запись (авто-подхват `skiller registry`). `Env(BaseEnv)`, atomic JSON, тесты offline (37).
+- Отложено на P4/P5 (по дизайну, не долг): `analyst suggest`→draft SKILL.ru.md + скилл `analyst-capture`
+  (P4), `observe.sh` PostToolUse (P5). Известное ограничение P2: устаревшие suggestion-файлы не прунятся
+  (re-scan перезаписывает актуальные, но не удаляет исчезнувшие паттерны) — чистка вручную.
+
+### Added (пакет `analyst` — P3: confidence-жизненный цикл)
+
+Реализует **P3** из [`research/analyst-self-learning-system.md`](research/analyst-self-learning-system.md)
+§5/§9 (план — [`research/analyst-P3-plan.md`](research/analyst-P3-plan.md)): детерминированный,
+**восстановимый-из-логов** пересчёт уверенности урока + **числовая** state-machine, **без демона**
+(on-demand) и **без нарушения инварианта** «`candidate→curated` — только человек».
+
+- **`events.ndjson`** (новый append-only поток сигналов, рядом с `audit.ndjson`) — `digest`/`promote`
+  дописывают скаляры наблюдений (`sessions_total/success`, `tests_total/passed`). Источник истины
+  пересчёта: снапшот воспроизводим только из этого лога.
+- **`confidence.py`** — ЧИСТАЯ арифметика (stdlib, без I/O/часов, тестируемая по точкам): Beta-среднее
+  `p=(S+α)/(N+α+β)` × volume `(1−e^{−N/k})` × time-decay `λ^days`; тиры применения
+  `0.3` tentative · `0.5` moderate · `0.7` strong · `0.9` core. Константы (`α=β=1`, `k=20`, `λ=0.95`
+  ≈ полураспад 14 дн, bucket=1 день) — **тюнинг-параметры модуля** (калибруются по false-positive rate).
+- **`analyst recompute [--now ISO] [--dry-run] [--json]`** — читает `events.ndjson` → decay по времени →
+  агрегат `S/N` (+ `S_decayed`/`N_decayed`) → `confidence` → числовая state-machine → **атомарный** снапшот
+  в урок (аддитивные поля, P1-схема не ломается). Детерминирован и восстановим (при фикс. `--now`). Гейты:
+  `ephemeral→candidate` — **авто** при `N≥15 && conf≥0.6 && tests_total≥1`; `candidate→curated` — **всегда
+  человек** (числа лишь помечают «готов», авто-переход запрещён — инвариант P1); просадка `conf<0.6` →
+  **soft-deprecate** (файл не удаляется).
+- **mem0-консолидация в human-gate** — `review`/`promote` считают таксономию **ADD/UPDATE/NOOP/CONFLICT**
+  (Jaccard по trigger/action, stdlib) против активных. Противоречие (та же ситуация, иное действие) →
+  **flag-and-ask** (промоут блокируется до явного `--supersedes ID` | `--force`, авто-резолва нет).
+  `--supersedes` — **soft-invalidate** замещаемого (`supersedes`/`superseded_by`+timestamp, move в
+  deprecated, файл сохранён).
+- **Обвязка:** `recompute` в `cli.py`/`bin/analyst`/`commands/analyst.md`; тесты offline (+33 = 70).
+  Демона нет. Реальный round-trip surfacing в память mAInd — проверен ещё в P1.
+
 ### Docs (аналитика и continuous-learning в витрине README + раннбуке)
 
 Витрина не упоминала аналитику/самообучение, хотя реальный слой уже есть, а полный контур —

@@ -2,6 +2,19 @@
 
 Формат — [Keep a Changelog](https://keepachangelog.com/ru/1.0.0/); версии — per-PACK (semver).
 
+## [0.3.0] - 2026-07-01
+
+### Changed
+
+- **dev-loop resilience (rate-limit incident 2026-07-01).** Затронут install-файл
+  `.claude/workflows/{PACK_PREFIX}-dev-loop.js`: статус `infra-failed` в enum схемы
+  (инфра-отказ не маскируется под `deferred`); fail-fast на терминальный
+  `agent()===null` (СТОП прогона); дефолт батча 3 → 2; heartbeat `log()` на каждом
+  шаге; текст-маркер `===SLICE-RESULT=== status=…` как запасной путь возврата.
+- In-script `withDeadline` **не добавляем** (песочница не даёт `Date.now()`/`setTimeout`/
+  cancel); затяжной hang ловит внешний supervisor — см. пак `_common` и
+  `docs/skiller/workflows/background-agents.md` → «Устойчивость».
+
 ## [0.2.0] - 2026-06-29
 
 ### Changed

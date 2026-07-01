@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "pack": "backend-laravel",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Backend dev-loop для Laravel: агенты slice-builder/test-writer/reviewer, последовательный одно-веточный workflow (срез→impl→test→review), SubagentStop review-gate. v0.5.0: risk-адаптивный review-gate (risk_level/risk_markers в схеме, adversarial-режим на HIGH, severity-enum детект≠гейтинг, config-honesty, честность тестов [POSSIBLE-DEFECT]), Lean-tiered model/effort-лейны под риск среза (Sonnet impl, Opus review/HIGH, Haiku тривиал), env-preflight в Setup, layout-agnostic globs правил. Обобщено из ретроспективы chatom + overnight-артефактов memster.",
   "stack": {
     "shape": "backend",

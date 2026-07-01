@@ -1,6 +1,7 @@
 """Диспетчер команд. Точка входа: main(argv) -> вызывает cmd_*(env, args)."""
 import sys
 
+from .analyze import cmd_analyze_run
 from .budget import cmd_budget
 from .common import Env
 from .connect import cmd_connect
@@ -26,6 +27,7 @@ COMMANDS = {
     "lock": cmd_lock,
     "status": cmd_status,
     "budget": cmd_budget,
+    "analyze-run": cmd_analyze_run,
     "eval": cmd_eval,
     "list": cmd_list,
     "registry": cmd_registry,

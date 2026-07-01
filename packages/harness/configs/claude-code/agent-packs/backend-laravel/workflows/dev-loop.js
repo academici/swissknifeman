@@ -20,7 +20,9 @@ const PROJECT_DIR = '{{PROJECT_DIR}}'
 
 // Урок overnight-прогона: хард-кап ДОЛЖЕН пережить resume. args на resume может не
 // долететь → дефолт держим литералом В СКРИПТЕ, а не только в args.
-const DEFAULT_MAX = 3
+// Урок throttling: батч = N срезов × (impl+test+review) — большой батч множит
+// retry-поверхность под rate-limit. Дефолт 2 (не 3+); solo-fallback — дисциплина оркестратора.
+const DEFAULT_MAX = 2
 
 const BRANCH = (args && args.branch) || 'feat/dev-loop'
 const BASE = (args && args.base) || 'main'
@@ -68,7 +70,7 @@ const SLICE_RESULT_SCHEMA = {
   required: ['id', 'status', 'risk_level', 'summary', 'assumptions', 'open_questions'],
   properties: {
     id: { type: 'string' },
-    status: { type: 'string', enum: ['green', 'deferred', 'failed'] },
+    status: { type: 'string', enum: ['green', 'deferred', 'failed', 'infra-failed'], description: 'green=тесты зелёные; deferred=честно не зелёный (реальный дефект); failed=агент отчитался о сбое; infra-failed=инфра-отказ (rate-limit/timeout/agent вернул null) — НЕ маскировать под deferred' },
     risk_level: { type: 'string', enum: ['LOW', 'MED', 'HIGH'], description: 'blast-radius среза (см. risk_markers)' },
     risk_markers: { type: 'array', items: { type: 'string', enum: ['concurrency', 'transactions', 'data-integrity', 'queue-semantics', 'connectors'] }, description: 'какие классы риска затронул срез' },
     summary: { type: 'string' },
@@ -102,6 +104,10 @@ const results = []
 let consecutiveFails = 0
 
 for (const slice of SLICES) {
+  const sliceNo = results.length + 1
+  // Durable-прогресс = число green-срезов (в песочнице нет shell → не git rev-list).
+  // Затяжной hang одного agent() тут НЕ ловится (управление не вернулось) — это забота
+  // внешнего supervisor (доклад оркестратора ~30 мин + PushNotification, см. orchestrator.md).
   if (consecutiveFails >= 2) {
     log(`Circuit-breaker: ${consecutiveFails} среза подряд не дошли до зелёного — стоп, иду в Verify/отчёт.`)
     break
@@ -128,6 +134,7 @@ ${priorSummary}
 ${HARD_GATES}`,
     { label: `impl:${slice.id}`, phase: 'Build', agentType: '{{PACK_PREFIX}}-slice-builder', model: lane.model, effort: lane.effort }
   )
+  log(`срез ${sliceNo}/${SLICES.length}: ${slice.id} impl-ok`)  // heartbeat: живость для supervisor/человека
 
   // 2) Тесты до зелёного (или чистая отсрочка). Test-writer ОЦЕНИВАЕТ риск и ЧЕСТНО репортит обходки.
   const result = await agent(
@@ -140,9 +147,11 @@ ${JSON.stringify(slice, null, 2)}
 ОБЯЗАТЕЛЬНО заполни risk_level (LOW|MED|HIGH) и risk_markers (concurrency/transactions/data-integrity/queue-semantics/connectors) — оцени blast-radius среза; test_coverage_pct — оценку покрытия изменённого поведения.
 ЧЕСТНОСТЬ (критично): любую обходку/форс-конфиг ради зелёного (форс config(...), штамповка timestamp перед пагинацией, sibling-класс в обход final) занеси в workarounds как [POSSIBLE-DEFECT] — за обходкой почти всегда реальный баг. ShouldQueue-job: если тест зовёт handle() напрямую — занеси в open_questions «queue-семантика (release/backoff/конкурентные воркеры) не покрыта».
 Дерево всегда оставляй ЧИСТЫМ. Зафиксируй допущения.
+ЗАПАСНОЙ ПУТЬ (если строгую схему возврата 5× не удаётся заполнить — не срывай прогон): последней строкой ответа выведи ровно '===SLICE-RESULT=== status=green' или '===SLICE-RESULT=== status=deferred'; коммит-дисциплина та же.
 ${HARD_GATES}`,
     { label: `test:${slice.id}`, phase: 'Build', agentType: '{{PACK_PREFIX}}-test-writer', schema: SLICE_RESULT_SCHEMA, effort: 'medium' }
   )
+  log(`срез ${sliceNo}/${SLICES.length}: ${slice.id} test=${result ? result.status : 'infra-failed(null)'}`)  // heartbeat
 
   // 3) Risk-адаптивный review-gate только по зелёным. Глубина/модель/effort — под РИСК (не под размер).
   let review = null
@@ -168,11 +177,20 @@ ${workarounds}
 ${HARD_GATES}`,
       { label: `review:${slice.id}`, phase: 'Build', agentType: '{{PACK_PREFIX}}-reviewer', model: rl.model, effort: rl.effort }
     )
+    log(`срез ${sliceNo}/${SLICES.length}: ${slice.id} review-ok (${results.filter((r) => r.status === 'green').length + 1}/${SLICES.length} зелёных)`)
   } else {
     consecutiveFails++
   }
 
-  results.push({ ...(result || { id: slice.id, status: 'failed', risk_level: RISK(slice), summary: 'agent вернул null', assumptions: [], open_questions: [] }), review_findings: review })
+  results.push({ ...(result || { id: slice.id, status: 'infra-failed', risk_level: RISK(slice), summary: 'agent вернул null (терминальный infra-сбой рантайма)', assumptions: [], open_questions: [] }), review_findings: review })
+
+  // Fail-fast на инфра-отказ: agent() вернул null = терминальный сбой рантайма (rate-limit/
+  // timeout, ретраи исчерпаны). Дальше бессмысленно — throttling сам не пройдёт от перехода
+  // к следующему срезу. НЕ маскируем под deferred (P4). Затяжной hang (без null) ловит supervisor.
+  if (!result) {
+    log(`Fail-fast: срез ${slice.id} infra-failed (agent вернул null) — стоп прогона, иду в Verify/отчёт.`)
+    break
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -190,6 +208,7 @@ ${HARD_GATES}`,
 )
 
 const built = results.map((r) => ({ id: r.id, status: r.status }))
-log(`Готово: ${built.filter((b) => b.status === 'green').length}/${SLICES.length} зелёных. Кап MAX=${MAX}, ветка ${BRANCH} (off ${BASE}). Ничего не запушено.`)
+const infraN = built.filter((b) => b.status === 'infra-failed').length
+log(`Готово: ${built.filter((b) => b.status === 'green').length}/${SLICES.length} зелёных${infraN ? `, ${infraN} infra-failed (инфра-отказ, НЕ дефект — см. <failures>)` : ''}. Кап MAX=${MAX}, ветка ${BRANCH} (off ${BASE}). Ничего не запушено.`)
 
 return { branch: BRANCH, base: BASE, max: MAX, results, verify }

@@ -4,6 +4,29 @@
 запись помечает затронутый install-файл, чтобы апгрейдящий агент сопоставил
 изменение с конкретным файлом проекта.
 
+## [0.7.0] - 2026-07-01
+
+### Changed
+
+- **dev-loop resilience (rate-limit incident 2026-07-01).** Затронут install-файл
+  `.claude/workflows/{PACK_PREFIX}-dev-loop.js`:
+  - Статус среза `infra-failed` в enum схемы — инфра-отказ (rate-limit/timeout/
+    `agent()`=null) больше НЕ маскируется под `deferred` (честная телеметрия).
+  - Fail-fast: терминальный `agent()===null` → `infra-failed` + СТОП прогона
+    (throttling сам не пройдёт от перехода к следующему срезу).
+  - Дефолт батча `DEFAULT_MAX` 3 → 2 — меньше retry-поверхности под throttling.
+  - Heartbeat `log()` на каждом шаге среза (сигнал живости для supervisor/человека).
+  - Текст-маркер `===SLICE-RESULT=== status=…` как запасной путь возврата (обход
+    StructuredOutput retry-cap рантайма на длинных/сложных возвратах).
+  - Итоговый `log()` показывает число `infra-failed`.
+
+### Не добавлено (сознательно)
+
+- In-script wall-clock / `withDeadline` — песочница Workflow не даёт `Date.now()`/
+  надёжного `setTimeout`, `agent()` не отменяем. Затяжной hang ловит **внешний
+  supervisor** (доклад оркестратора ~30 мин + `PushNotification`; см. пак `_common`
+  и `docs/skiller/workflows/background-agents.md` → «Устойчивость»).
+
 ## [0.6.0] - 2026-06-30
 
 ### Added

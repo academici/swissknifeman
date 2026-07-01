@@ -22,6 +22,7 @@
 | **📋 Управление задачами** | Плагин `task` (default-on): `/task:design\|dev\|review\|research\|fix` — каждая **пинит модель + effort + профиль** под интент, без ручного переключения |
 | **🪙 Токен-рычаги** | Дисциплина расхода: лестница `context-economy` (трим CLAUDE.md до ~92%, роутинг моделей до ~75%, аудит MCP, selective-input 5–50×), лаконичный вывод (`compact-responses`, output-style `lean`), **PAO** для PHP (вывод тестов → ~20 токенов JSON) |
 | **🧠 Память и граф** | Хаб **mAInd**: общая память экосистемы (agentmemory-демон, изоляция по namespace) + код-граф (Serena, навигация по символам вместо чтения файлов) + топология между проектами. Наблюдаемость — `maind analyze`/`verify`/`health` |
+| **📈 Аналитика и обучение** | Захват прогона хуком `run-report` → пост-ран разбор `maind analyze` (вердикт GREEN/ATTENTION/RED + метрики использования памяти/графа); экспериментальный `session-observer` (разбор сессии по JSONL-логам); петля обратной связи `field-feedback-loop` (наблюдение → урок → **человек** промоутит в скилл). Кросс-проектный **Continuous Learning** (детекция паттернов по многим проектам → авто-черновики скиллов) — спроектирован, в [roadmap](roadmap/self-learning-memory.md) |
 | **⚙️ Окружение** | `harness` настраивает Claude Code: пресеты permissions по стекам, MCP-серверы, хуки (auto-approve/memory/notify/run-report) |
 | **🔎 RAG-дисциплина** | Верификация внешних фактов до фиксации: лестница context7 → perplexity-web → WebSearch (скиллы `verify-claims`, `query-craft`, `mcp-advisor`) |
 
@@ -72,6 +73,8 @@ maind <cmd>                   # хаб (memory, graph, onboard, deploy, sync, he
   [роутинг источников/задач](docs/routing.md) · [референсы](docs/reference.md).
 - Пакеты: [скиллы](packages/skiller/docs/) · [окружение](packages/harness/docs/) ·
   [память и граф](packages/maind/docs/).
+- Развитие: [`roadmap/`](roadmap/) (напр. [Continuous Learning / самообучение](roadmap/self-learning-memory.md),
+  дизайн — [`research/analyst-package-design.md`](research/analyst-package-design.md)).
 
 ## Разработка
 

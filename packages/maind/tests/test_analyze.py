@@ -33,6 +33,13 @@ RED_RR = {"schema": 1, "tools": {"total": 1, "by_name": {"Bash": 1}}, "files_cha
           "tool_failures": [], "workflows": [{"name": "dev-loop", "status": "failed"}],
           "devloop": None, "session_id": "r1"}
 
+# тяжёлое сканирование (Read/Grep/Glob = 40) при нуле обращений к графу + пустой recall
+MAIND_RR = {"schema": 1, "tools": {"total": 40, "by_name": {"Read": 25, "Grep": 10, "Glob": 5}},
+            "files_changed": [], "bash": {"tests": [], "lints": [], "failed": []},
+            "tool_failures": [], "workflows": [], "devloop": None,
+            "maind": {"memory_recall": {"calls": 2, "results": 2, "found_total": 0, "found_max": 0}},
+            "session_id": "m1"}
+
 
 def _write_run(projdir, report):
     runs = Path(projdir) / ".claude" / "runs"
@@ -140,6 +147,21 @@ class ReportAssemblyCase(unittest.TestCase):
             self.assertIsNone(rep["health"])                    # отключён
             # JSON-сериализуемо целиком
             self.assertIsInstance(json.dumps(rep, ensure_ascii=False), str)
+
+
+class MaindObservabilityCase(unittest.TestCase):
+    def test_heavy_scan_no_graph_is_attention(self):
+        v, _c, red, reasons, _rp = compute_verdict(MAIND_RR, {"dirty": False}, None)
+        self.assertEqual(v, "ATTENTION")
+        self.assertFalse(red)
+        self.assertTrue(any("код-граф не использовался" in r for r in reasons))
+        self.assertTrue(any("recall" in r for r in reasons))       # пустой recall тоже подсвечен
+
+    def test_old_report_without_maind_key_ok(self):
+        # старый run-report без ключа maind: эвристика не падает, вердикт прежний, без граф-шума
+        v, _c, _red, reasons, _rp = compute_verdict(GREEN_RR, {"dirty": False}, None)
+        self.assertEqual(v, "GREEN")
+        self.assertFalse(any("граф" in r for r in reasons))
 
 
 if __name__ == "__main__":

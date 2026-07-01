@@ -2,16 +2,37 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-> Монорепозиторий-зонтик экосистемы **academici**: один швейцарский нож над несколькими
-> независимыми пакетами и плагинами Claude Code. Единая консоль, единый marketplace, общий core.
+> Швейцарский нож для разработки с Claude Code. Монорепозиторий-зонтик экосистемы **academici**:
+> плагины со скиллами, роли и workflow, набор токен-рычагов, управление задачами и общая
+> память/граф — под единой консолью и единым marketplace.
+
+**Что это даёт разработчику:** подключаешь проект одной командой — и Claude Code получает
+кураторский набор навыков, интент-команды задач, роли-агенты, дисциплину расхода токенов и общую
+память экосистемы. Не «ещё один список правил», а собранный процесс разработки.
+
+👉 **Как этим пользоваться — [раннбук разработчика](docs/develop.md)** (фазы плана, `/compact` vs
+новая сессия, задачи, память, граф, токен-рычаги, RAG).
+
+## Возможности
+
+| Что | Коротко |
+|:--|:--|
+| **🔌 Плагины со скиллами** | Единый marketplace Claude Code (бакеты навыков). Кураторский **CORE** (8 скиллов ≈ 480 резидентных токенов) раздаётся в каждый проект; остальное — по типу проекта. Два канала: `connect` (marketplace, автообновление) и `vendor` (физ. копии для отдачи вовне) |
+| **🎭 Роли и workflow** | `agent-packs` — версионируемые бандлы субагентов + workflow + хуков: стек-паки (Laravel/Node/Python/Flutter) и роль-паки (tech-lead/CTO/founder/maintainer). **dev-loop** гонит вертикальные срезы через risk-адаптивный **review-gate** (Haiku→Sonnet→Opus по риску) |
+| **📋 Управление задачами** | Плагин `task` (default-on): `/task:design\|dev\|review\|research\|fix` — каждая **пинит модель + effort + профиль** под интент, без ручного переключения |
+| **🪙 Токен-рычаги** | Дисциплина расхода: лестница `context-economy` (трим CLAUDE.md до ~92%, роутинг моделей до ~75%, аудит MCP, selective-input 5–50×), лаконичный вывод (`compact-responses`, output-style `lean`), **PAO** для PHP (вывод тестов → ~20 токенов JSON) |
+| **🧠 Память и граф** | Хаб **mAInd**: общая память экосистемы (agentmemory-демон, изоляция по namespace) + код-граф (Serena, навигация по символам вместо чтения файлов) + топология между проектами. Наблюдаемость — `maind analyze`/`verify`/`health` |
+| **⚙️ Окружение** | `harness` настраивает Claude Code: пресеты permissions по стекам, MCP-серверы, хуки (auto-approve/memory/notify/run-report) |
+| **🔎 RAG-дисциплина** | Верификация внешних фактов до фиксации: лестница context7 → perplexity-web → WebSearch (скиллы `verify-claims`, `query-craft`, `mcp-advisor`) |
 
 ## Пакеты
 
 | Пакет | Роль | CLI |
 |:--|:--|:--|
 | [`packages/skiller`](packages/skiller/) | реестр AI-скиллов — раздаёт навыки в проекты (connect/vendor) | `skiller` (алиас `swissknifeman`) |
-| [`packages/harness`](packages/harness/) | настройка окружения Claude Code (permissions, MCP-серверы, хуки) | `harness` |
+| [`packages/harness`](packages/harness/) | настройка окружения Claude Code (permissions, MCP, хуки, agent-packs) | `harness` |
 | [`packages/maind`](packages/maind/) | хаб памяти, графа и координации экосистемы (MCP-шина) | `maind` |
+| [`packages/task`](packages/task/) | плагин интент-команд задач (`/task:*`) | плагин Claude Code |
 
 Общий фундамент — пакет [`core`](core/) (stdlib-only: `Env`, вывод, slug).
 
@@ -33,16 +54,24 @@
 swissknifeman <group> …       # корневой роутер: skills→skiller, env→harness, maind→maind; + setup, doctor
 swissknifeman setup <project> # кросс-пакетный онбординг (скиллы+окружение+память+граф) → maind onboard
 skiller <cmd>                 # реестр скиллов (connect, vendor, integrate, registry, …) — алиас swissknifeman
-harness <cmd>                 # окружение Claude Code (permissions, mcp, hooks, doctor)
-maind <cmd>                   # хаб (memory, graph, onboard, deploy, sync, health, …)
+harness <cmd>                 # окружение Claude Code (permissions, mcp, hooks, agent-packs, doctor)
+maind <cmd>                   # хаб (memory, graph, onboard, deploy, sync, health, analyze, verify, …)
 ```
 
 ## Плагины Claude Code
 
 Один marketplace (`.claude-plugin/marketplace.json`, имя `swissknifeman` = зонтик) объявляет все
-плагины репо: бакеты скиллов, `skm`, `generate-skill` и `maind`. Генерируется `skiller registry`.
-Плагин `maind` — только команды `/maind:*` (MCP-инструменты хаба приходят per-project сервером
-`maind` из `.mcp.json` проекта, не из плагина).
+плагины репо: бакеты скиллов, кураторский `core`, `task`, `skm`, `generate-skill` и `maind`.
+Генерируется `skiller registry`. Плагин `maind` — только команды `/maind:*` (MCP-инструменты хаба
+приходят per-project сервером `maind` из `.mcp.json` проекта, не из плагина).
+
+## Документация
+
+- **[Раннбук разработчика](docs/develop.md)** — как вести процесс разработки с Claude Code.
+- [Обзор экосистемы](docs/index.md) · [control-surface проектов](docs/control-surface.md) ·
+  [роутинг источников/задач](docs/routing.md) · [референсы](docs/reference.md).
+- Пакеты: [скиллы](packages/skiller/docs/) · [окружение](packages/harness/docs/) ·
+  [память и граф](packages/maind/docs/).
 
 ## Разработка
 

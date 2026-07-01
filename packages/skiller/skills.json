@@ -1956,8 +1956,8 @@
       "path": "skills/general/context-economy/SKILL.md",
       "version": "1.2.1",
       "description": "Claude Code context economy in a project: CLAUDE.md ≤200 lines, path-scoped .claude/rules/, /compact vs /clear, Plan→Clear→Execute, MCP audit, model routing. Officially-supported mechanisms only — no myths like .claudeignore.",
-      "sha256": "833c80c85f6898c6d43347a73b053417c86724a837209c03ce4a85c591584474",
-      "content_sha256": "37039370ee73fbfbe96e486c312ac36098cbfebd296af09bde7c3f4cb08086ad",
+      "sha256": "407b3d2d719109b0771eb74512e0549865ed32ebebc7eaf749312baf40741580",
+      "content_sha256": "20918c85bab8493d7f3698b8bf6193c5118878466064429a59fb1cbf9bf5484e",
       "tags": [
         "tokens",
         "context",

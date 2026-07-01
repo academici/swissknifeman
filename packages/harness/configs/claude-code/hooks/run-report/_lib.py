@@ -71,6 +71,45 @@ def _result_text(content):
     return ""
 
 
+def _maind_tool(name):
+    """MCP-имя инструмента хаба → 'memory_<op>' / 'graph_<op>' / None. Матчим по ХВОСТУ после
+    последнего '__' — переживает и `mcp__maind__…`, и `mcp__plugin_core_maind__…` (лейбл сервера
+    меняется, имя инструмента — нет)."""
+    if not isinstance(name, str):
+        return None
+    tail = name.rsplit("__", 1)[-1]
+    if tail.startswith("maind_memory_"):
+        return "memory_" + tail[len("maind_memory_"):]
+    if tail.startswith("maind_graph_"):
+        return "graph_" + tail[len("maind_graph_"):]
+    return None
+
+
+def _maind_result_count(result_text):
+    """Число «полезных» единиц в результате maind-вызова (найденные факты / соседи / узлы / длина
+    пути). best-effort JSON: список → len; dict с `count` → count; `neighbors`/`nodes` → len;
+    `path` → len|0. Непарсибельно / нет числа → None (тогда пишем только счётчик вызова, без found)."""
+    text = (result_text or "").strip()
+    if not text or ("{" not in text and "[" not in text):
+        return None
+    try:
+        obj = json.loads(text)
+    except Exception:
+        return None
+    if isinstance(obj, list):
+        return len(obj)
+    if isinstance(obj, dict):
+        if isinstance(obj.get("count"), int):
+            return obj["count"]
+        for k in ("neighbors", "nodes"):
+            if isinstance(obj.get(k), list):
+                return len(obj[k])
+        if "path" in obj:
+            p = obj.get("path")
+            return len(p) if isinstance(p, list) else 0
+    return None
+
+
 def _find_json_with_keys(text, keys):
     """Первый {...}-фрагмент в text, парсящийся как dict с ≥1 ключом из keys. Best-effort:
     сканирует кандидатов по позициям '{' с балансировкой скобок. None если не нашли."""
@@ -137,11 +176,18 @@ def parse_events(lines):
     tests, lints, bash_failed = [], [], []
     devloop = {}
     total_tools = 0
+    maind = {}                  # op → {calls, results, found_total, found_max} (память/граф хаба)
 
     def add_file(fp):
         if fp and fp not in _files_seen and len(files) < _MAX_FILES:
             _files_seen.add(fp)
             files.append(fp)
+
+    def maind_rec(op):          # запись метрики op (фикс. размер: 4 счётчика, не растёт с вызовами)
+        r = maind.get(op)
+        if r is None:
+            r = maind[op] = {"calls": 0, "results": 0, "found_total": 0, "found_max": 0}
+        return r
 
     for line in lines:
         line = line.strip() if isinstance(line, str) else ""
@@ -162,6 +208,9 @@ def parse_events(lines):
                 name = b.get("name") or "?"
                 counts[name] = counts.get(name, 0) + 1
                 total_tools += 1
+                op = _maind_tool(name)          # память/граф хаба — агрегируем отдельно (для analyze)
+                if op:
+                    maind_rec(op)["calls"] += 1
                 tid = b.get("id")
                 inp = b.get("input") if isinstance(b.get("input"), dict) else {}
                 if tid:
@@ -178,6 +227,15 @@ def parse_events(lines):
                 tid = b.get("tool_use_id")
                 name = tool_name.get(tid, "?")
                 is_err = bool(b.get("is_error"))
+                mop = _maind_tool(name)         # результат maind-вызова: сколько нашёл/соседей
+                if mop and not is_err:
+                    cnt = _maind_result_count(_result_text(b.get("content")))
+                    if cnt is not None:
+                        rec = maind_rec(mop)
+                        rec["results"] += 1
+                        rec["found_total"] += cnt
+                        if cnt > rec["found_max"]:
+                            rec["found_max"] = cnt
                 cmd = bash_cmd.get(tid)
                 if cmd is not None:
                     entry = {"command": _snippet(cmd, 160), "ok": not is_err}
@@ -226,6 +284,7 @@ def parse_events(lines):
         "bash": {"tests": tests, "lints": lints, "failed": bash_failed},
         "workflows": workflows,
         "devloop": devloop or None,
+        "maind": maind or None,       # память/граф хаба: {op:{calls,results,found_total,found_max}}
     }
 
 

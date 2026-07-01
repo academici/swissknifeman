@@ -2,7 +2,7 @@
 
 Карта типовых проектов экосистемы: что детектится, какой набор раздаётся (`profiles/<type>.json`)
 и какие **неочевидные вопросы** решаются при онбординге. Цель — чтобы агент, получив проект, не
-гадал «что подключить». Полное дерево настройки — [onboarding-decision-tree](../../../maind/docs/guide/onboarding-decision-tree.md);
+гадал «что подключить». Полное дерево настройки — [onboarding-decision-tree](/maind/guide/onboarding-decision-tree);
 выбор канала скиллов (connect/vendor) — всегда **спрашивай у пользователя** (см. project-tooling-runbook).
 
 > Источник истины рецептов — `packages/skiller/profiles/*.json` (детект — `core/project.py`).

@@ -53,6 +53,35 @@ FIXTURE = "\n".join([
 ])
 
 
+def _mcp_line(uid, name, result_obj):
+    """assistant tool_use + user tool_result (result_obj → text блока, как в реальном транскрипте)."""
+    return "\n".join([
+        json.dumps({"type": "assistant", "message": {"content": [
+            {"type": "tool_use", "id": uid, "name": name, "input": {"q": "x"}}]}}),
+        json.dumps({"type": "user", "message": {"content": [
+            {"type": "tool_result", "tool_use_id": uid,
+             "content": [{"type": "text", "text": json.dumps(result_obj, ensure_ascii=False)}],
+             "is_error": False}]}}),
+    ])
+
+
+# память/граф хаба: обычный сервер + вариант лейбла plugin_core_ + is_error-деградация
+FIXTURE_MCP = "\n".join([
+    _mcp_line("m1", "mcp__maind__maind_memory_recall",
+              [{"score": 1, "text": "a"}, {"score": 2, "text": "b"}]),          # found=2
+    _mcp_line("m2", "mcp__plugin_core_maind__maind_memory_recall",
+              [{"score": 1, "text": "c"}]),                                     # found=1, др. лейбл
+    _mcp_line("g1", "mcp__maind__maind_graph_query",
+              {"root": "project:x", "count": 3, "neighbors": [1, 2, 3]}),       # count=3
+    _mcp_line("s1", "mcp__maind__maind_memory_store", {"memory": {"id": "m_1"}}),  # count не извлечь
+    json.dumps({"type": "assistant", "message": {"content": [
+        {"type": "tool_use", "id": "m3", "name": "mcp__maind__maind_memory_recall",
+         "input": {"q": "z"}}]}}),
+    json.dumps({"type": "user", "message": {"content": [
+        {"type": "tool_result", "tool_use_id": "m3", "content": "boom", "is_error": True}]}}),
+])
+
+
 def run(fn, *a, **kw):
     buf = io.StringIO()
     with contextlib.redirect_stdout(buf):
@@ -88,6 +117,24 @@ class ParseCase(unittest.TestCase):
         self.assertEqual(r["workflows"][0]["status"], "completed")
         self.assertEqual(r["devloop"]["tool_failures"], ["perplexity-web locked"])
         self.assertEqual(r["devloop"]["deferred"], ["e2e"])
+        self.assertIsNone(r["maind"])                          # в FIXTURE нет maind-вызовов
+
+    def test_maind_mcp_metrics(self):
+        r = parse_transcript(FIXTURE_MCP)
+        m = r["maind"]
+        # recall: m1(2)+m2(1) успешных + m3(is_error) → calls=3, results=2, found_total=3, max=2
+        self.assertEqual(m["memory_recall"]["calls"], 3)
+        self.assertEqual(m["memory_recall"]["results"], 2)
+        self.assertEqual(m["memory_recall"]["found_total"], 3)
+        self.assertEqual(m["memory_recall"]["found_max"], 2)
+        # store: вызов есть, но count из результата не извлекаем (dict без count/neighbors/nodes/path)
+        self.assertEqual(m["memory_store"]["calls"], 1)
+        self.assertEqual(m["memory_store"]["results"], 0)
+        # graph_query: count из dict
+        self.assertEqual(m["graph_query"]["calls"], 1)
+        self.assertEqual(m["graph_query"]["found_total"], 3)
+        # back-compat: MCP-вызовы всё ещё видны в общем tools.by_name (2× обычный лейбл: m1,m3)
+        self.assertEqual(r["tools"]["by_name"]["mcp__maind__maind_memory_recall"], 2)
 
     def test_empty_and_garbage(self):
         for bad in ("", "not json", "{{{", "null\n[]\n42"):

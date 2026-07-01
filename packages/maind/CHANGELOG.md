@@ -6,6 +6,15 @@
 ## [Unreleased]
 
 ### Added
+- **Наблюдаемость памяти/графа в `analyze` + `maind memory count`.** Отвечает на полевой вопрос
+  «память/граф пишут — а читаются ли и помогают ли, или просто жрут токены». `analyze.py` читает новый
+  аддитивный ключ `run_report.maind` (метрики MCP-вызовов памяти/графа, их считает парный парсер
+  run-report в harness): строка «память: recall×N→M · граф: query×K» + эвристика ATTENTION **«код-граф
+  не использовался при тяжёлом сканировании»** (Read/Grep/Glob ≥30 при графе ×0) и «recall пуст/не по
+  адресу». Новая подкоманда `maind memory count [--project|--scope] [--json]` — число фактов по scope
+  (по scope-маркеру, не весь глобальный пул). Скилл `ecosystem-mcp` усилен graph-first-подсказкой
+  (граф/Serena перед широким `grep`, с оговоркой про ручной скан). Тесты: `test_analyze.py`/
+  `test_memory.py` (+3). Back-compat: старый `analyze` игнорит ключ `maind`, новый не падает без него.
 - **`perplexity-web` — hub-managed MCP-сервер (раскатка из конфига, не вручную).** Keyless-мост
   `perplexity-web` (отдельный Node-пакет) раздаётся в проекты тем же `deploy`/`sync`, что `maind`
   и Serena, — единым источником истины вместо ручных хардкод-записей в каждом `.mcp.json`

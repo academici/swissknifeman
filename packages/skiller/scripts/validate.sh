@@ -36,6 +36,25 @@ for _cmd_md in [repo_root / "CLAUDE.md", *sorted((repo_root / "packages").glob("
                             f"(> {CLAUDE_MD_MAX_LINES}) — CLAUDE.md резидентен каждую сессию, "
                             "вынеси детали в docs/скиллы (токен-экономия)")
 
+# --- core-policy.json (декларативная CORE-политика, источник config.py) --------
+_core_policy_path = root / "configs" / "core-policy.json"
+if _core_policy_path.is_file():
+    try:
+        _cp = json.loads(_core_policy_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as _e:
+        errors.append(f"configs/core-policy.json: невалидный JSON: {_e}")
+        _cp = None
+    if isinstance(_cp, dict):
+        for _sk in _cp.get("skills", []):
+            if not (root / "skills" / _sk / "SKILL.md").is_file():
+                errors.append(f"core-policy.json skills[]: '{_sk}' — нет skills/{_sk}/SKILL.md")
+        for _ex in _cp.get("default_exclude", []):
+            if not (root / "skills" / _ex / "SKILL.md").is_file():
+                warnings.append(f"core-policy.json default_exclude[]: '{_ex}' — "
+                                f"нет skills/{_ex}/SKILL.md")
+else:
+    warnings.append("configs/core-policy.json отсутствует — config.py на встроенном фолбэке")
+
 UPSTREAM_SOURCES = {"github", "http", "file"}
 # replace = зеркало (автонакат); notify = адаптированная копия (только сообщать);
 # fork = форк с нашими правками (обёртка + pristine-зеркало в files[].path; на дрейфе

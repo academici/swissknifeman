@@ -1,0 +1,18 @@
+{
+  "_doc": "Декларативная CORE-политика skiller (источник истины). config.py грузит её самолокацией через __file__ на import-time, с фолбэком на встроенные дефолты (standalone-safe). Изменения ядра видны в git diff как данные, а не код.",
+  "skills": [
+    "general/context-economy",
+    "general/anti-drift",
+    "general/compact-responses",
+    "general/session-handoff",
+    "general/mcp-advisor",
+    "general/verify-claims",
+    "research/query-craft",
+    "oss-dev/gh-review"
+  ],
+  "resident_budget_target": 600,
+  "core_plugin": "core",
+  "core_buckets": ["general", "oss-dev"],
+  "default_command_plugins": ["task"],
+  "default_exclude": ["system/shared-memory", "system/cross-project-coordinator"]
+}

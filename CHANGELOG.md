@@ -20,6 +20,12 @@
   честность тестов `[POSSIBLE-DEFECT]`, env-preflight в Setup, layout-agnostic globs правил + per-layer
   risk-аннотации; фикс ложного «проект НЕ на Pest» (chatom F2) → `{{TEST_FRAMEWORK}}`, хардкод pint →
   `{{CHECK_CMD}}`.
+- **Миграция: `agent-packs upgrade` теперь ставит НОВЫЕ файлы версии** (не только safe-apply/conflict). Файлы,
+  добавленные в новой версии пака (recon-агенты 0.6.0), доезжают до онбордженных проектов на `upgrade` (а не
+  только на полном `render`) — цель не существует, запись безопасна; явно удалённые optional (`removed_optional`)
+  не возвращаются; локальные правки существующих файлов по-прежнему не затираются (`conflict`→`.pack-new`). Важно,
+  т.к. `maind sync` зовёт именно `upgrade`. +unit-тест. Гайд пака дополнен разделом «Как ставятся задачи» +
+  **mermaid-диаграммой** процесса dev-loop.
 
 ### Added/Changed (skiller — токен-экономия: плагин `tasks` + docker-router + context-economy/session-handoff)
 

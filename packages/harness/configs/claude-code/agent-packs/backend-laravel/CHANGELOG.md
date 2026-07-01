@@ -15,6 +15,9 @@
   `{prefix}-security-review` (auth/policy/инъекции/секреты/IDOR). Все `optional`, модель `{{MODEL_RECON}}`
   (дефолт `haiku`). Операционализирует «тяжёлое чтение — в субагент» (skill `context-economy` §8). Новые
   install-файлы `.claude/agents/{prefix}-{route-mapper,db-impact,blade-review,test-verifier,security-review}.md`.
+- **Гайд `subagents-and-workflows.md` обновлён**: раздел «Как ставятся задачи» (`/task:*` + `args.slices`),
+  **mermaid-диаграмма процесса dev-loop** (Setup→Build[impl→test→risk-review]→Verify + recon-делегирование),
+  recon-агенты и risk-адаптивный reviewer в таблице агентов; хардкод `pint`/phpstan → `{{CHECK_CMD}}`.
 
 ## [0.5.0] - 2026-06-30
 

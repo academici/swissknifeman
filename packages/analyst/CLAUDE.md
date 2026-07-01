@@ -5,9 +5,10 @@
 уроки» из потоков задач Claude Code и — **с человеком в гейте** — продвигает их в переиспользуемое
 знание (память mAInd → скиллы). CLI — `analyst`.
 
-Полный дизайн (и обоснование анти-collapse) — [`research/analyst-self-learning-system.md`](../../research/analyst-self-learning-system.md).
-Этот пакет реализует **P1 (MVP)**; последующие фазы (cross-project `scan`, confidence-lifecycle
-Beta/decay, mem0-таксономия, `observe.sh`) — см. §9 дизайна.
+Реализованный контур: **P1 (MVP)** — `digest` + lessons-store + human `review`/`promote`;
+**P2** — cross-project агрегатор `scan`; **P3** — confidence-арифметика (Beta/decay) + числовая
+state-machine `recompute` + mem0-таксономия. Дальше по roadmap: `analyst suggest`→draft-скилл (P4),
+`observe.sh` PostToolUse-поток (P5).
 
 ## Что это (два слоя, здесь — только слой-1)
 

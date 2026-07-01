@@ -6,8 +6,7 @@
 
 Новый четвёртый пакет монорепо **`analyst`** (CLI `analyst`, плагин-только-команды) — детерминированный
 (stdlib-only, **on-demand, без демона**) слой захвата «выстраданных уроков» из прогонов Claude Code с
-**человеком в гейте** (авто-запись в скиллы запрещена). Реализует P1 из
-[`research/analyst-self-learning-system.md`](research/analyst-self-learning-system.md) §9:
+**человеком в гейте** (авто-запись в скиллы запрещена). Реализует P1 контура continuous learning:
 
 - **`analyst digest`** — детерминированно извлекает КАНДИДАТ-уроки из свежего `run-report` прогона по
   высокоточным сигналам (resolved-failure «сработало после N попыток»; явные dev-loop workarounds) →
@@ -33,8 +32,7 @@
 
 ### Added (пакет `analyst` — P3: confidence-жизненный цикл)
 
-Реализует **P3** из [`research/analyst-self-learning-system.md`](research/analyst-self-learning-system.md)
-§5/§9 (план — [`research/analyst-P3-plan.md`](research/analyst-P3-plan.md)): детерминированный,
+Реализует **P3** контура continuous learning: детерминированный,
 **восстановимый-из-логов** пересчёт уверенности урока + **числовая** state-machine, **без демона**
 (on-demand) и **без нарушения инварианта** «`candidate→curated` — только человек».
 

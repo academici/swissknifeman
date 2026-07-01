@@ -1,6 +1,6 @@
 """analyst confidence — ЧИСТАЯ арифметика уверенности урока (stdlib, без I/O и часов).
 
-Модель (research/analyst-self-learning-system.md §5):
+Модель (Beta-среднее × volume-фактор × time-decay):
 
     p          = (S + α) / (N + α + β)      # Beta-среднее доли успеха
     volume     = 1 − e^(−N / k)             # штраф за малый объём наблюдений

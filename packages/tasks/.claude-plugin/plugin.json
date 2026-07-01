@@ -1,0 +1,9 @@
+{
+  "name": "tasks",
+  "version": "0.1.0",
+  "description": "tasks — интент-команды постановки задач для Claude Code: /task:design|dev|review|research|fix. Каждая команда пинит свою модель + reasoning effort + профиль workflow (перебивая настройки сессии), чтобы не помнить про ручное переключение модели/effort/режима. Тонкое лицо над agent-packs/workflow экосистемы academici.",
+  "author": { "name": "Dmitry Vostrikov", "email": "dv.vostrikov@gmail.com" },
+  "homepage": "https://github.com/academici/swissknifeman",
+  "keywords": ["tasks", "claude-code", "workflow", "model-routing", "effort", "lean-tiered", "academici", "ecosystem"],
+  "commands": ["./commands"]
+}

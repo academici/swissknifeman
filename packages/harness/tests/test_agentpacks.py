@@ -99,6 +99,24 @@ class TestAgentPacks(unittest.TestCase):
     def test_doctor_clean_pack(self):
         self.assertEqual(ap.do_doctor(self.env, self.pack), 0)
 
+    def test_upgrade_installs_new_file(self):
+        # Файл, добавленный в новой версии пака (нет в прежнем lock), должен
+        # ставиться на upgrade — не только render (иначе recon-агенты не доедут).
+        self._render(overrides={"PACK_PREFIX": "x"})
+        lock_path = self.proj / ".claude/agent-pack.lock.json"
+        lock = json.loads(lock_path.read_text())
+        entry = lock["packs"][self.pack]
+        entry["version"] = "0.0.1"  # старее манифеста → upgrade сработает
+        dropped = next(f["target"] for f in entry["files"]
+                       if f["target"].endswith("-reviewer.md"))
+        entry["files"] = [f for f in entry["files"] if f["target"] != dropped]
+        lock_path.write_text(json.dumps(lock))
+        (self.proj / dropped).unlink()  # как будто файл ещё не установлен
+        self.assertFalse((self.proj / dropped).exists())
+        ap.do_upgrade(self.env, self.pack, self.proj, overrides={},
+                      dry=False, shell_policy="safe")
+        self.assertTrue((self.proj / dropped).exists())  # новый файл поставлен
+
 
 class TestCategorizeFileChange(unittest.TestCase):
     """Чистая логика категоризации (выделена из do_upgrade) — матрица случаев."""

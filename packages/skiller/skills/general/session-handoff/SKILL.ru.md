@@ -8,7 +8,7 @@ persona: oss-dev
 tags: [workflow, context, tokens, handoff]
 requires: []
 produces_for: []
-outputs: []
+outputs: [".claude/handoffs/*.md"]
 snippets: ["handoff-template.md"]
 adapters: [claude, cursor, fable]
 sha256: ""
@@ -40,8 +40,8 @@ sha256: ""
 
 ## Структура документа
 
-Шаблон — `snippets/handoff-template.md`. Сохраняйте в проекте по
-конвенции проекта (например `docs/handoff/YYYY-MM-DD-<topic>.md`)
+Шаблон — `snippets/handoff-template.md`. Сохраняйте по стандартному пути
+`.claude/handoffs/YYYY-MM-DD-<topic>.md` (индексируется maind)
 или передавайте в первом сообщении новой сессии.
 
 ## Анти-паттерны

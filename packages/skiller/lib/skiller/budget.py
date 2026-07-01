@@ -23,9 +23,9 @@ from pathlib import Path
 from core import atomic_write_text
 
 from .common import die, parse_flags, parse_frontmatter
-from .config import (DEFAULT_EXCLUDE, all_buckets, core_skill_tuples,
-                     find_project_root, load_config, resolve_selection,
-                     validate_config)
+from .config import (DEFAULT_EXCLUDE, RESIDENT_BUDGET_TARGET, all_buckets,
+                     core_skill_tuples, find_project_root, load_config,
+                     resolve_selection, validate_config)
 from .vendor import build_requires_index, collect_skills, resolve_requires
 
 # Символов на токен — РАЗНЫЕ для кириллицы и латиницы/кода: кириллица у токенайзера
@@ -238,18 +238,41 @@ def cmd_budget(env, argv):
         "--target": "str", "--config": "str", "--compare": "str",
         "--profile": "str", "--buckets": "str", "--exclude": "str",
         "--json": "bool", "--no-core": "bool", "--write-map": "bool",
+        "--check-core": "bool", "--strict": "bool",
     })
     if opts["help"]:
         print("skiller budget [--config F.json | --compare a,b | --target DIR]\n"
               "               [--profile P | --buckets a,b] [--exclude x,y]\n"
-              "               [--no-core] [--json] [--write-map]\n"
+              "               [--no-core] [--json] [--write-map] [--check-core [--strict]]\n"
               "  Трёхъярусный токеновый бюджет набора скиллов (⊕ always / ↻ on-trigger\n"
-              "  / ⌥ on-demand). --write-map перегенерит docs/guide/budget.md.")
+              "  / ⌥ on-demand). --write-map перегенерит docs/guide/budget.md.\n"
+              "  --check-core: резидентный (⊕ tier-0) бюджет CORE_SKILLS vs target (гейт\n"
+              "  против тихого роста ядра); --strict — ненулевой код при превышении (CI).")
         return
     no_core = opts.get("no_core", False)
 
     if opts.get("write_map"):
         write_budget_map(env)
+        return
+
+    if opts.get("check_core"):
+        cards = [skill_budget(d) for (_b, _rel, d, _n)
+                 in core_skill_tuples(env, set())]
+        cards = [c for c in cards if c]
+        resident = sum(c["tier0"] for c in cards)
+        over = resident > RESIDENT_BUDGET_TARGET
+        status = "OVER" if over else "OK"
+        if opts.get("json"):
+            print(json.dumps({"resident_core_tier0": resident,
+                              "target": RESIDENT_BUDGET_TARGET,
+                              "skills": len(cards), "status": status},
+                             ensure_ascii=False))
+        else:
+            print(f"CORE резидент (⊕ tier-0): {resident} ток / target "
+                  f"{RESIDENT_BUDGET_TARGET} — {status} ({len(cards)} скиллов)")
+        if over and opts.get("strict"):
+            die(f"CORE резидентный бюджет {resident} > target "
+                f"{RESIDENT_BUDGET_TARGET}: ужми description или пересмотри состав CORE")
         return
 
     if opts.get("compare"):

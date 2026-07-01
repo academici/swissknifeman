@@ -2,6 +2,72 @@
 
 ## [Unreleased]
 
+### Added/Changed (harness — токен-экономия: downstream `deny` + agent-pack backend-laravel 0.5.0)
+
+> План: `~/.claude/plans/idempotent-snacking-nest.md` (свод ретроспективы chatom + ответа Perplexity +
+> токен-аудита; верифицировано RAG). Это P0-волна (publish-surface + workflow).
+
+- **Downstream `permissions.deny`-пресеты (publish-surface, самый дешёвый ROI).** `deny` — реальный
+  токен-барьер (на встроенные Read/Edit и на `cat/head/tail/sed`), `.claudeignore` не официальна.
+  `settings.laravel.json` += `storage/framework/**`, `bootstrap/cache/**`, `**/node_modules/**`,
+  `vendor/bin/**` (НЕ `vendor/**` целиком — vendor-исходники нужны для сверки реального API),
+  `**/package-lock.json`, `**/.phpunit.cache/**`, `**/*.sqlite[3]`. `settings.base.json` += `~/.claude/logs/**`
+  (лог-файлы хуков). `settings.python.json` получил deny-набор (`__pycache__`/`.venv`/`.mypy_cache`/
+  `.pytest_cache`/`.ruff_cache`/`*.egg-info`/`dist`/`build`). Логи целиком НЕ денаим — чтобы не ломать
+  `tail`-slice (selective-input).
+- **agent-pack `backend-laravel` 0.5.0** (детали — в его CHANGELOG): risk-адаптивный review-gate
+  (severity-enum, adversarial на HIGH, config-honesty, fresh-context), Lean-tiered model/effort-лейны,
+  честность тестов `[POSSIBLE-DEFECT]`, env-preflight в Setup, layout-agnostic globs правил + per-layer
+  risk-аннотации; фикс ложного «проект НЕ на Pest» (chatom F2) → `{{TEST_FRAMEWORK}}`, хардкод pint →
+  `{{CHECK_CMD}}`.
+- **Миграция: `agent-packs upgrade` теперь ставит НОВЫЕ файлы версии** (не только safe-apply/conflict). Файлы,
+  добавленные в новой версии пака (recon-агенты 0.6.0), доезжают до онбордженных проектов на `upgrade` (а не
+  только на полном `render`) — цель не существует, запись безопасна; явно удалённые optional (`removed_optional`)
+  не возвращаются; локальные правки существующих файлов по-прежнему не затираются (`conflict`→`.pack-new`). Важно,
+  т.к. `maind sync` зовёт именно `upgrade`. +unit-тест. Гайд пака дополнен разделом «Как ставятся задачи» +
+  **mermaid-диаграммой** процесса dev-loop.
+
+### Added/Changed (skiller — токен-экономия: плагин `tasks` + docker-router + context-economy/session-handoff)
+
+- **Новый плагин `tasks`** (`packages/tasks/`, commands-only, авто-регистрация в marketplace, 51 плагин):
+  интент-команды `/task:design|dev|review|research|fix`. Каждая пинит `model:`+`effort:` (frontmatter) под
+  профиль, перебивая настройки сессии — закрывает «забыл переключить модель/effort/режим». dev→Opus/high
+  (планирование) + Lean-tiered субагенты по риску; fix→Sonnet/medium single-agent; review→Opus/xhigh adversarial;
+  design/research→Opus/high + research-fanout.
+- **`devops/docker` → тонкий router-скилл** (v0.2.0, `risk: read`): description-триггер + маршрутная таблица по
+  всем 6 под-скиллам (docker-php/postgres/dev-prod/services/vite/makefile) + порядок сборки (DAG в
+  requires/produces_for); глубокая экспертиза — в `snippets/docker-expert.md` on-demand (progressive disclosure).
+  «Фоновый» кластер: резидентно только router-описание, специалисты грузятся по нужде.
+- **`general/context-economy` v1.2.0**: §8 — recon-субагенты (тяжёлое чтение в изолированном окне, наверх только
+  сводка), selective-input (срез вместо файла целиком; `tail`/`grep`/`git diff`; нюанс: `deny` блокирует и
+  `tail`), видимость стоимости (`/usage`, не `/cost`); back-ref на плагин `tasks`.
+- **`general/session-handoff`**: `outputs: []`→`[".claude/handoffs/*.md"]` + стандартный путь
+  `.claude/handoffs/YYYY-MM-DD-<topic>.md` (индексируется maind). RU→EN перестамплены, `skiller registry` прогнан.
+  Аудит рекомендовал `risk:draft→stable` — **отклонено** по верификации (`stable` не в
+  `RISK_VALUES={read,draft,write,external}` → сломал бы validate; зрелость — отдельное поле `level`, не `risk`).
+- **F8 budget-governance — `skiller budget --check-core`** (+ `--strict` для CI) и константа
+  `RESIDENT_BUDGET_TARGET=600` (config.py): гейт резидентного ⊕ tier-0-бюджета `CORE_SKILLS` (грузится в КАЖДЫЙ
+  запрос) против таргета; выведен в хвост `validate.sh` (информационно). Замер вскрыл: резидент CORE сейчас
+  **592/600 ток** — у потолка (комментарий обещал ~480), так что гейт против тихого роста ядра предметен.
+- **D4 — 5 новых production-readiness-скиллов** (из ретроспективы chatom; локальные, двуязычные RU→EN, 205 скиллов):
+  `php:transactional-outbox-relay` (persist+outbox в одной tx, единственный владелец retry, идемпотентность,
+  after-commit), `php:production-readiness-checklist` (атомарность/гонки/config-honesty/cursor/queue-семантика —
+  класс дефектов, который маскируют зелёные тесты), `php:cursor-pagination-design` (keyset по non-nullable ключу,
+  composite-tiebreak), `php:namespace-refactor-safety` (трёхфаза alias→use→rename, префиксные ловушки, контракт-seam),
+  `laravel-architecture:config-driven-abstraction` (Registry+Builder, config:cache-safe, per-variant ≠ runtime `$table`).
+  Ретроспективные #5 (state-machine-race) и #6 (env-driven-test) **свёрнуты** в production-readiness-checklist +
+  dev-loop env-preflight (анти-bloat: не дублировать существующие `enum-state-machine`/`db-test-preflight`).
+- **F2 — `skiller doctor --downstream`** (аудит publish-surface онбордженных проектов — там основной runtime-расход
+  токенов, не в реестре): per-project гигиена always-loaded слоя — `CLAUDE.md` ≤200 строк, scoped vs unscoped
+  `.claude/rules`, наличие `permissions.deny`-пресета. Замер по реальным проектам вскрыл over-budget CLAUDE.md
+  (sova 1214, cms 813, flexcrm 738 строк, …) против здоровых (chatom 123, corex 169) — операционализирует
+  ключевой тезис аудита (мерять сгенерированный артефакт, не шаблоны). +unit-тест (202 теста).
+- **A2/A3 — thin-orchestrator + skill-on-demand задокументированы/проброшены:** `docs/guide/skill-taxonomy.md`
+  получил раздел «Router-скилл» (тонкий оркестратор фонового кластера — образец docker); orchestrator-агент паков
+  (`_common/orchestrator.md`) — поля `risk:`+`skills:` в PLAN (минимальный набор под тип задачи + risk→модель/
+  effort/глубина ревью), вместо полного preload. (C — durable per-phase handover: реализован «лёгкой» версией —
+  компактные сводки в брифах + plan-file-primary + нативный resume воркфлоу; on-disk-дубль избыточен, не вводим.)
+
 ### Changed (skiller — `perplexity-web-mcp` v1.3.0: демон-конкурентность в скиллах)
 
 - **`research/query-craft`**: раздел «Надёжность keyless-моста» (lock/сериализация, запрет

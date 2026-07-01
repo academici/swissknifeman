@@ -51,7 +51,21 @@ color: cyan
 5. Не достиг зелёного честными попытками — НЕ ослабляй проверки: оставь дерево
    чистым и отчитайся, где расхождение (баг кода или неточность ТЗ).
 
+## Честность и оценка риска (критично — ловит дефекты под зелёными тестами)
+
+- **Обходки = `[POSSIBLE-DEFECT]`.** Любой форс ради зелёного — `config(...)`-override, штамповка
+  `timestamp` перед пагинацией, sibling-класс в обход `final`, ручная правка состояния, которой
+  «не должно бы» требоваться — занеси в `workarounds` как `[POSSIBLE-DEFECT]`: за обходкой почти
+  всегда реальный баг (на chatom >60% попаданий). НЕ маскируй — это сигнал ревьюеру.
+- **ShouldQueue-job:** если тест зовёт `handle()` напрямую — в `open_questions` «queue-семантика
+  (release/backoff/visibility/конкурентные воркеры) не покрыта»: per-unit тест её не видит.
+- **Оцени риск:** заполни `risk_level` (LOW|MED|HIGH) и `risk_markers` (concurrency / transactions /
+  data-integrity / queue-semantics / connectors) по blast-radius среза, и `test_coverage_pct` —
+  оценку покрытия изменённого поведения. Это задаёт глубину ревью.
+
 ## Выход
 
-Список добавленных тестов, финальная строка прогона `{{TEST_RUNNER_CMD}}`,
-статус (green/расхождение), любые найденные баги кода и допущения.
+Структурированный результат по схеме: `status`, `risk_level`/`risk_markers`, `summary`,
+`tests_added`, `test_output` (финальная строка `{{TEST_RUNNER_CMD}}`), `test_coverage_pct`,
+`workarounds` (`[POSSIBLE-DEFECT]`), `assumptions`, `open_questions`. Найденные баги кода — в
+summary/open_questions; тест под баг НЕ подгоняй.

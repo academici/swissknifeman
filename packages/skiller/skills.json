@@ -121,7 +121,7 @@
     },
     "laravel-architecture": {
       "description": "Scaling architecture: modular monolith/DDD, enum state machines, enum attributes, subagent orchestration",
-      "count": 5,
+      "count": 6,
       "status": "active"
     },
     "laravel-auth": {
@@ -181,7 +181,7 @@
     },
     "php": {
       "description": "PHP and Laravel core: architecture, structure, conventions, DI, database, repositories, patterns, static analysis",
-      "count": 13,
+      "count": 17,
       "status": "active"
     },
     "php-packages": {
@@ -894,13 +894,14 @@
       "name": "docker",
       "bucket": "devops",
       "path": "skills/devops/docker/SKILL.md",
-      "version": "0.1.0",
-      "description": "Advanced Docker containerization expertise: container optimization, security hardening, multi-stage builds, orchestration patterns, and production deployment strategies",
-      "sha256": "e0d1a1b4a90c5e7b9f379d7c51d93ef432dd4142ce6646e590cb35091fea9184",
-      "content_sha256": "44461887e760f3cd72feddfa6e7b17d279e960681fd39712e3e336e8a27e94bc",
+      "version": "0.2.0",
+      "description": "Router for Dockerizing a Laravel/PHP app: directs to the right sub-skill (PHP image, Postgres, dev/prod compose split, full service stack, Vite HMR, Makefile). Use when the task involves Docker/Compose for this stack.",
+      "sha256": "1fcf9dc7326a1f3b9a98fc2f2f6d5a091c43142fbde8a5682afa9a6df9cf525c",
+      "content_sha256": "45b228587d1c556a36c30928987107ff586c932c10ac418f9d67d6322db543c3",
       "tags": [
         "docker",
-        "devops"
+        "devops",
+        "router"
       ],
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/sickn33/antigravity-awesome-skills/main/skills/docker-expert/SKILL.md",
@@ -1953,10 +1954,10 @@
       "name": "context-economy",
       "bucket": "general",
       "path": "skills/general/context-economy/SKILL.md",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "description": "Claude Code context economy in a project: CLAUDE.md ≤200 lines, path-scoped .claude/rules/, /compact vs /clear, Plan→Clear→Execute, MCP audit, model routing. Officially-supported mechanisms only — no myths like .claudeignore.",
-      "sha256": "6e1bafda816f8c6c31c73a2bb1bac9314337df92ff95a87d82066528cb0203a8",
-      "content_sha256": "5004cfaf639e3d6a37e2f0a15d2e1f26b627f4d9eb513a4663feb7b38c61cbf4",
+      "sha256": "3e56a170a905c91cfa141949ff92c8441d9a3efcab28171c149992fa25ae2422",
+      "content_sha256": "04450f0b851bacc13196ac2ce3cdaca0c05b02a2c4b8f9dec93ed46503b49d22",
       "tags": [
         "tokens",
         "context",
@@ -2155,8 +2156,8 @@
       "path": "skills/general/session-handoff/SKILL.md",
       "version": "0.1.0",
       "description": "Cross-session/agent context handoff: compress a session into a structured doc — state, decisions, open items, next steps.",
-      "sha256": "db54f57952078e44cee7660bd2f4a4ac8cabe77a7649621f8f56e4fbdf52270c",
-      "content_sha256": "2632b45f48ea5e8d66eff2eec5ac3ec2c2685704fd6b5ac49ca282c9c8e004af",
+      "sha256": "cf804da9a05bffed081593556d0b3d701b6ed722ee9cbbcbcc1fa4ed5718d053",
+      "content_sha256": "632b7b4229a95c4f03b7d6e9d2c5bd1c10c1c6a915e927399033e9c83a5a0abc",
       "tags": [
         "workflow",
         "context",
@@ -2259,6 +2260,24 @@
         "tests",
         "docs",
         "style"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "config-driven-abstraction",
+      "bucket": "laravel-architecture",
+      "path": "skills/laravel-architecture/config-driven-abstraction/SKILL.md",
+      "version": "0.1.0",
+      "description": "Config-driven, cache-safe abstractions for multi-panel / multi-tenant Laravel: an immutable Registry (key→instance), a fluent Builder with feature-flags as methods, name maps in config (never closures — config:cache safe), shared schema + opt-in per-item, per-variant = a concrete class (not a shared model with runtime $table). Activate when designing multi-panel/multi-tenant resolution, pluggable drivers, a registry+builder. Triggers: multi-panel, multi-tenant, registry, builder pattern, config:cache, runtime table, driver resolution, per-panel.",
+      "sha256": "3026f9183ada43463b858e8d1cfc6371fe83e41c914d08bedd8cdaa6b2d72244",
+      "content_sha256": "23d9ffd14946ed499353f731d75c9d329418346a6fb3814517cc70a0ca3bf9ed",
+      "tags": [
+        "php",
+        "laravel",
+        "architecture",
+        "config",
+        "registry",
+        "multi-tenant"
       ],
       "source": "local"
     },
@@ -3041,6 +3060,23 @@
       "fetched_at": "2026-06-12"
     },
     {
+      "name": "cursor-pagination-design",
+      "bucket": "php",
+      "path": "skills/php/cursor-pagination-design/SKILL.md",
+      "version": "0.1.0",
+      "description": "Stable keyset (seek) pagination for infinite scroll / feeds: pick a sortable non-nullable key, composite index, handle ties and concurrent inserts, avoid offset drift. Activate when building infinite-scroll, cursor/seek pagination, message/feed lists, or fixing 'duplicates/skips while scrolling'. Triggers: cursor pagination, keyset, seek pagination, infinite scroll, paginate after, nullable order key, offset drift, last_message_at.",
+      "sha256": "b734aec60638b7437c193e5b2cfe906d6116a511f83ed037e976c0d7727922c7",
+      "content_sha256": "9bd1f83e114c5a649a02189d204de5662d650b6f379a2fb0961e24a411dbb6e5",
+      "tags": [
+        "php",
+        "laravel",
+        "pagination",
+        "cursor",
+        "database"
+      ],
+      "source": "local"
+    },
+    {
       "name": "database",
       "bucket": "php",
       "path": "skills/php/database/SKILL.md",
@@ -3149,6 +3185,22 @@
       "source": "local"
     },
     {
+      "name": "namespace-refactor-safety",
+      "bucket": "php",
+      "path": "skills/php/namespace-refactor-safety/SKILL.md",
+      "version": "0.1.0",
+      "description": "Discipline for large namespace/move refactors in PHP/Laravel: three-phase alias → update use-statements → hard rename; prefix-collision traps (Channel ⊂ ChannelMember, Message vs MessageNotFound); contracts as the seam phpstan checks; arch-tests for layer parity; breaking moves bump major. Activate when moving classes between namespaces, restructuring domains, mass-renaming. Triggers: namespace refactor, move class, rename namespace, domain restructure, mass rename, breaking change, arch test.",
+      "sha256": "590c83e641cf1a8e6388bf1f367426984a8e60bc2cf94c1656bba63571c99273",
+      "content_sha256": "5ce7a317d03c3a8dc72cebd8d2ed032cf3cf6f3c326bb89fbb9283feea483d02",
+      "tags": [
+        "php",
+        "refactor",
+        "namespace",
+        "safety"
+      ],
+      "source": "local"
+    },
+    {
       "name": "php-naming-conventions",
       "bucket": "php",
       "path": "skills/php/naming-conventions/SKILL.md",
@@ -3219,6 +3271,24 @@
       "source": "local"
     },
     {
+      "name": "production-readiness-checklist",
+      "bucket": "php",
+      "path": "skills/php/production-readiness-checklist/SKILL.md",
+      "version": "0.1.0",
+      "description": "Verify production-class invariants that green happy-path tests structurally miss: transaction atomicity, race-safe idempotency, config defaults that work out-of-the-box, non-nullable cursor keys, after-commit side-effects, soft-delete, id-strategy compatibility, single queue-retry owner, atomic state transitions. Activate before/at review of risky Laravel slices (services, queues, drivers, migrations). Triggers: production readiness, atomicity, race condition, idempotency, config default, cursor stability, after-commit, queue semantics, before merge.",
+      "sha256": "02f824cf08762833e9a45f7cc226eb519ab62c7df23ec7da163c82ec5e4012b5",
+      "content_sha256": "ac309c4806f068ef1165dedceb6ab9dde2ec8fe2e2fc4e3a0e66bb13df5b67e9",
+      "tags": [
+        "php",
+        "laravel",
+        "review",
+        "production",
+        "reliability",
+        "quality"
+      ],
+      "source": "local"
+    },
+    {
       "name": "repositories",
       "bucket": "php",
       "path": "skills/php/repositories/SKILL.md",
@@ -3246,6 +3316,24 @@
         "php",
         "laravel",
         "quality"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "transactional-outbox-relay",
+      "bucket": "php",
+      "path": "skills/php/transactional-outbox-relay/SKILL.md",
+      "version": "0.1.0",
+      "description": "Reliable at-least-once delivery of async events (webhooks/integration jobs) via the transactional-outbox pattern: persist + outbox row in ONE DB transaction, a single relay-sweep owner for retries, idempotent consumers, backoff + DLQ, side-effects after commit. Activate when wiring webhook/event delivery, an outbox, or async jobs that must not be lost or double-fired. Triggers: outbox, at-least-once, webhook delivery, ShouldQueue reliability, duplicate events, lost jobs, relay sweep, double retry.",
+      "sha256": "8464d25adc430f60e6a7a64e7ee1fd5daf8024eb646c5e6125560a5ddeb37b24",
+      "content_sha256": "c2844dc138e4db1b847ffe858f2f6c545152378d79e8e032e2cd3ad8affba73f",
+      "tags": [
+        "php",
+        "laravel",
+        "queue",
+        "outbox",
+        "reliability",
+        "async"
       ],
       "source": "local"
     },

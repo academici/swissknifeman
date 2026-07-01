@@ -29,9 +29,15 @@
     ],
     "deny": [
       "Read(storage/logs/**)",
-      "Read(node_modules/**)",
+      "Read(storage/framework/**)",
+      "Read(bootstrap/cache/**)",
+      "Read(**/node_modules/**)",
+      "Read(vendor/bin/**)",
       "Read(**/*.lock)",
-      "Read(.phpunit.cache/**)",
+      "Read(**/package-lock.json)",
+      "Read(**/.phpunit.cache/**)",
+      "Read(**/*.sqlite)",
+      "Read(**/*.sqlite3)",
       "Read(public/build/**)",
       "Read(_ide_helper*.php)",
       "Read(.phpstorm.meta.php)"

@@ -23,6 +23,19 @@ repo_root = _repo_root(root)
 errors = []
 warnings = []
 
+# --- CLAUDE.md line-count (токен-экономия; WARN, не fail) ------------------
+# CLAUDE.md резидентен КАЖДУЮ сессию (Anthropic target ≤200 строк). Мягкий гейт по
+# монорепо: root + packages/*/CLAUDE.md. Root — зонтичный гид, может легитимно расти →
+# держим warning, не блок.
+CLAUDE_MD_MAX_LINES = 200
+for _cmd_md in [repo_root / "CLAUDE.md", *sorted((repo_root / "packages").glob("*/CLAUDE.md"))]:
+    if _cmd_md.is_file():
+        _n = len(_cmd_md.read_text(encoding="utf-8", errors="replace").splitlines())
+        if _n > CLAUDE_MD_MAX_LINES:
+            warnings.append(f"{_cmd_md.relative_to(repo_root)}: {_n} строк "
+                            f"(> {CLAUDE_MD_MAX_LINES}) — CLAUDE.md резидентен каждую сессию, "
+                            "вынеси детали в docs/скиллы (токен-экономия)")
+
 UPSTREAM_SOURCES = {"github", "http", "file"}
 # replace = зеркало (автонакат); notify = адаптированная копия (только сообщать);
 # fork = форк с нашими правками (обёртка + pristine-зеркало в files[].path; на дрейфе

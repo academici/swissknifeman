@@ -12,6 +12,7 @@ from .settings import add_hook, load_settings, set_swissknife, write_json, write
 
 AA_MODES = ("strict", "permissive", "bypass", "off")
 MEM_MODES = ("file", "federation", "agentmemory", "off")
+ROUTER_MODES = ("propose", "auto_dispatch", "off")
 
 
 def block_autoapprove(target, mode, settings_file, dry):
@@ -49,6 +50,29 @@ def block_memory(target, brain, mode, dry):
           f"Состав участников — ~/.claude/hooks/memory/config.json")
 
 
+def block_router(target, mode, settings_file, dry):
+    """Записать agent-router.env.ini + зарегистрировать пару хуков intent-router:
+    UserPromptSubmit (per-turn bias) + SessionStart (статическая политика). off → без хуков."""
+    print(f"agent-router: {mode or 'пропуск'}")
+    if not mode:
+        return
+    if mode not in ROUTER_MODES:
+        die(f"неизвестный режим router: {mode} ({'|'.join(ROUTER_MODES)})")
+    write_text(target / ".claude" / "agent-router.env.ini", f"POLICY={mode}\n", dry)
+    if mode == "off":
+        return
+    settings, f = load_settings(target, settings_file)
+    added = False
+    added |= add_hook(settings, "UserPromptSubmit", None,
+                      "python3 ~/.claude/hooks/agent-router/router.py")
+    added |= add_hook(settings, "SessionStart", None,
+                      "python3 ~/.claude/hooks/agent-router/session-policy.py")
+    if added:
+        write_json(f, settings, dry)
+    else:
+        print(f"  хуки agent-router уже зарегистрированы в {f}")
+
+
 def install_global(env, dry):
     """Поставить файлы хуков (auto-approve/memory/notify/log) в ~/.claude/hooks/."""
     script = env.apply_script
@@ -74,11 +98,12 @@ def _parse_memory_flag(raw):
 def cmd_hooks(env, argv):
     opts = parse_flags(argv, {
         "--target": "str", "--auto-approve": "str", "--memory": "str",
-        "--file": "str", "--global": "bool", "--dry-run": "bool",
+        "--router": "str", "--file": "str", "--global": "bool", "--dry-run": "bool",
     })
     if opts["help"]:
         print("harness hooks [--global] [--target P] [--auto-approve "
               f"{'|'.join(AA_MODES)}] [--memory BRAIN:{'|'.join(MEM_MODES)}] "
+              f"[--router {'|'.join(ROUTER_MODES)}] "
               "[--file settings.json|settings.local.json] [--dry-run]")
         return
     if opts["global"]:
@@ -87,11 +112,14 @@ def cmd_hooks(env, argv):
     if not opts["target"]:
         die("нужен --target P (или --global)")
     target = Path(opts["target"]).expanduser()
-    if not opts["auto_approve"] and not opts["memory"]:
-        die("нужен хотя бы один из: --auto-approve MODE / --memory BRAIN:MODE / --global")
+    if not opts["auto_approve"] and not opts["memory"] and not opts["router"]:
+        die("нужен хотя бы один из: --auto-approve MODE / --memory BRAIN:MODE / "
+            "--router MODE / --global")
     settings_file = opts["file"] or "settings.json"
     if opts["auto_approve"]:
         block_autoapprove(target, opts["auto_approve"], settings_file, opts["dry_run"])
     if opts["memory"]:
         brain, mode = _parse_memory_flag(opts["memory"])
         block_memory(target, brain, mode, opts["dry_run"])
+    if opts["router"]:
+        block_router(target, opts["router"], settings_file, opts["dry_run"])

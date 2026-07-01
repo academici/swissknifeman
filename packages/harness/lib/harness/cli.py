@@ -11,12 +11,14 @@ from .doctor import cmd_doctor
 from .hooks import cmd_hooks
 from .mcp import cmd_mcp
 from .permissions import cmd_permissions
+from .router import cmd_router
 
 COMMANDS = {
     "permissions": cmd_permissions,
     "apply": cmd_permissions,  # alias
     "mcp": cmd_mcp,
     "hooks": cmd_hooks,
+    "router": cmd_router,
     "agent-packs": cmd_agent_packs,
     "doctor": cmd_doctor,
 }

@@ -30,6 +30,9 @@ CAPABILITIES = {
     "env:apply":     ("harness", ["permissions", "--target", "{path}"], True),
     "env:mcp":       ("harness", ["mcp", "--target", "{path}"], True),
     "env:hooks":     ("harness", ["hooks", "--target", "{path}"], True),
+    # каталог возможностей intent-router (.claude/agent-router.config.json) из
+    # доставленных агентов + локальных скиллов + /task:*; провиженер router-config в sync.
+    "env:router":    ("harness", ["router", "--generate", "--target", "{path}"], True),
     # детерминированная доставка пака субагентов (--pack приходит в extra):
     # render --auto резолвит интервью без агента; upgrade — версионный апгрейд.
     "env:agent-pack":         ("harness",

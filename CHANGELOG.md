@@ -2,6 +2,32 @@
 
 ## [Unreleased]
 
+### Added (intent-router — свободный текст → оптимальная команда; активация roadmap-хука)
+
+Field-feedback: владелец забывает ставить задачи через `/task:*` (замеренный мисроут → триггер
+активации отложенного `roadmap/agent-command-router-hook.md`). Верификация капабилити — целиком через
+`perplexity-web` (нашла 2 ошибки в исходном плане: auto-run первоклассный через `SlashCommand`;
+SessionStart-политику слать через `additionalContext`, не `systemMessage`).
+
+- **Пара Python-хуков `agent-router`** (первый Python-хук репо):
+  `configs/claude-code/hooks/agent-router/` — `session-policy.py` (SessionStart инжектит статическую
+  политику роутинга через `additionalContext`) + `router.py` (UserPromptSubmit: keyword-прескор →
+  крошечная idempotent-подсказка при score≥THRESHOLD, иначе тишина; escape-hatch `~`). Гибрид:
+  прескор — bias, финальную классификацию (вопрос vs задача) делает модель. Никогда не барьер.
+- **`harness hooks --router propose|auto_dispatch|off`** (`block_router`) — включает пару хуков
+  per-project (env.ini + merge-only регистрация UserPromptSubmit+SessionStart).
+- **`harness router --generate --target P`** (новый модуль `lib/harness/router.py` + `cli.py`) —
+  генерит `.claude/agent-router.config.json` из `/task:*` + `.claude/agents/*.md` + локальных
+  `.claude/skills/*/SKILL.md` (низкий вес — бэкстоп). Зонтичный `swissknifeman env router` даром.
+- **maind:** `env:router` capability + провиженер `router-config` в `maind sync` (opt-in: генерит
+  каталог только для проектов с включённым хуком; идёт после `agent-pack`).
+- **Глобальная раздача:** `apply-permissions.sh --global` копирует `agent-router/` в `~/.claude/hooks`
+  (env.ini не затирает). `validate.sh` получил py_compile-шаг для Python-хуков конфигов.
+- Тесты: `harness/tests/test_router.py` (+10: block_router, --generate, поведенческие хуков),
+  `maind` `TestRouterConfigProvisioner` (+4). roadmap помечен активированным + исправлен устаревший
+  тезис про авто-активацию команд. **Честный лимит:** хук команду не запускает; `auto_dispatch`
+  может оверфайрить → дефолт `propose`; marketplace-команды пакетов — follow-up (в README).
+
 ### Added (RAG-дисциплина формирования плана — агрессивный perplexity-web + footer «Проверка» + честность)
 
 Field-feedback: агенты неохотно жмут RAG при формировании плана, хотя план 100% должен стоять на свежих

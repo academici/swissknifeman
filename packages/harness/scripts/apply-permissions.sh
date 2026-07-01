@@ -101,8 +101,16 @@ if [[ "$GLOBAL" -eq 1 ]]; then
     chmod +x "$MM_DST/memory.sh" "$MM_DST/modes/"*.sh
     [[ -f "$MM_DST/env.ini" ]]    || cp "$MM_SRC/env.ini" "$MM_DST/"
     [[ -f "$MM_DST/config.json" ]] || cp "$MM_SRC/config.json" "$MM_DST/"
-    echo "Установлено глобально: log-bash-command + notify (активны) + файлы auto-approve/ и memory/ (НЕ активны)."
-    echo "auto-approve и memory включаются ПО ПРОЕКТУ / по вызову (см. README)."
+    # agent-router: пара Python-хуков (UserPromptSubmit router + SessionStart policy).
+    # Код/_lib/config.json/README обновляем; env.ini не перезатираем (там режим проекта).
+    AR_SRC="$PRESETS_DIR/hooks/agent-router"; AR_DST="$HOME/.claude/hooks/agent-router"
+    mkdir -p "$AR_DST"
+    cp "$AR_SRC/router.py" "$AR_SRC/session-policy.py" "$AR_SRC/_lib.py" "$AR_DST/"
+    cp "$AR_SRC/config.json" "$AR_SRC/README.md" "$AR_DST/"
+    chmod +x "$AR_DST/router.py" "$AR_DST/session-policy.py"
+    [[ -f "$AR_DST/env.ini" ]] || cp "$AR_SRC/env.ini" "$AR_DST/"
+    echo "Установлено глобально: log-bash-command + notify (активны) + файлы auto-approve/ + memory/ + agent-router/ (НЕ активны)."
+    echo "auto-approve, memory и agent-router включаются ПО ПРОЕКТУ / по вызову (см. README)."
   fi
 fi
 

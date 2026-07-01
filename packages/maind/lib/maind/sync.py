@@ -269,6 +269,37 @@ def _agent_pack_run(env, config, projects, mode, dry):
     return results
 
 
+def _router_config_run(env, config, projects, mode, dry):
+    """Сгенерить/обновить каталог intent-router (.claude/agent-router.config.json) через
+    harness — ТОЛЬКО для проектов, где хук уже включён (opt-in: есть agent-router.env.ini с
+    POLICY!=off; включается `harness hooks --router` / `maind onboard`). Не включён/нет пути/
+    harness недоступен → graceful skip. Идёт после agent-pack (читает свежедоставленных агентов)."""
+    from .orchestrate import run_capability
+    results = []
+    for p in projects:
+        lp = p.get("local_path")
+        if not lp:
+            results.append(_result("router-config", p["id"], "skip", detail="нет пути"))
+            continue
+        envini = Path(os.path.expanduser(lp)) / ".claude" / "agent-router.env.ini"
+        try:
+            enabled = "POLICY=off" not in envini.read_text(encoding="utf-8").replace(" ", "")
+        except Exception:
+            enabled = False
+        if not enabled:
+            results.append(_result("router-config", p["id"], "skip",
+                                   detail="intent-router не включён (opt-in)"))
+            continue
+        try:
+            rc = run_capability(env, config, p["id"], "env:router", [], dry=dry)
+            results.append(_result("router-config", p["id"], "ok" if rc == 0 else "failed",
+                                   changed=rc == 0, detail=f"rc={rc}"))
+        except SystemExit:
+            results.append(_result("router-config", p["id"], "skip",
+                                   detail="harness недоступен"))
+    return results
+
+
 # Реестр провиженеров и порядок применения (ORDER задаёт последовательность).
 # Сигнатура каждого: run(env, config, projects, mode, dry) -> list[_result(...)]
 # (форма результата — _result выше: provisioner/id/status/changed/state/detail).
@@ -284,10 +315,11 @@ PROVISIONERS = {
     "ecosystem-skill": _ecosystem_skill_run,
     "setup-skill": _setup_skill_run,
     "agent-pack": _agent_pack_run,
+    "router-config": _router_config_run,
 }
 ORDER = ["mcp", "code-graph", "graph", "memory", "memory-hook", "health-hook",
          "health-doc", "feature-log-hook", "ecosystem-skill", "setup-skill",
-         "agent-pack"]
+         "agent-pack", "router-config"]
 
 
 def provisioner_names(only=None):
@@ -324,8 +356,8 @@ def cmd_sync(env, argv):
     if opts["help"]:
         print("maind sync [--project ID | --namespace NS | --all] [--only mcp,code-graph,"
               "graph,memory,memory-hook,health-hook,health-doc,feature-log-hook,"
-              "ecosystem-skill,setup-skill,agent-pack] [--mode install|update|auto] "
-              "[--dry-run] [--json]")
+              "ecosystem-skill,setup-skill,agent-pack,router-config] "
+              "[--mode install|update|auto] [--dry-run] [--json]")
         return
     mode = opts["mode"] or "auto"
     if mode not in MODES:

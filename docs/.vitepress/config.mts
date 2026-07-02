@@ -193,6 +193,7 @@ export default withMermaid(defineConfig({
           items: [
             { text: 'CLI и команды', link: '/analyst/guide/cli' },
             { text: 'Жизненный цикл урока', link: '/analyst/guide/lifecycle' },
+            { text: 'Тюнинг-параметры', link: '/analyst/guide/tuning' },
             { text: 'suggest — черновик скилла (P4)', link: '/analyst/guide/suggest' },
           ],
         },

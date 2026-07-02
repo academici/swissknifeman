@@ -16,7 +16,7 @@ from .cli import parse_args, parse_flags, run_cmd
 from .env import HOME, BaseEnv
 from .io import (atomic_write_json, atomic_write_text, load_json_db,
                  read_ndjson, safe_load_json)
-from .paths import is_within, is_within_lexical
+from .paths import is_within, is_within_lexical, state_dir
 from .proc import pid_alive
 from .project import (DEFAULT_DOCS_VISIBILITY, DOCS_VISIBILITY_BY_TYPE,
                       LANGUAGE_BY_TYPE, PROJECT_TYPES, detect_project_type,
@@ -30,7 +30,7 @@ __all__ = [
     "HOME", "BaseEnv", "die", "warn", "now_iso", "parse_iso", "confirm", "sanitize",
     "atomic_write_text", "atomic_write_json", "safe_load_json", "load_json_db",
     "read_ndjson", "pid_alive", "find_run_report",
-    "is_within", "is_within_lexical",
+    "is_within", "is_within_lexical", "state_dir",
     "find_repo_root", "find_monorepo_root",
     "detect_project_type", "PROJECT_TYPES", "LANGUAGE_BY_TYPE",
     "docs_visibility_for", "DOCS_VISIBILITY_BY_TYPE", "DEFAULT_DOCS_VISIBILITY",

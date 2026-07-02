@@ -69,6 +69,27 @@ analyst deprecate <id>
 Противоречие с активным уроком → **flag-and-ask** (авто-резолв запрещён: реши `--supersedes` или
 `--force`). `deprecate` — soft-демоут (не удаляется, доступен для аудита).
 
+## `analyst status`
+
+```
+analyst status [--json]
+```
+
+Read-only сводка стора уроков: счётчики по состояниям, `curated-ready` (числа для curated есть —
+нужен человек), `promote_failed` (память была недоступна — досыл `promote --retry-failed`), число
+событий, даты последнего `digest`/`recompute`. Ничего не меняет.
+
+## `analyst compact`
+
+```
+analyst compact [--before ISO] [--dry-run] [--json]
+```
+
+Свести старые события `events.ndjson` (старше `--before`, или ВСЕ) в один snapshot-event на урок.
+Суммы (S/N/tests) и возраст последнего события сохраняются, поэтому [`recompute`](#analyst-recompute-p3)
+до и после даёт **ту же** confidence. `--dry-run` — показать, ничего не писать. Провенанс операции —
+в `audit.ndjson`.
+
 ## `analyst doctor`
 
 ```

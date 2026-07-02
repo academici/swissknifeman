@@ -37,7 +37,7 @@ research-аудит июнь 2026; skill-реестр и eval — рецензи
 | Industry-паттерны workflow-resilience 2025–2026 (rate-limit backpressure/circuit-breaker, job/worker/supervisor liveness, progress+deadline watchdog, `Promise.race`/cancellation, structured-output retry, infra-vs-task failure taxonomy) — Portkey/TrueFoundry/respan.ai/Vercel Workflow/claude-code issues | как проектировать устойчивый agent-workflow под rate-limit/hang | web/vendor-блоги + офиц. SDK-доки, верифиц. `perplexity-web` 2026-07-01 | **reference** | факт-основа раздела «Устойчивость» (`background-agents.md`) и dev-loop-правок (audit `2026-07-01-workflow-resilience-ratelimit`): fail-fast, `infra-failed`, supervisor+`PushNotification`; отклонён in-script `withDeadline` (V8-sandbox: нет `Date.now()`/`setTimeout`/cancel) |
 | [Kulaxyz/self-learning-skills](https://github.com/Kulaxyz/self-learning-skills) | промпт-скилл самообучения (0 кода/хуков, авто-запись скиллов) | 621★, MIT, ~3 дня, viral/no-track-record | **reference** | эпистемическая дисциплина записи знания в `analyst` (promotion-rule: passing-check+named-failure+ruled-out dead-end; capture-failures; секрет-по-ссылке; триаж skill/memory/skip). Авто-запись **инвертирована** в human-gate (синтез — во внутреннем дизайне пакета `analyst`). |
 | [affaan-m ECC — continuous-learning-v2](https://github.com/affaan-m/everything-claude-code) | observations→instincts→evolved-skills, confidence-тиры, демон Haiku | MIT, активный | **adopt (паттерн)** | 3-ярусная лестница + privacy-by-directory-layout + confidence 0.3/0.5/0.7/0.9 + human-gated evolve/promote в `analyst`. **Отказ от демона** — cadence on-demand (v1). Верифиц. GitHub API+DeepWiki+Mintlify |
-| [mem0](https://github.com/mem0ai/mem0) ([arxiv 2504.19413](https://arxiv.org/abs/2504.19413)) | память агентов: extraction→consolidation | Apache-2.0 | **adopt (паттерн)** | таксономия ADD/UPDATE/DELETE/NOOP → в human-gate; retrieve-similar-before-write (BM25/Jaccard stdlib); soft-invalidate вместо delete; timestamp-ranking вместо decay. Extraction фактов — LLM-inherent (флаг) |
+| [mem0](https://github.com/mem0ai/mem0) ([arxiv 2504.19413](https://arxiv.org/abs/2504.19413)) | память агентов: extraction→consolidation | Apache-2.0 | **adopt (паттерн)** | консолидация-таксономия mem0 = **ADD/UPDATE/DELETE/NOOP** (канон `prompts.py`) → адаптирована как **ADD/UPDATE/NOOP/CONFLICT** (`analyst.lessons.classify_consolidation`): **CONFLICT вместо DELETE** — авто-удаление нарушило бы инвариант «человек в гейте» (F-RAG-2, verified perplexity 2026-07). Плюс retrieve-similar-before-write (BM25/Jaccard stdlib); soft-invalidate вместо delete; timestamp-ranking вместо decay. Extraction фактов — LLM-inherent (флаг) |
 | Self-improving/anti-poisoning канон: [SICA](https://arxiv.org/abs/2504.15228)·[Voyager](https://voyager.minedojo.org/)·[Reflexion](https://arxiv.org/abs/2303.11366)·Generative Agents·A-MEM · [OWASP ASI06](https://genai.owasp.org/)·[MITRE AML.T0080](https://ttps.ai/technique/memory_poisoning.html)·MINJA | guardrails против model-collapse/memory-poisoning | академ.+security-фреймворки, верифиц. 2026-07 | **reference (комплаенс)** | safety-ядро `analyst`: self-verification доказанно достаточен против collapse → validate-before-promote; human-gate+провенанс+namespace = Tier-1; segment-per-tenant/expire-unverified (OWASP). Синтез — во внутреннем дизайне пакета `analyst`. |
 | Industry prompt-engineering для RAG-forcing / verification-footer / self-critique (2025–2026) — plan→retrieve→verify loop, tool-forcing, структурные секции `unverified_assumptions`/`tool_failures`/`verification_report`, «cited but not verified» (dev.to · sey.pro) | как заставить план-агента 100% опираться на свежий RAG и честно выносить непроверенное | web-блоги, верифиц. `perplexity-web` 2026-07-01 | **reference** | факт-основа footer'а «Проверка» в `verify-claims`/`decision-verification`/CLAUDE.md + блока `VERIFICATION` оркестратора + `tool_failures[]` в `dev-loop.js`; решение токен-экономии — агрессивный flat-rate `perplexity-web` |
 
@@ -144,6 +144,18 @@ Perplexity-навыка `idea-architect`. **Плюсы:** авторитетна
 4 модуля `idea-audit` (first-principles → рынок → арх-pre-mortem → kill/build), stage-context в
 `adversarial-check`, AI/Agentic-категория в `risk-assessment`, business_rationale в `architecture`,
 falsification-signals в `idea-discovery`, external-signal-гейт в `startup-lifecycle`.
+
+### mem0 — adopt (паттерн, таксономия консолидации)
+Источник таксономии консолидации памяти для `analyst.lessons.classify_consolidation`. Канон mem0
+(`prompts.py`) — четыре операции: **ADD / UPDATE / DELETE / NOOP** (F-RAG-2, verified perplexity
+2026-07). `analyst` берёт таксономию, но **осознанно адаптирует**: **ADD / UPDATE / NOOP / CONFLICT** —
+`CONFLICT` заменяет `DELETE`, потому что авто-удаление противоречащего урока нарушило бы инвариант
+пакета «человек в гейте» (авто-запись/авто-удаление в знание запрещены). На противоречии analyst не
+стирает, а **flag-and-ask**: помечает конфликт и отдаёт решение человеку (`--supersedes`/`--force`).
+**Плюсы:** зрелая, проверенная в проде схема extraction→consolidation; retrieve-similar-before-write
+ложится на stdlib-Jaccard без зависимостей. **Минусы:** сам mem0 — рантайм-зависимость (LLM-extraction),
+её не тащим — берём только паттерн. **Взято:** таксономия (с заменой DELETE→CONFLICT), retrieve-before-write,
+soft-invalidate вместо hard-delete, timestamp-ranking как альтернатива decay (у нас — обе: decay + ts).
 
 ## Как это легло в архитектуру
 

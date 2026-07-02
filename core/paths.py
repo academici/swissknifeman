@@ -16,6 +16,17 @@ def is_within(path, root):
         return False
 
 
+def state_dir(home, app=None):
+    """Зонтичный state-корень `~/.swissknifeman` (или подкаталог пакета
+    `~/.swissknifeman/<app>`). Единый источник литерала `.swissknifeman`, который
+    skiller (корень, он им владеет) и analyst (подкаталог) копировали по месту.
+
+    maind СЮДА не входит намеренно: его state — `~/.maind` (отдельный node-state узла,
+    не зонтичный слой), поэтому его path-property остаётся собственным."""
+    base = Path(home) / ".swissknifeman"
+    return base / app if app else base
+
+
 def is_within_lexical(path, root):
     """Containment МЕСТА `path` под `root` БЕЗ резолва symlink самого `path` (родитель
     резолвится). Для INSTALL-гейта: ловит traversal через '../' в имени, но НЕ отвергает

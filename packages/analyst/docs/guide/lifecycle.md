@@ -45,6 +45,7 @@ confidence = p × volume × decay          # ∈ [0, 1)
 ```
 
 Тиры применения: `tentative` 0.3 · `moderate` 0.5 · `strong` 0.7 · `core` 0.9 (ниже 0.3 — `none`).
+Все пороги (и почему именно такие) — в [Тюнинг-параметрах](./tuning).
 Источник истины — `events.ndjson`; снапшот воспроизводим при фиксированном `--now`. Числовая
 state-machine: авто `ephemeral→candidate`, `curated` — только человек, просадка → soft-deprecate.
 

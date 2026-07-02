@@ -15,7 +15,7 @@ from core import (DEFAULT_DOCS_VISIBILITY, PROJECT_TYPES, BaseEnv,
                   docs_visibility_for, find_monorepo_root, find_run_report,
                   find_repo_root, is_within, is_within_lexical, load_json_db,
                   now_iso, parse_args, parse_flags, parse_iso, pid_alive,
-                  read_ndjson, run_cmd, safe_load_json, sanitize)
+                  read_ndjson, run_cmd, safe_load_json, sanitize, state_dir)
 
 
 class TestText(unittest.TestCase):
@@ -163,6 +163,18 @@ class TestPaths(unittest.TestCase):
             # имя с '../' лексически вырывается за dest → False
             self.assertFalse(is_within_lexical(root / ".." / "evil", root))
             self.assertTrue(is_within_lexical(root / "skill", root))
+
+    def test_state_dir_umbrella_root(self):
+        home = Path("/home/u")
+        self.assertEqual(state_dir(home), home / ".swissknifeman")
+
+    def test_state_dir_app_subdir(self):
+        home = Path("/home/u")
+        self.assertEqual(state_dir(home, "analyst"), home / ".swissknifeman" / "analyst")
+
+    def test_state_dir_accepts_str_home(self):
+        self.assertEqual(state_dir("/home/u", "analyst"),
+                         Path("/home/u") / ".swissknifeman" / "analyst")
 
 
 class TestRepoRoot(unittest.TestCase):

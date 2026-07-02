@@ -19,7 +19,7 @@
     {
       "name": "analyst",
       "source": "./packages/analyst",
-      "description": "analyst — continuous learning экосистемы: детерминированный захват кандидат-уроков из прогонов (digest), человеко-гейт (review/promote), провенанс. Только команды.",
+      "description": "analyst — continuous learning экосистемы: детерминированный захват кандидат-уроков из прогонов (digest), человеко-гейт (review/promote), провенанс; агент-аналитик (/analyst:deep, digest-first). Команды + агент.",
       "category": "ecosystem",
       "tags": [
         "analyst",

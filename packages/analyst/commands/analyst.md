@@ -14,6 +14,10 @@ description: "analyst — continuous learning экосистемы: захват
 - `/analyst:deprecate <id>` — демоутнуть урок (soft, не удаляется — аудит).
 - `/analyst:status [--json]` — read-only сводка стора: счётчики по состояниям, curated-ready, promote_failed, число событий, даты последнего digest/recompute.
 - `/analyst:compact [--before ISO] [--dry-run]` — свести старые события `events.ndjson` в snapshot на урок (суммы и возраст сохраняются → recompute даёт ту же confidence).
+- `/analyst:token-report [--sessions N] [--by model|role] [--vs-baseline] [--all-projects]` — токен-репорт по `usage-trend.ndjson`: rolling-baseline (медиана+p90 последних 20 сессий) + regression-флаг (>1.3×медиана или >p90). `--by phase` пока недоступен (run-report не хранит токены на уровне workflows[]). `analyst token-report --baseline set --note "..."` — закрепить снимок в `.claude/analyze/baseline.json` (его же читает `maind analyze`).
+- `/analyst:deep [фокус]` — глубокий разбор прогонов агентом-аналитиком (digest-first): скрипты собирают JSON-выжимки (`maind analyze` / `token-report` / `review`), агент строит каузальный нарратив (стоимость, hidden scope, handoff, деградация cheap-моделей, resolve CONFLICT) и отдаёт findings → `analyst ingest`. Raw-транскрипты запрещены; on-demand, не per-session.
+- `/analyst:ingest --file F` — принять findings агента в ephemeral-уроки (валидация схемы до первой записи; только ephemeral, detector=agent-finding — enforced кодом; промоут — человек). CLI: `analyst ingest --file F [--dry-run]`.
+- `/analyst:proposals <create|list|show|status|handoff>` — черновики системных улучшений (stack-pack | project-override | docs) в `~/.swissknifeman/analyst/proposals/`; статусы draft|accepted|rejected через audit; печать handoff-последовательности «что и куда применить» (analyst никогда не пишет в шаблоны/проекты).
 - `/analyst:doctor` — диагностика окружения.
 
 Разбери намерение пользователя из «$ARGUMENTS». Если оно ясно — назови подходящую команду и предложи

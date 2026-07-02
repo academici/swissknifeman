@@ -11,6 +11,10 @@
 #   recompute пересчитать confidence из events.ndjson + числовая state-machine (--now | --dry-run)
 #   promote   продвинуть урок по конвейеру: ephemeral→candidate→curated (человек в гейте)
 #   deprecate демоутнуть урок (soft, не удаляется — аудит)
+#   status    read-only сводка стора уроков (счётчики, curated-ready, promote_failed)
+#   compact   свести старые события events.ndjson в snapshot (--before ISO | --dry-run)
+#   token-report  токен-репорт по usage-trend.ndjson + rolling/pinned baseline
+#                 (--sessions N | --by model|role | --vs-baseline | --baseline set --note "...")
 #   doctor    диагностика окружения
 #   version   версия (git SHA) и путь к пакету
 set -euo pipefail
@@ -28,7 +32,7 @@ if [[ ! -d "$REPO_ROOT/lib/analyst" ]]; then
   exit 1
 fi
 
-usage() { grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '2,14p'; }
+usage() { grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '2,18p'; }
 
 CMD="${1:-help}"
 [[ $# -gt 0 ]] && shift
@@ -39,7 +43,7 @@ case "$CMD" in
     sha="$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
     echo "analyst $sha ($REPO_ROOT)"
     exit 0 ;;
-  digest|scan|suggest|review|recompute|promote|deprecate|doctor) ;;
+  digest|scan|suggest|review|recompute|promote|deprecate|status|compact|token-report|doctor) ;;
   *) echo "Неизвестная команда: $CMD" >&2; usage >&2; exit 1 ;;
 esac
 

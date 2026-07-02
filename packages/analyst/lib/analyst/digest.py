@@ -16,8 +16,9 @@ import os
 from pathlib import Path
 
 from .common import die, find_run_report, parse_args
-from .lessons import (add_candidate, audit_append, event_append, jaccard,
-                      new_lesson)
+from .lessons import (ACTIVE_STATES, add_candidate, audit_append,
+                      classify_consolidation, event_append, jaccard,
+                      new_lesson, similar_lessons)
 
 _SIMILAR_CMD = 0.6   # порог «та же по сути команда» для пары fail→pass
 
@@ -53,14 +54,17 @@ def extract_resolved_failures(run_report, *, scope, project):
             continue
         seen.add(fcmd)
         attempts = sum(1 for e in entries if jaccard(fcmd, e.get("command", "")) >= _SIMILAR_CMD)
-        top_files = ", ".join(Path(x).name for x in files[:3]) or "—"
+        top_files = [Path(x).name for x in files[:3]]
         trigger = f"проверка падала и была исправлена в прогоне: {fcmd}"
-        action = (f"разобрано за {attempts} попыт(ки); затронутые файлы: {top_files}. "
-                  f"Уточни СУТЬ фикса при review (что именно поправили).")
+        # action — чистый семантический текст (Jaccard/surfacing); счётчики+файлы → meta;
+        # инструкция ревьюеру → review_hint (в память не уходят).
+        action = f"исправить причину падения проверки: {fcmd}"
         out.append(new_lesson(
             trigger=trigger, action=action, kind="gotcha", scope=scope,
             session_id=sid, project=project, detector="resolved-failure",
             evidence=[f"session:{sid}", "test-pass", f"attempts:{attempts}"],
+            meta={"attempts": attempts, "files": top_files},
+            review_hint="Уточни СУТЬ фикса при review (что именно поправили).",
             tests_total=attempts, tests_passed=max(attempts - 1, 0)))
     return out
 
@@ -128,26 +132,34 @@ def cmd_digest(env, argv):
             print()
         return
 
-    created = 0
+    created = skipped = 0
     for L in cands:
+        # семантический дедуп (П-6): NOOP по mem0-классификации = дубликат активного
+        # урока (та же ситуация И действие) → не плодим. add_candidate ловит лишь точный id.
+        sim = similar_lessons(ppath, L["trigger"], L["action"],
+                              states=ACTIVE_STATES, threshold=0.4)
+        if classify_consolidation(L["trigger"], L["action"], sim)["action"] == "NOOP":
+            skipped += 1
+            continue
         _lesson, was_new = add_candidate(ppath, L)
-        if was_new:
-            created += 1
-            audit_append(ppath, {"action": "digest", "id": L["id"],
-                                 "detector": L["provenance"]["detector"],
-                                 "session": rr.get("session_id"), "state": "ephemeral"})
-            # событие-сигнал для confidence: прогон, где урок «сработал» (fix/обходка прошли).
-            # append-only; recompute восстановит S/N из events.ndjson (не из этого счётчика).
-            event_append(ppath, {"id": L["id"], "source": "digest",
-                                 "session": rr.get("session_id"),
-                                 "sessions_total": 1, "sessions_success": 1,
-                                 "tests_total": int(L.get("tests_total", 0)),
-                                 "tests_passed": int(L.get("tests_passed", 0))})
+        if not was_new:
+            skipped += 1
+            continue
+        created += 1
+        audit_append(ppath, {"action": "digest", "id": L["id"],
+                             "detector": L["provenance"]["detector"],
+                             "session": rr.get("session_id"), "state": "ephemeral"})
+        # событие-сигнал для confidence: прогон, где урок «сработал» (fix/обходка прошли).
+        # append-only; recompute восстановит S/N из events.ndjson (не из этого счётчика).
+        event_append(ppath, {"id": L["id"], "source": "digest",
+                             "session": rr.get("session_id"),
+                             "sessions_total": 1, "sessions_success": 1,
+                             "tests_total": int(L.get("tests_total", 0)),
+                             "tests_passed": int(L.get("tests_passed", 0))})
 
-    dup = len(cands) - created
     print(f"\nanalyst digest — session {rr.get('session_id')}: "
           f"{created} нов(ых) кандидат(ов) в ephemeral"
-          f"{f', {dup} уже были' if dup else ''}.")
+          f"{f', {skipped} пропущено (дубль/похоже на существующий)' if skipped else ''}.")
     if created:
         print("  Смотри: analyst review   ·   промоут (человек): analyst promote <id>\n")
     else:

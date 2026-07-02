@@ -65,18 +65,61 @@ def surface_to_memory(env, lesson):
     return {"ok": False, "reason": tail}
 
 
+def _record_surface_result(project_path, lesson_id, res):
+    """Проставить на уроке promoted_at (успех) / promote_failed (сбой) — идемпотентно.
+    Даёт видимость доставки и делает возможным `promote --retry-failed` (иначе урок помечен
+    curated, но в памяти его нет и повторить нельзя — id уже в curated)."""
+    lesson, st = lessons.find_lesson(project_path, lesson_id)
+    if lesson is None:
+        return
+    lesson = dict(lesson)
+    if res["ok"]:
+        lesson["promoted_at"] = lessons.now_iso()
+        lesson.pop("promote_failed", None)
+    else:
+        lesson["promote_failed"] = True
+    lessons.save_lesson(project_path, lesson, st)
+
+
+def _retry_failed(env, ppath):
+    """Повторно всплыть в память curated-уроки с promote_failed=true (идемпотентно)."""
+    failed = [L for L, _st in lessons.list_lessons(ppath, "curated")
+              if L.get("promote_failed")]
+    if not failed:
+        print("Нет curated-уроков с promote_failed — досылать нечего.")
+        return
+    ok = 0
+    for L in failed:
+        res = surface_to_memory(env, L)
+        lessons.audit_append(ppath, {"action": "surface-retry", "id": L["id"],
+                                     "ok": res["ok"], "reason": res["reason"]})
+        _record_surface_result(ppath, L["id"], res)
+        if res["ok"]:
+            ok += 1
+            print(f"✓ {L['id']}: досыл в память mAInd")
+        else:
+            warn(f"{L['id']}: снова не удалось — {res['reason']}")
+    print(f"\nretry-failed: {ok}/{len(failed)} досланы в память.")
+
+
 # ── promote ──────────────────────────────────────────────────────────────────
 def cmd_promote(env, argv):
     """analyst promote <id> [--to candidate|curated] [--yes] [--supersedes ID] [--force]
-    — продвинуть урок вперёд по конвейеру. Переход в curated требует согласия человека."""
+    | analyst promote --retry-failed — досыл curated-уроков, не попавших в память."""
     opts, pos = parse_args(argv, {"--to": "str", "--yes": "bool", "--supersedes": "str",
-                                  "--force": "bool", "--project": "str", "--json": "bool"},
+                                  "--force": "bool", "--retry-failed": "bool",
+                                  "--project": "str", "--json": "bool"},
                            max_pos=1)
+    if opts["retry_failed"]:
+        _retry_failed(env, os.getcwd())
+        return
     if opts["help"] or not pos:
         print("analyst promote <id> [--to candidate|curated] [--yes] [--supersedes ID] [--force]\n"
               "  ephemeral→candidate→curated. Переход в curated — только с согласия человека\n"
               "  (confirm на tty либо --yes); curated всплывает в память mAInd.\n"
-              "  Противоречие с активным уроком → flag-and-ask (реши --supersedes ID | --force).")
+              "  Противоречие с активным уроком → flag-and-ask (реши --supersedes ID | --force).\n"
+              "analyst promote --retry-failed\n"
+              "  Повторно всплыть curated-уроки с promote_failed=true (память была недоступна).")
         return
     lid = pos[0]
     ppath = os.getcwd()
@@ -141,12 +184,13 @@ def cmd_promote(env, argv):
         res = surface_to_memory(env, moved)
         lessons.audit_append(ppath, {"action": "surface", "id": lid,
                                      "ok": res["ok"], "reason": res["reason"]})
+        _record_surface_result(ppath, lid, res)
         if res["ok"]:
             print(f"  всплыло в память mAInd (scope {moved.get('scope')}) — "
                   f"появится на SessionStart.")
         else:
-            warn(f"в память не всплыло: {res['reason']}. Урок curated на диске — "
-                 f"повтори surfacing позже (демон mAInd / maind CLI).")
+            warn(f"в память не всплыло: {res['reason']}. Урок curated на диске "
+                 f"(promote_failed) — досыл: analyst promote --retry-failed.")
 
 
 # ── deprecate ────────────────────────────────────────────────────────────────

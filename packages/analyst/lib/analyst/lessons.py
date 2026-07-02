@@ -16,6 +16,7 @@ Confidence-арифметика (Beta/decay) и state-machine-гейты по ч
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 
 from .common import (atomic_write_json, now_iso, read_ndjson, safe_load_json,
@@ -66,8 +67,13 @@ def make_lesson_id(trigger, action, session=""):
 
 def new_lesson(*, trigger, action, kind="heuristic", scope, session_id="",
                project="", detector="", evidence=None, source="digest",
-               tests_total=0, tests_passed=0):
-    """Собрать словарь урока (скаляры + провенанс). state всегда 'ephemeral' на входе."""
+               tests_total=0, tests_passed=0, meta=None, review_hint=""):
+    """Собрать словарь урока (скаляры + провенанс). state всегда 'ephemeral' на входе.
+
+    `action` — ЧИСТЫЙ семантический текст (по нему Jaccard-дедуп и surfacing в память).
+    Нетекстовое (счётчики попыток, затронутые файлы) → `meta`; инструкция ревьюеру →
+    `review_hint`. `meta`/`review_hint` НЕ попадают в память (surface читает только
+    trigger/action/evidence) — токен-экономия + чистый Jaccard."""
     if kind not in KINDS:
         raise ValueError(f"неизвестный kind: {kind}")
     trigger = " ".join((trigger or "").split()).strip()
@@ -79,6 +85,8 @@ def new_lesson(*, trigger, action, kind="heuristic", scope, session_id="",
         "trigger": trigger,
         "action": action,
         "evidence": list(evidence or []),
+        "meta": dict(meta or {}),
+        "review_hint": " ".join((review_hint or "").split()).strip(),
         "created_at": ts,
         "last_used_at": ts,
         "sessions_total": 1,
@@ -206,15 +214,13 @@ def read_events(project_path):
 
 
 # ── похожесть (Jaccard, stdlib) ──────────────────────────────────────────────
-_WORD_RE = None
+# compile на уровне модуля (re.compile идемпотентен, не падает на импорте): без
+# module-global-состояния и lazy-init — конвенция пакета + нет гонки в тестах с reload.
+_WORD_RE = re.compile(r"[a-zа-я0-9]{3,}")
 
 
 def _tokens(text):
     """Множество токенов (lower, только буквенно-цифровые слова ≥3 символов)."""
-    import re
-    global _WORD_RE
-    if _WORD_RE is None:
-        _WORD_RE = re.compile(r"[a-zа-я0-9]{3,}")
     return set(_WORD_RE.findall((text or "").lower()))
 
 

@@ -78,10 +78,32 @@ class TestPromote(unittest.TestCase):
         fake = self._fake_maind(rc=0)
         with chdir(self.proj), env_var("MAIND_BIN", fake):
             cmd_promote(self.env, [self.lid, "--to", "curated", "--yes"])
-        _l, st = lessons.find_lesson(self.proj, self.lid)
+        L, st = lessons.find_lesson(self.proj, self.lid)
         self.assertEqual(st, "curated")
         audit = lessons.read_audit(self.proj)
         self.assertTrue(any(r["action"] == "surface" and r["ok"] is True for r in audit))
+        # S10: успешный surface → promoted_at, без promote_failed
+        self.assertIn("promoted_at", L)
+        self.assertNotIn("promote_failed", L)
+
+    def test_promote_failed_then_retry(self):
+        # surface падает (maind недоступен) → promote_failed=true, урок в curated
+        lessons.move_lesson(self.proj, self.lid, "candidate")
+        with chdir(self.proj), env_var("MAIND_BIN", "/nonexistent/maind"):
+            cmd_promote(self.env, [self.lid, "--to", "curated", "--yes"])
+        L, st = lessons.find_lesson(self.proj, self.lid)
+        self.assertEqual(st, "curated")
+        self.assertTrue(L.get("promote_failed"))
+        self.assertNotIn("promoted_at", L)
+        # --retry-failed при доступном maind → досылает, ставит promoted_at, снимает флаг
+        fake = self._fake_maind(rc=0)
+        with chdir(self.proj), env_var("MAIND_BIN", fake):
+            cmd_promote(self.env, ["--retry-failed"])
+        L2, _ = lessons.find_lesson(self.proj, self.lid)
+        self.assertIn("promoted_at", L2)
+        self.assertNotIn("promote_failed", L2)
+        audit = lessons.read_audit(self.proj)
+        self.assertTrue(any(r["action"] == "surface-retry" and r["ok"] is True for r in audit))
 
     def test_surface_graceful_when_maind_absent(self):
         L, _ = lessons.find_lesson(self.proj, self.lid)

@@ -6,9 +6,10 @@ swissknifeman/maind/brain байт-в-байт: вывод (die/warn/now_iso/con
 пакета успели скопировать независимо с расходящимся поведением и которые сведены
 сюда к одному источнику истины: атомарная запись (atomic_write_text/json), поиск
 корня репо/монорепо (find_repo_root/find_monorepo_root), разбор флагов/аргументов
-(parse_flags/parse_args) и защищённый запуск подпроцесса (run_cmd). Доменные
-надстройки — path-property Env, HTTP, frontmatter — остаются в common.py каждого
-пакета (они расходятся по контракту и не дословны).
+(parse_flags/parse_args) и защищённый запуск подпроцесса (run_cmd), а также единый
+разбор YAML-frontmatter (parse_frontmatter/parse_inline_list — superset четырёх
+разошедшихся копий skiller/harness/maind). Доменные надстройки — path-property Env,
+HTTP — остаются в common.py каждого пакета (они расходятся по контракту и не дословны).
 
 Импортируется как пакет `core` (PYTHONPATH = корень монорепо; см. bin-лаунчеры).
 Без сторонних зависимостей."""
@@ -24,10 +25,11 @@ from .project import (DEFAULT_DOCS_VISIBILITY, DOCS_VISIBILITY_BY_TYPE,
 from .repo import find_monorepo_root, find_repo_root
 from .runs import find_run_report
 from .term import confirm, die, now_iso, parse_iso, warn
-from .text import sanitize
+from .text import parse_frontmatter, parse_inline_list, sanitize
 
 __all__ = [
     "HOME", "BaseEnv", "die", "warn", "now_iso", "parse_iso", "confirm", "sanitize",
+    "parse_frontmatter", "parse_inline_list",
     "atomic_write_text", "atomic_write_json", "safe_load_json", "load_json_db",
     "read_ndjson", "pid_alive", "find_run_report",
     "is_within", "is_within_lexical", "state_dir",

@@ -13,16 +13,19 @@ from .common import atomic_write_text, die, parse_args, parse_iso
 
 
 # ── status ────────────────────────────────────────────────────────────────────
-def _is_curated_ready(lesson):
-    """Кандидат набрал ЧИСЛА для curated (порог recompute)? Переход — всё равно человек."""
+def _is_curated_ready(lesson, curated_min_n=None):
+    """Кандидат набрал ЧИСЛА для curated (порог recompute)? Переход — всё равно человек.
+    curated_min_n — эффективный (адаптивный) порог; None → статический CURATED_MIN_N."""
     conf = lesson.get("confidence")
     if conf is None:
         return False
+    if curated_min_n is None:
+        curated_min_n = R.CURATED_MIN_N
     n = int(lesson.get("sessions_total", 0) or 0)
     tt = int(lesson.get("tests_total", 0) or 0)
     tp = int(lesson.get("tests_passed", 0) or 0)
     pr = (tp / tt) if tt > 0 else 0.0
-    return (n >= R.CURATED_MIN_N and conf >= R.CURATED_MIN_CONF
+    return (n >= curated_min_n and conf >= R.CURATED_MIN_CONF
             and pr >= R.CURATED_MIN_PASSRATE)
 
 
@@ -44,11 +47,15 @@ def build_status(project_path):
     counts = {st: 0 for st in lessons.STATES}
     promote_failed = 0
     curated_ready = 0
+    events = lessons.read_events(project_path)
+    # адаптивный порог curated — тот же, что применил бы recompute (активность проекта)
+    project_sessions = sum(int(e.get("sessions_total", 0) or 0) for e in events)
+    _, cur_min = R.adaptive_thresholds(project_sessions)
     for L, st in lessons.list_lessons(project_path):
         counts[st] += 1
         if L.get("promote_failed"):
             promote_failed += 1
-        if st == "candidate" and _is_curated_ready(L):
+        if st == "candidate" and _is_curated_ready(L, cur_min):
             curated_ready += 1
     audit = lessons.read_audit(project_path)
     return {
@@ -56,7 +63,7 @@ def build_status(project_path):
         "total": sum(counts.values()),
         "curated_ready": curated_ready,
         "promote_failed": promote_failed,
-        "events": len(lessons.read_events(project_path)),
+        "events": len(events),
         "last_digest": _last_ts(audit, lambda a: a.get("action") == "digest"),
         "last_recompute": _last_ts(
             audit, lambda a: str(a.get("action", "")).startswith("recompute")),

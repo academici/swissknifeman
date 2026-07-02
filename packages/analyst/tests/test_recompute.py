@@ -123,11 +123,50 @@ class TestRecompute(unittest.TestCase):
         self.assertTrue(p.is_file())
 
     def test_candidate_stable_stays(self):
+        # conf≥0.6 (не просадка), но passrate 0.8<0.95 → curated-ready не триггерится
+        # НИ при статическом, НИ при адаптивном пороге N → остаётся кандидатом.
         lid = _mk(self.proj, "candidate")
-        _ev(self.proj, lid, ts="2026-06-01T00:00:00Z", n=40, s=38, tt=10, tp=10)
-        recompute.recompute_project(self.proj, "2026-06-01T00:00:00Z")
+        _ev(self.proj, lid, ts="2026-06-01T00:00:00Z", n=40, s=38, tt=10, tp=8)
+        res = recompute.recompute_project(self.proj, "2026-06-01T00:00:00Z")
         _l, st = lessons.find_lesson(self.proj, lid)
-        self.assertEqual(st, "candidate")            # conf≈0.8, не curated-числа, не просадка
+        self.assertEqual(st, "candidate")
+        self.assertEqual(next(x for x in res if x["id"] == lid)["action"], "unchanged")
+
+    # ── S14: адаптивные пороги N от суммарной активности проекта ──────────────
+    def test_adaptive_thresholds_scaling(self):
+        R = recompute
+        # активный проект (Σ≥CURATED_MIN_N) → статические пороги
+        self.assertEqual(R.adaptive_thresholds(50), (R.CANDIDATE_MIN_N, R.CURATED_MIN_N))
+        self.assertEqual(R.adaptive_thresholds(200), (15, 50))
+        # малоактивный: candidate = max(3, s//5) (формула D2), curated — та же пропорция
+        self.assertEqual(R.adaptive_thresholds(40), (8, round(8 * 50 / 15)))  # (8, 27)
+        self.assertEqual(R.adaptive_thresholds(10), (3, 10))                  # floor 3 → cur 10
+        self.assertEqual(R.adaptive_thresholds(0), (3, 10))
+        # инварианты: не выше статического; curated ≥ candidate на всём диапазоне
+        for s in range(0, 60):
+            c, u = R.adaptive_thresholds(s)
+            self.assertLessEqual(c, R.CANDIDATE_MIN_N)
+            self.assertLessEqual(u, R.CURATED_MIN_N)
+            self.assertGreaterEqual(u, c)
+
+    def test_adaptive_curated_ready_for_low_activity(self):
+        # малоактивный проект (Σ=40): кандидат с N=40 набирает curated-ready под
+        # адаптивным порогом (27), хотя статический 50 не был бы достигнут.
+        lid = _mk(self.proj, "candidate")
+        _ev(self.proj, lid, ts="2026-06-01T00:00:00Z", n=40, s=40, tt=20, tp=20)
+        res = recompute.recompute_project(self.proj, "2026-06-01T00:00:00Z")
+        r = next(x for x in res if x["id"] == lid)
+        self.assertEqual(r["action"], "curated-ready")   # адаптивный порог сработал
+        _l, st = lessons.find_lesson(self.proj, lid)
+        self.assertEqual(st, "candidate")                # инвариант: авто в curated нельзя
+
+    def test_adaptive_deterministic(self):
+        # тот же events-лог + тот же now → тот же исход (адаптивный порог детерминирован)
+        lid = _mk(self.proj, "candidate")
+        _ev(self.proj, lid, ts="2026-06-01T00:00:00Z", n=40, s=40, tt=20, tp=20)
+        r1 = recompute.recompute_project(self.proj, "2026-06-01T00:00:00Z", dry_run=True)
+        r2 = recompute.recompute_project(self.proj, "2026-06-01T00:00:00Z", dry_run=True)
+        self.assertEqual(r1, r2)
 
 
 if __name__ == "__main__":

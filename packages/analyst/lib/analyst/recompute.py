@@ -8,7 +8,8 @@
 Инвариант (P1): `candidate→curated` — ВСЕГДА человек. Здесь при выполненных числовых
 порогах curated лишь ПОМЕЧАЕТСЯ «готов» (флаг в audit), но НЕ двигается автоматически.
 Демоут — soft (`move_lesson` в deprecated: ре-райт+unlink, файл сохраняется, не удаление).
-Авто-переход `ephemeral→candidate` разрешён (машинный тир) при N≥15 & conf≥0.6 & tests≥1.
+Авто-переход `ephemeral→candidate` разрешён (машинный тир) при N≥порог & conf≥0.6 & tests≥1;
+пороги N адаптивны к активности проекта для малоактивных (adaptive_thresholds, см. tuning.md).
 """
 import json
 import os
@@ -24,6 +25,26 @@ CURATED_MIN_N = 50         # числовой порог «готов к curated
 CURATED_MIN_CONF = 0.8
 CURATED_MIN_PASSRATE = 0.95
 DEPRECATE_CONF = 0.6       # просадка ниже → soft-демоут (candidate) / флаг (curated)
+CANDIDATE_MIN_N_FLOOR = 3   # нижняя планка адаптивного порога candidate (D2)
+
+
+def adaptive_thresholds(project_sessions):
+    """Пороги N перехода, адаптированные к суммарной активности проекта (D2, tuning.md).
+
+    Малоактивный проект (Σ sessions_total всех событий < CURATED_MIN_N) физически не
+    наберёт N≥15/50 → уроки залипают в «вечном ephemeral». Понижаем планку
+    пропорционально активности, сохраняя статическую пропорцию candidate:curated:
+
+        candidate = max(FLOOR, project_sessions // 5)                # формула D2
+        curated   = max(candidate, round(candidate × CURATED/CANDIDATE))  # та же пропорция
+
+    При project_sessions ≥ CURATED_MIN_N данных достаточно → статические (15, 50).
+    Чистая: (int) → (int, int). Детерминирована. Порог никогда не выше статического."""
+    if project_sessions >= CURATED_MIN_N:
+        return CANDIDATE_MIN_N, CURATED_MIN_N
+    cand = max(CANDIDATE_MIN_N_FLOOR, int(project_sessions) // 5)
+    cur = max(cand, round(cand * CURATED_MIN_N / CANDIDATE_MIN_N))
+    return cand, cur
 
 
 # ── время (парс timestamp'ов — единый core.parse_iso, py39-safe) ─────────────
@@ -80,23 +101,26 @@ def snapshot_fields(agg, conf, now_ts):
 
 
 # ── числовая state-machine (чистая: state+числа → решение) ────────────────────
-def decide_transition(state, agg, conf):
+def decide_transition(state, agg, conf,
+                      candidate_min_n=CANDIDATE_MIN_N, curated_min_n=CURATED_MIN_N):
     """(new_state, action, note) по числам. curated — НЕ авто (только флаг «готов»).
 
+    candidate_min_n/curated_min_n — эффективные пороги N (по умолчанию статические;
+    recompute_project передаёт адаптивные от активности проекта, см. adaptive_thresholds).
     action ∈ {promote, deprecate, curated-ready, curated-decay, unchanged}."""
     N = agg["N"]
     tt = agg["tests_total"]
     if state == "ephemeral":
-        if N >= CANDIDATE_MIN_N and conf >= CANDIDATE_MIN_CONF and tt >= 1:
-            return "candidate", "promote", "N≥15 & conf≥0.6 & tests≥1"
+        if N >= candidate_min_n and conf >= CANDIDATE_MIN_CONF and tt >= 1:
+            return "candidate", "promote", f"N≥{candidate_min_n} & conf≥{CANDIDATE_MIN_CONF} & tests≥1"
         return "ephemeral", "unchanged", ""
     if state == "candidate":
         if conf < DEPRECATE_CONF:
             return "deprecated", "deprecate", f"conf {conf:.2f} < {DEPRECATE_CONF} (soft)"
         pr = _passrate(tt, agg["tests_passed"])
-        if N >= CURATED_MIN_N and conf >= CURATED_MIN_CONF and pr >= CURATED_MIN_PASSRATE:
+        if N >= curated_min_n and conf >= CURATED_MIN_CONF and pr >= CURATED_MIN_PASSRATE:
             # инвариант P1: в curated двигает ТОЛЬКО человек — здесь лишь флаг
-            return "candidate", "curated-ready", "числа для curated есть — нужен человек"
+            return "candidate", "curated-ready", f"числа для curated есть (N≥{curated_min_n}) — нужен человек"
         return "candidate", "unchanged", ""
     if state == "curated":
         if conf < DEPRECATE_CONF:
@@ -112,10 +136,14 @@ def recompute_project(project_path, now_ts, *, dry_run=False):
     список результатов. dry_run — только считает, ничего не пишет на диск."""
     events = lessons.read_events(project_path)
     by_id = {}
+    project_sessions = 0
     for e in events:
+        project_sessions += int(e.get("sessions_total", 0) or 0)
         lid = e.get("id")
         if lid:
             by_id.setdefault(lid, []).append(e)
+    # адаптивные пороги от суммарной активности проекта (малоактивный не залипает в ephemeral)
+    cand_min, cur_min = adaptive_thresholds(project_sessions)
 
     results = []
     for L, st in lessons.list_lessons(project_path):
@@ -129,7 +157,7 @@ def recompute_project(project_path, now_ts, *, dry_run=False):
             continue
         agg = aggregate_events(evs, now_ts)
         conf = C.confidence(agg["S"], agg["N"], agg["days_since"])
-        new_state, action, note = decide_transition(st, agg, conf)
+        new_state, action, note = decide_transition(st, agg, conf, cand_min, cur_min)
         results.append({"id": lid, "state": st, "new_state": new_state,
                         "confidence": round(conf, 4), "tier": C.tier(conf),
                         "action": action, "note": note,

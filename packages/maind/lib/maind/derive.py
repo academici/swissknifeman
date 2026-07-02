@@ -13,6 +13,8 @@ import json
 import os
 from pathlib import Path
 
+from core import parse_frontmatter
+
 from .common import warn
 from .federation import rebuild_index, store_path
 from .graph import Graph
@@ -173,30 +175,11 @@ def derive_code(g, project, config, providers):
 
 
 # ── план: doc (Brain frontmatter, только чтение) ─────────────────────────────
-def _frontmatter(text):
-    """Грубый парс YAML-фронтматтера (между первыми '---'): только нужные нам списки."""
-    lines = text.splitlines()
-    if not lines or lines[0].strip() != "---":
-        return {}
-    end = next((i for i in range(1, len(lines)) if lines[i].strip() == "---"), None)
-    if end is None:
-        return {}
-    out, cur = {}, None
-    for ln in lines[1:end]:
-        if cur and ln[:1] in (" ", "\t") and ln.strip().startswith("-"):
-            out[cur].append(ln.strip()[1:].strip().strip("'\""))
-            continue
-        cur = None
-        if ":" not in ln:
-            continue
-        key, val = ln.split(":", 1)
-        key, val = key.strip(), val.strip()
-        if val.startswith("[") and val.endswith("]"):
-            out[key] = [x.strip().strip("'\"") for x in val[1:-1].split(",") if x.strip()]
-        elif val == "":
-            out[key] = []
-            cur = key
-    return out
+def _fm_list(fm, key):
+    """Значение frontmatter как список (uses/used_by — списки). Скаляр/пусто → []
+    (защита от char-итерации, если в ноте ключ задан скаляром, а не списком)."""
+    v = fm.get(key)
+    return v if isinstance(v, list) else []
 
 
 def _control_tower(project):
@@ -222,17 +205,17 @@ def derive_doc(g, project, config):
     if note is None:
         return 0
     try:
-        fm = _frontmatter(note.read_text(encoding="utf-8"))
+        fm = parse_frontmatter(note.read_text(encoding="utf-8"))
     except OSError:
         return 0
     edges = 0
-    for name in fm.get("uses") or []:
+    for name in _fm_list(fm, "uses"):
         tid, reg = resolve_project(name, config)
         if tid and tid != pid and link_allowed(project, tid, config):
             g.add_node(f"project:{tid}", "project", registered=reg)
             g.add_edge(pnode, f"project:{tid}", "uses", via="doc", plane="doc")
             edges += 1
-    for name in fm.get("used_by") or []:
+    for name in _fm_list(fm, "used_by"):
         tid, reg = resolve_project(name, config)
         if tid and tid != pid and link_allowed(project, tid, config):
             g.add_node(f"project:{tid}", "project", registered=reg)

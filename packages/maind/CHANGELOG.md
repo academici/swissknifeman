@@ -6,6 +6,13 @@
 ## [Unreleased]
 
 ### Added
+- **`maind sync` — провиженеры `skills-catalog` и `output-style`.** Ретроактивная раздача на уже
+  онбордженные проекты: `skills-catalog` (`skm:update` — пере-резолв каталога скиллов с диска,
+  новый скилл уже выбранного бакета докатывается без ручного re-onboard) и `output-style`
+  (`env:hooks --output-style lean`, опт-аут `project.output_style: "off"`). Оба — в дефолтном
+  наборе `--all`, оба используют существующие capability `skm:update`/`env:hooks` из
+  `orchestrate.py` (ни одна не имела вызывающего в `PROVISIONERS` до этого). Заодно `skm:update`
+  добавлен в `DRY_CAPABLE` — честный `--dry-run` вместо fake print+rc0.
 - **Наблюдаемость памяти/графа в `analyze` + `maind memory count`.** Отвечает на полевой вопрос
   «память/граф пишут — а читаются ли и помогают ли, или просто жрут токены». `analyze.py` читает новый
   аддитивный ключ `run_report.maind` (метрики MCP-вызовов памяти/графа, их считает парный парсер

@@ -637,7 +637,7 @@
     {
       "name": "task",
       "source": "./packages/task",
-      "description": "task — интент-команды постановки задач для Claude Code: /task:design|dev|review|research|fix. Каждая команда пинит свою модель + reasoning effort + профиль workflow (перебивая настройки сессии), чтобы не помнить про ручное переключение модели/effort/режима. Тонкое лицо над agent-packs/workflow экосистемы academici.",
+      "description": "task — интент-команды постановки задач для Claude Code: /task:design|dev|review|research|fix + plan-протокол /task:plan-design|plan-exec|plan-close|plan-audit (исполняемые мастер-планы в plans/ по скиллу plan-protocol: opus проектирует, sonnet исполняет, opus аудитит). Каждая команда пинит свою модель + reasoning effort + профиль workflow (перебивая настройки сессии), чтобы не помнить про ручное переключение модели/effort/режима. Тонкое лицо над agent-packs/workflow экосистемы academici.",
       "category": "ecosystem",
       "tags": [
         "tasks",

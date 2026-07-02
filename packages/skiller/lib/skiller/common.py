@@ -32,9 +32,14 @@ AGENT_DEFAULTS = {"claude": ".claude/skills", "cursor": ".cursor/skills",
 # физ.переноса (vendor/sync): upstream.json и .claude-plugin — служебные реестра;
 # SKILL.*.md (SKILL.ru.md и пр.) — человеческий ИСТОЧНИК (агент грузит лишь EN
 # SKILL.md, "SKILL.*.md" не матчит сам "SKILL.md"); evals/ — поведенческие тесты
-# скилла. ЕДИНЫЙ источник истины: vendor.copy_skill и skillset.sync копируют через
-# него (раньше дублировали и skillset терял SKILL.*.md/evals → утечка RU-источника).
-SKILL_IGNORE = ("upstream.json", ".claude-plugin", "SKILL.*.md", "evals")
+# скилла; __pycache__/*.pyc — байткод-кэш, появляется локально при ручном запуске
+# .py-сниппетов (напр. snippets/check.py) — найдено при расследовании нестабильного
+# content_sha256 у скилла с .py-сниппетами (registry --check зеленел локально и
+# дрейфовал в чистом чекауте/CI). ЕДИНЫЙ источник истины: vendor.copy_skill и
+# skillset.sync копируют через него (раньше дублировали и skillset терял
+# SKILL.*.md/evals → утечка RU-источника).
+SKILL_IGNORE = ("upstream.json", ".claude-plugin", "SKILL.*.md", "evals",
+                "__pycache__", "*.pyc")
 CONFIG_KEYS = {
     "project_type": str, "buckets": list, "exclude": list, "presets": list,
     "skills_path": str, "agent": str,
@@ -221,8 +226,9 @@ def skill_content_hash(skill_dir):
     """SHA-256 по содержимому ВСЕХ файлов каталога скилла — детект дрейфа sync шире,
     чем по одному SKILL.md: ловит правки в snippets/ и references/ (которые SKILL.md
     может не двигать). Игнорируем то же, что НЕ вендорится: upstream.json, языковые
-    альтернаты SKILL.*.md (кроме SKILL.md), .claude-plugin/. Относительный путь файла
-    входит в хеш (защита от переименований/перемещений). Порядок стабилен (sorted).
+    альтернаты SKILL.*.md (кроме SKILL.md), .claude-plugin/, __pycache__/*.pyc.
+    Относительный путь файла входит в хеш (защита от переименований/перемещений).
+    Порядок стабилен (sorted).
 
     Полный hexdigest, как у остальных sha256 в реестре/локе. Дополняет, а НЕ заменяет
     поле sha256 (по SKILL.md) — старые локи без content_sha256 деградируют корректно."""
@@ -237,6 +243,12 @@ def skill_content_hash(skill_dir):
         if name.startswith("SKILL.") and name.endswith(".md") and name != "SKILL.md":
             continue
         if ".claude-plugin" in f.parts:
+            continue
+        # __pycache__/*.pyc — байткод-кэш при локальном запуске .py-сниппетов (напр.
+        # snippets/check.py); без исключения content_sha256 нестабилен между машинами
+        # (найдено при расследовании дрейфа skills.json — на диске разработчика был
+        # __pycache__, в чистом чекауте/CI его нет, хеши расходились).
+        if "__pycache__" in f.parts or name.endswith(".pyc"):
             continue
         # evals/ — поведенческие тесты (eval-first), НЕ вендорятся (см. vendor.copy_skill);
         # исключаем из хеша, чтобы правка теста не считалась дрейфом вендоренного скилла.

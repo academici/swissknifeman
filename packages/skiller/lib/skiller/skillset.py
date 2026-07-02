@@ -503,7 +503,7 @@ def sync_skillset(env, target, cfg, dry_run=False, force=False,
     # не удаляются: обычный remove-цикл выше бьёт только по dest_root/name (новому
     # пути), а install-цикл ниже просто создаст ВТОРУЮ копию на новом месте.
     target_root = Path(target)
-    for name, old_rel_path in plan.get("relocated", {}).items():
+    for old_rel_path in plan.get("relocated", {}).values():
         stale = target_root / old_rel_path
         if dry_run:
             print(f"[dry-run] remove (relocated) {stale}")

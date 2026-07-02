@@ -740,7 +740,7 @@
       "version": "0.1.0",
       "description": "Data-config-driven parametric 3D modeling in Blender (bpy): dataclass part params (dims/tolerances/material/units mm), profile + revolve/extrude, invariant validation without launching Blender. Activate when editing models/*/config.py, profile.py, parts/*, check.py; adding a part param; questions about tolerances/units/radius matching for FDM/SLA printing.",
       "sha256": "51a9c20e9d6f6d19b8c99ea0d315e0026aef3c0a078d9c41b2cb8d3b30ccad09",
-      "content_sha256": "36d79462de43fcdded872d366b48311625d53cf679cd8416645b1281eec0cbd7",
+      "content_sha256": "95ae0cc3b444c322c2a3fdcc6c04dd7d36d9fe31ea3b03f5769655bdad6c8c9a",
       "tags": [
         "blender",
         "bpy",

@@ -9,7 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
 from skiller.common import (parse_flags, parse_frontmatter,
                                   parse_frontmatter_fields, parse_inline_list,
-                                  sanitize)
+                                  sanitize, skill_content_hash)
 import skiller.config as config_mod
 from skiller.config import autodetect, resolve_selection
 from skiller.vendor import flat_names, resolve_requires, build_requires_index
@@ -249,6 +249,47 @@ class TestFlatNames(unittest.TestCase):
     def test_no_collision_keeps_name(self):
         skills = [("php", "a", Path("/x/php/a"), "code-style")]
         self.assertEqual(flat_names(skills)[0], "code-style")
+
+
+class TestSkillContentHash(unittest.TestCase):
+    """__pycache__/*.pyc не должны влиять на content_sha256: найдено при
+    расследовании нестабильного skills.json (registry --check зеленел на машине с
+    локально запущенным .py-сниппетом, но дрейфовал в чистом чекауте/CI — байткод-
+    кэш от `python3 snippets/check.py` считался частью содержимого скилла)."""
+    def _make_skill(self, tmp):
+        d = tmp / "skill"
+        d.mkdir()
+        (d / "SKILL.md").write_text("---\nname: x\n---\nBody.\n", encoding="utf-8")
+        snippets = d / "snippets"
+        snippets.mkdir()
+        (snippets / "check.py").write_text("print('ok')\n", encoding="utf-8")
+        return d
+
+    def test_pycache_does_not_change_hash(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            d = self._make_skill(tmp)
+            before = skill_content_hash(d)
+
+            pycache = d / "snippets" / "__pycache__"
+            pycache.mkdir()
+            (pycache / "check.cpython-312.pyc").write_bytes(b"\x00fake bytecode")
+            (d / "snippets" / "stray.pyc").write_bytes(b"\x00another")
+
+            after = skill_content_hash(d)
+            self.assertEqual(before, after)
+
+    def test_real_content_change_still_detected(self):
+        # Регресс-предохранитель: исключение __pycache__ не должно случайно
+        # исключить реальные правки .py-файлов (только их скомпилированный кэш).
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            d = self._make_skill(tmp)
+            before = skill_content_hash(d)
+            (d / "snippets" / "check.py").write_text("print('changed')\n",
+                                                      encoding="utf-8")
+            after = skill_content_hash(d)
+            self.assertNotEqual(before, after)
 
 
 if __name__ == "__main__":

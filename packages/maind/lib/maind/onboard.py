@@ -241,16 +241,38 @@ def onboard(env, config, project_or_path, opts):
             "deployed": res is not None, "graph": gstats}
 
 
+# Шаги, невыполнение которых означает НЕ поставленное окружение/скиллы/MCP — не
+# маскируем «зелёным» онбордингом (S9): failed или skipped из-за НЕДОСТУПНОЙ зависимости
+# → эскалация в rc≠0 + ATTENTION. Осознанный частичный онбординг снимает --allow-partial.
+_CRITICAL_STEPS = {"skills", "env", "deploy"}
+
+
+def _unmet_steps(report, *, dry):
+    """Критичные шаги, не выполненные из-за сбоя/недоступной зависимости (не user-choice).
+    В dry-run эскалации нет (это превью). skipped из-за --skip-skills/отключений не считаем."""
+    if dry:
+        return []
+    out = []
+    for s in report["steps"]:
+        if s["name"] not in _CRITICAL_STEPS:
+            continue
+        if s["status"] == "failed" or (
+                s["status"] == "skipped" and "недоступен" in (s.get("detail") or "")):
+            out.append(s)
+    return out
+
+
 def cmd_onboard(env, argv):
     o, pos = parse_args(argv, {"--bundle": "str", "--skip-skills": "bool",
                                "--targets": "str", "--with-code": "bool",
                                "--with-graphify": "bool", "--namespace": "str",
                                "--memory": "str", "--skills-channel": "str",
                                "--with-brain": "bool", "--dry-run": "bool",
+                               "--allow-partial": "bool",
                                "--yes": "bool", "--json": "bool"}, max_pos=1)
     if not pos:
         die("использование: maind onboard <project|path> [--memory maind|native|off] "
-            "[--skills-channel connect|vendor] "
+            "[--skills-channel connect|vendor] [--allow-partial] "
             "[--namespace a,b] [--bundle B --yes --with-code --with-brain --dry-run]")
     config, _src = load_config(env)
     ns = [s.strip() for s in (o["namespace"] or "").split(",") if s.strip()] or None
@@ -280,11 +302,20 @@ def cmd_onboard(env, argv):
             "namespaces": ns, "memory": memory or "maind", "skills_channel": channel,
             "with_brain": o["with_brain"], "dry": o["dry_run"], "yes": o["yes"]}
     report = onboard(env, config, pos[0], opts)
+    unmet = _unmet_steps(report, dry=opts["dry"])
+    report["attention"] = [s["name"] for s in unmet]
     if o["json"]:
         print(json.dumps(report, ensure_ascii=False, indent=2))
-        return
-    print(f"Онбординг project:{report['project']} "
-          f"({'создан' if report['created'] else 'обновлён'}):")
-    for s in report["steps"]:
-        mark = {"ok": "✓", "skipped": "○", "failed": "✗"}.get(s["status"], "·")
-        print(f"  {mark} {s['name']:<9} {s['detail']}")
+    else:
+        print(f"Онбординг project:{report['project']} "
+              f"({'создан' if report['created'] else 'обновлён'}):")
+        for s in report["steps"]:
+            mark = {"ok": "✓", "skipped": "○", "failed": "✗"}.get(s["status"], "·")
+            print(f"  {mark} {s['name']:<9} {s['detail']}")
+        if unmet:
+            names = ", ".join(f"{s['name']} ({s['detail']})" for s in unmet)
+            print(f"\n⚠ ATTENTION: критичные шаги не выполнены: {names}")
+    if unmet and not o["allow_partial"]:
+        die("онбординг НЕ полон (окружение/скиллы/MCP не поставлены): "
+            f"{', '.join(report['attention'])}. Поставь harness/skiller и повтори, "
+            "либо запусти с --allow-partial.")

@@ -32,8 +32,22 @@ if (SLICES.length === 0) {
   return { built: [], note: 'no slices provided' }
 }
 
+// Урок overnight-прогона (azguard, plan-remainder): agent({schema}) может не вернуть null,
+// а БРОСИТЬ исключение ('subagent completed without calling StructuredOutput'). Без обёртки
+// throw ронял ВЕСЬ workflow. safeAgent сводит throw к null — дальше штатная деградация
+// if(!result)/circuit-breaker.
+async function safeAgent(prompt, opts) {
+  try {
+    return await agent(prompt, opts)
+  } catch (e) {
+    const label = (opts && opts.label) || '?'
+    log(`agent ${label} бросил исключение (${String((e && e.message) || e).slice(0, 160)}) — infra-failed, продолжаю`)
+    return null
+  }
+}
+
 phase('Setup')
-await agent(
+await safeAgent(
   `В ${PROJECT_DIR} подготовь рабочую ветку.
 1. 'git status' — грязное дерево → стоп и отчёт (не затирай чужое).
 2. Ветка ${BRANCH} есть → 'git checkout ${BRANCH}'; иначе 'git checkout ${BASE}' + 'git checkout -b ${BRANCH}'.
@@ -71,7 +85,7 @@ for (const slice of SLICES) {
   }
   const extraSkills = (slice.skills || []).join(', ') || '(дополнительных нет)'
 
-  await agent(
+  await safeAgent(
     `Реализуй ОДИН frontend-срез {{PACK_PREFIX}} (${SLICES.length ? '' : ''}{{VUE_VARIANT}}) в текущей ветке ${BRANCH}.
 СРЕЗ:
 ${JSON.stringify(slice, null, 2)}
@@ -82,7 +96,7 @@ ${HARD_GATES}`,
   )
   log(`срез ${sliceNo}/${SLICES.length}: ${slice.id} impl-ok`)  // heartbeat
 
-  const result = await agent(
+  const result = await safeAgent(
     `Ты в ветке ${BRANCH} в ${PROJECT_DIR}; срез реализован:
 ${JSON.stringify(slice, null, 2)}
 Напиши Vitest+@vue/test-utils по acceptance_criteria и итерируй '{{TEST_RUNNER_CMD}}' до ЗЕЛЁНОГО.
@@ -97,7 +111,7 @@ ${HARD_GATES}`,
   let review = null
   if (result && result.status === 'green') {
     consecutiveFails = 0
-    review = await agent(
+    review = await safeAgent(
       `Read-only ревью среза "${slice.title}" в ${PROJECT_DIR}, ветка ${BRANCH}. Diff против ${BASE}. Проверь типы (нет any), структуру (логика не в шаблоне, состояние в Pinia), доступность и acceptance_criteria: ${JSON.stringify(slice.acceptance_criteria)}. Прогони '{{TYPECHECK_CMD}}' и '{{LINT_CMD}}'. Файлы НЕ меняй.
 ${HARD_GATES}`,
       { label: `review:${slice.id}`, phase: 'Build', agentType: '{{PACK_PREFIX}}-reviewer', effort: 'high' }
@@ -106,7 +120,7 @@ ${HARD_GATES}`,
   } else {
     consecutiveFails++
   }
-  results.push({ ...(result || { id: slice.id, status: 'infra-failed', summary: 'agent вернул null (терминальный infra-сбой рантайма)', assumptions: [], open_questions: [] }), review_findings: review })
+  results.push({ ...(result || { id: slice.id, status: 'infra-failed', summary: 'agent вернул null (терминальный infra-сбой рантайма ИЛИ agent() бросил исключение — см. лог safeAgent)', assumptions: [], open_questions: [] }), review_findings: review })
 
   // Fail-fast на инфра-отказ: agent() вернул null = терминальный сбой (rate-limit/timeout,
   // ретраи исчерпаны). Дальше бессмысленно. НЕ маскируем под deferred (P4). Затяжной hang → supervisor.
@@ -117,7 +131,7 @@ ${HARD_GATES}`,
 }
 
 phase('Verify')
-const verify = await agent(
+const verify = await safeAgent(
   `Финальная проверка в ${PROJECT_DIR}, ветка ${BRANCH}:
 1. 'git status' — чисто, ветка ${BRANCH}.
 2. '{{TYPECHECK_CMD}}' — 0 ошибок.

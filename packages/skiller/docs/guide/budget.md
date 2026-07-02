@@ -159,14 +159,14 @@ flowchart LR
     skills_ssot["skills-ssot<br/>⊕35 ↻1771"]:::cool
     spec_interview["spec-interview<br/>⊕58 ↻753"]:::mild
     task_brief_template["task-brief-template<br/>⊕79 ↻1206"]:::warm
-    verify_claims["verify-claims<br/>⊕160 ↻2696"]:::hot
+    verify_claims["verify-claims<br/>⊕133 ↻2696"]:::hot
     writing_style["writing-style<br/>⊕98 ↻1702"]:::warm
   end
   subgraph laravel_architecture["laravel-architecture"]
-    config_driven_abstraction["config-driven-abstraction<br/>⊕170 ↻487"]:::hot
+    config_driven_abstraction["config-driven-abstraction<br/>⊕135 ↻487"]:::hot
     eloquent_accessors["eloquent-accessors<br/>⊕119 ↻1255"]:::warm
     enum_attributes["enum-attributes<br/>⊕131 ↻1977"]:::hot
-    enum_state_machine["enum-state-machine<br/>⊕159 ↻1585"]:::hot
+    enum_state_machine["enum-state-machine<br/>⊕132 ↻1585"]:::hot
     laravel_subagents["laravel-subagents<br/>⊕77 ↻1287"]:::warm
     modular_architecture["modular-architecture<br/>⊕83 ↻3139"]:::warm
   end
@@ -188,10 +188,10 @@ flowchart LR
     filament["filament<br/>⊕63 ↻2374"]:::mild
   end
   subgraph laravel_livewire["laravel-livewire"]
-    livewire_blade_attributes["livewire-blade-attributes<br/>⊕155 ↻1283"]:::hot
+    livewire_blade_attributes["livewire-blade-attributes<br/>⊕128 ↻1283"]:::hot
   end
   subgraph laravel_testing["laravel-testing"]
-    health_checks["health-checks<br/>⊕139 ↻2325"]:::hot
+    health_checks["health-checks<br/>⊕129 ↻2325"]:::hot
     laravel_dusk["laravel-dusk<br/>⊕34 ↻1008"]:::cool
     laravel_testing["laravel-testing<br/>⊕56 ↻3061"]:::mild
     test_isolation_guard["test-isolation-guard<br/>⊕104 ↻1599"]:::warm
@@ -234,15 +234,15 @@ flowchart LR
     laravel_best_practices["laravel-best-practices<br/>⊕40 ↻1727"]:::cool
     laravel_structure["laravel-structure<br/>⊕44 ↻2020"]:::mild
     named_arguments["named-arguments<br/>⊕50 ↻694"]:::mild
-    namespace_refactor_safety["namespace-refactor-safety<br/>⊕155 ↻365"]:::hot
+    namespace_refactor_safety["namespace-refactor-safety<br/>⊕131 ↻365"]:::hot
     pao["pao<br/>⊕59 ↻654"]:::mild
     php_naming_conventions["php-naming-conventions<br/>⊕80 ↻1426"]:::warm
     php_patterns["php-patterns<br/>⊕25 ↻2538"]:::cool
     php_upgrade_checklist["php-upgrade-checklist<br/>⊕71 ↻672"]:::mild
-    production_readiness_checklist["production-readiness-checklist<br/>⊕173 ↻575"]:::hot
+    production_readiness_checklist["production-readiness-checklist<br/>⊕128 ↻575"]:::hot
     repositories["repositories<br/>⊕31 ↻1563"]:::cool
     static_analysis["static-analysis<br/>⊕35 ↻1123"]:::cool
-    transactional_outbox_relay["transactional-outbox-relay<br/>⊕156 ↻585"]:::hot
+    transactional_outbox_relay["transactional-outbox-relay<br/>⊕134 ↻585"]:::hot
   end
   subgraph php_packages["php-packages"]
     laravel_package_compatibility["laravel-package-compatibility<br/>⊕76 ↻446"]:::mild
@@ -284,7 +284,7 @@ flowchart LR
     testing_safety_report["testing-safety-report<br/>⊕77 ↻756"]:::warm
   end
   subgraph research["research"]
-    query_craft["query-craft<br/>⊕137 ↻3928"]:::hot
+    query_craft["query-craft<br/>⊕130 ↻3928"]:::hot
     research_knowledge_super_skill["research-knowledge-super-skill<br/>⊕195 ↻20472"]:::hot
   end
   subgraph roles["roles"]
@@ -405,28 +405,28 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 205 скиллов · ⊕ always **14972** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 510527 ток · ⌥ snippets 167123 ток.
+**Итого:** 205 скиллов · ⊕ always **14748** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 510527 ток · ⌥ snippets 167123 ток.
 
 ## По бакетам
 
 | Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ snippets |
 |---|--:|--:|--:|--:|
-| `general` | 19 | 1386 | 21238 | 4773 |
-| `php` | 17 | 1213 | 19300 | 28598 |
+| `general` | 19 | 1359 | 21238 | 4773 |
+| `php` | 17 | 1122 | 19300 | 28598 |
 | `architect` | 14 | 880 | 44597 | 8087 |
 | `frontend-vue` | 11 | 854 | 25744 | 7306 |
-| `laravel-architecture` | 6 | 739 | 9730 | 7994 |
 | `quality` | 10 | 738 | 19065 | 7447 |
 | `php-packages` | 9 | 685 | 5417 | 520 |
+| `laravel-architecture` | 6 | 677 | 9730 | 7994 |
 | `oss-dev` | 10 | 627 | 13978 | 4928 |
 | `system` | 7 | 607 | 11012 | 834 |
 | `devops` | 11 | 548 | 9181 | 16993 |
 | `blender-modeling` | 6 | 506 | 8887 | 11131 |
 | `pm` | 10 | 438 | 33491 | 232 |
 | `founder` | 10 | 406 | 15188 | 578 |
-| `laravel-testing` | 4 | 333 | 7993 | 15335 |
-| `research` | 2 | 332 | 24400 | 0 |
+| `research` | 2 | 325 | 24400 | 0 |
 | `frontend-linting` | 4 | 323 | 5920 | 3122 |
+| `laravel-testing` | 4 | 323 | 7993 | 15335 |
 | `operator` | 6 | 296 | 31668 | 106 |
 | `frontend-backend` | 3 | 288 | 5488 | 7851 |
 | `frontend` | 3 | 285 | 3795 | 3508 |
@@ -440,11 +440,11 @@ flowchart LR
 | `finance` | 1 | 179 | 21503 | 0 |
 | `laravel-data-layer` | 2 | 160 | 3314 | 3977 |
 | `creative` | 1 | 155 | 26240 | 0 |
-| `laravel-livewire` | 1 | 155 | 1283 | 1117 |
 | `legal` | 1 | 145 | 29249 | 0 |
 | `sales` | 1 | 143 | 25593 | 0 |
 | `marketing` | 1 | 142 | 16617 | 0 |
 | `blender` | 2 | 140 | 2287 | 311 |
+| `laravel-livewire` | 1 | 128 | 1283 | 1117 |
 | `mobile` | 1 | 107 | 867 | 987 |
 | `frontend-reka` | 1 | 105 | 2007 | 2536 |
 | `frontend-naive-ui` | 1 | 103 | 2041 | 1337 |
@@ -466,13 +466,13 @@ flowchart LR
 | `research-knowledge-super-skill` | research | 195 |
 | `agent-security-super-skill` | security | 184 |
 | `finance-super-skill` | finance | 179 |
-| `production-readiness-checklist` | php | 173 |
-| `config-driven-abstraction` | laravel-architecture | 170 |
-| `verify-claims` | general | 160 |
-| `enum-state-machine` | laravel-architecture | 159 |
-| `transactional-outbox-relay` | php | 156 |
 | `content-creative-super-skill` | creative | 155 |
-| `livewire-blade-attributes` | laravel-livewire | 155 |
+| `legal-super-skill` | legal | 145 |
+| `sales-super-skill` | sales | 143 |
+| `marketing-super-skill` | marketing | 142 |
+| `vue-router-best-practices` | frontend-vue | 141 |
+| `figma-mcp-core` | architect | 136 |
+| `filepond-upload` | frontend | 136 |
 
 ## Топ ↻ on-trigger (цена срабатывания)
 

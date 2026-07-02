@@ -46,12 +46,27 @@ if (SLICES.length === 0) {
   return { built: [], note: 'no slices provided' }
 }
 
+// Урок overnight-прогона (azguard, plan-remainder): agent({schema}) может не вернуть null,
+// а БРОСИТЬ исключение ('subagent completed without calling StructuredOutput' — сабагент не
+// позвал StructuredOutput даже после подсказки). Без обёртки throw всплывал наверх и ронял
+// ВЕСЬ workflow (потерян прогресс после точки падения). safeAgent сводит throw к null —
+// дальше работает штатная деградация if(!result)/circuit-breaker, ничего не переписывая.
+async function safeAgent(prompt, opts) {
+  try {
+    return await agent(prompt, opts)
+  } catch (e) {
+    const label = (opts && opts.label) || '?'
+    log(`agent ${label} бросил исключение (${String((e && e.message) || e).slice(0, 160)}) — infra-failed, продолжаю`)
+    return null
+  }
+}
+
 // ---------------------------------------------------------------------------
 phase('Setup')
 
 // Один агент устанавливает ветку: чистое дерево → ветка от base (создать или
 // переключиться). Дальше НИКТО ветки не трогает.
-await agent(
+await safeAgent(
   `В ${PROJECT_DIR} подготовь рабочую ветку и проверь окружение ДО раздачи срезов.
 1. 'git status' — если дерево грязное, останови и отчитайся (НЕ затирай чужие правки).
 2. ENV-PREFLIGHT (блокер окружения ≠ баг кода): '{{PHP_RUNNER}} -v' (версия); '{{PHP_RUNNER}} -r "print_r(PDO::getAvailableDrivers());"' — нужный драйвер БД присутствует; пробный '{{TEST_RUNNER_CMD}} --filter=__preflight_nonexistent__' не падает фаталом окружения. Драйвер/версия/конфиг сломаны → ОСТАНОВИ прогон и отчитайся (chatom F3: php без рабочего pdo_sqlite всплывал лишь на первом DB-тесте).
@@ -122,7 +137,7 @@ for (const slice of SLICES) {
     : '(это первый срез)'
 
   // 1) Реализация среза в текущую ветку ({{PACK_PREFIX}}-slice-builder; модель/effort — по риску среза).
-  await agent(
+  await safeAgent(
     `Реализуй ОДИН backend-срез {{PACK_PREFIX}} в текущей ветке ${BRANCH}.
 
 СРЕЗ:
@@ -138,7 +153,7 @@ ${HARD_GATES}`,
   log(`срез ${sliceNo}/${SLICES.length}: ${slice.id} impl-ok`)  // heartbeat: живость для supervisor/человека
 
   // 2) Тесты до зелёного (или чистая отсрочка). Test-writer ОЦЕНИВАЕТ риск и ЧЕСТНО репортит обходки.
-  const result = await agent(
+  const result = await safeAgent(
     `Ты в текущей ветке ${BRANCH} в ${PROJECT_DIR}; срез уже реализован:
 ${JSON.stringify(slice, null, 2)}
 
@@ -169,7 +184,7 @@ ${HARD_GATES}`,
       : risk === 'MED'
       ? 'РЕЖИМ MED: контракты, авторизация, целостность; conditional-чек-листы соответствующего слоя.'
       : 'РЕЖИМ LOW: style + N+1 + очевидная корректность (spot-check).'
-    review = await agent(
+    review = await safeAgent(
       `Read-only ревью среза "${slice.title}" в ${PROJECT_DIR}, ветка ${BRANCH}. Diff против ${BASE} ('git diff ${BASE}...${BRANCH}').
 RISK=${risk}; risk_markers: ${markers}. ${depth}
 ${workarounds}
@@ -183,7 +198,7 @@ ${HARD_GATES}`,
     consecutiveFails++
   }
 
-  results.push({ ...(result || { id: slice.id, status: 'infra-failed', risk_level: RISK(slice), summary: 'agent вернул null (терминальный infra-сбой рантайма)', assumptions: [], open_questions: [] }), review_findings: review })
+  results.push({ ...(result || { id: slice.id, status: 'infra-failed', risk_level: RISK(slice), summary: 'agent вернул null (терминальный infra-сбой рантайма ИЛИ agent() бросил исключение — см. лог safeAgent)', assumptions: [], open_questions: [] }), review_findings: review })
 
   // Fail-fast на инфра-отказ: agent() вернул null = терминальный сбой рантайма (rate-limit/
   // timeout, ретраи исчерпаны). Дальше бессмысленно — throttling сам не пройдёт от перехода
@@ -197,7 +212,7 @@ ${HARD_GATES}`,
 // ---------------------------------------------------------------------------
 phase('Verify')
 
-const verify = await agent(
+const verify = await safeAgent(
   `Финальная проверка прогона в ${PROJECT_DIR}, ветка ${BRANCH}:
 1. 'git status' — дерево чистое, текущая ветка ${BRANCH}.
 2. grep -rnE '::query\\(|::create\\(|::where\\(|::all\\(|::find\\(' по {{ACCESS_ROOT}}/Http/Controllers и {{ACCESS_ROOT}}/Actions — перечисли оставшиеся попадания (в контроллерах должно быть 0).

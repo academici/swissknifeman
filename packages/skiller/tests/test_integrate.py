@@ -147,6 +147,23 @@ class IntegrateCase(unittest.TestCase):
                      {"file": None, "mcp": "playwright"}, "recommended", False)
         self.assertEqual(rv["mcp"], ["playwright"])
 
+    # --- output-style (терсе-голос агента, токен-экономия — для ВСЕХ бандлов) ---
+    def test_output_style_lean_in_every_bundle(self):
+        for bundle in ("minimal", "recommended", "full"):
+            g = _gather(self.env, self.proj, {"file": None}, bundle, False)
+            self.assertEqual(g["output_style"], "lean", bundle)
+
+    def test_output_style_custom_bundle_defaults_lean_noninteractive(self):
+        g = _gather(self.env, self.proj, {"file": None}, "custom", False)
+        self.assertEqual(g["output_style"], "lean")
+
+    def test_minimal_bundle_still_applies_output_style_block(self):
+        # minimal выключает perms/mcp/autoapprove/memory/hub/brain, но НЕ output-style —
+        # токен-экономия нужна «для всех проектов» независимо от объёма автоматизации.
+        out = run(cmd_integrate, self.env,
+                  ["--target", str(self.proj), "--bundle", "minimal", "--yes"])
+        self.assertIn("output-style: lean", out)
+
     # --- guards -------------------------------------------------------------
     def test_unknown_bundle_exits(self):
         with self.assertRaises(SystemExit):

@@ -6,8 +6,9 @@ generate_hub (хаб). Окружение Claude Code (permissions/MCP/auto-appr
 вынесено в отдельный пакет `harness` — соответствующие блоки делегируются ему через
 subprocess (как maind делегирует skiller). Безопасно: --dry-run, merge-only, confirm.
 
-Блоки: пререквизиты → скиллы → permissions → MCP → auto-approve → memory → hub → brain.
-Скилл-блоки (skills/hub) — здесь; окружение (permissions/MCP/auto-approve/memory) — в harness.
+Блоки: пререквизиты → скиллы → permissions → MCP → auto-approve → memory → output-style →
+hub → brain. Скилл-блоки (skills/hub) — здесь; окружение (permissions/MCP/auto-approve/
+memory/output-style) — в harness.
 """
 import subprocess
 import sys
@@ -28,11 +29,14 @@ SKILLS_CHANNELS = ("connect", "vendor", "skip")
 # mcp=True → раздать dev-дефолтные MCP-серверы (резолв по autodetect в _gather).
 BUNDLES = {
     "minimal":     {"skills": "connect", "perms": False, "mcp": False,
-                    "autoapprove": None, "memory": None, "hub": False, "brain": False},
+                    "autoapprove": None, "memory": None, "hub": False, "brain": False,
+                    "output_style": "lean"},
     "recommended": {"skills": "connect", "perms": True, "mcp": True,
-                    "autoapprove": "strict", "memory": None, "hub": True, "brain": False},
+                    "autoapprove": "strict", "memory": None, "hub": True, "brain": False,
+                    "output_style": "lean"},
     "full":        {"skills": "connect", "perms": True, "mcp": True,
-                    "autoapprove": "strict", "memory": "federation", "hub": True, "brain": True},
+                    "autoapprove": "strict", "memory": "federation", "hub": True, "brain": True,
+                    "output_style": "lean"},
 }
 AA_MODES = ("strict", "permissive", "bypass", "off")
 MEM_MODES = ("file", "federation", "agentmemory", "off")
@@ -238,11 +242,23 @@ def _block_memory(env, target, choices, dry):
     _run_harness(env, args)
 
 
+def _block_output_style(env, target, choices, dry):
+    """Терсе-голос агента (harness output-style lean) — токен-экономия вывода. off/None → пропуск."""
+    style = choices.get("output_style")
+    print(f"\n[6] output-style: {style or 'пропуск'}")
+    if not style:
+        return
+    args = ["hooks", "--target", str(target), "--output-style", style]
+    if dry:
+        args.append("--dry-run")
+    _run_harness(env, args)
+
+
 def _block_hub(env, target, choices, dry):
     # Хаб уже сгенерён внутри connect/vendor, если skills+hub. Иначе — отдельно.
     if not choices["hub"] or choices["skills"]:
         return
-    print("\n[6] Hub")
+    print("\n[7] Hub")
     if dry:
         print("  [dry-run] сгенерировал бы хаб (CLAUDE.md / .ai)")
         return
@@ -255,7 +271,7 @@ def _block_hub(env, target, choices, dry):
 def _block_brain(target, choices):
     if not choices["brain"]:
         return
-    print("\n[7] Brain docs-sync (подсказка — настраивается со стороны волта)")
+    print("\n[8] Brain docs-sync (подсказка — настраивается со стороны волта)")
     print("  В заметке проекта в Brain-волте добавь во frontmatter:")
     print(f"      repo: {target}")
     print("  Затем: brain status <project> / brain sync <project>")
@@ -357,6 +373,9 @@ def _gather(env, target, opts, bundle, interactive):
         ch["memory"] = _ask_choice("  режим", MEM_MODES, "federation", interactive)
     else:
         ch["memory"] = None
+    ch["output_style"] = "lean" if _ask_yn(
+        "Включить терсе-голос агента (output-style lean — экономия токенов)?",
+        True, interactive) else None
     ch["hub"] = _ask_yn("Сгенерировать хаб скиллов (CLAUDE.md / .ai)?", True, interactive)
     ch["brain"] = _ask_yn("Показать подсказку по brain docs-sync?", True, interactive)
     return ch
@@ -397,6 +416,7 @@ def cmd_integrate(env, argv):
     _block_mcp(env, target, choices, dry)
     _block_autoapprove(env, target, choices, dry)
     _block_memory(env, target, choices, dry)
+    _block_output_style(env, target, choices, dry)
     _block_hub(env, target, choices, dry)
     _block_brain(target, choices)
 

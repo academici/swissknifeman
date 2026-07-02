@@ -219,6 +219,91 @@ class TestMemoryHookProvisioner(unittest.TestCase):
             self.assertFalse(any("maind-memory" in c for c in cmds))
 
 
+class TestOutputStyleProvisioner(unittest.TestCase):
+    """output-style: outputStyle=lean во все .claude/settings.local.json (env:hooks), опт-аут
+    per-project через project.output_style="off". Идёт в ORDER."""
+    _HARNESS = Path(__file__).resolve().parents[2] / "harness" / "bin" / "harness"
+
+    def test_in_default_order(self):
+        self.assertIn("output-style", sync.provisioner_names())
+
+    def test_skip_when_opted_out(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj = _setup(tmp)
+            config["projects"][0]["output_style"] = "off"
+            projs = sync.select_projects(env, config, {"all": True})
+            r = sync.run_sync(env, config, projs, only="output-style")
+            self.assertEqual(r[0]["status"], "skip")
+            self.assertIn("output_style=off", r[0]["detail"])
+
+    def test_skip_when_no_path(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj = _setup(tmp)
+            projs = sync.select_projects(env, config, {"all": True})
+            projs[0] = dict(projs[0])
+            del projs[0]["local_path"]
+            r = sync.run_sync(env, config, projs, only="output-style")
+            self.assertEqual(r[0]["status"], "skip")
+
+    def test_applies_lean_by_default_dry(self):
+        import os
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj = _setup(tmp)
+            projs = sync.select_projects(env, config, {"all": True})
+            old = os.environ.get("MAIND_HARNESS_BIN")
+            os.environ["MAIND_HARNESS_BIN"] = str(self._HARNESS)
+            try:
+                r = sync.run_sync(env, config, projs, only="output-style", dry=True)
+            finally:
+                if old is None:
+                    os.environ.pop("MAIND_HARNESS_BIN", None)
+                else:
+                    os.environ["MAIND_HARNESS_BIN"] = old
+            self.assertEqual(r[0]["status"], "ok")
+            self.assertIn("style=lean", r[0]["detail"])
+            # честный dry-run harness — ничего не записано
+            self.assertFalse((proj / ".claude" / "settings.local.json").exists())
+
+
+class TestSkillsCatalogProvisioner(unittest.TestCase):
+    """skills-catalog: skm:update пере-резолвит каталог скиллов проекта (buckets/exclude с
+    диска) — новые скиллы уже выбранных бакетов доезжают без ручного re-run. Идёт в ORDER."""
+    _SKM = Path(__file__).resolve().parents[2] / "skiller" / "bin" / "skiller"
+
+    def test_in_default_order(self):
+        self.assertIn("skills-catalog", sync.provisioner_names())
+
+    def test_skip_when_no_path(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj = _setup(tmp)
+            projs = sync.select_projects(env, config, {"all": True})
+            projs[0] = dict(projs[0])
+            del projs[0]["local_path"]
+            r = sync.run_sync(env, config, projs, only="skills-catalog")
+            self.assertEqual(r[0]["status"], "skip")
+
+    def test_delegates_to_skm_update(self):
+        # tmp-проект не подключён к реестру skiller — 'skiller update' честно завершается
+        # rc=1 ('не подключён'), провиженер отражает это как failed, БЕЗ побочных записей
+        # (не трогает домашний ~/.swissknifeman ни у теста, ни у реального пользователя).
+        import os
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj = _setup(tmp)
+            projs = sync.select_projects(env, config, {"all": True})
+            old = os.environ.get("MAIND_SKM_BIN")
+            os.environ["MAIND_SKM_BIN"] = str(self._SKM)
+            try:
+                r = sync.run_sync(env, config, projs, only="skills-catalog", dry=True)
+            finally:
+                if old is None:
+                    os.environ.pop("MAIND_SKM_BIN", None)
+                else:
+                    os.environ["MAIND_SKM_BIN"] = old
+            self.assertEqual(r[0]["provisioner"], "skills-catalog")
+            self.assertEqual(r[0]["status"], "failed")
+            self.assertIn("rc=1", r[0]["detail"])
+
+
 class TestRouterConfigProvisioner(unittest.TestCase):
     """router-config: opt-in по .claude/agent-router.env.ini (POLICY!=off). Нет файла/off →
     skip; включён → генерит каталог intent-router через harness (env:router). Идёт в ORDER."""

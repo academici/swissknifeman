@@ -2,7 +2,7 @@
 name: config-driven-abstraction
 bucket: laravel-architecture
 version: 0.1.0
-description: "Config-driven, cache-safe abstractions for multi-panel / multi-tenant Laravel: an immutable Registry (key→instance), a fluent Builder with feature-flags as methods, name maps in config (never closures — config:cache safe), shared schema + opt-in per-item, per-variant = a concrete class (not a shared model with runtime $table). Activate when designing multi-panel/multi-tenant resolution, pluggable drivers, a registry+builder. Triggers: multi-panel, multi-tenant, registry, builder pattern, config:cache, runtime table, driver resolution, per-panel."
+description: "Config-driven, cache-safe Registry+Builder for multi-panel/multi-tenant Laravel: immutable registry key→instance, fluent builder w/ feature-flags as methods, config name-maps not closures, per-variant class not runtime $table. Activate when designing multi-panel/multi-tenant resolution or pluggable drivers. Triggers: multi-panel, multi-tenant, registry, builder pattern, config:cache, runtime table, driver resolution, per-panel."
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "architecture", "config", "registry", "multi-tenant"]
@@ -37,4 +37,4 @@ Cache-safe pluggable abstractions for multi-panel / multi-tenant / driver resolu
 
 - `laravel-architecture:modular-architecture`, `php:production-readiness-checklist`.
 
-<!-- ru-source-sha256: fbf0fc9cb49d67011b6c3aa1d17fc06b6ac49ddc31124e11516c265cfa60a265 -->
+<!-- ru-source-sha256: b2d8f301ca88e6049480df6f400f03f9122e56b950438c700e619368bc2a8383 -->

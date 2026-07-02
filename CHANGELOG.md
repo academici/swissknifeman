@@ -2,6 +2,32 @@
 
 ## [Unreleased]
 
+### Added (output-style=lean + skills-catalog — автоматическая раздача на все проекты)
+
+- **`skiller integrate` ставит `output-style lean` во ВСЕХ бандлах** (`minimal`/`recommended`/
+  `full`/`custom`, дефолт `True`) — новый блок `_block_output_style` делегирует `harness hooks
+  --output-style lean` (по образцу `_block_autoapprove`/`_block_memory`). Раньше терсе-голос
+  агента был чисто ручной операцией (`harness hooks --output-style lean`), ни одна из точек
+  входа (`maind onboard`, `skiller integrate`) его не вызывала — capability `env:hooks` в
+  `orchestrate.py` не имела ни одного вызывающего. Токен-экономия нужна «для всех проектов»
+  независимо от объёма остальной автоматизации бандла — единственный пункт, включённый и в
+  `minimal`.
+- **`maind sync` — два новых провиженера** для уже онбордженных проектов (закрывают
+  тот же разрыв ретроактивно, без полного re-onboard): `output-style` (тот же `env:hooks
+  --output-style lean`, опт-аут per-project `project.output_style: "off"` — иначе регулярный
+  `maind sync --all` затирал бы локально выбранный стиль) и `skills-catalog` (`skiller update`
+  — пере-резолв buckets/exclude с диска, поэтому новый скилл уже выбранного бакета, например
+  `php/pao`, доезжает до давно онбордженных PHP-проектов без ручного `skiller update`/`connect`/
+  `vendor`). Оба — в дефолтном наборе `--all`.
+- **`skm:update` добавлен в `orchestrate.DRY_CAPABLE`** — `skiller update` умеет свой честный
+  `--dry-run`, теперь `maind sync --dry-run` даёт реальный превью для `skills-catalog`, а не
+  fake print+rc0 (та же ловушка, которую `DRY_CAPABLE` уже чинил для `agent-pack`).
+- Контекст: `php/pao` (агентно-оптимизированный вывод PHPUnit/Pest/PHPStan для PHP-проектов) уже
+  входил в дефолтный профиль `php-package`/`laravel-project` и доезжал на новых онбордингах;
+  реальный `composer require laravel/pao --dev` **сознательно не автоматизирован** нигде (мутация
+  `composer.json`/`composer.lock` без подтверждения человека) — агент выполняет его сам по
+  инструкции скилла, когда реально начинает гонять тесты («skill-on-demand»).
+
 ### Fixed (пакет `skiller` — аудит registry/budget/vendor/connect: дублирование, ложно-зелёные гейты, надёжность)
 
 По итогам `research/Глубокий аудит пакета skiller (registry-budget-vendor-connect).md` (22 находки,

@@ -106,6 +106,29 @@ class TestOrchestrate(unittest.TestCase):
             with self.assertRaises(SystemExit):
                 orch.run_capability(env, cfg, "flexcrm", "brain:status")
 
+    def test_skm_update_is_dry_capable(self):
+        # skm:update — в DRY_CAPABLE: честный --dry-run сквозь skiller (`skiller update`
+        # умеет свой --dry-run), а не fake print+rc0 — иначе `maind sync --dry-run` давал бы
+        # ложно-зелёный превью для нового провиженера skills-catalog (та же ловушка, что
+        # раньше была с agent-pack — см. комментарий DRY_CAPABLE в orchestrate.py).
+        calls = {}
+        orig = orch.subprocess.run
+        orch.subprocess.run = _fake_run(calls)
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            os.environ["MAIND_SKM_BIN"] = str(_fake_bin(tmp))
+            try:
+                cfg = merge_defaults({"projects": [
+                    {"id": "flexcrm", "name": "F", "local_path": "/x/flexcrm"}]})
+                rc = orch.run_capability(env, cfg, "flexcrm", "skm:update", dry=True)
+                self.assertEqual(rc, 0)
+                argv = calls["argv"]
+                self.assertIn("update", argv)
+                self.assertIn("--dry-run", argv)
+            finally:
+                del os.environ["MAIND_SKM_BIN"]
+                orch.subprocess.run = orig
+
     def test_dry_run_does_not_execute(self):
         called = {"ran": False}
         orig = orch.subprocess.run

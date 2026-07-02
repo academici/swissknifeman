@@ -2,7 +2,7 @@
 name: health-checks
 bucket: laravel-testing
 version: 0.1.0
-description: "spatie/laravel-health в Laravel: кастомные Check-классы (диск, очередь, heartbeat шедулера, TCP-порт сервиса, кэш, БД) на Result::ok/failed, регистрация в config/health и Health::checks(), /health endpoint (live/ready, JSON/Filament), расписание прогона и уведомления. Активировать при словах health check, healthcheck, liveness/readiness, /health, spatie health, мониторинг доступности, проверка диска/очереди/кэша/heartbeat, при правке app/Health/** или config/health.php."
+description: "spatie/laravel-health в Laravel: кастомные Check-классы (диск, очередь, heartbeat шедулера, TCP-порт, кэш, БД) через Health::checks() в config/health; /health endpoint (live/ready, JSON/Filament); прогон по расписанию, уведомления о падении. Активировать при словах health check, healthcheck, liveness/readiness, /health, spatie health, мониторинг доступности, проверка диска/очереди/кэша/heartbeat, при правке app/Health/** или config/health.php."
 risk: write
 persona: oss-dev
 tags: [laravel, health, monitoring, spatie, liveness, readiness, observability]

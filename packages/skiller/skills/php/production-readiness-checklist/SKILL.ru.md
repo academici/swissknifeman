@@ -4,7 +4,7 @@
 name: production-readiness-checklist
 bucket: php
 version: 0.1.0
-description: "Verify production-class invariants that green happy-path tests structurally miss: transaction atomicity, race-safe idempotency, config defaults that work out-of-the-box, non-nullable cursor keys, after-commit side-effects, soft-delete, id-strategy compatibility, single queue-retry owner, atomic state transitions. Activate before/at review of risky Laravel slices (services, queues, drivers, migrations). Triggers: production readiness, atomicity, race condition, idempotency, config default, cursor stability, after-commit, queue semantics, before merge."
+description: "Verify production-readiness invariants happy-path tests miss: transaction atomicity, race-condition-safe idempotency, config defaults, non-nullable cursor keys, after-commit side-effects, soft-delete, id-strategy compatibility, single queue-retry owner, atomic state transitions. Activate before/at review of risky Laravel slices (services, queues, drivers, migrations), queue semantics, or before merge."
 risk: read
 persona: oss-dev
 tags: ["php", "laravel", "review", "production", "reliability", "quality"]

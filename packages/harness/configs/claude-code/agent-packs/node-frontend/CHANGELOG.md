@@ -2,6 +2,19 @@
 
 Формат — [Keep a Changelog](https://keepachangelog.com/ru/1.0.0/); версии — per-PACK (semver).
 
+## [0.4.0] - 2026-07-02
+
+### Changed
+
+- **dev-loop: `agent({schema})` throw (schema-noncompliance) больше не роняет прогон
+  (azguard overnight-инцидент 2026-07-02).** Затронут install-файл
+  `.claude/workflows/{PACK_PREFIX}-dev-loop.js`: все вызовы `agent()` обёрнуты в
+  `safeAgent()` — если сабагент завершился без вызова StructuredOutput (throw
+  `subagent completed without calling StructuredOutput`), исключение гасится в `null`
+  вместо всплытия наверх; дальше штатная деградация `if (!result)` (infra-failed →
+  fail-fast → Verify/отчёт), как уже было для терминальных API-ошибок. Раньше throw
+  ронял ВЕСЬ workflow (потеря прогресса, ручной resume).
+
 ## [0.3.0] - 2026-07-01
 
 ### Changed

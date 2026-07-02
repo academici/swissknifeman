@@ -4,6 +4,21 @@
 запись помечает затронутый install-файл, чтобы апгрейдящий агент сопоставил
 изменение с конкретным файлом проекта.
 
+## [0.11.1] - 2026-07-02
+
+### Added
+
+- **Ось `generated-core-edited` (HIGH) в `agents/reviewer.md`** — дифф, трогающий файл
+  с header `swissknifeman:generated`, репортится как HIGH: правку перенести в override,
+  core восстановить рендером. Затронут install-файл `.claude/agents/{PACK_PREFIX}-reviewer.md`.
+- **Overlay-скаффолд `rules/reviewer-overrides.md`** (user_owned, `role:override`) →
+  `.claude/rules/{PACK_PREFIX}-reviewer-overrides.md`: легальная зона проектных осей ревью;
+  reviewer читает его финальным блоком «Проектные оверрайды» ПОВЕРХ общих осей.
+- **HARD_GATES в `workflows/dev-loop.js`**: generated `.claude/agents|workflows|hooks`
+  не редактировать — оверрайды в `.claude/rules/*-overrides.md`.
+- Provenance-headers в rendered-файлы добавляет ДВИЖОК agent-packs (harness), не шаблоны
+  пака. Контекст: SKM-MASTER-002 фаза E.
+
 ## [0.11.0] - 2026-07-02
 
 ### Changed

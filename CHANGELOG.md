@@ -2,6 +2,38 @@
 
 ## [Unreleased]
 
+### Added (SKM-MASTER-002, волна 1 — plan-протокол · токен-телеметрия SCHEMA=2 · защита generated-ассетов)
+
+Мастер-план `plans/SKM-MASTER-002` (операционная система планов): сильная модель проектирует,
+дешёвая исполняет, телеметрия делает утечки токенов видимыми, generated-ассеты защищены.
+
+- **Plan-протокол (фаза A):** скилл `general/plan-protocol` (SSOT: схемы `plans/<ID>/{plan.md,
+  phases/Pn.md,handoff.md}`, 6 канонических статусов, rolling handoff, routing-матрица
+  model/effort, эскалация с greppable-артефактами) + snippets-шаблоны; 4 команды
+  `/task:plan-{design,exec,close,audit}` с пинами (opus/high · sonnet/medium · sonnet/low ·
+  opus/xhigh); детерминированный `plan-lint` (`packages/task/lib/task/plan_lint.py` + тонкий
+  `scripts/plan-lint.py`, 45 тестов) и первый `validate.sh` пакета task; сам мастер-план
+  транскрибирован в `plans/SKM-MASTER-002` (dogfooding, lint зелёный).
+- **Токен-телеметрия end-to-end (фаза B):** `core/usage.py` — единый самодостаточный
+  транскрипт-парсер usage (вендорится байт-в-байт в хук как `_usage.py`; `sync-usage.sh` +
+  cmp-гейт в validate.sh harness — дрейф копии валит валидацию); run-report **SCHEMA=2**
+  (only-additive: `usage` per-agent включая sidecar-субагентов, `reads`, `error_loops`,
+  `retrieval`, `protected_writes`); тренд `.claude/analyze/usage-trend.ndjson` (~200 байт/сессия,
+  ретеншн 4000→2000); `skiller analyze-run` переведён на `core.usage` (суммы идентичны,
+  регресс-фикстура); `maind analyze` — блок tokens (сессия vs медиана K=20/p90 тренда + pinned
+  `baseline.json`), регрессия токенов → ATTENTION (RED от токенов невозможен); `harness doctor`
+  детектит протухший установленный хук. USD сознательно не считаем — сырые токены model-keyed.
+- **Защита generated-ассетов (фаза E):** детерминированный provenance-header
+  `swissknifeman:generated` (Pack@version/Template/Edit-policy/Extension-points, БЕЗ timestamp —
+  хеш вместе с header, матрица `_decide`/`categorize_file_change` не тронута) во всех rendered
+  файлах паков; `user_owned` в lock (schema 1, аддитивно); `harness agent-packs doctor --drift
+  [--strict]` + самодостаточный `pack_drift` в `maind analyze` → ATTENTION при локальной правке
+  generated-файла; overlay-модель расширения (`.claude/rules/<prefix>-reviewer-overrides.md`,
+  user_owned, `role:override`) во всех стек-паках + правило `_common/rules/generated-assets.md`
+  + ось `generated-core-edited` (HIGH) в reviewer'ах + HARD_GATES в dev-loop. Бампы паков:
+  `_common` 0.4.0, `backend-laravel` 0.11.1, `node-frontend`/`python-backend`/`dart-flutter`
+  0.4.1, role-паки +0.0.1.
+
 ### Added (output-style=lean + skills-catalog — автоматическая раздача на все проекты)
 
 - **`skiller integrate` ставит `output-style lean` во ВСЕХ бандлах** (`minimal`/`recommended`/

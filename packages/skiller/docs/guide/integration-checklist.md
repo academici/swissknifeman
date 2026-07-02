@@ -16,12 +16,15 @@ skiller integrate --yes --bundle recommended   # без вопросов, гот
 
 Быстрый старт без перебора каждого пункта — `--bundle`:
 
-| Бандл | Скиллы | Permissions | MCP | auto-approve | Память | Hub |
-|---|---|---|---|---|---|---|
-| `minimal` | connect | — | — | — | — | — |
-| `recommended` (дефолт для `--yes`) | connect | autodetect | context7¹ | strict | — | да |
-| `full` | connect | autodetect | context7¹ | strict | brain `core`, federation | да |
-| `custom` (дефолт интерактивно) | спрашивает каждый блок | | | | | |
+| Бандл | Скиллы | Permissions | MCP | auto-approve | Память | output-style | Hub |
+|---|---|---|---|---|---|---|---|
+| `minimal` | connect | — | — | — | — | lean | — |
+| `recommended` (дефолт для `--yes`) | connect | autodetect | context7¹ | strict | — | lean | да |
+| `full` | connect | autodetect | context7¹ | strict | brain `core`, federation | lean | да |
+| `custom` (дефолт интерактивно) | спрашивает каждый блок | | | | | | |
+
+`output-style` — единственный пункт, включённый **во всех** бандлах (даже `minimal`):
+токен-экономия терсе-вывода нужна проекту независимо от объёма остальной автоматизации.
 
 ¹ В средах разработки (всё, кроме obsidian-vault).
 
@@ -73,13 +76,22 @@ PreToolUse-хук, разбирающий **всю** командную стро
 - Состав участников группы — `~/.claude/hooks/memory/config.json` (`brains.<имя>.members`).
 - Файлы хука — `apply-permissions.sh --global`. Скилл-обвязка: `system/shared-memory`.
 
-### 6. Hub (индекс скиллов)
+### 6. output-style (терсе-голос агента)
+Токен-экономия: сжимает вывод агента до выжимки+кода (`lean`), инженерные правила не режет.
+- Визард зовёт `harness hooks --output-style lean` — копирует пресет в
+  `.claude/output-styles/lean.md` + ставит `outputStyle` в `.claude/settings.local.json`.
+- Включён по умолчанию **во всех** бандлах (в т.ч. `minimal`); `custom` — спрашивает.
+- Уже подключённые проекты (созданные до этого пункта) докатывает `maind sync --all --only
+  output-style`; опт-аут — `project.output_style: "off"` в `config.json` (maind).
+- Активируется после `/clear` или новой сессии Claude Code.
+
+### 7. Hub (индекс скиллов)
 Managed-блок в `CLAUDE.md` (или `.ai/guidelines/swissknifeman-hub.md` при Boost) —
 агент видит, какие скиллы подключены.
 - Визард включает `--hub` у connect/vendor.
 - Ручками: `./scripts/generate-hub.sh --target <проект>`.
 
-### 7. Brain docs-sync (со стороны волта)
+### 8. Brain docs-sync (со стороны волта)
 Двусторонний синк `docs/`/`docs-public` между проектом и Obsidian-волтом Brain.
 - **Не автоматизируется из проекта** — настраивается во волте: во frontmatter
   заметки проекта добавь `repo: <путь к проекту>`, затем `brain status/sync`.

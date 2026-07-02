@@ -48,7 +48,7 @@ CAPABILITIES = {
 # что реально запишется), а не print+rc0. Для прочих (нет своего dry) — печать намерения.
 # Причина: `maind sync --dry-run` давал ложно-зелёный превью апгрейда паков (field-feedback).
 DRY_CAPABLE = {"env:apply", "env:mcp", "env:hooks",
-               "env:agent-pack", "env:agent-pack-upgrade", "env:router"}
+               "env:agent-pack", "env:agent-pack-upgrade", "env:router", "skm:update"}
 
 
 def _sibling_bin(config, which):

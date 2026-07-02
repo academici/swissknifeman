@@ -269,6 +269,56 @@ def _agent_pack_run(env, config, projects, mode, dry):
     return results
 
 
+def _skills_catalog_run(env, config, projects, mode, dry):
+    """Пере-резолв каталога скиллов (skiller update): buckets/exclude пере-читаются с диска
+    каждый раз, поэтому новый скилл в уже выбранном бакете (напр. `pao` в `php`) доезжает
+    до уже онбордженных проектов без ручного re-run skiller connect/vendor/update. Идемпотентно,
+    exclude уважается, foreign-файлы не трогает (skillset.sync_skillset/vendor.collect_skills)."""
+    from .orchestrate import run_capability
+    results = []
+    for p in projects:
+        if not p.get("local_path"):
+            results.append(_result("skills-catalog", p["id"], "skip", detail="нет пути проекта"))
+            continue
+        try:
+            rc = run_capability(env, config, p["id"], "skm:update", dry=dry)
+            results.append(_result("skills-catalog", p["id"], "ok" if rc == 0 else "failed",
+                                   changed=rc == 0, detail=f"rc={rc}"))
+        except SystemExit:
+            results.append(_result("skills-catalog", p["id"], "skip",
+                                   detail="skiller недоступен"))
+    return results
+
+
+def _output_style_run(env, config, projects, mode, dry):
+    """outputStyle=lean (терсе-голос агента, токен-экономия) во все .claude/settings.local.json
+    уже онбордженных проектов — догоняет `skiller integrate`, который ставит это только на
+    НОВЫХ онбордингах. Опт-аут per-project: project.output_style="off" — тогда пропуск (не
+    трогаем локально выбранный стиль): block_output_style в harness ПЕРЕЗАПИСЫВАЕТ ключ, если
+    он отличается от желаемого, поэтому без опт-аута регулярный `maind sync --all` затирал бы
+    чей-то осознанный выбор."""
+    from .orchestrate import run_capability
+    results = []
+    for p in projects:
+        style = p.get("output_style", "lean")
+        if not style or style == "off":
+            results.append(_result("output-style", p["id"], "skip",
+                                   detail="project.output_style=off"))
+            continue
+        if not p.get("local_path"):
+            results.append(_result("output-style", p["id"], "skip", detail="нет пути проекта"))
+            continue
+        try:
+            rc = run_capability(env, config, p["id"], "env:hooks",
+                                ["--output-style", style], dry=dry)
+            results.append(_result("output-style", p["id"], "ok" if rc == 0 else "failed",
+                                   changed=rc == 0, detail=f"style={style} rc={rc}"))
+        except SystemExit:
+            results.append(_result("output-style", p["id"], "skip",
+                                   detail="harness недоступен"))
+    return results
+
+
 def _router_config_run(env, config, projects, mode, dry):
     """Сгенерить/обновить каталог intent-router (.claude/agent-router.config.json) через
     harness — ТОЛЬКО для проектов, где хук уже включён (opt-in: есть agent-router.env.ini с
@@ -314,12 +364,14 @@ PROVISIONERS = {
     "feature-log-hook": _feature_log_hook_run,
     "ecosystem-skill": _ecosystem_skill_run,
     "setup-skill": _setup_skill_run,
+    "skills-catalog": _skills_catalog_run,
     "agent-pack": _agent_pack_run,
+    "output-style": _output_style_run,
     "router-config": _router_config_run,
 }
 ORDER = ["mcp", "code-graph", "graph", "memory", "memory-hook", "health-hook",
          "health-doc", "feature-log-hook", "ecosystem-skill", "setup-skill",
-         "agent-pack", "router-config"]
+         "skills-catalog", "agent-pack", "output-style", "router-config"]
 
 
 def provisioner_names(only=None):
@@ -356,7 +408,8 @@ def cmd_sync(env, argv):
     if opts["help"]:
         print("maind sync [--project ID | --namespace NS | --all] [--only mcp,code-graph,"
               "graph,memory,memory-hook,health-hook,health-doc,feature-log-hook,"
-              "ecosystem-skill,setup-skill,agent-pack,router-config] "
+              "ecosystem-skill,setup-skill,skills-catalog,agent-pack,output-style,"
+              "router-config] "
               "[--mode install|update|auto] [--dry-run] [--json]")
         return
     mode = opts["mode"] or "auto"

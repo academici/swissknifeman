@@ -13,7 +13,7 @@
 | Развилка | По умолчанию | Когда менять |
 |:--|:--|:--|
 | **Канал скиллов** | спросить | `connect` (плагины, не в репо, нужен доступ к реестру) vs `vendor`/`sync` (физ.копии в репо — для внешних разработчиков). НЕ дефолт — выбор пользователя |
-| **CORE-раздача** | вкл (`--no-core` отключает) | connect → курируемый плагин `core` (РОВНО 7 `CORE_SKILLS`, лёгкая замена бакетам general+oss-dev, ~480 vs ~1956 резидентных ток); vendor → те же 7 скиллов (`context-economy`/`anti-drift`/`compact-responses`/`session-handoff`/`mcp-advisor`/`verify-claims`/`gh-review`) пофайлово |
+| **CORE-раздача** | вкл (`--no-core` отключает) | connect → курируемый плагин `core` (РОВНО `CORE_SKILLS`, лёгкая замена бакетам general+oss-dev; актуальный резидент — `skiller budget --check-core`, не хардкодить снапшот); vendor → те же `CORE_SKILLS` (`context-economy`/`anti-drift`/`compact-responses`/`session-handoff`/`mcp-advisor`/`verify-claims`/`query-craft`/`gh-review`) пофайлово |
 | **Память** | `maind` | `maind` (хаб, общая) / `native` (agentmemory локально) / `off`. См. ecosystem-integration |
 | **namespace** | пусто → `default` | задать группы (`["axioma", …]`) для межпроектных связей; `["*"]` — общая инфраструктура |
 | **Код-граф (Serena)** | по типу (язык есть) | `--with-code` поднимает per-project `serena` через `uvx`; не для vault/standalone |

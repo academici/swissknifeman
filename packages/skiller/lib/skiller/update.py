@@ -94,7 +94,16 @@ def update_one(env, target, dry_run=False):
         manifest = {}
         mf = target / vendor_path / MANIFEST
         if mf.is_file():
-            manifest = json.loads(mf.read_text(encoding="utf-8"))
+            try:
+                manifest = json.loads(mf.read_text(encoding="utf-8"))
+            except json.JSONDecodeError as e:
+                # Битый манифест — деградация, не крах: раньше необёрнутый json.loads
+                # ронял необработанным исключением ВЕСЬ `update --all` (cmd_update ловит
+                # только SystemExit) на первом же проекте с битым манифестом (аудит U-1).
+                # manifest={} — agent/profile просто возьмутся из других источников
+                # precedence (config/projects.json record), как для проекта без манифеста.
+                warn(f"{mf}: битый JSON манифеста — игнорирую (agent/profile "
+                     f"возьмутся из .swissknife.json/projects.json, если заданы): {e}")
         if not rec:
             print(f"NOTE: {target} не был в projects.json — регистрирую (adopt)")
         opts = replay_opts(rec)

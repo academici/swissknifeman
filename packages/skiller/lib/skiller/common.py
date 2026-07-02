@@ -25,15 +25,21 @@ DB_FILE = STATE_DIR / "projects.json"
 DB_VERSION = 1
 MARKETPLACE = "swissknifeman"
 MANIFEST = ".swissknifeman-manifest.json"
+MANIFEST_VERSION = 1
 AGENT_DEFAULTS = {"claude": ".claude/skills", "cursor": ".cursor/skills",
                   "generic": ".ai/skills"}
 # Файлы каталога скилла, которые НЕ едут в потребляющий проект ни одним каналом
 # физ.переноса (vendor/sync): upstream.json и .claude-plugin — служебные реестра;
 # SKILL.*.md (SKILL.ru.md и пр.) — человеческий ИСТОЧНИК (агент грузит лишь EN
 # SKILL.md, "SKILL.*.md" не матчит сам "SKILL.md"); evals/ — поведенческие тесты
-# скилла. ЕДИНЫЙ источник истины: vendor.copy_skill и skillset.sync копируют через
-# него (раньше дублировали и skillset терял SKILL.*.md/evals → утечка RU-источника).
-SKILL_IGNORE = ("upstream.json", ".claude-plugin", "SKILL.*.md", "evals")
+# скилла; __pycache__/*.pyc — байткод-кэш, появляется локально при ручном запуске
+# .py-сниппетов (напр. snippets/check.py) — найдено при расследовании нестабильного
+# content_sha256 у скилла с .py-сниппетами (registry --check зеленел локально и
+# дрейфовал в чистом чекауте/CI). ЕДИНЫЙ источник истины: vendor.copy_skill и
+# skillset.sync копируют через него (раньше дублировали и skillset терял
+# SKILL.*.md/evals → утечка RU-источника).
+SKILL_IGNORE = ("upstream.json", ".claude-plugin", "SKILL.*.md", "evals",
+                "__pycache__", "*.pyc")
 CONFIG_KEYS = {
     "project_type": str, "buckets": list, "exclude": list, "presets": list,
     "skills_path": str, "agent": str,
@@ -67,6 +73,25 @@ def safe_copy_skill(src, dst, dest_root):
     shutil.copytree(src, dst, dirs_exist_ok=True,
                     ignore=shutil.ignore_patterns(*SKILL_IGNORE))
     return True
+
+
+def write_skill_manifest(manifest_file, *, profile, agent, layout, installed,
+                         support_files=None):
+    """ЕДИНЫЙ writer `.swissknifeman-manifest.json` — общий для vendor.do_vendor и
+    skillset.sync_skillset (раньше два независимых писателя с разной схемой:
+    date-only timestamp без `version` у vendor, `now_iso`+`version` у skillset —
+    аудит V-4, update.detect_vendor_path читает оба и мог упереться в расхождение).
+    Атомарно (tmp+os.replace), `version` первым ключом."""
+    data = {
+        "installed_at": now_iso(),
+        "profile": profile,
+        "agent": agent,
+        "layout": layout,
+        "skills": installed,
+    }
+    if support_files is not None:
+        data["support_files"] = support_files
+    atomic_write_json(manifest_file, data, version=MANIFEST_VERSION)
 
 
 @dataclass(frozen=True)
@@ -156,12 +181,54 @@ def parse_frontmatter_fields(skill_md):
             "requires": parse_inline_list(fm.get("requires", ""))}
 
 
+# --- requires (transitive dependency BFS) --------------------------------------
+def resolve_requires_bfs(seed, lookup, selected_keys, exclude):
+    """Транзитивный BFS резолва frontmatter `requires` — ЕДИНЫЙ источник для
+    vendor.resolve_requires (FS-кортежи) и skillset._pull_requires (registry-entry):
+    раньше это были два независимых, уже разошедшихся тела (RU/EN тексты warn,
+    аудит V-1). Вызывающий адаптирует свою модель данных к узлу-словарю через `lookup`.
+
+    seed: [(dep_name, requester_key), ...] — стартовая очередь (requires уже
+        отобранных скиллов).
+    lookup(dep_name) -> {"key", "requires": [str], "exclude_tokens": set[str], ...} | None
+        — разрешить имя зависимости в узел; None — зависимость не найдена в реестре.
+        Узел может нести любые доп. поля (напр. "_payload") — вызывающий сам их читает
+        из возврата.
+    selected_keys: изменяемое множество уже выбранных ключей — МУТИРУЕТСЯ (сюда
+        добавляются ключи резолвнутых узлов), чтобы повторный вызов/рекурсия не
+        задваивала уже выбранное.
+    exclude: множество токенов, которые ПОБЕЖДАЮТ зависимость (safety-oriented) —
+        зависимость с пересечением exclude_tokens пропускается с warning, даже если
+        она нужна другому скиллу.
+
+    Возвращает [(node, requester_key), ...] в порядке резолва — вызывающий сам
+    решает, как класть узлы в свою структуру (список кортежей / dict по имени)."""
+    queue = list(seed)
+    resolved = []
+    while queue:
+        dep, requester = queue.pop(0)
+        if dep in selected_keys:
+            continue
+        node = lookup(dep)
+        if node is None:
+            warn(f"'{requester}' requires неизвестный скилл '{dep}' — пропуск")
+            continue
+        if node["exclude_tokens"] & exclude:
+            warn(f"'{requester}' requires '{dep}', но он в exclude — зависимость пропущена")
+            continue
+        selected_keys.add(node["key"])
+        resolved.append((node, requester))
+        queue.extend((d, node["key"]) for d in node["requires"])
+    return resolved
+
+
 def skill_content_hash(skill_dir):
     """SHA-256 по содержимому ВСЕХ файлов каталога скилла — детект дрейфа sync шире,
     чем по одному SKILL.md: ловит правки в snippets/ и references/ (которые SKILL.md
     может не двигать). Игнорируем то же, что НЕ вендорится: upstream.json, языковые
-    альтернаты SKILL.*.md (кроме SKILL.md), .claude-plugin/. Относительный путь файла
-    входит в хеш (защита от переименований/перемещений). Порядок стабилен (sorted).
+    альтернаты SKILL.*.md (кроме SKILL.md), .claude-plugin/, __pycache__/*.pyc.
+    Относительный путь файла входит в хеш (защита от переименований/перемещений).
+    Порядок стабилен (sorted).
 
     Полный hexdigest, как у остальных sha256 в реестре/локе. Дополняет, а НЕ заменяет
     поле sha256 (по SKILL.md) — старые локи без content_sha256 деградируют корректно."""
@@ -176,6 +243,12 @@ def skill_content_hash(skill_dir):
         if name.startswith("SKILL.") and name.endswith(".md") and name != "SKILL.md":
             continue
         if ".claude-plugin" in f.parts:
+            continue
+        # __pycache__/*.pyc — байткод-кэш при локальном запуске .py-сниппетов (напр.
+        # snippets/check.py); без исключения content_sha256 нестабилен между машинами
+        # (найдено при расследовании дрейфа skills.json — на диске разработчика был
+        # __pycache__, в чистом чекауте/CI его нет, хеши расходились).
+        if "__pycache__" in f.parts or name.endswith(".pyc"):
             continue
         # evals/ — поведенческие тесты (eval-first), НЕ вендорятся (см. vendor.copy_skill);
         # исключаем из хеша, чтобы правка теста не считалась дрейфом вендоренного скилла.

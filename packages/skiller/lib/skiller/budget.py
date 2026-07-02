@@ -23,33 +23,53 @@ from pathlib import Path
 from core import atomic_write_text
 
 from .common import die, parse_flags, parse_frontmatter
-from .config import (DEFAULT_EXCLUDE, RESIDENT_BUDGET_TARGET, all_buckets,
-                     core_skill_tuples, find_project_root, load_config,
-                     resolve_selection, validate_config)
+from .config import (CORE_SKILLS, DEFAULT_EXCLUDE, RESIDENT_BUDGET_TARGET,
+                     all_buckets, core_skill_tuples, find_project_root,
+                     load_config, resolve_selection, validate_config)
 from .vendor import build_requires_index, collect_skills, resolve_requires
 
 # Символов на токен — РАЗНЫЕ для кириллицы и латиницы/кода: кириллица у токенайзера
-# Claude плотнее (~2.2 chars/tok), латиница/код/пунктуация — ~4.0. Поэтому EN-канон
-# дешевле RU при ТОМ ЖЕ объёме текста — это и есть выигрыш перевода. Грубо, для
-# сравнения наборов, не точный учёт.
-CHARS_PER_TOKEN_CYR = 2.2
-CHARS_PER_TOKEN_LAT = 4.0
+# Claude плотнее, латиница/код/пунктуация — реже. Поэтому EN-канон дешевле RU при
+# ТОМ ЖЕ объёме текста — это и есть выигрыш перевода. Грубо, для сравнения наборов,
+# не точный учёт (оракул — /v1/messages/count_tokens).
+#
+# Калибровка (RAG, verified 2026-07-02, perplexity — 3 источника: codeusagecalc,
+# frontiersin 2025, basicfreetools; аудит B-1): кириллица-проза ~2.8–3.2 chars/tok,
+# латиница-проза ~3.5–4.0, код ~2.5–3.0. Прежние 2.2/4.0 занижали RU chars/tok
+# (=завышали RU-токены, искусственно раздувая «выигрыш перевода») и завышали LAT
+# chars/tok (=занижали токены code-heavy тел). CYR — середина диапазона (2.9). LAT —
+# компромисс EN-прозы и кода одной константой (модель не различает код-блоки внутри
+# тела): тела скиллов технические (команды/сниппеты/таблицы) → ближе к коду, чем к
+# чистой прозе (3.4).
+CHARS_PER_TOKEN_CYR = 2.9
+CHARS_PER_TOKEN_LAT = 3.4
 CONTEXT_LIMIT = 200_000
 TOP_N = 10
 
 
 # --- оценка токенов -----------------------------------------------------------
 def estimate_tokens(text):
-    """Языко-зависимая оценка токенов: кириллица ~2.2 chars/tok, остальное ~4.0.
-    0 для пустого. EN тем самым дешевле RU при равном объёме (выигрыш перевода)."""
+    """Языко-зависимая оценка токенов: кириллица ~2.9 chars/tok, остальное ~3.4
+    (см. калибровку выше). 0 для пустого. EN тем самым дешевле RU при равном
+    объёме (выигрыш перевода)."""
     if not text:
         return 0
-    cyr = sum(1 for c in text if "Ѐ" <= c <= "ӿ")
+    # U+0400–04FF (Cyrillic) — RU/UK и большинство славянских языков; U+0500–052F
+    # (Cyrillic Supplement) — доп. буквы (коми-пермяцкий и др.), B-3: раньше не
+    # учитывались (недо-подсчёт токенов для текста с этими буквами).
+    cyr = sum(1 for c in text if "Ѐ" <= c <= "ӿ" or "Ԁ" <= c <= "ԯ")
     return math.ceil(cyr / CHARS_PER_TOKEN_CYR + (len(text) - cyr) / CHARS_PER_TOKEN_LAT)
 
 
 def _split_frontmatter(text):
-    """(frontmatter_text, body_text). Без frontmatter → ("", text)."""
+    """(frontmatter_text, body_text). Без frontmatter → ("", text).
+
+    B-4 (аудит): похоже на дубль common.parse_frontmatter/core.text.parse_frontmatter,
+    но решает ДРУГУЮ задачу — тем нужен разобранный YAML-словарь (без тела), этой
+    функции нужно ИМЕННО тело (frontmatter_text здесь не парсится как YAML, только
+    отрезается). Слить значило бы менять сигнатуру core.parse_frontmatter (общую для
+    skiller/harness/maind — риск шире одного пакета) ради 8-строчной находилки границы
+    `---`...`---`. Оставлено раздельно осознанно, не по недосмотру."""
     lines = text.replace("\r\n", "\n").split("\n")
     if not lines or lines[0].strip() != "---":
         return "", text
@@ -247,7 +267,9 @@ def cmd_budget(env, argv):
               "  Трёхъярусный токеновый бюджет набора скиллов (⊕ always / ↻ on-trigger\n"
               "  / ⌥ on-demand). --write-map перегенерит docs/guide/budget.md.\n"
               "  --check-core: резидентный (⊕ tier-0) бюджет CORE_SKILLS vs target (гейт\n"
-              "  против тихого роста ядра); --strict — ненулевой код при превышении (CI).")
+              "  против тихого роста ядра И против тихого недобора — пропавший по пути\n"
+              "  CORE-скилл занижает резидент, а не улучшает его); --strict — ненулевой\n"
+              "  код при превышении ИЛИ недоборе (CI).")
         return
     no_core = opts.get("no_core", False)
 
@@ -256,20 +278,30 @@ def cmd_budget(env, argv):
         return
 
     if opts.get("check_core"):
-        cards = [skill_budget(d) for (_b, _rel, d, _n)
-                 in core_skill_tuples(env, set())]
+        tuples = core_skill_tuples(env, set())
+        cards = [skill_budget(d) for (_b, _rel, d, _n) in tuples]
         cards = [c for c in cards if c]
+        # core_skill_tuples/skill_budget молча пропускают CORE_SKILLS-путь без SKILL.md
+        # (переезд/опечатка) — раньше пропавший скилл просто уменьшал resident и делал
+        # гейт «зеленее» (аудит B-2). Недобор — отдельная ошибка, не «повезло с бюджетом».
+        missing = len(CORE_SKILLS) - len(cards)
         resident = sum(c["tier0"] for c in cards)
         over = resident > RESIDENT_BUDGET_TARGET
-        status = "OVER" if over else "OK"
+        status = "MISSING" if missing else ("OVER" if over else "OK")
         if opts.get("json"):
             print(json.dumps({"resident_core_tier0": resident,
                               "target": RESIDENT_BUDGET_TARGET,
-                              "skills": len(cards), "status": status},
+                              "skills": len(cards), "expected_skills": len(CORE_SKILLS),
+                              "missing": missing, "status": status},
                              ensure_ascii=False))
         else:
             print(f"CORE резидент (⊕ tier-0): {resident} ток / target "
-                  f"{RESIDENT_BUDGET_TARGET} — {status} ({len(cards)} скиллов)")
+                  f"{RESIDENT_BUDGET_TARGET} — {status} "
+                  f"({len(cards)}/{len(CORE_SKILLS)} скиллов)")
+        if missing and opts.get("strict"):
+            die(f"CORE недобор: {missing} из {len(CORE_SKILLS)} CORE_SKILLS не найдены "
+                f"на диске (переезд/опечатка пути в config.py/core-policy.json) — "
+                f"резидент занижен, а не улучшен")
         if over and opts.get("strict"):
             die(f"CORE резидентный бюджет {resident} > target "
                 f"{RESIDENT_BUDGET_TARGET}: ужми description или пересмотри состав CORE")
@@ -345,16 +377,13 @@ def _quantile(values, frac):
     return s[min(len(s) - 1, int(len(s) * frac))]
 
 
-def write_budget_map(env):
-    """Сгенерировать docs/guide/budget.md — mermaid-карту трёхъярусного бюджета
-    (узел на скилл, heat по ⊕ always, рёбра requires = транзитивный налог) +
-    таблицы по бакетам и топам. Читает skills.json + тела SKILL.md по path."""
-    root = env.root
-    reg_file = root / "skills.json"
-    if not reg_file.is_file():
-        die("skills.json не найден — сначала прогони `skiller registry`")
-    registry = json.loads(reg_file.read_text(encoding="utf-8"))
-
+def render_budget_map(root, registry):
+    """Текст docs/guide/budget.md (без записи) из registry-dict — mermaid-карта
+    трёхъярусного бюджета + таблицы по бакетам/топам. Читает тела SKILL.md по
+    registry-путям относительно root. Вынесено из write_budget_map, чтобы
+    registry.check_drift мог сверить актуальность без побочной записи (R-2:
+    раньше только write-путь существовал, drift-гейт этот артефакт не видел).
+    Возвращает (text, n_skills, total0, total1)."""
     rows = []
     for e in registry["skills"]:
         b = skill_budget((root / e["path"]).parent)
@@ -458,8 +487,18 @@ def write_budget_map(env):
     lines += _top_table("Топ ↻ on-trigger (цена срабатывания)", "tier1",
                         "Самые тяжёлые тела — грузятся при применении скилла.")
     lines.append("")
+    return "\n".join(lines), len(rows), total0, total1
 
+
+def write_budget_map(env):
+    """Сгенерировать docs/guide/budget.md (атомарно) из skills.json на диске."""
+    root = env.root
+    reg_file = root / "skills.json"
+    if not reg_file.is_file():
+        die("skills.json не найден — сначала прогони `skiller registry`")
+    registry = json.loads(reg_file.read_text(encoding="utf-8"))
+    text, n_skills, total0, total1 = render_budget_map(root, registry)
     out = _docs_root(root) / "docs" / "guide" / "budget.md"
-    atomic_write_text(out, "\n".join(lines))
-    print(f"Updated {out.relative_to(_docs_root(root))}: {len(rows)} skills, "
+    atomic_write_text(out, text)
+    print(f"Updated {out.relative_to(_docs_root(root))}: {n_skills} skills, "
           f"⊕{total0} ↻{total1} ток")

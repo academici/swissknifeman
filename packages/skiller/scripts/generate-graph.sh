@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+# DEPRECATED (2026-07, аудит R-2): логика перенесена в lib/skiller/registry.py
+# (render_graph/write_graph) — cmd_registry больше НЕ вызывает этот скрипт, а
+# registry.check_drift теперь видит graph.md (раньше не мог — heredoc не имел
+# python-функции для сравнения in-memory). Оставлен в дереве (rm заблокирован
+# политикой окружения) — безопасно удалить: git rm scripts/generate-graph.sh.
+#
 # Generate packages/skiller/docs/guide/graph.md (Mermaid dependency graph) from
 # skills.json. Reads requires/produces_for fields (registry v5+); run after
 # 'skiller registry' (the registry command calls this automatically).

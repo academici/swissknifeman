@@ -9,6 +9,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from skiller.registry import build_registry
 from skiller.skillset import (_registry_index, cmd_init, do_sync, load_lock,
@@ -187,6 +188,46 @@ class TestSync(unittest.TestCase):
             self.assertTrue(lock["code-style"]["managed"])
             self.assertEqual(lock["code-style"]["bucket"], "php")
             self.assertTrue(lock["code-style"]["sha256"])
+
+    def test_skills_path_change_prunes_old_location(self):
+        """V-9: смена skills_path в конфиге не должна оставлять осиротевшую копию
+        по старому пути — переустановка на новом месте + удаление старого."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            root, env = make_registry(tmp)
+            _materialize_registry(env)
+            target = make_laravel_project(tmp)
+            cfg = {"mode": "vendor", "include": ["code-style"]}
+            sync_skillset(env, target, cfg)
+            self.assertTrue((target / ".claude/skills/code-style/SKILL.md").is_file())
+
+            cfg2 = {"mode": "vendor", "include": ["code-style"],
+                    "skills_path": ".claude/skills2"}
+            sync_skillset(env, target, cfg2)
+
+            # новое место — есть; старое — осиротевшая копия удалена, не задвоена
+            self.assertTrue((target / ".claude/skills2/code-style/SKILL.md").is_file())
+            self.assertFalse((target / ".claude/skills/code-style").exists())
+            lock = load_lock(target)["skills"]
+            self.assertEqual(lock["code-style"]["installed_path"],
+                             ".claude/skills2/code-style")
+
+    def test_copy_failure_not_reported_as_installed(self):
+        """safe_copy_skill может пропустить копию (containment-стоп/TOCTOU-гонка) —
+        такой скилл НЕ должен попасть ни в lock, ни в plan['installed'] (V-2:
+        раньше это тихо проглатывалось, sync рапортовал план как факт)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            root, env = make_registry(tmp)
+            _materialize_registry(env)
+            target = make_laravel_project(tmp)
+            cfg = {"mode": "vendor", "buckets": ["php"]}
+            with mock.patch("skiller.skillset.safe_copy_skill", return_value=False):
+                plan = sync_skillset(env, target, cfg)
+            self.assertEqual(plan["installed"], [])
+            self.assertCountEqual(plan["skip_copy"], plan["add"])
+            self.assertEqual(load_lock(target).get("skills", {}), {})
+            self.assertFalse((target / ".claude/skills/code-style").exists())
 
     def test_gitignore_managed_emits_ignore_for_managed_only(self):
         # gitignore_managed: managed-скиллы попадают в <skills_path>/.gitignore
@@ -368,6 +409,8 @@ class TestConflicts(unittest.TestCase):
             plan = plan_sync(env, target, {"mode": "vendor", "include": ["code-style"]})
             self.assertIn("code-style", plan["conflicts"])
             self.assertNotIn("code-style", plan["add"])
+            # содержимое РАЗНОЕ (MINE vs реестр) — не похоже на прерванный sync (V-6)
+            self.assertNotIn("code-style", plan["conflicts_likely_ours"])
 
             sync_skillset(env, target, {"mode": "vendor", "include": ["code-style"]})
             # чужой не тронут, в lock не попал
@@ -564,16 +607,46 @@ class TestLockHygiene(unittest.TestCase):
                 json.dumps(lock, ensure_ascii=False), encoding="utf-8")
             self.assertTrue((target / ".claude/skills/code-style").is_dir())
 
-            # без force — путь занят «чужим» (lock пуст), конфликт-пропуск
+            # без force — путь занят «чужим» (lock пуст), конфликт-пропуск. Содержимое
+            # СОВПАДАЕТ с реестром (файлы не тронуты) — как при прерванном sync (V-6),
+            # НО это осознанная ручная чистка → остаётся conflict, не авто-update
+            # (см. plan_sync); сигнал доступен через conflicts_likely_ours для warn'а.
             plan = plan_sync(env, target, cfg)
             self.assertIn("code-style", plan["conflicts"])
             self.assertNotIn("code-style", plan["add"])
+            self.assertIn("code-style", plan["conflicts_likely_ours"])
 
             # с force — чистое пере-усыновление: ровно одна managed-запись
             sync_skillset(env, target, cfg, force=True)
             after = load_lock(target)["skills"]
             self.assertEqual(
                 [n for n in after if after[n].get("managed")], ["code-style"])
+            self.assertTrue(after["code-style"]["managed"])
+            self.assertTrue((target / ".claude/skills/code-style/SKILL.md").is_file())
+
+    def test_broken_lock_json_recovers_managed_from_manifest(self):
+        """Битый (не парсящийся) lock — НЕ то же самое, что легитимно пустой (ручная
+        чистка, см. test_manual_lock_cleanup_*): managed-скилл, чей манифест цел,
+        восстанавливается как update (переустановится), а не улетает в conflicts
+        и не пропадает из нового lock (V-3 — раньше именно это и происходило)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            root, env, target = self._seed(tmp)
+            cfg = {"mode": "vendor", "include": ["code-style"]}
+            sync_skillset(env, target, cfg)
+            self.assertTrue((target / ".claude/skills/code-style").is_dir())
+
+            # lock физически битый (не валидный JSON) — манифест при этом цел
+            (target / "skills-lock.json").write_text("{not valid json", encoding="utf-8")
+            self.assertTrue(
+                (target / ".claude/skills" / MANIFEST).is_file())
+
+            plan = plan_sync(env, target, cfg)
+            self.assertNotIn("code-style", plan["conflicts"])
+            self.assertIn("code-style", plan["update"])
+
+            sync_skillset(env, target, cfg)
+            after = load_lock(target)["skills"]
             self.assertTrue(after["code-style"]["managed"])
             self.assertTrue((target / ".claude/skills/code-style/SKILL.md").is_file())
 

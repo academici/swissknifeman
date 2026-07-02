@@ -3,12 +3,12 @@ import json
 import os
 import shutil
 import sys
-from datetime import date
 
 from .boost import sync_boost_json
-from .common import (AGENT_DEFAULTS, MANIFEST, apply_permissions,
-                     atomic_write_json, die, is_within, parse_flags,
-                     parse_frontmatter_fields, safe_copy_skill, sanitize, warn)
+from .common import (AGENT_DEFAULTS, MANIFEST, apply_permissions, die,
+                     is_within, is_within_lexical, parse_flags,
+                     parse_frontmatter_fields, resolve_requires_bfs,
+                     safe_copy_skill, sanitize, warn, write_skill_manifest)
 from .config import (DEFAULT_EXCLUDE, all_buckets, core_skill_tuples,
                      load_config, resolve_selection, resolve_target)
 from .hub import generate_hub, hub_artifacts_exist
@@ -53,29 +53,25 @@ def build_requires_index(env):
 
 def resolve_requires(skills, index, exclude):
     """Транзитивно дотянуть `requires`. Мутирует skills, возвращает pulled
-    (dep -> requester). --exclude побеждает зависимость (с warning)."""
+    (dep -> requester). --exclude побеждает зависимость (с warning). BFS — общий с
+    skillset._pull_requires через common.resolve_requires_bfs (V-1: раньше два
+    независимых, уже разошедшихся тела)."""
     selected = {fm_name or d.name for _, _, d, fm_name in skills}
-    pulled = {}
-    queue = []
-    for _bucket, _rel, d, fm_name in skills:
-        key = fm_name or d.name
-        queue.extend((dep, key) for dep in index.get(key, ("", "", None, []))[3])
+    seed = [(dep, fm_name or d.name) for _bucket, _rel, d, fm_name in skills
+            for dep in index.get(fm_name or d.name, ("", "", None, []))[3]]
 
-    while queue:
-        dep, requester = queue.pop(0)
-        if dep in selected:
-            continue
+    def lookup(dep):
         if dep not in index:
-            warn(f"'{requester}' requires unknown skill '{dep}' — skipping")
-            continue
+            return None
         bucket, rel, d, dep_requires = index[dep]
-        if {dep, d.name, f"{bucket}/{rel}".replace("\\", "/")} & exclude:
-            warn(f"'{requester}' requires '{dep}' — excluded by --exclude, skipping")
-            continue
-        skills.append((bucket, rel, d, dep))
-        selected.add(dep)
-        pulled[dep] = requester
-        queue.extend((dd, dep) for dd in dep_requires)
+        tokens = {dep, d.name, f"{bucket}/{rel}".replace("\\", "/")}
+        return {"key": dep, "requires": dep_requires, "exclude_tokens": tokens,
+                "_payload": (bucket, rel, d, dep)}
+
+    pulled = {}
+    for node, requester in resolve_requires_bfs(seed, lookup, selected, exclude):
+        skills.append(node["_payload"])
+        pulled[node["key"]] = requester
     return pulled
 
 
@@ -207,34 +203,55 @@ def do_vendor(env, target, opts, register=True):
 
     # --- install ---------------------------------------------------------------------
     def copy_skill(src, dst):
+        """True — скопирован (или dry-run: запланирован). False — пропущен
+        (containment-стоп/TOCTOU-гонка, уже warn'ится внутри safe_copy_skill) —
+        вызывающий НЕ должен заносить его в installed/манифест (V-2)."""
         if dry_run:
             print(f"[dry-run] {src.relative_to(root)} -> {dst}")
-            return
+            return True
         # Единый безопасный copy (containment + снятие symlink/файла/каталога + TOCTOU-
         # перепроверка + SKILL_IGNORE) — общий с skillset.sync, чтобы детали безопасности не
         # разъезжались. Чужой SKILL.*.md/evals/upstream.json/.claude-plugin не едет в проект.
-        safe_copy_skill(src, dst, dest_root)
+        return safe_copy_skill(src, dst, dest_root)
+
+    def copy_support_file(src, dst):
+        """Безопасно скопировать ОДИНОЧНЫЙ support-файл (напр. skills/oss-dev/references/*.md)
+        внутри dest_root: containment-проверка + атомарная запись (tmp+os.replace) — паритет
+        с safe_copy_skill (тот копирует каталоги скиллов через copytree). Раньше эти файлы
+        шли голым shutil.copy2 мимо и containment, и атомарности (V-7)."""
+        if not is_within_lexical(dst, dest_root):
+            warn(f"пропуск support-файла: путь вне каталога назначения: {dst}")
+            return False
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        tmp = dst.with_name(f".{dst.name}.tmp-{os.getpid()}")
+        shutil.copy2(src, tmp)
+        os.replace(tmp, dst)
+        return True
 
     def load_manifest(manifest_file):
-        if manifest_file.exists():
+        if not manifest_file.exists():
+            return {}
+        try:
             return json.loads(manifest_file.read_text(encoding="utf-8"))
-        return {}
+        except json.JSONDecodeError as e:
+            # Битый манифест не должен ронять do_vendor необработанным исключением
+            # (нашлось при регрессии на U-1: update --all → do_vendor читает манифест
+            # ЕЩЁ РАЗ для reinstall/prune-учёта) — деградация: трактуем как «манифеста
+            # нет» (старые записи не найдены → без collision-детекта по old_paths,
+            # чистая переустановка).
+            warn(f"{manifest_file}: битый JSON манифеста — игнорирую, трактую как "
+                 f"отсутствующий: {e}")
+            return {}
 
     def contained(path):
         return is_within(path, dest_root)
 
     def write_manifest(manifest_file, layout, installed, support_files=None):
-        data = {
-            "installed_at": date.today().isoformat(),
-            "profile": profile_name,
-            "agent": agent,
-            "layout": layout,
-            "skills": installed,
-        }
-        if support_files is not None:
-            data["support_files"] = support_files
-        atomic_write_json(manifest_file, data)   # tmp+os.replace: краш не оставит битый манифест
+        write_skill_manifest(manifest_file, profile=profile_name, agent=agent,
+                             layout=layout, installed=installed,
+                             support_files=support_files)
 
+    skip_copy, skip_support = [], []
     if flat_layout:
         if agent == "claude":
             print("NOTE: --agent claude vendoring is deprecated for Claude Code "
@@ -253,9 +270,11 @@ def do_vendor(env, target, opts, register=True):
             dest_root.mkdir(parents=True, exist_ok=True)
         installed = []
         for i, (_bucket, _rel, d, _fm_name) in enumerate(skills):
-            copy_skill(d, dest_root / flats[i])
-            installed.append({"flat_name": flats[i],
-                              "source_path": str(d.relative_to(root))})
+            if copy_skill(d, dest_root / flats[i]):
+                installed.append({"flat_name": flats[i],
+                                  "source_path": str(d.relative_to(root))})
+            else:
+                skip_copy.append(flats[i])
         if not dry_run:
             write_manifest(manifest_file, "flat", installed)
     else:
@@ -311,22 +330,31 @@ def do_vendor(env, target, opts, register=True):
 
         installed = []
         for _bucket, _rel, d, path in planned:
-            copy_skill(d, dest_root / path)
-            installed.append({"path": path, "source_path": str(d.relative_to(root))})
+            if copy_skill(d, dest_root / path):
+                installed.append({"path": path, "source_path": str(d.relative_to(root))})
+            else:
+                skip_copy.append(path)
         support_rels = []
         for item, rel_path in support:
             dst = dest_root / rel_path
-            support_rels.append(rel_path)
             if dry_run:
                 print(f"[dry-run] {item.relative_to(root)} -> {dst}")
+                support_rels.append(rel_path)
+            elif copy_support_file(item, dst):
+                support_rels.append(rel_path)
             else:
-                dst.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(item, dst)
+                skip_support.append(rel_path)
         if not dry_run:
             write_manifest(manifest_file, "bucket", installed, support_rels)
 
+    if skip_copy:
+        warn(f"пропущено при копировании ({len(skip_copy)}): {', '.join(skip_copy)} "
+             f"— НЕ установлены, см. предупреждения выше")
+    if skip_support:
+        warn(f"пропущено support-файлов ({len(skip_support)}): {', '.join(skip_support)}")
     print(("[dry-run] " if dry_run else "")
-          + f"Installed {len(skills)} skills -> {dest_root}")
+          + f"Installed {len(installed)} skills -> {dest_root}"
+          + (f" ({len(skip_copy)} пропущено)" if skip_copy else ""))
 
     # Laravel Boost: дозаписать вендоренные скиллы в boost.json::skills
     vendored_names = sorted({fm_name for _, _, _, fm_name in skills})

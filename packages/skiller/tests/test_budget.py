@@ -2,6 +2,8 @@
 
 Проверяем: грубую оценку токенов, раздельный подсчёт ярусов, транзитивное
 раскрытие requires (метка transitive), генерацию карты docs/guide/budget.md."""
+import contextlib
+import io
 import sys
 import tempfile
 import unittest
@@ -9,8 +11,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
-from skiller.budget import (budget_for_set, estimate_tokens, resolve_active_set,
-                            skill_budget, write_budget_map)
+from skiller.budget import (budget_for_set, cmd_budget, estimate_tokens,
+                            resolve_active_set, skill_budget, write_budget_map)
 from skiller.registry import build_registry
 import tests.fixtures as fx
 from core import atomic_write_text
@@ -118,6 +120,34 @@ class WriteBudgetMapCase(unittest.TestCase):
         self.assertIn("classDef hot", text)
         self.assertIn("⊕", text)               # легенда яруса-0
         self.assertIn("laravel-conventions", text)  # скилл из фикстуры на карте
+
+
+class CheckCoreCase(unittest.TestCase):
+    """--check-core должен фейлить и на НЕДОБОРЕ CORE_SKILLS (переехавший/опечатанный
+    путь молча уменьшает резидент → гейт раньше «зеленел» вместо ошибки, аудит B-2).
+    Синтетический реестр (fx.make_registry) не содержит ни одного пути из дефолтных
+    CORE_SKILLS (context-economy/anti-drift/…) — гарантированный недобор для теста."""
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.tmp = Path(self._tmp.name)
+        self.root, self.env = fx.make_registry(self.tmp)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def test_missing_core_skill_dies_under_strict(self):
+        with contextlib.redirect_stdout(io.StringIO()):
+            with self.assertRaises(SystemExit):
+                cmd_budget(self.env, ["--check-core", "--strict"])
+
+    def test_missing_core_skill_reports_json_without_strict(self):
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            cmd_budget(self.env, ["--check-core", "--json"])
+        data = json.loads(buf.getvalue())
+        self.assertEqual(data["status"], "MISSING")
+        self.assertGreater(data["missing"], 0)
+        self.assertEqual(data["skills"], 0)
 
 
 if __name__ == "__main__":

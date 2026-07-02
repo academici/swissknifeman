@@ -1,6 +1,6 @@
 # Граф зависимостей скиллов
 
-> Сгенерировано `scripts/generate-graph.sh` из `skills.json` — не редактировать вручную.
+> Сгенерировано `skiller registry` (registry.render_graph) из `skills.json` — не редактировать вручную.
 > Пересборка: `skiller registry`.
 
 Сплошная стрелка `A --> B` — `A` требует `B` (`requires`): `skiller vendor` дотянет `B`

@@ -2,10 +2,12 @@
 
 Гоняются против синтетического реестра (tests/fixtures) во временных каталогах,
 без сети и subprocess. registry тестируется через build_registry/
-write_plugin_manifests напрямую (cmd_registry зовёт generate-graph.sh)."""
+write_plugin_manifests/render_graph напрямую (cmd_registry вызывает write_graph
+in-process, без subprocess — раньше это был отдельный shell-скрипт)."""
 import contextlib
 import io
 import json
+import os
 import sys
 import tempfile
 import unittest
@@ -263,10 +265,67 @@ class DoctorCase(unittest.TestCase):
         self.assertIn("skiller doctor", out)
         self.assertIn("python3", out)
         self.assertIn("профили загружаются", out)
+        # Doc-1: harness не найден в синтетическом tmp-реестре (нет monorepo вокруг)
+        # — это опциональная зависимость, НЕ должна считаться FAIL.
+        self.assertIn("harness не установлен", out)
+        self.assertNotIn("FAIL] harness", out)
 
     def test_doctor_help(self):
         _, out = capture(cmd_doctor, self.env, ["--help"])
         self.assertIn("skiller doctor", out)
+
+    def test_doctor_flags_broken_harness_not_missing(self):
+        """Doc-1: harness УСТАНОВЛЕН (SKM_HARNESS_BIN указывает на исполняемый файл),
+        но СЛОМАН (ненулевой exit) — doctor должен различать это от «не установлен»
+        и репортить FAIL, а не молчаливое 'ok'. Единственный тест файла, реально
+        зовущий subprocess (сути проверки не проверить иначе)."""
+        broken = self.tmp / "broken-harness.sh"
+        broken.write_text("#!/bin/sh\nexit 3\n", encoding="utf-8")
+        broken.chmod(0o755)
+        old = os.environ.get("SKM_HARNESS_BIN")
+        os.environ["SKM_HARNESS_BIN"] = str(broken)
+        try:
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                with contextlib.suppress(SystemExit):
+                    cmd_doctor(self.env, [])
+            out = buf.getvalue()
+        finally:
+            if old is None:
+                os.environ.pop("SKM_HARNESS_BIN", None)
+            else:
+                os.environ["SKM_HARNESS_BIN"] = old
+        self.assertIn("FAIL] harness исполняется", out)
+        self.assertNotIn("не установлен", out)
+
+    def test_doctor_flags_schema_type_mismatch_not_just_key_names(self):
+        """Doc-2: раньше doctor сверял ТОЛЬКО имена ключей схемы (⇄ ключи) — при
+        расхождении ТИПА свойства (напр. schema говорит array, CONFIG_KEYS — str)
+        печатал ложное "OK". Схема ниже: имена 1:1 с CONFIG_KEYS, но у
+        'project_type' тип 'array' вместо ожидаемого 'string'."""
+        from skiller.common import CONFIG_KEYS
+        json_type = {str: "string", list: "array", int: "integer",
+                    dict: "object", bool: "boolean"}
+        props = {k: {"type": json_type[t]} for k, t in CONFIG_KEYS.items()}
+        props["project_type"]["type"] = "array"  # намеренное расхождение
+        schema_dir = self.root / "schema"
+        schema_dir.mkdir(parents=True, exist_ok=True)
+        (schema_dir / "swissknife.schema.json").write_text(
+            json.dumps({"properties": props}), encoding="utf-8")
+        # вторая схема (SKILLSET_KEYS) — доктор её тоже читает, кладём валидной
+        from skiller.skillset import SKILLSET_KEYS
+        props2 = {k: {"type": json_type[t]} for k, t in SKILLSET_KEYS.items()}
+        (schema_dir / "swissknifeman-config.schema.json").write_text(
+            json.dumps({"properties": props2}), encoding="utf-8")
+
+        buf = io.StringIO()
+        with contextlib.suppress(SystemExit):
+            with contextlib.redirect_stdout(buf):
+                cmd_doctor(self.env, [])
+        out = buf.getvalue()
+        self.assertIn("⇄ ключи .swissknife.json", out)   # имена совпали — OK
+        self.assertIn("FAIL] схема swissknife.schema.json ⇄ типы", out)
+        self.assertIn("project_type", out)
 
 
 class StatusCase(unittest.TestCase):

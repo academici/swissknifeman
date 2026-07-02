@@ -5,7 +5,7 @@ import shutil
 from core import atomic_write_text, find_repo_root, safe_load_json
 
 from .common import (AGENT_DEFAULTS, MANIFEST, MARKETPLACE, apply_permissions,
-                     die, is_within, parse_flags)
+                     die, is_within, parse_flags, warn)
 from .config import (CORE_BUCKETS, CORE_PLUGIN, CORE_SKILLS,
                      DEFAULT_COMMAND_PLUGINS, all_buckets,
                      load_config, resolve_selection, resolve_target)
@@ -58,15 +58,25 @@ def do_connect(env, target, opts, register=True, fix_path_drift=False):
     known_plugins = (set(buckets) | {"generate-skill", CORE_PLUGIN}
                      | set(DEFAULT_COMMAND_PLUGINS))
     # CORE-политика (умное подключение): вместо целых бакетов general(19)+oss-dev(10) ≈ 1956
-    # резидентных токенов пушим лёгкий курируемый плагин `core` (== CORE_SKILLS, 7 ≈ 480 ток) —
-    # экономия ~1.5K ток/проект на КАЖДЫЙ запрос. --no-core отключает. Плагин объявлен в
-    # marketplace (registry.py); на старом marketplace / в тест-реестре его может не быть —
-    # тогда тихо пропускаем (как раньше для отсутствующих бакетов).
+    # резидентных токенов пушим лёгкий курируемый плагин `core` (== CORE_SKILLS) — экономия
+    # даже с текущим составом (8 скиллов, ~696 ток по калиброванным константам budget.py —
+    # см. `skiller budget --check-core` для актуальной цифры, не хардкодь снапшот здесь,
+    # см. аудит Т-2: «7 ≈ 480» протухло, когда CORE_SKILLS вырос до 8). --no-core отключает.
+    # Плагин объявлен в marketplace (registry.py); на старом marketplace / в тест-реестре
+    # его может не быть — тогда пропускаем с явным warn (см. ниже, аудит C-1).
     core_added = []
-    if (not opts.get("no_core") and CORE_PLUGIN not in plugins
-            and _marketplace_declares(env, CORE_PLUGIN)):
-        core_added = [CORE_PLUGIN]
-        plugins = list(plugins) + core_added
+    if not opts.get("no_core") and CORE_PLUGIN not in plugins:
+        if _marketplace_declares(env, CORE_PLUGIN):
+            core_added = [CORE_PLUGIN]
+            plugins = list(plugins) + core_added
+        else:
+            # Раньше тихий пропуск (C-1): ядро не доставлено, а обещание токен-экономии
+            # (§CORE-политика) аннулировано без сигнала — выглядит так, будто connect
+            # отработал полностью. marketplace.json не объявляет `core` обычно из-за
+            # непрогнанного `skiller registry` (или синтетического тест-реестра).
+            warn(f"marketplace '{MARKETPLACE}' не объявляет плагин '{CORE_PLUGIN}' — "
+                 f"ядро (CORE_SKILLS) НЕ доставлено. Прогони `skiller registry` в "
+                 f"реестре, затем повтори connect (или --no-core, если это осознанно).")
 
     # Командные плагины по умолчанию (task): включаем в КАЖДЫЙ проект, как core. Marketplace-guarded
     # (на старом marketplace / в тест-реестре тихо пропускаем). --no-core их НЕ трогает — это не

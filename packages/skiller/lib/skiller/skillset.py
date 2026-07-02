@@ -26,8 +26,9 @@ from pathlib import Path
 
 from core.io import atomic_write_json, atomic_write_text
 
-from .common import (MANIFEST, apply_permissions, die, is_within, now_iso,
-                     parse_flags, safe_copy_skill, warn)
+from .common import (MANIFEST, apply_permissions, die, is_within, parse_flags,
+                     resolve_requires_bfs, safe_copy_skill, warn,
+                     write_skill_manifest)
 from .config import (DEFAULT_EXCLUDE, all_buckets, core_skill_tuples,
                      load_config, resolve_selection, resolve_target)
 from .hub import generate_hub, hub_artifacts_exist
@@ -39,7 +40,6 @@ CONFIG_DIR = ".swissknifeman"
 CONFIG_FILE = "config.json"
 LOCK_FILE = "skills-lock.json"
 LOCK_VERSION = 1
-MANIFEST_VERSION = 1
 SOURCE = "swissknifeman"
 
 # Ключи конфига vendor-режима (.swissknifeman/config.json). Намеренно шире
@@ -197,26 +197,26 @@ def load_skillset_config(target):
 
 def _pull_requires(selected, by_name, exclude):
     """Транзитивно дотянуть `requires` выбранных скиллов в `selected` (name->entry).
-    Паритет с vendor.resolve_requires (но на entry реестра): exclude ПОБЕЖДАЕТ
-    зависимость (с warning), неизвестная зависимость — warning и пропуск. Без этого
-    skill-granular include молча терял зависимости (64/195 скиллов имеют requires)."""
-    queue = [(dep, e["name"]) for e in list(selected.values())
-             for dep in e.get("requires", [])]
-    while queue:
-        dep, requester = queue.pop(0)
-        if dep in selected:
-            continue
-        dep_entry = by_name.get(dep)
-        if dep_entry is None:
-            warn(f"'{requester}' requires неизвестный скилл '{dep}' — пропуск")
-            continue
-        full = (f"{dep_entry['bucket']}/{dep_entry['rel']}".rstrip("/")
-                if dep_entry["rel"] else dep_entry["bucket"])
-        if {dep, dep_entry["name"], full, dep_entry["bucket"]} & exclude:
-            warn(f"'{requester}' requires '{dep}', но он в exclude — зависимость пропущена")
-            continue
-        selected[dep_entry["name"]] = dep_entry
-        queue.extend((d, dep) for d in dep_entry.get("requires", []))
+    exclude ПОБЕЖДАЕТ зависимость (с warning), неизвестная зависимость — warning и
+    пропуск. Без этого skill-granular include молча терял зависимости (64/195
+    скиллов имеют requires). BFS — общий с vendor.resolve_requires через
+    common.resolve_requires_bfs (V-1: раньше два независимых, уже разошедшихся тела)."""
+    seed = [(dep, e["name"]) for e in list(selected.values())
+            for dep in e.get("requires", [])]
+    selected_keys = set(selected.keys())
+
+    def lookup(dep):
+        entry = by_name.get(dep)
+        if entry is None:
+            return None
+        full = (f"{entry['bucket']}/{entry['rel']}".rstrip("/")
+                if entry["rel"] else entry["bucket"])
+        tokens = {dep, entry["name"], full, entry["bucket"]}
+        return {"key": entry["name"], "requires": entry.get("requires", []),
+                "exclude_tokens": tokens, "_payload": entry}
+
+    for node, _requester in resolve_requires_bfs(seed, lookup, selected_keys, exclude):
+        selected[node["key"]] = node["_payload"]
 
 
 def resolve_skillset(env, cfg, include_core=False):
@@ -308,6 +308,24 @@ def load_lock(target):
     return data
 
 
+def _lock_broken(target):
+    """True — lock-файл есть на диске, но структурно битый (не парсится / без dict
+    'skills'), т.е. `load_lock` вернул {} НЕ потому, что managed-набор легитимно
+    пуст (напр. ручная чистка одной записи — валидный `{"skills": {}}`, это НЕ
+    поломка и не должно триггерить восстановление из манифеста), а потому что файл
+    повреждён. Отдельная от load_lock функция (не меняем её сигнатуру — на неё
+    завязаны тесты), с той же логикой парсинга, но без побочных warn (те уже
+    печатаются в load_lock)."""
+    f = Path(target) / LOCK_FILE
+    if not f.is_file():
+        return False
+    try:
+        data = json.loads(f.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return True
+    return not (isinstance(data, dict) and isinstance(data.get("skills"), dict))
+
+
 def write_lock(target, lock):
     atomic_write_json(Path(target) / LOCK_FILE, lock)
 
@@ -318,6 +336,34 @@ def _dir_sha256(skill_dir):
     if not md.is_file():
         return ""
     return hashlib.sha256(md.read_bytes()).hexdigest()
+
+
+def _recover_locked_from_manifest(target, skills_path):
+    """Best-effort managed-набор из `.swissknifeman-manifest.json`, когда lock на
+    диске битый/неожиданной структуры (см. warn в `load_lock`). Без этого пустой
+    `locked` трактует все прежде managed-скиллы как ЧУЖИЕ (dst существует, prev is
+    None) → conflicts → без --force пропускаются → `new_lock` пишется пустым и
+    стирает managed-карту НАВСЕГДА (найдено при аудите, V-3). sha256/content_sha256
+    здесь неизвестны (в манифесте их нет) — восстановленные записи гарантированно
+    не совпадут с реестром и уйдут в `update` (переустановятся), что и обещает
+    предупреждение в `load_lock`."""
+    manifest_file = Path(target) / skills_path / MANIFEST
+    if not manifest_file.is_file():
+        return {}
+    try:
+        data = json.loads(manifest_file.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError, UnicodeDecodeError):
+        return {}
+    recovered = {}
+    for entry in data.get("skills", []) if isinstance(data, dict) else []:
+        name = entry.get("flat_name")
+        if name:
+            recovered[name] = {
+                "source": SOURCE, "managed": True, "bucket": "",
+                "sha256": "", "content_sha256": "",
+                "installed_path": f"{skills_path}/{name}",
+            }
+    return recovered
 
 
 # --- sync ---------------------------------------------------------------------
@@ -337,18 +383,36 @@ def plan_sync(env, target, cfg, include_core=False):
     dest_root = Path(target) / skills_path
     lock = load_lock(target)
     locked = lock.get("skills", {})
+    if not locked and _lock_broken(target):
+        # Lock-файл СТРУКТУРНО битый (не легитимно пустой — см. _lock_broken) —
+        # восстанавливаем managed-набор из манифеста, иначе см. докстринг
+        # _recover_locked_from_manifest (V-3).
+        recovered = _recover_locked_from_manifest(target, skills_path)
+        if recovered:
+            warn(f"восстановлено {len(recovered)} managed-запис(ей) из манифеста "
+                 f"({MANIFEST}) — sha256 неизвестен, они уйдут в update при sync")
+            locked = recovered
 
     desired = {e["name"]: e for e in entries}
     managed_locked = {n: e for n, e in locked.items() if e.get("managed")}
 
-    add, update, keep, conflicts = [], [], [], []
+    add, update, keep, conflicts, conflicts_likely_ours = [], [], [], [], []
     for name, entry in desired.items():
         dst = dest_root / name
         prev = managed_locked.get(name)
         if prev is None:
-            # новый для нас; если путь занят чужим (не managed) — конфликт
+            # новый для нас; если путь занят чужим (не managed) — конфликт. НЕ авто-
+            # усыновляем даже при совпадении sha256 (V-6): осознанная "ручная чистка
+            # lock + живая папка" (test_manual_lock_cleanup_*) тоже даёт точное
+            # совпадение содержимого, но требует --force — предохранитель против
+            # случайного поглощения чужого. Отличаем в СООБЩЕНИИ (см. sync_skillset):
+            # совпадающий sha256 → скорее прерванный прошлый sync (--force безопасен),
+            # несовпадающий → правда чужой скилл.
             if dst.is_symlink() or dst.exists():
                 conflicts.append(name)
+                if not dst.is_symlink() and dst.is_dir() \
+                        and _dir_sha256(dst) == entry["sha256"]:
+                    conflicts_likely_ours.append(name)
             else:
                 add.append(name)
         elif not dst.is_dir() or dst.is_symlink():
@@ -363,10 +427,18 @@ def plan_sync(env, target, cfg, include_core=False):
         else:
             keep.append(name)
     remove = [n for n in managed_locked if n not in desired]
+    # V-9: managed-запись, чей installed_path (лок) НЕ совпадает с ТЕКУЩИМ skills_path
+    # (конфиг сменил skills_path) — копия по старому пути осиротеет, если её не
+    # прунить отдельно от обычного remove (remove бьёт только по «выпало из конфига»,
+    # а этот скилл может остаться desired — просто переезжает). {name: старый rel-путь}.
+    relocated = {n: e["installed_path"] for n, e in managed_locked.items()
+                if e.get("installed_path") and e["installed_path"] != f"{skills_path}/{n}"}
     return {
         "add": sorted(add), "update": sorted(update),
         "remove": sorted(remove), "keep": sorted(keep),
         "conflicts": sorted(conflicts),
+        "conflicts_likely_ours": sorted(conflicts_likely_ours),
+        "relocated": relocated,
         "skipped": skipped, "skills_path": skills_path,
         "entries": entries, "dest_root": dest_root,
     }
@@ -401,9 +473,20 @@ def sync_skillset(env, target, cfg, dry_run=False, force=False,
         if force:
             install += plan["conflicts"]
         else:
+            likely_ours = set(plan.get("conflicts_likely_ours", []))
             for name in plan["conflicts"]:
-                warn(f"конфликт: '{name}' занят чужим скиллом (не managed) — "
-                     f"пропуск; --force чтобы заменить версией из библиотеки")
+                if name in likely_ours:
+                    # sha256 совпадает с реестром: скорее прерванный прошлый sync
+                    # (файлы скопированы, lock не успел записаться — V-6), а не
+                    # правда чужой скилл. НЕ авто-усыновляем (см. plan_sync) — но
+                    # сообщение не должно пугать «чужим», когда это, вероятно, наше.
+                    warn(f"конфликт: '{name}' — папка уже содержит идентичное "
+                         f"содержимое (sha256 совпадает с реестром), но не в lock — "
+                         f"похоже на прерванный прошлый sync; --force безопасно "
+                         f"пере-усыновит")
+                else:
+                    warn(f"конфликт: '{name}' занят чужим скиллом (не managed) — "
+                         f"пропуск; --force чтобы заменить версией из библиотеки")
 
     # --- prune: только managed, выбывшие из конфига ---------------------------
     for name in plan["remove"]:
@@ -414,9 +497,23 @@ def sync_skillset(env, target, cfg, dry_run=False, force=False,
             _remove_path(stale)
         locked.pop(name, None)
 
+    # --- prune: осиротевшие копии по СТАРОМУ skills_path (V-9) -----------------
+    # Конфиг сменил skills_path — managed-запись (по installed_path в локе) может
+    # указывать на путь ВНЕ текущего dest_root. Без этого прохода такие копии никогда
+    # не удаляются: обычный remove-цикл выше бьёт только по dest_root/name (новому
+    # пути), а install-цикл ниже просто создаст ВТОРУЮ копию на новом месте.
+    target_root = Path(target)
+    for old_rel_path in plan.get("relocated", {}).values():
+        stale = target_root / old_rel_path
+        if dry_run:
+            print(f"[dry-run] remove (relocated) {stale}")
+        elif (stale.is_symlink() or stale.exists()) and is_within(stale, target_root):
+            _remove_path(stale)
+
     # --- install / update -----------------------------------------------------
     if not dry_run:
         dest_root.mkdir(parents=True, exist_ok=True)
+    installed_names, skip_copy = [], []
     for name in install:
         entry = entries[name]
         src = entry["skill_dir"]
@@ -428,8 +525,12 @@ def sync_skillset(env, target, cfg, dry_run=False, force=False,
             continue
         # Единый безопасный copy (containment + снятие symlink/файла/каталога + TOCTOU-
         # перепроверка + SKILL_IGNORE) — общий с vendor.copy_skill (не разъезжаться).
+        # Пропуск (containment-стоп/TOCTOU-гонка, уже warn'ится внутри) — не тихий:
+        # попадает в skip_copy, отчёт печатает ФАКТ (installed_names), не план (V-2).
         if not safe_copy_skill(src, dst, dest_root):
+            skip_copy.append(name)
             continue
+        installed_names.append(name)
         locked[name] = {
             "source": SOURCE,
             "managed": True,
@@ -475,6 +576,10 @@ def sync_skillset(env, target, cfg, dry_run=False, force=False,
             _write_gitignore(target, plan["skills_path"], new_lock["skills"])
         else:
             _remove_our_gitignore(target, plan["skills_path"])
+    # Факт (что реально скопировано/пропущено) отдельно от плана (plan["add"/"update"]) —
+    # do_sync/cmd_sync репортят по installed/skip_copy, а не по плану (V-2).
+    plan["installed"] = installed_names
+    plan["skip_copy"] = skip_copy
     return plan
 
 
@@ -513,7 +618,8 @@ def _write_manifest(target, skills_path, locked, entries, cfg):
     """Манифест .swissknifeman-manifest.json в skills_path — контракт для
     переустановки (vendor) и источник для generate-hub.sh (индекс скиллов).
     Раскладка sync всегда flat: <skills_path>/<name>/SKILL.md. Перечисляем
-    все managed-скиллы, фактически установленные после операции."""
+    все managed-скиллы, фактически установленные после операции. Writer —
+    common.write_skill_manifest, общий с vendor.py (V-4)."""
     dest_root = Path(target) / skills_path
     if not dest_root.is_dir():
         return
@@ -526,16 +632,9 @@ def _write_manifest(target, skills_path, locked, entries, cfg):
             "flat_name": name,
             "source_path": str(Path(entry["path"]).parent),
         })
-    data = {
-        "installed_at": now_iso(),
-        "profile": cfg.get("project_type", ""),
-        "agent": cfg.get("agent", "claude"),
-        "layout": "flat",
-        "skills": installed,
-    }
-    # Атомарно (tmp+os.replace) и с version первым ключом — как skills-lock.json;
-    # raw write_text здесь оставлял бы шанс на полузаписанный манифест при крахе.
-    atomic_write_json(dest_root / MANIFEST, data, version=MANIFEST_VERSION)
+    write_skill_manifest(dest_root / MANIFEST, profile=cfg.get("project_type", ""),
+                         agent=cfg.get("agent", "claude"), layout="flat",
+                         installed=installed)
 
 
 # --- config materialization (общая для init и do_sync) ------------------------
@@ -568,6 +667,22 @@ def materialize_skillset_config(env, target, opts, dry=False, force=False):
     return cfg, profile_name, True
 
 
+def _sync_report_counts(plan, dry_run, force):
+    """(add, update, repl, skip) для отчёта sync. При dry-run план ничего не
+    применял — план и есть факт. Иначе считаем по ФАКТУ (plan['installed']), а не
+    по плану (plan['add']/['update']): safe_copy_skill мог пропустить часть install
+    из-за containment-стопа/TOCTOU-гонки — отчёт не должен рапортовать план как
+    сделанную работу (V-2)."""
+    if dry_run:
+        return (len(plan["add"]), len(plan["update"]),
+                len(plan["conflicts"]) if force else 0, 0)
+    installed = set(plan.get("installed", []))
+    add = sum(1 for n in plan["add"] if n in installed)
+    upd = sum(1 for n in plan["update"] if n in installed)
+    repl = sum(1 for n in plan["conflicts"] if n in installed) if force else 0
+    return add, upd, repl, len(plan.get("skip_copy", []))
+
+
 # --- integrate/onboard entry (vendor-канал «опубликовать в репо») -------------
 def do_sync(env, target, opts, register=True):
     """Vendor-канал через sync: «опубликовать» скиллы физически в .claude/skills/.
@@ -587,8 +702,9 @@ def do_sync(env, target, opts, register=True):
 
     plan = sync_skillset(env, target, cfg, dry_run=dry, force=force,
                          include_core=not no_core)
+    n_add, n_upd, _n_repl, n_skip = _sync_report_counts(plan, dry, force)
     print(("[dry-run] " if dry else "")
-          + f"sync: +{len(plan['add'])} ~{len(plan['update'])} "
+          + f"sync: +{n_add} ~{n_upd} "
           f"-{len(plan['remove'])} ={len(plan['keep'])} "
           f"(skills_path: {plan['skills_path']})")
     if plan["conflicts"] and not force:
@@ -596,6 +712,10 @@ def do_sync(env, target, opts, register=True):
               "— --force чтобы заменить")
     if plan["skipped"]:
         print(f"  пропущено (нет в реестре): {', '.join(plan['skipped'])}")
+    if n_skip:
+        print(f"  ПРОПУЩЕНО при копировании ({n_skip}): "
+              f"{', '.join(plan['skip_copy'])} — см. предупреждения выше, "
+              f"sync для них НЕ завершён")
 
     # permissions-пресеты (deny мусора + allow стека) — паритет с connect/do_vendor
     if not opts.get("no_permissions"):
@@ -671,8 +791,9 @@ def cmd_sync(env, argv):
     plan = sync_skillset(env, target, cfg, dry_run=opts["dry_run"],
                          force=opts["force"], include_core=not opts["no_core"])
     prefix = "[dry-run] " if opts["dry_run"] else ""
-    n_repl = len(plan["conflicts"]) if opts["force"] else 0
-    print(f"{prefix}sync ({via}): +{len(plan['add'])} ~{len(plan['update'])} "
+    n_add, n_upd, n_repl, n_skip = _sync_report_counts(
+        plan, opts["dry_run"], opts["force"])
+    print(f"{prefix}sync ({via}): +{n_add} ~{n_upd} "
           f"-{len(plan['remove'])} ={len(plan['keep'])}"
           + (f" !{n_repl}" if n_repl else "")
           + f" (skills_path: {plan['skills_path']})")
@@ -681,6 +802,10 @@ def cmd_sync(env, argv):
               "— --force чтобы заменить")
     if plan["skipped"]:
         print(f"  пропущено (нет в реестре): {', '.join(plan['skipped'])}")
+    if n_skip:
+        print(f"  ПРОПУЩЕНО при копировании ({n_skip}): "
+              f"{', '.join(plan['skip_copy'])} — см. предупреждения выше, "
+              f"sync для них НЕ завершён")
 
     # Индекс скиллов в корне проекта: догоняем поведение vendor — обновляем,
     # если хаб уже есть или запрошен явно. --no-hub перебивает автоопределение.

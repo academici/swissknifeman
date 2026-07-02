@@ -18,7 +18,8 @@ import json
 import os
 from pathlib import Path
 
-from .common import atomic_write_json, now_iso, safe_load_json, sanitize
+from .common import (atomic_write_json, now_iso, read_ndjson, safe_load_json,
+                     sanitize)
 
 STATES = ("ephemeral", "candidate", "curated", "deprecated")
 KINDS = ("heuristic", "procedure", "gotcha")
@@ -182,26 +183,7 @@ def audit_append(project_path, record):
 
 def read_audit(project_path):
     """Список записей audit.ndjson (пропускает битые строки). [] если нет файла."""
-    return _read_ndjson(audit_path(project_path))
-
-
-def _read_ndjson(path):
-    """Разбор ndjson-файла в список dict'ов (битые/пустые строки пропускаются)."""
-    if not path.is_file():
-        return []
-    out = []
-    with open(path, encoding="utf-8", errors="replace") as fh:
-        for ln in fh:
-            ln = ln.strip()
-            if not ln:
-                continue
-            try:
-                rec = json.loads(ln)
-            except (ValueError, TypeError):
-                continue
-            if isinstance(rec, dict):
-                out.append(rec)
-    return out
+    return read_ndjson(audit_path(project_path))
 
 
 # ── events (append-only поток сигналов confidence) ───────────────────────────
@@ -220,7 +202,7 @@ def event_append(project_path, record):
 
 def read_events(project_path):
     """Список событий events.ndjson (пропускает битые строки). [] если нет файла."""
-    return _read_ndjson(events_path(project_path))
+    return read_ndjson(events_path(project_path))
 
 
 # ── похожесть (Jaccard, stdlib) ──────────────────────────────────────────────

@@ -15,7 +15,8 @@ import subprocess
 import time
 from urllib.parse import quote
 
-from .common import (die, http_get_json, http_post_json, parse_args, ping, warn)
+from .common import (die, http_get_json, http_post_json, parse_args, pid_alive,
+                     ping, warn)
 from .config import load_config
 from .constants import MEMORY_HTTP_PORT, MEMORY_STREAM_PORT, MEMORY_WORKERS
 
@@ -47,18 +48,6 @@ def _read_pid(env):
         return int(env.memory_pidfile.read_text(encoding="utf-8").strip())
     except (ValueError, OSError):
         return None
-
-
-def _pid_alive(pid):
-    if not pid:
-        return None
-    try:
-        os.kill(int(pid), 0)
-        return True
-    except ProcessLookupError:
-        return False
-    except (PermissionError, OSError, ValueError, OverflowError):
-        return True
 
 
 # ── жизненный цикл демона ────────────────────────────────────────────────────
@@ -166,15 +155,15 @@ def status(env, config):
     http_port, stream_port, url = resolve_ports(env, config)
     pid = _read_pid(env)
     running = health(url)
-    pid_alive = _pid_alive(pid) if pid is not None else None
+    alive = pid_alive(pid) if pid is not None else None
     return {
         "running": running,
         "url": url,
         "http_port": http_port,
         "stream_port": stream_port,
         "pid": pid,
-        "pid_alive": pid_alive,
-        "pidfile_stale": pid is not None and pid_alive is False,
+        "pid_alive": alive,
+        "pidfile_stale": pid is not None and alive is False,
         "owned": pid is not None,
         "workers": [{"name": w, "state": "up" if running else "down"}
                     for w in MEMORY_WORKERS],

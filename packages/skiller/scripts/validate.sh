@@ -90,19 +90,54 @@ CYRILLIC_RE = re.compile(r"[Ѐ-ӿ]")
 DESC_WARN_MAX = 450
 
 
+def _collect_block_scalar(lines, start):
+    """Отступные строки YAML-блок-скаляра начиная с lines[start] → (строки, next_i).
+    Пустые сохраняются как переносы; хвостовые обрезаются (clip-чомп). Зеркалит
+    lib/skiller/common.py::_collect_block_scalar (gate должен читать как generate)."""
+    block, i = [], start
+    while i < len(lines):
+        ln = lines[i]
+        if ln.strip() == "---":
+            break
+        if ln.strip() == "":
+            block.append("")
+        elif ln.startswith((" ", "\t")):
+            block.append(ln.strip())
+        else:
+            break
+        i += 1
+    while block and block[-1] == "":
+        block.pop()
+    return block, i
+
+
 def parse_frontmatter(path):
-    """Return dict of frontmatter keys, or None if no frontmatter block."""
-    lines = path.read_text(encoding="utf-8").replace("\r\n", "\n").splitlines()
+    """Frontmatter первого ---блока, или None если блока нет/не закрыт.
+
+    Собирает YAML-блок-скаляры (`key: |` / `key: >` + опц. чомп) и срезает BOM
+    (utf-8-sig) — ИНАЧЕ `description: >` даёт gate только маркер '>', и кириллица/
+    длина реального (блочного) описания не проверяются = ложно-зелёный. Читает так же,
+    как generate-путь lib/skiller/common.py::parse_frontmatter (осознанный
+    самодостаточный дубль: heredoc гоняется до PYTHONPATH на core, не импортируем)."""
+    lines = path.read_text(encoding="utf-8-sig").replace("\r\n", "\n").splitlines()
     if not lines or lines[0].strip() != "---":
         return None
-    fm = {}
-    for line in lines[1:]:
+    fm, i, terminated = {}, 1, False
+    while i < len(lines):
+        line = lines[i]
         if line.strip() == "---":
-            return fm
-        m = re.match(r"^([A-Za-z_][A-Za-z0-9_-]*):(.*)$", line)
-        if m:
-            fm[m.group(1)] = m.group(2).strip()
-    return None  # unterminated block
+            terminated = True
+            break
+        if ":" in line and not line.startswith((" ", "\t", "-")):
+            key, value = line.split(":", 1)
+            key, value = key.strip(), value.strip()
+            if value[:1] in ("|", ">") and all(c in "+-0123456789" for c in value[1:]):
+                block, i = _collect_block_scalar(lines, i + 1)
+                fm[key] = (" " if value[0] == ">" else "\n").join(block)
+                continue
+            fm[key] = value.strip('"').strip("'")
+        i += 1
+    return fm if terminated else None  # unterminated block → None
 
 
 def parse_inline_list(value):

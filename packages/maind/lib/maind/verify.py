@@ -13,7 +13,7 @@ import os
 from datetime import datetime, timezone
 from pathlib import Path
 
-from .common import parse_args
+from .common import parse_args, parse_iso
 from .config import load_config
 from .federation import _enabled_projects, store_path
 from .memory import export, health, resolve_ports
@@ -35,13 +35,6 @@ def _age(dt):
     return "только что"
 
 
-def _parse_iso(s):
-    try:
-        return datetime.fromisoformat(str(s).replace("Z", "+00:00"))
-    except (ValueError, TypeError):
-        return None
-
-
 def _mtime(path):
     try:
         return datetime.fromtimestamp(os.path.getmtime(path), timezone.utc)
@@ -59,7 +52,7 @@ def classify_memories(mems):
             seed += 1
         else:
             real += 1
-        ts = _parse_iso(m.get("createdAt") or m.get("updatedAt"))
+        ts = parse_iso(m.get("createdAt") or m.get("updatedAt"))
         if ts:
             times.append(ts)
     return {"total": len(mems), "seed": seed, "real": real,
@@ -124,7 +117,7 @@ def _print_human(mem, gr, sr):
           f"  ({mem['url']})")
     if mem["up"]:
         print(f"  записей:    {mem['total']}  (seed {mem['seed']} · реальных {mem['real']})")
-        print(f"  последняя:  {(_parse_iso(mem['last']) and _age(_parse_iso(mem['last']))) or '—'}"
+        print(f"  последняя:  {(parse_iso(mem['last']) and _age(parse_iso(mem['last']))) or '—'}"
               f"  ({(mem['last'] or '—')[:16].replace('T', ' ')})")
         print(f"  вьюер:      {mem['viewer']}")
         if mem["real"] == 0:

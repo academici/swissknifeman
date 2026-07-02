@@ -15,27 +15,13 @@ import json
 import os
 from pathlib import Path
 
-from .common import die, parse_args, safe_load_json
+from .common import die, find_run_report, parse_args
 from .lessons import (add_candidate, audit_append, event_append, jaccard,
                       new_lesson)
 
 _SIMILAR_CMD = 0.6   # порог «та же по сути команда» для пары fail→pass
 
-
-# ── источник: run-report ─────────────────────────────────────────────────────
-def find_run_report(project_path, session=None):
-    """Свежий (или по session) <project>/.claude/runs/*.json. None если нет каталога/файлов."""
-    runs = Path(os.path.expanduser(str(project_path))) / ".claude" / "runs"
-    if not runs.is_dir():
-        return None
-    if session:
-        f = runs / f"{session}.json"
-        return safe_load_json(f, None) if f.is_file() else None
-    files = [p for p in runs.glob("*.json") if p.is_file()]
-    if not files:
-        return None
-    latest = max(files, key=lambda p: p.stat().st_mtime)
-    return safe_load_json(latest, None)
+# источник run-report — единый core.find_run_report (раскрывает ~ в пути)
 
 
 # ── извлекатели (чистые) ─────────────────────────────────────────────────────

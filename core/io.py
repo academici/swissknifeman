@@ -28,6 +28,28 @@ def safe_load_json(path, default=None, *, on_error: Optional[Callable] = None):
         return default
 
 
+def read_ndjson(path):
+    """Разбор ndjson/jsonl-файла в список dict'ов; пустые/битые строки и не-dict
+    записи пропускаются. [] если файла нет. errors='replace' — битый байт не роняет
+    чтение. Единый источник вместо копий защитного ndjson-чтения по пакетам."""
+    path = Path(path)
+    if not path.is_file():
+        return []
+    out = []
+    with open(path, encoding="utf-8", errors="replace") as fh:
+        for ln in fh:
+            ln = ln.strip()
+            if not ln:
+                continue
+            try:
+                rec = json.loads(ln)
+            except (ValueError, TypeError):
+                continue
+            if isinstance(rec, dict):
+                out.append(rec)
+    return out
+
+
 def load_json_db(path, default, *, max_version=None):
     """JSON-«БД» с восстановлением: нет файла → deepcopy(default); БИТЫЙ файл → бэкап
     `<name>.corrupt.<date>` + warn + deepcopy(default); version > max_version → die.

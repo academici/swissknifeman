@@ -12,11 +12,10 @@
 """
 import json
 import os
-from datetime import datetime, timezone
 
 from . import confidence as C
 from . import lessons
-from .common import die, now_iso, parse_args
+from .common import die, now_iso, parse_args, parse_iso
 
 # ── числовые гейты state-machine (§5) ────────────────────────────────────────
 CANDIDATE_MIN_N = 15        # объём наблюдений для авто ephemeral→candidate
@@ -26,21 +25,11 @@ CURATED_MIN_CONF = 0.8
 CURATED_MIN_PASSRATE = 0.95
 DEPRECATE_CONF = 0.6       # просадка ниже → soft-демоут (candidate) / флаг (curated)
 
-_TS_FMT = "%Y-%m-%dT%H:%M:%SZ"
 
-
-# ── время (парс timestamp'ов — здесь, чтобы confidence.py оставался чистым) ──
-def _parse_ts(ts):
-    """ISO 'Z' → aware datetime (UTC). None при неразборе."""
-    try:
-        return datetime.strptime(ts, _TS_FMT).replace(tzinfo=timezone.utc)
-    except (ValueError, TypeError):
-        return None
-
-
+# ── время (парс timestamp'ов — единый core.parse_iso, py39-safe) ─────────────
 def day_bucket(ts_event, ts_now):
     """Возраст события в днях (floor, bucket=BUCKET_DAYS), ≥0. Неразбор ts → 0 (защитно)."""
-    a, b = _parse_ts(ts_event), _parse_ts(ts_now)
+    a, b = parse_iso(ts_event), parse_iso(ts_now)
     if a is None or b is None:
         return 0
     secs = (b - a).total_seconds()
@@ -53,15 +42,18 @@ def aggregate_events(events, now_ts):
     Возвращает {S,N,tests_total,tests_passed,days_since,event_count,last_ts}."""
     S = N = tt = tp = 0
     last_ts = None
+    last_dt = None
     for e in events:
         N += int(e.get("sessions_total", 0) or 0)
         S += int(e.get("sessions_success", 0) or 0)
         tt += int(e.get("tests_total", 0) or 0)
         tp += int(e.get("tests_passed", 0) or 0)
         ts = e.get("ts")
-        # ISO-'Z' фикс. ширины → лексикографический max == хронологический
-        if ts and (last_ts is None or ts > last_ts):
-            last_ts = ts
+        # хронологический max по РАЗОБРАННОМУ времени (не лексикографически — терпит
+        # дробные секунды/оффсеты, где строковое сравнение врёт)
+        dt = parse_iso(ts) if ts else None
+        if dt is not None and (last_dt is None or dt > last_dt):
+            last_dt, last_ts = dt, ts
     days = day_bucket(last_ts, now_ts) if last_ts else 0
     return {"S": S, "N": N, "tests_total": tt, "tests_passed": tp,
             "days_since": days, "event_count": len(events), "last_ts": last_ts}
@@ -178,7 +170,7 @@ def cmd_recompute(env, argv):
               "  просадка → soft-deprecate (файл не удаляется). Демона нет.")
         return
     now_ts = opts["now"] or now_iso()
-    if opts["now"] and _parse_ts(now_ts) is None:
+    if opts["now"] and parse_iso(now_ts) is None:
         die("--now: ожидается ISO UTC вида 2026-07-01T00:00:00Z")
 
     ppath = os.getcwd()

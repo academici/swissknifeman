@@ -3,6 +3,15 @@
 # A skill is upstream-tracked when its folder contains upstream.json.
 # Skills without upstream.json are self-written and never touched.
 #
+# body_path (P7.3 thin-navigator, additive): sha/drift is always computed per
+# files[].path — that already works for ANY local path, not just "SKILL.md" (see
+# strategy=fork, whose files[].path conventionally points at a pristine mirror in
+# references/). body_path just names, explicitly, WHICH files[].path entry is "the
+# body" when SKILL.md itself has become a hand-written navigator that this script
+# must never overwrite. No dedicated sha/drift code path exists (or is needed) for
+# it — the generic per-file loop below already does the right thing once the entry
+# points at body_path instead of SKILL.md.
+#
 # Exit codes:
 #   0  everything up to date (--check) / all eligible changes applied (--apply)
 #   1  usage error or malformed upstream.json
@@ -172,6 +181,15 @@ for cfg in configs:
             or not isinstance(data.get("files"), list) or not data["files"]:
         print(f"ERROR: {cfg.relative_to(root)}: malformed (run scripts/validate.sh)",
               file=sys.stderr)
+        sys.exit(1)
+    # body_path (P7.3 thin-navigator): если задан, ОБЯЗАН совпадать с path одной из
+    # files[]-записей — иначе заявленное «тело» на деле не отслеживается ни sha, ни
+    # дрейфом (тихая дыра). Не файловая проверка (существование/escape — validate.sh),
+    # только структурная: files[] реально трекает то, что body_path объявляет телом.
+    bp = data.get("body_path")
+    if bp is not None and bp not in {f.get("path") for f in data["files"]}:
+        print(f"ERROR: {cfg.relative_to(root)}: body_path '{bp}' not in files[].path "
+              f"(run scripts/validate.sh)", file=sys.stderr)
         sys.exit(1)
     parsed.append((cfg, sid, data))
 

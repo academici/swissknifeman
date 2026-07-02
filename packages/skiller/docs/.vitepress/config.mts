@@ -51,6 +51,7 @@ export default withMermaid(defineConfig({
             { text: 'Реестр skills.json', link: '/guide/registry' },
             { text: 'Граф зависимостей', link: '/guide/graph' },
             { text: 'Карта токенового бюджета', link: '/guide/budget' },
+            { text: 'Bucket-аудит 2026-07', link: '/guide/bucket-audit-2026-07' },
             { text: 'Сканер сниппетов', link: '/guide/scanner' },
             { text: 'CI/CD', link: '/guide/ci' },
             { text: 'Диагностика и обновление', link: '/guide/troubleshooting' },

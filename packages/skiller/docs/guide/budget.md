@@ -23,7 +23,7 @@ flowchart LR
     architecture["architecture<br/>⊕27 ↻1329"]:::cool
     codebase_design["codebase-design<br/>⊕117 ↻1996"]:::warm
     data_schema["data-schema<br/>⊕28 ↻924"]:::cool
-    dev_engineering_super_skill["dev-engineering-super-skill<br/>⊕133 ↻23962"]:::hot
+    dev_engineering_super_skill["dev-engineering-super-skill<br/>⊕133 ↻538"]:::hot
     domain_modeling["domain-modeling<br/>⊕122 ↻1261"]:::hot
     eval_design["eval-design<br/>⊕32 ↻1570"]:::cool
     figma_mcp_core["figma-mcp-core<br/>⊕136 ↻1629"]:::hot
@@ -52,7 +52,7 @@ flowchart LR
     botkit["botkit<br/>⊕29 ↻234"]:::cool
   end
   subgraph creative["creative"]
-    content_creative_super_skill["content-creative-super-skill<br/>⊕155 ↻26240"]:::hot
+    content_creative_super_skill["content-creative-super-skill<br/>⊕155 ↻687"]:::hot
   end
   subgraph devops["devops"]
     ci_cd["ci-cd<br/>⊕55 ↻1150"]:::mild
@@ -68,7 +68,7 @@ flowchart LR
     node_pnpm_preflight["node-pnpm-preflight<br/>⊕38 ↻255"]:::cool
   end
   subgraph finance["finance"]
-    finance_super_skill["finance-super-skill<br/>⊕179 ↻21503"]:::hot
+    finance_super_skill["finance-super-skill<br/>⊕179 ↻740"]:::hot
   end
   subgraph founder["founder"]
     adversarial_check["adversarial-check<br/>⊕55 ↻1162"]:::mild
@@ -198,10 +198,10 @@ flowchart LR
     test_isolation_guard["test-isolation-guard<br/>⊕104 ↻1599"]:::warm
   end
   subgraph legal["legal"]
-    legal_super_skill["legal-super-skill<br/>⊕145 ↻29249"]:::hot
+    legal_super_skill["legal-super-skill<br/>⊕145 ↻615"]:::hot
   end
   subgraph marketing["marketing"]
-    marketing_super_skill["marketing-super-skill<br/>⊕142 ↻16617"]:::hot
+    marketing_super_skill["marketing-super-skill<br/>⊕142 ↻663"]:::hot
   end
   subgraph mobile["mobile"]
     figma_to_flutter["figma-to-flutter<br/>⊕107 ↻867"]:::warm
@@ -210,7 +210,7 @@ flowchart LR
     capacity_planning["capacity-planning<br/>⊕41 ↻2083"]:::mild
     incident_response["incident-response<br/>⊕41 ↻1845"]:::mild
     oncall_rotation["oncall-rotation<br/>⊕37 ↻1708"]:::cool
-    operations_cx_super_skill["operations-cx-super-skill<br/>⊕98 ↻22355"]:::warm
+    operations_cx_super_skill["operations-cx-super-skill<br/>⊕98 ↻597"]:::warm
     postmortem["postmortem<br/>⊕43 ↻1929"]:::mild
     runbook["runbook<br/>⊕36 ↻1748"]:::cool
   end
@@ -261,7 +261,7 @@ flowchart LR
     business_process["business-process<br/>⊕27 ↻572"]:::cool
     go_to_market["go-to-market<br/>⊕26 ↻1325"]:::cool
     monetization_design["monetization-design<br/>⊕36 ↻1400"]:::cool
-    pm_super_skill["pm-super-skill<br/>⊕120 ↻23037"]:::hot
+    pm_super_skill["pm-super-skill<br/>⊕120 ↻618"]:::hot
     pmf_diagnostics["pmf-diagnostics<br/>⊕53 ↻1413"]:::mild
     prd_from_brd["prd-from-brd<br/>⊕38 ↻1441"]:::cool
     product_roadmap["product-roadmap<br/>⊕35 ↻1266"]:::cool
@@ -286,7 +286,7 @@ flowchart LR
   end
   subgraph research["research"]
     query_craft["query-craft<br/>⊕130 ↻3928"]:::hot
-    research_knowledge_super_skill["research-knowledge-super-skill<br/>⊕195 ↻20472"]:::hot
+    research_knowledge_super_skill["research-knowledge-super-skill<br/>⊕195 ↻569"]:::hot
   end
   subgraph roles["roles"]
     open_source_maintainer["open-source-maintainer<br/>⊕19 ↻1235"]:::cool
@@ -295,10 +295,10 @@ flowchart LR
     tech_lead["tech-lead<br/>⊕21 ↻1413"]:::cool
   end
   subgraph sales["sales"]
-    sales_super_skill["sales-super-skill<br/>⊕143 ↻25593"]:::hot
+    sales_super_skill["sales-super-skill<br/>⊕143 ↻719"]:::hot
   end
   subgraph security["security"]
-    agent_security_super_skill["agent-security-super-skill<br/>⊕184 ↻30199"]:::hot
+    agent_security_super_skill["agent-security-super-skill<br/>⊕184 ↻675"]:::hot
   end
   subgraph system["system"]
     agent_packs["agent-packs<br/>⊕120 ↻2332"]:::hot
@@ -406,7 +406,7 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 206 скиллов · ⊕ always **14791** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 512608 ток · ⌥ snippets 168717 ток.
+**Итого:** 206 скиллов · ⊕ always **14791** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 279802 ток · ⌥ snippets 168717 ток.
 
 ## По бакетам
 
@@ -414,7 +414,7 @@ flowchart LR
 |---|--:|--:|--:|--:|
 | `general` | 20 | 1402 | 23319 | 6367 |
 | `php` | 17 | 1122 | 19300 | 28598 |
-| `architect` | 14 | 880 | 44597 | 8087 |
+| `architect` | 14 | 880 | 21173 | 8087 |
 | `frontend-vue` | 11 | 854 | 25744 | 7306 |
 | `quality` | 10 | 738 | 19065 | 7447 |
 | `php-packages` | 9 | 685 | 5417 | 520 |
@@ -423,12 +423,12 @@ flowchart LR
 | `system` | 7 | 607 | 11012 | 834 |
 | `devops` | 11 | 548 | 9181 | 16993 |
 | `blender-modeling` | 6 | 506 | 8887 | 11131 |
-| `pm` | 10 | 438 | 33491 | 232 |
+| `pm` | 10 | 438 | 11072 | 232 |
 | `founder` | 10 | 406 | 15188 | 578 |
-| `research` | 2 | 325 | 24400 | 0 |
+| `research` | 2 | 325 | 4497 | 0 |
 | `frontend-linting` | 4 | 323 | 5920 | 3122 |
 | `laravel-testing` | 4 | 323 | 7993 | 15335 |
-| `operator` | 6 | 296 | 31668 | 106 |
+| `operator` | 6 | 296 | 9910 | 106 |
 | `frontend-backend` | 3 | 288 | 5488 | 7851 |
 | `frontend` | 3 | 285 | 3795 | 3508 |
 | `frontend-nuxt` | 3 | 255 | 2564 | 0 |
@@ -436,14 +436,14 @@ flowchart LR
 | `laravel-extras` | 3 | 225 | 4257 | 3362 |
 | `laravel-auth` | 3 | 202 | 3358 | 3263 |
 | `ai` | 2 | 199 | 2018 | 0 |
-| `security` | 1 | 184 | 30199 | 0 |
+| `security` | 1 | 184 | 675 | 0 |
 | `frontend-vite` | 4 | 180 | 3150 | 1486 |
-| `finance` | 1 | 179 | 21503 | 0 |
+| `finance` | 1 | 179 | 740 | 0 |
 | `laravel-data-layer` | 2 | 160 | 3314 | 3977 |
-| `creative` | 1 | 155 | 26240 | 0 |
-| `legal` | 1 | 145 | 29249 | 0 |
-| `sales` | 1 | 143 | 25593 | 0 |
-| `marketing` | 1 | 142 | 16617 | 0 |
+| `creative` | 1 | 155 | 687 | 0 |
+| `legal` | 1 | 145 | 615 | 0 |
+| `sales` | 1 | 143 | 719 | 0 |
+| `marketing` | 1 | 142 | 663 | 0 |
 | `blender` | 2 | 140 | 2287 | 311 |
 | `laravel-livewire` | 1 | 128 | 1283 | 1117 |
 | `mobile` | 1 | 107 | 867 | 987 |
@@ -481,13 +481,13 @@ flowchart LR
 
 | Скилл | Бакет | ток |
 |---|---|--:|
-| `agent-security-super-skill` | security | 30199 |
-| `legal-super-skill` | legal | 29249 |
-| `content-creative-super-skill` | creative | 26240 |
-| `sales-super-skill` | sales | 25593 |
-| `dev-engineering-super-skill` | architect | 23962 |
-| `pm-super-skill` | pm | 23037 |
-| `operations-cx-super-skill` | operator | 22355 |
-| `finance-super-skill` | finance | 21503 |
-| `research-knowledge-super-skill` | research | 20472 |
-| `marketing-super-skill` | marketing | 16617 |
+| `vueuse-functions` | frontend-vue | 10838 |
+| `query-craft` | research | 3928 |
+| `modular-architecture` | laravel-architecture | 3139 |
+| `laravel-testing` | laravel-testing | 3061 |
+| `vue-router-best-practices` | frontend-vue | 2792 |
+| `spatie-settings` | laravel-extras | 2704 |
+| `verify-claims` | general | 2696 |
+| `mutation-testing` | quality | 2580 |
+| `diagnosing-bugs` | quality | 2577 |
+| `vue-best-practices` | frontend-vue | 2560 |

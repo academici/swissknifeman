@@ -2,6 +2,7 @@
 import sys
 
 from .analyze import cmd_analyze_run
+from .audit import cmd_bucket_audit
 from .budget import cmd_budget
 from .common import Env
 from .connect import cmd_connect
@@ -27,6 +28,7 @@ COMMANDS = {
     "lock": cmd_lock,
     "status": cmd_status,
     "budget": cmd_budget,
+    "bucket-audit": cmd_bucket_audit,
     "analyze-run": cmd_analyze_run,
     "eval": cmd_eval,
     "list": cmd_list,

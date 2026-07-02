@@ -71,8 +71,16 @@ def build_registry(env):
                 on_error=lambda e, f=upstream_file: die(f"битый upstream.json: {f}: {e}"),
             )
             files = up.get("files", [])
-            main = next((f for f in files if f.get("path") == "SKILL.md"),
-                        files[0] if files else {})
+            # provenance-запись: body_path (P7.3 thin-navigator) явно называет, какая
+            # files[]-запись — «тело» апстрима, когда SKILL.md — навигатор, а не
+            # зеркало; иначе как раньше — запись SKILL.md, иначе первая (fork/merge:
+            # files[].path указывает на pristine-зеркало в references/, напр. в
+            # strategy=fork без выделенного body_path).
+            body_path = up.get("body_path") or None
+            main = (body_path and next(
+                        (f for f in files if f.get("path") == body_path), None)) \
+                or next((f for f in files if f.get("path") == "SKILL.md"), None) \
+                or (files[0] if files else {})
             entry["source"] = up.get("source", "http")
             entry["upstream"] = main.get("url", "")
             if main.get("fetched_at"):
@@ -106,12 +114,24 @@ def build_registry(env):
         die("buckets.json not found — every bucket needs description/category/tags")
     bucket_meta = json.loads(meta_file.read_text(encoding="utf-8"))
     bucket_dirs = sorted(d.name for d in (root / "skills").iterdir() if d.is_dir())
+    # Alias-бакеты (P7.5, будущие слияния бакетов — D14 запрещает исполнять их СЕЙЧАС):
+    # метаданные-запись БЕЗ физического skills/<bucket> — старое имя бакета переживает
+    # слияние как список ссылок на скиллы цели `alias_of` (см. build_plugin_manifests).
+    # Не «orphan» (забытый каталог), а явная миграционная запись.
+    alias_entries = {b: m for b, m in bucket_meta.items()
+                     if isinstance(m, dict) and m.get("alias_of")}
     missing = [b for b in bucket_dirs if b not in bucket_meta]
-    orphans = [b for b in bucket_meta if b not in bucket_dirs]
+    orphans = [b for b in bucket_meta
+              if b not in bucket_dirs and b not in alias_entries]
     if missing:
         die(f"buckets.json: missing entries for: {', '.join(missing)}")
     if orphans:
         die(f"buckets.json: entries without skills/ dir: {', '.join(orphans)}")
+    bad_targets = [b for b, m in alias_entries.items()
+                  if m["alias_of"] not in bucket_dirs]
+    if bad_targets:
+        die("buckets.json: alias_of указывает на несуществующий бакет: " + ", ".join(
+            f"{b}->{alias_entries[b]['alias_of']}" for b in bad_targets))
 
     registry = {
         "version": 5,
@@ -125,6 +145,31 @@ def build_registry(env):
         "references": references,
     }
     return registry, bucket_meta, bucket_dirs
+
+
+def load_bucket_aliases(env):
+    """Alias-бакеты (P7.5) из buckets.json: {старое_имя: целевой_бакет}. Лёгкий читатель
+    (без build_registry) для update.py/status.py — им не нужна вся структура реестра ради
+    одной подсказки. Пусто, если файла нет (standalone/тест-фикстура без buckets.json) или
+    алиасов не объявлено — сегодня в реальном реестре их нет (D14: P7 не сливает бакеты)."""
+    meta_file = env.root / "buckets.json"
+    if not meta_file.is_file():
+        return {}
+    try:
+        bucket_meta = json.loads(meta_file.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return {}
+    return {b: m["alias_of"] for b, m in bucket_meta.items()
+            if isinstance(m, dict) and m.get("alias_of")}
+
+
+def alias_migration_hints(aliases, enabled_names):
+    """Одна строка на КАЖДЫЙ активный alias-бакет — «бакет X теперь Y», без нагнетания
+    (P7.5 Code Guidance). `aliases` — {старое: целевое} из load_bucket_aliases,
+    `enabled_names` — плагины, реально включённые (True) в settings проекта."""
+    return [f"бакет '{name}' теперь '{aliases[name]}' — обновите enabledPlugins, "
+            f"когда удобно."
+            for name in sorted(enabled_names) if name in aliases]
 
 
 def _repo_root(pkg_root):
@@ -179,6 +224,34 @@ def build_plugin_manifests(env, bucket_meta, bucket_dirs):
             "category": meta.get("category", ""),
             "tags": meta.get("tags", []),
             "package": "skiller",
+        })
+
+    # Alias-бакеты (P7.5, слияния бакетов — механизм СЕЙЧАС без применения, D14): старое имя
+    # бакета остаётся marketplace-плагином (13 проектов на enabledPlugins — back-compat), но
+    # без своего skills/<bucket>. Та же техника, что у курируемого `core` ниже: marketplace-
+    # запись source:"./" + явный skills[]-список ссылок на скиллы, физически живущие теперь в
+    # целевом бакете (`alias_of` в buckets.json). Поле `alias_of` в самой записи — пометка в
+    # метаданных, которую читают update.py/status.py для подсказки «бакет X теперь Y».
+    # bucket_dirs не содержит alias-имена (нет физического каталога) — отдельный проход по
+    # bucket_meta. Пусто, пока ни одно слияние не объявлено → живой registry-дифф не меняется.
+    for name in sorted(bucket_meta):
+        meta = bucket_meta[name]
+        if not isinstance(meta, dict) or not meta.get("alias_of"):
+            continue
+        alias_paths = [src(f"skills/{s}") for s in meta.get("skills", [])
+                       if (root / "skills" / s / "SKILL.md").is_file()]
+        if not alias_paths:
+            continue
+        marketplace_plugins.append({
+            "name": name,
+            "source": "./",
+            "skills": alias_paths,
+            "description": meta.get("description")
+                or f"Alias: бакет перенесён в '{meta['alias_of']}'",
+            "category": meta.get("category", ""),
+            "tags": meta.get("tags", []),
+            "package": "skiller",
+            "alias_of": meta["alias_of"],
         })
 
     # Курируемый лёгкий core-плагин: токен-экономное ALWAYS-ON ядро (== CORE_SKILLS),

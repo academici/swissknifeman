@@ -2,6 +2,64 @@
 
 ## [Unreleased]
 
+### Added (SKM-MASTER-002, волна 3 — analyst learning loop · bucket optimization)
+
+- **Analyst learning loop (фаза D):** команда **`analyst token-report`**
+  (`[--sessions N] [--by model|role] [--vs-baseline] [--all-projects] [--json]`) — срезы
+  usage-trend, rolling-baseline (медиана+p90 последних 20 сессий), regression-флаг
+  (>1.3×медиана или >p90), pinned-снимок `--baseline set --note …` → `.claude/analyze/baseline.json`
+  (формат совместим с уже читающим его `maind analyze`; 21 тест). **Агент-аналитик**
+  `packages/analyst/agents/analyst.md` (opus, read-only) + команда **`/analyst:deep`** —
+  digest-first (D16): скрипты собирают JSON-выжимки (`maind analyze` / `token-report` / `review`)
+  в `.claude/analyst/deep/`, агенту передаются пути; raw-транскрипты запрещены промптом; выход —
+  findings под контракт **`analyst ingest --file F`** (валидация целиком до первой записи;
+  ТОЛЬКО ephemeral-уроки, detector=agent-finding — enforced кодом; промоут за человеком;
+  10 тестов). **`analyst proposals`** — черновики системных улучшений
+  (stack-pack | project-override | docs) в `~/.swissknifeman/analyst/proposals/<type>/<id>/`
+  (детерминированный слаг-id, edit-safe writer как suggest.py), статусы draft|accepted|rejected
+  через append-only audit, печать handoff-последовательности; тест-инвариант «ноль записей вне
+  ~/.swissknifeman/analyst/» (27 тестов). Плагин analyst теперь раздаёт и агента
+  (`"agents"` в plugin.json, marketplace перегенерён — 52 плагина).
+- **Bucket optimization (фаза G):** команда **`skiller bucket-audit`** (`lib/skiller/audit.py`) —
+  размер (реюз budget) · overlap (Jaccard≥0.4 по description, 5-gram shingle ≥0.3 по телам) ·
+  usage (фан-аут по projects.json, `--since N`, честная пометка «не использовался в окне») →
+  вердикты keep/thin/retrieval-only/merge/dead (структурные факты приоритетнее usage-сигнала;
+  20+ тестов). **Решение-документ** `docs/guide/bucket-audit-2026-07.md`: 206 скиллов / 45
+  бакетов / 21 проект, вердикты с числами (dead=180 · keep=13 · thin=8 · merge=3 ·
+  retrieval-only=2), эскиз топологии 45→~34 (только эскиз), раздел «что НЕ делаем» (D13/D14).
+  **10 монолитов → thin-navigator** (D13): тела 55–102KB перенесены байт-в-байт в
+  `references/full.md`, SKILL.md — компактный EN-навигатор с картой якорей; аддитивное поле
+  **`body_path`** в upstream-схеме + гейты в validate.sh/update-upstreams.sh (sha/дрейф — по
+  телу, не по навигатору). Итог по budget: **on-trigger ярус 512 608 → 279 802 ток
+  (−232 806, ~45%)**, резидентный ⊕-ярус не вырос. **Alias-механизм слияний бакетов** (D14,
+  код без применения): `alias_of`+`skills[]` в buckets.json → marketplace-запись по прецеденту
+  core-плагина, миграционные подсказки в `skiller update`/`status` (15 тестов; живой реестр
+  алиасов не объявляет — дифф генерёжки пуст). Критерий **always-on vs retrieval-only** записан
+  в `docs/guide/methodology.md` (3 условия + правило обратимого exclude по 2 окнам).
+
+### Fixed (волна 3 — попутные находки)
+
+- **`bin/analyst`**: жёсткий whitelist лаунчера не знал зарегистрированных команд
+  `status`/`compact` (и нового `token-report`) — команды были недостижимы через установленный
+  CLI; whitelist и usage синхронизированы.
+- **`bin/skiller`**: та же болезнь — `analyze-run` и новый `bucket-audit` отсутствовали в
+  whitelist лаунчера; добавлены.
+- **`skiller registry`**: provenance-запись external-скилла теперь предпочитает
+  `body_path`-файл (`references/full.md`) записи `SKILL.md` — иначе провенанс thin-navigator
+  скиллов зависел от порядка `files[]`.
+
+### Known gaps (честно, волна 3)
+
+- `analyst token-report --by phase` невозможен на текущей схеме run-report: `workflows[]` не
+  несёт токенов per-workflow — CLI принимает флаг и вежливо объясняет; добор формата хука —
+  отдельная волна (harness).
+- `budget.py` не учитывает `references/` ни в одном ярусе — экономия −232K частично «уход из
+  учёта», а не honest-переклассификация в on-demand; модельное решение по tier-2 учёту
+  references/ — follow-up.
+- usage-источник bucket-audit — транскрипт-скан по явным Skill-вызовам (не SCHEMA=2-тренд):
+  структурная слепая зона на auto-trigger/CORE-скиллах (8/8 CORE показывают «dead» при
+  заведомой раздаче) — вердикты dead читать с этой поправкой; интеграция с трендом — follow-up.
+
 ### Added (SKM-MASTER-002, волна 2 — каталог патологий · стек-пак laravel-package + пилоты)
 
 - **Каталог патологий (фаза C):** `core/pathology.py` — чистый защитный детектор workflow-патологий

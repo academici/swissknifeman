@@ -4,9 +4,10 @@
   "repo": "get-zeked/research-knowledge-super-skill",
   "strategy": "notify",
   "license": "MIT",
+  "body_path": "references/full.md",
   "files": [
     {
-      "path": "SKILL.md",
+      "path": "references/full.md",
       "url": "https://raw.githubusercontent.com/get-zeked/research-knowledge-super-skill/main/SKILL.md",
       "sha256": "ae7442a095f53f90a28b0e1b1bcd632796fdffac12c25f15d6d96e50e271a86c",
       "fetched_at": "2026-06-11"

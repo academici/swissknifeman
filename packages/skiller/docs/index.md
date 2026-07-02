@@ -11,6 +11,7 @@ title: Скиллы (skiller)
 - [Установка скиллов](./guide/installation) · [Vendor-режим](./guide/vendor-mode)
 - [CLI swissknifeman](./guide/cli) · [Профили и автодетект](./guide/profiles)
 - [Создание скиллов](./guide/creating-skills) · [Реестр skills.json](./guide/registry)
+- [Bucket-аудит 2026-07](./guide/bucket-audit-2026-07) — метрики/вердикты по всему реестру (P7.2)
 - [Адаптеры IDE](./adapters/claude-code) · [Примеры](./examples/laravel)
 - [Совместимость с Laravel Boost](./boost-compatibility) · [Раздача локального `.ai/` на провайдеры (dev-план)](./multi-provider-distribution)
 

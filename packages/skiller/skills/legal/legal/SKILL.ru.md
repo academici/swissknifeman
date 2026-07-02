@@ -1,4 +1,4 @@
-> 🌐 Перевод для человека. Агент использует SKILL.md, не этот файл.
+> 🌐 Перевод полного тела (`references/full.md`) для человека. Агент использует SKILL.md-навигатор и `references/full.md`, не этот файл.
 
 ---
 name: legal-super-skill

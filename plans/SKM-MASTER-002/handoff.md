@@ -1,42 +1,46 @@
-# HANDOFF — 2026-07-02 — after P6.9
+# HANDOFF — 2026-07-02 — after P7.6
 
-**Next:** /task:plan-exec SKM-MASTER-002 P4.1 (волна 3 = P4 analyst learning loop + P7 bucket
-optimization; спеки — phases/P4.md, phases/P7.md + одобренный план-файл)
-**Done:** волны 1–2 мастер-плана. Волна 1: P1.1–P1.7, P2 целиком, P5.1–P5.5 (коммиты 4311ebc,
-070e529, 0dfcc31). Волна 2 (workflow wf_b807bda3-dc2, 13/13 агентов, 0 ошибок): P3 закрыта
-(детекторный контур core/pathology → maind analyze «Эффективность» → analyst digest рецидив
-≥2/5 + каталог-док pathologies.md); P1.9 (кросс-ссылки 3 скиллов); P5.7 (дока harness +
-CHANGELOG); P6 закрыта 🟠 — пак laravel-package@0.1.0 (reviewer «публичный контракт»,
-src_pack-реюз, parity-тест shared-блоков, команда remove) + пилоты azguard (4 доменных оси
-оверрайдов) и chatom (монорепо-кейс) + регрессия непилотных (0 conflict в upgrade-канале) +
-roadmap/профиль php-package/доки/reference.md. Полевые фиксы движка: _probe_allowed-совместимая
-проба PACKAGE_NAMESPACE + монорепо-фолбэк; categorize_file_change missing→new; do_render
-переписывает lock при смене local_modified. backend-laravel бампнут 0.11.2 (shared-разметка +
-Repositories-фикс). CHANGELOG: корневой [Unreleased] (волна 2 Added+Fixed), laravel-package@0.1.0
-(создан), backend-laravel@0.11.2, maind. Валидация: 5×validate.sh + 139 core-тестов зелёные.
+**Next:** /task:plan-exec SKM-MASTER-002 P8.1 (волна 4 = P8 rollout/acceptance + хвосты:
+P1.8 пилотный цикл plan-exec→audit, P1.10 cold-start, P5.6 опц. pack-guard; спеки —
+phases/P8.md, phases/P1.md, phases/P5.md + одобренный план-файл)
+**Done:** волны 1–3. Волна 3 (workflow wf_faac2853-041, 18/19 агентов; sales/sales доделан
+оркестратором): P4 закрыта 🟠 — analyst learning loop замкнут (token-report + двухслойный
+baseline · агент-аналитик /analyst:deep digest-first · ingest ephemeral-only · proposals с
+инвариантом «ноль записей вне ~/.swissknifeman/analyst/»); P7 — P7.1/P7.5/P7.6 🟢,
+P7.2/P7.3 🟠: bucket-audit + решение-документ (dead=180·keep=13·thin=8·merge=3·r-o=2),
+10/10 монолитов → thin-navigator (**on-trigger 512 608 → 279 802 ток, −45%**, ⊕ не вырос),
+alias-механизм готов (слияний нет — D14), критерий в methodology.md. Попутно: whitelist
+bin/analyst (status/compact/token-report) и bin/skiller (analyze-run/bucket-audit);
+/analyst:proposals в роутере; конвенция «извлекатели чистые» в analyst/CLAUDE.md получила
+задокументированное исключение. Все validate ×5 + 139 core-тестов зелёные; CHANGELOG
+волны 3 внесён (Added + Fixed + Known gaps); plan-lint 0/0.
 **Remaining:**
-- Коммит волны 2 в монорепо (оркестратор, сразу после этого handoff'а). Изменения в РЕПО
-  azguard/chatom НЕ коммитить (рабочие деревья, решение владельца).
-- Волна 3: P4 (analyst token-report+baseline · агент-аналитик /analyst:deep · ingest ·
-  proposals) + P7 (bucket-audit · решение-документ · thin-навигаторы 10 монолитов + body_path ·
-  dead-pass · alias-механизм · methodology.md). P7.4 (dead-pass) требует окна usage ≥2 недели —
-  вероятно ⛔/deferred в этой волне.
-- Волна 4: P8 (rollout/acceptance: baseline пилотов ДО внедрения планов, maind sync на
-  остальные проекты) + P1.8/P1.10 (живой цикл plan-exec→audit, cold-start) + P5.6 (опц.
-  pack-guard).
+- Коммит волны 3 (оркестратор, сразу после этого handoff'а).
+- Волна 4 = P8: (1) метрики ДО на пилотах azguard+chatom (`harness hooks --global` уже
+  SCHEMA=2; пин baseline `analyst token-report --baseline set`), (2) пилотные планы в plans/
+  пилотов + живой цикл plan-design→exec(sonnet)→audit → это же закрывает P1.8, (3) P1.10
+  cold-start (/clear → продолжение только из файлов), (4) глобальная приёмка §15
+  (audit GREEN · reset-выживаемость · doctor --drift чисто · token-report --vs-baseline ·
+  «Эффективность» · bucket-решение-док · azguard package-acceptance · digest ≤2 канд/нед),
+  (5) расширение на остальные проекты maind sync — только после зелёной недели пилотов
+  (растянуто во времени — фиксировать как deferred, не ждать в сессии). P5.6 pack-guard —
+  опциональный, по решению.
+- ОТЛОЖЕННОЕ (не волна 4): P7.4 dead-pass — ≥2 недели прод-usage (середина июля) + починка
+  слепой зоны usage-детектора; merge-решения по эскизу топологии — человек.
 **Sources of truth:** plans/SKM-MASTER-002/plan.md · phases/P1–P8.md · одобренный план-файл
-~/.claude/plans/perplexity-snappy-platypus.md (полные спеки волн 3–4) · скилл
-packages/skiller/skills/general/plan-protocol/ · plan-lint packages/task/scripts/plan-lint.py
-**Open risks:** рабочие деревья azguard/chatom несут некоммиченные rendered-паки + оверрайды —
-не коммитить без владельца; sonnet «дорисовывает» план (проверка — P1.8); effort-пин haiku в
-Claude Code не проверен; perplexity-web не параллелить (память проекта) — RAG-запросы волны 3
-только последовательно из главного цикла.
+~/.claude/plans/perplexity-snappy-platypus.md · скилл plan-protocol · plan-lint.
+**Open risks:** рабочие деревья azguard/chatom несут некоммиченные rendered-паки — не
+коммитить без владельца; sonnet «дорисовывает» план — проверка в P1.8; effort-пин haiku не
+проверен; usage-окно телеметрии SCHEMA=2 ~1 день — baseline пилотов пиннить как «до», но
+честно помечать длину окна.
 **Workarounds/Deferred/Open questions:**
 - workarounds: —
-- deferred: P1.8/P1.10 — волна 4; P5.6 pack-guard (опц.); body_path в upstream-схеме —
-  сверить при P7.3; cost-enrichment (USD) — roadmap; конвенция «извлекатели digest — чистые
-  функции» в analyst/CLAUDE.md разошлась с extract_pathologies (читает историю с диска) —
-  поправить попутно в P4; follow-ups фазы F (pack:if для BC-строки dev-loop; extension-point
-  для dev-loop.js/rules/tests.md — кандидат в P4 proposals; flake детекта PACKAGE_NAMESPACE;
+- deferred: P7.4 (окно+детектор); tier-2 учёт references/ в budget.py (модельное решение);
+  RU-справки 7 монолитов ≠ навигаторы (контентный дрейф, отдельный проход); per-workflow
+  токены в run-report → analyst --by phase (доработка harness-хука); интеграция usage
+  bucket-audit со SCHEMA=2-трендом; 404 quality/tdd-discipline snippets/refactoring.md
+  (upstream переехал); cost-enrichment USD — roadmap; follow-ups фазы F (pack:if BC-строки
+  dev-loop; extension-point dev-loop.js/rules/tests.md; flake PACKAGE_NAMESPACE;
   *.pack-new в agelto — материал для /analyst:deep).
-- open_questions: —
+- open_questions: merge-вердикты (3 псевдо-overlap super-skill) — человек по эскизу
+  топологии 45→~34.

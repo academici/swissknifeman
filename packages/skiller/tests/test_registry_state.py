@@ -108,6 +108,26 @@ class RegistryBuildCase(unittest.TestCase):
         self.assertEqual(docker["upstream"], "https://raw.example/SKILL.md")
         self.assertEqual(docker["fetched_at"], "2026-03-03")
 
+    def test_body_path_provenance_preferred_over_skill_md_entry(self):
+        # P7.3 thin-navigator: body_path явно называет files[]-запись с реальным
+        # телом апстрима — registry должен брать provenance из НЕЁ, а не из первой
+        # найденной записи с path=="SKILL.md" (даже если такая по какой-то причине
+        # тоже трекается) и не из files[0] (порядок в files[] не должен решать).
+        fx.write_upstream(
+            self.root / "skills" / "devops" / "docker",
+            source="github", strategy="notify",
+            path="SKILL.md", url="https://raw.example/SKILL.md", sha256="stale",
+            fetched_at="2026-01-01",
+            body_path="references/full.md",
+            extra_files=[{"path": "references/full.md",
+                         "url": "https://raw.example/references/full.md",
+                         "sha256": "fresh", "fetched_at": "2026-07-01"}])
+        reg, *_ = build_registry(self.env)
+        docker = next(s for s in reg["skills"] if s["name"] == "docker")
+        self.assertEqual(docker["source"], "github")
+        self.assertEqual(docker["upstream"], "https://raw.example/references/full.md")
+        self.assertEqual(docker["fetched_at"], "2026-07-01")
+
     def test_broken_upstream_json_dies_with_path(self):
         # Битый upstream.json → внятная ошибка с путём, не голый traceback
         # на полпути генерации и не тихий провал в source="local".

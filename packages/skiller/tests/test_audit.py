@@ -10,13 +10,14 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
 from skiller.audit import (body_shingles, build_audit, cmd_bucket_audit,
                            collect_usage, desc_triggers, find_overlaps,
                            iter_registry_skills, jaccard, render_audit,
-                           usage_note, verdict)
+                           resident_skill_names, usage_note, verdict)
 from skiller.state import upsert_project
 import tests.fixtures as fx
 
@@ -106,6 +107,36 @@ class VerdictCase(unittest.TestCase):
         note = usage_note(0, 0, 14)
         self.assertIn("нет данных", note)
         self.assertIn("14", note)
+
+    # --- P2.2 SKM-MASTER-003: резидентный скилл без skill-call ≠ dead -----------
+    def test_resident_without_calls_is_keep_not_dead(self):
+        v = verdict(self._item(), overlap_partners=[], loaded_count=0,
+                    scanned_projects=3, resident=True)
+        self.assertEqual(v, "keep")
+
+    def test_non_resident_without_calls_still_dead(self):
+        # resident явно False (дефолт) -> старое поведение не тронуто.
+        v = verdict(self._item(), overlap_partners=[], loaded_count=0,
+                    scanned_projects=3, resident=False)
+        self.assertEqual(v, "dead")
+
+    def test_resident_with_calls_is_keep(self):
+        v = verdict(self._item(), overlap_partners=[], loaded_count=2,
+                    scanned_projects=3, resident=True)
+        self.assertEqual(v, "keep")
+
+    def test_usage_note_resident_without_calls_exact_wording(self):
+        self.assertEqual(
+            usage_note(0, 3, 30, resident=True),
+            "резидентный, прямых вызовов не видно (авто-триггер вне детекции)")
+
+    def test_usage_note_resident_with_calls_unaffected(self):
+        self.assertEqual(usage_note(5, 3, 30, resident=True), "5× за 30 дней")
+
+    def test_usage_note_resident_no_scan_data_unaffected(self):
+        # scanned_projects=0 -> "нет данных", резидентность здесь ни при чём.
+        note = usage_note(0, 0, 14, resident=True)
+        self.assertIn("нет данных", note)
 
 
 # --- сборка реестра + overlap на фикстуре -----------------------------------------
@@ -217,6 +248,88 @@ class UsageFanOutCase(unittest.TestCase):
         loaded, scanned = collect_usage(self.env, since_days=30)
         self.assertEqual(scanned, 1)     # сессия "просканирована" — просто пусто
         self.assertEqual(loaded, {})
+
+
+# --- резидент: второй источник видимости (P2.2 SKM-MASTER-003) -------------------
+class ResidentChannelCase(unittest.TestCase):
+    """collect_usage видит ТОЛЬКО явные Skill-tool-вызовы (слепая зона) — второй,
+    независимый источник резидентности (CORE_SKILLS / активный набор проекта)
+    закрывает её: резидентный скилл без единого вызова НЕ падает в dead."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.tmp = Path(self._tmp.name)
+        self.root, self.env = fx.make_registry(self.tmp)
+        self.project = self.tmp / "consumer-project"
+        self.project.mkdir(parents=True, exist_ok=True)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def test_core_skill_without_calls_is_not_dead(self):
+        # "docker" в реестре объявлен CORE (монки-патч CORE_SKILLS — реальный
+        # CORE_SKILLS живёт в другом бакете и в синтетический реестр не входит).
+        upsert_project(self.env, {"path": str(self.project), "channel": "vendor"})
+        _write_session(self.env, self.project, ["code-style"])  # др. скилл грузился
+        with mock.patch("skiller.audit.CORE_SKILLS", ["devops/docker"]):
+            report = build_audit(self.env, since_days=30)
+        row = next(r for r in report["items"] if r["key"] == "devops/docker")
+        self.assertEqual(row["loaded_count"], 0)
+        self.assertNotEqual(row["verdict"], "dead")
+        self.assertEqual(row["verdict"], "keep")
+        self.assertEqual(row["channel"], "resident")
+        self.assertEqual(row["usage_note"],
+                         "резидентный, прямых вызовов не видно (авто-триггер вне детекции)")
+
+    def test_non_core_unresident_skill_stays_dead(self):
+        # Без резидентности (не CORE, не в активном наборе ни одного проекта) —
+        # поведение до P2.2 не тронуто: dead + канал none.
+        upsert_project(self.env, {"path": str(self.project), "channel": "vendor"})
+        _write_session(self.env, self.project, ["code-style"])
+        with mock.patch("skiller.audit.CORE_SKILLS", []):
+            report = build_audit(self.env, since_days=30)
+        row = next(r for r in report["items"] if r["key"] == "devops/docker")
+        self.assertEqual(row["verdict"], "dead")
+        self.assertEqual(row["channel"], "none")
+
+    def test_skill_call_channel_wins_over_resident(self):
+        # Реальный вызов есть -> channel=skill-call, даже если скилл заодно CORE.
+        upsert_project(self.env, {"path": str(self.project), "channel": "vendor"})
+        _write_session(self.env, self.project, ["code-style"])
+        with mock.patch("skiller.audit.CORE_SKILLS", ["php/code-style"]):
+            report = build_audit(self.env, since_days=30)
+        row = next(r for r in report["items"] if r["key"] == "php/code-style")
+        self.assertEqual(row["channel"], "skill-call")
+
+    def test_active_profile_membership_makes_skill_resident(self):
+        # "входит в подключённый профиль/каталог проекта": .swissknife.json проекта
+        # выбирает бакет devops -> docker резидентен БЕЗ CORE_SKILLS.
+        (self.project / ".swissknife.json").write_text(
+            json.dumps({"buckets": ["devops"]}) + "\n", encoding="utf-8")
+        upsert_project(self.env, {"path": str(self.project), "channel": "vendor"})
+        _write_session(self.env, self.project, ["code-style"])
+        with mock.patch("skiller.audit.CORE_SKILLS", []):
+            names = resident_skill_names(self.env)
+            self.assertIn("docker", names)
+            report = build_audit(self.env, since_days=30)
+        row = next(r for r in report["items"] if r["key"] == "devops/docker")
+        self.assertEqual(row["verdict"], "keep")
+        self.assertEqual(row["channel"], "resident")
+
+    def test_resident_skill_names_graceful_on_unknown_bucket(self):
+        # Битый/неизвестный бакет в .swissknife.json проекта -> resolve_active_set
+        # die()-ит изнутри -> проект просто пропускается, аудит не падает.
+        (self.project / ".swissknife.json").write_text(
+            json.dumps({"buckets": ["no-such-bucket"]}) + "\n", encoding="utf-8")
+        upsert_project(self.env, {"path": str(self.project), "channel": "vendor"})
+        with mock.patch("skiller.audit.CORE_SKILLS", []):
+            names = resident_skill_names(self.env)  # не должно бросить исключение
+        self.assertEqual(names, set())
+
+    def test_resident_skills_count_in_report(self):
+        with mock.patch("skiller.audit.CORE_SKILLS", ["devops/docker"]):
+            report = build_audit(self.env, since_days=30)
+        self.assertEqual(report["resident_skills"], 1)
 
 
 # --- рендер / CLI ------------------------------------------------------------------

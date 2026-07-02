@@ -2,21 +2,23 @@
 
 Здесь живут **спеки на будущее внедрение** — идеи, которые исследованы и осознанно отложены
 (вне scope текущего прохода «конфигурируемые субагенты + шаблоны по типу проекта»). Каждый файл —
-самодостаточный план: зачем, как, критерий «когда внедрять».
+самодостаточный план: зачем, как, критерий «когда внедрять». Часть записей ниже уже **реализована**
+(критерий внедрения сработал) — файл остаётся в каталоге как история задумки/спецификация
+(колонка **Статус** — источник истины, не заголовок раздела).
 
 Источник большинства решений «отложить» — глубокий research-аудит (см.
 [`docs/reference.md`](../docs/reference.md), там же плюсы/минусы исследованных репозиториев).
 
 ## Отложенное
 
-| Файл | Что | Почему отложено | Критерий внедрения |
-|:--|:--|:--|:--|
-| [`agent-command-router-hook.md`](agent-command-router-hook.md) | UserPromptSubmit-хук, подсказывающий нужного субагента/команду | Скиллы уже автозагружаются по `description`; ценность только для агентов/команд; риск vendor-lock/латентности | Замеренные мисроуты агентов/команд на практике |
-| [`self-learning-memory.md`](self-learning-memory.md) | Самообучение через namespace-память maind (не перезапись CLAUDE.md) | Нет канонической реализации; нужны guardrails (confidence-gating + ручное промо); ортогонально цели | Появится потребность в авто-накоплении уроков + готовность к ревью-гейту |
-| [`skill-rules-sidecar.md`](skill-rules-sidecar.md) | Генерируемый `skill-rules.json` сайдкар для роутинга скиллов | Нативная автозагрузка скиллов обычно достаточна | Замеренные мис-активации скиллов |
-| [`mcp-config-example-emit.md`](mcp-config-example-emit.md) | maind deploy/sync сам эмитит `.mcp.json.example` (плейсхолдеры) + ведёт `.gitignore` | Кейс покрыт дисциплиной агента (скилл `project-tooling-runbook`); генератор-механизм пока избыточен | Повторная утечка абс.путей/секретов в репо ИЛИ внешний разработчик не поднял MCP без `.example` |
-| [`php-package-stack-pack.md`](php-package-stack-pack.md) | Отдельный стек-пак `php-package` (dev-loop под Testbench/Pest/публичный API), не app-ориентированный `backend-laravel` | `backend-laravel` v0.3.0 после фикса рабочий и для пакета; новый пак — только при повторном трении | Несколько онбордингов пакетов упёрлись в app-допущения `backend-laravel` (не один azguard) |
-| [`analyst-suggest-draft-skill.md`](analyst-suggest-draft-skill.md) | `analyst suggest` (P4): cross-project паттерн → ЧЕРНОВИК `SKILL.ru.md` в staging, человек промоутит | Спроектировано, не реализовано; ждёт накопленных cross-project паттернов (`scan`) + повторяющегося трения ручного оформления скилла | Непустой `index/by_pattern/` И ручное оформление черновика «с нуля» стало трением |
+| Файл | Что | Статус | Почему отложено / реализовано | Критерий внедрения |
+|:--|:--|:--|:--|:--|
+| [`agent-command-router-hook.md`](agent-command-router-hook.md) | UserPromptSubmit-хук, подсказывающий нужного субагента/команду | ✅ реализовано (v1) | Триггер сработал: замеренный мисроут `/task:*` на реальном потоке | — (сработал) |
+| [`self-learning-memory.md`](self-learning-memory.md) | Самообучение через namespace-память maind (не перезапись CLAUDE.md) | 🟡 ядро реализовано (`analyst`), остаток отложен | Ядро (`digest`→`confidence`→`promote`→`memory-digest-hook`) реализовано; остаток — потоковый PostToolUse event-stream capture (`observe.sh`/`analyst-capture`, P5) | Остаток: измеренное трение (наблюдения теряются между прогонами) — on-demand `digest` пока покрывает MVP |
+| [`skill-rules-sidecar.md`](skill-rules-sidecar.md) | Генерируемый `skill-rules.json` сайдкар для роутинга скиллов | ⬜ отложено | Нативная автозагрузка скиллов обычно достаточна | Замеренные мис-активации скиллов |
+| [`mcp-config-example-emit.md`](mcp-config-example-emit.md) | maind deploy/sync сам эмитит `.mcp.json.example` (плейсхолдеры) + ведёт `.gitignore` | ✅ реализовано (opt-in) | По умолчанию выключено (`mcp.emit_example`); полевой кейс agelto подтвердил ценность | Остаток (default-on): повторная утечка абс.путей/секретов ИЛИ внешний разработчик не поднял MCP без `.example` |
+| [`php-package-stack-pack.md`](php-package-stack-pack.md) | Отдельный стек-пак `php-package` (dev-loop под Testbench/Pest/публичный API), не app-ориентированный `backend-laravel` | ✅ реализовано (`agent-packs/laravel-package@0.1.0`) | Замеренное трение на azguard сработало, пак заведён (принятые отклонения — в самом файле) | — (сработал) |
+| [`analyst-suggest-draft-skill.md`](analyst-suggest-draft-skill.md) | `analyst suggest` (P4): cross-project паттерн → ЧЕРНОВИК `SKILL.ru.md` в staging, человек промоутит | ✅ реализовано (`packages/analyst/lib/analyst/suggest.py`) | Накопленные cross-project паттерны + повторяющееся ручное трение оформления черновика — критерий сработал | — (сработал) |
 
 ## Принцип
 

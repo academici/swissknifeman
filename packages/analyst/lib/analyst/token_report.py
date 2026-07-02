@@ -17,6 +17,12 @@ tools_total, files_changed, agents, wall_s, retr_chars}`.
     первично, `by_model.<model>.median_out` — fallback. Наш файл — надмножество (добавляет
     `median_in`/`p90_out`/`note`/`sessions`/`generated_at`) — maind эти поля просто не читает.
 
+`--vs-baseline` без пина (P2.6, LOW-находка аудита P8): НЕ ошибка запроса — rolling-отчёт сам
+по себе полон и полезен без сравнения. `cmd_token_report` печатает `warn()` в stderr
+(мягкая деградация, exit=0), тот же паттерн, что у соседних команд при отсутствии
+опциональных данных (`promote.py`: не всплыло в память → warn; `scan.py`: пустой реестр →
+warn) — die() зарезервирован за настоящим отсутствием данных (нет тренда вообще).
+
 Regression-флаг (ТЗ): `out > 1.3×rolling.median_out` ИЛИ `out > rolling.p90_out`.
 (Это НЕ тот же порог, что у `maind analyze` per-session ATTENTION — там `max(1.5×median, p90)`
 для ОДНОЙ живой сессии; здесь порог мягче и агрегатный — разная чувствительность осознанна.)
@@ -386,6 +392,8 @@ def cmd_token_report(env, argv):
               "  последних K=20) + regression-флаг (out > 1.3×медиана ИЛИ > p90).\n"
               "  --vs-baseline добавляет сравнение с pinned .claude/analyze/baseline.json\n"
               "  (его читает и maind analyze). --baseline set пинит текущее окно.\n"
+              "  Если --vs-baseline запрошен, а baseline не запинен — WARN в stderr, отчёт\n"
+              "  всё равно строится (мягкая деградация, не ошибка запроса).\n"
               "  ВНИМАНИЕ: --by phase недоступен — run-report не хранит токены на уровне\n"
               "  workflows[] (только name/status/summary). Доступно: model, role.")
         return
@@ -438,6 +446,16 @@ def cmd_token_report(env, argv):
     if rep is None:
         die(f"нет тренда токенов: {trend_path(ppath)} — включи хук run-report "
             f"(harness hooks --target . --run-report on) и прогони хотя бы одну сессию")
+    # --vs-baseline без пина — НЕ ошибка запроса (die): rolling-отчёт сам по себе полон и
+    # полезен, сравнения (ratio_pinned) просто выходят None (см. compute_report) — та же
+    # мягкая деградация, что и у соседних команд при отсутствии опциональных данных
+    # (promote.py: не всплыло в память → warn, не die; scan.py: пустой реестр → warn).
+    # До этой правки сигнала не было вовсе (голый print без WARN: — молчаливая деградация,
+    # LOW-находка аудита P8: несогласовано с die/warn-конвенцией пакета).
+    if opts["vs_baseline"] and not rep.get("pinned_baseline"):
+        warn("--vs-baseline запрошен, но pinned baseline не установлен — сравнение "
+             "пропущено (отчёт продолжается): analyst token-report --baseline set "
+             "--note \"...\"")
     if opts["json"]:
         print(json.dumps(rep, ensure_ascii=False, indent=2))
     else:

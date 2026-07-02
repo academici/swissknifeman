@@ -13,20 +13,33 @@
              как в `analyze.py` (Skill-tool вызовы), окно `--since N` дней. Транскрипты
              fail-safe (формат логов не гарантирован; см. analyze.parse_transcript) —
              недоступные/битые логи дают usage=0, а не падение аудита.
+  резидент — ВТОРОЙ, независимый от транскриптов источник видимости (P2.2 SKM-MASTER-003):
+             скилл в CORE_SKILLS (config.py, ярус-0 в каждом проекте) ИЛИ входит в
+             активный набор (профиль/бакеты `.swissknife.json`, тот же resolve_active_set,
+             что `analyze._active_skill_names`) хотя бы одного зарегистрированного проекта.
+             Закрывает слепую зону transcript-скана: транскрипт-скан ловит ТОЛЬКО явные
+             Skill-tool-вызовы (см. analyze.py) — резидентные/авто-триггерные скиллы (ярус-0
+             description, нативный preload) молча не оставляют такого следа и ложно
+             выглядят dead. Резидентность — best-effort/graceful (битый/удалённый проект →
+             просто пропускается, аудит не падает).
   вердикт  — чистая функция метрик с порогами-константами: keep/thin/retrieval-only/
-             merge/dead.
+             merge/dead. Резидентный скилл БЕЗ явных skill-вызовов не помечается dead —
+             вместо этого keep с честной пометкой (авто-триггер вне детекции обоих
+             источников — см. verdict()/usage_note()).
 
 Честность формулировки: skill с нулём загрузок в окне помечается РОВНО «не использовался
 в окне N дней» — усечённые данные (короткое окно / мало просканированных проектов) НЕ
-равны доказанной бесполезности."""
+равны доказанной бесполезности. Поле `channel` в отчёте (skill-call/resident/none)
+показывает, КАКОЙ из двух источников вообще видел скилл."""
 import json
 import re
 import time
 from pathlib import Path
 
-from .analyze import agent_stats, logs_root, parse_transcript
-from .budget import _split_frontmatter, skill_budget
+from .analyze import agent_stats, logs_root, parse_transcript, skill_key
+from .budget import _split_frontmatter, budget_for_set, resolve_active_set, skill_budget
 from .common import die, parse_flags, parse_frontmatter
+from .config import CORE_SKILLS, load_config
 from .state import load_db
 
 # --- пороги вердикта (константы — не магические числа по месту) ----------------
@@ -180,8 +193,52 @@ def collect_usage(env, since_days=DEFAULT_SINCE_DAYS):
     return loaded, scanned
 
 
+# --- резидент: второй источник видимости (P2.2 SKM-MASTER-003) -------------------
+def _core_skill_names():
+    """Нормализованные имена CORE_SKILLS (последний сегмент "bucket/name" —
+    та же нормализация, что skill_key/collect_usage) — грузятся ярусом-0
+    (name+description) в КАЖДОМ проекте по умолчанию, см. config.py."""
+    return {skill_key(p) for p in CORE_SKILLS}
+
+
+def resident_skill_names(env):
+    """Множество нормализованных имён «резидентных» скиллов — второй,
+    НЕЗАВИСИМЫЙ от транскриптов источник видимости:
+
+      1) CORE_SKILLS (config.py) — резидентны ярусом-0 в каждом проекте.
+      2) активный набор (профиль/бакеты `.swissknife.json`, тот же
+         `budget.resolve_active_set`, что использует `analyze._active_skill_names`)
+         хотя бы ОДНОГО зарегистрированного проекта (~/.swissknifeman/projects.json).
+
+    Резидентный скилл может не оставить ни одного явного Skill-tool-вызова в
+    транскрипте (авто-триггер description/нативный preload вне детекции transcript-
+    скана, см. docstring analyze.py) — это НЕ значит, что он мёртв.
+
+    Best-effort/graceful по каждому проекту: битый/отсутствующий `.swissknife.json`,
+    неизвестный бакет (die изнутри resolve_active_set) или удалённый путь проекта —
+    просто пропускаем проект, аудит целиком не падает (тот же принцип, что
+    collect_usage про битые транскрипты)."""
+    names = _core_skill_names()
+    db = load_db(env)
+    for proj in db.get("projects", []):
+        path = proj.get("path")
+        if not path:
+            continue
+        target = Path(path)
+        try:
+            config = load_config(env, target)
+            skills, meta = resolve_active_set(env, target, config)
+            b = budget_for_set(skills, meta.get("pulled"))
+            names |= {skill_key(i["name"]) for i in b["items"]}
+        except SystemExit:
+            continue  # неизвестный бакет/битый конфиг -> пропуск проекта
+        except Exception:
+            continue  # любая другая деградация (ФС/JSON) -> пропуск проекта
+    return names
+
+
 # --- вердикт ---------------------------------------------------------------------
-def verdict(item, *, overlap_partners, loaded_count, scanned_projects):
+def verdict(item, *, overlap_partners, loaded_count, scanned_projects, resident=False):
     """Чистая функция метрик → вердикт (keep/thin/retrieval-only/merge/dead).
 
     Порядок проверки = приоритет сигнала (первое совпадение побеждает). Структурные
@@ -192,10 +249,13 @@ def verdict(item, *, overlap_partners, loaded_count, scanned_projects):
     вместо «thin» — теряется ровно тот сигнал, ради которого и нужен размер:
       1) merge           — overlap с другим скиллом над порогом Jaccard/shingle.
       2) thin            — тело-монолит (tier1 >= TIER1_MONOLITH_TOKENS).
-      3) dead            — usage-данные ЕСТЬ (scanned_projects>0) И 0 загрузок в окне.
+      3) dead            — usage-данные ЕСТЬ (scanned_projects>0) И 0 загрузок в окне
+                            И скилл НЕ резидентный (см. resident_skill_names) — иначе
+                            keep (P2.2: резидент без skill-вызовов ≠ мёртв, это второй
+                            источник видимости, транскрипт-скан его просто не ловит).
       4) retrieval-only  — заметное тело (>= TIER1_LARGE_TOKENS) при редком
                             использовании (<= LOW_USAGE_MAX_LOADS, включая «нет данных»).
-      5) keep            — иначе.
+      5) keep            — иначе (включая dead-кандидатов, спасённых резидентностью).
 
     scanned_projects==0 → usage неинформативен: dead НЕ ставим (усечённые данные ≠
     бесполезность), но structural-вердикты (merge/thin) и retrieval-only по размеру
@@ -206,18 +266,22 @@ def verdict(item, *, overlap_partners, loaded_count, scanned_projects):
     if item["tier1"] >= TIER1_MONOLITH_TOKENS:
         return "thin"
     if scanned_projects > 0 and loaded_count == 0:
-        return "dead"
+        return "keep" if resident else "dead"
     if item["tier1"] >= TIER1_LARGE_TOKENS and loaded_count <= LOW_USAGE_MAX_LOADS:
         return "retrieval-only"
     return "keep"
 
 
-def usage_note(loaded_count, scanned_projects, since_days):
+def usage_note(loaded_count, scanned_projects, since_days, resident=False):
     """РОВНО «не использовался в окне N дней» при нуле загрузок — не «мёртв»/
-    «бесполезен» (усечённые данные ≠ доказанная бесполезность)."""
+    «бесполезен» (усечённые данные ≠ доказанная бесполезность). Резидентный скилл
+    (см. resident_skill_names) без загрузок получает отдельную честную пометку —
+    он виден вторым источником (CORE/активный набор), а не «не использовался»."""
     if scanned_projects == 0:
         return f"usage: нет данных за окно {since_days} дней (0 просканированных проектов)"
     if loaded_count == 0:
+        if resident:
+            return "резидентный, прямых вызовов не видно (авто-триггер вне детекции)"
         return f"не использовался в окне {since_days} дней"
     return f"{loaded_count}× за {since_days} дней"
 
@@ -228,22 +292,30 @@ def build_audit(env, since_days=DEFAULT_SINCE_DAYS):
     pairs = find_overlaps(items)
     ov_map = _overlap_map(pairs)
     loaded, scanned = collect_usage(env, since_days)
+    resident = resident_skill_names(env)
 
     rows = []
     for it in items:
         partners = ov_map.get(it["key"], [])
         loaded_count = loaded.get(it["name"], 0)
+        is_resident = it["name"] in resident
+        # channel: какой из двух независимых источников видел скилл — явный
+        # skill-call (сильнее, транскрипт) перевешивает резидентность (косвенный
+        # сигнал: CORE/активный набор), при отсутствии обоих — none.
+        channel = "skill-call" if loaded_count > 0 else ("resident" if is_resident else "none")
         v = verdict(it, overlap_partners=partners, loaded_count=loaded_count,
-                    scanned_projects=scanned)
+                    scanned_projects=scanned, resident=is_resident)
         rows.append({
             "bucket": it["bucket"], "name": it["name"], "key": it["key"],
             "tier0": it["tier0"], "tier1": it["tier1"], "tier2": it["tier2"],
             "overlap_with": sorted(partners), "loaded_count": loaded_count,
-            "usage_note": usage_note(loaded_count, scanned, since_days),
+            "channel": channel,
+            "usage_note": usage_note(loaded_count, scanned, since_days, resident=is_resident),
             "verdict": v,
         })
     return {
         "since_days": since_days, "scanned_projects": scanned,
+        "resident_skills": len(resident),
         "skills": len(rows), "overlap_pairs": pairs, "items": rows,
     }
 
@@ -254,7 +326,8 @@ def render_audit(report):
     out.append("")
     out.append("━━━ BUCKET-AUDIT ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
     out.append(f"Скиллов: {report['skills']}   usage-окно: {report['since_days']} дней   "
-               f"просканировано проектов: {report['scanned_projects']}")
+               f"просканировано проектов: {report['scanned_projects']}   "
+               f"резидентных (CORE/активный набор): {report.get('resident_skills', 0)}")
     counts = {}
     for r in report["items"]:
         counts[r["verdict"]] = counts.get(r["verdict"], 0) + 1
@@ -264,10 +337,10 @@ def render_audit(report):
     items = report["items"]
     width = max((len(r["key"]) for r in items), default=10)
     out.append("")
-    out.append(f"  {'скилл'.ljust(width)}  ⊕tier0  ↻tier1  вердикт           usage")
+    out.append(f"  {'скилл'.ljust(width)}  ⊕tier0  ↻tier1  вердикт           канал       usage")
     for r in sorted(items, key=lambda r: (r["verdict"], -r["tier1"])):
         out.append(f"  {r['key'].ljust(width)}  {r['tier0']:>6}  {r['tier1']:>6}  "
-                   f"{r['verdict']:<17} {r['usage_note']}")
+                   f"{r['verdict']:<17} {r.get('channel', 'none'):<11} {r['usage_note']}")
 
     if report["overlap_pairs"]:
         out.append("")
@@ -287,9 +360,12 @@ def cmd_bucket_audit(env, argv):
         print("skiller bucket-audit [--since N] [--json]")
         print("  Метрики по всему реестру скиллов: размер (⊕tier0/↻tier1/⌥tier2, реюз\n"
               "  budget.skill_budget) · overlap (description-триггеры Jaccard≥0.4 / тело\n"
-              "  5-gram shingle≥0.3) · usage (фан-аут по ~/.swissknifeman/projects.json,\n"
-              "  окно --since N дней, по умолчанию 30) · вердикты keep/thin/\n"
-              "  retrieval-only/merge/dead (чистая функция метрик).")
+              "  5-gram shingle≥0.3) · usage — ДВА независимых источника видимости:\n"
+              "  явные skill-call (фан-аут по ~/.swissknifeman/projects.json, окно\n"
+              "  --since N дней, по умолчанию 30) И резидентность (CORE_SKILLS/активный\n"
+              "  набор проекта, поле channel: skill-call|resident|none) · вердикты\n"
+              "  keep/thin/retrieval-only/merge/dead (резидентный скилл без\n"
+              "  skill-call НЕ помечается dead — чистая функция метрик).")
         return
     since_raw = opts.get("since") or str(DEFAULT_SINCE_DAYS)
     try:

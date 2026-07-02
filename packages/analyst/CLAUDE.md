@@ -7,8 +7,9 @@
 
 Реализованный контур: **P1 (MVP)** — `digest` + lessons-store + human `review`/`promote`;
 **P2** — cross-project агрегатор `scan`; **P3** — confidence-арифметика (Beta/decay) + числовая
-state-machine `recompute` + mem0-таксономия. Дальше по roadmap: `analyst suggest`→draft-скилл (P4),
-`observe.sh` PostToolUse-поток (P5).
+state-machine `recompute` + mem0-таксономия; **P4** — `suggest` → ЧЕРНОВИК скилла (`SKILL.ru.md`
+в staging, промоут — человек). Дальше по roadmap: `analyst-capture` + `observe.sh`
+PostToolUse-поток (P5, не начат).
 
 ## Что это (два слоя, здесь — только слой-1)
 
@@ -38,6 +39,7 @@ state-machine `recompute` + mem0-таксономия. Дальше по roadmap
 | `recompute.py` | `analyst recompute` (P3) — детерминированный пересчёт confidence из `events.ndjson` → числовая state-machine (авто `ephemeral→candidate`; `curated` — только человек; просадка → soft-deprecate). Восстановим из логов (при фикс. `--now`) |
 | `digest.py` | `analyst digest` — run-report → КАНДИДАТЫ по высокоточным сигналам (resolved-failure, workaround); чистые извлекатели ради тестируемости; защитная деградация |
 | `scan.py` | `analyst scan` (P2) — cross-project агрегатор: читает `config.json:projects[]`, per-project уроки → Jaccard-кластеры → паттерны в ≥N проектах (**namespace-изолированно**) → draft-предложения в `~/.swissknifeman/analyst/`; чистые core-функции + writers. **Reconcile**: после `write_artifacts` прун осиротевших index+suggestion СТРОГО в scope прогона (чистая `stale_pattern_ids` + `list_existing_patterns`/`prune_artifacts`; `--no-prune`/`--dry-run`; классификация ns — из ПОЛЯ индекса; чужой ns не рескан → не трогаем) |
+| `suggest.py` | `analyst suggest` (P4) — cross-project паттерн (`index/by_pattern/`) → ЧЕРНОВИК `SKILL.ru.md` в `~/.swissknifeman/analyst/drafts/<pattern_id>/` (+ `draft.meta.json`); ЧИСТЫЕ генераторы (`build_skill_ru`/`build_meta`/`_slug_name`) + edit-safe writer (`seed_sha256`-детект ручных правок, `--force`, сироты — warn не delete); НЕ пишет в `skills/`, НЕ генерит EN, НЕ регистрирует — промоут только человеком (печатает repo-grounded handoff-последовательность) |
 | `review.py` | `analyst review` — уроки по state + structured diff против активных (read-only) |
 | `token_report.py` | `analyst token-report` — срезы usage-trend по model/role, rolling-baseline (медиана+p90 K=20) + pinned `--baseline set` (формат совместим с `maind analyze`), regression-флаг |
 | `ingest.py` | `analyst ingest --file F` — findings агента-аналитика → ТОЛЬКО ephemeral-уроки (detector=agent-finding, enforced кодом); валидация целиком до первой записи |

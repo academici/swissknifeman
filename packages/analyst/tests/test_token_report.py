@@ -236,6 +236,39 @@ class TestCli(TmpProjectCase):
         self.assertIsNone(code)
         self.assertIn("не установлен", out)
 
+    def test_vs_baseline_without_pin_warns_but_does_not_die(self):
+        # P2.6 (LOW-находка аудита P8): --vs-baseline без пина — мягкая деградация
+        # (warn в stderr), НЕ ошибка запроса (die/exit≠0). Отчёт всё равно строится.
+        _write_trend(self.proj, [_trend_row(f"h{i}", 10000) for i in range(tr.MIN_BASELINE_N)])
+        code, out, err = self._chdir_run(["--vs-baseline"])
+        self.assertIsNone(code)                       # никакого SystemExit — не die
+        self.assertIn("WARN:", err)
+        self.assertIn("pinned baseline не установлен", err)
+        self.assertIn("не установлен", out)            # отчёт по-прежнему построен
+
+    def test_vs_baseline_with_pin_no_warn(self):
+        _write_trend(self.proj, [_trend_row(f"h{i}", 10000) for i in range(tr.MIN_BASELINE_N)])
+        code, _out, err = self._chdir_run(["--baseline", "set", "--note", "n"])
+        self.assertIsNone(code)
+        code, _out, err = self._chdir_run(["--vs-baseline"])
+        self.assertIsNone(code)
+        self.assertNotIn("WARN:", err)
+
+    def test_vs_baseline_without_pin_warns_in_json_mode_too(self):
+        # warn() — на уровне CLI (до ветвления json/human), не только в человекочитаемом выводе.
+        _write_trend(self.proj, [_trend_row(f"h{i}", 10000) for i in range(tr.MIN_BASELINE_N)])
+        code, out, err = self._chdir_run(["--vs-baseline", "--json"])
+        self.assertIsNone(code)
+        self.assertIn("WARN:", err)
+        data = json.loads(out)                          # stdout остаётся чистым JSON
+        self.assertIsNone(data["pinned_baseline"])
+
+    def test_without_vs_baseline_no_warn_even_if_unpinned(self):
+        _write_trend(self.proj, [_trend_row(f"h{i}", 10000) for i in range(tr.MIN_BASELINE_N)])
+        code, _out, err = self._chdir_run([])
+        self.assertIsNone(code)
+        self.assertNotIn("WARN:", err)
+
 
 if __name__ == "__main__":
     unittest.main()

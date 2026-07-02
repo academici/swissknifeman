@@ -7,7 +7,9 @@
                         КАЖДОМ запросе (по ним агент решает, применять ли скилл).
                         Это и есть постоянный «налог» — главная метрика.
   ярус-1 ↻ on-trigger — тело SKILL.md. Грузится, только когда скилл срабатывает.
-  ярус-2 ⌥ on-demand  — сниппеты. Грузятся по ссылке из тела, опционально.
+  ярус-2 ⌥ on-demand  — сниппеты и references. Грузятся по ссылке из тела,
+                        опционально (references — тела монолитов после
+                        thin-navigator-волны, см. P2.1 SKM-MASTER-003).
 
 Оценка токенов — ГРУБАЯ и языко-зависимая (кириллица плотнее латиницы у
 токенайзера Claude), stdlib-only, без сторонних токенайзеров. Именно поэтому
@@ -81,7 +83,12 @@ def _split_frontmatter(text):
 
 def skill_budget(skill_dir):
     """Трёхъярусный бюджет одного скилла (каталог с SKILL.md).
-    → {name, tier0, tier1, tier2, snippets}; None, если SKILL.md отсутствует."""
+    → {name, tier0, tier1, tier2, snippets, references}; None, если SKILL.md
+    отсутствует. tier2 (⌥ on-demand) — сумма snippets/ И references/: оба
+    грузятся ПО ССЫЛКЕ из тела (навигатор), не резидентно — та же семантика,
+    один glob-паттерн (P2.1 SKM-MASTER-003, T1: после thin-navigator-волны
+    P7 SKM-MASTER-002 тела монолитов лежат в references/full.md — без учёта
+    здесь ярус-2 занижен, «единый источник токен-математики» врёт)."""
     skill_dir = Path(skill_dir)
     md = skill_dir / "SKILL.md"
     if not md.is_file():
@@ -91,18 +98,23 @@ def skill_budget(skill_dir):
     name = fm.get("name", "") or skill_dir.name
     desc = fm.get("description", "")
     _, body = _split_frontmatter(text)
-    snip_dir = skill_dir / "snippets"
-    snippets = [p for p in sorted(snip_dir.glob("*"))
-                if p.is_file() and p.name != "index.json"] \
-        if snip_dir.is_dir() else []
+
+    def _on_demand_files(subdir):
+        d = skill_dir / subdir
+        return [p for p in sorted(d.glob("*"))
+                if p.is_file() and p.name != "index.json"] if d.is_dir() else []
+
+    snippets = _on_demand_files("snippets")
+    references = _on_demand_files("references")
     tier2 = sum(estimate_tokens(p.read_text(encoding="utf-8", errors="ignore"))
-                for p in snippets)
+                for p in (*snippets, *references))
     return {
         "name": name,
         "tier0": estimate_tokens(name + " " + desc),
         "tier1": estimate_tokens(body),
         "tier2": tier2,
         "snippets": len(snippets),
+        "references": len(references),
     }
 
 
@@ -151,7 +163,7 @@ def budget_for_set(skills, pulled=None):
         key = fm_name or Path(d).name
         rec = {"bucket": bucket, "name": b["name"], "tier0": b["tier0"],
                "tier1": b["tier1"], "tier2": b["tier2"], "snippets": b["snippets"],
-               "transitive": key in pulled}
+               "references": b["references"], "transitive": key in pulled}
         items.append(rec)
         agg = by_bucket.setdefault(
             bucket, {"tier0": 0, "tier1": 0, "tier2": 0, "count": 0})
@@ -188,7 +200,7 @@ def format_report(label, b):
     out.append(f"⊕ always:     {b['tier0']:>6} ток  — резидентно КАЖДЫЙ запрос "
                f"(name+description)")
     out.append(f"↻ on-trigger: {b['tier1']:>6} ток  — тела, если ВСЕ сработают")
-    out.append(f"⌥ on-demand:  {b['tier2']:>6} ток  — сниппеты, по требованию")
+    out.append(f"⌥ on-demand:  {b['tier2']:>6} ток  — сниппеты/references, по требованию")
     out.append(f"Σ если всё:   {b['if_all_triggered']:>6} ток  "
                f"(~{pct:.1f}% от {CONTEXT_LIMIT // 1000}K)")
 
@@ -392,6 +404,7 @@ def render_budget_map(root, registry):
         rows.append({"name": e["name"], "bucket": e["bucket"],
                      "tier0": b["tier0"], "tier1": b["tier1"],
                      "tier2": b["tier2"], "snippets": b["snippets"],
+                     "references": b["references"],
                      "requires": e.get("requires", [])})
 
     by_name = {r["name"]: r for r in rows}
@@ -429,7 +442,7 @@ def render_budget_map(root, registry):
         "- **⊕ always** — `name`+`description`: резидентны в КАЖДОМ запросе "
         "(по ним агент решает, применять ли скилл). Постоянный «налог».",
         "- **↻ on-trigger** — тело `SKILL.md`: грузится, только когда скилл сработал.",
-        "- **⌥ on-demand** — сниппеты: по ссылке из тела, опционально.",
+        "- **⌥ on-demand** — сниппеты и references: по ссылке из тела, опционально.",
         "",
         "Цвет узла — heat по **⊕ always** (краснее = дороже постоянный налог "
         "описания). Метка `name<br/>⊕always ↻body`. Сплошная стрелка `requires` "
@@ -461,11 +474,11 @@ def render_budget_map(root, registry):
         "",
         f"**Итого:** {len(rows)} скиллов · ⊕ always **{total0}** ток "
         f"(резидентно всегда, если включить весь реестр) · ↻ bodies {total1} ток "
-        f"· ⌥ snippets {total2} ток.",
+        f"· ⌥ on-demand {total2} ток (сниппеты + references).",
         "",
         "## По бакетам",
         "",
-        "| Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ snippets |",
+        "| Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ on-demand |",
         "|---|--:|--:|--:|--:|",
     ]
     for bucket in sorted(by_bucket, key=lambda k: sum(

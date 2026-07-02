@@ -223,7 +223,7 @@ const verify = await safeAgent(
 3. '{{CHECK_CMD}}' — чисто.
 4. 'grep -rn "env(" {{PACKAGE_SRC_ROOT}}' минус попадания внутри config/ — перечисли оставшиеся (должно быть 0: у потребителя с config:cache голый env() вне пакетного config/*.php вернёт null).
 5. 'composer validate --strict' — composer.json/lock консистентны.
-6. BC-проверка: если задана {{BC_CHECK_CMD}} — прогони её против latest tag, перечисли breaking-находки (заявленный breaking без объявленного MAJOR — CRITICAL); команда не задана — отметь «BC-чекер не установлен, пропуск».
+6. BC-проверка: <!-- pack:if BC_CHECK_CMD -->прогони {{BC_CHECK_CMD}} против latest tag, перечисли breaking-находки (заявленный breaking без объявленного MAJOR — CRITICAL).<!-- pack:endif --><!-- pack:ifnot BC_CHECK_CMD -->команда не задана — отметь «BC-чекер не установлен, пропуск».<!-- pack:endif -->
 Краткий итог: тесты (число/упало), {{CHECK_CMD}}, env()-утечки, composer validate, BC-проверка. Файлы не меняй, не push.
 ${HARD_GATES}`,
   { label: 'final-verify', phase: 'Verify', effort: 'high' }

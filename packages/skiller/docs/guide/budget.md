@@ -7,7 +7,7 @@
 
 - **⊕ always** — `name`+`description`: резидентны в КАЖДОМ запросе (по ним агент решает, применять ли скилл). Постоянный «налог».
 - **↻ on-trigger** — тело `SKILL.md`: грузится, только когда скилл сработал.
-- **⌥ on-demand** — сниппеты: по ссылке из тела, опционально.
+- **⌥ on-demand** — сниппеты и references: по ссылке из тела, опционально.
 
 Цвет узла — heat по **⊕ always** (краснее = дороже постоянный налог описания). Метка `name<br/>⊕always ↻body`. Сплошная стрелка `requires` показывает транзитивный налог: ставишь скилл — тянешь always-цену зависимости. Оценка токенов грубая и языко-зависимая (кириллица ~2.9 chars/tok, латиница/код ~3.4) — для сравнения наборов, не точного учёта.
 
@@ -154,7 +154,7 @@ flowchart LR
     mcp_advisor["mcp-advisor<br/>⊕107 ↻1893"]:::warm
     naming_conventions["naming-conventions<br/>⊕86 ↻1564"]:::warm
     packages_stack["packages-stack<br/>⊕85 ↻530"]:::warm
-    plan_protocol["plan-protocol<br/>⊕43 ↻1889"]:::mild
+    plan_protocol["plan-protocol<br/>⊕43 ↻2589"]:::mild
     project_map["project-map<br/>⊕83 ↻645"]:::warm
     session_handoff["session-handoff<br/>⊕41 ↻618"]:::mild
     skills_ssot["skills-ssot<br/>⊕35 ↻1771"]:::cool
@@ -406,45 +406,45 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 206 скиллов · ⊕ always **14791** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 279802 ток · ⌥ snippets 168717 ток.
+**Итого:** 206 скиллов · ⊕ always **14791** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 280502 ток · ⌥ on-demand 791885 ток (сниппеты + references).
 
 ## По бакетам
 
-| Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ snippets |
+| Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ on-demand |
 |---|--:|--:|--:|--:|
-| `general` | 20 | 1402 | 23319 | 6367 |
-| `php` | 17 | 1122 | 19300 | 28598 |
-| `architect` | 14 | 880 | 21173 | 8087 |
-| `frontend-vue` | 11 | 854 | 25744 | 7306 |
+| `general` | 20 | 1402 | 24019 | 8863 |
+| `php` | 17 | 1122 | 19300 | 54837 |
+| `architect` | 14 | 880 | 21173 | 33458 |
+| `frontend-vue` | 11 | 854 | 25744 | 248486 |
 | `quality` | 10 | 738 | 19065 | 7447 |
 | `php-packages` | 9 | 685 | 5417 | 520 |
 | `laravel-architecture` | 6 | 677 | 9730 | 7994 |
-| `oss-dev` | 10 | 627 | 13978 | 4928 |
+| `oss-dev` | 10 | 627 | 13978 | 10187 |
 | `system` | 7 | 607 | 11012 | 834 |
 | `devops` | 11 | 548 | 9181 | 16993 |
-| `blender-modeling` | 6 | 506 | 8887 | 11131 |
-| `pm` | 10 | 438 | 11072 | 232 |
+| `blender-modeling` | 6 | 506 | 8887 | 12586 |
+| `pm` | 10 | 438 | 11072 | 23524 |
 | `founder` | 10 | 406 | 15188 | 578 |
-| `research` | 2 | 325 | 4497 | 0 |
-| `frontend-linting` | 4 | 323 | 5920 | 3122 |
+| `research` | 2 | 325 | 4497 | 20472 |
+| `frontend-linting` | 4 | 323 | 5920 | 18380 |
 | `laravel-testing` | 4 | 323 | 7993 | 15335 |
-| `operator` | 6 | 296 | 9910 | 106 |
+| `operator` | 6 | 296 | 9910 | 22461 |
 | `frontend-backend` | 3 | 288 | 5488 | 7851 |
-| `frontend` | 3 | 285 | 3795 | 3508 |
-| `frontend-nuxt` | 3 | 255 | 2564 | 0 |
+| `frontend` | 3 | 285 | 3795 | 5927 |
+| `frontend-nuxt` | 3 | 255 | 2564 | 24048 |
 | `frontend-tailwind` | 2 | 240 | 4458 | 5218 |
-| `laravel-extras` | 3 | 225 | 4257 | 3362 |
-| `laravel-auth` | 3 | 202 | 3358 | 3263 |
-| `ai` | 2 | 199 | 2018 | 0 |
-| `security` | 1 | 184 | 675 | 0 |
-| `frontend-vite` | 4 | 180 | 3150 | 1486 |
-| `finance` | 1 | 179 | 740 | 0 |
+| `laravel-extras` | 3 | 225 | 4257 | 7664 |
+| `laravel-auth` | 3 | 202 | 3358 | 5640 |
+| `ai` | 2 | 199 | 2018 | 27188 |
+| `security` | 1 | 184 | 675 | 30199 |
+| `frontend-vite` | 4 | 180 | 3150 | 24662 |
+| `finance` | 1 | 179 | 740 | 21503 |
 | `laravel-data-layer` | 2 | 160 | 3314 | 3977 |
-| `creative` | 1 | 155 | 687 | 0 |
-| `legal` | 1 | 145 | 615 | 0 |
-| `sales` | 1 | 143 | 719 | 0 |
-| `marketing` | 1 | 142 | 663 | 0 |
-| `blender` | 2 | 140 | 2287 | 311 |
+| `creative` | 1 | 155 | 687 | 26240 |
+| `legal` | 1 | 145 | 615 | 29248 |
+| `sales` | 1 | 143 | 719 | 25593 |
+| `marketing` | 1 | 142 | 663 | 16617 |
+| `blender` | 2 | 140 | 2287 | 1907 |
 | `laravel-livewire` | 1 | 128 | 1283 | 1117 |
 | `mobile` | 1 | 107 | 867 | 987 |
 | `frontend-reka` | 1 | 105 | 2007 | 2536 |
@@ -453,7 +453,7 @@ flowchart LR
 | `roles` | 4 | 80 | 5253 | 177 |
 | `laravel-filament` | 1 | 63 | 2374 | 3182 |
 | `python` | 2 | 58 | 1163 | 0 |
-| `frontend-animations` | 1 | 55 | 920 | 0 |
+| `frontend-animations` | 1 | 55 | 920 | 5285 |
 | `frontend-wayfinder` | 1 | 48 | 994 | 1765 |
 | `azguard` | 1 | 37 | 1679 | 7293 |
 | `botkit` | 1 | 29 | 234 | 698 |
@@ -488,6 +488,6 @@ flowchart LR
 | `vue-router-best-practices` | frontend-vue | 2792 |
 | `spatie-settings` | laravel-extras | 2704 |
 | `verify-claims` | general | 2696 |
+| `plan-protocol` | general | 2589 |
 | `mutation-testing` | quality | 2580 |
 | `diagnosing-bugs` | quality | 2577 |
-| `vue-best-practices` | frontend-vue | 2560 |

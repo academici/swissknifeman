@@ -1,7 +1,20 @@
 # Roadmap: самообучение через namespace-память mAInd
 
-**Статус:** отложено. **Критерий внедрения:** появится потребность авто-накапливать «уроки»
-прогонов И готовность держать guardrails (confidence-gating + ручное промо в скилл).
+**Статус:** ядро реализовано пакетом `analyst` (`digest` → `confidence` → `promote` →
+`memory-digest-hook`, 2026-07): уроки прогонов извлекаются детерминированно (`analyst digest`),
+проходят числовую confidence-арифметику (`recompute`), продвигаются в `curated` только человеком
+(`analyst promote`, `--yes`/`confirm`) и всплывают в память mAInd (`maind memory remember`,
+subprocess, graceful) — на следующей сессии их подхватывает уже существующий
+`memory-digest-hook` (`SessionStart.additionalContext`). Guardrails из дизайна ниже удержаны:
+confidence-gating (`confidence.py`, тиры 0.3/0.5/0.7/0.9) + человек-в-гейте промо в куратед.
+**Остаток — потоковый PostToolUse event-stream capture (`observe.sh`/`analyst-capture`, P5) —
+НЕ начат:** захват наблюдений по ходу прогона (а не только post-mortem по `run-report`);
+критерий внедрения остатка — измеренное трение (наблюдения теряются между прогонами), текущий
+on-demand `digest` покрывает MVP (см. `packages/analyst/docs/roadmap.md`, `packages/analyst/CLAUDE.md`).
+Текст ниже («Идея»/«Безопасный дизайн»/«Почему отложено»/«Зависимости») — исходная постановка
+задачи, сохранена как история; ядро следует ей близко (детерминированный слой вместо CSV-скоринга
+из доклада, human-гейт промо, namespace-изоляция памяти) — секция «Почему отложено» относится
+теперь только к остатку (event-stream), не к реализованному ядру.
 
 ## Идея
 

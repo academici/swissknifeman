@@ -125,6 +125,64 @@ override».
 отчёте так и звучит: «generated-файл пака правлен локально: `<target>` —
 перенеси правку в override и восстанови (`harness agent-packs render`)».
 
+## pack-guard — превентивный слой 2 (опционально)
+
+Drift-детект выше ловит правку generated-файла **постфактум**, уже случившуюся.
+`pack-guard` — опциональный `PreToolUse`-хук (`configs/claude-code/hooks/pack-guard/`),
+который ловит её **до** того, как она случится: перехватывает `Edit`/`Write`/
+`MultiEdit`/`NotebookEdit` по файлу, который лежит в `.claude/agent-pack.lock.json`
+как managed (тот же набор `packs[].files[].target`, что и у Drift-детекта). Файлы
+`user_owned` (оверлеи — точка расширения base+overlay) `pack-guard` не трогает: их
+редактировать можно и нужно. По умолчанию **не устанавливается** — включается явно
+per-project.
+
+| Режим | Поведение |
+|---|---|
+| `off` (дефолт) | хук не регистрируется в проекте |
+| `warn` | stderr-предупреждение при правке generated-файла, **не блокирует** |
+| `strict` | **блокирует** Edit/Write/MultiEdit/NotebookEdit по generated-файлу (exit 2) |
+
+Fail-safe семантика: хук никогда не роняет сессию. Нет `.claude/agent-pack.lock.json` /
+он битый или пустой / файл не числится в нём как managed (или числится, но
+`user_owned`) / `MODE` в `pack-guard.env.ini` отсутствует или неизвестен / любая
+внутренняя ошибка хука (битый stdin-JSON и т.п.) — во всех случаях тихий пропуск
+(`exit 0`, эквивалент `off`). Блокировка возможна только на пересечении: валидный
+lock + файл реально managed + `MODE=strict`.
+
+```bash
+harness hooks --global                        # копирует файлы хука в ~/.claude/hooks/pack-guard/ (один раз на машину)
+harness hooks --target . --pack-guard warn     # включить в проекте: warn
+harness hooks --target . --pack-guard strict   # включить в проекте: strict
+harness hooks --target . --pack-guard off      # выключить (kill-switch)
+```
+
+`--pack-guard MODE` пишет `<project>/.claude/pack-guard.env.ini` (`MODE=...`) и
+регистрирует `PreToolUse`-хук на `Edit`/`Write`/`MultiEdit`/`NotebookEdit` в
+`.claude/settings.json` (merge-only, как и остальные хуки `harness hooks`). `off` —
+kill-switch: перезаписывает `MODE=off`, уже зарегистрированную запись хука в settings
+не снимает (merge-only не удаляет чужие записи), но хук читает `MODE=off` на каждый
+вызов и сразу выходит — эффективно неактивен.
+
+Пример срабатывания (`strict`, файл под управлением пака):
+
+```
+$ echo '{"cwd":"/proj","tool_name":"Edit","tool_input":{"file_path":"/proj/.claude/agents/reviewer.md"}}' \
+  | python3 ~/.claude/hooks/pack-guard/pack-guard.py
+pack-guard: файл сгенерирован паком 'backend-laravel' (swissknifeman:generated) — не
+редактируй ядро напрямую: правь оверлей пака или прими изменение через 'harness
+agent-packs upgrade': /proj/.claude/agents/reviewer.md
+$ echo $?
+2
+```
+
+В режиме `warn` то же сообщение уходит в stderr с префиксом `[warn]`, но exit-код
+остаётся `0` — правка проходит.
+
+Когда включать: `warn` — дефолт обкатки (сигнал без риска остановить легитимную
+работу), `strict` — для overnight/unattended dev-loop, где agent-паки должны
+оставаться под строгим контролем, а молчаливая правка generated-файла руками (мимо
+оверлея/`upgrade`) без человека в моменте нежелательна.
+
 ## Как легально изменить core
 
 Два способа, оба — работа человека, не агента:

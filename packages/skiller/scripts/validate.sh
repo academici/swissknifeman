@@ -933,6 +933,13 @@ PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}" python3 -c "import 
   echo "ERROR: lib/skiller fails to import" >&2; exit 1; }
 "$REPO_ROOT/scripts/test.sh" || { echo "ERROR: tests failed" >&2; exit 1; }
 
+# --- 12b. registry drift-gate (skills.json/_index.md/манифесты vs источники) ----
+# Пересобирает реестр В ПАМЯТИ и сверяет с закоммиченными артефактами. Ловит тихий
+# дрейф (правка SKILL.md/buckets.json/соседних plugin.json без `skiller registry`) —
+# раньше validate лишь json.loads'ил skills.json, не проверяя свежесть. Гейт для CI.
+"$REPO_ROOT/bin/skiller" registry --check || {
+  echo "ERROR: реестр устарел относительно источников — прогони: skiller registry" >&2; exit 1; }
+
 # --- 13. bucket-path drift lint (после раскола php/frontend) --------------------
 # Ловит протухшие ссылки `php/<skill>` / `frontend/<skill>` в телах скиллов и доках
 # пакета, где <skill> по skills.json уже живёт в другом бакете (laravel-*/frontend-*).
@@ -976,7 +983,11 @@ PY
   echo "ERROR: протухшие переводы SKILL.ru.md→SKILL.md (regen + check-translations.sh --stamp)" >&2
   exit 1; }
 
-# --- 15. CORE резидентный бюджет (информационно, не валит сборку) ---------------
-# ⊕ tier-0 CORE_SKILLS грузится в КАЖДЫЙ запрос — видимость роста ядра против target.
-# Жёсткий гейт для CI: `skiller budget --check-core --strict`.
-bash "$REPO_ROOT/bin/skiller" budget --check-core 2>/dev/null || true
+# --- 15. CORE резидентный бюджет (ЖЁСТКИЙ гейт) --------------------------------
+# ⊕ tier-0 CORE_SKILLS грузится в КАЖДЫЙ запрос — гейт против тихого роста ядра выше
+# target (resident_budget_target в core-policy.json). --strict = ненулевой код при
+# превышении. Раньше здесь был `|| true` (soft, вопреки этому же комменту) — честно
+# сделан реальным гейтом (D3): коммент обещал strict — теперь он и работает.
+bash "$REPO_ROOT/bin/skiller" budget --check-core --strict || {
+  echo "ERROR: CORE резидентный бюджет превышен — сократи описания/скиллы ядра (skiller budget)" >&2
+  exit 1; }

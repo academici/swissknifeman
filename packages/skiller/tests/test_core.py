@@ -4,6 +4,8 @@
 ассерты других тестов держались, а CORE там был no-op). Здесь дополняем реестр
 этими бакетами и проверяем инъекцию CORE (vendor=скиллы, connect=бакеты),
 default-exclude дублирующих maind/ручных скиллов и отключение через --no-core."""
+import contextlib
+import io
 import json
 import sys
 import tempfile
@@ -101,7 +103,8 @@ class CoreCase(unittest.TestCase):
         self.assertNotIn("core", enabled)
 
     def test_connect_core_skipped_when_marketplace_lacks_it(self):
-        # Защита: marketplace не объявляет core (старый/пустой) → CORE тихо не пушит.
+        # Защита: marketplace не объявляет core (старый/пустой) → CORE не пушится,
+        # но НЕ тихо (C-1) — явный warn на stderr, проверено отдельно ниже.
         (self.root / ".claude-plugin" / "marketplace.json").write_text("{}\n")
         proj = fx.make_laravel_project(self.tmp)
         do_connect(self.env, proj, {})
@@ -109,6 +112,39 @@ class CoreCase(unittest.TestCase):
             (proj / ".claude" / "settings.local.json").read_text())
         enabled = {k.split("@")[0] for k, v in settings["enabledPlugins"].items() if v}
         self.assertNotIn("core", enabled)
+
+    def test_connect_core_skipped_warns_not_silent(self):
+        # C-1: раньше пропуск CORE (marketplace не объявляет плагин) был тихим —
+        # обещание токен-экономии аннулировалось без сигнала. Теперь явный warn.
+        (self.root / ".claude-plugin" / "marketplace.json").write_text("{}\n")
+        proj = fx.make_laravel_project(self.tmp)
+        buf = io.StringIO()
+        with contextlib.redirect_stderr(buf):
+            do_connect(self.env, proj, {})
+        self.assertIn("не объявляет плагин", buf.getvalue())
+        self.assertIn("core", buf.getvalue())
+
+    def test_connect_adds_default_command_plugins(self):
+        # C-3: DEFAULT_COMMAND_PLUGINS (напр. `task`) — marketplace-guarded, как core,
+        # но НЕ CORE-скилл: --no-core их не трогает (проверено ниже). Раньше эта ветка
+        # (connect.py cmd_added) не была покрыта тестом — регресс раздачи команд
+        # не поймали бы.
+        (self.root / ".claude-plugin" / "marketplace.json").write_text(json.dumps({
+            "name": "swissknifeman",
+            "plugins": [
+                {"name": "core", "source": "./",
+                 "skills": ["./skills/general/context-economy"]},
+                {"name": "task", "source": "./packages/task"},
+            ],
+        }) + "\n")
+        proj = fx.make_laravel_project(self.tmp)
+        do_connect(self.env, proj, {"no_core": True})
+        settings = json.loads(
+            (proj / ".claude" / "settings.local.json").read_text())
+        enabled = {k.split("@")[0] for k, v in settings["enabledPlugins"].items() if v}
+        # --no-core отключает CORE-скиллы, но НЕ командные плагины (не CORE)
+        self.assertNotIn("core", enabled)
+        self.assertIn("task", enabled)
 
 
 if __name__ == "__main__":

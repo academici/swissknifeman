@@ -17,7 +17,7 @@
 какой давности.
 
 Поля графа использует [страница графа зависимостей](./graph) (генерируется
-`scripts/generate-graph.sh` при каждом `skiller registry`);
+`registry.render_graph` при каждом `skiller registry`);
 `skiller vendor` читает `requires` напрямую из frontmatter и транзитивно
 дотягивает зависимости при выборочной установке.
 

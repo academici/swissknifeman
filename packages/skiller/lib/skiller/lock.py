@@ -11,7 +11,7 @@ Universe = реально установленные скиллы (агентс�
 Файл коммитится в проект — это lock-карта внешних скиллов (как composer.lock)."""
 import json
 
-from .common import atomic_write_json, die, parse_flags
+from .common import atomic_write_json, die, parse_flags, warn
 from .config import resolve_target
 
 # Раскладки, куда агенты ставят скиллы (claude — плоско, прочие — по своим путям).
@@ -51,7 +51,12 @@ def _boost_skills(target):
         return None
     try:
         return list(json.loads(f.read_text(encoding="utf-8")).get("skills", []))
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as e:
+        # Раньше тихий []: конфликты also_in терялись без сигнала (аудит V-8) —
+        # skiller-скиллы, также перечисленные в битом boost.json, выглядели бы как
+        # «только swissknifeman», хотя реальный overlap не проверен.
+        warn(f"{f}: битый JSON — boost-скиллы не учтены в lock (also_in может "
+             f"недосчитаться): {e}")
         return []
 
 

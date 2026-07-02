@@ -101,6 +101,35 @@ class UpdateCase(unittest.TestCase):
         silently(cmd_update, self.env, ["--target", str(proj)])
         self.assertTrue((skills / "test-writer" / "SKILL.md").exists())
 
+    def test_update_all_survives_broken_manifest(self):
+        """U-1: битый манифест одного vendor-проекта не должен ронять весь
+        `update --all` НЕОБРАБОТАННЫМ исключением. Без манифеста do_vendor не может
+        отличить старые свои файлы от чужих — legitimate die()/collision (нужен
+        --force), что и раньше (безопасное поведение, паритет с V-6): но теперь это
+        КОНТРОЛИРУЕМЫЙ SystemExit, пойманный циклом --all как "failed", а НЕ краш,
+        уносящий весь батч и остальные проекты."""
+        (self.tmp / "p1").mkdir()
+        (self.tmp / "p2").mkdir()
+        proj1 = fx.make_laravel_project(self.tmp / "p1")
+        proj2 = fx.make_laravel_project(self.tmp / "p2")
+        silently(do_vendor, self.env, proj1, {"agent": "generic", "buckets": "devops"})
+        silently(do_vendor, self.env, proj2, {"agent": "generic", "buckets": "devops"})
+        (proj1 / ".ai" / "skills" / MANIFEST).write_text(
+            "{not valid json", encoding="utf-8")
+
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            with contextlib.redirect_stderr(io.StringIO()):
+                with self.assertRaises(SystemExit):  # p1 легитимно failed (см. докстринг)
+                    cmd_update(self.env, ["--all"])  # раньше падало здесь НЕОБРАБОТАННО
+
+        # соседний проект реально дообновился — батч не прервался на первом же
+        self.assertTrue(
+            (proj2 / ".ai" / "skills" / "devops" / "docker" / "SKILL.md").exists())
+        self.assertIn(str(proj1), buf.getvalue())
+        self.assertIn(str(proj2), buf.getvalue())
+        self.assertIn("failed", buf.getvalue())
+
     def test_update_unconnected_dies(self):
         proj = fx.make_laravel_project(self.tmp)
         with self.assertRaises(SystemExit):

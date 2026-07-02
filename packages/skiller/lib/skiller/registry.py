@@ -3,7 +3,7 @@ import hashlib
 import json
 import sys
 
-from core import atomic_write_text, find_repo_root, run_cmd, safe_load_json
+from core import atomic_write_text, find_repo_root, safe_load_json
 
 from .common import (MARKETPLACE, die, parse_flags, parse_frontmatter,
                      parse_inline_list, skill_content_hash)
@@ -31,6 +31,11 @@ def build_registry(env):
         else:
             name = parts[2]
         fm = parse_frontmatter(skill_md)
+        # R-4 (аудит): fm-имя почти всегда перекрывает path-fallback выше — но
+        # build_registry() не требует прогнанного validate.sh (гейт `name` во
+        # frontmatter — отдельный шаг). Скилл без `name` посреди разработки всё ещё
+        # получает разумное имя из пути, а не падает/остаётся безымянным. Оставлено
+        # намеренно, не забытая сложность.
         name = fm.get("name") or name
         sha = hashlib.sha256(skill_md.read_bytes()).hexdigest()
         entry = {
@@ -76,6 +81,12 @@ def build_registry(env):
             entry["source"] = "local"
         skills.append(entry)
 
+    # R-3 (аудит): единственный источник reference-материалов — oss-dev/references.
+    # Осознанное ограничение, не забытый частный случай: `parent` ниже ("oss-development")
+    # — конкретное имя владеющего скилла в ЭТОМ бакете, а не обобщаемое правило (для
+    # другого бакета с references/ понадобился бы свой parent — сейчас такого нет,
+    # см. `find skills -maxdepth 2 -type d -name references`). Если появится второй
+    # бакет с references/, обобщать здесь ЭТУ функцию, а не гадать заранее.
     for ref in sorted((root / "skills/oss-dev/references").glob("*.md")):
         references.append({
             "name": ref.stem,
@@ -172,9 +183,15 @@ def build_plugin_manifests(env, bucket_meta, bucket_dirs):
 
     # Курируемый лёгкий core-плагин: токен-экономное ALWAYS-ON ядро (== CORE_SKILLS),
     # которое connect раздаёт в каждый проект ВМЕСТО целых бакетов general+oss-dev.
-    # marketplace-запись source:"./" (корень репо) + явный skills[] = ПОЛНЫЙ набор плагина:
-    # грузятся РОВНО эти 7 скиллов (заменяет дефолтный скан — подтверждено докой Claude Code
-    # v2.1.x). Скиллы физически живут в своих бакетах — здесь только ссылки по пути, без копий.
+    # marketplace-запись source:"./" (корень репо = корень marketplace) + явный skills[] =
+    # ПОЛНЫЙ набор плагина: грузятся РОВНО перечисленные скиллы, дефолтный скан <source>/skills/
+    # не подмешивается. Подтверждено официальной докой (verified 2026-07-02, RAG):
+    # https://code.claude.com/docs/en/plugin-marketplaces#advanced-plugin-entries —
+    # «With a marketplace-root source, the listed paths are the complete set for that entry,
+    # and other directories in the shared skills/ folder don't load.» Фолбэк на дефолтный
+    # скан («If none of the listed paths exist, the default scan runs instead») тоже безопасен:
+    # дефолтный скан — это <repo>/skills/ (которого в этом репо нет), а не рекурсия по всему
+    # дереву. Скиллы физически живут в своих бакетах — здесь только ссылки по пути, без копий.
     core_skill_paths = [src(f"skills/{cs}") for cs in CORE_SKILLS
                         if (root / "skills" / cs / "SKILL.md").is_file()]
     if core_skill_paths:
@@ -267,8 +284,11 @@ def write_plugin_manifests(env, bucket_meta, bucket_dirs):
 
 def check_drift(env):
     """[relpath] сгенерированных артефактов, отставших от источников ([] если чисто).
-    Пересобирает реестр+манифесты+_index.md в памяти и сверяет с диском — гейт против
-    тихого дрейфа skills.json/marketplace.json (validate.sh лишь проверял валидность JSON)."""
+    Пересобирает реестр+манифесты+_index.md+graph.md+budget.md в памяти и сверяет с
+    диском — гейт против тихого дрейфа (validate.sh лишь проверял валидность JSON).
+    graph.md/budget.md добавлены в аудите R-2: `cmd_registry` их генерит, но раньше
+    drift-гейт про них не знал — CLAUDE.md обещает «генерёжка — не править руками»
+    для обоих, а гейт этого не проверял."""
     root = env.root
     repo_root = _repo_root(root)
     registry, bucket_meta, bucket_dirs = build_registry(env)
@@ -290,6 +310,16 @@ def check_drift(env):
     _cmp(root / "skills" / "_index.md", render_index(registry, bucket_meta))
     for path, data in build_plugin_manifests(env, bucket_meta, bucket_dirs):
         _cmp(path, _manifest_text(data))
+
+    graph_text, _n_nodes, _n_edges = render_graph(registry)
+    _cmp(_docs_root(root) / "docs" / "guide" / "graph.md", graph_text)
+
+    # budget.md — только если skills.json уже есть на диске (write_budget_map die'ит
+    # без него); при первом `registry` (файла ещё нет) сравнивать не с чем — не гейт.
+    from .budget import render_budget_map
+    if (root / "skills.json").is_file():
+        budget_text, *_rest = render_budget_map(root, registry)
+        _cmp(_docs_root(root) / "docs" / "guide" / "budget.md", budget_text)
     return drift
 
 
@@ -340,6 +370,101 @@ def render_index(registry, bucket_meta):
     return "\n".join(lines) + "\n"
 
 
+def _docs_root(p):
+    """Ближайший вверх каталог с docs/guide (сам пакет; fallback — p). Паритет с
+    budget._docs_root (обе доки живут в packages/skiller/docs)."""
+    for cand in (p, *p.parents):
+        if (cand / "docs" / "guide").is_dir():
+            return cand
+    return p
+
+
+def render_graph(registry):
+    """Mermaid-граф зависимостей скиллов (requires/produces_for) из registry-dict.
+    Портировано из scripts/generate-graph.sh (был bash+heredoc — единственный
+    генерируемый артефакт БЕЗ python-функции, отсюда drift-гейт его не видел,
+    аудит R-2). Раньше отдельный процесс; теперь тот же источник математики, что
+    у skills.json/_index.md — check_drift сравнивает С ЭТОЙ функцией, не гадает."""
+    skills = registry["skills"]
+    by_name = {s["name"]: s for s in skills}
+
+    requires_edges = set()
+    produces_edges = set()
+    for s in skills:
+        for dep in s.get("requires", []):
+            if dep in by_name:
+                requires_edges.add((s["name"], dep))
+    for s in skills:
+        for dst in s.get("produces_for", []):
+            if dst in by_name and (dst, s["name"]) not in requires_edges:
+                produces_edges.add((s["name"], dst))
+
+    connected = {n for e in requires_edges | produces_edges for n in e}
+
+    buckets = {}
+    for name in sorted(connected):
+        buckets.setdefault(by_name[name]["bucket"], []).append(name)
+
+    isolated = {}
+    for s in skills:
+        if s["name"] not in connected:
+            isolated.setdefault(s["bucket"], []).append(s["name"])
+
+    def node_id(name):
+        return name.replace("-", "_")
+
+    lines = [
+        "# Граф зависимостей скиллов",
+        "",
+        "> Сгенерировано `skiller registry` (registry.render_graph) из `skills.json` — "
+        "не редактировать вручную.",
+        "> Пересборка: `skiller registry`.",
+        "",
+        "Сплошная стрелка `A --> B` — `A` требует `B` (`requires`): `skiller vendor` дотянет `B`",
+        "при установке `A`. Пунктирная `A -.-> B` — результат `A` служит входом для `B`",
+        "(`produces_for`). Показаны только скиллы, участвующие в графе; изолированные —",
+        "в таблице ниже.",
+        "",
+        "```mermaid",
+        "flowchart LR",
+    ]
+    for bucket in sorted(buckets):
+        lines.append(f"  subgraph {node_id(bucket)}[\"{bucket}\"]")
+        for name in buckets[bucket]:
+            lines.append(f"    {node_id(name)}[\"{name}\"]")
+        lines.append("  end")
+    for src, dst in sorted(requires_edges):
+        lines.append(f"  {node_id(src)} -->|requires| {node_id(dst)}")
+    for src, dst in sorted(produces_edges):
+        lines.append(f"  {node_id(src)} -.->|feeds| {node_id(dst)}")
+    lines += [
+        "```",
+        "",
+        f"**В графе:** {len(connected)} скиллов, {len(requires_edges)} рёбер requires, "
+        f"{len(produces_edges)} рёбер produces_for.",
+        "",
+        f"## Изолированные скиллы ({sum(len(v) for v in isolated.values())})",
+        "",
+        "Скиллы без связей `requires`/`produces_for` — самодостаточны.",
+        "",
+        "| Бакет | Скиллы |",
+        "|---|---|",
+    ]
+    for bucket in sorted(isolated):
+        names = ", ".join(f"`{n}`" for n in sorted(isolated[bucket]))
+        lines.append(f"| {bucket} | {names} |")
+    lines.append("")
+    return "\n".join(lines), len(connected), len(requires_edges) + len(produces_edges)
+
+
+def write_graph(env, registry):
+    """Записать docs/guide/graph.md (атомарно). Возвращает (n_nodes, n_edges)."""
+    text, n_nodes, n_edges = render_graph(registry)
+    out = _docs_root(env.root) / "docs" / "guide" / "graph.md"
+    atomic_write_text(out, text)
+    return n_nodes, n_edges
+
+
 def cmd_registry(env, argv):
     opts = parse_flags(argv, {"--check": "bool"})
     if opts["help"]:
@@ -355,7 +480,8 @@ def cmd_registry(env, argv):
             for d in drift:
                 print(f"  - {d}", file=sys.stderr)
             sys.exit(1)
-        print("registry --check: артефакты актуальны (skills.json/_index.md/манифесты)")
+        print("registry --check: артефакты актуальны "
+              "(skills.json/_index.md/манифесты/graph.md/budget.md)")
         return
     root = env.root
     registry, bucket_meta, bucket_dirs = build_registry(env)
@@ -388,9 +514,10 @@ def cmd_registry(env, argv):
     print(f"Updated plugin manifests: {n_plugins} plugins "
           f"(.claude-plugin/marketplace.json)")
 
-    run_cmd([str(root / "scripts" / "generate-graph.sh")])
+    n_nodes, n_edges = write_graph(env, registry)
+    print(f"Updated docs/guide/graph.md: {n_nodes} nodes, {n_edges} edges")
 
     # Карта токенового бюджета (трёхъярусная) — in-process, чтобы токен-математика
-    # жила в одном модуле budget.py (а не дублировалась в bash+heredoc, как graph).
+    # жила в одном модуле budget.py, а не дублировалась.
     from .budget import write_budget_map
     write_budget_map(env)

@@ -10,7 +10,8 @@
     "research/query-craft",
     "oss-dev/gh-review"
   ],
-  "resident_budget_target": 600,
+  "_budget_note": "750 (было 600) — поднято 2026-07 после калибровки budget.CHARS_PER_TOKEN_* по RAG-данным (аудит B-1: старые константы занижали токены, реальный резидент 8 CORE_SKILLS оказался ~696, не ~592). Не занижай обратно ради 'зелёного' check-core — калибровка отражает реальный tokenizer точнее прежней.",
+  "resident_budget_target": 750,
   "core_plugin": "core",
   "core_buckets": ["general", "oss-dev"],
   "default_command_plugins": ["task"],

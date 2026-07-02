@@ -3,10 +3,11 @@ import hashlib
 import json
 import os
 import re
+import subprocess
 import sys
 from pathlib import Path
 
-from .common import DB_VERSION, is_within, parse_flags
+from .common import DB_VERSION, harness_bin, is_within, parse_flags
 from .state import registry_git_state
 
 
@@ -165,6 +166,28 @@ def cmd_doctor(env, argv):
     check(profiles and not bad, f"профили загружаются ({len(profiles)})",
           f"битые: {', '.join(bad)}")
 
+    # harness (окружение Claude Code — permissions/MCP/хуки) — ОПЦИОНАЛЬНАЯ
+    # зависимость: apply_permissions/_run_harness graceful-skip'ают, если её нет
+    # (standalone-раскладка / не установлен). Раньше doctor вообще не смотрел на
+    # harness — «не установлен» и «установлен, но сломан» (битый бинарь/венв/etc.)
+    # были неотличимы: connect/integrate тихо теряли permissions-пресеты, а doctor
+    # рапортовал «Все проверки пройдены» (аудит Doc-1). Отсутствие — НЕ FAIL (это
+    # опциональный пакет); сломанность при наличии — FAIL.
+    hbin = harness_bin(env)
+    if hbin is None:
+        print("  [ok ] harness не установлен — опционально (permissions/MCP/хуки "
+              "не применяются; установка: packages/harness/install.sh)")
+    else:
+        try:
+            r = subprocess.run([str(hbin), "--help"], capture_output=True,
+                               text=True, timeout=10, check=False)
+            check(r.returncode == 0, f"harness исполняется ({hbin})",
+                  f"exit {r.returncode}: {(r.stderr or r.stdout).strip()[:200]}")
+        except subprocess.TimeoutExpired:
+            check(False, f"harness исполняется ({hbin})", "превышен таймаут 10s")
+        except OSError as e:
+            check(False, f"harness исполняется ({hbin})", str(e))
+
     # JSON-схемы конфигов (schema/*.json) — DX-артефакт (IntelliSense). Рантайм-
     # валидация ручная (CONFIG_KEYS/SKILLSET_KEYS); схема не должна расходиться с
     # кодом, иначе редактор подсказывает не то, что принимает skiller. Тот же гейт
@@ -190,6 +213,21 @@ def cmd_doctor(env, argv):
         check(props == set(keys), f"схема {fname} ⇄ ключи {label}",
               f"разошлись: лишние в схеме {sorted(props - set(keys))}, "
               f"нет в схеме {sorted(set(keys) - props)} — обнови schema/{fname}")
+        # Doc-2: имена ключей — не единственное, что может разойтись. ТИП свойства
+        # в схеме (string/array/…) — тоже контракт с CONFIG_KEYS/SKILLSET_KEYS; раньше
+        # doctor сверял только имена ("⇄ ключи OK"), молчаливо пропуская расхождение
+        # типа (тест test_schema.py::test_property_types_align_with_python это ловит,
+        # но doctor ложно успокаивал интерактивным "OK").
+        json_type = {str: "string", list: "array", int: "integer",
+                    dict: "object", bool: "boolean"}
+        props_data = data.get("properties", {})
+        type_mismatches = [
+            f"{k}: схема={props_data.get(k, {}).get('type')} код={json_type.get(t)}"
+            for k, t in keys.items()
+            if k in props_data and props_data[k].get("type") != json_type.get(t)
+        ]
+        check(not type_mismatches, f"схема {fname} ⇄ типы {label}",
+              f"разошлись типы: {'; '.join(type_mismatches)} — обнови schema/{fname}")
 
     # freshness хабов: штамп <!-- swissknifeman:registry sha=… --> в хабе проекта
     # сверяем с текущим sha реестра (тот же расчёт, что в generate-hub.sh). Проекты

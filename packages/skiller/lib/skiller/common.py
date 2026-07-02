@@ -25,6 +25,7 @@ DB_FILE = STATE_DIR / "projects.json"
 DB_VERSION = 1
 MARKETPLACE = "swissknifeman"
 MANIFEST = ".swissknifeman-manifest.json"
+MANIFEST_VERSION = 1
 AGENT_DEFAULTS = {"claude": ".claude/skills", "cursor": ".cursor/skills",
                   "generic": ".ai/skills"}
 # Файлы каталога скилла, которые НЕ едут в потребляющий проект ни одним каналом
@@ -67,6 +68,25 @@ def safe_copy_skill(src, dst, dest_root):
     shutil.copytree(src, dst, dirs_exist_ok=True,
                     ignore=shutil.ignore_patterns(*SKILL_IGNORE))
     return True
+
+
+def write_skill_manifest(manifest_file, *, profile, agent, layout, installed,
+                         support_files=None):
+    """ЕДИНЫЙ writer `.swissknifeman-manifest.json` — общий для vendor.do_vendor и
+    skillset.sync_skillset (раньше два независимых писателя с разной схемой:
+    date-only timestamp без `version` у vendor, `now_iso`+`version` у skillset —
+    аудит V-4, update.detect_vendor_path читает оба и мог упереться в расхождение).
+    Атомарно (tmp+os.replace), `version` первым ключом."""
+    data = {
+        "installed_at": now_iso(),
+        "profile": profile,
+        "agent": agent,
+        "layout": layout,
+        "skills": installed,
+    }
+    if support_files is not None:
+        data["support_files"] = support_files
+    atomic_write_json(manifest_file, data, version=MANIFEST_VERSION)
 
 
 @dataclass(frozen=True)
@@ -154,6 +174,47 @@ def parse_frontmatter_fields(skill_md):
     fm = parse_frontmatter(skill_md)
     return {"name": fm.get("name", ""),
             "requires": parse_inline_list(fm.get("requires", ""))}
+
+
+# --- requires (transitive dependency BFS) --------------------------------------
+def resolve_requires_bfs(seed, lookup, selected_keys, exclude):
+    """Транзитивный BFS резолва frontmatter `requires` — ЕДИНЫЙ источник для
+    vendor.resolve_requires (FS-кортежи) и skillset._pull_requires (registry-entry):
+    раньше это были два независимых, уже разошедшихся тела (RU/EN тексты warn,
+    аудит V-1). Вызывающий адаптирует свою модель данных к узлу-словарю через `lookup`.
+
+    seed: [(dep_name, requester_key), ...] — стартовая очередь (requires уже
+        отобранных скиллов).
+    lookup(dep_name) -> {"key", "requires": [str], "exclude_tokens": set[str], ...} | None
+        — разрешить имя зависимости в узел; None — зависимость не найдена в реестре.
+        Узел может нести любые доп. поля (напр. "_payload") — вызывающий сам их читает
+        из возврата.
+    selected_keys: изменяемое множество уже выбранных ключей — МУТИРУЕТСЯ (сюда
+        добавляются ключи резолвнутых узлов), чтобы повторный вызов/рекурсия не
+        задваивала уже выбранное.
+    exclude: множество токенов, которые ПОБЕЖДАЮТ зависимость (safety-oriented) —
+        зависимость с пересечением exclude_tokens пропускается с warning, даже если
+        она нужна другому скиллу.
+
+    Возвращает [(node, requester_key), ...] в порядке резолва — вызывающий сам
+    решает, как класть узлы в свою структуру (список кортежей / dict по имени)."""
+    queue = list(seed)
+    resolved = []
+    while queue:
+        dep, requester = queue.pop(0)
+        if dep in selected_keys:
+            continue
+        node = lookup(dep)
+        if node is None:
+            warn(f"'{requester}' requires неизвестный скилл '{dep}' — пропуск")
+            continue
+        if node["exclude_tokens"] & exclude:
+            warn(f"'{requester}' requires '{dep}', но он в exclude — зависимость пропущена")
+            continue
+        selected_keys.add(node["key"])
+        resolved.append((node, requester))
+        queue.extend((d, node["key"]) for d in node["requires"])
+    return resolved
 
 
 def skill_content_hash(skill_dir):

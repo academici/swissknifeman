@@ -28,14 +28,17 @@ def safe_load_json(path, default=None, *, on_error: Optional[Callable] = None):
         return default
 
 
-def read_ndjson(path):
-    """Разбор ndjson/jsonl-файла в список dict'ов; пустые/битые строки и не-dict
-    записи пропускаются. [] если файла нет. errors='replace' — битый байт не роняет
-    чтение. Единый источник вместо копий защитного ndjson-чтения по пакетам."""
+def read_ndjson_iter(path):
+    """Генератор безопасного построчного разбора ndjson/jsonl: пустые/битые строки и
+    не-dict записи пропускаются, errors='replace' — битый байт не роняет чтение.
+    Несуществующий файл — пустой генератор.
+
+    Основа read_ndjson(list) и потоковых потребителей, которым материализация всего
+    файла в память не нужна (напр. большой общемашинный лог со всех проектов,
+    растущий без ротации)."""
     path = Path(path)
     if not path.is_file():
-        return []
-    out = []
+        return
     with open(path, encoding="utf-8", errors="replace") as fh:
         for ln in fh:
             ln = ln.strip()
@@ -46,8 +49,12 @@ def read_ndjson(path):
             except (ValueError, TypeError):
                 continue
             if isinstance(rec, dict):
-                out.append(rec)
-    return out
+                yield rec
+
+
+def read_ndjson(path):
+    """Разбор ndjson/jsonl-файла в список dict'ов; см. read_ndjson_iter."""
+    return list(read_ndjson_iter(path))
 
 
 def load_json_db(path, default, *, max_version=None):

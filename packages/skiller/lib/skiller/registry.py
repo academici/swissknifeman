@@ -3,7 +3,7 @@ import hashlib
 import json
 import sys
 
-from core import atomic_write_text, find_repo_root, run_cmd
+from core import atomic_write_text, find_repo_root, run_cmd, safe_load_json
 
 from .common import (MARKETPLACE, die, parse_flags, parse_frontmatter,
                      parse_inline_list, skill_content_hash)
@@ -58,7 +58,13 @@ def build_registry(env):
         # Provenance: upstream.json next to SKILL.md marks an external skill
         upstream_file = skill_md.parent / "upstream.json"
         if upstream_file.exists():
-            up = json.loads(upstream_file.read_text(encoding="utf-8"))
+            # Битый upstream.json НЕ роняем голым traceback на полпути генерации и
+            # НЕ проваливаем тихо в source="local" (это исказило бы провенанс
+            # внешнего скилла в marketplace) — внятная ошибка с путём к файлу.
+            up = safe_load_json(
+                upstream_file,
+                on_error=lambda e, f=upstream_file: die(f"битый upstream.json: {f}: {e}"),
+            )
             files = up.get("files", [])
             main = next((f for f in files if f.get("path") == "SKILL.md"),
                         files[0] if files else {})

@@ -106,6 +106,15 @@ class RegistryBuildCase(unittest.TestCase):
         self.assertEqual(docker["upstream"], "https://raw.example/SKILL.md")
         self.assertEqual(docker["fetched_at"], "2026-03-03")
 
+    def test_broken_upstream_json_dies_with_path(self):
+        # Битый upstream.json → внятная ошибка с путём, не голый traceback
+        # на полпути генерации и не тихий провал в source="local".
+        skill_dir = self.root / "skills" / "devops" / "docker"
+        (skill_dir / "upstream.json").write_text("{ this is not json",
+                                                 encoding="utf-8")
+        with self.assertRaises(SystemExit):
+            build_registry(self.env)
+
     def test_requires_only_when_present(self):
         reg, *_ = build_registry(self.env)
         conv = next(s for s in reg["skills"] if s["name"] == "laravel-conventions")

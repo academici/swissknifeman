@@ -16,6 +16,7 @@ export default defineConfig({
     nav: [
       { text: 'Обзор', link: '/' },
       { text: 'Permissions', link: '/configs/claude-permissions' },
+      { text: 'Agent-packs', link: '/configs/agent-packs' },
       { text: 'Интеграции', link: '/integrations/', activeMatch: '/integrations/' },
     ],
 
@@ -26,6 +27,7 @@ export default defineConfig({
           items: [
             { text: 'Обзор: CLI harness', link: '/' },
             { text: 'Permissions для Claude Code', link: '/configs/claude-permissions' },
+            { text: 'Agent-packs: паки субагентов', link: '/configs/agent-packs' },
             { text: 'Конфиги (обзор)', link: '/configs/' },
             { text: 'Настройка Claude Code (машина)', link: '/setup/claude' },
           ],

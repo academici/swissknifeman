@@ -83,3 +83,26 @@ def make_pack(root, name="demo-pack"):
         {"hooks": {"SubagentStop": [{"hooks": [
             {"type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/gate.sh"}]}]}}))
     return name
+
+
+def make_src_pack_pair(root, name_a="demo-pack", name_b="demo-pack-b"):
+    """Пак B без собственных файлов — единственная files[]-запись несёт
+    `src_pack: name_a`, контент читается из каталога пака A (F-1 src_pack).
+    Владелец файла (Pack: в header) при этом — B, не A."""
+    pdir = root / "configs" / "claude-code" / "agent-packs" / name_b
+    pdir.mkdir(parents=True, exist_ok=True)
+    manifest = {
+        "schema": 1, "pack": name_b, "version": "0.1.0", "description": "src_pack test",
+        "interview": [
+            {"id": "PACK_PREFIX", "q": "?", "default": "{project_dirname}", "kind": "slug"},
+            {"id": "RUNNER", "q": "?", "default": "phpunit"},
+            {"id": "USE_X", "q": "?", "kind": "bool", "default": True},
+        ],
+        "files": [
+            {"src": "agents/reviewer.md", "src_pack": name_a,
+             "target": ".claude/agents/{PACK_PREFIX}-shared.md",
+             "kind": "template", "role": "agent"},
+        ],
+    }
+    (pdir / "pack.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2))
+    return name_b

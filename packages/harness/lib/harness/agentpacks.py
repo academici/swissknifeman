@@ -17,7 +17,13 @@ Provenance-header: каждый сгенерированный файл (templat
 (пак@версия, шаблон, edit-policy, extension-points, команда upgrade). Header вшивается
 ДО подсчёта sha → `base_sha256` в lock включает его, матрица решений
 _decide/categorize_file_change не меняется. Lock schema=1, поле `user_owned` в
-files[] — аддитивное (старые локи без него читаются через .get(..., False))."""
+files[] — аддитивное (старые локи без него читаются через .get(..., False)).
+
+files[]-запись может нести опциональное `src_pack` — контент берётся из каталога
+ДРУГОГО пака (шаринг файлов между паками), владелец (Pack: в header, upgrade-команда)
+остаётся текущий пак (см. `src_file`). `remove` — обратная операция к render/upgrade:
+безопасно сносит только неправленные файлы (disk_sha == base_sha256), merge/user_owned
+не трогает (warn), снимает запись пака из lock (пустой lock — удаляется целиком)."""
 import hashlib
 import json
 import os
@@ -51,6 +57,14 @@ _IFNOT_RE = re.compile(r"<!--\s*pack:ifnot\s+(\w+)\s*-->(.*?)<!--\s*pack:endif\s
 # ── discovery ────────────────────────────────────────────────────────────────
 def pack_dir(env, pack):
     return env.agent_packs_dir / pack
+
+
+def src_file(env, pack, f):
+    """Путь исходника files[]-записи. Опциональное `src_pack` — контент берётся
+    из каталога ДРУГОГО пака (шаринг файлов между паками без копий); владелец
+    файла (Pack: в header, upgrade-команда) остаётся текущий `pack` — src_pack
+    влияет только на резолв ИСТОЧНИКА, не на провенанс."""
+    return pack_dir(env, f.get("src_pack") or pack) / f["src"]
 
 
 def list_packs(env):
@@ -325,17 +339,16 @@ def render_pack(env, pack, target, answers, *, dry=False, prior=None):
     Provenance-header вшивается ДО вычисления sha — база в lock включает header,
     поэтому матрица _decide/categorize_file_change не меняется вообще."""
     manifest = load_manifest(env, pack)
-    pdir = pack_dir(env, pack)
     prior_files = {f["src"]: f for f in (prior or {}).get("files", [])}
     ext_points = _extension_points(manifest, answers)
     out_files, changed, notes = [], False, []
     for f in manifest.get("files", []):
         src, kind = f["src"], f.get("kind", "template")
-        sfile = pdir / src
+        sfile = src_file(env, pack, f)
         if not sfile.exists():
             if f.get("optional"):
                 continue
-            die(f"{pack}: нет файла пака {src}")
+            die(f"{f.get('src_pack') or pack}: нет файла пака {src}")
         tgt_rel = _subst_single(f["target"], answers)
         tgt = target / tgt_rel
         prior_f = prior_files.get(src)
@@ -449,8 +462,17 @@ def do_render(env, pack, target, *, auto, overrides, dry, install_only, shell_po
     if rep["skipped_probes"]:
         warn(f"  пропущены небезопасные пробы: {len(rep['skipped_probes'])}")
     report = render_pack(env, pack, target, answers, dry=dry, prior=prior)
-    lock.setdefault("packs", {})[pack] = _pack_lock_entry(env, pack, answers, report)
-    if report["changed"] or prior is None:
+    new_entry = _pack_lock_entry(env, pack, answers, report)
+    lock.setdefault("packs", {})[pack] = new_entry
+    # report["changed"] отражает ТОЛЬКО запись на диск (write/merge) — но местное
+    # состояние lock'а (напр. local_modified per-file) может стать неактуальным и
+    # БЕЗ единой записи на диск: файл, который был skip-foreign/skip-local-modified,
+    # мог быть вручную приведён к базе между прогонами (см. F-7: разруливание
+    # коллизии после смены пака) — тогда decision внутри render_pack тихо перешёл в
+    # skip-nochange, а лежащий на диске lock всё ещё врёт "local_modified": true.
+    # Сравниваем entry целиком (не только changed), чтобы такой дрейф lock'а не
+    # застревал молча — иначе `doctor` (без --drift) годами репортил бы ложный modified.
+    if report["changed"] or prior is None or new_entry != prior:
         write_lock(target, lock, dry)
     for pat in validate_expect_globs(manifest, target, answers):
         warn(f"  ожидаемый путь '{pat}' матчит 0 файлов — проверь layout/answers "
@@ -468,17 +490,24 @@ def categorize_file_change(f, pf, new_sha, tgt):
     прежнего lock (None, если файл новый); new_sha — sha отрендеренного нового содержимого;
     tgt — путь файла на диске (для детекта локальной правки). Возврат:
       new / new-optional — файла не было; user-owned — отдан пользователю, не трогаем;
-      conflict — изменились и база, и локальная копия; safe-apply — изменилась только база;
-      nochange — база не менялась."""
+      conflict — изменились и база, и локальная копия; safe-apply — изменилась только
+      база (в т.ч. пропавший с диска файл при смене версии, см. ниже); nochange —
+      база не менялась (пропавший файл без смены версии — тоже nochange, это забота
+      doctor --drift, не upgrade)."""
     if pf is None:
         return "new-optional" if f.get("optional") else "new"
     if f.get("user_owned"):
         return "user-owned"
-    disk_sha = sha256_text(tgt.read_text(encoding="utf-8")) if tgt.exists() else ""
+    missing = not tgt.exists()
+    disk_sha = "" if missing else sha256_text(tgt.read_text(encoding="utf-8"))
     local_mod = disk_sha != pf.get("base_sha256")
     base_changed = new_sha != pf.get("base_sha256")
     if base_changed and local_mod:
-        return "conflict"
+        # Файл пропал с диска (lock_drift: 'missing') — мержить нечего: это не
+        # конфликт локальной правки, а установка отсутствующего файла (ровно то,
+        # что советует doctor --drift: "восстанови render"). Иначе missing-файл
+        # при смене версии пака ложно давал бы *.pack-new вместо восстановления.
+        return ("new-optional" if f.get("optional") else "new") if missing else "conflict"
     if base_changed:
         return "safe-apply"
     return "nochange"
@@ -498,12 +527,11 @@ def do_upgrade(env, pack, target, *, overrides, dry, shell_policy):
     base_overrides.update(overrides)
     answers, _ = resolve_interview(manifest, target, base_overrides, shell_policy)
     prior_files = {f["src"]: f for f in prior.get("files", [])}
-    pdir = pack_dir(env, pack)
     ext_points = _extension_points(manifest, answers)
     plan, out_files = [], []
     for f in manifest.get("files", []):
         src, kind = f["src"], f.get("kind", "template")
-        sfile = pdir / src
+        sfile = src_file(env, pack, f)
         if not sfile.exists():
             continue
         tgt_rel = _subst_single(f["target"], answers)
@@ -561,6 +589,60 @@ def do_upgrade(env, pack, target, *, overrides, dry, shell_policy):
     entry["removed_optional"] = prior.get("removed_optional", [])
     lock.setdefault("packs", {})[pack] = entry
     write_lock(target, lock, dry)
+    return 0
+
+
+def do_remove(env, pack, target, *, dry):
+    """Удалить установленный agent-pack из target. Безопасно — удаляются только
+    файлы, которые не были локально изменены (disk_sha == base_sha256 из lock);
+    kind=merge (вливается фрагментом в чужой settings.json) и user_owned (отдан
+    пользователю навсегда) не трогаем никогда — только предупреждаем. Запись
+    пака в lock снимается в любом случае (даже если ни один файл не удалён —
+    иначе повторный remove видел бы призрак); опустевший lock удаляется целиком."""
+    lock = load_lock(target)
+    entry = lock.get("packs", {}).get(pack)
+    if entry is None:
+        print(f"agent-pack '{pack}' не установлен в {target} — нечего удалять")
+        return 0
+    tag = " [dry-run]" if dry else ""
+    print(f"=== agent-pack remove: {pack} v{entry.get('version')} ← {target} ==={tag}")
+    merge_kept = []
+    for f in entry.get("files", []):
+        tgt_rel = f.get("target", "")
+        tgt = target / tgt_rel
+        if f.get("kind", "template") == "merge":
+            merge_kept.append(tgt_rel)
+            continue
+        if f.get("user_owned"):
+            warn(f"  {tgt_rel}: user-owned — оставлен, удали вручную при желании")
+            continue
+        if not tgt.exists():
+            continue  # уже отсутствует — тихо пропускаем
+        try:
+            disk_sha = sha256_text(tgt.read_text(encoding="utf-8"))
+        except (OSError, UnicodeDecodeError):
+            warn(f"  {tgt_rel}: не читается — оставлен на всякий случай")
+            continue
+        if disk_sha != f.get("base_sha256"):
+            warn(f"  {tgt_rel}: локально правлен — оставлен")
+            continue
+        print(f"  [{'dry-run' if dry else 'remove'}] {tgt_rel}")
+        if not dry:
+            tgt.unlink()
+    if merge_kept:
+        warn("  хуки в settings.json остаются — удали вручную при необходимости: "
+             + ", ".join(merge_kept))
+    if dry:
+        print(f"  [dry-run] lock: запись '{pack}' была бы удалена")
+        return 0
+    lock.get("packs", {}).pop(pack, None)
+    if lock.get("packs"):
+        write_lock(target, lock, dry=False)
+    else:
+        lp = lock_path(target)
+        if lp.exists():
+            lp.unlink()
+        print(f"  lock: {lp} удалён (пуст)")
     return 0
 
 
@@ -622,17 +704,16 @@ def do_doctor(env, pack=None, target=None, json_out=False):
     catalog = []
     for pk in packs:
         manifest = load_manifest(env, pk)
-        pdir = pack_dir(env, pk)
         problems = []
         ids = {e["id"] for e in manifest.get("interview", [])}
         for f in manifest.get("files", []):
-            if not (pdir / f["src"]).exists() and not f.get("optional"):
+            if not src_file(env, pk, f).exists() and not f.get("optional"):
                 problems.append(f"нет {f['src']}")
         # проверка: каждый {{TOKEN}} в template-исходниках имеет interview-id
         for f in manifest.get("files", []):
             if f.get("kind", "template") != "template":
                 continue
-            sfile = pdir / f["src"]
+            sfile = src_file(env, pk, f)
             if not sfile.exists():
                 continue
             for tok in set(_DOUBLE_RE.findall(sfile.read_text(encoding="utf-8"))):
@@ -643,7 +724,7 @@ def do_doctor(env, pack=None, target=None, json_out=False):
         for f in manifest.get("files", []):
             if f.get("kind", "template") != "template":
                 continue
-            sfile = pdir / f["src"]
+            sfile = src_file(env, pk, f)
             if not sfile.exists():
                 continue
             left = _DOUBLE_RE.findall(_render_template_text(
@@ -697,7 +778,7 @@ def _pop_answers(argv):
 
 def cmd_agent_packs(env, argv):
     if not argv:
-        die("usage: harness agent-packs <list|render|upgrade|doctor> [...]")
+        die("usage: harness agent-packs <list|render|upgrade|remove|doctor> [...]")
     sub, rest = argv[0], argv[1:]
     rest, answers = _pop_answers(rest)
     opts = parse_flags(rest, {
@@ -706,7 +787,7 @@ def cmd_agent_packs(env, argv):
         "--drift": "bool", "--strict": "bool",
     })
     if opts.get("help"):
-        print("harness agent-packs <list|render|upgrade|doctor> "
+        print("harness agent-packs <list|render|upgrade|remove|doctor> "
               "[--pack P] [--target DIR] [--auto] [--answer K=V] "
               "[--install-only] [--allow-shell off|safe|full] [--dry-run] [--json] "
               "[--drift [--strict]]")
@@ -729,7 +810,7 @@ def cmd_agent_packs(env, argv):
             raise SystemExit(do_doctor_drift(target, strict=bool(opts.get("strict"))))
         raise SystemExit(do_doctor(env, opts.get("pack"), target, json_out=opts.get("json")))
 
-    if sub in ("render", "install", "upgrade"):
+    if sub in ("render", "install", "upgrade", "remove"):
         if not opts.get("pack") or not opts.get("target"):
             die(f"нужны --pack P и --target DIR для {sub}")
         from pathlib import Path
@@ -741,6 +822,8 @@ def cmd_agent_packs(env, argv):
         if sub == "upgrade":
             raise SystemExit(do_upgrade(env, pack, target, overrides=answers,
                                         dry=dry, shell_policy=shell_policy))
+        if sub == "remove":
+            raise SystemExit(do_remove(env, pack, target, dry=dry))
         raise SystemExit(do_render(env, pack, target, auto=bool(opts.get("auto")),
                                    overrides=answers, dry=dry,
                                    install_only=bool(opts.get("install_only")),

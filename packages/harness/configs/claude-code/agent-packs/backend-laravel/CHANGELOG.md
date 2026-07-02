@@ -4,6 +4,21 @@
 запись помечает затронутый install-файл, чтобы апгрейдящий агент сопоставил
 изменение с конкретным файлом проекта.
 
+## [0.11.2] - 2026-07-02
+
+### Changed
+
+- **Shared-разметка прозы для parity-теста.** 6 общих блоков `agents/reviewer.md`
+  (risk-adaptive, config-honesty, test-honesty, over-engineering, generated-assets,
+  report-format) обёрнуты маркерами `<!-- shared:X --> … <!-- /shared:X -->` без
+  изменения содержимого; одноимённые блоки пака `laravel-package` сверяются
+  байт-в-байт тестом `test_agentpacks_shared.py` (дрейф общего текста = красный тест).
+- **Фикс `app/Repositories` → `{{ACCESS_ROOT}}/Repositories`** в `agents/reviewer.md`
+  и `agents/slice-builder.md` — последние пути мимо `ACCESS_ROOT` (хвост 0.9.0);
+  при `ACCESS_ROOT=app` рендер байт-эквивалентен прежнему смыслу (проверено
+  регрессией F-8 мастер-плана SKM-MASTER-002). Затронуты install-файлы
+  `.claude/agents/{PACK_PREFIX}-reviewer.md`, `.claude/agents/{PACK_PREFIX}-slice-builder.md`.
+
 ## [0.11.1] - 2026-07-02
 
 ### Added

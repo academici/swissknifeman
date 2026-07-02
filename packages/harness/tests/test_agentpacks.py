@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 
 from harness import agentpacks as ap
-from tests.fixtures import make_pack, make_project, make_root
+from tests.fixtures import make_pack, make_project, make_root, make_src_pack_pair
 
 
 class TestAgentPacks(unittest.TestCase):
@@ -81,6 +81,32 @@ class TestAgentPacks(unittest.TestCase):
         self._render(overrides={"PACK_PREFIX": "x"})
         self.assertEqual(agent.read_text(), "LOCALLY EDITED")  # не затёрто
 
+    def test_lock_local_modified_flag_stays_honest(self):
+        # F-7 field-feedback (chatom): report["changed"] отражает только запись НА
+        # ДИСК — если единственное, что изменилось между прогонами, это флаг
+        # local_modified (файл стал/перестал быть локально правленным, а писать на
+        # диск было нечего — см. test_local_modified_not_clobbered выше), раньше
+        # write_lock() пропускался и lock годами врал. Отдельно от "не затирает
+        # содержимое" (тест выше) — здесь проверяем именно ЧЕСТНОСТЬ lock'а.
+        self._render(overrides={"PACK_PREFIX": "x"})
+        lock_path = self.proj / ".claude/agent-pack.lock.json"
+        agent = self.proj / ".claude/agents/x-reviewer.md"
+        original = agent.read_text()
+
+        agent.write_text("LOCALLY EDITED")
+        self._render(overrides={"PACK_PREFIX": "x"})
+        lock = json.loads(lock_path.read_text())
+        f = next(f for f in lock["packs"][self.pack]["files"]
+                if f["target"].endswith("-reviewer.md"))
+        self.assertTrue(f["local_modified"])  # lock ловит правку немедленно
+
+        agent.write_text(original)  # вручную привели к базе (как в F-7)
+        self._render(overrides={"PACK_PREFIX": "x"})
+        lock = json.loads(lock_path.read_text())
+        f = next(f for f in lock["packs"][self.pack]["files"]
+                if f["target"].endswith("-reviewer.md"))
+        self.assertFalse(f["local_modified"])  # и честно снимает флаг обратно
+
     def test_unsafe_probe_skipped(self):
         # проба не из allowlist → не исполняется, miss → default
         out = ap._run_detect("curl http://evil", self.proj, "safe",
@@ -111,6 +137,34 @@ class TestAgentPacks(unittest.TestCase):
 
     def test_doctor_clean_pack(self):
         self.assertEqual(ap.do_doctor(self.env, self.pack), 0)
+
+    # ── src_pack (F-1) ────────────────────────────────────────────────────────
+    def test_src_pack_renders_from_other_pack_with_own_header(self):
+        # пак B без собственных файлов — src_pack указывает на A: контент читается
+        # из каталога A, но provenance-header несёт владельца — B@его версия.
+        pack_b = make_src_pack_pair(self.root, self.pack)
+        rc = ap.do_render(self.env, pack_b, self.proj, auto=True, overrides={},
+                          dry=False, install_only=False, shell_policy="safe")
+        self.assertEqual(rc, 0)
+        shared = self.proj / f".claude/agents/{self.proj.name}-shared.md"
+        self.assertTrue(shared.exists())
+        text = shared.read_text()
+        self.assertIn(f"Pack: {pack_b}@0.1.0", text)   # владелец — B, не A
+        self.assertIn("Template: agents/reviewer.md", text)
+        self.assertNotIn("{{", text)
+
+    def test_src_pack_doctor_checks_existence_in_other_pack(self):
+        pack_b = make_src_pack_pair(self.root, self.pack)
+        self.assertEqual(ap.do_doctor(self.env, pack_b), 0)
+
+    def test_src_pack_missing_source_is_bad_in_doctor(self):
+        pack_b = make_src_pack_pair(self.root, self.pack, name_b="demo-pack-c")
+        pdir = self.root / "configs" / "claude-code" / "agent-packs" / "demo-pack-c"
+        manifest = json.loads((pdir / "pack.json").read_text())
+        manifest["files"][0]["src_pack"] = "no-such-pack"
+        (pdir / "pack.json").write_text(json.dumps(manifest))
+        rc = ap.do_doctor(self.env, "demo-pack-c")
+        self.assertEqual(rc, 1)
 
     # ── provenance-header (E-1) ──────────────────────────────────────────────
     def test_header_in_md_after_frontmatter(self):
@@ -220,6 +274,70 @@ class TestAgentPacks(unittest.TestCase):
         self.assertTrue((self.proj / dropped).exists())  # новый файл поставлен
 
 
+class TestAgentPacksRemove(unittest.TestCase):
+    """Тесты do_remove (F-2): удаление установленного пака из target."""
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        self.root, self.env = make_root(self.tmp)
+        self.pack = make_pack(self.root)
+        self.proj = make_project(self.tmp, "p")
+        (self.proj / "composer.json").write_text('{"scripts": {"test": "pest"}}')
+        ap.do_render(self.env, self.pack, self.proj, auto=True,
+                    overrides={"PACK_PREFIX": "x"}, dry=False,
+                    install_only=False, shell_policy="safe")
+        self.reviewer = self.proj / ".claude/agents/x-reviewer.md"
+        self.overrides = self.proj / ".claude/agents/x-overrides.md"
+        self.gate = self.proj / ".claude/hooks/gate.sh"
+        self.settings = self.proj / ".claude/settings.json"
+        self.lock_path = self.proj / ".claude/agent-pack.lock.json"
+
+    def test_remove_deletes_clean_files_lock_removed(self):
+        # единственный установленный пак → после remove lock целиком удалён
+        rc = ap.do_remove(self.env, self.pack, self.proj, dry=False)
+        self.assertEqual(rc, 0)
+        self.assertFalse(self.reviewer.exists())     # чистый template-файл снесён
+        self.assertFalse(self.gate.exists())          # чистый verbatim-файл снесён
+        self.assertTrue(self.overrides.exists())       # user_owned остался
+        self.assertTrue(self.settings.exists())         # merge — settings.json не трогаем
+        self.assertFalse(self.lock_path.exists())        # lock опустел → удалён целиком
+
+    def test_remove_keeps_locally_modified_file(self):
+        self.reviewer.write_text("LOCALLY EDITED")
+        ap.do_remove(self.env, self.pack, self.proj, dry=False)
+        self.assertTrue(self.reviewer.exists())
+        self.assertEqual(self.reviewer.read_text(), "LOCALLY EDITED")
+
+    def test_remove_drops_only_this_pack_entry_from_lock(self):
+        pack_b = make_src_pack_pair(self.root, self.pack)
+        ap.do_render(self.env, pack_b, self.proj, auto=True, overrides={},
+                    dry=False, install_only=False, shell_policy="safe")
+        ap.do_remove(self.env, self.pack, self.proj, dry=False)
+        self.assertTrue(self.lock_path.exists())  # второй пак ещё установлен
+        lock = json.loads(self.lock_path.read_text())
+        self.assertNotIn(self.pack, lock["packs"])
+        self.assertIn(pack_b, lock["packs"])
+
+    def test_remove_dry_run_changes_nothing(self):
+        before_lock = self.lock_path.read_text()
+        rc = ap.do_remove(self.env, self.pack, self.proj, dry=True)
+        self.assertEqual(rc, 0)
+        self.assertTrue(self.reviewer.exists())
+        self.assertTrue(self.gate.exists())
+        self.assertEqual(self.lock_path.read_text(), before_lock)
+
+    def test_remove_not_installed_is_noop(self):
+        rc = ap.do_remove(self.env, "no-such-pack", self.proj, dry=False)
+        self.assertEqual(rc, 0)
+        self.assertTrue(self.reviewer.exists())  # ничего не тронуто
+
+    def test_remove_missing_file_silently_skipped(self):
+        self.reviewer.unlink()
+        rc = ap.do_remove(self.env, self.pack, self.proj, dry=False)
+        self.assertEqual(rc, 0)
+        self.assertFalse(self.lock_path.exists())
+
+
 class TestCategorizeFileChange(unittest.TestCase):
     """Чистая логика категоризации (выделена из do_upgrade) — матрица случаев."""
 
@@ -256,6 +374,24 @@ class TestCategorizeFileChange(unittest.TestCase):
         self.tgt.write_text("locally edited", encoding="utf-8")
         self.assertEqual(
             ap.categorize_file_change({}, self._pf("orig"), "newsha", self.tgt), "conflict")
+
+    def test_missing_file_with_base_changed_is_new_not_conflict(self):
+        # F-7 field-feedback (chatom, upgrade _common 0.3.0→0.4.0): файл установлен
+        # паком (pf есть в lock) и база сменилась (напр. version-bump в header), но
+        # файл пропал с диска (тот же случай ловит lock_drift: 'missing'). Раньше
+        # несуществующий disk_sha="" всегда != base → ложный "conflict" → бесполезный
+        # *.pack-new вместо простого восстановления. self.tgt НЕ создаётся — файла нет.
+        self.assertEqual(
+            ap.categorize_file_change({}, self._pf("orig"), "newsha", self.tgt), "new")
+        self.assertEqual(
+            ap.categorize_file_change({"optional": True}, self._pf("orig"), "newsha", self.tgt),
+            "new-optional")
+
+    def test_missing_file_with_base_unchanged_stays_nochange(self):
+        # Пропавший файл БЕЗ смены версии пака — не дело upgrade его восстанавливать
+        # (это забота doctor --drift); upgrade просто нечего делать для этой записи.
+        self.assertEqual(
+            ap.categorize_file_change({}, self._pf("samesha"), "samesha", self.tgt), "nochange")
 
 
 if __name__ == "__main__":

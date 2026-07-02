@@ -46,7 +46,7 @@ Skill и следуй им: `php:repositories`, `php:laravel-structure`,
    принимает модели/примитивы/DTO (не Request), много записей — под
    `DB::transaction()`, бизнес-нарушения — `throw ValidationException`. Action
    персистит через `*StoreRepository`, не через `Model::create()`.
-3. **Чтения — через `*Repository`** (`app/Repositories/<Домен>/`, read-side:
+3. **Чтения — через `*Repository`** (`{{ACCESS_ROOT}}/Repositories/<Домен>/`, read-side:
    list/search/filter/paginate). Повторяющиеся `where` выноси в model scopes.
 4. **`*Service`** — read-only эвалюатор: не персистит и не принимает Request.
 5. **DTO** на spatie/laravel-data для входных команд и выходных представлений.

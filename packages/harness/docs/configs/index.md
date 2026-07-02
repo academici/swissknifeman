@@ -11,6 +11,7 @@
 |---|---|---|
 | [Пресеты permissions для Claude Code](./claude-permissions) | `configs/claude-code/` | готовые `settings.json` с максимально разрешённым доступом: git, composer, artisan, npm, docker — по стекам |
 | MCP-серверы | `configs/claude-code/mcp/` | пресеты `.mcp.json`; `context7` ставит `skiller integrate` по умолчанию, курированный сабсет (playwright, filesystem, fetch, …) — opt-in через `--mcp`. Каталог: [Интеграции](../integrations/) |
+| [Agent-packs](./agent-packs) | `configs/claude-code/agent-packs/` | версионируемые паки субагентов/правил под стек/роль — provenance-header, оверрайды, drift-детект |
 
 ## Сценарий
 

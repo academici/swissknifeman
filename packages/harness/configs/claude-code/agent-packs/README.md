@@ -47,7 +47,8 @@ CHANGELOG-дельте с 3-way reasoning через sha256, без diff-дви�
 | Пак | Shape | Стек | Версия |
 |---|---|---|---|
 | `_common` | agnostic | оркестратор (delegate-only) — общий prerequisite | 0.4.0 |
-| `backend-laravel` | backend | Laravel/PHP | 0.11.1 |
+| `backend-laravel` | backend | Laravel/PHP (приложение) | 0.11.1 |
+| `laravel-package` | backend | Laravel-composer-пакет (в т.ч. монорепо `packages/*/src`) | 0.1.0 |
 | `node-frontend` | frontend | Vue/Vite/TS (SPA/Inertia/Nuxt) | 0.4.1 |
 | `dart-flutter` | mobile | Flutter/Dart (mobile/POS/embedded) | 0.4.1 |
 | `python-backend` | backend | Python (FastAPI/Django/Flask) | 0.4.1 |

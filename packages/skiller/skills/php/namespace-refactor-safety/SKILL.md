@@ -2,7 +2,7 @@
 name: namespace-refactor-safety
 bucket: php
 version: 0.1.0
-description: "Discipline for large namespace/move refactors in PHP/Laravel: three-phase alias → update use-statements → hard rename; prefix-collision traps (Channel ⊂ ChannelMember, Message vs MessageNotFound); contracts as the seam phpstan checks; arch-tests for layer parity; breaking moves bump major. Activate when moving classes between namespaces, restructuring domains, mass-renaming. Triggers: namespace refactor, move class, rename namespace, domain restructure, mass rename, breaking change, arch test."
+description: "Discipline for large PHP/Laravel namespace or class-move refactors: three-phase alias → update use-statements → hard rename; anchor find-replace on FQN (not bare token) to dodge prefix collisions; keep a contract at the seam for phpstan; arch-tests for layer parity; breaking moves bump major. Activate on: namespace refactor, move class, rename namespace, domain restructure, mass rename, breaking change, arch test."
 risk: write
 persona: oss-dev
 tags: ["php", "refactor", "namespace", "safety"]
@@ -38,4 +38,4 @@ Large namespace moves break silently. Stage them.
 
 - `php:laravel-structure`, `php:static-analysis` (phpstan seam).
 
-<!-- ru-source-sha256: 22d3d2e0ff9bbd5e9489addb6e7cb69f527830e91bca4dc2e4b2e3074fe874b7 -->
+<!-- ru-source-sha256: 3e49dc346a8b21ed19b4cd1fd3e40da51e8cb7a7ae3955e890c44e7db2b3704a -->

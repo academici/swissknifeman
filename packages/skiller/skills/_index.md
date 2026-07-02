@@ -223,17 +223,17 @@
 | `skills-ssot` | Single source of truth for skills across multiple AI agents: .ai/skills + symlinks, gitig… | `ai-context`, `skills`, `ssot`, `workflow`, `conventions`, `ai` |
 | `spec-interview` | Pre-code interview: agent asks one question at a time, reads the codebase itself where it… | `workflow`, `requirements`, `discovery` |
 | `task-brief-template` | Brief template for complex agent tasks: goal, scope, invariants, explicit assumptions, ou… | `workflow`, `template`, `requirements`, `context` |
-| `verify-claims` | Before a decision/verdict that rests on an EXTERNAL fact (library version/API, 'still cur… | `verification`, `rag`, `research`, `planning`, `context`, `claude-code` |
+| `verify-claims` | Before a decision/verdict on an EXTERNAL fact (library version/API, 'still current', best… | `verification`, `rag`, `research`, `planning`, `context`, `claude-code` |
 | `writing-style` | Tone & language of code artifacts: Russian by default for comments, commit bodies, test d… | `writing`, `language`, `russian`, `comments`, `commits`, `tests`, `docs`, `style` |
 
 ### laravel-architecture — Scaling architecture: modular monolith/DDD, enum state machines, enum attributes, subagent orchestration (6)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
-| `config-driven-abstraction` | Config-driven, cache-safe abstractions for multi-panel / multi-tenant Laravel: an immutab… | `php`, `laravel`, `architecture`, `config`, `registry`, `multi-tenant` |
+| `config-driven-abstraction` | Config-driven, cache-safe Registry+Builder for multi-panel/multi-tenant Laravel: immutabl… | `php`, `laravel`, `architecture`, `config`, `registry`, `multi-tenant` |
 | `eloquent-accessors` | Activate when writing/refactoring Eloquent accessors and mutators: when you see legacy ge… | `php`, `laravel`, `eloquent`, `attributes`, `accessors`, `mutators`, `patterns` |
 | `enum-attributes` | Use for enum metadata: replace label()/color()/description() match-ladders with PHP attri… | `php`, `enum`, `attributes`, `reflection`, `laravel`, `patterns`, `typescript` |
-| `enum-state-machine` | Activate when a domain status (Order/Document/Subscription) grows into a transition graph… | `php`, `enum`, `state-machine`, `workflow`, `laravel`, `transitions`, `domain`, `actions` |
+| `enum-state-machine` | Activate when a domain status (Order/Document/Subscription) needs transition rules: edge … | `php`, `enum`, `state-machine`, `workflow`, `laravel`, `transitions`, `domain`, `actions` |
 | `laravel-subagents` | Subagent orchestration on large Laravel tasks: activation threshold, delegating research … | `workflow`, `orchestration`, `agents`, `laravel` |
 | `modular-architecture` | Scale Laravel code as it grows: organize by business domain, Modular Monolith and DDD pat… | `php`, `laravel`, `architecture`, `nwidart`, `laravel-modules`, `filament` |
 
@@ -270,7 +270,7 @@
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
-| `livewire-blade-attributes` | Livewire 3 delta gotchas for Blade-component attributes. Activate when writing/reviewing … | `livewire`, `blade`, `laravel`, `frontend`, `advisory`, `gotchas` |
+| `livewire-blade-attributes` | Livewire 3 Blade-component attribute delta gotchas. Activate when a tag attribute must be… | `livewire`, `blade`, `laravel`, `frontend`, `advisory`, `gotchas` |
 
 ### laravel-testing — Laravel testing: Pest feature/unit, DB isolation guard, Dusk browser tests, health checks (4)
 
@@ -337,15 +337,15 @@
 | `laravel-best-practices` | Laravel best practices: 20 rule categories (Eloquent, validation, cache, queues, security… | `php`, `laravel`, `best-practices` |
 | `laravel-structure` | Laravel project structure canon for greenfield and adding domains: domain taxonomy, layer… | `php`, `laravel`, `architecture`, `structure` |
 | `named-arguments` | PHP rule: method/function calls use named arguments; exceptions; activate when writing/re… | `php`, `code-style`, `readability`, `conventions` |
-| `namespace-refactor-safety` | Discipline for large namespace/move refactors in PHP/Laravel: three-phase alias → update … | `php`, `refactor`, `namespace`, `safety` |
+| `namespace-refactor-safety` | Discipline for large PHP/Laravel namespace or class-move refactors: three-phase alias → u… | `php`, `refactor`, `namespace`, `safety` |
 | `pao` | Laravel PAO — agent-optimized PHP tool output: PHPUnit/Pest/Paratest/PHPStan/Rector/Artis… | `php`, `laravel`, `testing`, `tokens`, `agent-output` |
 | `php-naming-conventions` | Naming Laravel/PHP entities: repository methods by intent (not findByCodeOrFail-explosion… | `php`, `laravel`, `naming`, `conventions`, `code-style`, `readability` |
 | `php-patterns` | PHP domain patterns: VO, DTO, pipeline, specification — selection guide | `php`, `laravel`, `patterns`, `dto`, `architecture` |
 | `php-upgrade-checklist` | PHP version upgrade checklist (minor/major): sync image/CI, composer update + clear depre… | `php`, `upgrade`, `version`, `rector`, `phpstan`, `composer` |
-| `production-readiness-checklist` | Verify production-class invariants that green happy-path tests structurally miss: transac… | `php`, `laravel`, `review`, `production`, `reliability`, `quality` |
+| `production-readiness-checklist` | Verify production-readiness invariants happy-path tests miss: transaction atomicity, race… | `php`, `laravel`, `review`, `production`, `reliability`, `quality` |
 | `repositories` | Laravel repositories: read/store split, model scopes, delta-DTO, facade, VisibilityService | `php`, `laravel`, `repository`, `architecture` |
 | `static-analysis` | PHP/Laravel static analysis & linting: Laravel Pint, PHPStan, Rector locally + CI, refere… | `php`, `laravel`, `quality` |
-| `transactional-outbox-relay` | Reliable at-least-once delivery of async events (webhooks/integration jobs) via the trans… | `php`, `laravel`, `queue`, `outbox`, `reliability`, `async` |
+| `transactional-outbox-relay` | At-least-once delivery of async events via transactional outbox: write+outbox in one tran… | `php`, `laravel`, `queue`, `outbox`, `reliability`, `async` |
 
 ### php-packages — Laravel package development: scaffold, service provider, testing, compatibility, docs, releases (9)
 
@@ -402,7 +402,7 @@
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
-| `query-craft` | How to FORMULATE a search/doc-engine query (Perplexity Web · WebSearch · context7): maxim… | `research`, `perplexity`, `search`, `query`, `rag`, `context7`, `claude-code` |
+| `query-craft` | How to FORMULATE a search/doc-engine query (Perplexity Web · WebSearch · context7): versi… | `research`, `perplexity`, `search`, `query`, `rag`, `context7`, `claude-code` |
 | `research-knowledge-super-skill` | Comprehensive research and knowledge management skill merging Perplexity Computer's resea… |  |
 
 ### roles — Personas: tech lead, startup CTO, solo founder, open-source maintainer (4)

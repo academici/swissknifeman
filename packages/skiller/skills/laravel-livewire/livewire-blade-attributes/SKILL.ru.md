@@ -2,7 +2,7 @@
 name: livewire-blade-attributes
 bucket: laravel-livewire
 version: 0.1.0
-description: "Дельта-гочизы Livewire 3 по атрибутам Blade-компонентов. Активировать при написании/ревью Blade-разметки Livewire-компонентов, когда атрибут тега должен быть условным или динамическим: НЕ ставить @if/@endif/@js() внутри списка атрибутов (ломает парсинг компонента) — собирать атрибуты заранее в @php через ComponentAttributeBag (->merge, ->class) и разворачивать одним выражением. Триггеры: ошибка парсинга/рендера Blade-компонента, условный wire:model/wire:sortable/step/disabled, @js() в атрибуте, нестабильный wire:key в цикле"
+description: "Дельта-гочизы Livewire 3 по атрибутам Blade-компонентов. Активировать, когда атрибут тега должен быть условным/динамическим: не ставить @if/@endif/@js() внутри списка атрибутов (ломает парсинг). Решение: собирать атрибуты заранее в @php через ComponentAttributeBag (->merge, ->class), разворачивать одним выражением. Триггеры: ошибка парсинга/рендера, условный wire:model/wire:sortable/step/disabled, @js() в атрибуте, нестабильный wire:key в цикле"
 risk: read
 persona: oss-dev
 tags: ["livewire", "blade", "laravel", "frontend", "advisory", "gotchas"]

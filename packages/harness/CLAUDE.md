@@ -27,6 +27,11 @@
 - `output-styles/<name>.md` — **терсе-«голос» вывода** (токен-экономия: output-токены ~4-5× input).
   `lean` — телеграфный (только выжимка+код), `keep-coding-instructions:true` (инж-правила живут).
   Включается per-project: `harness hooks --output-style lean` (пишет `outputStyle` в settings.local.json).
+- **`plansDirectory` (per-project plan-система)** — `harness hooks --plans-dir plans|off` ставит
+  top-level ключ `plansDirectory` в **`.claude/settings.json`** (шаримый, коммитится — командная
+  конвенция, не машинно-локальная преференция; отличие от `outputStyle`). Merge-only и НЕ
+  перезаписывает чужой выбор: ключ уже занят ДРУГИМ значением → skip + warn «уважаю локальный
+  выбор»; `off` снимает ключ только если он равен нашему дефолту `plans`.
 
 ## Раскладка
 
@@ -55,7 +60,7 @@
 harness permissions --target . [--preset a,b] [--file F] [--dry-run] [--list] [--global]
 harness mcp         --target . --mcp context7,playwright [--list] [--dry-run]
 harness hooks       --global            # файлы хуков в ~/.claude/hooks (один раз на машину)
-harness hooks       --target . --auto-approve strict --memory core:federation --router propose --run-report on --output-style lean
+harness hooks       --target . --auto-approve strict --memory core:federation --router propose --run-report on --output-style lean --plans-dir plans
 harness router      --generate --target .   # каталог intent-router (.claude/agent-router.config.json)
 harness agent-packs <list|render|upgrade|remove|doctor> [--pack P] [--target .] [--auto]
         [--dry-run] [--install-only] [--allow-shell M] [KEY=VALUE …]   # см. agentpacks.py

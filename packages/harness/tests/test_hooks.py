@@ -9,13 +9,13 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
-from harness.hooks import _parse_memory_flag, block_autoapprove, block_memory
+from harness.hooks import _parse_memory_flag, block_autoapprove, block_memory, block_plans_dir
 import tests.fixtures as fx
 
 
 def run(fn, *a, **kw):
     buf = io.StringIO()
-    with contextlib.redirect_stdout(buf):
+    with contextlib.redirect_stdout(buf), contextlib.redirect_stderr(buf):
         fn(*a, **kw)
     return buf.getvalue()
 
@@ -76,6 +76,59 @@ class HooksCase(unittest.TestCase):
         self.assertEqual(_parse_memory_flag("core:federation"), ("core", "federation"))
         self.assertEqual(_parse_memory_flag("file"), ("core", "file"))
         self.assertEqual(_parse_memory_flag(":file"), ("core", "file"))
+
+    # --- plans-dir ------------------------------------------------------------
+    def test_plans_dir_sets_key_in_shared_settings_json(self):
+        run(block_plans_dir, self.proj, "plans", "settings.json", False)
+        s = json.loads((self.proj / ".claude" / "settings.json").read_text())
+        self.assertEqual(s["plansDirectory"], "plans")
+        # НЕ settings.local.json
+        self.assertFalse((self.proj / ".claude" / "settings.local.json").exists())
+
+    def test_plans_dir_idempotent_no_dupe_write(self):
+        run(block_plans_dir, self.proj, "plans", "settings.json", False)
+        before = (self.proj / ".claude" / "settings.json").read_text()
+        out = run(block_plans_dir, self.proj, "plans", "settings.json", False)
+        after = (self.proj / ".claude" / "settings.json").read_text()
+        self.assertEqual(before, after)
+        self.assertIn("уже", out)
+
+    def test_plans_dir_does_not_overwrite_foreign_value(self):
+        cdir = self.proj / ".claude"; cdir.mkdir(parents=True)
+        (cdir / "settings.json").write_text(
+            json.dumps({"plansDirectory": "my-custom-plans"}) + "\n")
+        out = run(block_plans_dir, self.proj, "plans", "settings.json", False)
+        s = json.loads((cdir / "settings.json").read_text())
+        self.assertEqual(s["plansDirectory"], "my-custom-plans")  # не перезаписано
+        self.assertIn("уважаю", out)
+
+    def test_plans_dir_off_removes_our_default(self):
+        run(block_plans_dir, self.proj, "plans", "settings.json", False)
+        run(block_plans_dir, self.proj, "off", "settings.json", False)
+        s = json.loads((self.proj / ".claude" / "settings.json").read_text())
+        self.assertNotIn("plansDirectory", s)
+
+    def test_plans_dir_off_does_not_touch_foreign_value(self):
+        cdir = self.proj / ".claude"; cdir.mkdir(parents=True)
+        (cdir / "settings.json").write_text(
+            json.dumps({"plansDirectory": "my-custom-plans"}) + "\n")
+        out = run(block_plans_dir, self.proj, "off", "settings.json", False)
+        s = json.loads((cdir / "settings.json").read_text())
+        self.assertEqual(s["plansDirectory"], "my-custom-plans")  # не снято
+        self.assertIn("не наш дефолт", out)
+
+    def test_plans_dir_off_noop_when_key_absent(self):
+        out = run(block_plans_dir, self.proj, "off", "settings.json", False)
+        self.assertFalse((self.proj / ".claude" / "settings.json").exists())
+        self.assertIn("нечего снимать", out)
+
+    def test_plans_dir_absolute_path_dies(self):
+        with self.assertRaises(SystemExit):
+            run(block_plans_dir, self.proj, "/tmp/abs-plans", "settings.json", False)
+
+    def test_plans_dir_dry_run_does_not_write(self):
+        run(block_plans_dir, self.proj, "plans", "settings.json", True)
+        self.assertFalse((self.proj / ".claude" / "settings.json").exists())
 
 
 if __name__ == "__main__":

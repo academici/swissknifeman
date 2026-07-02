@@ -85,6 +85,9 @@ PLAN_EXEC_RE = re.compile(r"/task:plan-exec\s+(\S+)\s+(P\d+\.\d+)")
 PHASE_FILENAME_RE = re.compile(r"^(P\d+)\.md$")
 PHASE_TOKEN_RE = re.compile(r"^P(\d+)$")
 DONE_TOTAL_RE = re.compile(r"^\s*(\d+)\s*/\s*(\d+)\s*$")
+ACTIVE_FIELD_RE = re.compile(r"^\*\*Active:\*\*\s*(.+)$")
+ACTIVE_FILENAME = "ACTIVE.md"
+README_FILENAME = "README.md"
 
 
 class Diagnostics:
@@ -570,8 +573,14 @@ def lint_plan(plan_dir, diag):
         next_val, next_lineno = handoff["fields"].get("Next", ("", None))
         m = PLAN_EXEC_RE.search(next_val)
         if not m:
-            diag.error(handoff_path, next_lineno,
-                       "Next не содержит «/task:plan-exec <PLAN-ID> Pn.m»")
+            # закрытый целиком план: все items терминальны — честный Next
+            # «план закрыт» вместо ссылки на несуществующий следующий item
+            plan_closed = bool(all_items) and all(
+                info["status"] in TERMINAL_STATUSES for info in all_items.values())
+            if not (plan_closed and "план закрыт" in next_val.lower()):
+                diag.error(handoff_path, next_lineno,
+                           "Next не содержит «/task:plan-exec <PLAN-ID> Pn.m» "
+                           "(для целиком закрытого плана допустимо «план закрыт»)")
         else:
             ref_plan_id, ref_item = m.group(1), m.group(2)
             if ref_plan_id != plan_id:
@@ -606,6 +615,58 @@ def lint_plan(plan_dir, diag):
     }
 
 
+# --- root-level проверки (path = plans/ целиком, не одиночный plans/<ID>) -----
+
+def lint_plans_root(root, models, diag):
+    """Проверки, применимые только к каталогу `plans/` целиком (см. discover_plan_dirs:
+    отличается от одиночного `plans/<ID>` тем, что там нет `plan.md` рядом с собой).
+    `models` — {plan_id: model|None} уже пролинтованных подкаталогов (для сверки, что
+    Active указывает на реально существующий каталог-план, и для подсчёта 🟡 In progress).
+
+    (а) есть plans/ACTIVE.md → поле «**Active:**» обязано быть «—» либо именем
+        существующего каталога-плана, иначе ERROR;
+    (б) нет ACTIVE.md и ≥2 планов со статусом «🟡 In progress» (Meta plan.md) →
+        WARNING «активный план неоднозначен»;
+    (в) плоские *.md в корне plans/ (кроме ACTIVE.md/README.md) — черновики plan mode,
+        оставшиеся без протокола, → одно WARNING со списком и подсказкой from-draft.
+    """
+    root = Path(root)
+
+    active_path = root / ACTIVE_FILENAME
+    active_lines = _read_lines(active_path)
+    if active_lines is not None:
+        value, value_lineno = None, None
+        for i, ln in enumerate(active_lines):
+            m = ACTIVE_FIELD_RE.match(ln)
+            if m:
+                value, value_lineno = m.group(1).strip(), i + 1
+                break
+        if value is None:
+            diag.error(active_path, None, "нет поля «**Active:**» в ACTIVE.md")
+        elif value != EMPTY_PLACEHOLDER and value not in models:
+            diag.error(active_path, value_lineno,
+                       f"Active «{value}» не указывает на существующий план "
+                       f"(нет каталога plans/{value}/)")
+    else:
+        in_progress = sorted(
+            pid for pid, model in models.items()
+            if (model or {}).get("meta", {}).get("Status") == STATUS_IN_PROGRESS
+        )
+        if len(in_progress) >= 2:
+            diag.warning(root, None,
+                         "активный план неоднозначен: нет plans/ACTIVE.md, а планов со "
+                         f"статусом «{STATUS_IN_PROGRESS}» {len(in_progress)}: {in_progress}")
+
+    drafts = sorted(
+        p.name for p in root.glob("*.md")
+        if p.is_file() and p.name not in (ACTIVE_FILENAME, README_FILENAME)
+    )
+    if drafts:
+        diag.warning(root, None,
+                     "черновики plan mode: " + ", ".join(drafts) +
+                     " — разверни /task:plan-design from-draft")
+
+
 # --- дискавери множества планов ----------------------------------------------
 
 def discover_plan_dirs(root):
@@ -635,7 +696,13 @@ def main(argv=None):
     if plan_dirs is None:
         print(f"ERROR: путь не найден: {root}", file=sys.stderr)
         return 1
-    if not plan_dirs:
+
+    # discover_plan_dirs: одиночный план — это (root/"plan.md").is_file() → [root];
+    # тот же признак используем здесь, чтобы root-проверки (ACTIVE.md/черновики)
+    # не применялись к одиночному `plan-lint.py plans/<ID>` (там ACTIVE.md вне видимости).
+    is_plans_root = not (root / "plan.md").is_file()
+
+    if not plan_dirs and not is_plans_root:
         print(f"нет планов для проверки в {root}")
         return 0
 
@@ -643,6 +710,9 @@ def main(argv=None):
     models = {}
     for plan_dir in plan_dirs:
         models[plan_dir.name] = lint_plan(plan_dir, diag)
+
+    if is_plans_root:
+        lint_plans_root(root, models, diag)
 
     for msg in diag.errors:
         print(f"ERROR: {msg}", file=sys.stderr)

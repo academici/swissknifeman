@@ -164,6 +164,23 @@ class IntegrateCase(unittest.TestCase):
                   ["--target", str(self.proj), "--bundle", "minimal", "--yes"])
         self.assertIn("output-style: lean", out)
 
+    # --- plans-dir (per-project plans/, дефолт «да» — для ВСЕХ бандлов) ---
+    def test_plans_dir_enabled_in_every_bundle(self):
+        for bundle in ("minimal", "recommended", "full"):
+            g = _gather(self.env, self.proj, {"file": None}, bundle, False)
+            self.assertTrue(g["plans_dir"], bundle)
+
+    def test_plans_dir_custom_bundle_defaults_true_noninteractive(self):
+        g = _gather(self.env, self.proj, {"file": None}, "custom", False)
+        self.assertTrue(g["plans_dir"])
+
+    def test_minimal_bundle_still_applies_plans_dir_block(self):
+        # minimal выключает perms/mcp/autoapprove/memory/hub/brain, но НЕ plans-dir —
+        # тот же принцип, что у output-style: применяется независимо от объёма автоматизации.
+        out = run(cmd_integrate, self.env,
+                  ["--target", str(self.proj), "--bundle", "minimal", "--yes"])
+        self.assertIn("plans-dir: plans", out)
+
     # --- guards -------------------------------------------------------------
     def test_unknown_bundle_exits(self):
         with self.assertRaises(SystemExit):

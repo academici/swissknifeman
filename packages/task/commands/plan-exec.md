@@ -68,4 +68,5 @@ effort: medium
    Known Deviations: <…|—>
    Escalation Needed: no|yes (тогда финальная строка ESCALATION-REQUIRED: …)
    Next Suggested Step: execute plan Pn.k
+   Context: handoff свежий — рекомендован /clear перед следующим item
    ```

@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 0.1.0
+version: 0.2.0
 description: "Executable master plans in plans/<ID>: plan/phase/task schemas, 6 statuses, handoff standard, model routing, /task:plan-* commands."
 risk: write
 persona: oss-dev
@@ -9,7 +9,7 @@ tags: [workflow, planning, handoff, routing, multi-model]
 requires: []
 produces_for: [session-handoff, complex-task-orchestrator]
 outputs: ["plans/<PLAN-ID>/plan.md", "plans/<PLAN-ID>/phases/*.md", "plans/<PLAN-ID>/handoff.md"]
-snippets: ["plan-template.md", "phase-template.md", "handoff-template.md"]
+snippets: ["plan-template.md", "phase-template.md", "handoff-template.md", "active-template.md"]
 adapters: [claude, cursor, fable]
 sha256: ""
 ---
@@ -35,6 +35,17 @@ plans/<PLAN-ID>/
 ```
 
 `PLAN-ID` = `[A-Z][A-Z0-9-]+` (e.g. `AUDIT-W2`, `MIGRATE-V3`).
+
+`plans/` root, next to the plan directories:
+
+- **`plans/ACTIVE.md`** — flat pointer to the active plan. Canon — EXACTLY 4 lines
+  (parsed by `plan-lint`): `# ACTIVE`, blank line, `**Active:** <PLAN-ID>` (no active
+  plan — `—`), `**Updated:** <YYYY-MM-DD>`. Skeleton — `snippets/active-template.md`.
+  Maintained by commands: `plan-design` (new/from-draft modes — sets the new plan's ID)
+  and `plan-close` (the WHOLE plan closed — resets to `—`).
+- **Draft convention:** any flat `.md` directly in `plans/` (except `ACTIVE.md` and
+  `README.md`) is a plan-mode draft; expand it with
+  `/task:plan-design from-draft <файл>` (`plan-lint` warns about lingering drafts).
 
 **MD-only rule:** the stored plan format is Markdown with strict markers ONLY. Any JSON
 is a derived parser artifact (`plan-lint --json`), never the source of truth.
@@ -100,6 +111,11 @@ execution. Closed an item → update `Phase Status` and the Status Board in `pla
 Under a master plan the general session handoff (skill `session-handoff`) collapses
 here — do not keep a second handoff file.
 
+**"item/phase → handoff → /clear" cycle:** after handoff.md is overwritten, `/clear`
+is recommended — the next item starts from reading the plan (plan.md → phases/Pn.md →
+handoff.md), not the chat tail. plan-exec and plan-close print the fixed reminder line:
+`Context: handoff свежий — рекомендован /clear перед следующим item`.
+
 ## 7. Routing & Thinking Policy (SSOT matrix)
 
 Default role→model/effort routing. Plan section `## 3. Routing` stores ONLY deviations:
@@ -109,9 +125,16 @@ Default role→model/effort routing. Plan section `## 3. Routing` stores ONLY de
 | issue-planner | opus/high | plan-design |
 | invariant-auditor | opus/xhigh | plan-audit |
 | package-implementer | sonnet/medium | plan-exec |
-| small-implementer | haiku/low | LOW slices of dev-loop |
-| repo-explorer | haiku/low | repo recon (grep/read/map) |
+| small-implementer | haiku/low ¹ | LOW slices of dev-loop |
+| repo-explorer | haiku/low ¹ | repo recon (grep/read/map) |
 | docs-curator | sonnet/low | plan-close |
+
+¹ Probe 2026-07-02: a haiku agent with effort=low, launched via the workflow-agent
+API, finished successfully (response received) — the runner accepted the
+haiku+effort=low pair without error. The probe confirms the parameter is accepted
+at the workflow-agent API level; it does NOT verify the behavior of the effort
+frontmatter pin inside interactive Claude Code (a different model/effort selection
+mechanism) — on mismatch, treat the model's default effort as authoritative.
 
 **Thinking policy:**
 
@@ -154,7 +177,24 @@ not the executor on the fly.
 - [ ] Phase-first: phases close sequentially, items don't jump between phases.
 - [ ] `plan-lint` green.
 
-## 11. Related skills
+## 11. Per-project deployment
+
+Plans live IN THE PROJECT, not in `~/.claude/plans/`: top-level key
+`plansDirectory: "plans"` in the project's `.claude/settings.json` (shared, committed).
+Rollout — three layers:
+
+- `harness hooks --target <проект> --plans-dir plans` — targeted knob (a key already
+  set to a different value is respected — not overwritten);
+- `maind sync --only plans-dir,plans-doc` — fleet of onboarded projects
+  (opt-out: `project.plans_dir="off"`);
+- `skiller integrate` — new onboardings (plans-dir block, default "yes").
+
+The convention is delivered to the project by the managed CLAUDE.md block
+`maind:plan-conventions` (provisioner `plans-doc`). Bridge from built-in plan mode: the
+approved plan is saved as a flat draft in `plans/` → `/task:plan-design from-draft <файл>`
+expands it into `plans/<ID>/` per this skill's templates (draft deleted, history in git).
+
+## 12. Related skills
 
 - `task-brief-template` (general) — single task without a master plan.
 - `session-handoff` (general) — arbitrary-session handoff; under a master plan the handoff lives in `plans/<ID>/handoff.md`.
@@ -162,4 +202,4 @@ not the executor on the fly.
 - `context-economy` (general) — Plan→Clear→Execute, token discipline.
 - `anti-drift` (general) — executor iteration discipline, circuit breaker.
 
-<!-- ru-source-sha256: 2c5fbb8eb1836a7f8eab7fd2f8ca671ff2f0f6630ec84f6205e96839ba758304 -->
+<!-- ru-source-sha256: 488e78ed0be1340629551e2ebad73b5f52f56704e286b45700a26597b63c9906 -->

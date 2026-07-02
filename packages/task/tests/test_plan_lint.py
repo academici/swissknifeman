@@ -8,8 +8,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from fixtures import handoff_md, phase_md, plan_md, write_valid_plan  # noqa: E402
-from task.plan_lint import Diagnostics, discover_plan_dirs, lint_plan, main  # noqa: E402
+from fixtures import active_md, handoff_md, phase_md, plan_md, write_valid_plan  # noqa: E402
+from task.plan_lint import (  # noqa: E402
+    Diagnostics, discover_plan_dirs, lint_plan, lint_plans_root, main,
+)
 
 
 def _lint(plan_dir):
@@ -369,6 +371,39 @@ class TestHandoffMd(TmpPlanTestCase):
         self.assertFalse(diag.ok)
         self.assertTrue(_errors_containing(diag, "item «P9.9» не существует ни в одной фазе"))
 
+    def test_handoff_next_plan_closed_allowed(self):
+        # все items терминальны → Next «план закрыт» без ссылки plan-exec — валиден
+        plan_dir = write_valid_plan(self.root)
+        text = (plan_dir / "handoff.md").read_text(encoding="utf-8")
+        text = text.replace("**Next:** /task:plan-exec DEMO-1 P1.1\n",
+                            "**Next:** план закрыт — все фазы терминальны.\n")
+        (plan_dir / "handoff.md").write_text(text, encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok)
+
+    def test_handoff_next_plan_closed_rejected_when_items_active(self):
+        # «план закрыт» при живом 🟡 item — не оправдание, ERROR остаётся
+        plan_dir = write_valid_plan(self.root)
+        p1 = plan_dir / "phases" / "P1.md"
+        text = p1.read_text(encoding="utf-8")
+        text = text.replace("**Status:** 🟢 Done", "**Status:** 🟡 In progress")
+        text = text.replace("| P1.1 | Валидация конфига | 🟢 Done |",
+                            "| P1.1 | Валидация конфига | 🟡 In progress |")
+        p1.write_text(text, encoding="utf-8")
+        plan = plan_dir / "plan.md"
+        text = plan.read_text(encoding="utf-8")
+        text = text.replace("| P1 | Фаза раз | 1/1 | 🟢 Done |",
+                            "| P1 | Фаза раз | 0/1 | 🟡 In progress |")
+        plan.write_text(text, encoding="utf-8")
+        ho = plan_dir / "handoff.md"
+        text = ho.read_text(encoding="utf-8")
+        text = text.replace("**Next:** /task:plan-exec DEMO-1 P1.1\n",
+                            "**Next:** план закрыт.\n")
+        ho.write_text(text, encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertFalse(diag.ok)
+        self.assertTrue(_errors_containing(diag, "Next не содержит «/task:plan-exec"))
+
 
 class TestGlobalUniqueness(TmpPlanTestCase):
     def test_duplicate_item_id_across_phases(self):
@@ -478,6 +513,104 @@ class TestWarnings(TmpPlanTestCase):
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok, diag.errors)
         self.assertTrue(any("пустые Required Reads" in w for w in diag.warnings))
+
+
+class TestPlansRoot(TmpPlanTestCase):
+    """Root-level проверки (path = plans/ целиком): ACTIVE.md + черновики (P1.5)."""
+
+    def _plans_root(self):
+        return self.root / "plans"
+
+    def test_valid_active_pointing_to_existing_plan_ok(self):
+        write_valid_plan(self.root, "DEMO-1")
+        (self._plans_root() / "ACTIVE.md").write_text(active_md("DEMO-1"), encoding="utf-8")
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = main([str(self._plans_root())])
+        self.assertEqual(code, 0, err.getvalue())
+        self.assertEqual(err.getvalue(), "")
+
+    def test_active_dash_means_no_active_plan_ok(self):
+        write_valid_plan(self.root, "DEMO-1")
+        (self._plans_root() / "ACTIVE.md").write_text(active_md("—"), encoding="utf-8")
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = main([str(self._plans_root())])
+        self.assertEqual(code, 0, err.getvalue())
+
+    def test_active_pointing_to_nonexistent_plan_is_error(self):
+        write_valid_plan(self.root, "DEMO-1")
+        (self._plans_root() / "ACTIVE.md").write_text(active_md("NO-SUCH-PLAN"), encoding="utf-8")
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = main([str(self._plans_root())])
+        self.assertEqual(code, 1)
+        self.assertIn("не указывает на существующий план", err.getvalue())
+
+    def test_active_md_without_active_field_is_error(self):
+        write_valid_plan(self.root, "DEMO-1")
+        (self._plans_root() / "ACTIVE.md").write_text("# ACTIVE\n\nничего полезного\n", encoding="utf-8")
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = main([str(self._plans_root())])
+        self.assertEqual(code, 1)
+        self.assertIn("нет поля «**Active:**»", err.getvalue())
+
+    def test_two_in_progress_plans_without_active_warns(self):
+        write_valid_plan(self.root, "DEMO-1")
+        write_valid_plan(self.root, "DEMO-2")
+        # дефолт фикстуры — Meta Status «🟢 Done»; переводим оба плана в «🟡 In progress»
+        # (только Meta-строку — консистентность items/board эта проверка не трогает).
+        for pid in ("DEMO-1", "DEMO-2"):
+            p = self._plans_root() / pid / "plan.md"
+            text = p.read_text(encoding="utf-8").replace(
+                "| Status | 🟢 Done |", "| Status | 🟡 In progress |")
+            p.write_text(text, encoding="utf-8")
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = main([str(self._plans_root())])
+        self.assertEqual(code, 0, err.getvalue())  # WARNING, не ERROR
+        self.assertIn("активный план неоднозначен", err.getvalue())
+
+    def test_single_in_progress_plan_without_active_is_clean(self):
+        write_valid_plan(self.root, "DEMO-1")  # дефолт Meta Status «🟢 Done» — не 🟡
+        diag = Diagnostics()
+        model = lint_plan(self._plans_root() / "DEMO-1", diag)
+        lint_plans_root(self._plans_root(), {"DEMO-1": model}, diag)
+        self.assertTrue(diag.ok, diag.errors)
+        self.assertEqual(diag.warnings, [])
+
+    def test_draft_flat_md_warns_with_from_draft_hint(self):
+        write_valid_plan(self.root, "DEMO-1")
+        (self._plans_root() / "sketch.md").write_text("# черновик\n", encoding="utf-8")
+        (self._plans_root() / "ACTIVE.md").write_text(active_md("DEMO-1"), encoding="utf-8")
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = main([str(self._plans_root())])
+        self.assertEqual(code, 0, err.getvalue())
+        self.assertIn("черновики plan mode", err.getvalue())
+        self.assertIn("sketch.md", err.getvalue())
+        self.assertIn("/task:plan-design from-draft", err.getvalue())
+
+    def test_readme_and_active_are_not_drafts(self):
+        write_valid_plan(self.root, "DEMO-1")
+        (self._plans_root() / "README.md").write_text("# readme\n", encoding="utf-8")
+        (self._plans_root() / "ACTIVE.md").write_text(active_md("DEMO-1"), encoding="utf-8")
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = main([str(self._plans_root())])
+        self.assertEqual(code, 0, err.getvalue())
+        self.assertEqual(err.getvalue(), "")
+
+    def test_single_plan_mode_ignores_sibling_active_md(self):
+        # plan-lint.py plans/<ID> (одиночный режим) не видит ACTIVE.md вовсе — даже
+        # битый (указывающий на несуществующий план) не должен на него влиять.
+        plan_dir = write_valid_plan(self.root, "DEMO-1")
+        (self._plans_root() / "ACTIVE.md").write_text(active_md("NO-SUCH-PLAN"), encoding="utf-8")
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = main([str(plan_dir)])
+        self.assertEqual(code, 0, err.getvalue())
 
 
 class TestDiscoveryAndCli(TmpPlanTestCase):

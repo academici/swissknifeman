@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 0.1.0
+version: 0.2.0
 description: "Исполняемые мастер-планы в plans/<ID>: схемы plan/phase/task, 6 статусов, handoff-стандарт, роутинг моделей, команды /task:plan-*."
 risk: write
 persona: oss-dev
@@ -9,7 +9,7 @@ tags: [workflow, planning, handoff, routing, multi-model]
 requires: []
 produces_for: [session-handoff, complex-task-orchestrator]
 outputs: ["plans/<PLAN-ID>/plan.md", "plans/<PLAN-ID>/phases/*.md", "plans/<PLAN-ID>/handoff.md"]
-snippets: ["plan-template.md", "phase-template.md", "handoff-template.md"]
+snippets: ["plan-template.md", "phase-template.md", "handoff-template.md", "active-template.md"]
 adapters: [claude, cursor, fable]
 sha256: ""
 ---
@@ -36,6 +36,17 @@ plans/<PLAN-ID>/
 ```
 
 `PLAN-ID` = `[A-Z][A-Z0-9-]+` (например `AUDIT-W2`, `MIGRATE-V3`).
+
+Корень `plans/` рядом с каталогами планов:
+
+- **`plans/ACTIVE.md`** — плоский указатель активного плана. Канон — РОВНО 4 строки
+  (парсится `plan-lint`): `# ACTIVE`, пустая строка, `**Active:** <PLAN-ID>`
+  (нет активного — `—`), `**Updated:** <YYYY-MM-DD>`. Скелет —
+  `snippets/active-template.md`. Ведут команды: `plan-design` (режимы new/from-draft —
+  ставит ID нового плана) и `plan-close` (закрыт ВЕСЬ план — сбрасывает в `—`).
+- **Конвенция черновиков:** любой плоский `.md` прямо в `plans/` (кроме `ACTIVE.md` и
+  `README.md`) — черновик plan mode; разворачивается командой
+  `/task:plan-design from-draft <файл>` (`plan-lint` предупреждает о залежавшихся).
 
 **ПРАВИЛО MD-only:** Хранимый формат плана — только Markdown с жёсткими маркерами.
 Любой JSON — производный артефакт парсера (`plan-lint --json`), не источник истины.
@@ -109,6 +120,12 @@ item/фазы (история версий — в git, не в файле). Ск
 При мастер-плане общий session-handoff (скилл `session-handoff`) сворачивается
 сюда — второй handoff-файл не заводить.
 
+**Цикл «item/фаза → handoff → /clear»:** после перезаписи handoff.md рекомендован
+`/clear` — следующий item стартует с чтения плана (plan.md → phases/Pn.md →
+handoff.md), а не хвоста чата. plan-exec и plan-close печатают фиксированную
+строку-напоминание:
+`Context: handoff свежий — рекомендован /clear перед следующим item`.
+
 ## 7. Routing & Thinking Policy (SSOT-матрица)
 
 Дефолтный роутинг ролей на модели/effort. Секция `## 3. Routing` плана хранит
@@ -119,9 +136,15 @@ item/фазы (история версий — в git, не в файле). Ск
 | issue-planner | opus/high | plan-design |
 | invariant-auditor | opus/xhigh | plan-audit |
 | package-implementer | sonnet/medium | plan-exec |
-| small-implementer | haiku/low | LOW-срезы dev-loop |
-| repo-explorer | haiku/low | разведка репо (grep/read/map) |
+| small-implementer | haiku/low ¹ | LOW-срезы dev-loop |
+| repo-explorer | haiku/low ¹ | разведка репо (grep/read/map) |
 | docs-curator | sonnet/low | plan-close |
+
+¹ Проба 2026-07-02: haiku-агент с effort=low, запущенный через workflow-agent API,
+успешно завершился (ответ получен) — раннер принял пару haiku+effort=low без ошибки.
+Проба подтверждает приёмку параметра на уровне workflow-agent API; поведение
+frontmatter-пина effort внутри интерактивного Claude Code ею НЕ проверено (другой
+механизм выбора модели/effort) — при расхождении считать дефолтным effort модели.
 
 **Thinking policy:**
 
@@ -169,7 +192,24 @@ item/фазы (история версий — в git, не в файле). Ск
 - [ ] Phase-first: фазы закрываются последовательно, item'ы не прыгают между фазами.
 - [ ] `plan-lint` зелёный.
 
-## 11. Связанные скиллы
+## 11. Per-project deployment
+
+Планы живут В ПРОЕКТЕ, не в `~/.claude/plans/`: top-level ключ
+`plansDirectory: "plans"` в `.claude/settings.json` проекта (шаримый, коммитится).
+Раскатка — три слоя:
+
+- `harness hooks --target <проект> --plans-dir plans` — точечная ручка (ключ, занятый
+  другим значением, уважается — не перезаписывается);
+- `maind sync --only plans-dir,plans-doc` — флот онбордженных проектов
+  (opt-out: `project.plans_dir="off"`);
+- `skiller integrate` — новые онбординги (блок plans-dir, дефолт «да»).
+
+Конвенцию в проект приносит managed-блок `maind:plan-conventions` в CLAUDE.md
+(провижионер `plans-doc`). Мост из встроенного plan mode: одобренный план сохраняется
+плоским черновиком в `plans/` → `/task:plan-design from-draft <файл>` разворачивает
+его в `plans/<ID>/` по шаблонам этого скилла (черновик удаляется, история — в git).
+
+## 12. Связанные скиллы
 
 - `task-brief-template` (general) — одиночная задача без мастер-плана.
 - `session-handoff` (general) — handoff произвольной сессии; при мастер-плане

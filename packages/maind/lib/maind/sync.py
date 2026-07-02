@@ -319,6 +319,57 @@ def _output_style_run(env, config, projects, mode, dry):
     return results
 
 
+def _plans_dir_run(env, config, projects, mode, dry):
+    """plansDirectory=plans в .claude/settings.json уже онбордженных проектов — второй слой
+    раскатки per-project plan-системы (дизайн A фазы P1): догоняет проекты, онбордженные ДО
+    появления этого провиженера (`skiller integrate` ставит plans-dir только на НОВЫХ). Опт-аут
+    per-project: project.plans_dir="off" — тогда пропуск (harness вообще не зовём). Отличие от
+    output-style: `block_plans_dir` в harness (P1.1) сам НЕ перезаписывает чужое значение —
+    ключ занят ДРУГИМ значением → skip внутри harness (уважает локальный выбор), поэтому здесь
+    массовый `sync --all` безопасен и без доп. защиты; опт-аут остаётся нужен для проектов,
+    вовсе не желающих plans/ (harness не вызывается вообще, а не вызывается с off — off у
+    harness снимает только НАШ дефолт)."""
+    from .orchestrate import run_capability
+    results = []
+    for p in projects:
+        val = p.get("plans_dir", "plans")
+        if not val or val == "off":
+            results.append(_result("plans-dir", p["id"], "skip",
+                                   detail="project.plans_dir=off"))
+            continue
+        if not p.get("local_path"):
+            results.append(_result("plans-dir", p["id"], "skip", detail="нет пути проекта"))
+            continue
+        try:
+            rc = run_capability(env, config, p["id"], "env:hooks",
+                                ["--plans-dir", val], dry=dry)
+            results.append(_result("plans-dir", p["id"], "ok" if rc == 0 else "failed",
+                                   changed=rc == 0, detail=f"value={val} rc={rc}"))
+        except SystemExit:
+            results.append(_result("plans-dir", p["id"], "skip",
+                                   detail="harness недоступен"))
+    return results
+
+
+def _plans_doc_run(env, config, projects, mode, dry):
+    """Управляемый блок конвенции планов (`## Планы проекта — конвенция plan-protocol`) в
+    CLAUDE.md проектов — третий слой раскатки per-project plan-системы (дизайн C фазы P1):
+    агент видит конвенцию прямо в CLAUDE.md, централизованно обновляемую hashed-блоком
+    (маркер maind:plan-conventions в health.apply_plans_doc). Опт-аут — ТА ЖЕ ручка, что у
+    plans-dir: project.plans_dir="off" (одна ручка на оба провиженера — конвенция без
+    раскатанного plansDirectory бессмысленна)."""
+    from .health import apply_plans_doc
+    results = []
+    for p in projects:
+        val = p.get("plans_dir", "plans")
+        if not val or val == "off":
+            results.append(_result("plans-doc", p["id"], "skip",
+                                   detail="project.plans_dir=off"))
+            continue
+        results.append(apply_plans_doc(env, config, p, mode, dry))
+    return results
+
+
 def _router_config_run(env, config, projects, mode, dry):
     """Сгенерить/обновить каталог intent-router (.claude/agent-router.config.json) через
     harness — ТОЛЬКО для проектов, где хук уже включён (opt-in: есть agent-router.env.ini с
@@ -367,11 +418,14 @@ PROVISIONERS = {
     "skills-catalog": _skills_catalog_run,
     "agent-pack": _agent_pack_run,
     "output-style": _output_style_run,
+    "plans-dir": _plans_dir_run,
+    "plans-doc": _plans_doc_run,
     "router-config": _router_config_run,
 }
 ORDER = ["mcp", "code-graph", "graph", "memory", "memory-hook", "health-hook",
          "health-doc", "feature-log-hook", "ecosystem-skill", "setup-skill",
-         "skills-catalog", "agent-pack", "output-style", "router-config"]
+         "skills-catalog", "agent-pack", "output-style", "plans-dir", "plans-doc",
+         "router-config"]
 
 
 def provisioner_names(only=None):
@@ -409,7 +463,7 @@ def cmd_sync(env, argv):
         print("maind sync [--project ID | --namespace NS | --all] [--only mcp,code-graph,"
               "graph,memory,memory-hook,health-hook,health-doc,feature-log-hook,"
               "ecosystem-skill,setup-skill,skills-catalog,agent-pack,output-style,"
-              "router-config] "
+              "plans-dir,plans-doc,router-config] "
               "[--mode install|update|auto] [--dry-run] [--json]")
         return
     mode = opts["mode"] or "auto"

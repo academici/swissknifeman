@@ -7,8 +7,8 @@ generate_hub (хаб). Окружение Claude Code (permissions/MCP/auto-appr
 subprocess (как maind делегирует skiller). Безопасно: --dry-run, merge-only, confirm.
 
 Блоки: пререквизиты → скиллы → permissions → MCP → auto-approve → memory → output-style →
-hub → brain. Скилл-блоки (skills/hub) — здесь; окружение (permissions/MCP/auto-approve/
-memory/output-style) — в harness.
+plans-dir → hub → brain. Скилл-блоки (skills/hub) — здесь; окружение (permissions/MCP/
+auto-approve/memory/output-style/plans-dir) — в harness.
 """
 import subprocess
 import sys
@@ -30,13 +30,13 @@ SKILLS_CHANNELS = ("connect", "vendor", "skip")
 BUNDLES = {
     "minimal":     {"skills": "connect", "perms": False, "mcp": False,
                     "autoapprove": None, "memory": None, "hub": False, "brain": False,
-                    "output_style": "lean"},
+                    "output_style": "lean", "plans_dir": True},
     "recommended": {"skills": "connect", "perms": True, "mcp": True,
                     "autoapprove": "strict", "memory": None, "hub": True, "brain": False,
-                    "output_style": "lean"},
+                    "output_style": "lean", "plans_dir": True},
     "full":        {"skills": "connect", "perms": True, "mcp": True,
                     "autoapprove": "strict", "memory": "federation", "hub": True, "brain": True,
-                    "output_style": "lean"},
+                    "output_style": "lean", "plans_dir": True},
 }
 AA_MODES = ("strict", "permissive", "bypass", "off")
 MEM_MODES = ("file", "federation", "agentmemory", "off")
@@ -254,11 +254,26 @@ def _block_output_style(env, target, choices, dry):
     _run_harness(env, args)
 
 
+def _block_plans_dir(env, target, choices, dry):
+    """Per-project plans/ (harness hooks --plans-dir plans) — plansDirectory в
+    .claude/settings.json (шаримый, коммитится), дефолт «да»: новые онбординги получают
+    plans/ сразу. Ответ «нет» = харнес вообще не звать — НЕ звать с off (у harness off
+    снимает только СВОЙ дефолт plans, это другая семантика, не «не устанавливать»)."""
+    want = choices.get("plans_dir")
+    print(f"\n[7] plans-dir: {'plans' if want else 'пропуск'}")
+    if not want:
+        return
+    args = ["hooks", "--target", str(target), "--plans-dir", "plans"]
+    if dry:
+        args.append("--dry-run")
+    _run_harness(env, args)
+
+
 def _block_hub(env, target, choices, dry):
     # Хаб уже сгенерён внутри connect/vendor, если skills+hub. Иначе — отдельно.
     if not choices["hub"] or choices["skills"]:
         return
-    print("\n[7] Hub")
+    print("\n[8] Hub")
     if dry:
         print("  [dry-run] сгенерировал бы хаб (CLAUDE.md / .ai)")
         return
@@ -271,7 +286,7 @@ def _block_hub(env, target, choices, dry):
 def _block_brain(target, choices):
     if not choices["brain"]:
         return
-    print("\n[8] Brain docs-sync (подсказка — настраивается со стороны волта)")
+    print("\n[9] Brain docs-sync (подсказка — настраивается со стороны волта)")
     print("  В заметке проекта в Brain-волте добавь во frontmatter:")
     print(f"      repo: {target}")
     print("  Затем: brain status <project> / brain sync <project>")
@@ -376,6 +391,9 @@ def _gather(env, target, opts, bundle, interactive):
     ch["output_style"] = "lean" if _ask_yn(
         "Включить терсе-голос агента (output-style lean — экономия токенов)?",
         True, interactive) else None
+    ch["plans_dir"] = _ask_yn(
+        "Включить per-project plans/ (plansDirectory — планы Claude Code в проекте)?",
+        True, interactive)
     ch["hub"] = _ask_yn("Сгенерировать хаб скиллов (CLAUDE.md / .ai)?", True, interactive)
     ch["brain"] = _ask_yn("Показать подсказку по brain docs-sync?", True, interactive)
     return ch
@@ -417,6 +435,7 @@ def cmd_integrate(env, argv):
     _block_autoapprove(env, target, choices, dry)
     _block_memory(env, target, choices, dry)
     _block_output_style(env, target, choices, dry)
+    _block_plans_dir(env, target, choices, dry)
     _block_hub(env, target, choices, dry)
     _block_brain(target, choices)
 

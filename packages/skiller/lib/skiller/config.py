@@ -26,7 +26,7 @@ def _load_core_policy():
     defaults = {
         "skills": ["general/context-economy", "general/anti-drift", "general/compact-responses",
                    "general/session-handoff", "general/mcp-advisor", "general/verify-claims",
-                   "research/query-craft", "oss-dev/gh-review"],
+                   "research/query-craft", "oss-dev/gh-review", "general/plan-protocol"],
         "resident_budget_target": 600,
         "core_plugin": "core",
         "core_buckets": ["general", "oss-dev"],

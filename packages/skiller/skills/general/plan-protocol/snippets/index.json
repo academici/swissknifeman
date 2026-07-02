@@ -15,6 +15,11 @@
       "file": "handoff-template.md",
       "description": "Скелет rolling handoff.md: Next/Done/Remaining/Sources of truth/Open risks + ключи devloop-телеметрии",
       "tags": ["workflow", "handoff", "template"]
+    },
+    {
+      "file": "active-template.md",
+      "description": "Скелет plans/ACTIVE.md — 4-строчный указатель активного плана (Active/Updated)",
+      "tags": ["workflow", "planning", "template"]
     }
   ]
 }

@@ -118,6 +118,16 @@ def handoff_md(plan_id, *, item_id="P1.1"):
 """
 
 
+def active_md(value="DEMO-1", *, updated="2026-07-02"):
+    """plans/ACTIVE.md — канонический формат (4 строки, Phase Context SKM-MASTER-003/P1):
+    `# ACTIVE`, пустая строка, `**Active:** <PLAN-ID>` (или «—»), `**Updated:** <дата>`."""
+    return f"""# ACTIVE
+
+**Active:** {value}
+**Updated:** {updated}
+"""
+
+
 def write_valid_plan(root, plan_id="DEMO-1"):
     """Пишет полностью валидный план (plan-lint должен вернуть 0 ошибок/предупреждений).
     Возвращает Path на plans/<plan_id>."""

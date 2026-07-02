@@ -35,6 +35,7 @@ export default defineConfig({
           items: [
             { text: 'CLI и команды', link: '/guide/cli' },
             { text: 'Жизненный цикл урока', link: '/guide/lifecycle' },
+            { text: 'Тюнинг-параметры', link: '/guide/tuning' },
             { text: 'suggest — черновик скилла (P4)', link: '/guide/suggest' },
           ],
         },

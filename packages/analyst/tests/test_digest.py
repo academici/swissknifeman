@@ -37,7 +37,11 @@ class TestExtractors(unittest.TestCase):
         self.assertEqual(c["provenance"]["detector"], "resolved-failure")
         self.assertIn("test-pass", c["evidence"])
         self.assertIn("attempts:2", c["evidence"])
-        self.assertIn("ServiceTest.php", c["action"])  # top files surfaced
+        # файлы/счётчики вынесены в meta (action — чистый семантический текст, S11)
+        self.assertIn("ServiceTest.php", c["meta"]["files"])
+        self.assertEqual(c["meta"]["attempts"], 2)
+        self.assertNotIn("Уточни", c["action"])
+        self.assertIn("Уточни", c["review_hint"])
 
     def test_failure_without_pass_is_ignored(self):
         rr = _run_report(bash={"tests": [

@@ -12,9 +12,10 @@ from unittest import mock
 
 from core import (DEFAULT_DOCS_VISIBILITY, PROJECT_TYPES, BaseEnv,
                   atomic_write_json, atomic_write_text, detect_project_type,
-                  docs_visibility_for, find_monorepo_root, find_repo_root,
-                  is_within, is_within_lexical, load_json_db, now_iso,
-                  parse_args, parse_flags, run_cmd, safe_load_json, sanitize)
+                  docs_visibility_for, find_monorepo_root, find_run_report,
+                  find_repo_root, is_within, is_within_lexical, load_json_db,
+                  now_iso, parse_args, parse_flags, parse_iso, pid_alive,
+                  read_ndjson, run_cmd, safe_load_json, sanitize, state_dir)
 
 
 class TestText(unittest.TestCase):
@@ -162,6 +163,18 @@ class TestPaths(unittest.TestCase):
             # имя с '../' лексически вырывается за dest → False
             self.assertFalse(is_within_lexical(root / ".." / "evil", root))
             self.assertTrue(is_within_lexical(root / "skill", root))
+
+    def test_state_dir_umbrella_root(self):
+        home = Path("/home/u")
+        self.assertEqual(state_dir(home), home / ".swissknifeman")
+
+    def test_state_dir_app_subdir(self):
+        home = Path("/home/u")
+        self.assertEqual(state_dir(home, "analyst"), home / ".swissknifeman" / "analyst")
+
+    def test_state_dir_accepts_str_home(self):
+        self.assertEqual(state_dir("/home/u", "analyst"),
+                         Path("/home/u") / ".swissknifeman" / "analyst")
 
 
 class TestRepoRoot(unittest.TestCase):
@@ -370,6 +383,98 @@ class TestDocsVisibility(unittest.TestCase):
         from core import DOCS_VISIBILITY_BY_TYPE
         for t in PROJECT_TYPES:
             self.assertIn(t, DOCS_VISIBILITY_BY_TYPE, t)
+
+
+class TestParseIso(unittest.TestCase):
+    def test_z_suffix(self):
+        dt = parse_iso("2026-07-01T12:00:00Z")
+        self.assertIsNotNone(dt)
+        self.assertEqual(dt.utcoffset().total_seconds(), 0)
+
+    def test_offset(self):
+        self.assertIsNotNone(parse_iso("2026-07-01T12:00:00+03:00"))
+
+    def test_fractional_various_digit_counts(self):
+        # py39 fromisoformat не принимал 2/4/7 знаков дробной части — нормализуем
+        for s in ("2026-07-01T12:00:00.1Z", "2026-07-01T12:00:00.12Z",
+                  "2026-07-01T12:00:00.1234Z", "2026-07-01T12:00:00.1234567Z",
+                  "2026-07-01T12:00:00.123456Z"):
+            self.assertIsNotNone(parse_iso(s), s)
+
+    def test_naive_treated_as_utc(self):
+        dt = parse_iso("2026-07-01T12:00:00")
+        self.assertIsNotNone(dt)
+        self.assertEqual(dt.utcoffset().total_seconds(), 0)
+
+    def test_now_iso_roundtrip(self):
+        self.assertIsNotNone(parse_iso(now_iso()))
+
+    def test_bad_input(self):
+        for s in (None, "", "not-a-date", 123, "2026-13-99"):
+            self.assertIsNone(parse_iso(s), repr(s))
+
+    def test_chronological_order_with_fractions(self):
+        a = parse_iso("2026-07-01T12:00:00.1Z")
+        b = parse_iso("2026-07-01T12:00:00.9Z")
+        self.assertLess(a, b)
+
+
+class TestPidAlive(unittest.TestCase):
+    def test_current_process_alive(self):
+        self.assertTrue(pid_alive(os.getpid()))
+
+    def test_none_unknown(self):
+        self.assertIsNone(pid_alive(None))
+        self.assertIsNone(pid_alive(0))
+
+    def test_huge_pid_no_crash(self):
+        # OverflowError на огромном pid не должен ронять вызывающего
+        self.assertTrue(pid_alive(10 ** 12))
+
+    def test_dead_pid(self):
+        # почти наверняка несуществующий pid
+        self.assertFalse(pid_alive(2 ** 22 - 1))
+
+
+class TestReadNdjson(unittest.TestCase):
+    def test_skips_blank_and_broken_and_nondict(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "x.ndjson"
+            p.write_text('{"a":1}\n\n  \nне-json\n[1,2]\n{"b":2}\n',
+                         encoding="utf-8")
+            self.assertEqual(read_ndjson(p), [{"a": 1}, {"b": 2}])
+
+    def test_missing_file(self):
+        with tempfile.TemporaryDirectory() as d:
+            self.assertEqual(read_ndjson(Path(d) / "nope.ndjson"), [])
+
+
+class TestFindRunReport(unittest.TestCase):
+    def _make(self, root, sid, payload):
+        runs = Path(root) / ".claude" / "runs"
+        runs.mkdir(parents=True, exist_ok=True)
+        (runs / f"{sid}.json").write_text(json.dumps(payload), encoding="utf-8")
+
+    def test_by_session(self):
+        with tempfile.TemporaryDirectory() as d:
+            self._make(d, "s1", {"session_id": "s1"})
+            self.assertEqual(find_run_report(d, "s1")["session_id"], "s1")
+
+    def test_latest(self):
+        with tempfile.TemporaryDirectory() as d:
+            self._make(d, "s1", {"session_id": "s1"})
+            self.assertIsNotNone(find_run_report(d))
+
+    def test_no_dir(self):
+        with tempfile.TemporaryDirectory() as d:
+            self.assertIsNone(find_run_report(d))
+
+    def test_expanduser(self):
+        # ~-путь должен раскрываться (расхождение, которое чинит вынос в core)
+        with tempfile.TemporaryDirectory() as home:
+            with mock.patch.dict(os.environ, {"HOME": home}):
+                self._make(home, "s1", {"session_id": "s1"})
+                self.assertIsNotNone(find_run_report("~", "s1"))
 
 
 if __name__ == "__main__":

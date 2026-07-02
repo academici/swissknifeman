@@ -56,6 +56,27 @@ class TestOnboard(unittest.TestCase):
             self.assertEqual(names["deploy"], "ok")
             self.assertTrue((proj_dir / ".mcp.json").exists())
 
+    def test_cmd_onboard_escalates_on_unavailable_dep(self):
+        # S9: skiller недоступен → шаг skills skipped(недоступен) → rc≠0 (не «зелёный»)
+        with tempfile.TemporaryDirectory() as tmp:
+            root, env = make_repo(tmp)
+            _seed_config(root)
+            proj_dir = Path(tmp) / "p2"
+            proj_dir.mkdir()
+            with self.assertRaises(SystemExit) as cm:
+                onb.cmd_onboard(env, [str(proj_dir), "--yes"])
+            self.assertNotEqual(cm.exception.code, 0)
+
+    def test_cmd_onboard_allow_partial_no_escalation(self):
+        # --allow-partial: осознанный частичный онбординг не эскалирует
+        with tempfile.TemporaryDirectory() as tmp:
+            root, env = make_repo(tmp)
+            _seed_config(root)
+            proj_dir = Path(tmp) / "p3"
+            proj_dir.mkdir()
+            onb.cmd_onboard(env, [str(proj_dir), "--yes", "--allow-partial"])
+            self.assertTrue(get(load_config(env)[0], "p3"))  # дошли без SystemExit
+
     def test_dry_run_writes_nothing(self):
         orig = onb.run_capability
         onb.run_capability = lambda *a, **k: 0

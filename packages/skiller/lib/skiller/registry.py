@@ -1,8 +1,9 @@
 """registry — регенерация skills.json + плагин-манифестов + графа (мейнтейнер)."""
 import hashlib
 import json
+import sys
 
-from core import atomic_write_text, find_repo_root, run_cmd
+from core import atomic_write_text, find_repo_root, run_cmd, safe_load_json
 
 from .common import (MARKETPLACE, die, parse_flags, parse_frontmatter,
                      parse_inline_list, skill_content_hash)
@@ -57,7 +58,13 @@ def build_registry(env):
         # Provenance: upstream.json next to SKILL.md marks an external skill
         upstream_file = skill_md.parent / "upstream.json"
         if upstream_file.exists():
-            up = json.loads(upstream_file.read_text(encoding="utf-8"))
+            # Битый upstream.json НЕ роняем голым traceback на полпути генерации и
+            # НЕ проваливаем тихо в source="local" (это исказило бы провенанс
+            # внешнего скилла в marketplace) — внятная ошибка с путём к файлу.
+            up = safe_load_json(
+                upstream_file,
+                on_error=lambda e, f=upstream_file: die(f"битый upstream.json: {f}: {e}"),
+            )
             files = up.get("files", [])
             main = next((f for f in files if f.get("path") == "SKILL.md"),
                         files[0] if files else {})
@@ -115,10 +122,10 @@ def _repo_root(pkg_root):
     return find_repo_root(pkg_root) or pkg_root
 
 
-def write_plugin_manifests(env, bucket_meta, bucket_dirs):
-    """Записать skills/*/.claude-plugin/plugin.json (в пакете) + marketplace.json
-    (в корне монорепо). source-пути плагинов — относительно корня репо.
-    Возвращает число плагинов."""
+def build_plugin_manifests(env, bucket_meta, bucket_dirs):
+    """Вычислить ВСЕ plugin-манифесты БЕЗ записи: [(path, data_dict)] в порядке записи;
+    последний элемент — marketplace.json (корень репо). Чистая (source of truth для
+    write_plugin_manifests и registry --check drift-гейта). source-пути от корня репо."""
     root = env.root
     repo_root = _repo_root(root)
     # Префикс пакета относительно корня репо: "packages/skiller" или "" (standalone)
@@ -129,8 +136,10 @@ def write_plugin_manifests(env, bucket_meta, bucket_dirs):
         """source-путь плагина от корня репо: ./packages/skiller/<sub> или ./<sub>."""
         return f"{prefix}/{sub}" if rel_pkg else f"./{sub}"
 
+    manifests = []
+
     def write_json(path, data):
-        atomic_write_text(path, json.dumps(data, indent=2, ensure_ascii=False) + "\n")
+        manifests.append((path, data))
 
     def skills_dirs(plugin_root):
         """Dirs (relative, ./-prefixed) whose subdirs contain SKILL.md files."""
@@ -240,7 +249,48 @@ def write_plugin_manifests(env, bucket_meta, bucket_dirs):
         "owner": OWNER,
         "plugins": sorted(marketplace_plugins, key=lambda p: p["name"]),
     })
-    return len(marketplace_plugins)
+    return manifests
+
+
+def _manifest_text(data):
+    return json.dumps(data, indent=2, ensure_ascii=False) + "\n"
+
+
+def write_plugin_manifests(env, bucket_meta, bucket_dirs):
+    """Записать все plugin-манифесты + marketplace.json (атомарно). Возвращает число плагинов."""
+    manifests = build_plugin_manifests(env, bucket_meta, bucket_dirs)
+    for path, data in manifests:
+        atomic_write_text(path, _manifest_text(data))
+    # число плагинов = размер marketplace.plugins (последний манифест — marketplace.json)
+    return len(manifests[-1][1]["plugins"])
+
+
+def check_drift(env):
+    """[relpath] сгенерированных артефактов, отставших от источников ([] если чисто).
+    Пересобирает реестр+манифесты+_index.md в памяти и сверяет с диском — гейт против
+    тихого дрейфа skills.json/marketplace.json (validate.sh лишь проверял валидность JSON)."""
+    root = env.root
+    repo_root = _repo_root(root)
+    registry, bucket_meta, bucket_dirs = build_registry(env)
+    drift = []
+
+    def _cmp(path, expected):
+        try:
+            actual = path.read_text(encoding="utf-8")
+        except OSError:
+            actual = None
+        if actual != expected:
+            try:
+                rel = path.relative_to(repo_root).as_posix()
+            except ValueError:
+                rel = str(path)
+            drift.append(rel)
+
+    _cmp(root / "skills.json", json.dumps(registry, indent=2, ensure_ascii=False) + "\n")
+    _cmp(root / "skills" / "_index.md", render_index(registry, bucket_meta))
+    for path, data in build_plugin_manifests(env, bucket_meta, bucket_dirs):
+        _cmp(path, _manifest_text(data))
+    return drift
 
 
 def render_index(registry, bucket_meta):
@@ -291,10 +341,21 @@ def render_index(registry, bucket_meta):
 
 
 def cmd_registry(env, argv):
-    # registry не принимает флагов, но help/неизвестные обрабатываем единообразно
-    opts = parse_flags(argv, {})
+    opts = parse_flags(argv, {"--check": "bool"})
     if opts["help"]:
-        print("skiller registry")
+        print("skiller registry [--check]\n"
+              "  без флага — регенерировать skills.json/_index.md/манифесты/граф/бюджет;\n"
+              "  --check   — НЕ писать, а сверить артефакты с источниками (drift-гейт, rc=1 при дрейфе).")
+        return
+    if opts["check"]:
+        drift = check_drift(env)
+        if drift:
+            print("DRIFT: сгенерированные артефакты отстали от источников — прогони `skiller registry`:",
+                  file=sys.stderr)
+            for d in drift:
+                print(f"  - {d}", file=sys.stderr)
+            sys.exit(1)
+        print("registry --check: артефакты актуальны (skills.json/_index.md/манифесты)")
         return
     root = env.root
     registry, bucket_meta, bucket_dirs = build_registry(env)

@@ -14,25 +14,12 @@ import json
 import os
 from pathlib import Path
 
-from .common import parse_args, run_cmd, safe_load_json
+from .common import find_run_report, parse_args, run_cmd
 from .config import load_config
 from .health import _target
 
 
-# ── источник 1: run-report (первичный) ───────────────────────────────────────
-def find_run_report(project_path, session=None):
-    """Свежий (или по session) <project>/.claude/runs/*.json. None если нет каталога/файлов."""
-    runs = Path(project_path) / ".claude" / "runs"
-    if not runs.is_dir():
-        return None
-    if session:
-        f = runs / f"{session}.json"
-        return safe_load_json(f, None) if f.is_file() else None
-    files = [p for p in runs.glob("*.json") if p.is_file()]
-    if not files:
-        return None
-    latest = max(files, key=lambda p: p.stat().st_mtime)
-    return safe_load_json(latest, None)
+# ── источник 1: run-report (первичный) — единый core.find_run_report (раскрывает ~)
 
 
 # ── источник 2: лог Bash (форензика; БЕЗ кодов возврата — PreToolUse) ─────────

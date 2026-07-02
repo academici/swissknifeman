@@ -232,7 +232,8 @@ def cmd_scan(env, argv):
               "  Обход config.json:projects[] → per-project уроки → Jaccard-кластеры → паттерны в ≥N\n"
               "  проектах (namespace-изолированно) → draft-предложения в ~/.swissknifeman/analyst/.\n"
               "  Реконсиляция: осиротевшие index+suggestion файлы (исчезнувшие паттерны) снимаются\n"
-              "  СТРОГО в scope прогона (--no-prune выключает; --dry-run только показывает).")
+              "  СТРОГО в scope прогона (--no-prune выключает; --dry-run ничего не пишет и\n"
+              "  показывает would-prune ОТНОСИТЕЛЬНО would-be-written паттернов этого прогона).")
         return
 
     try:

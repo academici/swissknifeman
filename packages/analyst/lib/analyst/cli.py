@@ -12,6 +12,7 @@ from .promote import cmd_deprecate, cmd_promote
 from .recompute import cmd_recompute
 from .review import cmd_review
 from .scan import cmd_scan
+from .status import cmd_compact, cmd_status
 from .suggest import cmd_suggest
 
 COMMANDS = {
@@ -22,6 +23,8 @@ COMMANDS = {
     "recompute": cmd_recompute,
     "promote": cmd_promote,
     "deprecate": cmd_deprecate,
+    "status": cmd_status,
+    "compact": cmd_compact,
     "doctor": cmd_doctor,
 }
 

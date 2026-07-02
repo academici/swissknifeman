@@ -5,12 +5,11 @@
 PYTHONPATH). Реэкспортируем ради `from .common import ...` в модулях пакета."""
 import os
 from dataclasses import dataclass
-from pathlib import Path
 
 from core import (  # noqa: F401
     HOME, BaseEnv, atomic_write_json, atomic_write_text, confirm,
-    die, find_monorepo_root, now_iso, parse_args, run_cmd, safe_load_json,
-    sanitize, warn,
+    die, find_monorepo_root, find_run_report, now_iso, parse_args, parse_iso,
+    read_ndjson, run_cmd, safe_load_json, sanitize, state_dir, warn,
 )
 
 
@@ -24,7 +23,7 @@ class Env(BaseEnv):
     def state_dir(self):
         """Единый cross-project слой (кластеры/suggestions). Общий state зонтика —
         ~/.swissknifeman (им владеет skiller); analyst кладёт свой подкаталог."""
-        return self.home / ".swissknifeman" / "analyst"
+        return state_dir(self.home, "analyst")
 
     @property
     def monorepo_root(self):

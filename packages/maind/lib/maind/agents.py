@@ -6,9 +6,9 @@
 import json
 import os
 import signal
-from datetime import datetime, timezone
 
-from .common import atomic_write_json, die, load_json_db, now_iso, parse_args
+from .common import (atomic_write_json, die, load_json_db, now_iso, parse_args,
+                     parse_iso, pid_alive)
 from .config import load_config
 from .constants import AGENT_STALE_FACTOR, HEARTBEAT_DEFAULT_MS
 
@@ -23,36 +23,16 @@ def save(env, db):
     atomic_write_json(env.agents_db, db, version=1)
 
 
-# ── деривация состояния ──────────────────────────────────────────────────────
-def _parse_iso(s):
-    try:
-        return datetime.strptime(s, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
-    except (TypeError, ValueError):
-        return None
-
-
+# ── деривация состояния (парс времени/pid — единые core-примитивы) ───────────
 def _age_ms(last, now):
-    a, b = _parse_iso(last), _parse_iso(now)
+    a, b = parse_iso(last), parse_iso(now)
     if a is None or b is None:
         return None
     return (b - a).total_seconds() * 1000
 
 
-def _pid_alive(pid):
-    """True/False если pid задан (None → неизвестно). PermissionError = жив (чужой)."""
-    if not pid:
-        return None
-    try:
-        os.kill(int(pid), 0)
-        return True
-    except ProcessLookupError:
-        return False
-    except (PermissionError, OSError, ValueError):
-        return True
-
-
 def _state(agent, now, interval_ms):
-    if _pid_alive(agent.get("pid")) is False:
+    if pid_alive(agent.get("pid")) is False:
         return "dead"
     age = _age_ms(agent.get("last_heartbeat"), now)
     if age is not None and age > interval_ms * AGENT_STALE_FACTOR:

@@ -531,6 +531,32 @@ Field-feedback: агенты неохотно жмут RAG при формиро
   Критерий внедрения — повторная утечка абс.путей/секретов или невозможность поднять MCP без `.example`.
   Маршрутизировано через `field-feedback-loop` из полевого кейса agelto (настройка playwright-MCP).
 
+### Added (аудит волна 3 — docs, эргономика, дедуп)
+
+- **`analyst status` / `analyst compact`** (S16). `status [--json]` — read-only сводка стора:
+  счётчики по состояниям, `curated-ready`, `promote_failed`, число событий, даты последнего
+  `digest`/`recompute`. `compact [--before ISO] [--dry-run]` — детерминированно сводит старые
+  события `events.ndjson` в один snapshot-event на урок; суммы (S/N/tests) и возраст последнего
+  события сохраняются, поэтому `recompute` до и после даёт **ту же** confidence (проверено e2e:
+  0.7968 → 0.7968). Провенанс операции — в `audit.ndjson`. Новый модуль `analyst/status.py` (+10 тестов).
+- **`packages/analyst/docs/guide/tuning.md`** (S13) — единый справочник всех порогов (confidence-
+  арифметика, тиры, state-machine, Jaccard-дедуп/консолидация): параметр · файл · значение ·
+  эффект↑/↓ · метод калибровки. Линкован в сайдбаре (standalone + зонтичный агрегат) и из
+  `lifecycle.md`.
+- **`core.paths.state_dir(home, app=None)`** (S15) — единый источник литерала `.swissknifeman`
+  для зонтичного state (корень `~/.swissknifeman` — skiller; подкаталог `~/.swissknifeman/analyst`).
+  `maind` намеренно НЕ входит (его state `~/.maind` — отдельный node-state, документировано). +3 теста.
+
+### Changed (честность + провенанс)
+
+- **Коммент `analyst/confidence.py` — честный** (S13, D3-дисциплина): убрано ложное «verified
+  perplexity, tune by false-positive rate» → «эвристики, подобранные по форме кривой, НЕ
+  откалибровано по FP-rate» (реальной калибровки не проводилось — отдельная research-задача).
+- **`docs/reference.md`: карточка mem0** (S17, провенанс F-RAG-2) — таксономия консолидации mem0
+  = ADD/UPDATE/DELETE/NOOP; `analyst` адаптирует как **ADD/UPDATE/NOOP/CONFLICT** (`CONFLICT`
+  вместо `DELETE` — авто-удаление нарушило бы инвариант «человек в гейте»). Строка в таблице
+  уточнена + отдельная карточка.
+
 ## [0.7.1] - 2026-06-28
 
 ### Added

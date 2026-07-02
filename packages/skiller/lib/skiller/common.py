@@ -16,10 +16,10 @@ from pathlib import Path
 from core import (  # noqa: F401
     HOME, BaseEnv, atomic_write_json, atomic_write_text, confirm, die,
     find_monorepo_root, is_within, is_within_lexical, now_iso, parse_flags,
-    run_cmd, safe_load_json, sanitize, warn,
+    run_cmd, safe_load_json, sanitize, state_dir, warn,
 )
 
-STATE_DIR = HOME / ".swissknifeman"
+STATE_DIR = state_dir(HOME)
 DB_FILE = STATE_DIR / "projects.json"
 DB_VERSION = 1
 MARKETPLACE = "swissknifeman"
@@ -75,7 +75,7 @@ class Env(BaseEnv):
 
     @property
     def state_dir(self):
-        return self.home / ".swissknifeman"
+        return state_dir(self.home)
 
     @property
     def db_file(self):

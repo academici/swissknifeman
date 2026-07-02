@@ -12,6 +12,8 @@ description: "analyst — continuous learning экосистемы: захват
 - `/analyst:recompute [--now ISO] [--dry-run]` — детерминированный пересчёт confidence из `events.ndjson` + числовая state-machine (авто `ephemeral→candidate`; `curated` — только человек; просадка → soft-deprecate). Демона нет.
 - `/analyst:promote <id> [--to candidate|curated] [--supersedes ID] [--force]` — продвинуть урок по конвейеру; переход в curated требует подтверждения человека и всплывает в память mAInd. Противоречие с активным → flag-and-ask.
 - `/analyst:deprecate <id>` — демоутнуть урок (soft, не удаляется — аудит).
+- `/analyst:status [--json]` — read-only сводка стора: счётчики по состояниям, curated-ready, promote_failed, число событий, даты последнего digest/recompute.
+- `/analyst:compact [--before ISO] [--dry-run]` — свести старые события `events.ndjson` в snapshot на урок (суммы и возраст сохраняются → recompute даёт ту же confidence).
 - `/analyst:doctor` — диагностика окружения.
 
 Разбери намерение пользователя из «$ARGUMENTS». Если оно ясно — назови подходящую команду и предложи

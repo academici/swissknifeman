@@ -9,6 +9,8 @@ import json
 import re
 from pathlib import Path
 
+from core import parse_frontmatter
+
 from .common import parse_flags
 from .settings import write_json
 
@@ -51,34 +53,12 @@ def _keywords_from_description(desc, limit=12):
 
 
 def _frontmatter(path):
-    """Мини-парсер frontmatter: name + description (в т.ч. блок-скаляры >- / | )."""
+    """Frontmatter файла (name + description) через единый core.parse_frontmatter."""
     try:
-        lines = path.read_text(encoding="utf-8").replace("\r\n", "\n").splitlines()
+        text = path.read_text(encoding="utf-8")
     except Exception:
         return {}
-    if not lines or lines[0].strip() != "---":
-        return {}
-    fm, i = {}, 1
-    while i < len(lines):
-        ln = lines[i]
-        if ln.strip() == "---":
-            break
-        m = re.match(r"^([A-Za-z0-9_-]+):\s*(.*)$", ln)
-        if m:
-            key, val = m.group(1), m.group(2).strip()
-            if val in (">", ">-", "|", "|-"):  # блок-скаляр — собрать вложенные строки
-                block, i = [], i + 1
-                while i < len(lines):
-                    nxt = lines[i]
-                    if nxt.strip() == "---" or re.match(r"^[A-Za-z0-9_-]+:\s", nxt):
-                        break
-                    block.append(nxt.strip())
-                    i += 1
-                fm[key] = " ".join(block).strip()
-                continue
-            fm[key] = val.strip('"').strip("'")
-        i += 1
-    return fm
+    return parse_frontmatter(text)
 
 
 def _scan_agents(claude_dir):

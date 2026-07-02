@@ -2,6 +2,37 @@
 
 ## [Unreleased]
 
+### Added (SKM-MASTER-002, волна 4 — pack-guard · живой цикл протокола · метрики ДО)
+
+- **pack-guard (P5.6, слой 2 mutation-защиты, опциональный):** PreToolUse-хук
+  `hooks/pack-guard/` (off | warn | strict; по умолчанию НЕ ставится) — ловит правку
+  generated-файла пака ДО того, как она случилась (решение по `.claude/agent-pack.lock.json`,
+  user_owned-файлы пропускаются; strict → блок с русским объяснением, любая ошибка/нет lock →
+  тихий пропуск, exit 0). Подключение: `harness hooks --target . --pack-guard MODE`;
+  физическая доставка — в `apply-permissions.sh --global`. 16 тестов. Рекомендован для
+  overnight/unattended dev-loop.
+- **Живой цикл протокола (P1.8/P1.10 — фаза A закрыта 10/10):** реальные item'ы P5.6 и P8.1
+  исполнены sonnet-операторами с холодным контекстом строго по `/task:plan-exec`, аудированы
+  opus по `/task:plan-audit`. Главный риск не подтвердился: sonnet не «дорисовывает» план —
+  исполнитель P8.1 сам поймал реальный дрейф (протухший глобальный хук) и честно отказался
+  пинить baseline на пустом окне; cold-start подтверждён (работа только из файлов plans/).
+  По findings аудитов протокол ужесточён: plan-close — гейт незапланированных файлов в дереве
+  закрываемой фазы + «🟢 требует коммита» + реконсиляция устаревших deviations; plan-audit —
+  явная сверка committed vs working-tree; plan-design — правило «тайм-гейтовый Deliverable —
+  отдельный item» (применено к самому плану: выделен P8.5 «пин baseline пилотов»).
+- **Метрики ДО (P8.1):** глобальный хук run-report обновлён до SCHEMA=2 (стоял протухший
+  SCHEMA=1 от раскатки 1 июля — реальный дрейф, пойманный исполнителем; `harness doctor`
+  чист); телеметрия включена на пилотах azguard и chatom (ENABLED=on + SessionEnd);
+  SCHEMA=2-механика проверена на реальном транскрипте в изолированном scratch-cwd (пилотные
+  baseline не засорены синтетикой). Пин baseline — тайм-гейт P8.5 (≥1 недели окна).
+
+### Fixed (волна 4)
+
+- Восстановлен из HEAD некоммиченный регресс-ревёрт `docs/routing.md` (потерян слой analyst,
+  «зонтик из трёх пакетов») и `docs/reference.md` (−24 строки провенанс-карточек) —
+  HIGH-находка adversarial-аудита P5; в `plan-close` добавлен гейт, ловящий такой класс
+  контаминации при закрытии фазы.
+
 ### Added (SKM-MASTER-002, волна 3 — analyst learning loop · bucket optimization)
 
 - **Analyst learning loop (фаза D):** команда **`analyst token-report`**

@@ -60,14 +60,14 @@ P7 — bucket-аудит и разгрузка монолитов (thin-navigato
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P1 | Plan-протокол (фаза A) | 8/10 | 🟡 In progress |
+| P1 | Plan-протокол (фаза A) | 10/10 | 🟢 Done |
 | P2 | Токен-телеметрия end-to-end (фаза B) | 5/5 | 🟢 Done |
 | P3 | Каталог патологий и детекторы (фаза C) | 2/4 | 🟠 Done with deviations |
 | P4 | Analyst learning loop (фаза D) | 1/3 | 🟠 Done with deviations |
-| P5 | Generated Asset Protection (фаза E) | 5/7 | 🟡 In progress |
+| P5 | Generated Asset Protection (фаза E) | 6/7 | 🟠 Done with deviations |
 | P6 | laravel-package stack + пилоты (фаза F) | 5/9 | 🟠 Done with deviations |
 | P7 | Bucket optimization (фаза G) | 3/6 | 🟡 In progress |
-| P8 | Rollout & Acceptance (фаза H) | 0/4 | ⬜ Not started |
+| P8 | Rollout & Acceptance (фаза H) | 0/5 | 🟡 In progress |
 
 ## 5. Decision Log
 
@@ -99,3 +99,4 @@ P7 — bucket-аудит и разгрузка монолитов (thin-navigato
 | 2026-07-02 | orchestrator/fable | Реконсиляция первой половины волны 2 (10/12 агентов workflow wf_b807bda3-dc2): P3 закрыта (P3.1 🟠 · P3.2 🟢 · P3.3 🟠 · P3.4 🟢, Phase Handoff заполнен); P1.9 → 🟢; P5.7 → 🟡 (дока готова, CHANGELOG — в пост-обработке волны); P6.1/P6.2/P6.5 → 🟢, P6.3/P6.4 → 🟠 (deviations задокументированы). P6.6–P6.9 исполняются фоном |
 | 2026-07-02 | orchestrator/fable | Волна 2 завершена (13/13 агентов, 0 ошибок): P6.6 → 🟢 (azguard + 4 доменных оси), P6.7 → 🟠 (chatom + 2 фикса движка), P6.8 → 🟠 (acceptance весь OK, worktree-эмуляция вместо буквального шага 3), P6.9 → 🟢; P6 закрыта 🟠 (Phase Handoff заполнен). P5.7 → 🟢 (CHANGELOG внесён оркестратором: корневой волна 2 Added+Fixed, laravel-package@0.1.0 создан, backend-laravel@0.11.2 бамп+запись, maind). Валидация: 5×validate.sh + 139 core-тестов зелёные |
 | 2026-07-02 | orchestrator/fable | Волна 3 завершена (workflow wf_faac2853-041, 18/19 агентов; sales/sales доделан оркестратором после падения агента на API Overloaded): P4 закрыта 🟠 (P4.1 🟠 ESCALATION --by phase невозможен на текущей схеме run-report · P4.2 🟠 · P4.3 🟢); P7 частично — P7.1/P7.5/P7.6 🟢, P7.2/P7.3 🟠 (10/10 монолитов → thin-navigator, on-trigger 512608→279802 ток), P7.4 ⬜ остаётся (нужно ≥2 недели прод-usage). Попутные фиксы: whitelist bin/analyst и bin/skiller; CHANGELOG волны 3 (Added+Fixed+Known gaps). Валидация: 5×validate.sh + 139 core-тестов зелёные |
+| 2026-07-02 | orchestrator/fable | Волна 4 (workflow wf_c9fdc444-0bf, живой цикл протокола): P5.6 🟢 и P8.1 🟠 исполнены sonnet с холодным контекстом строго по plan-exec; аудиты opus: P8=ATTENTION (5×LOW), P5=RED (HIGH: некоммиченный регресс docs/routing.md+reference.md — восстановлены из HEAD; MED: устаревшая deviation P5.5 — реконсилирована; MED: некоммиченный P5.6 — коммитится этой волной). P1.8/P1.10 → 🟢, P1 закрыта 10/10 🟢. По findings: 4 правки текстов plan-{close,audit,design}.md + новый item P8.5 (тайм-гейтовый пин baseline, Inputs P8.2 перенацелен). P8.2–P8.5 — календарные (≥2026-07-09), исполняются после окна |

@@ -9,7 +9,8 @@ import unittest
 from pathlib import Path
 
 from maind.analyze import (analyze_report, bash_log_forensics, compute_verdict,
-                           find_run_report, git_status, pack_drift, tokens_slice)
+                           find_run_report, git_status, pack_drift, pathology_slice,
+                           tokens_slice)
 from maind.config import load_config
 from tests.fixtures import make_repo, write_maind_config
 
@@ -54,6 +55,23 @@ TOKENS_RR = {"schema": 2, "tools": {"total": 1, "by_name": {"Bash": 1}}, "files_
                        "cache_hit": 0.87, "agents": [], "subagents_parsed": 0,
                        "subagents_skipped": 0},
              "session_id": "t1"}
+
+
+# C-2: patology-фикстуры для core.pathology.detect() поверх run-report.
+# protected-write (attention, вне зависимости от schema) — правки managed-путей.
+PATH_ATTN_RR = {"schema": 1, "tools": {"total": 2, "by_name": {"Edit": 2}},
+                "files_changed": ["/p/a.py"],
+                "bash": {"tests": [{"command": "pytest", "ok": True}], "lints": [], "failed": []},
+                "tool_failures": [], "workflows": [], "devloop": None,
+                "protected_writes": ["packages/skiller/skills/x/SKILL.md"],
+                "session_id": "path-attn1"}
+
+# no-op-run (info) — много тул-вызовов, ни файлов/тестов/retrieval; тест сам зелёный,
+# так что этот отчёт НЕ должен менять вердикт, только попасть в efficiency.
+PATH_INFO_RR = {"schema": 1, "tools": {"total": 25, "by_name": {"Read": 25}},
+                "files_changed": [], "bash": {"tests": [], "lints": [], "failed": []},
+                "tool_failures": [], "workflows": [], "devloop": None,
+                "session_id": "path-info1"}
 
 
 def _write_run(projdir, report):
@@ -443,6 +461,89 @@ class PackDriftCase(unittest.TestCase):
             self.assertEqual(rep["verdict"], "ATTENTION")
             self.assertTrue(any("правлен локально" in r for r in rep["reasons"]))
             self.assertIsInstance(json.dumps(rep, ensure_ascii=False), str)
+
+
+class PathologyCase(unittest.TestCase):
+    """C-2: core.pathology.detect() поверх run-report — attention в reasons вердикта,
+    info в rep['efficiency'], RED от патологий никогда не бывает, schema=1-«спокойный»
+    отчёт не производит ни находок, ни секции."""
+
+    def test_slice_splits_attention_and_info(self):
+        attention, efficiency = pathology_slice(PATH_ATTN_RR)
+        self.assertEqual(len(attention), 1)
+        self.assertIn("managed-путей", attention[0])
+        self.assertEqual(efficiency, [])
+
+    def test_slice_info_goes_to_efficiency(self):
+        attention, efficiency = pathology_slice(PATH_INFO_RR)
+        self.assertEqual(attention, [])
+        self.assertEqual(len(efficiency), 1)
+        self.assertEqual(efficiency[0]["code"], "no-op-run")
+        self.assertEqual(efficiency[0]["severity"], "info")
+
+    def test_slice_defensive_on_none_run_report(self):
+        # run-report может отсутствовать (форензика без источника) — detect() не падает
+        self.assertEqual(pathology_slice(None), ([], []))
+
+    def test_compute_verdict_attention_pathology_never_red(self):
+        v, _c, red, reasons, _rp = compute_verdict(
+            GREEN_RR, {"dirty": False}, None,
+            pathology_attention=["любая патология-строка"])
+        self.assertEqual(v, "ATTENTION")
+        self.assertEqual(red, [])                              # ЖЁСТКО: патологии не дают RED
+        self.assertEqual(reasons, ["любая патология-строка"])
+
+    def test_full_report_attention_pathology_is_verdict_reason(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, env = make_repo(tmp)
+            projdir = Path(tmp) / "proj_path_attn"
+            projdir.mkdir()
+            _write_run(projdir, PATH_ATTN_RR)
+            projects = [{"id": "path-attn", "name": "PathAttn", "type": "node-package",
+                         "status": "active", "local_path": str(projdir)}]
+            write_maind_config(root, projects=projects)
+            config, _ = load_config(env)
+            rep = analyze_report(env, config, config["projects"][0], with_health=False)
+            self.assertEqual(rep["verdict"], "ATTENTION")
+            self.assertEqual(rep["red"], [])                    # RED от патологий не бывает
+            self.assertTrue(any("managed-путей" in r for r in rep["reasons"]))
+            self.assertEqual(rep["efficiency"], [])              # это attention, не info
+            self.assertIsInstance(json.dumps(rep, ensure_ascii=False), str)
+
+    def test_full_report_info_pathology_in_efficiency_verdict_unchanged(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, env = make_repo(tmp)
+            projdir = Path(tmp) / "proj_path_info"
+            projdir.mkdir()
+            _write_run(projdir, PATH_INFO_RR)
+            projects = [{"id": "path-info", "name": "PathInfo", "type": "node-package",
+                         "status": "active", "local_path": str(projdir)}]
+            write_maind_config(root, projects=projects)
+            config, _ = load_config(env)
+            rep = analyze_report(env, config, config["projects"][0], with_health=False)
+            self.assertEqual(rep["verdict"], "GREEN")           # info не меняет вердикт
+            self.assertEqual(rep["red"], [])
+            self.assertEqual(len(rep["efficiency"]), 1)
+            self.assertEqual(rep["efficiency"][0]["code"], "no-op-run")
+            self.assertFalse(any("no-op-run" in r for r in rep["reasons"]))
+            self.assertIsInstance(json.dumps(rep, ensure_ascii=False), str)
+
+    def test_full_report_schema1_clean_report_no_pathology(self):
+        # GREEN_RR — SCHEMA=1 с небольшими объёмами (tools.total=3, файлы с прогнанными
+        # тестами) — detect() пуст: ни секции efficiency, ни лишних reasons.
+        with tempfile.TemporaryDirectory() as tmp:
+            root, env = make_repo(tmp)
+            projdir = Path(tmp) / "proj_path_clean"
+            projdir.mkdir()
+            _write_run(projdir, GREEN_RR)
+            projects = [{"id": "path-clean", "name": "PathClean", "type": "node-package",
+                         "status": "active", "local_path": str(projdir)}]
+            write_maind_config(root, projects=projects)
+            config, _ = load_config(env)
+            rep = analyze_report(env, config, config["projects"][0], with_health=False)
+            self.assertEqual(rep["verdict"], "GREEN")
+            self.assertEqual(rep["efficiency"], [])
+            self.assertEqual(rep["reasons"], [])
 
 
 if __name__ == "__main__":

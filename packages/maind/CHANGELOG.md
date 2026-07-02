@@ -6,6 +6,14 @@
 ## [Unreleased]
 
 ### Added
+- **`analyze` — секция «Эффективность» (патологии прогона, Detect ≠ Gate).** Новый источник
+  `pathology_slice(run_report)` поверх `core/pathology.py` (10 детекторов: file-reread,
+  tool-error-loop, no-op-run, no-verify, cache-miss, overthinking, retrieval-stuffing,
+  protected-write, static-context, fanout): attention-находки уходят в `reasons` → вердикт
+  ATTENTION (той же механикой, что `pack_drift`), info-находки — в machine-readable
+  `rep['efficiency']` и человеко-читаемую секцию «Эффективность» перед «ИТОГ». Инвариант
+  зафиксирован в докстрингах: RED от патологий не бывает никогда. SCHEMA=1-отчёты — блок
+  молча опускается. +8 тестов (`PathologyCase`). Контекст: SKM-MASTER-002 фаза C (P3.2).
 - **`maind sync` — провиженеры `skills-catalog` и `output-style`.** Ретроактивная раздача на уже
   онбордженные проекты: `skills-catalog` (`skm:update` — пере-резолв каталога скиллов с диска,
   новый скилл уже выбранного бакета докатывается без ручного re-onboard) и `output-style`

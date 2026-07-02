@@ -16,6 +16,8 @@ import os
 import statistics
 from pathlib import Path
 
+from core.pathology import detect as pathology_detect
+
 from .common import find_run_report, parse_args, read_ndjson_iter, run_cmd, safe_load_json
 from .config import load_config
 from .health import _target
@@ -236,13 +238,27 @@ def pack_drift(ppath):
     return reasons
 
 
+# ── источник 8: патологии (core.pathology — детекторы поверх run-report, C-2) ─
+def pathology_slice(run_report):
+    """core.pathology.detect() поверх run_report, разложенный по severity:
+    attention-находки уходят evidence-строками в reasons вердикта (через compute_verdict,
+    та же механика, что pack_drift), info-находки — отдельно, в rep['efficiency'] (не влияют
+    на вердикт). detect() сама защитна (None/не-dict/битые срезы → []) — здесь только разбор."""
+    findings = pathology_detect(run_report)
+    attention = [f["evidence"] for f in findings if f.get("severity") == "attention"]
+    efficiency = [f for f in findings if f.get("severity") == "info"]
+    return attention, efficiency
+
+
 # ── вердикт ──────────────────────────────────────────────────────────────────
-def compute_verdict(run_report, git, observer, tokens=None, pack_drift=None):
+def compute_verdict(run_report, git, observer, tokens=None, pack_drift=None,
+                    pathology_attention=None):
     """(verdict, confidence, red, reasons, repass) из собранных срезов.
     RED — упавший тест/воркфлоу. ATTENTION — линт/tool-провалы/deferred/workarounds/грязное
-    дерево/LOOP/аномальные токены (см. tokens_slice)/pack-drift (см. pack_drift). repass —
-    dev-loop tool_failures (движок был недоступен → факт не проверен). RED от токенов и
-    pack-drift НЕ бывает — только ATTENTION."""
+    дерево/LOOP/аномальные токены (см. tokens_slice)/pack-drift (см. pack_drift)/attention-
+    патологии (см. pathology_slice, core.pathology). repass — dev-loop tool_failures (движок
+    был недоступен → факт не проверен). RED от токенов, pack-drift и патологий НЕ бывает —
+    только ATTENTION (info-патологии вердикт вообще не трогают, см. rep['efficiency'])."""
     red, reasons, repass = [], [], []
     confidence = "high" if run_report else "low"
 
@@ -292,6 +308,8 @@ def compute_verdict(run_report, git, observer, tokens=None, pack_drift=None):
         reasons.append(f"observer-алертов: {len(observer['alerts'])}")
     for r in (pack_drift or []):
         reasons.append(r)
+    for r in (pathology_attention or []):     # ЖЁСТКО: только reasons.append, никогда red
+        reasons.append(r)
 
     trend = (tokens or {}).get("trend")
     if trend and trend.get("median_out"):    # median_out=0 — сравнивать не с чем, не делим на 0
@@ -326,16 +344,18 @@ def analyze_report(env, config, project, *, session=None, base=None, with_health
     health = health_slice(env, config, project) if with_health else None
     tokens = tokens_slice(run_report, ppath, effective_session)
     drift = pack_drift(ppath)
+    pathology_attention, efficiency = pathology_slice(run_report)
 
     verdict, confidence, red, reasons, repass = compute_verdict(
-        run_report, git, observer, tokens, pack_drift=drift)
+        run_report, git, observer, tokens, pack_drift=drift,
+        pathology_attention=pathology_attention)
     return {
         "project": pid, "path": ppath,
         "verdict": verdict, "confidence": confidence,
         "red": red, "reasons": reasons, "repass": repass,
         "run_report": run_report, "bash_log": bash_log,
         "observer": observer, "git": git, "health": health, "tokens": tokens,
-        "pack_drift": drift,
+        "pack_drift": drift, "efficiency": efficiency,
     }
 
 
@@ -433,6 +453,12 @@ def _print_human(rep):
             if bl.get("ratio_out") is not None:
                 bline += f" → ×{bl['ratio_out']:.1f}"
             print(bline)
+
+    eff = rep.get("efficiency")
+    if eff:                                   # info-патологии — не влияют на вердикт, только к сведению
+        print("\nЭффективность  " + "─" * 44)
+        for f in eff:
+            print(f"  · {f.get('code')}: {f.get('evidence')}")
 
     print("\nИТОГ  " + "─" * 56)
     for r in rep["red"]:

@@ -6,16 +6,25 @@
 
   A. resolved-failure — проверка (тест/линт) падала и затем прошла в том же прогоне
      («сработало после N попыток») → урок-gotcha с evidence test-pass;
-  B. workaround — агент явно записал обходку в dev-loop-сигнал (devloop.workarounds).
+  B. workaround — агент явно записал обходку в dev-loop-сигнал (devloop.workarounds);
+  C. pathology — детектор `core.pathology.detect` нашёл патологию С готовой ремедиацией
+     (file-reread/tool-error-loop/protected-write/no-verify) И код РЕЦИДИВИРУЕТ: та же
+     патология встречалась ≥2 раз в последних 5 прогонах проекта. Разовое срабатывание —
+     шум одной сессии, урок не создаёт (остальное — сигнал для `maind analyze`, не для памяти).
 
 Кандидаты пишутся в ephemeral (LOCAL, unreviewed). Суть фикса человек уточняет на `analyst review`;
-промоут — только человек. Извлекатели — ЧИСТЫЕ функции (run_report → [lesson]) ради тестируемости.
+промоут — только человек. Извлекатели A/B — ЧИСТЫЕ функции (run_report → [lesson]) ради
+тестируемости; C (`extract_pathologies`) — осознанное исключение из этого правила: правило
+рецидива требует смотреть ИСТОРИЮ прогонов проекта, а не только текущий run_report, поэтому
+она читает (read-only) `<project>/.claude/runs/*.json` — IO ограничен чтением, ничего не пишет.
 Защитно: любое отсутствующее/битое поле run-report пропускается, digest не падает."""
 import json
 import os
 from pathlib import Path
 
-from .common import die, find_run_report, parse_args
+from core.pathology import detect as detect_pathologies
+
+from .common import die, find_run_report, parse_args, safe_load_json
 from .lessons import (ACTIVE_STATES, add_candidate, audit_append,
                       classify_consolidation, event_append, jaccard,
                       new_lesson, similar_lessons)
@@ -23,6 +32,61 @@ from .lessons import (ACTIVE_STATES, add_candidate, audit_append,
 _SIMILAR_CMD = 0.6   # порог «та же по сути команда» для пары fail→pass
 
 # источник run-report — единый core.find_run_report (раскрывает ~ в пути)
+
+# ── сигнал C: патологии-рецидивы (core.pathology + правило рецидива) ─────────
+PATHOLOGY_WINDOW = 5     # правило рецидива: окно из скольких последних прогонов смотрим
+PATHOLOGY_MIN_HITS = 2   # код должен встретиться минимум в стольких прогонах окна
+
+# Коды с готовой ремедиацией → потенциальный урок (при рецидиве). Остальные коды
+# core.pathology.detect — сигналы для analyze/дэшборда, в память НЕ идут (нет
+# конкретного «что делать», только диагноз — учить агента нечему).
+_PATHOLOGY_REMEDIATIONS = {
+    "file-reread": "держи карту прочитанного; для повторного обращения используй "
+                   "заметки/план, не re-read",
+    "tool-error-loop": "после 2 одинаковых отказов инструмента меняй подход, не долби",
+    "protected-write": "generated-файлы паков не редактируй — оверрайды в "
+                       ".claude/rules/*-overrides.md",
+    "no-verify": "изменил код — прогони тесты до завершения сессии",
+}
+
+
+def _fmt_num(v):
+    """Компактная строка числа для evidence-тегов: float без длинного хвоста, остальное str()."""
+    if isinstance(v, float):
+        return str(round(v, 3))
+    return str(v)
+
+
+def _recent_run_reports(project_path, current, limit=PATHOLOGY_WINDOW):
+    """Последние `limit` run-report'ов проекта (текущий гарантированно среди них — даже
+    если ещё не долетел на диск/там лежит устаревшая версия под тем же session_id).
+
+    Остальное читаем с диска `<project>/.claude/runs/*.json`, свежие по mtime первыми;
+    битые/не-dict файлы пропускаем (safe_load_json). Дёшево: run-report — компактный JSON."""
+    runs_dir = Path(os.path.expanduser(str(project_path))) / ".claude" / "runs"
+    on_disk = []
+    if runs_dir.is_dir():
+        files = sorted((p for p in runs_dir.glob("*.json") if p.is_file()),
+                       key=lambda p: p.stat().st_mtime, reverse=True)
+        for p in files:
+            rec = safe_load_json(p, None)
+            if isinstance(rec, dict):
+                on_disk.append(rec)
+    cur_sid = current.get("session_id") if isinstance(current, dict) else None
+    if cur_sid:
+        on_disk = [r for r in on_disk if r.get("session_id") != cur_sid]
+    reports = ([current] if isinstance(current, dict) else []) + on_disk
+    return reports[:limit]
+
+
+def _pathology_hit_counts(project_path, current):
+    """{code: сколько прогонов из окна содержат ≥1 находку этого кода}. detect гоняем
+    по каждому прогону окна отдельно — он чистый и дешёвый (см. core/pathology.py)."""
+    counts = {}
+    for rr in _recent_run_reports(project_path, current):
+        for code in {f.get("code") for f in detect_pathologies(rr)}:
+            counts[code] = counts.get(code, 0) + 1
+    return counts
 
 
 # ── извлекатели (чистые) ─────────────────────────────────────────────────────
@@ -88,12 +152,61 @@ def extract_workarounds(run_report, *, scope, project):
     return out
 
 
-def extract_candidates(run_report, *, scope, project):
-    """Все высокоточные кандидаты прогона (A + B). Дубли по id схлопываются на записи."""
+def extract_pathologies(run_report, project_path):
+    """Сигнал C: патологии прогона (`core.pathology.detect`) с готовой ремедиацией
+    И рецидивом — тот же код встретился ≥PATHOLOGY_MIN_HITS раз в последних
+    PATHOLOGY_WINDOW прогонах проекта (текущий включительно). Разовое срабатывание
+    урок не создаёт (шум одной сессии); коды без ремедиации в _PATHOLOGY_REMEDIATIONS
+    в уроки не идут вовсе (это сигналы для analyze, не для памяти).
+
+    scope/project выводятся из project_path (как в cmd_digest) — сигнатура намеренно
+    (run_report, project_path), а не (run_report, *, scope, project): C нужен реальный
+    путь проекта, чтобы прочитать историю прогонов (см. docstring модуля про IO-исключение)."""
     if not isinstance(run_report, dict):
         return []
-    return (extract_resolved_failures(run_report, scope=scope, project=project)
-            + extract_workarounds(run_report, scope=scope, project=project))
+    findings = detect_pathologies(run_report)
+    if not findings:
+        return []
+    project = Path(os.path.expanduser(str(project_path))).name
+    scope = f"project:{project}"
+    sid = run_report.get("session_id") or ""
+    hit_counts = None  # считаем лениво: история читается только если в отчёте вообще есть кандидатный код
+    out, seen = [], set()
+    for f in findings:
+        code = f.get("code")
+        remediation = _PATHOLOGY_REMEDIATIONS.get(code)
+        if not remediation or code in seen:
+            continue
+        if hit_counts is None:
+            hit_counts = _pathology_hit_counts(project_path, run_report)
+        hits = hit_counts.get(code, 0)
+        if hits < PATHOLOGY_MIN_HITS:
+            continue
+        seen.add(code)
+        trigger = (f"рецидив патологии прогона «{code}» ({hits}/{PATHOLOGY_WINDOW} "
+                  f"последних прогонов): {f.get('evidence') or ''}")
+        out.append(new_lesson(
+            trigger=trigger, action=remediation, kind="gotcha", scope=scope,
+            session_id=sid, project=project, detector=code,
+            evidence=[f"session:{sid}", f"recurred:{hits}/{PATHOLOGY_WINDOW}",
+                     f"metric:{_fmt_num(f.get('metric'))}",
+                     f"threshold:{_fmt_num(f.get('threshold'))}"],
+            meta={"severity": f.get("severity"), "data": f.get("data") or {}}))
+    return out
+
+
+def extract_candidates(run_report, *, scope, project, project_path=None):
+    """Все высокоточные кандидаты прогона (A + B + C). Дубли по id схлопываются на записи.
+
+    project_path — опционален (обратная совместимость чистых A/B-вызовов без пути на
+    диске, см. тесты): без него сигнал C (требует историю прогонов) просто не запускается."""
+    if not isinstance(run_report, dict):
+        return []
+    out = (extract_resolved_failures(run_report, scope=scope, project=project)
+           + extract_workarounds(run_report, scope=scope, project=project))
+    if project_path is not None:
+        out += extract_pathologies(run_report, project_path)
+    return out
 
 
 # ── CLI ──────────────────────────────────────────────────────────────────────
@@ -105,7 +218,8 @@ def cmd_digest(env, argv):
     if opts["help"]:
         print("analyst digest [--cwd] [--session UUID] [--dry-run] [--json]\n"
               "  Детерминированно извлекает кандидат-уроки из run-report прогона "
-              "(resolved-failure / workaround) → ephemeral. Промоут — человек.")
+              "(resolved-failure / workaround / рецидивирующая патология) → ephemeral. "
+              "Промоут — человек.")
         return
 
     ppath = os.getcwd()
@@ -116,7 +230,7 @@ def cmd_digest(env, argv):
 
     project = Path(os.path.abspath(ppath)).name
     scope = f"project:{project}"
-    cands = extract_candidates(rr, scope=scope, project=project)
+    cands = extract_candidates(rr, scope=scope, project=project, project_path=ppath)
 
     if opts["dry_run"] or opts["json"]:
         payload = {"session": rr.get("session_id"), "project": project,

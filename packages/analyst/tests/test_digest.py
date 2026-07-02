@@ -1,5 +1,6 @@
-"""Тесты digest: чистые извлекатели (сигналы A/B) + защитная деградация + запись в ephemeral."""
+"""Тесты digest: чистые извлекатели (сигналы A/B/C) + защитная деградация + запись в ephemeral."""
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -80,6 +81,89 @@ class TestExtractors(unittest.TestCase):
         self.assertEqual(len(cands), 2)
 
 
+class TestExtractPathologies(unittest.TestCase):
+    """Сигнал C: core.pathology.detect + правило рецидива (≥2 из последних 5 прогонов).
+    detector "protected-write" — самый детерминированный (срабатывает при непустом списке,
+    без порогов/долей), удобен как контрольный код для проверки самого правила рецидива."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.proj = Path(self._tmp.name)
+        self.runs = self.proj / ".claude" / "runs"
+        self.runs.mkdir(parents=True)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _write(self, sid, mtime, hit=False):
+        """Синтетический run-report на диске .claude/runs/<sid>.json с фикс. mtime
+        (os.utime) — детерминированный порядок «последних 5» без гонок по времени записи."""
+        rr = {"session_id": sid, "protected_writes": (["/pack/skills/x/SKILL.md"] if hit else [])}
+        p = self.runs / f"{sid}.json"
+        p.write_text(json.dumps(rr), encoding="utf-8")
+        os.utime(p, (mtime, mtime))
+        return rr
+
+    def test_no_findings_no_lesson(self):
+        current = {"session_id": "cur", "protected_writes": []}
+        self.assertEqual(digest.extract_pathologies(current, self.proj), [])
+
+    def test_single_occurrence_out_of_five_no_lesson(self):
+        base = 1_800_000_000
+        for i, sid in enumerate(["h1", "h2", "h3", "h4"]):
+            self._write(sid, base + i, hit=False)
+        current = {"session_id": "cur", "protected_writes": ["/pack/skills/x/SKILL.md"]}
+        # патология только в текущем прогоне (1 из 5) — рецидива нет, урок не создаётся
+        self.assertEqual(digest.extract_pathologies(current, self.proj), [])
+
+    def test_two_occurrences_out_of_five_creates_lesson(self):
+        base = 1_800_000_000
+        self._write("h1", base, hit=False)
+        self._write("h2", base + 1, hit=True)   # тот же код уже встречался
+        self._write("h3", base + 2, hit=False)
+        self._write("h4", base + 3, hit=False)
+        current = {"session_id": "cur", "protected_writes": ["/pack/skills/x/SKILL.md"]}
+        cands = digest.extract_pathologies(current, self.proj)
+        self.assertEqual(len(cands), 1)
+        c = cands[0]
+        self.assertEqual(c["kind"], "gotcha")
+        self.assertEqual(c["provenance"]["detector"], "protected-write")
+        self.assertIn("оверрайды", c["action"])
+        self.assertIn(".claude/rules/*-overrides.md", c["action"])
+        self.assertIn("recurred:2/5", c["evidence"])
+        self.assertIn("session:cur", c["evidence"])
+
+    def test_window_excludes_reports_beyond_last_five(self):
+        base = 1_800_000_000
+        # старейший прогон (за пределами окна из 5) — с патологией, но его не должны увидеть
+        self._write("stale", base, hit=True)
+        self._write("h1", base + 10, hit=False)
+        self._write("h2", base + 11, hit=False)
+        self._write("h3", base + 12, hit=False)
+        self._write("h4", base + 13, hit=False)
+        current = {"session_id": "cur", "protected_writes": ["/pack/skills/x/SKILL.md"]}
+        # без учёта окна было бы 2 совпадения (stale+cur); в окне последних 5 "stale" не входит →
+        # рецидива нет
+        self.assertEqual(digest.extract_pathologies(current, self.proj), [])
+
+    def test_code_without_remediation_stays_signal_even_if_recurring(self):
+        # no-op-run — код БЕЗ готовой ремедиации (не входит в _PATHOLOGY_REMEDIATIONS):
+        # даже устойчивый рецидив (5 из 5) не должен рождать урок — это сигнал для analyze.
+        base = 1_800_000_000
+        noop = {"tools": {"total": 25}, "files_changed": [],
+                "bash": {"tests": [], "lints": [], "failed": []}, "retrieval": {"calls": 0}}
+        for i, sid in enumerate(["h1", "h2", "h3", "h4"]):
+            self.runs.joinpath(f"{sid}.json").write_text(
+                json.dumps(dict(noop, session_id=sid)), encoding="utf-8")
+            os.utime(self.runs / f"{sid}.json", (base + i, base + i))
+        current = dict(noop, session_id="cur")
+        self.assertEqual(digest.extract_pathologies(current, self.proj), [])
+
+    def test_non_dict_input_degrades(self):
+        self.assertEqual(digest.extract_pathologies(None, self.proj), [])
+        self.assertEqual(digest.extract_pathologies("мусор", self.proj), [])
+
+
 class TestDigestCmd(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
@@ -89,12 +173,14 @@ class TestDigestCmd(unittest.TestCase):
     def tearDown(self):
         self._tmp.cleanup()
 
-    def _write_rr(self, rr):
-        (self.proj / ".claude" / "runs" / f"{rr['session_id']}.json").write_text(
-            json.dumps(rr), encoding="utf-8")
+    def _write_rr(self, rr, mtime=None):
+        p = self.proj / ".claude" / "runs" / f"{rr['session_id']}.json"
+        p.write_text(json.dumps(rr), encoding="utf-8")
+        if mtime is not None:
+            os.utime(p, (mtime, mtime))
+        return p
 
     def test_digest_writes_ephemeral_and_is_idempotent(self):
-        import os
         rr = _run_report(bash={"tests": [
             {"command": "vendor/bin/pest", "ok": False},
             {"command": "vendor/bin/pest", "ok": True}], "lints": [], "failed": []})
@@ -112,6 +198,57 @@ class TestDigestCmd(unittest.TestCase):
             # повторный digest не создаёт дубль
             main([str(self.proj), "digest"])
             self.assertEqual(len(lessons.list_lessons(str(self.proj), "ephemeral")), 1)
+        finally:
+            os.chdir(cwd)
+
+    def test_recurring_pathology_becomes_lesson_via_cli_and_dedups_on_rerun(self):
+        # 5 прогонов проекта (правило рецидива читает .claude/runs целиком): 3 чистых + 1
+        # старый с той же патологией + текущий (самый свежий по mtime) — тоже с патологией →
+        # 2 из 5 → digest должен создать урок-gotcha с detector="protected-write".
+        # files_changed=[] — иначе шаблон _run_report() (files_changed непуст, tests пуст)
+        # попутно триггерит СВОЙ рецидив "no-verify" и засоряет assert по чистому сигналу.
+        base = 1_800_000_000
+        for i, sid in enumerate(["h1", "h2", "h3"]):
+            self._write_rr(_run_report(session_id=sid, protected_writes=[], files_changed=[]),
+                           mtime=base + i)
+        self._write_rr(_run_report(session_id="h4", files_changed=[],
+                                   protected_writes=["/pack/skills/x/SKILL.md"]), mtime=base + 10)
+        self._write_rr(_run_report(session_id="cur", files_changed=[],
+                                   protected_writes=["/pack/skills/x/SKILL.md"]), mtime=base + 20)
+        cwd = os.getcwd()
+        try:
+            os.chdir(self.proj)
+            from analyst.cli import main
+            main([str(self.proj), "digest"])
+            eph = [L for L, _st in lessons.list_lessons(str(self.proj), "ephemeral")]
+            self.assertEqual(len(eph), 1)
+            pw = eph[0]
+            self.assertEqual(pw["provenance"]["detector"], "protected-write")
+            self.assertEqual(pw["kind"], "gotcha")
+            self.assertIn("оверрайды", pw["action"])
+            # повторный digest на том же прогоне-истории — NOOP-дедуп (не плодит второй урок)
+            main([str(self.proj), "digest"])
+            self.assertEqual(len(lessons.list_lessons(str(self.proj), "ephemeral")), 1)
+        finally:
+            os.chdir(cwd)
+
+    def test_single_pathology_occurrence_via_cli_creates_no_lesson(self):
+        # только текущий прогон несёт патологию (1 из 5) — рецидива нет, урока быть не должно.
+        # files_changed=[] — исключить попутный рецидив "no-verify" из шаблона _run_report()
+        # (иначе тест перестал бы проверять именно правило рецидива для одиночного кода).
+        base = 1_800_000_000
+        for i, sid in enumerate(["h1", "h2", "h3", "h4"]):
+            self._write_rr(_run_report(session_id=sid, protected_writes=[], files_changed=[]),
+                           mtime=base + i)
+        self._write_rr(_run_report(session_id="cur", files_changed=[],
+                                   protected_writes=["/pack/skills/x/SKILL.md"]), mtime=base + 20)
+        cwd = os.getcwd()
+        try:
+            os.chdir(self.proj)
+            from analyst.cli import main
+            main([str(self.proj), "digest"])
+            eph = lessons.list_lessons(str(self.proj), "ephemeral")
+            self.assertEqual(eph, [])
         finally:
             os.chdir(cwd)
 

@@ -41,4 +41,5 @@ suggest   cross-project паттерн      → ЧЕРНОВИК скилла (d
 ```
 
 Подробно: [CLI и команды →](./cli) · [Жизненный цикл урока →](./lifecycle) ·
-[suggest — черновик скилла →](./suggest) · [Архитектура пакета →](../architecture).
+[Каталог патологий →](./pathologies) · [suggest — черновик скилла →](./suggest) ·
+[Архитектура пакета →](../architecture).

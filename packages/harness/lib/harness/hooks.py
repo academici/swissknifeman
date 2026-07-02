@@ -16,6 +16,7 @@ AA_MODES = ("strict", "permissive", "bypass", "off")
 MEM_MODES = ("file", "federation", "agentmemory", "off")
 ROUTER_MODES = ("propose", "auto_dispatch", "off")
 RUNREPORT_MODES = ("on", "off")
+PACKGUARD_MODES = ("off", "warn", "strict")
 
 
 def block_autoapprove(target, mode, settings_file, dry):
@@ -107,6 +108,31 @@ def block_run_report(target, mode, settings_file, dry):
         print(f"  хук run-report уже зарегистрирован в {f}")
 
 
+def block_pack_guard(target, mode, settings_file, dry):
+    """Записать pack-guard.env.ini + зарегистрировать PreToolUse-хук (Edit/Write/MultiEdit/
+    NotebookEdit). Опциональный слой 2 mutation-защиты (слой 1 — doctor --drift, постфактум):
+    по умолчанию НЕ устанавливается, включается явным --pack-guard. off → пишет MODE=off,
+    хук не регистрируется (kill-switch без снятия уже зарегистрированного — merge-only не
+    удаляет чужие записи)."""
+    print(f"pack-guard: {mode or 'пропуск'}")
+    if not mode:
+        return
+    if mode not in PACKGUARD_MODES:
+        die(f"неизвестный режим pack-guard: {mode} ({'|'.join(PACKGUARD_MODES)})")
+    write_text(target / ".claude" / "pack-guard.env.ini", f"MODE={mode}\n", dry)
+    if mode == "off":
+        return
+    settings, f = load_settings(target, settings_file)
+    cmd = "python3 ~/.claude/hooks/pack-guard/pack-guard.py"
+    added = False
+    for matcher in ("Edit", "Write", "MultiEdit", "NotebookEdit"):
+        added |= add_hook(settings, "PreToolUse", matcher, cmd)
+    if added:
+        write_json(f, settings, dry)
+    else:
+        print(f"  хук pack-guard уже зарегистрирован в {f}")
+
+
 def block_output_style(env, target, name, dry):
     """Скопировать output-style в проект + поставить top-level outputStyle в settings.local.json
     (машинно-локальная преференция голоса). off → не ставить (снять вручную — kill-switch).
@@ -156,7 +182,8 @@ def _parse_memory_flag(raw):
 def cmd_hooks(env, argv):
     opts = parse_flags(argv, {
         "--target": "str", "--auto-approve": "str", "--memory": "str",
-        "--router": "str", "--run-report": "str", "--output-style": "str", "--file": "str",
+        "--router": "str", "--run-report": "str", "--pack-guard": "str",
+        "--output-style": "str", "--file": "str",
         "--global": "bool", "--dry-run": "bool",
     })
     if opts["help"]:
@@ -164,6 +191,7 @@ def cmd_hooks(env, argv):
               f"{'|'.join(AA_MODES)}] [--memory BRAIN:{'|'.join(MEM_MODES)}] "
               f"[--router {'|'.join(ROUTER_MODES)}] "
               f"[--run-report {'|'.join(RUNREPORT_MODES)}] "
+              f"[--pack-guard {'|'.join(PACKGUARD_MODES)}] "
               "[--output-style lean|off] "
               "[--file settings.json|settings.local.json] [--dry-run]")
         return
@@ -174,9 +202,10 @@ def cmd_hooks(env, argv):
         die("нужен --target P (или --global)")
     target = Path(opts["target"]).expanduser()
     if not (opts["auto_approve"] or opts["memory"] or opts["router"]
-            or opts["run_report"] or opts["output_style"]):
+            or opts["run_report"] or opts["pack_guard"] or opts["output_style"]):
         die("нужен хотя бы один из: --auto-approve MODE / --memory BRAIN:MODE / "
-            "--router MODE / --run-report on|off / --output-style lean|off / --global")
+            "--router MODE / --run-report on|off / --pack-guard off|warn|strict / "
+            "--output-style lean|off / --global")
     settings_file = opts["file"] or "settings.json"
     if opts["auto_approve"]:
         block_autoapprove(target, opts["auto_approve"], settings_file, opts["dry_run"])
@@ -187,5 +216,7 @@ def cmd_hooks(env, argv):
         block_router(target, opts["router"], settings_file, opts["dry_run"])
     if opts["run_report"]:
         block_run_report(target, opts["run_report"], settings_file, opts["dry_run"])
+    if opts["pack_guard"]:
+        block_pack_guard(target, opts["pack_guard"], settings_file, opts["dry_run"])
     if opts["output_style"]:
         block_output_style(env, target, opts["output_style"], opts["dry_run"])

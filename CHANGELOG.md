@@ -2,6 +2,44 @@
 
 ## [Unreleased]
 
+### Added (SKM-MASTER-003 — plan-система per-project · хвосты рецензии)
+
+- **Plan-система per-project (P1, дизайн A–F):** планы plan-протокола живут В ПРОЕКТЕ.
+  Ключ `plansDirectory: "plans"` раскатывается тремя слоями — `harness hooks --plans-dir`
+  (новый `block_plans_dir` через `set_setting_key` в `.claude/settings.json`; чужое значение
+  ключа не перезаписывается), провиженеры `maind sync --only plans-dir,plans-doc`
+  (ретроактивно, опт-аут `project.plans_dir="off"`; `plans-doc` — hashed-блок конвенции
+  `maind:plan-conventions` в CLAUDE.md), `skiller integrate` (новые онбординги). Активный
+  план — `plans/ACTIVE.md` (ведут `plan-design`/`plan-close`, валидирует `plan-lint`
+  root-режимом: несуществующий план → ERROR, залежавшиеся черновики → WARNING с подсказкой).
+  Мост встроенного plan mode → протокол: режим **`/task:plan-design from-draft <файл>`**
+  (плоский черновик в `plans/` → `plans/<ID>/` по шаблонам, provenance в Decision Log,
+  черновик удаляется). Цикл владельца «фаза → handoff → /clear» закреплён строкой в
+  Expected output `plan-exec`/`plan-close`, §6 скилла и CLAUDE.md-блоке. Скилл
+  `plan-protocol` вошёл девятым в CORE_SKILLS (резидент 705/750 ток). Пилот end-to-end
+  на azguard — 7/7 шагов зелёный (артефакты в azguard не закоммичены — решение владельца);
+  эффект `plansDirectory` в живом plan mode headless не проверяется — первое живое
+  планирование владельца. Фан-аут на ~17 проектов — `maind sync` после обкатки.
+- **Хвосты рецензии волн 1–4 (P2, 9 items):** `skiller budget` учитывает `references/`
+  как ⌥ on-demand (симметрично `snippets/`); `bucket-audit` получил канал **`resident`**
+  (CORE_SKILLS ∪ активные наборы зарегистрированных проектов; dead → keep, честная
+  пометка «резидентный» — 9/9 CORE больше не ложно-dead; периметр шире CORE: флип
+  122 скиллов, учесть перед P7.4); 8 RU-монолитов (architect/legal/marketing/operator/
+  pm/research/security/sales) ужаты до RU-навигаторов (полные переводы — git-история);
+  upstream `quality/tdd-discipline` чист — удалённый в upstream файл убран из `files[]`
+  (0 failed); BC-строка Verify в dev-loop `laravel-package` под `pack:if/ifnot
+  BC_CHECK_CMD` (пак 0.1.1); `analyst token-report` — инвариант «ERROR:» ⇔ exit≠0
+  закреплён тестом; дока pack-guard в `agent-packs.md` (+58 строк); roadmap-доки
+  синхронизированы с реализацией (analyst-suggest/self-learning-memory/README —
+  «реализовано», остаток — event-stream capture).
+- **Догфудинг и починка протокола по field-feedback пилота (D9):** сам план волны —
+  `plans/SKM-MASTER-003/` (транскрибирован первым агентом, закрыт целиком 19/19,
+  `plan-lint plans/` 0/0, ACTIVE → «—»). По находкам пилота: узаконен bootstrap-заголовок
+  handoff `after P0.0` (plan-design), `plan-close` при закрытии плана целиком обновляет
+  `Meta.Status` и пишет `Next: план закрыт`, `plan_lint` допускает «план закрыт» только
+  при полностью терминальном плане (+2 теста). Deferred: honest `changed` у `plans-dir`
+  (F3), per-skill сигнал в SCHEMA=2-тренде (Known Deviations P2.2).
+
 ### Added (SKM-MASTER-002, волна 4 — pack-guard · живой цикл протокола · метрики ДО)
 
 - **pack-guard (P5.6, слой 2 mutation-защиты, опциональный):** PreToolUse-хук

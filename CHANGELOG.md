@@ -2,6 +2,58 @@
 
 ## [Unreleased]
 
+### Added (SKM-MASTER-002, волна 2 — каталог патологий · стек-пак laravel-package + пилоты)
+
+- **Каталог патологий (фаза C):** `core/pathology.py` — чистый защитный детектор workflow-патологий
+  (`detect(run_report) → findings {code, severity: info|attention, metric, threshold, evidence}`),
+  10 детекторов: file-reread, tool-error-loop, no-op-run, no-verify (+`no-verify-devloop`),
+  cache-miss, overthinking, retrieval-stuffing, protected-write, static-context, fanout; пороги —
+  константы с честной пометкой «эвристики, не откалиброваны» (36 тестов). Маршрутизация строго
+  Detect ≠ Gate: `maind analyze` — `pathology_slice` (attention → reasons/ATTENTION, info → секция
+  «Эффективность»; RED от патологий невозможен, инвариант в докстрингах); `analyst digest` —
+  извлекатель `extract_pathologies` с правилом рецидива (окно 5 последних run-report'ов, урок
+  только при ≥2 попаданиях кода; разовая патология — сигнал analyze, не урок), в уроки идут только
+  4 кода с готовой ремедиацией. Каталог-док `packages/analyst/docs/guide/pathologies.md`
+  (все классы, формулы/пороги = константы кода, remediation, честная колонка «детектируемо/добор»).
+- **Стек-пак `laravel-package` 0.1.0 (фаза F):** отдельный пак для Laravel-ПАКЕТОВ
+  (composer library / монорепо пакетов) — reviewer с центром «публичный контракт» (Public API/
+  BC-SemVer + roave/bc-check, register-vs-boot, publishables, `env()` вне config → HIGH,
+  composer-констрейнты, Testbench, multi-version matrix), slice-builder («фича пакета»,
+  @internal/final), test-writer (Testbench + version_compare-ветки), новый recon `api-surface`,
+  4 rules, dev-loop-форк (risk-adaptive сохранён, +public-api маркер, preflight
+  `composer validate --strict`). Анти-дубль двумя слоями: движковый **`src_pack`** в files[]
+  (review-gate.sh/env.ini/settings.fragment — байт-в-байт из backend-laravel без копий) +
+  **parity-тест shared-блоков** `test_agentpacks_shared.py` (6 блоков прозы reviewer'а размечены
+  `<!-- shared:X -->` в обоих паках, дрейф = красный тест). Новая команда **`harness agent-packs
+  remove`** (чистые файлы удаляются, modified/user_owned/merge остаются с warn, lock атомарно).
+  `backend-laravel` 0.11.2 — shared-разметка + фикс `app/Repositories` → `{{ACCESS_ROOT}}/…`.
+  Профиль `php-package` получил `agent_pack: ["laravel-package", "_common"]`; roadmap
+  `php-package-stack-pack.md` → «реализовано»; доки harness + docs/reference.md (roave — adopt;
+  spec-kit/beads/planning-with-files — reference).
+- **Пилоты (фаза F, rendered в рабочих деревьях azguard/chatom, там не коммитим):** azguard —
+  remove backend-laravel → render laravel-package чисто + 4 доменных оси в
+  `.claude/rules/azguard-reviewer-overrides.md` (panel_id isolation, epoch-invalidation,
+  wildcard semantics, extension API idempotency) + path-scoped `azguard-domain.md`; chatom
+  (монорепо `packages/*/src`) — та же миграция с `HAS_MIGRATIONS=true`/Pest. Acceptance-грепы
+  app-канона по обоим — 0 попаданий; `doctor --drift` чисто. Регрессия непилотных (F-8):
+  upgrade-канал 0.11.0→0.11.1 (worktree-эмуляция «до headers») — 0 conflict; dry-run на живом
+  app-проекте — conflict'ы только от реальных ручных правок generated-core (ровно тот паттерн,
+  который теперь ловит ось `generated-core-edited`).
+
+### Fixed (полевые находки пилотов волны 2 — движок agent-packs)
+
+- **`_probe_allowed` резал детект-пробы по `;` без понимания кавычек** — проба
+  `PACKAGE_NAMESPACE` (php -r) тихо skip'алась при `shell_policy=safe` и переменная
+  оставалась пустой; проба переписана одним PHP-выражением без `;` (терминатор `?>`),
+  плюс фолбэк на `packages/*/composer.json` с кратчайшим psr-4 (монорепо-кейс).
+- **`categorize_file_change`: файл пака в lock, но отсутствующий на диске**, при upgrade
+  давал бесполезный `conflict`/`*.pack-new` вместо простой установки → теперь `new`/
+  `new-optional` (missing + base-unchanged остаётся `nochange`). +2 теста.
+- **`do_render` не переписывал lock при `changed=False`**, даже если у файла реально
+  сменился флаг `local_modified` (внешняя реконсиляция файла к базе пака) — `doctor`
+  вечно показывал протухший `modified: true` → lock пишется при отличии свежей записи
+  от сохранённой. +1 тест.
+
 ### Added (SKM-MASTER-002, волна 1 — plan-протокол · токен-телеметрия SCHEMA=2 · защита generated-ассетов)
 
 Мастер-план `plans/SKM-MASTER-002` (операционная система планов): сильная модель проектирует,

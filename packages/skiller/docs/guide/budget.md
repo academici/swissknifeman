@@ -144,7 +144,7 @@ flowchart LR
   subgraph general["general"]
     anti_drift["anti-drift<br/>⊕43 ↻1258"]:::mild
     compact_responses["compact-responses<br/>⊕60 ↻570"]:::mild
-    complex_task_orchestrator["complex-task-orchestrator<br/>⊕44 ↻617"]:::mild
+    complex_task_orchestrator["complex-task-orchestrator<br/>⊕44 ↻659"]:::mild
     context_economy["context-economy<br/>⊕71 ↻2133"]:::mild
     cross_layer_change_checklist["cross-layer-change-checklist<br/>⊕37 ↻461"]:::cool
     git_commit_rules["git-commit-rules<br/>⊕29 ↻934"]:::cool
@@ -156,10 +156,10 @@ flowchart LR
     packages_stack["packages-stack<br/>⊕85 ↻530"]:::warm
     plan_protocol["plan-protocol<br/>⊕43 ↻1889"]:::mild
     project_map["project-map<br/>⊕83 ↻645"]:::warm
-    session_handoff["session-handoff<br/>⊕41 ↻515"]:::mild
+    session_handoff["session-handoff<br/>⊕41 ↻618"]:::mild
     skills_ssot["skills-ssot<br/>⊕35 ↻1771"]:::cool
     spec_interview["spec-interview<br/>⊕58 ↻753"]:::mild
-    task_brief_template["task-brief-template<br/>⊕79 ↻1206"]:::warm
+    task_brief_template["task-brief-template<br/>⊕79 ↻1253"]:::warm
     verify_claims["verify-claims<br/>⊕133 ↻2696"]:::hot
     writing_style["writing-style<br/>⊕98 ↻1702"]:::warm
   end
@@ -406,13 +406,13 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 206 скиллов · ⊕ always **14791** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 512416 ток · ⌥ snippets 168717 ток.
+**Итого:** 206 скиллов · ⊕ always **14791** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 512608 ток · ⌥ snippets 168717 ток.
 
 ## По бакетам
 
 | Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ snippets |
 |---|--:|--:|--:|--:|
-| `general` | 20 | 1402 | 23127 | 6367 |
+| `general` | 20 | 1402 | 23319 | 6367 |
 | `php` | 17 | 1122 | 19300 | 28598 |
 | `architect` | 14 | 880 | 44597 | 8087 |
 | `frontend-vue` | 11 | 854 | 25744 | 7306 |

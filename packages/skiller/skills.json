@@ -1937,8 +1937,8 @@
       "path": "skills/general/complex-task-orchestrator/SKILL.md",
       "version": "0.1.0",
       "description": "Complex-task orchestration: decomposition, context routing, risk management, Definition of Done, minimal verification loop.",
-      "sha256": "c188a05e08639e099b139e6143f1c9f9edf88d2bd84abf539df02ed79d2aad38",
-      "content_sha256": "cf9435f6c5fa80f05428a17d1143880a4d9939e23738864bb6f24f3d79eb7f1f",
+      "sha256": "bad2aa7fb19acb9bbc647684db3f3d99277313a43b1ee007648704fccbe2fa4c",
+      "content_sha256": "37ab19c276dd5d6620dd94a19d02b5d5ffdfda484a09cd6324f9c9736ce021a2",
       "tags": [
         "workflow",
         "orchestration",
@@ -2177,8 +2177,8 @@
       "path": "skills/general/session-handoff/SKILL.md",
       "version": "0.2.0",
       "description": "Cross-session/agent context handoff: compress a session into a structured doc — state, decisions, open items, next steps.",
-      "sha256": "1975e9336fdc16ef1c06ba378dbd8e561150da865cac5d75e08f7c20bfa4ca7b",
-      "content_sha256": "93b8d7b24dbdfaee71185f9cb4ca72ee31c4f3011e3e65cb4ec7ec1528cd9ee0",
+      "sha256": "9116c6f1612418fbd614b0f88ec86e27172363011f77926ea314c86d1e689cc5",
+      "content_sha256": "52d9a7c219080746cf5748215942f423d6be67d62c8cb9c38579f00716284967",
       "tags": [
         "workflow",
         "context",
@@ -2229,8 +2229,8 @@
       "path": "skills/general/task-brief-template/SKILL.md",
       "version": "0.4.0",
       "description": "Brief template for complex agent tasks: goal, scope, invariants, explicit assumptions, out of scope, acceptance criteria, definition of done. Plus Plan→Clear→Execute pattern and loop fields for iterative runs: verifier, exit condition, hard-stop.",
-      "sha256": "746fa4884c54330b3746b0204cedfd83a6050d1e96d25ba22047fbad50b08a8f",
-      "content_sha256": "9e0e8138b6fbbe180a2cde634620e3cc3d05c9768d4a61f1681031ebb20ec287",
+      "sha256": "d7860e287ad9bc5ed0deba54967a71016943eb55b07be5e1243af2114971b06f",
+      "content_sha256": "d8af2cf70b92d3e7e9234f1d8f9b81e3fb41c3b0617b444e1b65267939abecff",
       "tags": [
         "workflow",
         "template",

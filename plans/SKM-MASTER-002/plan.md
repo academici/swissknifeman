@@ -60,12 +60,12 @@ P7 — bucket-аудит и разгрузка монолитов (thin-navigato
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P1 | Plan-протокол (фаза A) | 7/10 | 🟡 In progress |
+| P1 | Plan-протокол (фаза A) | 8/10 | 🟡 In progress |
 | P2 | Токен-телеметрия end-to-end (фаза B) | 5/5 | 🟢 Done |
-| P3 | Каталог патологий и детекторы (фаза C) | 0/4 | ⬜ Not started |
+| P3 | Каталог патологий и детекторы (фаза C) | 2/4 | 🟠 Done with deviations |
 | P4 | Analyst learning loop (фаза D) | 0/3 | ⬜ Not started |
-| P5 | Generated Asset Protection (фаза E) | 4/7 | 🟡 In progress |
-| P6 | laravel-package stack + пилоты (фаза F) | 0/9 | ⬜ Not started |
+| P5 | Generated Asset Protection (фаза E) | 5/7 | 🟡 In progress |
+| P6 | laravel-package stack + пилоты (фаза F) | 5/9 | 🟠 Done with deviations |
 | P7 | Bucket optimization (фаза G) | 0/6 | ⬜ Not started |
 | P8 | Rollout & Acceptance (фаза H) | 0/4 | ⬜ Not started |
 
@@ -96,3 +96,5 @@ P7 — bucket-аудит и разгрузка монолитов (thin-navigato
 |:--|:--|:--|
 | 2026-07-02 | issue-planner/fable | Bootstrap-транскрипция одобренного мастер-плана в формат plan-protocol (item P1.5) |
 | 2026-07-02 | orchestrator/fable | Реконсиляция статусов волны 1 по факту validate.sh-зелёных прогонов: P1.1–P1.7 → 🟢 Done (P1 остаётся 🟡, хвосты P1.8–P1.10); P2 целиком → 🟢 Done (Phase Handoff заполнен); P5.1–P5.4 → 🟢 Done, P5.5 → 🟠 Done with deviations (P5 остаётся 🟡, P5.6–P5.7 не исполнялись) |
+| 2026-07-02 | orchestrator/fable | Реконсиляция первой половины волны 2 (10/12 агентов workflow wf_b807bda3-dc2): P3 закрыта (P3.1 🟠 · P3.2 🟢 · P3.3 🟠 · P3.4 🟢, Phase Handoff заполнен); P1.9 → 🟢; P5.7 → 🟡 (дока готова, CHANGELOG — в пост-обработке волны); P6.1/P6.2/P6.5 → 🟢, P6.3/P6.4 → 🟠 (deviations задокументированы). P6.6–P6.9 исполняются фоном |
+| 2026-07-02 | orchestrator/fable | Волна 2 завершена (13/13 агентов, 0 ошибок): P6.6 → 🟢 (azguard + 4 доменных оси), P6.7 → 🟠 (chatom + 2 фикса движка), P6.8 → 🟠 (acceptance весь OK, worktree-эмуляция вместо буквального шага 3), P6.9 → 🟢; P6 закрыта 🟠 (Phase Handoff заполнен). P5.7 → 🟢 (CHANGELOG внесён оркестратором: корневой волна 2 Added+Fixed, laravel-package@0.1.0 создан, backend-laravel@0.11.2 бамп+запись, maind). Валидация: 5×validate.sh + 139 core-тестов зелёные |

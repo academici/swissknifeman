@@ -119,6 +119,8 @@ Loop в шаблоне и запускай через встроенный `/loo
 
 - `spec-interview` (general) — заполнение этого шаблона по нечёткой идее через интервью.
 - `complex-task-orchestrator` (general) — декомпозиция готового брифа на подзадачи по слоям.
+- `plan-protocol` (general) — многофазная работа длиннее одной сессии оформляется
+  мастер-планом в `plans/<ID>/`; этот бриф — для одиночной задачи в рамках сессии.
 - `cross-layer-change-checklist` (general) — синхронизация слоёв при выполнении.
 - `context-economy` (general) — Plan→Clear→Execute и команды `/plan`, `/execute`.
 - `anti-drift` (general) — дисциплина итераций, опирается на зафиксированный scope.

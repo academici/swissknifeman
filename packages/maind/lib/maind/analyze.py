@@ -14,7 +14,7 @@ import json
 import os
 from pathlib import Path
 
-from .common import find_run_report, parse_args, run_cmd
+from .common import find_run_report, parse_args, read_ndjson_iter, run_cmd
 from .config import load_config
 from .health import _target
 
@@ -40,29 +40,19 @@ def bash_log_forensics(env, project_path, session=None):
     base = os.path.abspath(os.path.expanduser(str(project_path)))
     total, tests, lints = 0, [], []
     try:
-        with open(log, encoding="utf-8", errors="replace") as fh:
-            for line in fh:
-                line = line.strip()
-                if not line:
-                    continue
-                try:
-                    rec = json.loads(line)
-                except (ValueError, TypeError):
-                    continue
-                if not isinstance(rec, dict):
-                    continue
-                cwd = rec.get("cwd") or ""
-                if not (cwd == base or cwd.startswith(base + os.sep)):
-                    continue
-                if session and rec.get("session") != session:
-                    continue
-                cmd = (rec.get("command") or "")
-                total += 1
-                low = cmd.lower()
-                if any(h in low for h in _TEST_HINT):
-                    tests.append(cmd[:160])
-                if any(h in low for h in _LINT_HINT):
-                    lints.append(cmd[:160])
+        for rec in read_ndjson_iter(log):
+            cwd = rec.get("cwd") or ""
+            if not (cwd == base or cwd.startswith(base + os.sep)):
+                continue
+            if session and rec.get("session") != session:
+                continue
+            cmd = (rec.get("command") or "")
+            total += 1
+            low = cmd.lower()
+            if any(h in low for h in _TEST_HINT):
+                tests.append(cmd[:160])
+            if any(h in low for h in _LINT_HINT):
+                lints.append(cmd[:160])
     except OSError:
         return None
     return {"total": total, "tests": tests, "lints": lints}

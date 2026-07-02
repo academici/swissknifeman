@@ -2,7 +2,7 @@
 name: production-readiness-checklist
 bucket: php
 version: 0.1.0
-description: "Verify production-class invariants that green happy-path tests structurally miss: transaction atomicity, race-safe idempotency, config defaults that work out-of-the-box, non-nullable cursor keys, after-commit side-effects, soft-delete, id-strategy compatibility, single queue-retry owner, atomic state transitions. Activate before/at review of risky Laravel slices (services, queues, drivers, migrations). Triggers: production readiness, atomicity, race condition, idempotency, config default, cursor stability, after-commit, queue semantics, before merge."
+description: "Verify production-readiness invariants happy-path tests miss: transaction atomicity, race-condition-safe idempotency, config defaults, non-nullable cursor keys, after-commit side-effects, soft-delete, id-strategy compatibility, single queue-retry owner, atomic state transitions. Activate before/at review of risky Laravel slices (services, queues, drivers, migrations), queue semantics, or before merge."
 risk: read
 persona: oss-dev
 tags: ["php", "laravel", "review", "production", "reliability", "quality"]
@@ -51,4 +51,4 @@ A whole class of defects is invisible to per-unit happy-path tests (they force t
 
 - `php:transactional-outbox-relay`, `laravel-architecture:enum-state-machine`, `php:cursor-pagination-design`, `quality:code-review`.
 
-<!-- ru-source-sha256: 8f1f5cfd88f5a6d4f3c161ae263be3f244b87d68a0975dfed87a57609760b3ee -->
+<!-- ru-source-sha256: b8c97c17c5a6dfeae87fa74d18442d1fecdf6d32d196eec5c8be3f049b265881 -->

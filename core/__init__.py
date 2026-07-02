@@ -16,7 +16,7 @@ HTTP — остаются в common.py каждого пакета (они ра�
 from .cli import parse_args, parse_flags, run_cmd
 from .env import HOME, BaseEnv
 from .io import (atomic_write_json, atomic_write_text, load_json_db,
-                 read_ndjson, safe_load_json)
+                 read_ndjson, read_ndjson_iter, safe_load_json)
 from .paths import is_within, is_within_lexical, state_dir
 from .proc import pid_alive
 from .project import (DEFAULT_DOCS_VISIBILITY, DOCS_VISIBILITY_BY_TYPE,
@@ -31,7 +31,7 @@ __all__ = [
     "HOME", "BaseEnv", "die", "warn", "now_iso", "parse_iso", "confirm", "sanitize",
     "parse_frontmatter", "parse_inline_list",
     "atomic_write_text", "atomic_write_json", "safe_load_json", "load_json_db",
-    "read_ndjson", "pid_alive", "find_run_report",
+    "read_ndjson", "read_ndjson_iter", "pid_alive", "find_run_report",
     "is_within", "is_within_lexical", "state_dir",
     "find_repo_root", "find_monorepo_root",
     "detect_project_type", "PROJECT_TYPES", "LANGUAGE_BY_TYPE",

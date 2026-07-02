@@ -2,7 +2,7 @@
 name: livewire-blade-attributes
 bucket: laravel-livewire
 version: 0.1.0
-description: "Livewire 3 delta gotchas for Blade-component attributes. Activate when writing/reviewing Livewire Blade markup where a tag attribute must be conditional or dynamic: do NOT put @if/@endif/@js() inside the attribute list (breaks component parsing) — pre-build attributes in @php via ComponentAttributeBag (->merge, ->class) and spread as one expression. Triggers: Blade component parse/render error, conditional wire:model/wire:sortable/step/disabled, @js() in an attribute, unstable wire:key in a loop"
+description: "Livewire 3 Blade-component attribute delta gotchas. Activate when a tag attribute must be conditional/dynamic: never put @if/@endif/@js() inside the attribute list (breaks parsing). Fix: pre-build via ComponentAttributeBag (->merge, ->class) in @php, spread as one expression. Triggers: parse/render error, conditional wire:model/wire:sortable/step/disabled, @js() in an attribute, unstable wire:key in a loop"
 risk: read
 persona: oss-dev
 tags: ["livewire", "blade", "laravel", "frontend", "advisory", "gotchas"]
@@ -72,4 +72,4 @@ Do NOT activate: static attributes without conditions; Livewire lifecycle/bindin
 - `snippets/blade-attributes.blade.php` — before/after pairs.
 - Related skills: `laravel-filament/filament` (Livewire-based UI — same Blade components), `frontend-backend/laravel-echo-client` (realtime frontend when Livewire is augmented with websockets).
 
-<!-- ru-source-sha256: afe4063a41f96e4504a12cd5f1235fdfc1cea24b3ab769fb2c71e456c3859546 -->
+<!-- ru-source-sha256: f3348019b425da2cb27ebe1bf01f1bc67c470a8f147742cfe1b46c880785f58b -->

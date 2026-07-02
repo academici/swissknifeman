@@ -1,6 +1,7 @@
 """Smoke-тесты пакета core — общий фундамент монорепо (stdlib-only).
 
 Запуск: PYTHONPATH=<корень монорепо> python3 -m unittest discover -s core/tests"""
+import inspect
 import json
 import os
 import sys
@@ -15,7 +16,8 @@ from core import (DEFAULT_DOCS_VISIBILITY, PROJECT_TYPES, BaseEnv,
                   docs_visibility_for, find_monorepo_root, find_run_report,
                   find_repo_root, is_within, is_within_lexical, load_json_db,
                   now_iso, parse_args, parse_flags, parse_iso, pid_alive,
-                  read_ndjson, run_cmd, safe_load_json, sanitize, state_dir)
+                  read_ndjson, read_ndjson_iter, run_cmd, safe_load_json,
+                  sanitize, state_dir)
 
 
 class TestText(unittest.TestCase):
@@ -447,6 +449,40 @@ class TestReadNdjson(unittest.TestCase):
     def test_missing_file(self):
         with tempfile.TemporaryDirectory() as d:
             self.assertEqual(read_ndjson(Path(d) / "nope.ndjson"), [])
+
+    def test_iter_skips_blank_and_broken_and_nondict(self):
+        # проверка ФИЛЬТРАЦИИ независимо от read_ndjson — против hardcoded-ожидания,
+        # не против read_ndjson(p) (тот сам определён как list(read_ndjson_iter(p)),
+        # сравнение с самим собой ничего бы не поймало при сломанном фильтре)
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "x.ndjson"
+            p.write_text('{"a":1}\n\n  \nне-json\n[1,2]\n{"b":2}\n',
+                         encoding="utf-8")
+            self.assertEqual(list(read_ndjson_iter(p)), [{"a": 1}, {"b": 2}])
+
+    def test_iter_missing_file_empty(self):
+        with tempfile.TemporaryDirectory() as d:
+            self.assertEqual(list(read_ndjson_iter(Path(d) / "nope.ndjson")), [])
+
+    def test_iter_is_lazy_generator(self):
+        # генератор-специфичное поведение: объект и потребление по одной записи,
+        # не список — ради этого read_ndjson_iter и был выделен (streaming-потребители)
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "x.ndjson"
+            p.write_text('{"a":1}\n{"b":2}\n', encoding="utf-8")
+            gen = read_ndjson_iter(p)
+            self.assertTrue(inspect.isgenerator(gen))
+            self.assertEqual(next(gen), {"a": 1})
+            self.assertEqual(next(gen), {"b": 2})
+            self.assertRaises(StopIteration, next, gen)
+
+    def test_read_ndjson_is_list_of_iter(self):
+        # read_ndjson — тонкая обёртка над read_ndjson_iter, не отдельная копия логики
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "x.ndjson"
+            p.write_text('{"a":1}\n\n  \nне-json\n[1,2]\n{"b":2}\n',
+                         encoding="utf-8")
+            self.assertEqual(read_ndjson(p), list(read_ndjson_iter(p)))
 
 
 class TestFindRunReport(unittest.TestCase):

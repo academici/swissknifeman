@@ -2,7 +2,7 @@
 name: query-craft
 bucket: research
 version: 0.1.0
-description: "How to FORMULATE a search/doc-engine query (Perplexity Web · WebSearch · context7): maximize detail (exact version/stack/'min Filament 4', timeframe, format, result limit), pick engine+mode (search/advanced/deep), set sources (web/academic/social). Activate BEFORE any external search, esp. a library/framework (Laravel/Filament/Vue): ban bare 'Laravel how to X?'. Not when-to-verify (verify-claims) nor what-to-connect (mcp-advisor) — only HOW to ask."
+description: "How to FORMULATE a search/doc-engine query (Perplexity Web · WebSearch · context7): version/stack (e.g. 'min Filament 4'), timeframe, format, limit; pick engine+mode (search/advanced/deep) and sources (web/academic/social). Activate BEFORE any external search, esp. a library/framework (Laravel/Filament/Vue): ban bare 'Laravel how to X?'. Not when-to-verify (verify-claims) nor what-to-connect (mcp-advisor) — only HOW to ask."
 risk: read
 persona: oss-dev
 tags: [research, perplexity, search, query, rag, context7, claude-code]
@@ -193,4 +193,4 @@ don't know", don't guess`.
      Concurrency (daemon/pools/error codes BROWSER_BUSY·TIMEOUT·LOGIN_REQUIRED·PROTOCOL_MISMATCH) —
      from the perplexity-web-mcp v1.3.0 integration note, checked 2026-06-30. -->
 
-<!-- ru-source-sha256: 9f7dec477ba97f73e3c9015ec0d62a75d54c8743e06b3d3f77b805523219f05b -->
+<!-- ru-source-sha256: f75f6172b9f6b9f43a48deba17f7ad8a390db089f7a7b106f303e093667f6507 -->

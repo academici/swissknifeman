@@ -23,6 +23,7 @@ const HARD_GATES = `ЖЁСТКИЕ ГЕЙТЫ {{PACK_PREFIX}} (не наруша
 - Тесты/линт/типы ТОЛЬКО через '{{TEST_RUNNER_CMD}}' / '{{LINT_CMD}}' / '{{TYPECHECK_CMD}}' (venv-aware {{PY_BIN}}).
 - НЕ править lockfile вручную; НЕ ставить пакеты глобально; миграции — отдельным шагом.
 - НЕ git push, НЕ открывать/мержить PR, НЕ release.
+- .claude/agents|workflows|hooks с generated-header НЕ редактировать — оверрайды в .claude/rules/*-overrides.md.
 - Все срезы — на ОДНОЙ ветке ${BRANCH}; агенты НЕ создают/не переключают ветки, дерево чистое.
 - Работать строго внутри ${PROJECT_DIR}. Фреймворк: {{WEB_FRAMEWORK}}.`
 

@@ -38,6 +38,7 @@ const HARD_GATES = `ЖЁСТКИЕ ГЕЙТЫ {{PACK_PREFIX}} (не наруша
 - Если .env залочен хуком — не читать и не править; конфиг тестовой БД в phpunit.xml/tests/bootstrap.php ({{TEST_DB}}).
 - Тест-фреймворк проекта — {{TEST_FRAMEWORK}}: зеркаль стиль существующих тестов. <!-- pack:if SCAFFOLDS_SCHEMA -->Заводи недостающие миграции/модели по требованию среза.<!-- pack:endif --><!-- pack:ifnot SCAFFOLDS_SCHEMA -->Схему/миграции меняй только если того требует срез.<!-- pack:endif --> Статическая проверка (если настроена) — {{CHECK_CMD}}.
 - НЕ git push, НЕ открывать/мержить PR, НЕ release. НЕ migrate:fresh/drop по чему-либо кроме тестовой БД.
+- .claude/agents|workflows|hooks с generated-header НЕ редактировать — оверрайды в .claude/rules/*-overrides.md.
 - Все срезы строятся на ОДНОЙ ветке ${BRANCH}. Агенты НЕ создают и не переключают ветки — коммитят в текущую и оставляют дерево чистым.
 - Работать строго внутри ${PROJECT_DIR}.`
 

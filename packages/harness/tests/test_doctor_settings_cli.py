@@ -56,6 +56,26 @@ class DoctorCase(unittest.TestCase):
         self.assertNotIsInstance(out, SystemExit)
         self.assertIn("harness doctor:", text)
 
+    def test_run_report_hook_stale_when_not_installed(self):
+        # SCHEMA=2 (B-5): tmp-home пуст — хук run-report не установлен ⇒ warn, не ошибка (ok
+        # остаётся True — это не ✗, только «·»-подсказка).
+        env = fx.real_env(self.tmp)
+        out, text = run(cmd_doctor, env, [])
+        self.assertNotIsInstance(out, SystemExit)
+        self.assertIn("хук run-report протух", text)
+        self.assertIn("harness hooks --global", text)
+
+    def test_run_report_hook_fresh_no_warn(self):
+        # копия файлов хука из репо в tmp-home 1-в-1 ⇒ freshness-гейт молчит.
+        env = fx.real_env(self.tmp)
+        src = fx.PACKAGE_ROOT / "configs" / "claude-code" / "hooks" / "run-report"
+        dst = env.home / ".claude" / "hooks" / "run-report"
+        dst.mkdir(parents=True, exist_ok=True)
+        for name in ("run-report.py", "_lib.py", "_usage.py"):
+            (dst / name).write_text((src / name).read_text(encoding="utf-8"), encoding="utf-8")
+        _out, text = run(cmd_doctor, env, [])
+        self.assertNotIn("протух", text)
+
 
 class SettingsCase(unittest.TestCase):
     def setUp(self):

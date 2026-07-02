@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "pack": "node-frontend",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Frontend dev-loop для Vue/Vite (SPA или Inertia): агенты component-builder/slice-builder/test-writer/reviewer (преднагружены frontend-скиллами), последовательный one-branch workflow, SubagentStop review-gate (tsc/eslint) + PostToolUse-валидатор (не блокирует). Роли универсальны, стек — Vue/Vite/Tailwind/Pinia.",
   "stack": {
     "shape": "frontend",
@@ -51,7 +51,8 @@
     { "src": "rules/components.md", "target": ".claude/rules/components.md", "kind": "verbatim", "role": "rule" },
     { "src": "rules/state.md", "target": ".claude/rules/state.md", "kind": "verbatim", "role": "rule" },
     { "src": "rules/tests.md", "target": ".claude/rules/tests.md", "kind": "template", "role": "rule" },
-    { "src": "docs/subagents-and-workflows.md", "target": "{DOCS_DIR}/subagents-and-workflows.md", "kind": "template", "role": "doc" }
+    { "src": "docs/subagents-and-workflows.md", "target": "{DOCS_DIR}/subagents-and-workflows.md", "kind": "template", "role": "doc" },
+    { "src": "rules/reviewer-overrides.md", "target": ".claude/rules/{PACK_PREFIX}-reviewer-overrides.md", "kind": "template", "user_owned": true, "role": "override" }
   ],
   "notes": {
     "verify_workflow": "dev-loop.js использует top-level return/await — node --check НЕ применять; проверяй балансом скобок/непустотой.",

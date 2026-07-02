@@ -110,10 +110,12 @@ if [[ "$GLOBAL" -eq 1 ]]; then
     chmod +x "$AR_DST/router.py" "$AR_DST/session-policy.py"
     [[ -f "$AR_DST/env.ini" ]] || cp "$AR_SRC/env.ini" "$AR_DST/"
     # run-report: SessionEnd-хук архивного захвата исхода прогона (→ .claude/runs/).
-    # Код/_lib/README обновляем; env.ini не перезатираем (там ENABLED/RUNS_KEEP проекта).
+    # Код/_lib/_usage/README обновляем; env.ini не перезатираем (там ENABLED/RUNS_KEEP
+    # проекта). _usage.py — вендоренная (scripts/sync-usage.sh) копия core/usage.py,
+    # нужна рядом физически: PYTHONPATH монорепо в ~/.claude/hooks недоступен.
     RR_SRC="$PRESETS_DIR/hooks/run-report"; RR_DST="$HOME/.claude/hooks/run-report"
     mkdir -p "$RR_DST"
-    cp "$RR_SRC/run-report.py" "$RR_SRC/_lib.py" "$RR_SRC/README.md" "$RR_DST/"
+    cp "$RR_SRC/run-report.py" "$RR_SRC/_lib.py" "$RR_SRC/_usage.py" "$RR_SRC/README.md" "$RR_DST/"
     chmod +x "$RR_DST/run-report.py"
     [[ -f "$RR_DST/env.ini" ]] || cp "$RR_SRC/env.ini" "$RR_DST/"
     # output-styles: телеграфный «голос» вывода для токен-экономии (session-wide). Чистый

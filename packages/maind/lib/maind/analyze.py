@@ -10,11 +10,13 @@ read-only, деградирует по наличию источника (нет
 факт не проверен) выносятся в блок «Непроверено → ПОВТОРНЫЙ ПРОХОД».
 
 stdlib-only; Env передаётся явно. Переиспользует health.health_report, projects, core.run_cmd."""
+import hashlib
 import json
 import os
+import statistics
 from pathlib import Path
 
-from .common import find_run_report, parse_args, read_ndjson_iter, run_cmd
+from .common import find_run_report, parse_args, read_ndjson_iter, run_cmd, safe_load_json
 from .config import load_config
 from .health import _target
 
@@ -114,11 +116,133 @@ def health_slice(env, config, project):
         return None
 
 
+# ── источник 6: usage-токены (run-report schema=2; аддитивный, молча отсутствует на schema=1) ──
+_TREND_K = 20        # окно тренда (последние K прогонов, БЕЗ текущей сессии)
+_TREND_MIN_N = 3      # меньше — сравнивать не с чем, показываем только текущие числа
+
+
+def _fmt_tokens_k(n):
+    """Компактное 'тысячное' число для строки tokens: 48501 → '48k', 500 → '500'."""
+    try:
+        n = float(n)
+    except (TypeError, ValueError):
+        return "?"
+    return f"{n / 1000:.0f}k" if abs(n) >= 1000 else str(int(n))
+
+
+def _read_usage_trend(project_path, exclude_session, limit=_TREND_K):
+    """Последние `limit` строк <project>/.claude/analyze/usage-trend.ndjson, ИСКЛЮЧАЯ текущую
+    сессию (иначе прогон сравнивал бы себя с собой). read_ndjson_iter уже защитен (нет файла/
+    битые строки → пусто), здесь только фильтр+хвост."""
+    f = Path(project_path) / ".claude" / "analyze" / "usage-trend.ndjson"
+    rows = [r for r in read_ndjson_iter(f) if r.get("session") != exclude_session]
+    return rows[-limit:]
+
+
+def _read_baseline(project_path):
+    """<project>/.claude/analyze/baseline.json — pinned-снимок медиан. Формат не заморожен
+    (спека: `{by_model|totals: {median_out,...}}`) → читаем защитно: totals.median_out, а при
+    его отсутствии — median_out первой numeric-подходящей записи by_model. Любое отклонение
+    формата/отсутствие файла → None (сравнение с pinned baseline просто не показывается)."""
+    b = safe_load_json(Path(project_path) / ".claude" / "analyze" / "baseline.json", None)
+    if not isinstance(b, dict):
+        return None
+    node = b.get("totals")
+    if not isinstance(node, dict):
+        by_model = b.get("by_model")
+        node = next((v for v in (by_model or {}).values() if isinstance(v, dict)), None)
+    if not isinstance(node, dict):
+        return None
+    median_out = node.get("median_out")
+    return {"median_out": median_out} if isinstance(median_out, (int, float)) else None
+
+
+def tokens_slice(run_report, project_path, session=None):
+    """Блок usage-токенов текущего прогона + сравнение с трендом/pinned baseline.
+
+    ТОЛЬКО run-report schema=2 с непустым usage.totals — иначе None (молча, без предупреждений:
+    schema=1 просто не несёт usage). Тренд/baseline — best-effort надстройка поверх текущих чисел,
+    отсутствие файла/недостаток строк (<_TREND_MIN_N) не блокирует сами текущие in/out/cache-hit."""
+    if not run_report or run_report.get("schema") != 2:
+        return None
+    usage = run_report.get("usage")
+    if not isinstance(usage, dict):
+        return None
+    totals = usage.get("totals") or {}
+    out = totals.get("out", 0)
+    block = {
+        "in": totals.get("in", 0), "out": out,
+        "cache_read": totals.get("cache_read", 0), "cache_creation": totals.get("cache_creation", 0),
+        "cache_hit": usage.get("cache_hit"),
+        "trend": None, "baseline": None,
+    }
+    exclude = session or run_report.get("session_id")
+    trend_rows = _read_usage_trend(project_path, exclude)
+    if len(trend_rows) >= _TREND_MIN_N:
+        outs = [r.get("out", 0) for r in trend_rows]
+        median_out = statistics.median(outs)
+        median_in = statistics.median([r.get("in", 0) for r in trend_rows])
+        p90_out = statistics.quantiles(outs, n=10, method="inclusive")[-1]
+        block["trend"] = {
+            "n": len(trend_rows), "median_out": median_out, "median_in": median_in,
+            "p90_out": p90_out,
+            "ratio_out": (out / median_out) if median_out else None,
+        }
+    baseline = _read_baseline(project_path)
+    if baseline:
+        bmo = baseline["median_out"]
+        block["baseline"] = {"median_out": bmo, "ratio_out": (out / bmo) if bmo else None}
+    return block
+
+
+# ── источник 7: pack-drift (agent-pack'и harness — без импорта harness) ───────
+def pack_drift(ppath):
+    """generated-файлы agent-pack'ов харнеса, правленные локально мимо override.
+
+    Самодостаточно (maind НЕ импортирует harness — правило репо, пакеты изолированы):
+    путь лока и формула sha256 продублированы буквально из harness.agentpacks
+    (LOCK_REL/sha256_text) — единственный источник схемы лока остаётся harness,
+    здесь только читаем то, что он уже написал. Нет .claude/agent-pack.lock.json → []."""
+    lock = safe_load_json(Path(ppath) / ".claude" / "agent-pack.lock.json", None)
+    packs = lock.get("packs") if isinstance(lock, dict) else None
+    if not isinstance(packs, dict):
+        return []
+    reasons = []
+    for pdata in packs.values():
+        files = pdata.get("files") if isinstance(pdata, dict) else None
+        for f in files if isinstance(files, list) else []:
+            if not isinstance(f, dict):
+                continue
+            base_sha, target = f.get("base_sha256"), f.get("target")
+            if not base_sha or not target or f.get("kind") == "merge":
+                continue
+            owned = f.get("user_owned")
+            if owned is True:
+                continue
+            # ВРЕМЕННЫЙ допуск: локи без поля user_owned (записаны до его появления в схеме)
+            # для review-gate.env.ini — единственного уже известного user_owned-таргета всех
+            # паков, ещё не пережившего ре-рендер с новым полем. Остальные target без поля —
+            # трактуем как НЕ user_owned (совпадает с default .get(..., False) в harness).
+            if owned is None and str(target).endswith("review-gate.env.ini"):
+                continue
+            try:
+                disk_sha = hashlib.sha256(
+                    (Path(ppath) / target).read_text(encoding="utf-8").encode("utf-8")).hexdigest()
+            except (OSError, UnicodeDecodeError):
+                disk_sha = None
+            if disk_sha != base_sha:
+                reasons.append(f"generated-файл пака правлен локально: {target} — "
+                               f"перенеси правку в override и восстанови (harness agent-packs render)")
+    return reasons
+
+
 # ── вердикт ──────────────────────────────────────────────────────────────────
-def compute_verdict(run_report, git, observer):
+def compute_verdict(run_report, git, observer, tokens=None, pack_drift=None):
     """(verdict, confidence, red, reasons, repass) из собранных срезов.
     RED — упавший тест/воркфлоу. ATTENTION — линт/tool-провалы/deferred/workarounds/грязное
-    дерево/LOOP. repass — dev-loop tool_failures (движок был недоступен → факт не проверен)."""
+    дерево/LOOP/аномальные токены (см. tokens_slice)/pack-drift (см. pack_drift). repass —
+    dev-loop tool_failures (движок был недоступен → факт не проверен). RED от токенов и
+    pack-drift НЕ бывает — только ATTENTION."""
     red, reasons, repass = [], [], []
     confidence = "high" if run_report else "low"
 
@@ -166,6 +290,15 @@ def compute_verdict(run_report, git, observer):
         reasons.append(f"рабочее дерево не чисто: {git.get('working_files', '?')} файл(ов)")
     if observer and observer.get("alerts"):
         reasons.append(f"observer-алертов: {len(observer['alerts'])}")
+    for r in (pack_drift or []):
+        reasons.append(r)
+
+    trend = (tokens or {}).get("trend")
+    if trend and trend.get("median_out"):    # median_out=0 — сравнивать не с чем, не делим на 0
+        threshold = max(1.5 * trend["median_out"], trend["p90_out"])
+        if tokens["out"] > threshold:
+            reasons.append(f"токены ×{tokens['out'] / trend['median_out']:.1f} "
+                           f"vs медиана тренда")
 
     if red:
         verdict = "RED"
@@ -191,14 +324,18 @@ def analyze_report(env, config, project, *, session=None, base=None, with_health
     observer = observer_forensics(ppath)
     git = git_status(ppath, base)
     health = health_slice(env, config, project) if with_health else None
+    tokens = tokens_slice(run_report, ppath, effective_session)
+    drift = pack_drift(ppath)
 
-    verdict, confidence, red, reasons, repass = compute_verdict(run_report, git, observer)
+    verdict, confidence, red, reasons, repass = compute_verdict(
+        run_report, git, observer, tokens, pack_drift=drift)
     return {
         "project": pid, "path": ppath,
         "verdict": verdict, "confidence": confidence,
         "red": red, "reasons": reasons, "repass": repass,
         "run_report": run_report, "bash_log": bash_log,
-        "observer": observer, "git": git, "health": health,
+        "observer": observer, "git": git, "health": health, "tokens": tokens,
+        "pack_drift": drift,
     }
 
 
@@ -277,6 +414,25 @@ def _print_human(rep):
         print(f"  статус: {h.get('status')}  · память-демон: "
               f"{'up' if h.get('memory_daemon') else 'down'}  · round-trip: "
               f"{'ok' if h.get('roundtrip') else 'нет'}")
+
+    tk = rep.get("tokens")
+    if tk:                                    # молча отсутствует на schema=1/без usage
+        print("\ntokens  " + "─" * 53)
+        line = (f"  in {_fmt_tokens_k(tk['in'])} · out {_fmt_tokens_k(tk['out'])}")
+        if tk.get("cache_hit") is not None:
+            line += f" · cache-hit {tk['cache_hit'] * 100:.0f}%"
+        tr = tk.get("trend")
+        if tr:
+            line += (f" · медиана out ({tr['n']} прогонов) {_fmt_tokens_k(tr['median_out'])}")
+            if tr.get("ratio_out") is not None:
+                line += f" → ×{tr['ratio_out']:.1f}"
+        print(line)
+        bl = tk.get("baseline")
+        if bl:
+            bline = f"  pinned baseline: медиана out {_fmt_tokens_k(bl['median_out'])}"
+            if bl.get("ratio_out") is not None:
+                bline += f" → ×{bl['ratio_out']:.1f}"
+            print(bline)
 
     print("\nИТОГ  " + "─" * 56)
     for r in rep["red"]:

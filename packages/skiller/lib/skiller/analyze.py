@@ -10,11 +10,28 @@
 Честное ограничение: загрузка скилла детектится ТОЛЬКО по явным `Skill`-tool-
 вызовам; нативный `skills:`-preload субагента и авто-триггер плагина по description
 как Skill-вызов НЕ видны → «DEAD» эвристичен (помечаем в выводе).
+
+Разделение труда с соседними слоями (не дублировать, а дополнять):
+- хук `run-report` (packages/harness/configs/claude-code/hooks/run-report/) —
+  always-on коллектор: пишет структурированный исход КАЖДОГО прогона молча, без
+  участия человека;
+- `skiller analyze-run` (этот модуль) — ручной deep-dive ОДНОГО прогона по
+  требованию: токены/тайминги/skill-usage на живых JSONL-транскриптах;
+- `maind analyze` — вердикт GREEN/ATTENTION/RED по прогону (run-report + git +
+  health), синтез поверх, не парсинг транскриптов;
+- `analyst` — тренд/уроки НА ГОРИЗОНТЕ прогонов (digest/review/promote), а не
+  разбор одного прогона.
+Суммирование usage (токены/tool_errors/wall-clock) — из `core.usage` (единый
+источник, см. предостережение о самодостаточности в его docstring); здесь —
+только то, что `core.usage` не знает: tools/stop_reasons/skills/iterations,
+skill_usage (effective/DEAD), scan_markers, рендер и `--store`.
 """
 import json
 import os
 from datetime import datetime
 from pathlib import Path
+
+from core.usage import feed_event, finish, new_acc
 
 from .common import die, parse_flags
 
@@ -87,54 +104,49 @@ def skill_key(name):
 
 # --- агрегация по одному агенту (один транскрипт) -----------------------------
 def agent_stats(events, label):
-    st = {
-        "agent": label, "model": None,
-        "in": 0, "out": 0, "cache_read": 0, "cache_creation": 0,
-        "iterations": 0, "assistant_msgs": 0, "tool_errors": 0,
-        "tools": {}, "stop_reasons": {}, "skills": {},
-        "ts_min": None, "ts_max": None,
-    }
+    """Агрегат одного агента (один транскрипт). Токены/tool_errors/ts_min-ts_max —
+    через core.usage.feed_event/finish (единый источник сумм, не дублируем разбор
+    usage-блока и is_error-детект здесь). tools/stop_reasons/skills/iterations —
+    уникальная для analyze-run добавка: core.usage про Skill-вызовы/итерации/
+    tool_use ничего не знает (это его домен не входит, см. его docstring)."""
+    acc = new_acc()
+    tools, stop_reasons, skills = {}, {}, {}
+    iterations = 0
     for o in events:
-        ts = o.get("timestamp")
-        if isinstance(ts, str):
-            if st["ts_min"] is None or ts < st["ts_min"]:
-                st["ts_min"] = ts
-            if st["ts_max"] is None or ts > st["ts_max"]:
-                st["ts_max"] = ts
+        feed_event(acc, o)
+        if not isinstance(o, dict) or o.get("type") != "assistant":
+            continue
         m = o.get("message")
         if not isinstance(m, dict):
             continue
-        if o.get("type") == "assistant":
-            st["assistant_msgs"] += 1
-            if m.get("model"):
-                st["model"] = m["model"]
-            u = m.get("usage")
-            if isinstance(u, dict):
-                st["in"] += u.get("input_tokens") or 0
-                st["out"] += u.get("output_tokens") or 0
-                st["cache_read"] += u.get("cache_read_input_tokens") or 0
-                st["cache_creation"] += u.get("cache_creation_input_tokens") or 0
-                it = u.get("iterations")
-                if isinstance(it, int):
-                    st["iterations"] += it
-            sr = m.get("stop_reason")
-            if sr:
-                st["stop_reasons"][sr] = st["stop_reasons"].get(sr, 0) + 1
-            for b in _iter_content(m):
-                if isinstance(b, dict) and b.get("type") == "tool_use":
-                    name = b.get("name", "?")
-                    st["tools"][name] = st["tools"].get(name, 0) + 1
-                    if name == "Skill":
-                        inp = b.get("input") or {}
-                        sk = inp.get("skill") or inp.get("command")
-                        if sk:
-                            k = skill_key(sk)
-                            st["skills"][k] = st["skills"].get(k, 0) + 1
-        elif o.get("type") == "user":
-            for b in _iter_content(m):
-                if isinstance(b, dict) and b.get("is_error"):
-                    st["tool_errors"] += 1
-    return st
+        u = m.get("usage")
+        if isinstance(u, dict):
+            it = u.get("iterations")
+            if isinstance(it, int):
+                iterations += it
+        sr = m.get("stop_reason")
+        if sr:
+            stop_reasons[sr] = stop_reasons.get(sr, 0) + 1
+        for b in _iter_content(m):
+            if isinstance(b, dict) and b.get("type") == "tool_use":
+                name = b.get("name", "?")
+                tools[name] = tools.get(name, 0) + 1
+                if name == "Skill":
+                    inp = b.get("input") or {}
+                    sk = inp.get("skill") or inp.get("command")
+                    if sk:
+                        k = skill_key(sk)
+                        skills[k] = skills.get(k, 0) + 1
+    agg = finish(acc)
+    return {
+        "agent": label, "model": agg["model"],
+        "in": agg["in"], "out": agg["out"],
+        "cache_read": agg["cache_read"], "cache_creation": agg["cache_creation"],
+        "iterations": iterations, "assistant_msgs": agg["msgs"],
+        "tool_errors": agg["tool_errors"],
+        "tools": tools, "stop_reasons": stop_reasons, "skills": skills,
+        "ts_min": acc["ts_min"], "ts_max": acc["ts_max"],
+    }
 
 
 def _dt(s):

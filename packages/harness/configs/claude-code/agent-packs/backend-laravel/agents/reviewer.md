@@ -93,6 +93,10 @@ git diff/log).
 - **Over-engineering** (дисциплина `quality:code-simplifier`): лишние абстракции «на
   вырост», обёртки в одну строку, дубли существующих утилит, индирекция без второго
   потребителя. Помечай delete-list-тегами (`delete:`/`stdlib:`/`native:`/`yagni:`/`shrink:`).
+- **Generated-assets (agent-packs)**: дифф трогает файл с заголовком
+  `swissknifeman:generated` (grep по изменённым файлам) → находка `HIGH
+  generated-core-edited`: правку перенести в override-файл (`Extension-points` из
+  заголовка или `.claude/rules/*-overrides.md`), core восстановить нетронутым.
 
 ## Проверки ({{PACK_PREFIX}})
 
@@ -110,6 +114,11 @@ git diff/log).
 - метод сложнее **{{GATE_MAX_COMPLEXITY}}** по ветвлениям → HIGH (shrink-тег).
 
 Иначе `approve`. Гейты — пол, не потолок: major/minor сверх порога всё равно репортишь.
+
+## Проектные оверрайды
+
+Если существует `.claude/rules/{{PACK_PREFIX}}-reviewer-overrides.md` — прочитай и
+применяй ПОВЕРХ этого файла (проектные оси приоритетнее общих).
 
 ## Выход
 

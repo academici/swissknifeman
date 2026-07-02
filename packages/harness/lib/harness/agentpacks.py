@@ -10,7 +10,14 @@ Claude Code (агенты/воркфлоу/хуки/фрагмент settings/ru
 
 Контракты: target-пути в pack.json — single-brace `{KEY}`; контент template-файлов —
 double-brace `{{KEY}}`; интервью `default` интерполируется single-brace. Записи —
-merge-only через settings.write_*, бэкап *.bak. stdlib-only, сообщения на русском."""
+merge-only через settings.write_*, бэкап *.bak. stdlib-only, сообщения на русском.
+
+Provenance-header: каждый сгенерированный файл (template И verbatim, кроме merge)
+получает детерминированный блок «swissknifeman:generated» (без timestamp!) с паспортом
+(пак@версия, шаблон, edit-policy, extension-points, команда upgrade). Header вшивается
+ДО подсчёта sha → `base_sha256` в lock включает его, матрица решений
+_decide/categorize_file_change не меняется. Lock schema=1, поле `user_owned` в
+files[] — аддитивное (старые локи без него читаются через .get(..., False))."""
 import hashlib
 import json
 import os
@@ -171,6 +178,77 @@ def resolve_interview(manifest, target, overrides, shell_policy="safe"):
     return answers, report
 
 
+# ── provenance header ────────────────────────────────────────────────────────
+# Синтаксис комментария по расширению target-файла. Расширения вне карты header
+# не получают (не знаем безопасный синтаксис комментария — лучше ничего, чем
+# сломать файл). kind=merge header не получает никогда (фрагмент вливается в
+# чужой JSON, свой заголовок там неуместен и невалиден).
+_COMMENT_STYLES = {".md": "html", ".js": "line//", ".mjs": "line//",
+                   ".sh": "line#", ".ini": "line#"}
+
+
+def provenance_header(pack, version, src_rel, target_rel, edit_policy,
+                      extension_points):
+    """Детерминированный provenance-блок для сгенерированного файла. НАМЕРЕННО без
+    timestamp: header участвует в base_sha256, и любая недетерминированность
+    ломала бы skip-nochange/idempotent re-render. Возвращает '' для расширений
+    вне _COMMENT_STYLES."""
+    style = _COMMENT_STYLES.get(os.path.splitext(target_rel)[1])
+    if not style:
+        return ""
+    pts = ", ".join(extension_points) if extension_points else "—"
+    lines = [
+        "swissknifeman:generated",
+        "Generated-by: harness agent-packs",
+        f"Pack: {pack}@{version}",
+        f"Template: {src_rel}",
+        f"Edit-policy: {edit_policy}",
+        f"Extension-points: {pts}",
+        f"Upgrade: harness agent-packs upgrade --pack {pack} --target .",
+    ]
+    if style == "html":
+        return "<!-- " + lines[0] + "\n" + "\n".join(lines[1:]) + "\n-->\n"
+    prefix = "//" if style == "line//" else "#"
+    return "\n".join(f"{prefix} {ln}" for ln in lines) + "\n"
+
+
+def inject_header(rendered, header, target_rel):
+    """Вставить header в отрендеренный текст, не ломая машинно-значимые прологи:
+    .md — ПОСЛЕ закрывающего '---' YAML-frontmatter (иначе Claude Code перестал бы
+    парсить метаданные агента), shebang-файлы — после первой строки (иначе ядро
+    не увидит интерпретатор). Пустой header → текст без изменений."""
+    if not header:
+        return rendered
+    ext = os.path.splitext(target_rel)[1]
+    if ext == ".md" and rendered.startswith("---"):
+        lines = rendered.splitlines(keepends=True)
+        if lines[0].rstrip("\n") == "---":
+            for i, ln in enumerate(lines[1:], start=1):
+                if ln.rstrip("\n") == "---":  # закрывающий разделитель frontmatter
+                    return "".join(lines[:i + 1]) + header + "".join(lines[i + 1:])
+        return header + rendered  # frontmatter не закрыт/нет — в начало
+    if rendered.startswith("#!"):
+        nl = rendered.find("\n")
+        if nl != -1:
+            return rendered[:nl + 1] + header + rendered[nl + 1:]
+        return rendered + "\n" + header
+    return header + rendered
+
+
+def _edit_policy(f):
+    """Текст Edit-policy для header: user_owned-файлы отданы пользователю навсегда,
+    остальные перезаписываются паком при upgrade — редактировать их бессмысленно."""
+    return ("user-owned — файл ваш, пак его не перезапишет" if f.get("user_owned")
+            else "generated-core — НЕ редактируй; расширяй через extension-point")
+
+
+def _extension_points(manifest, answers):
+    """Точки расширения пака — target'ы файлов с role=override (новое поле формата,
+    может отсутствовать). Их и предлагаем править вместо generated-core."""
+    return [_subst_single(x["target"], answers)
+            for x in manifest.get("files", []) if x.get("role") == "override"]
+
+
 # ── render engine ────────────────────────────────────────────────────────────
 def sha256_text(s):
     return hashlib.sha256(s.encode("utf-8")).hexdigest()
@@ -243,10 +321,13 @@ def _decide(target_path, new_sha, owned, base_sha):
 
 def render_pack(env, pack, target, answers, *, dry=False, prior=None):
     """Отрендерить и записать все files[] пака. Возвращает report c lock-структурой
-    файлов (src/target/kind/base_sha256/local_modified) и changed-флагом."""
+    файлов (src/target/kind/base_sha256/local_modified/user_owned) и changed-флагом.
+    Provenance-header вшивается ДО вычисления sha — база в lock включает header,
+    поэтому матрица _decide/categorize_file_change не меняется вообще."""
     manifest = load_manifest(env, pack)
     pdir = pack_dir(env, pack)
     prior_files = {f["src"]: f for f in (prior or {}).get("files", [])}
+    ext_points = _extension_points(manifest, answers)
     out_files, changed, notes = [], False, []
     for f in manifest.get("files", []):
         src, kind = f["src"], f.get("kind", "template")
@@ -266,11 +347,17 @@ def render_pack(env, pack, target, answers, *, dry=False, prior=None):
             changed = changed or ch
             out_files.append({"src": src, "target": tgt_rel, "kind": kind,
                               "base_sha256": sha256_text(sfile.read_text(encoding="utf-8")),
-                              "local_modified": False})
+                              "local_modified": False,
+                              "user_owned": bool(f.get("user_owned", False))})
             continue
 
         rendered = (_render_template_text(sfile.read_text(encoding="utf-8"), answers)
                     if kind == "template" else sfile.read_text(encoding="utf-8"))
+        rendered = inject_header(
+            rendered,
+            provenance_header(pack, manifest["version"], src, tgt_rel,
+                              _edit_policy(f), ext_points),
+            tgt_rel)
         new_sha = sha256_text(rendered)
         decision = _decide(tgt, new_sha, owned, base_sha)
         local_mod = decision == "skip-local-modified"
@@ -286,7 +373,8 @@ def render_pack(env, pack, target, answers, *, dry=False, prior=None):
         elif decision == "skip-local-modified":
             warn(f"  {tgt_rel} правлен локально — не затираю (см. upgrade)")
         out_files.append({"src": src, "target": tgt_rel, "kind": kind,
-                          "base_sha256": new_sha, "local_modified": local_mod})
+                          "base_sha256": new_sha, "local_modified": local_mod,
+                          "user_owned": bool(f.get("user_owned", False))})
     report = {"files": out_files, "changed": changed, "notes": notes}
     return report
 
@@ -411,6 +499,7 @@ def do_upgrade(env, pack, target, *, overrides, dry, shell_policy):
     answers, _ = resolve_interview(manifest, target, base_overrides, shell_policy)
     prior_files = {f["src"]: f for f in prior.get("files", [])}
     pdir = pack_dir(env, pack)
+    ext_points = _extension_points(manifest, answers)
     plan, out_files = [], []
     for f in manifest.get("files", []):
         src, kind = f["src"], f.get("kind", "template")
@@ -423,10 +512,18 @@ def do_upgrade(env, pack, target, *, overrides, dry, shell_policy):
             _merge_fragment(target, sfile, f.get("merge", ""), answers, dry)
             out_files.append({"src": src, "target": tgt_rel, "kind": kind,
                               "base_sha256": sha256_text(sfile.read_text(encoding="utf-8")),
-                              "local_modified": False})
+                              "local_modified": False,
+                              "user_owned": bool(f.get("user_owned", False))})
             continue
         rendered = (_render_template_text(sfile.read_text(encoding="utf-8"), answers)
                     if kind == "template" else sfile.read_text(encoding="utf-8"))
+        # header — ДО sha: база сравнивается с прежней базой, тоже включавшей header
+        # (изменение только header'а, напр. bump версии пака, = обычный safe-apply)
+        rendered = inject_header(
+            rendered,
+            provenance_header(pack, manifest["version"], src, tgt_rel,
+                              _edit_policy(f), ext_points),
+            tgt_rel)
         new_sha = sha256_text(rendered)
         cat = categorize_file_change(f, prior_files.get(src), new_sha, tgt)
         plan.append((cat, src, tgt_rel))
@@ -445,7 +542,8 @@ def do_upgrade(env, pack, target, *, overrides, dry, shell_policy):
             warn(f"  conflict: {tgt_rel} — новый вариант в {tgt_rel}.pack-new (смержи вручную)")
         out_files.append({"src": src, "target": tgt_rel, "kind": kind,
                           "base_sha256": new_sha,
-                          "local_modified": cat == "conflict"})
+                          "local_modified": cat == "conflict",
+                          "user_owned": bool(f.get("user_owned", False))})
     print(f"=== upgrade {pack}: {v_old} → {v_new} ===")
     for cat, _src, tgt_rel in plan:
         print(f"  [{cat}] {tgt_rel}")
@@ -464,6 +562,58 @@ def do_upgrade(env, pack, target, *, overrides, dry, shell_policy):
     lock.setdefault("packs", {})[pack] = entry
     write_lock(target, lock, dry)
     return 0
+
+
+def lock_drift(target):
+    """Детект дрейфа generated-файлов lock'а против диска (E-2). Для каждой
+    files[]-записи каждого установленного пака — кроме kind=merge (вливается в
+    чужой JSON, свой sha не отслеживаем) и user_owned (файл отдан пользователю
+    навсегда, «дрейф» там ожидаем и не проблема) — sha256 файла на диске
+    сравнивается с base_sha256 из lock. Защитная функция: lock читается через
+    load_lock (несуществующий/битый → {schema:1, packs:{}} → пустой дрейф),
+    отсутствующий/нечитаемый файл на диске — 'missing', а не исключение.
+
+    Возвращает список {pack, target, status: 'modified'|'missing'} — чистая,
+    без побочных эффектов и печати (тестируема напрямую)."""
+    lock = load_lock(target)
+    drift = []
+    for pack, entry in (lock.get("packs") or {}).items():
+        for f in entry.get("files") or []:
+            if f.get("kind") == "merge" or f.get("user_owned"):
+                continue
+            tgt_rel = f.get("target", "")
+            tgt = target / tgt_rel
+            if not tgt.exists():
+                drift.append({"pack": pack, "target": tgt_rel, "status": "missing"})
+                continue
+            try:
+                disk_sha = sha256_text(tgt.read_text(encoding="utf-8"))
+            except (OSError, UnicodeDecodeError):
+                drift.append({"pack": pack, "target": tgt_rel, "status": "missing"})
+                continue
+            if disk_sha != f.get("base_sha256"):
+                drift.append({"pack": pack, "target": tgt_rel, "status": "modified"})
+    return drift
+
+
+def do_doctor_drift(target, *, strict=False):
+    """Печать таблицы дрейфа generated-файлов (lock vs диск). rc=0 информативно
+    (для обычного doctor-прогона), но --strict превращает найденный дрейф в
+    негромкий провал (rc=1) — годится как CI-гейт «никто не правил generated
+    руками мимо override»."""
+    drift = lock_drift(target)
+    if not drift:
+        print("[OK] дрейф generated-файлов не найден")
+        return 0
+    for d in drift:
+        if d["status"] == "modified":
+            warn(f"[{d['pack']}] generated-файл правлен локально: {d['target']} — "
+                 f"перенеси правку в override и восстанови render")
+        else:
+            warn(f"[{d['pack']}] generated-файл отсутствует: {d['target']} — "
+                 f"восстанови render (harness agent-packs render --pack {d['pack']} "
+                 f"--target .)")
+    return 1 if strict else 0
 
 
 def do_doctor(env, pack=None, target=None, json_out=False):
@@ -553,11 +703,13 @@ def cmd_agent_packs(env, argv):
     opts = parse_flags(rest, {
         "--pack": "str", "--target": "str", "--auto": "bool", "--dry-run": "bool",
         "--install-only": "bool", "--allow-shell": "str", "--list": "bool", "--json": "bool",
+        "--drift": "bool", "--strict": "bool",
     })
     if opts.get("help"):
         print("harness agent-packs <list|render|upgrade|doctor> "
               "[--pack P] [--target DIR] [--auto] [--answer K=V] "
-              "[--install-only] [--allow-shell off|safe|full] [--dry-run] [--json]")
+              "[--install-only] [--allow-shell off|safe|full] [--dry-run] [--json] "
+              "[--drift [--strict]]")
         return
     shell_policy = opts.get("allow_shell") or "safe"
 
@@ -571,6 +723,10 @@ def cmd_agent_packs(env, argv):
     if sub == "doctor":
         from pathlib import Path
         target = Path(opts["target"]).resolve() if opts.get("target") else None
+        if opts.get("drift"):
+            if target is None:
+                die("--drift требует --target DIR")
+            raise SystemExit(do_doctor_drift(target, strict=bool(opts.get("strict"))))
         raise SystemExit(do_doctor(env, opts.get("pack"), target, json_out=opts.get("json")))
 
     if sub in ("render", "install", "upgrade"):

@@ -3,6 +3,7 @@
 Проверяем чистые функции разбора транскрипта: агрегат токенов/инструментов/скиллов,
 cache-hit, wall-clock, skill-usage (effective/dead), скан рантайм-маркеров,
 нормализацию имени скилла, метку задачи, толерантный парсер. Без сети/реестра."""
+import json
 import sys
 import tempfile
 import unittest
@@ -101,6 +102,75 @@ class AgentStatsCase(unittest.TestCase):
     def test_wall_seconds(self):
         st = agent_stats(self.events, "a")
         self.assertEqual(wall_seconds(st["ts_min"], st["ts_max"]), 300.0)
+
+    def test_tool_errors_only_on_tool_result_blocks(self):
+        # Регрессия B-3: agent_stats делегирует tool_errors в core.usage.feed_event,
+        # который требует type=="tool_result" (не любой блок с is_error) — фиксируем,
+        # чтобы дубль-суммирование не заполз обратно с более широким/иным условием.
+        events = [_user([{"type": "text", "text": "не tool_result"}, {"is_error": True}])]
+        st = agent_stats(events, "a")
+        self.assertEqual(st["tool_errors"], 0)
+
+
+class AgentStatsJsonlFixtureCase(unittest.TestCase):
+    """Сквозная фикстура B-3: JSONL-файл → parse_transcript → agent_stats, суммы
+    зафиксированы явными числами — гарантия, что рефакторинг agent_stats на
+    core.usage (new_acc/feed_event/finish) не сдвинул ни один итог."""
+
+    def test_sums_locked_end_to_end(self):
+        lines = [
+            json.dumps({"type": "user", "timestamp": "2026-07-02T09:00:00.000Z",
+                       "message": {"content": "Почини баг в парсере"}}),
+            json.dumps({"type": "assistant", "timestamp": "2026-07-02T09:00:05.000Z",
+                       "message": {
+                           "model": "claude-sonnet-4-5",
+                           "usage": {"input_tokens": 500, "output_tokens": 120,
+                                    "cache_read_input_tokens": 2000,
+                                    "cache_creation_input_tokens": 100,
+                                    "iterations": 3},
+                           "stop_reason": "tool_use",
+                           "content": [
+                               {"type": "tool_use", "name": "Read",
+                                "input": {"file_path": "x.py"}},
+                               {"type": "tool_use", "name": "Skill",
+                                "input": {"skill": "general/verify-claims"}},
+                           ]}}),
+            json.dumps({"type": "user", "timestamp": "2026-07-02T09:00:10.000Z",
+                       "message": {"content": [
+                           {"type": "tool_result", "is_error": True,
+                            "content": "boom"}]}}),
+            json.dumps({"type": "assistant", "timestamp": "2026-07-02T09:01:00.000Z",
+                       "message": {
+                           "model": "claude-sonnet-4-5",
+                           "usage": {"input_tokens": 300, "output_tokens": 90,
+                                    "cache_read_input_tokens": 0,
+                                    "cache_creation_input_tokens": 0},
+                           "stop_reason": "end_turn",
+                           "content": [{"type": "text", "text": "готово"}]}}),
+            "мусорная строка не json",
+            "",
+        ]
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "session.jsonl"
+            p.write_text("\n".join(lines), encoding="utf-8")
+            events = parse_transcript(p)
+            st = agent_stats(events, "main:fixture")
+
+        self.assertEqual(st["in"], 800)
+        self.assertEqual(st["out"], 210)
+        self.assertEqual(st["cache_read"], 2000)
+        self.assertEqual(st["cache_creation"], 100)
+        self.assertEqual(st["iterations"], 3)
+        self.assertEqual(st["assistant_msgs"], 2)
+        self.assertEqual(st["tool_errors"], 1)
+        self.assertEqual(st["model"], "claude-sonnet-4-5")
+        self.assertEqual(st["tools"], {"Read": 1, "Skill": 1})
+        self.assertEqual(st["skills"], {"verify-claims": 1})
+        self.assertEqual(st["stop_reasons"], {"tool_use": 1, "end_turn": 1})
+        self.assertEqual(st["ts_min"], "2026-07-02T09:00:00.000Z")
+        self.assertEqual(st["ts_max"], "2026-07-02T09:01:00.000Z")
+        self.assertEqual(wall_seconds(st["ts_min"], st["ts_max"]), 60.0)
+        self.assertAlmostEqual(cache_hit(st), 2000 / (800 + 2000 + 100), places=6)
 
 
 class SkillUsageCase(unittest.TestCase):

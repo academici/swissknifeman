@@ -46,15 +46,15 @@ CHANGELOG-дельте с 3-way reasoning через sha256, без diff-дви�
 
 | Пак | Shape | Стек | Версия |
 |---|---|---|---|
-| `_common` | agnostic | оркестратор (delegate-only) — общий prerequisite | 0.1.0 |
-| `backend-laravel` | backend | Laravel/PHP | 0.2.0 |
-| `node-frontend` | frontend | Vue/Vite/TS (SPA/Inertia/Nuxt) | 0.1.0 |
-| `dart-flutter` | mobile | Flutter/Dart (mobile/POS/embedded) | 0.1.0 |
-| `python-backend` | backend | Python (FastAPI/Django/Flask) | 0.1.0 |
-| `role-tech-lead` | role | tech-lead (sprint/делегирование/ревью) | 0.1.0 |
-| `role-cto` | role | startup-CTO (архитектура/tech-radar/AI-viability) | 0.1.0 |
-| `role-founder` | role | solo-founder (discovery/MVP/cadence) | 0.1.0 |
-| `role-maintainer` | role | OSS-maintainer (триаж/ревью/релиз) | 0.1.0 |
+| `_common` | agnostic | оркестратор (delegate-only) — общий prerequisite | 0.4.0 |
+| `backend-laravel` | backend | Laravel/PHP | 0.11.1 |
+| `node-frontend` | frontend | Vue/Vite/TS (SPA/Inertia/Nuxt) | 0.4.1 |
+| `dart-flutter` | mobile | Flutter/Dart (mobile/POS/embedded) | 0.4.1 |
+| `python-backend` | backend | Python (FastAPI/Django/Flask) | 0.4.1 |
+| `role-tech-lead` | role | tech-lead (sprint/делегирование/ревью) | 0.2.1 |
+| `role-cto` | role | startup-CTO (архитектура/tech-radar/AI-viability) | 0.1.1 |
+| `role-founder` | role | solo-founder (discovery/MVP/cadence) | 0.1.1 |
+| `role-maintainer` | role | OSS-maintainer (триаж/ревью/релиз) | 0.2.1 |
 
 Каждый профиль (`packages/skiller/profiles/<type>.json`) называет `agent_pack` (строка ИЛИ
 список — **композиция**: стек-пак + `_common`). Fullstack = композиция по концерну

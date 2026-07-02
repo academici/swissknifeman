@@ -112,6 +112,95 @@ class TestAgentPacks(unittest.TestCase):
     def test_doctor_clean_pack(self):
         self.assertEqual(ap.do_doctor(self.env, self.pack), 0)
 
+    # ── provenance-header (E-1) ──────────────────────────────────────────────
+    def test_header_in_md_after_frontmatter(self):
+        # header в .md строго ПОСЛЕ закрывающего '---' — иначе сломался бы
+        # парсинг YAML-метаданных агента Claude Code'ом
+        self._render(overrides={"PACK_PREFIX": "acme"})
+        text = (self.proj / ".claude/agents/acme-reviewer.md").read_text()
+        fm_end = text.index("\n---\n") + len("\n---\n")
+        self.assertTrue(text[fm_end:].startswith("<!-- swissknifeman:generated"))
+        self.assertIn(f"Pack: {self.pack}@0.1.0", text)
+        self.assertIn("Template: agents/reviewer.md", text)
+        self.assertIn("Edit-policy: generated-core", text)
+        # точка расширения из role=override с интерполированным target
+        self.assertIn("Extension-points: .claude/agents/acme-overrides.md", text)
+        self.assertIn(f"Upgrade: harness agent-packs upgrade --pack {self.pack} "
+                      "--target .", text)
+
+    def test_header_in_sh_after_shebang(self):
+        # verbatim-файл тоже получает header; shebang остаётся первой строкой
+        self._render(overrides={"PACK_PREFIX": "x"})
+        lines = (self.proj / ".claude/hooks/gate.sh").read_text().splitlines()
+        self.assertTrue(lines[0].startswith("#!"))
+        self.assertEqual(lines[1], "# swissknifeman:generated")
+
+    def test_header_user_owned_policy(self):
+        self._render(overrides={"PACK_PREFIX": "x"})
+        text = (self.proj / ".claude/agents/x-overrides.md").read_text()
+        self.assertIn("Edit-policy: user-owned — файл ваш", text)
+        # .md без frontmatter → header в самом начале
+        self.assertTrue(text.startswith("<!-- swissknifeman:generated"))
+
+    def test_merge_fragment_without_header(self):
+        # kind=merge вливается в чужой settings.json — header там невалиден
+        self._render(overrides={"PACK_PREFIX": "x"})
+        s = (self.proj / ".claude/settings.json").read_text()
+        self.assertNotIn("swissknifeman:generated", s)
+
+    def test_header_deterministic_rerender_nochange(self):
+        # header без timestamp → sha стабилен → повторный render = skip-nochange
+        self._render(overrides={"PACK_PREFIX": "x"})
+        before = (self.proj / ".claude/agents/x-reviewer.md").read_text()
+        rep = ap.render_pack(self.env, self.pack, self.proj,
+                             {"PACK_PREFIX": "x", "RUNNER": "true", "USE_X": True},
+                             prior=ap.load_lock(self.proj)["packs"][self.pack])
+        self.assertFalse(rep["changed"])
+        self.assertEqual((self.proj / ".claude/agents/x-reviewer.md").read_text(),
+                         before)
+
+    def test_header_deterministic_skip_identical_without_lock(self):
+        # без lock (owned=False), диск байт-в-байт совпадает → skip-identical, не write
+        self._render(overrides={"PACK_PREFIX": "x"})
+        rep = ap.render_pack(self.env, self.pack, self.proj,
+                             {"PACK_PREFIX": "x", "RUNNER": "true", "USE_X": True},
+                             prior=None)
+        self.assertFalse(rep["changed"])
+        self.assertEqual(rep["notes"], [])  # ни одной collision-жалобы
+
+    def test_user_owned_flag_in_lock(self):
+        self._render(overrides={"PACK_PREFIX": "x"})
+        lock = json.loads((self.proj / ".claude/agent-pack.lock.json").read_text())
+        by_src = {f["src"]: f for f in lock["packs"][self.pack]["files"]}
+        self.assertTrue(all("user_owned" in f for f in by_src.values()))
+        self.assertTrue(by_src["agents/overrides.md"]["user_owned"])
+        self.assertFalse(by_src["agents/reviewer.md"]["user_owned"])
+
+    def test_old_lock_without_user_owned_still_reads(self):
+        # старый lock (до E-1) без поля user_owned читается без миграции
+        self._render(overrides={"PACK_PREFIX": "x"})
+        lp = self.proj / ".claude/agent-pack.lock.json"
+        lock = json.loads(lp.read_text())
+        for f in lock["packs"][self.pack]["files"]:
+            f.pop("user_owned", None)
+        lp.write_text(json.dumps(lock))
+        prior = ap.load_lock(self.proj)["packs"][self.pack]
+        self.assertFalse(any(f.get("user_owned", False) for f in prior["files"]))
+        rep = ap.render_pack(self.env, self.pack, self.proj,
+                             {"PACK_PREFIX": "x", "RUNNER": "true", "USE_X": True},
+                             prior=prior)
+        self.assertFalse(rep["changed"])  # base_sha256 те же — nochange
+        lock2 = json.loads(lp.read_text())  # lock не переписан (changed=False)…
+        # …но render-репорт уже несёт поле аддитивно
+        self.assertTrue(all("user_owned" in f for f in rep["files"]))
+        self.assertEqual(lock2["schema"], 1)
+
+    def test_provenance_header_unknown_extension_empty(self):
+        self.assertEqual(ap.provenance_header("p", "1.0", "a.json", "b.json",
+                                              "x", []), "")
+        # пустой header → inject_header не трогает текст
+        self.assertEqual(ap.inject_header("body", "", "b.json"), "body")
+
     def test_upgrade_installs_new_file(self):
         # Файл, добавленный в новой версии пака (нет в прежнем lock), должен
         # ставиться на upgrade — не только render (иначе recon-агенты не доедут).

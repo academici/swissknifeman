@@ -11,7 +11,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
-from skiller.analyze import (agent_stats, build_report, cache_hit,
+from skiller.quality.analyze import (agent_stats, build_report, cache_hit,
                              parse_transcript, render_report, scan_markers,
                              skill_key, skill_usage, wall_seconds,
                              _first_user_text)

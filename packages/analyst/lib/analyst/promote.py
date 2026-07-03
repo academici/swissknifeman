@@ -9,7 +9,8 @@ surfacing повторим позже — промоут на диске не о
 Confidence-гейты по числам (N≥15/conf≥0.6 …) и mem0 auto-резолв — фаза P3; в MVP переход
 делает человек осознанно."""
 import os
-import shutil
+
+from core import sibling_bin
 
 from . import lessons
 from .common import confirm, die, parse_args, run_cmd, warn
@@ -25,16 +26,10 @@ def _next_state(cur):
 
 # ── surfacing в память mAInd (graceful) ──────────────────────────────────────
 def _resolve_maind_bin(env):
-    """MAIND_BIN → PATH → <monorepo>/packages/maind/bin/maind. None если не найден."""
-    override = os.environ.get("MAIND_BIN")
-    if override:
-        p = os.path.expanduser(override)
-        return p if os.path.exists(p) else None
-    which = shutil.which("maind")
-    if which:
-        return which
-    cand = env.monorepo_root / "packages" / "maind" / "bin" / "maind"
-    return str(cand) if cand.exists() else None
+    """MAIND_BIN → PATH → <monorepo>/packages/maind/bin/maind. None если не найден.
+    Единый резолвер — `core.sibling_bin`."""
+    p = sibling_bin("maind", env_var="MAIND_BIN", monorepo_root=env.monorepo_root)
+    return str(p) if p else None
 
 
 def _fact_text(lesson):

@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from maind import workspace
+from maind.provision import workspace
 from tests.fixtures import make_repo
 
 

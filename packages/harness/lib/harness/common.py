@@ -8,8 +8,9 @@ from dataclasses import dataclass
 # Общий core (подключается через PYTHONPATH лаунчером/test.sh). Реэкспорт для
 # модулей пакета, которые берут эти имена из .common.
 from core import (  # noqa: F401
-    HOME, BaseEnv, atomic_write_text, confirm, die, find_monorepo_root,
-    now_iso, parse_flags, run_cmd, safe_load_json, sanitize, warn,
+    HOME, BaseEnv, atomic_write_text, backup_file, confirm, die,
+    find_monorepo_root, now_iso, parse_flags, run_cmd, safe_load_json,
+    sanitize, warn,
 )
 
 

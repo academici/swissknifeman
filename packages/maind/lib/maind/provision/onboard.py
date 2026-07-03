@@ -9,13 +9,13 @@ import os
 import sys
 from pathlib import Path
 
-from .common import (detect_project_type, die, docs_visibility_for, parse_args,
+from ..common import (detect_project_type, die, docs_visibility_for, parse_args,
                      sanitize)
-from .config import load_config
+from ..config import load_config
 from .deploy import deploy_project, mark_deployed
 from .orchestrate import run_capability
-from .projects import get as get_project
-from .projects import write_config
+from ..projects import get as get_project
+from ..projects import write_config
 
 
 def _infer_type(path):
@@ -57,7 +57,7 @@ def _wire_memory(env, config, proj, namespaces=None, mechanism="maind", dry=Fals
     - **native**: вернуть нативную авто-память Claude Code (revert хука), MODE=off.
     - **off**: память выключена (MODE=off, native не трогаем).
     Идемпотентно; доводит и уже подключённый проект."""
-    from .health import apply_memory_hook, revert_memory_hook
+    from ..health import apply_memory_hook, revert_memory_hook
     changed = False
     if mechanism == "maind":
         if namespaces and proj.get("namespaces") != list(namespaces):
@@ -151,7 +151,7 @@ def onboard(env, config, project_or_path, opts):
             write_config(env, config)
     res = deploy_project(env, config, proj, targets=opts.get("targets") or None,
                          with_code=True if want_code else None, dry=dry)
-    from . import codegraph
+    from .. import codegraph
     if codegraph.enabled(proj, codegraph.settings(config)):  # дефолтный .serena/project.yml
         codegraph.apply_serena_config(env, config, proj, "install", dry)
     if res is None:
@@ -166,14 +166,14 @@ def onboard(env, config, project_or_path, opts):
 
     # 3. derive графа из источников истины (код/доки/override/skills) → стор проекта + индекс
     gstats = {}
-    from .federation import graph_disabled
+    from ..federation import graph_disabled
     if dry:
         steps.append({"name": "graph", "status": "skipped", "detail": "--dry-run"})
     elif graph_disabled(config):
         steps.append({"name": "graph", "status": "skipped", "detail": "граф отключён"})
     else:
-        from .derive import derive_project_graph
-        from .federation import Federation, rebuild_index
+        from ..derive import derive_project_graph
+        from ..federation import Federation, rebuild_index
         d = derive_project_graph(env, config, proj)
         rebuild_index(env, config)
         gstats = Federation(env, config).stats()
@@ -184,7 +184,7 @@ def onboard(env, config, project_or_path, opts):
 
     # 3b. seed-память: базовый факт о связях (видимость «память общая»)
     if not dry:
-        from .seed import seed_memory
+        from ..seed import seed_memory
         ms = seed_memory(env, config, proj)
         steps.append({"name": "memory", "status": "ok" if ms["status"] == "ok" else "skipped",
                       "detail": ms.get("detail", ms["status"])})

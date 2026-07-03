@@ -11,9 +11,9 @@ LINKS переиспользует seed.linked_projects (DRY с seed-памят�
 import os
 from pathlib import Path
 
-from .health import _act, _file_state, _render, _result
-from .namespaces import namespaces_of
-from .seed import linked_projects
+from ..health import _act, _file_state, _render, _result
+from ..namespaces import namespaces_of
+from ..seed import linked_projects
 
 SKILL_PATH = Path(".claude") / "skills" / "ecosystem-mcp" / "SKILL.md"
 TEMPLATE = "skills/ecosystem-mcp/SKILL.md"
@@ -48,7 +48,7 @@ def _apply_managed_skill(env, config, project, mode, dry, *, label, template, sk
     if not _act(mode, state):
         return _result(pid, label, state, False, dry, str(skill_path))
     if not dry:
-        from .common import atomic_write_text, backup_file
+        from ..common import atomic_write_text, backup_file
         if target.is_file():
             backup_file(target)
         atomic_write_text(target, content)

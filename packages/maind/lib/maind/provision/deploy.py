@@ -10,15 +10,15 @@ import os
 import shutil
 from pathlib import Path
 
-from . import codegraph, pplxweb
-from .common import die, now_iso, parse_args, warn
-from .config import load_config
-from .mcpconfig import (MCP_FILES, MCPConfigError, load_mcp, mcp_path,
+from .. import codegraph, pplxweb
+from ..common import die, now_iso, parse_args, warn
+from ..config import load_config
+from ..mcpconfig import (MCP_FILES, MCPConfigError, load_mcp, mcp_path,
                         merge_server, reconcile_gitignore, remove_server,
                         write_example, write_mcp)
-from .memory import health, resolve_ports
-from .projects import get as get_project
-from .projects import listing, write_config
+from ..memory import health, resolve_ports
+from ..projects import get as get_project
+from ..projects import listing, write_config
 
 
 def _agentmemory_entry(env, config, scope):

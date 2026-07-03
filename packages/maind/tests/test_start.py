@@ -3,7 +3,7 @@ import json
 import tempfile
 import unittest
 
-from maind.start import cmd_start, cmd_status
+from maind.provision.start import cmd_start, cmd_status
 from tests.fixtures import FakeMemoryServer, capture, make_repo, write_maind_config
 
 

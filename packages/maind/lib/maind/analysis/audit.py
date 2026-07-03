@@ -14,9 +14,9 @@ import json
 import os
 from pathlib import Path
 
-from . import codegraph
-from .mcpconfig import MCP_FILES
-from .projects import listing
+from .. import codegraph
+from ..mcpconfig import MCP_FILES
+from ..projects import listing
 
 DIMS = ("mcp", "claude", "deny", "core")
 CLAUDE_MD_WARN = 200  # ориентир Anthropic (context-economy ось 1)
@@ -148,7 +148,7 @@ def run_audit(env, config, dim, as_json=False):
     dims = DIMS if dim in (None, "", "all") else (dim,)
     bad = [d for d in dims if d not in DIMS]
     if bad:
-        from .common import die
+        from ..common import die
         die(f"--audit: {', '.join(bad)} (доступно: {', '.join(DIMS)}, all)")
     code_st = codegraph.settings(config)
     projs = listing(env, config)

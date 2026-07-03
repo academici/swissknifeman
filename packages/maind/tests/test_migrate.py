@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 
 from maind.config import load_config
-from maind.migrate import cmd_migrate
+from maind.provision.migrate import cmd_migrate
 from tests.fixtures import capture, make_repo, write_brain_projects
 
 

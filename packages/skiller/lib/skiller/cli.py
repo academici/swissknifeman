@@ -1,13 +1,13 @@
 """Диспетчер команд. Точка входа: main(argv) -> вызывает cmd_*(env, args)."""
 import sys
 
-from .analyze import cmd_analyze_run
-from .audit import cmd_bucket_audit
 from .budget import cmd_budget
 from .common import Env
 from .connect import cmd_connect
 from .doctor import cmd_doctor
-from .eval import cmd_eval
+from .quality.analyze import cmd_analyze_run
+from .quality.audit import cmd_bucket_audit
+from .quality.eval import cmd_eval
 from .integrate import cmd_integrate
 from .listing import cmd_list
 from .lock import cmd_lock

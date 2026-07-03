@@ -3,7 +3,8 @@ import tempfile
 import unittest
 from unittest import mock
 
-from maind import memory, service
+from maind import memory
+from maind.provision import service
 from maind.config import load_config
 from tests.fixtures import make_repo, write_maind_config
 

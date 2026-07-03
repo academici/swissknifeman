@@ -16,7 +16,8 @@ from pathlib import Path
 from core import (  # noqa: F401
     HOME, BaseEnv, atomic_write_json, atomic_write_text, confirm, die,
     find_monorepo_root, is_within, is_within_lexical, now_iso, parse_flags,
-    parse_inline_list, run_cmd, safe_load_json, sanitize, state_dir, warn,
+    parse_inline_list, run_cmd, safe_load_json, sanitize, sibling_bin,
+    state_dir, warn,
 )
 from core import parse_frontmatter as _core_parse_frontmatter
 
@@ -114,17 +115,11 @@ class Env(BaseEnv):
 
 def harness_bin(env):
     """Путь к лаунчеру пакета `harness` (настройка окружения вынесена туда).
-    Резолв: env-override `SKM_HARNESS_BIN` → `<монорепо>/packages/harness/bin/harness`.
-    None, если пакет не найден (standalone-раскладка / harness не установлен)."""
-    override = os.environ.get("SKM_HARNESS_BIN")
-    if override:
-        p = Path(os.path.expanduser(override))
-        return p if p.exists() else None
-    mono = find_monorepo_root(env.root)
-    if not mono:
-        return None
-    p = mono / "packages" / "harness" / "bin" / "harness"
-    return p if p.exists() else None
+    Резолв — общий `core.sibling_bin`: env-override `SKM_HARNESS_BIN` → PATH →
+    `<монорепо>/packages/harness/bin/harness`. None, если не найден (standalone /
+    harness не установлен)."""
+    return sibling_bin("harness", env_var="SKM_HARNESS_BIN", use_path=False,
+                       monorepo_root=find_monorepo_root(env.root))
 
 
 def apply_permissions(env, target, presets="", dry_run=False, settings_file=None):

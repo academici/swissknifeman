@@ -25,6 +25,10 @@
 
 - `bin/maind` — тонкий bash-лаунчер → `python3 -m maind <repo_root> <cmd> [args]`.
 - `lib/maind/*.py` — вся логика, **stdlib-only** (без сторонних зависимостей в рантайме).
+  Плотно-связное ядро (память/граф/федерация/namespaces/derive + cli/common/config/mcp/health/
+  probe/verify) — на верхнем уровне; слабо-связанные окраины сгруппированы в подпакеты
+  `provision/` (deploy·sync·onboard·orchestrate·migrate·service·start·workspace·skilldoc) и
+  `analysis/` (fleet·analyze·audit). Импорт: `maind.provision.<mod>` / `maind.analysis.<mod>`.
 - `tests/` — `unittest`, без живого демона (`FakeMemoryServer`), изоляция в tmpdir.
 - `docs/` — VitePress; `templates/health/` — управляемые артефакты; `config/memory/` — конфиг демона.
 - `.claude-plugin/` + `commands/*.md` — **плагин Claude Code**: тонкое лицо над CLI (slash-команды

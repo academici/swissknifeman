@@ -8,10 +8,10 @@ import subprocess
 import sys
 from pathlib import Path
 
-from .common import die, parse_args
-from .config import load_config
-from .constants import SIBLINGS
-from .projects import get as get_project
+from ..common import die, parse_args
+from ..config import load_config
+from ..constants import SIBLINGS
+from ..projects import get as get_project
 
 # Белый список: name → (sibling, argv-шаблон, needs_project). {project}=id, {path}=local_path.
 CAPABILITIES = {
@@ -65,7 +65,7 @@ def _sibling_bin(config, which):
     # integrations.brain.path → vault проекта brain → дефолт ~/Vaults/Brain. brain_path
     # может вернуть путь к файлу .projects.json — нормализуем к каталогу vault (его родитель).
     if not root and which == "brain":
-        from .projects import brain_path
+        from ..projects import brain_path
         bp = Path(os.path.expanduser(brain_path(config)))
         root = str(bp.parent if bp.name.endswith(".json") else bp)
     if not root:

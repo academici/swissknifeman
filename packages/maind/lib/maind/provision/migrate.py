@@ -6,9 +6,9 @@ from-agentmemory (alias from-skm) — переносит iii-config.yaml в conf
 import re
 from pathlib import Path
 
-from .common import confirm, die, parse_args
-from .config import load_brain_projects, merge_defaults
-from .projects import write_config
+from ..common import confirm, die, parse_args
+from ..config import load_brain_projects, merge_defaults
+from ..projects import write_config
 
 
 def cmd_migrate(env, argv):
@@ -42,7 +42,7 @@ def _from_brain(env, argv):
     })
     write_config(env, config)
     # материализуем граф из источников истины (derive → стор на проект + индекс)
-    from .derive import derive_all
+    from ..derive import derive_all
     stats = derive_all(env, config)
     nodes = sum(s["nodes"] for s in stats)
     print(f"импортировано из brain: {len(projects)} проектов → "

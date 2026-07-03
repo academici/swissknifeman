@@ -14,7 +14,7 @@ from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
-from skiller.audit import (body_shingles, build_audit, cmd_bucket_audit,
+from skiller.quality.audit import (body_shingles, build_audit, cmd_bucket_audit,
                            collect_usage, desc_triggers, find_overlaps,
                            iter_registry_skills, jaccard, render_audit,
                            resident_skill_names, usage_note, verdict)
@@ -75,7 +75,7 @@ class VerdictCase(unittest.TestCase):
         self.assertEqual(v, "merge")
 
     def test_thin_for_monolith_body(self):
-        from skiller.audit import TIER1_MONOLITH_TOKENS
+        from skiller.quality.audit import TIER1_MONOLITH_TOKENS
         v = verdict(self._item(tier1=TIER1_MONOLITH_TOKENS), overlap_partners=[],
                     loaded_count=10, scanned_projects=1)
         self.assertEqual(v, "thin")
@@ -84,13 +84,13 @@ class VerdictCase(unittest.TestCase):
         # Известный монолит, просто не пойманный usage-детектом в окне (единичное
         # окно/машина, см. analyze.py про частичный Skill-tool детект) — не должен
         # тонуть под "dead": размер тела виден из контента с полной уверенностью.
-        from skiller.audit import TIER1_MONOLITH_TOKENS
+        from skiller.quality.audit import TIER1_MONOLITH_TOKENS
         v = verdict(self._item(tier1=TIER1_MONOLITH_TOKENS), overlap_partners=[],
                     loaded_count=0, scanned_projects=5)
         self.assertEqual(v, "thin")
 
     def test_retrieval_only_for_large_rare(self):
-        from skiller.audit import TIER1_LARGE_TOKENS
+        from skiller.quality.audit import TIER1_LARGE_TOKENS
         v = verdict(self._item(tier1=TIER1_LARGE_TOKENS), overlap_partners=[],
                     loaded_count=1, scanned_projects=4)
         self.assertEqual(v, "retrieval-only")
@@ -188,7 +188,7 @@ class RegistryAndOverlapCase(unittest.TestCase):
 def _write_session(env, project_path, skill_names):
     """Мини-JSONL сессии с Skill-tool вызовами для skill_names (по одному разу
     каждый) в каталоге логов проекта — как реальный транскрипт Claude Code."""
-    from skiller.analyze import logs_root
+    from skiller.quality.analyze import logs_root
     root = logs_root(env, project_path)
     root.mkdir(parents=True, exist_ok=True)
     content = [{"type": "tool_use", "name": "Skill", "input": {"skill": n}}
@@ -241,7 +241,7 @@ class UsageFanOutCase(unittest.TestCase):
 
     def test_transcripts_fail_safe_on_garbage(self):
         upsert_project(self.env, {"path": str(self.project), "channel": "vendor"})
-        from skiller.analyze import logs_root
+        from skiller.quality.analyze import logs_root
         root = logs_root(self.env, self.project)
         root.mkdir(parents=True, exist_ok=True)
         (root / "broken.jsonl").write_text("not-json\n{also broken\n", encoding="utf-8")
@@ -271,7 +271,7 @@ class ResidentChannelCase(unittest.TestCase):
         # CORE_SKILLS живёт в другом бакете и в синтетический реестр не входит).
         upsert_project(self.env, {"path": str(self.project), "channel": "vendor"})
         _write_session(self.env, self.project, ["code-style"])  # др. скилл грузился
-        with mock.patch("skiller.audit.CORE_SKILLS", ["devops/docker"]):
+        with mock.patch("skiller.quality.audit.CORE_SKILLS", ["devops/docker"]):
             report = build_audit(self.env, since_days=30)
         row = next(r for r in report["items"] if r["key"] == "devops/docker")
         self.assertEqual(row["loaded_count"], 0)
@@ -286,7 +286,7 @@ class ResidentChannelCase(unittest.TestCase):
         # поведение до P2.2 не тронуто: dead + канал none.
         upsert_project(self.env, {"path": str(self.project), "channel": "vendor"})
         _write_session(self.env, self.project, ["code-style"])
-        with mock.patch("skiller.audit.CORE_SKILLS", []):
+        with mock.patch("skiller.quality.audit.CORE_SKILLS", []):
             report = build_audit(self.env, since_days=30)
         row = next(r for r in report["items"] if r["key"] == "devops/docker")
         self.assertEqual(row["verdict"], "dead")
@@ -296,7 +296,7 @@ class ResidentChannelCase(unittest.TestCase):
         # Реальный вызов есть -> channel=skill-call, даже если скилл заодно CORE.
         upsert_project(self.env, {"path": str(self.project), "channel": "vendor"})
         _write_session(self.env, self.project, ["code-style"])
-        with mock.patch("skiller.audit.CORE_SKILLS", ["php/code-style"]):
+        with mock.patch("skiller.quality.audit.CORE_SKILLS", ["php/code-style"]):
             report = build_audit(self.env, since_days=30)
         row = next(r for r in report["items"] if r["key"] == "php/code-style")
         self.assertEqual(row["channel"], "skill-call")
@@ -308,7 +308,7 @@ class ResidentChannelCase(unittest.TestCase):
             json.dumps({"buckets": ["devops"]}) + "\n", encoding="utf-8")
         upsert_project(self.env, {"path": str(self.project), "channel": "vendor"})
         _write_session(self.env, self.project, ["code-style"])
-        with mock.patch("skiller.audit.CORE_SKILLS", []):
+        with mock.patch("skiller.quality.audit.CORE_SKILLS", []):
             names = resident_skill_names(self.env)
             self.assertIn("docker", names)
             report = build_audit(self.env, since_days=30)
@@ -322,12 +322,12 @@ class ResidentChannelCase(unittest.TestCase):
         (self.project / ".swissknife.json").write_text(
             json.dumps({"buckets": ["no-such-bucket"]}) + "\n", encoding="utf-8")
         upsert_project(self.env, {"path": str(self.project), "channel": "vendor"})
-        with mock.patch("skiller.audit.CORE_SKILLS", []):
+        with mock.patch("skiller.quality.audit.CORE_SKILLS", []):
             names = resident_skill_names(self.env)  # не должно бросить исключение
         self.assertEqual(names, set())
 
     def test_resident_skills_count_in_report(self):
-        with mock.patch("skiller.audit.CORE_SKILLS", ["devops/docker"]):
+        with mock.patch("skiller.quality.audit.CORE_SKILLS", ["devops/docker"]):
             report = build_audit(self.env, since_days=30)
         self.assertEqual(report["resident_skills"], 1)
 

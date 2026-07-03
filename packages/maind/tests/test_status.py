@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 
 import maind.probe as probe
-from maind import deploy
+from maind.provision import deploy
 from maind.config import merge_defaults
 from tests.fixtures import FakeMemoryServer, make_repo
 

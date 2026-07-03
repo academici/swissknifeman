@@ -12,12 +12,13 @@ from pathlib import Path
 from unittest import mock
 
 from core import (DEFAULT_DOCS_VISIBILITY, PROJECT_TYPES, BaseEnv,
-                  atomic_write_json, atomic_write_text, detect_project_type,
-                  docs_visibility_for, find_monorepo_root, find_run_report,
-                  find_repo_root, is_within, is_within_lexical, load_json_db,
+                  atomic_write_json, atomic_write_text, backup_file,
+                  content_hash, detect_project_type, docs_visibility_for,
+                  find_monorepo_root, find_run_report, find_repo_root,
+                  is_within, is_within_lexical, load_json_db, managed_block,
                   now_iso, parse_args, parse_flags, parse_iso, pid_alive,
                   read_ndjson, read_ndjson_iter, run_cmd, safe_load_json,
-                  sanitize, state_dir)
+                  sanitize, sibling_bin, state_dir, upsert_block)
 
 
 class TestText(unittest.TestCase):
@@ -204,6 +205,89 @@ class TestRepoRoot(unittest.TestCase):
     def test_find_monorepo_root_none_standalone(self):
         with tempfile.TemporaryDirectory() as tmp:
             self.assertIsNone(find_monorepo_root(Path(tmp) / "lonely"))
+
+
+class TestSiblingBin(unittest.TestCase):
+    def test_env_override_wins_when_exists(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            f = Path(tmp) / "custom-maind"
+            f.write_text("#!/bin/sh\n")
+            with mock.patch.dict(os.environ, {"MAIND_BIN": str(f)}):
+                self.assertEqual(sibling_bin("maind", env_var="MAIND_BIN"), f)
+
+    def test_env_override_missing_returns_none(self):
+        with mock.patch.dict(os.environ, {"MAIND_BIN": "/nope/maind"}):
+            self.assertIsNone(sibling_bin("maind", env_var="MAIND_BIN",
+                                          use_path=False))
+
+    def test_monorepo_layout(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            binp = root / "packages" / "harness" / "bin" / "harness"
+            binp.parent.mkdir(parents=True)
+            binp.write_text("#!/bin/sh\n")
+            with mock.patch.dict(os.environ, {}, clear=True):
+                got = sibling_bin("harness", env_var="SKM_HARNESS_BIN",
+                                  use_path=False, monorepo_root=root)
+            self.assertEqual(got, binp)
+
+    def test_none_when_nothing_found(self):
+        with mock.patch.dict(os.environ, {}, clear=True):
+            self.assertIsNone(sibling_bin("nonexistent-pkg", use_path=False,
+                                          monorepo_root=None))
+
+
+class TestBackupFile(unittest.TestCase):
+    def test_backup_existing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            f = Path(tmp) / "settings.json"
+            f.write_text('{"a":1}')
+            bak = backup_file(f)
+            self.assertEqual(bak, f.with_name("settings.json.bak"))
+            self.assertEqual(bak.read_text(), '{"a":1}')
+
+    def test_absent_returns_none(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertIsNone(backup_file(Path(tmp) / "missing.json"))
+
+    def test_custom_suffix(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            f = Path(tmp) / "x.conf"
+            f.write_text("z")
+            self.assertEqual(backup_file(f, suffix=".orig").name, "x.conf.orig")
+
+
+class TestManagedBlock(unittest.TestCase):
+    def test_insert_when_absent(self):
+        text, changed, state = upsert_block("hello\n", "body", "MARK")
+        self.assertTrue(changed)
+        self.assertEqual(state, "absent")
+        self.assertIn("<!-- MARK", text)
+        self.assertIn("<!-- /MARK -->", text)
+        self.assertIn("body", text)
+
+    def test_idempotent_fresh(self):
+        t1, _, _ = upsert_block("", "body", "MARK")
+        t2, changed, state = upsert_block(t1, "body", "MARK")
+        self.assertFalse(changed)
+        self.assertEqual(state, "fresh")
+        self.assertEqual(t1, t2)
+
+    def test_update_stale(self):
+        t1, _, _ = upsert_block("", "old", "MARK")
+        t2, changed, state = upsert_block(t1, "new", "MARK")
+        self.assertTrue(changed)
+        self.assertEqual(state, "stale")
+        self.assertIn("new", t2)
+        self.assertNotIn("old", t2)
+
+    def test_hash_stable(self):
+        self.assertEqual(content_hash("abc"), content_hash("abc"))
+        self.assertNotEqual(content_hash("abc"), content_hash("abd"))
+
+    def test_owner_in_header(self):
+        self.assertIn("managed by skiller", managed_block("x", "M", owner="skiller"))
+        self.assertIn("managed by maind", managed_block("x", "M"))
 
 
 class TestParseFlags(unittest.TestCase):

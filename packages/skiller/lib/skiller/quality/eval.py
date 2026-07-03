@@ -34,7 +34,7 @@ from pathlib import Path
 from core import (atomic_write_json, atomic_write_text, die, parse_args,
                   safe_load_json, warn)
 
-from .common import is_within
+from ..common import is_within
 
 # --- константы ----------------------------------------------------------------
 # Типы ассершенов — ТОЛЬКО детерминированные (без LLM-judge), чтобы grade был

@@ -33,7 +33,7 @@ from pathlib import Path
 
 from core.usage import feed_event, finish, new_acc
 
-from .common import die, parse_flags
+from ..common import die, parse_flags
 
 
 # --- path-резолв логов (как в system/session-observer) ------------------------
@@ -244,8 +244,8 @@ def _first_user_text(events):
 def _active_skill_names(env, project_path):
     """Нормализованные имена активных скиллов проекта (best-effort; [] при ошибке)."""
     try:
-        from .budget import budget_for_set, resolve_active_set
-        from .config import load_config
+        from ..budget import budget_for_set, resolve_active_set
+        from ..config import load_config
         config = load_config(env, Path(project_path))
         skills, meta = resolve_active_set(env, Path(project_path), config)
         b = budget_for_set(skills, meta.get("pulled"))
@@ -390,7 +390,7 @@ def cmd_analyze_run(env, argv):
     if opts.get("project"):
         project = Path(os.path.expanduser(opts["project"])).resolve()
     else:
-        from .config import find_project_root
+        from ..config import find_project_root
         project, _via = find_project_root(env)
         if project is None:
             project = Path.cwd()

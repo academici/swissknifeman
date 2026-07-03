@@ -22,14 +22,14 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from .common import die, parse_args, warn
-from .config import load_config
-from .federation import federated_graph, graph_disabled
-from .memory import health as mem_health
-from .memory import recall, resolve_ports, store
-from .namespaces import group_scopes, namespaces_of, private_scope
-from .projects import get as get_project
-from .projects import listing
+from ..common import die, parse_args, warn
+from ..config import load_config
+from ..federation import federated_graph, graph_disabled
+from ..memory import health as mem_health
+from ..memory import recall, resolve_ports, store
+from ..namespaces import group_scopes, namespaces_of, private_scope
+from ..projects import get as get_project
+from ..projects import listing
 
 FEATURE_MARKER = "maind:feature-log"
 
@@ -358,7 +358,7 @@ def cmd_fleet(env, argv):
         if proj is None and opts["project"]:
             die(f"проект не найден: {opts['project']}")
         if proj is None:  # дефолт — по cwd
-            from .health import _target
+            from ..health import _target
             proj = _target(env, config, {})
         r = log_feature(env, config, proj, " ".join(pos), dry=opts["dry_run"])
         print(json.dumps(r, ensure_ascii=False, indent=2) if opts["json"]

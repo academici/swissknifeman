@@ -13,12 +13,12 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
-from .common import die, parse_args, safe_load_json, warn
-from .config import load_config
-from .constants import SIBLINGS
-from .namespaces import in_namespace
-from .projects import get as get_project
-from .projects import listing
+from ..common import die, parse_args, safe_load_json, warn
+from ..config import load_config
+from ..constants import SIBLINGS
+from ..namespaces import in_namespace
+from ..projects import get as get_project
+from ..projects import listing
 
 MODES = ("install", "update", "auto")
 
@@ -83,7 +83,7 @@ def _result(provisioner, project_id, status, *, changed=False, state="", detail=
 def _mcp_run(env, config, projects, mode, dry):
     """MCP-серверы хаба (agent-memory + maind [+ код-граф/Serena]) в конфиги проектов."""
     from .deploy import deploy_project, mark_deployed
-    from .projects import write_config
+    from ..projects import write_config
     results, applied = [], False
     for p in projects:
         res = deploy_project(env, config, p, dry=dry)  # with_code=None → из политики/полей проекта
@@ -105,7 +105,7 @@ def _mcp_run(env, config, projects, mode, dry):
 
 def _codegraph_run(env, config, projects, mode, dry):
     """Дефолтный .serena/project.yml в проекты с включённым код-графом (движок Serena)."""
-    from .codegraph import apply_serena_config
+    from ..codegraph import apply_serena_config
     return [apply_serena_config(env, config, p, mode, dry) for p in projects]
 
 
@@ -113,8 +113,8 @@ def _graph_run(env, config, projects, mode, dry):
     """Derive графа проектов из источников (composer/Brain/override) + пересборка индекса.
     changed — честно по содержимому стора (сериализация детерминирована), чтобы
     --mode update не сообщал об изменении там, где граф фактически не поменялся."""
-    from .derive import build_provider_index, derive_project_graph
-    from .federation import rebuild_index, store_path
+    from ..derive import build_provider_index, derive_project_graph
+    from ..federation import rebuild_index, store_path
     results = []
     if dry:
         return [_result("graph", p["id"], "dry") for p in projects]
@@ -133,13 +133,13 @@ def _graph_run(env, config, projects, mode, dry):
 
 def _memory_run(env, config, projects, mode, dry):
     """Seed-память: базовый факт о связях проекта в project:<id> + cross-ref в global."""
-    from .seed import seed_memory
+    from ..seed import seed_memory
     return [seed_memory(env, config, p, dry=dry) for p in projects]
 
 
 def _health_hook_run(env, config, projects, mode, dry):
     """SessionStart-хук связи с хабом (НЕ блокирует) в .claude/settings.json проектов."""
-    from .health import apply_health_hook
+    from ..health import apply_health_hook
     return [apply_health_hook(env, config, p, mode, dry) for p in projects]
 
 
@@ -148,7 +148,7 @@ def _memory_hook_run(env, config, projects, mode, dry):
     проекта из .claude/memory.env.ini: MODE=maind → ставим (apply_memory_hook), MODE=off →
     откатываем на native (revert_memory_hook), нет конфига → не трогаем. Так `maind sync`
     раскатывает авто-загрузку памяти на уже подключённые проекты, не гоняя полный onboard."""
-    from .health import (apply_memory_hook, hook_memory_mode, revert_memory_hook)
+    from ..health import (apply_memory_hook, hook_memory_mode, revert_memory_hook)
     results = []
     for p in projects:
         hmode = hook_memory_mode(p)
@@ -164,17 +164,17 @@ def _memory_hook_run(env, config, projects, mode, dry):
 
 def _health_doc_run(env, config, projects, mode, dry):
     """Управляемый блок «ПРИОРИТЕТ №1 — связь с mAInd» в CLAUDE.md проектов."""
-    from .health import apply_health_doc
+    from ..health import apply_health_doc
     return [apply_health_doc(env, config, p, mode, dry) for p in projects]
 
 
 def _feature_log_hook_run(env, config, projects, mode, dry):
     """SessionEnd-хук фиксации коммитов в общую память (если code_graph.feature_log_hook)."""
-    from .codegraph import settings
+    from ..codegraph import settings
     if not settings(config).get("feature_log_hook", True):
         return [_result("feature-log-hook", p["id"], "skip", state="disabled",
                         detail="выключен в конфиге") for p in projects]
-    from .health import apply_feature_log_hook
+    from ..health import apply_feature_log_hook
     return [apply_feature_log_hook(env, config, p, mode, dry) for p in projects]
 
 
@@ -319,57 +319,6 @@ def _output_style_run(env, config, projects, mode, dry):
     return results
 
 
-def _plans_dir_run(env, config, projects, mode, dry):
-    """plansDirectory=plans в .claude/settings.json уже онбордженных проектов — второй слой
-    раскатки per-project plan-системы (дизайн A фазы P1): догоняет проекты, онбордженные ДО
-    появления этого провиженера (`skiller integrate` ставит plans-dir только на НОВЫХ). Опт-аут
-    per-project: project.plans_dir="off" — тогда пропуск (harness вообще не зовём). Отличие от
-    output-style: `block_plans_dir` в harness (P1.1) сам НЕ перезаписывает чужое значение —
-    ключ занят ДРУГИМ значением → skip внутри harness (уважает локальный выбор), поэтому здесь
-    массовый `sync --all` безопасен и без доп. защиты; опт-аут остаётся нужен для проектов,
-    вовсе не желающих plans/ (harness не вызывается вообще, а не вызывается с off — off у
-    harness снимает только НАШ дефолт)."""
-    from .orchestrate import run_capability
-    results = []
-    for p in projects:
-        val = p.get("plans_dir", "plans")
-        if not val or val == "off":
-            results.append(_result("plans-dir", p["id"], "skip",
-                                   detail="project.plans_dir=off"))
-            continue
-        if not p.get("local_path"):
-            results.append(_result("plans-dir", p["id"], "skip", detail="нет пути проекта"))
-            continue
-        try:
-            rc = run_capability(env, config, p["id"], "env:hooks",
-                                ["--plans-dir", val], dry=dry)
-            results.append(_result("plans-dir", p["id"], "ok" if rc == 0 else "failed",
-                                   changed=rc == 0, detail=f"value={val} rc={rc}"))
-        except SystemExit:
-            results.append(_result("plans-dir", p["id"], "skip",
-                                   detail="harness недоступен"))
-    return results
-
-
-def _plans_doc_run(env, config, projects, mode, dry):
-    """Управляемый блок конвенции планов (`## Планы проекта — конвенция plan-protocol`) в
-    CLAUDE.md проектов — третий слой раскатки per-project plan-системы (дизайн C фазы P1):
-    агент видит конвенцию прямо в CLAUDE.md, централизованно обновляемую hashed-блоком
-    (маркер maind:plan-conventions в health.apply_plans_doc). Опт-аут — ТА ЖЕ ручка, что у
-    plans-dir: project.plans_dir="off" (одна ручка на оба провиженера — конвенция без
-    раскатанного plansDirectory бессмысленна)."""
-    from .health import apply_plans_doc
-    results = []
-    for p in projects:
-        val = p.get("plans_dir", "plans")
-        if not val or val == "off":
-            results.append(_result("plans-doc", p["id"], "skip",
-                                   detail="project.plans_dir=off"))
-            continue
-        results.append(apply_plans_doc(env, config, p, mode, dry))
-    return results
-
-
 def _router_config_run(env, config, projects, mode, dry):
     """Сгенерить/обновить каталог intent-router (.claude/agent-router.config.json) через
     harness — ТОЛЬКО для проектов, где хук уже включён (opt-in: есть agent-router.env.ini с
@@ -418,14 +367,11 @@ PROVISIONERS = {
     "skills-catalog": _skills_catalog_run,
     "agent-pack": _agent_pack_run,
     "output-style": _output_style_run,
-    "plans-dir": _plans_dir_run,
-    "plans-doc": _plans_doc_run,
     "router-config": _router_config_run,
 }
 ORDER = ["mcp", "code-graph", "graph", "memory", "memory-hook", "health-hook",
          "health-doc", "feature-log-hook", "ecosystem-skill", "setup-skill",
-         "skills-catalog", "agent-pack", "output-style", "plans-dir", "plans-doc",
-         "router-config"]
+         "skills-catalog", "agent-pack", "output-style", "router-config"]
 
 
 def provisioner_names(only=None):
@@ -463,7 +409,7 @@ def cmd_sync(env, argv):
         print("maind sync [--project ID | --namespace NS | --all] [--only mcp,code-graph,"
               "graph,memory,memory-hook,health-hook,health-doc,feature-log-hook,"
               "ecosystem-skill,setup-skill,skills-catalog,agent-pack,output-style,"
-              "plans-dir,plans-doc,router-config] "
+              "router-config] "
               "[--mode install|update|auto] [--dry-run] [--json]")
         return
     mode = opts["mode"] or "auto"

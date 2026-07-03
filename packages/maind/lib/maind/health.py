@@ -25,10 +25,9 @@ from .namespaces import namespaces_of, private_scope
 from .probe import probe_project
 from .projects import get as get_project
 from .projects import match_cwd
-from .workspace import load_settings
+from .provision.workspace import load_settings
 
 BLOCK_MARKER = "maind:healthcheck"
-PLANS_BLOCK_MARKER = "maind:plan-conventions"
 HOOK_SCRIPT = ".claude/maind-health.sh"
 FEATURE_HOOK_SCRIPT = ".claude/maind-feature-log.sh"
 MEMORY_HOOK_SCRIPT = ".claude/maind-memory.sh"
@@ -198,29 +197,6 @@ def apply_health_doc(env, config, project, mode, dry):
     return _result(pid, "health-doc", state, True, dry, "CLAUDE.md")
 
 
-def apply_plans_doc(env, config, project, mode, dry):
-    """Управляемый блок конвенции планов (templates/plans/conventions-block.md) в
-    <project>/CLAUDE.md — дизайн C фазы P1 (SKM-MASTER-003): та же механика, что у
-    apply_health_doc (hashed-блок, свой маркер maind:plan-conventions), блок одинаков для
-    всех проектов — рендерится без подстановок."""
-    pid = project["id"]
-    local = project.get("local_path")
-    path = Path(os.path.expanduser(local)) if local else None
-    if not path or not path.is_dir():
-        return _result(pid, "plans-doc", "absent", False, dry, "нет пути")
-    block = _render(env, "plans/conventions-block.md", {})
-    claude = path / "CLAUDE.md"
-    text = claude.read_text(encoding="utf-8") if claude.is_file() else ""
-    new_text, _changed, state = upsert_block(text, block, PLANS_BLOCK_MARKER)
-    if not _act(mode, state):
-        return _result(pid, "plans-doc", state, False, dry, "CLAUDE.md")
-    if not dry:
-        if claude.is_file():
-            backup_file(claude)
-        atomic_write_text(claude, new_text)
-    return _result(pid, "plans-doc", state, True, dry, "CLAUDE.md")
-
-
 def _file_state(path, content):
     if not path.is_file():
         return "absent"
@@ -373,7 +349,7 @@ def cmd_health(env, argv):
                 mem_start(env, config)
             except SystemExit as e:
                 warn(f"не удалось поднять память: {e}")
-        from .sync import run_sync
+        from .provision.sync import run_sync
         run_sync(env, config, [project], only="mcp")
         rep = health_report(env, config, project)
 

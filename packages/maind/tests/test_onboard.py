@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-import maind.onboard as onb
+import maind.provision.onboard as onb
 from maind.config import load_config
 from maind.projects import get
 from tests.fixtures import make_repo

@@ -7,9 +7,25 @@ swissknifeman (`state.save_db`) и maind (`common.atomic_write_json`) скопи
 import copy
 import json
 import os
+import shutil
 from datetime import date
 from pathlib import Path
 from typing import Callable, Optional
+
+
+def backup_file(path, *, suffix=".bak"):
+    """Копия `<path><suffix>`, если файл существует. Возвращает путь бэкапа или None.
+
+    Единый источник merge-only-бэкапа: раньше `maind.common.backup_file` +
+    россыпь инлайновых `shutil.copy2(path, f'{path}.bak')` в harness.settings /
+    skiller.connect / skiller.topology. `suffix` параметризует хвост (`.bak` по
+    умолчанию; `.json.bak` у topology). stdlib-only."""
+    path = Path(path)
+    if not path.exists():
+        return None
+    bak = path.with_name(path.name + suffix)
+    shutil.copy2(path, bak)
+    return bak
 
 
 def safe_load_json(path, default=None, *, on_error: Optional[Callable] = None):

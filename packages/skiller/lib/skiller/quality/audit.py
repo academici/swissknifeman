@@ -37,10 +37,10 @@ import time
 from pathlib import Path
 
 from .analyze import agent_stats, logs_root, parse_transcript, skill_key
-from .budget import _split_frontmatter, budget_for_set, resolve_active_set, skill_budget
-from .common import die, parse_flags, parse_frontmatter
-from .config import CORE_SKILLS, load_config
-from .state import load_db
+from ..budget import _split_frontmatter, budget_for_set, resolve_active_set, skill_budget
+from ..common import die, parse_flags, parse_frontmatter
+from ..config import CORE_SKILLS, load_config
+from ..state import load_db
 
 # --- пороги вердикта (константы — не магические числа по месту) ----------------
 OVERLAP_DESC_JACCARD = 0.4     # схожесть description-триггеров -> кандидат merge

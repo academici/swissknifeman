@@ -6,24 +6,24 @@ argv ([repo_root, cmd, *args], которые передаёт bin/maind) и п�
 import sys
 
 from .agents import cmd_agents
-from .analyze import cmd_analyze
+from .analysis.analyze import cmd_analyze
 from .common import Env
-from .deploy import cmd_deploy
+from .provision.deploy import cmd_deploy
 from .doctor import cmd_doctor
-from .fleet import cmd_fleet
+from .analysis.fleet import cmd_fleet
 from .graph import cmd_graph
 from .health import cmd_health
 from .mcp import cmd_mcp
 from .memory import cmd_memory
-from .migrate import cmd_migrate
-from .onboard import cmd_onboard
-from .orchestrate import cmd_run
+from .provision.migrate import cmd_migrate
+from .provision.onboard import cmd_onboard
+from .provision.orchestrate import cmd_run
 from .projects import cmd_namespaces, cmd_projects
-from .service import cmd_service
-from .start import cmd_start, cmd_status
-from .sync import cmd_sync
+from .provision.service import cmd_service
+from .provision.start import cmd_start, cmd_status
+from .provision.sync import cmd_sync
 from .verify import cmd_verify
-from .workspace import cmd_workspace
+from .provision.workspace import cmd_workspace
 
 COMMANDS = {
     "start": cmd_start,

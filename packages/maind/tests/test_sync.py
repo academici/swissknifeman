@@ -7,7 +7,7 @@ from pathlib import Path
 
 _TEMPLATES = Path(__file__).resolve().parents[1] / "templates"
 
-from maind import sync
+from maind.provision import sync
 from maind.common import managed_block, upsert_block
 from maind.config import load_config
 from maind.mcpconfig import has_server
@@ -113,7 +113,7 @@ class TestSync(unittest.TestCase):
     def test_mcp_provisioner_graphify_config_driven(self):
         # graphify:true в записи проекта → провиженер mcp раскатывает graphify
         # (когда бинарь есть); без флага — нет. Бинарь мокаем присутствующим.
-        from maind import deploy
+        from maind.provision import deploy
         orig = deploy.shutil.which
         deploy.shutil.which = lambda name: f"/usr/bin/{name}"
         try:
@@ -263,103 +263,6 @@ class TestOutputStyleProvisioner(unittest.TestCase):
             self.assertIn("style=lean", r[0]["detail"])
             # честный dry-run harness — ничего не записано
             self.assertFalse((proj / ".claude" / "settings.local.json").exists())
-
-
-class TestPlansDirProvisioner(unittest.TestCase):
-    """plans-dir: plansDirectory=plans в .claude/settings.json (env:hooks), опт-аут per-project
-    через project.plans_dir="off". Идёт в ORDER сразу после output-style."""
-    _HARNESS = Path(__file__).resolve().parents[2] / "harness" / "bin" / "harness"
-
-    def test_in_default_order(self):
-        self.assertIn("plans-dir", sync.provisioner_names())
-
-    def test_skip_when_opted_out(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            env, config, proj = _setup(tmp)
-            config["projects"][0]["plans_dir"] = "off"
-            projs = sync.select_projects(env, config, {"all": True})
-            r = sync.run_sync(env, config, projs, only="plans-dir")
-            self.assertEqual(r[0]["status"], "skip")
-            self.assertIn("plans_dir=off", r[0]["detail"])
-
-    def test_skip_when_no_path(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            env, config, proj = _setup(tmp)
-            projs = sync.select_projects(env, config, {"all": True})
-            projs[0] = dict(projs[0])
-            del projs[0]["local_path"]
-            r = sync.run_sync(env, config, projs, only="plans-dir")
-            self.assertEqual(r[0]["status"], "skip")
-
-    def test_applies_plans_by_default_dry(self):
-        import os
-        with tempfile.TemporaryDirectory() as tmp:
-            env, config, proj = _setup(tmp)
-            projs = sync.select_projects(env, config, {"all": True})
-            old = os.environ.get("MAIND_HARNESS_BIN")
-            os.environ["MAIND_HARNESS_BIN"] = str(self._HARNESS)
-            try:
-                r = sync.run_sync(env, config, projs, only="plans-dir", dry=True)
-            finally:
-                if old is None:
-                    os.environ.pop("MAIND_HARNESS_BIN", None)
-                else:
-                    os.environ["MAIND_HARNESS_BIN"] = old
-            self.assertEqual(r[0]["status"], "ok")
-            self.assertIn("value=plans", r[0]["detail"])
-            # честный dry-run harness — ничего не записано
-            self.assertFalse((proj / ".claude" / "settings.json").exists())
-
-
-class TestPlansDocProvisioner(unittest.TestCase):
-    """plans-doc: управляемый блок конвенции планов (маркер maind:plan-conventions) в CLAUDE.md
-    проектов — та же опт-аут-ручка, что у plans-dir (project.plans_dir="off")."""
-
-    def _with_templates(self, tmp):
-        env, config, proj = _setup(tmp)
-        shutil.copytree(_TEMPLATES, env.root / "templates")  # шаблоны plans/ в env.root
-        return env, config, proj
-
-    def test_in_default_order(self):
-        self.assertIn("plans-doc", sync.provisioner_names())
-
-    def test_skip_when_opted_out(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            env, config, proj = self._with_templates(tmp)
-            config["projects"][0]["plans_dir"] = "off"
-            projs = sync.select_projects(env, config, {"all": True})
-            r = sync.run_sync(env, config, projs, only="plans-doc")
-            self.assertEqual(r[0]["status"], "skip")
-            self.assertIn("plans_dir=off", r[0]["detail"])
-            self.assertFalse((proj / "CLAUDE.md").exists())
-
-    def test_install_then_idempotent(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            env, config, proj = self._with_templates(tmp)
-            projs = sync.select_projects(env, config, {"all": True})
-            r1 = sync.run_sync(env, config, projs, only="plans-doc")
-            self.assertEqual(r1[0]["state"], "absent")
-            self.assertTrue(r1[0]["changed"])
-            claude = (proj / "CLAUDE.md").read_text(encoding="utf-8")
-            self.assertIn("plan-protocol", claude)
-            self.assertIn("plans/ACTIVE.md", claude)
-            r2 = sync.run_sync(env, config, projs, only="plans-doc")
-            self.assertEqual(r2[0]["state"], "fresh")
-            self.assertFalse(r2[0]["changed"])
-            self.assertEqual(claude, (proj / "CLAUDE.md").read_text(encoding="utf-8"))
-
-    def test_update_on_drift(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            env, config, proj = self._with_templates(tmp)
-            projs = sync.select_projects(env, config, {"all": True})
-            sync.run_sync(env, config, projs, only="plans-doc")
-            claude = proj / "CLAUDE.md"
-            claude.write_text(claude.read_text(encoding="utf-8")
-                              .replace("plan-protocol", "СТАРОЕ"), encoding="utf-8")
-            r = sync.run_sync(env, config, projs, only="plans-doc", mode="update")
-            self.assertEqual(r[0]["state"], "stale")
-            self.assertTrue(r[0]["changed"])
-            self.assertIn("plan-protocol", claude.read_text(encoding="utf-8"))
 
 
 class TestSkillsCatalogProvisioner(unittest.TestCase):

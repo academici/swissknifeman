@@ -16,7 +16,7 @@ def cmd_doctor(env, argv):
 
     # --audit: read-only fleet-отчёт о полноте раздачи оптимизаций по проектам
     if opts["audit"]:
-        from .audit import run_audit
+        from .analysis.audit import run_audit
         config = {}
         if env.default_config.exists():
             try:

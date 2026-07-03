@@ -1,12 +1,12 @@
 """Оркестрация узла: maind start (воркеры) + maind status (сводка)."""
 import json
 
-from .agents import listing as agents_listing
-from .common import die, parse_args
-from .config import load_config
-from .memory import start as memory_start
-from .memory import status as memory_status
-from .projects import listing as projects_listing
+from ..agents import listing as agents_listing
+from ..common import die, parse_args
+from ..config import load_config
+from ..memory import start as memory_start
+from ..memory import status as memory_status
+from ..projects import listing as projects_listing
 from .workspace import audit as workspace_audit
 
 
@@ -22,11 +22,11 @@ def cmd_start(env, argv):
     if only in ("", "graph"):
         # граф — файлы; «запуск» = собрать связи из источников истины (derive →
         # граф на проект + индекс). Единственная раскладка — федерация.
-        from .federation import Federation, graph_disabled
+        from ..federation import Federation, graph_disabled
         if graph_disabled(config):
             print("граф отключён (graph.adapter = disabled)")
         else:
-            from .derive import derive_all
+            from ..derive import derive_all
             derive_all(env, config)
             s = Federation(env, config).stats()
             print(f"граф готов (федерация): {s['nodes']} узлов, {s['edges']} рёбер, "
@@ -43,7 +43,7 @@ def cmd_status(env, argv):
     if adapter == "disabled":
         gstats = {"nodes": 0, "edges": 0}
     else:
-        from .federation import Federation
+        from ..federation import Federation
         gstats = Federation(env, config).stats()
     agents = agents_listing(env, config)
     alive = sum(1 for a in agents if a["state"] == "alive")

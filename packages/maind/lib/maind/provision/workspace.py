@@ -14,8 +14,8 @@ import json
 import os
 from pathlib import Path
 
-from .common import atomic_write_json, backup_file, die, parse_args
-from .config import load_config
+from ..common import atomic_write_json, backup_file, die, parse_args
+from ..config import load_config
 
 DEFAULT_MODE = "acceptEdits"
 

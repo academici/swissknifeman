@@ -30,7 +30,7 @@ def get(config, project_id):
 def match_cwd(env, config, cwd=None):
     """Проект, в каталоге которого мы находимся: матч cwd по local_path. None если не найден
     (в отличие от health._target, который die'ит). Используется для дефолт-scope MCP-сервера."""
-    from .workspace import norm_path
+    from .provision.workspace import norm_path
     cwd = norm_path(cwd or os.getcwd())
     for p in listing(env, config):
         lp = p.get("local_path")
@@ -127,7 +127,7 @@ def cmd_projects(env, argv):
 
 def _cmd_status(env, argv):
     from .probe import drift_hints, probe_hub, probe_project
-    from .workspace import trusted_dirs
+    from .provision.workspace import trusted_dirs
     opts, _ = parse_args(argv, {"--json": "bool", "--project": "str", "--all": "bool",
                                 "--namespace": "str"})
     config, _src = load_config(env)

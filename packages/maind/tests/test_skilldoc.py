@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from maind import skilldoc
+from maind.provision import skilldoc
 from maind.config import load_config
 from tests.fixtures import make_repo, write_maind_config
 

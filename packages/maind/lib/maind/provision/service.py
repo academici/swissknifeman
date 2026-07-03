@@ -10,7 +10,7 @@ import getpass
 import shutil
 import subprocess
 
-from .common import die
+from ..common import die
 
 UNIT = "maind-memory.service"
 SERVICE_SUBCMDS = {"install", "uninstall", "start", "stop", "restart",

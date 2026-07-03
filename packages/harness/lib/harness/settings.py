@@ -3,17 +3,15 @@
 Примитивы перенесены из skiller/integrate.py (общие writer'ы окружения): они
 не затирают чужое содержимое, делают *.bak и понимают dry-run."""
 import json
-import shutil
 
-from .common import atomic_write_text, die
+from .common import atomic_write_text, backup_file, die
 
 
 def write_json(path, data, dry):
     if dry:
         print(f"  [dry-run] записал бы {path}")
         return
-    if path.exists():
-        shutil.copy2(path, f"{path}.bak")
+    backup_file(path)
     atomic_write_text(path, json.dumps(data, ensure_ascii=False, indent=2) + "\n")
     print(f"  записано: {path}")
 
@@ -22,8 +20,7 @@ def write_text(path, text, dry):
     if dry:
         print(f"  [dry-run] записал бы {path} ({text!r})")
         return
-    if path.exists():
-        shutil.copy2(path, f"{path}.bak")
+    backup_file(path)
     atomic_write_text(path, text)
     print(f"  записано: {path}")
 

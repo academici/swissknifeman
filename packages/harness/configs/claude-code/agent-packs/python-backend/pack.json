@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "pack": "python-backend",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "Dev-loop для Python web-бэкенда (FastAPI/Django/Flask): агенты slice-builder/test-writer/reviewer/type-checker(mypy)/spec-writer(опц.), последовательный one-branch workflow, SubagentStop review-gate (ruff) + PostToolUse-валидатор. Знания фреймворков — в промптах агентов (бакет python тонкий).",
   "stack": {
     "shape": "backend",
@@ -26,11 +26,11 @@
     { "id": "BASE_BRANCH", "q": "Базовая ветка?", "detect": "git symbolic-ref --short refs/remotes/origin/HEAD", "default": "main" },
     { "id": "CHECK_CMD", "q": "Быстрая review-gate проверка?", "default": "{PY_BIN} -m ruff check . && {PY_BIN} -m ruff format --check ." },
     { "id": "DOCS_DIR", "q": "Куда положить guideline (внутренний AI-гайд, не публичная docs/)?", "default": ".claude/guidelines" },
-    { "id": "MODEL_REVIEWER", "q": "Модель reviewer?", "default": "inherit", "enum": ["inherit", "opus", "sonnet", "haiku"] },
-    { "id": "MODEL_TYPE_CHECKER", "q": "Модель type-checker?", "default": "inherit", "enum": ["inherit", "opus", "sonnet", "haiku"] },
-    { "id": "MODEL_SLICE_BUILDER", "q": "Модель slice-builder?", "default": "inherit", "enum": ["inherit", "opus", "sonnet", "haiku"] },
-    { "id": "MODEL_TEST_WRITER", "q": "Модель test-writer?", "default": "inherit", "enum": ["inherit", "opus", "sonnet", "haiku"] },
-    { "id": "MODEL_SPEC_WRITER", "q": "Модель spec-writer?", "default": "inherit", "enum": ["inherit", "opus", "sonnet", "haiku"] },
+    { "id": "MODEL_REVIEWER", "q": "Модель reviewer?", "default": "opus", "enum": ["inherit", "opus", "sonnet", "haiku"] },
+    { "id": "MODEL_TYPE_CHECKER", "q": "Модель type-checker?", "default": "sonnet", "enum": ["inherit", "opus", "sonnet", "haiku"] },
+    { "id": "MODEL_SLICE_BUILDER", "q": "Модель slice-builder?", "default": "sonnet", "enum": ["inherit", "opus", "sonnet", "haiku"] },
+    { "id": "MODEL_TEST_WRITER", "q": "Модель test-writer?", "default": "sonnet", "enum": ["inherit", "opus", "sonnet", "haiku"] },
+    { "id": "MODEL_SPEC_WRITER", "q": "Модель spec-writer?", "default": "sonnet", "enum": ["inherit", "opus", "sonnet", "haiku"] },
     { "id": "GATE_COVERAGE_MIN", "q": "Мин. покрытие (%)?", "default": "80" },
     { "id": "GATE_MAX_CRITICAL", "q": "Допустимо critical-находок?", "default": "0" }
   ],

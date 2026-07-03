@@ -2,6 +2,34 @@
 
 ## [Unreleased]
 
+### Changed (harness@0.5.0 — Lean-tiering агент-паков + whole-server MCP allow)
+
+- **agent-packs `python-backend`/`node-frontend`/`dart-flutter` → Lean-tiered (0.4.1 → 0.5.0).**
+  `workflows/dev-loop.js` этих трёх паков наследовали модель и жгли `effort:'high'` на КАЖДОМ
+  `agent()`; теперь — паритет с `backend-laravel`/`laravel-package`: helper-лейны `implLane`
+  (impl `LOW→haiku` иначе `sonnet`) и `reviewLane` (`LOW→sonnet/medium · MED→opus/high ·
+  HIGH→opus/xhigh`), setup/type-check/verify → `sonnet`; `SLICE_RESULT_SCHEMA` обогащена
+  `risk_level`/`risk_markers`/`workarounds`/`tool_failures` (risk-адаптивный review-gate по
+  оценке test-writer); durable-light handover прошлых срезов. `pack.json` MODEL_* дефолты
+  `inherit` → tiered (reviewer/ffi-reviewer `opus`, builder/test/spec `sonnet`).
+  Мотив (RAG-подтверждён): per-stage model tiering — дешёвые исполняют, дорогая проектирует/
+  арбитрирует (Anthropic orchestrator-worker + advisor pattern). Наследование родительской
+  модели фан-аутом = весь флот на топ-модели (инцидент Flex: 93% недельной квоты за день).
+- **`settings.global.json`: whole-server auto-approve `mcp__perplexity-web` + `mcp__playwright`.**
+  Bare-server форма покрывает все текущие+будущие инструменты (incl. `perplexity-web login`,
+  недостающие playwright-tools). Раскатывается `harness permissions --global` в `~/.claude/
+  settings.json` → перестаёт переспрашивать во ВСЕХ проектах (раньше — россыпь per-tool записей,
+  промпт на каждый новый инструмент). Грамматика подтверждена доками Claude Code.
+
+### Added (harness@0.5.0 / skiller — доктрины токен-экономики мультиагентных workflow)
+
+- Раннбуки паков `docs/subagents-and-workflows.md` (все 5) + скилл `general/context-economy`
+  §8: **no-polling** (не поллить фоновые агенты — уведомление приходит само, `ScheduleWakeup`/
+  циклы опроса жгут кэш), **resume-стабильность** (детерминированные промпты + model/effort-
+  override отдельным параметром → `resumeFromRunId` отдаёт стадии из кэша), **budget-log**
+  (`budget.remaining()` после волны в больших фан-аутах). Три доктрины отсутствовали дословно;
+  RAG-валидны (Anthropic context-engineering: progressive disclosure/compaction).
+
 ### Added (harness@0.x — safe-dirs: path-scoped разрешение rm/rmdir в auto-approve)
 
 - **safe-dirs**: `rm`/`rmdir` с целями строго внутри доверенных директорий проходят мимо

@@ -21,8 +21,12 @@ impl → tests-to-green → review-gate. Скоуп срезов задаёт ч
 
 ```
 args = { branch: 'feat/...', base: '{{BASE_BRANCH}}', max_slices: 3,
-         slices: [ { id, title, goal, acceptance_criteria, skills? } ] }
+         slices: [ { id, title, goal, acceptance_criteria, skills?, risk? } ] }
 ```
+
+`risk` среза (`LOW|MED|HIGH`) — подсказка для Lean-tiering: impl `LOW→haiku` иначе `sonnet`,
+review `LOW→sonnet · MED→opus/high · HIGH→opus/xhigh`. Нет `risk` → дефолт `MED`. test-writer
+возвращает свою оценку `risk_level`, ею и определяется глубина/модель ревью.
 
 ## Гейты
 
@@ -31,5 +35,15 @@ args = { branch: 'feat/...', base: '{{BASE_BRANCH}}', max_slices: 3,
 - **PostToolUse** (Edit/Write `*.ts|*.vue`) → `validate-frontend.sh`: advisory, инжектит
   ошибки tsc/eslint в контекст, НЕ блокирует.
 
-Модельные тиры агентов выставляет профиль `node-frontend` (`model_tiers`); по умолчанию
-`inherit`.
+## Уроки overnight-прогона (зашиты в workflow — соблюдай и вручную)
+
+1. **Один branch на прогон**, хард-кап числа срезов литералом (`DEFAULT_MAX`) — переживает
+   resume; circuit-breaker: 2 не-зелёных подряд → стоп.
+2. **Модель/effort — по РИСКУ, не по умолчанию.** Дешёвые исполняют, дорогая проектирует/
+   арбитрирует (тиры выше). Наследование родительской модели — осознанное исключение, не дефолт.
+3. **Не поллить фоновые агенты** — уведомление о завершении приходит само; циклы опроса /
+   `ScheduleWakeup` жгут контекст-кэш впустую.
+4. **Промпты детерминированы — ради resume-кэша**: никаких timestamp/random; model/effort-
+   override — отдельным параметром вызова (opts завершённых стадий не менять). В большом
+   фан-ауте логируй `budget.remaining()` после волны.
+5. **Параллель — только по независимым файлам** (общая ветка = общее дерево).

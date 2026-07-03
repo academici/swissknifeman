@@ -6,6 +6,7 @@ from .common import AGENT_DEFAULTS, MANIFEST, MARKETPLACE, die, parse_flags, war
 from .config import load_config, resolve_target
 from .connect import do_connect
 from .hub import hub_artifacts_exist
+from .registry import alias_migration_hints, load_bucket_aliases
 from .skillset import do_sync, load_skillset_config
 from .state import db_records, load_db, print_registry_state
 from .vendor import do_vendor
@@ -33,6 +34,19 @@ def detect_vendor_path(target, config):
         if (target / p / MANIFEST).is_file():
             return p
     return None
+
+
+def enabled_marketplace_plugins(target, mk_file):
+    """Активные (True) плагины marketplace-канала из settings-файла — имена без
+    '@<marketplace>'. Fail-safe: битый/пропавший файл → [] (гонка/порча между
+    detect_marketplace_file и этим чтением не должна ронять update)."""
+    f = target / ".claude" / mk_file
+    try:
+        s = json.loads(f.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return []
+    return [k.split("@")[0] for k, v in s.get("enabledPlugins", {}).items()
+            if k.endswith(f"@{MARKETPLACE}") and v]
 
 
 def replay_opts(record):
@@ -79,6 +93,11 @@ def update_one(env, target, dry_run=False):
         opts["dry_run"] = dry_run
         opts["hub"] = bool(rec.get("hub")) or hub_artifacts_exist(target)
         print(f"--- update (marketplace): {target} ---")
+        # P7.5: бакет слит (alias) — старое имя ещё включено у проекта → одна строка,
+        # без нагнетания (сам update ничего не переключает, только подсказывает).
+        for hint in alias_migration_hints(
+                load_bucket_aliases(env), enabled_marketplace_plugins(target, mk_file)):
+            print(f"Подсказка: {hint}")
         do_connect(env, target, opts, fix_path_drift=True)
         print_registry_state(env)
     if sync_cfg:

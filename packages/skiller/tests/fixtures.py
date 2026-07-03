@@ -24,21 +24,27 @@ def write_skill(skill_dir, name, *, version="0.1.0", description="desc",
 
 def write_upstream(skill_dir, *, source="github", url="https://example/SKILL.md",
                    sha256="deadbeef", fetched_at="2026-01-01",
-                   strategy="notify", path="SKILL.md", review_pending=None):
+                   strategy="notify", path="SKILL.md", review_pending=None,
+                   body_path=None, extra_files=None):
     """Положить upstream.json рядом с SKILL.md (метит скилл как внешний).
 
     strategy/path/review_pending — для fork-скиллов (path указывает на зеркало,
-    напр. references/source.md, а не на SKILL.md)."""
+    напр. references/source.md, а не на SKILL.md). body_path (P7.3 thin-navigator) —
+    аддитивное поле, называет files[]-запись с реальным телом апстрима (см.
+    schema/upstream.schema.json); extra_files — доп. files[]-записи (dict-ы) поверх
+    основной, напр. чтобы держать одновременно SKILL.md И references/full.md."""
     import json as _json
     data = {
         "schema_version": 1,
         "source": source,
         "strategy": strategy,
         "files": [{"path": path, "url": url, "sha256": sha256,
-                   "fetched_at": fetched_at}],
+                   "fetched_at": fetched_at}, *(extra_files or [])],
     }
     if review_pending is not None:
         data["review_pending"] = review_pending
+    if body_path is not None:
+        data["body_path"] = body_path
     (skill_dir / "upstream.json").write_text(_json.dumps(data) + "\n", encoding="utf-8")
 
 

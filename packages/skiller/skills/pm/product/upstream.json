@@ -4,13 +4,14 @@
   "repo": "get-zeked/pm-super-skill",
   "strategy": "notify",
   "license": "MIT",
+  "body_path": "references/full.md",
   "files": [
     {
-      "path": "SKILL.md",
+      "path": "references/full.md",
       "url": "https://raw.githubusercontent.com/get-zeked/pm-super-skill/main/SKILL.md",
       "sha256": "576a884f372e76b4df3dd9fc59034c197ff55baeda2485bc68e6041afaaaad25",
       "fetched_at": "2026-06-11"
     }
   ],
-  "notes": "Local copy adapted for swissknifeman (bucket frontmatter added); do not auto-replace."
+  "notes": "Local copy adapted for swissknifeman (bucket frontmatter added); do not auto-replace. P7.3 thin-navigator: SKILL.md — локальный навигатор, апстримное тело — references/full.md (body_path)."
 }

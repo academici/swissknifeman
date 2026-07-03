@@ -128,6 +128,44 @@ skills/<bucket>/<name>/
 Как и для остальных стратегий, `upstream.json` и `origins`-зеркала **не вендорятся**
 в проекты — туда уезжает выверенный `SKILL.md`.
 
+## `body_path`: тело апстрима вне SKILL.md (thin-navigator, P7.3)
+
+Аддитивное поле верхнего уровня `upstream.json` — для `replace`/`notify`-скиллов,
+которые переводятся на **thin-navigator**: компактный `SKILL.md` (триггеры + карта
+разделов, пишется локально агентом) вместо полного зеркала апстрима, тело которого
+физически лежит в `references/full.md` (обычно, имя не зафиксировано схемой).
+`body_path` называет, какая `files[].path`-запись теперь и есть «тело» — именно по
+ней (а не по `SKILL.md`, который тут больше не отслеживается) `update-upstreams.sh`
+считает sha/дрейф:
+
+```json
+{
+  "schema_version": 1,
+  "source": "github",
+  "strategy": "notify",
+  "body_path": "references/full.md",
+  "files": [
+    { "path": "references/full.md", "url": "https://raw.githubusercontent.com/.../SKILL.md",
+      "sha256": "…", "fetched_at": "2026-07-01" }
+  ]
+}
+```
+
+Отсутствие поля = тело в `SKILL.md`, как раньше (back-compat, ничего не меняется).
+Технически sha/дрейф уже давно считается **по любому `files[].path`**, не только по
+`"SKILL.md"` — этим и пользуется `strategy=fork` для своего pristine-зеркала (см.
+выше). `body_path` не добавляет новый механизм сверки, а лишь **явно документирует**
+и **гейтит** его: `validate.sh` проверяет, что путь реально существует, не убегает
+из каталога скилла и **отслеживается** какой-то `files[]`-записью (иначе заявленное
+«тело» на деле не проверяется — тихая дыра), а для `strategy=replace` дополнительно
+запрещает держать рядом `files[].path == "SKILL.md"` (иначе `--apply` тихо
+перезаписал бы навигатор). Провенанс в `skills.json` (`registry.py`) тоже смотрит на
+`body_path` в первую очередь — `entry.upstream`/`fetched_at` берутся из названной им
+записи, а не из первой попавшейся.
+
+Для `fork`/`merge` отдельный `body_path`, как правило, избыточен — ту же роль там
+уже играет `files[].path`/`origins[].url`, указывающий на pristine-зеркало.
+
 ## Канал загрузки: gh api → urllib
 
 Для GitHub raw-URL (`raw.githubusercontent.com/{owner}/{repo}/{ref}/{path}`)

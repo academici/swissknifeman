@@ -16,7 +16,8 @@ from pathlib import Path
 from core import (  # noqa: F401
     HOME, BaseEnv, atomic_write_json, atomic_write_text, confirm, die,
     find_monorepo_root, is_within, is_within_lexical, now_iso, parse_flags,
-    parse_inline_list, run_cmd, safe_load_json, sanitize, state_dir, warn,
+    parse_inline_list, run_cmd, safe_load_json, sanitize, sibling_bin,
+    state_dir, warn,
 )
 from core import parse_frontmatter as _core_parse_frontmatter
 
@@ -43,7 +44,11 @@ SKILL_IGNORE = ("upstream.json", ".claude-plugin", "SKILL.*.md", "evals",
 CONFIG_KEYS = {
     "project_type": str, "buckets": list, "exclude": list, "presets": list,
     "skills_path": str, "agent": str,
-    "memory_brain": str, "coordinator_ignore": list,
+    # memory_brain — строка (путь, back-compat: скармливается memory-хуку) ИЛИ
+    # объект {path, sync?} (doc-sync BRAIN↔проект, см. brain_sync.BrainSync). Кортеж
+    # типов → isinstance принимает оба; в схеме это oneOf[string, object] (гейт
+    # test_schema.py трактует кортеж как «мульти-тип», сверяя каждый член с oneOf).
+    "memory_brain": (str, dict), "coordinator_ignore": list,
     # Профиль каркаса агентов (данные для agent-packs/универсальности, не движок):
     # shape — backend|frontend|fullstack; stacks — напр. ["laravel","vue"];
     # skills_map — домен→скиллы для преднагрузки ролей под стек.
@@ -114,17 +119,11 @@ class Env(BaseEnv):
 
 def harness_bin(env):
     """Путь к лаунчеру пакета `harness` (настройка окружения вынесена туда).
-    Резолв: env-override `SKM_HARNESS_BIN` → `<монорепо>/packages/harness/bin/harness`.
-    None, если пакет не найден (standalone-раскладка / harness не установлен)."""
-    override = os.environ.get("SKM_HARNESS_BIN")
-    if override:
-        p = Path(os.path.expanduser(override))
-        return p if p.exists() else None
-    mono = find_monorepo_root(env.root)
-    if not mono:
-        return None
-    p = mono / "packages" / "harness" / "bin" / "harness"
-    return p if p.exists() else None
+    Резолв — общий `core.sibling_bin`: env-override `SKM_HARNESS_BIN` → PATH →
+    `<монорепо>/packages/harness/bin/harness`. None, если не найден (standalone /
+    harness не установлен)."""
+    return sibling_bin("harness", env_var="SKM_HARNESS_BIN", use_path=False,
+                       monorepo_root=find_monorepo_root(env.root))
 
 
 def apply_permissions(env, target, presets="", dry_run=False, settings_file=None):

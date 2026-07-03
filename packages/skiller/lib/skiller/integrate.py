@@ -7,8 +7,8 @@ generate_hub (хаб). Окружение Claude Code (permissions/MCP/auto-appr
 subprocess (как maind делегирует skiller). Безопасно: --dry-run, merge-only, confirm.
 
 Блоки: пререквизиты → скиллы → permissions → MCP → auto-approve → memory → output-style →
-hub → brain. Скилл-блоки (skills/hub) — здесь; окружение (permissions/MCP/auto-approve/
-memory/output-style) — в harness.
+plans-dir → hub → brain. Скилл-блоки (skills/hub) — здесь; окружение (permissions/MCP/
+auto-approve/memory/output-style/plans-dir) — в harness.
 """
 import subprocess
 import sys
@@ -16,6 +16,7 @@ import sys
 from .common import apply_permissions, die, harness_bin, parse_flags, warn
 from .config import (autodetect, load_config, load_profile, resolve_profile_name,
                      resolve_target)
+from .brain_sync import BrainSync
 from .connect import do_connect
 from .vendor import do_vendor
 from .skillset import do_sync
@@ -30,13 +31,13 @@ SKILLS_CHANNELS = ("connect", "vendor", "skip")
 BUNDLES = {
     "minimal":     {"skills": "connect", "perms": False, "mcp": False,
                     "autoapprove": None, "memory": None, "hub": False, "brain": False,
-                    "output_style": "lean"},
+                    "output_style": "lean", "plans_dir": True},
     "recommended": {"skills": "connect", "perms": True, "mcp": True,
                     "autoapprove": "strict", "memory": None, "hub": True, "brain": False,
-                    "output_style": "lean"},
+                    "output_style": "lean", "plans_dir": True},
     "full":        {"skills": "connect", "perms": True, "mcp": True,
                     "autoapprove": "strict", "memory": "federation", "hub": True, "brain": True,
-                    "output_style": "lean"},
+                    "output_style": "lean", "plans_dir": True},
 }
 AA_MODES = ("strict", "permissive", "bypass", "off")
 MEM_MODES = ("file", "federation", "agentmemory", "off")
@@ -254,11 +255,26 @@ def _block_output_style(env, target, choices, dry):
     _run_harness(env, args)
 
 
+def _block_plans_dir(env, target, choices, dry):
+    """Per-project plans/ (harness hooks --plans-dir plans) — plansDirectory в
+    .claude/settings.json (шаримый, коммитится), дефолт «да»: новые онбординги получают
+    plans/ сразу. Ответ «нет» = харнес вообще не звать — НЕ звать с off (у harness off
+    снимает только СВОЙ дефолт plans, это другая семантика, не «не устанавливать»)."""
+    want = choices.get("plans_dir")
+    print(f"\n[7] plans-dir: {'plans' if want else 'пропуск'}")
+    if not want:
+        return
+    args = ["hooks", "--target", str(target), "--plans-dir", "plans"]
+    if dry:
+        args.append("--dry-run")
+    _run_harness(env, args)
+
+
 def _block_hub(env, target, choices, dry):
     # Хаб уже сгенерён внутри connect/vendor, если skills+hub. Иначе — отдельно.
     if not choices["hub"] or choices["skills"]:
         return
-    print("\n[7] Hub")
+    print("\n[8] Hub")
     if dry:
         print("  [dry-run] сгенерировал бы хаб (CLAUDE.md / .ai)")
         return
@@ -268,13 +284,41 @@ def _block_hub(env, target, choices, dry):
         print(f"  пропуск хаба: {e}")
 
 
-def _block_brain(target, choices):
+def _block_brain(env, target, choices, dry):
     if not choices["brain"]:
         return
-    print("\n[8] Brain docs-sync (подсказка — настраивается со стороны волта)")
+    print("\n[9] Brain docs-sync")
+    # Подсказка со стороны волта (как раньше) — синк заметок настраивается там.
     print("  В заметке проекта в Brain-волте добавь во frontmatter:")
     print(f"      repo: {target}")
     print("  Затем: brain status <project> / brain sync <project>")
+
+    # Doc-sync проекта: конфиг .swissknife.json::memory_brain. Строка = путь без
+    # правил синка (только memory-хук, back-compat) → doc-sync выключен. Объект
+    # {path, sync?} → генерим .claude/sync-brain.sh (всегда) и, если direction
+    # pull|bidirectional, тянем файлы из BRAIN в проект.
+    from .config import load_config
+    brain_config = (load_config(env, target) or {}).get("memory_brain")
+    if not brain_config:
+        return
+    bs = BrainSync(target, brain_config)
+    if bs.brain_path is None:
+        return
+    if dry:
+        print(f"  [dry-run] сгенерировал бы .claude/sync-brain.sh (BRAIN={bs.brain_path},"
+              f" direction={bs.direction})")
+        if isinstance(brain_config, dict) and bs.direction in ("pull", "bidirectional"):
+            print("  [dry-run] и подтянул бы файлы из BRAIN по patterns "
+                  f"({', '.join(bs.patterns)})")
+        return
+    # Doc-sync-объект → активный синк; строковый конфиг оставляем только для
+    # memory-хука (doc-sync не включаем, чтобы не менять поведение старых проектов).
+    if isinstance(brain_config, dict) and bs.direction in ("pull", "bidirectional"):
+        copied = bs.sync_pull()
+        print(f"  pull: скопировано файлов из BRAIN → проект: {len(copied)}")
+    script = bs.generate_sync_script()
+    script.chmod(0o755)
+    print(f"  сгенерирован {script} (ручной синк: bash {script.name} [pull|push])")
 
 
 # --- choices assembly ---------------------------------------------------------
@@ -376,6 +420,9 @@ def _gather(env, target, opts, bundle, interactive):
     ch["output_style"] = "lean" if _ask_yn(
         "Включить терсе-голос агента (output-style lean — экономия токенов)?",
         True, interactive) else None
+    ch["plans_dir"] = _ask_yn(
+        "Включить per-project plans/ (plansDirectory — планы Claude Code в проекте)?",
+        True, interactive)
     ch["hub"] = _ask_yn("Сгенерировать хаб скиллов (CLAUDE.md / .ai)?", True, interactive)
     ch["brain"] = _ask_yn("Показать подсказку по brain docs-sync?", True, interactive)
     return ch
@@ -417,8 +464,9 @@ def cmd_integrate(env, argv):
     _block_autoapprove(env, target, choices, dry)
     _block_memory(env, target, choices, dry)
     _block_output_style(env, target, choices, dry)
+    _block_plans_dir(env, target, choices, dry)
     _block_hub(env, target, choices, dry)
-    _block_brain(target, choices)
+    _block_brain(env, target, choices, dry)
 
     print("\n=== Готово ===" + (" (dry-run)" if dry else ""))
     print("Перезапусти сессию Claude Code в проекте, чтобы хуки/плагины подхватились.")

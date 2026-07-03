@@ -116,7 +116,7 @@
     },
     "general": {
       "description": "General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists",
-      "count": 19,
+      "count": 20,
       "status": "active"
     },
     "laravel-architecture": {
@@ -227,6 +227,11 @@
     "system": {
       "description": "Local environment topology: the three hub nodes (Brain vault, swissknifeman, projects base) and how agents navigate between projects and their docs",
       "count": 7,
+      "status": "active"
+    },
+    "voice-ai": {
+      "description": "Realtime voice AI agents: WebRTC+WebSocket transport, VAD + semantic turn detection, sub-500ms barge-in, sub-800ms latency budget, STT→LLM→TTS orchestration, session state-machine, RU stack (Yandex SpeechKit / SaluteSpeech / GigaChat) + offline fallback",
+      "count": 1,
       "status": "active"
     }
   },
@@ -411,8 +416,8 @@
       "path": "skills/architect/engineering/SKILL.md",
       "version": "0.1.0",
       "description": "Broad engineering-bucket navigator (composite of external dev skills). For specific work prefer the granular skill — architecture→architecture, API→api-design, data→data-schema, domain→domain-modeling, agents→agent-design, eval→eval-design, security→security-design, observability→observability-design, stack→tech-stack-selection, codebase→codebase-design. Use only for a cross-cutting overview when no single skill fits.",
-      "sha256": "8a61d5d5d10466422c1da69ae4aa8ed302af606a2b0535befce034bd5a601edb",
-      "content_sha256": "e285dad3abe234ae997786a85a14f67dddec575d3e24fba28d5daa5cc044f541",
+      "sha256": "5fcdd133dff5e09bf192c278520709fabae24f14547b7c0375f8fcaaa91afdaf",
+      "content_sha256": "e63ec9acb5707a1a724c02f09fb7a2d573b2b4f23cda5ac4508ffa9bdd41bca4",
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/get-zeked/dev-engineering-super-skill/main/SKILL.md",
       "fetched_at": "2026-06-11"
@@ -835,8 +840,8 @@
       "path": "skills/creative/content-creative/SKILL.md",
       "version": "1.0.0",
       "description": "Comprehensive creative studio skill merging Perplexity Computer's video production, speech synthesis, image generation, and website building with Claude Code's canvas design, algorithmic art, brand guidelines, frontend design, artifacts builder, content frameworks, content calendar, and prompt engineering. Use when creating visual content, designing interfaces, building brands, generating videos/images/audio, writing content, planning content calendars, or doing any creative production work.",
-      "sha256": "0f33884a3e46c6b8b0b578f0c420d088d38fa8ba818e8bd001091531b15a9306",
-      "content_sha256": "64d3b9ecb29b11faced4caefabc75c4a6381a7aa8f381954a72bf4c8e4f3cf77",
+      "sha256": "38e43559b3070a4c16c370e7e1311874bb2821c7f543486585e38f1f87091f72",
+      "content_sha256": "995979925dd3281c6215507d7aae4d76a2c51d696e6db048fdad67affa292d08",
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/get-zeked/content-creative-super-skill/main/SKILL.md",
       "fetched_at": "2026-06-11"
@@ -1073,8 +1078,8 @@
       "path": "skills/finance/finance/SKILL.md",
       "version": "1.0.0",
       "description": "Comprehensive finance and accounting skill merging Perplexity Computer's 7 finance skills plus investment research with Claude Code's data science, data engineering, financial analysis, and invoice management skills. Covers financial statements, journal entries, reconciliation, close management, audit support, variance analysis, market data, investment research, data pipelines, ML forecasting, and invoice processing. Use for financial reporting, month-end close, audit prep, variance analysis, market research, investment thesis, data engineering, or any finance and accounting work.",
-      "sha256": "c24bf53e7005675622c69f3a957c78bee48f469c68af46af8874426516b0f7a2",
-      "content_sha256": "68c7fff7e5eb0cc60ad760e187bb10337fd4c12f0aaedd77bec73eaa7151b113",
+      "sha256": "ba733de87b8a54ab3e3c15a0c7fc377f48136f77333ec6d203bd0d24f509bac6",
+      "content_sha256": "1577ad1f0ed4ec598c897a5247ac30c3a0a640340cce75a685afc995e5247e6d",
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/get-zeked/finance-super-skill/main/SKILL.md",
       "fetched_at": "2026-06-11"
@@ -1937,8 +1942,8 @@
       "path": "skills/general/complex-task-orchestrator/SKILL.md",
       "version": "0.1.0",
       "description": "Complex-task orchestration: decomposition, context routing, risk management, Definition of Done, minimal verification loop.",
-      "sha256": "c188a05e08639e099b139e6143f1c9f9edf88d2bd84abf539df02ed79d2aad38",
-      "content_sha256": "cf9435f6c5fa80f05428a17d1143880a4d9939e23738864bb6f24f3d79eb7f1f",
+      "sha256": "bad2aa7fb19acb9bbc647684db3f3d99277313a43b1ee007648704fccbe2fa4c",
+      "content_sha256": "37ab19c276dd5d6620dd94a19d02b5d5ffdfda484a09cd6324f9c9736ce021a2",
       "tags": [
         "workflow",
         "orchestration",
@@ -2081,8 +2086,8 @@
       "path": "skills/general/mcp-advisor/SKILL.md",
       "version": "0.1.0",
       "description": "Pick MCP servers for a project at onboarding/sync: which to connect (context7/playwright/github/fetch/sequential-thinking + maind hub), why, when NOT to, and the cost in context/permissions/Node-deps. Activate when adding/onboarding/syncing a project, editing .mcp.json, or choosing MCP — emits a justified connection plan, not a dump of every server.",
-      "sha256": "ada6b91805c70edac09eba2f3ff2f0c8545a2495fcde6767bc49c1595d6cc2d4",
-      "content_sha256": "d6c767c7227a7b1542aa5b140b4986fb6f0906a6f6e3dc03a9d9e081e5af6de9",
+      "sha256": "d45824bf0172f9aa99bc68eb4afd6afebdba0424cd7baf368707f18634cdb61c",
+      "content_sha256": "4adb390fd3fb91bd30a9731cc3ac8e1cd3af0e70b05ad754741a1a0397b29440",
       "tags": [
         "mcp",
         "onboarding",
@@ -2131,6 +2136,27 @@
       "source": "local"
     },
     {
+      "name": "plan-protocol",
+      "bucket": "general",
+      "path": "skills/general/plan-protocol/SKILL.md",
+      "version": "0.2.0",
+      "description": "Executable master plans in plans/<ID>: plan/phase/task schemas, 6 statuses, handoff standard, model routing, /task:plan-* commands.",
+      "sha256": "af8f48e05b1802b993128119f4cc5b67b7fd7c911f69bd814902980e84331e94",
+      "content_sha256": "3dc08d233738c9aa99a9d4f6c2a299893ae1b7e9bfd15bbea87b0bd468e128ae",
+      "tags": [
+        "workflow",
+        "planning",
+        "handoff",
+        "routing",
+        "multi-model"
+      ],
+      "produces_for": [
+        "session-handoff",
+        "complex-task-orchestrator"
+      ],
+      "source": "local"
+    },
+    {
       "name": "project-map",
       "bucket": "general",
       "path": "skills/general/project-map/SKILL.md",
@@ -2156,8 +2182,8 @@
       "path": "skills/general/session-handoff/SKILL.md",
       "version": "0.2.0",
       "description": "Cross-session/agent context handoff: compress a session into a structured doc — state, decisions, open items, next steps.",
-      "sha256": "1975e9336fdc16ef1c06ba378dbd8e561150da865cac5d75e08f7c20bfa4ca7b",
-      "content_sha256": "93b8d7b24dbdfaee71185f9cb4ca72ee31c4f3011e3e65cb4ec7ec1528cd9ee0",
+      "sha256": "9116c6f1612418fbd614b0f88ec86e27172363011f77926ea314c86d1e689cc5",
+      "content_sha256": "52d9a7c219080746cf5748215942f423d6be67d62c8cb9c38579f00716284967",
       "tags": [
         "workflow",
         "context",
@@ -2208,8 +2234,8 @@
       "path": "skills/general/task-brief-template/SKILL.md",
       "version": "0.4.0",
       "description": "Brief template for complex agent tasks: goal, scope, invariants, explicit assumptions, out of scope, acceptance criteria, definition of done. Plus Plan→Clear→Execute pattern and loop fields for iterative runs: verifier, exit condition, hard-stop.",
-      "sha256": "746fa4884c54330b3746b0204cedfd83a6050d1e96d25ba22047fbad50b08a8f",
-      "content_sha256": "9e0e8138b6fbbe180a2cde634620e3cc3d05c9768d4a61f1681031ebb20ec287",
+      "sha256": "d7860e287ad9bc5ed0deba54967a71016943eb55b07be5e1243af2114971b06f",
+      "content_sha256": "d8af2cf70b92d3e7e9234f1d8f9b81e3fb41c3b0617b444e1b65267939abecff",
       "tags": [
         "workflow",
         "template",
@@ -2665,8 +2691,8 @@
       "path": "skills/legal/legal/SKILL.md",
       "version": "1.0.0",
       "description": "Comprehensive legal operations skill merging Perplexity Computer's 6 legal skills with Claude Code's writing, communications, and planning skills. Covers contract review, NDA triage, compliance (GDPR/CCPA), risk assessment, meeting briefings, canned responses, legal writing, internal communications, and structured planning. Use for contract analysis, NDA screening, compliance reviews, risk assessments, legal meeting prep, response drafting, or any legal operations work.",
-      "sha256": "69bede66b460a4f07d0993a815f8e9b5a4b3f5989549e35c7b8f1d5f52e3cc04",
-      "content_sha256": "9b0dda29a994b40a213c3f3acaa54cf48da3a424202c1d8a20382e6913ea3a43",
+      "sha256": "8ae71b9837fd2dc9af78eb4ca8e6a48f177e4d6510de242b5388f563b186a7b4",
+      "content_sha256": "7f5add329b0c9aae2f7a99f1217efbad6b835ce0fbfc55b5e7ca2e05d427469c",
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/get-zeked/legal-super-skill/main/SKILL.md",
       "fetched_at": "2026-06-11"
@@ -2677,8 +2703,8 @@
       "path": "skills/marketing/marketing/SKILL.md",
       "version": "1.0.0",
       "description": "Comprehensive end-to-end marketing skill merging Perplexity Computer's 6 built-in marketing skills with Claude Code's best community marketing skills. Covers campaign planning, brand voice, competitive analysis, SEO, content creation, performance analytics, copywriting frameworks, and marketing ops. Use when planning campaigns, analyzing competitors, creating content, building brand guidelines, tracking marketing metrics, or optimizing conversion funnels.",
-      "sha256": "0467b8aa30953e0012ea3832a15146ddfbb88cf323064a1b4493f88a2d6be2b9",
-      "content_sha256": "d536a6f6cf0402cac7f28bf1ecf03d2b551553253147c7630fc14984fc405e91",
+      "sha256": "783bdb03566a110c8fe39bb63b7b46d7987b117741501376ab8490167d053183",
+      "content_sha256": "fa15765aec2135548e7918e87cad6c97950ff26d031422b847c40c24e7240386",
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/get-zeked/marketing-super-skill/main/SKILL.md",
       "fetched_at": "2026-06-11"
@@ -2768,8 +2794,8 @@
       "path": "skills/operator/operations-cx/SKILL.md",
       "version": "1.0.0",
       "description": "Broad operations/CX-bucket navigator (composite of external CX skills). For specific work prefer the granular skill — incidents→incident-response, postmortem→postmortem, on-call→oncall-rotation, capacity→capacity-planning, runbooks→runbook. Use only for a cross-cutting overview when no single skill fits.",
-      "sha256": "a5a0a8ac47f44ae7cc5ff07c55e65697819d0b0cef27c36d2e9fa5a00afb898e",
-      "content_sha256": "15ae91a4a317d79b9477f84a503cb92c9e80c0ff3944ed4bc370a4c6e26d36af",
+      "sha256": "5203283cc33972d915126ce3599833c97accfe88450f3035a392839c54dcacc5",
+      "content_sha256": "87a6f28ae58a855dc68601b12d1e1c66707e14cb7f12cd4565e107bfa1f9adbf",
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/get-zeked/operations-cx-super-skill/main/SKILL.md",
       "fetched_at": "2026-06-11"
@@ -3621,8 +3647,8 @@
       "path": "skills/pm/product/SKILL.md",
       "version": "0.1.0",
       "description": "Broad PM-bucket navigator (composite of external PM skills). For specific work prefer the granular skill — PRD→prd-from-brd, roadmap→product-roadmap, BRD→brd, metrics/economics→unit-economics, prioritization→requirement-critic, GTM→go-to-market, monetization→monetization-design, PMF→pmf-diagnostics, process→business-process. Use only for a cross-cutting overview when no single skill fits.",
-      "sha256": "c768ddfa01ddab284124be7cc96bb691ba1e1af7baea88d986ecd0f66e448882",
-      "content_sha256": "9cf3c2b8d24a086873a03eee9a32af2950158dcbe717701d364048b15e509d9b",
+      "sha256": "0f2d1a35da1e7acdd8993721af172dd1991d68f7559e282be710b000ddea04bd",
+      "content_sha256": "d75f9259c75e8d9264122e3abb150f17af1baa96f0e1d3e17543436701138402",
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/get-zeked/pm-super-skill/main/SKILL.md",
       "fetched_at": "2026-06-11"
@@ -3943,8 +3969,8 @@
       "path": "skills/research/query-craft/SKILL.md",
       "version": "0.1.0",
       "description": "How to FORMULATE a search/doc-engine query (Perplexity Web · WebSearch · context7): version/stack (e.g. 'min Filament 4'), timeframe, format, limit; pick engine+mode (search/advanced/deep) and sources (web/academic/social). Activate BEFORE any external search, esp. a library/framework (Laravel/Filament/Vue): ban bare 'Laravel how to X?'. Not when-to-verify (verify-claims) nor what-to-connect (mcp-advisor) — only HOW to ask.",
-      "sha256": "0cda7e674a97305f9355e9e1e54cc0f6ae9977224697db2ff9b60e76c33e7ff2",
-      "content_sha256": "af27cb0581807978fe2cf8e7d8265ca5fe4e6c070c71ff93a180cd7e834d6fc1",
+      "sha256": "5a35c291cad4202b7034a13f87f00cab7e0450e25d13e9fe8bc44ae0dbf7b455",
+      "content_sha256": "f198949d1224dd019c4b9d1fc42493048351bdf3c44abcd1f6bbb07cd09eb3b8",
       "tags": [
         "research",
         "perplexity",
@@ -3965,8 +3991,8 @@
       "path": "skills/research/research/SKILL.md",
       "version": "0.1.0",
       "description": "Comprehensive research and knowledge management skill merging Perplexity Computer's research, data exploration, statistical analysis, and visualization skills with Claude Code's tapestry knowledge graphs, article extraction, content research, brainstorming, RAG system building, and prompt engineering. Covers deep research workflows, knowledge graph construction, academic research, data analysis, statistical methods, content synthesis, and AI-powered information retrieval. Use for research projects, literature reviews, data analysis, knowledge management, competitive research, or any investigation requiring deep synthesis.",
-      "sha256": "709b6fa3f2a3acf27ce81930b320daa28fc0dd2e29bc07bb4b54dfbe113ca74e",
-      "content_sha256": "ebcc783a055ebf7fe1d7b8f54071f1311c4125bccb7651f6716af08c4b2df236",
+      "sha256": "11035a5afb45a1bb9eccb86982f674016d217ed62cc1bc10b49e470631cc9577",
+      "content_sha256": "4677060be67945583b74fb16491478d8000e3a9e36682084d0d0c31224a7440a",
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/get-zeked/research-knowledge-super-skill/main/SKILL.md",
       "fetched_at": "2026-06-11"
@@ -4047,8 +4073,8 @@
       "path": "skills/sales/sales/SKILL.md",
       "version": "1.0.0",
       "description": "Comprehensive end-to-end sales skill merging Perplexity Computer's 6 built-in sales skills with Claude Code's customer interview analysis, brand voice analysis, content research, RICE prioritization, and UX research. Covers the full sales cycle from prospecting to close. Use when doing account research, call prep, competitive intelligence, outreach drafting, asset creation, daily briefings, customer interview analysis, deal prioritization, or prospect research.",
-      "sha256": "711d1cbf9fff22439c7eca1964cf4d5ccc39d9b7488be4b3390340ef871e0845",
-      "content_sha256": "eb0dc5294638b600c55b48883ba0752b0e9a4ae3e0d8a8bac063abe3ec6648ad",
+      "sha256": "4c25474e50717ed33c48e62157ee5598f842ac2856cca7968564e9f6cf81d77c",
+      "content_sha256": "c3afb9e7acd7a7db4f87ae3df0f61a339c9d58d0caaf89b04dca3e62aa5ffb1d",
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/get-zeked/sales-super-skill/main/SKILL.md",
       "fetched_at": "2026-06-11"
@@ -4059,8 +4085,8 @@
       "path": "skills/security/security/SKILL.md",
       "version": "0.1.0",
       "description": "Comprehensive AI agent security skill covering prompt injection defense, skill/plugin validation, memory poisoning prevention, permission auditing, tool-use safety, data exfiltration prevention, and incident response. Use when installing new skills, processing untrusted documents/emails/web content, auditing agent permissions, validating memory integrity, reviewing MCP tool configurations, or hardening agent workflows against adversarial attacks. Merges OWASP LLM Top 10, NIST AI RMF, vendor guidance from Anthropic/Microsoft/Google, and community security skills into one defensive playbook.",
-      "sha256": "2e7e9af19365e2408dc25bac518204a59a3da3b07c2b629b6a7486013ddd909b",
-      "content_sha256": "8397c41296e08c936f34d4487a94e022e4d8a52a902be6f80214aa8361715127",
+      "sha256": "a66166865878037eb4aec98b8ad9d5ff2cae167a57ecc46e42ecb7b92d7155a5",
+      "content_sha256": "84612cd3a244a8e36b72c9f13a0f47fdb24106338a539f5e821d24333d49722e",
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/get-zeked/agent-security-super-skill/main/SKILL.md",
       "fetched_at": "2026-06-11"
@@ -4218,6 +4244,29 @@
         "local-topology"
       ],
       "source": "local"
+    },
+    {
+      "name": "voice-ai",
+      "bucket": "voice-ai",
+      "path": "skills/voice-ai/voice-ai/SKILL.md",
+      "version": "0.1.0",
+      "description": "Designing realtime voice AI agents: transport (WebRTC media + WebSocket control), turn detection (VAD + semantic EOU), sub-500ms barge-in, sub-800ms latency, STT→LLM→TTS orchestration, session state-machine, RU stack and offline fallback. Activate when designing a voice agent/IVR/call-bot, choosing voice transport, tuning barge-in/turn-taking, budgeting speech latency, or picking a speech stack for RU and 152-FZ.",
+      "sha256": "fbff111f3a8888ea7a59e1babf8a308d05ad772c1ccf3d6b6999a509e8968b1b",
+      "content_sha256": "62560ba461abfa727aaaf17bce2d1a212273dc1f4eace9e951f49487f66a2f6c",
+      "tags": [
+        "voice",
+        "realtime",
+        "webrtc",
+        "stt",
+        "tts",
+        "vad",
+        "barge-in",
+        "latency",
+        "russian-stack"
+      ],
+      "source": "http",
+      "upstream": "https://developers.openai.com/api/docs/guides/realtime-vad",
+      "fetched_at": "2026-07-03"
     }
   ],
   "references": [

@@ -19,7 +19,7 @@
     {
       "name": "analyst",
       "source": "./packages/analyst",
-      "description": "analyst — continuous learning экосистемы: детерминированный захват кандидат-уроков из прогонов (digest), человеко-гейт (review/promote), провенанс. Только команды.",
+      "description": "analyst — continuous learning экосистемы: детерминированный захват кандидат-уроков из прогонов (digest), человеко-гейт (review/promote), провенанс; агент-аналитик (/analyst:deep, digest-first). Команды + агент.",
       "category": "ecosystem",
       "tags": [
         "analyst",
@@ -107,7 +107,8 @@
         "./packages/skiller/skills/general/mcp-advisor",
         "./packages/skiller/skills/general/verify-claims",
         "./packages/skiller/skills/research/query-craft",
-        "./packages/skiller/skills/oss-dev/gh-review"
+        "./packages/skiller/skills/oss-dev/gh-review",
+        "./packages/skiller/skills/general/plan-protocol"
       ],
       "description": "Curated always-on core: token-economy skills (context-economy, anti-drift, verify-claims, …) — lean replacement for the general+oss-dev buckets in every project",
       "category": "meta",
@@ -637,7 +638,7 @@
     {
       "name": "task",
       "source": "./packages/task",
-      "description": "task — интент-команды постановки задач для Claude Code: /task:design|dev|review|research|fix. Каждая команда пинит свою модель + reasoning effort + профиль workflow (перебивая настройки сессии), чтобы не помнить про ручное переключение модели/effort/режима. Тонкое лицо над agent-packs/workflow экосистемы academici.",
+      "description": "task — интент-команды постановки задач для Claude Code: /task:design|dev|review|research|fix + plan-протокол /task:plan-design|plan-exec|plan-close|plan-audit (исполняемые мастер-планы в plans/ по скиллу plan-protocol: opus проектирует, sonnet исполняет, opus аудитит). Каждая команда пинит свою модель + reasoning effort + профиль workflow (перебивая настройки сессии), чтобы не помнить про ручное переключение модели/effort/режима. Тонкое лицо над agent-packs/workflow экосистемы academici.",
       "category": "ecosystem",
       "tags": [
         "tasks",
@@ -650,6 +651,23 @@
         "ecosystem"
       ],
       "package": "task"
+    },
+    {
+      "name": "voice-ai",
+      "source": "./packages/skiller/skills/voice-ai",
+      "description": "Realtime voice AI agents: WebRTC+WebSocket transport, VAD + semantic turn detection, sub-500ms barge-in, sub-800ms latency budget, STT→LLM→TTS orchestration, session state-machine, RU stack (Yandex SpeechKit / SaluteSpeech / GigaChat) + offline fallback",
+      "category": "engineering",
+      "tags": [
+        "voice",
+        "realtime",
+        "webrtc",
+        "stt",
+        "tts",
+        "vad",
+        "barge-in",
+        "latency"
+      ],
+      "package": "skiller"
     }
   ]
 }

@@ -2,6 +2,17 @@
 
 Формат — [Keep a Changelog](https://keepachangelog.com/ru/1.0.0/); версии — per-PACK (semver).
 
+## [0.4.0] - 2026-07-02
+
+### Added
+
+- **`rules/generated-assets.md` — edit-policy generated-ассетов** (install-файл
+  `.claude/rules/generated-assets.md`, paths: `.claude/{agents,workflows,hooks}/**`).
+  Файл с блоком `swissknifeman:generated` — собственность пака: не редактировать,
+  расширять только через Extension-points/`.claude/rules/*-overrides.md`; нужна правка
+  core — остановиться и отчитаться (человек делает upgrade пака или правит шаблон).
+  Контекст: SKM-MASTER-002 фаза E (provenance-headers + drift-детект в движке harness).
+
 ## [0.3.0] - 2026-07-01
 
 ### Added

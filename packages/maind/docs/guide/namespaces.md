@@ -57,4 +57,42 @@ maind sync --namespace axioma --only graph,memory   # фан-аут по гру�
 в своей группе их не видит. `azguard` с `["axioma","*"]` — мост: виден и в `axioma`, и как общая
 инфраструктура всем.
 
+## Кэш BRAIN-доков в памяти
+
+Документы проекта (BRD, архитектура, API-контракты и т.п.) можно закэшировать в память maind,
+чтобы агент поднимал их через `recall` вместо перечитывания файлов при каждом запросе — экономия
+контекста на повторных прогонах. **Команды `maind memory store`/флагов `--key`/`--file` не
+существует** — реальная запись в память идёт через `maind memory remember`, у которой только
+флаги `--project`|`--scope`, `--share`, `--type`, `--json` (см. `lib/maind/memory.py:_cmd_remember`).
+«Ключ» темы документа (`docs:brd`, `docs:architecture`, …) передаётся через `--type`:
+
+```bash
+# записать документ как факт с типом-ключом docs:brd
+content="$(cat docs-private/dev/BRD.md)"
+maind memory remember --scope project:loqum --type docs:brd "$content"
+
+# вспомнить позже (запрос — по смыслу текста, а не точное совпадение ключа)
+maind memory recall --scope project:loqum "docs:brd"
+```
+
+Обёртка над несколькими документами разом — `packages/maind/scripts/cache-brain-docs.sh`:
+
+```bash
+scripts/cache-brain-docs.sh --scope project:loqum \
+  docs:brd=docs-private/dev/BRD.md \
+  docs:architecture=docs-private/dev/Architecture_Loqum.md
+```
+
+Рекомендуемые ключи (`--type`) для проектов с BRAIN-документацией:
+
+| ключ (`--type`) | что кэшируется |
+|:--|:--|
+| `docs:brd` | требования и цели (BRD) |
+| `docs:architecture` | архитектура (C4, компоненты) |
+| `docs:api` | API-контракты |
+| `docs:glossary` | глоссарий терминов |
+
+Это ручной/скриптовый шаг (не часть `maind onboard`/`sync`) — если понадобится авто-кэширование
+на онбординге, это отдельная доработка `provision/onboard.py`, не описанная здесь.
+
 Дальше: [Граф кода (Serena) →](./code-graph)

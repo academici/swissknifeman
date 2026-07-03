@@ -55,6 +55,9 @@ stdlib-only; синхрон держат `tests/test_schema.py` + `skiller docto
 
 - `bin/skiller` — тонкий bash-лаунчер → `python3 -m skiller`.
 - `lib/skiller/*.py` — вся логика, **stdlib-only** (без сторонних зависимостей в рантайме).
+  Каналы раздачи и реестр (переплетены через `config`/`state`/`budget`) — на верхнем уровне;
+  слабо-связанный **анализ** сгруппирован в подпакет `quality/` (`eval`·`audit`·`analyze`).
+  Импорт: `skiller.quality.<mod>`.
 - `skills/<bucket>/<name>/SKILL.md` — скиллы; `buckets.json` — метаданные бакетов (description/category/tags).
   PHP разбит на тонкие бакеты: ядро `php` + `laravel-{testing,filament,livewire,data-layer,auth,architecture,extras}`
   + `php-packages` (разработка пакетов) + одиночные `azguard`/`botkit` (под перенос внутрь пакетов).

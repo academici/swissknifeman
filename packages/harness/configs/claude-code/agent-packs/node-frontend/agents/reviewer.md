@@ -42,6 +42,10 @@ color: yellow
 - **Доступность**: фокус/aria на интерактивных элементах.
 - **Over-engineering** (`quality:code-simplifier`): абстракции «на вырост», обёртки в строку,
   индирекция без второго потребителя — помечай `delete:`/`yagni:`/`shrink:`.
+- **Generated-assets (agent-packs)**: дифф трогает файл с заголовком
+  `swissknifeman:generated` (grep по изменённым файлам) → находка `HIGH
+  generated-core-edited`: правку перенести в override-файл (`Extension-points` из
+  заголовка или `.claude/rules/*-overrides.md`), core восстановить нетронутым.
 
 ## Гейты вердикта (по порогам)
 
@@ -49,6 +53,11 @@ color: yellow
 - `{{LINT_CMD}}` ошибок > 0 → `needs-work`.
 - critical-находок > **{{GATE_MAX_CRITICAL}}** → `needs-work`.
 - покрытие изменённого поведения < **{{GATE_COVERAGE_MIN}}%** → `needs-work`.
+
+## Проектные оверрайды
+
+Если существует `.claude/rules/{{PACK_PREFIX}}-reviewer-overrides.md` — прочитай и
+применяй ПОВЕРХ этого файла (проектные оси приоритетнее общих).
 
 ## Выход
 

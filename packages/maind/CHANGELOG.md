@@ -6,6 +6,26 @@
 ## [Unreleased]
 
 ### Added
+- **`maind sync` — провиженеры `plans-dir` и `plans-doc` (per-project plan-система).**
+  Ретроактивная раскатка plan-протокола на онбордженные проекты: `plans-dir` зовёт
+  `harness hooks --plans-dir plans` (пишет `plansDirectory` в `.claude/settings.json`
+  проекта; занятый другим значением ключ harness уважает — skip), `plans-doc` вставляет
+  hashed-блок `maind:plan-conventions` в CLAUDE.md проекта (`health.apply_plans_doc`
+  по образцу `apply_health_doc`, шаблон `templates/plans/conventions-block.md`,
+  идемпотентно: повтор → `fresh/skip`). Опт-аут один на оба: `project.plans_dir="off"`
+  (конвенция без раскатанного plansDirectory бессмысленна). Оба — в дефолтном наборе
+  `--all`. Пилот end-to-end на azguard — 7/7 шагов зелёный. Известный шов: JSON-результат
+  `plans-dir` на идемпотентном повторе даёт `changed=true` (провиженер видит только rc
+  subprocess'а harness) — честный `changed` требует прокидывания stdout из
+  `run_capability`, deferred. Контекст: SKM-MASTER-003 P1.2/P1.3 (дизайн A/C).
+- **`analyze` — секция «Эффективность» (патологии прогона, Detect ≠ Gate).** Новый источник
+  `pathology_slice(run_report)` поверх `core/pathology.py` (10 детекторов: file-reread,
+  tool-error-loop, no-op-run, no-verify, cache-miss, overthinking, retrieval-stuffing,
+  protected-write, static-context, fanout): attention-находки уходят в `reasons` → вердикт
+  ATTENTION (той же механикой, что `pack_drift`), info-находки — в machine-readable
+  `rep['efficiency']` и человеко-читаемую секцию «Эффективность» перед «ИТОГ». Инвариант
+  зафиксирован в докстрингах: RED от патологий не бывает никогда. SCHEMA=1-отчёты — блок
+  молча опускается. +8 тестов (`PathologyCase`). Контекст: SKM-MASTER-002 фаза C (P3.2).
 - **`maind sync` — провиженеры `skills-catalog` и `output-style`.** Ретроактивная раздача на уже
   онбордженные проекты: `skills-catalog` (`skm:update` — пере-резолв каталога скиллов с диска,
   новый скилл уже выбранного бакета докатывается без ручного re-onboard) и `output-style`

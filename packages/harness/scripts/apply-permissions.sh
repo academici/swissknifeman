@@ -110,18 +110,30 @@ if [[ "$GLOBAL" -eq 1 ]]; then
     chmod +x "$AR_DST/router.py" "$AR_DST/session-policy.py"
     [[ -f "$AR_DST/env.ini" ]] || cp "$AR_SRC/env.ini" "$AR_DST/"
     # run-report: SessionEnd-хук архивного захвата исхода прогона (→ .claude/runs/).
-    # Код/_lib/README обновляем; env.ini не перезатираем (там ENABLED/RUNS_KEEP проекта).
+    # Код/_lib/_usage/README обновляем; env.ini не перезатираем (там ENABLED/RUNS_KEEP
+    # проекта). _usage.py — вендоренная (scripts/sync-usage.sh) копия core/usage.py,
+    # нужна рядом физически: PYTHONPATH монорепо в ~/.claude/hooks недоступен.
     RR_SRC="$PRESETS_DIR/hooks/run-report"; RR_DST="$HOME/.claude/hooks/run-report"
     mkdir -p "$RR_DST"
-    cp "$RR_SRC/run-report.py" "$RR_SRC/_lib.py" "$RR_SRC/README.md" "$RR_DST/"
+    cp "$RR_SRC/run-report.py" "$RR_SRC/_lib.py" "$RR_SRC/_usage.py" "$RR_SRC/README.md" "$RR_DST/"
     chmod +x "$RR_DST/run-report.py"
     [[ -f "$RR_DST/env.ini" ]] || cp "$RR_SRC/env.ini" "$RR_DST/"
+    # pack-guard: опциональный PreToolUse-хук слоя 2 mutation-защиты generated-ассетов
+    # (блокирует/предупреждает ДО правки; слой 1 — doctor --drift, постфактум). По умолчанию
+    # НЕ устанавливается ни в одном проекте — файлы копируются сюда (неактивно), включение —
+    # per-project `harness hooks --target . --pack-guard off|warn|strict`. Код/README
+    # обновляем; env.ini не перезатираем (там режим проекта).
+    PG_SRC="$PRESETS_DIR/hooks/pack-guard"; PG_DST="$HOME/.claude/hooks/pack-guard"
+    mkdir -p "$PG_DST"
+    cp "$PG_SRC/pack-guard.py" "$PG_SRC/README.md" "$PG_DST/"
+    chmod +x "$PG_DST/pack-guard.py"
+    [[ -f "$PG_DST/env.ini" ]] || cp "$PG_SRC/env.ini" "$PG_DST/"
     # output-styles: телеграфный «голос» вывода для токен-экономии (session-wide). Чистый
     # контент (нет env-state) → всегда overwrite. Включается per-project: harness hooks --output-style.
     OS_SRC="$PRESETS_DIR/output-styles"; OS_DST="$HOME/.claude/output-styles"
     if [[ -d "$OS_SRC" ]]; then mkdir -p "$OS_DST"; cp "$OS_SRC/"*.md "$OS_DST/"; fi
-    echo "Установлено глобально: log-bash-command + notify (активны) + файлы auto-approve/ + memory/ + agent-router/ + run-report/ + output-styles/ (НЕ активны)."
-    echo "auto-approve, memory, agent-router, run-report и output-style включаются ПО ПРОЕКТУ / по вызову (см. README)."
+    echo "Установлено глобально: log-bash-command + notify (активны) + файлы auto-approve/ + memory/ + agent-router/ + run-report/ + pack-guard/ + output-styles/ (НЕ активны)."
+    echo "auto-approve, memory, agent-router, run-report, pack-guard и output-style включаются ПО ПРОЕКТУ / по вызову (см. README)."
   fi
 fi
 

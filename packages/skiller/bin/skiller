@@ -17,6 +17,8 @@
 #   status    отчёт по текущему проекту (read-only)
 #   budget    токеновый бюджет набора скиллов (⊕ always/↻ on-trigger/⌥ on-demand)
 #   eval      поведенческий прогон скилла (evals/: with-skill vs baseline, pressure, триггеры)
+#   analyze-run   разбор транскриптов сессии: usage/cache по агентам, skill-маркеры
+#   bucket-audit  аудит бакетов: размер/overlap/usage → вердикты keep/thin/merge/dead
 #   list      зарегистрированные проекты (~/.swissknifeman/projects.json)
 #   topology  карта локальной среды (init|show) — ~/.swissknifeman/topology.json
 #
@@ -55,7 +57,7 @@ case "$CMD" in
     sha="$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
     echo "skiller $sha ($REPO_ROOT)"
     exit 0 ;;
-  connect|vendor|integrate|update|init|sync|lock|status|budget|eval|list|registry|doctor|topology) ;;
+  connect|vendor|integrate|update|init|sync|lock|status|budget|eval|analyze-run|bucket-audit|list|registry|doctor|topology) ;;
   *) echo "Неизвестная команда: $CMD" >&2; usage >&2; exit 1 ;;
 esac
 

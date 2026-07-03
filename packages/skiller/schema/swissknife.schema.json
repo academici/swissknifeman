@@ -38,8 +38,42 @@
       "description": "Целевой агент. Дефолтный skills_path: claude→.claude/skills, cursor→.cursor/skills, generic→.ai/skills."
     },
     "memory_brain": {
-      "type": "string",
-      "description": "Путь к Brain-валту (опционально)."
+      "description": "Brain-валт (опционально). Строка = путь (обратная совместимость: скармливается memory-хуку). Объект = doc-sync: path + правила синхронизации BRAIN↔проект.",
+      "oneOf": [
+        { "type": "string" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["path"],
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "Путь к Brain-валту."
+            },
+            "sync": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Правила doc-sync между BRAIN и проектом.",
+              "properties": {
+                "direction": {
+                  "type": "string",
+                  "enum": ["push", "pull", "bidirectional"],
+                  "description": "Направление синхронизации: push=проект→BRAIN, pull=BRAIN→проект, bidirectional=оба."
+                },
+                "on_integrate": {
+                  "type": "boolean",
+                  "description": "Выполнять pull при integrate (BRAIN→проект)."
+                },
+                "patterns": {
+                  "type": "array",
+                  "items": { "type": "string" },
+                  "description": "glob-паттерны файлов для синхронизации (относительно корня BRAIN/проекта)."
+                }
+              }
+            }
+          }
+        }
+      ]
     },
     "coordinator_ignore": {
       "type": "array",

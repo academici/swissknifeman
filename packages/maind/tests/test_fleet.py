@@ -4,7 +4,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from maind import derive, fleet
+from maind import derive
+from maind.analysis import fleet
 from maind import memory as memory_mod
 from maind.config import load_config
 from tests.fixtures import FakeMemoryServer, make_repo, write_maind_config

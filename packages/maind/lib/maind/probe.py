@@ -11,7 +11,7 @@ from . import codegraph
 from .mcpconfig import MCP_FILES, has_server
 from .memory import health, resolve_ports
 from .memory import status as memory_status
-from .workspace import norm_path, trusted_dirs
+from .provision.workspace import norm_path, trusted_dirs
 
 _SKILL_KEY = {"swissknifeman": "swissknifeman", "laravel-boost": "laravel_boost"}
 
@@ -123,7 +123,7 @@ def drift_hints(env, config, report):
     # Роли/агенты: профиль типа проекта ожидает паки, которых нет в lock.
     try:
         from .projects import get as _get
-        from .sync import _resolve_agent_pack
+        from .provision.sync import _resolve_agent_pack
         expected = _resolve_agent_pack(config, _get(config, pid) or {})
     except (SystemExit, Exception):       # fail-soft: профиль не найден → без подсказки
         expected = []

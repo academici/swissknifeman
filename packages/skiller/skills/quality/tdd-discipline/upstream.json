@@ -22,13 +22,7 @@
       "url": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/tdd/mocking.md",
       "sha256": "3ceb807fdf4a47d6a93d4d9a891e5ba6d362a6247bd08adc451feebfc17361ef",
       "fetched_at": "2026-06-26"
-    },
-    {
-      "path": "snippets/refactoring.md",
-      "url": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/tdd/refactoring.md",
-      "sha256": "54fced22dd1911b7094c3fe7979b7c1a40d40be307482c4adf7dc0588f27d6cc",
-      "fetched_at": "2026-06-26"
     }
   ],
-  "notes": "Из mattpocock/skills engineering/tdd (имя -> tdd-discipline во избежание коллизии с laravel-testing). Тело сохранено (англ.), RU description-роутер, ссылки на под-файлы -> snippets/, /codebase-design -> codebase-design, секция «Связанные скиллы». Примеры TS остаются (faithful-first); PHP/Dart-эквиваленты в tests.md/mocking.md — отдельной волной. strategy=notify."
+  "notes": "Из mattpocock/skills engineering/tdd (имя -> tdd-discipline во избежание коллизии с laravel-testing). Тело сохранено (англ.), RU description-роутер, ссылки на под-файлы -> snippets/, /codebase-design -> codebase-design, секция «Связанные скиллы». Примеры TS остаются (faithful-first); PHP/Dart-эквиваленты в tests.md/mocking.md — отдельной волной. strategy=notify. 2026-07-02: upstream удалил skills/engineering/tdd/refactoring.md (коммит 80e9dcc6, «tdd: drop the refactor stage — red -> green, not red -> green -> refactor», без переименования — подтверждено `gh api` листингом дерева и историей коммитов файла), запись snippets/refactoring.md убрана из files[]; локальный файл packages/skiller/skills/quality/tdd-discipline/snippets/refactoring.md остаётся (не отслеживается upstream, source истины теперь local-only)."
 }

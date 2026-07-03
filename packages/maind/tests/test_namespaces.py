@@ -168,7 +168,7 @@ class TestValidation(unittest.TestCase):
 # ── выборка и команда ────────────────────────────────────────────────────────
 class TestSelectionAndCommand(unittest.TestCase):
     def test_select_projects_by_namespace(self):
-        from maind.sync import select_projects
+        from maind.provision.sync import select_projects
         with tempfile.TemporaryDirectory() as tmp:
             env, config = _setup(tmp, flex_ns=["axioma"], az_ns=["other"])
             sel = select_projects(env, config, {"namespace": "axioma"})

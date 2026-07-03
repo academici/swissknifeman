@@ -61,9 +61,11 @@ sha256: ""
 ## Related skills
 - `task-brief-template` (general) — spec template (goal, boundaries, invariants, DoD) where decomposition lands.
 - `spec-interview` (general) — if spec unclear, interview first, then decompose.
+- `plan-protocol` (general) — decomposing a large initiative is a master plan
+  (`plans/<ID>/`, phases, statuses), not just the template below.
 - `cross-layer-change-checklist` (general) — mandatory layer sync before finalize.
 - `anti-drift` (general) — iteration discipline + circuit-breaker during execution.
 - `laravel-architecture/laravel-subagents` — delegate subtasks to subagents on large Laravel tasks.
 - `session-handoff` (general) — hand off unfinished task to next session.
 
-<!-- ru-source-sha256: 0d8d3068314be9e27fc452eabdf07b5bea5a07056ae30a9d0de64423c160ccac -->
+<!-- ru-source-sha256: 66ae5eedab46b76be070aa5aca80d3f7eea397eda88ead00cc922c5cdb01f92f -->

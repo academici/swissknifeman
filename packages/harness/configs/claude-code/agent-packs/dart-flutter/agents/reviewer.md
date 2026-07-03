@@ -37,6 +37,10 @@ Read-only, правок не вносишь; Bash — только провер�
 - **FFI**: парность `malloc/calloc`↔`free`, проверка кодов возврата нативных вызовов,
   `Pointer` валиден до использования; глубже — делегируй {{PACK_PREFIX}}-ffi-reviewer.
 <!-- pack:endif -->
+- **Generated-assets (agent-packs)**: дифф трогает файл с заголовком
+  `swissknifeman:generated` (grep по изменённым файлам) → находка `HIGH
+  generated-core-edited`: правку перенести в override-файл (`Extension-points` из
+  заголовка или `.claude/rules/*-overrides.md`), core восстановить нетронутым.
 
 ## Гейты вердикта
 
@@ -44,6 +48,11 @@ Read-only, правок не вносишь; Bash — только провер�
 - `{{FORMAT_CMD}}` нашёл неформатированное → `needs-work`.
 - critical-находок > **{{GATE_MAX_CRITICAL}}** → `needs-work`.
 - покрытие изменённого поведения < **{{GATE_COVERAGE_MIN}}%** → `needs-work`.
+
+## Проектные оверрайды
+
+Если существует `.claude/rules/{{PACK_PREFIX}}-reviewer-overrides.md` — прочитай и
+применяй ПОВЕРХ этого файла (проектные оси приоритетнее общих).
 
 ## Выход
 

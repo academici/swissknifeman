@@ -106,8 +106,10 @@ If the task needs several rounds with intermediate checks — fill the Loop fiel
 
 - `spec-interview` (general) — fill this template from a fuzzy idea via interview.
 - `complex-task-orchestrator` (general) — decompose a finished brief into per-layer subtasks.
+- `plan-protocol` (general) — multi-phase work longer than one session is a master plan
+  in `plans/<ID>/`; this brief is for a single task within one session.
 - `cross-layer-change-checklist` (general) — sync layers during execution.
 - `context-economy` (general) — Plan→Clear→Execute and `/plan`, `/execute` commands.
 - `anti-drift` (general) — iteration discipline, relies on fixed scope.
 
-<!-- ru-source-sha256: 6dd47e2132667db488088bd0aa5dd4bf06254ef04d59523dea1876353f3fb44a -->
+<!-- ru-source-sha256: ec328ef1ad906f5d528b45b57a61b597ed600afcbca41e0f4d00c9cf7fc5c0b7 -->

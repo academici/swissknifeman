@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "pack": "dart-flutter",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Dev-loop для Flutter/Dart (mobile / POS / embedded): агенты slice-builder/test-writer/reviewer (POS/embedded-aware)/ffi-reviewer(опц.), последовательный one-branch workflow, SubagentStop review-gate (dart analyze/format) + PostToolUse-валидатор. Знания Flutter/state/FFI — в промптах агентов (бакет mobile тонкий).",
   "stack": {
     "shape": "mobile",
@@ -51,7 +51,8 @@
     { "src": "rules/state.md", "target": ".claude/rules/state.md", "kind": "template", "role": "rule" },
     { "src": "rules/ffi.md", "target": ".claude/rules/ffi.md", "kind": "verbatim", "role": "rule" },
     { "src": "rules/tests.md", "target": ".claude/rules/tests.md", "kind": "template", "role": "rule" },
-    { "src": "docs/subagents-and-workflows.md", "target": "{DOCS_DIR}/subagents-and-workflows.md", "kind": "template", "role": "doc" }
+    { "src": "docs/subagents-and-workflows.md", "target": "{DOCS_DIR}/subagents-and-workflows.md", "kind": "template", "role": "doc" },
+    { "src": "rules/reviewer-overrides.md", "target": ".claude/rules/{PACK_PREFIX}-reviewer-overrides.md", "kind": "template", "user_owned": true, "role": "override" }
   ],
   "notes": {
     "verify_workflow": "dev-loop.js — top-level return/await, node --check НЕ применять.",

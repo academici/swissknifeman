@@ -13,16 +13,18 @@ HTTP — остаются в common.py каждого пакета (они ра�
 
 Импортируется как пакет `core` (PYTHONPATH = корень монорепо; см. bin-лаунчеры).
 Без сторонних зависимостей."""
+from .block import content_hash, managed_block, upsert_block
 from .cli import parse_args, parse_flags, run_cmd
+from .http import http_get_json, http_post_json, ping
 from .env import HOME, BaseEnv
-from .io import (atomic_write_json, atomic_write_text, load_json_db,
-                 read_ndjson, read_ndjson_iter, safe_load_json)
+from .io import (atomic_write_json, atomic_write_text, backup_file,
+                 load_json_db, read_ndjson, read_ndjson_iter, safe_load_json)
 from .paths import is_within, is_within_lexical, state_dir
 from .proc import pid_alive
 from .project import (DEFAULT_DOCS_VISIBILITY, DOCS_VISIBILITY_BY_TYPE,
                       LANGUAGE_BY_TYPE, PROJECT_TYPES, detect_project_type,
                       docs_visibility_for)
-from .repo import find_monorepo_root, find_repo_root
+from .repo import find_monorepo_root, find_repo_root, sibling_bin
 from .runs import find_run_report
 from .term import confirm, die, now_iso, parse_iso, warn
 from .text import parse_frontmatter, parse_inline_list, sanitize
@@ -31,10 +33,13 @@ __all__ = [
     "HOME", "BaseEnv", "die", "warn", "now_iso", "parse_iso", "confirm", "sanitize",
     "parse_frontmatter", "parse_inline_list",
     "atomic_write_text", "atomic_write_json", "safe_load_json", "load_json_db",
+    "backup_file",
     "read_ndjson", "read_ndjson_iter", "pid_alive", "find_run_report",
     "is_within", "is_within_lexical", "state_dir",
-    "find_repo_root", "find_monorepo_root",
+    "find_repo_root", "find_monorepo_root", "sibling_bin",
     "detect_project_type", "PROJECT_TYPES", "LANGUAGE_BY_TYPE",
     "docs_visibility_for", "DOCS_VISIBILITY_BY_TYPE", "DEFAULT_DOCS_VISIBILITY",
     "parse_flags", "parse_args", "run_cmd",
+    "content_hash", "managed_block", "upsert_block",
+    "http_get_json", "http_post_json", "ping",
 ]

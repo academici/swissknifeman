@@ -11,7 +11,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
-from skiller import eval as ev
+from skiller.quality import eval as ev
 import tests.fixtures as fx
 
 

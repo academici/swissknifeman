@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from maind.analyze import (analyze_report, bash_log_forensics, compute_verdict,
+from maind.analysis.analyze import (analyze_report, bash_log_forensics, compute_verdict,
                            find_run_report, git_status)
 from maind.config import load_config
 from tests.fixtures import make_repo, write_maind_config

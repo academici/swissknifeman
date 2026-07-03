@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "pack": "role-founder",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Персона-пак соло-фаундера: три субагента-консультанта — idea-validator (валидация гипотезы до кода: JTBD/discovery/конкуренты/moat/pre-mortem), mvp-scoper (сужение до MVP, roadmap, brd→prd) и founder-cadence (еженедельный ритм + decision-log, монетизация/unit-экономика). Роль-пак: не привязан к стеку, не автодетектится — выбирается явно и ставится с любым стек-паком (PACK_PREFIX совпадает).",
   "stack": {
     "shape": "role"

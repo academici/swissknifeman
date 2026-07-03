@@ -359,6 +359,38 @@ for up_file in sorted(root.glob("skills/**/upstream.json")) + \
         if fetched and not DATE_RE.match(fetched):
             errors.append(f"{rel}: files[{i}].fetched_at must be YYYY-MM-DD or empty")
 
+    # body_path (P7.3, thin-navigator): опционально — путь (относительно skill_dir),
+    # где реально лежит апстримное тело, когда SKILL.md стал локально написанным
+    # навигатором, а НЕ зеркалом апстрима (см. update-upstreams.sh, docs/guide/
+    # upstream-sync.md). Аддитивное поле; отсутствие = тело в SKILL.md (back-compat).
+    # Он ДОЛЖЕН совпадать с одной из files[].path — иначе update-upstreams.sh не
+    # будет считать sha/дрейф по заявленному телу (тихая дыра в отслеживании).
+    body_path = data.get("body_path")
+    if body_path is not None:
+        if not isinstance(body_path, str) or not body_path:
+            errors.append(f"{rel}: body_path must be a non-empty string")
+        else:
+            bp_target = (skill_dir / body_path).resolve()
+            if not str(bp_target).startswith(str(skill_dir.resolve())):
+                errors.append(f"{rel}: body_path escapes skill dir: {body_path}")
+            elif not bp_target.exists():
+                errors.append(f"{rel}: body_path does not exist: {body_path}")
+            tracked_paths = {f.get("path") for f in files if isinstance(f, dict)}
+            if body_path not in tracked_paths:
+                errors.append(
+                    f"{rel}: body_path '{body_path}' is not tracked in files[] — "
+                    f"update-upstreams.sh would not check its sha/drift")
+            # strategy=replace autowrites files[].path on --apply (unlike fork/merge,
+            # which only stage an incoming copy for manual review) — a stray SKILL.md
+            # entry there would silently clobber the hand-authored navigator.
+            if data.get("strategy") == "replace" and "SKILL.md" in tracked_paths \
+                    and body_path != "SKILL.md":
+                errors.append(
+                    f"{rel}: body_path set (thin-navigator) but files[] also tracks "
+                    f"SKILL.md under strategy=replace — update-upstreams.sh --apply "
+                    f"would overwrite the hand-authored navigator; drop the SKILL.md "
+                    f"files[] entry")
+
 # --- 3. profiles/*.json ---------------------------------------------------
 # Канон таксономии — core.project.PROJECT_TYPES; здесь самодостаточный дубль
 # (heredoc гоняется до PYTHONPATH на core — осознанно не импортируем; держать
@@ -539,8 +571,14 @@ else:
         if b not in bucket_meta:
             errors.append(f"buckets.json: missing entry for bucket: {b}")
     for b, meta in bucket_meta.items():
-        if b not in bucket_dirs:
+        # Alias-бакет (P7.5, слияния бакетов — механизм без применения, D14): метаданные-
+        # запись БЕЗ skills/<bucket>, `alias_of` указывает на целевой бакет. Не orphan.
+        is_alias = isinstance(meta, dict) and meta.get("alias_of")
+        if b not in bucket_dirs and not is_alias:
             errors.append(f"buckets.json: entry without skills/ dir: {b}")
+        if is_alias and meta["alias_of"] not in bucket_dirs:
+            errors.append(f"buckets.json: {b}: alias_of указывает на несуществующий "
+                          f"бакет: {meta['alias_of']}")
         if not (isinstance(meta, dict) and meta.get("description")):
             errors.append(f"buckets.json: {b}: description must be non-empty")
 

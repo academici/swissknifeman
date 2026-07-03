@@ -7,7 +7,7 @@ from pathlib import Path
 
 _TEMPLATES = Path(__file__).resolve().parents[1] / "templates"
 
-from maind import sync
+from maind.provision import sync
 from maind.common import managed_block, upsert_block
 from maind.config import load_config
 from maind.mcpconfig import has_server
@@ -113,7 +113,7 @@ class TestSync(unittest.TestCase):
     def test_mcp_provisioner_graphify_config_driven(self):
         # graphify:true в записи проекта → провиженер mcp раскатывает graphify
         # (когда бинарь есть); без флага — нет. Бинарь мокаем присутствующим.
-        from maind import deploy
+        from maind.provision import deploy
         orig = deploy.shutil.which
         deploy.shutil.which = lambda name: f"/usr/bin/{name}"
         try:

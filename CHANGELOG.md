@@ -2,6 +2,319 @@
 
 ## [Unreleased]
 
+### Added (skiller@0.x — профиль platform-service · скилл voice-ai · пресеты polyglot · гайд polyglot-monorepo)
+
+- **Профиль `platform-service`** (`packages/skiller/profiles/platform-service.json`): externalized
+  runtime platform, полиглот-монорепо (`services/` + `packages/js|php|flutter/` + `apps/` + `infra/`) —
+  10 бакетов (architect/ai/oss-dev/general/php/php-packages/frontend/frontend-vue/frontend-backend/devops),
+  `harness_presets:[base]`, `mcp:[context7]`. `agent_pack`/`model_tiers` осознанно не заданы (нет
+  подходящего generic-пака; аналоги тоже их не задают).
+- **Новый скилл `voice-ai`** (`skills/voice-ai/voice-ai/`, бакет `voice-ai`): voice-агенты
+  (WebRTC media + WebSocket control, 3-слойный turn-detection VAD+семантика+LLM, barge-in <500ms,
+  латентность <800ms — 1200ms явно помечена LEGACY/IVR, session state-machine, RU-стек Yandex
+  SpeechKit/SaluteSpeech/YandexGPT/GigaChat + offline-алternativы, ремарка 152-ФЗ). Двуязычный
+  (`SKILL.ru.md` источник → `SKILL.md` EN-канон), `upstream.json` strategy=notify (референс
+  спек/паттернов, без вендоринга кода). Реестр перегенерирован: **208 скиллов**, 53 плагина.
+- **4 полиглот-пресета** (`packages/skiller/presets/polyglot-{node-php-flutter,node-php,node-go,
+  python-node}.json`) — только из существующих бакетов (buckets.json), без ссылок на
+  несуществующие node/go/flutter-бакеты.
+- **Гайд `docs/guide/polyglot-monorepo.md`** (skiller docs): монорепо vs отдельные репо,
+  структура `services/+packages/js|php|flutter/+apps/+infra/`, dependency direction, contracts-as-SSOT
+  + codegen, per-package vs unified semver, отдельные lockfiles, CI multi-lang.
+
+### Changed (skiller@0.x — presets[] в `.swissknife.json` теперь резолвятся в connect-канале, БЫЛО no-op)
+
+- **Поведенческое изменение контракта `.swissknife.json`:** ключ `presets[]` раньше был
+  зарезервирован, но **игнорировался** (`_RESERVED`, no-op). Теперь connect-канал разворачивает
+  пресеты в бакеты по формуле `buckets = (resolve_presets(presets) ∪ buckets) − exclude` —
+  симметрично тому, как `presets` уже работали в vendor-канале (`skillset.resolve_presets`,
+  extends/cycle-detection переиспользованы, не задублированы). **Проекты, у которых в
+  `.swissknife.json` уже лежал `presets[]` (ранее молча игнорировался), при следующем `skiller
+  connect` получат соответствующие бакеты** — до применения стоит свериться с текущим набором
+  бакетов проекта. Precedence сохранена: явные CLI-флаги > `.swissknife.json` (buckets/presets) >
+  autodetect по профилю. Неизвестный пресет → warn+skip (не die); skill-only пресет в
+  bucket-канале → warn+no-op (пресеты работают на уровне бакетов, не отдельных скиллов). 13 новых
+  тестов (`tests/test_presets.py`).
+
+### Changed (schema — `memory_brain` теперь принимает объект с `sync{direction,patterns}`)
+
+- **`memory_brain` в `.swissknife.json`** расширен с чистой строки (path) до `oneOf[string,
+  {path, sync?{direction:push|pull|bidirectional, patterns?, on_integrate?}}]` — string-конфиги
+  старых проектов остаются валидными без изменений. Новый модуль `lib/skiller/brain_sync.py`
+  (stdlib-only): нормализация конфига, `sync_pull` (копирует по glob-паттернам из BRAIN, сохраняя
+  относительные пути, soft-skip при отсутствии BRAIN — не ломает офлайн-работу), генерация
+  `.claude/sync-brain.sh` (атомарная запись, `chmod 755`). `integrate` вызывает `sync_pull`
+  только для объектного конфига с `direction: pull|bidirectional`; строковый конфиг оставлен
+  под старый memory-хук без изменений поведения. Три drift-гейта (`test_schema`, `doctor`,
+  `test_registry_state`) обучены трактовать мульти-тип поля (`(str, dict)`) как `oneOf`, не
+  ослабляя проверку. Новый `tests/test_brain_sync.py`.
+
+### Added (maind@0.x — кэш BRAIN-доков в памяти namespace)
+
+- **`packages/maind/scripts/cache-brain-docs.sh`** — bash-хелпер, кэширующий доки из Brain-валта
+  в память namespace через реально существующие флаги `maind memory remember --scope
+  project:<ns> --type docs:<key> "<содержимое>"` (в предыдущем аудите фигурировали
+  несуществующие `--key`/`--file` — сверено по коду `memory.py`, использованы фактические флаги).
+  Раздел «Кэш BRAIN-доков в памяти» добавлен в `packages/maind/docs/guide/namespaces.md`
+  (таблица рекомендуемых `--type`-ключей: `docs:brd`/`docs:architecture`/`docs:api`/`docs:glossary`,
+  пример `recall`). Не интегрирован в `onboard.py` — остаётся ручным/скриптовым шагом.
+
+### Changed (рефакторинг раскладки + core-дедуп)
+
+- **core-дедуп:** три кросс-пакетных дубля сведены в общий `core`. `core.repo.sibling_bin`
+  (единый резолвер лаунчера соседа `env→PATH→<monorepo>/packages/<pkg>/bin`) заменил три
+  разошедшиеся копии (`skiller.harness_bin`, `analyst._resolve_maind_bin`); `core.io.backup_file`
+  (merge-only `*.bak`, параметризуемый суффикс) заменил `maind.common.backup_file` + инлайны в
+  `harness.settings`; управляемый markdown-блок и urllib-HTTP-клиент вынесены в `core.block`/
+  `core.http` (`maind.blocks`/`maind.http` — тонкие re-export-shim'ы, back-compat импортов).
+  +12 core-тестов.
+- **Группировка flat-lib по доменам** (за порогом flat-lib smell): `maind/lib/maind` —
+  слабо-связанные окраины в подпакеты `provision/` (deploy·sync·onboard·orchestrate·migrate·
+  service·start·workspace·skilldoc) и `analysis/` (fleet·analyze·audit); плотно-связное ядро
+  (память/граф/федерация/namespaces/derive + cli/common/config/mcp/health) осталось в корне.
+  `skiller/lib/skiller` — анализ в `quality/` (eval·audit·analyze). Импорты: `maind.provision.*`/
+  `maind.analysis.*`/`skiller.quality.*`. `cli/common/__main__` — на верхнем уровне (launchers
+  не тронуты). `harness`/`analyst` оставлены плоскими (ниже порога). validate всех 4 зелёный
+  (core 151 · maind 380 · analyst 175), CLI-smoke ок.
+
+### Changed (интеграционный контракт `perplexity-web-mcp` — снят версионный дрейф)
+
+- **`research/query-craft`, `general/mcp-advisor`, `docs/reference.md`:** инструкция интеграции моста
+  `perplexity-web` расходилась с фактическим кодом пакета (доки застряли на «демон v1.3.0», код ушёл
+  вперёд). Сверено **по коду** `perplexity-web-mcp` (`src/{config,resilience,dispatcher}.ts`, 2026-07-03),
+  привязка к версии снята, добавлено недокументированное поведение: **client-side resilience** (авто-retry
+  с backoff 3× на транзиентных `BROWSER_BUSY`/`TIMEOUT`/`INTERNAL`; desktop `notify-send` и структурный
+  JSONL error-log `$XDG_STATE_HOME/…/errors.jsonl` при финальном отказе; kill-switch'и `PERPLEXITY_WEB_MCP_*`),
+  код ошибки `INTERNAL`, **login grace-window** (демон сам открывает окно логина ~3 мин + cooldown, параллельные
+  запросы fail-fast с `LOGIN_REQUIRED`), дефолтные таймауты (`search` 60s / `deep` 600s) и авто-фолбэк в legacy.
+  Совет «ручной retry на BROWSER_BUSY/TIMEOUT» переформулирован — мост ретраит **сам**. Регенерён реестр.
+
+### Added (документация — Diátaxis-каркас + закрытие дыр)
+
+- **Пользовательские гайдлайны:** новый landing-каталог (`docs/index.md` — карта 4 пакетов
+  «что это + когда брать»), сквозной **`docs/getting-started.md`** (установка → онбординг →
+  первая задача) и **`docs/tasks.md`** — гайд «какая `/task:*` в каком случае» + **plan-протокол**
+  (мастер-планы `plans/<ID>/`, 4 команды, 6 статусов, handoff, эскалация, `plansDirectory`),
+  которого раньше на сайте не было вовсе.
+- **Разделы `task` и `core`** на сайте (`packages/{task,core}/docs/index.md` + docs-sync);
+  reference телеметрии run-report (SCHEMA=2, `core/usage.py`) — в core-разделе.
+- **Закрыты дыры:** `develop.md` синхронизирован (per-project `plans/`, `/task:plan-*`);
+  `analyst/docs/guide/cli.md` получил `token-report`/`ingest`/`proposals`; `plansDirectory`
+  operator-доки в `maind/sync.md` и `skiller/integration-checklist.md`; `bucket-audit` в sidebar.
+  Каркас Diátaxis введён навигацией (nav/sidebar), без массового переписывания 100+ страниц.
+  Провенанс Diátaxis — `docs/reference.md`. Сборка VitePress зелёная (без мёртвых ссылок).
+
+### Added (SKM-MASTER-003 — plan-система per-project · хвосты рецензии)
+
+- **Plan-система per-project (P1, дизайн A–F):** планы plan-протокола живут В ПРОЕКТЕ.
+  Ключ `plansDirectory: "plans"` раскатывается тремя слоями — `harness hooks --plans-dir`
+  (новый `block_plans_dir` через `set_setting_key` в `.claude/settings.json`; чужое значение
+  ключа не перезаписывается), провиженеры `maind sync --only plans-dir,plans-doc`
+  (ретроактивно, опт-аут `project.plans_dir="off"`; `plans-doc` — hashed-блок конвенции
+  `maind:plan-conventions` в CLAUDE.md), `skiller integrate` (новые онбординги). Активный
+  план — `plans/ACTIVE.md` (ведут `plan-design`/`plan-close`, валидирует `plan-lint`
+  root-режимом: несуществующий план → ERROR, залежавшиеся черновики → WARNING с подсказкой).
+  Мост встроенного plan mode → протокол: режим **`/task:plan-design from-draft <файл>`**
+  (плоский черновик в `plans/` → `plans/<ID>/` по шаблонам, provenance в Decision Log,
+  черновик удаляется). Цикл владельца «фаза → handoff → /clear» закреплён строкой в
+  Expected output `plan-exec`/`plan-close`, §6 скилла и CLAUDE.md-блоке. Скилл
+  `plan-protocol` вошёл девятым в CORE_SKILLS (резидент 705/750 ток). Пилот end-to-end
+  на azguard — 7/7 шагов зелёный (артефакты в azguard не закоммичены — решение владельца);
+  эффект `plansDirectory` в живом plan mode headless не проверяется — первое живое
+  планирование владельца. Фан-аут на ~17 проектов — `maind sync` после обкатки.
+- **Хвосты рецензии волн 1–4 (P2, 9 items):** `skiller budget` учитывает `references/`
+  как ⌥ on-demand (симметрично `snippets/`); `bucket-audit` получил канал **`resident`**
+  (CORE_SKILLS ∪ активные наборы зарегистрированных проектов; dead → keep, честная
+  пометка «резидентный» — 9/9 CORE больше не ложно-dead; периметр шире CORE: флип
+  122 скиллов, учесть перед P7.4); 8 RU-монолитов (architect/legal/marketing/operator/
+  pm/research/security/sales) ужаты до RU-навигаторов (полные переводы — git-история);
+  upstream `quality/tdd-discipline` чист — удалённый в upstream файл убран из `files[]`
+  (0 failed); BC-строка Verify в dev-loop `laravel-package` под `pack:if/ifnot
+  BC_CHECK_CMD` (пак 0.1.1); `analyst token-report` — инвариант «ERROR:» ⇔ exit≠0
+  закреплён тестом; дока pack-guard в `agent-packs.md` (+58 строк); roadmap-доки
+  синхронизированы с реализацией (analyst-suggest/self-learning-memory/README —
+  «реализовано», остаток — event-stream capture).
+- **Догфудинг и починка протокола по field-feedback пилота (D9):** сам план волны —
+  `plans/SKM-MASTER-003/` (транскрибирован первым агентом, закрыт целиком 19/19,
+  `plan-lint plans/` 0/0, ACTIVE → «—»). По находкам пилота: узаконен bootstrap-заголовок
+  handoff `after P0.0` (plan-design), `plan-close` при закрытии плана целиком обновляет
+  `Meta.Status` и пишет `Next: план закрыт`, `plan_lint` допускает «план закрыт» только
+  при полностью терминальном плане (+2 теста). Deferred: honest `changed` у `plans-dir`
+  (F3), per-skill сигнал в SCHEMA=2-тренде (Known Deviations P2.2).
+
+### Added (SKM-MASTER-002, волна 4 — pack-guard · живой цикл протокола · метрики ДО)
+
+- **pack-guard (P5.6, слой 2 mutation-защиты, опциональный):** PreToolUse-хук
+  `hooks/pack-guard/` (off | warn | strict; по умолчанию НЕ ставится) — ловит правку
+  generated-файла пака ДО того, как она случилась (решение по `.claude/agent-pack.lock.json`,
+  user_owned-файлы пропускаются; strict → блок с русским объяснением, любая ошибка/нет lock →
+  тихий пропуск, exit 0). Подключение: `harness hooks --target . --pack-guard MODE`;
+  физическая доставка — в `apply-permissions.sh --global`. 16 тестов. Рекомендован для
+  overnight/unattended dev-loop.
+- **Живой цикл протокола (P1.8/P1.10 — фаза A закрыта 10/10):** реальные item'ы P5.6 и P8.1
+  исполнены sonnet-операторами с холодным контекстом строго по `/task:plan-exec`, аудированы
+  opus по `/task:plan-audit`. Главный риск не подтвердился: sonnet не «дорисовывает» план —
+  исполнитель P8.1 сам поймал реальный дрейф (протухший глобальный хук) и честно отказался
+  пинить baseline на пустом окне; cold-start подтверждён (работа только из файлов plans/).
+  По findings аудитов протокол ужесточён: plan-close — гейт незапланированных файлов в дереве
+  закрываемой фазы + «🟢 требует коммита» + реконсиляция устаревших deviations; plan-audit —
+  явная сверка committed vs working-tree; plan-design — правило «тайм-гейтовый Deliverable —
+  отдельный item» (применено к самому плану: выделен P8.5 «пин baseline пилотов»).
+- **Метрики ДО (P8.1):** глобальный хук run-report обновлён до SCHEMA=2 (стоял протухший
+  SCHEMA=1 от раскатки 1 июля — реальный дрейф, пойманный исполнителем; `harness doctor`
+  чист); телеметрия включена на пилотах azguard и chatom (ENABLED=on + SessionEnd);
+  SCHEMA=2-механика проверена на реальном транскрипте в изолированном scratch-cwd (пилотные
+  baseline не засорены синтетикой). Пин baseline — тайм-гейт P8.5 (≥1 недели окна).
+
+### Fixed (волна 4)
+
+- Восстановлен из HEAD некоммиченный регресс-ревёрт `docs/routing.md` (потерян слой analyst,
+  «зонтик из трёх пакетов») и `docs/reference.md` (−24 строки провенанс-карточек) —
+  HIGH-находка adversarial-аудита P5; в `plan-close` добавлен гейт, ловящий такой класс
+  контаминации при закрытии фазы.
+
+### Added (SKM-MASTER-002, волна 3 — analyst learning loop · bucket optimization)
+
+- **Analyst learning loop (фаза D):** команда **`analyst token-report`**
+  (`[--sessions N] [--by model|role] [--vs-baseline] [--all-projects] [--json]`) — срезы
+  usage-trend, rolling-baseline (медиана+p90 последних 20 сессий), regression-флаг
+  (>1.3×медиана или >p90), pinned-снимок `--baseline set --note …` → `.claude/analyze/baseline.json`
+  (формат совместим с уже читающим его `maind analyze`; 21 тест). **Агент-аналитик**
+  `packages/analyst/agents/analyst.md` (opus, read-only) + команда **`/analyst:deep`** —
+  digest-first (D16): скрипты собирают JSON-выжимки (`maind analyze` / `token-report` / `review`)
+  в `.claude/analyst/deep/`, агенту передаются пути; raw-транскрипты запрещены промптом; выход —
+  findings под контракт **`analyst ingest --file F`** (валидация целиком до первой записи;
+  ТОЛЬКО ephemeral-уроки, detector=agent-finding — enforced кодом; промоут за человеком;
+  10 тестов). **`analyst proposals`** — черновики системных улучшений
+  (stack-pack | project-override | docs) в `~/.swissknifeman/analyst/proposals/<type>/<id>/`
+  (детерминированный слаг-id, edit-safe writer как suggest.py), статусы draft|accepted|rejected
+  через append-only audit, печать handoff-последовательности; тест-инвариант «ноль записей вне
+  ~/.swissknifeman/analyst/» (27 тестов). Плагин analyst теперь раздаёт и агента
+  (`"agents"` в plugin.json, marketplace перегенерён — 52 плагина).
+- **Bucket optimization (фаза G):** команда **`skiller bucket-audit`** (`lib/skiller/audit.py`) —
+  размер (реюз budget) · overlap (Jaccard≥0.4 по description, 5-gram shingle ≥0.3 по телам) ·
+  usage (фан-аут по projects.json, `--since N`, честная пометка «не использовался в окне») →
+  вердикты keep/thin/retrieval-only/merge/dead (структурные факты приоритетнее usage-сигнала;
+  20+ тестов). **Решение-документ** `docs/guide/bucket-audit-2026-07.md`: 206 скиллов / 45
+  бакетов / 21 проект, вердикты с числами (dead=180 · keep=13 · thin=8 · merge=3 ·
+  retrieval-only=2), эскиз топологии 45→~34 (только эскиз), раздел «что НЕ делаем» (D13/D14).
+  **10 монолитов → thin-navigator** (D13): тела 55–102KB перенесены байт-в-байт в
+  `references/full.md`, SKILL.md — компактный EN-навигатор с картой якорей; аддитивное поле
+  **`body_path`** в upstream-схеме + гейты в validate.sh/update-upstreams.sh (sha/дрейф — по
+  телу, не по навигатору). Итог по budget: **on-trigger ярус 512 608 → 279 802 ток
+  (−232 806, ~45%)**, резидентный ⊕-ярус не вырос. **Alias-механизм слияний бакетов** (D14,
+  код без применения): `alias_of`+`skills[]` в buckets.json → marketplace-запись по прецеденту
+  core-плагина, миграционные подсказки в `skiller update`/`status` (15 тестов; живой реестр
+  алиасов не объявляет — дифф генерёжки пуст). Критерий **always-on vs retrieval-only** записан
+  в `docs/guide/methodology.md` (3 условия + правило обратимого exclude по 2 окнам).
+
+### Fixed (волна 3 — попутные находки)
+
+- **`bin/analyst`**: жёсткий whitelist лаунчера не знал зарегистрированных команд
+  `status`/`compact` (и нового `token-report`) — команды были недостижимы через установленный
+  CLI; whitelist и usage синхронизированы.
+- **`bin/skiller`**: та же болезнь — `analyze-run` и новый `bucket-audit` отсутствовали в
+  whitelist лаунчера; добавлены.
+- **`skiller registry`**: provenance-запись external-скилла теперь предпочитает
+  `body_path`-файл (`references/full.md`) записи `SKILL.md` — иначе провенанс thin-navigator
+  скиллов зависел от порядка `files[]`.
+
+### Known gaps (честно, волна 3)
+
+- `analyst token-report --by phase` невозможен на текущей схеме run-report: `workflows[]` не
+  несёт токенов per-workflow — CLI принимает флаг и вежливо объясняет; добор формата хука —
+  отдельная волна (harness).
+- `budget.py` не учитывает `references/` ни в одном ярусе — экономия −232K частично «уход из
+  учёта», а не honest-переклассификация в on-demand; модельное решение по tier-2 учёту
+  references/ — follow-up.
+- usage-источник bucket-audit — транскрипт-скан по явным Skill-вызовам (не SCHEMA=2-тренд):
+  структурная слепая зона на auto-trigger/CORE-скиллах (8/8 CORE показывают «dead» при
+  заведомой раздаче) — вердикты dead читать с этой поправкой; интеграция с трендом — follow-up.
+
+### Added (SKM-MASTER-002, волна 2 — каталог патологий · стек-пак laravel-package + пилоты)
+
+- **Каталог патологий (фаза C):** `core/pathology.py` — чистый защитный детектор workflow-патологий
+  (`detect(run_report) → findings {code, severity: info|attention, metric, threshold, evidence}`),
+  10 детекторов: file-reread, tool-error-loop, no-op-run, no-verify (+`no-verify-devloop`),
+  cache-miss, overthinking, retrieval-stuffing, protected-write, static-context, fanout; пороги —
+  константы с честной пометкой «эвристики, не откалиброваны» (36 тестов). Маршрутизация строго
+  Detect ≠ Gate: `maind analyze` — `pathology_slice` (attention → reasons/ATTENTION, info → секция
+  «Эффективность»; RED от патологий невозможен, инвариант в докстрингах); `analyst digest` —
+  извлекатель `extract_pathologies` с правилом рецидива (окно 5 последних run-report'ов, урок
+  только при ≥2 попаданиях кода; разовая патология — сигнал analyze, не урок), в уроки идут только
+  4 кода с готовой ремедиацией. Каталог-док `packages/analyst/docs/guide/pathologies.md`
+  (все классы, формулы/пороги = константы кода, remediation, честная колонка «детектируемо/добор»).
+- **Стек-пак `laravel-package` 0.1.0 (фаза F):** отдельный пак для Laravel-ПАКЕТОВ
+  (composer library / монорепо пакетов) — reviewer с центром «публичный контракт» (Public API/
+  BC-SemVer + roave/bc-check, register-vs-boot, publishables, `env()` вне config → HIGH,
+  composer-констрейнты, Testbench, multi-version matrix), slice-builder («фича пакета»,
+  @internal/final), test-writer (Testbench + version_compare-ветки), новый recon `api-surface`,
+  4 rules, dev-loop-форк (risk-adaptive сохранён, +public-api маркер, preflight
+  `composer validate --strict`). Анти-дубль двумя слоями: движковый **`src_pack`** в files[]
+  (review-gate.sh/env.ini/settings.fragment — байт-в-байт из backend-laravel без копий) +
+  **parity-тест shared-блоков** `test_agentpacks_shared.py` (6 блоков прозы reviewer'а размечены
+  `<!-- shared:X -->` в обоих паках, дрейф = красный тест). Новая команда **`harness agent-packs
+  remove`** (чистые файлы удаляются, modified/user_owned/merge остаются с warn, lock атомарно).
+  `backend-laravel` 0.11.2 — shared-разметка + фикс `app/Repositories` → `{{ACCESS_ROOT}}/…`.
+  Профиль `php-package` получил `agent_pack: ["laravel-package", "_common"]`; roadmap
+  `php-package-stack-pack.md` → «реализовано»; доки harness + docs/reference.md (roave — adopt;
+  spec-kit/beads/planning-with-files — reference).
+- **Пилоты (фаза F, rendered в рабочих деревьях azguard/chatom, там не коммитим):** azguard —
+  remove backend-laravel → render laravel-package чисто + 4 доменных оси в
+  `.claude/rules/azguard-reviewer-overrides.md` (panel_id isolation, epoch-invalidation,
+  wildcard semantics, extension API idempotency) + path-scoped `azguard-domain.md`; chatom
+  (монорепо `packages/*/src`) — та же миграция с `HAS_MIGRATIONS=true`/Pest. Acceptance-грепы
+  app-канона по обоим — 0 попаданий; `doctor --drift` чисто. Регрессия непилотных (F-8):
+  upgrade-канал 0.11.0→0.11.1 (worktree-эмуляция «до headers») — 0 conflict; dry-run на живом
+  app-проекте — conflict'ы только от реальных ручных правок generated-core (ровно тот паттерн,
+  который теперь ловит ось `generated-core-edited`).
+
+### Fixed (полевые находки пилотов волны 2 — движок agent-packs)
+
+- **`_probe_allowed` резал детект-пробы по `;` без понимания кавычек** — проба
+  `PACKAGE_NAMESPACE` (php -r) тихо skip'алась при `shell_policy=safe` и переменная
+  оставалась пустой; проба переписана одним PHP-выражением без `;` (терминатор `?>`),
+  плюс фолбэк на `packages/*/composer.json` с кратчайшим psr-4 (монорепо-кейс).
+- **`categorize_file_change`: файл пака в lock, но отсутствующий на диске**, при upgrade
+  давал бесполезный `conflict`/`*.pack-new` вместо простой установки → теперь `new`/
+  `new-optional` (missing + base-unchanged остаётся `nochange`). +2 теста.
+- **`do_render` не переписывал lock при `changed=False`**, даже если у файла реально
+  сменился флаг `local_modified` (внешняя реконсиляция файла к базе пака) — `doctor`
+  вечно показывал протухший `modified: true` → lock пишется при отличии свежей записи
+  от сохранённой. +1 тест.
+
+### Added (SKM-MASTER-002, волна 1 — plan-протокол · токен-телеметрия SCHEMA=2 · защита generated-ассетов)
+
+Мастер-план `plans/SKM-MASTER-002` (операционная система планов): сильная модель проектирует,
+дешёвая исполняет, телеметрия делает утечки токенов видимыми, generated-ассеты защищены.
+
+- **Plan-протокол (фаза A):** скилл `general/plan-protocol` (SSOT: схемы `plans/<ID>/{plan.md,
+  phases/Pn.md,handoff.md}`, 6 канонических статусов, rolling handoff, routing-матрица
+  model/effort, эскалация с greppable-артефактами) + snippets-шаблоны; 4 команды
+  `/task:plan-{design,exec,close,audit}` с пинами (opus/high · sonnet/medium · sonnet/low ·
+  opus/xhigh); детерминированный `plan-lint` (`packages/task/lib/task/plan_lint.py` + тонкий
+  `scripts/plan-lint.py`, 45 тестов) и первый `validate.sh` пакета task; сам мастер-план
+  транскрибирован в `plans/SKM-MASTER-002` (dogfooding, lint зелёный).
+- **Токен-телеметрия end-to-end (фаза B):** `core/usage.py` — единый самодостаточный
+  транскрипт-парсер usage (вендорится байт-в-байт в хук как `_usage.py`; `sync-usage.sh` +
+  cmp-гейт в validate.sh harness — дрейф копии валит валидацию); run-report **SCHEMA=2**
+  (only-additive: `usage` per-agent включая sidecar-субагентов, `reads`, `error_loops`,
+  `retrieval`, `protected_writes`); тренд `.claude/analyze/usage-trend.ndjson` (~200 байт/сессия,
+  ретеншн 4000→2000); `skiller analyze-run` переведён на `core.usage` (суммы идентичны,
+  регресс-фикстура); `maind analyze` — блок tokens (сессия vs медиана K=20/p90 тренда + pinned
+  `baseline.json`), регрессия токенов → ATTENTION (RED от токенов невозможен); `harness doctor`
+  детектит протухший установленный хук. USD сознательно не считаем — сырые токены model-keyed.
+- **Защита generated-ассетов (фаза E):** детерминированный provenance-header
+  `swissknifeman:generated` (Pack@version/Template/Edit-policy/Extension-points, БЕЗ timestamp —
+  хеш вместе с header, матрица `_decide`/`categorize_file_change` не тронута) во всех rendered
+  файлах паков; `user_owned` в lock (schema 1, аддитивно); `harness agent-packs doctor --drift
+  [--strict]` + самодостаточный `pack_drift` в `maind analyze` → ATTENTION при локальной правке
+  generated-файла; overlay-модель расширения (`.claude/rules/<prefix>-reviewer-overrides.md`,
+  user_owned, `role:override`) во всех стек-паках + правило `_common/rules/generated-assets.md`
+  + ось `generated-core-edited` (HIGH) в reviewer'ах + HARD_GATES в dev-loop. Бампы паков:
+  `_common` 0.4.0, `backend-laravel` 0.11.1, `node-frontend`/`python-backend`/`dart-flutter`
+  0.4.1, role-паки +0.0.1.
+
 ### Added (output-style=lean + skills-catalog — автоматическая раздача на все проекты)
 
 - **`skiller integrate` ставит `output-style lean` во ВСЕХ бандлах** (`minimal`/`recommended`/

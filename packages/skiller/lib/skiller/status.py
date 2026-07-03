@@ -8,6 +8,7 @@ from core import find_repo_root
 from .budget import budget_for_set, resolve_active_set
 from .common import MANIFEST, MARKETPLACE, die, parse_flags
 from .config import find_project_root, load_config, resolve_selection
+from .registry import alias_migration_hints, load_bucket_aliases
 from .state import db_records, print_registry_state
 from .update import detect_marketplace_file, detect_vendor_path
 
@@ -85,11 +86,16 @@ def cmd_status(env, argv):
                 f"(добавить: skiller update)")
         if extra:
             out(f"  Сверх профиля: {' '.join(extra)}")
+        # P7.5: включённый бакет слит в другой (alias) — одна строка-подсказка, без
+        # нагнетания; status read-only, ничего не переключает сама.
+        alias_hints = alias_migration_hints(load_bucket_aliases(env), enabled)
+        for h in alias_hints:
+            out(f"  Подсказка: {h}")
         report["connect"] = {
             "marketplace_file": mk_file, "source": src.get("path", src), "moved": moved,
             "enabled": sorted(enabled), "disabled": sorted(disabled),
             "profile": profile_name, "source_via": source,
-            "missing": missing, "extra": extra}
+            "missing": missing, "extra": extra, "alias_hints": alias_hints}
     vendor_path = detect_vendor_path(target, config)
     if vendor_path:
         mf = target / vendor_path / MANIFEST

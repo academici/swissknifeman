@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from maind import deploy
+from maind.provision import deploy
 from maind.config import merge_defaults
 from maind.projects import get
 from tests.fixtures import make_repo

@@ -32,15 +32,21 @@ sha256: ""
 ## Doc structure
 Template: `snippets/handoff-template.md`. Save to the standard path `.claude/handoffs/YYYY-MM-DD-<topic>.md` (auto-indexable by maind) or pass in first message of new session.
 
+If work follows a master plan `plans/<ID>/` (see `plan-protocol`) — this template
+does not apply: handoff follows the plan schema in `plans/<ID>/handoff.md`,
+NOT `.claude/handoffs/`.
+
 ## Anti-patterns
 - Summary from memory without `git status`/`git diff`.
 - Listing done work without "why" on decisions.
 - Dumping whole session log — this is compression, not a transcript.
 
 ## Related skills
+- `plan-protocol` (general) — multi-phase work under a master plan `plans/<ID>/`:
+  handoff follows its schema in `plans/<ID>/handoff.md`, this skill does not apply.
 - `anti-drift` (general) — after hard threshold, session ends with this handoff.
 - `context-economy` (general) — handoff before `/clear` as part of Plan→Clear→Execute.
 - `complex-task-orchestrator` (general) — open subtasks and risks go into the handoff.
 - `system/shared-memory` — if projects share memory, key facts go there (remember), not only the handoff file.
 
-<!-- ru-source-sha256: 541061152cdbdced154b65885da1d48d08167c225fc500625ba9222932e1b806 -->
+<!-- ru-source-sha256: f4f2dc1f77dfc591ceb06d2acb89d898f6ab86bd6f853ad7fa36ee9d67781262 -->

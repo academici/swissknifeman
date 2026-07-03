@@ -44,6 +44,10 @@ sha256: ""
 `.claude/handoffs/YYYY-MM-DD-<topic>.md` (индексируется maind)
 или передавайте в первом сообщении новой сессии.
 
+Если работа идёт по мастер-плану `plans/<ID>/` (см. `plan-protocol`) — этот шаблон
+не используется: handoff пишется по схеме плана в `plans/<ID>/handoff.md`,
+НЕ в `.claude/handoffs/`.
+
 ## Анти-паттерны
 
 - Писать summary по памяти, не сверяясь с `git status`/`git diff`.
@@ -52,6 +56,8 @@ sha256: ""
 
 ## Связанные скиллы
 
+- `plan-protocol` (general) — многофазная работа по мастер-плану `plans/<ID>/`:
+  handoff пишется по его схеме в `plans/<ID>/handoff.md`, этот скилл не применяется.
 - `anti-drift` (general) — после жёсткого порога сессия завершается этим handoff.
 - `context-economy` (general) — handoff перед `/clear` как часть Plan→Clear→Execute.
 - `complex-task-orchestrator` (general) — незакрытые подзадачи и риски ложатся в handoff.

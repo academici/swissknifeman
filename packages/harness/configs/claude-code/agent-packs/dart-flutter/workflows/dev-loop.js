@@ -24,6 +24,7 @@ const HARD_GATES = `ЖЁСТКИЕ ГЕЙТЫ {{PACK_PREFIX}} (не наруша
 - НЕ править pubspec.lock вручную; НЕ bump SDK.
 - pos-embedded: не блокировать главный isolate; I/O периферии с timeout.
 - НЕ git push, НЕ открывать/мержить PR, НЕ release.
+- .claude/agents|workflows|hooks с generated-header НЕ редактировать — оверрайды в .claude/rules/*-overrides.md.
 - Все срезы — на ОДНОЙ ветке ${BRANCH}; агенты НЕ создают/не переключают ветки, дерево чистое.
 - Работать строго внутри ${PROJECT_DIR}.`
 

@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-import maind.onboard as onb
+import maind.provision.onboard as onb
 from maind.config import load_config
 from maind.projects import get
 from tests.fixtures import make_repo
@@ -76,6 +76,56 @@ class TestOnboard(unittest.TestCase):
             proj_dir.mkdir()
             onb.cmd_onboard(env, [str(proj_dir), "--yes", "--allow-partial"])
             self.assertTrue(get(load_config(env)[0], "p3"))  # дошли без SystemExit
+
+    def test_onboard_registers_namespaces(self):
+        # реестр config["namespaces"] (dict) наполняется ns'ами проекта при онбординге.
+        orig = onb.run_capability
+        onb.run_capability = lambda *a, **k: 0
+        with tempfile.TemporaryDirectory() as tmp:
+            root, env = make_repo(tmp)
+            _seed_config(root)
+            proj_dir = Path(tmp) / "nsproj"
+            proj_dir.mkdir()
+            try:
+                config, _ = load_config(env)
+                onb.onboard(env, config, str(proj_dir),
+                           {"namespaces": ["axioma", "nsproj"], "yes": True, "dry": False})
+                cfg2, _ = load_config(env)
+                registry = cfg2.get("namespaces")
+                self.assertIsInstance(registry, dict)
+                self.assertIn("axioma", registry)
+                self.assertIn("nsproj", registry)
+                self.assertEqual(registry["nsproj"], {"name": "nsproj"})
+            finally:
+                onb.run_capability = orig
+
+    def test_onboard_namespace_registration_idempotent(self):
+        # повторный онбординг не должен перетирать уже заданные метаданные namespace'а —
+        # setdefault, не присвоение.
+        orig = onb.run_capability
+        onb.run_capability = lambda *a, **k: 0
+        with tempfile.TemporaryDirectory() as tmp:
+            root, env = make_repo(tmp)
+            _seed_config(root)
+            proj_dir = Path(tmp) / "idemproj"
+            proj_dir.mkdir()
+            try:
+                config, _ = load_config(env)
+                config["namespaces"] = {"axioma": {"name": "axioma", "note": "куратор задал вручную"}}
+                onb.onboard(env, config, str(proj_dir),
+                           {"namespaces": ["axioma", "idemproj"], "yes": True, "dry": False})
+                cfg2, _ = load_config(env)
+                self.assertEqual(cfg2["namespaces"]["axioma"],
+                                 {"name": "axioma", "note": "куратор задал вручную"})
+                self.assertIn("idemproj", cfg2["namespaces"])
+                # повторный прогон тем же набором — реестр не меняется
+                onb.onboard(env, cfg2, str(proj_dir),
+                           {"namespaces": ["axioma", "idemproj"], "yes": True, "dry": False})
+                cfg3, _ = load_config(env)
+                self.assertEqual(cfg3["namespaces"]["axioma"],
+                                 {"name": "axioma", "note": "куратор задал вручную"})
+            finally:
+                onb.run_capability = orig
 
     def test_dry_run_writes_nothing(self):
         orig = onb.run_capability

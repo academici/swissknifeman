@@ -24,6 +24,14 @@ from skiller.connect import do_connect
 import tests.fixtures as fx
 
 
+def _schema_prop(pytype, json_type):
+    """Собрать schema-свойство под Python-тип из CONFIG_KEYS. Кортеж типов
+    (memory_brain = (str, dict)) → oneOf-члены; одиночный тип → {"type": ...}."""
+    if isinstance(pytype, tuple):
+        return {"oneOf": [{"type": json_type[t]} for t in pytype]}
+    return {"type": json_type[pytype]}
+
+
 def capture(fn, *a, **kw):
     """Выполнить fn, вернуть (result, stdout-текст)."""
     buf = io.StringIO()
@@ -107,6 +115,26 @@ class RegistryBuildCase(unittest.TestCase):
         self.assertEqual(docker["source"], "github")
         self.assertEqual(docker["upstream"], "https://raw.example/SKILL.md")
         self.assertEqual(docker["fetched_at"], "2026-03-03")
+
+    def test_body_path_provenance_preferred_over_skill_md_entry(self):
+        # P7.3 thin-navigator: body_path явно называет files[]-запись с реальным
+        # телом апстрима — registry должен брать provenance из НЕЁ, а не из первой
+        # найденной записи с path=="SKILL.md" (даже если такая по какой-то причине
+        # тоже трекается) и не из files[0] (порядок в files[] не должен решать).
+        fx.write_upstream(
+            self.root / "skills" / "devops" / "docker",
+            source="github", strategy="notify",
+            path="SKILL.md", url="https://raw.example/SKILL.md", sha256="stale",
+            fetched_at="2026-01-01",
+            body_path="references/full.md",
+            extra_files=[{"path": "references/full.md",
+                         "url": "https://raw.example/references/full.md",
+                         "sha256": "fresh", "fetched_at": "2026-07-01"}])
+        reg, *_ = build_registry(self.env)
+        docker = next(s for s in reg["skills"] if s["name"] == "docker")
+        self.assertEqual(docker["source"], "github")
+        self.assertEqual(docker["upstream"], "https://raw.example/references/full.md")
+        self.assertEqual(docker["fetched_at"], "2026-07-01")
 
     def test_broken_upstream_json_dies_with_path(self):
         # Битый upstream.json → внятная ошибка с путём, не голый traceback
@@ -306,7 +334,7 @@ class DoctorCase(unittest.TestCase):
         from skiller.common import CONFIG_KEYS
         json_type = {str: "string", list: "array", int: "integer",
                     dict: "object", bool: "boolean"}
-        props = {k: {"type": json_type[t]} for k, t in CONFIG_KEYS.items()}
+        props = {k: _schema_prop(t, json_type) for k, t in CONFIG_KEYS.items()}
         props["project_type"]["type"] = "array"  # намеренное расхождение
         schema_dir = self.root / "schema"
         schema_dir.mkdir(parents=True, exist_ok=True)
@@ -314,7 +342,7 @@ class DoctorCase(unittest.TestCase):
             json.dumps({"properties": props}), encoding="utf-8")
         # вторая схема (SKILLSET_KEYS) — доктор её тоже читает, кладём валидной
         from skiller.skillset import SKILLSET_KEYS
-        props2 = {k: {"type": json_type[t]} for k, t in SKILLSET_KEYS.items()}
+        props2 = {k: _schema_prop(t, json_type) for k, t in SKILLSET_KEYS.items()}
         (schema_dir / "swissknifeman-config.schema.json").write_text(
             json.dumps({"properties": props2}), encoding="utf-8")
 

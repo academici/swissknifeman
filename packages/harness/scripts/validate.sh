@@ -9,10 +9,20 @@ cd "$REPO_ROOT"
 fail=0
 err() { echo "  FAIL: $*" >&2; fail=1; }
 
-echo "[1/6] python compile"
+echo "[1/7] python compile"
 python3 -m compileall -q lib tests || err "py_compile"
 
-echo "[2/6] bash syntax"
+echo "[2/7] вендоринг _usage.py (SCHEMA=2 run-report)"
+MONOREPO_ROOT_USAGE="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
+USAGE_DST="configs/claude-code/hooks/run-report/_usage.py"
+if [[ -n "$MONOREPO_ROOT_USAGE" && -f "$MONOREPO_ROOT_USAGE/core/usage.py" ]]; then
+  cmp -s "$MONOREPO_ROOT_USAGE/core/usage.py" "$USAGE_DST" \
+    || err "вендоренный _usage.py разошёлся с core/usage.py — запусти scripts/sync-usage.sh"
+else
+  [[ -f "$USAGE_DST" ]] || err "нет $USAGE_DST (standalone-раскладка без core/ — ожидается вендоренная копия)"
+fi
+
+echo "[3/7] bash syntax"
 for f in bin/harness install.sh scripts/*.sh; do
   bash -n "$f" || err "bash -n $f"
 done
@@ -25,7 +35,7 @@ while IFS= read -r -d '' py; do
   python3 -m py_compile "$py" || err "py_compile $py"
 done < <(find configs/claude-code -name '*.py' -print0)
 
-echo "[3/6] JSON (плагин + пресеты)"
+echo "[4/7] JSON (плагин + пресеты)"
 python3 - <<'PY' || err "битый JSON"
 import glob, json, sys
 bad = []
@@ -39,7 +49,7 @@ for b in bad:
 sys.exit(1 if bad else 0)
 PY
 
-echo "[4/6] обязательные файлы"
+echo "[5/7] обязательные файлы"
 for f in bin/harness lib/harness/__init__.py lib/harness/cli.py \
          scripts/apply-permissions.sh configs/claude-code/settings.base.json \
          .claude-plugin/plugin.json commands/harness.md \
@@ -47,7 +57,7 @@ for f in bin/harness lib/harness/__init__.py lib/harness/cli.py \
   [[ -e "$f" ]] || err "нет файла: $f"
 done
 
-echo "[5/6] slash-команды (frontmatter)"
+echo "[6/7] slash-команды (frontmatter)"
 python3 - <<'PY' || err "битый frontmatter в commands/*.md"
 import glob, sys
 bad = []
@@ -70,7 +80,7 @@ for b in bad:
 sys.exit(1 if bad else 0)
 PY
 
-echo "[6/6] импорт пакета + тесты"
+echo "[7/7] импорт пакета + тесты"
 MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." 2>/dev/null && pwd || true)"
 [ -d "$MONOREPO_ROOT/core" ] || MONOREPO_ROOT=""
 PYTHONPATH="$REPO_ROOT/lib${MONOREPO_ROOT:+:$MONOREPO_ROOT}" python3 -c "import harness.cli" \

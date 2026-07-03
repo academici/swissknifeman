@@ -26,7 +26,7 @@ def _load_core_policy():
     defaults = {
         "skills": ["general/context-economy", "general/anti-drift", "general/compact-responses",
                    "general/session-handoff", "general/mcp-advisor", "general/verify-claims",
-                   "research/query-craft", "oss-dev/gh-review"],
+                   "research/query-craft", "oss-dev/gh-review", "general/plan-protocol"],
         "resident_budget_target": 600,
         "core_plugin": "core",
         "core_buckets": ["general", "oss-dev"],
@@ -101,6 +101,16 @@ def core_skill_tuples(env, exclude):
     return out
 
 
+def _type_label(pytype):
+    """Человекочитаемая метка ожидаемого типа для сообщения об ошибке. Кортеж типов
+    (напр. memory_brain = (str, dict)) → «string or object»."""
+    names = {str: "string", list: "list of strings", dict: "object",
+             int: "integer", bool: "boolean"}
+    if isinstance(pytype, tuple):
+        return " or ".join(names.get(t, t.__name__) for t in pytype)
+    return names.get(pytype, pytype.__name__)
+
+
 def validate_config(env, config, cfg_file):
     import difflib
     profile_names = sorted(p.stem for p in (env.root / "profiles").glob("*.json"))
@@ -112,10 +122,13 @@ def validate_config(env, config, cfg_file):
             suffix = f" — did you mean '{hint[0]}'?" if hint else ""
             die(f"{cfg_file}: unknown key '{key}'{suffix}")
         if not isinstance(value, CONFIG_KEYS[key]):
-            die(f"{cfg_file}: '{key}' must be a "
-                f"{'list of strings' if CONFIG_KEYS[key] is list else 'string'}")
+            die(f"{cfg_file}: '{key}' must be a {_type_label(CONFIG_KEYS[key])}")
         if CONFIG_KEYS[key] is list and not all(isinstance(v, str) for v in value):
             die(f"{cfg_file}: '{key}' must be a list of strings")
+    # memory_brain-объект: path обязателен (строчная форма — просто путь, back-compat).
+    mb = config.get("memory_brain")
+    if isinstance(mb, dict) and not (isinstance(mb.get("path"), str) and mb["path"]):
+        die(f"{cfg_file}: 'memory_brain' object must have a non-empty 'path'")
     if config.get("project_type") and config["project_type"] not in profile_names:
         die(f"{cfg_file}: unknown project_type '{config['project_type']}' "
             f"(available: {', '.join(profile_names)})")
@@ -131,8 +144,6 @@ def validate_config(env, config, cfg_file):
         "shape": "зарезервирован под agent-packs, ещё не реализован — игнорируется",
         "stacks": "зарезервирован под agent-packs, ещё не реализован — игнорируется",
         "coordinator_ignore": "legacy-ключ без потребителя — игнорируется",
-        "presets": "резолвятся только в .swissknifeman/config.json (sync-канал); "
-                   "в .swissknife.json не действуют",
     }
     for _key, _msg in _RESERVED.items():
         if config.get(_key):
@@ -170,9 +181,37 @@ def all_buckets(env):
     return sorted(d.name for d in (env.root / "skills").iterdir() if d.is_dir())
 
 
+def _expand_presets_buckets(env, config):
+    """Развернуть `presets[]` из .swissknife.json в список бакетов (переиспользуя
+    skillset.resolve_presets — extends/cycle-detection единожды, без дубля).
+
+    Каналы .swissknife.json (connect + legacy vendor) — bucket-granular, поэтому берём
+    ТОЛЬКО bucket-компонент пресетов; их skill-granular `include` тут не имеет смысла
+    (в connect игнорируется, как и `exclude`). Если пресет несёт лишь `include` без
+    `buckets` — предупреждаем, чтобы пустой эффект не выглядел молчаливым багом.
+    Ленивый импорт: skillset импортит config → на module-level был бы цикл."""
+    names = config.get("presets") or []
+    if not names:
+        return []
+    from .skillset import resolve_presets  # lazy: избегаем циклического импорта
+    pre_buckets, pre_include, _skipped = resolve_presets(env, names)
+    if pre_include and not pre_buckets:
+        warn(".swissknife.json: presets содержат только skill-granular 'include' без "
+             "'buckets' — в bucket-granular каналах (connect/legacy vendor) эффекта нет; "
+             "для skill-level используйте vendor sync (.swissknifeman/config.json)")
+    return list(dict.fromkeys(pre_buckets))
+
+
 def resolve_selection(env, target, config, flag_profile, flag_items):
     """Shared precedence: flags > .swissknife.json > autodetect.
-    Returns (items, profile_name, profile_source, source_label, include_meta)."""
+    Returns (items, profile_name, profile_source, source_label, include_meta).
+
+    В ветке .swissknife.json `presets[]` разворачиваются в бакеты (через
+    skillset.resolve_presets) и объединяются с явными `buckets`, затем вычитается
+    `exclude`: buckets = (resolve_presets(presets) ∪ buckets) − exclude. Формула
+    симметрична vendor sync (resolve_skillset), но на уровне бакетов (каналы
+    .swissknife.json bucket-granular). Точность precedence сохранена: presets
+    действуют только когда выбор идёт из .swissknife.json (не из flags/профиля)."""
     buckets = all_buckets(env)
     if flag_items:
         return flag_items, None, "items", "flags", False
@@ -180,8 +219,18 @@ def resolve_selection(env, target, config, flag_profile, flag_items):
         prof = load_profile(env, flag_profile)
         items = buckets if prof["buckets"] == ["*"] else prof["buckets"]
         return items, flag_profile, "flag", "--profile", prof.get("include_meta", False)
-    if config.get("buckets"):
-        return config["buckets"], None, "config", ".swissknife.json buckets", False
+    preset_buckets = _expand_presets_buckets(env, config)
+    if config.get("buckets") or preset_buckets:
+        # (presets ∪ buckets) − exclude. exclude в bucket-granular каналах skill-level
+        # (connect его игнорит с NOTE), но на уровне имён бакетов вычитаем корректно —
+        # симметрично формуле vendor sync; дедуп сохраняет порядок (presets раньше buckets).
+        merged = list(dict.fromkeys(preset_buckets + list(config.get("buckets") or [])))
+        excl = set(config.get("exclude") or [])
+        items = [b for b in merged if b not in excl]
+        label = (".swissknife.json presets+buckets" if preset_buckets and config.get("buckets")
+                 else ".swissknife.json presets" if preset_buckets
+                 else ".swissknife.json buckets")
+        return items, None, "config", label, False
     if config.get("project_type"):
         prof = load_profile(env, config["project_type"])
         items = buckets if prof["buckets"] == ["*"] else prof["buckets"]

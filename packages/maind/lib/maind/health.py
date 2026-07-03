@@ -25,7 +25,7 @@ from .namespaces import namespaces_of, private_scope
 from .probe import probe_project
 from .projects import get as get_project
 from .projects import match_cwd
-from .workspace import load_settings
+from .provision.workspace import load_settings
 
 BLOCK_MARKER = "maind:healthcheck"
 HOOK_SCRIPT = ".claude/maind-health.sh"
@@ -349,7 +349,7 @@ def cmd_health(env, argv):
                 mem_start(env, config)
             except SystemExit as e:
                 warn(f"не удалось поднять память: {e}")
-        from .sync import run_sync
+        from .provision.sync import run_sync
         run_sync(env, config, [project], only="mcp")
         rep = health_report(env, config, project)
 

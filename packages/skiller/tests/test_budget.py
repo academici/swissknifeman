@@ -65,6 +65,44 @@ class SkillBudgetCase(unittest.TestCase):
         self.assertEqual(b["snippets"], 1)   # index.json не считаем
         self.assertGreater(b["tier2"], 0)
 
+    def test_references_counted_on_demand(self):
+        # P2.1 SKM-MASTER-003 (T1): references/ — ярус-2 ⌥ on-demand, симметрично
+        # snippets/ (тела монолитов после thin-navigator-волны P7 SKM-MASTER-002).
+        d = self.root / "skills" / "quality" / "with-refs"
+        fx.write_skill(d, "with-refs", description="d")
+        (d / "references").mkdir()
+        (d / "references" / "full.md").write_text("y" * 90, encoding="utf-8")
+        b = skill_budget(d)
+        self.assertEqual(b["references"], 1)
+        self.assertEqual(b["snippets"], 0)
+        self.assertGreater(b["tier2"], 0)
+
+    def test_references_do_not_leak_into_tier1(self):
+        # references — ⌥ on-demand (ярус-2), НЕ ↻ on-trigger (ярус-1): тело
+        # SKILL.md короткое, references/ рядом объёмные — tier1 не должен расти.
+        d = self.root / "skills" / "quality" / "with-refs-tier1"
+        fx.write_skill(d, "with-refs-tier1", description="d", body="short body\n")
+        b_before = skill_budget(d)
+        (d / "references").mkdir()
+        (d / "references" / "full.md").write_text("z " * 2000, encoding="utf-8")
+        b_after = skill_budget(d)
+        self.assertEqual(b_after["tier1"], b_before["tier1"])
+        self.assertGreater(b_after["tier2"], b_before["tier2"])
+
+    def test_snippets_and_references_both_counted(self):
+        d = self.root / "skills" / "quality" / "with-both"
+        fx.write_skill(d, "with-both", description="d")
+        (d / "snippets").mkdir()
+        (d / "snippets" / "ex.md").write_text("x" * 90, encoding="utf-8")
+        (d / "references").mkdir()
+        (d / "references" / "full.md").write_text("y" * 90, encoding="utf-8")
+        b = skill_budget(d)
+        self.assertEqual(b["snippets"], 1)
+        self.assertEqual(b["references"], 1)
+        snip_only_tokens = estimate_tokens("x" * 90)
+        ref_only_tokens = estimate_tokens("y" * 90)
+        self.assertEqual(b["tier2"], snip_only_tokens + ref_only_tokens)
+
 
 class ResolveActiveSetCase(unittest.TestCase):
     def setUp(self):
@@ -103,6 +141,13 @@ class WriteBudgetMapCase(unittest.TestCase):
         self._tmp = tempfile.TemporaryDirectory()
         self.tmp = Path(self._tmp.name)
         self.root, self.env = fx.make_registry(self.tmp)
+        # P2.1 SKM-MASTER-003: скилл с references/ — карта/агрегация должны
+        # видеть его тело в ⌥ on-demand (не только snippets/).
+        refs_skill = self.root / "skills" / "quality" / "with-refs-map"
+        fx.write_skill(refs_skill, "with-refs-map", description="refs demo")
+        (refs_skill / "references").mkdir()
+        (refs_skill / "references" / "full.md").write_text(
+            "монолит " * 400, encoding="utf-8")
         (self.root / "docs" / "guide").mkdir(parents=True)
         registry, _, _ = build_registry(self.env)
         atomic_write_text(self.root / "skills.json",
@@ -120,6 +165,17 @@ class WriteBudgetMapCase(unittest.TestCase):
         self.assertIn("classDef hot", text)
         self.assertIn("⊕", text)               # легенда яруса-0
         self.assertIn("laravel-conventions", text)  # скилл из фикстуры на карте
+
+    def test_map_reflects_references_in_tier2(self):
+        # references/full.md скилла with-refs-map попадает в ⌥ on-demand карты
+        # (P2.1 T1) — итоговое tier2 больше, чем без учёта references/.
+        b = skill_budget(self.root / "skills" / "quality" / "with-refs-map")
+        self.assertEqual(b["references"], 1)
+        self.assertGreater(b["tier2"], 0)
+        write_budget_map(self.env)
+        out = self.root / "docs" / "guide" / "budget.md"
+        text = out.read_text(encoding="utf-8")
+        self.assertIn("on-demand", text)  # переименованная колонка/итог
 
 
 class CheckCoreCase(unittest.TestCase):

@@ -44,8 +44,18 @@ class TestConfigSchemas(unittest.TestCase):
                             ("swissknifeman-config.schema.json", SKILLSET_KEYS)):
             schema = _load(fname)
             for key, pytype in keys.items():
-                self.assertEqual(schema["properties"][key]["type"],
-                                 JSON_TYPE[pytype], f"{fname}: тип '{key}'")
+                prop = schema["properties"][key]
+                if isinstance(pytype, tuple):
+                    # Мульти-тип (напр. memory_brain = (str, dict)) → в схеме oneOf,
+                    # где члены покрывают ровно множество JSON-типов Python-кортежа.
+                    self.assertNotIn("type", prop,
+                                     f"{fname}: '{key}' — мульти-тип, ожидался oneOf")
+                    member_types = {b.get("type") for b in prop.get("oneOf", [])}
+                    self.assertEqual(member_types, {JSON_TYPE[t] for t in pytype},
+                                     f"{fname}: oneOf-члены '{key}'")
+                else:
+                    self.assertEqual(prop["type"], JSON_TYPE[pytype],
+                                     f"{fname}: тип '{key}'")
 
     def test_schemas_reject_unknown_keys(self):
         # Контракт DX: additionalProperties:false + escape для _/$ — как рантайм

@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-import maind.orchestrate as orch
+import maind.provision.orchestrate as orch
 from maind.config import merge_defaults
 from tests.fixtures import make_repo
 

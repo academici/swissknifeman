@@ -5,14 +5,13 @@
 вынесен в `maind.http`, управляемый markdown-блок — в `maind.blocks` (реэкспорт ниже
 для обратной совместимости импортов `from .common import ...`)."""
 import os
-import shutil
 from dataclasses import dataclass
 from pathlib import Path
 
 # Общий core (подключается через PYTHONPATH лаунчером/test.sh). Реэкспорт для
 # модулей пакета, которые исторически берут эти имена из .common.
 from core import (  # noqa: F401
-    HOME, BaseEnv, atomic_write_json, atomic_write_text, confirm,
+    HOME, BaseEnv, atomic_write_json, atomic_write_text, backup_file, confirm,
     detect_project_type, die, docs_visibility_for, find_monorepo_root,
     find_run_report, now_iso, parse_args, parse_iso, pid_alive, read_ndjson,
     read_ndjson_iter, run_cmd, safe_load_json, sanitize, warn,
@@ -111,17 +110,7 @@ class Env(BaseEnv):
 # (надмножество parse_flags с позиционными, стиль brain).
 
 
-# ── файловые помощники ──────────────────────────────────────────────────────
-def backup_file(path):
-    """Копия <path>.bak, если файл существует. Возвращает путь бэкапа или None."""
-    path = Path(path)
-    if not path.exists():
-        return None
-    bak = path.with_name(path.name + ".bak")
-    shutil.copy2(path, bak)
-    return bak
-
-
+# backup_file — из общего core (реэкспорт выше); раньше дублировался здесь.
 # managed_block/upsert_block/content_hash — в maind.blocks (реэкспорт выше).
 # http_get_json/http_post_json/ping — в maind.http (реэкспорт выше).
 

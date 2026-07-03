@@ -62,6 +62,26 @@ harness hooks --target . --memory core:federation # file|federation|agentmemory|
 контейнеров/VM, не на рабочей машине.
 :::
 
+### `harness agent-packs`
+
+Раскатывает версионируемые паки субагентов/правил под стек (`backend-laravel`,
+`node-frontend`, `python-backend`, `dart-flutter`) или роль (`role-cto` и др.)
+поверх скиллов. Подробности — [Agent-packs](./configs/agent-packs).
+
+```
+harness agent-packs list
+harness agent-packs render  --auto --pack <pack> --target .
+harness agent-packs upgrade        --pack <pack> --target .
+harness agent-packs doctor  --target . [--drift [--strict]]
+```
+
+- Каждый сгенерированный файл получает **provenance-header**
+  (`swissknifeman:generated`) — пак/версия/edit-policy/точки расширения;
+  правится не generated-core, а override-файл (`.claude/rules/<prefix>-reviewer-overrides.md`).
+- `doctor --drift` (и `--strict` для CI) ловит generated-файлы, правленные
+  локально мимо override; тот же сигнал попадает в `pack_drift` вердикта
+  `maind analyze` (ATTENTION, не RED).
+
 ### `harness doctor`
 
 Диагностика: наличие пресетов и `apply-permissions.sh`, установлены ли файлы

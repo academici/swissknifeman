@@ -1,0 +1,25 @@
+{
+  "skill": "plan-protocol",
+  "snippets": [
+    {
+      "file": "plan-template.md",
+      "description": "Скелет plan.md мастер-плана: Meta, Context, Execution Rules, Routing, Status Board, Decision/Update Log",
+      "tags": ["workflow", "planning", "template"]
+    },
+    {
+      "file": "phase-template.md",
+      "description": "Скелет phases/Pn.md: Phase Context/Status, один полностью заполненный item-образец + пустой скелет, Phase Handoff",
+      "tags": ["workflow", "planning", "template"]
+    },
+    {
+      "file": "handoff-template.md",
+      "description": "Скелет rolling handoff.md: Next/Done/Remaining/Sources of truth/Open risks + ключи devloop-телеметрии",
+      "tags": ["workflow", "handoff", "template"]
+    },
+    {
+      "file": "active-template.md",
+      "description": "Скелет plans/ACTIVE.md — 4-строчный указатель активного плана (Active/Updated)",
+      "tags": ["workflow", "planning", "template"]
+    }
+  ]
+}

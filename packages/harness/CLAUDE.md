@@ -27,6 +27,11 @@
 - `output-styles/<name>.md` — **терсе-«голос» вывода** (токен-экономия: output-токены ~4-5× input).
   `lean` — телеграфный (только выжимка+код), `keep-coding-instructions:true` (инж-правила живут).
   Включается per-project: `harness hooks --output-style lean` (пишет `outputStyle` в settings.local.json).
+- **`plansDirectory` (per-project plan-система)** — `harness hooks --plans-dir plans|off` ставит
+  top-level ключ `plansDirectory` в **`.claude/settings.json`** (шаримый, коммитится — командная
+  конвенция, не машинно-локальная преференция; отличие от `outputStyle`). Merge-only и НЕ
+  перезаписывает чужой выбор: ключ уже занят ДРУГИМ значением → skip + warn «уважаю локальный
+  выбор»; `off` снимает ключ только если он равен нашему дефолту `plans`.
 
 ## Раскладка
 
@@ -55,9 +60,9 @@
 harness permissions --target . [--preset a,b] [--file F] [--dry-run] [--list] [--global]
 harness mcp         --target . --mcp context7,playwright [--list] [--dry-run]
 harness hooks       --global            # файлы хуков в ~/.claude/hooks (один раз на машину)
-harness hooks       --target . --auto-approve strict --memory core:federation --router propose --run-report on --output-style lean
+harness hooks       --target . --auto-approve strict --memory core:federation --router propose --run-report on --output-style lean --plans-dir plans
 harness router      --generate --target .   # каталог intent-router (.claude/agent-router.config.json)
-harness agent-packs <list|render|upgrade|doctor> [--pack P] [--target .] [--auto]
+harness agent-packs <list|render|upgrade|remove|doctor> [--pack P] [--target .] [--auto]
         [--dry-run] [--install-only] [--allow-shell M] [KEY=VALUE …]   # см. agentpacks.py
 harness doctor
 ```
@@ -65,7 +70,10 @@ harness doctor
 `agent-packs` — подсистема персона/стек-паков (шаблоны `.claude/agents|hooks|settings` под проект):
 `render` ставит пак (интервью → подстановка `{{TOKEN}}`), `upgrade` накатывает новую версию пака
 бережно (категории new/safe-apply/conflict/user-owned — `conflict` пишет `*.pack-new`, локальные
-правки не затирает), `list`/`doctor` — каталог и диагностика. Lock — `.claude/agent-pack.lock.json`.
+правки не затирает), `remove` сносит установленный пак безопасно (только неправленные файлы;
+merge/user-owned оставляет с warn'ом), `list`/`doctor` — каталог и диагностика. Lock —
+`.claude/agent-pack.lock.json`. `files[]`-запись пака может нести `src_pack: <другой-пак>` —
+контент берётся из каталога того пака (шаринг без копий), владелец (header) — текущий пак.
 
 ## Конвенции (соблюдай при правках)
 

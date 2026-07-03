@@ -2,5 +2,6 @@
   "name": "php-package",
   "description": "Open-source PHP package development (Laravel packages included)",
   "buckets": ["system", "oss-dev", "php", "php-packages", "laravel-testing", "quality", "devops"],
-  "include_meta": false
+  "include_meta": false,
+  "agent_pack": ["laravel-package", "_common"]
 }

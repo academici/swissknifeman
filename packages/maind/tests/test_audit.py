@@ -7,7 +7,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 
-from maind import audit, codegraph  # noqa: E402
+from maind.analysis import audit  # noqa: E402
+from maind import codegraph  # noqa: E402
 import tests.fixtures as fx  # noqa: E402
 
 

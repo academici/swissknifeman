@@ -1,0 +1,733 @@
+"""plan_lint — детерминированный валидатор протокола исполняемых мастер-планов
+`plans/<PLAN-ID>/{plan.md, phases/Pn.md, handoff.md}`.
+
+Схема (жёстко фиксирована — SSOT: скилл `packages/skiller/skills/general/
+plan-protocol/SKILL.ru.md` + его `snippets/{plan,phase,handoff}-template.md`;
+эти три файла и `commands/plan-{design,exec,close,audit}.md` уже вызывают
+именно этот скрипт как `scripts/plan-lint.py plans/<ID>`):
+  plan.md      — «## 0. Meta» (ТАБЛИЦА `Поле|Значение`; обязательные
+                 Plan ID/Title/Version/Status) + «## 4. Phase Index & Status
+                 Board» (таблица `Phase|Title|Items 🟢/всего|Status`).
+  phases/Pn.md — «## Phase Status» (таблица `ID|Title|Status|Updated`, по
+                 строке на item), item-блоки (`### Pn.m — Заголовок`, поля
+                 строками `**Поле:** значение`) и «## Phase Handoff» в конце.
+  handoff.md   — `# HANDOFF — … — after Pn.m` + поля Next/Done/Remaining/
+                 Sources of truth (минимально обязательные; протокол несёт ещё
+                 Open risks/Workarounds — их наличие лишним не считается).
+
+stdlib-only (re/argparse/pathlib/json/sys), сообщения — на русском.
+"""
+import argparse
+import json
+import re
+import sys
+from pathlib import Path
+
+try:
+    # core.warn — дословно то же самое (print "WARN: …" в stderr); переиспользуем
+    # вместо дубля. Опционально: core/ на PYTHONPATH добавляет лаунчер
+    # (scripts/plan-lint.py), в standalone-раскладке (нет core/) — свой фолбэк.
+    from core.term import warn as _core_warn
+except ImportError:  # pragma: no cover - standalone-фолбэк, см. docstring выше
+    def _core_warn(msg):
+        print(f"WARN: {msg}", file=sys.stderr)
+
+# --- канон схемы -------------------------------------------------------------
+
+# РОВНО 6 канонических статусов — никаких иных строк/синонимов не допускается.
+STATUSES = (
+    "⬜ Not started",
+    "🟡 In progress",
+    "🟢 Done",
+    "🟠 Done with deviations",
+    "🔴 Blocked",
+    "⛔ Skipped by decision",
+)
+STATUS_BLOCKED = "🔴 Blocked"
+STATUS_DONE = "🟢 Done"
+STATUS_DEVIATIONS = "🟠 Done with deviations"
+STATUS_IN_PROGRESS = "🟡 In progress"
+# «терминальный» = фаза закрыта (готова/пропущена/сдана с оговорками) —
+# используется для phase-first-эвристики (WARNING), не путать с 🔴 (стоит, не закрыта).
+TERMINAL_STATUSES = (STATUS_DONE, STATUS_DEVIATIONS, "⛔ Skipped by decision")
+EMPTY_PLACEHOLDER = "—"  # пустое поле помечается ровно этим символом (em dash)
+
+# Meta — таблица `Поле|Значение`; обязательны только 4 identity-поля (остальные 8 из
+# шаблона — Document Type/Authoring Model/…/Approval Owner — информационные, не гейтятся).
+REQUIRED_META_FIELDS = ("Plan ID", "Title", "Version", "Status")
+META_TABLE_COLUMNS = ("Поле", "Значение")
+# Полный канон item-полей — SKILL.ru.md §4 / snippets/phase-template.md, строго в этом
+# порядке (порядок здесь не гейтится, только присутствие — см. lint_plan).
+REQUIRED_ITEM_FIELDS = (
+    "Status", "Intent", "Why", "Scope Included", "Scope Excluded", "Inputs", "Files",
+    "Required Reads", "Implementation Rules", "Code Guidance", "Validation",
+    "Deliverables", "Completion Notes", "Pending Work", "Known Deviations",
+    "Escalation Needed",
+)
+STATUS_BOARD_COLUMNS = ("Phase", "Title", "Items 🟢/всего", "Status")
+STATUS_BOARD_ITEMS_COL = "Items 🟢/всего"
+PHASE_STATUS_COLUMNS = ("ID", "Title", "Status", "Updated")
+# handoff.md — минимально обязательные 4 поля (протокол несёт ещё Open risks и
+# Workarounds/Deferred/Open questions — их отсутствие лишь предупреждение см. WARNING).
+HANDOFF_REQUIRED_FIELDS = ("Next", "Done", "Remaining", "Sources of truth")
+
+# --- regex-канон ---------------------------------------------------------
+ITEM_HEADER_RE = re.compile(r"^###\s+(P\d+\.\d+)\s+—\s+(.*)$")
+SECTION_HEADER_RE = re.compile(r"^##\s+\S.*$")  # уровень 2 (### уровня 3 не матчит)
+META_HEADER_RE = re.compile(r"^##\s+0\.\s+Meta\s*$")
+STATUS_BOARD_HEADER_RE = re.compile(r"^##\s+4\.\s+Phase Index & Status Board\s*$")
+PHASE_STATUS_HEADER_RE = re.compile(r"^##\s+Phase Status\s*$")
+PHASE_HANDOFF_HEADER_RE = re.compile(r"^##\s+Phase Handoff\s*$")
+FIELD_RE = re.compile(r"^\*\*([^*:]+):\*\*\s*(.*)$")
+ESCALATION_RE = re.compile(r"^>\s*🔴\s*ESCALATION\s+(P\d+\.\d+)\s*:")
+HANDOFF_TITLE_RE = re.compile(r"^#\s+HANDOFF\s+—.*—\s+after\s+(P\d+\.\d+)\s*$")
+PLAN_EXEC_RE = re.compile(r"/task:plan-exec\s+(\S+)\s+(P\d+\.\d+)")
+PHASE_FILENAME_RE = re.compile(r"^(P\d+)\.md$")
+PHASE_TOKEN_RE = re.compile(r"^P(\d+)$")
+DONE_TOTAL_RE = re.compile(r"^\s*(\d+)\s*/\s*(\d+)\s*$")
+ACTIVE_FIELD_RE = re.compile(r"^\*\*Active:\*\*\s*(.+)$")
+ACTIVE_FILENAME = "ACTIVE.md"
+README_FILENAME = "README.md"
+
+
+class Diagnostics:
+    """Копилка ERROR/WARNING с человекочитаемым выводом (русский, file:line)."""
+
+    def __init__(self):
+        self.errors = []
+        self.warnings = []
+
+    def error(self, path, line, msg):
+        self.errors.append(f"{_loc(path, line)}: {msg}")
+
+    def warning(self, path, line, msg):
+        self.warnings.append(f"{_loc(path, line)}: {msg}")
+
+    @property
+    def ok(self):
+        return not self.errors
+
+
+def _loc(path, line):
+    return f"{path}:{line}" if line else str(path)
+
+
+def _is_empty(value):
+    v = (value or "").strip()
+    return v == "" or v == EMPTY_PLACEHOLDER
+
+
+# --- низкоуровневый парсинг markdown -----------------------------------------
+
+def _read_lines(path):
+    """Читает файл построчно (без \\n). None — если файла нет/не читается."""
+    p = Path(path)
+    if not p.is_file():
+        return None
+    try:
+        text = p.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return None
+    return text.replace("\r\n", "\n").split("\n")
+
+
+def _section_header_indexes(lines):
+    """Индексы всех строк-заголовков уровня 2 (`## …`, НЕ `### …`)."""
+    return [i for i, ln in enumerate(lines) if SECTION_HEADER_RE.match(ln)]
+
+
+def _section_body(lines, header_idx, header_idxs):
+    """Тело секции header_idx: строки до следующего `##`-заголовка либо EOF.
+    Возвращает (body_lines, first_line_no) — line_no 1-индексный, для диагностик."""
+    following = [i for i in header_idxs if i > header_idx]
+    end = following[0] if following else len(lines)
+    return lines[header_idx + 1:end], header_idx + 2  # +2: 1-индекс + сдвиг на след. строку
+
+
+def _find_section(lines, header_re):
+    """Ищет ПЕРВУЮ строку, матчащую header_re, среди `##`-заголовков.
+    Возвращает (header_idx, body_lines, body_start_lineno) либо (None, None, None)."""
+    header_idxs = _section_header_indexes(lines)
+    for idx in header_idxs:
+        if header_re.match(lines[idx]):
+            body, start_lineno = _section_body(lines, idx, header_idxs)
+            return idx, body, start_lineno
+    return None, None, None
+
+
+def _parse_table(body_lines, body_start_lineno):
+    """Разбирает первую markdown-таблицу в блоке строк. Возвращает
+    (headers, rows, header_lineno) — rows: list[dict[col] = (value, row_lineno)].
+    (None, [], None) — если таблицы в блоке нет."""
+    start = None
+    for i, ln in enumerate(body_lines):
+        if ln.strip().startswith("|"):
+            start = i
+            break
+    if start is None:
+        return None, [], None
+
+    def split_row(ln):
+        s = ln.strip()
+        if s.startswith("|"):
+            s = s[1:]
+        if s.endswith("|"):
+            s = s[:-1]
+        return [c.strip() for c in s.split("|")]
+
+    headers = split_row(body_lines[start])
+    rows = []
+    i = start + 2  # строка start+1 — разделитель `---|---`, пропускаем без проверки формата
+    while i < len(body_lines) and body_lines[i].strip().startswith("|"):
+        cells = split_row(body_lines[i])
+        row = {headers[j]: (cells[j] if j < len(cells) else "") for j in range(len(headers))}
+        rows.append((row, body_start_lineno + i))
+        i += 1
+    return headers, rows, body_start_lineno + start
+
+
+def _parse_fields(body_lines, body_start_lineno, field_re):
+    """Разбирает строки-поля `**Поле:** значение` (значение может продолжаться
+    на следующих строках до следующего поля/конца блока). Возвращает
+    fields: dict[name] = (value, lineno)."""
+    fields = {}
+    cur_key = cur_lineno = None
+    cur_val = []
+
+    def flush():
+        if cur_key is not None:
+            fields[cur_key] = ("\n".join(cur_val).strip(), cur_lineno)
+
+    for i, ln in enumerate(body_lines):
+        m = field_re.match(ln)
+        if m:
+            flush()
+            cur_key = m.group(1).strip()
+            cur_lineno = body_start_lineno + i
+            rest = m.group(2).strip()
+            cur_val = [rest] if rest else []
+        elif cur_key is not None:
+            if ln.strip() or cur_val:
+                cur_val.append(ln.rstrip())
+    flush()
+    return fields
+
+
+def _find_items(lines):
+    """Все item-блоки `### Pn.m — Заголовок` в файле. Возвращает
+    list[(item_id, title, header_lineno, body_lines, body_start_lineno)]
+    (список — не dict: дубли ID не должны молча схлопываться)."""
+    header_idxs = [i for i, ln in enumerate(lines) if ln.startswith("###")]
+    section_idxs = _section_header_indexes(lines)
+    boundaries = sorted(set(header_idxs) | set(section_idxs) | {len(lines)})
+    items = []
+    for idx in header_idxs:
+        m = ITEM_HEADER_RE.match(lines[idx])
+        if not m:
+            continue  # заголовок вида "### …" без соответствия item-паттерну — не item
+        item_id, title = m.group(1), m.group(2).strip()
+        nxt = min(b for b in boundaries if b > idx)
+        items.append((item_id, title, idx + 1, lines[idx + 1:nxt], idx + 2))
+    return items
+
+
+def _malformed_item_headers(lines):
+    """Строки `### …`, похожие на item-заголовок (есть Pn.m), но не прошедшие
+    строгий regex (напр. без ` — ` разделителя) — отдельная ERROR-категория."""
+    bad = []
+    loose_re = re.compile(r"^###\s+(P\d+\.\d+)\b")
+    for i, ln in enumerate(lines):
+        if ln.startswith("###") and loose_re.match(ln) and not ITEM_HEADER_RE.match(ln):
+            bad.append((ln, i + 1))
+    return bad
+
+
+# --- парсинг файлов схемы -----------------------------------------------------
+
+def parse_plan_md(path, diag):
+    """plan.md → (meta: dict[name]=(value,lineno), status_board: list[(row,lineno)])."""
+    lines = _read_lines(path)
+    if lines is None:
+        diag.error(path, None, "plan.md отсутствует или не читается")
+        return None, []
+
+    meta = {}
+    _, meta_body, meta_start = _find_section(lines, META_HEADER_RE)
+    if meta_body is None:
+        diag.error(path, None, "нет секции «## 0. Meta»")
+    else:
+        headers, rows, header_lineno = _parse_table(meta_body, meta_start)
+        if headers is None:
+            diag.error(path, meta_start, "Meta: таблица `Поле|Значение` не найдена")
+        elif tuple(headers) != META_TABLE_COLUMNS:
+            diag.error(path, header_lineno,
+                       f"Meta: колонки {headers} ≠ ожидаемых {list(META_TABLE_COLUMNS)}")
+        else:
+            for row, lineno in rows:
+                meta[row.get("Поле", "")] = (row.get("Значение", ""), lineno)
+        for field in REQUIRED_META_FIELDS:
+            if field not in meta:
+                diag.error(path, meta_start, f"Meta: нет обязательного поля «{field}»")
+
+    status_board = []
+    _, board_body, board_start = _find_section(lines, STATUS_BOARD_HEADER_RE)
+    if board_body is None:
+        diag.error(path, None, "нет секции «## 4. Phase Index & Status Board»")
+    else:
+        headers, rows, header_lineno = _parse_table(board_body, board_start)
+        if headers is None:
+            diag.error(path, board_start, "Status Board: таблица не найдена")
+        elif tuple(headers) != STATUS_BOARD_COLUMNS:
+            diag.error(path, header_lineno,
+                       f"Status Board: колонки {headers} ≠ ожидаемых {list(STATUS_BOARD_COLUMNS)}")
+        else:
+            status_board = rows
+            for row, lineno in rows:
+                st = row.get("Status", "")
+                if st not in STATUSES:
+                    diag.error(path, lineno, f"Status Board: недопустимый статус «{st}»")
+                if not PHASE_TOKEN_RE.match(row.get("Phase", "")):
+                    diag.error(path, lineno,
+                               f"Status Board: Phase «{row.get('Phase')}» не похож на Pn")
+
+    return meta, status_board
+
+
+def parse_phase_md(path, phase_id, diag):
+    """phases/Pn.md → dict со status_table/items/handoff (см. lint_plan)."""
+    lines = _read_lines(path)
+    if lines is None:
+        diag.error(path, None, "файл фазы отсутствует или не читается")
+        return None
+
+    status_table = []
+    _, ps_body, ps_start = _find_section(lines, PHASE_STATUS_HEADER_RE)
+    if ps_body is None:
+        diag.error(path, None, "нет секции «## Phase Status»")
+    else:
+        headers, rows, header_lineno = _parse_table(ps_body, ps_start)
+        if headers is None:
+            diag.error(path, ps_start, "Phase Status: таблица не найдена")
+        elif tuple(headers) != PHASE_STATUS_COLUMNS:
+            diag.error(path, header_lineno,
+                       f"Phase Status: колонки {headers} ≠ ожидаемых {list(PHASE_STATUS_COLUMNS)}")
+        else:
+            status_table = rows
+            for row, lineno in rows:
+                st = row.get("Status", "")
+                if st not in STATUSES:
+                    diag.error(path, lineno, f"Phase Status: недопустимый статус «{st}»")
+
+    for bad_ln, lineno in _malformed_item_headers(lines):
+        diag.error(path, lineno,
+                    f"заголовок item не соответствует regex `^### (P\\d+\\.\\d+) — `: «{bad_ln}»")
+
+    items = {}
+    for item_id, title, header_lineno, body_lines, body_start in _find_items(lines):
+        prefix_m = PHASE_TOKEN_RE.match(item_id.split(".")[0])
+        if prefix_m and item_id.split(".")[0] != phase_id:
+            diag.error(path, header_lineno,
+                       f"item {item_id}: префикс «{item_id.split('.')[0]}» не совпадает "
+                       f"с файлом фазы «{phase_id}»")
+        fields = _parse_fields(body_lines, body_start, FIELD_RE)
+        for f in REQUIRED_ITEM_FIELDS:
+            if f not in fields:
+                diag.error(path, header_lineno, f"item {item_id}: нет обязательного поля «{f}»")
+        status_val, _ = fields.get("Status", ("", header_lineno))
+        if status_val and status_val not in STATUSES:
+            diag.error(path, header_lineno, f"item {item_id}: недопустимый статус «{status_val}»")
+        has_escalation = any(
+            ESCALATION_RE.match(ln) and ESCALATION_RE.match(ln).group(1) == item_id
+            for ln in body_lines
+        )
+        items.setdefault(item_id, []).append({
+            "title": title, "header_lineno": header_lineno, "fields": fields,
+            "has_escalation": has_escalation,
+        })
+
+    for item_id, occurrences in items.items():
+        if len(occurrences) > 1:
+            lns = ", ".join(str(o["header_lineno"]) for o in occurrences)
+            diag.error(path, occurrences[0]["header_lineno"],
+                       f"item {item_id}: повторяется в файле (строки {lns})")
+
+    _, handoff_body, handoff_start = _find_section(lines, PHASE_HANDOFF_HEADER_RE)
+    if handoff_body is None:
+        diag.error(path, None, "нет секции «## Phase Handoff»")
+        handoff_text = None
+    else:
+        handoff_text = "\n".join(handoff_body).strip()
+
+    return {"status_table": status_table, "items": items, "phase_handoff": handoff_text}
+
+
+def parse_handoff_md(path, diag):
+    lines = _read_lines(path)
+    if lines is None:
+        diag.error(path, None, "handoff.md отсутствует или не читается")
+        return None
+
+    title_lineno = None
+    title_item = None
+    for i, ln in enumerate(lines):
+        if ln.startswith("# "):
+            m = HANDOFF_TITLE_RE.match(ln)
+            title_lineno = i + 1
+            if m:
+                title_item = m.group(1)
+            else:
+                diag.error(path, title_lineno,
+                            "заголовок не соответствует «# HANDOFF — … — after Pn.m»")
+            break
+    else:
+        diag.error(path, None, "нет заголовка «# HANDOFF — … — after Pn.m»")
+
+    body_start = (title_lineno or 0) + 1
+    fields = _parse_fields(lines[body_start - 1:], body_start, FIELD_RE)
+    for f in HANDOFF_REQUIRED_FIELDS:
+        if f not in fields:
+            diag.error(path, body_start, f"нет обязательного поля «{f}»")
+
+    return {"title_item": title_item, "fields": fields}
+
+
+# --- линт одного плана ---------------------------------------------------
+
+def lint_plan(plan_dir, diag):
+    """Проверяет один план (plans/<PLAN-ID>/…). Возвращает распарсенную модель (dict)."""
+    plan_dir = Path(plan_dir)
+    plan_id = plan_dir.name
+    plan_md = plan_dir / "plan.md"
+    meta, status_board = parse_plan_md(plan_md, diag)
+
+    phases_dir = plan_dir / "phases"
+    phase_files = {}  # phase_id -> Path
+    if phases_dir.is_dir():
+        for f in sorted(phases_dir.glob("*.md")):
+            m = PHASE_FILENAME_RE.match(f.name)
+            if m:
+                phase_files[m.group(1)] = f
+            else:
+                diag.error(f, None, "имя файла фазы не соответствует шаблону Pn.md")
+    board_phase_ids = set()
+    if status_board:
+        board_phase_ids = {row.get("Phase") for row, _ in status_board if row.get("Phase")}
+
+    for pid in board_phase_ids - set(phase_files):
+        diag.error(plan_md, None, f"фаза {pid} есть в Status Board, но нет phases/{pid}.md")
+    for pid in set(phase_files) - board_phase_ids:
+        diag.error(phase_files[pid], None, f"фаза {pid} есть как phases/{pid}.md, но нет в Status Board")
+
+    phases = {}
+    all_items = {}  # item_id -> {"phase": pid, "title":..., "status":..., "fields":...}
+    for pid, path in phase_files.items():
+        parsed = parse_phase_md(path, pid, diag)
+        phases[pid] = {"path": str(path), **(parsed or {})}
+        if not parsed:
+            continue
+        # --- консистентность Phase Status(таблица) vs item.Status -----------
+        table_by_id = {row.get("ID"): (row, lineno) for row, lineno in parsed["status_table"]}
+        for item_id, occurrences in parsed["items"].items():
+            item = occurrences[0]  # диагностика дублей уже выдана выше; для сверки берём первый
+            status_val, _ = item["fields"].get("Status", ("", item["header_lineno"]))
+            all_items[item_id] = {
+                "phase": pid, "title": item["title"], "status": status_val,
+                "fields": {k: v[0] for k, v in item["fields"].items()},
+            }
+            row = table_by_id.pop(item_id, None)
+            if row is None:
+                diag.error(path, item["header_lineno"],
+                           f"item {item_id}: нет строки в «## Phase Status»")
+            else:
+                row_dict, row_lineno = row
+                if row_dict.get("Status") != status_val:
+                    diag.error(path, row_lineno,
+                               f"item {item_id}: статус в Phase Status «{row_dict.get('Status')}» "
+                               f"≠ статусу item «{status_val}»")
+        for orphan_id, (row_dict, row_lineno) in table_by_id.items():
+            diag.error(path, row_lineno,
+                       f"Phase Status: строка «{orphan_id}» без соответствующего item")
+
+        # --- item 🟢/🟠 ⇒ Completion Notes; 🟠 ⇒ Known Deviations -----------
+        for item_id, occurrences in parsed["items"].items():
+            item = occurrences[0]
+            status_val, status_lineno = item["fields"].get("Status", ("", item["header_lineno"]))
+            cn_val, cn_lineno = item["fields"].get("Completion Notes", ("", item["header_lineno"]))
+            kd_val, kd_lineno = item["fields"].get("Known Deviations", ("", item["header_lineno"]))
+            if status_val in (STATUS_DONE, STATUS_DEVIATIONS) and _is_empty(cn_val):
+                diag.error(path, cn_lineno,
+                           f"item {item_id}: статус «{status_val}» требует непустых Completion Notes")
+            if status_val == STATUS_DEVIATIONS and _is_empty(kd_val):
+                diag.error(path, kd_lineno,
+                           f"item {item_id}: статус «{status_val}» требует непустых Known Deviations")
+
+            # --- 🔴 ⇔ ESCALATION-блок ⇔ Escalation Needed: yes ---------------
+            en_val, en_lineno = item["fields"].get("Escalation Needed", ("", item["header_lineno"]))
+            en_norm = (en_val or "").strip().lower()
+            if en_norm in ("", EMPTY_PLACEHOLDER, "no"):
+                en_yes = False
+            elif en_norm == "yes":
+                en_yes = True
+            else:
+                diag.error(path, en_lineno,
+                           f"item {item_id}: Escalation Needed «{en_val}» — ожидается yes/no/—")
+                en_yes = None
+            is_blocked = status_val == STATUS_BLOCKED
+            has_escalation = item["has_escalation"]
+            if en_yes is not None and not (is_blocked == en_yes == has_escalation):
+                parts = (f"Status={'🔴' if is_blocked else '≠🔴'}",
+                         f"Escalation Needed={'yes' if en_yes else 'no/—'}",
+                         f"ESCALATION-блок={'есть' if has_escalation else 'нет'}")
+                diag.error(path, item["header_lineno"],
+                           f"item {item_id}: рассогласованы {', '.join(parts)} (должны совпадать)")
+
+            # --- WARNING: пустые Required Reads/Validation у не-⬜ item -------
+            if status_val and status_val != "⬜ Not started":
+                rr_val, rr_lineno = item["fields"].get("Required Reads", ("", item["header_lineno"]))
+                va_val, va_lineno = item["fields"].get("Validation", ("", item["header_lineno"]))
+                if _is_empty(rr_val):
+                    diag.warning(path, rr_lineno, f"item {item_id}: пустые Required Reads при статусе «{status_val}»")
+                if _is_empty(va_val):
+                    diag.warning(path, va_lineno, f"item {item_id}: пустая Validation при статусе «{status_val}»")
+
+    # --- глобальная уникальность ID item ---------------------------------
+    seen = {}
+    for pid, phase in phases.items():
+        for item_id in phase.get("items", {}):
+            seen.setdefault(item_id, []).append(pid)
+    for item_id, pids in seen.items():
+        if len(pids) > 1:
+            diag.error(plan_dir, None, f"item {item_id}: ID переиспользован в фазах {sorted(set(pids))}")
+
+    # --- дубли Title среди items (WARNING) --------------------------------
+    titles = {}
+    for item_id, info in all_items.items():
+        titles.setdefault(info["title"], []).append(item_id)
+    for title, ids in titles.items():
+        if len(ids) > 1:
+            diag.warning(plan_dir, None, f"дубль Title «{title}» среди items: {sorted(ids)}")
+
+    # --- Status Board согласован с фазами: счётчик 🟢/всего и статус фазы --
+    board_by_phase = {row.get("Phase"): (row, lineno) for row, lineno in status_board}
+    for pid in phases:
+        row = board_by_phase.get(pid)
+        if row is None:
+            continue  # уже отражено как отдельная ошибка выше (phase without Status Board row)
+        row_dict, row_lineno = row
+        phase_item_ids = list(phases[pid].get("items", {}).keys())
+        total = len(phase_item_ids)
+        done = sum(1 for iid in phase_item_ids
+                   if all_items.get(iid, {}).get("status") == STATUS_DONE)
+        items_cell = row_dict.get(STATUS_BOARD_ITEMS_COL, "")
+        m = DONE_TOTAL_RE.match(items_cell)
+        if not m:
+            diag.error(plan_md, row_lineno,
+                       f"Status Board {pid}: колонка «{STATUS_BOARD_ITEMS_COL}» = «{items_cell}» "
+                       f"— ожидается формат N/M")
+        elif (int(m.group(1)), int(m.group(2))) != (done, total):
+            diag.error(plan_md, row_lineno,
+                       f"Status Board {pid}: «{STATUS_BOARD_ITEMS_COL}» = «{items_cell}» "
+                       f"≠ фактическому {done}/{total}")
+
+        phase_status = row_dict.get("Status", "")
+        item_statuses = [all_items[iid]["status"] for iid in phase_item_ids if iid in all_items]
+        if item_statuses and any(s == STATUS_BLOCKED for s in item_statuses) and phase_status != STATUS_BLOCKED:
+            diag.error(plan_md, row_lineno,
+                       f"Status Board {pid}: есть 🔴 Blocked item, но статус фазы «{phase_status}» ≠ 🔴 Blocked")
+        if item_statuses and all(s == STATUS_DONE for s in item_statuses) and phase_status != STATUS_DONE:
+            diag.error(plan_md, row_lineno,
+                       f"Status Board {pid}: все items 🟢 Done, но статус фазы «{phase_status}» ≠ 🟢 Done")
+
+        # --- фаза 🟢/🟠 ⇒ Phase Handoff непуст --------------------------
+        if phase_status in (STATUS_DONE, STATUS_DEVIATIONS):
+            handoff_text = phases[pid].get("phase_handoff")
+            if handoff_text is None:
+                pass  # отсутствие секции уже отражено отдельной ошибкой
+            elif _is_empty(handoff_text):
+                diag.error(phases[pid]["path"], None,
+                           f"фаза {pid} статус «{phase_status}», но «## Phase Handoff» пуст")
+
+    # --- phase-first (WARNING): активные 🟡 items в фазе N+1 при не-терминальной N
+    numbered = sorted(
+        ((int(PHASE_TOKEN_RE.match(pid).group(1)), pid) for pid in board_by_phase if PHASE_TOKEN_RE.match(pid)),
+    )
+    by_num = dict(numbered)
+    for n, pid in numbered:
+        nxt_pid = by_num.get(n + 1)
+        if nxt_pid is None:
+            continue
+        cur_status = board_by_phase[pid][0].get("Status", "")
+        if cur_status in TERMINAL_STATUSES:
+            continue
+        nxt_items = phases.get(nxt_pid, {}).get("items", {})
+        active = [iid for iid in nxt_items if all_items.get(iid, {}).get("status") == STATUS_IN_PROGRESS]
+        if active:
+            diag.warning(plan_dir, None,
+                         f"phase-first: {nxt_pid} содержит активные 🟡 items {sorted(active)}, "
+                         f"хотя {pid} ещё не терминальна (статус «{cur_status}»)")
+
+    # --- handoff.md ---------------------------------------------------------
+    handoff_path = plan_dir / "handoff.md"
+    handoff = parse_handoff_md(handoff_path, diag)
+    if handoff:
+        next_val, next_lineno = handoff["fields"].get("Next", ("", None))
+        m = PLAN_EXEC_RE.search(next_val)
+        if not m:
+            # закрытый целиком план: все items терминальны — честный Next
+            # «план закрыт» вместо ссылки на несуществующий следующий item
+            plan_closed = bool(all_items) and all(
+                info["status"] in TERMINAL_STATUSES for info in all_items.values())
+            if not (plan_closed and "план закрыт" in next_val.lower()):
+                diag.error(handoff_path, next_lineno,
+                           "Next не содержит «/task:plan-exec <PLAN-ID> Pn.m» "
+                           "(для целиком закрытого плана допустимо «план закрыт»)")
+        else:
+            ref_plan_id, ref_item = m.group(1), m.group(2)
+            if ref_plan_id != plan_id:
+                diag.error(handoff_path, next_lineno,
+                           f"Next: PLAN-ID «{ref_plan_id}» ≠ фактическому «{plan_id}»")
+            if ref_item not in all_items:
+                diag.error(handoff_path, next_lineno,
+                           f"Next: item «{ref_item}» не существует ни в одной фазе")
+
+    return {
+        "id": plan_id,
+        "path": str(plan_dir),
+        "meta": {k: v[0] for k, v in (meta or {}).items()},
+        "status_board": [row for row, _ in status_board],
+        "phases": {
+            pid: {
+                "path": ph["path"],
+                "status_table": [row for row, _ in ph.get("status_table", [])],
+                "items": {
+                    iid: {"title": occ[0]["title"], "fields": {k: v[0] for k, v in occ[0]["fields"].items()}}
+                    for iid, occ in ph.get("items", {}).items()
+                },
+                "phase_handoff": ph.get("phase_handoff"),
+            }
+            for pid, ph in phases.items()
+        },
+        "handoff": {
+            "path": str(handoff_path),
+            "title_item": (handoff or {}).get("title_item"),
+            "fields": {k: v[0] for k, v in (handoff or {}).get("fields", {}).items()},
+        } if handoff else None,
+    }
+
+
+# --- root-level проверки (path = plans/ целиком, не одиночный plans/<ID>) -----
+
+def lint_plans_root(root, models, diag):
+    """Проверки, применимые только к каталогу `plans/` целиком (см. discover_plan_dirs:
+    отличается от одиночного `plans/<ID>` тем, что там нет `plan.md` рядом с собой).
+    `models` — {plan_id: model|None} уже пролинтованных подкаталогов (для сверки, что
+    Active указывает на реально существующий каталог-план, и для подсчёта 🟡 In progress).
+
+    (а) есть plans/ACTIVE.md → поле «**Active:**» обязано быть «—» либо именем
+        существующего каталога-плана, иначе ERROR;
+    (б) нет ACTIVE.md и ≥2 планов со статусом «🟡 In progress» (Meta plan.md) →
+        WARNING «активный план неоднозначен»;
+    (в) плоские *.md в корне plans/ (кроме ACTIVE.md/README.md) — черновики plan mode,
+        оставшиеся без протокола, → одно WARNING со списком и подсказкой from-draft.
+    """
+    root = Path(root)
+
+    active_path = root / ACTIVE_FILENAME
+    active_lines = _read_lines(active_path)
+    if active_lines is not None:
+        value, value_lineno = None, None
+        for i, ln in enumerate(active_lines):
+            m = ACTIVE_FIELD_RE.match(ln)
+            if m:
+                value, value_lineno = m.group(1).strip(), i + 1
+                break
+        if value is None:
+            diag.error(active_path, None, "нет поля «**Active:**» в ACTIVE.md")
+        elif value != EMPTY_PLACEHOLDER and value not in models:
+            diag.error(active_path, value_lineno,
+                       f"Active «{value}» не указывает на существующий план "
+                       f"(нет каталога plans/{value}/)")
+    else:
+        in_progress = sorted(
+            pid for pid, model in models.items()
+            if (model or {}).get("meta", {}).get("Status") == STATUS_IN_PROGRESS
+        )
+        if len(in_progress) >= 2:
+            diag.warning(root, None,
+                         "активный план неоднозначен: нет plans/ACTIVE.md, а планов со "
+                         f"статусом «{STATUS_IN_PROGRESS}» {len(in_progress)}: {in_progress}")
+
+    drafts = sorted(
+        p.name for p in root.glob("*.md")
+        if p.is_file() and p.name not in (ACTIVE_FILENAME, README_FILENAME)
+    )
+    if drafts:
+        diag.warning(root, None,
+                     "черновики plan mode: " + ", ".join(drafts) +
+                     " — разверни /task:plan-design from-draft")
+
+
+# --- дискавери множества планов ----------------------------------------------
+
+def discover_plan_dirs(root):
+    """path — либо сам plans/<ID> (есть plan.md), либо plans/ (перебор подкаталогов)."""
+    root = Path(root)
+    if (root / "plan.md").is_file():
+        return [root]
+    if not root.is_dir():
+        return None
+    return sorted(p for p in root.iterdir() if p.is_dir())
+
+
+# --- CLI ----------------------------------------------------------------------
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(
+        prog="plan-lint.py",
+        description="Детерминированный валидатор plan-протокола (plans/<PLAN-ID>/…).",
+    )
+    parser.add_argument("path", help="путь к plans/<PLAN-ID> или к plans/")
+    parser.add_argument("--json", action="store_true",
+                         help="вывести распарсенную модель (планы→фазы→items) в stdout как JSON")
+    args = parser.parse_args(argv)
+
+    root = Path(args.path)
+    plan_dirs = discover_plan_dirs(root)
+    if plan_dirs is None:
+        print(f"ERROR: путь не найден: {root}", file=sys.stderr)
+        return 1
+
+    # discover_plan_dirs: одиночный план — это (root/"plan.md").is_file() → [root];
+    # тот же признак используем здесь, чтобы root-проверки (ACTIVE.md/черновики)
+    # не применялись к одиночному `plan-lint.py plans/<ID>` (там ACTIVE.md вне видимости).
+    is_plans_root = not (root / "plan.md").is_file()
+
+    if not plan_dirs and not is_plans_root:
+        print(f"нет планов для проверки в {root}")
+        return 0
+
+    diag = Diagnostics()
+    models = {}
+    for plan_dir in plan_dirs:
+        models[plan_dir.name] = lint_plan(plan_dir, diag)
+
+    if is_plans_root:
+        lint_plans_root(root, models, diag)
+
+    for msg in diag.errors:
+        print(f"ERROR: {msg}", file=sys.stderr)
+    for msg in diag.warnings:
+        _core_warn(msg)
+
+    if args.json:
+        print(json.dumps({"plans": models}, ensure_ascii=False, indent=2))
+    else:
+        status = "OK" if diag.ok else "ПРОВАЛ"
+        print(f"plan-lint: {status} ({len(plan_dirs)} план(ов), "
+              f"{len(diag.errors)} ошибок, {len(diag.warnings)} предупреждений)")
+
+    return 0 if diag.ok else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

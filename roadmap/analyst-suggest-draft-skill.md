@@ -1,9 +1,24 @@
 # Roadmap / Design: `analyst suggest` — cross-project паттерн → ЧЕРНОВИК скилла
 
-**Пакет:** `packages/analyst` · **Фаза:** P4 · **Статус:** спроектировано, не реализовано
-(кода нет — этот документ ведёт `/task:dev`). **Критерий внедрения:** появились накопленные
-cross-project паттерны (`analyst scan` даёт непустой `index/by_pattern/`) И ручное оформление
-черновика скилла «с нуля» стало повторяющимся трением.
+**Пакет:** `packages/analyst` · **Фаза:** P4 · **Статус: реализовано** — код в
+`packages/analyst/lib/analyst/suggest.py` (+ `cli.py`, `commands/analyst.md`); документ исполнен
+напрямую через `/task:dev` по факту сработавшего критерия внедрения (накопленные cross-project
+паттерны + повторяющееся ручное трение оформления черновика «с нуля»). Текст ниже
+(проблема/поток данных/решения D1–D7/CLI-контракт/схема артефакта) сохранён как проектная
+спецификация — реализация следует ей близко.
+
+**Сверка [POSSIBLE-DEFECT] с кодом (2026-07-02, §8 ниже):**
+
+- **[POSSIBLE-DEFECT #1]** (`scan.py:139`, «промоут = `skiller integrate`») — **исправлено в
+  реализации**: `_suggestion_md` в [`scan.py`](../packages/analyst/lib/analyst/scan.py) теперь
+  ссылается на `analyst suggest <pattern_id>` + «промоут в бакет — человек»; текст про
+  `skiller integrate` снят.
+- **[POSSIBLE-DEFECT #2]** (`--min-tier` невозможен без confidence в индексе паттерна, D7) —
+  **подтверждено, актуально**: `detect_patterns` в
+  [`scan.py`](../packages/analyst/lib/analyst/scan.py) по-прежнему пишет в
+  `index/by_pattern/<id>.json` только `weight`/`lessons`/`members[]` — confidence туда не входит;
+  CLI `suggest` поддерживает лишь `--min-weight`, `--min-tier` не реализован. Фикс остаётся за P3
+  (агрегат-confidence в индекс паттерна) — как и предполагалось при проектировании, не костыль.
 
 > Прародитель этого направления — [`self-learning-memory.md`](self-learning-memory.md)
 > («промо в скилл — только через человека»). `analyst suggest` — последний недостающий шаг

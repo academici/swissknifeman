@@ -7,6 +7,20 @@
       "agents"
     ]
   },
+  "voice-ai": {
+    "description": "Realtime voice AI agents: WebRTC+WebSocket transport, VAD + semantic turn detection, sub-500ms barge-in, sub-800ms latency budget, STT→LLM→TTS orchestration, session state-machine, RU stack (Yandex SpeechKit / SaluteSpeech / GigaChat) + offline fallback",
+    "category": "engineering",
+    "tags": [
+      "voice",
+      "realtime",
+      "webrtc",
+      "stt",
+      "tts",
+      "vad",
+      "barge-in",
+      "latency"
+    ]
+  },
   "architect": {
     "description": "Architecture, API and data design, security, observability, tech stack selection",
     "category": "engineering",

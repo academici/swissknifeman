@@ -41,7 +41,8 @@ def make_project(tmp, name="proj"):
 
 def make_pack(root, name="demo-pack"):
     """Синтетический agent-pack под configs/claude-code/agent-packs/<name>/:
-    шаблон-агент, verbatim-хук (chmod +x), merge-фрагмент SubagentStop, pack:if-блок."""
+    шаблон-агент, verbatim-хук (chmod +x), merge-фрагмент SubagentStop, pack:if-блок,
+    user_owned override-файл (точка расширения для provenance-header)."""
     import json
     pdir = root / "configs" / "claude-code" / "agent-packs" / name
     (pdir / "agents").mkdir(parents=True, exist_ok=True)
@@ -66,14 +67,42 @@ def make_pack(root, name="demo-pack"):
             {"src": "settings/fragment.json", "target": ".claude/settings.json",
              "kind": "merge", "role": "settings",
              "merge": "hooks.SubagentStop[] append-if-absent"},
+            {"src": "agents/overrides.md",
+             "target": ".claude/agents/{PACK_PREFIX}-overrides.md",
+             "kind": "template", "role": "override", "user_owned": True},
         ],
     }
     (pdir / "pack.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2))
     (pdir / "agents" / "reviewer.md").write_text(
         "---\nname: {{PACK_PREFIX}}-reviewer\nrunner: {{RUNNER}}\n---\n"
         "<!-- pack:if USE_X -->X-on<!-- pack:endif -->\nbody\n")
+    (pdir / "agents" / "overrides.md").write_text(
+        "# Overrides для {{PACK_PREFIX}}\n\n(файл пользователя)\n")
     (pdir / "hooks" / "gate.sh").write_text("#!/usr/bin/env bash\necho gate\n")
     (pdir / "settings" / "fragment.json").write_text(json.dumps(
         {"hooks": {"SubagentStop": [{"hooks": [
             {"type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/gate.sh"}]}]}}))
     return name
+
+
+def make_src_pack_pair(root, name_a="demo-pack", name_b="demo-pack-b"):
+    """Пак B без собственных файлов — единственная files[]-запись несёт
+    `src_pack: name_a`, контент читается из каталога пака A (F-1 src_pack).
+    Владелец файла (Pack: в header) при этом — B, не A."""
+    pdir = root / "configs" / "claude-code" / "agent-packs" / name_b
+    pdir.mkdir(parents=True, exist_ok=True)
+    manifest = {
+        "schema": 1, "pack": name_b, "version": "0.1.0", "description": "src_pack test",
+        "interview": [
+            {"id": "PACK_PREFIX", "q": "?", "default": "{project_dirname}", "kind": "slug"},
+            {"id": "RUNNER", "q": "?", "default": "phpunit"},
+            {"id": "USE_X", "q": "?", "kind": "bool", "default": True},
+        ],
+        "files": [
+            {"src": "agents/reviewer.md", "src_pack": name_a,
+             "target": ".claude/agents/{PACK_PREFIX}-shared.md",
+             "kind": "template", "role": "agent"},
+        ],
+    }
+    (pdir / "pack.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2))
+    return name_b

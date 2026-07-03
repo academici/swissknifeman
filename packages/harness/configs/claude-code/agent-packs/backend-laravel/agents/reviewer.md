@@ -41,6 +41,7 @@ git diff/log).
 Если поле `skills:` не подгрузило скиллы — загрузи сам: `php:repositories`,
 `php:laravel-structure`, `php:laravel-security-audit`.
 
+<!-- shared:risk-adaptive -->
 ## Risk-адаптивность и принцип репорта
 
 Бриф передаёт `RISK=LOW|MED|HIGH`. Глубину масштабируй под РИСК (blast-radius), не под размер диффа:
@@ -54,6 +55,7 @@ git diff/log).
 `failure_scenario`; при сомнении ставь ВЫШЕ, сам не отбрасывай — фильтрация и решение о merge — по
 гейтам пакета (ниже). Это ловит класс дефектов, который зелёные happy-path тесты структурно не видят
 (атомарность / гонки идемпотентности / config-дефолты / after-commit).
+<!-- /shared:risk-adaptive -->
 
 ## Вход
 
@@ -68,7 +70,7 @@ git diff/log).
 - Мутации идут через **Action + `*StoreRepository`** (не `Model::create()` в
   Action/контроллере); чтения — через **`*Repository`**; `*Service` не персистит
   и не принимает Request.
-- `app/Repositories/<Домен>/` реально создан и используется, а не в обход.
+- `{{ACCESS_ROOT}}/Repositories/<Домен>/` реально создан и используется, а не в обход.
 
 ## Прочие Laravel-критерии
 
@@ -81,18 +83,30 @@ git diff/log).
 - **Миграции vs модели**: <!-- pack:if SCAFFOLDS_SCHEMA -->новые таблицы/поля заводятся отдельной миграцией; каждое новое поле отражено в `$fillable`/casts модели; `down()` обратим.<!-- pack:endif --><!-- pack:ifnot SCAFFOLDS_SCHEMA -->новые поля в `$fillable`/casts (новые миграции в {{PACK_PREFIX}} не предполагаются — проверь, что их и нет).<!-- pack:endif -->
 - **Транзакции**: множественные записи под транзакцией; события/джобы ПОСЛЕ коммита
   (after-commit listener / `dispatchAfterCommit`), не внутри транзакции.
+<!-- shared:config-honesty -->
 - **Config-honesty**: дефолт работает из коробки ИЛИ явно `null` + `throw` при
   использовании (анти-паттерн `?? 'echo'` без зарегистрированного драйвера).
+<!-- /shared:config-honesty -->
 - **Идемпотентность/гонки** (на `transactions`/`queue-semantics`-маркерах): race-safe
   запись (unique/on-conflict/`lockForUpdate`, не read-then-insert); единственный владелец
   retry; cursor по non-nullable ключу; soft vs hard delete; совместимость со всеми
   id-стратегиями (uuid7/ulid/bigint).
+<!-- shared:test-honesty -->
 - **Тесты**: на изменённое поведение есть тест ({{TEST_FRAMEWORK}}); тесты не ослаблены.
   Любая обходка/форс-конфиг в тесте (`[POSSIBLE-DEFECT]` от test-writer) — разбери источник,
   это почти всегда реальный баг.
+<!-- /shared:test-honesty -->
+<!-- shared:over-engineering -->
 - **Over-engineering** (дисциплина `quality:code-simplifier`): лишние абстракции «на
   вырост», обёртки в одну строку, дубли существующих утилит, индирекция без второго
   потребителя. Помечай delete-list-тегами (`delete:`/`stdlib:`/`native:`/`yagni:`/`shrink:`).
+<!-- /shared:over-engineering -->
+<!-- shared:generated-assets -->
+- **Generated-assets (agent-packs)**: дифф трогает файл с заголовком
+  `swissknifeman:generated` (grep по изменённым файлам) → находка `HIGH
+  generated-core-edited`: правку перенести в override-файл (`Extension-points` из
+  заголовка или `.claude/rules/*-overrides.md`), core восстановить нетронутым.
+<!-- /shared:generated-assets -->
 
 ## Проверки ({{PACK_PREFIX}})
 
@@ -111,6 +125,12 @@ git diff/log).
 
 Иначе `approve`. Гейты — пол, не потолок: major/minor сверх порога всё равно репортишь.
 
+## Проектные оверрайды
+
+Если существует `.claude/rules/{{PACK_PREFIX}}-reviewer-overrides.md` — прочитай и
+применяй ПОВЕРХ этого файла (проектные оси приоритетнее общих).
+
+<!-- shared:report-format -->
 ## Выход
 
 ```text
@@ -124,3 +144,4 @@ git diff/log).
 
 Находок нет — `approve`, пустой список, явное подтверждение прогнанных проверок.
 Не выдумывай находки ради объёма; minor-стиль, который ловит Pint, не дублируй.
+<!-- /shared:report-format -->

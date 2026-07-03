@@ -8,23 +8,29 @@ import sys
 from .common import Env
 from .digest import cmd_digest
 from .doctor import cmd_doctor
+from .ingest import cmd_ingest
 from .promote import cmd_deprecate, cmd_promote
+from .proposals import cmd_proposals
 from .recompute import cmd_recompute
 from .review import cmd_review
 from .scan import cmd_scan
 from .status import cmd_compact, cmd_status
 from .suggest import cmd_suggest
+from .token_report import cmd_token_report
 
 COMMANDS = {
     "digest": cmd_digest,
+    "ingest": cmd_ingest,
     "scan": cmd_scan,
     "suggest": cmd_suggest,
+    "proposals": cmd_proposals,
     "review": cmd_review,
     "recompute": cmd_recompute,
     "promote": cmd_promote,
     "deprecate": cmd_deprecate,
     "status": cmd_status,
     "compact": cmd_compact,
+    "token-report": cmd_token_report,
     "doctor": cmd_doctor,
 }
 

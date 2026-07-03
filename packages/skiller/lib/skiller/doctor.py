@@ -221,11 +221,21 @@ def cmd_doctor(env, argv):
         json_type = {str: "string", list: "array", int: "integer",
                     dict: "object", bool: "boolean"}
         props_data = data.get("properties", {})
-        type_mismatches = [
-            f"{k}: схема={props_data.get(k, {}).get('type')} код={json_type.get(t)}"
-            for k, t in keys.items()
-            if k in props_data and props_data[k].get("type") != json_type.get(t)
-        ]
+        type_mismatches = []
+        for k, t in keys.items():
+            if k not in props_data:
+                continue
+            if isinstance(t, tuple):
+                # Мульти-тип (memory_brain = (str, dict)) → в схеме oneOf; сверяем,
+                # что члены покрывают ровно ожидаемые JSON-типы.
+                members = {b.get("type") for b in props_data[k].get("oneOf", [])}
+                want = {json_type.get(x) for x in t}
+                if members != want:
+                    type_mismatches.append(
+                        f"{k}: схема oneOf={sorted(m for m in members if m)} код={sorted(want)}")
+            elif props_data[k].get("type") != json_type.get(t):
+                type_mismatches.append(
+                    f"{k}: схема={props_data[k].get('type')} код={json_type.get(t)}")
         check(not type_mismatches, f"схема {fname} ⇄ типы {label}",
               f"разошлись типы: {'; '.join(type_mismatches)} — обнови schema/{fname}")
 

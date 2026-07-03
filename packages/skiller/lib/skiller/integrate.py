@@ -16,6 +16,7 @@ import sys
 from .common import apply_permissions, die, harness_bin, parse_flags, warn
 from .config import (autodetect, load_config, load_profile, resolve_profile_name,
                      resolve_target)
+from .brain_sync import BrainSync
 from .connect import do_connect
 from .vendor import do_vendor
 from .skillset import do_sync
@@ -283,13 +284,41 @@ def _block_hub(env, target, choices, dry):
         print(f"  пропуск хаба: {e}")
 
 
-def _block_brain(target, choices):
+def _block_brain(env, target, choices, dry):
     if not choices["brain"]:
         return
-    print("\n[9] Brain docs-sync (подсказка — настраивается со стороны волта)")
+    print("\n[9] Brain docs-sync")
+    # Подсказка со стороны волта (как раньше) — синк заметок настраивается там.
     print("  В заметке проекта в Brain-волте добавь во frontmatter:")
     print(f"      repo: {target}")
     print("  Затем: brain status <project> / brain sync <project>")
+
+    # Doc-sync проекта: конфиг .swissknife.json::memory_brain. Строка = путь без
+    # правил синка (только memory-хук, back-compat) → doc-sync выключен. Объект
+    # {path, sync?} → генерим .claude/sync-brain.sh (всегда) и, если direction
+    # pull|bidirectional, тянем файлы из BRAIN в проект.
+    from .config import load_config
+    brain_config = (load_config(env, target) or {}).get("memory_brain")
+    if not brain_config:
+        return
+    bs = BrainSync(target, brain_config)
+    if bs.brain_path is None:
+        return
+    if dry:
+        print(f"  [dry-run] сгенерировал бы .claude/sync-brain.sh (BRAIN={bs.brain_path},"
+              f" direction={bs.direction})")
+        if isinstance(brain_config, dict) and bs.direction in ("pull", "bidirectional"):
+            print("  [dry-run] и подтянул бы файлы из BRAIN по patterns "
+                  f"({', '.join(bs.patterns)})")
+        return
+    # Doc-sync-объект → активный синк; строковый конфиг оставляем только для
+    # memory-хука (doc-sync не включаем, чтобы не менять поведение старых проектов).
+    if isinstance(brain_config, dict) and bs.direction in ("pull", "bidirectional"):
+        copied = bs.sync_pull()
+        print(f"  pull: скопировано файлов из BRAIN → проект: {len(copied)}")
+    script = bs.generate_sync_script()
+    script.chmod(0o755)
+    print(f"  сгенерирован {script} (ручной синк: bash {script.name} [pull|push])")
 
 
 # --- choices assembly ---------------------------------------------------------
@@ -437,7 +466,7 @@ def cmd_integrate(env, argv):
     _block_output_style(env, target, choices, dry)
     _block_plans_dir(env, target, choices, dry)
     _block_hub(env, target, choices, dry)
-    _block_brain(target, choices)
+    _block_brain(env, target, choices, dry)
 
     print("\n=== Готово ===" + (" (dry-run)" if dry else ""))
     print("Перезапусти сессию Claude Code в проекте, чтобы хуки/плагины подхватились.")

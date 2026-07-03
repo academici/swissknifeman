@@ -378,7 +378,7 @@ flowchart LR
 
 **В графе:** 127 скиллов, 91 рёбер requires, 88 рёбер produces_for.
 
-## Изолированные скиллы (79)
+## Изолированные скиллы (80)
 
 Скиллы без связей `requires`/`produces_for` — самодостаточны.
 
@@ -414,3 +414,4 @@ flowchart LR
 | sales | `sales-super-skill` |
 | security | `agent-security-super-skill` |
 | system | `agent-packs` |
+| voice-ai | `voice-ai` |

@@ -44,7 +44,11 @@ SKILL_IGNORE = ("upstream.json", ".claude-plugin", "SKILL.*.md", "evals",
 CONFIG_KEYS = {
     "project_type": str, "buckets": list, "exclude": list, "presets": list,
     "skills_path": str, "agent": str,
-    "memory_brain": str, "coordinator_ignore": list,
+    # memory_brain — строка (путь, back-compat: скармливается memory-хуку) ИЛИ
+    # объект {path, sync?} (doc-sync BRAIN↔проект, см. brain_sync.BrainSync). Кортеж
+    # типов → isinstance принимает оба; в схеме это oneOf[string, object] (гейт
+    # test_schema.py трактует кортеж как «мульти-тип», сверяя каждый член с oneOf).
+    "memory_brain": (str, dict), "coordinator_ignore": list,
     # Профиль каркаса агентов (данные для agent-packs/универсальности, не движок):
     # shape — backend|frontend|fullstack; stacks — напр. ["laravel","vue"];
     # skills_map — домен→скиллы для преднагрузки ролей под стек.

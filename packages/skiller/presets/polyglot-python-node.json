@@ -1,0 +1,14 @@
+{
+  "name": "polyglot-python-node",
+  "description": "Полиглот-стек Python + Node: python-бакет + общая инженерия + фронтенд (Vue) + мост фронт↔бэк + DevOps. Отдельного бакета node нет — Node-фронт покрывают frontend-бакеты.",
+  "buckets": [
+    "architect",
+    "oss-dev",
+    "general",
+    "python",
+    "frontend",
+    "frontend-vue",
+    "frontend-backend",
+    "devops"
+  ]
+}

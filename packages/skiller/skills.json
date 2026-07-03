@@ -228,6 +228,11 @@
       "description": "Local environment topology: the three hub nodes (Brain vault, swissknifeman, projects base) and how agents navigate between projects and their docs",
       "count": 7,
       "status": "active"
+    },
+    "voice-ai": {
+      "description": "Realtime voice AI agents: WebRTC+WebSocket transport, VAD + semantic turn detection, sub-500ms barge-in, sub-800ms latency budget, STT→LLM→TTS orchestration, session state-machine, RU stack (Yandex SpeechKit / SaluteSpeech / GigaChat) + offline fallback",
+      "count": 1,
+      "status": "active"
     }
   },
   "skills": [
@@ -2081,8 +2086,8 @@
       "path": "skills/general/mcp-advisor/SKILL.md",
       "version": "0.1.0",
       "description": "Pick MCP servers for a project at onboarding/sync: which to connect (context7/playwright/github/fetch/sequential-thinking + maind hub), why, when NOT to, and the cost in context/permissions/Node-deps. Activate when adding/onboarding/syncing a project, editing .mcp.json, or choosing MCP — emits a justified connection plan, not a dump of every server.",
-      "sha256": "ada6b91805c70edac09eba2f3ff2f0c8545a2495fcde6767bc49c1595d6cc2d4",
-      "content_sha256": "d6c767c7227a7b1542aa5b140b4986fb6f0906a6f6e3dc03a9d9e081e5af6de9",
+      "sha256": "d45824bf0172f9aa99bc68eb4afd6afebdba0424cd7baf368707f18634cdb61c",
+      "content_sha256": "4adb390fd3fb91bd30a9731cc3ac8e1cd3af0e70b05ad754741a1a0397b29440",
       "tags": [
         "mcp",
         "onboarding",
@@ -3964,8 +3969,8 @@
       "path": "skills/research/query-craft/SKILL.md",
       "version": "0.1.0",
       "description": "How to FORMULATE a search/doc-engine query (Perplexity Web · WebSearch · context7): version/stack (e.g. 'min Filament 4'), timeframe, format, limit; pick engine+mode (search/advanced/deep) and sources (web/academic/social). Activate BEFORE any external search, esp. a library/framework (Laravel/Filament/Vue): ban bare 'Laravel how to X?'. Not when-to-verify (verify-claims) nor what-to-connect (mcp-advisor) — only HOW to ask.",
-      "sha256": "0cda7e674a97305f9355e9e1e54cc0f6ae9977224697db2ff9b60e76c33e7ff2",
-      "content_sha256": "af27cb0581807978fe2cf8e7d8265ca5fe4e6c070c71ff93a180cd7e834d6fc1",
+      "sha256": "5a35c291cad4202b7034a13f87f00cab7e0450e25d13e9fe8bc44ae0dbf7b455",
+      "content_sha256": "f198949d1224dd019c4b9d1fc42493048351bdf3c44abcd1f6bbb07cd09eb3b8",
       "tags": [
         "research",
         "perplexity",
@@ -4239,6 +4244,29 @@
         "local-topology"
       ],
       "source": "local"
+    },
+    {
+      "name": "voice-ai",
+      "bucket": "voice-ai",
+      "path": "skills/voice-ai/voice-ai/SKILL.md",
+      "version": "0.1.0",
+      "description": "Designing realtime voice AI agents: transport (WebRTC media + WebSocket control), turn detection (VAD + semantic EOU), sub-500ms barge-in, sub-800ms latency, STT→LLM→TTS orchestration, session state-machine, RU stack and offline fallback. Activate when designing a voice agent/IVR/call-bot, choosing voice transport, tuning barge-in/turn-taking, budgeting speech latency, or picking a speech stack for RU and 152-FZ.",
+      "sha256": "fbff111f3a8888ea7a59e1babf8a308d05ad772c1ccf3d6b6999a509e8968b1b",
+      "content_sha256": "62560ba461abfa727aaaf17bce2d1a212273dc1f4eace9e951f49487f66a2f6c",
+      "tags": [
+        "voice",
+        "realtime",
+        "webrtc",
+        "stt",
+        "tts",
+        "vad",
+        "barge-in",
+        "latency",
+        "russian-stack"
+      ],
+      "source": "http",
+      "upstream": "https://developers.openai.com/api/docs/guides/realtime-vad",
+      "fetched_at": "2026-07-03"
     }
   ],
   "references": [

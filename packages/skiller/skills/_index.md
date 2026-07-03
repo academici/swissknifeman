@@ -4,7 +4,7 @@
 
 Источник истины портируемых скиллов (машинный реестр — `skills.json`). Раздача в проекты: `skiller connect` (плагины-бакеты) / `vendor` (физ. перенос). CORE-набор токен-скиллов (`general`/`oss-dev`) раздаётся по умолчанию — см. `connect`/`vendor`.
 
-Всего: 206 скиллов в 45 бакетах.
+Всего: 207 скиллов в 46 бакетах.
 
 ## Скиллы по бакетам
 
@@ -439,6 +439,12 @@
 | `shared-memory` | Constellation shared brain via hook ~/.claude/hooks/memory/ + mAInd daemon. Recall before… | `memory`, `cross-project`, `topology`, `recall`, `context`, `coordination` |
 | `swissknifeman-locator` | Reach swissknifeman (skills node) from an external repo — non-hardcoded path resolution, … | `swissknifeman`, `skills`, `registry`, `navigation`, `locator`, `ecosystem` |
 
+### voice-ai — Realtime voice AI agents: WebRTC+WebSocket transport, VAD + semantic turn detection, sub-500ms barge-in, sub-800ms latency budget, STT→LLM→TTS orchestration, session state-machine, RU stack (Yandex SpeechKit / SaluteSpeech / GigaChat) + offline fallback (1)
+
+| Скилл | Описание | Теги |
+|:--|:--|:--|
+| `voice-ai` | Designing realtime voice AI agents: transport (WebRTC media + WebSocket control), turn de… | `voice`, `realtime`, `webrtc`, `stt`, `tts`, `vad`, `barge-in`, `latency`, `russian-stack` |
+
 ## Tag matrix
 
 Поиск скиллов по тегу (грузи точечно, не весь бакет).
@@ -469,6 +475,7 @@
 | `authorization` | `attribute-authorization`, `azguard`, `laravel-permissions` |
 | `auto-layout` | `figma-to-flutter`, `figma-to-vue` |
 | `azguard` | `azguard`, `laravel-permissions` |
+| `barge-in` | `voice-ai` |
 | `best-practices` | `laravel-best-practices` |
 | `blade` | `livewire-blade-attributes` |
 | `blender` | `build-loop`, `config-conventions`, `mcp-blender`, `model-rules`, `parametric-config`, `scene-conventions`, `threading`, `version-gotchas` |
@@ -607,6 +614,7 @@
 | `laravel-data` | `laravel-data` |
 | `laravel-echo` | `laravel-echo-client` |
 | `laravel-modules` | `modular-architecture` |
+| `latency` | `voice-ai` |
 | `lazy-loading` | `vue-router-best-practices` |
 | `learning` | `session-observer` |
 | `license` | `oss-governance` |
@@ -691,7 +699,7 @@
 | `rbac` | `attribute-authorization`, `azguard`, `laravel-permissions`, `security-design` |
 | `readability` | `named-arguments`, `naming-conventions`, `php-naming-conventions` |
 | `readiness` | `health-checks` |
-| `realtime` | `laravel-broadcasting`, `laravel-echo-client` |
+| `realtime` | `laravel-broadcasting`, `laravel-echo-client`, `voice-ai` |
 | `rebase` | `resolving-merge-conflicts` |
 | `recall` | `shared-memory` |
 | `rector` | `php-upgrade-checklist` |
@@ -719,6 +727,7 @@
 | `rules` | `model-rules` |
 | `runbook` | `observability-design` |
 | `russian` | `writing-style` |
+| `russian-stack` | `voice-ai` |
 | `safety` | `git-safety`, `namespace-refactor-safety`, `test-isolation-guard`, `testing-safety-report` |
 | `scalability` | `architecture` |
 | `scene` | `scene-conventions` |
@@ -745,6 +754,7 @@
 | `store` | `pinia-stores` |
 | `stride` | `security-design` |
 | `structure` | `inertia-vue`, `laravel-structure`, `ml-project-structure`, `project-map` |
+| `stt` | `voice-ai` |
 | `style` | `compact-responses`, `writing-style` |
 | `stylistic` | `eslint-flat-config` |
 | `subagents` | `ai-agents` |
@@ -768,6 +778,7 @@
 | `trade-off` | `tech-stack-selection` |
 | `transitions` | `enum-state-machine` |
 | `triage` | `issue-triage`, `open-source-maintainer` |
+| `tts` | `voice-ai` |
 | `type-sync` | `backend-type-sync` |
 | `types` | `backend-type-sync` |
 | `typescript` | `backend-type-sync`, `enum-attributes`, `eslint-flat-config`, `js-code-style`, `playwright-e2e`, `vue-dynamic-icons`, `vue-router-best-practices`, `wayfinder` |
@@ -776,6 +787,7 @@
 | `units` | `parametric-config` |
 | `upgrade` | `agent-packs`, `php-upgrade-checklist` |
 | `uploads` | `filepond-upload`, `medialibrary` |
+| `vad` | `voice-ai` |
 | `validation` | `adversarial-check`, `agent-design`, `code-review`, `code-simplifier`, `cross-layer-change-checklist`, `customer-discovery`, `defensibility`, `eval-design`, `idea-audit`, `laravel-data`, `pmf-diagnostics`, `refactoring-plan`, `requirement-critic`, `risk-assessment`, `solo-founder`, `startup-lifecycle`, `tech-debt-audit`, `test-strategy` |
 | `variants` | `reka-ui-cva` |
 | `vault` | `brain-locator` |
@@ -787,10 +799,12 @@
 | `viewport` | `mcp-blender` |
 | `vite` | `docker-vite`, `vite-module-loader`, `vite-multi-build` |
 | `vitest` | `vitest`, `vue-testing-best-practices` |
+| `voice` | `voice-ai` |
 | `vue` | `dark-mode`, `eslint-flat-config`, `figma-to-vue`, `filepond-upload`, `inertia-vue`, `js-code-style`, `laravel-echo-client`, `naive-ui-theming`, `pinia-stores`, `reka-ui-cva`, `tailwind-conventions`, `vite-module-loader`, `vitest`, `vue-composition-api`, `vue-dynamic-icons`, `vue-router-best-practices`, `vue-testing-best-practices` |
 | `vue-router` | `vue-router-best-practices` |
 | `vue-test-utils` | `vue-testing-best-practices` |
 | `wayfinder` | `wayfinder` |
+| `webrtc` | `voice-ai` |
 | `websocket` | `docker-services` |
 | `websockets` | `laravel-broadcasting`, `laravel-echo-client` |
 | `workflow` | `anti-drift`, `build-loop`, `business-process`, `code-review`, `compact-responses`, `complex-task-orchestrator`, `context-economy`, `cross-layer-change-checklist`, `enum-state-machine`, `implement`, `incident-response`, `laravel-subagents`, `plan-protocol`, `postmortem`, `refactoring-plan`, `session-handoff`, `skills-ssot`, `spec-interview`, `task-brief-template`, `tech-debt-audit`, `tech-lead` |

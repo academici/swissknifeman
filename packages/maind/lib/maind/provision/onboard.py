@@ -24,9 +24,28 @@ def _infer_type(path):
     return detect_project_type(path)
 
 
+def _register_namespaces(config, namespaces):
+    """Наполняет реестр `config["namespaces"]` (dict имя→метаданные) записями по умолчанию
+    для тех ns, которых там ещё нет — setdefault, чтобы не затирать уже заданные метаданные
+    при повторном онбординге (идемпотентно). Реестр — TOP_KEYS['namespaces']=dict, НЕ list;
+    projects[i].namespaces — отдельное поле (list строк), сюда не относится."""
+    registry = config.get("namespaces")
+    if not isinstance(registry, dict):
+        registry = {}
+        config["namespaces"] = registry
+    changed = False
+    for ns in namespaces or []:
+        if ns not in registry:
+            registry.setdefault(ns, {"name": ns})
+            changed = True
+    return changed
+
+
 def _ensure_project(env, config, project_or_path, namespaces=None, dry=False):
     """(config, project, created). Новый путь → синтез записи (+ write_config, если не dry).
-    namespaces по умолчанию — общий `axioma` + свой `<id>` (несколько на проект)."""
+    namespaces по умолчанию — общий `axioma` + свой `<id>` (несколько на проект).
+    Заодно регистрирует эти namespaces в общем реестре `config["namespaces"]`, если их там
+    ещё нет (dict-реестр, setdefault — идемпотентно, метаданные не перетираются)."""
     proj = get_project(config, project_or_path)
     if proj is not None:
         return config, proj, False
@@ -36,14 +55,16 @@ def _ensure_project(env, config, project_or_path, namespaces=None, dry=False):
     pid = sanitize(path.name)
     ptype = _infer_type(path)
     vis = docs_visibility_for(ptype)            # package→public, product→private
+    proj_namespaces = list(namespaces) if namespaces else ["axioma", pid]
     proj = {"id": pid, "name": path.name, "local_path": str(path), "repo": None,
             "type": ptype, "enabled": True,
             "memory_scope": f"project:{pid}",
-            "namespaces": list(namespaces) if namespaces else ["axioma", pid],
+            "namespaces": proj_namespaces,
             "docs_folders": [{"id": "docs", "vault": "docs", "repo": "docs",
                               "visibility": vis}],
             "agents": [], "skills": [], "tags": [], "status": "active", "dependencies": []}
     config["projects"] = list(config.get("projects") or []) + [proj]
+    _register_namespaces(config, proj_namespaces)
     if not dry:
         write_config(env, config)
     return config, proj, True
@@ -65,6 +86,8 @@ def _wire_memory(env, config, proj, namespaces=None, mechanism="maind", dry=Fals
             changed = True
         elif not proj.get("namespaces"):
             proj["namespaces"] = ["axioma", proj["id"]]
+            changed = True
+        if _register_namespaces(config, proj["namespaces"]):
             changed = True
         if changed and not dry:
             write_config(env, config)

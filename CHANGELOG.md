@@ -2,6 +2,108 @@
 
 ## [Unreleased]
 
+### Added (skiller@0.x — профиль platform-service · скилл voice-ai · пресеты polyglot · гайд polyglot-monorepo)
+
+- **Профиль `platform-service`** (`packages/skiller/profiles/platform-service.json`): externalized
+  runtime platform, полиглот-монорепо (`services/` + `packages/js|php|flutter/` + `apps/` + `infra/`) —
+  10 бакетов (architect/ai/oss-dev/general/php/php-packages/frontend/frontend-vue/frontend-backend/devops),
+  `harness_presets:[base]`, `mcp:[context7]`. `agent_pack`/`model_tiers` осознанно не заданы (нет
+  подходящего generic-пака; аналоги тоже их не задают).
+- **Новый скилл `voice-ai`** (`skills/voice-ai/voice-ai/`, бакет `voice-ai`): voice-агенты
+  (WebRTC media + WebSocket control, 3-слойный turn-detection VAD+семантика+LLM, barge-in <500ms,
+  латентность <800ms — 1200ms явно помечена LEGACY/IVR, session state-machine, RU-стек Yandex
+  SpeechKit/SaluteSpeech/YandexGPT/GigaChat + offline-алternativы, ремарка 152-ФЗ). Двуязычный
+  (`SKILL.ru.md` источник → `SKILL.md` EN-канон), `upstream.json` strategy=notify (референс
+  спек/паттернов, без вендоринга кода). Реестр перегенерирован: **208 скиллов**, 53 плагина.
+- **4 полиглот-пресета** (`packages/skiller/presets/polyglot-{node-php-flutter,node-php,node-go,
+  python-node}.json`) — только из существующих бакетов (buckets.json), без ссылок на
+  несуществующие node/go/flutter-бакеты.
+- **Гайд `docs/guide/polyglot-monorepo.md`** (skiller docs): монорепо vs отдельные репо,
+  структура `services/+packages/js|php|flutter/+apps/+infra/`, dependency direction, contracts-as-SSOT
+  + codegen, per-package vs unified semver, отдельные lockfiles, CI multi-lang.
+
+### Changed (skiller@0.x — presets[] в `.swissknife.json` теперь резолвятся в connect-канале, БЫЛО no-op)
+
+- **Поведенческое изменение контракта `.swissknife.json`:** ключ `presets[]` раньше был
+  зарезервирован, но **игнорировался** (`_RESERVED`, no-op). Теперь connect-канал разворачивает
+  пресеты в бакеты по формуле `buckets = (resolve_presets(presets) ∪ buckets) − exclude` —
+  симметрично тому, как `presets` уже работали в vendor-канале (`skillset.resolve_presets`,
+  extends/cycle-detection переиспользованы, не задублированы). **Проекты, у которых в
+  `.swissknife.json` уже лежал `presets[]` (ранее молча игнорировался), при следующем `skiller
+  connect` получат соответствующие бакеты** — до применения стоит свериться с текущим набором
+  бакетов проекта. Precedence сохранена: явные CLI-флаги > `.swissknife.json` (buckets/presets) >
+  autodetect по профилю. Неизвестный пресет → warn+skip (не die); skill-only пресет в
+  bucket-канале → warn+no-op (пресеты работают на уровне бакетов, не отдельных скиллов). 13 новых
+  тестов (`tests/test_presets.py`).
+
+### Changed (schema — `memory_brain` теперь принимает объект с `sync{direction,patterns}`)
+
+- **`memory_brain` в `.swissknife.json`** расширен с чистой строки (path) до `oneOf[string,
+  {path, sync?{direction:push|pull|bidirectional, patterns?, on_integrate?}}]` — string-конфиги
+  старых проектов остаются валидными без изменений. Новый модуль `lib/skiller/brain_sync.py`
+  (stdlib-only): нормализация конфига, `sync_pull` (копирует по glob-паттернам из BRAIN, сохраняя
+  относительные пути, soft-skip при отсутствии BRAIN — не ломает офлайн-работу), генерация
+  `.claude/sync-brain.sh` (атомарная запись, `chmod 755`). `integrate` вызывает `sync_pull`
+  только для объектного конфига с `direction: pull|bidirectional`; строковый конфиг оставлен
+  под старый memory-хук без изменений поведения. Три drift-гейта (`test_schema`, `doctor`,
+  `test_registry_state`) обучены трактовать мульти-тип поля (`(str, dict)`) как `oneOf`, не
+  ослабляя проверку. Новый `tests/test_brain_sync.py`.
+
+### Added (maind@0.x — кэш BRAIN-доков в памяти namespace)
+
+- **`packages/maind/scripts/cache-brain-docs.sh`** — bash-хелпер, кэширующий доки из Brain-валта
+  в память namespace через реально существующие флаги `maind memory remember --scope
+  project:<ns> --type docs:<key> "<содержимое>"` (в предыдущем аудите фигурировали
+  несуществующие `--key`/`--file` — сверено по коду `memory.py`, использованы фактические флаги).
+  Раздел «Кэш BRAIN-доков в памяти» добавлен в `packages/maind/docs/guide/namespaces.md`
+  (таблица рекомендуемых `--type`-ключей: `docs:brd`/`docs:architecture`/`docs:api`/`docs:glossary`,
+  пример `recall`). Не интегрирован в `onboard.py` — остаётся ручным/скриптовым шагом.
+
+### Changed (рефакторинг раскладки + core-дедуп)
+
+- **core-дедуп:** три кросс-пакетных дубля сведены в общий `core`. `core.repo.sibling_bin`
+  (единый резолвер лаунчера соседа `env→PATH→<monorepo>/packages/<pkg>/bin`) заменил три
+  разошедшиеся копии (`skiller.harness_bin`, `analyst._resolve_maind_bin`); `core.io.backup_file`
+  (merge-only `*.bak`, параметризуемый суффикс) заменил `maind.common.backup_file` + инлайны в
+  `harness.settings`; управляемый markdown-блок и urllib-HTTP-клиент вынесены в `core.block`/
+  `core.http` (`maind.blocks`/`maind.http` — тонкие re-export-shim'ы, back-compat импортов).
+  +12 core-тестов.
+- **Группировка flat-lib по доменам** (за порогом flat-lib smell): `maind/lib/maind` —
+  слабо-связанные окраины в подпакеты `provision/` (deploy·sync·onboard·orchestrate·migrate·
+  service·start·workspace·skilldoc) и `analysis/` (fleet·analyze·audit); плотно-связное ядро
+  (память/граф/федерация/namespaces/derive + cli/common/config/mcp/health) осталось в корне.
+  `skiller/lib/skiller` — анализ в `quality/` (eval·audit·analyze). Импорты: `maind.provision.*`/
+  `maind.analysis.*`/`skiller.quality.*`. `cli/common/__main__` — на верхнем уровне (launchers
+  не тронуты). `harness`/`analyst` оставлены плоскими (ниже порога). validate всех 4 зелёный
+  (core 151 · maind 380 · analyst 175), CLI-smoke ок.
+
+### Changed (интеграционный контракт `perplexity-web-mcp` — снят версионный дрейф)
+
+- **`research/query-craft`, `general/mcp-advisor`, `docs/reference.md`:** инструкция интеграции моста
+  `perplexity-web` расходилась с фактическим кодом пакета (доки застряли на «демон v1.3.0», код ушёл
+  вперёд). Сверено **по коду** `perplexity-web-mcp` (`src/{config,resilience,dispatcher}.ts`, 2026-07-03),
+  привязка к версии снята, добавлено недокументированное поведение: **client-side resilience** (авто-retry
+  с backoff 3× на транзиентных `BROWSER_BUSY`/`TIMEOUT`/`INTERNAL`; desktop `notify-send` и структурный
+  JSONL error-log `$XDG_STATE_HOME/…/errors.jsonl` при финальном отказе; kill-switch'и `PERPLEXITY_WEB_MCP_*`),
+  код ошибки `INTERNAL`, **login grace-window** (демон сам открывает окно логина ~3 мин + cooldown, параллельные
+  запросы fail-fast с `LOGIN_REQUIRED`), дефолтные таймауты (`search` 60s / `deep` 600s) и авто-фолбэк в legacy.
+  Совет «ручной retry на BROWSER_BUSY/TIMEOUT» переформулирован — мост ретраит **сам**. Регенерён реестр.
+
+### Added (документация — Diátaxis-каркас + закрытие дыр)
+
+- **Пользовательские гайдлайны:** новый landing-каталог (`docs/index.md` — карта 4 пакетов
+  «что это + когда брать»), сквозной **`docs/getting-started.md`** (установка → онбординг →
+  первая задача) и **`docs/tasks.md`** — гайд «какая `/task:*` в каком случае» + **plan-протокол**
+  (мастер-планы `plans/<ID>/`, 4 команды, 6 статусов, handoff, эскалация, `plansDirectory`),
+  которого раньше на сайте не было вовсе.
+- **Разделы `task` и `core`** на сайте (`packages/{task,core}/docs/index.md` + docs-sync);
+  reference телеметрии run-report (SCHEMA=2, `core/usage.py`) — в core-разделе.
+- **Закрыты дыры:** `develop.md` синхронизирован (per-project `plans/`, `/task:plan-*`);
+  `analyst/docs/guide/cli.md` получил `token-report`/`ingest`/`proposals`; `plansDirectory`
+  operator-доки в `maind/sync.md` и `skiller/integration-checklist.md`; `bucket-audit` в sidebar.
+  Каркас Diátaxis введён навигацией (nav/sidebar), без массового переписывания 100+ страниц.
+  Провенанс Diátaxis — `docs/reference.md`. Сборка VitePress зелёная (без мёртвых ссылок).
+
 ### Added (SKM-MASTER-003 — plan-система per-project · хвосты рецензии)
 
 - **Plan-система per-project (P1, дизайн A–F):** планы plan-протокола живут В ПРОЕКТЕ.

@@ -24,6 +24,14 @@ from skiller.connect import do_connect
 import tests.fixtures as fx
 
 
+def _schema_prop(pytype, json_type):
+    """Собрать schema-свойство под Python-тип из CONFIG_KEYS. Кортеж типов
+    (memory_brain = (str, dict)) → oneOf-члены; одиночный тип → {"type": ...}."""
+    if isinstance(pytype, tuple):
+        return {"oneOf": [{"type": json_type[t]} for t in pytype]}
+    return {"type": json_type[pytype]}
+
+
 def capture(fn, *a, **kw):
     """Выполнить fn, вернуть (result, stdout-текст)."""
     buf = io.StringIO()
@@ -326,7 +334,7 @@ class DoctorCase(unittest.TestCase):
         from skiller.common import CONFIG_KEYS
         json_type = {str: "string", list: "array", int: "integer",
                     dict: "object", bool: "boolean"}
-        props = {k: {"type": json_type[t]} for k, t in CONFIG_KEYS.items()}
+        props = {k: _schema_prop(t, json_type) for k, t in CONFIG_KEYS.items()}
         props["project_type"]["type"] = "array"  # намеренное расхождение
         schema_dir = self.root / "schema"
         schema_dir.mkdir(parents=True, exist_ok=True)
@@ -334,7 +342,7 @@ class DoctorCase(unittest.TestCase):
             json.dumps({"properties": props}), encoding="utf-8")
         # вторая схема (SKILLSET_KEYS) — доктор её тоже читает, кладём валидной
         from skiller.skillset import SKILLSET_KEYS
-        props2 = {k: {"type": json_type[t]} for k, t in SKILLSET_KEYS.items()}
+        props2 = {k: _schema_prop(t, json_type) for k, t in SKILLSET_KEYS.items()}
         (schema_dir / "swissknifeman-config.schema.json").write_text(
             json.dumps({"properties": props2}), encoding="utf-8")
 

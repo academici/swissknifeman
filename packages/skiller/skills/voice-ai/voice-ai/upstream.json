@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "source": "http",
+  "strategy": "notify",
+  "license": "N/A (patterns/specs reference, no vendored code)",
+  "files": [
+    {
+      "path": "",
+      "url": "https://developers.openai.com/api/docs/guides/realtime-vad",
+      "sha256": "",
+      "fetched_at": "2026-07-03",
+      "notes": "OpenAI Realtime: server_vad / semantic_vad, eagerness, interrupt_response — паттерн turn-detection и barge-in на LLM-стороне."
+    },
+    {
+      "path": "",
+      "url": "https://huggingface.co/pipecat-ai/smart-turn-v2",
+      "sha256": "",
+      "fetched_at": "2026-07-03",
+      "notes": "Pipecat smart-turn-v2: семантический end-of-utterance, мультиязычный (RU в наборе) — паттерн semantic VAD как отдельного слоя turn-detection."
+    },
+    {
+      "path": "",
+      "url": "https://docs.livekit.io/agents/",
+      "sha256": "",
+      "fetched_at": "2026-07-03",
+      "notes": "LiveKit Agents: SFU + WebRTC media-путь, agent-узел читает треки — паттерн media/runtime и разделения media↔control."
+    },
+    {
+      "path": "",
+      "url": "https://www.rfc-editor.org/rfc/rfc8825",
+      "sha256": "",
+      "fetched_at": "2026-07-03",
+      "notes": "WebRTC overview (RFC 8825) + Opus/RTP — спецификация media-транспорта голосового контура. Взят только паттерн транспорта, кода не вендорим."
+    },
+    {
+      "path": "",
+      "url": "https://aistudio.yandex.ru/docs/en/speechkit/stt/",
+      "sha256": "",
+      "fetched_at": "2026-07-03",
+      "notes": "Yandex SpeechKit STT (streaming gRPC v3, партиалы, лимит сессии ≤5 мин) — RU-стек, паттерн стриминговой STT-сессии и её ротации."
+    }
+  ],
+  "notes": "Авторский скилл (SKILL.md написан у нас, не зеркало апстрима): собран по ВНЕШНИМ паттернам и спецификациям голосовых агентов реального времени (WebRTC/Opus транспорт, OpenAI Realtime turn-detection/barge-in, Pipecat/LiveKit turn-taking, Yandex SpeechKit RU-стек). Чужой код НЕ вендорим — files[].path пусты (референсы, не локальные зеркала); url ведёт на спеку/доку/паттерн. strategy=notify — апстрим только репортится (не автонакат); факты подтверждены RAG на fetched_at. Тела скилла upstream НЕ определяет — правь SKILL.ru.md и регенерируй SKILL.md."
+}

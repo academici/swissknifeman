@@ -26,6 +26,8 @@ export default withMermaid(defineConfig({
       { text: 'Память и граф', link: '/maind/', activeMatch: '/maind/' },
       { text: 'Обучение', link: '/analyst/', activeMatch: '/analyst/' },
       { text: 'Референсы', link: '/reference', activeMatch: '/reference' },
+      { text: 'core', link: '/core/', activeMatch: '/core/' },
+      { text: 'task', link: '/task/', activeMatch: '/task/' },
     ],
 
     sidebar: {
@@ -222,6 +224,8 @@ export default withMermaid(defineConfig({
             { text: 'Окружение — harness', link: '/harness/' },
             { text: 'Память и граф — maind', link: '/maind/' },
             { text: 'Обучение — analyst', link: '/analyst/' },
+            { text: 'Фундамент — core', link: '/core/' },
+            { text: 'Интент-команды — task', link: '/task/' },
           ],
         },
       ],

@@ -108,6 +108,16 @@ def write_example(real_path, data, project_root, *, dry=False):
     atomic_write_json(ex_path, example)
 
 
+def _is_tracked(project_root, rel):
+    """True, если rel уже в индексе git проекта (best-effort — нет git/ошибка → False)."""
+    try:
+        return subprocess.run(
+            ["git", "-C", str(project_root), "ls-files", "--error-unmatch", rel],
+            capture_output=True).returncode == 0
+    except OSError:
+        return False
+
+
 def reconcile_gitignore(project_root, rel_real, *, dry=False):
     """Гигиена .gitignore для пары real↔.example: реальный MCP-конфиг — В .gitignore
     (append-if-absent, у него machine-specific пути), его `.example` — НЕ в .gitignore
@@ -130,17 +140,31 @@ def reconcile_gitignore(project_root, rel_real, *, dry=False):
     if dry:
         print(f"[dry-run] {gi}: + {rel_real}, − {rel_example}")
         return True
-    try:
-        tracked = subprocess.run(
-            ["git", "-C", str(project_root), "ls-files", "--error-unmatch", rel_real],
-            capture_output=True).returncode == 0
-        if tracked:
-            warn(f"{rel_real} уже трекается git в {project_root} — добавил в .gitignore, "
-                 f"но `git rm --cached {rel_real}` сделай сам")
-    except OSError:
-        pass
+    if _is_tracked(project_root, rel_real):
+        warn(f"{rel_real} уже трекается git в {project_root} — добавил в .gitignore, "
+             f"но `git rm --cached {rel_real}` сделай сам")
     gi.write_text("\n".join(out) + "\n", encoding="utf-8")
     return True
+
+
+def check_hygiene(project_root):
+    """Read-only снимок real↔.example гигиены `.mcp.json` проекта (без сети/записи на диск):
+    трекается ли git и есть ли `.example`. Только claude-канал — `.cursor`/`.vscode` не maind-
+    таргеты по умолчанию (project.mcp.targets) и часто не содержат machine-specific путей вовсе
+    (напр. чистый `php artisan boost:mcp`), проверка их вслепую даёт шум без пользы.
+    Источник хинтов `maind health`: tracked-in-git чинится вручную (git rm --cached, гигиена
+    выше это не автоматизирует), missing-example чинит `maind sync --only mcp`
+    (при config.mcp.emit_example=true — см. provision/deploy.py)."""
+    rel = MCP_FILES["claude"]
+    path = Path(project_root) / rel
+    if not path.is_file():
+        return []
+    problems = []
+    if _is_tracked(project_root, rel):
+        problems.append("tracked-in-git")
+    if not Path(str(path) + EXAMPLE_SUFFIX).is_file():
+        problems.append("missing-example")
+    return [{"channel": "claude", "file": rel, "problems": problems}] if problems else []
 
 
 def has_server(path, name):

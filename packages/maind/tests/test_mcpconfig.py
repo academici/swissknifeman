@@ -4,9 +4,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from maind.mcpconfig import (EXAMPLE_SUFFIX, MCPConfigError, has_server,
-                             load_mcp, merge_server, reconcile_gitignore,
-                             write_example, write_mcp)
+from maind.mcpconfig import (EXAMPLE_SUFFIX, MCPConfigError, check_hygiene,
+                             has_server, load_mcp, merge_server,
+                             reconcile_gitignore, write_example, write_mcp)
 
 
 class TestMcpConfig(unittest.TestCase):
@@ -110,6 +110,40 @@ class TestMcpConfig(unittest.TestCase):
             self.assertNotIn(".mcp.json.example", lines)
             self.assertIn(".env", lines)
             self.assertFalse(reconcile_gitignore(proj, ".mcp.json"))  # идемпотентно
+
+    def test_check_hygiene_clean(self):
+        """Нет реального файла → нет проблем; есть .example + не трекается → clean."""
+        with tempfile.TemporaryDirectory() as tmp:
+            proj = Path(tmp)
+            self.assertEqual(check_hygiene(proj), [])
+            (proj / ".mcp.json").write_text("{}", encoding="utf-8")
+            (proj / ".mcp.json.example").write_text("{}", encoding="utf-8")
+            self.assertEqual(check_hygiene(proj), [])  # не git-репо → tracked=False, example есть
+
+    def test_check_hygiene_missing_example(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            proj = Path(tmp)
+            (proj / ".mcp.json").write_text("{}", encoding="utf-8")
+            issues = check_hygiene(proj)
+            self.assertEqual(len(issues), 1)
+            self.assertEqual(issues[0]["file"], ".mcp.json")
+            self.assertIn("missing-example", issues[0]["problems"])
+            self.assertNotIn("tracked-in-git", issues[0]["problems"])
+
+    def test_check_hygiene_tracked_in_git(self):
+        import subprocess
+        with tempfile.TemporaryDirectory() as tmp:
+            proj = Path(tmp)
+            subprocess.run(["git", "-C", str(proj), "init", "-q"], check=True)
+            subprocess.run(["git", "-C", str(proj), "config", "user.email", "t@t"], check=True)
+            subprocess.run(["git", "-C", str(proj), "config", "user.name", "t"], check=True)
+            (proj / ".mcp.json").write_text("{}", encoding="utf-8")
+            subprocess.run(["git", "-C", str(proj), "add", ".mcp.json"], check=True)
+            subprocess.run(["git", "-C", str(proj), "commit", "-q", "-m", "x"], check=True)
+            issues = check_hygiene(proj)
+            self.assertEqual(len(issues), 1)
+            self.assertIn("tracked-in-git", issues[0]["problems"])
+            self.assertIn("missing-example", issues[0]["problems"])
 
 
 if __name__ == "__main__":

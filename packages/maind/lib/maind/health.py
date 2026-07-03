@@ -16,6 +16,7 @@ from pathlib import Path
 from .common import (atomic_write_json, atomic_write_text, backup_file,
                      content_hash, die, parse_args, upsert_block, warn)
 from .config import load_config
+from .mcpconfig import check_hygiene
 from .memory import forget as mem_forget
 from .memory import health as mem_health
 from .memory import recall as mem_recall
@@ -114,6 +115,8 @@ def health_report(env, config, project, *, memory_reachable=None):
     hook_mode = hook_memory_mode(project)
     native_off, digest_hook = _native_memory_state(project)
     roundtrip = memory_roundtrip(env, config, project, memory_reachable)
+    local = project.get("local_path")
+    hygiene = check_hygiene(os.path.expanduser(local)) if local else []
     hints = []
     if not memory_reachable:
         hints.append("демон памяти не запущен → maind start --only memory")
@@ -128,6 +131,14 @@ def health_report(env, config, project, *, memory_reachable=None):
                      "remember/recall идут в разные сторы?")
     if not c.get("maind_mcp"):
         hints.append(f"нет maind MCP в проекте → maind sync --only mcp --project {pid}")
+    for issue in hygiene:
+        f = issue["file"]
+        if "tracked-in-git" in issue["problems"]:
+            hints.append(f"{f} закоммичен в git (должен быть только .example) → "
+                         f"git rm --cached {f} (файл на диске останется)")
+        if "missing-example" in issue["problems"]:
+            hints.append(f"нет {f}.example → maind sync --only mcp --project {pid} "
+                         "(эмитит портируемый шаблон + .gitignore)")
     return {
         "id": pid, "scope": rep.get("memory_scope", f"project:{pid}"),
         "namespaces": sorted(namespaces_of(project)),
@@ -140,6 +151,7 @@ def health_report(env, config, project, *, memory_reachable=None):
         "agentmemory_mcp": bool(c.get("agentmemory_mcp")),
         "maind_mcp": bool(c.get("maind_mcp")),
         "code_mcp": bool(c.get("code_mcp")),
+        "mcp_hygiene": hygiene,
         "path": rep.get("path"), "hints": hints,
     }
 
@@ -342,7 +354,8 @@ def cmd_health(env, argv):
     project = _target(env, config, opts)
     rep = health_report(env, config, project)
 
-    if opts["fix"] and rep["status"] != "connected":
+    hygiene_fixable = any("missing-example" in i["problems"] for i in rep["mcp_hygiene"])
+    if opts["fix"] and (rep["status"] != "connected" or hygiene_fixable):
         if not rep["memory_daemon"]:
             try:
                 from .memory import start as mem_start
@@ -367,6 +380,8 @@ def cmd_health(env, argv):
             print(f"  [{_status(rep['native_memory_off'] and rep['digest_hook'])}] native off + "
                   "digest-инжект (SessionStart)")
         print(f"  [{_status(rep['memory_roundtrip'])}] память round-trip (write→recall→forget)")
+        print(f"  [{_status(not rep['mcp_hygiene'])}] конфиг-гигиена .mcp.json "
+              "(real gitignored + .example в репо)")
         print(f"  ns: [{', '.join(rep['namespaces'])}]  статус: {rep['status']}")
         for h in rep["hints"]:
             print(f"    → {h}")

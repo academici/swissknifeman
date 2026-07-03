@@ -21,6 +21,7 @@ def _setup(tmp, *, with_mcp=False, memory_url=None, hook_maind=False):
     if with_mcp:
         (proj / ".mcp.json").write_text(json.dumps({"mcpServers": {
             "agentmemory": {"command": "x"}, "maind": {"command": "y"}}}), encoding="utf-8")
+        (proj / ".mcp.json.example").write_text("{}", encoding="utf-8")  # гигиена: не FAIL
     if hook_maind:                            # хук памяти в режиме демона
         (proj / ".claude").mkdir(parents=True, exist_ok=True)
         (proj / ".claude" / "memory.env.ini").write_text("MODE=maind\n", encoding="utf-8")
@@ -65,6 +66,16 @@ class TestReport(unittest.TestCase):
             self.assertTrue(rep["memory_roundtrip"])       # сам демон отвечает
             self.assertNotEqual(rep["hook_memory_mode"], "maind")
             self.assertTrue(any("режиме maind" in h for h in rep["hints"]))
+
+    def test_mcp_hygiene_missing_example_hinted(self):
+        # .mcp.json есть, .example нет → hint чинить через maind sync --only mcp.
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, proj, pdir = _setup(tmp)
+            (pdir / ".mcp.json").write_text(json.dumps({"mcpServers": {}}), encoding="utf-8")
+            rep = health.health_report(env, config, proj, memory_reachable=False)
+            self.assertEqual(len(rep["mcp_hygiene"]), 1)
+            self.assertIn("missing-example", rep["mcp_hygiene"][0]["problems"])
+            self.assertTrue(any("sync --only mcp" in h and ".example" in h for h in rep["hints"]))
 
 
 class TestHealthDoc(unittest.TestCase):

@@ -75,6 +75,7 @@ GitHub ops (PRs, review threads, others' code, releases) → **GitHub CLI**, not
 - **Selective input (5–50× saving).** Don't `Read` a whole file — a slice (function/class/route ±context); logs → `tail -n`/`grep` by identifier, not the whole file; errors → last stack-frame; PR/diff → `git diff`/`gh pr diff`. "Point, don't paste." Caveat: a `deny` rule on a path also blocks `cat/head/tail/sed` on it — don't deny dirs you legitimately need to tail.
 - **Cost visibility.** `/usage` after long recon → if bloated: handoff (`.claude/handoffs/…`) + `/clear`, or `/compact "focus on modified files + test commands"`. (Command is `/usage`, not `/cost`.)
 - **Code navigation — graph/symbols, not grep.** Before broad multi-file search — structure first: `serena` (`get_symbols_overview`/`find_symbol`) or cross-project `maind graph` (node neighbors), instead of whole-file reads. Details + graph-staleness caveat → skill `ecosystem-mcp` (maind).
+- **Multi-agent fan-out (Workflow) is costly — tier it, don't poll.** Subagent fan-out ≈15× chat tokens: justified on research/design (breadth-first), not on coding. In the script: (1) **set model/effort per RISK on EVERY `agent()`** — cheap models execute, the expensive one designs/arbitrates; inheriting the parent model is a deliberate exception, not the default (else the whole fleet runs on the top model); (2) **don't poll background agents** — the completion notification arrives on its own; `ScheduleWakeup`/poll loops burn the cache; (3) **keep prompts deterministic** (no timestamp/random, override via a separate param) so `resumeFromRunId` returns finished stages free from cache; (4) **log `budget.remaining()` after each wave** or you learn of the overrun only afterwards. Reference impl — harness agent-packs `dev-loop.js`.
 
 ## 9. Ladder — measured magnitudes (what saves most)
 
@@ -113,4 +114,4 @@ Numbers are "up to, workload-dependent," not SLAs; they compound.
 - Skill `mcp-advisor` (general) — pick MCP for a project at onboarding (the reverse side of the audit: what to connect)
 - Skill `ecosystem-mcp` (maind) — project memory/graph MCP tools: when to call graph/Serena instead of file search
 
-<!-- ru-source-sha256: b26072cd5ba5ad50ac4403b59cd3c584e5fcae17a862ba197911740edc75ba48 -->
+<!-- ru-source-sha256: e671b5d90b8e2bdcfe31c70c8de933915f8c8adbf40cfafb815e367a65e4223d -->

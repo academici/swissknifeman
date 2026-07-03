@@ -44,7 +44,9 @@
       "Bash(chmod +x *)",
       "Workflow",
       "Agent",
-      "TodoWrite"
+      "TodoWrite",
+      "mcp__perplexity-web",
+      "mcp__playwright"
     ],
     "ask": [
       "Bash(git push *)",

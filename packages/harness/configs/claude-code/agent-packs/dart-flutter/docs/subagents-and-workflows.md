@@ -16,7 +16,10 @@
 ## dev-loop
 
 `.claude/workflows/{{PACK_PREFIX}}-dev-loop.js` — impl→tests-to-green→review на одной ветке.
-Скоуп срезов задаёт человек через `args.slices`.
+Скоуп срезов задаёт человек через `args.slices` (`{id,title,goal,acceptance_criteria,
+skills?,risk?}`). `risk` (`LOW|MED|HIGH`) → Lean-tiering: impl `LOW→haiku` иначе `sonnet`,
+review `LOW→sonnet · MED→opus/high · HIGH→opus/xhigh`. Нет `risk` → дефолт `MED`; глубина/
+модель ревью — по `risk_level`, который вернул test-writer.
 
 ## Гейты
 
@@ -24,5 +27,16 @@
 - **PostToolUse** (Edit/Write `*.dart`) → `validate-flutter.sh`: advisory `dart analyze` →
   additionalContext, НЕ блокирует.
 
-Модельные тиры — из профиля `dart-flutter` (`model_tiers`); по умолчанию `inherit`.
+## Уроки overnight-прогона (зашиты в workflow — соблюдай и вручную)
+
+1. **Один branch на прогон**, хард-кап срезов литералом (`DEFAULT_MAX`) — переживает resume;
+   circuit-breaker: 2 не-зелёных подряд → стоп.
+2. **Модель/effort — по РИСКУ, не по умолчанию.** Дешёвые исполняют, дорогая проектирует/
+   арбитрирует (тиры выше). Наследование родительской модели — осознанное исключение, не дефолт.
+3. **Не поллить фоновые агенты** — уведомление приходит само; циклы опроса / `ScheduleWakeup`
+   жгут контекст-кэш впустую.
+4. **Промпты детерминированы — ради resume-кэша**: никаких timestamp/random; model/effort-
+   override — отдельным параметром вызова. В большом фан-ауте логируй `budget.remaining()` после волны.
+5. **Параллель — только по независимым файлам** (общая ветка = общее дерево).
+
 Бакет `mobile` тонкий: архитектура/state/FFI/POS живут в промптах агентов и `rules/`.

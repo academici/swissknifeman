@@ -145,7 +145,7 @@ flowchart LR
     anti_drift["anti-drift<br/>⊕43 ↻1258"]:::mild
     compact_responses["compact-responses<br/>⊕60 ↻570"]:::mild
     complex_task_orchestrator["complex-task-orchestrator<br/>⊕44 ↻659"]:::mild
-    context_economy["context-economy<br/>⊕71 ↻2133"]:::mild
+    context_economy["context-economy<br/>⊕71 ↻2380"]:::mild
     cross_layer_change_checklist["cross-layer-change-checklist<br/>⊕37 ↻461"]:::cool
     git_commit_rules["git-commit-rules<br/>⊕29 ↻934"]:::cool
     git_safety["git-safety<br/>⊕84 ↻600"]:::warm
@@ -409,13 +409,13 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 207 скиллов · ⊕ always **14916** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 283695 ток · ⌥ on-demand 791885 ток (сниппеты + references).
+**Итого:** 207 скиллов · ⊕ always **14916** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 283942 ток · ⌥ on-demand 791885 ток (сниппеты + references).
 
 ## По бакетам
 
 | Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ on-demand |
 |---|--:|--:|--:|--:|
-| `general` | 20 | 1402 | 24019 | 8863 |
+| `general` | 20 | 1402 | 24266 | 8863 |
 | `php` | 17 | 1122 | 19300 | 54837 |
 | `architect` | 14 | 880 | 21173 | 33458 |
 | `frontend-vue` | 11 | 854 | 25744 | 248486 |

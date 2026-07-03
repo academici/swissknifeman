@@ -84,7 +84,7 @@ if [[ "$GLOBAL" -eq 1 ]]; then
     AA_SRC="$PRESETS_DIR/hooks/auto-approve"; AA_DST="$HOME/.claude/hooks/auto-approve"
     mkdir -p "$AA_DST/lib" "$AA_DST/modes"
     cp "$AA_SRC/auto-approve.sh" "$AA_DST/"
-    cp "$AA_SRC/lib/"*.sh "$AA_DST/lib/"
+    cp "$AA_SRC/lib/"*.sh "$AA_SRC/lib/"*.py "$AA_DST/lib/"
     cp "$AA_SRC/modes/"*.sh "$AA_DST/modes/"
     cp "$AA_SRC/CREDITS.md" "$AA_DST/"
     chmod +x "$AA_DST/auto-approve.sh" "$AA_DST/modes/"*.sh

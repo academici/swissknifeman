@@ -92,6 +92,8 @@ _segment_ok() {
   case "$head" in
     if|for|while|until|case|esac|fi|done|function|'{'|'}'|'['|'[['|']'|']]'|return|break|continue|exit|local|export|declare|typeset|readonly|set|unset|read|shift|wait|true|false|:)
       return 0;;
+    safe-rm|safe-rmdir)
+      return 0;;   # появляется только после вердикта safe-dirs (safedirs_mask)
   esac
 
   case "$head" in
@@ -131,9 +133,21 @@ run_bash_analysis() {
   local scan_dh; scan_dh="$(printf '%s' "$scan" \
     | sed -E 's/(^|[^[:alnum:]_/.-])git[[:space:]]+rm([[:space:]]|$)/\1git-rm\2/g')"
 
+  # safe-dirs: rm/rmdir с целями строго внутри доверенных директорий (machine-owned
+  # safe-dirs.json: $SKM_SAFE_DIRS_CONFIG → корень монорепо swissknifeman → legacy
+  # ~/.swissknifeman/) маскируем в safe-rm/safe-rmdir — deny_hard их не ловит, strict
+  # принимает головы. Вердикт по сырому HOOK_INPUT (lib/safedirs.py), fail-closed:
+  # любой сбой/сомнение => deny_hard как раньше.
+  local SAFEDIRS_OK=0
+  if safedirs_applicable "$scan_dh" && safedirs_verdict; then
+    SAFEDIRS_OK=1
+    scan_dh="$(safedirs_mask "$scan_dh")"
+    scan="$(safedirs_mask "$scan")"
+  fi
+
   # 1) deny_hard => активный DENY (катастрофично) — во всех режимах.
   _match_any "$scan_dh" "${DENY_HARD[@]}" \
-    && emit_deny "Заблокировано: опасная операция (deny_hard). Выполните вручную при необходимости."
+    && emit_deny "Заблокировано: опасная операция (deny_hard). Выполните вручную при необходимости. rm в доверенных папках можно разрешить: harness safe-dirs (safe-dirs.json в корне репо swissknifeman)."
 
   # bypass: одобряем всё, что не катастрофично.
   if [ "$mode" = "bypass" ]; then
@@ -161,6 +175,8 @@ run_bash_analysis() {
     while IFS= read -r h || [ -n "$h" ]; do
       [ -n "$h" ] || continue
       case "$h" in git|gh|docker) continue;; esac
+      # shfmt разбирает немаскированный HOOK_CMD — rm/rmdir легитимны после вердикта
+      case "$h" in rm|rmdir) [ "$SAFEDIRS_OK" = 1 ] && continue;; esac
       case "$ALLOW_SET" in *" $h "*) continue;; esac
       fallthrough_logged "strict/shfmt: неизвестная голова '$h'"
     done < <(_shfmt_heads "$HOOK_CMD")

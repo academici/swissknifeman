@@ -40,7 +40,9 @@
   оркестрация (`Workflow`/`Agent`/`TodoWrite` — чтобы многофазный воркфлоу не
   просил подтверждение после каждой стадии; разбор — в
   [пресетах permissions](../configs/claude-permissions));
-- **ask** — необратимое: `git push`, `git reset --hard`, `rm -rf`;
+- **ask** — необратимое: `git push`, `git reset --hard`; (`rm` управляется не
+  ask-правилом, а auto-approve-хуком: deny вне доверенных директорий, allow
+  внутри — см. `harness safe-dirs`);
 - **deny** — заблокировано всегда: `sudo`, force-push, `git config --global`,
   `chmod 777`, чтение секретов (`.env`, `*.pem`, `*.key`, `~/.ssh`, `~/.aws`).
 

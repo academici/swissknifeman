@@ -2,6 +2,45 @@
 
 ## [Unreleased]
 
+### Added (harness@0.x — safe-dirs: path-scoped разрешение rm/rmdir в auto-approve)
+
+- **safe-dirs**: `rm`/`rmdir` с целями строго внутри доверенных директорий проходят мимо
+  `deny_hard` auto-approve-хука (раньше — безусловный deny). Allowlist **machine-owned**,
+  живёт **в корне монорепо** — `safe-dirs.json` (gitignored; шаблон `safe-dirs.example.json` —
+  паттерн `config.json` узла maind), лестница поиска хуком: `$SKM_SAFE_DIRS_CONFIG`
+  (эксклюзивный override) → корень монорепо (realpath PATH-лаунчера swissknifeman/skiller/
+  harness/maind, маркер `.claude-plugin/marketplace.json`) → legacy `~/.swissknifeman/
+  safe-dirs.json` (`init` мигрирует его в репо, home остаётся памяти/реестру). Формат:
+  `dirs[]` + авто-включение онбордженных проектов из `projects.json` + `exclude[]`;
+  project-override `.claude/auto-approve.config.json` на allowlist НЕ влияет (враждебный
+  репозиторий не может разрешить себе rm). Вердикт —
+  новый `hooks/auto-approve/lib/safedirs.py` (stdlib-only, fail-closed): argv через shlex
+  (не regex по строке), realpath против symlink-escape и `..`, containment по компонентам,
+  cd-трекинг для относительных путей, глобы по статическому префиксу (`allow_globs`),
+  защита `.git` (`protect_git`) и самого корня safe-dir; `$VAR`/`$( )`/backticks/`xargs rm`/
+  неизвестные флаги/многострочность → deny как раньше. Обработчик ЦЕНТРАЛЬНЫЙ: один файл
+  в `~/.claude/hooks/auto-approve/` (ставит `harness hooks --global`), проекты лишь ссылаются.
+- **CLI `harness safe-dirs`** (`lib/harness/safedirs.py` + slash `/harness:safe-dirs`):
+  `init` (создаёт в корне монорепо; legacy из home мигрирует автоматически, старый файл →
+  `*.migrated`) / `list` (эффективный allowlist глазами хука — importlib того же ядра, без
+  второй реализации) / `add|remove [--exclude]` (гарды: `/`, `$HOME`, предки `$HOME` — отказ) /
+  `prune-ask [--global] [--target P] [--all-projects]` — снятие статических ask-правил rm
+  из settings уже применённых проектов (merge-only их сам не удалит). Новый хелпер
+  `settings.remove_permission_rules` (точные совпадения, «снимаем своё»).
+- Тесты: +34 (`test_safedirs.py` — юнит ядра: symlink escape, `..`, глобы, `--`, `.git`,
+  exclude, cd-ветвления; сценарные через реальный `auto-approve.sh` с tmp-$HOME, включая
+  иммунитет к враждебному project-override; `test_safedirs_cli.py` — CLI+prune-ask).
+
+### Changed (harness@0.x — пресеты: rm управляется хуком, не ask-правилами)
+
+- Из `settings.base.json`/`settings.global.json` убраны `ask: Bash(rm -r *)`, `Bash(rm -rf *)`:
+  hook-`allow` НЕ пробивает статический ask (официальная семантика permissions — deny > ask >
+  allow между слоями), т.е. с ними rm в safe-dirs всё равно промптил бы. Вне safe-dirs rm
+  по-прежнему жёстко блокирует deny_hard — защита не ослабла. Заодно убран мёртвый
+  `allow: Bash(rmdir *)` из global (его всегда перекрывал deny_hard). Для уже применённых
+  проектов правила сами не уйдут (merge-only) — снять: `harness safe-dirs prune-ask
+  --global --all-projects`.
+
 ### Added (skiller@0.x — профиль platform-service · скилл voice-ai · пресеты polyglot · гайд polyglot-monorepo)
 
 - **Профиль `platform-service`** (`packages/skiller/profiles/platform-service.json`): externalized

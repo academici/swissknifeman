@@ -50,6 +50,18 @@ harness doctor
 выкл по умолчанию. ⚠️ `review-gate` исполняет `check_command` только из machine-owned config
 (не из project-local — RCE), если не выставлен `ALLOW_PROJECT_CONFIG=1`.
 
+**safe-dirs (rm в доверенных папках):** `rm`/`rmdir` с целями строго внутри allowlist-корней
+проходят мимо `deny_hard` — allowlist MACHINE-OWNED `<монорепо>/safe-dirs.json` (в КОРНЕ репо,
+gitignored, шаблон `safe-dirs.example.json` — паттерн maind config.json; лестница хука:
+`$SKM_SAFE_DIRS_CONFIG` → корень монорепо через realpath PATH-лаунчера → legacy
+`~/.swissknifeman/safe-dirs.json`, `init` мигрирует его в репо). Команды:
+`harness safe-dirs init|list|add|remove|prune-ask`; дефолт включает онбордженные проекты из
+`projects.json`. Вердикт — `hooks/auto-approve/lib/safedirs.py`, fail-closed (shlex-argv,
+realpath, containment, защита `.git`/корня; глобы по статическому префиксу; `$VAR`/`$( )`/
+`xargs rm` → deny). Project-override конфига хука на allowlist НЕ влияет. Ask-правила
+`Bash(rm -r*)` из пресетов убраны (hook-allow не пробивает статический ask) — на старых
+проектах снять `harness safe-dirs prune-ask --global --all-projects`.
+
 ## agent-packs (персона/стек-паки)
 
 `configs/claude-code/agent-packs/` — параметризованные наборы агентов+хуков+settings,

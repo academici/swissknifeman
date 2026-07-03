@@ -38,7 +38,6 @@
       "Bash(gh pr list *)",
       "Bash(gh issue list *)",
       "Bash(mkdir *)",
-      "Bash(rmdir *)",
       "Bash(cp *)",
       "Bash(mv *)",
       "Bash(touch *)",
@@ -49,9 +48,7 @@
     ],
     "ask": [
       "Bash(git push *)",
-      "Bash(git reset --hard *)",
-      "Bash(rm -r *)",
-      "Bash(rm -rf *)"
+      "Bash(git reset --hard *)"
     ],
     "deny": [
       "Bash(sudo *)",

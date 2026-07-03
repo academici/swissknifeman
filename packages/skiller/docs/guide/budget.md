@@ -151,7 +151,7 @@ flowchart LR
     git_safety["git-safety<br/>⊕84 ↻600"]:::warm
     grill_with_docs["grill-with-docs<br/>⊕98 ↻911"]:::warm
     implement["implement<br/>⊕88 ↻479"]:::warm
-    mcp_advisor["mcp-advisor<br/>⊕107 ↻1899"]:::warm
+    mcp_advisor["mcp-advisor<br/>⊕107 ↻1893"]:::warm
     naming_conventions["naming-conventions<br/>⊕86 ↻1564"]:::warm
     packages_stack["packages-stack<br/>⊕85 ↻530"]:::warm
     plan_protocol["plan-protocol<br/>⊕43 ↻2589"]:::mild
@@ -285,7 +285,7 @@ flowchart LR
     testing_safety_report["testing-safety-report<br/>⊕77 ↻756"]:::warm
   end
   subgraph research["research"]
-    query_craft["query-craft<br/>⊕130 ↻4385"]:::hot
+    query_craft["query-craft<br/>⊕130 ↻3928"]:::hot
     research_knowledge_super_skill["research-knowledge-super-skill<br/>⊕195 ↻569"]:::hot
   end
   subgraph roles["roles"]
@@ -409,13 +409,13 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 207 скиллов · ⊕ always **14916** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 284158 ток · ⌥ on-demand 791885 ток (сниппеты + references).
+**Итого:** 207 скиллов · ⊕ always **14916** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 283695 ток · ⌥ on-demand 791885 ток (сниппеты + references).
 
 ## По бакетам
 
 | Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ on-demand |
 |---|--:|--:|--:|--:|
-| `general` | 20 | 1402 | 24025 | 8863 |
+| `general` | 20 | 1402 | 24019 | 8863 |
 | `php` | 17 | 1122 | 19300 | 54837 |
 | `architect` | 14 | 880 | 21173 | 33458 |
 | `frontend-vue` | 11 | 854 | 25744 | 248486 |
@@ -428,7 +428,7 @@ flowchart LR
 | `blender-modeling` | 6 | 506 | 8887 | 12586 |
 | `pm` | 10 | 438 | 11072 | 23524 |
 | `founder` | 10 | 406 | 15188 | 578 |
-| `research` | 2 | 325 | 4954 | 20472 |
+| `research` | 2 | 325 | 4497 | 20472 |
 | `frontend-linting` | 4 | 323 | 5920 | 18380 |
 | `laravel-testing` | 4 | 323 | 7993 | 15335 |
 | `operator` | 6 | 296 | 9910 | 22461 |
@@ -486,7 +486,7 @@ flowchart LR
 | Скилл | Бакет | ток |
 |---|---|--:|
 | `vueuse-functions` | frontend-vue | 10838 |
-| `query-craft` | research | 4385 |
+| `query-craft` | research | 3928 |
 | `voice-ai` | voice-ai | 3193 |
 | `modular-architecture` | laravel-architecture | 3139 |
 | `laravel-testing` | laravel-testing | 3061 |

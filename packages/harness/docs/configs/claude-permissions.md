@@ -30,10 +30,21 @@
 Логика каждого пресета трёхуровневая:
 
 - **allow** — повседневный инструментарий стека работает без промптов;
-- **ask** — необратимое или внешнее (git push, `rm -rf`, `migrate:fresh`,
+- **ask** — необратимое или внешнее (git push, `migrate:fresh`,
   `docker system prune`, `npm publish`) требует подтверждения;
 - **deny** — секреты (`.env`, `*.pem`, `*.key`, `~/.ssh`, `~/.aws`) и `sudo`
   заблокированы всегда.
+
+::: tip rm управляется хуком, не ask-правилами
+`rm`/`rmdir` в пресетах **не стоят в ask**: их жёстко блокирует deny_hard
+auto-approve-хука, а внутри доверенных директорий (machine-owned allowlist
+`safe-dirs.json` в корне монорепо swissknifeman, команда `harness safe-dirs`) —
+пропускает.
+Статическое ask-правило здесь только мешало бы: hook-`allow` не пробивает ask
+из settings (официальная семантика permissions), и rm в safe-dirs промптил бы
+всегда. Если ask-правила rm остались в проекте от старых пресетов — сними их:
+`harness safe-dirs prune-ask --global --all-projects`.
+:::
 
 ## Оркестрация: `Workflow` / `Agent` / `TodoWrite`
 
@@ -203,7 +214,7 @@ VM, devcontainer-ах, где агент не может навредить ос
     ],
     "ask": [
       "Bash(git push *)", "Bash(git reset --hard *)", "Bash(git clean *)",
-      "Bash(rm -r *)", "Bash(rm -rf *)", "Bash(chmod -R *)", "Bash(chown *)"
+      "Bash(chmod -R *)", "Bash(chown *)"
     ],
     "deny": [
       "Read(.env)", "Read(.env.local)", "Read(.env.production)",

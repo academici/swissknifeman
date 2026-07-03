@@ -57,6 +57,31 @@ harness hooks --target . --memory core:federation # file|federation|agentmemory|
   `.claude/review-gate.config.json` (`check_command`; пусто → no-op). Подробно —
   `hooks/review-gate/README.md`.
 
+### `harness safe-dirs`
+
+Machine-owned allowlist доверенных директорий: внутри его корней auto-approve
+пропускает `rm`/`rmdir` мимо deny_hard (код под git — удаление обратимо), вне —
+блокирует как раньше. Конфиг живёт **в корне монорепо swissknifeman** —
+`safe-dirs.json` (gitignored, шаблон `safe-dirs.example.json` — тот же паттерн,
+что `config.json` узла maind); лестница поиска хуком: `$SKM_SAFE_DIRS_CONFIG`
+(эксклюзивный override) → корень монорепо (через realpath лаунчера из PATH) →
+legacy `~/.swissknifeman/safe-dirs.json` (`init` мигрирует его в репо
+автоматически). Вердикт считает `hooks/auto-approve/lib/safedirs.py` строго
+fail-closed: argv через shlex, realpath против symlink-escape/`..`, containment
+по компонентам, защита `.git` и самого корня, глобы по статическому префиксу;
+любая shell-магия (`$VAR`, `$( )`, backticks, `xargs rm`) → deny.
+Project-override конфига хука на allowlist **не влияет** (безопасность).
+
+```
+harness safe-dirs init                                  # конфиг с дефолтами
+harness safe-dirs list                                  # эффективный allowlist глазами хука
+harness safe-dirs add ~/projects                        # добавить корень (--exclude — изъятие)
+harness safe-dirs prune-ask --global --all-projects     # снять старые ask-правила rm
+```
+
+Дефолт `include_registered_projects=true` — онбордженные проекты из
+`~/.swissknifeman/projects.json` попадают в allowlist автоматически.
+
 ::: warning bypass снимает подтверждения
 Режим `bypass` авто-одобряет всё, кроме жёсткого denylist — только для
 контейнеров/VM, не на рабочей машине.

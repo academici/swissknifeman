@@ -15,7 +15,13 @@
 - `mcp/<name>.json` — голые объекты конфига MCP-серверов (context7/playwright/
   filesystem/fetch/memory/github/sequential-thinking). Вливаются в `.mcp.json`.
 - `hooks/auto-approve/` — PreToolUse-хук авто-одобрения (режимы strict/permissive/
-  bypass; порядок deny_hard→deny_block→allow).
+  bypass; порядок deny_hard→deny_block→allow). **safe-dirs**: rm/rmdir с целями строго
+  внутри доверенных директорий пропускаются мимо deny_hard — allowlist MACHINE-OWNED
+  `<монорепо>/safe-dirs.json` (корень репо, gitignored, шаблон `safe-dirs.example.json`;
+  лестница хука: `$SKM_SAFE_DIRS_CONFIG` → корень монорепо через realpath PATH-лаунчера →
+  legacy `~/.swissknifeman/`), управление — `harness safe-dirs`, вердикт `lib/safedirs.py`
+  (fail-closed: shlex-argv, realpath, containment, защита .git/корня; project-override
+  конфига хука на allowlist НЕ влияет).
 - `hooks/memory/` — единая память (file/federation/agentmemory).
 - `hooks/notify/`, `hooks/log-bash-command.sh` — ОС-уведомления и лог Bash-команд.
 - `hooks/agent-router/` — **intent-router** (первый Python-хук репо): пара `session-policy.py`
@@ -52,6 +58,7 @@
 | `permissions.py` | `apply_permissions` + `cmd_permissions` (обвязка `apply-permissions.sh`) |
 | `mcp.py` | `block_mcp`/`available_mcp` + `cmd_mcp` (пресеты MCP → `.mcp.json`) |
 | `hooks.py` | `block_autoapprove`/`block_memory`/`install_global` + `cmd_hooks` |
+| `safedirs.py` | `cmd_safedirs` — allowlist `<монорепо>/safe-dirs.json` (init/add/list/prune-ask, init мигрирует legacy из home); вердикт-ядро живёт в хуке `configs/.../auto-approve/lib/safedirs.py` |
 | `doctor.py` | диагностика окружения |
 
 ## Команды CLI
@@ -64,6 +71,8 @@ harness hooks       --target . --auto-approve strict --memory core:federation --
 harness router      --generate --target .   # каталог intent-router (.claude/agent-router.config.json)
 harness agent-packs <list|render|upgrade|remove|doctor> [--pack P] [--target .] [--auto]
         [--dry-run] [--install-only] [--allow-shell M] [KEY=VALUE …]   # см. agentpacks.py
+harness safe-dirs   <init|list|add|remove|prune-ask> [PATH] [--exclude] [--global]
+        [--target P] [--all-projects] [--dry-run]   # allowlist rm/rmdir (см. safedirs.py)
 harness doctor
 ```
 

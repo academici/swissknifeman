@@ -14,8 +14,9 @@
 
 HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-. "$HOOK_DIR/lib/common.sh"  2>/dev/null || exit 0
-. "$HOOK_DIR/lib/analyze.sh" 2>/dev/null || exit 0
+. "$HOOK_DIR/lib/common.sh"   2>/dev/null || exit 0
+. "$HOOK_DIR/lib/analyze.sh"  2>/dev/null || exit 0
+. "$HOOK_DIR/lib/safedirs.sh" 2>/dev/null || exit 0
 
 require jq
 read_input

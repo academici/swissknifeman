@@ -19,6 +19,9 @@ settings.local.json.bak
 MERGE-PLAN.snapshots/
 # Приватный конфиг узла maind (пути ко всем проектам); шаблон — config.example.json
 config.json
+# Machine-owned allowlist safe-dirs (пути машины); шаблон — safe-dirs.example.json,
+# читают хук auto-approve (lib/safedirs.py) и CLI `harness safe-dirs`
+safe-dirs.json
 
 # Машинно-специфичный MCP-конфиг проекта: абсолютные пути к лаунчеру maind (утечка
 # пути + ломает клон у других). Шаблон — .mcp.json.example; реальный файл генерит

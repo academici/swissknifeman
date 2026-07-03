@@ -37,7 +37,7 @@
     "read_nouns_any": ["api", "search"]
   },
 
-  "$comment_deny": "deny_hard => активный DENY (катастрофично). deny_block_approve => fall-through на обычный промпт (мутация, но решаешь сам).",
+  "$comment_deny": "deny_hard => активный DENY (катастрофично). deny_block_approve => fall-through на обычный промпт (мутация, но решаешь сам). rm/rmdir можно точечно разрешить в доверенных директориях — machine-owned safe-dirs.json в корне монорепо swissknifeman ($SKM_SAFE_DIRS_CONFIG → репо → legacy ~/.swissknifeman/; команда harness safe-dirs), НЕ через project-override этого конфига (lib/safedirs.py его не читает).",
 
   "deny_hard": [
     "(^|[^[:alnum:]_/.-])(sudo|doas|rm|rmdir|shred|mkfs|mkswap|reboot|shutdown|poweroff|halt|fdisk|parted)([[:space:]]|$)",

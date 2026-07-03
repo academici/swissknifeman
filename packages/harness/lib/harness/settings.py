@@ -49,6 +49,22 @@ def add_hook(settings, event, matcher, command):
     return True
 
 
+def remove_permission_rules(settings, key, rules):
+    """Удалить ТОЧНЫЕ совпадения rules из permissions.<key> (семантика «снимаем
+    своё» — чужие правила не трогаем). Возвращает число удалённых."""
+    perms = settings.get("permissions")
+    if not isinstance(perms, dict) or not isinstance(perms.get(key), list):
+        return 0
+    kept = [r for r in perms[key] if r not in rules]
+    removed = len(perms[key]) - len(kept)
+    if removed:
+        if kept:
+            perms[key] = kept
+        else:
+            del perms[key]
+    return removed
+
+
 def set_setting_key(target, fname, key, value, dry):
     """Merge-only writer одного top-level ключа в .claude/<fname> (напр. outputStyle). Бэкап *.bak."""
     settings, f = load_settings(target, fname)

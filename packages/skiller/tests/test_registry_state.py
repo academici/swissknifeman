@@ -356,6 +356,71 @@ class DoctorCase(unittest.TestCase):
         self.assertIn("project_type", out)
 
 
+def _run_doctor(env, argv):
+    """doctor может sys.exit(1) на синтетическом tmp-реестре (нет симлинка/git) — это
+    норма (см. test_doctor_runs_and_reports); ловим, чтобы прочитать вывод."""
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        with contextlib.suppress(SystemExit):
+            cmd_doctor(env, argv)
+    return buf.getvalue()
+
+
+class VendorDriftCase(unittest.TestCase):
+    """doctor --vendor-drift: дрейф managed-скиллов зарегистрированных vendor-проектов
+    от текущего реестра (сухой plan_sync — см. doctor._vendor_drift)."""
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.tmp = Path(self._tmp.name)
+        self.root, self.env = fx.make_registry(self.tmp)
+        reg, *_ = build_registry(self.env)
+        (self.root / "skills.json").write_text(
+            json.dumps(reg, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _register_vendor_project(self, buckets):
+        proj = self.tmp / "proj"
+        proj.mkdir(parents=True, exist_ok=True)
+        cfg_dir = proj / ".swissknifeman"
+        cfg_dir.mkdir(parents=True, exist_ok=True)
+        (cfg_dir / "config.json").write_text(
+            json.dumps({"mode": "vendor", "buckets": buckets}), encoding="utf-8")
+        upsert_project(self.env, {"path": str(proj), "channel": "vendor"})
+        return proj
+
+    def test_summary_ok_when_no_vendor_projects(self):
+        out = _run_doctor(self.env, [])
+        self.assertIn("vendor-скиллы: дрейфа от реестра нет", out)
+
+    def test_summary_warns_when_project_behind(self):
+        self._register_vendor_project(["quality"])
+        out = _run_doctor(self.env, [])
+        self.assertIn("vendor-скиллы: 1 проект(ов) отстали от реестра", out)
+
+    def test_detail_flag_reports_missing_skill(self):
+        self._register_vendor_project(["quality"])
+        out = _run_doctor(self.env, ["--vendor-drift"])
+        self.assertIn("proj: +1 новых", out)
+
+    def test_detail_flag_clean_after_sync(self):
+        from skiller.skillset import load_skillset_config, sync_skillset
+        proj = self._register_vendor_project(["quality"])
+        cfg = load_skillset_config(proj)
+        sync_skillset(self.env, proj, cfg)
+        out = _run_doctor(self.env, ["--vendor-drift"])
+        self.assertIn("(все vendor-проекты синхронизированы с реестром)", out)
+
+    def test_connect_only_project_ignored(self):
+        # проект без .swissknifeman/config.json (только connect) — не участвует в дрейфе
+        proj = self.tmp / "connectonly"
+        proj.mkdir(parents=True, exist_ok=True)
+        upsert_project(self.env, {"path": str(proj), "channel": "connect"})
+        out = _run_doctor(self.env, [])
+        self.assertIn("vendor-скиллы: дрейфа от реестра нет", out)
+
+
 class StatusCase(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()

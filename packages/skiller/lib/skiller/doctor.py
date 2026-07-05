@@ -71,6 +71,75 @@ def _audit_downstream(env):
         print("  (нет онбордженных проектов на диске)")
 
 
+def _vendor_drift(env):
+    """Дрейф vendor-скиллов по флоту: зарегистрированные mode=vendor проекты, чей набор
+    разошёлся с ТЕКУЩИМ реестром (add — новый скилл появился, update — sha256 сменился,
+    remove — выпал из конфига). Сухой plan_sync, ничего не пишет. Connect-only проекты
+    (без .swissknifeman/config.json) пропускаются — им обновление приходит из marketplace
+    само. Возвращает [(project_name, plan), ...] только для тех, у кого есть дрейф."""
+    from .skillset import load_skillset_config, plan_sync
+    db_file = env.db_file
+    if not db_file.exists():
+        return []
+    try:
+        projects = json.loads(db_file.read_text(encoding="utf-8")).get("projects", [])
+    except json.JSONDecodeError:
+        return []
+    drifted = []
+    for p in projects:
+        pdir = Path(p.get("path", ""))
+        if not pdir.is_dir():
+            continue
+        try:
+            cfg = load_skillset_config(pdir)
+        except SystemExit:
+            continue  # битый .swissknifeman/config.json — отдельная забота, не роняем скан
+        if cfg is None:
+            continue
+        try:
+            # include_core=True — тот же дефолт, что и у `skiller sync` (cmd_sync:
+            # include_core=not opts["no_core"], по умолчанию no_core=False). Без
+            # этого сравнение с реестром ложно считает CORE_SKILLS «add»/«remove».
+            plan = plan_sync(env, pdir, cfg, include_core=True)
+        except Exception:
+            continue
+        if plan["add"] or plan["update"] or plan["remove"] or plan["conflicts"]:
+            drifted.append((p.get("id") or pdir.name, plan))
+    return drifted
+
+
+def _audit_vendor_drift(env):
+    """Детальный по-проектный отчёт дрейфа vendor-скиллов (--vendor-drift)."""
+    print("\nДрейф vendor-скиллов от реестра (mode=vendor, сухой расчёт):")
+    drifted = _vendor_drift(env)
+    if not drifted:
+        print("  (все vendor-проекты синхронизированы с реестром)")
+        return
+    for name, plan in drifted:
+        parts = []
+        if plan["add"]:
+            parts.append(f"+{len(plan['add'])} новых")
+        if plan["update"]:
+            parts.append(f"~{len(plan['update'])} с новой версией")
+        if plan["remove"]:
+            parts.append(f"-{len(plan['remove'])} лишних")
+        if plan["conflicts"]:
+            parts.append(f"!{len(plan['conflicts'])} конфликтов (прерванный sync?)")
+        print(f"  [warn] {name}: " + ", ".join(parts)
+              + "  (применить: skiller sync — из каталога проекта)")
+
+
+def _vendor_drift_summary(env):
+    """Компактная summary-строка для дефолтного doctor: сколько vendor-проектов отстало
+    от реестра (новые/изменившиеся managed-скиллы). Детали — --vendor-drift."""
+    drifted = _vendor_drift(env)
+    if drifted:
+        print(f"  [warn] vendor-скиллы: {len(drifted)} проект(ов) отстали от реестра "
+              "(детали: skiller doctor --vendor-drift)")
+    else:
+        print("  [ok ] vendor-скиллы: дрейфа от реестра нет")
+
+
 def _downstream_claude_md_summary(env):
     """Компактная summary-строка для дефолтного doctor: сколько онбордженных проектов имеют
     CLAUDE.md > 200 строк (always-loaded → резидентный токен-расход). Детали — --downstream."""
@@ -103,11 +172,13 @@ def _downstream_claude_md_summary(env):
 
 
 def cmd_doctor(env, argv):
-    opts = parse_flags(argv, {"--downstream": "bool"})
+    opts = parse_flags(argv, {"--downstream": "bool", "--vendor-drift": "bool"})
     if opts["help"]:
-        print("skiller doctor [--downstream]\n"
-              "  --downstream: гигиена publish-surface онбордженных проектов "
-              "(CLAUDE.md ≤200, scoped/unscoped rules, deny-пресет).")
+        print("skiller doctor [--downstream] [--vendor-drift]\n"
+              "  --downstream:   гигиена publish-surface онбордженных проектов "
+              "(CLAUDE.md ≤200, scoped/unscoped rules, deny-пресет).\n"
+              "  --vendor-drift: по-проектный дрейф vendor-скиллов от реестра "
+              "(новые/изменившиеся managed-скиллы; сухой расчёт).")
         return
     root = env.root
     issues = 0
@@ -273,6 +344,11 @@ def cmd_doctor(env, argv):
         _audit_downstream(env)
     else:
         _downstream_claude_md_summary(env)
+
+    if opts.get("vendor_drift"):
+        _audit_vendor_drift(env)
+    else:
+        _vendor_drift_summary(env)
 
     print(f"\n{'Все проверки пройдены.' if issues == 0 else f'Проблем: {issues}'}")
     if issues:

@@ -1,17 +1,69 @@
 """doctor — диагностика окружения узла maind."""
+import os
 import shutil
 import sys
+from pathlib import Path
 
 from .common import parse_args
 from .memory import health, resolve_ports
 
 
+def _skill_drift(env, config):
+    """Дрейф managed-скиллов maind (ecosystem-mcp/ecosystem-setup) по флоту enabled-
+    проектов: сухой прогон обоих провиженеров (mode=auto, dry=True) — state != 'fresh'
+    значит скилл отсутствует ИЛИ шаблон в maind с тех пор обновился (устарел). Ничего
+    не пишет; реальная раскатка — `maind sync --only ecosystem-skill,setup-skill`."""
+    from .federation import _enabled_projects
+    from .provision.skilldoc import apply_ecosystem_skill, apply_setup_skill
+    drifted = []
+    for p in _enabled_projects(config):
+        local = p.get("local_path")
+        if not local or not Path(os.path.expanduser(local)).is_dir():
+            continue
+        for fn, label in ((apply_ecosystem_skill, "ecosystem-mcp"),
+                          (apply_setup_skill, "ecosystem-setup")):
+            try:
+                res = fn(env, config, p, "auto", True)
+            except Exception:
+                continue
+            if res.get("state") != "fresh":
+                drifted.append((p.get("id"), label, res["state"]))
+    return drifted
+
+
+def _skill_drift_report(env, config, detail):
+    """detail=False: одна summary-строка для дефолтного doctor. detail=True: по-проектная
+    разбивка (--skill-drift)."""
+    drifted = _skill_drift(env, config)
+    if not detail:
+        if drifted:
+            projects = sorted({pid for pid, _, _ in drifted})
+            print(f"  [warn] managed-скиллы (ecosystem-mcp/setup): {len(projects)} "
+                  "проект(ов) отстали от шаблона (детали: maind doctor --skill-drift)")
+        else:
+            print("  [ok ] managed-скиллы (ecosystem-mcp/setup): дрейфа от шаблона нет")
+        return
+    print("\nДрейф managed-скиллов maind (ecosystem-mcp/ecosystem-setup, сухой расчёт):")
+    if not drifted:
+        print("  (все enabled-проекты синхронизированы с текущими шаблонами)")
+        return
+    by_project = {}
+    for pid, label, state in drifted:
+        by_project.setdefault(pid, []).append(f"{label}:{state}")
+    for pid, items in sorted(by_project.items()):
+        print(f"  [warn] {pid}: " + ", ".join(items)
+              + "  (применить: maind sync --project " + pid + " --only ecosystem-skill,setup-skill)")
+
+
 def cmd_doctor(env, argv):
-    opts, _ = parse_args(argv, {"--quiet": "bool", "--audit": "str", "--json": "bool"})
+    opts, _ = parse_args(argv, {"--quiet": "bool", "--audit": "str", "--json": "bool",
+                                "--skill-drift": "bool"})
     if opts["help"]:
         print("maind doctor [--quiet] — проверка окружения узла\n"
               "maind doctor --audit mcp|claude|deny|core|all [--json] — "
-              "fleet-аудит оптимизаций по проектам (read-only)")
+              "fleet-аудит оптимизаций по проектам (read-only)\n"
+              "maind doctor --skill-drift — по-проектная разбивка дрейфа "
+              "ecosystem-mcp/ecosystem-setup от текущего шаблона")
         return
 
     # --audit: read-only fleet-отчёт о полноте раздачи оптимизаций по проектам
@@ -73,6 +125,9 @@ def cmd_doctor(env, argv):
         suffix = (" (есть legacy .projects.json — maind migrate from-brain)"
                   if legacy.exists() else " (создайте из config.example.json)")
         check(True, "config.json отсутствует" + suffix)
+
+    if config:
+        _skill_drift_report(env, config, detail=opts.get("skill_drift"))
 
     # порты памяти — на разрешённых портах (env/конфиг), информативно
     if not quiet:

@@ -14,7 +14,8 @@ import os
 import shutil
 import sys
 
-from .common import atomic_write_json, die, now_iso, parse_flags, warn
+from .common import (atomic_write_json, die, find_monorepo_root, now_iso,
+                     parse_flags, warn)
 from .state import load_db
 
 TOPOLOGY_VERSION = 1
@@ -119,7 +120,8 @@ def _cmd_init(env, opts):
                 or detect)
 
     brain = default_for("brain", "brain", detect_brain(env))
-    skman = default_for("swissknifeman", "swissknifeman", str(env.root))
+    skman = default_for("swissknifeman", "swissknifeman",
+                        str(find_monorepo_root(env.root) or env.root))
     base = default_for("projects_base", "projects_base", detect_projects_base(env))
 
     interactive = sys.stdin.isatty() and not opts.get("yes")

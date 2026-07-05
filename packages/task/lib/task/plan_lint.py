@@ -82,6 +82,10 @@ FIELD_RE = re.compile(r"^\*\*([^*:]+):\*\*\s*(.*)$")
 ESCALATION_RE = re.compile(r"^>\s*🔴\s*ESCALATION\s+(P\d+\.\d+)\s*:")
 HANDOFF_TITLE_RE = re.compile(r"^#\s+HANDOFF\s+—.*—\s+after\s+(P\d+\.\d+)\s*$")
 PLAN_EXEC_RE = re.compile(r"/task:plan-exec\s+(\S+)\s+(P\d+\.\d+)")
+# Следующий шаг допустим и как «сначала детализировать фазу-скелет» (Execution Rules
+# протокола прямо предписывают plan-design перед plan-exec на фазах без заполненных
+# 16 полей) — ссылка на ФАЗУ (Pn), не на item (Pn.m).
+PLAN_DESIGN_PHASE_RE = re.compile(r"/task:plan-design\s+(\S+)\s+(P\d+)(?!\.\d)\b")
 PHASE_FILENAME_RE = re.compile(r"^(P\d+)\.md$")
 PHASE_TOKEN_RE = re.compile(r"^P(\d+)$")
 DONE_TOTAL_RE = re.compile(r"^\s*(\d+)\s*/\s*(\d+)\s*$")
@@ -572,7 +576,16 @@ def lint_plan(plan_dir, diag):
     if handoff:
         next_val, next_lineno = handoff["fields"].get("Next", ("", None))
         m = PLAN_EXEC_RE.search(next_val)
-        if not m:
+        m_design = PLAN_DESIGN_PHASE_RE.search(next_val) if not m else None
+        if m_design:
+            ref_plan_id, ref_phase = m_design.group(1), m_design.group(2)
+            if ref_plan_id != plan_id:
+                diag.error(handoff_path, next_lineno,
+                           f"Next: PLAN-ID «{ref_plan_id}» ≠ фактическому «{plan_id}»")
+            if ref_phase not in phases:
+                diag.error(handoff_path, next_lineno,
+                           f"Next: фаза «{ref_phase}» не существует в плане")
+        elif not m:
             # закрытый целиком план: все items терминальны — честный Next
             # «план закрыт» вместо ссылки на несуществующий следующий item
             plan_closed = bool(all_items) and all(
@@ -580,7 +593,8 @@ def lint_plan(plan_dir, diag):
             if not (plan_closed and "план закрыт" in next_val.lower()):
                 diag.error(handoff_path, next_lineno,
                            "Next не содержит «/task:plan-exec <PLAN-ID> Pn.m» "
-                           "(для целиком закрытого плана допустимо «план закрыт»)")
+                           "(для целиком закрытого плана допустимо «план закрыт», "
+                           "для фазы-скелета — «/task:plan-design <PLAN-ID> Pn»)")
         else:
             ref_plan_id, ref_item = m.group(1), m.group(2)
             if ref_plan_id != plan_id:

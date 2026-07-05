@@ -87,4 +87,4 @@ effort: high
 Красное линтера почини в созданных файлах.
 
 **Expected output:** список созданных/изменённых файлов + число items + строка
-«Готово к: /task:plan-exec <ID> Pn.m».
+«Готово к: `/task:plan-exec <ID> Pn.m` (Sonnet/medium)».

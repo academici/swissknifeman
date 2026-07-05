@@ -302,6 +302,11 @@ maind sync --project <id> --only <cap>   # точечный re-sync: mcp|memory|
 `skiller status --json` (скиллы) · `harness agent-packs doctor --target . --json` (роли) ·
 `maind verify --json` (пруф памяти/графа).
 
+`fixes[]` (drift_hints, probe.py) пока НЕ покрывает версионный дрейф самих managed-скиллов
+(реестр skiller обновился/шаблон ecosystem-mcp обновился, а проекту это не прилетело) — для
+этого отдельный флотовый гейт: [ecosystem-integration] §Drift-gate
+(`skiller doctor --vendor-drift` + `maind doctor --skill-drift`).
+
 ## Ссылки
 
 - [Control-surface проекта](../../../docs/control-surface.md) — единый статус 4 слоёв + точечный re-sync.

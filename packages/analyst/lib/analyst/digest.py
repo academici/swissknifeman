@@ -20,6 +20,7 @@
 Защитно: любое отсутствующее/битое поле run-report пропускается, digest не падает."""
 import json
 import os
+import re
 from pathlib import Path
 
 from core.pathology import detect as detect_pathologies
@@ -30,6 +31,45 @@ from .lessons import (ACTIVE_STATES, add_candidate, audit_append,
                       new_lesson, similar_lessons)
 
 _SIMILAR_CMD = 0.6   # порог «та же по сути команда» для пары fail→pass
+
+# ── фильтр «настоящая проверка vs разведка» для сигнала A ──────────────────────
+# Хук (run-report/_lib.py TEST_PAT/LINT_PAT) кладёт в bash.tests/lints ЛЮБУЮ команду
+# с подстрокой раннера — включая разведку вроде `ls .bin | grep -E 'vitest|pest'`.
+# Такая «падала→прошла» пара даёт мусорный урок (trigger≈action, чинить нечего).
+# Отсекаем: урок из resolved-failure имеет смысл, только если команда РЕАЛЬНО исполняет
+# тест/линт-раннер, а не ищет его имя грепом и не пробит наличие через `|| ...`.
+
+# Раннер действительно ЗАПУСКАЕТСЯ: имя в позиции команды (после разделителя/начала,
+# в т.ч. `vendor/bin/pest`, `npm test`), а не аргумент grep/ls. `\b(?<![-/])` не ловит
+# `--test`/`some/test`; для `vendor/bin/pest` и `npm test` — явные подвыражения.
+_RUNNER_EXEC = re.compile(
+    r"(?:(?:^|[;&|]\s*|\bcd\s+\S+\s+)"
+    r"(?:pytest|phpunit|pest|jest|vitest|unittest|ruff|flake8|pylint|mypy|eslint|"
+    r"phpstan|psalm|pint|black|isort|tsc|prettier|composer|py_compile)\b"
+    r"|vendor/bin/(?:pest|phpunit|pint|phpstan|psalm)\b"
+    r"|(?:npm|yarn|pnpm)\s+(?:run\s+)?(?:test|lint)\b"
+    r"|(?:go|cargo)\s+test\b"
+    r"|(?<![\w.])(?:validate|test)\.sh\b)", re.I)  # путь scripts/validate.sh — это ЗАПУСК
+
+# Явная разведка: команда, СОДЕРЖАЩАЯ имя раннера лишь как аргумент поиска
+# (`grep … vitest`, `ls … | grep pest`) — не исполнение. Плюс `|| ...`-фолбэк-пробинг
+# (`… || echo NO`) — проверка присутствия, а не прогон.
+_DIAGNOSTIC_CMD = re.compile(r"\b(?:grep|rg|ag|find|ls|cat|which|command\s+-v)\b", re.I)
+
+
+def _is_real_check(cmd):
+    """True, если команда действительно ЗАПУСКАЕТ тест/линт-раннер (а не ищет его грепом
+    и не пробит наличие через `||`). Отсекает диагностический шум из сигнала A —
+    resolved-failure на такой паре давал бы урок с trigger≈action, чинить в котором нечего."""
+    if not cmd or not _RUNNER_EXEC.search(cmd):
+        return False
+    # `... || <fallback>` — проверка присутствия, не прогон (падение здесь — норма, не баг)
+    if "||" in cmd:
+        return False
+    # раннер упомянут ТОЛЬКО как аргумент разведки, реального запуска нет → шум
+    if _DIAGNOSTIC_CMD.search(cmd) and not _RUNNER_EXEC.search(re.split(r"[|;&]", cmd)[0]):
+        return False
+    return True
 
 # источник run-report — единый core.find_run_report (раскрывает ~ в пути)
 
@@ -105,7 +145,9 @@ def extract_resolved_failures(run_report, *, scope, project):
     """Сигнал A: команда, которая падала и затем прошла (по Jaccard ≥ порог) → gotcha."""
     sid = run_report.get("session_id") or ""
     files = run_report.get("files_changed") or []
-    entries = _check_entries(run_report)
+    # только НАСТОЯЩИЕ прогоны раннера — разведку/пробинг (`grep vitest`, `... || echo`)
+    # хук кладёт в bash.tests по подстроке, но урок из неё мусорный (см. _is_real_check).
+    entries = [e for e in _check_entries(run_report) if _is_real_check(e.get("command", ""))]
     failed = [e for e in entries if not e.get("ok", True)]
     passed = [e for e in entries if e.get("ok", True)]
     out, seen = [], set()

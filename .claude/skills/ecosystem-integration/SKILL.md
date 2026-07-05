@@ -76,6 +76,23 @@ maind graph --project <id>      # граф проекта и соседи
 разово включи linger: `loginctl enable-linger $USER` (проверка: `loginctl show-user $USER -p
 Linger` → `yes`). См. [systemd-гайд](../../../packages/maind/docs/guide/systemd.md).
 
+## Drift-gate — обязательно перед тем, как считать онбординг/интеграцию завершённой
+
+Managed-скиллы (vendor-канал skiller + `ecosystem-mcp`/`ecosystem-setup` от maind) со временем
+улучшаются в реестре/шаблонах, но уже онбордженным проектам это НЕ прилетает само — раскатка
+одноразовая. Без финальной проверки частичные `--only`-синки незаметно копят дрейф (инцидент:
+у agelto `ecosystem-mcp` не знал про Serena 2 недели — агент читал файлы напрямую вместо графа).
+
+```bash
+skiller doctor --vendor-drift     # какие vendor-проекты отстали от реестра skiller (add/update/remove)
+maind doctor --skill-drift        # какие проекты отстали от шаблонов ecosystem-mcp/ecosystem-setup
+```
+
+Оба read-only и по умолчанию (без флагов) дают одну summary-строку в обычном `doctor`. Проект
+из отчёта → `skiller sync` (из его каталога) и/или `maind sync --project <id> --only
+ecosystem-skill,setup-skill`. Гоняй это после любого точечного (`--only`) онбординга/интеграции,
+не только после полного `maind onboard`.
+
 ## Код-граф (граф кода в проекте) — универсальный
 
 Отдельный per-project MCP графа КОДА (символы/ссылки/реализации). Движок по умолчанию —

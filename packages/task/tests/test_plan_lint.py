@@ -381,6 +381,36 @@ class TestHandoffMd(TmpPlanTestCase):
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok)
 
+    def test_handoff_next_plan_design_phase_allowed(self):
+        # фаза-скелет впереди → Next «/task:plan-design <ID> Pn» (ссылка на фазу, не item) — валиден
+        plan_dir = write_valid_plan(self.root)
+        text = (plan_dir / "handoff.md").read_text(encoding="utf-8")
+        text = text.replace("**Next:** /task:plan-exec DEMO-1 P1.1\n",
+                            "**Next:** /task:plan-design DEMO-1 P1\n")
+        (plan_dir / "handoff.md").write_text(text, encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok)
+
+    def test_handoff_next_plan_design_wrong_plan_id(self):
+        plan_dir = write_valid_plan(self.root)
+        text = (plan_dir / "handoff.md").read_text(encoding="utf-8")
+        text = text.replace("**Next:** /task:plan-exec DEMO-1 P1.1\n",
+                            "**Next:** /task:plan-design OTHER-ID P1\n")
+        (plan_dir / "handoff.md").write_text(text, encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertFalse(diag.ok)
+        self.assertTrue(_errors_containing(diag, "PLAN-ID «OTHER-ID» ≠ фактическому «DEMO-1»"))
+
+    def test_handoff_next_plan_design_nonexistent_phase(self):
+        plan_dir = write_valid_plan(self.root)
+        text = (plan_dir / "handoff.md").read_text(encoding="utf-8")
+        text = text.replace("**Next:** /task:plan-exec DEMO-1 P1.1\n",
+                            "**Next:** /task:plan-design DEMO-1 P9\n")
+        (plan_dir / "handoff.md").write_text(text, encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertFalse(diag.ok)
+        self.assertTrue(_errors_containing(diag, "фаза «P9» не существует в плане"))
+
     def test_handoff_next_plan_closed_rejected_when_items_active(self):
         # «план закрыт» при живом 🟡 item — не оправдание, ERROR остаётся
         plan_dir = write_valid_plan(self.root)

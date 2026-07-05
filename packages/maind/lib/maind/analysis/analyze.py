@@ -101,6 +101,24 @@ def git_status(project_path, base=None):
     return out
 
 
+# ── источник 6: непросмотренные уроки analyst (петля обучения ждёт человека) ───
+# ephemeral/candidate — уроки, которые digest извлёк, но человек ещё не отревьюил/промоутнул.
+# Копятся молча (digest пишет автоматически, review — вручную); analyze напоминает про них.
+_PENDING_LESSON_STATES = ("ephemeral", "candidate")
+
+
+def pending_lessons(project_path):
+    """Сколько уроков analyst ждут ревью человека (ephemeral+candidate). 0 если каталога нет.
+    Read-only счётчик файлов — analyst-стор живёт в <project>/.claude/analyst/lessons/<state>/."""
+    base = Path(os.path.expanduser(str(project_path))) / ".claude" / "analyst" / "lessons"
+    total = 0
+    for state in _PENDING_LESSON_STATES:
+        d = base / state
+        if d.is_dir():
+            total += sum(1 for p in d.glob("*.json") if p.is_file())
+    return total
+
+
 # ── источник 5: health (хаб жив? переиспользуем health_report) ────────────────
 def health_slice(env, config, project):
     """Компактный срез health_report (память/граф/round-trip). None при любой ошибке —
@@ -199,6 +217,7 @@ def analyze_report(env, config, project, *, session=None, base=None, with_health
         "red": red, "reasons": reasons, "repass": repass,
         "run_report": run_report, "bash_log": bash_log,
         "observer": observer, "git": git, "health": health,
+        "pending_lessons": pending_lessons(ppath),
     }
 
 
@@ -289,6 +308,10 @@ def _print_human(rep):
             print(f"    ↻ {item}")
     if not (rep["red"] or rep["reasons"] or rep["repass"]):
         print("  ✓ прогон чистый: тесты/линт зелёные, дерево чисто, обходок/отложек нет")
+    # напоминание о петле обучения (не влияет на вердикт — уроки ждут человека, не баг прогона)
+    pending = rep.get("pending_lessons") or 0
+    if pending:
+        print(f"  📚 {pending} урок(ов) analyst ждут ревью — analyst review · промоут: analyst promote <id>")
     print()
 
 

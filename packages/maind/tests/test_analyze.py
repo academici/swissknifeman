@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 
 from maind.analysis.analyze import (analyze_report, bash_log_forensics, compute_verdict,
-                           find_run_report, git_status)
+                           find_run_report, git_status, pending_lessons)
 from maind.config import load_config
 from tests.fixtures import make_repo, write_maind_config
 
@@ -147,6 +147,40 @@ class ReportAssemblyCase(unittest.TestCase):
             self.assertIsNone(rep["health"])                    # отключён
             # JSON-сериализуемо целиком
             self.assertIsInstance(json.dumps(rep, ensure_ascii=False), str)
+
+
+class PendingLessonsCase(unittest.TestCase):
+    """analyze напоминает о непросмотренных уроках analyst (ephemeral+candidate)."""
+    def test_counts_ephemeral_and_candidate_only(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp) / ".claude" / "analyst" / "lessons"
+            for state, n in (("ephemeral", 2), ("candidate", 1),
+                             ("curated", 3), ("deprecated", 5)):
+                d = base / state
+                d.mkdir(parents=True)
+                for i in range(n):
+                    (d / f"l{i}.json").write_text("{}", encoding="utf-8")
+            self.assertEqual(pending_lessons(tmp), 3)   # curated/deprecated не считаются
+
+    def test_zero_when_no_analyst_dir(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertEqual(pending_lessons(tmp), 0)
+
+    def test_report_carries_pending_count(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, env = make_repo(tmp)
+            projdir = Path(tmp) / "proj_beta"
+            projdir.mkdir()
+            _write_run(projdir, GREEN_RR)
+            eph = projdir / ".claude" / "analyst" / "lessons" / "ephemeral"
+            eph.mkdir(parents=True)
+            (eph / "x.json").write_text("{}", encoding="utf-8")
+            projects = [{"id": "beta", "name": "Beta", "type": "node-package",
+                         "status": "active", "local_path": str(projdir)}]
+            write_maind_config(root, projects=projects)
+            config, _ = load_config(env)
+            rep = analyze_report(env, config, config["projects"][0], with_health=False)
+            self.assertEqual(rep["pending_lessons"], 1)
 
 
 class MaindObservabilityCase(unittest.TestCase):

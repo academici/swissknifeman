@@ -6,6 +6,11 @@
 файлы, tool-провалы) и пишет `<cwd>/.claude/runs/<session_id>.json`. Отсюда `maind analyze`
 собирает пост-ран отчёт «всё ли сработало». Ничего в dev-loop.js/паках менять не нужно.
 
+После записи отчёта (если DIGEST=on в env.ini) тихо дёргает `analyst digest` subprocess'ом —
+замыкает петлю обучения (run-report → кандидат-уроки в ephemeral). Best-effort, не барьер:
+нет бинаря analyst / таймаут / любой сбой не мешают завершению сессии. Промоут в память —
+по-прежнему человек (инвариант analyst не нарушается: авто-запись только в LOCAL ephemeral).
+
 Дисциплина (verified perplexity-web по офиц. докам Claude Code hooks):
 - SessionEnd получает `transcript_path`/`session_id`/`cwd`, НЕ блокирует — идеален для архива;
 - транскрипт — first-class артефакт, строчный парс поддерживаем/стабилен к аддитивным правкам;
@@ -23,16 +28,17 @@ _DEFAULT_KEEP = 30
 
 
 def _read_enabled(cwd):
-    """ENABLED из <cwd>/.claude/run-report.env.ini (default on: регистрация хука = намерение).
-    Kill-switch без правки settings.json. Возвращает (enabled: bool, keep: int)."""
-    enabled, keep = True, _DEFAULT_KEEP
+    """ENABLED/RUNS_KEEP/DIGEST из <cwd>/.claude/run-report.env.ini (default on: регистрация
+    хука = намерение). Kill-switch без правки settings.json. Возвращает (enabled, keep, digest).
+    DIGEST=on (дефолт) — после записи отчёта тихо дёрнуть `analyst digest` (петля обучения)."""
+    enabled, keep, digest = True, _DEFAULT_KEEP, True
     if not cwd:
-        return enabled, keep
+        return enabled, keep, digest
     f = Path(cwd) / ".claude" / "run-report.env.ini"
     try:
         text = f.read_text(encoding="utf-8")
     except Exception:
-        return enabled, keep
+        return enabled, keep, digest
     for line in text.splitlines():
         line = line.strip()
         if not line or line.startswith("#") or "=" not in line:
@@ -45,7 +51,9 @@ def _read_enabled(cwd):
                 keep = max(1, int(v))
             except ValueError:
                 pass
-    return enabled, keep
+        elif k == "DIGEST":
+            digest = v.lower() not in ("off", "0", "false", "no")
+    return enabled, keep, digest
 
 
 def _ensure_gitignore(runs_dir):
@@ -136,6 +144,51 @@ def _append_trend(cwd, sid, report):
         pass
 
 
+def _analyst_bin():
+    """Резолв бинаря analyst: ANALYST_BIN → PATH → топология swissknifeman → дефолт-путь.
+    Хук копируется в ~/.claude/hooks без PYTHONPATH монорепо, потому digest дёргаем subprocess'ом
+    (как memory-хук зовёт maind). None, если не найден — тогда digest тихо пропускается."""
+    import shutil
+    env_bin = os.environ.get("ANALYST_BIN")
+    if env_bin and os.access(env_bin, os.X_OK):
+        return env_bin
+    found = shutil.which("analyst")
+    if found:
+        return found
+    candidates = []
+    topo = Path(os.path.expanduser("~/.swissknifeman/topology.json"))
+    try:
+        nodes = (json.loads(topo.read_text(encoding="utf-8")) or {}).get("nodes") or {}
+        skm = nodes.get("swissknifeman")
+        base = skm.get("path") if isinstance(skm, dict) else skm
+        if base:
+            candidates.append(Path(os.path.expanduser(base)) / "packages/analyst/bin/analyst")
+    except Exception:
+        pass
+    candidates.append(Path(os.path.expanduser(
+        "~/projects/packages/swissknifeman/packages/analyst/bin/analyst")))
+    for c in candidates:
+        if c.is_file() and os.access(c, os.X_OK):
+            return str(c)
+    return None
+
+
+def _run_digest(cwd, sid):
+    """Тихо дёрнуть `analyst digest --session <sid>` в проекте после записи отчёта: извлечь
+    кандидат-уроки в ephemeral (промоут в память по-прежнему человек — инвариант не нарушается).
+    Best-effort, НЕ барьер: нет бинаря / таймаут / любой сбой → молча пропускаем (как весь хук)."""
+    try:
+        import subprocess
+        bin_ = _analyst_bin()
+        if not bin_:
+            return
+        subprocess.run([bin_, "digest", "--session", sid],
+                       cwd=cwd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                       timeout=30, check=False)
+    except Exception:
+        pass
+
+
 def main():
     try:
         raw = sys.stdin.read()
@@ -146,7 +199,7 @@ def main():
         sys.exit(0)
 
     cwd = payload.get("cwd") or os.getcwd()
-    enabled, keep = _read_enabled(cwd)
+    enabled, keep, digest = _read_enabled(cwd)
     if not enabled:
         sys.exit(0)
 
@@ -184,6 +237,8 @@ def main():
     except Exception:
         sys.exit(0)
     _append_trend(cwd, sid, report)   # best-effort, глотает свои ошибки сама
+    if digest:
+        _run_digest(cwd, sid)         # петля обучения: run-report → analyst digest → ephemeral
     sys.exit(0)
 
 

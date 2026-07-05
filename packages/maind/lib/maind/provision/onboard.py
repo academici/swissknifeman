@@ -47,6 +47,19 @@ def _ensure_project(env, config, project_or_path, namespaces=None, dry=False):
     Заодно регистрирует эти namespaces в общем реестре `config["namespaces"]`, если их там
     ещё нет (dict-реестр, setdefault — идемпотентно, метаданные не перетираются)."""
     proj = get_project(config, project_or_path)
+    if proj is None:
+        # get_project матчит ТОЛЬКО по id — `maind onboard <тот же путь>` повторно (не по
+        # id, а по абсолютному пути) иначе штампует дубль-запись с тем же id каждый раз
+        # (инцидент: loqum x3 в config.json). Доп. матч по local_path (нормализованному),
+        # если аргумент похож на реальный каталог.
+        from .workspace import norm_path
+        cand = norm_path(project_or_path)
+        if os.path.isdir(cand):
+            for p in config.get("projects") or []:
+                lp = p.get("local_path")
+                if lp and norm_path(lp) == cand:
+                    proj = p
+                    break
     if proj is not None:
         return config, proj, False
     path = Path(os.path.expanduser(project_or_path))

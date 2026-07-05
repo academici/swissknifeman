@@ -30,6 +30,7 @@ maind sync --all --dry-run --json                  # план без запис�
 | `health-doc` | управляемый блок «приоритет №1» в `CLAUDE.md` | `health.py` |
 | `feature-log-hook` | SessionEnd-хук фиксации нового коммита в общую память (при `code_graph.feature_log_hook`) | `health.py` |
 | `ecosystem-skill` | управляемый скилл `ecosystem-mcp` (что за MCP-инструменты, связи, починка) в `.claude/skills/` | `skilldoc.py` |
+| `setup-skill` | управляемый скилл `ecosystem-setup` (дерево решений тулинга проекта) в `.claude/skills/` | `skilldoc.py` |
 | `skills-catalog` | `skiller update` — пере-резолв каталога скиллов (buckets/exclude с диска); новый скилл уже выбранного бакета (напр. `pao` в `php`) доезжает без ручного re-run | `orchestrate.py` → `skm:update` |
 | `agent-pack` | детерминированная раскатка/апгрейд agent-pack(ов) профиля проекта | `orchestrate.py` → `env:agent-pack` |
 | `output-style` | `outputStyle: lean` (терсе-голос агента, токен-экономия) во все `.claude/settings.local.json`; опт-аут — `project.output_style: "off"` | `orchestrate.py` → `env:hooks` |
@@ -57,6 +58,28 @@ maind sync --all --dry-run --json                  # план без запис�
 
 `changed` в отчёте — честный: graph-провиженер сравнивает содержимое стора (сериализация
 детерминирована), а doc/hook — content-hash блока. `--dry-run` ничего не пишет и показывает план.
+
+## Как узнать, что sync вообще нужен (drift-gate)
+
+`sync` детерминирован (content-hash), но **сам себя не вызывает**. Шаблоны провиженеров
+(`templates/skills/ecosystem-mcp/SKILL.md` и т.п.) и реестр скиллов (`skiller`) со временем
+улучшаются, но уже онбордженным проектам это не прилетает, пока кто-то вручную не перезапустит
+sync — «регулярно докатывает» из примечания выше требует триггера. Read-only проверка, что
+триггер назрел:
+
+```bash
+maind doctor --skill-drift        # ecosystem-mcp/ecosystem-setup: absent/stale по флоту enabled-проектов
+skiller doctor --vendor-drift     # vendor-скиллы (buckets/include CORE_SKILLS): add/update/remove по флоту
+```
+
+Оба — сухой прогон (`plan_sync`/`_apply_managed_skill(..., dry=True)`), ничего не пишут; в
+обычном `doctor` (без флагов) — по одной summary-строке. Прогоняй после ЛЮБОГО точечного
+(`--only`) онбординга/интеграции — не только после `--all`: `--only` синки чаще всего и
+оставляют «половину проекта» несинхронизированной, потому что применяют не весь набор
+провиженеров. Реальный инцидент (2026-07): проект `agelto` две недели работал без графа кода
+Serena — `ecosystem-mcp` был раскатан ДО того, как в шаблон добавили правило «сначала граф,
+потом grep», и никто не перезапустил sync, чтобы это подхватить; агент тихо читал файлы
+целиком вместо `find_symbol`, drift был не виден без этой команды.
 
 ## Пример вывода
 

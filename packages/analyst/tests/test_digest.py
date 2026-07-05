@@ -57,6 +57,35 @@ class TestExtractors(unittest.TestCase):
         ], "lints": [], "failed": []})
         self.assertEqual(digest.extract_resolved_failures(rr, scope="s", project="p"), [])
 
+    def test_diagnostic_command_is_not_a_resolved_failure(self):
+        """Разведку хук кладёт в bash.tests по подстроке раннера (`grep vitest`, `... ||`),
+        но урок из «падала→прошла» такой пары мусорный (trigger≈action). Фильтруем."""
+        # тот самый полевой кейс из vaulter: `ls .bin | grep vitest ||` (fail) + доп. проба (pass)
+        rr = _run_report(bash={"tests": [
+            {"command": "ls node_modules/.bin/ | grep -E 'vue-tsc|vitest|vite$' ||", "ok": False},
+            {"command": "ls node_modules/.bin/ | grep -E 'vue-tsc|vitest|vite$' 2>/dev/null", "ok": True},
+        ], "lints": [], "failed": []})
+        self.assertEqual(digest.extract_resolved_failures(rr, scope="s", project="p"), [])
+
+    def test_real_runner_still_extracted_alongside_diagnostic(self):
+        """Настоящий прогон раннера остаётся уроком, даже если рядом diagnostic-шум."""
+        rr = _run_report(bash={"tests": [
+            {"command": "grep -rn vitest package.json", "ok": False},        # разведка — игнор
+            {"command": "vendor/bin/pest tests/FooTest.php", "ok": False},   # реальный прогон
+            {"command": "vendor/bin/pest tests/FooTest.php", "ok": True},
+        ], "lints": [], "failed": []})
+        cands = digest.extract_resolved_failures(rr, scope="s", project="p")
+        self.assertEqual(len(cands), 1)
+        self.assertIn("FooTest", cands[0]["trigger"])
+
+    def test_is_real_check_helper(self):
+        self.assertTrue(digest._is_real_check("vendor/bin/pest 2>&1 | tail -4"))
+        self.assertTrue(digest._is_real_check("cd x && npm test"))
+        self.assertTrue(digest._is_real_check("bash scripts/validate.sh"))
+        self.assertFalse(digest._is_real_check("ls .bin | grep vitest || echo NO"))
+        self.assertFalse(digest._is_real_check("grep -rn pest packages/"))
+        self.assertFalse(digest._is_real_check("git status --short"))
+
     def test_workarounds(self):
         rr = _run_report(devloop={"workarounds": [
             "захардкодил лимит 100 пока нет конфига",

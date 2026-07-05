@@ -38,4 +38,11 @@ effort: xhigh
 
 **Expected output:** вердикт `GREEN` (расхождений нет) / `ATTENTION` (есть MED/LOW) /
 `RED` (HIGH/CRITICAL: no-op под 🟢, невоспроизводимая Validation, scope drift с поломкой) +
-список findings (severity · item · file:line · failure_scenario).
+список findings (severity · item · file:line · failure_scenario), затем:
+```
+Suggested Command: <готова к копипасте по вердикту:
+  GREEN → `/task:plan-exec <PLAN-ID> P(следующая фаза).1` (план продолжается);
+  ATTENTION → `/task:plan-exec <PLAN-ID> Pn.m` на items с находками (почини по месту);
+  RED → `/task:plan-design <PLAN-ID> Pn` (план нуждается в пересборке, не в починке)>
+Model Hint: <sonnet/medium | opus/high> — <причина в 3–8 слов>
+```

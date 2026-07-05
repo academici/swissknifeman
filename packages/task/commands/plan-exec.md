@@ -67,6 +67,22 @@ effort: medium
    Validation: passed|failed — <команды и суть>
    Known Deviations: <…|—>
    Escalation Needed: no|yes (тогда финальная строка ESCALATION-REQUIRED: …)
-   Next Suggested Step: execute plan Pn.k
+   Suggested Command: `/task:plan-exec <PLAN-ID> Pn.k` (готова к копипасте — если следующий
+     item ещё скелет, вместо этого `/task:plan-design <PLAN-ID> Pn` per Execution Rules;
+     если фаза N терминальна и следующий item в фазе N+1 — команда на первый item фазы N+1)
+   Model Hint: <sonnet|opus|haiku>/<effort> — <причина в 3–8 слов>
    Context: handoff свежий — рекомендован /clear перед следующим item
    ```
+   **Suggested Command** и **Model Hint** — не статичный шаблон, а разовая оценка СЛЕДУЮЩЕГО
+   item'а по факту его текста в `phases/Pn.md` (уже прочитан в п. 1) и `plan.md` §Routing:
+   - Если следующий item — обычная реализация в уже детализированной фазе → дефолт `sonnet/medium`
+     (как эта команда).
+   - Если Scope/Code Guidance следующего item'а задевает public contract/SemVer, архитектурный
+     выбор, конфликт правил или неочевидные acceptance (см. триггеры эскалации п. 5) → предложи
+     `opus/high` и явно назови, что переисполнитель может захотеть `/task:plan-design` вместо
+     прямого exec.
+   - Если следующий item — чистая механическая разведка/recon без решений (см. `plan.md` §Routing,
+     обычно `haiku/low`) → предложи её.
+   - Если следующая фаза ещё скелет (Items 🟢/всего в Status Board = 0/N без заполненных 16 полей) —
+     Suggested Command обязан быть `/task:plan-design <PLAN-ID> Pn`, не `plan-exec` (иначе он
+     упадёт на предусловии).

@@ -71,6 +71,37 @@ class TestOnboard(unittest.TestCase):
             finally:
                 onb.run_capability = orig
 
+    def test_repeat_onboard_via_symlink_does_not_duplicate_entry(self):
+        # N4 (P1-review): остаточный edge того же инцидента loqum — norm_path раньше
+        # делал только expanduser+normpath, без резолва симлинков, поэтому онбординг
+        # ТОГО ЖЕ каталога через симлинк на него не матчился с уже зарегистрированным
+        # local_path и штамповал дубль-запись.
+        calls = []
+        orig = onb.run_capability
+        onb.run_capability = lambda e, c, pid, cap, extra=None, dry=False: \
+            (calls.append(cap), 0)[1]
+        with tempfile.TemporaryDirectory() as tmp:
+            root, env = make_repo(tmp)
+            _seed_config(root)
+            proj_dir = Path(tmp) / "loqum"
+            proj_dir.mkdir()
+            proj_link = Path(tmp) / "loqum-link"
+            proj_link.symlink_to(proj_dir)
+            try:
+                config, _ = load_config(env)
+                r1 = onb.onboard(env, config, str(proj_dir),
+                                 {"bundle": "recommended", "yes": True, "dry": False})
+                self.assertTrue(r1["created"])
+                config2, _ = load_config(env)
+                r2 = onb.onboard(env, config2, str(proj_link),
+                                 {"bundle": "recommended", "yes": True, "dry": False})
+                self.assertFalse(r2["created"])
+                cfg3, _ = load_config(env)
+                matches = [p for p in cfg3["projects"] if p.get("id") == "loqum"]
+                self.assertEqual(len(matches), 1)
+            finally:
+                onb.run_capability = orig
+
     def test_skm_missing_skipped_but_deploys(self):
         with tempfile.TemporaryDirectory() as tmp:
             root, env = make_repo(tmp)

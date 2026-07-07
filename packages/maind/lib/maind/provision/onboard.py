@@ -177,6 +177,15 @@ def onboard(env, config, project_or_path, opts):
             steps.append({"name": "skills", "status": "skipped",
                           "detail": "skiller недоступен — пропуск"})
 
+    # 1b. PAO (php/laravel-проект, PHP≥8.3) — токен-экономия вывода PHP-инструментов;
+    # инвариант онбординга (SKM-AUDIT-004 P6): доставка скилла ≠ установка зависимости.
+    lp = proj.get("local_path")
+    if lp:
+        from .. import pao
+        pstep = pao.apply_pao(proj, Path(os.path.expanduser(lp)),
+                              interactive=sys.stdin.isatty() and not opts.get("yes"), dry=dry)
+        steps.append(pstep)
+
     # 2. maind deploy — память + граф (MCP-серверы хаба)
     # --with-code (legacy --with-graphify) фиксируем как намерение в записи проекта, чтобы
     # последующие `maind sync` тоже раскатывали код-граф (config-driven, см. _mcp_run).

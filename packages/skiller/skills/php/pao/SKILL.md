@@ -16,7 +16,7 @@ sha256: ""
 
 # Laravel PAO — Agent-Optimized Output
 
-PAO (https://github.com/nunomaduro/pao) detects runs inside an AI agent (ENV: `CLAUDE_CODE`, `CURSOR_AGENT`, etc.) and replaces output with compact JSON (~20 tokens regardless of suite size). Human terminal sees normal output; only the agent env changes. Works with any PHP project (Laravel, Symfony, vanilla): PHPUnit, Pest, Paratest, PHPStan, Rector, Laravel Artisan.
+PAO (https://github.com/laravel/pao) detects runs inside an AI agent (ENV: `CLAUDE_CODE`, `CURSOR_AGENT`, etc.) and replaces output with compact JSON (~20 tokens regardless of suite size). Human terminal sees normal output; only the agent env changes. Works with any PHP project (Laravel, Symfony, vanilla): PHPUnit, Pest, Paratest, PHPStan, Rector, Laravel Artisan.
 
 ## Input
 - PHP ≥ 8.3 (hard package requirement).
@@ -54,9 +54,9 @@ On failure PAO keeps everything needed to fix — file, line, message:
 - Custom `bin/check-*` scripts NOT covered by PAO — for those use waaseyaa/agent-output (NDJSON, −94.7%): https://jonesrussell.github.io/blog/agent-output-php-ci-tools/. Not adopted as a registry standard — PAO covers the main stack.
 
 ## Links
-- https://github.com/nunomaduro/pao
+- https://github.com/laravel/pao
 - https://laravel.com/blog/introducing-laravel-pao-cleaner-output-for-ai-agents
 - https://laravel-news.com/pao-agent-optimized-output-for-php-testing-tools
 - Related skills: `laravel-testing/laravel-testing` (PHPUnit/Pest, output collapsed by PAO), `php/static-analysis` (PHPStan/Rector — also under PAO wrapper), `general/context-economy` (general agent context economy)
 
-<!-- ru-source-sha256: 74053d2166b1c13b18453e1643fca94f8d2c911d217468349f26f47d55f6898e -->
+<!-- ru-source-sha256: 870d164e8529095ef72d2833f558de178f9b30f66c4389b81a64a364937d417b -->

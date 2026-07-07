@@ -18,7 +18,7 @@ sha256: ""
 
 ## Контекст
 
-Полный вывод PHPUnit на большом прогоне — ~10 000 токенов, и он накапливается с каждой итерацией «правка → тест». PAO (https://github.com/nunomaduro/pao) детектирует запуск внутри AI-агента (ENV: `CLAUDE_CODE`, `CURSOR_AGENT` и др.) и заменяет вывод компактным JSON (~20 токенов независимо от размера сьюта). Человек в терминале видит обычный вывод — меняется только агентская среда.
+Полный вывод PHPUnit на большом прогоне — ~10 000 токенов, и он накапливается с каждой итерацией «правка → тест». PAO (https://github.com/laravel/pao) детектирует запуск внутри AI-агента (ENV: `CLAUDE_CODE`, `CURSOR_AGENT` и др.) и заменяет вывод компактным JSON (~20 токенов независимо от размера сьюта). Человек в терминале видит обычный вывод — меняется только агентская среда.
 
 Работает с любым PHP-проектом (Laravel, Symfony, vanilla): PHPUnit, Pest, Paratest, PHPStan, Rector, Laravel Artisan.
 
@@ -63,7 +63,7 @@ sha256: ""
 
 ## Ссылки
 
-- https://github.com/nunomaduro/pao
+- https://github.com/laravel/pao
 - https://laravel.com/blog/introducing-laravel-pao-cleaner-output-for-ai-agents
 - https://laravel-news.com/pao-agent-optimized-output-for-php-testing-tools
 - Связанные скиллы: `laravel-testing/laravel-testing` (PHPUnit/Pest, вывод которых сжимает PAO), `php/static-analysis` (PHPStan/Rector — тоже под обёрткой PAO), `general/context-economy` (общая экономия контекста агента)

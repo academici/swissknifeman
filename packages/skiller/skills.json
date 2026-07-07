@@ -3250,8 +3250,8 @@
       "path": "skills/php/pao/SKILL.md",
       "version": "1.0.0",
       "description": "Laravel PAO — agent-optimized PHP tool output: PHPUnit/Pest/Paratest/PHPStan/Rector/Artisan collapse to compact JSON (~20 tokens vs thousands) when run inside an AI agent. Install, verify, limits.",
-      "sha256": "c6ff427ef27dd518f30839f5152bd3305670da3b8dad85ede7fd12c563fd850a",
-      "content_sha256": "bcb826b5c6d5be6ff24fc8fb167c8a173a3ed392df8fa37c577cd4afec3315d3",
+      "sha256": "d3fa9ddf0dbcafdc7dbf6be12e12b6ccd505a8613d4dd5bb0877532b773dfdc9",
+      "content_sha256": "b8f2a7eb885224c019d45436475186035e3ba604c372159f0706871963c982a8",
       "tags": [
         "php",
         "laravel",

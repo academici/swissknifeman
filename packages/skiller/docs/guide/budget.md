@@ -236,7 +236,7 @@ flowchart LR
     laravel_structure["laravel-structure<br/>⊕44 ↻2020"]:::mild
     named_arguments["named-arguments<br/>⊕50 ↻694"]:::mild
     namespace_refactor_safety["namespace-refactor-safety<br/>⊕131 ↻365"]:::hot
-    pao["pao<br/>⊕59 ↻654"]:::mild
+    pao["pao<br/>⊕59 ↻652"]:::mild
     php_naming_conventions["php-naming-conventions<br/>⊕80 ↻1426"]:::warm
     php_patterns["php-patterns<br/>⊕25 ↻2538"]:::cool
     php_upgrade_checklist["php-upgrade-checklist<br/>⊕71 ↻672"]:::mild
@@ -409,14 +409,14 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 207 скиллов · ⊕ always **14916** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 283942 ток · ⌥ on-demand 794050 ток (сниппеты + references).
+**Итого:** 207 скиллов · ⊕ always **14916** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 283940 ток · ⌥ on-demand 794050 ток (сниппеты + references).
 
 ## По бакетам
 
 | Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ on-demand |
 |---|--:|--:|--:|--:|
 | `general` | 20 | 1402 | 24266 | 11028 |
-| `php` | 17 | 1122 | 19300 | 54837 |
+| `php` | 17 | 1122 | 19298 | 54837 |
 | `architect` | 14 | 880 | 21173 | 33458 |
 | `frontend-vue` | 11 | 854 | 25744 | 248486 |
 | `quality` | 10 | 738 | 19065 | 7447 |

@@ -31,18 +31,18 @@ stdlib-only; синхрон держат `tests/test_schema.py` + `skiller docto
 ### CORE-политика (раздача по умолчанию) — «умное подключение»
 
 Токен-экономный CORE (== `CORE_SKILLS`: `context-economy`, `anti-drift`, `compact-responses`,
-`session-handoff`, `mcp-advisor`, `verify-claims`, `query-craft`, `gh-review` — 8 скиллов,
-`configs/core-policy.json`) раздаётся в КАЖДЫЙ проект по умолчанию (`--no-core` отключает):
+`session-handoff`, `mcp-advisor`, `verify-claims`, `query-craft`, `gh-review`, `plan-protocol` —
+9 скиллов, `configs/core-policy.json`) раздаётся в КАЖДЫЙ проект по умолчанию (`--no-core` отключает):
 
 - **connect → курируемый плагин `core`** (`CORE_PLUGIN`). marketplace-запись `source:"./"` +
-  явный `skills[]` грузит РОВНО эти 8 скиллов (скиллы физически в своих бакетах — ссылки, без
+  явный `skills[]` грузит РОВНО эти 9 скиллов (скиллы физически в своих бакетах — ссылки, без
   копий; подтверждено докой Claude Code — для marketplace-записи, чей `source` резолвится в
   корень marketplace, явный список подкаталогов `skills[]` ПОЛНОСТЬЮ заменяет дефолтный скан,
   см. комментарий у сборки `core`-записи в `registry.py`). Это вместо прежней раздачи целых
   бакетов `general`(19)+`oss-dev`(10): экономия по сравнению с ~1956 ток, но текущий резидент —
-  см. `skiller budget --check-core` (не хардкодь снапшот здесь: цифра «7 ≈ 480» протухла, когда
-  CORE_SKILLS вырос до 8 — аудит Т-2; на 2026-07 фактический резидент ПРЕВЫШАЕТ
-  `RESIDENT_BUDGET_TARGET`, гейт держит это видимым, а не тихим). Плагин эмитит `registry.py`;
+  см. `skiller budget --check-core` (не хардкодь снапшот здесь: цифра «7 ≈ 480» протухла при
+  росте CORE_SKILLS сперва до 8, затем до 9 — гейт держит актуальное значение видимым, а не
+  протухшей константой в доке). Плагин эмитит `registry.py`;
   gate — `validate.sh`. `connect` печатает строку
   `Резидент: ~N ток` (budget-aware) и подсказывает онбордженным снять старые `general/oss-dev`
   (миграция, merge-only). `CORE_BUCKETS` оставлен только для этой подсказки.

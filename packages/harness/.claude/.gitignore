@@ -1,0 +1,7 @@
+# Машинно-специфичные артефакты Claude Code sessions
+# Коммитируются: events.ndjson, audit.ndjson (analyst/)
+# Игнорируются: эфемерные уроки, run-логи (runs/), анализ (analyze/)
+
+runs/
+analyze/
+analyst/lessons/ephemeral/

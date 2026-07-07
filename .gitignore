@@ -15,6 +15,9 @@ docs/.vitepress/cache/
 .claude/auto-approve.config.json
 .claude/memory.env.ini
 .claude/memory.config.json
+# Эфемерные (временные) артефакты analyst-уроков — машинно-специфичны, не коммитим.
+# Важные файлы (events.ndjson, audit.ndjson) остаются.
+.claude/analyst/lessons/ephemeral/
 settings.local.json.bak
 MERGE-PLAN.snapshots/
 # Приватный конфиг узла maind (пути ко всем проектам); шаблон — config.example.json

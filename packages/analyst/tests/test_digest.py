@@ -86,6 +86,19 @@ class TestExtractors(unittest.TestCase):
         self.assertFalse(digest._is_real_check("grep -rn pest packages/"))
         self.assertFalse(digest._is_real_check("git status --short"))
 
+    def test_is_real_check_laravel_runners(self):
+        """N2a: `php artisan test`/`sail test` — доминирующий раннер Laravel-стека
+        экосистемы; до фикса `_RUNNER_EXEC` их не резолвил, сигнал A был слеп."""
+        self.assertTrue(digest._is_real_check("php artisan test"))
+        self.assertTrue(digest._is_real_check("php artisan test --filter Foo"))
+        self.assertTrue(digest._is_real_check("sail test"))
+
+    def test_is_real_check_guarded_pipe_is_still_a_real_run(self):
+        """N2b: `||`/`| xargs` guard-паттерны реально исполняют раннер и несут его
+        exit-код — блайндный отказ по факту `||` в команде терял такие resolved-failure."""
+        self.assertTrue(digest._is_real_check("pytest tests/ || exit 1"))
+        self.assertTrue(digest._is_real_check("printf '%s' tests/*_test.py | xargs pytest"))
+
     def test_workarounds(self):
         rr = _run_report(devloop={"workarounds": [
             "захардкодил лимит 100 пока нет конфига",

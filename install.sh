@@ -27,6 +27,8 @@ mkdir -p "$BIN_DIR"
 
 # Делегируем установку пакетных CLI их собственным install.sh (там пакетная
 # пост-настройка: maind — npm/service опции; skiller — topology; harness — stateless).
+# `task` в списке НЕТ сознательно: у него нет bin/CLI/install.sh — это plugin-only
+# пакет (только slash-команды), доставляется через marketplace/vendor skiller-канал.
 fwd=(); $FORCE && fwd+=(--force); fwd+=(--bin-dir "$BIN_DIR")
 echo "Установка CLI пакетов (bin-dir: $BIN_DIR):"
 failed=()  # пакеты, чей install.sh упал — для итогового статуса (иначе «Готово» врёт)

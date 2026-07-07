@@ -1962,7 +1962,7 @@
       "version": "1.2.1",
       "description": "Claude Code context economy in a project: CLAUDE.md ≤200 lines, path-scoped .claude/rules/, /compact vs /clear, Plan→Clear→Execute, MCP audit, model routing. Officially-supported mechanisms only — no myths like .claudeignore.",
       "sha256": "5f58b3a85174952856921036099c8359cb9b80e315effed502fef1022f888a9f",
-      "content_sha256": "1090127c45f7a224bf10ce08d2afc38858b86af58702b94c3ae357dc794edcdb",
+      "content_sha256": "49a2dbf871c69bf4ea8424a17c939e44da17a4803ed1166581c81641f1b0cea2",
       "tags": [
         "tokens",
         "context",

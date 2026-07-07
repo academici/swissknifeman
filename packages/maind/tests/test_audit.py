@@ -4,11 +4,13 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 
 from maind.analysis import audit  # noqa: E402
 from maind import codegraph  # noqa: E402
+from maind import pao  # noqa: E402
 import tests.fixtures as fx  # noqa: E402
 
 
@@ -104,6 +106,52 @@ class AuditCase(unittest.TestCase):
     def test_invalid_dim_dies(self):
         with self.assertRaises(SystemExit):
             audit.run_audit(self.env, {}, "bogus")
+
+    @mock.patch.object(pao, "_php_version", return_value=(8, 4))
+    def test_audit_pao_missing(self, _m):
+        p = _make_project(self.tmp)
+        proj = {"id": "proj", "type": "laravel-project", "local_path": str(p)}
+        row = audit.audit_project(self.env, proj, ("pao",), self.code_st)
+        self.assertEqual(row["pao"], "missing")
+
+    @mock.patch.object(pao, "_php_version", return_value=(8, 4))
+    def test_audit_pao_installed(self, _m):
+        p = _make_project(self.tmp)
+        (p / "vendor" / "laravel" / "pao").mkdir(parents=True)
+        proj = {"id": "proj", "type": "laravel-project", "local_path": str(p)}
+        row = audit.audit_project(self.env, proj, ("pao",), self.code_st)
+        self.assertEqual(row["pao"], "installed")
+
+    def test_audit_pao_not_applicable_for_non_php(self):
+        p = _make_project(self.tmp)
+        proj = {"id": "proj", "type": "node-package", "local_path": str(p)}
+        row = audit.audit_project(self.env, proj, ("pao",), self.code_st)
+        self.assertEqual(row["pao"], "n-a")
+
+    @mock.patch.object(pao, "_php_version", return_value=(8, 1))
+    def test_audit_pao_php_too_old_is_clean(self, _m):
+        p = _make_project(self.tmp)
+        proj = {"id": "proj", "type": "php-package", "local_path": str(p)}
+        row = audit.audit_project(self.env, proj, ("pao",), self.code_st)
+        self.assertEqual(row["pao"], "php-too-old")
+
+    def test_audit_pao_optout_is_clean(self):
+        p = _make_project(self.tmp)
+        proj = {"id": "proj", "type": "laravel-project",
+               "pao_opt_out": True, "local_path": str(p)}
+        row = audit.audit_project(self.env, proj, ("pao",), self.code_st)
+        self.assertEqual(row["pao"], "opt-out")
+
+    @mock.patch.object(pao, "_php_version", return_value=(8, 4))
+    def test_run_audit_pao_warns_in_text_output(self, _m):
+        p = _make_project(self.tmp)
+        fx.write_maind_config(self.root, projects=[
+            {"id": "phpproj", "name": "PhpProj", "type": "laravel-project",
+             "status": "active", "dependencies": [], "local_path": str(p)}])
+        from maind.config import load_config
+        config, _ = load_config(self.env)
+        _, out = fx.capture(audit.run_audit, self.env, config, "pao")
+        self.assertIn("pao⚠(missing: composer require laravel/pao --dev)", out)
 
 
 if __name__ == "__main__":

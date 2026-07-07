@@ -6,7 +6,10 @@
 - claude: размер CLAUDE.md (>200 строк — постоянный налог на контекст сессии);
 - deny:   есть ли permissions.deny (блок мусора _ide_helper/*.lock из контекста);
 - core:   доехали ли CORE-скиллы токен-экономии + командные плагины по умолчанию
-          (task → /task:*) — их раздаёт skiller connect в каждый проект.
+          (task → /task:*) — их раздаёт skiller connect в каждый проект;
+- pao:    php/laravel-проект (PHP≥8.3) без установленного `laravel/pao` (и без
+          зафиксированного opt-out) — токен-экономия вывода PHP-тестов/анализа
+          не работает (см. SKM-AUDIT-004 P6, `..pao`).
 
 Ничего не пишет на диск — только читает файлы проектов. Источник списка —
 projects.listing (та же модель, что projects/status)."""
@@ -15,10 +18,11 @@ import os
 from pathlib import Path
 
 from .. import codegraph
+from .. import pao
 from ..mcpconfig import MCP_FILES
 from ..projects import listing
 
-DIMS = ("mcp", "claude", "deny", "core")
+DIMS = ("mcp", "claude", "deny", "core", "pao")
 CLAUDE_MD_WARN = 200  # ориентир Anthropic (context-economy ось 1)
 CORE_SKILLS = ("context-economy", "anti-drift", "compact-responses",
                "session-handoff", "gh-review")
@@ -140,6 +144,8 @@ def audit_project(env, project, dims, code_st):
             # Командные плагины (task) доезжают только connect-каналом → проверяем enabledPlugins.
             "missing_cmds": [c for c in DEFAULT_COMMAND_PLUGINS if c not in enabled],
         }
+    if "pao" in dims:
+        row["pao"] = pao.status(project, path)
     return row
 
 
@@ -187,4 +193,9 @@ def run_audit(env, config, dim, as_json=False):
             if miss_cmds:
                 seg += " cmd⚠(нет: " + ", ".join("/" + c + ":*" for c in miss_cmds) + ")"
             parts.append(seg)
+        if "pao" in dims:
+            st = r["pao"]
+            parts.append({"installed": "pao✓",
+                          "missing": "pao⚠(missing: composer require laravel/pao --dev)",
+                          }.get(st, f"pao·{st}"))
         print(f"  {r['id']:<18} " + "  ".join(parts))

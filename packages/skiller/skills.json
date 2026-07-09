@@ -2204,8 +2204,8 @@
       "path": "skills/general/plan-protocol/SKILL.md",
       "version": "0.2.0",
       "description": "Executable master plans in plans/<ID>: plan/phase/task schemas, 6 statuses, handoff standard, model routing, /task:plan-* commands.",
-      "sha256": "af8f48e05b1802b993128119f4cc5b67b7fd7c911f69bd814902980e84331e94",
-      "content_sha256": "3dc08d233738c9aa99a9d4f6c2a299893ae1b7e9bfd15bbea87b0bd468e128ae",
+      "sha256": "4818d78fe913c158c40ac8cb71b5ff6657fb89686bdc2ec6273dbfa98d426aff",
+      "content_sha256": "49be58be8010f98ed2e856d118bd241ee3cb7f6ed7e3101de1f0aa314a38f0f2",
       "tags": [
         "workflow",
         "planning",

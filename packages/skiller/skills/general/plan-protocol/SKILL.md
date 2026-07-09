@@ -194,7 +194,24 @@ The convention is delivered to the project by the managed CLAUDE.md block
 approved plan is saved as a flat draft in `plans/` → `/task:plan-design from-draft <файл>`
 expands it into `plans/<ID>/` per this skill's templates (draft deleted, history in git).
 
-## 12. Related skills
+## 12. Plan artifacts: findings/
+
+`plans/<PLAN-ID>/findings/<Pn>-<slug>.md` — the standard home for plan artifacts: RAG
+extracts and recon reports, so future plan work doesn't repay the cost of reconstructing
+"where did this come from" (RAG/subagent extracts are cheap artifacts for future iterations).
+
+- **Path and name:** `plans/<PLAN-ID>/findings/<Pn>-<slug>.md` (`Pn` — phase, `slug` —
+  kebab topic); example — `plans/SKM-AUDIT-004/findings/`.
+- **What goes there:** a RAG extract (source URL + verification date + verdict), a
+  subagent recon report, a diagnosis/repro — **compact synthesis, not raw material**.
+- **How items reference it:** an item whose work relies on the artifact lists the file in
+  its `Inputs`/`Required Reads` — the downstream executor reads the file instead of
+  reconstructing context from chat.
+- **Optional:** `findings/` isn't mandatory for every plan/item — required only when the
+  item declares the file in its `Deliverables`. The item's 16-field schema is unchanged;
+  `plan_lint.py` does not check this directory (not its layer).
+
+## 13. Related skills
 
 - `task-brief-template` (general) — single task without a master plan.
 - `session-handoff` (general) — arbitrary-session handoff; under a master plan the handoff lives in `plans/<ID>/handoff.md`.
@@ -202,4 +219,4 @@ expands it into `plans/<ID>/` per this skill's templates (draft deleted, history
 - `context-economy` (general) — Plan→Clear→Execute, token discipline.
 - `anti-drift` (general) — executor iteration discipline, circuit breaker.
 
-<!-- ru-source-sha256: 488e78ed0be1340629551e2ebad73b5f52f56704e286b45700a26597b63c9906 -->
+<!-- ru-source-sha256: 78009df436c8630118fd4837d20cbe06c1da8c819b431c53a0336d778a3233e8 -->

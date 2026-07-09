@@ -32,7 +32,8 @@ phase handoff. Первый item (P1.1) — полностью заполнен�
 **Implementation Rules:** stdlib-only; сообщения die() на русском; существующее поведение валидных конфигов не менять.
 **Code Guidance:** ручная проверка dict-ключей (НЕ jsonschema — pip запрещён); ошибки собирать списком и падать одним die() со всеми сразу; новые абстракции не вводить; обязательный тест на каждый класс ошибки (missing key, wrong type); запрещено глотать исключения через try/except pass.
 **Validation:** bash scripts/test.sh — зелёный; ручной прогон с битым конфигом даёт внятную ошибку.
-**Deliverables:** валидация в config.py + ≥3 новых теста.
+**Deliverables:** валидация в config.py + ≥3 новых теста. (Если item несёт RAG-выжимку/recon —
+задекларируй файл здесь: `plans/<PLAN-ID>/findings/P1-config-validation.md`.)
 **Completion Notes:** —
 **Pending Work:** —
 **Known Deviations:** —

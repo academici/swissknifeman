@@ -6,7 +6,7 @@ description: "Launch a new startup project: concept, competitors, risks, full fo
 risk: write
 persona: founder
 tags: [discovery, requirements, market, gtm]
-requires: [idea-discovery, competitive-analysis, risk-assessment]
+requires: [idea-discovery, competitive-analysis, risk-assessment, ecosystem-reuse-gate]
 produces_for: []
 outputs: [ProjectName.md, "docs/01_Business/01_Concept_and_Monetization.md", "docs/01_Business/02_Competitive_Analysis.md", "docs/01_Business/Risk_Register.md", "Открытые вопросы.md"]
 sha256: ""
@@ -53,6 +53,10 @@ Ask only if you **cannot proceed** without the answer.
 
 Rule: if agent can answer itself with >70% confidence — answer, document the decision.
 
+## Step 2.5. Ecosystem reuse-gate (before scaffold)
+
+Before creating the folder structure, run `ecosystem-reuse-gate` against the ecosystem radar — do not reinvent what already exists in other projects/packages.
+
 ## Step 3. Documentation (staged)
 
 Creating control-tower `ProjectName.md`: set frontmatter **`stage: idea`** (validation stage; new project always starts at idea). Stage advances via stage-gate review (`startup-lifecycle`), never manually.
@@ -88,6 +92,7 @@ Orchestrator: does not duplicate domain skills, calls them by stage. Chain:
 - `founder/idea-discovery` — step 0: raw-idea discovery (JTBD, hypothesis, kill-criteria) before concept
 - `founder/adversarial-check` — idea-gate: pressure-test hypothesis before scaffold
 - `founder/customer-discovery` — idea-gate: problem-solution fit evidence via live interviews
+- `architect/ecosystem-reuse-gate` — step 2.5: check the ecosystem radar before scaffold
 - `founder/competitive-analysis` — step 2: market, competitors, attack vector
 - `founder/risk-assessment` — step 3: 5 risk categories, Risk Register
 - `pm/unit-economics` — step 4: LTV/CAC/payback
@@ -99,4 +104,4 @@ Orchestrator: does not duplicate domain skills, calls them by stage. Chain:
 - `pm/monetization-design` — adjacent: business-model choice before unit-economics
 - `roles/solo-founder`, `roles/startup-cto` — personas that activate this chain
 
-<!-- ru-source-sha256: eb1ec818130461d67030f402e8b586e758e06172fdf3c83cd97dab1c49553b0c -->
+<!-- ru-source-sha256: adb0d28dff9a98e504b104278fd02f8df7da48615131c25800fab10218d3b4db -->

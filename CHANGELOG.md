@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+### Added (skiller — ecosystem-reuse-gate + бакет axioma)
+
+- **`architect/ecosystem-reuse-gate`**: гейт против переизобретения функционала — перед
+  проектированием нового проекта/фичи обязательна сверка с реестром экосистемы и прогон
+  vendor-vs-build правил (дефолт — переиспользование). `tech-stack-selection` и `founder/new-project`
+  получили `requires: [ecosystem-reuse-gate]` и шаг вызова гейта в алгоритме (Step 1 / Step 0
+  Idea-gate).
+- **Бакет `axioma`**: `axioma-doctrine` (пять столпов-императивов экосистемы Axioma) +
+  `axioma-stack` (привязка reuse-gate к живому `Ecosystem_Tech_Radar.md`) — читать при
+  проектировании любого нового проекта/пакета Axioma до архитектурных решений.
+
+### Fixed (maind — `derive`/`probe` падали на list-формате `skills-lock.json`)
+
+- `derive.derive_skills`/`probe.probe_project` предполагали `skills-lock.json::skills` только
+  как `dict {name: entry}` (формат `skiller sync`) и падали `AttributeError` на альтернативном
+  формате — списке (напр. собственный lock-генератор Brain-валта). Пойман при первом онбординге
+  проекта с таким lock-файлом в mAInd (`maind onboard`/`maind sync --only graph` рушились,
+  `maind health --project <id>` тоже). Нормализация списка в dict перед итерацией; тест на оба
+  формата в `test_derive.py`.
+
 ### Added (maind@0.x — провиженер Laravel PAO + fleet-гейт)
 
 - **`maind pao`**: новый провиженер (`lib/maind/pao.py`, детект по файловым фактам + `php -v`),

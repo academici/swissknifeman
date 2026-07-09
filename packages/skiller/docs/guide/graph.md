@@ -17,6 +17,7 @@ flowchart LR
     codebase_design["codebase-design"]
     data_schema["data-schema"]
     domain_modeling["domain-modeling"]
+    ecosystem_reuse_gate["ecosystem-reuse-gate"]
     eval_design["eval-design"]
     figma_mcp_core["figma-mcp-core"]
     legal_compliance["legal-compliance"]
@@ -24,6 +25,9 @@ flowchart LR
     package_contribution_protocol["package-contribution-protocol"]
     security_design["security-design"]
     tech_stack_selection["tech-stack-selection"]
+  end
+  subgraph axioma["axioma"]
+    axioma_stack["axioma-stack"]
   end
   subgraph blender["blender"]
     mcp_blender["mcp-blender"]
@@ -200,6 +204,7 @@ flowchart LR
   architecture -->|requires| brd
   architecture -->|requires| tech_stack_selection
   attribute_authorization -->|requires| laravel_permissions
+  axioma_stack -->|requires| ecosystem_reuse_gate
   backend_type_sync -->|requires| wayfinder
   botkit -->|requires| laravel
   brain_locator -->|requires| local_topology
@@ -249,6 +254,7 @@ flowchart LR
   mutation_testing -->|requires| test_strategy
   naive_ui_theming -->|requires| tailwind_conventions
   new_project -->|requires| competitive_analysis
+  new_project -->|requires| ecosystem_reuse_gate
   new_project -->|requires| idea_discovery
   new_project -->|requires| risk_assessment
   observability_design -->|requires| architecture
@@ -278,6 +284,7 @@ flowchart LR
   shared_memory -->|requires| local_topology
   swissknifeman_locator -->|requires| local_topology
   tech_stack_selection -->|requires| brd
+  tech_stack_selection -->|requires| ecosystem_reuse_gate
   test_isolation_guard -->|requires| laravel_testing
   to_issues -->|requires| github_flow
   unit_economics -->|requires| monetization_design
@@ -376,9 +383,9 @@ flowchart LR
   verify_claims -.->|feeds| tech_stack_selection
 ```
 
-**В графе:** 127 скиллов, 91 рёбер requires, 88 рёбер produces_for.
+**В графе:** 129 скиллов, 94 рёбер requires, 88 рёбер produces_for.
 
-## Изолированные скиллы (80)
+## Изолированные скиллы (81)
 
 Скиллы без связей `requires`/`produces_for` — самодостаточны.
 
@@ -386,6 +393,7 @@ flowchart LR
 |---|---|
 | ai | `ai-agents`, `token-efficient` |
 | architect | `dev-engineering-super-skill` |
+| axioma | `axioma-doctrine` |
 | azguard | `azguard` |
 | creative | `content-creative-super-skill` |
 | devops | `docker` |

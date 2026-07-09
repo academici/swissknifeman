@@ -102,6 +102,30 @@ class TestDerive(unittest.TestCase):
             self.assertEqual(e["attrs"]["via"], "override")
             self.assertEqual(e["attrs"]["note"], "REST corex/messenger")
 
+    def test_skills_plane_dict_lock(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config = _setup(tmp)
+            flex = Path(config["projects"][0]["local_path"])
+            _write(flex / "skills-lock.json", {"skills": {
+                "architecture": {"bucket": "architect", "source": "swissknifeman"}}})
+            stats = {s["id"]: s for s in derive.derive_all(env, config)}
+            self.assertEqual(stats["flexcrm"]["by_via"]["skills"], 2)  # skill + provided_by
+            g = federation.project_graph(env, config, config["projects"][0])
+            self.assertIn("skill:architecture", g.nodes)
+            self.assertIn("tool:swissknifeman", g.nodes)
+
+    def test_skills_plane_list_lock(self):
+        # свой формат lock-файла (напр. Brain-валт): "skills" — список, не dict {name: entry}
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config = _setup(tmp)
+            flex = Path(config["projects"][0]["local_path"])
+            _write(flex / "skills-lock.json", {"skills": [
+                {"name": "tech-stack-selection", "persona": "architect"}]})
+            stats = {s["id"]: s for s in derive.derive_all(env, config)}
+            self.assertEqual(stats["flexcrm"]["by_via"]["skills"], 1)  # без source — без tool-рёбра
+            g = federation.project_graph(env, config, config["projects"][0])
+            self.assertEqual(g.nodes["skill:tech-stack-selection"]["attrs"]["bucket"], "architect")
+
 
 if __name__ == "__main__":
     unittest.main()

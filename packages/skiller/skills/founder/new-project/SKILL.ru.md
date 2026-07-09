@@ -6,7 +6,7 @@ description: Запуск нового стартап-проекта: конце
 risk: write
 persona: founder
 tags: [discovery, requirements, market, gtm]
-requires: [idea-discovery, competitive-analysis, risk-assessment]
+requires: [idea-discovery, competitive-analysis, risk-assessment, ecosystem-reuse-gate]
 produces_for: []
 outputs: [ProjectName.md, "docs/01_Business/01_Concept_and_Monetization.md", "docs/01_Business/02_Competitive_Analysis.md", "docs/01_Business/Risk_Register.md", "Открытые вопросы.md"]
 sha256: ""
@@ -63,6 +63,10 @@ adapters: [claude, cursor, fable]
 
 Правило: если агент может ответить сам с вероятностью >70% — отвечает сам, документирует решение.
 
+## Шаг 2.5. Ecosystem reuse-gate (до скаффолда)
+
+Перед созданием структуры папок прогнать `ecosystem-reuse-gate` против радара экосистемы — не переизобретать то, что уже есть в других проектах/пакетах.
+
 ## Шаг 3. Создание документации (стадийно)
 
 При создании control-tower `ProjectName.md` выставить во frontmatter **`stage: idea`** (бизнес-стадия валидации; новый проект всегда стартует с idea). Стадия поднимается через stage-gate review (`startup-lifecycle`), не вручную по настроению.
@@ -101,6 +105,7 @@ adapters: [claude, cursor, fable]
 - `founder/idea-discovery` — этап 0: discovery сырой идеи (JTBD, гипотеза, kill-criteria) до концепции
 - `founder/adversarial-check` — idea-gate: pressure-test гипотезы до скаффолда
 - `founder/customer-discovery` — idea-gate: доказательства problem-solution fit живыми интервью
+- `architect/ecosystem-reuse-gate` — шаг 2.5: сверка с радаром экосистемы до скаффолда
 - `founder/competitive-analysis` — этап 2: рынок, конкуренты, вектор атаки
 - `founder/risk-assessment` — этап 3: 5 категорий рисков, Risk Register
 - `pm/unit-economics` — этап 4: LTV/CAC/payback

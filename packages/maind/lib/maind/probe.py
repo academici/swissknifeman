@@ -60,7 +60,9 @@ def probe_project(env, config, project, *, memory_reachable=None, trusted=None):
     lock = _read_skills_lock(path)
     skills = {"total": 0, "swissknifeman": 0, "laravel_boost": 0, "local": 0}
     if lock:
-        for e in (lock.get("skills") or {}).values():
+        lock_skills = lock.get("skills") or {}
+        entries = lock_skills if isinstance(lock_skills, list) else lock_skills.values()
+        for e in entries:
             skills["total"] += 1
             skills[_SKILL_KEY.get(e.get("source", "local"), "local")] += 1
 

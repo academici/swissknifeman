@@ -45,6 +45,18 @@
       "package": "skiller"
     },
     {
+      "name": "axioma",
+      "source": "./packages/skiller/skills/axioma",
+      "description": "Axioma ecosystem doctrine & reuse: dev philosophy, tech-radar binding, vendor-vs-build discipline (project-scoped bucket)",
+      "category": "engineering",
+      "tags": [
+        "axioma",
+        "ecosystem",
+        "doctrine"
+      ],
+      "package": "skiller"
+    },
+    {
       "name": "azguard",
       "source": "./packages/skiller/skills/azguard",
       "description": "azguard package usage: code-first RBAC, panels, scoped roles, abilities (academici package — skill will relocate into the package repo)",

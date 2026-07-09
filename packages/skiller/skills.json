@@ -11,7 +11,12 @@
     },
     "architect": {
       "description": "Architecture, API and data design, security, observability, tech stack selection",
-      "count": 14,
+      "count": 15,
+      "status": "active"
+    },
+    "axioma": {
+      "description": "Axioma ecosystem doctrine & reuse: dev philosophy, tech-radar binding, vendor-vs-build discipline (project-scoped bucket)",
+      "count": 2,
       "status": "active"
     },
     "azguard": {
@@ -411,6 +416,27 @@
       "fetched_at": "2026-06-26"
     },
     {
+      "name": "ecosystem-reuse-gate",
+      "bucket": "architect",
+      "path": "skills/architect/ecosystem-reuse-gate/SKILL.md",
+      "version": "0.1.0",
+      "description": "Gate against reinventing functionality when designing a new project/feature: before build-new, force a check against the ecosystem registry (radar) and run universal vendor-vs-build if-then rules. Default is reuse; build-new only when a rule explicitly fires. Activate when designing a new project, a large reusable feature, or picking a stack.",
+      "sha256": "c98c31c738cbd08c4e989668848577ac189c03b48989c2370b1dd5cd41e62e5d",
+      "content_sha256": "c09e05ded99e90b7d804b47340ed7d4589c1ab43ba0df3ad5b9d9ca095e3bf6f",
+      "tags": [
+        "ecosystem",
+        "reuse",
+        "vendor-vs-build",
+        "gate",
+        "architecture"
+      ],
+      "produces_for": [
+        "new-project",
+        "tech-stack-selection"
+      ],
+      "source": "local"
+    },
+    {
       "name": "dev-engineering-super-skill",
       "bucket": "architect",
       "path": "skills/architect/engineering/SKILL.md",
@@ -573,8 +599,8 @@
       "path": "skills/architect/tech-stack-selection/SKILL.md",
       "version": "0.1.0",
       "description": "Tech stack selection with trade-off matrix before architecture design. ADR-first step",
-      "sha256": "18d6afc87dbdbcdfc282af2f89a12d6163fc3fd7cef6b25f68b92b113b1a451d",
-      "content_sha256": "beeccc02a906afca33f613aec206ce4768d18c8cdb95032a7903bef78df64abd",
+      "sha256": "9eb1809a2aa9213273cf5a5e1406e1a35be932bd0e4a47fc2a4d18de66b0f8f6",
+      "content_sha256": "878f925715c6a600161ac7126067279596f7f9d4b13b2711cf682bbbb96fd78f",
       "tags": [
         "stack-choice",
         "architecture",
@@ -582,12 +608,48 @@
         "trade-off"
       ],
       "requires": [
-        "brd"
+        "brd",
+        "ecosystem-reuse-gate"
       ],
       "produces_for": [
         "architecture",
         "oss-development",
         "release-engineering"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "axioma-doctrine",
+      "bucket": "axioma",
+      "path": "skills/axioma/axioma-doctrine/SKILL.md",
+      "version": "0.1.0",
+      "description": "Axioma ecosystem development doctrine: five imperative pillars (horizontal core → verticals, vendor-vs-build discipline, AI-native/MCP-first, offline-first+RU compliance, RegHub distribution). Read when designing ANY new Axioma-ecosystem project/package — before architectural decisions.",
+      "sha256": "9daaed6448f45cacde811a517f6c249464598778cd844e948f0fece68c4e8376",
+      "content_sha256": "0ed32f62164b843a421cea14b9ad143a7dc6e1e99403124af26e5233190e216b",
+      "tags": [
+        "axioma",
+        "doctrine",
+        "architecture",
+        "ecosystem"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "axioma-stack",
+      "bucket": "axioma",
+      "path": "skills/axioma/axioma-stack/SKILL.md",
+      "version": "0.1.0",
+      "description": "Binds the universal reuse-gate to the live Ecosystem_Tech_Radar.md of the Axioma ecosystem: canon path, its 4-section structure, delegation to ecosystem-reuse-gate's algorithm, a concrete reuse report per unit. Read when designing any new Axioma-ecosystem project/feature — right after axioma-doctrine, before new-project/tech-stack-selection.",
+      "sha256": "b40877acd9b229b0f5e4d9d99eb07b79ed5c4ce325326bd387c419dd46aab795",
+      "content_sha256": "7ae5769ce40733ec46ed58705c59d28e0fd108caf8aca98bcb986566349703f0",
+      "tags": [
+        "axioma",
+        "ecosystem",
+        "reuse",
+        "tech-radar"
+      ],
+      "requires": [
+        "ecosystem-reuse-gate"
       ],
       "source": "local"
     },
@@ -1221,8 +1283,8 @@
       "path": "skills/founder/new-project/SKILL.md",
       "version": "0.1.0",
       "description": "Launch a new startup project: concept, competitors, risks, full folder structure",
-      "sha256": "8687e4c9065101af60c65cbd0760e99034e61e2ca837d613ca35d9ec28279eee",
-      "content_sha256": "cc1a5a4a2f9264acf0c5172483330d9c04372894301b832bcd506cd85bff1df7",
+      "sha256": "fe49ba28a1e5aa4d1234a8040c91c70215217cfaa950f7d1cfc99f68525d89f3",
+      "content_sha256": "28035da4aa10a0248517180d00aafe24cf7b3a27d0c69ba7c8a7e7b15a30055d",
       "tags": [
         "discovery",
         "requirements",
@@ -1232,7 +1294,8 @@
       "requires": [
         "idea-discovery",
         "competitive-analysis",
-        "risk-assessment"
+        "risk-assessment",
+        "ecosystem-reuse-gate"
       ],
       "source": "local"
     },

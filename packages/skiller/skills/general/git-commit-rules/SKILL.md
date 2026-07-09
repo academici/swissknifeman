@@ -85,10 +85,22 @@ ci(deps): добавить php-расширения для composer install
 - Don't mix unrelated changes in one commit.
 - Don't manually edit generated AI artifacts (`CLAUDE.md`, `AGENTS.md`).
 
+## Conformance
+
+- Run `git status --short` and `git diff` before committing — know what you commit.
+- Don't bypass hooks: `--no-verify` forbidden without explicit user request.
+- Format — conventional: `type(scope): subject`; type from the project's list.
+- Take scope from commitlint config or project structure, don't invent.
+- Message in Russian; subject in past tense ("добавили"), not an infinitive.
+- Body — 1–2 lines: concrete result + why, no bureaucratese.
+- Mark breaking changes: `BREAKING CHANGE:` footer or `!` after type/scope.
+- Don't mix unrelated changes in one commit.
+- Destructive git commands only on explicit user request.
+
 ## Related skills
 
 - `writing-style` (general) — tone/language of commit body (Russian, reason over mechanics); format — here.
 - `devops/node-pnpm-preflight` — Node/pnpm check before commit with husky/commitlint hooks.
 - `oss-dev/github-flow` — Issue → Branch → PR → Merge → Tag chain and SemVer Oracle (commit type → version bump).
 
-<!-- ru-source-sha256: 5d9c1d92f98289a3092f340677667a725517f0057b28d2b6596d12d56c3630f9 -->
+<!-- ru-source-sha256: 4747a3144dbb40cf871cecc0757c62015ac8b17ed8a5dd106ffdfc2fe8255730 -->

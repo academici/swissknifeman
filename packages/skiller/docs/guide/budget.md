@@ -152,12 +152,12 @@ flowchart LR
     complex_task_orchestrator["complex-task-orchestrator<br/>⊕44 ↻659"]:::mild
     context_economy["context-economy<br/>⊕71 ↻2380"]:::mild
     cross_layer_change_checklist["cross-layer-change-checklist<br/>⊕37 ↻461"]:::cool
-    git_commit_rules["git-commit-rules<br/>⊕29 ↻934"]:::cool
+    git_commit_rules["git-commit-rules<br/>⊕29 ↻1124"]:::cool
     git_safety["git-safety<br/>⊕84 ↻600"]:::warm
     grill_with_docs["grill-with-docs<br/>⊕98 ↻911"]:::warm
     implement["implement<br/>⊕88 ↻479"]:::warm
     mcp_advisor["mcp-advisor<br/>⊕107 ↻1893"]:::warm
-    naming_conventions["naming-conventions<br/>⊕86 ↻1564"]:::warm
+    naming_conventions["naming-conventions<br/>⊕86 ↻1782"]:::warm
     packages_stack["packages-stack<br/>⊕85 ↻530"]:::warm
     plan_protocol["plan-protocol<br/>⊕66 ↻5889"]:::mild
     project_map["project-map<br/>⊕83 ↻645"]:::warm
@@ -166,7 +166,7 @@ flowchart LR
     spec_interview["spec-interview<br/>⊕58 ↻753"]:::mild
     task_brief_template["task-brief-template<br/>⊕79 ↻1253"]:::mild
     verify_claims["verify-claims<br/>⊕133 ↻2696"]:::hot
-    writing_style["writing-style<br/>⊕98 ↻1702"]:::warm
+    writing_style["writing-style<br/>⊕98 ↻1905"]:::warm
   end
   subgraph laravel_architecture["laravel-architecture"]
     config_driven_abstraction["config-driven-abstraction<br/>⊕135 ↻487"]:::hot
@@ -418,13 +418,13 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 211 скиллов · ⊕ always **15335** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 293141 ток · ⌥ on-demand 795707 ток (сниппеты + references).
+**Итого:** 211 скиллов · ⊕ always **15335** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 293752 ток · ⌥ on-demand 795707 ток (сниппеты + references).
 
 ## По бакетам
 
 | Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ on-demand |
 |---|--:|--:|--:|--:|
-| `general` | 20 | 1425 | 27566 | 12685 |
+| `general` | 20 | 1425 | 28177 | 12685 |
 | `php` | 17 | 1122 | 19298 | 54837 |
 | `architect` | 15 | 988 | 22596 | 33458 |
 | `frontend-vue` | 11 | 854 | 25744 | 248486 |

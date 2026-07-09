@@ -2059,8 +2059,8 @@
       "path": "skills/general/git-commit-rules/SKILL.md",
       "version": "0.2.0",
       "description": "Git workflow: commit prep, husky/commitlint, message format, safe action order.",
-      "sha256": "e4eedf2a7331206ce114e4874c767e3e6c524eb2da215d3be275934a70d515e7",
-      "content_sha256": "baa2f7eba72aa451412af80f2de805ac13872d99ee9c05ce4eedb5164e8d1ef8",
+      "sha256": "0eb9f53793c0addc7b8646a8b1965b722dab68eac2cf81c7c0c3f6c168211ba1",
+      "content_sha256": "a12a3d7c3079d64a81036178f29ef0322c2120ac3cceff1e7fec1e87319fda47",
       "tags": [
         "git",
         "conventions",
@@ -2169,8 +2169,8 @@
       "path": "skills/general/naming-conventions/SKILL.md",
       "version": "0.1.0",
       "description": "Naming discipline (language-agnostic): name reveals intent, not implementation; fight noise words (Manager/Helper/data/process) and combinatorial method explosion (findByXOrFail/getOrNull). Activate when naming or reviewing names of functions, classes, variables, methods.",
-      "sha256": "8bb2f2a8f1777619ad8f34259036dcd33500ea13b6d814911b88097b369d0f51",
-      "content_sha256": "0a1eacd89d2b0b83fde93c39ce9bb9374ea6fa99d8c11d9af1ee8546ce0dd0d9",
+      "sha256": "4e546b2851812cb188e2eb350979e675e6db5886e5b73f2d704286d61bebaaa4",
+      "content_sha256": "6a8746f6ab07d04eff49a061cfbf9e253bd9596891aa4f1fe9f7167a7aea9ffe",
       "tags": [
         "naming",
         "conventions",
@@ -2338,8 +2338,8 @@
       "path": "skills/general/writing-style/SKILL.md",
       "version": "0.1.0",
       "description": "Tone & language of code artifacts: Russian by default for comments, commit bodies, test descriptions it()/test(), docstrings, internal docs; live language, no bureaucratese, explain WHY not WHAT. Activate when writing comments, commit bodies, test descriptions, internal docs (git format/mechanics → git-commit-rules).",
-      "sha256": "b4af7dc7d0fcf8168c03d2d809a9f2fea37532d263e9287627fd838b8f1b2243",
-      "content_sha256": "711c76c90d45373205b0b763ac07f037f72aff76d12128bb3ee90b3f6b7817d8",
+      "sha256": "4914d533fd808452765c61c671b10819f10ff195f4165620bf439af5cdd007c2",
+      "content_sha256": "9d5b731d8d5378f7b076ad65e47f7dbad97af9914a5914186423775625b8f2bf",
       "tags": [
         "writing",
         "language",

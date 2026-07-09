@@ -76,6 +76,18 @@ Don't spawn a method per field. Allowed:
 - [ ] Name length matches scope; pronounceable and searchable.
 - [ ] Name doesn't lie about side effects (CQS).
 
+## Conformance
+
+- Name reveals intent, not implementation or type; clear without reading the body.
+- Effectful action = verb phrase; data/class = noun.
+- Boolean = question: `is/has/can/should/needs` prefix.
+- Name doesn't lie about side effects (CQS): query has no effects, command is a state-changing verb.
+- One verb per concept across the codebase: don't mix `get/fetch/retrieve/load`.
+- Name opposite operations symmetrically: `open/close`, `create/delete`.
+- No method-per-field (`findByXOrFail` × N) — criteria/specification; error policy expressed once.
+- No noise names `data/info/obj/temp/result` or suffixes `Manager/Helper/Util/Handler` without a role.
+- Name length ∝ scope; pronounceable and searchable, no Hungarian notation.
+
 ## Snippet
 
 `snippets/naming-gallery.md` — extended cross-language "bad → good" table (functions, classes, variables, booleans, collections, tests) for review/CLAUDE.md.
@@ -87,4 +99,4 @@ Don't spawn a method per field. Allowed:
 - `quality/code-review` — where name checks fit into review (P2/P3 findings).
 - `general/anti-drift` — "simplicity first": simpler name = less drift.
 
-<!-- ru-source-sha256: fa860d2c16747dee89bb959a04f353de4646d59f7c29465b7373e6f238dd632a -->
+<!-- ru-source-sha256: a30a41cf4f9554c92c371ac9997d6004726bfb9f456289407abed896104ae084 -->

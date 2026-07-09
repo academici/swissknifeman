@@ -107,10 +107,22 @@ Stays inside the team → Russian. Unsure who the reader is → default Russian.
 - [ ] Test description — about behavior and conditions, no method-name transliteration.
 - [ ] Identifiers, keys, contracts not translated — only prose translated.
 
+## Conformance
+
+- Write comments, commit bodies, test descriptions, internal-code docstrings in Russian.
+- Keep English only for public API, docs-public, external audience.
+- Comment explains WHY, not restates WHAT; delete code-restating comments.
+- No bureaucratese / AI templates: "данный код", "осуществляет", "производит", "является".
+- Present/past tense; no infinitives or verbal nouns.
+- Commit subject — completed action ("добавили"), not a bare infinitive.
+- Commit body — reason + effect in 1–2 lines, no generic phrases.
+- Test description — behavior and conditions in Russian, no method-name transliteration.
+- Don't translate identifiers, keys, contracts — prose only.
+
 ## References
 
 - `git-commit-rules` (general) — git format & mechanics: Conventional Commits, types, scope, breaking, husky/commitlint, action order.
 - `compact-responses` (general) — model output brevity (how much text, when); this skill is tone & language when text IS needed.
 - snippets/before-after.md — bad/good pairs for a comment and a commit subject.
 
-<!-- ru-source-sha256: 9899b632120cd656f4c789b2b0fa8899aa4df7e042e1021ea7790c48628872b9 -->
+<!-- ru-source-sha256: f70f22617687a6cac7d09eba060e37d5334b9c5ff03f513319a5a0bd1c030685 -->

@@ -44,6 +44,11 @@ effort: medium
    это `🟠 Done with deviations` с Known Deviations либо эскалация, НЕ молчаливый пропуск.
 
 7. **ЗАКРЫТИЕ ОБЯЗАТЕЛЬНО** — без него работа НЕ выполнена, даже если код написан:
+   - **Дифф item'а ЗАКОММИЧЕН до смены статуса**: Conventional Commits (рус.), атомарно по
+     смыслу (несколько коммитов — нормально), `validate.sh` затронутого пакета зелёный ДО
+     коммита; фиксы по замечаниям ревью — ОТДЕЛЬНЫМ коммитом (не `amend` — трассируемость:
+     видно, что нашло ревью); незакоммиченного диффа по Scope item'а в дереве не осталось
+     (`git status`); дифф ВНЕ Scope — не коммитить, зафиксировать в **Pending Work**;
    - `**Status:**` → `🟢 Done` (или `🟠 Done with deviations` + заполненные **Known Deviations**);
    - **Completion Notes** — только факты: изменённые файлы, добавленные тесты,
      прогнанные команды и их вывод (без оценок «всё отлично»);
@@ -65,6 +70,7 @@ effort: medium
    Completed: <что сделано, 1–3 строки>
    Pending Work: <…|—>
    Files Changed: <список путей>
+   Commits: <hash — subject; …|—>
    Validation: passed|failed — <команды и суть>
    Known Deviations: <…|—>
    Escalation Needed: no|yes (тогда финальная строка ESCALATION-REQUIRED: …)

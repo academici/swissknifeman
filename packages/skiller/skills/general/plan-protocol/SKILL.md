@@ -97,6 +97,14 @@ EXACTLY 6 canonical strings — copy byte-for-byte (greppable, parser is strict)
 Status lives in the plan: finishing work without updating the plan = incomplete
 execution. Closed an item → update `Phase Status` and the Status Board in `plan.md`.
 
+**Commit gate on close.** Status `🟢`/`🟠` is NOT set without the item's diff committed:
+Conventional Commits (Russian), atomic by meaning (several commits — fine), affected
+package's `validate.sh` green BEFORE the commit; review-fix commits are SEPARATE (not
+`amend` — traceability: it must show what review caught); no uncommitted diff for the
+item's Scope remains in the tree (`git status`); a diff OUTSIDE Scope is not committed,
+record it in Pending Work. Incident basis — D12 of plan SKM-AUDIT-004: 4 "closed" items
+were marked done while their code sat uncommitted in the working tree.
+
 ## 6. Handoff standard
 
 `plans/<ID>/handoff.md` — rolling pointer, OVERWRITTEN on every item/phase close
@@ -219,4 +227,4 @@ extracts and recon reports, so future plan work doesn't repay the cost of recons
 - `context-economy` (general) — Plan→Clear→Execute, token discipline.
 - `anti-drift` (general) — executor iteration discipline, circuit breaker.
 
-<!-- ru-source-sha256: 78009df436c8630118fd4837d20cbe06c1da8c819b431c53a0336d778a3233e8 -->
+<!-- ru-source-sha256: 458dd3c9d74d3ca56146337d1e8ba3089907f3e4147e1ff46156159c05867382 -->

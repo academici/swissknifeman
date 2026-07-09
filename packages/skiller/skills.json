@@ -206,7 +206,7 @@
     },
     "quality": {
       "description": "Code review, refactoring plans, tech debt audits, test strategy",
-      "count": 10,
+      "count": 11,
       "status": "active"
     },
     "research": {
@@ -2202,10 +2202,10 @@
       "name": "plan-protocol",
       "bucket": "general",
       "path": "skills/general/plan-protocol/SKILL.md",
-      "version": "0.2.0",
-      "description": "Executable master plans in plans/<ID>: plan/phase/task schemas, 6 statuses, handoff standard, model routing, /task:plan-* commands.",
-      "sha256": "642011df6b37e48af7df785be71017c435d9524a76b30487ff20d4187858c1ec",
-      "content_sha256": "b439e7eebf05cab0b7bd287fef8419c8467a979c23e93e3439cf8184bfcb2c52",
+      "version": "2.0.0",
+      "description": "Executable master plans in plans/<ID>: plan/phase/task schemas, 6 statuses, refine loop and DoR gate, canonical plan root, two homes and archive, handoff with launch-block, model routing, /task:plan-* commands.",
+      "sha256": "6a003bd7a4ebdf0709c8e919becd29d026697ef0a790d61e94112af7af241273",
+      "content_sha256": "a77b2f364d2658145a3ef93ce7e64d948e7a327e4388fa64902c43e5775224dc",
       "tags": [
         "workflow",
         "planning",
@@ -3811,6 +3811,26 @@
       ],
       "requires": [
         "ml-project-structure"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "artifact-review",
+      "bucket": "quality",
+      "path": "skills/quality/artifact-review/SKILL.md",
+      "version": "0.1.0",
+      "description": "Review taxonomy by artifact type: three profiles (plan/spec, documentation, code), each with a conformance constitution and dimensions; shared severity axis Blocker/Major/Minor/Nit + independent Conventional-Comments label. Activate when reviewing any artifact — pick the profile first, then measure.",
+      "sha256": "fc8a01680bb633e9853909e031cdf870953cce456322d3306fdb61993873668a",
+      "content_sha256": "a9d89fa16b7e9784f9fc21a1c3c8f8201b0cbd1e236420215cb9fa34e645499c",
+      "tags": [
+        "quality",
+        "review",
+        "taxonomy",
+        "plan",
+        "docs",
+        "code",
+        "severity",
+        "conventional-comments"
       ],
       "source": "local"
     },

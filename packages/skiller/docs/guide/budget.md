@@ -159,7 +159,7 @@ flowchart LR
     mcp_advisor["mcp-advisor<br/>⊕107 ↻1893"]:::warm
     naming_conventions["naming-conventions<br/>⊕86 ↻1564"]:::warm
     packages_stack["packages-stack<br/>⊕85 ↻530"]:::warm
-    plan_protocol["plan-protocol<br/>⊕43 ↻3078"]:::mild
+    plan_protocol["plan-protocol<br/>⊕66 ↻5889"]:::mild
     project_map["project-map<br/>⊕83 ↻645"]:::warm
     session_handoff["session-handoff<br/>⊕41 ↻618"]:::cool
     skills_ssot["skills-ssot<br/>⊕35 ↻1771"]:::cool
@@ -278,6 +278,7 @@ flowchart LR
     venv_dependencies["venv-dependencies<br/>⊕30 ↻549"]:::cool
   end
   subgraph quality["quality"]
+    artifact_review["artifact-review<br/>⊕93 ↻1499"]:::warm
     code_review["code-review<br/>⊕36 ↻1622"]:::cool
     code_simplifier["code-simplifier<br/>⊕68 ↻1260"]:::mild
     diagnosing_bugs["diagnosing-bugs<br/>⊕106 ↻2577"]:::warm
@@ -417,17 +418,17 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 210 скиллов · ⊕ always **15219** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 288831 ток · ⌥ on-demand 794085 ток (сниппеты + references).
+**Итого:** 211 скиллов · ⊕ always **15335** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 293141 ток · ⌥ on-demand 795707 ток (сниппеты + references).
 
 ## По бакетам
 
 | Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ on-demand |
 |---|--:|--:|--:|--:|
-| `general` | 20 | 1402 | 24755 | 11063 |
+| `general` | 20 | 1425 | 27566 | 12685 |
 | `php` | 17 | 1122 | 19298 | 54837 |
 | `architect` | 15 | 988 | 22596 | 33458 |
 | `frontend-vue` | 11 | 854 | 25744 | 248486 |
-| `quality` | 10 | 738 | 19065 | 7447 |
+| `quality` | 11 | 831 | 20564 | 7447 |
 | `php-packages` | 9 | 685 | 5417 | 520 |
 | `laravel-architecture` | 6 | 677 | 9730 | 7994 |
 | `oss-dev` | 10 | 627 | 13978 | 10187 |
@@ -495,10 +496,10 @@ flowchart LR
 | Скилл | Бакет | ток |
 |---|---|--:|
 | `vueuse-functions` | frontend-vue | 10838 |
+| `plan-protocol` | general | 5889 |
 | `query-craft` | research | 4221 |
 | `voice-ai` | voice-ai | 3193 |
 | `modular-architecture` | laravel-architecture | 3139 |
-| `plan-protocol` | general | 3078 |
 | `laravel-testing` | laravel-testing | 3061 |
 | `vue-router-best-practices` | frontend-vue | 2792 |
 | `spatie-settings` | laravel-extras | 2704 |

@@ -385,7 +385,7 @@ flowchart LR
 
 **В графе:** 129 скиллов, 94 рёбер requires, 88 рёбер produces_for.
 
-## Изолированные скиллы (81)
+## Изолированные скиллы (82)
 
 Скиллы без связей `requires`/`produces_for` — самодостаточны.
 
@@ -417,6 +417,7 @@ flowchart LR
 | php | `code-style-spatie`, `cursor-pagination-design`, `laravel-best-practices`, `named-arguments`, `namespace-refactor-safety`, `pao`, `php-naming-conventions`, `php-patterns`, `php-upgrade-checklist`, `production-readiness-checklist`, `transactional-outbox-relay` |
 | php-packages | `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages` |
 | pm | `pm-super-skill` |
+| quality | `artifact-review` |
 | research | `research-knowledge-super-skill` |
 | roles | `open-source-maintainer`, `solo-founder`, `startup-cto`, `tech-lead` |
 | sales | `sales-super-skill` |

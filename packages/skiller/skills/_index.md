@@ -4,7 +4,7 @@
 
 Источник истины портируемых скиллов (машинный реестр — `skills.json`). Раздача в проекты: `skiller connect` (плагины-бакеты) / `vendor` (физ. перенос). CORE-набор токен-скиллов (`general`/`oss-dev`) раздаётся по умолчанию — см. `connect`/`vendor`.
 
-Всего: 210 скиллов в 47 бакетах.
+Всего: 211 скиллов в 47 бакетах.
 
 ## Скиллы по бакетам
 
@@ -226,7 +226,7 @@
 | `mcp-advisor` | Pick MCP servers for a project at onboarding/sync: which to connect (context7/playwright/… | `mcp`, `onboarding`, `tooling`, `context`, `claude-code` |
 | `naming-conventions` | Naming discipline (language-agnostic): name reveals intent, not implementation; fight noi… | `naming`, `conventions`, `readability`, `code-style`, `discipline`, `clean-code` |
 | `packages-stack` | Project external-dependency registry methodology: which packages are used and for what, a… | `dependencies`, `conventions`, `navigation`, `stack`, `init` |
-| `plan-protocol` | Executable master plans in plans/<ID>: plan/phase/task schemas, 6 statuses, handoff stand… | `workflow`, `planning`, `handoff`, `routing`, `multi-model` |
+| `plan-protocol` | Executable master plans in plans/<ID>: plan/phase/task schemas, 6 statuses, refine loop a… | `workflow`, `planning`, `handoff`, `routing`, `multi-model` |
 | `project-map` | Project structure map methodology: zone directories by responsibility for safe change rou… | `conventions`, `navigation`, `architecture`, `structure`, `routing` |
 | `session-handoff` | Cross-session/agent context handoff: compress a session into a structured doc — state, de… | `workflow`, `context`, `tokens`, `handoff` |
 | `skills-ssot` | Single source of truth for skills across multiple AI agents: .ai/skills + symlinks, gitig… | `ai-context`, `skills`, `ssot`, `workflow`, `conventions`, `ai` |
@@ -392,10 +392,11 @@
 | `ml-project-structure` | Standardized ML/Data Science project structure (Cookiecutter Data Science) | `python`, `ml`, `structure`, `architecture`, `data`, `conventions` |
 | `venv-dependencies` | Python dependency management and virtual environments for project reproducibility | `python`, `venv`, `dependencies`, `tooling`, `quality`, `conventions` |
 
-### quality — Code review, refactoring plans, tech debt audits, test strategy (10)
+### quality — Code review, refactoring plans, tech debt audits, test strategy (11)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
+| `artifact-review` | Review taxonomy by artifact type: three profiles (plan/spec, documentation, code), each w… | `quality`, `review`, `taxonomy`, `plan`, `docs`, `code`, `severity`, `conventional-comments` |
 | `code-review` | Code review process & checklist: mandatory checks, comment severity grades, async vs sync… | `quality`, `validation`, `review`, `github`, `workflow` |
 | `code-simplifier` | Simplify freshly written code without changing behavior: dead code, needless abstractions… | `quality`, `refactoring`, `refactor`, `ci`, `validation` |
 | `diagnosing-bugs` | Discipline for diagnosing hard bugs and performance regressions: FIRST build a tight repr… | `debugging`, `diagnostics`, `feedback-loop`, `performance`, `testing` |
@@ -508,6 +509,7 @@
 | `claude-code` | `agent-packs`, `context-economy`, `mcp-advisor`, `query-craft`, `verify-claims` |
 | `clean-code` | `naming-conventions` |
 | `cli` | `dx-design` |
+| `code` | `artifact-review` |
 | `code-connect` | `figma-mcp-core` |
 | `code-style` | `code-style-spatie`, `eslint-flat-config`, `js-code-style`, `named-arguments`, `naming-conventions`, `php-naming-conventions` |
 | `comments` | `writing-style` |
@@ -525,6 +527,7 @@
 | `context7` | `query-craft` |
 | `contracts` | `api-design` |
 | `contribution` | `package-contribution-protocol` |
+| `conventional-comments` | `artifact-review` |
 | `conventional-commits` | `git-commit-rules` |
 | `conventions` | `compact-responses`, `config-conventions`, `context-economy`, `git-commit-rules`, `ml-project-structure`, `model-rules`, `named-arguments`, `naming-conventions`, `packages-stack`, `php-naming-conventions`, `project-map`, `skills-ssot`, `venv-dependencies` |
 | `coordination` | `cross-project-coordinator`, `shared-memory` |
@@ -557,7 +560,7 @@
 | `discipline` | `anti-drift`, `naming-conventions`, `startup-cto` |
 | `discovery` | `competitive-analysis`, `customer-discovery`, `idea-discovery`, `new-project`, `solo-founder`, `spec-interview` |
 | `docker` | `db-test-preflight`, `docker`, `docker-dev-prod`, `docker-php`, `docker-postgres`, `docker-services`, `docker-vite`, `laravel-dusk`, `makefile` |
-| `docs` | `brain-locator`, `grill-with-docs`, `writing-style` |
+| `docs` | `artifact-review`, `brain-locator`, `grill-with-docs`, `writing-style` |
 | `doctrine` | `axioma-doctrine` |
 | `documentation` | `dx-design`, `oss-development`, `oss-governance` |
 | `domain` | `domain-modeling`, `enum-state-machine`, `grill-with-docs` |
@@ -690,6 +693,7 @@
 | `php` | `attribute-authorization`, `azguard`, `botkit`, `code-style-spatie`, `config-driven-abstraction`, `cursor-pagination-design`, `database`, `dependency-audit`, `dependency-injection`, `docker-php`, `eloquent-accessors`, `enum-attributes`, `enum-state-machine`, `filament`, `laravel`, `laravel-best-practices`, `laravel-broadcasting`, `laravel-data`, `laravel-dusk`, `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages`, `laravel-permissions`, `laravel-security-audit`, `laravel-structure`, `laravel-testing`, `medialibrary`, `modular-architecture`, `mutation-testing`, `named-arguments`, `namespace-refactor-safety`, `pao`, `pennant-development`, `php-naming-conventions`, `php-patterns`, `php-upgrade-checklist`, `production-readiness-checklist`, `repositories`, `spatie-settings`, `static-analysis`, `test-isolation-guard`, `transactional-outbox-relay` |
 | `phpstan` | `php-upgrade-checklist` |
 | `pinia` | `pinia-stores`, `vue-testing-best-practices` |
+| `plan` | `artifact-review` |
 | `planning` | `plan-protocol`, `to-issues`, `verify-claims` |
 | `playwright` | `playwright-e2e` |
 | `pnpm` | `node-pnpm-preflight` |
@@ -702,7 +706,7 @@
 | `prompt-engineering` | `ai-agents` |
 | `pusher` | `laravel-echo-client` |
 | `python` | `mcp-blender`, `ml-project-structure`, `parametric-config`, `venv-dependencies`, `version-gotchas` |
-| `quality` | `code-review`, `code-simplifier`, `mutation-testing`, `playwright-e2e`, `production-readiness-checklist`, `refactoring-plan`, `static-analysis`, `tech-debt-audit`, `test-strategy`, `testing-safety-report`, `venv-dependencies` |
+| `quality` | `artifact-review`, `code-review`, `code-simplifier`, `mutation-testing`, `playwright-e2e`, `production-readiness-checklist`, `refactoring-plan`, `static-analysis`, `tech-debt-audit`, `test-strategy`, `testing-safety-report`, `venv-dependencies` |
 | `query` | `query-craft` |
 | `queue` | `docker-services`, `transactional-outbox-relay` |
 | `rag` | `ai-agents`, `query-craft`, `verify-claims` |
@@ -730,7 +734,7 @@
 | `rest` | `api-design` |
 | `reuse` | `axioma-stack`, `ecosystem-reuse-gate` |
 | `reverb` | `laravel-broadcasting`, `laravel-echo-client` |
-| `review` | `code-review`, `gh-review`, `implement`, `open-source-maintainer`, `production-readiness-checklist`, `tech-lead` |
+| `review` | `artifact-review`, `code-review`, `gh-review`, `implement`, `open-source-maintainer`, `production-readiness-checklist`, `tech-lead` |
 | `role` | `open-source-maintainer`, `solo-founder`, `startup-cto`, `tech-lead` |
 | `router` | `docker` |
 | `routes` | `wayfinder` |
@@ -751,6 +755,7 @@
 | `semver` | `github-flow`, `package-contribution-protocol`, `release-engineering` |
 | `session-analysis` | `session-observer` |
 | `settings` | `spatie-settings` |
+| `severity` | `artifact-review` |
 | `skills` | `laravel-packages`, `skills-ssot`, `swissknifeman-locator` |
 | `sla` | `build-loop`, `capacity-planning`, `config-conventions`, `incident-response`, `oncall-rotation`, `parametric-config`, `threading` |
 | `slo` | `observability-design` |
@@ -772,6 +777,7 @@
 | `swissknifeman` | `swissknifeman-locator` |
 | `tailwind` | `dark-mode`, `figma-to-vue`, `naive-ui-theming`, `reka-ui-cva`, `tailwind-conventions`, `vite-multi-build` |
 | `tailwindcss-v4` | `figma-to-vue`, `tailwind-conventions` |
+| `taxonomy` | `artifact-review` |
 | `tdd` | `implement`, `tdd-discipline` |
 | `tech-radar` | `axioma-stack` |
 | `template` | `brd`, `model-rules`, `prd-from-brd`, `runbook`, `task-brief-template` |

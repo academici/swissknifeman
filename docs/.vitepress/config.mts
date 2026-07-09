@@ -206,6 +206,22 @@ export default withMermaid(defineConfig({
         },
       ],
 
+      '/task/': [
+        {
+          text: 'Интент-команды (task)',
+          items: [{ text: 'Обзор: команды /task:*', link: '/task/' }],
+        },
+        {
+          text: 'Методология plan-protocol',
+          items: [
+            { text: 'Полный цикл', link: '/task/methodology' },
+            { text: 'Структура плана', link: '/task/plan-structure' },
+            { text: 'Шаблоны', link: '/task/templates' },
+            { text: 'Конструктор workflow', link: '/task/workflows' },
+          ],
+        },
+      ],
+
       '/': [
         {
           text: 'Экосистема',

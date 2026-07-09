@@ -48,6 +48,9 @@ allow, safe-dirs (harness) — сквозная проверка; цель — �
   RAG (context7 → perplexity-web), не по памяти (методология корневого CLAUDE.md).
 - Коммиты — Conventional Commits на русском, мелкими порциями по смыслу.
 - Перед любым коммитом кода: validate.sh затронутого пакета зелёный.
+- **P7 разрешён при нетерминальной P5** (она ждёт только approve Owner на тег):
+  локальное исключение phase-first, зафиксировано D13; тег v0.8.0 ставится на HEAD
+  паспорта P5.1 независимо от P7-коммитов.
 
 ## 3. Routing
 
@@ -70,6 +73,7 @@ allow, safe-dirs (harness) — сквозная проверка; цель — �
 | P4 | Permissions-слой: perplexity-web и safe-dirs | 3/3 | 🟢 Done |
 | P6 | Laravel PAO: обязательная установка на PHP-проекты | 3/4 | 🟠 Done with deviations |
 | P5 | Релиз: CHANGELOG и stable-тег | 1/2 | 🟡 In progress |
+| P7 | Обвязка агентов: RAG-агрессия, план-артефакты, git-гейт, ревью-скиллы | 5/5 | 🟢 Done |
 
 ## 5. Decision Log
 
@@ -87,6 +91,9 @@ allow, safe-dirs (harness) — сквозная проверка; цель — �
 | D10 | 2026-07-07 | Эскалация P6.4 разрешена по варианту (a): миграция тест-стека Agelto (pest v3→v4 + phpunit v11→v12) вынесена из scope swissknifeman как задача владельца Agelto; P6.4 закрыт 🟠 Done with deviations, P6 терминальна (4/4), путь к P5 разблокирован | Контракт репо по P6 выполнен (install-шаг P6.2 + doctor-гейт P6.3 под тестами; fleet-скан затронул только Agelto; Boost-гигиена закрыта). Блокер PAO в Agelto — внутренняя миграция потребителя, вне контракта тулинга; P5 (релиз swissknifeman) от неё не зависит. Держать фазу заблокированной на внешнем проекте нарушает phase-first и «не проектируем под внешнее состояние». Deviation зафиксирован, follow-up отслеживается как owner-task |
 | D11 | 2026-07-07 | Эскалация P5.1 разрешена: Approval Owner напрямую убрал строку `"Read(**/CHANGELOG.md)"` из `permissions.deny` в `.claude/settings.local.json`. Read CHANGELOG.md подтверждён рабочим; P5.1 разморожен → `⬜ Not started` | Deny-строка блокировала Required Read/Edit CHANGELOG.md для P5.1 (конфликт правил); соседствовала в списке с генерируемыми/шумными файлами (skills.json, *.lock), а не секретами — сужение/снятие не задевает философию репо (stdlib-only, дедуп в core/ и т.д.) |
 | D12 | 2026-07-07 | Фиксы P3.3/P4.3/P6.2/P6.3 (Update Log считал «закрытыми») оказались незакоммиченными в рабочем дереве при старте P5.1 — докоммичены 4 коммитами по смыслу перед CHANGELOG (шаг 1 release-discipline: коммит фикса до CHANGELOG), без нового кода | Не архитектурный вопрос (код уже написан и провалидирован в своих item'ах, эскалация не triggers-enum), а мехническое довыполнение release-discipline; иначе тег ставился бы поверх незакоммиченного кода |
+| D13 | 2026-07-07 | Добавлена фаза P7 (5 items, идеи Owner) — пост-релизная, НЕ входит в v0.8.0 (паспорт P5-release.md уже собран); при задержке approve P5.2 исполнение P7 разрешено Execution Rules (тег ставится на коммит паспорта, P7-коммиты его не двигают). Все 5 идей верифицированы до включения: structured-output директивы — Perplexity docs (RAG 2026-07-07); git-практика атомарных intent-коммитов + отдельных fix-коммитов — RAG 2026-07-07 + инцидент D12; `skills:` у subagents поддержан и инжектит SKILL.md (но НЕ snippets) — дока subagents; RAG-пробел dev/review/fix и отсутствие findings/-конвенции — grep репо | Требование Owner: неподтверждённое не делать; каждая идея легла в item только с verified-основанием |
+| D14 | 2026-07-07 | Усиление RAG-политики — на уровне интент-команд и скиллов, НЕ постоянной hook-инъекции (session-policy/router не трогаем); «freshness»-агент освежения проектов — спекулятивно → roadmap-стаб, не внедряем | Hook-инъекция = резидентные токены каждой сессии (context-economy); философия репо: фичу внедряем по факту измеренной проблемы |
+| D15 | 2026-07-07 | Поправка предпосылки Owner: «атрибуты вместо $fillable» НЕ подтверждена — конвенция реестра (php:laravel snippets/eloquent-model.md): атрибуты `#[Table]`/`#[ObservedBy]` вместо `$table`/ручной регистрации Observer, а `$fillable` ОСТАЁТСЯ явным protected-списком. Чек-лист ревью в P7.5 сформулирован по скиллу, не по формулировке запроса | Требование Owner «ошибаюсь — не делай»: ревью-гейт не должен требовать несуществующую конвенцию |
 
 ## 6. Update Log
 
@@ -109,3 +116,9 @@ allow, safe-dirs (harness) — сквозная проверка; цель — �
 | 2026-07-07 | plan-exec/sonnet | P5.1 эскалирован: Required Read «существующий CHANGELOG» упёрся в `permissions.deny` (`.claude/settings.local.json`) — `"Read(**/CHANGELOG.md)"` блокирует Read и транзитивно Edit/Write CHANGELOG.md; обход через Bash/Grep не предпринимался (нарушил бы дух настройки). Эскалировано на `/task:plan-design SKM-AUDIT-004 P5.1`, фаза P5 🔴 Blocked (0/2) |
 | 2026-07-07 | Approval Owner | Эскалация P5.1 разрешена (D11): deny-строка `Read(**/CHANGELOG.md)` убрана владельцем напрямую из `.claude/settings.local.json`; Read CHANGELOG.md подтверждён рабочим. P5.1 разморожен → `⬜ Not started`, эскалация снята, фаза P5 → `⬜ Not started` (0/2), готова к обычному `/task:plan-exec SKM-AUDIT-004 P5.1` |
 | 2026-07-07 | plan-exec/sonnet | P5.1 закрыт (D12): докоммичены недостающие фиксы P3.3/P4.3/P6.2/P6.3 (4 коммита), `CHANGELOG.md` `[Unreleased]` дополнен 6 группами записей, `skiller registry` идемпотентен (207/53), финальный прогон всех 9 гейтов P1.1/P2.3 на итоговом HEAD — 🟢 PASS; findings/P5-release.md — паспорт релиза, предложена версия v0.8.0; фаза P5 (1/2 🟡), следующий item — P5.2 (approve владельца + тег) |
+| 2026-07-07 | plan-design/fable | Спроектирована фаза P7 (5 items, D13–D15) по field-feedback Owner: контракт ИИ-вывода в query-craft · RAG-правило в dev/review/fix · канонизация findings/ · коммит-гейт закрытия item'а · чек-лист конвенций моделей в ревью-паках. Все идеи верифицированы (RAG + дока subagents + grep репо); код не тронут — только plan-артефакты |
+| 2026-07-09 | plan-exec/sonnet | P7.1 закрыт: скилл `research/query-craft` получил слот 6 (постоянный контракт вывода для ИИ-потребителя) в SKILL.ru.md/SKILL.md + чек-лист/антипаттерн; `skiller registry` прогнан; validate.sh зелёный. Коммит `e418fda` |
+| 2026-07-09 | plan-exec/sonnet | P7.2 закрыт: RAG-правило (лестница verify-claims/query-craft) добавлено в `dev.md`/`review.md` (компактный блок) и `fix.md` (одна строка); модель/effort команд не тронуты. Коммит `42367ea` |
+| 2026-07-09 | plan-exec/sonnet | P7.3 закрыт: `plan-protocol` SKILL.ru.md/SKILL.md получили секцию «Артефакты плана: findings/»; пример в phase-template.md; требования в plan-design.md/plan-exec.md. `plan_lint.py` не тронут (схема не менялась). Коммит `c8fd503` |
+| 2026-07-09 | plan-exec/sonnet | P7.4 закрыт: коммит-гейт закрытия item'а введён в `plan-exec.md` (п.7 + строка `Commits:` в Expected output) и зеркально в `plan-protocol` SKILL.ru.md/SKILL.md (§5 Статусы). Коммит `5f8d625` |
+| 2026-07-09 | plan-exec/sonnet | P7.5 закрыт: `laravel` добавлен в `skills:` reviewer-агентов backend-laravel/laravel-package + строка чек-листа конвенций моделей (snippets не инжектятся при preload); версии паков подняты (0.11.2→0.12.0, 0.1.1→0.2.0); `roadmap/project-freshness-agent.md` создан (D14, не внедряется). Фаза P7 терминальна (5/5 🟢). Коммит `0b7fca8` |

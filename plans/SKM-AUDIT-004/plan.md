@@ -7,7 +7,7 @@
 | Plan ID | SKM-AUDIT-004 |
 | Title | Аудит и стабилизация перед stable-тегом |
 | Version | 0.1.0 |
-| Status | 🟡 In progress |
+| Status | 🟠 Done with deviations |
 | Document Type | Executable Master Plan |
 | Authoring Model | fable |
 | Last Updated | 2026-07-07 |
@@ -72,7 +72,7 @@ allow, safe-dirs (harness) — сквозная проверка; цель — �
 | P3 | Статистика проектов и токен-экономия | 3/3 | 🟢 Done |
 | P4 | Permissions-слой: perplexity-web и safe-dirs | 3/3 | 🟢 Done |
 | P6 | Laravel PAO: обязательная установка на PHP-проекты | 3/4 | 🟠 Done with deviations |
-| P5 | Релиз: CHANGELOG и stable-тег | 1/2 | 🟡 In progress |
+| P5 | Релиз: CHANGELOG и stable-тег | 2/2 | 🟢 Done |
 | P7 | Обвязка агентов: RAG-агрессия, план-артефакты, git-гейт, ревью-скиллы | 5/5 | 🟢 Done |
 
 ## 5. Decision Log
@@ -122,3 +122,4 @@ allow, safe-dirs (harness) — сквозная проверка; цель — �
 | 2026-07-09 | plan-exec/sonnet | P7.3 закрыт: `plan-protocol` SKILL.ru.md/SKILL.md получили секцию «Артефакты плана: findings/»; пример в phase-template.md; требования в plan-design.md/plan-exec.md. `plan_lint.py` не тронут (схема не менялась). Коммит `c8fd503` |
 | 2026-07-09 | plan-exec/sonnet | P7.4 закрыт: коммит-гейт закрытия item'а введён в `plan-exec.md` (п.7 + строка `Commits:` в Expected output) и зеркально в `plan-protocol` SKILL.ru.md/SKILL.md (§5 Статусы). Коммит `5f8d625` |
 | 2026-07-09 | plan-exec/sonnet | P7.5 закрыт: `laravel` добавлен в `skills:` reviewer-агентов backend-laravel/laravel-package + строка чек-листа конвенций моделей (snippets не инжектятся при preload); версии паков подняты (0.11.2→0.12.0, 0.1.1→0.2.0); `roadmap/project-freshness-agent.md` создан (D14, не внедряется). Фаза P7 терминальна (5/5 🟢). Коммит `0b7fca8` |
+| 2026-07-09 | plan-exec/sonnet | P5.2 закрыт: паспорт findings/P5-release.md предъявлен владельцу через AskUserQuestion, получен explicit approve («Да, v0.8.0»); поставлен и запушен аннотированный тег `v0.8.0` на HEAD `34e2694`, виден в origin (`git ls-remote --tags origin`). Фаза P5 терминальна (2/2 🟢). Все 7 фаз плана терминальны — план SKM-AUDIT-004 закрыт (🟠 Done with deviations — из-за P6.4, D10) |

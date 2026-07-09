@@ -290,7 +290,7 @@ flowchart LR
     testing_safety_report["testing-safety-report<br/>⊕77 ↻756"]:::mild
   end
   subgraph research["research"]
-    query_craft["query-craft<br/>⊕130 ↻3928"]:::hot
+    query_craft["query-craft<br/>⊕130 ↻4221"]:::hot
     research_knowledge_super_skill["research-knowledge-super-skill<br/>⊕195 ↻569"]:::hot
   end
   subgraph roles["roles"]
@@ -417,7 +417,7 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 210 скиллов · ⊕ always **15219** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 288049 ток · ⌥ on-demand 794050 ток (сниппеты + references).
+**Итого:** 210 скиллов · ⊕ always **15219** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 288342 ток · ⌥ on-demand 794050 ток (сниппеты + references).
 
 ## По бакетам
 
@@ -436,7 +436,7 @@ flowchart LR
 | `blender-modeling` | 6 | 506 | 8887 | 12586 |
 | `pm` | 10 | 438 | 11072 | 23524 |
 | `founder` | 10 | 406 | 15277 | 578 |
-| `research` | 2 | 325 | 4497 | 20472 |
+| `research` | 2 | 325 | 4790 | 20472 |
 | `frontend-linting` | 4 | 323 | 5920 | 18380 |
 | `laravel-testing` | 4 | 323 | 7993 | 15335 |
 | `operator` | 6 | 296 | 9910 | 22461 |
@@ -495,7 +495,7 @@ flowchart LR
 | Скилл | Бакет | ток |
 |---|---|--:|
 | `vueuse-functions` | frontend-vue | 10838 |
-| `query-craft` | research | 3928 |
+| `query-craft` | research | 4221 |
 | `voice-ai` | voice-ai | 3193 |
 | `modular-architecture` | laravel-architecture | 3139 |
 | `laravel-testing` | laravel-testing | 3061 |

@@ -29,6 +29,7 @@ skills:
   - dependency-injection
   - laravel-security-audit
   - code-style-spatie
+  - laravel
 model: {{MODEL_REVIEWER}}
 color: yellow
 ---
@@ -39,7 +40,7 @@ color: yellow
 git diff/log).
 
 Если поле `skills:` не подгрузило скиллы — загрузи сам: `php:repositories`,
-`php:laravel-structure`, `php:laravel-security-audit`.
+`php:laravel-structure`, `php:laravel-security-audit`, `php:laravel`.
 
 <!-- shared:risk-adaptive -->
 ## Risk-адаптивность и принцип репорта
@@ -81,6 +82,9 @@ git diff/log).
 - **Авторизация**: на новые действия есть policy/gate и она реально вызывается;
   маршруты под нужным middleware.
 - **Миграции vs модели**: <!-- pack:if SCAFFOLDS_SCHEMA -->новые таблицы/поля заводятся отдельной миграцией; каждое новое поле отражено в `$fillable`/casts модели; `down()` обратим.<!-- pack:endif --><!-- pack:ifnot SCAFFOLDS_SCHEMA -->новые поля в `$fillable`/casts (новые миграции в {{PACK_PREFIX}} не предполагаются — проверь, что их и нет).<!-- pack:endif -->
+- **Модели — конвенции реестра**: `#[Table(name: '...')]` — явное имя таблицы (не свойство
+  `$table`), `#[ObservedBy]` при наличии Observer, `$fillable` — явный protected-список;
+  канон — скилл `php:laravel` → `snippets/eloquent-model.md`.
 - **Транзакции**: множественные записи под транзакцией; события/джобы ПОСЛЕ коммита
   (after-commit listener / `dispatchAfterCommit`), не внутри транзакции.
 <!-- shared:config-honesty -->

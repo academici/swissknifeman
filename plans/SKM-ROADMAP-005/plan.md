@@ -70,7 +70,7 @@ enforcement заполнения CHANGELOG; (6) `ecosystem-glossary` — еди�
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P1 | settings-doctor: конфликт-линтер настроек Claude Code | 4/6 | 🟡 In progress |
+| P1 | settings-doctor: конфликт-линтер настроек Claude Code | 5/6 | 🟡 In progress |
 | P2 | wf-status: консольный статус-репортер workflow-прогонов | 0/5 | ⬜ Not started |
 | P3 | workflow-craft: активация конструктора + команда-гейт | 0/5 | ⬜ Not started |
 | P4 | Канон планов: репо-дом, имена, дом workflow-скриптов | 0/6 | ⬜ Not started |
@@ -109,3 +109,4 @@ enforcement заполнения CHANGELOG; (6) `ecosystem-glossary` — еди�
 | 2026-07-10 | issue-planner/opus | Фаза P1 развёрнута из скелета: 6 items с полными ТЗ, Scope Included/Excluded, DoR пройден. Три развилки закрыты владельцем → D10 (дом движка — harness), D11 (декларация профиля), D12 (хук вне scope) |
 | 2026-07-10 | issue-planner/opus | Пере-сверка фактов CC (проход 2, + эмпирика package.json расширения 2.1.206) → D13/D14/D15; выжимка дописана в `findings/P1-cc-settings-facts.md` |
 | 2026-07-10 | issue-planner/opus | D16: канон имён планов `ГГГГ.ММ.ДД-КОДОВОЕ-ИМЯ` (требование владельца) — внедряется в P4, отмечен в его Phase Context |
+| 2026-07-10 | package-implementer/sonnet | P1.5 закрыт: проверки 6–8, 10, 12–13 + JSONC VSCode-reader + интеграционный fieldcase-тест. `validate.sh` зелёный, реальный прогон на этом репо подтвердил находки. Коммит `7c11f46` |

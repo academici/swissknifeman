@@ -221,6 +221,10 @@ Definition of Ready — чеклист и refine-цикл в разделе 7. �
 - [ ] Alternatives для несущих решений зафиксированы в D-логе.
 - [ ] Open Questions разнесены по статусам `open-questions.md` (раздел 3).
 - [ ] Несущие факты несут RAG-маркеры.
+- [ ] **Для фаз с ЗАЯВЛЕННОЙ оркестрацией** (multi-agent/fan-out): готовый workflow-скрипт
+      в `plans/<ID>/workflows/`, launch-block handoff ссылается на него по `scriptPath`
+      (D29). Условие — ТОЛЬКО при заявленной оркестрации: ручное item-by-item исполнение
+      фазы workflow НЕ требует (дом/имя скрипта — раздел 2, авторинг — скилл `workflow-craft`).
 
 **RAG-маркеры в схеме.** Каждый load-bearing факт/вердикт в Intent/Why/Implementation
 Rules item'а и в D-логе несёт `RAG:✅ <дата/суть запроса>` либо `[UNVERIFIED]`.

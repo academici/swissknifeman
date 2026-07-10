@@ -945,3 +945,79 @@ class TestPlanIdentity43Warnings(TmpPlanTestCase):
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok, diag.errors)
         self.assertEqual(self._warnings_containing(diag, "supersedes"), [], diag.warnings)
+
+
+class TestWorkflowDoRWarning46(TmpPlanTestCase):
+    """P4.6 (D29) — workflow-как-DoR: фаза со статусом 🟡+, ЗАЯВЛЯЮЩАЯ оркестрацию
+    (грепаемый признак multi-agent/fan-out), но без workflow-скрипта в
+    `plans/<ID>/workflows/` = WARNING. Условность: без признака / при статусе ⬜ /
+    при наличии скрипта — тишина. Всё warning-only: diag.ok=True."""
+
+    _NEEDLE = "заявляет оркестрацию"
+
+    def _warnings_containing(self, diag, needle):
+        return [w for w in diag.warnings if needle in w]
+
+    def _inject_orchestration(self, plan_dir, phase="P1"):
+        """Добавляет грепаемый признак оркестрации в Phase Context фазы."""
+        p = plan_dir / "phases" / f"{phase}.md"
+        text = p.read_text(encoding="utf-8").replace(
+            "Демо-фаза.", "Демо-фаза. Оркестрация fan-out субагентов, launch-block по scriptPath.")
+        p.write_text(text, encoding="utf-8")
+
+    def _add_workflow(self, plan_dir, name="wf-demo-1-drive.js"):
+        wf = plan_dir / "workflows"
+        wf.mkdir(parents=True, exist_ok=True)
+        (wf / name).write_text("export const meta = {\n  phases: [],\n}\n", encoding="utf-8")
+
+    # --- позитив: фаза заявляет оркестрацию, статус 🟢, скрипта нет → warning -----
+    def test_orchestration_phase_without_script_warns(self):
+        plan_dir = write_valid_plan(self.root, "DEMO-1")
+        self._inject_orchestration(plan_dir)
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)  # warning-only, не error
+        self.assertTrue(self._warnings_containing(diag, self._NEEDLE), diag.warnings)
+
+    # --- негатив: признак есть, но скрипт в workflows/ лежит → тишина -------------
+    def test_orchestration_phase_with_script_silent(self):
+        plan_dir = write_valid_plan(self.root, "DEMO-1")
+        self._inject_orchestration(plan_dir)
+        self._add_workflow(plan_dir)
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+        self.assertEqual(self._warnings_containing(diag, self._NEEDLE), [], diag.warnings)
+
+    # --- негатив: признака оркестрации в фазе нет → тишина (ручное исполнение) ----
+    def test_phase_without_orchestration_marker_silent(self):
+        plan_dir = write_valid_plan(self.root, "DEMO-1")  # green-path, без маркера
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+        self.assertEqual(self._warnings_containing(diag, self._NEEDLE), [], diag.warnings)
+
+    # --- негатив: бумерное `fan-out` в прозе (не декларация) → тишина ------------
+    # регрессия на ложный warning SKM-MASTER-002/P3 (fan-out в Known Deviations про
+    # токен-учёт): консервативный набор маркеров намеренно НЕ ловит одиночное слово.
+    def test_bare_fanout_in_prose_silent(self):
+        plan_dir = write_valid_plan(self.root, "DEMO-1")
+        p = plan_dir / "phases" / "P1.md"
+        text = p.read_text(encoding="utf-8").replace(
+            "Демо-фаза.", "Демо-фаза. Искажение метрики при fan-out субагентов — допущено.")
+        p.write_text(text, encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+        self.assertEqual(self._warnings_containing(diag, self._NEEDLE), [], diag.warnings)
+
+    # --- негатив: фаза заявляет оркестрацию, но статус ⬜ → тишина (не в exec) -----
+    def test_orchestration_phase_not_started_silent(self):
+        plan_dir = Path(self.root) / "plans" / "DEMO-1"
+        (plan_dir / "phases").mkdir(parents=True, exist_ok=True)
+        (plan_dir / "plan.md").write_text(
+            plan_md("DEMO-1", items_cell="0/1", phase_status="⬜ Not started"), encoding="utf-8")
+        (plan_dir / "phases" / "P1.md").write_text(
+            phase_md(item_status="⬜ Not started", completion_notes="—",
+                     handoff_text="—"), encoding="utf-8")
+        (plan_dir / "handoff.md").write_text(handoff_md("DEMO-1"), encoding="utf-8")
+        self._inject_orchestration(plan_dir)
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+        self.assertEqual(self._warnings_containing(diag, self._NEEDLE), [], diag.warnings)

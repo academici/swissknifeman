@@ -75,7 +75,7 @@ enforcement заполнения CHANGELOG; (6) `ecosystem-glossary` — еди�
 | P1 | settings-doctor: конфликт-линтер настроек Claude Code | 6/6 | 🟢 Done |
 | P2 | wf-status: консольный статус-репортер workflow-прогонов | 4/5 | 🟠 Done with deviations |
 | P3 | workflow-craft: активация конструктора + команда-гейт | 5/5 | 🟢 Done |
-| P4 | Канон планов: репо-дом, имена, дом workflow-скриптов | 5/6 | 🟡 In progress |
+| P4 | Канон планов: репо-дом, имена, дом workflow-скриптов | 6/6 | 🟢 Done |
 | P5 | changelog-discipline: enforcement заполнения CHANGELOG | 0/3 | ⬜ Not started |
 | P6 | ecosystem-glossary: единый язык трёхслойкой | 0/4 | ⬜ Not started |
 | P7 | ephemeral-дисциплина и закрытие пакета | 0/2 | ⬜ Not started |
@@ -156,3 +156,4 @@ enforcement заполнения CHANGELOG; (6) `ecosystem-glossary` — еди�
 | 2026-07-11 | package-implementer/opus | P4.3 закрыт: три warning-проверки `plan_lint` (union-regex ID D24 · место/имя workflow-скрипта D28 · supersedes-преемственность D27) + `_plan_codename` + 11 юнит-кейсов; back-compat зелёный — детали см. phases/P4.md P4.3 Completion Notes |
 | 2026-07-11 | package-implementer/opus | P4.4 закрыт: двуязычный скилл-указатель `axioma/ecosystem-map` (D26, тело 50 строк, cross-ref на plan-protocol/workflow-craft вместо копий) — детали см. phases/P4.md P4.4 Completion Notes |
 | 2026-07-11 | package-implementer/sonnet | P4.5 закрыт: секции «документация и планы» merge-only добавлены в vault CLAUDE.md §8 и корневой CLAUDE.md монорепо (ссылка на `ecosystem-map`+`plan-protocol`) — детали см. phases/P4.md P4.5 Completion Notes |
+| 2026-07-11 | package-implementer/opus | P4.6 закрыт: условная DoR-строка workflow-как-готовность §7 `plan-protocol` (D29) + парная warning-проверка `plan_lint` (маркер оркестрации консервативен, без бумерного `fan-out`) + 5 юнит-кейсов; фаза P4 закрыта 6/6 🟢 — детали см. phases/P4.md P4.6 Completion Notes |

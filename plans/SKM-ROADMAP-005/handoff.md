@@ -1,60 +1,57 @@
-# HANDOFF — 2026-07-11 — after P3.5
+# HANDOFF — 2026-07-11 — after P4.6
 
-**Next:** /task:plan-exec SKM-ROADMAP-005 P4.1
+**Next:** /task:plan-exec SKM-ROADMAP-005 P5.1
 
 | Параметр | Значение |
 |:--|:--|
 | Model | sonnet |
 | Thinking | medium |
 | Context | fresh session |
-| Суть | Исполнение возобновляется с P4.1 (канон планов — репо-дом по умолчанию, имена с `supersedes`, дом workflow-скриптов `plans/<ID>/workflows/`; правит `plan_lint`/`plan-protocol`, в т.ч. часть 1.6 `workflow-craft`, D2) |
+| Суть | Фаза P4 закрыта 6/6 🟢 — переход к P5 `changelog-discipline` (commit-гейт заполнения CHANGELOG: harness-хук `changelog-gate` D32/D33 + опц. `skm release` D34) |
 
 ````
-/task:plan-exec SKM-ROADMAP-005 P4.1 — исполнить первый item фазы P4 (канон планов) строго по ТЗ.
-Cold-start reads: plans/SKM-ROADMAP-005/phases/P4.md (ТЗ P4.1, Required Reads) ·
-plans/SKM-ROADMAP-005/plan.md (§5 Decision Log D2/D16/D24+ — канон имён/мест) ·
-packages/skiller/skills/general/plan-protocol/SKILL.md (SSOT протокола) ·
-packages/task/lib/task/plan_lint.py (валидатор схемы) · phases/P3.md (закрыта — часть 1.6
-конструктора workflow-скриптов уходит сюда, D2).
+/task:plan-exec SKM-ROADMAP-005 P5.1 — исполнить первый item фазы P5 (changelog-discipline) строго по ТЗ.
+Cold-start reads: plans/SKM-ROADMAP-005/phases/P5.md (ТЗ P5.1, Required Reads) ·
+plans/SKM-ROADMAP-005/plan.md (§5 Decision Log D32/D33/D34 — форма commit-гейта и release) ·
+roadmap/changelog-discipline.md (спека) · packages/harness/ (дом хука, прецеденты pack-guard.py/review-gate.sh).
+ВНИМАНИЕ: путь CHANGELOG.md заблокирован permission-deny среды — тулинг changelog тестировать на tmp-фикстуре, не на реальном файле (прецедент P2.4).
 ````
 
-**Done:** Фазы **P1** (`settings-doctor`, 6/6 🟢) и **P2** (`wf-status`, 4/5 🟢+🟠) закрыты ранее.
-Фаза **P3** (`workflow-craft`) закрыта 5/5 🟢: скилл-указатель `general/workflow-craft`
-(двуязычный, SSOT-матрица design vs dev + explicit «не смешивать» + cross-ref на 2 полевых
-эталона vault Brain, D20/D21); прошивка ссылки на конструктор в 4 команды (`dev`/`design`/
-`research`/`review` — `fix`/`plan-exec` осознанно пропущены, repo-grounded); команда-гейт
-`/task:make-workflow` (opus/high, D22) с интервью по `spec-interview`; выходной статический
-ревьюер (13-пунктовый чеклист, зеркало README конструктора, RED блокирует выдачу).
-`roadmap/README.md`: `workflow-craft` ч.1 → 🟢 внедрено (SKM-ROADMAP-005 P3); ч.2 (fleet-синтез)
-осталась ⬜ — вне scope плана (D1, критерий не сработал).
+**Done:** Фазы **P1** (`settings-doctor`, 6/6 🟢), **P2** (`wf-status`, 4/5 🟢+🟠), **P3**
+(`workflow-craft`, 5/5 🟢) закрыты ранее. Фаза **P4** (канон планов) закрыта 6/6 🟢: `plan-protocol`
+2.1.0 — репо-дом по умолчанию (§12/D31), поля Meta `visibility`/`supersedes` (§4/D25/D27), датовый
+ID-канон back-compat (§2/D16/D24), дом workflow-скриптов `plans/<ID>/workflows/` + канон имён
+(§2/D28), условная DoR-строка workflow-как-готовность (§7/D29). `plan_lint.py` — четыре WARNING-
+проверки (union-regex ID · место/имя workflow-скрипта · supersedes-преемственность · workflow-как-DoR
+при заявленной оркестрации, все warning-only, back-compat D24). Скилл-указатель `axioma/ecosystem-map`
+(D26). Секции «документация и планы» в vault CLAUDE.md §8 + корневом CLAUDE.md монорепо.
+`roadmap/README.md`: `plan-homes` 🟢 внедрено (P4), `workflow-craft` ч.1.6.
 
-**Remaining:** Исполнить P4 канон планов (6 items) → P5 changelog-discipline (3) → P6
-ecosystem-glossary (4) → P7 ephemeral-дисциплина + закрытие пакета (2), phase-first
-последовательно. Все четыре фазы уже развёрнуты из скелетов до полных ТЗ (design-workflow
-P4→P6, rest-exec P3→P6) — исполнение, не проектирование.
+**Remaining:** P5 changelog-discipline (3 items) → P6 ecosystem-glossary (4, P6.4 — тайм-гейтовый
+⬜, D41) → P7 ephemeral-дисциплина + закрытие пакета (2), phase-first последовательно. Фазы P5–P7
+уже развёрнуты из скелетов до полных ТЗ — исполнение, не проектирование.
 
-**Sources of truth:** plans/SKM-ROADMAP-005/plan.md (Meta, Routing, D-лог D1–D43+) ·
-plans/SKM-ROADMAP-005/phases/P1.md (закрыт — образец Phase Handoff) · phases/P3.md (закрыта,
-эталон свежего Phase Handoff) · phases/P4.md · phases/P5.md · phases/P6.md · phases/P7.md
-(развёрнуты) · packages/skiller/skills/general/plan-protocol/SKILL.md (SSOT протокола) ·
-packages/task/lib/task/plan_lint.py (валидатор схемы)
+**Sources of truth:** plans/SKM-ROADMAP-005/plan.md (Meta, Routing, D-лог D1–D43) ·
+phases/P4.md (закрыта, эталон свежего Phase Handoff) · phases/P5.md · phases/P6.md · phases/P7.md
+(развёрнуты) · packages/skiller/skills/general/plan-protocol/SKILL.md (SSOT протокола 2.1.0) ·
+packages/task/lib/task/plan_lint.py (валидатор схемы, 4 P4-проверки)
 
 **Open risks:**
 - P1.4 Pending Work: проверка №5 даёт ложный `error` на хук-командах с интерпретатор-префиксом
   (`bash …`, `python3 …`). Вне scope P1.
 - P1.6 Pending Work: `maind doctor --audit all` падает на измерении `core` (`_present_skills`) на
   части флота. `--audit settings` в изоляции не задет.
-- P3: пять CHANGELOG-строк items (P3.1–P3.5) НЕ внесены — путь `CHANGELOG.md` заблокирован
-  permission-deny этой среды (прецедент P2.4); формулировки на будущее зафиксированы в Pending
-  Work каждого item'а phases/P3.md — внести при первой сессии со свободным доступом к файлу.
-- D16 (канон имён планов `ГГГГ.ММ.ДД-КОДОВОЕ-ИМЯ`) внедряется в P4 — этот план НЕ переименовывается.
+- CHANGELOG-строки items P3.1–P3.5 и консолидированная строка фазы P4 НЕ внесены — путь
+  `CHANGELOG.md` заблокирован permission-deny среды (прецедент P2.4); формулировки в Pending Work
+  соответствующих items — внести при первой сессии со свободным доступом к файлу.
+- D16 (канон имён планов) внедрён в P4 — этот план НЕ переименовывается (back-compat D24).
 
 **Workarounds/Deferred/Open questions:**
 - workarounds: семантика слияния `permissions.additionalDirectories` неизвестна → проверка №8
-  per-layer (D15); полнота списка hook-событий не подтверждена → неизвестное событие даёт `info`.
-- deferred: opt-in `UserPromptSubmit`-хук settings-doctor (D12) и активации workflow-craft (не в
-  спеке); авто-починка `--fix`; часть 2 `workflow-craft` fleet-синтез (D1); часть 1.6 конструктора
-  (канон места/имён скриптов) — уходит в P4 (D2); `skill-rules-sidecar`, остаток
-  `self-learning-memory`, default-on `mcp-config-example-emit` (D1); P1.4/P1.6 Pending Work;
-  пять CHANGELOG-строк P3 (permission-deny).
+  per-layer (D15); полнота списка hook-событий не подтверждена → неизвестное событие даёт `info`;
+  маркер оркестрации в plan_lint консервативен (без бумерного `fan-out`) — против ложных warning (P4.6).
+- deferred: opt-in `UserPromptSubmit`-хук settings-doctor (D12); авто-починка `--fix`; часть 2
+  `workflow-craft` fleet-синтез (D1); `skill-rules-sidecar`, остаток `self-learning-memory`,
+  default-on `mcp-config-example-emit` (D1); P1.4/P1.6 Pending Work; CHANGELOG-строки P3 + P4
+  (permission-deny); maind-провижионер `plans-doc` авто-раскатки CLAUDE.md во флот (D30).
 - open_questions: содержание «ephemeral-дисциплины» — снимается интервью владельца в P7.1 (D7).

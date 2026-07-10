@@ -128,6 +128,15 @@ PLAN_ID_LEGACY_RE = re.compile(r"^[A-Z][A-Z0-9-]+$")
 WORKFLOW_META_MARKER = "export const meta"
 WORKFLOW_DIR_NAME = "workflows"  # единственный дом скриптов плана (D28)
 
+# --- P4.6: workflow-как-DoR — грепаемый признак заявленной оркестрации (D29) ---
+# КОНСЕРВАТИВНЫЙ набор маркеров в теле фазы: явный `scriptPath` launch-block'а,
+# «оркестрац», «мультиагент»/`multi-agent`. Правило Code Guidance «при сомнении НЕ
+# срабатывать» перевешивает буквальный список: бумерный `fan-out` НАМЕРЕННО исключён —
+# как одиночное слово он ловит нерелевантную прозу (напр. «искажение при fan-out» в
+# Known Deviations про токен-учёт), давая ложный warning. Условность (D29): ручное
+# item-by-item исполнение workflow не требует — маркер должен быть намеренным.
+ORCHESTRATION_MARKER_RE = re.compile(r"scriptPath|оркестрац|мультиагент|multi-agent", re.IGNORECASE)
+
 
 def _plan_codename(plan_id):
     """Кодовое имя плана (D28) — для деривации имени workflow-скрипта и supersedes-сверки:
@@ -141,6 +150,24 @@ def _plan_codename(plan_id):
 def _workflow_name_re(codename):
     """Каноничное имя workflow-скрипта — `wf-<кодовое-имя-lower>-<назначение>.js` (D28)."""
     return re.compile(r"^wf-" + re.escape(codename) + r"-[a-z0-9-]+\.js$")
+
+
+def _plan_has_workflow_script(plan_dir):
+    """Есть ли у плана хоть один `.js`-workflow-скрипт (с маркером `export const meta`)
+    в `plans/<ID>/workflows/` — признак «готового workflow» для DoR-проверки P4.6 (D29).
+    Детект БЕЗ исполнения JS (подстрока-маркер, прецедент P2.1/D19)."""
+    workflows_dir = Path(plan_dir) / WORKFLOW_DIR_NAME
+    if not workflows_dir.is_dir():
+        return False
+    for js in workflows_dir.glob("*.js"):
+        if not js.is_file():
+            continue
+        try:
+            if WORKFLOW_META_MARKER in js.read_text(encoding="utf-8"):
+                return True
+        except (OSError, UnicodeDecodeError):
+            continue
+    return False
 
 
 class Diagnostics:
@@ -489,6 +516,10 @@ def parse_phase_md(path, phase_id, diag):
     needs_clarification = [i + 1 for i, ln in enumerate(lines)
                            if NEEDS_CLARIFICATION_RE.search(ln)]
 
+    # --- P4.6: заявляет ли фаза оркестрацию (грепаемый признак, D29) — линуется
+    # в lint_plan (workflow-как-DoR: фаза с оркестрацией без workflow-скрипта = warning)
+    declares_orchestration = any(ORCHESTRATION_MARKER_RE.search(ln) for ln in lines)
+
     items = {}
     for item_id, title, header_lineno, body_lines, body_start in _find_items(lines):
         prefix_m = PHASE_TOKEN_RE.match(item_id.split(".")[0])
@@ -542,7 +573,8 @@ def parse_phase_md(path, phase_id, diag):
         handoff_text = "\n".join(handoff_body).strip()
 
     return {"status_table": status_table, "items": items, "phase_handoff": handoff_text,
-            "is_skeleton": is_skeleton, "needs_clarification": needs_clarification}
+            "is_skeleton": is_skeleton, "needs_clarification": needs_clarification,
+            "declares_orchestration": declares_orchestration}
 
 
 def parse_handoff_md(path, diag):
@@ -737,6 +769,17 @@ def lint_plan(plan_dir, diag):
                              f"фаза {pid} в статусе «{phase_status}», но несёт "
                              f"{len(nc)} маркер(ов) [NEEDS CLARIFICATION] "
                              f"(строки {nc}) — DoR-гейт не пройден (SKILL §7)")
+
+        # --- P4.6 WARNING: workflow-как-DoR (D29) — фаза со статусом 🟡+, ЗАЯВЛЯЮЩАЯ
+        # оркестрацию (грепаемый признак), но у плана нет workflow-скрипта в
+        # `plans/<ID>/workflows/`. Условность: без признака оркестрации — молчит
+        # (ручное item-by-item исполнение workflow не требует). warning-only.
+        if (phase_status and phase_status != "⬜ Not started"
+                and phases[pid].get("declares_orchestration")
+                and not _plan_has_workflow_script(plan_dir)):
+            diag.warning(phases[pid]["path"], None,
+                         f"фаза {pid} заявляет оркестрацию (multi-agent/fan-out), но нет "
+                         f"workflow-скрипта в `plans/{plan_id}/workflows/` — DoR §7 (D29)")
 
         # --- фаза 🟢/🟠 ⇒ Phase Handoff непуст --------------------------
         if phase_status in (STATUS_DONE, STATUS_DEVIATIONS):

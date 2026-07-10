@@ -221,6 +221,10 @@ post-factum:
 - [ ] Alternatives for load-bearing decisions recorded in the D-log.
 - [ ] Open Questions distributed across `open-questions.md` statuses (section 3).
 - [ ] Load-bearing facts carry RAG markers.
+- [ ] **For phases that DECLARE orchestration** (multi-agent/fan-out): a ready workflow
+      script in `plans/<ID>/workflows/`, the handoff launch-block references it by
+      `scriptPath` (D29). Conditional ONLY on declared orchestration — manual item-by-item
+      execution needs no workflow (script home/name — section 2, authoring — `workflow-craft`).
 
 **RAG markers in the schema.** Every load-bearing fact/verdict in an item's
 Intent/Why/Implementation Rules and in the D-log carries `RAG:✅ <date/query gist>` or
@@ -445,4 +449,4 @@ extracts and recon reports, so future plan work doesn't repay the cost of recons
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of
   editing vendor copies (section 12).
 
-<!-- ru-source-sha256: 0d7cdab05282e63bc1c5e9aded56d77df2791f1ae3bc07214f18fbf776c1357e -->
+<!-- ru-source-sha256: b75d576b56cd6277ddfcde11034cefb8015d74b51ce9d29d76d02a242d0d198c -->

@@ -2221,8 +2221,8 @@
       "path": "skills/general/plan-protocol/SKILL.md",
       "version": "2.1.0",
       "description": "Executable master plans in plans/<ID>: plan/phase/task schemas, 6 statuses, refine loop and DoR gate, canonical plan root, repo home by default + visibility/supersedes fields, two homes and archive, handoff with launch-block, model routing, /task:plan-* commands.",
-      "sha256": "16e50ff5f7d2885f9966085110fd76845505fdd8b39733359f5522faf2090135",
-      "content_sha256": "30906ec5a19b35883fb44d10045c086b93566bbd50104b3de76c57d73b5b93ed",
+      "sha256": "9998e90050618bd0f2238ffa1ae781947b42f445024dcd7d51174e695948c829",
+      "content_sha256": "746e1ee26420cd01d43d2c80af315a8d857bfeb4ea1fbaf1713016c97109fff6",
       "tags": [
         "workflow",
         "planning",

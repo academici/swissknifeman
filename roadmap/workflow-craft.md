@@ -67,6 +67,28 @@ workflow (task:dev, task:plan-exec, task:design) — прецедент: `ecosys
 `wf-agentools-drive.js` (AGENTOOLS, dev с designOnly-флагом) — использовать как эталоны
 при синтезе команды.
 
+## Часть 1.6: канон места и имён (идея Owner 2026-07-10)
+
+Сейчас workflow-скрипты создаются «кто во что горазд»: разные места, разношёрстные имена.
+Привести к одному состоянию через plan-protocol (SSOT — скилл `general/plan-protocol`):
+
+1. **Место — только `plans/<ID>/workflows/`** плана-владельца. Скрипт — артефакт плана,
+   как `artifacts/` и `findings/`; вне плана скриптам не место (шаблоны-исходники живут
+   в конструкторе `packages/task/workflows/`, полевые копии — в папке плана).
+2. **Имя — `wf-<plan-id-lower>-<назначение>.js`** (прецеденты: `wf-agentools-drive.js`,
+   `wf-design-fleet.js` → канонично было бы `wf-ecosystem-design-fleet.js`; пайплайн-доки —
+   `<Pn>-pipeline.md` рядом).
+3. **Обязательность:** для массивных планов (2+ фазы, research+dev) готовый workflow в
+   `workflows/` — часть Definition of Ready фазы исполнения; `/task:plan-design` обязан
+   его произвести (через команду-гейт ч.1.5), launch-block handoff ссылается на него по
+   `scriptPath`.
+4. **Проверка:** `plan-lint` дополняется правилом — скрипты с `export const meta` вне
+   `plans/*/workflows/` или с неканоничным именем = warning; план с фазой исполнения без
+   workflow при заявленной оркестрации = warning.
+
+Реализация ложится в: скилл `plan-protocol` (схема «двух домов» + раздел workflows/),
+команды `plan-design`/`make-workflow`, `plan_lint.py`.
+
 ## Часть 2: fleet-синтез накопленных workflow
 
 Workflow-скрипты копятся по проектам (`plans/*/workflows/*.js` в vault Brain: ECOSYSTEM

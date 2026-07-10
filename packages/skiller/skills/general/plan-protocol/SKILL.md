@@ -46,6 +46,7 @@ plans/<PLAN-ID>/
 ├── findings/          # RAG extracts and recon reports (section 16)
 ├── 20_research/       # the plan's research artifacts
 ├── artifacts/         # phases' working artifacts, destiny — archive
+├── workflows/         # plan's field copies of workflow scripts (template sources — packages/task/workflows/)
 ├── root/              # long-lived material, destiny — project docs (section 3)
 └── open-questions.md  # disputed/unresolved (protocol — section 3)
 ```
@@ -74,6 +75,16 @@ migration is forward-only (terminal plans move to the archive as they close).
 
 **MD-only rule:** the stored plan format is Markdown with strict markers ONLY. Any JSON
 is a derived parser artifact (`plan-lint --json`), never the source of truth.
+
+**Workflow-scripts home.** A multi-agent workflow script is the owning plan's artifact
+(like `findings/`/`artifacts/`): the only place is `plans/<ID>/workflows/` — scripts have
+no place outside the plan. Name — `wf-<codename-lower>-<purpose>.js`, where the codename
+(D28) = the ID part after the date for the date-based format (`2026.07.10-FLEX` → `flex`)
+or the whole ID for the legacy one (`SKM-ROADMAP-005` → `skm-roadmap-005`), always
+lowercase; example — `wf-ecosystem-design-fleet.js`. Run pipeline docs — `<Pn>-pipeline.md`
+alongside. Script authoring discipline (mandatory stages, slots, structured summary) — skill
+`workflow-craft`; here it's only WHERE it lives and HOW it's named. The library of portable
+template sources — `packages/task/workflows/README.md`.
 
 ## 3. Canonical plan root
 
@@ -434,4 +445,4 @@ extracts and recon reports, so future plan work doesn't repay the cost of recons
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of
   editing vendor copies (section 12).
 
-<!-- ru-source-sha256: 6dfd412c28c4ce7a159dba25d2ca82da9e28d5b2c4be79e59cafe59a91aedba1 -->
+<!-- ru-source-sha256: 0d7cdab05282e63bc1c5e9aded56d77df2791f1ae3bc07214f18fbf776c1357e -->

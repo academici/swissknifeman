@@ -76,7 +76,7 @@ enforcement заполнения CHANGELOG; (6) `ecosystem-glossary` — еди�
 | P2 | wf-status: консольный статус-репортер workflow-прогонов | 4/5 | 🟠 Done with deviations |
 | P3 | workflow-craft: активация конструктора + команда-гейт | 5/5 | 🟢 Done |
 | P4 | Канон планов: репо-дом, имена, дом workflow-скриптов | 6/6 | 🟢 Done |
-| P5 | changelog-discipline: enforcement заполнения CHANGELOG | 2/3 | 🟡 In progress |
+| P5 | changelog-discipline: enforcement заполнения CHANGELOG | 3/3 | 🟢 Done |
 | P6 | ecosystem-glossary: единый язык трёхслойкой | 0/4 | ⬜ Not started |
 | P7 | ephemeral-дисциплина и закрытие пакета | 0/2 | ⬜ Not started |
 
@@ -159,3 +159,4 @@ enforcement заполнения CHANGELOG; (6) `ecosystem-glossary` — еди�
 | 2026-07-11 | package-implementer/opus | P4.6 закрыт: условная DoR-строка workflow-как-готовность §7 `plan-protocol` (D29) + парная warning-проверка `plan_lint` (маркер оркестрации консервативен, без бумерного `fan-out`) + 5 юнит-кейсов; фаза P4 закрыта 6/6 🟢 — детали см. phases/P4.md P4.6 Completion Notes |
 | 2026-07-11 | package-implementer/sonnet | P5.1 закрыт: `release-engineering` получил секцию повседневной CHANGELOG-дисциплины (пакеты vs проекты) — детали см. phases/P5.md P5.1 Completion Notes |
 | 2026-07-11 | package-implementer/sonnet | P5.2 закрыт: opt-in commit-гейт `changelog-gate` в harness (RAG:✅ additionalContext-канал) — детали см. phases/P5.md P5.2 Completion Notes |
+| 2026-07-11 | package-implementer/sonnet | P5.3 закрыт: `skiller release`/`swissknifeman release` (umbrella-тег, MAJOR только вручную) — фаза P5 закрыта 3/3 🟢, детали см. phases/P5.md P5.3 Completion Notes |

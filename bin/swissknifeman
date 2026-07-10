@@ -13,6 +13,7 @@
 #   status [<id>]   → единый 4-слойный инвентарь проекта/флота (maind projects status:
 #                     skills+packs+mcp+память + drift→fix); bare/--target → skiller status
 #   wf <args>       → harness   (детальный статус фонового workflow-прогона: wf status)
+#   release <args>  → skiller   (предложение релиза монорепо: [Unreleased]+conventional commits)
 #   -V, --version   → версия зонтика (git describe)
 #
 # Back-compat: исторические команды swissknifeman = skiller (алиас сохранён):
@@ -44,6 +45,7 @@ case "$CMD" in
   skills)  shift; need "$SKILLER"; exec "$SKILLER" "$@" ;;
   env)     shift; need "$HARNESS"; exec "$HARNESS" "$@" ;;
   wf)      shift; need "$HARNESS"; exec "$HARNESS" wf "$@" ;;
+  release) shift; need "$SKILLER"; exec "$SKILLER" release "$@" ;;
   maind|hub) shift; need "$MAIND"; exec "$MAIND" "$@" ;;
   analyst) shift; need "$ANALYST"; exec "$ANALYST" "$@" ;;
   setup)   shift; need "$MAIND"; exec "$MAIND" onboard "$@" ;;

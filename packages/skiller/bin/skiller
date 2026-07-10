@@ -21,6 +21,8 @@
 #   bucket-audit  аудит бакетов: размер/overlap/usage → вердикты keep/thin/merge/dead
 #   list      зарегистрированные проекты (~/.swissknifeman/projects.json)
 #   topology  карта локальной среды (init|show) — ~/.swissknifeman/topology.json
+#   release   предложение релиза монорепо: [Unreleased]+conventional commits → vX.Y.Z
+#             (opt --dry-run; НЕ тегает/не пушит — печатает команду)
 #
 # Команды мейнтейнера (работают с самим реестром):
 #   registry  регенерировать skills.json + плагин-манифесты + граф
@@ -44,7 +46,7 @@ if [[ ! -d "$REPO_ROOT/skills" || ! -d "$REPO_ROOT/lib/skiller" ]]; then
 fi
 
 usage() {
-  grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '8,27p'
+  grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '8,31p'
 }
 
 CMD="${1:-help}"
@@ -57,7 +59,7 @@ case "$CMD" in
     sha="$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
     echo "skiller $sha ($REPO_ROOT)"
     exit 0 ;;
-  connect|vendor|integrate|update|init|sync|lock|status|budget|eval|analyze-run|bucket-audit|list|registry|doctor|topology) ;;
+  connect|vendor|integrate|update|init|sync|lock|status|budget|eval|analyze-run|bucket-audit|list|registry|doctor|topology|release) ;;
   *) echo "Неизвестная команда: $CMD" >&2; usage >&2; exit 1 ;;
 esac
 

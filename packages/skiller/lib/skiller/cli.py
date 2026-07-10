@@ -12,6 +12,7 @@ from .integrate import cmd_integrate
 from .listing import cmd_list
 from .lock import cmd_lock
 from .registry import cmd_registry
+from .release import cmd_release
 from .skillset import cmd_init, cmd_sync
 from .status import cmd_status
 from .topology import cmd_topology
@@ -35,6 +36,7 @@ COMMANDS = {
     "registry": cmd_registry,
     "doctor": cmd_doctor,
     "topology": cmd_topology,
+    "release": cmd_release,
 }
 
 

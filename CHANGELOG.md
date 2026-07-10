@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Added (maind — fleet-измерение settings)
+
+- **`maind doctor --audit settings|all`**: измерение `settings` в fleet-аудите — subprocess к
+  `harness doctor --settings --target <path> --json` по каждому зарегистрированному проекту
+  (D10, maind не импортирует harness). Fail-soft как `--channel-drift`: harness недоступен/упал/
+  отдал не-JSON → `settings·n/a`, код возврата аудита не меняется. Печать: `settings✓` (ноль
+  error/warn) · `settings⚠(err:N warn:M)` · `settings·n/a`. `--json` кладёт `{"error","warn","info"}`
+  или строку `"unavailable"` в строку проекта.
+
+### Внедрено (settings-doctor — SKM-ROADMAP-005 P1 закрыт)
+
+- Конфликт-линтер настроек Claude Code (`roadmap/settings-doctor.md`) полностью внедрён:
+  таксономия 13 проверок, 2 policy-профиля, CLI `harness doctor --settings` + фасад
+  `skiller doctor --settings` + fleet `maind doctor --audit settings`. Полевой кейс 2026-07-10
+  ловится целиком (интеграционный тест P1.5); реальный прогон по флоту (21 проект) подтвердил.
+
 ### Added (harness — settings-doctor CLI + фасад skiller)
 
 - **`harness doctor --settings [--target P] [--json] [--profile NAME]`**: вывод движка

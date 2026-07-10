@@ -1,6 +1,8 @@
 # Шаблон plan.md — скопировать в plans/<PLAN-ID>/plan.md
 
-Скелет мастер-плана по протоколу `plan-protocol`. PLAN-ID = `[A-Z][A-Z0-9-]+`.
+Скелет мастер-плана по протоколу `plan-protocol`. PLAN-ID — датовый
+`<ГГГГ>.<ММ>.<ДД>-<КОДОВОЕ-ИМЯ>` (предпочтительный, напр. `2026.07.10-SETTINGS-DOCTOR`)
+ИЛИ старый `[A-Z][A-Z0-9-]+` (back-compat), см. SKILL раздел 2.
 Хранимый формат — только Markdown с жёсткими маркерами; JSON — производный
 артефакт парсера, не источник истины.
 
@@ -28,7 +30,9 @@
 | Execution Mode | phase-first |
 | Target Operator Models | sonnet (exec) · haiku (LOW) · opus (design/audit) |
 | Approval Owner | <человек, утверждающий план> |
-| Home | <необязательное: brain ИЛИ repo:путь — где живёт исполняемая копия, SKILL раздел 12> |
+| Home | <необязательное: brain ИЛИ repo:путь — где живёт исполняемая копия, по умолчанию репо проекта, SKILL раздел 12> |
+| visibility | <необязательное: private ИЛИ public, дефолт private; public → в git только публичная выжимка, SKILL раздел 4> |
+| supersedes | <необязательное: старый PLAN-ID, чью волну трека сменяет план; предшественник в plans/archive/> |
 | Paused By | <необязательное: PLAN-ID перехватившего ACTIVE + дата; заполняет plan-design new; нет — «—»> |
 
 ## 1. Context

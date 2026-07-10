@@ -1,8 +1,8 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.0.0
-description: "Executable master plans in plans/<ID>: plan/phase/task schemas, 6 statuses, refine loop and DoR gate, canonical plan root, two homes and archive, handoff with launch-block, model routing, /task:plan-* commands."
+version: 2.1.0
+description: "Executable master plans in plans/<ID>: plan/phase/task schemas, 6 statuses, refine loop and DoR gate, canonical plan root, repo home by default + visibility/supersedes fields, two homes and archive, handoff with launch-block, model routing, /task:plan-* commands."
 risk: write
 persona: oss-dev
 tags: [workflow, planning, handoff, routing, multi-model]
@@ -51,7 +51,15 @@ plans/<PLAN-ID>/
 ```
 
 Only `plan.md`/`phases/`/`handoff.md` are mandatory — everything else is optional,
-per the plan's needs. `PLAN-ID` = `[A-Z][A-Z0-9-]+` (e.g. `AUDIT-W2`, `MIGRATE-V3`).
+per the plan's needs. `PLAN-ID` — one of two canonical patterns:
+
+- **date-based** (preferred, D16) — `<YYYY>.<MM>.<DD>-<CODENAME>`, e.g.
+  `2026.07.10-SETTINGS-DOCTOR`: the date prefix gives `plans/` chronological sorting and
+  a "when" cue without reading Meta;
+- **legacy** (back-compat, D24) — `[A-Z][A-Z0-9-]+`, e.g. `AUDIT-W2`, `MIGRATE-V3`.
+
+The legacy pattern `[A-Z][A-Z0-9-]+` stays valid, existing plans are NOT renamed;
+migration is forward-only (terminal plans move to the archive as they close).
 
 `plans/` root, next to the plan directories:
 
@@ -101,7 +109,13 @@ Skeleton — `snippets/plan-template.md`. Sections strictly in this order:
 - **`## 0. Meta`** — field table: Plan ID / Title / Version / Status / Document Type /
   Authoring Model / Last Updated / Repository / Related Packages / Execution Mode /
   Target Operator Models / Approval Owner. Optional fields:
-  - **Home** — `brain` | `repo:<путь>`: where the plan's executable copy lives (section 12);
+  - **Home** — `brain` | `repo:<путь>`: where the plan's executable copy lives; defaults
+    to the project repo (section 12, D31);
+  - **visibility** — `private` | `public`, defaults to `private` when absent (D25):
+    `public` → only a public roadmap extract is allowed in the git repo, the private
+    business context stays in the vault;
+  - **supersedes** — `<old-ID>`: the plan replaces a predecessor of the same track wave;
+    the predecessor moves to `plans/archive/` (section 12);
   - **Paused By** — which plan seized ACTIVE and when; filled by plan-design mode `new`,
     which appends the field to the previously active plan.
 - **`## 1. Context`** — 5–15 lines: what we do and why. Self-contained: the executor
@@ -323,10 +337,11 @@ forbid `/task:plan-exec` and name the prescribed command for launching delegates
 external canon found specifically for Obsidian↔repo two-way — the mechanism is our
 `brain sync`). The plan's SSOT is determined by its stage:
 
-- **before exec starts** — the base plan lives in Brain (canon);
-- **at exec start** — the plan moves to the project repo (repo's `plans/<ID>`),
-  Meta `Home: repo:<путь>`; the Brain copy becomes a mirror (synced via the
-  `brain sync` channel, frontmatter `repo:` — the same mechanism as docs/);
+- **Home defaults to the project repo** (D31): the plan lives where its deliverables are
+  (repo's `plans/<ID>`, Meta `Home: repo:<путь>`); Brain keeps the program/cross-project
+  plan whose deliverables are spread across several repos;
+- **at exec start** — the repo copy becomes SSOT; the Brain mirror is synced via the
+  `brain sync` channel (frontmatter `repo:` — the same mechanism as docs/);
 - **during exec** — SSOT = repo; silent edits to the base plan in Brain are
   FORBIDDEN — only via the conflict protocol; default sync direction is repo→Brain
   (mirroring), not the reverse;
@@ -419,4 +434,4 @@ extracts and recon reports, so future plan work doesn't repay the cost of recons
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of
   editing vendor copies (section 12).
 
-<!-- ru-source-sha256: 489734d938c85222986a880894da50c0875f965f3c016b3b27bcee678b690725 -->
+<!-- ru-source-sha256: 6dfd412c28c4ce7a159dba25d2ca82da9e28d5b2c4be79e59cafe59a91aedba1 -->

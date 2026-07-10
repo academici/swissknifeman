@@ -71,7 +71,7 @@ enforcement заполнения CHANGELOG; (6) `ecosystem-glossary` — еди�
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P1 | settings-doctor: конфликт-линтер настроек Claude Code | 6/6 | 🟢 Done |
-| P2 | wf-status: консольный статус-репортер workflow-прогонов | 2/5 | 🟡 In progress |
+| P2 | wf-status: консольный статус-репортер workflow-прогонов | 3/5 | 🟡 In progress |
 | P3 | workflow-craft: активация конструктора + команда-гейт | 0/5 | ⬜ Not started |
 | P4 | Канон планов: репо-дом, имена, дом workflow-скриптов | 0/6 | ⬜ Not started |
 | P5 | changelog-discipline: enforcement заполнения CHANGELOG | 0/3 | ⬜ Not started |
@@ -122,3 +122,4 @@ enforcement заполнения CHANGELOG; (6) `ecosystem-glossary` — еди�
 | 2026-07-10 | issue-planner/opus | P3 развёрнута из скелета: 5 items с полными ТЗ, DoR пройден — детали см. phases/P3.md. Развилки закрыты: D20 (дом скилла), D21 (SSOT матрицы), D22 (форма команды+ревьюера) |
 | 2026-07-10 | package-implementer/sonnet | P2.1 закрыт: защищённый парсер `wf_status.py` (`parse_run`/`parse_script_meta`/`summarize_result`) в harness — journal.jsonl + agent-*.meta.json + sibling-скрипт `export const meta` (D19), degraded-флаг вместо трейсбека, per-phase attribution намеренно не выводится (D18). `validate.sh` зелёный |
 | 2026-07-10 | package-implementer/sonnet | P2.2 закрыт: discovery прогонов (`discover_runs`/`project_slug`) в `wf_status.py` — база `$CLAUDE_CONFIG_DIR`/`~/.claude` (D23, RAG:✅ perplexity-web), ручной обход дерева без разыменования симлинков, сортировка по mtime `journal.jsonl` с tie-break по `run_id`. `validate.sh` зелёный (270 тестов, было 263) |
+| 2026-07-10 | package-implementer/sonnet | P2.3 закрыт: `render_text`/`render_json`/`watch_loop` в `wf_status.py` — плоский рендер (данные готовит P2.1, здесь только форматирование), ФИКСИРОВАННЫЙ шаблон (run id/имя/статус/фазы-декларации без per-phase счётчиков — D18/грубый %/последние результаты), `--json` round-trip, `--watch` через инъекцию `sleep_fn`/`max_iterations` с чистым выходом на `KeyboardInterrupt`. `validate.sh` зелёный (279 тестов, было 270) |

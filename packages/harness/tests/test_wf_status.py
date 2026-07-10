@@ -7,6 +7,7 @@
     <session>/subagents/workflows/wf_<id>/{journal.jsonl,agent-*.meta.json}
 
 Никаких моков ФС — реальные файлы в tempdir (единый паттерн с test_settings_audit.py)."""
+import io
 import json
 import os
 import sys
@@ -17,7 +18,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
 from harness.wf_status import (
-    discover_runs, parse_run, parse_script_meta, project_slug, summarize_result,
+    discover_runs, parse_run, parse_script_meta, project_slug, render_json,
+    render_text, summarize_result, watch_loop,
 )
 
 
@@ -256,6 +258,135 @@ class ProjectSlugCase(unittest.TestCase):
             project_slug("/home/vostrikov/projects/packages/loqum"),
             "-home-vostrikov-projects-packages-loqum",
         )
+
+
+class RenderTextCase(unittest.TestCase):
+    """(а) Validation P2.3: фикс-словарь результата → текст содержит run id,
+    заголовки фаз, строку «%»."""
+
+    def _status(self, **overrides):
+        status = {
+            "run_id": "wf_demo123",
+            "run_dir": "/tmp/wf_demo123",
+            "degraded": False,
+            "degraded_reasons": [],
+            "agents_total": 2,
+            "started": 2,
+            "done": 1,
+            "inflight": 1,
+            "results": [{"agent_id": "a1", "summary": "готово"}],
+            "meta": {
+                "name": "p2-1-demo",
+                "description": "демо",
+                "phases": [
+                    {"title": "Review", "detail": "первая фаза"},
+                    {"title": "Verify", "detail": "вторая фаза"},
+                ],
+                "recognized": True,
+                "script_path": "/tmp/script.js",
+            },
+        }
+        status.update(overrides)
+        return status
+
+    def test_happy_path_contains_run_id_phases_and_percent(self):
+        text = render_text(self._status())
+        self.assertIn("wf_demo123", text)
+        self.assertIn("Review", text)
+        self.assertIn("Verify", text)
+        self.assertIn("%", text)
+        self.assertIn("статус: running", text)
+
+    def test_deterministic_rendering_is_byte_for_byte(self):
+        status = self._status()
+        self.assertEqual(render_text(status), render_text(status))
+
+    def test_done_state_when_no_inflight(self):
+        text = render_text(self._status(inflight=0, done=2))
+        self.assertIn("статус: done", text)
+
+    def test_degraded_status_has_honest_reason_no_traceback(self):
+        status = self._status(
+            degraded=True,
+            degraded_reasons=["journal.jsonl не найден: /tmp/wf_demo123/journal.jsonl"],
+            started=0, done=0, inflight=0, agents_total=0, results=[],
+            meta={"name": None, "description": None, "phases": [], "recognized": False,
+                  "script_path": None},
+        )
+        text = render_text(status)
+        self.assertIn("статус: degraded", text)
+        self.assertIn("формат не распознан", text)
+        self.assertIn("journal.jsonl не найден", text)
+        self.assertNotIn("Traceback", text)
+
+
+class RenderJsonCase(unittest.TestCase):
+    """(б) Validation P2.3: `--json` round-trip
+    (`json.loads(render_json(x)) == x`)."""
+
+    def test_round_trip_equals_original(self):
+        status = parse_run(_make_run(tempfile.mkdtemp(), journal_lines=[
+            json.dumps({"type": "started", "key": "v2:a", "agentId": "a1"}),
+            json.dumps({"type": "result", "key": "v2:a", "agentId": "a1",
+                        "result": {"summary": "готово"}}),
+        ]))
+        self.assertEqual(json.loads(render_json(status)), status)
+
+    def test_json_is_valid_and_not_ascii_escaped(self):
+        status = {"run_id": "wf_x", "degraded": False, "meta": {"name": "имя"}}
+        dumped = render_json(status)
+        self.assertEqual(json.loads(dumped), status)
+        self.assertIn("имя", dumped)  # ensure_ascii=False — кириллица не эскейпится
+
+
+class WatchLoopCase(unittest.TestCase):
+    """`--watch`: перепечатка кадром, останов при inflight==0 либо max_iterations,
+    KeyboardInterrupt → чистый выход."""
+
+    def test_stops_when_inflight_reaches_zero(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            lines = [
+                json.dumps({"type": "started", "key": "v2:a", "agentId": "a1"}),
+                json.dumps({"type": "result", "key": "v2:a", "agentId": "a1",
+                            "result": "готово"}),
+            ]
+            run_dir = _make_run(tmp, journal_lines=lines)
+            sleeps = []
+            buf = io.StringIO()
+
+            exit_code = watch_loop(run_dir, out=buf, sleep_fn=sleeps.append,
+                                    max_iterations=5)
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(sleeps, [])  # inflight==0 сразу — цикл не спит
+            self.assertIn("wf_demo123", buf.getvalue())
+
+    def test_respects_max_iterations_when_still_inflight(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            lines = [json.dumps({"type": "started", "key": "v2:a", "agentId": "a1"})]
+            run_dir = _make_run(tmp, journal_lines=lines)
+            sleeps = []
+            buf = io.StringIO()
+
+            exit_code = watch_loop(run_dir, out=buf, sleep_fn=sleeps.append,
+                                    max_iterations=3)
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(len(sleeps), 2)  # 3 итерации → 2 сна между ними
+            self.assertEqual(buf.getvalue().count("run: wf_demo123"), 3)
+
+    def test_keyboard_interrupt_gives_clean_exit(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            lines = [json.dumps({"type": "started", "key": "v2:a", "agentId": "a1"})]
+            run_dir = _make_run(tmp, journal_lines=lines)
+            buf = io.StringIO()
+
+            def _raise(_interval):
+                raise KeyboardInterrupt
+
+            exit_code = watch_loop(run_dir, out=buf, sleep_fn=_raise, max_iterations=None)
+
+            self.assertEqual(exit_code, 0)
 
 
 if __name__ == "__main__":

@@ -36,6 +36,7 @@ run-каталог) проверяется `is_symlink()` и пропускае�
 import json
 import os
 import re
+import time
 from pathlib import Path
 
 from core import safe_load_json
@@ -352,3 +353,103 @@ def discover_runs(base_dir=None, run=None, project=None, limit=1):
     if limit is not None:
         return candidates[:limit]
     return candidates
+
+
+# ---------------------------------------------------------------------------
+# P2.3 — фиксированный шаблон отчёта, --json, --watch
+# ---------------------------------------------------------------------------
+#
+# Плоский рендер (Code Guidance P2.3): вся логика вычисления статуса живёт в `parse_run`
+# (P2.1) — здесь только форматирование готового dict-а. Если рендеру понадобилась бы
+# бизнес-логика (вычислить что-то ещё), это дефект слоёв — чинить в P2.1, не здесь.
+
+
+def render_text(status):
+    """ФИКСИРОВАННЫЙ человекочитаемый шаблон статуса прогона (Scope Included P2.3) — один
+    и тот же байт-в-байт при равных входных данных (детерминизм рендера, без ветвления
+    бизнес-логики внутри f-строк). Печатает декларации фаз из `meta.phases` ОТДЕЛЬНО от
+    прогресса агентов, с явной пометкой недоступности привязки агент→фаза (D18 — журнал
+    её физически не несёт, парсер её не изобретает). `degraded` — честная причина без
+    трейсбека, никогда пустой тихий ответ. plain-текст без ANSI: обязан читаться в пайпах
+    (Scope Excluded — цвет как единственный носитель смысла)."""
+    meta = status.get("meta") or {}
+    lines = []
+    lines.append(f"run: {status.get('run_id')}")
+    lines.append(f"имя: {meta.get('name') or '(без имени)'}")
+
+    if status.get("degraded"):
+        state = "degraded"
+    elif status.get("inflight", 0) > 0:
+        state = "running"
+    else:
+        state = "done"
+    lines.append(f"статус: {state}")
+
+    if status.get("degraded"):
+        lines.append("формат не распознан (версия CC?):")
+        for reason in status.get("degraded_reasons") or []:
+            lines.append(f"  — {reason}")
+
+    lines.append("фазы (декларация скрипта; привязка агентов недоступна — D18):")
+    phases = meta.get("phases") or []
+    if not phases:
+        lines.append("  (фазы не распознаны)")
+    else:
+        for phase in phases:
+            title = phase.get("title") or "(без названия)"
+            detail = (phase.get("detail") or "").strip()
+            lines.append(f"  - {title}: {detail}" if detail else f"  - {title}")
+
+    started = status.get("started", 0)
+    done = status.get("done", 0)
+    inflight = status.get("inflight", 0)
+    total = status.get("agents_total", 0)
+    pct = round(done / started * 100) if started > 0 else 0
+    lines.append(
+        f"агенты: всего={total} started={started} done={done} inflight={inflight}")
+    lines.append(f"% готово (грубо, done/started): {pct}%")
+
+    results = status.get("results") or []
+    lines.append(f"последние результаты ({len(results)}):")
+    if not results:
+        lines.append("  (пока нет)")
+    else:
+        for r in results:
+            agent_id = r.get("agent_id") or "?"
+            lines.append(f"  [{agent_id}] {r.get('summary') or ''}")
+
+    return "\n".join(lines)
+
+
+def render_json(status):
+    """`--json`: та же структура P2.1 (`parse_run`), сериализованная валидным JSON
+    (`ensure_ascii=False` — контракт для хуков/статуслайна, кириллица не эскейпится).
+    Round-trip: `json.loads(render_json(x)) == x` (Validation P2.3 (б)) — `status` уже
+    состоит из JSON-нативных типов (str/int/bool/list/dict), рендер их не меняет."""
+    return json.dumps(status, ensure_ascii=False)
+
+
+def watch_loop(run_dir, interval=2.0, out=None, sleep_fn=time.sleep, max_iterations=None):
+    """`--watch`: перепечатка `render_text(parse_run(run_dir))` кадром до Ctrl-C либо пока
+    `inflight == 0` (Implementation Rules P2.3) — на каждой итерации `parse_run` читает
+    журнал заново (его пишет фоновый процесс). `KeyboardInterrupt` перехватывается —
+    чистый выход, возвращает 0 (Implementation Rules: не трейсбек на Ctrl-C).
+    `max_iterations`/`sleep_fn` — инъекция для тестируемости (иначе бесконечный цикл в
+    реальном использовании); `out` — куда печатать кадр (по умолчанию `sys.stdout`)."""
+    if out is None:
+        import sys as _sys
+        out = _sys.stdout
+    iterations = 0
+    try:
+        while True:
+            status = parse_run(run_dir)
+            print(render_text(status), file=out)
+            iterations += 1
+            if status.get("inflight", 0) == 0:
+                break
+            if max_iterations is not None and iterations >= max_iterations:
+                break
+            sleep_fn(interval)
+    except KeyboardInterrupt:
+        pass
+    return 0

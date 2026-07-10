@@ -13,12 +13,28 @@
 см. `plans/SKM-ROADMAP-005/findings/P1-cc-settings-facts.md` (дата сверки зафиксирована
 там; при регрессии — пере-сверить, доки Claude Code меняются между версиями CLI).
 stdlib-only."""
+import os
+import re
+import shlex
+import subprocess
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
 from core import safe_load_json
+
+# Снапшот канонических ключей рядом с пресетами (не апстрим-схема — выжимка, D13):
+# lib/harness/settings_audit.py → <package>/configs/claude-code/settings-keys.json.
+# Тот же паттерн, что `router._HOOK_CONFIG` — путь module-relative, НЕ env-relative
+# (снапшот один на пакет, а не per-target).
+_SETTINGS_KEYS_PATH = (Path(__file__).resolve().parents[2]
+                        / "configs" / "claude-code" / "settings-keys.json")
+
+# Эвристика проверки №9 (секреты в env.*): имя ключа матчит один из паттернов
+# И значение длиннее 8 символов И не похоже на плейсхолдер.
+_SECRET_KEY_RE = re.compile(r"(API_?KEY|TOKEN|SECRET|PASSWORD|CREDENTIAL)", re.IGNORECASE)
+_PLACEHOLDER_RE = re.compile(r"^(\$\{?[A-Za-z_][A-Za-z0-9_]*\}?|<.*>|changeme)$", re.IGNORECASE)
 
 # Порядок слоёв по ВОЗРАСТАНИЮ приоритета (RAG:✅ 2026-07-10 settings.md, 5-tier scope
 # system). Пятый scope — CLI-аргументы — файлом не представлен, doctor'у не виден.
@@ -265,3 +281,274 @@ def effective_config(layers):
         provenance["permissions"] = perm_prov
 
     return values, provenance
+
+
+@dataclass(frozen=True)
+class Context(object):
+    """Контекст прогона проверок таксономии (P1.2+): слои + эффективная
+    конфигурация + окружение запуска. `profile` — всегда `None` в P1.2 (объявлен,
+    чтобы `fn(ctx)` проверок не менялась сигнатурой, когда P1.3 заведёт профили)."""
+
+    layers: list
+    values: dict
+    provenance: dict
+    target: Path
+    env: object
+    profile: Optional[object] = None
+
+
+def build_context(env, target, profile=None):
+    """Читает слои и строит эффективную конфигурацию — удобный вход для CLI/тестов."""
+    layers = load_layers(env, target)
+    values, provenance = effective_config(layers)
+    return Context(layers=layers, values=values, provenance=provenance,
+                    target=Path(target), env=env, profile=profile)
+
+
+def _load_settings_keys():
+    """Снапшот канонических ключей (D13, выжимка не апстрим-схема). Отсутствие/битый
+    файл — doctor не падает, но проверки №2/№5 деградируют до пустых списков."""
+    data = safe_load_json(_SETTINGS_KEYS_PATH, default=None)
+    if not isinstance(data, dict):
+        return {"top_level": [], "permissions": [], "hook_events": [],
+                "hook_events_unverified": True, "verified": "?"}
+    return data
+
+
+# --- Проверка №1 — валидность JSON слоя (error) -----------------------------
+
+def check_1_layer_json_valid(ctx):
+    """Один слой с битым JSON = одна находка error — Layer.error уже несёт текст
+    исключения (P1.1, fail-soft: слой исключён из merge, doctor не падает)."""
+    findings = []
+    for layer in ctx.layers:
+        if layer.error:
+            findings.append(Finding(
+                id=1, level="error",
+                title=f"Слой «{layer.name}» ({layer.path}) — битый JSON",
+                detail=layer.error,
+                hint="Почини JSON слоя (или удали файл, если он лишний) — весь слой "
+                     "сейчас исключён из эффективной конфигурации.",
+            ))
+    return findings
+
+
+# --- Проверка №2 — неканонические ключи (warn) -------------------------------
+
+def check_2_noncanonical_keys(ctx):
+    """Ключи верхнего уровня и подключи `permissions.*` каждого слоя сверяются со
+    снапшотом `settings-keys.json`. Эталонный кейс — `permissions.autoApprove` (D6:
+    ключа нет в доках, Claude Code молча его игнорирует)."""
+    keys = _load_settings_keys()
+    known_top = set(keys.get("top_level") or [])
+    known_perm = set(keys.get("permissions") or [])
+    findings = []
+    seen = set()
+    for layer in ctx.layers:
+        if not isinstance(layer.data, dict):
+            continue
+        for key in layer.data.keys():
+            if key == "$schema" or key in known_top:
+                continue
+            marker = ("top", key, layer.name)
+            if marker in seen:
+                continue
+            seen.add(marker)
+            findings.append(Finding(
+                id=2, level="warn",
+                title=f"Неканонический ключ «{key}» (слой {layer.name})",
+                detail="Ключа нет в снапшоте канонических ключей settings-keys.json — "
+                       "Claude Code молча его игнорирует.",
+                hint="Сверь актуальное имя ключа в code.claude.com/docs/en/settings.md.",
+            ))
+        perms = layer.data.get("permissions")
+        if not isinstance(perms, dict):
+            continue
+        for sub in perms.keys():
+            if sub in known_perm:
+                continue
+            marker = ("perm", sub, layer.name)
+            if marker in seen:
+                continue
+            seen.add(marker)
+            findings.append(Finding(
+                id=2, level="warn",
+                title=f"Неканонический ключ permissions.{sub} (слой {layer.name})",
+                detail="Подключа нет в снапшоте permissions.* — Claude Code молча его "
+                       "игнорирует (эталон: permissions.autoApprove, D6).",
+                hint="Сверь актуальное имя ключа в code.claude.com/docs/en/permissions.md.",
+            ))
+    return findings
+
+
+# --- Проверка №3 — конфликт defaultMode между слоями (warn) ------------------
+
+def check_3_default_mode_conflict(ctx):
+    """`defaultMode`, объявленный больше чем в одном слое, — не сразу ошибка (нижний
+    слой может дублировать верхний намеренно), но это ровно тот конфликт, что дал
+    field-case: агент видит local, не зная, что project его уже переопределил."""
+    declared = []
+    for layer in ctx.layers:
+        perms = layer.data.get("permissions") if isinstance(layer.data, dict) else None
+        if isinstance(perms, dict) and "defaultMode" in perms:
+            declared.append((layer.name, perms["defaultMode"]))
+    if len(declared) < 2:
+        return []
+    effective = (ctx.values.get("permissions") or {}).get("defaultMode")
+    chain = ", ".join(f"{name}={mode!r}" for name, mode in declared)
+    return [Finding(
+        id=3, level="warn",
+        title="permissions.defaultMode объявлен в нескольких слоях",
+        detail=f"Цепочка по возрастанию приоритета: {chain}. Эффективный режим: {effective!r}.",
+        hint="Режим фиксируется на СТАРТЕ сессии — правка на лету не действует "
+             "(перезапусти сессию после смены).",
+    )]
+
+
+# --- Проверка №5 — хуки: command существует/исполняем; событие известно ------
+
+def _resolve_hook_command_path(command, target):
+    """Первый токен command-строки → путь. Плейсхолдеры (`$VAR`/`${VAR}`) НЕ
+    резолвим (Implementation Rules) — вернём None, вызывающий даёт `info`."""
+    try:
+        tokens = shlex.split(command)
+    except ValueError:
+        return None
+    if not tokens:
+        return None
+    first = tokens[0]
+    if "$" in first:
+        return None
+    path = Path(first)
+    if not path.is_absolute():
+        path = Path(target) / path
+    return path
+
+
+def check_5_hooks(ctx):
+    """Событие вне снапшота → `info` (список неполный, D15/findings [UNVERIFIED]).
+    Command-файл отсутствует/неисполняем → `error`. Плейсхолдер в команде → `info`."""
+    keys = _load_settings_keys()
+    known_events = set(keys.get("hook_events") or [])
+    snapshot_date = keys.get("verified", "?")
+    findings = []
+    hooks = ctx.values.get("hooks") or {}
+    for event, entries in hooks.items():
+        if event not in known_events:
+            findings.append(Finding(
+                id=5, level="info",
+                title=f"Хук-событие «{event}» не в снапшоте",
+                detail=f"События нет в снапшоте от {snapshot_date} — сверь доку, "
+                       "снапшот мог устареть.",
+                hint="Полнота списка hook-событий не подтверждена вторым источником "
+                     "(findings, [UNVERIFIED]).",
+            ))
+        for entry in entries or []:
+            command = entry.get("command") if isinstance(entry, dict) else None
+            if not command:
+                continue
+            path = _resolve_hook_command_path(command, ctx.target)
+            if path is None:
+                findings.append(Finding(
+                    id=5, level="info",
+                    title=f"Хук {event}: команда с плейсхолдером не проверена",
+                    detail=command,
+                    hint="Путь содержит $VAR-плейсхолдер ($CLAUDE_PROJECT_DIR и "
+                         "т.п.) — doctor его не резолвит.",
+                ))
+                continue
+            if not path.exists() or not os.access(path, os.X_OK):
+                findings.append(Finding(
+                    id=5, level="error",
+                    title=f"Хук {event}: команда недоступна или неисполняема",
+                    detail=f"{command} → {path}",
+                    hint="Проверь путь и права на исполнение (chmod +x).",
+                ))
+    return findings
+
+
+# --- Проверка №9 — секреты в env.* + gitignore-статус local (error) ----------
+
+def check_9_secrets(ctx):
+    """Эвристика ТОЛЬКО по `env` (запрещено расширять на permissions.*/тела хуков —
+    ложняки взрывают доверие к doctor'у) + gitignore-статус settings.local.json."""
+    findings = []
+    env_values = ctx.values.get("env") or {}
+    env_prov = ctx.provenance.get("env") or {}
+    for key, val in env_values.items():
+        if not isinstance(val, str):
+            continue
+        if not _SECRET_KEY_RE.search(key):
+            continue
+        if len(val) <= 8:
+            continue
+        if _PLACEHOLDER_RE.match(val.strip()):
+            continue
+        findings.append(Finding(
+            id=9, level="error",
+            title=f"Похоже на секрет плейнтекстом: env.{key}",
+            detail=f"Слой: {env_prov.get(key, '?')}.",
+            hint="Вынеси значение в переменную окружения/секрет-хранилище, не в settings.json.",
+        ))
+
+    local_layer = next((l for l in ctx.layers if l.name == "local"), None)
+    if local_layer is not None and local_layer.path.exists():
+        gitignore_finding = _check_local_gitignored(ctx.target, local_layer.path)
+        if gitignore_finding is not None:
+            findings.append(gitignore_finding)
+    return findings
+
+
+def _check_local_gitignored(target, local_path):
+    """`git check-ignore -q` — fail-soft: нет git/не репозиторий → `info`, НЕ
+    `error` (Implementation Rules). rc=0 игнорируется (норма, без находки),
+    rc=1 не игнорируется (error), иначе (напр. 128 «не репозиторий») → info."""
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(target), "check-ignore", "-q", str(local_path)],
+            check=False, timeout=10, capture_output=True,
+        )
+    except (subprocess.SubprocessError, OSError):
+        return Finding(
+            id=9, level="info",
+            title="Не удалось проверить gitignore-статус settings.local.json",
+            detail="git недоступен.",
+            hint="Проверь вручную: git check-ignore -q .claude/settings.local.json",
+        )
+    if result.returncode == 0:
+        return None
+    if result.returncode == 1:
+        return Finding(
+            id=9, level="error",
+            title="settings.local.json НЕ в .gitignore",
+            detail=str(local_path),
+            hint="Добавь .claude/settings.local.json в .gitignore — файл может "
+                 "нести секреты/локальные пути.",
+        )
+    return Finding(
+        id=9, level="info",
+        title="Не удалось проверить gitignore-статус settings.local.json",
+        detail=f"git check-ignore вернул код {result.returncode} (не git-репозиторий?).",
+        hint="Проверь вручную.",
+    )
+
+
+# --- Реестр проверок ----------------------------------------------------------
+
+# Список пар (id, fn); добавление проверки = новая функция + строка здесь, не
+# ветвление в мега-функции (Implementation Rules P1.2). Порядок — по возрастанию id.
+CHECKS = (
+    (1, check_1_layer_json_valid),
+    (2, check_2_noncanonical_keys),
+    (3, check_3_default_mode_conflict),
+    (5, check_5_hooks),
+    (9, check_9_secrets),
+)
+
+
+def run_checks(ctx, checks=CHECKS):
+    """Прогоняет реестр проверок над `Context`, возвращает плоский список `Finding`."""
+    findings = []
+    for _id, fn in checks:
+        findings.extend(fn(ctx))
+    return findings

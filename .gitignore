@@ -18,6 +18,7 @@ docs/.vitepress/cache/
 # Эфемерные (временные) артефакты analyst-уроков — машинно-специфичны, не коммитим.
 # Важные файлы (events.ndjson, audit.ndjson) остаются.
 .claude/analyst/lessons/ephemeral/
+.claude/analyst/**/*.ndjson
 settings.local.json.bak
 MERGE-PLAN.snapshots/
 # Приватный конфиг узла maind (пути ко всем проектам); шаблон — config.example.json

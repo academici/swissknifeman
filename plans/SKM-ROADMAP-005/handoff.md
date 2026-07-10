@@ -1,60 +1,54 @@
 # HANDOFF — 2026-07-10 — after P1.6
 
-**Next:** /task:plan-design SKM-ROADMAP-005 P2
+**Next:** /task:plan-exec SKM-ROADMAP-005 P2.1
 
 | Параметр | Значение |
 |:--|:--|
-| Model | opus |
-| Thinking | high |
+| Model | sonnet |
+| Thinking | medium |
 | Context | fresh session |
-| Суть | Развернуть фазу P2 (`wf-status`) из скелета: 5 items с полными ТЗ, Scope Included/Excluded, DoR-чеклист — ДО plan-exec |
+| Суть | Исполнение возобновляется с P2.1 (фазы P2 и P3 развёрнуты из скелетов, но НЕ исполнены; phase-first: P2 закрывается до P3). Начать с P2.1 — защищённый парсер transcript-директории workflow-прогона |
 
 ````
-/task:plan-design SKM-ROADMAP-005 P2 — развернуть фазу-скелет из плана: детализировать 5 items
-(`wf-status` — консольный статус-репортер фоновых workflow-прогонов, `swissknifeman wf status`,
-D8/D9 «новых пакетов не заводим», парсинг journal.jsonl+meta вместо LLM-импровизаций и совета
-несуществующей `/workflows`). Cold-start reads: plans/SKM-ROADMAP-005/plan.md (Context, Routing
-P2.1, D8) · plans/SKM-ROADMAP-005/phases/P2.md (скелет). P2.1 требует чтение реальной transcript-
-директории (`~/.claude/projects/**/subagents/workflows/wf_*`) — источник истины формат, не доки.
+/task:plan-exec SKM-ROADMAP-005 P2.1 — исполнить первый item фазы P2 (wf-status) строго по ТЗ:
+защищённый stdlib-only парсер одной transcript-директории `wf_<id>/` (journal.jsonl + agent-*.meta.json
++ sibling-скрипт `export const meta`) → dict статуса; degraded-флаг вместо трейсбека. Дом движка —
+harness (D17). Cold-start reads: plans/SKM-ROADMAP-005/phases/P2.md (ТЗ P2.1, Required Reads) ·
+plans/SKM-ROADMAP-005/findings/P2-workflow-transcript-format.md (формат — источник истины, не доки) ·
+packages/harness/lib/harness/settings_audit.py (стиль защищённого чтения .claude/*.json).
 ````
 
-**Done:** Фаза P1 (`settings-doctor`) закрыта 6/6 🟢. Движок в harness
-(`lib/harness/settings_audit.py`, D10): 4 слоя настроек CC + эффективная конфигурация с
-провенансом, таксономия 13 проверок, 2 policy-профиля (`max-permissive`/`base`) + декларация
-`.swissknife.json:policy_profile`, CLI `harness doctor --settings [--target] [--json] [--profile]`
-(exit-code 0/1/2), фасад `skiller doctor --settings`, VSCode-слой (JSONC-reader), интеграционный
-fieldcase-тест (все 6 пунктов полевого кейса 2026-07-10 ловятся разом), fleet-измерение
-`maind doctor --audit settings|all` (subprocess к harness, fail-soft). `roadmap/README.md` и
-шапка `roadmap/settings-doctor.md` приведены к факту: `🟢 внедрено (SKM-ROADMAP-005 P1)`.
-`CHANGELOG.md [Unreleased]` заполнен по каждому item'у. Реальный прогон `maind doctor --audit
-settings` по флоту (21 проект) подтвердил рабочесть измерения.
+**Done:** Фаза P1 (`settings-doctor`) закрыта 6/6 🟢 (движок в harness, D10). Фазы **P2**
+(`wf-status`, 5 items) и **P3** (`workflow-craft`, 5 items) РАЗВЁРНУТЫ из скелетов до полных ТЗ,
+DoR пройден — но обе ещё НЕ исполнены (0/5 каждая). P3: скилл-указатель `workflow-craft` в бакете
+`general` skiller (D20), команда-гейт `/task:make-workflow` (opus/high, D22) + выходной статический
+ревьюер (RED блокирует выдачу), SSOT две-типа-матрицы = сам скилл (D21), разведение design-only vs dev
++ cross-ref на два эталона vault Brain.
 
-**Remaining:** P2–P7 — скелеты, каждую разворачивать `/task:plan-design SKM-ROADMAP-005 Pn` ДО
-`plan-exec`: P2 wf-status (5) · P3 workflow-craft (5) · P4 канон планов (6) · P5
-changelog-discipline (3) · P6 ecosystem-glossary (4) · P7 ephemeral + закрытие пакета (2).
+**Remaining:** Исполнить P2 (5) → затем P3 (5), phase-first последовательно. Развернуть из скелетов
+`/task:plan-design SKM-ROADMAP-005 Pn` ДО `plan-exec`: P4 канон планов (6) · P5 changelog-discipline
+(3) · P6 ecosystem-glossary (4) · P7 ephemeral + закрытие пакета (2).
 
-**Sources of truth:** plans/SKM-ROADMAP-005/plan.md (Meta, Routing, D-лог D1–D16) ·
-plans/SKM-ROADMAP-005/phases/P1.md (закрыт, Phase Handoff заполнен — образец для P2–P7) ·
-roadmap/README.md (статус settings-doctor приведён к факту) ·
-packages/skiller/skills/general/plan-protocol/SKILL.md (SSOT протокола) ·
+**Sources of truth:** plans/SKM-ROADMAP-005/plan.md (Meta, Routing, D-лог D1–D22) ·
+plans/SKM-ROADMAP-005/phases/P1.md (закрыт — образец Phase Handoff) · phases/P2.md · phases/P3.md
+(развёрнуты) · roadmap/workflow-craft.md (спека P3) · packages/task/workflows/README.md (конструктор,
+SSOT инвариантов для ревьюера P3.4) · packages/skiller/skills/general/spec-interview/SKILL.md (механика
+интервью P3.3) · packages/skiller/skills/general/plan-protocol/SKILL.md (SSOT протокола) ·
 packages/task/lib/task/plan_lint.py (валидатор схемы)
 
 **Open risks:**
-- P1.4 Pending Work не закрыт: проверка №5 даёт ложный `error` на хук-командах с
-  интерпретатор-префиксом (`bash …`, `python3 …`) — резолвится по первому токену. Вне scope P1,
-  следующий срез или отдельное решение владельца.
-- P1.6 Pending Work: `maind doctor --audit all` падает на измерении `core` (`_present_skills`,
-  список вместо объекта в `skills-lock.json:skills` на части флота) — воспроизведено ДО диффа
-  P1.6, вне scope (расширение `DIMS` запрещено ТЗ P1.6). `--audit settings` в изоляции не задет.
-- D16 (канон имён планов `ГГГГ.ММ.ДД-КОДОВОЕ-ИМЯ`) внедряется в P4 — этот план (SKM-ROADMAP-005)
-  НЕ переименовывается (back-compat, ломает git-историю/ссылки).
+- P1.4 Pending Work: проверка №5 даёт ложный `error` на хук-командах с интерпретатор-префиксом
+  (`bash …`, `python3 …`). Вне scope P1.
+- P1.6 Pending Work: `maind doctor --audit all` падает на измерении `core` (`_present_skills`) на
+  части флота. `--audit settings` в изоляции не задет.
+- D16 (канон имён планов `ГГГГ.ММ.ДД-КОДОВОЕ-ИМЯ`) внедряется в P4 — этот план НЕ переименовывается.
+- P3 эталоны (`wf-design-fleet.js`, `wf-agentools-drive.js`) — в vault Brain, НЕ в репо: cross-ref по
+  пути, не вендорим (P3.5). На исполняющей машине без vault → пометка «эталон в vault Brain», не падать.
 
 **Workarounds/Deferred/Open questions:**
 - workarounds: семантика слияния `permissions.additionalDirectories` неизвестна → проверка №8
-  работает per-layer, вердикт от семантики не зависит (D15); полнота списка hook-событий не
-  подтверждена → неизвестное событие даёт `info`, не `warn`.
-- deferred: opt-in `UserPromptSubmit`-хук settings-doctor (D12); авто-починка `--fix`; семантический
-  glob-матчер перекрытий allow/deny; форки VSCode (Cursor/Insiders); P1.4/P1.6 Pending Work (выше);
-  `workflow-craft` ч.2, `skill-rules-sidecar`, остаток `self-learning-memory`, default-on
-  `mcp-config-example-emit` (D1).
+  per-layer (D15); полнота списка hook-событий не подтверждена → неизвестное событие даёт `info`.
+- deferred: opt-in `UserPromptSubmit`-хук settings-doctor (D12) и активации workflow-craft (не в спеке);
+  авто-починка `--fix`; часть 2 `workflow-craft` fleet-синтез (D1); `skill-rules-sidecar`, остаток
+  `self-learning-memory`, default-on `mcp-config-example-emit` (D1); P1.4/P1.6 Pending Work.
 - open_questions: содержание «ephemeral-дисциплины» — снимается интервью владельца в P7.1 (D7).

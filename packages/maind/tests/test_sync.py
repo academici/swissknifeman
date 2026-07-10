@@ -89,6 +89,53 @@ class TestRoleAgentPacks(unittest.TestCase):
             ["role-tech-lead"])
 
 
+class TestAgentPackRun(unittest.TestCase):
+    """update не должен падать на паке, которого ещё нет в lock'е цели (field-feedback:
+    профиль дорос новым паком → sync --mode update душил его через upgrade, требующий
+    prior-install; чинить полагается install-путём, апгрейдить — уже стоящие)."""
+
+    def test_installed_agent_packs_reads_lock(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / ".claude").mkdir()
+            (Path(tmp) / ".claude" / "agent-pack.lock.json").write_text(
+                json.dumps({"schema": 1, "packs": {"role-maintainer": {"version": "0.2.1"}}}),
+                encoding="utf-8")
+            self.assertEqual(sync._installed_agent_packs(tmp), {"role-maintainer"})
+
+    def test_installed_agent_packs_missing_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertEqual(sync._installed_agent_packs(tmp), set())
+
+    def test_update_mode_installs_missing_falls_back_to_render(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / ".claude").mkdir()
+            (Path(tmp) / ".claude" / "agent-pack.lock.json").write_text(
+                json.dumps({"schema": 1, "packs": {"role-maintainer": {"version": "0.2.1"}}}),
+                encoding="utf-8")
+            project = {"id": "p", "local_path": tmp, "roles": [],
+                       "agent_pack": ["laravel-package", "_common", "role-maintainer"]}
+            calls = []
+
+            def fake_run_capability(env, config, project_id, capability, extra=None, *, dry=False):
+                calls.append((project_id, capability, list(extra or [])))
+                return 0
+
+            import maind.provision.orchestrate as orchestrate
+            orig = orchestrate.run_capability
+            orchestrate.run_capability = fake_run_capability
+            try:
+                results = sync._agent_pack_run(None, {}, [project], "update", False)
+            finally:
+                orchestrate.run_capability = orig
+
+            caps = {pack: cap for _pid, cap, extra in calls
+                    for pack in [extra[extra.index("--pack") + 1]]}
+            self.assertEqual(caps["laravel-package"], "env:agent-pack")
+            self.assertEqual(caps["_common"], "env:agent-pack")
+            self.assertEqual(caps["role-maintainer"], "env:agent-pack-upgrade")
+            self.assertTrue(all(r["status"] == "ok" for r in results))
+
+
 class TestSync(unittest.TestCase):
     def test_select_projects(self):
         with tempfile.TemporaryDirectory() as tmp:

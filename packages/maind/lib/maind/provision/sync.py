@@ -240,9 +240,18 @@ def _profile_answers(config, project):
     return out
 
 
+def _installed_agent_packs(local_path):
+    """Имена паков, уже осевших в lock'е цели (.claude/agent-pack.lock.json). Нет
+    файла/битый JSON → пусто (трактуем как «ничего не установлено»)."""
+    lock = safe_load_json(Path(local_path) / ".claude" / "agent-pack.lock.json", default={}) or {}
+    return set((lock.get("packs") or {}).keys())
+
+
 def _agent_pack_run(env, config, projects, mode, dry):
     """Детерминированно раскатать agent-pack(и) профиля проекта в .claude/ через harness
-    (без агента в цикле). install — только если ещё не стоит; update — версионный апгрейд;
+    (без агента в цикле). install — только если ещё не стоит; update — версионный апгрейд
+    уже установленных + install недостающих (harness upgrade падает на неустановленном
+    паке, см. field-feedback: профиль дорос новым паком → update один его не подхватит);
     auto — render --auto (install + идемпотентный ре-ролл). Нет пака/пути/harness → skip."""
     from .orchestrate import run_capability
     results = []
@@ -252,9 +261,11 @@ def _agent_pack_run(env, config, projects, mode, dry):
             results.append(_result("agent-pack", p["id"], "skip",
                                    detail="нет профиля/agent_pack или пути"))
             continue
+        installed = _installed_agent_packs(p["local_path"])
         answers = _profile_answers(config, p)
         for pack in packs:
-            cap = "env:agent-pack-upgrade" if mode == "update" else "env:agent-pack"
+            cap = ("env:agent-pack-upgrade" if mode == "update" and pack in installed
+                   else "env:agent-pack")
             extra = (["--pack", pack] + answers
                      + (["--install-only"] if mode == "install" else []))
             try:

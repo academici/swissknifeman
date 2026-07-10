@@ -284,10 +284,24 @@ def effective_config(layers):
 
 
 @dataclass(frozen=True)
+class ProfileState(object):
+    """Разрешённое состояние policy-профиля проекта (P1.3). Три случая:
+    - НЕ объявлен: `name=None`, `profile=None` → проверки №4/№11 дают один `info`;
+    - объявлено НЕИЗВЕСТНОЕ имя: `name="…"`, `profile=None` → №4 даёт `error`;
+    - объявлен и загружен: `name`+`profile` заполнены → №4/№11 сверяют факт с `expect`.
+    `available` — доступные имена профилей (для сообщения об ошибке)."""
+
+    name: Optional[str] = None
+    profile: Optional[dict] = None
+    available: tuple = ()
+
+
+@dataclass(frozen=True)
 class Context(object):
     """Контекст прогона проверок таксономии (P1.2+): слои + эффективная
-    конфигурация + окружение запуска. `profile` — всегда `None` в P1.2 (объявлен,
-    чтобы `fn(ctx)` проверок не менялась сигнатурой, когда P1.3 заведёт профили)."""
+    конфигурация + окружение запуска. `profile` — `ProfileState` (P1.3): разрешён
+    из декларации `<target>/.swissknife.json:policy_profile` либо явного имени
+    (`--profile`, P1.4). До P1.3 был `None`; проверки №4/№11 читают его."""
 
     layers: list
     values: dict
@@ -297,10 +311,14 @@ class Context(object):
     profile: Optional[object] = None
 
 
-def build_context(env, target, profile=None):
-    """Читает слои и строит эффективную конфигурацию — удобный вход для CLI/тестов."""
+def build_context(env, target, profile_name=None):
+    """Читает слои, строит эффективную конфигурацию и разрешает policy-профиль —
+    удобный вход для CLI/тестов. `profile_name` (явное имя из `--profile`, P1.4)
+    перекрывает декларацию `<target>/.swissknife.json:policy_profile`; None →
+    берётся декларация."""
     layers = load_layers(env, target)
     values, provenance = effective_config(layers)
+    profile = resolve_profile_state(env, target, profile_name)
     return Context(layers=layers, values=values, provenance=provenance,
                     target=Path(target), env=env, profile=profile)
 
@@ -313,6 +331,56 @@ def _load_settings_keys():
         return {"top_level": [], "permissions": [], "hook_events": [],
                 "hook_events_unverified": True, "verified": "?"}
     return data
+
+
+# --- Policy-профили (P1.3): декларация проекта + сверка «ожидание vs факт» ----
+# Профили — пакетный ресурс рядом с пресетами, ПУТЬ module-relative (как снапшот
+# ключей выше), НЕ env-relative: снапшот/профили одни на пакет, а тесты гоняют с
+# tmp-корнем env (иначе искали бы профиль в tmp/configs и не нашли).
+_POLICY_DIR = (Path(__file__).resolve().parents[2]
+               / "configs" / "claude-code" / "policy")
+
+
+def available_profiles():
+    """Имена доступных профилей (`configs/claude-code/policy/*.json`), отсортированы.
+    Нет каталога — пустой кортеж (не находка: сверка просто не сработает)."""
+    if not _POLICY_DIR.is_dir():
+        return ()
+    return tuple(sorted(p.stem for p in _POLICY_DIR.glob("*.json")))
+
+
+def read_policy_declaration(target):
+    """Декларация ожидаемой политики: `<target>/.swissknife.json:policy_profile`
+    (D11 — дом декларации НЕ `.claude/settings.json`, иначе собственная проверка №2
+    пометит ключ как неканонический). harness читает файл САМ через `core.safe_load_json`,
+    НЕ импортируя skiller — пакеты независимы, общее живёт в `core`. Возвращает имя
+    профиля (строку) или None (нет файла / нет ключа / битый JSON — fail-soft)."""
+    data = safe_load_json(Path(target) / ".swissknife.json", default=None)
+    if not isinstance(data, dict):
+        return None
+    name = data.get("policy_profile")
+    return name if isinstance(name, str) and name else None
+
+
+def load_profile(env, name):
+    """Профиль `configs/claude-code/policy/<name>.json` → dict, или None (пустое имя /
+    нет файла / битый / не объект). `env` — для совместимости сигнатуры с P1.4-вызовом
+    (`--profile`), путь профиля module-relative (пакетный ресурс, см. `_POLICY_DIR`)."""
+    if not name:
+        return None
+    data = safe_load_json(_POLICY_DIR / f"{name}.json", default=None)
+    return data if isinstance(data, dict) else None
+
+
+def resolve_profile_state(env, target, explicit_name=None):
+    """Разрешает `ProfileState` для проекта: явное имя (`--profile`, P1.4) перекрывает
+    декларацию `<target>/.swissknife.json`. Имя не задано → состояние «не объявлен»;
+    задано, но файла нет → состояние «неизвестный профиль» (обе ветки — не die())."""
+    name = explicit_name or read_policy_declaration(target)
+    available = available_profiles()
+    if not name:
+        return ProfileState(name=None, profile=None, available=available)
+    return ProfileState(name=name, profile=load_profile(env, name), available=available)
 
 
 # --- Проверка №1 — валидность JSON слоя (error) -----------------------------
@@ -403,6 +471,93 @@ def check_3_default_mode_conflict(ctx):
         hint="Режим фиксируется на СТАРТЕ сессии — правка на лету не действует "
              "(перезапусти сессию после смены).",
     )]
+
+
+# --- Проверка №4 — соответствие policy-профилю проекта (error) ---------------
+
+def check_4_policy_profile_conformance(ctx):
+    """Эффективная конфигурация vs `expect` объявленного профиля: `defaultMode`
+    (равенство), `permissions.deny` (надмножество — проект ВПРАВЕ добавить свои
+    guardrails, НЕ вправе урезать), `hooks.required` (событие+команда прописаны).
+    `permissions.ask` — не здесь (проверка №11). Секция `vscode` — читается в P1.5
+    (в P1.3 объявлена, но молча пропускается). Профиль не объявлен → один `info`;
+    объявлено неизвестное имя → `error` (обе ветки несут единственный `info`/`error`
+    за пару №4/№11 — №11 в этих случаях молчит)."""
+    state = ctx.profile
+    if state is None or state.name is None:
+        avail = ", ".join(state.available) if state and state.available else "—"
+        return [Finding(
+            id=4, level="info",
+            title="policy-профиль проекта не объявлен",
+            detail="В .swissknife.json нет ключа policy_profile — сверка эффективной "
+                   "конфигурации с ожидаемой политикой не выполняется.",
+            hint=f"Объяви ожидаемую политику ключом policy_profile в .swissknife.json "
+                 f"(доступны: {avail}).",
+        )]
+    if state.profile is None:
+        avail = ", ".join(state.available) if state.available else "—"
+        return [Finding(
+            id=4, level="error",
+            title=f"Неизвестный policy-профиль «{state.name}»",
+            detail=f"Профиля нет среди доступных: {avail}.",
+            hint="Проверь имя в .swissknife.json:policy_profile или заведи профиль "
+                 "в configs/claude-code/policy/.",
+        )]
+
+    findings = []
+    expect = state.profile.get("expect") or {}
+    perms = ctx.values.get("permissions") or {}
+
+    # defaultMode — равенство.
+    if "permissions.defaultMode" in expect:
+        exp_mode = expect["permissions.defaultMode"]
+        act_mode = perms.get("defaultMode")
+        if act_mode != exp_mode:
+            findings.append(Finding(
+                id=4, level="error",
+                title="Эффективный permissions.defaultMode ≠ профилю",
+                detail=f"Профиль «{state.name}» ждёт {exp_mode!r}, эффективно {act_mode!r}.",
+                hint="Приведи permissions.defaultMode к профилю (writer: harness permissions).",
+            ))
+
+    # deny — надмножество (⊇): проект вправе расширить guardrails, не урезать.
+    deny_expect = expect.get("permissions.deny")
+    if isinstance(deny_expect, dict) and isinstance(deny_expect.get("contains"), list):
+        actual_deny = set(perms.get("deny") or [])
+        missing = [r for r in deny_expect["contains"] if r not in actual_deny]
+        if missing:
+            findings.append(Finding(
+                id=4, level="error",
+                title="В эффективном permissions.deny нет обязательных guardrail-правил",
+                detail=f"Профиль «{state.name}» требует (⊇), не хватает: {', '.join(missing)}.",
+                hint="Верни удалённые deny-правила — они работают guardrail'ом во ВСЕХ "
+                     "режимах, включая bypassPermissions.",
+            ))
+
+    # hooks.required — событие+команда присутствуют в эффективной конфигурации.
+    hooks_expect = expect.get("hooks")
+    if isinstance(hooks_expect, dict):
+        eff_hooks = ctx.values.get("hooks") or {}
+        for req in hooks_expect.get("required") or []:
+            if not isinstance(req, dict):
+                continue
+            event = req.get("event")
+            command = req.get("command")
+            entries = eff_hooks.get(event) or []
+            present = any(
+                command is None or (isinstance(e, dict) and e.get("command") == command)
+                for e in entries
+            )
+            if not present:
+                findings.append(Finding(
+                    id=4, level="error",
+                    title=f"Ожидаемый профилем хук не прописан: {event}",
+                    detail=f"Профиль «{state.name}» требует хук {event}"
+                           + (f" → {command}" if command else "") + ".",
+                    hint="Пропиши хук (writer: harness hooks) или сними требование из профиля.",
+                ))
+
+    return findings
 
 
 # --- Проверка №5 — хуки: command существует/исполняем; событие известно ------
@@ -533,6 +688,36 @@ def _check_local_gitignored(target, local_path):
     )
 
 
+# --- Проверка №11 — ask-правила при политике «не спрашивать» (error) ---------
+
+def check_11_ask_rules_when_expected_empty(ctx):
+    """Профиль объявил `permissions.ask: []` (семантика «никогда не спрашивать»), а
+    эффективный `ask` непуст → `error`: ask-правила форсируют промпт В ЛЮБОМ режиме,
+    включая `bypassPermissions` (RAG:✅ 2026-07-10 permissions.md — первопричина
+    field-case #2). Профиль не объявлен / неизвестен / не требует пустого ask →
+    молчим (первый случай уже отражён проверкой №4 одним `info`/`error`)."""
+    state = ctx.profile
+    if state is None or state.name is None or state.profile is None:
+        return []
+    expect = state.profile.get("expect") or {}
+    if "permissions.ask" not in expect:
+        return []
+    if expect["permissions.ask"]:  # профиль ждёт НЕпустой ask — не «не спрашивать»
+        return []
+    ask_rules = (ctx.values.get("permissions") or {}).get("ask") or []
+    if not ask_rules:
+        return []
+    ask_prov = dict((ctx.provenance.get("permissions") or {}).get("ask") or [])
+    listed = ", ".join(f"{r} ({ask_prov.get(r, '?')})" for r in ask_rules)
+    return [Finding(
+        id=11, level="error",
+        title="ask-правила форсируют промпт при политике «не спрашивать»",
+        detail=f"Профиль «{state.name}» требует пустой permissions.ask, эффективно: {listed}.",
+        hint="Убери ask-правила — они форсируют промпт В ЛЮБОМ режиме, включая "
+             "bypassPermissions (deny/ask применяются всегда).",
+    )]
+
+
 # --- Реестр проверок ----------------------------------------------------------
 
 # Список пар (id, fn); добавление проверки = новая функция + строка здесь, не
@@ -541,8 +726,10 @@ CHECKS = (
     (1, check_1_layer_json_valid),
     (2, check_2_noncanonical_keys),
     (3, check_3_default_mode_conflict),
+    (4, check_4_policy_profile_conformance),
     (5, check_5_hooks),
     (9, check_9_secrets),
+    (11, check_11_ask_rules_when_expected_empty),
 )
 
 

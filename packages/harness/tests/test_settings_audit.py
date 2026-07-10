@@ -216,5 +216,95 @@ class SettingsAuditChecksCase(unittest.TestCase):
         self.assertEqual(secret_findings, [])
 
 
+class SettingsAuditPolicyProfileCase(unittest.TestCase):
+    """Проверки №4/№11 (P1.3) — policy-профили и сверка «ожидание vs факт».
+    Реальные `.claude/settings*.json` + `.swissknife.json` в tmpdir, прогон через
+    `run_checks()` (анти-самообман: не подсовывать готовый `values`-словарь)."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.tmp = Path(self._tmp.name)
+        self.home = self.tmp / "home"
+        self.target = self.tmp / "proj"
+        self.home.mkdir()
+        self.target.mkdir()
+        self.env = Env(self.tmp, "test", home=self.home)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _declare(self, name):
+        _write(self.target / ".swissknife.json", {"policy_profile": name})
+
+    def _run(self):
+        return run_checks(build_context(self.env, self.target))
+
+    # профиль объявлен и совпадает → 0 находок №4 и №11
+    def test_profile_matches_no_findings(self):
+        self._declare("max-permissive")
+        _write(self.target / ".claude" / "settings.json", {"permissions": {
+            "defaultMode": "bypassPermissions",
+            "ask": [],
+            "deny": ["Read(~/.ssh/**)", "Read(~/.aws/**)",
+                     "Read(**/*.pem)", "Bash(sudo *)"],
+        }})
+        findings = self._run()
+        self.assertEqual(_findings_by_id(findings, 4), [])
+        self.assertEqual(_findings_by_id(findings, 11), [])
+
+    # ask непуст при max-permissive → error id=11 с именами правил и слоёв-источников
+    def test_ask_nonempty_under_max_permissive_is_error(self):
+        self._declare("max-permissive")
+        _write(self.target / ".claude" / "settings.json", {"permissions": {
+            "defaultMode": "bypassPermissions",
+            "ask": ["Bash(git push *)"],
+            "deny": ["Read(~/.ssh/**)", "Read(~/.aws/**)",
+                     "Read(**/*.pem)", "Bash(sudo *)"],
+        }})
+        errs = [f for f in _findings_by_id(self._run(), 11) if f.level == "error"]
+        self.assertEqual(len(errs), 1)
+        self.assertIn("Bash(git push *)", errs[0].detail)
+        self.assertIn("project", errs[0].detail)
+
+    # deny урезан (нет Bash(sudo *)) → error id=4
+    def test_deny_stripped_missing_guardrail_is_error(self):
+        self._declare("max-permissive")
+        _write(self.target / ".claude" / "settings.json", {"permissions": {
+            "defaultMode": "bypassPermissions",
+            "ask": [],
+            "deny": ["Read(~/.ssh/**)", "Read(~/.aws/**)", "Read(**/*.pem)"],
+        }})
+        errs = [f for f in _findings_by_id(self._run(), 4) if f.level == "error"]
+        self.assertEqual(len(errs), 1)
+        self.assertIn("Bash(sudo *)", errs[0].detail)
+
+    # deny расширен лишним правилом → 0 находок №4 (contains-семантика ⊇)
+    def test_deny_extended_with_extra_rule_ok(self):
+        self._declare("max-permissive")
+        _write(self.target / ".claude" / "settings.json", {"permissions": {
+            "defaultMode": "bypassPermissions",
+            "ask": [],
+            "deny": ["Read(~/.ssh/**)", "Read(~/.aws/**)", "Read(**/*.pem)",
+                     "Bash(sudo *)", "Read(**/secret.txt)"],
+        }})
+        self.assertEqual(_findings_by_id(self._run(), 4), [])
+
+    # неизвестное имя профиля → error id=4
+    def test_unknown_profile_name_is_error(self):
+        self._declare("does-not-exist")
+        errs = [f for f in _findings_by_id(self._run(), 4) if f.level == "error"]
+        self.assertEqual(len(errs), 1)
+        self.assertIn("does-not-exist", errs[0].title)
+
+    # декларации нет → ровно один info и ноль error за пару №4/№11
+    def test_no_declaration_single_info_zero_error(self):
+        findings = self._run()
+        pair = [f for f in findings if f.id in (4, 11)]
+        infos = [f for f in pair if f.level == "info"]
+        errs = [f for f in pair if f.level == "error"]
+        self.assertEqual(len(infos), 1)
+        self.assertEqual(errs, [])
+
+
 if __name__ == "__main__":
     unittest.main()

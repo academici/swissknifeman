@@ -1,5 +1,5 @@
 """wf_status — детерминированный парсер transcript-директории workflow-прогона Claude Code
-(P2.1: ядро парсинга; discovery/рендер/CLI — P2.2-P2.4).
+(P2.1: ядро парсинга; P2.2: discovery прогонов; рендер/CLI — P2.3-P2.4).
 
 Формат ВНУТРЕННИЙ и НЕДОКУМЕНТИРОВАННЫЙ (может меняться между версиями CLI) — источник
 истины НЕ доки Claude Code, а эмпирика на реальных прогонах:
@@ -23,8 +23,18 @@ D19: скрипт прогона лежит в sibling-каталоге `../../w
 честная причина в `degraded_reasons`. НИКОГДА трейсбек, НИКОГДА тихий пустой ответ.
 Запрещены `eval`/`exec`/импорт `.js` и любые внешние зависимости — meta скрипта (JS-объект,
 НЕ JSON) парсится регуляркой. Функции здесь ЧИСТЫЕ (path in → dict out), без печати и
-других побочных эффектов — рендер и вывод живут в P2.3/P2.4. stdlib-only."""
+других побочных эффектов — рендер и вывод живут в P2.3/P2.4. stdlib-only.
+
+Discovery (P2.2, `discover_runs`/`project_slug`): база прогонов — `<config_dir>/projects/
+<proj-slug>/<session>/subagents/workflows/wf_*`. `<config_dir>` — `$CLAUDE_CONFIG_DIR`, если
+задан в окружении (RAG:✅ 2026-07-10 perplexity-web: официальный env-override корня конфига
+Claude Code, «all-or-nothing» — заменяет ~/.claude целиком), иначе дефолт `~/.claude`.
+`<proj-slug>` — абсолютный путь проекта с заменой `/`→`-`, ведущий `-` сохранён (findings
+§«Раскладка на диске»). Discovery обходит дерево вручную (НЕ `Path.glob` с широким `**`) и
+не разыменовывает симлинки вслепую — каждый уровень (проект/сессия/`subagents/workflows`/
+run-каталог) проверяется `is_symlink()` и пропускается, если это симлинк."""
 import json
+import os
 import re
 from pathlib import Path
 
@@ -236,3 +246,109 @@ def parse_run(run_dir):
         "results": results,
         "meta": meta,
     }
+
+
+# ---------------------------------------------------------------------------
+# P2.2 — discovery прогонов (свежие по mtime, --run, --project)
+# ---------------------------------------------------------------------------
+
+# Официальный env-override корня конфигурации Claude Code (RAG:✅ 2026-07-10 perplexity-web:
+# заменяет ~/.claude целиком, all-or-nothing). Уважаем, если задан в окружении; иначе — дефолт.
+_CONFIG_DIR_ENV = "CLAUDE_CONFIG_DIR"
+
+
+def _config_base_dir():
+    """Корень конфигурации Claude Code: `$CLAUDE_CONFIG_DIR`, если непустой в окружении,
+    иначе дефолт `~/.claude` (`os.path.expanduser`, никаких `Path.home()` — единый паттерн
+    с `settings_audit`: тестируемо без утечки в реальный домашний каталог, т.к. discovery
+    сам не имеет `env`-параметра пакета и полагается только на переменную окружения)."""
+    override = os.environ.get(_CONFIG_DIR_ENV)
+    if override:
+        return Path(override)
+    return Path(os.path.expanduser("~/.claude"))
+
+
+def project_slug(path):
+    """Абсолютный путь проекта → CC-слаг директории `~/.claude/projects/<slug>` (findings
+    §«Раскладка на диске»): `/` → `-`, ведущий `-` СОХРАНЯЕТСЯ (абсолютный путь и так
+    начинается с `/`, замена даёт ведущий `-` сама по себе — не «примерно», байт-в-байт
+    правило из findings, покрыто тестом)."""
+    abs_path = os.path.abspath(os.path.expanduser(str(path)))
+    return abs_path.replace("/", "-")
+
+
+def _run_mtime(run_dir):
+    """Время активности прогона — mtime `journal.jsonl` (findings: «время активности берём
+    из mtime journal.jsonl»), fallback — mtime самого каталога прогона (журнал ещё не
+    появился / уже удалён). Запрещено читать тела агентов ради mtime (Code Guidance)."""
+    try:
+        return (run_dir / "journal.jsonl").stat().st_mtime
+    except OSError:
+        try:
+            return run_dir.stat().st_mtime
+        except OSError:
+            return 0.0
+
+
+def discover_runs(base_dir=None, run=None, project=None, limit=1):
+    """Найти прогоны-кандидаты под базой `<config_dir>/projects` (P2.2 Scope Included).
+
+    `base_dir` — переопределение для тестов (обычно `None` → `_config_base_dir()`).
+    `run` — точное имя `wf_<id>`, сужает по всем проектам. `project` — абсолютный путь
+    проекта, сужается по `project_slug(project)`. `limit` — сколько самых свежих вернуть
+    (`None` — все совпавшие); дефолт 1 (главный кейс «покажи, что идёт сейчас»).
+
+    Сортировка — по убыванию mtime `journal.jsonl`, tie-break по `run_id` (детерминизм,
+    тест на стабильность). Отсутствует база `<config_dir>/projects` (свежая машина без
+    прогонов) → `[]`, честно, БЕЗ исключения. Дерево обходится вручную по уровням
+    (проект → сессия → `subagents/workflows` → `wf_*`), каждый уровень — `is_symlink()`
+    отсекается ДО спуска (символические ссылки не разыменовываются вслепую, Code Guidance)."""
+    base_dir = Path(base_dir) if base_dir is not None else _config_base_dir()
+    projects_dir = base_dir / "projects"
+    if not projects_dir.is_dir():
+        return []
+
+    slug = project_slug(project) if project else None
+    candidates = []
+
+    try:
+        proj_entries = sorted(projects_dir.iterdir())
+    except OSError:
+        return []
+
+    for proj_dir in proj_entries:
+        if proj_dir.is_symlink() or not proj_dir.is_dir():
+            continue
+        if slug is not None and proj_dir.name != slug:
+            continue
+        try:
+            session_entries = sorted(proj_dir.iterdir())
+        except OSError:
+            continue
+        for session_dir in session_entries:
+            if session_dir.is_symlink() or not session_dir.is_dir():
+                continue
+            wf_root = session_dir / "subagents" / "workflows"
+            if wf_root.is_symlink() or not wf_root.is_dir():
+                continue
+            try:
+                run_entries = sorted(wf_root.glob("wf_*"))
+            except OSError:
+                continue
+            for run_dir in run_entries:
+                if run_dir.is_symlink() or not run_dir.is_dir():
+                    continue
+                run_id = run_dir.name
+                if run is not None and run_id != run:
+                    continue
+                candidates.append({
+                    "run_id": run_id,
+                    "run_dir": str(run_dir),
+                    "project_slug": proj_dir.name,
+                    "mtime": _run_mtime(run_dir),
+                })
+
+    candidates.sort(key=lambda c: (-c["mtime"], c["run_id"]))
+    if limit is not None:
+        return candidates[:limit]
+    return candidates

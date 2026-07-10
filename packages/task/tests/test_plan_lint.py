@@ -852,3 +852,96 @@ class TestLint20Warnings(TmpPlanTestCase):
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok, diag.errors)
         self.assertEqual(self._warnings_containing(diag, "launch-block"), [], diag.warnings)
+
+
+class TestPlanIdentity43Warnings(TmpPlanTestCase):
+    """P4.3 (D24/D27/D28) — три WARNING-проверки идентичности плана: регулярка PLAN-ID,
+    место/имя workflow-скрипта, supersedes-преемственность. ВСЕ warning: diag.ok=True."""
+
+    def _warnings_containing(self, diag, needle):
+        return [w for w in diag.warnings if needle in w]
+
+    def _add_js(self, plan_dir, rel, with_marker=True):
+        p = plan_dir / rel
+        p.parent.mkdir(parents=True, exist_ok=True)
+        body = "export const meta = {\n  name: 'x',\n}\n" if with_marker else "// не workflow\n"
+        p.write_text(body, encoding="utf-8")
+        return p
+
+    # --- (1) регулярка PLAN-ID (D24) -----------------------------------------
+    def test_legacy_id_no_warning(self):
+        plan_dir = write_valid_plan(self.root, "OLD-STYLE")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+        self.assertEqual(self._warnings_containing(diag, "канону PLAN-ID"), [], diag.warnings)
+
+    def test_dated_id_no_warning(self):
+        plan_dir = write_valid_plan(self.root, "2026.07.10-DEMO")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+        self.assertEqual(self._warnings_containing(diag, "канону PLAN-ID"), [], diag.warnings)
+
+    def test_noncanonical_id_warning(self):
+        # строчные буквы → не матчит ни старый `[A-Z]…`, ни датовый паттерн
+        plan_dir = write_valid_plan(self.root, "demo-lower")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+        self.assertTrue(self._warnings_containing(diag, "канону PLAN-ID"), diag.warnings)
+
+    # --- (2) место/имя workflow-скрипта (D28) --------------------------------
+    def test_canonical_workflow_script_silent(self):
+        plan_dir = write_valid_plan(self.root, "DEMO-1")  # codename = demo-1
+        self._add_js(plan_dir, "workflows/wf-demo-1-drive.js")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+        self.assertEqual(self._warnings_containing(diag, "workflow-скрипт"), [], diag.warnings)
+
+    def test_workflow_script_outside_workflows_dir_warns_place(self):
+        plan_dir = write_valid_plan(self.root, "DEMO-1")
+        self._add_js(plan_dir, "wf-demo-1-drive.js")  # каноничное имя, но не под workflows/
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+        w = self._warnings_containing(diag, "workflow-скрипт")
+        self.assertTrue(any("вне" in x for x in w), diag.warnings)
+        self.assertFalse(any("неканоничным именем" in x for x in w), diag.warnings)
+
+    def test_workflow_script_noncanonical_name_warns_name(self):
+        plan_dir = write_valid_plan(self.root, "DEMO-1")
+        self._add_js(plan_dir, "workflows/wf-bad.js")  # под workflows/, но имя неканонично
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+        w = self._warnings_containing(diag, "workflow-скрипт")
+        self.assertTrue(any("неканоничным именем" in x for x in w), diag.warnings)
+        self.assertFalse(any("вне" in x for x in w), diag.warnings)
+
+    def test_js_without_marker_ignored(self):
+        plan_dir = write_valid_plan(self.root, "DEMO-1")
+        self._add_js(plan_dir, "helpers/util.js", with_marker=False)
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+        self.assertEqual(self._warnings_containing(diag, "workflow-скрипт"), [], diag.warnings)
+
+    # --- (3) supersedes-преемственность (D27) --------------------------------
+    def test_supersedes_missing_with_archived_codename_warns(self):
+        plan_dir = write_valid_plan(self.root, "DEMO-1")
+        (self.root / "plans" / "archive" / "DEMO-1").mkdir(parents=True)
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+        self.assertTrue(self._warnings_containing(diag, "supersedes"), diag.warnings)
+
+    def test_supersedes_present_silences(self):
+        plan_dir = write_valid_plan(self.root, "DEMO-1")
+        (self.root / "plans" / "archive" / "DEMO-1").mkdir(parents=True)
+        plan = plan_dir / "plan.md"
+        text = plan.read_text(encoding="utf-8").replace(
+            "| Status | 🟢 Done |", "| Status | 🟢 Done |\n| supersedes | DEMO-OLD |")
+        plan.write_text(text, encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+        self.assertEqual(self._warnings_containing(diag, "supersedes"), [], diag.warnings)
+
+    def test_no_archive_dir_no_warning(self):
+        plan_dir = write_valid_plan(self.root, "DEMO-1")  # plans/archive/ отсутствует
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+        self.assertEqual(self._warnings_containing(diag, "supersedes"), [], diag.warnings)

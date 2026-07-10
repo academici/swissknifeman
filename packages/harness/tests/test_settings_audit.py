@@ -12,7 +12,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
 from harness.common import Env
-from harness.settings_audit import build_context, effective_config, load_layers, run_checks
+from harness.settings_audit import (
+    build_context, effective_config, load_layers, run_checks,
+    _strip_jsonc_comments, _load_vscode_layer, _vscode_user_path,
+)
 
 
 def _write(path, data):
@@ -398,6 +401,235 @@ class SettingsDoctorCliCase(unittest.TestCase):
         self.assertIsNone(exc)
         self.assertIn("harness doctor:", buf.getvalue())
         self.assertNotIn("--settings (target", buf.getvalue())
+
+
+class SettingsAuditSecondSliceChecksCase(unittest.TestCase):
+    """Проверки 6-8, 10, 12-13 (P1.5) + VSCode-слой. Реальные tmpdir-деревья
+    `.claude/`/`.vscode/`/VSCode-user, прогон через `run_checks()` (анти-самообман:
+    не подсовывать готовый `values`-словарь)."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.tmp = Path(self._tmp.name)
+        self.home = self.tmp / "home"
+        self.target = self.tmp / "proj"
+        self.home.mkdir()
+        self.target.mkdir()
+        self.env = Env(self.tmp, "test", home=self.home)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _run(self):
+        return run_checks(build_context(self.env, self.target))
+
+    # №6 — 200 точных Bash(...)-правил (>= порога 50) → info id=6 с числом в detail
+    def test_check6_dead_allow_rules_info_with_count(self):
+        rules = [f"Bash(echo {i})" for i in range(200)]
+        _write(self.home / ".claude" / "settings.json",
+               {"permissions": {"allow": rules}})
+        findings = _findings_by_id(self._run(), 6)
+        self.assertEqual(len(findings), 1)
+        self.assertEqual(findings[0].level, "info")
+        self.assertIn("200", findings[0].title)
+
+    # №6 — под порогом (10 правил) → без находок
+    def test_check6_below_threshold_no_finding(self):
+        rules = [f"Bash(echo {i})" for i in range(10)]
+        _write(self.home / ".claude" / "settings.json",
+               {"permissions": {"allow": rules}})
+        self.assertEqual(_findings_by_id(self._run(), 6), [])
+
+    # №6 — wildcard-правило (со звёздочкой) НЕ считается точным/мусорным
+    def test_check6_wildcard_rule_not_counted(self):
+        rules = [f"Bash(echo {i} *)" for i in range(200)]
+        _write(self.home / ".claude" / "settings.json",
+               {"permissions": {"allow": rules}})
+        self.assertEqual(_findings_by_id(self._run(), 6), [])
+
+    # №7 — один паттерн и в allow, и в deny → warn id=7
+    def test_check7_pattern_in_allow_and_deny_is_warn(self):
+        _write(self.target / ".claude" / "settings.json", {"permissions": {
+            "allow": ["Bash(git status)"],
+            "deny": ["Bash(git status)"],
+        }})
+        warns = [f for f in _findings_by_id(self._run(), 7) if f.level == "warn"]
+        self.assertEqual(len(warns), 1)
+        self.assertIn("Bash(git status)", warns[0].title)
+
+    # №8 — несуществующий additionalDirectories → warn id=8 с именем слоя
+    def test_check8_nonexistent_additional_directory_is_warn(self):
+        _write(self.target / ".claude" / "settings.json", {"permissions": {
+            "additionalDirectories": ["/does/not/exist/at/all"]}})
+        warns = [f for f in _findings_by_id(self._run(), 8) if f.level == "warn"]
+        self.assertEqual(len(warns), 1)
+        self.assertIn("project", warns[0].title)
+
+    # №8 — существующий путь → без находок
+    def test_check8_existing_additional_directory_no_finding(self):
+        real_dir = self.tmp / "real"
+        real_dir.mkdir()
+        _write(self.target / ".claude" / "settings.json", {"permissions": {
+            "additionalDirectories": [str(real_dir)]}})
+        self.assertEqual(_findings_by_id(self._run(), 8), [])
+
+    # №10 — bypassPermissions без skipDangerousModePermissionPrompt → РОВНО info id=10
+    def test_check10_bypass_without_skip_dialog_is_exactly_info(self):
+        _write(self.target / ".claude" / "settings.json",
+               {"permissions": {"defaultMode": "bypassPermissions"}})
+        findings = _findings_by_id(self._run(), 10)
+        self.assertEqual(len(findings), 1)
+        self.assertEqual(findings[0].level, "info")
+
+    # №10 — bypassPermissions + skipDangerousModePermissionPrompt: true → без находок
+    def test_check10_bypass_with_skip_dialog_no_finding(self):
+        _write(self.target / ".claude" / "settings.json", {
+            "permissions": {"defaultMode": "bypassPermissions"},
+            "skipDangerousModePermissionPrompt": True,
+        })
+        self.assertEqual(_findings_by_id(self._run(), 10), [])
+
+    # №12 — VSCode initialPermissionMode="default" при эффективном bypassPermissions → warn
+    def test_check12_initial_mode_mismatch_is_warn(self):
+        _write(self.target / ".claude" / "settings.json",
+               {"permissions": {"defaultMode": "bypassPermissions"}})
+        _write(self.target / ".vscode" / "settings.json",
+               {"claudeCode.initialPermissionMode": "default"})
+        warns = [f for f in _findings_by_id(self._run(), 12) if f.level == "warn"]
+        self.assertEqual(len(warns), 1)
+
+    # №12 — совпадает → без находок
+    def test_check12_initial_mode_matches_no_finding(self):
+        _write(self.target / ".claude" / "settings.json",
+               {"permissions": {"defaultMode": "bypassPermissions"}})
+        _write(self.target / ".vscode" / "settings.json",
+               {"claudeCode.initialPermissionMode": "bypassPermissions"})
+        self.assertEqual(_findings_by_id(self._run(), 12), [])
+
+    # №13 — bypassPermissions без allowDangerouslySkipPermissions → warn
+    def test_check13_bypass_toggle_missing_is_warn(self):
+        _write(self.target / ".claude" / "settings.json",
+               {"permissions": {"defaultMode": "bypassPermissions"}})
+        _write(self.target / ".vscode" / "settings.json",
+               {"claudeCode.initialPermissionMode": "bypassPermissions"})
+        warns = [f for f in _findings_by_id(self._run(), 13) if f.level == "warn"]
+        self.assertEqual(len(warns), 1)
+
+    # №13 — toggle включён → без находок
+    def test_check13_bypass_toggle_present_no_finding(self):
+        _write(self.target / ".claude" / "settings.json",
+               {"permissions": {"defaultMode": "bypassPermissions"}})
+        _write(self.target / ".vscode" / "settings.json", {
+            "claudeCode.initialPermissionMode": "bypassPermissions",
+            "claudeCode.allowDangerouslySkipPermissions": True,
+        })
+        self.assertEqual(_findings_by_id(self._run(), 13), [])
+
+    # JSONC: комментарии + "https://..." в значении парсятся корректно
+    def test_jsonc_comment_and_url_value_parse_correctly(self):
+        text = (
+            "{\n"
+            "  // line comment\n"
+            "  \"claudeCode.initialPermissionMode\": \"bypassPermissions\", // trailing\n"
+            "  /* block\n     comment */\n"
+            "  \"someUrl\": \"https://example.com/path//double-slash\",\n"
+            "}\n"
+        )
+        (self.target / ".vscode").mkdir(parents=True, exist_ok=True)
+        (self.target / ".vscode" / "settings.json").write_text(text, encoding="utf-8")
+        layer = _load_vscode_layer("project", self.target / ".vscode" / "settings.json")
+        self.assertIsNone(layer.error)
+        self.assertEqual(layer.data["claudeCode.initialPermissionMode"], "bypassPermissions")
+        self.assertEqual(layer.data["someUrl"], "https://example.com/path//double-slash")
+
+    # битый VSCode-JSON → info id=12 (никогда error), doctor не падает
+    def test_broken_vscode_json_is_info_not_error(self):
+        (self.target / ".vscode").mkdir(parents=True, exist_ok=True)
+        (self.target / ".vscode" / "settings.json").write_text("{не json", encoding="utf-8")
+        findings = self._run()
+        by12 = _findings_by_id(findings, 12)
+        self.assertTrue(any(f.level == "info" for f in by12))
+        self.assertFalse(any(f.level in ("warn", "error") for f in by12))
+
+    # VSCode-файла нет вообще (ни user, ни project) — doctor не падает, checks 12/13 молчат
+    def test_no_vscode_file_no_crash_no_vscode_findings(self):
+        findings = self._run()
+        self.assertEqual(_findings_by_id(findings, 12), [])
+        self.assertEqual(_findings_by_id(findings, 13), [])
+
+    # loader напрямую: отсутствующий файл — норма (data=None, error=None)
+    def test_load_vscode_layer_missing_file_is_normal(self):
+        layer = _load_vscode_layer("user", self.target / "no-such-file.json")
+        self.assertIsNone(layer.data)
+        self.assertIsNone(layer.error)
+
+    # loader напрямую: битый JSON — error текстом, без исключения
+    def test_load_vscode_layer_broken_json_sets_error_text(self):
+        broken = self.target / "broken.json"
+        broken.write_text("{не json", encoding="utf-8")
+        layer = _load_vscode_layer("user", broken)
+        self.assertIsNone(layer.data)
+        self.assertIsNotNone(layer.error)
+
+
+class SettingsAuditFourthCheckVscodeCase(unittest.TestCase):
+    """№4 теперь читает секцию `expect.vscode` профиля (P1.5) — только когда
+    проект реально несёт VSCode-настройки (иначе шум на каждый non-VSCode проект)."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.tmp = Path(self._tmp.name)
+        self.home = self.tmp / "home"
+        self.target = self.tmp / "proj"
+        self.home.mkdir()
+        self.target.mkdir()
+        self.env = Env(self.tmp, "test", home=self.home)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _declare(self, name):
+        _write(self.target / ".swissknife.json", {"policy_profile": name})
+
+    def _run(self):
+        return run_checks(build_context(self.env, self.target))
+
+    def _base_settings(self):
+        _write(self.target / ".claude" / "settings.json", {"permissions": {
+            "defaultMode": "bypassPermissions",
+            "ask": [],
+            "deny": ["Read(~/.ssh/**)", "Read(~/.aws/**)",
+                     "Read(**/*.pem)", "Bash(sudo *)"],
+        }})
+
+    # VSCode настроен и совпадает с профилем → 0 находок №4
+    def test_vscode_matches_profile_no_findings(self):
+        self._declare("max-permissive")
+        self._base_settings()
+        _write(self.target / ".vscode" / "settings.json", {
+            "claudeCode.initialPermissionMode": "bypassPermissions",
+            "claudeCode.allowDangerouslySkipPermissions": True,
+        })
+        self.assertEqual(_findings_by_id(self._run(), 4), [])
+
+    # VSCode настроен, но расходится с профилем → error id=4
+    def test_vscode_mismatches_profile_is_error(self):
+        self._declare("max-permissive")
+        self._base_settings()
+        _write(self.target / ".vscode" / "settings.json", {
+            "claudeCode.initialPermissionMode": "default",
+        })
+        errs = [f for f in _findings_by_id(self._run(), 4) if f.level == "error"]
+        self.assertTrue(any("vscode" in f.title.lower()
+                             or "VSCode" in f.title for f in errs))
+
+    # проект вообще не использует VSCode → сверка молчит (не тянет expect.vscode)
+    def test_no_vscode_at_all_check4_silent_on_vscode(self):
+        self._declare("max-permissive")
+        self._base_settings()
+        errs = [f for f in _findings_by_id(self._run(), 4)
+                if "VSCode" in f.title or "vscode" in f.title.lower()]
+        self.assertEqual(errs, [])
 
 
 if __name__ == "__main__":

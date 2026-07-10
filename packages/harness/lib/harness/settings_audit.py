@@ -13,6 +13,7 @@
 см. `plans/SKM-ROADMAP-005/findings/P1-cc-settings-facts.md` (дата сверки зафиксирована
 там; при регрессии — пере-сверить, доки Claude Code меняются между версиями CLI).
 stdlib-only."""
+import json
 import os
 import re
 import shlex
@@ -59,6 +60,10 @@ UNVERIFIED_MERGE_KEYS = ("permissions.additionalDirectories",)
 # Подключи permissions.*, которые сливаются как union-массивы (не путать с
 # additionalDirectories выше и с прочими скалярными подключами вроде defaultMode).
 _PERMISSIONS_ARRAY_KEYS = ("allow", "deny", "ask")
+
+# Порог проверки №6 (мусорные точные allow-правила) — константа модуля, НЕ флаг
+# CLI (Implementation Rules P1.5: вынос во флаг = scope creep).
+DEAD_ALLOW_THRESHOLD = 50
 
 
 @dataclass(frozen=True)
@@ -283,6 +288,113 @@ def effective_config(layers):
     return values, provenance
 
 
+# --- VSCode-слой (P1.5): claudeCode.* поверх user/project settings.json -------
+# Path юзер-слоя VSCode — **[UNVERIFIED]** (findings §«Не подтверждено» не покрывает
+# это отдельно, но это общее знание о VSCode, не Claude Code докой): linux
+# `~/.config/Code/User/settings.json`, darwin `~/Library/Application Support/Code/
+# User/settings.json`, win32 `~/AppData/Roaming/Code/User/settings.json` (эквивалент
+# `%APPDATA%`). Считаем от `env.home`, НЕ `Path.home()` — иначе тесты в tmpdir потекут
+# в реальный домашний каталог (тот же принцип, что `load_layers`).
+
+_JSONC_TRAILING_COMMA_RE = re.compile(r",(\s*[}\]])")
+
+
+def _strip_jsonc_comments(text):
+    """Минимальный толерантный JSONC-препроцессор (stdlib-only, не полноценный
+    парсер): убирает `//`- и `/* */`-комментарии ВНЕ строковых литералов и висячие
+    запятые перед `}`/`]`. Строки, содержащие `//` (`"url": "https://..."`), не
+    ломаются — комментарии распознаются только за пределами `"..."`."""
+    out = []
+    i, n = 0, len(text)
+    in_string = False
+    escape = False
+    while i < n:
+        c = text[i]
+        if in_string:
+            out.append(c)
+            if escape:
+                escape = False
+            elif c == "\\":
+                escape = True
+            elif c == '"':
+                in_string = False
+            i += 1
+            continue
+        if c == '"':
+            in_string = True
+            out.append(c)
+            i += 1
+            continue
+        if c == "/" and i + 1 < n and text[i + 1] == "/":
+            while i < n and text[i] not in "\r\n":
+                i += 1
+            continue
+        if c == "/" and i + 1 < n and text[i + 1] == "*":
+            i += 2
+            while i + 1 < n and not (text[i] == "*" and text[i + 1] == "/"):
+                i += 1
+            i += 2
+            continue
+        out.append(c)
+        i += 1
+    return _JSONC_TRAILING_COMMA_RE.sub(r"\1", "".join(out))
+
+
+def _vscode_user_path(env):
+    """Путь юзер-слоя VSCode для текущей ОС, от `env.home` (**[UNVERIFIED]**, см.
+    докстринг выше). Неизвестная ОС → None (слой не читается, не находка)."""
+    home = Path(env.home)
+    if sys.platform.startswith("linux"):
+        return home / ".config" / "Code" / "User" / "settings.json"
+    if sys.platform == "darwin":
+        return home / "Library" / "Application Support" / "Code" / "User" / "settings.json"
+    if sys.platform.startswith("win"):
+        return home / "AppData" / "Roaming" / "Code" / "User" / "settings.json"
+    return None
+
+
+def _load_vscode_layer(name, path):
+    """Файл VSCode → `Layer`, JSONC-толерантно. Отсутствующий файл — норма
+    (`data=None, error=None`), битый/нечитаемый — `data=None, error=текст` (fail-soft,
+    НИКОГДА не die/raise — вызывающая проверка обязана дать `info`, не `error`)."""
+    if not path.exists():
+        return Layer(name, path, data=None, error=None)
+    try:
+        text = path.read_text(encoding="utf-8")
+        data = json.loads(_strip_jsonc_comments(text))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as e:
+        return Layer(name, path, data=None, error=str(e))
+    if not isinstance(data, dict):
+        return Layer(name, path, data=None, error="верхний уровень JSON не объект")
+    return Layer(name, path, data=data, error=None)
+
+
+@dataclass(frozen=True)
+class VscodeState(object):
+    """VSCode-слой (user + project), сведённый в эффективный dict (project
+    override user — обычная семантика VSCode workspace-настроек, здесь не
+    участвует permissions-merge Claude Code). `layers` несёт провенанс/ошибки
+    парсинга для info-находок проверок №12/№13."""
+
+    layers: tuple
+    effective: dict
+
+
+def load_vscode(env, target):
+    """Читает VSCode user+project `settings.json` (JSONC-толерантно) и строит
+    эффективный dict `claudeCode.*`-ключей (project побеждает user)."""
+    layers = []
+    user_path = _vscode_user_path(env)
+    if user_path is not None:
+        layers.append(_load_vscode_layer("user", user_path))
+    layers.append(_load_vscode_layer("project", Path(target) / ".vscode" / "settings.json"))
+    effective = {}
+    for layer in layers:
+        if isinstance(layer.data, dict):
+            effective.update(layer.data)
+    return VscodeState(layers=tuple(layers), effective=effective)
+
+
 @dataclass(frozen=True)
 class ProfileState(object):
     """Разрешённое состояние policy-профиля проекта (P1.3). Три случая:
@@ -301,7 +413,9 @@ class Context(object):
     """Контекст прогона проверок таксономии (P1.2+): слои + эффективная
     конфигурация + окружение запуска. `profile` — `ProfileState` (P1.3): разрешён
     из декларации `<target>/.swissknife.json:policy_profile` либо явного имени
-    (`--profile`, P1.4). До P1.3 был `None`; проверки №4/№11 читают его."""
+    (`--profile`, P1.4). До P1.3 был `None`; проверки №4/№11 читают его.
+    `vscode` (P1.5) — `VscodeState`; проверки №4 (секция `expect.vscode`)/№12/№13
+    читают его, до P1.5 был `None`."""
 
     layers: list
     values: dict
@@ -309,18 +423,20 @@ class Context(object):
     target: Path
     env: object
     profile: Optional[object] = None
+    vscode: Optional[object] = None
 
 
 def build_context(env, target, profile_name=None):
-    """Читает слои, строит эффективную конфигурацию и разрешает policy-профиль —
-    удобный вход для CLI/тестов. `profile_name` (явное имя из `--profile`, P1.4)
-    перекрывает декларацию `<target>/.swissknife.json:policy_profile`; None →
-    берётся декларация."""
+    """Читает слои, строит эффективную конфигурацию, разрешает policy-профиль и
+    VSCode-слой — удобный вход для CLI/тестов. `profile_name` (явное имя из
+    `--profile`, P1.4) перекрывает декларацию `<target>/.swissknife.json:policy_profile`;
+    None → берётся декларация."""
     layers = load_layers(env, target)
     values, provenance = effective_config(layers)
     profile = resolve_profile_state(env, target, profile_name)
+    vscode = load_vscode(env, target)
     return Context(layers=layers, values=values, provenance=provenance,
-                    target=Path(target), env=env, profile=profile)
+                    target=Path(target), env=env, profile=profile, vscode=vscode)
 
 
 def _load_settings_keys():
@@ -557,6 +673,22 @@ def check_4_policy_profile_conformance(ctx):
                     hint="Пропиши хук (writer: harness hooks) или сними требование из профиля.",
                 ))
 
+    # vscode — секция профиля (P1.3 объявлена, P1.5 читается и сверяется). Сверяем
+    # ТОЛЬКО если проект реально несёт VSCode-настройки (хотя бы один слой с данными) —
+    # иначе каждый проект без VSCode ловил бы шумный error за неиспользуемый редактор.
+    vscode_expect = expect.get("vscode")
+    if isinstance(vscode_expect, dict) and ctx.vscode is not None and ctx.vscode.effective:
+        actual = ctx.vscode.effective
+        for key, exp_val in vscode_expect.items():
+            act_val = actual.get(key)
+            if act_val != exp_val:
+                findings.append(Finding(
+                    id=4, level="error",
+                    title=f"VSCode-настройка {key} ≠ профилю",
+                    detail=f"Профиль «{state.name}» ждёт {exp_val!r}, факт {act_val!r}.",
+                    hint="Приведи VSCode user/project settings.json к профилю.",
+                ))
+
     return findings
 
 
@@ -718,6 +850,166 @@ def check_11_ask_rules_when_expected_empty(ctx):
     )]
 
 
+# --- Проверка №6 — мусорные точные allow-правила Bash(...) (info) ------------
+
+def _is_exact_bash_rule(rule):
+    """«Точное» правило (Implementation Rules P1.5): `Bash(...)` БЕЗ `*` в теле —
+    одноразовый след кнопки «always allow», не покрывает ничего нового."""
+    return (isinstance(rule, str) and rule.startswith("Bash(") and rule.endswith(")")
+            and "*" not in rule)
+
+
+def check_6_dead_allow_rules(ctx):
+    """Порог `DEAD_ALLOW_THRESHOLD` точных `Bash(...)`-правил в эффективном
+    `permissions.allow` → `info` с числом и топ-5 примерами. Дубли уже сведены
+    union'ом эффективной конфигурации (P1.1) — здесь только объём мусора."""
+    allow = (ctx.values.get("permissions") or {}).get("allow") or []
+    exact = [r for r in allow if _is_exact_bash_rule(r)]
+    if len(exact) < DEAD_ALLOW_THRESHOLD:
+        return []
+    return [Finding(
+        id=6, level="info",
+        title=f"Мусорные точные allow-правила Bash(...): {len(exact)} шт.",
+        detail=f"Порог {DEAD_ALLOW_THRESHOLD}. Топ-5 примеров: {', '.join(exact[:5])}.",
+        hint="Замени точные разовые правила на wildcard-паттерн или прогони чистку "
+             "(doctor read-only — авто-чистки нет).",
+    )]
+
+
+# --- Проверка №7 — противоречия allow/deny (warn) -----------------------------
+
+def check_7_allow_deny_overlap(ctx):
+    """Один и тот же ПАТТЕРН (сравнение строк, без семантического glob-матчера —
+    Implementation Rules P1.5) объявлен и в allow, и в deny → deny побеждает
+    молча (RAG:✅ 2026-07-10 permissions.md, deny-first)."""
+    perms = ctx.values.get("permissions") or {}
+    allow = {r for r in (perms.get("allow") or []) if isinstance(r, str)}
+    deny = {r for r in (perms.get("deny") or []) if isinstance(r, str)}
+    return [
+        Finding(
+            id=7, level="warn",
+            title=f"Правило и в allow, и в deny: {rule}",
+            detail="Deny побеждает молча (deny-first) — allow-запись сейчас мертва.",
+            hint="Убери правило из одного из списков — держать в обоих бессмысленно.",
+        )
+        for rule in sorted(allow & deny)
+    ]
+
+
+# --- Проверка №8 — несуществующие additionalDirectories (warn) ---------------
+
+def check_8_additional_directories_missing(ctx):
+    """`additionalDirectories` — per-layer (D15, семантика слияния [UNVERIFIED],
+    вердикт этой проверки от неё не зависит): путь, объявленный В КАКОМ-ТО слое,
+    не существует на диске → `warn` с именем слоя."""
+    findings = []
+    ad = (ctx.values.get("permissions") or {}).get("additionalDirectories")
+    if not isinstance(ad, dict):
+        return findings
+    for layer_name, dirs in (ad.get("by_layer") or {}).items():
+        for d in dirs:
+            if not isinstance(d, str):
+                continue
+            path = Path(d)
+            if not path.is_absolute():
+                path = ctx.target / path
+            if not path.exists():
+                findings.append(Finding(
+                    id=8, level="warn",
+                    title=f"additionalDirectories: путь не существует (слой {layer_name})",
+                    detail=f"{d} → {path}",
+                    hint="Проверь путь или убери запись из additionalDirectories.",
+                ))
+    return findings
+
+
+# --- Проверка №10 — bypassPermissions без skipDangerousModePermissionPrompt (info) --
+
+def check_10_bypass_without_skip_dialog(ctx):
+    """**Ровно `info`, никогда `warn`/`error`** (D3): ключ `skipDangerousModePermissionPrompt`
+    НЕ задокументирован — doctor не имеет права краснеть на недокументированном ключе,
+    хотя он наблюдался в поле (field-case). Не улучшай уровень."""
+    perms = ctx.values.get("permissions") or {}
+    if perms.get("defaultMode") != "bypassPermissions":
+        return []
+    if ctx.values.get("skipDangerousModePermissionPrompt"):
+        return []
+    return [Finding(
+        id=10, level="info",
+        title="bypassPermissions без skipDangerousModePermissionPrompt",
+        detail="Ключ не задокументирован (сверка 2026-07-10), наблюдался в поле; "
+               "отсутствие может быть безвредно.",
+        hint="Информационно — doctor не гейтит недокументированный ключ (D3).",
+    )]
+
+
+# --- VSCode-слой: проверки №12/№13 (warn) + info на битый/непарсящийся файл --
+
+def _vscode_parse_errors(ctx):
+    """Layer.error непустой (JSONC не распарсился) → `info` (никогда `error`,
+    Implementation Rules P1.5). Отсутствующий файл — норма, без находки."""
+    vscode = ctx.vscode
+    if vscode is None:
+        return []
+    return [
+        Finding(
+            id=12, level="info",
+            title=f"VSCode-слой «{layer.name}» ({layer.path}) не распарсился",
+            detail=layer.error,
+            hint="JSONC-reader толерантен к комментариям/висячим запятым, но не "
+                 "ко всему — почини файл вручную.",
+        )
+        for layer in vscode.layers
+        if layer.error
+    ]
+
+
+def check_12_vscode_initial_mode_mismatch(ctx):
+    """`claudeCode.initialPermissionMode` расходится с эффективным
+    `permissions.defaultMode` слоёв Claude Code → `warn`: расширение может
+    проигнорировать `defaultMode` слоёв на старте сессии (field-case #2)."""
+    parse_errors = _vscode_parse_errors(ctx)
+    if parse_errors:
+        return parse_errors
+    vscode = ctx.vscode
+    if vscode is None:
+        return []
+    initial = vscode.effective.get("claudeCode.initialPermissionMode")
+    if initial is None:
+        return []
+    effective_mode = (ctx.values.get("permissions") or {}).get("defaultMode")
+    if initial == effective_mode:
+        return []
+    return [Finding(
+        id=12, level="warn",
+        title="VSCode claudeCode.initialPermissionMode расходится с эффективным defaultMode",
+        detail=f"VSCode: {initial!r}, эффективно (слои Claude Code): {effective_mode!r}.",
+        hint="Расширение стартует сессию из СВОЕЙ настройки — приведи в соответствие "
+             "или прими расхождение осознанно.",
+    )]
+
+
+def check_13_vscode_bypass_toggle_missing(ctx):
+    """Эффективный `bypassPermissions`, но `claudeCode.allowDangerouslySkipPermissions`
+    не включён в VSCode → `warn`: режим недоступен в селекторе расширения."""
+    perms = ctx.values.get("permissions") or {}
+    if perms.get("defaultMode") != "bypassPermissions":
+        return []
+    vscode = ctx.vscode
+    if vscode is None:
+        return []
+    if vscode.effective.get("claudeCode.allowDangerouslySkipPermissions") is True:
+        return []
+    return [Finding(
+        id=13, level="warn",
+        title="VSCode claudeCode.allowDangerouslySkipPermissions не включён",
+        detail="Эффективный permissions.defaultMode=bypassPermissions, но toggle "
+               "расширения не выставлен в true.",
+        hint="Включи claudeCode.allowDangerouslySkipPermissions:true в VSCode "
+             "settings.json — иначе режим недоступен в селекторе.",
+    )]
+
+
 # --- Реестр проверок ----------------------------------------------------------
 
 # Список пар (id, fn); добавление проверки = новая функция + строка здесь, не
@@ -728,8 +1020,14 @@ CHECKS = (
     (3, check_3_default_mode_conflict),
     (4, check_4_policy_profile_conformance),
     (5, check_5_hooks),
+    (6, check_6_dead_allow_rules),
+    (7, check_7_allow_deny_overlap),
+    (8, check_8_additional_directories_missing),
     (9, check_9_secrets),
+    (10, check_10_bypass_without_skip_dialog),
     (11, check_11_ask_rules_when_expected_empty),
+    (12, check_12_vscode_initial_mode_mismatch),
+    (13, check_13_vscode_bypass_toggle_missing),
 )
 
 

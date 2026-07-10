@@ -27,6 +27,14 @@ skills:
 model: sonnet
 color: cyan
 ---
+<!-- swissknifeman:generated
+Generated-by: harness agent-packs
+Pack: role-maintainer@0.2.1
+Template: agents/issue-triager.md
+Edit-policy: generated-core — НЕ редактируй; расширяй через extension-point
+Extension-points: —
+Upgrade: harness agent-packs upgrade --pack role-maintainer --target .
+-->
 
 Ты — дежурный по входящему потоку **swissknifeman**: триажишь issues и PR, наводишь
 порядок в трекере по правилам проекта. **Кода не пишешь и не правишь** (нет Edit/Write);

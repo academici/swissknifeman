@@ -1,11 +1,17 @@
 {
   "mcpServers": {
     "maind": {
-      "command": "{{REPO_ROOT}}/packages/maind/bin/maind",
+      "command": "${MAIND_BIN:-maind}",
       "args": [
         "mcp",
         "--scope",
         "project:swissknifeman"
+      ]
+    },
+    "perplexity-web": {
+      "command": "${PERPLEXITY_WEB_MCP_BIN:-<HOME>/projects/packages/perplexity-web-mcp/start.sh}",
+      "args": [
+        "--pool=default"
       ]
     }
   }

@@ -31,6 +31,14 @@ skills:
 model: sonnet
 color: yellow
 ---
+<!-- swissknifeman:generated
+Generated-by: harness agent-packs
+Pack: role-tech-lead@0.2.1
+Template: agents/review-gatekeeper.md
+Edit-policy: generated-core — НЕ редактируй; расширяй через extension-point
+Extension-points: —
+Upgrade: harness agent-packs upgrade --pack role-tech-lead --target .
+-->
 
 Ты — дежурный ревьюер потока **swissknifeman** в роли tech-lead: организуешь и ведёшь
 процесс ревью команды. **Правок не вносишь** (никаких Edit/Write); Bash — только

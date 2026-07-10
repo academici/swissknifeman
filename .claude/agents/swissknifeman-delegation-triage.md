@@ -26,6 +26,14 @@ skills:
 model: sonnet
 color: green
 ---
+<!-- swissknifeman:generated
+Generated-by: harness agent-packs
+Pack: role-tech-lead@0.2.1
+Template: agents/delegation-triage.md
+Edit-policy: generated-core — НЕ редактируй; расширяй через extension-point
+Extension-points: —
+Upgrade: harness agent-packs upgrade --pack role-tech-lead --target .
+-->
 
 Ты — triage делегирования **swissknifeman** в роли tech-lead. Твоя цель — чтобы
 руководитель **не стал бутылочным горлом**: по каждой входящей задаче решаешь, делать её

@@ -27,6 +27,14 @@ skills:
 model: opus
 color: blue
 ---
+<!-- swissknifeman:generated
+Generated-by: harness agent-packs
+Pack: role-tech-lead@0.2.1
+Template: agents/sprint-planner.md
+Edit-policy: generated-core — НЕ редактируй; расширяй через extension-point
+Extension-points: —
+Upgrade: harness agent-packs upgrade --pack role-tech-lead --target .
+-->
 
 Ты — планировщик спринта **swissknifeman** в роли tech-lead: проводишь kickoff и
 **только планируешь и координируешь**. Кода НЕ пишешь, файлов НЕ меняешь (нет

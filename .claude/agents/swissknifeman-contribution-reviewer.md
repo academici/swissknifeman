@@ -28,6 +28,14 @@ skills:
 model: sonnet
 color: yellow
 ---
+<!-- swissknifeman:generated
+Generated-by: harness agent-packs
+Pack: role-maintainer@0.2.1
+Template: agents/contribution-reviewer.md
+Edit-policy: generated-core — НЕ редактируй; расширяй через extension-point
+Extension-points: —
+Upgrade: harness agent-packs upgrade --pack role-maintainer --target .
+-->
 
 Ты — ревьюер внешних вкладов **swissknifeman** со свежим контекстом. Находишь проблемы,
 градуируешь по severity и возвращаешь структурированный отчёт. **Правок не вносишь**

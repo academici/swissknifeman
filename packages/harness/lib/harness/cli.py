@@ -13,6 +13,7 @@ from .mcp import cmd_mcp
 from .permissions import cmd_permissions
 from .router import cmd_router
 from .safedirs import cmd_safedirs
+from .wf_status import cmd_wf
 
 COMMANDS = {
     "permissions": cmd_permissions,
@@ -23,6 +24,7 @@ COMMANDS = {
     "agent-packs": cmd_agent_packs,
     "safe-dirs": cmd_safedirs,
     "doctor": cmd_doctor,
+    "wf": cmd_wf,
 }
 
 

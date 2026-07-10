@@ -41,6 +41,8 @@ from pathlib import Path
 
 from core import safe_load_json
 
+from .common import die, parse_flags
+
 # Типы событий journal.jsonl, которые парсер понимает (findings §journal.jsonl). Любой
 # другой type молча игнорируется (защита от будущих полей CC) — это НЕ считается поломкой
 # формата, деградация журнала определяется отдельно (см. _read_journal/parse_run).
@@ -453,3 +455,81 @@ def watch_loop(run_dir, interval=2.0, out=None, sleep_fn=time.sleep, max_iterati
     except KeyboardInterrupt:
         pass
     return 0
+
+
+# ---------------------------------------------------------------------------
+# P2.4 — CLI: `harness wf status` (диспетч в bin/harness, регистрация в cli.py)
+# ---------------------------------------------------------------------------
+#
+# Тонкая обвязка над P2.1-P2.3 (парс/discovery/рендер) — сама CLI-функция НЕ несёт
+# бизнес-логики (Code Guidance: root-фасад `swissknifeman wf` строго passthrough,
+# здесь же — единственное место, где парс/discovery/рендер реально сводятся вместе).
+
+_WF_USAGE = (
+    "harness wf status [--run WF_ID] [--project PATH] [--json] [--last N]\n"
+    "                   [--watch] [--interval SEC]\n"
+    "  --run WF_ID     точный id прогона (имя каталога wf_<id>)\n"
+    "  --project PATH  сузить discovery до прогонов этого проекта (CC-слаг пути)\n"
+    "  --last N        сколько самых свежих прогонов показать (дефолт 1, игнорируется с --run)\n"
+    "  --json          та же структура, valid JSON (ensure_ascii=False)\n"
+    "  --watch         перепечатка кадром до Ctrl-C / пока прогон не завершится\n"
+    "  --interval SEC  интервал --watch в секундах (дефолт 2)\n"
+    "exit-code: 0 — всегда (включая «нет прогонов»/degraded — это info, не ошибка);\n"
+    "ненулевой — ТОЛЬКО ошибка использования флагов."
+)
+
+
+def _cmd_wf_status(argv):
+    """`harness wf status [...]` — discovery (P2.2) → parse (P2.1) → render (P2.3).
+    Отсутствие прогонов — честное сообщение, exit 0 (это info, не ошибка использования)."""
+    opts = parse_flags(argv, {
+        "--run": "str", "--project": "str", "--json": "bool",
+        "--watch": "bool", "--interval": "str", "--last": "str",
+    })
+    if opts["help"]:
+        print(_WF_USAGE)
+        return
+    run_id = opts["run"] or None
+    project = opts["project"] or None
+    last_raw = opts["last"] or "1"
+    try:
+        last = int(last_raw)
+    except ValueError:
+        die(f"--last ожидает целое число, получено: {last_raw!r}")
+        return
+    try:
+        interval = float(opts["interval"]) if opts["interval"] else 2.0
+    except ValueError:
+        die(f"--interval ожидает число секунд, получено: {opts['interval']!r}")
+        return
+
+    limit = None if run_id else last
+    candidates = discover_runs(run=run_id, project=project, limit=limit)
+    if not candidates:
+        print("прогонов не найдено"
+              f"{f' (run={run_id})' if run_id else ''}"
+              f"{f' (project={project})' if project else ''}")
+        return
+
+    if opts["watch"]:
+        # --watch имеет смысл ровно для одного прогона (свежайший из найденных).
+        watch_loop(Path(candidates[0]["run_dir"]), interval=interval)
+        return
+
+    for cand in candidates:
+        status = parse_run(Path(cand["run_dir"]))
+        print(render_json(status) if opts["json"] else render_text(status))
+
+
+def cmd_wf(env, argv):  # noqa: ARG001 — env не используется (discovery берёт базу
+    # из $CLAUDE_CONFIG_DIR/~/.claude напрямую, не из env пакета harness, см. модульный
+    # докстринг «Discovery»), сигнатура унифицирована с остальными cmd_*(env, argv).
+    """`harness wf status ...` — единственная подкоманда группы `wf`."""
+    if not argv or argv[0] in ("-h", "--help"):
+        print(_WF_USAGE)
+        return
+    sub, rest = argv[0], argv[1:]
+    if sub != "status":
+        die(f"неизвестная подкоманда wf: {sub} (ожидается: status)")
+        return
+    _cmd_wf_status(rest)

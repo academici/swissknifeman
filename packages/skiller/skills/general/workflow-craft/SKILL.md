@@ -87,6 +87,35 @@ workflow-craft.md` §1.5 + `packages/task/workflows/README.md`) — if it seems
 like another mandatory stage is needed, propose a matrix edit explicitly,
 don't quietly bolt it onto one script.
 
+**design ≠ dev, don't blend.** These are two disjoint requirement sets, not
+two variants of one set: a design-only script with an `impl`/`tests` step, or
+a dev script without risk-adaptive review, are equally defective (the first
+turns a design session into unplanned code on the cheap model, the second
+reproduces the exact vaulter field-case). Determine the type BEFORE
+generation (the template-matching step already hints the type:
+research-fanout/audit-adversarial → design-only, dev-slice/author-by-spec →
+dev) and run the whole script down one column of the table — don't mix in
+stages from the other column "just in case".
+
+### 2.1 Reference scripts (field prototypes of both types)
+
+Two real workflow scripts from other plans in vault Brain serve as a shape
+reference (stage structure, what each type does NOT contain) — **cross-ref by
+absolute path, don't vendor** (they belong to other plans; a copy drifts from
+the source):
+
+- **design-only:** `/home/vostrikov/Vaults/Brain/plans/ECOSYSTEM/workflows/
+  wf-design-fleet.js` — RAG research → design → adversarial audit/DoR gate →
+  fixes → re-audit, with zero lines of code/tests.
+- **dev:** `/home/vostrikov/Vaults/Brain/plans/AGENTOOLS/workflows/
+  wf-agentools-drive.js` — slice → impl → tests-to-green → review → gates →
+  commit, with a `designOnly` slot flag branching between the two modes
+  within one template family.
+
+If the file is unreachable (vault not mounted on the executing machine) —
+don't fail and don't invent content: use the path as a cross-ref only and the
+table above as the requirement source.
+
 ### 3. Slot rules — by reference, don't duplicate
 
 How to fill slots (constants in the script header, embedded config instead of
@@ -136,4 +165,4 @@ unavailable — don't pass off unverified orchestration as verified.
   orchestration (step 5).
 - `general/verify-claims` — when and how to verify an external fact at all.
 
-<!-- ru-source-sha256: f931a1d7e9c698409f8245c79ac2dd95ca87d520be7ad5a103f2d7a91dafedc0 -->
+<!-- ru-source-sha256: 316f7cd3f03a12e2132d9083ff7a6aee3cdd1a732f236f232a8463e5694f06d9 -->

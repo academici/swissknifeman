@@ -10,7 +10,7 @@
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | opus |
-| Last Updated | 2026-07-10 |
+| Last Updated | 2026-07-11 |
 | Repository | swissknifeman (монорепо academici) |
 | Related Packages | skiller, harness, maind, task, analyst, core |
 | Execution Mode | phase-first |
@@ -74,7 +74,7 @@ enforcement заполнения CHANGELOG; (6) `ecosystem-glossary` — еди�
 |:--|:--|:--|:--|
 | P1 | settings-doctor: конфликт-линтер настроек Claude Code | 6/6 | 🟢 Done |
 | P2 | wf-status: консольный статус-репортер workflow-прогонов | 4/5 | 🟠 Done with deviations |
-| P3 | workflow-craft: активация конструктора + команда-гейт | 4/5 | 🟡 In progress |
+| P3 | workflow-craft: активация конструктора + команда-гейт | 5/5 | 🟢 Done |
 | P4 | Канон планов: репо-дом, имена, дом workflow-скриптов | 0/6 | ⬜ Not started |
 | P5 | changelog-discipline: enforcement заполнения CHANGELOG | 0/3 | ⬜ Not started |
 | P6 | ecosystem-glossary: единый язык трёхслойкой | 0/4 | ⬜ Not started |
@@ -150,3 +150,4 @@ enforcement заполнения CHANGELOG; (6) `ecosystem-glossary` — еди�
 | 2026-07-11 | package-implementer/sonnet | P3.2 закрыт: ссылка на `workflow-craft` прошита в 4 команды по факту грепа (dev/design/research/review); `fix`/`plan-exec` осознанно пропущены — детали см. phases/P3.md P3.2 Completion Notes |
 | 2026-07-11 | package-implementer/opus | P3.3 закрыт: команда-гейт `/task:make-workflow` (opus/high) — контур активация `workflow-craft` → интервью по `spec-interview` → генерация копией шаблона → выходной ревьюер; критерии ревьюера под P3.4 — детали см. phases/P3.md P3.3 Completion Notes |
 | 2026-07-11 | package-implementer/opus | P3.4 закрыт: выходной статический ревьюер в `make-workflow.md` — критерий-чеклист (зеркало README конструктора + матрицы типов), RED блокирует выдачу — детали см. phases/P3.md P3.4 Completion Notes |
+| 2026-07-11 | package-implementer/sonnet | P3.5 закрыт: `workflow-craft` дошлифован (explicit «design ≠ dev» + cross-ref на 2 эталона vault Brain); `roadmap/README.md` ч.1 → внедрено. Фаза P3 закрыта 5/5 🟢 — детали см. phases/P3.md P3.5 Completion Notes |

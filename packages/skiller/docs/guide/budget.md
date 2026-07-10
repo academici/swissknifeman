@@ -37,6 +37,7 @@ flowchart LR
   subgraph axioma["axioma"]
     axioma_doctrine["axioma-doctrine<br/>⊕90 ↻1260"]:::warm
     axioma_stack["axioma-stack<br/>⊕105 ↻1337"]:::warm
+    ecosystem_map["ecosystem-map<br/>⊕47 ↻670"]:::mild
   end
   subgraph azguard["azguard"]
     azguard["azguard<br/>⊕37 ↻1679"]:::cool
@@ -419,7 +420,7 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 212 скиллов · ⊕ always **15399** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 296656 ток · ⌥ on-demand 795837 ток (сниппеты + references).
+**Итого:** 213 скиллов · ⊕ always **15446** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 297326 ток · ⌥ on-demand 795837 ток (сниппеты + references).
 
 ## По бакетам
 
@@ -445,11 +446,11 @@ flowchart LR
 | `frontend-backend` | 3 | 288 | 5488 | 7851 |
 | `frontend` | 3 | 285 | 3795 | 5927 |
 | `frontend-nuxt` | 3 | 255 | 2564 | 24048 |
+| `axioma` | 3 | 242 | 3267 | 0 |
 | `frontend-tailwind` | 2 | 240 | 4458 | 5218 |
 | `laravel-extras` | 3 | 225 | 4257 | 7664 |
 | `laravel-auth` | 3 | 202 | 3358 | 5640 |
 | `ai` | 2 | 199 | 2018 | 27188 |
-| `axioma` | 2 | 195 | 2597 | 0 |
 | `security` | 1 | 184 | 675 | 30199 |
 | `frontend-vite` | 4 | 180 | 3150 | 24662 |
 | `finance` | 1 | 179 | 740 | 21503 |

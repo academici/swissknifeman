@@ -16,7 +16,7 @@
     },
     "axioma": {
       "description": "Axioma ecosystem doctrine & reuse: dev philosophy, tech-radar binding, vendor-vs-build discipline (project-scoped bucket)",
-      "count": 2,
+      "count": 3,
       "status": "active"
     },
     "azguard": {
@@ -650,6 +650,23 @@
       ],
       "requires": [
         "ecosystem-reuse-gate"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "ecosystem-map",
+      "bucket": "axioma",
+      "path": "skills/axioma/ecosystem-map/SKILL.md",
+      "version": "0.1.0",
+      "description": "Where docs, plans, findings and vault links live in a project and how repo↔Brain sync. A locator, not canon — HOW planning works: plan-protocol.",
+      "sha256": "c076883dd96b432c76f8e6e3e09d8cfca6e8da0bfb9347c6a389431ba69c309e",
+      "content_sha256": "48d82fe43ab08ba98d68549aff8474d92cd609038708fd3efcc58ac05b4bdffa",
+      "tags": [
+        "axioma",
+        "ecosystem",
+        "plans",
+        "docs",
+        "navigation"
       ],
       "source": "local"
     },

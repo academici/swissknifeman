@@ -4,7 +4,7 @@
 
 Источник истины портируемых скиллов (машинный реестр — `skills.json`). Раздача в проекты: `skiller connect` (плагины-бакеты) / `vendor` (физ. перенос). CORE-набор токен-скиллов (`general`/`oss-dev`) раздаётся по умолчанию — см. `connect`/`vendor`.
 
-Всего: 212 скиллов в 47 бакетах.
+Всего: 213 скиллов в 47 бакетах.
 
 ## Скиллы по бакетам
 
@@ -35,12 +35,13 @@
 | `security-design` | Data classification, auth strategy, RBAC/ABAC, OWASP Top 10, GDPR, STRIDE threat modeling… | `security`, `compliance`, `auth`, `owasp`, `threat-modeling`, `rbac`, `gdpr`, `privacy`, `stride` |
 | `tech-stack-selection` | Tech stack selection with trade-off matrix before architecture design. ADR-first step | `stack-choice`, `architecture`, `adr`, `trade-off` |
 
-### axioma — Axioma ecosystem doctrine & reuse: dev philosophy, tech-radar binding, vendor-vs-build discipline (project-scoped bucket) (2)
+### axioma — Axioma ecosystem doctrine & reuse: dev philosophy, tech-radar binding, vendor-vs-build discipline (project-scoped bucket) (3)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
 | `axioma-doctrine` | Axioma ecosystem development doctrine: five imperative pillars (horizontal core → vertica… | `axioma`, `doctrine`, `architecture`, `ecosystem` |
 | `axioma-stack` | Binds the universal reuse-gate to the live Ecosystem_Tech_Radar.md of the Axioma ecosyste… | `axioma`, `ecosystem`, `reuse`, `tech-radar` |
+| `ecosystem-map` | Where docs, plans, findings and vault links live in a project and how repo↔Brain sync. A … | `axioma`, `ecosystem`, `plans`, `docs`, `navigation` |
 
 ### azguard — azguard package usage: code-first RBAC, panels, scoped roles, abilities (academici package — skill will relocate into the package repo) (1)
 
@@ -485,7 +486,7 @@
 | `authoring` | `workflow-craft` |
 | `authorization` | `attribute-authorization`, `azguard`, `laravel-permissions` |
 | `auto-layout` | `figma-to-flutter`, `figma-to-vue` |
-| `axioma` | `axioma-doctrine`, `axioma-stack` |
+| `axioma` | `axioma-doctrine`, `axioma-stack`, `ecosystem-map` |
 | `azguard` | `azguard`, `laravel-permissions` |
 | `barge-in` | `voice-ai` |
 | `best-practices` | `laravel-best-practices` |
@@ -562,7 +563,7 @@
 | `discipline` | `anti-drift`, `naming-conventions`, `startup-cto` |
 | `discovery` | `competitive-analysis`, `customer-discovery`, `idea-discovery`, `new-project`, `solo-founder`, `spec-interview` |
 | `docker` | `db-test-preflight`, `docker`, `docker-dev-prod`, `docker-php`, `docker-postgres`, `docker-services`, `docker-vite`, `laravel-dusk`, `makefile` |
-| `docs` | `artifact-review`, `brain-locator`, `grill-with-docs`, `writing-style` |
+| `docs` | `artifact-review`, `brain-locator`, `ecosystem-map`, `grill-with-docs`, `writing-style` |
 | `doctrine` | `axioma-doctrine` |
 | `documentation` | `dx-design`, `oss-development`, `oss-governance` |
 | `domain` | `domain-modeling`, `enum-state-machine`, `grill-with-docs` |
@@ -573,7 +574,7 @@
 | `dynamic-component` | `vue-dynamic-icons` |
 | `e2e` | `laravel-dusk`, `playwright-e2e` |
 | `echo` | `laravel-broadcasting` |
-| `ecosystem` | `axioma-doctrine`, `axioma-stack`, `ecosystem-reuse-gate`, `swissknifeman-locator` |
+| `ecosystem` | `axioma-doctrine`, `axioma-stack`, `ecosystem-map`, `ecosystem-reuse-gate`, `swissknifeman-locator` |
 | `eloquent` | `eloquent-accessors` |
 | `entities` | `data-schema` |
 | `enum` | `attribute-authorization`, `azguard`, `backend-type-sync`, `enum-attributes`, `enum-state-machine` |
@@ -667,7 +668,7 @@
 | `naive-ui` | `naive-ui-theming` |
 | `namespace` | `namespace-refactor-safety` |
 | `naming` | `naming-conventions`, `php-naming-conventions`, `scene-conventions` |
-| `navigation` | `brain-locator`, `local-topology`, `packages-stack`, `project-map`, `swissknifeman-locator` |
+| `navigation` | `brain-locator`, `ecosystem-map`, `local-topology`, `packages-stack`, `project-map`, `swissknifeman-locator` |
 | `navigation-guards` | `vue-router-best-practices` |
 | `node` | `node-pnpm-preflight` |
 | `nwidart` | `modular-architecture` |
@@ -698,6 +699,7 @@
 | `pinia` | `pinia-stores`, `vue-testing-best-practices` |
 | `plan` | `artifact-review` |
 | `planning` | `plan-protocol`, `to-issues`, `verify-claims` |
+| `plans` | `ecosystem-map` |
 | `playwright` | `playwright-e2e` |
 | `pnpm` | `node-pnpm-preflight` |
 | `post-mortem` | `session-observer` |

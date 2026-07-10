@@ -160,3 +160,4 @@ enforcement заполнения CHANGELOG; (6) `ecosystem-glossary` — еди�
 | 2026-07-11 | package-implementer/sonnet | P5.1 закрыт: `release-engineering` получил секцию повседневной CHANGELOG-дисциплины (пакеты vs проекты) — детали см. phases/P5.md P5.1 Completion Notes |
 | 2026-07-11 | package-implementer/sonnet | P5.2 закрыт: opt-in commit-гейт `changelog-gate` в harness (RAG:✅ additionalContext-канал) — детали см. phases/P5.md P5.2 Completion Notes |
 | 2026-07-11 | package-implementer/sonnet | P5.3 закрыт: `skiller release`/`swissknifeman release` (umbrella-тег, MAJOR только вручную) — фаза P5 закрыта 3/3 🟢, детали см. phases/P5.md P5.3 Completion Notes |
+| 2026-07-11 | plan-closer/sonnet | Фаза P5 закрыта: bookkeeping-сверка (Status Board ⇄ items, Phase Handoff уже заполнен), `handoff.md` перезаписан (Next → P6.1), `plan-lint` зелёный (0 ошибок, 3 pre-existing WARNING) |

@@ -1,5 +1,6 @@
 """Тест fleet-аудита (audit.py): per-project read-only проверки оптимизаций."""
 import json
+import os
 import sys
 import tempfile
 import unittest
@@ -12,6 +13,70 @@ from maind.analysis import audit  # noqa: E402
 from maind import codegraph  # noqa: E402
 from maind import pao  # noqa: E402
 import tests.fixtures as fx  # noqa: E402
+
+
+def _fake_harness_bin(tmp, body):
+    """Скрипт-заглушка harness (см. test_orchestrate._fake_bin): печатает body в stdout."""
+    p = Path(tmp) / "fake-harness"
+    p.write_text(f"#!/bin/sh\n{body}\n", encoding="utf-8")
+    p.chmod(0o755)
+    return p
+
+
+class SettingsDimCase(unittest.TestCase):
+    """Измерение settings в audit_project/run_audit — fail-soft subprocess к harness (D10)."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.tmp = Path(self._tmp.name)
+        self.root, self.env = fx.make_repo(self.tmp)
+        self.code_st = codegraph.settings({})
+        self._old_env = os.environ.get("MAIND_HARNESS_BIN")
+
+    def tearDown(self):
+        self._tmp.cleanup()
+        if self._old_env is None:
+            os.environ.pop("MAIND_HARNESS_BIN", None)
+        else:
+            os.environ["MAIND_HARNESS_BIN"] = self._old_env
+
+    def test_settings_status_reports_counts_from_fake_harness(self):
+        payload = json.dumps({"counts": {"error": 1, "warn": 2, "info": 0}})
+        os.environ["MAIND_HARNESS_BIN"] = str(
+            _fake_harness_bin(self.tmp, f"echo '{payload}'"))
+        p = _make_project(self.tmp)
+        row = audit.audit_project(self.env, {"id": "proj", "local_path": str(p)},
+                                  ("settings",), self.code_st, config={})
+        self.assertEqual(row["settings"], {"error": 1, "warn": 2, "info": 0})
+
+    def test_settings_status_unavailable_when_harness_missing(self):
+        os.environ.pop("MAIND_HARNESS_BIN", None)
+        p = _make_project(self.tmp)
+        # config без записи проекта swissknifeman → _sibling_bin die() → SystemExit → unavailable
+        row = audit.audit_project(self.env, {"id": "proj", "local_path": str(p)},
+                                  ("settings",), self.code_st, config={})
+        self.assertEqual(row["settings"], "unavailable")
+
+    def test_settings_status_broken_stdout_is_unavailable_no_traceback(self):
+        os.environ["MAIND_HARNESS_BIN"] = str(
+            _fake_harness_bin(self.tmp, "echo 'not json at all {'"))
+        p = _make_project(self.tmp)
+        row = audit.audit_project(self.env, {"id": "proj", "local_path": str(p)},
+                                  ("settings",), self.code_st, config={})
+        self.assertEqual(row["settings"], "unavailable")
+
+    def test_run_audit_settings_dim_prints_ok_and_does_not_crash(self):
+        payload = json.dumps({"counts": {"error": 0, "warn": 0, "info": 3}})
+        os.environ["MAIND_HARNESS_BIN"] = str(
+            _fake_harness_bin(self.tmp, f"echo '{payload}'"))
+        p = _make_project(self.tmp, claude_lines=1)
+        fx.write_maind_config(self.root, projects=[
+            {"id": "proj", "name": "Proj", "type": "node-package",
+             "status": "active", "dependencies": [], "local_path": str(p)}])
+        from maind.config import load_config
+        config, _ = load_config(self.env)
+        _, out = fx.capture(audit.run_audit, self.env, config, "settings")
+        self.assertIn("settings✓", out)
 
 
 def _make_project(tmp, *, claude_lines=0, deny=False, mcp=None, skills=None,

@@ -70,7 +70,7 @@ enforcement заполнения CHANGELOG; (6) `ecosystem-glossary` — еди�
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P1 | settings-doctor: конфликт-линтер настроек Claude Code | 1/6 | 🟡 In progress |
+| P1 | settings-doctor: конфликт-линтер настроек Claude Code | 2/6 | 🟡 In progress |
 | P2 | wf-status: консольный статус-репортер workflow-прогонов | 0/5 | ⬜ Not started |
 | P3 | workflow-craft: активация конструктора + команда-гейт | 0/5 | ⬜ Not started |
 | P4 | Канон планов: репо-дом, имена, дом workflow-скриптов | 0/6 | ⬜ Not started |

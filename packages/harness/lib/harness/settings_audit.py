@@ -991,12 +991,19 @@ def check_12_vscode_initial_mode_mismatch(ctx):
 
 def check_13_vscode_bypass_toggle_missing(ctx):
     """Эффективный `bypassPermissions`, но `claudeCode.allowDangerouslySkipPermissions`
-    не включён в VSCode → `warn`: режим недоступен в селекторе расширения."""
+    не включён в VSCode → `warn`: режим недоступен в селекторе расширения.
+
+    Сверяется ТОЛЬКО когда проект реально несёт VSCode-настройки (хотя бы один
+    слой с данными, как №4) — иначе шум на каждый non-VSCode/headless проект
+    с рекомендованным bypassPermissions."""
     perms = ctx.values.get("permissions") or {}
     if perms.get("defaultMode") != "bypassPermissions":
         return []
+    parse_errors = _vscode_parse_errors(ctx)
+    if parse_errors:
+        return parse_errors
     vscode = ctx.vscode
-    if vscode is None:
+    if vscode is None or not vscode.effective:
         return []
     if vscode.effective.get("claudeCode.allowDangerouslySkipPermissions") is True:
         return []

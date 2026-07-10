@@ -551,11 +551,31 @@ class SettingsAuditSecondSliceChecksCase(unittest.TestCase):
         self.assertTrue(any(f.level == "info" for f in by12))
         self.assertFalse(any(f.level in ("warn", "error") for f in by12))
 
+    # битый VSCode-JSON + bypassPermissions → №13 НЕ выдаёт уверенный warn на
+    # непрочитанных данных (значение toggle не прочитано, файл не распарсился) —
+    # тот же дух, что и №12: parse-error короткое замыкание на info, не на warn
+    def test_broken_vscode_json_with_bypass_mode_check13_no_warn(self):
+        _write(self.target / ".claude" / "settings.json",
+               {"permissions": {"defaultMode": "bypassPermissions"}})
+        (self.target / ".vscode").mkdir(parents=True, exist_ok=True)
+        (self.target / ".vscode" / "settings.json").write_text("{не json", encoding="utf-8")
+        findings = self._run()
+        self.assertEqual(_findings_by_id(findings, 13), [])
+        by12 = _findings_by_id(findings, 12)
+        self.assertTrue(any(f.level == "info" for f in by12))
+
     # VSCode-файла нет вообще (ни user, ни project) — doctor не падает, checks 12/13 молчат
     def test_no_vscode_file_no_crash_no_vscode_findings(self):
         findings = self._run()
         self.assertEqual(_findings_by_id(findings, 12), [])
         self.assertEqual(_findings_by_id(findings, 13), [])
+
+    # bypassPermissions без КАКИХ-ЛИБО VSCode-настроек (headless/CI-проект) →
+    # №13 молчит: проект не несёт VSCode-настроек вообще, шум недопустим (как №4)
+    def test_check13_bypass_without_any_vscode_no_finding(self):
+        _write(self.target / ".claude" / "settings.json",
+               {"permissions": {"defaultMode": "bypassPermissions"}})
+        self.assertEqual(_findings_by_id(self._run(), 13), [])
 
     # loader напрямую: отсутствующий файл — норма (data=None, error=None)
     def test_load_vscode_layer_missing_file_is_normal(self):

@@ -3101,8 +3101,8 @@
       "path": "skills/oss-dev/release-engineering/SKILL.md",
       "version": "0.1.0",
       "description": "SemVer strategy, CHANGELOG, release pipeline (CI/CD), pre-releases, deprecation policy for an OSS package",
-      "sha256": "34d1a56c8573dbd8be890d1df48a9c35c7309c8671f36a0085b0a13cec3ef21e",
-      "content_sha256": "1dc3f092252dd5a4f1a3c3301434af0d72e574b4c0a52a5e651a3af135085120",
+      "sha256": "92a002ef60c2639ea0576c33067f1b66c2facff9a25bb90df301000a21f5be44",
+      "content_sha256": "05505814293304e59d16cd64acb49c3c9cc8189caf4c0143a1aae11ee60ba849",
       "tags": [
         "oss",
         "semver",

@@ -229,7 +229,7 @@ flowchart LR
     issue_triage["issue-triage<br/>⊕114 ↻2163"]:::warm
     oss_development["oss-development<br/>⊕38 ↻1392"]:::cool
     oss_governance["oss-governance<br/>⊕31 ↻1595"]:::cool
-    release_engineering["release-engineering<br/>⊕37 ↻1660"]:::cool
+    release_engineering["release-engineering<br/>⊕37 ↻2173"]:::cool
     resolving_merge_conflicts["resolving-merge-conflicts<br/>⊕103 ↻335"]:::warm
     to_issues["to-issues<br/>⊕92 ↻1184"]:::warm
   end
@@ -420,7 +420,7 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 213 скиллов · ⊕ always **15446** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 297431 ток · ⌥ on-demand 795837 ток (сниппеты + references).
+**Итого:** 213 скиллов · ⊕ always **15446** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 297944 ток · ⌥ on-demand 795837 ток (сниппеты + references).
 
 ## По бакетам
 
@@ -433,7 +433,7 @@ flowchart LR
 | `quality` | 11 | 831 | 20564 | 7447 |
 | `php-packages` | 9 | 685 | 5417 | 520 |
 | `laravel-architecture` | 6 | 677 | 9730 | 7994 |
-| `oss-dev` | 10 | 627 | 13978 | 10187 |
+| `oss-dev` | 10 | 627 | 14491 | 10187 |
 | `system` | 7 | 607 | 11012 | 834 |
 | `devops` | 11 | 548 | 9181 | 16993 |
 | `blender-modeling` | 6 | 506 | 8887 | 12586 |

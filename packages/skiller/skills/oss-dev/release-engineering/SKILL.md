@@ -91,6 +91,34 @@ Filled-in CHANGELOG example (Keep a Changelog) with section breakdown — [refer
 - **Hotfix-flow.** What to do on critical bug in `1.2.3` when main is on `1.3-alpha`: branch `release/1.2.x`, fix, `1.2.4`, backport to main.
 - **LTS strategy (if applicable).** Library-level (BrainKit) — no. Core infrastructure — yes, 1 LTS parallel to current.
 
+## Everyday CHANGELOG discipline
+
+This skill triggers on release tasks — but the CHANGELOG rots between releases, not during
+them: a missed `[Unreleased]` line accumulates silently and near-impossible to reconstruct as
+a batch later. So discipline is not "once per release" but **every content commit**. Two
+tracks, by repo type:
+
+**Packages (SemVer-strict).** Type from the conventional commit: `fix:` → PATCH, `feat:` →
+MINOR. **MAJOR is ALWAYS the owner's manual decision** — breaking-change is NEVER inferred
+automatically; only a human decides a change breaks the contract enough for a major. Every
+content commit leaves a line in `[Unreleased]` under the right Keep a Changelog group
+(Added/Changed/Deprecated/Removed/Fixed/Security).
+
+**Projects (no SemVer).** Compact entry + commit link, GitHub-style:
+`- short description ([abc1234](…/commit/abc1234))`. Systematize into a coherent description
+in a batch, at release time, not line-by-line.
+
+Entry format in both tracks — Keep a Changelog (above); write entries in Russian
+(`writing-style`).
+
+**Enforcement.** Discipline doesn't rely on session memory: the `harness` commit gate
+(`--changelog-gate`, `changelog-gate` hook on `git commit`) warns into the model's context
+when the diff is content-bearing and the CHANGELOG is untouched — **warning, not a block**.
+A conscious exception (docs/chore commit) is auto-skipped by commit type; anything else needs
+an explicit `[changelog-skip]` marker in the commit message. Version-assembly mechanization
+from `[Unreleased]` + conventional commits — `skiller release` (optional, umbrella tag
+`vX.Y.Z`).
+
 ## Output files
 
 ### `ProjectName/RELEASING.md`
@@ -162,5 +190,7 @@ NEVER:
 - Force-push a tag (release tags immutable)
 - Publish without 2FA / provenance for `v1.0+`
 - Use "git log dump" instead of changelog
+- Close a content commit (feat/fix/perf/refactor) without a line in `[Unreleased]` — except
+  docs/chore/test or an explicit skip marker
 
-<!-- ru-source-sha256: 67b5fb2ec501e1513827c65048930ded2f719d6f56c2728e722e375000995d63 -->
+<!-- ru-source-sha256: 8175789d42bf4ff125fa348794731d85a5fb9e091781a7e761a79bb29591a20c -->

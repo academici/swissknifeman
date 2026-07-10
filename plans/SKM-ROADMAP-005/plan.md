@@ -75,7 +75,7 @@ enforcement заполнения CHANGELOG; (6) `ecosystem-glossary` — еди�
 | P1 | settings-doctor: конфликт-линтер настроек Claude Code | 6/6 | 🟢 Done |
 | P2 | wf-status: консольный статус-репортер workflow-прогонов | 4/5 | 🟠 Done with deviations |
 | P3 | workflow-craft: активация конструктора + команда-гейт | 5/5 | 🟢 Done |
-| P4 | Канон планов: репо-дом, имена, дом workflow-скриптов | 1/6 | 🟡 In progress |
+| P4 | Канон планов: репо-дом, имена, дом workflow-скриптов | 2/6 | 🟡 In progress |
 | P5 | changelog-discipline: enforcement заполнения CHANGELOG | 0/3 | ⬜ Not started |
 | P6 | ecosystem-glossary: единый язык трёхслойкой | 0/4 | ⬜ Not started |
 | P7 | ephemeral-дисциплина и закрытие пакета | 0/2 | ⬜ Not started |
@@ -152,3 +152,4 @@ enforcement заполнения CHANGELOG; (6) `ecosystem-glossary` — еди�
 | 2026-07-11 | package-implementer/opus | P3.4 закрыт: выходной статический ревьюер в `make-workflow.md` — критерий-чеклист (зеркало README конструктора + матрицы типов), RED блокирует выдачу — детали см. phases/P3.md P3.4 Completion Notes |
 | 2026-07-11 | package-implementer/sonnet | P3.5 закрыт: `workflow-craft` дошлифован (explicit «design ≠ dev» + cross-ref на 2 эталона vault Brain); `roadmap/README.md` ч.1 → внедрено. Фаза P3 закрыта 5/5 🟢 — детали см. phases/P3.md P3.5 Completion Notes |
 | 2026-07-11 | package-implementer/opus | P4.1 закрыт: `plan-protocol` 2.1.0 — репо-дом по умолчанию (§12/D31) + поля Meta `visibility`/`supersedes` (§4/D25/D27) + датовый ID-канон back-compat (§2/D16/D24), двуязычно RU→regen EN — детали см. phases/P4.md P4.1 Completion Notes |
+| 2026-07-11 | package-implementer/opus | P4.2 закрыт: §2 `plan-protocol` — строка `workflows/` в раскладке + подраздел «Дом workflow-скриптов» (место+имя D28+cross-ref на workflow-craft), двуязычно RU→regen EN, версия не бампалась — детали см. phases/P4.md P4.2 Completion Notes |

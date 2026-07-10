@@ -19,7 +19,8 @@ effort: high
 2. **Если установлен agent-pack** (`.claude/workflows/*-dev-loop.js` + агенты `*-slice-builder/test-writer/
    reviewer`) — гони срезы через него: impl→tests-to-green→risk-адаптивный review-gate. Модель/effort
    субагентов уже заданы по риску (Sonnet impl, Opus+xhigh на HIGH-review, Haiku тривиал) и перебивают сессию.
-   Передай срезы как `args.slices`.
+   Передай срезы как `args.slices`. Детальный статус фонового workflow-прогона — `swissknifeman wf status`,
+   НЕ советовать `/workflows` (такой команды в окружении нет).
 3. **Нет пака** — работай последовательно сам, ОДИН срез за раз на ОДНОЙ ветке: impl → тесты до зелёного →
    self-review под риск (на HIGH — adversarial: перечисли failure-modes → построй сценарий сбоя).
 4. **Внешние факты (версия/API библиотеки, «ещё актуально», best practice) — верифицируй ДО фиксации в

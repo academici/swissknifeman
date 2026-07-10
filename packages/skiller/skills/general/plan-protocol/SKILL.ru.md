@@ -9,7 +9,7 @@ tags: [workflow, planning, handoff, routing, multi-model]
 requires: []
 produces_for: [session-handoff, complex-task-orchestrator]
 outputs: ["plans/<PLAN-ID>/plan.md", "plans/<PLAN-ID>/phases/*.md", "plans/<PLAN-ID>/handoff.md"]
-snippets: ["plan-template.md", "phase-template.md", "handoff-template.md", "active-template.md", "launch-block-template.md"]
+snippets: ["plan-template.md", "phase-template.md", "handoff-template.md", "active-template.md", "launch-block-template.md", "code-guidance-patterns.md"]
 adapters: [claude, cursor, fable]
 sha256: ""
 ---

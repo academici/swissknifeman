@@ -9,7 +9,7 @@ tags: [workflow, planning, handoff, routing, multi-model]
 requires: []
 produces_for: [session-handoff, complex-task-orchestrator]
 outputs: ["plans/<PLAN-ID>/plan.md", "plans/<PLAN-ID>/phases/*.md", "plans/<PLAN-ID>/handoff.md"]
-snippets: ["plan-template.md", "phase-template.md", "handoff-template.md", "active-template.md", "launch-block-template.md"]
+snippets: ["plan-template.md", "phase-template.md", "handoff-template.md", "active-template.md", "launch-block-template.md", "code-guidance-patterns.md"]
 adapters: [claude, cursor, fable]
 sha256: ""
 ---
@@ -419,4 +419,4 @@ extracts and recon reports, so future plan work doesn't repay the cost of recons
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of
   editing vendor copies (section 12).
 
-<!-- ru-source-sha256: 8a6962e58e0ae8b7bde1f0bece8b16fb6f5d57e67b7691ef11c7cd45ef7628aa -->
+<!-- ru-source-sha256: 489734d938c85222986a880894da50c0875f965f3c016b3b27bcee678b690725 -->

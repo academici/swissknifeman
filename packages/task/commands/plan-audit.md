@@ -43,7 +43,8 @@ effort: xhigh
    - **routing-adherence**: модель/effort фактического исполнения (по Update Log /
      Completion Notes) ≠ строке Routing плана без записи в Known Deviations = находка —
      тихое отклонение от роутинга запрещено.
-3. **Детект ≠ гейтинг.** Репортишь ВСЕ находки: `severity ∈ {LOW,MED,HIGH,CRITICAL}` +
+3. **Детект ≠ гейтинг.** Репортишь ВСЕ находки: `severity ∈ {Blocker,Major,Minor,Nit}` +
+   лейбл `issue/suggestion/question/nitpick` (единая ось `quality/artifact-review`) +
    `file:line` + `failure_scenario` (конкретный сценарий, где это ломает план/код);
    при сомнении ставь ВЫШЕ, сам не отбрасывай.
 4. **Единственная разрешённая запись** — append-блок `## Audit Pn — <YYYY-MM-DD>` в КОНЕЦ
@@ -52,13 +53,13 @@ effort: xhigh
 5. Находка, достойная повышения в скилл/правило экосистемы (повторяемый анти-паттерн
    исполнителя, дыра протокола), — пометь `PROMOTE-CANDIDATE` в тексте finding'а.
 
-**Expected output:** вердикт `GREEN` (расхождений нет) / `ATTENTION` (есть MED/LOW) /
-`RED` (HIGH/CRITICAL: no-op под 🟢, невоспроизводимая Validation, scope drift с поломкой) +
-список findings (severity · item · file:line · failure_scenario), затем:
-```
-Suggested Command: <готова к копипасте по вердикту:
-  GREEN → `/task:plan-exec <PLAN-ID> P(следующая фаза).1` (план продолжается);
-  ATTENTION → `/task:plan-exec <PLAN-ID> Pn.m` на items с находками (почини по месту);
-  RED → `/task:plan-design <PLAN-ID> Pn` (план нуждается в пересборке, не в починке)>
-Model Hint: <sonnet/medium | opus/high> — <причина в 3–8 слов>
-```
+**Expected output:** вердикт `GREEN` (расхождений нет) / `ATTENTION` (есть Minor/Nit) /
+`RED` (Blocker/Major: no-op под 🟢, невоспроизводимая Validation, scope drift с поломкой) +
+список findings (severity · item · file:line · failure_scenario), затем launch-block
+(фиксированная форма SKILL §8): таблица `| Model | Thinking | Context | Суть |` + голая
+команда отдельным code-block, копипаст без правок. Команду выбрать по вердикту:
+- `GREEN` → `/task:plan-exec <PLAN-ID> P(n+1).1`;
+- `ATTENTION` → `/task:plan-exec <PLAN-ID> Pn.m` (items с находками — почини по месту);
+- `RED` → `/task:plan-design <PLAN-ID> Pn` (пересборка, не починка).
+
+Model/Thinking — из строки Routing плана (SKILL §9), Context = fresh session.

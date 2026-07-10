@@ -1,5 +1,14 @@
-"""doctor — диагностика окружения harness (пресеты, скрипт, файлы хуков)."""
+"""doctor — диагностика окружения harness (пресеты, скрипт, файлы хуков) + аудит
+настроек Claude Code (`--settings`, settings-doctor).
+
+Две НЕсмешиваемые ветки: без флага — диагностика окружения самого harness (пресеты,
+apply-скрипт, файлы хуков); с `--settings` — аудит слоёв настроек Claude Code
+целевого проекта (движок `settings_audit`), с человекочитаемым отчётом или единым
+JSON-документом и exit-code 0/1/2. Ветки не пересекаются в выводе (ранний return)."""
 import hashlib
+import json
+import os
+import sys
 from pathlib import Path
 
 from .agentpacks import list_packs
@@ -18,10 +27,37 @@ def _sha256(path):
         return None
 
 
+def _cmd_doctor_settings(env, opts):
+    """Ветка `--settings`: аудит слоёв настроек Claude Code целевого проекта.
+    Отдельная от диагностики окружения harness (ранний return в `cmd_doctor`) —
+    два разных вывода не смешиваются. exit-code 0/1/2 по составу находок; `--json`
+    печатает РОВНО один JSON-документ (контракт для fleet-скана P1.6)."""
+    from .settings_audit import build_context, exit_code, render_json_obj, render_text, run_checks
+    target = opts["target"] or os.getcwd()
+    profile_name = opts["profile"] or None
+    ctx = build_context(env, target, profile_name=profile_name)
+    findings = run_checks(ctx)
+    if opts["json"]:
+        # Единственный вывод в stdout — иначе fleet-скан P1.6 (json.loads) падает.
+        print(json.dumps(render_json_obj(ctx, findings), ensure_ascii=False))
+    else:
+        print(render_text(ctx, findings))
+    sys.exit(exit_code(findings))
+
+
 def cmd_doctor(env, argv):
-    opts = parse_flags(argv, {})
+    opts = parse_flags(argv, {
+        "--settings": "bool", "--target": "str", "--json": "bool",
+        "--profile": "str",
+    })
     if opts["help"]:
-        print("harness doctor")
+        print("harness doctor [--settings [--target P] [--json] [--profile NAME]]\n"
+              "  без флага:  диагностика окружения harness (пресеты/скрипт/хуки).\n"
+              "  --settings: аудит слоёв настроек Claude Code целевого проекта\n"
+              "              (отчёт, --json, exit-code 0 чисто / 1 warn / 2 error).")
+        return
+    if opts["settings"]:
+        _cmd_doctor_settings(env, opts)
         return
     ok = True
 

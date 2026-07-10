@@ -306,5 +306,99 @@ class SettingsAuditPolicyProfileCase(unittest.TestCase):
         self.assertEqual(errs, [])
 
 
+class SettingsDoctorCliCase(unittest.TestCase):
+    """CLI `harness doctor --settings` (P1.4): --json как единственный вывод,
+    exit-code 0/1/2 на реальных tmpdir-конфигурациях, регресс безфлагового doctor.
+    Анти-подгонка: конфликты строятся в tmpdir, `run_checks` не мокается."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.tmp = Path(self._tmp.name)
+        self.home = self.tmp / "home"
+        self.target = self.tmp / "proj"
+        self.home.mkdir()
+        self.target.mkdir()
+        self.env = Env(self.tmp, "test", home=self.home)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _run_cli(self, argv):
+        import contextlib
+        import io
+        from harness.doctor import cmd_doctor
+        buf = io.StringIO()
+        exc = None
+        with contextlib.redirect_stdout(buf), contextlib.redirect_stderr(buf):
+            try:
+                cmd_doctor(self.env, argv)
+            except SystemExit as e:
+                exc = e
+        return exc, buf.getvalue()
+
+    def _argv(self, *extra):
+        return ["--settings", "--target", str(self.target), *extra]
+
+    # --json: валидный JSON и НИЧЕГО кроме него (контракт fleet-скана P1.6)
+    def test_json_is_single_valid_document(self):
+        local = self.target / ".claude" / "settings.local.json"
+        local.parent.mkdir(parents=True, exist_ok=True)
+        local.write_text("{битый", encoding="utf-8")  # → error id=1
+        exc, out = self._run_cli(self._argv("--json"))
+        stripped = out.strip()
+        # ровно один JSON-документ: одна строка, парсится, ничего лишнего рядом
+        self.assertNotIn("\n", stripped)
+        data = json.loads(stripped)  # не должно бросить
+        self.assertEqual(data["target"], str(self.target))
+        self.assertIn("counts", data)
+        self.assertEqual(data["exit"], 2)
+        self.assertTrue(any(f["id"] == 1 and f["level"] == "error"
+                            for f in data["findings"]))
+        self.assertIsInstance(exc, SystemExit)
+        self.assertEqual(exc.code, 2)
+
+    # exit 0 — чистая конфигурация (только info о необъявленном профиле)
+    def test_exit_zero_on_clean(self):
+        exc, _out = self._run_cli(self._argv())
+        self.assertIsInstance(exc, SystemExit)
+        self.assertEqual(exc.code, 0)
+
+    # exit 1 — есть warn, нет error (неканонический ключ permissions.autoApprove)
+    def test_exit_one_on_warn_only(self):
+        _write(self.target / ".claude" / "settings.json",
+               {"permissions": {"autoApprove": True}})
+        exc, _out = self._run_cli(self._argv())
+        self.assertIsInstance(exc, SystemExit)
+        self.assertEqual(exc.code, 1)
+
+    # exit 2 — есть error (битый JSON слоя)
+    def test_exit_two_on_error(self):
+        local = self.target / ".claude" / "settings.local.json"
+        local.parent.mkdir(parents=True, exist_ok=True)
+        local.write_text("{битый", encoding="utf-8")
+        exc, out = self._run_cli(self._argv())
+        self.assertIsInstance(exc, SystemExit)
+        self.assertEqual(exc.code, 2)
+        self.assertIn("[error]", out)  # человекочитаемый отчёт, не JSON
+
+    # регресс: harness doctor БЕЗ флага печатает прежний вывод и не sys.exit'ает
+    def test_no_flag_keeps_env_doctor_output(self):
+        import contextlib
+        import io
+        import tests.fixtures as fx
+        from harness.doctor import cmd_doctor
+        env = fx.real_env(self.tmp)
+        buf = io.StringIO()
+        exc = None
+        with contextlib.redirect_stdout(buf), contextlib.redirect_stderr(buf):
+            try:
+                cmd_doctor(env, [])
+            except SystemExit as e:
+                exc = e
+        self.assertIsNone(exc)
+        self.assertIn("harness doctor:", buf.getvalue())
+        self.assertNotIn("--settings (target", buf.getvalue())
+
+
 if __name__ == "__main__":
     unittest.main()

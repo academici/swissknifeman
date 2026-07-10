@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Added (harness — settings-doctor CLI + фасад skiller)
+
+- **`harness doctor --settings [--target P] [--json] [--profile NAME]`**: вывод движка
+  settings-doctor в CLI. Отдельная от диагностики окружения ветка (ранний return): читает
+  слои настроек Claude Code целевого проекта, репортит таксономию проверок человекочитаемым
+  отчётом либо единым JSON-документом. exit-code `0` (чисто/только info) / `1` (warn) / `2`
+  (error); `--json` кода не меняет и печатает РОВНО один документ в stdout (контракт для
+  fleet-скана). Аудит read-only — ничего не пишет на диск.
+- **`skiller doctor --settings [--target P]`**: фасад того же аудита из реестра скиллов —
+  делегирует в `harness doctor --settings` через subprocess (без логики проверок), прокидывает
+  код возврата; harness не установлен → warn и graceful skip (rc 0).
+
 ### Added (skiller — ecosystem-reuse-gate + бакет axioma)
 
 - **`architect/ecosystem-reuse-gate`**: гейт против переизобретения функционала — перед

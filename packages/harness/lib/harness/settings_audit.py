@@ -739,3 +739,77 @@ def run_checks(ctx, checks=CHECKS):
     for _id, fn in checks:
         findings.extend(fn(ctx))
     return findings
+
+
+# --- Рендер отчёта, счётчики, код возврата (P1.4) ----------------------------
+# Контракт CLI (`harness doctor --settings`): человекочитаемый отчёт ЛИБО единый
+# JSON-документ + exit-code 0/1/2. На `--json` стоит fleet-скан P1.6 — форма ниже
+# ЯВЛЯЕТСЯ контрактом, не стилем.
+
+# Порядок вывода уровней в человекочитаемом отчёте (сначала самое важное).
+_LEVEL_ORDER = ("error", "warn", "info")
+
+
+def counts(findings):
+    """Счётчики находок по уровням: `{"error": n, "warn": m, "info": k}`."""
+    c = {"error": 0, "warn": 0, "info": 0}
+    for f in findings:
+        if f.level in c:
+            c[f.level] += 1
+    return c
+
+
+def exit_code(findings):
+    """Код возврата по составу находок: `2` — есть error; `1` — есть warn (без
+    error); `0` — находок нет либо только `info`. `--json` кода не меняет."""
+    c = counts(findings)
+    if c["error"]:
+        return 2
+    if c["warn"]:
+        return 1
+    return 0
+
+
+def _profile_name(ctx):
+    """Имя разрешённого policy-профиля (из декларации или `--profile`) либо None."""
+    prof = getattr(ctx, "profile", None)
+    return prof.name if prof is not None else None
+
+
+def render_text(ctx, findings):
+    """Человекочитаемый отчёт: группировка по уровням, на каждую находку строка
+    `[level] #id <title>` → `    — <detail>` → `    → <hint>`; финальная сводка."""
+    name = _profile_name(ctx)
+    lines = [
+        f"harness doctor --settings (target: {ctx.target})",
+        f"policy-профиль: {name if name else 'не объявлен'}",
+    ]
+    if not findings:
+        lines.append("  находок нет — эффективная конфигурация чистая.")
+    for level in _LEVEL_ORDER:
+        for f in (x for x in findings if x.level == level):
+            lines.append(f"[{level}] #{f.id} {f.title}")
+            if f.detail:
+                lines.append(f"    — {f.detail}")
+            if f.hint:
+                lines.append(f"    → {f.hint}")
+    c = counts(findings)
+    lines.append(
+        f"ошибок: {c['error']}, предупреждений: {c['warn']}, заметок: {c['info']}")
+    return "\n".join(lines)
+
+
+def render_json_obj(ctx, findings):
+    """Машинный вид (контракт для P1.6): dict под `json.dumps(..., ensure_ascii=False)`.
+    Ровно один такой документ идёт в stdout при `--json`, ничего кроме него."""
+    return {
+        "target": str(ctx.target),
+        "profile": _profile_name(ctx),
+        "counts": counts(findings),
+        "findings": [
+            {"id": f.id, "level": f.level, "title": f.title,
+             "detail": f.detail, "hint": f.hint}
+            for f in findings
+        ],
+        "exit": exit_code(findings),
+    }

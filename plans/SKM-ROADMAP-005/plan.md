@@ -74,7 +74,7 @@ enforcement заполнения CHANGELOG; (6) `ecosystem-glossary` — еди�
 |:--|:--|:--|:--|
 | P1 | settings-doctor: конфликт-линтер настроек Claude Code | 6/6 | 🟢 Done |
 | P2 | wf-status: консольный статус-репортер workflow-прогонов | 4/5 | 🟠 Done with deviations |
-| P3 | workflow-craft: активация конструктора + команда-гейт | 3/5 | 🟡 In progress |
+| P3 | workflow-craft: активация конструктора + команда-гейт | 4/5 | 🟡 In progress |
 | P4 | Канон планов: репо-дом, имена, дом workflow-скриптов | 0/6 | ⬜ Not started |
 | P5 | changelog-discipline: enforcement заполнения CHANGELOG | 0/3 | ⬜ Not started |
 | P6 | ecosystem-glossary: единый язык трёхслойкой | 0/4 | ⬜ Not started |
@@ -149,3 +149,4 @@ enforcement заполнения CHANGELOG; (6) `ecosystem-glossary` — еди�
 | 2026-07-11 | issue-planner/opus | Интеграция дельт дизайна: 5 ATTENTION/RED-gaps от аудита исправлены (битые пути P6.1, grep-критерий P6.3, `atomic_write_text` P5.3, ложные премисы plan_lint P4.3/P4.6) |
 | 2026-07-11 | package-implementer/sonnet | P3.2 закрыт: ссылка на `workflow-craft` прошита в 4 команды по факту грепа (dev/design/research/review); `fix`/`plan-exec` осознанно пропущены — детали см. phases/P3.md P3.2 Completion Notes |
 | 2026-07-11 | package-implementer/opus | P3.3 закрыт: команда-гейт `/task:make-workflow` (opus/high) — контур активация `workflow-craft` → интервью по `spec-interview` → генерация копией шаблона → выходной ревьюер; критерии ревьюера под P3.4 — детали см. phases/P3.md P3.3 Completion Notes |
+| 2026-07-11 | package-implementer/opus | P3.4 закрыт: выходной статический ревьюер в `make-workflow.md` — критерий-чеклист (зеркало README конструктора + матрицы типов), RED блокирует выдачу — детали см. phases/P3.md P3.4 Completion Notes |

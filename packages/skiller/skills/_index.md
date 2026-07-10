@@ -4,7 +4,7 @@
 
 Источник истины портируемых скиллов (машинный реестр — `skills.json`). Раздача в проекты: `skiller connect` (плагины-бакеты) / `vendor` (физ. перенос). CORE-набор токен-скиллов (`general`/`oss-dev`) раздаётся по умолчанию — см. `connect`/`vendor`.
 
-Всего: 211 скиллов в 47 бакетах.
+Всего: 212 скиллов в 47 бакетах.
 
 ## Скиллы по бакетам
 
@@ -210,7 +210,7 @@
 |:--|:--|:--|
 | `wayfinder` | Laravel Wayfinder: typesafe routes and controller actions for the frontend. Generation, n… | `wayfinder`, `laravel`, `typescript`, `routes`, `inertia`, `eslint`, `frontend` |
 
-### general — General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists (20)
+### general — General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists (21)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
@@ -233,6 +233,7 @@
 | `spec-interview` | Pre-code interview: agent asks one question at a time, reads the codebase itself where it… | `workflow`, `requirements`, `discovery` |
 | `task-brief-template` | Brief template for complex agent tasks: goal, scope, invariants, explicit assumptions, ou… | `workflow`, `template`, `requirements`, `context` |
 | `verify-claims` | Before a decision/verdict on an EXTERNAL fact (library version/API, 'still current', best… | `verification`, `rag`, `research`, `planning`, `context`, `claude-code` |
+| `workflow-craft` | Activate on \"write a workflow\"/multi-agent orchestration: match 4 canonical templates f… | `workflow`, `orchestration`, `multi-agent`, `templates`, `authoring` |
 | `writing-style` | Tone & language of code artifacts: Russian by default for comments, commit bodies, test d… | `writing`, `language`, `russian`, `comments`, `commits`, `tests`, `docs`, `style` |
 
 ### laravel-architecture — Scaling architecture: modular monolith/DDD, enum state machines, enum attributes, subagent orchestration (6)
@@ -481,6 +482,7 @@
 | `attribute` | `attribute-authorization` |
 | `attributes` | `eloquent-accessors`, `enum-attributes` |
 | `auth` | `security-design` |
+| `authoring` | `workflow-craft` |
 | `authorization` | `attribute-authorization`, `azguard`, `laravel-permissions` |
 | `auto-layout` | `figma-to-flutter`, `figma-to-vue` |
 | `axioma` | `axioma-doctrine`, `axioma-stack` |
@@ -656,6 +658,7 @@
 | `monetization` | `go-to-market`, `monetization-design`, `pitch-deck`, `unit-economics` |
 | `monitoring` | `capacity-planning`, `health-checks`, `runbook` |
 | `monorepo` | `package-contribution-protocol` |
+| `multi-agent` | `workflow-craft` |
 | `multi-config` | `vite-multi-build` |
 | `multi-model` | `plan-protocol` |
 | `multi-tenant` | `config-driven-abstraction` |
@@ -673,7 +676,7 @@
 | `obsidian` | `brain-locator` |
 | `onboarding` | `mcp-advisor` |
 | `ops` | `capacity-planning`, `incident-response`, `oncall-rotation`, `postmortem`, `runbook` |
-| `orchestration` | `ai-agents`, `anti-drift`, `complex-task-orchestrator`, `cross-project-coordinator`, `laravel-subagents`, `mcp-blender`, `tech-lead` |
+| `orchestration` | `ai-agents`, `anti-drift`, `complex-task-orchestrator`, `cross-project-coordinator`, `laravel-subagents`, `mcp-blender`, `tech-lead`, `workflow-craft` |
 | `oss` | `dependency-audit`, `dx-design`, `github-flow`, `open-source-maintainer`, `oss-development`, `oss-governance`, `release-engineering` |
 | `ousterhout` | `codebase-design` |
 | `outbox` | `transactional-outbox-relay` |
@@ -781,7 +784,7 @@
 | `tdd` | `implement`, `tdd-discipline` |
 | `tech-radar` | `axioma-stack` |
 | `template` | `brd`, `model-rules`, `prd-from-brd`, `runbook`, `task-brief-template` |
-| `templates` | `agent-packs` |
+| `templates` | `agent-packs`, `workflow-craft` |
 | `testability` | `codebase-design` |
 | `testing` | `db-test-preflight`, `diagnosing-bugs`, `docker-postgres`, `eval-design`, `laravel-testing`, `mutation-testing`, `pao`, `playwright-e2e`, `tdd-discipline`, `test-isolation-guard`, `test-strategy`, `testing-safety-report`, `vitest`, `vue-testing-best-practices` |
 | `tests` | `writing-style` |
@@ -826,5 +829,5 @@
 | `webrtc` | `voice-ai` |
 | `websocket` | `docker-services` |
 | `websockets` | `laravel-broadcasting`, `laravel-echo-client` |
-| `workflow` | `anti-drift`, `build-loop`, `business-process`, `code-review`, `compact-responses`, `complex-task-orchestrator`, `context-economy`, `cross-layer-change-checklist`, `enum-state-machine`, `implement`, `incident-response`, `laravel-subagents`, `plan-protocol`, `postmortem`, `refactoring-plan`, `session-handoff`, `skills-ssot`, `spec-interview`, `task-brief-template`, `tech-debt-audit`, `tech-lead` |
+| `workflow` | `anti-drift`, `build-loop`, `business-process`, `code-review`, `compact-responses`, `complex-task-orchestrator`, `context-economy`, `cross-layer-change-checklist`, `enum-state-machine`, `implement`, `incident-response`, `laravel-subagents`, `plan-protocol`, `postmortem`, `refactoring-plan`, `session-handoff`, `skills-ssot`, `spec-interview`, `task-brief-template`, `tech-debt-audit`, `tech-lead`, `workflow-craft` |
 | `writing` | `writing-style` |

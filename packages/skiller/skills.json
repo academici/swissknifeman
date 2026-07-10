@@ -121,7 +121,7 @@
     },
     "general": {
       "description": "General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists",
-      "count": 20,
+      "count": 21,
       "status": "active"
     },
     "laravel-architecture": {
@@ -2329,6 +2329,23 @@
       "produces_for": [
         "architecture",
         "tech-stack-selection"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "workflow-craft",
+      "bucket": "general",
+      "path": "skills/general/workflow-craft/SKILL.md",
+      "version": "0.1.0",
+      "description": "Activate on \\\"write a workflow\\\"/multi-agent orchestration: match 4 canonical templates first, then design-vs-dev stage matrix; slots per README.",
+      "sha256": "e168ad8a77530a38951a179477bb1af5ff1a15f819fcc0cbf1b22a187def7006",
+      "content_sha256": "0a287658a8d24f22be4d0208797d07d9cc6d828ab7365edbc5994ce7e9ee55ea",
+      "tags": [
+        "workflow",
+        "orchestration",
+        "multi-agent",
+        "templates",
+        "authoring"
       ],
       "source": "local"
     },

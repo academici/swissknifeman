@@ -17,6 +17,7 @@ MEM_MODES = ("file", "federation", "agentmemory", "off")
 ROUTER_MODES = ("propose", "auto_dispatch", "off")
 RUNREPORT_MODES = ("on", "off")
 PACKGUARD_MODES = ("off", "warn", "strict")
+CHANGELOGGATE_MODES = ("off", "warn", "strict")
 PLANSDIR_DEFAULT = "plans"
 
 
@@ -134,6 +135,27 @@ def block_pack_guard(target, mode, settings_file, dry):
         print(f"  хук pack-guard уже зарегистрирован в {f}")
 
 
+def block_changelog_gate(target, mode, settings_file, dry):
+    """Записать changelog-gate.env.ini + зарегистрировать PreToolUse-хук (matcher Bash).
+    Opt-in commit-гейт CHANGELOG-дисциплины (P5.2, D32/D33): по умолчанию НЕ устанавливается,
+    включается явным --changelog-gate. off → пишет MODE=off, хук не регистрируется
+    (kill-switch без снятия уже зарегистрированного — merge-only не удаляет чужие записи)."""
+    print(f"changelog-gate: {mode or 'пропуск'}")
+    if not mode:
+        return
+    if mode not in CHANGELOGGATE_MODES:
+        die(f"неизвестный режим changelog-gate: {mode} ({'|'.join(CHANGELOGGATE_MODES)})")
+    write_text(target / ".claude" / "changelog-gate.env.ini", f"MODE={mode}\n", dry)
+    if mode == "off":
+        return
+    settings, f = load_settings(target, settings_file)
+    cmd = "python3 ~/.claude/hooks/changelog-gate/changelog-gate.py"
+    if add_hook(settings, "PreToolUse", "Bash", cmd):
+        write_json(f, settings, dry)
+    else:
+        print(f"  хук changelog-gate уже зарегистрирован в {f}")
+
+
 def block_plans_dir(target, value, settings_file, dry):
     """Записать top-level plansDirectory в .claude/<settings_file> (шаримый, коммитится —
     НЕ settings.local.json: командная конвенция проекта, не машинно-локальная преференция).
@@ -217,6 +239,7 @@ def cmd_hooks(env, argv):
     opts = parse_flags(argv, {
         "--target": "str", "--auto-approve": "str", "--memory": "str",
         "--router": "str", "--run-report": "str", "--pack-guard": "str",
+        "--changelog-gate": "str",
         "--output-style": "str", "--plans-dir": "str", "--file": "str",
         "--global": "bool", "--dry-run": "bool",
     })
@@ -226,6 +249,7 @@ def cmd_hooks(env, argv):
               f"[--router {'|'.join(ROUTER_MODES)}] "
               f"[--run-report {'|'.join(RUNREPORT_MODES)}] "
               f"[--pack-guard {'|'.join(PACKGUARD_MODES)}] "
+              f"[--changelog-gate {'|'.join(CHANGELOGGATE_MODES)}] "
               "[--output-style lean|off] "
               "[--plans-dir plans|off] "
               "[--file settings.json|settings.local.json] [--dry-run]")
@@ -237,10 +261,11 @@ def cmd_hooks(env, argv):
         die("нужен --target P (или --global)")
     target = Path(opts["target"]).expanduser()
     if not (opts["auto_approve"] or opts["memory"] or opts["router"]
-            or opts["run_report"] or opts["pack_guard"] or opts["output_style"]
-            or opts["plans_dir"]):
+            or opts["run_report"] or opts["pack_guard"] or opts["changelog_gate"]
+            or opts["output_style"] or opts["plans_dir"]):
         die("нужен хотя бы один из: --auto-approve MODE / --memory BRAIN:MODE / "
             "--router MODE / --run-report on|off / --pack-guard off|warn|strict / "
+            "--changelog-gate off|warn|strict / "
             "--output-style lean|off / --plans-dir plans|off / --global")
     settings_file = opts["file"] or "settings.json"
     if opts["auto_approve"]:
@@ -254,6 +279,8 @@ def cmd_hooks(env, argv):
         block_run_report(target, opts["run_report"], settings_file, opts["dry_run"])
     if opts["pack_guard"]:
         block_pack_guard(target, opts["pack_guard"], settings_file, opts["dry_run"])
+    if opts["changelog_gate"]:
+        block_changelog_gate(target, opts["changelog_gate"], settings_file, opts["dry_run"])
     if opts["output_style"]:
         block_output_style(env, target, opts["output_style"], opts["dry_run"])
     if opts["plans_dir"]:

@@ -129,12 +129,22 @@ if [[ "$GLOBAL" -eq 1 ]]; then
     cp "$PG_SRC/pack-guard.py" "$PG_SRC/README.md" "$PG_DST/"
     chmod +x "$PG_DST/pack-guard.py"
     [[ -f "$PG_DST/env.ini" ]] || cp "$PG_SRC/env.ini" "$PG_DST/"
+    # changelog-gate: опциональный PreToolUse-хук commit-гейта CHANGELOG-дисциплины (ловит
+    # `git commit` содержательного типа без правки CHANGELOG среди staged, D32/D33). По
+    # умолчанию НЕ устанавливается ни в одном проекте — файлы копируются сюда (неактивно),
+    # включение — per-project `harness hooks --target . --changelog-gate off|warn|strict`.
+    # Код/README обновляем; env.ini не перезатираем (там режим проекта).
+    CG_SRC="$PRESETS_DIR/hooks/changelog-gate"; CG_DST="$HOME/.claude/hooks/changelog-gate"
+    mkdir -p "$CG_DST"
+    cp "$CG_SRC/changelog-gate.py" "$CG_SRC/README.md" "$CG_DST/"
+    chmod +x "$CG_DST/changelog-gate.py"
+    [[ -f "$CG_DST/env.ini" ]] || cp "$CG_SRC/env.ini" "$CG_DST/"
     # output-styles: телеграфный «голос» вывода для токен-экономии (session-wide). Чистый
     # контент (нет env-state) → всегда overwrite. Включается per-project: harness hooks --output-style.
     OS_SRC="$PRESETS_DIR/output-styles"; OS_DST="$HOME/.claude/output-styles"
     if [[ -d "$OS_SRC" ]]; then mkdir -p "$OS_DST"; cp "$OS_SRC/"*.md "$OS_DST/"; fi
-    echo "Установлено глобально: log-bash-command + notify (активны) + файлы auto-approve/ + memory/ + agent-router/ + run-report/ + pack-guard/ + output-styles/ (НЕ активны)."
-    echo "auto-approve, memory, agent-router, run-report, pack-guard и output-style включаются ПО ПРОЕКТУ / по вызову (см. README)."
+    echo "Установлено глобально: log-bash-command + notify (активны) + файлы auto-approve/ + memory/ + agent-router/ + run-report/ + pack-guard/ + changelog-gate/ + output-styles/ (НЕ активны)."
+    echo "auto-approve, memory, agent-router, run-report, pack-guard, changelog-gate и output-style включаются ПО ПРОЕКТУ / по вызову (см. README)."
   fi
 fi
 

@@ -93,6 +93,10 @@
     "skills_map": {
       "type": "object",
       "description": "Зарезервировано: домен→скиллы для преднагрузки ролей под стек (ещё не реализовано)."
+    },
+    "policy_profile": {
+      "type": "string",
+      "description": "Ожидаемый policy-профиль настроек Claude Code: harness doctor --settings сверяет эффективную конфигурацию слоёв с профилем configs/claude-code/policy/<name>.json (напр. max-permissive, base). Дрейф = находка. Дом декларации — здесь, а не в .claude/settings.json."
     }
   }
 }

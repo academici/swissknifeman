@@ -2,6 +2,75 @@
 
 ## [Unreleased]
 
+### Added (skiller — ecosystem-reuse-gate + бакет axioma)
+
+- **`architect/ecosystem-reuse-gate`**: гейт против переизобретения функционала — перед
+  проектированием нового проекта/фичи обязательна сверка с реестром экосистемы и прогон
+  vendor-vs-build правил (дефолт — переиспользование). `tech-stack-selection` и `founder/new-project`
+  получили `requires: [ecosystem-reuse-gate]` и шаг вызова гейта в алгоритме (Step 1 / Step 0
+  Idea-gate).
+- **Бакет `axioma`**: `axioma-doctrine` (пять столпов-императивов экосистемы Axioma) +
+  `axioma-stack` (привязка reuse-gate к живому `Ecosystem_Tech_Radar.md`) — читать при
+  проектировании любого нового проекта/пакета Axioma до архитектурных решений.
+
+### Fixed (maind — `derive`/`probe` падали на list-формате `skills-lock.json`)
+
+- `derive.derive_skills`/`probe.probe_project` предполагали `skills-lock.json::skills` только
+  как `dict {name: entry}` (формат `skiller sync`) и падали `AttributeError` на альтернативном
+  формате — списке (напр. собственный lock-генератор Brain-валта). Пойман при первом онбординге
+  проекта с таким lock-файлом в mAInd (`maind onboard`/`maind sync --only graph` рушились,
+  `maind health --project <id>` тоже). Нормализация списка в dict перед итерацией; тест на оба
+  формата в `test_derive.py`.
+
+### Added (maind@0.x — провиженер Laravel PAO + fleet-гейт)
+
+- **`maind pao`**: новый провиженер (`lib/maind/pao.py`, детект по файловым фактам + `php -v`),
+  подключён шагом `pao` в онбординге PHP/Laravel-проектов (`provision/onboard.py`). Интерактивно
+  предлагает `composer require laravel/pao --dev`; на `--yes`/неинтерактиве — громкий warn, не
+  молчаливая установка; opt-out `project.pao_opt_out`. `onboarding-decision-tree.md` получил
+  секцию «PHP-инструменты: PAO».
+- **`maind doctor --audit pao|all`**: новое измерение fleet-audit, переиспользует `pao.status()`
+  (детект-логика не задублирована). Печатает `pao⚠(missing: composer require laravel/pao --dev)`
+  для php/laravel-проекта без PAO, `pao✓`/`pao·<state>` для installed/n-a/opt-out/php-too-old.
+  Закрывает дыру контракта «доставка скилла ≠ установка зависимости»: онбординг Agelto прошёл
+  GREEN без реально установленного `laravel/pao`.
+
+### Fixed (harness — perplexity-web больше не промптит permission)
+
+- **`settings.global.json`**: два независимых класса пермишен-промптов устранены одним изменением
+  — allow `mcp__plugin_core_perplexity-web` (плагинный `core` дублирует `perplexity-web` под другим
+  именем) + top-level `enabledMcpjsonServers: ["perplexity-web"]` (project-scoped `.mcp.json`-сервер
+  вечно `Pending approval`). Семантика верифицирована context7. `apply-permissions.sh` получил
+  union-merge для `enabledMcpjsonServers` + тест. Репро на 4 проектах (botkit/flexcrm/agelto/
+  dterema-app): `⏸ Pending` → `✓ Connected`.
+
+### Fixed (skiller — SKILL_MANAGED_MARKER byte round-trip, registry idempotence)
+
+- **`SKILL_MANAGED_MARKER`/`_mark_skill_managed`/`strip_skill_managed_marker`** реализованы в
+  `lib/skiller/common.py` (байт-режим, BOM-safe, идемпотентно) — импорт падал (`ImportError`),
+  `skiller registry` не был идемпотентен (`git status` оставался грязным после повторного прогона).
+- **PAO skill**: опечатка пакета в тексте (`nunomaduro/pao` → `laravel/pao`, внешне верифицировано)
+  в `SKILL.ru.md`/`SKILL.md`, `skills.json` перегенерирован.
+
+### Fixed (analyst — Laravel-раннеры и guard-паттерны в сигнале A)
+
+- `_RUNNER_EXEC` (`lib/analyst/digest.py`) научился резолвить `php artisan test`/`sail test`
+  (Sail-shortcut); убран бланкетный отказ по `||` + добавлена ветка `xargs` — разведочные команды
+  без реального прогона теста/линта больше не засчитываются как «сигнал A».
+
+### Fixed (maind — `norm_path` резолвит симлинки при дедупе проектов)
+
+- `provision/workspace.py`: `norm_path` переведён на `os.path.realpath` — повторный онбординг
+  проекта через симлинк больше не создавал дублирующую запись в `projects.json`.
+
+### Changed (docs — пакет `task` в корневом CLAUDE.md, CORE_SKILLS 8→9)
+
+- Корневой `CLAUDE.md`: строка `task` в таблице «Пакеты» + раскладка + пояснение в CLI-блоке,
+  почему `task` не роутится через `swissknifeman` (plugin-only, без `bin/`); новый
+  `packages/task/CLAUDE.md`. `install.sh` — комментарий, поясняющий исключение `task` из установки.
+- `packages/skiller/CLAUDE.md`: `plan-protocol` девятым в `CORE_SKILLS` (резидент 705/750 ток,
+  в рамках `RESIDENT_BUDGET_TARGET`); устаревшая фраза «резидент превышает target» поправлена.
+
 ### Changed (harness@0.5.0 — Lean-tiering агент-паков + whole-server MCP allow)
 
 - **agent-packs `python-backend`/`node-frontend`/`dart-flutter` → Lean-tiered (0.4.1 → 0.5.0).**

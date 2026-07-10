@@ -4,6 +4,11 @@
 Хранимый формат — только Markdown с жёсткими маркерами; JSON — производный
 артефакт парсера, не источник истины.
 
+Спорное/нерешённое НЕ держать в теле плана — выносить в
+`plans/<PLAN-ID>/open-questions.md` со статусом (`Exploration` /
+`Decision pending` / `Resolved → D#`); протокол — SKILL раздел 3.
+Неоднозначность в тексте — маркер `[NEEDS CLARIFICATION: <вопрос>]` (раздел 7).
+
 ```markdown
 # <PLAN-ID> — <Title>
 
@@ -23,6 +28,8 @@
 | Execution Mode | phase-first |
 | Target Operator Models | sonnet (exec) · haiku (LOW) · opus (design/audit) |
 | Approval Owner | <человек, утверждающий план> |
+| Home | <необязательное: brain ИЛИ repo:путь — где живёт исполняемая копия, SKILL раздел 12> |
+| Paused By | <необязательное: PLAN-ID перехватившего ACTIVE + дата; заполняет plan-design new; нет — «—»> |
 
 ## 1. Context
 

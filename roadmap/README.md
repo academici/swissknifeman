@@ -19,6 +19,7 @@
 | [`mcp-config-example-emit.md`](mcp-config-example-emit.md) | maind deploy/sync сам эмитит `.mcp.json.example` (плейсхолдеры) + ведёт `.gitignore` | ✅ реализовано (opt-in) | По умолчанию выключено (`mcp.emit_example`); полевой кейс agelto подтвердил ценность | Остаток (default-on): повторная утечка абс.путей/секретов ИЛИ внешний разработчик не поднял MCP без `.example` |
 | [`php-package-stack-pack.md`](php-package-stack-pack.md) | Отдельный стек-пак `php-package` (dev-loop под Testbench/Pest/публичный API), не app-ориентированный `backend-laravel` | ✅ реализовано (`agent-packs/laravel-package@0.1.0`) | Замеренное трение на azguard сработало, пак заведён (принятые отклонения — в самом файле) | — (сработал) |
 | [`analyst-suggest-draft-skill.md`](analyst-suggest-draft-skill.md) | `analyst suggest` (P4): cross-project паттерн → ЧЕРНОВИК `SKILL.ru.md` в staging, человек промоутит | ✅ реализовано (`packages/analyst/lib/analyst/suggest.py`) | Накопленные cross-project паттерны + повторяющееся ручное трение оформления черновика — критерий сработал | — (сработал) |
+| [`settings-doctor.md`](settings-doctor.md) | Конфликт-линтер настроек Claude Code: эффективный merge слоёв, policy-профили проектов, сверка «ожидание vs факт» (пара к `apply-permissions.sh`) | ⬜ к внедрению | Критерий уже сработал: field-case 2026-07-10 — промпты каждые полминуты при `bypassPermissions` в local, неустановленный safe-dirs-хук, ~400 мёртвых allow-правил | — (сработал, ждёт приоритизации владельцем) |
 
 ## Принцип
 

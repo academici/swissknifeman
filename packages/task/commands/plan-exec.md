@@ -17,7 +17,10 @@ effort: medium
    Повторное чтение уже прочитанного ЗАПРЕЩЕНО (экономия контекста); «почитаю ещё по
    репо на всякий случай» — тоже. Всё нужное обязан нести план; не несёт — см. п. 5.
 
-2. **Предусловия.** Статус item'а — `⬜ Not started` или `🟡 In progress`; иначе стоп и отчёт
+2. **Предусловия.** **Дом:** `## 0. Meta` несёт `Home: repo:<путь>`, а ты запущен НЕ в этом
+   репо (в Brain/зеркале) — ошибка запуска: стоп и отчёт с правильным домом (голая команда
+   перезапуска из `<путь>`); SSOT плана во время exec = репо, зеркало не исполняется
+   (скилл `plan-protocol` §12). Статус item'а — `⬜ Not started` или `🟡 In progress`; иначе стоп и отчёт
    (терминальный item не переисполняется). **Phase-first:** item фазы N+1 не исполняется,
    пока фаза N не терминальна (все её items 🟢/🟠/⛔) — иначе стоп + отчёт, какая фаза держит.
 
@@ -28,7 +31,8 @@ effort: medium
    жёсткие рамки, не рекомендации. Заметил «улучшить бы заодно» — запиши в **Pending Work**
    item'а, НЕ делай. План разошёлся с реальным кодом (файла нет, сигнатура другая, якорь
    не находится) → НЕ импровизировать, НЕ «чинить план на ходу» → эскалация (п. 5):
-   план правит plan-design, а не исполнитель.
+   план правит plan-design, а не исполнитель. Recon/диагноз-deliverable item'а (если Deliverables
+   его декларируют) кладётся в `plans/<PLAN-ID>/findings/<Pn>-<slug>.md`.
 
 5. **Эскалация.** Триггеры (закрытый enum): многопакетный рефакторинг · неясная архитектура ·
    public contract/SemVer · protected generated assets · конфликт правил · неясные acceptance.
@@ -43,15 +47,31 @@ effort: medium
    это `🟠 Done with deviations` с Known Deviations либо эскалация, НЕ молчаливый пропуск.
 
 7. **ЗАКРЫТИЕ ОБЯЗАТЕЛЬНО** — без него работа НЕ выполнена, даже если код написан:
+   - **Routing-adherence gate:** сверь фактические модель/effort этой сессии с `plan.md`
+     §Routing (секция пуста — с SSOT-матрицей скилла: plan-exec = sonnet/medium); расхождение —
+     ОБЯЗАТЕЛЬНАЯ запись в **Known Deviations** item'а (`исполнено <факт> вместо <из Routing>`),
+     тихое умолчание запрещено;
+   - **Дифф item'а ЗАКОММИЧЕН до смены статуса**: Conventional Commits (рус.) формата
+     `тип(scope): суть (Pn.m)`, атомарно по
+     смыслу (несколько коммитов — нормально), `validate.sh` затронутого пакета зелёный ДО
+     коммита; фиксы по замечаниям ревью — ОТДЕЛЬНЫМ коммитом (не `amend` — трассируемость:
+     видно, что нашло ревью); незакоммиченного диффа по Scope item'а в дереве не осталось
+     (`git status`); дифф ВНЕ Scope — не коммитить, зафиксировать в **Pending Work**;
    - `**Status:**` → `🟢 Done` (или `🟠 Done with deviations` + заполненные **Known Deviations**);
    - **Completion Notes** — только факты: изменённые файлы, добавленные тесты,
      прогнанные команды и их вывод (без оценок «всё отлично»);
    - **Pending Work** — накопленное из п. 4 (или «—»);
    - синхронизируй строку в `## Phase Status` фазы И `## 4. Phase Index & Status Board`
      в `plan.md` (счётчик `Items 🟢/всего`, статус фазы);
+   - добавь строку в `## 6. Update Log` plan.md — «Что» ≤ 2 строк, канонический формат
+     `<item> закрыт: <1 строка сути> — детали см. phases/Pn.md <item> Completion Notes`;
+     пересказывать Completion Notes в Update Log ЗАПРЕЩЕНО;
    - ПЕРЕЗАПИШИ `plans/<PLAN-ID>/handoff.md` целиком по схеме:
-     `# HANDOFF — <ISO-дата> — after Pn.m`, затем строки **Next:** (конкретная команда
-     `/task:plan-exec <PLAN-ID> Pn.k`) / **Done:** / **Remaining:** / **Sources of truth:** /
+     `# HANDOFF — <ISO-дата> — after Pn.m`, затем строки **Next:** (launch-block: таблица
+     `Model / Thinking / Context / Суть` + голая команда `/task:plan-exec <PLAN-ID> Pn.k`
+     отдельным code-block'ом — копипаст без правок; самодостаточна из холодной сессии:
+     plan-ID + cold-start reads, «эта сессия» — только как дополнение;
+     скелет — `snippets/launch-block-template.md` скилла) / **Done:** / **Remaining:** / **Sources of truth:** /
      **Open risks:** / **Workarounds/Deferred/Open questions:** (три подпункта:
      workarounds · deferred · open_questions; «—» если нет);
    - прогони `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/plan-lint.py" plans/<PLAN-ID>`
@@ -64,16 +84,24 @@ effort: medium
    Completed: <что сделано, 1–3 строки>
    Pending Work: <…|—>
    Files Changed: <список путей>
+   Commits: <hash — subject; …|—>
    Validation: passed|failed — <команды и суть>
    Known Deviations: <…|—>
    Escalation Needed: no|yes (тогда финальная строка ESCALATION-REQUIRED: …)
-   Suggested Command: `/task:plan-exec <PLAN-ID> Pn.k` (готова к копипасте — если следующий
-     item ещё скелет, вместо этого `/task:plan-design <PLAN-ID> Pn` per Execution Rules;
-     если фаза N терминальна и следующий item в фазе N+1 — команда на первый item фазы N+1)
-   Model Hint: <sonnet|opus|haiku>/<effort> — <причина в 3–8 слов>
-   Context: handoff свежий — рекомендован /clear перед следующим item
+   Launch-block (следующий шаг):
+   | Параметр | Значение |
+   |:--|:--|
+   | Model | <sonnet|opus|haiku> |
+   | Thinking | <effort> — <причина в 3–8 слов> |
+   | Context | fresh session — handoff свежий, рекомендован /clear |
+   | Суть | <1 строка: что делает следующий шаг> |
+
+   <голая команда ОТДЕЛЬНЫМ code-block'ом, копипаст без правок:
+     `/task:plan-exec <PLAN-ID> Pn.k`; если следующий item ещё скелет — вместо этого
+     `/task:plan-design <PLAN-ID> Pn` per Execution Rules; если фаза N терминальна и
+     следующий item в фазе N+1 — команда на первый item фазы N+1>
    ```
-   **Suggested Command** и **Model Hint** — не статичный шаблон, а разовая оценка СЛЕДУЮЩЕГО
+   **Launch-block** (команда + Model/Thinking) — не статичный шаблон, а разовая оценка СЛЕДУЮЩЕГО
    item'а по факту его текста в `phases/Pn.md` (уже прочитан в п. 1) и `plan.md` §Routing:
    - Если следующий item — обычная реализация в уже детализированной фазе → дефолт `sonnet/medium`
      (как эта команда).
@@ -84,5 +112,5 @@ effort: medium
    - Если следующий item — чистая механическая разведка/recon без решений (см. `plan.md` §Routing,
      обычно `haiku/low`) → предложи её.
    - Если следующая фаза ещё скелет (Items 🟢/всего в Status Board = 0/N без заполненных 16 полей) —
-     Suggested Command обязан быть `/task:plan-design <PLAN-ID> Pn`, не `plan-exec` (иначе он
+     команда launch-block'а обязана быть `/task:plan-design <PLAN-ID> Pn`, не `plan-exec` (иначе он
      упадёт на предусловии).

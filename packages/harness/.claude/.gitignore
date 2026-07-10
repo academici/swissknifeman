@@ -1,7 +1,11 @@
-# Машинно-специфичные артефакты Claude Code sessions
-# Коммитируются: events.ndjson, audit.ndjson (analyst/)
-# Игнорируются: эфемерные уроки, run-логи (runs/), анализ (analyze/)
+# Машинно-специфичные артефакты Claude Code sessions — все эфемерные, ничего из
+# этого не коммитим (N1/P1-review: audit.ndjson/events.ndjson раньше были
+# исключением "коммитируются", но несут session-UUID/timestamp/home-путь
+# разработчика и растут на каждом SessionEnd авто-digest хуком — постоянный
+# diff-churn и утечка машинно-специфичных данных, не аудит-артефакт репо).
 
 runs/
 analyze/
 analyst/lessons/ephemeral/
+analyst/audit.ndjson
+analyst/events.ndjson

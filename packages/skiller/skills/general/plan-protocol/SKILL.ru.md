@@ -1,15 +1,15 @@
 ---
 name: plan-protocol
 bucket: general
-version: 0.2.0
-description: "Исполняемые мастер-планы в plans/<ID>: схемы plan/phase/task, 6 статусов, handoff-стандарт, роутинг моделей, команды /task:plan-*."
+version: 2.0.0
+description: "Исполняемые мастер-планы в plans/<ID>: схемы plan/phase/task, 6 статусов, refine-цикл и DoR-гейт, канонический корень плана, два дома и архив, handoff с launch-block, роутинг моделей, команды /task:plan-*."
 risk: write
 persona: oss-dev
 tags: [workflow, planning, handoff, routing, multi-model]
 requires: []
 produces_for: [session-handoff, complex-task-orchestrator]
 outputs: ["plans/<PLAN-ID>/plan.md", "plans/<PLAN-ID>/phases/*.md", "plans/<PLAN-ID>/handoff.md"]
-snippets: ["plan-template.md", "phase-template.md", "handoff-template.md", "active-template.md"]
+snippets: ["plan-template.md", "phase-template.md", "handoff-template.md", "active-template.md", "launch-block-template.md", "code-guidance-patterns.md"]
 adapters: [claude, cursor, fable]
 sha256: ""
 ---
@@ -17,7 +17,9 @@ sha256: ""
 # Plan Protocol
 
 SSOT plan-протокола экосистемы: как устроен исполняемый мастер-план, который «сильная»
-модель пишет, а «дешёвая» исполняет без доступа к чату планирования.
+модель пишет, а «дешёвая» исполняет без доступа к чату планирования. Протокол фиксирует
+ТОЛЬКО Axioma-специфику — схемы, гейты, маркеры, конвейеры; общие практики планирования,
+которые plan mode / модель умеют сами, здесь не пересказываются.
 
 ## 1. Когда активировать
 
@@ -26,16 +28,30 @@ SSOT plan-протокола экосистемы: как устроен исп�
   sonnet/haiku закрывают items по нему.
 - Вызов любой команды `/task:plan-*` (design/exec/close/audit).
 
+**Порог «нужен ли план» (эвристика):**
+
+| Признаки задачи | Маршрут |
+|:--|:--|
+| Мелкая правка, багфикс, одиночный файл | `/task:fix` без мастер-плана |
+| Фича в одном модуле, PoC, эксперимент | `/task:dev` без мастер-плана |
+| Кросс-модульное; compliance (54-ФЗ/платежи/PII); >1 репо; >1 сессии | ОБЯЗАТЕЛЕН `/task:plan-design` с гейтами этого протокола |
+
 ## 2. Раскладка
 
 ```text
 plans/<PLAN-ID>/
-├── plan.md          # мастер-план (Meta, Context, Rules, Routing, Status Board, логи)
-├── phases/Pn.md     # по файлу на фазу: контекст фазы, items, phase handoff
-└── handoff.md       # rolling-указатель «где мы» (перезаписывается)
+├── plan.md            # мастер-план (Meta, Context, Rules, Routing, Status Board, логи)
+├── phases/Pn.md       # по файлу на фазу: контекст фазы, items, phase handoff
+├── handoff.md         # rolling-указатель «где мы» (перезаписывается)
+├── findings/          # RAG-выжимки и recon-отчёты (раздел 16)
+├── 20_research/       # research-артефакты плана
+├── artifacts/         # рабочие артефакты фаз, судьба — архив
+├── root/              # долгоживущий материал, судьба — docs проекта (раздел 3)
+└── open-questions.md  # спорное/нерешённое (протокол — раздел 3)
 ```
 
-`PLAN-ID` = `[A-Z][A-Z0-9-]+` (например `AUDIT-W2`, `MIGRATE-V3`).
+Обязательны только `plan.md`/`phases/`/`handoff.md` — остальное опционально,
+по потребности плана. `PLAN-ID` = `[A-Z][A-Z0-9-]+` (например `AUDIT-W2`, `MIGRATE-V3`).
 
 Корень `plans/` рядом с каталогами планов:
 
@@ -51,24 +67,59 @@ plans/<PLAN-ID>/
 **ПРАВИЛО MD-only:** Хранимый формат плана — только Markdown с жёсткими маркерами.
 Любой JSON — производный артефакт парсера (`plan-lint --json`), не источник истины.
 
-## 3. Схема plan.md
+## 3. Канонический корень плана
+
+Смысловое различие двух каталогов артефактов (RAG:✅ P5.1 §2 arc42 — timeless-материал
+в корень, итерации — в дочерние):
+
+- **`root/`** — долгоживущий материал, судьба — документация проекта:
+  `architecture.md`, `data-model.md`, `contracts/`, `philosophy.md`, `glossary.md`.
+  Набор — по потребности плана, не все файлы обязательны.
+- **`artifacts/`** — рабочий материал фаз, судьба — архив вместе с планом.
+
+**Протокол Open Questions** (RAG:✅ P5.1 §7 IETF rough consensus): спорный пункт НЕ
+блокирует план, если вынесен в `open-questions.md` с одним из статусов:
+
+```text
+Exploration
+Decision pending (нужен владелец)
+Resolved → D#
+```
+
+Правила: вопрос, «висящий» в теле фазы без выноса, = находка аудита; закрытие плана
+с pending-вопросами = только `🟠 Done with deviations`; возражение фиксируется
+содержательно («не нравится» — не возражение).
+
+**Re-design поверх закрытых фаз** (RAG:✅ P5.1 §7 superseded-цепочки): новое решение =
+новый D# со ссылкой «supersedes D#-старый»; старый D# НЕ редактируется. Реопен фазы:
+Status `🟢`→`🟡` + Version bump плана + D-запись о причине.
+
+## 4. Схема plan.md
 
 Скелет — `snippets/plan-template.md`. Секции строго в этом порядке:
 
 - **`## 0. Meta`** — таблица полей: Plan ID / Title / Version / Status / Document Type /
   Authoring Model / Last Updated / Repository / Related Packages / Execution Mode /
-  Target Operator Models / Approval Owner.
+  Target Operator Models / Approval Owner. Необязательные поля:
+  - **Home** — `brain` | `repo:<путь>`: где живёт исполняемая копия плана (раздел 12);
+  - **Paused By** — какой план перехватил ACTIVE и когда; заполняет режим `new`
+    plan-design, дописывая поле предыдущему активному плану.
 - **`## 1. Context`** — 5–15 строк: что делаем и почему. Самодостаточно: исполнитель
   НЕ видит обсуждение, в котором план родился.
 - **`## 2. Execution Rules`** — выжимка правил исполнения ≤20 строк + план-специфичные
   отклонения. Полный протокол — этот скилл, его не копировать целиком.
-- **`## 3. Routing`** — ТОЛЬКО отклонения от SSOT-матрицы роутинга (раздел 7).
-  Пустая секция = действуют дефолты.
+- **`## 3. Routing`** — ТОЛЬКО отклонения от SSOT-матрицы роутинга (раздел 9).
+  Пустая секция = действуют дефолты. Формат строки:
+  `Items | Model/effort И/ИЛИ Tool Capability | Почему` — tool-capability
+  (типовое: `perplexity-web/WebFetch (RAG)`) ДОПОЛНЯЕТ model/effort, не заменяет.
 - **`## 4. Phase Index & Status Board`** — таблица `Phase | Title | Items 🟢/всего | Status`.
 - **`## 5. Decision Log`** — таблица `D# | Дата | Решение | Почему`.
 - **`## 6. Update Log`** — append-only таблица `Дата | Кто (role/model) | Что`.
+  Жёсткий лимит «Что» ≤ 2 строк, канонический формат:
+  `<item> закрыт: <1 строка сути> — детали см. phases/Pn.md <item> Completion Notes`.
+  Пересказывать Completion Notes в Update Log ЗАПРЕЩЕНО (инцидент EDUFY: 54KB plan.md).
 
-## 4. Схема phases/Pn.md
+## 5. Схема phases/Pn.md
 
 Скелет — `snippets/phase-template.md`. Структура файла фазы:
 
@@ -82,11 +133,25 @@ plans/<PLAN-ID>/
   Implementation Rules, Code Guidance, Validation, Deliverables, Completion Notes,
   Pending Work, Known Deviations, Escalation Needed`.
   Пустое значение — канонический символ «—» (не пустая строка, не «N/A»).
+  Исключение: у поля `Escalation Needed` — и ТОЛЬКО у него — маркер `no` равноправен «—».
   **Code Guidance ОБЯЗАТЕЛЕН**: стиль решения, запреты, допустимые абстракции,
   обязательные тесты, запрещённые shortcuts — то, что дешёвая модель не выведет сама.
 - **`## Phase Handoff`** — заполняется при закрытии фазы (что сдали, что дальше).
 
-## 5. Статусы
+**Маркер фазы-скелета.** Фаза, намеренно не детализированная при авторинге, несёт
+в Phase Context фиксированную строку:
+
+```text
+> СКЕЛЕТ — не детализирован, разворачивается /task:plan-design <ID> Pn
+```
+
+При маркере пустые поля item'ов легальны, включая Code Guidance = «—». Без маркера
+пустой Code Guidance — дефект плана.
+
+**RAG-маркеры** на несущих фактах в Intent/Why/Implementation Rules и в D-логе
+обязательны — схема и определение load-bearing в разделе 7.
+
+## 6. Статусы
 
 РОВНО 6 канонических строк — копировать байт-в-байт (greppable, парсер жёсткий):
 
@@ -102,20 +167,85 @@ plans/<PLAN-ID>/
 Статус живёт в плане: завершение работы без обновления плана = незавершённое
 исполнение. Закрыл item — обнови `Phase Status` и Status Board в `plan.md`.
 
-## 6. Handoff-стандарт
+**Коммит-гейт закрытия.** Статус `🟢`/`🟠` не ставится без закоммиченного диффа item'а:
+Conventional Commits (рус.), атомарно по смыслу (несколько коммитов — нормально),
+`validate.sh` затронутого пакета зелёный ДО коммита; фиксы по замечаниям ревью —
+ОТДЕЛЬНЫМ коммитом (не `amend` — трассируемость: видно, что нашло ревью);
+незакоммиченного диффа по Scope item'а в дереве не остаётся (`git status`); дифф ВНЕ
+Scope item'а — не коммитить, зафиксировать в Pending Work. Инцидент-основание — D12
+плана SKM-AUDIT-004: 4 «закрытых» item'а числились готовыми, а их код лежал
+незакоммиченным в рабочем дереве.
+
+**DoR-гейт фазы.** Фаза не переводится из дизайна в исполнение, пока не пройден
+Definition of Ready — чеклист и refine-цикл в разделе 7. Фаза, ушедшая в exec с
+незакрытыми `[NEEDS CLARIFICATION]`, = находка plan-audit.
+
+## 7. Refine-цикл и готовность
+
+**Маркер `[NEEDS CLARIFICATION: <вопрос>]`** — канонический способ пометить
+неоднозначность прямо в тексте плана/ТЗ item'а (RAG:✅ P5.1 §1 spec-kit). Спорное место
+при авторинге — либо маркер, либо вопрос владельцу; самовольное допущение запрещено.
+Гейт бинарный: 0 маркеров.
+
+**DoR-гейт фазы** (Definition of Ready, RAG:✅ P5.1 §7 Atlassian) — фиксированный
+чеклист; plan-design обязан прогнать его перед выдачей «фаза готова», plan-audit
+проверяет пост-фактум:
+
+- [ ] Все `[NEEDS CLARIFICATION]` сняты (0 маркеров в фазе).
+- [ ] Scope Included / Scope Excluded фазы заполнены (эквивалент Goals/Non-Goals).
+- [ ] Alternatives для несущих решений зафиксированы в D-логе.
+- [ ] Open Questions разнесены по статусам `open-questions.md` (раздел 3).
+- [ ] Несущие факты несут RAG-маркеры.
+
+**RAG-маркеры в схеме.** Каждый load-bearing факт/вердикт в Intent/Why/Implementation
+Rules item'а и в D-логе несёт `RAG:✅ <дата/суть запроса>` либо `[UNVERIFIED]`.
+Load-bearing = «на этом стоит проектное решение». Несущий пункт без маркера =
+дефект схемы, находка аудита.
+
+**Refine-цикл** — канонический контур авторинга:
+design → self-audit (DoR-чеклист) → правка → повтор до 0 маркеров.
+
+**Pre-mortem для high-stakes** (фискалка/платежи/tenant-isolation/ядро экосистемы):
+перед закрытием фазы дизайна — раунд по протоколу Klein (RAG:✅ P5.1 §7, prospective
+hindsight +30%): «план провалился через 6–12 мес — почему»; независимая запись причин →
+кластеризация → mitigations с owner в Risks/D-лог.
+
+## 8. Handoff-стандарт
 
 `plans/<ID>/handoff.md` — rolling-указатель, ПЕРЕЗАПИСЫВАЕТСЯ при каждом закрытии
 item/фазы (история версий — в git, не в файле). Скелет — `snippets/handoff-template.md`.
 Поля:
 
 - Заголовок: `# HANDOFF — <ISO-дата> — after Pn.m`
-- **Next:** `/task:plan-exec <ID> Pn.k` — конкретная следующая команда.
+- **Next:** следующая команда в форме launch-block (ниже).
 - **Done:** что закрыто.
 - **Remaining:** что осталось.
 - **Sources of truth:** где правда (plan.md, phases/Pn.md, ключевые файлы).
 - **Open risks:** открытые риски.
 - **Workarounds/Deferred/Open questions:** ключи совпадают с run-report
   `devloop{workarounds,deferred,open_questions}` — сверяемость с телеметрией.
+
+**Launch-block.** Каждая выдача «что запускать дальше» — handoff.Next и финалы отчётов
+plan-exec/plan-close/plan-audit — обязана иметь фиксированную форму
+(`snippets/launch-block-template.md`):
+
+```markdown
+| Параметр | Значение |
+|:--|:--|
+| Model | <модель> |
+| Thinking | <effort> |
+| Context | <fresh session / continue> |
+| Суть | <1 строка> |
+
+````
+<голая команда одним code-block, копипаст без правок>
+````
+```
+
+**Самодостаточность (cold-start).** Команда в launch-block обязана работать из холодной
+сессии: plan-ID + пути входных доков (cold-start reads) + встроенное утверждение гейта,
+если исполнение гейтится. Ссылки вида «эта сессия» — только как дополнение.
+`plan-lint` проверяет: handoff.Next содержит launch-block-таблицу и code-block (грепаемо).
 
 При мастер-плане общий session-handoff (скилл `session-handoff`) сворачивается
 сюда — второй handoff-файл не заводить.
@@ -126,7 +256,7 @@ handoff.md), а не хвоста чата. plan-exec и plan-close печата
 строку-напоминание:
 `Context: handoff свежий — рекомендован /clear перед следующим item`.
 
-## 7. Routing & Thinking Policy (SSOT-матрица)
+## 9. Routing & Thinking Policy (SSOT-матрица)
 
 Дефолтный роутинг ролей на модели/effort. Секция `## 3. Routing` плана хранит
 ТОЛЬКО отклонения от этой таблицы:
@@ -154,7 +284,7 @@ frontmatter-пина effort внутри интерактивного Claude Cod
   grep/read/map, механических правок, статус-апдейтов, docs sync,
   handoff-форматирования.
 
-## 8. Эскалация (протокол дешёвой модели)
+## 10. Эскалация (протокол дешёвой модели)
 
 Триггеры — закрытый enum:
 
@@ -175,24 +305,76 @@ frontmatter-пина effort внутри интерактивного Claude Cod
 План разошёлся с кодом → НЕ импровизировать, эскалировать: правит план plan-design,
 а не исполнитель на ходу.
 
-## 9. Командный протокол
+## 11. Межплановые паттерны
+
+**Cross-plan gate** (прецедент AIRESTO ERP-GATE-01): зависимость плана от чужого
+плана оформляется decision-доком с таблицей предусловий; каждая строка ссылается на
+ТОЧНЫЙ ID строки Status Board донорского плана. Чтение однонаправленное: потребитель
+читает донора, донор о потребителе не знает и не правится.
+
+**Программный план** (прецеденты FLEX-IMPL, ECOSYSTEM P4): координационный план над
+делегатами — `Document Type: Program Master Plan (coordination)`; items =
+milestone-делегаты (по плану-делегату на item); Validation item'а = GREEN-аудит
+делегата; код в программном плане НЕ пишется. Execution Rules такого плана обязаны
+запрещать `/task:plan-exec` и указывать предписанную команду запуска делегатов.
+
+## 12. Жизненный цикл: два дома, архив, документация
+
+**Модель двух домов** (RAG:✅ P5.1 §2 docs-as-code: git=SSOT, hub=display/index;
+внешнего канона именно для Obsidian↔repo two-way не найдено — механизм наш
+`brain sync`). SSOT плана определяется стадией:
+
+- **до старта exec** — базовый план живёт в Brain (canon);
+- **на старте exec** — план переезжает в репо проекта (`plans/<ID>` репо),
+  Meta `Home: repo:<путь>`; Brain-копия становится зеркалом (синк `brain sync`-каналом,
+  frontmatter `repo:` — тот же механизм, что docs/);
+- **во время exec** — SSOT = репо; правки базового плана в Brain молча ЗАПРЕЩЕНЫ —
+  только через протокол конфликтов; направление синка по умолчанию repo→Brain
+  (зеркалирование), не наоборот;
+- **после завершения** — синк обратно → архив → миграция root/ в docs.
+
+**Протокол конфликтов.** Базовый план изменился во время исполнения → исполнитель
+НЕ мержит молча: фиксирует `temporary divergence` в Known Deviations текущего item →
+эскалация по разделу 10; владелец решает — принять в working-копию новым D# или
+отложить до конца фазы.
+
+**Скиллы — тот же принцип:** SSOT скиллов — всегда swissknifeman; vendor-копии в
+проектах обновляются только `skiller vendor/connect`; локальная правка vendor-копии =
+дефект, путь — contribution в SSOT (см. `package-contribution-protocol`).
+
+**Конвейер план→архив→docs** (RAG:✅ P5.1 §2 Diátaxis + Oxide «committed =
+реализовано»). По терминальности плана — команда `/task:plan-close archive <ID>`:
+
+1. План перемещается в `plans/archive/<ID>` ОТДЕЛЬНЫМ коммитом
+   `chore(plan): archive <ID>`.
+2. Из `root/` собирается документация проекта по Diátaxis-типам:
+   architecture/philosophy → explanation; data-model/contracts → reference;
+   гайды фаз → how-to.
+3. Чек-лист миграции (что перенесено в docs, что осталось в архиве) — в финальном
+   handoff.
+
+## 13. Командный протокол
 
 | Команда | Модель/effort | Что делает |
 |:--|:--|:--|
-| `/task:plan-design` | opus/high | новый план / новая фаза / ТЗ item'ов |
+| `/task:plan-design` | opus/high | новый план / новая фаза / ТЗ item'ов; refine-цикл + DoR-гейт |
 | `/task:plan-exec` | sonnet/medium | исполнить item; самозакрывающийся (обновляет статусы + handoff) |
-| `/task:plan-close` | sonnet/low | реконсиляция статусов / закрытие фазы |
+| `/task:plan-close` | sonnet/low | реконсиляция статусов / закрытие фазы / режим `archive` |
 | `/task:plan-audit` | opus/xhigh | adversarial-аудит фазы; вердикт GREEN/ATTENTION/RED |
 
-## 10. Чеклист качества плана
+## 14. Чеклист качества плана
 
 - [ ] Каждый item исполним sonnet'ом без дополнительного контекста (вне плана).
 - [ ] Required Reads конечны и упорядочены (не «посмотри по репо»).
 - [ ] Code Guidance заполнен у каждого item (не «—»).
+- [ ] Недетализированная фаза несёт скелет-маркер — не «просто пустые поля».
+- [ ] Несущие факты/вердикты несут `RAG:✅`/`[UNVERIFIED]`-маркеры.
+- [ ] Open Questions не «висят» в теле фаз — вынесены в `open-questions.md` со статусом.
+- [ ] handoff.Next содержит launch-block (таблица + code-block).
 - [ ] Phase-first: фазы закрываются последовательно, item'ы не прыгают между фазами.
 - [ ] `plan-lint` зелёный.
 
-## 11. Per-project deployment
+## 15. Per-project deployment
 
 Планы живут В ПРОЕКТЕ, не в `~/.claude/plans/`: top-level ключ
 `plansDirectory: "plans"` в `.claude/settings.json` проекта (шаримый, коммитится).
@@ -209,7 +391,24 @@ frontmatter-пина effort внутри интерактивного Claude Cod
 плоским черновиком в `plans/` → `/task:plan-design from-draft <файл>` разворачивает
 его в `plans/<ID>/` по шаблонам этого скилла (черновик удаляется, история — в git).
 
-## 12. Связанные скиллы
+## 16. Артефакты плана: findings/
+
+`plans/<PLAN-ID>/findings/<Pn>-<slug>.md` — штатное место артефактов плана: RAG-выжимки
+и recon-отчёты, чтобы дальнейшая доработка плана не переплачивала за восстановление
+«откуда что взялось» (RAG/субагентские выжимки — дешёвые артефакты для будущих итераций).
+
+- **Путь и имя:** `plans/<PLAN-ID>/findings/<Pn>-<slug>.md` (`Pn` — фаза, `slug` — кебаб
+  тема); образец — `plans/SKM-AUDIT-004/findings/`.
+- **Что кладут:** RAG-выжимка (источник-URL + дата верификации + вердикт), recon-отчёт
+  субагента, диагноз/репро — **компактный синтез, не сырьё**.
+- **Как ссылаются:** item, чья работа опирается на артефакт, указывает файл в своих
+  `Inputs`/`Required Reads` — downstream-исполнитель читает файл, а не восстанавливает
+  контекст по чату.
+- **Опционально:** `findings/` не обязателен для каждого плана/item'а — обязателен
+  только когда item декларирует файл в своих `Deliverables`. Схема 16 полей item'а не
+  меняется, `plan_lint.py` каталог не проверяет (не его слой).
+
+## 17. Связанные скиллы
 
 - `task-brief-template` (general) — одиночная задача без мастер-плана.
 - `session-handoff` (general) — handoff произвольной сессии; при мастер-плане
@@ -217,3 +416,5 @@ frontmatter-пина effort внутри интерактивного Claude Cod
 - `complex-task-orchestrator` (general) — декомпозиция и маршрутизация контекста.
 - `context-economy` (general) — Plan→Clear→Execute, дисциплина токенов.
 - `anti-drift` (general) — дисциплина итераций исполнителя, circuit breaker.
+- `package-contribution-protocol` (architect) — contribution в SSOT вместо правки
+  vendor-копий (раздел 12).

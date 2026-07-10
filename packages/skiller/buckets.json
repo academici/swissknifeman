@@ -244,6 +244,15 @@
     "category": "engineering",
     "tags": ["laravel", "spatie", "packages"]
   },
+  "axioma": {
+    "description": "Axioma ecosystem doctrine & reuse: dev philosophy, tech-radar binding, vendor-vs-build discipline (project-scoped bucket)",
+    "category": "engineering",
+    "tags": [
+      "axioma",
+      "ecosystem",
+      "doctrine"
+    ]
+  },
   "azguard": {
     "description": "azguard package usage: code-first RBAC, panels, scoped roles, abilities (academici package — skill will relocate into the package repo)",
     "category": "engineering",

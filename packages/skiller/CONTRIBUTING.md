@@ -18,6 +18,11 @@
 (обобщённо: «проект-потребитель», «зависимый пакет»). Стандарт приёмки и
 методология — `docs/guide/methodology.md`.
 
+**Секция `## Conformance`.** Для скиллов-конвенций (naming / writing-style / стек)
+обязательна: ≤10 строк императивов — машинно-выжимаемый чек-лист для
+conformance-finder'ов `task:review`. Стандарт авторинга —
+`docs/guide/creating-skills.md`, § «Секция `## Conformance`».
+
 ## Adding an External (Upstream-Tracked) Skill
 
 Внешние скиллы берём **выборочно** — только то, что реально подходит. Кандидаты

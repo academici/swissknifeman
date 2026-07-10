@@ -56,6 +56,21 @@ class PermissionsCase(unittest.TestCase):
         # base-пресет всегда вносит deny/allow — структура непустая
         self.assertTrue(data["permissions"])
 
+    def test_global_preset_merges_enabled_mcpjson_servers(self):
+        # SKM-AUDIT-004 P4.3: settings.global.json одобряет perplexity-web
+        # (Класс B) top-level ключом enabledMcpjsonServers — merge-семантика
+        # apply-permissions.sh должна union'ить его, не только permissions.*.
+        env = fx.real_env(self.tmp)
+        proj = fx.make_project(self.tmp)
+        # существующая цель уже несёт свой сервер — фикс не должен его затирать
+        settings_path = proj / ".claude" / "settings.local.json"
+        settings_path.parent.mkdir(parents=True, exist_ok=True)
+        settings_path.write_text(json.dumps({"enabledMcpjsonServers": ["github"]}))
+        ret, _out = run(apply_permissions, env, proj, presets="global")
+        self.assertTrue(ret)
+        data = json.loads(settings_path.read_text())
+        self.assertEqual(sorted(data["enabledMcpjsonServers"]), ["github", "perplexity-web"])
+
 
 if __name__ == "__main__":
     unittest.main()

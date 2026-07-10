@@ -104,9 +104,23 @@ def phase_md(phase_id="P1", *, item_id="P1.1", item_status="🟢 Done",
 
 
 def handoff_md(plan_id, *, item_id="P1.1"):
+    # Next несёт launch-block (таблица `| Model |` + code-block) — канон 2.0;
+    # без него green-path ловил бы warning «Next без launch-block».
     return f"""# HANDOFF — 2026-07-02 — after {item_id}
 
 **Next:** /task:plan-exec {plan_id} {item_id}
+
+| Параметр | Значение |
+|:--|:--|
+| Model | sonnet |
+| Thinking | medium |
+| Context | fresh session |
+| Суть | закрыть следующий item |
+
+````
+/task:plan-exec {plan_id} {item_id}
+````
+
 **Done:** {item_id} закрыт.
 **Remaining:** ничего.
 **Sources of truth:** plans/{plan_id}/plan.md · plans/{plan_id}/phases/P1.md

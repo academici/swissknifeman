@@ -93,6 +93,30 @@ ACTIVE_FIELD_RE = re.compile(r"^\*\*Active:\*\*\s*(.+)$")
 ACTIVE_FILENAME = "ACTIVE.md"
 README_FILENAME = "README.md"
 
+# --- канон 2.0 (все проверки ниже — ТОЛЬКО warning, существующие планы не ломаем) --
+# Маркер фазы-скелета (SKILL §5): при нём пустые поля items легальны, без него
+# item с ≥50% пустых полей — warning (P0.3 рек#1).
+SKELETON_MARKER_RE = re.compile(r"^>\s*СКЕЛЕТ\s+—\s+не детализирован")
+# Маркер неоднозначности (SKILL §7): в фазе со статусом 🟡+ (не ⬜) = DoR-warning.
+NEEDS_CLARIFICATION_RE = re.compile(r"\[NEEDS CLARIFICATION")
+# RAG-маркеры несущих фактов (SKILL §7) — эвристика по D-логу.
+RAG_MARKER_RE = re.compile(r"RAG:✅|\[UNVERIFIED\]")
+# launch-block в handoff.Next (SKILL §8): таблица с `| Model |` + code-block.
+LAUNCH_TABLE_ROW_RE = re.compile(r"^\|\s*Model\s*\|")
+CODE_FENCE_RE = re.compile(r"^\s*```")
+# Канонический порядок нумерованных секций plan.md (P0.3 рек#6).
+PLAN_SECTION_NUM_RE = re.compile(r"^##\s+(\d+)\.\s+(.*?)\s*$")
+PLAN_SECTION_TITLES = {
+    0: "Meta", 1: "Context", 2: "Execution Rules", 3: "Routing",
+    4: "Phase Index & Status Board", 5: "Decision Log", 6: "Update Log",
+}
+DECISION_LOG_HEADER_RE = re.compile(r"^##\s+5\.\s+Decision Log\s*$")
+UPDATE_LOG_HEADER_RE = re.compile(r"^##\s+6\.\s+Update Log\s*$")
+UPDATE_LOG_MAX_CHARS = 300  # лимит «Что» Update Log (P0.3 рек#5, EDUFY 54KB-инцидент)
+PHASE_CONTEXT_HEADER_RE = re.compile(r"^##\s+Phase Context\s*$")
+# порог «item по сути пуст» для требования скелет-маркера
+SKELETON_EMPTY_RATIO = 0.5
+
 
 class Diagnostics:
     """Копилка ERROR/WARNING с человекочитаемым выводом (русский, file:line)."""
@@ -246,6 +270,55 @@ def _malformed_item_headers(lines):
     return bad
 
 
+# --- warning-проверки 2.0 для plan.md ------------------------------------------
+
+def _lint_plan_md_20(lines, path, diag):
+    """Warning-проверки схемы 2.0 поверх plan.md (существующее поведение не трогают):
+    (а) порядок/заголовки нумерованных секций `## 0-6` (P0.3 рек#6);
+    (б) Update Log: ячейка «Что» длиннее UPDATE_LOG_MAX_CHARS (P0.3 рек#5);
+    (в) D-лог с ≥3 решениями без единого RAG-маркера — эвристика отсутствия
+        маркировки несущих фактов (SKILL §7)."""
+    # (а) нумерованные секции: номера по возрастанию, заголовки 0-6 — канонические
+    numbered = []
+    for i, ln in enumerate(lines):
+        m = PLAN_SECTION_NUM_RE.match(ln)
+        if m:
+            numbered.append((int(m.group(1)), m.group(2), i + 1))
+    nums = [n for n, _, _ in numbered]
+    if nums != sorted(nums):
+        diag.warning(path, numbered[0][2],
+                     f"секции plan.md идут не по порядку: {nums} (канон — ## 0…6 по возрастанию)")
+    for n, title, lineno in numbered:
+        expected = PLAN_SECTION_TITLES.get(n)
+        if expected and title != expected:
+            diag.warning(path, lineno,
+                         f"секция «## {n}. {title}» ≠ канонической «## {n}. {expected}»")
+
+    # (б) Update Log — лимит «Что»
+    _, ul_body, ul_start = _find_section(lines, UPDATE_LOG_HEADER_RE)
+    if ul_body is not None:
+        headers, rows, _ = _parse_table(ul_body, ul_start)
+        if headers and "Что" in headers:
+            for row, lineno in rows:
+                what_val = row.get("Что", "")
+                if len(what_val) > UPDATE_LOG_MAX_CHARS:
+                    diag.warning(path, lineno,
+                                 f"Update Log: запись «Что» {len(what_val)} символов > "
+                                 f"{UPDATE_LOG_MAX_CHARS} — канон: ≤2 строк + ссылка на "
+                                 f"Completion Notes, не пересказ")
+
+    # (в) D-лог ≥3 решений без единого RAG-маркера
+    _, dl_body, dl_start = _find_section(lines, DECISION_LOG_HEADER_RE)
+    if dl_body is not None:
+        _, rows, _ = _parse_table(dl_body, dl_start)
+        if len(rows) >= 3 and not any(
+                RAG_MARKER_RE.search(" ".join(str(v) for v in row.values()))
+                for row, _ in rows):
+            diag.warning(path, dl_start,
+                         f"Decision Log: {len(rows)} решений и ни одного маркера "
+                         f"«RAG:✅»/«[UNVERIFIED]» — несущие факты не промаркированы (SKILL §7)")
+
+
 # --- парсинг файлов схемы -----------------------------------------------------
 
 def parse_plan_md(path, diag):
@@ -254,6 +327,8 @@ def parse_plan_md(path, diag):
     if lines is None:
         diag.error(path, None, "plan.md отсутствует или не читается")
         return None, []
+
+    _lint_plan_md_20(lines, path, diag)
 
     meta = {}
     _, meta_body, meta_start = _find_section(lines, META_HEADER_RE)
@@ -326,6 +401,16 @@ def parse_phase_md(path, phase_id, diag):
         diag.error(path, lineno,
                     f"заголовок item не соответствует regex `^### (P\\d+\\.\\d+) — `: «{bad_ln}»")
 
+    # --- 2.0: скелет-маркер в Phase Context (легализует пустые поля items) ------
+    is_skeleton = False
+    _, ctx_body, _ = _find_section(lines, PHASE_CONTEXT_HEADER_RE)
+    if ctx_body is not None:
+        is_skeleton = any(SKELETON_MARKER_RE.match(ln) for ln in ctx_body)
+
+    # --- 2.0: маркеры [NEEDS CLARIFICATION] — линуются в lint_plan по статусу фазы
+    needs_clarification = [i + 1 for i, ln in enumerate(lines)
+                           if NEEDS_CLARIFICATION_RE.search(ln)]
+
     items = {}
     for item_id, title, header_lineno, body_lines, body_start in _find_items(lines):
         prefix_m = PHASE_TOKEN_RE.match(item_id.split(".")[0])
@@ -337,6 +422,22 @@ def parse_phase_md(path, phase_id, diag):
         for f in REQUIRED_ITEM_FIELDS:
             if f not in fields:
                 diag.error(path, header_lineno, f"item {item_id}: нет обязательного поля «{f}»")
+
+        # --- 2.0 WARNING: порядок 16 канонических полей (P0.3 рек#6) ------------
+        canon_index = {f: i for i, f in enumerate(REQUIRED_ITEM_FIELDS)}
+        present_order = [f for f in fields if f in canon_index]
+        if present_order != sorted(present_order, key=canon_index.get):
+            diag.warning(path, header_lineno,
+                         f"item {item_id}: поля идут не в каноническом порядке "
+                         f"(канон — SKILL §5 / phase-template)")
+
+        # --- 2.0 WARNING: ≥50% пустых полей без скелет-маркера (P0.3 рек#1) -----
+        empty = sum(1 for f in REQUIRED_ITEM_FIELDS if _is_empty(fields.get(f, ("",))[0]))
+        if not is_skeleton and empty >= len(REQUIRED_ITEM_FIELDS) * SKELETON_EMPTY_RATIO:
+            diag.warning(path, header_lineno,
+                         f"item {item_id}: {empty}/{len(REQUIRED_ITEM_FIELDS)} полей пусты, "
+                         f"а в Phase Context нет маркера «> СКЕЛЕТ — не детализирован…» — "
+                         f"либо детализировать, либо пометить фазу скелетом")
         status_val, _ = fields.get("Status", ("", header_lineno))
         if status_val and status_val not in STATUSES:
             diag.error(path, header_lineno, f"item {item_id}: недопустимый статус «{status_val}»")
@@ -362,7 +463,8 @@ def parse_phase_md(path, phase_id, diag):
     else:
         handoff_text = "\n".join(handoff_body).strip()
 
-    return {"status_table": status_table, "items": items, "phase_handoff": handoff_text}
+    return {"status_table": status_table, "items": items, "phase_handoff": handoff_text,
+            "is_skeleton": is_skeleton, "needs_clarification": needs_clarification}
 
 
 def parse_handoff_md(path, diag):
@@ -392,7 +494,7 @@ def parse_handoff_md(path, diag):
         if f not in fields:
             diag.error(path, body_start, f"нет обязательного поля «{f}»")
 
-    return {"title_item": title_item, "fields": fields}
+    return {"title_item": title_item, "fields": fields, "lines": lines}
 
 
 # --- линт одного плана ---------------------------------------------------
@@ -468,6 +570,8 @@ def lint_plan(plan_dir, diag):
             # --- 🔴 ⇔ ESCALATION-блок ⇔ Escalation Needed: yes ---------------
             en_val, en_lineno = item["fields"].get("Escalation Needed", ("", item["header_lineno"]))
             en_norm = (en_val or "").strip().lower()
+            # 2.0 канонизировал (P0.3 рек#4, SKILL §5): у Escalation Needed — и ТОЛЬКО
+            # у него — маркер `no` равноправен «—»; оба принимаются без диагностики.
             if en_norm in ("", EMPTY_PLACEHOLDER, "no"):
                 en_yes = False
             elif en_norm == "yes":
@@ -542,6 +646,15 @@ def lint_plan(plan_dir, diag):
             diag.error(plan_md, row_lineno,
                        f"Status Board {pid}: все items 🟢 Done, но статус фазы «{phase_status}» ≠ 🟢 Done")
 
+        # --- 2.0 WARNING: [NEEDS CLARIFICATION] в фазе 🟡+ = DoR-гейт не пройден --
+        if phase_status and phase_status != "⬜ Not started":
+            nc = phases[pid].get("needs_clarification") or []
+            if nc:
+                diag.warning(phases[pid]["path"], nc[0],
+                             f"фаза {pid} в статусе «{phase_status}», но несёт "
+                             f"{len(nc)} маркер(ов) [NEEDS CLARIFICATION] "
+                             f"(строки {nc}) — DoR-гейт не пройден (SKILL §7)")
+
         # --- фаза 🟢/🟠 ⇒ Phase Handoff непуст --------------------------
         if phase_status in (STATUS_DONE, STATUS_DEVIATIONS):
             handoff_text = phases[pid].get("phase_handoff")
@@ -575,6 +688,23 @@ def lint_plan(plan_dir, diag):
     handoff = parse_handoff_md(handoff_path, diag)
     if handoff:
         next_val, next_lineno = handoff["fields"].get("Next", ("", None))
+
+        # --- 2.0 WARNING: launch-block в handoff.Next (SKILL §8) ------------------
+        # Таблица `| Model | …` и code-block грепаются по всему файлу: шаблон кладёт
+        # launch-block продолжением Next, но точное место не гейтим (warning-уровень).
+        # Для целиком закрытого плана («план закрыт») запускать нечего — не требуем.
+        if "план закрыт" not in next_val.lower():
+            has_table = any(LAUNCH_TABLE_ROW_RE.match(ln) for ln in handoff["lines"])
+            has_fence = any(CODE_FENCE_RE.match(ln) for ln in handoff["lines"])
+            if not (has_table and has_fence):
+                missing = []
+                if not has_table:
+                    missing.append("таблицы `| Model | …`")
+                if not has_fence:
+                    missing.append("code-block с командой")
+                diag.warning(handoff_path, next_lineno,
+                             "Next без launch-block: нет " + " и ".join(missing) +
+                             " (форма — snippets/launch-block-template.md)")
         m = PLAN_EXEC_RE.search(next_val)
         m_design = PLAN_DESIGN_PHASE_RE.search(next_val) if not m else None
         if m_design:

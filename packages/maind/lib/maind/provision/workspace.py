@@ -26,8 +26,12 @@ def hub_settings_path(env):
 
 
 def norm_path(p):
-    """Нормализация пути для сравнения/дедупа: expanduser + normpath (без резолва симлинков)."""
-    return os.path.normpath(os.path.expanduser(str(p)))
+    """Нормализация пути для сравнения/дедупа: expanduser + realpath (резолвит симлинки и
+    `.`/`..`-сегменты). N4: раньше был только normpath — повторный `maind onboard` через
+    симлинк/иной эквивалентный путь на тот же каталог штамповал дубль-запись проекта
+    (_ensure_project матчит по нормализованному local_path). realpath безопасен и для
+    несуществующих путей (резолвит существующий префикс, остаток оставляет как есть)."""
+    return os.path.realpath(os.path.expanduser(str(p)))
 
 
 def load_settings(path):

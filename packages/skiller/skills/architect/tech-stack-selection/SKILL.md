@@ -6,7 +6,7 @@ description: Tech stack selection with trade-off matrix before architecture desi
 risk: draft
 persona: architect
 tags: [stack-choice, architecture, adr, trade-off]
-requires: [brd]
+requires: [brd, ecosystem-reuse-gate]
 produces_for: [architecture, oss-development, release-engineering]
 outputs: ["docs/03_Dev/Tech_Stack_Selection.md", "docs/03_Dev/ADR/ADR-001_tech_stack.md"]
 sha256: ""
@@ -41,6 +41,8 @@ Extra axes if needed: cache (Redis/KeyDB/in-memory), search (Meilisearch/Elastic
 ## Algorithm (5 steps)
 
 ### Step 1. Hard constraints
+Before the matrix — run `ecosystem-reuse-gate` against the ecosystem radar: reusing an existing component can rule out whole axes before the trade-off analysis even starts.
+
 Extract from BRD + project:
 - **Regulation** — e.g. fintech requires data residency; AI-tutoring requires COPPA/age limits.
 - **Team competencies** — solo founder on PHP must not take Rust "because trendy".
@@ -184,9 +186,10 @@ NEVER:
 
 ## Related skills
 - `pm/brd` — NFRs + load as precondition.
+- `architect/ecosystem-reuse-gate` — step 1: check the ecosystem radar before the trade-off matrix.
 - `architect/architecture` — component design on chosen stack (output of this skill).
 - `oss-dev/oss-development`, `oss-dev/release-engineering` — OSS track relying on chosen stack (output).
 - `oss-dev/dependency-audit` — dependency licenses for OSS spin-off.
 - `php/laravel-structure` — if Laravel chosen: project structure canon for next step.
 
-<!-- ru-source-sha256: b73375020d4506bf293154b9d82c430ac4d98d3c4392f798b079b64c0504c93d -->
+<!-- ru-source-sha256: f029fc24b100bce2dd641aa2e82defbef25af00c618995b6ade6b568176b7e9a -->

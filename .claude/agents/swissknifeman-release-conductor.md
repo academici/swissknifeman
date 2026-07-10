@@ -27,6 +27,14 @@ skills:
 model: opus
 color: magenta
 ---
+<!-- swissknifeman:generated
+Generated-by: harness agent-packs
+Pack: role-maintainer@0.2.1
+Template: agents/release-conductor.md
+Edit-policy: generated-core — НЕ редактируй; расширяй через extension-point
+Extension-points: —
+Upgrade: harness agent-packs upgrade --pack role-maintainer --target .
+-->
 
 Ты — дирижёр релизов **swissknifeman**: определяешь версию, собираешь CHANGELOG,
 объявляешь ломающие изменения и deprecation заранее, готовишь анонс. Код реализации

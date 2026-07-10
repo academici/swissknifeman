@@ -55,15 +55,70 @@ def _skill_drift_report(env, config, detail):
               + "  (применить: maind sync --project " + pid + " --only ecosystem-skill,setup-skill)")
 
 
+def _channel_overlap(env, config):
+    """Дубль-канал skiller (бакет раздаётся ОДНОВРЕМЕННО plugin'ом (connect) и
+    вендором) по флоту enabled-проектов: сухой `skiller status --json` на каждый —
+    детект живёт в skiller (`channel_overlap`), doctor только агрегирует по флоту
+    (field-feedback: найдено вручную на agelto/azguard/dterema — теперь на радаре
+    само). Возвращает [(project_id, [bucket, …])]."""
+    import json
+    import subprocess
+
+    from .federation import _enabled_projects
+    from .provision.orchestrate import _sibling_bin
+    try:
+        skm_bin = _sibling_bin(config, "swissknifeman")
+    except SystemExit:
+        return []
+    overlaps = []
+    for p in _enabled_projects(config):
+        local = p.get("local_path")
+        if not local or not Path(os.path.expanduser(local)).is_dir():
+            continue
+        try:
+            r = subprocess.run([str(skm_bin), "status", "--target", local, "--json"],
+                               capture_output=True, text=True, timeout=15, check=False)
+            data = json.loads(r.stdout)
+        except (subprocess.SubprocessError, ValueError, OSError):
+            continue
+        overlap = data.get("channel_overlap") or []
+        if overlap:
+            overlaps.append((p.get("id"), overlap))
+    return overlaps
+
+
+def _channel_hygiene_report(env, config, detail):
+    """detail=False: одна summary-строка. detail=True (--channel-drift): по-проектная
+    разбивка дублей канала."""
+    overlaps = _channel_overlap(env, config)
+    if not detail:
+        if overlaps:
+            print(f"  [warn] дубль-канал skiller (connect+vendor): {len(overlaps)} "
+                  "проект(ов) раздают скиллы дважды (детали: maind doctor --channel-drift)")
+        else:
+            print("  [ok ] дубль-канал skiller (connect+vendor): не найден")
+        return
+    print("\nДубль-канал skiller (бакет ОДНОВРЕМЕННО plugin+vendor, сухой запрос):")
+    if not overlaps:
+        print("  (не найден ни в одном enabled-проекте)")
+        return
+    for pid, buckets in overlaps:
+        print(f"  [warn] {pid}: {' '.join(buckets)}  (почистить: skiller connect "
+              "--target <path> --cleanup-vendored — плюс отдельно вручную, если "
+              "вендор через .swissknifeman/config.json, не legacy .swissknife.json)")
+
+
 def cmd_doctor(env, argv):
     opts, _ = parse_args(argv, {"--quiet": "bool", "--audit": "str", "--json": "bool",
-                                "--skill-drift": "bool"})
+                                "--skill-drift": "bool", "--channel-drift": "bool"})
     if opts["help"]:
         print("maind doctor [--quiet] — проверка окружения узла\n"
-              "maind doctor --audit mcp|claude|deny|core|all [--json] — "
+              "maind doctor --audit mcp|claude|deny|core|pao|all [--json] — "
               "fleet-аудит оптимизаций по проектам (read-only)\n"
               "maind doctor --skill-drift — по-проектная разбивка дрейфа "
-              "ecosystem-mcp/ecosystem-setup от текущего шаблона")
+              "ecosystem-mcp/ecosystem-setup от текущего шаблона\n"
+              "maind doctor --channel-drift — по-проектная разбивка дубль-канала "
+              "skiller (connect+vendor на один бакет)")
         return
 
     # --audit: read-only fleet-отчёт о полноте раздачи оптимизаций по проектам
@@ -128,6 +183,7 @@ def cmd_doctor(env, argv):
 
     if config:
         _skill_drift_report(env, config, detail=opts.get("skill_drift"))
+        _channel_hygiene_report(env, config, detail=opts.get("channel_drift"))
 
     # порты памяти — на разрешённых портах (env/конфиг), информативно
     if not quiet:

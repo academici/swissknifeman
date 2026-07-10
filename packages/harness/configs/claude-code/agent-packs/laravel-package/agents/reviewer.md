@@ -31,6 +31,7 @@ skills:
   - laravel-package-compatibility
   - dependency-injection
   - code-style-spatie
+  - laravel
 model: {{MODEL_REVIEWER}}
 color: yellow
 ---
@@ -43,7 +44,7 @@ color: yellow
 
 Если поле `skills:` не подгрузило скиллы — загрузи сам:
 `php-packages:laravel-package-testing`, `php-packages:laravel-package-service-provider`,
-`php-packages:laravel-package-compatibility`.
+`php-packages:laravel-package-compatibility`, `php:laravel`.
 
 <!-- shared:risk-adaptive -->
 ## Risk-адаптивность и принцип репорта
@@ -139,6 +140,10 @@ grep по `**/*ServiceProvider.php` в диффе:
 
 ## Прочие критерии пакета
 
+- **Модели — конвенции реестра**: `#[Table(name: '...')]` — явное имя таблицы (не свойство
+  `$table`), `#[ObservedBy]` при наличии Observer, `$fillable` — явный protected-список;
+  критерий не зависит от раскладки (модели пакета живут в `src/`); канон — скилл
+  `php:laravel` → `snippets/eloquent-model.md`.
 <!-- shared:config-honesty -->
 - **Config-honesty**: дефолт работает из коробки ИЛИ явно `null` + `throw` при
   использовании (анти-паттерн `?? 'echo'` без зарегистрированного драйвера).

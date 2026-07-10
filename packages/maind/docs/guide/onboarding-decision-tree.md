@@ -84,6 +84,25 @@ Claude-проекта сам генерит `.swissknifeman/config.json` из п
 | **auto-approve** | strict / permissive / bypass / off | `.claude/auto-approve.env.ini` + PreToolUse-хук |
 | **brain-memory** | file / federation / agentmemory / off | `.swissknife.json` + memory-хук |
 
+### PHP-инструменты: PAO (инвариант для php/laravel-проектов)
+
+**Вопрос:** для `laravel-project`/`php-package` (PHP≥8.3) — установлен ли `laravel/pao`
+(agent-optimized вывод PHP-тестов/анализа, прямая токен-экономия — тесты/PHPStan/Rector/
+Artisan схлопываются в ~20-токенный JSON вместо тысяч строк)? Онбординг детектит по файловым
+фактам (`composer.lock`/`vendor/laravel/pao` + `php -v`) и действует так:
+
+| Состояние | Действие |
+|:--|:--|
+| не php-тип / PHP < 8.3 | skip (не применимо / не поддерживается) |
+| осознанный opt-out (`project.pao_opt_out`) | skip, без warn |
+| отсутствует, интерактивная сессия | спросить, установить ли `composer require laravel/pao --dev` |
+| отсутствует, `--yes`/неинтерактив | **не ставить молча** — громкий warn с рекомендацией |
+| уже установлен | skip, `status:ok` |
+
+Инвариант: **php-проект (≥8.3) ⇒ `laravel/pao` установлен ИЛИ зафиксирован opt-out.**
+Видимость отсутствия в диагностике — doctor-гейт (`plans/SKM-AUDIT-004` P6.3); скилл-инструкция
+для агента — `php/pao` (`packages/skiller/skills/php/pao/SKILL.md`).
+
 ## Слой 6 — Deploy (MCP + код-граф)
 
 - **MCP-таргеты:** `.mcp.json` (claude) всегда; `.cursor/mcp.json` если есть `.cursor/`; vscode по флагу.

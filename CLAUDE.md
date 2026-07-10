@@ -16,7 +16,8 @@ router к пакетам + кросс-пакетный `setup` (онбордин
 │   ├── skiller/               # реестр AI-скиллов (skills/, skm/, generate-skill/, lib/, bin/) — CLI skiller
 │   ├── harness/               # настройка окружения Claude Code (configs/, lib/, bin/, commands/) — CLI harness
 │   ├── maind/                 # хаб памяти/графа/координации (lib/, bin/, commands/) — CLI maind
-│   └── analyst/               # continuous learning: захват уроков из прогонов (lib/, bin/, commands/) — CLI analyst
+│   ├── analyst/               # continuous learning: захват уроков из прогонов (lib/, bin/, commands/) — CLI analyst
+│   └── task/                  # интент-команды + plan-протокол (commands/, lib/, tests/) — без CLI, только plugin
 ├── .claude-plugin/
 │   └── marketplace.json       # ЕДИНЫЙ marketplace репо (генерируется), ~50 плагинов
 └── docs/                      # зонтичный VitePress: общее (index/routing/roadmap) + агрегат
@@ -37,6 +38,7 @@ router к пакетам + кросс-пакетный `setup` (онбордин
 | [`packages/harness`](packages/harness/CLAUDE.md) | настройка окружения Claude Code | `harness` | пресеты permissions, auto-approve/bypass, MCP-серверы, хуки (memory/notify). Source истины — `configs/claude-code/`. skiller делегирует сюда через subprocess |
 | [`packages/maind`](packages/maind/CLAUDE.md) | память + граф + координация (хаб/шина) | `maind` | MCP-хаб, namespace-память, федерация графа. **Единый** — память (`agentmemory`) и graphify (граф кода) уже отдельные MCP-серверы; дробить maind не нужно |
 | [`packages/analyst`](packages/analyst/CLAUDE.md) | continuous learning (захват уроков из прогонов) | `analyst` | детерминированный (stdlib, on-demand — без демона) слой-1: `digest` (run-report → кандидаты) · `review`/`promote` с **человеком в гейте** (авто-запись запрещена) · провенанс/audit · curated всплывает в память mAInd. P1 (MVP); cross-project scan + confidence-lifecycle — P2/P3 |
+| [`packages/task`](packages/task/CLAUDE.md) | интент-команды постановки задач + plan-протокол | нет (plugin-only, без `bin/`) | `/task:design\|dev\|review\|research\|fix` + `/task:plan-design\|plan-exec\|plan-close\|plan-audit` (исполняемые мастер-планы в `plans/`); каждая команда пинит модель/effort/workflow per-команда, перебивая настройки сессии |
 
 Это **один монорепозиторий, не «соседние пакеты»**: maind координирует skiller через
 `subprocess` (см. `packages/maind/lib/maind/orchestrate.py`); skiller так же делегирует окружение
@@ -58,6 +60,8 @@ skiller <cmd>              # реестр скиллов: connect, vendor, integ
 harness <cmd>              # окружение Claude Code: permissions, mcp, hooks, doctor
 maind <cmd>                # хаб: memory, graph, onboard, deploy, sync, health, doctor, …
 analyst <cmd>              # continuous learning: digest, scan, review, promote, deprecate, doctor
+# task — сознательно БЕЗ строки в `swissknifeman <group>`: у пакета нет bin/CLI, только
+# slash-команды плагина (/task:*, см. таблицу «Пакеты»); роутить через swissknifeman нечего
 ```
 
 Корневой `swissknifeman` — тонкий диспетчер: логику не реализует, делегирует пакетам;

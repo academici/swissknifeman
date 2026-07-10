@@ -55,6 +55,57 @@ CONFIG_KEYS = {
     "shape": str, "stacks": list, "skills_map": dict,
 }
 HUB_MARKER = "<!-- swissknifeman:hub:start -->"
+SKILL_MANAGED_MARKER = "<!-- swissknifeman:managed -->"
+
+
+def _split_bom(raw):
+    """(bom, body) — срезать BOM-префикс (если есть) без нормализации остального."""
+    if raw.startswith(b"\xef\xbb\xbf"):
+        return raw[:3], raw[3:]
+    return b"", raw
+
+
+def _mark_skill_managed(dst):
+    """Проставить SKILL_MANAGED_MARKER сразу после закрывающего `---` frontmatter'а
+    в `dst/SKILL.md`, БАЙТ-РЕЖИМ (без text-mode чтения/нормализации `\\r\\n`→`\\n`) —
+    старая версия читала файл через `.read_text()`, из-за чего у CRLF-скиллов
+    записанные байты расходились с исходными и `hashlib.sha256(read_bytes())`
+    реестра (registry.py) детектировал ложный дрейф на каждом sync. Идемпотентно
+    (второй вызов — no-op); нет файла/нет frontmatter → тихий no-op (не крэш)."""
+    path = Path(dst) / "SKILL.md"
+    if not path.is_file():
+        return
+    raw = path.read_bytes()
+    bom, body = _split_bom(raw)
+    if body.startswith(b"---\r\n"):
+        newline = b"\r\n"
+    elif body.startswith(b"---\n"):
+        newline = b"\n"
+    else:
+        return  # нет frontmatter — не наш файл, пропуск
+    delim = b"---" + newline
+    close_idx = body.find(delim, len(delim))
+    if close_idx == -1:
+        return  # frontmatter не закрыт — malformed, пропуск
+    insert_at = close_idx + len(delim)
+    marker_bytes = SKILL_MANAGED_MARKER.encode("utf-8")
+    if body[insert_at:insert_at + len(marker_bytes)] == marker_bytes:
+        return  # уже размечен — идемпотентный no-op
+    new_body = body[:insert_at] + marker_bytes + newline + body[insert_at:]
+    path.write_bytes(bom + new_body)
+
+
+def strip_skill_managed_marker(data):
+    """Обратное к `_mark_skill_managed` — убрать строку-маркер из байтов `data`
+    (LF или CRLF), вернув исходное содержимое байт-в-байт. Отсутствие маркера —
+    identity (не находка, а обычный невставленный файл)."""
+    marker_bytes = SKILL_MANAGED_MARKER.encode("utf-8")
+    for newline in (b"\r\n", b"\n"):
+        pattern = marker_bytes + newline
+        idx = data.find(pattern)
+        if idx != -1:
+            return data[:idx] + data[idx + len(pattern):]
+    return data
 
 
 def safe_copy_skill(src, dst, dest_root):

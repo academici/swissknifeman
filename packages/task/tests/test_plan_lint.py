@@ -347,7 +347,7 @@ class TestHandoffMd(TmpPlanTestCase):
     def test_handoff_next_missing_reference(self):
         plan_dir = write_valid_plan(self.root)
         text = (plan_dir / "handoff.md").read_text(encoding="utf-8")
-        text = text.replace("**Next:** /task:plan-exec DEMO-1 P1.1\n", "**Next:** сделай что-нибудь\n")
+        text = text.replace("/task:plan-exec DEMO-1 P1.1", "сделай что-нибудь")
         (plan_dir / "handoff.md").write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
@@ -375,8 +375,7 @@ class TestHandoffMd(TmpPlanTestCase):
         # все items терминальны → Next «план закрыт» без ссылки plan-exec — валиден
         plan_dir = write_valid_plan(self.root)
         text = (plan_dir / "handoff.md").read_text(encoding="utf-8")
-        text = text.replace("**Next:** /task:plan-exec DEMO-1 P1.1\n",
-                            "**Next:** план закрыт — все фазы терминальны.\n")
+        text = text.replace("/task:plan-exec DEMO-1 P1.1", "план закрыт — все фазы терминальны.")
         (plan_dir / "handoff.md").write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok)
@@ -385,8 +384,7 @@ class TestHandoffMd(TmpPlanTestCase):
         # фаза-скелет впереди → Next «/task:plan-design <ID> Pn» (ссылка на фазу, не item) — валиден
         plan_dir = write_valid_plan(self.root)
         text = (plan_dir / "handoff.md").read_text(encoding="utf-8")
-        text = text.replace("**Next:** /task:plan-exec DEMO-1 P1.1\n",
-                            "**Next:** /task:plan-design DEMO-1 P1\n")
+        text = text.replace("/task:plan-exec DEMO-1 P1.1", "/task:plan-design DEMO-1 P1")
         (plan_dir / "handoff.md").write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok)
@@ -394,8 +392,7 @@ class TestHandoffMd(TmpPlanTestCase):
     def test_handoff_next_plan_design_wrong_plan_id(self):
         plan_dir = write_valid_plan(self.root)
         text = (plan_dir / "handoff.md").read_text(encoding="utf-8")
-        text = text.replace("**Next:** /task:plan-exec DEMO-1 P1.1\n",
-                            "**Next:** /task:plan-design OTHER-ID P1\n")
+        text = text.replace("/task:plan-exec DEMO-1 P1.1", "/task:plan-design OTHER-ID P1")
         (plan_dir / "handoff.md").write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
@@ -404,8 +401,7 @@ class TestHandoffMd(TmpPlanTestCase):
     def test_handoff_next_plan_design_nonexistent_phase(self):
         plan_dir = write_valid_plan(self.root)
         text = (plan_dir / "handoff.md").read_text(encoding="utf-8")
-        text = text.replace("**Next:** /task:plan-exec DEMO-1 P1.1\n",
-                            "**Next:** /task:plan-design DEMO-1 P9\n")
+        text = text.replace("/task:plan-exec DEMO-1 P1.1", "/task:plan-design DEMO-1 P9")
         (plan_dir / "handoff.md").write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
@@ -427,8 +423,7 @@ class TestHandoffMd(TmpPlanTestCase):
         plan.write_text(text, encoding="utf-8")
         ho = plan_dir / "handoff.md"
         text = ho.read_text(encoding="utf-8")
-        text = text.replace("**Next:** /task:plan-exec DEMO-1 P1.1\n",
-                            "**Next:** план закрыт.\n")
+        text = text.replace("/task:plan-exec DEMO-1 P1.1", "план закрыт.")
         ho.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
@@ -701,3 +696,159 @@ class TestDiscoveryAndCli(TmpPlanTestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestLint20Warnings(TmpPlanTestCase):
+    """Проверки схемы 2.0 (ECOSYSTEM P5.2 блок 13) — ВСЕ warning-уровня:
+    диагностика попадает в diag.warnings, diag.ok остаётся True."""
+
+    def _warnings_containing(self, diag, needle):
+        return [w for w in diag.warnings if needle in w]
+
+    def test_plan_sections_out_of_order_warning(self):
+        plan_dir = write_valid_plan(self.root)
+        plan = plan_dir / "plan.md"
+        text = plan.read_text(encoding="utf-8")
+        # меняем местами Decision Log (5) и Update Log (6) — номера не по возрастанию
+        text = text.replace("## 5. Decision Log", "## X-TMP")
+        text = text.replace("## 6. Update Log", "## 5. Decision Log… нет, Update Log")
+        text = text.replace("## X-TMP", "## 6. Update Log")
+        plan.write_text(text, encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+        self.assertTrue(self._warnings_containing(diag, "не по порядку"), diag.warnings)
+
+    def test_plan_section_title_mismatch_warning(self):
+        plan_dir = write_valid_plan(self.root)
+        plan = plan_dir / "plan.md"
+        text = plan.read_text(encoding="utf-8")
+        text = text.replace("## 3. Routing", "## 3. Маршрутизация")
+        plan.write_text(text, encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+        self.assertTrue(self._warnings_containing(diag, "≠ канонической"), diag.warnings)
+
+    def test_update_log_too_long_warning(self):
+        plan_dir = write_valid_plan(self.root)
+        plan = plan_dir / "plan.md"
+        text = plan.read_text(encoding="utf-8")
+        text = text.replace("| 2026-07-02 | issue-planner/opus | План создан |",
+                            "| 2026-07-02 | issue-planner/opus | " + "х" * 301 + " |")
+        plan.write_text(text, encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+        self.assertTrue(self._warnings_containing(diag, "Update Log"), diag.warnings)
+
+    def test_decision_log_without_rag_markers_warning(self):
+        plan_dir = write_valid_plan(self.root)
+        plan = plan_dir / "plan.md"
+        text = plan.read_text(encoding="utf-8")
+        extra = ("| D2 | 2026-07-02 | ещё решение | так надо |\n"
+                 "| D3 | 2026-07-02 | третье решение | и так надо |\n")
+        text = text.replace("| D1 | 2026-07-02 | тест | тест |\n",
+                            "| D1 | 2026-07-02 | тест | тест |\n" + extra)
+        plan.write_text(text, encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+        self.assertTrue(self._warnings_containing(diag, "RAG:✅"), diag.warnings)
+
+    def test_decision_log_with_rag_marker_no_warning(self):
+        plan_dir = write_valid_plan(self.root)
+        plan = plan_dir / "plan.md"
+        text = plan.read_text(encoding="utf-8")
+        extra = ("| D2 | 2026-07-02 | ещё решение | RAG:✅ 2026-07-02 запрос |\n"
+                 "| D3 | 2026-07-02 | третье решение | [UNVERIFIED] |\n")
+        text = text.replace("| D1 | 2026-07-02 | тест | тест |\n",
+                            "| D1 | 2026-07-02 | тест | тест |\n" + extra)
+        plan.write_text(text, encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(self._warnings_containing(diag, "RAG:✅»/«[UNVERIFIED]"), [])
+
+    def test_item_fields_out_of_order_warning(self):
+        plan_dir = write_valid_plan(self.root)
+        p1 = plan_dir / "phases" / "P1.md"
+        text = p1.read_text(encoding="utf-8")
+        # Intent и Why меняем местами — канонический порядок нарушен
+        text = text.replace("**Intent:** Добавить проверку.\n**Why:** Диагностика дорогая.",
+                            "**Why:** Диагностика дорогая.\n**Intent:** Добавить проверку.")
+        p1.write_text(text, encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+        self.assertTrue(self._warnings_containing(diag, "не в каноническом порядке"), diag.warnings)
+
+    def _make_hollow_item(self, plan_dir):
+        """P1.1 с ⬜ и ≥50% пустых полей (скелетоподобный item)."""
+        p1 = plan_dir / "phases" / "P1.md"
+        text = p1.read_text(encoding="utf-8")
+        for field, val in (("Intent", "Добавить проверку."), ("Why", "Диагностика дорогая."),
+                           ("Scope Included", "load_config()."), ("Scope Excluded", "формат конфига."),
+                           ("Inputs", "список ключей."), ("Files", "lib/pkg/config.py"),
+                           ("Required Reads", "1) lib/pkg/config.py"),
+                           ("Implementation Rules", "stdlib-only."),
+                           ("Code Guidance", "ручная проверка dict-ключей.")):
+            text = text.replace(f"**{field}:** {val}", f"**{field}:** —")
+        text = text.replace("**Status:** 🟢 Done", "**Status:** ⬜ Not started")
+        text = text.replace("| P1.1 | Валидация конфига | 🟢 Done |",
+                            "| P1.1 | Валидация конфига | ⬜ Not started |")
+        p1.write_text(text, encoding="utf-8")
+        plan = plan_dir / "plan.md"
+        ptext = plan.read_text(encoding="utf-8")
+        ptext = ptext.replace("| P1 | Фаза раз | 1/1 | 🟢 Done |",
+                              "| P1 | Фаза раз | 0/1 | ⬜ Not started |")
+        ptext = ptext.replace("| Status | 🟢 Done |", "| Status | 🟡 In progress |")
+        plan.write_text(ptext, encoding="utf-8")
+        return p1
+
+    def test_hollow_item_without_skeleton_marker_warning(self):
+        plan_dir = write_valid_plan(self.root)
+        self._make_hollow_item(plan_dir)
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+        self.assertTrue(self._warnings_containing(diag, "СКЕЛЕТ"), diag.warnings)
+
+    def test_hollow_item_with_skeleton_marker_no_warning(self):
+        plan_dir = write_valid_plan(self.root)
+        p1 = self._make_hollow_item(plan_dir)
+        text = p1.read_text(encoding="utf-8")
+        text = text.replace(
+            "Демо-фаза.",
+            "Демо-фаза.\n\n> СКЕЛЕТ — не детализирован, разворачивается /task:plan-design DEMO-1 P1")
+        p1.write_text(text, encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(self._warnings_containing(diag, "СКЕЛЕТ"), [], diag.warnings)
+
+    def test_needs_clarification_in_active_phase_warning(self):
+        plan_dir = write_valid_plan(self.root)
+        p1 = plan_dir / "phases" / "P1.md"
+        text = p1.read_text(encoding="utf-8")
+        text = text.replace("**Why:** Диагностика дорогая.",
+                            "**Why:** Диагностика дорогая. [NEEDS CLARIFICATION: какой формат ошибок?]")
+        p1.write_text(text, encoding="utf-8")
+        _, diag = _lint(plan_dir)  # фаза 🟢 Done — точно «ушла из дизайна»
+        self.assertTrue(diag.ok, diag.errors)
+        self.assertTrue(self._warnings_containing(diag, "NEEDS CLARIFICATION"), diag.warnings)
+
+    def test_handoff_next_without_launch_block_warning(self):
+        plan_dir = write_valid_plan(self.root)
+        ho = plan_dir / "handoff.md"
+        text = handoff_md("DEMO-1")
+        # выпиливаем launch-block целиком: остаётся голый Next без таблицы/code-block
+        head, _, tail = text.partition("\n| Параметр | Значение |")
+        _, _, after = tail.partition("````\n\n")
+        ho.write_text(head + "\n" + after, encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+        self.assertTrue(self._warnings_containing(diag, "launch-block"), diag.warnings)
+
+    def test_handoff_plan_closed_launch_block_not_required(self):
+        # план закрыт → запускать нечего, launch-block не требуется
+        plan_dir = write_valid_plan(self.root)
+        ho = plan_dir / "handoff.md"
+        text = ho.read_text(encoding="utf-8")
+        text = text.replace("/task:plan-exec DEMO-1 P1.1", "план закрыт — все фазы терминальны.")
+        head, _, tail = text.partition("\n| Параметр | Значение |")
+        _, _, after = tail.partition("````\n\n")
+        ho.write_text(head + "\n" + after, encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+        self.assertEqual(self._warnings_containing(diag, "launch-block"), [], diag.warnings)

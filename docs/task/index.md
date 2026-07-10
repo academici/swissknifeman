@@ -32,3 +32,12 @@
 `general/plan-protocol`. Процесс день за днём — [Разработка](/develop).
 
 Валидатор планов: `python3 packages/task/scripts/plan-lint.py plans/<PLAN-ID>`.
+
+## Методология plan-protocol 2.0
+
+| Страница | Что там |
+|:--|:--|
+| [Методология — полный цикл](/task/methodology) | Mermaid-карта research → design → refine (DoR, pre-mortem) → approve → exec (commit-гейт, два дома) → review (таксономия) → archive → docs |
+| [Структура плана](/task/plan-structure) | канон папок `plans/<ID>/` 2.0, различие `root/`/`artifacts/`, таблица миграции root/ → docs |
+| [Шаблоны](/task/templates) | референс snippets: plan/phase/handoff/launch-block/code-guidance — что где лежит |
+| [Конструктор workflow](/task/workflows) | 4 канонических шаблон-скрипта оркестрации: когда какой, правила слотов |

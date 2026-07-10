@@ -43,28 +43,35 @@ _SIMILAR_CMD = 0.6   # порог «та же по сути команда» д�
 # в т.ч. `vendor/bin/pest`, `npm test`), а не аргумент grep/ls. `\b(?<![-/])` не ловит
 # `--test`/`some/test`; для `vendor/bin/pest` и `npm test` — явные подвыражения.
 _RUNNER_EXEC = re.compile(
-    r"(?:(?:^|[;&|]\s*|\bcd\s+\S+\s+)"
+    r"(?:(?:^|[;&|]\s*|\bcd\s+\S+\s+|\bxargs\s+)"
     r"(?:pytest|phpunit|pest|jest|vitest|unittest|ruff|flake8|pylint|mypy|eslint|"
     r"phpstan|psalm|pint|black|isort|tsc|prettier|composer|py_compile)\b"
     r"|vendor/bin/(?:pest|phpunit|pint|phpstan|psalm)\b"
     r"|(?:npm|yarn|pnpm)\s+(?:run\s+)?(?:test|lint)\b"
     r"|(?:go|cargo)\s+test\b"
+    # Laravel: `php artisan test` (+ ключи вроде --filter) и Sail-обёртка `sail test`
+    # (документированный shortcut Sail на `artisan test`, sail/bin/sail) — N2a: без
+    # этой ветки резолвится доминирующий раннер Laravel-стека экосистемы, петля
+    # обучения не видела ни одного «упал→прошёл» на нём.
+    r"|(?:php\s+artisan|sail)\s+test\b"
     r"|(?<![\w.])(?:validate|test)\.sh\b)", re.I)  # путь scripts/validate.sh — это ЗАПУСК
 
 # Явная разведка: команда, СОДЕРЖАЩАЯ имя раннера лишь как аргумент поиска
-# (`grep … vitest`, `ls … | grep pest`) — не исполнение. Плюс `|| ...`-фолбэк-пробинг
-# (`… || echo NO`) — проверка присутствия, а не прогон.
+# (`grep … vitest`, `ls … | grep pest`) — не исполнение, а проба присутствия (какой
+# бы суффикс — `|| echo NO`, `2>/dev/null` — у неё ни был). N2b: бланкетный отказ по
+# одному факту наличия `||` в команде рубил и легитимные guard-паттерны (`pytest ||
+# exit 1`, `... | xargs pytest`) — раннер там реально исполняется и его exit-код
+# определяет ветку `||`, отбрасывать такой resolved-failure неверно; различение
+# «проба vs прогон» и так делает проверка ниже (раннер в первом сегменте до
+# `|`/`;`/`&`).
 _DIAGNOSTIC_CMD = re.compile(r"\b(?:grep|rg|ag|find|ls|cat|which|command\s+-v)\b", re.I)
 
 
 def _is_real_check(cmd):
-    """True, если команда действительно ЗАПУСКАЕТ тест/линт-раннер (а не ищет его грепом
-    и не пробит наличие через `||`). Отсекает диагностический шум из сигнала A —
-    resolved-failure на такой паре давал бы урок с trigger≈action, чинить в котором нечего."""
+    """True, если команда действительно ЗАПУСКАЕТ тест/линт-раннер (а не ищет его грепом).
+    Отсекает диагностический шум из сигнала A — resolved-failure на такой паре давал бы
+    урок с trigger≈action, чинить в котором нечего."""
     if not cmd or not _RUNNER_EXEC.search(cmd):
-        return False
-    # `... || <fallback>` — проверка присутствия, не прогон (падение здесь — норма, не баг)
-    if "||" in cmd:
         return False
     # раннер упомянут ТОЛЬКО как аргумент разведки, реального запуска нет → шум
     if _DIAGNOSTIC_CMD.search(cmd) and not _RUNNER_EXEC.search(re.split(r"[|;&]", cmd)[0]):

@@ -4,7 +4,7 @@
 
 Источник истины портируемых скиллов (машинный реестр — `skills.json`). Раздача в проекты: `skiller connect` (плагины-бакеты) / `vendor` (физ. перенос). CORE-набор токен-скиллов (`general`/`oss-dev`) раздаётся по умолчанию — см. `connect`/`vendor`.
 
-Всего: 207 скиллов в 46 бакетах.
+Всего: 211 скиллов в 47 бакетах.
 
 ## Скиллы по бакетам
 
@@ -15,7 +15,7 @@
 | `ai-agents` | Navigator for the AI-agent building reference (vendored super-skill): agent patterns, MCP… | `ai`, `agents`, `mcp`, `rag`, `orchestration`, `prompt-engineering`, `subagents` |
 | `token-efficient` | Reduces Perplexity Computer output verbosity and token waste. Eliminates sycophantic open… |  |
 
-### architect — Architecture, API and data design, security, observability, tech stack selection (14)
+### architect — Architecture, API and data design, security, observability, tech stack selection (15)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
@@ -26,6 +26,7 @@
 | `data-schema` | Data schema, entities, attributes, relations. DB-agnostic — markdown tables only | `data`, `architecture`, `schema`, `entities`, `erd` |
 | `dev-engineering-super-skill` | Broad engineering-bucket navigator (composite of external dev skills). For specific work … |  |
 | `domain-modeling` | Active domain-model discipline: challenge terms, stress-test with scenarios, RECORD the g… | `domain`, `ddd`, `glossary`, `adr`, `ubiquitous-language` |
+| `ecosystem-reuse-gate` | Gate against reinventing functionality when designing a new project/feature: before build… | `ecosystem`, `reuse`, `vendor-vs-build`, `gate`, `architecture` |
 | `eval-design` | Evaluate LLM/AI output quality — eval-set, metrics, regression harness, automated + human… | `agentic`, `validation`, `llm`, `metrics`, `testing` |
 | `figma-mcp-core` | Discipline for the official Figma Dev Mode MCP: real tools (get_metadata, get_variable_de… | `figma`, `mcp`, `design-system`, `design-tokens`, `dev-mode`, `code-connect`, `ui` |
 | `legal-compliance` | GDPR, CCPA, AI Act, DMCA, COPPA, DSA — pre-launch regulatory checklist | `compliance`, `gdpr`, `privacy`, `ai-act`, `regulatory` |
@@ -33,6 +34,13 @@
 | `package-contribution-protocol` | Gate against bloating a depended-on package from a consumer project: Rule of Three, propo… | `governance`, `package`, `monorepo`, `contribution`, `semver`, `anti-bloat`, `boundary` |
 | `security-design` | Data classification, auth strategy, RBAC/ABAC, OWASP Top 10, GDPR, STRIDE threat modeling… | `security`, `compliance`, `auth`, `owasp`, `threat-modeling`, `rbac`, `gdpr`, `privacy`, `stride` |
 | `tech-stack-selection` | Tech stack selection with trade-off matrix before architecture design. ADR-first step | `stack-choice`, `architecture`, `adr`, `trade-off` |
+
+### axioma — Axioma ecosystem doctrine & reuse: dev philosophy, tech-radar binding, vendor-vs-build discipline (project-scoped bucket) (2)
+
+| Скилл | Описание | Теги |
+|:--|:--|:--|
+| `axioma-doctrine` | Axioma ecosystem development doctrine: five imperative pillars (horizontal core → vertica… | `axioma`, `doctrine`, `architecture`, `ecosystem` |
+| `axioma-stack` | Binds the universal reuse-gate to the live Ecosystem_Tech_Radar.md of the Axioma ecosyste… | `axioma`, `ecosystem`, `reuse`, `tech-radar` |
 
 ### azguard — azguard package usage: code-first RBAC, panels, scoped roles, abilities (academici package — skill will relocate into the package repo) (1)
 
@@ -218,7 +226,7 @@
 | `mcp-advisor` | Pick MCP servers for a project at onboarding/sync: which to connect (context7/playwright/… | `mcp`, `onboarding`, `tooling`, `context`, `claude-code` |
 | `naming-conventions` | Naming discipline (language-agnostic): name reveals intent, not implementation; fight noi… | `naming`, `conventions`, `readability`, `code-style`, `discipline`, `clean-code` |
 | `packages-stack` | Project external-dependency registry methodology: which packages are used and for what, a… | `dependencies`, `conventions`, `navigation`, `stack`, `init` |
-| `plan-protocol` | Executable master plans in plans/<ID>: plan/phase/task schemas, 6 statuses, handoff stand… | `workflow`, `planning`, `handoff`, `routing`, `multi-model` |
+| `plan-protocol` | Executable master plans in plans/<ID>: plan/phase/task schemas, 6 statuses, refine loop a… | `workflow`, `planning`, `handoff`, `routing`, `multi-model` |
 | `project-map` | Project structure map methodology: zone directories by responsibility for safe change rou… | `conventions`, `navigation`, `architecture`, `structure`, `routing` |
 | `session-handoff` | Cross-session/agent context handoff: compress a session into a structured doc — state, de… | `workflow`, `context`, `tokens`, `handoff` |
 | `skills-ssot` | Single source of truth for skills across multiple AI agents: .ai/skills + symlinks, gitig… | `ai-context`, `skills`, `ssot`, `workflow`, `conventions`, `ai` |
@@ -384,10 +392,11 @@
 | `ml-project-structure` | Standardized ML/Data Science project structure (Cookiecutter Data Science) | `python`, `ml`, `structure`, `architecture`, `data`, `conventions` |
 | `venv-dependencies` | Python dependency management and virtual environments for project reproducibility | `python`, `venv`, `dependencies`, `tooling`, `quality`, `conventions` |
 
-### quality — Code review, refactoring plans, tech debt audits, test strategy (10)
+### quality — Code review, refactoring plans, tech debt audits, test strategy (11)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
+| `artifact-review` | Review taxonomy by artifact type: three profiles (plan/spec, documentation, code), each w… | `quality`, `review`, `taxonomy`, `plan`, `docs`, `code`, `severity`, `conventional-comments` |
 | `code-review` | Code review process & checklist: mandatory checks, comment severity grades, async vs sync… | `quality`, `validation`, `review`, `github`, `workflow` |
 | `code-simplifier` | Simplify freshly written code without changing behavior: dead code, needless abstractions… | `quality`, `refactoring`, `refactor`, `ci`, `validation` |
 | `diagnosing-bugs` | Discipline for diagnosing hard bugs and performance regressions: FIRST build a tight repr… | `debugging`, `diagnostics`, `feedback-loop`, `performance`, `testing` |
@@ -467,13 +476,14 @@
 | `alerting` | `observability-design` |
 | `anti-bloat` | `package-contribution-protocol` |
 | `api` | `api-design`, `dx-design`, `laravel-data`, `version-gotchas` |
-| `architecture` | `agent-design`, `api-design`, `architecture`, `config-driven-abstraction`, `data-schema`, `dependency-injection`, `idea-audit`, `inertia-vue`, `laravel`, `laravel-structure`, `local-topology`, `ml-project-structure`, `modular-architecture`, `oss-development`, `php-patterns`, `pinia-stores`, `project-map`, `repositories`, `startup-cto`, `tech-stack-selection`, `test-strategy` |
+| `architecture` | `agent-design`, `api-design`, `architecture`, `axioma-doctrine`, `config-driven-abstraction`, `data-schema`, `dependency-injection`, `ecosystem-reuse-gate`, `idea-audit`, `inertia-vue`, `laravel`, `laravel-structure`, `local-topology`, `ml-project-structure`, `modular-architecture`, `oss-development`, `php-patterns`, `pinia-stores`, `project-map`, `repositories`, `startup-cto`, `tech-stack-selection`, `test-strategy` |
 | `async` | `transactional-outbox-relay` |
 | `attribute` | `attribute-authorization` |
 | `attributes` | `eloquent-accessors`, `enum-attributes` |
 | `auth` | `security-design` |
 | `authorization` | `attribute-authorization`, `azguard`, `laravel-permissions` |
 | `auto-layout` | `figma-to-flutter`, `figma-to-vue` |
+| `axioma` | `axioma-doctrine`, `axioma-stack` |
 | `azguard` | `azguard`, `laravel-permissions` |
 | `barge-in` | `voice-ai` |
 | `best-practices` | `laravel-best-practices` |
@@ -499,6 +509,7 @@
 | `claude-code` | `agent-packs`, `context-economy`, `mcp-advisor`, `query-craft`, `verify-claims` |
 | `clean-code` | `naming-conventions` |
 | `cli` | `dx-design` |
+| `code` | `artifact-review` |
 | `code-connect` | `figma-mcp-core` |
 | `code-style` | `code-style-spatie`, `eslint-flat-config`, `js-code-style`, `named-arguments`, `naming-conventions`, `php-naming-conventions` |
 | `comments` | `writing-style` |
@@ -516,6 +527,7 @@
 | `context7` | `query-craft` |
 | `contracts` | `api-design` |
 | `contribution` | `package-contribution-protocol` |
+| `conventional-comments` | `artifact-review` |
 | `conventional-commits` | `git-commit-rules` |
 | `conventions` | `compact-responses`, `config-conventions`, `context-economy`, `git-commit-rules`, `ml-project-structure`, `model-rules`, `named-arguments`, `naming-conventions`, `packages-stack`, `php-naming-conventions`, `project-map`, `skills-ssot`, `venv-dependencies` |
 | `coordination` | `cross-project-coordinator`, `shared-memory` |
@@ -548,7 +560,8 @@
 | `discipline` | `anti-drift`, `naming-conventions`, `startup-cto` |
 | `discovery` | `competitive-analysis`, `customer-discovery`, `idea-discovery`, `new-project`, `solo-founder`, `spec-interview` |
 | `docker` | `db-test-preflight`, `docker`, `docker-dev-prod`, `docker-php`, `docker-postgres`, `docker-services`, `docker-vite`, `laravel-dusk`, `makefile` |
-| `docs` | `brain-locator`, `grill-with-docs`, `writing-style` |
+| `docs` | `artifact-review`, `brain-locator`, `grill-with-docs`, `writing-style` |
+| `doctrine` | `axioma-doctrine` |
 | `documentation` | `dx-design`, `oss-development`, `oss-governance` |
 | `domain` | `domain-modeling`, `enum-state-machine`, `grill-with-docs` |
 | `drift` | `session-observer` |
@@ -558,7 +571,7 @@
 | `dynamic-component` | `vue-dynamic-icons` |
 | `e2e` | `laravel-dusk`, `playwright-e2e` |
 | `echo` | `laravel-broadcasting` |
-| `ecosystem` | `swissknifeman-locator` |
+| `ecosystem` | `axioma-doctrine`, `axioma-stack`, `ecosystem-reuse-gate`, `swissknifeman-locator` |
 | `eloquent` | `eloquent-accessors` |
 | `entities` | `data-schema` |
 | `enum` | `attribute-authorization`, `azguard`, `backend-type-sync`, `enum-attributes`, `enum-state-machine` |
@@ -575,7 +588,7 @@
 | `flutter` | `figma-to-flutter` |
 | `forms` | `filepond-upload` |
 | `frontend` | `backend-type-sync`, `docker-vite`, `eslint-flat-config`, `filepond-upload`, `inertia-vue`, `laravel-echo-client`, `livewire-blade-attributes`, `naive-ui-theming`, `pinia-stores`, `playwright-e2e`, `reka-ui-cva`, `vite-module-loader`, `vite-multi-build`, `vitest`, `vue-composition-api`, `vue-dynamic-icons`, `vue-router-best-practices`, `vue-testing-best-practices`, `wayfinder` |
-| `gate` | `attribute-authorization`, `azguard` |
+| `gate` | `attribute-authorization`, `azguard`, `ecosystem-reuse-gate` |
 | `gdpr` | `legal-compliance`, `security-design` |
 | `geometry` | `parametric-config`, `threading` |
 | `gh` | `gh-review` |
@@ -680,6 +693,7 @@
 | `php` | `attribute-authorization`, `azguard`, `botkit`, `code-style-spatie`, `config-driven-abstraction`, `cursor-pagination-design`, `database`, `dependency-audit`, `dependency-injection`, `docker-php`, `eloquent-accessors`, `enum-attributes`, `enum-state-machine`, `filament`, `laravel`, `laravel-best-practices`, `laravel-broadcasting`, `laravel-data`, `laravel-dusk`, `laravel-package-compatibility`, `laravel-package-docs`, `laravel-package-expressive`, `laravel-package-generate-skill`, `laravel-package-release`, `laravel-package-scaffold`, `laravel-package-service-provider`, `laravel-package-testing`, `laravel-packages`, `laravel-permissions`, `laravel-security-audit`, `laravel-structure`, `laravel-testing`, `medialibrary`, `modular-architecture`, `mutation-testing`, `named-arguments`, `namespace-refactor-safety`, `pao`, `pennant-development`, `php-naming-conventions`, `php-patterns`, `php-upgrade-checklist`, `production-readiness-checklist`, `repositories`, `spatie-settings`, `static-analysis`, `test-isolation-guard`, `transactional-outbox-relay` |
 | `phpstan` | `php-upgrade-checklist` |
 | `pinia` | `pinia-stores`, `vue-testing-best-practices` |
+| `plan` | `artifact-review` |
 | `planning` | `plan-protocol`, `to-issues`, `verify-claims` |
 | `playwright` | `playwright-e2e` |
 | `pnpm` | `node-pnpm-preflight` |
@@ -692,7 +706,7 @@
 | `prompt-engineering` | `ai-agents` |
 | `pusher` | `laravel-echo-client` |
 | `python` | `mcp-blender`, `ml-project-structure`, `parametric-config`, `venv-dependencies`, `version-gotchas` |
-| `quality` | `code-review`, `code-simplifier`, `mutation-testing`, `playwright-e2e`, `production-readiness-checklist`, `refactoring-plan`, `static-analysis`, `tech-debt-audit`, `test-strategy`, `testing-safety-report`, `venv-dependencies` |
+| `quality` | `artifact-review`, `code-review`, `code-simplifier`, `mutation-testing`, `playwright-e2e`, `production-readiness-checklist`, `refactoring-plan`, `static-analysis`, `tech-debt-audit`, `test-strategy`, `testing-safety-report`, `venv-dependencies` |
 | `query` | `query-craft` |
 | `queue` | `docker-services`, `transactional-outbox-relay` |
 | `rag` | `ai-agents`, `query-craft`, `verify-claims` |
@@ -718,8 +732,9 @@
 | `requirements` | `brd`, `business-process`, `grill-with-docs`, `idea-discovery`, `new-project`, `prd-from-brd`, `product-roadmap`, `requirement-critic`, `spec-interview`, `startup-lifecycle`, `task-brief-template` |
 | `research` | `query-craft`, `verify-claims` |
 | `rest` | `api-design` |
+| `reuse` | `axioma-stack`, `ecosystem-reuse-gate` |
 | `reverb` | `laravel-broadcasting`, `laravel-echo-client` |
-| `review` | `code-review`, `gh-review`, `implement`, `open-source-maintainer`, `production-readiness-checklist`, `tech-lead` |
+| `review` | `artifact-review`, `code-review`, `gh-review`, `implement`, `open-source-maintainer`, `production-readiness-checklist`, `tech-lead` |
 | `role` | `open-source-maintainer`, `solo-founder`, `startup-cto`, `tech-lead` |
 | `router` | `docker` |
 | `routes` | `wayfinder` |
@@ -740,6 +755,7 @@
 | `semver` | `github-flow`, `package-contribution-protocol`, `release-engineering` |
 | `session-analysis` | `session-observer` |
 | `settings` | `spatie-settings` |
+| `severity` | `artifact-review` |
 | `skills` | `laravel-packages`, `skills-ssot`, `swissknifeman-locator` |
 | `sla` | `build-loop`, `capacity-planning`, `config-conventions`, `incident-response`, `oncall-rotation`, `parametric-config`, `threading` |
 | `slo` | `observability-design` |
@@ -761,7 +777,9 @@
 | `swissknifeman` | `swissknifeman-locator` |
 | `tailwind` | `dark-mode`, `figma-to-vue`, `naive-ui-theming`, `reka-ui-cva`, `tailwind-conventions`, `vite-multi-build` |
 | `tailwindcss-v4` | `figma-to-vue`, `tailwind-conventions` |
+| `taxonomy` | `artifact-review` |
 | `tdd` | `implement`, `tdd-discipline` |
+| `tech-radar` | `axioma-stack` |
 | `template` | `brd`, `model-rules`, `prd-from-brd`, `runbook`, `task-brief-template` |
 | `templates` | `agent-packs` |
 | `testability` | `codebase-design` |
@@ -791,6 +809,7 @@
 | `validation` | `adversarial-check`, `agent-design`, `code-review`, `code-simplifier`, `cross-layer-change-checklist`, `customer-discovery`, `defensibility`, `eval-design`, `idea-audit`, `laravel-data`, `pmf-diagnostics`, `refactoring-plan`, `requirement-critic`, `risk-assessment`, `solo-founder`, `startup-lifecycle`, `tech-debt-audit`, `test-strategy` |
 | `variants` | `reka-ui-cva` |
 | `vault` | `brain-locator` |
+| `vendor-vs-build` | `ecosystem-reuse-gate` |
 | `venv` | `venv-dependencies` |
 | `verification` | `testing-safety-report`, `verify-claims` |
 | `version` | `php-upgrade-checklist`, `version-gotchas` |

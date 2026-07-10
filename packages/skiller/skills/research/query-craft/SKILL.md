@@ -59,6 +59,21 @@ Minimal template:
 Answer: <format>, <limit>.
 ```
 
+## Slot 6 (constant): output contract for the AI consumer
+
+The answer's consumer is an **AI agent, not a human**. Append a contract tail to every query
+(unless the answer is deliberately meant for a human):
+
+> _Answer for an AI agent: dense fact bullets, no intro/conclusion/advice; every fact cites a
+> source (URL) and date/version; exact identifiers (package, version, method); if data isn't
+> reliable, write unknown, don't guess; max N bullets._
+
+For `search_deep` — same contract plus explicit section structure in the answer (the engine must
+return a structured synthesis, not prose over 20 sources).
+
+Why: human-facing answers (preambles, advice, prose) burn downstream tokens when an agent parses
+them — Perplexity's own docs recommend structured output for machine consumption.
+
 ## Engine selection (what goes where)
 
 Engine first — phrasing adapts to it. (The "when" ladder is in `verify-claims`; here — how to phrase for the
@@ -158,6 +173,7 @@ speed/precision, not as a workaround for a locked profile.
 - **No timeframe on a fresh fact** — for versions/releases/"still current" add `as of 2025` / `current` / `latest major`.
 - **Describing the tool inside the query** — don't tell the engine "search the web"; it does so itself.
 - **Explaining "why I need it" instead of the subject** — context (slot 3) is stack/goal, not the task's backstory.
+- **Answer comes back as human prose** → in the follow-up, repeat the AI-consumer contract (slot 6).
 
 ## Iteration (if the answer misses)
 
@@ -178,6 +194,7 @@ don't know", don't guess`.
 - [ ] In `search_advanced` `sources` chosen by fact type (academic/social/web).
 - [ ] Fresh fact has a **timeframe**.
 - [ ] `perplexity-web`: parallelized within `maxConcurrency` (default 3); on `BROWSER_BUSY`/`TIMEOUT` — retry/split, on `PROTOCOL_MISMATCH` — don't fall back to legacy; raw drop (`ECONNRESET`) → self-heals via `start.sh` if any Chromium is installed, else `npx playwright install chromium`; heavy synthesis → `research/research` or API-key variant.
+- [ ] AI-consumer contract (slot 6) attached — or deliberately dropped if the answer is truly for a human.
 
 ## Related skills
 
@@ -193,4 +210,4 @@ don't know", don't guess`.
      Concurrency (daemon/pools/error codes BROWSER_BUSY·TIMEOUT·LOGIN_REQUIRED·PROTOCOL_MISMATCH) —
      from the perplexity-web-mcp v1.3.0 integration note, checked 2026-06-30. -->
 
-<!-- ru-source-sha256: f75f6172b9f6b9f43a48deba17f7ad8a390db089f7a7b106f303e093667f6507 -->
+<!-- ru-source-sha256: 938550962aeb108d4f9dae229efa890b2df82544816069c2c0f462f798c40c21 -->

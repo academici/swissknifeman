@@ -6,7 +6,7 @@ description: Выбор технологического стека с trade-off
 risk: draft
 persona: architect
 tags: [stack-choice, architecture, adr, trade-off]
-requires: [brd]
+requires: [brd, ecosystem-reuse-gate]
 produces_for: [architecture, oss-development, release-engineering]
 outputs: ["docs/03_Dev/Tech_Stack_Selection.md", "docs/03_Dev/ADR/ADR-001_tech_stack.md"]
 sha256: ""
@@ -48,6 +48,8 @@ adapters: [claude, cursor, fable]
 ## Алгоритм выбора (5 шагов)
 
 ### Шаг 1. Жёсткие ограничения
+Перед матрицей — прогнать `ecosystem-reuse-gate` против радара экосистемы: переиспользование уже существующего компонента может исключить целые оси выбора ещё до trade-off анализа.
+
 Из BRD и проекта извлечь:
 - **Регуляторика** — например, fintech требует резидентности данных (Finbrain), AI-tutoring требует COPPA/возрастных ограничений (Edufy)
 - **Существующие компетенции команды** — solo founder с PHP не должен брать Rust «потому что модно»
@@ -203,6 +205,7 @@ Accepted — YYYY-MM-DD
 ## Связанные скиллы
 
 - `pm/brd` — нефункциональные требования и нагрузка как предусловие.
+- `architect/ecosystem-reuse-gate` — шаг 1: сверка с радаром экосистемы до trade-off матрицы.
 - `architect/architecture` — проектирование компонентов при уже выбранном стеке (выход этого скилла).
 - `oss-dev/oss-development`, `oss-dev/release-engineering` — OSS-трек, опирающийся на выбранный стек (выход).
 - `oss-dev/dependency-audit` — лицензии зависимостей для open-source spin-off.

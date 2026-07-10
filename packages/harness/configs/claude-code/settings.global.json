@@ -46,6 +46,7 @@
       "Agent",
       "TodoWrite",
       "mcp__perplexity-web",
+      "mcp__plugin_core_perplexity-web",
       "mcp__playwright"
     ],
     "ask": [
@@ -69,6 +70,9 @@
       "Read(**/secrets/**)"
     ]
   },
+  "enabledMcpjsonServers": [
+    "perplexity-web"
+  ],
   "hooks": {
     "PreToolUse": [
       {

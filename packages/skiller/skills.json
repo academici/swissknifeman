@@ -11,7 +11,12 @@
     },
     "architect": {
       "description": "Architecture, API and data design, security, observability, tech stack selection",
-      "count": 14,
+      "count": 15,
+      "status": "active"
+    },
+    "axioma": {
+      "description": "Axioma ecosystem doctrine & reuse: dev philosophy, tech-radar binding, vendor-vs-build discipline (project-scoped bucket)",
+      "count": 2,
       "status": "active"
     },
     "azguard": {
@@ -201,7 +206,7 @@
     },
     "quality": {
       "description": "Code review, refactoring plans, tech debt audits, test strategy",
-      "count": 10,
+      "count": 11,
       "status": "active"
     },
     "research": {
@@ -411,6 +416,27 @@
       "fetched_at": "2026-06-26"
     },
     {
+      "name": "ecosystem-reuse-gate",
+      "bucket": "architect",
+      "path": "skills/architect/ecosystem-reuse-gate/SKILL.md",
+      "version": "0.1.0",
+      "description": "Gate against reinventing functionality when designing a new project/feature: before build-new, force a check against the ecosystem registry (radar) and run universal vendor-vs-build if-then rules. Default is reuse; build-new only when a rule explicitly fires. Activate when designing a new project, a large reusable feature, or picking a stack.",
+      "sha256": "c98c31c738cbd08c4e989668848577ac189c03b48989c2370b1dd5cd41e62e5d",
+      "content_sha256": "c09e05ded99e90b7d804b47340ed7d4589c1ab43ba0df3ad5b9d9ca095e3bf6f",
+      "tags": [
+        "ecosystem",
+        "reuse",
+        "vendor-vs-build",
+        "gate",
+        "architecture"
+      ],
+      "produces_for": [
+        "new-project",
+        "tech-stack-selection"
+      ],
+      "source": "local"
+    },
+    {
       "name": "dev-engineering-super-skill",
       "bucket": "architect",
       "path": "skills/architect/engineering/SKILL.md",
@@ -573,8 +599,8 @@
       "path": "skills/architect/tech-stack-selection/SKILL.md",
       "version": "0.1.0",
       "description": "Tech stack selection with trade-off matrix before architecture design. ADR-first step",
-      "sha256": "18d6afc87dbdbcdfc282af2f89a12d6163fc3fd7cef6b25f68b92b113b1a451d",
-      "content_sha256": "beeccc02a906afca33f613aec206ce4768d18c8cdb95032a7903bef78df64abd",
+      "sha256": "9eb1809a2aa9213273cf5a5e1406e1a35be932bd0e4a47fc2a4d18de66b0f8f6",
+      "content_sha256": "878f925715c6a600161ac7126067279596f7f9d4b13b2711cf682bbbb96fd78f",
       "tags": [
         "stack-choice",
         "architecture",
@@ -582,12 +608,48 @@
         "trade-off"
       ],
       "requires": [
-        "brd"
+        "brd",
+        "ecosystem-reuse-gate"
       ],
       "produces_for": [
         "architecture",
         "oss-development",
         "release-engineering"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "axioma-doctrine",
+      "bucket": "axioma",
+      "path": "skills/axioma/axioma-doctrine/SKILL.md",
+      "version": "0.1.0",
+      "description": "Axioma ecosystem development doctrine: five imperative pillars (horizontal core → verticals, vendor-vs-build discipline, AI-native/MCP-first, offline-first+RU compliance, RegHub distribution). Read when designing ANY new Axioma-ecosystem project/package — before architectural decisions.",
+      "sha256": "9daaed6448f45cacde811a517f6c249464598778cd844e948f0fece68c4e8376",
+      "content_sha256": "0ed32f62164b843a421cea14b9ad143a7dc6e1e99403124af26e5233190e216b",
+      "tags": [
+        "axioma",
+        "doctrine",
+        "architecture",
+        "ecosystem"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "axioma-stack",
+      "bucket": "axioma",
+      "path": "skills/axioma/axioma-stack/SKILL.md",
+      "version": "0.1.0",
+      "description": "Binds the universal reuse-gate to the live Ecosystem_Tech_Radar.md of the Axioma ecosystem: canon path, its 4-section structure, delegation to ecosystem-reuse-gate's algorithm, a concrete reuse report per unit. Read when designing any new Axioma-ecosystem project/feature — right after axioma-doctrine, before new-project/tech-stack-selection.",
+      "sha256": "b40877acd9b229b0f5e4d9d99eb07b79ed5c4ce325326bd387c419dd46aab795",
+      "content_sha256": "7ae5769ce40733ec46ed58705c59d28e0fd108caf8aca98bcb986566349703f0",
+      "tags": [
+        "axioma",
+        "ecosystem",
+        "reuse",
+        "tech-radar"
+      ],
+      "requires": [
+        "ecosystem-reuse-gate"
       ],
       "source": "local"
     },
@@ -1221,8 +1283,8 @@
       "path": "skills/founder/new-project/SKILL.md",
       "version": "0.1.0",
       "description": "Launch a new startup project: concept, competitors, risks, full folder structure",
-      "sha256": "8687e4c9065101af60c65cbd0760e99034e61e2ca837d613ca35d9ec28279eee",
-      "content_sha256": "cc1a5a4a2f9264acf0c5172483330d9c04372894301b832bcd506cd85bff1df7",
+      "sha256": "fe49ba28a1e5aa4d1234a8040c91c70215217cfaa950f7d1cfc99f68525d89f3",
+      "content_sha256": "28035da4aa10a0248517180d00aafe24cf7b3a27d0c69ba7c8a7e7b15a30055d",
       "tags": [
         "discovery",
         "requirements",
@@ -1232,7 +1294,8 @@
       "requires": [
         "idea-discovery",
         "competitive-analysis",
-        "risk-assessment"
+        "risk-assessment",
+        "ecosystem-reuse-gate"
       ],
       "source": "local"
     },
@@ -1962,7 +2025,7 @@
       "version": "1.2.1",
       "description": "Claude Code context economy in a project: CLAUDE.md ≤200 lines, path-scoped .claude/rules/, /compact vs /clear, Plan→Clear→Execute, MCP audit, model routing. Officially-supported mechanisms only — no myths like .claudeignore.",
       "sha256": "5f58b3a85174952856921036099c8359cb9b80e315effed502fef1022f888a9f",
-      "content_sha256": "1090127c45f7a224bf10ce08d2afc38858b86af58702b94c3ae357dc794edcdb",
+      "content_sha256": "49a2dbf871c69bf4ea8424a17c939e44da17a4803ed1166581c81641f1b0cea2",
       "tags": [
         "tokens",
         "context",
@@ -1996,8 +2059,8 @@
       "path": "skills/general/git-commit-rules/SKILL.md",
       "version": "0.2.0",
       "description": "Git workflow: commit prep, husky/commitlint, message format, safe action order.",
-      "sha256": "e4eedf2a7331206ce114e4874c767e3e6c524eb2da215d3be275934a70d515e7",
-      "content_sha256": "baa2f7eba72aa451412af80f2de805ac13872d99ee9c05ce4eedb5164e8d1ef8",
+      "sha256": "0eb9f53793c0addc7b8646a8b1965b722dab68eac2cf81c7c0c3f6c168211ba1",
+      "content_sha256": "a12a3d7c3079d64a81036178f29ef0322c2120ac3cceff1e7fec1e87319fda47",
       "tags": [
         "git",
         "conventions",
@@ -2106,8 +2169,8 @@
       "path": "skills/general/naming-conventions/SKILL.md",
       "version": "0.1.0",
       "description": "Naming discipline (language-agnostic): name reveals intent, not implementation; fight noise words (Manager/Helper/data/process) and combinatorial method explosion (findByXOrFail/getOrNull). Activate when naming or reviewing names of functions, classes, variables, methods.",
-      "sha256": "8bb2f2a8f1777619ad8f34259036dcd33500ea13b6d814911b88097b369d0f51",
-      "content_sha256": "0a1eacd89d2b0b83fde93c39ce9bb9374ea6fa99d8c11d9af1ee8546ce0dd0d9",
+      "sha256": "4e546b2851812cb188e2eb350979e675e6db5886e5b73f2d704286d61bebaaa4",
+      "content_sha256": "6a8746f6ab07d04eff49a061cfbf9e253bd9596891aa4f1fe9f7167a7aea9ffe",
       "tags": [
         "naming",
         "conventions",
@@ -2139,10 +2202,10 @@
       "name": "plan-protocol",
       "bucket": "general",
       "path": "skills/general/plan-protocol/SKILL.md",
-      "version": "0.2.0",
-      "description": "Executable master plans in plans/<ID>: plan/phase/task schemas, 6 statuses, handoff standard, model routing, /task:plan-* commands.",
-      "sha256": "af8f48e05b1802b993128119f4cc5b67b7fd7c911f69bd814902980e84331e94",
-      "content_sha256": "3dc08d233738c9aa99a9d4f6c2a299893ae1b7e9bfd15bbea87b0bd468e128ae",
+      "version": "2.0.0",
+      "description": "Executable master plans in plans/<ID>: plan/phase/task schemas, 6 statuses, refine loop and DoR gate, canonical plan root, two homes and archive, handoff with launch-block, model routing, /task:plan-* commands.",
+      "sha256": "1e31832d2e283d8cb5cc108b00c7933ec18a990e2d9d6ff5ceded86c49099511",
+      "content_sha256": "be8b841994dfc80fe1f943b60bf6d9cd2e1c6946d4c44cb895c25aa87a384017",
       "tags": [
         "workflow",
         "planning",
@@ -2275,8 +2338,8 @@
       "path": "skills/general/writing-style/SKILL.md",
       "version": "0.1.0",
       "description": "Tone & language of code artifacts: Russian by default for comments, commit bodies, test descriptions it()/test(), docstrings, internal docs; live language, no bureaucratese, explain WHY not WHAT. Activate when writing comments, commit bodies, test descriptions, internal docs (git format/mechanics → git-commit-rules).",
-      "sha256": "b4af7dc7d0fcf8168c03d2d809a9f2fea37532d263e9287627fd838b8f1b2243",
-      "content_sha256": "711c76c90d45373205b0b763ac07f037f72aff76d12128bb3ee90b3f6b7817d8",
+      "sha256": "4914d533fd808452765c61c671b10819f10ff195f4165620bf439af5cdd007c2",
+      "content_sha256": "9d5b731d8d5378f7b076ad65e47f7dbad97af9914a5914186423775625b8f2bf",
       "tags": [
         "writing",
         "language",
@@ -3250,8 +3313,8 @@
       "path": "skills/php/pao/SKILL.md",
       "version": "1.0.0",
       "description": "Laravel PAO — agent-optimized PHP tool output: PHPUnit/Pest/Paratest/PHPStan/Rector/Artisan collapse to compact JSON (~20 tokens vs thousands) when run inside an AI agent. Install, verify, limits.",
-      "sha256": "c6ff427ef27dd518f30839f5152bd3305670da3b8dad85ede7fd12c563fd850a",
-      "content_sha256": "bcb826b5c6d5be6ff24fc8fb167c8a173a3ed392df8fa37c577cd4afec3315d3",
+      "sha256": "d3fa9ddf0dbcafdc7dbf6be12e12b6ccd505a8613d4dd5bb0877532b773dfdc9",
+      "content_sha256": "b8f2a7eb885224c019d45436475186035e3ba604c372159f0706871963c982a8",
       "tags": [
         "php",
         "laravel",
@@ -3752,6 +3815,26 @@
       "source": "local"
     },
     {
+      "name": "artifact-review",
+      "bucket": "quality",
+      "path": "skills/quality/artifact-review/SKILL.md",
+      "version": "0.1.0",
+      "description": "Review taxonomy by artifact type: three profiles (plan/spec, documentation, code), each with a conformance constitution and dimensions; shared severity axis Blocker/Major/Minor/Nit + independent Conventional-Comments label. Activate when reviewing any artifact — pick the profile first, then measure.",
+      "sha256": "fc8a01680bb633e9853909e031cdf870953cce456322d3306fdb61993873668a",
+      "content_sha256": "a9d89fa16b7e9784f9fc21a1c3c8f8201b0cbd1e236420215cb9fa34e645499c",
+      "tags": [
+        "quality",
+        "review",
+        "taxonomy",
+        "plan",
+        "docs",
+        "code",
+        "severity",
+        "conventional-comments"
+      ],
+      "source": "local"
+    },
+    {
       "name": "code-review",
       "bucket": "quality",
       "path": "skills/quality/code-review/SKILL.md",
@@ -3969,8 +4052,8 @@
       "path": "skills/research/query-craft/SKILL.md",
       "version": "0.1.0",
       "description": "How to FORMULATE a search/doc-engine query (Perplexity Web · WebSearch · context7): version/stack (e.g. 'min Filament 4'), timeframe, format, limit; pick engine+mode (search/advanced/deep) and sources (web/academic/social). Activate BEFORE any external search, esp. a library/framework (Laravel/Filament/Vue): ban bare 'Laravel how to X?'. Not when-to-verify (verify-claims) nor what-to-connect (mcp-advisor) — only HOW to ask.",
-      "sha256": "0cda7e674a97305f9355e9e1e54cc0f6ae9977224697db2ff9b60e76c33e7ff2",
-      "content_sha256": "af27cb0581807978fe2cf8e7d8265ca5fe4e6c070c71ff93a180cd7e834d6fc1",
+      "sha256": "f5bd45ab05c5da463fe8bb1bbbcf089de700a1a1d103ed8259aa06934e776f0f",
+      "content_sha256": "5b4d453bd63edc9637b3a59eae3abab91bdb4c3bdbe36ee7fbc541a67ce8520c",
       "tags": [
         "research",
         "perplexity",

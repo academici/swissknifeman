@@ -12,7 +12,8 @@
 #
 # Merge-семантика: allow/ask/deny объединяются и дедуплицируются, существующие
 # правила цели сохраняются. defaultMode берётся из пресета только если в цели
-# он ещё не задан. Существующий файл сохраняется в *.bak.
+# он ещё не задан. enabledMcpjsonServers (top-level) — union с дедупом.
+# Существующий файл сохраняется в *.bak.
 
 set -euo pipefail
 
@@ -206,6 +207,12 @@ for path in preset_paths:
     for event, entries in data.get("hooks", {}).items():
         existing = result.setdefault("hooks", {}).setdefault(event, [])
         existing.extend(e for e in entries if e not in existing)
+    # enabledMcpjsonServers (top-level, НЕ под permissions): union с дедупом —
+    # одобрение project-scoped .mcp.json-серверов по имени (Класс B, SKM-AUDIT-004 P4.3)
+    incoming_mcp = data.get("enabledMcpjsonServers", [])
+    if incoming_mcp:
+        cur_mcp = result.setdefault("enabledMcpjsonServers", [])
+        cur_mcp.extend(s for s in incoming_mcp if s not in cur_mcp)
 
 print(json.dumps(result, ensure_ascii=False, indent=2))
 PY

@@ -268,7 +268,11 @@ def _lock_skills(project):
         return None
     f = Path(os.path.expanduser(local)) / "skills-lock.json"
     data = _load_json(f)
-    return (data or {}).get("skills") if data else None
+    skills = (data or {}).get("skills") if data else None
+    if isinstance(skills, list):
+        # свой формат lock-файла (напр. Brain-валт: список, не dict {name: entry})
+        skills = {s.get("name"): s for s in skills if s.get("name")}
+    return skills
 
 
 def derive_skills(g, project):
@@ -281,7 +285,8 @@ def derive_skills(g, project):
     edges = 0
     for name, entry in skills.items():
         snode = f"skill:{name}"
-        g.add_node(snode, "skill", project=pid, bucket=entry.get("bucket", ""))
+        bucket = entry.get("bucket") or entry.get("persona", "")
+        g.add_node(snode, "skill", project=pid, bucket=bucket)
         g.add_edge(pnode, snode, "uses", via="skills", plane="meta")
         edges += 1
         for src in [entry.get("source")] + list(entry.get("also_in") or []):

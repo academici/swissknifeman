@@ -66,7 +66,7 @@ enforcement заполнения CHANGELOG; (6) `ecosystem-glossary` — еди�
 | P4.3, P4.4, P4.6 | **opus/high** | Публичный контракт протокола: валидатор `plan_lint` (regex/правила места-имени = класс public contract/SemVer), новая скилл-карта `ecosystem-map`, DoR-клауза скилла — дешёвая модель канон/валидатор не переписывает (SSOT-матрица §9). P4.5 (правка CLAUDE.md, merge-only) — дефолт sonnet/medium |
 | P5.2 | sonnet/medium + **claude-code-guide / perplexity-web (RAG)** | Доставка non-blocking warning В КОНТЕКСТ модели через `PreToolUse`-хук стоит на hook-API Claude Code (`additionalContext` vs `systemMessage` vs stderr) — API меняется между версиями CLI; исполнитель верифицирует по `hooks.md` перед фиксацией ([UNVERIFIED] в P5.2 Code Guidance) |
 | P6.4 | **sonnet/low** | Наполнение term-index — механический перенос терминов из готовых источников; thinking вреден (SSOT-матрица §9) |
-| P7.1 | **opus/high** + интервью владельца | Авторинг отсутствующей спеки — проектирование, не исполнение |
+| P7.1, P7.2 | **sonnet/low** | Интервью владельца закрыто (D44 → удаление, не авторинг): P7.1 — механическая чистка (`git rm` + 2 точечные правки), P7.2 — сверка витрин со §4. Thinking вреден (SSOT-матрица §9); авторинг спеки отменён владельцем |
 
 ## 4. Phase Index & Status Board
 
@@ -78,7 +78,7 @@ enforcement заполнения CHANGELOG; (6) `ecosystem-glossary` — еди�
 | P4 | Канон планов: репо-дом, имена, дом workflow-скриптов | 6/6 | 🟢 Done |
 | P5 | changelog-discipline: enforcement заполнения CHANGELOG | 3/3 | 🟢 Done |
 | P6 | ecosystem-glossary: единый язык трёхслойкой | 2/4 | 🟡 In progress |
-| P7 | ephemeral-дисциплина и закрытие пакета | 0/2 | ⬜ Not started |
+| P7 | ephemeral-дисциплина и закрытие пакета | 1/2 | 🟡 In progress |
 
 ## 5. Decision Log
 
@@ -124,6 +124,7 @@ enforcement заполнения CHANGELOG; (6) `ecosystem-glossary` — еди�
 | D41 | 2026-07-11 | P6.4 (наполнение term-index) — ТАЙМ-ГЕЙТОВЫЙ ОТКРЫТЫЙ item: остаётся ⬜ на доске, `plan-exec` P6 его НЕ закрывает; фаза P6 закрывается с P6.4 ⬜ (механизм сдан P6.1–P6.3), downstream (dev-волна ECOSYSTEM P4) наполняет по факту | Спека §Критерий («наполнение — после dev-волны P4»); Rule of Two требует ФАКТА пересечения 2+ пакетов. Раньше = мега-глоссарий, который протухнет (RAG:✅ спека §Проблема). Альтернатива (закрыть no-op сейчас) отвергнута |
 | D42 | 2026-07-11 | Rule of Two входа в term-index + формат строки + steward-модель канонизированы в ОДНОМ месте — скилле `domain-modeling` (P6.1, секция `## Conformance`); `axioma-glossary` (P6.3) и ревью-поверхности (P6.2) ЦИТИРУЮТ его | Рамка CLAUDE.md «единый источник > копий»; образец Rule of Two — `package-contribution-protocol`. Три поверхности на одно правило = semantic drift (failure mode, против которого фаза). Альтернатива (правило в каждой) отвергнута |
 | D43 | 2026-07-11 | Строка «Glossary impact?» — идентичной копипаст-формулировкой в 5 стек-паковых `reviewer.md`, СТРОГО вне shared-регионов `<!-- shared:* -->` | Repo-grounded: `test_agentpacks_shared.py` сверяет shared-прозу байт-в-байт (вставка в shared-регион покраснит тест); role-паки не имеют `reviewer.md`. Альтернатива (новый shared-фрагмент) отвергнута: тяжелее |
+| D44 | 2026-07-11 | «Ephemeral-дисциплина» (P7.1) — **удалить**: стаб `roadmap/ephemeral-discipline.md` + две bundle-ссылки (`plan-homes.md`, `changelog-discipline.md`). Авторинг спеки (прежний план P7.1) отменён; P7.1 переведён с opus/high на sonnet/low (механическая чистка). **Уточняет D7** (D7 задал развилку «спека ЛИБО убрать ссылки» — владелец выбрал вторую ветвь) | Owner-confirmed 2026-07-11 (интервью в plan-design P7): имя было рабочей заготовкой, содержание перенесено в отдельный ROADMAP → локальный стаб избыточен. Реконструкция смысла запрещена (D7), но решать нечего — выбор владельца финален. Альтернативы: формулировать спеку (нет содержания — владелец подтвердил); оставить стаб «⚠️ РАЗОБРАТЬСЯ» бессрочно (мёртвая запись в каталоге) — обе отвергнуты владельцем |
 
 ## 6. Update Log
 
@@ -165,3 +166,5 @@ enforcement заполнения CHANGELOG; (6) `ecosystem-glossary` — еди�
 | 2026-07-11 | package-implementer/sonnet | P6.1 закрыт: `domain-modeling` усилен триггерами обновления CONTEXT.md + Rule of Two входа в term-index + `## Conformance` (D42) — детали см. phases/P6.md P6.1 Completion Notes |
 | 2026-07-11 | package-implementer/sonnet | P6.2 закрыт: «Glossary impact?» в 5 `reviewer.md` (вне shared-регионов) + glossary-conformance-измерение в `task:review` Stage B — детали см. phases/P6.md P6.2 Completion Notes |
 | 2026-07-11 | plan-exec/sonnet | P6.3 закрыт: скилл-указатель `axioma/axioma-glossary` + каркас Brain-страницы `Ecosystem_Glossary.md` + строка `roadmap/README.md` — детали см. phases/P6.md P6.3 Completion Notes |
+| 2026-07-11 | issue-planner/opus | P7 развёрнута из скелета: 2 items с полными ТЗ, DoR пройден. Развилка «смысл ephemeral» закрыта владельцем → D44 (удалить, перенесено в ROADMAP); P7.1 переведён opus/high→sonnet/low (авторинг спеки отменён, механическая чистка) |
+| 2026-07-11 | plan-exec/sonnet | P7.1 закрыт: стаб `roadmap/ephemeral-discipline.md` удалён + 2 висячие ссылки сняты в `plan-homes.md`/`changelog-discipline.md` — детали см. phases/P7.md P7.1 Completion Notes |

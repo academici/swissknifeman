@@ -77,7 +77,7 @@ enforcement заполнения CHANGELOG; (6) `ecosystem-glossary` — еди�
 | P3 | workflow-craft: активация конструктора + команда-гейт | 5/5 | 🟢 Done |
 | P4 | Канон планов: репо-дом, имена, дом workflow-скриптов | 6/6 | 🟢 Done |
 | P5 | changelog-discipline: enforcement заполнения CHANGELOG | 3/3 | 🟢 Done |
-| P6 | ecosystem-glossary: единый язык трёхслойкой | 1/4 | 🟡 In progress |
+| P6 | ecosystem-glossary: единый язык трёхслойкой | 2/4 | 🟡 In progress |
 | P7 | ephemeral-дисциплина и закрытие пакета | 0/2 | ⬜ Not started |
 
 ## 5. Decision Log
@@ -164,3 +164,4 @@ enforcement заполнения CHANGELOG; (6) `ecosystem-glossary` — еди�
 | 2026-07-11 | plan-closer/sonnet | Фаза P5 закрыта: bookkeeping-сверка (Status Board ⇄ items, Phase Handoff уже заполнен), `handoff.md` перезаписан (Next → P6.1), `plan-lint` зелёный (0 ошибок, 3 pre-existing WARNING) |
 | 2026-07-11 | package-implementer/sonnet | P6.1 закрыт: `domain-modeling` усилен триггерами обновления CONTEXT.md + Rule of Two входа в term-index + `## Conformance` (D42) — детали см. phases/P6.md P6.1 Completion Notes |
 | 2026-07-11 | package-implementer/sonnet | P6.2 закрыт: «Glossary impact?» в 5 `reviewer.md` (вне shared-регионов) + glossary-conformance-измерение в `task:review` Stage B — детали см. phases/P6.md P6.2 Completion Notes |
+| 2026-07-11 | plan-exec/sonnet | P6.3 закрыт: скилл-указатель `axioma/axioma-glossary` + каркас Brain-страницы `Ecosystem_Glossary.md` + строка `roadmap/README.md` — детали см. phases/P6.md P6.3 Completion Notes |

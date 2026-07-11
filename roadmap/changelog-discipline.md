@@ -39,7 +39,7 @@
 ## Критерий внедрения
 
 Вместе с пакетом SKM-плана оркестрации/дисциплины (settings-doctor, workflow-craft,
-wf-status, ephemeral-дисциплина, plan-homes) — трогает те же слои (скиллы + harness-хуки).
+wf-status, plan-homes) — трогает те же слои (скиллы + harness-хуки).
 
 ## Источник
 

@@ -383,6 +383,13 @@ implemented"). On plan terminality — command `/task:plan-close archive <ID>`:
 3. A migration checklist (what moved to docs, what stayed in the archive) — in the
    final handoff.
 
+**Plans are NEVER deleted.** A terminal plan moves to `plans/archive/<ID>` and is kept
+forever (decision provenance: D-log, Completion Notes, Known Deviations — the only
+source of "why it was done this way" months later). `rm`/`git rm` of a plan directory
+is a defect, not a protocol operation; a superseded predecessor also goes to the
+archive, not the trash. The only exception — an explicit owner order with a `--force`
+flag in the command (the agent never proposes deletion on its own).
+
 ## 13. Command protocol
 
 | Command | Model/effort | Does |
@@ -449,4 +456,4 @@ extracts and recon reports, so future plan work doesn't repay the cost of recons
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of
   editing vendor copies (section 12).
 
-<!-- ru-source-sha256: b75d576b56cd6277ddfcde11034cefb8015d74b51ce9d29d76d02a242d0d198c -->
+<!-- ru-source-sha256: 30124bde8e8599b272266f195138bea5a958e09224a5db4d7ee4987cb6311c48 -->

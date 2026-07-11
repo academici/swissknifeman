@@ -34,4 +34,4 @@
 ## Источник
 
 Field-feedback Owner, план `SKM-AUDIT-004`, фаза P7 (идея 5), решение D14
-(`plans/SKM-AUDIT-004/plan.md`).
+(`plans/2026.07.07-SKM-AUDIT-004/plan.md`).

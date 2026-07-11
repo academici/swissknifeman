@@ -10,7 +10,7 @@
 P3.1/P3.2) показала: из ~20 онбордженных проектов лишь малая часть пишет run-report
 вообще, и ещё меньше накопили analyst-state/token-trend. Отсутствие сигнала — не баг
 `digest` (перепроверено read-only на трёх проектах, см. R3 в
-`plans/SKM-AUDIT-004/findings/P3-recommendations.md`: `--dry-run` корректно резолвит
+`plans/2026.07.07-SKM-AUDIT-004/findings/P3-recommendations.md`: `--dry-run` корректно резолвит
 бинарь и легитимно возвращает `candidates: []`), а data-coverage gap: хук `run-report`
 per-project настройка (harness-хуки), не глобальный демон.
 
@@ -39,5 +39,5 @@ per-project настройка (harness-хуки), не глобальный д�
 
 ## Источник
 
-`plans/SKM-AUDIT-004/findings/P3-stats.md` (табл. 2) ·
-`plans/SKM-AUDIT-004/findings/P3-recommendations.md` (R6).
+`plans/2026.07.07-SKM-AUDIT-004/findings/P3-stats.md` (табл. 2) ·
+`plans/2026.07.07-SKM-AUDIT-004/findings/P3-recommendations.md` (R6).

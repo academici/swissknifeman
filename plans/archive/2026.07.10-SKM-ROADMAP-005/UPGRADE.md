@@ -8,7 +8,7 @@
 
 | Область | Что | Как доставляется в проект |
 |:--|:--|:--|
-| **settings-doctor** (P1) | Конфликт-линтер слоёв настроек Claude Code: `harness settings doctor` (фасад `skiller doctor --settings`); fleet-прогон `maind doctor --audit settings` | Ничего не копируется — команда живёт в harness; достаточно обновлённого swissknifeman на машине |
+| **settings-doctor** (P1) | Конфликт-линтер слоёв настроек Claude Code: `harness doctor --settings` (фасад `skiller doctor --settings`); fleet-прогон `maind doctor --audit settings` | Ничего не копируется — команда живёт в harness; достаточно обновлённого swissknifeman на машине (**зонтичный `install.sh`**, не `skiller install`) |
 | **wf status** (P2) | Детерминированный статус-репортер workflow-прогонов: `harness wf status` / фасад `swissknifeman wf status` (+ `--json`, `--watch`) | То же — CLI-команда, раскатки в проект не требует; агентам больше НЕ советовать `/workflows` |
 | **workflow-craft** (P3) | Скилл-указатель на канон `packages/task/workflows/` + команда-гейт `/task:make-workflow` (интервью → генерация → статический ревьюер) | Через плагин `task@swissknifeman` — обновить плагины (`maind:plugins` / marketplace pull) |
 | **Канон планов** (P4) | plan-protocol 2.1: репо-дом планов по умолчанию (`plans/<ID>/` рядом с docs), канон имён + `supersedes`, дом workflow-скриптов `plans/<ID>/workflows/`, ужесточённый `plan-lint` | Скилл `general/plan-protocol` — через skiller connect/vendor (re-sync скиллов); в проектах с планами завести `plans/ACTIVE.md` |

@@ -694,18 +694,39 @@ def check_4_policy_profile_conformance(ctx):
 
 # --- Проверка №5 — хуки: command существует/исполняем; событие известно ------
 
+# Интерпретаторы: `bash script.sh` — проверять надо СКРИПТ, а не сам `bash`.
+_INTERPRETERS = {"bash", "sh", "zsh", "dash", "python", "python3", "node", "perl", "ruby"}
+
+
 def _resolve_hook_command_path(command, target):
-    """Первый токен command-строки → путь. Плейсхолдеры (`$VAR`/`${VAR}`) НЕ
-    резолвим (Implementation Rules) — вернём None, вызывающий даёт `info`."""
+    """Токен command-строки → путь к проверяемому файлу. Плейсхолдеры (`$VAR`/`${VAR}`)
+    НЕ резолвим (Implementation Rules) — вернём None, вызывающий даёт `info`.
+
+    Два класса, которые наивный «первый токен» ломал ложным `error`:
+    - `~/.claude/hooks/x.sh` — тильда обязана раскрываться (иначе клеится к target);
+    - `bash /path/x.sh` — первый токен интерпретатор, проверять надо аргумент-скрипт.
+    """
     try:
         tokens = shlex.split(command)
     except ValueError:
         return None
     if not tokens:
         return None
+
     first = tokens[0]
     if "$" in first:
         return None
+
+    # `bash script.sh` / `python3 hook.py` → цель проверки — скрипт (второй токен).
+    if Path(first).name in _INTERPRETERS:
+        args = [t for t in tokens[1:] if not t.startswith("-")]
+        if not args:
+            return None  # интерпретатор без скрипта (`bash -c …`) — не проверяем
+        first = args[0]
+        if "$" in first:
+            return None
+
+    first = os.path.expanduser(first)
     path = Path(first)
     if not path.is_absolute():
         path = Path(target) / path

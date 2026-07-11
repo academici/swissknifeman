@@ -188,6 +188,33 @@ class SettingsAuditChecksCase(unittest.TestCase):
         errs = [f for f in _findings_by_id(findings, 5) if f.level == "error"]
         self.assertEqual(len(errs), 1)
 
+    # №5 — `~/…` раскрывается: легальный хук в HOME НЕ даёт ложный error
+    # (полевой кейс 2026-07-11: ~/.claude/hooks/log-bash-command.sh клеился к target).
+    def test_check5_tilde_path_expanded_no_false_error(self):
+        hooks_dir = self.home / ".claude" / "hooks"
+        hooks_dir.mkdir(parents=True, exist_ok=True)
+        script = hooks_dir / "log-bash-command.sh"
+        script.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+        script.chmod(0o755)
+        _write(self.target / ".claude" / "settings.json", {"hooks": {"PreToolUse": [
+            {"matcher": "Bash",
+             "hooks": [{"type": "command", "command": "~/.claude/hooks/log-bash-command.sh"}]}]}})
+        findings = self._run()
+        errs = [f for f in _findings_by_id(findings, 5) if f.level == "error"]
+        self.assertEqual(errs, [], "тильда обязана раскрываться — ложный error недопустим")
+
+    # №5 — интерпретатор-префикс: проверять надо СКРИПТ, а не сам `bash` (P1.4 Pending Work)
+    def test_check5_interpreter_prefix_checks_script_not_interpreter(self):
+        script = self.target / "hook.sh"
+        script.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+        script.chmod(0o755)
+        _write(self.target / ".claude" / "settings.json", {"hooks": {"PreToolUse": [
+            {"matcher": "Bash",
+             "hooks": [{"type": "command", "command": f"bash {script}"}]}]}})
+        findings = self._run()
+        errs = [f for f in _findings_by_id(findings, 5) if f.level == "error"]
+        self.assertEqual(errs, [], "`bash <script>` — проверяется скрипт, не интерпретатор")
+
     # №5 — хук с событием TotallyUnknownEvent → info id=5 (снапшот неполный, [UNVERIFIED])
     def test_check5_unknown_hook_event_is_info_not_warn(self):
         script = self.target / "hook.sh"

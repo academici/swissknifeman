@@ -30,3 +30,13 @@ roadmap/README.md (витрина статусов) · packages/skiller/skills/g
   `mcp-config-example-emit` (D1); maind-провижионер `plans-doc` (D30); **наполнение term-index**
   (бывш. P6.4 ⛔ → roadmap `ecosystem-glossary`, гейт: код dev-волны ECOSYSTEM P4).
 - open_questions: политика vendored-vs-bilingual для `domain-modeling` — OQ1 (`open-questions.md`).
+
+## Чек-лист миграции (архивация 2026-07-11)
+
+| Что | Куда |
+|:--|:--|
+| `root/` → docs | — (каталога `root/` в плане не было, мигрировать нечего) |
+| `findings/`, `workflows/`, `phases/`, `open-questions.md` | остались в архиве `plans/archive/SKM-ROADMAP-005/` |
+| `plans/ACTIVE.md` | сброшен на `—` (коммит ec30966) |
+| Ссылки в живых доках | `roadmap/README.md` → указывает на `plans/archive/SKM-ROADMAP-005/phases/P6.md` (ТЗ term-index); других ссылок на старый путь нет (grep чист) |
+| Открытый хвост | наполнение term-index (бывш. P6.4 ⛔) — roadmap-строка `ecosystem-glossary` |

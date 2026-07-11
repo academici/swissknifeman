@@ -4,7 +4,7 @@
 
 Источник истины портируемых скиллов (машинный реестр — `skills.json`). Раздача в проекты: `skiller connect` (плагины-бакеты) / `vendor` (физ. перенос). CORE-набор токен-скиллов (`general`/`oss-dev`) раздаётся по умолчанию — см. `connect`/`vendor`.
 
-Всего: 213 скиллов в 47 бакетах.
+Всего: 214 скиллов в 47 бакетах.
 
 ## Скиллы по бакетам
 
@@ -35,11 +35,12 @@
 | `security-design` | Data classification, auth strategy, RBAC/ABAC, OWASP Top 10, GDPR, STRIDE threat modeling… | `security`, `compliance`, `auth`, `owasp`, `threat-modeling`, `rbac`, `gdpr`, `privacy`, `stride` |
 | `tech-stack-selection` | Tech stack selection with trade-off matrix before architecture design. ADR-first step | `stack-choice`, `architecture`, `adr`, `trade-off` |
 
-### axioma — Axioma ecosystem doctrine & reuse: dev philosophy, tech-radar binding, vendor-vs-build discipline (project-scoped bucket) (3)
+### axioma — Axioma ecosystem doctrine & reuse: dev philosophy, tech-radar binding, vendor-vs-build discipline (project-scoped bucket) (4)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
 | `axioma-doctrine` | Axioma ecosystem development doctrine: five imperative pillars (horizontal core → vertica… | `axioma`, `doctrine`, `architecture`, `ecosystem` |
+| `axioma-glossary` | Binds domain-modeling discipline to the live thin term-index of the Axioma ecosystem: can… | `axioma`, `ecosystem`, `glossary`, `term-index` |
 | `axioma-stack` | Binds the universal reuse-gate to the live Ecosystem_Tech_Radar.md of the Axioma ecosyste… | `axioma`, `ecosystem`, `reuse`, `tech-radar` |
 | `ecosystem-map` | Where docs, plans, findings and vault links live in a project and how repo↔Brain sync. A … | `axioma`, `ecosystem`, `plans`, `docs`, `navigation` |
 
@@ -486,7 +487,7 @@
 | `authoring` | `workflow-craft` |
 | `authorization` | `attribute-authorization`, `azguard`, `laravel-permissions` |
 | `auto-layout` | `figma-to-flutter`, `figma-to-vue` |
-| `axioma` | `axioma-doctrine`, `axioma-stack`, `ecosystem-map` |
+| `axioma` | `axioma-doctrine`, `axioma-glossary`, `axioma-stack`, `ecosystem-map` |
 | `azguard` | `azguard`, `laravel-permissions` |
 | `barge-in` | `voice-ai` |
 | `best-practices` | `laravel-best-practices` |
@@ -574,7 +575,7 @@
 | `dynamic-component` | `vue-dynamic-icons` |
 | `e2e` | `laravel-dusk`, `playwright-e2e` |
 | `echo` | `laravel-broadcasting` |
-| `ecosystem` | `axioma-doctrine`, `axioma-stack`, `ecosystem-map`, `ecosystem-reuse-gate`, `swissknifeman-locator` |
+| `ecosystem` | `axioma-doctrine`, `axioma-glossary`, `axioma-stack`, `ecosystem-map`, `ecosystem-reuse-gate`, `swissknifeman-locator` |
 | `eloquent` | `eloquent-accessors` |
 | `entities` | `data-schema` |
 | `enum` | `attribute-authorization`, `azguard`, `backend-type-sync`, `enum-attributes`, `enum-state-machine` |
@@ -600,7 +601,7 @@
 | `github-actions` | `ci-cd` |
 | `gitlab-ci` | `ci-cd` |
 | `gitops` | `git-commit-rules`, `gitops` |
-| `glossary` | `domain-modeling` |
+| `glossary` | `axioma-glossary`, `domain-modeling` |
 | `gotchas` | `livewire-blade-attributes`, `version-gotchas` |
 | `governance` | `issue-triage`, `package-contribution-protocol` |
 | `grilling` | `grill-with-docs` |
@@ -787,6 +788,7 @@
 | `tech-radar` | `axioma-stack` |
 | `template` | `brd`, `model-rules`, `prd-from-brd`, `runbook`, `task-brief-template` |
 | `templates` | `agent-packs`, `workflow-craft` |
+| `term-index` | `axioma-glossary` |
 | `testability` | `codebase-design` |
 | `testing` | `db-test-preflight`, `diagnosing-bugs`, `docker-postgres`, `eval-design`, `laravel-testing`, `mutation-testing`, `pao`, `playwright-e2e`, `tdd-discipline`, `test-isolation-guard`, `test-strategy`, `testing-safety-report`, `vitest`, `vue-testing-best-practices` |
 | `tests` | `writing-style` |

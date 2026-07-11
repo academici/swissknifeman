@@ -36,6 +36,7 @@ flowchart LR
   end
   subgraph axioma["axioma"]
     axioma_doctrine["axioma-doctrine<br/>⊕90 ↻1260"]:::warm
+    axioma_glossary["axioma-glossary<br/>⊕110 ↻1338"]:::warm
     axioma_stack["axioma-stack<br/>⊕105 ↻1337"]:::warm
     ecosystem_map["ecosystem-map<br/>⊕47 ↻670"]:::mild
   end
@@ -325,6 +326,7 @@ flowchart LR
   architecture -->|requires| brd
   architecture -->|requires| tech_stack_selection
   attribute_authorization -->|requires| laravel_permissions
+  axioma_glossary -->|requires| domain_modeling
   axioma_stack -->|requires| ecosystem_reuse_gate
   backend_type_sync -->|requires| wayfinder
   botkit -->|requires| laravel
@@ -420,7 +422,7 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 213 скиллов · ⊕ always **15452** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 298868 ток · ⌥ on-demand 795837 ток (сниппеты + references).
+**Итого:** 214 скиллов · ⊕ always **15562** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 300206 ток · ⌥ on-demand 795837 ток (сниппеты + references).
 
 ## По бакетам
 
@@ -439,6 +441,7 @@ flowchart LR
 | `blender-modeling` | 6 | 506 | 8887 | 12586 |
 | `pm` | 10 | 438 | 11072 | 23524 |
 | `founder` | 10 | 406 | 15277 | 578 |
+| `axioma` | 4 | 352 | 4605 | 0 |
 | `research` | 2 | 325 | 4790 | 20472 |
 | `frontend-linting` | 4 | 323 | 5920 | 18380 |
 | `laravel-testing` | 4 | 323 | 7993 | 15335 |
@@ -446,7 +449,6 @@ flowchart LR
 | `frontend-backend` | 3 | 288 | 5488 | 7851 |
 | `frontend` | 3 | 285 | 3795 | 5927 |
 | `frontend-nuxt` | 3 | 255 | 2564 | 24048 |
-| `axioma` | 3 | 242 | 3267 | 0 |
 | `frontend-tailwind` | 2 | 240 | 4458 | 5218 |
 | `laravel-extras` | 3 | 225 | 4257 | 7664 |
 | `laravel-auth` | 3 | 202 | 3358 | 5640 |

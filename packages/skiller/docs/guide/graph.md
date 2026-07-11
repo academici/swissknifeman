@@ -27,6 +27,7 @@ flowchart LR
     tech_stack_selection["tech-stack-selection"]
   end
   subgraph axioma["axioma"]
+    axioma_glossary["axioma-glossary"]
     axioma_stack["axioma-stack"]
   end
   subgraph blender["blender"]
@@ -204,6 +205,7 @@ flowchart LR
   architecture -->|requires| brd
   architecture -->|requires| tech_stack_selection
   attribute_authorization -->|requires| laravel_permissions
+  axioma_glossary -->|requires| domain_modeling
   axioma_stack -->|requires| ecosystem_reuse_gate
   backend_type_sync -->|requires| wayfinder
   botkit -->|requires| laravel
@@ -383,7 +385,7 @@ flowchart LR
   verify_claims -.->|feeds| tech_stack_selection
 ```
 
-**В графе:** 129 скиллов, 94 рёбер requires, 88 рёбер produces_for.
+**В графе:** 130 скиллов, 95 рёбер requires, 88 рёбер produces_for.
 
 ## Изолированные скиллы (84)
 

@@ -16,7 +16,7 @@
     },
     "axioma": {
       "description": "Axioma ecosystem doctrine & reuse: dev philosophy, tech-radar binding, vendor-vs-build discipline (project-scoped bucket)",
-      "count": 3,
+      "count": 4,
       "status": "active"
     },
     "azguard": {
@@ -631,6 +631,25 @@
         "doctrine",
         "architecture",
         "ecosystem"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "axioma-glossary",
+      "bucket": "axioma",
+      "path": "skills/axioma/axioma-glossary/SKILL.md",
+      "version": "0.1.0",
+      "description": "Binds domain-modeling discipline to the live thin term-index of the Axioma ecosystem: canon path, its 4-column structure, delegation of the Rule-of-Two/steward model to domain-modeling (no embedded copy of content). Read when asking 'what does term X mean in another package' or suspecting a collision/homonym across packages — right after domain-modeling.",
+      "sha256": "5fc07e50f51abfca6f0196be87eece476c74291efee7b805961a002e45ddcbf6",
+      "content_sha256": "ee5a1775e84c27b2bb30609e0e26565851f776f82f156908881560b622b93875",
+      "tags": [
+        "axioma",
+        "ecosystem",
+        "glossary",
+        "term-index"
+      ],
+      "requires": [
+        "domain-modeling"
       ],
       "source": "local"
     },

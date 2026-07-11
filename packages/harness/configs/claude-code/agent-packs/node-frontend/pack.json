@@ -1,58 +1,274 @@
 {
   "schema": 1,
   "pack": "node-frontend",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Frontend dev-loop для Vue/Vite (SPA или Inertia): агенты component-builder/slice-builder/test-writer/reviewer (преднагружены frontend-скиллами), последовательный one-branch workflow, SubagentStop review-gate (tsc/eslint) + PostToolUse-валидатор (не блокирует). Роли универсальны, стек — Vue/Vite/Tailwind/Pinia.",
   "stack": {
     "shape": "frontend",
     "language": "typescript",
     "framework": "vue",
     "project_type": "node-frontend",
-    "detect": { "all_of": ["package.json"], "any_of": ["vite.config.ts", "vite.config.js", "nuxt.config.ts"] }
+    "detect": {
+      "all_of": [
+        "package.json"
+      ],
+      "any_of": [
+        "vite.config.ts",
+        "vite.config.js",
+        "nuxt.config.ts"
+      ]
+    }
   },
   "requires": {
     "skills": [
-      "vue", "vue-composition-api", "vue-best-practices", "vite", "tailwind-conventions",
-      "pinia", "ts-library", "js-code-style", "eslint-flat-config", "inertia-vue",
-      "vitest", "vitest-vue", "vue-testing-best-practices", "code-simplifier"
+      "vue",
+      "vue-composition-api",
+      "vue-best-practices",
+      "vite",
+      "tailwind-conventions",
+      "pinia",
+      "ts-library",
+      "js-code-style",
+      "eslint-flat-config",
+      "inertia-vue",
+      "vitest",
+      "vitest-vue",
+      "vue-testing-best-practices",
+      "code-simplifier"
     ],
-    "harness_presets": ["base", "node"]
+    "harness_presets": [
+      "base",
+      "node"
+    ]
   },
   "interview": [
-    { "id": "PACK_PREFIX", "q": "Префикс имён агентов/воркфлоу?", "default": "{project_dirname}", "kind": "slug" },
-    { "id": "PROJECT_DIR", "q": "Абсолютный путь к проекту?", "detect": "pwd" },
-    { "id": "PKG_MANAGER", "q": "Пакетный менеджер?", "detect": "test -f pnpm-lock.yaml && echo pnpm || (test -f yarn.lock && echo yarn || echo npm)", "enum": ["pnpm", "yarn", "npm"], "default": "npm" },
-    { "id": "TEST_RUNNER_CMD", "q": "Команда тестов?", "default": "{PKG_MANAGER} run test" },
-    { "id": "TYPECHECK_CMD", "q": "Команда typecheck?", "default": "{PKG_MANAGER} run typecheck" },
-    { "id": "LINT_CMD", "q": "Команда линта?", "default": "{PKG_MANAGER} run lint" },
-    { "id": "VUE_VARIANT", "q": "Inertia, SPA(vue-router) или Nuxt?", "detect": "package.json:dependencies.@inertiajs/vue3", "enum": ["inertia", "spa", "nuxt"], "default": "spa" },
-    { "id": "BASE_BRANCH", "q": "Базовая ветка?", "detect": "git symbolic-ref --short refs/remotes/origin/HEAD", "default": "main" },
-    { "id": "CHECK_CMD", "q": "Быстрая review-gate проверка?", "default": "{PKG_MANAGER} run typecheck && {PKG_MANAGER} run lint" },
-    { "id": "DOCS_DIR", "q": "Куда положить guideline (внутренний AI-гайд, не публичная docs/)?", "default": ".claude/guidelines" },
-    { "id": "MODEL_REVIEWER", "q": "Модель reviewer?", "default": "opus", "enum": ["inherit", "opus", "sonnet", "haiku"] },
-    { "id": "MODEL_COMPONENT_BUILDER", "q": "Модель component-builder?", "default": "sonnet", "enum": ["inherit", "opus", "sonnet", "haiku"] },
-    { "id": "MODEL_SLICE_BUILDER", "q": "Модель slice-builder?", "default": "sonnet", "enum": ["inherit", "opus", "sonnet", "haiku"] },
-    { "id": "MODEL_TEST_WRITER", "q": "Модель test-writer?", "default": "sonnet", "enum": ["inherit", "opus", "sonnet", "haiku"] },
-    { "id": "MODEL_SPEC_WRITER", "q": "Модель spec-writer?", "default": "sonnet", "enum": ["inherit", "opus", "sonnet", "haiku"] },
-    { "id": "GATE_COVERAGE_MIN", "q": "Мин. покрытие (%)?", "default": "80" },
-    { "id": "GATE_MAX_CRITICAL", "q": "Допустимо critical-находок?", "default": "0" }
+    {
+      "id": "PACK_PREFIX",
+      "q": "Префикс имён агентов/воркфлоу?",
+      "default": "{project_dirname}",
+      "kind": "slug"
+    },
+    {
+      "id": "PROJECT_DIR",
+      "q": "Абсолютный путь к проекту?",
+      "detect": "pwd"
+    },
+    {
+      "id": "PKG_MANAGER",
+      "q": "Пакетный менеджер?",
+      "detect": "test -f pnpm-lock.yaml && echo pnpm || (test -f yarn.lock && echo yarn || echo npm)",
+      "enum": [
+        "pnpm",
+        "yarn",
+        "npm"
+      ],
+      "default": "npm"
+    },
+    {
+      "id": "TEST_RUNNER_CMD",
+      "q": "Команда тестов?",
+      "default": "{PKG_MANAGER} run test"
+    },
+    {
+      "id": "TYPECHECK_CMD",
+      "q": "Команда typecheck?",
+      "default": "{PKG_MANAGER} run typecheck"
+    },
+    {
+      "id": "LINT_CMD",
+      "q": "Команда линта?",
+      "default": "{PKG_MANAGER} run lint"
+    },
+    {
+      "id": "VUE_VARIANT",
+      "q": "Inertia, SPA(vue-router) или Nuxt?",
+      "detect": "package.json:dependencies.@inertiajs/vue3",
+      "enum": [
+        "inertia",
+        "spa",
+        "nuxt"
+      ],
+      "default": "spa"
+    },
+    {
+      "id": "BASE_BRANCH",
+      "q": "Базовая ветка?",
+      "detect": "git symbolic-ref --short refs/remotes/origin/HEAD",
+      "default": "main"
+    },
+    {
+      "id": "CHECK_CMD",
+      "q": "Быстрая review-gate проверка?",
+      "default": "{PKG_MANAGER} run typecheck && {PKG_MANAGER} run lint"
+    },
+    {
+      "id": "DOCS_DIR",
+      "q": "Куда положить guideline (внутренний AI-гайд, не публичная docs/)?",
+      "default": ".claude/guidelines"
+    },
+    {
+      "id": "MODEL_REVIEWER",
+      "q": "Модель reviewer?",
+      "default": "opus",
+      "enum": [
+        "inherit",
+        "opus",
+        "sonnet",
+        "haiku"
+      ]
+    },
+    {
+      "id": "MODEL_COMPONENT_BUILDER",
+      "q": "Модель component-builder?",
+      "default": "sonnet",
+      "enum": [
+        "inherit",
+        "opus",
+        "sonnet",
+        "haiku"
+      ]
+    },
+    {
+      "id": "MODEL_SLICE_BUILDER",
+      "q": "Модель slice-builder?",
+      "default": "sonnet",
+      "enum": [
+        "inherit",
+        "opus",
+        "sonnet",
+        "haiku"
+      ]
+    },
+    {
+      "id": "MODEL_TEST_WRITER",
+      "q": "Модель test-writer?",
+      "default": "sonnet",
+      "enum": [
+        "inherit",
+        "opus",
+        "sonnet",
+        "haiku"
+      ]
+    },
+    {
+      "id": "MODEL_SPEC_WRITER",
+      "q": "Модель spec-writer?",
+      "default": "sonnet",
+      "enum": [
+        "inherit",
+        "opus",
+        "sonnet",
+        "haiku"
+      ]
+    },
+    {
+      "id": "GATE_COVERAGE_MIN",
+      "q": "Мин. покрытие (%)?",
+      "default": "80"
+    },
+    {
+      "id": "GATE_MAX_CRITICAL",
+      "q": "Допустимо critical-находок?",
+      "default": "0"
+    }
   ],
   "files": [
-    { "src": "agents/component-builder.md", "target": ".claude/agents/{PACK_PREFIX}-component-builder.md", "kind": "template", "role": "agent" },
-    { "src": "agents/slice-builder.md", "target": ".claude/agents/{PACK_PREFIX}-slice-builder.md", "kind": "template", "role": "agent" },
-    { "src": "agents/test-writer.md", "target": ".claude/agents/{PACK_PREFIX}-test-writer.md", "kind": "template", "role": "agent" },
-    { "src": "agents/reviewer.md", "target": ".claude/agents/{PACK_PREFIX}-reviewer.md", "kind": "template", "role": "agent" },
-    { "src": "agents/spec-writer.md", "target": ".claude/agents/{PACK_PREFIX}-spec-writer.md", "kind": "template", "role": "agent", "optional": true },
-    { "src": "workflows/dev-loop.js", "target": ".claude/workflows/{PACK_PREFIX}-dev-loop.js", "kind": "template", "role": "workflow" },
-    { "src": "hooks/review-gate.sh", "target": ".claude/hooks/review-gate.sh", "kind": "verbatim", "role": "hook", "chmod": "+x" },
-    { "src": "hooks/review-gate.env.ini", "target": ".claude/review-gate.env.ini", "kind": "template", "role": "config", "user_owned": true },
-    { "src": "hooks/validate-frontend.sh", "target": ".claude/hooks/validate-frontend.sh", "kind": "verbatim", "role": "hook", "chmod": "+x" },
-    { "src": "settings/settings.fragment.json", "target": ".claude/settings.json", "kind": "merge", "role": "settings", "merge": "hooks.SubagentStop[]+hooks.PostToolUse[] append-if-absent" },
-    { "src": "rules/components.md", "target": ".claude/rules/components.md", "kind": "verbatim", "role": "rule" },
-    { "src": "rules/state.md", "target": ".claude/rules/state.md", "kind": "verbatim", "role": "rule" },
-    { "src": "rules/tests.md", "target": ".claude/rules/tests.md", "kind": "template", "role": "rule" },
-    { "src": "docs/subagents-and-workflows.md", "target": "{DOCS_DIR}/subagents-and-workflows.md", "kind": "template", "role": "doc" },
-    { "src": "rules/reviewer-overrides.md", "target": ".claude/rules/{PACK_PREFIX}-reviewer-overrides.md", "kind": "template", "user_owned": true, "role": "override" }
+    {
+      "src": "agents/component-builder.md",
+      "target": ".claude/agents/{PACK_PREFIX}-component-builder.md",
+      "kind": "template",
+      "role": "agent"
+    },
+    {
+      "src": "agents/slice-builder.md",
+      "target": ".claude/agents/{PACK_PREFIX}-slice-builder.md",
+      "kind": "template",
+      "role": "agent"
+    },
+    {
+      "src": "agents/test-writer.md",
+      "target": ".claude/agents/{PACK_PREFIX}-test-writer.md",
+      "kind": "template",
+      "role": "agent"
+    },
+    {
+      "src": "agents/reviewer.md",
+      "target": ".claude/agents/{PACK_PREFIX}-reviewer.md",
+      "kind": "template",
+      "role": "agent"
+    },
+    {
+      "src": "agents/spec-writer.md",
+      "target": ".claude/agents/{PACK_PREFIX}-spec-writer.md",
+      "kind": "template",
+      "role": "agent",
+      "optional": true
+    },
+    {
+      "src": "workflows/dev-loop.js",
+      "target": ".claude/workflows/{PACK_PREFIX}-dev-loop.js",
+      "kind": "template",
+      "role": "workflow"
+    },
+    {
+      "src": "hooks/review-gate.sh",
+      "target": ".claude/hooks/review-gate.sh",
+      "kind": "verbatim",
+      "role": "hook",
+      "chmod": "+x"
+    },
+    {
+      "src": "hooks/review-gate.env.ini",
+      "target": ".claude/review-gate.env.ini",
+      "kind": "template",
+      "role": "config",
+      "user_owned": true
+    },
+    {
+      "src": "hooks/validate-frontend.sh",
+      "target": ".claude/hooks/validate-frontend.sh",
+      "kind": "verbatim",
+      "role": "hook",
+      "chmod": "+x"
+    },
+    {
+      "src": "settings/settings.fragment.json",
+      "target": ".claude/settings.json",
+      "kind": "merge",
+      "role": "settings",
+      "merge": "hooks.SubagentStop[]+hooks.PostToolUse[] append-if-absent"
+    },
+    {
+      "src": "rules/components.md",
+      "target": ".claude/rules/components.md",
+      "kind": "verbatim",
+      "role": "rule"
+    },
+    {
+      "src": "rules/state.md",
+      "target": ".claude/rules/state.md",
+      "kind": "verbatim",
+      "role": "rule"
+    },
+    {
+      "src": "rules/tests.md",
+      "target": ".claude/rules/tests.md",
+      "kind": "template",
+      "role": "rule"
+    },
+    {
+      "src": "docs/subagents-and-workflows.md",
+      "target": "{DOCS_DIR}/subagents-and-workflows.md",
+      "kind": "template",
+      "role": "doc"
+    },
+    {
+      "src": "rules/reviewer-overrides.md",
+      "target": ".claude/rules/{PACK_PREFIX}-reviewer-overrides.md",
+      "kind": "template",
+      "user_owned": true,
+      "role": "override"
+    }
   ],
   "notes": {
     "verify_workflow": "dev-loop.js использует top-level return/await — node --check НЕ применять; проверяй балансом скобок/непустотой.",

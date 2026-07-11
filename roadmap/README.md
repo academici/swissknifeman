@@ -13,6 +13,7 @@
 
 | Файл | Что | Статус | Почему отложено / реализовано | Критерий внедрения |
 |:--|:--|:--|:--|:--|
+| [`agent-packs-upgrade-drift.md`](agent-packs-upgrade-drift.md) | `agent-packs upgrade` сверяет ФАКТ файлов (хэши target+источника), а не только номер версии пака | ⬜ к внедрению | Критерий уже сработал: 2 отказа за одну раскатку — забытый бамп версии тихо не доставил изменение в 11 проектов; удалённые файлы не восстановились («уже актуален») | — (сработал, 2026-07-11) |
 | [`agent-command-router-hook.md`](agent-command-router-hook.md) | UserPromptSubmit-хук, подсказывающий нужного субагента/команду | ✅ реализовано (v1) | Триггер сработал: замеренный мисроут `/task:*` на реальном потоке | — (сработал) |
 | [`self-learning-memory.md`](self-learning-memory.md) | Самообучение через namespace-память maind (не перезапись CLAUDE.md) | 🟡 ядро реализовано (`analyst`), остаток отложен | Ядро (`digest`→`confidence`→`promote`→`memory-digest-hook`) реализовано; остаток — потоковый PostToolUse event-stream capture (`observe.sh`/`analyst-capture`, P5) | Остаток: измеренное трение (наблюдения теряются между прогонами) — on-demand `digest` пока покрывает MVP |
 | [`skill-rules-sidecar.md`](skill-rules-sidecar.md) | Генерируемый `skill-rules.json` сайдкар для роутинга скиллов | ⬜ отложено | Нативная автозагрузка скиллов обычно достаточна | Замеренные мис-активации скиллов |

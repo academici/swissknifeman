@@ -1,8 +1,8 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.0.0
-description: "Executable master plans in plans/<ID>: plan/phase/task schemas, 6 statuses, refine loop and DoR gate, canonical plan root, two homes and archive, handoff with launch-block, model routing, /task:plan-* commands."
+version: 2.1.0
+description: "Executable master plans in plans/<ID>: plan/phase/task schemas, 6 statuses, refine loop and DoR gate, canonical plan root, repo home by default + visibility/supersedes fields, two homes and archive, handoff with launch-block, model routing, /task:plan-* commands."
 risk: write
 persona: oss-dev
 tags: [workflow, planning, handoff, routing, multi-model]
@@ -46,12 +46,21 @@ plans/<PLAN-ID>/
 ├── findings/          # RAG extracts and recon reports (section 16)
 ├── 20_research/       # the plan's research artifacts
 ├── artifacts/         # phases' working artifacts, destiny — archive
+├── workflows/         # plan's field copies of workflow scripts (template sources — packages/task/workflows/)
 ├── root/              # long-lived material, destiny — project docs (section 3)
 └── open-questions.md  # disputed/unresolved (protocol — section 3)
 ```
 
 Only `plan.md`/`phases/`/`handoff.md` are mandatory — everything else is optional,
-per the plan's needs. `PLAN-ID` = `[A-Z][A-Z0-9-]+` (e.g. `AUDIT-W2`, `MIGRATE-V3`).
+per the plan's needs. `PLAN-ID` — one of two canonical patterns:
+
+- **date-based** (preferred, D16) — `<YYYY>.<MM>.<DD>-<CODENAME>`, e.g.
+  `2026.07.10-SETTINGS-DOCTOR`: the date prefix gives `plans/` chronological sorting and
+  a "when" cue without reading Meta;
+- **legacy** (back-compat, D24) — `[A-Z][A-Z0-9-]+`, e.g. `AUDIT-W2`, `MIGRATE-V3`.
+
+The legacy pattern `[A-Z][A-Z0-9-]+` stays valid, existing plans are NOT renamed;
+migration is forward-only (terminal plans move to the archive as they close).
 
 `plans/` root, next to the plan directories:
 
@@ -66,6 +75,16 @@ per the plan's needs. `PLAN-ID` = `[A-Z][A-Z0-9-]+` (e.g. `AUDIT-W2`, `MIGRATE-V
 
 **MD-only rule:** the stored plan format is Markdown with strict markers ONLY. Any JSON
 is a derived parser artifact (`plan-lint --json`), never the source of truth.
+
+**Workflow-scripts home.** A multi-agent workflow script is the owning plan's artifact
+(like `findings/`/`artifacts/`): the only place is `plans/<ID>/workflows/` — scripts have
+no place outside the plan. Name — `wf-<codename-lower>-<purpose>.js`, where the codename
+(D28) = the ID part after the date for the date-based format (`2026.07.10-FLEX` → `flex`)
+or the whole ID for the legacy one (`SKM-ROADMAP-005` → `skm-roadmap-005`), always
+lowercase; example — `wf-ecosystem-design-fleet.js`. Run pipeline docs — `<Pn>-pipeline.md`
+alongside. Script authoring discipline (mandatory stages, slots, structured summary) — skill
+`workflow-craft`; here it's only WHERE it lives and HOW it's named. The library of portable
+template sources — `packages/task/workflows/README.md`.
 
 ## 3. Canonical plan root
 
@@ -101,7 +120,13 @@ Skeleton — `snippets/plan-template.md`. Sections strictly in this order:
 - **`## 0. Meta`** — field table: Plan ID / Title / Version / Status / Document Type /
   Authoring Model / Last Updated / Repository / Related Packages / Execution Mode /
   Target Operator Models / Approval Owner. Optional fields:
-  - **Home** — `brain` | `repo:<путь>`: where the plan's executable copy lives (section 12);
+  - **Home** — `brain` | `repo:<путь>`: where the plan's executable copy lives; defaults
+    to the project repo (section 12, D31);
+  - **visibility** — `private` | `public`, defaults to `private` when absent (D25):
+    `public` → only a public roadmap extract is allowed in the git repo, the private
+    business context stays in the vault;
+  - **supersedes** — `<old-ID>`: the plan replaces a predecessor of the same track wave;
+    the predecessor moves to `plans/archive/` (section 12);
   - **Paused By** — which plan seized ACTIVE and when; filled by plan-design mode `new`,
     which appends the field to the previously active plan.
 - **`## 1. Context`** — 5–15 lines: what we do and why. Self-contained: the executor
@@ -196,6 +221,10 @@ post-factum:
 - [ ] Alternatives for load-bearing decisions recorded in the D-log.
 - [ ] Open Questions distributed across `open-questions.md` statuses (section 3).
 - [ ] Load-bearing facts carry RAG markers.
+- [ ] **For phases that DECLARE orchestration** (multi-agent/fan-out): a ready workflow
+      script in `plans/<ID>/workflows/`, the handoff launch-block references it by
+      `scriptPath` (D29). Conditional ONLY on declared orchestration — manual item-by-item
+      execution needs no workflow (script home/name — section 2, authoring — `workflow-craft`).
 
 **RAG markers in the schema.** Every load-bearing fact/verdict in an item's
 Intent/Why/Implementation Rules and in the D-log carries `RAG:✅ <date/query gist>` or
@@ -323,10 +352,11 @@ forbid `/task:plan-exec` and name the prescribed command for launching delegates
 external canon found specifically for Obsidian↔repo two-way — the mechanism is our
 `brain sync`). The plan's SSOT is determined by its stage:
 
-- **before exec starts** — the base plan lives in Brain (canon);
-- **at exec start** — the plan moves to the project repo (repo's `plans/<ID>`),
-  Meta `Home: repo:<путь>`; the Brain copy becomes a mirror (synced via the
-  `brain sync` channel, frontmatter `repo:` — the same mechanism as docs/);
+- **Home defaults to the project repo** (D31): the plan lives where its deliverables are
+  (repo's `plans/<ID>`, Meta `Home: repo:<путь>`); Brain keeps the program/cross-project
+  plan whose deliverables are spread across several repos;
+- **at exec start** — the repo copy becomes SSOT; the Brain mirror is synced via the
+  `brain sync` channel (frontmatter `repo:` — the same mechanism as docs/);
 - **during exec** — SSOT = repo; silent edits to the base plan in Brain are
   FORBIDDEN — only via the conflict protocol; default sync direction is repo→Brain
   (mirroring), not the reverse;
@@ -352,6 +382,13 @@ implemented"). On plan terminality — command `/task:plan-close archive <ID>`:
    phase guides → how-to.
 3. A migration checklist (what moved to docs, what stayed in the archive) — in the
    final handoff.
+
+**Plans are NEVER deleted.** A terminal plan moves to `plans/archive/<ID>` and is kept
+forever (decision provenance: D-log, Completion Notes, Known Deviations — the only
+source of "why it was done this way" months later). `rm`/`git rm` of a plan directory
+is a defect, not a protocol operation; a superseded predecessor also goes to the
+archive, not the trash. The only exception — an explicit owner order with a `--force`
+flag in the command (the agent never proposes deletion on its own).
 
 ## 13. Command protocol
 
@@ -419,4 +456,4 @@ extracts and recon reports, so future plan work doesn't repay the cost of recons
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of
   editing vendor copies (section 12).
 
-<!-- ru-source-sha256: 489734d938c85222986a880894da50c0875f965f3c016b3b27bcee678b690725 -->
+<!-- ru-source-sha256: 30124bde8e8599b272266f195138bea5a958e09224a5db4d7ee4987cb6311c48 -->

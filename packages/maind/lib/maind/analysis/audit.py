@@ -9,7 +9,10 @@
           (task → /task:*) — их раздаёт skiller connect в каждый проект;
 - pao:    php/laravel-проект (PHP≥8.3) без установленного `laravel/pao` (и без
           зафиксированного opt-out) — токен-экономия вывода PHP-тестов/анализа
-          не работает (см. SKM-AUDIT-004 P6, `..pao`).
+          не работает (см. SKM-AUDIT-004 P6, `..pao`);
+- settings: конфликт-линтер настроек Claude Code по слоям (`harness doctor
+          --settings --json`, subprocess к соседу — D10 SKM-ROADMAP-005 P1) —
+          per-project doctor не смотрит на весь флот разом, здесь смотрит.
 
 Ничего не пишет на диск — только читает файлы проектов. Источник списка —
 projects.listing (та же модель, что projects/status)."""
@@ -22,7 +25,7 @@ from .. import pao
 from ..mcpconfig import MCP_FILES
 from ..projects import listing
 
-DIMS = ("mcp", "claude", "deny", "core", "pao")
+DIMS = ("mcp", "claude", "deny", "core", "pao", "settings")
 CLAUDE_MD_WARN = 200  # ориентир Anthropic (context-economy ось 1)
 CORE_SKILLS = ("context-economy", "anti-drift", "compact-responses",
                "session-handoff", "gh-review")
@@ -117,7 +120,33 @@ def _enabled_buckets(path):
     return buckets
 
 
-def audit_project(env, project, dims, code_st):
+def _settings_status(config, path):
+    """Fail-soft вызов `harness doctor --settings --json` по проекту (subprocess к
+    соседу — maind harness НЕ импортирует, D10). Возвращает {"error", "warn", "info"}
+    или строку "unavailable" (harness не найден / упал / отдал не-JSON) — измерение
+    не имеет права уронить fleet-аудит."""
+    import subprocess
+
+    from ..provision.orchestrate import _sibling_bin
+    if config is None:
+        return "unavailable"
+    try:
+        harness_bin = _sibling_bin(config, "harness")
+    except SystemExit:
+        return "unavailable"
+    try:
+        r = subprocess.run(
+            [str(harness_bin), "doctor", "--settings", "--target", str(path), "--json"],
+            capture_output=True, text=True, timeout=20, check=False)
+        data = json.loads(r.stdout)
+        counts = data["counts"]
+        return {"error": int(counts["error"]), "warn": int(counts["warn"]),
+                "info": int(counts["info"])}
+    except (subprocess.SubprocessError, ValueError, OSError, KeyError, TypeError):
+        return "unavailable"
+
+
+def audit_project(env, project, dims, code_st, config=None):
     pid = project["id"]
     local = project.get("local_path")
     path = Path(os.path.expanduser(local)) if local else None
@@ -146,6 +175,8 @@ def audit_project(env, project, dims, code_st):
         }
     if "pao" in dims:
         row["pao"] = pao.status(project, path)
+    if "settings" in dims:
+        row["settings"] = _settings_status(config, path)
     return row
 
 
@@ -158,7 +189,7 @@ def run_audit(env, config, dim, as_json=False):
         die(f"--audit: {', '.join(bad)} (доступно: {', '.join(DIMS)}, all)")
     code_st = codegraph.settings(config)
     projs = listing(env, config)
-    rows = [audit_project(env, p, dims, code_st) for p in projs]
+    rows = [audit_project(env, p, dims, code_st, config) for p in projs]
     if as_json:
         print(json.dumps({"dims": list(dims), "projects": rows},
                          ensure_ascii=False, indent=2))
@@ -198,4 +229,12 @@ def run_audit(env, config, dim, as_json=False):
             parts.append({"installed": "pao✓",
                           "missing": "pao⚠(missing: composer require laravel/pao --dev)",
                           }.get(st, f"pao·{st}"))
+        if "settings" in dims:
+            st = r["settings"]
+            if st == "unavailable":
+                parts.append("settings·n/a")
+            elif st["error"] == 0 and st["warn"] == 0:
+                parts.append("settings✓")
+            else:
+                parts.append(f"settings⚠(err:{st['error']} warn:{st['warn']})")
         print(f"  {r['id']:<18} " + "  ".join(parts))

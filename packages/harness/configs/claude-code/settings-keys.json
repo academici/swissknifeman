@@ -1,0 +1,46 @@
+{
+  "source": "https://code.claude.com/docs/en/settings.md, https://code.claude.com/docs/en/permissions.md, https://code.claude.com/docs/en/hooks.md — сверка RAG-лестницей (claude-code-guide), выжимка не полная копия апстрим-схемы (см. https://json.schemastore.org/claude-code-settings.json)",
+  "verified": "2026-07-10",
+  "cli_version": "2.1.206",
+  "top_level": [
+    "$schema",
+    "permissions",
+    "env",
+    "hooks",
+    "model",
+    "apiKeyHelper",
+    "cleanupPeriodDays",
+    "includeCoAuthoredBy",
+    "outputStyle",
+    "plansDirectory",
+    "statusLine",
+    "forceLoginMethod",
+    "enableAllProjectMcpServers",
+    "enabledMcpjsonServers",
+    "disabledMcpjsonServers",
+    "awsAuthRefresh",
+    "awsCredentialExport"
+  ],
+  "permissions": [
+    "allow",
+    "deny",
+    "ask",
+    "defaultMode",
+    "additionalDirectories",
+    "disableBypassPermissionsMode",
+    "disableAutoMode"
+  ],
+  "hook_events": [
+    "PreToolUse",
+    "PostToolUse",
+    "UserPromptSubmit",
+    "SessionStart",
+    "SessionEnd",
+    "Notification",
+    "Stop",
+    "SubagentStop",
+    "PreCompact",
+    "PermissionRequest"
+  ],
+  "hook_events_unverified": true
+}

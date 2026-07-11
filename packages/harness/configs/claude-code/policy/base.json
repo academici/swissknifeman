@@ -1,0 +1,17 @@
+{
+  "name": "base",
+  "description": "Базовая политика интерактивной разработки: acceptEdits + guardrail-deny (секреты/ключи/sudo). Зеркало configs/claude-code/settings.base.json; ask НЕ ограничивается пустым (подтверждения опасных операций остаются).",
+  "expect": {
+    "permissions.defaultMode": "acceptEdits",
+    "permissions.deny": {
+      "contains": [
+        "Read(.env)",
+        "Read(**/*.pem)",
+        "Read(**/*.key)",
+        "Read(~/.ssh/**)",
+        "Read(~/.aws/**)",
+        "Bash(sudo *)"
+      ]
+    }
+  }
+}

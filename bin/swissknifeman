@@ -12,6 +12,8 @@
 #   doctor          → диагностика всех пакетов (fan-out)
 #   status [<id>]   → единый 4-слойный инвентарь проекта/флота (maind projects status:
 #                     skills+packs+mcp+память + drift→fix); bare/--target → skiller status
+#   wf <args>       → harness   (детальный статус фонового workflow-прогона: wf status)
+#   release <args>  → skiller   (предложение релиза монорепо: [Unreleased]+conventional commits)
 #   -V, --version   → версия зонтика (git describe)
 #
 # Back-compat: исторические команды swissknifeman = skiller (алиас сохранён):
@@ -25,7 +27,7 @@ HARNESS="$ROOT/packages/harness/bin/harness"
 MAIND="$ROOT/packages/maind/bin/maind"
 ANALYST="$ROOT/packages/analyst/bin/analyst"
 
-usage() { grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '2,19p'; }
+usage() { grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '2,20p'; }
 
 need() {  # $1 — путь к лаунчеру пакета
   [[ -x "$1" ]] || { echo "ERROR: не найден лаунчер пакета: $1" >&2
@@ -42,6 +44,8 @@ case "$CMD" in
     exit 0 ;;
   skills)  shift; need "$SKILLER"; exec "$SKILLER" "$@" ;;
   env)     shift; need "$HARNESS"; exec "$HARNESS" "$@" ;;
+  wf)      shift; need "$HARNESS"; exec "$HARNESS" wf "$@" ;;
+  release) shift; need "$SKILLER"; exec "$SKILLER" release "$@" ;;
   maind|hub) shift; need "$MAIND"; exec "$MAIND" "$@" ;;
   analyst) shift; need "$ANALYST"; exec "$ANALYST" "$@" ;;
   setup)   shift; need "$MAIND"; exec "$MAIND" onboard "$@" ;;

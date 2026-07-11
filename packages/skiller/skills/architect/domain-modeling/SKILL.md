@@ -1,8 +1,8 @@
 ---
 name: domain-modeling
 bucket: architect
-version: 0.1.0
-description: "Active domain-model discipline: challenge terms, stress-test with scenarios, RECORD the glossary (CONTEXT.md — domain language only) and ADRs INLINE as they crystallize (not in batches). Multi-context via CONTEXT-MAP.md. Activate when clarifying terminology/ubiquitous language, recording an architectural decision, or when another skill builds a domain model (esp. fintech: banking APIs, fiscal)."
+version: 0.2.0
+description: "Active domain-model discipline: challenge terms, stress-test with scenarios, RECORD the glossary (CONTEXT.md) and ADRs INLINE as they crystallize (not in batches). Multi-context via CONTEXT-MAP.md; Rule of Two entry into the shared term-index; term steward model. Activate when clarifying terminology/ubiquitous language, recording an architectural decision, or when another skill builds a domain model (esp. fintech)."
 risk: draft
 persona: architect
 tags: [domain, ddd, glossary, adr, ubiquitous-language]
@@ -51,10 +51,29 @@ If a `CONTEXT-MAP.md` exists at the root, the repo has multiple contexts. The ma
 
 Create files lazily — only when you have something to write. If no `CONTEXT.md` exists, create one when the first term is resolved. If no `docs/adr/` exists, create it when the first ADR is needed.
 
-> **Мульти-репо (наш кейс).** Когда термин общий для нескольких проектов экосистемы (например
-> «фискальный документ», «ОФД», «кассовый чек» — одинаковы во всех POS-проектах), фиксируй его в
-> общем словаре уровня экосистемы (хаб mAInd / Brain), а проектный `CONTEXT.md` ссылается на него,
-> добавляя только проект-специфичные уточнения.
+> **Multi-repo (our case).** When a term is shared across several ecosystem projects (e.g. "fiscal
+> document", "OFD", "cash receipt" — identical across all POS projects), record it in the shared
+> ecosystem-level dictionary (mAInd hub / Brain), and the project's `CONTEXT.md` references it,
+> adding only project-specific refinements.
+>
+> **Rule of Two (entry gate into the shared term-index).** A term enters the ecosystem's shared
+> term-index ONLY when it has actually crossed the boundary of 2+ packages (precedent —
+> `architect/package-contribution-protocol`: a need is confirmed by 2+ consumers, not one). A term
+> living in a single package stays in its local `CONTEXT.md` — that's the norm, not an exception;
+> the term-index is a thin index of cross-package overlaps, not a mega-glossary. Unsure whether a
+> term crossed the boundary — don't add it: the gate is an entry gate, not a "just in case".
+>
+> **Path to the shared term-index.** `02-Knowledge/00-Strategy/Ecosystem_Glossary.md` — the path is
+> given **relative to the Brain vault root**, NOT the current project's CWD. Designing outside Brain —
+> first locate the Brain vault root (the ecosystem's mAInd hub / a known path), open the term-index
+> there; a CWD-relative path silently collapses the reference into a no-op (same risk `axioma-stack`
+> warns about for the radar).
+>
+> **Steward model.** The term's owner is the package whose `CONTEXT.md` governs it (steward). The
+> term's definition is edited ONLY through the owning package's `CONTEXT.md`; the term-index in Brain
+> does NOT store the definition itself — only a pointer line "term → owning package → collisions/
+> homonyms → deprecated synonyms". Found a mismatch between the term-index and the owner's
+> `CONTEXT.md` — `CONTEXT.md` is the source of truth, the term-index is stale and must be updated to match it.
 
 ## During the session
 
@@ -64,7 +83,7 @@ When the user uses a term that conflicts with the existing language in `CONTEXT.
 
 ### Sharpen fuzzy language
 
-When the user uses vague or overloaded terms, propose a precise canonical term. "You're saying 'account' — do you mean the Customer or the User? Those are different things." (Финтех: «операция» / «платёж» / «перевод» / «авторизация» значат разное в SberBusiness, НСПК СБП, Модульбанк — не смешивай.)
+When the user uses vague or overloaded terms, propose a precise canonical term. "You're saying 'account' — do you mean the Customer or the User? Those are different things." (Fintech: "operation" / "payment" / "transfer" / "authorization" mean different things across banking APIs — don't conflate them.)
 
 ### Discuss concrete scenarios
 
@@ -80,6 +99,20 @@ When a term is resolved, update `CONTEXT.md` right there. Don't batch these up �
 
 `CONTEXT.md` should be totally devoid of implementation details. Do not treat `CONTEXT.md` as a spec, a scratch pad, or a repository for implementation decisions. It is a glossary and nothing else.
 
+**Update triggers.** Edit `CONTEXT.md` on any of these events, without delay:
+
+- a new aggregate, entity, or value object appears in the model;
+- an existing term is renamed (even locally, within a single PR);
+- a term splits into two distinct concepts, or two terms collapse into one.
+
+**PR-sync rule.** The glossary edit ships in the SAME PR/commit as the code that triggered it — not
+as a separate "doc" afterward. A glossary lagging the code by even one PR has already started rotting.
+
+**"Asked it — it's stale" rule.** If during the session you had to ask the user what a `CONTEXT.md`
+term means (rather than defining a new term for the first time), that's a signal the glossary no
+longer reflects the team's current understanding. Record the clarified definition immediately after
+getting the answer — don't defer it.
+
 ### Offer ADRs sparingly
 
 Only offer to create an ADR when all three are true:
@@ -88,11 +121,23 @@ Only offer to create an ADR when all three are true:
 2. **Surprising without context** — a future reader will wonder "why did they do it this way?"
 3. **The result of a real trade-off** — there were genuine alternatives and you picked one for specific reasons
 
-If any of the three is missing, skip the ADR. Use the format in [ADR-FORMAT.md](snippets/ADR-FORMAT.md). (Пример из нашего домена: «почему libfptr10 через dart:ffi, а не через shell» — трудно-обратимо, удивит без контекста, был реальный выбор.)
+If any of the three is missing, skip the ADR. Use the format in [ADR-FORMAT.md](snippets/ADR-FORMAT.md). (Domain example: "why libfptr10 via dart:ffi, not shell" — hard to reverse, surprising without context, a real choice was made.)
 
-## Связанные скиллы
+## Conformance
 
-- `architect/architecture` — процесс ADR в большем масштабе (архитектурные решения системы); domain-modeling даёт инлайн-формат и язык, architecture — полную дисциплину решений.
-- `laravel-architecture/modular-architecture` — применение DDD/bounded-context в Laravel (модульный монолит).
-- `general/grill-with-docs` — грилинг-сессия, которая зовёт этот скилл и строит CONTEXT.md/ADR на ходу.
-- `architect/api-design`, `architect/data-schema` — потребляют зафиксированный глоссарий (этот скилл `produces_for` их).
+- New aggregate/entity/term rename — edit `CONTEXT.md` in the SAME PR, not a separate doc afterward.
+- Asked the user what a `CONTEXT.md` term means — the glossary is stale, record the clarified definition immediately.
+- `CONTEXT.md` — domain language only; zero implementation details, specs, or decisions.
+- A term enters the shared term-index (`Ecosystem_Glossary.md`) only when it provably crossed 2+ packages (Rule of Two); unsure — don't add it.
+- The path to the term-index is relative to the Brain vault root, not the project's CWD.
+- A term's definition lives ONLY in the owning package's `CONTEXT.md` (steward); the term-index is a pointer, not a definition store.
+- Term-index vs. owner's `CONTEXT.md` mismatch — `CONTEXT.md` is the source of truth, fix the term-index to match it.
+
+## Related skills
+
+- `architect/architecture` — ADR process at larger scale (system-wide architectural decisions); domain-modeling gives the inline format and language, architecture gives the full decision discipline.
+- `laravel-architecture/modular-architecture` — applying DDD/bounded-context in Laravel (modular monolith).
+- `general/grill-with-docs` — grilling session that invokes this skill and builds CONTEXT.md/ADR on the fly.
+- `architect/api-design`, `architect/data-schema` — consume the recorded glossary (this skill `produces_for` them).
+
+<!-- ru-source-sha256: 503bd4c5cfff45d93dc195629bddba62ed687bb1406d12fea22a405b1ff4e161 -->

@@ -15,6 +15,8 @@
 #                <list|render|upgrade|doctor> [--pack P] [--target P] [--auto] [--answer K=V] [--dry-run]
 #   safe-dirs    allowlist доверенных директорий для rm/rmdir (machine-owned)
 #                <init|list|add|remove|prune-ask> [PATH] [--exclude] [--global] [--target P] [--all-projects] [--dry-run]
+#   wf           статус фонового workflow-прогона Claude Code (детерминированный парс)
+#                status [--run WF_ID] [--project PATH] [--json] [--last N] [--watch] [--interval S]
 #   doctor       диагностика окружения (пресеты, скрипт, файлы хуков в ~/.claude)
 #   version      версия (git SHA) и путь к пакету
 set -euo pipefail
@@ -43,7 +45,7 @@ case "$CMD" in
     sha="$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
     echo "harness $sha ($REPO_ROOT)"
     exit 0 ;;
-  permissions|apply|mcp|hooks|router|agent-packs|safe-dirs|doctor) ;;
+  permissions|apply|mcp|hooks|router|agent-packs|safe-dirs|wf|doctor) ;;
   *) echo "Неизвестная команда: $CMD" >&2; usage >&2; exit 1 ;;
 esac
 

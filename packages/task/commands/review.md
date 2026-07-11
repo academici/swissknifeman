@@ -47,7 +47,16 @@ effort: xhigh
    Нет секции `## Conformance` — finder берёт свод правил из тела SKILL (чеклист качества /
    жёсткие запреты). Один скилл = одно измерение; в fan-out-раскладке — finder-агент на скилл
    (шаблон `wf-audit-adversarial.js`), в single-agent — последовательные проходы.
-3. **Внешний факт под сомнением** (версия/API библиотеки, «ещё актуально», best practice) —
+   Оркестрация мультиагентным `*.js`-скриптом → сначала скилл `general/workflow-craft` (матчинг 4
+   канонических шаблонов + обязательные стадии design vs dev) и конструктор
+   `packages/task/workflows/README.md`, не изобретай оркестрацию с нуля.
+3. **Glossary-conformance** (конституция = `CONTEXT.md` затронутых пакетов + term-index
+   `02-Knowledge/00-Strategy/Ecosystem_Glossary.md` для кросс-пакетных терминов): дифф
+   не вводит термин, конфликтующий с языком `CONTEXT.md` пакета; не использует
+   `_Avoid_`-синоним вместо канона; термин, реально пересёкший 2+ пакетов (Rule of Two),
+   отражён в term-index. Дисциплина и Rule of Two — в `architect/domain-modeling`
+   (не дублируется здесь).
+4. **Внешний факт под сомнением** (версия/API библиотеки, «ещё актуально», best practice) —
    верифицируй, не утверждай по памяти: лестница `verify-claims` (context7 → агрессивно
    `perplexity-web` → WebSearch), запрос по `query-craft`. RAG-ступень исполняй там, где
    доступен `perplexity-web` — НЕ делегируй тул-бедному субагенту.

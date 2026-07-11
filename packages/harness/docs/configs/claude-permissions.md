@@ -230,6 +230,34 @@ VM, devcontainer-ах, где агент не может навредить ос
 > (фрагмент выше — копия для удобства). Остальные пресеты —
 > [packages/harness/configs/claude-code/](https://github.com/academici/swissknifeman/tree/main/packages/harness/configs/claude-code).
 
+## Аудит настроек: `harness doctor --settings`
+
+Пресеты применяет писатель (`harness permissions`); проверяет получившуюся
+конфигурацию — парный **read-only** аудит `harness doctor --settings`
+(settings-doctor). Он читает все слои (`user → project → local → managed`),
+строит эффективную конфигурацию с провенансом и репортит конфликты: битый JSON
+слоя, неканонические ключи (напр. `permissions.autoApprove` — Claude Code молча
+игнорирует), конфликт `defaultMode` между слоями, недоступные/неисполнимые
+хук-команды, секреты плейнтекстом в `env`, расхождение с ожидаемым
+policy-профилем.
+
+```bash
+# отчёт по текущему проекту
+harness doctor --settings --target .
+
+# машинный вывод (CI/fleet): единый JSON, exit-code 0 чисто / 1 warn / 2 error
+harness doctor --settings --target . --json
+
+# сверить с явным policy-профилем (перекрывает .swissknife.json:policy_profile)
+harness doctor --settings --profile max-permissive
+```
+
+Проект объявляет ожидаемую политику ключом `policy_profile` в `.swissknife.json`
+(профили — `configs/claude-code/policy/<name>.json`: `base`, `max-permissive`);
+doctor сверяет факт с декларацией. Аудит **ничего не чинит** — писатель остаётся
+`harness permissions`. Тот же аудит доступен из реестра скиллов фасадом
+`skiller doctor --settings`.
+
 ## Тонкая настройка под проект
 
 Пресет — отправная точка. После применения правьте

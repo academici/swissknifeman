@@ -59,7 +59,8 @@
 | `mcp.py` | `block_mcp`/`available_mcp` + `cmd_mcp` (пресеты MCP → `.mcp.json`) |
 | `hooks.py` | `block_autoapprove`/`block_memory`/`install_global` + `cmd_hooks` |
 | `safedirs.py` | `cmd_safedirs` — allowlist `<монорепо>/safe-dirs.json` (init/add/list/prune-ask, init мигрирует legacy из home); вердикт-ядро живёт в хуке `configs/.../auto-approve/lib/safedirs.py` |
-| `doctor.py` | диагностика окружения |
+| `settings_audit.py` | **settings-doctor** (read-only): слои настроек CC (`user→project→local→managed`) + эффективная конфигурация с провенансом + таксономия проверок (`CHECKS`) + рендер отчёта/`--json`/exit-code. Профили — `configs/claude-code/policy/*.json`, декларация — `.swissknife.json:policy_profile` |
+| `doctor.py` | диагностика окружения (без флага) + ветка `--settings` → аудит настроек CC (`settings_audit`, отчёт/`--json`/exit-code 0-1-2) |
 
 ## Команды CLI
 
@@ -73,7 +74,8 @@ harness agent-packs <list|render|upgrade|remove|doctor> [--pack P] [--target .] 
         [--dry-run] [--install-only] [--allow-shell M] [KEY=VALUE …]   # см. agentpacks.py
 harness safe-dirs   <init|list|add|remove|prune-ask> [PATH] [--exclude] [--global]
         [--target P] [--all-projects] [--dry-run]   # allowlist rm/rmdir (см. safedirs.py)
-harness doctor
+harness doctor       # диагностика окружения harness
+harness doctor      --settings [--target .] [--json] [--profile NAME]  # аудит настроек CC (read-only)
 ```
 
 `agent-packs` — подсистема персона/стек-паков (шаблоны `.claude/agents|hooks|settings` под проект):

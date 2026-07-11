@@ -27,6 +27,7 @@ flowchart LR
     tech_stack_selection["tech-stack-selection"]
   end
   subgraph axioma["axioma"]
+    axioma_glossary["axioma-glossary"]
     axioma_stack["axioma-stack"]
   end
   subgraph blender["blender"]
@@ -204,6 +205,7 @@ flowchart LR
   architecture -->|requires| brd
   architecture -->|requires| tech_stack_selection
   attribute_authorization -->|requires| laravel_permissions
+  axioma_glossary -->|requires| domain_modeling
   axioma_stack -->|requires| ecosystem_reuse_gate
   backend_type_sync -->|requires| wayfinder
   botkit -->|requires| laravel
@@ -383,9 +385,9 @@ flowchart LR
   verify_claims -.->|feeds| tech_stack_selection
 ```
 
-**В графе:** 129 скиллов, 94 рёбер requires, 88 рёбер produces_for.
+**В графе:** 130 скиллов, 95 рёбер requires, 88 рёбер produces_for.
 
-## Изолированные скиллы (82)
+## Изолированные скиллы (84)
 
 Скиллы без связей `requires`/`produces_for` — самодостаточны.
 
@@ -393,7 +395,7 @@ flowchart LR
 |---|---|
 | ai | `ai-agents`, `token-efficient` |
 | architect | `dev-engineering-super-skill` |
-| axioma | `axioma-doctrine` |
+| axioma | `axioma-doctrine`, `ecosystem-map` |
 | azguard | `azguard` |
 | creative | `content-creative-super-skill` |
 | devops | `docker` |
@@ -405,7 +407,7 @@ flowchart LR
 | frontend-nuxt | `nuxt`, `nuxt-modules`, `nuxt-seo` |
 | frontend-vite | `vite`, `vitepress` |
 | frontend-vue | `pinia`, `pinia-stores`, `vitest-vue`, `vue-best-practices`, `vue-composition-api`, `vue-dynamic-icons`, `vue-router-best-practices`, `vueuse-functions` |
-| general | `compact-responses`, `git-safety`, `naming-conventions`, `packages-stack`, `skills-ssot`, `writing-style` |
+| general | `compact-responses`, `git-safety`, `naming-conventions`, `packages-stack`, `skills-ssot`, `workflow-craft`, `writing-style` |
 | laravel-architecture | `config-driven-abstraction`, `eloquent-accessors`, `enum-attributes`, `enum-state-machine`, `laravel-subagents` |
 | laravel-data-layer | `laravel-broadcasting` |
 | laravel-extras | `medialibrary`, `pennant-development`, `spatie-settings` |

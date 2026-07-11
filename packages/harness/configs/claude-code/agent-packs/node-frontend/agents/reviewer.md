@@ -46,6 +46,10 @@ color: yellow
   `swissknifeman:generated` (grep по изменённым файлам) → находка `HIGH
   generated-core-edited`: правку перенести в override-файл (`Extension-points` из
   заголовка или `.claude/rules/*-overrides.md`), core восстановить нетронутым.
+- **Glossary impact?**: новый/переименованный термин (агрегат, сущность, событие) —
+  сверен с `CONTEXT.md` пакета и term-index (`02-Knowledge/00-Strategy/Ecosystem_Glossary.md`
+  для кросс-пакетных, Rule of Two); использован `_Avoid_`-синоним вместо канона → находка
+  (дисциплина `architect/domain-modeling`).
 
 ## Гейты вердикта (по порогам)
 

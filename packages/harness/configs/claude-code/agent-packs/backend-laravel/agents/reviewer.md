@@ -87,6 +87,10 @@ git diff/log).
   канон — скилл `php:laravel` → `snippets/eloquent-model.md`.
 - **Транзакции**: множественные записи под транзакцией; события/джобы ПОСЛЕ коммита
   (after-commit listener / `dispatchAfterCommit`), не внутри транзакции.
+- **Glossary impact?**: новый/переименованный термин (агрегат, сущность, событие) —
+  сверен с `CONTEXT.md` пакета и term-index (`02-Knowledge/00-Strategy/Ecosystem_Glossary.md`
+  для кросс-пакетных, Rule of Two); использован `_Avoid_`-синоним вместо канона → находка
+  (дисциплина `architect/domain-modeling`).
 <!-- shared:config-honesty -->
 - **Config-honesty**: дефолт работает из коробки ИЛИ явно `null` + `throw` при
   использовании (анти-паттерн `?? 'echo'` без зарегистрированного драйвера).

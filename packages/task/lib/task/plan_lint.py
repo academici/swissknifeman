@@ -117,6 +117,58 @@ PHASE_CONTEXT_HEADER_RE = re.compile(r"^##\s+Phase Context\s*$")
 # порог «item по сути пуст» для требования скелет-маркера
 SKELETON_EMPTY_RATIO = 0.5
 
+# --- P4.3: канон ID / места-имени workflow-скрипта / supersedes (D24/D27/D28) --
+# Регулярка PLAN-ID (D16/D24) — union: датовый канон `ГГГГ.ММ.ДД-КОДОВОЕ-ИМЯ`
+# и старый паттерн (back-compat: живые планы SKM-ROADMAP-005/SKM-AUDIT-004 матчат
+# старый → 0 warning; несоответствие ни одному — WARNING, никогда не ERROR).
+PLAN_ID_DATED_RE = re.compile(r"^\d{4}\.\d{2}\.\d{2}-[A-Z][A-Z0-9-]*$")
+PLAN_ID_LEGACY_RE = re.compile(r"^[A-Z][A-Z0-9-]+$")
+# Маркер workflow-скрипта в теле .js — детект ПОДСТРОКОЙ (не eval/import JS,
+# прецедент P2.1/D19 `parse_script_meta`).
+WORKFLOW_META_MARKER = "export const meta"
+WORKFLOW_DIR_NAME = "workflows"  # единственный дом скриптов плана (D28)
+
+# --- P4.6: workflow-как-DoR — грепаемый признак заявленной оркестрации (D29) ---
+# КОНСЕРВАТИВНЫЙ набор маркеров в теле фазы: явный `scriptPath` launch-block'а,
+# «оркестрац», «мультиагент»/`multi-agent`. Правило Code Guidance «при сомнении НЕ
+# срабатывать» перевешивает буквальный список: бумерный `fan-out` НАМЕРЕННО исключён —
+# как одиночное слово он ловит нерелевантную прозу (напр. «искажение при fan-out» в
+# Known Deviations про токен-учёт), давая ложный warning. Условность (D29): ручное
+# item-by-item исполнение workflow не требует — маркер должен быть намеренным.
+ORCHESTRATION_MARKER_RE = re.compile(r"scriptPath|оркестрац|мультиагент|multi-agent", re.IGNORECASE)
+
+
+def _plan_codename(plan_id):
+    """Кодовое имя плана (D28) — для деривации имени workflow-скрипта и supersedes-сверки:
+    датовый ID `ГГГГ.ММ.ДД-ИМЯ` → часть после даты; старый ID → весь ID; всегда `.lower()`.
+    Примеры: `2026.07.10-FLEX` → `flex`; `SKM-ROADMAP-005` → `skm-roadmap-005`."""
+    if PLAN_ID_DATED_RE.match(plan_id) and "-" in plan_id:
+        return plan_id.split("-", 1)[1].lower()
+    return plan_id.lower()
+
+
+def _workflow_name_re(codename):
+    """Каноничное имя workflow-скрипта — `wf-<кодовое-имя-lower>-<назначение>.js` (D28)."""
+    return re.compile(r"^wf-" + re.escape(codename) + r"-[a-z0-9-]+\.js$")
+
+
+def _plan_has_workflow_script(plan_dir):
+    """Есть ли у плана хоть один `.js`-workflow-скрипт (с маркером `export const meta`)
+    в `plans/<ID>/workflows/` — признак «готового workflow» для DoR-проверки P4.6 (D29).
+    Детект БЕЗ исполнения JS (подстрока-маркер, прецедент P2.1/D19)."""
+    workflows_dir = Path(plan_dir) / WORKFLOW_DIR_NAME
+    if not workflows_dir.is_dir():
+        return False
+    for js in workflows_dir.glob("*.js"):
+        if not js.is_file():
+            continue
+        try:
+            if WORKFLOW_META_MARKER in js.read_text(encoding="utf-8"):
+                return True
+        except (OSError, UnicodeDecodeError):
+            continue
+    return False
+
 
 class Diagnostics:
     """Копилка ERROR/WARNING с человекочитаемым выводом (русский, file:line)."""
@@ -319,6 +371,59 @@ def _lint_plan_md_20(lines, path, diag):
                          f"«RAG:✅»/«[UNVERIFIED]» — несущие факты не промаркированы (SKILL §7)")
 
 
+# --- P4.3 warning-проверки: ID / workflow-скрипты / supersedes (D24/D27/D28) ----
+
+def _lint_plan_identity_20(plan_dir, plan_id, meta, plan_md, diag):
+    """Три WARNING-проверки идентичности плана (все — warning, back-compat D24):
+    (1) имя каталога-плана против union PLAN-ID-паттернов (D24);
+    (2) workflow-скрипты (`*.js` c `export const meta`) вне `plans/<ID>/workflows/`
+        или с неканоничным именем (D28) — два раздельных сообщения (место / имя);
+    (3) план без Meta `supersedes` при совпадении кодового имени с архивным (D27).
+    `meta` — dict[name] = (value, lineno) из parse_plan_md (может быть None/пустым)."""
+    plan_dir = Path(plan_dir)
+    meta = meta or {}
+
+    # (1) регулярка PLAN-ID (union старого и датового; несоответствие → warning)
+    if not (PLAN_ID_LEGACY_RE.match(plan_id) or PLAN_ID_DATED_RE.match(plan_id)):
+        diag.warning(plan_dir, None,
+                     f"имя каталога-плана «{plan_id}» не соответствует канону PLAN-ID "
+                     f"(старый `[A-Z][A-Z0-9-]+` ИЛИ датовый `ГГГГ.ММ.ДД-КОДОВОЕ-ИМЯ`, D24)")
+
+    codename = _plan_codename(plan_id)
+
+    # (2) место/имя workflow-скриптов (только `.js` с маркером `export const meta`)
+    name_re = _workflow_name_re(codename)
+    for js in sorted(plan_dir.rglob("*.js")):
+        if not js.is_file():
+            continue
+        try:
+            text = js.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            continue
+        if WORKFLOW_META_MARKER not in text:
+            continue
+        rel = js.relative_to(plan_dir)
+        if not (rel.parts and rel.parts[0] == WORKFLOW_DIR_NAME):
+            diag.warning(js, None,
+                         f"workflow-скрипт «{rel}» вне `plans/{plan_id}/workflows/` — "
+                         f"единственный дом workflow-скриптов плана (D28)")
+        if not name_re.match(js.name):
+            diag.warning(js, None,
+                         f"workflow-скрипт «{js.name}» с неканоничным именем — "
+                         f"канон `wf-{codename}-<назначение>.js` (D28)")
+
+    # (3) supersedes: совпадение кодового имени с архивным планом без Meta supersedes
+    archive_dir = plan_dir.parent / "archive"
+    if archive_dir.is_dir():
+        archived = {_plan_codename(p.name) for p in archive_dir.iterdir() if p.is_dir()}
+        supersedes_val = (meta.get("supersedes", ("", None))[0] or "").strip()
+        if codename in archived and _is_empty(supersedes_val):
+            diag.warning(plan_md, None,
+                         f"план «{plan_id}» повторяет кодовое имя «{codename}» архивного "
+                         f"плана, но не несёт Meta `supersedes` — преемственность волны "
+                         f"трека не объявлена (D27)")
+
+
 # --- парсинг файлов схемы -----------------------------------------------------
 
 def parse_plan_md(path, diag):
@@ -411,6 +516,10 @@ def parse_phase_md(path, phase_id, diag):
     needs_clarification = [i + 1 for i, ln in enumerate(lines)
                            if NEEDS_CLARIFICATION_RE.search(ln)]
 
+    # --- P4.6: заявляет ли фаза оркестрацию (грепаемый признак, D29) — линуется
+    # в lint_plan (workflow-как-DoR: фаза с оркестрацией без workflow-скрипта = warning)
+    declares_orchestration = any(ORCHESTRATION_MARKER_RE.search(ln) for ln in lines)
+
     items = {}
     for item_id, title, header_lineno, body_lines, body_start in _find_items(lines):
         prefix_m = PHASE_TOKEN_RE.match(item_id.split(".")[0])
@@ -464,7 +573,8 @@ def parse_phase_md(path, phase_id, diag):
         handoff_text = "\n".join(handoff_body).strip()
 
     return {"status_table": status_table, "items": items, "phase_handoff": handoff_text,
-            "is_skeleton": is_skeleton, "needs_clarification": needs_clarification}
+            "is_skeleton": is_skeleton, "needs_clarification": needs_clarification,
+            "declares_orchestration": declares_orchestration}
 
 
 def parse_handoff_md(path, diag):
@@ -505,6 +615,11 @@ def lint_plan(plan_dir, diag):
     plan_id = plan_dir.name
     plan_md = plan_dir / "plan.md"
     meta, status_board = parse_plan_md(plan_md, diag)
+
+    # P4.3: warning-проверки идентичности (ID / workflow-скрипты / supersedes) — D24/D27/D28.
+    # meta здесь — сырой dict[name]=(value,lineno) до маппинга в модель ниже.
+    _meta_raw = meta if isinstance(meta, dict) else {}
+    _lint_plan_identity_20(plan_dir, plan_id, _meta_raw, plan_md, diag)
 
     phases_dir = plan_dir / "phases"
     phase_files = {}  # phase_id -> Path
@@ -654,6 +769,17 @@ def lint_plan(plan_dir, diag):
                              f"фаза {pid} в статусе «{phase_status}», но несёт "
                              f"{len(nc)} маркер(ов) [NEEDS CLARIFICATION] "
                              f"(строки {nc}) — DoR-гейт не пройден (SKILL §7)")
+
+        # --- P4.6 WARNING: workflow-как-DoR (D29) — фаза со статусом 🟡+, ЗАЯВЛЯЮЩАЯ
+        # оркестрацию (грепаемый признак), но у плана нет workflow-скрипта в
+        # `plans/<ID>/workflows/`. Условность: без признака оркестрации — молчит
+        # (ручное item-by-item исполнение workflow не требует). warning-only.
+        if (phase_status and phase_status != "⬜ Not started"
+                and phases[pid].get("declares_orchestration")
+                and not _plan_has_workflow_script(plan_dir)):
+            diag.warning(phases[pid]["path"], None,
+                         f"фаза {pid} заявляет оркестрацию (multi-agent/fan-out), но нет "
+                         f"workflow-скрипта в `plans/{plan_id}/workflows/` — DoR §7 (D29)")
 
         # --- фаза 🟢/🟠 ⇒ Phase Handoff непуст --------------------------
         if phase_status in (STATUS_DONE, STATUS_DEVIATIONS):

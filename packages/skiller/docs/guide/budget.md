@@ -24,7 +24,7 @@ flowchart LR
     codebase_design["codebase-design<br/>⊕117 ↻1996"]:::warm
     data_schema["data-schema<br/>⊕28 ↻924"]:::cool
     dev_engineering_super_skill["dev-engineering-super-skill<br/>⊕133 ↻538"]:::hot
-    domain_modeling["domain-modeling<br/>⊕122 ↻1261"]:::hot
+    domain_modeling["domain-modeling<br/>⊕128 ↻2185"]:::hot
     ecosystem_reuse_gate["ecosystem-reuse-gate<br/>⊕108 ↻1342"]:::warm
     eval_design["eval-design<br/>⊕32 ↻1570"]:::cool
     figma_mcp_core["figma-mcp-core<br/>⊕136 ↻1629"]:::hot
@@ -36,7 +36,9 @@ flowchart LR
   end
   subgraph axioma["axioma"]
     axioma_doctrine["axioma-doctrine<br/>⊕90 ↻1260"]:::warm
+    axioma_glossary["axioma-glossary<br/>⊕110 ↻1338"]:::warm
     axioma_stack["axioma-stack<br/>⊕105 ↻1337"]:::warm
+    ecosystem_map["ecosystem-map<br/>⊕47 ↻670"]:::mild
   end
   subgraph azguard["azguard"]
     azguard["azguard<br/>⊕37 ↻1679"]:::cool
@@ -159,13 +161,14 @@ flowchart LR
     mcp_advisor["mcp-advisor<br/>⊕107 ↻1893"]:::warm
     naming_conventions["naming-conventions<br/>⊕86 ↻1782"]:::warm
     packages_stack["packages-stack<br/>⊕85 ↻530"]:::warm
-    plan_protocol["plan-protocol<br/>⊕66 ↻5889"]:::mild
+    plan_protocol["plan-protocol<br/>⊕82 ↻6670"]:::warm
     project_map["project-map<br/>⊕83 ↻645"]:::warm
     session_handoff["session-handoff<br/>⊕41 ↻618"]:::cool
     skills_ssot["skills-ssot<br/>⊕35 ↻1771"]:::cool
     spec_interview["spec-interview<br/>⊕58 ↻753"]:::mild
     task_brief_template["task-brief-template<br/>⊕79 ↻1253"]:::mild
     verify_claims["verify-claims<br/>⊕133 ↻2696"]:::hot
+    workflow_craft["workflow-craft<br/>⊕48 ↻2373"]:::mild
     writing_style["writing-style<br/>⊕98 ↻1905"]:::warm
   end
   subgraph laravel_architecture["laravel-architecture"]
@@ -227,7 +230,7 @@ flowchart LR
     issue_triage["issue-triage<br/>⊕114 ↻2163"]:::warm
     oss_development["oss-development<br/>⊕38 ↻1392"]:::cool
     oss_governance["oss-governance<br/>⊕31 ↻1595"]:::cool
-    release_engineering["release-engineering<br/>⊕37 ↻1660"]:::cool
+    release_engineering["release-engineering<br/>⊕37 ↻2173"]:::cool
     resolving_merge_conflicts["resolving-merge-conflicts<br/>⊕103 ↻335"]:::warm
     to_issues["to-issues<br/>⊕92 ↻1184"]:::warm
   end
@@ -323,6 +326,7 @@ flowchart LR
   architecture -->|requires| brd
   architecture -->|requires| tech_stack_selection
   attribute_authorization -->|requires| laravel_permissions
+  axioma_glossary -->|requires| domain_modeling
   axioma_stack -->|requires| ecosystem_reuse_gate
   backend_type_sync -->|requires| wayfinder
   botkit -->|requires| laravel
@@ -418,25 +422,26 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 211 скиллов · ⊕ always **15335** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 293752 ток · ⌥ on-demand 795707 ток (сниппеты + references).
+**Итого:** 214 скиллов · ⊕ always **15562** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 300351 ток · ⌥ on-demand 795837 ток (сниппеты + references).
 
 ## По бакетам
 
 | Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ on-demand |
 |---|--:|--:|--:|--:|
-| `general` | 20 | 1425 | 28177 | 12685 |
+| `general` | 21 | 1489 | 31331 | 12815 |
 | `php` | 17 | 1122 | 19298 | 54837 |
-| `architect` | 15 | 988 | 22596 | 33458 |
+| `architect` | 15 | 994 | 23520 | 33458 |
 | `frontend-vue` | 11 | 854 | 25744 | 248486 |
 | `quality` | 11 | 831 | 20564 | 7447 |
 | `php-packages` | 9 | 685 | 5417 | 520 |
 | `laravel-architecture` | 6 | 677 | 9730 | 7994 |
-| `oss-dev` | 10 | 627 | 13978 | 10187 |
+| `oss-dev` | 10 | 627 | 14491 | 10187 |
 | `system` | 7 | 607 | 11012 | 834 |
 | `devops` | 11 | 548 | 9181 | 16993 |
 | `blender-modeling` | 6 | 506 | 8887 | 12586 |
 | `pm` | 10 | 438 | 11072 | 23524 |
 | `founder` | 10 | 406 | 15277 | 578 |
+| `axioma` | 4 | 352 | 4605 | 0 |
 | `research` | 2 | 325 | 4790 | 20472 |
 | `frontend-linting` | 4 | 323 | 5920 | 18380 |
 | `laravel-testing` | 4 | 323 | 7993 | 15335 |
@@ -448,7 +453,6 @@ flowchart LR
 | `laravel-extras` | 3 | 225 | 4257 | 7664 |
 | `laravel-auth` | 3 | 202 | 3358 | 5640 |
 | `ai` | 2 | 199 | 2018 | 27188 |
-| `axioma` | 2 | 195 | 2597 | 0 |
 | `security` | 1 | 184 | 675 | 30199 |
 | `frontend-vite` | 4 | 180 | 3150 | 24662 |
 | `finance` | 1 | 179 | 740 | 21503 |
@@ -496,7 +500,7 @@ flowchart LR
 | Скилл | Бакет | ток |
 |---|---|--:|
 | `vueuse-functions` | frontend-vue | 10838 |
-| `plan-protocol` | general | 5889 |
+| `plan-protocol` | general | 6670 |
 | `query-craft` | research | 4221 |
 | `voice-ai` | voice-ai | 3193 |
 | `modular-architecture` | laravel-architecture | 3139 |

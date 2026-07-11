@@ -53,6 +53,11 @@ CONFIG_KEYS = {
     # shape — backend|frontend|fullstack; stacks — напр. ["laravel","vue"];
     # skills_map — домен→скиллы для преднагрузки ролей под стек.
     "shape": str, "stacks": list, "skills_map": dict,
+    # Ожидаемый policy-профиль настроек Claude Code (harness doctor --settings сверяет
+    # факт слоёв с профилем configs/claude-code/policy/<name>.json; harness читает файл
+    # сам, не импортируя skiller). Дом декларации — здесь, НЕ в .claude/settings.json
+    # (там собственная проверка №2 doctor'а пометила бы ключ как неканонический). D11.
+    "policy_profile": str,
 }
 HUB_MARKER = "<!-- swissknifeman:hub:start -->"
 SKILL_MANAGED_MARKER = "<!-- swissknifeman:managed -->"

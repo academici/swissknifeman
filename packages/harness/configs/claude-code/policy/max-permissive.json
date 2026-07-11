@@ -1,0 +1,20 @@
+{
+  "name": "max-permissive",
+  "description": "Максимально проходной режим для автономных прогонов: bypassPermissions + пустой ask (ничего не спрашивать), guardrail-deny неприкосновенны. Эталон field-case #2 (2026-07-10, vault Brain). Ключ skipDangerousModePermissionPrompt в expect НЕ включён — он не задокументирован (D3).",
+  "expect": {
+    "permissions.defaultMode": "bypassPermissions",
+    "permissions.ask": [],
+    "permissions.deny": {
+      "contains": [
+        "Read(~/.ssh/**)",
+        "Read(~/.aws/**)",
+        "Read(**/*.pem)",
+        "Bash(sudo *)"
+      ]
+    },
+    "vscode": {
+      "claudeCode.initialPermissionMode": "bypassPermissions",
+      "claudeCode.allowDangerouslySkipPermissions": true
+    }
+  }
+}

@@ -2,6 +2,34 @@
 
 ## [Unreleased]
 
+### Added (maind — fleet-измерение settings)
+
+- **`maind doctor --audit settings|all`**: измерение `settings` в fleet-аудите — subprocess к
+  `harness doctor --settings --target <path> --json` по каждому зарегистрированному проекту
+  (D10, maind не импортирует harness). Fail-soft как `--channel-drift`: harness недоступен/упал/
+  отдал не-JSON → `settings·n/a`, код возврата аудита не меняется. Печать: `settings✓` (ноль
+  error/warn) · `settings⚠(err:N warn:M)` · `settings·n/a`. `--json` кладёт `{"error","warn","info"}`
+  или строку `"unavailable"` в строку проекта.
+
+### Внедрено (settings-doctor — SKM-ROADMAP-005 P1 закрыт)
+
+- Конфликт-линтер настроек Claude Code (`roadmap/settings-doctor.md`) полностью внедрён:
+  таксономия 13 проверок, 2 policy-профиля, CLI `harness doctor --settings` + фасад
+  `skiller doctor --settings` + fleet `maind doctor --audit settings`. Полевой кейс 2026-07-10
+  ловится целиком (интеграционный тест P1.5); реальный прогон по флоту (21 проект) подтвердил.
+
+### Added (harness — settings-doctor CLI + фасад skiller)
+
+- **`harness doctor --settings [--target P] [--json] [--profile NAME]`**: вывод движка
+  settings-doctor в CLI. Отдельная от диагностики окружения ветка (ранний return): читает
+  слои настроек Claude Code целевого проекта, репортит таксономию проверок человекочитаемым
+  отчётом либо единым JSON-документом. exit-code `0` (чисто/только info) / `1` (warn) / `2`
+  (error); `--json` кода не меняет и печатает РОВНО один документ в stdout (контракт для
+  fleet-скана). Аудит read-only — ничего не пишет на диск.
+- **`skiller doctor --settings [--target P]`**: фасад того же аудита из реестра скиллов —
+  делегирует в `harness doctor --settings` через subprocess (без логики проверок), прокидывает
+  код возврата; harness не установлен → warn и graceful skip (rc 0).
+
 ### Added (skiller — ecosystem-reuse-gate + бакет axioma)
 
 - **`architect/ecosystem-reuse-gate`**: гейт против переизобретения функционала — перед

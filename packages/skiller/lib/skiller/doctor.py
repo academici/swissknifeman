@@ -7,8 +7,29 @@ import subprocess
 import sys
 from pathlib import Path
 
-from .common import DB_VERSION, harness_bin, is_within, parse_flags
+from .common import DB_VERSION, harness_bin, is_within, parse_flags, warn
 from .state import registry_git_state
+
+
+def _delegate_settings_doctor(env, opts):
+    """Фасад `skiller doctor --settings` → `harness doctor --settings` (subprocess).
+    Логики проверок здесь НЕТ (D10, единый источник истины в harness): только
+    прокидываем stdout (наследуемый) и код возврата. harness не найден → warn и
+    graceful skip (rc 0, как apply_permissions). Никакого разбора вывода harness."""
+    binp = harness_bin(env)
+    if binp is None:
+        warn("harness не установлен — settings-doctor недоступен "
+             "(установите: packages/harness/install.sh)")
+        return
+    cmd = [str(binp), "doctor", "--settings",
+           "--target", opts.get("target") or os.getcwd()]
+    try:
+        result = subprocess.run(cmd, check=False, timeout=30)
+    except (subprocess.SubprocessError, OSError) as e:
+        warn(f"harness doctor --settings не запустился: {e}")
+        return
+    if result.returncode:
+        sys.exit(result.returncode)
 
 
 def _audit_downstream(env):
@@ -172,13 +193,19 @@ def _downstream_claude_md_summary(env):
 
 
 def cmd_doctor(env, argv):
-    opts = parse_flags(argv, {"--downstream": "bool", "--vendor-drift": "bool"})
+    opts = parse_flags(argv, {"--downstream": "bool", "--vendor-drift": "bool",
+                              "--settings": "bool", "--target": "str"})
     if opts["help"]:
-        print("skiller doctor [--downstream] [--vendor-drift]\n"
+        print("skiller doctor [--downstream] [--vendor-drift] [--settings [--target P]]\n"
               "  --downstream:   гигиена publish-surface онбордженных проектов "
               "(CLAUDE.md ≤200, scoped/unscoped rules, deny-пресет).\n"
               "  --vendor-drift: по-проектный дрейф vendor-скиллов от реестра "
-              "(новые/изменившиеся managed-скиллы; сухой расчёт).")
+              "(новые/изменившиеся managed-скиллы; сухой расчёт).\n"
+              "  --settings:     аудит настроек Claude Code (фасад → harness "
+              "doctor --settings).")
+        return
+    if opts.get("settings"):
+        _delegate_settings_doctor(env, opts)
         return
     root = env.root
     issues = 0

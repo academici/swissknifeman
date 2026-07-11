@@ -4,7 +4,7 @@
 
 Источник истины портируемых скиллов (машинный реестр — `skills.json`). Раздача в проекты: `skiller connect` (плагины-бакеты) / `vendor` (физ. перенос). CORE-набор токен-скиллов (`general`/`oss-dev`) раздаётся по умолчанию — см. `connect`/`vendor`.
 
-Всего: 211 скиллов в 47 бакетах.
+Всего: 214 скиллов в 47 бакетах.
 
 ## Скиллы по бакетам
 
@@ -35,12 +35,14 @@
 | `security-design` | Data classification, auth strategy, RBAC/ABAC, OWASP Top 10, GDPR, STRIDE threat modeling… | `security`, `compliance`, `auth`, `owasp`, `threat-modeling`, `rbac`, `gdpr`, `privacy`, `stride` |
 | `tech-stack-selection` | Tech stack selection with trade-off matrix before architecture design. ADR-first step | `stack-choice`, `architecture`, `adr`, `trade-off` |
 
-### axioma — Axioma ecosystem doctrine & reuse: dev philosophy, tech-radar binding, vendor-vs-build discipline (project-scoped bucket) (2)
+### axioma — Axioma ecosystem doctrine & reuse: dev philosophy, tech-radar binding, vendor-vs-build discipline (project-scoped bucket) (4)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
 | `axioma-doctrine` | Axioma ecosystem development doctrine: five imperative pillars (horizontal core → vertica… | `axioma`, `doctrine`, `architecture`, `ecosystem` |
+| `axioma-glossary` | Binds domain-modeling discipline to the live thin term-index of the Axioma ecosystem: can… | `axioma`, `ecosystem`, `glossary`, `term-index` |
 | `axioma-stack` | Binds the universal reuse-gate to the live Ecosystem_Tech_Radar.md of the Axioma ecosyste… | `axioma`, `ecosystem`, `reuse`, `tech-radar` |
+| `ecosystem-map` | Where docs, plans, findings and vault links live in a project and how repo↔Brain sync. A … | `axioma`, `ecosystem`, `plans`, `docs`, `navigation` |
 
 ### azguard — azguard package usage: code-first RBAC, panels, scoped roles, abilities (academici package — skill will relocate into the package repo) (1)
 
@@ -210,7 +212,7 @@
 |:--|:--|:--|
 | `wayfinder` | Laravel Wayfinder: typesafe routes and controller actions for the frontend. Generation, n… | `wayfinder`, `laravel`, `typescript`, `routes`, `inertia`, `eslint`, `frontend` |
 
-### general — General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists (20)
+### general — General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists (21)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
@@ -233,6 +235,7 @@
 | `spec-interview` | Pre-code interview: agent asks one question at a time, reads the codebase itself where it… | `workflow`, `requirements`, `discovery` |
 | `task-brief-template` | Brief template for complex agent tasks: goal, scope, invariants, explicit assumptions, ou… | `workflow`, `template`, `requirements`, `context` |
 | `verify-claims` | Before a decision/verdict on an EXTERNAL fact (library version/API, 'still current', best… | `verification`, `rag`, `research`, `planning`, `context`, `claude-code` |
+| `workflow-craft` | Activate on \"write a workflow\"/multi-agent orchestration: match 4 canonical templates f… | `workflow`, `orchestration`, `multi-agent`, `templates`, `authoring` |
 | `writing-style` | Tone & language of code artifacts: Russian by default for comments, commit bodies, test d… | `writing`, `language`, `russian`, `comments`, `commits`, `tests`, `docs`, `style` |
 
 ### laravel-architecture — Scaling architecture: modular monolith/DDD, enum state machines, enum attributes, subagent orchestration (6)
@@ -481,9 +484,10 @@
 | `attribute` | `attribute-authorization` |
 | `attributes` | `eloquent-accessors`, `enum-attributes` |
 | `auth` | `security-design` |
+| `authoring` | `workflow-craft` |
 | `authorization` | `attribute-authorization`, `azguard`, `laravel-permissions` |
 | `auto-layout` | `figma-to-flutter`, `figma-to-vue` |
-| `axioma` | `axioma-doctrine`, `axioma-stack` |
+| `axioma` | `axioma-doctrine`, `axioma-glossary`, `axioma-stack`, `ecosystem-map` |
 | `azguard` | `azguard`, `laravel-permissions` |
 | `barge-in` | `voice-ai` |
 | `best-practices` | `laravel-best-practices` |
@@ -560,7 +564,7 @@
 | `discipline` | `anti-drift`, `naming-conventions`, `startup-cto` |
 | `discovery` | `competitive-analysis`, `customer-discovery`, `idea-discovery`, `new-project`, `solo-founder`, `spec-interview` |
 | `docker` | `db-test-preflight`, `docker`, `docker-dev-prod`, `docker-php`, `docker-postgres`, `docker-services`, `docker-vite`, `laravel-dusk`, `makefile` |
-| `docs` | `artifact-review`, `brain-locator`, `grill-with-docs`, `writing-style` |
+| `docs` | `artifact-review`, `brain-locator`, `ecosystem-map`, `grill-with-docs`, `writing-style` |
 | `doctrine` | `axioma-doctrine` |
 | `documentation` | `dx-design`, `oss-development`, `oss-governance` |
 | `domain` | `domain-modeling`, `enum-state-machine`, `grill-with-docs` |
@@ -571,7 +575,7 @@
 | `dynamic-component` | `vue-dynamic-icons` |
 | `e2e` | `laravel-dusk`, `playwright-e2e` |
 | `echo` | `laravel-broadcasting` |
-| `ecosystem` | `axioma-doctrine`, `axioma-stack`, `ecosystem-reuse-gate`, `swissknifeman-locator` |
+| `ecosystem` | `axioma-doctrine`, `axioma-glossary`, `axioma-stack`, `ecosystem-map`, `ecosystem-reuse-gate`, `swissknifeman-locator` |
 | `eloquent` | `eloquent-accessors` |
 | `entities` | `data-schema` |
 | `enum` | `attribute-authorization`, `azguard`, `backend-type-sync`, `enum-attributes`, `enum-state-machine` |
@@ -597,7 +601,7 @@
 | `github-actions` | `ci-cd` |
 | `gitlab-ci` | `ci-cd` |
 | `gitops` | `git-commit-rules`, `gitops` |
-| `glossary` | `domain-modeling` |
+| `glossary` | `axioma-glossary`, `domain-modeling` |
 | `gotchas` | `livewire-blade-attributes`, `version-gotchas` |
 | `governance` | `issue-triage`, `package-contribution-protocol` |
 | `grilling` | `grill-with-docs` |
@@ -656,6 +660,7 @@
 | `monetization` | `go-to-market`, `monetization-design`, `pitch-deck`, `unit-economics` |
 | `monitoring` | `capacity-planning`, `health-checks`, `runbook` |
 | `monorepo` | `package-contribution-protocol` |
+| `multi-agent` | `workflow-craft` |
 | `multi-config` | `vite-multi-build` |
 | `multi-model` | `plan-protocol` |
 | `multi-tenant` | `config-driven-abstraction` |
@@ -664,7 +669,7 @@
 | `naive-ui` | `naive-ui-theming` |
 | `namespace` | `namespace-refactor-safety` |
 | `naming` | `naming-conventions`, `php-naming-conventions`, `scene-conventions` |
-| `navigation` | `brain-locator`, `local-topology`, `packages-stack`, `project-map`, `swissknifeman-locator` |
+| `navigation` | `brain-locator`, `ecosystem-map`, `local-topology`, `packages-stack`, `project-map`, `swissknifeman-locator` |
 | `navigation-guards` | `vue-router-best-practices` |
 | `node` | `node-pnpm-preflight` |
 | `nwidart` | `modular-architecture` |
@@ -673,7 +678,7 @@
 | `obsidian` | `brain-locator` |
 | `onboarding` | `mcp-advisor` |
 | `ops` | `capacity-planning`, `incident-response`, `oncall-rotation`, `postmortem`, `runbook` |
-| `orchestration` | `ai-agents`, `anti-drift`, `complex-task-orchestrator`, `cross-project-coordinator`, `laravel-subagents`, `mcp-blender`, `tech-lead` |
+| `orchestration` | `ai-agents`, `anti-drift`, `complex-task-orchestrator`, `cross-project-coordinator`, `laravel-subagents`, `mcp-blender`, `tech-lead`, `workflow-craft` |
 | `oss` | `dependency-audit`, `dx-design`, `github-flow`, `open-source-maintainer`, `oss-development`, `oss-governance`, `release-engineering` |
 | `ousterhout` | `codebase-design` |
 | `outbox` | `transactional-outbox-relay` |
@@ -695,6 +700,7 @@
 | `pinia` | `pinia-stores`, `vue-testing-best-practices` |
 | `plan` | `artifact-review` |
 | `planning` | `plan-protocol`, `to-issues`, `verify-claims` |
+| `plans` | `ecosystem-map` |
 | `playwright` | `playwright-e2e` |
 | `pnpm` | `node-pnpm-preflight` |
 | `post-mortem` | `session-observer` |
@@ -781,7 +787,8 @@
 | `tdd` | `implement`, `tdd-discipline` |
 | `tech-radar` | `axioma-stack` |
 | `template` | `brd`, `model-rules`, `prd-from-brd`, `runbook`, `task-brief-template` |
-| `templates` | `agent-packs` |
+| `templates` | `agent-packs`, `workflow-craft` |
+| `term-index` | `axioma-glossary` |
 | `testability` | `codebase-design` |
 | `testing` | `db-test-preflight`, `diagnosing-bugs`, `docker-postgres`, `eval-design`, `laravel-testing`, `mutation-testing`, `pao`, `playwright-e2e`, `tdd-discipline`, `test-isolation-guard`, `test-strategy`, `testing-safety-report`, `vitest`, `vue-testing-best-practices` |
 | `tests` | `writing-style` |
@@ -826,5 +833,5 @@
 | `webrtc` | `voice-ai` |
 | `websocket` | `docker-services` |
 | `websockets` | `laravel-broadcasting`, `laravel-echo-client` |
-| `workflow` | `anti-drift`, `build-loop`, `business-process`, `code-review`, `compact-responses`, `complex-task-orchestrator`, `context-economy`, `cross-layer-change-checklist`, `enum-state-machine`, `implement`, `incident-response`, `laravel-subagents`, `plan-protocol`, `postmortem`, `refactoring-plan`, `session-handoff`, `skills-ssot`, `spec-interview`, `task-brief-template`, `tech-debt-audit`, `tech-lead` |
+| `workflow` | `anti-drift`, `build-loop`, `business-process`, `code-review`, `compact-responses`, `complex-task-orchestrator`, `context-economy`, `cross-layer-change-checklist`, `enum-state-machine`, `implement`, `incident-response`, `laravel-subagents`, `plan-protocol`, `postmortem`, `refactoring-plan`, `session-handoff`, `skills-ssot`, `spec-interview`, `task-brief-template`, `tech-debt-audit`, `tech-lead`, `workflow-craft` |
 | `writing` | `writing-style` |

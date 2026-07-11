@@ -113,7 +113,7 @@ def cmd_doctor(env, argv):
                                 "--skill-drift": "bool", "--channel-drift": "bool"})
     if opts["help"]:
         print("maind doctor [--quiet] — проверка окружения узла\n"
-              "maind doctor --audit mcp|claude|deny|core|pao|all [--json] — "
+              "maind doctor --audit mcp|claude|deny|core|pao|settings|all [--json] — "
               "fleet-аудит оптимизаций по проектам (read-only)\n"
               "maind doctor --skill-drift — по-проектная разбивка дрейфа "
               "ecosystem-mcp/ecosystem-setup от текущего шаблона\n"

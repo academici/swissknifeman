@@ -1,8 +1,10 @@
 # Roadmap: settings-doctor — конфликт-линтер настроек Claude Code
 
-**Статус:** ⬜ к внедрению — критерий уже сработал (field-case 2026-07-10, см. §Проблема).
-**Дом:** `skiller doctor` (per-project) + `maind doctor --audit settings` (fleet) — пара к уже
-существующему писателю `scripts/apply-permissions.sh` (он раскатывает, doctor сверяет).
+**Статус:** 🟢 внедрено (SKM-ROADMAP-005 P1, 2026-07-10).
+**Дом:** движок — `harness doctor --settings` (per-project, `lib/harness/settings_audit.py`,
+D10 SKM-ROADMAP-005); фасад — `skiller doctor --settings` (subprocess в harness); fleet —
+`maind doctor --audit settings` (subprocess к harness по флоту) — пара к уже существующему
+писателю `scripts/apply-permissions.sh` (он раскатывает, doctor сверяет).
 
 ## Проблема (измеренная)
 
@@ -79,3 +81,39 @@ Python в `packages/skiller` (или общий `lib`): загрузка сло�
 Field-feedback Owner 2026-07-10, сессия дизайн-волны ECOSYSTEM P4 (vault Brain): диагностика
 «промпты каждые полминуты при bypassPermissions в local» → переход политики на
 `dontAsk` + deny-лист глобально.
+
+## Field-case #2 (2026-07-10, вечер): dontAsk тоже не спас — канонический рецепт «никогда не спрашивать»
+
+Политика `dontAsk` снова дала окна подтверждения (vault Brain, exec ECOSYSTEM P4.7). Разбор
+(доки v2.1.200+ + package.json расширения VSCode) дал новые факты для таксономии doctor:
+
+1. **`dontAsk` ≠ «разрешить всё»** — это «тихо ОТКЛОНЯТЬ всё, что не в allow». Окно = сессия
+   вообще не в dontAsk (режим фиксируется на старте сессии; `defaultMode` на лету не действует).
+2. **`ask`-правила форсируют промпт В ЛЮБОМ режиме, включая `bypassPermissions`** — deny и ask
+   применяются всегда. Хочешь «не спрашивать» — `ask: []`.
+3. **VSCode extension стартует сессию из СВОЕЙ настройки** `claudeCode.initialPermissionMode`
+   (default: `"default"` = Manual) — `defaultMode` из local/project слоёв он может игнорировать.
+   Для bypass дополнительно нужен toggle `claudeCode.allowDangerouslySkipPermissions: true`,
+   иначе режим недоступен в селекторе.
+4. **PreToolUse/PermissionRequest-хук НЕ обходит permission-rules** — hook-decision не выше
+   deny/ask; «авто-allow всего хуком» не существует.
+
+**Применённый рецепт (эталон для policy-профиля `max-permissive`):**
+
+| Слой | Ключ | Значение |
+|:--|:--|:--|
+| `~/.claude/settings.json` | `permissions.defaultMode` | `"bypassPermissions"` |
+| `~/.claude/settings.json` | `permissions.ask` | `[]` |
+| `~/.claude/settings.json` | `skipDangerousModePermissionPrompt` | `true` (диалог принятия bypass) |
+| `.claude/settings.local.json` | `permissions.defaultMode` + `ask` | то же (страховка per-project) |
+| VSCode user settings.json | `claudeCode.initialPermissionMode` | `"bypassPermissions"` |
+| VSCode user settings.json | `claudeCode.allowDangerouslySkipPermissions` | `true` |
+
+`deny`-списки НЕ трогать — работают во всех режимах, это и есть guardrail. Что промптит даже
+в bypass (не лечится): MCP-инструменты с `requiresUserInteraction` (auth-флоу), circuit-breaker
+`rm -rf /`. Вступает в силу с НОВОЙ сессии (перезапуск окна VSCode).
+
+**Доп. проверки в таксономию doctor:** (11) `ask`-правила при заявленной политике
+«не спрашивать» — error; (12) `claudeCode.initialPermissionMode` в VSCode settings ≠
+эффективному `defaultMode` слоёв — warn (расширение переопределяет старт сессии);
+(13) `bypassPermissions` без `claudeCode.allowDangerouslySkipPermissions` в VSCode — warn.

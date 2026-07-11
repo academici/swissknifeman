@@ -397,8 +397,8 @@
       "path": "skills/architect/domain-modeling/SKILL.md",
       "version": "0.2.0",
       "description": "Active domain-model discipline: challenge terms, stress-test with scenarios, RECORD the glossary (CONTEXT.md) and ADRs INLINE as they crystallize (not in batches). Multi-context via CONTEXT-MAP.md; Rule of Two entry into the shared term-index; term steward model. Activate when clarifying terminology/ubiquitous language, recording an architectural decision, or when another skill builds a domain model (esp. fintech).",
-      "sha256": "da1cdba9cd28edd3e4402b1a031b5b35f14c0ffa19b4e8a6448c903e3196d2fb",
-      "content_sha256": "2630dd2463cc782241b5f1b48e81262aaa55f5b7794da266766ef4bdab60f8d2",
+      "sha256": "12e6e285b1e714a0f0d0746d2d6b2d9434aba3fb8a50879cc2c7ceee212905dd",
+      "content_sha256": "7387c3a210f15ce15a18a2c3e691ed7dbe8d8058cadbf062c7ffdd89d73534cd",
       "tags": [
         "domain",
         "ddd",

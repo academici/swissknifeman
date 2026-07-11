@@ -140,4 +140,4 @@ If any of the three is missing, skip the ADR. Use the format in [ADR-FORMAT.md](
 - `general/grill-with-docs` — grilling session that invokes this skill and builds CONTEXT.md/ADR on the fly.
 - `architect/api-design`, `architect/data-schema` — consume the recorded glossary (this skill `produces_for` them).
 
-<!-- ru-source-sha256: PENDING -->
+<!-- ru-source-sha256: 503bd4c5cfff45d93dc195629bddba62ed687bb1406d12fea22a405b1ff4e161 -->

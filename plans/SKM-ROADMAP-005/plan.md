@@ -77,7 +77,7 @@ enforcement заполнения CHANGELOG; (6) `ecosystem-glossary` — еди�
 | P3 | workflow-craft: активация конструктора + команда-гейт | 5/5 | 🟢 Done |
 | P4 | Канон планов: репо-дом, имена, дом workflow-скриптов | 6/6 | 🟢 Done |
 | P5 | changelog-discipline: enforcement заполнения CHANGELOG | 3/3 | 🟢 Done |
-| P6 | ecosystem-glossary: единый язык трёхслойкой | 1/4 | 🟡 In progress |
+| P6 | ecosystem-glossary: единый язык трёхслойкой | 0/4 | 🟡 In progress |
 | P7 | ephemeral-дисциплина и закрытие пакета | 0/2 | ⬜ Not started |
 
 ## 5. Decision Log
@@ -147,6 +147,7 @@ enforcement заполнения CHANGELOG; (6) `ecosystem-glossary` — еди�
 | 2026-07-11 | design-workflow/opus·3 | P4/P5/P6 развёрнуты из скелетов (параллельно, +adversarial-аудит): 13 items, DoR пройден. D24–D34, D38–D43 влиты в §5; routing P4.3/P4.4/P4.6 + P5.2 |
 | 2026-07-11 | package-implementer/sonnet | P3.1 закрыт: скилл `general/workflow-craft` (SSOT-матрица design vs dev, D21) — детали см. phases/P3.md P3.1 Completion Notes |
 | 2026-07-11 | issue-planner/opus | Интеграция дельт дизайна: 5 ATTENTION/RED-gaps от аудита исправлены (битые пути P6.1, grep-критерий P6.3, `atomic_write_text` P5.3, ложные премисы plan_lint P4.3/P4.6) |
+| 2026-07-11 | rest-exec/opus·34 + супервизор | P3🟢5/5, P4🟢6/6, P5🟢3/3 закрыты (exec-workflow). P6.1 закрыт 🟠 (вендор-скилл: check-translations не стампит — эскалация владельцу); цепочка стала на P6.1, P6.2/P6.3 не исполнены — детали см. phases/P6.md P6.1 |
 | 2026-07-11 | package-implementer/sonnet | P3.2 закрыт: ссылка на `workflow-craft` прошита в 4 команды по факту грепа (dev/design/research/review); `fix`/`plan-exec` осознанно пропущены — детали см. phases/P3.md P3.2 Completion Notes |
 | 2026-07-11 | package-implementer/opus | P3.3 закрыт: команда-гейт `/task:make-workflow` (opus/high) — контур активация `workflow-craft` → интервью по `spec-interview` → генерация копией шаблона → выходной ревьюер; критерии ревьюера под P3.4 — детали см. phases/P3.md P3.3 Completion Notes |
 | 2026-07-11 | package-implementer/opus | P3.4 закрыт: выходной статический ревьюер в `make-workflow.md` — критерий-чеклист (зеркало README конструктора + матрицы типов), RED блокирует выдачу — детали см. phases/P3.md P3.4 Completion Notes |

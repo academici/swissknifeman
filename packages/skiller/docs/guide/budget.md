@@ -24,7 +24,7 @@ flowchart LR
     codebase_design["codebase-design<br/>⊕117 ↻1996"]:::warm
     data_schema["data-schema<br/>⊕28 ↻924"]:::cool
     dev_engineering_super_skill["dev-engineering-super-skill<br/>⊕133 ↻538"]:::hot
-    domain_modeling["domain-modeling<br/>⊕128 ↻2168"]:::hot
+    domain_modeling["domain-modeling<br/>⊕128 ↻2185"]:::hot
     ecosystem_reuse_gate["ecosystem-reuse-gate<br/>⊕108 ↻1342"]:::warm
     eval_design["eval-design<br/>⊕32 ↻1570"]:::cool
     figma_mcp_core["figma-mcp-core<br/>⊕136 ↻1629"]:::hot
@@ -420,7 +420,7 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 213 скиллов · ⊕ always **15452** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 298851 ток · ⌥ on-demand 795837 ток (сниппеты + references).
+**Итого:** 213 скиллов · ⊕ always **15452** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 298868 ток · ⌥ on-demand 795837 ток (сниппеты + references).
 
 ## По бакетам
 
@@ -428,7 +428,7 @@ flowchart LR
 |---|--:|--:|--:|--:|
 | `general` | 21 | 1489 | 31186 | 12815 |
 | `php` | 17 | 1122 | 19298 | 54837 |
-| `architect` | 15 | 994 | 23503 | 33458 |
+| `architect` | 15 | 994 | 23520 | 33458 |
 | `frontend-vue` | 11 | 854 | 25744 | 248486 |
 | `quality` | 11 | 831 | 20564 | 7447 |
 | `php-packages` | 9 | 685 | 5417 | 520 |

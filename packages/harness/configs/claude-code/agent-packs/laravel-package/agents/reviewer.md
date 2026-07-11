@@ -144,6 +144,10 @@ grep по `**/*ServiceProvider.php` в диффе:
   `$table`), `#[ObservedBy]` при наличии Observer, `$fillable` — явный protected-список;
   критерий не зависит от раскладки (модели пакета живут в `src/`); канон — скилл
   `php:laravel` → `snippets/eloquent-model.md`.
+- **Glossary impact?**: новый/переименованный термин (агрегат, сущность, событие) —
+  сверен с `CONTEXT.md` пакета и term-index (`02-Knowledge/00-Strategy/Ecosystem_Glossary.md`
+  для кросс-пакетных, Rule of Two); использован `_Avoid_`-синоним вместо канона → находка
+  (дисциплина `architect/domain-modeling`).
 <!-- shared:config-honesty -->
 - **Config-honesty**: дефолт работает из коробки ИЛИ явно `null` + `throw` при
   использовании (анти-паттерн `?? 'echo'` без зарегистрированного драйвера).

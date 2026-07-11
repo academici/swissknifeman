@@ -78,7 +78,7 @@ enforcement заполнения CHANGELOG; (6) `ecosystem-glossary` — еди�
 | P4 | Канон планов: репо-дом, имена, дом workflow-скриптов | 6/6 | 🟢 Done |
 | P5 | changelog-discipline: enforcement заполнения CHANGELOG | 3/3 | 🟢 Done |
 | P6 | ecosystem-glossary: единый язык трёхслойкой | 2/4 | 🟡 In progress |
-| P7 | ephemeral-дисциплина и закрытие пакета | 1/2 | 🟡 In progress |
+| P7 | ephemeral-дисциплина и закрытие пакета | 1/2 | 🟠 Done with deviations |
 
 ## 5. Decision Log
 
@@ -168,3 +168,4 @@ enforcement заполнения CHANGELOG; (6) `ecosystem-glossary` — еди�
 | 2026-07-11 | plan-exec/sonnet | P6.3 закрыт: скилл-указатель `axioma/axioma-glossary` + каркас Brain-страницы `Ecosystem_Glossary.md` + строка `roadmap/README.md` — детали см. phases/P6.md P6.3 Completion Notes |
 | 2026-07-11 | issue-planner/opus | P7 развёрнута из скелета: 2 items с полными ТЗ, DoR пройден. Развилка «смысл ephemeral» закрыта владельцем → D44 (удалить, перенесено в ROADMAP); P7.1 переведён opus/high→sonnet/low (авторинг спеки отменён, механическая чистка) |
 | 2026-07-11 | plan-exec/sonnet | P7.1 закрыт: стаб `roadmap/ephemeral-discipline.md` удалён + 2 висячие ссылки сняты в `plan-homes.md`/`changelog-discipline.md` — детали см. phases/P7.md P7.1 Completion Notes |
+| 2026-07-11 | plan-exec/sonnet | P7.2 закрыт 🟠: 6 строк `roadmap/README.md` сверены (уже совпадали с фактом, правка не нужна), docs без отставания (0 ephemeral-refs), CHANGELOG-консолидация permission-deny → список в Pending Work. Фаза P7 закрыта 1/2 🟠. Пакет SKM-ROADMAP-005 готов к `/task:plan-close archive` — детали см. phases/P7.md P7.2 Completion Notes |

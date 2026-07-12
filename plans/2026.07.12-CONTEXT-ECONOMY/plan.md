@@ -69,7 +69,7 @@ SessionStart-политика 1445 симв ≈ 600–900 ток каждую с
 | P4 | agent-packs: диета описаний субагентов | 2/2 | 🟢 Done |
 | P5 | Footprint-доктор + телеметрия | 3/4 | 🟠 Done with deviations |
 | P6 | Rollout на флот + замер до/после | 0/4 | ⬜ Not started |
-| P7 | Машинный bootstrap (новая машина / команда) | 1/2 | 🟡 In progress |
+| P7 | Машинный bootstrap (новая машина / команда) | 2/2 | 🟢 Done |
 | P8 | Доктрина + скиллы/доки + релиз v0.9.0 | 0/5 | ⬜ Not started |
 
 ## 5. Decision Log
@@ -116,3 +116,4 @@ SessionStart-политика 1445 симв ≈ 600–900 ток каждую с
 | 2026-07-12 | plan-exec/sonnet | P7.1 закрыт (фаза P7 1/2 🟡): `scripts/bootstrap-machine.sh` (6 ступеней install.sh→hooks/permissions --global→MCP(soft-skip, нет --global механизма)→maind service install→doctor) + роут `swissknifeman setup --machine`; `scripts/test-bootstrap-machine.sh` (8 smoke-проверок) зелёный; гейт двойного прогона выполнен реально в `python:3.12-slim` (repo `-v ro`, HOME=/root) — RUN1/RUN2 идентичны, rc=0 оба раза, идемпотентность подтверждена; `bash -n` OK, `packages/maind/scripts/validate.sh` 415 тестов OK; найден (не исправлен, вне scope) дефект `harness/scripts/apply-permissions.sh:57` (mkdir до dry-run гейта) — Escalation Needed в P7.1 |
 | 2026-07-12 | plan-exec/sonnet (main loop) | Post-review фикс P7.1 (workflow-гейт нашёл Major): `apply-permissions.sh:57` mkdir перенесён внутрь `if DRY_RUN -eq 0` — `--dry-run` больше не пишет на диск (подтверждено чистым контейнером); смок #4 ужесточён (без `-type f`), смок #7 (был мёртвым) теперь реально ассертит; harness/test-bootstrap-machine зелёные |
 | 2026-07-12 | plan-exec/sonnet (main loop) | Post-review фикс P5.1 (Minor): `test_rules_with_paths_excluded_from_claude_md` не проверял реальное исключение — добавлена baseline без правил + `assertEqual`; skiller test.sh 379 OK |
+| 2026-07-12 | plan-exec/sonnet | P7.2 закрыт (фаза P7 2/2 🟢): манифест-шаг `--projects FILE` в `bootstrap-machine.sh` (7-я ступень; clone только отсутствующих, pull не делает, `swissknifeman setup <path>` идемпотентно) + `docs/machine-manifest.example.json` + `docs/deploy.md` (страница «Развёртывание: новая машина/команда», в nav/sidebar) + `roadmap/cross-machine-memory.md` (D12: явный запрет shared-папки для `state_store.db`, 2 варианта — Tailscale-хост / export-import, критерий активации); реальный прогон на локальном git-фикстуре (без сети) — RUN1 клонирует+онбордит, RUN2 не клонирует/не pull'ит, только повторный setup; 6 новых smoke-тестов (16 всего) зелёные; `bash -n` OK; `npx vitepress build docs` зелёный (новая страница собралась, dead-links нет) |

@@ -34,7 +34,8 @@ fi
 #    проверки DRY_RUN — пофикшено (mkdir перенесён внутрь `if [[ DRY_RUN -eq 0 ]]`),
 #    поэтому здесь считаем ЛЮБУЮ запись (-mindepth 1, без -type f).
 TMP_HOME="$(mktemp -d)"
-trap 'rm -rf "$TMP_HOME"' EXIT
+LOCAL_HOME=""
+trap 'rm -rf "$TMP_HOME" "${LOCAL_HOME:-}"' EXIT
 before_all="$(find "$TMP_HOME" -mindepth 1 2>/dev/null | sort)"
 HOME="$TMP_HOME" "$SCRIPT" --dry-run --bin-dir "$TMP_HOME/.local/bin" >/tmp/dry.out 2>&1 || true
 after_all="$(find "$TMP_HOME" -mindepth 1 2>/dev/null | sort)"
@@ -71,6 +72,70 @@ elif echo "$out" | grep -qi "onboard"; then
 else
   bad "setup --help: вывод не похож ни на maind onboard usage, ни на bootstrap-machine ($out)"
 fi
+
+# 8) --projects: невалидный манифест (нет обязательного поля path) — ступень явно падает.
+BAD_HOME="$(mktemp -d)"
+BAD_MANIFEST="$BAD_HOME/manifest.json"
+cat > "$BAD_MANIFEST" <<'EOF'
+{"version": 1, "projects": [{"repo": "https://example.invalid/repo.git"}]}
+EOF
+if HOME="$BAD_HOME" "$SCRIPT" --dry-run --projects "$BAD_MANIFEST" --bin-dir "$BAD_HOME/.local/bin" >/tmp/badmanifest.out 2>&1; then
+  bad "невалидный манифест (без path) должен завершаться ошибкой"
+else
+  grep -q "манифест невалиден" /tmp/badmanifest.out && ok "невалидный манифест — явная ошибка" || bad "невалидный манифест: нет диагностики в выводе"
+fi
+rm -rf "$BAD_HOME"
+
+# 9) --projects + --dry-run: план печатает git clone/setup, ничего не пишет на диск
+#    (кроме манифеста, который создали мы сами).
+PROJ_HOME="$(mktemp -d)"
+GOOD_MANIFEST="$PROJ_HOME/manifest.json"
+cat > "$GOOD_MANIFEST" <<EOF
+{"version": 1, "projects": [{"repo": "https://example.invalid/repo.git", "path": "~/dest/example-repo", "profile": ""}]}
+EOF
+before_proj="$(find "$PROJ_HOME" -mindepth 1 2>/dev/null | sort)"
+HOME="$PROJ_HOME" "$SCRIPT" --dry-run --projects "$GOOD_MANIFEST" --bin-dir "$PROJ_HOME/.local/bin" >/tmp/dryprojects.out 2>&1 || true
+after_proj="$(find "$PROJ_HOME" -mindepth 1 2>/dev/null | sort)"
+if [[ "$before_proj" == "$after_proj" ]]; then
+  ok "--projects --dry-run не пишет файлов (кроме манифеста, созданного тестом)"
+else
+  bad "--projects --dry-run создал записи на диске: $(diff <(echo "$before_proj") <(echo "$after_proj") || true)"
+fi
+grep -q "git clone https://example.invalid/repo.git" /tmp/dryprojects.out && ok "--projects --dry-run печатает план git clone" || bad "--projects --dry-run: план clone не найден в выводе"
+rm -rf "$PROJ_HOME"
+
+# 10) --projects (реальный прогон, без сети — локальный git-репозиторий как fixture):
+#     RUN1 клонирует отсутствующий репозиторий; RUN2 (повторный прогон) НЕ делает повторный
+#     clone/pull — рабочая копия идемпотентна (Code Guidance P7.2: манифест-шаг идемпотентен).
+LOCAL_HOME="$(mktemp -d)"
+SRC_REPO="$LOCAL_HOME/src-repo"
+mkdir -p "$SRC_REPO"
+git init -q "$SRC_REPO"
+git -C "$SRC_REPO" -c user.email=t@t -c user.name=t commit -q --allow-empty -m init
+LOCAL_MANIFEST="$LOCAL_HOME/manifest.json"
+cat > "$LOCAL_MANIFEST" <<EOF
+{"version": 1, "projects": [{"repo": "$SRC_REPO", "path": "~/dest/local-repo", "profile": ""}]}
+EOF
+HOME="$LOCAL_HOME" "$SCRIPT" --projects "$LOCAL_MANIFEST" --bin-dir "$LOCAL_HOME/.local/bin" >/tmp/run1.out 2>&1 || true
+DEST_REPO="$LOCAL_HOME/dest/local-repo"
+if [[ -d "$DEST_REPO/.git" ]]; then
+  ok "--projects клонирует отсутствующий репозиторий из манифеста"
+else
+  bad "--projects: репозиторий из манифеста не клонирован ($DEST_REPO не найден)"
+fi
+commits_after_run1="$(git -C "$DEST_REPO" log --oneline 2>/dev/null | wc -l | tr -d ' ')"
+HOME="$LOCAL_HOME" "$SCRIPT" --projects "$LOCAL_MANIFEST" --bin-dir "$LOCAL_HOME/.local/bin" >/tmp/run2.out 2>&1 || true
+commits_after_run2="$(git -C "$DEST_REPO" log --oneline 2>/dev/null | wc -l | tr -d ' ')"
+grep -q "SKIP clone" /tmp/run2.out && ok "повторный прогон --projects пропускает clone уже склонированного" || bad "повторный прогон --projects: нет SKIP clone в выводе"
+if [[ "$commits_after_run1" == "$commits_after_run2" ]]; then
+  ok "повторный прогон --projects не меняет git-историю клона (pull не делает)"
+else
+  bad "повторный прогон --projects изменил git-историю клона (был бы pull) — commits: $commits_after_run1 -> $commits_after_run2"
+fi
+
+# 11) --skip-projects побеждает даже при заданном --projects (ступень явно пропущена).
+HOME="$LOCAL_HOME" "$SCRIPT" --dry-run --skip-projects --projects "$LOCAL_MANIFEST" --bin-dir "$LOCAL_HOME/.local/bin" >/tmp/skipwins.out 2>&1 || true
+grep -q -- "--skip-projects принят" /tmp/skipwins.out && ok "--skip-projects побеждает --projects (ступень пропущена)" || bad "--skip-projects: ступень манифеста не была явно пропущена"
 
 if (( fail == 0 )); then
   echo "test-bootstrap-machine: все проверки зелёные"

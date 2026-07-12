@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "projects": [
+    {
+      "repo": "git@github.com:example-org/example-project.git",
+      "path": "~/projects/example-org/example-project",
+      "profile": ""
+    },
+    {
+      "repo": "git@github.com:example-org/another-project.git",
+      "path": "~/projects/example-org/another-project",
+      "profile": "php-package"
+    }
+  ]
+}

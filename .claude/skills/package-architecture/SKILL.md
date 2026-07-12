@@ -77,7 +77,9 @@ connect/vendor/update; диск всегда источник истины, за
 Команды: `connect`, `vendor`, `integrate`, `update [--all]` (детект каналов по
 маркерам, adopt незарегистрированных, починка path-drift marketplace),
 `init` (создать `.swissknifeman/config.json` без копирования), `sync` (vendor),
-`lock`, `status`, `budget`, `list [--prune]`, `topology [init|show]`,
+`lock`, `status`, `budget` (`--first-turn` — always-on футпринт первого хода
+проекта: skills+agents+CLAUDE.md/rules+живой прогон хуков+MCP, target ≤7K/warn
+>10K; флот — `maind doctor --context`), `list [--prune]`, `topology [init|show]`,
 `registry` (мейнтейнер), `validate`, `doctor`, `version`. Корень проекта ищется
 вверх от CWD: `.swissknife.json` → `.claude/` → `.git`. Внутри самого реестра
 project-команды отказываются работать.
@@ -125,6 +127,10 @@ SKILL.md; (8) уникальность имён в бакете (через ба
 (9) requires/produces_for: существующие имена, без self-ref и циклов;
 (10) мягкий линт внутренних скиллов `.claude/skills/` (name+description,
 kebab-case == имя каталога); (11) `bash -n` всех скриптов + исполняемость CLI.
+Описания: `DESC_WARN_MAX=300` (warn) / `DESC_ERROR_MAX=450` (hard error) +
+burn-down-рэтчет `scripts/desc-burndown.txt` (унаследованный долг >300 легален
+только пока внесён в список; новый долг вне списка — error; one-way — протухшие
+записи предупреждают на удаление).
 
 ## Визард `integrate` (`lib/skiller/integrate.py`)
 

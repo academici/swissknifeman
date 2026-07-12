@@ -57,6 +57,11 @@ maind migrate from-agentmemory <dir> [--force]
 
 maind mcp                              # запустить как MCP-сервер (stdio)
 maind doctor [--quiet]                 # диагностика окружения
+maind doctor --audit mcp|claude|deny|core|pao|settings|all [--json]  # fleet-аудит по проектам
+maind doctor --context [--json]        # флот-агрегация always-on футпринта первого хода
+                                        #   (skiller budget --first-turn по каждому проекту)
+maind doctor --skill-drift             # дрейф ecosystem-mcp/ecosystem-setup от шаблона, по проектам
+maind doctor --channel-drift           # дубль-канал skiller (connect+vendor на один бакет)
 maind verify [--json]                  # пруф работы 3 плоскостей: пишут реально или вхолостую
 maind version                          # git SHA + путь к узлу
 ```

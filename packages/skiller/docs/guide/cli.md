@@ -107,6 +107,7 @@ Read-only отчёт: корень и маркер, каналы, дрейф п�
 | `skiller registry` | регенерирует `skills.json`, плагин-манифесты `.claude-plugin/*` и `docs/guide/graph.md` (бывший `./sync.sh --update-registry`) |
 | `swissknifeman validate` | `scripts/validate.sh` (то же, что CI) |
 | `skiller doctor` | python3, симлинк, PATH, projects.json, чистота реестра, профили |
+| `skiller budget --first-turn [--target DIR] [--json] [--strict]` | always-on футпринт первого хода проекта (skills+agents+CLAUDE.md/rules+живой прогон SessionStart-хуков+MCP); вердикт OK ≤7K / ELEVATED ≤10K / WARN >10K ток; `--strict` — exit 1 при WARN (CI). Флот — `maind doctor --context` |
 | `swissknifeman version` | git SHA + путь к реестру |
 
 ## Карта проектов: `~/.swissknifeman/projects.json`

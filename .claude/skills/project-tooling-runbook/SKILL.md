@@ -150,6 +150,11 @@ inertia-vue`, `frontend/tailwind-conventions`, `frontend/wayfinder` и т.п.). 
 > Типичный кейс «дай проекту скиллы разработчика+проектировщика»: laravel-project уже даёт `php`
 > (разработчик) + `architect` (проектировщик). Если фронт на Vue/Nuxt — добавь `frontend`.
 
+> **Доктрина budget-гейта.** Любой новый always-on инжект (description скилла/агента/команды,
+> hook additionalContext, CLAUDE.md-блок, MCP-сервер) до раскатки проверяй `skiller budget
+> --first-turn` (target ≤7K/warn >10K ток; флот — `maind doctor --context`) — правило root
+> CLAUDE.md «Рамки», добавление скилла массово вслепую эту доктрину нарушает.
+
 ## Агенты/роли проекта (agent-packs) — ОТДЕЛЬНО от скиллов
 
 Скиллы (connect/vendor) дают **знания**, но НЕ ставят **субагентов и workflow**. Роли/агенты — это

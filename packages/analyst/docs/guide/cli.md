@@ -90,6 +90,19 @@ analyst compact [--before ISO] [--dry-run] [--json]
 до и после даёт **ту же** confidence. `--dry-run` — показать, ничего не писать. Провенанс операции —
 в `audit.ndjson`.
 
+## `analyst sessions`
+
+```
+analyst sessions [--project P] [--weeks N] [--json]
+```
+
+Недельные ISO-медианы `first_turn_overhead`/`fresh-per-turn` из ЖИВЫХ jsonl-транскриптов сессий
+(`~/.claude/projects/<encoded-cwd>/*.jsonl`, отдельный источник от `usage-trend.ndjson` —
+тот питает `analyst token-report`); `--project P` резолвит `local_path` по id из реестра узла,
+без флага — текущий каталог. Warn в stderr при росте медианы недели >20% к предыдущей (календарно
+смежной) неделе — сигнал context-economy-рецидива (постоянная альтернатива разовому замеру
+`skiller budget --first-turn` / `maind doctor --context`).
+
 ## `analyst doctor`
 
 ```

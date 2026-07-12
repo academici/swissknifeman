@@ -143,7 +143,7 @@ Haiku, impl — Sonnet, HIGH-риск review — Opus+xhigh. Подробнее:
 
 | Слой | Где хранится | Кто пишет | Как читается |
 |:--|:--|:--|:--|
-| **agentmemory (mAInd)** | демон :4111, бинарный KV в `maind/data/` | агент через MCP `maind_memory_store` или хук памяти (`MODE=maind`) | **дайджест на старте** (`maind memory digest` печатает топ-8 фактов в контекст) + семантический `recall` on-demand |
+| **agentmemory (mAInd)** | демон :4111, бинарный KV в `maind/data/` | агент через MCP `maind_memory_store` или хук памяти (`MODE=maind`) | **дайджест на старте** (`maind memory digest` печатает топ-8 фактов, **только приватная память этого проекта** — `shared_max=0` по умолчанию) + семантический `recall`/граф по `ns:<имя>` on-demand для межпроектной задачи |
 | **нативная память Claude Code** | `~/.claude/projects/<slug>/memory/*.md` + индекс `MEMORY.md` | **сам Claude Code** (базовая фича, не наш код) | грузит первые 200 строк/25KB `MEMORY.md` на старте; тематические `.md` — по требованию |
 
 **Почему два.** agentmemory — **общая** память экосистемы (изолирована по namespace, видна связанным

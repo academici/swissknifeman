@@ -42,6 +42,9 @@ description: Как настраивать/перенастраивать ЭТО
 - **Поменять память/namespaces** → `maind onboard {{PROJECT}} --memory … --namespace …`.
 - **Перераскатать артефакты** → `maind sync --project {{PROJECT}}` (или `--only mcp,graph,…`).
 - **Проверить связь** → `maind health` (round-trip-гейт), `skiller status`, `maind doctor`.
+- **Проверить always-on бюджет** (перед добавлением скилла/агента/CLAUDE.md-блока/MCP-сервера) →
+  `skiller budget --first-turn` (per-project, target ≤7K/warn >10K); флот — `maind doctor --context`;
+  тренд по сессиям — `analyst sessions`.
 
 Полное дерево всех слоёв — в доке maind «Дерево решений: настройка проекта»
 (`packages/maind/docs/guide/onboarding-decision-tree.md`).

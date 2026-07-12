@@ -20,6 +20,7 @@ EN-канон дешевле RU при равном объёме — это ви
 import json
 import math
 import os
+import subprocess
 from pathlib import Path
 
 from core import atomic_write_text
@@ -183,6 +184,224 @@ def budget_for_set(skills, pulled=None):
     }
 
 
+# --- first-turn footprint (P5.1) -----------------------------------------------
+# Невидимый always-on бюджет — первопричина инцидента (findings/P0-rag-context-economy.md,
+# RAG:✅ 2026-07-12): стартовый контекст 3–7K ток норма, >10K — аномалия. Пять
+# источников always-on нагрузки первого хода проекта: skills meta (⊕ tier-0),
+# .claude/agents description, CLAUDE.md + path-less rules, живой прогон
+# SessionStart-хуков, MCP tool-defs.
+FIRST_TURN_TARGET_MAX = 7_000
+FIRST_TURN_WARN = 10_000
+HOOK_TIMEOUT = 10
+
+# Известные MCP-серверы → число tool-схем, резидентных в system prompt (грубо;
+# maind точный — packages/maind/lib/maind/mcp.py::TOOLS). Неизвестный сервер из
+# .mcp.json — FALLBACK_MCP_TOOLS (flat-оценка, не 0 и не завышение).
+KNOWN_MCP_TOOLS = {
+    "maind": 11, "perplexity-web": 4, "context7": 2, "sequential-thinking": 1,
+    "fetch": 1, "memory": 9, "filesystem": 11, "github": 20, "playwright": 21,
+    "serena": 20, "laravel-boost": 15,
+}
+FALLBACK_MCP_TOOLS = 5
+TOKENS_PER_MCP_TOOL = 150
+
+
+def _measure_skills(env, target):
+    """⊕ tier-0 активного набора скиллов проекта — тот же источник, что и
+    resolve_active_set/budget_for_set выше. n/a на любой сбой (незнакомый бакет
+    в чужом .swissknife.json и т.п.) — не должно ронять весь отчёт."""
+    try:
+        config = load_config(env, target)
+        skills, meta = resolve_active_set(env, target, config)
+        b = budget_for_set(skills, meta["pulled"])
+        return {"tokens": b["tier0"], "detail": f"{b['count']} скиллов"}
+    except (Exception, SystemExit) as e:
+        return {"tokens": None, "detail": f"n/a ({e})"}
+
+
+def _measure_agents(target):
+    """name+description каждого .claude/agents/*.md (frontmatter) — тот же
+    always-on «налог», что у скиллов, но для субагентов проекта."""
+    d = Path(target) / ".claude" / "agents"
+    if not d.is_dir():
+        return {"tokens": 0, "detail": "нет .claude/agents"}
+    total, count = 0, 0
+    for p in sorted(d.glob("*.md")):
+        try:
+            fm = parse_frontmatter(p)
+        except Exception:
+            continue
+        total += estimate_tokens(f"{fm.get('name', p.stem)} {fm.get('description', '')}")
+        count += 1
+    return {"tokens": total, "detail": f"{count} агентов"}
+
+
+def _measure_claude_md(target):
+    """CLAUDE.md проекта + .claude/rules/*.md БЕЗ `paths:` (path-scoped rules
+    не always-on — грузятся только на затронутый файл, см. skill-authoring/
+    context-economy канон)."""
+    target = Path(target)
+    total, parts, n_rules = 0, [], 0
+    claude_md = target / "CLAUDE.md"
+    if claude_md.is_file():
+        try:
+            t = estimate_tokens(claude_md.read_text(encoding="utf-8", errors="ignore"))
+            total += t
+            parts.append(f"CLAUDE.md={t}")
+        except Exception:
+            parts.append("CLAUDE.md=n/a")
+    rules_dir = target / ".claude" / "rules"
+    if rules_dir.is_dir():
+        for p in sorted(rules_dir.glob("*.md")):
+            try:
+                fm = parse_frontmatter(p)
+            except Exception:
+                continue
+            if fm.get("paths"):
+                continue
+            total += estimate_tokens(p.read_text(encoding="utf-8", errors="ignore"))
+            n_rules += 1
+    detail = " + ".join(parts) if parts else "нет CLAUDE.md"
+    if n_rules:
+        detail += f" + {n_rules} rules без paths"
+    return {"tokens": total, "detail": detail}
+
+
+def _settings_hook_commands(target, event="SessionStart"):
+    """Команды хука `event` из .claude/settings.json + settings.local.json
+    (merge, оба читаются — local может добавлять хуки поверх settings.json)."""
+    target = Path(target)
+    cmds = []
+    for fname in ("settings.json", "settings.local.json"):
+        f = target / ".claude" / fname
+        if not f.is_file():
+            continue
+        try:
+            data = json.loads(f.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        for block in data.get("hooks", {}).get(event, []):
+            for h in block.get("hooks", []):
+                cmd = h.get("command")
+                if cmd:
+                    cmds.append(cmd)
+    return cmds
+
+
+def _run_hook(cmd, target, timeout=HOOK_TIMEOUT):
+    """Живой прогон одного SessionStart-хука: пустой stdin, timeout, fail-soft.
+    additionalContext из hookSpecificOutput JSON, иначе сырой stdout (тот же
+    контракт, что читает сам Claude Code). Возвращает (tokens, ok); ok=False на
+    любой сбой/таймаут/ненулевой exit — это ДАННЫЕ отчёта (хук чужого проекта
+    может быть сломан), не повод падать самой команде."""
+    run_env = dict(os.environ)
+    run_env["CLAUDE_PROJECT_DIR"] = str(target)
+    try:
+        result = subprocess.run(
+            cmd, shell=True, cwd=str(target), env=run_env, input="",
+            capture_output=True, text=True, timeout=timeout, check=False)
+    except Exception:
+        return None, False
+    if result.returncode != 0:
+        return None, False
+    out = result.stdout.strip()
+    if not out:
+        return 0, True
+    ctx = out
+    try:
+        data = json.loads(out)
+        ctx = data.get("hookSpecificOutput", {}).get("additionalContext", out)
+    except (json.JSONDecodeError, AttributeError, TypeError):
+        pass
+    return estimate_tokens(ctx), True
+
+
+def _measure_hooks(target, timeout=HOOK_TIMEOUT):
+    cmds = _settings_hook_commands(target, "SessionStart")
+    if not cmds:
+        return {"tokens": 0, "detail": "нет SessionStart-хуков"}
+    total, ok_n, fail_n = 0, 0, 0
+    for cmd in cmds:
+        tokens, ok = _run_hook(cmd, target, timeout=timeout)
+        if ok:
+            total += tokens
+            ok_n += 1
+        else:
+            fail_n += 1
+    if ok_n == 0:
+        return {"tokens": None, "detail": f"n/a ({fail_n} хук(ов) сбоили)"}
+    detail = f"{ok_n} хук(ов)" + (f", {fail_n} n/a" if fail_n else "")
+    return {"tokens": total, "detail": detail}
+
+
+def _measure_mcp(target):
+    """Статичная оценка tool-defs подключённых MCP-серверов проекта (.mcp.json):
+    известные серверы — по числу tool-схем (KNOWN_MCP_TOOLS), неизвестные —
+    flat FALLBACK_MCP_TOOLS. Не парсим реальные схемы (сервер может быть недоступен
+    из этого окружения) — это оценка, как и весь budget.py."""
+    f = Path(target) / ".mcp.json"
+    if not f.is_file():
+        return {"tokens": 0, "detail": "нет .mcp.json"}
+    try:
+        data = json.loads(f.read_text(encoding="utf-8"))
+    except Exception:
+        return {"tokens": None, "detail": "n/a (.mcp.json invalid JSON)"}
+    servers = sorted(data.get("mcpServers", {}))
+    if not servers:
+        return {"tokens": 0, "detail": "нет серверов"}
+    total = sum(KNOWN_MCP_TOOLS.get(n, FALLBACK_MCP_TOOLS) * TOKENS_PER_MCP_TOOL
+               for n in servers)
+    return {"tokens": total, "detail": f"{len(servers)} сервер(ов): " + ", ".join(servers)}
+
+
+_FIRST_TURN_SOURCE_LABELS = (
+    ("skills", "skills meta (⊕ always)"),
+    ("agents", ".claude/agents"),
+    ("claude_md", "CLAUDE.md + rules"),
+    ("hooks", "SessionStart-хуки (живой прогон)"),
+    ("mcp", "MCP tool-defs"),
+)
+
+
+def first_turn_report(env, target, *, timeout=HOOK_TIMEOUT):
+    """Сумма always-on футпринта первого хода проекта по пяти источникам.
+    n/a-источники (fail-soft) не участвуют в сумме — total считает только то,
+    что реально измерено. Вердикт: OK ≤7K · ELEVATED ≤10K · WARN >10K
+    (findings/P0-rag-context-economy.md, RAG:✅ 2026-07-12)."""
+    target = Path(target).resolve()
+    sources = {
+        "skills": _measure_skills(env, target),
+        "agents": _measure_agents(target),
+        "claude_md": _measure_claude_md(target),
+        "hooks": _measure_hooks(target, timeout=timeout),
+        "mcp": _measure_mcp(target),
+    }
+    total = sum(s["tokens"] for s in sources.values() if s["tokens"] is not None)
+    if total <= FIRST_TURN_TARGET_MAX:
+        verdict = "OK"
+    elif total <= FIRST_TURN_WARN:
+        verdict = "ELEVATED"
+    else:
+        verdict = "WARN"
+    return {"target": str(target), "sources": sources, "total": total, "verdict": verdict}
+
+
+def format_first_turn_report(report):
+    out = ["", "━━━ FIRST-TURN БЮДЖЕТ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+          f"Проект: {report['target']}", ""]
+    for key, label in _FIRST_TURN_SOURCE_LABELS:
+        s = report["sources"].get(key, {})
+        tok = s.get("tokens")
+        tok_str = "   n/a" if tok is None else f"{tok:>6}"
+        out.append(f"  {label:<28} {tok_str} ток  ({s.get('detail', '')})")
+    out.append("")
+    out.append(f"Итого: {report['total']:>6} ток — {report['verdict']}  "
+               f"(target ≤{FIRST_TURN_TARGET_MAX} · warn >{FIRST_TURN_WARN})")
+    out.append("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    out.append("")
+    return "\n".join(out)
+
+
 # --- текстовый отчёт ----------------------------------------------------------
 def _bar(value, scale):
     return "█" * min(40, round(value / scale)) if scale else ""
@@ -270,23 +489,44 @@ def cmd_budget(env, argv):
         "--target": "str", "--config": "str", "--compare": "str",
         "--profile": "str", "--buckets": "str", "--exclude": "str",
         "--json": "bool", "--no-core": "bool", "--write-map": "bool",
-        "--check-core": "bool", "--strict": "bool",
+        "--check-core": "bool", "--strict": "bool", "--first-turn": "bool",
     })
     if opts["help"]:
         print("skiller budget [--config F.json | --compare a,b | --target DIR]\n"
               "               [--profile P | --buckets a,b] [--exclude x,y]\n"
               "               [--no-core] [--json] [--write-map] [--check-core [--strict]]\n"
+              "               [--first-turn [--json] [--strict]]\n"
               "  Трёхъярусный токеновый бюджет набора скиллов (⊕ always / ↻ on-trigger\n"
               "  / ⌥ on-demand). --write-map перегенерит docs/guide/budget.md.\n"
               "  --check-core: резидентный (⊕ tier-0) бюджет CORE_SKILLS vs target (гейт\n"
               "  против тихого роста ядра И против тихого недобора — пропавший по пути\n"
               "  CORE-скилл занижает резидент, а не улучшает его); --strict — ненулевой\n"
-              "  код при превышении ИЛИ недоборе (CI).")
+              "  код при превышении ИЛИ недоборе (CI).\n"
+              "  --first-turn: always-on футпринт первого хода проекта (skills meta +\n"
+              "  agents + CLAUDE.md/rules + живой прогон SessionStart-хуков + MCP) —\n"
+              "  target ≤7K / warn >10K ток; --strict — exit 1 при WARN (CI).")
         return
     no_core = opts.get("no_core", False)
 
     if opts.get("write_map"):
         write_budget_map(env)
+        return
+
+    if opts.get("first_turn"):
+        if opts.get("target"):
+            target = Path(os.path.expanduser(opts["target"])).resolve()
+        else:
+            target, _via = find_project_root(env)
+            if target is None:
+                die("корень проекта не найден выше CWD — укажи --target")
+        report = first_turn_report(env, target)
+        if opts.get("json"):
+            print(json.dumps(report, ensure_ascii=False, indent=2))
+        else:
+            print(format_first_turn_report(report))
+        if opts.get("strict") and report["verdict"] == "WARN":
+            die(f"first-turn бюджет {report['total']} ток > warn-порог "
+                f"{FIRST_TURN_WARN} ({target}) — см. таблицу выше")
         return
 
     if opts.get("check_core"):

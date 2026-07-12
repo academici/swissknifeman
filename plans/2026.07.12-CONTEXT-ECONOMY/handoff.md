@@ -1,13 +1,13 @@
-# HANDOFF — 2026-07-12 — after P1.2
+# HANDOFF — 2026-07-12 — after P1.3 (P1 закрыта, 3/3)
 
-**Next:** /task:plan-exec 2026.07.12-CONTEXT-ECONOMY P1.3
+**Next:** /task:plan-exec 2026.07.12-CONTEXT-ECONOMY P2.1
 
 | Параметр | Значение |
 |:--|:--|
-| Model | sonnet |
-| Thinking | medium |
+| Model | fable или opus/high (D-роутинг: компрессия policy без потери семантики — вердикт-чувствительно) |
+| Thinking | high |
 | Context | fresh session, корень репо swissknifeman |
-| Суть | P1.3 (гайдлайн межпроектной памяти: скиллы + доки) — ГЕЙТ: P1.1 закрыт (выполнено) |
+| Суть | P2.1 (harness: компрессия agent-router policy → v2, терс-EN ≤400 ток) — ГЕЙТ: нет (P1 закрыта) |
 
 Основной путь (D14) — общий workflow-исполнитель с per-item роутингом моделей
 (автономно P1→P5+P7, стоп перед Owner-гейтами P6/P8; запуск строго scriptPath):
@@ -19,22 +19,30 @@ Workflow({scriptPath: "plans/2026.07.12-CONTEXT-ECONOMY/workflows/wf-context-eco
 Альтернатива — поштучно:
 
 ````
-/task:plan-exec 2026.07.12-CONTEXT-ECONOMY P1.3 — ТЗ: plans/2026.07.12-CONTEXT-ECONOMY/phases/P1.md; нормы: findings/P0-rag-context-economy.md
+/task:plan-exec 2026.07.12-CONTEXT-ECONOMY P2.1 — ТЗ: plans/2026.07.12-CONTEXT-ECONOMY/phases/P2.md; нормы: findings/P0-rag-context-economy.md
 ````
 
 **Done:** P1.1 (digest-бюджет) — `select_digest_items` в packages/maind/lib/maind/memory.py
 (чистая функция, байт-бюджет 4000/item_max 500/shared_max=0 project-only, D10) + 4 константы
 в constants.py + config-дефолты `memory.digest` в config.py + 3 CLI-флага
-(`--budget-chars --item-max --shared-max`) + 9 новых тестов (7 TestDigestSelection +
-2 config-дефолтов/override); `bash packages/maind/scripts/validate.sh` → 397 тестов OK.
+(`--budget-chars --item-max --shared-max`) + 9 новых тестов; `validate.sh` → 397 OK.
 P1.2 (шаблоны хуков) — session-start-hook.sh переведён на `health --cwd --strict`: rc=0 →
-тихий `exit 0` (ничего в additionalContext), rc≠0 → печать stdout, затем `exit 0`
-(хук-безопасность сохранена); memory-digest-hook.sh — бамп-комментарий шапки (v2/P1.2,
-byte-change → stale для `maind sync`), вызов остался argless. 5 новых тестов в
-packages/maind/tests/test_health.py (`TestSessionStartHookTemplate`: статика --strict+rc-гейт,
-тихий stdout при fake-maind rc=0, печать статуса при rc=1, тихий no-op без maind в PATH;
-`TestMemoryDigestHookTemplate`: маркер бампа шапки + argless-вызов); `validate.sh` → 402 тестов OK.
-**Remaining:** 7 фаз / 20 items ⬜, P1 — 2/3 🟡 (P1.3 гайдлайн памяти) · P2 router v2 (1) ·
+тихий `exit 0`, rc≠0 → печать stdout, затем `exit 0`; memory-digest-hook.sh — бамп-комментарий
+шапки (byte-change → stale для sync), вызов остался argless. 5 новых тестов; `validate.sh` → 402 OK.
+P1.3 (гайдлайн межпроектной памяти) — ecosystem-mcp (источник, `packages/maind/templates/skills/
+ecosystem-mcp/SKILL.md`) дополнен оговоркой «дайджест — только свой проект» + секцией
+«Межпроектная задача (2+ проекта)»: 3 шага (`maind graph --project X`/`maind_graph_path` →
+`maind memory recall --scope ns:<имя>` → `maind memory remember --scope ns:<имя>`, не
+`--project --share`). Тот же гайдлайн — в локальных скиллах `maind-overview`,
+`cross-project-optimizer`, `ecosystem-integration` (короткие оговорки + ссылки на источник и
+доку, не переписывание). `docs/guide/memory.md` — абзац project-only(`shared_max=0`) в разделе
+digest + новая секция «Межпроектная задача — как явно поднять shared-контекст»;
+`docs/guide/namespaces.md` — та же оговорка-исключение у таблицы recall_scopes. Все команды
+сверены `--help` на HEAD, MCP-имена (`maind_graph_path/neighbors`, `maind_memory_recall/store`)
+сверены со списком `TOOLS` в `mcp.py` — не по памяти. 9 новых тестов
+(`packages/maind/tests/test_p13_cross_project_memory_docs.py`); `validate.sh` → 411 тестов OK.
+Фаза **P1 закрыта (3/3 🟢)**.
+**Remaining:** 7 фаз / 19 items ⬜, P1 — 3/3 🟢 (закрыта) · P2 router v2 (1) ·
 P3 описания скиллов (2, порядок P3.1→P3.2) · P4 agent-packs (2) · P5 footprint+телеметрия (4) ·
 P6 rollout+замер (4, baseline ДО раскатки, Owner-гейты) · P7 bootstrap машины (2) ·
 P8 доктрина+скиллы/доки+релиз v0.9.0 (4). Роутинг-отклонения: P2.1 — fable/opus (семантика

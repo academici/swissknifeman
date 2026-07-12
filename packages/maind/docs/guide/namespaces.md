@@ -41,8 +41,11 @@ Namespace — это **группа проектов**. Внутри групп�
 | `ns:<имя>` | все проекты группы `<имя>` |
 | `global` | вся экосистема (wildcard-инфраструктура + ecosystem-wide) |
 
-`seed` пишет cross-ref о связях проекта в его `ns:<имя>` (wildcard → `global`); агент читает
-`project:<id>` + `ns:<свои группы>` + `global` (`namespaces.recall_scopes`).
+`seed` пишет cross-ref о связях проекта в его `ns:<имя>` (wildcard → `global`); `recall`/MCP
+читают `project:<id>` + `ns:<свои группы>` + `global` (`namespaces.recall_scopes`). **Но
+SessionStart-дайджест — исключение**: он по умолчанию несёт только `project:<id>`
+(`shared_max=0`); `ns:<группа>` поднимается только явным `recall`/`--shared-max` — подробнее и
+сценарий межпроектной задачи → [Память](./memory).
 
 ## Команды и пример
 

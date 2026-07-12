@@ -70,14 +70,44 @@ Recall объединяет `project:<id>` + `ns:<все группы>` + `globa
 
 - `MODE=maind` ставит SessionStart-хук `<project>/.claude/maind-memory.sh`, который зовёт
   **`maind memory digest`** (детерминированный дайджест памяти проекта: list+фильтр по
-  scope-маркеру, приватный scope первым, свежее сверху; хук-безопасно — демон лёг → no-op) и
-  инжектит его через `additionalContext` (Claude Code ≥ 2.1.59).
+  scope-маркеру, приватный scope первым, свежее сверху; байт-бюджет + per-item обрезка; хук-
+  безопасно — демон лёг → no-op) и инжектит его через `additionalContext` (Claude Code ≥ 2.1.59).
 - Одновременно ставится **`autoMemoryEnabled:false`** — нативная авто-память выключается, чтобы
   не было дублирования. Демон становится единым источником и памяти, и стартового контекста.
+- **Дайджест — project-only по умолчанию.** `shared_max=0` (дефолт): в `additionalContext` идёт
+  ТОЛЬКО приватная память проекта (`project:<id>`); `ns:<группа>`/`global` в дайджест не
+  попадают вовсе, даже если факты там есть. Это осознанное сужение (context-economy: общий
+  namespace без оговорки раздувал старт каждой сессии и тянул чужой контекст группы —
+  «negative» был только у digest, не у recall/графа). Когда `shared_max=0`, digest печатает
+  однострочную подсказку `(межпроектное: maind memory recall --scope ns:<name> — digest
+  project-only)`. Включить shared в дайджест явно — `--shared-max N` (CLI) или
+  `memory.digest.shared_max` в конфиге проекта; тогда добавляются N свежайших shared-фактов
+  после private. См. «Межпроектная задача» ниже — как поднять общий контекст без изменения
+  дефолта дайджеста.
 
 **Гибко (per-project):** `maind onboard <id> --memory maind|native|off` (дефолт `maind`; в
 интерактиве — вопрос). `native` делает revert (вернуть авто-память, снять digest-хук). Проверка
 консистентности — в `maind health` (MODE=maind ⇒ native off + digest-хук на месте).
+
+## Межпроектная задача — как явно поднять shared-контекст
+
+Дайджест на старте сессии несёт только свой проект (см. выше). Когда задача реально
+межпроектная («проанализируй проект A и B и улучши общее между ними») — поднимай shared-
+контекст тремя явными шагами (без изменения дефолта дайджеста):
+
+1. **Связи** — какие проекты вообще связаны и как: `maind graph --project <id>` (CLI, короткая
+   форма `view`) или MCP `maind_graph_path`/`maind_graph_neighbors` — путь/соседи в графе.
+2. **Контекст группы** — поднять общую память namespace явно (её нет в дайджесте):
+   `maind memory recall --scope ns:<имя> "<запрос>"` (CLI) или `maind_memory_recall` c этим
+   `scope` (MCP).
+3. **Запись вывода** — межпроектный факт пишется в scope группы, не в приватный `project:<id>`,
+   иначе другие проекты группы его не увидят: `maind memory remember --scope ns:<имя> "<факт>"`
+   (CLI) или `maind_memory_store` с `scope: "ns:<имя>"` (MCP).
+
+Скилл-ориентир с этим же гайдлайном раскатан в каждый подключённый проект — `ecosystem-mcp`
+(источник — `packages/maind/templates/skills/ecosystem-mcp/SKILL.md`). Межпроектная оптимизация
+кода (дубли/общие пакеты) — отдельный локальный скилл `cross-project-optimizer`
+(`maind fleet manifest|duplicates|features`).
 
 ## Куда писать факт — правило роутинга (не плодить дубли)
 

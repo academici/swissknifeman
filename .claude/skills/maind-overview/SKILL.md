@@ -25,7 +25,15 @@ description: Краткая схема работы хаба mAInd — что э
 
 - **Граф**: межпроектное ребро A↔B строится, только если A и B делят namespace.
 - **Память**: бакеты `project:<id>` (приватно) · `ns:<имя>` (группа) · `global` (вся экосистема,
-  wildcard). Агент читает `project:<id>` + `ns:<свои группы>` + `global`.
+  wildcard). `recall`/MCP читают `project:<id>` + `ns:<свои группы>` + `global`.
+
+**Дайджест на старте сессии (SessionStart-хук) — по умолчанию только `project:<id>`**
+(`shared_max=0`, context-economy: чужой ns/global-контекст не течёт в каждую сессию без
+спроса). Общий контекст группы поднимается ЯВНО, когда задача реально межпроектная — гайдлайн
+и команды: [ecosystem-mcp] → «Межпроектная задача», доктрина — [docs/guide/memory.md].
+
+[ecosystem-mcp]: ../ecosystem-mcp/SKILL.md
+[docs/guide/memory.md]: ../../../packages/maind/docs/guide/memory.md
 
 ## Ключевые команды
 

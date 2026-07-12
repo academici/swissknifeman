@@ -24,7 +24,13 @@ maind fleet manifest                 # JSON: проекты (пути/scopes/cod
 maind fleet features --namespace axioma     # факты «сделал фичу X» из общей памяти группы
 ```
 Коррелируй похожие фичи между проектами: если в двух проектах делали близкое — кандидат на общий
-хелпер. (Записывать факт: `maind fleet log "<что сделал>" --project <id>`.)
+хелпер. (Записывать факт: `maind fleet log "<что сделал>" --project <id>`.) Это межпроектная
+задача по определению — поднимай контекст группы явно тем же путём, что и общий гайдлайн
+([ecosystem-mcp] → «Межпроектная задача»): `maind memory recall --scope ns:<имя>` (SessionStart-
+дайджест по умолчанию её НЕ несёт, D10 — [docs/guide/memory.md]).
+
+[ecosystem-mcp]: ../ecosystem-mcp/SKILL.md
+[docs/guide/memory.md]: ../../../packages/maind/docs/guide/memory.md
 
 ### 3. Дубли — что именно повторяется
 ```bash

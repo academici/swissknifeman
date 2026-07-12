@@ -6,7 +6,7 @@
   "buckets": {
     "ai": {
       "description": "AI agent building: design, tools, evaluation",
-      "count": 2,
+      "count": 3,
       "status": "active"
     },
     "architect": {
@@ -261,6 +261,18 @@
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/get-zeked/ai-agent-super-skill/main/SKILL.md",
       "fetched_at": "2026-06-25"
+    },
+    {
+      "name": "mcp-builder",
+      "bucket": "ai",
+      "path": "skills/ai/mcp-builder/SKILL.md",
+      "version": "0.1.0",
+      "description": "Guide for creating high-quality MCP (Model Context Protocol) servers that enable LLMs to interact with external services through well-designed tools. Use when building MCP servers to integrate external APIs or services, whether in Python (FastMCP) or Node/TypeScript (MCP SDK).",
+      "sha256": "0f4592dcb53cf2b5d6b7febee6b4152018b565551a1c29e3c612f57b218ab295",
+      "content_sha256": "45123dd733fb78280d491e935da87b0196f165b73ae0b2a5099db443745f5a65",
+      "source": "github",
+      "upstream": "https://raw.githubusercontent.com/anthropics/skills/main/skills/mcp-builder/SKILL.md",
+      "fetched_at": "2026-07-11"
     },
     {
       "name": "token-efficient",

@@ -1,4 +1,4 @@
 # ACTIVE
 
-**Active:** —
-**Updated:** 2026-07-11
+**Active:** 2026.07.12-CONTEXT-ECONOMY
+**Updated:** 2026-07-12

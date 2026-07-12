@@ -15,6 +15,7 @@
 flowchart LR
   subgraph ai["ai"]
     ai_agents["ai-agents<br/>⊕88 ↻613"]:::warm
+    mcp_builder["mcp-builder<br/>⊕85 ↻2560"]:::warm
     token_efficient["token-efficient<br/>⊕111 ↻1405"]:::warm
   end
   subgraph architect["architect"]
@@ -422,7 +423,7 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 214 скиллов · ⊕ always **15562** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 300351 ток · ⌥ on-demand 795837 ток (сниппеты + references).
+**Итого:** 215 скиллов · ⊕ always **15647** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 302911 ток · ⌥ on-demand 820122 ток (сниппеты + references).
 
 ## По бакетам
 
@@ -448,11 +449,11 @@ flowchart LR
 | `operator` | 6 | 296 | 9910 | 22461 |
 | `frontend-backend` | 3 | 288 | 5488 | 7851 |
 | `frontend` | 3 | 285 | 3795 | 5927 |
+| `ai` | 3 | 284 | 4578 | 51473 |
 | `frontend-nuxt` | 3 | 255 | 2564 | 24048 |
 | `frontend-tailwind` | 2 | 240 | 4458 | 5218 |
 | `laravel-extras` | 3 | 225 | 4257 | 7664 |
 | `laravel-auth` | 3 | 202 | 3358 | 5640 |
-| `ai` | 2 | 199 | 2018 | 27188 |
 | `security` | 1 | 184 | 675 | 30199 |
 | `frontend-vite` | 4 | 180 | 3150 | 24662 |
 | `finance` | 1 | 179 | 740 | 21503 |

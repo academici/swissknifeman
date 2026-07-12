@@ -33,6 +33,7 @@
 | [sickn33/antigravity-awesome-skills](sickn33-antigravity-awesome-skills.md) | Источник docker-expert | imported |
 | [get-zeked/perplexity-super-skills](get-zeked-perplexity-super-skills.md) | 12 super-skills, gap-analysis формат | imported |
 | [anthropics/claude-code](anthropics-claude-code.md) | Официальная спецификация SKILL.md | imported |
+| [anthropics/skills](anthropics-skills.md) | Официальная коллекция скиллов Anthropic (Apache-2.0) | imported |
 | [VoltAgent/awesome-agent-skills](voltagent-awesome-agent-skills.md) | Курируемый индекс официальных скиллов | planned |
 | [jpcaparas/superpowers-laravel](jpcaparas-superpowers-laravel.md) | Laravel workflow-скиллы (TDD, debug, plan) | planned |
 | [skills.laravel.cloud](skills-laravel-cloud.md) | Laravel-маркетплейс, 175 скиллов | planned |

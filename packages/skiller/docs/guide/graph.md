@@ -387,13 +387,13 @@ flowchart LR
 
 **В графе:** 130 скиллов, 95 рёбер requires, 88 рёбер produces_for.
 
-## Изолированные скиллы (84)
+## Изолированные скиллы (85)
 
 Скиллы без связей `requires`/`produces_for` — самодостаточны.
 
 | Бакет | Скиллы |
 |---|---|
-| ai | `ai-agents`, `token-efficient` |
+| ai | `ai-agents`, `mcp-builder`, `token-efficient` |
 | architect | `dev-engineering-super-skill` |
 | axioma | `axioma-doctrine`, `ecosystem-map` |
 | azguard | `azguard` |

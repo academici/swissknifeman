@@ -4,15 +4,16 @@
 
 Источник истины портируемых скиллов (машинный реестр — `skills.json`). Раздача в проекты: `skiller connect` (плагины-бакеты) / `vendor` (физ. перенос). CORE-набор токен-скиллов (`general`/`oss-dev`) раздаётся по умолчанию — см. `connect`/`vendor`.
 
-Всего: 214 скиллов в 47 бакетах.
+Всего: 215 скиллов в 47 бакетах.
 
 ## Скиллы по бакетам
 
-### ai — AI agent building: design, tools, evaluation (2)
+### ai — AI agent building: design, tools, evaluation (3)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
 | `ai-agents` | Navigator for the AI-agent building reference (vendored super-skill): agent patterns, MCP… | `ai`, `agents`, `mcp`, `rag`, `orchestration`, `prompt-engineering`, `subagents` |
+| `mcp-builder` | Guide for creating high-quality MCP (Model Context Protocol) servers that enable LLMs to … |  |
 | `token-efficient` | Reduces Perplexity Computer output verbosity and token waste. Eliminates sycophantic open… |  |
 
 ### architect — Architecture, API and data design, security, observability, tech stack selection (15)

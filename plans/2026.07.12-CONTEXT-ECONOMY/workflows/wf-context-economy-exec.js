@@ -135,6 +135,7 @@ const GATES = [
 ]
 
 const MAX_GREEN_ITERATIONS = 3
+const GATE_ATTEMPT = 3 // бампать при ручном resume после фикса вне item'а — иначе gate-агент отдаёт кэш
 
 const IMPL_MODEL = { model: 'sonnet', effort: 'medium' }
 const GREEN_MODEL = { model: 'sonnet', effort: 'medium' }
@@ -206,7 +207,7 @@ const reviewPrompt = s => [
 ].join('\n\n')
 
 const gatePrompt = s => [
-  `Прогони гейты СЕЙЧАС, свежий git-статус (не полагайся на прошлые прогоны), после item «${s.key}» в ${REPO}: ${GATES.join('; ')}. НИЧЕГО не чини — только факты (exit-коды).`,
+  `[попытка ${GATE_ATTEMPT}] Прогони гейты СЕЙЧАС, свежий git-статус (не полагайся на прошлые прогоны), после item «${s.key}» в ${REPO}: ${GATES.join('; ')}. НИЧЕГО не чини — только факты (exit-коды).`,
   `tests_green = ОБА гейта завершились exit 0 (даже если stdout содержит непустые WARN). issues — ТОЛЬКО блокирующие ошибки (exit≠0, ERROR); неблокирующие WARN/заметки в issues НЕ класть — упомяни их в summary. Финальный текст = данные по схеме.`,
 ].join('\n')
 

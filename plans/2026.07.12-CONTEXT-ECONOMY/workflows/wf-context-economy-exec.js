@@ -32,36 +32,11 @@ const SPEC = `${REPO}/plans/${PLAN}`
 // в git-истории этого файла, если понадобится перезапуск с нуля.
 // P5 ЗАКРЫТА ЦЕЛИКОМ вне workflow (2026-07-12, main loop): P5.3 gate-red — post-review фикс
 // commit 92706de (trend-warn несмежные недели); P5.4 — ⛔ Skipped by decision (D7,
-// Owner-подтверждение), roadmap/otel-preset.md. SLICES обрезан до P7 — не переисполнять.
+// Owner-подтверждение), roadmap/otel-preset.md; P5.1 review-фикс commit a317d84
+// (paths-exclusion тест). P7.1 ЗАКРЫТ ЦЕЛИКОМ вне workflow: review-fix-required (Major,
+// apply-permissions.sh dry-run mkdir) — post-review фикс commit 35ef80f, верифицирован чистым
+// контейнером. SLICES обрезан до P7.2 — не переисполнять P5/P7.1.
 const SLICES = [
-  {
-    key: 'P5.1',
-    brief: `Item P5.1 (${SPEC}/phases/P5.md): skiller budget --first-turn — first_turn_report (skills meta + agents + CLAUDE.md + живой прогон SessionStart-хуков fail-soft/timeout + MCP-оценка), пороги 3–7K/10K, --json/--strict, ≥5 тестов на tmpdir-фикстуре.`,
-    tests: `cd ${REPO} && bash packages/skiller/scripts/validate.sh`,
-    risk: 'medium',
-    commit: `feat(skiller): budget --first-turn — замер always-on футпринта проекта (${PLAN} P5.1)`,
-  },
-  {
-    key: 'P5.2',
-    brief: `Item P5.2 (${SPEC}/phases/P5.md): maind doctor --context — флот-агрегация subprocess'ом skiller budget --first-turn --json (без кросс-импортов, паттерн doctor --audit settings), fail-soft context·n/a, ≥3 теста (subprocess mocked).`,
-    tests: `cd ${REPO} && bash packages/maind/scripts/validate.sh`,
-    risk: 'low',
-    commit: `feat(maind): doctor --context — футпринт первого хода по флоту (${PLAN} P5.2)`,
-  },
-  {
-    key: 'P5.3',
-    brief: `Item P5.3 (${SPEC}/phases/P5.md): run-report.py — блок usage из jsonl сессии (first_turn_overhead, суммы, turns; хук-безопасно); analyst sessions --project/--weeks — недельные медианы + тренд-warn >20% w-o-w; encoded-cwd проверить на живых каталогах, НЕ угадывать (неясно → эскалация); ≥6 тестов на синтетическом jsonl.`,
-    tests: `cd ${REPO} && bash packages/analyst/scripts/validate.sh && bash packages/harness/scripts/validate.sh`,
-    risk: 'medium',
-    commit: `feat(analyst,harness): сессионная токен-аналитика — usage в run-report + analyst sessions (${PLAN} P5.3)`,
-  },
-  {
-    key: 'P7.1',
-    brief: `Item P7.1 (${SPEC}/phases/P7.md): scripts/bootstrap-machine.sh + роут swissknifeman setup --machine — тонкий идемпотентный оркестратор (install.sh → harness hooks/permissions --global → MCP → демон maind → doctor), --dry-run/--skip-projects; ГЕЙТ: двойной прогон на чистом окружении (второй = no-op), лог обоих в Completion Notes.`,
-    tests: `cd ${REPO} && bash -n scripts/bootstrap-machine.sh && bash packages/maind/scripts/validate.sh`,
-    risk: 'medium',
-    commit: `feat(root): bootstrap-machine.sh — развёртывание машины одной командой (${PLAN} P7.1)`,
-  },
   {
     key: 'P7.2',
     brief: `Item P7.2 (${SPEC}/phases/P7.md): манифест проектов (~/.swissknifeman/machine-manifest.json, .example в docs) + шаг --projects (clone отсутствующих + setup, идемпотентно) + doc-страница «Развёртывание: новая машина/команда» + roadmap/cross-machine-memory.md (D12: запрет shared-папки для state_store.db, 2 безопасных варианта).`,

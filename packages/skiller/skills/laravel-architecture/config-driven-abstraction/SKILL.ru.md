@@ -4,7 +4,7 @@
 name: config-driven-abstraction
 bucket: laravel-architecture
 version: 0.1.0
-description: "Config-driven cache-safe абстракции для мульти-панель/мульти-тенант Laravel: Registry+Builder — иммутабельный реестр key→instance, fluent builder с feature-флагами как методами, name-maps в конфиге вместо closures (config:cache-safe), per-variant — конкретный класс, а не shared-модель с runtime $table. Активировать при проектировании мульти-панель/мульти-тенант резолва, подключаемых драйверов, registry+builder. Триггеры: multi-panel, multi-tenant, registry, builder pattern, config:cache, runtime table, driver resolution, per-panel."
+description: "Config-driven cache-safe Registry+Builder для мульти-панель/мульти-тенант Laravel: иммутабельный реестр key→instance, fluent builder с feature-флагами, name-maps в конфиге вместо closures, per-variant — конкретный класс, не runtime $table. Активировать при проектировании мульти-панель/мульти-тенант резолва, подключаемых драйверов. Триггеры: registry, builder pattern, config:cache, driver resolution."
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "architecture", "config", "registry", "multi-tenant"]

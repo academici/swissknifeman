@@ -2,7 +2,7 @@
 name: query-craft
 bucket: research
 version: 0.1.0
-description: "Дисциплина ФОРМУЛИРОВКИ запроса к поисковому/доковому движку (Perplexity Web · WebSearch · context7): детализируй версию/стек (напр. «минимум Filament 4»), временные рамки, формат, лимит; выбери движок+режим (search/advanced/deep) и источники (web/academic/social). Активировать ПЕРЕД любым внешним поиском, особенно по библиотеке/фреймворку (Laravel/Filament/Vue): запрет на голое «Laravel как сделать X?». НЕ про «когда» (verify-claims) и НЕ про «что подключать» (mcp-advisor) — только КАК спросить."
+description: "Дисциплина ФОРМУЛИРОВКИ запроса к поисковому/доковому движку (Perplexity Web · WebSearch · context7): версия/стек, временные рамки, формат, лимит; выбери движок+режим и источники. Активировать ПЕРЕД любым внешним поиском, особенно по библиотеке/фреймворку: запрет на голое «Laravel как сделать X?». НЕ про «когда» (verify-claims) и НЕ про «что подключать» (mcp-advisor) — только КАК спросить."
 risk: read
 persona: oss-dev
 tags: [research, perplexity, search, query, rag, context7, claude-code]

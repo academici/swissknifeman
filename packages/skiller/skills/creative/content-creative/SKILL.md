@@ -2,7 +2,7 @@
 name: content-creative-super-skill
 bucket: creative
 version: 1.0.0
-description: Comprehensive creative studio skill merging Perplexity Computer's video production, speech synthesis, image generation, and website building with Claude Code's canvas design, algorithmic art, brand guidelines, frontend design, artifacts builder, content frameworks, content calendar, and prompt engineering. Use when creating visual content, designing interfaces, building brands, generating videos/images/audio, writing content, planning content calendars, or doing any creative production work.
+description: Creative studio: video production, speech synthesis, image generation, website building, canvas design, algorithmic art, brand guidelines, frontend design, artifacts, content frameworks/calendars. Use when creating visual content, designing interfaces, building brands, generating video/image/audio, writing content, or planning content calendars.
 license: MIT
 metadata:
   author: get-zeked

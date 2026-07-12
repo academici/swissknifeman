@@ -29,7 +29,7 @@
 | `domain-modeling` | Active domain-model discipline: challenge terms, stress-test with scenarios, RECORD the g… | `domain`, `ddd`, `glossary`, `adr`, `ubiquitous-language` |
 | `ecosystem-reuse-gate` | Gate against reinventing functionality when designing a new project/feature: before build… | `ecosystem`, `reuse`, `vendor-vs-build`, `gate`, `architecture` |
 | `eval-design` | Evaluate LLM/AI output quality — eval-set, metrics, regression harness, automated + human… | `agentic`, `validation`, `llm`, `metrics`, `testing` |
-| `figma-mcp-core` | Discipline for the official Figma Dev Mode MCP: real tools (get_metadata, get_variable_de… | `figma`, `mcp`, `design-system`, `design-tokens`, `dev-mode`, `code-connect`, `ui` |
+| `figma-mcp-core` | Figma Dev Mode MCP discipline: real tools (get_metadata, get_variable_defs, get_code, get… | `figma`, `mcp`, `design-system`, `design-tokens`, `dev-mode`, `code-connect`, `ui` |
 | `legal-compliance` | GDPR, CCPA, AI Act, DMCA, COPPA, DSA — pre-launch regulatory checklist | `compliance`, `gdpr`, `privacy`, `ai-act`, `regulatory` |
 | `observability-design` | Logging, metrics, tracing, alerting. SLO/SLI, error budget, runbooks for prod-readiness | `observability`, `logging`, `metrics`, `tracing`, `alerting`, `slo`, `runbook` |
 | `package-contribution-protocol` | Gate against bloating a depended-on package from a consumer project: Rule of Three, propo… | `governance`, `package`, `monorepo`, `contribution`, `semver`, `anti-bloat`, `boundary` |
@@ -62,7 +62,7 @@
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
-| `build-loop` | Parametric-modeling build loop via MCP Blender: analyze task → check flexibility/cross-co… | `blender`, `cad`, `parametric`, `workflow`, `bpy`, `mcp`, `3d`, `fdm`, `sla` |
+| `build-loop` | Parametric-modeling build loop via MCP Blender: analyze task → check flexibility/recomput… | `blender`, `cad`, `parametric`, `workflow`, `bpy`, `mcp`, `3d`, `fdm`, `sla` |
 | `config-conventions` | Parametric CAD config conventions: one entity = one dataclass; variable naming (r_outer/z… | `blender`, `cad`, `parametric`, `dataclass`, `config`, `cross-config`, `conventions`, `bpy`, `fdm`, `sla` |
 | `model-rules` | Template models/{name}/ai/rules.md — model-specific rules read by the agent before any ta… | `blender`, `template`, `rules`, `3d`, `cad`, `conventions` |
 | `parametric-config` | Data-config-driven parametric 3D modeling in Blender (bpy): dataclass part params (dims/t… | `blender`, `bpy`, `parametric`, `dataclass`, `cad`, `fdm`, `sla`, `geometry`, `units`, `python`, `3d` |
@@ -79,7 +79,7 @@
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
-| `content-creative-super-skill` | Comprehensive creative studio skill merging Perplexity Computer's video production, speec… |  |
+| `content-creative-super-skill` | Creative studio: video production, speech synthesis, image generation, website building, … |  |
 
 ### devops — Docker environments, CI/CD pipelines, GitOps (11)
 
@@ -101,7 +101,7 @@
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
-| `finance-super-skill` | Comprehensive finance and accounting skill merging Perplexity Computer's 7 finance skills… |  |
+| `finance-super-skill` | Finance and accounting: financial statements, journal entries, reconciliation, close mana… |  |
 
 ### founder — Idea discovery, competitive analysis, risk assessment, pitch decks (10)
 
@@ -203,7 +203,7 @@
 | `vue-best-practices` | MUST be used for Vue.js tasks. Strongly recommends Composition API with `<script setup>` … |  |
 | `vue-composition-api` | Project Composition API conventions: ref-first and composables pattern. NOT an API refere… | `vue`, `frontend`, `composable`, `patterns` |
 | `vue-dynamic-icons` | Vue: one icon component rendering SVG by string name from a set (lucide-vue-next etc.) vi… | `vue`, `icons`, `dynamic-component`, `lucide`, `typescript`, `frontend` |
-| `vue-router-best-practices` | Vue Router 4 routing and navigation: typed/named routes, lazy-loaded views, route meta, R… | `vue`, `vue-router`, `frontend`, `routing`, `navigation-guards`, `lazy-loading`, `typescript` |
+| `vue-router-best-practices` | Vue Router 4 routing/navigation: typed/named routes, lazy-loaded views, route meta, RETUR… | `vue`, `vue-router`, `frontend`, `routing`, `navigation-guards`, `lazy-loading`, `typescript` |
 | `vue-testing-best-practices` | Testing practices for Vue 3 components with Vitest + Vue Test Utils 2: mount vs shallowMo… | `vue`, `testing`, `vitest`, `vue-test-utils`, `pinia`, `composables`, `frontend` |
 | `vueuse-functions` | Apply VueUse composables where appropriate to build concise, maintainable Vue.js / Nuxt f… |  |
 
@@ -235,7 +235,7 @@
 | `skills-ssot` | Single source of truth for skills across multiple AI agents: .ai/skills + symlinks, gitig… | `ai-context`, `skills`, `ssot`, `workflow`, `conventions`, `ai` |
 | `spec-interview` | Pre-code interview: agent asks one question at a time, reads the codebase itself where it… | `workflow`, `requirements`, `discovery` |
 | `task-brief-template` | Brief template for complex agent tasks: goal, scope, invariants, explicit assumptions, ou… | `workflow`, `template`, `requirements`, `context` |
-| `verify-claims` | Before a decision/verdict on an EXTERNAL fact (library version/API, 'still current', best… | `verification`, `rag`, `research`, `planning`, `context`, `claude-code` |
+| `verify-claims` | Before a verdict on an EXTERNAL fact (library version/API, 'still current', best practice… | `verification`, `rag`, `research`, `planning`, `context`, `claude-code` |
 | `workflow-craft` | Activate on \"write a workflow\"/multi-agent orchestration: match 4 canonical templates f… | `workflow`, `orchestration`, `multi-agent`, `templates`, `authoring` |
 | `writing-style` | Tone & language of code artifacts: Russian by default for comments, commit bodies, test d… | `writing`, `language`, `russian`, `comments`, `commits`, `tests`, `docs`, `style` |
 
@@ -243,7 +243,7 @@
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
-| `config-driven-abstraction` | Config-driven, cache-safe Registry+Builder for multi-panel/multi-tenant Laravel: immutabl… | `php`, `laravel`, `architecture`, `config`, `registry`, `multi-tenant` |
+| `config-driven-abstraction` | Config-driven cache-safe Registry+Builder for multi-panel/multi-tenant Laravel: immutable… | `php`, `laravel`, `architecture`, `config`, `registry`, `multi-tenant` |
 | `eloquent-accessors` | Activate when writing/refactoring Eloquent accessors and mutators: when you see legacy ge… | `php`, `laravel`, `eloquent`, `attributes`, `accessors`, `mutators`, `patterns` |
 | `enum-attributes` | Use for enum metadata: replace label()/color()/description() match-ladders with PHP attri… | `php`, `enum`, `attributes`, `reflection`, `laravel`, `patterns`, `typescript` |
 | `enum-state-machine` | Activate when a domain status (Order/Document/Subscription) needs transition rules: edge … | `php`, `enum`, `state-machine`, `workflow`, `laravel`, `transitions`, `domain`, `actions` |
@@ -271,7 +271,7 @@
 |:--|:--|:--|
 | `medialibrary` | spatie/laravel-medialibrary: attach files to Eloquent models, collections, conversions, g… | `php`, `laravel`, `media`, `spatie`, `uploads`, `images` |
 | `pennant-development` | Laravel Pennant feature flags: define/active/for-scope, the @feature directive, activatio… | `php`, `laravel`, `pennant`, `feature-flags` |
-| `spatie-settings` | spatie/laravel-settings: typed settings classes (extends Settings, public properties, gro… | `php`, `laravel`, `spatie`, `settings`, `filament`, `configuration` |
+| `spatie-settings` | spatie/laravel-settings: typed settings classes (extends Settings, group()), migrations a… | `php`, `laravel`, `spatie`, `settings`, `filament`, `configuration` |
 
 ### laravel-filament — Filament admin panels: resources, schemas, tables, widgets, actions, tenancy (1)
 
@@ -298,13 +298,13 @@
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
-| `legal-super-skill` | Comprehensive legal operations skill merging Perplexity Computer's 6 legal skills with Cl… |  |
+| `legal-super-skill` | Legal operations: contract review, NDA triage, compliance (GDPR/CCPA), risk assessment, m… |  |
 
 ### marketing — Marketing: strategy, campaigns, content, growth (1)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
-| `marketing-super-skill` | Comprehensive end-to-end marketing skill merging Perplexity Computer's 6 built-in marketi… |  |
+| `marketing-super-skill` | Marketing: campaign planning, brand voice, competitive analysis, SEO, content creation, p… |  |
 
 ### mobile — Mobile development: Flutter — design-to-code, theming, layout mapping from Figma (1)
 
@@ -343,7 +343,7 @@
 | Скилл | Описание | Теги |
 |:--|:--|:--|
 | `code-style-spatie` | Laravel/PHP code style per Spatie guidelines: Laravel conventions over PSR-12, typing ins… | `php`, `laravel`, `code-style`, `spatie` |
-| `cursor-pagination-design` | Stable keyset (seek) pagination for infinite scroll / feeds: pick a sortable non-nullable… | `php`, `laravel`, `pagination`, `cursor`, `database` |
+| `cursor-pagination-design` | Stable keyset (seek) pagination for infinite scroll/feeds: sortable non-nullable key, com… | `php`, `laravel`, `pagination`, `cursor`, `database` |
 | `database` | Database migrations, models, and table naming. Activate when writing migrations, creating… | `php`, `laravel`, `database`, `migrations` |
 | `dependency-injection` | Layer interaction via constructor injection: final readonly + promotion, injection matrix… | `php`, `laravel`, `di`, `architecture` |
 | `laravel` | Laravel architecture patterns: actions, repositories, resources | `php`, `laravel`, `architecture`, `patterns` |
@@ -358,7 +358,7 @@
 | `production-readiness-checklist` | Verify production-readiness invariants happy-path tests miss: transaction atomicity, race… | `php`, `laravel`, `review`, `production`, `reliability`, `quality` |
 | `repositories` | Laravel repositories: read/store split, model scopes, delta-DTO, facade, VisibilityService | `php`, `laravel`, `repository`, `architecture` |
 | `static-analysis` | PHP/Laravel static analysis & linting: Laravel Pint, PHPStan, Rector locally + CI, refere… | `php`, `laravel`, `quality` |
-| `transactional-outbox-relay` | At-least-once delivery of async events via transactional outbox: write+outbox in one tran… | `php`, `laravel`, `queue`, `outbox`, `reliability`, `async` |
+| `transactional-outbox-relay` | At-least-once async event delivery via transactional outbox: write+outbox in one transact… | `php`, `laravel`, `queue`, `outbox`, `reliability`, `async` |
 
 ### php-packages — Laravel package development: scaffold, service provider, testing, compatibility, docs, releases (9)
 
@@ -417,7 +417,7 @@
 | Скилл | Описание | Теги |
 |:--|:--|:--|
 | `query-craft` | How to FORMULATE a search/doc-engine query (Perplexity Web · WebSearch · context7): versi… | `research`, `perplexity`, `search`, `query`, `rag`, `context7`, `claude-code` |
-| `research-knowledge-super-skill` | Comprehensive research and knowledge management skill merging Perplexity Computer's resea… |  |
+| `research-knowledge-super-skill` | Research and knowledge management: deep research, knowledge graphs, data exploration, sta… |  |
 
 ### roles — Personas: tech lead, startup CTO, solo founder, open-source maintainer (4)
 
@@ -432,13 +432,13 @@
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
-| `sales-super-skill` | Comprehensive end-to-end sales skill merging Perplexity Computer's 6 built-in sales skill… |  |
+| `sales-super-skill` | End-to-end sales: account research, call prep, competitive intelligence, outreach draftin… |  |
 
 ### security — AI agent security: prompt injection defense, hardening (1)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
-| `agent-security-super-skill` | Comprehensive AI agent security skill covering prompt injection defense, skill/plugin val… |  |
+| `agent-security-super-skill` | AI agent security: prompt injection defense, skill/plugin validation, memory poisoning pr… |  |
 
 ### system — Local environment topology: the three hub nodes (Brain vault, swissknifeman, projects base) and how agents navigate between projects and their docs (7)
 

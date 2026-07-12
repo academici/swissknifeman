@@ -2,7 +2,7 @@
 name: laravel-echo-client
 bucket: frontend-backend
 version: 0.1.0
-description: "Frontend realtime client Laravel Echo (Reverb/Pusher) in Vue 3: configure Echo from runtime-config/env, subscribe to private/presence channels, listen on broadcastAs events, unsubscribe in onUnmounted, inject X-Socket-ID into axios. Activate when: wiring websockets on frontend, writing useEcho/useChannel composable, listening to .broadcastAs event, seeing window.echo / Echo / laravel-echo / reactive realtime in Vue."
+description: "Frontend realtime client Laravel Echo (Reverb/Pusher) in Vue 3: configure Echo from runtime-config/env, subscribe to private/presence channels, listen on broadcastAs events, unsubscribe in onUnmounted, inject X-Socket-ID into axios. Activate wiring websockets on frontend, useEcho/useChannel composable, .broadcastAs event, window.echo/laravel-echo in Vue."
 risk: write
 persona: oss-dev
 tags: [laravel-echo, reverb, pusher, websockets, realtime, vue, broadcasting, frontend]
@@ -85,4 +85,4 @@ Build channel name from neutral domain model: `order.${orderId}`, `notifications
 - snippets/useEcho.ts, snippets/echo-config.ts, snippets/axios-socket-id.ts
 - Related skills: `laravel-data-layer/laravel-broadcasting` (backend: events, channels, ShouldBroadcast), `frontend-backend/inertia-vue`, `frontend-vue/vue-composition-api`, `frontend-vue/pinia-stores` (realtime "who is online"/notifications state in store, store access from ws-adapter outside component)
 
-<!-- ru-source-sha256: 4a5947895cb34935f0a62ee86595651ab8691517835ac6d0a76abf213f963bec -->
+<!-- ru-source-sha256: 389f4932933c877ebe39c7552c899712e5676e66c13d89a52c9c563072618991 -->

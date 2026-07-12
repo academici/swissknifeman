@@ -2,7 +2,7 @@
 name: figma-mcp-core
 bucket: architect
 version: 0.1.0
-description: "Discipline for the official Figma Dev Mode MCP: real tools (get_metadata, get_variable_defs, get_code, get_code_connect_map, get_screenshot, search_design_system), no extracting values from screenshots, selection-driven algorithm, design-token extraction to W3C tokens.json, component reuse via Code Connect, design-system audit, antipatterns. Activate for any UI-from-Figma task via a connected MCP server, before mapping to a concrete framework."
+description: "Figma Dev Mode MCP discipline: real tools (get_metadata, get_variable_defs, get_code, get_code_connect_map, get_screenshot, search_design_system), no reading values off screenshots, selection-driven algorithm, W3C tokens.json extraction, Code Connect reuse. Activate for any UI-from-Figma task via connected MCP, before mapping to a framework."
 risk: read
 persona: architect
 tags: [figma, mcp, design-system, design-tokens, dev-mode, code-connect, ui]
@@ -88,4 +88,4 @@ Before developing against an unfamiliar file — run the readiness checklist (`s
 - [W3C Design Tokens Format](https://design-tokens.github.io/community-group/format/)
 - Related skills: `figma-to-vue`, `figma-to-flutter`.
 
-<!-- ru-source-sha256: 81030b43e4c2156f6fd2163d5ea679e8add5c45a7bfb1b8d70b7c207b2e867a2 -->
+<!-- ru-source-sha256: c0d92e7973ca1373ac37f08ef9a909acb8cec0c909dfcb8bbcda91602203f2aa -->

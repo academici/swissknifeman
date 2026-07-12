@@ -4,7 +4,7 @@
 name: agent-security-super-skill
 bucket: security
 version: 0.1.0
-description: Comprehensive AI agent security skill covering prompt injection defense, skill/plugin validation, memory poisoning prevention, permission auditing, tool-use safety, data exfiltration prevention, and incident response. Use when installing new skills, processing untrusted documents/emails/web content, auditing agent permissions, validating memory integrity, reviewing MCP tool configurations, or hardening agent workflows against adversarial attacks. Merges OWASP LLM Top 10, NIST AI RMF, vendor guidance from Anthropic/Microsoft/Google, and community security skills into one defensive playbook.
+description: AI agent security: prompt injection defense, skill/plugin validation, memory poisoning prevention, permission auditing, tool-use safety, exfiltration prevention, incident response. Use when installing skills, processing untrusted content, auditing permissions, validating memory, reviewing MCP configs, or hardening agents.
 license: MIT
 metadata:
   author: get-zeked

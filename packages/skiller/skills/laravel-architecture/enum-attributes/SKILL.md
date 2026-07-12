@@ -2,7 +2,7 @@
 name: enum-attributes
 bucket: laravel-architecture
 version: 0.2.0
-description: "Use for enum metadata: replace label()/color()/description() match-ladders with PHP attributes #[Label]/#[Color]/#[Description] on cases + Concern traits with a reflection resolver; or export an enum as a TS type via #[TypeScript] stack (App.Enums.* union in .d.ts). Triggers: PHP enum, attributes on cases, getLabel()/getColor(), Filament HasLabel, spatie/laravel-typescript-transformer, local enum-concern via path-repository"
+description: "Use for enum metadata: replace label()/color()/description() match-ladders with PHP attributes #[Label]/#[Color]/#[Description] on cases + reflection resolver; or export enum as TS type via #[TypeScript]. Triggers: PHP enum, attributes on cases, getLabel()/getColor(), Filament HasLabel, laravel-typescript-transformer."
 risk: write
 persona: oss-dev
 tags: ["php", "enum", "attributes", "reflection", "laravel", "patterns", "typescript"]
@@ -77,4 +77,4 @@ Two independent metadata layers coexist on one enum: domain custom attributes on
 - https://github.com/spatie/laravel-typescript-transformer
 - `snippets/enum-typescript.php` — enum with #[TypeScript]+#[Label] stack, Label attribute + concern, config fragment
 - Related: `frontend-backend/backend-type-sync` (consuming App.Enums.* on front), `laravel-filament/filament`, `laravel-auth/attribute-authorization` (same reflection+attribute trick for enum action perms), `laravel-data-layer/laravel-data` (enum cases as DTO props), `php/laravel-structure` (placing Enums/Concerns/Attributes/Support in the tree)
-<!-- ru-source-sha256: 15a601eafa77f1e0858b46647393f942404b63d95fb8096a6b55e71a6fc0f018 -->
+<!-- ru-source-sha256: bdde3b53759af6658bf5ae54fa71f97c80bfcd40aedca6fdd0c2aa0520bb913c -->

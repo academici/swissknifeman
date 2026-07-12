@@ -2,7 +2,7 @@
 name: figma-mcp-core
 bucket: architect
 version: 0.1.0
-description: "Дисциплина работы с официальным Figma Dev Mode MCP: реальные инструменты (get_metadata, get_variable_defs, get_code, get_code_connect_map, get_screenshot, search_design_system), запрет извлечения значений из скриншотов, selection-driven алгоритм, извлечение design tokens в W3C tokens.json, переиспользование компонентов через Code Connect, аудит design-system, антипаттерны. Активировать при любой задаче по реализации UI из Figma через подключённый MCP-сервер, до маппинга в конкретный фреймворк."
+description: "Дисциплина работы с официальным Figma Dev Mode MCP: реальные инструменты (get_metadata, get_variable_defs, get_code, get_code_connect_map, get_screenshot, search_design_system), запрет извлечения значений из скриншотов, selection-driven алгоритм, извлечение design tokens в W3C tokens.json, переиспользование через Code Connect. Активировать при любой задаче UI из Figma через подключённый MCP, до маппинга в конкретный фреймворк."
 risk: read
 persona: architect
 tags: [figma, mcp, design-system, design-tokens, dev-mode, code-connect, ui]

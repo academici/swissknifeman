@@ -2,7 +2,7 @@
 name: legal-super-skill
 bucket: legal
 version: 1.0.0
-description: Comprehensive legal operations skill merging Perplexity Computer's 6 legal skills with Claude Code's writing, communications, and planning skills. Covers contract review, NDA triage, compliance (GDPR/CCPA), risk assessment, meeting briefings, canned responses, legal writing, internal communications, and structured planning. Use for contract analysis, NDA screening, compliance reviews, risk assessments, legal meeting prep, response drafting, or any legal operations work.
+description: Legal operations: contract review, NDA triage, compliance (GDPR/CCPA), risk assessment, meeting briefings, canned responses, legal writing, internal comms, structured planning. Use for contract analysis, NDA screening, compliance reviews, risk assessments, legal meeting prep, or response drafting.
 license: MIT
 metadata:
   author: get-zeked

@@ -2,7 +2,7 @@
 name: tailwind-conventions
 bucket: frontend-tailwind
 version: 0.1.0
-description: "Конвенции Tailwind CSS v4 для Laravel/Vue: CSS-first конфиг (@import tailwindcss, @theme-токены вместо tailwind.config.js), дизайн-токены, тёмная тема (.dark + dark:* + useAppearance), cn() (clsx+tailwind-merge), prettier-plugin-tailwindcss + tailwindFunctions, дисциплина отступов. Активировать при правке *.vue/*.css с Tailwind, настройке tailwind/postcss/prettier под Tailwind, работе с тёмной темой."
+description: "Конвенции Tailwind CSS v4 для Laravel/Vue: CSS-first конфиг (@import tailwindcss, @theme-токены вместо tailwind.config.js), тёмная тема (.dark + dark:* + useAppearance), cn() (clsx+tailwind-merge), prettier-plugin-tailwindcss. Активировать при правке *.vue/*.css с Tailwind, настройке tailwind/postcss/prettier, работе с тёмной темой."
 risk: write
 persona: oss-dev
 tags: [tailwind, tailwindcss-v4, css, vue, laravel, dark-mode, design-tokens, prettier]

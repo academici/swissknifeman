@@ -65,7 +65,7 @@ SessionStart-политика 1445 симв ≈ 600–900 ток каждую с
 |:--|:--|:--|:--|
 | P1 | maind: тощий старт сессии (digest-бюджет + тихий health) | 3/3 | 🟢 Done |
 | P2 | harness: диета agent-router (policy v2) | 1/1 | 🟢 Done |
-| P3 | skiller: рэтчет описаний скиллов | 0/2 | ⬜ Not started |
+| P3 | skiller: рэтчет описаний скиллов | 1/2 | 🟡 In progress |
 | P4 | agent-packs: диета описаний субагентов | 0/2 | ⬜ Not started |
 | P5 | Footprint-доктор + телеметрия | 0/4 | ⬜ Not started |
 | P6 | Rollout на флот + замер до/после | 0/4 | ⬜ Not started |
@@ -102,3 +102,4 @@ SessionStart-политика 1445 симв ≈ 600–900 ток каждую с
 | 2026-07-12 | plan-exec/sonnet | P1.2 закрыт: session-start-hook.sh тихий при OK (`--strict` rc-гейт), memory-digest-hook.sh — бамп-комментарий шапки (stale для sync); 5 новых тестов (статика + функциональные); validate.sh 402 OK |
 | 2026-07-12 | plan-exec/sonnet | P1.3 закрыт (фаза P1 3/3 🟢): ecosystem-mcp (источник) + 3 локальных скилла + docs/guide/{memory,namespaces}.md — гайдлайн «межпроектная задача» (graph → recall --scope ns:<имя> → remember --scope ns:<имя>, D10) и оговорка digest project-only; команды сверены с --help; 9 тестов; validate.sh 411 OK |
 | 2026-07-12 | plan-exec/opus | P2.1 закрыт (фаза P2 1/1 🟢): policy config.json → терс-EN 1186 симв ≈296 ток (было 1445 симв RU), version 1→2, auto_suffix EN; семантический инвариант (6 пунктов) сохранён полностью, эскалация не потребовалась; test_router_config (4 теста) + validate.sh зелёный |
+| 2026-07-12 | plan-exec/sonnet | P3.1 закрыт (фаза P3 1/2 🟡): 0/8 описаний >450 (мандаторный минимум); 24 скилла укорочены (SKILL.md+SKILL.ru.md), 3 из 8 мандаторных ≤300; check-translations --stamp + registry идемпотентен + validate.sh 366 тестов + budget --check-core --strict зелёные; новый test_desc_diet.py (скан реального реестра); остаток 64 >300 — вход в burn-down P3.2 |

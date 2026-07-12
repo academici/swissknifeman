@@ -2,7 +2,7 @@
 name: spatie-settings
 bucket: laravel-extras
 version: 0.2.0
-description: "spatie/laravel-settings: типизированные классы настроек (extends Settings, public-свойства, group()), миграции настроек add/migrate/rename, кэш, выбор рантайм-настройки vs config/, привязка к Filament SettingsPage, рантайм-инфраконфиг (websocket/Reverb) из админки во фронт через DTO. Активировать при создании/правке класса настроек, добавлении свойства, settings-миграции, экрана редактирования или вынесения инфра-настройки в рантайм-переопределение."
+description: "spatie/laravel-settings: типизированные классы настроек (extends Settings, group()), миграции настроек add/migrate/rename, кэш, выбор рантайм vs config/, привязка к Filament SettingsPage, инфраконфиг из админки во фронт через DTO. Активировать при создании/правке класса настроек/свойства/миграции, экрана редактирования или вынесения инфра-настройки в рантайм-переопределение."
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "spatie", "settings", "filament", "configuration"]

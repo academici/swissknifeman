@@ -2,7 +2,7 @@
 name: sales-super-skill
 bucket: sales
 version: 1.0.0
-description: Comprehensive end-to-end sales skill merging Perplexity Computer's 6 built-in sales skills with Claude Code's customer interview analysis, brand voice analysis, content research, RICE prioritization, and UX research. Covers the full sales cycle from prospecting to close. Use when doing account research, call prep, competitive intelligence, outreach drafting, asset creation, daily briefings, customer interview analysis, deal prioritization, or prospect research.
+description: End-to-end sales: account research, call prep, competitive intelligence, outreach drafting, asset creation, daily briefings, customer interview analysis, brand voice analysis, RICE prioritization, UX research. Use for account/prospect research, call prep, competitive intel, outreach drafting, briefings, interview analysis, or deal prioritization.
 license: MIT
 metadata:
   author: get-zeked

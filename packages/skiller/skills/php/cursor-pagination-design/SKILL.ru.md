@@ -4,7 +4,7 @@
 name: cursor-pagination-design
 bucket: php
 version: 0.1.0
-description: "Stable keyset (seek) pagination for infinite scroll / feeds: pick a sortable non-nullable key, composite index, handle ties and concurrent inserts, avoid offset drift. Activate when building infinite-scroll, cursor/seek pagination, message/feed lists, or fixing 'duplicates/skips while scrolling'. Triggers: cursor pagination, keyset, seek pagination, infinite scroll, paginate after, nullable order key, offset drift, last_message_at."
+description: "Stable keyset (seek) pagination for infinite scroll/feeds: sortable non-nullable key, composite index, handle ties/concurrent inserts, avoid offset drift. Activate building infinite-scroll, cursor/seek pagination, feed lists, or fixing 'duplicates/skips while scrolling'. Triggers: keyset, seek pagination, paginate after, offset drift."
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "pagination", "cursor", "database"]

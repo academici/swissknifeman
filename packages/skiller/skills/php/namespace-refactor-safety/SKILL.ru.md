@@ -4,7 +4,7 @@
 name: namespace-refactor-safety
 bucket: php
 version: 0.1.0
-description: "Дисциплина крупных namespace/move-рефакторингов в PHP/Laravel: три фазы — alias → обновление use-стейтментов → hard-rename; ловушка префиксных коллизий find-replace (якорься на FQN, не на голый токен); контракт на границе — phpstan ловит дрейф имплементера; arch-тесты на паритет слоёв; breaking move = мажор. Активировать: namespace refactor, move class, rename namespace, domain restructure, mass rename, breaking change, arch test."
+description: "Дисциплина крупных namespace/move-рефакторингов в PHP/Laravel: три фазы — alias → обновление use-стейтментов → hard-rename; find-replace на FQN (не на голый токен) против префиксных коллизий; контракт на границе для phpstan; arch-тесты на паритет слоёв. Активировать: namespace refactor, move class, rename namespace, domain restructure, mass rename."
 risk: write
 persona: oss-dev
 tags: ["php", "refactor", "namespace", "safety"]

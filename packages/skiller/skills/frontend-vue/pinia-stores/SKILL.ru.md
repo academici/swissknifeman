@@ -2,7 +2,7 @@
 name: pinia-stores
 bucket: frontend-vue
 version: 0.1.0
-description: "Pinia (Vue 3) — глобальное состояние: setup-сторы (defineStore с функцией), ref=state/computed=getters/function=actions, именование use*Store, композиция сторов, доступ к стору вне компонента, hydration из props, persist. Активировать при создании/правке файла под resources/js/stores/**, defineStore, useXxxStore, при вопросах «как хранить глобальное состояние / шарить данные между компонентами / куда вынести состояние из компонента»."
+description: "Pinia (Vue 3) — глобальное состояние: setup-сторы (defineStore с функцией), ref=state/computed=getters/function=actions, именование use*Store, композиция сторов, доступ вне компонента, hydration, persist. Активировать при создании/правке файла под resources/js/stores/**, defineStore, useXxxStore, при вопросах «как хранить глобальное состояние / шарить данные между компонентами»."
 risk: write
 persona: oss-dev
 tags: [pinia, vue, frontend, state-management, store, architecture]

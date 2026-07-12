@@ -2,7 +2,7 @@
 name: health-checks
 bucket: laravel-testing
 version: 0.1.0
-description: "spatie/laravel-health in Laravel: custom Check classes (disk, queue, scheduler heartbeat, TCP port, cache, DB) via Health::checks() in config/health; /health endpoint (live/ready, JSON/Filament); scheduled runs, failure notifications. Activate on: health check, healthcheck, liveness/readiness, /health, spatie health, availability monitoring, disk/queue/cache/heartbeat checks, editing app/Health/** or config/health.php."
+description: "spatie/laravel-health in Laravel: custom Check classes (disk, queue, scheduler heartbeat, TCP port, cache, DB) via Health::checks(); /health endpoint (live/ready, JSON/Filament); scheduled runs, failure notifications. Activate on: health check, liveness/readiness, /health, spatie health, disk/queue/cache/heartbeat checks."
 risk: write
 persona: oss-dev
 tags: [laravel, health, monitoring, spatie, liveness, readiness, observability]
@@ -98,4 +98,4 @@ Built-in package checks (`UsedDiskSpaceCheck`, `DatabaseCheck`, `DebugModeCheck`
 - snippets/config-health.php
 - Related skills: `architect/observability-design` (logging/metrics/tracing, SLO/SLI — health as part of prod readiness), `operator/runbook` and `operator/incident-response` (what to do on check failure), `devops/docker-services` (healthcheck `/up` and `depends_on: service_healthy`), `laravel-extras/spatie-settings` (another spatie config layer)
 
-<!-- ru-source-sha256: 86f7e67852c2a8c797fe6f9cb960e3aa381106571380606bb28944aac9435fa6 -->
+<!-- ru-source-sha256: af7399f06b9c268a2b33646d0ff90817ebcfeba57bf6428510a2cbbc6261d927 -->

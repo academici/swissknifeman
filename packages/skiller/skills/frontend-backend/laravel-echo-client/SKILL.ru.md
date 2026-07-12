@@ -2,7 +2,7 @@
 name: laravel-echo-client
 bucket: frontend-backend
 version: 0.1.0
-description: "Фронтовый realtime-клиент Laravel Echo (Reverb/Pusher) во Vue 3: настройка Echo из runtime-конфига/env, подписка на private/presence-каналы, listen на broadcastAs-события, отписка в onUnmounted, проброс X-Socket-ID в axios. Активировать когда: подключаешь websockets на фронте, делаешь useEcho/useChannel-composable, слушаешь .broadcastAs-событие, видишь window.echo / Echo / laravel-echo / реактивный realtime в Vue."
+description: "Фронтовый realtime-клиент Laravel Echo (Reverb/Pusher) во Vue 3: настройка Echo из runtime-конфига/env, подписка на private/presence-каналы, listen на broadcastAs-события, отписка в onUnmounted, проброс X-Socket-ID в axios. Активировать при подключении websockets на фронте, useEcho/useChannel-composable, .broadcastAs-событии, window.echo/laravel-echo во Vue."
 risk: write
 persona: oss-dev
 tags: [laravel-echo, reverb, pusher, websockets, realtime, vue, broadcasting, frontend]

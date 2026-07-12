@@ -2,7 +2,7 @@
 name: research-knowledge-super-skill
 bucket: research
 version: 0.1.0
-description: Comprehensive research and knowledge management skill merging Perplexity Computer's research, data exploration, statistical analysis, and visualization skills with Claude Code's tapestry knowledge graphs, article extraction, content research, brainstorming, RAG system building, and prompt engineering. Covers deep research workflows, knowledge graph construction, academic research, data analysis, statistical methods, content synthesis, and AI-powered information retrieval. Use for research projects, literature reviews, data analysis, knowledge management, competitive research, or any investigation requiring deep synthesis.
+description: Research and knowledge management: deep research, knowledge graphs, data exploration, statistics, visualization, article extraction, RAG, prompt engineering. Use for research projects, literature reviews, data analysis, knowledge management, competitive research, or deep-synthesis investigations.
 license: MIT
 metadata:
   author: get-zeked

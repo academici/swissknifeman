@@ -2,7 +2,7 @@
 name: enum-state-machine
 bucket: laravel-architecture
 version: 0.1.0
-description: "Активируй, когда статус домена (Order/Document/Subscription) обрастает правилами переходов: граф рёбер как метод enum transitionDefinitions(), рантайм-реестр (canTransition/allowedFrom) поверх него и исполнение перехода в Action под DB::transaction() с доменным событием. Триггеры: PHP enum статусов, разрешённые переходы, StateMachine/workflow, параллельный граф переходов пора свести в один источник, canTransitionTo, allowedTransitions, нелегальный переход статуса"
+description: "Активируй, когда статус домена (Order/Document/Subscription) обрастает правилами переходов: граф рёбер как enum transitionDefinitions(), рантайм-реестр (canTransition/allowedFrom), исполнение перехода в Action под DB::transaction(). Триггеры: PHP enum статусов, разрешённые переходы, StateMachine, canTransitionTo, нелегальный переход статуса."
 risk: write
 persona: oss-dev
 tags: ["php", "enum", "state-machine", "workflow", "laravel", "transitions", "domain", "actions"]

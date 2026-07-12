@@ -2,7 +2,7 @@
 name: filepond-upload
 bucket: frontend
 version: 0.1.0
-description: "File upload via FilePond in Vue + Laravel: register vue-filepond + plugins (validate-type/size, image-preview, file-poster), server-side via rahulhaque/laravel-filepond (process/revert on /filepond), bind uploaded file serverId to form, previews and posters. Activate when adding/editing file upload, drag-and-drop upload, FilePond field, image preview in form, on words filepond/vue-filepond/laravel-filepond/file upload/process/revert/serverId."
+description: "File upload via FilePond in Vue + Laravel: register vue-filepond + plugins (validate-type/size, image-preview, file-poster), server via rahulhaque/laravel-filepond (process/revert on /filepond), bind serverId to form, previews/posters. Activate on file upload, drag-and-drop, FilePond field, image preview, filepond/vue-filepond/laravel-filepond/process/revert/serverId."
 risk: write
 persona: oss-dev
 tags: [filepond, vue, laravel, file-upload, frontend, forms, image-preview, inertia, uploads]
@@ -104,4 +104,4 @@ Stack: `filepond` (core) + `vue-filepond` (Vue wrapper) + `filepond-plugin-*` + 
 - https://github.com/rahulhaque/laravel-filepond — server-side (process/revert, `Filepond::field()`)
 - Related skills: `frontend-backend/inertia-vue` (forms/pages), `frontend-vue/vue-composition-api`, `frontend-wayfinder/wayfinder`
 
-<!-- ru-source-sha256: 2340c044aa11f3661ec5d7a06799d2530c32461427987c3655ae0057ed41c4e3 -->
+<!-- ru-source-sha256: 7606abcb0b846e3e9373c9cd65d9c0465cedb89200e96ee2f39de43a83914af8 -->

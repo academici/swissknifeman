@@ -4,7 +4,7 @@
 name: vue-router-best-practices
 bucket: frontend-vue
 version: 0.2.0
-description: "Vue Router 4 — маршрутизация и навигация: typed/именованные routes, lazy-loading view-компонентов, route meta, навигационные гварды на ВОЗВРАТ-API (return route/false/path вместо deprecated next()), per-route vs global гварды, beforeEnter, scrollBehavior, обработка NavigationFailure/onError, useRoute/useRouter/useLink. Активировать при создании/правке router/index.ts, маршрутов, гвардов, при вопросах «как защитить роут / редирект в гварде / почему next() висит / lazy-загрузка страницы / восстановить скролл»."
+description: "Vue Router 4 — маршрутизация/навигация: typed/именованные routes, lazy-loading view, route meta, гварды на ВОЗВРАТ-API (return route/false/path вместо deprecated next()), per-route/global гварды, beforeEnter, scrollBehavior, NavigationFailure/onError, useRoute/useRouter/useLink. Активировать при правке router/index.ts, маршрутов/гвардов, защите/редиректе роута, зависшем next(), lazy-загрузке, восстановлении скролла."
 risk: write
 persona: oss-dev
 tags: [vue, vue-router, frontend, routing, navigation-guards, lazy-loading, typescript]

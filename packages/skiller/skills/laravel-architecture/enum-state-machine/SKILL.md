@@ -2,7 +2,7 @@
 name: enum-state-machine
 bucket: laravel-architecture
 version: 0.1.0
-description: "Activate when a domain status (Order/Document/Subscription) needs transition rules: edge graph via enum transitionDefinitions(), runtime registry (canTransition/allowedFrom), Action-executed transition under DB::transaction() + domain event. Triggers: PHP status enum, allowed transitions, StateMachine/workflow, parallel transition graph to unify into one source, canTransitionTo, allowedTransitions, illegal status transition"
+description: "Activate when a domain status (Order/Document/Subscription) needs transition rules: edge graph via enum transitionDefinitions(), runtime registry (canTransition/allowedFrom), Action-executed transition under DB::transaction(). Triggers: PHP status enum, allowed transitions, StateMachine, canTransitionTo, illegal status transition."
 risk: write
 persona: oss-dev
 tags: ["php", "enum", "state-machine", "workflow", "laravel", "transitions", "domain", "actions"]
@@ -75,4 +75,4 @@ Single source of truth: edge graph as a static enum method `transitionDefinition
 - `php/laravel`, `php/repositories` — Action/Repository boundaries the transition lives in.
 - `general/cross-layer-change-checklist` — layer sync when adding a transition.
 
-<!-- ru-source-sha256: c61ece16b206ead26370c6d3dcacd06488ad7c51d48940d32262be97aefd66b8 -->
+<!-- ru-source-sha256: 768b3953372f49fb2dc627e9d22e0268a7672979175259ffb93c1e15f16054c8 -->

@@ -2,7 +2,7 @@
 name: spatie-settings
 bucket: laravel-extras
 version: 0.2.0
-description: "spatie/laravel-settings: typed settings classes (extends Settings, public properties, group()), settings migrations add/migrate/rename, cache, runtime-settings vs config/ choice, Filament SettingsPage binding, runtime infra-config (websocket/Reverb) from admin to frontend via DTO. Activate when creating/editing a settings class, adding a property, a settings migration, an edit screen, or moving an infra setting to a runtime override."
+description: "spatie/laravel-settings: typed settings classes (extends Settings, group()), migrations add/migrate/rename, cache, runtime vs config/ choice, Filament SettingsPage binding, infra-config (websocket/Reverb) admin→frontend via DTO. Activate creating/editing a settings class/property/migration, an edit screen, or moving infra setting to runtime override."
 risk: write
 persona: oss-dev
 tags: ["php", "laravel", "spatie", "settings", "filament", "configuration"]
@@ -142,4 +142,4 @@ Justified when: admin must change value without deploy and frontend needs it at 
 - snippets/filament-settings-page.php — Filament form binding
 - Related skills: `laravel-filament/filament` (SettingsPage and plugin), `laravel-data-layer/laravel-data` (Data as settings property type and public frontend DTO), `laravel-architecture/enum-attributes` (enum casts for settings), `php/database` (settings migrations alongside normal ones), `frontend-backend/laravel-echo-client` (consuming websocket settings on client), `frontend-backend/backend-type-sync` (settings DTO → TS type)
 
-<!-- ru-source-sha256: 4dd5d7740b4e409a916dc7174d94a7ff206f78152af879e42ff05c5b3da34df3 -->
+<!-- ru-source-sha256: db1051023d0475f3bb6340a46675a1908da216a2ae31efc3365b1eafcb9aa0d5 -->

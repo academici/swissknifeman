@@ -2,7 +2,7 @@
 name: pinia-stores
 bucket: frontend-vue
 version: 0.1.0
-description: "Pinia (Vue 3) global state: setup stores (defineStore with function), ref=state/computed=getters/function=actions, use*Store naming, store composition, store access outside components, hydration from props, persist. Activate on creating/editing files under resources/js/stores/**, defineStore, useXxxStore, or questions 'how to store global state / share data between components / where to move state out of a component'."
+description: "Pinia (Vue 3) global state: setup stores (defineStore with function), ref=state/computed=getters/function=actions, use*Store naming, store composition, access outside components, hydration, persist. Activate creating/editing resources/js/stores/**, defineStore, useXxxStore, or 'how to store global state / share data between components'."
 risk: write
 persona: oss-dev
 tags: [pinia, vue, frontend, state-management, store, architecture]
@@ -96,4 +96,4 @@ Easy-to-break rules:
 - https://prazdevs.github.io/pinia-plugin-persistedstate/
 - Related skills: `frontend-vue/vue-composition-api` (local component state), `frontend-backend/inertia-vue` (where `stores/` sits in layered `resources/js`), `frontend-backend/laravel-echo-client` (live store updates via realtime events)
 
-<!-- ru-source-sha256: bcc37bd335ca074eb71a38c5e19c16475021b2916df2ce8a7a8034e5c73fef49 -->
+<!-- ru-source-sha256: 962f03ef79fd5003c371afb0e4bb744d9ac15a18301d41a8c3135e1ee993d968 -->

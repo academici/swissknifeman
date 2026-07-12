@@ -2,7 +2,7 @@
 name: tailwind-conventions
 bucket: frontend-tailwind
 version: 0.1.0
-description: "Tailwind CSS v4 conventions for Laravel/Vue: CSS-first config (@import tailwindcss, @theme tokens instead of tailwind.config.js), design tokens, dark mode (.dark + dark:* + useAppearance), cn() (clsx+tailwind-merge), prettier-plugin-tailwindcss + tailwindFunctions, spacing discipline. Activate when editing *.vue/*.css with Tailwind, configuring tailwind/postcss/prettier for Tailwind, working with dark mode."
+description: "Tailwind CSS v4 conventions for Laravel/Vue: CSS-first config (@import tailwindcss, @theme tokens instead of tailwind.config.js), dark mode (.dark + dark:* + useAppearance), cn() (clsx+tailwind-merge), prettier-plugin-tailwindcss. Activate editing *.vue/*.css with Tailwind, configuring tailwind/postcss/prettier, dark mode work."
 risk: write
 persona: oss-dev
 tags: [tailwind, tailwindcss-v4, css, vue, laravel, dark-mode, design-tokens, prettier]
@@ -99,4 +99,4 @@ Activate when: editing styles in `*.vue`/`*.blade.php` with Tailwind utilities o
 - https://tailwindcss.com/docs/theme — `@theme` directive and tokens
 - Related skills: `frontend-tailwind/dark-mode` (three-mode `useAppearance` composable, FOUC-free boot, SSR — owner of `.dark` state), `frontend-backend/inertia-vue`, `frontend-vue/vue-composition-api`, `frontend-linting/js-code-style`, `frontend-linting/eslint-flat-config` (where the Prettier-plugin chain is declared), `frontend-reka/reka-ui-cva` (`cn()` and tokens in UI-kit components), `frontend-naive-ui/naive-ui-theming` (shared color source-of-truth via CSS vars)
 
-<!-- ru-source-sha256: 0bf8d46d456d50025555ce96ecf80685a083ed82e0a4a73e4b7d2998824d6e5c -->
+<!-- ru-source-sha256: 6b75a4225722464c379d2e75e05c610897077107b251e30534e611e51ffb8053 -->

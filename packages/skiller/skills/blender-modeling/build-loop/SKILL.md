@@ -2,7 +2,7 @@
 name: build-loop
 bucket: blender-modeling
 version: 0.1.0
-description: "Parametric-modeling build loop via MCP Blender: analyze task → check flexibility/cross-config recompute → incremental part build → verify geometry via get_object_info BEFORE screenshot → camera on changed zone → screenshot in right mode → propose rule fixes. Includes part docstring template and error-diagnosis table. Activate on any part build/edit task in Blender. Tool/preset mechanics from skill blender/mcp-blender."
+description: "Parametric-modeling build loop via MCP Blender: analyze task → check flexibility/recompute → incremental part build → verify geometry via get_object_info BEFORE screenshot → camera on changed zone → screenshot → propose rule fixes. Part docstring template, error-diagnosis table included. Activate on any part build/edit task in Blender."
 risk: write
 persona: oss-dev
 tags: [blender, cad, parametric, workflow, bpy, mcp, 3d, fdm, sla]
@@ -137,4 +137,4 @@ If mismatches, gaps, or inaccuracies found in model rules/skills — formulate a
 - `blender-modeling/model-rules` — `models/{name}/ai/rules.md`: part stack, camera zones, thread params.
 - `blender-modeling/threading` — thread printing and radial clearances (Steps 2–7).
 
-<!-- ru-source-sha256: a347ddcbac6cc2f53fd0b80c42663c7406bb6a18f2e2f27d1b9885f45f766daa -->
+<!-- ru-source-sha256: 1598160c220dcb428d816c522517457e401516558743c141e8a11dd750b23bf9 -->

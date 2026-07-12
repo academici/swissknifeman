@@ -2,7 +2,7 @@
 name: verify-claims
 bucket: general
 version: 0.2.0
-description: "Before a decision/verdict on an EXTERNAL fact (library version/API, 'still current', best practice, market, service/MCP capabilities) — verify via RAG, not from memory. Ladder: context7 → Perplexity (native MCP if key, else perplexity-web) → WebSearch → research for deep/high-stakes. Activate on audit/plan review, big planning, library/stack/dependency choice, claiming 'this is standard/modern'. Repo-grounded/stable knowledge — skip."
+description: "Before a verdict on an EXTERNAL fact (library version/API, 'still current', best practice, market, service/MCP capability) — verify via RAG, not memory. Ladder: context7 → Perplexity → WebSearch → research for high-stakes. Activate on audit/plan review, big planning, library/stack choice, claiming 'this is standard'. Repo-grounded/stable knowledge — skip."
 risk: read
 persona: oss-dev
 tags: [verification, rag, research, planning, context, claude-code]
@@ -141,4 +141,4 @@ Reviewing someone's audit/plan, for EACH item decide: is the verdict repo-ground
 - `general/anti-drift` — iteration discipline; this skill is knowledge discipline (don't assert stale facts).
 - `general/context-economy` — each RAG engine costs context/permissions; don't keep unused ones connected.
 
-<!-- ru-source-sha256: cd5663bc87fd40a1dc2f9cdb9f520e62c66b3236514d4aedd62d2de4aec4cb37 -->
+<!-- ru-source-sha256: 167635f470c559b15686db3efe6fae9e55150b029172b6284f5fbde76a86a89d -->

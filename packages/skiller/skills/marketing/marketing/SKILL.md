@@ -2,7 +2,7 @@
 name: marketing-super-skill
 bucket: marketing
 version: 1.0.0
-description: Comprehensive end-to-end marketing skill merging Perplexity Computer's 6 built-in marketing skills with Claude Code's best community marketing skills. Covers campaign planning, brand voice, competitive analysis, SEO, content creation, performance analytics, copywriting frameworks, and marketing ops. Use when planning campaigns, analyzing competitors, creating content, building brand guidelines, tracking marketing metrics, or optimizing conversion funnels.
+description: Marketing: campaign planning, brand voice, competitive analysis, SEO, content creation, performance analytics, copywriting frameworks, marketing ops. Use when planning campaigns, analyzing competitors, creating content, building brand guidelines, tracking metrics, or optimizing conversion funnels.
 license: MIT
 metadata:
   author: get-zeked

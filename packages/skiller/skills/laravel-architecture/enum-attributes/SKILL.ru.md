@@ -2,7 +2,7 @@
 name: enum-attributes
 bucket: laravel-architecture
 version: 0.2.0
-description: "Активируй при работе с метаданными enum: когда match-простыни label()/color()/description() пора заменить на PHP-атрибуты #[Label]/#[Color]/#[Description] над кейсами + Concern-трейты с reflection-резолвером, или когда нужно экспортировать enum как TS-тип через стэк #[TypeScript] (App.Enums.* union в .d.ts). Триггеры: PHP enum, атрибуты на кейсах, getLabel()/getColor(), Filament HasLabel, spatie/laravel-typescript-transformer, локальный enum-concern через path-repository"
+description: "Активируй при работе с метаданными enum: замена match-простыней label()/color()/description() на PHP-атрибуты #[Label]/#[Color]/#[Description] над кейсами + reflection-резолвер, или экспорт enum как TS-тип через #[TypeScript]. Триггеры: PHP enum, атрибуты на кейсах, getLabel()/getColor(), Filament HasLabel, laravel-typescript-transformer."
 risk: write
 persona: oss-dev
 tags: ["php", "enum", "attributes", "reflection", "laravel", "patterns", "typescript"]

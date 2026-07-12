@@ -64,7 +64,7 @@ SessionStart-политика 1445 симв ≈ 600–900 ток каждую с
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P1 | maind: тощий старт сессии (digest-бюджет + тихий health) | 3/3 | 🟢 Done |
-| P2 | harness: диета agent-router (policy v2) | 0/1 | ⬜ Not started |
+| P2 | harness: диета agent-router (policy v2) | 1/1 | 🟢 Done |
 | P3 | skiller: рэтчет описаний скиллов | 0/2 | ⬜ Not started |
 | P4 | agent-packs: диета описаний субагентов | 0/2 | ⬜ Not started |
 | P5 | Footprint-доктор + телеметрия | 0/4 | ⬜ Not started |
@@ -101,3 +101,4 @@ SessionStart-политика 1445 симв ≈ 600–900 ток каждую с
 | 2026-07-12 | plan-exec/sonnet | P1.1 закрыт: select_digest_items (байт-бюджет + project-only shared_max=0, D10) + config/CLI-флаги + 9 тестов; validate.sh 397 OK |
 | 2026-07-12 | plan-exec/sonnet | P1.2 закрыт: session-start-hook.sh тихий при OK (`--strict` rc-гейт), memory-digest-hook.sh — бамп-комментарий шапки (stale для sync); 5 новых тестов (статика + функциональные); validate.sh 402 OK |
 | 2026-07-12 | plan-exec/sonnet | P1.3 закрыт (фаза P1 3/3 🟢): ecosystem-mcp (источник) + 3 локальных скилла + docs/guide/{memory,namespaces}.md — гайдлайн «межпроектная задача» (graph → recall --scope ns:<имя> → remember --scope ns:<имя>, D10) и оговорка digest project-only; команды сверены с --help; 9 тестов; validate.sh 411 OK |
+| 2026-07-12 | plan-exec/opus | P2.1 закрыт (фаза P2 1/1 🟢): policy config.json → терс-EN 1186 симв ≈296 ток (было 1445 симв RU), version 1→2, auto_suffix EN; семантический инвариант (6 пунктов) сохранён полностью, эскалация не потребовалась; test_router_config (4 теста) + validate.sh зелёный |

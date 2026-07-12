@@ -95,18 +95,21 @@ class FirstTurnReportCase(unittest.TestCase):
         self.assertIn("totally-unknown-server", mcp["detail"])
 
     def test_rules_with_paths_excluded_from_claude_md(self):
+        no_rules = first_turn_report(self.env, self.proj)["sources"]["claude_md"]
         rules = self.proj / ".claude" / "rules"
         rules.mkdir(parents=True)
         (rules / "scoped.md").write_text(
             "---\npaths:\n  - \"**/tests/**\"\n---\n" + "scoped rule body " * 200,
             encoding="utf-8")
-        without_scoped = first_turn_report(self.env, self.proj)["sources"]["claude_md"]
+        with_scoped = first_turn_report(self.env, self.proj)["sources"]["claude_md"]
+        # path-scoped rule (scoped.md) не даёт вклада — токены не выросли
+        self.assertEqual(with_scoped["tokens"], no_rules["tokens"])
         (rules / "always.md").write_text(
             "---\nversion: 1\n---\n" + "always-on rule body " * 200,
             encoding="utf-8")
         with_always = first_turn_report(self.env, self.proj)["sources"]["claude_md"]
-        # path-scoped rule (scoped.md) не даёт вклада — рост целиком от always.md
-        self.assertGreater(with_always["tokens"], without_scoped["tokens"])
+        # always-on rule (без paths) даёт вклад — рост целиком от always.md
+        self.assertGreater(with_always["tokens"], with_scoped["tokens"])
 
     def test_verdict_warn_above_10k_and_strict_cli_exits(self):
         # раздуваем CLAUDE.md, чтобы гарантированно перевалить warn-порог 10K

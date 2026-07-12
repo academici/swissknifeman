@@ -2,7 +2,7 @@
   "schema": 1,
   "packs": {
     "role-maintainer": {
-      "version": "0.2.1",
+      "version": "0.2.2",
       "source": "harness:configs/claude-code/agent-packs/role-maintainer",
       "answers": {
         "PACK_PREFIX": "swissknifeman"
@@ -12,7 +12,7 @@
           "src": "agents/issue-triager.md",
           "target": ".claude/agents/swissknifeman-issue-triager.md",
           "kind": "template",
-          "base_sha256": "5076fd85a7bff63b3beda83ea0ff256df3333e6eb9567c983cc74e9d5dbb4c6c",
+          "base_sha256": "ae82c5f69f8683be317eb981a21697fd112a370f7d10868e7cc417696d5af40c",
           "local_modified": false,
           "user_owned": false
         },
@@ -20,7 +20,7 @@
           "src": "agents/contribution-reviewer.md",
           "target": ".claude/agents/swissknifeman-contribution-reviewer.md",
           "kind": "template",
-          "base_sha256": "0ffa38fd4189b5cc66f4f641cbb5a1a887b007a39a24aedaba8f34e9874a9f59",
+          "base_sha256": "151729c51a6a820b83a87d1b4a2d94508b5012f7479b9789676cf2f3e009d9d5",
           "local_modified": false,
           "user_owned": false
         },
@@ -28,7 +28,7 @@
           "src": "agents/release-conductor.md",
           "target": ".claude/agents/swissknifeman-release-conductor.md",
           "kind": "template",
-          "base_sha256": "cf04deb9cd04dd40f1056e319e5cfd6d59ae848db1342aefc8ee43dcad3210ca",
+          "base_sha256": "c54347751f968762feed1ce83ad184d71cb5ececc6656cee79324c13f2a277d0",
           "local_modified": false,
           "user_owned": false
         }
@@ -36,7 +36,7 @@
       "removed_optional": []
     },
     "role-tech-lead": {
-      "version": "0.2.1",
+      "version": "0.2.2",
       "source": "harness:configs/claude-code/agent-packs/role-tech-lead",
       "answers": {
         "PACK_PREFIX": "swissknifeman"
@@ -46,7 +46,7 @@
           "src": "agents/sprint-planner.md",
           "target": ".claude/agents/swissknifeman-sprint-planner.md",
           "kind": "template",
-          "base_sha256": "e61e1032c394614debbd2f980a732294d083339db26f73a239b25ae1cd7eb4aa",
+          "base_sha256": "9166703e4ea21e401cad4e629aea9133b64e65c843f50798788629845c9e1cf9",
           "local_modified": false,
           "user_owned": false
         },
@@ -54,7 +54,7 @@
           "src": "agents/delegation-triage.md",
           "target": ".claude/agents/swissknifeman-delegation-triage.md",
           "kind": "template",
-          "base_sha256": "ace07050fff3d871465d23acfb1c78507f2372a95454531f160257476a3a5c7e",
+          "base_sha256": "40f5555e9b7dab2403ebecfa69382aad01f9fffa9c6c721e96166c9a4e261962",
           "local_modified": false,
           "user_owned": false
         },
@@ -62,7 +62,7 @@
           "src": "agents/review-gatekeeper.md",
           "target": ".claude/agents/swissknifeman-review-gatekeeper.md",
           "kind": "template",
-          "base_sha256": "662c1591828950a2ca308967e66e5d2303acac8e0ce0c5745cd6f8cb463ba9ab",
+          "base_sha256": "7feeae69c3ebf19c4b14ad8732849e7817791111bcc95900e66c89fa09287e69",
           "local_modified": false,
           "user_owned": false
         }

@@ -1,22 +1,11 @@
 ---
 name: swissknifeman-review-gatekeeper
 description: >-
-  Use this agent when у swissknifeman надо организовать/провести процесс ревью командного
-  потока: применить severity-градацию (blocker/major/nit — что блокирует merge, что nit),
-  сверить с test-strategy и моделью веток/PR-workflow, спланировать сквозные изменения через
-  слои. Дежурный ревьюер потока команды; архитектурные решения эскалирует на CTO. Координирует процесс, кода НЕ пишет.
-  <example>Context: пачка PR на ревью, неясно что блокирует.
-  user: "Три PR в очереди, что мерджим, что блокируем?"
-  assistant: "Зову swissknifeman-review-gatekeeper — разнесёт замечания по severity и скажет, что блокирует merge."
-  <commentary>Нужна severity-градация и решение по merge-гейтам — это процессная роль ревью.</commentary></example>
-  <example>Context: сквозное изменение через несколько слоёв.
-  user: "Меняем формат API — это заденет фронт, бэк и миграции"
-  assistant: "Сквозная правка — swissknifeman-review-gatekeeper спланирует порядок по слоям и PR-workflow."
-  <commentary>Кросс-слойное изменение требует чек-листа слоёв и модели веток, а не одного диффа.</commentary></example>
-  <example>Context: в ревью всплыл архитектурный выбор уровня системы.
-  user: "Тут по-хорошему надо менять модель данных всего сервиса"
-  assistant: "Это уровень CTO — swissknifeman-review-gatekeeper зафиксирует и эскалирует, не решает в ревью."
-  <commentary>Системная архитектура не решается в ревью — гейткипер эскалирует на CTO.</commentary></example>
+  Use this agent when у swissknifeman надо организовать ревью потока:
+  severity-градация (blocker/major/nit), сверка с test-strategy.
+  <example>user: "Настрой процесс ревью для команды" assistant: "Зову
+  swissknifeman-review-gatekeeper."</example> Анти-триггер: архитектурные
+  решения — эскалирует на CTO.
 tools: Read, Grep, Glob, Bash
 skills:
   - code-review
@@ -33,7 +22,7 @@ color: yellow
 ---
 <!-- swissknifeman:generated
 Generated-by: harness agent-packs
-Pack: role-tech-lead@0.2.1
+Pack: role-tech-lead@0.2.2
 Template: agents/review-gatekeeper.md
 Edit-policy: generated-core — НЕ редактируй; расширяй через extension-point
 Extension-points: —

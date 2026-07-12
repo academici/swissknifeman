@@ -1,23 +1,10 @@
 ---
 name: swissknifeman-contribution-reviewer
 description: >-
-  Use this agent when во внешнем PR к swissknifeman нужен ревью с уважением ко времени
-  контрибьютора: severity-градация находок, проверка формата коммитов, влияния на
-  публичный API/DX и зависимостей (supply-chain — лицензии, vuln, новые deps). Read-only
-  по коду, гоняет проверки и пишет ревью через gh CLI. Вызывай на каждый внешний PR
-  перед мержем.
-  <example>Context: внешний контрибьютор открыл PR с новой публичной функцией.
-  user: "Глянь PR #142 от стороннего контрибьютора"
-  assistant: "Запускаю swissknifeman-contribution-reviewer — severity-ревью, влияние на public API/DX и проверка новых зависимостей."
-  <commentary>Внешний вклад с публичным API и новыми deps — нужен свежий взгляд с supply-chain-проверкой, а не самопроверка автора.</commentary></example>
-  <example>Context: PR добавляет тяжёлую зависимость ради одной утилиты.
-  user: "Тут притащили новый пакет, посмотри"
-  assistant: "swissknifeman-contribution-reviewer проверит лицензию, размер, vuln и нужна ли зависимость вообще."
-  <commentary>Новая зависимость — supply-chain-риск, ревью обязателен.</commentary></example>
-  <example>Context: косметика в комментариях своего же кода.
-  user: "Поправил пару опечаток в комментах, глянь"
-  assistant: "Тривиальная косметика — проверяю инлайн, отдельного ревью не нужно."
-  <commentary>Анти-триггер: мелочь без влияния на API/deps не требует полного ревью.</commentary></example>
+  Use this agent when во внешнем PR к swissknifeman нужен ревью с уважением ко
+  времени контрибьютора: severity, влияние на public API/deps.
+  <example>user: "Внешний PR готов к ревью" assistant: "Зову
+  swissknifeman-contribution-reviewer."</example>
 tools: Read, Grep, Glob, Bash
 skills:
   - gh-review
@@ -30,7 +17,7 @@ color: yellow
 ---
 <!-- swissknifeman:generated
 Generated-by: harness agent-packs
-Pack: role-maintainer@0.2.1
+Pack: role-maintainer@0.2.2
 Template: agents/contribution-reviewer.md
 Edit-policy: generated-core — НЕ редактируй; расширяй через extension-point
 Extension-points: —

@@ -1,22 +1,11 @@
 ---
 name: swissknifeman-sprint-planner
 description: >-
-  Use this agent when у swissknifeman крупная инициатива/спринт, который надо РАЗ-
-  ЛОЖИТЬ на цели, риски и capacity и распределить по команде/ролям, а не делать в одном
-  контексте. Проводит kickoff, декомпозирует на подзадачи с DoD и раздаёт контекст. Только
-  планирует и координирует (кода НЕ пишет). Для одной мелкой правки НЕ нужен.
-  <example>Context: старт итерации с крупной фичей.
-  user: "Берём в спринт модуль биллинга — тарифы, счета, вебхуки. С чего начать?"
-  assistant: "Зову swissknifeman-sprint-planner — оформит цели/риски/capacity и разложит на срезы с DoD."
-  <commentary>Многодоменная инициатива в начале итерации — выигрывает от явного плана и распределения контекста.</commentary></example>
-  <example>Context: пришла большая неоформленная задача без декомпозиции.
-  user: "Надо переписать платежи, это на пару недель"
-  assistant: "Крупно и надолго — swissknifeman-sprint-planner разобьёт на задачи с критериями приёмки и зависимостями."
-  <commentary>Объём >1 сессии и >2 слоёв — порог декомпозиции пройден.</commentary></example>
-  <example>Context: однострочная правка.
-  user: "Поправь опечатку в тексте кнопки"
-  assistant: "Одна правка — делаю напрямую, планировщик тут лишний."
-  <commentary>Анти-триггер: декомпозиция мелочи — чистый налог.</commentary></example>
+  Use this agent when у swissknifeman крупная инициатива/спринт — разложить на
+  цели/риски/capacity и раздать по команде.
+  <example>user: "Спланируй спринт по новой инициативе" assistant: "Зову
+  swissknifeman-sprint-planner."</example> Анти-триггер: одна мелкая правка —
+  не нужен.
 tools: Read, Grep, Glob
 skills:
   - complex-task-orchestrator
@@ -29,7 +18,7 @@ color: blue
 ---
 <!-- swissknifeman:generated
 Generated-by: harness agent-packs
-Pack: role-tech-lead@0.2.1
+Pack: role-tech-lead@0.2.2
 Template: agents/sprint-planner.md
 Edit-policy: generated-core — НЕ редактируй; расширяй через extension-point
 Extension-points: —

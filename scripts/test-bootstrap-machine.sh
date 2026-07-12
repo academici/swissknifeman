@@ -29,22 +29,19 @@ else
   ok "неизвестный флаг --bogus-flag завершается ошибкой"
 fi
 
-# 4) --dry-run в изолированном HOME не пишет НИКАКИХ файлов на диск.
-#    Известное отклонение вне scope P7.1: `harness hooks --global --dry-run` создаёт
-#    пустой каталог ~/.claude/hooks/auto-approve (apply-permissions.sh делает
-#    `mkdir -p` ДО проверки DRY_RUN) — сам bootstrap-machine.sh ничего не пишет,
-#    дефект в packages/harness/scripts/apply-permissions.sh (не файлы P7.1, не правим
-#    попутно — issue вынесен в Completion Notes P7.1). Проверяем отсутствие ОБЫЧНЫХ
-#    файлов (директории мкдира не считаем «записью на диск»).
+# 4) --dry-run в изолированном HOME не пишет НИЧЕГО на диск (ни файлов, ни каталогов).
+#    Post-review фикс: apply-permissions.sh делал `mkdir -p .../auto-approve` ДО
+#    проверки DRY_RUN — пофикшено (mkdir перенесён внутрь `if [[ DRY_RUN -eq 0 ]]`),
+#    поэтому здесь считаем ЛЮБУЮ запись (-mindepth 1, без -type f).
 TMP_HOME="$(mktemp -d)"
 trap 'rm -rf "$TMP_HOME"' EXIT
-before_files="$(find "$TMP_HOME" -mindepth 1 -type f 2>/dev/null | sort)"
+before_all="$(find "$TMP_HOME" -mindepth 1 2>/dev/null | sort)"
 HOME="$TMP_HOME" "$SCRIPT" --dry-run --bin-dir "$TMP_HOME/.local/bin" >/tmp/dry.out 2>&1 || true
-after_files="$(find "$TMP_HOME" -mindepth 1 -type f 2>/dev/null | sort)"
-if [[ "$before_files" == "$after_files" ]]; then
+after_all="$(find "$TMP_HOME" -mindepth 1 2>/dev/null | sort)"
+if [[ "$before_all" == "$after_all" ]]; then
   ok "--dry-run не создаёт файлов в изолированном HOME"
 else
-  bad "--dry-run создал файлы в изолированном HOME (diff): $(diff <(echo "$before_files") <(echo "$after_files") || true)"
+  bad "--dry-run создал записи в изолированном HOME (diff): $(diff <(echo "$before_all") <(echo "$after_all") || true)"
 fi
 grep -q "install.sh" /tmp/dry.out && ok "--dry-run печатает план install.sh" || bad "--dry-run: план install.sh не найден в выводе"
 grep -q "MCP-пресеты" /tmp/dry.out && ok "--dry-run печатает ступень MCP-пресетов" || bad "--dry-run: ступень MCP-пресетов не найдена в выводе"
@@ -64,9 +61,15 @@ else
 fi
 
 # 7) `swissknifeman setup <project>` (без --machine) остаётся маршрутом на maind onboard —
-#    проверяем только что это НЕ маршрутизируется в bootstrap-machine.sh (без реального онбординга)
-if out="$("$SWISSKNIFEMAN" setup --help 2>&1)"; then
-  :  # maind onboard --help — не гарантирует конкретный текст, только что рут не падает при --machine отсутствии
+#    проверяем что это НЕ маршрутизируется в bootstrap-machine.sh (rc не важен: без позиционного
+#    project'а maind onboard сам завершается ошибкой usage — это его штатное поведение, не наше).
+out="$("$SWISSKNIFEMAN" setup --help 2>&1 || true)"
+if echo "$out" | grep -q "bootstrap-machine"; then
+  bad "setup --help упоминает bootstrap-machine — маршрут без --machine перепутан"
+elif echo "$out" | grep -qi "onboard"; then
+  ok "setup без --machine маршрутизирован на maind onboard, не на bootstrap-machine.sh"
+else
+  bad "setup --help: вывод не похож ни на maind onboard usage, ни на bootstrap-machine ($out)"
 fi
 
 if (( fail == 0 )); then

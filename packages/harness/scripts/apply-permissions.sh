@@ -54,8 +54,8 @@ if [[ "$GLOBAL" -eq 1 ]]; then
   TARGET="$HOME"
   SETTINGS_FILE="settings.json"
   PRESETS="${PRESETS:-global}"
-  mkdir -p "$HOME/.claude/hooks/auto-approve"
   if [[ "$DRY_RUN" -eq 0 ]]; then
+    mkdir -p "$HOME/.claude/hooks/auto-approve"
     cp "$PRESETS_DIR/hooks/log-bash-command.sh" "$HOME/.claude/hooks/"
     chmod +x "$HOME/.claude/hooks/log-bash-command.sh"
     # notify: ОС-уведомления на запрос подтверждения / утверждения плана

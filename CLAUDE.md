@@ -124,6 +124,9 @@ MCP-инструменты хаба приходят в проект per-project
 - Не вендорим Proprietary-источники (напр. `docx/pdf/pptx` из `anthropics/skills`) и не вендорим
   без `upstream.json`.
 - Не утверждаем внешние факты по памяти — верифицируем (RAG, см. «Методология решений»).
+- Не раскатываем новый always-on инжект (hook additionalContext, description скилла/агента/
+  команды, CLAUDE.md-блок, MCP-сервер) без прогона `skiller budget --first-turn` — вписался
+  в бюджет (target 3–7K, warn 10K) или нет, решает Owner; нарушение — блокер ревью.
 
 ## Документация и планы
 

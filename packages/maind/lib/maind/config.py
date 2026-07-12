@@ -15,7 +15,8 @@ from pathlib import Path
 
 from .common import (detect_project_type, die, docs_visibility_for, sanitize,
                      warn)
-from .constants import (CODE_GRAPH_DEFAULTS, GRAPH_ADAPTERS, HEARTBEAT_DEFAULT_MS,
+from .constants import (CODE_GRAPH_DEFAULTS, DIGEST_BUDGET_CHARS, DIGEST_ITEM_MAX_CHARS,
+                        DIGEST_SHARED_MAX, GRAPH_ADAPTERS, HEARTBEAT_DEFAULT_MS,
                         LEGACY_GRAPH_ADAPTERS, MAX_IDLE_DEFAULT_MS, MEMORY_HTTP_PORT,
                         MEMORY_STREAM_PORT, PERPLEXITY_WEB_DEFAULTS, SERVICE_NAME)
 
@@ -195,6 +196,11 @@ def merge_defaults(config):
     mem.setdefault("stream_port", MEMORY_STREAM_PORT)
     mem.setdefault("config_path", "config/memory/iii-config.yaml")
     mem.setdefault("data_dir", "./data")
+    dg = mem.get("digest") or {}
+    dg.setdefault("budget_chars", DIGEST_BUDGET_CHARS)
+    dg.setdefault("item_max_chars", DIGEST_ITEM_MAX_CHARS)
+    dg.setdefault("shared_max", DIGEST_SHARED_MAX)
+    mem["digest"] = dg
     config["memory"] = mem
 
     gr = config.get("graph") or {}

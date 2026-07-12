@@ -22,6 +22,15 @@ MEMORY_WORKERS = (
 GLOBAL_SCOPE = "global"
 NS_SCOPE_PREFIX = "ns:"
 
+# Digest-бюджет SessionStart (D10, P1.1): дайджест — project-only по умолчанию, ограничен
+# байтами (не только count), с per-item обрезкой. Нормы — findings/P0-rag-context-economy.md
+# (additionalContext ≤500–1500 ток/сессию; ~4 симв/ток → 4000 симв ≈ 1000–1200 ток).
+DIGEST_BUDGET_CHARS = 4000
+DIGEST_ITEM_MAX_CHARS = 500
+DIGEST_SHARED_MAX = 0          # project-only дефолт (D10); shared — явно, флагом/конфигом
+DIGEST_TRUNCATE_SUFFIX = "… (→ recall)"
+DIGEST_MIN_TAIL_CHARS = 150    # переполняющий item обрезаем только если остаток бюджета ≥ это
+
 # ── граф ────────────────────────────────────────────────────────────────────
 NODE_TYPES = {"project", "agent", "memory", "skill", "entity", "tool", "package", "doc"}
 EDGE_TYPES = {"uses", "knows", "relates_to", "belongs_to", "depends_on", "provided_by",

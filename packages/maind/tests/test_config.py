@@ -55,6 +55,18 @@ class TestDefaults(unittest.TestCase):
         merge_defaults(src)
         self.assertEqual(src, {"memory": {"http_port": 9}})
 
+    def test_digest_defaults(self):
+        # P1.1 (D10): дайджест project-only по умолчанию — shared_max=0
+        m = merge_defaults({})
+        self.assertEqual(m["memory"]["digest"]["budget_chars"], 4000)
+        self.assertEqual(m["memory"]["digest"]["item_max_chars"], 500)
+        self.assertEqual(m["memory"]["digest"]["shared_max"], 0)
+
+    def test_digest_overrides_preserved(self):
+        m = merge_defaults({"memory": {"digest": {"shared_max": 3}}})
+        self.assertEqual(m["memory"]["digest"]["shared_max"], 3)
+        self.assertEqual(m["memory"]["digest"]["budget_chars"], 4000)  # остальные — дефолт
+
 
 class TestPrecedence(unittest.TestCase):
     def test_maind_json_wins(self):

@@ -127,5 +127,88 @@ class TestCount(unittest.TestCase):
                                   ["--scope", "project:brain"])
 
 
+class TestDigestSelection(unittest.TestCase):
+    """select_digest_items — чистая функция (без I/O/Env), P1.1: байт-бюджет + shared-cap
+    project-only по умолчанию (D10). Тестируем на списках dict — форма export()."""
+
+    def _row(self, scope, text, ts):
+        return {"content": memory.mark_scope(scope, text), "timestamp": ts}
+
+    def test_item_truncated_by_word_with_suffix(self):
+        raw = [self._row("project:p", "слово " * 200, "2026-01-01T00:00:00Z")]
+        items, dropped = memory.select_digest_items(
+            raw, "project:p", {"project:p"}, limit=8, budget_chars=4000,
+            item_max_chars=50, shared_max=0)
+        self.assertEqual(len(items), 1)
+        self.assertLessEqual(len(items[0]), 50)
+        self.assertTrue(items[0].endswith("… (→ recall)"))
+        self.assertNotIn("  ", items[0])            # не режет посреди слова (нет двойного пробела)
+        self.assertEqual(dropped, 0)
+
+    def test_budget_stop(self):
+        # три РАЗНЫХ факта по 200 симв каждый (иначе дедуп схлопнет), бюджет — на два целиком
+        raw = [self._row("project:p", f"{c * 199}{i}", f"2026-01-0{i}T00:00:00Z")
+               for i, c in ((3, "a"), (2, "b"), (1, "c"))]
+        items, dropped = memory.select_digest_items(
+            raw, "project:p", {"project:p"}, limit=8, budget_chars=450,
+            item_max_chars=500, shared_max=0)
+        self.assertEqual(len(items), 2)             # третий не влезает целиком, остаток < 150 → drop
+        self.assertEqual(dropped, 1)
+
+    def test_default_shared_max_zero_keeps_only_private(self):
+        raw = [
+            self._row("project:p", "private fact", "2026-01-04T00:00:00Z"),
+            self._row("ns:a", "shared fact a", "2026-01-03T00:00:00Z"),
+            self._row("ns:b", "shared fact b", "2026-01-02T00:00:00Z"),
+            self._row("global", "shared fact global", "2026-01-01T00:00:00Z"),
+        ]
+        want = {"project:p", "ns:a", "ns:b", "global"}
+        items, dropped = memory.select_digest_items(
+            raw, "project:p", want, limit=8, budget_chars=4000,
+            item_max_chars=500, shared_max=0)
+        self.assertEqual(items, ["private fact"])
+        self.assertEqual(dropped, 3)
+
+    def test_shared_max_two_takes_two_freshest_after_private(self):
+        raw = [
+            self._row("project:p", "private fact", "2026-01-01T00:00:00Z"),
+            self._row("ns:a", "oldest shared", "2026-01-01T00:00:00Z"),
+            self._row("ns:a", "middle shared", "2026-01-02T00:00:00Z"),
+            self._row("global", "freshest shared", "2026-01-03T00:00:00Z"),
+        ]
+        want = {"project:p", "ns:a", "global"}
+        items, dropped = memory.select_digest_items(
+            raw, "project:p", want, limit=8, budget_chars=4000,
+            item_max_chars=500, shared_max=2)
+        self.assertEqual(items, ["private fact", "freshest shared", "middle shared"])
+        self.assertEqual(dropped, 1)                # oldest shared остался за cap'ом
+
+    def test_footer_dropped_positive_when_over_limit(self):
+        raw = [self._row("project:p", f"fact {i}", f"2026-01-0{i}T00:00:00Z") for i in range(1, 4)]
+        items, dropped = memory.select_digest_items(
+            raw, "project:p", {"project:p"}, limit=2, budget_chars=4000,
+            item_max_chars=500, shared_max=0)
+        self.assertEqual(len(items), 2)
+        self.assertGreater(dropped, 0)
+
+    def test_empty_pool_returns_empty(self):
+        items, dropped = memory.select_digest_items(
+            [], "project:p", {"project:p"}, limit=8, budget_chars=4000,
+            item_max_chars=500, shared_max=0)
+        self.assertEqual(items, [])
+        self.assertEqual(dropped, 0)
+
+    def test_dedup_preserved(self):
+        raw = [
+            self._row("project:p", "same fact", "2026-01-01T00:00:00Z"),
+            self._row("project:p", "same fact", "2026-01-02T00:00:00Z"),
+        ]
+        items, dropped = memory.select_digest_items(
+            raw, "project:p", {"project:p"}, limit=8, budget_chars=4000,
+            item_max_chars=500, shared_max=0)
+        self.assertEqual(items, ["same fact"])
+        self.assertEqual(dropped, 0)
+
+
 if __name__ == "__main__":
     unittest.main()

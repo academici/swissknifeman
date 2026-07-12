@@ -18,7 +18,9 @@ from urllib.parse import quote
 from .common import (die, http_get_json, http_post_json, parse_args, pid_alive,
                      ping, warn)
 from .config import load_config
-from .constants import MEMORY_HTTP_PORT, MEMORY_STREAM_PORT, MEMORY_WORKERS
+from .constants import (DIGEST_BUDGET_CHARS, DIGEST_ITEM_MAX_CHARS, DIGEST_MIN_TAIL_CHARS,
+                        DIGEST_SHARED_MAX, DIGEST_TRUNCATE_SUFFIX, MEMORY_HTTP_PORT,
+                        MEMORY_STREAM_PORT, MEMORY_WORKERS)
 
 
 # ── разрешение портов/URL (env → конфиг → дефолт) ───────────────────────────
@@ -414,20 +416,105 @@ def _cmd_forget(env, config, argv):
         print(f"memory(maind): forget {pos[0]} → deleted={deleted}")
 
 
+def _truncate_item(text, max_chars):
+    """Обрезать `text` до `max_chars` по последнему пробелу + суффикс DIGEST_TRUNCATE_SUFFIX.
+    Не режет посреди слова (кроме вырожденного случая — суффикс сам не влезает в max_chars)."""
+    if len(text) <= max_chars:
+        return text
+    room = max_chars - len(DIGEST_TRUNCATE_SUFFIX)
+    if room <= 0:
+        return text[:max_chars]
+    cut = text[:room]
+    sp = cut.rfind(" ")
+    if sp > 0:
+        cut = cut[:sp]
+    return cut + DIGEST_TRUNCATE_SUFFIX
+
+
+def select_digest_items(raw, private, want, *, limit, budget_chars, item_max_chars, shared_max):
+    """Чистая функция (без I/O/Env) — отбор фактов для SessionStart-дайджеста из сырого
+    дампа памяти `raw` (список dict export()-формы: content/narrative/title + timestamp).
+
+    `private` — приватный scope проекта (первым в выдаче); `want` — видимые scope'ы
+    (приватный + ns:*/global по recall_scopes). Алгоритм (D10, P1.1):
+    1) фильтр по scope-маркеру/want + дедуп + ecosystem-link cross-ref (как раньше) →
+       партиция private_rows/shared_rows, каждая отсортирована свежее-сверху;
+    2) кандидаты = весь private + shared[:shared_max] (дефолт shared_max=0 → shared не
+       участвует вовсе — project-only digest, D10);
+    3) каждый кандидат обрезается до item_max_chars (по слову + суффикс);
+    4) аккумулируются до budget_chars: переполняющий item обрезается до остатка бюджета,
+       если остаток ≥ DIGEST_MIN_TAIL_CHARS, иначе — дропается;
+    5) финально — count-cap `limit`;
+    6) возвращает (items, dropped) — dropped = сколько фактов из видимого пула (private+shared,
+       без учёта cap'а до этого) не попало в итог (обрезано целиком/лимитом/бюджетом).
+
+    Возвращает (items: list[str], dropped: int)."""
+    seen, priv_rows, shared_rows = set(), [], []
+    for m in raw:
+        text = m.get("content") or m.get("narrative") or m.get("title") or ""
+        sc, clean = split_scope(text)
+        clean = (clean or "").strip()
+        if sc not in want or not clean or clean in seen:
+            continue
+        # чужие seed-cross-ref'ы ("[maind:ecosystem-link] a → b") — graph-сиды, не контекст
+        if sc != private and clean.startswith("[maind:ecosystem-link]") and " → " in clean:
+            continue
+        seen.add(clean)
+        ts = m.get("timestamp") or ""
+        (priv_rows if sc == private else shared_rows).append((ts, clean))
+    priv_rows.sort(key=lambda r: r[0], reverse=True)     # свежее сверху
+    shared_rows.sort(key=lambda r: r[0], reverse=True)
+    total_pool = len(priv_rows) + len(shared_rows)
+    shared_cap = shared_rows[:shared_max] if shared_max > 0 else []
+    candidates = [c for _, c in priv_rows] + [c for _, c in shared_cap]
+
+    items, used = [], 0
+    for cand in candidates:
+        cand = _truncate_item(cand, item_max_chars)
+        if used + len(cand) <= budget_chars:
+            items.append(cand)
+            used += len(cand)
+            continue
+        remaining = budget_chars - used
+        if remaining >= DIGEST_MIN_TAIL_CHARS:
+            items.append(_truncate_item(cand, remaining))
+            used = budget_chars
+        # иначе — молча дропаем (учтётся в dropped ниже), пробуем следующего кандидата
+    items = items[:limit]
+    dropped = total_pool - len(items)
+    return items, dropped
+
+
 def _cmd_digest(env, config, argv):
     """Компактный дайджест памяти проекта для SessionStart-хука (additionalContext).
     ДЕТЕРМИНИРОВАННО (не семантика): берём ВСЕ факты scope'ов проекта через list+фильтр по
-    scope-маркеру, приоритет приватному, свежее сверху. ХУК-БЕЗОПАСНО: демон лёг / scope не
-    определён → молча пусто, без die. Так maind получает свойство авто-загрузки native-памяти."""
-    opts, _ = parse_args(argv, {"--project": "str", "--scope": "str",
-                                "--limit": "str", "--json": "bool"}, max_pos=0)
+    scope-маркеру, приоритет приватному, свежее сверху, байт-бюджет (D10, P1.1) — по
+    умолчанию project-only (shared_max=0), shared — явно флагом/конфигом. ХУК-БЕЗОПАСНО:
+    демон лёг / scope не определён → молча пусто, без die."""
+    opts, _ = parse_args(argv, {"--project": "str", "--scope": "str", "--limit": "str",
+                                "--budget-chars": "str", "--item-max": "str",
+                                "--shared-max": "str", "--json": "bool"}, max_pos=0)
     if opts["help"]:
-        print("maind memory digest [--project ID|--scope S] [--limit N]  # дайджест для SessionStart")
+        print("maind memory digest [--project ID|--scope S] [--limit N] [--budget-chars N] "
+              "[--item-max N] [--shared-max N]  # дайджест для SessionStart")
         return
+    dg = (config.get("memory") or {}).get("digest") or {}
     try:
         limit = int(opts.get("limit") or 8)
     except (TypeError, ValueError):
         limit = 8
+    try:
+        budget_chars = int(opts.get("budget_chars") or dg.get("budget_chars") or DIGEST_BUDGET_CHARS)
+    except (TypeError, ValueError):
+        budget_chars = DIGEST_BUDGET_CHARS
+    try:
+        item_max_chars = int(opts.get("item_max") or dg.get("item_max_chars") or DIGEST_ITEM_MAX_CHARS)
+    except (TypeError, ValueError):
+        item_max_chars = DIGEST_ITEM_MAX_CHARS
+    try:
+        shared_max = int(opts.get("shared_max") or dg.get("shared_max", DIGEST_SHARED_MAX))
+    except (TypeError, ValueError):
+        shared_max = DIGEST_SHARED_MAX
     _, _, url = resolve_ports(env, config)
     if not health(url):
         return                                   # демон лёг → тихо (хук-безопасно)
@@ -441,21 +528,10 @@ def _cmd_digest(env, config, argv):
         raw = export(url, "")                    # весь пул (namespace игнор) → фильтр по маркеру
     except RuntimeError:
         return
-    seen, rows = set(), []
-    for m in raw:
-        text = m.get("content") or m.get("narrative") or m.get("title") or ""
-        sc, clean = split_scope(text)
-        clean = (clean or "").strip()
-        if sc not in want or not clean or clean in seen:
-            continue
-        # чужие seed-cross-ref'ы ("[maind:ecosystem-link] a → b") — graph-сиды, не контекст
-        if sc != private and clean.startswith("[maind:ecosystem-link]") and " → " in clean:
-            continue
-        seen.add(clean)
-        rows.append((0 if sc == private else 1, m.get("timestamp") or "", clean))
-    rows.sort(key=lambda r: r[1], reverse=True)  # свежее сверху
-    rows.sort(key=lambda r: r[0])                # приватный scope первым (стабильно)
-    items = [r[2] for r in rows[:limit]]
+    items, dropped = select_digest_items(raw, private, want, limit=limit,
+                                         budget_chars=budget_chars,
+                                         item_max_chars=item_max_chars,
+                                         shared_max=shared_max)
     if not items:
         return
     if opts["json"]:
@@ -465,6 +541,11 @@ def _cmd_digest(env, config, argv):
     print(f"Память проекта {pid} (mAInd — детали: `maind memory recall \"<тема>\"`):")
     for t in items:
         print(f"- {t}")
+    if shared_max == 0:
+        # D10: project-only дефолт — межпроектное поднимается явно, не проглатывается в digest
+        print(f"  (межпроектное: maind memory recall --scope ns:<name> — digest project-only)")
+    if dropped > 0:
+        print(f"  (+{dropped} фактов — maind memory recall)")
 
 
 def _cmd_count(env, config, argv):

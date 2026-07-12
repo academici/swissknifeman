@@ -1,4 +1,6 @@
 """Тесты детерминированного рендера agent-packs (изоляция в tmpdir, без сети)."""
+import contextlib
+import io
 import json
 import os
 import tempfile
@@ -137,6 +139,25 @@ class TestAgentPacks(unittest.TestCase):
 
     def test_doctor_clean_pack(self):
         self.assertEqual(ap.do_doctor(self.env, self.pack), 0)
+
+    def test_doctor_warns_on_bak_files_but_stays_ok(self):
+        # .bak в .claude/agents/ — легальный бэкап merge-only записи (не ошибка):
+        # doctor должен warn'ить, но rc остаётся 0 (P4.2 — гигиена, не гейт).
+        self._render(overrides={"PACK_PREFIX": "acme"})
+        (self.proj / ".claude/agents/acme-reviewer.md.bak").write_text("old")
+        buf = io.StringIO()
+        with contextlib.redirect_stderr(buf):
+            rc = ap.do_doctor(self.env, self.pack, self.proj)
+        self.assertEqual(rc, 0)
+        self.assertIn("acme-reviewer.md.bak", buf.getvalue())
+
+    def test_doctor_no_warn_without_bak_files(self):
+        self._render(overrides={"PACK_PREFIX": "acme"})
+        buf = io.StringIO()
+        with contextlib.redirect_stderr(buf):
+            rc = ap.do_doctor(self.env, self.pack, self.proj)
+        self.assertEqual(rc, 0)
+        self.assertNotIn(".bak", buf.getvalue())
 
     # ── src_pack (F-1) ────────────────────────────────────────────────────────
     def test_src_pack_renders_from_other_pack_with_own_header(self):

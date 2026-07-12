@@ -754,6 +754,12 @@ def do_doctor(env, pack=None, target=None, json_out=False):
                 print("[BAD] lock: schema != 1")
         elif installed and not json_out:
             print(f"Установлено в {target.name}: {', '.join(sorted(installed))}")
+        # .bak-гигиена: локальные *.bak в .claude/agents/ — легальны (бэкап merge-only
+        # записи), но копятся мусором (прецедент: agelto — 9 файлов) — только warn, не error.
+        bak_files = sorted(f.name for f in (target / ".claude" / "agents").glob("*.bak"))
+        if bak_files and not json_out:
+            warn(f".claude/agents: {len(bak_files)} .bak-файл(ов) — "
+                 f"проверь и удали лишнее ({', '.join(bak_files)})")
     if json_out:
         print(json.dumps({"catalog": catalog, "installed": installed, "rc": rc},
                          ensure_ascii=False, indent=2))

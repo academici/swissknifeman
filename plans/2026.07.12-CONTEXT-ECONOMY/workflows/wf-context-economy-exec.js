@@ -26,64 +26,11 @@ const SPEC = `${REPO}/plans/${PLAN}`
 // SLICES — items плана в порядке зависимостей (P3.1→P3.2; P5 после P1; P7 — исключение
 // phase-first D14). brief отсылает к 16-полевому ТЗ item'а — агент читает phases/Pn.md сам.
 // impl — override модели исполнителя (Routing плана); отсутствие = IMPL_MODEL.
+// P1–P4 закрыты и закоммичены (2026-07-12, отдельная сессия) — SLICES обрезан до остатка,
+// чтобы новая сессия не тратила agent()-вызовы на «уже сделано, ничего не меняю» верификацию.
+// История среза — в git log (7cfa22c..cece125) и Update Log plan.md. Полный список items —
+// в git-истории этого файла, если понадобится перезапуск с нуля.
 const SLICES = [
-  {
-    key: 'P1.1',
-    brief: `Item P1.1 (${SPEC}/phases/P1.md): digest-бюджет maind — чистая функция select_digest_items (байт-бюджет 4000, per-item 500, shared_max=0 project-only D10) + константы + config-дефолты + CLI-флаги + ≥7 тестов. ГЕЙТ ДО ПРАВОК: закоммитить/запарковать грязное дерево (skills/ai/mcp-builder/ + regen-артефакты) отдельным коммитом.`,
-    tests: `cd ${REPO} && bash packages/maind/scripts/validate.sh`,
-    risk: 'medium',
-    commit: `feat(maind): digest-бюджет — project-only + байт-кап (${PLAN} P1.1)`,
-  },
-  {
-    key: 'P1.2',
-    brief: `Item P1.2 (${SPEC}/phases/P1.md): шаблоны хуков — memory-digest-hook.sh бамп-комментарий (stale для sync), session-start-hook.sh тихий при OK (health --cwd --strict, rc=0 → exit 0) + тест-ассерты.`,
-    tests: `cd ${REPO} && bash packages/maind/scripts/validate.sh`,
-    risk: 'low',
-    commit: `feat(maind): health-хук тихий при OK, digest-шаблон v2 (${PLAN} P1.2)`,
-  },
-  {
-    key: 'P1.3',
-    brief: `Item P1.3 (${SPEC}/phases/P1.md): гайдлайн межпроектной памяти — шаблон ecosystem-mcp (источник maind) + локальные скиллы maind-overview/cross-project-optimizer/ecosystem-integration + doc-страница; сценарий «проанализируй 2 проекта» → graph → recall --scope ns → store в ns. Команды сверять с --help на HEAD.`,
-    tests: `cd ${REPO} && bash packages/maind/scripts/validate.sh`,
-    risk: 'low',
-    commit: `docs(maind): гайдлайн межпроектной памяти — digest project-only, shared по запросу (${PLAN} P1.3)`,
-  },
-  {
-    key: 'P2.1',
-    brief: `Item P2.1 (${SPEC}/phases/P2.md): компрессия policy agent-router → терс-EN ≤400 ток (≤1700 симв), version 2, auto_suffix 1 фраза EN + тест длины. Семантический инвариант из Inputs сохранить ПОЛНОСТЬЮ (чек-лист пункт-за-пунктом в Completion Notes); пункт не влезает → СТОП+эскалация (меняет D4).`,
-    tests: `cd ${REPO} && bash packages/harness/scripts/validate.sh`,
-    risk: 'high',
-    impl: { model: 'opus', effort: 'high' }, // Routing плана: P2.1 — вердикт-чувствительная компрессия
-    commit: `feat(harness): agent-router policy v2 — терс-EN ≤400 ток (${PLAN} P2.1)`,
-  },
-  {
-    key: 'P3.1',
-    brief: `Item P3.1 (${SPEC}/phases/P3.md): batch-укорочение description — все 8 скиллов >450 симв → ≤450, топ из 67 >300 → ≤300; триггер-семантику сохранять; SKILL.ru.md зеркала + check-translations --stamp + skiller registry. Таблица было→стало в Completion Notes.`,
-    tests: `cd ${REPO} && bash packages/skiller/scripts/validate.sh`,
-    risk: 'medium',
-    commit: `refactor(skiller): диета description худших скиллов (${PLAN} P3.1)`,
-  },
-  {
-    key: 'P3.2',
-    brief: `Item P3.2 (${SPEC}/phases/P3.md): гейт validate.sh — DESC_WARN_MAX 450→300, новый DESC_ERROR_MAX=450 hard; burn-down scripts/desc-burndown.txt (bootstrap = остаток P3.1), one-way; негативные прогоны обязательны (лог в Completion Notes). Красный validate на HEAD = НЕ закрывать item.`,
-    tests: `cd ${REPO} && bash packages/skiller/scripts/validate.sh`,
-    risk: 'medium',
-    commit: `feat(skiller): desc-гейт error>450/warn>300 + burn-down рэтчет (${PLAN} P3.2)`,
-  },
-  {
-    key: 'P4.1',
-    brief: `Item P4.1 (${SPEC}/phases/P4.md): диета description агентов всех 10 паков → cap 600B (1 example вместо 3), bump pack.json версий + per-pack CHANGELOG; рендер-смоук после каждого пака; таблица было→стало в Completion Notes.`,
-    tests: `cd ${REPO} && bash packages/harness/scripts/validate.sh`,
-    risk: 'medium',
-    commit: `refactor(harness): диета описаний agent-packs, cap 600B (${PLAN} P4.1)`,
-  },
-  {
-    key: 'P4.2',
-    brief: `Item P4.2 (${SPEC}/phases/P4.md): регрессионный cap-тест (все паки, description ≤600B, переиспользовать парсер frontmatter agentpacks.py) + warn на *.bak в agent-packs doctor; негативная проверка в Completion Notes.`,
-    tests: `cd ${REPO} && bash packages/harness/scripts/validate.sh`,
-    risk: 'low',
-    commit: `test(harness): cap-гейт описаний паков + .bak-warn в doctor (${PLAN} P4.2)`,
-  },
   {
     key: 'P5.1',
     brief: `Item P5.1 (${SPEC}/phases/P5.md): skiller budget --first-turn — first_turn_report (skills meta + agents + CLAUDE.md + живой прогон SessionStart-хуков fail-soft/timeout + MCP-оценка), пороги 3–7K/10K, --json/--strict, ≥5 тестов на tmpdir-фикстуре.`,

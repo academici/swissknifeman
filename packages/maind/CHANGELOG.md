@@ -5,6 +5,20 @@
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-07-12
+
+### Added (2026.07.12-CONTEXT-ECONOMY — тощий старт сессии)
+
+- **`select_digest_items` — digest-бюджет project-only + байт-кап (P1.1).** Байт-бюджет на дайджест
+  памяти + `shared_max=0` по умолчанию (D10, supersede D5): межпроектные (`ns:*`) факты в дайджест не
+  попадают без явного запроса; конфиг/CLI-флаги `--shared-max` для точечного включения.
+- **`session-start-hook.sh`/`memory-digest-hook.sh` — тихий health + шаблон v2 (P1.2).** Хук здоровья
+  сессии больше не печатает ничего при OK (только `--strict` даёт rc-гейт); дайджест-хук — компактный
+  шаблон v2.
+- **`doctor --context` — footprint флота (P5.2).** Флот-агрегация `_fleet_context`: subprocess `skiller
+  budget --first-turn --json` по каждому `_enabled_projects` (без кросс-импортов), fail-soft
+  `context: "n/a"` при недоступности.
+
 ### Added
 - **`maind sync` — провиженеры `plans-dir` и `plans-doc` (per-project plan-система).**
   Ретроактивная раскатка plan-протокола на онбордженные проекты: `plans-dir` зовёт

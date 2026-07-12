@@ -2,6 +2,56 @@
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-07-12
+
+### Added (2026.07.12-CONTEXT-ECONOMY — тощий старт сессии + footprint-доктор + bootstrap + доктрина)
+
+- **maind — digest-бюджет project-only + байт-кап (P1.1).** `select_digest_items`: байт-бюджет на
+  дайджест памяти + `shared_max=0` по умолчанию (D10 supersede D5) — межпроектные (`ns:*`) факты в
+  дайджест не попадают без явного запроса; `--shared-max`/config-флаги для точечного включения.
+- **maind — тихий health-хук + digest-шаблон v2 (P1.2).** `session-start-hook.sh` больше не печатает
+  ничего при OK (только `--strict` даёт rc-гейт); `memory-digest-hook.sh` — компактный шаблон v2.
+- **maind — гайдлайн межпроектной памяти (P1.3).** `ecosystem-mcp` + доки `guide/{memory,namespaces}.md`:
+  межпроектная задача → `graph` → `recall --scope ns:<имя>` → `remember --scope ns:<имя>`, дайджест —
+  только project-only (D10).
+- **harness — agent-router policy v2 (P2.1).** Policy-конфиг сжат до терс-EN ≤400 ток (было RU ≈600–900
+  ток каждую сессию), семантика (6 инвариантов роутинга) сохранена полностью.
+- **skiller — диета описаний скиллов + desc-гейт (P3.1/P3.2).** 24 самых длинных описания сокращены;
+  новый жёсткий гейт `validate.sh` (`DESC_WARN_MAX=300`/`DESC_ERROR_MAX=450`) + burn-down-рэтчет
+  (`scripts/desc-burndown.txt`, one-way, протухшая запись — warn) для оставшихся скиллов.
+- **harness — диета agent-packs (P4.1/P4.2).** Описания субагентов всех 10 паков сжаты (1 пример вместо
+  2–3 + одна анти-триггер-фраза), regression cap-тест на реальном реестре + `.bak`-warn в `agent-packs
+  doctor`.
+- **skiller — `budget --first-turn` (P5.1).** Замер always-on футпринта проекта первого хода: skills
+  tier-0, agents, CLAUDE.md/rules без paths, живой fail-soft прогон SessionStart-хуков, MCP tool-defs;
+  вердикт OK/ELEVATED/WARN (пороги 7K/10K), `--json`/`--strict`.
+- **maind — `doctor --context` (P5.2).** Флот-агрегация `_fleet_context`: subprocess `skiller budget
+  --first-turn --json` по всем `_enabled_projects`, fail-soft `n/a` при недоступности.
+- **analyst — сессионная токен-аналитика (P5.3).** `core/usage.py` — `first_turn_overhead` (первая
+  assistant-запись, главный транскрипт); run-report `usage.first_turn_overhead`/`usage.turns`; новая
+  команда `analyst sessions [--project ID] [--weeks N] [--json]` — недельные ISO-медианы из живых
+  transcript-jsonl с trend-warn (week-over-week >20%, только календарно смежные недели).
+- **root — bootstrap-machine.sh (P7.1/P7.2).** Идемпотентный скрипт развёртывания новой машины/команды
+  (`swissknifeman setup --machine`): install → hooks/permissions --global → MCP soft-skip → maind
+  service install → doctor, плюс манифест-шаг `--projects FILE` (клонирует только отсутствующие
+  проекты, не трогает существующие); `docs/deploy.md` + `docs/machine-manifest.example.json`.
+- **root — доктрина budget-гейта (P8.1).** root CLAUDE.md «Рамки»: любой новый always-on инжект (hook
+  additionalContext/description скилла-агента-команды/CLAUDE.md-блок/MCP-сервер) до раскатки проходит
+  `skiller budget --first-turn` и вписывается в бюджет (target 3–7K, warn 10K); компактная запись в
+  память mAInd (`ns:axioma`).
+- **Локальные скиллы/доки синхронизированы с релизом (P8.2).** `package-architecture`/
+  `project-tooling-runbook`/шаблон `ecosystem-setup` (maind) + CLI-доки `analyst`/`maind`/`skiller`
+  дополнены новыми командами (`budget --first-turn`, `doctor --context`, `analyst sessions`,
+  bootstrap-machine); устаревшая формулировка «дайджест топ-8» (без `project-only`-оговорки) в
+  `docs/develop.md` исправлена.
+
+### Changed
+
+- **P5.4 (OTEL-пресет) — ⛔ Skipped by decision (D7).** Без работающего внешнего коллектора — мёртвый
+  код; спека сохранена в `roadmap/otel-preset.md`. Новый каталог `docs/rejected-optimizations.md` —
+  осознанно отклонённые идеи (не «отложено», как `roadmap/`).
+
+
 ### Added (maind — fleet-измерение settings)
 
 - **`maind doctor --audit settings|all`**: измерение `settings` в fleet-аудите — subprocess к

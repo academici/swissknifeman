@@ -7,7 +7,7 @@
 | Plan ID | 2026.07.12-CONTEXT-ECONOMY |
 | Title | Context-economy стабилизация экосистемы → stable release v0.9.0 |
 | Version | 0.1.0 |
-| Status | 🟡 In progress |
+| Status | 🟠 Done with deviations |
 | Document Type | Executable Master Plan |
 | Authoring Model | fable |
 | Last Updated | 2026-07-12 |
@@ -70,7 +70,7 @@ SessionStart-политика 1445 симв ≈ 600–900 ток каждую с
 | P5 | Footprint-доктор + телеметрия | 3/4 | 🟠 Done with deviations |
 | P6 | Rollout на флот + замер до/после | 2/4 | 🟠 Done with deviations |
 | P7 | Машинный bootstrap (новая машина / команда) | 2/2 | 🟢 Done |
-| P8 | Доктрина + скиллы/доки + релиз v0.9.0 | 4/5 | 🟡 In progress |
+| P8 | Доктрина + скиллы/доки + релиз v0.9.0 | 4/5 | 🟠 Done with deviations |
 
 ## 5. Decision Log
 
@@ -93,6 +93,7 @@ SessionStart-политика 1445 симв ≈ 600–900 ток каждую с
 | D15 | 2026-07-12 | P6.2 (sync-волны): Brain (`/home/vostrikov/Vaults/Brain`) — первый проект в каждой волне, приоритетнее остального флота; продолжение по остальным ~16 проектам — только после его подтверждённого успеха | запрос Owner |
 | D16 | 2026-07-12 | Добавлен item P8.5 (task-package доктрина: критерий Workflow-оркестрации + session-restart discipline в `plan-protocol`/`plan-exec`); Related Packages + `task` | живой инцидент этой же сессии (P1–P4): решение «нужен ли workflow / рестартовать ли сессию» не опиралось на явный критерий — Owner-жалоба на непоследовательность агента |
 | D17 | 2026-07-12 | Разовое исключение из phase-first/per-item-командой: форсированная workflow-оркестровка P6.3→P8.3+P8.5 одним прогоном (без ручного `/task:plan-exec` на каждый item); P6.3 — авто-эвристика вместо per-project AskUserQuestion; P8.4 (тег) остаётся ручным стоп-гейтом | запрос Owner: дедлайн токен-баланса (конец дня), неизрасходованный бюджет — экономия на дешёвых финальных этапах теряет смысл при доступном запасе; философия «одна команда — один item» остаётся дефолтом, это осознанное разовое отступление |
+| D18 | 2026-07-12 | P8.4: отдельный PR не открывался (main и так на 150+ коммитов впереди origin, PR main→main невозможен) — вместо этого прямой push main + тег, по прецеденту v0.8.0; при push обнаружен дрейф origin (PR #140/#141, сторонний sync того же main) — разрешён `git merge` без конфликтов (diff пуст, содержимое уже покрыто локальной историей) | явный выбор Owner (AskUserQuestion) вместо буквального Implementation Rules item'а; дрейф origin — находка при исполнении, не решение по плану |
 
 ## 6. Update Log
 
@@ -126,3 +127,4 @@ SessionStart-политика 1445 симв ≈ 600–900 ток каждую с
 | 2026-07-12 | plan-exec/sonnet | P8.2 закрыт (фаза P8 2/5 🟡): скиллы/доки синхронизированы с философией релиза — 4 новые команды (budget --first-turn/doctor --context/analyst sessions/setup-skill-шаблон) добавлены в package-architecture/project-tooling-runbook/ecosystem-setup (через maind sync, не руками) + попутно найдена и исправлена стале-фраза «digest топ-8» без project-only оговорки в docs/develop.md (вне заявленного списка файлов) + добавлена целиком отсутствовавшая секция `analyst sessions` в analyst CLI-доке — детали см. phases/P8.md P8.2 Completion Notes |
 | 2026-07-12 | plan-exec/sonnet | P8.3 закрыт (фаза P8 3/5 🟡): версии D9 (maind 0.3.0/skiller 0.4.0/harness 0.2.0), CHANGELOG-срез root `[0.9.0]`+maind `[0.3.0]` (13+3 записи по фичам P1.1–P8.2), registry идемпотентен, 3 validate.sh зелёные, найден недокументированный SKM-ROADMAP-005-хвост в старом [Unreleased] (не бэкфиллен — вне Scope) — детали см. phases/P8.md P8.3 Completion Notes, findings/P8-release.md |
 | 2026-07-12 | plan-exec/sonnet (D17 forced) | P8.5 закрыт (фаза P8 4/5 🟡): критерий «фаза обязана заявить оркестрацию» (2 сигнала) в `plan-protocol` §7 + session-restart discipline (Context-поле launch-block'а) в §8, `plan-exec.md`/`plan-design.md` синхронизированы, EN-канон regen + registry — детали см. phases/P8.md P8.5 Completion Notes |
+| 2026-07-12 | plan-exec/sonnet | P8.4 закрыт 🟠 (фаза P8 4/5 🟠 Done with deviations, терминальна; план терминален): approve Owner получен, origin/main-дрейф (D18) слит без конфликтов, тег `v0.9.0` на `1294813` в origin подтверждён `git ls-remote`; PR не открывался (D18) — детали см. phases/P8.md P8.4 Completion Notes |

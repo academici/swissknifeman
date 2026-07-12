@@ -1,80 +1,71 @@
-# HANDOFF — 2026-07-12 — after P8.5
+# HANDOFF — 2026-07-12 — after P8.4
 
-**Next:** P8.4 (PR + approve Owner + тег v0.9.0) — **ручной стоп-гейт**, D17-исключение
-это НЕ отменяет. Тег ЗАПРЕЩЕНО ставить без явного approve Owner (`plan-exec.md` п.5/
-Code Guidance P8.4): агент останавливается и ждёт ответа, не таймаутит на дефолт.
-Это последний открытый item плана (P8 4/5, фаза станет терминальной по его закрытию).
+**Next:** План закрыт (все 8 фаз терминальны, тег `v0.9.0` в origin). Следующий шаг —
+НЕ `/task:plan-exec` этого плана, а по выбору Owner:
+(а) архивировать план (`/task:plan-close 2026.07.12-CONTEXT-ECONOMY archive`), (б) новый
+план/item под накопленный Pending Work (per-project CLAUDE.md-диета, MCP-ревизия, починка
+`budget.py`/`doctor --context` под vendor-канал, бэкфилл SKM-ROADMAP-005 в CHANGELOG,
+flexcrm/sova config-дрейф, vintera legacy-бакеты, dterema pack-конфликт).
 
 | Параметр | Значение |
 |:--|:--|
 | Model | sonnet/low |
-| Thinking | low — механическая работа (PR/тег), решение о тег-approve не модельное |
-| Context | continue (/clear) — ручной item; НЕ Workflow-оркестрован (D17: P8.4 остаётся вне очереди форсированного прогона) |
-| Суть | Смержить PR (если ещё не смержен) + получить явный approve Owner на тег → `git tag v0.9.0` + push тега (не форс) |
+| Thinking | low — механическая архивация по шаблону, решений нет |
+| Context | fresh session — рекомендован `/clear` |
+| Суть | Архивировать план в `plans/archive/` (конвейер план→архив→docs) — если Owner решит закрыть тему; иначе — новый `/task:plan-design` под конкретный Pending Work item |
 
 ```
-/task:plan-exec 2026.07.12-CONTEXT-ECONOMY P8.4
+/task:plan-close 2026.07.12-CONTEXT-ECONOMY archive
 ```
 
-**Done:** P1–P7 закрыты (см. Update Log plan.md). P8.1–P8.3 закрыты (доктрина
-budget-гейта, скиллы/доки синхронизированы, релиз-подготовка — версии D9, CHANGELOG-срез,
-registry). P8.5 закрыт (фаза P8 4/5 🟡): критерий «фаза обязана заявить оркестрацию»
-(2 бинарных сигнала — N≥3 items с независимым/parallelizable scope + детерминированной
-Validation; либо длинная автономная цепочка с внешним состоянием) добавлен в
-`general/plan-protocol` §7 (DoR-гейт); session-restart discipline (различение поля
-Context launch-block'а `continue (/clear) — ручной item` vs `NEW SESSION —
-Workflow-оркестрован`) добавлена в §8; `packages/task/commands/plan-exec.md` шаг 8 и
-`packages/task/commands/plan-design.md` Финал синхронизированы с обоими правилами;
-RU→EN регенерация вручную + `check-translations.sh --stamp` + `skiller registry`;
-ручная пост-фактум проверка критерия на P1–P4 подтвердила ожидание item'а (сигнал 2
-сработал на уровне плана целиком через D14 `wf-context-economy-exec.js`). Коммит —
-см. поле commits финального отчёта. Паспорт — phases/P8.md P8.5 Completion Notes.
+**Done:** Все 8 фаз (P1–P8) терминальны — план 🟠 Done with deviations в целом (2 фазы
+с честными отклонениями: P6 — критерии приёмки формально не достигнуты; P8 — P8.4 без
+отдельного PR). Релиз v0.9.0 выпущен: maind 0.3.0 · skiller 0.4.0 · harness 0.2.0, тег
+`v0.9.0` в origin на коммите `1294813` (подтверждено `git ls-remote --tags origin`).
 
-**Remaining:** P8.4 (1 item) — PR + approve Owner + тег v0.9.0. После его закрытия
-фаза P8 терминальна (5/5), план полностью закрыт → следующий шаг вне этого плана —
-`/task:plan-close 2026.07.12-CONTEXT-ECONOMY` (реконсиляция/архивация по решению Owner).
+**P8.4 закрыт (фаза P8 5/5 🟠 Done with deviations, терминальна):** Owner дал explicit
+approve («да, тэг, пуш и pr»). При push обнаружился дрейф `origin/main` (2 мерж-коммита
+PR #140/#141 — «sync/main-backlog» от другого агента/сессии, синковавшие тот же local
+`main` ранее, 2026-07-10/11) — `git merge --no-commit --no-ff origin/main` разрешился
+автоматически без конфликтов, `git diff --stat` результата против HEAD до мержа пуст
+(контент обоих PR уже полностью покрыт последующей локальной историей — SHA разные,
+файлы идентичны). Смёржено (`1294813`), запушено (`1f62b51..1294813`), поставлен и
+запушен аннотированный тег `v0.9.0`. Отдельный PR НЕ открывался (main и так на 150+
+коммитов впереди origin, PR main→main технически невозможен) — Owner выбрал прямой push
+(прецедент v0.8.0/SKM-AUDIT-004, тоже без PR).
 
-**Sources of truth:** plans/2026.07.12-CONTEXT-ECONOMY/plan.md (D-лог D1–D17) ·
-phases/P1.md–P8.md · findings/P0-rag-context-economy.md ·
-findings/P0-rag-bootstrap-memory-sync.md · findings/P6-baseline.md ·
-findings/P6-rollout.md · findings/P6-buckets.md · findings/P6-after.md ·
-findings/P8-release.md · docs/rejected-optimizations.md ·
-roadmap/cross-machine-memory.md · root CLAUDE.md «Философия и рамки» (доктрина P8.1) ·
-`packages/skiller/skills/general/plan-protocol/SKILL.ru.md`/`SKILL.md` §7/§8
-(критерий оркестрации + session-restart, P8.5) · `packages/task/commands/
-plan-exec.md`/`plan-design.md` (launch-block Context-поле, P8.5) ·
-phases/P8.md P8.1–P8.3/P8.5 Completion Notes.
+**Remaining:** Плана не осталось — все items P1.1–P8.5 закрыты (🟢 или 🟠 с честными
+Known Deviations). Накопленный Pending Work (кандидаты на новый план/roadmap, НЕ в Scope
+этого плана):
+- Починка `budget.py`↔`skillset.py` разрыва — `doctor --context`/`skiller budget` не видят
+  vendor-канал (искажает любые будущие context-сравнения для agelto/diabox/etc.).
+- Per-project CLAUDE.md/rules-диета фронтовых проектов (agelto CLAUDE.md=14379 ток).
+- Per-project ревизия MCP-серверов (`core:mcp-advisor`; agelto 6 серверов=10950 ток).
+- Бэкфилл CHANGELOG для SKM-ROADMAP-005 P2–P7 (попали под релиз v0.9.0 фактически, без
+  построчных записей — чужой уже архивированный план).
+- flexcrm/sova — нет `.swissknifeman/config.json` при vendor-регистрации (дрейф).
+- vintera/vintera — legacy-имена бакетов `frontend/*` в конфиге.
+- dterema — 9-файловый pack-конфликт (backend-laravel + laravel-package одновременно).
+- 4 проекта — ручной мерж `.pack-new` для `subagents-and-workflows.md`.
+- `packages/task/scripts/validate.sh` красный на репо-уровне из-за `plans/archive/`
+  (отсутствуют `plan.md`/`handoff.md` в части архивных планов) — pre-existing, не от этого
+  плана, но требует внимания.
+- `package-lock.json` (maind/skiller) рассинхронизирован с `package.json` (P8.3).
+- WARN `maind sync`: «config.json: неизвестный ключ memory.digest» (замечено в P8.2/P6.2).
 
-**Open risks:**
-- P8.1 доктрина ограничена явно (Scope Excluded): область — hook additionalContext /
-  description скилла-агента-команды / CLAUDE.md-блок / MCP-сервер; `skiller budget
-  --first-turn` НЕ покрывает CLAUDE.md/rules и MCP tool-defs как управляемые рычаги
-  (P6.4-находка) — доктрина этот разрыв не закрывает, только называет.
-- vendor-измерение (`budget.py`↔`skillset.py`, находка P6.3 §0) остаётся
-  неотремонтированным.
-- Тег `v0.8.0` был поставлен БЕЗ среза CHANGELOG — SKM-ROADMAP-005 P2–P7 копился в
-  `[Unreleased]` без построчной документации, бэкфилл вне Scope P8.3.
-- P8.5-критерий — бинарный, но НЕ ретроактивно перезапускает уже закрытые фазы: P1–P4
-  этого же плана исполнены до появления критерия (см. phases/P8.md P8.5 Completion
-  Notes — постфактум-проверка честно фиксирует, что сигнал 1 не сработал бы для P1
-  индивидуально, реальная оркестрация P1–P5+P7 держалась на отдельном решении D14, не
-  на этом DoR-пункте); критерий применяется вперёд, к новым фазам новых планов.
+**Sources of truth:** plans/2026.07.12-CONTEXT-ECONOMY/plan.md (D-лог D1–D18, все фазы
+терминальны) · phases/P1.md–P8.md · findings/P0-rag-context-economy.md ·
+findings/P0-rag-bootstrap-memory-sync.md · findings/P6-baseline.md · findings/P6-rollout.md ·
+findings/P6-buckets.md · findings/P6-after.md · findings/P8-release.md ·
+docs/rejected-optimizations.md · roadmap/cross-machine-memory.md · root CLAUDE.md
+«Философия и рамки» (доктрина P8.1) · CHANGELOG.md `[0.9.0]`.
+
+**Open risks:** релиз v0.9.0 объявлен несмотря на 0/3 формальных критериев приёмки P6
+(зафиксировано честно как Known Deviations, не скрыто) — если Owner ожидал измеримое
+улучшение бюджета как условие релиза, а не только инструментарий+доктрину, стоит явно
+сверить с ним трактовку «стабильно» из Approval Owner.
 
 **Workarounds/Deferred/Open questions:**
-- workarounds: чтение/правка `CHANGELOG.md`/`package-lock.json`/`skills.json` через
-  `python3 -c`/скрипт вместо `Read`/`cat`/`grep`/`ls` (deny-лист `.claude/
-  settings.local.json`) — известный паттерн, применялся и в P8.5 при regen `skiller
-  registry`.
-- deferred: как в предыдущем handoff (OTEL-пресет D7, межкомпьютерная память D12,
-  манифест `profile`-поле, burn-down desc-burndown.txt, KNOWN_MCP_TOOLS, encode_cwd
-  `.`/`_`, flexcrm/sova `.swissknifeman/config.json` отсутствует, vintera legacy-имена
-  бакетов, dterema 9-файловый конфликт, 4 проекта `.pack-new` ручной мерж, починка
-  `budget.py`/`doctor --context` под vendor-канал, sibintek-insiders недо-поставка
-  laravel-filament/frontend-vue/azguard, memster base `frontend` бакет, agelto
-  vendor-бакет `general`) + два кандидата P6.4 (per-project CLAUDE.md-диета фронтовых
-  проектов; per-project MCP-ревизия `core:mcp-advisor`) + WARN `maind sync`:
-  «config.json: неизвестный ключ memory.digest» (P8.2) + `analyst token-report`
-  недокументирован в CLI-доке (P8.2) + бэкфилл CHANGELOG SKM-ROADMAP-005 P2–P7 (P8.3)
-  + `package-lock.json` (maind/skiller) рассинхронизирован с `package.json` (P8.3).
-  Все — вне Scope этого плана, кандидаты для нового item/фазы/плана.
+- workarounds: —
+- deferred: весь список из Remaining выше (кандидаты для нового плана).
 - open_questions: —

@@ -108,9 +108,64 @@ def _channel_hygiene_report(env, config, detail):
               "вендор через .swissknifeman/config.json, не legacy .swissknife.json)")
 
 
+def _fleet_context(env, config):
+    """Флот-агрегация футпринта первого хода: цикл по registered-проектам → subprocess
+    `skiller budget --first-turn --target <path> --json` (P5.1) — токен-математика
+    остаётся ЕДИНСТВЕННО в skiller, maind только потребляет готовый JSON (без дубля,
+    без кросс-импортов — паттерн doctor --audit settings, D10). Fail-soft: недоступный
+    skiller / сломанный вывод / отсутствующий local_path на проект → context='n/a',
+    скан флота продолжается."""
+    import json
+    import subprocess
+
+    from .federation import _enabled_projects
+    from .provision.orchestrate import _sibling_bin
+    try:
+        skm_bin = _sibling_bin(config, "swissknifeman")
+    except SystemExit:
+        skm_bin = None
+    rows = []
+    for p in _enabled_projects(config):
+        pid = p.get("id")
+        local = p.get("local_path")
+        path = Path(os.path.expanduser(local)) if local else None
+        if not path or not path.is_dir() or skm_bin is None:
+            rows.append({"id": pid, "context": "n/a"})
+            continue
+        try:
+            r = subprocess.run(
+                [str(skm_bin), "budget", "--first-turn", "--target", str(path), "--json"],
+                capture_output=True, text=True, timeout=20, check=False)
+            data = json.loads(r.stdout)
+            rows.append({"id": pid,
+                        "context": {"total": data["total"], "verdict": data["verdict"]}})
+        except (subprocess.SubprocessError, ValueError, OSError, KeyError, TypeError):
+            rows.append({"id": pid, "context": "n/a"})
+    return rows
+
+
+def _context_report(env, config, as_json):
+    import json
+    rows = _fleet_context(env, config)
+    if as_json:
+        print(json.dumps({"projects": rows}, ensure_ascii=False, indent=2))
+        return
+    print(f"maind doctor --context (футпринт первого хода) — проектов: {len(rows)}")
+    if not rows:
+        print("  проектов нет — config.json пуст или отсутствует")
+        return
+    for r in rows:
+        ctx = r["context"]
+        if ctx == "n/a":
+            print(f"  {r['id']:<18} context·n/a")
+        else:
+            print(f"  {r['id']:<18} context={ctx['total']} {ctx['verdict']}")
+
+
 def cmd_doctor(env, argv):
     opts, _ = parse_args(argv, {"--quiet": "bool", "--audit": "str", "--json": "bool",
-                                "--skill-drift": "bool", "--channel-drift": "bool"})
+                                "--skill-drift": "bool", "--channel-drift": "bool",
+                                "--context": "bool"})
     if opts["help"]:
         print("maind doctor [--quiet] — проверка окружения узла\n"
               "maind doctor --audit mcp|claude|deny|core|pao|settings|all [--json] — "
@@ -118,7 +173,9 @@ def cmd_doctor(env, argv):
               "maind doctor --skill-drift — по-проектная разбивка дрейфа "
               "ecosystem-mcp/ecosystem-setup от текущего шаблона\n"
               "maind doctor --channel-drift — по-проектная разбивка дубль-канала "
-              "skiller (connect+vendor на один бакет)")
+              "skiller (connect+vendor на один бакет)\n"
+              "maind doctor --context [--json] — флот-агрегация футпринта первого "
+              "хода (skiller budget --first-turn по каждому проекту)")
         return
 
     # --audit: read-only fleet-отчёт о полноте раздачи оптимизаций по проектам
@@ -132,6 +189,18 @@ def cmd_doctor(env, argv):
             except SystemExit:
                 config = {}
         run_audit(env, config, opts["audit"], as_json=opts["json"])
+        return
+
+    # --context: read-only fleet-агрегация футпринта первого хода (subprocess → skiller)
+    if opts["context"]:
+        config = {}
+        if env.default_config.exists():
+            try:
+                from .config import load_config
+                config, _ = load_config(env)
+            except SystemExit:
+                config = {}
+        _context_report(env, config, as_json=opts["json"])
         return
 
     quiet = opts["quiet"]

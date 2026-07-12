@@ -2,6 +2,7 @@
 при замоканном окружении). Без живых бинарей/демона — изолированно в tmpdir."""
 import contextlib
 import io
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -9,7 +10,7 @@ from pathlib import Path
 from unittest import mock
 
 from maind import doctor
-from maind.doctor import _channel_overlap, _skill_drift, cmd_doctor
+from maind.doctor import _channel_overlap, _fleet_context, _skill_drift, cmd_doctor
 from tests.fixtures import capture, make_repo, write_maind_config
 
 
@@ -191,6 +192,82 @@ class TestChannelOverlap(unittest.TestCase):
             fake = mock.Mock(stdout="not json")
             with mock.patch("subprocess.run", return_value=fake):
                 self.assertEqual(_channel_overlap(env, config), [])
+
+
+class TestFleetContext(unittest.TestCase):
+    """_fleet_context (doctor --context): агрегирует по флоту сухой `skiller budget
+    --first-turn --target <path> --json` (P5.1) каждого проекта — без дубля токен-
+    математики в maind, только потребление JSON (subprocess mocked, паттерн doctor
+    --audit settings)."""
+
+    def _config(self, tmp, root, env, projects):
+        _write_skiller_stub(root)
+        all_projects = [
+            {"id": "swissknifeman", "name": "Swissknifeman", "type": "standalone",
+             "status": "active", "enabled": False, "local_path": str(root)},
+        ] + projects
+        write_maind_config(root, projects=all_projects)
+        from maind.config import load_config
+        config, _ = load_config(env)
+        return config
+
+    def test_reports_total_and_verdict_from_skiller_json(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, env = make_repo(tmp)
+            projdir = Path(tmp) / "proj"
+            projdir.mkdir()
+            config = self._config(tmp, root, env, [
+                {"id": "proj", "name": "Proj", "type": "php-package",
+                 "status": "active", "local_path": str(projdir)}])
+            fake = mock.Mock(stdout='{"target": "'+str(projdir)+'", "sources": {}, '
+                             '"total": 4200, "verdict": "OK"}')
+            with mock.patch("subprocess.run", return_value=fake) as run:
+                rows = _fleet_context(env, config)
+            self.assertEqual(rows, [{"id": "proj",
+                                     "context": {"total": 4200, "verdict": "OK"}}])
+            self.assertIn("budget", run.call_args.args[0])
+            self.assertIn("--first-turn", run.call_args.args[0])
+            self.assertIn("--json", run.call_args.args[0])
+
+    def test_broken_json_maps_to_na_not_raised(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, env = make_repo(tmp)
+            projdir = Path(tmp) / "proj"
+            projdir.mkdir()
+            config = self._config(tmp, root, env, [
+                {"id": "proj", "name": "Proj", "type": "php-package",
+                 "status": "active", "local_path": str(projdir)}])
+            fake = mock.Mock(stdout="not json")
+            with mock.patch("subprocess.run", return_value=fake):
+                rows = _fleet_context(env, config)
+            self.assertEqual(rows, [{"id": "proj", "context": "n/a"}])
+
+    def test_missing_local_path_maps_to_na_without_subprocess(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, env = make_repo(tmp)
+            config = self._config(tmp, root, env, [
+                {"id": "proj", "name": "Proj", "type": "php-package",
+                 "status": "active"}])  # без local_path
+            with mock.patch("subprocess.run") as run:
+                rows = _fleet_context(env, config)
+            self.assertEqual(rows, [{"id": "proj", "context": "n/a"}])
+            run.assert_not_called()
+
+    def test_cmd_doctor_context_json_prints_rows(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, env = make_repo(tmp)
+            projdir = Path(tmp) / "proj"
+            projdir.mkdir()
+            self._config(tmp, root, env, [
+                {"id": "proj", "name": "Proj", "type": "php-package",
+                 "status": "active", "local_path": str(projdir)}])
+            fake = mock.Mock(stdout='{"target": "'+str(projdir)+'", "sources": {}, '
+                             '"total": 5000, "verdict": "ELEVATED"}')
+            with mock.patch("subprocess.run", return_value=fake):
+                _, out = capture(cmd_doctor, env, ["--context", "--json"])
+            data = json.loads(out)
+            self.assertEqual(data["projects"],
+                             [{"id": "proj", "context": {"total": 5000, "verdict": "ELEVATED"}}])
 
 
 if __name__ == "__main__":

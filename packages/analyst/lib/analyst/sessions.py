@@ -24,11 +24,13 @@ Needed P5.3 в phases/P5.md).
 Недельный ключ — ISO-календарная неделя (`%G-W%V`) первой временной метки сессии
 (`ts_min` аккумулятора). `--weeks N` — последние N недель, для которых есть сессии.
 Trend-warn (ТЗ): медиана `first_turn_overhead` недели N выросла >20% к неделе N-1 —
-простое сравнение медиан, без экзотики (stdlib `statistics`, без pandas/numpy)."""
+простое сравнение медиан, без экзотики (stdlib `statistics`, без pandas/numpy). Сравниваются
+только КАЛЕНДАРНО смежные недели (`_is_next_iso_week`) — при пропуске недель (нет сессий)
+warn не печатается, чтобы не путать разрыв с рецидивом."""
 import json
 import os
 import statistics
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 
 from core import usage as core_usage
@@ -113,6 +115,16 @@ def _median(values):
     return statistics.median(values) if values else None
 
 
+def _is_next_iso_week(prev_week, cur_week):
+    """True, если cur_week — КАЛЕНДАРНО следующая ISO-неделя за prev_week (без
+    пропусков между ними, не просто соседний индекс в списке присутствующих недель)."""
+    py, pw = (int(x) for x in prev_week.split("-W"))
+    cy, cw = (int(x) for x in cur_week.split("-W"))
+    prev_monday = date.fromisocalendar(py, pw, 1)
+    cur_monday = date.fromisocalendar(cy, cw, 1)
+    return (cur_monday - prev_monday).days == 7
+
+
 def weekly_buckets(rows):
     """{week: [session-metrics...]} — группировка по ISO-неделе."""
     buckets = {}
@@ -148,7 +160,7 @@ def build_report(cwd, weeks=None, home=None):
     for i in range(1, len(weekly)):
         prev, cur = weekly[i - 1], weekly[i]
         pm, cm = prev["median_first_turn_overhead"], cur["median_first_turn_overhead"]
-        if pm and cm and cm > TREND_WARN_MULT * pm:
+        if pm and cm and cm > TREND_WARN_MULT * pm and _is_next_iso_week(prev["week"], cur["week"]):
             growth_pct = (cm / pm - 1) * 100
             warnings.append(
                 f"{prev['week']}→{cur['week']}: медиана first_turn_overhead выросла "

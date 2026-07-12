@@ -132,6 +132,25 @@ class WeeklyReportCase(unittest.TestCase):
     def test_no_sessions_dir_returns_none(self):
         self.assertIsNone(ss.build_report("/nowhere/else", home=self.home))
 
+    def test_no_warn_across_week_gap(self):
+        # W20 → W28: рост >20%, но недели не смежные (7-недельный разрыв без сессий) —
+        # не рецидив, а разрыв данных, warn не должен печататься
+        self._add("s1", 1000, "2026-05-11T10:00:00Z")   # W20
+        self._add("s2", 2000, "2026-07-06T10:00:00Z")   # W28
+        rep = ss.build_report(self.cwd, home=self.home)
+        self.assertEqual(rep["trend_warnings"], [])
+
+
+class IsNextIsoWeekCase(unittest.TestCase):
+    def test_adjacent_weeks(self):
+        self.assertTrue(ss._is_next_iso_week("2026-W27", "2026-W28"))
+
+    def test_gap_weeks(self):
+        self.assertFalse(ss._is_next_iso_week("2026-W20", "2026-W28"))
+
+    def test_year_boundary(self):
+        self.assertTrue(ss._is_next_iso_week("2025-W52", "2026-W01"))
+
 
 class CliCase(unittest.TestCase):
     def setUp(self):

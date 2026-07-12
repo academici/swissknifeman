@@ -368,6 +368,11 @@ class Schema2ParseCase(unittest.TestCase):
         self.assertEqual(len(u["agents"]), 2)
         self.assertIn("claude-opus-4-1", u["by_model"])
         self.assertIn("claude-haiku-4", u["by_model"])
+        # first_turn_overhead/turns — ГЛАВНОГО транскрипта (100+5, не мёрж с субагентом);
+        # turns = число assistant-событий главного транскрипта (1 usage-запись + 3 reads +
+        # 3 bash + 1 websearch + 1 perplexity + 4 edits = 13, см. build_schema2_fixture)
+        self.assertEqual(u["first_turn_overhead"], 105)
+        self.assertEqual(u["turns"], 13)
 
     def test_reads_top_rereads(self):
         reads = self._parse()["reads"]

@@ -14,6 +14,7 @@ from .proposals import cmd_proposals
 from .recompute import cmd_recompute
 from .review import cmd_review
 from .scan import cmd_scan
+from .sessions import cmd_sessions
 from .status import cmd_compact, cmd_status
 from .suggest import cmd_suggest
 from .token_report import cmd_token_report
@@ -31,6 +32,7 @@ COMMANDS = {
     "status": cmd_status,
     "compact": cmd_compact,
     "token-report": cmd_token_report,
+    "sessions": cmd_sessions,
     "doctor": cmd_doctor,
 }
 

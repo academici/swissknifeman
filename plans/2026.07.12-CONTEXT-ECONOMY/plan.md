@@ -67,7 +67,7 @@ SessionStart-политика 1445 симв ≈ 600–900 ток каждую с
 | P2 | harness: диета agent-router (policy v2) | 1/1 | 🟢 Done |
 | P3 | skiller: рэтчет описаний скиллов | 2/2 | 🟢 Done |
 | P4 | agent-packs: диета описаний субагентов | 2/2 | 🟢 Done |
-| P5 | Footprint-доктор + телеметрия | 2/4 | 🟡 In progress |
+| P5 | Footprint-доктор + телеметрия | 3/4 | 🟡 In progress |
 | P6 | Rollout на флот + замер до/после | 0/4 | ⬜ Not started |
 | P7 | Машинный bootstrap (новая машина / команда) | 0/2 | ⬜ Not started |
 | P8 | Доктрина + скиллы/доки + релиз v0.9.0 | 0/5 | ⬜ Not started |
@@ -110,3 +110,4 @@ SessionStart-политика 1445 симв ≈ 600–900 ток каждую с
 | 2026-07-12 | plan-exec/sonnet | P4.2 закрыт (фаза P4 2/2 🟢): регрессионный cap-тест `test_pack_desc_cap.py` (реальный реестр, переиспользует `core.parse_frontmatter`, негативно проверен — временный раздув reviewer.md ловится, откачен) + `.bak`-warn в `agent-packs doctor` (rc не трогает); validate.sh 315 тестов OK |
 | 2026-07-12 | plan-exec/sonnet | P5.1 закрыт (фаза P5 1/4 🟡): `skiller budget --first-turn` — first_turn_report по 5 источникам (skills tier-0, agents, CLAUDE.md/rules без paths, живой fail-soft прогон SessionStart-хуков, MCP tool-defs таблица), вердикт OK/ELEVATED/WARN (7K/10K), --json/--strict; 7 тестов; живой прогон agelto — ненулевые skills/agents/hooks (34538 WARN); validate.sh 379 тестов OK |
 | 2026-07-12 | plan-exec/sonnet | P5.2 закрыт (фаза P5 2/4 🟡): `maind doctor --context` — флот-агрегация `_fleet_context` subprocess'ом `skiller budget --first-turn --json` по `_enabled_projects` (без кросс-импортов, паттерн doctor --audit settings), fail-soft `context: "n/a"`; 4 теста mocked; живой прогон 21 проект без падения; validate.sh maind 415 тестов OK |
+| 2026-07-12 | plan-exec/sonnet | P5.3 закрыт (фаза P5 3/4 🟡): `core/usage.py` — `first_turn_overhead` (первая assistant-запись) + вендор-синк `_usage.py`; run-report `usage.first_turn_overhead`/`usage.turns` (главный транскрипт, не мёрж субагентов); новый `analyst sessions [--project ID] [--weeks N] [--json]` — недельные ISO-медианы из ЖИВЫХ jsonl-транскриптов (`~/.claude/projects/<encoded-cwd>/*.jsonl`, отдельно от usage-trend.ndjson), trend-warn week-over-week >20%; encode_cwd подтверждён на ~20 живых каталогах (только `/`→`-`, `.`/`_`-кейс не встретился — Escalation Needed); 16 новых тестов; живой прогон `--project swissknifeman --weeks 5` воспроизвёл разведку (W28 медиана 29.8K ≈ 31.9K); validate.sh analyst 194 + harness 315 OK |

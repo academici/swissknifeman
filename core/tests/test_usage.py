@@ -73,6 +73,9 @@ class TestFeedFinish(unittest.TestCase):
         self.assertEqual(agg["models"], ["claude-opus-4", "claude-sonnet-4"])
         self.assertEqual(agg["label"], "Проверь usage-парсер")
         self.assertAlmostEqual(agg["wall_seconds"], 65.0)
+        # first_turn_overhead = input+cache_creation ПЕРВОЙ assistant-записи (100+50),
+        # не суммарно по всем (P5.3)
+        self.assertEqual(agg["first_turn_overhead"], 150)
 
     def test_label_from_blocks_and_truncation(self):
         long_line = "x" * 200
@@ -107,6 +110,17 @@ class TestFeedFinish(unittest.TestCase):
         self.assertEqual(agg["thinking_chars"], 0)
         self.assertEqual(agg["text_chars"], 0)
         self.assertEqual(agg["model"], "claude-opus-4")
+
+    def test_first_turn_overhead_none_without_usage(self):
+        # первая assistant-запись без usage-блока → first_turn_overhead остаётся None,
+        # последующие тоже её не перезаписывают
+        agg = finish(_feed_all([
+            _assistant(content=[{"type": "text", "text": "no usage here"}]),
+            _assistant(usage={"input_tokens": 5, "output_tokens": 1,
+                              "cache_read_input_tokens": 0, "cache_creation_input_tokens": 0}),
+        ]))
+        self.assertIsNone(agg["first_turn_overhead"])
+        self.assertEqual(agg["msgs"], 2)
 
     def test_wall_seconds_none_on_bad_ts(self):
         agg = finish(_feed_all([{"type": "user", "timestamp": "не дата",

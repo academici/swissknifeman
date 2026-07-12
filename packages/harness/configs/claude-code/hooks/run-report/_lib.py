@@ -142,6 +142,7 @@ def _collect_usage(main_acc, transcript_path):
         except Exception:
             skipped += 1
     summary = _usage.merge(agents)
+    main = agents[0]   # finish(main_acc, label="main") — всегда первый (см. выше)
     return {
         "totals": summary["totals"],
         "by_model": summary["by_model"],
@@ -149,6 +150,10 @@ def _collect_usage(main_acc, transcript_path):
         "agents": agents,
         "subagents_parsed": parsed,
         "subagents_skipped": skipped,
+        # first_turn_overhead/turns — ГЛАВНОГО транскрипта (не мёрж с субагентами):
+        # это про стартовый оверхед самой сессии (P5.3, ТЗ), не про сумму всех агентов.
+        "first_turn_overhead": main.get("first_turn_overhead"),
+        "turns": main.get("msgs"),
     }
 
 

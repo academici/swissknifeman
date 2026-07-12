@@ -49,7 +49,7 @@ def new_acc():
         "in": 0, "out": 0, "cache_read": 0, "cache_creation": 0,
         "msgs": 0, "thinking_chars": 0, "text_chars": 0, "tool_errors": 0,
         "ts_min": None, "ts_max": None,
-        "first_user_text": None,
+        "first_user_text": None, "first_turn_overhead": None,
     }
 
 
@@ -71,6 +71,7 @@ def feed_event(acc, ev):
         return
     etype = ev.get("type")
     if etype == "assistant":
+        is_first_turn = acc["msgs"] == 0    # до инкремента — этот assistant-event первый
         acc["msgs"] += 1
         model = m.get("model")
         if isinstance(model, str) and model:
@@ -78,10 +79,16 @@ def feed_event(acc, ev):
             acc["models"].add(model)
         u = m.get("usage")
         if isinstance(u, dict):
-            acc["in"] += _int(u.get("input_tokens"))
+            in_ = _int(u.get("input_tokens"))
+            cache_creation = _int(u.get("cache_creation_input_tokens"))
+            acc["in"] += in_
             acc["out"] += _int(u.get("output_tokens"))
             acc["cache_read"] += _int(u.get("cache_read_input_tokens"))
-            acc["cache_creation"] += _int(u.get("cache_creation_input_tokens"))
+            acc["cache_creation"] += cache_creation
+            if is_first_turn:
+                # first_turn_overhead = input + cache_creation первой assistant-записи
+                # (выжимка scratchpad-разведки 4af788f3, RAG:✅ 2026-07-12 findings/P0)
+                acc["first_turn_overhead"] = in_ + cache_creation
         for b in _iter_content(m):
             if not isinstance(b, dict):
                 continue
@@ -147,6 +154,7 @@ def finish(acc, label=None):
         "text_chars": acc.get("text_chars", 0),
         "tool_errors": acc.get("tool_errors", 0),
         "wall_seconds": _wall_seconds(acc.get("ts_min"), acc.get("ts_max")),
+        "first_turn_overhead": acc.get("first_turn_overhead"),
     }
 
 

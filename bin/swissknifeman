@@ -9,6 +9,7 @@
 #   maind <args>    → maind    (хаб: memory, graph, onboard, deploy, sync, health, …)
 #   analyst <args>  → analyst  (обучение: digest, review, promote, deprecate, doctor)
 #   setup <project> → maind onboard (полный онбординг: скиллы+окружение+память+граф)
+#   setup --machine → scripts/bootstrap-machine.sh (развёртывание машины одной командой)
 #   doctor          → диагностика всех пакетов (fan-out)
 #   status [<id>]   → единый 4-слойный инвентарь проекта/флота (maind projects status:
 #                     skills+packs+mcp+память + drift→fix); bare/--target → skiller status
@@ -48,7 +49,12 @@ case "$CMD" in
   release) shift; need "$SKILLER"; exec "$SKILLER" release "$@" ;;
   maind|hub) shift; need "$MAIND"; exec "$MAIND" "$@" ;;
   analyst) shift; need "$ANALYST"; exec "$ANALYST" "$@" ;;
-  setup)   shift; need "$MAIND"; exec "$MAIND" onboard "$@" ;;
+  setup)
+    shift
+    if [[ "${1:-}" == "--machine" ]]; then
+      shift; exec "$ROOT/scripts/bootstrap-machine.sh" "$@"
+    fi
+    need "$MAIND"; exec "$MAIND" onboard "$@" ;;
   doctor)
     # fan-out на все пакеты. НЕ через need() — он бьёт exit 1 на первом же
     # отсутствующем лаунчере и не даёт проверить остальные; здесь агрегируем rc.

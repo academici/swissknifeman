@@ -69,7 +69,7 @@ SessionStart-политика 1445 симв ≈ 600–900 ток каждую с
 | P4 | agent-packs: диета описаний субагентов | 2/2 | 🟢 Done |
 | P5 | Footprint-доктор + телеметрия | 3/4 | 🟠 Done with deviations |
 | P6 | Rollout на флот + замер до/после | 0/4 | ⬜ Not started |
-| P7 | Машинный bootstrap (новая машина / команда) | 0/2 | ⬜ Not started |
+| P7 | Машинный bootstrap (новая машина / команда) | 1/2 | 🟡 In progress |
 | P8 | Доктрина + скиллы/доки + релиз v0.9.0 | 0/5 | ⬜ Not started |
 
 ## 5. Decision Log
@@ -113,3 +113,4 @@ SessionStart-политика 1445 симв ≈ 600–900 ток каждую с
 | 2026-07-12 | plan-exec/sonnet | P5.3 закрыт (фаза P5 3/4 🟡): `core/usage.py` — `first_turn_overhead` (первая assistant-запись) + вендор-синк `_usage.py`; run-report `usage.first_turn_overhead`/`usage.turns` (главный транскрипт, не мёрж субагентов); новый `analyst sessions [--project ID] [--weeks N] [--json]` — недельные ISO-медианы из ЖИВЫХ jsonl-транскриптов (`~/.claude/projects/<encoded-cwd>/*.jsonl`, отдельно от usage-trend.ndjson), trend-warn week-over-week >20%; encode_cwd подтверждён на ~20 живых каталогах (только `/`→`-`, `.`/`_`-кейс не встретился — Escalation Needed); 16 новых тестов; живой прогон `--project swissknifeman --weeks 5` воспроизвёл разведку (W28 медиана 29.8K ≈ 31.9K); validate.sh analyst 194 + harness 315 OK |
 | 2026-07-12 | plan-exec/sonnet (main loop) | Post-review фикс P5.3 (workflow-гейт нашёл дефект): trend-warn сравнивал соседние ПРИСУТСТВУЮЩИЕ недели, не календарно смежные — ложный «рецидив» через разрыв без сессий; `_is_next_iso_week` (`date.fromisocalendar`) + 4 теста; validate.sh analyst 198 OK |
 | 2026-07-12 | plan-exec/sonnet (main loop) | P5.4 закрыт ⛔ Skipped by decision (D7, Owner-подтверждение): OTEL-пресет без работающего коллектора — мёртвый код; спека сохранена `roadmap/otel-preset.md`; фаза P5 закрыта 3/4 🟠 Done with deviations. Заодно: новый каталог `docs/rejected-optimizations.md` (отклонённые идеи, не путать с `roadmap/`) + пункт в root CLAUDE.md «Референсы и провенанс» (179 строк, ≤200 держится) |
+| 2026-07-12 | plan-exec/sonnet | P7.1 закрыт (фаза P7 1/2 🟡): `scripts/bootstrap-machine.sh` (6 ступеней install.sh→hooks/permissions --global→MCP(soft-skip, нет --global механизма)→maind service install→doctor) + роут `swissknifeman setup --machine`; `scripts/test-bootstrap-machine.sh` (8 smoke-проверок) зелёный; гейт двойного прогона выполнен реально в `python:3.12-slim` (repo `-v ro`, HOME=/root) — RUN1/RUN2 идентичны, rc=0 оба раза, идемпотентность подтверждена; `bash -n` OK, `packages/maind/scripts/validate.sh` 415 тестов OK; найден (не исправлен, вне scope) дефект `harness/scripts/apply-permissions.sh:57` (mkdir до dry-run гейта) — Escalation Needed в P7.1 |

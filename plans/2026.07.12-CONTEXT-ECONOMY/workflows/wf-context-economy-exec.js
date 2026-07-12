@@ -30,6 +30,9 @@ const SPEC = `${REPO}/plans/${PLAN}`
 // чтобы новая сессия не тратила agent()-вызовы на «уже сделано, ничего не меняю» верификацию.
 // История среза — в git log (7cfa22c..cece125) и Update Log plan.md. Полный список items —
 // в git-истории этого файла, если понадобится перезапуск с нуля.
+// P5 ЗАКРЫТА ЦЕЛИКОМ вне workflow (2026-07-12, main loop): P5.3 gate-red — post-review фикс
+// commit 92706de (trend-warn несмежные недели); P5.4 — ⛔ Skipped by decision (D7,
+// Owner-подтверждение), roadmap/otel-preset.md. SLICES обрезан до P7 — не переисполнять.
 const SLICES = [
   {
     key: 'P5.1',
@@ -51,13 +54,6 @@ const SLICES = [
     tests: `cd ${REPO} && bash packages/analyst/scripts/validate.sh && bash packages/harness/scripts/validate.sh`,
     risk: 'medium',
     commit: `feat(analyst,harness): сессионная токен-аналитика — usage в run-report + analyst sessions (${PLAN} P5.3)`,
-  },
-  {
-    key: 'P5.4',
-    brief: `Item P5.4 (${SPEC}/phases/P5.md): opt-in OTEL-пресет harness (env-блок: TELEMETRY=1, exporters, ENHANCED_TELEMETRY_BETA, TOOL_DETAILS, RESOURCE_ATTRIBUTES) merge-only + тест + doc-строка. D7: допустимо ⛔ Skipped by decision с roadmap/otel-preset.md — если нет естественного места в раскладке пресетов, НЕ изобретать: эскалация или ⛔ по D7.`,
-    tests: `cd ${REPO} && bash packages/harness/scripts/validate.sh`,
-    risk: 'low',
-    commit: `feat(harness): opt-in OTEL-пресет телеметрии (${PLAN} P5.4)`,
   },
   {
     key: 'P7.1',
@@ -82,7 +78,7 @@ const GATES = [
 ]
 
 const MAX_GREEN_ITERATIONS = 3
-const GATE_ATTEMPT = 4 // бампать при ручном resume после фикса вне item'а — иначе gate-агент отдаёт кэш
+const GATE_ATTEMPT = 5 // бампать при ручном resume после фикса вне item'а — иначе gate-агент отдаёт кэш (P5.3 post-review фикс 92706de)
 
 const IMPL_MODEL = { model: 'sonnet', effort: 'medium' }
 const GREEN_MODEL = { model: 'sonnet', effort: 'medium' }

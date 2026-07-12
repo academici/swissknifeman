@@ -68,7 +68,7 @@ SessionStart-политика 1445 симв ≈ 600–900 ток каждую с
 | P3 | skiller: рэтчет описаний скиллов | 2/2 | 🟢 Done |
 | P4 | agent-packs: диета описаний субагентов | 2/2 | 🟢 Done |
 | P5 | Footprint-доктор + телеметрия | 3/4 | 🟠 Done with deviations |
-| P6 | Rollout на флот + замер до/после | 2/4 | 🟡 In progress |
+| P6 | Rollout на флот + замер до/после | 2/4 | 🟠 Done with deviations |
 | P7 | Машинный bootstrap (новая машина / команда) | 2/2 | 🟢 Done |
 | P8 | Доктрина + скиллы/доки + релиз v0.9.0 | 0/5 | ⬜ Not started |
 
@@ -121,3 +121,4 @@ SessionStart-политика 1445 симв ≈ 600–900 ток каждую с
 | 2026-07-12 | plan-exec/sonnet | P6.1 закрыт (фаза P6 1/4 🟡): baseline-замер до раскатки — `maind doctor --context` (25 проектов: 1 OK/1 ELEVATED/20 WARN/3 n/a) + `analyst sessions --weeks 2` по agelto/swissknifeman/brain → `findings/P6-baseline.md`; детерминизм подтверждён повторным прогоном (diff пуст) — детали см. phases/P6.md P6.1 Completion Notes |
 | 2026-07-12 | plan-exec/sonnet | P6.2 закрыт (фаза P6 2/4 🟡): sync-волны на флот (Brain-канарейка первой, D15), 0 сбоев кроме 2 vendor-проектов с дрейфом конфига — детали см. phases/P6.md P6.2 Completion Notes, findings/P6-rollout.md |
 | 2026-07-12 | plan-exec/sonnet (D17 forced) | P6.3 закрыт 🟠 (фаза P6 2/4 🟡, D17-эвристика вместо AskUserQuestion): снят легаси `general`/`oss-dev` на 14 проектах; находка — `doctor --context` не видит vendor-набор (agelto и др.), Validation-критерий не достигнут как смена тира — см. phases/P6.md P6.3, findings/P6-buckets.md |
+| 2026-07-12 | plan-exec/sonnet (D17 forced) | P6.4 закрыт 🟠 (фаза P6 2/4 🟠 Done with deviations, терминальна): after-замер — 0/3 критериев приёмки формально пройдено (флот-медиана −6.5%, agelto −4.9%, 20/22 проектов остались WARN); остаток честно разложен — CLAUDE.md/rules+MCP tool-defs 67–79% бюджета, вне Scope P1–P6 — см. phases/P6.md P6.4, findings/P6-after.md |

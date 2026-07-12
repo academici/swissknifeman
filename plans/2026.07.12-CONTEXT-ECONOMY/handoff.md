@@ -1,78 +1,85 @@
-# HANDOFF — 2026-07-12 — after P6.3
+# HANDOFF — 2026-07-12 — after P6.4
 
-**Next:** P6.4 (after-замер и приёмка).
+**Next:** P8.1 (доктрина бюджета в CLAUDE.md + память mAInd).
 
 | Параметр | Значение |
 |:--|:--|
 | Model | sonnet/medium |
-| Thinking | medium — приёмка по существующим командам, но требует НЕТРИВИАЛЬНОГО решения из-за находки P6.3 (см. Open risks) |
-| Context | fresh session — handoff свежий, рекомендован /clear |
-| Суть | Свежие сессии на agelto + 2 медианных проектах → `analyst sessions` + `maind doctor --context` → `findings/P6-after.md` со сравнением против `findings/P6-baseline.md`; **ВАЖНО перед стартом**: прочитать `findings/P6-buckets.md §0` — `doctor --context` не измеряет vendor-проекты (agelto!) корректно, решить (в рамках item'а, без кода) — использовать `analyst sessions` как основной источник для agelto/vendor-проектов вместо/вместе с `doctor --context`, и явно разметить это в вердикте приёмки |
+| Thinking | medium — правка минимальная (1–3 строки CLAUDE.md + 1 запись памяти), но требует свежего чтения `--help`/памяти, не по шаблону вслепую |
+| Context | fresh session — handoff свежий, рекомендован `/clear` (P6 закрыт, состояние в git+plan, ручной item без Workflow-оркестрации) |
+| Суть | Пункт в root CLAUDE.md «Рамки»: любой новый always-on инжект — до раскатки через `skiller budget --first-turn`, вписывается в бюджет (3–7K/warn 10K); компактная запись в память mAInd (ns:axioma). Держать root CLAUDE.md ≤200 строк (сейчас 179) |
 
 ```
-/task:plan-exec 2026.07.12-CONTEXT-ECONOMY P6.4
+/task:plan-exec 2026.07.12-CONTEXT-ECONOMY P8.1
 ```
 
-**Done:** P1–P5, P7 закрыты (см. Update Log plan.md). P6.1 (baseline), P6.2 (sync-волны)
-закрыты 🟢.
+**Done:** P1–P7 закрыты (см. Update Log plan.md). P6 закрыта целиком (4/4: P6.1/P6.2 🟢,
+P6.3/P6.4 🟠 Done with deviations) — фаза терминальна.
 
-**P6.3 закрыт 🟠 Done with deviations (фаза P6 2/4 🟢 + 1 🟠 🟡 In progress):** Owner в
-цикле недоступен (форс-прогон D17) — применена эвристика вместо AskUserQuestion
-per-project. Применено (высокая уверенность): CORE-политика-миграция — легаси
-`general`/`oss-dev` (дублируют лёгкий плагин `core`) сняты на 14 проектах (azguard,
-botkit, vaulter, swissknifeman, corex, memster, cms, edufy, dterema-app,
-sibintek-insiders, chatom, perplexity-web-mcp, loqum, brain) через
-`enabledPlugins[...]=false` + закрепляющий явный `.swissknife.json`; точечно — `roles`
-(dterema-app, персоны нерелевантны Nuxt) и дрейф `php`/`php-packages`/`frontend-vue`/
-`frontend-backend` (loqum, реальный стек TS/Vite без PHP/Vue). **ГЛАВНАЯ НАХОДКА:**
-`skiller budget --first-turn`/`maind doctor --context` для **vendor-проектов**
-(agelto, diabox, azguard/botkit-vendor, cms, vintera, dterema, dterema-app) НЕ читают
-`.swissknifeman/config.json`/физические `.claude/skills/` вовсе — измеряют фиктивный
-autodetect-профиль; agelto (флагманский «виновник» из Context плана, 32830 ток) на 86%
-состоит из CLAUDE.md+rules/MCP tool-defs, а измеряемые skills (5571 ток) не отражают
-реальный 19-бакетный vendor-набор. Это предсуществующий разрыв `budget.py`↔`skillset.py`
-(budget.py спроектирован под старый `vendor.py`+`.swissknife.json`, не под новый
-skill-granular `skillset.py`+`.swissknifeman/config.json`), не введён этим item'ом,
-правка — код, вне Scope P6.3. Validation-критерий item'а («вердикт улучшился» per-project)
-НЕ достигнут как смена тира ни для одного из 14 затронутых проектов (все остались WARN —
-доминируют CLAUDE.md/MCP, не skills); сырое число снизилось у 6, не изменилось у 4
-(измерение нечувствительно), честно ВЫРОСЛО у 4 (вскрытый предсуществующий дрейф-недоучёт,
-не регресс). Реальный эффект в будущих Claude Code-сессиях достигнут у всех 14 проектов
-независимо от измерения. Полная таблица + 4 сомнительных случая («нужен Owner», не
-применено: agelto vendor-бакет general, memster base frontend, sibintek-insiders
-недо-поставка laravel-filament/frontend-vue/azguard, vintera legacy-имена) —
-findings/P6-buckets.md. Детали — phases/P6.md P6.3 Completion Notes.
+**P6.4 закрыт 🟠 Done with deviations (фаза P6 4/4 закрыта, терминальна):** after-замер
+выполнен теми же командами, что baseline (`maind doctor --context --json`, `analyst
+sessions --weeks 3 --json` на agelto/swissknifeman/brain) + разбивка по источникам
+(`skiller budget --first-turn`). **Итог по 3 критериям приёмки Phase Context P6 — 0 из 3
+формально пройдено** (не ослаблено, честно зафиксировано):
+1. Медиана первого хода ≤10–12K — флот-медиана `doctor --context` 19864.5→18582 (−6.5%);
+   `analyst sessions` W28-медианы 29781(swk)/50083.5(agelto)/31317.5(brain) — далеко выше
+   порога.
+2. agelto −≥40% — `doctor --context` 34538→32830 (−4.9%); `analyst sessions` W28 без
+   изменений (те же сессии — раскатка и baseline пришлись на ту же ISO-неделю W28,
+   недельная гранулярность инструмента не разделяет «до/после» внутри недели —
+   ограничение измерения, не подгонка).
+3. `doctor --context` без WARN кроме принятых — 20/22 проекта остались WARN (было 20/22),
+   только axiomaerpsdk сменил тир ELEVATED→OK.
 
-**Remaining:** P6.4 after-замер и приёмка (медиана ≤10–12K, agelto −≥40%, `doctor --context`
-без WARN кроме принятых — **пересмотреть критерий agelto с учётом находки P6.3**, см. выше)
-· P8 доктрина+скиллы/доки+релиз v0.9.0 (5 items, P8.4 — approve Owner на тег).
+Реальный ненулевой эффект есть: флот-медиана −6.5%, 10/22 проектов снизили сырое число на
+3–21%, качественный эффект (router v2, тихий health-хук, диета описаний/паков, снятие
+легаси-бакетов на 14+ проектах) реально применён и будет виден в новых сессиях. Но он на
+порядок меньше заявленных критериев: разбивка по источникам (`skiller budget --first-turn`)
+показала, что во всех 3 замеряемых проектах CLAUDE.md/rules + MCP tool-defs дают 67–79%
+итогового бюджета (agelto 46%+33%, swissknifeman 39%+21%, brain 36%+35%), а skills
+(единственный рычаг items P1–P5: диета описаний P3, agent-pack диета P4) — только 17–24%.
+Даже полное обнуление skills-слагаемого не увело бы agelto ниже WARN. Это структурный
+разрыв между Context плана (медианный оверхед W28 ~31.9K) и фактически затронутыми P1–P6
+рычагами — не дефект исполнения отдельных items (все закрыты с зелёной валидацией по
+своему Scope). Рекомендация для plan-design (не exec): два новых кандидата вне Scope плана
+— (1) per-project CLAUDE.md/rules фронтовых проектов (agelto CLAUDE.md=14379 ток — план
+не трогал проектные CLAUDE.md вообще); (2) число подключённых MCP-серверов per-project
+(agelto 6 серверов=10950 ток, методология отбора — `core:mcp-advisor`, применение
+per-project — отдельная работа). Детали, все 5 таблиц — `findings/P6-after.md`.
+
+**Remaining:** P8 доктрина+скиллы/доки+релиз v0.9.0 (5 items: P8.1 доктрина CLAUDE.md/
+память, P8.2 скиллы/доки-синхронизация, P8.3 релиз-подготовка, P8.4 approve Owner+тег
+[стоп-гейт], P8.5 task-package доктрина оркестрации). P8.2 должен явно отразить
+ограничение эффекта P6 (не только достижения) — footprint-доктрина честнее без замалчивания
+остаточного разрыва.
 
 **Sources of truth:** plans/2026.07.12-CONTEXT-ECONOMY/plan.md (D-лог D1–D17) ·
-phases/P1.md–P8.md · findings/P0-rag-context-economy.md · findings/P0-rag-bootstrap-memory-sync.md ·
-findings/P6-baseline.md (точка отсчёта) · findings/P6-rollout.md (волны P6.2) ·
-findings/P6-buckets.md (новый, ревизия бакетов P6.3 + главная находка про vendor-измерение) ·
-docs/rejected-optimizations.md · roadmap/cross-machine-memory.md.
+phases/P1.md–P8.md · findings/P0-rag-context-economy.md ·
+findings/P0-rag-bootstrap-memory-sync.md · findings/P6-baseline.md (точка отсчёта) ·
+findings/P6-rollout.md (волны P6.2) · findings/P6-buckets.md (ревизия бакетов P6.3 +
+находка про vendor-измерение) · findings/P6-after.md (новый, after-замер + вердикт
+приёмки P6.4) · docs/rejected-optimizations.md · roadmap/cross-machine-memory.md.
 
 **Open risks:**
-- **P6.4 приёмка под угрозой для agelto**: критерий «agelto −≥40%» опирается на
-  `doctor --context`/`skiller budget --first-turn`, которые для vendor-проектов (agelto)
-  не видят реальный skill-набор вовсе (см. находка выше). P6.4 должен явно решить: мерить
-  agelto через `analyst sessions` (реальные транскрипты — уже показывали в P6.1 baseline
-  W27/W28 медианы), либо честно отметить числовой критерий как неприменимый к
-  `doctor --context` для vendor-проектов до отдельной починки измерения (roadmap/новый item),
-  не подгонять/не замалчивать разрыв.
-- doctor --context после P6.3: 4 проекта (vaulter/memster/chatom/brain) показывают
-  бо́льшее число, чем до P6.3 — это НЕ регресс (см. §3 findings/P6-buckets.md), но при
-  поверхностном чтении может выглядеть как ухудшение — не путать со сравнением P6.1→P6.4.
+- P8-доктрина (P8.1) фиксирует правило «новый always-on инжект — через budget-гейт», но
+  сама фаза P6 доказала, что имеющийся гейт (`skiller budget --first-turn`) не покрывает
+  CLAUDE.md/rules и MCP tool-defs как управляемые рычаги (только замеряет их, не диктует
+  бюджет для них) — доктрина P8.1 должна либо явно ограничить область (только
+  skills/hooks/agent-packs описания), либо это тоже кандидат в отдельный item (не
+  расширять Scope P8.1 явочным порядком).
+- vendor-измерение (`budget.py`↔`skillset.py`, находка P6.3 §0) остаётся неотремонти-
+  рованным — любые будущие сравнения agelto/diabox/... через `doctor --context` продолжат
+  измерять фиктивный autodetect-профиль, не реальный vendor-набор, пока это не починено
+  отдельным item'ом (roadmap/новый item, не в этом плане).
 
 **Workarounds/Deferred/Open questions:**
 - workarounds: —
 - deferred: как в предыдущем handoff (OTEL-пресет D7, межкомпьютерная память D12, манифест
   `profile`-поле, burn-down desc-burndown.txt, KNOWN_MCP_TOOLS, encode_cwd `.`/`_`,
   flexcrm/sova `.swissknifeman/config.json` отсутствует, vintera legacy-имена бакетов,
-  dterema 9-файловый конфликт, 4 проекта `.pack-new` ручной мерж) + новое: починка
-  `budget.py`/`doctor --context` под vendor-канал (skillset.py) — кандидат в отдельный
-  item/roadmap, не в этом плане; sibintek-insiders недо-поставка
-  laravel-filament/frontend-vue/azguard (Owner-решение); memster base `frontend` бакет
-  (сомнение, не тронут); agelto vendor-бакет `general` (сомнение, не тронут).
+  dterema 9-файловый конфликт, 4 проекта `.pack-new` ручной мерж, починка
+  `budget.py`/`doctor --context` под vendor-канал, sibintek-insiders недо-поставка
+  laravel-filament/frontend-vue/azguard, memster base `frontend` бакет, agelto vendor-бакет
+  `general`) + новое: два кандидата в новый item/фазу из P6.4 Pending Work — per-project
+  CLAUDE.md-диета фронтовых проектов; per-project MCP-сервер ревизия (`core:mcp-advisor`).
 - open_questions: —

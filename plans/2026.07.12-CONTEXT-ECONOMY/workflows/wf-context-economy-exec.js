@@ -135,7 +135,7 @@ const GATES = [
 ]
 
 const MAX_GREEN_ITERATIONS = 3
-const GATE_ATTEMPT = 3 // бампать при ручном resume после фикса вне item'а — иначе gate-агент отдаёт кэш
+const GATE_ATTEMPT = 4 // бампать при ручном resume после фикса вне item'а — иначе gate-агент отдаёт кэш
 
 const IMPL_MODEL = { model: 'sonnet', effort: 'medium' }
 const GREEN_MODEL = { model: 'sonnet', effort: 'medium' }

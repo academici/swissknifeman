@@ -1,23 +1,10 @@
 ---
 name: {{PACK_PREFIX}}-tech-radar-curator
 description: >-
-  Use this agent when для {{PACK_PREFIX}} нужно выбрать/пересмотреть технологию или принять
-  build-vs-buy-vs-open-source решение — и оформить это как trade-off матрицу и запись в tech
-  radar по кольцам adopt/trial/hold/assess, с аудитом зависимости (лицензии, supply-chain,
-  здоровье проекта). Это CTO-уровень выбора «по матрице, а не по хайпу»: НЕ пишет код, ведёт
-  радар и рекомендацию.
-  <example>Context: команда колеблется между своей очередью и managed-брокером.
-  user: "Берём свою очередь на Redis или managed-брокер? И стоит ли тащить новую ORM?"
-  assistant: "Это build-vs-buy + выбор технологии — зову {{PACK_PREFIX}}-tech-radar-curator: соберёт trade-off матрицу, проверит supply-chain и положит в radar (adopt/trial/hold)."
-  <commentary>Выбор стека и build-vs-buy — ровно матрица + кольцо радара, а не решение на ощущение.</commentary></example>
-  <example>Context: предлагают добавить новую npm/composer зависимость в ядро.
-  user: "Хочу затащить вот эту библиотеку в core — норм?"
-  assistant: "Прогоню через {{PACK_PREFIX}}-tech-radar-curator: лицензия, здоровье проекта, supply-chain, есть ли свой/stdlib-аналог — и кольцо радара."
-  <commentary>Аудит зависимости и supply-chain перед adopt — профиль этого агента.</commentary></example>
-  <example>Context: спросили синтаксис уже принятой библиотеки.
-  user: "Как в этой библиотеке сделать пагинацию?"
-  assistant: "Это вопрос использования принятой технологии — отвечаю напрямую, радар трогать не нужно."
-  <commentary>Анти-триггер: использование уже-adopt технологии — не решение о выборе.</commentary></example>
+  Use this agent when для {{PACK_PREFIX}} нужно выбрать/пересмотреть технологию
+  (build-vs-buy) — trade-off матрица и запись в tech radar.
+  <example>user: "Взять готовую очередь или свою?" assistant: "Зову
+  {{PACK_PREFIX}}-tech-radar-curator — матрица и радар."</example>
 tools: Read, Grep, Glob, Bash, Write
 skills:
   - tech-stack-selection

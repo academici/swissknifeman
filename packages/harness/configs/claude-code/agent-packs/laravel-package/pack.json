@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "pack": "laravel-package",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Dev-loop для Laravel-composer-пакетов: агенты slice-builder/test-writer/reviewer заточены на публичный контракт (BC/SemVer), ServiceProvider register-vs-boot, publishables, Testbench-инфру — вместо app-канона access-layer. Форк backend-laravel под мир пакетов (см. notes.origin): recon-набор дополнен api-surface (BC-дифф публичной поверхности), review-gate/settings/hooks шарятся с backend-laravel через src_pack.",
   "stack": {
     "shape": "backend",

@@ -1,18 +1,10 @@
 ---
 name: {{PACK_PREFIX}}-test-writer
 description: >-
-  Use this agent when код фичи Laravel-ПАКЕТА {{PACK_PREFIX}} уже готов и нужно написать
-  тесты ({{TEST_FRAMEWORK}} на Orchestra Testbench) и итерировать до зелёного через
-  {{PHP_RUNNER}}. Вызывай после {{PACK_PREFIX}}-slice-builder — передай пути и acceptance
-  criteria. Прикладной код не меняет, расхождения репортит как баг.
-  <example>Context: slice-builder завершил фичу пакета.
-  user: "Фича готова, нужны тесты на контракт и регистрацию в провайдере"
-  assistant: "Зову {{PACK_PREFIX}}-test-writer написать Testbench-тесты и догнать до зелёного."
-  <commentary>Код есть, поведение определено — пора покрывать тестами отдельным агентом.</commentary></example>
-  <example>Context: тест нашёл расхождение с ожидаемым поведением.
-  user: "Тест падает — подгони его под код"
-  assistant: "Не ослабляю тест: репортю расхождение как баг для slice-builder."
-  <commentary>Тест-райтер не маскирует баги подгонкой ассертов.</commentary></example>
+  Use this agent when код фичи Laravel-пакета {{PACK_PREFIX}} готов — нужно
+  написать тесты ({{TEST_FRAMEWORK}} на Testbench) до зелёного.
+  <example>user: "Фича готова, напиши тесты" assistant: "Зову
+  {{PACK_PREFIX}}-test-writer после slice-builder."</example>
 tools: Read, Grep, Glob, Edit, Write, Bash
 skills:
   - laravel-package-testing

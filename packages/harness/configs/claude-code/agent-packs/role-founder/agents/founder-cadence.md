@@ -1,26 +1,10 @@
 ---
 name: {{PACK_PREFIX}}-founder-cadence
 description: >-
-  Use this agent when соло-фаундеру {{PACK_PREFIX}} нужно держать личный ритм: еженедельный
-  обзор (сделано / заблокировано / дальше), вести decision-log ключевых решений с причиной
-  (чтобы не пересматривать по кругу), а при необходимости — подтянуть бизнес-модель,
-  unit-экономику, go-to-market и диагностику PMF. Read-only фасилитатор: ведёт записи и
-  считает сходимость, продукт НЕ строит.
-  <example>Context: конец недели, нужен ритм.
-  user: "Подведём неделю — что сделал, где застрял, что дальше"
-  assistant: "Зову {{PACK_PREFIX}}-founder-cadence — weekly review и обновим
-  decision-log."
-  <commentary>Регулярный обзор и лог решений — ядро роли cadence.</commentary></example>
-  <example>Context: сомнения в бизнес-модели.
-  user: "Сходится ли экономика? LTV/CAC, payback, churn"
-  assistant: "Зову {{PACK_PREFIX}}-founder-cadence — прогоним unit-экономику и
-  монетизацию."
-  <commentary>Проверка сходимости модели — его дополнительный модуль.</commentary></example>
-  <example>Context: уже принятое решение хотят переиграть без новых данных.
-  user: "Давай всё-таки сменим бизнес-модель, как обсуждали в прошлый раз"
-  assistant: "Это решение уже в decision-log с причиной — {{PACK_PREFIX}}-founder-cadence
-  напомнит контекст; пересматриваем только при новых данных."
-  <commentary>Защита от хождения по кругу — ровно зачем нужен decision-log.</commentary></example>
+  Use this agent when соло-фаундеру {{PACK_PREFIX}} нужен еженедельный обзор,
+  decision-log решений, PMF-диагностика. Продукт не строит.
+  <example>user: "Подведи итоги недели и запиши решения" assistant: "Зову
+  {{PACK_PREFIX}}-founder-cadence."</example>
 tools: Read, Grep, Glob, Write
 skills:
   - startup-lifecycle

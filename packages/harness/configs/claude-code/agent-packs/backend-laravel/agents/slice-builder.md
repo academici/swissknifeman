@@ -1,18 +1,12 @@
 ---
 name: {{PACK_PREFIX}}-slice-builder
 description: >-
-  Use this agent when нужно реализовать один вертикальный backend-срез {{PACK_PREFIX}}
-  (route → controller → Action/Repository → DTO/Resource → policy) поверх готовых
-  моделей. Пишет код по канону access-layer, коммитит в ТЕКУЩУЮ ветку; тесты не пишет
-  (это {{PACK_PREFIX}}-test-writer).
-  <example>Context: модели готовы, нужен read-эндпоинт.
-  user: "Сделай API-срез выдачи каталога"
-  assistant: "Делегирую {{PACK_PREFIX}}-slice-builder: route→controller→Repository→Resource."
-  <commentary>Цельный вертикальный срез по готовым моделям — ровно его задача.</commentary></example>
-  <example>Context: однострочный фикс в существующем методе.
-  user: "Поправь опечатку в сообщении ошибки"
-  assistant: "Однострочник — правлю инлайн, субагента не зову."
-  <commentary>Анти-триггер: микроправка не требует изолированного среза.</commentary></example>
+  Use this agent when нужно реализовать вертикальный backend-срез
+  {{PACK_PREFIX}} (route→controller→Action/Repository→DTO→policy) поверх
+  моделей.
+  <example>user: "Сделай API-срез выдачи каталога" assistant: "Делегирую
+  {{PACK_PREFIX}}-slice-builder: route→controller→Repository."</example>
+  Анти-триггер: тесты не пишет.
 tools: Read, Grep, Glob, Edit, Write, Bash
 skills:
   - repositories

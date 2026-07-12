@@ -2,6 +2,15 @@
 
 Формат — [Keep a Changelog](https://keepachangelog.com/ru/1.0.0/); версии — per-PACK (semver).
 
+## [0.4.1] - 2026-07-12
+
+### Changed
+
+- **Диета `description` всех агентов пака** (P4.1, план CONTEXT-ECONOMY): frontmatter
+  `description:` каждого `agents/*.md` сокращён до cap 600B — 1 показательный `<example>`
+  вместо 2-3, анти-триггер сведён к одной фразе прозой. Затронуты install-файлы
+  `.claude/agents/{PACK_PREFIX}-*.md` (все агенты пака).
+
 ## [0.4.0] - 2026-07-02
 
 ### Added

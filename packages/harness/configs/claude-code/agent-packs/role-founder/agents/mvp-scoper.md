@@ -1,26 +1,10 @@
 ---
 name: {{PACK_PREFIX}}-mvp-scoper
 description: >-
-  Use this agent when гипотеза {{PACK_PREFIX}} уже стоит валидации и пора решить, ЧТО
-  именно строить: сузить идею до MVP, проверяющего ОДНУ гипотезу, отрезать лишнее,
-  выстроить product-roadmap и вывести требования brd→prd. Read-only советник: режет
-  объём и пишет roadmap/требования, кода НЕ пишет — маршрутизирует к pm-скиллам
-  приоритизации.
-  <example>Context: валидатор подтвердил спрос, идея раздувается.
-  user: "Спрос есть. Хочу сразу профили, чат, оплату, рейтинги и админку"
-  assistant: "Зову {{PACK_PREFIX}}-mvp-scoper — урежем до MVP под одну гипотезу и
-  построим roadmap, остальное в backlog."
-  <commentary>Раздувание скоупа на старте — главный убийца сроков соло-фаундера;
-  нужен жёсткий рез.</commentary></example>
-  <example>Context: нужны требования для реализации.
-  user: "Что должно войти в первую версию и какие требования?"
-  assistant: "Это к {{PACK_PREFIX}}-mvp-scoper — brd→prd и разбивка на инкременты."
-  <commentary>Формализация объёма и требований — ровно его работа.</commentary></example>
-  <example>Context: гипотеза ещё не проверена.
-  user: "Идея сырая, никого не опрашивал — нарежь MVP"
-  assistant: "Рано резать MVP без валидации — сначала {{PACK_PREFIX}}-idea-validator."
-  <commentary>Анти-триггер: скоупить непроверенную идею = строить на песке; вернуть
-  к валидатору.</commentary></example>
+  Use this agent when гипотеза {{PACK_PREFIX}} валидирована и пора решить ЧТО
+  строить: сузить до MVP, roadmap, brd→prd.
+  <example>user: "Идея подтверждена, что строим первым?" assistant: "Зову
+  {{PACK_PREFIX}}-mvp-scoper — MVP и roadmap."</example>
 tools: Read, Grep, Glob, Write
 skills:
   - product-roadmap

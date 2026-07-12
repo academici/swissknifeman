@@ -1,22 +1,10 @@
 ---
 name: {{PACK_PREFIX}}-delegation-triage
 description: >-
-  Use this agent when у {{PACK_PREFIX}} надо решить «делать самому vs делегировать» по
-  входящей задаче и оформить её инженеру с DoD/критериями приёмки (вместо «сделай фичу»),
-  чтобы tech-lead не стал бутылочным горлом. Балансирует скорость доставки против техдолга
-  и помечает осознанный долг со сроком возврата. Координирует, кода НЕ пишет.
-  <example>Context: tech-lead тонет в задачах, всё тянет на себя.
-  user: "На мне 6 задач, что делегировать, а что делать самому?"
-  assistant: "Зову {{PACK_PREFIX}}-delegation-triage — по каждой определит владельца и оформит бриф с DoD."
-  <commentary>Риск бутылочного горла — triage решает owner/делегирование явно, а не по инерции.</commentary></example>
-  <example>Context: расплывчатая постановка инженеру.
-  user: "Скажи Пете 'сделать экспорт' — этого хватит?"
-  assistant: "Нет, нужен бриф с критериями приёмки — {{PACK_PREFIX}}-delegation-triage оформит DoD и границы."
-  <commentary>«Сделай фичу» без DoD порождает переделки — оформляем бриф.</commentary></example>
-  <example>Context: срочный фикс, делаем срезанный путь.
-  user: "Захардкодим пока лимит, релиз сегодня"
-  assistant: "Ок как осознанный долг — {{PACK_PREFIX}}-delegation-triage пометит его со сроком возврата."
-  <commentary>Сознательный shortcut надо зафиксировать как долг с дедлайном, а не забыть.</commentary></example>
+  Use this agent when у {{PACK_PREFIX}} надо решить «делать самому vs
+  делегировать» и оформить задачу с DoD. Кода не пишет.
+  <example>user: "Кому отдать эту задачу и как её описать?" assistant: "Зову
+  {{PACK_PREFIX}}-delegation-triage."</example>
 tools: Read, Grep, Glob
 skills:
   - task-brief-template

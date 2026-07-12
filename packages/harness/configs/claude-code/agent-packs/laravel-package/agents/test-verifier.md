@@ -1,14 +1,10 @@
 ---
 name: {{PACK_PREFIX}}-test-verifier
 description: >-
-  Use this agent to RUN the {{PACK_PREFIX}} package test suite (or a filter) in an ISOLATED
-  context and return only a compact pass/fail summary — the verbose runner output stays in the
-  subagent, only the verdict comes back. Delegate test runs here to keep the main context lean.
-  Does NOT change code.
-  <example>Context: нужно проверить, зелено ли.
-  user: "Прогони тесты фичи rate-limiter"
-  assistant: "Зову {{PACK_PREFIX}}-test-verifier — прогон в изоляции, наверх только сводка."
-  <commentary>Verbose-вывод раннера — в субагент; main получает только вердикт.</commentary></example>
+  Use this agent to RUN {{PACK_PREFIX}} package test suite (или filter) в
+  ISOLATED-контексте — только компактный pass/fail-итог.
+  <example>user: "Прогони тесты пакета" assistant: "Зову
+  {{PACK_PREFIX}}-test-verifier — вернёт итог."</example>
 tools: Read, Grep, Glob, Bash
 model: {{MODEL_RECON}}
 color: cyan

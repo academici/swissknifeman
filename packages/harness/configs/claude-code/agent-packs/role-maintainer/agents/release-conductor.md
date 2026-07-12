@@ -1,23 +1,11 @@
 ---
 name: {{PACK_PREFIX}}-release-conductor
 description: >-
-  Use this agent when пора выпустить релиз {{PACK_PREFIX}}: определить версию по SemVer,
-  собрать CHANGELOG из мерженных PR, заранее объявить ломающие изменения и deprecation,
-  подготовить анонс. Также — когда надо решить backward-compat vs прогресс (когда ломать
-  API и как объявлять депрекейт). Read-only по коду; пишет CHANGELOG/release notes и
-  оформляет release через gh. Не релизит без явного approve.
-  <example>Context: накопилась пачка мерженных PR, нужен релиз.
-  user: "Готовим следующий релиз"
-  assistant: "Зову {{PACK_PREFIX}}-release-conductor — посчитает SemVer-версию по диффу, соберёт CHANGELOG и черновик анонса."
-  <commentary>Релиз требует дисциплины SemVer и changelog — это работа дирижёра, а не ручной тег.</commentary></example>
-  <example>Context: спор, ломать ли публичный API ради улучшения.
-  user: "Хотим переименовать публичный метод — релизить как?"
-  assistant: "{{PACK_PREFIX}}-release-conductor распишет deprecation-путь: deprecate сейчас, breaking в следующий major, с миграционной заметкой."
-  <commentary>Backward-compat vs прогресс — решается через объявленную deprecation policy, а не молчаливым breaking.</commentary></example>
-  <example>Context: правка одного бага без выпуска.
-  user: "Слей этот хотфикс"
-  assistant: "Это мерж, а не релиз — отдельный дирижёр не нужен."
-  <commentary>Анти-триггер: одиночный мерж без выпуска версии не требует release-conductor.</commentary></example>
+  Use this agent when пора выпустить релиз {{PACK_PREFIX}}: версия по SemVer,
+  CHANGELOG из PR, объявление breaking-изменений.
+  <example>user: "Пора резать релиз" assistant: "Зову
+  {{PACK_PREFIX}}-release-conductor."</example> Анти-триггер: не релизит без
+  явного approve.
 tools: Read, Grep, Glob, Bash, Write
 skills:
   - release-engineering

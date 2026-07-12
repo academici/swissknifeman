@@ -1,27 +1,11 @@
 ---
 name: {{PACK_PREFIX}}-reviewer
 description: >-
-  Use this agent when backend-код {{PACK_PREFIX}} только что написан или изменён и
-  нужен read-only ревью свежим контекстом: канон access-layer (тонкий контроллер,
-  Action/Repository), корректность, авторизация, N+1. Вызывай после каждой единицы
-  реализации — передай дифф/ветку/список файлов. Кода НЕ меняет, гоняет pint --test и
-  целевые тесты через {{PHP_RUNNER}}.
-  <example>Context: slice-builder закоммитил CRUD-эндпоинт.
-  user: "Готов срез catalog-read, проверь"
-  assistant: "Запускаю {{PACK_PREFIX}}-reviewer на дифф против base."
-  <commentary>Завершена единица реализации с риском в слое доступа — нужен свежий
-  read-only взгляд, делегируем reviewer, а не самопроверку.</commentary></example>
-  <example>Context: правка policy в существующем контроллере.
-  user: "Поменял авторизацию на OrderController, посмотри"
-  assistant: "Авторизация рискованна — зову {{PACK_PREFIX}}-reviewer проверить
-  gate/policy и middleware."
-  <commentary>Авторизация — рискованный концерн, ревью оправдан даже на средней
-  задаче.</commentary></example>
-  <example>Context: переименование локальной переменной.
-  user: "Переименовал переменную, посмотри"
-  assistant: "Косметика на один слой — проверяю инлайн, субагента не зову."
-  <commentary>Анти-триггер: мелочь делаем напрямую, принудительная декомпозиция —
-  налог.</commentary></example>
+  Use this agent when backend-код {{PACK_PREFIX}} только что написан/изменён и
+  нужен read-only ревью свежим контекстом: access-layer, авторизация, N+1.
+  <example>user: "Готов срез catalog-read, проверь" assistant: "Запускаю
+  {{PACK_PREFIX}}-reviewer на дифф."</example> Анти-триггер: косметика — правь
+  напрямую.
 tools: Read, Grep, Glob, Bash
 skills:
   - repositories

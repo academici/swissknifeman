@@ -1,29 +1,11 @@
 ---
 name: {{PACK_PREFIX}}-reviewer
 description: >-
-  Use this agent when код Laravel-ПАКЕТА {{PACK_PREFIX}} только что написан или изменён
-  и нужен read-only ревью свежим контекстом: публичный контракт/BC (SemVer),
-  ServiceProvider register-vs-boot, publishables, composer-констрейнты, Testbench-инфра.
-  Вызывай после каждой единицы реализации — передай дифф/ветку/список файлов. Кода НЕ
-  меняет, гоняет {{CHECK_CMD}} и целевые тесты через {{PHP_RUNNER}}.
-  <example>Context: slice-builder закоммитил фичу с новым интерфейсом в Contracts/.
-  user: "Готова фича rate-limiter, добавился публичный контракт — проверь"
-  assistant: "Новая публичная поверхность = SemVer-обязательство пакета — запускаю
-  {{PACK_PREFIX}}-reviewer на дифф против base."
-  <commentary>Расширение публичного API пакета — рискованный концерн: нужен свежий
-  read-only взгляд на BC-поверхность, делегируем reviewer, а не самопроверку.</commentary></example>
-  <example>Context: правка ServiceProvider пакета.
-  user: "Перенёс регистрацию биндингов и publishables в ServiceProvider, посмотри"
-  assistant: "ServiceProvider — точка входа у КАЖДОГО потребителя: зову
-  {{PACK_PREFIX}}-reviewer проверить register-vs-boot и publishables."
-  <commentary>Ошибка register/boot (I/O в register, publishes не в boot) бьёт по всем
-  потребителям сразу — ревью оправдан даже на средней правке.</commentary></example>
-  <example>Context: переименование локальной переменной в private-методе.
-  user: "Переименовал переменную, посмотри"
-  assistant: "Косметика без выхода на публичную поверхность — проверяю инлайн,
-  субагента не зову."
-  <commentary>Анти-триггер: мелочь, не трогающая контракт пакета, делаем напрямую —
-  принудительная декомпозиция — налог.</commentary></example>
+  Use this agent when код Laravel-пакета {{PACK_PREFIX}} написан/изменён и нужен
+  read-only ревью: BC/SemVer, ServiceProvider, publishables.
+  <example>user: "Готова фича пакета, проверь" assistant: "Запускаю
+  {{PACK_PREFIX}}-reviewer на дифф против base."</example> Анти-триггер:
+  косметика — правь напрямую.
 tools: Read, Grep, Glob, Bash
 skills:
   - laravel-package-testing

@@ -1,13 +1,11 @@
 ---
 name: {{PACK_PREFIX}}-db-impact
 description: >-
-  Use this agent for READ-ONLY analysis of a {{PACK_PREFIX}} change's DATABASE impact: which
-  models / migrations / relations / scopes are affected, in an ISOLATED context, returning only
-  a compact impact summary. Delegate heavy schema exploration here.
-  <example>Context: добавляем поле, нужно понять охват.
-  user: "Что заденет добавление status в orders?"
-  assistant: "Зову {{PACK_PREFIX}}-db-impact — карта затронутых моделей/миграций/связей."
-  <commentary>Импакт по схеме — read-heavy разведка в субагенте.</commentary></example>
+  Use this agent for READ-ONLY analysis of a {{PACK_PREFIX}} change's DATABASE
+  impact (models/migrations/relations/scopes) in ISOLATED context — compact
+  summary only.
+  <example>user: "Что затронет эта миграция по связям?" assistant: "Зову
+  {{PACK_PREFIX}}-db-impact — вернёт компактную сводку."</example>
 tools: Read, Grep, Glob, Bash
 model: {{MODEL_RECON}}
 color: blue

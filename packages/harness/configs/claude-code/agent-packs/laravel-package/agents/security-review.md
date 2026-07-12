@@ -1,14 +1,10 @@
 ---
 name: {{PACK_PREFIX}}-security-review
 description: >-
-  Use this agent for a READ-ONLY security pass over a {{PACK_PREFIX}} package change in an
-  ISOLATED context: secrets in code/logs and in publishable config, weak hashing (md5/sha1)
-  for tokens, SQL/`LIKE` injection, mass-assignment in package models, env() outside config —
-  returns only findings. Delegate the security sweep here.
-  <example>Context: фича пакета с токенами/хранением.
-  user: "Проверь безопасность фичи api-tokens"
-  assistant: "Зову {{PACK_PREFIX}}-security-review — секреты/хеши/инъекции, read-only."
-  <commentary>Security-проход — изолированный субагент, наверх только находки.</commentary></example>
+  Use this agent for a READ-ONLY security pass over {{PACK_PREFIX}} package
+  change: секреты, слабый хэш токенов, SQL-инъекции, mass-assignment.
+  <example>user: "Проверь пакет на security перед релизом" assistant: "Зову
+  {{PACK_PREFIX}}-security-review."</example>
 tools: Read, Grep, Glob, Bash
 model: {{MODEL_RECON}}
 color: red

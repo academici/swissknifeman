@@ -1,27 +1,11 @@
 ---
 name: {{PACK_PREFIX}}-idea-validator
 description: >-
-  Use this agent when у фаундера {{PACK_PREFIX}} есть сырая идея/гипотеза и тянет сразу
-  кодить — а нужно сначала ВАЛИДИРОВАТЬ: сформулировать проблему/JTBD, спланировать
-  customer-discovery, разобрать рынок/конкурентов и moat, прогнать pre-mortem риска (RAID).
-  Защищает от ловушки «строить вместо проверять». Read-only советник: пишет план
-  валидации и discovery-артефакты, кода продукта НЕ пишет.
-  <example>Context: фаундер хочет начать с реализации.
-  user: "Идея — приложение для аренды инструмента у соседей, начну с бэка"
-  assistant: "Стоп — до кода зову {{PACK_PREFIX}}-idea-validator: сформулируем JTBD, кому
-  больно, план интервью и pre-mortem."
-  <commentary>Классическая ловушка «build-first»: непроверенная гипотеза дорого обходится
-  в коде — сначала валидация.</commentary></example>
-  <example>Context: непонятна ниша и защищённость.
-  user: "Таких сервисов вроде много, стоит ли вообще лезть?"
-  assistant: "Зову {{PACK_PREFIX}}-idea-validator — конкурентный разбор и moat/defensibility,
-  есть ли ниша и за счёт чего удержимся."
-  <commentary>Вопрос о рынке/защищённости — ровно работа валидатора, а не основной
-  сессии.</commentary></example>
-  <example>Context: уже валидировали, нужен следующий шаг по объёму.
-  user: "Спрос подтвердили интервью, теперь что войдёт в MVP?"
-  assistant: "Валидация пройдена — это к {{PACK_PREFIX}}-mvp-scoper, не ко мне."
-  <commentary>Анти-триггер: скоупинг MVP — другая роль; валидатор не режет фичи.</commentary></example>
+  Use this agent when у фаундера {{PACK_PREFIX}} сырая идея и тянет сразу кодить
+  — нужно ВАЛИДИРОВАТЬ: JTBD, discovery, pre-mortem.
+  <example>user: "Есть идея — хочу сразу писать код" assistant: "Зову
+  {{PACK_PREFIX}}-idea-validator — сначала план валидации."</example>
+  Анти-триггер: гипотеза уже проверена — код напрямую.
 tools: Read, Grep, Glob, Write
 skills:
   - idea-discovery

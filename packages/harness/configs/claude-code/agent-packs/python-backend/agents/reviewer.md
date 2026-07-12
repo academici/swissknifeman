@@ -1,18 +1,10 @@
 ---
 name: {{PACK_PREFIX}}-reviewer
 description: >-
-  Use this agent when Python-код {{PACK_PREFIX}} ({{WEB_FRAMEWORK}}) написан/изменён и нужен
-  read-only ревью: ruff чисто, mypy чисто, тонкий handler, валидация на границе, без bare
-  except, секреты не в коде, SQL параметризован. Вызывай после единицы реализации. Кода НЕ
-  меняет.
-  <example>Context: slice-builder закоммитил эндпоинт.
-  user: "Готов POST /orders, проверь"
-  assistant: "Запускаю {{PACK_PREFIX}}-reviewer — ruff/mypy + валидация + слои."
-  <commentary>Завершённая единица — свежий read-only взгляд.</commentary></example>
-  <example>Context: правка docstring.
-  user: "Поправил комментарий"
-  assistant: "Косметика — проверяю инлайн."
-  <commentary>Анти-триггер.</commentary></example>
+  Use this agent when Python-код {{PACK_PREFIX}} ({{WEB_FRAMEWORK}})
+  написан/изменён и нужен read-only ревью: ruff/mypy, тонкий handler.
+  <example>user: "Эндпоинт готов, проверь" assistant: "Зову
+  {{PACK_PREFIX}}-reviewer на дифф."</example>
 tools: Read, Grep, Glob, Bash
 skills:
   - code-simplifier

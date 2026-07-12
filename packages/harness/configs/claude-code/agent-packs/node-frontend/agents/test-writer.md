@@ -1,18 +1,10 @@
 ---
 name: {{PACK_PREFIX}}-test-writer
 description: >-
-  Use this agent when код компонента/среза {{PACK_PREFIX}} готов и нужно написать тесты
-  (Vitest + @vue/test-utils) и догнать до зелёного через {{TEST_RUNNER_CMD}}. Вызывай после
-  component-builder/slice-builder — передай пути и ожидаемое поведение. Прикладной код не
-  меняет, расхождения репортит как баг.
-  <example>Context: собран компонент с v-model и эмитами.
-  user: "Покрой DateRangePicker тестами"
-  assistant: "Зову {{PACK_PREFIX}}-test-writer — Vitest+test-utils на props/emits/рендер."
-  <commentary>Код есть, поведение определено — пора тесты отдельным агентом.</commentary></example>
-  <example>Context: тест падает из-за бага в компоненте.
-  user: "Подгони тест, чтобы прошёл"
-  assistant: "Не ослабляю тест — репортю расхождение как баг для builder'а."
-  <commentary>Не маскируем баг подгонкой ассертов.</commentary></example>
+  Use this agent when код компонента/среза {{PACK_PREFIX}} готов и нужны тесты
+  (Vitest + @vue/test-utils) до зелёного.
+  <example>user: "Компонент готов, напиши тесты" assistant: "Зову
+  {{PACK_PREFIX}}-test-writer."</example>
 tools: Read, Grep, Glob, Edit, Write, Bash
 skills:
   - vitest

@@ -66,7 +66,7 @@ SessionStart-политика 1445 симв ≈ 600–900 ток каждую с
 | P1 | maind: тощий старт сессии (digest-бюджет + тихий health) | 3/3 | 🟢 Done |
 | P2 | harness: диета agent-router (policy v2) | 1/1 | 🟢 Done |
 | P3 | skiller: рэтчет описаний скиллов | 2/2 | 🟢 Done |
-| P4 | agent-packs: диета описаний субагентов | 0/2 | ⬜ Not started |
+| P4 | agent-packs: диета описаний субагентов | 1/2 | 🟡 In progress |
 | P5 | Footprint-доктор + телеметрия | 0/4 | ⬜ Not started |
 | P6 | Rollout на флот + замер до/после | 0/4 | ⬜ Not started |
 | P7 | Машинный bootstrap (новая машина / команда) | 0/2 | ⬜ Not started |
@@ -104,3 +104,4 @@ SessionStart-политика 1445 симв ≈ 600–900 ток каждую с
 | 2026-07-12 | plan-exec/opus | P2.1 закрыт (фаза P2 1/1 🟢): policy config.json → терс-EN 1186 симв ≈296 ток (было 1445 симв RU), version 1→2, auto_suffix EN; семантический инвариант (6 пунктов) сохранён полностью, эскалация не потребовалась; test_router_config (4 теста) + validate.sh зелёный |
 | 2026-07-12 | plan-exec/sonnet | P3.1 закрыт (фаза P3 1/2 🟡): 0/8 описаний >450 (мандаторный минимум); 24 скилла укорочены (SKILL.md+SKILL.ru.md), 3 из 8 мандаторных ≤300; check-translations --stamp + registry идемпотентен + validate.sh 366 тестов + budget --check-core --strict зелёные; новый test_desc_diet.py (скан реального реестра); остаток 64 >300 — вход в burn-down P3.2 |
 | 2026-07-12 | plan-exec/sonnet | P3.2 закрыт (фаза P3 2/2 🟢): validate.sh — DESC_WARN_MAX 450→300, новый DESC_ERROR_MAX=450 hard (burn-down не спасает); bootstrap scripts/desc-burndown.txt (64 скилла, ключ по пути bucket/name); one-way протухшая-запись warn; 4 негативных прогона на HEAD подтверждены (лог в Completion Notes P3.2) + новый test_desc_burndown_gate.py (6 тестов); validate.sh 372 теста, exit 0 |
+| 2026-07-12 | plan-exec/sonnet | P4.1 закрыт (фаза P4 1/2 🟡): диета description всех 44 агентов 10 паков (1 example вместо 2-3 + анти-триггер одной фразой) — все ≤600B, backend-laravel сумма 9.2KB→3.4KB (≤3.5KB); patch-бамп версий + CHANGELOG во всех 10 pack.json; рендер-смоук всех 10 паков (`--dry-run`, rc=0) после правки; validate.sh 311 тестов OK |

@@ -1,18 +1,11 @@
 ---
 name: {{PACK_PREFIX}}-spec-writer
 description: >-
-  Use this agent when перед крупной/неоднозначной фичей {{PACK_PREFIX}} (≥3 слоя/домена)
-  нужен короткий tech-spec: требования, технический подход, разбивка на задачи, критерии
-  приёмки → docs/specs/. Опциональная роль, НЕ глобальный гейт — по тому же порогу, что и
-  делегирование субагентам.
-  <example>Context: запрос на крупную многодоменную фичу.
-  user: "Нужен модуль биллинга с тарифами, счетами и вебхуками"
-  assistant: "Сначала зову {{PACK_PREFIX}}-spec-writer — tech-spec и разбивка на срезы."
-  <commentary>Большая неоднозначная фича на 3+ домена — спека до кода экономит переделки.</commentary></example>
-  <example>Context: добавить одно поле в существующую форму.
-  user: "Добавь поле phone в профиль"
-  assistant: "Мелочь на один слой — спека не нужна, делаю срезом напрямую."
-  <commentary>Анти-триггер: маленькое однозначное изменение спеки не требует.</commentary></example>
+  Use this agent when перед крупной/неоднозначной фичей {{PACK_PREFIX}} (≥3
+  слоя) нужен короткий tech-spec → docs/specs/. Не гейт.
+  <example>user: "Нужен модуль биллинга с тарифами и вебхуками" assistant: "Зову
+  {{PACK_PREFIX}}-spec-writer — tech-spec."</example> Анти-триггер: мелкая
+  правка спеки не требует.
 tools: Read, Grep, Glob, Write
 skills:
   - architecture

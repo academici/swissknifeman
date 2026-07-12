@@ -1,13 +1,11 @@
 ---
 name: {{PACK_PREFIX}}-route-mapper
 description: >-
-  Use this agent for READ-ONLY reconnaissance of {{PACK_PREFIX}} routing: map routes →
-  controllers → Actions/Repositories for a domain in an ISOLATED context, returning only a
-  compact map. Delegate heavy route exploration here so the main agent stays lean.
-  <example>Context: нужно понять, как устроен домен перед правкой.
-  user: "Покажи роуты и контроллеры домена orders"
-  assistant: "Зову {{PACK_PREFIX}}-route-mapper — карта роутов в изолированном контексте."
-  <commentary>Тяжёлое чтение роутинга — в субагент, чтобы не раздувать main-контекст.</commentary></example>
+  Use this agent for READ-ONLY recon of {{PACK_PREFIX}} routing:
+  маршруты→контроллеры→Actions/Repositories домена, ISOLATED-контекст — только
+  компактная карта.
+  <example>user: "Какие роуты у домена orders?" assistant: "Зову
+  {{PACK_PREFIX}}-route-mapper — вернёт карту маршрутов."</example>
 tools: Read, Grep, Glob, Bash
 model: {{MODEL_RECON}}
 color: blue

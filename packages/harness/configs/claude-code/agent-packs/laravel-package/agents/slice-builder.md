@@ -1,19 +1,11 @@
 ---
 name: {{PACK_PREFIX}}-slice-builder
 description: >-
-  Use this agent when нужно реализовать одну фичу Laravel-ПАКЕТА {{PACK_PREFIX}}
-  (контракт в Contracts/ → реализация → регистрация в ServiceProvider → publishables →
-  фасад/хелперы). Пишет код с минимальной публичной поверхностью, коммитит в ТЕКУЩУЮ
-  ветку; тесты не пишет (это {{PACK_PREFIX}}-test-writer).
-  <example>Context: нужна новая возможность пакета.
-  user: "Сделай фичу rate-limiter с драйверами и публикуемым конфигом"
-  assistant: "Делегирую {{PACK_PREFIX}}-slice-builder: контракт → реализация →
-  ServiceProvider → config."
-  <commentary>Цельная фича пакета от контракта до регистрации — ровно его задача.</commentary></example>
-  <example>Context: однострочный фикс в существующем методе.
-  user: "Поправь опечатку в сообщении исключения"
-  assistant: "Однострочник — правлю инлайн, субагента не зову."
-  <commentary>Анти-триггер: микроправка не требует изолированного среза.</commentary></example>
+  Use this agent when нужно реализовать фичу Laravel-пакета {{PACK_PREFIX}}
+  (Contracts→реализация→ServiceProvider→publishables→фасад).
+  <example>user: "Добавь новый драйвер в пакет" assistant: "Делегирую
+  {{PACK_PREFIX}}-slice-builder: Contracts→ServiceProvider."</example>
+  Анти-триггер: тесты не пишет.
 tools: Read, Grep, Glob, Edit, Write, Bash
 skills:
   - laravel-package-scaffold

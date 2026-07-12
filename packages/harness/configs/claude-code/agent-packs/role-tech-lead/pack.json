@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "pack": "role-tech-lead",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Персона-пак tech-lead (роль, не стек): субагенты sprint-planner (kickoff/декомпозиция/распределение контекста), delegation-triage (делать-самому-vs-делегировать + бриф с DoD + учёт техдолга), review-gatekeeper (процесс ревью с severity-градацией, сверка с веточной моделью, эскалация архитектуры на CTO). Delegate-only/координация — кода роли не пишут. Тянется как companion к стек-паку с тем же PACK_PREFIX.",
   "stack": {
     "shape": "role"

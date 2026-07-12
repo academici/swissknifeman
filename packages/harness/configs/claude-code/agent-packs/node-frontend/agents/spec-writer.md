@@ -1,18 +1,10 @@
 ---
 name: {{PACK_PREFIX}}-spec-writer
 description: >-
-  Use this agent when перед крупной/неоднозначной frontend-фичей {{PACK_PREFIX}} (≥3
-  страницы/потока) нужен короткий tech-spec: пользовательские сценарии, состояние/стор,
-  контракты API, разбивка на срезы, критерии приёмки → docs/specs/. Опциональная роль, НЕ
-  гейт.
-  <example>Context: запрос на крупный многоэкранный флоу.
-  user: "Сделай онбординг из 4 шагов с сохранением прогресса"
-  assistant: "Сначала {{PACK_PREFIX}}-spec-writer — состояние, контракты, разбивка на срезы."
-  <commentary>Многоэкранный флоу выигрывает от спеки до кода.</commentary></example>
-  <example>Context: добавить колонку в таблицу.
-  user: "Добавь столбец даты в список"
-  assistant: "Мелочь — делаю срезом напрямую, спека не нужна."
-  <commentary>Анти-триггер: маленькое изменение.</commentary></example>
+  Use this agent when перед крупной/неоднозначной frontend-фичей {{PACK_PREFIX}}
+  (≥3 страницы) нужен короткий tech-spec. Не гейт.
+  <example>user: "Нужен многошаговый чекаут на 4 страницы" assistant: "Зову
+  {{PACK_PREFIX}}-spec-writer — сценарии и стор."</example>
 tools: Read, Grep, Glob, Write
 skills:
   - architecture

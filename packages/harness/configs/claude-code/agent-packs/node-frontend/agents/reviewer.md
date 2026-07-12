@@ -1,18 +1,10 @@
 ---
 name: {{PACK_PREFIX}}-reviewer
 description: >-
-  Use this agent when frontend-код {{PACK_PREFIX}} только что написан/изменён и нужен
-  read-only ревью: чистый tsc, чистый eslint, типизация (без any), props/emits, отсутствие
-  бизнес-логики в компонентах, доступность. Вызывай после единицы реализации — передай
-  дифф/ветку. Кода НЕ меняет.
-  <example>Context: slice-builder закоммитил страницу.
-  user: "Готов срез страницы заказов, проверь"
-  assistant: "Запускаю {{PACK_PREFIX}}-reviewer — tsc/eslint + типы + структура."
-  <commentary>Завершённая единица — нужен свежий read-only взгляд.</commentary></example>
-  <example>Context: правка одной строки текста.
-  user: "Поменял лейбл кнопки"
-  assistant: "Косметика — проверяю инлайн, субагента не зову."
-  <commentary>Анти-триггер: микроправка не требует ревью-субагента.</commentary></example>
+  Use this agent when frontend-код {{PACK_PREFIX}} написан/изменён и нужен
+  read-only ревью: tsc/eslint, типизация, props/emits, доступность.
+  <example>user: "Компонент готов, проверь" assistant: "Зову
+  {{PACK_PREFIX}}-reviewer на дифф."</example>
 tools: Read, Grep, Glob, Bash
 skills:
   - vue-best-practices

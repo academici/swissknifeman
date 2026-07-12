@@ -1,14 +1,10 @@
 ---
 name: {{PACK_PREFIX}}-api-surface
 description: >-
-  Use this agent for READ-ONLY reconnaissance of the {{PACK_PREFIX}} package's PUBLIC
-  surface diff: public methods / contracts / facades / config keys / events —
-  added/changed/removed against base, in an ISOLATED context, returning only a compact
-  map. Feed it to the reviewer's BC-axis before judging SemVer impact.
-  <example>Context: перед ревью нужно понять BC-эффект диффа.
-  user: "Что изменилось в публичной поверхности пакета на этой ветке?"
-  assistant: "Зову {{PACK_PREFIX}}-api-surface — карта added/changed/removed публичного API."
-  <commentary>Тяжёлый дифф-анализ поверхности — в субагент, ревьюеру — компактная карта.</commentary></example>
+  Use this agent for READ-ONLY recon of {{PACK_PREFIX}} package PUBLIC surface
+  diff (методы/контракты/facades/config) — только карта для BC-оси reviewer'а.
+  <example>user: "Что поменялось в публичном API пакета?" assistant: "Зову
+  {{PACK_PREFIX}}-api-surface — вернёт карту диффа."</example>
 tools: Read, Grep, Glob, Bash
 model: {{MODEL_RECON}}
 color: blue

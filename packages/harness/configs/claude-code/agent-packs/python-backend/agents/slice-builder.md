@@ -1,17 +1,11 @@
 ---
 name: {{PACK_PREFIX}}-slice-builder
 description: >-
-  Use this agent when для {{PACK_PREFIX}} нужно реализовать вертикальный backend-срез на
-  {{WEB_FRAMEWORK}}: router/view → service → repository/ORM → схема (pydantic/serializer).
-  Пишет Python-код, коммитит в текущую ветку; тесты не пишет.
-  <example>Context: нужен новый эндпоинт с валидацией.
-  user: "Сделай POST /orders с проверкой и сохранением"
-  assistant: "Делегирую {{PACK_PREFIX}}-slice-builder — router→service→repo→схема."
-  <commentary>Цельный срез эндпоинта — его задача.</commentary></example>
-  <example>Context: переименование переменной.
-  user: "Переименуй локальную переменную"
-  assistant: "Однострочник — правлю инлайн."
-  <commentary>Анти-триггер.</commentary></example>
+  Use this agent when для {{PACK_PREFIX}} нужно реализовать вертикальный
+  backend-срез на {{WEB_FRAMEWORK}}: router→service→repository→схема.
+  <example>user: "Сделай эндпоинт списка заказов" assistant: "Делегирую
+  {{PACK_PREFIX}}-slice-builder: router→service→repository."</example>
+  Анти-триггер: тесты не пишет.
 tools: Read, Grep, Glob, Edit, Write, Bash
 skills:
   - venv-dependencies

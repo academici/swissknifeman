@@ -1,17 +1,11 @@
 ---
 name: {{PACK_PREFIX}}-slice-builder
 description: >-
-  Use this agent when для {{PACK_PREFIX}} нужно реализовать вертикальный Flutter-срез:
-  экран → дерево виджетов → состояние ({{STATE_MGMT}}) → repository/service → роутинг, для
-  цели {{TARGET_KIND}}. Пишет Dart-код, коммитит в текущую ветку; тесты не пишет.
-  <example>Context: нужен экран списка с загрузкой.
-  user: "Сделай экран заказов со списком и pull-to-refresh"
-  assistant: "Делегирую {{PACK_PREFIX}}-slice-builder — экран+виджеты+{{STATE_MGMT}}+repository."
-  <commentary>Цельный вертикальный срез экрана — его задача.</commentary></example>
-  <example>Context: поправить отступ в одном виджете.
-  user: "Увеличь padding карточки"
-  assistant: "Однострочник — правлю инлайн, субагента не зову."
-  <commentary>Анти-триггер: микроправка.</commentary></example>
+  Use this agent when для {{PACK_PREFIX}} нужно реализовать вертикальный
+  Flutter-срез: экран→виджеты→состояние→repository→роутинг.
+  <example>user: "Сделай экран списка заказов" assistant: "Делегирую
+  {{PACK_PREFIX}}-slice-builder: экран→state→repository."</example>
+  Анти-триггер: тесты не пишет.
 tools: Read, Grep, Glob, Edit, Write, Bash
 skills:
   - figma-to-flutter

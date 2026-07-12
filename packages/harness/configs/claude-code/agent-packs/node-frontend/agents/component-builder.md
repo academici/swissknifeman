@@ -1,17 +1,10 @@
 ---
 name: {{PACK_PREFIX}}-component-builder
 description: >-
-  Use this agent when для {{PACK_PREFIX}} нужно собрать ОДИН переиспользуемый Vue-компонент
-  (SFC) с его composable/store-привязкой и стилями Tailwind — атомарная UI-единица, не целая
-  страница. Типизированные props/emits, без бизнес-логики в шаблоне.
-  <example>Context: нужен виджет выбора даты.
-  user: "Сделай компонент DateRangePicker с v-model"
-  assistant: "Делегирую {{PACK_PREFIX}}-component-builder — SFC + типы props/emits + composable."
-  <commentary>Атомарный переиспользуемый компонент — ровно его задача.</commentary></example>
-  <example>Context: нужна целая страница с роутом и загрузкой данных.
-  user: "Собери страницу заказов со списком и фильтрами"
-  assistant: "Это срез страницы — зову {{PACK_PREFIX}}-slice-builder, не component-builder."
-  <commentary>Страница/фича = slice-builder; component-builder — про одну UI-единицу.</commentary></example>
+  Use this agent when для {{PACK_PREFIX}} нужно собрать ОДИН переиспользуемый
+  Vue-компонент (SFC) с composable/store и Tailwind — не страница.
+  <example>user: "Нужна карточка товара как компонент" assistant: "Зову
+  {{PACK_PREFIX}}-component-builder — SFC с props/emits."</example>
 tools: Read, Grep, Glob, Edit, Write, Bash
 skills:
   - vue

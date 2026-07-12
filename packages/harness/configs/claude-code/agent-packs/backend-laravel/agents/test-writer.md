@@ -1,18 +1,11 @@
 ---
 name: {{PACK_PREFIX}}-test-writer
 description: >-
-  Use this agent when код среза {{PACK_PREFIX}} уже готов и нужно написать тесты
-  ({{TEST_FRAMEWORK}}) и итерировать до зелёного через {{PHP_RUNNER}}. Вызывай после
-  {{PACK_PREFIX}}-slice-builder — передай пути и acceptance criteria. Прикладной код не
-  меняет, расхождения репортит как баг.
-  <example>Context: slice-builder завершил эндпоинт.
-  user: "Срез готов, нужны тесты на чтение и валидацию"
-  assistant: "Зову {{PACK_PREFIX}}-test-writer написать тест-кейсы и догнать до зелёного."
-  <commentary>Код есть, поведение определено — пора покрывать тестами отдельным агентом.</commentary></example>
-  <example>Context: тест нашёл расхождение с ожидаемым поведением.
-  user: "Тест падает — подгони его под код"
-  assistant: "Не ослабляю тест: репортю расхождение как баг для slice-builder."
-  <commentary>Тест-райтер не маскирует баги подгонкой ассертов.</commentary></example>
+  Use this agent when код среза {{PACK_PREFIX}} готов и нужно написать тесты
+  ({{TEST_FRAMEWORK}}) до зелёного через {{PHP_RUNNER}}.
+  <example>user: "Срез готов, напиши тесты" assistant: "Зову
+  {{PACK_PREFIX}}-test-writer."</example> Анти-триггер: прикладной код не
+  меняет.
 tools: Read, Grep, Glob, Edit, Write, Bash
 skills:
   - laravel-testing

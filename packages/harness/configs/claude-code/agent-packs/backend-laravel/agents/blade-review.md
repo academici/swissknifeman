@@ -1,13 +1,11 @@
 ---
 name: {{PACK_PREFIX}}-blade-review
 description: >-
-  Use this agent for READ-ONLY review of {{PACK_PREFIX}} Blade/view changes in an ISOLATED
-  context: escaping (`{{ }}` vs `{!! !!}`), N+1 in views, components/slots, accessibility basics
-  — returns only findings. Delegate view-diff reading here.
-  <example>Context: правка вьюх.
-  user: "Глянь изменения в resources/views домена"
-  assistant: "Зову {{PACK_PREFIX}}-blade-review на дифф вьюх."
-  <commentary>Чтение вьюх — в субагент; вернёт только находки.</commentary></example>
+  Use this agent for READ-ONLY review of {{PACK_PREFIX}} Blade/view diffs in
+  ISOLATED context: escaping, N+1 in views, components/slots, a11y — only
+  findings.
+  <example>user: "Проверь вьюху заказа на XSS и N+1" assistant: "Зову
+  {{PACK_PREFIX}}-blade-review — вернёт только находки."</example>
 tools: Read, Grep, Glob, Bash
 model: {{MODEL_RECON}}
 color: blue

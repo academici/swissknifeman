@@ -1,18 +1,11 @@
 ---
 name: {{PACK_PREFIX}}-slice-builder
 description: >-
-  Use this agent when для {{PACK_PREFIX}} нужно реализовать вертикальный frontend-срез
-  страницы/фичи: route → page → store (Pinia) → API-клиент → композиция компонентов
-  ({{VUE_VARIANT}}). Пишет код, коммитит в текущую ветку; тесты не пишет (это
-  {{PACK_PREFIX}}-test-writer).
-  <example>Context: нужна страница списка с фильтрами и загрузкой.
-  user: "Сделай страницу заказов: список, фильтры, пагинация"
-  assistant: "Делегирую {{PACK_PREFIX}}-slice-builder — route+page+store+api+композиция."
-  <commentary>Целый вертикальный срез страницы — его задача.</commentary></example>
-  <example>Context: одна атомарная кнопка.
-  user: "Добавь компонент-бейдж статуса"
-  assistant: "Атомарный компонент — зову {{PACK_PREFIX}}-component-builder."
-  <commentary>Одна UI-единица = component-builder, не slice-builder.</commentary></example>
+  Use this agent when для {{PACK_PREFIX}} нужно реализовать вертикальный
+  frontend-срез: route→page→store (Pinia)→API-клиент→компоненты.
+  <example>user: "Сделай страницу заказов" assistant: "Делегирую
+  {{PACK_PREFIX}}-slice-builder: route→page→store."</example> Анти-триггер:
+  тесты не пишет.
 tools: Read, Grep, Glob, Edit, Write, Bash
 skills:
   - vue

@@ -1,18 +1,10 @@
 ---
 name: {{PACK_PREFIX}}-ffi-reviewer
 description: >-
-  Use this agent when в {{PACK_PREFIX}} есть FFI/нативная граница (dart:ffi, POS-периферия:
-  фискальник, принтер, сканер) и нужен сфокусированный read-only ревью именно FFI-диффа:
-  память (malloc/calloc↔free), ABI/типы, потоки/isolate, время жизни Pointer, обработка
-  кодов возврата. Кода НЕ меняет.
-  <example>Context: добавлена обёртка над нативной libfptr10.
-  user: "Проверь FFI-биндинг к фискальнику"
-  assistant: "Зову {{PACK_PREFIX}}-ffi-reviewer — память, коды возврата, isolate-границы."
-  <commentary>FFI-граница — отдельный концентрированный риск (утечки/краши на ARM).</commentary></example>
-  <example>Context: чисто Dart-правка без нативного кода.
-  user: "Поправил формат суммы в чеке (Dart)"
-  assistant: "FFI не затронут — обычный {{PACK_PREFIX}}-reviewer достаточно."
-  <commentary>Анти-триггер: без нативной границы ffi-reviewer не нужен.</commentary></example>
+  Use this agent when в {{PACK_PREFIX}} есть FFI/нативная граница (dart:ffi,
+  POS-периферия) и нужен read-only ревью FFI-диффа: память, ABI, isolate.
+  <example>user: "Проверь новый FFI-биндинг к принтеру" assistant: "Зову
+  {{PACK_PREFIX}}-ffi-reviewer — память/ABI/Pointer-lifetime."</example>
 tools: Read, Grep, Glob, Bash
 model: {{MODEL_FFI_REVIEWER}}
 color: red

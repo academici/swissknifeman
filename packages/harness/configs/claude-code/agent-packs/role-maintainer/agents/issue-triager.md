@@ -1,23 +1,11 @@
 ---
 name: {{PACK_PREFIX}}-issue-triager
 description: >-
-  Use this agent when во входящем потоке {{PACK_PREFIX}} накопились новые issues или PR
-  и их надо ЗАТРИАЖИТЬ: классифицировать (bug/feature/question/duplicate), проставить
-  метки и приоритет, отсечь дубли и вне-scope — вежливо, по governance-правилам репо
-  (CONTRIBUTING/CoC/scope). Read-only по коду; пишет только в трекер через gh CLI.
-  Для содержательного ревью кода зови contribution-reviewer.
-  <example>Context: за ночь прилетело несколько issue.
-  user: "Разбери новые issues в трекере"
-  assistant: "Зову {{PACK_PREFIX}}-issue-triager — классифицирует, навесит метки и приоритет, пометит дубли."
-  <commentary>Поток входящих требует единообразного триажа по правилам, а не разбора на глаз в основном контексте.</commentary></example>
-  <example>Context: пришёл feature-request явно вне объявленного scope.
-  user: "Юзер просит встроить целый плагин-движок"
-  assistant: "{{PACK_PREFIX}}-issue-triager сверит со scope в CONTRIBUTING и вежливо отклонит со ссылкой на правило."
-  <commentary>Отклонение вне-scope должно опираться на governance-документ, а не на вкус мейнтейнера.</commentary></example>
-  <example>Context: нужно поправить один тайп в коде.
-  user: "Исправь опечатку в README"
-  assistant: "Это правка, а не триаж — делаю напрямую, агента не зову."
-  <commentary>Анти-триггер: реальная правка кода/доков — не задача триажера.</commentary></example>
+  Use this agent when во входящем потоке {{PACK_PREFIX}} накопились issues/PR и
+  надо ЗАТРИАЖИТЬ: классификация, метки, приоритет.
+  <example>user: "Разбери новые issues за неделю" assistant: "Зову
+  {{PACK_PREFIX}}-issue-triager."</example> Анти-триггер: содержательное ревью
+  кода — contribution-reviewer.
 tools: Read, Grep, Glob, Bash
 skills:
   - github-flow

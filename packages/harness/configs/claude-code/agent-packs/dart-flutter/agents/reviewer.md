@@ -1,18 +1,10 @@
 ---
 name: {{PACK_PREFIX}}-reviewer
 description: >-
-  Use this agent when Flutter-код {{PACK_PREFIX}} (цель {{TARGET_KIND}}) написан/изменён и
-  нужен read-only ревью: dart analyze/format чисто, дисциплина состояния ({{STATE_MGMT}}),
-  dispose/утечки, null-safety, а для pos-embedded — не блокировать главный isolate
-  (watchdog/ANR), timeout I/O периферии. Кода НЕ меняет.
-  <example>Context: slice-builder закоммитил экран.
-  user: "Готов экран заказов, проверь"
-  assistant: "Запускаю {{PACK_PREFIX}}-reviewer — analyze/format + состояние + ресурсы."
-  <commentary>Завершённая единица — свежий read-only взгляд.</commentary></example>
-  <example>Context: правка строки локализации.
-  user: "Поменял текст кнопки"
-  assistant: "Косметика — проверяю инлайн."
-  <commentary>Анти-триггер.</commentary></example>
+  Use this agent when Flutter-код {{PACK_PREFIX}} написан/изменён и нужен
+  read-only ревью: analyze/format, состояние, dispose, null-safety.
+  <example>user: "Экран заказа готов, проверь" assistant: "Зову
+  {{PACK_PREFIX}}-reviewer на дифф."</example>
 tools: Read, Grep, Glob, Bash
 skills:
   - code-simplifier

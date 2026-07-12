@@ -1,13 +1,11 @@
 ---
 name: {{PACK_PREFIX}}-security-review
 description: >-
-  Use this agent for a READ-ONLY security pass over a {{PACK_PREFIX}} change in an ISOLATED
-  context: authorization (policy/gate actually enforced), mass-assignment, SQL/`LIKE` injection,
-  secrets in code/logs, IDOR — returns only findings. Delegate the security sweep here.
-  <example>Context: рискованный access-layer срез.
-  user: "Проверь безопасность среза orders-write"
-  assistant: "Зову {{PACK_PREFIX}}-security-review — auth/инъекции/секреты, read-only."
-  <commentary>Security-проход — изолированный субагент, наверх только находки.</commentary></example>
+  Use this agent for a READ-ONLY security pass over {{PACK_PREFIX}} change:
+  авторизация, mass-assignment, SQL/LIKE-инъекции, секреты, IDOR — только
+  находки.
+  <example>user: "Проверь эндпоинт на security перед мержем" assistant: "Зову
+  {{PACK_PREFIX}}-security-review."</example>
 tools: Read, Grep, Glob, Bash
 model: {{MODEL_RECON}}
 color: red

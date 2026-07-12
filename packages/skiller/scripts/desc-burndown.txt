@@ -1,0 +1,83 @@
+# desc-burndown.txt — рэтчет frontmatter `description` (P3.2, plans/2026.07.12-CONTEXT-ECONOMY/phases/P3.md)
+#
+# Формат: одна запись на строку — `<bucket>/<name>` (совпадает с frontmatter bucket:name).
+# Строки, начинающиеся с `#`, и пустые — комментарии, игнорируются.
+#
+# Правила (see validate.sh, секция description-гейтов):
+#   - description > DESC_ERROR_MAX (450 симв) — ВСЕГДА hard error, burn-down не спасает.
+#   - description > DESC_WARN_MAX (300 симв) и <= 450:
+#       * скилл ЕСТЬ в этом списке → warn (легально, унаследованный долг);
+#       * скилла НЕТ в списке → error (новый долг запрещён — рэтчет).
+#   - Запись «протухла» (скилл удалён/переименован ИЛИ его description уже <= 300 симв) →
+#     validate.sh печатает warn «протухшая запись, убери» — удали строку при сокращении.
+#
+# One-way: список ТОЛЬКО уменьшается. Добавление новых строк вне bootstrap этого item —
+# осознанное решение отдельного item'а с обоснованием в его Completion Notes, не тихая правка.
+#
+# Bootstrap (2026-07-12, P3.2): весь остаток >300 симв после P3.1 (64 скилла,
+# см. plans/2026.07.12-CONTEXT-ECONOMY/phases/P3.md Completion Notes P3.1).
+
+architect/dev-engineering-super-skill
+architect/domain-modeling
+voice-ai/voice-ai
+frontend-nuxt/nuxt-modules
+laravel-livewire/livewire-blade-attributes
+system/shared-memory
+php/production-readiness-checklist
+frontend-vue/vue-router-best-practices
+laravel-data-layer/laravel-data
+system/agent-packs
+pm/pm-super-skill
+blender/mcp-blender
+laravel-architecture/eloquent-accessors
+architect/codebase-design
+system/session-observer
+oss-dev/issue-triage
+frontend-tailwind/dark-mode
+frontend/filepond-upload
+blender-modeling/config-conventions
+frontend-linting/eslint-flat-config
+ai/token-efficient
+php-packages/laravel-package-expressive
+laravel-architecture/config-driven-abstraction
+blender-modeling/parametric-config
+general/verify-claims
+frontend-backend/laravel-echo-client
+axioma/axioma-glossary
+laravel-extras/spatie-settings
+general/mcp-advisor
+sales/sales-super-skill
+creative/content-creative-super-skill
+quality/playwright-e2e
+mobile/figma-to-flutter
+php/transactional-outbox-relay
+php/namespace-refactor-safety
+frontend-reka/reka-ui-cva
+architect/ecosystem-reuse-gate
+quality/mutation-testing
+axioma/axioma-stack
+architect/figma-mcp-core
+quality/diagnosing-bugs
+frontend-vue/pinia-stores
+blender-modeling/build-loop
+php/cursor-pagination-design
+research/query-craft
+finance/finance-super-skill
+devops/db-test-preflight
+laravel-architecture/enum-state-machine
+laravel-testing/test-isolation-guard
+frontend-naive-ui/naive-ui-theming
+frontend-tailwind/tailwind-conventions
+architect/package-contribution-protocol
+quality/tdd-discipline
+security/agent-security-super-skill
+laravel-testing/health-checks
+frontend-figma/figma-to-vue
+oss-dev/resolving-merge-conflicts
+laravel-architecture/enum-attributes
+frontend-backend/backend-type-sync
+general/writing-style
+general/grill-with-docs
+frontend-vue/vue-best-practices
+operator/operations-cx-super-skill
+blender-modeling/scene-conventions

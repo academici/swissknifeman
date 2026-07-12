@@ -84,10 +84,29 @@ LEAN_MAX_BODY_LINES = 150
 # именно он попадает в контекст; русский держим в SKILL.ru.md. Жёсткий гейт на frontmatter
 # `description` (резидентный ⊕ tier-0 — постоянный налог в КАЖДОМ запросе).
 CYRILLIC_RE = re.compile(r"[Ѐ-ӿ]")
-# Порог мягкого warn на длину description (резидентный tier-0). Высокий, чтобы ловить только
-# ЯВНО раздутые (триггеро-богатые описания ~200-400 симв — норма; навигаторы-суперскиллы
-# на 450+ — кандидаты в сокращение), без шума на каждое второе описание.
-DESC_WARN_MAX = 450
+# Пороги description-гейта (резидентный tier-0, P3.2 рэтчет). DESC_ERROR_MAX — жёсткий
+# потолок, без исключений (burn-down не спасает выше него). DESC_WARN_MAX — целевая норма;
+# скиллы между WARN и ERROR легальны только если внесены в burn-down (унаследованный долг),
+# иначе — error (новый долг запрещён). См. scripts/desc-burndown.txt.
+DESC_WARN_MAX = 300
+DESC_ERROR_MAX = 450
+
+def _load_desc_burndown(repo_root_pkg):
+    """scripts/desc-burndown.txt → set('bucket/name'), комменты(#)/пустые строки игнор."""
+    p = repo_root_pkg / "scripts" / "desc-burndown.txt"
+    if not p.is_file():
+        return set()
+    out = set()
+    for ln in p.read_text(encoding="utf-8").splitlines():
+        ln = ln.strip()
+        if not ln or ln.startswith("#"):
+            continue
+        out.add(ln)
+    return out
+
+DESC_BURNDOWN = _load_desc_burndown(root)
+DESC_BURNDOWN_SEEN = set()
+DESC_BY_KEY = {}  # 'bucket/name' -> len(description), для протухшей-записи гейта ниже
 
 
 def _collect_block_scalar(lines, start):
@@ -195,9 +214,28 @@ for skill_md in skill_files:
                       f"EN-канон (резидентный tier-0 в КАЖДОМ запросе); русский держи в SKILL.ru.md")
     if CYRILLIC_RE.search(fm.get("name", "")):
         errors.append(f"{rel}: frontmatter name содержит кириллицу (имя скилла — EN-kebab)")
-    if len(desc) > DESC_WARN_MAX:
-        warnings.append(f"{rel}: description {len(desc)} симв (> {DESC_WARN_MAX}) — резидентный "
-                        f"tier-0 налог; сократи (триггеры можно ужать), см. skiller budget")
+    # ключ бакета — из ПУТИ (не frontmatter): upstream-скиллы часто без поля `bucket`.
+    _desc_parts = rel.parts
+    _desc_bn = _desc_parts[1] if _desc_parts[0] == "skills" and len(_desc_parts) > 2 else None
+    _desc_nm = fm.get("name", "").strip('"').strip("'") or skill_dir.name
+    _desc_key = f"{_desc_bn}/{_desc_nm}" if _desc_bn and _desc_nm else None
+    if _desc_key:
+        DESC_BY_KEY[_desc_key] = len(desc)
+    if len(desc) > DESC_ERROR_MAX:
+        errors.append(f"{rel}: description {len(desc)} симв (> {DESC_ERROR_MAX} hard-потолок) — "
+                      f"сократи description (триггеры можно ужать), burn-down не спасает "
+                      f"выше {DESC_ERROR_MAX}, см. skiller budget")
+    elif len(desc) > DESC_WARN_MAX:
+        if _desc_key and _desc_key in DESC_BURNDOWN:
+            DESC_BURNDOWN_SEEN.add(_desc_key)
+            warnings.append(f"{rel}: description {len(desc)} симв (> {DESC_WARN_MAX}) — "
+                            f"унаследованный долг в scripts/desc-burndown.txt (легально, но "
+                            f"сокращай при следующей правке)")
+        else:
+            errors.append(f"{rel}: description {len(desc)} симв (> {DESC_WARN_MAX}) и НЕ в "
+                          f"scripts/desc-burndown.txt — новый долг запрещён (рэтчет P3.2): "
+                          f"сократи description до <= {DESC_WARN_MAX} симв или добавь в "
+                          f"desc-burndown.txt с обоснованием")
 
     # --- 1a. enum / semver / bucket-vs-dir / declared snippets / intra-links ---
     parts = rel.parts
@@ -254,6 +292,17 @@ for skill_md in skill_files:
         warnings.append(f"{rel}: тело SKILL.md {body_lines} непустых строк "
                         f"(> {LEAN_MAX_BODY_LINES}) — вынеси детали в references/snippets "
                         f"(lean SKILL.md, docs/guide/skill-taxonomy.md)")
+
+# --- 1b. desc-burndown.txt — протухшие записи (one-way рэтчет, P3.2) -----------
+# Запись легальна, только пока: скилл существует И его description всё ещё > DESC_WARN_MAX.
+# Иначе — протухла (скилл удалён/переименован, либо уже сокращён до нормы) — убери строку.
+for _bn_key in sorted(DESC_BURNDOWN):
+    if _bn_key not in DESC_BY_KEY:
+        warnings.append(f"scripts/desc-burndown.txt: '{_bn_key}' — протухшая запись (скилла нет "
+                        f"в реестре под этим bucket/name), убери строку")
+    elif DESC_BY_KEY[_bn_key] <= DESC_WARN_MAX:
+        warnings.append(f"scripts/desc-burndown.txt: '{_bn_key}' — протухшая запись (description "
+                        f"уже {DESC_BY_KEY[_bn_key]} симв <= {DESC_WARN_MAX}), убери строку")
 
 # --- 2. upstream.json -----------------------------------------------------
 for up_file in sorted(root.glob("skills/**/upstream.json")) + \

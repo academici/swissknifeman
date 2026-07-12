@@ -12,7 +12,7 @@
 | Authoring Model | fable |
 | Last Updated | 2026-07-12 |
 | Repository | swissknifeman (монорепо academici) |
-| Related Packages | maind, harness, skiller, analyst, core |
+| Related Packages | maind, harness, skiller, analyst, core, task |
 | Execution Mode | phase-first |
 | Target Operator Models | sonnet (exec) · haiku (LOW) · opus/fable (design/review/audit) |
 | Approval Owner | Dmitry Vostrikov |
@@ -70,7 +70,7 @@ SessionStart-политика 1445 симв ≈ 600–900 ток каждую с
 | P5 | Footprint-доктор + телеметрия | 0/4 | ⬜ Not started |
 | P6 | Rollout на флот + замер до/после | 0/4 | ⬜ Not started |
 | P7 | Машинный bootstrap (новая машина / команда) | 0/2 | ⬜ Not started |
-| P8 | Доктрина + скиллы/доки + релиз v0.9.0 | 0/4 | ⬜ Not started |
+| P8 | Доктрина + скиллы/доки + релиз v0.9.0 | 0/5 | ⬜ Not started |
 
 ## 5. Decision Log
 
@@ -91,6 +91,7 @@ SessionStart-политика 1445 симв ≈ 600–900 ток каждую с
 | D13 | 2026-07-12 | Валидация доработок не только кодом: новые items P1.3 (гайдлайн межпроектной памяти в скиллах/доках, источник — шаблоны maind) и P8.2 (синхронизация локальных скиллов и доков с философией/возможностями релиза) | требование Owner: скиллы — интерфейс знания агентов; без них агенты работают по устаревшей модели |
 | D14 | 2026-07-12 | Общий workflow-исполнитель плана `workflows/wf-context-economy-exec.js` (scriptPath-запуск, per-item модель/effort из Routing): автономно ведёт P1→P5 и P7; останавливается перед Owner-гейтами (P6 — baseline/раскатка/бакеты/живые сессии; P8.4 — approve тега). Локальное исключение phase-first: P7 (код в репо) разрешён до закрытия P6 (rollout с человеком) | запрос Owner «workflow до самого конца с моделью на каждую фазу»; прецедент — wf-skm-roadmap-005-rest-exec.js; P6 требует человека по построению (baseline из живых сессий, per-project подтверждения) — честнее объявить паузу, чем имитировать |
 | D15 | 2026-07-12 | P6.2 (sync-волны): Brain (`/home/vostrikov/Vaults/Brain`) — первый проект в каждой волне, приоритетнее остального флота; продолжение по остальным ~16 проектам — только после его подтверждённого успеха | запрос Owner |
+| D16 | 2026-07-12 | Добавлен item P8.5 (task-package доктрина: критерий Workflow-оркестрации + session-restart discipline в `plan-protocol`/`plan-exec`); Related Packages + `task` | живой инцидент этой же сессии (P1–P4): решение «нужен ли workflow / рестартовать ли сессию» не опиралось на явный критерий — Owner-жалоба на непоследовательность агента |
 
 ## 6. Update Log
 

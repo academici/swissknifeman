@@ -2,6 +2,8 @@
 # managed by maind — SessionStart: инжект ДАЙДЖЕСТА памяти проекта в контекст Claude Code
 # через additionalContext. Заменяет нативную авто-загрузку MEMORY.md, когда MODE=maind
 # (native выключается autoMemoryEnabled:false). Демон лёг / пусто → тихий no-op.
+# v2 (2026-07-12, P1.2): дайджест теперь project-only по умолчанию + байт-бюджет (P1.1) —
+# бамп версии шаблона делает существующие копии stale для `maind sync`.
 # Источник: <maind>/templates/health/memory-digest-hook.sh — правьте ТАМ и
 # `maind sync --only memory-hook --all --mode update`, не в копии проекта.
 # Лаунчер maind: env MAIND_BIN → PATH (command -v). Без машинно-специфичного пути

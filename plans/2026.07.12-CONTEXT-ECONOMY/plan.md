@@ -63,7 +63,7 @@ SessionStart-политика 1445 симв ≈ 600–900 ток каждую с
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P1 | maind: тощий старт сессии (digest-бюджет + тихий health) | 1/3 | 🟡 In progress |
+| P1 | maind: тощий старт сессии (digest-бюджет + тихий health) | 2/3 | 🟡 In progress |
 | P2 | harness: диета agent-router (policy v2) | 0/1 | ⬜ Not started |
 | P3 | skiller: рэтчет описаний скиллов | 0/2 | ⬜ Not started |
 | P4 | agent-packs: диета описаний субагентов | 0/2 | ⬜ Not started |
@@ -99,3 +99,4 @@ SessionStart-политика 1445 симв ≈ 600–900 ток каждую с
 | 2026-07-12 | plan-design/fable | Дополнение Owner: D10 (digest project-only, supersede D5), новая фаза P7 bootstrap (D11), память между машинами → roadmap (D12); релиз перенумерован P7→P8. Итог: 8 фаз, 20 items |
 | 2026-07-12 | plan-design/fable | Дополнение Owner-2: P1.3 + P8.2 — скиллы/доки как обязательный слой валидации (D13); общий workflow-исполнитель wf-context-economy-exec.js с per-item роутингом моделей (D14). Итог: 8 фаз, 22 items |
 | 2026-07-12 | plan-exec/sonnet | P1.1 закрыт: select_digest_items (байт-бюджет + project-only shared_max=0, D10) + config/CLI-флаги + 9 тестов; validate.sh 397 OK |
+| 2026-07-12 | plan-exec/sonnet | P1.2 закрыт: session-start-hook.sh тихий при OK (`--strict` rc-гейт), memory-digest-hook.sh — бамп-комментарий шапки (stale для sync); 5 новых тестов (статика + функциональные); validate.sh 402 OK |

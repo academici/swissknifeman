@@ -1,7 +1,10 @@
 """Тесты health.py: отчёт о связи, провиженеры health-doc/health-hook, CLI."""
 import copy
 import json
+import os
 import shutil
+import stat
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -11,6 +14,8 @@ from maind.config import load_config
 from tests.fixtures import FakeMemoryServer, capture, make_repo, write_maind_config
 
 _TEMPLATES = Path(__file__).resolve().parents[1] / "templates"
+_SESSION_START_HOOK = _TEMPLATES / "health" / "session-start-hook.sh"
+_MEMORY_DIGEST_HOOK = _TEMPLATES / "health" / "memory-digest-hook.sh"
 
 
 def _setup(tmp, *, with_mcp=False, memory_url=None, hook_maind=False):
@@ -218,6 +223,72 @@ class TestHookPortability(unittest.TestCase):
             self._assert_portable(script, env)
             # снятие MAIND_BIN не сломало подстановку {{PROJECT}}
             self.assertIn('--project "flexcrm"', script.read_text(encoding="utf-8"))
+
+
+class TestSessionStartHookTemplate(unittest.TestCase):
+    """P1.2: session-start-hook.sh — тихий при OK (--strict rc=0 → exit 0, ничего в stdout),
+    печатает статус только когда health нездоров."""
+
+    def _fake_maind(self, tmp, *, rc, stdout=""):
+        """Скрипт-заглушка `maind`, отвечающая на `health --cwd --strict` заданным rc/stdout."""
+        fake = Path(tmp) / "maind"
+        fake.write_text(
+            "#!/usr/bin/env bash\n"
+            f'printf %s "{stdout}"\n'
+            f"exit {rc}\n",
+            encoding="utf-8",
+        )
+        fake.chmod(fake.stat().st_mode | stat.S_IXUSR)
+        return fake
+
+    def _run_hook(self, maind_bin):
+        env = dict(os.environ)
+        env["MAIND_BIN"] = str(maind_bin)
+        return subprocess.run(
+            ["bash", str(_SESSION_START_HOOK)],
+            env=env, capture_output=True, text=True, timeout=10,
+        )
+
+    def test_static_content_has_strict_and_rc_gate(self):
+        # Требование ТЗ P1.2: шаблон содержит --strict и rc-гейт `exit 0`.
+        txt = _SESSION_START_HOOK.read_text(encoding="utf-8")
+        self.assertIn("--strict", txt)
+        self.assertIn('"$rc" -eq 0 ] && exit 0', txt)
+
+    def test_quiet_when_healthy(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            fake = self._fake_maind(tmp, rc=0, stdout="статус: connected")
+            r = self._run_hook(fake)
+            self.assertEqual(r.returncode, 0)
+            self.assertEqual(r.stdout, "")            # тихий при OK — ничего не пишет в контекст
+
+    def test_prints_status_when_unhealthy(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            fake = self._fake_maind(tmp, rc=1, stdout="статус: standalone")
+            r = self._run_hook(fake)
+            self.assertEqual(r.returncode, 0)          # хук-безопасность: сам хук не падает
+            self.assertIn("статус: standalone", r.stdout)
+
+    def test_missing_maind_is_quiet_noop(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env = dict(os.environ)
+            env["MAIND_BIN"] = str(Path(tmp) / "does-not-exist")
+            # PATH без maind (но с bash/coreutils, чтобы сам хук мог запуститься)
+            env["PATH"] = os.path.dirname(shutil.which("bash"))
+            r = subprocess.run(["bash", str(_SESSION_START_HOOK)], env=env,
+                                capture_output=True, text=True, timeout=10)
+            self.assertEqual(r.returncode, 0)
+            self.assertEqual(r.stdout, "")
+
+
+class TestMemoryDigestHookTemplate(unittest.TestCase):
+    """P1.2: memory-digest-hook.sh — бамп-комментарий шапки (byte-change → stale для
+    `maind sync`), сам вызов остаётся argless (config-driven, single source of truth P1.1)."""
+
+    def test_header_bumped_for_sync_staleness(self):
+        txt = _MEMORY_DIGEST_HOOK.read_text(encoding="utf-8")
+        self.assertIn("P1.2", txt)                      # маркер бампа шапки
+        self.assertIn('"$MAIND" memory digest', txt)     # вызов остаётся argless
 
 
 class TestCLI(unittest.TestCase):

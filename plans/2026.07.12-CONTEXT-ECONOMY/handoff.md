@@ -1,4 +1,4 @@
-# HANDOFF — 2026-07-12 — after P1.3 (P1 закрыта, 3/3)
+# HANDOFF — 2026-07-12 — after P1.3
 
 **Next:** /task:plan-exec 2026.07.12-CONTEXT-ECONOMY P2.1
 

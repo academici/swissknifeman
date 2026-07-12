@@ -70,7 +70,7 @@ SessionStart-политика 1445 симв ≈ 600–900 ток каждую с
 | P5 | Footprint-доктор + телеметрия | 3/4 | 🟠 Done with deviations |
 | P6 | Rollout на флот + замер до/после | 2/4 | 🟠 Done with deviations |
 | P7 | Машинный bootstrap (новая машина / команда) | 2/2 | 🟢 Done |
-| P8 | Доктрина + скиллы/доки + релиз v0.9.0 | 3/5 | 🟡 In progress |
+| P8 | Доктрина + скиллы/доки + релиз v0.9.0 | 4/5 | 🟡 In progress |
 
 ## 5. Decision Log
 
@@ -125,3 +125,4 @@ SessionStart-политика 1445 симв ≈ 600–900 ток каждую с
 | 2026-07-12 | plan-exec/sonnet | P8.1 закрыт (фаза P8 1/5 🟡): доктрина budget-гейта — 3 строки в root CLAUDE.md «Рамки» (182 строки, ≤200) + компактная запись памяти mAInd (ns:axioma, 400 симв), recall подтверждён — детали см. phases/P8.md P8.1 Completion Notes |
 | 2026-07-12 | plan-exec/sonnet | P8.2 закрыт (фаза P8 2/5 🟡): скиллы/доки синхронизированы с философией релиза — 4 новые команды (budget --first-turn/doctor --context/analyst sessions/setup-skill-шаблон) добавлены в package-architecture/project-tooling-runbook/ecosystem-setup (через maind sync, не руками) + попутно найдена и исправлена стале-фраза «digest топ-8» без project-only оговорки в docs/develop.md (вне заявленного списка файлов) + добавлена целиком отсутствовавшая секция `analyst sessions` в analyst CLI-доке — детали см. phases/P8.md P8.2 Completion Notes |
 | 2026-07-12 | plan-exec/sonnet | P8.3 закрыт (фаза P8 3/5 🟡): версии D9 (maind 0.3.0/skiller 0.4.0/harness 0.2.0), CHANGELOG-срез root `[0.9.0]`+maind `[0.3.0]` (13+3 записи по фичам P1.1–P8.2), registry идемпотентен, 3 validate.sh зелёные, найден недокументированный SKM-ROADMAP-005-хвост в старом [Unreleased] (не бэкфиллен — вне Scope) — детали см. phases/P8.md P8.3 Completion Notes, findings/P8-release.md |
+| 2026-07-12 | plan-exec/sonnet (D17 forced) | P8.5 закрыт (фаза P8 4/5 🟡): критерий «фаза обязана заявить оркестрацию» (2 сигнала) в `plan-protocol` §7 + session-restart discipline (Context-поле launch-block'а) в §8, `plan-exec.md`/`plan-design.md` синхронизированы, EN-канон regen + registry — детали см. phases/P8.md P8.5 Completion Notes |

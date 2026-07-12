@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.1.0
+version: 2.2.0
 description: "Executable master plans in plans/<ID>: plan/phase/task schemas, 6 statuses, refine loop and DoR gate, canonical plan root, repo home by default + visibility/supersedes fields, two homes and archive, handoff with launch-block, model routing, /task:plan-* commands."
 risk: write
 persona: oss-dev
@@ -226,6 +226,24 @@ post-factum:
       `scriptPath` (D29). Conditional ONLY on declared orchestration — manual item-by-item
       execution needs no workflow (script home/name — section 2, authoring — `workflow-craft`).
 
+**Criterion "a phase MUST declare orchestration"** (D16 — the decision used to be left
+to the executor's judgment each time, hence the observed inconsistency). A phase MUST
+set up a workflow script (item-by-item is not legal) if EITHER of two signals fires:
+
+- **N≥3 items with independent/parallelizable scope** — the phase's items don't block
+  each other on data (one item's Inputs don't reference another item's Deliverables
+  within the SAME phase) AND each carries deterministic Validation commands (concrete,
+  checkable commands, not "check manually");
+- **a long autonomous chain with external state** — the phase is meant to run without
+  manual intervention between items for longer than one executor session (state passes
+  through git+plan, not through chat context).
+
+Neither signal fires (items <3, or item scope is sequentially coupled, or Validation
+can't be formalized) — the phase stays manual, a workflow is NOT set up "just in case"
+(an extra file + extra slot discipline without need). The criterion is binary: the
+agent checks the fact against the phase's items (count, Inputs↔Deliverables coupling,
+presence of Validation commands) — it does not judge "by feel".
+
 **RAG markers in the schema.** Every load-bearing fact/verdict in an item's
 Intent/Why/Implementation Rules and in the D-log carries `RAG:✅ <date/query gist>` or
 `[UNVERIFIED]`. Load-bearing = "a project decision stands on this". A load-bearing
@@ -283,6 +301,22 @@ here — do not keep a second handoff file.
 is recommended — the next item starts from reading the plan (plan.md → phases/Pn.md →
 handoff.md), not the chat tail. plan-exec and plan-close print the fixed reminder line:
 `Context: handoff свежий — рекомендован /clear перед следующим item`.
+
+**Session-restart discipline (launch-block Context field distinction, D16).** The
+launch-block Context field carries EXACTLY one of two values — not a static generic
+"clear recommended" regardless of the next step's type:
+
+- **`continue (/clear) — manual item`** — the next step is a regular item-by-item
+  exec: the current session suffices, `/clear` before the next item.
+- **`NEW SESSION — Workflow-orchestrated`** — the next step is a Workflow-orchestrated
+  chunk (item/phase/chain) that EITHER finished CLEAN (`git status` empty for its
+  Scope, `plan-lint` green) OR is only about to launch (section 7 criterion fired,
+  `scriptPath` ready): the launch-block MUST explicitly propose a NEW session with the
+  ready `Workflow({scriptPath:...})` command, not a generic `/clear`. Reason: the
+  notification payload of background `Workflow()` tasks grows the executor session's
+  context faster than the work itself if the session isn't restarted; `/clear` inside
+  the same session doesn't fix this (it clears chat context, not the background
+  payload/limits of the executor process).
 
 ## 9. Routing & Thinking Policy (SSOT matrix)
 
@@ -456,4 +490,4 @@ extracts and recon reports, so future plan work doesn't repay the cost of recons
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of
   editing vendor copies (section 12).
 
-<!-- ru-source-sha256: 30124bde8e8599b272266f195138bea5a958e09224a5db4d7ee4987cb6311c48 -->
+<!-- ru-source-sha256: 4784e54048635380bab9f769ab8ec4498534ec0c43b2a84f094f6560553f6219 -->

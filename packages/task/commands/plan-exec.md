@@ -93,7 +93,7 @@ effort: medium
    |:--|:--|
    | Model | <sonnet|opus|haiku> |
    | Thinking | <effort> — <причина в 3–8 слов> |
-   | Context | fresh session — handoff свежий, рекомендован /clear |
+   | Context | continue (/clear) — ручной item ИЛИ NEW SESSION — Workflow-оркестрован |
    | Суть | <1 строка: что делает следующий шаг> |
 
    <голая команда ОТДЕЛЬНЫМ code-block'ом, копипаст без правок:
@@ -114,3 +114,11 @@ effort: medium
    - Если следующая фаза ещё скелет (Items 🟢/всего в Status Board = 0/N без заполненных 16 полей) —
      команда launch-block'а обязана быть `/task:plan-design <PLAN-ID> Pn`, не `plan-exec` (иначе он
      упадёт на предусловии).
+   - **Context-поле (session-restart discipline, `plan-protocol` §8, D16).** Дефолт —
+     `continue (/clear) — ручной item` (следующий item обычный item-by-item exec). Если
+     следующий шаг — Workflow-оркестрованный кусок (фаза/item заявила оркестрацию по
+     критерию `plan-protocol` §7: N≥3 items с независимым scope и детерминированной
+     Validation, либо длинная автономная цепочка с внешним состоянием) — Context ОБЯЗАН
+     быть `NEW SESSION — Workflow-оркестрован` с готовой командой `Workflow({scriptPath:
+     "plans/<PLAN-ID>/workflows/wf-....js"})`, а не общий `/clear`: фоновый payload
+     `Workflow()`-тасков растит контекст текущей сессии быстрее самой работы.

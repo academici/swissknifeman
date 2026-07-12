@@ -138,5 +138,11 @@ effort: high
 Красное линтера почини в созданных файлах.
 
 **Expected output:** список созданных/изменённых файлов + число items + вердикт
-DoR-чеклиста (режимы `Pn`/`Pn.m`) + строка
-«Готово к: `/task:plan-exec <ID> Pn.m` (Sonnet/medium)».
+DoR-чеклиста (режимы `Pn`/`Pn.m`) + строка «Готово к: …» — команда зависит от
+DoR-пункта «заявленная оркестрация» (SKILL §7 критерий: N≥3 items с независимым
+scope и детерминированной Validation, либо длинная автономная цепочка с внешним
+состоянием). Фаза БЕЗ оркестрации → «Готово к: `/task:plan-exec <ID> Pn.m`
+(Sonnet/medium)». Фаза С заявленной оркестрацией (критерий сработал, workflow-скрипт
+готов в `plans/<ID>/workflows/`) → «Готово к: `Workflow({scriptPath:
+"plans/<ID>/workflows/wf-....js"})` (NEW SESSION — не продолжать эту)», не `plan-exec`
+(session-restart discipline, SKILL §8).

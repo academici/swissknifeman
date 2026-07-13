@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.3.0
+version: 2.4.0
 description: "Executable master plans in plans/<ID>: plan/phase/task schemas, 6 statuses, refine loop and DoR gate, canonical plan root, repo home by default + visibility/supersedes fields, two homes and archive, handoff with launch-block, model routing, /task:plan-* commands."
 risk: write
 persona: oss-dev
@@ -96,11 +96,17 @@ timeless material at the root, iterations in children):
 
 **Open Questions protocol** (RAG:✅ P5.1 §7 IETF rough consensus): a disputed point
 does NOT block the plan if moved out into `open-questions.md` with one of the statuses:
-`Exploration` | `Decision pending (owner needed)` | `Resolved → D#`.
+`Exploration` | `Decision pending (нужен владелец)` | `Resolved → D#`.
 
 Rules: a question "hanging" in a phase body without being moved out = audit finding;
 closing a plan with pending questions = only `🟠 Done with deviations`; an objection is
 recorded substantively ("I don't like it" is not an objection).
+
+**Fork carriers — two roles, no duplicates:** `## Обсуждение` (Discussion) in plan.md
+(section 4) = PROVENANCE (options, recommendation, where it landed), archived together
+with the plan; `open-questions.md` = TRACKER of the unresolved — a fork whose status ≠
+`Resolved` MUST have an entry there, a resolved one is NOT copied (we keep no duplicates);
+nothing unresolved → the file is NOT created (an empty one is a noise artifact).
 
 **Re-design over closed phases** (RAG:✅ P5.1 §7 superseded chains): a new decision =
 a new D# with a "supersedes D#-old" reference; the old D# is NOT edited. Phase reopen:
@@ -153,6 +159,17 @@ Skeleton — `snippets/plan-template.md`. Sections strictly in this order:
 | Контракт | Донор-план | Pinned | Замечено | Реакция |
 |:--|:--|:--|:--|:--|
 | REGHUB/root/contracts/module-manifest.md | REGHUB | v2.0.0 | v2.0.2 (2026-07-13) | P8.2 — поднять до v2.0.2 |
+```
+
+- **`## Обсуждение`** (Discussion) — **OPTIONAL**, UNNUMBERED, the LAST section (legacy
+  plans keep it numbered — recognized BY HEADING, like Contracts). Carrier of design forks;
+  EVERY fork carries a MANDATORY status line (enum of section 3):
+
+```text
+  ### N — <развилка одной строкой>
+  - **(рекоменд.) Вариант A.** Плюсы … Минусы …
+  - **Вариант B.** Плюсы … Минусы …
+  **Статус:** Resolved → D# | Decision pending (нужен владелец) | Exploration
 ```
 
 ## 5. phases/Pn.md schema
@@ -209,7 +226,10 @@ A non-empty Known Deviations BY ITSELF does NOT change the item's status.
 - Validation left red (not fixed within Scope);
 - public contract / SemVer / a frozen contract touched BEYOND the item's spec;
 - the item's acceptance criterion not met;
-- a workaround accepted that LIVES IN THE CODE/artifact (not in the execution process).
+- a workaround accepted that LIVES IN THE CODE/artifact (not in the execution process);
+- the item commit carries a diff outside Files of the item (a foreign working-tree
+  capture, or a file "on topic" not declared in the spec) — regardless of whether the
+  diff itself is correct.
 
 🟢 Done is kept on a process deviation, but the Known Deviations entry is MANDATORY:
 tier overshoot (executed with a model/effort ABOVE what Routing prescribed), commit
@@ -233,6 +253,15 @@ package's `validate.sh` green BEFORE the commit; review-fix commits are SEPARATE
 item's Scope remains in the tree (`git status`); a diff OUTSIDE the item's Scope is not
 committed, record it in Pending Work. Incident basis — D12 of plan SKM-AUDIT-004: 4
 "closed" items were marked done while their code sat uncommitted in the working tree.
+
+```text
+An item's commit is assembled BY EXPLICIT PATHS: `git add <paths from Files> <plan files>`.
+`git add -A` and `git commit -a` are FORBIDDEN: the working tree may carry a foreign diff
+(the owner edits code in parallel with the agent) — it would ride into the item commit
+unnoticed. A foreign diff in the tree the executor does NOT touch (does not commit, stash,
+revert or "tidy up") — he NAMES it in the item's report: someone else's work is not his
+subject. Incident basis — F1 of the P2 audit of plan 2026.07.13-PLAN-PROTOCOL-GAP.
+```
 
 **Phase coherence of derived artifacts.** An item MAY leave a DERIVED artifact stale (the
 skill's generated EN canon, the registry, a docs snapshot) if ALL three hold: (a) the phase
@@ -261,7 +290,8 @@ post-factum:
 - [ ] All `[NEEDS CLARIFICATION]` resolved (0 markers in the phase).
 - [ ] Phase Scope Included / Scope Excluded filled (Goals/Non-Goals equivalent).
 - [ ] Alternatives for load-bearing decisions recorded in the D-log.
-- [ ] Open Questions distributed across `open-questions.md` statuses (section 3).
+- [ ] Every `## Обсуждение` fork carries a status line; everything ≠ `Resolved` has an
+      entry in `open-questions.md` (section 3).
 - [ ] Load-bearing facts carry RAG markers.
 - [ ] **For phases that DECLARE orchestration** (multi-agent/fan-out): a ready workflow
       script in `plans/<ID>/workflows/`, the handoff launch-block references it by
@@ -617,4 +647,4 @@ work doesn't repay the cost of reconstructing "where did this come from".
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of
   editing vendor copies (section 12).
 
-<!-- ru-source-sha256: 8b50388046a2e2ab7aa587d528546d6343249e410e2d8dbcf03024b589703fd9 -->
+<!-- ru-source-sha256: 7b6cc19dd767de3b40ed86a104e555049720838fd9ef41ba02c18b9daafc9661 -->

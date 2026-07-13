@@ -154,7 +154,9 @@ TARGET="$(cd "$TARGET" && pwd)"
 
 # Автодетект стека — та же логика маркеров, что в install.sh
 detect_presets() {
-  local detected="base"
+  # yolo первым: задаёт defaultMode=bypassPermissions ДО base (порядок пресетов
+  # решает — первый источник defaultMode побеждает, см. merge-логику ниже).
+  local detected="yolo,base"
   if [[ -f "$TARGET/artisan" && -f "$TARGET/composer.json" ]]; then
     detected+=",laravel"
   elif [[ -f "$TARGET/composer.json" ]]; then

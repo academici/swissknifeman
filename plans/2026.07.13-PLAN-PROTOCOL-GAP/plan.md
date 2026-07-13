@@ -91,7 +91,7 @@ Blocker-остатке по существу — фазу держали не д
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P1 | Разблокировка: формы Next + честный счёт lint | 1/2 | 🟡 In progress |
+| P1 | Разблокировка: формы Next + честный счёт lint | 2/2 | 🟢 Done |
 | P2 | SSOT-канон: routing-гейт, status-rule, Contracts | 0/4 | ⬜ Not started |
 | P3 | Команды plan-*: гейты и порядок закрытия | 0/4 | ⬜ Not started |
 | P4 | Регресс по флоту, закрытие эскалации REGHUB, доки | 0/3 | ⬜ Not started |
@@ -121,6 +121,7 @@ Blocker-остатке по существу — фазу держали не д
 |:--|:--|:--|
 | 2026-07-13 | issue-planner (opus/high, `/task:design`) | План создан: кластер protocol-gap (F7/m7/m8/A5/B1 + найденные при проектировании N1/N2/N3), 4 фазы / 13 items, D1–D14 — детали см. `findings/P0-protocol-gap-recon.md`. |
 | 2026-07-13 | plan-exec (sonnet/medium) | P1.1 закрыт: enum 8 форм Next + порядок закрытия в SKILL.ru.md §8, резолвер в plan_lint.py, N3-фикс archive — детали см. phases/P1.md P1.1 Completion Notes. |
+| 2026-07-13 | plan-exec (sonnet/medium) | P1.2 закрыт, фаза P1 терминальна: `plan-lint --baseline`/`--gate` — детерминированный K через git archive — детали см. phases/P1.md P1.2 Completion Notes. |
 
 ## Обсуждение (рецензия развилок — для владельца)
 

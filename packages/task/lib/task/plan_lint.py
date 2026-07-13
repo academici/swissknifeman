@@ -133,6 +133,18 @@ PLAN_SECTION_TITLES = {
     0: "Meta", 1: "Context", 2: "Execution Rules", 3: "Routing",
     4: "Phase Index & Status Board", 5: "Decision Log", 6: "Update Log",
 }
+# --- m7/D10: `## 7. Contracts` — носитель cross-plan notification ---------------
+# Секция опциональна и молода → ВСЕ находки по ней WARNING-уровня (ERROR сломал бы
+# back-compat-гейт: ни один живой план флота секции не имеет).
+# Опознаётся по ЗАГОЛОВКУ, не по номеру (D20): номер 7 — канон для НОВЫХ планов, но
+# живые планы уже заняли его своими секциями (VLT-HSEAM «## 7. Обсуждение») — жёсткая
+# привязка номера дала бы им новые WARNING «≠ канонической «## 7. Contracts»».
+CONTRACTS_HEADER_RE = re.compile(r"^##\s+(?:\d+\.\s+)?Contracts\s*$")
+CONTRACTS_EXPORTED_RE = re.compile(r"^\s*###\s+Exported\s*$")
+CONTRACTS_CONSUMED_RE = re.compile(r"^\s*###\s+Consumed\s*$")
+EXPORTED_COLUMNS = ("Контракт", "Версия", "Статус", "Потребители", "Уведомлены")
+CONSUMED_COLUMNS = ("Контракт", "Донор-план", "Pinned", "Замечено", "Реакция")
+SEMVER_RE = re.compile(r"v(\d+)\.(\d+)\.(\d+)")
 DECISION_LOG_HEADER_RE = re.compile(r"^##\s+5\.\s+Decision Log\s*$")
 UPDATE_LOG_HEADER_RE = re.compile(r"^##\s+6\.\s+Update Log\s*$")
 UPDATE_LOG_MAX_CHARS = 300  # лимит «Что» Update Log (P0.3 рек#5, EDUFY 54KB-инцидент)
@@ -415,6 +427,88 @@ def _lint_plan_md_20(lines, path, diag):
                          f"«RAG:✅»/«[UNVERIFIED]» — несущие факты не промаркированы (SKILL §7)")
 
 
+# --- m7/D10: парсер секции `## 7. Contracts` -----------------------------------
+
+def _contract_key(value):
+    """Нормализация имени контракта — последний сегмент пути: донор пишет
+    `root/contracts/module-manifest.md`, потребитель — `REGHUB/root/contracts/…`."""
+    return (value or "").strip().strip("`").rsplit("/", 1)[-1]
+
+
+def _semver_tuple(value):
+    """`v2.0.2` → (2, 0, 2); пре-релизы не поддерживаем (D10). Нет матча → None."""
+    m = SEMVER_RE.search(value or "")
+    return tuple(int(g) for g in m.groups()) if m else None
+
+
+def parse_contracts(lines, path, diag):
+    """Опциональная секция `## 7. Contracts` → {"exported": [...], "consumed": [...]}.
+    Секции нет — молча пустая модель (отсутствие не дефект). Кривые колонки/подсекции —
+    WARNING (механизм молод: ERROR сломал бы back-compat-гейт)."""
+    model = {"exported": [], "consumed": []}
+    _, body, body_start = _find_section(lines, CONTRACTS_HEADER_RE)
+    if body is None:
+        return model
+
+    subs = []
+    for i, ln in enumerate(body):
+        if CONTRACTS_EXPORTED_RE.match(ln):
+            subs.append(("exported", i))
+        elif CONTRACTS_CONSUMED_RE.match(ln):
+            subs.append(("consumed", i))
+    if not subs:
+        diag.warning(path, body_start,
+                     "«## 7. Contracts»: нет подсекций «### Exported» / «### Consumed»")
+        return model
+
+    expected = {"exported": EXPORTED_COLUMNS, "consumed": CONSUMED_COLUMNS}
+    for pos, (kind, start) in enumerate(subs):
+        end = subs[pos + 1][1] if pos + 1 < len(subs) else len(body)
+        headers, rows, header_lineno = _parse_table(body[start + 1:end],
+                                                    body_start + start + 1)
+        title = kind.capitalize()
+        if headers is None:
+            diag.warning(path, body_start + start, f"«### {title}»: таблица не найдена")
+            continue
+        if tuple(headers) != expected[kind]:
+            diag.warning(path, header_lineno,
+                         f"«### {title}»: колонки {headers} ≠ канонических "
+                         f"{list(expected[kind])}")
+            continue
+        for row, lineno in rows:
+            model[kind].append({**row, "_lineno": lineno})
+    return model
+
+
+def _lint_contracts_cross_plan(models, diag):
+    """(m7/D10) Сверка потребителей с донорами В ПРЕДЕЛАХ одного корня `plans/`.
+    Связь строится ОТ потребителя (`Consumed.Донор-план`) — единственное детерминированное
+    направление. Донор вне корня (кросс-репо) не проверяется — граница §11.
+    `Pinned` ≠ `Версия` донора → WARNING «уведомление не разнесено»."""
+    exported = {}  # (plan_id, contract_key) -> версия-строка
+    for pid, model in models.items():
+        for row in (model or {}).get("contracts", {}).get("exported", []):
+            key = _contract_key(row.get("Контракт"))
+            if key:
+                exported[(pid, key)] = (row.get("Версия") or "").strip()
+
+    for pid, model in models.items():
+        plan_md = Path((model or {}).get("path", pid)) / "plan.md"
+        for row in (model or {}).get("contracts", {}).get("consumed", []):
+            donor = (row.get("Донор-план") or "").strip()
+            key = _contract_key(row.get("Контракт"))
+            donor_ver = exported.get((donor, key))
+            if donor_ver is None:
+                continue  # донора нет в этом корне — линтер честно молчит (§11)
+            pinned = (row.get("Pinned") or "").strip()
+            dv, pv = _semver_tuple(donor_ver), _semver_tuple(pinned)
+            if dv is None or pv is None or dv == pv:
+                continue
+            diag.warning(plan_md, row.get("_lineno"),
+                         f"донор {donor}: контракт {key} = {donor_ver}, потребитель {pid} "
+                         f"запинен на {pinned} — уведомление не разнесено (§11)")
+
+
 # --- P4.3 warning-проверки: ID / workflow-скрипты / supersedes (D24/D27/D28) ----
 
 def _lint_plan_identity_20(plan_dir, plan_id, meta, plan_md, diag):
@@ -667,6 +761,11 @@ def lint_plan(plan_dir, diag):
     # meta здесь — сырой dict[name]=(value,lineno) до маппинга в модель ниже.
     _meta_raw = meta if isinstance(meta, dict) else {}
     _lint_plan_identity_20(plan_dir, plan_id, _meta_raw, plan_md, diag)
+
+    # m7/D10: опциональная секция `## 7. Contracts` (нет секции — пустая модель, молча).
+    plan_lines = _read_lines(plan_md)
+    contracts = (parse_contracts(plan_lines, plan_md, diag) if plan_lines is not None
+                 else {"exported": [], "consumed": []})
 
     phases_dir = plan_dir / "phases"
     phase_files = {}  # phase_id -> Path
@@ -965,6 +1064,7 @@ def lint_plan(plan_dir, diag):
         "id": plan_id,
         "path": str(plan_dir),
         "meta": {k: v[0] for k, v in (meta or {}).items()},
+        "contracts": contracts,
         "status_board": [row for row, _ in status_board],
         "phases": {
             pid: {
@@ -999,9 +1099,12 @@ def lint_plans_root(root, models, diag):
     (б) нет ACTIVE.md и ≥2 планов со статусом «🟡 In progress» (Meta plan.md) →
         WARNING «активный план неоднозначен»;
     (в) плоские *.md в корне plans/ (кроме ACTIVE.md/README.md) — черновики plan mode,
-        оставшиеся без протокола, → одно WARNING со списком и подсказкой from-draft.
+        оставшиеся без протокола, → одно WARNING со списком и подсказкой from-draft;
+    (г) cross-plan сверка `## 7. Contracts`: Pinned потребителя ≠ Версии донора того же
+        корня → WARNING «уведомление не разнесено» (m7/D10, §11).
     """
     root = Path(root)
+    _lint_contracts_cross_plan(models, diag)
 
     active_path = root / ACTIVE_FILENAME
     active_lines = _read_lines(active_path)

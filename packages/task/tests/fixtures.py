@@ -132,6 +132,25 @@ def handoff_md(plan_id, *, item_id="P1.1"):
 """
 
 
+def contracts_section(*, exported=(), consumed=()):
+    """Опциональная секция `## 7. Contracts` (m7/D10) — дописывается к plan_md().
+    `exported`: (контракт, версия, потребители); `consumed`: (контракт, донор, pinned)."""
+    out = ["\n## 7. Contracts\n"]
+    if exported:
+        out.append("\n### Exported\n\n")
+        out.append("| Контракт | Версия | Статус | Потребители | Уведомлены |\n")
+        out.append("|:--|:--|:--|:--|:--|\n")
+        for contract, version, consumers in exported:
+            out.append(f"| {contract} | {version} | frozen | {consumers} | 2026-07-13 |\n")
+    if consumed:
+        out.append("\n### Consumed\n\n")
+        out.append("| Контракт | Донор-план | Pinned | Замечено | Реакция |\n")
+        out.append("|:--|:--|:--|:--|:--|\n")
+        for contract, donor, pinned in consumed:
+            out.append(f"| {contract} | {donor} | {pinned} | — | P1.1 — поднять |\n")
+    return "".join(out)
+
+
 def active_md(value="DEMO-1", *, updated="2026-07-02"):
     """plans/ACTIVE.md — канонический формат (4 строки, Phase Context SKM-MASTER-003/P1):
     `# ACTIVE`, пустая строка, `**Active:** <PLAN-ID>` (или «—»), `**Updated:** <дата>`."""

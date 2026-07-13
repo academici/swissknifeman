@@ -10,7 +10,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from fixtures import active_md, handoff_md, phase_md, plan_md, write_valid_plan  # noqa: E402
+from fixtures import (  # noqa: E402
+    active_md, contracts_section, handoff_md, phase_md, plan_md, write_valid_plan,
+)
 from task.plan_lint import (  # noqa: E402
     Diagnostics, discover_plan_dirs, lint_plan, lint_plans_root, main,
 )
@@ -1174,6 +1176,75 @@ class TestWorkflowDoRWarning46(TmpPlanTestCase):
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok, diag.errors)
         self.assertEqual(self._warnings_containing(diag, self._NEEDLE), [], diag.warnings)
+
+
+class TestContractsSection(TmpPlanTestCase):
+    """m7/D10 — опциональная секция `## 7. Contracts` + cross-plan сверка версий (§11)."""
+
+    CONTRACT = "root/contracts/module-manifest.md"
+
+    def _write_pair(self, donor_version, pinned):
+        """Донор DONOR (Exported) + потребитель CONSUMER (Consumed) в одном корне plans/."""
+        donor = write_valid_plan(self.root, "DONOR")
+        consumer = write_valid_plan(self.root, "CONSUMER")
+        (donor / "plan.md").write_text(
+            plan_md("DONOR") + contracts_section(
+                exported=[(self.CONTRACT, donor_version, "CONSUMER (P1.1)")]),
+            encoding="utf-8")
+        (consumer / "plan.md").write_text(
+            plan_md("CONSUMER") + contracts_section(
+                consumed=[(f"DONOR/{self.CONTRACT}", "DONOR", pinned)]),
+            encoding="utf-8")
+        (self.root / "plans" / "ACTIVE.md").write_text(active_md("DONOR"), encoding="utf-8")
+        return self.root / "plans"
+
+    def _lint_root(self, plans_root):
+        diag = Diagnostics()
+        models = {d.name: lint_plan(d, diag) for d in discover_plan_dirs(plans_root)}
+        lint_plans_root(plans_root, models, diag)
+        return models, diag
+
+    def test_versions_in_sync_no_warning(self):
+        models, diag = self._lint_root(self._write_pair("v2.0.2", "v2.0.2"))
+        self.assertEqual(diag.errors, [])
+        self.assertEqual([w for w in diag.warnings if "уведомление не разнесено" in w], [])
+        self.assertEqual(models["DONOR"]["contracts"]["exported"][0]["Версия"], "v2.0.2")
+
+    def test_version_drift_warns_once(self):
+        _, diag = self._lint_root(self._write_pair("v2.0.2", "v2.0.0"))
+        hits = [w for w in diag.warnings if "уведомление не разнесено" in w]
+        self.assertEqual(len(hits), 1, diag.warnings)
+        self.assertIn("потребитель CONSUMER запинен на v2.0.0", hits[0])
+        self.assertEqual(diag.errors, [])  # только WARNING — механизм молод (D10)
+
+    def test_no_section_silent(self):
+        plan_dir = write_valid_plan(self.root, "DEMO-1")
+        model, diag = _lint(plan_dir)
+        self.assertEqual(diag.errors, [])
+        self.assertEqual(diag.warnings, [])
+        self.assertEqual(model["contracts"], {"exported": [], "consumed": []})
+
+    def test_donor_outside_root_silent(self):
+        # Донор в другом репо (в этом корне его нет) — линтер честно молчит (граница §11).
+        consumer = write_valid_plan(self.root, "CONSUMER")
+        (consumer / "plan.md").write_text(
+            plan_md("CONSUMER") + contracts_section(
+                consumed=[(f"REGHUB/{self.CONTRACT}", "REGHUB", "v2.0.0")]),
+            encoding="utf-8")
+        (self.root / "plans" / "ACTIVE.md").write_text(active_md("CONSUMER"), encoding="utf-8")
+        _, diag = self._lint_root(self.root / "plans")
+        self.assertEqual(diag.errors, [])
+        self.assertEqual([w for w in diag.warnings if "уведомление не разнесено" in w], [])
+
+    def test_wrong_columns_warn_not_error(self):
+        plan_dir = write_valid_plan(self.root, "DEMO-1")
+        broken = contracts_section(
+            exported=[(self.CONTRACT, "v1.0.0", "—")]).replace("| Статус |", "| State |")
+        (plan_dir / "plan.md").write_text(plan_md("DEMO-1") + broken, encoding="utf-8")
+        model, diag = _lint(plan_dir)
+        self.assertEqual(diag.errors, [])
+        self.assertTrue(any("колонки" in w for w in diag.warnings), diag.warnings)
+        self.assertEqual(model["contracts"]["exported"], [])  # кривая таблица не парсится
 
 
 class TestBaselineGate(TmpPlanTestCase):

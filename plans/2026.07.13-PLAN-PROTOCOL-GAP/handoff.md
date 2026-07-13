@@ -1,69 +1,73 @@
-# HANDOFF — 2026-07-13 — after P2.2
+# HANDOFF — 2026-07-13 — after P2.3
 
-**Next:** ЗАПУСК ВРУЧНУЮ: opus/high — P2.3 (`plan.md` §3 Routing: P2.1–P2.4 = opus/high,
-Exec = manual; `/task:plan-exec` пинит sonnet/medium → по routing-гейту §9 обязан отказать,
-`ROUTING-BLOCKED`. До появления `/task:plan-run` (item P3.5, D18) — только ручной запуск в
-сессии, где уже выставлены `/model opus` + `/effort high`)
+**Next:** ЗАПУСК ВРУЧНУЮ: opus/high — P2.4 (`plan.md` §3 Routing: P2.1–P2.4 = opus/high,
+Exec = manual; `/task:plan-exec` пинит sonnet/medium → routing-гейт §9 обязан отказать,
+`ROUTING-BLOCKED`). **Терминальный item фазы P2**: снимает красный `check-translations`
+(D17 — фазовая когерентность производного)
 
 | Параметр | Значение |
 |:--|:--|
 | Model | opus |
-| Thinking | high — item несёт ОБА SSOT сразу (канон §4/§11 + парсер и cross-plan сверка в `plan_lint.py`): схема секции, semver-сравнение, back-compat 26 планов, тесты. Инварианты + public contract → SSOT §9: high+ MANDATORY |
-| Context | continue (/clear) — ручной item; items P2 делят `SKILL.ru.md`, строго последовательно |
-| Суть | `## 7. Contracts` (Exported/Consumed) в §4 + cross-plan notification в §11 + парсер и сверка версий в `plan_lint.py` + тесты (m7/D10) |
+| Thinking | high — регенерация EN-канона: агент грузит ТОЛЬКО `SKILL.md`, поэтому качество компактного EN = качество канона для всего флота; плюс контроль бюджета тела (≤620 строк) и сверка, что все четыре новых правила доехали |
+| Context | continue (/clear) — ручной item; последний item фазы P2 |
+| Суть | snippets (plan/handoff/launch-block) + version 2.3.0 + **регенерация `SKILL.md` из RU** + `check-translations.sh --stamp` + `skiller registry` |
 
 ````
-Запусти вручную под opus/high (НЕ /task:plan-exec — Exec=manual): исполни item P2.3 плана
+Запусти вручную под opus/high (НЕ /task:plan-exec — Exec=manual): исполни item P2.4 плана
 2026.07.13-PLAN-PROTOCOL-GAP по протоколу plan-exec (packages/skiller/skills/general/
-plan-protocol/SKILL.ru.md §8–11) — прочитай plan.md (Context, Execution Rules, §3 Routing,
-D-лог: D10 + новые D15–D19), phases/P2.md (Phase Context + item P2.3 целиком, включая
-Completion Notes закрытых P2.1/P2.2), закрой item по каноническому порядку закрытия §8 (дифф
-→ validate → bookkeeping → перезапись handoff → plan-lint --baseline HEAD ПОСЛЕ handoff →
-коммит). Правило двух SSOT: `SKILL.ru.md` §4/§11 И `plan_lint.py` правятся В ОДНОМ item'е.
-Гейт приёмки — back-compat: ноль НОВЫХ ERROR/WARNING по 9 корням флота (ни один живой план
-секции 7 не имеет).
+plan-protocol/SKILL.ru.md §8–11) — прочитай plan.md (Execution Rules, §3 Routing, D-лог:
+D12 + D15–D20), phases/P2.md (item P2.4 целиком + Completion Notes закрытых P2.1–P2.3),
+закрой item по каноническому порядку закрытия §8 (дифф → validate → bookkeeping →
+перезапись handoff → plan-lint --baseline HEAD ПОСЛЕ handoff → коммит). Порядок работ
+СТРОГИЙ: RU → snippets → version 2.3.0 → регенерация SKILL.md промтом
+packages/skiller/prompts/generate/claude-canon-from-ru.md → check-translations.sh --stamp
+→ skiller registry. Править SKILL.md руками ЗАПРЕЩЕНО. После item'а
+`bash packages/skiller/scripts/validate.sh` обязан стать ЗЕЛЁНЫМ — это гейт закрытия фазы
+(D17: полный зелёный требуется на терминальном item'е). Фазу P2 после этого закрывает
+/task:plan-close 2026.07.13-PLAN-PROTOCOL-GAP P2.
 ````
 
 **Done:** P1 терминальна (`4c03715`, `b45cd51`). P2.1 🟢 (`38954ab`) — §9: канон-форма строки
-Routing (колонка Exec), тир-порядок (`haiku < sonnet < opus ≈ fable`; `low < medium < high <
-xhigh < max`), деривация Exec + консистентность заполненной колонки, routing-гейт из 5 веток
-(`ROUTING-BLOCKED` / `ROUTING-INCONSISTENT`), back-compat легаси-форм. P2.2 🟢 — §6: status-rule
-(непустые Known Deviations сами по себе статус не меняют; 🟠 — закрытый список из 5
-material-триггеров; 🟢 при process + ОБЯЗАТЕЛЬНАЯ запись; недобор модели/effort вынесен из
-предиката — он запрещён гейтом §9), «фазовая когерентность производного» (D17) и «дефект ТЗ ≠
-отклонение исполнителя» (D19: эскалация → D# владельца → синк Scope → 🟢). Между фазами владелец
-принял D18 (`fc57561`): новый item **P3.5** — команда `/task:plan-run` БЕЗ пина модели (наследует
-сессию), чтобы manual-items не требовали ритуала `/model` + `/effort` + вставки промпта; жёсткий
-гейт остаётся за `plan-exec`. Полные детали — `phases/P2.md` Completion Notes P2.1/P2.2.
+Routing (колонка Exec), тир-порядок, деривация + консистентность Exec, routing-гейт
+(`ROUTING-BLOCKED` / `ROUTING-INCONSISTENT`). P2.2 🟢 (`cd749ab`) — §6: status-rule (5
+material-триггеров; 🟢 при process + обязательная запись), «фазовая когерентность производного»
+(D17), «дефект ТЗ ≠ отклонение исполнителя» (D19). P2.3 🟢 — оба SSOT синхронно: `SKILL.ru.md`
+§4 (опциональная `## 7. Contracts`, две подтаблицы) + §11 (cross-plan notification: обязанность
+несёт ITEM, связь строится ОТ потребителя, кросс-репо граница названа честно) и `plan_lint.py`
+(`parse_contracts`, модель `contracts` в `--json`, root-сверка `Pinned` ≠ `Версия` донора →
+WARNING; +5 тестов, 104 → 109 зелёных). Регресс по 9 корням флота: **0 новых ERROR, 0 новых
+WARNING** — и он же поймал дефект ТЗ (жёсткая привязка секции к номеру 7 давала 2 новых WARNING
+планам, уже занявшим этот номер) → D20: секция опознаётся по ЗАГОЛОВКУ. Между фазами владелец
+принял D18 (`fc57561`) → новый item **P3.5** (`/task:plan-run` — команда без пина модели).
+Полные детали — `phases/P2.md` Completion Notes P2.1–P2.3.
 
-**Remaining:** P2.3 (§4/§11 Contracts + парсер/сверка в `plan_lint.py` + тесты) → P2.4
-(ТЕРМИНАЛЬНЫЙ item фазы: snippets + version 2.3.0 + **регенерация EN-канона** + `skiller registry`
-— снимает красный `check-translations`) → P3 (5 items, sonnet/medium: `plan-exec` routing-гейт,
-`plan-close`, `plan-audit`, `plan-design`, новый `plan-run`) → P4 (3 items — регресс по 9 корням
-флота, закрытие эскалации REGHUB в чужом репо, доки/CHANGELOG).
+**Remaining:** P2.4 (терминальный item фазы) → закрытие фазы P2 (`/task:plan-close … P2`) → P3
+(5 items, sonnet/medium: `plan-exec` routing-гейт, `plan-close`, `plan-audit`, `plan-design`,
+новый `plan-run`) → P4 (3 items — регресс по флоту, закрытие эскалации REGHUB в чужом репо,
+доки/CHANGELOG).
 
 **Sources of truth:** `plans/2026.07.13-PLAN-PROTOCOL-GAP/plan.md` (Meta, Execution Rules, §3
-Routing, D-лог D1–D19) · `phases/P2.md` (Completion Notes P2.1/P2.2; ТЗ P2.3/P2.4) ·
-`phases/P3.md` (ТЗ P3.1–P3.5) · `findings/P0-protocol-gap-recon.md` · SSOT-цели:
-`packages/skiller/skills/general/plan-protocol/SKILL.ru.md` (§6, §9 — закрыты; §4/§11 — предмет
-P2.3), `packages/task/lib/task/plan_lint.py`.
+Routing, D-лог D1–D20) · `phases/P2.md` (Completion Notes P2.1–P2.3; ТЗ P2.4) · `phases/P3.md`
+(ТЗ P3.1–P3.5) · SSOT-цели: `packages/skiller/skills/general/plan-protocol/SKILL.ru.md`
+(§4/§6/§9/§11 — закрыты; frontmatter version + snippets + EN-канон — предмет P2.4),
+`packages/task/lib/task/plan_lint.py`.
 
 **Open risks:**
-- P2.3 — единственный item фазы, трогающий КОД линтера: гейт приёмки = ноль новых ERROR/WARNING
-  по 26 живым планам в 9 корнях (Execution Rules). Регресс-прогон обязателен ДО коммита.
-- Фаза P2 правит SSOT-канон: формулировки = public contract для флота. Ревью P2.1 показало, что
-  дефекты бывают в САМИХ формулировках ТЗ (D15/D16) — ТЗ не заменяет думанье, читать критически.
-- EN-канон `SKILL.md` протух намеренно (D17, теперь канонизировано в §6) →
-  `packages/skiller/scripts/validate.sh` красный на `check-translations` до P2.4. Это ожидаемо,
-  не регресс; в P2.4 снимается регенерацией.
-- Routing-гейт §9 и status-rule §6 уже в SSOT, но в текстах команд `/task:plan-*` их ещё НЕТ (P3):
-  до P3 правила исполняет только читающий человек/агент.
+- P2.4 — единственный item, который трогает `SKILL.md` (EN-канон): править его РУКАМИ запрещено,
+  только регенерация промтом. Агенты флота грузят ТОЛЬКО EN — ошибка регенерации = правила фазы
+  P2 не доедут до исполнителей вовсе.
+- Бюджет тела EN-канона: ориентир ≤620 строк (RU вырос на ~90 строк за фазу). Раздулось сильнее —
+  ужимать формулировки, а не «оставить как вышло»: скилл в CORE, грузится во всех проектах флота.
+- До P2.4 `packages/skiller/scripts/validate.sh` красный на `check-translations` (D17, ожидаемо).
+  После P2.4 обязан быть зелёным — иначе фаза P2 не закрывается.
+- Правила §6/§9/§11 уже в SSOT, но в текстах команд `/task:plan-*` их ещё НЕТ (фаза P3): до неё
+  routing-гейт и status-rule исполняет только читающий человек/агент, автоматически — никто.
 - P4.2 правит ЧУЖОЙ репозиторий (Brain-vault, план REGHUB) — коммит там отдельный.
 
 **Workarounds/Deferred/Open questions:**
 - workarounds: —
-- deferred: регенерация EN-канона (P2.4, D17); миграция §3 Routing 26 живых планов на канон-форму
-  с колонкой Exec (back-compat: легаси-формы валидны); кросс-репо push-уведомление о bump'е
-  контракта (роадмап, вне scope).
+- deferred: миграция §3 Routing 26 живых планов на канон-форму с колонкой Exec (back-compat:
+  легаси-формы валидны); заполнение секции `## 7. Contracts` в живых планах (REGHUB — P4.2);
+  кросс-репо push-уведомление о bump'е контракта (роадмап, вне scope).
 - open_questions: развилки `plan.md` §Обсуждение (авто-делегация в Workflow, релакс ERROR→WARNING
   на скелетах) — отклонены D-логом; возражение владельца перебивает новым D# со `supersedes`.

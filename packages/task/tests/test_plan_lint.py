@@ -4,6 +4,8 @@
 import contextlib
 import io
 import json
+import shutil
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -1172,3 +1174,66 @@ class TestWorkflowDoRWarning46(TmpPlanTestCase):
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok, diag.errors)
         self.assertEqual(self._warnings_containing(diag, self._NEEDLE), [], diag.warnings)
+
+
+class TestBaselineGate(TmpPlanTestCase):
+    """P1.2/B1/D5/D6 — `--baseline`/`--gate`: детерминированный счёт новых ошибок K."""
+
+    def _git(self, *args):
+        subprocess.run(["git", *args], cwd=str(self.root), check=True, capture_output=True)
+
+    def _init_repo_with_valid_plan(self):
+        plan_dir = write_valid_plan(self.root, "DEMO-1")
+        self._git("init", "-q")
+        self._git("config", "user.email", "test@example.com")
+        self._git("config", "user.name", "Test")
+        self._git("add", "-A")
+        self._git("commit", "-q", "-m", "init")
+        return plan_dir
+
+    @unittest.skipUnless(shutil.which("git"), "git недоступен")
+    def test_baseline_no_new_errors_on_clean_tree(self):
+        plan_dir = self._init_repo_with_valid_plan()
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = main([str(plan_dir), "--baseline"])
+        self.assertEqual(code, 0, err.getvalue())
+        self.assertIn("новых от рабочего дерева: 0", out.getvalue())
+
+    @unittest.skipUnless(shutil.which("git"), "git недоступен")
+    def test_baseline_counts_new_error_and_gate_new_fails(self):
+        plan_dir = self._init_repo_with_valid_plan()
+        text = (plan_dir / "plan.md").read_text(encoding="utf-8")
+        text = text.replace("| Plan ID | DEMO-1 |\n", "")
+        (plan_dir / "plan.md").write_text(text, encoding="utf-8")
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = main([str(plan_dir), "--baseline", "HEAD", "--gate", "new"])
+        self.assertEqual(code, 1)
+        self.assertIn("новых от рабочего дерева: 1", out.getvalue())
+
+    @unittest.skipUnless(shutil.which("git"), "git недоступен")
+    def test_baseline_default_gate_stays_all_even_when_k_zero(self):
+        # --gate=all (дефолт, back-compat CI) — exit по N, даже если сам baseline-дифф
+        # чист (K==0), а план несёт остаточную ошибку вне диффа этого коммита.
+        plan_dir = self._init_repo_with_valid_plan()
+        text = (plan_dir / "plan.md").read_text(encoding="utf-8")
+        text = text.replace("| Plan ID | DEMO-1 |\n", "")
+        (plan_dir / "plan.md").write_text(text, encoding="utf-8")
+        self._git("add", "-A")
+        self._git("commit", "-q", "-m", "broken baseline too")
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = main([str(plan_dir), "--baseline"])
+        self.assertEqual(code, 1)
+        self.assertIn("новых от рабочего дерева: 0", out.getvalue())
+
+    def test_baseline_unavailable_without_git_repo(self):
+        plan_dir = write_valid_plan(self.root, "DEMO-1")  # НЕТ git init
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = main([str(plan_dir), "--baseline"])
+        self.assertEqual(code, 0, err.getvalue())  # exit по N (план валиден), не по K
+        self.assertIn("baseline", err.getvalue())
+        self.assertIn("недоступен", err.getvalue())
+        self.assertNotIn("новых от рабочего дерева", out.getvalue())

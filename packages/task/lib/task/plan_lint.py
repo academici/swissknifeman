@@ -18,9 +18,14 @@ plan-protocol/SKILL.ru.md` + его `snippets/{plan,phase,handoff}-template.md`;
 stdlib-only (re/argparse/pathlib/json/sys), сообщения — на русском.
 """
 import argparse
+import io
 import json
 import re
+import subprocess
 import sys
+import tarfile
+import tempfile
+from collections import Counter
 from pathlib import Path
 
 try:
@@ -194,16 +199,37 @@ class Diagnostics:
     def __init__(self):
         self.errors = []
         self.warnings = []
+        self._raw_errors = []  # (path, msg) — для normalized_keys (P1.2/B1)
+        self._raw_warnings = []
 
     def error(self, path, line, msg):
         self.errors.append(f"{_loc(path, line)}: {msg}")
+        self._raw_errors.append((Path(path), msg))
 
     def warning(self, path, line, msg):
         self.warnings.append(f"{_loc(path, line)}: {msg}")
+        self._raw_warnings.append((Path(path), msg))
 
     @property
     def ok(self):
         return not self.errors
+
+    def normalized_keys(self, base_dir):
+        """Мультимножество `(kind, отн_путь, msg)` для сравнения деревьев (`--baseline`,
+        P1.2/D5/D6): путь — относительно `base_dir` (если под ним, иначе как есть),
+        номер строки НЕ участвует (сдвиг строк от собственного диффа не должен превращать
+        старую ошибку в «новую»)."""
+        base_dir = Path(base_dir).resolve()
+
+        def rel(path):
+            try:
+                return str(Path(path).resolve().relative_to(base_dir))
+            except ValueError:
+                return str(path)
+
+        keys = [("ERROR", rel(p), m) for p, m in self._raw_errors]
+        keys += [("WARN", rel(p), m) for p, m in self._raw_warnings]
+        return keys
 
 
 def _loc(path, line):
@@ -1037,6 +1063,68 @@ def discover_plan_dirs(root):
     return dirs
 
 
+# --- --baseline: детерминированный счёт новых ошибок (P1.2/B1/D5/D6) ---------
+
+def _git_run(args, cwd, timeout=15):
+    """`check=False`, перехватывает `FileNotFoundError`/таймаут — линтер обязан
+    работать вне git-репо (гоняют по Brain-vault'у и чужим корням, P1.2 Implementation
+    Rules). None — команда не выполнилась вовсе (нет git / таймаут)."""
+    try:
+        return subprocess.run(["git"] + args, cwd=str(cwd), capture_output=True,
+                               timeout=timeout, check=False)
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        return None
+
+
+def _baseline_diag_keys(root, ref):
+    """Прогоняет lint на дереве `ref` для того же `root`-пути (git archive во временный
+    каталог, БЕЗ файла-состояния — источник истины git). Возвращает
+    `(normalized_keys, None)` либо `(None, причина)` при недоступности baseline —
+    graceful degrade (git отсутствует / не репозиторий / ref не найден / archive упал)."""
+    root = Path(root).resolve()
+
+    proc = _git_run(["rev-parse", "--show-toplevel"], cwd=root)
+    if proc is None or proc.returncode != 0:
+        return None, "не git-репозиторий (или git не установлен)"
+    git_root = Path(proc.stdout.decode("utf-8", "replace").strip())
+
+    try:
+        relpath = root.relative_to(git_root)
+    except ValueError:
+        return None, f"путь «{root}» вне git-репозитория «{git_root}»"
+
+    verify = _git_run(["rev-parse", "--verify", f"{ref}^{{commit}}"], cwd=git_root)
+    if verify is None or verify.returncode != 0:
+        return None, f"ref «{ref}» не найден"
+
+    archive = _git_run(["archive", ref, "--", str(relpath)], cwd=git_root, timeout=30)
+    if archive is None or archive.returncode != 0 or not archive.stdout:
+        return None, f"«git archive {ref} -- {relpath}» не удался"
+
+    with tempfile.TemporaryDirectory(prefix="plan-lint-baseline-") as tmp:
+        tmpdir = Path(tmp)
+        try:
+            with tarfile.open(fileobj=io.BytesIO(archive.stdout), mode="r|") as tar:
+                tar.extractall(path=tmpdir)
+        except tarfile.TarError as exc:
+            return None, f"распаковка архива не удалась: {exc}"
+
+        baseline_root = tmpdir / relpath
+        baseline_dirs = discover_plan_dirs(baseline_root)
+        if not baseline_root.exists() or baseline_dirs is None:
+            return None, f"путь «{relpath}» отсутствует в «{ref}» (новый план?)"
+
+        baseline_diag = Diagnostics()
+        models = {}
+        for plan_dir in baseline_dirs:
+            models[plan_dir.name] = lint_plan(plan_dir, baseline_diag)
+        is_root = not (baseline_root / "plan.md").is_file()
+        if is_root:
+            lint_plans_root(baseline_root, models, baseline_diag)
+
+        return baseline_diag.normalized_keys(baseline_root), None
+
+
 # --- CLI ----------------------------------------------------------------------
 
 def main(argv=None):
@@ -1047,6 +1135,13 @@ def main(argv=None):
     parser.add_argument("path", help="путь к plans/<PLAN-ID> или к plans/")
     parser.add_argument("--json", action="store_true",
                          help="вывести распарсенную модель (планы→фазы→items) в stdout как JSON")
+    parser.add_argument("--baseline", nargs="?", const="HEAD", default=None, metavar="REF",
+                         help="git-ref для счёта НОВЫХ ошибок от рабочего дерева (K, B1/D5/D6); "
+                              "без значения — HEAD")
+    parser.add_argument("--gate", choices=("all", "new"), default="all",
+                         help="exit-код по всем диагностикам (all, дефолт — back-compat CI) "
+                              "или только по новым от --baseline (new); при недоступном "
+                              "baseline gate=new деградирует к all (красное не пропускается)")
     args = parser.parse_args(argv)
 
     root = Path(args.path)
@@ -1072,6 +1167,17 @@ def main(argv=None):
     if is_plans_root:
         lint_plans_root(root, models, diag)
 
+    new_count = None
+    if args.baseline is not None:
+        base_keys, reason = _baseline_diag_keys(root, args.baseline)
+        if reason is not None:
+            diag.warning(root, None,
+                         f"baseline «{args.baseline}» недоступен: {reason} — "
+                         f"счёт новых ошибок не вычислен")
+        else:
+            diff = Counter(diag.normalized_keys(root)) - Counter(base_keys)
+            new_count = sum(diff.values())
+
     for msg in diag.errors:
         print(f"ERROR: {msg}", file=sys.stderr)
     for msg in diag.warnings:
@@ -1081,9 +1187,12 @@ def main(argv=None):
         print(json.dumps({"plans": models}, ensure_ascii=False, indent=2))
     else:
         status = "OK" if diag.ok else "ПРОВАЛ"
+        suffix = f"; новых от рабочего дерева: {new_count}" if new_count is not None else ""
         print(f"plan-lint: {status} ({len(plan_dirs)} план(ов), "
-              f"{len(diag.errors)} ошибок, {len(diag.warnings)} предупреждений)")
+              f"{len(diag.errors)} ошибок, {len(diag.warnings)} предупреждений{suffix})")
 
+    if args.gate == "new" and new_count is not None:
+        return 0 if new_count == 0 else 1
     return 0 if diag.ok else 1
 
 

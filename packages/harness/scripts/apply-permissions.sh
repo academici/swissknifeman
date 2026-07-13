@@ -62,6 +62,12 @@ if [[ "$GLOBAL" -eq 1 ]]; then
     mkdir -p "$HOME/.claude/hooks/notify"
     cp "$PRESETS_DIR/hooks/notify/notify.sh" "$HOME/.claude/hooks/notify/"
     chmod +x "$HOME/.claude/hooks/notify/notify.sh"
+    # daemon-safety: PreToolUse-хук, блокирует опасные Bash-операции с демонами
+    # (kill -9 сервисов, systemctl stop критичных юнитов и т.п.). Всегда активен
+    # (зашит в settings.global.json), состояния нет — просто обновляем код.
+    mkdir -p "$HOME/.claude/hooks/daemon-safety"
+    cp "$PRESETS_DIR/hooks/daemon-safety/block-daemon-ops.sh" "$HOME/.claude/hooks/daemon-safety/"
+    chmod +x "$HOME/.claude/hooks/daemon-safety/block-daemon-ops.sh"
     # review-gate: гейт архитектуры на SubagentStop. Код обновляем; env.ini и
     # config.json не перезатираем (там режим и проверка проекта).
     RG_SRC="$PRESETS_DIR/hooks/review-gate"; RG_DST="$HOME/.claude/hooks/review-gate"

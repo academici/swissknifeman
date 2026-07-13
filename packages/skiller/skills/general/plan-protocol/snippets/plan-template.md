@@ -51,7 +51,12 @@ plan-protocol; не копировать его целиком. Минимум:>
 
 ## 3. Routing
 
-<ТОЛЬКО отклонения от SSOT-матрицы plan-protocol §7. Пусто = дефолты.>
+<ТОЛЬКО отклонения от SSOT-матрицы plan-protocol §9. Пусто = дефолты SSOT-матрицы §9.>
+
+| Items | Model/effort | Exec | Почему |
+|:--|:--|:--|:--|
+| <Pn.m–Pn.k> | <fable/high> | manual | <расфриз public-контракта: effort high+ MANDATORY> |
+| <Pn.m–Pn.k> | <sonnet/low> | plan-exec | <doc-cleanup без новых решений> |
 
 ## 4. Phase Index & Status Board
 
@@ -71,4 +76,21 @@ plan-protocol; не копировать его целиком. Минимум:>
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
 | <YYYY-MM-DD> | issue-planner/opus | План создан |
+
+## 7. Contracts
+
+<ОПЦИОНАЛЬНАЯ: только у планов, экспортирующих/потребляющих замороженные контракты.
+Не экспортируешь и не потребляешь — секцию УДАЛИ (её отсутствие не дефект).>
+
+### Exported
+
+| Контракт | Версия | Статус | Потребители | Уведомлены |
+|:--|:--|:--|:--|:--|
+| <root/contracts/<name>.md> | v1.0.0 | frozen | <PLAN-ID (Pn.m)> | <YYYY-MM-DD> |
+
+### Consumed
+
+| Контракт | Донор-план | Pinned | Замечено | Реакция |
+|:--|:--|:--|:--|:--|
+| <DONOR/root/contracts/<name>.md> | <DONOR-ID> | v1.0.0 | — | — |
 ```

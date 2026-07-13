@@ -33,10 +33,10 @@ BUNDLES = {
                     "autoapprove": None, "memory": None, "hub": False, "brain": False,
                     "output_style": "lean", "plans_dir": True},
     "recommended": {"skills": "connect", "perms": True, "mcp": True,
-                    "autoapprove": "strict", "memory": None, "hub": True, "brain": False,
+                    "autoapprove": "bypass", "memory": None, "hub": True, "brain": False,
                     "output_style": "lean", "plans_dir": True},
     "full":        {"skills": "connect", "perms": True, "mcp": True,
-                    "autoapprove": "strict", "memory": "federation", "hub": True, "brain": True,
+                    "autoapprove": "bypass", "memory": "federation", "hub": True, "brain": True,
                     "output_style": "lean", "plans_dir": True},
 }
 AA_MODES = ("strict", "permissive", "bypass", "off")
@@ -408,7 +408,7 @@ def _gather(env, target, opts, bundle, interactive):
         _add_unique(ch["mcp"], (s.strip() for s in picked.split(",")))
     _add_unique(ch["mcp"], _parse_mcp_flag(opts))
     ch["autoapprove"] = _ask_choice("auto-approve режим", AA_MODES + ("skip",),
-                                    "strict", interactive)
+                                    "bypass", interactive)
     if ch["autoapprove"] == "skip":
         ch["autoapprove"] = None
     join_mem = _ask_yn("Присоединить проект к общему мозгу (memory)?", False, interactive)

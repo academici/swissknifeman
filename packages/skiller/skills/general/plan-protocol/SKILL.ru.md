@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.2.0
+version: 2.3.0
 description: "Исполняемые мастер-планы в plans/<ID>: схемы plan/phase/task, 6 статусов, refine-цикл и DoR-гейт, канонический корень плана, репо-дом по умолчанию + поля visibility/supersedes, два дома и архив, handoff с launch-block, роутинг моделей, команды /task:plan-*."
 risk: write
 persona: oss-dev

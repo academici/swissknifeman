@@ -92,7 +92,7 @@ Blocker-остатке по существу — фазу держали не д
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P1 | Разблокировка: формы Next + честный счёт lint | 2/2 | 🟢 Done |
-| P2 | SSOT-канон: routing-гейт, status-rule, Contracts | 3/4 | 🟡 In progress |
+| P2 | SSOT-канон: routing-гейт, status-rule, Contracts | 4/4 | 🟢 Done |
 | P3 | Команды plan-*: гейты и порядок закрытия | 0/5 | ⬜ Not started |
 | P4 | Регресс по флоту, закрытие эскалации REGHUB, доки | 0/3 | ⬜ Not started |
 
@@ -132,6 +132,7 @@ Blocker-остатке по существу — фазу держали не д
 | 2026-07-13 | issue-planner (opus/high, ручная правка плана) | Владелец: ритуал ручного запуска на manual-item'ах → D18 + новый item **P3.5** (`/task:plan-run` — команда без пина модели, наследует сессию). Status Board P3: 4 → 5 items. |
 | 2026-07-13 | package-implementer (opus/high, ручной запуск — Exec=manual) | P2.2 закрыт: `SKILL.ru.md` §6 — status-rule (5 material-триггеров, 🟢 при process) + фазовая когерентность производного (D17) + оговорка «дефект ТЗ ≠ отклонение» (новый D19) — детали см. phases/P2.md P2.2 Completion Notes. |
 | 2026-07-13 | package-implementer (opus/high, ручной запуск — Exec=manual) | P2.3 закрыт: `## 7. Contracts` в §4/§11 + парсер и cross-plan сверка версий в `plan_lint.py` (+5 тестов, 109 зелёных); регресс по 9 корням — 0 новых ERROR/WARNING, поймал дефект ТЗ → D20 — детали см. phases/P2.md P2.3 Completion Notes. |
+| 2026-07-13 | package-implementer (opus/high, ручной запуск — Exec=manual) | P2.4 закрыт, **фаза P2 терминальна (4/4 🟢)**: snippets + `SKILL.ru.md` 2.3.0 + регенерация EN-канона (493 → 620 строк, гейт ≤620) + registry; skiller validate.sh зелёный — детали см. phases/P2.md P2.4 Completion Notes + Phase Handoff. |
 
 ## Обсуждение (рецензия развилок — для владельца)
 

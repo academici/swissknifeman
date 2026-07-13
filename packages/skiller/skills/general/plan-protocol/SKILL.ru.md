@@ -134,9 +134,8 @@ Status `🟢`→`🟡` + Version bump плана + D-запись о причи�
 - **`## 2. Execution Rules`** — выжимка правил исполнения ≤20 строк + план-специфичные
   отклонения. Полный протокол — этот скилл, его не копировать целиком.
 - **`## 3. Routing`** — ТОЛЬКО отклонения от SSOT-матрицы роутинга (раздел 9).
-  Пустая секция = действуют дефолты. Формат строки:
-  `Items | Model/effort И/ИЛИ Tool Capability | Почему` — tool-capability
-  (типовое: `perplexity-web/WebFetch (RAG)`) ДОПОЛНЯЕТ model/effort, не заменяет.
+  Пустая секция = действуют дефолты. Канон-форма строки (колонка `Exec`), правило
+  деривации `Exec` и routing-гейт — раздел 9; легаси-формы остаются валидными.
 - **`## 4. Phase Index & Status Board`** — таблица `Phase | Title | Items 🟢/всего | Status`.
 - **`## 5. Decision Log`** — таблица `D# | Дата | Решение | Почему`.
 - **`## 6. Update Log`** — append-only таблица `Дата | Кто (role/model) | Что`.
@@ -384,6 +383,57 @@ frontmatter-пина effort внутри интерактивного Claude Cod
 - effort **low ОБЯЗАТЕЛЕН** (thinking вреден — жжёт токены без пользы) для:
   grep/read/map, механических правок, статус-апдейтов, docs sync,
   handoff-форматирования.
+
+**Форма строки `## 3. Routing`** — канон для НОВЫХ планов (эмитит `plan-design`):
+
+```text
+| Items | Model/effort | Exec | Почему |
+|:--|:--|:--|:--|
+| P2.7–P2.9 | fable/high | manual | расфриз public-контракта: effort high+ MANDATORY |
+| P2.10–P2.13 | sonnet/low | plan-exec | doc-cleanup без новых решений |
+```
+
+Колонка **Exec** — закрытый enum `plan-exec` | `manual` | `plan-design`: кто имеет право
+исполнять item. Тир-порядок: модели `haiku < sonnet < opus ≈ fable`, effort
+`low < medium < high < xhigh < max`. Пин команды `plan-exec` — **sonnet/medium**.
+
+**Деривация Exec** (колонка пуста) и **консистентность** (колонка заполнена):
+
+```text
+Сравнение по тирам, обе оси: перебор безвреден, недобор запрещён.
+- model ≤ sonnet И effort ≤ medium  → plan-exec
+- model > sonnet (opus/fable)       → manual  (сменить модель изнутри команды нельзя —
+                                               API не существует)
+- effort > medium (high/xhigh/max)  → manual  (недобор thinking запрещён — policy выше)
+- ячейка без модели / без effort    → недостающее берётся из матрицы ролей выше
+Tool Capability (perplexity-web/context7/…) пишется в ту же ячейку через «+» и ДОПОЛНЯЕТ
+model/effort, не заменяет.
+
+Заполненная Exec перебивает деривацию ТОЛЬКО в сторону строгости: `manual` законен при
+любой паре model/effort. Обратное (`Exec = plan-exec` там, где деривация даёт `manual`) —
+ДЕФЕКТ ПЛАНА, а не разрешение: иначе колонка = дыра в гейте, ровно F7.
+```
+
+**Routing-гейт** — исполняет `plan-exec` ДО работы (инцидент-основание — F7 плана
+2026.07.13-PLAN-PROTOCOL-GAP: contract-items ушли под sonnet вопреки мандату fable/high):
+
+```text
+- Exec = manual (задан ИЛИ выведен) → item НЕ исполняется командой: СТОП, отчёт
+  «ROUTING-BLOCKED: Pn.m — предписано <model/effort>, команда пинит sonnet/medium»,
+  launch-block формы «ЗАПУСК ВРУЧНУЮ» (§8). Статус item'а НЕ меняется.
+- Exec = plan-exec, Routing НИЖЕ пина (haiku и/или low) → исполнять (перебор безвреден),
+  process-отклонение — в Known Deviations; статус остаётся 🟢 (§6).
+- Exec = plan-exec ПРОТИВОРЕЧИТ model/effort → СТОП, отчёт «ROUTING-INCONSISTENT: Pn.m —
+  Exec=plan-exec при <model/effort>»; правит `plan-design`. Статус НЕ меняется.
+- Exec = plan-design → item не исполняется: СТОП, ре-дизайн (§10).
+- Routing неоднозначен (строки на item нет, «fable ИЛИ opus», проза без модели) И item —
+  design/contract-класса (сработал бы любой триггер эскалации §10) → СТОП (fail-safe: цена
+  ложного стопа — перезапуск, цена ложного прохода — RED-аудит).
+```
+
+**Back-compat.** Легаси-формы §3 (проза, буллеты, таблица без колонки Exec, пустая секция)
+остаются ВАЛИДНЫМИ; `plan-lint` секцию §3 не парсит — гейт исполняет читающий ИСПОЛНИТЕЛЬ,
+не regex. Exec легаси-строки выводится правилом деривации выше.
 
 ## 10. Эскалация (протокол дешёвой модели)
 

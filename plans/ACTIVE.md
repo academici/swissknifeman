@@ -1,4 +1,4 @@
 # ACTIVE
 
-**Active:** 2026.07.12-CONTEXT-ECONOMY
-**Updated:** 2026-07-12
+**Active:** 2026.07.13-PLAN-PROTOCOL-GAP
+**Updated:** 2026-07-13

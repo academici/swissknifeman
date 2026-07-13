@@ -33,7 +33,7 @@ plans/2026.07.13-PLAN-PROTOCOL-GAP --baseline HEAD` ПОСЛЕ handoff → сч�
 **Done:** P1 терминальна (`4c03715`, `b45cd51`). Фаза P2 — **5/8**: `38954ab` P2.1 §9
 routing-гейт · `cd749ab` P2.2 §6 status-rule · `1451ed9` P2.3 §4/§11 Contracts + линтер ·
 `365079c` P2.4 snippets + EN-канон 2.3.0 (закрыт 🟢, но аудит нашёл F1/F2 → статус переоценят
-в P2.7) · `c90b5fb` реопен P2 по RED-аудиту (plan-design, D21–D25) · **`<P2.5>` — §6
+в P2.7) · `c90b5fb` реопен P2 по RED-аудиту (plan-design, D21–D25) · **`4a4af60` P2.5 — §6
 коммит-гигиена + 6-й material-триггер (D22)**.
 
 Что даёт P2.5 в SSOT: item-коммит собирается ПО ЯВНЫМ ПУТЯМ (`git add <Files> <файлы плана>`),

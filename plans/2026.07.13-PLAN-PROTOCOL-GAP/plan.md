@@ -95,7 +95,7 @@ Blocker-остатке по существу — фазу держали не д
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P1 | Разблокировка: формы Next + честный счёт lint | 2/2 | 🟢 Done |
-| P2 | SSOT-канон: routing-гейт, status-rule, Contracts (+ ремедиация аудита) | 4/8 | 🟡 In progress |
+| P2 | SSOT-канон: routing-гейт, status-rule, Contracts (+ ремедиация аудита) | 5/8 | 🟡 In progress |
 | P3 | Команды plan-*: гейты и порядок закрытия | 0/5 | ⬜ Not started |
 | P4 | Регресс по флоту, закрытие эскалации REGHUB, доки | 0/3 | ⬜ Not started |
 
@@ -143,6 +143,7 @@ Blocker-остатке по существу — фазу держали не д
 | 2026-07-13 | package-implementer (opus/high, ручной запуск — Exec=manual) | P2.4 закрыт, **фаза P2 терминальна (4/4 🟢)**: snippets + `SKILL.ru.md` 2.3.0 + регенерация EN-канона (493 → 620 строк, гейт ≤620) + registry; skiller validate.sh зелёный — детали см. phases/P2.md P2.4 Completion Notes + Phase Handoff. |
 | 2026-07-13 | plan-audit (opus/xhigh, свежий контекст) | Аудит P2: **🔴 RED** (2 Major — загрязнённый коммит P2.4 + ложный 🟢; 2 Minor, 1 Nit) — детали см. phases/P2.md `## Audit P2 — 2026-07-13`. |
 | 2026-07-13 | issue-planner (opus/high, `/task:plan-design`) | **Реопен P2** по вердикту аудита (D24): 1.0.0 → 1.1.0, фаза 🟢 → 🟡, +4 items (P2.5–P2.8) на ремедиацию F1–F4; решения владельца — D21–D23, D25. Здесь же снят F5 (D13 возвращён в порядок) — детали см. phases/P2.md ТЗ P2.5–P2.8. |
+| 2026-07-13 | package-implementer (opus/high, ручной запуск — Exec=manual) | P2.5 закрыт: `SKILL.ru.md` §6 — операционная форма коммит-гейта (`git add` по путям, `-A` запрещён) + 6-й material-триггер «дифф вне `Files`» (D22). Реопен-дифф plan-design отделён коммитом `c90b5fb` ДО item'а (решение владельца) — детали см. phases/P2.md P2.5 Completion Notes. |
 
 ## Обсуждение (рецензия развилок — для владельца)
 

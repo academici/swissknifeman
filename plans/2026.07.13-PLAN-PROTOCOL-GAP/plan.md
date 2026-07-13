@@ -95,7 +95,7 @@ Blocker-остатке по существу — фазу держали не д
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P1 | Разблокировка: формы Next + честный счёт lint | 2/2 | 🟢 Done |
-| P2 | SSOT-канон: routing-гейт, status-rule, Contracts (+ ремедиация аудита) | 6/8 | 🟡 In progress |
+| P2 | SSOT-канон: routing-гейт, status-rule, Contracts (+ ремедиация аудита) | 7/8 | 🟡 In progress |
 | P3 | Команды plan-*: гейты и порядок закрытия | 0/5 | ⬜ Not started |
 | P4 | Регресс по флоту, закрытие эскалации REGHUB, доки | 0/3 | ⬜ Not started |
 
@@ -146,6 +146,7 @@ Blocker-остатке по существу — фазу держали не д
 | 2026-07-13 | package-implementer (opus/high, ручной запуск — Exec=manual) | P2.5 закрыт: `SKILL.ru.md` §6 — операционная форма коммит-гейта (`git add` по путям, `-A` запрещён) + 6-й material-триггер «дифф вне `Files`» (D22). Реопен-дифф plan-design отделён коммитом `c90b5fb` ДО item'а (решение владельца) — детали см. phases/P2.md P2.5 Completion Notes. |
 | 2026-07-13 | package-implementer (opus/high, ручной запуск — Exec=manual) | P2.6 закрыт: `SKILL.ru.md` §3/§4/§7 + `snippets/plan-template.md` — секция `## Обсуждение` (опциональная, без номера, статус у каждой развилки) как носитель провенанса, `open-questions.md` — трекер незакрытого (D23) — детали см. phases/P2.md P2.6 Completion Notes. |
 | 2026-07-13 | plan-exec (sonnet/medium) | P2.7 закрыт: ремедиация аудита — P2.4 `🟢`→`🟠` (D21/D22), 4 развилки получили статус, F4 число исправлено — детали см. phases/P2.md P2.7 Completion Notes. |
+| 2026-07-13 | package-implementer (opus/high, ручной запуск — Exec=manual) | P2.8 закрыт, **все items P2 терминальны (7 🟢 + 1 🟠)**: скилл 2.4.0 (D25), EN-канон регенерирован из RU (620 → 650 строк), реестр перегенерён; `skiller validate.sh` ПОЛНОСТЬЮ зелёный — производный дрейф §6/D17 снят — детали см. phases/P2.md P2.8 Completion Notes. |
 
 ## Обсуждение (рецензия развилок — для владельца)
 

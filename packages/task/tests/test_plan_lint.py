@@ -140,6 +140,17 @@ class TestItemHeaderAndFields(TmpPlanTestCase):
         self.assertFalse(diag.ok)
         self.assertTrue(_errors_containing(diag, "нет обязательного поля «Code Guidance»"))
 
+    def test_missing_required_item_field_message_is_actionable(self):
+        # ERROR скелет-item'а обязана называть путь починки (D11: ERROR не ослабляется,
+        # меняется только текст) — /task:plan-design <ID> Pn.
+        plan_dir = write_valid_plan(self.root)
+        text = (plan_dir / "phases" / "P1.md").read_text(encoding="utf-8")
+        text = text.replace("**Code Guidance:** ручная проверка dict-ключей.\n", "")
+        (plan_dir / "phases" / "P1.md").write_text(text, encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertFalse(diag.ok)
+        self.assertTrue(_errors_containing(diag, "/task:plan-design <ID> P1"))
+
     def test_invalid_item_status(self):
         plan_dir = self.root / "plans" / "DEMO-1"
         (plan_dir / "phases").mkdir(parents=True)
@@ -351,7 +362,7 @@ class TestHandoffMd(TmpPlanTestCase):
         (plan_dir / "handoff.md").write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "Next не содержит «/task:plan-exec"))
+        self.assertTrue(_errors_containing(diag, "не соответствует ни одной из допустимых форм"))
 
     def test_handoff_next_wrong_plan_id(self):
         plan_dir = write_valid_plan(self.root)
@@ -427,7 +438,147 @@ class TestHandoffMd(TmpPlanTestCase):
         ho.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
-        self.assertTrue(_errors_containing(diag, "Next не содержит «/task:plan-exec"))
+        self.assertTrue(_errors_containing(diag, "«план закрыт», но не все items терминальны"))
+
+
+class TestNextFormsEnum(TmpPlanTestCase):
+    """m8/B1/N1/N2 — enum 8 форм handoff.Next (SKILL §8): по кейсу на форму
+    (принимается) + мусорная форма (ERROR) + plan-audit нетерминальной фазы (WARNING)."""
+
+    def _next(self, plan_dir, new_next):
+        ho = plan_dir / "handoff.md"
+        text = ho.read_text(encoding="utf-8")
+        text = text.replace("/task:plan-exec DEMO-1 P1.1", new_next)
+        ho.write_text(text, encoding="utf-8")
+
+    def test_plan_design_item_form_accepted(self):
+        # item эскалирован/требует ре-дизайна — ссылка на существующий item Pn.m
+        plan_dir = write_valid_plan(self.root)
+        self._next(plan_dir, "/task:plan-design DEMO-1 P1.1")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+
+    def test_plan_design_item_form_nonexistent_item_is_error(self):
+        plan_dir = write_valid_plan(self.root)
+        self._next(plan_dir, "/task:plan-design DEMO-1 P9.9")
+        _, diag = _lint(plan_dir)
+        self.assertFalse(diag.ok)
+        self.assertTrue(_errors_containing(diag, "item «P9.9» не существует ни в одной фазе"))
+
+    def test_plan_audit_terminal_phase_accepted(self):
+        # фаза P1 терминальна (🟢 Done в фикстуре) — plan-audit допустим без warning
+        plan_dir = write_valid_plan(self.root)
+        self._next(plan_dir, "/task:plan-audit DEMO-1 P1")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+        self.assertEqual([w for w in diag.warnings if "не терминальна" in w], [])
+
+    def test_plan_audit_nonterminal_phase_warns(self):
+        plan_dir = self.root / "plans" / "DEMO-1"
+        (plan_dir / "phases").mkdir(parents=True)
+        (plan_dir / "plan.md").write_text(
+            plan_md("DEMO-1", items_cell="0/1", phase_status="🟡 In progress"), encoding="utf-8")
+        (plan_dir / "phases" / "P1.md").write_text(
+            phase_md(item_status="🟡 In progress", completion_notes="—", handoff_text="—"),
+            encoding="utf-8")
+        (plan_dir / "handoff.md").write_text(handoff_md("DEMO-1"), encoding="utf-8")
+        self._next(plan_dir, "/task:plan-audit DEMO-1 P1")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(any("не терминальна" in w for w in diag.warnings), diag.warnings)
+
+    def test_plan_close_phase_form_accepted(self):
+        plan_dir = write_valid_plan(self.root)
+        self._next(plan_dir, "/task:plan-close DEMO-1 P1")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+
+    def test_plan_close_item_form_accepted(self):
+        plan_dir = write_valid_plan(self.root)
+        self._next(plan_dir, "/task:plan-close DEMO-1 P1.1")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+
+    def test_plan_close_item_form_nonexistent_item_is_error(self):
+        plan_dir = write_valid_plan(self.root)
+        self._next(plan_dir, "/task:plan-close DEMO-1 P9.9")
+        _, diag = _lint(plan_dir)
+        self.assertFalse(diag.ok)
+        self.assertTrue(_errors_containing(diag, "item «P9.9» не существует ни в одной фазе"))
+
+    def test_plan_close_archive_form_accepted_when_closed(self):
+        # план целиком терминален (единственный item 🟢 Done) — форма допустима
+        plan_dir = write_valid_plan(self.root)
+        self._next(plan_dir, "/task:plan-close archive DEMO-1")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+
+    def test_plan_close_archive_form_warns_when_not_closed(self):
+        plan_dir = self.root / "plans" / "DEMO-1"
+        (plan_dir / "phases").mkdir(parents=True)
+        (plan_dir / "plan.md").write_text(
+            plan_md("DEMO-1", items_cell="0/1", phase_status="🟡 In progress"), encoding="utf-8")
+        (plan_dir / "phases" / "P1.md").write_text(
+            phase_md(item_status="🟡 In progress", completion_notes="—", handoff_text="—"),
+            encoding="utf-8")
+        (plan_dir / "handoff.md").write_text(handoff_md("DEMO-1"), encoding="utf-8")
+        self._next(plan_dir, "/task:plan-close archive DEMO-1")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(any("план ещё не терминален целиком" in w for w in diag.warnings), diag.warnings)
+
+    def test_manual_run_form_accepted(self):
+        plan_dir = write_valid_plan(self.root)
+        self._next(plan_dir, "ЗАПУСК ВРУЧНУЮ: fable/high — item требует public-контракт решения")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+
+    def test_garbage_next_form_is_error(self):
+        plan_dir = write_valid_plan(self.root)
+        self._next(plan_dir, "сделай что-нибудь по вдохновению")
+        _, diag = _lint(plan_dir)
+        self.assertFalse(diag.ok)
+        self.assertTrue(_errors_containing(diag, "не соответствует ни одной из допустимых форм"))
+
+
+class TestArchivePlansNotPhantomPlan(TmpPlanTestCase):
+    """N3/D14 — `plans/archive/` сама планом не является (не должна требовать
+    plan.md/handoff.md), а `plans/archive/<ID>` линтуется как обычный план."""
+
+    def _write_archived_plan(self, plan_id="DEMO-OLD"):
+        plan_dir = self.root / "plans" / "archive" / plan_id
+        (plan_dir / "phases").mkdir(parents=True, exist_ok=True)
+        (plan_dir / "plan.md").write_text(plan_md(plan_id), encoding="utf-8")
+        (plan_dir / "phases" / "P1.md").write_text(phase_md(), encoding="utf-8")
+        (plan_dir / "handoff.md").write_text(handoff_md(plan_id), encoding="utf-8")
+        return plan_dir
+
+    def test_archive_container_produces_no_phantom_errors(self):
+        write_valid_plan(self.root, "DEMO-1")
+        self._write_archived_plan("DEMO-OLD")
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = main([str(self.root / "plans")])
+        self.assertEqual(code, 0, err.getvalue())
+        self.assertNotIn("archive/plan.md", err.getvalue())
+        self.assertNotIn("archive/handoff.md", err.getvalue())
+
+    def test_archived_plan_still_linted(self):
+        write_valid_plan(self.root, "DEMO-1")
+        archived_dir = self._write_archived_plan("DEMO-OLD")
+        text = (archived_dir / "plan.md").read_text(encoding="utf-8")
+        text = text.replace("| Plan ID | DEMO-OLD |\n", "")
+        (archived_dir / "plan.md").write_text(text, encoding="utf-8")
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = main([str(self.root / "plans")])
+        self.assertEqual(code, 1)
+        self.assertIn("нет обязательного поля «Plan ID»", err.getvalue())
+
+    def test_discover_plan_dirs_excludes_archive_container_includes_children(self):
+        write_valid_plan(self.root, "DEMO-1")
+        self._write_archived_plan("DEMO-OLD")
+        found = discover_plan_dirs(self.root / "plans")
+        names = sorted(p.name for p in found)
+        self.assertEqual(names, ["DEMO-1", "DEMO-OLD"])
 
 
 class TestGlobalUniqueness(TmpPlanTestCase):

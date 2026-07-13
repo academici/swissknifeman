@@ -298,6 +298,43 @@ plan-exec/plan-close/plan-audit — обязана иметь фиксирова
 При мастер-плане общий session-handoff (скилл `session-handoff`) сворачивается
 сюда — второй handoff-файл не заводить.
 
+**Допустимые формы `Next`** (закрытый enum, m8/B1/N1/N2 — `plan-lint` принимает РОВНО эти
+8 форм; иная форма = ERROR с перечислением допустимых):
+
+```text
+| Форма Next | Когда |
+|:--|:--|
+| /task:plan-exec <ID> Pn.m        | следующий item детализирован, Exec = plan-exec (§9) |
+| /task:plan-design <ID> Pn        | следующая фаза — скелет |
+| /task:plan-design <ID> Pn.m      | item эскалирован (🔴) либо требует ре-дизайна |
+| /task:plan-audit <ID> Pn         | фаза Pn закрыта (терминальна) — аудит перед следующей |
+| /task:plan-close <ID> Pn[.m]     | items терминальны: закрыть фазу / сверить item |
+| /task:plan-close archive <ID>    | план терминален целиком |
+| «план закрыт»                    | все items терминальны, следующий шаг вне протокола |
+| «ЗАПУСК ВРУЧНУЮ: <model/effort>» | Exec = manual (§9): команды нет — launch-block несёт модель
+                                     и голый промпт item'а отдельным code-block |
+Иная форма = ERROR plan-lint.
+```
+
+**Порядок закрытия item'а** (канонизирует B1/F11/M2/A4 — рецидивы «нечестного» lint):
+
+```text
+1. Дифф Scope (код/артефакты) → validate.sh пакета зелёный → коммит.
+2. Bookkeeping плана: Status, Completion Notes, Pending Work, Known Deviations,
+   Phase Status, Status Board, Update Log.
+3. Перезапись handoff.md (Next — форма из enum выше).
+4. plan-lint — ПОСЛЕ шага 3, на итоговом дереве. Прогон ДО перезаписи handoff ЗАПРЕЩЁН:
+   закрывающий item сам меняет handoff, и счёт «до» не описывает состояние коммита.
+5. Счёт публикуется С АТРИБУЦИЕЙ: «N ERROR / M WARN — новых от диффа item'а: K»
+   (K — детерминированно: plan-lint --baseline HEAD).
+   • K > 0 — чинится ДО коммита bookkeeping'а;
+   • N − K > 0 (остаточные ошибки плана вне Scope item'а) — НЕ замалчиваются: строка в
+     Pending Work item'а + Open risks handoff'а.
+6. Коммит bookkeeping-диффа.
+
+«Зелёный lint» гейта закрытия = K = 0 (нет НОВЫХ ошибок), а не N = 0.
+```
+
 **Цикл «item/фаза → handoff → /clear»:** после перезаписи handoff.md рекомендован
 `/clear` — следующий item стартует с чтения плана (plan.md → phases/Pn.md →
 handoff.md), а не хвоста чата. plan-exec и plan-close печатают фиксированную

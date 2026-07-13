@@ -98,7 +98,7 @@ Blocker-остатке по существу — фазу держали не д
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P1 | Разблокировка: формы Next + честный счёт lint | 2/2 | 🟢 Done |
-| P2 | SSOT-канон: routing-гейт, status-rule, Contracts (+ ремедиация аудитов) | 7/13 | 🟡 In progress |
+| P2 | SSOT-канон: routing-гейт, status-rule, Contracts (+ ремедиация аудитов) | 8/13 | 🟡 In progress |
 | P3 | Команды plan-*: гейты и порядок закрытия | 0/5 | ⬜ Not started |
 | P4 | Регресс по флоту, закрытие эскалации REGHUB, доки | 0/3 | ⬜ Not started |
 
@@ -159,6 +159,7 @@ Blocker-остатке по существу — фазу держали не д
 | 2026-07-13 | plan-close (sonnet/low) | Фаза P2 закрыта: Status Board `7/8 🟡 → 8/8 🟠 Done with deviations`, `## Phase Handoff` в phases/P2.md перезаписан (снята устаревшая врезка «4/4 🟢», добавлен агрегат Known Deviations) — детали см. phases/P2.md `## Phase Handoff`. |
 | 2026-07-13 | plan-audit (opus/xhigh, свежий контекст) | Повторный аудит P2: **🔴 RED** (6 Major — противоречие §6/§8, EN-канон ломает линтер, три ложных утверждения bookkeeping'а) — детали см. phases/P2.md `## Audit P2 (повторный)`. |
 | 2026-07-13 | issue-planner (opus/high, `/task:plan-design`) | **Второй реопен P2** (D31): 1.1.0 → 1.2.0, фаза 🟠 → 🟡, +5 items (P2.9–P2.13) на ремедиацию G1–G13; решения владельца — D26–D30. Здесь же сняты G12/G13 (D4 «7 форм» → 8, суффикс заголовка `## Обсуждение`) — детали см. phases/P2.md ТЗ P2.9–P2.13. |
+| 2026-07-13 | package-implementer (opus/high, ручной запуск — Exec=manual) | P2.9 закрыт: `SKILL.ru.md` §6/§8 — ДВА коммита как единственная топология item'а (D26) + carve-out плановых путей в 6-м material-триггере (D27); дифф `plan-design` (реопен №2) отделён коммитом `270d460` — детали см. phases/P2.md P2.9 Completion Notes. |
 
 ## Обсуждение
 

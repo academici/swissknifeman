@@ -180,6 +180,23 @@ WORKFLOW_DIR_NAME = "workflows"  # единственный дом скрипт�
 # item-by-item исполнение workflow не требует — маркер должен быть намеренным.
 ORCHESTRATION_MARKER_RE = re.compile(r"scriptPath|оркестрац|мультиагент|multi-agent", re.IGNORECASE)
 
+# --- P2.15/D34: протухший `## Phase Handoff` при реопене фазы (H2) --------------
+# Реопен (SKILL §3, 4-й шаг) НЕ удаляет блок сдачи, а помечает его ПЕРВОЙ НЕПУСТОЙ строкой
+# маркером `> УСТАРЕЛ — фаза реопенена <D#>` (провенанс сдачи сохраняется, ложь снимается);
+# перезаписывает блок `plan-close` при следующем закрытии фазы. Жирное начертание маркера
+# (`> **УСТАРЕЛ — …**`) легально — гейт смотрит на начало строки. Именно ПЕРВАЯ строка, а не
+# «где-то в тексте»: иначе гейт обходится упоминанием слова.
+PHASE_HANDOFF_STALE_RE = re.compile(r"^>\s*\*{0,2}\s*УСТАРЕЛ\b")
+# УЗКИЙ предикат «блок УТВЕРЖДАЕТ закрытие фазы». Формы взяты из замера по флоту
+# (findings/P2-third-reopen-fleet-measurements.md §1, 8 корней / 38 планов): наивное «блок
+# непуст при нетерминальной фазе» бьёт 104 фазы (скелеты/заготовки — ложно-положительные),
+# эти три формы — 4 фазы, все истинно-положительные. Список НЕ расширять «на всякий случай»:
+# каждое лишнее слово — риск ложного WARNING на сотне фаз (пойдёт в реестр CANON_LITERALS,
+# P2.16). Регистронезависимо (флот пишет и «Терминальн…», и «терминальн…»).
+PHASE_HANDOFF_CLOSURE_LITERALS = ("терминальн", "фаза закрыта", "Сдано:")
+PHASE_HANDOFF_CLOSURE_RE = re.compile(
+    "|".join(re.escape(lit) for lit in PHASE_HANDOFF_CLOSURE_LITERALS), re.IGNORECASE)
+
 
 def _plan_codename(plan_id):
     """Кодовое имя плана (D28) — для деривации имени workflow-скрипта и supersedes-сверки:
@@ -716,13 +733,20 @@ def parse_phase_md(path, phase_id, diag):
                        f"item {item_id}: повторяется в файле (строки {lns})")
 
     _, handoff_body, handoff_start = _find_section(lines, PHASE_HANDOFF_HEADER_RE)
+    handoff_stale = False
     if handoff_body is None:
         diag.error(path, None, "нет секции «## Phase Handoff»")
         handoff_text = None
+        handoff_lineno = None
     else:
         handoff_text = "\n".join(handoff_body).strip()
+        handoff_lineno = handoff_start - 1  # строка самого заголовка «## Phase Handoff»
+        # P2.15/D34: маркер инвалидации — ПЕРВАЯ непустая строка блока (линуется в lint_plan)
+        first_line = next((ln for ln in handoff_body if ln.strip()), "")
+        handoff_stale = bool(PHASE_HANDOFF_STALE_RE.match(first_line.strip()))
 
     return {"status_table": status_table, "items": items, "phase_handoff": handoff_text,
+            "phase_handoff_stale": handoff_stale, "phase_handoff_lineno": handoff_lineno,
             "is_skeleton": is_skeleton, "needs_clarification": needs_clarification,
             "declares_orchestration": declares_orchestration}
 
@@ -944,6 +968,22 @@ def lint_plan(plan_dir, diag):
             elif _is_empty(handoff_text):
                 diag.error(phases[pid]["path"], None,
                            f"фаза {pid} статус «{phase_status}», но «## Phase Handoff» пуст")
+
+        # --- P2.15/D34 WARNING: зеркальный гейт — фаза НЕтерминальна, а Phase Handoff
+        # УТВЕРЖДАЕТ закрытие и не помечен маркером инвалидации (H2, SKILL §3, 4-й шаг).
+        # WARNING, не ERROR: три плана флота (истинно-положительные, carve-out D34) иначе
+        # получили бы недостижимый commit-гейт в ЧУЖИХ репозиториях.
+        elif phase_status and phase_status not in TERMINAL_STATUSES:
+            handoff_text = phases[pid].get("phase_handoff")
+            if (handoff_text and not _is_empty(handoff_text)
+                    and PHASE_HANDOFF_CLOSURE_RE.search(handoff_text)
+                    and not phases[pid].get("phase_handoff_stale")):
+                diag.warning(phases[pid]["path"], phases[pid].get("phase_handoff_lineno"),
+                             f"Phase Handoff протух: фаза {pid} НЕ закрыта (статус "
+                             f"«{phase_status}»), а блок утверждает закрытие фазы — поставь "
+                             f"его первой строкой маркер «> УСТАРЕЛ — фаза реопенена <D#>» "
+                             f"(SKILL §3, 4-й шаг реопена: блок не удаляется, его перезапишет "
+                             f"plan-close при следующем закрытии фазы)")
 
     # --- phase-first (WARNING): активные 🟡 items в фазе N+1 при не-терминальной N
     numbered = sorted(

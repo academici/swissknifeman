@@ -331,6 +331,53 @@ class TestPhaseHandoffGating(TmpPlanTestCase):
         self.assertTrue(_errors_containing(diag, "нет секции «## Phase Handoff»"))
 
 
+class TestStalePhaseHandoff(TmpPlanTestCase):
+    """P2.15/D34 (H2): реопен инвалидирует `## Phase Handoff` маркером; блок, переживший
+    реопен и утверждающий закрытие фазы, — WARNING. Гейт УЗКИЙ: заготовка/скелет молчит."""
+
+    STALE_TEXT = ("Фаза P1 закрыта: **1/1 терминальны**.\n\n"
+                  "**Сдано:** валидация конфига.\n\n**Дальше:** `/task:plan-audit DEMO-1 P1`.")
+
+    def _write_reopened_phase(self, handoff_text):
+        """Фаза 🟡 (реопенена: item снова в работе) с заданным `## Phase Handoff`."""
+        plan_dir = self.root / "plans" / "DEMO-1"
+        (plan_dir / "phases").mkdir(parents=True)
+        (plan_dir / "plan.md").write_text(
+            plan_md("DEMO-1", items_cell="0/1", phase_status="🟡 In progress"), encoding="utf-8")
+        (plan_dir / "phases" / "P1.md").write_text(
+            phase_md(item_status="🟡 In progress", completion_notes="—",
+                     handoff_text=handoff_text), encoding="utf-8")
+        (plan_dir / "handoff.md").write_text(handoff_md("DEMO-1"), encoding="utf-8")
+        return plan_dir
+
+    def _stale_warnings(self, diag):
+        return [w for w in diag.warnings if "Phase Handoff протух" in w]
+
+    def test_nonterminal_phase_with_closure_claim_warns(self):
+        plan_dir = self._write_reopened_phase(self.STALE_TEXT)
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)  # именно WARNING, не ERROR (D34)
+        self.assertEqual(len(self._stale_warnings(diag)), 1, diag.warnings)
+        self.assertIn("> УСТАРЕЛ — фаза реопенена <D#>", self._stale_warnings(diag)[0])
+
+    def test_stale_marker_silences_the_gate(self):
+        plan_dir = self._write_reopened_phase(
+            "> **УСТАРЕЛ — фаза реопенена (D9, 2026-07-14).** Блок ниже записан plan-close\n"
+            "> до реопена; факт: 0/1, фаза 🟡.\n\n" + self.STALE_TEXT)
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+        self.assertEqual(self._stale_warnings(diag), [])
+
+    def test_placeholder_handoff_of_unfinished_phase_is_silent(self):
+        # анти-регресс: скелеты/заготовки флота (наивная формулировка била 104 фазы)
+        for text in ("—", "Заполняется при закрытии фазы."):
+            with self.subTest(handoff=text):
+                plan_dir = self._write_reopened_phase(text)
+                _, diag = _lint(plan_dir)
+                self.assertEqual(self._stale_warnings(diag), [])
+                shutil.rmtree(plan_dir.parent)
+
+
 class TestHandoffMd(TmpPlanTestCase):
     def test_missing_handoff_file(self):
         plan_dir = self.root / "plans" / "DEMO-1"

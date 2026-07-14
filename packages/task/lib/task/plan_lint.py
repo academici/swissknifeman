@@ -92,6 +92,9 @@ ESCALATION_RE = re.compile(r"^>\s*🔴\s*ESCALATION\s+(P\d+\.\d+)\s*:")
 HANDOFF_TITLE_RE = re.compile(r"^#\s+HANDOFF\s+—.*—\s+after\s+(P\d+(?:\.\d+)?)\s*$")
 HANDOFF_TITLE_HELP = ("заголовок не соответствует ни одной из двух форм (SKILL §8): "
                       "«# HANDOFF — … — after Pn.m» (item) · «# HANDOFF — … — after Pn» (фаза)")
+# Bootstrap-форма стартового handoff'а: план ещё не тронут, фазы `P0` не бывает (D37).
+# Ровно эта строка — не «любая фаза P0» и не «любой item .0»: расширение = дыра в гейте.
+HANDOFF_TITLE_BOOTSTRAP = "P0.0"
 PLAN_EXEC_RE = re.compile(r"/task:plan-exec\s+(\S+)\s+(P\d+\.\d+)")
 # Форма m8/B1/N1/N2: `handoff.Next` допускает закрытый enum 8 форм (SKILL §8) —
 # ниже регулярки на каждую (кроме plan-exec/«план закрыт», уже объявленных). Порядок
@@ -788,6 +791,35 @@ def parse_phase_md(path, phase_id, diag):
             "declares_orchestration": declares_orchestration}
 
 
+def _resolve_next_form(text):
+    """Резолвит форму `Next` из enum'а §8 в тексте: `(kind, match)` либо `(None, None)`.
+
+    Порядок — от специфичной формы к общей; первая сматчившая определяет проверку ссылок,
+    остальные не пробуются (D4). «план закрыт» проверяется СРАЗУ после plan-exec (а не
+    среди прочих regex-форм): это цельное утверждение о состоянии плана, а не slash-команда
+    — Next закрытого плана иногда УПОМИНАЕТ следующую команду прозой («… решает владелец:
+    `/task:plan-close archive <ID>` либо …», см. EDUFY-2), и эта проза не должна
+    перехватывать резолвер. Manual-маркер — последним: у формы нет ссылок, она резолвится
+    лишь тем, что ни одна slash-форма не объявлена.
+    """
+    m = PLAN_EXEC_RE.search(text)
+    if m:
+        return "exec", m
+    if LITERAL_PLAN_CLOSED in text.lower():
+        return "closed", None
+    for kind, rx in (("design-item", PLAN_DESIGN_ITEM_RE),
+                     ("design-phase", PLAN_DESIGN_PHASE_RE),
+                     ("audit", PLAN_AUDIT_RE),
+                     ("close-archive", PLAN_CLOSE_ARCHIVE_RE),
+                     ("close", PLAN_CLOSE_RE)):
+        m = rx.search(text)
+        if m:
+            return kind, m
+    if MANUAL_RUN_MARKER in text:
+        return "manual", None
+    return None, None
+
+
 def parse_handoff_md(path, diag):
     lines = _read_lines(path)
     if lines is None:
@@ -1047,19 +1079,45 @@ def lint_plan(plan_dir, diag):
     if handoff:
         next_val, next_lineno = handoff["fields"].get("Next", ("", None))
 
-        # Заголовок формы `after Pn` (фаза, D30) — ссылка обязана резолвиться, иначе
-        # расширение regex'а просто «разрешило всё». Форма `after Pn.m` существованием
-        # item'а НЕ гейтится: 12 планов флота несут `after P0.0` (плана ещё не касались,
+        # Заголовок (D30/D37) — ссылка обязана резолвиться, иначе расширение regex'а просто
+        # «разрешило всё»: у ОБЕИХ форм (`after Pn` — фаза, `after Pn.m` — item) гейтится
+        # существование ФАЗЫ `Pn`. Исключение — bootstrap `P0.0` (замер флота: единственное
+        # попадание item-формы — стартовый handoff, не дефект). Существование самого ITEM'а
+        # `Pn.m` НЕ гейтится: 12 планов флота несут `after P0.0` (плана ещё не касались,
         # item'а P0.0 не бывает) — гейт на неё = новые ERROR флоту, back-compat запрещает.
+        # Оракул «фаза существует» — ОБЪЕДИНЕНИЕ Status Board и файлов фаз (D41): это гейт
+        # висячей ССЫЛКИ, а рассинхрон board↔файлы — отдельный дефект со своей диагностикой
+        # («фаза Pn есть в Status Board, но нет phases/Pn.md»), дублировать её здесь нечем.
+        known_phases = set(phases) | set(board_by_phase)
         title_ref = handoff.get("title_ref")
-        if title_ref and "." not in title_ref and title_ref not in phases:
-            diag.error(handoff_path, handoff.get("title_lineno"),
-                       f"заголовок: фаза «{title_ref}» не существует в плане")
+        if title_ref and title_ref != HANDOFF_TITLE_BOOTSTRAP:
+            title_phase = title_ref.split(".", 1)[0]
+            if title_phase not in known_phases:
+                diag.error(handoff_path, handoff.get("title_lineno"),
+                           f"заголовок: фаза «{title_phase}» не существует в плане")
+
+        # ФОРМА `Next` ОБЪЯВЛЯЕТСЯ ПЕРВОЙ НЕПУСТОЙ СТРОКОЙ поля (D40). Само поле
+        # МНОГОСТРОЧНОЕ: ниже идёт launch-block (таблица Model/Thinking/Context/Суть +
+        # code-block), и его проза законно ЦИТИРУЕТ другие формы enum'а — голый промпт
+        # item'а, чинящего сам протокол, называет и slash-команды, и «план закрыт».
+        # Резолв по ВСЕМУ полю принимал такую цитату за объявление: handoff с «ЗАПУСК
+        # ВРУЧНУЮ» в первой строке ловил ложный ERROR «не все items терминальны».
+        next_decl = next((ln for ln in next_val.splitlines() if ln.strip()), "")
+        kind, m = _resolve_next_form(next_decl)
+        if kind is None:
+            # Строка-объявление не назвала формы — back-compat: планы флота, у которых
+            # первая строка прозаическая, а команда живёт в launch-block'е, читаются как
+            # прежде (резолв по всему полю).
+            kind, m = _resolve_next_form(next_val)
 
         # --- 2.0 WARNING: launch-block в handoff.Next (SKILL §8) ------------------
         # Таблица `| Model | …` и code-block грепаются по всему файлу: шаблон кладёт
         # launch-block продолжением Next, но точное место не гейтим (warning-уровень).
         # Для целиком закрытого плана («план закрыт») запускать нечего — не требуем.
+        # Условие СОЗНАТЕЛЬНО мягче резолвера (`kind`): любое утверждение о закрытии в
+        # ЛЮБОМ месте поля снимает требование launch-block'а. Ужесточение до `kind` дало бы
+        # новый WARNING живому плану флота (PILOT-AZG: первая строка несёт и «план закрыт
+        # целиком», и lint-ссылку `/task:plan-exec` → резолвится как exec) — back-compat §2.
         if LITERAL_PLAN_CLOSED not in next_val.lower():
             has_table = any(LAUNCH_TABLE_ROW_RE.match(ln) for ln in handoff["lines"])
             has_fence = any(CODE_FENCE_RE.match(ln) for ln in handoff["lines"])
@@ -1090,44 +1148,26 @@ def lint_plan(plan_dir, diag):
                 diag.error(handoff_path, next_lineno,
                            f"Next: item «{ref_item}» не существует ни в одной фазе")
 
-        # Резолвер enum'а (SKILL §8) — от специфичного к общему; первая сматчившая
-        # форма определяет проверку ссылок, остальные не пробуются (D4). «план закрыт»
-        # проверяется СРАЗУ после plan-exec (а не среди прочих regex-форм): это цельное
-        # утверждение о состоянии плана, а не slash-команда — Next закрытого плана иногда
-        # УПОМИНАЕТ следующую команду прозой («… решает владелец: `/task:plan-close
-        # archive <ID>` либо …», см. EDUFY-2), и эта проза не должна перехватывать резолвер.
-        is_closed_text = LITERAL_PLAN_CLOSED in next_val.lower()
-        m_exec = PLAN_EXEC_RE.search(next_val)
-        m_design_item = None if (m_exec or is_closed_text) else PLAN_DESIGN_ITEM_RE.search(next_val)
-        m_design_phase = None if (m_exec or is_closed_text or m_design_item) \
-            else PLAN_DESIGN_PHASE_RE.search(next_val)
-        m_audit = None if (m_exec or is_closed_text or m_design_item or m_design_phase) \
-            else PLAN_AUDIT_RE.search(next_val)
-        m_close_archive = None if (m_exec or is_closed_text or m_design_item or m_design_phase or m_audit) \
-            else PLAN_CLOSE_ARCHIVE_RE.search(next_val)
-        m_close = None if (m_exec or is_closed_text or m_design_item or m_design_phase
-                            or m_audit or m_close_archive) \
-            else PLAN_CLOSE_RE.search(next_val)
-        is_manual = MANUAL_RUN_MARKER in next_val
-
-        if m_exec:
-            ref_plan_id, ref_item = m_exec.group(1), m_exec.group(2)
+        if kind == "manual":
+            pass  # «ЗАПУСК ВРУЧНУЮ: <model/effort>» — форма без slash-команды, ссылок нет
+        elif kind == "exec":
+            ref_plan_id, ref_item = m.group(1), m.group(2)
             _check_plan_id(ref_plan_id)
             _check_item(ref_item)
-        elif is_closed_text:
+        elif kind == "closed":
             if not plan_closed:
                 diag.error(handoff_path, next_lineno,
                            "Next: «план закрыт», но не все items терминальны")
-        elif m_design_item:
-            ref_plan_id, ref_item = m_design_item.group(1), m_design_item.group(2)
+        elif kind == "design-item":
+            ref_plan_id, ref_item = m.group(1), m.group(2)
             _check_plan_id(ref_plan_id)
             _check_item(ref_item)
-        elif m_design_phase:
-            ref_plan_id, ref_phase = m_design_phase.group(1), m_design_phase.group(2)
+        elif kind == "design-phase":
+            ref_plan_id, ref_phase = m.group(1), m.group(2)
             _check_plan_id(ref_plan_id)
             _check_phase(ref_phase)
-        elif m_audit:
-            ref_plan_id, ref_phase = m_audit.group(1), m_audit.group(2)
+        elif kind == "audit":
+            ref_plan_id, ref_phase = m.group(1), m.group(2)
             _check_plan_id(ref_plan_id)
             _check_phase(ref_phase)
             if ref_phase in phases:
@@ -1138,20 +1178,17 @@ def lint_plan(plan_dir, diag):
                                  f"Next: /task:plan-audit {ref_phase} — фаза в статусе "
                                  f"«{phase_status}», не терминальна (аудит гоняется по "
                                  f"закрытой фазе, SKILL §13)")
-        elif m_close_archive:
-            ref_plan_id = m_close_archive.group(1)
-            _check_plan_id(ref_plan_id)
+        elif kind == "close-archive":
+            _check_plan_id(m.group(1))
             if not plan_closed:
                 diag.warning(handoff_path, next_lineno,
                              "Next: /task:plan-close archive — план ещё не терминален целиком")
-        elif m_close:
-            ref_plan_id, ref_phase, ref_suffix = m_close.group(1), m_close.group(2), m_close.group(3)
+        elif kind == "close":
+            ref_plan_id, ref_phase, ref_suffix = m.group(1), m.group(2), m.group(3)
             _check_plan_id(ref_plan_id)
             _check_phase(ref_phase)
             if ref_suffix:
                 _check_item(ref_phase + ref_suffix)
-        elif is_manual:
-            pass  # «ЗАПУСК ВРУЧНУЮ: <model/effort>» — форма без slash-команды, ссылок нет
         else:
             diag.error(handoff_path, next_lineno, NEXT_FORMS_HELP)
 

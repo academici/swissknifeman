@@ -424,6 +424,27 @@ class TestHandoffMd(TmpPlanTestCase):
         self.assertFalse(diag.ok)
         self.assertTrue(_errors_containing(diag, "заголовок: фаза «P9» не существует в плане"))
 
+    def test_handoff_title_item_form_nonexistent_phase(self):
+        # D37/H10: item-форма `after Pn.m` больше не обходит гейт резолва — ФАЗА обязана быть
+        plan_dir = write_valid_plan(self.root)
+        handoff = plan_dir / "handoff.md"
+        text = handoff.read_text(encoding="utf-8")
+        text = text.replace("— after P1.1\n", "— after P9.1\n")
+        handoff.write_text(text, encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertFalse(diag.ok)
+        self.assertTrue(_errors_containing(diag, "заголовок: фаза «P9» не существует в плане"))
+
+    def test_handoff_title_bootstrap_item_form_allowed(self):
+        # D37: whitelist — РОВНО `P0.0` (стартовый handoff, фазы P0 в плане не бывает) → тихо
+        plan_dir = write_valid_plan(self.root)
+        handoff = plan_dir / "handoff.md"
+        text = handoff.read_text(encoding="utf-8")
+        text = text.replace("— after P1.1\n", "— after P0.0\n")
+        handoff.write_text(text, encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+
     def test_handoff_title_prose_form_rejected(self):
         # `after phase 2` — вне обеих форм enum'а
         plan_dir = write_valid_plan(self.root)
@@ -626,6 +647,61 @@ class TestNextFormsEnum(TmpPlanTestCase):
         _, diag = _lint(plan_dir)
         self.assertFalse(diag.ok)
         self.assertTrue(_errors_containing(diag, "не соответствует ни одной из допустимых форм"))
+
+
+class TestNextDeclarationLine(TmpPlanTestCase):
+    """D40 — форма `Next` объявляется ПЕРВОЙ строкой поля; проза launch-block'а (в т.ч.
+    ячейка «Суть») законно ЦИТИРУЕТ другие формы enum'а и резолвер не перехватывает."""
+
+    def _activate_item(self, plan_dir):
+        """Делает единственный item 🟡 (план перестаёт быть терминальным целиком)."""
+        p1 = plan_dir / "phases" / "P1.md"
+        text = p1.read_text(encoding="utf-8")
+        text = text.replace("**Status:** 🟢 Done", "**Status:** 🟡 In progress")
+        text = text.replace("| P1.1 | Валидация конфига | 🟢 Done |",
+                            "| P1.1 | Валидация конфига | 🟡 In progress |")
+        p1.write_text(text, encoding="utf-8")
+        plan = plan_dir / "plan.md"
+        text = plan.read_text(encoding="utf-8")
+        text = text.replace("| P1 | Фаза раз | 1/1 | 🟢 Done |",
+                            "| P1 | Фаза раз | 0/1 | 🟡 In progress |")
+        plan.write_text(text, encoding="utf-8")
+
+    def _sut(self, plan_dir, next_decl, sut_cell):
+        """Переписывает handoff: объявление формы + ячейка «Суть» launch-block'а."""
+        ho = plan_dir / "handoff.md"
+        text = ho.read_text(encoding="utf-8")
+        text = text.replace("**Next:** /task:plan-exec DEMO-1 P1.1", f"**Next:** {next_decl}")
+        text = text.replace("| Суть | закрыть следующий item |", f"| Суть | {sut_cell} |")
+        ho.write_text(text, encoding="utf-8")
+
+    def test_manual_declaration_beats_closed_literal_in_prose(self):
+        # Дефект: греп «план закрыт» по ВСЕМУ полю ловил упоминание формы в «Сути»
+        # и давал ложный ERROR «не все items терминальны», перебивая маркер manual.
+        plan_dir = write_valid_plan(self.root)
+        self._activate_item(plan_dir)
+        self._sut(plan_dir, "«ЗАПУСК ВРУЧНУЮ: opus/high»",
+                  "свести формы enum'а: «план закрыт» vs slash-команды")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+
+    def test_manual_declaration_beats_slash_form_in_prose(self):
+        # Та же природа: slash-команда, ПРОЦИТИРОВАННАЯ в «Сути» manual-формы, не объявление —
+        # резолв её ссылок дал бы ERROR по несуществующему item'у P9.9.
+        plan_dir = write_valid_plan(self.root)
+        self._sut(plan_dir, "«ЗАПУСК ВРУЧНУЮ: opus/high»",
+                  "команды `/task:plan-design DEMO-1 P9.9` для этого item'а не существует")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+
+    def test_closed_literal_on_declaration_line_still_gated(self):
+        # Анти-ослабление: объявленная первой строкой форма «план закрыт» гейтится как прежде.
+        plan_dir = write_valid_plan(self.root)
+        self._activate_item(plan_dir)
+        self._sut(plan_dir, "«план закрыт»", "следующий шаг вне протокола")
+        _, diag = _lint(plan_dir)
+        self.assertFalse(diag.ok)
+        self.assertTrue(_errors_containing(diag, "«план закрыт», но не все items терминальны"))
 
 
 class TestArchivePlansNotPhantomPlan(TmpPlanTestCase):

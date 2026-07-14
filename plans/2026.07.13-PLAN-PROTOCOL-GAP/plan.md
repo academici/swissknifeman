@@ -109,7 +109,7 @@ Blocker-остатке по существу — фазу держали не д
 |:--|:--|:--|:--|
 | P1 | Разблокировка: формы Next + честный счёт lint | 2/2 | 🟢 Done |
 | P2 | SSOT-канон: routing-гейт, status-rule, Contracts (+ ремедиация аудитов) | 17/18 | 🟠 Done with deviations |
-| P3 | Команды plan-*: гейты и порядок закрытия | 0/6 | ⬜ Not started |
+| P3 | Команды plan-*: гейты и порядок закрытия | 1/6 | 🟡 In progress |
 | P4 | Регресс по флоту, закрытие эскалации REGHUB, доки | 0/3 | ⬜ Not started |
 
 ## 5. Decision Log
@@ -199,6 +199,7 @@ Blocker-остатке по существу — фазу держали не д
 | 2026-07-14 | plan-close (sonnet/low) | **Фаза P2 закрыта**: 18/18 терминальны, Phase Status ↔ Status Board сведены, `## Phase Handoff` перезаписан, `plan-lint` → 0/0 — Next: `plan-audit P2`. |
 | 2026-07-14 | issue-planner (opus/high, `/task:plan-design`) | **Фаза P3 спроектирована** (1.3.0 → 1.4.0): 5 → **6 items** (+P3.6 терминальный, D42), ТЗ пересобраны под канон **2.5.0** — прежний текст ссылался на отменённые формы (один коммит, `Context = NEW SESSION` у manual-item'а); решения — D42/D43 — детали см. phases/P3.md + findings/P3-command-layer.md. |
 | 2026-07-14 | issue-planner (opus/high, решение владельца) | **Аудит №4 P2 отменён (D44)**: вместо него прогнан детерминированный конфликт-скан — три SSOT сходятся, гейты зелёные (`0 ❌`, 124 теста, `plan-lint` 0 ERROR). Правила остановки аудита внесены в ТЗ **P3.3**; спека класса — `roadmap/plan-audit-loop.md`. |
+| 2026-07-14 | package-implementer (opus/high, ручной запуск — Exec=manual) | P3.1 закрыт (`4cfc10a`): `plan-exec.md` получил routing-гейт §9 (5 веток), топологию ДВУХ коммитов §8 (шаги 1–6, lint ПОСЛЕ handoff, гейт K=0), коммит-гигиену, status-rule и якорь дерева — детали см. phases/P3.md P3.1 Completion Notes. |
 
 ## Обсуждение
 

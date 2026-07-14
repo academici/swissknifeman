@@ -5,10 +5,16 @@
 #   <!-- ru-source-sha256: <hash> -->
 # в SKILL.md = sha256 файла SKILL.ru.md на момент генерации.
 #
+# Плюс ГЕЙТ непереводимых литералов (D28): директива `<!-- i18n-keep: <литерал> -->` в
+# SKILL.ru.md объявляет строку, которую внешний парсер грепает байт-в-байт (шапки таблиц,
+# маркеры) — генератор EN обязан перенести её дословно. Отсутствие литерала в SKILL.md = ❌
+# и НЕНУЛЕВОЙ exit в ЛЮБОМ режиме отчёта (не только --strict): переведённый литерал ломает
+# парсер молча. Механизм универсален — скилл без директив ведёт себя ровно как раньше.
+#
 # Режимы (НЕ вызывается из `skiller registry` — отдельный тулинг):
 #   (по умолчанию) отчёт: локальные без RU-источника; EN протух (RU правлен после
-#     генерации → регенерить SKILL.md); осиротевшие SKILL.ru.md.
-#   --strict  ненулевой код при проблемах (для CI).
+#     генерации → регенерить SKILL.md); осиротевшие SKILL.ru.md; гейт литералов.
+#   --strict  ненулевой код при ЛЮБЫХ проблемах (для CI; гейт литералов красит и без него).
 #   --stamp   проставить/обновить маркер ru-source-sha256 в локальных SKILL.md по
 #     текущему SKILL.ru.md (запускать ПОСЛЕ регенерации EN — «подтверждаю синхрон»).
 # Usage: scripts/check-translations.sh [--strict|--stamp]
@@ -28,7 +34,11 @@ strict = "--strict" in flags
 stamp = "--stamp" in flags
 skills_root = root / "skills"
 
-MARKER = re.compile(r"<!--\s*ru-source-sha256:\s*([0-9a-fA-F]{64})\s*-->")
+# `PENDING` — плейсхолдер, который эмитит промт-генератор EN; без него в альтернативе
+# `--stamp` не находил маркер и ДОПИСЫВАЛ второй вместо замены (G11: сработало дважды).
+MARKER = re.compile(r"<!--\s*ru-source-sha256:\s*([0-9a-fA-F]{64}|PENDING)\s*-->")
+# Директива непереводимого литерала (D28) — по строке на литерал, живёт в SKILL.ru.md.
+I18N_KEEP = re.compile(r"<!--\s*i18n-keep:\s*(.+?)\s*-->")
 
 
 def sha(path):
@@ -47,6 +57,7 @@ def set_marker(md, digest):
 
 
 local = external = ext_with_ru = stale = missing_ru = orphaned = stamped = 0
+literal_misses = 0
 problems = []
 
 for md in sorted(skills_root.rglob("SKILL.md")):
@@ -71,6 +82,15 @@ for md in sorted(skills_root.rglob("SKILL.md")):
         stamped += 1
         continue
     md_text = md.read_text(encoding="utf-8")
+    # гейт непереводимых литералов: директивы берём из RU (SSOT), присутствие сверяем
+    # ПОДСТРОКОЙ в EN — литерал может стоять и в таблице, и в code-блоке, и в прозе.
+    for lit in I18N_KEEP.findall(ru.read_text(encoding="utf-8")):
+        if lit not in md_text:
+            literal_misses += 1
+            problems.append(f"❌ EN не несёт непереводимый литерал «{lit}»: {rel}/SKILL.md "
+                            f"(объявлен директивой i18n-keep в SKILL.ru.md — регенерируй EN "
+                            f"промтом prompts/generate/claude-canon-from-ru.md: литералы "
+                            f"переносятся байт-в-байт, править SKILL.md руками нельзя)")
     # defense-in-depth: маркер должен быть РОВНО один и без stale-плейсхолдера
     marker_lines = [ln for ln in md_text.splitlines() if "ru-source-sha256:" in ln]
     if any("PENDING" in ln for ln in marker_lines):
@@ -106,8 +126,13 @@ for p in problems:
     print(p)
 print(f"\nЛокальных: {local} (RU-источник: {local - missing_ru}, нет: {missing_ru}, "
       f"EN протух/без маркера: {stale}) · внешних: {external} "
-      f"(с RU-справкой: {ext_with_ru}) · осиротевших: {orphaned}")
+      f"(с RU-справкой: {ext_with_ru}) · осиротевших: {orphaned} · "
+      f"непереводимых литералов нет в EN: {literal_misses}")
 
+# гейт литералов — ЖЁСТКИЙ, вне зависимости от --strict: EN, разошедшийся с греппаемым
+# литералом, ломает внешний парсер молча (G3: план по EN-канону не парсился вовсе).
+if literal_misses:
+    sys.exit(1)
 if strict and (missing_ru or stale or orphaned):
     sys.exit(1)
 PY

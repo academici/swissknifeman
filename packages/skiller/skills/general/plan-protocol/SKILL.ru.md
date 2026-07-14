@@ -123,7 +123,7 @@ Status `🟢`→`🟡` + Version bump плана + D-запись о причи�
 
 Скелет — `snippets/plan-template.md`. Секции строго в этом порядке:
 
-- **`## 0. Meta`** — таблица полей: Plan ID / Title / Version / Status / Document Type /
+- **`## 0. Meta`** — таблица `Поле | Значение`: Plan ID / Title / Version / Status / Document Type /
   Authoring Model / Last Updated / Repository / Related Packages / Execution Mode /
   Target Operator Models / Approval Owner. Необязательные поля:
   - **Home** — `brain` | `repo:<путь>`: где живёт исполняемая копия плана; по умолчанию
@@ -719,3 +719,27 @@ milestone-делегаты (по плану-делегату на item); Validat
 - `anti-drift` (general) — дисциплина итераций исполнителя, circuit breaker.
 - `package-contribution-protocol` (architect) — contribution в SSOT вместо правки
   vendor-копий (раздел 12).
+
+<!-- ===========================================================================
+     i18n-keep — НЕПЕРЕВОДИМЫЕ ЛИТЕРАЛЫ EN-канона (D28).
+     Список выведен из констант `packages/task/lib/task/plan_lint.py` — это ровно то,
+     что линтер грепает байт-в-байт. Генератор EN (`prompts/generate/claude-canon-from-ru.md`)
+     обязан перенести каждый литерал в `SKILL.md` ДОСЛОВНО (не переводить, не
+     транслитерировать, не «улучшать»); сами директивы в EN не выводятся.
+     Гейт присутствия — `scripts/check-translations.sh` (отсутствие литерала = ❌).
+     Инцидент-основание — G3 аудита P2 плана 2026.07.13-PLAN-PROTOCOL-GAP: EN нёс
+     `Items 🟢/total`, линтер сверял `Items 🟢/всего` — план по EN-канону не парсился вовсе.
+     =========================================================================== -->
+<!-- i18n-keep: Поле | Значение -->
+<!-- i18n-keep: Items 🟢/всего -->
+<!-- i18n-keep: D# | Дата | Решение | Почему -->
+<!-- i18n-keep: Дата | Кто (role/model) | Что -->
+<!-- i18n-keep: Контракт | Версия | Статус | Потребители | Уведомлены -->
+<!-- i18n-keep: Контракт | Донор-план | Pinned | Замечено | Реакция -->
+<!-- i18n-keep: > СКЕЛЕТ — не детализирован -->
+<!-- i18n-keep: ЗАПУСК ВРУЧНУЮ -->
+<!-- i18n-keep: [NEEDS CLARIFICATION -->
+<!-- i18n-keep: RAG:✅ -->
+<!-- i18n-keep: RAG:— -->
+<!-- i18n-keep: [UNVERIFIED] -->
+<!-- i18n-keep: — -->

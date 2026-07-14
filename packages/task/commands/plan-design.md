@@ -13,11 +13,13 @@ effort: high
 ## Режимы (по $ARGUMENTS)
 
 1. **`new <название>`** — новый план: выбери `PLAN-ID` (`[A-Z][A-Z0-9-]+`, напр. `AUDIT-W2`),
-   создай `plans/<ID>/plan.md` по шаблону (все секции 0–6), скелеты фаз `plans/<ID>/phases/Pn.md`
+   создай `plans/<ID>/plan.md` по шаблону (секции 0–6 + опциональные `## 7. Contracts`/
+   `## Обсуждение` — заводи, только если план их несёт), скелеты фаз `plans/<ID>/phases/Pn.md`
    (Phase Context со скелет-маркером — фиксированная строка
    `> СКЕЛЕТ — не детализирован, разворачивается /task:plan-design <ID> Pn` —
-   + Phase Status + items-скелеты с «—»; при маркере пустые поля легальны, включая
-   Code Guidance = «—») и `handoff.md` (Next: первый item;
+   + Phase Status + items-скелеты; каждый item несёт ВСЕ 16 полей строками (при маркере
+   пустые поля легальны, включая Code Guidance = «—», но САМИ ПОЛЯ обязаны быть — иначе
+   ERROR `plan-lint`)) и `handoff.md` (Next: первый item;
    заголовок стартового handoff — `# HANDOFF — <дата> — after P0.0`: bootstrap-канон,
    закрытых items ещё нет, а линт требует строго `after Pn.m`).
    **Constitution-гейт (план нового Axioma-проекта/пакета):** ДО фиксации стека и несущих
@@ -35,6 +37,12 @@ effort: high
    самодостаточно — фаза исполнима без чтения других фаз; скелет-маркер убрать) и разложить
    на items `### Pn.m — Title` со всеми полями; синхронизировать Status Board в plan.md.
    Финал режима — обязательный refine-цикл + DoR-чеклист (ниже).
+   **Реопен фазы** (Pn уже терминальна 🟢/🟠) — четыре шага обязательны (пропуск = находка
+   аудита): (1) Status фазы → `🟡` синхронно в Status Board `plan.md` и `## Phase Status`;
+   (2) version bump плана; (3) D-запись о причине реопена; (4) `## Phase Handoff` реопененной
+   фазы ИНВАЛИДИРУЕТСЯ — блок не удаляется, его первой непустой строкой ставится маркер
+   ДОСЛОВНО `> УСТАРЕЛ — фаза реопенена <D#>` (снимает его только `plan-close` при следующем
+   закрытии фазы). `handoff.md` в этом случае пишется с заголовком `after Pn` (не `Pn.m`).
 3. **`<PLAN-ID> Pn.m`** — довести один item до исполняемого ТЗ: дозаполнить все поля
    до уровня «sonnet исполнит без вопросов». Финал режима — refine-цикл + DoR-чеклист (ниже).
 4. **`from-draft <файл>`** — мост встроенного plan mode Claude Code → протокол (событие
@@ -61,14 +69,20 @@ effort: high
   Authoring Model / Last Updated / Repository / Related Packages / Execution Mode /
   Target Operator Models / Approval Owner; необязательные: `Home` — `brain`|`repo:<путь>`,
   `Paused By` — кто перехватил ACTIVE и когда) · `## 1. Context` (5–15 строк, самодостаточно) ·
-  `## 2. Execution Rules` (выжимка ≤20 строк) · `## 3. Routing` (ТОЛЬКО отклонения от
-  SSOT-матрицы; пусто = дефолты; формат `Items | Model/effort И/ИЛИ Tool Capability | Почему` —
-  tool-capability, типовое `perplexity-web/WebFetch (RAG)`, ДОПОЛНЯЕТ model/effort) ·
+  `## 2. Execution Rules` (выжимка ≤20 строк) · `## 3. Routing` — канон-таблица
+  `| Items | Model/effort | Exec | Почему |` (SKILL §9); колонка **Exec** — enum `plan-exec` |
+  `manual` | `plan-design`; пустая ячейка = дефолт-деривация (`model ≤ sonnet` И `effort ≤
+  medium` → `plan-exec`, иначе `manual`); design/contract-item'ы получают `Exec = manual`
+  явно; пустая секция = дефолты SSOT-матрицы ·
   `## 4. Phase Index & Status Board` (`Phase | Title | Items 🟢/всего | Status`) ·
   `## 5. Decision Log` (`D# | Дата | Решение | Почему`) · `## 6. Update Log` (append-only:
   `Дата | Кто | Что`; «Что» ≤ 2 строк, канон
   `<item> закрыт: <1 строка сути> — детали см. phases/Pn.md <item> Completion Notes`,
-  пересказ Completion Notes запрещён).
+  пересказ Completion Notes запрещён) · `## 7. Contracts` (ОПЦИОНАЛЬНАЯ — только у планов,
+  экспортирующих/потребляющих замороженные контракты; линтер опознаёт секцию по ЗАГОЛОВКУ,
+  не по номеру — занят 7, ставь под свободным) · `## Обсуждение` (ОПЦИОНАЛЬНАЯ, БЕЗ номера,
+  последней секцией: каждая развилка несёт `**Статус:** Resolved → D# | Decision pending |
+  Exploration`; всё, что ≠ `Resolved` — запись в `open-questions.md`).
 - `phases/Pn.md`: `# Pn — Title` → `## Phase Context` (скелет-маркер, если фаза не
   детализирована) → `## Phase Status` (`ID | Title | Status | Updated`) → items →
   `## Phase Handoff`.
@@ -82,9 +96,11 @@ effort: high
   `⬜ Not started` · `🟡 In progress` · `🟢 Done` · `🟠 Done with deviations` ·
   `🔴 Blocked` · `⛔ Skipped by decision`. Гейты статусов: коммит-гейт закрытия +
   DoR-гейт перевода фазы в исполнение (SKILL §6).
-- `handoff.md`: `# HANDOFF — <ISO-дата> — after Pn.m` + Next / Done / Remaining /
-  Sources of truth / Open risks / Workarounds-Deferred-Open questions; перезаписывается
-  целиком. Next — в форме launch-block, самодостаточный из холодной сессии (SKILL §8).
+- `handoff.md`: заголовок — две формы (SKILL §8): `# HANDOFF — <ISO-дата> — after Pn.m`
+  (закрыт item) либо `# HANDOFF — <ISO-дата> — after Pn` (закрыта/проаудирована/
+  ре-дизайнена/реопенена ФАЗА) + Next / Done / Remaining / Sources of truth / Open risks /
+  Workarounds-Deferred-Open questions; перезаписывается целиком. Next — в форме
+  launch-block, самодостаточный из холодной сессии (SKILL §8).
 - Раскладка 2.0: обязательны `plan.md`/`phases/`/`handoff.md`; опционально `findings/`,
   `20_research/`, `artifacts/` (судьба — архив), `root/` (судьба — docs проекта),
   `open-questions.md` (протокол спорного — SKILL §3).
@@ -102,11 +118,12 @@ effort: high
   допущение — дефект. Принятые решения фиксируй в `## 5. Decision Log`; правку плана
   отметь строкой в `## 6. Update Log`; долгоживущее спорное — в `open-questions.md`
   по протоколу SKILL §3.
-- **RAG-маркеры на несущих.** Внешние факты верифицируй существующей RAG-лестницей
-  (context7 → perplexity → WebSearch) — она источник; след в плане — маркер: каждый
-  load-bearing факт/вердикт в Intent/Why/Implementation Rules и в D-логе несёт
-  `RAG:✅ <дата/суть запроса>` либо `[UNVERIFIED]`. Несущий пункт без маркера =
-  дефект схемы, находка аудита.
+- **RAG-маркеры на несущих — enum ТРЁХ значений (SKILL §7).** Каждый load-bearing
+  факт/вердикт в Intent/Why/Implementation Rules и в D-логе несёт РОВНО один: `RAG:✅
+  <дата/суть запроса>` (внешний факт верифицирован RAG-лестницей context7 → perplexity →
+  WebSearch); `RAG:— (repo-grounded: <файл:строка>)` (repo-grounded/внутреннее правило —
+  внешней верификации не требует; НЕ годится ни для одного внешнего факта); `[UNVERIFIED]`
+  (не проверено, риск принят явно). Несущий пункт без маркера = дефект схемы, находка аудита.
 - **RAG-верификации фазы — в `findings/`, не только в чат.** Если при проектировании фазы
   делал RAG-верификацию внешних фактов, сохрани выжимку (источник-URL + дата + вердикт) в
   `plans/<PLAN-ID>/findings/<Pn>-<slug>.md` и сошлись на неё из `Inputs`/`Required Reads`
@@ -123,8 +140,12 @@ effort: high
 Канонический контур (SKILL §7): design → self-audit по DoR-чеклисту → правка → повтор
 до 0 маркеров `[NEEDS CLARIFICATION]`. Перед выдачей «фаза готова» прогони DoR-чеклист:
 маркеры сняты; Scope Included/Excluded фазы заполнены; Alternatives несущих решений —
-в D-логе; Open Questions разнесены по статусам; несущие факты несут RAG-маркеры.
-Фаза, ушедшая в exec без DoR, = находка plan-audit.
+в D-логе; Open Questions разнесены по статусам; несущие факты несут RAG-маркеры;
+**§3 Routing покрывает каждый item фазы** (или явно сказано — действуют дефолты §9),
+design/contract-item'ы несут `Exec = manual`; **план экспортирует/потребляет
+замороженные контракты → `## 7. Contracts` заполнена**; **каждая развилка
+`## Обсуждение` несёт `**Статус:**`**, всё, что ≠ `Resolved` — в `open-questions.md`;
+**скелет-items несут все 16 полей**. Фаза, ушедшая в exec без DoR, = находка plan-audit.
 
 **Pre-mortem для high-stakes** (фискалка/платежи/tenant-isolation/ядро экосистемы):
 перед закрытием фазы дизайна — раунд по протоколу Klein: «план провалился через

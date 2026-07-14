@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.5.0
+version: 2.6.0
 description: "Executable master plans in plans/<ID>: plan/phase/task schemas, 6 statuses, refine loop and DoR gate, canonical plan root, repo home by default + visibility/supersedes fields, two homes and archive, handoff with launch-block, model routing, /task:plan-* commands."
 risk: write
 persona: oss-dev
@@ -25,7 +25,7 @@ practices that plan mode / the model handle on their own are not retold here.
 
 - Multi-phase work longer than one session (the plan outlives context).
 - "Strong model plans, cheap model executes": opus builds the plan, sonnet/haiku close items.
-- Any `/task:plan-*` command invocation (design/exec/close/audit).
+- Any `/task:plan-*` command invocation (design/exec/run/close/audit).
 
 **"Do we need a plan?" threshold (heuristic):**
 
@@ -605,6 +605,17 @@ DEFECT, not a permission: otherwise the column is a hole in the gate — exactly
   (fail-safe: a false stop costs one restart, a false pass costs a RED audit).
 ```
 
+**What EXECUTES an `Exec = manual` item.** Two equal paths, both under the model PRESCRIBED by
+Routing: (a) the item's BARE PROMPT from the launch-block (§8, «ЗАПУСК ВРУЧНУЮ» form);
+(b) the command `/task:plan-run <ID> Pn.m` (§13) — the only one with NO `model`/`effort` pin in
+its frontmatter: the owner sets `/model` + `/effort` himself, the command inherits them from the
+session and INVERTS the routing gate — it compares the ACTUAL session model/effort against §3
+Routing and on an undershoot emits the same `ROUTING-BLOCKED`. The honesty boundary is named
+explicitly: an agent's self-attribution of its model is NOT machine-checkable, so `plan-run`
+removes the switching ritual before a series of manual items, but the HARD gate stays with
+`plan-exec` (its pin makes an undershoot structurally impossible). A `plan-run` executor MUST
+print the actual model/effort pair in the report and in the Update Log.
+
 **Back-compat.** Legacy `## 3. Routing` forms (prose, bullets, a table without the Exec column,
 an empty section) stay VALID; `plan-lint` does not parse section 3 — the gate is run by the
 READING EXECUTOR, not by regex. A legacy row's Exec is derived by the rule above.
@@ -705,8 +716,14 @@ on its own).
 |:--|:--|:--|
 | `/task:plan-design` | opus/high | new plan / new phase / item specs; refine loop + DoR gate |
 | `/task:plan-exec` | sonnet/medium | execute an item; self-closing (updates statuses + handoff) |
+| `/task:plan-run` | SESSION model/effort (no pin) | execute an `Exec = manual` item under the prescribed model: the whole `plan-exec` protocol, routing gate INVERTED — compares the ACTUAL session against §3 Routing (undershoot → `ROUTING-BLOCKED`) |
 | `/task:plan-close` | sonnet/low | status reconciliation / phase close / `archive` mode |
 | `/task:plan-audit` | opus/xhigh | adversarial phase audit; verdict GREEN/ATTENTION/RED |
+
+FOUR commands carry a frontmatter model pin — that pin IS the machine tier gate. `plan-run`
+carries none DELIBERATELY (omitting the `model`/`effort` keys = inheriting the session): it is
+not a gate bypass but the removal of the `/model` + `/effort` ritual before a series of manual
+items; what executes an `Exec = manual` item and where the honesty boundary lies — §9.
 
 ## 14. Plan-quality checklist
 
@@ -761,4 +778,4 @@ doesn't repay the cost of reconstructing "where did this come from".
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of editing
   vendor copies (section 12).
 
-<!-- ru-source-sha256: fb4106afe005a449ac78203f59d8599e96ad10ff2644dff7862623f59a5cae94 -->
+<!-- ru-source-sha256: b13f798f1c908c2b850cd6f2dbd2dcc1ef1f5b1a5c002190cd39d911c4897f49 -->

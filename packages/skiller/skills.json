@@ -2250,10 +2250,10 @@
       "name": "plan-protocol",
       "bucket": "general",
       "path": "skills/general/plan-protocol/SKILL.md",
-      "version": "2.5.0",
+      "version": "2.6.0",
       "description": "Executable master plans in plans/<ID>: plan/phase/task schemas, 6 statuses, refine loop and DoR gate, canonical plan root, repo home by default + visibility/supersedes fields, two homes and archive, handoff with launch-block, model routing, /task:plan-* commands.",
-      "sha256": "dd627b953447d312ed9c7d43f0e2c9d90be80fefab059dafb600095c33c760af",
-      "content_sha256": "a6413a4bd105f190477a5dd9cb5c11c6a01052a572d0944becc91f8c74aa6150",
+      "sha256": "16c5bb2f215644f3b8558ff23bf6234672d0c15f4e8ab35e387329564cb5e08d",
+      "content_sha256": "e6a35c34406daf63d44227d850eee6d7b87eee252dd0edcc371f8b392a8bd95d",
       "tags": [
         "workflow",
         "planning",

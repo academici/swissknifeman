@@ -105,7 +105,7 @@ Blocker-остатке по существу — фазу держали не д
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P1 | Разблокировка: формы Next + честный счёт lint | 2/2 | 🟢 Done |
-| P2 | SSOT-канон: routing-гейт, status-rule, Contracts (+ ремедиация аудитов) | 13/18 | 🟡 In progress |
+| P2 | SSOT-канон: routing-гейт, status-rule, Contracts (+ ремедиация аудитов) | 14/18 | 🟡 In progress |
 | P3 | Команды plan-*: гейты и порядок закрытия | 0/5 | ⬜ Not started |
 | P4 | Регресс по флоту, закрытие эскалации REGHUB, доки | 0/3 | ⬜ Not started |
 
@@ -183,6 +183,7 @@ Blocker-остатке по существу — фазу держали не д
 | 2026-07-14 | issue-planner (opus/high, `/task:plan-design`) | **Третий реопен P2** (D32): 1.2.0 → 1.3.0, +5 items (P2.14–P2.18) на H1–H13, решения владельца D33–D38; `## Phase Handoff` помечен `> УСТАРЕЛ` — детали см. phases/P2.md ТЗ P2.14–P2.18 + findings/P2-third-reopen-fleet-measurements.md. |
 | 2026-07-14 | package-implementer (opus/high, ручной запуск — Exec=manual) | P2.14 закрыт (`7110507`): §8 — форма «ЗАПУСК ВРУЧНУЮ» и `Context` manual-item'а определены в SSOT один раз (D33; снипет больше не второй SSOT), якорь дерева для чисел (D36), `Last Updated` в шаге 2 (D38) — детали см. phases/P2.md P2.14 Completion Notes. |
 | 2026-07-14 | package-implementer (opus/high, ручной запуск — Exec=manual) | P2.15 закрыт (`87022d6`): реопен фазы инвалидирует `## Phase Handoff` маркером `> УСТАРЕЛ` — канон §3 (4 шага реопена) + узкий WARNING-гейт в `plan_lint` + 3 теста; фактических новых WARNING флоту — 2, не 3 (D39) — детали см. phases/P2.md P2.15 Completion Notes. |
+| 2026-07-14 | package-implementer (opus/high, ручной запуск — Exec=manual) | P2.16 закрыт (`34c165a`): реестр `CANON_LITERALS` (14 сверок) + `HEURISTIC_LITERALS` (5) в `plan_lint.py`, тесты T1/T2 (AST-полнота; реестр ⊆ директивы), 2 новые директивы `i18n-keep` — литералов канона оказалось 14, а не 13 — детали см. phases/P2.md P2.16 Completion Notes. |
 
 ## Обсуждение
 

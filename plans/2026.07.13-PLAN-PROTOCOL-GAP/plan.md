@@ -98,7 +98,7 @@ Blocker-остатке по существу — фазу держали не д
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P1 | Разблокировка: формы Next + честный счёт lint | 2/2 | 🟢 Done |
-| P2 | SSOT-канон: routing-гейт, status-rule, Contracts (+ ремедиация аудитов) | 10/13 | 🟡 In progress |
+| P2 | SSOT-канон: routing-гейт, status-rule, Contracts (+ ремедиация аудитов) | 11/13 | 🟡 In progress |
 | P3 | Команды plan-*: гейты и порядок закрытия | 0/5 | ⬜ Not started |
 | P4 | Регресс по флоту, закрытие эскалации REGHUB, доки | 0/3 | ⬜ Not started |
 
@@ -162,6 +162,7 @@ Blocker-остатке по существу — фазу держали не д
 | 2026-07-13 | package-implementer (opus/high, ручной запуск — Exec=manual) | P2.9 закрыт: `SKILL.ru.md` §6/§8 — ДВА коммита как единственная топология item'а (D26) + carve-out плановых путей в 6-м material-триггере (D27); дифф `plan-design` (реопен №2) отделён коммитом `270d460` — детали см. phases/P2.md P2.9 Completion Notes. |
 | 2026-07-14 | package-implementer (opus/high, ручной запуск — Exec=manual) | P2.10 закрыт (`f33a6cc`): §7 — enum трёх RAG-маркеров (`RAG:—`, D29); §8 — вторая форма заголовка handoff (`after Pn`) и третье значение `Context` (`шаг-не-item`, D30); §14, оба снипета, `plan_lint.py` (2 regex + резолв фазы) + 5 тестов — детали см. phases/P2.md P2.10 Completion Notes. |
 | 2026-07-14 | package-implementer (opus/high, ручной запуск — Exec=manual) | P2.11 закрыт (`4a0e6f6`, D28): директивы `i18n-keep` + правило переноса в промте EN-генератора + ГЕЙТ в `check-translations.sh` (гейта не было — доказано прогоном ДО) + фикс `--stamp` (G11) — детали см. phases/P2.md P2.11 Completion Notes. |
+| 2026-07-14 | plan-exec (sonnet/medium) | P2.12 закрыт (`7bbeb76`): bookkeeping-правда по git-фактам — снят невалидный числитель борда из Update Log, ложная правка борда в Completion Notes P2.7, карта «коммит → item» сверена по `git log` (расхождений нет) — детали см. phases/P2.md P2.12 Completion Notes. |
 
 ## Обсуждение
 

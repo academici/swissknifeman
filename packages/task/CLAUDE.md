@@ -18,7 +18,10 @@ academici: набор slash-команд `/task:*` для Claude Code, кажд�
   скилле `packages/skiller/skills/general/plan-protocol/SKILL.ru.md`; команды пакета
   `task` — исполнительный слой поверх этой схемы (`plan-design` проектирует, `plan-exec`
   исполняет item, `plan-close` реконсилирует/закрывает, `plan-audit` — adversarial-аудит
-  закрытой фазы).
+  закрытой фазы). Третий режим исполнения — `commands/plan-run.md` (D18): БЕЗ пина
+  `model`/`effort`, наследует модель/effort сессии владельца — делегирует протокол
+  `plan-exec` с инвертированным routing-гейтом, снимает ритуал `/model`+`/effort` перед
+  серией `Exec = manual` item'ов.
 - **`lib/task/plan_lint.py`** (+ `scripts/plan-lint.py` — тонкий bash/python-лаунчер) —
   детерминированный валидатор структуры `plans/<PLAN-ID>/{plan.md, phases/Pn.md,
   handoff.md}`: 6 канонических статусов, обязательные секции/таблицы, единый формат

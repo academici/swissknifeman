@@ -169,7 +169,7 @@ effort: medium
      `«ЗАПУСК ВРУЧНУЮ: <model/effort>»`; `Model`/`Thinking` — **предписанные Routing**, НЕ
      sonnet/medium; code-block несёт **ГОЛЫЙ ПРОМПТ item'а** (копипаст без правок), а НЕ slash-команду
      (`/task:plan-exec` пинит sonnet/medium и по гейту п. 2 обязан такой item отклонить — команда в
-     code-block'е была бы инструкцией нарушить гейт); `Context` = `continue (/clear) — ручной item`.
+     code-block'е была бы инструкцией нарушить гейт); `Context` = `continue (/clear) — ручной item`. Либо: `/model <M>` + `/effort <E>` + `/task:plan-run <ID> Pn.m` (D18).
    - Следующая фаза ещё скелет (16 полей не заполнены) → `/task:plan-design <PLAN-ID> Pn`, не
      `plan-exec` (упадёт на предусловии). Фаза терминальна → `/task:plan-close <PLAN-ID> Pn`.
    - **`Context` — РОВНО одно из ТРЁХ значений** (`plan-protocol` §8): `continue (/clear) — ручной

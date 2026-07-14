@@ -25,7 +25,7 @@ effort: low
   | `/task:plan-close archive <ID>` | план терминален целиком |
   | «план закрыт» | все items терминальны, следующий шаг вне протокола |
   | «ЗАПУСК ВРУЧНУЮ: `<model/effort>`» | `Exec = manual` (§9): команды нет — launch-block несёт
-  предписанную модель и голый промпт item'а отдельным code-block |
+  предписанную модель и голый промпт item'а отдельным code-block (либо `/model`+`/effort`+`/task:plan-run <ID> Pn.m`, D18) |
 - **Launch-block ОБЯЗАТЕЛЕН**: таблица `Model / Thinking / Context / Суть` + голая команда
   (или, у `Exec = manual`, голый промпт item'а) ОТДЕЛЬНЫМ code-block'ом (копипаст без
   правок); самодостаточна из холодной сессии — plan-ID + cold-start reads, «эта сессия» —

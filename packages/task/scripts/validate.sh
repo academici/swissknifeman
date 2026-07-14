@@ -50,10 +50,14 @@ for f in sorted(glob.glob("commands/*.md")):
         continue
     if not fm.get("description"):
         bad.append(f"{f}: пустой/нет description")
-    if fm.get("model") not in VALID_MODELS:
-        bad.append(f"{f}: model «{fm.get('model')}» не из {sorted(VALID_MODELS)}")
-    if fm.get("effort") not in VALID_EFFORTS:
-        bad.append(f"{f}: effort «{fm.get('effort')}» не из {sorted(VALID_EFFORTS)}")
+    # plan-run.md (D18) намеренно БЕЗ model/effort — наследует сессию, единственное исключение
+    if f != "commands/plan-run.md":
+        if fm.get("model") not in VALID_MODELS:
+            bad.append(f"{f}: model «{fm.get('model')}» не из {sorted(VALID_MODELS)}")
+        if fm.get("effort") not in VALID_EFFORTS:
+            bad.append(f"{f}: effort «{fm.get('effort')}» не из {sorted(VALID_EFFORTS)}")
+    elif fm.get("model") or fm.get("effort"):
+        bad.append(f"{f}: model/effort ЗАПИНЕНЫ — plan-run обязана их не нести (D18)")
 for b in bad:
     print("  FAIL:", b, file=sys.stderr)
 sys.exit(1 if bad else 0)

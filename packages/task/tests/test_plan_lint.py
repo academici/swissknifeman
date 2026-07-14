@@ -1517,3 +1517,49 @@ class TestBaselineGate(TmpPlanTestCase):
         self.assertIn("baseline", err.getvalue())
         self.assertIn("недоступен", err.getvalue())
         self.assertNotIn("новых от рабочего дерева", out.getvalue())
+
+
+class TestAuditBlockOutsidePhaseGates(TmpPlanTestCase):
+    """P3.8/A4/D52 — append-only блок `## Audit Pn` ВНЕ региона грепов по фазе.
+    Аудитор обязан назвать маркер, о проверке которого отчитывается («маркеров X — 0»);
+    греп по всему файлу фазы ронял гейт на его собственной строке. Регион кончается на
+    первом `## Audit`; тот же маркер в ТЕЛЕ item'а по-прежнему даёт WARNING."""
+
+    def _warnings_containing(self, diag, needle):
+        return [w for w in diag.warnings if needle in w]
+
+    def _append_audit_block(self, plan_dir, body, phase="P1"):
+        p = plan_dir / "phases" / f"{phase}.md"
+        p.write_text(p.read_text(encoding="utf-8")
+                     + f"\n## Audit {phase} — 2026-07-15\n\n**Вердикт:** 🟢 GREEN\n\n{body}\n",
+                     encoding="utf-8")
+
+    # --- A4: DoR-маркер ТОЛЬКО в блоке аудита → гейт молчит -----------------------
+    def test_clarification_marker_inside_audit_block_silent(self):
+        plan_dir = write_valid_plan(self.root, "DEMO-1")
+        self._append_audit_block(
+            plan_dir, "- Проверено: маркеров `[NEEDS CLARIFICATION: …]` в фазе — 0.")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+        self.assertEqual(self._warnings_containing(diag, "NEEDS CLARIFICATION"), [], diag.warnings)
+
+    # --- контроль: тот же маркер в ТЕЛЕ item'а → WARNING (гейт не ослаблен) -------
+    def test_clarification_marker_in_item_body_still_warns(self):
+        plan_dir = write_valid_plan(self.root, "DEMO-1")
+        p1 = plan_dir / "phases" / "P1.md"
+        p1.write_text(p1.read_text(encoding="utf-8").replace(
+            "**Why:** Диагностика дорогая.",
+            "**Why:** Диагностика дорогая. [NEEDS CLARIFICATION: какой формат?]"),
+            encoding="utf-8")
+        self._append_audit_block(plan_dir, "- Проверено: маркеров уточнения — 0.")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(self._warnings_containing(diag, "NEEDS CLARIFICATION"), diag.warnings)
+
+    # --- тот же регион у второго грепа по фазе: признак оркестрации в блоке аудита -
+    def test_orchestration_marker_inside_audit_block_silent(self):
+        plan_dir = write_valid_plan(self.root, "DEMO-1")
+        self._append_audit_block(
+            plan_dir, "- Оркестрация фазой не заявлена: `scriptPath` в launch-block отсутствует.")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+        self.assertEqual(self._warnings_containing(diag, "заявляет оркестрацию"), [], diag.warnings)

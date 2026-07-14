@@ -131,6 +131,12 @@ README_FILENAME = "README.md"
 SKELETON_MARKER_RE = re.compile(r"^>\s*СКЕЛЕТ\s+—\s+не детализирован")
 # Маркер неоднозначности (SKILL §7): в фазе со статусом 🟡+ (не ⬜) = DoR-warning.
 NEEDS_CLARIFICATION_RE = re.compile(r"\[NEEDS CLARIFICATION")
+# P3.8/D52: append-only блок `## Audit Pn` ИСКЛЮЧЁН из региона грепов по фазе. Аудитор
+# отчитывается о проверке предиката («маркеров X — 0») и обязан УПОМЯНУТЬ маркер дословно;
+# греп по всему файлу бил бы по честному отчёту (A4: первая версия `## Audit P3` уронила
+# гейт собственной строкой). Регион гейтов кончается на ПЕРВОМ `## Audit` — ниже него живого
+# ТЗ фазы нет (блок append-only, дописывается ПОСЛЕ items и Phase Handoff).
+AUDIT_BLOCK_HEADER_RE = re.compile(r"^##\s+Audit\b")
 # RAG-маркеры несущих фактов (SKILL §7, enum из трёх значений — D29) — эвристика по
 # D-логу. `RAG:—` (repo-grounded) пишется через em dash, как EMPTY_PLACEHOLDER;
 # ASCII-дефис не канонизирован.
@@ -367,6 +373,15 @@ def _find_section(lines, header_re):
             body, start_lineno = _section_body(lines, idx, header_idxs)
             return idx, body, start_lineno
     return None, None, None
+
+
+def _lines_before_audit(lines):
+    """Строки фазы ДО первого append-блока `## Audit` — регион грепов по фазе (D52).
+    Префикс исходного списка ⇒ номера строк (i + 1) остаются валидными для диагностик."""
+    for i, ln in enumerate(lines):
+        if AUDIT_BLOCK_HEADER_RE.match(ln):
+            return lines[:i]
+    return lines
 
 
 def _parse_table(body_lines, body_start_lineno):
@@ -729,13 +744,17 @@ def parse_phase_md(path, phase_id, diag):
     if ctx_body is not None:
         is_skeleton = any(SKELETON_MARKER_RE.match(ln) for ln in ctx_body)
 
+    # --- P3.8/D52: регион ОБОИХ грепов по фазе — до первого `## Audit` (append-блок
+    # аудита законно цитирует маркеры, по которым отчитывается; см. AUDIT_BLOCK_HEADER_RE)
+    gate_lines = _lines_before_audit(lines)
+
     # --- 2.0: маркеры [NEEDS CLARIFICATION] — линуются в lint_plan по статусу фазы
-    needs_clarification = [i + 1 for i, ln in enumerate(lines)
+    needs_clarification = [i + 1 for i, ln in enumerate(gate_lines)
                            if NEEDS_CLARIFICATION_RE.search(ln)]
 
     # --- P4.6: заявляет ли фаза оркестрацию (грепаемый признак, D29) — линуется
     # в lint_plan (workflow-как-DoR: фаза с оркестрацией без workflow-скрипта = warning)
-    declares_orchestration = any(ORCHESTRATION_MARKER_RE.search(ln) for ln in lines)
+    declares_orchestration = any(ORCHESTRATION_MARKER_RE.search(ln) for ln in gate_lines)
 
     items = {}
     for item_id, title, header_lineno, body_lines, body_start in _find_items(lines):

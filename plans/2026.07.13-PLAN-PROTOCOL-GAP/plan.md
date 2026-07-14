@@ -105,7 +105,7 @@ Blocker-остатке по существу — фазу держали не д
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P1 | Разблокировка: формы Next + честный счёт lint | 2/2 | 🟢 Done |
-| P2 | SSOT-канон: routing-гейт, status-rule, Contracts (+ ремедиация аудитов) | 15/18 | 🟡 In progress |
+| P2 | SSOT-канон: routing-гейт, status-rule, Contracts (+ ремедиация аудитов) | 16/18 | 🟡 In progress |
 | P3 | Команды plan-*: гейты и порядок закрытия | 0/5 | ⬜ Not started |
 | P4 | Регресс по флоту, закрытие эскалации REGHUB, доки | 0/3 | ⬜ Not started |
 
@@ -187,6 +187,7 @@ Blocker-остатке по существу — фазу держали не д
 | 2026-07-14 | package-implementer (opus/high, ручной запуск — Exec=manual) | P2.15 закрыт (`87022d6`): реопен фазы инвалидирует `## Phase Handoff` маркером `> УСТАРЕЛ` — канон §3 (4 шага реопена) + узкий WARNING-гейт в `plan_lint` + 3 теста; фактических новых WARNING флоту — 2, не 3 (D39) — детали см. phases/P2.md P2.15 Completion Notes. |
 | 2026-07-14 | package-implementer (opus/high, ручной запуск — Exec=manual) | P2.16 закрыт (`34c165a`): реестр `CANON_LITERALS` (14 сверок) + `HEURISTIC_LITERALS` (5) в `plan_lint.py`, тесты T1/T2 (AST-полнота; реестр ⊆ директивы), 2 новые директивы `i18n-keep` — литералов канона оказалось 14, а не 13 — детали см. phases/P2.md P2.16 Completion Notes. |
 | 2026-07-14 | package-implementer (opus/high, ручной запуск — Exec=manual) | P2.17 закрыт (`ba89c62`): §6 — проза топологии сведена с D26, якоря F1/G2 при своих правилах; гейт item-формы заголовка handoff (D37) + резолв `Next` по строке-объявлению (**D40**); оракул гейта — **D41** (дефект замера, пойман регрессом) — детали см. phases/P2.md P2.17 Completion Notes. |
+| 2026-07-14 | plan-exec (sonnet/medium) | P2.18 закрыт: пять ложных утверждений (H4/H5/H6/H8/H12) переписаны по git-фактам с якорем дерева (D36) — обоснование борда P2.7, числа `5/8` P2.12, «посимвольно» P2.10, «215 скиллов» P2.11, карта коммитов + `fc57561` P2.12 — детали см. phases/P2.md P2.18 Completion Notes. |
 
 ## Обсуждение
 

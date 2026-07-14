@@ -4,6 +4,18 @@
 Ключи блока Workarounds/Deferred/Open questions совпадают с run-report
 `devloop{workarounds,deferred,open_questions}` — сверяемость с телеметрией.
 
+**Заголовок** — две формы (иная = ERROR линтера; канон — SKILL §8):
+
+| Форма заголовка | Когда |
+|:--|:--|
+| `# HANDOFF — <YYYY-MM-DD> — after Pn.m` | закрыт item |
+| `# HANDOFF — <YYYY-MM-DD> — after Pn` | закрыта/проаудирована/ре-дизайнена ФАЗА — шаг без «последнего закрытого item'а» как адресата |
+
+**Поле `Context`** launch-block'а — закрытый enum трёх значений (SKILL §8): `continue
+(/clear) — ручной item` · `NEW SESSION — Workflow-оркестрован` · `NEW SESSION —
+шаг-не-item` (`plan-audit`/`plan-close`/`plan-design`). Статичное «рекомендован /clear»
+независимо от типа следующего шага — запрещено.
+
 Next обязан нести launch-block (полная форма и правила cold-start —
 `snippets/launch-block-template.md`, SKILL раздел 8): таблица параметров запуска
 + голая команда одним code-block. `plan-lint` проверяет их наличие (warning).
@@ -31,7 +43,7 @@ Next обязан нести launch-block (полная форма и прави
 |:--|:--|
 | Model | opus |
 | Thinking | high — <почему high+ MANDATORY по §9> |
-| Context | <fresh session / continue> |
+| Context | continue (/clear) — ручной item |
 | Суть | <1 строка> |
 
 ````
@@ -48,7 +60,7 @@ Next обязан нести launch-block (полная форма и прави
 |:--|:--|
 | Model | <модель> |
 | Thinking | <effort> |
-| Context | <fresh session / continue> |
+| Context | <enum §8: continue (/clear) — ручной item · NEW SESSION — Workflow-оркестрован · NEW SESSION — шаг-не-item> |
 | Суть | <1 строка: что делает следующий запуск> |
 
 ````

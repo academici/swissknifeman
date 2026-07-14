@@ -350,6 +350,44 @@ class TestHandoffMd(TmpPlanTestCase):
         self.assertFalse(diag.ok)
         self.assertTrue(_errors_containing(diag, "нет заголовка «# HANDOFF"))
 
+    def test_handoff_title_after_item_valid(self):
+        # форма `after Pn.m` (закрыт item) — базовая, остаётся валидной (D30)
+        plan_dir = write_valid_plan(self.root)
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+
+    def test_handoff_title_after_phase_valid(self):
+        # вторая форма `after Pn` (закрыта/проаудирована ФАЗА) — D30/G10
+        plan_dir = write_valid_plan(self.root)
+        handoff = plan_dir / "handoff.md"
+        text = handoff.read_text(encoding="utf-8")
+        text = text.replace("— after P1.1\n", "— after P1\n")
+        handoff.write_text(text, encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+
+    def test_handoff_title_after_nonexistent_phase(self):
+        # анти-подгонка: `after Pn` обязан РЕЗОЛВИТЬСЯ, а не просто матчиться regex'ом
+        plan_dir = write_valid_plan(self.root)
+        handoff = plan_dir / "handoff.md"
+        text = handoff.read_text(encoding="utf-8")
+        text = text.replace("— after P1.1\n", "— after P9\n")
+        handoff.write_text(text, encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertFalse(diag.ok)
+        self.assertTrue(_errors_containing(diag, "заголовок: фаза «P9» не существует в плане"))
+
+    def test_handoff_title_prose_form_rejected(self):
+        # `after phase 2` — вне обеих форм enum'а
+        plan_dir = write_valid_plan(self.root)
+        handoff = plan_dir / "handoff.md"
+        text = handoff.read_text(encoding="utf-8")
+        text = text.replace("— after P1.1\n", "— after phase 1\n")
+        handoff.write_text(text, encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertFalse(diag.ok)
+        self.assertTrue(_errors_containing(diag, "заголовок не соответствует ни одной из двух форм"))
+
     def test_handoff_missing_required_field(self):
         plan_dir = write_valid_plan(self.root)
         text = (plan_dir / "handoff.md").read_text(encoding="utf-8")
@@ -918,6 +956,20 @@ class TestLint20Warnings(TmpPlanTestCase):
         plan.write_text(text, encoding="utf-8")
         _, diag = _lint(plan_dir)
         self.assertEqual(self._warnings_containing(diag, "RAG:✅»/«[UNVERIFIED]"), [])
+
+    def test_decision_log_with_rag_dash_marker_no_warning(self):
+        # третий маркер enum'а §7 (D29): `RAG:—` — repo-grounded факт, WARNING'а быть не должно
+        plan_dir = write_valid_plan(self.root)
+        plan = plan_dir / "plan.md"
+        text = plan.read_text(encoding="utf-8")
+        extra = ("| D2 | 2026-07-02 | ещё решение | RAG:— (repo-grounded: lib/pkg/config.py) |\n"
+                 "| D3 | 2026-07-02 | третье решение | RAG:— |\n")
+        text = text.replace("| D1 | 2026-07-02 | тест | тест |\n",
+                            "| D1 | 2026-07-02 | тест | тест |\n" + extra)
+        plan.write_text(text, encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+        self.assertEqual(self._warnings_containing(diag, "Decision Log:"), [])
 
     def test_item_fields_out_of_order_warning(self):
         plan_dir = write_valid_plan(self.root)

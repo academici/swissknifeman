@@ -85,7 +85,13 @@ PHASE_STATUS_HEADER_RE = re.compile(r"^##\s+Phase Status\s*$")
 PHASE_HANDOFF_HEADER_RE = re.compile(r"^##\s+Phase Handoff\s*$")
 FIELD_RE = re.compile(r"^\*\*([^*:]+):\*\*\s*(.*)$")
 ESCALATION_RE = re.compile(r"^>\s*🔴\s*ESCALATION\s+(P\d+\.\d+)\s*:")
-HANDOFF_TITLE_RE = re.compile(r"^#\s+HANDOFF\s+—.*—\s+after\s+(P\d+\.\d+)\s*$")
+# Две формы заголовка handoff (SKILL §8 / D30): `after Pn.m` — закрыт item; `after Pn` —
+# закрыта/проаудирована/ре-дизайнена ФАЗА (шаг без «последнего закрытого item'а» как
+# адресата). Группа отдаёт ссылку: с точкой — item, без точки — фаза (резолвится в
+# lint_plan). Иные формы (`after phase 2`, `after P2 item 8`) остаются ERROR.
+HANDOFF_TITLE_RE = re.compile(r"^#\s+HANDOFF\s+—.*—\s+after\s+(P\d+(?:\.\d+)?)\s*$")
+HANDOFF_TITLE_HELP = ("заголовок не соответствует ни одной из двух форм (SKILL §8): "
+                      "«# HANDOFF — … — after Pn.m» (item) · «# HANDOFF — … — after Pn» (фаза)")
 PLAN_EXEC_RE = re.compile(r"/task:plan-exec\s+(\S+)\s+(P\d+\.\d+)")
 # Форма m8/B1/N1/N2: `handoff.Next` допускает закрытый enum 8 форм (SKILL §8) —
 # ниже регулярки на каждую (кроме plan-exec/«план закрыт», уже объявленных). Порядок
@@ -122,8 +128,10 @@ README_FILENAME = "README.md"
 SKELETON_MARKER_RE = re.compile(r"^>\s*СКЕЛЕТ\s+—\s+не детализирован")
 # Маркер неоднозначности (SKILL §7): в фазе со статусом 🟡+ (не ⬜) = DoR-warning.
 NEEDS_CLARIFICATION_RE = re.compile(r"\[NEEDS CLARIFICATION")
-# RAG-маркеры несущих фактов (SKILL §7) — эвристика по D-логу.
-RAG_MARKER_RE = re.compile(r"RAG:✅|\[UNVERIFIED\]")
+# RAG-маркеры несущих фактов (SKILL §7, enum из трёх значений — D29) — эвристика по
+# D-логу. `RAG:—` (repo-grounded) пишется через em dash, как EMPTY_PLACEHOLDER;
+# ASCII-дефис не канонизирован.
+RAG_MARKER_RE = re.compile(r"RAG:✅|RAG:" + EMPTY_PLACEHOLDER + r"|\[UNVERIFIED\]")
 # launch-block в handoff.Next (SKILL §8): таблица с `| Model |` + code-block.
 LAUNCH_TABLE_ROW_RE = re.compile(r"^\|\s*Model\s*\|")
 CODE_FENCE_RE = re.compile(r"^\s*```")
@@ -424,7 +432,8 @@ def _lint_plan_md_20(lines, path, diag):
                 for row, _ in rows):
             diag.warning(path, dl_start,
                          f"Decision Log: {len(rows)} решений и ни одного маркера "
-                         f"«RAG:✅»/«[UNVERIFIED]» — несущие факты не промаркированы (SKILL §7)")
+                         f"«RAG:✅»/«RAG:{EMPTY_PLACEHOLDER}»/«[UNVERIFIED]» — несущие "
+                         f"факты не промаркированы (SKILL §7)")
 
 
 # --- m7/D10: парсер секции `## 7. Contracts` -----------------------------------
@@ -725,19 +734,18 @@ def parse_handoff_md(path, diag):
         return None
 
     title_lineno = None
-    title_item = None
+    title_ref = None  # `Pn.m` (item) либо `Pn` (фаза) — резолвится в lint_plan
     for i, ln in enumerate(lines):
         if ln.startswith("# "):
             m = HANDOFF_TITLE_RE.match(ln)
             title_lineno = i + 1
             if m:
-                title_item = m.group(1)
+                title_ref = m.group(1)
             else:
-                diag.error(path, title_lineno,
-                            "заголовок не соответствует «# HANDOFF — … — after Pn.m»")
+                diag.error(path, title_lineno, HANDOFF_TITLE_HELP)
             break
     else:
-        diag.error(path, None, "нет заголовка «# HANDOFF — … — after Pn.m»")
+        diag.error(path, None, "нет заголовка «# HANDOFF — … — after Pn.m» / «… — after Pn»")
 
     body_start = (title_lineno or 0) + 1
     fields = _parse_fields(lines[body_start - 1:], body_start, FIELD_RE)
@@ -745,7 +753,8 @@ def parse_handoff_md(path, diag):
         if f not in fields:
             diag.error(path, body_start, f"нет обязательного поля «{f}»")
 
-    return {"title_item": title_item, "fields": fields, "lines": lines}
+    return {"title_ref": title_ref, "title_lineno": title_lineno,
+            "fields": fields, "lines": lines}
 
 
 # --- линт одного плана ---------------------------------------------------
@@ -961,6 +970,15 @@ def lint_plan(plan_dir, diag):
     if handoff:
         next_val, next_lineno = handoff["fields"].get("Next", ("", None))
 
+        # Заголовок формы `after Pn` (фаза, D30) — ссылка обязана резолвиться, иначе
+        # расширение regex'а просто «разрешило всё». Форма `after Pn.m` существованием
+        # item'а НЕ гейтится: 12 планов флота несут `after P0.0` (плана ещё не касались,
+        # item'а P0.0 не бывает) — гейт на неё = новые ERROR флоту, back-compat запрещает.
+        title_ref = handoff.get("title_ref")
+        if title_ref and "." not in title_ref and title_ref not in phases:
+            diag.error(handoff_path, handoff.get("title_lineno"),
+                       f"заголовок: фаза «{title_ref}» не существует в плане")
+
         # --- 2.0 WARNING: launch-block в handoff.Next (SKILL §8) ------------------
         # Таблица `| Model | …` и code-block грепаются по всему файлу: шаблон кладёт
         # launch-block продолжением Next, но точное место не гейтим (warning-уровень).
@@ -1080,7 +1098,7 @@ def lint_plan(plan_dir, diag):
         },
         "handoff": {
             "path": str(handoff_path),
-            "title_item": (handoff or {}).get("title_item"),
+            "title_ref": (handoff or {}).get("title_ref"),
             "fields": {k: v[0] for k, v in (handoff or {}).get("fields", {}).items()},
         } if handoff else None,
     }

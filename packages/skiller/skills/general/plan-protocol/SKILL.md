@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.4.0
+version: 2.5.0
 description: "Executable master plans in plans/<ID>: plan/phase/task schemas, 6 statuses, refine loop and DoR gate, canonical plan root, repo home by default + visibility/supersedes fields, two homes and archive, handoff with launch-block, model routing, /task:plan-* commands."
 risk: write
 persona: oss-dev
@@ -50,24 +50,24 @@ plans/<PLAN-ID>/
 └── open-questions.md  # disputed/unresolved (protocol — section 3)
 ```
 
-Only `plan.md`/`phases/`/`handoff.md` are mandatory — everything else is optional,
-per the plan's needs. `PLAN-ID` — one of two canonical patterns:
+Only `plan.md`/`phases/`/`handoff.md` are mandatory — everything else is optional, per the
+plan's needs. `PLAN-ID` — one of two canonical patterns:
 
 - **date-based** (preferred, D16) — `<YYYY>.<MM>.<DD>-<CODENAME>`, e.g.
-  `2026.07.10-SETTINGS-DOCTOR`: the date prefix gives `plans/` chronological sorting and
-  a "when" cue without reading Meta;
+  `2026.07.10-SETTINGS-DOCTOR`: chronological sorting of `plans/` + a "when" cue without
+  reading Meta;
 - **legacy** (back-compat, D24) — `[A-Z][A-Z0-9-]+`, e.g. `AUDIT-W2`, `MIGRATE-V3`.
 
-The legacy pattern `[A-Z][A-Z0-9-]+` stays valid, existing plans are NOT renamed;
-migration is forward-only (terminal plans move to the archive as they close).
+The legacy pattern stays valid, existing plans are NOT renamed; migration is forward-only
+(terminal plans move to the archive as they close).
 
 `plans/` root, next to the plan directories:
 
 - **`plans/ACTIVE.md`** — flat pointer to the active plan. Canon — EXACTLY 4 lines
   (parsed by `plan-lint`): `# ACTIVE`, blank line, `**Active:** <PLAN-ID>` (no active
   plan — `—`), `**Updated:** <YYYY-MM-DD>`. Skeleton — `snippets/active-template.md`.
-  Maintained by commands: `plan-design` (new/from-draft modes — sets the new plan's ID)
-  and `plan-close` (the WHOLE plan closed — resets to `—`).
+  Maintained by `plan-design` (new/from-draft — sets the new plan's ID) and `plan-close`
+  (the WHOLE plan closed — resets to `—`).
 - **Draft convention:** any flat `.md` directly in `plans/` (except `ACTIVE.md` and
   `README.md`) is a plan-mode draft; expand it with
   `/task:plan-design from-draft <файл>` (`plan-lint` warns about lingering drafts).
@@ -86,16 +86,16 @@ structured summary) — skill `workflow-craft`; portable template sources —
 
 ## 3. Canonical plan root
 
-The semantic difference between the two artifact directories (RAG:✅ P5.1 §2 arc42 —
-timeless material at the root, iterations in children):
+Two artifact directories (RAG:✅ P5.1 §2 arc42 — timeless material at the root, iterations
+in children):
 
 - **`root/`** — long-lived material whose destiny is project documentation:
-  `architecture.md`, `data-model.md`, `contracts/`, `philosophy.md`, `glossary.md` (the
-  set is per the plan's needs — not all files are mandatory).
+  `architecture.md`, `data-model.md`, `contracts/`, `philosophy.md`, `glossary.md` (set is
+  per the plan's needs — not all files mandatory).
 - **`artifacts/`** — phases' working material, archived together with the plan.
 
-**Open Questions protocol** (RAG:✅ P5.1 §7 IETF rough consensus): a disputed point
-does NOT block the plan if moved out into `open-questions.md` with one of the statuses:
+**Open Questions protocol** (RAG:✅ P5.1 §7 IETF rough consensus): a disputed point does
+NOT block the plan if moved out into `open-questions.md` with one of the statuses:
 `Exploration` | `Decision pending (нужен владелец)` | `Resolved → D#`.
 
 Rules: a question "hanging" in a phase body without being moved out = audit finding;
@@ -103,22 +103,44 @@ closing a plan with pending questions = only `🟠 Done with deviations`; an obj
 recorded substantively ("I don't like it" is not an objection).
 
 **Fork carriers — two roles, no duplicates:** `## Обсуждение` (Discussion) in plan.md
-(section 4) = PROVENANCE (options, recommendation, where it landed), archived together
-with the plan; `open-questions.md` = TRACKER of the unresolved — a fork whose status ≠
-`Resolved` MUST have an entry there, a resolved one is NOT copied (we keep no duplicates);
-nothing unresolved → the file is NOT created (an empty one is a noise artifact).
+(section 4) = PROVENANCE (options, recommendation, where it landed), archived with the
+plan; `open-questions.md` = TRACKER of the unresolved — a fork whose status ≠ `Resolved`
+MUST have an entry there, a resolved one is NOT copied (no duplicates); nothing unresolved
+→ the file is NOT created (an empty one is a noise artifact).
 
-**Re-design over closed phases** (RAG:✅ P5.1 §7 superseded chains): a new decision =
-a new D# with a "supersedes D#-old" reference; the old D# is NOT edited. Phase reopen:
-Status `🟢`→`🟡` + plan Version bump + a D-log entry with the reason.
+**Re-design over closed phases** (RAG:✅ P5.1 §7 superseded chains): a new decision = a new
+D# with a "supersedes D#-old" reference; the old D# is NOT edited.
+
+**Phase reopen — FOUR steps** (all mandatory; skipping one = audit finding):
+
+1. Phase Status `🟢`/`🟠` → `🟡` — in sync in the plan.md Status Board and in `## Phase Status`.
+2. Plan Version bump.
+3. A D-log entry with the reason for the reopen.
+4. **The reopened phase's `## Phase Handoff` is INVALIDATED.** The block is NOT deleted
+   (provenance of what was delivered and when is kept); its **first non-empty line** gets
+   the marker:
+
+   ```text
+   > УСТАРЕЛ — фаза реопенена <D#>
+   ```
+
+   After the marker (same quote) — facts as of the reopen: how many items and what status
+   NOW, what the next step is. A bold marker (`> **УСТАРЕЛ — фаза реопенена D#.**`) is
+   legal — the gate looks at the line start. Only `plan-close` removes it, at the next
+   phase close, by overwriting the whole block (basis H2: a block surviving a reopen keeps
+   claiming "phase closed, N/N terminal" and misleads the cold-start agent).
+
+   `plan_lint` gate: phase NOT terminal + block claims closure (`терминальн` /
+   `фаза закрыта` / `Сдано:`) + no marker → **WARNING** "Phase Handoff stale". Whether the
+   block's content is ACTUAL is not machine-checkable — that is the `plan-audit` checklist.
 
 ## 4. plan.md schema
 
 Skeleton — `snippets/plan-template.md`. Sections strictly in this order:
 
-- **`## 0. Meta`** — field table: Plan ID / Title / Version / Status / Document Type /
-  Authoring Model / Last Updated / Repository / Related Packages / Execution Mode /
-  Target Operator Models / Approval Owner. Optional fields:
+- **`## 0. Meta`** — table `Поле | Значение`: Plan ID / Title / Version / Status /
+  Document Type / Authoring Model / Last Updated / Repository / Related Packages /
+  Execution Mode / Target Operator Models / Approval Owner. Optional fields:
   - **Home** — `brain` | `repo:<путь>`: where the plan's executable copy lives; defaults
     to the project repo (section 12, D31);
   - **visibility** — `private` | `public`, defaults to `private` when absent (D25):
@@ -128,18 +150,18 @@ Skeleton — `snippets/plan-template.md`. Sections strictly in this order:
     the predecessor moves to `plans/archive/` (section 12);
   - **Paused By** — which plan seized ACTIVE and when; filled by plan-design mode `new`,
     which appends the field to the previously active plan.
-- **`## 1. Context`** — 5–15 lines: what we do and why. Self-contained: the executor
-  does NOT see the chat the plan was born in.
+- **`## 1. Context`** — 5–15 lines: what we do and why. Self-contained: the executor does
+  NOT see the chat the plan was born in.
 - **`## 2. Execution Rules`** — ≤20-line digest of execution rules + plan-specific
   deviations. The full protocol is this skill; do not copy it wholesale.
-- **`## 3. Routing`** — ONLY deviations from the SSOT routing matrix (section 9).
-  Empty section = defaults apply. Canonical line form (column `Exec`), the `Exec`
-  derivation rule and the routing gate — section 9; legacy forms stay valid.
-- **`## 4. Phase Index & Status Board`** — table `Phase | Title | Items 🟢/total | Status`.
-- **`## 5. Decision Log`** — table `D# | Date | Decision | Why`.
-- **`## 6. Update Log`** — append-only table `Date | Who (role/model) | What`.
-  Hard limit: "What" ≤ 2 lines, canonical format:
-  `<item> closed: <1 line of substance> — details in phases/Pn.md <item> Completion Notes`.
+- **`## 3. Routing`** — ONLY deviations from the SSOT routing matrix (section 9). Empty
+  section = defaults apply. Canonical line form (column `Exec`), the `Exec` derivation rule
+  and the routing gate — section 9; legacy forms stay valid.
+- **`## 4. Phase Index & Status Board`** — table `Phase | Title | Items 🟢/всего | Status`.
+- **`## 5. Decision Log`** — table `D# | Дата | Решение | Почему`.
+- **`## 6. Update Log`** — append-only table `Дата | Кто (role/model) | Что`. Hard limit:
+  "What" ≤ 2 lines, canonical format:
+  `<item> закрыт: <1 line of substance> — детали см. phases/Pn.md <item> Completion Notes`.
   Retelling Completion Notes in the Update Log is FORBIDDEN (EDUFY incident: 54KB plan.md).
 - **`## 7. Contracts`** — **OPTIONAL** (only for plans that export OR consume frozen
   contracts; a missing section is not a defect). Number 7 is the canon for NEW plans, but
@@ -177,19 +199,22 @@ Skeleton — `snippets/plan-template.md`. Sections strictly in this order:
 Skeleton — `snippets/phase-template.md`. Phase file structure:
 
 - `# Pn — Title`
-- **`## Phase Context`** — 5–10 lines, self-contained (the phase is executable
-  without reading other phases).
+- **`## Phase Context`** — 5–10 lines, self-contained (the phase is executable without
+  reading other phases).
 - **`## Phase Status`** — table `ID | Title | Status | Updated`.
 - **Items.** Item heading STRICTLY `### Pn.m — Title`. Fields STRICTLY as lines
   `**Field:** value`, in this order:
   `Status, Intent, Why, Scope Included, Scope Excluded, Inputs, Files, Required Reads,
   Implementation Rules, Code Guidance, Validation, Deliverables, Completion Notes,
   Pending Work, Known Deviations, Escalation Needed`.
-  Empty value — canonical «—» (not blank, not "N/A"); exception: for `Escalation Needed`
-  — and ONLY for it — the marker `no` is equal in standing to «—».
+  Empty value — canonical «—» (not blank, not "N/A"); exception: for `Escalation Needed` —
+  and ONLY for it — the marker `no` is equal in standing to «—».
   **Code Guidance is MANDATORY**: solution style, bans, allowed abstractions, required
   tests, forbidden shortcuts — what a cheap model won't infer on its own.
-- **`## Phase Handoff`** — filled when the phase is closed (what was delivered, what's next).
+- **`## Phase Handoff`** — filled when the phase is closed (what was delivered, what's
+  next). On a phase **reopen** the block is not deleted but invalidated with the marker
+  `> УСТАРЕЛ — фаза реопенена <D#>` on its first line (§3, 4th reopen step); `plan-close`
+  overwrites it at the next phase close.
 
 **Skeleton-phase marker.** A phase deliberately left undetailed at authoring time carries
 a fixed line in its Phase Context:
@@ -197,8 +222,8 @@ a fixed line in its Phase Context:
 With the marker, empty item fields are legal, including Code Guidance = «—». Without the
 marker an empty Code Guidance is a plan defect.
 
-**RAG markers** on load-bearing facts in Intent/Why/Implementation Rules and in the
-D-log are mandatory — schema and load-bearing definition in section 7.
+**RAG markers** on load-bearing facts in Intent/Why/Implementation Rules and in the D-log
+are mandatory — schema and load-bearing definition in section 7.
 
 ## 6. Statuses
 
@@ -213,8 +238,8 @@ EXACTLY 6 canonical strings — copy byte-for-byte (greppable, parser is strict)
 ⛔ Skipped by decision
 ```
 
-Status lives in the plan: finishing work without updating the plan = incomplete
-execution. Closed an item → update `Phase Status` and the Status Board in `plan.md`.
+Status lives in the plan: finishing work without updating the plan = incomplete execution.
+Closed an item → update `Phase Status` and the Status Board in `plan.md`.
 
 **Status under deviations.**
 
@@ -227,9 +252,12 @@ A non-empty Known Deviations BY ITSELF does NOT change the item's status.
 - public contract / SemVer / a frozen contract touched BEYOND the item's spec;
 - the item's acceptance criterion not met;
 - a workaround accepted that LIVES IN THE CODE/artifact (not in the execution process);
-- the item commit carries a diff outside Files of the item (a foreign working-tree
-  capture, or a file "on topic" not declared in the spec) — regardless of whether the
-  diff itself is correct.
+- the item commit carries a diff outside `Files` of the item (a foreign working-tree
+  capture, or a file "on topic" not declared in the spec) — regardless of whether the diff
+  itself is correct. Counted ONLY over NON-plan paths: `plans/<ID>/**` and
+  `plans/ACTIVE.md` are a regular part of closing an item (§8: the bookkeeping commit),
+  their presence in the item's commits is NOT a material deviation (and they need not be
+  listed in `Files`).
 
 🟢 Done is kept on a process deviation, but the Known Deviations entry is MANDATORY:
 tier overshoot (executed with a model/effort ABOVE what Routing prescribed), commit
@@ -247,20 +275,38 @@ even if the result is "better".
 ```
 
 **Commit gate on close.** Status `🟢`/`🟠` is NOT set without the item's diff committed:
-Conventional Commits (Russian), atomic by meaning (several commits — fine), affected
-package's `validate.sh` green BEFORE the commit; review-fix commits are SEPARATE (not
-`amend` — traceability: it must show what review caught); no uncommitted diff for the
-item's Scope remains in the tree (`git status`); a diff OUTSIDE the item's Scope is not
-committed, record it in Pending Work. Incident basis — D12 of plan SKM-AUDIT-004: 4
-"closed" items were marked done while their code sat uncommitted in the working tree.
+Conventional Commits (Russian), affected package's `validate.sh` green BEFORE the commit;
+no uncommitted diff for the item's Scope remains in the tree (`git status`); a diff OUTSIDE
+the item's Scope is not committed — record it in Pending Work (basis D12/SKM-AUDIT-004:
+4 "closed" items were marked done while their code sat uncommitted).
 
 ```text
-An item's commit is assembled BY EXPLICIT PATHS: `git add <paths from Files> <plan files>`.
+An item is closed with TWO commits (the only topology — §8 "Item close order"; here — only
+the ASSEMBLY of each, the step order is not duplicated):
+- item commit        → `git add <paths from Files>`         (item's Scope only);
+- bookkeeping commit → `git add plans/<ID> plans/ACTIVE.md`  (plan files only).
+
+TWO is the topology of CLOSING, not a cap on the number of commits:
+- inside STEP 1 the Scope diff may be assembled from SEVERAL commits if each is atomic in
+  meaning; the item commit is the FINAL commit of step 1, and it is ITS hash that goes into
+  the handoff (§8, step 3);
+- a review-fix commit is ON TOP of the topology (never `amend` — traceability: it must show
+  what review caught), NOT an alternative to it: the close topology is unchanged.
+Neither allows MERGING steps 1 and 6 into one commit — see bundling below.
+
 `git add -A` and `git commit -a` are FORBIDDEN: the working tree may carry a foreign diff
 (the owner edits code in parallel with the agent) — it would ride into the item commit
 unnoticed. A foreign diff in the tree the executor does NOT touch (does not commit, stash,
 revert or "tidy up") — he NAMES it in the item's report: someone else's work is not his
-subject. Incident basis — F1 of the P2 audit of plan 2026.07.13-PLAN-PROTOCOL-GAP.
+subject. Basis — F1 (audit P2, 2026.07.13-PLAN-PROTOCOL-GAP): `git add -A` dragged a foreign
+product file (`integrate.py`) into the item commit.
+
+Bundling (Scope diff and bookkeeping in ONE commit) is a process deviation: 🟢 + a Known
+Deviations entry — but even then the handoff MUST carry the real item-commit hash (§8,
+step 3), which does not exist yet while the bundle is being assembled. A bundle is therefore
+bought with a FIXING commit carrying the hash: that price is named in the report, not hidden;
+a placeholder instead of a hash is a defect (basis G2: the §6/§8 disagreement already
+produced the placeholder `<P2.5>`).
 ```
 
 **Phase coherence of derived artifacts.** An item MAY leave a DERIVED artifact stale (the
@@ -272,20 +318,19 @@ terminal item. Regenerating after EVERY item that edits the same source publishe
 incoherent snapshots of a canon still being written. Silently closing an item while
 `validate.sh` is red is not a deviation — it is a lie in Completion Notes.
 
-**Phase DoR gate.** A phase is not moved from design to execution until Definition of
-Ready passes — checklist and refine loop in section 7. A phase that went to exec with
-unresolved `[NEEDS CLARIFICATION]` markers = a plan-audit finding.
+**Phase DoR gate.** A phase is not moved from design to execution until Definition of Ready
+passes — checklist and refine loop in section 7. A phase that went to exec with unresolved
+`[NEEDS CLARIFICATION]` markers = a plan-audit finding.
 
 ## 7. Refine loop and readiness
 
-**Marker `[NEEDS CLARIFICATION: <вопрос>]`** — the canonical way to flag an ambiguity
-right in the text of the plan / an item's spec (RAG:✅ P5.1 §1 spec-kit). A disputed
-spot at authoring time — either the marker or a question to the owner; an unauthorized
-assumption is forbidden. The gate is binary: 0 markers.
+**Marker `[NEEDS CLARIFICATION: <вопрос>]`** — the canonical way to flag an ambiguity right
+in the text of the plan / an item's spec (RAG:✅ P5.1 §1 spec-kit). A disputed spot at
+authoring time — either the marker or a question to the owner; an unauthorized assumption is
+forbidden. The gate is binary: 0 markers.
 
 **Phase DoR gate** (Definition of Ready, RAG:✅ P5.1 §7 Atlassian) — a fixed checklist;
-plan-design must run it before declaring "phase ready", plan-audit checks it
-post-factum:
+plan-design must run it before declaring "phase ready", plan-audit checks it post-factum:
 
 - [ ] All `[NEEDS CLARIFICATION]` resolved (0 markers in the phase).
 - [ ] Phase Scope Included / Scope Excluded filled (Goals/Non-Goals equivalent).
@@ -301,40 +346,58 @@ post-factum:
 **Criterion "a phase MUST declare orchestration"** (D16). A phase MUST set up a workflow
 script (item-by-item is not legal) if EITHER signal fires:
 
-- **N≥3 items with independent/parallelizable scope** — items don't block each other on
-  data (one item's Inputs don't reference another item's Deliverables within the SAME
-  phase) AND each carries deterministic Validation commands (not "check manually");
-- **a long autonomous chain with external state** — the phase is meant to run without
-  manual intervention between items for longer than one executor session (state passes
-  through git+plan, not chat context).
+- **N≥3 items with independent/parallelizable scope** — items don't block each other on data
+  (one item's Inputs don't reference another item's Deliverables within the SAME phase) AND
+  each carries deterministic Validation commands (concrete commands with a checkable result,
+  not "check manually");
+- **a long autonomous chain with external state** — the phase is meant to run without manual
+  intervention between items for longer than one executor session (state passes through
+  git+plan, not chat context).
 
-Neither fires (items <3, or scope is sequentially coupled, or Validation can't be
-formalized) — the phase stays manual, a workflow is NOT set up "just in case". The
-criterion is binary: check the facts against the phase's items (count,
-Inputs↔Deliverables coupling, presence of Validation commands) — do not judge "by feel".
+Neither fires (items <3, or scope is sequentially coupled, or Validation can't be formalized)
+— the phase stays manual, a workflow is NOT set up "just in case". The criterion is binary:
+check the facts against the phase's items (count, Inputs↔Deliverables coupling, presence of
+Validation commands) — do not judge "by feel".
 
 **RAG markers in the schema.** Every load-bearing fact/verdict in an item's
-Intent/Why/Implementation Rules and in the D-log carries `RAG:✅ <date/query gist>` or
-`[UNVERIFIED]`. Load-bearing = "a project decision stands on this". A load-bearing point
-without a marker = schema defect, audit finding.
+Intent/Why/Implementation Rules and in the D-log carries EXACTLY ONE marker from a closed
+enum of three values (D29):
 
-**Refine loop** — canonical authoring contour: design → self-audit (DoR checklist) →
-edit → repeat until 0 markers.
+- `RAG:✅ <дата/суть запроса>` — an EXTERNAL fact verified via RAG.
+- `RAG:—` — a repo-grounded fact / internal rule: confirmed by reading this repo's code or
+  the plan itself, needs no external verification. Basis in parentheses:
+  `RAG:— (repo-grounded: plan_lint.py:88)`.
+- `[UNVERIFIED]` — not checked, the decision is taken at risk.
 
-**Pre-mortem for high-stakes** (fiscal/payments/tenant-isolation/ecosystem core):
-before closing a design phase — a round per the Klein protocol (RAG:✅ P5.1 §7,
-prospective hindsight +30%): "the plan failed 6–12 months out — why"; independent
-recording of causes → clustering → mitigations with an owner in Risks/D-log.
+Load-bearing = "a project decision stands on this". A load-bearing point without a marker =
+schema defect, audit finding. `RAG:—` fits NO EXTERNAL fact (library version/API, "still
+current/deprecated", market, another service's/MCP's capabilities) — there it is either
+`RAG:✅` or `[UNVERIFIED]`; `RAG:—` on an external fact = the same audit finding.
+
+**Refine loop** — canonical authoring contour: design → self-audit (DoR checklist) → edit →
+repeat until 0 markers.
+
+**Pre-mortem for high-stakes** (fiscal/payments/tenant-isolation/ecosystem core): before
+closing a design phase — a round per the Klein protocol (RAG:✅ P5.1 §7, prospective
+hindsight +30%): "the plan failed 6–12 months out — why"; independent recording of causes →
+clustering → mitigations with an owner in Risks/D-log.
 
 ## 8. Handoff standard
 
-`plans/<ID>/handoff.md` — rolling pointer, OVERWRITTEN on every item/phase close
-(version history lives in git, not in the file). Skeleton — `snippets/handoff-template.md`.
-Fields: heading `# HANDOFF — <ISO-date> — after Pn.m` · **Next:** (next command in
-launch-block form, below) · **Done:** · **Remaining:** · **Sources of truth:** (plan.md,
-phases/Pn.md, key files) · **Open risks:** · **Workarounds/Deferred/Open questions:**
-(keys match run-report `devloop{workarounds,deferred,open_questions}` — cross-checkable
-with telemetry).
+`plans/<ID>/handoff.md` — rolling pointer, OVERWRITTEN on every item/phase close (version
+history lives in git, not in the file). Skeleton — `snippets/handoff-template.md`. Fields:
+
+- Heading — two forms (any other = `plan-lint` ERROR; D30):
+  - `# HANDOFF — <ISO-date> — after Pn.m` — an item is closed (addressee = the last closed item);
+  - `# HANDOFF — <ISO-date> — after Pn` — a PHASE was closed/audited/re-designed, i.e. a step
+    with no "last closed item" as addressee (`plan-close <ID> Pn`, `plan-audit <ID> Pn`,
+    `plan-design <ID> Pn`).
+- **Next:** the next command in launch-block form (below).
+- **Done:** what is closed. · **Remaining:** what is left.
+- **Sources of truth:** where the truth is (plan.md, phases/Pn.md, key files).
+- **Open risks:** open risks.
+- **Workarounds/Deferred/Open questions:** keys match run-report
+  `devloop{workarounds,deferred,open_questions}` — cross-checkable with telemetry.
 
 **Launch-block.** Every "what to launch next" output — handoff.Next and the finals of
 plan-exec/plan-close/plan-audit reports — must take the fixed form
@@ -345,7 +408,7 @@ plan-exec/plan-close/plan-audit reports — must take the fixed form
 |:--|:--|
 | Model | <модель> |
 | Thinking | <effort> |
-| Context | <fresh session / continue> |
+| Context | <одно из трёх значений enum'а ниже> |
 | Суть | <1 строка> |
 
 ````
@@ -354,14 +417,13 @@ plan-exec/plan-close/plan-audit reports — must take the fixed form
 ```
 
 **Self-sufficiency (cold-start).** The launch-block command must work from a cold session:
-plan-ID + input-doc paths (cold-start reads) + an embedded gate approval if the execution
-is gated. References like "this session" — only as a supplement. `plan-lint` checks:
-handoff.Next contains the launch-block table and a code block (greppable). Under a master
-plan the general session handoff (skill `session-handoff`) collapses here — do not keep a
-second handoff file.
+plan-ID + input-doc paths (cold-start reads) + an embedded gate approval if the execution is
+gated. References like "this session" — only as a supplement. `plan-lint` checks: handoff.Next
+contains the launch-block table and a code block (greppable). Under a master plan the general
+session handoff (skill `session-handoff`) collapses here — no second handoff file.
 
-**Allowed `Next` forms** (closed enum — `plan-lint` accepts EXACTLY these 8 forms; any
-other form = ERROR listing the allowed ones):
+**Allowed `Next` forms** (closed enum, m8/B1/N1/N2 — `plan-lint` accepts EXACTLY these 8
+forms; any other form = ERROR listing the allowed ones):
 
 ```text
 | Форма Next | Когда |
@@ -381,10 +443,19 @@ other form = ERROR listing the allowed ones):
 **Item close order** (canonizes B1/F11/M2/A4 — repeat offenses of "dishonest" lint):
 
 ```text
-1. Scope diff (code/artifacts) → package `validate.sh` green → commit.
-2. Plan bookkeeping: Status, Completion Notes, Pending Work, Known Deviations,
-   Phase Status, Status Board, Update Log.
-3. Overwrite handoff.md (Next — a form from the enum above).
+TWO commits — the only topology of an item. The ASSEMBLY of each (`git add` by explicit
+paths, `-A`/`-a` banned) — §6 "Commit hygiene", not duplicated here.
+
+1. Scope diff (code/artifacts) ONLY by the `Files` paths → package `validate.sh` green →
+   ITEM COMMIT. Plan files do NOT go into it.
+2. Plan bookkeeping: Status, Completion Notes, Pending Work, Known Deviations, Phase Status,
+   Status Board, Update Log; in `plan.md` — `Last Updated` (the item's close date). There is
+   NO machine gate on `Last Updated` (a stale field = bookkeeping lagged, not a finding):
+   the `plan-audit` checklist verifies it.
+3. Rewrite handoff.md (Next — a form from the enum above). The handoff takes the item
+   commit's hash FROM STEP 1 — that commit is already in history
+   (`git rev-parse --short HEAD`), so the hash is REAL. A placeholder instead of a hash
+   (`<Pn.m>`, "TBD", an empty cell) is a defect, not a form.
 4. plan-lint — AFTER step 3, on the final tree. Running it BEFORE the handoff rewrite is
    FORBIDDEN: the closing item itself changes the handoff, so a "before" count does not
    describe the state of the commit.
@@ -393,34 +464,78 @@ other form = ERROR listing the allowed ones):
    • K > 0 — fix BEFORE the bookkeeping commit;
    • N − K > 0 (residual plan errors outside the item's Scope) — NOT hushed up: a line in
      the item's Pending Work + the handoff's Open risks.
-6. Commit the bookkeeping diff.
+6. BOOKKEEPING COMMIT: plan files only (`plans/<ID>/**`, `plans/ACTIVE.md`).
 
 "Green lint" for the close gate = K = 0 (no NEW errors), not N = 0.
+An item with no code diff (Scope = the plan itself) follows the same topology: step 1 commits
+the item's `Files`, step 6 — the rest of the bookkeeping.
+Merging steps 1 and 6 into one commit (bundling) = process deviation §6: 🟢 + a Known
+Deviations entry + a fixing commit carrying the real hash in the handoff.
 ```
 
-**"item/phase → handoff → /clear" cycle:** after handoff.md is overwritten, `/clear`
-is recommended — the next item starts from reading the plan (plan.md → phases/Pn.md →
+**Tree anchor for numbers in reports.** ANY NUMBER in an item's report (Completion Notes,
+Validation, Known Deviations, Update Log) — a `grep` count, an ERROR/WARN count, a count of
+commits/files — is given with an explicit **tree anchor** on which it is reproducible:
+`<число> (на <git-ref>)`, plus the command that produced it. The default anchor is the item's
+**COMMITTED tree**, not the tree at the moment the report was written:
+
+```text
+A number about the Scope diff (code/artifacts) → anchor = the ITEM COMMIT (step 1): it is
+  already in history, bookkeeping does not change it — the command reproduces as is.
+A number about PLAN files (greps over phases/Pn.md, lint counts) → anchor = the BOOKKEEPING
+  COMMIT (step 6): the report itself changes it. Count on the tree you are COMMITTING (after
+  `git add` of all step 2–3 edits), not on the pre-edit tree; if it diverged after the commit
+  — fix it with a fixing commit, do not leave it.
+```
+
+A number without an anchor, or one not reproducible by its own command on the committed tree,
+is a **FALSE STATEMENT** (class B1) — even if it was true when written. No machine gate — the
+check lives in the `plan-audit` checklist.
+
+**"item/phase → handoff → /clear" cycle:** after handoff.md is overwritten, `/clear` is
+recommended — the next item starts from reading the plan (plan.md → phases/Pn.md →
 handoff.md), not the chat tail. plan-exec and plan-close print the fixed reminder line:
 `Context: handoff свежий — рекомендован /clear перед следующим item`.
 
-**Session-restart discipline (launch-block Context field distinction, D16).** The
-launch-block Context field carries EXACTLY one of two values — not a static generic
-"clear recommended" regardless of the next step's type:
+**Session-restart discipline (launch-block Context field, D16 + D30).** The Context field
+carries EXACTLY one of three values — not a static generic "clear recommended" regardless of
+the next step's type:
 
-- **`continue (/clear) — manual item`** — the next step is a regular item-by-item
-  exec: the current session suffices, `/clear` before the next item.
-- **`NEW SESSION — Workflow-orchestrated`** — the next step is a Workflow-orchestrated
-  chunk (item/phase/chain) that EITHER finished CLEAN (`git status` empty for its Scope,
-  `plan-lint` green) OR is about to launch (section 7 criterion fired, `scriptPath`
-  ready): the launch-block MUST propose a NEW session with the ready
-  `Workflow({scriptPath:...})` command, not a generic `/clear`. Reason: background
-  `Workflow()` notification payload grows the executor session's context faster than the
-  work itself; `/clear` in the same session clears chat context, not that payload.
+- **`continue (/clear) — ручной item`** — the next step is a regular item-by-item exec: the
+  current session suffices, `/clear` before the next item.
+- **`NEW SESSION — Workflow-оркестрован`** — the next step is a Workflow-orchestrated chunk
+  (item/phase/chain) that EITHER finished CLEAN (`git status` empty for its Scope, `plan-lint`
+  green) OR is about to launch (section 7 criterion fired, `scriptPath` ready): the
+  launch-block MUST propose a NEW session with the ready `Workflow({scriptPath:...})` command,
+  not a generic `/clear`. Reason: background `Workflow()` notification payload grows the
+  executor session's context faster than the work itself; `/clear` in the same session clears
+  chat context, not that payload / the executor process's limits.
+- **`NEW SESSION — шаг-не-item`** — the next step is not an item exec but a protocol step ABOVE
+  the plan (`plan-audit` / `plan-close` / `plan-design`): it re-reads the plan from disk (an
+  audit is also adversarial — inheriting the executor's context is forbidden to it), so the
+  launch-block proposes a NEW session, not a `/clear` in the current one.
+
+**An item with `Exec = manual` (§9) — the «ЗАПУСК ВРУЧНУЮ» form.** Such an item has no slash
+command, therefore the launch-block:
+
+- `Next` = `«ЗАПУСК ВРУЧНУЮ: <model/effort>»` (a form from the `Next` enum above);
+- `Model`/`Thinking` — as PRESCRIBED by Routing (§9), NOT sonnet/medium;
+- the code block carries the item's **BARE PROMPT** (copy-paste, no edits), NOT a slash
+  command: `/task:plan-exec` pins sonnet/medium and by the routing gate must reject such an
+  item — a command in the code block would be a direct instruction to breach the gate;
+- `Context` — from the same enum of THREE values, by the type of the next step. A manual item
+  is a regular item-by-item exec, merely launched by a bare prompt under the prescribed model
+  ⇒ `continue (/clear) — ручной item`. **`NEW SESSION` is NOT required for a manual item**:
+  both NEW values are reserved for Workflow orchestration and steps-that-are-not-items;
+  restarting the session on every manual item is a ritual with no payoff.
+
+This is the ONLY place where a manual item's `Context` is defined; `snippets/` quote it and
+introduce no rules of their own.
 
 ## 9. Routing & Thinking Policy (SSOT matrix)
 
-Default role→model/effort routing. Plan section `## 3. Routing` stores ONLY
-deviations from this table:
+Default role→model/effort routing. Plan section `## 3. Routing` stores ONLY deviations from
+this table:
 
 | Role | Model/effort | Works in |
 |:--|:--|:--|
@@ -431,10 +546,10 @@ deviations from this table:
 | repo-explorer | haiku/low ¹ | repo recon (grep/read/map) |
 | docs-curator | sonnet/low | plan-close |
 
-¹ Probe 2026-07-02: haiku + effort=low was accepted by the workflow-agent API (agent
-finished, response received). This confirms acceptance at that API level only; it does
-NOT verify the effort frontmatter pin inside interactive Claude Code (a different
-mechanism) — on mismatch, treat the model's default effort as authoritative.
+¹ Probe 2026-07-02: haiku + effort=low was accepted by the workflow-agent API. That confirms
+acceptance at that API level only; the effort frontmatter pin inside interactive Claude Code
+(a different mechanism) is NOT verified — on mismatch, treat the model's default effort as
+authoritative.
 
 **Thinking policy:**
 
@@ -452,8 +567,8 @@ mechanism) — on mismatch, treat the model's default effort as authoritative.
 | P2.10–P2.13 | sonnet/low | plan-exec | doc-cleanup без новых решений |
 ```
 
-Column **Exec** — closed enum `plan-exec` | `manual` | `plan-design`: who is allowed to
-execute the item. Tier order: models `haiku < sonnet < opus ≈ fable`, effort
+Column **Exec** — closed enum `plan-exec` | `manual` | `plan-design`: who is allowed to execute
+the item. Tier order: models `haiku < sonnet < opus ≈ fable`, effort
 `low < medium < high < xhigh < max`. The `plan-exec` command pin is **sonnet/medium**.
 
 **Exec derivation** (column empty) and **consistency** (column filled):
@@ -465,12 +580,12 @@ Compare by tier, both axes: overshoot is harmless, undershoot is forbidden.
                                                 no such API exists)
 - effort > medium (high/xhigh/max)   → manual  (thinking undershoot forbidden — policy above)
 - cell without model / without effort → the missing half comes from the role matrix above
-Tool Capability (perplexity-web/context7/…) goes into the same cell via «+» and
-SUPPLEMENTS model/effort, never replaces it.
+Tool Capability (perplexity-web/context7/…) goes into the same cell via «+» and SUPPLEMENTS
+model/effort, never replaces it.
 
 A filled Exec overrides derivation ONLY toward strictness: `manual` is legal for any
-model/effort pair. The reverse (`Exec = plan-exec` where derivation yields `manual`) is a
-PLAN DEFECT, not a permission: otherwise the column is a hole in the gate — exactly F7.
+model/effort pair. The reverse (`Exec = plan-exec` where derivation yields `manual`) is a PLAN
+DEFECT, not a permission: otherwise the column is a hole in the gate — exactly F7.
 ```
 
 **Routing gate** — run by `plan-exec` BEFORE any work (incident basis — F7 of plan
@@ -485,14 +600,14 @@ PLAN DEFECT, not a permission: otherwise the column is a hole in the gate — ex
 - Exec = plan-exec CONTRADICTS model/effort → STOP, report «ROUTING-INCONSISTENT: Pn.m —
   Exec=plan-exec при <model/effort>»; `plan-design` fixes it. Status NOT changed.
 - Exec = plan-design → the item is not executed: STOP, re-design (§10).
-- Routing is ambiguous (no row for the item, "fable OR opus", prose without a model) AND
-  the item is of the design/contract class (any §10 escalation trigger would fire) → STOP
+- Routing is ambiguous (no row for the item, "fable OR opus", prose without a model) AND the
+  item is of the design/contract class (any §10 escalation trigger would fire) → STOP
   (fail-safe: a false stop costs one restart, a false pass costs a RED audit).
 ```
 
-**Back-compat.** Legacy `## 3. Routing` forms (prose, bullets, a table without the Exec
-column, an empty section) stay VALID; `plan-lint` does not parse section 3 — the gate is
-run by the READING EXECUTOR, not by regex. A legacy row's Exec is derived by the rule above.
+**Back-compat.** Legacy `## 3. Routing` forms (prose, bullets, a table without the Exec column,
+an empty section) stay VALID; `plan-lint` does not parse section 3 — the gate is run by the
+READING EXECUTOR, not by regex. A legacy row's Exec is derived by the rule above.
 
 ## 10. Escalation (cheap-model protocol)
 
@@ -517,74 +632,72 @@ executor on the fly.
 
 ## 11. Cross-plan patterns
 
-**Cross-plan gate** (precedent AIRESTO ERP-GATE-01): a plan's dependency on another plan
-is formalized as a decision doc with a precondition table; every row references the EXACT
-Status Board row ID of the donor plan. Reading is one-way: the consumer reads the donor;
-the donor does not know about the consumer and is not edited.
+**Cross-plan gate** (precedent AIRESTO ERP-GATE-01): a plan's dependency on another plan is
+formalized as a decision doc with a precondition table; every row references the EXACT Status
+Board row ID of the donor plan. Reading is one-way: the consumer reads the donor; the donor
+does not know about the consumer and is not edited.
 
-**Cross-plan notification (back channel).** A notification the executor "must remember"
-never happens (grep precedent: the donor bumped a frozen contract to v2.0.2 — ZERO
-mentions on the consumer side). The carrier is section `## 7. Contracts` (§4); the
-addressee is a concrete item:
+**Cross-plan notification (back channel).** A notification the executor "must remember" never
+happens (grep precedent: the donor bumped a frozen contract to v2.0.2 — ZERO mentions on the
+consumer side). The carrier is section `## 7. Contracts` (§4); the addressee is a concrete item:
 
-- An item bumping a **frozen** contract (semver bump) MUST carry in its Deliverables:
-  (a) an update of the donor's `Exported` row (Версия + Уведомлены) and (b) an update of
-  the `Consumed` row in EVERY consumer plan IN THE SAME `plans/` root (columns `Замечено`
-  + `Реакция` — the item that will raise the pin). Not "the plan's" duty — the ITEM's:
-  an obligation without an addressee is a note to self.
-- A consumer in ANOTHER repo is not checked by the linter — the boundary is named
-  honestly: an entry in the donor's `open-questions.md` + a line in its handoff's Open
-  risks. Cross-repo push is the bus's job (mAInd), not the plan protocol's.
+- An item bumping a **frozen** contract (semver bump) MUST carry in its Deliverables: (a) an
+  update of the donor's `Exported` row (Версия + Уведомлены) and (b) an update of the
+  `Consumed` row in EVERY consumer plan IN THE SAME `plans/` root (columns `Замечено` +
+  `Реакция` — the item that will raise the pin). Not "the plan's" duty — the ITEM's: an
+  obligation without an addressee is a note to self.
+- A consumer in ANOTHER repo is not checked by the linter — the boundary is named honestly: an
+  entry in the donor's `open-questions.md` + a line in its handoff's Open risks. Cross-repo push
+  is the bus's job (mAInd), not the plan protocol's.
 - `plan-lint` in root mode compares the consumer's `Consumed.Pinned` with the donor's
-  `Exported.Версия` in the same root → **WARNING** on mismatch (the mechanism is young;
-  ERROR would break back-compat). The link is built FROM the consumer (its
-  `Consumed.Донор-план`) — the only deterministic direction.
+  `Exported.Версия` in the same root → **WARNING** on mismatch (the mechanism is young; ERROR
+  would break back-compat). The link is built FROM the consumer (its `Consumed.Донор-план`) —
+  the only deterministic direction; the donor's `Потребители` column is human-readable.
 
-**Program plan** (precedents FLEX-IMPL, ECOSYSTEM P4): a coordination plan over delegates
-— `Document Type: Program Master Plan (coordination)`; items = milestone delegates (one
-delegate plan per item); the item's Validation = a GREEN audit of the delegate; NO code is
-written in a program plan. Such a plan's Execution Rules must forbid `/task:plan-exec` and
-name the prescribed command for launching delegates.
+**Program plan** (precedents FLEX-IMPL, ECOSYSTEM P4): a coordination plan over delegates —
+`Document Type: Program Master Plan (coordination)`; items = milestone delegates (one delegate
+plan per item); the item's Validation = a GREEN audit of the delegate; NO code is written in a
+program plan. Such a plan's Execution Rules must forbid `/task:plan-exec` and name the
+prescribed command for launching delegates.
 
 ## 12. Lifecycle: two homes, archive, documentation
 
-**Two-homes model** (RAG:✅ P5.1 §2 docs-as-code: git=SSOT, hub=display/index; no
-external canon found specifically for Obsidian↔repo two-way — the mechanism is our
-`brain sync`). The plan's SSOT is determined by its stage:
+**Two-homes model** (RAG:✅ P5.1 §2 docs-as-code: git=SSOT, hub=display/index; no external canon
+found specifically for Obsidian↔repo two-way — the mechanism is our `brain sync`). The plan's
+SSOT is determined by its stage:
 
-- **Home defaults to the project repo** (D31): the plan lives where its deliverables are
-  (repo's `plans/<ID>`, Meta `Home: repo:<путь>`); Brain keeps the program/cross-project
-  plan whose deliverables are spread across several repos;
-- **at exec start** — the repo copy becomes SSOT; the Brain mirror is synced via the
-  `brain sync` channel (frontmatter `repo:` — the same mechanism as docs/);
-- **during exec** — SSOT = repo; silent edits to the base plan in Brain are FORBIDDEN —
-  only via the conflict protocol; default sync direction is repo→Brain (mirroring);
+- **Home defaults to the project repo** (D31): the plan lives where its deliverables are (repo's
+  `plans/<ID>`, Meta `Home: repo:<путь>`); Brain keeps the program/cross-project plan whose
+  deliverables are spread across several repos;
+- **at exec start** — the repo copy becomes SSOT; the Brain mirror is synced via the `brain sync`
+  channel (frontmatter `repo:` — the same mechanism as docs/);
+- **during exec** — SSOT = repo; silent edits to the base plan in Brain are FORBIDDEN — only via
+  the conflict protocol; default sync direction is repo→Brain (mirroring);
 - **after completion** — sync back → archive → migrate root/ into docs.
 
-**Conflict protocol.** The base plan changed during execution → the executor does NOT
-merge silently: record a `temporary divergence` in the current item's Known Deviations →
-escalate per section 10; the owner decides — accept into the working copy as a new D# or
-defer to the end of the phase.
+**Conflict protocol.** The base plan changed during execution → the executor does NOT merge
+silently: record a `temporary divergence` in the current item's Known Deviations → escalate per
+section 10; the owner decides — accept into the working copy as a new D# or defer to the end of
+the phase.
 
-**Skills — same principle:** the skills' SSOT is always swissknifeman; vendor copies are
-updated only by `skiller vendor/connect`; a local edit of a vendor copy = defect, the path
-is a contribution to the SSOT (see `package-contribution-protocol`).
+**Skills — same principle:** the skills' SSOT is always swissknifeman; vendor copies are updated
+only by `skiller vendor/connect`; a local edit of a vendor copy = defect, the path is a
+contribution to the SSOT (see `package-contribution-protocol`).
 
-**Plan→archive→docs pipeline** (RAG:✅ P5.1 §2 Diátaxis + Oxide "committed =
-implemented"). On plan terminality — command `/task:plan-close archive <ID>`:
+**Plan→archive→docs pipeline** (RAG:✅ P5.1 §2 Diátaxis + Oxide "committed = implemented"). On
+plan terminality — command `/task:plan-close archive <ID>`:
 
 1. The plan moves to `plans/archive/<ID>` as a SEPARATE commit `chore(plan): archive <ID>`.
 2. Project docs are assembled from `root/` by Diátaxis types: architecture/philosophy →
    explanation; data-model/contracts → reference; phase guides → how-to.
-3. A migration checklist (what moved to docs, what stayed in the archive) — in the final
-   handoff.
+3. A migration checklist (what moved to docs, what stayed in the archive) — in the final handoff.
 
-**Plans are NEVER deleted.** A terminal plan moves to `plans/archive/<ID>` and is kept
-forever (decision provenance: D-log, Completion Notes, Known Deviations — the only source
-of "why it was done this way" months later). `rm`/`git rm` of a plan directory is a defect,
-not a protocol operation; a superseded predecessor also goes to the archive, not the trash.
-The only exception — an explicit owner order with a `--force` flag in the command (the
-agent never proposes deletion on its own).
+**Plans are NEVER deleted.** A terminal plan moves to `plans/archive/<ID>` and is kept forever
+(decision provenance: D-log, Completion Notes, Known Deviations — the only source of "why it was
+done this way" months later). `rm`/`git rm` of a plan directory is a defect, not a protocol
+operation; a superseded predecessor also goes to the archive, not the trash. The only exception —
+an explicit owner order with a `--force` flag in the command (the agent never proposes deletion
+on its own).
 
 ## 13. Command protocol
 
@@ -601,7 +714,8 @@ agent never proposes deletion on its own).
 - [ ] Required Reads finite and ordered (not "look around the repo").
 - [ ] Code Guidance filled for every item (not «—»).
 - [ ] An undetailed phase carries the skeleton marker — not "just empty fields".
-- [ ] Load-bearing facts/verdicts carry `RAG:✅`/`[UNVERIFIED]` markers.
+- [ ] Load-bearing facts/verdicts carry a marker from the §7 enum: `RAG:✅` · `RAG:—`
+      (repo-grounded ONLY) · `[UNVERIFIED]`.
 - [ ] Open Questions don't "hang" in phase bodies — moved to `open-questions.md` with a status.
 - [ ] handoff.Next contains a launch-block (table + code block).
 - [ ] Phase-first: phases close sequentially, items don't jump between phases.
@@ -609,42 +723,42 @@ agent never proposes deletion on its own).
 
 ## 15. Per-project deployment
 
-Plans live IN THE PROJECT, not in `~/.claude/plans/`: top-level key `plansDirectory:
-"plans"` in the project's `.claude/settings.json` (shared, committed). Rollout — 3 layers:
+Plans live IN THE PROJECT, not in `~/.claude/plans/`: top-level key `plansDirectory: "plans"` in
+the project's `.claude/settings.json` (shared, committed). Rollout — 3 layers:
 
-- `harness hooks --target <проект> --plans-dir plans` — targeted knob (a key already set
-  to a different value is respected — not overwritten);
+- `harness hooks --target <проект> --plans-dir plans` — targeted knob (a key already set to a
+  different value is respected — not overwritten);
 - `maind sync --only plans-dir,plans-doc` — fleet of onboarded projects (opt-out:
   `project.plans_dir="off"`); `skiller integrate` — new onboardings (default "yes").
 
-The convention reaches the project via the managed CLAUDE.md block
-`maind:plan-conventions` (provisioner `plans-doc`). Bridge from built-in plan mode: the
-approved plan is saved as a flat draft in `plans/` → `/task:plan-design from-draft <файл>`
-expands it into `plans/<ID>/` per this skill's templates (draft deleted, history in git).
+The convention reaches the project via the managed CLAUDE.md block `maind:plan-conventions`
+(provisioner `plans-doc`). Bridge from built-in plan mode: the approved plan is saved as a flat
+draft in `plans/` → `/task:plan-design from-draft <файл>` expands it into `plans/<ID>/` per this
+skill's templates (draft deleted, history in git).
 
 ## 16. Plan artifacts: findings/
 
-The standard home for plan artifacts — RAG extracts and recon reports — so future plan
-work doesn't repay the cost of reconstructing "where did this come from".
+The standard home for plan artifacts — RAG extracts and recon reports — so future plan work
+doesn't repay the cost of reconstructing "where did this come from".
 
-- **Path and name:** `plans/<PLAN-ID>/findings/<Pn>-<slug>.md` (`Pn` — phase, `slug` —
-  kebab topic); example — `plans/SKM-AUDIT-004/findings/`.
-- **What goes there:** a RAG extract (source URL + verification date + verdict), a
-  subagent recon report, a diagnosis/repro — **compact synthesis, not raw material**.
+- **Path and name:** `plans/<PLAN-ID>/findings/<Pn>-<slug>.md` (`Pn` — phase, `slug` — kebab
+  topic); example — `plans/SKM-AUDIT-004/findings/`.
+- **What goes there:** a RAG extract (source URL + verification date + verdict), a subagent recon
+  report, a diagnosis/repro — **compact synthesis, not raw material**.
 - **How items reference it:** an item relying on the artifact lists the file in its
   `Inputs`/`Required Reads` — the downstream executor reads the file, not the chat.
-- **Optional:** required only when an item declares the file in its `Deliverables`. The
-  16-field item schema is unchanged; `plan_lint.py` does not check this directory.
+- **Optional:** required only when an item declares the file in its `Deliverables`. The 16-field
+  item schema is unchanged; `plan_lint.py` does not check this directory.
 
 ## 17. Related skills
 
 - `task-brief-template` (general) — single task without a master plan.
-- `session-handoff` (general) — arbitrary-session handoff; under a master plan the
-  handoff lives in `plans/<ID>/handoff.md`.
+- `session-handoff` (general) — arbitrary-session handoff; under a master plan the handoff lives
+  in `plans/<ID>/handoff.md`.
 - `complex-task-orchestrator` (general) — decomposition and context routing.
 - `context-economy` (general) — Plan→Clear→Execute, token discipline.
 - `anti-drift` (general) — executor iteration discipline, circuit breaker.
-- `package-contribution-protocol` (architect) — contribution to the SSOT instead of
-  editing vendor copies (section 12).
+- `package-contribution-protocol` (architect) — contribution to the SSOT instead of editing
+  vendor copies (section 12).
 
-<!-- ru-source-sha256: 7b6cc19dd767de3b40ed86a104e555049720838fd9ef41ba02c18b9daafc9661 -->
+<!-- ru-source-sha256: fb4106afe005a449ac78203f59d8599e96ad10ff2644dff7862623f59a5cae94 -->

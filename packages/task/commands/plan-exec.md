@@ -10,19 +10,41 @@ effort: medium
 Несколько item'ов в аргументах — исполняй последовательно, каждый по полному циклу 1–8.
 
 1. **Порядок чтения — РОВНО такой, ничего сверх:**
-   1) `plans/<PLAN-ID>/plan.md` — Context, Execution Rules, Routing, Status Board;
+   1) `plans/<PLAN-ID>/plan.md` — Context, Execution Rules, **§3 Routing (читать ОБЯЗАТЕЛЬНО — п. 2)**,
+      Status Board;
    2) `plans/<PLAN-ID>/handoff.md` — где мы;
    3) `plans/<PLAN-ID>/phases/Pn.md` — Phase Context + твой item Pn.m целиком;
    4) файлы из **Required Reads** item'а — в указанном порядке.
-   Повторное чтение уже прочитанного ЗАПРЕЩЕНО (экономия контекста); «почитаю ещё по
-   репо на всякий случай» — тоже. Всё нужное обязан нести план; не несёт — см. п. 5.
+   Повторное чтение уже прочитанного ЗАПРЕЩЕНО (экономия контекста); «почитаю ещё по репо на всякий
+   случай» — тоже. Всё нужное обязан нести план; не несёт — см. п. 5.
 
-2. **Предусловия.** **Дом:** `## 0. Meta` несёт `Home: repo:<путь>`, а ты запущен НЕ в этом
-   репо (в Brain/зеркале) — ошибка запуска: стоп и отчёт с правильным домом (голая команда
-   перезапуска из `<путь>`); SSOT плана во время exec = репо, зеркало не исполняется
-   (скилл `plan-protocol` §12). Статус item'а — `⬜ Not started` или `🟡 In progress`; иначе стоп и отчёт
-   (терминальный item не переисполняется). **Phase-first:** item фазы N+1 не исполняется,
-   пока фаза N не терминальна (все её items 🟢/🟠/⛔) — иначе стоп + отчёт, какая фаза держит.
+2. **Предусловия.** **Дом:** `## 0. Meta` несёт `Home: repo:<путь>`, а ты запущен НЕ в этом репо
+   (в Brain/зеркале) — ошибка запуска: стоп и отчёт с правильным домом (голая команда перезапуска из
+   `<путь>`); SSOT плана во время exec = репо, зеркало не исполняется (скилл `plan-protocol` §12).
+   Статус item'а — `⬜ Not started` или `🟡 In progress`; иначе стоп и отчёт (терминальный item не
+   переисполняется). **Phase-first:** item фазы N+1 не исполняется, пока фаза N не терминальна
+   (все её items 🟢/🟠/⛔) — иначе стоп + отчёт, какая фаза держит.
+
+   **Routing-гейт (ДО п. 3 — заблокированный item в 🟡 не остаётся).** Найди строку item'а в `plan.md`
+   §3 Routing (секции/строки нет → дефолт SSOT-матрицы: `plan-exec` = sonnet/medium). Колонка **Exec** —
+   enum `plan-exec` | `manual` | `plan-design`; пуста → **деривация** по тир-порядку (модели `haiku <
+   sonnet < opus ≈ fable`, effort `low < medium < high < xhigh < max`; недостающее в ячейке берётся из
+   матрицы ролей скилла §9): `model ≤ sonnet` И `effort ≤ medium` → `plan-exec`; `model > sonnet` ИЛИ
+   `effort > medium` → `manual`. Ветки:
+   - `Exec = manual` (задан ИЛИ выведен) → item НЕ исполняется командой: СТОП, отчёт
+     `ROUTING-BLOCKED: Pn.m — предписано <model/effort>, команда пинит sonnet/medium`,
+     launch-block формы «ЗАПУСК ВРУЧНУЮ» (п. 8). Статус item'а НЕ меняется.
+   - `Exec = plan-exec`, Routing НИЖЕ пина (haiku и/или low) → исполнять (перебор безвреден),
+     process-отклонение — в Known Deviations; статус остаётся 🟢 (п. 7).
+   - `Exec = plan-exec` ПРОТИВОРЕЧИТ model/effort (заполненная Exec перебивает деривацию только
+     в сторону строгости) → СТОП, отчёт `ROUTING-INCONSISTENT: Pn.m — Exec=plan-exec при
+     <model/effort>`; правит `plan-design`. Статус НЕ меняется.
+   - `Exec = plan-design` → item не исполняется: СТОП, ре-дизайн (п. 5).
+   - Routing неоднозначен (строки на item нет, «fable ИЛИ opus», проза без модели) И item —
+     design/contract-класса (сработал бы любой триггер эскалации п. 5) → **СТОП. При сомнении —
+     СТОП** (fail-safe: цена ложного стопа — перезапуск, цена ложного прохода — RED-аудит).
+   Гейт — ЧТЕНИЕ §3 глазами, не парсинг (форм Routing во флоте много, regex запрещён). Разрешение
+   владельца РЕПЛИКОЙ в чате гейт не снимает: оно выражается ЗАПИСЬЮ `Exec = plan-exec` в §3.
 
 3. **До работы:** пометь `**Status:** 🟡 In progress` у item'а И строку в таблице
    `## Phase Status` (статусы — 6 канонических строк байт-в-байт, копируй из плана).
@@ -46,36 +68,72 @@ effort: medium
    (команда → passed/failed + суть вывода). Красное — чини в рамках Scope; не чинится в рамках —
    это `🟠 Done with deviations` с Known Deviations либо эскалация, НЕ молчаливый пропуск.
 
-7. **ЗАКРЫТИЕ ОБЯЗАТЕЛЬНО** — без него работа НЕ выполнена, даже если код написан:
-   - **Routing-adherence gate:** сверь фактические модель/effort этой сессии с `plan.md`
-     §Routing (секция пуста — с SSOT-матрицей скилла: plan-exec = sonnet/medium); расхождение —
-     ОБЯЗАТЕЛЬНАЯ запись в **Known Deviations** item'а (`исполнено <факт> вместо <из Routing>`),
-     тихое умолчание запрещено;
-   - **Дифф item'а ЗАКОММИЧЕН до смены статуса**: Conventional Commits (рус.) формата
-     `тип(scope): суть (Pn.m)`, атомарно по
-     смыслу (несколько коммитов — нормально), `validate.sh` затронутого пакета зелёный ДО
-     коммита; фиксы по замечаниям ревью — ОТДЕЛЬНЫМ коммитом (не `amend` — трассируемость:
-     видно, что нашло ревью); незакоммиченного диффа по Scope item'а в дереве не осталось
-     (`git status`); дифф ВНЕ Scope — не коммитить, зафиксировать в **Pending Work**;
-   - `**Status:**` → `🟢 Done` (или `🟠 Done with deviations` + заполненные **Known Deviations**);
-   - **Completion Notes** — только факты: изменённые файлы, добавленные тесты,
-     прогнанные команды и их вывод (без оценок «всё отлично»);
-   - **Pending Work** — накопленное из п. 4 (или «—»);
-   - синхронизируй строку в `## Phase Status` фазы И `## 4. Phase Index & Status Board`
-     в `plan.md` (счётчик `Items 🟢/всего`, статус фазы);
-   - добавь строку в `## 6. Update Log` plan.md — «Что» ≤ 2 строк, канонический формат
-     `<item> закрыт: <1 строка сути> — детали см. phases/Pn.md <item> Completion Notes`;
-     пересказывать Completion Notes в Update Log ЗАПРЕЩЕНО;
-   - ПЕРЕЗАПИШИ `plans/<PLAN-ID>/handoff.md` целиком по схеме:
-     `# HANDOFF — <ISO-дата> — after Pn.m`, затем строки **Next:** (launch-block: таблица
-     `Model / Thinking / Context / Суть` + голая команда `/task:plan-exec <PLAN-ID> Pn.k`
-     отдельным code-block'ом — копипаст без правок; самодостаточна из холодной сессии:
-     plan-ID + cold-start reads, «эта сессия» — только как дополнение;
-     скелет — `snippets/launch-block-template.md` скилла) / **Done:** / **Remaining:** / **Sources of truth:** /
-     **Open risks:** / **Workarounds/Deferred/Open questions:** (три подпункта:
-     workarounds · deferred · open_questions; «—» если нет);
-   - прогони `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/plan-lint.py" plans/<PLAN-ID>`
-     (переменная не задана или скрипта нет — предупреди и пропусти); красное почини.
+7. **ЗАКРЫТИЕ ОБЯЗАТЕЛЬНО** — без него работа НЕ выполнена, даже если код написан.
+
+   **Топология — ДВА коммита (единственная; шаги 1–6 строго в этом порядке):**
+   1) **Item-коммит.** Дифф Scope (код/артефакты) ТОЛЬКО по путям `Files` item'а — файлы плана в него
+      НЕ входят; `validate.sh` затронутого пакета зелёный ДО коммита; Conventional Commits (рус.)
+      `тип(scope): суть (Pn.m)`; `git add <пути из Files>`. Внутри шага дифф может собираться
+      НЕСКОЛЬКИМИ атомарными коммитами — item-коммит ЗАВЕРШАЮЩИЙ, ИМЕННО его хеш идёт в handoff
+      (шаг 3). Фикс по ревью — коммит СВЕРХ топологии (не `amend`: трассируемость).
+   2) **Bookkeeping плана.** `**Status:**` item'а → `🟢 Done` / `🟠 Done with deviations` (status-rule
+      ниже) · **Completion Notes** — только факты (файлы, тесты, прогнанные команды и их вывод; без
+      оценок «всё отлично») · **Pending Work** (из п. 4, или «—») · **Known Deviations** · строка в
+      `## Phase Status` фазы · `## 4. Phase Index & Status Board` в `plan.md` (счётчик `Items 🟢/всего`,
+      статус фазы) · строка в `## 6. Update Log` («Что» ≤ 2 строк, формат `<item> закрыт: <1 строка
+      сути> — детали см. phases/Pn.md <item> Completion Notes`; пересказ Completion Notes ЗАПРЕЩЁН) ·
+      **`Last Updated`** в `## 0. Meta` = дата закрытия item'а.
+   3) **Перезапись `handoff.md` целиком** (схема ниже). Хеш item-коммита handoff берёт ИЗ ШАГА 1 —
+      коммит уже в истории (`git rev-parse --short HEAD`), поэтому хеш РЕАЛЬНЫЙ. Плейсхолдер
+      вместо хеша (`<Pn.m>`, «TBD», пустая ячейка) — дефект, а не форма.
+   4) **`python3 "${CLAUDE_PLUGIN_ROOT}/scripts/plan-lint.py" plans/<PLAN-ID> --baseline HEAD`** —
+      ПОСЛЕ шага 3, на итоговом дереве. Прогон ДО перезаписи handoff ЗАПРЕЩЁН: закрывающий item сам
+      меняет handoff, и счёт «до» не описывает состояние коммита. (Нет переменной/скрипта — предупреди.)
+   5) **Счёт публикуется С АТРИБУЦИЕЙ:** `N ERROR / M WARN — новых от диффа item'а: K`
+      (K — детерминированно: `--baseline HEAD`). • K > 0 — чинится ДО коммита bookkeeping'а;
+      • N − K > 0 (остаточные ошибки плана вне Scope item'а) — НЕ замалчиваются: строка в Pending
+      Work item'а + Open risks handoff'а. «Зелёный lint» гейта закрытия = **K = 0**, а не N = 0.
+   6) **Bookkeeping-коммит:** `git add plans/<PLAN-ID> plans/ACTIVE.md` — только файлы плана.
+   Item без диффа кода (Scope = сам план) идёт той же топологией: шаг 1 коммитит `Files` item'а,
+   шаг 6 — бухгалтерию. Слить шаги 1 и 6 в один коммит (бандл) = process-отклонение: 🟢 + запись в
+   Known Deviations + ЧИНЯЩИЙ коммит с реальным хешем в handoff (права на плейсхолдер бандл не даёт).
+
+   **Коммит-гигиена.** `git add -A` и `git commit -a` ЗАПРЕЩЕНЫ: дерево может нести чужой дифф
+   (владелец правит код параллельно) — он уедет в item-коммит незамеченным. Коммит собирается ПО ЯВНЫМ
+   ПУТЯМ. Посторонний дифф исполнитель НЕ трогает (не коммитит, не стэшит, не ревертит, не «прибирает»)
+   — он НАЗЫВАЕТ его в отчёте (п. 8). Carve-out: `plans/<PLAN-ID>/**` и `plans/ACTIVE.md` — штатная
+   часть закрытия (шаг 6), в `Files` не перечисляются и посторонним диффом не считаются.
+
+   **Status-rule.** Непустые Known Deviations САМИ ПО СЕБЕ статус item'а НЕ меняют.
+   `🟠 Done with deviations` ОБЯЗАТЕЛЕН при **material**-отклонении (любое из): Scope Included выполнен
+   не полностью или иначе, чем предписано · Validation осталась красной · затронут public contract /
+   SemVer / замороженный контракт СВЕРХ ТЗ item'а · acceptance-критерий не выполнен · принят workaround,
+   который ЖИВЁТ В КОДЕ/артефакте (а не в процессе исполнения) · item-коммит несёт дифф вне `Files`
+   item'а (считается только по НЕплановым путям — carve-out выше), верен сам дифф или нет.
+   `🟢 Done` сохраняется при **process**-отклонении, но запись в Known Deviations ОБЯЗАТЕЛЬНА: перебор
+   тира (исполнено моделью/effort ВЫШЕ предписанных Routing), бандлинг коммитов, порядок правок,
+   стилистика отчёта. Тихое умолчание = дефект (находка аудита).
+   Дефект САМОГО ТЗ (правило ТЗ ошибочно или невыполнимо) — тоже НЕ отклонение исполнителя: он
+   эскалирует (п. 5: конфликт правил / неясные acceptance), владелец или `plan-design` вносит новый D#
+   и СИНХРОНИЗИРУЕТ Scope Included item'а с решением; закрытие идёт по ОБНОВЛЁННОМУ ТЗ → 🟢 + запись в
+   Known Deviations (что изменено, каким D#). Правка ТЗ по ходу БЕЗ D# — material-отклонение (scope
+   drift), даже если результат «лучше». **Routing-adherence:** недобор модели/effort снят гейтом п. 2
+   (структурно невозможен), остаётся ПЕРЕБОР — та же запись (`исполнено <факт> вместо <из Routing>`).
+
+   **Якорь дерева для чисел.** Любое ЧИСЛО в Completion Notes / Validation / Known Deviations /
+   Update Log (счётчик `grep`, число ERROR/WARN, коммитов, файлов) приводится с якорем дерева:
+   `<число> (на <git-ref>)` — и с командой, которой получено. Якорь чисел о диффе Scope — **item-коммит**
+   (шаг 1; bookkeeping его не меняет); чисел о файлах ПЛАНА (грепы по `phases/Pn.md`, счёт lint) —
+   **bookkeeping-коммит** (шаг 6): считай на дереве, которое КОММИТИШЬ (после `git add` правок шагов
+   2–3), а не на дереве момента написания. Число без якоря либо не воспроизводимое своей же командой
+   на закоммиченном дереве = **ложное утверждение**, даже если в момент написания было верным.
+
+   **Схема `handoff.md`** (шаг 3): `# HANDOFF — <ISO-дата> — after Pn.m`, затем **Next:** (launch-block
+   п. 8 — таблица `Model / Thinking / Context / Суть` + голая команда ИЛИ голый промпт отдельным
+   code-block'ом, копипаст без правок; самодостаточен из холодной сессии: plan-ID + cold-start reads;
+   скелет — `snippets/launch-block-template.md` скилла) / **Done:** / **Remaining:** / **Sources of
+   truth:** / **Open risks:** / **Workarounds/Deferred/Open questions:** (workarounds · deferred ·
+   open_questions; «—» если нет).
 
 8. **Expected output — фиксированный формат (по блоку на item):**
    ```
@@ -84,41 +142,39 @@ effort: medium
    Completed: <что сделано, 1–3 строки>
    Pending Work: <…|—>
    Files Changed: <список путей>
-   Commits: <hash — subject; …|—>
+   Commits: <item-коммит: hash — subject; bookkeeping: hash — subject>
    Validation: passed|failed — <команды и суть>
+   Lint: N ERROR / M WARN — новых от диффа item'а: K
+   Посторонний дифф в дереве: <файлы> | нет
    Known Deviations: <…|—>
    Escalation Needed: no|yes (тогда финальная строка ESCALATION-REQUIRED: …)
    Launch-block (следующий шаг):
    | Параметр | Значение |
    |:--|:--|
-   | Model | <sonnet|opus|haiku> |
+   | Model | <sonnet|opus|haiku|fable> |
    | Thinking | <effort> — <причина в 3–8 слов> |
-   | Context | continue (/clear) — ручной item ИЛИ NEW SESSION — Workflow-оркестрован |
+   | Context | <РОВНО одно из трёх значений enum'а ниже> |
    | Суть | <1 строка: что делает следующий шаг> |
 
-   <голая команда ОТДЕЛЬНЫМ code-block'ом, копипаст без правок:
-     `/task:plan-exec <PLAN-ID> Pn.k`; если следующий item ещё скелет — вместо этого
-     `/task:plan-design <PLAN-ID> Pn` per Execution Rules; если фаза N терминальна и
-     следующий item в фазе N+1 — команда на первый item фазы N+1>
+   <голая команда ИЛИ голый промпт — ОТДЕЛЬНЫМ code-block'ом, копипаст без правок>
    ```
-   **Launch-block** (команда + Model/Thinking) — не статичный шаблон, а разовая оценка СЛЕДУЮЩЕГО
-   item'а по факту его текста в `phases/Pn.md` (уже прочитан в п. 1) и `plan.md` §Routing:
-   - Если следующий item — обычная реализация в уже детализированной фазе → дефолт `sonnet/medium`
-     (как эта команда).
-   - Если Scope/Code Guidance следующего item'а задевает public contract/SemVer, архитектурный
-     выбор, конфликт правил или неочевидные acceptance (см. триггеры эскалации п. 5) → предложи
-     `opus/high` и явно назови, что переисполнитель может захотеть `/task:plan-design` вместо
-     прямого exec.
-   - Если следующий item — чистая механическая разведка/recon без решений (см. `plan.md` §Routing,
-     обычно `haiku/low`) → предложи её.
-   - Если следующая фаза ещё скелет (Items 🟢/всего в Status Board = 0/N без заполненных 16 полей) —
-     команда launch-block'а обязана быть `/task:plan-design <PLAN-ID> Pn`, не `plan-exec` (иначе он
-     упадёт на предусловии).
-   - **Context-поле (session-restart discipline, `plan-protocol` §8, D16).** Дефолт —
-     `continue (/clear) — ручной item` (следующий item обычный item-by-item exec). Если
-     следующий шаг — Workflow-оркестрованный кусок (фаза/item заявила оркестрацию по
-     критерию `plan-protocol` §7: N≥3 items с независимым scope и детерминированной
-     Validation, либо длинная автономная цепочка с внешним состоянием) — Context ОБЯЗАН
-     быть `NEW SESSION — Workflow-оркестрован` с готовой командой `Workflow({scriptPath:
-     "plans/<PLAN-ID>/workflows/wf-....js"})`, а не общий `/clear`: фоновый payload
-     `Workflow()`-тасков растит контекст текущей сессии быстрее самой работы.
+   При `ROUTING-BLOCKED` / `ROUTING-INCONSISTENT` (п. 2) блок несёт ТОЛЬКО эту строку + launch-block:
+   работа не начиналась, статуса/коммитов/lint'а нет.
+
+   **Launch-block** — не статичный шаблон, а разовая оценка СЛЕДУЮЩЕГО шага по факту его текста в
+   `phases/Pn.md` (уже прочитан в п. 1) и `plan.md` §3 Routing:
+   - Следующий item, `Exec = plan-exec` → голая команда `/task:plan-exec <PLAN-ID> Pn.k`; Model/Thinking
+     — из Routing (дефолт `sonnet/medium`).
+   - Следующий item с **`Exec = manual`** (§9 скилла) → форма **«ЗАПУСК ВРУЧНУЮ»**: `Next` =
+     `«ЗАПУСК ВРУЧНУЮ: <model/effort>»`; `Model`/`Thinking` — **предписанные Routing**, НЕ
+     sonnet/medium; code-block несёт **ГОЛЫЙ ПРОМПТ item'а** (копипаст без правок), а НЕ slash-команду
+     (`/task:plan-exec` пинит sonnet/medium и по гейту п. 2 обязан такой item отклонить — команда в
+     code-block'е была бы инструкцией нарушить гейт); `Context` = `continue (/clear) — ручной item`.
+   - Следующая фаза ещё скелет (16 полей не заполнены) → `/task:plan-design <PLAN-ID> Pn`, не
+     `plan-exec` (упадёт на предусловии). Фаза терминальна → `/task:plan-close <PLAN-ID> Pn`.
+   - **`Context` — РОВНО одно из ТРЁХ значений** (`plan-protocol` §8): `continue (/clear) — ручной
+     item` (обычный item-by-item exec, в т.ч. manual — рестарт сессии ему не нужен) ·
+     `NEW SESSION — Workflow-оркестрован` (следующий шаг — Workflow-оркестрованный кусок: фоновый
+     payload растит контекст сессии быстрее самой работы, `/clear` этого не решает) ·
+     `NEW SESSION — шаг-не-item` (`plan-audit`/`plan-close`/`plan-design` — читают план с диска
+     заново; аудиту наследовать контекст исполнителя запрещено).

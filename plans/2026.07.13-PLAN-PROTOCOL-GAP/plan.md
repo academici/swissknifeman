@@ -109,7 +109,7 @@ Blocker-остатке по существу — фазу держали не д
 |:--|:--|:--|:--|
 | P1 | Разблокировка: формы Next + честный счёт lint | 2/2 | 🟢 Done |
 | P2 | SSOT-канон: routing-гейт, status-rule, Contracts (+ ремедиация аудитов) | 17/18 | 🟠 Done with deviations |
-| P3 | Команды plan-*: гейты и порядок закрытия | 3/6 | 🟡 In progress |
+| P3 | Команды plan-*: гейты и порядок закрытия | 4/6 | 🟡 In progress |
 | P4 | Регресс по флоту, закрытие эскалации REGHUB, доки | 0/3 | ⬜ Not started |
 
 ## 5. Decision Log
@@ -204,6 +204,7 @@ Blocker-остатке по существу — фазу держали не д
 | 2026-07-14 | package-implementer (opus/high, ручной запуск — Exec=manual) | P3.1 закрыт (`4cfc10a`): `plan-exec.md` получил routing-гейт §9 (5 веток), топологию ДВУХ коммитов §8 (шаги 1–6, lint ПОСЛЕ handoff, гейт K=0), коммит-гигиену, status-rule и якорь дерева — детали см. phases/P3.md P3.1 Completion Notes. |
 | 2026-07-14 | plan-exec (sonnet/medium) | P3.2 закрыт (`0823cb4`): `plan-close.md` получил enum 8 форм Next (D40), две формы заголовка handoff (D30), `Context` из enum трёх значений, снятие маркера `> УСТАРЕЛ`, `plan-lint --baseline HEAD` после handoff со счётом-атрибуцией — детали см. phases/P3.md P3.2 Completion Notes. |
 | 2026-07-14 | package-implementer (**opus/high**, ручной запуск — Exec=manual) | P3.3 закрыт (`f4ce8c9`): `plan-audit.md` — правила остановки D44 (scope-граница, порог severity, потолок раундов, follow-up, конфликт-скан) + чеклист канона 2.5.0 и три пункта PROMOTE аудита №4 (D46) — детали см. phases/P3.md P3.3 Completion Notes. |
+| 2026-07-14 | plan-exec (sonnet/medium) | P3.4 закрыт (`c95caed`): `plan-design.md` — канон-Routing с колонкой Exec, обязательные 16 полей скелета, блок «Реопен фазы» (4 шага + маркер `> УСТАРЕЛ`), схема `## 7. Contracts`/`## Обсуждение`, RAG-enum трёх маркеров, 4 новых пункта DoR — детали см. phases/P3.md P3.4 Completion Notes. |
 
 ## Обсуждение
 

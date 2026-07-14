@@ -31,9 +31,9 @@ plan-exec/plan-close/plan-audit — обязана иметь эту форму 
     фоновых тасков растит контекст быстрее самой работы — нужна новая сессия);
   - `NEW SESSION — шаг-не-item` — следующий шаг над планом (`plan-audit`/`plan-close`/
     `plan-design`): читает план с диска свежим контекстом.
-- **Exec = manual (§9)** → форма «ЗАПУСК ВРУЧНУЮ»: `Model` = предписанная Routing (НЕ
-  sonnet), `Context` = NEW SESSION, а code-block несёт **ГОЛЫЙ ПРОМПТ item'а**, не
-  slash-команду: `/task:plan-exec` пинит sonnet/medium и по routing-гейту обязан такой
-  item отклонить — команда в code-block'е была бы прямой инструкцией нарушить гейт.
+- **Exec = manual (§9)** → форма «ЗАПУСК ВРУЧНУЮ» — правило целиком в SKILL разделе 8
+  (единственный SSOT), здесь только напоминание: `Model` = предписанная Routing (НЕ sonnet),
+  code-block = **ГОЛЫЙ ПРОМПТ item'а** вместо slash-команды, `Context` = обычное значение
+  enum'а по типу шага (`continue (/clear) — ручной item`).
 - `plan-lint` проверяет (warning): handoff.Next содержит таблицу с `| Model |`
   и code-block (грепаемо).

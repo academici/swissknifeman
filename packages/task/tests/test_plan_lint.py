@@ -377,6 +377,40 @@ class TestStalePhaseHandoff(TmpPlanTestCase):
                 self.assertEqual(self._stale_warnings(diag), [])
                 shutil.rmtree(plan_dir.parent)
 
+    # --- P3.7/D50 (J1): гейт судит по СУБЪЕКТУ утверждения, а не по встреченному слову.
+    # Обе фикстуры — ДОСЛОВНЫЕ формы флота (findings/P3-reopen-gates-and-fleet.md §1),
+    # не «удобные» синтетические строки: ровно на них гейт разошёлся с истиной.
+
+    def test_honest_interim_handoff_is_silent(self):
+        """themeon/2026.07.12-BASE/P5: первая строка ОТРИЦАЕТ закрытие фазы, а слово
+        «Терминальны» относится к ITEMS → ложно-положительный WARNING (J1, Blocker)."""
+        plan_dir = self._write_reopened_phase(
+            "**Фаза P5 НЕ закрыта.** Терминальны только P5.1 и P5.2 (2/10); P5.3–P5.10 (8/10) — "
+            "🟠⬜ `Not started`\n(dterema: breakpoints/runtime-switch; vintera: весь пилот).\n\n"
+            "**Что сдано (dterema, ветка `themeon-migration/P5`, НЕ смержена):** 3 коммита.")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+        self.assertEqual(self._stale_warnings(diag), [], diag.warnings)
+
+    def test_delivery_claim_of_nonterminal_phase_still_warns(self):
+        """vaulter/VLT-REMED/P5: первая строка УТВЕРЖДАЕТ сдачу фазы при нетерминальном
+        статусе → истинно-положительный WARNING обязан сохраниться (анти-подгонка предиката)."""
+        plan_dir = self._write_reopened_phase(
+            "**Сдано:** Фаза P5 (сквозной adversarial code review всех изменений VLT-REMED) — "
+            "**терминальна (3/3)**:\nP5.1 (🔴 Blocked) → P5.2 (🟠 Done with deviations) → "
+            "**P5.3 (🟢 Done)**.")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+        self.assertEqual(len(self._stale_warnings(diag)), 1, diag.warnings)
+
+    def test_negation_below_first_line_does_not_silence_the_gate(self):
+        """Отрицание судится по ТОЙ ЖЕ первой строке: «фаза закрыта … но P1.2 не закрыта»
+        ниже по тексту не гасит истинное срабатывание (Implementation Rules P3.7)."""
+        plan_dir = self._write_reopened_phase(
+            "**Сдано:** фаза закрыта, 1/1.\n\nОстаток: P1.2 не закрыта — переносится в P2.")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(len(self._stale_warnings(diag)), 1, diag.warnings)
+
 
 class TestHandoffMd(TmpPlanTestCase):
     def test_missing_handoff_file(self):

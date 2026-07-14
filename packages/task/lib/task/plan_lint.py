@@ -199,6 +199,17 @@ PHASE_HANDOFF_STALE_RE = re.compile(r"^>\s*\*{0,2}\s*УСТАРЕЛ\b")
 PHASE_HANDOFF_CLOSURE_LITERALS = ("терминальн", "фаза закрыта", "Сдано:")
 PHASE_HANDOFF_CLOSURE_RE = re.compile(
     "|".join(re.escape(lit) for lit in PHASE_HANDOFF_CLOSURE_LITERALS), re.IGNORECASE)
+# P3.7/D50: гейт судит по СУБЪЕКТУ утверждения, а не по встреченному слову. Закрывающий
+# литерал ищется ТОЛЬКО в ПЕРВОЙ непустой строке блока (там же, где ищется маркер
+# `> УСТАРЕЛ`), и гасится ОТРИЦАНИЕМ на той же строке. Основание (J1, живая форма флота
+# `themeon/2026.07.12-BASE/P5`): «**Фаза P5 НЕ закрыта.** Терминальны только P5.1 и P5.2
+# (2/10)» — слово «Терминальны» относится к ITEMS, блок буквально отрицает закрытие фазы,
+# а греп по всему блоку давал ЛОЖНО-положительный WARNING. Отрицание проверяется на ТОЙ ЖЕ
+# строке, а не по блоку: «фаза закрыта … но P5.3 ещё не закрыта» ниже по тексту не должно
+# гасить истинное срабатывание (форма `vaulter/VLT-REMED/P5` обязана остаться WARNING).
+PHASE_HANDOFF_NEGATION_LITERALS = ("не закрыт",)
+PHASE_HANDOFF_NEGATION_RE = re.compile(
+    "|".join(re.escape(lit) for lit in PHASE_HANDOFF_NEGATION_LITERALS), re.IGNORECASE)
 
 # --- P2.16/D35: реестр непереводимых литералов (H3) ---------------------------
 # ЕДИНСТВЕННЫЙ источник строк, которые линтер сверяет с ТЕКСТОМ ПЛАНА байт-в-байт.
@@ -233,9 +244,11 @@ CANON_LITERALS = (
     LITERAL_PHASE_HANDOFF_STALE,
 )
 # Эвристики: `оркестрац`/`мультиагент` — детект заявленной оркестрации (ORCHESTRATION_MARKER_RE,
-# D29); `PHASE_HANDOFF_CLOSURE_LITERALS` — детект «блок утверждает закрытие фазы» (D34). Обе
+# D29); `PHASE_HANDOFF_CLOSURE_LITERALS` — детект «блок утверждает закрытие фазы» (D34);
+# `PHASE_HANDOFF_NEGATION_LITERALS` — детект отрицания в том же утверждении (D50). Все три
 # группы ищут СМЫСЛ в прозе автора, а не канонический токен ⇒ присутствие в EN не требуется.
-HEURISTIC_LITERALS = ("оркестрац", "мультиагент") + PHASE_HANDOFF_CLOSURE_LITERALS
+HEURISTIC_LITERALS = (("оркестрац", "мультиагент") + PHASE_HANDOFF_CLOSURE_LITERALS
+                      + PHASE_HANDOFF_NEGATION_LITERALS)
 
 
 def _plan_codename(plan_id):
@@ -774,6 +787,7 @@ def parse_phase_md(path, phase_id, diag):
 
     _, handoff_body, handoff_start = _find_section(lines, PHASE_HANDOFF_HEADER_RE)
     handoff_stale = False
+    handoff_first_line = ""
     if handoff_body is None:
         diag.error(path, None, "нет секции «## Phase Handoff»")
         handoff_text = None
@@ -781,12 +795,14 @@ def parse_phase_md(path, phase_id, diag):
     else:
         handoff_text = "\n".join(handoff_body).strip()
         handoff_lineno = handoff_start - 1  # строка самого заголовка «## Phase Handoff»
-        # P2.15/D34: маркер инвалидации — ПЕРВАЯ непустая строка блока (линуется в lint_plan)
-        first_line = next((ln for ln in handoff_body if ln.strip()), "")
-        handoff_stale = bool(PHASE_HANDOFF_STALE_RE.match(first_line.strip()))
+        # P2.15/D34: маркер инвалидации — ПЕРВАЯ непустая строка блока (линуется в lint_plan);
+        # P3.7/D50: по ней же судит предикат «блок утверждает закрытие фазы» (субъект, не слово)
+        handoff_first_line = next((ln for ln in handoff_body if ln.strip()), "").strip()
+        handoff_stale = bool(PHASE_HANDOFF_STALE_RE.match(handoff_first_line))
 
     return {"status_table": status_table, "items": items, "phase_handoff": handoff_text,
             "phase_handoff_stale": handoff_stale, "phase_handoff_lineno": handoff_lineno,
+            "phase_handoff_first_line": handoff_first_line,
             "is_skeleton": is_skeleton, "needs_clarification": needs_clarification,
             "declares_orchestration": declares_orchestration}
 
@@ -1042,10 +1058,14 @@ def lint_plan(plan_dir, diag):
         # УТВЕРЖДАЕТ закрытие и не помечен маркером инвалидации (H2, SKILL §3, 4-й шаг).
         # WARNING, не ERROR: три плана флота (истинно-положительные, carve-out D34) иначе
         # получили бы недостижимый commit-гейт в ЧУЖИХ репозиториях.
+        # P3.7/D50: утверждение о закрытии ФАЗЫ читается по ПЕРВОЙ НЕПУСТОЙ СТРОКЕ блока и
+        # снимается ОТРИЦАНИЕМ на ней же — иначе гейт ловит слово, а не субъект (J1).
         elif phase_status and phase_status not in TERMINAL_STATUSES:
             handoff_text = phases[pid].get("phase_handoff")
+            claim_line = phases[pid].get("phase_handoff_first_line") or ""
             if (handoff_text and not _is_empty(handoff_text)
-                    and PHASE_HANDOFF_CLOSURE_RE.search(handoff_text)
+                    and PHASE_HANDOFF_CLOSURE_RE.search(claim_line)
+                    and not PHASE_HANDOFF_NEGATION_RE.search(claim_line)
                     and not phases[pid].get("phase_handoff_stale")):
                 diag.warning(phases[pid]["path"], phases[pid].get("phase_handoff_lineno"),
                              f"Phase Handoff протух: фаза {pid} НЕ закрыта (статус "

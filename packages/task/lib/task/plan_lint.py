@@ -197,6 +197,43 @@ PHASE_HANDOFF_CLOSURE_LITERALS = ("терминальн", "фаза закрыт
 PHASE_HANDOFF_CLOSURE_RE = re.compile(
     "|".join(re.escape(lit) for lit in PHASE_HANDOFF_CLOSURE_LITERALS), re.IGNORECASE)
 
+# --- P2.16/D35: реестр непереводимых литералов (H3) ---------------------------
+# ЕДИНСТВЕННЫЙ источник строк, которые линтер сверяет с ТЕКСТОМ ПЛАНА байт-в-байт.
+# Дисциплина (гейт — tests/test_canon_literals.py):
+#   * `CANON_LITERALS` — строка, которую протокол ТРЕБУЕТ писать дословно (шапки таблиц,
+#     маркеры, формы `Next`). Агент флота берёт её из EN-канона `SKILL.md` ⇒ каждая обязана
+#     нести директиву `<!-- i18n-keep: … -->` в `SKILL.ru.md` (гейт присутствия в EN —
+#     `packages/skiller/scripts/check-translations.sh`). Тест T2 сверяет реестр с директивами.
+#   * `HEURISTIC_LITERALS` — ДЕТЕКТОРЫ НАМЕРЕНИЯ в свободной прозе (стеммы, регистронезависимо):
+#     автор их дословно не пишет, EN-канон их не несёт и нести не обязан ⇒ директив у них нет.
+#   * Тест T1 (AST-обход этого файла) не даёт завести кириллическую сверку МИМО обоих реестров —
+#     ровно так выпал `план закрыт` (H3: инлайн-строка без константы, гейт литералов к ней слеп).
+# Диагностические сообщения (`diag.error`/`diag.warning`) — НЕ литералы сверки: они не грепаются
+# по тексту плана, в реестр не входят. `EMPTY_PLACEHOLDER` («—») сверяется, но директиву не
+# получает (H13: em dash есть в любом EN-тексте — контракта такая директива не даёт).
+LITERAL_PLAN_CLOSED = "план закрыт"  # форма `Next` целиком закрытого плана (SKILL §8)
+LITERAL_PHASE_HANDOFF_STALE = "> УСТАРЕЛ — фаза реопенена"  # маркер инвалидации (SKILL §3, D34)
+CANON_LITERALS = (
+    "Поле | Значение",                                        # шапка Meta (plan.md §0)
+    "Items 🟢/всего",                                          # колонка Status Board (§4)
+    "D# | Дата | Решение | Почему",                           # шапка Decision Log (§5)
+    "Дата | Кто (role/model) | Что",                          # шапка Update Log (§6)
+    "Контракт | Версия | Статус | Потребители | Уведомлены",   # шапка Contracts/Exported (§7)
+    "Контракт | Донор-план | Pinned | Замечено | Реакция",     # шапка Contracts/Consumed (§7)
+    "> СКЕЛЕТ — не детализирован",                            # маркер фазы-скелета (§5)
+    MANUAL_RUN_MARKER,                                        # «ЗАПУСК ВРУЧНУЮ» — Exec=manual (§9)
+    "[NEEDS CLARIFICATION",                                   # маркер неоднозначности (§7)
+    "RAG:✅",                                                  # enum RAG-маркеров (§7, D29)
+    "RAG:" + EMPTY_PLACEHOLDER,
+    "[UNVERIFIED]",
+    LITERAL_PLAN_CLOSED,
+    LITERAL_PHASE_HANDOFF_STALE,
+)
+# Эвристики: `оркестрац`/`мультиагент` — детект заявленной оркестрации (ORCHESTRATION_MARKER_RE,
+# D29); `PHASE_HANDOFF_CLOSURE_LITERALS` — детект «блок утверждает закрытие фазы» (D34). Обе
+# группы ищут СМЫСЛ в прозе автора, а не канонический токен ⇒ присутствие в EN не требуется.
+HEURISTIC_LITERALS = ("оркестрац", "мультиагент") + PHASE_HANDOFF_CLOSURE_LITERALS
+
 
 def _plan_codename(plan_id):
     """Кодовое имя плана (D28) — для деривации имени workflow-скрипта и supersedes-сверки:
@@ -1023,7 +1060,7 @@ def lint_plan(plan_dir, diag):
         # Таблица `| Model | …` и code-block грепаются по всему файлу: шаблон кладёт
         # launch-block продолжением Next, но точное место не гейтим (warning-уровень).
         # Для целиком закрытого плана («план закрыт») запускать нечего — не требуем.
-        if "план закрыт" not in next_val.lower():
+        if LITERAL_PLAN_CLOSED not in next_val.lower():
             has_table = any(LAUNCH_TABLE_ROW_RE.match(ln) for ln in handoff["lines"])
             has_fence = any(CODE_FENCE_RE.match(ln) for ln in handoff["lines"])
             if not (has_table and has_fence):
@@ -1059,7 +1096,7 @@ def lint_plan(plan_dir, diag):
         # утверждение о состоянии плана, а не slash-команда — Next закрытого плана иногда
         # УПОМИНАЕТ следующую команду прозой («… решает владелец: `/task:plan-close
         # archive <ID>` либо …», см. EDUFY-2), и эта проза не должна перехватывать резолвер.
-        is_closed_text = "план закрыт" in next_val.lower()
+        is_closed_text = LITERAL_PLAN_CLOSED in next_val.lower()
         m_exec = PLAN_EXEC_RE.search(next_val)
         m_design_item = None if (m_exec or is_closed_text) else PLAN_DESIGN_ITEM_RE.search(next_val)
         m_design_phase = None if (m_exec or is_closed_text or m_design_item) \

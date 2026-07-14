@@ -105,7 +105,7 @@ Blocker-остатке по существу — фазу держали не д
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P1 | Разблокировка: формы Next + честный счёт lint | 2/2 | 🟢 Done |
-| P2 | SSOT-канон: routing-гейт, status-rule, Contracts (+ ремедиация аудитов) | 17/18 | 🟡 In progress |
+| P2 | SSOT-канон: routing-гейт, status-rule, Contracts (+ ремедиация аудитов) | 17/18 | 🟠 Done with deviations |
 | P3 | Команды plan-*: гейты и порядок закрытия | 0/5 | ⬜ Not started |
 | P4 | Регресс по флоту, закрытие эскалации REGHUB, доки | 0/3 | ⬜ Not started |
 
@@ -189,6 +189,7 @@ Blocker-остатке по существу — фазу держали не д
 | 2026-07-14 | package-implementer (opus/high, ручной запуск — Exec=manual) | P2.17 закрыт (`ba89c62`): §6 — проза топологии сведена с D26, якоря F1/G2 при своих правилах; гейт item-формы заголовка handoff (D37) + резолв `Next` по строке-объявлению (**D40**); оракул гейта — **D41** (дефект замера, пойман регрессом) — детали см. phases/P2.md P2.17 Completion Notes. |
 | 2026-07-14 | plan-exec (sonnet/medium) | P2.18 закрыт: пять ложных утверждений (H4/H5/H6/H8/H12) переписаны по git-фактам с якорем дерева (D36) — обоснование борда P2.7, числа `5/8` P2.12, «посимвольно» P2.10, «215 скиллов» P2.11, карта коммитов + `fc57561` P2.12 — детали см. phases/P2.md P2.18 Completion Notes. |
 | 2026-07-14 | package-implementer (opus/high, ручной запуск — Exec=manual) | P2.13 закрыт (`d92ace0`), **все items P2 терминальны (17 🟢 + 1 🟠)**: скилл 2.5.0, EN-канон регенерирован из RU (650 → 764 строки) — гейт литералов 6 ❌ → **0 ❌** по 14 директивам (G3 закрыт), реестр перегенерён; `skiller validate.sh` ПОЛНОСТЬЮ зелёный — детали см. phases/P2.md P2.13 Completion Notes. |
+| 2026-07-14 | plan-close (sonnet/low) | **Фаза P2 закрыта**: 18/18 терминальны, Phase Status ↔ Status Board сведены, `## Phase Handoff` перезаписан, `plan-lint` → 0/0 — Next: `plan-audit P2`. |
 
 ## Обсуждение
 

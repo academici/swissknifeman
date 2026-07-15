@@ -1,89 +1,57 @@
-# HANDOFF — 2026-07-15 — after P3.8
+# HANDOFF — 2026-07-15 — after P3.9
 
-**Next:** ЗАПУСК ВРУЧНУЮ: `opus/high` — item P3.9 (`Exec = manual`, §3 Routing)
+**Next:** `/task:plan-exec 2026.07.13-PLAN-PROTOCOL-GAP P3.10` (`Exec = plan-exec`, §3 Routing)
 
 | Параметр | Значение |
 |:--|:--|
-| Model | opus |
-| Thinking | high — авторская правка текста команды под потолком: что резать в прозе |
+| Model | sonnet |
+| Thinking | medium — дописать ОДИН блок по готовой формулировке канона §11 |
 | Context | continue (/clear) — ручной item |
-| Суть | `plan-close.md` ≤ 180 строк: адресат `## 6. Update Log` (A1), шаг коммита закрытия фазы (A3), status-rule 6 триггеров дословно, механический агрегат Known Deviations (J5/J6) |
+| Суть | `plan-exec.md` ≤ 210 строк: обязанность §11 Contracts (item, бампающий frozen-контракт, обновляет `Exported` донора + `Consumed` потребителей того же корня; чужой репо — `open-questions.md` + Open risks) |
 
 ````
-/model opus
-/effort high
-/task:plan-run 2026.07.13-PLAN-PROTOCOL-GAP P3.9
+/task:plan-exec 2026.07.13-PLAN-PROTOCOL-GAP P3.10
 ````
 
-Альтернатива (без D18-команды) — голый промпт:
-
-````
-Исполни item P3.9 мастер-плана `plans/2026.07.13-PLAN-PROTOCOL-GAP` (репо swissknifeman,
-/home/vostrikov/projects/packages/swissknifeman) — строго по ТЗ, с обязательным закрытием item'а
-и перезаписью handoff.
-
-Читай РОВНО в этом порядке, ничего сверх: (1) plans/2026.07.13-PLAN-PROTOCOL-GAP/plan.md —
-§1 Context, §2 Execution Rules, §3 Routing, §4 Status Board, D49 в §5; (2) этот handoff.md;
-(3) plans/2026.07.13-PLAN-PROTOCOL-GAP/phases/P3.md — Phase Context + item P3.9 целиком;
-(4) файлы из Required Reads item'а в указанном порядке.
-
-Протокол исполнения — packages/task/commands/plan-exec.md (пп. 3–8: топология ДВУХ коммитов,
-коммит-гигиена по явным путям, status-rule, якорь дерева для чисел, plan-lint --baseline HEAD
-ПОСЛЕ перезаписи handoff, гейт K = 0). Routing-гейт п. 2 не применяй: item предписан
-`opus/high · Exec = manual`, ты и есть ручной запуск под предписанной моделью — подтверди это
-строкой в отчёте.
-
-Суть P3.9: свести ЧЕТЫРЕ правила в `packages/task/commands/plan-close.md` под поднятым потолком
-≤ 180 строк (D49) — A1 (шаг 4 режима `Pn` называет АДРЕСАТ: строка пишется в `## 6. Update Log`
-ПЛАНА, не в handoff; сверить все шаги обоих режимов на тот же дефект), A3 (режим `Pn` получает
-финальный шаг коммита закрытия фазы, lint остаётся ПЕРЕД коммитом), status-rule (6 триггеров
-material/process ДОСЛОВНО как в `plan-exec.md:107-115`), J5/J6 (агрегат `## Phase Handoff`
-собирается ПЕРЕЧИСЛЕНИЕМ непустых `Known Deviations` items, не пересказом). Главное правило
-Code Guidance: сжатие прозы НЕ имеет права удалить адресат артефакта — ровно на этом фаза уже
-потеряла правило (A1). Не влезает без потери адресата/триггера → СТОП + эскалация, не «ужать».
-````
-
-**Done:** P1 (2/2 🟢), P2 (18/18 — терминальна, `🟠 Done with deviations`), P3 — **7/11**.
+**Done:** P1 (2/2 🟢), P2 (18/18 — терминальна, `🟠 Done with deviations`), P3 — **8/11**.
 **Фаза P3 РЕОПЕНЕНА** (D48, 2026-07-15) после 🔴 RED аудита (`phases/P3.md` `## Audit P3`); реопен-дифф
-закоммичен отдельно (`4bf6c1f`). Шесть items первой волны в силе: P3.1 (`4cfc10a`) `plan-exec.md`;
-P3.2 (`0823cb4`) `plan-close.md`; P3.3 (`f4ce8c9`) `plan-audit.md`; P3.4 (`c95caed`) `plan-design.md`;
-P3.5 (`b4146eb`, 🟠) `plan-run.md`; P3.6 (`eea2a9a`) скилл **2.6.0** + EN-канон.
-P3.7 (`e08a7fe`) — Blocker J1 снят: гейт «Phase Handoff протух» судит СУБЪЕКТ утверждения (D50).
+закоммичен отдельно (`4bf6c1f`). Первая волна: P3.1 (`4cfc10a`) `plan-exec.md`; P3.2 (`0823cb4`)
+`plan-close.md`; P3.3 (`f4ce8c9`) `plan-audit.md`; P3.4 (`c95caed`) `plan-design.md`; P3.5 (`b4146eb`, 🟠)
+`plan-run.md`; P3.6 (`eea2a9a`) скилл **2.6.0** + EN-канон. Реопен-волна: P3.7 (`e08a7fe`) — Blocker J1
+снят (D50); P3.8 (`d9ab955`) — правила, исполнимые собственным линтером (J3/A4/J8 + следы D40/D37/дельта).
 
-**P3.8 закрыт 🟢 (`d9ab955`) — класс «правило, невыполнимое по собственному линтеру» закрыт ПРОГОНОМ.**
-J3 (D51): шаг 1 реопена (§3) ставит статус ФАЗЫ только в Status Board `plan.md`; на синтетическом
-плане старая буква даёт `ERROR: Phase Status: строка «P1» без соответствующего item`, новая — `OK
-(0 ошибок)`. A4 (D52): оба грепа по `phases/Pn.md` кончаются на первом `## Audit` — append-блок
-аудита законно цитирует маркеры, о которых отчитывается. J8 (D52): сборщик T1 расширен на три
-вектора промаха (локальная переменная · аргумент функции линтера · `re.finditer`), обещание D35
-**честно сужено** («гейт ловит формы, не класс») в докстринге T1 и в блоке `i18n-keep` канона.
-J11/J13 (D55/D53): §8 несёт следы D40/D37 и правило «числа вне репо — только дельта парного прогона».
-Тесты: **134 OK** (на `d9ab955`; было 127 на `e08a7fe`) — 7 новых. **Парный регресс 10 корней /
-30 планов** (один снимок, `git stash` линтера → прогон → `pop` → прогон): **ERROR Δ 0** и **WARN Δ 0**
-во всех 10; в `agelto/archive/DOMLANG` изменился ТЕКСТ одного WARNING (5 → 4 маркера: вхождение
-внутри `## Audit` больше не считается) — предмет A4, новых диагностик флоту нет.
+**P3.9 закрыт 🟢 (`4d9252d`) — обе ✗ сквозной сверки в части `plan-close` сняты.** `plan-close.md`
+доведён до канона пятью правилами под поднятым потолком **169 ≤ 180** (D49): (A1) режим `Pn` шаг 4
+называет АДРЕСАТ `## 6. Update Log` — **плана (`plan.md`)**, не handoff (который перезаписывается
+целиком) + свип адресатов обоих режимов (второй Update Log; `## Phase Status`→`phases/Pn.md`,
+`## 4.`→`plan.md`); (A3) режим `Pn` получил финальный шаг 7 «Коммит закрытия фазы — ОДИН»
+(`git add plans/<ID>` + `docs(plan): фаза Pn закрыта`), lint остаётся шагом 6 ПЕРЕД коммитом;
+(status-rule) режим `Pn.m` шаг 4 несёт предикат material/process, **6 триггеров дословно** как
+`plan-exec.md:107-115` (diff-сверка IDENTICAL, единственное отличие — переадресация `carve-out
+выше`→`§8`); (J5/J6) режим `Pn` шаг 3 — агрегат Known Deviations перечислением непустых полей items,
+запрет утверждать сверх полей (класс B1). Validation 7/7 (детали — P3.9 Completion Notes): `validate.sh`
+exit 0, `plan-lint --baseline HEAD` K=0.
 
-**Remaining:** 3 items реопена, порядок обязателен —
+**Remaining:** 2 items реопена, порядок обязателен —
 
-1. **P3.9 ← Next** (opus/high, manual) — `plan-close.md` ≤ 180: адресат Update Log (A1), шаг
-   коммита закрытия фазы (A3), status-rule (6 триггеров дословно), механический агрегат (J5/J6).
-2. **P3.10** (sonnet/medium, `/task:plan-exec`) — `plan-exec.md` ≤ 210: обязанность §11 Contracts.
-3. **P3.11** (opus/high, manual) — терминальный: скилл **2.7.0** (D56), **регенерация EN-канона**
+1. **P3.10 ← Next** (sonnet/medium, `/task:plan-exec`) — `plan-exec.md` ≤ 210: обязанность §11 Contracts
+   (вторая ✗ сквозной сверки — `grep -c "Contracts\|Exported" plan-exec.md` → 0).
+2. **P3.11** (opus/high, manual) — терминальный: скилл **2.7.0** (D56), **регенерация EN-канона**
    (`SKILL.md` протух с P3.7/P3.8 — Pending Work), `skiller registry`, повторная сквозная сверка
-   «правило → команда» (41 проверка → 0 ✗).
-4. Затем: `plan-close … P3` → `plan-audit … P3` → фаза **P4** (P4.1 регресс по флоту — **10 корней /
+   «правило → команда» (→ 0 ✗) + семантическое ревью канона (D44).
+3. Затем: `plan-close … P3` → `plan-audit … P3` → фаза **P4** (P4.1 регресс по флоту — **10 корней /
    30 планов**, D53; P4.2 эскалация REGHUB — чужой репо Brain; P4.3 доки + CHANGELOG).
 
 **Sources of truth:** `plan.md` (Meta **1.5.0**, Status 🟡, §2 Execution Rules + carve-out D34, §3
 Routing, §5 D-лог **D1–D56**, `## Обсуждение` — 10 развилок) · `phases/P3.md` (11 items;
 `## Phase Handoff` помечен `> УСТАРЕЛ — фаза реопенена D48`; append-блок `## Audit P3`) ·
 `phases/P4.md` (3 items) · `open-questions.md` (**OQ-1** — «мягкий пункт Validation», Decision
-pending) · `findings/P3-reopen-gates-and-fleet.md` (формы гейта J1 + инвентарь флота + потолки) ·
-`findings/P3-command-layer.md` (матрица правил §2, потолки §3) · `roadmap/plan-audit-loop.md` ·
+pending) · `findings/P3-reopen-gates-and-fleet.md` (§3 потолки/урок A1, §4 grep-инвентарь правил) ·
+`findings/P3-command-layer.md` (матрица правил §2 — две ✗, потолки §3) · `roadmap/plan-audit-loop.md` ·
 SSOT канона: `packages/skiller/skills/general/plan-protocol/` (`SKILL.ru.md` — источник, 2.6.0;
 `SKILL.md` — EN-канон, **протух** до P3.11) · `packages/task/lib/task/plan_lint.py` · команды:
-`plan-exec.md` (180 → потолок **210**) · `plan-close.md` (145 → потолок **180**) · `plan-audit.md`
-(115/115) · `plan-design.md` (169/185) · `plan-run.md` (28/45).
+`plan-exec.md` (180/потолок **210** — растёт в P3.10) · `plan-close.md` (**169**/180) ·
+`plan-audit.md` (115/115) · `plan-design.md` (169/185) · `plan-run.md` (28/45).
 
 **Open risks:**
 - **EN-канон `SKILL.md` протух** (RU правлен P3.7 и P3.8) ⇒ `packages/skiller/scripts/validate.sh`
@@ -94,7 +62,7 @@ SSOT канона: `packages/skiller/skills/general/plan-protocol/` (`SKILL.ru.m
 - Полнота гейта литералов (T1) **сужена честно** (D52/J8): динамически собранный шаблон и литерал
   из внешнего файла им не ловятся. Заводя новую форму сверки в `plan_lint.py`, расширяй сборщик —
   иначе класс G3 (слип перевода) воспроизведётся мимо гейта.
-- Остаточные 35 WARN `plan-lint` по 6 планам монорепо (на `d9ab955`) — вне Scope items P3, чинятся
+- Остаточные 35 WARN `plan-lint` по 6 планам монорепо (на `4d9252d`) — вне Scope items P3, чинятся
   не здесь (записи Update Log > 300 символов у старых планов и т. п.).
 - P4.2 правит ЧУЖОЙ репозиторий (Brain-vault, план REGHUB) — коммит там отдельный.
 

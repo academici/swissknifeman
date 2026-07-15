@@ -1,51 +1,55 @@
-# HANDOFF — 2026-07-15 — after P1.1
+# HANDOFF — 2026-07-15 — after P2.1
 
-**Next:** `/task:plan-audit 2026.07.15-PLANFLOW-UX P1` — фаза P1 терминальна (recon = evidence-base
-для 5 фикс-фаз); adversarial-аудит вердикта D4 / 2×2-счётчиков / RAG-утверждений ДО инвестиций в
-детализацию P2–P5. **Рекомендация (D6):** аудит — high-ROI дешёвая страховка, зеркалит методологию
-плана (falsified-гипотезу до-проверять, CLAUDE.md). **Альтернатива:** `/task:plan-design
-2026.07.15-PLANFLOW-UX P2` — recon уже подтвердил скелеты, можно сразу детализировать первую фикс-фазу
-(contract-first, D5). Владелец выбирает; по умолчанию — аудит.
+**Next:** ЗАПУСК ВРУЧНУЮ: sonnet/high — P2.2 (§3 Routing: Exec = manual; `/task:plan-exec`
+пинит sonnet/medium и по routing-гейту §9 обязан отказать — effort>medium). Альтернатива
+запуска (D18): `/model sonnet` + `/effort high` + `/task:plan-run 2026.07.15-PLANFLOW-UX P2.2`.
 
 | Параметр | Значение |
 |:--|:--|
-| Model | opus |
-| Thinking | xhigh |
-| Context | NEW SESSION — шаг-не-item |
-| Суть | P1 recon закрыт (D4 верифицирован A✅/B🟡/C✅; корень = гейт-доставка+калибровка+методология, не «нет шаблона»). Аудит recon перед детализацией P2–P5 (adversarial, свежий контекст) |
+| Model | sonnet |
+| Thinking | high — точность прозы канона §8, читаемой всем флотом (§3 Routing P2.2) |
+| Context | continue (/clear) — ручной item |
+| Суть | P2.2 — дисциплина «ошибка при exec → сразу фикс-предложение с аргументацией» в SKILL §8 + `plan-exec.md` §6/§8 |
 
-```
-/task:plan-audit 2026.07.15-PLANFLOW-UX P1
-```
+````
+Исполни P2.2 мастер-плана 2026.07.15-PLANFLOW-UX (Exec = manual, предписано sonnet/high — routing-гейт §9
+подтверждён этим handoff'ом: effort>medium, `/task:plan-exec` обязан отказать). Холодный старт, читай СТРОГО:
+1) plans/2026.07.15-PLANFLOW-UX/plan.md — Context, Execution Rules, §3 Routing, §5 D-log (D6/D7), Status Board;
+2) plans/2026.07.15-PLANFLOW-UX/handoff.md — этот файл;
+3) plans/2026.07.15-PLANFLOW-UX/phases/P2.md — Phase Context + item P2.2 целиком (16 полей);
+4) Required Reads из P2.2 (findings/P1-recon.md §5-C3 → plan.md §1 cluster-5b + §2 D6 →
+   SKILL.ru.md §8/§10 → commands/plan-exec.md §5/§6/§8 → packages/skiller/CLAUDE.md двуязычие).
+Сделай СТРОГО в Scope Included P2.2: правило «всплывшая material-ошибка → отчёт СРАЗУ несёт конкретное
+фикс-предложение (что + launch-block под фикс + 1 строка почему)» в SKILL.ru.md §8 (≤8 строк) →
+регенерация SKILL.md → check-translations.sh --stamp; зеркало правила в commands/plan-exec.md §6/§8.
+Report-quality, НЕ машинный гейт (в plan_lint НЕ добавлять — сверяет plan-audit). Уточняет, не заменяет
+запись в Known Deviations/Pending Work. Двуязычие: правишь RU → регенеришь EN. Валидация — все команды
+поля Validation P2.2 (check-translations.sh, validate.sh, plan-lint --baseline HEAD; ручная сверка ≤8 строк).
+Закрой item по plan-protocol §8 (ДВА коммита, handoff-перезапись, plan-lint --baseline HEAD, атрибуция K).
+````
 
-**Done:** P1.1 закрыт 🟢 (item-коммит `0ad2b34`), фаза P1 терминальна (1/1). Собран
-`findings/P1-recon.md`: (A) инвентарь 62 workflow, 44 разобрано 5 fan-out; 2×2 → дискриминатор =
-провенанс (template-copy/generated=good, все 3 bad=ad-hoc-без-гейта); (B) клинч PLAN-PROTOCOL-GAP
-(P2 реопен ×3, REGHUB ×4 RED-аудита) — связанный SSOT без критерия сходимости; (C) 5/30 активных
-handoff неконформны (легаси+vault; провал = проза в Next). Мета-находка: ~0 workflow через гейт
-`make-workflow`; ревьюер строже эталонов (ложные RED). RAG:✅ канон = 2026-best-practice → «шаблоны
-плохи» опровергнуто. Скелеты P2–P5 подтверждены. Гейт TELEMETRY-OPT снят (P4/P5 терминальны).
+**Done:** P2.1 закрыт 🟠 Done with deviations (item-коммит `13daef6`). 9-я форма `Next` «ОЖИДАНИЕ:
+<условие> → <целевая форма>» в каноне §8 (SKILL.ru.md/SKILL.md RU+EN) + оба сниппета; `plan_lint`
+резолвит `waiting` ДО `exec` + C2-WARNING на прозу-оговорку в runnable-форме (стем-лист узкий,
+проверен дельтой флота — 0 новых); handoff `SKM-MASTER-002` мигрирован на форму «ОЖИДАНИЕ» (снят
+launch-block-WARN). Тесты: `TestWaitingForm` (6 кейсов) + T1/T2 зелёные; 140 passed.
 
-**Remaining:** аудит P1 (реком.) → детализация P2–P5 по вердикту recon (contract-first, D5) → exec.
-Cross-plan gate §7 снят — exec PLANFLOW-UX больше НЕ заблокирован TELEMETRY-OPT.
+**Remaining:** exec P2.2 (manual, sonnet/high) → `plan-close P2` → `plan-audit P2` → детализация
+P3 (ось A, несущая) → P4 → P5. Фаза P2 сейчас 🟡 (P2.1 🟠 терминален, P2.2 ⬜). Cross-plan gate §7
+снят (TELEMETRY-OPT P4/P5 терминальны/архивированы) — exec НЕ заблокирован.
 
-**Sources of truth:** `findings/P1-recon.md` (2×2·клинч·конформанс·скилл-критика·рекомендации §5·вердикт
-D4·footer Проверка) · `plan.md` (D1–D6, Routing §3, Contracts §7, Обсуждение) · `phases/P1.md`
-(P1.1 Completion Notes + Phase Handoff) · `open-questions.md` OQ-1 (артефакт глобального exec-плана → P4).
+**Sources of truth:** `phases/P2.md` (P2.2 ТЗ, P2.1 Completion Notes) · `plan.md` (D6/D7/D8, §3 Routing,
+§6 Update Log) · `findings/P1-recon.md` §5-C3 (доказбаза) · канон-цели P2.2: `plan-protocol/SKILL.ru.md`
+§8/§10, `commands/plan-exec.md` §6/§8 · `packages/skiller/CLAUDE.md` (двуязычие).
 
-**Open risks:** доля «невыполнимых» handoff по флоту оценена (5/30 + кейс), не полным чтением 46 тел
-([UNVERIFIED] — добить при детализации P2). Достаточность plan-protocol 2.7/D44 против клинча —
-гипотеза, верифицируется в P5. Рекомендация A1 (раздать `workflow-craft`/гейт в проекты) — новый
-always-on резидент → перед раскаткой обязателен `skiller budget --first-turn` (гейт CLAUDE.md).
-`plan-lint` = 0 ERROR (гейт зелёный), 2 WARN: (a) остаточный false-positive DoR §7/D29 — фаза P1
-«заявляет fan-out, нет workflow-скрипта»: item был routed **manual/opus/high** (§3, «синтез > fan-out»),
-fan-out — внутренний Agent-tool-хелпер экстракции (scratchpad, не коммитится), workflow-скрипт by design
-не нужен → эвристика споткнулась о слово «fan-out» в прозе, не дефект; (b) снят правкой Update Log.
+**Open risks:** deviation P2.1 (регенерённые skills.json/budget.md вне `Files` ТЗ) — фикс-предложение
+адресовано `plan-design` (внести генерённые артефакты реестра в Files/Scope; см. P2.1 Known Deviations).
+`plan-lint` PLANFLOW-UX = 0 ERROR, остаточный WARN на P1 (заявляет fan-out, нет workflow-скрипта — P1
+routed manual/opus, workflow by design не нужен; эвристика D29 споткнулась о слово, не дефект).
 
 **Workarounds/Deferred/Open questions:**
 - workarounds: —
-- deferred: детализация P2–P5 (contract-first, just-in-time после recon, D5); механика «глобального
-  exec-плана» (P4, OQ-1).
-- open_questions: **OQ-1** — артефакт глобального exec-плана (новый файл vs Status Board), Decision
-  pending, владелец Dmitry Vostrikov, решается в P4 на данных recon (§5 findings: Status Board уже
-  несёт фазы/статусы; батч/команда/модель/ревью-глубина — новая ось).
+- deferred: детализация P3–P5 (contract-first, just-in-time, D5); launch-block вне `plan-*` (OQ-2);
+  «глобальный exec-план» (OQ-1, P4).
+- open_questions: **OQ-1** (артефакт exec-плана, P4) · **OQ-2** (launch-block в `dev.md`/`fix.md` —
+  Decision pending, владелец Dmitry Vostrikov; рекомендация: `dev.md` при боли, `fix.md` exempt).

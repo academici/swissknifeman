@@ -10,7 +10,7 @@
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | opus |
-| Last Updated | 2026-07-15 (P5.2 закрыт — внешний RAG-развед токен-экономии) |
+| Last Updated | 2026-07-15 (P5.3 закрыт — ROI-backlog, фаза P5 терминальна) |
 | Repository | swissknifeman |
 | Related Packages | harness (run-report hook, permissions), analyst (token_report, digest), task (workflow-craft/routing-команды), skiller (workflow-craft/plan-protocol скиллы) |
 | Execution Mode | phase-first |
@@ -68,7 +68,7 @@ Opus/xhigh намеренно, но это самый дорогой рычаг,
 | P2 | Churn-гейт файл-операций | 2/2 | 🟢 Done |
 | P3 | Model-routing аудит | 2/2 | 🟢 Done |
 | P4 | Permission-friction | 2/2 | 🟢 Done |
-| P5 | Discovery: дальнейшие рычаги токен-экономии (RAG) | 2/3 | 🟡 In progress |
+| P5 | Discovery: дальнейшие рычаги токен-экономии (RAG) | 3/3 | 🟢 Done |
 
 ## 5. Decision Log
 
@@ -107,6 +107,7 @@ Opus/xhigh намеренно, но это самый дорогой рычаг,
 | 2026-07-15 | plan-exec/sonnet | P4.2 закрыт, фаза P4 терминальна: дисциплина-правило «DENY терминален для формы» в CORE-скилле `anti-drift` (v0.4.0, RU→EN); protection-surface (ось B/C, бакет-c) уточнён и остаётся в OQ-5 (Decision pending); D11 — детали см. phases/P4.md P4.2 Completion Notes |
 | 2026-07-15 | plan-exec/sonnet | P5.1 закрыт: `skiller budget --first-turn` на 5 проектах разного стека — 4/5 WARN (>10K); 3 кандидата сжатия с измеренным резидентом (MCP tool-defs · CLAUDE.md сверх ≤200 строк · повторяющиеся ⊕always-описания across проектов) — детали см. phases/P5.md P5.1 Completion Notes |
 | 2026-07-15 | manual/fable/medium | P5.2 закрыт: внешний RAG-развед токен-экономии 2026 — 8 кандидатов (2 adopt-кандидата: trimming maind MCP-ответов, MCP deferred loading/прополка; 4 reference; 2 skip → rejected-optimizations) — детали см. phases/P5.md P5.2 Completion Notes |
+| 2026-07-15 | plan-run/opus/high | P5.3 закрыт, фаза P5 терминальна (🟢): ROI-backlog из 5 рычагов (L1 MCP-прополка · L2 ⊕always-описания · L4 maind trimming · L3/L5 gated/вне-scope) + рекомендация P6+ (Owner-approve pending, D-запись не внесена) — детали см. phases/P5.md P5.3 Completion Notes |
 
 ## Обсуждение
 

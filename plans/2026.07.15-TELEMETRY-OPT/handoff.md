@@ -1,85 +1,53 @@
-# HANDOFF — 2026-07-15 — after P5.2
+# HANDOFF — 2026-07-15 — after P5.3
 
-**Next:** «ЗАПУСК ВРУЧНУЮ: opus/high» — P5.3 (Exec=manual, Routing §3: opus/high, синтез ROI =
-архитектурное решение, вне пина `plan-exec`). Либо: `/model opus` + `/effort high` +
-`/task:plan-run 2026.07.15-TELEMETRY-OPT P5.3` (D18).
+**Next:** план закрыт — фаза P5 терминальна, **все items плана 2026.07.15-TELEMETRY-OPT
+терминальны** (P1 🟠, P2/P3/P4/P5 🟢, ⬜-item'ов нет). Item-протокол исчерпан; дальше — решение
+Owner по ROI-backlog (`findings/P5-optimization-backlog.md`): архивировать план ИЛИ породить новые
+фазы (реализация рычагов). Дефолт-путь при отсутствии решения по новым фазам — архивация
+терминального плана командой ниже.
 
 | Параметр | Значение |
 |:--|:--|
-| Model | opus |
-| Thinking | high — синтез ROI-backlog + рекомендация приоритизации (Routing §3) |
-| Context | continue (/clear) — ручной item |
-| Суть | Свести кандидатов P5.1+P5.2 в ROI-ранжированный backlog + рекомендация Owner по P2–P4/P6+ |
+| Model | sonnet |
+| Thinking | low — реконсиляция/архивация по git-фактам (plan-close пинит sonnet/low) |
+| Context | NEW SESSION — шаг-не-item |
+| Суть | Owner разбирает backlog P5.3 → архивировать терминальный план (или новая фаза-реализация) |
 
 ```
-Исполни P5.3 мастер-плана plans/2026.07.15-TELEMETRY-OPT (репо swissknifeman) строго по ТЗ
-phases/P5.md:
-
-**Intent:** Свести кандидатов P5.1 (внутренние) + P5.2 (внешние) в единый ранжированный по ROI
-backlog (findings/P5-optimization-backlog.md): каждый рычаг — экономия · стоимость · риск ·
-вердикт; вывести рекомендацию Owner: переупорядочить P2–P4 по ROI и/или породить новые фазы P6+.
-
-**Scope Included:** объединение двух findings в один backlog с колонками рычаг/экономия/
-стоимость/риск/вердикт/источник; ROI-сортировка; рекомендация по последовательности P2–P4 и
-кандидаты на P6+; фиксация в plan.md (D-запись) при принятии Owner.
-
-**Scope Excluded:** реализация рычагов (будущие фазы); сбор данных (P5.1/P5.2 закрыты);
-авто-переупорядочивание фаз без Owner-approve.
-
-**Required Reads:** 1) plans/2026.07.15-TELEMETRY-OPT/findings/P5-internal-budget-audit.md
-2) plans/2026.07.15-TELEMETRY-OPT/findings/P5-external-bestpractices.md
-3) plans/2026.07.15-TELEMETRY-OPT/plan.md (§4 Status Board, §5 D-лог)
-
-**Implementation Rules:** ROI = оценённая экономия / стоимость внедрения — обе величины из
-findings, не из воздуха; кандидат без числа с обеих сторон помечается «нужен замер», не
-ранжируется вслепую; переупорядочивание P2–P4 / новые фазы — только РЕКОМЕНДАЦИЯ, применяет
-Owner (авто-правка Status Board без approve запрещена).
-
-**Code Guidance:** Synthesis-item, кода нет. Если P5.1 или P5.2 неполны — backlog помечает
-пробелы явно, НЕ доранжировывает гипотезами. Рекомендация обязана опираться на числа backlog.
-Запрещено помечать 🟢 при неоформленной рекомендации Owner.
-
-**Validation:** findings/P5-optimization-backlog.md существует, ROI-ранжирован, каждый рычаг со
-ссылкой на источник-findings; содержит явную секцию «Рекомендация приоритизации P2–P4 / P6+»;
-пробелы данных отмечены.
-
-**Files:** plans/2026.07.15-TELEMETRY-OPT/findings/P5-optimization-backlog.md (создать) ·
-plan.md (D-запись/Update Log при approve)
-
-После работы — обязательное закрытие item'а по протоколу plan-exec (Status/Completion Notes/
-Pending Work/Known Deviations, item-коммит по Files выше, bookkeeping-коммит, перезапись
-handoff.md, plan-lint.py). Закрытие P5.3 делает фазу P5 терминальной — заполнить Phase Handoff
-в phases/P5.md и Status Board. Model/effort сессии — opus/high, НЕ переключай на sonnet/medium.
+/task:plan-close 2026.07.15-TELEMETRY-OPT
 ```
 
-**Done:** P5.2 закрыт (item-коммит 77829c4): внешний RAG-развед токен-экономии 2026 — 6
-последовательных `perplexity-web`-запросов (context7 — quota-промах, штатный фолбэк), 8
-кандидатов C1–C8 в `findings/P5-external-bestpractices.md`, все RAG-маркированы. Adopt-кандидаты:
-C4 (потолок+truncation-receipt в ответах maind MCP-тулов) · C5 (прополка MCP-серверов + deferred
-tool-loading, пара к К1 из P5.1; `ENABLE_TOOL_SEARCH` — `[UNVERIFIED]`, нужна пред-проверка по
-first-party доке). Reference: C1 prompt-cache (кэш уже здоров) · C2 compaction (уже канон
-`context-economy`) · C3 sub-agent isolation · C6 tiered routing (валидирует D8/D9). Skip: C7
-cascade-router · C8 vector-store память — обе строками в `docs/rejected-optimizations.md`;
-+1 строка в `docs/reference.md`.
+Развилка для Owner (перед архивацией): backlog P5.3 рекомендует новые фазы-реализации в порядке
+MCP-поверхность (L1 + L3-gated) → ⊕always-описания (L2) → maind trimming (L4). Принять → развернуть
+их через `plan-design` (+ D-запись в plan.md §5, до сих пор НЕ внесена — approve не получен).
+Отклонить/отложить → архивировать план как есть.
 
-**Remaining:** P5.3 (синтез ROI-backlog, manual/opus/high, ⬜) — оба Required Reads готовы
-(P5.1 ∥ P5.2 закрыты), можно исполнять сейчас; закрывает фазу P5. P1 терминальна (🟠),
-P2/P3/P4 терминальны (🟢).
+**Done:** P5.3 закрыт (item-коммит 39ff401): сведены P5.1 (К1–К3) + P5.2 (C1–C8) в единый
+ROI-ранжированный `findings/P5-optimization-backlog.md` — 5 рычагов L1–L5 (L1 прополка MCP-серверов
+ранг 1 · L2 сжатие ⊕always-`description` ранг 2 · L4 maind tool-result trimming ранг 3/«нужен замер» ·
+L3 `ENABLE_TOOL_SEARCH` `[UNVERIFIED]` вне ранга · L5 CLAUDE.md внешних проектов — вне scope репо) +
+6 не-рычагов (C1/C2/C3/C6 reference, C7/C8 skip). Рекомендация Owner: P2–P4 переупорядочить нельзя
+(терминальны), forward — P6→P7→P8. D-запись о P6+ НЕ внесена (Owner-approve pending). Session:
+opus/high (plan-run D18). Фаза P5 терминальна (Phase Handoff заполнен в phases/P5.md).
 
-**Sources of truth:** `findings/P5-internal-budget-audit.md` (P5.1: 3 кандидата К1–К3 с
-измеренным резидентом) · `findings/P5-external-bestpractices.md` (P5.2: C1–C8 с вердиктами) ·
-`phases/P5.md` (ТЗ P5.3 + Completion Notes P5.1/P5.2) · `plan.md` (§3 Routing, §4 Phase Index,
-§5 D-лог) · `docs/reference.md` / `docs/rejected-optimizations.md` (внешний провенанс P5.2).
+**Remaining:** Item'ов плана нет — все фазы терминальны. Открыто ТОЛЬКО решение Owner по backlog
+(P6+ vs архив) — вне item-протокола.
 
-**Open risks:** OQ-5 (Owner-решение по осям B/C permission-friction) и OQ-4 (research
-opus→sonnet) остаются Decision pending, вне P5. `ENABLE_TOOL_SEARCH` (C5) — [UNVERIFIED],
-внедрение без пред-проверки по first-party доке запрещено. Посторонний дифф в дереве:
-untracked `plans/2026.07.15-PLANFLOW-UX/` — не тронут этим item'ом, владелец работает
-параллельно — не коммитить/не ревертить без явного запроса.
+**Sources of truth:** `findings/P5-optimization-backlog.md` (P5.3: ROI-backlog + рекомендация) ·
+`findings/P5-internal-budget-audit.md` (P5.1: К1–К3) · `findings/P5-external-bestpractices.md`
+(P5.2: C1–C8) · `phases/P5.md` (ТЗ + Completion Notes P5.1–P5.3 + Phase Handoff) · `plan.md`
+(§4 Status Board — все фазы терминальны, §5 D-лог, §6 Update Log).
+
+**Open risks:** Backlog несёт 3 пробела данных, которые НЕ доранжированы гипотезами (честность):
+N-множитель L2 · размеры ответов maind MCP (L4) · `ENABLE_TOOL_SEARCH` `[UNVERIFIED]` (L3) — все
+требуют замера/пред-проверки на фазе реализации P6+, до этого рычаги не ранжируются вслепую.
+OQ-5 (оси B/C permission-friction) и OQ-4 (research opus→sonnet) — Decision pending, вне P5.
+Посторонний дифф в дереве: untracked `plans/2026.07.15-PLANFLOW-UX/` — не тронут этим item'ом,
+владелец работает параллельно — не коммитить/не ревертить без явного запроса.
 
 **Workarounds/Deferred/Open questions:**
 - workarounds: —
-- deferred: пред-проверка `ENABLE_TOOL_SEARCH` (C5) и замер размеров ответов maind MCP-тулов
-  (C4) — на фазе реализации / ROI в P5.3.
-- open_questions: **OQ-5** — Decision pending (владелец Dmitry Vostrikov). **OQ-4** — Decision
-  pending (research opus→sonnet). OQ-1/OQ-2/OQ-3 Resolved.
+- deferred: реализация рычагов L1–L4 (фазы P6+ при Owner-approve); замеры N/размеров maind/флага
+  `ENABLE_TOOL_SEARCH` — первыми items соответствующих фаз.
+- open_questions: **решение Owner по backlog P5.3** (P6+ vs архивация) — блокирует D-запись о P6+.
+  **OQ-5** / **OQ-4** — Decision pending (владелец), вне P5. OQ-1/OQ-2/OQ-3 Resolved.

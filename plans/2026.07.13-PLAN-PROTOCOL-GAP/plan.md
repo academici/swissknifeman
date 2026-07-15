@@ -114,7 +114,7 @@ Blocker-остатке по существу — фазу держали не д
 |:--|:--|:--|:--|
 | P1 | Разблокировка: формы Next + честный счёт lint | 2/2 | 🟢 Done |
 | P2 | SSOT-канон: routing-гейт, status-rule, Contracts (+ ремедиация аудитов) | 17/18 | 🟠 Done with deviations |
-| P3 | Команды plan-*: гейты и порядок закрытия | 9/11 | 🟡 In progress |
+| P3 | Команды plan-*: гейты и порядок закрытия | 10/11 | 🟠 Done with deviations |
 | P4 | Регресс по флоту, закрытие эскалации REGHUB, доки | 0/3 | ⬜ Not started |
 
 ## 5. Decision Log
@@ -229,6 +229,8 @@ Blocker-остатке по существу — фазу держали не д
 | 2026-07-15 | plan-run (**opus/high**, модель сессии — Exec=manual, D18) | P3.8 закрыт (`d9ab955`): J3 — шаг 1 реопена приведён к единственному носителю статуса фазы (проверен на синтетике: старая буква = ERROR линтера, новая = 0); A4/J8 — регион грепов и сборщик T1; §8 — следы D40/D37 и правило дельты (J11/J13) — детали см. phases/P3.md P3.8 Completion Notes. |
 | 2026-07-15 | plan-run (**opus/high**, модель сессии — Exec=manual, D18) | P3.9 закрыт (`4d9252d`): `plan-close.md` (169≤180, D49) — адресат Update Log плана (A1) + свип адресатов, шаг 7 коммита закрытия фазы (A3), status-rule 6 триггеров дословно из `plan-exec`, механический агрегат Known Deviations (J5/J6) — детали см. phases/P3.md P3.9 Completion Notes. |
 | 2026-07-15 | plan-exec (sonnet/medium) | P3.10 закрыт (`be3b636`): `plan-exec.md` (188≤210) — блок §11 Contracts в шаге 2 bookkeeping'а, копия формулировки `SKILL.ru.md` §11 — детали см. phases/P3.md P3.10 Completion Notes. |
+| 2026-07-15 | plan-run (**opus/high**, модель сессии — Exec=manual, D18) | P3.11 закрыт (`99ad792`): скилл `plan-protocol` **2.7.0** (D56) — регенерация EN-канона (D50/D51/D40/D37/D53), `check-translations` 0 ❌, registry (skills.json/budget.md), сквозная сверка 46 ✓ / 0 ✗ — детали см. phases/P3.md P3.11 Completion Notes. |
+| 2026-07-15 | plan-run (**opus/high**, Exec=manual) | **Фаза P3 закрыта** `🟠 Done with deviations` (11 items: 10 🟢 + 1 🟠): реопен-волна (P3.7–P3.11, D48) сняла долги RED-аудита `## Audit P3` и аудита №4 P2; `## Phase Handoff` перезаписан, маркер `> УСТАРЕЛ` снят (§3, шаг 4). Следующий — `plan-audit … P3` (2-й заход). |
 
 ## Обсуждение
 

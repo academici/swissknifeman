@@ -7,10 +7,10 @@
 | Plan ID | 2026.07.15-TELEMETRY-OPT |
 | Title | Оптимизация токен-расхода и надёжности workflow экосистемы |
 | Version | 0.1.0 |
-| Status | 🟡 In progress |
+| Status | 🟠 Done with deviations |
 | Document Type | Executable Master Plan |
 | Authoring Model | opus |
-| Last Updated | 2026-07-15 (P5.3 закрыт — ROI-backlog, фаза P5 терминальна) |
+| Last Updated | 2026-07-15 (план закрыт целиком — все фазы терминальны) |
 | Repository | swissknifeman |
 | Related Packages | harness (run-report hook, permissions), analyst (token_report, digest), task (workflow-craft/routing-команды), skiller (workflow-craft/plan-protocol скиллы) |
 | Execution Mode | phase-first |
@@ -108,6 +108,7 @@ Opus/xhigh намеренно, но это самый дорогой рычаг,
 | 2026-07-15 | plan-exec/sonnet | P5.1 закрыт: `skiller budget --first-turn` на 5 проектах разного стека — 4/5 WARN (>10K); 3 кандидата сжатия с измеренным резидентом (MCP tool-defs · CLAUDE.md сверх ≤200 строк · повторяющиеся ⊕always-описания across проектов) — детали см. phases/P5.md P5.1 Completion Notes |
 | 2026-07-15 | manual/fable/medium | P5.2 закрыт: внешний RAG-развед токен-экономии 2026 — 8 кандидатов (2 adopt-кандидата: trimming maind MCP-ответов, MCP deferred loading/прополка; 4 reference; 2 skip → rejected-optimizations) — детали см. phases/P5.md P5.2 Completion Notes |
 | 2026-07-15 | plan-run/opus/high | P5.3 закрыт, фаза P5 терминальна (🟢): ROI-backlog из 5 рычагов (L1 MCP-прополка · L2 ⊕always-описания · L4 maind trimming · L3/L5 gated/вне-scope) + рекомендация P6+ (Owner-approve pending, D-запись не внесена) — детали см. phases/P5.md P5.3 Completion Notes |
+| 2026-07-15 | plan-close/sonnet | План закрыт ЦЕЛИКОМ: все 5 фаз терминальны (P1 🟠, P2–P5 🟢), Status → 🟠 Done with deviations. Owner отклонил немедленное развёртывание backlog P5.3 (P6+) — план архивируется как есть, D-запись о P6+ не вносится (Owner-approve не получен) |
 
 ## Обсуждение
 

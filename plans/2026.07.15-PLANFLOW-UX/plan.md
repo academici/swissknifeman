@@ -10,7 +10,7 @@
 | Status | 🟡 In progress (design) |
 | Document Type | Executable Master Plan |
 | Authoring Model | opus |
-| Last Updated | 2026-07-15 (P3 детализирована: 5 items A1–A5 оси A; D9–D11, OQ-3) |
+| Last Updated | 2026-07-15 (P3.1 закрыт 🟠) |
 | Repository | swissknifeman |
 | Related Packages | task (plan-protocol/workflow-craft скиллы, команды plan-*/make-workflow/review), skiller (реестр скиллов, budget), harness (agent-packs dev-loop, run-report) |
 | Execution Mode | phase-first |
@@ -76,7 +76,7 @@
 |:--|:--|:--|:--|
 | P1 | Recon: доказбаза (workflow-авторинг · plan-design клинчи · handoff-конформанс) | 1/1 | 🟢 Done |
 | P2 | Launch-block энфорсмент + ошибка→сразу-фикс | 1/2 | 🟠 Done with deviations |
-| P3 | Workflow-авторинг + авто-ревью (make-workflow ревьюер · base-шаблоны · видимость скилла) | 0/5 | ⬜ Not started |
+| P3 | Workflow-авторинг + авто-ревью (make-workflow ревьюер · base-шаблоны · видимость скилла) | 0/5 | 🟡 In progress |
 | P4 | Contract-first дизайн-флоу + глобальный exec-план + батчинг + адаптивная глубина ревью | 0/3 | ⬜ Not started |
 | P5 | Fix-стратегия plan-design + архитектурный апгрейд скиллов/сниппетов | 0/2 | ⬜ Not started |
 
@@ -108,6 +108,7 @@
 | 2026-07-15 | plan-close(manual)/sonnet/low | Фаза P2 закрыта: Phase Handoff заполнен (агрегат Known Deviations из P2.1/P2.2), handoff.md перезаписан (after P2), lint прогнан |
 | 2026-07-15 | plan-design/opus | P3 детализирована (5 items = recon A1–A5, ось A) — ТЗ см. phases/P3.md P3.1–P3.5. D9–D11; OQ-3 (канал доставки гейта); Обсуждение №5 (pre-mortem рекалибровки); v0.2.0→0.3.0 |
 | 2026-07-15 | remediation(bookkeeping)/sonnet/low | Ремедиация: `skiller registry` (дрейф skills.json/budget.md устранён, validate.sh зелёный); §7 Consumed — TELEMETRY-OPT терминален+архивирован, гейт снят |
+| 2026-07-15 | plan-run(manual)/sonnet/high | P3.1 закрыт 🟠 (registry-артефакты вне Files, паттерн P2.1): 3 ложных-RED сняты в make-workflow.md/README/workflow-craft — детали см. phases/P3.md P3.1 Completion Notes |
 
 ## 7. Contracts
 

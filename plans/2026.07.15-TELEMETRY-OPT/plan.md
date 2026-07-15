@@ -65,7 +65,7 @@ Opus/xhigh намеренно, но это самый дорогой рычаг,
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P1 | Workflow completion-signal (анти-релонч) | 1/3 | 🟡 In progress |
+| P1 | Workflow completion-signal (анти-релонч) | 2/3 | 🟡 In progress |
 | P2 | Churn-гейт файл-операций | 0/2 | ⬜ Not started |
 | P3 | Model-routing аудит | 0/2 | ⬜ Not started |
 | P4 | Permission-friction | 0/2 | ⬜ Not started |
@@ -92,6 +92,7 @@ Opus/xhigh намеренно, но это самый дорогой рычаг,
 | 2026-07-15 | plan-design/opus | P5 детализирован (3 items: внутр. аудит ∥ внешний RAG → синтез ROI-backlog), DoR пройден; Routing §3 покрывает P5. P2–P4 намеренно скелеты до discovery |
 | 2026-07-15 | plan-design/opus | P2 детализирован (2 items: инвентаризация churn → file-op-гигиена в anti-drift), DoR пройден; D6 (дисциплина-first, гейт отклонён); Routing §3 покрывает P2.1–P2.2; OQ-3 → P2.1. Детализирован ранее общей дизайн-паузы — churn-кластер самодостаточен по baseline, не зависит от P1.1/P5 discovery |
 | 2026-07-15 | plan-exec/sonnet | P1.1 закрыт: корневая причина 15× dterema-релонча — 11/15 вызовов `resumeFromRunId` ПОСЛЕ правки скрипта (co-разработка воркфлоу в основной сессии), не отсутствие completion-сигнала; OQ-2 → D7 (Resolved) — детали см. phases/P1.md P1.1 Completion Notes |
+| 2026-07-15 | plan-exec/sonnet | P1.2 закрыт: срез `workflow_relaunch` добавлен в run-report hook, группировка по `runId` (fallback `workflowName`) — детали см. phases/P1.md P1.2 Completion Notes |
 
 ## Обсуждение
 

@@ -10,7 +10,7 @@
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | opus |
-| Last Updated | 2026-07-15 (P3.1 закрыт) |
+| Last Updated | 2026-07-15 (P3.2 закрыт, фаза P3 терминальна) |
 | Repository | swissknifeman |
 | Related Packages | harness (run-report hook, permissions), analyst (token_report, digest), task (workflow-craft/routing-команды), skiller (workflow-craft/plan-protocol скиллы) |
 | Execution Mode | phase-first |
@@ -67,7 +67,7 @@ Opus/xhigh намеренно, но это самый дорогой рычаг,
 |:--|:--|:--|:--|
 | P1 | Workflow completion-signal (анти-релонч) | 2/3 | 🟠 Done with deviations |
 | P2 | Churn-гейт файл-операций | 2/2 | 🟢 Done |
-| P3 | Model-routing аудит | 1/2 | 🟡 In progress |
+| P3 | Model-routing аудит | 2/2 | 🟢 Done |
 | P4 | Permission-friction | 0/2 | ⬜ Not started |
 | P5 | Discovery: дальнейшие рычаги токен-экономии (RAG) | 0/3 | ⬜ Not started |
 
@@ -82,6 +82,7 @@ Opus/xhigh намеренно, но это самый дорогой рычаг,
 | D5 | 2026-07-15 | Добавлена discovery-фаза P5 (RAG-развед «на чём ещё сэкономить») поверх known-кластеров; её backlog может переупорядочить P2–P4 по ROI / породить P6+ | P1–P4 закрывают измеренные проблемы, но не исчерпывают рычаги; discovery ищет ЕЩЁ (always-on бюджет, MCP-поверхность, best-practices) до фиксации приоритетов. RAG:— (repo-grounded: запрос Owner + рамки CLAUDE.md «фичу — по факту измеренной проблемы») |
 | D6 | 2026-07-15 | Форма вмешательства P2 (churn) = **дисциплина-first** (CORE-скилл anti-drift), НЕ новый блокирующий хук-гейт; хук-сигнал категоризации отложен до вердикта P2.1 | Edit/Write Claude Code уже нативно гейтят read-before-edit — 46 «not-read-first» это СРАБАТЫВАНИЯ гейта (фейлы в `tool_failures`), а не тихие перезаписи → второй гейт избыточен; churn «100% устраним дисциплиной» (baseline). Alternatives: (A) блокирующий хук-гейт — отклонён (редундантен, добавляет friction на Write); (B) хук-сигнал категоризации в analyst — отложен (churn уже видим в `tool_failures`, analyst его не читает — ценность недоказана, решает P2.1). RAG:— (repo-grounded: контракт тула Edit/Write + `findings/telemetry-baseline.md` 46 not-read-first в tool_failures + `_lib.py:445-447`) |
 | D8 | 2026-07-15 | OQ-1 разрешён → **Вариант A** (аудит по task-командам, не по phase-токенам). Гранулярность P3 = пины `commands/*.md` + телеметрия `analyst token-report --by model` (реализован); Вариант B (phase-токены) отклонён — `--by phase` не реализован (`token_report.py:38-41`, ESCALATION-REQUIRED), схема run-report не несёт токены на workflow-уровне, доработка формата хука вне скоупа. Downgrade correctness-critical пинов — ТОЛЬКО с Owner-одобрением (P3.2), не blanket по цене. **Pre-mortem:** тихий downgrade design/plan-audit/review → деградация качества планов/ревью во ВСЕХ проектах, никем не замечаемая без quality-телеметрии → mitigation: не трогать correctness-critical без Owner + аудит-док как провенанс | Вариант A не блокируется telemetry-gap (данные сразу); точная phase-атрибуция (B) требует доработки run-report вне плана. RAG:— (repo-grounded: `token_report.py:30-41` + `docs/routing.md` + `findings/telemetry-baseline.md`) |
+| D9 | 2026-07-15 | P3.2: вердикт P3.1 применён. **Downgrade применён (Owner-делегировано):** `dev` opus/high→**sonnet/high**, `make-workflow` opus/high→**sonnet/high** (frontmatter+description+body+`skiller registry`+`validate.sh` зелёный). **Keep-Opus подтверждены:** design/plan-design (opus/high), plan-audit/review (opus/xhigh) — правок пинов нет. **research** (needs-Owner) → OQ-4 «Decision pending». Политик-док — секция «Model-routing пинов task-команд» в `docs/routing.md`. Owner-гейт: `AskUserQuestion` по 2 кандидатам → владелец делегировал выбор исполнителю → оба применены по вердикту P3.1 (downgrade-candidate, safety-nets review-gate/статич.ревьюер, Sonnet 5 par/выше на coding-agentic). Fable не рассматривался (дороже Opus). Ось токен-экономии P3 (Opus 8.1M vs Sonnet 5.4M out) | Аудит без применения — потраченная фаза; downgrade correctness-critical = ставка на качество → только Owner-гейт (D8 pre-mortem). RAG:— (repo-grounded: `findings/P3-routing-audit.md` вердикты + Owner-делегирование в сессии P3.2) |
 | D7 | 2026-07-15 | OQ-2 разрешён: `async_launched` + отдельный `<task-notification>` на завершение, и `resumeFromRunId` (resume после правки скрипта с кэшем нетронутого префикса) — ДОКУМЕНТИРОВАННЫЙ, санкционированный контракт тула `Workflow`, не баг ядра. Реальный драйвер 15× в dterema (657a7deb) — 11 из 15 вызовов были `resume` ПОСЛЕ правки скрипта воркфлоу (co-разработка воркфлоу внутри основной сессии: relative-path баг, top-level `return`, gate-промпт без scope, docblock/pint-форматирование, дважды правился review-промпт) — токен-жор от нестабильности только что написанного скрипта + отладки в основной сессии, не от «недоставленного» completion-сигнала (сигнал дошёл — session дождалась `<task-notification>` и корректно среагировала TaskStop'ом). D3 сужен: профилактика остаётся детекция+guidance (ядро не патчим), но детектор P1.2 обязан различать «resume-цикл отладки» (штатно) от «висящего async без notification к концу сессии» (реальная аномалия) | RAG:✅ (первичный источник — JSONSchema-описание тула `Workflow` в системном промпте, дословные цитаты; вторичная сверка `claude-code-guide` по публичным докам — COULD NOT VERIFY на этом уровне детализации, не противоречит) + repo-grounded (транскрипт `657a7deb-0784-4368-8f18-b49db286f595.jsonl` построчно, см. `findings/P1-workflow-rootcause.md`) |
 
 ## 6. Update Log
@@ -99,6 +100,7 @@ Opus/xhigh намеренно, но это самый дорогой рычаг,
 | 2026-07-15 | plan-exec/sonnet | P2.1 закрыт: пере-агрегация 114 run-reports — reread(342) доминирует над Edit/Write edit-fail(55); нативный read-гейт подтверждён по факту; вердикт «дисциплина, не хук-сигнал» (OQ-3 → Resolved, совпал с D6) — детали см. phases/P2.md P2.1 Completion Notes |
 | 2026-07-15 | plan-exec/sonnet | P2.2 закрыт, фаза P2 терминальна: file-op-гигиена (read-before-edit/якорь/анти-reread) в CORE-скилле `anti-drift` (RU→EN, version 0.3.0) — детали см. phases/P2.md P2.2 Completion Notes |
 | 2026-07-15 | manual/opus/high | P3.1 закрыт: аудит 7 Opus-пинов (keep×4 correctness-critical / downgrade-cand×2 dev·make-workflow / needs-Owner×1 research); Fable исключён (дороже Opus); RAG:✅ 2026-07 — детали см. phases/P3.md P3.1 Completion Notes |
+| 2026-07-15 | manual/opus/high | P3.2 закрыт, фаза P3 терминальна: вердикт применён — dev/make-workflow → sonnet/high (Owner-делегировано), keep-Opus×4 подтверждены, research → OQ-4; политик-док «Model-routing пинов task-команд» в docs/routing.md; D9 — детали см. phases/P3.md P3.2 Completion Notes |
 
 ## Обсуждение
 

@@ -10,7 +10,7 @@
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | opus |
-| Last Updated | 2026-07-15 (P3.2 закрыт, фаза P3 терминальна) |
+| Last Updated | 2026-07-15 (P4.1 закрыт — DENY-инвентаризация) |
 | Repository | swissknifeman |
 | Related Packages | harness (run-report hook, permissions), analyst (token_report, digest), task (workflow-craft/routing-команды), skiller (workflow-craft/plan-protocol скиллы) |
 | Execution Mode | phase-first |
@@ -56,9 +56,8 @@ Opus/xhigh намеренно, но это самый дорогой рычаг,
 | P3.1–P3.2 | opus/high + perplexity-web/context7 | manual | routing-policy аудит = архитектурное решение; effort high+ MANDATORY; RAG на model-capabilities в основной сессии |
 | P5.1 | sonnet/medium | plan-exec | внутренний аудит инструментом `skiller budget` — детерминированный, дефолты §9 |
 | P5.2 | fable/medium | manual | внешний RAG-развед — токен-дёшево (D1), fable вне пина plan-exec |
+| P4.1–P4.2 | sonnet/medium | plan-exec | repo-grounded пере-агрегация DENY + дисциплина-правка скилла (зеркало P2); детерминированная Validation; внешнего RAG нет. Protection-surface (permissions/auto-approve/safe-dirs) — Owner-gated, вынесено в OQ-5, командой НЕ применяется |
 | P5.3 | opus/high | manual | синтез ROI + рекомендация приоритизации = архитектурное решение |
-
-<P4 — скелет; routing проставится при детализации фазы (`/task:plan-design <ID> Pn`).>
 <P5.1 ∥ P5.2 независимы → орк-кандидат: parallel(P5.1, P5.2) → P5.3 (при исполнении фазы).>
 
 ## 4. Phase Index & Status Board
@@ -68,7 +67,7 @@ Opus/xhigh намеренно, но это самый дорогой рычаг,
 | P1 | Workflow completion-signal (анти-релонч) | 2/3 | 🟠 Done with deviations |
 | P2 | Churn-гейт файл-операций | 2/2 | 🟢 Done |
 | P3 | Model-routing аудит | 2/2 | 🟢 Done |
-| P4 | Permission-friction | 0/2 | ⬜ Not started |
+| P4 | Permission-friction | 1/2 | 🟡 In progress |
 | P5 | Discovery: дальнейшие рычаги токен-экономии (RAG) | 0/3 | ⬜ Not started |
 
 ## 5. Decision Log
@@ -83,6 +82,7 @@ Opus/xhigh намеренно, но это самый дорогой рычаг,
 | D6 | 2026-07-15 | Форма вмешательства P2 (churn) = **дисциплина-first** (CORE-скилл anti-drift), НЕ новый блокирующий хук-гейт; хук-сигнал категоризации отложен до вердикта P2.1 | Edit/Write Claude Code уже нативно гейтят read-before-edit — 46 «not-read-first» это СРАБАТЫВАНИЯ гейта (фейлы в `tool_failures`), а не тихие перезаписи → второй гейт избыточен; churn «100% устраним дисциплиной» (baseline). Alternatives: (A) блокирующий хук-гейт — отклонён (редундантен, добавляет friction на Write); (B) хук-сигнал категоризации в analyst — отложен (churn уже видим в `tool_failures`, analyst его не читает — ценность недоказана, решает P2.1). RAG:— (repo-grounded: контракт тула Edit/Write + `findings/telemetry-baseline.md` 46 not-read-first в tool_failures + `_lib.py:445-447`) |
 | D8 | 2026-07-15 | OQ-1 разрешён → **Вариант A** (аудит по task-командам, не по phase-токенам). Гранулярность P3 = пины `commands/*.md` + телеметрия `analyst token-report --by model` (реализован); Вариант B (phase-токены) отклонён — `--by phase` не реализован (`token_report.py:38-41`, ESCALATION-REQUIRED), схема run-report не несёт токены на workflow-уровне, доработка формата хука вне скоупа. Downgrade correctness-critical пинов — ТОЛЬКО с Owner-одобрением (P3.2), не blanket по цене. **Pre-mortem:** тихий downgrade design/plan-audit/review → деградация качества планов/ревью во ВСЕХ проектах, никем не замечаемая без quality-телеметрии → mitigation: не трогать correctness-critical без Owner + аудит-док как провенанс | Вариант A не блокируется telemetry-gap (данные сразу); точная phase-атрибуция (B) требует доработки run-report вне плана. RAG:— (repo-grounded: `token_report.py:30-41` + `docs/routing.md` + `findings/telemetry-baseline.md`) |
 | D9 | 2026-07-15 | P3.2: вердикт P3.1 применён. **Downgrade применён (Owner-делегировано):** `dev` opus/high→**sonnet/high**, `make-workflow` opus/high→**sonnet/high** (frontmatter+description+body+`skiller registry`+`validate.sh` зелёный). **Keep-Opus подтверждены:** design/plan-design (opus/high), plan-audit/review (opus/xhigh) — правок пинов нет. **research** (needs-Owner) → OQ-4 «Decision pending». Политик-док — секция «Model-routing пинов task-команд» в `docs/routing.md`. Owner-гейт: `AskUserQuestion` по 2 кандидатам → владелец делегировал выбор исполнителю → оба применены по вердикту P3.1 (downgrade-candidate, safety-nets review-gate/статич.ревьюер, Sonnet 5 par/выше на coding-agentic). Fable не рассматривался (дороже Opus). Ось токен-экономии P3 (Opus 8.1M vs Sonnet 5.4M out) | Аудит без применения — потраченная фаза; downgrade correctness-critical = ставка на качество → только Owner-гейт (D8 pre-mortem). RAG:— (repo-grounded: `findings/P3-routing-audit.md` вердикты + Owner-делегирование в сессии P3.2) |
+| D10 | 2026-07-15 | **P4 probe-реframe.** Baseline-гипотеза кластера 4 («118 DENY(policy) = rm в защищённых → рычаг `harness safe-dirs`») **частична**: design-time probe над `*/.claude/runs/*.json` (166 run-reports, паттерн `Permission to use * has been denied` в `tool_failures`) → 124 денаев, **Bash 96** — подавляюще **компаунд/пайп read-only цепочки** (`cd;ls;grep;cat`), денайнутые atomic allow-matcher'ом; деструктивный `rm` — меньшинство; Read-«денаи» probe'ом как policy НЕ подтверждены. Рычаг смещается с safe-dirs(rm) на allow-matchability read-only Bash. **Форма ремедиации = дисциплина-first (зеркало D6), защиту НЕ ослабляем:** дисциплина-правило «DENY терминален для формы — не retry verbatim, адаптировать/штатный тул» (устраняет ПОВТОРНЫЕ тычки — цель кластера); protection-surface (permissions/auto-approve компаунд-парсинг/safe-dirs) — только Owner-gated (OQ-5), plan-exec не применяет. P4.1 пере-деривит точные цифры на полном окне и классифицирует бакеты (a компаунд-фрикция / b корректный-deny-агент-ошибка / c легит-блок-Owner). Pre-mortem: слепое ослабление allow-правил ради числа 118 → дыра в защите → mitigation: бакет-(c) не применять без Owner, классификация по РЕАЛЬНЫМ allow/deny-правилам, не «на глаз» | Планировать на falsified-гипотезе нельзя (CLAUDE.md методология: до-проверять аудит на свежих данных); зеркалит D6 (native-гейт корректен, чинит дисциплина, не второй гейт — здесь гейт напротив слишком строг для read-only, но ослабление = protection-surface → Owner). RAG:— (repo-grounded: probe над run-reports + `_lib.py:450-452` tool_failures shape + `settings.base.json` allow/deny + `auto-approve/` deny-порядок) |
 | D7 | 2026-07-15 | OQ-2 разрешён: `async_launched` + отдельный `<task-notification>` на завершение, и `resumeFromRunId` (resume после правки скрипта с кэшем нетронутого префикса) — ДОКУМЕНТИРОВАННЫЙ, санкционированный контракт тула `Workflow`, не баг ядра. Реальный драйвер 15× в dterema (657a7deb) — 11 из 15 вызовов были `resume` ПОСЛЕ правки скрипта воркфлоу (co-разработка воркфлоу внутри основной сессии: relative-path баг, top-level `return`, gate-промпт без scope, docblock/pint-форматирование, дважды правился review-промпт) — токен-жор от нестабильности только что написанного скрипта + отладки в основной сессии, не от «недоставленного» completion-сигнала (сигнал дошёл — session дождалась `<task-notification>` и корректно среагировала TaskStop'ом). D3 сужен: профилактика остаётся детекция+guidance (ядро не патчим), но детектор P1.2 обязан различать «resume-цикл отладки» (штатно) от «висящего async без notification к концу сессии» (реальная аномалия) | RAG:✅ (первичный источник — JSONSchema-описание тула `Workflow` в системном промпте, дословные цитаты; вторичная сверка `claude-code-guide` по публичным докам — COULD NOT VERIFY на этом уровне детализации, не противоречит) + repo-grounded (транскрипт `657a7deb-0784-4368-8f18-b49db286f595.jsonl` построчно, см. `findings/P1-workflow-rootcause.md`) |
 
 ## 6. Update Log
@@ -101,6 +101,8 @@ Opus/xhigh намеренно, но это самый дорогой рычаг,
 | 2026-07-15 | plan-exec/sonnet | P2.2 закрыт, фаза P2 терминальна: file-op-гигиена (read-before-edit/якорь/анти-reread) в CORE-скилле `anti-drift` (RU→EN, version 0.3.0) — детали см. phases/P2.md P2.2 Completion Notes |
 | 2026-07-15 | manual/opus/high | P3.1 закрыт: аудит 7 Opus-пинов (keep×4 correctness-critical / downgrade-cand×2 dev·make-workflow / needs-Owner×1 research); Fable исключён (дороже Opus); RAG:✅ 2026-07 — детали см. phases/P3.md P3.1 Completion Notes |
 | 2026-07-15 | manual/opus/high | P3.2 закрыт, фаза P3 терминальна: вердикт применён — dev/make-workflow → sonnet/high (Owner-делегировано), keep-Opus×4 подтверждены, research → OQ-4; политик-док «Model-routing пинов task-команд» в docs/routing.md; D9 — детали см. phases/P3.md P3.2 Completion Notes |
+| 2026-07-15 | plan-design/opus | P4 детализирован (2 items), DoR пройден; D10 (probe-реframe: доминанта — компаунд read-only Bash, не rm; дисциплина-first, protection-surface Owner-gated); Routing §3 (P4.1–P4.2 sonnet/medium plan-exec); OQ-5 + Discussion №3 — детали см. phases/P4.md |
+| 2026-07-15 | plan-exec/sonnet | P4.1 закрыт: полное окно 169 run-reports, 98 policy-shaped DENY (Bash 75/Read 23), бакеты a=16(16%)/b=46(47%)/c=36(37%) — на полном окне (a) компаунд-Bash МЕНЬШИНСТВО (уточнение к D10), rm-гипотеза не подтвердилась (D10 if-then не сработал) — детали см. phases/P4.md P4.1 Completion Notes |
 
 ## Обсуждение
 
@@ -121,3 +123,19 @@ Opus/xhigh намеренно, но это самый дорогой рычаг,
 - **Вариант B — адаптивный** (доля async без парного завершения). Точнее, но сложнее и хрупче на малых N.
 
 **Статус:** Resolved → D4 (фиксированный, refinable)
+
+### 3 — Форма ремедиации permission-friction (P4): дисциплина vs preset-tuning vs dedicated-сигнал
+
+- **(рекоменд.) Ось A — дисциплина.** Правило «DENY терминален для формы — не retry verbatim,
+  адаптировать/штатный тул» в CORE-скилле (зеркало P2.2). Плюсы: бьёт прямо в цель («убрать
+  ПОВТОРНЫЕ тычки»), защиту не трогает, plan-exec-able. Минусы: не расширяет auto-approve —
+  легитимный компаунд read-only всё равно требует адаптации агентом.
+- **Ось B — тюнинг permissions/auto-approve.** Научить auto-approve пропускать компаунд READ-ONLY
+  (сплит по `;`/`&&`/`|`, все под-команды в allow-set → approve). Плюсы: выше рычаг, снимает
+  фрикцию у источника. Минусы: **protection-surface** (баг парсинга = пропуск скрытой деструктивной
+  под-команды), нетривиальный код → Owner + возможный ре-дизайн, не plan-exec.
+- **Ось C — dedicated `permission_friction`-сигнал в run-report.** Плюсы: явная телеметрия.
+  Минусы: DENY уже видим в `tool_failures` (зеркало OQ-3 — сигнал невостребован), ценность недоказана.
+
+**Статус:** Decision pending (нужен владелец) → OQ-5. Ось A применяется в P4.2 (дефолт D10);
+оси B/C — под Owner (protection-surface / недоказанная ценность), конкретные кандидаты из данных P4.1.

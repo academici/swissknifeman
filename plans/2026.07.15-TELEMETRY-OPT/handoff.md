@@ -1,45 +1,51 @@
-# HANDOFF — 2026-07-15 — after P3.2
+# HANDOFF — 2026-07-15 — after P4.1
 
-**Next:** P4 (permission-friction) — **СКЕЛЕТ**, требует детализации через `/task:plan-design`
-до исполнения. Альтернатива — P5 (discovery, детализирован, независим от P3/P4).
+**Next:** P4.2 (ремедиация: дисциплина-first + Owner-gated preset/hook) — детализирован, Exec=plan-exec.
 
 | Параметр | Значение |
 |:--|:--|
-| Model | opus (детализация P4 = дизайн, §3 Routing) |
-| Thinking | high |
-| Context | continue (/clear) |
-| Суть | Фаза P3 закрыта (2/2 🟢). Дальше — детализация P4 (permission-friction) ИЛИ исполнение P5 (discovery) |
+| Model | sonnet |
+| Thinking | medium |
+| Context | continue (/clear) — ручной item |
+| Суть | Применить вердикт P4.1: дисциплина-правило (терминальность DENY-формы) в скилл-хост + вынос бакета (c)/protection-surface в OQ-5 |
 
 ```
-Детализируй фазу P4 (permission-friction) мастер-плана 2026.07.15-TELEMETRY-OPT под Opus/high: /task:plan-design 2026.07.15-TELEMETRY-OPT P4. Прочитай plan.md (§1 Context кластер 4 — 118 DENY(policy), Phase Index) + phases/P4.md (скелет) + findings/telemetry-baseline.md. Разложи P4 на item'ы (DoR), проставь Routing §3, пройди DoR-гейт.
+/task:plan-exec 2026.07.15-TELEMETRY-OPT P4.2
 ```
 
-**Done:** P3.2 закрыт, **фаза P3 терминальна (2/2 🟢)**. Вердикт P3.1 применён:
-- **Downgrade Opus→Sonnet 5/high (2):** `dev`, `make-workflow` — Owner-делегировал выбор
-  исполнителю (`AskUserQuestion` → «выбор оптимальных моделей — твоя работа»), оба применены по
-  вердикту P3.1 (downgrade-candidate, safety-nets review-gate / статич.выходной ревьюер; Sonnet 5
-  par/выше на coding-agentic 80.4/74.6). Frontmatter `model` + строка «Пинит Sonnet/high» в
-  `description` + body-когерентность + `skiller registry` (идемпотентен) + `validate.sh` зелёный.
-- **Keep-Opus подтверждены (4):** `design`/`plan-design` (opus/high), `plan-audit`/`review`
-  (opus/xhigh) — правок пинов НЕТ, только политик-док.
-- **research (needs-Owner) → OQ-4** «Decision pending (нужен владелец)», низкий приоритет.
-- **Политик-док:** секция «Model-routing пинов task-команд» в `docs/routing.md` (рационал +
-  вердикт всех 7 пинов, правило синхронизации frontmatter↔description↔registry). D9 в plan.md.
+**Done:** P4.1 закрыт — воспроизводимая инвентаризация DENY-фрикции на полном окне run-report'ов
+(169 файлов, `*/.claude/runs/*.json`). Policy-shaped DENY = **98** (Bash `Permission to use …
+has been denied.` = 75; Read `File is in a directory that is denied…` = 23) — ниже
+baseline-118/probe-124, расхождение объяснено методологически (канонический фильтр отсекает
+non-policy шум типа `mysql: Access denied`). Бакеты: **a (компаунд read-only) = 16 (16%)**,
+**b (protection-deny by-design) = 46 (47%)**, **c (needs-Owner, ambiguous) = 36 (37%)**. Ключевое
+уточнение к D10/Phase Context: на полном окне бакет (a) — МЕНЬШИНСТВО, не доминанта; при этом
+D10 if-then (rm-доминирование) не сработал (rm-форм всего 3/98) → формальной эскалации не
+требуется, но рекомендация P4.2 сформулирована ОБЩЕЙ дисциплиной (не завязана только на
+компаунд-Bash). Findings-док: `findings/P4-deny-inventory.md` (бакет-таблица, топ-10 форм,
+рекомендация, footer «Проверка» — repo-grounded, RAG не требовался). `plan-lint` — 0 ERROR/0 WARN
+(K=0). Детали — `phases/P4.md` P4.1 Completion Notes.
 
-**Remaining:** P4 (permission-friction, СКЕЛЕТ — детализация обязательна); P5 (discovery,
-детализирован, 3 items). P1 терминальна (🟠), P2 терминальна (🟢), P3 терминальна (🟢).
-**Sources of truth:** `docs/routing.md` §Model-routing пинов task-команд (политика) ·
-`packages/task/commands/{dev,make-workflow}.md` (новые пины sonnet/high) · plan.md (D9, Routing §3) ·
-phases/P3.md P3.2 Completion Notes + Phase Handoff · open-questions.md OQ-4 ·
-findings/P3-routing-audit.md (вердикты P3.1).
-**Open risks:** downgrade dev/make-workflow — качество нарезки срезов / генерации workflow под
-Sonnet 5 не измерено (нет quality-телеметрии); safety-nets (review-gate / статич.выходной
-ревьюер) — страховка, но не гарантия. Откат — вернуть `model: opus` во frontmatter + синхронно
-description + `skiller registry`.
+**Remaining:** P4.2 (исполнение — дисциплина-правило в скилл-хост, кандидат `packages/skiller/
+skills/general/anti-drift`, зеркало P2.2, + OQ-5 обновление); P5 (discovery, 3 items, независим).
+P1 терминальна (🟠), P2/P3 терминальны (🟢). После P4.2 — фаза P4 терминальна →
+`/task:plan-audit 2026.07.15-TELEMETRY-OPT P4`.
+
+**Sources of truth:** `phases/P4.md` (ТЗ P4.2 + P4.1 Completion Notes) · `findings/
+P4-deny-inventory.md` (вердикт + рекомендация P4.1) · plan.md (D10, Routing §3) ·
+`open-questions.md` (OQ-5).
+
+**Open risks:** бакет (c) needs-Owner (36/98, 37%) остаётся неклассифицированным по причине —
+P4.2 обязан вынести его в OQ-5, НЕ угадывать; гипотеза формы #1 (`[POSSIBLE-DEFECT]` — возможное
+отсутствие auto-approve хука в части проектов) не верифицирована, отдельное расследование вне
+скоупа плана. P4.1 нашла, что D10-формулировка «компаунд подавляюще доминирует» не подтвердилась
+на полном окне — P4.2 не должен формулировать дисциплину узко «только для компаунда», рекомендация
+P4.1 это уже учитывает (общая формулировка).
+
 **Workarounds/Deferred/Open questions:**
 - workarounds: —
-- deferred: `--by phase` в analyst (токен-атрибуция на workflow-уровень) — не реализовано
-  (`token_report.py:38-41`); ROI пер-команды downgrade НЕ квантифицируется → приоритет trial'ов
-  качественный (по downgrade-risk), не по измеренной экономии.
-- open_questions: **OQ-4** — `research` opus/high → возможный A/B `sonnet/high` (Decision pending,
-  владелец Dmitry Vostrikov, низкий приоритет). OQ-1/OQ-2/OQ-3 Resolved.
+- deferred: ось B (auto-approve компаунд-парсинг read-only) + ось C (dedicated
+  `permission_friction`-сигнал в run-report) — Owner-gated (OQ-5), не в скоупе plan-exec P4.
+- open_questions: **OQ-5** — тюнинг permissions/auto-approve (ось B), dedicated-сигнал (ось C),
+  бакет-(c) needs-Owner формы (P4.1) — Decision pending, владелец Dmitry Vostrikov. **OQ-4** —
+  research opus→sonnet (Decision pending). OQ-1/OQ-2/OQ-3 Resolved.

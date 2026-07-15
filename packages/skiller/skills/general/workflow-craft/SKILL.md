@@ -132,6 +132,31 @@ tied to a master plan (a one-off run outside `plans/`) that's an exception,
 but the canon is mandatory whenever a plan exists (see `plan-protocol` — the
 "two homes" scheme).
 
+### 4.1 Anti-relaunch discipline (co-developing a workflow inside a session)
+
+The run-report field `workflow_relaunch` (harness detector `_lib.py`, fires at
+≥3 launches/resumes of one workflow in one session) is not a core-tool bug:
+`resumeFromRunId` after an `Edit` to the script is a documented, sanctioned
+pattern ("the longest unchanged prefix of agent() calls returns cached
+results instantly"). Field precedent (`plans/2026.07.15-TELEMETRY-OPT/
+findings/P1-workflow-rootcause.md`): a dterema session called `Workflow` 15×
+in a row — not "relaunch without a signal", but **8 rounds of fixing the
+workflow script from inside the main interactive session** (relative-path
+bug, top-level `return`, gate prompt missing scope, docblock/formatting,
+review-prompt text fixed twice), each fix → commit → `resumeFromRunId`. The
+signal is a diagnostic proxy — "script was written and fanned out untested" —
+not an alarm.
+
+**Rule:** before calling `Workflow` on a script you just wrote or heavily
+edited, dry-run its syntax/logic on a minimal data slice (or at least
+`node --check`) in an isolated dev-loop, rather than treating the fan-out
+itself as your linter. If `workflow_relaunch` still fires (many resumes on
+one script this session) — that's not cause for alarm (the process is
+sanctioned), but it IS cause to fix one bug per resume deliberately rather
+than silently piling up iterations: note in the script comment what each fix
+addressed, so `analyst digest` (candidate lesson `workflow-relaunch`) and the
+next session see the fix history, not just the final version.
+
 ### 5. RAG option for non-standard orchestration
 
 If the task needs orchestration the 4 templates don't cover directly (rare,
@@ -165,4 +190,4 @@ unavailable — don't pass off unverified orchestration as verified.
   orchestration (step 5).
 - `general/verify-claims` — when and how to verify an external fact at all.
 
-<!-- ru-source-sha256: 316f7cd3f03a12e2132d9083ff7a6aee3cdd1a732f236f232a8463e5694f06d9 -->
+<!-- ru-source-sha256: 87bd0d13768d91376e2f46ccf0f2352a061e1c2bdb7c203b890d4c48712545fb -->

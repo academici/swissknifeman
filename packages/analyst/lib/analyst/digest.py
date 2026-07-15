@@ -10,7 +10,13 @@
   C. pathology — детектор `core.pathology.detect` нашёл патологию С готовой ремедиацией
      (file-reread/tool-error-loop/protected-write/no-verify) И код РЕЦИДИВИРУЕТ: та же
      патология встречалась ≥2 раз в последних 5 прогонах проекта. Разовое срабатывание —
-     шум одной сессии, урок не создаёт (остальное — сигнал для `maind analyze`, не для памяти).
+     шум одной сессии, урок не создаёт (остальное — сигнал для `maind analyze`, не для памяти);
+  D. workflow_relaunch — run-report hook (P1.2, `_lib.py`) уже сгруппировал вызовы `Workflow`
+     по `runId`/имени и отдал готовую группу `{name, count, statuses}` при `count ≥
+     _WF_RELAUNCH_MIN`. Диагностический, не тревожный сигнал (findings/P1-workflow-rootcause.md,
+     plans/2026.07.15-TELEMETRY-OPT): «воркфлоу-скрипт потребовал N итераций resume/отладки
+     внутри одной сессии» — не ошибка (штатный `resumeFromRunId`-паттерн), но кандидат-урок
+     «доводить скрипт в изолированном dev-loop, не в основной интерактивной сессии».
 
 Кандидаты пишутся в ephemeral (LOCAL, unreviewed). Суть фикса человек уточняет на `analyst review`;
 промоут — только человек. Извлекатели A/B — ЧИСТЫЕ функции (run_report → [lesson]) ради
@@ -244,15 +250,41 @@ def extract_pathologies(run_report, project_path):
     return out
 
 
+def extract_workflow_relaunch(run_report, *, scope, project):
+    """Сигнал D: срез `workflow_relaunch` run-report'а (P1.2) — готовые группы
+    `{name, count, statuses}` уже отфильтрованы хуком по порогу `_WF_RELAUNCH_MIN`.
+    Диагностический кандидат, не «ошибка»: N resume/relaunch одного воркфлоу в одной
+    сессии — прокси «скрипт нестабилен, дебажился на лету внутри основной сессии»
+    (findings/P1-workflow-rootcause.md)."""
+    sid = run_report.get("session_id") or ""
+    out = []
+    for g in (run_report.get("workflow_relaunch") or []):
+        if not isinstance(g, dict) or not g.get("name") or not g.get("count"):
+            continue
+        name, count, statuses = g["name"], g["count"], g.get("statuses") or {}
+        trigger = f"workflow «{name}» перезапускался/резюмился {count}× в одной сессии"
+        action = ("довести скрипт воркфлоу до стабильного состояния в изолированном "
+                  "dev-loop ДО фан-аута, не отлаживать его правками внутри основной "
+                  "интерактивной сессии (resumeFromRunId после Edit — штатно, но частое "
+                  "повторение сигналит незрелость только что написанного скрипта)")
+        out.append(new_lesson(
+            trigger=trigger, action=action, kind="gotcha", scope=scope,
+            session_id=sid, project=project, detector="workflow-relaunch",
+            evidence=[f"session:{sid}", f"count:{count}"],
+            meta={"name": name, "statuses": statuses}))
+    return out
+
+
 def extract_candidates(run_report, *, scope, project, project_path=None):
-    """Все высокоточные кандидаты прогона (A + B + C). Дубли по id схлопываются на записи.
+    """Все высокоточные кандидаты прогона (A + B + C + D). Дубли по id схлопываются на записи.
 
     project_path — опционален (обратная совместимость чистых A/B-вызовов без пути на
     диске, см. тесты): без него сигнал C (требует историю прогонов) просто не запускается."""
     if not isinstance(run_report, dict):
         return []
     out = (extract_resolved_failures(run_report, scope=scope, project=project)
-           + extract_workarounds(run_report, scope=scope, project=project))
+           + extract_workarounds(run_report, scope=scope, project=project)
+           + extract_workflow_relaunch(run_report, scope=scope, project=project))
     if project_path is not None:
         out += extract_pathologies(run_report, project_path)
     return out

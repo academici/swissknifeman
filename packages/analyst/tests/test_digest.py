@@ -1,4 +1,4 @@
-"""Тесты digest: чистые извлекатели (сигналы A/B/C) + защитная деградация + запись в ephemeral."""
+"""Тесты digest: чистые извлекатели (сигналы A/B/C/D) + защитная деградация + запись в ephemeral."""
 import json
 import os
 import tempfile
@@ -121,6 +121,28 @@ class TestExtractors(unittest.TestCase):
             devloop={"workarounds": ["обходка X"]})
         cands = digest.extract_candidates(rr, scope="s", project="p")
         self.assertEqual(len(cands), 2)
+
+    def test_workflow_relaunch(self):
+        rr = _run_report(workflow_relaunch=[
+            {"name": "wf-dterema-site-p3-api", "count": 11,
+             "statuses": {"async_launched": 11}}])
+        cands = digest.extract_workflow_relaunch(rr, scope="project:proj", project="proj")
+        self.assertEqual(len(cands), 1)
+        self.assertEqual(cands[0]["provenance"]["detector"], "workflow-relaunch")
+        self.assertIn("11", cands[0]["trigger"])
+        self.assertIn("wf-dterema-site-p3-api", cands[0]["trigger"])
+        self.assertIn("count:11", cands[0]["evidence"])
+
+    def test_workflow_relaunch_empty_no_lesson(self):
+        rr = _run_report(workflow_relaunch=[])
+        self.assertEqual(digest.extract_workflow_relaunch(rr, scope="s", project="p"), [])
+
+    def test_workflow_relaunch_via_extract_candidates(self):
+        rr = _run_report(workflow_relaunch=[
+            {"name": "wf-x", "count": 3, "statuses": {"async_launched": 3}}])
+        cands = digest.extract_candidates(rr, scope="s", project="p")
+        detectors = {c["provenance"]["detector"] for c in cands}
+        self.assertIn("workflow-relaunch", detectors)
 
 
 class TestExtractPathologies(unittest.TestCase):

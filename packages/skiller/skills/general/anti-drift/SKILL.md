@@ -1,7 +1,7 @@
 ---
 name: anti-drift
 bucket: general
-version: 0.3.0
+version: 0.4.0
 description: "Discipline against agent rabbit-holing: think before coding, simplicity first, surgical edits, circuit-breaker on dragging iterations."
 risk: read
 persona: oss-dev
@@ -68,6 +68,23 @@ Catches three degradation patterns: layered edits (new layer atop old instead of
   - Missing package functionality → **issue against the package**, temporary impl on consumer side (`app/`/`Modules/`) + `TODO`; don't edit the package "along the way".
   - Deep protocol (proposal → ADR → SemVer) → `package-contribution-protocol`.
 
+## DENY circuit-breaker (permission denied)
+
+A measured (not hypothetical) source of wasted moves: the agent gets `DENY(policy)`
+on a command and re-issues the SAME form almost unchanged — pure repeated churn, no
+progress. Rule: **a permission-gate denial is terminal for the exact command FORM
+within the session** — never re-issue it verbatim. The next attempt must be one of:
+
+1. **Atomic/allow-matchable alternative** — e.g. split a denied compound chain
+   (`cd X; ls; grep …`) into separate atomic commands, each in the allow-set.
+2. **Standard tool instead of manual action** — e.g. `skiller`/`maind` instead of a
+   manual `rm` on a managed asset (skill, hub config).
+3. **Explicit question to the user** if the form is ambiguously denied (unclear what
+   in the allow/deny rules rejected it) — don't guess or keep varying the same form.
+
+Check: if the next command is the same form that already got DENY'd this session,
+differing only in arguments/paths — stop, that's a repeat, not an alternative.
+
 ## Shared resources & flaky tools
 
 Long-lived daemons/servers (browser pools like perplexity-web-mcp, dev servers, LSP) serve OTHER agents concurrently.
@@ -88,4 +105,4 @@ Long-lived daemons/servers (browser pools like perplexity-web-mcp, dev servers, 
 
 `snippets/claude-md-anti-drift.md` — ready-made rules block for the target project's CLAUDE.md (agent applies thresholds without an explicit skill call).
 
-<!-- ru-source-sha256: 0e0901faeb2e8d383a078f0228402e6efe5592a0d52efd03a48d8073ff98eb0a -->
+<!-- ru-source-sha256: 688d0a494558c7c7f588f5b4c8899f6e8edc41ba865ad68941b1d9e3539d235d -->

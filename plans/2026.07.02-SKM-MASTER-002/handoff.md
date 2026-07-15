@@ -1,10 +1,21 @@
 # HANDOFF — 2026-07-02 — after P1.10
 
-**Next:** /task:plan-exec 2026.07.02-SKM-MASTER-002 P8.5 — НО не раньше ~2026-07-09 (лучше ~2026-07-16):
-item тайм-гейтовый (пин baseline пилотов требует 1–2 недель накопленного usage-trend).
-До этой даты по плану делать нечего — сессионная часть волны 4 исполнена целиком.
-Ранний старт возможен только для «бес-пиновой» части P8.2 (plan-design пилотных планов),
-с явной пометкой baseline-сравнения как отложенного.
+**Next:** ОЖИДАНИЕ: ≥2026-07-16 (baseline usage-trend ≥1–2 недель) → /task:plan-exec 2026.07.02-SKM-MASTER-002 P8.5
+
+| Параметр | Значение |
+|:--|:--|
+| Model | sonnet |
+| Thinking | medium |
+| Context | continue (/clear) — ручной item |
+| Суть | P8.5 — пин baseline пилотов после накопления usage-trend (тайм-гейтовый item) |
+
+````
+# НЕ раньше: baseline usage-trend ≥1–2 недель, ≥2026-07-16
+/task:plan-exec 2026.07.02-SKM-MASTER-002 P8.5 — cold-start: plans/2026.07.02-SKM-MASTER-002/plan.md · phases/P8.md (item P8.5); гейт: пин baseline требует накопленного usage-trend
+````
+
+Ранний старт возможен только для «бес-пиновой» части P8.2 (plan-design пилотных планов), с явной
+пометкой baseline-сравнения как отложенного.
 **Done:** волны 1–4 (сессионная часть). Волна 4 — живой цикл протокола: P5.6 (pack-guard,
 опциональный PreToolUse-слой mutation-защиты off/warn/strict + `harness hooks --pack-guard`)
 и P8.1 (метрики ДО: глобальный хук обновлён до SCHEMA=2 — был протухший SCHEMA=1, дрейф

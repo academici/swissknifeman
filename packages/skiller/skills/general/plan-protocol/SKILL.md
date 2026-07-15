@@ -446,7 +446,7 @@ gated. References like "this session" — only as a supplement. `plan-lint` chec
 contains the launch-block table and a code block (greppable). Under a master plan the general
 session handoff (skill `session-handoff`) collapses here — no second handoff file.
 
-**Allowed `Next` forms** (closed enum, m8/B1/N1/N2 — `plan-lint` accepts EXACTLY these 8
+**Allowed `Next` forms** (closed enum, m8/B1/N1/N2 + D8 — `plan-lint` accepts EXACTLY these 9
 forms; any other form = ERROR listing the allowed ones):
 
 ```text
@@ -461,6 +461,8 @@ forms; any other form = ERROR listing the allowed ones):
 | «план закрыт»                    | все items терминальны, следующий шаг вне протокола |
 | «ЗАПУСК ВРУЧНУЮ: <model/effort>» | Exec = manual (§9): команды нет — launch-block несёт модель
                                      и голый промпт item'а отдельным code-block |
+| «ОЖИДАНИЕ: <условие> → <форма>»  | шаг РЕАЛЕН, но неисполним сейчас (time-gate/накопление
+                                     данных/кросс-план-гейт не терминален) — не дефект, не терминал |
 Иная форма = ERROR plan-lint.
 ```
 
@@ -572,6 +574,25 @@ command, therefore the launch-block:
 
 This is the ONLY place where a manual item's `Context` is defined; `snippets/` quote it and
 introduce no rules of their own.
+
+**The `Next` «ОЖИДАНИЕ: <условие> → <целевая форма>» form (D8).** The next step is REAL but
+NOT executable RIGHT NOW — a HEALTHY wait on external time/state (time-gate, baseline/usage-trend
+accrual, a cross-plan gate not yet terminal), NOT a plan defect. Do not confuse: `🔴 Blocked`/§10
+escalation = a DEFECT (plan diverged from code, needs re-design); «план закрыт» = TERMINAL
+(nothing left to do); «ОЖИДАНИЕ» = a pause before a real step.
+
+- `Next` = `«ОЖИДАНИЕ: <условие> → <целевая форма>»`, where the **condition is STRUCTURAL**: a
+  date `≥ГГГГ-ММ-ДД`, or a gate `<PLAN-ID> Pn терминальна`, or `usage-trend ≥N недель` (not prose
+  "someday later"); the **target form** — any runnable enum form above (usually
+  `/task:plan-exec <ID> Pn.m`);
+- the launch-block carries the **target command** (the one that runs once the gate lifts), and its
+  FIRST code-block line is the **guard `# НЕ раньше: <условие>`** (copy-pastable and honest about
+  present non-executability); `Model`/`Thinking`/`Context` — of the TARGET step;
+- do NOT write a prose caveat on the declaring line (`/task:plan-exec … — НО не раньше …`): it does
+  not copy-paste, and `plan-lint` flags it WARNING (C2), suggesting this form instead.
+
+`plan-lint` resolves the form as `waiting` (BEFORE `exec` — the line embeds the target
+`/task:plan-exec`) and requires a launch-block (like other runnable forms — not exempt).
 
 ## 9. Routing & Thinking Policy (SSOT matrix)
 
@@ -819,4 +840,4 @@ doesn't repay the cost of reconstructing "where did this come from".
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of editing
   vendor copies (section 12).
 
-<!-- ru-source-sha256: 9b32179661d53bec480bd1e29685857612ab6ce91702c18a863dbb865268ec2c -->
+<!-- ru-source-sha256: c87759e9918d452d23015cf2f3d355c6ef42239dbf8904dc9ec4dfac029de79b -->

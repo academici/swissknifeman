@@ -738,6 +738,92 @@ class TestNextDeclarationLine(TmpPlanTestCase):
         self.assertTrue(_errors_containing(diag, "«план закрыт», но не все items терминальны"))
 
 
+class TestWaitingForm(TmpPlanTestCase):
+    """P2.1/D8 — 9-я форма Next «ОЖИДАНИЕ» (waiting): резолв ДО exec, требует
+    launch-block; C2-WARNING на прозаическую gate-оговорку в runnable-форме."""
+
+    def _waiting_handoff(self, plan_id="DEMO-1", *, cond="≥2026-07-16",
+                         target="/task:plan-exec DEMO-1 P1.1", guard=True):
+        guard_line = f"# НЕ раньше: {cond}\n" if guard else ""
+        return f"""# HANDOFF — 2026-07-02 — after P1.1
+
+**Next:** ОЖИДАНИЕ: {cond} → {target}
+
+| Параметр | Значение |
+|:--|:--|
+| Model | sonnet |
+| Thinking | medium |
+| Context | continue (/clear) — ручной item |
+| Суть | закрыть целевой item по снятии гейта |
+
+````
+{guard_line}{target}
+````
+
+**Done:** P1.1 закрыт.
+**Remaining:** целевой шаг ждёт гейта.
+**Sources of truth:** plans/{plan_id}/plan.md · plans/{plan_id}/phases/P1.md
+**Open risks:** —
+**Workarounds/Deferred/Open questions:**
+- workarounds: —
+- deferred: —
+- open_questions: —
+"""
+
+    def test_waiting_form_accepted(self):
+        plan_dir = write_valid_plan(self.root)
+        (plan_dir / "handoff.md").write_text(self._waiting_handoff(), encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+
+    def test_waiting_resolves_before_exec_no_item_ref_error(self):
+        # целевой /task:plan-exec … P9.9 в ОБЪЯВЛЕНИИ не должен резолвиться как exec и ловить
+        # ERROR по несуществующему item'у — форма waiting перехватывает резолвер раньше (D8).
+        plan_dir = write_valid_plan(self.root)
+        ho = self._waiting_handoff(target="/task:plan-exec DEMO-1 P9.9")
+        (plan_dir / "handoff.md").write_text(ho, encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+        self.assertEqual([e for e in diag.errors if "P9.9" in e], [], diag.errors)
+
+    def test_waiting_guard_line_no_c2_warning(self):
+        # guard-строка `# НЕ раньше:` в code-block'е НЕ триггерит C2: сканируется только
+        # строка-объявление, а она резолвится в waiting (не в runnable-форму).
+        plan_dir = write_valid_plan(self.root)
+        (plan_dir / "handoff.md").write_text(self._waiting_handoff(guard=True), encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertEqual([w for w in diag.warnings if "прозу-оговорку" in w], [], diag.warnings)
+
+    def test_waiting_without_launch_block_warns(self):
+        # waiting несёт launch-block как прочие runnable-формы — не exempt (в отличие от «план закрыт»)
+        plan_dir = write_valid_plan(self.root)
+        text = self._waiting_handoff()
+        head, _, tail = text.partition("\n| Параметр | Значение |")
+        _, _, after = tail.partition("````\n\n")
+        (plan_dir / "handoff.md").write_text(head + "\n" + after, encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(any("launch-block" in w for w in diag.warnings), diag.warnings)
+
+    def test_c2_prose_oговорка_in_runnable_form_warns(self):
+        # runnable-форма (exec) + прозаический стем в объявлении = C2-WARNING (не ERROR)
+        plan_dir = write_valid_plan(self.root)
+        ho = plan_dir / "handoff.md"
+        text = ho.read_text(encoding="utf-8")
+        text = text.replace(
+            "**Next:** /task:plan-exec DEMO-1 P1.1",
+            "**Next:** /task:plan-exec DEMO-1 P1.1 — НО не раньше ~2026-07-16 (тайм-гейт)")
+        ho.write_text(text, encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+        self.assertTrue(any("прозу-оговорку" in w for w in diag.warnings), diag.warnings)
+
+    def test_clean_runnable_form_no_c2_warning(self):
+        # чистый exec без стемов — C2 молчит
+        plan_dir = write_valid_plan(self.root)
+        _, diag = _lint(plan_dir)
+        self.assertEqual([w for w in diag.warnings if "прозу-оговорку" in w], [], diag.warnings)
+
+
 class TestArchivePlansNotPhantomPlan(TmpPlanTestCase):
     """N3/D14 — `plans/archive/` сама планом не является (не должна требовать
     plan.md/handoff.md), а `plans/archive/<ID>` линтуется как обычный план."""

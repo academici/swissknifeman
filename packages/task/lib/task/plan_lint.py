@@ -96,7 +96,7 @@ HANDOFF_TITLE_HELP = ("заголовок не соответствует ни �
 # Ровно эта строка — не «любая фаза P0» и не «любой item .0»: расширение = дыра в гейте.
 HANDOFF_TITLE_BOOTSTRAP = "P0.0"
 PLAN_EXEC_RE = re.compile(r"/task:plan-exec\s+(\S+)\s+(P\d+\.\d+)")
-# Форма m8/B1/N1/N2: `handoff.Next` допускает закрытый enum 8 форм (SKILL §8) —
+# Форма m8/B1/N1/N2 (+D8): `handoff.Next` допускает закрытый enum 9 форм (SKILL §8) —
 # ниже регулярки на каждую (кроме plan-exec/«план закрыт», уже объявленных). Порядок
 # проверки в резолвере (см. lint_plan) идёт от специфичной к общей: design-item ДО
 # design-phase (иначе `(?!\.\d)`-lookahead фазовой формы просто не даст матчу проиграть
@@ -112,11 +112,12 @@ PLAN_AUDIT_RE = re.compile(r"/task:plan-audit\s+(\S+)\s+(P\d+)(?!\.\d)\b")
 PLAN_CLOSE_ARCHIVE_RE = re.compile(r"/task:plan-close\s+archive\s+(\S+)")
 PLAN_CLOSE_RE = re.compile(r"/task:plan-close\s+(\S+)\s+(P\d+)(\.\d+)?\b")
 MANUAL_RUN_MARKER = "ЗАПУСК ВРУЧНУЮ"  # Exec=manual (§9): форма без slash-команды, ищется подстрокой
+LITERAL_WAITING = "ОЖИДАНИЕ:"  # 9-я форма Next (§8, D8): здоровое ожидание внешнего времени/гейта, ищется подстрокой
 NEXT_FORMS_HELP = (
     "Next не соответствует ни одной из допустимых форм (SKILL §8): "
     "/task:plan-exec <ID> Pn.m · /task:plan-design <ID> Pn · /task:plan-design <ID> Pn.m · "
     "/task:plan-audit <ID> Pn · /task:plan-close <ID> Pn[.m] · /task:plan-close archive <ID> · "
-    "«план закрыт» · «ЗАПУСК ВРУЧНУЮ: <model/effort>»"
+    "«план закрыт» · «ЗАПУСК ВРУЧНУЮ: <model/effort>» · «ОЖИДАНИЕ: <условие> → <целевая форма>»"
 )
 PHASE_FILENAME_RE = re.compile(r"^(P\d+)\.md$")
 PHASE_TOKEN_RE = re.compile(r"^P(\d+)$")
@@ -248,13 +249,30 @@ CANON_LITERALS = (
     "[UNVERIFIED]",
     LITERAL_PLAN_CLOSED,
     LITERAL_PHASE_HANDOFF_STALE,
+    LITERAL_WAITING,                                          # форма `Next` «ОЖИДАНИЕ» (SKILL §8, D8)
 )
+# --- P2.1/D8: C2-детектор прозы-оговорки в объявлении `Next` (WARNING) ----------
+# Автор пишет runnable slash-форму «команда есть, но не сейчас» вместо структурной формы
+# «ОЖИДАНИЕ: <условие> → <целевая форма>» (recon §3.2, живой SKM-MASTER-002). Стем-лист
+# УЗКИЙ и финализирован по замеру ДЕЛЬТЫ флота (§8 D53), не «на глаз»: каждый лишний стем —
+# риск ложного WARNING на сотнях handoff'ов (зеркало D34). Сканируется только СТРОКА-ОБЪЯВЛЕНИЕ
+# (`next_decl`), НЕ весь launch-block: guard-строка `# НЕ раньше:` законно живёт в code-block'е.
+C2_WAITING_STEMS = ("не раньше", "делать нечего", "тайм-гейт", "time-gate")
+C2_WAITING_STEMS_RE = re.compile(
+    "|".join(re.escape(s) for s in C2_WAITING_STEMS), re.IGNORECASE)
+# Формы Next, несущие исполнимую slash-команду СЕЙЧАС (не waiting/manual/closed) — только на
+# них C2 срабатывает: прозаическая оговорка при runnable-команде и есть анти-паттерн.
+C2_RUNNABLE_KINDS = frozenset({"exec", "design-item", "design-phase", "audit",
+                               "close", "close-archive"})
+
 # Эвристики: `оркестрац`/`мультиагент` — детект заявленной оркестрации (ORCHESTRATION_MARKER_RE,
 # D29); `PHASE_HANDOFF_CLOSURE_LITERALS` — детект «блок утверждает закрытие фазы» (D34);
-# `PHASE_HANDOFF_NEGATION_LITERALS` — детект отрицания в том же утверждении (D50). Все три
-# группы ищут СМЫСЛ в прозе автора, а не канонический токен ⇒ присутствие в EN не требуется.
+# `PHASE_HANDOFF_NEGATION_LITERALS` — детект отрицания в том же утверждении (D50); C2-стемы
+# (кириллические) — детект прозы-оговорки в `Next` (D8). Все группы ищут СМЫСЛ в прозе автора,
+# а не канонический токен ⇒ присутствие в EN не требуется (i18n-keep не нужен).
 HEURISTIC_LITERALS = (("оркестрац", "мультиагент") + PHASE_HANDOFF_CLOSURE_LITERALS
-                      + PHASE_HANDOFF_NEGATION_LITERALS)
+                      + PHASE_HANDOFF_NEGATION_LITERALS
+                      + ("не раньше", "делать нечего", "тайм-гейт"))
 
 
 def _plan_codename(plan_id):
@@ -836,7 +854,13 @@ def _resolve_next_form(text):
     `/task:plan-close archive <ID>` либо …», см. EDUFY-2), и эта проза не должна
     перехватывать резолвер. Manual-маркер — последним: у формы нет ссылок, она резолвится
     лишь тем, что ни одна slash-форма не объявлена.
+
+    Форма «ОЖИДАНИЕ» (D8) — ПЕРВОЙ, ДО plan-exec: её строка-объявление embed'ит целевой
+    `/task:plan-exec` (запустится по снятии гейта), который иначе перехватил бы резолвер как
+    `exec` — зеркало того, почему «план закрыт» стоит сразу после exec.
     """
+    if LITERAL_WAITING in text:
+        return "waiting", None
     m = PLAN_EXEC_RE.search(text)
     if m:
         return "exec", m
@@ -1149,6 +1173,20 @@ def lint_plan(plan_dir, diag):
             # прежде (резолв по всему полю).
             kind, m = _resolve_next_form(next_val)
 
+        # --- C2 (D8): прозаическая gate-оговорка при runnable-форме → WARNING ------
+        # Автор вписал в объявление runnable slash-форму «команда есть, но не сейчас»
+        # (стем «не раньше»/«делать нечего»/time-gate) вместо структурной формы «ОЖИДАНИЕ».
+        # Скан — только СТРОКА-ОБЪЯВЛЕНИЕ (`next_decl`): guard-строка `# НЕ раньше:` формы
+        # «ОЖИДАНИЕ» законно живёт в code-block'е и не должна триггерить C2 (форма waiting
+        # к тому же не входит в C2_RUNNABLE_KINDS). Уровень — WARNING (механизм молод, D20).
+        if kind in C2_RUNNABLE_KINDS and C2_WAITING_STEMS_RE.search(next_decl):
+            diag.warning(handoff_path, next_lineno,
+                         "Next: runnable-форма несёт прозу-оговорку о неисполнимости сейчас "
+                         "(«не раньше»/«делать нечего»/time-gate) — если шаг реален, но "
+                         "заблокирован временем/гейтом, объяви форму «ОЖИДАНИЕ: <условие> → "
+                         "<целевая форма>» (SKILL §8): она копипастится с guard-строкой "
+                         "`# НЕ раньше:`, прозаическая оговорка — нет")
+
         # --- 2.0 WARNING: launch-block в handoff.Next (SKILL §8) ------------------
         # Таблица `| Model | …` и code-block грепаются по всему файлу: шаблон кладёт
         # launch-block продолжением Next, но точное место не гейтим (warning-уровень).
@@ -1189,6 +1227,11 @@ def lint_plan(plan_dir, diag):
 
         if kind == "manual":
             pass  # «ЗАПУСК ВРУЧНУЮ: <model/effort>» — форма без slash-команды, ссылок нет
+        elif kind == "waiting":
+            pass  # «ОЖИДАНИЕ: <условие> → <целевая форма>» (D8): целевая команда guarded в
+                  # launch-block'е; ссылки объявления не резолвим (целевая форма проверится
+                  # при реальном запуске по снятии гейта). launch-block требуется — как у
+                  # прочих runnable-форм (не exempt): гейт launch-block выше не смотрит kind.
         elif kind == "exec":
             ref_plan_id, ref_item = m.group(1), m.group(2)
             _check_plan_id(ref_plan_id)

@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.7.0
+version: 2.8.0
 description: "Executable master plans in plans/<ID>: plan/phase/task schemas, 6 statuses, refine loop and DoR gate, canonical plan root, repo home by default + visibility/supersedes fields, two homes and archive, handoff with launch-block, model routing, /task:plan-* commands."
 risk: write
 persona: oss-dev
@@ -285,6 +285,13 @@ owner or plan-design records a new D# and SYNCS the item's Scope Included with i
 close proceeds against the UPDATED spec → 🟢 + a Known Deviations entry (what changed, by
 which D#). Editing the spec on the fly WITHOUT a D# is a material deviation (scope drift),
 even if the result is "better".
+
+A "soft Validation point" (a spec note marking some threshold/point as optional) is
+FORBIDDEN: a red Validation point is ALWAYS material (see above) or, if the spec's own
+threshold is wrong/inconvenient, ESCALATE to the owner for a new D# (see "Spec defect"
+above) — not a silent relaxation by the executor on the spot. A "soft" knob is a path to
+any inconvenient threshold being quietly voided by the very item that exceeded it
+(precedent D58: an item closed 🟢 on a red point because the spec itself declared it soft).
 ```
 
 **Commit gate on close.** Status `🟢`/`🟠` is NOT set without the item's diff committed:
@@ -812,4 +819,4 @@ doesn't repay the cost of reconstructing "where did this come from".
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of editing
   vendor copies (section 12).
 
-<!-- ru-source-sha256: e934f9afc9745baad586973cf6e7702164f277f8fac66e3fc51cda672f42a092 -->
+<!-- ru-source-sha256: 9b32179661d53bec480bd1e29685857612ab6ce91702c18a863dbb865268ec2c -->

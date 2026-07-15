@@ -53,6 +53,20 @@ FIXTURE = "\n".join([
 ])
 
 
+def _wf_line(uid, name, status, run_id=None):
+    """assistant tool_use(Workflow) + user tool_result с toolUseResult.workflowName/status/runId."""
+    tur = {"status": status, "workflowName": name, "summary": ""}
+    if run_id is not None:
+        tur["runId"] = run_id
+    return "\n".join([
+        json.dumps({"type": "assistant", "message": {"content": [
+            {"type": "tool_use", "id": uid, "name": "Workflow", "input": {"name": name}}]}}),
+        json.dumps({"type": "user", "message": {"content": [
+            {"type": "tool_result", "tool_use_id": uid, "content": "ok", "is_error": False}]},
+            "toolUseResult": tur}),
+    ])
+
+
 def _mcp_line(uid, name, result_obj):
     """assistant tool_use + user tool_result (result_obj → text блока, как в реальном транскрипте)."""
     return "\n".join([
@@ -226,6 +240,49 @@ class ParseCase(unittest.TestCase):
                  "input": {"command": f"echo {i}"}}]}}) for i in range(5000))
         r = parse_transcript(big)
         self.assertEqual(r["tools"]["total"], 5000)
+
+
+# ── workflow_relaunch (P1.2, plans/2026.07.15-TELEMETRY-OPT) ────────────────────
+class WorkflowRelaunchCase(unittest.TestCase):
+    def test_three_same_name_async_flags(self):
+        t = "\n".join(_wf_line(f"w{i}", "dterema-site-p3-api", "async_launched")
+                       for i in range(3))
+        r = parse_transcript(t)
+        self.assertEqual(len(r["workflow_relaunch"]), 1)
+        entry = r["workflow_relaunch"][0]
+        self.assertEqual(entry["name"], "dterema-site-p3-api")
+        self.assertEqual(entry["count"], 3)
+        self.assertEqual(entry["statuses"], {"async_launched": 3})
+
+    def test_single_call_no_flag(self):
+        t = _wf_line("w1", "dterema-site-p3-api", "async_launched")
+        r = parse_transcript(t)
+        self.assertEqual(r["workflow_relaunch"], [])
+
+    def test_three_different_names_no_flag(self):
+        t = "\n".join(_wf_line(f"w{i}", name, "async_launched")
+                       for i, name in enumerate(["a", "b", "c"]))
+        r = parse_transcript(t)
+        self.assertEqual(r["workflow_relaunch"], [])
+
+    def test_groups_by_run_id_not_name(self):
+        # тот же workflowName, но ДВА разных runId (dterema-кейс: новый run + resume-цепочка) —
+        # каждая группа своя, ни одна не достигает порога сама по себе
+        t = "\n".join([
+            _wf_line("w1", "dterema-site-p3-api", "async_launched", run_id="wf_run_a"),
+            _wf_line("w2", "dterema-site-p3-api", "async_launched", run_id="wf_run_a"),
+            _wf_line("w3", "dterema-site-p3-api", "async_launched", run_id="wf_run_b"),
+            _wf_line("w4", "dterema-site-p3-api", "async_launched", run_id="wf_run_b"),
+        ])
+        r = parse_transcript(t)
+        self.assertEqual(r["workflow_relaunch"], [])
+
+    def test_same_run_id_three_resumes_flags(self):
+        t = "\n".join(_wf_line(f"w{i}", "dterema-site-p3-api", "async_launched",
+                                run_id="wf_run_a") for i in range(3))
+        r = parse_transcript(t)
+        self.assertEqual(len(r["workflow_relaunch"]), 1)
+        self.assertEqual(r["workflow_relaunch"][0]["count"], 3)
 
 
 # ── поведенческий: реальный хук через subprocess ─────────────────────────────

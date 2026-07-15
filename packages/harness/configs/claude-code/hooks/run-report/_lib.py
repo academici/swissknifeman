@@ -11,7 +11,10 @@ SCHEMA=2 (аддитивно к SCHEMA=1, старые читатели не л�
 токен-usage (главный транскрипт + субагенты, через вендоренный _usage.py — см.
 scripts/sync-usage.sh), reads (re-read-хотспоты), error_loops (застревания на одном инструменте),
 retrieval (WebFetch/WebSearch/context7/perplexity-вызовы), protected_writes (пересечение
-files_changed с managed-путями skills-lock.json/agent-pack.lock.json).
+files_changed с managed-путями skills-lock.json/agent-pack.lock.json), workflow_relaunch
+(P1.2, plans/2026.07.15-TELEMETRY-OPT: ≥_WF_RELAUNCH_MIN вызовов Workflow сгруппированных по
+runId — fallback на workflowName при его отсутствии — диагностический сигнал «скрипт воркфлоу
+дебажился на лету», не ошибка).
 
 Никогда не бросай наружу: вызывающий хук оборачивает всё в try/except → exit 0.
 """
@@ -49,6 +52,7 @@ DEVLOOP_KEYS = ("tool_failures", "workarounds", "deferred", "open_questions",
 _MAX_FAILURES = 25
 _MAX_FILES = 200
 _MAX_WORKFLOWS = 20
+_WF_RELAUNCH_MIN = 3  # D4 (plans/2026.07.15-TELEMETRY-OPT): ≥3 launches одной группы → flag
 _MAX_READS = 500             # верхняя граница числа различимых путей чтения (память)
 _MAX_ERROR_LOOPS = 20
 _MAX_RETRIEVAL_QUERIES = 20  # окно для O(n²) similar_ratio-сравнения запросов (дёшево)
@@ -340,6 +344,7 @@ def parse_events(lines, transcript_path=None, cwd=None):
     files, _files_seen = [], set()
     tool_failures = []
     workflows = []
+    wf_relaunch = {}            # runId (fallback: workflowName) → {"name","count","statuses"}
     tests, lints, bash_failed = [], [], []
     devloop = {}
     total_tools = 0
@@ -482,6 +487,19 @@ def parse_events(lines, transcript_path=None, cwd=None):
                         "status": tur.get("status") or "?",
                         "summary": _snippet(tur.get("summary") or "", 300),
                     })
+                # workflow_relaunch (P1.2, findings/P1-workflow-rootcause.md): группировка ПО
+                # runId (resume того же рана — dterema-кейс, 11× resumeFromRunId), не по имени —
+                # один workflowName у двух разных runId не должен схлопываться в одну группу.
+                # runId отсутствует (старые транскрипты/фикстуры) → деградация на workflowName.
+                wf_name = tur.get("workflowName") or "?"
+                wf_status = tur.get("status") or "?"
+                wf_key = tur.get("runId") or wf_name
+                g = wf_relaunch.get(wf_key)
+                if g is None and len(wf_relaunch) < _MAX_WORKFLOWS:
+                    g = wf_relaunch[wf_key] = {"name": wf_name, "count": 0, "statuses": {}}
+                if g is not None:
+                    g["count"] += 1
+                    g["statuses"][wf_status] = g["statuses"].get(wf_status, 0) + 1
                 obj = _find_json_with_keys(tur.get("summary") or "", DEVLOOP_KEYS)
                 if obj:
                     _merge_devloop(devloop, obj)
@@ -501,6 +519,10 @@ def parse_events(lines, transcript_path=None, cwd=None):
         key=lambda e: (-e["count"], e["path"]))[:5]
     protected_dirs, protected_files = _protected_sets(cwd)
     protected_writes = [fp for fp in files_sorted if _is_protected(fp, protected_dirs, protected_files)]
+    workflow_relaunch = [
+        {"name": g["name"], "count": g["count"], "statuses": g["statuses"]}
+        for g in wf_relaunch.values() if g["count"] >= _WF_RELAUNCH_MIN
+    ]
 
     return {
         "schema": SCHEMA,
@@ -509,6 +531,7 @@ def parse_events(lines, transcript_path=None, cwd=None):
         "tool_failures": tool_failures,
         "bash": {"tests": tests, "lints": lints, "failed": bash_failed},
         "workflows": workflows,
+        "workflow_relaunch": workflow_relaunch,
         "devloop": devloop or None,
         "maind": maind or None,       # память/граф хаба: {op:{calls,results,found_total,found_max}}
         "usage": _collect_usage(main_acc, transcript_path),   # None без _usage.py (SCHEMA=2)

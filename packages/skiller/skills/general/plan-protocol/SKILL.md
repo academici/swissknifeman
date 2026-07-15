@@ -594,6 +594,16 @@ escalation = a DEFECT (plan diverged from code, needs re-design); «план з�
 `plan-lint` resolves the form as `waiting` (BEFORE `exec` — the line embeds the target
 `/task:plan-exec`) and requires a launch-block (like other runnable forms — not exempt).
 
+**Surfaced error → fix proposal (C3, D6).** A run exposes a material problem (Validation red
+outside Scope · lint remainder N−K>0 · stray diff · a found defect) → the report/handoff MUST
+carry a concrete remediation proposal right away (what + a launch-block for the fix + 1-line
+"why"), not a passive "ready for next, there were errors" note; it ADDS to the Known
+Deviations/Pending Work entry, not replaces it. When the fix is the most valuable next action,
+`Next` points to it (`/task:plan-design <ID> Pn.m` or a follow-up fix item), not silently to the
+next item. Do not confuse with §10 escalation (🔴 = plan↔code defect, needs re-design): here the
+item still closes (🟢/🟠) with an explicit proposal, not a block. Report-quality — checked by
+`plan-audit`, no machine gate.
+
 ## 9. Routing & Thinking Policy (SSOT matrix)
 
 Default role→model/effort routing. Plan section `## 3. Routing` stores ONLY deviations from
@@ -840,4 +850,4 @@ doesn't repay the cost of reconstructing "where did this come from".
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of editing
   vendor copies (section 12).
 
-<!-- ru-source-sha256: c87759e9918d452d23015cf2f3d355c6ef42239dbf8904dc9ec4dfac029de79b -->
+<!-- ru-source-sha256: c4e5de349d5cf210f1f4375aef28590f5e1b72d4b8a49909c490891d0965d8b2 -->

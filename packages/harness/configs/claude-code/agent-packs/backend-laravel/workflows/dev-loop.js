@@ -24,6 +24,18 @@ const PROJECT_DIR = '{{PROJECT_DIR}}'
 // retry-поверхность под rate-limit. Дефолт 2 (не 3+); solo-fallback — дисциплина оркестратора.
 const DEFAULT_MAX = 2
 
+// Named-workflow (Workflow({name,args})) доставляет args СТРОКОЙ — SLICES резолвился бы в [],
+// давая ложный no-op «нет срезов». Guard парсит строку; битый JSON — явный log-STOP с
+// подсказкой (P3.4/findings §4/§1.3), не молчаливое падение в пустой массив.
+if (typeof args === 'string' && args.trim()) {
+  try {
+    args = JSON.parse(args)
+  } catch (e) {
+    log(`args пришёл строкой, но JSON.parse провалился (${String((e && e.message) || e).slice(0, 160)}) — запускай через scriptPath (embedded args), не named-workflow.`)
+    return { built: [], note: 'args parse failed' }
+  }
+}
+
 const BRANCH = (args && args.branch) || 'feat/dev-loop'
 const BASE = (args && args.base) || 'main'
 const MAX = (args && args.max_slices) || DEFAULT_MAX
@@ -43,7 +55,7 @@ const HARD_GATES = `ЖЁСТКИЕ ГЕЙТЫ {{PACK_PREFIX}} (не наруша
 - Работать строго внутри ${PROJECT_DIR}.`
 
 if (SLICES.length === 0) {
-  log('Нет срезов на вход (args.slices пуст) — нечего строить. Передай { branch, base, max_slices, slices: [...] }.')
+  log('Нет срезов на вход (args.slices пуст) — STOP. Передай { branch, base, max_slices, slices: [...] } через scriptPath (embedded args), не named-workflow.')
   return { built: [], note: 'no slices provided' }
 }
 

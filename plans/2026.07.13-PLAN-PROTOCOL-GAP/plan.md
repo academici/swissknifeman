@@ -115,7 +115,7 @@ Blocker-остатке по существу — фазу держали не д
 | P1 | Разблокировка: формы Next + честный счёт lint | 2/2 | 🟢 Done |
 | P2 | SSOT-канон: routing-гейт, status-rule, Contracts (+ ремедиация аудитов) | 17/18 | 🟠 Done with deviations |
 | P3 | Команды plan-*: гейты и порядок закрытия | 10/11 | 🟠 Done with deviations |
-| P4 | Регресс по флоту, закрытие эскалации REGHUB, доки | 0/3 | ⬜ Not started |
+| P4 | Регресс по флоту, закрытие эскалации REGHUB, доки | 1/3 | 🟡 In progress |
 
 ## 5. Decision Log
 
@@ -233,6 +233,7 @@ Blocker-остатке по существу — фазу держали не д
 | 2026-07-15 | plan-run (**opus/high**, модель сессии — Exec=manual, D18) | P3.11 закрыт (`99ad792`): скилл `plan-protocol` **2.7.0** (D56) — регенерация EN-канона (D50/D51/D40/D37/D53), `check-translations` 0 ❌, registry (skills.json/budget.md), сквозная сверка 46 ✓ / 0 ✗ — детали см. phases/P3.md P3.11 Completion Notes. |
 | 2026-07-15 | plan-run (**opus/high**, Exec=manual) | **Фаза P3 закрыта** `🟠 Done with deviations` (11 items: 10 🟢 + 1 🟠): реопен-волна (P3.7–P3.11, D48) сняла долги RED-аудита `## Audit P3` и аудита №4 P2; `## Phase Handoff` перезаписан, маркер `> УСТАРЕЛ` снят (§3, шаг 4). Следующий — `plan-audit … P3` (2-й заход). |
 | 2026-07-15 | issue-planner (opus/high, `/task:plan-design P4`) | **P4 дизайн-рефайн + DoR pass**: P4.3 → `plan-protocol` 2.7.0 (был 2.4.0) + CHANGELOG на реопен-волну; P4.2 baseline REGHUB → **78**; D57 — P4 item-by-item (порог §7 не сработал, 2<3) — детали см. phases/P4.md + D57. |
+| 2026-07-15 | plan-exec (sonnet/medium) | P4.1 закрыт (`4922ddc`): парный regression-замер 10 корней/30 планов (D53) — 0 новых ERROR/WARNING вне archive-покрытия (N3/D14) и message-rewording нейтральных пар (D14) — детали см. phases/P4.md P4.1 Completion Notes. |
 
 ## Обсуждение
 

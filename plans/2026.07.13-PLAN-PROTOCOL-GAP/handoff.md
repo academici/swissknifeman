@@ -1,98 +1,80 @@
-# HANDOFF — 2026-07-15 — after P3
+# HANDOFF — 2026-07-15 — after P4.1
 
-**Next:** `/task:plan-audit 2026.07.13-PLAN-PROTOCOL-GAP P3` (сужён — семантика реопен-волны)
+**Next:** «ЗАПУСК ВРУЧНУЮ: opus/high»
 
 | Параметр | Значение |
 |:--|:--|
 | Model | opus |
-| Thinking | xhigh — adversarial-аудит закрытой фазы (SSOT §9: invariant-auditor) |
-| Context | NEW SESSION — шаг-не-item (аудит перечитывает план с диска, контекст исполнителя ему запрещён) |
-| Суть | 2-й заход (потолок раундов D44), СУЖЕН: механика принята зелёной, adversarial-бюджет — на семантику правил реопен-волны P3.7–P3.11 |
+| Thinking | high — чужой замороженный контекст (Brain-vault, REGHUB) + суждение о статусах эскалации (§3 Routing P4.2) |
+| Context | continue (/clear) — ручной item |
+| Суть | P4.2: закрыть эскалацию REGHUB (5 пунктов `open-questions.md` → `Resolved → D#`) + дозаполнить 8 скелет-items `phases/P3.md` (16 полей) + секция `## 7. Contracts / Exported`; коммит В ДРУГОМ РЕПО (Brain-vault) |
 
 ````
-/task:plan-audit 2026.07.13-PLAN-PROTOCOL-GAP P3
+Ты исполняешь item P4.2 мастер-плана 2026.07.13-PLAN-PROTOCOL-GAP (репо swissknifeman) —
+ЗАПУСК ВРУЧНУЮ (Exec = manual, opus/high, §3 Routing): чужой замороженный контекст (Brain-vault,
+план REGHUB) + решения о статусах — не для дешёвой модели.
 
-СУЖЕНИЕ ЗАХОДА (2-й раунд, потолок D44). Механический класс уже зелёный и воспроизводим —
-НЕ перепроверяй числа заново, а подтверди одним прогоном конфликт-скана и сосредоточь
-adversarial-бюджет на СЕМАНТИКЕ реопен-волны P3.7–P3.11:
+Прочитай (в этом порядке, ничего сверх):
+1) /home/vostrikov/projects/packages/swissknifeman/plans/2026.07.13-PLAN-PROTOCOL-GAP/phases/P4.md
+   — раздел "### P4.2 — REGHUB: закрыть эскалацию + дозаполнить скелет P3" целиком (Intent, Why,
+   Scope Included/Excluded, Inputs, Files, Required Reads, Implementation Rules, Code Guidance,
+   Validation, Deliverables);
+2) /home/vostrikov/projects/packages/swissknifeman/plans/2026.07.13-PLAN-PROTOCOL-GAP/plan.md
+   §5 Decision Log D1–D12 (источник D# для ссылок в open-questions.md REGHUB);
+3) /home/vostrikov/Vaults/Brain/plans/REGHUB/open-questions.md §Процессные (целиком, 127 строк);
+4) /home/vostrikov/Vaults/Brain/plans/REGHUB/phases/P3.md (8 скелет-items);
+5) /home/vostrikov/Vaults/Brain/plans/REGHUB/plan.md §2 Execution Rules и §5 Decision Log
+   (D21/D22 — решения владельца, НЕ переигрывать).
 
-Дано зелёным (подтвердить греп-скан, не разбирать заново):
-- skiller/task validate.sh exit 0; 134 теста; plan-lint --baseline HEAD K=0 (на 311a7c0);
-- сквозная сверка findings/P3-command-layer.md §5 — 46 ✓ / 0 ✗ (на 99ad792).
+Исполни Scope Included P4.2 (см. phases/P4.md), прогони Validation (4 команды из ТЗ), закрой item
+ПОЛНЫМ протоколом закрытия (§7 команды plan-exec): коммит В BRAIN-VAULT отдельно (префикс
+`docs(reghub):`), затем bookkeeping ЭТОГО плана (Status/Completion Notes/Pending
+Work/Known Deviations/Phase Status/Status Board/Update Log/Last Updated) — со ссылкой на sha
+коммита Brain — коммит в swissknifeman, перезапись handoff.md, `plan-lint --baseline HEAD` после
+handoff, счёт с атрибуцией K.
 
-Судить (severity находки ≠ вердикт фазы; RED только на сломанном Deliverable, бьющем по флоту):
-1. D50/D51 (P3.7/P3.8) — правила канона ДЕЙСТВИТЕЛЬНО исполнимы собственным линтером
-   (не воспроизводят класс «канон предписывает форму, которую линтер отвергает»)?
-2. Канон↔команды не разошлись СМЫСЛОМ после регенерации EN 2.7.0 (6 дельт RU → SKILL.md)
-   и после сжатия под потолки — ни одно правило не потеряло АДРЕСАТ (класс A1) и не ослаблено?
-3. Реопен-волна закрыла ровно долги ## Audit P3 (A1/A3) + аудита №4 без дома (J1/J3/A4/J8) —
-   без no-op под 🟢 и без scope drift за пределы Scope Included фазы?
-4. Phase Handoff описывает фактическое состояние (11 терминальны, 🟠), маркер > УСТАРЕЛ снят.
-5. OQ-1 (J16, мягкий пункт Validation) — Decision pending, дедлайн «до закрытия P3» прошёл:
-   зафиксировать как долг владельцу, не как дефект исполнения (вне Scope P3.11).
-
-Бухгалтерия/проза/числа → ATTENTION + follow-up в P4, НЕ реопен. Третий заход не назначай —
-AUDIT-CAP: P3 → владельцу.
+Работа в swissknifeman-репо этим item'ом диффа НЕ оставляет, кроме bookkeeping плана.
 ````
 
-**Done:** P1 (2/2 🟢), P2 (18/18 — терминальна, `🟠 Done with deviations`), **P3 — 11/11 терминальна,
-`🟠 Done with deviations`** (10 🟢 + 1 🟠). Реопен фазы (D48) закрыт: реопен-волна P3.7–P3.11 сняла
-долги RED-аудита `## Audit P3` (A1/A3) и аудита №4 P2 без дома (J1 Blocker, J3, A4/J8, J11/J13).
-
-**P3.11 закрыт 🟢 (`99ad792`) — терминальный item фазы.** Скилл `plan-protocol` **2.7.0** (D56):
-регенерация EN-канона `SKILL.md` из RU (6 дельт P3.7/P3.8 — D50 первая строка гейта Phase Handoff ·
-D51 единственный носитель статуса фазы · D40 форма Next первой строкой · D37/D41 существование фазы
-`after Pn.m` · D53 дельта парного прогона); `check-translations.sh` → 0 ❌ (новых `CANON_LITERALS` не
-было — 14 директив `i18n-keep` уже полны, T2 зелёный); `skiller registry` (bump изменил `skills.json`
-+ `budget.md`, прочие 4 артефакта — байт-в-байт). **Сквозная сверка `findings/P3-command-layer.md` §5:
-46 проверок → 46 ✓ / 0 ✗** (на `99ad792`) — обе ✗ P3.6 сняты (status-rule → `plan-close` P3.9; §11 →
-`plan-exec` P3.10) + 5 канон-семантических строк реопена. `packages/task/CLAUDE.md` сверен — расхождений
-нет (описания ролевого уровня), не правился.
+**Done:** P1 (2/2 🟢), P2 (18/18 — терминальна, `🟠 Done with deviations`), P3 (11/11 —
+терминальна, `🟠 Done with deviations`, 2-й и 3-й заход аудита завершены — AUDIT-CAP, `## Audit P3`
+в `phases/P3.md`, реопен не назначен). **P4.1 закрыт 🟢 (`4922ddc`)**: парный regression-замер
+`plan-lint` по **10 корням / 30 планам** (D53) — **ноль новых ERROR/WARNING** вне двух объяснённых
+классов (archive/ впервые линтуется — N3/D14 расширение покрытия; message-rewording пары D14 —
+идентичный текст поля скелета репортится другой формулировкой, net 0, построчно проверено `comm`).
+Собственные фиксы кластера видны как чистое снижение ERROR: swissknifeman 4→0, corex 1→0,
+agelto 9→7 (сняты 2 фантомные `plans/archive/*`, N3), Brain 86→84. Отчёт —
+`findings/P4-regression-flotilla.md`.
 
 **Remaining:**
-1. **`plan-audit … P3` ← Next** (opus/xhigh) — 2-й заход (греп `## Audit P3` в `phases/P3.md` → 1 запись;
-   потолок раундов D44 — два аудита, третий → решение владельца). Проверить: 🟠 фазы обоснован (P3.5
-   material), no-op/scope drift реопен-волны, `## Phase Handoff` описывает фактическое состояние,
-   маркер `> УСТАРЕЛ` снят, сквозная сверка 46/46 воспроизводима грепом.
-2. Затем **фаза P4** (0/3, **ДЕТАЛИЗИРОВАНА — DoR passed**, `plan-design P4` 2026-07-15; item-by-item,
-   D57): P4.1 регресс по флоту — **10 корней / 30 планов** (D53, парный прогон дельтой); P4.2 эскалация
-   REGHUB — чужой репо Brain (коммит там отдельный, `Exec = manual` opus/high); P4.3 доки + CHANGELOG
-   (`plan-protocol` итог 2.4.0 → 2.7.0). Порядок: `plan-audit P3` (гейт) → `plan-exec … P4.1`.
+1. **P4.2 ← Next** (opus/high, ЗАПУСК ВРУЧНУЮ) — закрыть эскалацию REGHUB в её SSOT
+   (`open-questions.md` §Процессные → `Resolved → D#`), дозаполнить 8 скелет-items `phases/P3.md`
+   (16 полей, «—»), заполнить `## 7. Contracts / Exported` (6 контрактов, версии сверить с
+   баннерами `root/contracts/*.md`). Коммит в Brain-vault отдельно от bookkeeping swissknifeman.
+2. Затем **P4.3** (sonnet/low, `plan-exec`) — `CHANGELOG.md` (`plan-protocol` 2.4.0 → 2.7.0, итог
+   кластера), `docs/task/plan-structure.md`, `docs/reference.md`, `docs/rejected-optimizations.md`.
+   После P4.3 — фаза P4 терминальна, план близок к архивации (`plan-close archive`, после
+   `plan-audit P4`, если потребуется по канону).
 
-**Sources of truth:** `plan.md` (Meta **1.5.0**, Status 🟡, §2 Execution Rules + carve-out D34, §3
-Routing, §5 D-лог **D1–D56**, `## Обсуждение` — 10 развилок) · `phases/P3.md` (11 items терминальны;
-`## Phase Handoff` перезаписан — маркер `> УСТАРЕЛ` снят; append-блок `## Audit P3`) · `phases/P4.md`
-(3 items) · `open-questions.md` (**OQ-1** — Decision pending) · `findings/P3-command-layer.md`
-(§2 baseline-разведка · **§5 финальная сверка 46/46**) · `findings/P3-reopen-gates-and-fleet.md`
-(§2 флот 10/30 · §3 потолки · §4 grep-инвентарь) · SSOT канона:
-`packages/skiller/skills/general/plan-protocol/` (`SKILL.ru.md` **2.7.0** — источник; `SKILL.md`
-**2.7.0** — EN-канон, регенерирован, 0 ❌) · `packages/task/lib/task/plan_lint.py` · команды:
-`plan-exec.md` (188/210) · `plan-close.md` (169/180) · `plan-audit.md` (115/115) · `plan-design.md`
-(169/185) · `plan-run.md` (28/45).
+**Sources of truth:** `plan.md` (Meta **1.5.0**, Status 🟡, §3 Routing, §5 D-лог **D1–D57**,
+`## Обсуждение`) · `phases/P4.md` (P4.1 🟢, P4.2/P4.3 ⬜) · `phases/P3.md` (11 терминальны,
+`## Audit P3` — 3 захода, AUDIT-CAP) · `open-questions.md` (**OQ-1** — Decision pending, долг
+владельцу, не в Scope P4) · `findings/P4-regression-flotilla.md` (регресс 10/30, метод, команда
+воспроизведения) · `findings/P3-reopen-gates-and-fleet.md` (§2 инвентарь флота, источник D53) ·
+SSOT канона: `packages/skiller/skills/general/plan-protocol/` (`SKILL.ru.md`/`SKILL.md` **2.7.0**) ·
+`packages/task/lib/task/plan_lint.py` · команды `plan-{exec,close,audit,design,run}`.
 
 **Open risks:**
-- **OQ-1 (Decision pending) — дедлайн «до закрытия P3» ПРОШЁЛ неснятым.** J16 (`## Обсуждение` п. 10):
-  канон §6 не знает «мягкого пункта Validation» — узаконить или запретить. НЕ в Scope Included P3.11
-  (ТЗ его не адресует) ⇒ силой скоуп не расширял; требует владельца/`plan-design`. Маршрут — вход в
-  `plan-audit … P3` и P4.
-- Канон 2.7.0 не проходил СЕМАНТИЧЕСКОГО ревью свежими глазами (D44) — механический класс закрыт
-  сквозной сверкой (46/46) и конфликт-сканом; семантика — за повторным аудитом P3.
-- Полнота гейта литералов (T1) сужена честно (D52/J8): динамический шаблон и литерал из внешнего файла
-  не ловятся. Заводя новую форму сверки в `plan_lint.py`, расширяй сборщик — иначе класс G3 воспроизведётся.
-- Остаточные 35 WARN `plan-lint` по 6 планам монорепо — вне Scope items P3 (записи Update Log > 300
-  символов у старых планов и т. п.); не от диффа P3.11.
-- P4.2 правит ЧУЖОЙ репозиторий (Brain-vault, план REGHUB) — коммит там отдельный.
+- **OQ-1 (Decision pending)** — дедлайн «до закрытия P3» прошёл неснятым (J16: канон §6 не знает
+  «мягкого пункта Validation»). Вне Scope P4.1; маршрут — владелец/`plan-design`, не блокирует P4.2/P4.3.
+- P4.2 правит ЧУЖОЙ репозиторий (Brain-vault, REGHUB) — коммит там отдельный, вне git-истории
+  swissknifeman; сверять версии контрактов с баннерами `root/contracts/*.md`, не по памяти (класс B1).
+- Остаточные WARN `plan-lint` по флоту (Brain, vaulter, themeon, agelto) — вне Scope P4.1
+  (архив-покрытие впервые + рост живых планов не диффом этого плана); не блокер.
 
 **Workarounds/Deferred/Open questions:**
 - workarounds: нет.
-- deferred: **принятый долг аудита №4 P2** (D54 — J2/J7/J9/J10/J15/J17/J18: bookkeeping закрытых items
-  P2 задним числом НЕ переписывается, источник правды — append-блоки `## Audit P2*`); раскатка директив
-  `i18n-keep` на остальные локальные скиллы; миграция §3 Routing / `## Обсуждение` живых планов на
-  канон-форму (back-compat); заполнение `## 7. Contracts` в живых планах (REGHUB — P4.2); правка
-  `## Phase Handoff` чужих планов (вне scope; WARNING vaulter корректен и остаётся); кросс-репо
-  push-уведомление (роадмап); CLI-ступень `plan-lint --conflicts` (роадмап); CHANGELOG + docs пакетов
-  (P4.3); **[POSSIBLE-DEFECT]** нестабильный порядок вывода диагностик `plan-lint` между прогонами
-  (пре-существующий, на счётчики/`--baseline` не влияет).
-- open_questions: **OQ-1** (`open-questions.md`) — «мягкий пункт Validation» (J16, `## Обсуждение` п. 10,
-  `Decision pending`); дедлайн «до закрытия P3» прошёл — эскалирован в Open risks. Остальные 9 развилок
-  `## Обсуждение` несут `**Статус:** Resolved → D#`.
+- deferred: см. предыдущий handoff (принятый долг аудита №4 P2, миграция §3 Routing живых планов,
+  CLI-ступень `plan-lint --conflicts`, кросс-репо push-уведомление — роадмап); CHANGELOG/доки — P4.3.
+- open_questions: **OQ-1** (`open-questions.md`) — «мягкий пункт Validation», Decision pending,
+  дедлайн прошёл, эскалирован в Open risks.

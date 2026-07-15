@@ -10,7 +10,7 @@
 | Status | 🟡 In progress (design) |
 | Document Type | Executable Master Plan |
 | Authoring Model | opus |
-| Last Updated | 2026-07-15 (P3.4 закрыт 🟠) |
+| Last Updated | 2026-07-15 (P3.5 закрыт 🟢 — P3 терминальна) |
 | Repository | swissknifeman |
 | Related Packages | task (plan-protocol/workflow-craft скиллы, команды plan-*/make-workflow/review), skiller (реестр скиллов, budget), harness (agent-packs dev-loop, run-report) |
 | Execution Mode | phase-first |
@@ -76,7 +76,7 @@
 |:--|:--|:--|:--|
 | P1 | Recon: доказбаза (workflow-авторинг · plan-design клинчи · handoff-конформанс) | 1/1 | 🟢 Done |
 | P2 | Launch-block энфорсмент + ошибка→сразу-фикс | 1/2 | 🟠 Done with deviations |
-| P3 | Workflow-авторинг + авто-ревью (make-workflow ревьюер · base-шаблоны · видимость скилла) | 1/5 | 🟡 In progress |
+| P3 | Workflow-авторинг + авто-ревью (make-workflow ревьюер · base-шаблоны · видимость скилла) | 2/5 | 🟡 In progress |
 | P4 | Contract-first дизайн-флоу + глобальный exec-план + батчинг + адаптивная глубина ревью | 0/3 | ⬜ Not started |
 | P5 | Fix-стратегия plan-design + архитектурный апгрейд скиллов/сниппетов | 0/2 | ⬜ Not started |
 
@@ -112,6 +112,7 @@
 | 2026-07-15 | plan-run(manual)/sonnet/high | P3.2 закрыт 🟠 (registry-артефакты вне Files, паттерн P2.1/P3.1 3-й раз): хардненинг 4 шаблонов + workflow-craft §2.1 — детали см. phases/P3.md P3.2 Completion Notes |
 | 2026-07-15 | plan-exec/sonnet/medium | P3.3 закрыт 🟢: чек места/имени workflow оказался уже реализован (D24/D27/D28), добавлен недостающий `dev-loop.js` exempt — детали см. phases/P3.md P3.3 Completion Notes |
 | 2026-07-15 | plan-exec/sonnet/medium | P3.4 закрыт 🟠 (Validation `node --check` структурно не проходит из-за санкционированного P3.1/D10 top-level `return`, предсуществующее): guard args-строки + STOP-сообщение в 5 `dev-loop.js` — детали см. phases/P3.md P3.4 Completion Notes |
+| 2026-07-15 | plan-run(manual)/opus/high | P3.5 закрыт 🟢, фаза P3 терминальна (🟠 — P3.1/P3.2/P3.4 deviations): budget-квантификация доставки `workflow-craft` (tier-0=48 ток, CORE 694→742/750 OK), рекомендация канала A=CORE_SKILLS (D6), OQ-3 обновлён — детали см. phases/P3.md P3.5 Completion Notes |
 
 ## 7. Contracts
 

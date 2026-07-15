@@ -1,63 +1,57 @@
-# HANDOFF — 2026-07-15 — after P3.4
+# HANDOFF — 2026-07-15 — after P3.5
 
-**Next:** ЗАПУСК ВРУЧНУЮ: opus/high
+**Next:** /task:plan-close 2026.07.15-PLANFLOW-UX P3
 
 | Параметр | Значение |
 |:--|:--|
-| Model | opus |
-| Thinking | high — analysis+рекомендация (budget-квантификация + канал доставки + OQ-3), decision-item Owner-facing |
-| Context | continue (/clear) — ручной item |
-| Суть | P3.5: budget-квантификация доставки `workflow-craft`/`make-workflow`, рекомендация канала (CORE vs onboard-required), OQ-3 |
+| Model | sonnet |
+| Thinking | low — сверка/закрытие фазы (все 5 items терминальны), без новых решений |
+| Context | NEW SESSION — шаг-не-item |
+| Суть | Закрыть фазу P3 (терминальна 🟠 — P3.1/P3.2/P3.4 Done with deviations): заполнить Phase Handoff, Status Board P3 → 🟠, перезаписать handoff.md |
 
 ```
-Это ИСПОЛНЕНИЕ item'а мастер-плана (plan-протокол). Ввод: «2026.07.15-PLANFLOW-UX P3.5».
-Прочитай ПОЛНЫЙ протокол /task:plan-exec (skill plan-protocol §нужный при явной ссылке).
-Routing (plan.md §3): P3.5 = opus/high, Exec = manual (analysis+рекомендация, Owner-facing
-decision-item — НЕ code-item). Читай: plan.md (Context/Execution Rules/§3 Routing/Status
-Board) → handoff.md → phases/P3.md (Phase Context + P3.5 целиком) → Required Reads item'а
-(findings §5-A1; корневой CLAUDE.md §Философия budget-гейт; packages/skiller/CLAUDE.md
-§CORE-политика; packages/skiller/lib/skiller/budget.py или `skiller budget --help`;
-workflow-craft SKILL.md frontmatter). Исполни Scope Included P3.5: (1) прогони `skiller
-budget --first-turn`/`--check-core` — реальное число; (2) рекомендация канала (CORE_SKILLS
-vs required-при-онбординге) с причиной (D6); (3) OQ-3 в open-questions.md (Decision pending,
-владелец Dmitry Vostrikov); (4) делегирование rollout — заметка в handoff, НЕ код. НЕ править
-CORE_SKILLS/config.py в этой фазе (scope-excluded). Закрой по полному циклу протокола (два
-коммита: item + bookkeeping, lint --baseline HEAD, перезапись handoff.md).
+/task:plan-close 2026.07.15-PLANFLOW-UX P3
 ```
 
-**Done:** P3.4 закрыт 🟠 Done with deviations — guard `typeof args === 'string' && args.trim()`
-→ `JSON.parse` + STOP-сообщение с подсказкой `scriptPath` добавлены во все 5 независимых копий
-`dev-loop.js` (`{dart-flutter,node-frontend,python-backend,backend-laravel,laravel-package}` —
-md5 всех пяти различны, единого шаблона-источника нет). Item-коммит 0636c28. Deviation
-(material, Status-rule): пункт Validation `node --check` СТРУКТУРНО не проходит — файлы несут
-top-level `return` (санкционированная идиома рантайма Workflow-тула, P3.1/D10), подтверждено
-предсуществующим (контрольный `git stash` + `node --check` на дереве ДО диффа даёт тот же
-`SyntaxError`) — дефект самого пункта Validation ТЗ (P3 задизайнена ДО P3.1), не привнесён этим
-item'ом. Субститут-проверка (тело файла обёрнуто в `async function`, `export`→`const`) — 0
-синтаксических ошибок по всем 5. `bash packages/harness/scripts/validate.sh` — OK.
+**Done:** P3.5 закрыт 🟢 Done — budget-квантификация доставки гейта `workflow-craft`. Замеры
+(git-якорь `2173b27`): `workflow-craft` tier-0 (резидент name+description) = **48 ток**, тело 3096
+on-trigger (не резидент); CORE `--check-core` 694/750 OK → +48 = **742/750 OK**, headroom 56→**8 ток**.
+Уточнение A1: не доставлен ровно скилл `workflow-craft` (команда `make-workflow` уже едет `task@`
+везде; `workflow-craft` — 1/15). **Рекомендация исполнителя (D6): вариант A — CORE_SKILLS**
+(видимость>экономии; авторинг workflow широк, наименьший механизм) с оговоркой Owner'у (заполняет
+ядро под потолок 8 ток + размывает курацию; приоритет headroom → вариант B). OQ-3 обновлён
+рекомендацией (статус Decision pending, владелец Dmitry Vostrikov). Числа+проверка —
+`findings/P3-delivery-budget.md`. Item-коммит `42965f8`. Фаза P3 стала терминальной (5/5 items:
+P3.1🟠 P3.2🟠 P3.3🟢 P3.4🟠 P3.5🟢).
 
-**Remaining:** P3.5 (opus/high manual, доставка-гейт analysis — launch-block выше). Затем
-`plan-close P3` (Phase Handoff, фаза закроется 🟠 — P3.1/P3.2/P3.4 все Done with deviations) →
-детализация P4 → P5.
+**Remaining:** `plan-close P3` (Phase Handoff, Status Board P3 → 🟠 Done with deviations) → детализация
+P4 (contract-first, just-in-time, D5; OQ-1 exec-план) → P5 (fix-стратегия plan-design, ось B).
 
-**Sources of truth:** `phases/P3.md` (P3.1–P3.4 Completion Notes + P3.5 ТЗ) · `plan.md`
-(§3 Routing P3.1–P3.5, §4 Phase Index P3 → 🟡 In progress 1/5, §6 Update Log) ·
-`findings/P1-recon.md` §4/§5-A1 (главный рычаг доставки, budget-требование).
+**Sources of truth:** `phases/P3.md` (P3.1–P3.5 Completion Notes) · `plan.md` (§4 Status Board P3
+2/5 🟡, §6 Update Log, §5 D9–D11) · `findings/P3-delivery-budget.md` (числа доставки, git-якорь) ·
+`open-questions.md` OQ-3 (рекомендация канала).
 
-**Open risks:** Known Deviation P3.2 — registry-артефакты вне `Files` (паттерн P2.1→P3.1→P3.2);
-P3.4 — `node --check` Validation-пункт структурно недостижим для файлов с санкционированным
-top-level `return` (P3.1/D10) — fix-предложение: будущему `plan-design`-проходу скорректировать
-такие пункты Validation на «обёрнутый в async function субститут» для ЛЮБОГО будущего item'а,
-трогающего `dev-loop.js`/канон-шаблоны. P3.1 pre-mortem (Обсуждение №5) остаётся открытым до
-P3.5/OQ-3.
+**Open risks:**
+- **Rollout доставки гейта делегирован (НЕ выполнен в этой фазе — контракт):** правка
+  `CORE_SKILLS`/`core-policy.json` (вариант A) ЛИБО onboard-required flag (вариант B) — только
+  ПОСЛЕ резолва OQ-3 Owner'ом, исполнитель — skiller/maind. Пока не раскатано — P3.1–P3.4 усиливают
+  гейт, который физически в 1/15 проектов. Это НЕ вход downstream-item'а плана (терминальная делегация).
+- Вариант A заполняет CORE под потолок (742/750, 8 ток headroom) → фактически последний скилл,
+  влезающий при target 750; рост CORE потребует подъёма target (750→800) отдельным решением.
+- Наследованные (P3.1/P3.2): registry-артефакты вне `Files` (паттерн P2.1→P3.1→P3.2 — fix-предложение
+  «вносить skills.json/budget.md в Files item'ов, правящих SKILL.ru.md»); P3.4 — `node --check`
+  Validation-пункт структурно недостижим для файлов с санкционированным top-level `return`.
+- P3.1 pre-mortem (Обсуждение №5, причина-3): гейт академичен, пока OQ-3 не резолвнут и rollout не
+  сделан — доска честно держала A1 открытым; теперь A1 квантифицирован, мяч у Owner (OQ-3).
 
 **Workarounds/Deferred/Open questions:**
 - workarounds: —
-- deferred: детализация P4–P5 (contract-first, just-in-time, D5); rollout доставки гейта (P3.5
-  Pending — пост-резолв OQ-3, deleg skiller/maind); launch-block вне `plan-*` (OQ-2); правило
-  «registry-артефакты в Files» (P3.1 fix-предложение); правило «async-обёртка вместо буквального
-  node --check» для Validation-пунктов будущих item'ов над `dev-loop.js`/канон-шаблонами (P3.4
-  fix-предложение выше).
+- deferred: rollout доставки гейта (пост-резолв OQ-3, deleg skiller/maind); детализация P4–P5
+  (contract-first, just-in-time, D5); launch-block вне `plan-*` (OQ-2); правило «registry-артефакты
+  в Files» (P3.1 fix-предложение); правило «async-обёртка вместо буквального node --check» для
+  Validation-пунктов над `dev-loop.js`/канон-шаблонами (P3.4 fix-предложение).
 - open_questions: **OQ-1** (артефакт exec-плана, P4) · **OQ-2** (launch-block в `dev.md`/`fix.md`) ·
-  **OQ-3** (канал доставки гейта workflow-craft/make-workflow — CORE vs onboard-required; резолв в
-  exec P3.5 на budget-данных; владелец Dmitry Vostrikov).
+  **OQ-3** (канал доставки гейта — квантифицирован P3.5, рекомендация A=CORE_SKILLS; **ждёт решения
+  Owner Dmitry Vostrikov**, статус Decision pending).
+
+**Context:** handoff свежий — рекомендован /clear перед следующим шагом.

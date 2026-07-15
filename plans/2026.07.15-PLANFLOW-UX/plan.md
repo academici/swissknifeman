@@ -96,6 +96,7 @@
 | 2026-07-15 | plan-design/opus | P2 детализирована (2 item'а): P2.1 форма `Next` «ОЖИДАНИЕ» + lint-детект прозы + миграция SKM-MASTER-002 (opus/high manual); P2.2 дисциплина ошибка→фикс (sonnet/high manual). D7 (scope-сужение вне-plan-*→OQ-2), D8 (форма «ОЖИДАНИЕ»); Обсуждение №3/№4; v0.1.0→0.2.0 |
 | 2026-07-15 | plan-run(manual)/opus/high | P2.1 закрыт 🟠 (dev outside Files): 9-я форма `Next` «ОЖИДАНИЕ» (SKILL §8 RU+EN + 2 сниппета), `plan_lint` резолв `waiting`+C2-WARNING, миграция SKM-MASTER-002; deviation — регенерённые skills.json/budget.md вне Files — детали см. phases/P2.md P2.1 Completion Notes |
 | 2026-07-15 | plan-run(manual)/sonnet/high | P2.2 закрыт 🟢, фаза P2 терминальна (🟠 — P2.1 деviation): дисциплина «ошибка→фикс-предложение» C3/D6 в SKILL §8 (RU+EN, ≤8 строк) + зеркало `plan-exec.md` §6/§8 — детали см. phases/P2.md P2.2 Completion Notes |
+| 2026-07-15 | plan-close(manual)/sonnet/low | Фаза P2 закрыта: Phase Handoff заполнен (агрегат Known Deviations из P2.1/P2.2), handoff.md перезаписан (after P2), lint прогнан |
 
 ## 7. Contracts
 

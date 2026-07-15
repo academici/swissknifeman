@@ -2015,10 +2015,10 @@
       "name": "anti-drift",
       "bucket": "general",
       "path": "skills/general/anti-drift/SKILL.md",
-      "version": "0.2.1",
+      "version": "0.3.0",
       "description": "Discipline against agent rabbit-holing: think before coding, simplicity first, surgical edits, circuit-breaker on dragging iterations.",
-      "sha256": "6eadd6e5ca344d7ab19a8b2ff1019dc28522a61e3be6ebc62ea6cbfc3419fbfb",
-      "content_sha256": "ea1325cfa54b69ed8566d7d28046e21e836374be4f53f58b85a94c184ee670a7",
+      "sha256": "b6760ecc2353aba5279c1d0b74c22ae6d41eebd713797e4d6a22ce43d0f7341d",
+      "content_sha256": "f0c416a76de6fb97ac76df8c55a520125c161a00e99030c6ba70aa6df37c1a71",
       "tags": [
         "workflow",
         "discipline",

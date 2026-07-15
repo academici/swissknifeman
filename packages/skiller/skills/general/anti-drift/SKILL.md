@@ -1,7 +1,7 @@
 ---
 name: anti-drift
 bucket: general
-version: 0.2.1
+version: 0.3.0
 description: "Discipline against agent rabbit-holing: think before coding, simplicity first, surgical edits, circuit-breaker on dragging iterations."
 risk: read
 persona: oss-dev
@@ -29,6 +29,28 @@ Any code-writing/editing session, especially when:
 2. **Simplicity First** — minimal code for the current task; not one line "for the future" (YAGNI). Check: "could I write this simpler?" If yes, rewrite before committing.
 3. **Surgical Changes** — touch only files named in the task; don't improve neighboring code unrequested. Check: `git diff` — any out-of-scope change? Revert it.
 4. **Goal-Driven Execution** — success criterion (test/check) first, then code. Check: is there a check that fails BEFORE and passes AFTER?
+
+## File-op hygiene (read/edit/write)
+
+Three concrete rules against file-op churn — a measured (not hypothetical) source of wasted
+iterations: reread dwarfs Edit/Write failures by an order of magnitude, and failures are the
+tool's existing gate firing (Edit/Write rejects editing a file not Read THIS session), not a
+silent overwrite.
+
+1. **Read-before-edit.** Before Edit/Write a file, confirm it was Read THIS session (not from
+   memory of an earlier iteration). The tool rejects the attempt anyway without a read — a
+   blind attempt is pure churn (reject → forced-read → retry) with no upside. Check: can you
+   cite the line number of the last Read of this file in the current session?
+2. **Anchor hygiene.** Take `old_string` verbatim from the FRESH Read output, not from
+   memory/guess — large, unique context (several lines, not one word), else
+   `string-not-found`/`not-unique`. Repeated edit pattern → `replace_all=true` instead of a
+   series of single Edits. Check: is `old_string` copied from the latest Read output, not
+   typed from memory?
+3. **Anti-reread.** A file already visible in session context, unchanged since its last Read
+   (by you or an external tool) — don't reread it, use the content already in context. Reread
+   is the largest measured driver of file-op churn, yet produces NO tool error (not caught by
+   failure categorization) — only discipline stops it. Check: any Edit/Write of THIS file
+   (yours or someone else's) between now and its last Read? No → don't reread.
 
 ## Circuit Breaker — stop thresholds
 
@@ -66,4 +88,4 @@ Long-lived daemons/servers (browser pools like perplexity-web-mcp, dev servers, 
 
 `snippets/claude-md-anti-drift.md` — ready-made rules block for the target project's CLAUDE.md (agent applies thresholds without an explicit skill call).
 
-<!-- ru-source-sha256: 7ebaee24e5cac6c4e6ead03b0c8ac9447682ca0e8fea575d1724ad4efa0a0b3f -->
+<!-- ru-source-sha256: 0e0901faeb2e8d383a078f0228402e6efe5592a0d52efd03a48d8073ff98eb0a -->

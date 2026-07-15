@@ -1,4 +1,4 @@
 # ACTIVE
 
-**Active:** 2026.07.13-PLAN-PROTOCOL-GAP
-**Updated:** 2026-07-13
+**Active:** —
+**Updated:** 2026-07-15

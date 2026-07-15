@@ -7,7 +7,7 @@
 | Plan ID | 2026.07.13-PLAN-PROTOCOL-GAP |
 | Title | Кластер protocol-gap: routing-гейт, честный lint закрытия, cross-plan notification, status-rule |
 | Version | 1.5.0 |
-| Status | 🟡 In progress |
+| Status | 🟠 Done with deviations |
 | Document Type | Implementation Master Plan |
 | Authoring Model | opus/high (`/task:design`, 2026-07-13) |
 | Last Updated | 2026-07-15 |
@@ -236,6 +236,7 @@ Blocker-остатке по существу — фазу держали не д
 | 2026-07-15 | plan-exec (sonnet/medium) | P4.1 закрыт (`4922ddc`): парный regression-замер 10 корней/30 планов (D53) — 0 новых ERROR/WARNING вне archive-покрытия (N3/D14) и message-rewording нейтральных пар (D14) — детали см. phases/P4.md P4.1 Completion Notes. |
 | 2026-07-15 | plan-run (**opus/high**, Exec=manual, D18) | P4.2 закрыт (Brain `461a860`): кластер protocol-gap закрыт в SSOT-источнике REGHUB — §Процессные F7/m7/m8/A5/B1 → Resolved D#, скелет P3 78→0 ERROR, `## 7. Contracts` (6 контрактов) — детали см. phases/P4.md P4.2 Completion Notes. |
 | 2026-07-15 | plan-exec (sonnet/low) | P4.3 закрыт (`46713a4`), все items P4 терминальны (3/3 🟢): CHANGELOG + 3 дока (structure/reference/rejected) — детали см. phases/P4.md P4.3 Completion Notes. |
+| 2026-07-15 | plan-close (sonnet/low) | **Фаза P4 закрыта** `🟢 Done` (3/3), `plan-lint` 0/0. **Все фазы терминальны — план закрыт целиком**: Status §0 → `🟠 Done with deviations` (агрегат), `plans/ACTIVE.md` → `—` — детали см. `handoff.md`. |
 
 ## Обсуждение
 

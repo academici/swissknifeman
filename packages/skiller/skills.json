@@ -2386,8 +2386,8 @@
       "path": "skills/general/workflow-craft/SKILL.md",
       "version": "0.1.0",
       "description": "Activate on \\\"write a workflow\\\"/multi-agent orchestration: match 4 canonical templates first, then design-vs-dev stage matrix; slots per README.",
-      "sha256": "3420928f4ff54c3a4f1887b441aa14199f95a9432a52f7b4392a15758d93f447",
-      "content_sha256": "bbc99fddc1394258572a7fde09db995ea2a2c7de5790e6f8d4fc49f9c8569b8a",
+      "sha256": "a6dff90faca39c9929ed58ae9629c490b04d44d1c749a6aa2ab092e9bb256af9",
+      "content_sha256": "9ecb51429c860d19345889b48178395300ae4ff4f4c6169155007143f843f23b",
       "tags": [
         "workflow",
         "orchestration",

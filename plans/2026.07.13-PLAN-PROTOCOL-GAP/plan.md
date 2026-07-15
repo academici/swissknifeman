@@ -115,7 +115,7 @@ Blocker-остатке по существу — фазу держали не д
 | P1 | Разблокировка: формы Next + честный счёт lint | 2/2 | 🟢 Done |
 | P2 | SSOT-канон: routing-гейт, status-rule, Contracts (+ ремедиация аудитов) | 17/18 | 🟠 Done with deviations |
 | P3 | Команды plan-*: гейты и порядок закрытия | 10/11 | 🟠 Done with deviations |
-| P4 | Регресс по флоту, закрытие эскалации REGHUB, доки | 2/3 | 🟡 In progress |
+| P4 | Регресс по флоту, закрытие эскалации REGHUB, доки | 3/3 | 🟢 Done |
 
 ## 5. Decision Log
 
@@ -235,6 +235,7 @@ Blocker-остатке по существу — фазу держали не д
 | 2026-07-15 | issue-planner (opus/high, `/task:plan-design P4`) | **P4 дизайн-рефайн + DoR pass**: P4.3 → `plan-protocol` 2.7.0 (был 2.4.0) + CHANGELOG на реопен-волну; P4.2 baseline REGHUB → **78**; D57 — P4 item-by-item (порог §7 не сработал, 2<3) — детали см. phases/P4.md + D57. |
 | 2026-07-15 | plan-exec (sonnet/medium) | P4.1 закрыт (`4922ddc`): парный regression-замер 10 корней/30 планов (D53) — 0 новых ERROR/WARNING вне archive-покрытия (N3/D14) и message-rewording нейтральных пар (D14) — детали см. phases/P4.md P4.1 Completion Notes. |
 | 2026-07-15 | plan-run (**opus/high**, Exec=manual, D18) | P4.2 закрыт (Brain `461a860`): кластер protocol-gap закрыт в SSOT-источнике REGHUB — §Процессные F7/m7/m8/A5/B1 → Resolved D#, скелет P3 78→0 ERROR, `## 7. Contracts` (6 контрактов) — детали см. phases/P4.md P4.2 Completion Notes. |
+| 2026-07-15 | plan-exec (sonnet/low) | P4.3 закрыт (`46713a4`), все items P4 терминальны (3/3 🟢): CHANGELOG + 3 дока (structure/reference/rejected) — детали см. phases/P4.md P4.3 Completion Notes. |
 
 ## Обсуждение
 

@@ -98,17 +98,26 @@ design-only, dev-slice/author-by-spec → dev) и веди весь скрипт
 
 ### 2.1 Эталоны (полевые прототипы обоих типов)
 
-Два реальных workflow-скрипта из чужих планов vault Brain служат образцом
-формы (структура стадий, что каждый тип НЕ содержит) — **cross-ref по
-абсолютному пути, не вендорить** (чужие планы, копия дрейфует от источника):
+Реальные workflow-скрипты из чужих планов vault Brain служат образцом формы
+(структура стадий, что каждый тип НЕ содержит) — **cross-ref по абсолютному
+пути, не вендорить** (чужие планы, копия дрейфует от источника):
 
-- **design-only:** `/home/vostrikov/Vaults/Brain/plans/ECOSYSTEM/workflows/
+- **design-only, high-water-mark:** `/home/vostrikov/Vaults/Brain/plans/EDUFY-2/
+  workflows/wf-edufy-2-design-wave.js` — сильнейший живой образец из разобранных
+  (findings P1-recon §1.4 «Ирония эталона»): `// SLOT:`-маркеры на каждой
+  константе (единственный из ~44 файлов флота их несёт), judge-panel гейтнут
+  ТОЛЬКО на high-stakes фазу (`JUDGE_PHASES`/`JUDGE_QUORUM`, не везде),
+  `MAX_FIX_ROUNDS` на КАЖДОМ audit→fix цикле (не только основном), pipeline +
+  граф зависимостей фаз. Смотреть на структуру ПЕРВЫМ — она выше базового
+  уровня двух эталонов ниже.
+- **design-only, база:** `/home/vostrikov/Vaults/Brain/plans/ECOSYSTEM/workflows/
   wf-design-fleet.js` — RAG-research → дизайн → adversarial-аудит/DoR-гейт →
   фиксы → re-audit, без единой строки кода/тестов.
-- **dev:** `/home/vostrikov/Vaults/Brain/plans/AGENTOOLS/workflows/
+- **dev, база:** `/home/vostrikov/Vaults/Brain/plans/AGENTOOLS/workflows/
   wf-agentools-drive.js` — срез → impl → tests-to-green → review → гейты →
   коммит, с флагом `designOnly` в слотах для ветвления между двумя режимами
-  внутри одного шаблонного семейства.
+  внутри одного шаблонного семейства; L195 — образец guarded-optional-args
+  (`typeof args === 'string' ? JSON.parse(args) : (args || {})`).
 
 Если файл недоступен (vault не смонтирован на исполняющей машине) — не
 падай и не выдумывай содержимое: используй только путь как cross-ref и

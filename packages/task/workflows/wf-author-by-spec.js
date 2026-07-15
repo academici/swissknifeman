@@ -12,14 +12,21 @@ export const meta = {
 
 // ── Конфиг (embedded, НЕ через args-строку) ──────────────────────────────────
 // SLOT: пути — репозиторий-цель и спека-SSOT (абсолютные: cwd субагента сбрасывается).
+// ИНВАРИАНТ: абсолютный путь обязателен — assert ловит относительный на живом прогоне,
+// не срабатывает на незаполненном шаблоне (плейсхолдер `/abs/path/to/…` сам абсолютен).
 const REPO = '/abs/path/to/repo'
 const SPEC = '/abs/path/to/spec.md'
+if (!REPO.startsWith('/')) throw new Error(`REPO должен быть абсолютным путём: "${REPO}"`)
+if (!SPEC.startsWith('/')) throw new Error(`SPEC должен быть абсолютным путём: "${SPEC}"`)
 
 // SLOT: FILES — файловые задания. Одно задание = один агент = один коммит.
 //   files      — какие файлы правит/создаёт (дисциплина: ТОЛЬКО их);
 //   brief      — плотное ТЗ со ссылкой на блок спеки (агент обязан читать спеку сам);
 //   validation — команда/греп, которыми агент И self-check проверяют результат;
 //   commit     — готовый subject Conventional Commits (агент не сочиняет свой).
+// cache-bust: `agent()` кэширует по (prompt, opts) — на `resumeFromRunId` ОДНОГО задания
+// без глобального инвалидатора добавь опц. поле `asOf` (дата/тег) в объект задания и подмешай
+// в `label` (см. README §Общие инварианты; паттерн — roadmap-заметка dterema-p4).
 const FILES = [
   {
     key: 'block-1',
@@ -32,6 +39,8 @@ const FILES = [
 
 // SLOT: конвейер-команды — обязательные прогоны после правки (пусто, если их нет).
 // Пример swissknifeman: check-translations.sh --stamp → skiller registry → validate.sh.
+// guarded-optional-args: пустой массив — явный дефолт «конвейера нет» (см. `CONVEYOR.length ?
+// … : null` ниже), не пропуск проверки — паттерн из `wf-agentools-drive` (cross-ref, не вендорить).
 const CONVEYOR = []
 
 // SLOT: model/effort — авторинг обычно sonnet/medium, self-check sonnet/low.

@@ -99,18 +99,27 @@ stages from the other column "just in case".
 
 ### 2.1 Reference scripts (field prototypes of both types)
 
-Two real workflow scripts from other plans in vault Brain serve as a shape
+Real workflow scripts from other plans in vault Brain serve as a shape
 reference (stage structure, what each type does NOT contain) — **cross-ref by
 absolute path, don't vendor** (they belong to other plans; a copy drifts from
 the source):
 
-- **design-only:** `/home/vostrikov/Vaults/Brain/plans/ECOSYSTEM/workflows/
-  wf-design-fleet.js` — RAG research → design → adversarial audit/DoR gate →
-  fixes → re-audit, with zero lines of code/tests.
-- **dev:** `/home/vostrikov/Vaults/Brain/plans/AGENTOOLS/workflows/
+- **design-only, high-water-mark:** `/home/vostrikov/Vaults/Brain/plans/
+  EDUFY-2/workflows/wf-edufy-2-design-wave.js` — the strongest live example
+  surveyed (findings P1-recon §1.4 "Reference irony"): `// SLOT:` markers on
+  every constant (the only one of ~44 fleet files carrying them), judge-panel
+  gated ONLY on the high-stakes phase (`JUDGE_PHASES`/`JUDGE_QUORUM`, not
+  everywhere), `MAX_FIX_ROUNDS` on EVERY audit→fix cycle (not just the main
+  one), pipeline + phase dependency graph. Look at its structure FIRST — it's
+  above the baseline of the two references below.
+- **design-only, baseline:** `/home/vostrikov/Vaults/Brain/plans/ECOSYSTEM/
+  workflows/wf-design-fleet.js` — RAG research → design → adversarial
+  audit/DoR gate → fixes → re-audit, with zero lines of code/tests.
+- **dev, baseline:** `/home/vostrikov/Vaults/Brain/plans/AGENTOOLS/workflows/
   wf-agentools-drive.js` — slice → impl → tests-to-green → review → gates →
   commit, with a `designOnly` slot flag branching between the two modes
-  within one template family.
+  within one template family; L195 is a guarded-optional-args example
+  (`typeof args === 'string' ? JSON.parse(args) : (args || {})`).
 
 If the file is unreachable (vault not mounted on the executing machine) —
 don't fail and don't invent content: use the path as a cross-ref only and the
@@ -193,4 +202,4 @@ unavailable — don't pass off unverified orchestration as verified.
   orchestration (step 5).
 - `general/verify-claims` — when and how to verify an external fact at all.
 
-<!-- ru-source-sha256: ba2e4d3f2d6711076962f50972e1a1d8732d4352fc8f2e5d46aa3e14829509b5 -->
+<!-- ru-source-sha256: f4e111bc28531540733da5efa74b040353b43ef932f48f8ffd4290d3d554fee6 -->

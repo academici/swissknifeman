@@ -13,14 +13,21 @@ export const meta = {
 
 // ── Конфиг (embedded, НЕ через args-строку) ──────────────────────────────────
 // SLOT: пути — репозиторий и ТЗ-SSOT (абсолютные: cwd субагента сбрасывается).
+// ИНВАРИАНТ: абсолютный путь обязателен — assert ловит относительный на живом прогоне,
+// не срабатывает на незаполненном шаблоне (плейсхолдер `/abs/path/to/…` сам абсолютен).
 const REPO = '/abs/path/to/repo'
 const SPEC = '/abs/path/to/spec.md'
+if (!REPO.startsWith('/')) throw new Error(`REPO должен быть абсолютным путём: "${REPO}"`)
+if (!SPEC.startsWith('/')) throw new Error(`SPEC должен быть абсолютным путём: "${SPEC}"`)
 
 // SLOT: SLICES — вертикальные срезы, последовательно. Один срез = impl + green + review + коммит.
 //   brief  — ТЗ среза со ссылкой на раздел SPEC (агент читает SPEC сам);
 //   tests  — команда прогона тестов среза (и есть его validation);
 //   risk   — low | medium | high: определяет глубину review (см. reviewFor);
 //   commit — готовый subject Conventional Commits.
+// cache-bust: `agent()` кэширует по (prompt, opts) — на `resumeFromRunId` ОДНОГО среза
+// без глобального инвалидатора добавь опц. поле `asOf` (дата/тег) в объект среза и подмешай
+// в `label` (см. README §Общие инварианты; паттерн — roadmap-заметка dterema-p4).
 const SLICES = [
   {
     key: 'slice-1',
@@ -46,6 +53,9 @@ const GREEN_MODEL = { model: 'sonnet', effort: 'medium' }
 // Risk-адаптивное review: low — self-check автора достаточен (review пропускается);
 // medium — один ревьюер свежим контекстом; high — opus/xhigh (для фискалки/платежей/
 // tenant-isolation дополнительно судейская панель — шаблон wf-audit-adversarial).
+// guarded-optional-args: срез без `risk` не должен молча получить дешёвый review — явный
+// дефолт 'medium' (typeof-guard), не голое обращение к `s.risk` (паттерн wf-agentools-drive).
+const riskOf = s => typeof s.risk === 'string' ? s.risk : 'medium'
 const reviewFor = risk => risk === 'high'
   ? { model: 'opus', effort: 'xhigh' }
   : { model: 'opus', effort: 'medium' }
@@ -119,9 +129,15 @@ const gatePrompt = s => [
 // ── Оркестрация: срезы последовательно, внутри среза — loop-until-green с потолком ──
 log(`dev-slice: ${SLICES.length} срезов, max green-итераций: ${MAX_GREEN_ITERATIONS}`)
 
+// safeAgent — try/catch над **bare** `await agent()` (вне `parallel()`/`pipeline()`, где throw
+// уже ловится рантаймом и отдаёт `null`): без обёртки бросок агента роняет весь прогон.
+async function safeAgent(prompt, opts) {
+  try { return await agent(prompt, opts) } catch (e) { log(`agent error (${opts.label || '?'}): ${e.message || e}`); return null }
+}
+
 const done = []
 for (const s of SLICES) {
-  let res = await agent(implPrompt(s), {
+  let res = await safeAgent(implPrompt(s), {
     label: `impl:${s.key}`, phase: 'Impl', ...IMPL_MODEL, schema: REPORT,
   })
   if (!res) { log(`СТОП: impl:${s.key} без результата`); break }
@@ -130,7 +146,7 @@ for (const s of SLICES) {
   let iter = 0
   while (!res.tests_green && iter < MAX_GREEN_ITERATIONS) {
     iter++
-    const fix = await agent(greenPrompt(s, res, iter), {
+    const fix = await safeAgent(greenPrompt(s, res, iter), {
       label: `green:${s.key}#${iter}`, phase: 'Green', ...GREEN_MODEL, schema: REPORT,
     })
     if (!fix) break
@@ -144,9 +160,9 @@ for (const s of SLICES) {
 
   // Risk-адаптивное review: low пропускает отдельного ревьюера.
   let review = null
-  if (s.risk !== 'low') {
-    review = await agent(reviewPrompt(s), {
-      label: `review:${s.key}`, phase: 'Review', ...reviewFor(s.risk), schema: REVIEW_SCHEMA,
+  if (riskOf(s) !== 'low') {
+    review = await safeAgent(reviewPrompt(s), {
+      label: `review:${s.key}`, phase: 'Review', ...reviewFor(riskOf(s)), schema: REVIEW_SCHEMA,
     })
     if (review && review.verdict === 'FIX_REQUIRED') {
       log(`СТОП: review среза ${s.key} = FIX_REQUIRED (${review.findings.length} наход.) — фиксы в main loop, review-фиксы отдельными коммитами`)
@@ -157,7 +173,7 @@ for (const s of SLICES) {
 
   // Гейты между срезами.
   const gate = GATES.length
-    ? await agent(gatePrompt(s), { label: `gate:${s.key}`, phase: 'Impl', model: 'sonnet', effort: 'low', schema: REPORT })
+    ? await safeAgent(gatePrompt(s), { label: `gate:${s.key}`, phase: 'Impl', model: 'sonnet', effort: 'low', schema: REPORT })
     : null
   if (gate && gate.issues && gate.issues.length) {
     log(`СТОП: гейт после ${s.key} красный: ${gate.issues.join('; ')}`)

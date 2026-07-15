@@ -13,6 +13,9 @@ export const meta = {
 // ── Конфиг (embedded, НЕ через args-строку) ──────────────────────────────────
 // SLOT: TOPICS — темы разведки; key = slug для label/отчёта, brief = плотное ТЗ
 // с контекстом экосистемы, таймфреймом (год!), named tools и границами scope.
+// cache-bust: `agent()` кэширует по (prompt, opts) — на `resumeFromRunId` ОДНОЙ темы без
+// глобального инвалидатора добавь опц. поле `asOf` (дата/тег) в объект темы и подмешай в
+// `label`/промпт (см. README §Общие инварианты; паттерн — roadmap-заметка dterema-p4).
 const TOPICS = [
   { key: 'topic-a', brief: 'Тема A: конкретный вопрос со стеком/версиями/таймфреймом 2025-2026, "X vs Y", named tools.' },
   { key: 'topic-b', brief: 'Тема B: …' },
@@ -27,6 +30,8 @@ const RESEARCH_MODEL = { model: 'sonnet', effort: 'medium' }
 const VERIFY_MODEL = { model: 'sonnet', effort: 'medium' }
 
 // SLOT: сколько load-bearing утверждений проверять на тему (verify — не бесплатный).
+// guarded-optional-args: если load-bearing утверждений нет, фолбэк на первые 4 (см. `claims`
+// в verifyPrompt) — явный дефолт, не пустой список верификации; wf-agentools-drive cross-ref.
 const VERIFY_TOP_N = 6
 
 // ── Схемы structured-summary (агент возвращает данные, супервизор держит контекст) ──

@@ -13,9 +13,13 @@ export const meta = {
 
 // ── Конфиг (embedded, НЕ через args-строку) ──────────────────────────────────
 // SLOT: TARGET — что аудируем (абсолютные пути: репо/план/дифф) + как читать.
+// ИНВАРИАНТ: только абсолютные пути (cwd субагента сбрасывается между вызовами).
 const TARGET = {
   paths: ['/abs/path/to/target'],
   readHint: 'прочитай план целиком; код — точечно по ссылкам из плана', // как экономно читать цель
+}
+for (const p of TARGET.paths) {
+  if (!p.startsWith('/')) throw new Error(`TARGET.paths должен быть абсолютным путём: "${p}"`)
 }
 
 // SLOT: CONSTITUTION — конституция соответствия (профиль artifact-review, блок 12):
@@ -26,6 +30,9 @@ const CONSTITUTION = ['/abs/path/to/constitution.md']
 // SLOT: DIMENSIONS — измерения аудита; по finder'у на измерение. Классика для кода:
 // correctness/security/perf + conformance-finder на каждый применимый скилл.
 // Для плана: RAG-groundedness, структурная полнота, непротиворечивость D-лога, Open Questions.
+// cache-bust: `agent()` кэширует по (prompt, opts) — на `resumeFromRunId` конкретного
+// измерения без глобального инвалидатора добавь опц. поле `asOf` (дата/тег) в объект
+// измерения и подмешай в `label`/промпт (см. README §Общие инварианты), не трогая остальные.
 const DIMENSIONS = [
   { key: 'dimension-a', brief: 'Что именно искать, какие паттерны дефектов, что НЕ является находкой.' },
 ]
@@ -35,6 +42,8 @@ const SEVERITY = ['Blocker', 'Major', 'Minor', 'Nit']
 
 // SLOT: judge-panel — ТОЛЬКО для high-stakes стадий (фискалка/платежи/tenant-isolation/
 // ядро экосистемы). false = один verify-агент; true = 3 независимых вердикта + консенсус.
+// guarded-optional-args: флаг с явным дефолтом (false), не голое условие без значения по
+// умолчанию — паттерн из `wf-agentools-drive` (cross-ref абс.путём, не вендорить).
 const JUDGE_PANEL = false
 
 // SLOT: model/effort — finders sonnet/medium; verify дороже (свежий контекст решает вердикт).
@@ -112,6 +121,12 @@ function verifyPrompt(findings, judgeIdx) {
   ].join('\n')
 }
 
+// safeAgent — try/catch над **bare** `await agent()` (вне `parallel()`/`pipeline()`, где throw
+// уже ловится рантаймом и отдаёт `null`): без обёртки бросок агента роняет весь прогон.
+async function safeAgent(prompt, opts) {
+  try { return await agent(prompt, opts) } catch (e) { log(`agent error (${opts.label || '?'}): ${e.message || e}`); return null }
+}
+
 // ── Оркестрация ──────────────────────────────────────────────────────────────
 log(`audit-adversarial: ${DIMENSIONS.length} измерений, judge-panel=${JUDGE_PANEL}`)
 
@@ -127,7 +142,7 @@ if (!raw.length) { log('находок нет — аудит чист'); return 
 
 // Dedup нужен только когда finder'ов больше одного — иначе нечего сливать.
 const deduped = DIMENSIONS.length > 1 && raw.length > 1
-  ? (await agent(dedupPrompt(raw), { label: 'dedup', phase: 'Dedup', ...DEDUP_MODEL, schema: FINDINGS_SCHEMA }))?.findings || raw
+  ? (await safeAgent(dedupPrompt(raw), { label: 'dedup', phase: 'Dedup', ...DEDUP_MODEL, schema: FINDINGS_SCHEMA }))?.findings || raw
   : raw
 
 log(`находок: ${raw.length} → после dedup: ${deduped.length}`)
@@ -150,7 +165,7 @@ if (JUDGE_PANEL) {
     return { summary: f.summary, verdict, note: v.map(x => x.note).join(' | '), severity: f.severity }
   })
 } else {
-  const v = await agent(verifyPrompt(deduped, null), {
+  const v = await safeAgent(verifyPrompt(deduped, null), {
     label: 'verify', phase: 'Verify',
     ...VERIFY_MODEL, schema: VERDICTS_SCHEMA,
   })

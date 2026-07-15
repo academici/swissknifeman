@@ -10,7 +10,7 @@
 | Status | 🟡 In progress (design) |
 | Document Type | Executable Master Plan |
 | Authoring Model | opus |
-| Last Updated | 2026-07-15 (P2.1 закрыт 🟠: форма `Next` «ОЖИДАНИЕ» + lint-детект + миграция SKM-MASTER-002) |
+| Last Updated | 2026-07-15 (P2.2 закрыт 🟢, фаза P2 терминальна 🟠: дисциплина ошибка→фикс-предложение C3/D6) |
 | Repository | swissknifeman |
 | Related Packages | task (plan-protocol/workflow-craft скиллы, команды plan-*/make-workflow/review), skiller (реестр скиллов, budget), harness (agent-packs dev-loop, run-report) |
 | Execution Mode | phase-first |
@@ -69,7 +69,7 @@
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P1 | Recon: доказбаза (workflow-авторинг · plan-design клинчи · handoff-конформанс) | 1/1 | 🟢 Done |
-| P2 | Launch-block энфорсмент + ошибка→сразу-фикс | 0/2 | 🟡 In progress |
+| P2 | Launch-block энфорсмент + ошибка→сразу-фикс | 1/2 | 🟠 Done with deviations |
 | P3 | Workflow-авторинг + авто-ревью (make-workflow ревьюер · base-шаблоны · видимость скилла) | 0/2 | ⬜ Not started |
 | P4 | Contract-first дизайн-флоу + глобальный exec-план + батчинг + адаптивная глубина ревью | 0/3 | ⬜ Not started |
 | P5 | Fix-стратегия plan-design + архитектурный апгрейд скиллов/сниппетов | 0/2 | ⬜ Not started |
@@ -95,6 +95,7 @@
 | 2026-07-15 | plan-exec(manual)/opus/high | P1.1 закрыт 🟢, фаза P1 терминальна: recon `findings/P1-recon.md`; D4 верифицирован A✅/B🟡/C✅; скелеты P2–P5 подтверждены; гейт TELEMETRY-OPT снят — детали см. phases/P1.md P1.1 Completion Notes |
 | 2026-07-15 | plan-design/opus | P2 детализирована (2 item'а): P2.1 форма `Next` «ОЖИДАНИЕ» + lint-детект прозы + миграция SKM-MASTER-002 (opus/high manual); P2.2 дисциплина ошибка→фикс (sonnet/high manual). D7 (scope-сужение вне-plan-*→OQ-2), D8 (форма «ОЖИДАНИЕ»); Обсуждение №3/№4; v0.1.0→0.2.0 |
 | 2026-07-15 | plan-run(manual)/opus/high | P2.1 закрыт 🟠 (dev outside Files): 9-я форма `Next` «ОЖИДАНИЕ» (SKILL §8 RU+EN + 2 сниппета), `plan_lint` резолв `waiting`+C2-WARNING, миграция SKM-MASTER-002; deviation — регенерённые skills.json/budget.md вне Files — детали см. phases/P2.md P2.1 Completion Notes |
+| 2026-07-15 | plan-run(manual)/sonnet/high | P2.2 закрыт 🟢, фаза P2 терминальна (🟠 — P2.1 деviation): дисциплина «ошибка→фикс-предложение» C3/D6 в SKILL §8 (RU+EN, ≤8 строк) + зеркало `plan-exec.md` §6/§8 — детали см. phases/P2.md P2.2 Completion Notes |
 
 ## 7. Contracts
 

@@ -36,3 +36,14 @@ Owner. OQ-5 (оси B/C permission-friction) и OQ-4 (research opus→sonnet) �
 - workarounds: —
 - deferred: реализация рычагов L1/L2/L4 backlog P5.3 — отдельным новым планом, если Owner решит.
 - open_questions: OQ-4, OQ-5 — Decision pending (вне scope этого плана, не блокируют архивацию).
+
+## Чек-лист миграции (archive)
+
+- `root/` в плане отсутствовал — шаг 3 (миграция в docs проекта) пропущен, ничего не переносилось.
+- Перенос: `plans/2026.07.15-TELEMETRY-OPT` → `plans/archive/2026.07.15-TELEMETRY-OPT` (git mv,
+  коммит `chore(plan): archive 2026.07.15-TELEMETRY-OPT`).
+- Остаётся в архиве целиком: `plan.md`, `phases/`, `findings/`, `open-questions.md`, этот `handoff.md`.
+- Реестры/ссылки обновлены на `plans/archive/...`: `packages/skiller/skills/general/workflow-craft/SKILL.md`
+  (EN-канон; RU-источник `SKILL.ru.md` эту ссылку не несёт — расхождения нет), `roadmap/README.md`,
+  `roadmap/2026.07.15-workflow-global-cachebust-fullpipeline-rerun.md`, `docs/routing.md`.
+- `plans/ACTIVE.md` уже указывал `—` — не менялся.

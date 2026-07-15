@@ -138,7 +138,7 @@ The run-report field `workflow_relaunch` (harness detector `_lib.py`, fires at
 ≥3 launches/resumes of one workflow in one session) is not a core-tool bug:
 `resumeFromRunId` after an `Edit` to the script is a documented, sanctioned
 pattern ("the longest unchanged prefix of agent() calls returns cached
-results instantly"). Field precedent (`plans/2026.07.15-TELEMETRY-OPT/
+results instantly"). Field precedent (`plans/archive/2026.07.15-TELEMETRY-OPT/
 findings/P1-workflow-rootcause.md`): a dterema session called `Workflow` 15×
 in a row — not "relaunch without a signal", but **8 rounds of fixing the
 workflow script from inside the main interactive session** (relative-path

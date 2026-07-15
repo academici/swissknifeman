@@ -177,7 +177,7 @@ swissknifeman — **зонтик из четырёх пакетов**, а не �
 Каждая `/task:*`-команда пинит `model`/`effort` во frontmatter `packages/task/commands/*.md`,
 перебивая настройки сессии (SSOT-матрица тиров — скилл `general/plan-protocol` §9, здесь **не
 дублируется**, а обосновывается per-command). Секция фиксирует **рационал каждого пина + вердикт
-аудита P3.1** (`plans/2026.07.15-TELEMETRY-OPT/findings/P3-routing-audit.md`) — провенанс, чтобы
+аудита P3.1** (`plans/archive/2026.07.15-TELEMETRY-OPT/findings/P3-routing-audit.md`) — провенанс, чтобы
 не second-guess'ить пины повторно. Ось оптимизации — **токен-экономия** (Opus доминирует по out:
 8.1M vs Sonnet 5.4M — самый дорогой рычаг). Ось downgrade — **только Opus → Sonnet 5**: Fable 5
 дороже Opus (out $50 = 2× Opus, up-tier для frontier-сложности) → как цель-даунгрейда исключён.

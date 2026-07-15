@@ -118,11 +118,14 @@ table above as the requirement source.
 
 ### 3. Slot rules — by reference, don't duplicate
 
-How to fill slots (constants in the script header, embedded config instead of
-an args string, structured-summary-by-schema for every `agent()`, judge-panel
-only for high-stakes, max-iteration on every loop-until) — see
-`packages/task/workflows/README.md` §"Slot-filling rules". Started retelling
-these rules here instead of linking — stop, that's a constructor duplicate.
+How to fill slots (constants in the script header, `// SLOT:` markers
+recommended but not mandatory; embedded config instead of an args string;
+structured-summary-by-schema for **control-flow agents**, action/mechanical
+agents may return prose; judge-panel only for high-stakes; max-iteration on
+every loop-until; top-level `return report` is a sanctioned runtime idiom, not
+a defect) — see `packages/task/workflows/README.md` §"Slot-filling rules".
+Started retelling these rules here instead of linking — stop, that's a
+constructor duplicate.
 
 ### 4. File location and name
 
@@ -190,4 +193,4 @@ unavailable — don't pass off unverified orchestration as verified.
   orchestration (step 5).
 - `general/verify-claims` — when and how to verify an external fact at all.
 
-<!-- ru-source-sha256: 87bd0d13768d91376e2f46ccf0f2352a061e1c2bdb7c203b890d4c48712545fb -->
+<!-- ru-source-sha256: ba2e4d3f2d6711076962f50972e1a1d8732d4352fc8f2e5d46aa3e14829509b5 -->

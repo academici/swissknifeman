@@ -169,7 +169,7 @@ flowchart LR
     spec_interview["spec-interview<br/>⊕58 ↻753"]:::mild
     task_brief_template["task-brief-template<br/>⊕79 ↻1253"]:::mild
     verify_claims["verify-claims<br/>⊕110 ↻2696"]:::hot
-    workflow_craft["workflow-craft<br/>⊕48 ↻2838"]:::mild
+    workflow_craft["workflow-craft<br/>⊕48 ↻2889"]:::mild
     writing_style["writing-style<br/>⊕98 ↻1905"]:::warm
   end
   subgraph laravel_architecture["laravel-architecture"]
@@ -423,13 +423,13 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 215 скиллов · ⊕ always **14798** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 312459 ток · ⌥ on-demand 821832 ток (сниппеты + references).
+**Итого:** 215 скиллов · ⊕ always **14798** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 312510 ток · ⌥ on-demand 821832 ток (сниппеты + references).
 
 ## По бакетам
 
 | Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ on-demand |
 |---|--:|--:|--:|--:|
-| `general` | 21 | 1466 | 40879 | 14525 |
+| `general` | 21 | 1466 | 40930 | 14525 |
 | `php` | 17 | 1048 | 19298 | 54837 |
 | `architect` | 15 | 964 | 23520 | 33458 |
 | `quality` | 11 | 831 | 20564 | 7447 |
@@ -506,7 +506,7 @@ flowchart LR
 | `voice-ai` | voice-ai | 3193 |
 | `modular-architecture` | laravel-architecture | 3139 |
 | `laravel-testing` | laravel-testing | 3061 |
-| `workflow-craft` | general | 2838 |
+| `workflow-craft` | general | 2889 |
 | `vue-router-best-practices` | frontend-vue | 2792 |
 | `spatie-settings` | laravel-extras | 2704 |
 | `verify-claims` | general | 2696 |

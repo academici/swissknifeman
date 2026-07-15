@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+### Added (2026.07.13-PLAN-PROTOCOL-GAP — кластер protocol-gap plan-протокола)
+
+- **task — скилл `plan-protocol` 2.4.0 → 2.7.0.** Итог кластера (F7/m7/m8/A5/B1, эскалация REGHUB):
+  **2.4.0** — routing-гейт (§9 колонка `Exec`: `plan-exec`/`manual`/`plan-design`, деривация по
+  тир-порядку model/effort), status-rule §6 (material vs process-отклонения, 6-й триггер —
+  посторонний дифф в item-коммите), enum форм `Next` + порядок закрытия §8 (дифф → validate →
+  bookkeeping → handoff → `plan-lint` → атрибутированный счёт → коммит), секция Contracts §7/§11
+  (Exported/Consumed, cross-plan notification), носитель развилок `## Обсуждение` §3. **2.5.0** —
+  гейт непереводимых литералов (`CANON_LITERALS`) + обязательный якорь дерева для чисел в
+  Completion Notes/Validation/Update Log. **2.6.0** — канон-текст команд `plan-{exec,close,audit,
+  design,run}` (§13). **2.7.0** (реопен-волна) — предикат «Phase Handoff протух» проверяется по
+  ПЕРВОЙ строке + отрицанием (не substring), единственный носитель статуса фазы — Status Board
+  (не Phase Handoff), гейты линтера исполнимы на своих артефактах + расширенный сборщик корней,
+  числа по ЧУЖИМ корням `plans/` — только дельтой парного прогона на одном снимке, форма `Next`
+  первой строкой + существование фазы `after Pn.m` в handoff.
+- **task — `plan_lint.py`.** Синхронный со скиллом: enum форм `Next`, `--baseline`/`--gate`,
+  сверка секции Contracts, регресс по 30 живым планам в 10 корнях `plans/` — 0 новых ERROR.
+- **skiller — смена дефолта auto-approve `strict` → `bypass`** в бандлах `recommended`/`full`
+  (решение владельца, `365079c`).
+
 ## [0.9.0] - 2026-07-12
 
 ### Added (2026.07.12-CONTEXT-ECONOMY — тощий старт сессии + footprint-доктор + bootstrap + доктрина)

@@ -10,7 +10,7 @@
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | opus |
-| Last Updated | 2026-07-15 (P1.3 закрыт) |
+| Last Updated | 2026-07-15 (P2.1 закрыт) |
 | Repository | swissknifeman |
 | Related Packages | harness (run-report hook, permissions), analyst (token_report, digest), task (workflow-craft/routing-команды), skiller (workflow-craft/plan-protocol скиллы) |
 | Execution Mode | phase-first |
@@ -66,7 +66,7 @@ Opus/xhigh намеренно, но это самый дорогой рычаг,
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P1 | Workflow completion-signal (анти-релонч) | 2/3 | 🟠 Done with deviations |
-| P2 | Churn-гейт файл-операций | 0/2 | ⬜ Not started |
+| P2 | Churn-гейт файл-операций | 1/2 | 🟡 In progress |
 | P3 | Model-routing аудит | 0/2 | ⬜ Not started |
 | P4 | Permission-friction | 0/2 | ⬜ Not started |
 | P5 | Discovery: дальнейшие рычаги токен-экономии (RAG) | 0/3 | ⬜ Not started |
@@ -94,6 +94,7 @@ Opus/xhigh намеренно, но это самый дорогой рычаг,
 | 2026-07-15 | plan-exec/sonnet | P1.1 закрыт: корневая причина 15× dterema-релонча — 11/15 вызовов `resumeFromRunId` ПОСЛЕ правки скрипта (co-разработка воркфлоу в основной сессии), не отсутствие completion-сигнала; OQ-2 → D7 (Resolved) — детали см. phases/P1.md P1.1 Completion Notes |
 | 2026-07-15 | plan-exec/sonnet | P1.2 закрыт: срез `workflow_relaunch` добавлен в run-report hook, группировка по `runId` (fallback `workflowName`) — детали см. phases/P1.md P1.2 Completion Notes |
 | 2026-07-15 | plan-exec/sonnet | P1.3 закрыт (🟠, tests вне буквального Files): сигнал `workflow_relaunch` поднят в analyst digest (сигнал D) + анти-релонч-дисциплина в скилле workflow-craft (§4.1, RU+EN) — фаза P1 терминальна (🟠) — детали см. phases/P1.md P1.3 Completion Notes |
+| 2026-07-15 | plan-exec/sonnet | P2.1 закрыт: пере-агрегация 114 run-reports — reread(342) доминирует над Edit/Write edit-fail(55); нативный read-гейт подтверждён по факту; вердикт «дисциплина, не хук-сигнал» (OQ-3 → Resolved, совпал с D6) — детали см. phases/P2.md P2.1 Completion Notes |
 
 ## Обсуждение
 

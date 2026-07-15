@@ -1,79 +1,85 @@
-# HANDOFF — 2026-07-15 — after P5.1
+# HANDOFF — 2026-07-15 — after P5.2
 
-**Next:** «ЗАПУСК ВРУЧНУЮ: fable/medium» — P5.2 (Exec=manual, Routing §3: fable/medium,
-внешний RAG-развед, вне пина `plan-exec`).
+**Next:** «ЗАПУСК ВРУЧНУЮ: opus/high» — P5.3 (Exec=manual, Routing §3: opus/high, синтез ROI =
+архитектурное решение, вне пина `plan-exec`). Либо: `/model opus` + `/effort high` +
+`/task:plan-run 2026.07.15-TELEMETRY-OPT P5.3` (D18).
 
 | Параметр | Значение |
 |:--|:--|
-| Model | fable |
-| Thinking | medium — внешний RAG-развед, токен-дёшево (D1, Routing §3) |
+| Model | opus |
+| Thinking | high — синтез ROI-backlog + рекомендация приоритизации (Routing §3) |
 | Context | continue (/clear) — ручной item |
-| Суть | RAG-развед best-practices токен-экономии (perplexity-web/context7) + сверка с рамками swissknifeman |
+| Суть | Свести кандидатов P5.1+P5.2 в ROI-ранжированный backlog + рекомендация Owner по P2–P4/P6+ |
 
 ```
-Исполни P5.2 мастер-плана plans/2026.07.15-TELEMETRY-OPT (репо swissknifeman) строго по ТЗ
+Исполни P5.3 мастер-плана plans/2026.07.15-TELEMETRY-OPT (репо swissknifeman) строго по ТЗ
 phases/P5.md:
 
-**Intent:** Через perplexity-web/context7 собрать актуальные (2026) практики токен-экономии
-агентных систем (структурирование prompt-cache и его TTL, context compaction/pruning, sub-agent
-context isolation, tool-result trimming, model-routing по стоимости) и сверить каждую с
-архитектурой swissknifeman; вывести кандидатов adopt/reference/skip.
+**Intent:** Свести кандидатов P5.1 (внутренние) + P5.2 (внешние) в единый ранжированный по ROI
+backlog (findings/P5-optimization-backlog.md): каждый рычаг — экономия · стоимость · риск ·
+вердикт; вывести рекомендацию Owner: переупорядочить P2–P4 по ROI и/или породить новые фазы P6+.
 
-**Scope Included:** RAG-запросы по перечню тем (дисциплина query-craft: версия/таймфрейм 2026/
-формат); сверка каждой практики с рамками (stdlib-only, MCP-модель, кэш-профиль); вердикт
-adopt/reference/skip; значимое → строка в docs/reference.md; отклонённое → docs/rejected-
-optimizations.md.
+**Scope Included:** объединение двух findings в один backlog с колонками рычаг/экономия/
+стоимость/риск/вердикт/источник; ROI-сортировка; рекомендация по последовательности P2–P4 и
+кандидаты на P6+; фиксация в plan.md (D-запись) при принятии Owner.
 
-**Scope Excluded:** реализация (будущие фазы); внутренние метрики (P5.1, уже закрыт —
-findings/P5-internal-budget-audit.md); синтез (P5.3); WebSearch как первый движок (лестница
-context7→perplexity→WebSearch).
+**Scope Excluded:** реализация рычагов (будущие фазы); сбор данных (P5.1/P5.2 закрыты);
+авто-переупорядочивание фаз без Owner-approve.
 
-**Required Reads:** 1) packages/skiller/skills/general/query-craft/SKILL.md 2) docs/reference.md
-3) docs/rejected-optimizations.md 4) CLAUDE.md (раздел «Философия и рамки» + «Методология решений»)
+**Required Reads:** 1) plans/2026.07.15-TELEMETRY-OPT/findings/P5-internal-budget-audit.md
+2) plans/2026.07.15-TELEMETRY-OPT/findings/P5-external-bestpractices.md
+3) plans/2026.07.15-TELEMETRY-OPT/plan.md (§4 Status Board, §5 D-лог)
 
-**Implementation Rules:** RAG-лестница context7→perplexity-web→WebSearch (CLAUDE.md); каждый
-несущий вердикт — `RAG:✅ <дата/источник>` либо `[UNVERIFIED]`; perplexity-web НЕ параллелить
-(профиль-лок >120s) и не слать сверхдолгие search_deep (таймаут моста); практика, требующая
-pip-рантайма — авто-skip (stdlib-only — жёстко).
+**Implementation Rules:** ROI = оценённая экономия / стоимость внедрения — обе величины из
+findings, не из воздуха; кандидат без числа с обеих сторон помечается «нужен замер», не
+ранжируется вслепую; переупорядочивание P2–P4 / новые фазы — только РЕКОМЕНДАЦИЯ, применяет
+Owner (авто-правка Status Board без approve запрещена).
 
-**Validation:** findings/P5-external-bestpractices.md с ≥N кандидатами, каждый RAG-маркирован
-(✅ с источником или [UNVERIFIED]); отклонённые отражены в docs/rejected-optimizations.md;
-принятые значимые — в docs/reference.md.
+**Code Guidance:** Synthesis-item, кода нет. Если P5.1 или P5.2 неполны — backlog помечает
+пробелы явно, НЕ доранжировывает гипотезами. Рекомендация обязана опираться на числа backlog.
+Запрещено помечать 🟢 при неоформленной рекомендации Owner.
 
-**Files:** plans/2026.07.15-TELEMETRY-OPT/findings/P5-external-bestpractices.md (создать) ·
-docs/reference.md (при adopt) · docs/rejected-optimizations.md (при skip)
+**Validation:** findings/P5-optimization-backlog.md существует, ROI-ранжирован, каждый рычаг со
+ссылкой на источник-findings; содержит явную секцию «Рекомендация приоритизации P2–P4 / P6+»;
+пробелы данных отмечены.
+
+**Files:** plans/2026.07.15-TELEMETRY-OPT/findings/P5-optimization-backlog.md (создать) ·
+plan.md (D-запись/Update Log при approve)
 
 После работы — обязательное закрытие item'а по протоколу plan-exec (Status/Completion Notes/
 Pending Work/Known Deviations, item-коммит по Files выше, bookkeeping-коммит, перезапись
-handoff.md, plan-lint.py). Model/effort сессии — fable/medium (уже установлены), НЕ переключай на
-sonnet/medium.
+handoff.md, plan-lint.py). Закрытие P5.3 делает фазу P5 терминальной — заполнить Phase Handoff
+в phases/P5.md и Status Board. Model/effort сессии — opus/high, НЕ переключай на sonnet/medium.
 ```
 
-**Done:** P5.1 закрыт: внутренний аудит always-on бюджета `skiller budget --first-turn` на 5
-проектах разного стека (swissknifeman/vaulter/memster/dterema-app/erp-sdk) — 4/5 WARN (>10K ток).
-Найдено 3 кандидата сжатия с измеренным резидентом: К1 MCP tool-defs (2250→10650 ток, 35% итога
-на dterema/app, 7 резидентных серверов) · К2 CLAUDE.md сверх ≤200 строк (dterema/app 13535 ток,
-memster 9055 ток) · К3 повторяющиеся ⊕always-описания скиллов across 3/5 проектов (множитель
-N-подписчиков). Инструмент не сбоил ни на одном прогоне. Детали — `findings/
-P5-internal-budget-audit.md`, `phases/P5.md` P5.1 Completion Notes.
+**Done:** P5.2 закрыт (item-коммит 77829c4): внешний RAG-развед токен-экономии 2026 — 6
+последовательных `perplexity-web`-запросов (context7 — quota-промах, штатный фолбэк), 8
+кандидатов C1–C8 в `findings/P5-external-bestpractices.md`, все RAG-маркированы. Adopt-кандидаты:
+C4 (потолок+truncation-receipt в ответах maind MCP-тулов) · C5 (прополка MCP-серверов + deferred
+tool-loading, пара к К1 из P5.1; `ENABLE_TOOL_SEARCH` — `[UNVERIFIED]`, нужна пред-проверка по
+first-party доке). Reference: C1 prompt-cache (кэш уже здоров) · C2 compaction (уже канон
+`context-economy`) · C3 sub-agent isolation · C6 tiered routing (валидирует D8/D9). Skip: C7
+cascade-router · C8 vector-store память — обе строками в `docs/rejected-optimizations.md`;
++1 строка в `docs/reference.md`.
 
-**Remaining:** P5.2 (внешний RAG-развед, manual/fable/medium, ⬜) — независим от P5.1 (уже
-закрыт), можно исполнять сейчас. P5.3 (синтез ROI-backlog, manual/opus/high) — ждёт P5.1 ∥ P5.2
-(оба нужны как Required Reads). P1 терминальна (🟠), P2/P3/P4 терминальны (🟢).
+**Remaining:** P5.3 (синтез ROI-backlog, manual/opus/high, ⬜) — оба Required Reads готовы
+(P5.1 ∥ P5.2 закрыты), можно исполнять сейчас; закрывает фазу P5. P1 терминальна (🟠),
+P2/P3/P4 терминальны (🟢).
 
-**Sources of truth:** `findings/P5-internal-budget-audit.md` (P5.1 вердикт + 3 кандидата) ·
-`phases/P5.md` (ТЗ P5.1/P5.2/P5.3 + Completion Notes) · `plan.md` (§3 Routing, §4 Phase Index) ·
-`packages/skiller/lib/skiller/budget.py` (источник токен-математики).
+**Sources of truth:** `findings/P5-internal-budget-audit.md` (P5.1: 3 кандидата К1–К3 с
+измеренным резидентом) · `findings/P5-external-bestpractices.md` (P5.2: C1–C8 с вердиктами) ·
+`phases/P5.md` (ТЗ P5.3 + Completion Notes P5.1/P5.2) · `plan.md` (§3 Routing, §4 Phase Index,
+§5 D-лог) · `docs/reference.md` / `docs/rejected-optimizations.md` (внешний провенанс P5.2).
 
-**Open risks:** OQ-5 (Owner-решение по осям B/C permission-friction) и OQ-4 (research opus→sonnet)
-остаются Decision pending, вне P5. Посторонний дифф в дереве на момент старта сессии:
-`plans/2026.07.15-TELEMETRY-OPT/phases/P4.md` (modified) и untracked
-`plans/2026.07.15-PLANFLOW-UX/` — не тронуты этим item'ом (не входят в Files P5.1), владелец
-работает параллельно — не коммитить/не ревертить без явного запроса.
+**Open risks:** OQ-5 (Owner-решение по осям B/C permission-friction) и OQ-4 (research
+opus→sonnet) остаются Decision pending, вне P5. `ENABLE_TOOL_SEARCH` (C5) — [UNVERIFIED],
+внедрение без пред-проверки по first-party доке запрещено. Посторонний дифф в дереве:
+untracked `plans/2026.07.15-PLANFLOW-UX/` — не тронут этим item'ом, владелец работает
+параллельно — не коммитить/не ревертить без явного запроса.
 
 **Workarounds/Deferred/Open questions:**
 - workarounds: —
-- deferred: правки-сжатия по кандидатам К1/К2/К3 — measure-only item, реализация вне scope P5.1
-  (будущие items по backlog P5.3).
+- deferred: пред-проверка `ENABLE_TOOL_SEARCH` (C5) и замер размеров ответов maind MCP-тулов
+  (C4) — на фазе реализации / ROI в P5.3.
 - open_questions: **OQ-5** — Decision pending (владелец Dmitry Vostrikov). **OQ-4** — Decision
   pending (research opus→sonnet). OQ-1/OQ-2/OQ-3 Resolved.

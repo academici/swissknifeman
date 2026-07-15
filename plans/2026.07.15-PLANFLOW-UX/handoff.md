@@ -1,55 +1,55 @@
-# HANDOFF — 2026-07-15 — after P3.1
+# HANDOFF — 2026-07-15 — after P3.2
 
-**Next:** ЗАПУСК ВРУЧНУЮ: sonnet/high
+**Next:** /task:plan-exec 2026.07.15-PLANFLOW-UX P3.3
 
 | Параметр | Значение |
 |:--|:--|
 | Model | sonnet |
-| Thinking | high — канон-хардненинг 4 шаблонов + §2.1 эталонов, правит README/SKILL (Routing P3.2) |
+| Thinking | medium — детерминированный чек `plan_lint` (имя/место workflow) + TDD-тесты, независимый python-scope |
 | Context | continue (/clear) — ручной item |
-| Суть | Хардненинг 4 канон-шаблонов (safeAgent/REPO-guard/guarded-args/cache-bust) + §2.1 эталоны, ПОСЛЕ P3.1 (общий README) |
+| Суть | Добавить в `plan_lint.py` WARNING-детектор имени/места плановых workflow-скриптов (`wf-<id>-*.js` в `plans/<ID>/workflows/`), `dev-loop.js` exempt |
 
 ```
-/model sonnet
-/effort high
-/task:plan-run 2026.07.15-PLANFLOW-UX P3.2
+/task:plan-exec 2026.07.15-PLANFLOW-UX P3.3
 ```
 
-**Done:** P3.1 закрыт 🟠 Done with deviations — 3 ложных-RED ревьюера `make-workflow` сняты
-синхронно в 3 файлах-каноне: (1) structured-summary обязательна только у control-flow-агентов,
-action/механические агенты (open/state/commit/fix/gate) могут возвращать прозу; (2) top-level
-`return report` помечен санкционированной идиомой async-обёртки Workflow-тула, не дефектом;
-(3) `// SLOT:`-маркеры — рекомендация (читаемость), их отсутствие само по себе не RED — детектор
-форка логики шаблона остаётся байт-в-байт. Правки: `packages/task/commands/make-workflow.md`
-(§Критерий-чеклист), `packages/task/workflows/README.md` (§Правила заполнения слотов п.1/3,
-§Общие инварианты), `workflow-craft` `SKILL.ru.md` §3 + регенерённый `SKILL.md`. Ручная сверка
-на git-ref 22440c4: `wf-design-fleet.js`/`wf-agentools-drive.js` (vault Brain) и
-`python-backend/dev-loop.js` — рекалиброванный чеклист не даёт ложных RED, реальные детекторы
-(относит.путь, пишущий audit, форк логики) не тронуты.
+**Done:** P3.2 закрыт 🟠 Done with deviations — боевой хардненинг вшит в 4 канон-шаблона
+`packages/task/workflows/`: `safeAgent` (bare `await agent()` → `null` при throw) в
+`wf-audit-adversarial.js`/`wf-dev-slice.js` (единственные с bare-вызовами вне
+`parallel`/`pipeline`); REPO/путь-инвариант (`X.startsWith('/')`-assert) у `REPO`/`SPEC`/
+`TARGET.paths`; guarded-optional-args (typeof-дефолт `riskOf(s)` в dev-slice + документация
+существующих ternary-guard'ов); per-item cache-bust — комментарий-паттерн `asOf` у всех
+4 item-массивов. `workflow-craft` §2.1: поднят `wf-edufy-2-design-wave.js` (vault Brain) как
+high-water-mark эталон (SLOT-маркеры, judge-panel-гейт, `MAX_FIX_ROUNDS`), 2 прежних эталона
+сохранены как база. Правки: `packages/task/workflows/{README.md,wf-research-fanout.js,
+wf-author-by-spec.js,wf-audit-adversarial.js,wf-dev-slice.js}`, `workflow-craft`
+`SKILL.ru.md`/`SKILL.md` §2.1. Item-коммиты b36db62 (Files ТЗ) + 47ed9a3 (registry-артефакты
+вне Files — паттерн P2.1/P3.1 повторился 3-й раз). Прогон: `node --check` × 4 (0 ошибок),
+`validate.sh` (140 тестов OK), `check-translations.sh --stamp` (159 SKILL.md), `skiller registry`
+(215 скиллов), `packages/skiller/scripts/validate.sh` (379 тестов OK).
 
-**Remaining:** P3.2 (хардненинг 4 шаблонов + §2.1, sonnet/high manual, ПОСЛЕ P3.1) → P3.3/P3.4
-(независимы, sonnet/medium `/task:plan-exec`) → P3.5 (opus/high manual, доставка-гейт analysis).
-Затем `plan-close P3` (Phase Handoff) → детализация P4 → P5.
+**Remaining:** P3.3 (независим, sonnet/medium `/task:plan-exec`) → P3.4 (независим, sonnet/medium
+`/task:plan-exec`) → P3.5 (opus/high manual, доставка-гейт analysis). Затем `plan-close P3`
+(Phase Handoff, фаза закроется 🟠 — P3.1/P3.2 оба Done with deviations) → детализация P4 → P5.
 
-**Sources of truth:** `phases/P3.md` (P3.1 Completion Notes + P3.2–P3.5 ТЗ) · `plan.md`
+**Sources of truth:** `phases/P3.md` (P3.1–P3.2 Completion Notes + P3.3–P3.5 ТЗ) · `plan.md`
 (§3 Routing P3.1–P3.5, §4 Phase Index P3 → 🟡 In progress 0/5, §6 Update Log) ·
-`findings/P1-recon.md` §1.4 (3 ложных-RED поимённо, источник калибровки) · каноны-правленные:
-`packages/task/commands/make-workflow.md`, `packages/task/workflows/README.md`, `workflow-craft`
-`SKILL.ru.md`/`SKILL.md`.
+`findings/P1-recon.md` §1.3/§1.4 (дефекты по строкам, edufy-2 «Ирония эталона») · каноны-правленные:
+`packages/task/workflows/README.md` + 4 шаблона, `workflow-craft` `SKILL.ru.md`/`SKILL.md`.
 
-**Open risks:** Known Deviation P3.1 — item-коммит (22440c4) несёт дифф вне `Files` ТЗ
-(`packages/skiller/skills.json`, `packages/skiller/docs/guide/budget.md` — побочный эффект
-обязательного `skiller registry`); тот же паттерн, что P2.1. Fix-предложение (не выполнено в
-этом item'е, вне его Scope): будущим `plan-design`-проходам вносить артефакты `skiller registry`
-в `Files` любого item'а, правящего `SKILL.ru.md`, — снимет повторяющуюся деviation на корню.
-P3.1 pre-mortem (Обсуждение №5) остаётся открытым до P3.5/OQ-3 (доставка гейта) и P3.2
-(рассинхрон 3 файлов — P3.2 правит README/SKILL.ru.md СВЕРХУ P3.1-версии, не откатывая §3).
+**Open risks:** Known Deviation P3.2 — registry-артефакты вне `Files` (паттерн P2.1→P3.1→P3.2,
+3-й раз подряд); fix-предложение P3.1 (внести артефакты `skiller registry` в `Files` любого
+item'а, правящего `SKILL.ru.md`) при детализации P3.2 применено не было (P3.2 задизайнена ДО
+закрытия P3.1) — следующему `plan-design`-проходу внести правило в сам шаблон ТЗ, не
+документировать реактивно на каждом item'е. Validation-пункт «сухой прогон/бросающий agent»
+выполнен статическим прослеживанием кода, не живым вызовом `Workflow()` (process-деviation,
+см. Known Deviations P3.2). P3.1 pre-mortem (Обсуждение №5) остаётся открытым до P3.5/OQ-3.
 
 **Workarounds/Deferred/Open questions:**
 - workarounds: —
 - deferred: детализация P4–P5 (contract-first, just-in-time, D5); rollout доставки гейта (P3.5
-  Pending — пост-резолв OQ-3, deleg skiller/maind); launch-block вне `plan-*` (OQ-2); fix-
-  предложение по Files-регистри-артефактам (выше) — не в Scope P3.1, следующий `plan-design`-проход.
+  Pending — пост-резолв OQ-3, deleg skiller/maind); launch-block вне `plan-*` (OQ-2); правило
+  «registry-артефакты в Files» для будущего `plan-design`-прохода (выше) — не в Scope P3.2.
 - open_questions: **OQ-1** (артефакт exec-плана, P4) · **OQ-2** (launch-block в `dev.md`/`fix.md`) ·
   **OQ-3** (канал доставки гейта workflow-craft/make-workflow — CORE vs onboard-required; резолв в
   exec P3.5 на budget-данных; владелец Dmitry Vostrikov).

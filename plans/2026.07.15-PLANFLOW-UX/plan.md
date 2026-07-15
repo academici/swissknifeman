@@ -10,7 +10,7 @@
 | Status | 🟡 In progress (design) |
 | Document Type | Executable Master Plan |
 | Authoring Model | opus |
-| Last Updated | 2026-07-15 (P3.1 закрыт 🟠) |
+| Last Updated | 2026-07-15 (P3.2 закрыт 🟠) |
 | Repository | swissknifeman |
 | Related Packages | task (plan-protocol/workflow-craft скиллы, команды plan-*/make-workflow/review), skiller (реестр скиллов, budget), harness (agent-packs dev-loop, run-report) |
 | Execution Mode | phase-first |
@@ -109,6 +109,7 @@
 | 2026-07-15 | plan-design/opus | P3 детализирована (5 items = recon A1–A5, ось A) — ТЗ см. phases/P3.md P3.1–P3.5. D9–D11; OQ-3 (канал доставки гейта); Обсуждение №5 (pre-mortem рекалибровки); v0.2.0→0.3.0 |
 | 2026-07-15 | remediation(bookkeeping)/sonnet/low | Ремедиация: `skiller registry` (дрейф skills.json/budget.md устранён, validate.sh зелёный); §7 Consumed — TELEMETRY-OPT терминален+архивирован, гейт снят |
 | 2026-07-15 | plan-run(manual)/sonnet/high | P3.1 закрыт 🟠 (registry-артефакты вне Files, паттерн P2.1): 3 ложных-RED сняты в make-workflow.md/README/workflow-craft — детали см. phases/P3.md P3.1 Completion Notes |
+| 2026-07-15 | plan-run(manual)/sonnet/high | P3.2 закрыт 🟠 (registry-артефакты вне Files, паттерн P2.1/P3.1 3-й раз): хардненинг 4 шаблонов + workflow-craft §2.1 — детали см. phases/P3.md P3.2 Completion Notes |
 
 ## 7. Contracts
 

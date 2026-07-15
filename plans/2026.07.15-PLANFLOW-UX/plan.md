@@ -10,7 +10,7 @@
 | Status | 🟡 In progress (design) |
 | Document Type | Executable Master Plan |
 | Authoring Model | opus |
-| Last Updated | 2026-07-15 (P3.3 закрыт 🟢) |
+| Last Updated | 2026-07-15 (P3.4 закрыт 🟠) |
 | Repository | swissknifeman |
 | Related Packages | task (plan-protocol/workflow-craft скиллы, команды plan-*/make-workflow/review), skiller (реестр скиллов, budget), harness (agent-packs dev-loop, run-report) |
 | Execution Mode | phase-first |
@@ -111,6 +111,7 @@
 | 2026-07-15 | plan-run(manual)/sonnet/high | P3.1 закрыт 🟠 (registry-артефакты вне Files, паттерн P2.1): 3 ложных-RED сняты в make-workflow.md/README/workflow-craft — детали см. phases/P3.md P3.1 Completion Notes |
 | 2026-07-15 | plan-run(manual)/sonnet/high | P3.2 закрыт 🟠 (registry-артефакты вне Files, паттерн P2.1/P3.1 3-й раз): хардненинг 4 шаблонов + workflow-craft §2.1 — детали см. phases/P3.md P3.2 Completion Notes |
 | 2026-07-15 | plan-exec/sonnet/medium | P3.3 закрыт 🟢: чек места/имени workflow оказался уже реализован (D24/D27/D28), добавлен недостающий `dev-loop.js` exempt — детали см. phases/P3.md P3.3 Completion Notes |
+| 2026-07-15 | plan-exec/sonnet/medium | P3.4 закрыт 🟠 (Validation `node --check` структурно не проходит из-за санкционированного P3.1/D10 top-level `return`, предсуществующее): guard args-строки + STOP-сообщение в 5 `dev-loop.js` — детали см. phases/P3.md P3.4 Completion Notes |
 
 ## 7. Contracts
 

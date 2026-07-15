@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.6.0
+version: 2.7.0
 description: "Executable master plans in plans/<ID>: plan/phase/task schemas, 6 statuses, refine loop and DoR gate, canonical plan root, repo home by default + visibility/supersedes fields, two homes and archive, handoff with launch-block, model routing, /task:plan-* commands."
 risk: write
 persona: oss-dev
@@ -113,7 +113,11 @@ D# with a "supersedes D#-old" reference; the old D# is NOT edited.
 
 **Phase reopen — FOUR steps** (all mandatory; skipping one = audit finding):
 
-1. Phase Status `🟢`/`🟠` → `🟡` — in sync in the plan.md Status Board and in `## Phase Status`.
+1. Phase Status `🟢`/`🟠` → `🟡` — in **`## 4. Phase Index & Status Board`** (`plan.md`).
+   That is the SOLE carrier of the PHASE status (D51): the items table in `phases/Pn.md` does
+   NOT carry the phase status — `plan-lint` rejects a non-item row with an ERROR (§5). A second
+   carrier of one fact = a desync source, creating it is forbidden. The reopened phase's item
+   statuses are fixed by its remediation (per the new items' specs), not by the reopen step.
 2. Plan Version bump.
 3. A D-log entry with the reason for the reopen.
 4. **The reopened phase's `## Phase Handoff` is INVALIDATED.** The block is NOT deleted
@@ -131,8 +135,15 @@ D# with a "supersedes D#-old" reference; the old D# is NOT edited.
    claiming "phase closed, N/N terminal" and misleads the cold-start agent).
 
    `plan_lint` gate: phase NOT terminal + block claims closure (`терминальн` /
-   `фаза закрыта` / `Сдано:`) + no marker → **WARNING** "Phase Handoff stale". Whether the
-   block's content is ACTUAL is not machine-checkable — that is the `plan-audit` checklist.
+   `фаза закрыта` / `Сдано:`) + no marker → **WARNING** "Phase Handoff stale". The closure
+   claim is read **by the block's first non-empty line** — the same line the marker is sought
+   on — and is cancelled by a NEGATION on that same line (`не закрыт…`): the gate judges the
+   SUBJECT of the statement, not a word it meets (D50). Thus an honest interim block
+   «**Фаза P5 НЕ закрыта.** Терминальны только P5.1 и P5.2» is legal and stays silent
+   («терминальны» there is about ITEMS), while «**Сдано:** фаза … терминальна (3/3)» on a
+   non-terminal phase → WARNING. Put the verdict about the phase on the FIRST line: the gate
+   does not look below it. Whether the block's content is ACTUAL is not machine-checkable —
+   that is the `plan-audit` checklist.
 
 ## 4. plan.md schema
 
@@ -201,7 +212,9 @@ Skeleton — `snippets/phase-template.md`. Phase file structure:
 - `# Pn — Title`
 - **`## Phase Context`** — 5–10 lines, self-contained (the phase is executable without
   reading other phases).
-- **`## Phase Status`** — table `ID | Title | Status | Updated`.
+- **`## Phase Status`** — table `ID | Title | Status | Updated`. Rows are ONLY items: the
+  PHASE status lives in the plan.md Status Board (§3/§4, D51); a `Pn` row here is rejected by
+  `plan-lint` with an ERROR ("row without a matching item").
 - **Items.** Item heading STRICTLY `### Pn.m — Title`. Fields STRICTLY as lines
   `**Field:** value`, in this order:
   `Status, Intent, Why, Scope Included, Scope Excluded, Inputs, Files, Required Reads,
@@ -392,6 +405,10 @@ history lives in git, not in the file). Skeleton — `snippets/handoff-template.
   - `# HANDOFF — <ISO-date> — after Pn` — a PHASE was closed/audited/re-designed, i.e. a step
     with no "last closed item" as addressee (`plan-close <ID> Pn`, `plan-audit <ID> Pn`,
     `plan-design <ID> Pn`).
+  - For the `after Pn.m` form the **phase `Pn` MUST exist in the plan** (declared in the Status
+    Board OR having a `phases/Pn.md` file) — otherwise ERROR "dangling reference" (D37/D41). The
+    only exception — the bootstrap heading `after P0.0` of the starting handoff (there is no
+    phase `P0`). The existence of the ITEM `Pn.m` itself is NOT gated (fleet back-compat).
 - **Next:** the next command in launch-block form (below).
 - **Done:** what is closed. · **Remaining:** what is left.
 - **Sources of truth:** where the truth is (plan.md, phases/Pn.md, key files).
@@ -439,6 +456,13 @@ forms; any other form = ERROR listing the allowed ones):
                                      и голый промпт item'а отдельным code-block |
 Иная форма = ERROR plan-lint.
 ```
+
+**The `Next` form is declared by the FIRST non-empty line of the field** (D40). The field is
+multi-line (it runs to the next `**Field:**` and includes the launch-block), so the resolver
+reads the form from the declaring line, and only on failure — by a grep over the whole field
+(fallback, back-compat). Practical point: the launch-block QUOTES commands and enum forms (for a
+manual item — a whole bare prompt), and a quote in the «Суть» cell would hijack the resolver into
+a false ERROR. Declare the form on the line `**Next:** …` — below it the form gate does not look.
 
 **Item close order** (canonizes B1/F11/M2/A4 — repeat offenses of "dishonest" lint):
 
@@ -491,6 +515,16 @@ A number about PLAN files (greps over phases/Pn.md, lint counts) → anchor = th
 A number without an anchor, or one not reproducible by its own command on the committed tree,
 is a **FALSE STATEMENT** (class B1) — even if it was true when written. No machine gate — the
 check lives in the `plan-audit` checklist.
+
+**Numbers OUTSIDE this repo — only the DELTA of a paired run** (D53). A foreign root (another
+repo's `plans/`, the fleet) lives its own life and mutates between runs: the tree anchor does
+not extend to it — a `git-ref` of your own repo does not pin a foreign tree. So a
+regression/back-compat claim over foreign roots is proven ONLY by a pair of runs on ONE snapshot
+of the foreign tree (`<ref-before>` → `<ref-after>` of YOUR repo, the foreign one untouched) and
+published as the **delta** of diagnostic sets: `ERROR Δ 0 · WARN Δ −1 (снят ложный …)`. An
+absolute count of a foreign root («ERROR 116 → 116») is NOT proof: it does not tell the foreign
+repo's drift from your edit's regression. Delta ≠ 0 — either a true finding of a new rule (name
+it by name) or a blocker.
 
 **"item/phase → handoff → /clear" cycle:** after handoff.md is overwritten, `/clear` is
 recommended — the next item starts from reading the plan (plan.md → phases/Pn.md →
@@ -778,4 +812,4 @@ doesn't repay the cost of reconstructing "where did this come from".
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of editing
   vendor copies (section 12).
 
-<!-- ru-source-sha256: b13f798f1c908c2b850cd6f2dbd2dcc1ef1f5b1a5c002190cd39d911c4897f49 -->
+<!-- ru-source-sha256: e934f9afc9745baad586973cf6e7702164f277f8fac66e3fc51cda672f42a092 -->

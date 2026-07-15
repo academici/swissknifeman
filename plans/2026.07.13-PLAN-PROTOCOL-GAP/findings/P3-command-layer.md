@@ -109,3 +109,39 @@ Contracts\|RAG:—\|after Pn\|Обсуждение\|material\|git add" packages/
 Та же правда о SSOT: `SKILL.ru.md` §13 «Командный протокол» — таблица ЧЕТЫРЁХ команд. Пятая
 команда, не попавшая в §13, = расхождение SSOT (правило двух SSOT, §2 Execution Rules плана) ⇒
 правка скилла + регенерация EN-канона + `skiller registry` — терминальный item фазы (P3.6, D42).
+
+## 5. Сквозная сверка — финал фазы (P3.11, реопен)
+
+Повторный прогон грепом по файлам команд/канона (все команды закоммичены на `4e2f9b5`; SKILL
+RU/EN — на item-коммите P3.11). Матрица §2 показывала baseline-разведку (все ✗ на `b5ca096`);
+здесь — ДОСТАВКА после items P3.1–P3.10, каждая ячейка ✓ = грепаемая строка в файле.
+
+**Обе ✗ прогона P3.6 сняты:**
+
+| Ячейка (была ✗ на `eea2a9a`) | Item | Проверка (на item-коммите P3.11) | Итог |
+|:--|:--|:--|:--|
+| status-rule → `plan-close.md` | P3.9 (`4d9252d`) | `grep -c "material" plan-close.md` → **2** (было 0) | ✓ |
+| §11 Contracts → `plan-exec.md` | P3.10 (`be3b636`) | `grep -c "Contracts" plan-exec.md` → **2**; `grep -c "Exported\|Consumed"` → **2** (было 0/0) | ✓ |
+
+**Строки семантики гейта → канон (реопен, D50/D51/D53 + следы D40/D37):** правило живёт в SSOT
+(`SKILL.ru.md` → `SKILL.md`), не в командах:
+
+| Правило | RU | EN (на item-коммите P3.11) |
+|:--|:--:|:--:|
+| D50 — гейт «Phase Handoff протух» судит субъект по ПЕРВОЙ строке (`не закрыт…` гасит) | ✓ | `grep -c "first non-empty line\|SUBJECT of the statement"` → **3** |
+| D51 — статус фазы = единственный носитель Status Board; `Pn`-строка в items = ERROR | ✓ | `grep -c "SOLE carrier of the PHASE status\|row without a matching item"` → **2** |
+| D40 — форма `Next` объявляется ПЕРВОЙ непустой строкой поля | ✓ | `grep -c "declared by the FIRST non-empty line"` → **1** |
+| D37/D41 — фаза `Pn` заголовка `after Pn.m` обязана существовать (искл. `P0.0`) | ✓ | `grep -c "phase .Pn. MUST exist"` → **1** |
+| D53 — числа ВНЕ этого репо — только ДЕЛЬТА парного прогона | ✓ | `grep -c "DELTA of a paired run"` → **1** |
+
+**Остальные 39 ячеек** прогона P3.6 подтверждены повторно (спот-греп на `4e2f9b5`):
+`ROUTING-BLOCKED`→exec(2) · «ЗАПУСК ВРУЧНУЮ»→exec/close/audit(3 файла) · топология двух коммитов→exec(3)
+· `git add -A` запрет→exec(1) · `--baseline`→exec(2)/close(3) · enum 8 форм `Next`→close(6) · `after Pn`→close(3)/design(4)
+· `fresh session`→**0** во всех (запрещённое значение вычищено) · status-rule material→exec(2)/audit(3) · якорь дерева→
+exec(3)/close(2)/audit(3) · `Last Updated`→exec/close/audit(по 1) · `> УСТАРЕЛ`→close(1)/design(1) · cross-plan
+`Exported`/`Consumed`→audit(`:70-71`)/design(3) · `## Обсуждение`/развилки→design(5)/audit(1) · `RAG:—`→design(1)/audit(2)
+· скелет 16 полей→design(3) · `/task:plan-run`→exec(1)/close(1).
+
+**Итог: 46 проверок — 46 ✓ / 0 ✗** (на item-коммите P3.11): 41 команда-канон (39 из P3.6 + 2 снятые ✗) +
+5 канон-семантических строк реопена. Матрица §2 (baseline «что отсутствует») сохранена как провенанс
+разведки — она НЕ переписывается под результат; финальная доставка — эта таблица.

@@ -1,18 +1,18 @@
 ---
-description: "Задача РАЗРАБОТКИ: адаптивный dev-loop (срез→impl→tests-to-green→risk-адаптивный review) на Lean-tiered моделях. Пинит Opus/high для планирования; субагенты — по риску среза."
+description: "Задача РАЗРАБОТКИ: адаптивный dev-loop (срез→impl→tests-to-green→risk-адаптивный review) на Lean-tiered моделях. Пинит Sonnet/high для планирования; субагенты — по риску среза."
 argument-hint: "[что строим: бриф / срезы / ссылка на план]"
-model: opus
+model: sonnet
 effort: high
 ---
 Это задача РАЗРАБОТКИ. Ввод пользователя: «$ARGUMENTS».
 
-Профиль `dev` (token-экономный, Lean-tiered). Модель/effort этой команды уже запинены (Opus/high) —
+Профиль `dev` (token-экономный, Lean-tiered). Модель/effort этой команды уже запинены (Sonnet/high) —
 не переключай вручную.
 
 **Вход — КОРОТКИЙ:** ссылка на durable план-файл (primary source) + что делаем. Детали, якоря и текст
 правок бери ИЗ плана; не жди и не проси бриф на 2 страницы — вся подробность живёт в плане, не в промпте.
 
-1. **Планируй** на текущей (Opus) модели: разложи задачу на вертикальные срезы
+1. **Планируй** на текущей (Sonnet) модели: разложи задачу на вертикальные срезы
    (model→service→controller→test), каждый со своим риском `LOW|MED|HIGH` (blast-radius: concurrency /
    transactions / data-integrity / queue-semantics / connectors). Срез = завершённая вертикаль с проводкой
    и тестом, а не горизонтальная нарезка.

@@ -6,11 +6,11 @@
 |:--|:--|
 | Plan ID | 2026.07.15-PLANFLOW-UX |
 | Title | Надёжность и UX плановой/workflow-системы (launch-block · workflow-авторинг · дизайн-флоу) |
-| Version | 0.2.0 |
+| Version | 0.3.0 |
 | Status | 🟡 In progress (design) |
 | Document Type | Executable Master Plan |
 | Authoring Model | opus |
-| Last Updated | 2026-07-15 (P2.2 закрыт 🟢, фаза P2 терминальна 🟠: дисциплина ошибка→фикс-предложение C3/D6) |
+| Last Updated | 2026-07-15 (P3 детализирована: 5 items A1–A5 оси A; D9–D11, OQ-3) |
 | Repository | swissknifeman |
 | Related Packages | task (plan-protocol/workflow-craft скиллы, команды plan-*/make-workflow/review), skiller (реестр скиллов, budget), harness (agent-packs dev-loop, run-report) |
 | Execution Mode | phase-first |
@@ -62,7 +62,13 @@
 | P2.1 | opus/high | manual | public-contract-change: 9-я форма enum `Next` + правка линтера с back-compat флота (recon §2.2 D20/D28 — канон-правки рябят) + реестр литералов/i18n-гейт; §9 «public contract/SemVer → high+ MANDATORY»; opus — субтильный back-compat/инвариант, не механика; effort>medium → manual |
 | P2.2 | sonnet/high | manual | авторинг правила-дисциплины в канон §8 + `plan-exec.md` (без линтера/парсера/литерала — ниже back-compat-риск P2.1); точность прозы, читаемой флотом → high; effort>medium → manual |
 
-<P3–P5 — скелеты; routing проставится при детализации фазы (`/task:plan-design <ID> Pn`).>
+| P3.1 | sonnet/high | manual | канон-когерентность 3 файлов (`make-workflow.md`↔README§3↔`workflow-craft`§3) — снять 3 ложных-RED без снятия детекции; §9 «канон, за которым следует флот → high MANDATORY»; effort>medium → manual; sonnet — рекалибровка по recon-целям, не новая архитектура |
+| P3.2 | sonnet/high | manual | хардненинг 4 канон-шаблонов (safeAgent/REPO-guard/guarded-args/cache-bust) + §2.1 — аддитив к живой оркестрации, не ломать циклы; правит канон+SKILL → high; effort>medium → manual; исполнять ПОСЛЕ P3.1 (общий README) |
+| P3.3 | sonnet/medium | plan-exec | детерминированный чек `plan_lint` (имя/место workflow) + TDD-тесты; независимый scope (python), Validation = unittest; дефолт-деривация (model≤sonnet ∧ effort≤medium → plan-exec) |
+| P3.4 | sonnet/medium | plan-exec | механический guard args-строки в 5 dev-loop (harness); независимый scope, Validation = `node --check` + пак-валидация; дефолт-деривация → plan-exec |
+| P3.5 | opus/high | manual | analysis+рекомендация (budget-квантификация + канал доставки + OQ-3) — judgment Owner-facing, не код; decision-item → manual явно; opus — критика-рекомендация с budget-tradeoff |
+
+<P4–P5 — скелеты; routing проставится при детализации фазы (`/task:plan-design <ID> Pn`).>
 
 ## 4. Phase Index & Status Board
 
@@ -70,7 +76,7 @@
 |:--|:--|:--|:--|
 | P1 | Recon: доказбаза (workflow-авторинг · plan-design клинчи · handoff-конформанс) | 1/1 | 🟢 Done |
 | P2 | Launch-block энфорсмент + ошибка→сразу-фикс | 1/2 | 🟠 Done with deviations |
-| P3 | Workflow-авторинг + авто-ревью (make-workflow ревьюер · base-шаблоны · видимость скилла) | 0/2 | ⬜ Not started |
+| P3 | Workflow-авторинг + авто-ревью (make-workflow ревьюер · base-шаблоны · видимость скилла) | 0/5 | ⬜ Not started |
 | P4 | Contract-first дизайн-флоу + глобальный exec-план + батчинг + адаптивная глубина ревью | 0/3 | ⬜ Not started |
 | P5 | Fix-стратегия plan-design + архитектурный апгрейд скиллов/сниппетов | 0/2 | ⬜ Not started |
 
@@ -86,6 +92,9 @@
 | D6 | 2026-07-15 | **Философия «результат > экономии»** вшита в Execution Rules как жёсткое правило + требование «рекомендация с причиной при любой развилке» (Owner: не в ущерб результату; всегда предлагай, не спрашивай голо) | Прямой запрос Owner: экономия, выливающаяся в проблемы, недопустима; переспросы без рекомендации — фрикция. RAG:— (repo-grounded: запрос Owner в сессии) |
 | D7 | 2026-07-15 | **Scope P2 сужен до recon-доказанного C1/C2/C3** (форма `Next` «ОЖИДАНИЕ» + lint-детект прозы + миграция своего handoff + дисциплина ошибка→фикс). Обещанный скелетом «launch-block вне `plan-*` (`dev.md`/`fix.md`/ad-hoc)» вынесен из P2 → **OQ-2** (рекомендация: `dev.md` — да при всплытии боли, `fix.md` — терминальная микроправка, exempt) | recon (P1) falsified «вне plan-*» как измеренный корень: канон §8 работает где применён (25/30), измеренная боль — дыра enum (time-gate-проза), сконцентрирована в plan-handoff'ах; `dev.md`/`fix.md`-launch-block реально отсутствует (grep), но НЕ доказан как боль → не жечь фиксы на недоказанном (D2/CLAUDE.md методология). RAG:— (repo-grounded: findings §3/§5 + grep `dev.md`/`fix.md` в дизайне) |
 | D8 | 2026-07-15 | **Форма `Next` «ОЖИДАНИЕ: <условие> → <целевая форма>»** — 9-я в enum §8: условие = дата/гейт (структурно), launch-block несёт целевую команду с guard-строкой `# НЕ раньше:`, резолв `plan_lint` `waiting` ДО `exec`, C2-детектор прозы = WARNING. Альтернативы — Обсуждение №3 | enum §8 не имел формы под «заблокировано/time-gate/делать-нечего» → проза в `Next` (recon §3.2, живой `SKM-MASTER-002`); отдельная СТРУКТУРНАЯ форма закрывает «невыполнимое/не копипастится», отличаясь от `🔴 Blocked` (дефект) и «план закрыт» (терминал). Аддитив + WARNING-гейты — back-compat флота (recon §2.2). RAG:— (repo-grounded: findings §3.2/§5-C1 + plan_lint.py:829 `_resolve_next_form`) |
+| D9 | 2026-07-15 | **P3 разложена на 5 items = recon A1–A5** (findings §5-P3), не 2 скелетных: P3.1 рекалибровка ревьюера (A2), P3.2 хардненинг шаблонов+§2.1 (A3), P3.3 `plan-lint` имя/место (A4), P3.4 harness dev-loop guard (A5), P3.5 доставка-гейта analysis (A1). Скелетные «имена/крэш» покрыты (A4/A3/A5) | recon дал 5 адресных рычагов оси A; дробить по файловой когерентности (ревьюер vs шаблоны vs линтер vs harness vs доставка) — независимая Validation, честная доска; D6 «результат > экономии» — не ронять несущие фиксы в 2 item'а. RAG:— (repo-grounded: findings §5-P3 A1–A5) |
+| D10 | 2026-07-15 | **A2 = канон-когерентность, не «усиление»:** 3 ложных-RED ревьюера (schema-на-каждом-`agent()`, top-level-`return`, SLOT-обязателен) откалибрены под эталоны СИНХРОННО в 3 файлах (`make-workflow.md` ↔ README §3 ↔ `workflow-craft` §3); РЕАЛЬНЫЕ детекторы (относит.пути, audit-read-only, форк) сохранены | ревьюер строже собственных эталонов → ложные RED → подрыв гейта (findings §1.4); `make-workflow` сам декларирует «дрейф от README = дефект» → правка во все 3 источника. RAG:✅ (P1 §6 perplexity-web 2026-07: schema на control-flow, проза локально — CONFIRMED) |
+| D11 | 2026-07-15 | **A1 (⭐ доставка гейта) = analysis+рекомендация (P3.5) + OQ-3, НЕ rollout кодом.** budget-квантификация резидента + рекомендация канала (CORE vs onboard-required); фактический rollout делегирован skiller/maind пост-Owner-approval | контракт фазы «доставка не кодом в этой фазе (deleg)»; CLAUDE.md-гейт «новый always-on inject → `budget --first-turn`, Owner решает»; главный рычаг нельзя ни уронить (D6), ни раскатать без Owner/budget. RAG:— (repo-grounded: findings §5-A1 + CLAUDE.md budget-гейт + Phase Context контракт) |
 
 ## 6. Update Log
 
@@ -97,6 +106,8 @@
 | 2026-07-15 | plan-run(manual)/opus/high | P2.1 закрыт 🟠 (dev outside Files): 9-я форма `Next` «ОЖИДАНИЕ» (SKILL §8 RU+EN + 2 сниппета), `plan_lint` резолв `waiting`+C2-WARNING, миграция SKM-MASTER-002; deviation — регенерённые skills.json/budget.md вне Files — детали см. phases/P2.md P2.1 Completion Notes |
 | 2026-07-15 | plan-run(manual)/sonnet/high | P2.2 закрыт 🟢, фаза P2 терминальна (🟠 — P2.1 деviation): дисциплина «ошибка→фикс-предложение» C3/D6 в SKILL §8 (RU+EN, ≤8 строк) + зеркало `plan-exec.md` §6/§8 — детали см. phases/P2.md P2.2 Completion Notes |
 | 2026-07-15 | plan-close(manual)/sonnet/low | Фаза P2 закрыта: Phase Handoff заполнен (агрегат Known Deviations из P2.1/P2.2), handoff.md перезаписан (after P2), lint прогнан |
+| 2026-07-15 | plan-design/opus | P3 детализирована (5 items = recon A1–A5, ось A) — ТЗ см. phases/P3.md P3.1–P3.5. D9–D11; OQ-3 (канал доставки гейта); Обсуждение №5 (pre-mortem рекалибровки); v0.2.0→0.3.0 |
+| 2026-07-15 | remediation(bookkeeping)/sonnet/low | Ремедиация: `skiller registry` (дрейф skills.json/budget.md устранён, validate.sh зелёный); §7 Consumed — TELEMETRY-OPT терминален+архивирован, гейт снят |
 
 ## 7. Contracts
 
@@ -104,11 +115,11 @@
 
 | Контракт | Донор-план | Pinned | Замечено | Реакция |
 |:--|:--|:--|:--|:--|
-| Терминальность TELEMETRY-OPT P4 (правки `anti-drift`) | 2026.07.15-TELEMETRY-OPT | P4 ⬜ | P4.2 правит `anti-drift` (тот же скилл, что P3/P5 здесь) | Exec PLANFLOW-UX стартует ТОЛЬКО после P4🟢/🟠 |
-| Терминальность TELEMETRY-OPT P1.3 (правки `workflow-craft`) | 2026.07.15-TELEMETRY-OPT | P1.3 🟠 | `workflow-craft` §4.1 (анти-релонч) уже добавлен | P3 здесь строит ПОВЕРХ, не откатывает |
+| Терминальность TELEMETRY-OPT P4 (правки `anti-drift`) | 2026.07.15-TELEMETRY-OPT (архив) | P4 🟢 | План терминален целиком, архивирован (`plans/archive/2026.07.15-TELEMETRY-OPT`) | Гейт снят — exec PLANFLOW-UX не блокирован |
+| Терминальность TELEMETRY-OPT P1.3 (правки `workflow-craft`) | 2026.07.15-TELEMETRY-OPT (архив) | P1.3 🟠 | `workflow-craft` §4.1 (анти-релонч) уже добавлен | P3 здесь строит ПОВЕРХ, не откатывает |
 
-> Гейт односторонний (§11): PLANFLOW-UX читает TELEMETRY-OPT, не правит его. Кросс-репо push не нужен —
-> оба плана в одном `plans/` root swissknifeman (`plan-lint` сверяет Pinned↔Status локально).
+> Гейт снят (донор терминален и архивирован). Был односторонним (§11): PLANFLOW-UX читал
+> TELEMETRY-OPT, не правил его.
 
 ## Обсуждение
 
@@ -164,3 +175,20 @@
 
 **Статус:** Resolved → D7 (Вариант A — сузить). Часть про `dev.md`/`fix.md` живёт как **OQ-2**
 (рекомендация исполнителю: `dev.md` — да при всплытии боли; `fix.md` — exempt как терминал).
+
+### 5 — Pre-mortem рекалибровки ревьюера (P3.1, ядро экосистемы)
+
+Канон workflow-авторинга — ядро экосистемы (весь флот следует ему). «Через 6–12 мес рекалибровка
+провалилась» → независимые причины:
+- **Причина-1: пере-ослабили — гейт стал беззубым**, плохие workflow проходят (обратка жалобы
+  Owner). Митигация: рекалибровка = точечное СУЖЕНИЕ 3 ложных-RED, детекторы относит.путей/read-only/
+  форк остаются байт-в-байт (Scope Excluded P3.1); Validation требует RED на синтетике с
+  относит.путём / пишущим-аудитом.
+- **Причина-2: рассинхрон 3 файлов-канона** (правка в `make-workflow.md`, забыли README/
+  `workflow-craft`) → `make-workflow` сам ловит «дрейф от README = дефект». Митигация: Implementation
+  Rules «одна формулировка во все 3 источника» + `check-translations` гейт.
+- **Причина-3: гейт так и не доставлен** (P3.5 → OQ-3 не резолвится) → рекалибровка академична.
+  Митигация: P3.5 квантифицирует + рекомендует, OQ-3 эскалирует Owner'у; доска честно держит A1
+  открытым до резолва.
+
+**Статус:** Resolved → митигации в Implementation Rules/Validation P3.1/P3.5 + OQ-3.

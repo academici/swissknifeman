@@ -1,7 +1,7 @@
 ---
 name: mcp-advisor
 bucket: general
-version: 0.1.0
+version: 0.2.0
 description: "Pick MCP servers for a project at onboarding/sync: which to connect (context7/playwright/github/fetch/sequential-thinking + maind hub), why, when NOT to, and the cost in context/permissions/Node-deps. Activate when adding/onboarding/syncing a project, editing .mcp.json, or choosing MCP — emits a justified connection plan, not a dump of every server."
 risk: read
 persona: oss-dev
@@ -75,6 +75,28 @@ Skiller profiles currently give: `context7` — to all code types; `+playwright`
 advisor **adds** per role/tasks: `github` — for oss/maintainer and packages; `fetch` — where fresh external
 docs/API are needed; `sequential-thinking` — for complex tasks. Keep the base set minimal.
 
+## Weeding resident MCP (auditing what's already connected)
+
+Selection (above) is about adding. Symmetric ritual — about what's ALREADY sitting in the project's
+`.mcp.json`:
+
+1. **Audit:** `skiller budget --first-turn --target <path>` → the MCP line of the report (server list +
+   tokens, eager model `budget.py::_measure_mcp`). Check each resident server against the map above:
+   connected by a project signal (stack/role/tasks), or "connected earlier, signal no longer holds"?
+2. **"1-2 servers per task" rule.** A typical session uses 1-2 MCP servers out of the connected set (the
+   rest are a silent resident "tax" on every request). More than 4-5 servers on a small project without
+   an explicit multi-domain stack is a signal for owner review, not automatic disconnection.
+3. **Tool-search caveat:** first-party Claude Code CLI keeps tool search / deferred MCP-loading **on by
+   default** — resident content is summaries + per-server instructions, not full tool schemas;
+   `_measure_mcp` counts the EAGER ceiling (full schemas), which is **not** the actual resident footprint
+   on a typical run. Don't claim weeding savings on the eager number ("disabling server X saves N
+   tokens") — that figure is honest only as an upper bound when tool search is off/unavailable. Weeding
+   still has value (a server is still a summary line + permissions surface + Node/uvx dep), but its ROI
+   is lower than the eager ceiling implies.
+4. **Disconnect candidate** — a server for which none of the map's "Connect when" signals has held for
+   7+ days straight (see `context-economy` §5) — propose disconnection to the project owner with a
+   reason, don't disconnect silently.
+
 ## Quality checklist
 
 - [ ] Signals collected: stack, role, task types — the recommendation is justified by them, not "all by default".
@@ -94,4 +116,4 @@ docs/API are needed; `sequential-thinking` — for complex tasks. Keep the base 
 - `architect/figma-mcp-core` — a domain special case (Figma Dev Mode MCP), outside general selection.
 - `verify-claims` (general) — complementary: this skill is about *what to connect* to a project, that one about *when and how to fetch/verify a fact* via the connected engines (context7/perplexity/web).
 
-<!-- ru-source-sha256: 648d8c8e5996400d33fe904340851348e4ac1822c394292ce8437048a613bf01 -->
+<!-- ru-source-sha256: 167766f22c020388e639900aef0562529bac0f1f8329a68418ab28bc818018e6 -->

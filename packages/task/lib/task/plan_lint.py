@@ -180,6 +180,9 @@ PLAN_ID_LEGACY_RE = re.compile(r"^[A-Z][A-Z0-9-]+$")
 # прецедент P2.1/D19 `parse_script_meta`).
 WORKFLOW_META_MARKER = "export const meta"
 WORKFLOW_DIR_NAME = "workflows"  # единственный дом скриптов плана (D28)
+# Резидентный agent-pack класс (harness dev-loop.js) — не плановый артефакт, exempt по
+# имени файла от места/имени-проверки (findings A4, P3.3).
+DEV_LOOP_EXEMPT_NAME = "dev-loop.js"
 
 # --- P4.6: workflow-как-DoR — грепаемый признак заявленной оркестрации (D29) ---
 # КОНСЕРВАТИВНЫЙ набор маркеров в теле фазы: явный `scriptPath` launch-block'а,
@@ -651,6 +654,8 @@ def _lint_plan_identity_20(plan_dir, plan_id, meta, plan_md, diag):
         except (OSError, UnicodeDecodeError):
             continue
         if WORKFLOW_META_MARKER not in text:
+            continue
+        if js.name == DEV_LOOP_EXEMPT_NAME:
             continue
         rel = js.relative_to(plan_dir)
         if not (rel.parts and rel.parts[0] == WORKFLOW_DIR_NAME):

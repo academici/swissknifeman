@@ -1371,6 +1371,14 @@ class TestPlanIdentity43Warnings(TmpPlanTestCase):
         self.assertTrue(diag.ok, diag.errors)
         self.assertEqual(self._warnings_containing(diag, "workflow-скрипт"), [], diag.warnings)
 
+    # --- (2b) dev-loop.js — резидентный agent-pack класс, exempt (P3.3/findings A4) ---
+    def test_dev_loop_js_exempt_by_name(self):
+        plan_dir = write_valid_plan(self.root, "DEMO-1")
+        self._add_js(plan_dir, "dev-loop.js")  # вне workflows/, неканоничное имя — оба триггера
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+        self.assertEqual(self._warnings_containing(diag, "workflow-скрипт"), [], diag.warnings)
+
     # --- (3) supersedes-преемственность (D27) --------------------------------
     def test_supersedes_missing_with_archived_codename_warns(self):
         plan_dir = write_valid_plan(self.root, "DEMO-1")

@@ -1,50 +1,79 @@
-# HANDOFF — 2026-07-15 — after P4.2
+# HANDOFF — 2026-07-15 — after P5.1
 
-**Next:** фаза P4 терминальна (2/2 🟢) → `/task:plan-audit 2026.07.15-TELEMETRY-OPT P4`.
+**Next:** «ЗАПУСК ВРУЧНУЮ: fable/medium» — P5.2 (Exec=manual, Routing §3: fable/medium,
+внешний RAG-развед, вне пина `plan-exec`).
 
 | Параметр | Значение |
 |:--|:--|
-| Model | opus |
-| Thinking | xhigh — plan-audit пин команды |
-| Context | NEW SESSION — шаг-не-item |
-| Суть | Adversarial-аудит фазы P4 (P4.1+P4.2): сверка 🟢 с git-фактами, no-op/scope drift, качество handoff |
+| Model | fable |
+| Thinking | medium — внешний RAG-развед, токен-дёшево (D1, Routing §3) |
+| Context | continue (/clear) — ручной item |
+| Суть | RAG-развед best-practices токен-экономии (perplexity-web/context7) + сверка с рамками swissknifeman |
 
 ```
-/task:plan-audit 2026.07.15-TELEMETRY-OPT P4
+Исполни P5.2 мастер-плана plans/2026.07.15-TELEMETRY-OPT (репо swissknifeman) строго по ТЗ
+phases/P5.md:
+
+**Intent:** Через perplexity-web/context7 собрать актуальные (2026) практики токен-экономии
+агентных систем (структурирование prompt-cache и его TTL, context compaction/pruning, sub-agent
+context isolation, tool-result trimming, model-routing по стоимости) и сверить каждую с
+архитектурой swissknifeman; вывести кандидатов adopt/reference/skip.
+
+**Scope Included:** RAG-запросы по перечню тем (дисциплина query-craft: версия/таймфрейм 2026/
+формат); сверка каждой практики с рамками (stdlib-only, MCP-модель, кэш-профиль); вердикт
+adopt/reference/skip; значимое → строка в docs/reference.md; отклонённое → docs/rejected-
+optimizations.md.
+
+**Scope Excluded:** реализация (будущие фазы); внутренние метрики (P5.1, уже закрыт —
+findings/P5-internal-budget-audit.md); синтез (P5.3); WebSearch как первый движок (лестница
+context7→perplexity→WebSearch).
+
+**Required Reads:** 1) packages/skiller/skills/general/query-craft/SKILL.md 2) docs/reference.md
+3) docs/rejected-optimizations.md 4) CLAUDE.md (раздел «Философия и рамки» + «Методология решений»)
+
+**Implementation Rules:** RAG-лестница context7→perplexity-web→WebSearch (CLAUDE.md); каждый
+несущий вердикт — `RAG:✅ <дата/источник>` либо `[UNVERIFIED]`; perplexity-web НЕ параллелить
+(профиль-лок >120s) и не слать сверхдолгие search_deep (таймаут моста); практика, требующая
+pip-рантайма — авто-skip (stdlib-only — жёстко).
+
+**Validation:** findings/P5-external-bestpractices.md с ≥N кандидатами, каждый RAG-маркирован
+(✅ с источником или [UNVERIFIED]); отклонённые отражены в docs/rejected-optimizations.md;
+принятые значимые — в docs/reference.md.
+
+**Files:** plans/2026.07.15-TELEMETRY-OPT/findings/P5-external-bestpractices.md (создать) ·
+docs/reference.md (при adopt) · docs/rejected-optimizations.md (при skip)
+
+После работы — обязательное закрытие item'а по протоколу plan-exec (Status/Completion Notes/
+Pending Work/Known Deviations, item-коммит по Files выше, bookkeeping-коммит, перезапись
+handoff.md, plan-lint.py). Model/effort сессии — fable/medium (уже установлены), НЕ переключай на
+sonnet/medium.
 ```
 
-**Done:** P4.2 закрыт, фаза P4 (Permission-friction) терминальна. Дисциплина-правило
-«DENY(policy) терминален для точной формы команды в сессии — не retry verbatim» добавлено
-в CORE-скилл `packages/skiller/skills/general/anti-drift` (секция «DENY circuit-breaker»,
-RU-источник → EN-канон регенерирован, версия 0.3.0→0.4.0). Правило ОБЩЕЕ (не завязано на
-компаунд-Bash, по вердикту P4.1: бакет-a — меньшинство 16%). Protection-surface (auto-approve
-компаунд-парсинг ось B, dedicated `permission_friction`-сигнал ось C, бакет-(c) needs-Owner
-формы 36/98 включая гипотезу `[POSSIBLE-DEFECT]` про отсутствие auto-approve хука) НЕ
-применены — уточнены в `open-questions.md` (OQ-5, Decision pending, владелец Dmitry
-Vostrikov). D-запись: plan.md D11. Validation зелёная: `check-translations.sh` (159/159
-локальных, EN не протух), `skiller registry` идемпотентен (2 прогона без остаточного diff),
-`bash packages/skiller/scripts/validate.sh` (216 skills valid, 379 tests OK, registry --check
-актуален), `skiller budget --first-turn` (6275/7000 ток, CORE-резидент 694/750 — OK).
-Item-коммит `dd7b553`; bookkeeping — текущий коммит (см. git log). Детали — `phases/P4.md`
-P4.2 Completion Notes + Phase Handoff.
+**Done:** P5.1 закрыт: внутренний аудит always-on бюджета `skiller budget --first-turn` на 5
+проектах разного стека (swissknifeman/vaulter/memster/dterema-app/erp-sdk) — 4/5 WARN (>10K ток).
+Найдено 3 кандидата сжатия с измеренным резидентом: К1 MCP tool-defs (2250→10650 ток, 35% итога
+на dterema/app, 7 резидентных серверов) · К2 CLAUDE.md сверх ≤200 строк (dterema/app 13535 ток,
+memster 9055 ток) · К3 повторяющиеся ⊕always-описания скиллов across 3/5 проектов (множитель
+N-подписчиков). Инструмент не сбоил ни на одном прогоне. Детали — `findings/
+P5-internal-budget-audit.md`, `phases/P5.md` P5.1 Completion Notes.
 
-**Remaining:** P5 (discovery, 3 items: внутр. аудит `skiller budget` ∥ внешний RAG-развед →
-синтез ROI-backlog) — независима от P1–P4, ⬜ Not started. P1 терминальна (🟠), P2/P3/P4
-терминальны (🟢).
+**Remaining:** P5.2 (внешний RAG-развед, manual/fable/medium, ⬜) — независим от P5.1 (уже
+закрыт), можно исполнять сейчас. P5.3 (синтез ROI-backlog, manual/opus/high) — ждёт P5.1 ∥ P5.2
+(оба нужны как Required Reads). P1 терминальна (🟠), P2/P3/P4 терминальны (🟢).
 
-**Sources of truth:** `phases/P4.md` (ТЗ P4.1/P4.2 + Completion Notes + Phase Handoff) ·
-`findings/P4-deny-inventory.md` (P4.1 вердикт + рекомендация) · `plan.md` (D10/D11, Routing §3,
-Phase Index) · `open-questions.md` (OQ-5, обновлён P4.1-цифрами) · `packages/skiller/skills/
-general/anti-drift/SKILL.ru.md` + `SKILL.md` (v0.4.0).
+**Sources of truth:** `findings/P5-internal-budget-audit.md` (P5.1 вердикт + 3 кандидата) ·
+`phases/P5.md` (ТЗ P5.1/P5.2/P5.3 + Completion Notes) · `plan.md` (§3 Routing, §4 Phase Index) ·
+`packages/skiller/lib/skiller/budget.py` (источник токен-математики).
 
-**Open risks:** OQ-5 (Owner-решение по осям B/C + бакет-(c) needs-Owner, включая
-`[POSSIBLE-DEFECT]` гипотезу про auto-approve хук) остаётся открытым — не блокирует
-`plan-audit` P4 (дисциплина-часть закрыта, protection-surface сознательно вне скоупа
-plan-exec). OQ-4 (research opus→sonnet) остаётся Decision pending, вне P4.
+**Open risks:** OQ-5 (Owner-решение по осям B/C permission-friction) и OQ-4 (research opus→sonnet)
+остаются Decision pending, вне P5. Посторонний дифф в дереве на момент старта сессии:
+`plans/2026.07.15-TELEMETRY-OPT/phases/P4.md` (modified) и untracked
+`plans/2026.07.15-PLANFLOW-UX/` — не тронуты этим item'ом (не входят в Files P5.1), владелец
+работает параллельно — не коммитить/не ревертить без явного запроса.
 
 **Workarounds/Deferred/Open questions:**
 - workarounds: —
-- deferred: ось B (auto-approve компаунд-парсинг read-only) + ось C (dedicated
-  `permission_friction`-сигнал) — Owner-gated, не в скоупе plan-exec.
-- open_questions: **OQ-5** — Decision pending (владелец Dmitry Vostrikov), уточнён P4.1-данными.
-  **OQ-4** — Decision pending (research opus→sonnet). OQ-1/OQ-2/OQ-3 Resolved.
+- deferred: правки-сжатия по кандидатам К1/К2/К3 — measure-only item, реализация вне scope P5.1
+  (будущие items по backlog P5.3).
+- open_questions: **OQ-5** — Decision pending (владелец Dmitry Vostrikov). **OQ-4** — Decision
+  pending (research opus→sonnet). OQ-1/OQ-2/OQ-3 Resolved.

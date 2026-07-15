@@ -10,7 +10,7 @@
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | opus |
-| Last Updated | 2026-07-15 (P4.2 закрыт — фаза P4 терминальна) |
+| Last Updated | 2026-07-15 (P5.1 закрыт — внутренний аудит always-on бюджета) |
 | Repository | swissknifeman |
 | Related Packages | harness (run-report hook, permissions), analyst (token_report, digest), task (workflow-craft/routing-команды), skiller (workflow-craft/plan-protocol скиллы) |
 | Execution Mode | phase-first |
@@ -68,7 +68,7 @@ Opus/xhigh намеренно, но это самый дорогой рычаг,
 | P2 | Churn-гейт файл-операций | 2/2 | 🟢 Done |
 | P3 | Model-routing аудит | 2/2 | 🟢 Done |
 | P4 | Permission-friction | 2/2 | 🟢 Done |
-| P5 | Discovery: дальнейшие рычаги токен-экономии (RAG) | 0/3 | ⬜ Not started |
+| P5 | Discovery: дальнейшие рычаги токен-экономии (RAG) | 1/3 | 🟡 In progress |
 
 ## 5. Decision Log
 
@@ -105,6 +105,7 @@ Opus/xhigh намеренно, но это самый дорогой рычаг,
 | 2026-07-15 | plan-design/opus | P4 детализирован (2 items), DoR пройден; D10 (probe-реframe: доминанта — компаунд read-only Bash, не rm; дисциплина-first, protection-surface Owner-gated); Routing §3 (P4.1–P4.2 sonnet/medium plan-exec); OQ-5 + Discussion №3 — детали см. phases/P4.md |
 | 2026-07-15 | plan-exec/sonnet | P4.1 закрыт: полное окно 169 run-reports, 98 policy-shaped DENY (Bash 75/Read 23), бакеты a=16(16%)/b=46(47%)/c=36(37%) — на полном окне (a) компаунд-Bash МЕНЬШИНСТВО (уточнение к D10), rm-гипотеза не подтвердилась (D10 if-then не сработал) — детали см. phases/P4.md P4.1 Completion Notes |
 | 2026-07-15 | plan-exec/sonnet | P4.2 закрыт, фаза P4 терминальна: дисциплина-правило «DENY терминален для формы» в CORE-скилле `anti-drift` (v0.4.0, RU→EN); protection-surface (ось B/C, бакет-c) уточнён и остаётся в OQ-5 (Decision pending); D11 — детали см. phases/P4.md P4.2 Completion Notes |
+| 2026-07-15 | plan-exec/sonnet | P5.1 закрыт: `skiller budget --first-turn` на 5 проектах разного стека — 4/5 WARN (>10K); 3 кандидата сжатия с измеренным резидентом (MCP tool-defs · CLAUDE.md сверх ≤200 строк · повторяющиеся ⊕always-описания across проектов) — детали см. phases/P5.md P5.1 Completion Notes |
 
 ## Обсуждение
 

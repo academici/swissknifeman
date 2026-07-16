@@ -161,12 +161,21 @@ def active_md(value="DEMO-1", *, updated="2026-07-02"):
 """
 
 
+def brief_md(plan_id):
+    return f"""# Бриф — {plan_id}
+
+Переформулированный вход владельца: демо-план для тестов линтера.
+"""
+
+
 def write_valid_plan(root, plan_id="DEMO-1"):
     """Пишет полностью валидный план (plan-lint должен вернуть 0 ошибок/предупреждений).
     Возвращает Path на plans/<plan_id>."""
     plan_dir = Path(root) / "plans" / plan_id
     (plan_dir / "phases").mkdir(parents=True, exist_ok=True)
+    (plan_dir / "brief").mkdir(parents=True, exist_ok=True)
     (plan_dir / "plan.md").write_text(plan_md(plan_id), encoding="utf-8")
     (plan_dir / "phases" / "P1.md").write_text(phase_md(), encoding="utf-8")
     (plan_dir / "handoff.md").write_text(handoff_md(plan_id), encoding="utf-8")
+    (plan_dir / "brief" / "00-brief.md").write_text(brief_md(plan_id), encoding="utf-8")
     return plan_dir

@@ -42,6 +42,7 @@ plans/<PLAN-ID>/
 ├── plan.md            # master plan (Meta, Context, Rules, Routing, Status Board, logs)
 ├── phases/Pn.md       # one file per phase: phase context, items, phase handoff
 ├── handoff.md         # rolling "where we are" pointer (overwritten)
+├── brief/             # layer 0 "input": the owner's brief + appended refinements (section 16, MANDATORY)
 ├── findings/          # layer 1 "raw": RAG extracts, recon, source documents (section 16)
 ├── research/          # layer 2 "synthesis": the model's authored design docs (section 16)
 ├── artifacts/         # phases' working artifacts, destiny — archive
@@ -50,7 +51,9 @@ plans/<PLAN-ID>/
 └── open-questions.md  # disputed/unresolved (protocol — section 3)
 ```
 
-Only `plan.md`/`phases/`/`handoff.md` are mandatory — everything else is optional, per the
+Mandatory: `plan.md`/`phases/`/`handoff.md` AND `brief/` (layer 0 — a `plan-lint` gate:
+for date-based plans from 2026.07.16 a missing non-empty `brief/*.md` is an ERROR, the
+plan does not pass approval; older/legacy — WARNING). Everything else is optional, per the
 plan's needs. `PLAN-ID` — one of two canonical patterns:
 
 - **date-based** (preferred, D16) — `<YYYY>.<MM>.<DD>-<CODENAME>`, e.g.
@@ -939,13 +942,21 @@ The convention reaches the project via the managed CLAUDE.md block `maind:plan-c
 draft in `plans/` → `/task:plan-design from-draft <файл>` expands it into `plans/<ID>/` per this
 skill's templates (draft deleted, history in git).
 
-## 16. The plan's knowledge layers: findings/ → research/ → decisions
+## 16. The plan's knowledge layers: brief/ → findings/ → research/ → decisions
 
-Three-layer canon. The "raw → synthesis → decision" chain MUST be reconstructible from the
+Layer canon. The "input → raw → synthesis → decision" chain MUST be reconstructible from the
 plan's files WITHOUT access to the authoring session's chat — otherwise later plan work
 repays the cost of reconstructing "where did this come from", and the owner's/model's
 thinking gets lost.
 
+0. **Layer 0 — the owner's input (`brief/`, MANDATORY, plan-lint gate):**
+   `brief/00-brief.md` — the owner's original message reformulated WITHOUT loss of thought
+   (not a digest: every thought is kept, only the form changes); everything clarified along
+   the way (answered questions, resolved forks, scope changes) is APPENDED as dated blocks
+   (`brief/01-refinements.md` or new files). The layer's job: the plan shows "what was the
+   input → what we arrived at" — which is also the material for improving the planning
+   process itself. Without a non-empty `brief/*.md` the plan does not pass approval
+   (date-based plans from 2026.07.16 — linter ERROR).
 1. **Layer 1 — external raw (`findings/`):** everything obtained from external sources while
    working on the plan — RAG extracts (source URL + verification date + verdict), subagent
    recon reports, digests of source documents (emails/specs; binary attachments live next to
@@ -983,4 +994,4 @@ thinking gets lost.
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of editing
   vendor copies (section 12).
 
-<!-- ru-source-sha256: 22ad7b69cdc07d3d44b1c4a74a76e01b6a07d8e51d2cefe41efd648e8230af82 -->
+<!-- ru-source-sha256: f1499cc258c5f609d74156f395bb007c2726e8c45fa6bf9c4abebf72aad7edc9 -->

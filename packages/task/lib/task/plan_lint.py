@@ -624,6 +624,32 @@ def _lint_contracts_cross_plan(models, diag):
                          f"запинен на {pinned} — уведомление не разнесено (§11)")
 
 
+# --- Слой 0 «бриф» — обязательный вход плана (SKILL §16) ------------------------
+# С этой даты (датовый PLAN-ID) отсутствие brief/ — ERROR; старее/legacy — WARNING
+# (back-compat: существующие планы не ломаем, новые без брифа утверждение не проходят).
+BRIEF_CANON_DATE = "2026.07.16"
+
+
+def _lint_plan_brief_20(plan_dir, plan_id, diag):
+    """brief/ — слой 0 «вход»: переформулированное без потери мыслей исходное
+    сообщение владельца (00-brief.md) + дописываемые датированные уточнения.
+    Задача: из плана видно «что было на входе → к чему пришли». План без brief/
+    не проходит утверждение (SKILL §16)."""
+    plan_dir = Path(plan_dir)
+    brief_dir = plan_dir / "brief"
+    has_md = brief_dir.is_dir() and any(
+        f.is_file() and f.stat().st_size > 0 for f in brief_dir.glob("*.md"))
+    if has_md:
+        return
+    msg = (f"нет слоя 0 «бриф»: {plan_dir.name}/brief/ с ≥1 непустым .md "
+           f"(00-brief.md — переформулированный вход владельца, уточнения дописываются; "
+           f"SKILL §16)")
+    if PLAN_ID_DATED_RE.match(plan_id) and plan_id[:10] >= BRIEF_CANON_DATE:
+        diag.error(plan_dir / "plan.md", None, msg)
+    else:
+        diag.warning(plan_dir / "plan.md", None, msg)
+
+
 # --- P4.3 warning-проверки: ID / workflow-скрипты / supersedes (D24/D27/D28) ----
 
 def _lint_plan_identity_20(plan_dir, plan_id, meta, plan_md, diag):
@@ -927,6 +953,9 @@ def lint_plan(plan_dir, diag):
     # meta здесь — сырой dict[name]=(value,lineno) до маппинга в модель ниже.
     _meta_raw = meta if isinstance(meta, dict) else {}
     _lint_plan_identity_20(plan_dir, plan_id, _meta_raw, plan_md, diag)
+
+    # Слой 0 «бриф» обязателен (SKILL §16): новые датовые планы — ERROR, старые — WARNING.
+    _lint_plan_brief_20(plan_dir, plan_id, diag)
 
     # m7/D10: опциональная секция `## 7. Contracts` (нет секции — пустая модель, молча).
     plan_lines = _read_lines(plan_md)

@@ -38,6 +38,35 @@ class TmpPlanTestCase(unittest.TestCase):
         self._tmp.cleanup()
 
 
+class TestBriefLayer(TmpPlanTestCase):
+    """Слой 0 «бриф» (SKILL §16): датовый план от 2026.07.16 без brief/ — ERROR,
+    легаси/старее — WARNING; непустой brief/00-brief.md гасит проверку."""
+
+    def test_dated_plan_without_brief_is_error(self):
+        plan_dir = write_valid_plan(self.root, plan_id="2026.07.16-DEMO")
+        shutil.rmtree(plan_dir / "brief")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "нет слоя 0"), diag.errors)
+
+    def test_legacy_plan_without_brief_is_warning(self):
+        plan_dir = write_valid_plan(self.root)
+        shutil.rmtree(plan_dir / "brief")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "нет слоя 0"), [])
+        self.assertTrue([w for w in diag.warnings if "нет слоя 0" in w], diag.warnings)
+
+    def test_empty_brief_md_does_not_count(self):
+        plan_dir = write_valid_plan(self.root, plan_id="2026.07.16-DEMO")
+        (plan_dir / "brief" / "00-brief.md").write_text("", encoding="utf-8")
+        (plan_dir / "brief" / "01-extra.md").unlink(missing_ok=True)
+        # оставили только пустой 00-brief.md — проверка обязана сработать
+        for f in (plan_dir / "brief").glob("*.md"):
+            if f.name != "00-brief.md":
+                f.unlink()
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "нет слоя 0"), diag.errors)
+
+
 class TestValidPlan(TmpPlanTestCase):
     def test_valid_plan_ok(self):
         plan_dir = write_valid_plan(self.root)

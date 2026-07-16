@@ -297,10 +297,16 @@ A non-empty Known Deviations BY ITSELF does NOT change the item's status.
 - a workaround accepted that LIVES IN THE CODE/artifact (not in the execution process);
 - the item commit carries a diff outside `Files` of the item (a foreign working-tree
   capture, or a file "on topic" not declared in the spec) — regardless of whether the diff
-  itself is correct. Counted ONLY over NON-plan paths: `plans/<ID>/**` and
-  `plans/ACTIVE.md` are a regular part of closing an item (§8: the bookkeeping commit),
-  their presence in the item's commits is NOT a material deviation (and they need not be
-  listed in `Files`).
+  itself is correct. NOT counted as a foreign diff (not a material deviation, need not be
+  listed in `Files`): (a) `plans/<ID>/**` and `plans/ACTIVE.md` are a regular part of
+  closing an item (§8: the bookkeeping commit); (b) a **deterministic derived artifact** —
+  the output of a NAMED regeneration command run over the item's `Files` sources (registry
+  manifests, a generated canon in another language, lockfiles, doc snapshots): regenerating
+  it is a direct expected consequence of the item editing its own sources, not "someone
+  else's work" (foreign-diff protection still stands — carve-out (b) does NOT cover
+  non-deterministic/manual/foreign output). Do not confuse with "phase coherence of a
+  derived artifact" below: that rule is about LEAVING an artifact stale; this one is about
+  COMMITTING its regeneration.
 
 🟢 Done is kept on a process deviation, but the Known Deviations entry is MANDATORY:
 tier overshoot (executed with a model/effort ABOVE what Routing prescribed), commit
@@ -958,4 +964,4 @@ doesn't repay the cost of reconstructing "where did this come from".
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of editing
   vendor copies (section 12).
 
-<!-- ru-source-sha256: 2ebfca5307fe2e618efa31e9d9af4cd11803a5ec9d436c84e08ab95008dd8f57 -->
+<!-- ru-source-sha256: 7122566d563c88c268b7bb82822ad4ba6c729452f9ac4e11abfc34a229d78c88 -->

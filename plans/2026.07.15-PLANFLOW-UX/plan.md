@@ -6,11 +6,11 @@
 |:--|:--|
 | Plan ID | 2026.07.15-PLANFLOW-UX |
 | Title | Надёжность и UX плановой/workflow-системы (launch-block · workflow-авторинг · дизайн-флоу) |
-| Version | 0.4.0 |
+| Version | 0.5.0 |
 | Status | 🟡 In progress (design) |
 | Document Type | Executable Master Plan |
 | Authoring Model | opus |
-| Last Updated | 2026-07-16 (P4.3 закрыт 🟠, фаза P4 терминальна) |
+| Last Updated | 2026-07-16 (P5.1 закрыт 🟢 — RECOVERY-дисциплина клинча в plan-protocol §7) |
 | Repository | swissknifeman |
 | Related Packages | task (plan-protocol/workflow-craft скиллы, команды plan-*/make-workflow/review), skiller (реестр скиллов, budget), harness (agent-packs dev-loop, run-report) |
 | Execution Mode | phase-first |
@@ -72,7 +72,11 @@
 | P4.2 | sonnet/high | manual | канон-схема §3 Routing (+`Batch`/`Review` колонки) + семантика батчинга по резолву OQ-1/D12 — канон-когерентность, читаемая флотом → high; effort>medium → manual; sonnet — расширение схемы, не новая архитектура; ПОСЛЕ P4.1 (общий `SKILL.ru.md`) |
 | P4.3 | sonnet/high | manual | классификация риска среза → глубина ревью (наполняет `Review` enum из P4.2) + D6-инвариант — канон, fleet-facing → high; effort>medium → manual; ПОСЛЕ P4.2 (колонка существует) |
 
-<P5 — скелет; routing проставится при детализации фазы (`/task:plan-design <ID> Pn`).>
+| Batch | Items | Model/effort | Exec | Review | Почему |
+|:--|:--|:--|:--|:--|:--|
+| — | P5.1 | opus/high | manual | full | новая RECOVERY-методология в ядро-канон `plan-protocol §7` + зеркало `plan-design.md` — субтильный fleet-facing дизайн-флоу, не механика; §9 «декомпозиция/методология → high+ MANDATORY»; effort>medium → manual; opus — новая архитектура анти-клинч-слоя (как P4.1) |
+| — | P5.2 | sonnet/high | manual | full | канон-carve-out §6 (производные артефакты в Scope) — канон-когерентность с foreign-diff/фазовой-когерентностью, читаемая флотом → high; §9 «канон, за которым следует флот → high MANDATORY»; effort>medium → manual; sonnet — расширение схемы, не новая архитектура; ПОСЛЕ P5.1 (общий `SKILL.ru.md`) |
+| — | P5.3 | sonnet/medium | plan-exec | light | верификация+точечное расширение i18n-гейта (`check-translations.sh`) + терминальная регенерация; независимый scope (bash-гейт, не канон-проза), Validation детерминирована (прогон+счётчик); дефолт-деривация (model≤sonnet ∧ effort≤medium → plan-exec); ПОСЛЕ P5.1/P5.2 (сверяет их RU↔EN) |
 
 ## 4. Phase Index & Status Board
 
@@ -82,7 +86,7 @@
 | P2 | Launch-block энфорсмент + ошибка→сразу-фикс | 1/2 | 🟠 Done with deviations |
 | P3 | Workflow-авторинг + авто-ревью (make-workflow ревьюер · base-шаблоны · видимость скилла) | 2/5 | 🟠 Done with deviations |
 | P4 | Contract-first дизайн-флоу + глобальный exec-план + батчинг + адаптивная глубина ревью | 0/3 | 🟠 Done with deviations |
-| P5 | Fix-стратегия plan-design + архитектурный апгрейд скиллов/сниппетов | 0/2 | ⬜ Not started |
+| P5 | Fix-стратегия plan-design при клинче + канон-апгрейд из полевой обратной связи | 1/3 | 🟡 In progress |
 
 ## 5. Decision Log
 
@@ -102,6 +106,10 @@
 | D12 | 2026-07-15 | **OQ-1 разрешён → вариант B: расширить `## 3. Routing` колонками `Batch`+`Review`** (НЕ новый `exec-plan.md` = вариант A, НЕ Status Board = C). Owner отказался от вопроса («не тупи, проектируй») → designer берёт рекомендацию с обоснованием. Alternatives — Обсуждение №2 | Протокол сам предостерегает «второй носитель факта = рассинхрон» (§3): отдельный `exec-plan.md` дублировал бы routing/статус items → анти-паттерн. §3 УЖЕ несёт per-item Model/effort/Exec → 2 непересекающиеся колонки = минимум механизма, ноль дублей; Status Board фазового уровня (неверная гранулярность подфаз). RAG:— (repo-grounded: SKILL.ru.md §3 «второй носитель» + §9 форма §3 Routing) |
 | D13 | 2026-07-15 | **Граница P4/P5:** P4.1 кодифицирует FORWARD contract-first флоу + превентивное перечисление coupling-поверхности; RECOVERY (fix-стратегия когда refine клинчит) + верификация достаточности plan-protocol 2.7/D44 → **P5.1**. Alternatives (всё в P4 vs разнести) — Обсуждение №6 | recon §5 B1 назначил recovery+sufficiency-check на P5; contract-first дизайн-флоу (превенция ripple §2.2) — структурный кластер P4. Разнос убирает overlap, держит фазы независимыми. RAG:— (repo-grounded: findings/P1-recon.md §5 B1 + P4/P5 Phase Context) |
 | D14 | 2026-07-15 | **Адаптивная глубина ревью = ПРИНЦИП, не форс** (recon: уже практика dev-loop, D6-легитимно): консервативная классификация (дефолт `full`, `light`/`none` с обоснованием, сомнение → `full` fail-safe); батч наследует МАКСИМУМ риска участников (D6-инвариант, связка P4.2↔P4.3) | Владелец: «переревью долго» (кластер 3), но D6 запрещает ронять качество; recon подтвердил risk-adaptive как best-practice, не «ревью везде». Fail-safe как routing-гейт §9 (цена ложного none = RED в проде). RAG:✅ (P1 §6 perplexity-web 2026-07: judge-panel high-stakes only, risk-adaptive review — CONFIRMED) |
+| D15 | 2026-07-16 | **P5 детализирована в 3 items** (не 2): P5.1 RECOVERY-дисциплина клинча + верификация анти-клинч-канона (ось B B1); P5.2 §6 carve-out производных артефактов (emergent 6× Files-паттерн, field-feedback); P5.3 B2 i18n-keep генерализация. Reconcile контракт-блока: RECOVERY строит ПОВЕРХ P4.1 coupling/контракт-блок + P4.2 батчинг (additive, НЕ supersedes) | recon §5-P5 дал B1+B2; 6× Files-паттерн (`plan.md §6`) — измеренный полевой дефект канона, не спекуляция (handoff P4 Open risks флагнул кандидатом); 3 items = честная доска + независимая Validation (P5.3 scope = `check-translations.sh`, не `SKILL.ru.md`). RAG:— (repo-grounded: findings §5-P5 + §6 Update Log 6× + P4.1/P4.2 контракты) |
+| D16 | 2026-07-16 | **RECOVERY-дисциплина клинча = SBD/LRM/progressive-freeze/medium-batch** (средний батч вокруг ОДНОГО хотспота, интеграционная валидация после батча, финальная консолидация одним проходом, пустой feasible-set → удалить вариант). Кодифицируется в `plan-protocol §7`, НЕ машинный гейт (проза уровня pre-mortem/DoR). Альтернативы (per-change thrash / big-bang / medium-batch) сравнены в `findings/P5-design-convergence.md` | RAG подтвердил: между «per-change» (thrash) и «big-bang» (прячет несовместимости) — средние когерентные батчи вокруг дизайн-вопроса, best-practice Lean/SAFe/SBCE. AUDIT-петля уже закрыта (`plan-audit.md` L24–35 D44); пробел — DESIGN-рефайн-петля §7 (голая L443–444). RAG:✅ (2026-07-16 perplexity-web SBD/LRM — `findings/P5-design-convergence.md`) |
+| D18 | 2026-07-16 | **Достаточность анти-клинч-канона верифицирована:** AUDIT-петля закрыта в `plan-audit.md` L22–35 (потолок 2 аудита/фазу · severity находки ≠ вердикт фазы · follow-up вместо реопена, D44/2.7) — НЕ трогаем (Scope Excluded P5.1). Пробел — DESIGN-рефайн-петля §7 (нёс голый `design→self-audit→правка→повтор`, L443–444) → P5.1 закрывает её подразделом «RECOVERY при клинче». RECOVERY additive к P4.1(§5 contract-first)/P4.2(§9 батчинг), НЕ supersedes | recon §2.2: клинч = плотно-связанный SSOT + отсутствие критерия сходимости DESIGN-петли; AUDIT-петля уже закрыта, дублировать не нужно; RECOVERY переиспользует носители P4, не вводит параллельный механизм («второй носитель факта» §3). RAG:✅ (2026-07-16 perplexity-web SBD/LRM — `findings/P5-design-convergence.md`); repo-grounded: `plan-audit.md` L22–35 + SKILL.ru.md §7 L443–444 прочитаны |
+| D17 | 2026-07-16 | **§6 carve-out — GENERIC** (детерминированный производный артефакт = выход НАЗВАННОЙ команды регенерации над `Files`-источниками item'а → часть Scope, не material-deviation, в `Files` можно не перечислять), НЕ частный случай `skills.json/budget.md`. Зеркалит plan-файловый carve-out §6; граница «недетерминированное/чужое» сохранена | Частный случай → следующий генерённый артефакт снова ложный-🟠 (D6: чинить корень); generic снимает 6× паттерн и будущие. Foreign-diff-защита СУЖАЕТСЯ на детерминированное производное, не снимается (F1: `git add -A` тащит чужой продукт). RAG:— (repo-grounded: SKILL.ru.md §6 L305–381 + plan-файловый carve-out как образец) |
 
 ## 6. Update Log
 
@@ -126,6 +134,8 @@
 | 2026-07-16 | plan-run(manual)/opus/high | P4.2 закрыт 🟠 (регенерённые skills.json/budget.md вне Files, паттерн 5-й раз): §3 Routing +Batch/+Review (опц.) + подраздел «Батчинг подфаз» (D6-инвариант) в plan-protocol §9 RU+EN + заметки plan-design/plan-exec; OQ-1 закрыт D12 — детали см. phases/P4.md P4.2 Completion Notes |
 | 2026-07-16 | plan-run(manual)/sonnet/high | P4.3 закрыт 🟠, фаза P4 терминальна (🟠 — все 3 items с deviation): подраздел «Адаптивная глубина ревью» (full/light/none + дефолт full + D6-инвариант + батч-максимум) в plan-protocol §9 + заметка plan-exec.md — детали см. phases/P4.md P4.3 Completion Notes |
 | 2026-07-16 | plan-close(manual)/sonnet/low | Фаза P4 закрыта: Phase Handoff заполнен (агрегат Known Deviations P4.1–P4.3, 6× Files-паттерн), handoff.md перезаписан (after P4, Next → plan-audit), lint прогнан |
+| 2026-07-16 | plan-design/opus | P5 детализирована (3 items, терминальная) — ТЗ см. phases/P5.md P5.1–P5.3. D15–D17 (3-item разбивка/reconcile · RECOVERY=SBD-LRM · §6 carve-out generic); Обсуждение №7 pre-mortem; §3 Routing P5.1–P5.3; findings/P5-design-convergence.md; v0.4.0→0.5.0 |
+| 2026-07-16 | plan-run(manual)/opus/high | P5.1 закрыт 🟢: подраздел «RECOVERY при клинче» в plan-protocol §7 (RU+EN) + зеркало plan-design.md + верификация анти-клинч-канона (D18: AUDIT-петля закрыта, P5.1 закрывает DESIGN-петлю) — детали см. phases/P5.md P5.1 Completion Notes |
 
 ## 7. Contracts
 
@@ -236,3 +246,25 @@
   `light`/`none` требует явного обоснования в `Почему`.
 
 **Статус:** Resolved → митигации в Implementation Rules/Code Guidance P4.1/P4.2/P4.3 + D12–D14.
+
+### 7 — Pre-mortem P5 (ядро экосистемы: `plan-protocol` §6/§7 ведёт весь флот)
+
+«Через 6–12 мес RECOVERY-дисциплина / §6 carve-out / i18n-генерализация сломали флот» → независимые причины:
+- **Причина-1: RECOVERY стал предлогом копить рассинхрон** («финальная консолидация в конце» →
+  «в конце разберёмся», big-bang, который RAG прямо назвал анти-паттерном). Митигация: правило
+  требует ИНТЕГРАЦИОННОЙ валидации (DoR по затронутым фазам) ПОСЛЕ КАЖДОГО среднего батча, не только
+  в конце (Implementation Rules/Code Guidance P5.1, дословно из `findings/P5-design-convergence.md`).
+- **Причина-2: §6 carve-out проглотил foreign-diff-защиту** (любой лишний файл в коммите стал «ок»
+  → возврат F1: `git add -A` тащит чужой продукт). Митигация: carve-out СУЖЕН на ДЕТЕРМИНИРОВАННОЕ
+  производное с НАЗВАННОЙ командой над `Files`-источниками; граница «недетерминированное/ручное/чужое»
+  дословно в каноне (Scope Excluded + Code Guidance P5.2); generic-формулировка (D17), не частный случай.
+- **Причина-3: RECOVERY-проза продублировала P4.1/P4.2 механизмы** (параллельный носитель батчинга/
+  freeze → рассинхрон, «второй носитель факта» §3). Митигация: RECOVERY ССЫЛАЕТСЯ на контракт-блок
+  P4.1 (freeze) и `Batch` P4.2 (батч=хотспот), не вводит свои (Implementation Rules P5.1; reconcile D15
+  additive, не supersedes).
+- **Причина-4: i18n-«генерализация» академична** (сказали «покрыто», а гейт проверяет подмножество →
+  скилл дрейфует RU↔EN незамеченным, ровно D28). Митигация: P5.3 verify-first — покрытие
+  подтверждается ПРОГОНОМ+СЧЁТЧИКОМ (N скиллов с RU vs M проверяемых), не чтением скрипта; пробел →
+  расширение или honest-🟠 с названным остатком (Code Guidance P5.3).
+
+**Статус:** Resolved → митигации в Implementation Rules/Code Guidance/Scope Excluded P5.1/P5.2/P5.3 + D15–D17.

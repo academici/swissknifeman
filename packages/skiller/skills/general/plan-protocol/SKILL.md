@@ -42,8 +42,8 @@ plans/<PLAN-ID>/
 ├── plan.md            # master plan (Meta, Context, Rules, Routing, Status Board, logs)
 ├── phases/Pn.md       # one file per phase: phase context, items, phase handoff
 ├── handoff.md         # rolling "where we are" pointer (overwritten)
-├── findings/          # RAG extracts and recon reports (section 16)
-├── 20_research/       # the plan's research artifacts
+├── findings/          # layer 1 "raw": RAG extracts, recon, source documents (section 16)
+├── research/          # layer 2 "synthesis": the model's authored design docs (section 16)
 ├── artifacts/         # phases' working artifacts, destiny — archive
 ├── workflows/         # plan's field copies of workflow scripts (template sources — packages/task/workflows/)
 ├── root/              # long-lived material, destiny — project docs (section 3)
@@ -939,19 +939,38 @@ The convention reaches the project via the managed CLAUDE.md block `maind:plan-c
 draft in `plans/` → `/task:plan-design from-draft <файл>` expands it into `plans/<ID>/` per this
 skill's templates (draft deleted, history in git).
 
-## 16. Plan artifacts: findings/
+## 16. The plan's knowledge layers: findings/ → research/ → decisions
 
-The standard home for plan artifacts — RAG extracts and recon reports — so future plan work
-doesn't repay the cost of reconstructing "where did this come from".
+Three-layer canon. The "raw → synthesis → decision" chain MUST be reconstructible from the
+plan's files WITHOUT access to the authoring session's chat — otherwise later plan work
+repays the cost of reconstructing "where did this come from", and the owner's/model's
+thinking gets lost.
 
-- **Path and name:** `plans/<PLAN-ID>/findings/<Pn>-<slug>.md` (`Pn` — phase, `slug` — kebab
-  topic); example — `plans/SKM-AUDIT-004/findings/`.
-- **What goes there:** a RAG extract (source URL + verification date + verdict), a subagent recon
-  report, a diagnosis/repro — **compact synthesis, not raw material**.
-- **How items reference it:** an item relying on the artifact lists the file in its
-  `Inputs`/`Required Reads` — the downstream executor reads the file, not the chat.
-- **Optional:** required only when an item declares the file in its `Deliverables`. The 16-field
-  item schema is unchanged; `plan_lint.py` does not check this directory.
+1. **Layer 1 — external raw (`findings/`):** everything obtained from external sources while
+   working on the plan — RAG extracts (source URL + verification date + verdict), subagent
+   recon reports, digests of source documents (emails/specs; binary attachments live next to
+   them, e.g. `findings/email-assets/`), diagnoses/repros.
+   **Immediate-capture rule:** the result of a RAG call or recon that influenced the plan is
+   written to `findings/` in the same working turn, not "later"; a load-bearing fact living
+   only in chat is a defect (a plan-audit finding).
+2. **Layer 2 — authored synthesis (`research/`):** the model's design documents — analyses,
+   target structures, domain models, test strategies, the owner's requirements digest
+   (user-intent with "thought → where it went" tracing). Every synthesis references the
+   layer-1 files it stands on; synthesis without a source carries `[UNVERIFIED]` or
+   `RAG:— (repo-grounded: …)`.
+3. **Layer 3 — decisions (`## 5. Decision Log`, ADRs, `root/`):** D-entries reference
+   layer-1/2 files and carry RAG markers (§7); long-lived canon goes to `root/`
+   (destiny — docs, §3).
+
+- **Path and name:** `findings/<Pn>-<slug>.md` (phase-scoped) or `findings/<topic>-<date>.md`
+  (plan-wide, e.g. `rag-2026-07-16.md`); `research/NN-<slug>.md` (NN — reading order).
+- **How items reference them:** an item lists the layer files in its `Inputs`/`Required Reads` —
+  the executor reads files, not chat; when detailing a phase (`plan-design Pn`) the phase's
+  research files are read FIRST.
+- **Optionality:** the directories are optional only while factually empty: if RAG calls,
+  recon, or authored synthesis DID happen, capturing them in the corresponding layer is
+  mandatory. The 16-field item schema is unchanged; `plan_lint.py` does not check these
+  directories (not its layer).
 
 ## 17. Related skills
 
@@ -964,4 +983,4 @@ doesn't repay the cost of reconstructing "where did this come from".
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of editing
   vendor copies (section 12).
 
-<!-- ru-source-sha256: 7122566d563c88c268b7bb82822ad4ba6c729452f9ac4e11abfc34a229d78c88 -->
+<!-- ru-source-sha256: 22ad7b69cdc07d3d44b1c4a74a76e01b6a07d8e51d2cefe41efd648e8230af82 -->

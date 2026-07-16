@@ -183,7 +183,10 @@ effort: medium
    (`/task:plan-design <ID> Pn.m` ре-дизайн либо follow-up fix-item), а не молча на следующий item.
 
    **Launch-block** — не статичный шаблон, а разовая оценка СЛЕДУЮЩЕГО шага по факту его текста в
-   `phases/Pn.md` (уже прочитан в п. 1) и `plan.md` §3 Routing:
+   `phases/Pn.md` (уже прочитан в п. 1), `plan.md` §3 Routing И `plans/<PLAN-ID>/roadmap.md`
+   (SKILL §8): если roadmap существует и следующий шаг входит в batch/workflow-группу —
+   launch-block несёт КОМАНДУ ГРУППЫ (`/task:plan-run <ID> Pn.a-Pn.b` / `Workflow({scriptPath})`),
+   а не одиночный item; расхождение roadmap↔Routing — эскалация, не молчаливый выбор:
    - Следующий item, `Exec = plan-exec` → голая команда `/task:plan-exec <PLAN-ID> Pn.k`; Model/Thinking
      — из Routing (дефолт `sonnet/medium`).
    - Следующий item с **`Exec = manual`** (§9 скилла) → форма **«ЗАПУСК ВРУЧНУЮ»**: `Next` =

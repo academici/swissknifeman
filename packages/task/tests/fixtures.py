@@ -168,6 +168,15 @@ def brief_md(plan_id):
 """
 
 
+def roadmap_md(plan_id):
+    return f"""# Roadmap исполнения — {plan_id}
+
+| Item | Batch | Запуск | Model/Thinking | Гейт владельца | Примечание |
+|---|---|---|---|---|---|
+| P1.1 | solo | plan-exec | sonnet/medium | — | единственный item демо-плана |
+"""
+
+
 def write_valid_plan(root, plan_id="DEMO-1"):
     """Пишет полностью валидный план (plan-lint должен вернуть 0 ошибок/предупреждений).
     Возвращает Path на plans/<plan_id>."""
@@ -178,4 +187,5 @@ def write_valid_plan(root, plan_id="DEMO-1"):
     (plan_dir / "phases" / "P1.md").write_text(phase_md(), encoding="utf-8")
     (plan_dir / "handoff.md").write_text(handoff_md(plan_id), encoding="utf-8")
     (plan_dir / "brief" / "00-brief.md").write_text(brief_md(plan_id), encoding="utf-8")
+    (plan_dir / "roadmap.md").write_text(roadmap_md(plan_id), encoding="utf-8")
     return plan_dir

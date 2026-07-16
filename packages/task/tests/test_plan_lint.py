@@ -55,6 +55,24 @@ class TestBriefLayer(TmpPlanTestCase):
         self.assertEqual(_errors_containing(diag, "нет слоя 0"), [])
         self.assertTrue([w for w in diag.warnings if "нет слоя 0" in w], diag.warnings)
 
+    def test_dated_fully_detailed_plan_without_roadmap_is_error(self):
+        plan_dir = write_valid_plan(self.root, plan_id="2026.07.16-DEMO")
+        (plan_dir / "roadmap.md").unlink()
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "roadmap.md"), diag.errors)
+
+    def test_skeleton_phase_does_not_require_roadmap(self):
+        plan_dir = write_valid_plan(self.root, plan_id="2026.07.16-DEMO")
+        (plan_dir / "roadmap.md").unlink()
+        p1 = plan_dir / "phases" / "P1.md"
+        text = p1.read_text(encoding="utf-8")
+        marker = ("> СКЕЛЕТ — не детализирован, разворачивается "
+                  "/task:plan-design 2026.07.16-DEMO P1\n\n")
+        p1.write_text(text.replace("## Phase Status", marker + "## Phase Status", 1),
+                      encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "roadmap.md"), [])
+
     def test_dated_plan_next_without_launch_block_is_error(self):
         plan_dir = write_valid_plan(self.root, plan_id="2026.07.16-DEMO")
         handoff = plan_dir / "handoff.md"

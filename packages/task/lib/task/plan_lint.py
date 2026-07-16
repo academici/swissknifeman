@@ -650,6 +650,32 @@ def _lint_plan_brief_20(plan_dir, plan_id, diag):
         diag.warning(plan_dir / "plan.md", None, msg)
 
 
+def _lint_plan_roadmap_20(plan_dir, plan_id, phase_files, diag):
+    """roadmap.md обязателен, когда план полностью детализирован (нет скелет-маркеров
+    ни в одной фазе) — SKILL §8: исполнение идёт батчами по исполнительской карте,
+    а не поштучным бэбиситтингом. Severity как у brief-гейта: датовые планы от
+    BRIEF_CANON_DATE — ERROR, старее/legacy — WARNING."""
+    plan_dir = Path(plan_dir)
+    if not phase_files:
+        return
+    for path in phase_files.values():
+        try:
+            text = Path(path).read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            continue
+        if any(SKELETON_MARKER_RE.match(ln) for ln in text.splitlines()):
+            return  # есть скелеты — план ещё в авторинге, roadmap не требуется
+    rm = plan_dir / "roadmap.md"
+    if rm.is_file() and rm.stat().st_size > 0:
+        return
+    msg = (f"план полностью детализирован (скелет-маркеров нет), а {plan_dir.name}/roadmap.md "
+           f"отсутствует — исполнительская карта обязательна (SKILL §8)")
+    if PLAN_ID_DATED_RE.match(plan_id) and plan_id[:10] >= BRIEF_CANON_DATE:
+        diag.error(plan_dir / "plan.md", None, msg)
+    else:
+        diag.warning(plan_dir / "plan.md", None, msg)
+
+
 # --- P4.3 warning-проверки: ID / workflow-скрипты / supersedes (D24/D27/D28) ----
 
 def _lint_plan_identity_20(plan_dir, plan_id, meta, plan_md, diag):
@@ -974,6 +1000,9 @@ def lint_plan(plan_dir, diag):
     board_phase_ids = set()
     if status_board:
         board_phase_ids = {row.get("Phase") for row, _ in status_board if row.get("Phase")}
+
+    # Roadmap-гейт (SKILL §8): полностью детализированный план обязан нести roadmap.md.
+    _lint_plan_roadmap_20(plan_dir, plan_id, phase_files, diag)
 
     for pid in board_phase_ids - set(phase_files):
         diag.error(plan_md, None, f"фаза {pid} есть в Status Board, но нет phases/{pid}.md")

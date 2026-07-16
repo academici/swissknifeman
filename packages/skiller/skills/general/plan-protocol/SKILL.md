@@ -9,7 +9,7 @@ tags: [workflow, planning, handoff, routing, multi-model]
 requires: []
 produces_for: [session-handoff, complex-task-orchestrator]
 outputs: ["plans/<PLAN-ID>/plan.md", "plans/<PLAN-ID>/phases/*.md", "plans/<PLAN-ID>/handoff.md"]
-snippets: ["plan-template.md", "phase-template.md", "handoff-template.md", "active-template.md", "launch-block-template.md", "code-guidance-patterns.md"]
+snippets: ["plan-template.md", "phase-template.md", "handoff-template.md", "active-template.md", "launch-block-template.md", "roadmap-template.md", "code-guidance-patterns.md"]
 adapters: [claude, cursor, fable]
 sha256: ""
 ---
@@ -42,6 +42,7 @@ plans/<PLAN-ID>/
 ├── plan.md            # master plan (Meta, Context, Rules, Routing, Status Board, logs)
 ├── phases/Pn.md       # one file per phase: phase context, items, phase handoff
 ├── handoff.md         # rolling "where we are" pointer (overwritten)
+├── roadmap.md         # execution map: batches/workflows/owner gates (section 8; mandatory once fully detailed)
 ├── brief/             # layer 0 "input": the owner's brief + appended refinements (section 16, MANDATORY)
 ├── findings/          # layer 1 "raw": RAG extracts, recon, source documents (section 16)
 ├── research/          # layer 2 "synthesis": the model's authored design docs (section 16)
@@ -256,6 +257,16 @@ Contract-block canon — one line in `Phase Context` (next to the skeleton marke
 - **Потребляет** (consumes) — input from ALREADY-closed phases (artifacts, contracts, D# decisions);
 - **Производит** (produces) — what the phase hands to the next (files, canon edits, D#);
 - **Границы** (boundaries) — what the phase deliberately does NOT touch (handed to another phase).
+
+**Full detailing before exec — the DEFAULT (D-canon 2026-07-16).** Contract-first skeletons are
+an AUTHORING tool, not a license to start exec on a half-baked plan: by default ALL phases are
+brought to DoR (refine loop §7) and approved by the owner BEFORE the first `plan-exec`/`plan-run`,
+then `roadmap.md` (§8) is assembled — and execution runs in batches without babysitting.
+Just-in-time detailing (exec starting with live skeleton markers) is allowed ONLY via an explicit
+D-entry with a reason (a volatile phase whose input radically depends on earlier phases' outcomes);
+silently exec'ing over skeletons = a plan-audit finding. Owner gates inside the plan (approvals of
+matrices/ADRs/specs on design items) remain — full detailing removes routine manual launches, not
+the owner's decisions.
 
 **Reconcile at detailing** (deterministic, cheap — the skeleton is not terminal): when expanding
 phase Pn, compare its contract block's `Потребляет` with the `Производит` of the actually-closed
@@ -518,6 +529,30 @@ launch-block (the Model/Thinking/Context/Essence table + the bare command as a s
 block) — not "run such-and-such command" in prose: the owner must never have to ask back which
 model and settings to launch with. A bare command without Model/Thinking in the finale is a
 session defect (a plan-audit finding).
+
+**Execution roadmap — `plans/<ID>/roadmap.md` (D-canon 2026-07-16).** Assembled after all phases
+are fully detailed (§5 default) — the plan's execution map answering "which command next?" without
+re-analyzing the whole plan and without the owner idling at the monitor. Skeleton —
+`snippets/roadmap-template.md`. Contents:
+
+- a table of ALL items in execution order: `Item | Batch | Запуск | Model/Thinking | Гейт
+  владельца | Примечание`;
+- **Batch** — a group of consecutive small same-model items with coupled scope, executed by ONE
+  session with one command (`/task:plan-run <ID> Pn.a-Pn.b` — a series); a large/complex/risky
+  item — `solo` (own session); scope-INDEPENDENT items — `workflow` (a script in
+  `plans/<ID>/workflows/`, one launch). For solo items the "why it can't be merged" justification
+  is mandatory (an empty cell = an audit finding);
+- **Owner gates** — only where the decision is genuinely the owner's (matrix/ADR/spec approvals,
+  high-risk steps); everything else runs without stops;
+- a ready launch-block for every batch/workflow group.
+
+Consumers: `plan-exec`/`plan-run`/`plan-close` sessions check their final launch-block against the
+roadmap — if the next step belongs to a batch, the BATCH command is offered, not a single item;
+the owner's "what's next?" = reading roadmap.md + handoff.md. A roadmap↔Routing§3 mismatch is a
+defect (the roadmap does not override models — it only groups launches). Gate: `plan-lint` — all
+phases detailed (no skeleton markers) while `roadmap.md` is missing → ERROR for date-based plans
+from 2026.07.16 (older/legacy — WARNING); `plan-audit design` checks item coverage and batch
+justification. A living document: phase closes / re-designs update the roadmap (an Update Log row).
 
 Under a master plan the general
 session handoff (skill `session-handoff`) collapses here — no second handoff file.
@@ -1004,4 +1039,4 @@ thinking gets lost.
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of editing
   vendor copies (section 12).
 
-<!-- ru-source-sha256: 7837bc8b64567228c093bca368302cab0577e6ab80fd7c2d0b17b48f65a45d55 -->
+<!-- ru-source-sha256: 23715564290bccfcb3bf847af67a6c6bfaf6504fd4b6b5c5b5cf9b6431a3a141 -->

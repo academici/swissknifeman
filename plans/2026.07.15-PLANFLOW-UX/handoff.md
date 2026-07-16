@@ -1,53 +1,62 @@
-# HANDOFF — 2026-07-15 — after P3
+# HANDOFF — 2026-07-16 — after P4.1
 
-**Next:** /task:plan-design 2026.07.15-PLANFLOW-UX P4
+**Next:** ЗАПУСК ВРУЧНУЮ: opus/high
 
 | Параметр | Значение |
 |:--|:--|
 | Model | opus |
-| Thinking | high — детализация фазы (contract-first дизайн-флоу, новая архитектурная поверхность) |
-| Context | NEW SESSION — шаг-не-item |
-| Суть | Детализировать скелет P4 (contract-first дизайн-флоу + глобальный exec-план + батчинг + адаптивная глубина ревью) в исполняемые item'ы |
+| Thinking | high — канон-схема §3 Routing (fleet-facing, back-compat флота) |
+| Context | continue (/clear) — ручной item |
+| Суть | P4.2 — расширить §3 Routing колонками Batch/Review (опц.) + подраздел «Батчинг подфаз» (D12/OQ-1) |
 
 ```
-/task:plan-design 2026.07.15-PLANFLOW-UX P4
+Исполни item P4.2 плана 2026.07.15-PLANFLOW-UX (Exec=manual, opus/high).
+Прочитай: plans/2026.07.15-PLANFLOW-UX/plan.md (Context, §2 Execution Rules, §3 Routing,
+Status Board) → plans/2026.07.15-PLANFLOW-UX/handoff.md → plans/2026.07.15-PLANFLOW-UX/phases/P4.md
+(Phase Context + item P4.2 целиком, включая P4.1 Completion Notes) → Required Reads P4.2 по порядку.
+Расширь канон-форму §3 Routing колонками Batch/Review (ОПЦИОНАЛЬНЫМИ, легаси-форма валидна) +
+подраздел «Батчинг подфаз» с D6-инвариантом (батч наследует МАКСИМУМ риска, Review=full не сливать)
+в SKILL.ru.md → регенерация SKILL.md (генератор prompts/generate/claude-canon-from-ru.md) →
+check-translations.sh --stamp → skiller registry; заметки в plan-design.md/plan-exec.md — строго по
+Scope/Rules P4.2. НЕ трогать plan_lint.py (§3 не парсится, back-compat). Закрой item по протоколу
+(§8): item-коммит по Files → bookkeeping → перезапись handoff → lint (--baseline HEAD).
 ```
 
-**Done:** Фаза P3 закрыта (🟠 Done with deviations, 5/5 items терминальны: P3.1🟠 P3.2🟠 P3.3🟢
-P3.4🟠 P3.5🟢). Сдано: рекалибровка ревьюера `make-workflow` (3 ложных-RED сняты) · хардненинг 4
-канон-шаблонов + эталоны §2.1 · `plan-lint` энфорс имя/место плановых workflow · harness dev-loop
-embed-or-guard `SLICES` (no-slices fix) · budget-квантификация доставки гейта `workflow-craft`
-(742/750 `--check-core` проекция, рекомендация канала A=CORE_SKILLS, OQ-3 обновлён — Decision
-pending за Owner). `Phase Handoff` заполнен в `phases/P3.md` (агрегат Known Deviations всех 5
-items). `## 4. Phase Index & Status Board` (`plan.md`) синхронизирован: P3 → 🟠 Done with
-deviations.
+**Done:** P4.1 закрыт 🟠 (регенерённые skills.json/budget.md вне Files — паттерн P2.1/P3.1/P3.2,
+4-й раз). Подраздел **«Contract-first дизайн-флоу»** кодифицирован в канон `plan-protocol` §5
+(`SKILL.ru.md` SSOT + регенерён `SKILL.md`): опциональный режим авторинга (запечатать все фазы
+скелетами + межфазовый контракт-блок `Потребляет · Производит · Границы`, детализировать
+just-in-time) + reconcile-правило при детализации (дрейф → D#) + превентивное перечисление
+coupling-поверхности. Опц. контракт-блок в `snippets/phase-template.md`; заметки режимов `new`/`Pn`
+в `plan-design.md`. Машинный гейт НЕ введён, `plan_lint.py` не тронут, §5 скелет-маркер не переписан
+(аддитив). Item-коммит `5b0bf0e`. Первая фаза P4 стартовала (Status Board P4 → 🟡, 1/3).
 
-**Remaining:** P4 (contract-first дизайн-флоу + глобальный exec-план + батчинг + адаптивная
-глубина ревью, D5/OQ-1) → P5 (fix-стратегия plan-design + архитектурный апгрейд скиллов/сниппетов,
-ось B).
+**Remaining:** P4.2 (глобальный exec-план — батчинг §3 Routing +Batch/+Review, sonnet/high manual,
+D12/OQ-1) → P4.3 (адаптивная глубина ревью, наполняет enum `Review`, sonnet/high manual) — оба
+manual/sequential (общий `SKILL.ru.md`) → P5 (fix-стратегия plan-design + архитектурный апгрейд,
+скелет, детализируется `/task:plan-design ... P5`).
 
-**Sources of truth:** `phases/P3.md` (`## Phase Handoff`, P3.1–P3.5 Completion Notes) · `plan.md`
-(§4 Status Board P3 🟠, §6 Update Log, §5 D9–D11) · `findings/P3-delivery-budget.md` (числа
-доставки, git-якорь) · `open-questions.md` OQ-3 (рекомендация канала, Decision pending).
+**Sources of truth:** `phases/P4.md` (Phase Context + P4.1 Completion Notes/Known Deviations +
+P4.2/P4.3 ТЗ) · `plan.md` (§3 Routing P4.2/P4.3, §4 Status Board P4 🟡 1/3, §5 D12–D14, §6 Update
+Log) · `packages/skiller/skills/general/plan-protocol/SKILL.ru.md` §5 (новый подраздел Contract-first —
+предпосылка P4.2) · `findings/P1-recon.md` (§4 dev-loop risk-adaptive, §5-P4, §6 RAG).
 
 **Open risks:**
-- **Rollout доставки гейта делегирован (НЕ выполнен в P3 — контракт):** правка
-  `CORE_SKILLS`/`core-policy.json` (вариант A) ЛИБО onboard-required flag (вариант B) — только
-  ПОСЛЕ резолва OQ-3 Owner'ом, исполнитель — skiller/maind. НЕ вход downstream-item'а плана.
-- Вариант A заполняет CORE под потолок (742/750, 8 ток headroom) → рост CORE потребует подъёма
-  target (750→800) отдельным решением.
-- Наследованные P3.1/P3.2/P3.4 deviations (registry-артефакты вне `Files`; `node --check`
-  Validation-пункт структурно недостижим для файлов с санкционированным top-level `return`) —
-  дословный агрегат в `phases/P3.md` `## Phase Handoff`.
+- **P4.2 после P4.1:** общий файл `SKILL.ru.md` — P4.2 строит §9-форму §3 Routing ПОВЕРХ §5
+  Contract-first; конфликта нет (разные секции), но регенерация EN + `skiller registry` обязательны
+  (иначе дрейф `skills.json`/`budget.md`, как в P4.1).
+- **Files skill-item'ов не несут реестровые артефакты** (4-й повтор): P4.2/P4.3 закроются тем же 🟠,
+  пока plan-design не внесёт `skills.json`/`budget.md`/`marketplace.json` в Files skill-правящих
+  item'ов. Кандидат в канон (см. P4.1 Known Deviations #1).
+- **Незакоммиченный P4-design дифф** (`handoff.md`/`open-questions.md`/`plan.md`/`P4.md`, шаг
+  plan-design «P4 детализирована») уехал в bookkeeping-коммит P4.1 — plan-файлы carve-out, назван
+  в P4.1 Known Deviations #2. Дальнейших остатков нет.
 
 **Workarounds/Deferred/Open questions:**
 - workarounds: —
-- deferred: rollout доставки гейта (пост-резолв OQ-3, deleg skiller/maind); детализация P4–P5
-  (contract-first, just-in-time, D5); launch-block вне `plan-*` (OQ-2); правило «registry-артефакты
-  в Files» (P3.1 fix-предложение); правило «async-обёртка вместо буквального node --check» для
-  Validation-пунктов над `dev-loop.js`/канон-шаблонами (P3.4 fix-предложение).
-- open_questions: **OQ-1** (артефакт exec-плана, P4) · **OQ-2** (launch-block в `dev.md`/`fix.md`) ·
-  **OQ-3** (канал доставки гейта — квантифицирован P3.5, рекомендация A=CORE_SKILLS; ждёт решения
-  Owner Dmitry Vostrikov, статус Decision pending).
+- deferred: P5 детализация (fix-стратегия + архитектурный апгрейд, ось B); rollout доставки гейта
+  `workflow-craft` (пост-OQ-3, deleg skiller/maind); launch-block вне `plan-*` (OQ-2).
+- open_questions: **OQ-2** (launch-block в `dev.md`/`fix.md` — pending) · **OQ-3** (канал доставки
+  гейта — квантифицирован P3.5, рекомендация A=CORE_SKILLS, pending за Owner). OQ-1 — Resolved→D12.
 
-**Context:** handoff свежий — рекомендован /clear перед следующим шагом.
+**Context:** handoff свежий — рекомендован /clear перед следующим item.

@@ -756,6 +756,23 @@ duplicate §3/Status Board and drift from them (the "second carrier of a fact" b
   canon-the-fleet-follows) are NOT batched under "skip confirmation" — economy that degrades the
   result is forbidden.
 
+**Adaptive review depth (fills the `Review` enum).** Slice-risk classification → review
+depth; a PRINCIPLE, not a mandate (the canon neither requires review on every slice nor
+forbids it — it gives a criterion). Default `full`; `light`/`none` — only with an explicit
+`Почему` justification; doubt → `full` (fail-safe, same as the routing gate above: a false
+`full` costs an extra review, a false `none` costs a RED bug in prod).
+
+- **`full`** — correctness-critical, public-contract/SemVer, tenant-isolation,
+  fiscal/payments, canon-the-fleet-follows, migrations, security-sensitive.
+- **`light`** — localized logic with green deterministic tests, moderate risk.
+- **`none`** — cosmetics (docs, comments, formatting, purely mechanical status updates).
+- A slice doesn't fit any class unambiguously → do NOT guess toward cheaper: `full`, name
+  the ambiguity in Completion Notes.
+- **D6 invariant:** `full` classes are always `full` — never batched or eased under "skip
+  confirmation".
+- A batch inherits review depth = the MAXIMUM risk of participants — see "Subphase batching"
+  above (a link, not an override: one rule, one carrier).
+
 ## 10. Escalation (cheap-model protocol)
 
 Triggers — closed enum:
@@ -914,4 +931,4 @@ doesn't repay the cost of reconstructing "where did this come from".
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of editing
   vendor copies (section 12).
 
-<!-- ru-source-sha256: b8f2737c3a0710eb88d69fb7d82ad8da66253386794efeaad1eeaa806469b0d9 -->
+<!-- ru-source-sha256: 1e48ac52725f95304110fc194a79644ce18152ae3a3a76eb60bea40a62c666dd -->

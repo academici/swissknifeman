@@ -14,9 +14,9 @@
 
 | Item | Batch | Запуск | Model/Thinking | Гейт владельца | Примечание |
 |---|---|---|---|---|---|
-| P0.1 | B1 | plan-run серия | sonnet/medium | — | сцеплен с P0.2 по файлам |
+| P0.1 | B1 | plan-exec серия | sonnet/medium | — | сцеплен с P0.2 по файлам |
 | P0.2 | B1 | ↑ | sonnet/medium | — | |
-| P1.1 | solo | plan-design item | opus/high | ✅ утверждение матрицы | design-item, объединять нельзя: вердикт владельца посреди |
+| P1.1 | solo | plan-run (manual) | opus/high | ✅ утверждение матрицы | design-item, объединять нельзя: вердикт владельца посреди; перед запуском /model opus + /effort high |
 | P2.1–P2.3 | W1 | workflow | sonnet/medium | — | независимый scope → wf-<codename>-p2.js |
 | … | | | | | |
 
@@ -32,8 +32,12 @@
 | Суть | Серия <Pn.a>–<Pn.b> одной сессией, гейты между items — внутри сессии |
 
 ```
-/task:plan-run <PLAN-ID> <Pn.a>-<Pn.b>
+/task:plan-exec <PLAN-ID> <Pn.a> <Pn.b> <Pn.c>
 ```
+
+<!-- Батч-серии — ТОЛЬКО через plan-exec (список items): её пин sonnet/medium — жёсткий
+     гейт тира. /task:plan-run — без пина, для manual design-items под моделью сессии
+     (ритуал /model+/effort по Routing перед запуском). -->
 
 ### W1 — <суть workflow-группы>
 

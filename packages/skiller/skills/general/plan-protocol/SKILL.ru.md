@@ -611,8 +611,8 @@ roadmap↔Routing§3 — дефект (roadmap не переопределяет
 ```text
 | Форма Next | Когда |
 |:--|:--|
-| /task:plan-exec <ID> Pn.m        | следующий item детализирован, Exec = plan-exec (§9) |
-| /task:plan-run <ID> Pn.a[-Pn.b]  | батч-серия по roadmap (§8): одна сессия закрывает диапазон |
+| /task:plan-exec <ID> Pn.m [Pn.k …] | следующий item детализирован, Exec = plan-exec (§9); СПИСОК items = батч-серия roadmap одной сессией (пин sonnet/medium команды — жёсткий гейт тира, §9) |
+| /task:plan-run <ID> Pn.m[-Pn.k]  | manual-item(ы) под моделью ТЕКУЩЕЙ сессии (без пина): перед запуском — ритуал /model+/effort по Routing; для plan-exec-серий НЕ использовать (уедет на модели предыдущего гейта) |
 | /task:plan-audit <ID> design     | план детализирован — pre-exec ревью перед стартом exec |
 | /task:plan-design <ID> Pn        | следующая фаза — скелет |
 | /task:plan-design <ID> Pn.m      | item эскалирован (🔴) либо требует ре-дизайна |

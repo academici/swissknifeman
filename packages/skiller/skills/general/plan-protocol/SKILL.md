@@ -590,8 +590,8 @@ forms; any other form = ERROR listing the allowed ones):
 ```text
 | Форма Next | Когда |
 |:--|:--|
-| /task:plan-exec <ID> Pn.m        | следующий item детализирован, Exec = plan-exec (§9) |
-| /task:plan-run <ID> Pn.a[-Pn.b]  | батч-серия по roadmap (§8): одна сессия закрывает диапазон |
+| /task:plan-exec <ID> Pn.m [Pn.k …] | следующий item детализирован, Exec = plan-exec (§9); СПИСОК items = батч-серия roadmap одной сессией (пин sonnet/medium команды — жёсткий гейт тира, §9) |
+| /task:plan-run <ID> Pn.m[-Pn.k]  | manual-item(ы) под моделью ТЕКУЩЕЙ сессии (без пина): перед запуском — ритуал /model+/effort по Routing; для plan-exec-серий НЕ использовать (уедет на модели предыдущего гейта) |
 | /task:plan-audit <ID> design     | план детализирован — pre-exec ревью перед стартом exec |
 | /task:plan-design <ID> Pn        | следующая фаза — скелет |
 | /task:plan-design <ID> Pn.m      | item эскалирован (🔴) либо требует ре-дизайна |
@@ -1068,4 +1068,4 @@ thinking gets lost.
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of editing
   vendor copies (section 12).
 
-<!-- ru-source-sha256: fb253908e9be236f7087cffaece135be3bae21ebbfad5ee1879ce28762694920 -->
+<!-- ru-source-sha256: e7b12bcaa3dbbf17906a3f9a08847ffa393ded4bd68e06b222d456473c405b9c -->

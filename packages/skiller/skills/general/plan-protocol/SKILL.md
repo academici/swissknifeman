@@ -235,6 +235,36 @@ a fixed line in its Phase Context:
 With the marker, empty item fields are legal, including Code Guidance = «—». Without the
 marker an empty Code Guidance is a plan defect.
 
+**Contract-first design flow (optional authoring mode).** An alternative to per-phase "detail
+one phase → exec immediately": on `new`, seal ALL phases with skeleton markers and write a
+**contract block** into each `Phase Context` — what the phase consumes from earlier phases and
+produces for later ones; detail items just-in-time (`/task:plan-design <ID> Pn`) against the facts
+of already-closed phases. Goal — see inter-phase conflicts and the coupling surface BEFORE
+detailing (pre-empts the "fixing one phase breaks another" ripple) without paying the full upfront
+cost of designing all items. OPTIONAL and ADDITIVE to the skeleton marker: the contract block is
+not required, its absence is NOT a defect, the skeleton marker stands on its own without it.
+
+Contract-block canon — one line in `Phase Context` (next to the skeleton marker):
+
+```text
+> **Контракт фазы (contract-first).** Потребляет: … · Производит: … · Границы: …
+```
+
+- **Потребляет** (consumes) — input from ALREADY-closed phases (artifacts, contracts, D# decisions);
+- **Производит** (produces) — what the phase hands to the next (files, canon edits, D#);
+- **Границы** (boundaries) — what the phase deliberately does NOT touch (handed to another phase).
+
+**Reconcile at detailing** (deterministic, cheap — the skeleton is not terminal): when expanding
+phase Pn, compare its contract block's `Потребляет` with the `Производит` of the actually-closed
+earlier phases. A mismatch (an early phase produced differently than the skeleton expected) →
+update Pn's contract block + record a D# (`supersedes D#` when it overrides an earlier decision,
+§3 "Re-design over closed phases"). Silently fitting the skeleton to fact without a D# = scope drift.
+
+**Preventive coupling-surface enumeration** — part of the flow, NOT a separate heavy ritual: on
+`new` (or first detailing) list the files/canon sections touched by ≥2 phases, in `## 5. Decision
+Log` (a D# "coupling surface") or in `Phase Context`. Visible coupling pre-empts the ripple: the
+author of a later phase sees its edit will hit an earlier one BEFORE writing it.
+
 **RAG markers** on load-bearing facts in Intent/Why/Implementation Rules and in the D-log
 are mandatory — schema and load-bearing definition in section 7.
 
@@ -850,4 +880,4 @@ doesn't repay the cost of reconstructing "where did this come from".
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of editing
   vendor copies (section 12).
 
-<!-- ru-source-sha256: c4e5de349d5cf210f1f4375aef28590f5e1b72d4b8a49909c490891d0965d8b2 -->
+<!-- ru-source-sha256: 23d6fd7d5f4faf0777af339f5e3ff68ca454d83bea59690da2b4c5c9282730ea -->

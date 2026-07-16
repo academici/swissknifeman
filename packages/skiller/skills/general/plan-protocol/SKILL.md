@@ -279,6 +279,20 @@ exec'ing over skeletons = a plan-audit finding. Owner gates inside the plan (app
 matrices/ADRs/specs on design items) remain — full detailing removes routine manual launches, not
 the owner's decisions.
 
+**Design budget: design passes (D-canon 2026-07-16).** At `new`, right after analyzing the brief
+and sizing the scope, the author declares a `## 0. Meta` field
+`Design Passes: k/N — <justification>` (a registrar heuristic, N is the MINIMUM number of passes:
+≤3 phases or ≤10 items → 1; 4–7 phases or 15–35 items → 2; cross-repo / ecosystem core / high
+brief uncertainty → 3; the owner may raise N explicitly — plan quality is not the place to
+economize, spend wisely: passes pay for themselves). A pass = a full design sweep (new/phases —
+or a refine of already-detailed phases) in a NEW SESSION — the context is reset deliberately, a
+fresh view catches what a stale session is blind to. Each pass ends with: k++ in Meta, an Update
+Log row "Design pass k/N: what was done; what wasn't reached; the next pass's focus", and
+handoff.Next — the next pass's launch-block CARRYING that focus (the new session starts from the
+spots the previous one couldn't reach). The last pass ends with `finish`. `finish` with k<N —
+only via an explicit owner D-entry shrinking the budget; `plan-audit design` checks the counter
+against the Update Log. A missing field = N=1 (a small plan).
+
 **Reconcile at detailing** (deterministic, cheap — the skeleton is not terminal): when expanding
 phase Pn, compare its contract block's `Потребляет` with the `Производит` of the actually-closed
 earlier phases. A mismatch (an early phase produced differently than the skeleton expected) →
@@ -1052,4 +1066,4 @@ thinking gets lost.
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of editing
   vendor copies (section 12).
 
-<!-- ru-source-sha256: ce61026433597c6066bbd3b0e1c9c6199bed026141a943564cc09a5bd835297d -->
+<!-- ru-source-sha256: fe169ae8ce0f26c5ba8510bf8c4962be2f68fda1932bfaac75ec538b2136160a -->

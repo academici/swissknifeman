@@ -125,6 +125,7 @@
 | 2026-07-16 | plan-run(manual)/opus/high | P4.1 закрыт 🟠 (регенерённые skills.json/budget.md вне Files, паттерн P2.1/P3.1/P3.2): подраздел «Contract-first дизайн-флоу» в plan-protocol §5 (RU+EN) + опц. контракт-блок phase-template + заметки new/Pn plan-design — детали см. phases/P4.md P4.1 Completion Notes |
 | 2026-07-16 | plan-run(manual)/opus/high | P4.2 закрыт 🟠 (регенерённые skills.json/budget.md вне Files, паттерн 5-й раз): §3 Routing +Batch/+Review (опц.) + подраздел «Батчинг подфаз» (D6-инвариант) в plan-protocol §9 RU+EN + заметки plan-design/plan-exec; OQ-1 закрыт D12 — детали см. phases/P4.md P4.2 Completion Notes |
 | 2026-07-16 | plan-run(manual)/sonnet/high | P4.3 закрыт 🟠, фаза P4 терминальна (🟠 — все 3 items с deviation): подраздел «Адаптивная глубина ревью» (full/light/none + дефолт full + D6-инвариант + батч-максимум) в plan-protocol §9 + заметка plan-exec.md — детали см. phases/P4.md P4.3 Completion Notes |
+| 2026-07-16 | plan-close(manual)/sonnet/low | Фаза P4 закрыта: Phase Handoff заполнен (агрегат Known Deviations P4.1–P4.3, 6× Files-паттерн), handoff.md перезаписан (after P4, Next → plan-audit), lint прогнан |
 
 ## 7. Contracts
 

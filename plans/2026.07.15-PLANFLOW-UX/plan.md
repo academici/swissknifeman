@@ -7,10 +7,10 @@
 | Plan ID | 2026.07.15-PLANFLOW-UX |
 | Title | Надёжность и UX плановой/workflow-системы (launch-block · workflow-авторинг · дизайн-флоу) |
 | Version | 0.5.0 |
-| Status | 🟡 In progress (design) |
+| Status | 🟠 Done with deviations |
 | Document Type | Executable Master Plan |
 | Authoring Model | opus |
-| Last Updated | 2026-07-16 (P5.3 закрыт 🟢 — верификация i18n-keep-гейта, фаза P5 терминальна) |
+| Last Updated | 2026-07-16 (фаза P5 закрыта 🟢 — план терминален целиком) |
 | Repository | swissknifeman |
 | Related Packages | task (plan-protocol/workflow-craft скиллы, команды plan-*/make-workflow/review), skiller (реестр скиллов, budget), harness (agent-packs dev-loop, run-report) |
 | Execution Mode | phase-first |
@@ -138,6 +138,7 @@
 | 2026-07-16 | plan-run(manual)/opus/high | P5.1 закрыт 🟢: подраздел «RECOVERY при клинче» в plan-protocol §7 (RU+EN) + зеркало plan-design.md + верификация анти-клинч-канона (D18: AUDIT-петля закрыта, P5.1 закрывает DESIGN-петлю) — детали см. phases/P5.md P5.1 Completion Notes |
 | 2026-07-16 | plan-run/sonnet/high | P5.2 закрыт 🟢: carve-out (б) «детерминированный производный артефакт» в plan-protocol §6 (RU+EN, в том же bullet foreign-diff) — снимает систематический ложный-🟠 6× паттерн — детали см. phases/P5.md P5.2 Completion Notes |
 | 2026-07-16 | plan-exec/sonnet/medium | P5.3 закрыт 🟢, фаза P5 терминальна (3/3, все 🟢): verify-only — i18n-keep-гейт уже генерализован на все 159 локальных скиллов (0 пробелов), правка `check-translations.sh` не потребовалась; полный зелёный `validate.sh`/`plan-lint` — детали см. phases/P5.md P5.3 Completion Notes |
+| 2026-07-16 | plan-close(manual)/sonnet/low | Фаза P5 закрыта, план терминален ЦЕЛИКОМ (все 5 фаз): Phase Handoff заполнен, handoff.md перезаписан (after P5, «план закрыт»), Meta Status → 🟠 Done with deviations — детали см. phases/P5.md Phase Handoff |
 
 ## 7. Contracts
 

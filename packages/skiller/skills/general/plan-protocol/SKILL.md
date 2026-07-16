@@ -262,12 +262,17 @@ Contract-block canon — one line in `Phase Context` (next to the skeleton marke
 an AUTHORING tool, not a license to start exec on a half-baked plan: by default ALL phases are
 brought to DoR (refine loop §7) and approved by the owner BEFORE the first `plan-exec`/`plan-run`,
 then `roadmap.md` (§8) is assembled — and execution runs in batches without babysitting.
-The standard authoring pipeline: `new` (skeletons+contracts) → `Pn` one phase per pass, as
-SEPARATE commands/sessions (design is expensive; the per-phase pass reconciles contracts at every
-step) → `<PLAN-ID> roadmap` (final assembly: a cross-phase reconcile of ALL phases — the
-"conflicts resolved" verdict is made only when ALL details are visible — plus roadmap.md) →
-`plan-audit design` → exec. A single-pass variant (one strong session details everything) is also
-legal — but the final `roadmap` pass with the cross-check is mandatory either way. Just-in-time
+The standard authoring pipeline is PER-PHASE: `new` (the top view: skeletons+contracts, where the
+aligning questions get asked) → `Pn` one phase per pass, as SEPARATE commands/sessions — phases
+are loosely coupled, the questions and the owner's approval happen inside the phase's own pass;
+the sequence emerges as the passes proceed → `<PLAN-ID> finish` (final gap-closing: a cross-phase
+reconcile of ALL phases — the "conflicts resolved" verdict is made only when ALL details are
+visible; roadmap.md is assembled as its LAST step and only on a clean plan) → `plan-audit design`
+→ exec. The single-pass variant (one strong session details everything) — only for small plans
+(≤3 phases) or by the owner's explicit choice: on a large plan one stream = the highest error
+risk and mixed-up approvals. `<PLAN-ID> roadmap` — a separate LIGHT rebuild of the map (a phase
+changed/added, phases closed) without the full sweep; if phase contracts changed, a new `finish`
+is required, not a rebuild. Just-in-time
 detailing (exec starting with live skeleton markers) is allowed ONLY via an explicit D-entry with
 a reason (a volatile phase whose input radically depends on earlier phases' outcomes); silently
 exec'ing over skeletons = a plan-audit finding. Owner gates inside the plan (approvals of
@@ -538,7 +543,9 @@ session defect (a plan-audit finding).
 
 **Execution roadmap — `plans/<ID>/roadmap.md` (D-canon 2026-07-16).** Assembled after all phases
 are fully detailed (§5 default) — the plan's execution map answering "which command next?" without
-re-analyzing the whole plan and without the owner idling at the monitor. Skeleton —
+re-analyzing the whole plan and without the owner idling at the monitor. It is assembled by
+`plan-design <ID> finish` as its LAST step (only on a gap-free plan); later rebuilds (phases
+changed/closed) — the light `plan-design <ID> roadmap` mode. Skeleton —
 `snippets/roadmap-template.md`. Contents:
 
 - a table of ALL items in execution order: `Item | Batch | Запуск | Model/Thinking | Гейт
@@ -1045,4 +1052,4 @@ thinking gets lost.
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of editing
   vendor copies (section 12).
 
-<!-- ru-source-sha256: 4d1d4db81bef034a479c3534463ed80d1576e3ce16becf5520a6a7e940d96a43 -->
+<!-- ru-source-sha256: ce61026433597c6066bbd3b0e1c9c6199bed026141a943564cc09a5bd835297d -->

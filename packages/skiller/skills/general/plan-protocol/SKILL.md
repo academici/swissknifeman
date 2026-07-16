@@ -427,6 +427,33 @@ current/deprecated", market, another service's/MCP's capabilities) — there it 
 **Refine loop** — canonical authoring contour: design → self-audit (DoR checklist) → edit →
 repeat until 0 markers.
 
+**RECOVERY on a clinch.** The refine loop above converges while a fix stays LOCAL. A CLINCH is
+when a fix to one phase/item ripples into another (tightly-coupled SSOT): per-change refine
+gives thrash — each local fix exposes a new mismatch; big-bang "accumulate and sort it out at
+the end" hides incompatibilities until late. The convergence discipline is the middle path
+(RAG:✅ P5.1 SBD/LRM/progressive-freeze, `findings/P5-design-convergence.md`):
+
+- **A medium batch around ONE coupling hotspot** — group edits around a single coherent design
+  question and apply them across ALL affected phases/sections at once (not a micro-tweak per
+  change, not "the whole design in one shot"); the batch carrier is the `Batch` column of §3
+  Routing (§9 "Sub-phase batching") — RECOVERY introduces no mechanism of its own.
+- **Integration validation AFTER EACH batch** — the DoR checklist over all affected phases, not
+  only at the very end. "Final consolidation at the end" ≠ "accumulate desync the whole design":
+  without per-batch validation this is exactly the big-bang anti-pattern.
+- **Final consolidation is a single pass** (a whole-check after the hotspots are settled), NOT a
+  full re-design N times.
+- **Progressive freeze** — a stabilized phase is frozen by its contract block (§5, contract-first);
+  onward only details, no new contracts (reconcile `Потребляет`↔`Производит` when detailing later
+  phases, §5).
+- **Empty feasible set → drop the variant, don't patch** (SBD): if no hotspot edit reconciles the
+  phases, the variant is structurally non-viable — remove it via `## Обсуждение`+D#, don't pile up
+  crutches around it.
+- **Decomposition strategy on a clinch** — escalate to Perplexity (RAG delegation), not
+  "by-feel" improvisation.
+- **Stop criterion:** 0 open high-severity mismatches between phases AND all coupling hotspots
+  reconciled — onward only editorial edits. The AUDIT loop (audit round cap, §13/`plan-audit`) is
+  closed separately — RECOVERY closes the DESIGN refine loop.
+
 **Pre-mortem for high-stakes** (fiscal/payments/tenant-isolation/ecosystem core): before
 closing a design phase — a round per the Klein protocol (RAG:✅ P5.1 §7, prospective
 hindsight +30%): "the plan failed 6–12 months out — why"; independent recording of causes →
@@ -931,4 +958,4 @@ doesn't repay the cost of reconstructing "where did this come from".
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of editing
   vendor copies (section 12).
 
-<!-- ru-source-sha256: 1e48ac52725f95304110fc194a79644ce18152ae3a3a76eb60bea40a62c666dd -->
+<!-- ru-source-sha256: 2ebfca5307fe2e618efa31e9d9af4cd11803a5ec9d436c84e08ab95008dd8f57 -->

@@ -10,7 +10,7 @@
 | Status | 🟡 In progress (design) |
 | Document Type | Executable Master Plan |
 | Authoring Model | opus |
-| Last Updated | 2026-07-16 (P5.2 закрыт 🟢 — §6 carve-out производных артефактов) |
+| Last Updated | 2026-07-16 (P5.3 закрыт 🟢 — верификация i18n-keep-гейта, фаза P5 терминальна) |
 | Repository | swissknifeman |
 | Related Packages | task (plan-protocol/workflow-craft скиллы, команды plan-*/make-workflow/review), skiller (реестр скиллов, budget), harness (agent-packs dev-loop, run-report) |
 | Execution Mode | phase-first |
@@ -86,7 +86,7 @@
 | P2 | Launch-block энфорсмент + ошибка→сразу-фикс | 1/2 | 🟠 Done with deviations |
 | P3 | Workflow-авторинг + авто-ревью (make-workflow ревьюер · base-шаблоны · видимость скилла) | 2/5 | 🟠 Done with deviations |
 | P4 | Contract-first дизайн-флоу + глобальный exec-план + батчинг + адаптивная глубина ревью | 0/3 | 🟠 Done with deviations |
-| P5 | Fix-стратегия plan-design при клинче + канон-апгрейд из полевой обратной связи | 2/3 | 🟡 In progress |
+| P5 | Fix-стратегия plan-design при клинче + канон-апгрейд из полевой обратной связи | 3/3 | 🟢 Done |
 
 ## 5. Decision Log
 
@@ -137,6 +137,7 @@
 | 2026-07-16 | plan-design/opus | P5 детализирована (3 items, терминальная) — ТЗ см. phases/P5.md P5.1–P5.3. D15–D17 (3-item разбивка/reconcile · RECOVERY=SBD-LRM · §6 carve-out generic); Обсуждение №7 pre-mortem; §3 Routing P5.1–P5.3; findings/P5-design-convergence.md; v0.4.0→0.5.0 |
 | 2026-07-16 | plan-run(manual)/opus/high | P5.1 закрыт 🟢: подраздел «RECOVERY при клинче» в plan-protocol §7 (RU+EN) + зеркало plan-design.md + верификация анти-клинч-канона (D18: AUDIT-петля закрыта, P5.1 закрывает DESIGN-петлю) — детали см. phases/P5.md P5.1 Completion Notes |
 | 2026-07-16 | plan-run/sonnet/high | P5.2 закрыт 🟢: carve-out (б) «детерминированный производный артефакт» в plan-protocol §6 (RU+EN, в том же bullet foreign-diff) — снимает систематический ложный-🟠 6× паттерн — детали см. phases/P5.md P5.2 Completion Notes |
+| 2026-07-16 | plan-exec/sonnet/medium | P5.3 закрыт 🟢, фаза P5 терминальна (3/3, все 🟢): verify-only — i18n-keep-гейт уже генерализован на все 159 локальных скиллов (0 пробелов), правка `check-translations.sh` не потребовалась; полный зелёный `validate.sh`/`plan-lint` — детали см. phases/P5.md P5.3 Completion Notes |
 
 ## 7. Contracts
 

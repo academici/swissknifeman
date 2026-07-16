@@ -1,62 +1,54 @@
-# HANDOFF — 2026-07-16 — after P5.2
+# HANDOFF — 2026-07-16 — after P5.3
 
-**Next:** `/task:plan-exec 2026.07.15-PLANFLOW-UX P5.3`
+**Next:** `/task:plan-close 2026.07.15-PLANFLOW-UX P5`
 
 | Параметр | Значение |
 |:--|:--|
 | Model | sonnet |
-| Thinking | medium — независимый bash-гейт (`check-translations.sh`), не канон-проза; дефолт-деривация (model≤sonnet ∧ effort≤medium → plan-exec) |
-| Context | continue (/clear) — регулярный item-by-item exec |
-| Суть | P5.3 — верификация/генерализация i18n-keep-гейта (`check-translations.sh`) на ВСЕ скиллы-каноны + терминальная регенерация-когерентность фазы (полный зелёный `validate.sh` обязателен) |
+| Thinking | low — закрытие фазы по git-фактам (Phase Handoff, lint), не дизайн |
+| Context | NEW SESSION — шаг-не-item |
+| Суть | Закрыть фазу P5 (терминальна, 3/3 🟢): заполнить Phase Handoff в phases/P5.md, перезаписать handoff.md, прогнать plan-lint. После — план терминален целиком → `/task:plan-close 2026.07.15-PLANFLOW-UX archive` |
 
 ```
-/task:plan-exec 2026.07.15-PLANFLOW-UX P5.3
+/task:plan-close 2026.07.15-PLANFLOW-UX P5
 ```
 
-**Done:** P5.2 закрыт 🟢 — carve-out (б) «детерминированный производный артефакт» в
-`plan-protocol §6` (RU `SKILL.ru.md` L310–319 · EN `SKILL.md` L298–307, регенерация): выход
-НАЗВАННОЙ команды регенерации над `Files`-источниками item'а (реестр-манифесты,
-сгенерированный канон другого языка, локфайлы, снапшоты доков) → часть Scope, НЕ
-material-deviation, в `Files` не обязателен. Зеркалит существующий plan-файловый carve-out
-(a) в том же bullet (второго носителя нет). Граница явна (не покрывает недетерминированное/
-ручное/чужое); согласовано с «фазовой когерентностью производного» (L379–381, не тронута).
-Generic-формулировка (D17), не частный случай `skills.json`/`budget.md`. Item-коммит `439120b`.
-Снимает систематический ложный-🟠 (6× P2.1/P3.1/P3.2/P4.1/P4.2/P4.3): следующие item'ы,
-регенерирующие реестр в рамках своих `Files`-источников, закрываются 🟢 без искусственного
-перечисления `skills.json`/`budget.md` в `Files`.
+**Done:** P5.3 закрыт 🟢 (verify-only, `Files`=«—»): `check-translations.sh` уже итерирует по
+**ВСЕМ** `SKILL.md` под `skills/` (не по подмножеству) — покрытие 159/159 локальных скиллов с
+`SKILL.ru.md` (0 пробелов, 0 протухших, 0 осиротевших, 0 расходящихся i18n-keep-литералов);
+56 внешних (upstream), 55 с RU-справкой (не стампятся — canon EN от upstream). Вердикт:
+**генерализован, пробелов нет** — правка гейта не потребовалась. Финальная регенерация-
+когерентность фазы: `skiller/scripts/validate.sh` зелёный (216 skills, 379 tests OK, registry
+--check актуален), `task/scripts/validate.sh`→`plan-lint: OK (9 планов, 0 ошибок, 37 WARN
+предсуществующих)`. Фаза P5 терминальна (P5.1🟢/P5.2🟢/P5.3🟢, 3/3) — Status Board и §4 Phase
+Index обновлены в `plan.md`.
 
-**Remaining:** exec P5.3 (терминальный item фазы — полный зелёный `validate.sh` обязателен,
-§6 фазовая когерентность). После P5.3 — фаза P5 закрывается (`/task:plan-close
-2026.07.15-PLANFLOW-UX P5`), затем план терминален целиком (`/task:plan-close archive`).
+**Remaining:** `/task:plan-close 2026.07.15-PLANFLOW-UX P5` — заполнить Phase Handoff
+`phases/P5.md`, агрегировать Known Deviations фазы (P5.1/P5.2/P5.3 — все без деviations),
+lint. Затем план терминален целиком (все 5 фаз 🟢/🟠): `/task:plan-close 2026.07.15-PLANFLOW-UX
+archive` — конвейер план→архив→docs. **Open risks P4-аудит бухгалтерия-реконсиляция**
+(из handoff P5.2) — сделать при archive, не забыть.
 
-**Sources of truth:** `phases/P5.md` (ТЗ P5.1✅/P5.2✅/P5.3, Completion Notes P5.1/P5.2) ·
-`plan.md` (§3 Routing P5.1–P5.3, §4 Status Board P5 2/3, §5 D15–D18, §6 Update Log) ·
-`packages/skiller/skills/general/plan-protocol/SKILL.ru.md` §6/§7 (carve-out (a)+(б), RECOVERY) ·
-`packages/skiller/scripts/check-translations.sh` (объект верификации P5.3).
+**Sources of truth:** `phases/P5.md` (ТЗ P5.1✅/P5.2✅/P5.3✅, все Completion Notes) ·
+`plan.md` (§4 Phase Index P5 3/3 🟢, §6 Update Log, §5 D15–D18) ·
+`packages/skiller/scripts/check-translations.sh` (0 дрейфа, 159/159 покрытие).
 
 **Open risks:**
-- **Bookkeeping-коммит P5.1 аггрегировал ИНХЕРИТ-дифф** (в дереве до старта P5.1, весь в
-  `plans/<ID>/**` = carve-out §8, НЕ foreign diff): (а) детализация P5 plan-design/opus
-  (D15–D17, ТЗ P5.1–P5.3, `findings/P5-design-convergence.md`) — некоммичена прошлой
-  сессией; (б) блок «## Audit P4 — 2026-07-16» в `phases/P4.md` (вердикт ATTENTION,
-  F1–F3) — прогнан, но его СОБСТВЕННАЯ бухгалтерия неполна (§6 Update Log/§4 Status Board
-  P4 не реконсилированы под аудит). Реконсиляцию P4-аудита сделать при `plan-close archive`
-  (или отдельным bookkeeping-проходом).
-- `plan-lint --baseline HEAD` несёт предсуществующие WARN-false-positive (DoR §7
-  orchestration-эвристика P1/P3/P4 — P4-аудит F3, `plan_lint.py` грепает «оркестрац» без
-  учёта отрицания) — не блокер, вне scope P5.
+- **Bookkeeping-коммит P5.1 аггрегировал ИНХЕРИТ-дифф** (детализация P5 plan-design/opus +
+  блок «## Audit P4» в `phases/P4.md` — бухгалтерия неполна). Реконсиляцию сделать при
+  `plan-close archive` (перенесено из handoff P5.2, не резолвлено).
+- `plan-lint --baseline HEAD` несёт 37 предсуществующих WARN (DoR §7 orchestration-эвристика
+  P1/P3/P4 ложные срабатывания, description-долг других планов) — не блокер, вне scope P5.
 
 **Workarounds/Deferred/Open questions:**
-- workarounds: P5.1 перечислил реестровые артефакты (`skills.json`/`budget.md`) в `Files`
-  явно (обход ложного-🟠 до §6 carve-out P5.2, теперь снятый P5.2 — будущие item'ы этот
-  workaround больше не нужны).
+- workarounds: — (P5.1 workaround `Files`-перечисления реестра снят §6 carve-out P5.2, см.
+  предыдущий handoff).
 - deferred: OQ-2 (launch-block в `dev.md`/`fix.md`); OQ-3 rollout доставки гейта
   `workflow-craft` (deleg skiller/maind, пост-Owner); P4-аудит бухгалтерия-реконсиляция
   перед архивацией.
 - open_questions: **OQ-2** (pending Owner) · **OQ-3** (квантифицирован P3.5, рекомендация
-  A=CORE_SKILLS, pending Owner). Оба вне exec-scope P5 (Границы фазы); план закроется 🟠 с
-  ними pending либо промотируются follow-up-планом.
+  A=CORE_SKILLS, pending Owner). Оба вне exec-scope плана; план закроется с ними pending
+  либо промотируются follow-up-планом при архивации.
 
-**Context:** continue (/clear) — P5.3 регулярный item под sonnet/medium (`Exec=plan-exec`,
-дефолт-деривация); `/clear` перед стартом (читать план с диска: plan.md → phases/P5.md →
-handoff.md). NEW SESSION не требуется (не Workflow, не шаг-не-item).
+**Context:** NEW SESSION — шаг-не-item (`plan-close` читает план с диска заново; сессии
+исполнителя P5.3 наследовать запрещено).

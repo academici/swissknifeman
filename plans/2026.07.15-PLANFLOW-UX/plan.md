@@ -10,7 +10,7 @@
 | Status | 🟡 In progress (design) |
 | Document Type | Executable Master Plan |
 | Authoring Model | opus |
-| Last Updated | 2026-07-16 (P4.2 закрыт 🟠) |
+| Last Updated | 2026-07-16 (P4.3 закрыт 🟠, фаза P4 терминальна) |
 | Repository | swissknifeman |
 | Related Packages | task (plan-protocol/workflow-craft скиллы, команды plan-*/make-workflow/review), skiller (реестр скиллов, budget), harness (agent-packs dev-loop, run-report) |
 | Execution Mode | phase-first |
@@ -81,7 +81,7 @@
 | P1 | Recon: доказбаза (workflow-авторинг · plan-design клинчи · handoff-конформанс) | 1/1 | 🟢 Done |
 | P2 | Launch-block энфорсмент + ошибка→сразу-фикс | 1/2 | 🟠 Done with deviations |
 | P3 | Workflow-авторинг + авто-ревью (make-workflow ревьюер · base-шаблоны · видимость скилла) | 2/5 | 🟠 Done with deviations |
-| P4 | Contract-first дизайн-флоу + глобальный exec-план + батчинг + адаптивная глубина ревью | 0/3 | 🟡 In progress |
+| P4 | Contract-first дизайн-флоу + глобальный exec-план + батчинг + адаптивная глубина ревью | 0/3 | 🟠 Done with deviations |
 | P5 | Fix-стратегия plan-design + архитектурный апгрейд скиллов/сниппетов | 0/2 | ⬜ Not started |
 
 ## 5. Decision Log
@@ -124,6 +124,7 @@
 | 2026-07-15 | plan-design/opus | P4 детализирована (3 items = 3 механизма кластеров 3/4) — ТЗ см. phases/P4.md P4.1–P4.3. D12 (OQ-1→вариант B, §3 Routing +Batch/+Review), D13 (граница P4/P5), D14 (адаптивная глубина ревью = принцип); OQ-1 закрыт (снят из open-questions); Обсуждение №2 Resolved, №6 pre-mortem; v0.3.0→0.4.0 |
 | 2026-07-16 | plan-run(manual)/opus/high | P4.1 закрыт 🟠 (регенерённые skills.json/budget.md вне Files, паттерн P2.1/P3.1/P3.2): подраздел «Contract-first дизайн-флоу» в plan-protocol §5 (RU+EN) + опц. контракт-блок phase-template + заметки new/Pn plan-design — детали см. phases/P4.md P4.1 Completion Notes |
 | 2026-07-16 | plan-run(manual)/opus/high | P4.2 закрыт 🟠 (регенерённые skills.json/budget.md вне Files, паттерн 5-й раз): §3 Routing +Batch/+Review (опц.) + подраздел «Батчинг подфаз» (D6-инвариант) в plan-protocol §9 RU+EN + заметки plan-design/plan-exec; OQ-1 закрыт D12 — детали см. phases/P4.md P4.2 Completion Notes |
+| 2026-07-16 | plan-run(manual)/sonnet/high | P4.3 закрыт 🟠, фаза P4 терминальна (🟠 — все 3 items с deviation): подраздел «Адаптивная глубина ревью» (full/light/none + дефолт full + D6-инвариант + батч-максимум) в plan-protocol §9 + заметка plan-exec.md — детали см. phases/P4.md P4.3 Completion Notes |
 
 ## 7. Contracts
 

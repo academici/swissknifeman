@@ -584,13 +584,15 @@ justification. A living document: phase closes / re-designs update the roadmap (
 Under a master plan the general
 session handoff (skill `session-handoff`) collapses here — no second handoff file.
 
-**Allowed `Next` forms** (closed enum, m8/B1/N1/N2 + D8 — `plan-lint` accepts EXACTLY these 9
+**Allowed `Next` forms** (closed enum, m8/B1/N1/N2 + D8 — `plan-lint` accepts EXACTLY these 11
 forms; any other form = ERROR listing the allowed ones):
 
 ```text
 | Форма Next | Когда |
 |:--|:--|
 | /task:plan-exec <ID> Pn.m        | следующий item детализирован, Exec = plan-exec (§9) |
+| /task:plan-run <ID> Pn.a[-Pn.b]  | батч-серия по roadmap (§8): одна сессия закрывает диапазон |
+| /task:plan-audit <ID> design     | план детализирован — pre-exec ревью перед стартом exec |
 | /task:plan-design <ID> Pn        | следующая фаза — скелет |
 | /task:plan-design <ID> Pn.m      | item эскалирован (🔴) либо требует ре-дизайна |
 | /task:plan-audit <ID> Pn         | фаза Pn закрыта (терминальна) — аудит перед следующей |
@@ -1066,4 +1068,4 @@ thinking gets lost.
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of editing
   vendor copies (section 12).
 
-<!-- ru-source-sha256: fe169ae8ce0f26c5ba8510bf8c4962be2f68fda1932bfaac75ec538b2136160a -->
+<!-- ru-source-sha256: fb253908e9be236f7087cffaece135be3bae21ebbfad5ee1879ce28762694920 -->

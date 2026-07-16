@@ -108,6 +108,10 @@ PLAN_DESIGN_ITEM_RE = re.compile(r"/task:plan-design\s+(\S+)\s+(P\d+\.\d+)")
 # протокола прямо предписывают plan-design перед plan-exec на фазах без заполненных
 # 16 полей) — ссылка на ФАЗУ (Pn), не на item (Pn.m).
 PLAN_DESIGN_PHASE_RE = re.compile(r"/task:plan-design\s+(\S+)\s+(P\d+)(?!\.\d)\b")
+# Батч-серия roadmap (SKILL §8): одна сессия закрывает диапазон items текущей моделью.
+PLAN_RUN_RE = re.compile(r"/task:plan-run\s+(\S+)\s+(P\d+\.\d+)(?:\s*-\s*(P\d+\.\d+))?")
+# Pre-exec design-ревью всего плана (plan-audit, режим design).
+PLAN_AUDIT_DESIGN_RE = re.compile(r"/task:plan-audit\s+(\S+)\s+design\b")
 PLAN_AUDIT_RE = re.compile(r"/task:plan-audit\s+(\S+)\s+(P\d+)(?!\.\d)\b")
 PLAN_CLOSE_ARCHIVE_RE = re.compile(r"/task:plan-close\s+archive\s+(\S+)")
 PLAN_CLOSE_RE = re.compile(r"/task:plan-close\s+(\S+)\s+(P\d+)(\.\d+)?\b")
@@ -115,8 +119,10 @@ MANUAL_RUN_MARKER = "ЗАПУСК ВРУЧНУЮ"  # Exec=manual (§9): форм
 LITERAL_WAITING = "ОЖИДАНИЕ:"  # 9-я форма Next (§8, D8): здоровое ожидание внешнего времени/гейта, ищется подстрокой
 NEXT_FORMS_HELP = (
     "Next не соответствует ни одной из допустимых форм (SKILL §8): "
-    "/task:plan-exec <ID> Pn.m · /task:plan-design <ID> Pn · /task:plan-design <ID> Pn.m · "
-    "/task:plan-audit <ID> Pn · /task:plan-close <ID> Pn[.m] · /task:plan-close archive <ID> · "
+    "/task:plan-exec <ID> Pn.m · /task:plan-run <ID> Pn.a[-Pn.b] · "
+    "/task:plan-design <ID> Pn · /task:plan-design <ID> Pn.m · "
+    "/task:plan-audit <ID> Pn · /task:plan-audit <ID> design · "
+    "/task:plan-close <ID> Pn[.m] · /task:plan-close archive <ID> · "
     "«план закрыт» · «ЗАПУСК ВРУЧНУЮ: <model/effort>» · «ОЖИДАНИЕ: <условие> → <целевая форма>»"
 )
 PHASE_FILENAME_RE = re.compile(r"^(P\d+)\.md$")
@@ -265,8 +271,8 @@ C2_WAITING_STEMS_RE = re.compile(
     "|".join(re.escape(s) for s in C2_WAITING_STEMS), re.IGNORECASE)
 # Формы Next, несущие исполнимую slash-команду СЕЙЧАС (не waiting/manual/closed) — только на
 # них C2 срабатывает: прозаическая оговорка при runnable-команде и есть анти-паттерн.
-C2_RUNNABLE_KINDS = frozenset({"exec", "design-item", "design-phase", "audit",
-                               "close", "close-archive"})
+C2_RUNNABLE_KINDS = frozenset({"exec", "run", "design-item", "design-phase", "audit",
+                               "audit-design", "close", "close-archive"})
 
 # Эвристики: `оркестрац`/`мультиагент` — детект заявленной оркестрации (ORCHESTRATION_MARKER_RE,
 # D29); `PHASE_HANDOFF_CLOSURE_LITERALS` — детект «блок утверждает закрытие фазы» (D34);
@@ -921,10 +927,14 @@ def _resolve_next_form(text):
     m = PLAN_EXEC_RE.search(text)
     if m:
         return "exec", m
+    m = PLAN_RUN_RE.search(text)
+    if m:
+        return "run", m
     if LITERAL_PLAN_CLOSED in text.lower():
         return "closed", None
     for kind, rx in (("design-item", PLAN_DESIGN_ITEM_RE),
                      ("design-phase", PLAN_DESIGN_PHASE_RE),
+                     ("audit-design", PLAN_AUDIT_DESIGN_RE),
                      ("audit", PLAN_AUDIT_RE),
                      ("close-archive", PLAN_CLOSE_ARCHIVE_RE),
                      ("close", PLAN_CLOSE_RE)):
@@ -1304,6 +1314,14 @@ def lint_plan(plan_dir, diag):
             ref_plan_id, ref_item = m.group(1), m.group(2)
             _check_plan_id(ref_plan_id)
             _check_item(ref_item)
+        elif kind == "run":
+            ref_plan_id, ref_from, ref_to = m.group(1), m.group(2), m.group(3)
+            _check_plan_id(ref_plan_id)
+            _check_item(ref_from)
+            if ref_to:
+                _check_item(ref_to)
+        elif kind == "audit-design":
+            _check_plan_id(m.group(1))
         elif kind == "closed":
             if not plan_closed:
                 diag.error(handoff_path, next_lineno,

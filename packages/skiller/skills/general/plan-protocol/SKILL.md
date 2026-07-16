@@ -262,9 +262,15 @@ Contract-block canon — one line in `Phase Context` (next to the skeleton marke
 an AUTHORING tool, not a license to start exec on a half-baked plan: by default ALL phases are
 brought to DoR (refine loop §7) and approved by the owner BEFORE the first `plan-exec`/`plan-run`,
 then `roadmap.md` (§8) is assembled — and execution runs in batches without babysitting.
-Just-in-time detailing (exec starting with live skeleton markers) is allowed ONLY via an explicit
-D-entry with a reason (a volatile phase whose input radically depends on earlier phases' outcomes);
-silently exec'ing over skeletons = a plan-audit finding. Owner gates inside the plan (approvals of
+The standard authoring pipeline: `new` (skeletons+contracts) → `Pn` one phase per pass, as
+SEPARATE commands/sessions (design is expensive; the per-phase pass reconciles contracts at every
+step) → `<PLAN-ID> roadmap` (final assembly: a cross-phase reconcile of ALL phases — the
+"conflicts resolved" verdict is made only when ALL details are visible — plus roadmap.md) →
+`plan-audit design` → exec. A single-pass variant (one strong session details everything) is also
+legal — but the final `roadmap` pass with the cross-check is mandatory either way. Just-in-time
+detailing (exec starting with live skeleton markers) is allowed ONLY via an explicit D-entry with
+a reason (a volatile phase whose input radically depends on earlier phases' outcomes); silently
+exec'ing over skeletons = a plan-audit finding. Owner gates inside the plan (approvals of
 matrices/ADRs/specs on design items) remain — full detailing removes routine manual launches, not
 the owner's decisions.
 
@@ -1039,4 +1045,4 @@ thinking gets lost.
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of editing
   vendor copies (section 12).
 
-<!-- ru-source-sha256: 23715564290bccfcb3bf847af67a6c6bfaf6504fd4b6b5c5b5cf9b6431a3a141 -->
+<!-- ru-source-sha256: 4d1d4db81bef034a479c3534463ed80d1576e3ce16becf5520a6a7e940d96a43 -->

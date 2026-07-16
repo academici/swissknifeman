@@ -145,5 +145,99 @@ class SafedirsCliCase(unittest.TestCase):
         self.assertNotIn("ask", after["permissions"])
 
 
+class SafedirsDeleteCase(unittest.TestCase):
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.tmp = Path(self._tmp.name)
+        self.home = self.tmp / "home"
+        (self.home / ".swissknifeman").mkdir(parents=True)
+        self.trusted = self.home / "projects" / "demo"
+        self.trusted.mkdir(parents=True)
+        self.env = Env(PKG, "safe-dirs", home=self.home)
+        self.state = self.tmp / "state" / "safe-dirs.json"
+        self.state.parent.mkdir()
+        patcher = unittest.mock.patch.dict(
+            os.environ, {"SKM_SAFE_DIRS_CONFIG": str(self.state)})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        run(self.env, ["init"])
+        run(self.env, ["add", str(self.home / "projects")])
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def test_delete_file_inside_trusted_root(self):
+        target = self.trusted / "leftover.txt"
+        target.write_text("x", encoding="utf-8")
+        out = run(self.env, ["delete", str(target)])
+        self.assertIn("удалено", out)
+        self.assertFalse(target.exists())
+
+    def test_delete_directory_inside_trusted_root(self):
+        target = self.trusted / "skills"
+        (target / "sub").mkdir(parents=True)
+        (target / "sub" / "f.md").write_text("x", encoding="utf-8")
+        run(self.env, ["delete", str(target)])
+        self.assertFalse(target.exists())
+
+    def test_delete_multiple_paths_one_call(self):
+        a = self.trusted / "a.txt"
+        b = self.trusted / "b.txt"
+        a.write_text("x", encoding="utf-8")
+        b.write_text("x", encoding="utf-8")
+        out = run(self.env, ["delete", str(a), str(b)])
+        self.assertEqual(out.count("удалено"), 2)
+        self.assertFalse(a.exists())
+        self.assertFalse(b.exists())
+
+    def test_delete_dry_run_does_not_touch_disk(self):
+        target = self.trusted / "keep.txt"
+        target.write_text("x", encoding="utf-8")
+        out = run(self.env, ["delete", str(target), "--dry-run"])
+        self.assertIn("[dry-run]", out)
+        self.assertTrue(target.exists())
+
+    def test_delete_rejects_path_outside_allowlist(self):
+        outside = self.tmp / "outside.txt"
+        outside.write_text("x", encoding="utf-8")
+        with self.assertRaises(SystemExit):
+            run(self.env, ["delete", str(outside)])
+        self.assertTrue(outside.exists())
+
+    def test_delete_rejects_dotgit_component(self):
+        gitdir = self.trusted / ".git" / "hooks"
+        gitdir.mkdir(parents=True)
+        with self.assertRaises(SystemExit):
+            run(self.env, ["delete", str(gitdir)])
+        self.assertTrue(gitdir.exists())
+
+    def test_delete_rejects_glob_metachars(self):
+        with self.assertRaises(SystemExit):
+            run(self.env, ["delete", str(self.trusted / "*.txt")])
+
+    def test_delete_rejects_dotdot_component(self):
+        with self.assertRaises(SystemExit):
+            run(self.env, ["delete", str(self.trusted / ".." / "escape")])
+
+    def test_delete_skips_absent_path(self):
+        target = self.trusted / "gone.txt"
+        out = run(self.env, ["delete", str(target)])
+        self.assertIn("уже отсутствует", out)
+
+    def test_delete_no_args_dies(self):
+        with self.assertRaises(SystemExit):
+            run(self.env, ["delete"])
+
+    def test_delete_logs_jsonl(self):
+        target = self.trusted / "logged.txt"
+        target.write_text("x", encoding="utf-8")
+        run(self.env, ["delete", str(target)])
+        log_file = self.home / ".claude" / "logs" / "safe-delete-decisions.jsonl"
+        self.assertTrue(log_file.exists())
+        entry = json.loads(log_file.read_text(encoding="utf-8").splitlines()[-1])
+        self.assertEqual(entry["result"], "deleted")
+        self.assertFalse(entry["dry_run"])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -72,8 +72,9 @@ harness hooks       --target . --auto-approve strict --memory core:federation --
 harness router      --generate --target .   # каталог intent-router (.claude/agent-router.config.json)
 harness agent-packs <list|render|upgrade|remove|doctor> [--pack P] [--target .] [--auto]
         [--dry-run] [--install-only] [--allow-shell M] [KEY=VALUE …]   # см. agentpacks.py
-harness safe-dirs   <init|list|add|remove|prune-ask> [PATH] [--exclude] [--global]
-        [--target P] [--all-projects] [--dry-run]   # allowlist rm/rmdir (см. safedirs.py)
+harness safe-dirs   <init|list|add|remove|prune-ask|delete> [PATH…] [--exclude] [--global]
+        [--target P] [--all-projects] [--dry-run]   # allowlist rm/rmdir; delete — прямое
+        удаление в обход shell rm/rmdir (для/xargs/sudo-заблокированных форм, см. safedirs.py)
 harness doctor       # диагностика окружения harness
 harness doctor      --settings [--target .] [--json] [--profile NAME]  # аудит настроек CC (read-only)
 ```

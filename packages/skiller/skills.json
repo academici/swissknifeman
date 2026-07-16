@@ -2307,10 +2307,10 @@
       "name": "shell",
       "bucket": "general",
       "path": "skills/general/shell/SKILL.md",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "description": "Growing cookbook of shell constructs compatible with this environment's hooks (currently rm/rmdir vs the safe-dirs auto-approve hook; more patterns get added over time). Activate on a hard-deny-hook block and before writing rm/rmdir commands.",
-      "sha256": "413c4542147c2bcc71065cb05beceb119680c1f5173807b7a6b4027de26bc049",
-      "content_sha256": "abdbea23788624371a37275450432accb2bc507414990af3bc51fe2cc360054c",
+      "sha256": "ad4023eb06dc89e4432ab947e41641122fd5adccc5f56971caf14d740d35509d",
+      "content_sha256": "cbbce42f8672d35a3469facff42d9ee02743f2cd3062ef2776e6e67a7b7f2399",
       "tags": [
         "workflow",
         "bash",

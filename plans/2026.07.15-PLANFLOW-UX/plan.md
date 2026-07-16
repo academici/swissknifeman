@@ -10,7 +10,7 @@
 | Status | 🟡 In progress (design) |
 | Document Type | Executable Master Plan |
 | Authoring Model | opus |
-| Last Updated | 2026-07-16 (P4.1 закрыт 🟠) |
+| Last Updated | 2026-07-16 (P4.2 закрыт 🟠) |
 | Repository | swissknifeman |
 | Related Packages | task (plan-protocol/workflow-craft скиллы, команды plan-*/make-workflow/review), skiller (реестр скиллов, budget), harness (agent-packs dev-loop, run-report) |
 | Execution Mode | phase-first |
@@ -123,6 +123,7 @@
 | 2026-07-15 | plan-close(manual)/sonnet/low | Фаза P3 закрыта: Phase Handoff заполнен (агрегат Known Deviations P3.1/P3.2/P3.3/P3.4/P3.5), handoff.md перезаписан (after P3), lint прогнан |
 | 2026-07-15 | plan-design/opus | P4 детализирована (3 items = 3 механизма кластеров 3/4) — ТЗ см. phases/P4.md P4.1–P4.3. D12 (OQ-1→вариант B, §3 Routing +Batch/+Review), D13 (граница P4/P5), D14 (адаптивная глубина ревью = принцип); OQ-1 закрыт (снят из open-questions); Обсуждение №2 Resolved, №6 pre-mortem; v0.3.0→0.4.0 |
 | 2026-07-16 | plan-run(manual)/opus/high | P4.1 закрыт 🟠 (регенерённые skills.json/budget.md вне Files, паттерн P2.1/P3.1/P3.2): подраздел «Contract-first дизайн-флоу» в plan-protocol §5 (RU+EN) + опц. контракт-блок phase-template + заметки new/Pn plan-design — детали см. phases/P4.md P4.1 Completion Notes |
+| 2026-07-16 | plan-run(manual)/opus/high | P4.2 закрыт 🟠 (регенерённые skills.json/budget.md вне Files, паттерн 5-й раз): §3 Routing +Batch/+Review (опц.) + подраздел «Батчинг подфаз» (D6-инвариант) в plan-protocol §9 RU+EN + заметки plan-design/plan-exec; OQ-1 закрыт D12 — детали см. phases/P4.md P4.2 Completion Notes |
 
 ## 7. Contracts
 

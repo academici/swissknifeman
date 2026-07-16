@@ -5,6 +5,9 @@
 
 ## [Unreleased]
 
+### Fixed
+- **`validate_config` — секция `memory` не знала про `digest`.** Ключ `memory.digest` (P1.1: `budget_chars`/`item_max_chars`/`shared_max`) существовал в рантайме с 0.3.0, но схема-валидатор считал его неизвестным и предупреждал на каждом `maind health`/CLI-вызове. Добавлен в допустимые ключи секции.
+
 ## [0.3.0] — 2026-07-12
 
 ### Added (2026.07.12-CONTEXT-ECONOMY — тощий старт сессии)

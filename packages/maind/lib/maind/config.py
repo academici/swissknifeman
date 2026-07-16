@@ -122,7 +122,7 @@ def validate_config(config, cfg_file):
                    {"role": NODE_ROLES})
     _check_section(cfg_file, "memory", config.get("memory", {}),
                    {"enabled": bool, "config_path": str, "http_port": int,
-                    "stream_port": int, "data_dir": str, "url": str})
+                    "stream_port": int, "data_dir": str, "url": str, "digest": dict})
     _check_section(cfg_file, "graph", config.get("graph", {}),
                    {"enabled": bool, "adapter": str, "persist": bool,
                     "persist_path": str, "store_layout": str})

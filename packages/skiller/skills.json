@@ -121,7 +121,7 @@
     },
     "general": {
       "description": "General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists",
-      "count": 21,
+      "count": 22,
       "status": "active"
     },
     "laravel-architecture": {
@@ -2300,6 +2300,23 @@
         "context",
         "tokens",
         "handoff"
+      ],
+      "source": "local"
+    },
+    {
+      "name": "shell",
+      "bucket": "general",
+      "path": "skills/general/shell/SKILL.md",
+      "version": "0.1.0",
+      "description": "Growing cookbook of shell constructs compatible with this environment's hooks (currently rm/rmdir vs the safe-dirs auto-approve hook; more patterns get added over time). Activate on a hard-deny-hook block and before writing rm/rmdir commands.",
+      "sha256": "413c4542147c2bcc71065cb05beceb119680c1f5173807b7a6b4027de26bc049",
+      "content_sha256": "abdbea23788624371a37275450432accb2bc507414990af3bc51fe2cc360054c",
+      "tags": [
+        "workflow",
+        "bash",
+        "shell",
+        "safety",
+        "hooks"
       ],
       "source": "local"
     },

@@ -165,6 +165,7 @@ flowchart LR
     plan_protocol["plan-protocol<br/>⊕82 ↻16981"]:::warm
     project_map["project-map<br/>⊕83 ↻645"]:::warm
     session_handoff["session-handoff<br/>⊕41 ↻618"]:::cool
+    shell["shell<br/>⊕73 ↻1487"]:::mild
     skills_ssot["skills-ssot<br/>⊕35 ↻1771"]:::cool
     spec_interview["spec-interview<br/>⊕58 ↻753"]:::mild
     task_brief_template["task-brief-template<br/>⊕79 ↻1253"]:::mild
@@ -423,13 +424,13 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 215 скиллов · ⊕ always **14798** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 315179 ток · ⌥ on-demand 822005 ток (сниппеты + references).
+**Итого:** 216 скиллов · ⊕ always **14871** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 316666 ток · ⌥ on-demand 822417 ток (сниппеты + references).
 
 ## По бакетам
 
 | Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ on-demand |
 |---|--:|--:|--:|--:|
-| `general` | 21 | 1466 | 43599 | 14698 |
+| `general` | 22 | 1539 | 45086 | 15110 |
 | `php` | 17 | 1048 | 19298 | 54837 |
 | `architect` | 15 | 964 | 23520 | 33458 |
 | `quality` | 11 | 831 | 20564 | 7447 |

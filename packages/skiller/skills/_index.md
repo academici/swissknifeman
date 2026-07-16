@@ -4,7 +4,7 @@
 
 Источник истины портируемых скиллов (машинный реестр — `skills.json`). Раздача в проекты: `skiller connect` (плагины-бакеты) / `vendor` (физ. перенос). CORE-набор токен-скиллов (`general`/`oss-dev`) раздаётся по умолчанию — см. `connect`/`vendor`.
 
-Всего: 215 скиллов в 47 бакетах.
+Всего: 216 скиллов в 47 бакетах.
 
 ## Скиллы по бакетам
 
@@ -213,7 +213,7 @@
 |:--|:--|:--|
 | `wayfinder` | Laravel Wayfinder: typesafe routes and controller actions for the frontend. Generation, n… | `wayfinder`, `laravel`, `typescript`, `routes`, `inertia`, `eslint`, `frontend` |
 
-### general — General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists (21)
+### general — General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists (22)
 
 | Скилл | Описание | Теги |
 |:--|:--|:--|
@@ -232,6 +232,7 @@
 | `plan-protocol` | Executable master plans in plans/<ID>: plan/phase/task schemas, 6 statuses, refine loop a… | `workflow`, `planning`, `handoff`, `routing`, `multi-model` |
 | `project-map` | Project structure map methodology: zone directories by responsibility for safe change rou… | `conventions`, `navigation`, `architecture`, `structure`, `routing` |
 | `session-handoff` | Cross-session/agent context handoff: compress a session into a structured doc — state, de… | `workflow`, `context`, `tokens`, `handoff` |
+| `shell` | Growing cookbook of shell constructs compatible with this environment's hooks (currently … | `workflow`, `bash`, `shell`, `safety`, `hooks` |
 | `skills-ssot` | Single source of truth for skills across multiple AI agents: .ai/skills + symlinks, gitig… | `ai-context`, `skills`, `ssot`, `workflow`, `conventions`, `ai` |
 | `spec-interview` | Pre-code interview: agent asks one question at a time, reads the codebase itself where it… | `workflow`, `requirements`, `discovery` |
 | `task-brief-template` | Brief template for complex agent tasks: goal, scope, invariants, explicit assumptions, ou… | `workflow`, `template`, `requirements`, `context` |
@@ -491,6 +492,7 @@
 | `axioma` | `axioma-doctrine`, `axioma-glossary`, `axioma-stack`, `ecosystem-map` |
 | `azguard` | `azguard`, `laravel-permissions` |
 | `barge-in` | `voice-ai` |
+| `bash` | `shell` |
 | `best-practices` | `laravel-best-practices` |
 | `blade` | `livewire-blade-attributes` |
 | `blender` | `build-loop`, `config-conventions`, `mcp-blender`, `model-rules`, `parametric-config`, `scene-conventions`, `threading`, `version-gotchas` |
@@ -612,7 +614,7 @@
 | `harness` | `agent-packs` |
 | `headless` | `reka-ui-cva` |
 | `health` | `health-checks` |
-| `hooks` | `git-safety` |
+| `hooks` | `git-safety`, `shell` |
 | `icons` | `vue-dynamic-icons` |
 | `image-preview` | `filepond-upload` |
 | `images` | `medialibrary` |
@@ -750,7 +752,7 @@
 | `runbook` | `observability-design` |
 | `russian` | `writing-style` |
 | `russian-stack` | `voice-ai` |
-| `safety` | `git-safety`, `namespace-refactor-safety`, `test-isolation-guard`, `testing-safety-report` |
+| `safety` | `git-safety`, `namespace-refactor-safety`, `shell`, `test-isolation-guard`, `testing-safety-report` |
 | `scalability` | `architecture` |
 | `scene` | `scene-conventions` |
 | `schema` | `data-schema` |
@@ -763,6 +765,7 @@
 | `session-analysis` | `session-observer` |
 | `settings` | `spatie-settings` |
 | `severity` | `artifact-review` |
+| `shell` | `shell` |
 | `skills` | `laravel-packages`, `skills-ssot`, `swissknifeman-locator` |
 | `sla` | `build-loop`, `capacity-planning`, `config-conventions`, `incident-response`, `oncall-rotation`, `parametric-config`, `threading` |
 | `slo` | `observability-design` |
@@ -834,5 +837,5 @@
 | `webrtc` | `voice-ai` |
 | `websocket` | `docker-services` |
 | `websockets` | `laravel-broadcasting`, `laravel-echo-client` |
-| `workflow` | `anti-drift`, `build-loop`, `business-process`, `code-review`, `compact-responses`, `complex-task-orchestrator`, `context-economy`, `cross-layer-change-checklist`, `enum-state-machine`, `implement`, `incident-response`, `laravel-subagents`, `plan-protocol`, `postmortem`, `refactoring-plan`, `session-handoff`, `skills-ssot`, `spec-interview`, `task-brief-template`, `tech-debt-audit`, `tech-lead`, `workflow-craft` |
+| `workflow` | `anti-drift`, `build-loop`, `business-process`, `code-review`, `compact-responses`, `complex-task-orchestrator`, `context-economy`, `cross-layer-change-checklist`, `enum-state-machine`, `implement`, `incident-response`, `laravel-subagents`, `plan-protocol`, `postmortem`, `refactoring-plan`, `session-handoff`, `shell`, `skills-ssot`, `spec-interview`, `task-brief-template`, `tech-debt-audit`, `tech-lead`, `workflow-craft` |
 | `writing` | `writing-style` |

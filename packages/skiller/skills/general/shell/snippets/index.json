@@ -1,0 +1,10 @@
+{
+  "skill": "shell",
+  "snippets": [
+    {
+      "file": "blocked-vs-safe.md",
+      "description": "Growing cookbook of blocked vs safe rm/rmdir constructs under the safe-dirs hook",
+      "tags": ["rm", "safe-dirs", "hooks"]
+    }
+  ]
+}

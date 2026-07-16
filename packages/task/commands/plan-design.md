@@ -199,11 +199,15 @@ D-записью. Фаза, ушедшая в exec без DoR, = находка 
 Красное линтера почини в созданных файлах.
 
 **Expected output:** список созданных/изменённых файлов + число items + вердикт
-DoR-чеклиста (режимы `Pn`/`Pn.m`) + строка «Готово к: …» — команда зависит от
-DoR-пункта «заявленная оркестрация» (SKILL §7 критерий: N≥3 items с независимым
-scope и детерминированной Validation, либо длинная автономная цепочка с внешним
-состоянием). Фаза БЕЗ оркестрации → «Готово к: `/task:plan-exec <ID> Pn.m`
-(Sonnet/medium)». Фаза С заявленной оркестрацией (критерий сработал, workflow-скрипт
-готов в `plans/<ID>/workflows/`) → «Готово к: `Workflow({scriptPath:
-"plans/<ID>/workflows/wf-....js"})` (NEW SESSION — не продолжать эту)», не `plan-exec`
-(session-restart discipline, SKILL §8).
+DoR-чеклиста (режимы `Pn`/`Pn.m`) + **финал сообщения — ПОЛНЫЙ launch-block следующего
+шага** (SKILL §8, форма `snippets/launch-block-template.md`): таблица
+`| Параметр | Значение |` с Model / Thinking / Context / Суть + голая команда ОТДЕЛЬНЫМ
+code-block'ом (копипаст без правок). Строка «Готово к: …» без таблицы и code-block =
+дефект (владелец не должен переспрашивать модель/настройки). Какая команда в блоке —
+зависит от DoR-пункта «заявленная оркестрация» (SKILL §7 критерий: N≥3 items с
+независимым scope и детерминированной Validation, либо длинная автономная цепочка с
+внешним состоянием): фаза БЕЗ оркестрации → `/task:plan-exec <ID> Pn.m` (Model/Thinking —
+из §3 Routing, дефолт Sonnet/medium); фаза С заявленной оркестрацией (workflow-скрипт
+готов в `plans/<ID>/workflows/`) → `Workflow({scriptPath: "plans/<ID>/workflows/wf-….js"})`
+с пометкой NEW SESSION (session-restart discipline, SKILL §8), не `plan-exec`;
+режим `new` (все фазы — скелеты) → `/task:plan-design <ID> P0` (Opus/high).

@@ -509,7 +509,17 @@ plan-exec/plan-close/plan-audit reports — must take the fixed form
 **Self-sufficiency (cold-start).** The launch-block command must work from a cold session:
 plan-ID + input-doc paths (cold-start reads) + an embedded gate approval if the execution is
 gated. References like "this session" — only as a supplement. `plan-lint` checks: handoff.Next
-contains the launch-block table and a code block (greppable). Under a master plan the general
+contains the launch-block table and a code block (greppable; for date-based plans from
+2026.07.16 a missing launch-block is an ERROR, older/legacy — WARNING).
+
+**The session's final message = a launch-block.** Any `/task:plan-*` session (design / exec /
+run / close / audit) that has a next step ENDS its last message to the owner with a full
+launch-block (the Model/Thinking/Context/Essence table + the bare command as a separate code
+block) — not "run such-and-such command" in prose: the owner must never have to ask back which
+model and settings to launch with. A bare command without Model/Thinking in the finale is a
+session defect (a plan-audit finding).
+
+Under a master plan the general
 session handoff (skill `session-handoff`) collapses here — no second handoff file.
 
 **Allowed `Next` forms** (closed enum, m8/B1/N1/N2 + D8 — `plan-lint` accepts EXACTLY these 9
@@ -994,4 +1004,4 @@ thinking gets lost.
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of editing
   vendor copies (section 12).
 
-<!-- ru-source-sha256: f1499cc258c5f609d74156f395bb007c2726e8c45fa6bf9c4abebf72aad7edc9 -->
+<!-- ru-source-sha256: 7837bc8b64567228c093bca368302cab0577e6ab80fd7c2d0b17b48f65a45d55 -->

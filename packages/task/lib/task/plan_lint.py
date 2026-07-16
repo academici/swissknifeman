@@ -1221,7 +1221,9 @@ def lint_plan(plan_dir, diag):
                          "<целевая форма>» (SKILL §8): она копипастится с guard-строкой "
                          "`# НЕ раньше:`, прозаическая оговорка — нет")
 
-        # --- 2.0 WARNING: launch-block в handoff.Next (SKILL §8) ------------------
+        # --- 2.0: launch-block в handoff.Next (SKILL §8) --------------------------
+        # Severity как у brief-гейта: датовые планы от BRIEF_CANON_DATE — ERROR
+        # (владелец не должен переспрашивать модель/настройки), старее/legacy — WARNING.
         # Таблица `| Model | …` и code-block грепаются по всему файлу: шаблон кладёт
         # launch-block продолжением Next, но точное место не гейтим (warning-уровень).
         # Для целиком закрытого плана («план закрыт») запускать нечего — не требуем.
@@ -1238,9 +1240,12 @@ def lint_plan(plan_dir, diag):
                     missing.append("таблицы `| Model | …`")
                 if not has_fence:
                     missing.append("code-block с командой")
-                diag.warning(handoff_path, next_lineno,
-                             "Next без launch-block: нет " + " и ".join(missing) +
-                             " (форма — snippets/launch-block-template.md)")
+                _lb_msg = ("Next без launch-block: нет " + " и ".join(missing) +
+                           " (форма — snippets/launch-block-template.md)")
+                if PLAN_ID_DATED_RE.match(plan_id) and plan_id[:10] >= BRIEF_CANON_DATE:
+                    diag.error(handoff_path, next_lineno, _lb_msg)
+                else:
+                    diag.warning(handoff_path, next_lineno, _lb_msg)
         plan_closed = bool(all_items) and all(
             info["status"] in TERMINAL_STATUSES for info in all_items.values())
 

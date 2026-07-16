@@ -55,6 +55,17 @@ class TestBriefLayer(TmpPlanTestCase):
         self.assertEqual(_errors_containing(diag, "нет слоя 0"), [])
         self.assertTrue([w for w in diag.warnings if "нет слоя 0" in w], diag.warnings)
 
+    def test_dated_plan_next_without_launch_block_is_error(self):
+        plan_dir = write_valid_plan(self.root, plan_id="2026.07.16-DEMO")
+        handoff = plan_dir / "handoff.md"
+        text = handoff.read_text(encoding="utf-8")
+        # выкидываем таблицу launch-block'а и code-block — остаётся голая строка Next
+        lines = [ln for ln in text.splitlines()
+                 if not ln.startswith("|") and not ln.startswith("```")]
+        handoff.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "Next без launch-block"), diag.errors)
+
     def test_empty_brief_md_does_not_count(self):
         plan_dir = write_valid_plan(self.root, plan_id="2026.07.16-DEMO")
         (plan_dir / "brief" / "00-brief.md").write_text("", encoding="utf-8")

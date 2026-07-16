@@ -2,43 +2,27 @@
 
 **Next:** план закрыт
 
-**Done:** Фаза P5 закрыта, все 3 item'а 🟢 Done: P5.1 (RECOVERY-дисциплина клинча в
-`plan-protocol §7` + зеркало `plan-design.md` + верификация достаточности анти-клинч-канона,
-D18), P5.2 (§6 carve-out «детерминированные производные артефакты — часть Scope», снимает
-6× ложный-🟠 паттерн), P5.3 (verify-only — i18n-keep-гейт уже генерализован на 159/159
-локальных скиллов, правка гейта не потребовалась). Phase Handoff в `phases/P5.md` заполнен
-(отклонений нет — все три item'а несут пустой Known Deviations). Все 5 фаз плана теперь
-терминальны (P1 🟢, P2 🟠, P3 🟠, P4 🟠, P5 🟢) → **план закрыт целиком**: Meta Status →
-🟠 Done with deviations; `plans/ACTIVE.md` не тронут (указывает на 2026.07.15-TOKEN-ECON-P6,
-этот план никогда не сеizил ACTIVE — D3).
+**Done:** План терминален целиком (все 5 фаз 🟢/🟠) и архивирован в
+`plans/archive/2026.07.15-PLANFLOW-UX/`. `root/` в плане отсутствовал — миграционных
+docs-переносов нет (Diátaxis-шаг пропущен, нечего мигрировать); `findings/`,
+`open-questions.md` остаются в архиве (канон §12, не мигрируют). Живых доков/реестров,
+ссылающихся на `plans/2026.07.15-PLANFLOW-UX`, не найдено (grep по репо), кроме
+исторического упоминания в уже архивированном `plans/archive/2026.07.15-TELEMETRY-OPT/
+handoff.md` (заморожен, не правится). `plans/ACTIVE.md` не трогался — уже указывал на
+`2026.07.15-TOKEN-ECON-P6` (D3, план никогда не seiz'ил ACTIVE).
 
-**Remaining:** план закрыт по фазам, но ещё НЕ архивирован. Следующий шаг вне протокола —
-владелец решает, когда запускать `/task:plan-close 2026.07.15-PLANFLOW-UX archive`
-(конвейер план→архив→docs). Open risk «P4-аудит бухгалтерия-реконсиляция» (см. ниже) —
-разобрать ДО архивации.
+**Remaining:** — (план архивирован, дальнейших шагов в протоколе нет).
 
-**Sources of truth:** `plan.md` (§0 Meta Status 🟠, §4 Phase Index — все 5 фаз терминальны,
-§5 D1–D18, §6 Update Log) · `phases/P1.md`…`phases/P5.md` (все items 🟢/🟠 закрыты,
-Completion Notes) · `findings/P1-recon.md`, `findings/P5-design-convergence.md`.
+Открытый пункт бухгалтерии (не блокирует архивацию): bookkeeping-коммит P5.1 (`2deb44d`)
+инхерит-диффом принёс блок «## Audit P4» в `phases/P4.md` (вердикт ATTENTION, F1–F3) —
+собственная реконсиляция была отложена «до archive». Ревизия: F2 (Files не перечисляют
+реестровые артефакты, 6×) закрыт канон-фиксом §6 carve-out (P5.2); F1 (routing-self-attr
+P4.2 sonnet→opus) и F3 (линтер false-positive DoR §7 оркестрация) — минорные бухгалтерские
+находки, продукт фазы P4 не затронут, реопен не требуется. Оставлены как есть в архиве
+(исторический аудит-документ, не правится задним числом).
 
-**Open risks:**
-- **Bookkeeping-коммит P5.1 аггрегировал ИНХЕРИТ-дифф** (детализация P5 plan-design/opus +
-  блок «## Audit P4» в `phases/P4.md» — бухгалтерия неполна). Реконсиляция отложена на
-  момент `plan-close archive` (перенесено из предыдущих handoff'ов, не резолвлено).
-- `plan-lint --baseline HEAD` несёт предсуществующие WARN (DoR §7 orchestration-эвристика
-  ложные срабатывания по другим планам, description-долг) — не блокер, вне scope этого плана.
-- Совокупные Known Deviations фаз P2/P3/P4 (реестровые артефакты вне `Files`, паттерн 6×) —
-  теперь закрыты канон-фиксом §6 carve-out (P5.2), новых экземпляров не будет, но исторические
-  🟠-статусы фаз P2/P3/P4 остаются как есть (правило не ретроактивно).
+**Sources of truth:** `plan.md` (§0 Meta, §4 Phase Index — все 5 фаз терминальны, §5
+D1–D18, §6 Update Log) · `phases/P1.md`…`phases/P5.md` (Completion Notes) · `findings/`.
 
-**Workarounds/Deferred/Open questions:**
-- workarounds: — (P5.1 workaround `Files`-перечисления реестра снят §6 carve-out P5.2).
-- deferred: OQ-2 (launch-block вне `plan-*` — `dev.md`/`fix.md`); OQ-3 rollout доставки гейта
-  `workflow-craft` (deleg skiller/maind, пост-Owner approval); P4-аудит бухгалтерия-
-  реконсиляция перед архивацией.
-- open_questions: **OQ-2** (pending Owner) · **OQ-3** (квантифицирован P3.5, рекомендация
-  A=CORE_SKILLS, pending Owner). Оба вне exec-scope плана — план закрывается с ними pending;
-  промотируются follow-up-планом (либо резолвятся Owner'ом) при архивации.
-
-**Context:** NEW SESSION — шаг-не-item (архивация — отдельный `plan-close archive` режим,
-читает план с диска заново).
+**Context:** NEW SESSION — шаг-не-item (план архивирован, следующий шаг вне протокола —
+следующий план выбирает владелец).

@@ -35,7 +35,7 @@ plans/2026.07.15-PLANFLOW-UX/phases/P5.md (раздел «### P5.2»). Моде�
 (контракт-блок §5) · пустой feasible-set → удалить вариант (SBD) · эскалация к Perplexity · критерий
 остановки. Зеркало-заметка в `plan-design.md §Refine-цикл`. Верификация анти-клинч-канона (D18):
 `plan-audit.md` L22–35 закрывает AUDIT-петлю, P5.1 закрывает DESIGN-рефайн-петлю; RECOVERY additive
-к P4.1(§5)/P4.2(§9). RAG:✅ SBD/LRM. Item-коммит `d9225f5`, bookkeeping `<BK>`.
+к P4.1(§5)/P4.2(§9). RAG:✅ SBD/LRM. Item-коммит `d9225f5`, bookkeeping `2deb44d`.
 
 **Remaining:** exec P5.2 → P5.3 (последовательно, coupling на `SKILL.ru.md` §6↔§7). P5.3 —
 терминальный item фазы (полный зелёный `validate.sh` обязателен, §6). После P5.3 — фаза P5

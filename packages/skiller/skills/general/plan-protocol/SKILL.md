@@ -660,14 +660,22 @@ authoritative.
 - effort **low MANDATORY** (thinking is harmful — burns tokens for nothing) for:
   grep/read/map, mechanical edits, status updates, docs sync, handoff formatting.
 
-**`## 3. Routing` line form** — canon for NEW plans (emitted by `plan-design`):
+**`## 3. Routing` line form** — canon for NEW plans (emitted by `plan-design`). The full form
+carries TWO OPTIONAL columns — `Batch` (id of a subphase group for one session, «Subphase
+batching» below) and `Review` (review depth of the subphase, enum `full`|`light`|`none`; default
+`full`, doubt → `full`):
 
 ```text
-| Items | Model/effort | Exec | Почему |
-|:--|:--|:--|:--|
-| P2.7–P2.9 | fable/high | manual | расфриз public-контракта: effort high+ MANDATORY |
-| P2.10–P2.13 | sonnet/low | plan-exec | doc-cleanup без новых решений |
+| Batch | Items | Model/effort | Exec | Review | Почему |
+|:--|:--|:--|:--|:--|:--|
+| B1 | P2.7–P2.9 | fable/high | manual | full | расфриз public-контракта: effort high+ MANDATORY |
+| B1 | P2.10–P2.13 | sonnet/low | plan-exec | light | doc-cleanup без новых решений |
 ```
+
+Columns `Batch`/`Review` are **OPTIONAL**: the legacy form without them
+(`| Items | Model/effort | Exec | Почему |`) stays VALID (back-compat, below), their absence is
+NOT a defect. `Batch` empty → the subphase runs solo (not in a batch); `Review` empty → depth by
+default (`full`).
 
 Column **Exec** — closed enum `plan-exec` | `manual` | `plan-design`: who is allowed to execute
 the item. Tier order: models `haiku < sonnet < opus ≈ fable`, effort
@@ -718,9 +726,35 @@ removes the switching ritual before a series of manual items, but the HARD gate 
 `plan-exec` (its pin makes an undershoot structurally impossible). A `plan-run` executor MUST
 print the actual model/effort pair in the report and in the Update Log.
 
-**Back-compat.** Legacy `## 3. Routing` forms (prose, bullets, a table without the Exec column,
-an empty section) stay VALID; `plan-lint` does not parse section 3 — the gate is run by the
-READING EXECUTOR, not by regex. A legacy row's Exec is derived by the rule above.
+**Back-compat.** Legacy `## 3. Routing` forms (prose, bullets, a table without the
+Exec/`Batch`/`Review` column, an empty section) stay VALID; `plan-lint` does not parse section 3 —
+the gate is run by the READING EXECUTOR, not by regex. A legacy row's Exec is derived by the rule
+above. The new `Batch`/`Review` columns are likewise not parsed by the linter (no machine gate on
+them).
+
+**Subphase batching (optional exec-plan "console").** A batch — a group of subphases executed in
+ONE executor session without a per-subphase confirmation ritual (small subphases don't run
+handoff→`/clear` between each other). The batch carrier is the `Batch` column of §3 Routing (group
+id, e.g. `B1`), NOT a separate `exec-plan.md` file: a second carrier of routing/status would
+duplicate §3/Status Board and drift from them (the "second carrier of a fact" ban, §3).
+§3-as-full-board of subphases is opt-in: a plan without batching keeps the legacy §3 form.
+
+- **Merge-into-batch criterion** (all three): low subphase coupling (one's Inputs do NOT wait on
+  another's Deliverables WITHIN the batch) + compatible `Model/effort` and `Exec` + compatible
+  `Review` depth.
+- **Each subphase STILL carries its own command/model** (its own §3 Routing row): the batch flow is
+  convenience, not a loss of granularity. Falling off the flow (error, §10 escalation, model change)
+  → the remaining subphases are launched one-by-one by hand (each subphase's launch-block is valid on
+  its own).
+- **Order within a batch is sequential** (mechanism already exists: `plan-exec` "several items in the
+  arguments — execute sequentially, each through the full cycle"); closing EACH subphase — full §8
+  protocol (item-commit + bookkeeping + handoff), a batch does NOT merge closings.
+- **"Result > economy" invariant (hard):** batching NEVER merges a `Review=full` subphase into a flow
+  that suppresses its review. A batch inherits review depth = the **MAXIMUM risk of participants**: one
+  `full` in the batch → the whole batch is reviewed at its depth. Classes that are always `full` (e.g.
+  correctness-critical, public-contract/SemVer, tenant-isolation, fiscal/payments,
+  canon-the-fleet-follows) are NOT batched under "skip confirmation" — economy that degrades the
+  result is forbidden.
 
 ## 10. Escalation (cheap-model protocol)
 
@@ -880,4 +914,4 @@ doesn't repay the cost of reconstructing "where did this come from".
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of editing
   vendor copies (section 12).
 
-<!-- ru-source-sha256: 23d6fd7d5f4faf0777af339f5e3ff68ca454d83bea59690da2b4c5c9282730ea -->
+<!-- ru-source-sha256: b8f2737c3a0710eb88d69fb7d82ad8da66253386794efeaad1eeaa806469b0d9 -->

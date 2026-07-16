@@ -80,7 +80,9 @@ effort: high
   Target Operator Models / Approval Owner; необязательные: `Home` — `brain`|`repo:<путь>`,
   `Paused By` — кто перехватил ACTIVE и когда) · `## 1. Context` (5–15 строк, самодостаточно) ·
   `## 2. Execution Rules` (выжимка ≤20 строк) · `## 3. Routing` — канон-таблица
-  `| Items | Model/effort | Exec | Почему |` (SKILL §9); колонка **Exec** — enum `plan-exec` |
+  `| Items | Model/effort | Exec | Почему |` (SKILL §9; опц. колонки `Batch` — id группы подфаз
+  одной сессии — и `Review` — глубина ревью `full`|`light`|`none` — для батчинга подфаз,
+  легаси-форма без них валидна); колонка **Exec** — enum `plan-exec` |
   `manual` | `plan-design`; пустая ячейка = дефолт-деривация (`model ≤ sonnet` И `effort ≤
   medium` → `plan-exec`, иначе `manual`); design/contract-item'ы получают `Exec = manual`
   явно; пустая секция = дефолты SSOT-матрицы ·

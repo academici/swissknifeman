@@ -770,6 +770,21 @@ authoritative.
 - effort **low MANDATORY** (thinking is harmful — burns tokens for nothing) for:
   grep/read/map, mechanical edits, status updates, docs sync, handoff formatting.
 
+**Tier policy (MODEL-TIER criterion — an axis INDEPENDENT of effort):**
+
+- **top tier (fable/opus)** — only where the item still has OPEN design decisions OR the cost
+  of a semantic mistake is irreversible/gets frozen (freeze mechanism, breaking default
+  semantics, fleet canon, cross-phase synthesis);
+- **prescribed implementation** against already-pinned canons (RAG verdict, frozen spec, a
+  ready D# decision) → sonnet/high;
+- **editorial/mechanics** with deterministic gates → sonnet/medium (by derivation below —
+  `plan-exec`);
+- "effort high+ MANDATORY" does NOT raise the model tier: a SemVer item against a frozen spec
+  = sonnet/high, not fable/high. Tier overshoot PRESCRIBED by Routing is as much a plan defect
+  as executor undershoot: it burns the top tier on sonnet-class work (field case — azguard
+  D28, 2026-07-18: a blanket fable/high row over 10 heterogeneous items, 7 of 10
+  over-provisioned by 1–2 tiers).
+
 **`## 3. Routing` line form** — canon for NEW plans (emitted by `plan-design`). The full form
 carries TWO OPTIONAL columns — `Batch` (id of a subphase group for one session, «Subphase
 batching» below) and `Review` (review depth of the subphase, enum `full`|`light`|`none`; default
@@ -778,7 +793,7 @@ batching» below) and `Review` (review depth of the subphase, enum `full`|`light
 ```text
 | Batch | Items | Model/effort | Exec | Review | Почему |
 |:--|:--|:--|:--|:--|:--|
-| B1 | P2.7–P2.9 | fable/high | manual | full | расфриз public-контракта: effort high+ MANDATORY |
+| B1 | P2.7–P2.9 | fable/high | manual | full | расфриз public-контракта: открытые design-решения → верхний тир; effort high+ MANDATORY |
 | B1 | P2.10–P2.13 | sonnet/low | plan-exec | light | doc-cleanup без новых решений |
 ```
 
@@ -786,6 +801,12 @@ Columns `Batch`/`Review` are **OPTIONAL**: the legacy form without them
 (`| Items | Model/effort | Exec | Почему |`) stays VALID (back-compat, below), their absence is
 NOT a defect. `Batch` empty → the subphase runs solo (not in a batch); `Review` empty → depth by
 default (`full`).
+
+**Granularity.** A range row (`P2.x–P2.y`) is legal only for HOMOGENEOUS items: one risk class
+per Tier policy, one "Почему" phrase true for EVERY item of the range. When a phase gets
+detailed, the Routing of its items MUST become per-item if homogeneity does not hold; a
+phase-level blanket row is legal only as a draft for phases NOT yet detailed. The gate is the
+`plan-design` DoR checklist (there is no machine lint on §3 — Back-compat below).
 
 Column **Exec** — closed enum `plan-exec` | `manual` | `plan-design`: who is allowed to execute
 the item. Tier order: models `haiku < sonnet < opus ≈ fable`, effort

@@ -15,6 +15,11 @@ argument-hint: "<PLAN-ID> Pn.m [Pn.k]"
   → СТОП «ROUTING-BLOCKED: Pn.m — предписано <model/effort>, сессия <фактическое>»,
   статус item'а НЕ меняется. Перебор → исполнять, запись в Known Deviations (§6
   `plan-exec.md`). Exec = plan-design → СТОП, ре-дизайн.
+  **Журнал (D21, P1.1):** при `ROUTING-BLOCKED`/`ROUTING-INCONSISTENT` append ОДНУ запись
+  `python3 -m task.journal append --plan-dir plans/<PLAN-ID> --plan <PLAN-ID> --item <Pn.m>
+  --command plan-run --actor <фактические model>/<фактический effort> --result blocked
+  --friction routing-blocked --note "<предписано vs фактическое>"` — работа не начиналась,
+  старт-запись плана-exec.md (п. 3) не пишется.
 
 **Граница честности.** Самоатрибуция модели/effort агентом машинно НЕ проверяема (класс
 B2 аудита REGHUB). Фактическая модель/effort ОБЯЗАНЫ быть напечатаны в отчёте (строка

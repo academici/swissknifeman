@@ -114,6 +114,11 @@ effort: xhigh
 5. **Единственная разрешённая запись** — append-блок `## Audit Pn — <YYYY-MM-DD>` в КОНЕЦ
    `plans/<PLAN-ID>/phases/Pn.md`: вердикт + findings + «Проверено без находок» (с доказательствами).
    Статусы/поля items НЕ править — их разруливают plan-design/plan-close по твоему отчёту.
+   **Журнал (D21, P1.1):** append ОДНУ запись (не правка markdown — не нарушает «единственная
+   запись» выше) — `python3 -m task.journal append --plan-dir plans/<PLAN-ID> --plan <PLAN-ID>
+   --item <Pn — режим фазы|design — режим design> --command plan-audit --actor opus/xhigh
+   --result <audit-green|audit-red — GREEN даёт audit-green, ATTENTION/RED дают audit-red>
+   --note "заход <N>, вердикт <вердикт>"`.
 
 6. Находка, достойная повышения в скилл/правило экосистемы (повторяемый анти-паттерн исполнителя, дыра
    протокола), — пометь `PROMOTE-CANDIDATE` в тексте finding'а.

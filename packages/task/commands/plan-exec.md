@@ -52,6 +52,13 @@ effort: medium
 
 3. **До работы:** пометь `**Status:** 🟡 In progress` у item'а И строку в таблице
    `## Phase Status` (статусы — 6 канонических строк байт-в-байт, копируй из плана).
+   **Журнал (D21, P1.1, хелпер `lib/task/journal.py`):** следом append старт-запись —
+   `PYTHONPATH=packages/task/lib python3 -m task.journal append --plan-dir plans/<PLAN-ID>
+   --plan <PLAN-ID> --item <Pn.m> --command <plan-exec|plan-run — фактически вызванная
+   команда> --actor <model>/<effort> --result in-progress` (`<model>/<effort>` — модель/effort
+   ЭТОГО исполнения: pinned Sonnet/medium у `plan-exec`, фактическая сессии у `plan-run`).
+   Хелпера/каталога плана нет (standalone-раскладка вне монорепо) — предупреди и пропусти
+   (не блокер, как `plan-lint`).
 
 4. **Исполнение — СТРОГО в Scope Included.** Implementation Rules и Code Guidance item'а —
    жёсткие рамки, не рекомендации. Заметил «улучшить бы заодно» — запиши в **Pending Work**
@@ -67,6 +74,9 @@ effort: medium
    - `**Status:** 🔴 Blocked` у item'а (и в Phase Status) + `**Escalation Needed:** yes`;
    - обнови `handoff.md` (Next: /task:plan-design <PLAN-ID> Pn.m; причина — в Open risks);
    - финальная строка отчёта: `ESCALATION-REQUIRED: Pn.m — <причина>`.
+   - **Журнал (D21, P1.1):** append финал-запись `--result escalated --friction escalation
+     --note "<причина эскалации, ≤1 строка>"` (те же `--plan-dir/--plan/--item/--command/--actor`,
+     что старт-запись п. 3).
 
 6. **Validation.** Прогони КАЖДУЮ команду из поля **Validation** item'а; зафиксируй результат
    (команда → passed/failed + суть вывода). Красное — чини в рамках Scope; не чинится в рамках —
@@ -90,7 +100,13 @@ effort: medium
       `## Phase Status` фазы · `## 4. Phase Index & Status Board` в `plan.md` (счётчик `Items 🟢/всего`,
       статус фазы) · строка в `## 6. Update Log` («Что» ≤ 2 строк, формат `<item> закрыт: <1 строка
       сути> — детали см. phases/Pn.md <item> Completion Notes`; пересказ Completion Notes ЗАПРЕЩЁН) ·
-      **`Last Updated`** в `## 0. Meta` = дата закрытия item'а.
+      **`Last Updated`** в `## 0. Meta` = дата закрытия item'а · **Журнал (D21, P1.1)**: append
+      финал-запись (те же `--plan-dir/--plan/--item/--command/--actor`, что старт-запись п. 3)
+      `--result <closed-green|closed-deviations — по статусу выше> --attempt <N — 1-based счётчик
+      попыток ЭТОГО item'а> --friction <из закрытого списка §2.1: deviation при непустых Known
+      Deviations, retry при attempt>1, no-op если прогон не сдвинул статус, иначе пусто> --note
+      "<1 строка сути закрытия>"` — файл `journal.jsonl` входит в carve-out `plans/<PLAN-ID>/**`
+      (коммитится тем же `git add plans/<PLAN-ID>` шага 6, отдельного коммита не даёт).
 
       **Contracts (§11).** Item, бампающий ЗАМОРОЖЕННЫЙ контракт (semver-bump секции `## 7.
       Contracts` донора — секция опознаётся по ЗАГОЛОВКУ, не по номеру; плана без неё правило не

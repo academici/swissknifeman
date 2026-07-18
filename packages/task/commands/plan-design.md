@@ -64,6 +64,10 @@ effort: high
    самодостаточно — фаза исполнима без чтения других фаз; скелет-маркер убрать) и разложить
    на items `### Pn.m — Title` со всеми полями; синхронизировать Status Board в plan.md.
    Финал режима — обязательный refine-цикл + DoR-чеклист (ниже).
+   **Журнал (D21, P1.1):** append ОДНУ запись (item_id = `Pn` — фаза, не item; design-сессия
+   не закрывает item'ы, `result` честно отражает это) — `python3 -m task.journal append
+   --plan-dir plans/<PLAN-ID> --plan <PLAN-ID> --item Pn --command plan-design --actor
+   opus/high --result in-progress --note "фаза детализирована до DoR"`.
    **Reconcile контракт-блока (contract-first, скилл `plan-protocol` §5):** если фаза несёт
    контракт-блок `> **Контракт фазы (contract-first).**`, при детализации сверь его `Потребляет`
    с `Производит` уже закрытых фаз; расхождение → обнови блок + D# (`supersedes D#` при отмене
@@ -76,6 +80,9 @@ effort: high
    закрытии фазы). `handoff.md` в этом случае пишется с заголовком `after Pn` (не `Pn.m`).
 3. **`<PLAN-ID> Pn.m`** — довести один item до исполняемого ТЗ: дозаполнить все поля
    до уровня «sonnet исполнит без вопросов». Финал режима — refine-цикл + DoR-чеклист (ниже).
+   **Журнал (D21, P1.1):** append ОДНУ запись — `python3 -m task.journal append --plan-dir
+   plans/<PLAN-ID> --plan <PLAN-ID> --item <Pn.m> --command plan-design --actor opus/high
+   --result in-progress --note "ТЗ item'а доведено до DoR"`.
 4. **`from-draft <файл>`** — мост встроенного plan mode Claude Code → протокол (событие
    ExitPlanMode не существует — авто-хука нет, мост ручной, но одношаговый). `<файл>` —
    плоский одобренный черновик `plans/<slug>.md` (конвенция: плоский `.md` в `plans/`, кроме

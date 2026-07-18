@@ -67,6 +67,11 @@ effort: low
 6. Синхронизируй `## Phase Status` (в `phases/Pn.md`) и `## 4. Phase Index & Status Board`
    (в `plan.md`); перезапиши `handoff.md`, если статус изменился (заголовок `after Pn.m`,
    форма `Next` — из enum выше).
+   **Журнал (D21, P1.1, хелпер `lib/task/journal.py`):** append ОДНУ запись —
+   `PYTHONPATH=packages/task/lib python3 -m task.journal append --plan-dir plans/<PLAN-ID>
+   --plan <PLAN-ID> --item <Pn.m> --command plan-close --actor sonnet/low --result
+   <closed-green|closed-deviations|blocked — по итоговому статусу шага 4> --note "<1 строка:
+   что сверено>"` (реконсиляция атомарна — старт-запись не нужна, один прогон = один факт).
 
 ## Режим `Pn` — закрытие фазы
 
@@ -85,7 +90,7 @@ effort: low
    схема, фича для понимания проекта, «трюк/подводный камень» работы с агентами,
    изменивший поведение флота)? Критерий не дублируем здесь — он один раз живёт в
    скилле `docs-maintenance`. Три исхода, ОДИН обязателен к записи в Phase Handoff (шаг 4):
-   (a) обновил `docs/` — закоммить вместе с закрытием фазы (шаг 8) или отдельным
+   (a) обновил `docs/` — закоммить вместе с закрытием фазы (шаг 9) или отдельным
    doc-коммитом раньше; строка в Phase Handoff «Docs: обновлено — <файл(ы)>»;
    (b) не требуется — строка «Docs: не требуется» (не молчание — явная отметка, что
    проверка прошла); (c) требуется, но крупнее этой фазы — follow-up-строка в Phase
@@ -121,7 +126,12 @@ effort: low
    АТРИБУЦИЕЙ: `N ERROR / M WARN — новых от закрытия: K` (`--baseline HEAD`). K > 0 —
    чинится ДО коммита; N − K > 0 (остаточные ошибки вне этой фазы) — строка в Open risks
    `handoff.md`. Любое число в отчёте — с якорем дерева `<число> (на <git-ref>)`.
-8. **Коммит закрытия фазы — ОДИН** (только плановые пути + docs/, если правился шагом 3;
+8. **Журнал (D21, P1.1):** append ОДНУ запись для закрываемой ФАЗЫ (item_id = `Pn`) —
+   `python3 -m task.journal append --plan-dir plans/<PLAN-ID> --plan <PLAN-ID> --item Pn
+   --command plan-close --actor sonnet/low --result <closed-green — все items 🟢 |
+   closed-deviations — хоть один 🟠> --note "фаза Pn закрыта"` — ДО коммита закрытия (шаг 9,
+   `journal.jsonl` входит в `git add plans/<PLAN-ID>` того же коммита).
+9. **Коммит закрытия фазы — ОДИН** (только плановые пути + docs/, если правился шагом 3;
    топология «двух коммитов» §8 — про ITEM, не про фазу — второй не выдумывай):
    `git add plans/<PLAN-ID>` (+ `docs/<файлы>`, если правились) — `git add -A` /
    `git commit -a` ЗАПРЕЩЕНЫ — чужой дифф уедет незамеченным) + Conventional Commits (рус.)

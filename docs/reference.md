@@ -168,6 +168,47 @@ falsification-signals в `idea-discovery`, external-signal-гейт в `startup-
 её не тащим — берём только паттерн. **Взято:** таксономия (с заменой DELETE→CONFLICT), retrieve-before-write,
 soft-invalidate вместо hard-delete, timestamp-ranking как альтернатива decay (у нас — обе: decay + ts).
 
+### garrytan/gstack — reference (watch, пока не используется)
+https://github.com/garrytan/gstack — сетап Claude Code Гарри Тана (YC): 23 «opinionated tools»
+в ролях CEO/Designer/Eng Manager, 50+ скиллов (`/ship`, `/spec`, `/qa`, `/retro`, `/pair-agent`,
+`/context-save`), `gbrain` — семантическая память на PGLite между сессиями. 122.5k★, MIT,
+активный (июль 2026, 2264+ PR). Проверено по GitHub API 2026-07-18 (Perplexity ложно счёл часть
+этой партии несуществующей — вердикты только по API/README). **Плюсы:** реальная операционная
+документация (ARCHITECTURE 32KB, CLAUDE.md 59KB), боевой соло-масштаб; роль-ориентированная
+модель близка нашим `roles/`. **Минусы:** свой самодостаточный мир — целиком тащить = дублировать
+skiller/harness/maind; часть ценности (память) у нас закрыта mAInd. **Потенциал:** идейный донор
+роль-структуры для супервизоров Foreman (мандаты/зоны), паттерны `/spec`, `/context-save`;
+внедрять по факту измеренной потребности, через вендоринг отдельных скиллов с провенансом.
+
+### mvanhorn/last30days-skill — reference (watch, пока не используется)
+https://github.com/mvanhorn/last30days-skill — агентный «поисковик по людям, не редакторам»:
+свежак за 30 дней из Reddit/X/YouTube/HN/Polymarket/TikTok/arXiv, скоринг апвоутами/лайками/
+живыми деньгами. 52.6k★, MIT, активный (июль 2026), ставится как CC-плагин или `npx skills add`.
+**Плюсы:** zero-config, дополняет наш RAG-стек (perplexity/context7) измерением «что сообщество
+реально обсуждает» — полезно founder-треку (competitive-analysis, idea-audit) и research-fanout.
+**Минусы:** внешние источники/ключи, к супервизорам отношения не имеет. **Потенциал:** research-
+инструмент экосистемы; кандидат на вендоринг в research-бакет по факту потребности.
+
+### aiwithremy/claude-skills-llm-council — reference (только идея; ⚠ НЕТ ЛИЦЕНЗИИ)
+https://github.com/aiwithremy/claude-skills-llm-council — скилл «LLM Council» по методологии
+Karpathy (karpathy/llm-council): 5 независимых советников → peer-review → синтез председателя.
+1.1k★, апрель 2026, **лицензия отсутствует** → код не вендорить, только идея. **Плюсы:** зрелая
+методология мульти-перспективной оценки решений. **Минусы:** у нас паттерн уже реализован
+своими Workflow-примитивами (judge panel, adversarial verify, perspective-diverse verify) —
+дублирование. **Потенциал:** сверка нашей judge-panel-механики с канонической методологией;
+возможное применение в прогресс-движке Foreman (совет по спорному вердикту continue/escalate).
+
+### openai/codex-plugin-cc — reference → roadmap (`roadmap/codex-subagent-offload.md`)
+https://github.com/openai/codex-plugin-cc — **официальный плагин OpenAI** для Claude Code:
+`/codex:review` и `/codex:adversarial-review` (второе мнение другой моделью), `/codex:rescue`/
+`transfer`/`status`/`result`/`cancel` — делегация задач и фоновые job'ы на Codex, субагент
+`codex:codex-rescue`. 29.2k★, Apache-2.0, активный (июль 2026). Требует подписку ChatGPT
+(вкл. Free) или OpenAI API key; расходует лимиты Codex, НЕ Claude. **Плюсы:** first-party
+качество; кросс-модельное adversarial-ревью; разгрузка квот Claude Max (наш болевой D18-кейс
+FOREMAN) делегацией review/фоновых задач на отдельную учётку OpenAI. **Минусы:** вторая
+подписка/биллинг; координация двух CLI; качество Codex на наших Laravel/Dart-стеках не замерено.
+**Взято:** пока ничего — детальная проработка в `roadmap/codex-subagent-offload.md`.
+
 ## Как это легло в архитектуру
 
 - Канон субагентов (спек, Volt, vijay) → **agent-packs** с каноническими `description`+`<example>`.

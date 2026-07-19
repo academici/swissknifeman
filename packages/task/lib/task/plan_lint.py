@@ -37,6 +37,11 @@ except ImportError:  # pragma: no cover - standalone-фолбэк, см. docstri
     def _core_warn(msg):
         print(f"WARN: {msg}", file=sys.stderr)
 
+# task.journal — SSOT схемы записи P1.1 (REQUIRED_FIELDS/enum'ы/validate_entry); лint
+# журнала реюзает её вместо дубля правил (Code Guidance P1.4 «анти-подгонка»), тот же
+# пакет `task`, тот же lib/ на sys.path (см. scripts/plan-lint.py лаунчер).
+from task import journal as _journal
+
 # --- канон схемы -------------------------------------------------------------
 
 # РОВНО 6 канонических статусов — никаких иных строк/синонимов не допускается.
@@ -243,6 +248,17 @@ PHASE_HANDOFF_NEGATION_RE = re.compile(
 # получает (H13: em dash есть в любом EN-тексте — контракта такая директива не даёт).
 LITERAL_PLAN_CLOSED = "план закрыт"  # форма `Next` целиком закрытого плана (SKILL §8)
 LITERAL_PHASE_HANDOFF_STALE = "> УСТАРЕЛ — фаза реопенена"  # маркер инвалидации (SKILL §3, D34)
+# --- scope-payload launch-block'а, несущего находки (SKILL §8, D-канон 2026-07-17) ---
+# Вердикт блока `## Audit Pn`: значения латиницей (RED/ATTENTION/GREEN) — переводу не
+# подлежат by nature, директив не требуют; кириллична только сама шапка поля.
+LITERAL_AUDIT_VERDICT = "Вердикт:"
+AUDIT_VERDICT_RE = re.compile(LITERAL_AUDIT_VERDICT + r"\s*\**\s*(RED|ATTENTION|GREEN)\b")
+# Вердикты, чей launch-block ПЕРЕДАЁТ находки следующей сессии ⇒ обязан нести scope-payload.
+# GREEN находок не несёт — с него payload не требуем (иначе маркеры выродятся в ритуал).
+AUDIT_FINDINGS_VERDICTS = ("RED", "ATTENTION")
+# Четыре обязательные строки payload'а. Порядок в каноне фиксирован, гейт проверяет
+# ПРИСУТСТВИЕ (содержательность `СКОУП:`/`НЕ ТРОГАТЬ:` машина не меряет — это report-quality).
+SCOPE_PAYLOAD_MARKERS = ("РЕЖИМ:", "ВХОД:", "СКОУП:", "НЕ ТРОГАТЬ:")
 CANON_LITERALS = (
     "Поле | Значение",                                        # шапка Meta (plan.md §0)
     "Items 🟢/всего",                                          # колонка Status Board (§4)
@@ -259,6 +275,8 @@ CANON_LITERALS = (
     LITERAL_PLAN_CLOSED,
     LITERAL_PHASE_HANDOFF_STALE,
     LITERAL_WAITING,                                          # форма `Next` «ОЖИДАНИЕ» (SKILL §8, D8)
+    LITERAL_AUDIT_VERDICT,                                    # шапка вердикта `## Audit Pn` (§8)
+    *SCOPE_PAYLOAD_MARKERS,                                   # scope-payload launch-block'а (§8)
 )
 # --- P2.1/D8: C2-детектор прозы-оговорки в объявлении `Next` (WARNING) ----------
 # Автор пишет runnable slash-форму «команда есть, но не сейчас» вместо структурной формы
@@ -409,6 +427,52 @@ def _lines_before_audit(lines):
         if AUDIT_BLOCK_HEADER_RE.match(ln):
             return lines[:i]
     return lines
+
+
+def _lint_audit_scope_payload(lines, path, plan_id, diag):
+    """Scope-payload launch-block'а в блоках `## Audit Pn` (SKILL §8, D-канон 2026-07-17).
+
+    Аудит с вердиктом RED/ATTENTION ПЕРЕДАЁТ находки следующей сессии, и голая команда их
+    теряет: принимающая сессия переоткрывает находки сама, а `handoff.md` в этот момент ещё
+    указывает на ПРЕДЫДУЩИЙ шаг и уводит мимо. Инцидент-основание — аудит P0 плана
+    2026.07.16-INS-EVO: launch-block `/task:plan-design <ID> P0` без payload'а владелец
+    прочитал как «фазу предлагают разрабатывать заново», а `plan-audit.md` ровно голую
+    команду и предписывал. Правило cold-start («пути входных доков») существовало и до
+    инцидента — не хватало формы и гейта.
+
+    Гейтится ПРИСУТСТВИЕ четырёх строк; содержательность `СКОУП:`/`НЕ ТРОГАТЬ:` машина не
+    меряет (report-quality — дело следующего аудита). Severity — как у brief/launch-block:
+    датовые планы от BRIEF_CANON_DATE — ERROR, старее/legacy — WARNING (back-compat §2:
+    живые планы флота писались до канона и красить их задним числом нельзя).
+    """
+    header_idxs = _section_header_indexes(lines)
+    for idx in header_idxs:
+        if not AUDIT_BLOCK_HEADER_RE.match(lines[idx]):
+            continue
+        body, _ = _section_body(lines, idx, header_idxs)
+        if not body:
+            continue
+        body_text = "\n".join(body)
+        verdict = AUDIT_VERDICT_RE.search(body_text)
+        # Блок без строки вердикта — не отчёт аудита по форме (свободная заметка): не гейтим,
+        # иначе линтер начнёт требовать payload от произвольного `## Audit …`-заголовка.
+        if not verdict or verdict.group(1) not in AUDIT_FINDINGS_VERDICTS:
+            continue
+        missing = []
+        if not any(LAUNCH_TABLE_ROW_RE.match(ln) for ln in body):
+            missing.append("таблицы `| Model | …`")
+        if not any(CODE_FENCE_RE.match(ln) for ln in body):
+            missing.append("code-block с командой")
+        missing.extend("строки `%s`" % m for m in SCOPE_PAYLOAD_MARKERS if m not in body_text)
+        if not missing:
+            continue
+        msg = (f"«{lines[idx].strip()}»: вердикт {verdict.group(1)} передаёт находки, но "
+               f"launch-block неполон — нет " + ", ".join(missing) +
+               " (scope-payload — SKILL §8, snippets/launch-block-template.md)")
+        if PLAN_ID_DATED_RE.match(plan_id) and plan_id[:10] >= BRIEF_CANON_DATE:
+            diag.error(path, idx + 1, msg)
+        else:
+            diag.warning(path, idx + 1, msg)
 
 
 def _parse_table(body_lines, body_start_lineno):
@@ -680,6 +744,65 @@ def _lint_plan_roadmap_20(plan_dir, plan_id, phase_files, diag):
         diag.error(plan_dir / "plan.md", None, msg)
     else:
         diag.warning(plan_dir / "plan.md", None, msg)
+
+
+# --- Слой журнала/индекса (P1.4/D22) — soft/hard-гейт по дате-cutoff ------------
+# Датовые планы ОТ этой даты обязаны нести валидный journal.jsonl (ERROR); старее/
+# legacy — WARNING (тот же паттерн, что у brief/roadmap-гейтов, back-compat — не ломаем
+# уже идущий флот). Cutoff = дата запечатывания этого канона (P1.4/D47): план
+# 2026.07.18-FOREMAN сам датовый от этой даты — обязан бэкфиллить свой journal.jsonl
+# ДО коммита этой правки, иначе первым же ловит собственный ERROR-гейт.
+JOURNAL_CANON_DATE = "2026.07.18"
+
+
+def _lint_plan_journal_20(plan_dir, plan_id, diag):
+    """journal.jsonl (P1.1, root/contracts/plan-journal-schema.md) — append-only NDJSON,
+    одна запись на исполнение item'а любым запуском `/task:plan-*`. Отсутствие/пустой/
+    невалидный файл — ERROR для датовых планов от JOURNAL_CANON_DATE, WARNING для
+    старее/legacy. Схема записи реюзается из `task.journal` (SSOT — не дублируем enum'ы)."""
+    plan_dir = Path(plan_dir)
+    jf = plan_dir / _journal.FILENAME
+    is_dated_new = bool(PLAN_ID_DATED_RE.match(plan_id)) and plan_id[:10] >= JOURNAL_CANON_DATE
+    report = diag.error if is_dated_new else diag.warning
+
+    if not jf.is_file() or jf.stat().st_size == 0:
+        report(plan_dir / "plan.md", None,
+               f"нет {plan_dir.name}/{_journal.FILENAME} (append-only история "
+               f"исполнения, P1.1) или файл пуст — пишется close-протоколом "
+               f"/task:plan-* (lib/task/journal.py)")
+        return
+
+    try:
+        lines = jf.read_text(encoding="utf-8").split("\n")
+    except (OSError, UnicodeDecodeError):
+        report(jf, None, "journal.jsonl не читается (кодировка/IO)")
+        return
+
+    for i, ln in enumerate(lines):
+        if not ln.strip():
+            continue
+        try:
+            entry = json.loads(ln)
+        except json.JSONDecodeError as e:
+            report(jf, i + 1, f"строка не валидный JSON (append-only NDJSON, §1): {e}")
+            continue
+        try:
+            _journal.validate_entry(entry)
+        except _journal.JournalValidationError as e:
+            report(jf, i + 1, f"запись не проходит схему P1.1: {e}")
+
+
+def _lint_plan_index_20(plan_dir, plan_id, diag):
+    """index.md (P1.2, root/contracts/plan-index-schema.md) — карта файлов+провенанс,
+    ОПЦИОНАЛЕН (не носитель факта, в отличие от журнала/брифа — P1.2 §1). Отсутствие —
+    ВСЕГДА WARNING, независимо от даты плана (нет ERROR-ветки в отличие от журнала)."""
+    plan_dir = Path(plan_dir)
+    idx = plan_dir / "index.md"
+    if not idx.is_file() or idx.stat().st_size == 0:
+        diag.warning(plan_dir / "plan.md", None,
+                     f"нет {plan_dir.name}/index.md (карта файлов + провенанс "
+                     f"findings/research→фаза, P1.2, опционален) — снипет "
+                     f"snippets/index-template.md")
 
 
 # --- P4.3 warning-проверки: ID / workflow-скрипты / supersedes (D24/D27/D28) ----
@@ -1014,6 +1137,10 @@ def lint_plan(plan_dir, diag):
     # Roadmap-гейт (SKILL §8): полностью детализированный план обязан нести roadmap.md.
     _lint_plan_roadmap_20(plan_dir, plan_id, phase_files, diag)
 
+    # Журнал/индекс (P1.4/D22): journal.jsonl soft/hard по дате-cutoff, index.md WARNING-only.
+    _lint_plan_journal_20(plan_dir, plan_id, diag)
+    _lint_plan_index_20(plan_dir, plan_id, diag)
+
     for pid in board_phase_ids - set(phase_files):
         diag.error(plan_md, None, f"фаза {pid} есть в Status Board, но нет phases/{pid}.md")
     for pid in set(phase_files) - board_phase_ids:
@@ -1026,6 +1153,10 @@ def lint_plan(plan_dir, diag):
         phases[pid] = {"path": str(path), **(parsed or {})}
         if not parsed:
             continue
+        # Блоки `## Audit Pn` исключены из грепов фазы (_lines_before_audit) — свой гейт.
+        phase_lines = _read_lines(path)
+        if phase_lines:
+            _lint_audit_scope_payload(phase_lines, path, plan_id, diag)
         # --- консистентность Phase Status(таблица) vs item.Status -----------
         table_by_id = {row.get("ID"): (row, lineno) for row, lineno in parsed["status_table"]}
         for item_id, occurrences in parsed["items"].items():

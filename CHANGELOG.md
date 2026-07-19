@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Added (2026.07.18-FOREMAN P1.4 — plan-protocol 2.9.0)
+
+- **skiller — `plan-protocol` 2.8.0 → 2.9.0.** Scope-payload launch-block'а для `RED`/`ATTENTION`
+  аудитов (`РЕЖИМ:`/`ВХОД:`/`СКОУП:`/`НЕ ТРОГАТЬ:`), литерал `Вердикт:`; журнал
+  `journal.jsonl` и опциональный `index.md` в раскладке плана; snippets
+  `journal-template.md`, `index-template.md`.
+- **skiller — `check-translations.sh`.** Двусторонний гейт `i18n-keep`: литерал обязан быть
+  употреблён в теле `SKILL.ru.md`, не только в директиве.
+- **task — `plan_lint.py` + `plan-audit.md`.** Гейты scope-payload в блоках `## Audit Pn`,
+  валидация `journal.jsonl` (ERROR от 2026.07.18) и `index.md` (WARNING); unittest'ы.
+- **docs — `reference.md`.** Карточки gstack, last30days-skill, llm-council, codex-plugin-cc;
+  roadmap `codex-subagent-offload.md`, `plan-design-vs-exec-status-check.md`.
+
 ### Added (2026.07.13-PLAN-PROTOCOL-GAP — кластер protocol-gap plan-протокола)
 
 - **task — скилл `plan-protocol` 2.4.0 → 2.7.0.** Итог кластера (F7/m7/m8/A5/B1, эскалация REGHUB):

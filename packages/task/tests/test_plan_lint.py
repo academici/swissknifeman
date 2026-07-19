@@ -11,7 +11,8 @@ import unittest
 from pathlib import Path
 
 from fixtures import (  # noqa: E402
-    active_md, contracts_section, handoff_md, phase_md, plan_md, write_valid_plan,
+    active_md, contracts_section, handoff_md, index_md, journal_jsonl, phase_md,
+    plan_md, write_valid_plan,
 )
 from task.plan_lint import (  # noqa: E402
     Diagnostics, discover_plan_dirs, lint_plan, lint_plans_root, main,
@@ -94,6 +95,142 @@ class TestBriefLayer(TmpPlanTestCase):
                 f.unlink()
         _, diag = _lint(plan_dir)
         self.assertTrue(_errors_containing(diag, "нет слоя 0"), diag.errors)
+
+
+class TestJournalIndexLayer(TmpPlanTestCase):
+    """journal.jsonl/index.md (P1.4/D22): датовый план от 2026.07.18 без валидного
+    journal.jsonl — ERROR, старее/legacy — WARNING; index.md отсутствует — ВСЕГДА
+    WARNING (не носитель факта, в отличие от журнала)."""
+
+    def test_dated_plan_without_journal_is_error(self):
+        plan_dir = write_valid_plan(self.root, plan_id="2026.07.18-DEMO")
+        (plan_dir / "journal.jsonl").unlink()
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "journal.jsonl"), diag.errors)
+
+    def test_legacy_plan_without_journal_is_warning(self):
+        plan_dir = write_valid_plan(self.root)
+        (plan_dir / "journal.jsonl").unlink()
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "journal.jsonl"), [])
+        self.assertTrue([w for w in diag.warnings if "journal.jsonl" in w], diag.warnings)
+
+    def test_dated_plan_with_empty_journal_is_error(self):
+        plan_dir = write_valid_plan(self.root, plan_id="2026.07.18-DEMO")
+        (plan_dir / "journal.jsonl").write_text("", encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "journal.jsonl"), diag.errors)
+
+    def test_dated_plan_with_malformed_json_line_is_error(self):
+        plan_dir = write_valid_plan(self.root, plan_id="2026.07.18-DEMO")
+        (plan_dir / "journal.jsonl").write_text("{not valid json\n", encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "не валидный JSON"), diag.errors)
+
+    def test_dated_plan_with_schema_violation_is_error(self):
+        plan_dir = write_valid_plan(self.root, plan_id="2026.07.18-DEMO")
+        (plan_dir / "journal.jsonl").write_text('{"plan_id":"x"}\n', encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "не проходит схему"), diag.errors)
+
+    def test_dated_plan_before_cutoff_journal_gate_is_warning(self):
+        plan_dir = write_valid_plan(self.root, plan_id="2026.07.16-DEMO")
+        (plan_dir / "journal.jsonl").unlink()
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "journal.jsonl"), [])
+        self.assertTrue([w for w in diag.warnings if "journal.jsonl" in w], diag.warnings)
+
+    def test_missing_index_is_always_warning_not_error(self):
+        plan_dir = write_valid_plan(self.root, plan_id="2026.07.18-DEMO")
+        (plan_dir / "index.md").unlink()
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "index.md"), [])
+        self.assertTrue([w for w in diag.warnings if "index.md" in w], diag.warnings)
+
+    def test_valid_plan_with_journal_and_index_is_clean(self):
+        plan_dir = write_valid_plan(self.root, plan_id="2026.07.18-DEMO")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "journal.jsonl"), [])
+        self.assertEqual(_errors_containing(diag, "index.md"), [])
+        self.assertEqual([w for w in diag.warnings if "journal.jsonl" in w], [])
+        self.assertEqual([w for w in diag.warnings if "index.md" in w], [])
+
+
+class TestAuditScopePayload(TmpPlanTestCase):
+    """Scope-payload launch-block'а в блоке `## Audit Pn` (SKILL §8, D-канон 2026-07-17).
+
+    Инцидент-основание: аудит P0 плана 2026.07.16-INS-EVO выдал `/task:plan-design <ID> P0`
+    голым — владелец прочитал это как «фазу разрабатывают заново». Вердикт RED/ATTENTION
+    передаёт находки ⇒ launch-block обязан нести РЕЖИМ:/ВХОД:/СКОУП:/НЕ ТРОГАТЬ:.
+    """
+
+    PAYLOAD = (
+        "\n## Audit P1 — 2026-07-17\n\n"
+        "**Вердикт: {verdict}** · заход 1\n\n"
+        "### Findings\n\nB1 · issue · P1.1 · `a.py:1` — сломано.\n\n"
+        "### Что запускать\n\n"
+        "| Параметр | Значение |\n|:--|:--|\n| Model | Opus |\n| Thinking | high |\n"
+        "| Context | NEW SESSION — шаг-не-item |\n| Суть | Реопен |\n\n"
+        "```\n/task:plan-design 2026.07.16-DEMO P1\n\n{payload}```\n"
+    )
+    FULL_PAYLOAD = ("РЕЖИМ: реопен по §3\n"
+                    "ВХОД: phases/P1.md → блок `## Audit P1 — 2026-07-17`\n"
+                    "СКОУП: 1) завести item под B1\n"
+                    "НЕ ТРОГАТЬ: ТЗ закрытых items\n")
+
+    def _write_audit(self, plan_id, verdict, payload):
+        plan_dir = write_valid_plan(self.root, plan_id=plan_id)
+        phase = plan_dir / "phases" / "P1.md"
+        phase.write_text(phase.read_text(encoding="utf-8")
+                         + self.PAYLOAD.format(verdict=verdict, payload=payload),
+                         encoding="utf-8")
+        return plan_dir
+
+    def test_red_without_payload_is_error(self):
+        plan_dir = self._write_audit("2026.07.16-DEMO", "RED", "")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "launch-block неполон"), diag.errors)
+
+    def test_attention_without_payload_is_error(self):
+        plan_dir = self._write_audit("2026.07.16-DEMO", "ATTENTION", "")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "launch-block неполон"), diag.errors)
+
+    def test_partial_payload_names_the_missing_line(self):
+        """Гейт называет ИМЕННО недостающую строку — иначе автор чинит наугад."""
+        partial = "РЕЖИМ: реопен по §3\nВХОД: phases/P1.md → блок аудита\nСКОУП: 1) item\n"
+        plan_dir = self._write_audit("2026.07.16-DEMO", "RED", partial)
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "НЕ ТРОГАТЬ"), diag.errors)
+
+    def test_red_with_full_payload_is_clean(self):
+        plan_dir = self._write_audit("2026.07.16-DEMO", "RED", self.FULL_PAYLOAD)
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "launch-block неполон"), [], diag.errors)
+
+    def test_green_does_not_require_payload(self):
+        """GREEN находок не несёт — payload'а не требуем (иначе маркеры = ритуал)."""
+        plan_dir = self._write_audit("2026.07.16-DEMO", "GREEN", "")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "launch-block неполон"), [], diag.errors)
+
+    def test_legacy_plan_is_warning_not_error(self):
+        """Back-compat §2: планы старее канона красить задним числом нельзя."""
+        plan_dir = self._write_audit("DEMO-LEGACY", "RED", "")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "launch-block неполон"), [], diag.errors)
+        self.assertTrue([w for w in diag.warnings if "launch-block неполон" in w],
+                        diag.warnings)
+
+    def test_block_without_verdict_line_is_not_gated(self):
+        """Граница: `## Audit …` без строки вердикта — свободная заметка, не отчёт."""
+        plan_dir = write_valid_plan(self.root, plan_id="2026.07.16-DEMO")
+        phase = plan_dir / "phases" / "P1.md"
+        phase.write_text(phase.read_text(encoding="utf-8")
+                         + "\n## Audit P1 — 2026-07-17\n\nСвободная заметка без вердикта.\n",
+                         encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "launch-block неполон"), [], diag.errors)
 
 
 class TestValidPlan(TmpPlanTestCase):

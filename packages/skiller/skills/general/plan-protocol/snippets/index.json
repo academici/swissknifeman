@@ -64,6 +64,25 @@
         "execution",
         "template"
       ]
+    },
+    {
+      "file": "journal-template.md",
+      "description": "Справочник plans/<ID>/journal.jsonl (append-only NDJSON, P1.1): канонический CLI-способ дописи через lib/task/journal.py, схема одной записи для ручного бэкфилла/backstop",
+      "tags": [
+        "workflow",
+        "planning",
+        "journal",
+        "template"
+      ]
+    },
+    {
+      "file": "index-template.md",
+      "description": "Скелет plans/<ID>/index.md (P1.2, опционален): карта директорий + провенанс findings/research→фаза + ключевые артефакты root/ — НЕ носитель статуса/next",
+      "tags": [
+        "workflow",
+        "planning",
+        "template"
+      ]
     }
   ]
 }

@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.8.0
+version: 2.9.0
 description: "Executable master plans in plans/<ID>: plan/phase/task schemas, 6 statuses, refine loop and DoR gate, canonical plan root, repo home by default + visibility/supersedes fields, two homes and archive, handoff with launch-block, model routing, /task:plan-* commands."
 risk: write
 persona: oss-dev
@@ -9,7 +9,7 @@ tags: [workflow, planning, handoff, routing, multi-model]
 requires: []
 produces_for: [session-handoff, complex-task-orchestrator]
 outputs: ["plans/<PLAN-ID>/plan.md", "plans/<PLAN-ID>/phases/*.md", "plans/<PLAN-ID>/handoff.md"]
-snippets: ["plan-template.md", "phase-template.md", "handoff-template.md", "active-template.md", "launch-block-template.md", "roadmap-template.md", "code-guidance-patterns.md"]
+snippets: ["plan-template.md", "phase-template.md", "handoff-template.md", "active-template.md", "launch-block-template.md", "roadmap-template.md", "code-guidance-patterns.md", "journal-template.md", "index-template.md"]
 adapters: [claude, cursor, fable]
 sha256: ""
 ---
@@ -42,7 +42,9 @@ plans/<PLAN-ID>/
 ├── plan.md            # master plan (Meta, Context, Rules, Routing, Status Board, logs)
 ├── phases/Pn.md       # one file per phase: phase context, items, phase handoff
 ├── handoff.md         # rolling "where we are" pointer (overwritten)
+├── index.md           # file map + findings/research→phase provenance (section 2, optional)
 ├── roadmap.md         # execution map: batches/workflows/owner gates (section 8; mandatory once fully detailed)
+├── journal.jsonl      # append-only execution history, one entry per /task:plan-* run (section 2)
 ├── brief/             # layer 0 "input": the owner's brief + appended refinements (section 16, MANDATORY)
 ├── findings/          # layer 1 "raw": RAG extracts, recon, source documents (section 16)
 ├── research/          # layer 2 "synthesis": the model's authored design docs (section 16)
@@ -56,6 +58,21 @@ Mandatory: `plan.md`/`phases/`/`handoff.md` AND `brief/` (layer 0 — a `plan-li
 for date-based plans from 2026.07.16 a missing non-empty `brief/*.md` is an ERROR, the
 plan does not pass approval; older/legacy — WARNING). Everything else is optional, per the
 plan's needs. `PLAN-ID` — one of two canonical patterns:
+
+**Execution journal `journal.jsonl`** (append-only NDJSON, schema — contract
+`plan-journal-schema.md`): one entry per item execution by any `/task:plan-*` run (a start
+entry `result:"in-progress"` + a terminal-`result` final entry), written by the command's
+close protocol (`lib/task/journal.py`). Existing lines are NEVER rewritten/deleted — history,
+not current state (does not duplicate the Status Board/handoff). `plan-lint` gate: for
+date-based plans from 2026.07.18 a missing/invalid `journal.jsonl` is an ERROR; older/legacy
+— WARNING (a soft gate against breaking the already-running fleet — the same pattern as
+brief/roadmap).
+
+**Plan index `index.md`** (optional) — a map of the plan's FILES + provenance links
+(`findings`/`research` → consuming phase); NOT a carrier of status/next (that's the Status
+Board/`handoff.md`). Recommended auto-generated from the file tree + frontmatter; MVP —
+manual, from `snippets/index-template.md`. `plan-lint` gate — WARNING only (navigational
+convenience, not a mandatory fact carrier, unlike the journal/brief).
 
 - **date-based** (preferred, D16) — `<YYYY>.<MM>.<DD>-<CODENAME>`, e.g.
   `2026.07.10-SETTINGS-DOCTOR`: chronological sorting of `plans/` + a "when" cue without
@@ -548,6 +565,54 @@ gated. References like "this session" — only as a supplement. `plan-lint` chec
 contains the launch-block table and a code block (greppable; for date-based plans from
 2026.07.16 a missing launch-block is an ERROR, older/legacy — WARNING).
 
+**Scope-payload: a launch-block CARRYING FINDINGS (D-canon 2026-07-17).** A command that hands
+findings to the next session — a `plan-audit` verdict `RED`/`ATTENTION` (§3) and a C3/D6 fix
+proposal — MUST NOT be bare. Four lines follow it inside the same code block (order fixed):
+
+````
+<slash command>
+
+РЕЖИМ: <reopen per §3 (4 steps) | detailing | remediation — what the session actually does>
+ВХОД: <file → block with the findings; cold-start read>
+СКОУП: <numbered list: what to do>
+НЕ ТРОГАТЬ: <anti-scope: what to leave as is>
+````
+
+Why each line:
+
+- `РЕЖИМ:` — `/task:plan-design <ID> Pn` is AMBIGUOUS: a fresh session seeing a phase with
+  terminal items decides "reopen or detailing" by itself, and errs toward the expensive one.
+- `ВХОД:` — enforces the cold-start rule above ("input-doc paths"): without it the payload
+  lives only in chat and dies with the session. Same class as "debt lives only in handoff":
+  handoff is a rolling pointer, and at hand-off time it still points at the PREVIOUS step,
+  i.e. actively misdirects the receiving session away from the findings.
+- `СКОУП:` / `НЕ ТРОГАТЬ:` — the only thing holding the session back from re-developing what
+  is already closed. The anti-scope is mandatory precisely because the expensive mistake here
+  is not "does too little" but "redoes everything".
+
+Grounding incident: the P0 audit of plan `2026.07.16-INS-EVO` (2026-07-17) emitted the
+launch-block `/task:plan-design <ID> P0` with no payload — the owner read it as "they propose
+re-developing the phase"; `plan-audit.md` itself prescribed exactly the bare command, even
+though the cold-start rule already existed. What was missing was the FORM and the GATE, not
+the doctrine.
+
+**The payload's carrier is the on-disk report.** `plan-audit` puts the launch-block as a
+`### Что запускать` subsection at the END of its `## Audit Pn` block (§3) — same single
+permitted write, same file. A chat-only launch-block is machine-uncheckable by design; on disk
+`plan-lint` gates the presence of the table, the code block and all four lines (date-based
+plans from 2026.07.16 — ERROR, older/legacy — WARNING). Presence ≠ quality: the substance of
+`СКОУП:`/`НЕ ТРОГАТЬ:` is not machine-measured — that is the next audit's report-quality call.
+
+**The verdict line is a literal.** An audit declares its verdict with the line
+`**Вердикт: <GREEN|ATTENTION|RED>**` in its `## Audit Pn` block and writes it VERBATIM: the values
+are latin, the header `Вердикт:` is not. That is the line the gate finds the verdict by. A free-form
+variant («Verdict: RED», «Итог: RED») does not fire the gate — silently — and the scope-payload
+stops being required at all: this is the "gate greens on a blank" class the literal was canonized
+for (registry `CANON_LITERALS`, directive `i18n-keep`). An `## Audit …` block WITHOUT a `Вердикт:`
+line is a free-form note, not an audit report: it is not gated (otherwise the linter would demand a
+payload from an arbitrary `## Audit` heading). A `GREEN` verdict carries no findings and requires no
+payload.
+
 **The session's final message = a launch-block.** Any `/task:plan-*` session (design / exec /
 run / close / audit) that has a next step ENDS its last message to the owner with a full
 launch-block (the Model/Thinking/Context/Essence table + the bare command as a separate code
@@ -740,7 +805,9 @@ carry a concrete remediation proposal right away (what + a launch-block for the 
 "why"), not a passive "ready for next, there were errors" note; it ADDS to the Known
 Deviations/Pending Work entry, not replaces it. When the fix is the most valuable next action,
 `Next` points to it (`/task:plan-design <ID> Pn.m` or a follow-up fix item), not silently to the
-next item. Do not confuse with §10 escalation (🔴 = plan↔code defect, needs re-design): here the
+next item. The launch-block of such a `Next` carries the **scope-payload** (§8: `РЕЖИМ:`/`ВХОД:`/
+`СКОУП:`/`НЕ ТРОГАТЬ:`) — a proposal without it hands the next session the problem but not its
+boundaries. Do not confuse with §10 escalation (🔴 = plan↔code defect, needs re-design): here the
 item still closes (🟢/🟠) with an explicit proposal, not a block. Report-quality — checked by
 `plan-audit`, no machine gate.
 
@@ -1089,4 +1156,4 @@ thinking gets lost.
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of editing
   vendor copies (section 12).
 
-<!-- ru-source-sha256: e7b12bcaa3dbbf17906a3f9a08847ffa393ded4bd68e06b222d456473c405b9c -->
+<!-- ru-source-sha256: 29f9c583cd6fc7bdc81dd1443e6fcaca548711757bd5af1d94f17d89e1837e92 -->

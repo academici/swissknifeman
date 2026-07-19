@@ -177,6 +177,34 @@ def roadmap_md(plan_id):
 """
 
 
+def journal_jsonl(plan_id, *, item_id="P1.1"):
+    """journal.jsonl (P1.1) — одна валидная финальная запись (схема §2 контракта)."""
+    import json as _json
+    entry = {
+        "ts": "2026-07-02T00:00:00Z", "plan_id": plan_id, "item_id": item_id,
+        "command": "plan-exec", "session_id": None, "run_id": None, "attempt": 1,
+        "actor": "sonnet/medium", "friction": [], "result": "closed-green",
+        "cost_usd": None, "num_turns": None, "duration_ms": None, "note": "тест",
+    }
+    return _json.dumps(entry, ensure_ascii=False, sort_keys=True) + "\n"
+
+
+def index_md(plan_id):
+    return f"""# Индекс — {plan_id}
+
+## Карта директорий
+
+| Путь | Назначение |
+|:--|:--|
+| `plan.md` | мастер-план |
+
+## Провенанс
+
+| Источник | Слой | Питает | Суть |
+|:--|:--|:--|:--|
+"""
+
+
 def write_valid_plan(root, plan_id="DEMO-1"):
     """Пишет полностью валидный план (plan-lint должен вернуть 0 ошибок/предупреждений).
     Возвращает Path на plans/<plan_id>."""
@@ -188,4 +216,6 @@ def write_valid_plan(root, plan_id="DEMO-1"):
     (plan_dir / "handoff.md").write_text(handoff_md(plan_id), encoding="utf-8")
     (plan_dir / "brief" / "00-brief.md").write_text(brief_md(plan_id), encoding="utf-8")
     (plan_dir / "roadmap.md").write_text(roadmap_md(plan_id), encoding="utf-8")
+    (plan_dir / "journal.jsonl").write_text(journal_jsonl(plan_id), encoding="utf-8")
+    (plan_dir / "index.md").write_text(index_md(plan_id), encoding="utf-8")
     return plan_dir

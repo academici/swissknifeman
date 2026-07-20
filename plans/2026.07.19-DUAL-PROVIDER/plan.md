@@ -105,7 +105,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P0 | Evidence, vocabulary и запечатанные provider contracts | 3/5 | 🟡 In progress |
+| P0 | Evidence, vocabulary и запечатанные provider contracts | 4/5 | 🟡 In progress |
 | P1 | Provider config/domain и backward-compatible resolution | 0/4 | ⬜ Not started |
 | P2 | Deterministic adapters, provenance, lock и drift engine | 0/4 | ⬜ Not started |
 | P3 | Dual skills publication и marketplaces | 0/5 | ⬜ Not started |
@@ -198,6 +198,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | 2026-07-20 | plan-exec/Codex gpt-5.6-terra medium | P0.5 закрыт: отдельный scanner и anchored umbrella correction фиксируют пять explicit roots без переписывания P0.1 — детали см. phases/P0.md P0.5 Completion Notes. |
 | 2026-07-20 | plan-run/Codex gpt-5.6-sol high | P0.2 закрыт: D53 утвердил единый glossary/scenario set и distinction Command Surface / Task Command — детали см. phases/P0.md P0.2 Completion Notes. |
 | 2026-07-20 | Approval Owner + plan-run/Codex gpt-5.6-sol xhigh | D54: исправлены Codex launch/hook registrations и P0.3 Validation scope; contract candidates остаются незамороженными до отдельного D55. |
+| 2026-07-20 | plan-run/Codex gpt-5.6-sol xhigh | P0.3 закрыт: D55 заморозил capability/artifact v1.0.0 и принял ADR-0001 — детали см. phases/P0.md P0.3 Completion Notes. |
 
 ## 7. Contracts
 

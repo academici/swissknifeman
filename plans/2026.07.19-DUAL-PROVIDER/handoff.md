@@ -1,36 +1,38 @@
-# HANDOFF — 2026-07-20 — after P0.2
+# HANDOFF — 2026-07-20 — after P0.3
 
-**Next:** ЗАПУСК ВРУЧНУЮ: gpt-5.6-sol/xhigh
+**Next:** ЗАПУСК ВРУЧНУЮ: gpt-5.6-sol/high
 
 | Параметр | Значение |
 |:--|:--|
 | Model | gpt-5.6-sol |
-| Thinking | xhigh — frozen public contracts + ADR |
+| Thinking | high — migration/FOREMAN/fleet safety contract |
 | Context | continue (/clear) — ручной item |
-| Суть | Запечатать capability/artifact contracts и ADR по D53 vocabulary. |
+| Суть | Выполнить P0.4 и остановиться на его обязательном Owner Approval gate. |
 
 ```text
-Выполнить P0.3 вручную в 2026.07.19-DUAL-PROVIDER на gpt-5.6-sol/xhigh. Сначала прочитать plan.md, handoff.md, phases/P0.md и Required Reads P0.3 строго в указанном порядке. Использовать owner-approved D53 glossary/scenarios как единый vocabulary input; Command Surface и Task Command остаются разными entries, а terminal P0.5 counts не являются frozen constants. Выполнить только scope P0.3: два frozen contracts, ADR, owner Approval D# и штатное plan bookkeeping. Не менять package code, P0.1/P0.5 evidence, FOREMAN, fleet и unrelated user changes.
+Выполнить P0.4 плана 2026.07.19-DUAL-PROVIDER вручную на gpt-5.6-sol/high. Начать с cold preflight из root AGENTS.md, затем прочитать plan.md, handoff.md, phases/P0.md и Required Reads P0.4 строго в указанном порядке. Использовать frozen D55 capability/artifact contracts и accepted ADR-0001 как неизменяемый input. Подготовить migration/FOREMAN/fleet gate contract и pre-mortem traceability, выполнить validation и остановиться на обязательном Owner Approval D# до frozen status/commits. Не исполнять и не редактировать FOREMAN, не менять fleet/package code и unrelated user changes; environment defect обрабатывать по D56.
 ```
 
-**Done:** P0.2 закрыт item-коммитом `6603647`: `root/CONTEXT.md` и
-`research/04-provider-domain-scenarios.md` утверждены единым owner decision D53;
-Command Surface / Task Command разделены, terminal P0.5 counts сохранены
-как anchored observations.
+**Done:** P0.3 закрыт item-коммитом `67b0edb`: D55 заморозил capability/artifact
+contracts v1.0.0, принял ADR-0001 и exact `docs/reference.md` diff. D54 hook/command
+ремедиация и D56 environment disclosure rule сохранены отдельными commits/evidence.
 
-**Remaining:** P0.3 запечатывает capability/artifact contracts и ADR; P0.4 затем
-утверждает migration/FOREMAN/fleet gates. FOREMAN остаётся paused, fleet — no-write.
+**Remaining:** P0.4 создаёт и owner-freezes migration/FOREMAN/fleet gates. Затем P0
+становится терминальной и проходит отдельные `plan-close` и independent phase audit;
+P1 стартует только после их green gates.
 
-**Sources of truth:** `plan.md` D52/D53 · `phases/P0.md` P0.2/P0.3 ·
-`root/CONTEXT.md` · `research/04-provider-domain-scenarios.md` ·
-`findings/P0-command-surface-correction.md` · historical
-`findings/P0-provider-coupling-baseline.md`.
+**Sources of truth:** `plan.md` D53–D56 и Contracts · `phases/P0.md` P0.3/P0.4 ·
+`root/contracts/provider-capability-contract.md` ·
+`root/contracts/provider-artifact-contract.md` ·
+`root/adr/0001-provider-adapter-architecture.md` ·
+`brief/03-environment-defect-handling.md`.
 
-**Open risks:** P0.3 не должен превратить inventory observations в contract constants,
-смешать trust/approval/sandbox или запечатать contracts без отдельного owner D#.
+**Open risks:** P0.4 не вправе снять FOREMAN pause, разрешить fleet writes или принять
+текущую bootstrap-сессию как release evidence. Любая environment проблема с влиянием на
+качество немедленно раскрывается и блокирует зависимую работу по D56.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: —
-- deferred: provider schemas, renderers и package implementation — P1–P6 после contract gates.
+- workarounds: executable no-op shim по прежнему project hook path остаётся только для кеша текущего процесса; cold-start project `PreToolUse` пуст.
+- deferred: provider schemas/renderers/package implementation — P1–P6; managed hook projection — P5/P6; release/self-host proof — P7.
 - open_questions: —

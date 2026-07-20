@@ -1,34 +1,36 @@
-# HANDOFF — 2026-07-20 — after P0.5
+# HANDOFF — 2026-07-20 — after P0.2
 
-**Next:** ЗАПУСК ВРУЧНУЮ: gpt-5.6-sol/high
+**Next:** ЗАПУСК ВРУЧНУЮ: gpt-5.6-sol/xhigh
 
 | Параметр | Значение |
 |:--|:--|
 | Model | gpt-5.6-sol |
-| Thinking | high — owner-approved vocabulary freeze |
+| Thinking | xhigh — frozen public contracts + ADR |
 | Context | continue (/clear) — ручной item |
-| Суть | Выполнить P0.2 glossary/scenario freeze на terminal P0.5 evidence. |
+| Суть | Запечатать capability/artifact contracts и ADR по D53 vocabulary. |
 
 ```text
-Выполнить P0.2 вручную в 2026.07.19-DUAL-PROVIDER на gpt-5.6-sol/high. Сначала прочитать plan.md, handoff.md, phases/P0.md и Required Reads P0.2 в указанном порядке. Использовать terminal findings/P0-command-surface-correction.md как evidence: Command Surface и Task Command — разные glossary entries, anchored counts не становятся frozen constants. Подготовить только P0.2 glossary/scenario scope и получить новый Approval Owner D# на весь набор. Не менять P0.1/P0.5 evidence, package code, FOREMAN, ACTIVE или fleet.
+Выполнить P0.3 вручную в 2026.07.19-DUAL-PROVIDER на gpt-5.6-sol/xhigh. Сначала прочитать plan.md, handoff.md, phases/P0.md и Required Reads P0.3 строго в указанном порядке. Использовать owner-approved D53 glossary/scenarios как единый vocabulary input; Command Surface и Task Command остаются разными entries, а terminal P0.5 counts не являются frozen constants. Выполнить только scope P0.3: два frozen contracts, ADR, owner Approval D# и штатное plan bookkeeping. Не менять package code, P0.1/P0.5 evidence, FOREMAN, fleet и unrelated user changes.
 ```
 
-**Done:** P0.5 закрыт item-коммитом `56239e9`: отдельные scanner и anchored correction
-finding зафиксировали umbrella Command Surface и historical Task Command subset без
-переписывания P0.1.
+**Done:** P0.2 закрыт item-коммитом `6603647`: `root/CONTEXT.md` и
+`research/04-provider-domain-scenarios.md` утверждены единым owner decision D53;
+Command Surface / Task Command разделены, terminal P0.5 counts сохранены
+как anchored observations.
 
-**Remaining:** P0.2 проходит manual owner review и записывает новый approval D# на весь
-vocabulary/scenario set. Затем остаются P0.3/P0.4. FOREMAN остаётся paused, fleet — no-write.
+**Remaining:** P0.3 запечатывает capability/artifact contracts и ADR; P0.4 затем
+утверждает migration/FOREMAN/fleet gates. FOREMAN остаётся paused, fleet — no-write.
 
-**Sources of truth:** `plan.md` D52 · `phases/P0.md` P0.5/P0.2 ·
-`findings/P0-command-surface-correction.md` · `research/15-command-surface-prerequisite-remediation.md` ·
-`brief/01-refinements.md` · historical `findings/P0-provider-coupling-baseline.md`.
+**Sources of truth:** `plan.md` D52/D53 · `phases/P0.md` P0.2/P0.3 ·
+`root/CONTEXT.md` · `research/04-provider-domain-scenarios.md` ·
+`findings/P0-command-surface-correction.md` · historical
+`findings/P0-provider-coupling-baseline.md`.
 
-**Open risks:** P0.2 owner approval обязан принять весь glossary/scenario set, включая
-Command Surface / Task Command distinction и terminal P0.5 anchor; P0.5 сам этого не утверждает.
+**Open risks:** P0.3 не должен превратить inventory observations в contract constants,
+смешать trust/approval/sandbox или запечатать contracts без отдельного owner D#.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: numbering P0.5 сохраняет существующие P0.1/P0.2 IDs; фактический порядок задаёт D52.
-- deferred: весь P0.2 owner approval до manual run.
+- workarounds: —
+- deferred: provider schemas, renderers и package implementation — P1–P6 после contract gates.
 - open_questions: —

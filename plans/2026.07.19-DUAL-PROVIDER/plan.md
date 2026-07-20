@@ -105,7 +105,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P0 | Evidence, vocabulary и запечатанные provider contracts | 2/5 | 🟡 In progress |
+| P0 | Evidence, vocabulary и запечатанные provider contracts | 3/5 | 🟡 In progress |
 | P1 | Provider config/domain и backward-compatible resolution | 0/4 | ⬜ Not started |
 | P2 | Deterministic adapters, provenance, lock и drift engine | 0/4 | ⬜ Not started |
 | P3 | Dual skills publication и marketplaces | 0/5 | ⬜ Not started |
@@ -170,6 +170,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | D50 | 2026-07-19 | Current Routing после remediation покрывает 39/39 items: 11 `plan-exec`, 28 `manual`; P5.6/P5.7 идут solo/full и не меняют provider model family D38/D44. | RAG:— (repo-grounded: `plan.md` §3, `roadmap.md`) — новые contract/implementation risks неоднородны с P5.5 и не батчатся. |
 | D51 | 2026-07-19 | Owner-approved historical schema exception (supersedes D49 в части invalid row 11): sealed event `journal.jsonl` не переписывается и не расширяется; optional append-only `journal-exceptions.jsonl` фиксирует physical line 11 + SHA-256 exact raw bytes, exact `invalid_fields:["friction"]`, owner D51, actor/reason. Writer и linter fail closed на duplicate/hash mismatch/missing D#/valid или malformed target; sidecar не несёт event/status/next и не может таргетить sidecar. | RAG:— (owner-grounded: remediation invocation; repo-grounded synthesis: `research/14-journal-schema-exception-remediation.md`; F1: `findings/design-audit-2026-07-19-r2.md`) — устраняет append-only↔strict-per-line противоречие без correction-цикла и без изменения P0.1–P7.4. |
 | D52 | 2026-07-20 | Supersedes D10 для остатка P0: после terminal P0.1 порядок становится P0.5→P0.2→P0.3→P0.4. P0.5 отдельно корректирует umbrella Command Surface (`32 = task 11 + skiller 5 + harness 6 + maind 8 + analyst 2`), не переписывая P0.1; P0.2 owner gate обязан принять различие Command Surface/Task Command и terminal P0.5 anchor до freeze. | RAG:— (owner-grounded: `brief/01-refinements.md`; repo-grounded synthesis: `research/15-command-surface-prerequisite-remediation.md`) — сохраняет item/journal provenance и устраняет prerequisite defect отдельным executable carrier. |
+| D53 | 2026-07-20 | Approval Owner утверждает как единый набор весь P0.2 glossary и scenarios S1–S10/W1–W3: stable Provider IDs `claude-code`/`codex`; Support Level `native`/`adapted`/`unsupported`; раздельные Project Trust/Approval Policy/Sandbox Boundary; Canonical/Rendered/Managed Artifact lifecycle; Override/Drift/Repair; отдельные glossary entries Command Surface и Task Command. Terminal P0.5 anchor `d8ac22c04fc4d4219dc95244ee9d181e92553a74` принят: `32 = 11 + 5 + 6 + 8 + 2` — current umbrella observation, `11` — current task subset observation; counts не являются frozen constants. | RAG:— (owner-grounded: manual owner-gated P0.2 invocation 2026-07-20; repo-grounded: terminal `findings/P0-command-surface-correction.md`, `root/CONTEXT.md`, `research/04-provider-domain-scenarios.md`) — один approval покрывает весь vocabulary/scenario set и открывает P0.3 без freeze текущих inventory counts. |
 
 ## 6. Update Log
 
@@ -192,6 +193,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | 2026-07-20 | plan-exec/Codex gpt-5.6-terra medium | P0.1 закрыт: reproducible provider inventory зафиксировал current path sets и task-command delta — детали см. phases/P0.md P0.1 Completion Notes. |
 | 2026-07-20 | issue-planner/Codex gpt-5 high | P0.2 prerequisite remediated в design: добавлен P0.5 carrier, glossary различает umbrella 32 и task subset 11 (на `d8ac22c`); P0.1 history сохранена, freeze ждёт terminal P0.5 и owner D#. |
 | 2026-07-20 | plan-exec/Codex gpt-5.6-terra medium | P0.5 закрыт: отдельный scanner и anchored umbrella correction фиксируют пять explicit roots без переписывания P0.1 — детали см. phases/P0.md P0.5 Completion Notes. |
+| 2026-07-20 | plan-run/Codex gpt-5.6-sol high | P0.2 закрыт: D53 утвердил единый glossary/scenario set и distinction Command Surface / Task Command — детали см. phases/P0.md P0.2 Completion Notes. |
 
 ## 7. Contracts
 

@@ -1,47 +1,50 @@
-# HANDOFF — 2026-07-20 — after P2
+# HANDOFF — 2026-07-20 — after P3.1
 
-**Next:** «ЗАПУСК ВРУЧНУЮ: gpt-5.6-sol/xhigh»
+**Next:** `/task:plan-exec 2026.07.19-DUAL-PROVIDER P3.2`
 
 | Параметр | Значение |
 |:--|:--|
-| Model | gpt-5.6-sol |
-| Thinking | xhigh — independent adversarial P2 audit |
-| Context | NEW SESSION — шаг-не-item |
-| Суть | Провести fresh independent audit terminal P2; P3.1 не начинать. |
+| Model | gpt-5.6-terra |
+| Thinking | medium — deterministic Claude compatibility refactor |
+| Context | continue (/clear) — ручной item |
+| Суть | Execute P3.2 only: extract the immutable semantic publication catalog and preserve Claude output bytes. |
 
 ```text
-Проведи только fresh independent audit P2 плана 2026.07.19-DUAL-PROVIDER на gpt-5.6-sol/xhigh.
+Execute only P3.2 of plan 2026.07.19-DUAL-PROVIDER on gpt-5.6-terra/medium.
 
-Сначала прочитай AGENTS.md, CLAUDE.md, plans/2026.07.19-DUAL-PROVIDER/plan.md,
-handoff.md и phases/P2.md, включая Audit P2 от 2026-07-20 и P2.5. Затем читай ровно
-материалы, необходимые для независимой проверки P2.1–P2.5 и D76.
+First read AGENTS.md, CLAUDE.md, plans/2026.07.19-DUAL-PROVIDER/plan.md,
+handoff.md, phases/P3.md, then P3.2 Required Reads strictly in their listed order.
+P3.1 is terminal: D77 froze provider-skill-publication-contract v1.0.0 at item commit
+2b5fbbe. Preserve all unrelated owner dirt. Execute only P3.2 Files/Scope; do not start
+P3.3+, alter generated outputs except through the declared P3.2 renderer path, perform
+native install/live writes, or touch FOREMAN/fleet.
 
-Проверь на свежем контексте commit 5db342e: malformed provenance/override fail closed,
-all-noop apply invokes no writer, caller-supplied managed-block codec preserves outside bytes
-and refuses duplicate/nested/missing/reordered boundaries, and project Override gives stale-source/update.
-Не изменяй core, frozen contracts/ADR/K1–K6, packages, live paths, FOREMAN, fleet, P3+ или owner dirt.
-Выдай только audit verdict и evidence; при RED применяй fix-forward protocol, не начинай P3.1.
+Keep the frozen D77 contract and current Claude marketplace/plugin bytes, names, ordering,
+source paths, and enabledPlugins semantics as hard compatibility gates. Build the catalog and
+Claude renderer from explicit immutable inputs; do not add Codex paths/tokens, discovery,
+global registration, or provider-manifest conversion. Follow full item lifecycle: journal,
+validation, two commits, plan status, and handoff.
 ```
 
-**Done:** P2 повторно закрыта после D76. Terminal P2.1–P2.5 завершаются commit `5db342e`:
-complete/canonical provenance and override layers validate before clean classification, all-`noop`
-apply returns with zero target/backup/lock writes, and one explicit caller-owned managed-block
-codec pair carries through plan/apply. Synthetic evidence has 11 named contract cases, including
-outside-byte preservation, boundary refusal and project-Override stale-source/update.
+**Done:** P3.1 is terminal. D77 records the exact Owner approval and freezes
+`root/contracts/provider-skill-publication-contract.md` v1.0.0. The approved review records
+the S1–S6 alternatives/verdict; no package/runtime artifact, native install, live configuration,
+FOREMAN, fleet, or owner-owned file changed.
 
-**Remaining:** Fresh independent P2 audit. P3.1 remains out of scope until literal GREEN.
+**Remaining:** P3.2–P3.5, then independent P3 audit G03 before P4.1.
 
-**Sources of truth:** `phases/P2.md` P2.1–P2.5 and Audit P2 · D16–D18/D75/D76 in `plan.md` ·
-frozen `root/contracts/provider-{capability,artifact,config,migration-gates}.md` ·
-`artifacts/P2-provider-artifact-conformance.md` · `research/17-p2-red-audit-remediation.md` ·
-commit `5db342e` · `journal.jsonl`.
+**Sources of truth:** `phases/P3.md` P3.1/P3.2 · D77 and Contracts in `plan.md` · frozen
+`root/contracts/provider-skill-publication-contract.md` ·
+`artifacts/P3-skill-publication-contract-review.md` · item commit `2b5fbbe`.
 
-**Open risks:** Static `codex doctor --json` route/effort ambiguity remains D56 non-green but
-non-blocking under D72. Unrelated owner dirt remains intentionally unstaged. The P2.5 codec seam
-must remain caller-supplied and must not grow into marker grammar, discovery, or registry.
+**Open risks:** The static `codex doctor --json` model/effort ambiguity remains D56 non-green
+but non-blocking under D72. Unrelated owner dirt remains intentionally unstaged. P3.2 must retain
+Claude byte compatibility and must not pull Codex concerns forward from P3.3. `plan-lint` reports
+two P3 DoR false-positive warnings after the phase enters `🟡`; P3.1 records a scoped remediation
+proposal but has no ERROR and does not alter the task linter.
 
 **Workarounds/Deferred/Open questions:**
 
 - workarounds: none.
-- deferred: package/provider delivery begins only after fresh P2 audit GREEN.
+- deferred: native Codex manifests/bundles are P3.3; distribution/install/update flows are P3.4.
 - open_questions: —

@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.4.6 |
+| Version | 1.4.7 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
@@ -113,7 +113,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P0 | Evidence, vocabulary и запечатанные provider contracts | 7/7 | 🟢 Done |
 | P1 | Provider config/domain и backward-compatible resolution | 6/6 | 🟢 Done |
 | P2 | Deterministic adapters, provenance, lock и drift engine | 5/5 | 🟢 Done |
-| P3 | Dual skills publication и marketplaces | 0/5 | ⬜ Not started |
+| P3 | Dual skills publication и marketplaces | 1/5 | 🟡 In progress |
 | P4 | Task-command parity и provider-neutral model routing | 0/5 | ⬜ Not started |
 | P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 0/7 | ⬜ Not started |
 | P6 | mAInd deployment, memory и provider-neutral analytics | 0/6 | ⬜ Not started |
@@ -199,11 +199,13 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | D74 | 2026-07-20 | P1 формально реопенена после RED Audit P1: P1.5 доказывает G02 только committed synthetic fixtures, P1.6 владеет уже внесёнными documentation projections и append-only P1.2–P1.4 commit→item map. Historical P1.1–P1.4 statuses/specs и frozen provider-config v1.0.0 не переписываются. | RAG:— (repo-grounded: `phases/P1.md` Audit P1 2026-07-20, `artifacts/P1-provider-compatibility-matrix.md`, commit `33f35d8`) — выполняет ровно три audit finding без расширения authority на root config, FOREMAN, fleet или P2+. |
 | D75 | 2026-07-20 | Approval Owner принимает exact P2.1 CORE-ARTIFACT K1–K6 as written: Rule of Three и flat `core.provider_artifact` seam, complete additive ten-symbol API, frozen artifact v1.0.0 bytes/hash/provenance/path invariants without lifecycle writes, explicit caller renderer and dependency direction, minor SemVer classification, and P2.1-only authority. | RAG:— (owner-grounded: exact reply `APPROVE P2.1 CORE-ARTIFACT K1-K6 AS WRITTEN`; repo-grounded: `artifacts/P2-core-contribution-proposal.md`, `root/adr/ADR-0002-provider-artifact-kernel.md`) — opens only the prescribed P2.1 implementation; P2.2+, provider delivery, live carriers, FOREMAN and fleet remain excluded. |
 | D76 | 2026-07-20 | D58 fix-forward формально реопенит P2 после RED Audit P2 и добавляет один P2.5. Он исправляет только missing fail-closed provenance/override validation, clean/noop zero-write apply и missing managed-boundary/project-override goldens. Для существующей contract boundary разрешён один explicit caller-supplied codec pair на existing P2.2 plan/apply entry points; это не новый `core.__all__` symbol, не marker grammar, не package registry и не изменение K1–K6 или frozen v1.0.0 bytes. | RAG:— (repo-grounded: `phases/P2.md` Audit P2 2026-07-20, `root/contracts/provider-artifact-contract.md`, `research/17-p2-red-audit-remediation.md`) — audit выявил contract-required bug fixes, а не owner-level fork: codec только выражает уже замороженную границу package-owned blocks, P3+ и live carriers остаются закрыты. |
+| D77 | 2026-07-20 | Approval Owner принимает exact P3.1 SKILL-PUBLICATION S1–S6 as written и замораживает `provider-skill-publication-contract.md` как v1.0.0: один semantic catalog, independent native Claude/Codex projections, same-repository thin adapters versus self-contained cache/vendor artifacts, package-version source, Claude-only legacy compatibility, explicit native install boundary и provider-qualified fail-closed diagnostics. | RAG:— (owner-grounded: exact reply `APPROVE P3.1 SKILL-PUBLICATION S1-S6 AS WRITTEN`; repo-grounded: `artifacts/P3-skill-publication-contract-review.md`, `root/contracts/provider-skill-publication-contract.md`) — открывает P3.2–P3.5 только по их declared scope; не разрешает package/runtime writes в P3.1, public command design, native install, live config, FOREMAN, fleet или owner dirt. |
 
 ## 6. Update Log
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-20 | plan-run/Codex gpt-5.6-sol high | P3.1 закрыт: D77 заморозил semantic skill/publication contract v1.0.0 и approved review — детали см. phases/P3.md P3.1 Completion Notes. |
 | 2026-07-20 | plan-close/Codex mechanical | P2 повторно закрыта после D76: terminal P2.1–P2.5 и contract-safety/no-write/boundary evidence сверены; далее independent P2 audit — детали см. phases/P2.md Phase Handoff. |
 | 2026-07-20 | plan-close/Codex mechanical | P2 закрыта: terminal artifact kernel/lock/registry/conformance evidence сверены; следующий gate — independent P2 audit — детали см. phases/P2.md Phase Handoff. |
 | 2026-07-20 | plan-run/Codex gpt-5.6-terra high | P2.5 закрыт: D76 fail-closed provenance/override, no-write clean apply и explicit managed-block codec conformance — детали см. phases/P2.md P2.5 Completion Notes. |
@@ -269,7 +271,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | `root/contracts/provider-artifact-contract.md` | v1.0.0 | frozen (D55) | P2–P7, future fleet rollout | 2026-07-20 (D55) |
 | `root/contracts/provider-migration-gates.md` | v1.0.0 | frozen (D59) | P1–P7, FOREMAN reconcile gate, future fleet plan | 2026-07-20 (D59) |
 | `root/contracts/provider-config-contract.md` | v1.0.0 | frozen (D70) | P1.2–P7, future FOREMAN/fleet consumers | 2026-07-20 (D70) |
-| `root/contracts/provider-skill-publication-contract.md` | planned v1.0.0 | owner-gated creation/sealing P3.1 after P2.4 | P3.2–P3.5, P4 task adapters, P7 self-host/release evidence | — |
+| `root/contracts/provider-skill-publication-contract.md` | v1.0.0 | frozen (D77) | P3.2–P3.5, P4 task adapters, P7 self-host/release evidence | 2026-07-20 (D77) |
 | `root/contracts/provider-command-routing-contract.md` | planned v1.0.0 | owner-gated creation/sealing P4.1 after P3.5 | P4.2–P4.5, P5–P7, FOREMAN reconcile после P7.4 | — |
 | `root/contracts/provider-harness-contract.md` | v0.1.0-draft | draft; owner-gated sealing P5.1 after P4.5 | P5.2–P5.5, P6 deploy/sync, P7 self-host/release evidence | — |
 | `root/contracts/provider-instruction-contract.md` | planned v1.0.0 | owner-gated creation/sealing P5.6 after P5.5 | P5.7 renderer/conformance, P6.2/P6.5/P6.6 deploy+restart, P7 self-host/cleanup/release evidence | — |

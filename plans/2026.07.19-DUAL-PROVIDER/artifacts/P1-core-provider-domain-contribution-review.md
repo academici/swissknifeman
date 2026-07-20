@@ -1,10 +1,10 @@
 # P1.2 shared-core provider-domain contribution review
 
-**Status:** proposed — explicit Approval Owner D# required before `core/**` edit  
-**Initiator:** `2026.07.19-DUAL-PROVIDER` P1.2  
-**Package:** monorepo shared package `core`  
-**Session:** gpt-5.6-terra/high  
-**Evidence:** frozen D53/D55/D70 contracts and P1.2 Required Reads; no external claim  
+**Status:** proposed — explicit Approval Owner D# required before `core/**` edit
+**Initiator:** `2026.07.19-DUAL-PROVIDER` P1.2
+**Package:** monorepo shared package `core`
+**Session:** gpt-5.6-terra/high
+**Evidence:** frozen D53/D55/D70 contracts and P1.2 Required Reads; no external claim
 
 ## Go / no-go
 

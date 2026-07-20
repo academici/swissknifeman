@@ -8,6 +8,12 @@
   vendor locks and explicit `skiller codex-install`; normal connect/update/doctor and
   dry-runs never invoke the native user-global installer.
 
+### Fixed
+
+- **skiller:** dual-provider `sync` now rejects an unmanaged selected-provider target
+  before any provider skill copy, lock write or project registration; `--force` remains
+  the explicit overwrite path.
+
 ### Added
 
 - **task — historical journal exception v1.** Owner-gated append-only sidecar for one exact

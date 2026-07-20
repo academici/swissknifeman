@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.4.1 |
+| Version | 1.4.2 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
@@ -188,6 +188,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | D66 | 2026-07-20 | Owner делегирует root agent все механические решения AI execution: model/effort overshoot, fresh-context boundaries, subagent/CLI retry, isolated worktrees и contract-neutral fix-forward выполняются автоматически без approval-пауз. Новый Owner Approval нужен только при изменении product semantics/frozen public contract, расширении authority/data scope или необратимом действии. | RAG:— (owner-grounded: explicit instruction 2026-07-20; repo-grounded: D56–D58, observed delegated-run stalls) — устраняет ложные остановки на внутренней механике, сохраняя substantive safety gates. |
 | D67 | 2026-07-20 | Owner выбирает contract-neutral P0 ATTENTION fix-forward через один P0.7 и один exceptional independent audit attempt 3 ради literal GREEN G01: P0 формально реопенена, P1.1 остаётся закрыт; следующий аудит обязан напечатать `AUDIT-CAP` со ссылкой на D67, но вправе выдать substantive verdict. | RAG:— (owner-grounded: explicit instruction 2026-07-20; repo-grounded: второй Audit P0, plan-protocol audit-round cap) — не сдаёт P0 orange и не отменяет frozen G01, одновременно снимая routine approval pause по D66. |
 | D68 | 2026-07-20 | D65-A уточняется без supersession: sealed reconciliation carrier содержит ровно 11 allowlisted paths — 8 `conflict`, task plugin `matches-delivery`, два generated outputs `matches-base`; generated path исключается из conflict count только когда path clean и SHA-256 совпадает с base, иначе reconciliation блокируется и output пересчитывается path-local CLI из delivery sources. | RAG:— (owner-grounded: explicit D65 clarification; repo-grounded: hash/path-only scan base/main/delivery 2026-07-20) — публикует воспроизводимую derived-output policy, не меняя D65 exact eight, main read-only authority или pre-P7.4 gate. |
+| D69 | 2026-07-20 | Экономный execution routing не меняет item semantics: каждый manual item исполняется в свежем explicit Codex process на модели/effort не ниже своей Routing row; Sol/xhigh используется только для явно xhigh public-contract items и independent phase audits, Sol/high — для остальных design items, Terra/high/medium — для prescribed implementation/conformance, Terra/low — для mechanical close/bookkeeping. После каждой terminal phase обязателен fresh independent audit; regression автоматически возвращается в owning phase по D58. Inherited root xhigh не является routine fallback. | RAG:— (owner-grounded: explicit cost/context strategy 2026-07-20; repo-grounded: Routing §3, roadmap sequential dependencies, D57/D58/D66) — снижает расход frontier-контекста без undershoot, пропуска review или новых approval-пауз. |
 
 ## 6. Update Log
 
@@ -225,6 +226,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | 2026-07-20 | plan-run/Codex gpt-5.6-sol xhigh | P0.7 закрыт: sealed D65 reconciliation manifest и isolated-CLI invariant зафиксированы — детали см. phases/P0.md P0.7 Completion Notes. |
 | 2026-07-20 | plan-run/Codex gpt-5.6-terra high | P0.7 post-review F1/F2 fix-forward закрыт: Git read locks и descriptor-safe main hashing запечатаны отдельным commit — детали см. phases/P0.md P0.7 Completion Notes. |
 | 2026-07-20 | plan-close/Codex gpt-5.6-terra low | P0 повторно закрыта после `8bafc68`/`507122e`/`2325027`: terminal status, frozen bytes и sealed replay сверены; далее — exceptional independent audit attempt 3 по D67. |
+| 2026-07-20 | plan-audit/Codex gpt-5.6-sol xhigh | P0 audit attempt 3 завершён literal GREEN на `245bb56`; G01 открыт, D69 фиксирует fresh-context/cost routing перед P1.1. |
 
 ## 7. Contracts
 

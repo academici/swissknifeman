@@ -6,16 +6,19 @@
      Порядок строго phase-first: P0→P1→P2→P3→P4→P5→P6→P7. До finish + GREEN design
      audit исполнение любого item запрещено. -->
 
-**Обновлён:** 2026-07-20 · **Соответствует plan.md:** v1.4.1
+**Обновлён:** 2026-07-20 · **Соответствует plan.md:** v1.4.2
 
-> **Статус exec:** P0.7 закрыт; derived phase status P0 синхронизирован в `Done`.
-> P0 закрыта; следующим выполняется exceptional independent audit attempt 3 с literal
-> `AUDIT-CAP` + D67. P1.1 закрыт до literal GREEN G01; reconciliation с dirty main
-> перенесена, но не отменена, и обязательна перед P7.4 по D65-A/D68.
+> **Статус exec:** P0 закрыта и audit attempt 3 завершён literal GREEN на `245bb56`;
+> G01 открыт. Следующий item — owner-gated P1.1 в fresh `gpt-5.6-sol/xhigh` process.
+> Reconciliation с dirty main перенесена, но не отменена, и обязательна перед P7.4
+> по D65-A/D68.
 > Исполнительские модели — только current ChatGPT/Codex family: Terra для prescribed
 > implementation, Sol для design/contracts/audit. GPT-5.6 Luna не используется на этом
 > public-contract/release critical path. RAG:✅ 2026-07-19
 > (`findings/P7-openai-model-routing-2026-07-19.md`).
+> D69: explicit fresh process на каждом manual item; inherited root xhigh не используется
+> как routine fallback. Каждая terminal phase получает fresh independent Sol/xhigh audit;
+> regression возвращается в owning phase по D58 до продолжения roadmap.
 
 ## Карта исполнения
 
@@ -26,7 +29,7 @@
 | P0.2 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/high | ✅ D53 | vocabulary/scenarios и distinction Command Surface / Task Command заморожены |
 | P0.3 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/xhigh | ✅ D55 | capability/artifact contracts v1.0.0 + ADR accepted |
 | P0.4 | solo | plan-run/plan-close repair — 🟢 | gpt-5.6-sol/high; repair gpt-5.6-sol/xhigh | ✅ D59; D60 contract-neutral repair | exact structural G11 revalidation green; frozen contract unchanged |
-| P0.6 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | ✅ D63-B · D64-A · D65-A | sealed clean-tree lint/evidence replay закрыт; P0 reclose завершён, G01 ждёт independent audit |
+| P0.6 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | ✅ D63-B · D64-A · D65-A | sealed clean-tree lint/evidence replay закрыт; P0 reclose и independent audit GREEN завершены |
 | P0.7 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | ✅ D67/D68 mechanical authority | sealed D65 manifest + isolated-CLI invariant; package/main/P1 bytes не менялись |
 | P1.1 | solo | plan-run (manual) | gpt-5.6-sol/xhigh | ✅ provider-config contract | owner-gated public precedence/config freeze |
 | P1.2 | solo | plan-run (manual) | gpt-5.6-terra/high | ✅ shared-core contribution | prescribed API после P1.1; public core boundary требует full review |
@@ -75,17 +78,21 @@ implementation. P5.6→P5.7 — contract→prescribed implementation, поэто
 
 ## Готовый launch-block текущего шага
 
-### S-P0-audit — exceptional independent audit attempt 3
+### S-P1.1 — freeze provider-config contract
 
 | Параметр | Значение |
 |:--|:--|
 | Model | gpt-5.6-sol |
 | Thinking | xhigh |
-| Context | NEW SESSION — шаг-не-item |
-| Суть | Независимо проверить P0 под D67 и напечатать literal AUDIT-CAP. |
+| Context | continue (/clear) — ручной item |
+| Суть | На открытом G01 спроектировать и представить Owner точный provider-config freeze set. |
 
-```
-/task:plan-audit 2026.07.19-DUAL-PROVIDER P0
+```text
+Продолжай 2026.07.19-DUAL-PROVIDER: исполни только P1.1 через task-plan-run на
+gpt-5.6-sol/xhigh. Начни из committed tree 245bb56, проверь literal GREEN последнего
+Audit P0 и G01, затем следуй phases/P1.md P1.1 и Required Reads. Подготовь frozen
+provider-config contract и точный Owner Approval D# decision set; до approval не закрывай
+item и не начинай P1.2. Не трогай package runtime, dirty main, FOREMAN или fleet.
 ```
 
 ## Гейты владельца (сводно)

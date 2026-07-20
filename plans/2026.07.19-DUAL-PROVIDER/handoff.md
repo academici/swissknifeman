@@ -7,7 +7,7 @@
 | Model | gpt-5.6-terra |
 | Thinking | high — prescribed public core API and contribution gate |
 | Context | continue (/clear) — ручной item |
-| Суть | Принять или отклонить atomic G1–G6 proposal до первого edit `core/**`; P1.2 уже resumed на live Terra/high. |
+| Суть | Принять или отклонить atomic G1–G6 proposal до первого edit `core/**`; D71 runtime route evidence corrected, но P1.2 не исполнялся. |
 
 ```text
 # НЕ раньше: Approval Owner D# принимает exact G1–G6 из artifacts/P1-core-provider-domain-contribution-review.md
@@ -39,14 +39,20 @@ P1.1 approval · `roadmap.md` S-P1.2 · `journal.jsonl`.
 
 **Open risks:** P1.2 — public shared-core contribution gate ждёт explicit Owner D# для
 atomic G1–G6; до него `core/**` запрещён. D71 завершил main reconciliation без снятия этого
-гейта; effective doctor всё ещё показывает `gpt-5.6-sol` и не публикует effort, поэтому
-runtime provenance не заявляется как Terra/high evidence.
+гейта. Его exact runtime startup banner — authoritative evidence `gpt-5.6-terra/high`,
+approval `never`, sandbox `danger-full-access`; static doctor с persisted `gpt-5.6-sol` и
+без effective effort остаётся D56 non-green environment anomaly, а не routing block.
 
 **Workarounds/Deferred/Open questions:**
 
 - workarounds: D56 — current canonical-main preflight confirms approval `Never`, unrestricted
-  filesystem, `maind health --cwd` and SessionStart probe; doctor reports `gpt-5.6-sol` but not
-  effort. This is unavailable Terra/high provenance, not a green routing assertion.
+  filesystem, `maind health --cwd` and SessionStart probe; doctor reports persisted
+  `gpt-5.6-sol` but not effort. D71's exact runtime startup banner is the separate,
+  authoritative Terra/high route evidence; doctor mismatch does not block routing.
 - deferred: D71 removes only the isolated-worktree timing/target condition from D65-A. P5/P6/P7
   still own any future isolated/self-host MCP and SessionStart proof; no live/fleet write follows.
-- open_questions: —
+- open_questions: D72 preserves the final historical P1.2 journal row and compensates it
+  append-only because its `2026-07-20T14:00:00Z` timestamp was future-dated at repair time;
+  retained stash `72505e4d8bef2a58f4ed555cc5b6014450aee3a9` is authoritative by OID plus Git
+  commit time `2026-07-20T13:26:51Z`, not by its subject label. See
+  `findings/D71-provenance-bookkeeping-repair-2026-07-20.md`.

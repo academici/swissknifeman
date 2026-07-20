@@ -61,6 +61,11 @@ def make_registry(tmp_path):
     """
     root = tmp_path / "registry"
     skills = root / "skills"
+    # P3 publication reads the sole package-version source before rendering.
+    (root / "package.json").parent.mkdir(parents=True, exist_ok=True)
+    (root / "package.json").write_text(
+        json.dumps({"name": "@fixture/registry", "version": "0.1.0"}) + "\n",
+        encoding="utf-8")
 
     write_skill(skills / "php" / "laravel-conventions", "laravel-conventions",
                 requires=["code-style"], description="Laravel conventions")

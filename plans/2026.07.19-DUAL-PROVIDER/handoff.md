@@ -37,5 +37,6 @@ Files scope and must be reconciled during phase-close bookkeeping before any nex
 **Workarounds/Deferred/Open questions:**
 
 - workarounds: mAInd/live-carrier evidence remains excluded; P1 uses synthetic fixtures only.
+- deferred: P1.4's missed intermediate Phase Status transition is recorded append-only as a process deviation; no implementation evidence changed.
 - deferred: provider registry, renderer, artifact lifecycle, package CLI presentation — P2+.
 - open_questions: —

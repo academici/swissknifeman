@@ -237,6 +237,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | 2026-07-20 | repair-worker/Codex gpt-5.6-terra high | D72: D71 runtime banner proves Terra/high; D56 doctor remains non-green/non-blocking. Future-dated journal row is preserved/compensated; stash authority is OID+Git time — `findings/D71-provenance-bookkeeping-repair-2026-07-20.md`. |
 | 2026-07-20 | plan-run/Codex gpt-5.6-terra high | P1.2 закрыт: D73 accepted exact G1–G6; immutable `core.provider` API committed — детали см. phases/P1.md P1.2 Completion Notes. |
 | 2026-07-20 | plan-exec/gpt-5.6-terra medium | P1.4 закрыт: compatibility matrix and protected-path no-write proof committed — детали см. phases/P1.md P1.4 Completion Notes. |
+| 2026-07-20 | plan-exec/gpt-5.6-terra medium | P1.4 bookkeeping correction: append-only process deviation recorded — детали см. phases/P1.md P1.4 Known Deviations. |
 
 ## 7. Contracts
 

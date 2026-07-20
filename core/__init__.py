@@ -24,6 +24,11 @@ from .proc import pid_alive
 from .project import (DEFAULT_DOCS_VISIBILITY, DOCS_VISIBILITY_BY_TYPE,
                       LANGUAGE_BY_TYPE, PROJECT_TYPES, detect_project_type,
                       docs_visibility_for)
+from .provider import (CapabilityId, CapabilityRequirement, ConfigProvenance,
+                       ConfigSource, DiagnosticSeverity, EffectiveProvider,
+                       NativeExtensionId, ProviderAdapter, ProviderDecision,
+                       ProviderDiagnostic, ProviderId, ProviderSelection,
+                       SupportLevel)
 from .repo import find_monorepo_root, find_repo_root, sibling_bin
 from .runs import find_run_report
 from .term import confirm, die, now_iso, parse_iso, warn
@@ -42,4 +47,8 @@ __all__ = [
     "parse_flags", "parse_args", "run_cmd",
     "content_hash", "managed_block", "upsert_block",
     "http_get_json", "http_post_json", "ping",
+    "ProviderId", "SupportLevel", "DiagnosticSeverity", "CapabilityId",
+    "NativeExtensionId", "CapabilityRequirement", "ProviderDecision",
+    "ProviderSelection", "EffectiveProvider", "ConfigSource", "ConfigProvenance",
+    "ProviderDiagnostic", "ProviderAdapter",
 ]

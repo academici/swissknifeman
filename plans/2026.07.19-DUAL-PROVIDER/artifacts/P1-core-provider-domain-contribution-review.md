@@ -1,6 +1,6 @@
 # P1.2 shared-core provider-domain contribution review
 
-**Status:** proposed — explicit Approval Owner D# required before `core/**` edit
+**Status:** accepted — Approval Owner D73, 2026-07-20
 **Initiator:** `2026.07.19-DUAL-PROVIDER` P1.2
 **Package:** monorepo shared package `core`
 **Session:** gpt-5.6-terra/high
@@ -208,7 +208,8 @@ Exact approval reply:
 APPROVE P1.2 CORE-PROVIDER G1-G6 AS WRITTEN
 ```
 
-Only after that reply may lifecycle bookkeeping assign an Owner D# and P1.2 edit `core/**`.
+Approval Owner D73 records the exact reply above on 2026-07-20. G1–G6 are accepted
+atomically; this authorizes only the stated P1.2 scope before the next phase gate.
 
 ## Adversarial review before approval
 

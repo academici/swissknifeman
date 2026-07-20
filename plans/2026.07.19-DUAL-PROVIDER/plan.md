@@ -111,7 +111,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 |:--|:--|:--|:--|
 | P0 | Evidence, vocabulary и запечатанные provider contracts | 7/7 | 🟢 Done |
 | P1 | Provider config/domain и backward-compatible resolution | 6/6 | 🟢 Done |
-| P2 | Deterministic adapters, provenance, lock и drift engine | 2/4 | 🟡 In progress |
+| P2 | Deterministic adapters, provenance, lock и drift engine | 3/4 | 🟡 In progress |
 | P3 | Dual skills publication и marketplaces | 0/5 | ⬜ Not started |
 | P4 | Task-command parity и provider-neutral model routing | 0/5 | ⬜ Not started |
 | P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 0/7 | ⬜ Not started |
@@ -250,6 +250,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | 2026-07-20 | plan-close/Codex mechanical | P1 повторно закрыта после D74: terminal P1.1–P1.6 и synthetic G02/docs/provenance evidence сверены — детали см. phases/P1.md Phase Handoff. |
 | 2026-07-20 | plan-run/Codex gpt-5.6-terra high | P2.1 закрыт: D75 accepted additive deterministic `core.provider_artifact` kernel — детали см. phases/P2.md P2.1 Completion Notes. |
 | 2026-07-20 | plan-run/Codex gpt-5.6-terra high | P2.2 закрыт: fail-closed lock/drift/apply API и TemporaryDirectory conformance added — детали см. phases/P2.md P2.2 Completion Notes. |
+| 2026-07-20 | plan-run/Codex gpt-5.6-sol high | P2.3 закрыт: explicit immutable capability-aware catalog и synthetic gate tests — детали см. phases/P2.md P2.3 Completion Notes. |
 
 ## 7. Contracts
 

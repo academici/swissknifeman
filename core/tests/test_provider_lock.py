@@ -1,4 +1,5 @@
 """Conformance tests for P2.2 fail-closed artifact lock lifecycle."""
+import json
 import os
 from pathlib import Path
 import tempfile
@@ -98,6 +99,38 @@ class ProviderLockTests(unittest.TestCase):
                 self.assertEqual(plan.actions[0].action, ArtifactActionKind.REFUSE)
                 with self.assertRaises(ValueError):
                     apply_plan(self.root, plan)
+
+    def test_malformed_provenance_and_override_lock_records_refuse(self):
+        initial = self.plan()
+        apply_plan(self.root, initial)
+        raw = json.loads(serialize_lock(initial.next_lock))
+        malformed_records = []
+        no_sources = json.loads(json.dumps(raw))
+        no_sources["records"][0]["canonical_sources"] = []
+        malformed_records.append(no_sources)
+        malformed_override = json.loads(json.dumps(raw))
+        malformed_override["records"][0]["override_layers"] = [{"id": "project", "order": 0}]
+        malformed_records.append(malformed_override)
+        for value in malformed_records:
+            with self.subTest(value=value):
+                lock = json.dumps(value, sort_keys=True, separators=(",", ":")).encode() + b"\n"
+                plan = self.plan(lock_bytes=lock)
+                self.assertEqual((plan.actions[0].observation, plan.actions[0].action),
+                                 (DriftObservation.PROVENANCE_INVALID, ArtifactActionKind.REFUSE))
+
+    def test_clean_noop_apply_never_calls_writer_or_replaces_lock(self):
+        initial = self.plan()
+        apply_plan(self.root, initial)
+        lock = serialize_lock(initial.next_lock)
+        clean = self.plan(lock_bytes=lock)
+        before = tuple(sorted((path.relative_to(self.root).as_posix(), path.read_bytes())
+                              for path in self.root.rglob("*") if path.is_file()))
+        with patch.object(provider_lock, "_atomic_write_bytes", wraps=provider_lock._atomic_write_bytes) as writer:
+            self.assertIs(apply_plan(self.root, clean), clean)
+        self.assertEqual(writer.call_count, 0)
+        after = tuple(sorted((path.relative_to(self.root).as_posix(), path.read_bytes())
+                             for path in self.root.rglob("*") if path.is_file()))
+        self.assertEqual(after, before)
 
     def test_unsafe_paths_and_symlink_escape_refuse(self):
         outside = self.root.parent / "outside-provider-lock"

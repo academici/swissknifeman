@@ -19,11 +19,11 @@ def _adapter():
     )
 
 
-def _request(*, sources, target=None, semantic_parameters=None, renderer=None):
+def _request(*, sources, target=None, override_layers=(), semantic_parameters=None, renderer=None):
     return ArtifactRenderRequest(
         "task.plan-exec.codex-skill", tuple(sources),
         target or ArtifactTarget(".agents/skills/task-plan-exec/SKILL.md", ("whole-file", ())),
-        _adapter(), (), semantic_parameters or {"title": "Plan exec"},
+        _adapter(), override_layers, semantic_parameters or {"title": "Plan exec"},
         renderer or (lambda _request: b"---\nname: task-plan-exec\n---\nbody\n"),
     )
 
@@ -79,14 +79,36 @@ class ProviderArtifactTests(unittest.TestCase):
         request = ArtifactRenderRequest(
             "root.instructions.codex", (ArtifactSource("root.common", "instructions/common.md", SOURCE_HASH_A),),
             target, _adapter(),
-            ({"id": "operation", "order": 0}, {"id": "project", "order": 1}),
+            ({"id": "operation", "owner": "operation", "order": 0,
+              "provenance": {"source": "request"}},
+             {"id": "project", "owner": "project", "order": 1,
+              "provenance": {"path": ".swissknife.json"}}),
             {"language": "ru"}, lambda _request: b"<!-- common -->\n<!-- codex -->\n",
         )
         result = plan_artifact_render(request)
         self.assertEqual(result.provenance.override_layers,
-                         ((("id", "operation"), ("order", 0)),
-                          (("id", "project"), ("order", 1))))
+                         ((("id", "operation"), ("order", 0), ("owner", "operation"),
+                           ("provenance", {"source": "request"})),
+                          (("id", "project"), ("order", 1), ("owner", "project"),
+                           ("provenance", {"path": ".swissknife.json"}))))
         self.assertEqual(result.provenance.managed_boundary, ("managed-blocks", ("common", "codex")))
+
+    def test_rejects_malformed_or_ambiguous_override_layers(self):
+        source = ArtifactSource("task.command.plan-exec", "packages/task/commands/plan-exec.md", SOURCE_HASH_A)
+        invalid_layers = (
+            ({"id": "project", "order": 0, "provenance": {"path": "x"}},),
+            ({"id": "project", "owner": "project", "order": True,
+              "provenance": {"path": "x"}},),
+            ({"id": "project", "owner": "project", "order": 0, "provenance": {}},),
+            ({"id": "project", "owner": "project", "order": 0, "provenance": {"path": "x"}},
+             {"id": "fleet", "owner": "fleet", "order": 0, "provenance": {"path": "y"}}),
+            ({"id": "project", "owner": "project", "order": 0, "provenance": {"path": "x"}},
+             {"id": "project-extra", "owner": "project", "order": 1, "provenance": {"path": "y"}}),
+        )
+        for layers in invalid_layers:
+            with self.subTest(layers=layers):
+                with self.assertRaises((TypeError, ValueError)):
+                    _request(sources=(source,), override_layers=layers)
 
     def test_capability_requirements_contribute_to_the_source_envelope(self):
         source = ArtifactSource("task.command.plan-exec", "packages/task/commands/plan-exec.md", SOURCE_HASH_A)

@@ -107,10 +107,8 @@ class ArtifactRenderRequest:
             raise TypeError("target must be ArtifactTarget")
         if not isinstance(self.adapter, ArtifactAdapterIdentity):
             raise TypeError("adapter must be ArtifactAdapterIdentity")
-        if not isinstance(self.override_layers, tuple):
-            raise TypeError("override_layers must be tuple")
-        object.__setattr__(self, "override_layers", tuple(
-            _immutable_mapping(layer, "override layer") for layer in self.override_layers))
+        object.__setattr__(self, "override_layers", _validate_override_layers(
+            self.override_layers, "override_layers"))
         object.__setattr__(self, "semantic_parameters", _immutable_mapping(
             self.semantic_parameters, "semantic_parameters"))
         if not callable(self.renderer):
@@ -133,6 +131,41 @@ class ArtifactProvenance:
     managed_boundary: tuple[str, tuple[str, ...]]
     override_layers: tuple[tuple[tuple[str, object], ...], ...]
     capability_requirements: tuple[CapabilityRequirement, ...]
+
+    def __post_init__(self) -> None:
+        _require_semver(self.contract_version, "contract_version")
+        if self.contract_version != _CONTRACT_VERSION:
+            raise ValueError("unsupported artifact contract version")
+        _require_identifier(self.artifact_id, "artifact_id")
+        if not isinstance(self.canonical_sources, tuple) or not self.canonical_sources:
+            raise ValueError("canonical_sources must be a non-empty tuple")
+        if not all(isinstance(source, ArtifactSource) for source in self.canonical_sources):
+            raise TypeError("canonical_sources must contain ArtifactSource")
+        ordered_sources = tuple(sorted(self.canonical_sources))
+        if self.canonical_sources != ordered_sources:
+            raise ValueError("canonical_sources must be canonically ordered")
+        if len({(source.source_id, source.path) for source in ordered_sources}) != len(ordered_sources):
+            raise ValueError("canonical_sources must not repeat source_id/path")
+        _require_identifier(self.adapter_id, "adapter_id")
+        _require_semver(self.adapter_version, "adapter_version")
+        if not isinstance(self.provider_id, ProviderId):
+            raise TypeError("provider_id must be ProviderId")
+        object.__setattr__(self, "target_path", validate_target_path(self.target_path))
+        _require_digest(self.source_hash, "source_hash")
+        _require_digest(self.rendered_hash, "rendered_hash")
+        object.__setattr__(self, "managed_boundary", _validate_boundary(self.managed_boundary))
+        object.__setattr__(self, "override_layers", _validate_override_layers(
+            self.override_layers, "override_layers"))
+        if not isinstance(self.capability_requirements, tuple):
+            raise TypeError("capability_requirements must be tuple")
+        if not all(isinstance(item, CapabilityRequirement) for item in self.capability_requirements):
+            raise TypeError("capability_requirements must contain CapabilityRequirement")
+        ordered_requirements = tuple(sorted(
+            self.capability_requirements, key=lambda item: item.capability_id.value))
+        if self.capability_requirements != ordered_requirements:
+            raise ValueError("capability_requirements must be canonically ordered")
+        if len({item.capability_id for item in ordered_requirements}) != len(ordered_requirements):
+            raise ValueError("capability_requirements must not repeat capability IDs")
 
 
 @dataclass(frozen=True)
@@ -237,6 +270,45 @@ def _immutable_mapping(value: object, label: str) -> tuple[tuple[str, object], .
     if not all(isinstance(key, str) for key in value):
         raise TypeError(f"{label} keys must be strings")
     return tuple((key, _json_value(item)) for key, item in sorted(value.items()))
+
+
+def _validate_override_layers(value: object, label: str) -> tuple[tuple[tuple[str, object], ...], ...]:
+    if not isinstance(value, tuple):
+        raise TypeError(f"{label} must be tuple")
+    layers = []
+    ids = set()
+    owners = set()
+    orders = set()
+    for layer in value:
+        if _is_pairs(layer) and len({item[0] for item in layer}) != len(layer):
+            raise ValueError("override layer must not repeat keys")
+        mapping = _mapping_from_pairs(layer) if _is_pairs(layer) else layer
+        canonical = _immutable_mapping(mapping, "override layer")
+        keys = {key for key, _ in canonical}
+        if keys != {"id", "owner", "order", "provenance"}:
+            raise ValueError("override layer has an unsupported shape")
+        data = _mapping_from_pairs(canonical)
+        _require_identifier(data["id"], "override id")
+        _require_identifier(data["owner"], "override owner")
+        order = data["order"]
+        if isinstance(order, bool) or not isinstance(order, int) or order < 0:
+            raise ValueError("override order must be a non-negative integer")
+        provenance = data["provenance"]
+        if provenance in ({}, (), [], None, ""):
+            raise ValueError("override provenance must be non-empty")
+        _json_value(provenance)
+        if data["id"] in ids or data["owner"] in owners or order in orders:
+            raise ValueError("override layers must have unique IDs, owners, and orders")
+        ids.add(data["id"])
+        owners.add(data["owner"])
+        orders.add(order)
+        layers.append(canonical)
+    return tuple(layers)
+
+
+def _is_pairs(value: object) -> bool:
+    return (isinstance(value, tuple) and all(isinstance(item, tuple) and len(item) == 2
+                                              and isinstance(item[0], str) for item in value))
 
 
 def _mapping_from_pairs(value: tuple[tuple[str, object], ...]) -> dict[str, object]:

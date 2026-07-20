@@ -5,20 +5,65 @@ protected-path test deliberately keeps repository, FOREMAN, and fleet sentinels
 outside that root, proving this harness cannot write them by accident.
 """
 from pathlib import Path
+import re
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from core import (AdapterCatalog, AdapterDescriptor, ArtifactAdapterIdentity,
                   ArtifactActionKind, ArtifactRenderRequest, ArtifactSource,
                   ArtifactTarget, CapabilityId, CapabilityRequirement,
                   CapabilitySupport, DriftObservation, EffectiveProvider,
                   ProviderConfigCatalog, ProviderId, SupportLevel, apply_plan,
-                  plan_artifact_lock, serialize_lock)
+                  plan_artifact_lock, plan_artifact_render, serialize_lock)
+import core.provider_lock as provider_lock
 from core.provider_lock import (artifact_doctor, artifact_dry_run,
                                 render_artifact_projection)
 
 
 HASH = "sha256:" + "a" * 64
+_BLOCK_MARKER = re.compile(rb"(?m)^<<(\/)?([a-z0-9-]+)>>\n")
+
+
+def _fixture_blocks(file_bytes, ordered_block_ids):
+    blocks = []
+    opened = None
+    start = None
+    for match in _BLOCK_MARKER.finditer(file_bytes):
+        closing, block_id = match.group(1), match.group(2).decode()
+        if closing is None:
+            if opened is not None:
+                raise ValueError("nested fixture block")
+            opened, start = block_id, match.start()
+        elif opened != block_id:
+            raise ValueError("missing or reordered fixture block")
+        else:
+            blocks.append((opened, start, match.end(), file_bytes[start:match.end()]))
+            opened, start = None, None
+    if opened is not None or tuple(block[0] for block in blocks) != ordered_block_ids:
+        raise ValueError("duplicate, missing, or reordered fixture block")
+    return blocks
+
+
+def _fixture_extract(file_bytes, ordered_block_ids):
+    return b"".join(block[3] for block in _fixture_blocks(file_bytes, ordered_block_ids))
+
+
+def _fixture_replace(file_bytes, managed_bytes, ordered_block_ids):
+    if not file_bytes:
+        _fixture_blocks(managed_bytes, ordered_block_ids)
+        return managed_bytes
+    original = _fixture_blocks(file_bytes, ordered_block_ids)
+    replacement = _fixture_blocks(managed_bytes, ordered_block_ids)
+    cursor = 0
+    parts = []
+    for old, new in zip(original, replacement):
+        parts.extend((file_bytes[cursor:old[1]], new[3]))
+        cursor = old[2]
+    return b"".join(parts) + file_bytes[cursor:]
+
+
+FIXTURE_CODEC = (_fixture_extract, _fixture_replace)
 
 
 def _catalog():
@@ -76,6 +121,27 @@ class ProviderArtifactEndToEndTests(unittest.TestCase):
 
     def plan(self, expected, lock_bytes=None, **kwargs):
         return plan_artifact_lock(self.root, (expected,), lock_bytes=lock_bytes, **kwargs)
+
+    def render_blocks(self, *, project_override=False):
+        selected = self.registry.select(
+            provider_id=ProviderId.CODEX, artifact_kind="fixture.artifact",
+            capability_catalog=self.catalog, effective_provider=EffectiveProvider(ProviderId.CODEX, True))
+        self.assertIsNotNone(selected.selection)
+        identity = selected.selection.descriptor.identity
+        overrides = ()
+        label = b"default"
+        if project_override:
+            overrides = ({"id": "project", "owner": "project", "order": 0,
+                          "provenance": {"path": ".swissknife.json", "hash": HASH}},)
+            label = b"project"
+        return plan_artifact_render(ArtifactRenderRequest(
+            "fixture.codex.blocks",
+            (ArtifactSource("fixture.source", "fixtures/source.md", HASH),),
+            ArtifactTarget("generated/managed.txt", ("managed-blocks", ("common", "codex"))),
+            identity, overrides, {"fixture": "blocks"},
+            lambda _request: (b"<<common>>\ncommon=" + label + b"\n<</common>>\n"
+                              b"<<codex>>\ncodex=" + label + b"\n<</codex>>\n"),
+        ))
 
     def test_two_provider_adapters_render_in_one_canonical_order(self):
         codex = self.render()
@@ -165,6 +231,51 @@ class ProviderArtifactEndToEndTests(unittest.TestCase):
         self.assertEqual(applied.actions[0].action, ArtifactActionKind.NOOP)
         self.assertEqual(target.with_name(target.name + ".provider-artifact.bak").read_bytes(),
                          b"local edit\n")
+
+    def test_managed_blocks_preserve_outside_bytes_and_project_override_is_stale_source(self):
+        initial = self.render_blocks()
+        created = self.plan(initial, managed_block_codecs={initial.provenance.artifact_id: FIXTURE_CODEC})
+        applied = apply_plan(self.root, created)
+        target = self.root / initial.target.path
+        target.write_bytes(target.read_bytes().replace(
+            b"<</common>>\n", b"<</common>>\nproject-between\n", 1).replace(
+                b"<<common>>\n", b"project-prefix\n<<common>>\n", 1) + b"project-suffix\n")
+        override = self.render_blocks(project_override=True)
+        update = self.plan(override, serialize_lock(applied.next_lock),
+                           managed_block_codecs={override.provenance.artifact_id: FIXTURE_CODEC})
+        self.assertEqual((update.actions[0].observation, update.actions[0].action),
+                         (DriftObservation.STALE_SOURCE, ArtifactActionKind.UPDATE))
+        apply_plan(self.root, update)
+        self.assertEqual(target.read_bytes(),
+                         b"project-prefix\n<<common>>\ncommon=project\n<</common>>\n"
+                         b"project-between\n<<codex>>\ncodex=project\n<</codex>>\nproject-suffix\n")
+
+    def test_invalid_managed_boundaries_refuse_without_writer(self):
+        expected = self.render_blocks()
+        initial = self.plan(expected, managed_block_codecs={expected.provenance.artifact_id: FIXTURE_CODEC})
+        applied = apply_plan(self.root, initial)
+        target = self.root / expected.target.path
+        valid = target.read_bytes()
+        invalid = {
+            "duplicate": valid + b"<<common>>\nagain\n<</common>>\n",
+            "nested": valid.replace(b"common=default\n", b"common=default\n<<codex>>\n", 1),
+            "missing": valid.replace(b"<</codex>>\n", b"", 1),
+            "reordered": (b"<<codex>>\ncodex=default\n<</codex>>\n"
+                          b"<<common>>\ncommon=default\n<</common>>\n"),
+        }
+        for name, value in invalid.items():
+            with self.subTest(case=name):
+                target.write_bytes(value)
+                plan = self.plan(expected, serialize_lock(applied.next_lock),
+                                 managed_block_codecs={expected.provenance.artifact_id: FIXTURE_CODEC})
+                self.assertEqual((plan.actions[0].observation, plan.actions[0].action),
+                                 (DriftObservation.BOUNDARY_INVALID, ArtifactActionKind.REFUSE))
+                before = target.read_bytes()
+                with patch.object(provider_lock, "_atomic_write_bytes", wraps=provider_lock._atomic_write_bytes) as writer:
+                    with self.assertRaises(ValueError):
+                        apply_plan(self.root, plan)
+                self.assertEqual(writer.call_count, 0)
+                self.assertEqual(target.read_bytes(), before)
 
     def test_protected_repo_foreman_and_fleet_sentinels_remain_unchanged(self):
         protected = Path(self.temp.name) / "protected"

@@ -11,7 +11,7 @@ import os
 from pathlib import Path
 import re
 import tempfile
-from typing import Iterable
+from typing import Callable, Iterable, Mapping
 
 from .provider_artifact import (ArtifactProvenance, ArtifactRenderResult,
                                 ArtifactSource, canonical_json_bytes, sha256_digest,
@@ -78,6 +78,8 @@ class ArtifactAction:
     expected: ArtifactRenderResult
     observed_hash: str | None
     diagnostic: str
+    managed_block_codec: tuple[Callable[[bytes, tuple[str, ...]], bytes],
+                               Callable[[bytes, bytes, tuple[str, ...]], bytes]] | None = None
 
 
 @dataclass(frozen=True)
@@ -206,12 +208,16 @@ def parse_lock(raw: bytes) -> ArtifactLock:
 
 def plan_artifact_lock(root: Path, expected: Iterable[ArtifactRenderResult], *,
                        lock_bytes: bytes | None, repair_artifact_ids: tuple[str, ...] = (),
-                       unsupported_artifact_ids: tuple[str, ...] = ()) -> ArtifactPlan:
+                       unsupported_artifact_ids: tuple[str, ...] = (),
+                       managed_block_codecs: Mapping[str, tuple[
+                           Callable[[bytes, tuple[str, ...]], bytes],
+                           Callable[[bytes, bytes, tuple[str, ...]], bytes]]] | None = None) -> ArtifactPlan:
     """Classify expected artifacts without changing disk, lock, backups, or root."""
     root = _root(root)
     results = tuple(sorted(_results(expected), key=lambda result: result.target.path))
     repairs = frozenset(repair_artifact_ids)
     unsupported = frozenset(unsupported_artifact_ids)
+    codecs = _managed_block_codecs(managed_block_codecs, results)
     if not repairs.isdisjoint(unsupported):
         raise ValueError("repair and unsupported IDs must not overlap")
     lock, lock_problem = _read_lock(lock_bytes)
@@ -224,9 +230,11 @@ def plan_artifact_lock(root: Path, expected: Iterable[ArtifactRenderResult], *,
         observation, action, observed_hash, diagnostic = _classify(
             target, result, records_by_id.get(provenance.artifact_id),
             records_by_target.get(provenance.target_path), lock_problem,
-            provenance.artifact_id in repairs, provenance.artifact_id in unsupported, root)
+            provenance.artifact_id in repairs, provenance.artifact_id in unsupported, root,
+            codecs.get(provenance.artifact_id))
         actions.append(ArtifactAction(provenance.artifact_id, provenance.target_path,
-                                      observation, action, result, observed_hash, diagnostic))
+                                      observation, action, result, observed_hash, diagnostic,
+                                      codecs.get(provenance.artifact_id)))
     next_lock = None if any(action.action is ArtifactActionKind.REFUSE for action in actions) else ArtifactLock(
         LOCK_SCHEMA_VERSION, tuple(result.provenance for result in results))
     return ArtifactPlan(tuple(actions), next_lock)
@@ -244,9 +252,11 @@ def apply_plan(root: Path, plan: ArtifactPlan) -> ArtifactPlan:
     if plan.next_lock is None or any(action.action is ArtifactActionKind.REFUSE for action in plan.actions):
         raise ValueError("refusing plan cannot be applied")
     writable = tuple(action for action in plan.actions if action.action is not ArtifactActionKind.NOOP)
+    if not writable:
+        return plan
     for action in writable:
         target = _contained_target(root, action.target_path)
-        current = _read_hash(target)
+        current = _managed_hash(target, action.expected, action.managed_block_codec)
         if current != action.observed_hash:
             raise ValueError("target changed after planning")
     for action in writable:
@@ -254,15 +264,21 @@ def apply_plan(root: Path, plan: ArtifactPlan) -> ArtifactPlan:
         if action.action is ArtifactActionKind.REPAIR and target.exists():
             _atomic_write_bytes(target.with_name(target.name + ".provider-artifact.bak"),
                                 target.read_bytes())
-        _atomic_write_bytes(target, action.expected.managed_bytes)
+        _atomic_write_bytes(target, _replacement_bytes(target, action.expected,
+                                                        action.managed_block_codec))
     _atomic_write_bytes(_contained_target(root, plan.lock_path), serialize_lock(plan.next_lock))
     return plan_artifact_lock(root, (action.expected for action in plan.actions),
-                              lock_bytes=serialize_lock(plan.next_lock))
+                              lock_bytes=serialize_lock(plan.next_lock),
+                              managed_block_codecs={
+                                  action.artifact_id: action.managed_block_codec
+                                  for action in plan.actions if action.managed_block_codec is not None})
 
 
 def _classify(target: Path, result: ArtifactRenderResult, record: ArtifactProvenance | None,
               target_record: ArtifactProvenance | None, lock_problem: str | None,
-              repair_requested: bool, unsupported: bool, root: Path) -> tuple[DriftObservation, ArtifactActionKind, str | None, str]:
+              repair_requested: bool, unsupported: bool, root: Path,
+              codec: tuple[Callable[[bytes, tuple[str, ...]], bytes],
+                           Callable[[bytes, bytes, tuple[str, ...]], bytes]] | None) -> tuple[DriftObservation, ArtifactActionKind, str | None, str]:
     provenance = result.provenance
     if unsupported:
         return DriftObservation.UNSUPPORTED, ArtifactActionKind.REFUSE, None, "unsupported"
@@ -270,24 +286,31 @@ def _classify(target: Path, result: ArtifactRenderResult, record: ArtifactProven
         return DriftObservation.PROVENANCE_INVALID, ArtifactActionKind.REFUSE, None, lock_problem
     if not _safe_target(target, root):
         return DriftObservation.BOUNDARY_INVALID, ArtifactActionKind.REFUSE, None, "unsafe-target"
-    if provenance.managed_boundary[0] != "whole-file":
-        return DriftObservation.BOUNDARY_INVALID, ArtifactActionKind.REFUSE, _read_hash(target), "block-extractor-not-supplied"
+    if provenance.managed_boundary[0] == "managed-blocks":
+        if codec is None:
+            return DriftObservation.BOUNDARY_INVALID, ArtifactActionKind.REFUSE, None, "block-codec-not-supplied"
+        if target.exists() and _managed_hash(target, result, codec) is None:
+            return DriftObservation.BOUNDARY_INVALID, ArtifactActionKind.REFUSE, None, "block-extraction-invalid"
     if target_record is not None and target_record.artifact_id != provenance.artifact_id:
         return DriftObservation.OWNERSHIP_CONFLICT, ArtifactActionKind.REFUSE, None, "target-owned-by-other-artifact"
     if record is None:
         if target.exists() or target.is_symlink():
-            return DriftObservation.OWNERSHIP_CONFLICT, ArtifactActionKind.REFUSE, _read_hash(target), "unmanaged-target"
+            return DriftObservation.OWNERSHIP_CONFLICT, ArtifactActionKind.REFUSE, _managed_hash(target, result, codec), "unmanaged-target"
         return DriftObservation.MISSING, ArtifactActionKind.CREATE, None, "missing"
     if not _matching_identity(record, provenance):
-        return DriftObservation.PROVENANCE_INVALID, ArtifactActionKind.REFUSE, _read_hash(target), "record-identity-mismatch"
+        return DriftObservation.PROVENANCE_INVALID, ArtifactActionKind.REFUSE, _managed_hash(target, result, codec), "record-identity-mismatch"
     if not target.exists():
         return DriftObservation.MISSING, ArtifactActionKind.CREATE, None, "missing"
-    observed_hash = _read_hash(target)
+    observed_hash = _managed_hash(target, result, codec)
+    if observed_hash is None:
+        return DriftObservation.BOUNDARY_INVALID, ArtifactActionKind.REFUSE, None, "block-extraction-invalid"
     if observed_hash != record.rendered_hash:
         if repair_requested:
             return DriftObservation.MANAGED_DRIFT, ArtifactActionKind.REPAIR, observed_hash, "explicit-repair"
         return DriftObservation.MANAGED_DRIFT, ArtifactActionKind.REFUSE, observed_hash, "repair-required"
-    if record.source_hash != provenance.source_hash or record.rendered_hash != provenance.rendered_hash:
+    if record != provenance:
+        if record.source_hash == provenance.source_hash:
+            return DriftObservation.PROVENANCE_INVALID, ArtifactActionKind.REFUSE, observed_hash, "record-provenance-mismatch"
         return DriftObservation.STALE_SOURCE, ArtifactActionKind.UPDATE, observed_hash, "source-changed"
     return DriftObservation.CLEAN, ArtifactActionKind.NOOP, observed_hash, "clean"
 
@@ -318,6 +341,86 @@ def _matching_identity(record: ArtifactProvenance, expected: ArtifactProvenance)
             and record.managed_boundary == expected.managed_boundary)
 
 
+def _managed_block_codecs(
+        value: Mapping[str, tuple[Callable[[bytes, tuple[str, ...]], bytes],
+                                  Callable[[bytes, bytes, tuple[str, ...]], bytes]]] | None,
+        results: tuple[ArtifactRenderResult, ...]) -> dict[str, tuple[
+            Callable[[bytes, tuple[str, ...]], bytes],
+            Callable[[bytes, bytes, tuple[str, ...]], bytes]]]:
+    if value is None:
+        return {}
+    if not isinstance(value, Mapping) or not all(isinstance(key, str) for key in value):
+        raise TypeError("managed_block_codecs must be a mapping keyed by artifact ID")
+    expected_ids = {result.provenance.artifact_id for result in results
+                    if result.provenance.managed_boundary[0] == "managed-blocks"}
+    if set(value) != expected_ids:
+        raise ValueError("managed block codecs must exactly match managed-block artifacts")
+    codecs = {}
+    for artifact_id, pair in value.items():
+        if (not isinstance(pair, tuple) or len(pair) != 2 or
+                not callable(pair[0]) or not callable(pair[1])):
+            raise TypeError("managed block codec must be an extract/replace callable pair")
+        codecs[artifact_id] = pair
+    return codecs
+
+
+def _managed_hash(
+        target: Path, result: ArtifactRenderResult,
+        codec: tuple[Callable[[bytes, tuple[str, ...]], bytes],
+                     Callable[[bytes, bytes, tuple[str, ...]], bytes]] | None) -> str | None:
+    if not target.exists() or target.is_symlink():
+        return None
+    managed = _extract_managed_bytes(target.read_bytes(), result, codec)
+    return sha256_digest(managed) if managed is not None else None
+
+
+def _extract_managed_bytes(
+        file_bytes: bytes, result: ArtifactRenderResult,
+        codec: tuple[Callable[[bytes, tuple[str, ...]], bytes],
+                     Callable[[bytes, bytes, tuple[str, ...]], bytes]] | None) -> bytes | None:
+    if result.provenance.managed_boundary[0] == "whole-file":
+        return file_bytes
+    if codec is None:
+        return None
+    try:
+        managed = codec[0](file_bytes, result.provenance.managed_boundary[1])
+    except (TypeError, ValueError):
+        return None
+    return managed if isinstance(managed, bytes) else None
+
+
+def _replacement_bytes(
+        target: Path, result: ArtifactRenderResult,
+        codec: tuple[Callable[[bytes, tuple[str, ...]], bytes],
+                     Callable[[bytes, bytes, tuple[str, ...]], bytes]] | None) -> bytes:
+    if result.provenance.managed_boundary[0] == "whole-file":
+        return result.managed_bytes
+    if codec is None:
+        raise ValueError("managed block codec is required")
+    original = target.read_bytes() if target.exists() else b""
+    existing = _extract_managed_bytes(original, result, codec)
+    if target.exists() and existing is None:
+        raise ValueError("managed boundary is invalid")
+    try:
+        replacement = codec[1](original, result.managed_bytes,
+                               result.provenance.managed_boundary[1])
+    except (TypeError, ValueError) as error:
+        raise ValueError("managed boundary replacement is invalid") from error
+    if not isinstance(replacement, bytes):
+        raise ValueError("managed boundary replacement is invalid")
+    extracted = _extract_managed_bytes(replacement, result, codec)
+    if extracted != result.managed_bytes:
+        raise ValueError("managed boundary replacement is invalid")
+    if target.exists():
+        try:
+            restored = codec[1](replacement, existing, result.provenance.managed_boundary[1])
+        except (TypeError, ValueError) as error:
+            raise ValueError("managed boundary replacement is invalid") from error
+        if restored != original:
+            raise ValueError("managed boundary replacement changed unmanaged bytes")
+    return replacement
+
+
 def _root(root: Path) -> Path:
     if not isinstance(root, Path):
         raise TypeError("root must be Path")
@@ -335,12 +438,6 @@ def _contained_target(root: Path, relative: str) -> Path:
     if not _safe_target(target, root) or not is_within(target, root):
         raise ValueError("target escapes explicit root")
     return target
-
-
-def _read_hash(path: Path) -> str | None:
-    if not path.exists() or path.is_symlink():
-        return None
-    return sha256_digest(path.read_bytes())
 
 
 def _atomic_write_bytes(path: Path, value: bytes) -> None:

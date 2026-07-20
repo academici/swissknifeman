@@ -111,7 +111,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 |:--|:--|:--|:--|
 | P0 | Evidence, vocabulary и запечатанные provider contracts | 7/7 | 🟢 Done |
 | P1 | Provider config/domain и backward-compatible resolution | 6/6 | 🟢 Done |
-| P2 | Deterministic adapters, provenance, lock и drift engine | 0/4 | ⬜ Not started |
+| P2 | Deterministic adapters, provenance, lock и drift engine | 1/4 | 🟡 In progress |
 | P3 | Dual skills publication и marketplaces | 0/5 | ⬜ Not started |
 | P4 | Task-command parity и provider-neutral model routing | 0/5 | ⬜ Not started |
 | P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 0/7 | ⬜ Not started |
@@ -196,6 +196,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | D72 | 2026-07-20 | D71 provenance addendum: exact runtime startup banner is the authoritative process route evidence for the D71 worker — `gpt-5.6-terra/high`, approval `never`, sandbox `danger-full-access`. Static `codex doctor --json` remains the disclosed D56 environment anomaly: it reports persisted `gpt-5.6-sol` and no effective effort, so it is not a routing block. The retained stash is identified by OID plus Git commit time `2026-07-20T13:26:51Z`; its human subject timestamp is not evidence. | RAG:— (owner-grounded: exact D71 runtime banner and retained-stash correction; repo-grounded: `c09f876`, `c68defc`, `1e9fa8d`, `9fb9f14`, `git show 72505e4…`, `findings/D71-provenance-bookkeeping-repair-2026-07-20.md`) — adds provenance only: no P1.2/core/** execution, frozen-product semantic change, authority expansion, stash mutation, or Owner-gate disposition. |
 | D73 | 2026-07-20 | Approval Owner accepts exact P1.2 CORE-PROVIDER G1–G6 as written: Rule of Three, one pure stdlib-only `core.provider` boundary, exactly 13 public symbols, metadata-only protocol, additive minor SemVer, and P1.2-only authority. | RAG:— (owner-grounded: exact reply `APPROVE P1.2 CORE-PROVIDER G1-G6 AS WRITTEN`; repo-grounded: `artifacts/P1-core-provider-domain-contribution-review.md`) — opens only the prescribed P1.2 core API implementation. |
 | D74 | 2026-07-20 | P1 формально реопенена после RED Audit P1: P1.5 доказывает G02 только committed synthetic fixtures, P1.6 владеет уже внесёнными documentation projections и append-only P1.2–P1.4 commit→item map. Historical P1.1–P1.4 statuses/specs и frozen provider-config v1.0.0 не переписываются. | RAG:— (repo-grounded: `phases/P1.md` Audit P1 2026-07-20, `artifacts/P1-provider-compatibility-matrix.md`, commit `33f35d8`) — выполняет ровно три audit finding без расширения authority на root config, FOREMAN, fleet или P2+. |
+| D75 | 2026-07-20 | Approval Owner принимает exact P2.1 CORE-ARTIFACT K1–K6 as written: Rule of Three и flat `core.provider_artifact` seam, complete additive ten-symbol API, frozen artifact v1.0.0 bytes/hash/provenance/path invariants without lifecycle writes, explicit caller renderer and dependency direction, minor SemVer classification, and P2.1-only authority. | RAG:— (owner-grounded: exact reply `APPROVE P2.1 CORE-ARTIFACT K1-K6 AS WRITTEN`; repo-grounded: `artifacts/P2-core-contribution-proposal.md`, `root/adr/ADR-0002-provider-artifact-kernel.md`) — opens only the prescribed P2.1 implementation; P2.2+, provider delivery, live carriers, FOREMAN and fleet remain excluded. |
 
 ## 6. Update Log
 
@@ -247,6 +248,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | 2026-07-20 | plan-exec/gpt-5.6-terra medium | P1.6 закрыт: historical documentation projections validated, exact provenance map appended — детали см. phases/P1.md P1.6 Completion Notes. |
 | 2026-07-20 | plan-exec/gpt-5.6-terra medium | P1 map: P1.2=`57b9b2e96f1e56dc06ba4841586e6e4958ac91a8`; P1.3=`8f377e109041a391235d40be9bec73ad6f4d7f89`/fix=`061a2cb822812c30ea5ab1855a4aebef066c2308`; P1.4=`58a6f5d202a15e164849b1dc901e98924da8c480`; docs-close=`33f35d8618c887a055f79380084574d211af5f05`. |
 | 2026-07-20 | plan-close/Codex mechanical | P1 повторно закрыта после D74: terminal P1.1–P1.6 и synthetic G02/docs/provenance evidence сверены — детали см. phases/P1.md Phase Handoff. |
+| 2026-07-20 | plan-run/Codex gpt-5.6-terra high | P2.1 закрыт: D75 accepted additive deterministic `core.provider_artifact` kernel — детали см. phases/P2.md P2.1 Completion Notes. |
 
 ## 7. Contracts
 

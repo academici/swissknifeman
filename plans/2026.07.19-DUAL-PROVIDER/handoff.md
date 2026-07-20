@@ -1,39 +1,47 @@
-# HANDOFF — 2026-07-20 — after P1
+# HANDOFF — 2026-07-20 — after P2.1
 
-**Next:** `/task:plan-audit 2026.07.19-DUAL-PROVIDER P1`
+**Next:** ЗАПУСК ВРУЧНУЮ: `gpt-5.6-terra/high`
 
 | Параметр | Значение |
 |:--|:--|
-| Model | gpt-5.6-sol |
-| Thinking | xhigh — independent G02 verification |
-| Context | NEW SESSION — шаг-не-item |
-| Суть | Independently audit re-closed P1 and D74 remediation before P2.1. |
+| Model | gpt-5.6-terra |
+| Thinking | high — managed-boundary safety semantics |
+| Context | continue (/clear) — ручной item |
+| Суть | Реализовать P2.2 lock/drift/apply API поверх terminal P2.1 artifact kernel. |
 
 ```text
-/task:plan-audit 2026.07.19-DUAL-PROVIDER P1
+Продолжай только P2.2 плана 2026.07.19-DUAL-PROVIDER на gpt-5.6-terra/high.
+
+Сначала прочитай AGENTS.md, CLAUDE.md, packages/task/commands/plan-exec.md, затем
+plans/2026.07.19-DUAL-PROVIDER/plan.md, handoff.md, phases/P2.md и все P2.2 Required Reads
+строго в указанном порядке. P2.1 terminal: D75 accepted K1-K6; item commit 0dfdcd6 added
+core.provider_artifact. Preserve all unrelated owner dirt. Execute only P2.2; do not touch
+P2.3+, package-specific integration, live configs, FOREMAN, fleet, or user files.
+
+Implement the frozen lock/drift contract fail-closed: planning is no-write, apply receives
+only an explicit target root plus precomputed plan, and every write stays under TemporaryDirectory
+in tests. Do not auto-adopt, force, recursively discover, or delete outside declared managed entries.
 ```
 
-**Done:** P1 повторно закрыта: P1.1–P1.6 terminal `🟢 Done`. P1.5 item commit `7637cad`
-supplies committed synthetic G02 no-write evidence; P1.6 item commit `8cb4a5a` owns and
-validates the two historical documentation projections and provides exact P1.2–P1.4 commit
-anchors. Phase Handoff mechanically aggregates P1.1/P1.2/P1.5 process deviations.
+**Done:** P2.1 is terminal `🟢 Done`: D75 accepted K1–K6, and item commit `0dfdcd6`
+added the pure `core.provider_artifact` kernel, explicit exports, accepted contribution proposal,
+accepted ADR-0002, and focused deterministic/provenance/path conformance tests.
 
-**Remaining:** Run a fresh independent G02 audit before P2.1. P2.1 remains
-a manual `gpt-5.6-terra/high` shared-core proposal/ADR gate.
+**Remaining:** P2.2 → P2.3 → P2.4 remain strictly sequential. P2.2 owns lock, drift,
+explicit apply, repair, and atomic containment semantics; no package or live-target integration
+is open yet.
 
-**Sources of truth:** `root/contracts/provider-config-contract.md` (D70) ·
-`root/contracts/provider-migration-gates.md` (G02) · `phases/P1.md` ·
-`artifacts/P1-protected-path-fixture-evidence.md` ·
-`artifacts/P1-documentation-projection-verification.md` · terminal item commits · `journal.jsonl`.
+**Sources of truth:** `phases/P2.md` P2.1/P2.2 · D75 in `plan.md` ·
+`root/contracts/provider-artifact-contract.md` v1.0.0 · accepted
+`artifacts/P2-core-contribution-proposal.md` · accepted
+`root/adr/ADR-0002-provider-artifact-kernel.md` · item commit `0dfdcd6` · `journal.jsonl`.
 
-**Open risks:** Historical Audit P1 remains literal RED as provenance until a fresh independent
-G02 audit issues its new verdict. Static `codex doctor --json` route/effort ambiguity remains
-D56 non-green but non-blocking under D72. Uncommitted owner refinement
-`brief/01-refinements.md` is outside the P1 Files union and is deliberately preserved unstaged.
+**Open risks:** Static `codex doctor --json` route/effort ambiguity remains D56 non-green but
+non-blocking under D72. Current target plan-lint has no errors; any residual warnings must be
+baseline-attributed at P2.2 close. Unrelated owner dirt remains intentionally unstaged.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: mAInd/live-carrier evidence remains excluded; P1.5 uses synthetic fixtures only.
-- deferred: P1.2/P1.4/P1.5 process deviations are recorded in their Phase Status/journal carriers; P1.6 preserves historical rows and appends provenance only.
-- deferred: provider registry, renderer, artifact lifecycle, package CLI presentation — P2+.
+- workarounds: —
+- deferred: locks/drift/apply/repair (P2.2), catalog (P2.3), synthetic E2E/doctor (P2.4), and all package/provider delivery remain deferred.
 - open_questions: —

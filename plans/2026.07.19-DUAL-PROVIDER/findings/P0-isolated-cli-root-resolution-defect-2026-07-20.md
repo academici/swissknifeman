@@ -45,3 +45,14 @@ Git root для resolved global launcher —
 путём `./packages/<name>/bin/<cli>`. Перед write проверяются resolved launcher и git repo
 root; bare/global package CLI запрещён. Компактный recurring invariant добавлен в root
 `AGENTS.md`.
+
+## Post-item review — F1/F2 resolution
+
+Пост-review подтвердил два узких дефекта именно в read-only D65 helper, без изменения
+manifest или authority. **F1:** каждый git subprocess теперь получает сохранённый environment
+с `GIT_OPTIONAL_LOCKS=0`; bounded throwaway-repository probe фиксирует неизменность SHA-256 и
+mtime index после path-scoped `git status`. **F2:** каждый component main-root relative path
+открывается descriptor-relative с `O_NOFOLLOW`, final descriptor проверяется через `fstat` как
+regular file, и digest читается из этого descriptor. Bounded probes reject same-byte in-root и
+outside-root symlinks, non-regular final node, а также symlink/replaced directory component.
+Main остаётся path-scoped read-only; F1/F2 resolved отдельным fix-forward commit.

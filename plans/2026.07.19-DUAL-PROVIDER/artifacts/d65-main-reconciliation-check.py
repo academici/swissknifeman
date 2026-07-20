@@ -4,11 +4,13 @@
 from __future__ import annotations
 
 import argparse
+import errno
 import hashlib
 import json
 import os
 from pathlib import Path
 import re
+import stat
 import subprocess
 import sys
 import tempfile
@@ -136,11 +138,14 @@ class ReconciliationError(RuntimeError):
 
 
 def _run_git(root: Path, *args: str, binary: bool = False) -> bytes | str:
+    environment = os.environ.copy()
+    environment["GIT_OPTIONAL_LOCKS"] = "0"
     process = subprocess.run(
         ["git", "-C", str(root), *args],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         check=False,
+        env=environment,
     )
     if process.returncode:
         detail = process.stderr.decode("utf-8", errors="replace").strip()
@@ -154,28 +159,103 @@ def _sha256_bytes(content: bytes) -> str:
     return hashlib.sha256(content).hexdigest()
 
 
-def _sha256_file(root: Path, relative_path: str) -> str:
-    root = root.resolve(strict=True)
-    candidate = (root / relative_path).resolve(strict=True)
+def _relative_components(relative_path: str) -> tuple[str, ...]:
+    candidate = Path(relative_path)
+    if candidate.is_absolute() or not relative_path or any(
+        part in {"", ".", ".."} for part in candidate.parts
+    ):
+        raise ReconciliationError(f"path is not a safe relative path: {relative_path}")
+    return candidate.parts
+
+
+def _open_directory_no_symlinks(root: Path) -> int:
+    absolute = Path(os.path.abspath(root))
+    if not absolute.is_absolute():
+        raise ReconciliationError(f"root is not absolute: {root}")
+    nofollow = getattr(os, "O_NOFOLLOW", None)
+    directory = getattr(os, "O_DIRECTORY", None)
+    if nofollow is None or directory is None:
+        raise ReconciliationError("Linux O_NOFOLLOW/O_DIRECTORY are required")
+    flags = os.O_RDONLY | os.O_CLOEXEC | nofollow | directory
+    descriptor = os.open("/", flags)
     try:
-        candidate.relative_to(root)
-    except ValueError as exc:
-        raise ReconciliationError(f"path escapes main root: {relative_path}") from exc
-    digest = hashlib.sha256()
-    with candidate.open("rb") as source:
-        for chunk in iter(lambda: source.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
+        for component in absolute.parts[1:]:
+            try:
+                next_descriptor = os.open(component, flags, dir_fd=descriptor)
+            except OSError as exc:
+                if exc.errno in {errno.ELOOP, errno.ENOTDIR}:
+                    raise ReconciliationError(f"unsafe root component: {component}") from exc
+                raise
+            os.close(descriptor)
+            descriptor = next_descriptor
+        if not stat.S_ISDIR(os.fstat(descriptor).st_mode):
+            raise ReconciliationError(f"root is not a directory: {root}")
+        return descriptor
+    except Exception:
+        os.close(descriptor)
+        raise
+
+
+def _sha256_file(root: Path, relative_path: str) -> str:
+    components = _relative_components(relative_path)
+    nofollow = getattr(os, "O_NOFOLLOW", None)
+    directory = getattr(os, "O_DIRECTORY", None)
+    if nofollow is None or directory is None:
+        raise ReconciliationError("Linux O_NOFOLLOW/O_DIRECTORY are required")
+    root_descriptor = _open_directory_no_symlinks(root)
+    descriptor = root_descriptor
+    try:
+        for component in components[:-1]:
+            try:
+                next_descriptor = os.open(
+                    component,
+                    os.O_RDONLY | os.O_CLOEXEC | nofollow | directory,
+                    dir_fd=descriptor,
+                )
+            except OSError as exc:
+                if exc.errno in {errno.ELOOP, errno.ENOTDIR}:
+                    raise ReconciliationError(
+                        f"unsafe path component: {relative_path}"
+                    ) from exc
+                raise
+            os.close(descriptor)
+            descriptor = next_descriptor
+        try:
+            file_descriptor = os.open(
+                components[-1],
+                os.O_RDONLY | os.O_CLOEXEC | nofollow,
+                dir_fd=descriptor,
+            )
+        except OSError as exc:
+            if exc.errno == errno.ELOOP:
+                raise ReconciliationError(f"symlinked final file: {relative_path}") from exc
+            raise
+        try:
+            if not stat.S_ISREG(os.fstat(file_descriptor).st_mode):
+                raise ReconciliationError(f"final path is not a regular file: {relative_path}")
+            digest = hashlib.sha256()
+            with os.fdopen(file_descriptor, "rb", closefd=True) as source:
+                file_descriptor = -1
+                for chunk in iter(lambda: source.read(1024 * 1024), b""):
+                    digest.update(chunk)
+            return digest.hexdigest()
+        finally:
+            if file_descriptor >= 0:
+                os.close(file_descriptor)
+    finally:
+        os.close(descriptor)
 
 
 def _assert_root(root: Path, expected: Path | None = None) -> Path:
-    resolved = root.resolve(strict=True)
-    top_level = Path(str(_run_git(resolved, "rev-parse", "--show-toplevel"))).resolve(strict=True)
-    if top_level != resolved:
-        raise ReconciliationError(f"not an exact git root: {resolved}")
-    if expected is not None and resolved != expected.resolve(strict=True):
-        raise ReconciliationError(f"unexpected git root: {resolved}")
-    return resolved
+    absolute = Path(os.path.abspath(root))
+    descriptor = _open_directory_no_symlinks(absolute)
+    os.close(descriptor)
+    top_level = Path(os.path.abspath(str(_run_git(absolute, "rev-parse", "--show-toplevel"))))
+    if top_level != absolute:
+        raise ReconciliationError(f"not an exact git root: {absolute}")
+    if expected is not None and absolute != Path(os.path.abspath(expected)):
+        raise ReconciliationError(f"unexpected git root: {absolute}")
+    return absolute
 
 
 def _resolve_commit(root: Path, commit: str) -> str:

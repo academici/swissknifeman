@@ -1,0 +1,57 @@
+{
+  "contract_version": "1.0.0",
+  "publication_unit": "core",
+  "version": "0.4.0",
+  "artifacts": [
+    {
+      "path": ".codex-plugin/plugin.json",
+      "source_hash": "sha256:4a87ced9591d82f9f86ebf20cd09754fed0809ba7f5d86022d73114040ebfb39",
+      "rendered_hash": "sha256:0234a57e65d6a4828c09dcb752bf68d120ccc24ed5397dc76084a5c5f6e6dfe7"
+    },
+    {
+      "path": "skills/general/context-economy/SKILL.md",
+      "source_hash": "sha256:57f911d0c81c20467efb9d5bef8b0df07d4b1270afe0e13d07ae9391396c4343",
+      "rendered_hash": "sha256:5f58b3a85174952856921036099c8359cb9b80e315effed502fef1022f888a9f"
+    },
+    {
+      "path": "skills/general/anti-drift/SKILL.md",
+      "source_hash": "sha256:8c6b2065bee24b9efa1389fbb7340bdda72bd21508948b272bf0de2cf9289f0d",
+      "rendered_hash": "sha256:30d386711671315d8d974759456d04565a28ad979aec85cc17e93dbef9e28004"
+    },
+    {
+      "path": "skills/general/compact-responses/SKILL.md",
+      "source_hash": "sha256:16e084032cf6663c581938d8e76a726d28478ad6f28f1404719fb2ec2e2e9ed6",
+      "rendered_hash": "sha256:afd38c18697b7b170557936647e5b92bb74c5352f0b0636bb2c721ecd810e5c2"
+    },
+    {
+      "path": "skills/general/session-handoff/SKILL.md",
+      "source_hash": "sha256:f929059e488fb8c5e5d9b64fe98d71622f38fad9788a292f2eda6b10714f7a3a",
+      "rendered_hash": "sha256:9116c6f1612418fbd614b0f88ec86e27172363011f77926ea314c86d1e689cc5"
+    },
+    {
+      "path": "skills/general/mcp-advisor/SKILL.md",
+      "source_hash": "sha256:f5646029c5d82f05b7de20f65a0d9a504495e493b9d39ed735dc83076988ea70",
+      "rendered_hash": "sha256:cfa7c70cd7183323d6611d140d73f460c8a57a574dd7b09d2d2c628d4d1e0f69"
+    },
+    {
+      "path": "skills/general/verify-claims/SKILL.md",
+      "source_hash": "sha256:3e8d93f750424df9a660305d8d18f5f6bb8716ab80114ee6776f42d45c44d698",
+      "rendered_hash": "sha256:ccb328f74903a8beb922c3619579922743bcb3ddd6f8934a0ba5f9ab434d85ba"
+    },
+    {
+      "path": "skills/research/query-craft/SKILL.md",
+      "source_hash": "sha256:36187ee0da2ce958357db6722d1f42b0072804f452ee3ca5d580c5f228228556",
+      "rendered_hash": "sha256:6e72140a9d7fc3b403450f1e4b420cd053a5bb81282bc1d0e3f2d8bfe3c97af6"
+    },
+    {
+      "path": "skills/oss-dev/gh-review/SKILL.md",
+      "source_hash": "sha256:8dd08f14943b55ce88999c19905ad5d1e0714e7e4ae1e18b0fba88d3902fdde4",
+      "rendered_hash": "sha256:7a6942c56babb3a0c97a076861cdb89ab943aa9aec696d091ec0852da895eda9"
+    },
+    {
+      "path": "skills/general/plan-protocol/SKILL.md",
+      "source_hash": "sha256:3e5aeb0874a9025f41304221a21912866f287749ce444e8962baa00196d7e984",
+      "rendered_hash": "sha256:9040c533879e56a97c631cfebeb524543de3b9aec379ac2f60ec4a01d1aaa94e"
+    }
+  ]
+}

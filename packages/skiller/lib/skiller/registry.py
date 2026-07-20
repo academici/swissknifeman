@@ -9,7 +9,7 @@ from .common import (MARKETPLACE, die, parse_flags, parse_frontmatter,
                      parse_inline_list, skill_content_hash)
 from .config import CORE_PLUGIN, CORE_SKILLS
 from .publication import (SiblingPlugin, build_publication_catalog,
-                          render_claude_publication)
+                          render_claude_publication, render_codex_publication)
 
 OWNER = {"name": "Dmitry Vostrikov", "email": "dv.vostrikov@gmail.com"}
 
@@ -393,6 +393,23 @@ def build_claude_publication(env, bucket_meta, bucket_dirs, registry=None):
     return render_claude_publication(catalog, repo_root=repo_root, package_root=root)
 
 
+def build_codex_publication(env, bucket_meta, bucket_dirs, registry=None):
+    """Render native Codex outputs from the same immutable semantic catalog."""
+    root = env.root
+    repo_root = _repo_root(root)
+    if registry is None:
+        registry, _meta, _dirs = build_registry(env)
+    meta_skill = parse_frontmatter(root / "generate-skill" / "generate-skill" / "SKILL.md")
+    catalog = build_publication_catalog(
+        registry=registry, bucket_meta=bucket_meta, bucket_dirs=bucket_dirs,
+        core_skills=CORE_SKILLS, core_plugin=CORE_PLUGIN,
+        package_version=_package_version(root), siblings=_sibling_plugins(repo_root, root),
+        generate_skill_description=meta_skill.get("description", "Meta-skill for creating new skills"),
+        skm_present=(root / "skm" / ".claude-plugin" / "plugin.json").is_file(),
+    )
+    return render_codex_publication(catalog, repo_root=repo_root, package_root=root)
+
+
 def build_plugin_manifests(env, bucket_meta, bucket_dirs, registry=None):
     """Compatibility view of Claude artifacts for the legacy registry writer/checker."""
     return [(artifact.target, json.loads(artifact.managed_bytes.decode("utf-8")))
@@ -408,6 +425,8 @@ def write_plugin_manifests(env, bucket_meta, bucket_dirs):
     manifests = build_plugin_manifests(env, bucket_meta, bucket_dirs)
     for path, data in manifests:
         atomic_write_text(path, _manifest_text(data))
+    for artifact in build_codex_publication(env, bucket_meta, bucket_dirs):
+        atomic_write_text(artifact.target, artifact.managed_bytes.decode("utf-8"))
     # число плагинов = размер marketplace.plugins (последний манифест — marketplace.json)
     return len(manifests[-1][1]["plugins"])
 
@@ -440,6 +459,8 @@ def check_drift(env):
     _cmp(root / "skills" / "_index.md", render_index(registry, bucket_meta))
     for path, data in build_plugin_manifests(env, bucket_meta, bucket_dirs, registry):
         _cmp(path, _manifest_text(data))
+    for artifact in build_codex_publication(env, bucket_meta, bucket_dirs, registry):
+        _cmp(artifact.target, artifact.managed_bytes.decode("utf-8"))
 
     graph_text, _n_nodes, _n_edges = render_graph(registry)
     _cmp(_docs_root(root) / "docs" / "guide" / "graph.md", graph_text)

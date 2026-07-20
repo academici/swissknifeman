@@ -1,0 +1,8 @@
+{
+  "name": "laravel-data-layer",
+  "version": "0.4.0",
+  "description": "Typed data + realtime: spatie/laravel-data DTOs (TS export), Echo/Reverb broadcasting",
+  "skills": [
+    "./"
+  ]
+}

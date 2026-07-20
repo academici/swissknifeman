@@ -22,6 +22,12 @@ _CLAUDE_ADAPTER = ArtifactAdapterIdentity(
                            (SupportLevel.NATIVE, SupportLevel.ADAPTED)),),
 )
 
+_CODEX_ADAPTER = ArtifactAdapterIdentity(
+    "skiller.codex-publication", "1.0.0", ProviderId.CODEX, "1.0.0",
+    (CapabilityRequirement(CapabilityId("skills.repository"),
+                           (SupportLevel.NATIVE, SupportLevel.ADAPTED)),),
+)
+
 
 @dataclass(frozen=True)
 class SemanticSkill:
@@ -75,6 +81,18 @@ class PublicationCatalog:
 @dataclass(frozen=True)
 class ClaudePublicationArtifact:
     """P2-backed rendered bytes and provenance for one Claude generated artifact."""
+
+    target: Path
+    publication_unit_id: str
+    package_version: str
+    managed_bytes: bytes
+    source_hash: str
+    rendered_hash: str
+
+
+@dataclass(frozen=True)
+class CodexPublicationArtifact:
+    """P2-backed generated Codex artifact; never a canonical skill source."""
 
     target: Path
     publication_unit_id: str
@@ -243,6 +261,160 @@ def render_claude_publication(catalog: PublicationCatalog, *, repo_root: Path,
                                                       "marketplace", ()), marketplace_data,
                                       all_sources, repo_root, catalog.package_version))
     return tuple(artifacts)
+
+
+def render_codex_publication(catalog: PublicationCatalog, *, repo_root: Path,
+                             package_root: Path) -> tuple[CodexPublicationArtifact, ...]:
+    """Render native Codex plugins independently from the semantic catalog.
+
+    Bucket plugins remain direct canonical roots.  The discontiguous core and
+    management unit are explicit cache-contained bundles; only declared SKILL.md
+    members are copied into those bundles.
+    """
+    if not isinstance(catalog, PublicationCatalog):
+        raise TypeError("catalog must be PublicationCatalog")
+    repo_root = repo_root.resolve()
+    package_root = package_root.resolve()
+    by_id = {skill.semantic_id: skill for skill in catalog.skills}
+    metadata = {name: dict(data) for name, data in catalog.bucket_metadata}
+    artifacts: list[CodexPublicationArtifact] = []
+    plugins: list[dict[str, object]] = []
+
+    def source_path(path: Path) -> str:
+        return "./" + path.relative_to(repo_root).as_posix()
+
+    for unit in catalog.units:
+        if unit.kind == "bucket":
+            meta = metadata[unit.plugin_id]
+            root = package_root / "skills" / unit.plugin_id
+            data = _codex_plugin_manifest(unit.plugin_id, catalog.package_version,
+                                          meta["description"], ["./"])
+            artifacts.append(_render_codex_artifact(
+                root / ".codex-plugin" / "plugin.json", unit, data,
+                tuple(by_id[item] for item in unit.member_ids), repo_root,
+                catalog.package_version))
+            plugins.append(_codex_marketplace_entry(unit.plugin_id, source_path(root),
+                                                    meta["description"], meta))
+        elif unit.kind == "meta":
+            root = package_root / "generate-skill"
+            data = _codex_plugin_manifest("generate-skill", catalog.package_version,
+                                          catalog.generate_skill_description,
+                                          ["./generate-skill"])
+            artifacts.append(_render_codex_artifact(
+                root / ".codex-plugin" / "plugin.json", unit, data, (), repo_root,
+                catalog.package_version))
+            plugins.append(_codex_marketplace_entry("generate-skill", source_path(root),
+                                                    catalog.generate_skill_description,
+                                                    {"category": "meta", "tags": ["meta", "authoring"]}))
+        elif unit.kind == "curated":
+            root = package_root / "adapters" / "codex" / "core"
+            artifacts.extend(_render_codex_bundle(
+                root, unit, catalog, tuple(by_id[item] for item in unit.member_ids), repo_root, package_root,
+                description="Curated always-on core skills", skill_root="./skills"))
+            plugins.append(_codex_marketplace_entry("core", source_path(root),
+                                                    "Curated always-on core skills",
+                                                    {"category": "meta", "tags": ["core", "token-economy"]}))
+        elif unit.kind == "management":
+            root = package_root / "adapters" / "codex" / "skm"
+            artifacts.extend(_render_codex_skm_bundle(root, unit, catalog, repo_root))
+            plugins.append(_codex_marketplace_entry("skm", source_path(root),
+                                                    "skiller management skill adapter",
+                                                    {"category": "meta", "tags": ["cli", "skills", "management"]}))
+
+    marketplace = {
+        "name": catalog.marketplace_name,
+        "plugins": sorted(plugins, key=lambda plugin: str(plugin["name"])),
+    }
+    artifacts.append(_render_codex_artifact(
+        repo_root / ".agents" / "plugins" / "marketplace.json",
+        PublicationUnit("codex-marketplace", "codex-marketplace", "marketplace", ()),
+        marketplace, tuple(catalog.skills), repo_root, catalog.package_version))
+    return tuple(artifacts)
+
+
+def _codex_plugin_manifest(name: str, version: str, description: str,
+                           skills: list[str]) -> dict[str, object]:
+    return {"name": name, "version": version, "description": description, "skills": skills}
+
+
+def _codex_marketplace_entry(name: str, path: str, description: str,
+                             metadata: Mapping[str, object]) -> dict[str, object]:
+    if not path.startswith("./") or ".." in Path(path).parts:
+        raise ValueError("Codex marketplace source path must be contained and ./-prefixed")
+    return {
+        "name": name,
+        "source": {"path": path},
+        "description": description,
+        "category": metadata.get("category", ""),
+        "tags": list(metadata.get("tags", [])),
+        "install_policy": "explicit",
+        "auth": "none",
+    }
+
+
+def _render_codex_bundle(root: Path, unit: PublicationUnit, catalog: PublicationCatalog,
+                         members: tuple[SemanticSkill, ...], repo_root: Path, package_root: Path, *,
+                         description: str, skill_root: str) -> tuple[CodexPublicationArtifact, ...]:
+    artifacts = [_render_codex_artifact(
+        root / ".codex-plugin" / "plugin.json", unit,
+        _codex_plugin_manifest(unit.plugin_id, catalog.package_version, description, [skill_root]),
+        members, repo_root, catalog.package_version)]
+    for member in members:
+        target = root / "skills" / member.semantic_id / "SKILL.md"
+        source = (package_root / member.source_path).read_bytes()
+        artifacts.append(_render_codex_artifact(target, unit, source, (member,), repo_root,
+                                                catalog.package_version))
+    artifacts.append(_codex_bundle_lock(root, unit, catalog.package_version, tuple(artifacts), repo_root))
+    return tuple(artifacts)
+
+
+def _render_codex_skm_bundle(root: Path, unit: PublicationUnit, catalog: PublicationCatalog,
+                             repo_root: Path) -> tuple[CodexPublicationArtifact, ...]:
+    skill = ("---\nname: skm\ndescription: skiller CLI management adapter.\n---\n\n"
+             "Use the repository-local skiller CLI for status, doctor, skills, and integration.\n")
+    artifacts = [
+        _render_codex_artifact(root / ".codex-plugin" / "plugin.json", unit,
+                               _codex_plugin_manifest("skm", catalog.package_version,
+                                                      "skiller management skill adapter", ["./skills"]),
+                               (), repo_root, catalog.package_version),
+        _render_codex_artifact(root / "skills" / "skm" / "SKILL.md", unit,
+                               skill.encode("utf-8"), (), repo_root, catalog.package_version),
+    ]
+    artifacts.append(_codex_bundle_lock(root, unit, catalog.package_version, tuple(artifacts), repo_root))
+    return tuple(artifacts)
+
+
+def _codex_bundle_lock(root: Path, unit: PublicationUnit, version: str,
+                       artifacts: tuple[CodexPublicationArtifact, ...],
+                       repo_root: Path) -> CodexPublicationArtifact:
+    records = [{"path": artifact.target.relative_to(root).as_posix(),
+                "source_hash": artifact.source_hash, "rendered_hash": artifact.rendered_hash}
+               for artifact in artifacts]
+    return _render_codex_artifact(root / "publication-lock.json", unit,
+                                  {"contract_version": "1.0.0", "publication_unit": unit.unit_id,
+                                   "version": version, "artifacts": records}, (), repo_root, version)
+
+
+def _render_codex_artifact(target: Path, unit: PublicationUnit, data: Mapping[str, object] | bytes,
+                           sources: Sequence[SemanticSkill], repo_root: Path,
+                           package_version: str) -> CodexPublicationArtifact:
+    source_records = tuple(ArtifactSource(
+        f"skiller.publication.source{index}", source.source_path,
+        source.content_hash if source.content_hash.startswith("sha256:") else f"sha256:{source.content_hash}")
+        for index, source in enumerate(sources))
+    if not source_records:
+        source_records = (ArtifactSource("skiller.publication.meta", "packages/skiller/package.json",
+                                         "sha256:" + "0" * 64),)
+    rendered = data if isinstance(data, bytes) else _manifest_text(data)
+    result = plan_artifact_render(ArtifactRenderRequest(
+        f"skiller.codex.{unit.plugin_id}.{target.relative_to(repo_root).as_posix().lstrip('.').replace('/', '-').replace('.', '-').lower()}", source_records,
+        ArtifactTarget(target.relative_to(repo_root).as_posix(), ("whole-file", ())),
+        _CODEX_ADAPTER, (), {"publication_unit": unit.unit_id,
+                              "plugin_version": package_version},
+        lambda _request: rendered,
+    ))
+    return CodexPublicationArtifact(target, unit.unit_id, package_version, result.managed_bytes,
+                                    result.provenance.source_hash, result.provenance.rendered_hash)
 
 
 def _render_artifact(target: Path, unit: PublicationUnit, data: Mapping[str, object],

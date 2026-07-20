@@ -14,7 +14,7 @@ import tempfile
 from typing import Iterable
 
 from .provider_artifact import (ArtifactProvenance, ArtifactRenderResult,
-                                ArtifactSource, sha256_digest,
+                                ArtifactSource, canonical_json_bytes, sha256_digest,
                                 validate_target_path)
 from .provider import CapabilityId, CapabilityRequirement, ProviderId, SupportLevel
 from .paths import is_within, is_within_lexical
@@ -101,6 +101,46 @@ class ArtifactPlan:
         object.__setattr__(self, "actions", ordered)
 
 
+def artifact_dry_run(plan: ArtifactPlan) -> dict[str, object]:
+    """Project one immutable plan for machine-readable no-write preview output.
+
+    The returned value is derived only from ``plan``.  It deliberately neither
+    reads a root nor calls ``apply_plan``; callers must pass this same plan to
+    application if they later choose an explicit write operation.
+    """
+    return _plan_projection(plan, "dry-run")
+
+
+def artifact_doctor(plan: ArtifactPlan) -> dict[str, object]:
+    """Project one immutable plan into deterministic no-write doctor data."""
+    return _plan_projection(plan, "doctor")
+
+
+def render_artifact_projection(projection: dict[str, object]) -> str:
+    """Render a stable Russian human view of a dry-run or doctor projection."""
+    if not isinstance(projection, dict):
+        raise TypeError("projection must be a dict")
+    if set(projection) != {"actions", "exit_severity", "mode", "plan_id"}:
+        raise ValueError("projection has an unsupported shape")
+    mode = projection["mode"]
+    severity = projection["exit_severity"]
+    plan_id = projection["plan_id"]
+    actions = projection["actions"]
+    if mode not in {"dry-run", "doctor"} or severity not in {"green", "warning", "error"}:
+        raise ValueError("projection has an unsupported value")
+    if not isinstance(plan_id, str) or not isinstance(actions, list):
+        raise ValueError("projection has an unsupported shape")
+    lines = [f"Режим: {mode}", f"План: {plan_id}", f"Статус: {severity}"]
+    for action in actions:
+        if not isinstance(action, dict):
+            raise ValueError("projection action has an unsupported shape")
+        try:
+            lines.append("- {artifact_id}: {observation} → {action} ({diagnostic})".format(**action))
+        except (KeyError, TypeError) as error:
+            raise ValueError("projection action has an unsupported shape") from error
+    return "\n".join(lines) + "\n"
+
+
 def serialize_lock(lock: ArtifactLock) -> bytes:
     """Return canonical JSON bytes for a supported lock; timestamps are forbidden."""
     if not isinstance(lock, ArtifactLock):
@@ -109,6 +149,35 @@ def serialize_lock(lock: ArtifactLock) -> bytes:
              "records": [_provenance_value(record) for record in lock.records]}
     return json.dumps(value, sort_keys=True, separators=(",", ":"),
                       ensure_ascii=False).encode("utf-8") + b"\n"
+
+
+def _plan_projection(plan: ArtifactPlan, mode: str) -> dict[str, object]:
+    if not isinstance(plan, ArtifactPlan):
+        raise TypeError("plan must be ArtifactPlan")
+    actions = [{
+        "action": action.action.value,
+        "artifact_id": action.artifact_id,
+        "diagnostic": action.diagnostic,
+        "observation": action.observation.value,
+        "target_path": action.target_path,
+    } for action in plan.actions]
+    identity = {
+        "actions": [{
+            "action": action["action"], "artifact_id": action["artifact_id"],
+            "diagnostic": action["diagnostic"], "observation": action["observation"],
+            "target_path": action["target_path"],
+        } for action in actions],
+        "lock_path": plan.lock_path,
+        "next_lock": sha256_digest(serialize_lock(plan.next_lock)) if plan.next_lock else None,
+    }
+    if any(action.action is ArtifactActionKind.REFUSE for action in plan.actions):
+        severity = "error"
+    elif any(action.action is not ArtifactActionKind.NOOP for action in plan.actions):
+        severity = "warning"
+    else:
+        severity = "green"
+    return {"mode": mode, "plan_id": sha256_digest(canonical_json_bytes(identity)),
+            "exit_severity": severity, "actions": actions}
 
 
 def parse_lock(raw: bytes) -> ArtifactLock:

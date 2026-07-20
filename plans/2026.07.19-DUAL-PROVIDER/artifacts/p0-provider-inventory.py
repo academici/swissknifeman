@@ -1,165 +1,111 @@
 #!/usr/bin/env python3
-"""Reproducible, read-only P0.1 inventory for the dual-provider plan."""
+"""Verify the sealed P0.1 inventory from git objects, never live inputs."""
 from __future__ import annotations
 
 import argparse
 import hashlib
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
 
-
 PLAN_ID = "2026.07.19-DUAL-PROVIDER"
-PASS_ONE = {
-    "canonical skills": 216,
-    "task commands": 32,
-    "plugin manifests": 54,
-    "MCP presets": 8,
-    "agent packs": 10,
-    "fleet projects": 25,
-}
+ANCHOR_REL = f"plans/{PLAN_ID}/artifacts/p0-evidence-anchors.json"
 
 
-def root_from_script() -> Path:
+def root() -> Path:
     return Path(__file__).resolve().parents[3]
 
 
-def run(root: Path, *args: str) -> str:
-    return subprocess.run(
-        ["git", *args], cwd=root, text=True, capture_output=True, check=True
-    ).stdout.rstrip()
+def git(repo: Path, *args: str) -> str:
+    return subprocess.run(["git", *args], cwd=repo, text=True, capture_output=True,
+                          check=True).stdout
 
 
-def paths(root: Path, pattern: str) -> list[str]:
-    return sorted(str(p.relative_to(root)) for p in root.glob(pattern) if p.is_file())
+def canonical(value: object) -> bytes:
+    return json.dumps(value, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
 
 
-def package_sources(root: Path, package: str) -> list[str]:
-    return paths(root, f"packages/{package}/lib/{package}/**/*.py")
+def object_paths(repo: Path, tree: str, pattern: str) -> list[str]:
+    paths = git(repo, "ls-tree", "-r", "--name-only", tree).splitlines()
+    expression = re.compile("^" + re.escape(pattern).replace(r"\*\*", ".*").replace(r"\*", "[^/]*") + "$" )
+    return sorted(path for path in paths if expression.match(path))
 
 
-def provider_mentions(root: Path, package: str) -> list[str]:
-    result = []
-    for rel in package_sources(root, package):
-        text = (root / rel).read_text(encoding="utf-8", errors="replace").lower()
-        if any(token in text for token in ("claude", ".mcp.json", ".claude/")):
-            result.append(rel)
-    return result
+def object_text(repo: Path, commit: str, path: str) -> str:
+    return git(repo, "show", f"{commit}:{path}")
 
 
-def classify(root: Path) -> dict[str, list[str]]:
-    return {
-        "canonical": sorted(
-            paths(root, "packages/skiller/skills/**/SKILL.md")
-            + paths(root, "packages/task/commands/*.md")
-        ),
-        "provider-adapter": sorted(
-            paths(root, "packages/*/.claude-plugin/plugin.json")
-            + paths(root, "packages/harness/configs/claude-code/**/*.json")
-        ),
-        "generated": sorted(
-            paths(root, ".claude-plugin/marketplace.json")
-            + paths(root, "packages/skiller/skills/*/.claude-plugin/plugin.json")
-        ),
-        "bootstrap-only": sorted(
-            p for p in ("AGENTS.md", ".mcp.json.example") if (root / p).is_file()
-        ) + sorted(
-            str(p.relative_to(root)) for d in (".agents", ".serena")
-            for p in (root / d).rglob("*") if p.is_file()
-        ),
-    }
+def block(finding: str, heading: str) -> list[str]:
+    found = re.search(rf"^### {re.escape(heading)}\n\n```text\n(.*?)\n```", finding, re.M | re.S)
+    if not found:
+        raise ValueError(f"missing historical raw set: {heading}")
+    return found.group(1).splitlines()
 
 
-def inventory(root: Path) -> dict[str, object]:
-    classes = classify(root)
-    config = json.loads((root / "config.json").read_text(encoding="utf-8"))
-    sets = {
-        "canonical skills": paths(root, "packages/skiller/skills/**/SKILL.md"),
-        "task commands": paths(root, "packages/task/commands/*.md"),
-        "plugin manifests": paths(root, "**/.claude-plugin/plugin.json"),
-        "MCP presets": paths(root, "packages/harness/configs/claude-code/mcp/*.json"),
-        "agent packs": paths(root, "packages/harness/configs/claude-code/agent-packs/**/pack.json"),
-        "fleet projects": [str(row["id"]) for row in config.get("projects", [])],
-    }
-    coupling = {pkg: provider_mentions(root, pkg) for pkg in
-                ("skiller", "task", "harness", "maind", "analyst")}
-    coupling["core"] = [
-        rel for rel in paths(root, "core/*.py")
-        if any(token in (root / rel).read_text(encoding="utf-8", errors="replace").lower()
-               for token in ("claude", ".mcp.json", ".claude/"))
-    ]
-    return {"sets": sets, "classes": classes, "coupling": coupling}
-
-
-def render(root: Path) -> str:
-    data = inventory(root)
-    head = run(root, "rev-parse", "HEAD")
-    status = run(root, "status", "--short") or "(clean)"
-    lines = [
-        "# P0 provider coupling baseline", "",
-        "## Anchor", "",
-        f"- `git rev-parse HEAD`: `{head}`.",
-        "- `git status --short`:", "", "```text", status, "```", "",
-        "The anchor records the complete visible worktree; untracked or dirty files are not "
-        "included automatically in an item commit.", "",
-        "## Summary", "",
-        "| Surface | Pass 1 | Current | Delta |", "|:--|--:|--:|--:|",
-    ]
-    for label, members in data["sets"].items():
-        lines.append(f"| {label} | {PASS_ONE[label]} | {len(members)} | {len(members) - PASS_ONE[label]:+d} |")
-    lines += [
-        "",
-        "The only delta is `task commands` (-21): the frozen pass-1 finding described 32, "
-        "while the explicit canonical root `packages/task/commands/*.md` currently contains 11. "
-        "The helper preserves that definition rather than broadening it to unrelated package command "
-        "directories; P0.2 must decide whether the older label used a different scope.",
-    ]
-    lines += ["", "Raw sorted path/id sets:", ""]
-    for label, members in data["sets"].items():
-        lines += [f"### {label}", "", "```text", *members, "```", ""]
-    lines += ["## Coupling by package", ""]
-    for package, members in data["coupling"].items():
-        lines += [f"### {package}", "", "Provider-name matches are classified seams, not defects.",
-                  "", "```text", *members, "```", ""]
-    lines += ["## Classification", ""]
-    for kind, members in data["classes"].items():
-        lines += [f"### {kind}", "", "```text", *members, "```", ""]
-    lines += [
-        "## Bootstrap-only state", "",
-        "`AGENTS.md`, `.agents/`, `.serena/`, and `.mcp.json.example` are recorded as "
-        "bootstrap-only. This inventory neither changes nor treats them as the distribution canon.",
-        "",
-        "## Reproduction", "",
-        "```bash",
-        "python3 plans/2026.07.19-DUAL-PROVIDER/artifacts/p0-provider-inventory.py --write",
-        "python3 plans/2026.07.19-DUAL-PROVIDER/artifacts/p0-provider-inventory.py --check",
-        "```",
-        "",
-        "The helper scans only the explicit roots encoded in this file, sorts every path set, "
-        "and is read-only except for its plan finding in `--write` mode.",
-        "",
-    ]
-    return "\n".join(lines)
+def fail(message: str) -> int:
+    print(f"P0.1 anchor check failed: {message}", file=sys.stderr)
+    return 1
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser()
-    mode = parser.add_mutually_exclusive_group(required=True)
-    mode.add_argument("--write", action="store_true")
-    mode.add_argument("--check", action="store_true")
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--check", action="store_true")
+    parser.add_argument("--write", action="store_true")
+    parser.add_argument("--live", action="store_true")
+    parser.add_argument("--anchor-file", type=Path)
     args = parser.parse_args()
-    root = root_from_script()
-    target = root / "plans" / PLAN_ID / "findings" / "P0-provider-coupling-baseline.md"
-    content = render(root)
-    if args.check:
-        if not target.is_file() or target.read_text(encoding="utf-8") != content:
-            print("P0 inventory drift detected", file=sys.stderr)
-            return 1
-        print("P0 inventory: no drift")
-        return 0
-    target.write_text(content, encoding="utf-8")
-    print(f"P0 inventory: wrote {target}")
+    if args.write:
+        return fail("--write cannot rewrite immutable historical evidence")
+    if args.live:
+        return fail("live fallback is forbidden; replay is sealed to git objects")
+    if not args.check:
+        return fail("--check is required")
+    repo = root()
+    anchor_path = args.anchor_file or repo / ANCHOR_REL
+    try:
+        anchor_doc = json.loads(anchor_path.read_text(encoding="utf-8"))
+        if anchor_doc.get("schema_version") != 1 or anchor_doc.get("plan_id") != PLAN_ID:
+            raise ValueError("malformed anchor header")
+        anchor = anchor_doc["anchors"]["p0.1"]
+        tree = anchor["source_tree"]
+        git(repo, "cat-file", "-e", f"{tree}^{{tree}}")
+        finding = object_text(repo, anchor["item_commit"], anchor["finding_path"])
+        if hashlib.sha256(finding.encode()).hexdigest() != anchor["finding_sha256"]:
+            raise ValueError("wrong finding hash")
+        collections = anchor["collections"]
+        actual = {
+            "canonical skills": object_paths(repo, tree, collections["canonical skills"]["glob"]),
+            "task commands": object_paths(repo, tree, collections["task commands"]["glob"]),
+            "MCP presets": object_paths(repo, tree, collections["MCP presets"]["glob"]),
+            "agent packs": object_paths(repo, tree, collections["agent packs"]["glob"]),
+        }
+        for label, paths in actual.items():
+            if len(paths) != collections[label]["expected_count"] or paths != block(finding, label):
+                raise ValueError(f"changed root set: {label}")
+        plugins = collections["plugin manifests"]
+        external = plugins["external_paths"]
+        if (plugins.get("collection_mode") != "tracked_source_tree_plus_sealed_external_paths"
+                or canonical(external).hex() == ""
+                or hashlib.sha256(canonical(external)).hexdigest() != plugins["external_paths_canonical_json_sha256"]
+                or len(external) != 1):
+            raise ValueError("malformed sealed external path anchor")
+        tracked = object_paths(repo, tree, plugins["tracked_glob"])
+        if len(tracked) != plugins["tracked_expected_count"]:
+            raise ValueError("changed tracked plugin root set")
+        replayed_plugins = sorted(tracked + external)
+        if replayed_plugins != block(finding, "plugin manifests") or len(replayed_plugins) != 54:
+            raise ValueError("missing, extra, or changed sealed external path")
+        fleet = collections["fleet projects"]
+        values = fleet["values"]
+        if (fleet.get("collection_mode") != "sealed_redacted_ids"
+                or hashlib.sha256(canonical(values)).hexdigest() != fleet["canonical_json_sha256"]
+                or values != block(finding, "fleet projects")):
+            raise ValueError("wrong redacted input hash")
+    except (OSError, KeyError, TypeError, ValueError, subprocess.CalledProcessError, json.JSONDecodeError) as error:
+        return fail(str(error))
+    print("P0.1 inventory: sealed replay verified (53 tracked + 1 external path; no live fallback)")
     return 0
 
 

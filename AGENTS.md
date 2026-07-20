@@ -41,3 +41,12 @@ inside `packages/<name>/`, also read that package's `CLAUDE.md`.
   MCP/evidence, hooks, sandbox/approval, context budget or validation fidelity. Pause dependent
   work and repair safe in-scope defects immediately; otherwise record the evidence and route an
   explicit follow-up. Never treat a failed or skipped check as green.
+- For an active executable master plan, the root agent automatically delegates each next
+  executable item to a fresh subagent grounded from the committed plan/handoff; a launch block
+  is a recovery carrier, not a request for the owner to relay routine work. Run sequentially
+  dependent items one agent at a time and continue automatically after green close/audit. Yield
+  only at an explicit Owner Approval, new-authority boundary or genuinely unresolved blocker.
+- Treat audit regressions as an automatic fix-forward loop: return to the owning item/phase,
+  follow the plan-protocol reopen rules when needed, commit the repair separately, repeat
+  validation and independent audit, then resume the roadmap. Ask the owner only when repair
+  changes a frozen contract, expands authority or presents a genuine owner-level fork.

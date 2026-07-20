@@ -1,23 +1,22 @@
 # HANDOFF — 2026-07-20 — after P1.1
 
-**Next:** /task:plan-run 2026.07.19-DUAL-PROVIDER P1.2
+**Next:** «ОЖИДАНИЕ: Approval Owner D# для P1.2 G1–G6 → ЗАПУСК ВРУЧНУЮ: gpt-5.6-terra/high»
 
 | Параметр | Значение |
 |:--|:--|
 | Model | gpt-5.6-terra |
 | Thinking | high — prescribed public core API and contribution gate |
 | Context | continue (/clear) — ручной item |
-| Суть | Подготовить shared-core contribution review, получить Owner D# и реализовать только P1.2 против frozen D70. |
+| Суть | Принять или отклонить atomic G1–G6 proposal до первого edit `core/**`; P1.2 уже resumed на live Terra/high. |
 
 ```text
-$ task:plan-run 2026.07.19-DUAL-PROVIDER P1.2
+# НЕ раньше: Approval Owner D# принимает exact G1–G6 из artifacts/P1-core-provider-domain-contribution-review.md
 
-Продолжай только P1.2 на gpt-5.6-terra/high из P1.1 item commit
-e9560bf26de5a256b73d7a4c36dc2ca388d2ba75. Прочитай plan.md, phases/P1.md,
-handoff.md и все P1.2 Required Reads; проверь D70/frozen provider-config v1.0.0.
-Сначала подготовь `artifacts/P1-core-provider-domain-contribution-review.md` и получи
-Approval Owner D# до первого edit `core/**`, затем реализуй только P1.2 и закрой его
-полным lifecycle. Не трогай P1.3+, dirty main, FOREMAN, fleet или live carrier state.
+Продолжай только P1.2 на gpt-5.6-terra/high. Прочитай plan.md, phases/P1.md,
+handoff.md, all P1.2 Required Reads и approved contribution review. Проверь D70/frozen
+provider-config v1.0.0 и Owner D#; затем реализуй только approved `core/**` API и закрой
+P1.2 полным lifecycle. Не трогай P1.3+, package runtime, provider outputs, dirty main,
+FOREMAN, fleet или live carrier state.
 ```
 
 **Done:** Approval Owner D70 принял exact F1–F6 candidate SHA-256
@@ -28,17 +27,20 @@ Approval Owner D# до первого edit `core/**`, затем реализу�
 validation и adversarial self-review GREEN; обратная реконструкция lifecycle metadata
 совпала с approved candidate SHA. P1.1 закрыт `🟢 Done`, terminal journal event добавлен.
 
-**Remaining:** P1.2 должен сначала пройти shared-core contribution review и explicit
-Approval Owner D#, затем реализовать только immutable provider domain/API. P1.3/P1.4,
-package adapters, provider outputs, live carriers, FOREMAN и fleet остаются закрыты.
+**Remaining:** contribution review prepared; explicit Approval Owner D# для exact G1–G6
+обязателен до первого `core/**` edit. После approval P1.2 реализует только approved
+immutable provider domain/API. P1.3/P1.4, package adapters, provider outputs, live
+carriers, FOREMAN и fleet остаются закрыты.
 
 **Sources of truth:** `root/contracts/provider-config-contract.md` · `plan.md` D70,
-Contracts/Status Board/Update Log · `phases/P1.md` P1.1/P1.2 · `brief/01-refinements.md`
+Contracts/Status Board/Update Log · `phases/P1.md` P1.1/P1.2 ·
+`artifacts/P1-core-provider-domain-contribution-review.md` · `brief/01-refinements.md`
 P1.1 approval · `roadmap.md` S-P1.2 · `journal.jsonl`.
 
-**Open risks:** P1.2 — public shared-core contribution gate с отдельным Owner D# до
-`core/**`. D56 isolated-worktree/MCP anomalies остаются негриновыми environment facts;
-они не изменили deterministic local P1.1 evidence и не чинятся вне P5/P6/P7 ownership.
+**Open risks:** P1.2 — public shared-core contribution gate ждёт explicit Owner D# для
+atomic G1–G6; до него `core/**` запрещён. D56 isolated-worktree/MCP anomalies остаются
+негриновыми environment facts; они не изменили deterministic local P1.1 evidence и не
+чинятся вне P5/P6/P7 ownership.
 
 **Workarounds/Deferred/Open questions:**
 

@@ -19,8 +19,9 @@ protected-path snapshots, and baseline-attributed plan lint.
 ```
 
 **Done:** P1.3 closed `🟢 Done`: item commit `8f377e1` added the pure provider-config resolver,
-field provenance, deterministic PCFG diagnostics, and thin skiller/maind adapters. Focused core/
-skiller/maind tests, full skiller and maind validation, compile, and diff check passed.
+field provenance, deterministic PCFG diagnostics, and thin skiller/maind adapters; review fix
+`061a2cb` covers the absent fleet override and identical-layer cross-carrier conformance. Focused
+core/skiller/maind tests, full skiller and maind validation, compile, and diff check passed.
 
 **Remaining:** P1.4 remains, then P1 phase close/audit. P1.4 owns compatibility matrix, legacy
 byte-preservation, optional example, protected-path delta evidence, and precise P2 handoff.

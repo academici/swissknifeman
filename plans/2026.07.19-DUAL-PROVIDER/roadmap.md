@@ -6,13 +6,14 @@
      Порядок строго phase-first: P0→P1→P2→P3→P4→P5→P6→P7. До finish + GREEN design
      audit исполнение любого item запрещено. -->
 
-**Обновлён:** 2026-07-20 · **Соответствует plan.md:** v1.4.0
+**Обновлён:** 2026-07-20 · **Соответствует plan.md:** v1.4.1
 
-> **Статус exec:** P0 повторно закрыта GREEN после D61–D65; frozen P0 contracts/ADR
-> и historical P0.1/P0.5 carriers остаются неизменными. Следующий шаг — independent
-> `/task:plan-audit 2026.07.19-DUAL-PROVIDER P0` в новой `gpt-5.6-sol/xhigh` session.
-> P1.1 закрыт до literal GREEN G01 audit; reconciliation с dirty main
-> перенесена, но не отменена, и обязательна перед P7.4.
+> **Статус exec:** D67 формально реопенил P0 после ATTENTION; P0.1–P0.6 и frozen
+> contracts/ADR остаются неизменными. Следующий шаг — fresh
+> `/task:plan-run 2026.07.19-DUAL-PROVIDER P0.7` (`gpt-5.6-terra/high`). Затем
+> `plan-close P0` и exceptional independent audit attempt 3 с `AUDIT-CAP` + D67.
+> P1.1 закрыт до literal GREEN G01; reconciliation с dirty main перенесена, но не
+> отменена, и обязательна перед P7.4 по D65-A/D68.
 > Исполнительские модели — только current ChatGPT/Codex family: Terra для prescribed
 > implementation, Sol для design/contracts/audit. GPT-5.6 Luna не используется на этом
 > public-contract/release critical path. RAG:✅ 2026-07-19
@@ -28,6 +29,7 @@
 | P0.3 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/xhigh | ✅ D55 | capability/artifact contracts v1.0.0 + ADR accepted |
 | P0.4 | solo | plan-run/plan-close repair — 🟢 | gpt-5.6-sol/high; repair gpt-5.6-sol/xhigh | ✅ D59; D60 contract-neutral repair | exact structural G11 revalidation green; frozen contract unchanged |
 | P0.6 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | ✅ D63-B · D64-A · D65-A | sealed clean-tree lint/evidence replay закрыт; P0 reclose завершён, G01 ждёт independent audit |
+| P0.7 | solo | plan-run (manual) | gpt-5.6-terra/high | ✅ D67/D68 mechanical authority | hash-only ATTENTION bookkeeping; exact D65 manifest + isolated-CLI finding, без package/main/P1 writes |
 | P1.1 | solo | plan-run (manual) | gpt-5.6-sol/xhigh | ✅ provider-config contract | owner-gated public precedence/config freeze |
 | P1.2 | solo | plan-run (manual) | gpt-5.6-terra/high | ✅ shared-core contribution | prescribed API после P1.1; public core boundary требует full review |
 | P1.3 | solo | plan-run (manual) | gpt-5.6-terra/high | — | потребляет P1.2 symbols и реализует precedence/diagnostics |
@@ -66,7 +68,7 @@
 
 ## Solo-обоснование и отсутствие batches/workflows
 
-Все 41 item идут `solo`. В каждой фазе terminal Deliverable предыдущего item является
+Все 42 item идут `solo`. В каждой фазе terminal Deliverable предыдущего item является
 Inputs следующего, поэтому merge-criterion plan-protocol для batch/workflow не выполняется:
 внутрифазных независимых scopes N≥3 нет. Contract/security/canon/release items имеют
 `Review=full` и owner/commit boundaries; conformance items намеренно отделены от авторов
@@ -75,17 +77,22 @@ implementation. P5.6→P5.7 — contract→prescribed implementation, поэто
 
 ## Готовый launch-block текущего шага
 
-### S-P0-AUDIT — независимый G01 аудит фазы
+### S-P0.7 — ATTENTION bookkeeping fix-forward
 
 | Параметр | Значение |
 |:--|:--|
-| Model | gpt-5.6-sol |
-| Thinking | xhigh — independent adversarial G01 verification |
-| Context | NEW SESSION — шаг-не-item |
-| Суть | Независимо переаудировать повторно закрытую P0 и выдать literal G01 verdict. |
+| Model | gpt-5.6-terra |
+| Thinking | high |
+| Context | continue (/clear) — ручной item |
+| Суть | Fresh executor закрывает только P0.7 и передаёт P0 на close/audit attempt 3. |
 
 ```
-/task:plan-audit 2026.07.19-DUAL-PROVIDER P0
+/task:plan-run 2026.07.19-DUAL-PROVIDER P0.7
+
+РЕЖИМ: contract-neutral remediation одного нового item; P0 уже формально реопенена D67.
+ВХОД: phases/P0.md → второй Audit P0 block, затем P0.7; plan.md D52/D65–D68.
+СКОУП: исправить normative provenance links; создать hash-only checker/manifest и isolated-CLI finding; синхронизировать carriers и закрыть P0.7 отдельными item/bookkeeping commits.
+НЕ ТРОГАТЬ: historical audit/finding/journal/Completion Notes; P0.1–P0.6 semantics/status; research user-owned carrier; package/helper code; dirty main/FOREMAN/fleet; P1.
 ```
 
 ## Гейты владельца (сводно)
@@ -96,6 +103,7 @@ implementation. P5.6→P5.7 — contract→prescribed implementation, поэто
 | P0.3 | capability/artifact contracts + ADR | P0.4 и все downstream contracts |
 | P0.4 | migration/FOREMAN/fleet safety gates | P1 entry |
 | P0.6 | D63-B exact prerequisite/isolation · D64-A sealed path-only anchor · D65-A execution target/deferred main reconciliation | выполнено; P0 close/audit и P1 entry остаются gated G01 |
+| P0.7 | D67 exceptional audit attempt 3 · D68 exact reconciliation classifications/derived policy | mechanical authority выдана; frozen contracts и D65 exact eight не меняются |
 | P1.1 | provider-config contract | P1.2–P1.4 |
 | P1.2 | contribution в shared core | P1.3–P1.4 |
 | P2.1 | artifact-kernel proposal/ADR | P2.2–P2.4 |
@@ -116,7 +124,7 @@ implementation. P5.6→P5.7 — contract→prescribed implementation, поэто
 
 - RAG: official OpenAI model catalog + Terra model page, 2026-07-19 — Sol/Terra IDs,
   roles и efforts подтверждены; детали в `findings/P7-openai-model-routing-2026-07-19.md`.
-- Repo-grounding: 41/41 Routing rows, 12 `plan-exec` + 29 `manual`; instruction carrier
+- Repo-grounding: 42/42 Routing rows, 12 `plan-exec` + 30 `manual`; instruction carrier
   и contract/read/owner-gate reconcile — `research/12-final-cross-phase-reconcile.md`,
   `research/13-instruction-contract-remediation.md`.
 - Непроверено → ПОВТОРНЫЙ ПРОХОД: account availability Sol/Terra; runtime fail closed,

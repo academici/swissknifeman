@@ -7,9 +7,9 @@
 | Путь | Назначение |
 |:--|:--|
 | `plan.md` | мета, scope, routing, status board и решения |
-| `phases/P0.md … P7.md` | все 8 фаз детализированы до DoR; 41 item, skeleton markers отсутствуют |
+| `phases/P0.md … P7.md` | все 8 фаз детализированы до DoR; 42 item, skeleton markers отсутствуют; P0.7 — ATTENTION fix-forward |
 | `handoff.md` | rolling next-step для холодного старта |
-| `roadmap.md` | полная execution map 41/41 с GPT-5.6 Sol/Terra routing и owner gates |
+| `roadmap.md` | полная execution map 42/42 с GPT-5.6 Sol/Terra routing и owner gates |
 | `journal.jsonl` | append-only журнал plan-команд |
 | `journal-exceptions.jsonl` | optional append-only owner-gated provenance exceptions для historical schema-invalid journal rows |
 | `brief/` | полный вход владельца, включая launch/hook и environment-defect refinements |
@@ -52,7 +52,6 @@
 | `research/12-final-cross-phase-reconcile.md` | research | finish, design audit | contract chain, Required Reads, Routing, owner gates и итоговый DoR pass 3/3 |
 | `research/13-instruction-contract-remediation.md` | research | P5.6–P7, design audit | common instruction contract/projections и restart propagation |
 | `research/14-journal-schema-exception-remediation.md` | research | journal gate, design audits r3–r4 | F1 sidecar alternatives, exact schema и unchanged same-plan contract |
-| `research/15-command-surface-prerequisite-remediation.md` | research | P0.5→P0.2 | breakdown 32, umbrella/subset terminology, correction carrier и owner gate |
 | `research/16-p0-red-reproducibility-repair.md` | research | P0.6 | selected canonical exception + anchored evidence repair, commit topology и Owner Approval set |
 | `root/adr/0001-provider-adapter-architecture.md` | decision | P0.3–P7 | alternatives, business rationale, dependency direction и component diagram |
 | `root/contracts/provider-migration-gates.md` | decision D59 | P0.4–P7, FOREMAN/fleet boundaries | frozen exact G01–G11 producers/evidence/owners/failure actions, rollback/no-write и handoff bundle |

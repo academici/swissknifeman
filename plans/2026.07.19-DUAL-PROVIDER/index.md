@@ -53,6 +53,7 @@
 
 | Артефакт | Суть | Статус |
 |:--|:--|:--|
+| `root/CONTEXT.md` | owner-approved provider glossary, stewardship и collisions | approved D53 |
 | `root/contracts/provider-capability-contract.md` | capability vocabulary/matrix | draft |
 | `root/contracts/provider-artifact-contract.md` | render/provenance/lock/drift | draft |
 | `root/contracts/provider-migration-gates.md` | P1–P7/FOREMAN/fleet entry и release gates | draft |

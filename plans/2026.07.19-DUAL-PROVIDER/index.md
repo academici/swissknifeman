@@ -15,7 +15,7 @@
 | `brief/` | полный вход владельца, включая launch/hook и environment-defect refinements |
 | `findings/` | repo/provider evidence, P0 reproducible coupling baseline, package recon P2/P3/P5 и current OpenAI model routing |
 | `research/` | traceability, architecture/sequence и phase design syntheses P0–P7 |
-| `root/contracts/` | frozen P0.3 capability/artifact + draft migration-gate/config/harness/analytics contracts; skill/command contracts создаются своими owner-gated items |
+| `root/contracts/` | frozen P0 capability/artifact/migration-gate + draft config/harness/analytics contracts; skill/command contracts создаются своими owner-gated items |
 | `root/adr/` | архитектурные решения плана; ADR-0001 фиксирует canonical source → deterministic adapters |
 
 ## Провенанс
@@ -51,6 +51,7 @@
 | `research/14-journal-schema-exception-remediation.md` | research | journal gate, design audits r3–r4 | F1 sidecar alternatives, exact schema и unchanged same-plan contract |
 | `research/15-command-surface-prerequisite-remediation.md` | research | P0.5→P0.2 | breakdown 32, umbrella/subset terminology, correction carrier и owner gate |
 | `root/adr/0001-provider-adapter-architecture.md` | decision | P0.3–P7 | alternatives, business rationale, dependency direction и component diagram |
+| `root/contracts/provider-migration-gates.md` | decision D59 | P0.4–P7, FOREMAN/fleet boundaries | frozen exact G01–G11 producers/evidence/owners/failure actions, rollback/no-write и handoff bundle |
 
 ## Ключевые артефакты `root/`
 
@@ -60,7 +61,7 @@
 | `root/contracts/provider-capability-contract.md` | capability manifest, support/evidence/compatibility | frozen v1.0.0, D55 |
 | `root/contracts/provider-artifact-contract.md` | identity/provenance/hash/boundary/drift/repair | frozen v1.0.0, D55 |
 | `root/adr/0001-provider-adapter-architecture.md` | canonical semantic source → deterministic provider adapters | accepted, D55 |
-| `root/contracts/provider-migration-gates.md` | P1–P7/FOREMAN/fleet entry и release gates | draft |
+| `root/contracts/provider-migration-gates.md` | P1–P7/FOREMAN/fleet entry и release gates | frozen v1.0.0, D59 |
 | `root/contracts/provider-config-contract.md` | project/fleet carriers, precedence, provenance и diagnostics | draft; sealing P1.1 |
 | `root/contracts/provider-harness-contract.md` | profiles/security/provider-native settings/hooks/MCP/agents | draft; sealing P5.1 |
 | `root/contracts/provider-analytics-contract.md` | neutral events/runs/readers/storage/privacy/migration | draft; sealing P6.3 |

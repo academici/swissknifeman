@@ -176,6 +176,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | D56 | 2026-07-20 | Environment defect, способный повлиять на model/effort, filesystem, MCP/evidence, hooks, sandbox/approval, context budget или validation fidelity, немедленно раскрывается Owner и останавливает зависимую работу. Safe in-scope defect исправляется сразу с повторной проверкой; доказуемо терпимый — фиксируется с exact follow-up; failed/skipped check не считается green. | RAG:— (owner-grounded: `brief/03-environment-defect-handling.md`) — сохраняет качество phase-first исполнения и запрещает молчаливые/ложнозелёные environment обходы. |
 | D57 | 2026-07-20 | Root agent автоматически делегирует каждый следующий executable roadmap step свежему subagent из committed plan/handoff/Required Reads и не перекладывает routine launch на Owner. Последовательно зависимые items идут по одному без Workflow fan-out; launch block остаётся recovery carrier. Остановка разрешена только на explicit Owner Approval, новой границе полномочий или реально неустранимом blocker после safe remediation. | RAG:— (owner-grounded: `brief/04-automatic-agent-continuation.md`; repo-grounded: roadmap sequential dependencies, plan-protocol §7/§8) — сохраняет чистые контексты без ложных остановок и без параллельных гонок. |
 | D58 | 2026-07-20 | Regression из item/phase audit запускает автоматический fix-forward: возврат к owning item/phase, formal reopen при необходимости, отдельный repair commit, повторные validation и independent audit, затем resume roadmap. Owner нужен только если repair меняет frozen contract, расширяет authority или открывает genuine owner-level fork. | RAG:— (owner-grounded: `brief/04-automatic-agent-continuation.md`; repo-grounded: plan-protocol phase reopen/status/commit/audit rules) — допускает отход назад без потери provenance и не превращает review finding в ручную остановку. |
+| D59 | 2026-07-20 | Approval Owner замораживает `provider-migration-gates.md` v1.0.0 единым seven-point set: G01–G11 producers/evidence/owners/outcomes; independent trust/approval/sandbox и explicit-only full access; no-write/rollback/partial-provider/provenance-only cleanup; exact reconcile-only FOREMAN bundle; fleet no-op + separate post-FOREMAN rollout plan; P0–P7 pre-mortem ownership; без authority на FOREMAN/fleet/package writes в P0.4. D11/D12 уточнены этим exact gate contract без изменения их sequencing/fail-closed semantics. | RAG:— (owner-grounded: explicit D59 approval 2026-07-20; repo-grounded: `root/contracts/provider-migration-gates.md`, `research/03-p0-design-and-premortem.md`) — открывает post-approval validation/close P0.4, но не P1 до G01 phase audit. |
 
 ## 6. Update Log
 
@@ -201,6 +202,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | 2026-07-20 | plan-run/Codex gpt-5.6-sol high | P0.2 закрыт: D53 утвердил единый glossary/scenario set и distinction Command Surface / Task Command — детали см. phases/P0.md P0.2 Completion Notes. |
 | 2026-07-20 | Approval Owner + plan-run/Codex gpt-5.6-sol xhigh | D54: исправлены Codex launch/hook registrations и P0.3 Validation scope; contract candidates остаются незамороженными до отдельного D55. |
 | 2026-07-20 | plan-run/Codex gpt-5.6-sol xhigh | P0.3 закрыт: D55 заморозил capability/artifact v1.0.0 и принял ADR-0001 — детали см. phases/P0.md P0.3 Completion Notes. |
+| 2026-07-20 | plan-run/Codex gpt-5.6-sol xhigh | P0.4 candidate: migration/FOREMAN/fleet gates и pre-mortem traceability подготовлены; freeze/close ожидали explicit Owner Approval D59. |
 
 ## 7. Contracts
 
@@ -210,7 +212,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 |:--|:--|:--|:--|:--|
 | `root/contracts/provider-capability-contract.md` | v1.0.0 | frozen (D55) | P1–P7, FOREMAN reconcile после P7.4 | 2026-07-20 (D55) |
 | `root/contracts/provider-artifact-contract.md` | v1.0.0 | frozen (D55) | P2–P7, future fleet rollout | 2026-07-20 (D55) |
-| `root/contracts/provider-migration-gates.md` | v0.1.0-draft | draft; sealing P0.4 | P1–P7, FOREMAN resume decision, future fleet plan | — |
+| `root/contracts/provider-migration-gates.md` | v1.0.0 | frozen (D59) | P1–P7, FOREMAN reconcile gate, future fleet plan | 2026-07-20 (D59) |
 | `root/contracts/provider-config-contract.md` | v0.1.0-draft | draft; sealing P1.1 after P0.3/P0.4 | P1.2–P7, future FOREMAN/fleet consumers | — |
 | `root/contracts/provider-skill-publication-contract.md` | planned v1.0.0 | owner-gated creation/sealing P3.1 after P2.4 | P3.2–P3.5, P4 task adapters, P7 self-host/release evidence | — |
 | `root/contracts/provider-command-routing-contract.md` | planned v1.0.0 | owner-gated creation/sealing P4.1 after P3.5 | P4.2–P4.5, P5–P7, FOREMAN reconcile после P7.4 | — |

@@ -7,7 +7,7 @@
 | Путь | Назначение |
 |:--|:--|
 | `plan.md` | мета, scope, routing, status board и решения |
-| `phases/P0.md … P7.md` | все 8 фаз детализированы до DoR; 42 item, skeleton markers отсутствуют; P0.7 — ATTENTION fix-forward |
+| `phases/P0.md … P7.md` | все 8 фаз детализированы до DoR; 42 item, skeleton markers отсутствуют; P0.7 — terminal ATTENTION fix-forward |
 | `handoff.md` | rolling next-step для холодного старта |
 | `roadmap.md` | полная execution map 42/42 с GPT-5.6 Sol/Terra routing и owner gates |
 | `journal.jsonl` | append-only журнал plan-команд |
@@ -15,7 +15,7 @@
 | `brief/` | полный вход владельца, включая launch/hook и environment-defect refinements |
 | `findings/` | repo/provider evidence, immutable P0.1/P0.5 carriers, P0 clean-reproducibility repair, package recon P2/P3/P5 и current OpenAI model routing |
 | `artifacts/p0-evidence-anchors.json` | v1 sealed source-tree/input anchors for P0.1/P0.5 replay; D64 records only one external plugin path, never its contents |
-| `artifacts/d65-main-reconciliation-check.py` + `artifacts/d65-main-reconciliation.json` | stdlib-only D65-A/D68 exact-path checker и sealed base/main/delivery hash manifest |
+| `artifacts/d65-main-reconciliation-check.py` + `artifacts/d65-main-reconciliation.json` | stdlib-only D65-A/D68 exact-path checker и sealed base/main/delivery hash manifest; D71 records its completed main reconciliation and retained stash recovery point |
 | `research/` | traceability, architecture/sequence и phase design syntheses P0–P7 |
 | `root/contracts/` | frozen P0 capability/artifact/migration-gate + draft config/harness/analytics contracts; skill/command contracts создаются своими owner-gated items |
 | `root/adr/` | архитектурные решения плана; ADR-0001 фиксирует canonical source → deterministic adapters |

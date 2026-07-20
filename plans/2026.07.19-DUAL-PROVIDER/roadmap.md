@@ -6,13 +6,14 @@
      Порядок строго phase-first: P0→P1→P2→P3→P4→P5→P6→P7. До finish + GREEN design
      audit исполнение любого item запрещено. -->
 
-**Обновлён:** 2026-07-20 · **Соответствует plan.md:** v1.4.2
+**Обновлён:** 2026-07-20 · **Соответствует plan.md:** v1.4.3
 
 > **Статус exec:** P0 закрыта и audit attempt 3 завершён literal GREEN на `245bb56`;
 > G01 открыт, P1.1 закрыт D70/item `e9560bf`. Следующий item — owner-gated P1.2
 > в fresh `gpt-5.6-terra/high` process.
-> Reconciliation с dirty main перенесена, но не отменена, и обязательна перед P7.4
-> по D65-A/D68.
+> D71 исполнил D65/D68 reconciliation сейчас: `main` — active execution root, retained stash
+> `72505e4d8bef2a58f4ed555cc5b6014450aee3a9` сохраняет recovery point, unrelated owner dirt
+> возвращён unstaged. Это не открывает FOREMAN/fleet/live authority и не снимает P1.2 owner gate.
 > Исполнительские модели — только current ChatGPT/Codex family: Terra для prescribed
 > implementation, Sol для design/contracts/audit. GPT-5.6 Luna не используется на этом
 > public-contract/release critical path. RAG:✅ 2026-07-19
@@ -30,8 +31,8 @@
 | P0.2 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/high | ✅ D53 | vocabulary/scenarios и distinction Command Surface / Task Command заморожены |
 | P0.3 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/xhigh | ✅ D55 | capability/artifact contracts v1.0.0 + ADR accepted |
 | P0.4 | solo | plan-run/plan-close repair — 🟢 | gpt-5.6-sol/high; repair gpt-5.6-sol/xhigh | ✅ D59; D60 contract-neutral repair | exact structural G11 revalidation green; frozen contract unchanged |
-| P0.6 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | ✅ D63-B · D64-A · D65-A | sealed clean-tree lint/evidence replay закрыт; P0 reclose и independent audit GREEN завершены |
-| P0.7 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | ✅ D67/D68 mechanical authority | sealed D65 manifest + isolated-CLI invariant; package/main/P1 bytes не менялись |
+| P0.6 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | ✅ D63-B · D64-A · D65-A → D71 timing/target | sealed clean-tree lint/evidence replay закрыт; D71 reconciled delivery into main without product-semantic expansion |
+| P0.7 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | ✅ D67/D68 mechanical authority | sealed D65 manifest/derived policy applied in D71; package/main/P1 product semantics не менялись |
 | P1.1 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/xhigh | ✅ D70 | frozen provider-config v1.0.0; exact F1–F6 candidate accepted |
 | P1.2 | solo | plan-run (manual) | gpt-5.6-terra/high | ✅ shared-core contribution | prescribed API после P1.1; public core boundary требует full review |
 | P1.3 | solo | plan-run (manual) | gpt-5.6-terra/high | — | потребляет P1.2 symbols и реализует precedence/diagnostics |
@@ -96,7 +97,8 @@ e9560bf26de5a256b73d7a4c36dc2ca388d2ba75. Прочитай plan.md, phases/P1.md
 handoff.md и все P1.2 Required Reads; проверь D70/frozen provider-config v1.0.0.
 Сначала подготовь `artifacts/P1-core-provider-domain-contribution-review.md` и получи
 Approval Owner D# до первого edit `core/**`, затем реализуй только P1.2 и закрой его
-полным lifecycle. Не трогай P1.3+, dirty main, FOREMAN, fleet или live carrier state.
+полным lifecycle. Не трогай P1.3+, восстановленный owner-owned dirt на main, FOREMAN, fleet
+или live carrier state.
 ```
 
 ## Гейты владельца (сводно)
@@ -106,8 +108,8 @@ Approval Owner D# до первого edit `core/**`, затем реализу�
 | P0.2 | весь vocabulary + domain scenarios; terminal P0.5 anchor; Command Surface 32 / Task Command 11 как разные scopes | P0.3 contract authoring |
 | P0.3 | capability/artifact contracts + ADR | P0.4 и все downstream contracts |
 | P0.4 | migration/FOREMAN/fleet safety gates | P1 entry |
-| P0.6 | D63-B exact prerequisite/isolation · D64-A sealed path-only anchor · D65-A execution target/deferred main reconciliation | выполнено; P0 close/audit и P1 entry остаются gated G01 |
-| P0.7 | D67 exceptional audit attempt 3 · D68 exact reconciliation classifications/derived policy | mechanical authority выдана; frozen contracts и D65 exact eight не меняются |
+| P0.6 | D63-B exact prerequisite/isolation · D64-A sealed path-only anchor · D65-A → D71 execution target/timing | выполнено; D71 сделал main active root, P0 close/audit и P1 entry остаются gated G01 |
+| P0.7 | D67 exceptional audit attempt 3 · D68 exact reconciliation classifications/derived policy | D71 applied sealed policy; frozen contracts и historical D65 exact eight не меняются |
 | P1.1 | provider-config contract — D70 выполнен | P1.2–P1.4 |
 | P1.2 | contribution в shared core | P1.3–P1.4 |
 | P2.1 | artifact-kernel proposal/ADR | P2.2–P2.4 |

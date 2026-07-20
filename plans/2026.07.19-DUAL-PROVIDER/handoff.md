@@ -15,8 +15,8 @@
 Продолжай только P1.2 на gpt-5.6-terra/high. Прочитай plan.md, phases/P1.md,
 handoff.md, all P1.2 Required Reads и approved contribution review. Проверь D70/frozen
 provider-config v1.0.0 и Owner D#; затем реализуй только approved `core/**` API и закрой
-P1.2 полным lifecycle. Не трогай P1.3+, package runtime, provider outputs, dirty main,
-FOREMAN, fleet или live carrier state.
+P1.2 полным lifecycle. Не трогай P1.3+, package runtime, provider outputs, восстановленный
+owner-owned dirt на main, FOREMAN, fleet или live carrier state.
 ```
 
 **Done:** Approval Owner D70 принял exact F1–F6 candidate SHA-256
@@ -38,20 +38,15 @@ Contracts/Status Board/Update Log · `phases/P1.md` P1.1/P1.2 ·
 P1.1 approval · `roadmap.md` S-P1.2 · `journal.jsonl`.
 
 **Open risks:** P1.2 — public shared-core contribution gate ждёт explicit Owner D# для
-atomic G1–G6; до него `core/**` запрещён. D56 isolated-worktree/MCP anomalies остаются
-негриновыми environment facts; они не изменили deterministic local P1.1 evidence и не
-чинятся вне P5/P6/P7 ownership.
+atomic G1–G6; до него `core/**` запрещён. D71 завершил main reconciliation без снятия этого
+гейта; effective doctor всё ещё показывает `gpt-5.6-sol` и не публикует effort, поэтому
+runtime provenance не заявляется как Terra/high evidence.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: D56 — effective doctor подтверждает `gpt-5.6-sol`/`Never`, но сообщает
-  restricted sandbox helpers и не показывает effort; runtime задан как
-  `gpt-5.6-sol/xhigh` + danger-full-access, без fallback. `maind health --cwd` не мапит
-  isolated worktree. SessionStart/PATH maind и maind/Serena MCP registrations указывают
-  на canonical main; doctor/list MCP inventories расходятся. Это unavailable evidence,
-  не green. Global hooks syntax/benign probes прошли, live block probe сработал.
-- deferred: the exact defect carrier is
-  `findings/P0-isolated-cli-root-resolution-defect-2026-07-20.md`; owning P5/P6 integration
-  must make `maind health --cwd` and SessionStart work from the isolated/self-host root, and
-  P7 self-host validation must prove effective MCP registrations target the intended tree.
+- workarounds: D56 — current canonical-main preflight confirms approval `Never`, unrestricted
+  filesystem, `maind health --cwd` and SessionStart probe; doctor reports `gpt-5.6-sol` but not
+  effort. This is unavailable Terra/high provenance, not a green routing assertion.
+- deferred: D71 removes only the isolated-worktree timing/target condition from D65-A. P5/P6/P7
+  still own any future isolated/self-host MCP and SessionStart proof; no live/fleet write follows.
 - open_questions: —

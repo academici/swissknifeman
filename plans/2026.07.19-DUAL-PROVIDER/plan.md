@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.4.2 |
+| Version | 1.4.3 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
@@ -190,6 +190,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | D68 | 2026-07-20 | D65-A уточняется без supersession: sealed reconciliation carrier содержит ровно 11 allowlisted paths — 8 `conflict`, task plugin `matches-delivery`, два generated outputs `matches-base`; generated path исключается из conflict count только когда path clean и SHA-256 совпадает с base, иначе reconciliation блокируется и output пересчитывается path-local CLI из delivery sources. | RAG:— (owner-grounded: explicit D65 clarification; repo-grounded: hash/path-only scan base/main/delivery 2026-07-20) — публикует воспроизводимую derived-output policy, не меняя D65 exact eight, main read-only authority или pre-P7.4 gate. |
 | D69 | 2026-07-20 | Экономный execution routing не меняет item semantics: каждый manual item исполняется в свежем explicit Codex process на модели/effort не ниже своей Routing row; Sol/xhigh используется только для явно xhigh public-contract items и independent phase audits, Sol/high — для остальных design items, Terra/high/medium — для prescribed implementation/conformance, Terra/low — для mechanical close/bookkeeping. После каждой terminal phase обязателен fresh independent audit; regression автоматически возвращается в owning phase по D58. Inherited root xhigh не является routine fallback. | RAG:— (owner-grounded: explicit cost/context strategy 2026-07-20; repo-grounded: Routing §3, roadmap sequential dependencies, D57/D58/D66) — снижает расход frontier-контекста без undershoot, пропуска review или новых approval-пауз. |
 | D70 | 2026-07-20 | Approval Owner атомарно принимает provider-config F1–F6 exact candidate SHA-256 `3ecc108a41ee111c79dbd792ecb45fabfe63024981db724233feefabc1f0c2c3` и замораживает `provider-config-contract.md` как v1.0.0: uniform partial layers; exact precedence/per-ID merge; legacy Claude-only no-write default; leaf provenance/closed diagnostics; fail-closed version/unknown policy; normative goldens и неизменная authority boundary. Изменены только lifecycle freeze metadata, утверждённые F1–F6 bytes сохранены. | RAG:— (owner-grounded: exact reply `APPROVE P1.1 PROVIDER-CONFIG F1-F6 AS WRITTEN`; repo-grounded: approved candidate SHA-256 и `root/contracts/provider-config-contract.md`) — открывает P1.2 против frozen input, не разрешая provider outputs, live carriers, FOREMAN, fleet или P1.2 implementation в P1.1. |
+| D71 | 2026-07-20 | Exact Owner instruction supersedes D65-A только в execution target/timing: ранняя D65/D68 reconciliation выполнена сейчас в canonical `main`; retained backup — stash `72505e4d8bef2a58f4ed555cc5b6014450aee3a9`; main остаётся active execution root. Восстановлены все owner-owned dirt, а P1.2/core/**, frozen product semantics, FOREMAN/fleet и live authority не расширены. | RAG:— (owner-grounded: exact reconciliation instruction 2026-07-20; repo-grounded: sealed checker, stash/ff/apply evidence) — historical D65-A/D68 bytes и их exact classifications не переписываются; D71 меняет только уже наступивший срок/target integration. |
 
 ## 6. Update Log
 
@@ -229,6 +230,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | 2026-07-20 | plan-close/Codex gpt-5.6-terra low | P0 повторно закрыта после `8bafc68`/`507122e`/`2325027`: terminal status, frozen bytes и sealed replay сверены; далее — exceptional independent audit attempt 3 по D67. |
 | 2026-07-20 | plan-audit/Codex gpt-5.6-sol xhigh | P0 audit attempt 3 завершён literal GREEN на `245bb56`; G01 открыт, D69 фиксирует fresh-context/cost routing перед P1.1. |
 | 2026-07-20 | plan-run/Codex gpt-5.6-sol xhigh | P1.1 закрыт: D70 заморозил exact F1–F6 provider-config v1.0.0 в item commit `e9560bf` — детали см. phases/P1.md P1.1 Completion Notes. |
+| 2026-07-20 | reconciliation-worker/Codex gpt-5.6-sol (effective doctor; requested Terra/high) | D71: main fast-forwarded to `9fb9f14`, retained stash `72505e4d8bef2a58f4ed555cc5b6014450aee3a9` applied and reconciled; owner dirt preserved unstaged, sealed D65 checker and package/plan gates rerun — P1.2 owner gate remains next. |
 
 ## 7. Contracts
 

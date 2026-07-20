@@ -117,3 +117,17 @@ RAG:— (owner-grounded: прямой запуск remediation audit-r2 2026-07-
   и unrelated user changes.
 
 RAG:— (owner-grounded: прямой запуск remediation audit-r3 2026-07-20).
+
+## 2026-07-20 — substantive approval P1.1 provider-config F1–F6
+
+- Владелец дал точный ответ `APPROVE P1.1 PROVIDER-CONFIG F1-F6 AS WRITTEN`.
+- Approval атомарно принимает весь F1–F6 set candidate SHA-256
+  `3ecc108a41ee111c79dbd792ecb45fabfe63024981db724233feefabc1f0c2c3`; partial approval
+  или содержательная редакция не подразумеваются.
+- Решению назначен D70; contract замораживается как v1.0.0. Разрешены только lifecycle
+  freeze metadata и plan carriers, утверждённые F1–F6 bytes остаются неизменными.
+- D70 открывает P1.2 против frozen input, но не разрешает P1.2 implementation внутри P1.1,
+  provider output/live carrier writes, FOREMAN, fleet или dirty main changes.
+
+RAG:— (owner-grounded: exact substantive approval в сессии 2026-07-20; repo-grounded:
+`root/contracts/provider-config-contract.md`, `plan.md` D70).

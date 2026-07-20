@@ -108,7 +108,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P0 | Evidence, vocabulary и запечатанные provider contracts | 7/7 | 🟢 Done |
-| P1 | Provider config/domain и backward-compatible resolution | 0/4 | ⬜ Not started |
+| P1 | Provider config/domain и backward-compatible resolution | 1/4 | 🟡 In progress |
 | P2 | Deterministic adapters, provenance, lock и drift engine | 0/4 | ⬜ Not started |
 | P3 | Dual skills publication и marketplaces | 0/5 | ⬜ Not started |
 | P4 | Task-command parity и provider-neutral model routing | 0/5 | ⬜ Not started |
@@ -228,6 +228,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | 2026-07-20 | plan-run/Codex gpt-5.6-terra high | P0.7 post-review F1/F2 fix-forward закрыт: Git read locks и descriptor-safe main hashing запечатаны отдельным commit — детали см. phases/P0.md P0.7 Completion Notes. |
 | 2026-07-20 | plan-close/Codex gpt-5.6-terra low | P0 повторно закрыта после `8bafc68`/`507122e`/`2325027`: terminal status, frozen bytes и sealed replay сверены; далее — exceptional independent audit attempt 3 по D67. |
 | 2026-07-20 | plan-audit/Codex gpt-5.6-sol xhigh | P0 audit attempt 3 завершён literal GREEN на `245bb56`; G01 открыт, D69 фиксирует fresh-context/cost routing перед P1.1. |
+| 2026-07-20 | plan-run/Codex gpt-5.6-sol xhigh | P1.1 закрыт: D70 заморозил exact F1–F6 provider-config v1.0.0 в item commit `e9560bf` — детали см. phases/P1.md P1.1 Completion Notes. |
 
 ## 7. Contracts
 

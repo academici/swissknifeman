@@ -1,48 +1,55 @@
-# HANDOFF — 2026-07-20 — after P0
+# HANDOFF — 2026-07-20 — after P1.1
 
-**Next:** ЗАПУСК ВРУЧНУЮ: gpt-5.6-sol/xhigh — P1.1
+**Next:** /task:plan-run 2026.07.19-DUAL-PROVIDER P1.2
 
 | Параметр | Значение |
 |:--|:--|
-| Model | gpt-5.6-sol |
-| Thinking | xhigh |
+| Model | gpt-5.6-terra |
+| Thinking | high — prescribed public core API and contribution gate |
 | Context | continue (/clear) — ручной item |
-| Суть | На открытом G01 подготовить exact provider-config contract freeze и Owner D# set. |
+| Суть | Подготовить shared-core contribution review, получить Owner D# и реализовать только P1.2 против frozen D70. |
 
 ```text
-Продолжай 2026.07.19-DUAL-PROVIDER: исполни только P1.1 через task-plan-run на
-gpt-5.6-sol/xhigh. Начни из committed tree 245bb56, проверь literal GREEN последнего
-Audit P0 и G01, затем следуй phases/P1.md P1.1 и Required Reads. Подготовь frozen
-provider-config contract и точный Owner Approval D# decision set; до approval не закрывай
-item и не начинай P1.2. Не трогай package runtime, dirty main, FOREMAN или fleet.
+$ task:plan-run 2026.07.19-DUAL-PROVIDER P1.2
+
+Продолжай только P1.2 на gpt-5.6-terra/high из P1.1 item commit
+e9560bf26de5a256b73d7a4c36dc2ca388d2ba75. Прочитай plan.md, phases/P1.md,
+handoff.md и все P1.2 Required Reads; проверь D70/frozen provider-config v1.0.0.
+Сначала подготовь `artifacts/P1-core-provider-domain-contribution-review.md` и получи
+Approval Owner D# до первого edit `core/**`, затем реализуй только P1.2 и закрой его
+полным lifecycle. Не трогай P1.3+, dirty main, FOREMAN, fleet или live carrier state.
 ```
 
-**Done:** P0 закрыта GREEN: 7/7 terminal items сверены после P0.7 review-fix chain
-`8bafc6842d246a968f560dfdee2cd979f37620e0` →
-`507122ea951452376beacfc2491982cca7a6e0e8` →
-`23250271c6fa224f3b8758ed4d0de38a3acd74ed`. Committed P0.1/P0.5 sealed replay,
-plan-lint и frozen/historical preservation checks прошли; main, FOREMAN, fleet и P1
-не выполнялись и не менялись. Independent audit attempt 3 на Sol/xhigh завершён literal
-GREEN commit `245bb564099275db69b408d1fc8b751a227aca18`; G01 открыт.
+**Done:** Approval Owner D70 принял exact F1–F6 candidate SHA-256
+`3ecc108a41ee111c79dbd792ecb45fabfe63024981db724233feefabc1f0c2c3` и заморозил
+`root/contracts/provider-config-contract.md` как v1.0.0. Item commit —
+`e9560bf26de5a256b73d7a4c36dc2ca388d2ba75`; frozen file SHA-256 —
+`4456c60713754034050d9ad6e19945b26a3a017ffcda8f3b21924727d7e98a03`. Required
+validation и adversarial self-review GREEN; обратная реконструкция lifecycle metadata
+совпала с approved candidate SHA. P1.1 закрыт `🟢 Done`, terminal journal event добавлен.
 
-**Remaining:** P1.1 готовит public provider-config contract и останавливается только на
-его substantive Owner Approval D#. После approval автоматически идут P1.2→P1.4, phase-close
-и fresh independent P1 audit. D65-A/D68 reconciliation с dirty main обязательна перед P7.4.
+**Remaining:** P1.2 должен сначала пройти shared-core contribution review и explicit
+Approval Owner D#, затем реализовать только immutable provider domain/API. P1.3/P1.4,
+package adapters, provider outputs, live carriers, FOREMAN и fleet остаются закрыты.
 
-**Sources of truth:** `plan.md` D52/D65–D69, Routing, Status Board и Update Log ·
-`phases/P0.md` latest GREEN Audit P0 block · `phases/P1.md` P1.1 · `roadmap.md` S-P1.1 ·
-`artifacts/d65-main-reconciliation-check.py` · `artifacts/d65-main-reconciliation.json` ·
-`findings/P0-isolated-cli-root-resolution-defect-2026-07-20.md` ·
-`findings/P0-command-surface-correction.md` · `research/03-p0-design-and-premortem.md` ·
-`journal.jsonl`.
+**Sources of truth:** `root/contracts/provider-config-contract.md` · `plan.md` D70,
+Contracts/Status Board/Update Log · `phases/P1.md` P1.1/P1.2 · `brief/01-refinements.md`
+P1.1 approval · `roadmap.md` S-P1.2 · `journal.jsonl`.
 
-**Open risks:** P1.1 — frozen public contract, поэтому его semantic freeze требует Owner D#;
-P1.2/package execution до него закрыты. Dirty main остаётся read-only; derived output можно
-исключить только при clean path и main hash = base, иначе reconciliation блокируется и output
-пересчитывается path-local CLI из delivery sources. FOREMAN/fleet не открыты.
+**Open risks:** P1.2 — public shared-core contribution gate с отдельным Owner D# до
+`core/**`. D56 isolated-worktree/MCP anomalies остаются негриновыми environment facts;
+они не изменили deterministic local P1.1 evidence и не чинятся вне P5/P6/P7 ownership.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: isolated worktree не зарегистрирован в mAInd, поэтому P0 audit не использовал MCP evidence; committed git objects и deterministic validators дали полный GREEN. Persisted `codex doctor` default не используется как runtime provenance; explicit `-m`/effort обязателен по D69.
-- deferred: main reconciliation — pre-P7.4; provider implementation — P1–P6; self-host/cleanup/release — P7; FOREMAN reconcile — G10; fleet — separate post-FOREMAN plan.
+- workarounds: D56 — effective doctor подтверждает `gpt-5.6-sol`/`Never`, но сообщает
+  restricted sandbox helpers и не показывает effort; runtime задан как
+  `gpt-5.6-sol/xhigh` + danger-full-access, без fallback. `maind health --cwd` не мапит
+  isolated worktree. SessionStart/PATH maind и maind/Serena MCP registrations указывают
+  на canonical main; doctor/list MCP inventories расходятся. Это unavailable evidence,
+  не green. Global hooks syntax/benign probes прошли, live block probe сработал.
+- deferred: the exact defect carrier is
+  `findings/P0-isolated-cli-root-resolution-defect-2026-07-20.md`; owning P5/P6 integration
+  must make `maind health --cwd` and SessionStart work from the isolated/self-host root, and
+  P7 self-host validation must prove effective MCP registrations target the intended tree.
 - open_questions: —

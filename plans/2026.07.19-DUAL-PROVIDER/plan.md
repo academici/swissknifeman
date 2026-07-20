@@ -113,7 +113,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P0 | Evidence, vocabulary и запечатанные provider contracts | 7/7 | 🟢 Done |
 | P1 | Provider config/domain и backward-compatible resolution | 6/6 | 🟢 Done |
 | P2 | Deterministic adapters, provenance, lock и drift engine | 5/5 | 🟢 Done |
-| P3 | Dual skills publication и marketplaces | 1/5 | 🟡 In progress |
+| P3 | Dual skills publication и marketplaces | 2/5 | 🟡 In progress |
 | P4 | Task-command parity и provider-neutral model routing | 0/5 | ⬜ Not started |
 | P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 0/7 | ⬜ Not started |
 | P6 | mAInd deployment, memory и provider-neutral analytics | 0/6 | ⬜ Not started |
@@ -205,6 +205,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-20 | plan-exec/Codex gpt-5.6-terra medium | P3.2 закрыт: semantic catalog и P2-backed Claude renderer сохраняют exact legacy bytes — детали см. phases/P3.md P3.2 Completion Notes. |
 | 2026-07-20 | plan-run/Codex gpt-5.6-sol high | P3.1 закрыт: D77 заморозил semantic skill/publication contract v1.0.0 и approved review — детали см. phases/P3.md P3.1 Completion Notes. |
 | 2026-07-20 | plan-close/Codex mechanical | P2 повторно закрыта после D76: terminal P2.1–P2.5 и contract-safety/no-write/boundary evidence сверены; далее independent P2 audit — детали см. phases/P2.md Phase Handoff. |
 | 2026-07-20 | plan-close/Codex mechanical | P2 закрыта: terminal artifact kernel/lock/registry/conformance evidence сверены; следующий gate — independent P2 audit — детали см. phases/P2.md Phase Handoff. |

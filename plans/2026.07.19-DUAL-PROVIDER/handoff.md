@@ -1,50 +1,48 @@
-# HANDOFF — 2026-07-20 — after P3.1
+# HANDOFF — 2026-07-20 — after P3.2
 
-**Next:** `/task:plan-exec 2026.07.19-DUAL-PROVIDER P3.2`
+**Next:** ЗАПУСК ВРУЧНУЮ: gpt-5.6-terra/high
 
 | Параметр | Значение |
 |:--|:--|
 | Model | gpt-5.6-terra |
-| Thinking | medium — deterministic Claude compatibility refactor |
+| Thinking | high — native Codex marketplace contract |
 | Context | continue (/clear) — ручной item |
-| Суть | Execute P3.2 only: extract the immutable semantic publication catalog and preserve Claude output bytes. |
+| Суть | Execute P3.3 only: add a native Codex projection over the frozen semantic catalog. |
 
 ```text
-Execute only P3.2 of plan 2026.07.19-DUAL-PROVIDER on gpt-5.6-terra/medium.
+Execute only P3.3 of plan 2026.07.19-DUAL-PROVIDER on gpt-5.6-terra/high.
 
 First read AGENTS.md, CLAUDE.md, plans/2026.07.19-DUAL-PROVIDER/plan.md,
-handoff.md, phases/P3.md, then P3.2 Required Reads strictly in their listed order.
-P3.1 is terminal: D77 froze provider-skill-publication-contract v1.0.0 at item commit
-2b5fbbe. Preserve all unrelated owner dirt. Execute only P3.2 Files/Scope; do not start
-P3.3+, alter generated outputs except through the declared P3.2 renderer path, perform
-native install/live writes, or touch FOREMAN/fleet.
+handoff.md, phases/P3.md, then all P3.3 Required Reads strictly in their listed order.
+P3.1 is terminal at D77. P3.2 is terminal at item commit 28dc93e: its immutable semantic
+catalog and named Claude renderer preserve the pre-refactor Claude byte golden. Preserve all
+unrelated owner dirt. Execute only P3.3 Files/Scope; do not start P3.4+, alter current Claude
+artifacts, install or enable any plugin, write user-global Codex state, or touch FOREMAN/fleet.
 
-Keep the frozen D77 contract and current Claude marketplace/plugin bytes, names, ordering,
-source paths, and enabledPlugins semantics as hard compatibility gates. Build the catalog and
-Claude renderer from explicit immutable inputs; do not add Codex paths/tokens, discovery,
-global registration, or provider-manifest conversion. Follow full item lifecycle: journal,
-validation, two commits, plan status, and handoff.
+Use the same catalog without provider-manifest conversion. Follow frozen native Codex contract,
+cache containment, explicit bundle allowlists and provenance/lock rules. Keep Codex outputs
+generated and non-canonical; no raw copytree and no copying SKILL.ru.md/evals/upstream service
+files. Follow the full item lifecycle: journal, validation, two commits, plan status and handoff.
 ```
 
-**Done:** P3.1 is terminal. D77 records the exact Owner approval and freezes
-`root/contracts/provider-skill-publication-contract.md` v1.0.0. The approved review records
-the S1–S6 alternatives/verdict; no package/runtime artifact, native install, live configuration,
-FOREMAN, fleet, or owner-owned file changed.
+**Done:** P3.1 frozen publication contract v1.0.0 is unchanged. P3.2 added the package-owned
+immutable semantic catalog and P2-backed Claude renderer at item commit `28dc93e`; the pre-refactor
+aggregate byte golden, focused tests, package validation and `registry --check` passed. Current
+Claude marketplace/plugin bytes, names, ordering, paths and `enabledPlugins` semantics are unchanged.
 
-**Remaining:** P3.2–P3.5, then independent P3 audit G03 before P4.1.
+**Remaining:** P3.3–P3.5, then independent P3 audit G03 before P4.1.
 
-**Sources of truth:** `phases/P3.md` P3.1/P3.2 · D77 and Contracts in `plan.md` · frozen
-`root/contracts/provider-skill-publication-contract.md` ·
-`artifacts/P3-skill-publication-contract-review.md` · item commit `2b5fbbe`.
+**Sources of truth:** `phases/P3.md` P3.1–P3.3 · D77 and Contracts in `plan.md` · frozen
+`root/contracts/provider-skill-publication-contract.md` · P2 artifact conformance · P3.2 item
+commit `28dc93e` and `packages/skiller/lib/skiller/publication.py`.
 
 **Open risks:** The static `codex doctor --json` model/effort ambiguity remains D56 non-green
-but non-blocking under D72. Unrelated owner dirt remains intentionally unstaged. P3.2 must retain
-Claude byte compatibility and must not pull Codex concerns forward from P3.3. `plan-lint` reports
-two P3 DoR false-positive warnings after the phase enters `🟡`; P3.1 records a scoped remediation
-proposal but has no ERROR and does not alter the task linter.
+but non-blocking under D72. Unrelated owner dirt remains intentionally unstaged. `plan-lint`
+retains two documented P3 DoR false-positive warnings; P3.2 added no plan errors. P3.3 must keep
+the Claude golden unchanged while adding only declared native Codex artifacts.
 
 **Workarounds/Deferred/Open questions:**
 
 - workarounds: none.
-- deferred: native Codex manifests/bundles are P3.3; distribution/install/update flows are P3.4.
+- deferred: distribution/install/update flows are P3.4.
 - open_questions: —

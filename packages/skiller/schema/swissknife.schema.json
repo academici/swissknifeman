@@ -37,6 +37,10 @@
       "enum": ["claude", "cursor", "generic"],
       "description": "Целевой агент. Дефолтный skills_path: claude→.claude/skills, cursor→.cursor/skills, generic→.ai/skills."
     },
+    "providers": {
+      "type": "object",
+      "description": "Опциональный provider-config v1.0.0; runtime resolution выполняет shared core resolver."
+    },
     "memory_brain": {
       "description": "Brain-валт (опционально). Строка = путь (обратная совместимость: скармливается memory-хуку). Объект = doc-sync: path + правила синхронизации BRAIN↔проект.",
       "oneOf": [

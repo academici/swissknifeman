@@ -44,6 +44,7 @@ SKILL_IGNORE = ("upstream.json", ".claude-plugin", "SKILL.*.md", "evals",
 CONFIG_KEYS = {
     "project_type": str, "buckets": list, "exclude": list, "presets": list,
     "skills_path": str, "agent": str,
+    "providers": dict,
     # memory_brain — строка (путь, back-compat: скармливается memory-хуку) ИЛИ
     # объект {path, sync?} (doc-sync BRAIN↔проект, см. brain_sync.BrainSync). Кортеж
     # типов → isinstance принимает оба; в схеме это oneOf[string, object] (гейт

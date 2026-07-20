@@ -13,6 +13,9 @@ import os
 import re
 from pathlib import Path
 
+from core import (ConfigSource, ProviderConfigCatalog, ProviderConfigLayer,
+                  ResolvedProviderConfig,
+                  resolve_provider_config as resolve_shared_provider_config)
 from .common import (detect_project_type, die, docs_visibility_for, sanitize,
                      warn)
 from .constants import (CODE_GRAPH_DEFAULTS, DIGEST_BUDGET_CHARS, DIGEST_ITEM_MAX_CHARS,
@@ -72,6 +75,7 @@ TOP_KEYS = {
     "integrations": dict,
     "mcp": dict,
     "observability": dict,
+    "providers": dict,
     "role_packs": dict,        # роль → agent-pack (вариант C: project.roles → авто-доставка пака)
 }
 
@@ -143,6 +147,10 @@ def validate_config(config, cfg_file):
                    {"service_name": str, "metrics_enabled": bool,
                     "traces_enabled": bool},
                    {"log_level": LOG_LEVELS})
+    if "providers" in config and not isinstance(config["providers"].get("defaults"), dict):
+        die(f"{cfg_file}: providers.defaults должно быть объектом")
+    if "providers" in config and set(config["providers"]) - {"defaults"}:
+        die(f"{cfg_file}: providers содержит неизвестный ключ")
 
     registry = config.get("namespaces") or {}
     for i, proj in enumerate(config.get("projects", [])):
@@ -158,6 +166,8 @@ def validate_config(config, cfg_file):
         if "status" in proj and proj["status"] not in PROJECT_STATUSES:
             die(f"{cfg_file}: projects[{i}].status = '{proj['status']}' — допустимо: "
                 f"{', '.join(sorted(PROJECT_STATUSES))}")
+        if "providers" in proj and not isinstance(proj["providers"], dict):
+            die(f"{cfg_file}: projects[{i}].providers должно быть объектом")
         if "namespaces" in proj:
             ns = proj["namespaces"]
             if not isinstance(ns, list) or not all(isinstance(x, str) for x in ns):
@@ -379,6 +389,14 @@ class Config(dict):
                 return p
         return None
 
+    def provider_config_layers(self, project_id):
+        return provider_config_layers(self, project_id)
+
+    def resolve_provider_config(self, catalog, project_id, *, project_config=None,
+                                operation=None):
+        return resolve_provider_config(self, catalog, project_id,
+                                       project_config=project_config, operation=operation)
+
     @property
     def namespaces(self):
         return self.get("namespaces") or {}
@@ -386,3 +404,31 @@ class Config(dict):
     @property
     def integrations(self):
         return self.get("integrations") or {}
+
+
+def provider_config_layers(config, project_id):
+    """Return maind-owned fleet layers without changing the loaded legacy carrier."""
+    defaults = (config.get("providers") or {}).get("defaults")
+    default_layer = None if defaults is None else ProviderConfigLayer(
+        ConfigSource("fleet-defaults", "fleet-defaults:config", "config.json", "/providers/defaults"), defaults)
+    matches = []
+    for index, project in enumerate(config.get("projects") or []):
+        if project.get("id") == project_id and "providers" in project:
+            matches.append(ProviderConfigLayer(
+                ConfigSource("fleet-project", f"fleet-project:{project_id}", "config.json",
+                             f"/projects/{index}/providers"), project["providers"]))
+    return default_layer, tuple(matches)
+
+
+def resolve_provider_config(config, catalog: ProviderConfigCatalog, project_id, *,
+                            project_config=None, operation=None) -> ResolvedProviderConfig:
+    """Thin maind carrier adapter; fleet/project precedence is owned by core."""
+    defaults, projects = provider_config_layers(config, project_id)
+    project_layer = None if project_config is None else ProviderConfigLayer(
+        ConfigSource("project", f"project:{project_id}", ".swissknife.json", "/providers"), project_config)
+    return resolve_shared_provider_config(catalog=catalog, operation=operation, project=project_layer,
+                                          fleet_project=projects, fleet_defaults=defaults)
+
+
+def render_provider_diagnostic(diagnostic):
+    return f"provider config: {diagnostic.code} ({diagnostic.path})"

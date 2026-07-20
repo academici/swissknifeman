@@ -3,7 +3,9 @@ import json
 import os
 from pathlib import Path
 
-from core import detect_project_type
+from core import (ConfigSource, ProviderConfigCatalog, ProviderConfigLayer,
+                  ResolvedProviderConfig, detect_project_type,
+                  resolve_provider_config as resolve_shared_provider_config)
 
 from .common import (AGENT_DEFAULTS, CONFIG_KEYS, confirm, die,
                      parse_frontmatter_fields, warn)
@@ -160,6 +162,31 @@ def load_config(env, target):
         die(f"{cfg_file}: invalid JSON: {e}")
     validate_config(env, config, cfg_file)
     return config
+
+
+def provider_config_layer(config, project_id="local"):
+    """Return the project-owned provider layer, or ``None`` when it is absent."""
+    value = config.get("providers")
+    if value is None:
+        return None
+    return ProviderConfigLayer(
+        ConfigSource("project", f"project:{project_id}", ".swissknife.json", "/providers"),
+        value,
+    )
+
+
+def resolve_provider_config(config, catalog: ProviderConfigCatalog, *, project_id="local",
+                            operation=None, fleet_project=None, fleet_defaults=None) -> ResolvedProviderConfig:
+    """Thin skiller carrier adapter; selection/delivery semantics stay unchanged."""
+    return resolve_shared_provider_config(catalog=catalog, operation=operation,
+                                          project=provider_config_layer(config, project_id),
+                                          fleet_project=fleet_project,
+                                          fleet_defaults=fleet_defaults)
+
+
+def render_provider_diagnostic(diagnostic):
+    """Package-owned Russian text while preserving the shared diagnostic envelope."""
+    return f"provider config: {diagnostic.code} ({diagnostic.path})"
 
 
 def autodetect(target):

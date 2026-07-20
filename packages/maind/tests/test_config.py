@@ -1,9 +1,14 @@
 """Тесты config.py: валидация схемы, дефолты, приоритет, brain-маппинг."""
 import tempfile
 import unittest
+from pathlib import Path
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from maind.config import (load_config, map_brain_project, merge_defaults,
-                          validate_config)
+                          resolve_provider_config, validate_config)
+from core.tests.test_provider_config import catalog, config
 from tests.fixtures import make_repo, write_brain_projects, write_maind_config
 
 
@@ -66,6 +71,15 @@ class TestDefaults(unittest.TestCase):
         m = merge_defaults({"memory": {"digest": {"shared_max": 3}}})
         self.assertEqual(m["memory"]["digest"]["shared_max"], 3)
         self.assertEqual(m["memory"]["digest"]["budget_chars"], 4000)  # остальные — дефолт
+
+
+class TestProviderConfig(unittest.TestCase):
+    def test_fleet_and_project_layers_use_shared_resolver(self):
+        cfg = {"providers": {"defaults": config({"codex": {"enabled": False}})},
+               "projects": [{"id": "demo", "providers": config({"codex": {"enabled": True}})}]}
+        validate_config(cfg, "x")
+        result = resolve_provider_config(cfg, catalog(), "demo")
+        self.assertTrue(dict((x.provider_id.value, x.enabled) for x in result.effective)["codex"])
 
 
 class TestPrecedence(unittest.TestCase):

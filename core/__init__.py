@@ -29,6 +29,10 @@ from .provider import (CapabilityId, CapabilityRequirement, ConfigProvenance,
                        NativeExtensionId, ProviderAdapter, ProviderDecision,
                        ProviderDiagnostic, ProviderId, ProviderSelection,
                        SupportLevel)
+from .provider_config import (CapabilitySupport, NativeExtension,
+                              ProviderConfigCatalog, ProviderConfigLayer,
+                              ResolvedProviderConfig, effective_projection,
+                              resolve_provider_config)
 from .repo import find_monorepo_root, find_repo_root, sibling_bin
 from .runs import find_run_report
 from .term import confirm, die, now_iso, parse_iso, warn
@@ -51,4 +55,7 @@ __all__ = [
     "NativeExtensionId", "CapabilityRequirement", "ProviderDecision",
     "ProviderSelection", "EffectiveProvider", "ConfigSource", "ConfigProvenance",
     "ProviderDiagnostic", "ProviderAdapter",
+    "CapabilitySupport", "NativeExtension", "ProviderConfigCatalog",
+    "ProviderConfigLayer", "ResolvedProviderConfig", "resolve_provider_config",
+    "effective_projection",
 ]

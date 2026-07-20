@@ -108,7 +108,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P0 | Evidence, vocabulary и запечатанные provider contracts | 7/7 | 🟢 Done |
-| P1 | Provider config/domain и backward-compatible resolution | 3/4 | 🟡 In progress |
+| P1 | Provider config/domain и backward-compatible resolution | 4/4 | 🟢 Done |
 | P2 | Deterministic adapters, provenance, lock и drift engine | 0/4 | ⬜ Not started |
 | P3 | Dual skills publication и marketplaces | 0/5 | ⬜ Not started |
 | P4 | Task-command parity и provider-neutral model routing | 0/5 | ⬜ Not started |
@@ -236,6 +236,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | 2026-07-20 | reconciliation-worker/Codex gpt-5.6-sol (effective doctor; requested Terra/high) | D71: main fast-forwarded to `9fb9f14`, retained stash `72505e4d8bef2a58f4ed555cc5b6014450aee3a9` applied and reconciled; owner dirt preserved unstaged, sealed D65 checker and package/plan gates rerun — P1.2 owner gate remains next. |
 | 2026-07-20 | repair-worker/Codex gpt-5.6-terra high | D72: D71 runtime banner proves Terra/high; D56 doctor remains non-green/non-blocking. Future-dated journal row is preserved/compensated; stash authority is OID+Git time — `findings/D71-provenance-bookkeeping-repair-2026-07-20.md`. |
 | 2026-07-20 | plan-run/Codex gpt-5.6-terra high | P1.2 закрыт: D73 accepted exact G1–G6; immutable `core.provider` API committed — детали см. phases/P1.md P1.2 Completion Notes. |
+| 2026-07-20 | plan-exec/gpt-5.6-terra medium | P1.4 закрыт: compatibility matrix and protected-path no-write proof committed — детали см. phases/P1.md P1.4 Completion Notes. |
 
 ## 7. Contracts
 

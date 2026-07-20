@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.4.3 |
+| Version | 1.4.4 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
@@ -71,6 +71,8 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P1.2 | gpt-5.6-terra/high | manual | full | prescribed public core API против frozen contracts; effort high+ MANDATORY |
 | P1.3 | gpt-5.6-terra/high | manual | full | cross-package precedence/provenance/diagnostics; effort high+ MANDATORY |
 | P1.4 | gpt-5.6-terra/medium | plan-exec | full | deterministic compatibility fixtures и no-write evidence без открытых design-решений |
+| P1.5 | gpt-5.6-terra/medium | plan-exec | full | prescribed committed synthetic protected-path proof; frozen contracts/API и live carriers не затрагиваются |
+| P1.6 | gpt-5.6-terra/medium | plan-exec | full | deterministic documentation/provenance remediation с exact commit anchors; без semantic change provider-config |
 | P2.1 | gpt-5.6-terra/high | manual | full | prescribed additive shared `core` API против frozen artifact contract; effort high+ MANDATORY |
 | P2.2 | gpt-5.6-terra/high | manual | full | managed-boundary/repair semantics с риском чужих файлов; effort high+ MANDATORY |
 | P2.3 | gpt-5.6-sol/high | manual | full | explicit capability-aware catalog: открытое public design decision |
@@ -108,7 +110,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P0 | Evidence, vocabulary и запечатанные provider contracts | 7/7 | 🟢 Done |
-| P1 | Provider config/domain и backward-compatible resolution | 4/4 | 🟢 Done |
+| P1 | Provider config/domain и backward-compatible resolution | 5/6 | 🟡 In progress |
 | P2 | Deterministic adapters, provenance, lock и drift engine | 0/4 | ⬜ Not started |
 | P3 | Dual skills publication и marketplaces | 0/5 | ⬜ Not started |
 | P4 | Task-command parity и provider-neutral model routing | 0/5 | ⬜ Not started |
@@ -193,6 +195,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | D71 | 2026-07-20 | Exact Owner instruction supersedes D65-A только в execution target/timing: ранняя D65/D68 reconciliation выполнена сейчас в canonical `main`; retained backup — stash `72505e4d8bef2a58f4ed555cc5b6014450aee3a9`; main остаётся active execution root. Восстановлены все owner-owned dirt, а P1.2/core/**, frozen product semantics, FOREMAN/fleet и live authority не расширены. | RAG:— (owner-grounded: exact reconciliation instruction 2026-07-20; repo-grounded: sealed checker, stash/ff/apply evidence) — historical D65-A/D68 bytes и их exact classifications не переписываются; D71 меняет только уже наступивший срок/target integration. |
 | D72 | 2026-07-20 | D71 provenance addendum: exact runtime startup banner is the authoritative process route evidence for the D71 worker — `gpt-5.6-terra/high`, approval `never`, sandbox `danger-full-access`. Static `codex doctor --json` remains the disclosed D56 environment anomaly: it reports persisted `gpt-5.6-sol` and no effective effort, so it is not a routing block. The retained stash is identified by OID plus Git commit time `2026-07-20T13:26:51Z`; its human subject timestamp is not evidence. | RAG:— (owner-grounded: exact D71 runtime banner and retained-stash correction; repo-grounded: `c09f876`, `c68defc`, `1e9fa8d`, `9fb9f14`, `git show 72505e4…`, `findings/D71-provenance-bookkeeping-repair-2026-07-20.md`) — adds provenance only: no P1.2/core/** execution, frozen-product semantic change, authority expansion, stash mutation, or Owner-gate disposition. |
 | D73 | 2026-07-20 | Approval Owner accepts exact P1.2 CORE-PROVIDER G1–G6 as written: Rule of Three, one pure stdlib-only `core.provider` boundary, exactly 13 public symbols, metadata-only protocol, additive minor SemVer, and P1.2-only authority. | RAG:— (owner-grounded: exact reply `APPROVE P1.2 CORE-PROVIDER G1-G6 AS WRITTEN`; repo-grounded: `artifacts/P1-core-provider-domain-contribution-review.md`) — opens only the prescribed P1.2 core API implementation. |
+| D74 | 2026-07-20 | P1 формально реопенена после RED Audit P1: P1.5 доказывает G02 только committed synthetic fixtures, P1.6 владеет уже внесёнными documentation projections и append-only P1.2–P1.4 commit→item map. Historical P1.1–P1.4 statuses/specs и frozen provider-config v1.0.0 не переписываются. | RAG:— (repo-grounded: `phases/P1.md` Audit P1 2026-07-20, `artifacts/P1-provider-compatibility-matrix.md`, commit `33f35d8`) — выполняет ровно три audit finding без расширения authority на root config, FOREMAN, fleet или P2+. |
 
 ## 6. Update Log
 
@@ -239,6 +242,8 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | 2026-07-20 | plan-exec/gpt-5.6-terra medium | P1.4 закрыт: compatibility matrix and protected-path no-write proof committed — детали см. phases/P1.md P1.4 Completion Notes. |
 | 2026-07-20 | plan-exec/gpt-5.6-terra medium | P1.4 bookkeeping correction: append-only process deviation recorded — детали см. phases/P1.md P1.4 Known Deviations. |
 | 2026-07-20 | plan-close/Codex mechanical | P1 закрыта: terminal provider-config/domain/resolver/compatibility evidence сверена; docs описывают provider-selection foundation — детали см. phases/P1.md Phase Handoff. |
+| 2026-07-20 | issue-planner/Codex gpt-5.6-sol high | P1 реопенена по D74 после RED Audit P1: добавлены P1.5 committed synthetic G02 evidence и P1.6 docs/provenance ownership; frozen contract, historical P1.1–P1.4, root config, FOREMAN, fleet и P2+ не менялись. |
+| 2026-07-20 | plan-exec/gpt-5.6-terra medium | P1.5 закрыт: committed synthetic fixture proof заменил live owner-state snapshot — детали см. phases/P1.md P1.5 Completion Notes. |
 
 ## 7. Contracts
 

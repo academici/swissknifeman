@@ -1,47 +1,44 @@
-# HANDOFF — 2026-07-20 — after P3.3
+# HANDOFF — 2026-07-20 — after P3.4
 
-**Next:** ЗАПУСК ВРУЧНУЮ: gpt-5.6-terra/high
+**Next:** /task:plan-exec 2026.07.19-DUAL-PROVIDER P3.5
 
 | Параметр | Значение |
 |:--|:--|
 | Model | gpt-5.6-terra |
-| Thinking | high — provider distribution and repair boundary |
-| Context | continue (/clear) — ручной item |
-| Суть | Execute P3.4 only: providerize distribution flows over the completed Claude and Codex projections. |
+| Thinking | medium — deterministic independent inventory/parity conformance |
+| Context | fresh — P3.5 is plan-exec routed |
+| Суть | Execute only P3.5 and independently prove the complete Claude/Codex publication matrix. |
 
 ```text
-Execute only P3.4 of plan 2026.07.19-DUAL-PROVIDER on gpt-5.6-terra/high.
+Execute only P3.5 of plan 2026.07.19-DUAL-PROVIDER on gpt-5.6-terra/medium.
 
-First read AGENTS.md, CLAUDE.md, plans/2026.07.19-DUAL-PROVIDER/plan.md,
-handoff.md, phases/P3.md, then all P3.4 Required Reads strictly in their listed order.
-P3.3 is terminal at item commit 302a5f0: native Codex marketplace, direct bucket plugins,
-cache-contained core/skm bundles, locks and focused conformance exist. Preserve all unrelated
-owner dirt. Execute only P3.4 Files/Scope; do not start P3.5+, alter P3.1 frozen contracts,
-install or enable plugins, write user-global Codex state, touch the current root .agents/skills,
-or touch FOREMAN/fleet.
+First read AGENTS.md, CLAUDE.md, packages/task/commands/plan-exec.md, then
+plans/2026.07.19-DUAL-PROVIDER/plan.md, handoff.md, phases/P3.md and every P3.5
+Required Read strictly in its listed order. P3.4 is terminal at item commit 1d73963.
 
-Use the P1 resolver and P2 immutable plan/apply boundary. Keep native installation explicit,
-separate from ordinary render/check/doctor/update, and prove no implicit subprocess or user-global
-write through temp-root tests. Follow the full item lifecycle: journal, validation, two commits,
-plan status and handoff.
+Preserve unrelated owner dirt. Execute only P3.5. Do not change P3.1 frozen contracts,
+P4+, live Codex user-global state, current root .agents/skills, FOREMAN or fleet.
+Use temporary roots for all apply/repair tests. Build expected semantic sets independently
+from canonical registry and contract; do not derive them from a provider renderer.
+Run the full lifecycle: journal, validation, two commits, status board and handoff.
 ```
 
-**Done:** P3.3 added the independent native Codex publication renderer at item commit `302a5f0`.
-It emits direct bucket/meta manifests, a contained repo marketplace, and self-contained `core`/
-`skm` cache bundles with deterministic locks. Claude golden compatibility remains covered.
+**Done:** P3.4 at `1d73963` added P1-resolved provider distribution preflight, provider-qualified
+vendor ownership, fail-closed external Codex marketplace handling, read-only provider doctor,
+and an explicit native Codex installer. Legacy Claude remains the missing-provider default.
 
-**Remaining:** P3.4–P3.5, then independent P3 audit G03 before P4.1.
+**Remaining:** P3.5, then independent P3 audit G03 before P4.1.
 
-**Sources of truth:** `phases/P3.md` P3.3–P3.4 · frozen
+**Sources of truth:** `phases/P3.md` P3.4–P3.5 · frozen
 `root/contracts/provider-skill-publication-contract.md` · `packages/skiller/lib/skiller/publication.py`
-· P3.3 item commit `302a5f0`.
+· P3.4 item commit `1d73963`.
 
-**Open risks:** The static `codex doctor --json` model/effort ambiguity remains D56 non-green
-but non-blocking under D72. Unrelated owner dirt remains intentionally unstaged. `plan-lint`
-retains two documented P3 DoR false-positive warnings; P3.3 added no plan errors.
+**Open risks:** Existing plan-lint has 2 documented P3 DoR false-positive warnings; P3.4 adds
+no errors. Native user-global Codex install was not run: only the explicit fake-runner path was
+tested, by item scope. `maind health --cwd` is healthy; it accepts no positional path argument.
 
 **Workarounds/Deferred/Open questions:**
 
 - workarounds: none.
-- deferred: provider distribution/install/update flows are P3.4.
+- deferred: exhaustive inventory/channel parity is P3.5.
 - open_questions: —

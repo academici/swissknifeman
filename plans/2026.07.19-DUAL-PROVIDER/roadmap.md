@@ -6,11 +6,11 @@
      Порядок строго phase-first: P0→P1→P2→P3→P4→P5→P6→P7. До finish + GREEN design
      audit исполнение любого item запрещено. -->
 
-**Обновлён:** 2026-07-20 · **Соответствует plan.md:** v1.3.0
+**Обновлён:** 2026-07-20 · **Соответствует plan.md:** v1.3.1
 
-> **Статус exec:** P0.1 и P0.5 🟢; остальные 38 items открыты. P0.5 terminal correction
-> evidence разделяет umbrella Command Surface и Task Command subset; следующий шаг — новый
-> P0.2 owner freeze.
+> **Статус exec:** P0.1/P0.5/P0.2/P0.3 🟢; P0.4 формально переоткрыт D60 только для
+> plan-only Validation repair. Corrected G11 scan зелён, frozen D59 contract byte-identical;
+> следующий шаг — атомарная сверка P0.4, затем phase close и independent audit G01.
 > Historical audit r4 GREEN уже открыл исполнение P0.1; повторный whole-plan audit из-за
 > локальной prerequisite correction не подменяет item-level full review и остаётся вне
 > текущего Next.
@@ -25,9 +25,9 @@
 |---|---|---|---|---|---|
 | P0.1 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | historical narrow inventory закрыт; command-surface интерпретация корректируется отдельным P0.5 |
 | P0.5 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | terminal correction evidence пяти explicit roots; не переписывает P0.1 |
-| P0.2 | solo | plan-run (manual) | gpt-5.6-sol/high | ✅ весь vocabulary/scenarios + Command Surface 32 / Task Command 11 | стартует только после terminal P0.5; owner approval ссылается на correction anchor |
-| P0.3 | solo | plan-run (manual) | gpt-5.6-sol/xhigh | ✅ capability/artifact contracts + ADR | frozen public contracts; отдельный irreversible owner gate |
-| P0.4 | solo | plan-run (manual) | gpt-5.6-sol/high | ✅ migration/FOREMAN/fleet gates | cross-plan safety gate после frozen P0.3, отдельно от contract authoring |
+| P0.2 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/high | ✅ D53 | vocabulary/scenarios и distinction Command Surface / Task Command заморожены |
+| P0.3 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/xhigh | ✅ D55 | capability/artifact contracts v1.0.0 + ADR accepted |
+| P0.4 | solo | plan-close repair — 🟡 | gpt-5.6-terra/low | ✅ D59; D60 contract-neutral repair | exact structural G11 revalidation после line-local Validation defect |
 | P1.1 | solo | plan-run (manual) | gpt-5.6-sol/xhigh | ✅ provider-config contract | owner-gated public precedence/config freeze |
 | P1.2 | solo | plan-run (manual) | gpt-5.6-terra/high | ✅ shared-core contribution | prescribed API после P1.1; public core boundary требует full review |
 | P1.3 | solo | plan-run (manual) | gpt-5.6-terra/high | — | потребляет P1.2 symbols и реализует precedence/diagnostics |
@@ -73,19 +73,19 @@ Inputs следующего, поэтому merge-criterion plan-protocol для
 implementation. P5.6→P5.7 — contract→prescribed implementation, поэтому их нельзя
 объединять; P6.5→P6.6 и P7.3→P7.4 дополнительно разделены обязательным NEW SESSION.
 
-## Готовый launch-block текущего owner gate
+## Готовый launch-block текущего шага
 
-### S-P0.2 — vocabulary owner freeze
+### S-P0.4-R1 — Validation repair reconciliation
 
 | Параметр | Значение |
 |:--|:--|
-| Model | gpt-5.6-sol |
-| Thinking | high — owner-approved vocabulary freeze |
-| Context | continue (/clear) — ручной item |
-| Суть | Зафиксировать P0.2 glossary и scenario matrix на terminal P0.5 evidence |
+| Model | gpt-5.6-terra |
+| Thinking | low — deterministic item reconciliation |
+| Context | NEW SESSION — шаг-не-item |
+| Суть | Повторно сверить P0.4 после D60, не меняя frozen contract. |
 
 ```
-Выполнить P0.2 вручную в 2026.07.19-DUAL-PROVIDER на gpt-5.6-sol/high. Сначала прочитать plan.md, handoff.md, phases/P0.md и Required Reads P0.2 в указанном порядке. Использовать terminal findings/P0-command-surface-correction.md как evidence: Command Surface и Task Command — разные glossary entries, anchored counts не становятся frozen constants. Подготовить только P0.2 glossary/scenario scope и получить новый Approval Owner D# на весь набор. Не менять P0.1/P0.5 evidence, package code, FOREMAN, ACTIVE или fleet.
+/task:plan-close 2026.07.19-DUAL-PROVIDER P0.4
 ```
 
 ## Гейты владельца (сводно)

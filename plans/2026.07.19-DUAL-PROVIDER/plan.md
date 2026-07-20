@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.3.0 |
+| Version | 1.3.1 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
@@ -105,7 +105,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P0 | Evidence, vocabulary и запечатанные provider contracts | 5/5 | 🟢 Done |
+| P0 | Evidence, vocabulary и запечатанные provider contracts | 4/5 | 🟡 In progress |
 | P1 | Provider config/domain и backward-compatible resolution | 0/4 | ⬜ Not started |
 | P2 | Deterministic adapters, provenance, lock и drift engine | 0/4 | ⬜ Not started |
 | P3 | Dual skills publication и marketplaces | 0/5 | ⬜ Not started |
@@ -177,6 +177,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | D57 | 2026-07-20 | Root agent автоматически делегирует каждый следующий executable roadmap step свежему subagent из committed plan/handoff/Required Reads и не перекладывает routine launch на Owner. Последовательно зависимые items идут по одному без Workflow fan-out; launch block остаётся recovery carrier. Остановка разрешена только на explicit Owner Approval, новой границе полномочий или реально неустранимом blocker после safe remediation. | RAG:— (owner-grounded: `brief/04-automatic-agent-continuation.md`; repo-grounded: roadmap sequential dependencies, plan-protocol §7/§8) — сохраняет чистые контексты без ложных остановок и без параллельных гонок. |
 | D58 | 2026-07-20 | Regression из item/phase audit запускает автоматический fix-forward: возврат к owning item/phase, formal reopen при необходимости, отдельный repair commit, повторные validation и independent audit, затем resume roadmap. Owner нужен только если repair меняет frozen contract, расширяет authority или открывает genuine owner-level fork. | RAG:— (owner-grounded: `brief/04-automatic-agent-continuation.md`; repo-grounded: plan-protocol phase reopen/status/commit/audit rules) — допускает отход назад без потери provenance и не превращает review finding в ручную остановку. |
 | D59 | 2026-07-20 | Approval Owner замораживает `provider-migration-gates.md` v1.0.0 единым seven-point set: G01–G11 producers/evidence/owners/outcomes; independent trust/approval/sandbox и explicit-only full access; no-write/rollback/partial-provider/provenance-only cleanup; exact reconcile-only FOREMAN bundle; fleet no-op + separate post-FOREMAN rollout plan; P0–P7 pre-mortem ownership; без authority на FOREMAN/fleet/package writes в P0.4. D11/D12 уточнены этим exact gate contract без изменения их sequencing/fail-closed semantics. | RAG:— (owner-grounded: explicit D59 approval 2026-07-20; repo-grounded: `root/contracts/provider-migration-gates.md`, `research/03-p0-design-and-premortem.md`) — открывает post-approval validation/close P0.4, но не P1 до G01 phase audit. |
+| D60 | 2026-07-20 | D58 fix-forward формально переоткрывает P0/P0.4 и supersedes только дефектный line-local Validation literal `отдельн.*fleet`: corrected check явно проверяет G11 fleet no-write/separate-plan row. Frozen D59 contract, gates и authority остаются byte-identical. | RAG:— (repo-grounded: P0-close exact Validation replay; `root/contracts/provider-migration-gates.md` G11) — исправляет ложный прежний GREEN без расфриза contract или расширения scope. |
 
 ## 6. Update Log
 
@@ -204,6 +205,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | 2026-07-20 | plan-run/Codex gpt-5.6-sol xhigh | P0.3 закрыт: D55 заморозил capability/artifact v1.0.0 и принял ADR-0001 — детали см. phases/P0.md P0.3 Completion Notes. |
 | 2026-07-20 | plan-run/Codex gpt-5.6-sol xhigh | P0.4 candidate: migration/FOREMAN/fleet gates и pre-mortem traceability подготовлены; freeze/close ожидали explicit Owner Approval D59. |
 | 2026-07-20 | plan-run/Codex gpt-5.6-sol xhigh | P0.4 закрыт: D59 заморозил migration gates v1.0.0 и P0–P7 risk traceability — детали см. phases/P0.md P0.4 Completion Notes. |
+| 2026-07-20 | plan-close/Codex gpt-5.6-sol xhigh | D58 repair P0.4: D60 заменил ложный line-local fleet validation literal на structural G11 check; frozen D59 contract не изменён. |
 
 ## 7. Contracts
 

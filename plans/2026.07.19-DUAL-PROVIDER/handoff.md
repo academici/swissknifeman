@@ -1,35 +1,31 @@
-# HANDOFF — 2026-07-20 — after P0.7
+# HANDOFF — 2026-07-20 — after P0
 
-**Next:** /task:plan-close 2026.07.19-DUAL-PROVIDER P0
+**Next:** /task:plan-audit 2026.07.19-DUAL-PROVIDER P0
 
 | Параметр | Значение |
 |:--|:--|
-| Model | gpt-5.6-terra |
-| Thinking | low |
+| Model | gpt-5.6-sol |
+| Thinking | xhigh |
 | Context | NEW SESSION — шаг-не-item |
-| Суть | Сверить terminal P0 items и передать фазу на independent audit attempt 3. |
+| Суть | Независимо проверить P0 attempt 3 по D67 и напечатать literal AUDIT-CAP. |
 
 ```text
-/task:plan-close 2026.07.19-DUAL-PROVIDER P0
+/task:plan-audit 2026.07.19-DUAL-PROVIDER P0
 ```
 
-**Done:** P0.7 закрыт item-коммитом
-`1c1184c595aa4ee5027738b71166b1b7313d34fb`: добавлены strict stdlib checker,
-canonical D65-A/D68 manifest, isolated-CLI root-resolution finding и stable root
-`AGENTS.md` invariant. Active normative D52/P0.5/P0.2/index provenance не ссылается
-на absent carrier; historical Audit/finding/journal bytes сохранены. Main проверялся
-только exact-path status/hash и не изменялся. Post-item review fix chain
-`8bafc6842d246a968f560dfdee2cd979f37620e0` → `507122ea951452376beacfc2491982cca7a6e0e8`
-закрывает F1/F2: Git reads не берут optional locks, а main-file hashing fail-closed на
-symlink/non-regular path без FIFO-block.
+**Done:** P0 закрыта GREEN: 7/7 terminal items сверены после P0.7 review-fix chain
+`8bafc6842d246a968f560dfdee2cd979f37620e0` →
+`507122ea951452376beacfc2491982cca7a6e0e8` →
+`23250271c6fa224f3b8758ed4d0de38a3acd74ed`. Committed P0.1/P0.5 sealed replay,
+plan-lint и frozen/historical preservation checks прошли; main, FOREMAN, fleet и P1
+не выполнялись и не менялись.
 
-**Remaining:** Отдельный `plan-close P0` reconciles Phase Handoff/closure evidence, затем
-independent Audit P0 attempt 3 обязан напечатать `AUDIT-CAP` со ссылкой на D67.
-P1.1 остаётся fail-closed до literal GREEN G01. D65-A/D68 reconciliation с dirty main
-остаётся обязательной перед P7.4.
+**Remaining:** Independent Audit P0 attempt 3 обязан напечатать `AUDIT-CAP` со ссылкой
+на D67 и вправе выдать substantive verdict. P1.1 остаётся fail-closed до literal GREEN
+G01. D65-A/D68 reconciliation с dirty main остаётся обязательной перед P7.4.
 
 **Sources of truth:** `plan.md` D52/D65–D68, Routing, Status Board и Update Log ·
-`phases/P0.md` P0.7 и второй historical Audit P0 block · `roadmap.md` S-P0-close ·
+`phases/P0.md` P0.7, Phase Handoff и второй historical Audit P0 block · `roadmap.md` S-P0-audit ·
 `artifacts/d65-main-reconciliation-check.py` · `artifacts/d65-main-reconciliation.json` ·
 `findings/P0-isolated-cli-root-resolution-defect-2026-07-20.md` ·
 `findings/P0-command-surface-correction.md` · `research/03-p0-design-and-premortem.md` ·

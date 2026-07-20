@@ -9,10 +9,9 @@
 **Обновлён:** 2026-07-20 · **Соответствует plan.md:** v1.4.1
 
 > **Статус exec:** P0.7 закрыт; derived phase status P0 синхронизирован в `Done`.
-> Отдельный `/task:plan-close 2026.07.19-DUAL-PROVIDER P0` reconciles Phase Handoff и
-> closure evidence, затем выполняется exceptional independent audit attempt 3 с `AUDIT-CAP` + D67.
-> P1.1 закрыт до literal GREEN G01; reconciliation с dirty main перенесена, но не
-> отменена, и обязательна перед P7.4 по D65-A/D68.
+> P0 закрыта; следующим выполняется exceptional independent audit attempt 3 с literal
+> `AUDIT-CAP` + D67. P1.1 закрыт до literal GREEN G01; reconciliation с dirty main
+> перенесена, но не отменена, и обязательна перед P7.4 по D65-A/D68.
 > Исполнительские модели — только current ChatGPT/Codex family: Terra для prescribed
 > implementation, Sol для design/contracts/audit. GPT-5.6 Luna не используется на этом
 > public-contract/release critical path. RAG:✅ 2026-07-19
@@ -76,17 +75,17 @@ implementation. P5.6→P5.7 — contract→prescribed implementation, поэто
 
 ## Готовый launch-block текущего шага
 
-### S-P0-close — повторное закрытие P0
+### S-P0-audit — exceptional independent audit attempt 3
 
 | Параметр | Значение |
 |:--|:--|
-| Model | gpt-5.6-terra |
-| Thinking | low |
+| Model | gpt-5.6-sol |
+| Thinking | xhigh |
 | Context | NEW SESSION — шаг-не-item |
-| Суть | Сверить terminal P0 items и передать фазу на independent audit attempt 3. |
+| Суть | Независимо проверить P0 под D67 и напечатать literal AUDIT-CAP. |
 
 ```
-/task:plan-close 2026.07.19-DUAL-PROVIDER P0
+/task:plan-audit 2026.07.19-DUAL-PROVIDER P0
 ```
 
 ## Гейты владельца (сводно)

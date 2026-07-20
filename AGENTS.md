@@ -37,3 +37,7 @@ inside `packages/<name>/`, also read that package's `CLAUDE.md`.
   verify both the cold-start registry and the live-session call path.
 - Capture each observed launch/hook defect in the active plan's `brief/` + `findings/` and
   fix the owning source/generator when it exists. Keep only stable recurring invariants here.
+- Disclose environment defects as soon as they can affect model/effort, filesystem access,
+  MCP/evidence, hooks, sandbox/approval, context budget or validation fidelity. Pause dependent
+  work and repair safe in-scope defects immediately; otherwise record the evidence and route an
+  explicit follow-up. Never treat a failed or skipped check as green.

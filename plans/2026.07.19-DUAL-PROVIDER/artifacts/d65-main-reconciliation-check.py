@@ -223,7 +223,7 @@ def _sha256_file(root: Path, relative_path: str) -> str:
         try:
             file_descriptor = os.open(
                 components[-1],
-                os.O_RDONLY | os.O_CLOEXEC | nofollow,
+                os.O_RDONLY | os.O_CLOEXEC | os.O_NONBLOCK | nofollow,
                 dir_fd=descriptor,
             )
         except OSError as exc:

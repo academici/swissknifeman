@@ -67,6 +67,6 @@
 | `root/contracts/provider-artifact-contract.md` | identity/provenance/hash/boundary/drift/repair | frozen v1.0.0, D55 |
 | `root/adr/0001-provider-adapter-architecture.md` | canonical semantic source → deterministic provider adapters | accepted, D55 |
 | `root/contracts/provider-migration-gates.md` | P1–P7/FOREMAN/fleet entry и release gates | frozen v1.0.0, D59 |
-| `root/contracts/provider-config-contract.md` | project/fleet carriers, precedence, provenance и diagnostics | draft; sealing P1.1 |
+| `root/contracts/provider-config-contract.md` | project/fleet carriers, precedence, provenance и diagnostics | frozen v1.0.0, D70 |
 | `root/contracts/provider-harness-contract.md` | profiles/security/provider-native settings/hooks/MCP/agents | draft; sealing P5.1 |
 | `root/contracts/provider-analytics-contract.md` | neutral events/runs/readers/storage/privacy/migration | draft; sealing P6.3 |

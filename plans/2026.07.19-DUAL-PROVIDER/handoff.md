@@ -1,47 +1,48 @@
-# HANDOFF — 2026-07-20 — after P2.1
+# HANDOFF — 2026-07-20 — after P2.2
 
-**Next:** ЗАПУСК ВРУЧНУЮ: `gpt-5.6-terra/high`
+**Next:** ЗАПУСК ВРУЧНУЮ: `gpt-5.6-sol/high`
 
 | Параметр | Значение |
 |:--|:--|
-| Model | gpt-5.6-terra |
-| Thinking | high — managed-boundary safety semantics |
+| Model | gpt-5.6-sol |
+| Thinking | high — capability catalog contract decision |
 | Context | continue (/clear) — ручной item |
-| Суть | Реализовать P2.2 lock/drift/apply API поверх terminal P2.1 artifact kernel. |
+| Суть | Реализовать только P2.3 immutable capability-aware adapter registry поверх terminal P2.1/P2.2 APIs. |
 
 ```text
-Продолжай только P2.2 плана 2026.07.19-DUAL-PROVIDER на gpt-5.6-terra/high.
+Продолжай только P2.3 плана 2026.07.19-DUAL-PROVIDER на gpt-5.6-sol/high.
 
 Сначала прочитай AGENTS.md, CLAUDE.md, packages/task/commands/plan-exec.md, затем
-plans/2026.07.19-DUAL-PROVIDER/plan.md, handoff.md, phases/P2.md и все P2.2 Required Reads
-строго в указанном порядке. P2.1 terminal: D75 accepted K1-K6; item commit 0dfdcd6 added
-core.provider_artifact. Preserve all unrelated owner dirt. Execute only P2.2; do not touch
-P2.3+, package-specific integration, live configs, FOREMAN, fleet, or user files.
+plans/2026.07.19-DUAL-PROVIDER/plan.md, handoff.md, phases/P2.md и все P2.3 Required Reads
+строго в указанном порядке. P2.1 terminal: D75 and item commit 0dfdcd6. P2.2 terminal:
+item commit 7035a63 adds core.provider_lock fail-closed lock/drift/explicit-apply API.
 
-Implement the frozen lock/drift contract fail-closed: planning is no-write, apply receives
-only an explicit target root plus precomputed plan, and every write stays under TemporaryDirectory
-in tests. Do not auto-adopt, force, recursively discover, or delete outside declared managed entries.
+Execute only P2.3. Preserve unrelated owner dirt. Do not touch P2.4+, package-specific
+integration, live configs, FOREMAN, fleet, or user files. Implement only the frozen explicit
+immutable catalog; no discovery, globals, package imports, environment/cwd selection, or
+provider-name branching. Stop only for an actual frozen-contract/authority gap.
 ```
 
-**Done:** P2.1 is terminal `🟢 Done`: D75 accepted K1–K6, and item commit `0dfdcd6`
-added the pure `core.provider_artifact` kernel, explicit exports, accepted contribution proposal,
-accepted ADR-0002, and focused deterministic/provenance/path conformance tests.
+**Done:** P2.1 and P2.2 are terminal `🟢 Done`. P2.2 item commit `7035a63` provides canonical
+v1 artifact-lock serialization, deterministic fail-closed drift planning, explicit-root atomic
+apply, explicit repair backup and TemporaryDirectory conformance tests.
 
-**Remaining:** P2.2 → P2.3 → P2.4 remain strictly sequential. P2.2 owns lock, drift,
-explicit apply, repair, and atomic containment semantics; no package or live-target integration
-is open yet.
+**Remaining:** P2.3 → P2.4 remain strictly sequential. P2.3 consumes the terminal artifact and
+lock APIs to create a capability-aware immutable catalog; P2.4 then provides the synthetic E2E
+conformance/doctor evidence. Package and live-target integration remain out of scope.
 
-**Sources of truth:** `phases/P2.md` P2.1/P2.2 · D75 in `plan.md` ·
-`root/contracts/provider-artifact-contract.md` v1.0.0 · accepted
-`artifacts/P2-core-contribution-proposal.md` · accepted
-`root/adr/ADR-0002-provider-artifact-kernel.md` · item commit `0dfdcd6` · `journal.jsonl`.
+**Sources of truth:** `phases/P2.md` P2.1–P2.3 · D16–D18/D75 in `plan.md` · frozen
+`root/contracts/provider-{capability,artifact,config,migration-gates}.md` ·
+`root/adr/ADR-0002-provider-artifact-kernel.md` · commits `0dfdcd6` and `7035a63` ·
+`journal.jsonl`.
 
 **Open risks:** Static `codex doctor --json` route/effort ambiguity remains D56 non-green but
-non-blocking under D72. Current target plan-lint has no errors; any residual warnings must be
-baseline-attributed at P2.2 close. Unrelated owner dirt remains intentionally unstaged.
+non-blocking under D72. Unrelated owner dirt remains intentionally unstaged. Managed-block
+application requires an explicit caller extractor and currently fails closed, rather than
+inventing marker grammar before P5 instruction semantics.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: —
-- deferred: locks/drift/apply/repair (P2.2), catalog (P2.3), synthetic E2E/doctor (P2.4), and all package/provider delivery remain deferred.
+- workarounds: managed-block apply is intentionally refused until its owning phase supplies an explicit extractor/replacer.
+- deferred: capability catalog (P2.3), synthetic E2E/doctor (P2.4), and all package/provider delivery.
 - open_questions: —

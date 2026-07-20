@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.4.4 |
+| Version | 1.4.5 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
@@ -111,7 +111,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 |:--|:--|:--|:--|
 | P0 | Evidence, vocabulary и запечатанные provider contracts | 7/7 | 🟢 Done |
 | P1 | Provider config/domain и backward-compatible resolution | 6/6 | 🟢 Done |
-| P2 | Deterministic adapters, provenance, lock и drift engine | 1/4 | 🟡 In progress |
+| P2 | Deterministic adapters, provenance, lock и drift engine | 2/4 | 🟡 In progress |
 | P3 | Dual skills publication и marketplaces | 0/5 | ⬜ Not started |
 | P4 | Task-command parity и provider-neutral model routing | 0/5 | ⬜ Not started |
 | P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 0/7 | ⬜ Not started |
@@ -249,6 +249,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | 2026-07-20 | plan-exec/gpt-5.6-terra medium | P1 map: P1.2=`57b9b2e96f1e56dc06ba4841586e6e4958ac91a8`; P1.3=`8f377e109041a391235d40be9bec73ad6f4d7f89`/fix=`061a2cb822812c30ea5ab1855a4aebef066c2308`; P1.4=`58a6f5d202a15e164849b1dc901e98924da8c480`; docs-close=`33f35d8618c887a055f79380084574d211af5f05`. |
 | 2026-07-20 | plan-close/Codex mechanical | P1 повторно закрыта после D74: terminal P1.1–P1.6 и synthetic G02/docs/provenance evidence сверены — детали см. phases/P1.md Phase Handoff. |
 | 2026-07-20 | plan-run/Codex gpt-5.6-terra high | P2.1 закрыт: D75 accepted additive deterministic `core.provider_artifact` kernel — детали см. phases/P2.md P2.1 Completion Notes. |
+| 2026-07-20 | plan-run/Codex gpt-5.6-terra high | P2.2 закрыт: fail-closed lock/drift/apply API и TemporaryDirectory conformance added — детали см. phases/P2.md P2.2 Completion Notes. |
 
 ## 7. Contracts
 

@@ -12,6 +12,54 @@ from pathlib import Path
 
 PLAN_ID = "2026.07.19-DUAL-PROVIDER"
 ANCHOR_REL = f"plans/{PLAN_ID}/artifacts/p0-evidence-anchors.json"
+P01_ANCHOR_CANONICAL_SHA256 = "c0a1a7649fa0dc088857ac3c07c7074f64e54fbe68b754ae061cf8c4ec9eb984"
+EXPECTED_P01_ANCHOR = {
+    "source_tree": "9844f499797faf063aede49b79703c71f7ef666e",
+    "item_commit": "f4d230e6e83aac56ab7fe82a085b7bb18d59d6de",
+    "bookkeeping_commit": "d8ac22c04fc4d4219dc95244ee9d181e92553a74",
+    "finding_path": "plans/2026.07.19-DUAL-PROVIDER/findings/P0-provider-coupling-baseline.md",
+    "finding_sha256": "23f8bccce5fcbfc1841ef0373fad4bf0ed5c341b25b037f797eb3c5695550b88",
+    "collections": {
+        "canonical skills": {"glob": "packages/skiller/skills/**/SKILL.md", "expected_count": 216},
+        "task commands": {"glob": "packages/task/commands/*.md", "expected_count": 11},
+        "plugin manifests": {
+            "collection_mode": "tracked_source_tree_plus_sealed_external_paths",
+            "tracked_glob": "packages/**/.claude-plugin/plugin.json",
+            "tracked_expected_count": 53,
+            "external_paths": [
+                "packages/maind/node_modules/@agentmemory/agentmemory/plugin/.claude-plugin/plugin.json"
+            ],
+            "external_paths_canonical_json_sha256": (
+                "d0471d0cbafc3e0889dbf2499493670147bfbb0b8ef83c70998f49b1205c0eb4"
+            ),
+            "external_provenance": (
+                "immutable P0.1 finding at f4d230e6e83aac56ab7fe82a085b7bb18d59d6de; "
+                "source tree 9844f499797faf063aede49b79703c71f7ef666e"
+            ),
+        },
+        "MCP presets": {
+            "glob": "packages/harness/configs/claude-code/mcp/*.json",
+            "expected_count": 8,
+        },
+        "agent packs": {
+            "glob": "packages/harness/configs/claude-code/agent-packs/**/pack.json",
+            "expected_count": 10,
+        },
+        "fleet projects": {
+            "collection_mode": "sealed_redacted_ids",
+            "values": [
+                "agelto", "diabox", "flexcrm", "axiomaerpsdk", "azguard", "botkit",
+                "vaulter", "swissknifeman", "axiomastudio", "corex", "memster", "cms",
+                "edufy", "vintera", "dterema", "dterema-app", "sibintek-insiders",
+                "chatom", "perplexity-web-mcp", "loqum", "brain", "local-repo",
+                "local-repo", "local-repo", "local-repo",
+            ],
+            "canonical_json_sha256": (
+                "fb18cc310634a91d0062f836f49cc48fb9401b41d56af031ae835c088066045d"
+            ),
+        },
+    },
+}
 
 
 def root() -> Path:
@@ -25,6 +73,28 @@ def git(repo: Path, *args: str) -> str:
 
 def canonical(value: object) -> bytes:
     return json.dumps(value, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+
+
+def canonical_anchor(value: object) -> bytes:
+    return json.dumps(value, ensure_ascii=False, sort_keys=True,
+                      separators=(",", ":")).encode("utf-8")
+
+
+def require_exact(actual: object, expected: object, path: str) -> None:
+    if type(actual) is not type(expected):
+        raise ValueError(f"wrong anchor type: {path}")
+    if isinstance(expected, dict):
+        if actual.keys() != expected.keys():
+            raise ValueError(f"wrong anchor keys: {path}")
+        for key, expected_value in expected.items():
+            require_exact(actual[key], expected_value, f"{path}.{key}")
+    elif isinstance(expected, list):
+        if len(actual) != len(expected):
+            raise ValueError(f"wrong anchor length: {path}")
+        for index, expected_value in enumerate(expected):
+            require_exact(actual[index], expected_value, f"{path}[{index}]")
+    elif actual != expected:
+        raise ValueError(f"wrong anchor value: {path}")
 
 
 def object_paths(repo: Path, tree: str, pattern: str) -> list[str]:
@@ -66,11 +136,23 @@ def main() -> int:
     anchor_path = args.anchor_file or repo / ANCHOR_REL
     try:
         anchor_doc = json.loads(anchor_path.read_text(encoding="utf-8"))
-        if anchor_doc.get("schema_version") != 1 or anchor_doc.get("plan_id") != PLAN_ID:
+        if (type(anchor_doc) is not dict
+                or set(anchor_doc) != {"schema_version", "plan_id", "anchors"}
+                or type(anchor_doc["schema_version"]) is not int
+                or anchor_doc["schema_version"] != 1
+                or type(anchor_doc["plan_id"]) is not str
+                or anchor_doc["plan_id"] != PLAN_ID
+                or type(anchor_doc["anchors"]) is not dict
+                or set(anchor_doc["anchors"]) != {"p0.1", "p0.5"}):
             raise ValueError("malformed anchor header")
         anchor = anchor_doc["anchors"]["p0.1"]
+        if hashlib.sha256(canonical_anchor(anchor)).hexdigest() != P01_ANCHOR_CANONICAL_SHA256:
+            raise ValueError("P0.1 anchor differs from the approved immutable structure")
+        require_exact(anchor, EXPECTED_P01_ANCHOR, "anchors.p0.1")
         tree = anchor["source_tree"]
         git(repo, "cat-file", "-e", f"{tree}^{{tree}}")
+        git(repo, "cat-file", "-e", f"{anchor['item_commit']}^{{commit}}")
+        git(repo, "cat-file", "-e", f"{anchor['bookkeeping_commit']}^{{commit}}")
         finding = object_text(repo, anchor["item_commit"], anchor["finding_path"])
         if hashlib.sha256(finding.encode()).hexdigest() != anchor["finding_sha256"]:
             raise ValueError("wrong finding hash")

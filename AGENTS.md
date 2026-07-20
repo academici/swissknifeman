@@ -9,6 +9,8 @@ inside `packages/<name>/`, also read that package's `CLAUDE.md`.
 
 - Treat `.agents/skills/*` as thin Codex adapters. Canonical content stays under
   `packages/skiller/skills/` and `packages/task/commands/`; never fork it into adapters.
+- In an isolated worktree, never invoke a bare/global write-capable package CLI. Use the
+  worktree-local `./packages/<name>/bin/<cli>` and verify its real repo root before writes.
 - Use the `maind` MCP server for project memory and ecosystem/code-graph queries when
   available. Its scope for this repository is `project:swissknifeman`.
 - Preserve Claude Code compatibility. Provider-specific files are adapters over a shared

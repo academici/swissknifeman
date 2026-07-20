@@ -6,11 +6,12 @@
      Порядок строго phase-first: P0→P1→P2→P3→P4→P5→P6→P7. До finish + GREEN design
      audit исполнение любого item запрещено. -->
 
-**Обновлён:** 2026-07-20 · **Соответствует plan.md:** v1.4.3
+**Обновлён:** 2026-07-20 · **Соответствует plan.md:** v1.4.4
 
 > **Статус exec:** P0 закрыта и audit attempt 3 завершён literal GREEN на `245bb56`;
-> G01 открыт, P1 закрыта после D70/D73 и terminal P1.3/P1.4 evidence.
-> Следующий шаг — independent P1 audit для G02; P2.1 остаётся закрыт до literal GREEN.
+> G01 открыт, P1 повторно закрыта после D74: P1.5 добавила committed synthetic G02 proof,
+> P1.6 валидировала two documentation projections и exact commit map. Следующий шаг — fresh
+> independent P1 audit; P2.1 остаётся закрыт до literal GREEN G02 audit.
 > D71 исполнил D65/D68 reconciliation сейчас: `main` — active execution root, retained stash
 > `72505e4d8bef2a58f4ed555cc5b6014450aee3a9` сохраняет recovery point, unrelated owner dirt
 > возвращён unstaged. Это не открывает FOREMAN/fleet/live authority и не снимает P1.2 owner gate.
@@ -37,6 +38,8 @@
 | P1.2 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | ✅ D73 shared-core contribution | immutable core API committed in exact item scope |
 | P1.3 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | — | precedence/diagnostics и carrier adapters committed |
 | P1.4 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | compatibility/no-write gate committed |
+| P1.5 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | committed synthetic protected-path proof; no live owner-state inputs |
+| P1.6 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | docs ownership/validation + append-only exact P1.2–P1.4 commit map after P1.5 |
 | P2.1 | solo | plan-run (manual) | gpt-5.6-terra/high | ✅ core proposal/ADR | shared artifact kernel; contribution gate и public API review |
 | P2.2 | solo | plan-run (manual) | gpt-5.6-terra/high | — | drift/apply state machine зависит от terminal P2.1 API |
 | P2.3 | solo | plan-run (manual) | gpt-5.6-sol/high | — | public catalog design после P2.2; открытое design decision D17 |
@@ -71,7 +74,7 @@
 
 ## Solo-обоснование и отсутствие batches/workflows
 
-Все 42 item идут `solo`. В каждой фазе terminal Deliverable предыдущего item является
+Все 44 item идут `solo`. В каждой фазе terminal Deliverable предыдущего item является
 Inputs следующего, поэтому merge-criterion plan-protocol для batch/workflow не выполняется:
 внутрифазных независимых scopes N≥3 нет. Contract/security/canon/release items имеют
 `Review=full` и owner/commit boundaries; conformance items намеренно отделены от авторов
@@ -87,13 +90,13 @@ implementation. P5.6→P5.7 — contract→prescribed implementation, поэто
 | Model | gpt-5.6-sol |
 | Thinking | xhigh |
 | Context | NEW SESSION — шаг-не-item |
-| Суть | Независимо проверить terminal P1 для G02 до P2.1. |
+| Суть | Независимо проверить re-closed P1 для G02 до P2.1. |
 
 ```text
 /task:plan-audit 2026.07.19-DUAL-PROVIDER P1
 
 Прочитай plan.md, phases/P1.md, handoff.md, journal.jsonl, P1 contracts и compatibility matrix.
-Проведи independent G02 audit terminal P1.1–P1.4. Не запускай P2.1, не меняй live config,
+Проведи fresh independent G02 audit terminal P1.1–P1.6 и D74 remediation. Не запускай P2.1, не меняй live config,
 FOREMAN, fleet или unrelated owner-owned dirt.
 ```
 

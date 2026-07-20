@@ -246,6 +246,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | 2026-07-20 | plan-exec/gpt-5.6-terra medium | P1.5 закрыт: committed synthetic fixture proof заменил live owner-state snapshot — детали см. phases/P1.md P1.5 Completion Notes. |
 | 2026-07-20 | plan-exec/gpt-5.6-terra medium | P1.6 закрыт: historical documentation projections validated, exact provenance map appended — детали см. phases/P1.md P1.6 Completion Notes. |
 | 2026-07-20 | plan-exec/gpt-5.6-terra medium | P1 map: P1.2=`57b9b2e96f1e56dc06ba4841586e6e4958ac91a8`; P1.3=`8f377e109041a391235d40be9bec73ad6f4d7f89`/fix=`061a2cb822812c30ea5ab1855a4aebef066c2308`; P1.4=`58a6f5d202a15e164849b1dc901e98924da8c480`; docs-close=`33f35d8618c887a055f79380084574d211af5f05`. |
+| 2026-07-20 | plan-close/Codex mechanical | P1 повторно закрыта после D74: terminal P1.1–P1.6 и synthetic G02/docs/provenance evidence сверены — детали см. phases/P1.md Phase Handoff. |
 
 ## 7. Contracts
 

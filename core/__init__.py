@@ -33,6 +33,11 @@ from .provider_config import (CapabilitySupport, NativeExtension,
                               ProviderConfigCatalog, ProviderConfigLayer,
                               ResolvedProviderConfig, effective_projection,
                               resolve_provider_config)
+from .provider_artifact import (ArtifactAdapterIdentity, ArtifactProvenance,
+                                ArtifactRenderRequest, ArtifactRenderResult,
+                                ArtifactSource, ArtifactTarget,
+                                canonical_json_bytes, plan_artifact_render,
+                                sha256_digest, validate_target_path)
 from .repo import find_monorepo_root, find_repo_root, sibling_bin
 from .runs import find_run_report
 from .term import confirm, die, now_iso, parse_iso, warn
@@ -58,4 +63,8 @@ __all__ = [
     "CapabilitySupport", "NativeExtension", "ProviderConfigCatalog",
     "ProviderConfigLayer", "ResolvedProviderConfig", "resolve_provider_config",
     "effective_projection",
+    "ArtifactSource", "ArtifactTarget", "ArtifactAdapterIdentity",
+    "ArtifactRenderRequest", "ArtifactProvenance", "ArtifactRenderResult",
+    "canonical_json_bytes", "sha256_digest", "validate_target_path",
+    "plan_artifact_render",
 ]

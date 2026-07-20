@@ -18,6 +18,7 @@ research-аудит июнь 2026; skill-реестр и eval — рецензи
 | Источник | Что | Зрелость | Вердикт | Взято в swissknifeman |
 |:--|:--|:--|:--|:--|
 | Официальный спек Claude Code | subagents/skills/hooks/plugins, «steering» | first-party, активный | **adopt** | канон frontmatter субагента (`name/description+<example>/tools/model/color`), контракты хуков, прогрессивное раскрытие |
+| [OpenAI Codex manual](https://developers.openai.com/codex/codex-manual.md) + [OpenAI model catalog](https://developers.openai.com/api/docs/models) + [Anthropic Claude Code docs](https://docs.anthropic.com/en/docs/claude-code/) | current provider surfaces и model roles: instructions/config/trust, skills/plugins, hooks, MCP, approvals/sandbox; GPT-5.6 Sol/Terra/Luna | first-party, проверено 2026-07-19 | **adopt (contract facts)** | evidence для `2026.07.19-DUAL-PROVIDER`: P0 provider-native contracts; P7/roadmap routing Sol для design/audit, Terra для implementation; approval/trust/sandbox не схлопывать |
 | [hesreallyhim/awesome-claude-code](https://github.com/hesreallyhim/awesome-claude-code) | курируемый каталог | 47k★, активный, NOASSERTION-лиц. | reference | подтверждает реальную схему субагента; Design-Review ≈ agent-pack 1:1 |
 | [vijaythecoder/awesome-claude-agents](https://github.com/vijaythecoder/awesome-claude-agents) | оркестратор + специалисты | 4.3k★, MIT, ~stale | reference | блюпринт `orchestrator → stack-detect → специалисты` (= наши профили + `_common`) |
 | [VoltAgent/awesome-claude-code-subagents](https://github.com/VoltAgent/awesome-claude-code-subagents) | 150+ субагентов | 22k★, MIT, активный | reference | seed-материал ролей; нативный frontmatter |
@@ -29,6 +30,7 @@ research-аудит июнь 2026; skill-реестр и eval — рецензи
 | [anthropics/skills](https://github.com/anthropics/skills) | официальные skills (skill-creator, mcp-builder, doc/creative) | first-party, Apache-2.0 (docx/pdf/pptx — Proprietary) | **adopt** (метод) | eval-харнес скиллов из `skill-creator` (evals/benchmark, оптимизация описания); docx/pdf/pptx — **skip** (Proprietary); `mcp-builder` — reference (отложено) |
 | [obra/superpowers](https://github.com/obra/superpowers) | process/discipline-скиллы + каркас (hooks-bootstrap) | MIT, активный, мульти-harness | **adopt** (метод) | pressure-тесты (`writing-skills` — TDD для документации) в eval-формат; iron-law/red-flag/SessionStart-bootstrap — reference (отложено) |
 | [affaan-m/ECC](https://github.com/affaan-m/ECC) | кросс-harness фреймворк (skills/agents/hooks/security) | ~221k★, MIT, активный | reference | supply-chain-скан вендоринга, hook-профили, PreCompact, fact-force gate — **отложено**; инфраструктура (память/граф) уже у `maind` |
+| [ai-agent-rules](https://github.com/wpfleger96/ai-agent-rules) · [anywhere-agents](https://github.com/yzhao062/anywhere-agents) · [agent-config](https://github.com/brianlovin/agent-config) · [ai-cli-mcp](https://github.com/mkXultra/ai-cli-mcp) · [agent-bridge](https://github.com/raysonmeng/agent-bridge) | multi-provider target classes, manifest/lock/hash/drift, lightweight sync и agent bridges | shallow commit-pinned audit 2026-07-19 | **reference** | P0/P1/P2 patterns; deterministic adapters/packaging controls приняты, external deps/symlink-first/runner bridge не входят в migration core |
 | [Anthropic — Founder's Playbook](https://www.anthropic.com/) | методология AI-native стартапа (Idea/MVP/Launch/Scale, Claude как structured devil's advocate) | first-party, май 2026 | **reference** | каркас founder-трека + `idea-audit` (4 модуля, stage-context, premature scaling); эпиграф = парафраз, не verbatim |
 | [CB Insights — Why Startups Fail](https://www.cbinsights.com/research/report/startup-failure-reasons-top/) | пост-мортемы стартапов, «no market need» | классика ~2014, апдейт 2026 | **reference** | аргумент зоны idea-validation в `idea-audit`; цитировать как классику (~42%), 2026 реформулирует ~43% poor PMF |
 | [Anthropic — Effective context engineering for AI agents](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents) | context engineering для агентов | first-party, сен 2025 | **reference** | основа Perplexity-навыка `idea-architect` (роль/режимы/правила веб-поиска/антипаттерны) |
@@ -64,6 +66,22 @@ research-аудит июнь 2026; skill-реестр и eval — рецензи
 `code.claude.com` (сетево недоступны из части окружений); новые поля субагента
 (`disallowedTools/skills/memory`) ещё не зафиксированы как first-party — строить на них рано.
 **Взято:** канонические `description`+`<example>` во всех пак-агентах, поле `color`, `model`-тиры.
+
+### Официальные Codex + Claude Code docs — adopt (contract facts)
+
+Fresh Codex manual и official Anthropic docs повторно проверены 2026-07-19 для плана
+`2026.07.19-DUAL-PROVIDER`. **Плюсы:** first-party contracts для instruction/config layers,
+skills/plugins, hooks, MCP и security knobs. **Минусы:** одинаковые названия скрывают разные
+trust/precedence/permission semantics; 1:1 field mapping недопустим. **Взято:** общий capability
+язык + нативные adapters; `approval`, `sandbox/access` и `project trust` остаются разными осями.
+
+### Multi-provider upstream audit — reference
+
+Пять небольших репо из сводной строки проверены на pinned commits 2026-07-19. **Плюсы:**
+практические target classes, manifest/lock/hash/drift и лёгкий sync. **Минусы:** ни один не
+покрывает contract swissknifeman; встречаются symlink-first, внешние dependencies и runner/bridge
+scope. **Взято:** только deterministic adapter и packaging-control patterns; runtime dependency,
+fleet rollout и unattended runner в эту migration не перенесены.
 
 ### hesreallyhim/awesome-claude-code — reference
 Огромный курируемый каталог. **Плюсы:** сигнал «что реально шипят»; Design-Review-Workflow ≈

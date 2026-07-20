@@ -12,10 +12,11 @@
 | `roadmap.md` | полная execution map 40/40 с GPT-5.6 Sol/Terra routing и owner gates |
 | `journal.jsonl` | append-only журнал plan-команд |
 | `journal-exceptions.jsonl` | optional append-only owner-gated provenance exceptions для historical schema-invalid journal rows |
-| `brief/` | полный вход владельца |
+| `brief/` | полный вход владельца, включая launch/hook и environment-defect refinements |
 | `findings/` | repo/provider evidence, P0 reproducible coupling baseline, package recon P2/P3/P5 и current OpenAI model routing |
 | `research/` | traceability, architecture/sequence и phase design syntheses P0–P7 |
-| `root/contracts/` | draft capability, artifact, migration-gate, config, harness и analytics contracts; skill/command contracts создаются своими owner-gated items |
+| `root/contracts/` | frozen P0.3 capability/artifact + draft migration-gate/config/harness/analytics contracts; skill/command contracts создаются своими owner-gated items |
+| `root/adr/` | архитектурные решения плана; ADR-0001 фиксирует canonical source → deterministic adapters |
 
 ## Провенанс
 
@@ -24,6 +25,7 @@
 | `findings/repository-baseline-2026-07-19.md` | findings | P0–P7 | реальный масштаб и package seams |
 | `findings/P0-provider-coupling-baseline.md` | findings | P0.1–P0.3 | anchored, reproducible current inventory and classified provider seams |
 | `findings/P0-command-surface-correction.md` | findings | P0.5–P0.3 | terminal umbrella command-surface anchor; не переписывает historical P0.1 evidence |
+| `findings/P0-codex-launch-hook-defects-2026-07-20.md` | findings | bootstrap, P5–P7 | exit-127 dangling hook, duplicate global logger, local repair и launch preflight |
 | `findings/provider-capabilities-2026-07-19.md` | findings | P0, P3–P5 | first-party provider facts |
 | `findings/upstream-patterns-2026-07-19.md` | findings | P0–P3 | проверенные multi-provider patterns |
 | `findings/P3-skiller-publication-recon-2026-07-19.md` | findings | P3–P4 | current skiller publication/install/marketplace seams |
@@ -48,14 +50,16 @@
 | `research/13-instruction-contract-remediation.md` | research | P5.6–P7, design audit | common instruction contract/projections и restart propagation |
 | `research/14-journal-schema-exception-remediation.md` | research | journal gate, design audits r3–r4 | F1 sidecar alternatives, exact schema и unchanged same-plan contract |
 | `research/15-command-surface-prerequisite-remediation.md` | research | P0.5→P0.2 | breakdown 32, umbrella/subset terminology, correction carrier и owner gate |
+| `root/adr/0001-provider-adapter-architecture.md` | decision | P0.3–P7 | alternatives, business rationale, dependency direction и component diagram |
 
 ## Ключевые артефакты `root/`
 
 | Артефакт | Суть | Статус |
 |:--|:--|:--|
 | `root/CONTEXT.md` | owner-approved provider glossary, stewardship и collisions | approved D53 |
-| `root/contracts/provider-capability-contract.md` | capability vocabulary/matrix | draft |
-| `root/contracts/provider-artifact-contract.md` | render/provenance/lock/drift | draft |
+| `root/contracts/provider-capability-contract.md` | capability manifest, support/evidence/compatibility | frozen v1.0.0, D55 |
+| `root/contracts/provider-artifact-contract.md` | identity/provenance/hash/boundary/drift/repair | frozen v1.0.0, D55 |
+| `root/adr/0001-provider-adapter-architecture.md` | canonical semantic source → deterministic provider adapters | accepted, D55 |
 | `root/contracts/provider-migration-gates.md` | P1–P7/FOREMAN/fleet entry и release gates | draft |
 | `root/contracts/provider-config-contract.md` | project/fleet carriers, precedence, provenance и diagnostics | draft; sealing P1.1 |
 | `root/contracts/provider-harness-contract.md` | profiles/security/provider-native settings/hooks/MCP/agents | draft; sealing P5.1 |

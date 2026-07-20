@@ -7,9 +7,9 @@
 | Путь | Назначение |
 |:--|:--|
 | `plan.md` | мета, scope, routing, status board и решения |
-| `phases/P0.md … P7.md` | все 8 фаз детализированы до DoR; 39 items, skeleton markers отсутствуют |
+| `phases/P0.md … P7.md` | все 8 фаз детализированы до DoR; 40 items, skeleton markers отсутствуют |
 | `handoff.md` | rolling next-step для холодного старта |
-| `roadmap.md` | полная execution map 39/39 с GPT-5.6 Sol/Terra routing и owner gates |
+| `roadmap.md` | полная execution map 40/40 с GPT-5.6 Sol/Terra routing и owner gates |
 | `journal.jsonl` | append-only журнал plan-команд |
 | `journal-exceptions.jsonl` | optional append-only owner-gated provenance exceptions для historical schema-invalid journal rows |
 | `brief/` | полный вход владельца |
@@ -23,6 +23,7 @@
 |:--|:--|:--|:--|
 | `findings/repository-baseline-2026-07-19.md` | findings | P0–P7 | реальный масштаб и package seams |
 | `findings/P0-provider-coupling-baseline.md` | findings | P0.1–P0.3 | anchored, reproducible current inventory and classified provider seams |
+| `findings/P0-command-surface-correction.md` | findings | P0.5–P0.3 | terminal umbrella command-surface anchor; не переписывает historical P0.1 evidence |
 | `findings/provider-capabilities-2026-07-19.md` | findings | P0, P3–P5 | first-party provider facts |
 | `findings/upstream-patterns-2026-07-19.md` | findings | P0–P3 | проверенные multi-provider patterns |
 | `findings/P3-skiller-publication-recon-2026-07-19.md` | findings | P3–P4 | current skiller publication/install/marketplace seams |
@@ -34,6 +35,7 @@
 | `research/01-target-architecture-options.md` | research | P0–P2 | выбранная adapter architecture |
 | `research/02-sequence-and-boundaries.md` | research | Status Board | порядок и границы с FOREMAN/fleet |
 | `research/03-p0-design-and-premortem.md` | research | P0 | item dependency chain, owner gates, pre-mortem mitigations |
+| `research/04-provider-domain-scenarios.md` | research | P0.2–P0.4 | scenario-tested provider vocabulary and security/artifact distinctions |
 | `research/05-p1-provider-config-domain-design.md` | research | P1–P2 | config precedence, core/package boundary, compatibility pre-mortem |
 | `findings/P2-artifact-engine-recon-2026-07-19.md` | findings | P2 | current core/skiller/harness/maind hash/lock/drift seams и Rule of Three evidence |
 | `research/06-p2-deterministic-artifact-engine-design.md` | research | P2–P6 | shared kernel boundary, registry/apply alternatives, invariants и pre-mortem |
@@ -45,6 +47,7 @@
 | `research/12-final-cross-phase-reconcile.md` | research | finish, design audit | contract chain, Required Reads, Routing, owner gates и итоговый DoR pass 3/3 |
 | `research/13-instruction-contract-remediation.md` | research | P5.6–P7, design audit | common instruction contract/projections и restart propagation |
 | `research/14-journal-schema-exception-remediation.md` | research | journal gate, design audits r3–r4 | F1 sidecar alternatives, exact schema и unchanged same-plan contract |
+| `research/15-command-surface-prerequisite-remediation.md` | research | P0.5→P0.2 | breakdown 32, umbrella/subset terminology, correction carrier и owner gate |
 
 ## Ключевые артефакты `root/`
 

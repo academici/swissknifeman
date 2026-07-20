@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.2.1 |
+| Version | 1.3.0 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
@@ -18,7 +18,7 @@
 | Approval Owner | Dmitry Vostrikov |
 | Home | repo:/home/vostrikov/projects/packages/swissknifeman |
 | Paused By | — |
-| Design Passes | 3/3 — ecosystem core, 8 фаз/39 items, публичные contracts и высокий cross-package coupling; audit-r3 F1 same-plan fail-open устранён без изменения contract, execution закрыт до повторного design audit |
+| Design Passes | 3/3 — ecosystem core, 8 фаз/40 items, публичные contracts и высокий cross-package coupling; post-exec prerequisite remediation добавила P0.5 без переписывания terminal P0.1 |
 
 ## 1. Context
 
@@ -61,6 +61,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | Items | Model/effort | Exec | Review | Почему |
 |:--|:--|:--|:--|:--|
 | P0.1 | gpt-5.6-terra/medium | plan-exec | full | deterministic repo inventory с check-mode; top-tier design decisions отсутствуют |
+| P0.5 | gpt-5.6-terra/medium | plan-exec | full | deterministic correction scan пяти explicit roots; semantic owner freeze остаётся в P0.2 |
 | P0.2 | gpt-5.6-sol/high | manual | full | cross-package ubiquitous language и owner-approved capability semantics |
 | P0.3 | gpt-5.6-sol/xhigh | manual | full | load-bearing frozen public contracts + ADR; необратимая цена semantic ошибки |
 | P0.4 | gpt-5.6-sol/high | manual | full | ecosystem migration/FOREMAN/fleet gate contract и pre-mortem reconciliation |
@@ -104,7 +105,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P0 | Evidence, vocabulary и запечатанные provider contracts | 1/4 | 🟡 In progress |
+| P0 | Evidence, vocabulary и запечатанные provider contracts | 2/5 | 🟡 In progress |
 | P1 | Provider config/domain и backward-compatible resolution | 0/4 | ⬜ Not started |
 | P2 | Deterministic adapters, provenance, lock и drift engine | 0/4 | ⬜ Not started |
 | P3 | Dual skills publication и marketplaces | 0/5 | ⬜ Not started |
@@ -168,6 +169,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | D49 | 2026-07-19 | Journal remediation append-only: historical plan-design starts получают terminal `no-op` backfills (design завершён, execution statuses не менялись), invalid free-form audit friction компенсируется канонической `audit-red` deviation row; старые строки не переписываются. Anchored plan-lint в этом заходе не запускался и GREEN не заявляется. | RAG:— (repo-grounded: `packages/task/lib/task/journal.py`, plan-journal contract §1/§2, `journal.jsonl`) — сохраняет историю и честно выносит residual на повторный audit. |
 | D50 | 2026-07-19 | Current Routing после remediation покрывает 39/39 items: 11 `plan-exec`, 28 `manual`; P5.6/P5.7 идут solo/full и не меняют provider model family D38/D44. | RAG:— (repo-grounded: `plan.md` §3, `roadmap.md`) — новые contract/implementation risks неоднородны с P5.5 и не батчатся. |
 | D51 | 2026-07-19 | Owner-approved historical schema exception (supersedes D49 в части invalid row 11): sealed event `journal.jsonl` не переписывается и не расширяется; optional append-only `journal-exceptions.jsonl` фиксирует physical line 11 + SHA-256 exact raw bytes, exact `invalid_fields:["friction"]`, owner D51, actor/reason. Writer и linter fail closed на duplicate/hash mismatch/missing D#/valid или malformed target; sidecar не несёт event/status/next и не может таргетить sidecar. | RAG:— (owner-grounded: remediation invocation; repo-grounded synthesis: `research/14-journal-schema-exception-remediation.md`; F1: `findings/design-audit-2026-07-19-r2.md`) — устраняет append-only↔strict-per-line противоречие без correction-цикла и без изменения P0.1–P7.4. |
+| D52 | 2026-07-20 | Supersedes D10 для остатка P0: после terminal P0.1 порядок становится P0.5→P0.2→P0.3→P0.4. P0.5 отдельно корректирует umbrella Command Surface (`32 = task 11 + skiller 5 + harness 6 + maind 8 + analyst 2`), не переписывая P0.1; P0.2 owner gate обязан принять различие Command Surface/Task Command и terminal P0.5 anchor до freeze. | RAG:— (owner-grounded: `brief/01-refinements.md`; repo-grounded synthesis: `research/15-command-surface-prerequisite-remediation.md`) — сохраняет item/journal provenance и устраняет prerequisite defect отдельным executable carrier. |
 
 ## 6. Update Log
 
@@ -188,6 +190,8 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | 2026-07-19 | issue-planner/Codex gpt-5.6 high | Audit-r2 F1 remediation: D51 owner-gated sidecar синхронизирован с journal writer/schema/linter/plan lifecycle; sealed event bytes сохранены, P0.1–P7.4 не исполнялись; детали и anchors см. `research/14-journal-schema-exception-remediation.md`. |
 | 2026-07-20 | issue-planner/Codex gpt-5 high | Audit-r3 F1 remediation: event+sidecar IDs привязаны к canonical plan-directory ID в writer/linter, mismatch non-exemptable; contract/D51/canon не менялись, evidence — `findings/journal-same-plan-remediation-verification-2026-07-20.md`. |
 | 2026-07-20 | plan-exec/Codex gpt-5.6-terra medium | P0.1 закрыт: reproducible provider inventory зафиксировал current path sets и task-command delta — детали см. phases/P0.md P0.1 Completion Notes. |
+| 2026-07-20 | issue-planner/Codex gpt-5 high | P0.2 prerequisite remediated в design: добавлен P0.5 carrier, glossary различает umbrella 32 и task subset 11 (на `d8ac22c`); P0.1 history сохранена, freeze ждёт terminal P0.5 и owner D#. |
+| 2026-07-20 | plan-exec/Codex gpt-5.6-terra medium | P0.5 закрыт: отдельный scanner и anchored umbrella correction фиксируют пять explicit roots без переписывания P0.1 — детали см. phases/P0.md P0.5 Completion Notes. |
 
 ## 7. Contracts
 

@@ -6,13 +6,14 @@
      Порядок строго phase-first: P0→P1→P2→P3→P4→P5→P6→P7. До finish + GREEN design
      audit исполнение любого item запрещено. -->
 
-**Обновлён:** 2026-07-20 · **Соответствует plan.md:** v1.2.1
+**Обновлён:** 2026-07-20 · **Соответствует plan.md:** v1.3.0
 
-> **Статус exec:** все 39 items ⬜; P0–P7 детализированы до DoR и post-audit
-> reconciled; audit-r3 F1 same-plan fail-open закрыт без изменения D51/contract/canon;
-> current plan-lint 0/0, wrong-plan probe nonzero. Следующий шаг — повторный
-> adversarial design audit r4 на Sol/xhigh;
-> до его GREEN execution запрещён.
+> **Статус exec:** P0.1 и P0.5 🟢; остальные 38 items открыты. P0.5 terminal correction
+> evidence разделяет umbrella Command Surface и Task Command subset; следующий шаг — новый
+> P0.2 owner freeze.
+> Historical audit r4 GREEN уже открыл исполнение P0.1; повторный whole-plan audit из-за
+> локальной prerequisite correction не подменяет item-level full review и остаётся вне
+> текущего Next.
 > Исполнительские модели — только current ChatGPT/Codex family: Terra для prescribed
 > implementation, Sol для design/contracts/audit. GPT-5.6 Luna не используется на этом
 > public-contract/release critical path. RAG:✅ 2026-07-19
@@ -22,8 +23,9 @@
 
 | Item | Batch | Запуск | Model/Thinking | Гейт владельца | Примечание |
 |---|---|---|---|---|---|
-| P0.1 | solo | plan-exec | gpt-5.6-terra/medium | — | independent deterministic inventory; solo, потому что его baseline является входом всех следующих P0 items |
-| P0.2 | solo | plan-run (manual) | gpt-5.6-sol/high | ✅ vocabulary/scenarios | design verdict над P0.1 evidence; объединение скроет approval boundary |
+| P0.1 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | historical narrow inventory закрыт; command-surface интерпретация корректируется отдельным P0.5 |
+| P0.5 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | terminal correction evidence пяти explicit roots; не переписывает P0.1 |
+| P0.2 | solo | plan-run (manual) | gpt-5.6-sol/high | ✅ весь vocabulary/scenarios + Command Surface 32 / Task Command 11 | стартует только после terminal P0.5; owner approval ссылается на correction anchor |
 | P0.3 | solo | plan-run (manual) | gpt-5.6-sol/xhigh | ✅ capability/artifact contracts + ADR | frozen public contracts; отдельный irreversible owner gate |
 | P0.4 | solo | plan-run (manual) | gpt-5.6-sol/high | ✅ migration/FOREMAN/fleet gates | cross-plan safety gate после frozen P0.3, отдельно от contract authoring |
 | P1.1 | solo | plan-run (manual) | gpt-5.6-sol/xhigh | ✅ provider-config contract | owner-gated public precedence/config freeze |
@@ -64,52 +66,33 @@
 
 ## Solo-обоснование и отсутствие batches/workflows
 
-Все 39 items идут `solo`. В каждой фазе terminal Deliverable предыдущего item является
+Все 40 items идут `solo`. В каждой фазе terminal Deliverable предыдущего item является
 Inputs следующего, поэтому merge-criterion plan-protocol для batch/workflow не выполняется:
 внутрифазных независимых scopes N≥3 нет. Contract/security/canon/release items имеют
 `Review=full` и owner/commit boundaries; conformance items намеренно отделены от авторов
 implementation. P5.6→P5.7 — contract→prescribed implementation, поэтому их нельзя
 объединять; P6.5→P6.6 и P7.3→P7.4 дополнительно разделены обязательным NEW SESSION.
 
-## Готовые launch-block'и pre-exec и первого execution gate
+## Готовый launch-block текущего owner gate
 
-### A-AUDIT — pre-exec adversarial design audit
+### S-P0.2 — vocabulary owner freeze
 
 | Параметр | Значение |
 |:--|:--|
 | Model | gpt-5.6-sol |
-| Thinking | xhigh — invariant audit всего executable plan |
-| Context | NEW SESSION — шаг-не-item |
-| Суть | Проверить audit-r3 F1 same-plan binding, wrong-plan red и anchored current 0/0 до P0.1 |
-
-```
-$ task:plan-audit 2026.07.19-DUAL-PROVIDER design
-
-РЕЖИМ: повторный adversarial design audit r4 после точечной remediation audit-r3 F1; execution не начинать
-ВХОД: ПЕРВЫМ прочитать plans/2026.07.19-DUAL-PROVIDER/findings/design-audit-2026-07-19-r3.md → F1; затем plans/2026.07.19-DUAL-PROVIDER/{plan.md,roadmap.md,handoff.md,journal.jsonl,journal-exceptions.jsonl,findings/journal-same-plan-remediation-verification-2026-07-20.md,research/14-journal-schema-exception-remediation.md,brief/01-refinements.md}; package writer/linter/canon/tests только read-only
-СКОУП: 1) canonical plan-directory binding event+sidecar IDs в writer/linter; 2) mismatch non-exemptable, wrong-plan nonzero и exact field-set fail-closed; 3) independently reproduce current 0 ERROR / 0 WARN, targeted/full tests и anchors; 4) confirm no contract/canon/D51 change and no regression of r3 non-F1 areas; 5) confirm P0.1 gate; verdict GREEN/ATTENTION/RED
-НЕ ТРОГАТЬ: P0.1–P7.4 implementation/items; package writes; plans/2026.07.18-FOREMAN/**; plans/ACTIVE.md; fleet; instruction remediation P5.6→P7; unrelated user changes; only audit report + terminal audit journal append allowed
-```
-
-### S-P0.1 — первый execution item после GREEN design audit
-
-| Параметр | Значение |
-|:--|:--|
-| Model | gpt-5.6-terra |
-| Thinking | medium |
+| Thinking | high — owner-approved vocabulary freeze |
 | Context | continue (/clear) — ручной item |
-| Суть | Пересчитать inventory/provider-coupling baseline без package mutation |
+| Суть | Зафиксировать P0.2 glossary и scenario matrix на terminal P0.5 evidence |
 
 ```
-# ТОЛЬКО ПОСЛЕ: $ task:plan-audit 2026.07.19-DUAL-PROVIDER design = GREEN
-$ task:plan-exec 2026.07.19-DUAL-PROVIDER P0.1 — cold-start reads: plans/2026.07.19-DUAL-PROVIDER/{plan.md,roadmap.md,phases/P0.md,research/03-p0-design-and-premortem.md,findings/repository-baseline-2026-07-19.md,brief/00-brief.md}; gate: GREEN design audit
+Выполнить P0.2 вручную в 2026.07.19-DUAL-PROVIDER на gpt-5.6-sol/high. Сначала прочитать plan.md, handoff.md, phases/P0.md и Required Reads P0.2 в указанном порядке. Использовать terminal findings/P0-command-surface-correction.md как evidence: Command Surface и Task Command — разные glossary entries, anchored counts не становятся frozen constants. Подготовить только P0.2 glossary/scenario scope и получить новый Approval Owner D# на весь набор. Не менять P0.1/P0.5 evidence, package code, FOREMAN, ACTIVE или fleet.
 ```
 
 ## Гейты владельца (сводно)
 
 | Где | Что утверждает | Блокирует |
 |---|---|---|
-| P0.2 | vocabulary + domain scenarios | P0.3 contract authoring |
+| P0.2 | весь vocabulary + domain scenarios; terminal P0.5 anchor; Command Surface 32 / Task Command 11 как разные scopes | P0.3 contract authoring |
 | P0.3 | capability/artifact contracts + ADR | P0.4 и все downstream contracts |
 | P0.4 | migration/FOREMAN/fleet safety gates | P1 entry |
 | P1.1 | provider-config contract | P1.2–P1.4 |
@@ -132,12 +115,13 @@ $ task:plan-exec 2026.07.19-DUAL-PROVIDER P0.1 — cold-start reads: plans/2026.
 
 - RAG: official OpenAI model catalog + Terra model page, 2026-07-19 — Sol/Terra IDs,
   roles и efforts подтверждены; детали в `findings/P7-openai-model-routing-2026-07-19.md`.
-- Repo-grounding: 39/39 Routing rows, 11 `plan-exec` + 28 `manual`; instruction carrier
+- Repo-grounding: 40/40 Routing rows, 12 `plan-exec` + 28 `manual`; instruction carrier
   и contract/read/owner-gate reconcile — `research/12-final-cross-phase-reconcile.md`,
   `research/13-instruction-contract-remediation.md`.
 - Непроверено → ПОВТОРНЫЙ ПРОХОД: account availability Sol/Terra; runtime fail closed,
   downgrade запрещён.
-- Обходки/[POSSIBLE-DEFECT]: нет активных. D51 supersedes недостаточный D49 только в части
+- Обходки/[POSSIBLE-DEFECT]: numbering P0.5 отражает новый carrier без renumber существующих
+  journal IDs; фактический порядок задают D52 и эта execution map. D51 supersedes недостаточный D49 только в части
   schema-invalid row 11; audit-r3 F1 не меняет contract/D51/canon, а закрывает missing
   directory-ID enforcement. Evidence — `findings/journal-same-plan-remediation-verification-2026-07-20.md`.
   Audit r4 остаётся pre-exec gate.

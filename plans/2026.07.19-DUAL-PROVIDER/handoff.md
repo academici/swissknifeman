@@ -1,36 +1,34 @@
-# HANDOFF — 2026-07-20 — after P0.1
+# HANDOFF — 2026-07-20 — after P0.5
 
 **Next:** ЗАПУСК ВРУЧНУЮ: gpt-5.6-sol/high
 
 | Параметр | Значение |
 |:--|:--|
 | Model | gpt-5.6-sol |
-| Thinking | high — vocabulary owner approval |
+| Thinking | high — owner-approved vocabulary freeze |
 | Context | continue (/clear) — ручной item |
-| Суть | Зафиксировать provider glossary и scenario-tested capability vocabulary по P0.2. |
+| Суть | Выполнить P0.2 glossary/scenario freeze на terminal P0.5 evidence. |
 
 ```text
-Execute 2026.07.19-DUAL-PROVIDER P0.2 manually at gpt-5.6-sol/high. Cold-start reads: plan.md, handoff.md, phases/P0.md, findings/P0-provider-coupling-baseline.md, research/03-p0-design-and-premortem.md, findings/provider-capabilities-2026-07-19.md, research/01-target-architecture-options.md, brief/00-brief.md, root/contracts/provider-capability-contract.md, root/contracts/provider-artifact-contract.md. Produce only the P0.2 scope: owner-approved domain vocabulary and scenario matrix; do not implement schemas or provider outputs. Resolve the P0.1 task-command definition delta explicitly before using it as a contract input.
+Выполнить P0.2 вручную в 2026.07.19-DUAL-PROVIDER на gpt-5.6-sol/high. Сначала прочитать plan.md, handoff.md, phases/P0.md и Required Reads P0.2 в указанном порядке. Использовать terminal findings/P0-command-surface-correction.md как evidence: Command Surface и Task Command — разные glossary entries, anchored counts не становятся frozen constants. Подготовить только P0.2 glossary/scenario scope и получить новый Approval Owner D# на весь набор. Не менять P0.1/P0.5 evidence, package code, FOREMAN, ACTIVE или fleet.
 ```
 
-**Done:** P0.1 closed with item commit `f4d230e`: a stdlib-only, deterministic inventory helper,
-raw sorted path sets, provider-seam classification, bootstrap-only classification, and current
-worktree anchor. Check mode is green. The current canonical task-command root has 11 files,
-versus the pass-1 figure of 32; this is recorded as a semantic definition delta, not hidden.
+**Done:** P0.5 закрыт item-коммитом `56239e9`: отдельные scanner и anchored correction
+finding зафиксировали umbrella Command Surface и historical Task Command subset без
+переписывания P0.1.
 
-**Remaining:** P0.2–P0.4 remain sequentially blocked behind their required owner approvals;
-FOREMAN remains paused and fleet remains no-write.
+**Remaining:** P0.2 проходит manual owner review и записывает новый approval D# на весь
+vocabulary/scenario set. Затем остаются P0.3/P0.4. FOREMAN остаётся paused, fleet — no-write.
 
-**Sources of truth:** `plan.md` · `roadmap.md` · `phases/P0.md` ·
-`findings/P0-provider-coupling-baseline.md` · `research/03-p0-design-and-premortem.md` ·
-`brief/00-brief.md` · `findings/provider-capabilities-2026-07-19.md` · `AGENTS.md`.
+**Sources of truth:** `plan.md` D52 · `phases/P0.md` P0.5/P0.2 ·
+`findings/P0-command-surface-correction.md` · `research/15-command-surface-prerequisite-remediation.md` ·
+`brief/01-refinements.md` · historical `findings/P0-provider-coupling-baseline.md`.
 
-**Open risks:** P0.2 must determine whether the pass-1 label “32 task commands” used a broader
-semantic scope than `packages/task/commands/*.md`; do not silently alter the inventory root or
-freeze that ambiguity into a contract.
+**Open risks:** P0.2 owner approval обязан принять весь glossary/scenario set, включая
+Command Surface / Task Command distinction и terminal P0.5 anchor; P0.5 сам этого не утверждает.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: —
-- deferred: P0.2 owner vocabulary approval, P0.3/P0.4 contracts, FOREMAN resume only after P7.4 GREEN + owner D#, and fleet rollout only in a separate plan.
-- open_questions: task-command inventory scope behind the pass-1 count of 32.
+- workarounds: numbering P0.5 сохраняет существующие P0.1/P0.2 IDs; фактический порядок задаёт D52.
+- deferred: весь P0.2 owner approval до manual run.
+- open_questions: —

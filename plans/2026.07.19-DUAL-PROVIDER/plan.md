@@ -202,6 +202,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-20 | plan-close/Codex mechanical | P2 закрыта: terminal artifact kernel/lock/registry/conformance evidence сверены; следующий gate — independent P2 audit — детали см. phases/P2.md Phase Handoff. |
 | 2026-07-20 | gpt-5.6-terra/medium | P2.4 закрыт: synthetic preview/doctor/apply/repair conformance и protected no-write evidence — детали см. phases/P2.md P2.4 Completion Notes. |
 | 2026-07-19 | issue-planner/Codex gpt-5.6-sol high | Design pass 1/3: сохранены brief/findings/research, выбран target architecture, созданы draft contracts и скелеты 8 фаз/34 items; следующий фокус — детализация P0. |
 | 2026-07-20 | gpt-5.6-terra/high | P1.3 закрыт: pure resolver и thin skiller/maind adapters — детали см. phases/P1.md P1.3 Completion Notes. |

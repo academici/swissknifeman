@@ -6,12 +6,14 @@
      Порядок строго phase-first: P0→P1→P2→P3→P4→P5→P6→P7. До finish + GREEN design
      audit исполнение любого item запрещено. -->
 
-**Обновлён:** 2026-07-20 · **Соответствует plan.md:** v1.4.4
+**Обновлён:** 2026-07-20 · **Соответствует plan.md:** v1.4.5
 
 > **Статус exec:** P0 закрыта и audit attempt 3 завершён literal GREEN на `245bb56`;
 > G01 открыт, P1 повторно закрыта после D74: P1.5 добавила committed synthetic G02 proof,
 > P1.6 валидировала two documentation projections и exact commit map. Следующий шаг — fresh
-> independent P1 audit; P2.1 остаётся закрыт до literal GREEN G02 audit.
+> independent P1 audit literal GREEN на `2363b21`; P2 закрыта после terminal P2.1–P2.4
+> artifact-kernel/lock/registry/conformance evidence. Следующий шаг — fresh independent P2
+> audit; P3.1 остаётся закрыт до его GREEN verdict.
 > D71 исполнил D65/D68 reconciliation сейчас: `main` — active execution root, retained stash
 > `72505e4d8bef2a58f4ed555cc5b6014450aee3a9` сохраняет recovery point, unrelated owner dirt
 > возвращён unstaged. Это не открывает FOREMAN/fleet/live authority и не снимает P1.2 owner gate.
@@ -40,10 +42,10 @@
 | P1.4 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | compatibility/no-write gate committed |
 | P1.5 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | committed synthetic protected-path proof; no live owner-state inputs |
 | P1.6 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | docs ownership/validation + append-only exact P1.2–P1.4 commit map after P1.5 |
-| P2.1 | solo | plan-run (manual) | gpt-5.6-terra/high | ✅ core proposal/ADR | shared artifact kernel; contribution gate и public API review |
-| P2.2 | solo | plan-run (manual) | gpt-5.6-terra/high | — | drift/apply state machine зависит от terminal P2.1 API |
-| P2.3 | solo | plan-run (manual) | gpt-5.6-sol/high | — | public catalog design после P2.2; открытое design decision D17 |
-| P2.4 | solo | plan-exec | gpt-5.6-terra/medium | — | independent dry/doctor/conformance gate завершает P2 |
+| P2.1 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | ✅ D75 core proposal/ADR | shared artifact kernel committed against approved additive contract |
+| P2.2 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | — | fail-closed drift/apply state machine committed after terminal P2.1 API |
+| P2.3 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/high | — | immutable capability-aware catalog committed after P2.2 |
+| P2.4 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | synthetic dry/doctor/conformance gate committed; phase is terminal pending independent audit |
 | P3.1 | solo | plan-run (manual) | gpt-5.6-sol/high | ✅ publication contract | frozen identity/install/ownership semantics до adapters |
 | P3.2 | solo | plan-exec | gpt-5.6-terra/medium | — | deterministic Claude compatibility projection после P3.1 |
 | P3.3 | solo | plan-run (manual) | gpt-5.6-terra/high | — | native Codex plugin/cache contract, зависит от P3.2 catalog/goldens |
@@ -83,20 +85,21 @@ implementation. P5.6→P5.7 — contract→prescribed implementation, поэто
 
 ## Готовый launch-block текущего шага
 
-### S-P1 audit — independent G02 gate
+### S-P2 audit — independent artifact-engine gate
 
 | Параметр | Значение |
 |:--|:--|
 | Model | gpt-5.6-sol |
 | Thinking | xhigh |
 | Context | NEW SESSION — шаг-не-item |
-| Суть | Независимо проверить re-closed P1 для G02 до P2.1. |
+| Суть | Независимо проверить closed P2 before opening P3.1. |
 
 ```text
-/task:plan-audit 2026.07.19-DUAL-PROVIDER P1
+/task:plan-audit 2026.07.19-DUAL-PROVIDER P2
 
-Прочитай plan.md, phases/P1.md, handoff.md, journal.jsonl, P1 contracts и compatibility matrix.
-Проведи fresh independent G02 audit terminal P1.1–P1.6 и D74 remediation. Не запускай P2.1, не меняй live config,
+Прочитай plan.md, phases/P2.md, handoff.md, journal.jsonl, frozen P2 contracts, ADR-0002,
+P2 contribution/conformance artifacts и commits P2.1–P2.4. Проведи fresh independent audit
+terminal P2.1–P2.4. Не запускай P3.1, не меняй package delivery behavior, live config,
 FOREMAN, fleet или unrelated owner-owned dirt.
 ```
 

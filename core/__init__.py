@@ -41,6 +41,8 @@ from .provider_artifact import (ArtifactAdapterIdentity, ArtifactProvenance,
 from .provider_lock import (ArtifactAction, ArtifactActionKind, ArtifactLock, ArtifactPlan,
                             DriftObservation, LOCK_RELATIVE_PATH, LOCK_SCHEMA_VERSION,
                             apply_plan, parse_lock, plan_artifact_lock, serialize_lock)
+from .provider_registry import (AdapterCatalog, AdapterDescriptor, AdapterSelection,
+                                AdapterSelectionResult, RegistryDiagnostic, RegistrySeverity)
 from .repo import find_monorepo_root, find_repo_root, sibling_bin
 from .runs import find_run_report
 from .term import confirm, die, now_iso, parse_iso, warn
@@ -73,4 +75,6 @@ __all__ = [
     "ArtifactLock", "ArtifactAction", "ArtifactPlan", "DriftObservation",
     "ArtifactActionKind", "LOCK_SCHEMA_VERSION", "LOCK_RELATIVE_PATH", "serialize_lock",
     "parse_lock", "plan_artifact_lock", "apply_plan",
+    "RegistrySeverity", "RegistryDiagnostic", "AdapterDescriptor", "AdapterSelection",
+    "AdapterSelectionResult", "AdapterCatalog",
 ]

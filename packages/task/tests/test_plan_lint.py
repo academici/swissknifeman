@@ -188,6 +188,25 @@ class TestJournalIndexLayer(TmpPlanTestCase):
         self.assertTrue(_errors_containing(diag, "journal-exceptions.jsonl"), diag.errors)
         self.assertTrue(_errors_containing(diag, "не проходит схему"), diag.errors)
 
+    def test_non_string_owner_exception_never_suppresses_journal_error(self):
+        plan_id = "2026.07.19-DEMO"
+        plan_dir = write_valid_plan(self.root, plan_id=plan_id)
+        entry = json.loads((plan_dir / "journal.jsonl").read_text(encoding="utf-8"))
+        entry["friction"] = "legacy"
+        raw = json.dumps(entry, ensure_ascii=False, sort_keys=True)
+        (plan_dir / "journal.jsonl").write_text(raw + "\n", encoding="utf-8")
+        sidecar = {
+            "ts": "2026-07-20T00:00:00Z", "plan_id": plan_id, "target_line": 1,
+            "target_sha256": __import__("hashlib").sha256(raw.encode()).hexdigest(),
+            "invalid_fields": ["friction"], "owner_decision": 123,
+            "actor": "owner", "reason": "test",
+        }
+        (plan_dir / "journal-exceptions.jsonl").write_text(
+            json.dumps(sidecar, ensure_ascii=False, sort_keys=True) + "\n", encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "owner_decision"), diag.errors)
+        self.assertTrue(_errors_containing(diag, "не проходит схему"), diag.errors)
+
 
 class TestAuditScopePayload(TmpPlanTestCase):
     """Scope-payload launch-block'а в блоке `## Audit Pn` (SKILL §8, D-канон 2026-07-17).

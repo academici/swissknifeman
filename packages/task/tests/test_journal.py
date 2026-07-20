@@ -255,6 +255,17 @@ class TestHistoricalExceptions(TmpDirTestCase):
         _, errors = validate_exceptions(self.plan_dir, self.plan_id)
         self.assertTrue(any("invalid_fields" in error for error in errors), errors)
 
+    def test_malformed_field_types_fail_closed_with_diagnostics(self):
+        for field, value in (
+                ("owner_decision", 123),
+                ("target_sha256", 123),
+                ("invalid_fields", 123)):
+            with self.subTest(field=field):
+                self._write(self._record(**{field: value}))
+                records, errors = validate_exceptions(self.plan_dir, self.plan_id)
+                self.assertEqual(records, {})
+                self.assertTrue(any(field in error for error in errors), errors)
+
     def test_exception_cli_appends_valid_record(self):
         rc = main([
             "exception", "--plan-dir", str(self.plan_dir), "--target-line", "1",

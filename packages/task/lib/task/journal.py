@@ -162,9 +162,11 @@ def _exception_errors(record, plan_dir, plan_id, journal_lines, seen_targets):
         errors.append("target_sha256 не совпадает с raw SHA-256 target line")
     if record["invalid_fields"] != list(HISTORICAL_EXCEPTION_FIELDS):
         errors.append("invalid_fields обязан быть exact [\"friction\"]")
-    if not re.fullmatch(r"D\d+", record["owner_decision"] or "") or not _decision_exists(
-            plan_dir, record["owner_decision"]):
-        errors.append(f"owner_decision {record['owner_decision']!r} отсутствует в plan.md")
+    owner_decision = record["owner_decision"]
+    if isinstance(owner_decision, str) and (
+            not re.fullmatch(r"D\d+", owner_decision)
+            or not _decision_exists(plan_dir, owner_decision)):
+        errors.append(f"owner_decision {owner_decision!r} отсутствует в plan.md")
     try:
         entry = json.loads(raw)
     except json.JSONDecodeError:
@@ -176,7 +178,7 @@ def _exception_errors(record, plan_dir, plan_id, journal_lines, seen_targets):
     actual_fields = set(entry_error_map(entry))
     if not actual_fields:
         errors.append("target event уже валидна")
-    elif actual_fields != set(record["invalid_fields"]):
+    elif actual_fields != set(HISTORICAL_EXCEPTION_FIELDS):
         errors.append("invalid_fields не совпадает с exact target schema error set")
     return errors
 

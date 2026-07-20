@@ -18,7 +18,10 @@
 canonical D65-A/D68 manifest, isolated-CLI root-resolution finding и stable root
 `AGENTS.md` invariant. Active normative D52/P0.5/P0.2/index provenance не ссылается
 на absent carrier; historical Audit/finding/journal bytes сохранены. Main проверялся
-только exact-path status/hash и не изменялся.
+только exact-path status/hash и не изменялся. Post-item review fix chain
+`8bafc6842d246a968f560dfdee2cd979f37620e0` → `507122ea951452376beacfc2491982cca7a6e0e8`
+закрывает F1/F2: Git reads не берут optional locks, а main-file hashing fail-closed на
+symlink/non-regular path без FIFO-block.
 
 **Remaining:** Отдельный `plan-close P0` reconciles Phase Handoff/closure evidence, затем
 independent Audit P0 attempt 3 обязан напечатать `AUDIT-CAP` со ссылкой на D67.
@@ -39,6 +42,6 @@ FOREMAN/fleet и P1 package execution не открыты.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: persisted `codex doctor --json` default `gpt-5.6-luna` не является runtime provenance; actual owner/parent route `gpt-5.6-sol/xhigh` authoritative и безопасно overshot P0.7 `gpt-5.6-terra/high`. Isolated worktree не зарегистрирован в mAInd и не несёт bootstrap hook script; effective live hook main path проверен только path/hash, эти isolation boundaries не объявлены green evidence P0.7.
+- workarounds: persisted `codex doctor --json` default `gpt-5.6-luna` не является runtime provenance; initial owner/parent route `gpt-5.6-sol/xhigh` safely overshot P0.7, а post-item F1/F2 fix фактически выполнен `gpt-5.6-terra/high` по Routing. Isolated worktree не зарегистрирован в mAInd и не несёт bootstrap hook script; effective live hook main path проверен только path/hash, эти isolation boundaries не объявлены green evidence P0.7.
 - deferred: P0 close/audit attempt 3; main reconciliation — pre-P7.4; provider implementation — P1–P6; self-host/cleanup/release — P7; FOREMAN reconcile — G10; fleet — separate post-FOREMAN plan.
 - open_questions: —

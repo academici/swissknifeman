@@ -110,7 +110,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P0 | Evidence, vocabulary и запечатанные provider contracts | 7/7 | 🟢 Done |
-| P1 | Provider config/domain и backward-compatible resolution | 5/6 | 🟡 In progress |
+| P1 | Provider config/domain и backward-compatible resolution | 6/6 | 🟢 Done |
 | P2 | Deterministic adapters, provenance, lock и drift engine | 0/4 | ⬜ Not started |
 | P3 | Dual skills publication и marketplaces | 0/5 | ⬜ Not started |
 | P4 | Task-command parity и provider-neutral model routing | 0/5 | ⬜ Not started |
@@ -244,6 +244,8 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | 2026-07-20 | plan-close/Codex mechanical | P1 закрыта: terminal provider-config/domain/resolver/compatibility evidence сверена; docs описывают provider-selection foundation — детали см. phases/P1.md Phase Handoff. |
 | 2026-07-20 | issue-planner/Codex gpt-5.6-sol high | P1 реопенена по D74 после RED Audit P1: добавлены P1.5 committed synthetic G02 evidence и P1.6 docs/provenance ownership; frozen contract, historical P1.1–P1.4, root config, FOREMAN, fleet и P2+ не менялись. |
 | 2026-07-20 | plan-exec/gpt-5.6-terra medium | P1.5 закрыт: committed synthetic fixture proof заменил live owner-state snapshot — детали см. phases/P1.md P1.5 Completion Notes. |
+| 2026-07-20 | plan-exec/gpt-5.6-terra medium | P1.6 закрыт: historical documentation projections validated, exact provenance map appended — детали см. phases/P1.md P1.6 Completion Notes. |
+| 2026-07-20 | plan-exec/gpt-5.6-terra medium | P1 map: P1.2=`57b9b2e96f1e56dc06ba4841586e6e4958ac91a8`; P1.3=`8f377e109041a391235d40be9bec73ad6f4d7f89`/fix=`061a2cb822812c30ea5ab1855a4aebef066c2308`; P1.4=`58a6f5d202a15e164849b1dc901e98924da8c480`; docs-close=`33f35d8618c887a055f79380084574d211af5f05`. |
 
 ## 7. Contracts
 

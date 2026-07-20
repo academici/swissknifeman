@@ -77,6 +77,8 @@ def resolve_provider_config(*, catalog: ProviderConfigCatalog,
     for rank in _RANKS:
         candidate = supplied[rank]
         if isinstance(candidate, tuple):
+            if not candidate:
+                continue
             if len(candidate) != 1:
                 source = candidate[0].source if candidate else _synthetic_source(rank)
                 code = "PCFG_DUPLICATE_FLEET_PROJECT" if rank == "fleet-project" else "PCFG_LAYER_CONFLICT"

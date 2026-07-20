@@ -9,9 +9,10 @@
 **Обновлён:** 2026-07-20 · **Соответствует plan.md:** v1.4.0
 
 > **Статус exec:** P0 формально реопенена D61 после terminal audit RED; frozen P0
-> contracts/ADR и historical P0.1/P0.5 carriers остаются неизменными. Следующий шаг —
-> Owner Approval для exact prerequisite и dirty-tree режима P0.6; P1.1 закрыт до
-> реализации P0.6, повторного plan-close и независимого literal GREEN G01 audit.
+> contracts/ADR и historical P0.1/P0.5 carriers остаются неизменными. P0.6 terminal
+> на clean execution target по D63–D65; следующий шаг — повторный `plan-close P0`.
+> P1.1 закрыт до независимого literal GREEN G01 audit; reconciliation с dirty main
+> перенесена, но не отменена, и обязательна перед P7.4.
 > Исполнительские модели — только current ChatGPT/Codex family: Terra для prescribed
 > implementation, Sol для design/contracts/audit. GPT-5.6 Luna не используется на этом
 > public-contract/release critical path. RAG:✅ 2026-07-19
@@ -26,7 +27,7 @@
 | P0.2 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/high | ✅ D53 | vocabulary/scenarios и distinction Command Surface / Task Command заморожены |
 | P0.3 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/xhigh | ✅ D55 | capability/artifact contracts v1.0.0 + ADR accepted |
 | P0.4 | solo | plan-run/plan-close repair — 🟢 | gpt-5.6-sol/high; repair gpt-5.6-sol/xhigh | ✅ D59; D60 contract-neutral repair | exact structural G11 revalidation green; frozen contract unchanged |
-| P0.6 | solo | plan-run (manual) — ⬜ | gpt-5.6-terra/high | ✅ exact package prerequisite + dirty ownership mode A/B | clean-tree lint repair and immutable P0.1/P0.5 evidence anchors; P0 remains RED through independent re-audit |
+| P0.6 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | ✅ D63-B · D64-A · D65-A | sealed clean-tree lint/evidence replay закрыт; P0 остаётся RED до independent re-audit |
 | P1.1 | solo | plan-run (manual) | gpt-5.6-sol/xhigh | ✅ provider-config contract | owner-gated public precedence/config freeze |
 | P1.2 | solo | plan-run (manual) | gpt-5.6-terra/high | ✅ shared-core contribution | prescribed API после P1.1; public core boundary требует full review |
 | P1.3 | solo | plan-run (manual) | gpt-5.6-terra/high | — | потребляет P1.2 symbols и реализует precedence/diagnostics |
@@ -74,21 +75,17 @@ implementation. P5.6→P5.7 — contract→prescribed implementation, поэто
 
 ## Готовый launch-block текущего шага
 
-### S-P0.6-OWNER — exact prerequisite approval
+### S-P0-CLOSE — повторное закрытие фазы
 
 | Параметр | Значение |
 |:--|:--|
 | Model | gpt-5.6-terra |
-| Thinking | high — shared-package prerequisite + reproducibility repair |
-| Context | continue (`/clear`) — ручной item; до Approval только decision gate |
-| Суть | Утвердить exact prerequisite/version и выбрать dirty ownership A/B; без D# реализация запрещена. |
+| Thinking | low — mechanical phase reconciliation; evidence gates не ослаблять |
+| Context | NEW SESSION — шаг-не-item |
+| Суть | Сверить 6/6 terminal items и повторно закрыть P0 перед independent audit. |
 
 ```
-Подготовь Owner Approval для P0.6 плана 2026.07.19-DUAL-PROVIDER.
-Сначала прочитай P0.6, findings/P0-red-reproducibility-preflight-2026-07-20.md
-и research/16-p0-red-reproducibility-repair.md. Не меняй файлы до Approval Owner D#.
-Представь exact prerequisite/version и выбор dirty ownership: A — owner сначала
-очищает/фиксирует конфликтующие paths; B — isolated clean worktree/branch без изменения main.
+/task:plan-close 2026.07.19-DUAL-PROVIDER P0
 ```
 
 ## Гейты владельца (сводно)
@@ -98,7 +95,7 @@ implementation. P5.6→P5.7 — contract→prescribed implementation, поэто
 | P0.2 | весь vocabulary + domain scenarios; terminal P0.5 anchor; Command Surface 32 / Task Command 11 как разные scopes | P0.3 contract authoring |
 | P0.3 | capability/artifact contracts + ADR | P0.4 и все downstream contracts |
 | P0.4 | migration/FOREMAN/fleet safety gates | P1 entry |
-| P0.6 | exact task/plan-protocol prerequisite/version + dirty ownership A/B | P0.6 implementation, repeat close/audit и P1 entry |
+| P0.6 | D63-B exact prerequisite/isolation · D64-A sealed path-only anchor · D65-A execution target/deferred main reconciliation | выполнено; P0 close/audit и P1 entry остаются gated G01 |
 | P1.1 | provider-config contract | P1.2–P1.4 |
 | P1.2 | contribution в shared core | P1.3–P1.4 |
 | P2.1 | artifact-kernel proposal/ADR | P2.2–P2.4 |

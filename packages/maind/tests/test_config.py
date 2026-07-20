@@ -96,6 +96,26 @@ class TestProviderConfig(unittest.TestCase):
         self.assertEqual(effective_projection(maind_result), effective_projection(skiller_result))
         self.assertEqual(maind_result.diagnostics, skiller_result.diagnostics)
 
+    def test_legacy_carriers_load_and_resolve_without_writes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, env = make_repo(tmp)
+            path = write_maind_config(root)
+            before = path.read_bytes()
+            loaded, source = load_config(env)
+            result = resolve_provider_config(loaded, catalog(), "alpha")
+            self.assertEqual(source, "config.json")
+            self.assertEqual(path.read_bytes(), before)
+            self.assertEqual([item.code for item in result.diagnostics], ["PCFG_LEGACY_DEFAULT_APPLIED"])
+
+    def test_duplicate_fleet_project_is_fail_closed_without_mutation(self):
+        providers = config({"codex": {"enabled": True}})
+        fleet = {"projects": [{"id": "demo", "providers": providers}, {"id": "demo", "providers": providers}]}
+        before = repr(fleet)
+        result = resolve_provider_config(fleet, catalog(), "demo")
+        self.assertIsNone(result.effective)
+        self.assertEqual(result.diagnostics[0].code, "PCFG_DUPLICATE_FLEET_PROJECT")
+        self.assertEqual(repr(fleet), before)
+
 
 class TestPrecedence(unittest.TestCase):
     def test_maind_json_wins(self):

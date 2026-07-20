@@ -25,6 +25,33 @@ def config(selection):
     return {"contract_version": "1.0.0", "selection": selection}
 
 
+COMPATIBILITY_CASES = (
+    ("C1", {}, {"claude-code": True, "codex": False}, ["PCFG_LEGACY_DEFAULT_APPLIED"]),
+    ("C2", {"fleet_defaults": config({"claude-code": {"enabled": True}})},
+     {"claude-code": True, "codex": False}, []),
+    ("C3", {"fleet_project": config({"codex": {"enabled": True}})},
+     {"claude-code": True, "codex": True}, []),
+    ("C4", {"project": config({"claude-code": {"enabled": False}})},
+     {"claude-code": False, "codex": False}, []),
+    ("C5", {"operation": config({"codex": {"enabled": True}})},
+     {"claude-code": True, "codex": True}, []),
+    ("C6", {"project": config({"claude-code": {"enabled": True}})},
+     {"claude-code": True, "codex": False}, []),
+    ("C7", {"project": config({"claude-code": {"enabled": False}, "codex": {"enabled": True}})},
+     {"claude-code": False, "codex": True}, []),
+    ("C8", {"project": config({"claude-code": {"enabled": True}, "codex": {"enabled": True}})},
+     {"claude-code": True, "codex": True}, []),
+    ("C9", {"fleet_defaults": config({"codex": {"enabled": True}}),
+             "project": config({"codex": {"enabled": False}})},
+     {"claude-code": True, "codex": False}, []),
+)
+
+
+def compatibility_layers(case_layers):
+    return {kind: layer(kind.replace("_", "-"), value)
+            for kind, value in case_layers.items()}
+
+
 class TestProviderConfigResolution(unittest.TestCase):
     def test_legacy_default_is_distinct_and_sorted(self):
         result = resolve_provider_config(catalog=catalog())
@@ -54,3 +81,40 @@ class TestProviderConfigResolution(unittest.TestCase):
         self.assertEqual(data["selection"]["codex"]["enabled"], False)
         self.assertIsNone(result.effective)
         self.assertEqual(result.diagnostics[0].code, "PCFG_DUPLICATE_FLEET_PROJECT")
+
+    def test_canonical_compatibility_case_table(self):
+        for case_id, supplied, expected, diagnostic_codes in COMPATIBILITY_CASES:
+            with self.subTest(case=case_id):
+                result = resolve_provider_config(catalog=catalog(), **compatibility_layers(supplied))
+                self.assertEqual(
+                    {key: value["enabled"] for key, value in effective_projection(result).items()},
+                    expected,
+                )
+                self.assertEqual([item.code for item in result.diagnostics], diagnostic_codes)
+
+    def test_all_layers_preserve_leaf_provenance_and_explicit_disable(self):
+        result = resolve_provider_config(
+            catalog=catalog(),
+            fleet_defaults=layer("fleet-defaults", config({"claude-code": {"enabled": True}, "codex": {"enabled": False}})),
+            fleet_project=layer("fleet-project", config({"codex": {"enabled": True}})),
+            project=layer("project", config({"codex": {"enabled": False}})),
+            operation=layer("operation", config({"codex": {"enabled": True}})),
+        )
+        winners = {item.effective_path: (item.source.kind, item.explicit) for item in result.provenance}
+        self.assertEqual(winners["/selection/claude-code/enabled"], ("fleet-defaults", True))
+        self.assertEqual(winners["/selection/codex/enabled"], ("operation", True))
+
+    def test_negative_table_is_fail_closed_and_deterministic(self):
+        cases = (
+            ("C10", config({"chatgpt": {"enabled": False}}), "PCFG_UNKNOWN_PROVIDER"),
+            ("C11", config({"codex": {"capabilities": {"hooks.lifecycle": True}}}), "PCFG_CAPABILITY_UNSUPPORTED"),
+            ("C12", config({"codex": {"enabled": "true"}}), "PCFG_SCHEMA_INVALID"),
+            ("C13", config({"codex": {"enabled": True, "options": {}}}), "PCFG_UNKNOWN_FIELD"),
+            ("C14", config({"codex": {"capabilities": {"skills.unknown": False}}}), "PCFG_UNKNOWN_CAPABILITY"),
+            ("C15", config({"claude-code": {"native_extensions": {"codex.fixture-native": False}}}), "PCFG_EXTENSION_PROVIDER_MISMATCH"),
+        )
+        for case_id, value, code in cases:
+            with self.subTest(case=case_id):
+                result = resolve_provider_config(catalog=catalog(), project=layer("project", value))
+                self.assertIsNone(result.effective)
+                self.assertEqual(result.diagnostics[0].code, code)

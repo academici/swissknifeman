@@ -8,8 +8,8 @@
 
 **Обновлён:** 2026-07-20 · **Соответствует plan.md:** v1.3.1
 
-> **Статус exec:** P0 items терминальны GREEN после D60 fix-forward; frozen P0 contracts/ADR
-> byte-identical approved commits. Следующий шаг — `plan-close P0`, затем independent audit G01;
+> **Статус exec:** P0 закрыта GREEN после D60 fix-forward; frozen P0 contracts/ADR
+> byte-identical approved commits. Следующий шаг — independent P0 audit по G01;
 > P1.1 остаётся закрытым до literal GREEN.
 > Historical audit r4 GREEN уже открыл исполнение P0.1; повторный whole-plan audit из-за
 > локальной prerequisite correction не подменяет item-level full review и остаётся вне
@@ -75,17 +75,17 @@ implementation. P5.6→P5.7 — contract→prescribed implementation, поэто
 
 ## Готовый launch-block текущего шага
 
-### S-P0-CLOSE — phase reconciliation
+### S-P0-AUDIT — independent G01 audit
 
 | Параметр | Значение |
 |:--|:--|
-| Model | gpt-5.6-terra |
-| Thinking | low — deterministic item reconciliation |
+| Model | gpt-5.6-sol |
+| Thinking | xhigh — independent frozen-contract audit |
 | Context | NEW SESSION — шаг-не-item |
-| Суть | Закрыть terminal P0 после D60, затем передать её на independent audit. |
+| Суть | Независимо проаудировать terminal P0 и выдать literal G01 verdict до P1.1. |
 
 ```
-/task:plan-close 2026.07.19-DUAL-PROVIDER P0
+/task:plan-audit 2026.07.19-DUAL-PROVIDER P0
 ```
 
 ## Гейты владельца (сводно)

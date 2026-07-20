@@ -207,6 +207,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | 2026-07-20 | plan-run/Codex gpt-5.6-sol xhigh | P0.4 закрыт: D59 заморозил migration gates v1.0.0 и P0–P7 risk traceability — детали см. phases/P0.md P0.4 Completion Notes. |
 | 2026-07-20 | plan-close/Codex gpt-5.6-sol xhigh | D58 repair P0.4: D60 заменил ложный line-local fleet validation literal на structural G11 check; frozen D59 contract не изменён. |
 | 2026-07-20 | plan-close/Codex gpt-5.6-sol xhigh | P0.4 повторно закрыт GREEN после D60: corrected exact G11 validation прошла, repair commit `df100a2` — детали см. phases/P0.md P0.4 Completion Notes. |
+| 2026-07-20 | plan-close/Codex gpt-5.6-sol xhigh | P0 закрыта: terminal contracts/evidence сверены после D60 fix-forward — детали см. phases/P0.md Phase Handoff; roadmap переведён на independent G01 audit. |
 
 ## 7. Contracts
 

@@ -8,9 +8,9 @@
 
 **Обновлён:** 2026-07-20 · **Соответствует plan.md:** v1.3.1
 
-> **Статус exec:** P0.1/P0.5/P0.2/P0.3 🟢; P0.4 формально переоткрыт D60 только для
-> plan-only Validation repair. Corrected G11 scan зелён, frozen D59 contract byte-identical;
-> следующий шаг — атомарная сверка P0.4, затем phase close и independent audit G01.
+> **Статус exec:** P0 items терминальны GREEN после D60 fix-forward; frozen P0 contracts/ADR
+> byte-identical approved commits. Следующий шаг — `plan-close P0`, затем independent audit G01;
+> P1.1 остаётся закрытым до literal GREEN.
 > Historical audit r4 GREEN уже открыл исполнение P0.1; повторный whole-plan audit из-за
 > локальной prerequisite correction не подменяет item-level full review и остаётся вне
 > текущего Next.
@@ -27,7 +27,7 @@
 | P0.5 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | terminal correction evidence пяти explicit roots; не переписывает P0.1 |
 | P0.2 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/high | ✅ D53 | vocabulary/scenarios и distinction Command Surface / Task Command заморожены |
 | P0.3 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/xhigh | ✅ D55 | capability/artifact contracts v1.0.0 + ADR accepted |
-| P0.4 | solo | plan-close repair — 🟡 | gpt-5.6-terra/low | ✅ D59; D60 contract-neutral repair | exact structural G11 revalidation после line-local Validation defect |
+| P0.4 | solo | plan-run/plan-close repair — 🟢 | gpt-5.6-sol/high; repair gpt-5.6-sol/xhigh | ✅ D59; D60 contract-neutral repair | exact structural G11 revalidation green; frozen contract unchanged |
 | P1.1 | solo | plan-run (manual) | gpt-5.6-sol/xhigh | ✅ provider-config contract | owner-gated public precedence/config freeze |
 | P1.2 | solo | plan-run (manual) | gpt-5.6-terra/high | ✅ shared-core contribution | prescribed API после P1.1; public core boundary требует full review |
 | P1.3 | solo | plan-run (manual) | gpt-5.6-terra/high | — | потребляет P1.2 symbols и реализует precedence/diagnostics |
@@ -75,17 +75,17 @@ implementation. P5.6→P5.7 — contract→prescribed implementation, поэто
 
 ## Готовый launch-block текущего шага
 
-### S-P0.4-R1 — Validation repair reconciliation
+### S-P0-CLOSE — phase reconciliation
 
 | Параметр | Значение |
 |:--|:--|
 | Model | gpt-5.6-terra |
 | Thinking | low — deterministic item reconciliation |
 | Context | NEW SESSION — шаг-не-item |
-| Суть | Повторно сверить P0.4 после D60, не меняя frozen contract. |
+| Суть | Закрыть terminal P0 после D60, затем передать её на independent audit. |
 
 ```
-/task:plan-close 2026.07.19-DUAL-PROVIDER P0.4
+/task:plan-close 2026.07.19-DUAL-PROVIDER P0
 ```
 
 ## Гейты владельца (сводно)

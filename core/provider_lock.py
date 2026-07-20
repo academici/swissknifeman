@@ -1,0 +1,347 @@
+"""Fail-closed planning and explicit application for provider artifacts.
+
+The module owns a versioned sidecar lock, not provider discovery or rendering.
+Planning is pure and application accepts only a caller-provided root plus the
+immutable plan it produced.
+"""
+from dataclasses import dataclass
+from enum import Enum
+import json
+import os
+from pathlib import Path
+import re
+import tempfile
+from typing import Iterable
+
+from .provider_artifact import (ArtifactProvenance, ArtifactRenderResult,
+                                ArtifactSource, sha256_digest,
+                                validate_target_path)
+from .provider import CapabilityId, CapabilityRequirement, ProviderId, SupportLevel
+from .paths import is_within, is_within_lexical
+
+
+LOCK_SCHEMA_VERSION = 1
+LOCK_RELATIVE_PATH = ".swissknifeman/provider-artifacts.lock.json"
+_DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
+_IDENTIFIER_RE = re.compile(r"^[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*)*$")
+_SEMVER_RE = re.compile(r"^[0-9]+\.[0-9]+\.[0-9]+$")
+
+
+class DriftObservation(str, Enum):
+    CLEAN = "clean"
+    MISSING = "missing"
+    STALE_SOURCE = "stale-source"
+    MANAGED_DRIFT = "managed-drift"
+    BOUNDARY_INVALID = "boundary-invalid"
+    PROVENANCE_INVALID = "provenance-invalid"
+    OWNERSHIP_CONFLICT = "ownership-conflict"
+    UNSUPPORTED = "unsupported"
+
+
+class ArtifactActionKind(str, Enum):
+    NOOP = "noop"
+    CREATE = "create"
+    UPDATE = "update"
+    REPAIR = "repair"
+    REFUSE = "refuse"
+
+
+@dataclass(frozen=True)
+class ArtifactLock:
+    """Canonical v1 sidecar lock with exactly one record per artifact and target."""
+
+    schema_version: int
+    records: tuple[ArtifactProvenance, ...]
+
+    def __post_init__(self) -> None:
+        if self.schema_version != LOCK_SCHEMA_VERSION:
+            raise ValueError("unsupported lock schema version")
+        if not isinstance(self.records, tuple) or not all(isinstance(record, ArtifactProvenance)
+                                                          for record in self.records):
+            raise TypeError("records must be a tuple of ArtifactProvenance")
+        ordered = tuple(sorted(self.records, key=lambda record: record.artifact_id))
+        if len({record.artifact_id for record in ordered}) != len(ordered):
+            raise ValueError("lock records must not repeat artifact IDs")
+        if len({record.target_path for record in ordered}) != len(ordered):
+            raise ValueError("lock records must not repeat target paths")
+        object.__setattr__(self, "records", ordered)
+
+
+@dataclass(frozen=True)
+class ArtifactAction:
+    """One deterministic no-write decision; bytes are applied only by ``apply_plan``."""
+
+    artifact_id: str
+    target_path: str
+    observation: DriftObservation
+    action: ArtifactActionKind
+    expected: ArtifactRenderResult
+    observed_hash: str | None
+    diagnostic: str
+
+
+@dataclass(frozen=True)
+class ArtifactPlan:
+    """A complete immutable plan, including the lock that successful apply writes."""
+
+    actions: tuple[ArtifactAction, ...]
+    next_lock: ArtifactLock | None
+    lock_path: str = LOCK_RELATIVE_PATH
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.actions, tuple) or not all(isinstance(action, ArtifactAction)
+                                                          for action in self.actions):
+            raise TypeError("actions must be a tuple of ArtifactAction")
+        ordered = tuple(sorted(self.actions, key=lambda action: (action.target_path, action.artifact_id)))
+        if len({action.target_path for action in ordered}) != len(ordered):
+            raise ValueError("actions must not repeat target paths")
+        if self.next_lock is not None and not isinstance(self.next_lock, ArtifactLock):
+            raise TypeError("next_lock must be ArtifactLock or None")
+        validate_target_path(self.lock_path)
+        object.__setattr__(self, "actions", ordered)
+
+
+def serialize_lock(lock: ArtifactLock) -> bytes:
+    """Return canonical JSON bytes for a supported lock; timestamps are forbidden."""
+    if not isinstance(lock, ArtifactLock):
+        raise TypeError("lock must be ArtifactLock")
+    value = {"schema_version": lock.schema_version,
+             "records": [_provenance_value(record) for record in lock.records]}
+    return json.dumps(value, sort_keys=True, separators=(",", ":"),
+                      ensure_ascii=False).encode("utf-8") + b"\n"
+
+
+def parse_lock(raw: bytes) -> ArtifactLock:
+    """Parse only the canonical v1 shape; malformed/newer locks fail closed."""
+    if not isinstance(raw, bytes):
+        raise TypeError("raw lock must be bytes")
+    try:
+        value = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise ValueError("corrupt lock") from error
+    if not isinstance(value, dict) or set(value) != {"records", "schema_version"}:
+        raise ValueError("corrupt lock")
+    if value["schema_version"] != LOCK_SCHEMA_VERSION:
+        raise ValueError("unsupported lock schema version")
+    if not isinstance(value["records"], list):
+        raise ValueError("corrupt lock")
+    try:
+        lock = ArtifactLock(LOCK_SCHEMA_VERSION, tuple(_provenance_from_value(item)
+                                                       for item in value["records"]))
+    except (KeyError, TypeError, ValueError) as error:
+        raise ValueError("corrupt lock") from error
+    if serialize_lock(lock) != raw:
+        raise ValueError("lock is not canonically serialized")
+    return lock
+
+
+def plan_artifact_lock(root: Path, expected: Iterable[ArtifactRenderResult], *,
+                       lock_bytes: bytes | None, repair_artifact_ids: tuple[str, ...] = (),
+                       unsupported_artifact_ids: tuple[str, ...] = ()) -> ArtifactPlan:
+    """Classify expected artifacts without changing disk, lock, backups, or root."""
+    root = _root(root)
+    results = tuple(sorted(_results(expected), key=lambda result: result.target.path))
+    repairs = frozenset(repair_artifact_ids)
+    unsupported = frozenset(unsupported_artifact_ids)
+    if not repairs.isdisjoint(unsupported):
+        raise ValueError("repair and unsupported IDs must not overlap")
+    lock, lock_problem = _read_lock(lock_bytes)
+    records_by_id = {record.artifact_id: record for record in lock.records} if lock else {}
+    records_by_target = {record.target_path: record for record in lock.records} if lock else {}
+    actions = []
+    for result in results:
+        provenance = result.provenance
+        target = root / provenance.target_path
+        observation, action, observed_hash, diagnostic = _classify(
+            target, result, records_by_id.get(provenance.artifact_id),
+            records_by_target.get(provenance.target_path), lock_problem,
+            provenance.artifact_id in repairs, provenance.artifact_id in unsupported, root)
+        actions.append(ArtifactAction(provenance.artifact_id, provenance.target_path,
+                                      observation, action, result, observed_hash, diagnostic))
+    next_lock = None if any(action.action is ArtifactActionKind.REFUSE for action in actions) else ArtifactLock(
+        LOCK_SCHEMA_VERSION, tuple(result.provenance for result in results))
+    return ArtifactPlan(tuple(actions), next_lock)
+
+
+def apply_plan(root: Path, plan: ArtifactPlan) -> ArtifactPlan:
+    """Apply an already computed plan under one explicit root, or refuse without writes.
+
+    Repair writes a recoverable ``.provider-artifact.bak`` pre-image beside its target.
+    Precondition checks are repeated immediately before every write.
+    """
+    root = _root(root)
+    if not isinstance(plan, ArtifactPlan):
+        raise TypeError("plan must be ArtifactPlan")
+    if plan.next_lock is None or any(action.action is ArtifactActionKind.REFUSE for action in plan.actions):
+        raise ValueError("refusing plan cannot be applied")
+    writable = tuple(action for action in plan.actions if action.action is not ArtifactActionKind.NOOP)
+    for action in writable:
+        target = _contained_target(root, action.target_path)
+        current = _read_hash(target)
+        if current != action.observed_hash:
+            raise ValueError("target changed after planning")
+    for action in writable:
+        target = _contained_target(root, action.target_path)
+        if action.action is ArtifactActionKind.REPAIR and target.exists():
+            _atomic_write_bytes(target.with_name(target.name + ".provider-artifact.bak"),
+                                target.read_bytes())
+        _atomic_write_bytes(target, action.expected.managed_bytes)
+    _atomic_write_bytes(_contained_target(root, plan.lock_path), serialize_lock(plan.next_lock))
+    return plan_artifact_lock(root, (action.expected for action in plan.actions),
+                              lock_bytes=serialize_lock(plan.next_lock))
+
+
+def _classify(target: Path, result: ArtifactRenderResult, record: ArtifactProvenance | None,
+              target_record: ArtifactProvenance | None, lock_problem: str | None,
+              repair_requested: bool, unsupported: bool, root: Path) -> tuple[DriftObservation, ArtifactActionKind, str | None, str]:
+    provenance = result.provenance
+    if unsupported:
+        return DriftObservation.UNSUPPORTED, ArtifactActionKind.REFUSE, None, "unsupported"
+    if lock_problem:
+        return DriftObservation.PROVENANCE_INVALID, ArtifactActionKind.REFUSE, None, lock_problem
+    if not _safe_target(target, root):
+        return DriftObservation.BOUNDARY_INVALID, ArtifactActionKind.REFUSE, None, "unsafe-target"
+    if provenance.managed_boundary[0] != "whole-file":
+        return DriftObservation.BOUNDARY_INVALID, ArtifactActionKind.REFUSE, _read_hash(target), "block-extractor-not-supplied"
+    if target_record is not None and target_record.artifact_id != provenance.artifact_id:
+        return DriftObservation.OWNERSHIP_CONFLICT, ArtifactActionKind.REFUSE, None, "target-owned-by-other-artifact"
+    if record is None:
+        if target.exists() or target.is_symlink():
+            return DriftObservation.OWNERSHIP_CONFLICT, ArtifactActionKind.REFUSE, _read_hash(target), "unmanaged-target"
+        return DriftObservation.MISSING, ArtifactActionKind.CREATE, None, "missing"
+    if not _matching_identity(record, provenance):
+        return DriftObservation.PROVENANCE_INVALID, ArtifactActionKind.REFUSE, _read_hash(target), "record-identity-mismatch"
+    if not target.exists():
+        return DriftObservation.MISSING, ArtifactActionKind.CREATE, None, "missing"
+    observed_hash = _read_hash(target)
+    if observed_hash != record.rendered_hash:
+        if repair_requested:
+            return DriftObservation.MANAGED_DRIFT, ArtifactActionKind.REPAIR, observed_hash, "explicit-repair"
+        return DriftObservation.MANAGED_DRIFT, ArtifactActionKind.REFUSE, observed_hash, "repair-required"
+    if record.source_hash != provenance.source_hash or record.rendered_hash != provenance.rendered_hash:
+        return DriftObservation.STALE_SOURCE, ArtifactActionKind.UPDATE, observed_hash, "source-changed"
+    return DriftObservation.CLEAN, ArtifactActionKind.NOOP, observed_hash, "clean"
+
+
+def _read_lock(lock_bytes: bytes | None) -> tuple[ArtifactLock | None, str | None]:
+    if lock_bytes is None:
+        return ArtifactLock(LOCK_SCHEMA_VERSION, ()), None
+    try:
+        return parse_lock(lock_bytes), None
+    except ValueError as error:
+        return None, str(error)
+
+
+def _results(expected: Iterable[ArtifactRenderResult]) -> tuple[ArtifactRenderResult, ...]:
+    values = tuple(expected)
+    if not values or not all(isinstance(value, ArtifactRenderResult) for value in values):
+        raise ValueError("expected must be a non-empty iterable of ArtifactRenderResult")
+    if len({value.provenance.artifact_id for value in values}) != len(values):
+        raise ValueError("expected must not repeat artifact IDs")
+    if len({value.target.path for value in values}) != len(values):
+        raise ValueError("expected must not repeat target paths")
+    return values
+
+
+def _matching_identity(record: ArtifactProvenance, expected: ArtifactProvenance) -> bool:
+    return (record.artifact_id == expected.artifact_id and record.target_path == expected.target_path
+            and record.contract_version == expected.contract_version
+            and record.managed_boundary == expected.managed_boundary)
+
+
+def _root(root: Path) -> Path:
+    if not isinstance(root, Path):
+        raise TypeError("root must be Path")
+    if not root.is_absolute():
+        raise ValueError("root must be explicit and absolute")
+    return root
+
+
+def _safe_target(target: Path, root: Path) -> bool:
+    return is_within_lexical(target, root) and (not target.exists() or not target.is_symlink())
+
+
+def _contained_target(root: Path, relative: str) -> Path:
+    target = root / validate_target_path(relative)
+    if not _safe_target(target, root) or not is_within(target, root):
+        raise ValueError("target escapes explicit root")
+    return target
+
+
+def _read_hash(path: Path) -> str | None:
+    if not path.exists() or path.is_symlink():
+        return None
+    return sha256_digest(path.read_bytes())
+
+
+def _atomic_write_bytes(path: Path, value: bytes) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary = tempfile.mkstemp(prefix=path.name + ".", suffix=".tmp", dir=path.parent)
+    try:
+        with os.fdopen(descriptor, "wb") as handle:
+            handle.write(value)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, path)
+    except BaseException:
+        try:
+            os.unlink(temporary)
+        except FileNotFoundError:
+            pass
+        raise
+
+
+def _provenance_value(record: ArtifactProvenance) -> dict[str, object]:
+    return {"adapter_id": record.adapter_id, "adapter_version": record.adapter_version,
+            "artifact_id": record.artifact_id,
+            "canonical_sources": [{"hash": source.content_hash, "path": source.path,
+                                   "source_id": source.source_id} for source in record.canonical_sources],
+            "capability_requirements": [{"accepted_levels": [level.value for level in requirement.accepted_levels],
+                                          "id": requirement.capability_id.value}
+                                         for requirement in record.capability_requirements],
+            "contract_version": record.contract_version,
+            "managed_boundary": {"block_ids": list(record.managed_boundary[1]),
+                                 "mode": record.managed_boundary[0]},
+            "override_layers": [dict(layer) for layer in record.override_layers],
+            "provider_id": record.provider_id.value, "rendered_hash": record.rendered_hash,
+            "source_hash": record.source_hash, "target_path": record.target_path}
+
+
+def _provenance_from_value(value: object) -> ArtifactProvenance:
+    if not isinstance(value, dict):
+        raise ValueError("corrupt lock")
+    required = {"adapter_id", "adapter_version", "artifact_id", "canonical_sources",
+                "capability_requirements", "contract_version", "managed_boundary",
+                "override_layers", "provider_id", "rendered_hash", "source_hash", "target_path"}
+    if set(value) != required or not isinstance(value["canonical_sources"], list) or not isinstance(value["capability_requirements"], list):
+        raise ValueError("corrupt lock")
+    if (value["contract_version"] != "1.0.0" or
+            not all(isinstance(value[field], str) for field in ("adapter_id", "adapter_version", "artifact_id", "target_path", "source_hash", "rendered_hash")) or
+            not _IDENTIFIER_RE.fullmatch(value["adapter_id"]) or not _IDENTIFIER_RE.fullmatch(value["artifact_id"]) or
+            not _SEMVER_RE.fullmatch(value["adapter_version"]) or not _DIGEST_RE.fullmatch(value["source_hash"]) or
+            not _DIGEST_RE.fullmatch(value["rendered_hash"])):
+        raise ValueError("corrupt lock")
+    try:
+        validate_target_path(value["target_path"])
+    except ValueError as error:
+        raise ValueError("corrupt lock") from error
+    boundary = value["managed_boundary"]
+    if not isinstance(boundary, dict) or set(boundary) != {"mode", "block_ids"} or not isinstance(boundary["block_ids"], list):
+        raise ValueError("corrupt lock")
+    sources = tuple(ArtifactSource(item["source_id"], item["path"], item["hash"])
+                    for item in value["canonical_sources"] if isinstance(item, dict) and set(item) == {"source_id", "path", "hash"})
+    if len(sources) != len(value["canonical_sources"]):
+        raise ValueError("corrupt lock")
+    requirements = tuple(CapabilityRequirement(CapabilityId(item["id"]),
+                                                 tuple(SupportLevel(level) for level in item["accepted_levels"]))
+                         for item in value["capability_requirements"]
+                         if isinstance(item, dict) and set(item) == {"id", "accepted_levels"} and isinstance(item["accepted_levels"], list))
+    if len(requirements) != len(value["capability_requirements"]) or not isinstance(value["override_layers"], list):
+        raise ValueError("corrupt lock")
+    overrides = tuple(tuple(sorted(layer.items())) for layer in value["override_layers"] if isinstance(layer, dict))
+    if len(overrides) != len(value["override_layers"]):
+        raise ValueError("corrupt lock")
+    return ArtifactProvenance(value["contract_version"], value["artifact_id"], sources,
+                              value["adapter_id"], value["adapter_version"], ProviderId(value["provider_id"]),
+                              value["target_path"], value["source_hash"], value["rendered_hash"],
+                              (boundary["mode"], tuple(boundary["block_ids"])), overrides, requirements)

@@ -107,7 +107,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P0 | Evidence, vocabulary и запечатанные provider contracts | 6/7 | 🟡 In progress |
+| P0 | Evidence, vocabulary и запечатанные provider contracts | 7/7 | 🟢 Done |
 | P1 | Provider config/domain и backward-compatible resolution | 0/4 | ⬜ Not started |
 | P2 | Deterministic adapters, provenance, lock и drift engine | 0/4 | ⬜ Not started |
 | P3 | Dual skills publication и marketplaces | 0/5 | ⬜ Not started |
@@ -222,6 +222,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | 2026-07-20 | plan-run/Codex gpt-5.6-terra high | P0.6 закрыт: D63–D65 закрепили isolated delivery и sealed replay; review findings исправлены отдельными commits — детали см. phases/P0.md P0.6 Completion Notes. |
 | 2026-07-20 | plan-close/Codex mechanical | P0 повторно закрыта: terminal items, sealed replay и frozen contracts сверены после D61–D65 — детали см. phases/P0.md Phase Handoff; roadmap переведён на independent G01 audit. |
 | 2026-07-20 | issue-planner/Codex gpt-5.6-sol xhigh | D67/D68 ATTENTION fix-forward design: P0 формально реопенена 6/7, добавлен contract-neutral P0.7 с sealed D65 manifest и isolated-CLI finding; P1/package/main/FOREMAN/fleet execution не начиналось. |
+| 2026-07-20 | plan-run/Codex gpt-5.6-sol xhigh | P0.7 закрыт: sealed D65 reconciliation manifest и isolated-CLI invariant зафиксированы — детали см. phases/P0.md P0.7 Completion Notes. |
 
 ## 7. Contracts
 

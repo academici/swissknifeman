@@ -8,10 +8,9 @@
 
 **Обновлён:** 2026-07-20 · **Соответствует plan.md:** v1.4.1
 
-> **Статус exec:** D67 формально реопенил P0 после ATTENTION; P0.1–P0.6 и frozen
-> contracts/ADR остаются неизменными. Следующий шаг — fresh
-> `/task:plan-run 2026.07.19-DUAL-PROVIDER P0.7` (`gpt-5.6-terra/high`). Затем
-> `plan-close P0` и exceptional independent audit attempt 3 с `AUDIT-CAP` + D67.
+> **Статус exec:** P0.7 закрыт; derived phase status P0 синхронизирован в `Done`.
+> Отдельный `/task:plan-close 2026.07.19-DUAL-PROVIDER P0` reconciles Phase Handoff и
+> closure evidence, затем выполняется exceptional independent audit attempt 3 с `AUDIT-CAP` + D67.
 > P1.1 закрыт до literal GREEN G01; reconciliation с dirty main перенесена, но не
 > отменена, и обязательна перед P7.4 по D65-A/D68.
 > Исполнительские модели — только current ChatGPT/Codex family: Terra для prescribed
@@ -29,7 +28,7 @@
 | P0.3 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/xhigh | ✅ D55 | capability/artifact contracts v1.0.0 + ADR accepted |
 | P0.4 | solo | plan-run/plan-close repair — 🟢 | gpt-5.6-sol/high; repair gpt-5.6-sol/xhigh | ✅ D59; D60 contract-neutral repair | exact structural G11 revalidation green; frozen contract unchanged |
 | P0.6 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | ✅ D63-B · D64-A · D65-A | sealed clean-tree lint/evidence replay закрыт; P0 reclose завершён, G01 ждёт independent audit |
-| P0.7 | solo | plan-run (manual) | gpt-5.6-terra/high | ✅ D67/D68 mechanical authority | hash-only ATTENTION bookkeeping; exact D65 manifest + isolated-CLI finding, без package/main/P1 writes |
+| P0.7 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | ✅ D67/D68 mechanical authority | sealed D65 manifest + isolated-CLI invariant; package/main/P1 bytes не менялись |
 | P1.1 | solo | plan-run (manual) | gpt-5.6-sol/xhigh | ✅ provider-config contract | owner-gated public precedence/config freeze |
 | P1.2 | solo | plan-run (manual) | gpt-5.6-terra/high | ✅ shared-core contribution | prescribed API после P1.1; public core boundary требует full review |
 | P1.3 | solo | plan-run (manual) | gpt-5.6-terra/high | — | потребляет P1.2 symbols и реализует precedence/diagnostics |
@@ -77,22 +76,17 @@ implementation. P5.6→P5.7 — contract→prescribed implementation, поэто
 
 ## Готовый launch-block текущего шага
 
-### S-P0.7 — ATTENTION bookkeeping fix-forward
+### S-P0-close — повторное закрытие P0
 
 | Параметр | Значение |
 |:--|:--|
 | Model | gpt-5.6-terra |
-| Thinking | high |
-| Context | continue (/clear) — ручной item |
-| Суть | Fresh executor закрывает только P0.7 и передаёт P0 на close/audit attempt 3. |
+| Thinking | low |
+| Context | NEW SESSION — шаг-не-item |
+| Суть | Сверить terminal P0 items и передать фазу на independent audit attempt 3. |
 
 ```
-/task:plan-run 2026.07.19-DUAL-PROVIDER P0.7
-
-РЕЖИМ: contract-neutral remediation одного нового item; P0 уже формально реопенена D67.
-ВХОД: phases/P0.md → второй Audit P0 block, затем P0.7; plan.md D52/D65–D68.
-СКОУП: исправить normative provenance links; создать hash-only checker/manifest и isolated-CLI finding; синхронизировать carriers и закрыть P0.7 отдельными item/bookkeeping commits.
-НЕ ТРОГАТЬ: historical audit/finding/journal/Completion Notes; P0.1–P0.6 semantics/status; research user-owned carrier; package/helper code; dirty main/FOREMAN/fleet; P1.
+/task:plan-close 2026.07.19-DUAL-PROVIDER P0
 ```
 
 ## Гейты владельца (сводно)

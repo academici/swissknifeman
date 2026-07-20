@@ -15,6 +15,7 @@
 | `brief/` | полный вход владельца, включая launch/hook и environment-defect refinements |
 | `findings/` | repo/provider evidence, immutable P0.1/P0.5 carriers, P0 clean-reproducibility repair, package recon P2/P3/P5 и current OpenAI model routing |
 | `artifacts/p0-evidence-anchors.json` | v1 sealed source-tree/input anchors for P0.1/P0.5 replay; D64 records only one external plugin path, never its contents |
+| `artifacts/d65-main-reconciliation-check.py` + `artifacts/d65-main-reconciliation.json` | stdlib-only D65-A/D68 exact-path checker и sealed base/main/delivery hash manifest |
 | `research/` | traceability, architecture/sequence и phase design syntheses P0–P7 |
 | `root/contracts/` | frozen P0 capability/artifact/migration-gate + draft config/harness/analytics contracts; skill/command contracts создаются своими owner-gated items |
 | `root/adr/` | архитектурные решения плана; ADR-0001 фиксирует canonical source → deterministic adapters |
@@ -28,6 +29,7 @@
 | `findings/P0-command-surface-correction.md` | findings | P0.5–P0.3 | terminal umbrella command-surface anchor; не переписывает historical P0.1 evidence |
 | `findings/P0-red-reproducibility-preflight-2026-07-20.md` | findings | P0.6 | clean committed-tree RED reproduction, immutable evidence anchors и exact prerequisite boundary |
 | `findings/P0-clean-reproducibility-repair.md` | findings | P0.6 | object-based replay attribution; D64 sealed external path-only correction without live node_modules fallback |
+| `findings/P0-isolated-cli-root-resolution-defect-2026-07-20.md` | findings | P0.7, pre-P7.4 reconciliation | path-only evidence bare/global CLI root defect, restored derived state и isolated write invariant |
 | `findings/P0-codex-launch-hook-defects-2026-07-20.md` | findings | bootstrap, P5–P7 | exit-127 dangling hook, duplicate global logger, local repair и launch preflight |
 | `findings/provider-capabilities-2026-07-19.md` | findings | P0, P3–P5 | first-party provider facts |
 | `findings/upstream-patterns-2026-07-19.md` | findings | P0–P3 | проверенные multi-provider patterns |

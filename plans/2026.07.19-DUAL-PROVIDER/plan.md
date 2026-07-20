@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.4.5 |
+| Version | 1.4.6 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
@@ -77,6 +77,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P2.2 | gpt-5.6-terra/high | manual | full | managed-boundary/repair semantics с риском чужих файлов; effort high+ MANDATORY |
 | P2.3 | gpt-5.6-sol/high | manual | full | explicit capability-aware catalog: открытое public design decision |
 | P2.4 | gpt-5.6-terra/medium | plan-exec | full | deterministic synthetic conformance/doctor/no-write evidence без новых design-решений |
+| P2.5 | gpt-5.6-terra/high | manual | full | prescribed RED remediation against frozen contract: fail-closed provenance, explicit managed-boundary codec and no-write conformance; effort high+ MANDATORY |
 | P3.1 | gpt-5.6-sol/high | manual | full | owner-gated public skill/publication contract и необратимые identity/install semantics |
 | P3.2 | gpt-5.6-terra/medium | plan-exec | full | prescribed Claude adapter refactor с byte-compat golden и без новых design-решений |
 | P3.3 | gpt-5.6-terra/high | manual | full | новый native Codex plugin/marketplace contract + cache-contained generated bundles; effort high+ MANDATORY |
@@ -111,7 +112,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 |:--|:--|:--|:--|
 | P0 | Evidence, vocabulary и запечатанные provider contracts | 7/7 | 🟢 Done |
 | P1 | Provider config/domain и backward-compatible resolution | 6/6 | 🟢 Done |
-| P2 | Deterministic adapters, provenance, lock и drift engine | 4/4 | 🟢 Done |
+| P2 | Deterministic adapters, provenance, lock и drift engine | 5/5 | 🟢 Done |
 | P3 | Dual skills publication и marketplaces | 0/5 | ⬜ Not started |
 | P4 | Task-command parity и provider-neutral model routing | 0/5 | ⬜ Not started |
 | P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 0/7 | ⬜ Not started |
@@ -197,12 +198,15 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | D73 | 2026-07-20 | Approval Owner accepts exact P1.2 CORE-PROVIDER G1–G6 as written: Rule of Three, one pure stdlib-only `core.provider` boundary, exactly 13 public symbols, metadata-only protocol, additive minor SemVer, and P1.2-only authority. | RAG:— (owner-grounded: exact reply `APPROVE P1.2 CORE-PROVIDER G1-G6 AS WRITTEN`; repo-grounded: `artifacts/P1-core-provider-domain-contribution-review.md`) — opens only the prescribed P1.2 core API implementation. |
 | D74 | 2026-07-20 | P1 формально реопенена после RED Audit P1: P1.5 доказывает G02 только committed synthetic fixtures, P1.6 владеет уже внесёнными documentation projections и append-only P1.2–P1.4 commit→item map. Historical P1.1–P1.4 statuses/specs и frozen provider-config v1.0.0 не переписываются. | RAG:— (repo-grounded: `phases/P1.md` Audit P1 2026-07-20, `artifacts/P1-provider-compatibility-matrix.md`, commit `33f35d8`) — выполняет ровно три audit finding без расширения authority на root config, FOREMAN, fleet или P2+. |
 | D75 | 2026-07-20 | Approval Owner принимает exact P2.1 CORE-ARTIFACT K1–K6 as written: Rule of Three и flat `core.provider_artifact` seam, complete additive ten-symbol API, frozen artifact v1.0.0 bytes/hash/provenance/path invariants without lifecycle writes, explicit caller renderer and dependency direction, minor SemVer classification, and P2.1-only authority. | RAG:— (owner-grounded: exact reply `APPROVE P2.1 CORE-ARTIFACT K1-K6 AS WRITTEN`; repo-grounded: `artifacts/P2-core-contribution-proposal.md`, `root/adr/ADR-0002-provider-artifact-kernel.md`) — opens only the prescribed P2.1 implementation; P2.2+, provider delivery, live carriers, FOREMAN and fleet remain excluded. |
+| D76 | 2026-07-20 | D58 fix-forward формально реопенит P2 после RED Audit P2 и добавляет один P2.5. Он исправляет только missing fail-closed provenance/override validation, clean/noop zero-write apply и missing managed-boundary/project-override goldens. Для существующей contract boundary разрешён один explicit caller-supplied codec pair на existing P2.2 plan/apply entry points; это не новый `core.__all__` symbol, не marker grammar, не package registry и не изменение K1–K6 или frozen v1.0.0 bytes. | RAG:— (repo-grounded: `phases/P2.md` Audit P2 2026-07-20, `root/contracts/provider-artifact-contract.md`, `research/17-p2-red-audit-remediation.md`) — audit выявил contract-required bug fixes, а не owner-level fork: codec только выражает уже замороженную границу package-owned blocks, P3+ и live carriers остаются закрыты. |
 
 ## 6. Update Log
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
 | 2026-07-20 | plan-close/Codex mechanical | P2 закрыта: terminal artifact kernel/lock/registry/conformance evidence сверены; следующий gate — independent P2 audit — детали см. phases/P2.md Phase Handoff. |
+| 2026-07-20 | plan-run/Codex gpt-5.6-terra high | P2.5 закрыт: D76 fail-closed provenance/override, no-write clean apply и explicit managed-block codec conformance — детали см. phases/P2.md P2.5 Completion Notes. |
+| 2026-07-20 | issue-planner/Codex gpt-5.6-sol high | D76: P2 реопенена 4/5 после RED audit; P2.5 ограничена fail-closed provenance/override, zero-write clean apply и boundary/override conformance без изменения frozen contract, K1–K6, package/live/FOREMAN/fleet scope. |
 | 2026-07-20 | gpt-5.6-terra/medium | P2.4 закрыт: synthetic preview/doctor/apply/repair conformance и protected no-write evidence — детали см. phases/P2.md P2.4 Completion Notes. |
 | 2026-07-19 | issue-planner/Codex gpt-5.6-sol high | Design pass 1/3: сохранены brief/findings/research, выбран target architecture, созданы draft contracts и скелеты 8 фаз/34 items; следующий фокус — детализация P0. |
 | 2026-07-20 | gpt-5.6-terra/high | P1.3 закрыт: pure resolver и thin skiller/maind adapters — детали см. phases/P1.md P1.3 Completion Notes. |

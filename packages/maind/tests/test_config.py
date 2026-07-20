@@ -107,6 +107,27 @@ class TestProviderConfig(unittest.TestCase):
             self.assertEqual(path.read_bytes(), before)
             self.assertEqual([item.code for item in result.diagnostics], ["PCFG_LEGACY_DEFAULT_APPLIED"])
 
+    def test_synthetic_protected_carriers_remain_byte_identical(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, env = make_repo(tmp)
+            repository_config = write_maind_config(root)
+            sentinels = {
+                repository_config: repository_config.read_bytes(),
+                root / "protected-plan" / "sentinel.txt": b"protected plan sentinel\n",
+                root / "external-fleet" / "config.json": b"external fleet sentinel\n",
+            }
+            for path, content in sentinels.items():
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(content)
+            before = {path: path.read_bytes() for path in sentinels}
+
+            loaded, source = load_config(env)
+            result = resolve_provider_config(loaded, catalog(), "alpha")
+
+            self.assertEqual(source, "config.json")
+            self.assertEqual([item.code for item in result.diagnostics], ["PCFG_LEGACY_DEFAULT_APPLIED"])
+            self.assertEqual({path: path.read_bytes() for path in sentinels}, before)
+
     def test_duplicate_fleet_project_is_fail_closed_without_mutation(self):
         providers = config({"codex": {"enabled": True}})
         fleet = {"projects": [{"id": "demo", "providers": providers}, {"id": "demo", "providers": providers}]}

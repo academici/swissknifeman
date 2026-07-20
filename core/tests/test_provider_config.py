@@ -1,4 +1,7 @@
+import json
+import tempfile
 import unittest
+from pathlib import Path
 
 from core import (CapabilityId, CapabilitySupport, ConfigSource, NativeExtension,
                   NativeExtensionId, ProviderConfigCatalog, ProviderConfigLayer,
@@ -53,6 +56,31 @@ def compatibility_layers(case_layers):
 
 
 class TestProviderConfigResolution(unittest.TestCase):
+    def test_synthetic_protected_carriers_remain_byte_identical(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            carriers = {
+                root / "repository" / "config.json": (
+                    b'{"providers":{"contract_version":"1.0.0","selection":'
+                    b'{"codex":{"enabled":true}}}}\n'
+                ),
+                root / "protected-plan" / "sentinel.txt": b"protected plan sentinel\n",
+                root / "external-fleet" / "config.json": b"external fleet sentinel\n",
+            }
+            for path, content in carriers.items():
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(content)
+            before = {path: path.read_bytes() for path in carriers}
+
+            project = json.loads((root / "repository" / "config.json").read_text(encoding="utf-8"))
+            result = resolve_provider_config(
+                catalog=catalog(),
+                project=layer("project", project["providers"]),
+            )
+
+            self.assertTrue(effective_projection(result)["codex"]["enabled"])
+            self.assertEqual({path: path.read_bytes() for path in carriers}, before)
+
     def test_legacy_default_is_distinct_and_sorted(self):
         result = resolve_provider_config(catalog=catalog())
         self.assertEqual(effective_projection(result)["claude-code"]["enabled"], True)

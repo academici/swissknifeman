@@ -43,3 +43,29 @@ class TestProviderConfigAdapter(unittest.TestCase):
             self.assertEqual(path.read_text(encoding="utf-8"), raw)
             self.assertEqual([item.code for item in result.diagnostics], ["PCFG_LEGACY_DEFAULT_APPLIED"])
             self.assertEqual(provider_config_layer(loaded, "legacy"), None)
+
+    def test_synthetic_protected_carriers_remain_byte_identical(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "registry"
+            (root / "profiles").mkdir(parents=True)
+            (root / "profiles" / "fixture.json").write_text("{}\n", encoding="utf-8")
+            env = Env(root, home=Path(tmp) / "home")
+            project = Path(tmp) / "project"
+            project.mkdir()
+            project_config = project / ".swissknife.json"
+            project_config.write_bytes(b'{"project_type":"fixture"}\n')
+            sentinels = {
+                project_config: project_config.read_bytes(),
+                Path(tmp) / "protected-plan" / "sentinel.txt": b"protected plan sentinel\n",
+                Path(tmp) / "external-fleet" / "config.json": b"external fleet sentinel\n",
+            }
+            for path, content in sentinels.items():
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(content)
+            before = {path: path.read_bytes() for path in sentinels}
+
+            loaded = load_config(env, project)
+            result = resolve_provider_config(loaded, catalog(), project_id="fixture")
+
+            self.assertEqual([item.code for item in result.diagnostics], ["PCFG_LEGACY_DEFAULT_APPLIED"])
+            self.assertEqual({path: path.read_bytes() for path in sentinels}, before)

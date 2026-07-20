@@ -28,26 +28,11 @@ fixture. `packages/maind/tests/test_config.py` covers C16 through its actual fle
 adapter. The suite also verifies deterministic error ordering, compound map leaf provenance,
 and input immutability.
 
-## Legacy carrier no-write evidence
+## Fixture-backed protected-path evidence
 
-Tests pass only synthetic mappings or `TemporaryDirectory` files. The skiller test loads every
-current non-provider `.swissknife.json` key, resolves the legacy result, and compares the input
-bytes. The maind test writes a synthetic `config.json`, calls its real loader plus adapter, and
-compares the same file bytes. Neither test names the repository root `config.json` nor a consumer
-project path.
-
-Protected-path snapshot is captured before and after validation with:
-
-```text
-git status --short -- config.json plans/2026.07.18-FOREMAN
-sha256sum config.json
-find plans/2026.07.18-FOREMAN -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum
-find /home/vostrikov/projects -mindepth 1 -maxdepth 2 -type f -name config.json -not -path '/home/vostrikov/projects/packages/swissknifeman/config.json' -print | sort
-```
-
-The initial repository-root `config.json` SHA-256 is
-`52f632bf796a48a2085485299d168954db2c6e1f8571983cafc01c2d4cd379c5`. The FOREMAN tree
-aggregate is `18062affa90b37759e8fb858f53dd7bc374310dfe1ff0562a9c83f4109b58802`; its two
-pre-existing owner modifications remain baseline dirt and are not changed by P1.4. The external
-fleet-root discovery returned no `config.json` candidates under `/home/vostrikov/projects` at the
-snapshot anchor. The final post-validation snapshot must exactly match these values and status.
+P1.5 replaces the historical owner-state snapshot with committed fixture assertions. Each focused
+test constructs a repository carrier, protected-plan sentinel, and external-fleet sentinel below
+one `TemporaryDirectory`; it snapshots all bytes, calls the actual loader/resolver path, and
+compares every byte afterwards. The proof is limited to supplied synthetic carriers: it makes no
+claim about mutable owner state. Exact replay commands and test names are in
+`P1-protected-path-fixture-evidence.md`.

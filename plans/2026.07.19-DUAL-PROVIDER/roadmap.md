@@ -8,10 +8,10 @@
 
 **Обновлён:** 2026-07-20 · **Соответствует plan.md:** v1.4.0
 
-> **Статус exec:** P0 формально реопенена D61 после terminal audit RED; frozen P0
-> contracts/ADR и historical P0.1/P0.5 carriers остаются неизменными. P0.6 terminal
-> на clean execution target по D63–D65; следующий шаг — повторный `plan-close P0`.
-> P1.1 закрыт до независимого literal GREEN G01 audit; reconciliation с dirty main
+> **Статус exec:** P0 повторно закрыта GREEN после D61–D65; frozen P0 contracts/ADR
+> и historical P0.1/P0.5 carriers остаются неизменными. Следующий шаг — independent
+> `/task:plan-audit 2026.07.19-DUAL-PROVIDER P0` в новой `gpt-5.6-sol/xhigh` session.
+> P1.1 закрыт до literal GREEN G01 audit; reconciliation с dirty main
 > перенесена, но не отменена, и обязательна перед P7.4.
 > Исполнительские модели — только current ChatGPT/Codex family: Terra для prescribed
 > implementation, Sol для design/contracts/audit. GPT-5.6 Luna не используется на этом
@@ -27,7 +27,7 @@
 | P0.2 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/high | ✅ D53 | vocabulary/scenarios и distinction Command Surface / Task Command заморожены |
 | P0.3 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/xhigh | ✅ D55 | capability/artifact contracts v1.0.0 + ADR accepted |
 | P0.4 | solo | plan-run/plan-close repair — 🟢 | gpt-5.6-sol/high; repair gpt-5.6-sol/xhigh | ✅ D59; D60 contract-neutral repair | exact structural G11 revalidation green; frozen contract unchanged |
-| P0.6 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | ✅ D63-B · D64-A · D65-A | sealed clean-tree lint/evidence replay закрыт; P0 остаётся RED до independent re-audit |
+| P0.6 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | ✅ D63-B · D64-A · D65-A | sealed clean-tree lint/evidence replay закрыт; P0 reclose завершён, G01 ждёт independent audit |
 | P1.1 | solo | plan-run (manual) | gpt-5.6-sol/xhigh | ✅ provider-config contract | owner-gated public precedence/config freeze |
 | P1.2 | solo | plan-run (manual) | gpt-5.6-terra/high | ✅ shared-core contribution | prescribed API после P1.1; public core boundary требует full review |
 | P1.3 | solo | plan-run (manual) | gpt-5.6-terra/high | — | потребляет P1.2 symbols и реализует precedence/diagnostics |
@@ -75,17 +75,17 @@ implementation. P5.6→P5.7 — contract→prescribed implementation, поэто
 
 ## Готовый launch-block текущего шага
 
-### S-P0-CLOSE — повторное закрытие фазы
+### S-P0-AUDIT — независимый G01 аудит фазы
 
 | Параметр | Значение |
 |:--|:--|
-| Model | gpt-5.6-terra |
-| Thinking | low — mechanical phase reconciliation; evidence gates не ослаблять |
+| Model | gpt-5.6-sol |
+| Thinking | xhigh — independent adversarial G01 verification |
 | Context | NEW SESSION — шаг-не-item |
-| Суть | Сверить 6/6 terminal items и повторно закрыть P0 перед independent audit. |
+| Суть | Независимо переаудировать повторно закрытую P0 и выдать literal G01 verdict. |
 
 ```
-/task:plan-close 2026.07.19-DUAL-PROVIDER P0
+/task:plan-audit 2026.07.19-DUAL-PROVIDER P0
 ```
 
 ## Гейты владельца (сводно)

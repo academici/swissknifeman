@@ -217,6 +217,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | 2026-07-20 | plan-close/Codex gpt-5.6-sol xhigh | P0 закрыта: terminal contracts/evidence сверены после D60 fix-forward — детали см. phases/P0.md Phase Handoff; roadmap переведён на independent G01 audit. |
 | 2026-07-20 | issue-planner/Codex gpt-5.6-sol xhigh | D61 RED-remediation design: P0 реопенена 5/6, добавлен один owner-gated P0.6 с clean-package prerequisite и anchored evidence contract; package/FOREMAN/fleet/user dirt не исполнялись и не менялись. |
 | 2026-07-20 | plan-run/Codex gpt-5.6-terra high | P0.6 закрыт: D63–D65 закрепили isolated delivery и sealed replay; review findings исправлены отдельными commits — детали см. phases/P0.md P0.6 Completion Notes. |
+| 2026-07-20 | plan-close/Codex mechanical | P0 повторно закрыта: terminal items, sealed replay и frozen contracts сверены после D61–D65 — детали см. phases/P0.md Phase Handoff; roadmap переведён на independent G01 audit. |
 
 ## 7. Contracts
 

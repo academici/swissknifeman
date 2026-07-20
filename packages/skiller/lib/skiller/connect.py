@@ -11,6 +11,7 @@ from .config import (CORE_BUCKETS, CORE_PLUGIN, CORE_SKILLS,
                      load_config, resolve_selection, resolve_target)
 from .hub import generate_hub, hub_artifacts_exist
 from .state import upsert_project
+from .publication import build_connect_distribution_plan
 
 
 def _resident_tokens(env, plugins):
@@ -45,7 +46,7 @@ def _marketplace_declares(env, plugin_name):
     return any(p.get("name") == plugin_name for p in data.get("plugins", []))
 
 
-def do_connect(env, target, opts, register=True, fix_path_drift=False):
+def _do_connect_claude(env, target, opts, register=True, fix_path_drift=False):
     root = env.root
     config = load_config(env, target)
     flag_plugins = [p for p in opts.get("plugins", "").split(",") if p]
@@ -242,6 +243,7 @@ def do_connect(env, target, opts, register=True, fix_path_drift=False):
         "plugins": plugins,
         "settings_file": settings_file,
         "hub": hub or hub_artifacts_exist(target),
+        "provider": "claude-code",
     }
     if register and not dry_run:
         upsert_project(env, record)
@@ -249,6 +251,33 @@ def do_connect(env, target, opts, register=True, fix_path_drift=False):
     print("Далее: перезапустите сессию Claude Code в проекте "
           "(или /plugin marketplace update swissknifeman)")
     return record
+
+
+def do_connect(env, target, opts, register=True, fix_path_drift=False):
+    """Apply a preflighted provider marketplace plan.
+
+    The legacy Claude writer remains byte-compatible.  Codex self-host delivery
+    is intentionally a verified generated marketplace, not a second settings
+    format or an implicit global install.
+    """
+    config = load_config(env, target)
+    repo_root = find_repo_root(env.root) or env.root
+    plans = build_connect_distribution_plan(config, target, project_id=target.name,
+                                            repo_root=repo_root)
+    records = []
+    for plan in plans:
+        if plan.provider_id == "claude-code":
+            records.append(_do_connect_claude(env, target, opts, register=register,
+                                              fix_path_drift=fix_path_drift))
+        elif plan.provider_id == "codex":
+            print(f"Codex marketplace: {plan.target} (self-host generated projection; native install is explicit: skiller codex-install)")
+            record = {"path": str(target), "channel": "marketplace",
+                      "provider": "codex", "target": str(plan.target),
+                      "hub": hub_artifacts_exist(target)}
+            if register and not opts.get("dry_run"):
+                upsert_project(env, record)
+            records.append(record)
+    return records[0] if len(records) == 1 else {"providers": records}
 
 
 def cmd_connect(env, argv):

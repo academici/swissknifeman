@@ -21,13 +21,22 @@ def save_db(env, db):
 
 
 def upsert_project(env, record):
-    """Records keyed by (path, channel); preserves first_connected_at."""
+    """Records keyed by (path, channel, provider); preserves first_connected_at.
+
+    Old rows predate provider-aware delivery.  Their absent provider is the frozen
+    legacy Claude default, so an ordinary Claude refresh updates that row instead
+    of creating a duplicate record.
+    """
     db = load_db(env)
     # нормализуем путь: иначе разные repr одного каталога (симлинк, ./, ..) → дубли
     record["path"] = str(Path(record["path"]).resolve())
     record["updated_at"] = now_iso()
+    provider = record.get("provider", "claude-code")
+    record["provider"] = provider
     for i, p in enumerate(db["projects"]):
-        if p["path"] == record["path"] and p["channel"] == record["channel"]:
+        existing_provider = p.get("provider", "claude-code")
+        if (p["path"] == record["path"] and p["channel"] == record["channel"]
+                and existing_provider == provider):
             record["first_connected_at"] = p.get("first_connected_at",
                                                  record["updated_at"])
             db["projects"][i] = record

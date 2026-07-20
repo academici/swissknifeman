@@ -367,7 +367,7 @@ def _recover_locked_from_manifest(target, skills_path):
 
 
 # --- sync ---------------------------------------------------------------------
-def plan_sync(env, target, cfg, include_core=False):
+def plan_sync(env, target, cfg, include_core=False, provider="claude-code"):
     """Сухой расчёт: что добавить/обновить/удалить. Ничего не пишет.
 
     Возвращает dict: {add, update, remove, keep, conflicts, skills_path, entries}.
@@ -382,7 +382,8 @@ def plan_sync(env, target, cfg, include_core=False):
     skills_path = cfg.get("skills_path") or DEFAULT_SKILLS_PATH
     dest_root = Path(target) / skills_path
     lock = load_lock(target)
-    locked = lock.get("skills", {})
+    locked = (lock.get("skills", {}) if provider == "claude-code"
+              else lock.get("providers", {}).get(provider, {}))
     if not locked and _lock_broken(target):
         # Lock-файл СТРУКТУРНО битый (не легитимно пустой — см. _lock_broken) —
         # восстанавливаем managed-набор из манифеста, иначе см. докстринг
@@ -453,16 +454,18 @@ def _remove_path(path):
 
 
 def sync_skillset(env, target, cfg, dry_run=False, force=False,
-                  include_core=False):
+                  include_core=False, provider="claude-code", plan=None):
     """Применить конфиг: скопировать новые/обновлённые, удалить выбывшие managed,
     переписать skills-lock.json. Чужие скиллы остаются как есть (конфликты
     пропускаются с warning; --force перетирает чужой путь нашим скиллом).
     include_core=True — раздать CORE_SKILLS по умолчанию (как vendor/connect)."""
-    plan = plan_sync(env, target, cfg, include_core=include_core)
+    if plan is None:
+        plan = plan_sync(env, target, cfg, include_core=include_core, provider=provider)
     dest_root = plan["dest_root"]
     entries = {e["name"]: e for e in plan["entries"]}
     lock = load_lock(target)
-    locked = dict(lock.get("skills", {}))
+    locked = dict(lock.get("skills", {}) if provider == "claude-code"
+                  else lock.get("providers", {}).get(provider, {}))
 
     def contained(path):
         return is_within(path, dest_root)
@@ -554,12 +557,16 @@ def sync_skillset(env, target, cfg, dry_run=False, force=False,
             "installed_path": f"{plan['skills_path']}/{name}",
         })
 
-    new_lock = {
-        "version": lock.get("version", LOCK_VERSION),
-        "skills": dict(sorted(locked.items())),
-        "sources": {**lock.get("sources", {}),
-                    SOURCE: {"ref": "registry", "mode": "vendor"}},
-    }
+    new_lock = dict(lock)
+    new_lock["version"] = lock.get("version", LOCK_VERSION)
+    if provider == "claude-code":
+        new_lock["skills"] = dict(sorted(locked.items()))
+    else:
+        providers = dict(lock.get("providers", {}))
+        providers[provider] = dict(sorted(locked.items()))
+        new_lock["providers"] = dict(sorted(providers.items()))
+    new_lock["sources"] = {**lock.get("sources", {}),
+                           SOURCE: {"ref": "registry", "mode": "vendor"}}
     if not dry_run:
         # Порядок НАМЕРЕННЫЙ: skills-lock.json — источник истины детекта (plan_sync читает
         # load_lock, НЕ манифест), поэтому пишем его авторитетно ПОСЛЕ того, как файлы уже на
@@ -568,12 +575,12 @@ def sync_skillset(env, target, cfg, dry_run=False, force=False,
         # sync корректен (по lock), манифест добьётся. (Не переставлять: манифест-первым сделал
         # бы lock устаревшим при краше и сломал бы детект.)
         write_lock(target, new_lock)
-        _write_manifest(target, plan["skills_path"], new_lock["skills"],
+        _write_manifest(target, plan["skills_path"], locked,
                         entries, cfg)
         # gitignore_managed: держать managed-скиллы вне git (воспроизводимы sync),
         # локальные/кастомные — в репо. Список авто-сопровождается каждым sync.
         if cfg.get("gitignore_managed"):
-            _write_gitignore(target, plan["skills_path"], new_lock["skills"])
+            _write_gitignore(target, plan["skills_path"], locked)
         else:
             _remove_our_gitignore(target, plan["skills_path"])
     # Факт (что реально скопировано/пропущено) отдельно от плана (plan["add"/"update"]) —
@@ -684,7 +691,7 @@ def _sync_report_counts(plan, dry_run, force):
 
 
 # --- integrate/onboard entry (vendor-канал «опубликовать в репо») -------------
-def do_sync(env, target, opts, register=True):
+def _do_sync_provider(env, target, opts, register=True, plan=None):
     """Vendor-канал через sync: «опубликовать» скиллы физически в .claude/skills/.
 
     Это путь для проектов, которые отдают сторонним разработчикам БЕЗ доступа к
@@ -697,11 +704,14 @@ def do_sync(env, target, opts, register=True):
     force = opts.get("force", False)
     no_core = opts.get("no_core", False)
 
+    provider = opts.get("provider", "claude-code")
     cfg, profile_name, _created = materialize_skillset_config(
         env, target, opts, dry=dry)
+    if provider == "codex":
+        cfg = {**cfg, "skills_path": ".agents/skills", "agent": "codex"}
 
     plan = sync_skillset(env, target, cfg, dry_run=dry, force=force,
-                         include_core=not no_core)
+                         include_core=not no_core, provider=provider, plan=plan)
     n_add, n_upd, _n_repl, n_skip = _sync_report_counts(plan, dry, force)
     print(("[dry-run] " if dry else "")
           + f"sync: +{n_add} ~{n_upd} "
@@ -716,9 +726,11 @@ def do_sync(env, target, opts, register=True):
         print(f"  ПРОПУЩЕНО при копировании ({n_skip}): "
               f"{', '.join(plan['skip_copy'])} — см. предупреждения выше, "
               f"sync для них НЕ завершён")
+        die(f"SPUB_OWNERSHIP_CONFLICT: provider {provider} vendor apply incomplete; "
+            "repair: resolve the target conflict and rerun `skiller sync`")
 
     # permissions-пресеты (deny мусора + allow стека) — паритет с connect/do_vendor
-    if not opts.get("no_permissions"):
+    if provider == "claude-code" and not opts.get("no_permissions"):
         apply_permissions(env, target, dry_run=dry)
 
     if opts.get("hub") and not dry:
@@ -728,13 +740,42 @@ def do_sync(env, target, opts, register=True):
         "path": str(target),
         "channel": "vendor",
         "profile": profile_name,
-        "agent": "claude",
+        "agent": "codex" if provider == "codex" else "claude",
         "skills_path": plan["skills_path"],
+        "provider": provider,
         "hub": opts.get("hub") or hub_artifacts_exist(target),
     }
     if register and not dry:
         upsert_project(env, record)
     return record
+
+
+def do_sync(env, target, opts, register=True):
+    """Build every selected provider plan before the first managed write."""
+    from .config import load_config
+    from .publication import build_vendor_distribution_plan
+    config = load_config(env, target)
+    base_cfg, _profile, _created = materialize_skillset_config(
+        env, target, opts, dry=opts.get("dry_run", False))
+    paths = build_vendor_distribution_plan(
+        config, target, project_id=target.name,
+        claude_path=base_cfg.get("skills_path") or DEFAULT_SKILLS_PATH,
+        codex_path=".agents/skills")
+    planned = []
+    for descriptor in paths:
+        provider = descriptor.provider_id
+        provider_cfg = ({**base_cfg, "skills_path": ".agents/skills", "agent": "codex"}
+                        if provider == "codex" else base_cfg)
+        # The immutable copy plan is calculated for every selected provider
+        # before applying any of them.  A later provider conflict therefore
+        # cannot turn the earlier provider into a misleading partial success.
+        planned.append((provider, plan_sync(
+            env, target, provider_cfg, include_core=not opts.get("no_core", False),
+            provider=provider)))
+    records = [_do_sync_provider(env, target, {**opts, "provider": provider},
+                                 register=register, plan=plan)
+               for provider, plan in planned]
+    return records[0] if len(records) == 1 else {"providers": records}
 
 
 # --- CLI ----------------------------------------------------------------------
@@ -788,28 +829,8 @@ def cmd_sync(env, argv):
         die(f"{skillset_config_path(target)} не найден — создайте конфиг "
             "vendor-режима (mode=vendor, include/buckets/exclude)")
 
-    plan = sync_skillset(env, target, cfg, dry_run=opts["dry_run"],
-                         force=opts["force"], include_core=not opts["no_core"])
-    prefix = "[dry-run] " if opts["dry_run"] else ""
-    n_add, n_upd, n_repl, n_skip = _sync_report_counts(
-        plan, opts["dry_run"], opts["force"])
-    print(f"{prefix}sync ({via}): +{n_add} ~{n_upd} "
-          f"-{len(plan['remove'])} ={len(plan['keep'])}"
-          + (f" !{n_repl}" if n_repl else "")
-          + f" (skills_path: {plan['skills_path']})")
-    if plan["conflicts"] and not opts["force"]:
-        print(f"  конфликты (чужие, пропущены): {', '.join(plan['conflicts'])} "
-              "— --force чтобы заменить")
-    if plan["skipped"]:
-        print(f"  пропущено (нет в реестре): {', '.join(plan['skipped'])}")
-    if n_skip:
-        print(f"  ПРОПУЩЕНО при копировании ({n_skip}): "
-              f"{', '.join(plan['skip_copy'])} — см. предупреждения выше, "
-              f"sync для них НЕ завершён")
-
     # Индекс скиллов в корне проекта: догоняем поведение vendor — обновляем,
     # если хаб уже есть или запрошен явно. --no-hub перебивает автоопределение.
     want_hub = opts["hub"] or (hub_artifacts_exist(target)
                                and not opts["no_hub"])
-    if want_hub and not opts["dry_run"]:
-        generate_hub(env, target)
+    do_sync(env, target, {**opts, "hub": want_hub})

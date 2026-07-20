@@ -3,8 +3,8 @@ import json
 import os
 from pathlib import Path
 
-from core import (ConfigSource, ProviderConfigCatalog, ProviderConfigLayer,
-                  ResolvedProviderConfig, detect_project_type,
+from core import (CapabilityId, CapabilitySupport, ConfigSource, ProviderConfigCatalog, ProviderConfigLayer,
+                  ProviderId, ResolvedProviderConfig, SupportLevel, detect_project_type,
                   resolve_provider_config as resolve_shared_provider_config)
 
 from .common import (AGENT_DEFAULTS, CONFIG_KEYS, confirm, die,
@@ -182,6 +182,17 @@ def resolve_provider_config(config, catalog: ProviderConfigCatalog, *, project_i
                                           project=provider_config_layer(config, project_id),
                                           fleet_project=fleet_project,
                                           fleet_defaults=fleet_defaults)
+
+
+def resolve_distribution_providers(config, *, project_id="local"):
+    """Resolve selected skill-distribution providers through the frozen P1 adapter."""
+    catalog = ProviderConfigCatalog(
+        "1.0.0", (ProviderId.CLAUDE_CODE, ProviderId.CODEX),
+        (CapabilitySupport(CapabilityId("skills.repository"), ProviderId.CLAUDE_CODE,
+                           SupportLevel.NATIVE),
+         CapabilitySupport(CapabilityId("skills.repository"), ProviderId.CODEX,
+                           SupportLevel.NATIVE)), ())
+    return resolve_provider_config(config, catalog, project_id=project_id)
 
 
 def render_provider_diagnostic(diagnostic):

@@ -4,6 +4,12 @@
 
 ### Added
 
+- **skiller:** provider-aware Claude/Codex distribution preflight, provider-qualified
+  vendor locks and explicit `skiller codex-install`; normal connect/update/doctor and
+  dry-runs never invoke the native user-global installer.
+
+### Added
+
 - **task — historical journal exception v1.** Owner-gated append-only sidecar for one exact
   historical `friction` schema error; strict writer/linter validation and negative tests.
 - **skiller — `plan-protocol` 2.9.0 → 2.10.0.** Documents the sealed D51 exception lifecycle.

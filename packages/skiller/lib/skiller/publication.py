@@ -8,6 +8,8 @@ manifest.
 """
 from dataclasses import dataclass
 import json
+import shutil
+import subprocess
 from pathlib import Path
 from typing import Mapping, Sequence
 
@@ -495,3 +497,86 @@ def _freeze_value(value: object) -> object:
     if isinstance(value, list):
         return tuple(_freeze_value(item) for item in value)
     return value
+
+
+# P3.4 distribution plans live beside the P3-owned semantic publication seam.
+# They intentionally consume package config only through the P1 adapter and do
+# not scan a provider manifest or execute a native installer during planning.
+@dataclass(frozen=True)
+class ProviderDistributionPlan:
+    provider_id: str
+    channel: str
+    target: Path
+    target_identity: str
+    source_hash: str
+    rendered_hash: str
+
+
+def selected_distribution_providers(config, *, project_id: str) -> tuple[str, ...]:
+    from .common import die
+    from .config import resolve_distribution_providers
+    resolved = resolve_distribution_providers(config, project_id=project_id)
+    if resolved.effective is None:
+        diagnostics = ", ".join(item.code for item in resolved.diagnostics)
+        die(f"provider distribution blocked: {diagnostics or 'PCFG_SCHEMA_INVALID'}")
+    return tuple(item.provider_id.value for item in resolved.effective if item.enabled)
+
+
+def build_vendor_distribution_plan(config, target: Path, *, project_id: str,
+                                   claude_path: str, codex_path: str) -> tuple[ProviderDistributionPlan, ...]:
+    from .common import die
+    paths = {"claude-code": claude_path, "codex": codex_path}
+    plans = tuple(ProviderDistributionPlan(provider, "vendor", target / paths[provider],
+                                           (target / paths[provider]).as_posix(), "", "")
+                  for provider in selected_distribution_providers(config, project_id=project_id))
+    seen = set()
+    for plan in plans:
+        resolved = plan.target.resolve(strict=False)
+        if resolved in seen:
+            die("SPUB_OWNERSHIP_CONFLICT: selected providers share one managed vendor path")
+        seen.add(resolved)
+    return plans
+
+
+def build_connect_distribution_plan(config, target: Path, *, project_id: str,
+                                    repo_root: Path) -> tuple[ProviderDistributionPlan, ...]:
+    from .common import die
+    plans = []
+    for provider in selected_distribution_providers(config, project_id=project_id):
+        if provider == "claude-code":
+            plans.append(ProviderDistributionPlan(provider, "marketplace", target / ".claude",
+                                                   ".claude", "", ""))
+        elif provider == "codex":
+            if target.resolve() != repo_root.resolve():
+                die("SPUB_PATH_UNCONTAINED: Codex marketplace thin adapter is self-host only; use skiller sync for a vendor consumer")
+            marketplace = repo_root / ".agents" / "plugins" / "marketplace.json"
+            if not marketplace.is_file():
+                die("SPUB_BUNDLE_INCOMPLETE: generated Codex marketplace is missing; run skiller registry")
+            plans.append(ProviderDistributionPlan(provider, "marketplace", marketplace,
+                                                   marketplace.as_posix(), "", ""))
+        else:
+            die(f"SPUB_CAPABILITY_UNSUPPORTED: provider {provider}")
+    return tuple(plans)
+
+
+def run_codex_native_install(*, repo_root: Path, plugin: str, dry_run: bool,
+                             runner=subprocess.run, executable: str = "codex") -> tuple[bool, str]:
+    """The explicit native global transaction; dry-run never probes or runs it."""
+    from .common import MARKETPLACE
+    if dry_run:
+        return True, "SPUB_INSTALL_EXPLICIT_REQUIRED: dry-run; native installer was not invoked"
+    if shutil.which(executable) is None:
+        return False, "SPUB_INSTALL_UNAVAILABLE: codex executable not found"
+    commands = (
+        [executable, "plugin", "marketplace", "add", str(repo_root)],
+        [executable, "plugin", "add", f"{plugin}@{MARKETPLACE}"],
+    )
+    for command in commands:
+        try:
+            result = runner(command, check=False, capture_output=True, text=True)
+        except OSError as exc:
+            return False, f"SPUB_INSTALL_UNAVAILABLE: {exc}"
+        if getattr(result, "returncode", 1) != 0:
+            detail = (getattr(result, "stderr", "") or getattr(result, "stdout", "")).strip()
+            return False, f"SPUB_INSTALL_UNAVAILABLE: {' '.join(command[:3])} failed: {detail}"
+    return True, f"codex/native-install: marketplace={repo_root}, plugin={plugin}@{MARKETPLACE}"

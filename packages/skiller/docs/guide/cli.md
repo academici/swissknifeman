@@ -21,11 +21,26 @@
 в `.claude/settings.local.json`. Merge-only: явный `false` не перетирается,
 включённое сверх профиля не отключается, бэкап в `*.bak`.
 
+Provider selection берётся из `.swissknife.json::providers`: при отсутствии
+слоя сохраняется legacy-режим только для Claude Code. Codex marketplace может
+быть thin-проекцией лишь в self-host checkout реестра; внешний проект получает
+Codex skills через `skiller sync` в `.agents/skills`. Dual-selection проходит
+preflight всех provider-целей до первой записи, поэтому конфликт не оставляет
+успешную половину подключения.
+
 ```
 skiller connect [--profile P | --plugins a,b]
                       [--file settings.json|settings.local.json]
                       [--cleanup-vendored] [--list] [--dry-run] [--hub]
 ```
+
+### `./packages/skiller/install.sh --codex-plugin NAME`
+
+Единственная явная операция, которая меняет user-global Codex: добавляет
+marketplace текущего checkout и устанавливает выбранный plugin. `connect`,
+`sync`, `update`, `doctor` и `--dry-run` её не вызывают. Если Codex CLI или
+generated marketplace недоступны, installer отказывает до native вызова;
+проектные artifacts остаются отдельной транзакцией.
 
 ### `skiller vendor`
 
@@ -139,6 +154,11 @@ Read-only отчёт: корень и маркер, каналы, дрейф п�
 Запись атомарная; повреждённый файл переименовывается в
 `projects.json.corrupt.<дата>` и пересоздаётся — записи восстанавливаются
 adopt-ом при следующем `update` в проекте.
+
+Provider-aware vendor lock хранит legacy Claude entries в `skills`, а Codex — в
+`providers.codex`; ключ карты проекта — `(path, channel, provider)`. Два
+provider-а не могут владеть одним physical skills path: операция fail-closed до
+копирования или prune.
 
 ## Troubleshooting
 

@@ -25,6 +25,12 @@ def detect_marketplace_file(target):
     return None
 
 
+def detect_codex_marketplace(target):
+    """The repository-local native Codex marketplace marker (no global state)."""
+    marker = target / ".agents" / "plugins" / "marketplace.json"
+    return marker if marker.is_file() else None
+
+
 def detect_vendor_path(target, config):
     candidates = []
     if config.get("skills_path"):
@@ -67,6 +73,7 @@ def replay_opts(record):
 def update_one(env, target, dry_run=False):
     config = load_config(env, target)
     mk_file = detect_marketplace_file(target)
+    codex_marketplace = detect_codex_marketplace(target)
     # sync-канал (.swissknifeman/config.json) владеет тем же .swissknifeman-manifest.json,
     # что и legacy vendor — поэтому при наличии sync-конфига обновляем sync'ом (он
     # уважает skill-granular include/exclude), а detect_vendor_path не трогаем.
@@ -74,7 +81,7 @@ def update_one(env, target, dry_run=False):
     vendor_path = None if sync_cfg else detect_vendor_path(target, config)
     records = {r["channel"]: r for r in db_records(env, target)}
 
-    if not mk_file and not sync_cfg and not vendor_path:
+    if not mk_file and not codex_marketplace and not sync_cfg and not vendor_path:
         if records:
             warn(f"{target}: записан в projects.json, но маркеры подключения "
                  f"не найдены — забыть: skiller list --prune")
@@ -84,20 +91,22 @@ def update_one(env, target, dry_run=False):
         return False
 
     ok = True
-    if mk_file:
+    if mk_file or codex_marketplace:
         rec = records.get("marketplace", {})
         if not rec:
             print(f"NOTE: {target} не был в projects.json — регистрирую (adopt)")
         opts = replay_opts(rec)
-        opts["file"] = mk_file
+        if mk_file:
+            opts["file"] = mk_file
         opts["dry_run"] = dry_run
         opts["hub"] = bool(rec.get("hub")) or hub_artifacts_exist(target)
         print(f"--- update (marketplace): {target} ---")
         # P7.5: бакет слит (alias) — старое имя ещё включено у проекта → одна строка,
         # без нагнетания (сам update ничего не переключает, только подсказывает).
-        for hint in alias_migration_hints(
-                load_bucket_aliases(env), enabled_marketplace_plugins(target, mk_file)):
-            print(f"Подсказка: {hint}")
+        if mk_file:
+            for hint in alias_migration_hints(
+                    load_bucket_aliases(env), enabled_marketplace_plugins(target, mk_file)):
+                print(f"Подсказка: {hint}")
         do_connect(env, target, opts, fix_path_drift=True)
         print_registry_state(env)
     if sync_cfg:

@@ -108,7 +108,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P0 | Evidence, vocabulary и запечатанные provider contracts | 7/7 | 🟢 Done |
-| P1 | Provider config/domain и backward-compatible resolution | 2/4 | 🟡 In progress |
+| P1 | Provider config/domain и backward-compatible resolution | 3/4 | 🟡 In progress |
 | P2 | Deterministic adapters, provenance, lock и drift engine | 0/4 | ⬜ Not started |
 | P3 | Dual skills publication и marketplaces | 0/5 | ⬜ Not started |
 | P4 | Task-command parity и provider-neutral model routing | 0/5 | ⬜ Not started |
@@ -199,6 +199,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
 | 2026-07-19 | issue-planner/Codex gpt-5.6-sol high | Design pass 1/3: сохранены brief/findings/research, выбран target architecture, созданы draft contracts и скелеты 8 фаз/34 items; следующий фокус — детализация P0. |
+| 2026-07-20 | gpt-5.6-terra/high | P1.3 закрыт: pure resolver и thin skiller/maind adapters — детали см. phases/P1.md P1.3 Completion Notes. |
 | 2026-07-19 | issue-planner/Codex gpt-5.6-sol high | ACTIVE перехвачен у `2026.07.18-FOREMAN`; FOREMAN paused на P1.3/P1.4 boundary до release gate P7.4. |
 | 2026-07-19 | issue-planner/Codex high | P0 детализирована до DoR: 4 sequential items, per-item Routing, owner gates, pre-mortem и третий draft migration-gate contract; execution ещё не начинался. |
 | 2026-07-19 | issue-planner/Codex gpt-5.6-sol xhigh | P1 детализирована до DoR: frozen config-contract gate, pure core boundary, per-item Routing и compatibility/no-write matrix; P0 остаётся неисполненным entry gate. |

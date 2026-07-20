@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.3.1 |
+| Version | 1.4.0 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
@@ -18,7 +18,7 @@
 | Approval Owner | Dmitry Vostrikov |
 | Home | repo:/home/vostrikov/projects/packages/swissknifeman |
 | Paused By | — |
-| Design Passes | 3/3 — ecosystem core, 8 фаз/40 items, публичные contracts и высокий cross-package coupling; post-exec prerequisite remediation добавила P0.5 без переписывания terminal P0.1 |
+| Design Passes | 3/3 — ecosystem core, 8 фаз/41 items, публичные contracts и высокий cross-package coupling; RED-remediation добавила P0.6 без переписывания terminal P0.1/P0.5 |
 
 ## 1. Context
 
@@ -65,6 +65,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P0.2 | gpt-5.6-sol/high | manual | full | cross-package ubiquitous language и owner-approved capability semantics |
 | P0.3 | gpt-5.6-sol/xhigh | manual | full | load-bearing frozen public contracts + ADR; необратимая цена semantic ошибки |
 | P0.4 | gpt-5.6-sol/high | manual | full | ecosystem migration/FOREMAN/fleet gate contract и pre-mortem reconciliation |
+| P0.6 | gpt-5.6-terra/high | manual | full | prescribed shared-package prerequisite + anchored evidence repair; owner D# и effort high+ MANDATORY |
 | P1.1 | gpt-5.6-sol/xhigh | manual | full | freeze публичного provider-config contract: необратимая semantic цена ошибки; effort high+ MANDATORY |
 | P1.2 | gpt-5.6-terra/high | manual | full | prescribed public core API против frozen contracts; effort high+ MANDATORY |
 | P1.3 | gpt-5.6-terra/high | manual | full | cross-package precedence/provenance/diagnostics; effort high+ MANDATORY |
@@ -105,7 +106,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P0 | Evidence, vocabulary и запечатанные provider contracts | 5/5 | 🟢 Done |
+| P0 | Evidence, vocabulary и запечатанные provider contracts | 5/6 | 🟡 In progress |
 | P1 | Provider config/domain и backward-compatible resolution | 0/4 | ⬜ Not started |
 | P2 | Deterministic adapters, provenance, lock и drift engine | 0/4 | ⬜ Not started |
 | P3 | Dual skills publication и marketplaces | 0/5 | ⬜ Not started |
@@ -178,6 +179,8 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | D58 | 2026-07-20 | Regression из item/phase audit запускает автоматический fix-forward: возврат к owning item/phase, formal reopen при необходимости, отдельный repair commit, повторные validation и independent audit, затем resume roadmap. Owner нужен только если repair меняет frozen contract, расширяет authority или открывает genuine owner-level fork. | RAG:— (owner-grounded: `brief/04-automatic-agent-continuation.md`; repo-grounded: plan-protocol phase reopen/status/commit/audit rules) — допускает отход назад без потери provenance и не превращает review finding в ручную остановку. |
 | D59 | 2026-07-20 | Approval Owner замораживает `provider-migration-gates.md` v1.0.0 единым seven-point set: G01–G11 producers/evidence/owners/outcomes; independent trust/approval/sandbox и explicit-only full access; no-write/rollback/partial-provider/provenance-only cleanup; exact reconcile-only FOREMAN bundle; fleet no-op + separate post-FOREMAN rollout plan; P0–P7 pre-mortem ownership; без authority на FOREMAN/fleet/package writes в P0.4. D11/D12 уточнены этим exact gate contract без изменения их sequencing/fail-closed semantics. | RAG:— (owner-grounded: explicit D59 approval 2026-07-20; repo-grounded: `root/contracts/provider-migration-gates.md`, `research/03-p0-design-and-premortem.md`) — открывает post-approval validation/close P0.4, но не P1 до G01 phase audit. |
 | D60 | 2026-07-20 | D58 fix-forward формально переоткрывает P0/P0.4 и supersedes только дефектный line-local Validation literal `отдельн.*fleet`: corrected check явно проверяет G11 fleet no-write/separate-plan row. Frozen D59 contract, gates и authority остаются byte-identical. | RAG:— (repo-grounded: P0-close exact Validation replay; `root/contracts/provider-migration-gates.md` G11) — исправляет ложный прежний GREEN без расфриза contract или расширения scope. |
+| D61 | 2026-07-20 | D58 fix-forward формально переоткрывает P0 после RED-аудита и добавляет единственный P0.6: clean committed plan-lint, anchored P0.1/P0.5 replay и append-only attribution. Вердикт RED сохраняется до нового independent audit; D53/D55/D59 и historical carriers не расфриживаются. | RAG:— (repo-grounded: `phases/P0.md` Audit P0 2026-07-20; `findings/P0-red-reproducibility-preflight-2026-07-20.md`) — phase-close evidence зависит от dirty validator и невоспроизводимых live inputs. |
+| D62 | 2026-07-20 | Plan-local-only repair невозможен без переписывания historical journal bytes или ослабления canonical gate. Поэтому P0.6 содержит отдельный exact-scope shared-package prerequisite, но текущая design-сессия не даёт authority на его исполнение: до package writes нужен новый Approval Owner D# и выбранный способ изоляции user-owned dirty paths. | RAG:— (repo-grounded: committed `packages/task/lib/task/{journal,plan_lint}.py` на `1544cfe`, D51, `research/16-p0-red-reproducibility-repair.md`) — committed linter не умеет читать существующий sidecar, а package dirt принадлежит владельцу. |
 
 ## 6. Update Log
 
@@ -208,6 +211,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | 2026-07-20 | plan-close/Codex gpt-5.6-sol xhigh | D58 repair P0.4: D60 заменил ложный line-local fleet validation literal на structural G11 check; frozen D59 contract не изменён. |
 | 2026-07-20 | plan-close/Codex gpt-5.6-sol xhigh | P0.4 повторно закрыт GREEN после D60: corrected exact G11 validation прошла, repair commit `df100a2` — детали см. phases/P0.md P0.4 Completion Notes. |
 | 2026-07-20 | plan-close/Codex gpt-5.6-sol xhigh | P0 закрыта: terminal contracts/evidence сверены после D60 fix-forward — детали см. phases/P0.md Phase Handoff; roadmap переведён на independent G01 audit. |
+| 2026-07-20 | issue-planner/Codex gpt-5.6-sol xhigh | D61 RED-remediation design: P0 реопенена 5/6, добавлен один owner-gated P0.6 с clean-package prerequisite и anchored evidence contract; package/FOREMAN/fleet/user dirt не исполнялись и не менялись. |
 
 ## 7. Contracts
 

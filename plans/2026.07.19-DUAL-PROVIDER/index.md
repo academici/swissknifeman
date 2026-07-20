@@ -7,9 +7,9 @@
 | Путь | Назначение |
 |:--|:--|
 | `plan.md` | мета, scope, routing, status board и решения |
-| `phases/P0.md … P7.md` | все 8 фаз детализированы до DoR; 40 items, skeleton markers отсутствуют |
+| `phases/P0.md … P7.md` | все 8 фаз детализированы до DoR; 41 item, skeleton markers отсутствуют |
 | `handoff.md` | rolling next-step для холодного старта |
-| `roadmap.md` | полная execution map 40/40 с GPT-5.6 Sol/Terra routing и owner gates |
+| `roadmap.md` | полная execution map 41/41 с GPT-5.6 Sol/Terra routing и owner gates |
 | `journal.jsonl` | append-only журнал plan-команд |
 | `journal-exceptions.jsonl` | optional append-only owner-gated provenance exceptions для historical schema-invalid journal rows |
 | `brief/` | полный вход владельца, включая launch/hook и environment-defect refinements |
@@ -25,6 +25,7 @@
 | `findings/repository-baseline-2026-07-19.md` | findings | P0–P7 | реальный масштаб и package seams |
 | `findings/P0-provider-coupling-baseline.md` | findings | P0.1–P0.3 | anchored, reproducible current inventory and classified provider seams |
 | `findings/P0-command-surface-correction.md` | findings | P0.5–P0.3 | terminal umbrella command-surface anchor; не переписывает historical P0.1 evidence |
+| `findings/P0-red-reproducibility-preflight-2026-07-20.md` | findings | P0.6 | clean committed-tree RED reproduction, immutable evidence anchors и exact prerequisite boundary |
 | `findings/P0-codex-launch-hook-defects-2026-07-20.md` | findings | bootstrap, P5–P7 | exit-127 dangling hook, duplicate global logger, local repair и launch preflight |
 | `findings/provider-capabilities-2026-07-19.md` | findings | P0, P3–P5 | first-party provider facts |
 | `findings/upstream-patterns-2026-07-19.md` | findings | P0–P3 | проверенные multi-provider patterns |
@@ -50,6 +51,7 @@
 | `research/13-instruction-contract-remediation.md` | research | P5.6–P7, design audit | common instruction contract/projections и restart propagation |
 | `research/14-journal-schema-exception-remediation.md` | research | journal gate, design audits r3–r4 | F1 sidecar alternatives, exact schema и unchanged same-plan contract |
 | `research/15-command-surface-prerequisite-remediation.md` | research | P0.5→P0.2 | breakdown 32, umbrella/subset terminology, correction carrier и owner gate |
+| `research/16-p0-red-reproducibility-repair.md` | research | P0.6 | selected canonical exception + anchored evidence repair, commit topology и Owner Approval set |
 | `root/adr/0001-provider-adapter-architecture.md` | decision | P0.3–P7 | alternatives, business rationale, dependency direction и component diagram |
 | `root/contracts/provider-migration-gates.md` | decision D59 | P0.4–P7, FOREMAN/fleet boundaries | frozen exact G01–G11 producers/evidence/owners/failure actions, rollback/no-write и handoff bundle |
 

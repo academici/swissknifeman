@@ -6,14 +6,12 @@
      Порядок строго phase-first: P0→P1→P2→P3→P4→P5→P6→P7. До finish + GREEN design
      audit исполнение любого item запрещено. -->
 
-**Обновлён:** 2026-07-20 · **Соответствует plan.md:** v1.3.1
+**Обновлён:** 2026-07-20 · **Соответствует plan.md:** v1.4.0
 
-> **Статус exec:** P0 закрыта GREEN после D60 fix-forward; frozen P0 contracts/ADR
-> byte-identical approved commits. Следующий шаг — independent P0 audit по G01;
-> P1.1 остаётся закрытым до literal GREEN.
-> Historical audit r4 GREEN уже открыл исполнение P0.1; повторный whole-plan audit из-за
-> локальной prerequisite correction не подменяет item-level full review и остаётся вне
-> текущего Next.
+> **Статус exec:** P0 формально реопенена D61 после terminal audit RED; frozen P0
+> contracts/ADR и historical P0.1/P0.5 carriers остаются неизменными. Следующий шаг —
+> Owner Approval для exact prerequisite и dirty-tree режима P0.6; P1.1 закрыт до
+> реализации P0.6, повторного plan-close и независимого literal GREEN G01 audit.
 > Исполнительские модели — только current ChatGPT/Codex family: Terra для prescribed
 > implementation, Sol для design/contracts/audit. GPT-5.6 Luna не используется на этом
 > public-contract/release critical path. RAG:✅ 2026-07-19
@@ -28,6 +26,7 @@
 | P0.2 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/high | ✅ D53 | vocabulary/scenarios и distinction Command Surface / Task Command заморожены |
 | P0.3 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/xhigh | ✅ D55 | capability/artifact contracts v1.0.0 + ADR accepted |
 | P0.4 | solo | plan-run/plan-close repair — 🟢 | gpt-5.6-sol/high; repair gpt-5.6-sol/xhigh | ✅ D59; D60 contract-neutral repair | exact structural G11 revalidation green; frozen contract unchanged |
+| P0.6 | solo | plan-run (manual) — ⬜ | gpt-5.6-terra/high | ✅ exact package prerequisite + dirty ownership mode A/B | clean-tree lint repair and immutable P0.1/P0.5 evidence anchors; P0 remains RED through independent re-audit |
 | P1.1 | solo | plan-run (manual) | gpt-5.6-sol/xhigh | ✅ provider-config contract | owner-gated public precedence/config freeze |
 | P1.2 | solo | plan-run (manual) | gpt-5.6-terra/high | ✅ shared-core contribution | prescribed API после P1.1; public core boundary требует full review |
 | P1.3 | solo | plan-run (manual) | gpt-5.6-terra/high | — | потребляет P1.2 symbols и реализует precedence/diagnostics |
@@ -66,7 +65,7 @@
 
 ## Solo-обоснование и отсутствие batches/workflows
 
-Все 40 items идут `solo`. В каждой фазе terminal Deliverable предыдущего item является
+Все 41 item идут `solo`. В каждой фазе terminal Deliverable предыдущего item является
 Inputs следующего, поэтому merge-criterion plan-protocol для batch/workflow не выполняется:
 внутрифазных независимых scopes N≥3 нет. Contract/security/canon/release items имеют
 `Review=full` и owner/commit boundaries; conformance items намеренно отделены от авторов
@@ -75,17 +74,21 @@ implementation. P5.6→P5.7 — contract→prescribed implementation, поэто
 
 ## Готовый launch-block текущего шага
 
-### S-P0-AUDIT — independent G01 audit
+### S-P0.6-OWNER — exact prerequisite approval
 
 | Параметр | Значение |
 |:--|:--|
-| Model | gpt-5.6-sol |
-| Thinking | xhigh — independent frozen-contract audit |
-| Context | NEW SESSION — шаг-не-item |
-| Суть | Независимо проаудировать terminal P0 и выдать literal G01 verdict до P1.1. |
+| Model | gpt-5.6-terra |
+| Thinking | high — shared-package prerequisite + reproducibility repair |
+| Context | continue (`/clear`) — ручной item; до Approval только decision gate |
+| Суть | Утвердить exact prerequisite/version и выбрать dirty ownership A/B; без D# реализация запрещена. |
 
 ```
-/task:plan-audit 2026.07.19-DUAL-PROVIDER P0
+Подготовь Owner Approval для P0.6 плана 2026.07.19-DUAL-PROVIDER.
+Сначала прочитай P0.6, findings/P0-red-reproducibility-preflight-2026-07-20.md
+и research/16-p0-red-reproducibility-repair.md. Не меняй файлы до Approval Owner D#.
+Представь exact prerequisite/version и выбор dirty ownership: A — owner сначала
+очищает/фиксирует конфликтующие paths; B — isolated clean worktree/branch без изменения main.
 ```
 
 ## Гейты владельца (сводно)
@@ -95,6 +98,7 @@ implementation. P5.6→P5.7 — contract→prescribed implementation, поэто
 | P0.2 | весь vocabulary + domain scenarios; terminal P0.5 anchor; Command Surface 32 / Task Command 11 как разные scopes | P0.3 contract authoring |
 | P0.3 | capability/artifact contracts + ADR | P0.4 и все downstream contracts |
 | P0.4 | migration/FOREMAN/fleet safety gates | P1 entry |
+| P0.6 | exact task/plan-protocol prerequisite/version + dirty ownership A/B | P0.6 implementation, repeat close/audit и P1 entry |
 | P1.1 | provider-config contract | P1.2–P1.4 |
 | P1.2 | contribution в shared core | P1.3–P1.4 |
 | P2.1 | artifact-kernel proposal/ADR | P2.2–P2.4 |
@@ -115,7 +119,7 @@ implementation. P5.6→P5.7 — contract→prescribed implementation, поэто
 
 - RAG: official OpenAI model catalog + Terra model page, 2026-07-19 — Sol/Terra IDs,
   roles и efforts подтверждены; детали в `findings/P7-openai-model-routing-2026-07-19.md`.
-- Repo-grounding: 40/40 Routing rows, 12 `plan-exec` + 28 `manual`; instruction carrier
+- Repo-grounding: 41/41 Routing rows, 12 `plan-exec` + 29 `manual`; instruction carrier
   и contract/read/owner-gate reconcile — `research/12-final-cross-phase-reconcile.md`,
   `research/13-instruction-contract-remediation.md`.
 - Непроверено → ПОВТОРНЫЙ ПРОХОД: account availability Sol/Terra; runtime fail closed,

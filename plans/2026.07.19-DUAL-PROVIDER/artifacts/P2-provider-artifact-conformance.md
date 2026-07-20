@@ -1,7 +1,7 @@
 # P2 provider-artifact conformance
 
 **Producer:** P2.4 · **Inputs:** frozen `provider-artifact` and
-`provider-capability` v1.0.0 contracts · **Tree anchor:** P2.4 item commit
+`provider-capability` v1.0.0 contracts · **Tree anchor:** `56c579f`
 
 The executable evidence is `core/tests/test_provider_artifact_e2e.py`. It uses
 only `TemporaryDirectory` roots for render targets and lock application; preview

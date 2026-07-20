@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Added
+
+- **task — historical journal exception v1.** Owner-gated append-only sidecar for one exact
+  historical `friction` schema error; strict writer/linter validation and negative tests.
+- **skiller — `plan-protocol` 2.9.0 → 2.10.0.** Documents the sealed D51 exception lifecycle.
+
 ### Added (2026.07.18-FOREMAN P1.4 — plan-protocol 2.9.0)
 
 - **skiller — `plan-protocol` 2.8.0 → 2.9.0.** Scope-payload launch-block'а для `RED`/`ATTENTION`

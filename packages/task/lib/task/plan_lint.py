@@ -778,6 +778,10 @@ def _lint_plan_journal_20(plan_dir, plan_id, diag):
         report(jf, None, "journal.jsonl не читается (кодировка/IO)")
         return
 
+    exceptions, exception_errors = _journal.validate_exceptions(plan_dir, plan_id)
+    for error in exception_errors:
+        report(plan_dir / _journal.EXCEPTIONS_FILENAME, None, error)
+
     for i, ln in enumerate(lines):
         if not ln.strip():
             continue
@@ -786,10 +790,13 @@ def _lint_plan_journal_20(plan_dir, plan_id, diag):
         except json.JSONDecodeError as e:
             report(jf, i + 1, f"строка не валидный JSON (append-only NDJSON, §1): {e}")
             continue
-        try:
-            _journal.validate_entry(entry)
-        except _journal.JournalValidationError as e:
-            report(jf, i + 1, f"запись не проходит схему P1.1: {e}")
+        errors = _journal.entry_error_map(entry)
+        exception = exceptions.get(i + 1)
+        if exception and set(errors) == set(exception["invalid_fields"]):
+            continue
+        if errors:
+            message = "; ".join(msg for values in errors.values() for msg in values)
+            report(jf, i + 1, f"запись не проходит схему P1.1: {message}")
 
 
 def _lint_plan_index_20(plan_dir, plan_id, diag):

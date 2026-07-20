@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.9.0
+version: 2.10.0
 description: "Executable master plans in plans/<ID>: plan/phase/task schemas, 6 statuses, refine loop and DoR gate, canonical plan root, repo home by default + visibility/supersedes fields, two homes and archive, handoff with launch-block, model routing, /task:plan-* commands."
 risk: write
 persona: oss-dev
@@ -67,6 +67,13 @@ not current state (does not duplicate the Status Board/handoff). `plan-lint` gat
 date-based plans from 2026.07.18 a missing/invalid `journal.jsonl` is an ERROR; older/legacy
 — WARNING (a soft gate against breaking the already-running fleet — the same pattern as
 brief/roadmap).
+
+**Historical schema exception `journal-exceptions.jsonl` (D51, optional).** This is a separate
+append-only sidecar, not an event/status/Next carrier. It can waive only the exact historical
+`friction` error: a physical non-empty target line, raw SHA-256, canonical plan ID, exact
+`invalid_fields:["friction"]`, and an existing owner D# are mandatory. Duplicate, valid/malformed
+target, hash/plan mismatch, or extra errors fail closed; the existing journal line never changes.
+Write it only with `task.journal exception`; a compensating event does not repair invalid history.
 
 **Plan index `index.md`** (optional) — a map of the plan's FILES + provenance links
 (`findings`/`research` → consuming phase); NOT a carrier of status/next (that's the Status
@@ -1156,4 +1163,4 @@ thinking gets lost.
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of editing
   vendor copies (section 12).
 
-<!-- ru-source-sha256: 29f9c583cd6fc7bdc81dd1443e6fcaca548711757bd5af1d94f17d89e1837e92 -->
+<!-- ru-source-sha256: 096b7acc8f65c9939378cf5136fb62f6d39423fb586dd32fa4160e30e3168500 -->

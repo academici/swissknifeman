@@ -238,6 +238,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | 2026-07-20 | plan-run/Codex gpt-5.6-terra high | P1.2 закрыт: D73 accepted exact G1–G6; immutable `core.provider` API committed — детали см. phases/P1.md P1.2 Completion Notes. |
 | 2026-07-20 | plan-exec/gpt-5.6-terra medium | P1.4 закрыт: compatibility matrix and protected-path no-write proof committed — детали см. phases/P1.md P1.4 Completion Notes. |
 | 2026-07-20 | plan-exec/gpt-5.6-terra medium | P1.4 bookkeeping correction: append-only process deviation recorded — детали см. phases/P1.md P1.4 Known Deviations. |
+| 2026-07-20 | plan-close/Codex mechanical | P1 закрыта: terminal provider-config/domain/resolver/compatibility evidence сверена; docs описывают provider-selection foundation — детали см. phases/P1.md Phase Handoff. |
 
 ## 7. Contracts
 

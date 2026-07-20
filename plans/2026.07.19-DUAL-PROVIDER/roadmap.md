@@ -9,8 +9,8 @@
 **Обновлён:** 2026-07-20 · **Соответствует plan.md:** v1.4.3
 
 > **Статус exec:** P0 закрыта и audit attempt 3 завершён literal GREEN на `245bb56`;
-> G01 открыт, P1.1 закрыт D70/item `e9560bf`, P1.2 закрыт D73/item `57b9b2e`.
-> Следующий item — P1.3 в fresh `gpt-5.6-terra/high` process.
+> G01 открыт, P1 закрыта после D70/D73 и terminal P1.3/P1.4 evidence.
+> Следующий шаг — independent P1 audit для G02; P2.1 остаётся закрыт до literal GREEN.
 > D71 исполнил D65/D68 reconciliation сейчас: `main` — active execution root, retained stash
 > `72505e4d8bef2a58f4ed555cc5b6014450aee3a9` сохраняет recovery point, unrelated owner dirt
 > возвращён unstaged. Это не открывает FOREMAN/fleet/live authority и не снимает P1.2 owner gate.
@@ -35,8 +35,8 @@
 | P0.7 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | ✅ D67/D68 mechanical authority | sealed D65 manifest/derived policy applied in D71; package/main/P1 product semantics не менялись |
 | P1.1 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/xhigh | ✅ D70 | frozen provider-config v1.0.0; exact F1–F6 candidate accepted |
 | P1.2 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | ✅ D73 shared-core contribution | immutable core API committed in exact item scope |
-| P1.3 | solo | plan-run (manual) | gpt-5.6-terra/high | — | потребляет P1.2 symbols и реализует precedence/diagnostics |
-| P1.4 | solo | plan-exec | gpt-5.6-terra/medium | — | independent compatibility/no-write gate после всей P1 implementation |
+| P1.3 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | — | precedence/diagnostics и carrier adapters committed |
+| P1.4 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | compatibility/no-write gate committed |
 | P2.1 | solo | plan-run (manual) | gpt-5.6-terra/high | ✅ core proposal/ADR | shared artifact kernel; contribution gate и public API review |
 | P2.2 | solo | plan-run (manual) | gpt-5.6-terra/high | — | drift/apply state machine зависит от terminal P2.1 API |
 | P2.3 | solo | plan-run (manual) | gpt-5.6-sol/high | — | public catalog design после P2.2; открытое design decision D17 |
@@ -80,22 +80,21 @@ implementation. P5.6→P5.7 — contract→prescribed implementation, поэто
 
 ## Готовый launch-block текущего шага
 
-### S-P1.3 — provider config resolution and diagnostics
+### S-P1 audit — independent G02 gate
 
 | Параметр | Значение |
 |:--|:--|
-| Model | gpt-5.6-terra |
-| Thinking | high |
-| Context | continue (/clear) — ручной item |
-| Суть | Реализовать pure resolver, diagnostics, and thin carrier adapters against frozen P1.1/P1.2. |
+| Model | gpt-5.6-sol |
+| Thinking | xhigh |
+| Context | NEW SESSION — шаг-не-item |
+| Суть | Независимо проверить terminal P1 для G02 до P2.1. |
 
 ```text
-$ task:plan-run 2026.07.19-DUAL-PROVIDER P1.3
+/task:plan-audit 2026.07.19-DUAL-PROVIDER P1
 
-Продолжай только P1.3 на gpt-5.6-terra/high из P1.2 item commit `57b9b2e`.
-Прочитай plan.md, phases/P1.md, handoff.md и все P1.3 Required Reads; реализуй только
-frozen P1.1 precedence/diagnostics и P1.3 Files. Не трогай P1.4+, live config, FOREMAN,
-fleet или unrelated owner-owned dirt.
+Прочитай plan.md, phases/P1.md, handoff.md, journal.jsonl, P1 contracts и compatibility matrix.
+Проведи independent G02 audit terminal P1.1–P1.4. Не запускай P2.1, не меняй live config,
+FOREMAN, fleet или unrelated owner-owned dirt.
 ```
 
 ## Гейты владельца (сводно)

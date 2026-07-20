@@ -18,6 +18,7 @@ difflib), неизвестный вложенный — предупрежден
 | `code_graph` | политика графа кода: `command`/`args`/`server_name`, `ignores`/`workspace_ignores`, `language_by_type`, `initial_prompt`/`workspace_prompt`, `pre_index`, `feature_log_hook` (см. ниже) |
 | `agents` | `registry_enabled`, `heartbeat_interval_ms`, `max_idle_ms`, `definitions[]` |
 | `projects[]` | проекты (см. ниже) |
+| `providers` | необязательные fleet defaults provider selection; точный контракт ниже |
 | `namespaces` | необязательный реестр namespace-групп: `{ id: { name, description } }` |
 | `integrations` | `swissknifeman`, `brain` (синк) |
 | `mcp` | `servers[]` — внешние MCP-серверы узла; `emit_example` (opt-in `.mcp.json.example`); `perplexity_web` — hub-managed раскатка keyless-моста perplexity-web (см. ниже) |
@@ -47,6 +48,19 @@ difflib), неизвестный вложенный — предупрежден
 
 Старые имена `graphify` / `graphify_command` / `graphify_args` / `graphify_server_name` /
 `graphify_workspace` принимаются как **legacy-alias** (обратная совместимость).
+
+## Provider selection
+
+Необязательный `providers.defaults` задаёт fleet-слой выбора провайдера, а
+`projects[].providers` — более сильный слой для точного project ID. Каждый слой следует
+одному provider-config v1 contract (`contract_version` и непустой `selection`), совместимому
+с project-owned `.swissknife.json#/providers`. При отсутствии всех provider-слоёв результат
+остается legacy Claude Code-only и ничего не записывается на диск.
+
+Точный порядок precedence: operation override → project `.swissknife.json` →
+`projects[].providers` → `providers.defaults` → synthetic legacy. Provider selection
+валидируется и возвращает provenance/diagnostics; он не включает provider, не генерирует
+артефакты и не меняет существующий `config.json` сам по себе.
 
 Обязательные для совместимости с brain поля: `id`, `name`, `repo`, `local_path`, `type`.
 Остальное — расширения maind (brain их игнорирует при чтении fallback).

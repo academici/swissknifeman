@@ -111,7 +111,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 |:--|:--|:--|:--|
 | P0 | Evidence, vocabulary и запечатанные provider contracts | 7/7 | 🟢 Done |
 | P1 | Provider config/domain и backward-compatible resolution | 6/6 | 🟢 Done |
-| P2 | Deterministic adapters, provenance, lock и drift engine | 3/4 | 🟡 In progress |
+| P2 | Deterministic adapters, provenance, lock и drift engine | 4/4 | 🟢 Done |
 | P3 | Dual skills publication и marketplaces | 0/5 | ⬜ Not started |
 | P4 | Task-command parity и provider-neutral model routing | 0/5 | ⬜ Not started |
 | P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 0/7 | ⬜ Not started |
@@ -202,6 +202,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-20 | gpt-5.6-terra/medium | P2.4 закрыт: synthetic preview/doctor/apply/repair conformance и protected no-write evidence — детали см. phases/P2.md P2.4 Completion Notes. |
 | 2026-07-19 | issue-planner/Codex gpt-5.6-sol high | Design pass 1/3: сохранены brief/findings/research, выбран target architecture, созданы draft contracts и скелеты 8 фаз/34 items; следующий фокус — детализация P0. |
 | 2026-07-20 | gpt-5.6-terra/high | P1.3 закрыт: pure resolver и thin skiller/maind adapters — детали см. phases/P1.md P1.3 Completion Notes. |
 | 2026-07-19 | issue-planner/Codex gpt-5.6-sol high | ACTIVE перехвачен у `2026.07.18-FOREMAN`; FOREMAN paused на P1.3/P1.4 boundary до release gate P7.4. |

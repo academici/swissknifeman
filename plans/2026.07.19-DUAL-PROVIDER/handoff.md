@@ -1,16 +1,16 @@
-# HANDOFF — 2026-07-20 — after P2.5
+# HANDOFF — 2026-07-20 — after P2
 
-**Next:** «ЗАПУСК ВРУЧНУЮ: gpt-5.6-sol/high»
+**Next:** «ЗАПУСК ВРУЧНУЮ: gpt-5.6-sol/xhigh»
 
 | Параметр | Значение |
 |:--|:--|
 | Model | gpt-5.6-sol |
-| Thinking | high — independent adversarial P2 audit |
+| Thinking | xhigh — independent adversarial P2 audit |
 | Context | NEW SESSION — шаг-не-item |
 | Суть | Провести fresh independent audit terminal P2; P3.1 не начинать. |
 
 ```text
-Проведи только fresh independent audit P2 плана 2026.07.19-DUAL-PROVIDER на gpt-5.6-sol/high.
+Проведи только fresh independent audit P2 плана 2026.07.19-DUAL-PROVIDER на gpt-5.6-sol/xhigh.
 
 Сначала прочитай AGENTS.md, CLAUDE.md, plans/2026.07.19-DUAL-PROVIDER/plan.md,
 handoff.md и phases/P2.md, включая Audit P2 от 2026-07-20 и P2.5. Затем читай ровно
@@ -23,11 +23,11 @@ and refuses duplicate/nested/missing/reordered boundaries, and project Override 
 Выдай только audit verdict и evidence; при RED применяй fix-forward protocol, не начинай P3.1.
 ```
 
-**Done:** P2.5 closed green. Item commit `5db342e` validates complete/canonical provenance
-and override layers before clean classification, makes all-`noop` apply return with zero target,
-backup, or lock writes, and carries one explicit caller-owned managed-block codec pair through
-plan/apply. Synthetic evidence has 11 named contract cases, including outside-byte preservation,
-boundary refusal and project-Override stale-source/update.
+**Done:** P2 повторно закрыта после D76. Terminal P2.1–P2.5 завершаются commit `5db342e`:
+complete/canonical provenance and override layers validate before clean classification, all-`noop`
+apply returns with zero target/backup/lock writes, and one explicit caller-owned managed-block
+codec pair carries through plan/apply. Synthetic evidence has 11 named contract cases, including
+outside-byte preservation, boundary refusal and project-Override stale-source/update.
 
 **Remaining:** Fresh independent P2 audit. P3.1 remains out of scope until literal GREEN.
 

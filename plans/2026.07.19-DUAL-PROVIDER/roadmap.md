@@ -6,14 +6,15 @@
      Порядок строго phase-first: P0→P1→P2→P3→P4→P5→P6→P7. До finish + GREEN design
      audit исполнение любого item запрещено. -->
 
-**Обновлён:** 2026-07-20 · **Соответствует plan.md:** v1.4.5
+**Обновлён:** 2026-07-20 · **Соответствует plan.md:** v1.4.6
 
 > **Статус exec:** P0 закрыта и audit attempt 3 завершён literal GREEN на `245bb56`;
 > G01 открыт, P1 повторно закрыта после D74: P1.5 добавила committed synthetic G02 proof,
 > P1.6 валидировала two documentation projections и exact commit map. Следующий шаг — fresh
-> independent P1 audit literal GREEN на `2363b21`; P2 закрыта после terminal P2.1–P2.4
-> artifact-kernel/lock/registry/conformance evidence. Следующий шаг — fresh independent P2
-> audit; P3.1 остаётся закрыт до его GREEN verdict.
+> independent P1 audit literal GREEN на `2363b21`; P2 повторно закрыта после D76: P2.5
+> добавила fail-closed provenance/override, clean/noop no-write и managed-boundary/
+> project-override conformance. Следующий шаг — fresh independent P2 audit; P3.1 остаётся
+> закрыт до literal GREEN verdict.
 > D71 исполнил D65/D68 reconciliation сейчас: `main` — active execution root, retained stash
 > `72505e4d8bef2a58f4ed555cc5b6014450aee3a9` сохраняет recovery point, unrelated owner dirt
 > возвращён unstaged. Это не открывает FOREMAN/fleet/live authority и не снимает P1.2 owner gate.
@@ -46,6 +47,7 @@
 | P2.2 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | — | fail-closed drift/apply state machine committed after terminal P2.1 API |
 | P2.3 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/high | — | immutable capability-aware catalog committed after P2.2 |
 | P2.4 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | synthetic dry/doctor/conformance gate committed; phase is terminal pending independent audit |
+| P2.5 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | — | D76 contract-required RED remediation committed; phase reclosed pending fresh audit |
 | P3.1 | solo | plan-run (manual) | gpt-5.6-sol/high | ✅ publication contract | frozen identity/install/ownership semantics до adapters |
 | P3.2 | solo | plan-exec | gpt-5.6-terra/medium | — | deterministic Claude compatibility projection после P3.1 |
 | P3.3 | solo | plan-run (manual) | gpt-5.6-terra/high | — | native Codex plugin/cache contract, зависит от P3.2 catalog/goldens |
@@ -76,7 +78,7 @@
 
 ## Solo-обоснование и отсутствие batches/workflows
 
-Все 44 item идут `solo`. В каждой фазе terminal Deliverable предыдущего item является
+Все 45 item идут `solo`. В каждой фазе terminal Deliverable предыдущего item является
 Inputs следующего, поэтому merge-criterion plan-protocol для batch/workflow не выполняется:
 внутрифазных независимых scopes N≥3 нет. Contract/security/canon/release items имеют
 `Review=full` и owner/commit boundaries; conformance items намеренно отделены от авторов
@@ -92,15 +94,19 @@ implementation. P5.6→P5.7 — contract→prescribed implementation, поэто
 | Model | gpt-5.6-sol |
 | Thinking | xhigh |
 | Context | NEW SESSION — шаг-не-item |
-| Суть | Независимо проверить closed P2 before opening P3.1. |
+| Суть | Независимо проверить повторно закрытую P2 до открытия P3.1. |
 
 ```text
-/task:plan-audit 2026.07.19-DUAL-PROVIDER P2
+Проведи только fresh independent audit P2 плана 2026.07.19-DUAL-PROVIDER на gpt-5.6-sol/xhigh.
 
-Прочитай plan.md, phases/P2.md, handoff.md, journal.jsonl, frozen P2 contracts, ADR-0002,
-P2 contribution/conformance artifacts и commits P2.1–P2.4. Проведи fresh independent audit
-terminal P2.1–P2.4. Не запускай P3.1, не меняй package delivery behavior, live config,
-FOREMAN, fleet или unrelated owner-owned dirt.
+Сначала прочитай AGENTS.md, CLAUDE.md, plan.md, handoff.md, phases/P2.md (включая Audit P2
+и P2.5), frozen contracts, ADR-0002, P2 proposal/conformance artifacts, D76 remediation
+research и commits P2.1–P2.5. Проверь на свежем контексте commit 5db342e: malformed
+provenance/override fail closed, all-noop apply invokes no writer, caller-supplied codec
+preserves outside bytes and refuses duplicate/nested/missing/reordered boundaries, and
+project Override gives stale-source/update. Не начинай P3.1 и не меняй core, frozen contracts,
+ADR/K1–K6, packages, live paths, FOREMAN, fleet или unrelated owner dirt. Выдай только audit
+verdict и evidence; RED возвращает в owning P2 fix-forward.
 ```
 
 ## Гейты владельца (сводно)

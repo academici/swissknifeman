@@ -204,6 +204,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-20 | plan-close/Codex mechanical | P2 повторно закрыта после D76: terminal P2.1–P2.5 и contract-safety/no-write/boundary evidence сверены; далее independent P2 audit — детали см. phases/P2.md Phase Handoff. |
 | 2026-07-20 | plan-close/Codex mechanical | P2 закрыта: terminal artifact kernel/lock/registry/conformance evidence сверены; следующий gate — independent P2 audit — детали см. phases/P2.md Phase Handoff. |
 | 2026-07-20 | plan-run/Codex gpt-5.6-terra high | P2.5 закрыт: D76 fail-closed provenance/override, no-write clean apply и explicit managed-block codec conformance — детали см. phases/P2.md P2.5 Completion Notes. |
 | 2026-07-20 | issue-planner/Codex gpt-5.6-sol high | D76: P2 реопенена 4/5 после RED audit; P2.5 ограничена fail-closed provenance/override, zero-write clean apply и boundary/override conformance без изменения frozen contract, K1–K6, package/live/FOREMAN/fleet scope. |

@@ -13,7 +13,7 @@
 | `journal.jsonl` | append-only журнал plan-команд |
 | `journal-exceptions.jsonl` | optional append-only owner-gated provenance exceptions для historical schema-invalid journal rows |
 | `brief/` | полный вход владельца, включая launch/hook и environment-defect refinements |
-| `findings/` | repo/provider evidence, immutable P0.1/P0.5 carriers, P0 clean-reproducibility repair, package recon P2/P3/P5 и current OpenAI model routing |
+| `findings/` | repo/provider evidence, immutable P0.1/P0.5 carriers, P0 clean-reproducibility repair, package recon P2/P3/P5, P3.5 unmanaged-provider-B reproduction и current OpenAI model routing |
 | `artifacts/p0-evidence-anchors.json` | v1 sealed source-tree/input anchors for P0.1/P0.5 replay; D64 records only one external plugin path, never its contents |
 | `artifacts/d65-main-reconciliation-check.py` + `artifacts/d65-main-reconciliation.json` | stdlib-only D65-A/D68 exact-path checker и sealed base/main/delivery hash manifest; D71 records its completed main reconciliation and retained stash recovery point |
 | `research/` | traceability, architecture/sequence и phase design syntheses P0–P7 |
@@ -34,6 +34,7 @@
 | `findings/provider-capabilities-2026-07-19.md` | findings | P0, P3–P5 | first-party provider facts |
 | `findings/upstream-patterns-2026-07-19.md` | findings | P0–P3 | проверенные multi-provider patterns |
 | `findings/P3-skiller-publication-recon-2026-07-19.md` | findings | P3–P4 | current skiller publication/install/marketplace seams |
+| `findings/P3.5-provider-b-unmanaged-partial-success-2026-07-20.md` | findings | re-opened P3.4, P3.5 | synthetic unmanaged Codex vendor conflict was skipped yet reported as success |
 | `findings/P5-harness-recon-2026-07-19.md` | findings | P5–P6 | current settings/hooks/MCP/agent-pack ownership seams |
 | `findings/P7-openai-model-routing-2026-07-19.md` | findings | Routing, roadmap, P7 | official current GPT-5.6 Sol/Terra/Luna role guidance |
 | `findings/journal-remediation-verification-2026-07-19.md` | findings | journal gate, design audit r3 | anchored 0/0 lint, tests, exact exception provenance |
@@ -54,6 +55,7 @@
 | `research/12-final-cross-phase-reconcile.md` | research | finish, design audit | contract chain, Required Reads, Routing, owner gates и итоговый DoR pass 3/3 |
 | `research/13-instruction-contract-remediation.md` | research | P5.6–P7, design audit | common instruction contract/projections и restart propagation |
 | `research/14-journal-schema-exception-remediation.md` | research | journal gate, design audits r3–r4 | F1 sidecar alternatives, exact schema и unchanged same-plan contract |
+| `research/18-p3-provider-b-unmanaged-remediation.md` | research | re-opened P3.4, P3.5 | smallest contract-preserving pre-write ownership refusal and acceptance matrix |
 | `research/16-p0-red-reproducibility-repair.md` | research | P0.6 | selected canonical exception + anchored evidence repair, commit topology и Owner Approval set |
 | `root/adr/0001-provider-adapter-architecture.md` | decision | P0.3–P7 | alternatives, business rationale, dependency direction и component diagram |
 | `root/contracts/provider-migration-gates.md` | decision D59 | P0.4–P7, FOREMAN/fleet boundaries | frozen exact G01–G11 producers/evidence/owners/failure actions, rollback/no-write и handoff bundle |

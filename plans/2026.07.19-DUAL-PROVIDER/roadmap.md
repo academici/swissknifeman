@@ -6,7 +6,7 @@
      Порядок строго phase-first: P0→P1→P2→P3→P4→P5→P6→P7. До finish + GREEN design
      audit исполнение любого item запрещено. -->
 
-**Обновлён:** 2026-07-20 · **Соответствует plan.md:** v1.4.6
+**Обновлён:** 2026-07-20 · **Соответствует plan.md:** v1.4.8
 
 > **Статус exec:** P0 закрыта и audit attempt 3 завершён literal GREEN на `245bb56`;
 > G01 открыт, P1 повторно закрыта после D74: P1.5 добавила committed synthetic G02 proof,
@@ -51,8 +51,8 @@
 | P3.1 | solo | plan-run (manual) | gpt-5.6-sol/high | ✅ publication contract | frozen identity/install/ownership semantics до adapters |
 | P3.2 | solo | plan-exec | gpt-5.6-terra/medium | — | deterministic Claude compatibility projection после P3.1 |
 | P3.3 | solo | plan-run (manual) | gpt-5.6-terra/high | — | native Codex plugin/cache contract, зависит от P3.2 catalog/goldens |
-| P3.4 | solo | plan-run (manual) | gpt-5.6-terra/high | — | providerizes mutation flows после обеих projections; partial-failure review |
-| P3.5 | solo | plan-exec | gpt-5.6-terra/medium | — | independent whole-inventory parity/no-write gate |
+| P3.4 | solo | plan-run (manual) — 🟡 D78 repair | gpt-5.6-terra/high | — | pre-write unmanaged selected-provider conflict must fail closed before any managed write |
+| P3.5 | solo | plan-exec — 🔴 waits P3.4 | gpt-5.6-terra/medium | — | independent whole-inventory parity/no-write gate resumes only after terminal-green D78 repair |
 | P4.1 | solo | plan-run (manual) | gpt-5.6-sol/xhigh | ✅ command/routing contract | frozen semantic tiers/invocation; отдельный public-contract gate |
 | P4.2 | solo | plan-run (manual) | gpt-5.6-terra/high | ✅ task contribution | complete Codex adapter/catalog against frozen P4.1 |
 | P4.3 | solo | plan-exec | gpt-5.6-terra/medium | — | independent Claude byte/literal compatibility gate |

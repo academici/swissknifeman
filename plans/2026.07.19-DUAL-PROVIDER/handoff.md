@@ -1,44 +1,50 @@
-# HANDOFF — 2026-07-20 — after P3.4
+# HANDOFF — 2026-07-20 — after P3
 
-**Next:** /task:plan-exec 2026.07.19-DUAL-PROVIDER P3.5
+**Next:** «ЗАПУСК ВРУЧНУЮ: gpt-5.6-terra/high»
 
 | Параметр | Значение |
 |:--|:--|
 | Model | gpt-5.6-terra |
-| Thinking | medium — deterministic independent inventory/parity conformance |
-| Context | fresh — P3.5 is plan-exec routed |
-| Суть | Execute only P3.5 and independently prove the complete Claude/Codex publication matrix. |
+| Thinking | high |
+| Context | continue (/clear) — ручной item |
+| Суть | Исполнить D78 repair P3.4: unmanaged selected-provider vendor conflict обязан остановить apply до первой managed write. |
 
 ```text
-Execute only P3.5 of plan 2026.07.19-DUAL-PROVIDER on gpt-5.6-terra/medium.
+Продолжи только re-opened P3.4 плана 2026.07.19-DUAL-PROVIDER на gpt-5.6-terra/high.
 
-First read AGENTS.md, CLAUDE.md, packages/task/commands/plan-exec.md, then
-plans/2026.07.19-DUAL-PROVIDER/plan.md, handoff.md, phases/P3.md and every P3.5
-Required Read strictly in its listed order. P3.4 is terminal at item commit 1d73963.
+Сначала прочитай AGENTS.md, CLAUDE.md, plan.md, handoff.md, phases/P3.md P3.4-P3.5,
+`findings/P3.5-provider-b-unmanaged-partial-success-2026-07-20.md`,
+`research/18-p3-provider-b-unmanaged-remediation.md`, frozen P3 contract и P3.4 Required Reads.
 
-Preserve unrelated owner dirt. Execute only P3.5. Do not change P3.1 frozen contracts,
-P4+, live Codex user-global state, current root .agents/skills, FOREMAN or fleet.
-Use temporary roots for all apply/repair tests. Build expected semantic sets independently
-from canonical registry and contract; do not derive them from a provider renderer.
-Run the full lifecycle: journal, validation, two commits, status board and handoff.
+Implement the exact D78 repair: after all provider plans are built, a selected provider's
+unmanaged vendor conflict without explicit `--force` must raise provider-qualified
+`SPUB_OWNERSHIP_CONFLICT` before any Claude/Codex managed skill write, lock write or project
+registration. Add the isolated dual-provider TemporaryDirectory test and retain the distinct
+post-preflight provider-B copy-failure/repair proof. Run P3.4 validation and commit only P3.4
+scope, then perform plan bookkeeping. Do not resume P3.5 in this item.
+
+Do not alter frozen contracts, provider selection/lock grammar, public CLI surface, P3.5 scope,
+P4+, FOREMAN, fleet, live user state or unrelated owner dirt. D79 authorizes this
+contract-preserving repair without another Owner Approval.
 ```
 
-**Done:** P3.4 at `1d73963` added P1-resolved provider distribution preflight, provider-qualified
-vendor ownership, fail-closed external Codex marketplace handling, read-only provider doctor,
-and an explicit native Codex installer. Legacy Claude remains the missing-provider default.
+**Done:** P3.5 found the synthetic provider-B unmanaged-target partial success before writing
+parity cases. D78 returned the owning, non-terminal P3.4 item to execution; no package repair
+has run in this design pass.
 
-**Remaining:** P3.5, then independent P3 audit G03 before P4.1.
+**Remaining:** P3.4 D78 repair and validation; then P3.5 parity proof and independent P3 audit
+G03 before P4.1.
 
-**Sources of truth:** `phases/P3.md` P3.4–P3.5 · frozen
-`root/contracts/provider-skill-publication-contract.md` · `packages/skiller/lib/skiller/publication.py`
-· P3.4 item commit `1d73963`.
+**Sources of truth:** `phases/P3.md` P3.4-P3.5; frozen
+`root/contracts/provider-skill-publication-contract.md`; `packages/skiller/lib/skiller/skillset.py`
+(`plan_sync`, `sync_skillset`, `do_sync`); reproduction command recorded in the P3.5 escalation.
 
-**Open risks:** Existing plan-lint has 2 documented P3 DoR false-positive warnings; P3.4 adds
-no errors. Native user-global Codex install was not run: only the explicit fake-runner path was
-tested, by item scope. `maind health --cwd` is healthy; it accepts no positional path argument.
+**Open risks:** Until D78 is implemented, a selected provider may be reported successful despite
+an unmanaged-target conflict. Existing P3 DoR marker/orchestration warnings remain separate
+documented false positives.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: none.
-- deferred: exhaustive inventory/channel parity is P3.5.
-- open_questions: —
+- workarounds: none; `--force` may overwrite the unmanaged path and is not proof of safe default behavior.
+- deferred: exhaustive P3.5 inventory/channel parity waits for terminal-green P3.4.
+- open_questions: none; D78 selected existing P3.4 scope, and D79 removes the routine approval pause.

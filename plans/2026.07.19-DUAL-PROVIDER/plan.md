@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.4.7 |
+| Version | 1.4.8 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
@@ -113,7 +113,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P0 | Evidence, vocabulary и запечатанные provider contracts | 7/7 | 🟢 Done |
 | P1 | Provider config/domain и backward-compatible resolution | 6/6 | 🟢 Done |
 | P2 | Deterministic adapters, provenance, lock и drift engine | 5/5 | 🟢 Done |
-| P3 | Dual skills publication и marketplaces | 4/5 | 🟡 In progress |
+| P3 | Dual skills publication и marketplaces | 3/5 | 🔴 Blocked |
 | P4 | Task-command parity и provider-neutral model routing | 0/5 | ⬜ Not started |
 | P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 0/7 | ⬜ Not started |
 | P6 | mAInd deployment, memory и provider-neutral analytics | 0/6 | ⬜ Not started |
@@ -200,12 +200,15 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | D75 | 2026-07-20 | Approval Owner принимает exact P2.1 CORE-ARTIFACT K1–K6 as written: Rule of Three и flat `core.provider_artifact` seam, complete additive ten-symbol API, frozen artifact v1.0.0 bytes/hash/provenance/path invariants without lifecycle writes, explicit caller renderer and dependency direction, minor SemVer classification, and P2.1-only authority. | RAG:— (owner-grounded: exact reply `APPROVE P2.1 CORE-ARTIFACT K1-K6 AS WRITTEN`; repo-grounded: `artifacts/P2-core-contribution-proposal.md`, `root/adr/ADR-0002-provider-artifact-kernel.md`) — opens only the prescribed P2.1 implementation; P2.2+, provider delivery, live carriers, FOREMAN and fleet remain excluded. |
 | D76 | 2026-07-20 | D58 fix-forward формально реопенит P2 после RED Audit P2 и добавляет один P2.5. Он исправляет только missing fail-closed provenance/override validation, clean/noop zero-write apply и missing managed-boundary/project-override goldens. Для существующей contract boundary разрешён один explicit caller-supplied codec pair на existing P2.2 plan/apply entry points; это не новый `core.__all__` symbol, не marker grammar, не package registry и не изменение K1–K6 или frozen v1.0.0 bytes. | RAG:— (repo-grounded: `phases/P2.md` Audit P2 2026-07-20, `root/contracts/provider-artifact-contract.md`, `research/17-p2-red-audit-remediation.md`) — audit выявил contract-required bug fixes, а не owner-level fork: codec только выражает уже замороженную границу package-owned blocks, P3+ и live carriers остаются закрыты. |
 | D77 | 2026-07-20 | Approval Owner принимает exact P3.1 SKILL-PUBLICATION S1–S6 as written и замораживает `provider-skill-publication-contract.md` как v1.0.0: один semantic catalog, independent native Claude/Codex projections, same-repository thin adapters versus self-contained cache/vendor artifacts, package-version source, Claude-only legacy compatibility, explicit native install boundary и provider-qualified fail-closed diagnostics. | RAG:— (owner-grounded: exact reply `APPROVE P3.1 SKILL-PUBLICATION S1-S6 AS WRITTEN`; repo-grounded: `artifacts/P3-skill-publication-contract-review.md`, `root/contracts/provider-skill-publication-contract.md`) — открывает P3.2–P3.5 только по их declared scope; не разрешает package/runtime writes в P3.1, public command design, native install, live config, FOREMAN, fleet или owner dirt. |
+| D78 | 2026-07-20 | D58 fix-forward возвращает P3.4 в `🟡 In progress`; P3.5 остаётся `🔴 Blocked` до repair. `do_sync` обязан до первой provider write fail-closed отклонять precomputed unmanaged conflict выбранного provider с `SPUB_OWNERSHIP_CONFLICT`; P3.4 затем снова предшествует P3.5. | RAG:— (repo-grounded: `findings/P3.5-provider-b-unmanaged-partial-success-2026-07-20.md`, `research/18-p3-provider-b-unmanaged-remediation.md`, P3.1 S6/P3.4) — это existing P3.4 ownership/partial-result invariant, не изменение frozen P3.1 contract, provider selection, lock grammar, P4+, FOREMAN, fleet или live state. |
+| D79 | 2026-07-20 | Owner authorizes autonomous continuation only for evidence-backed, contract-preserving decisions within active-plan scope; D-log/plan carriers record the decision, while frozen-contract changes, authority expansion and owner-level forks still escalate. | RAG:— (owner-grounded: `brief/01-refinements.md` 2026-07-20) — снимает routine approval pauses without changing any contract or execution boundary. |
 
 ## 6. Update Log
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
 | 2026-07-20 | plan-run/Codex gpt-5.6-terra high | P3.4 закрыт: provider-aware distribution plan, qualified vendor locks и explicit Codex installer — детали см. phases/P3.md P3.4 Completion Notes. |
+| 2026-07-20 | issue-planner/Codex gpt-5.6-sol high | D78: P3.4 возвращён в работу после P3.5 unmanaged-provider-B escalation; repair ограничен pre-write fail-closed vendor conflict, P3.5/P4+/frozen contracts/live targets не исполнялись. |
 | 2026-07-20 | plan-run/Codex gpt-5.6-terra high | P3.3 закрыт: native Codex publication renderer, cache-contained bundles и conformance добавлены без Claude delta — детали см. phases/P3.md P3.3 Completion Notes. |
 | 2026-07-20 | plan-exec/Codex gpt-5.6-terra medium | P3.2 закрыт: semantic catalog и P2-backed Claude renderer сохраняют exact legacy bytes — детали см. phases/P3.md P3.2 Completion Notes. |
 | 2026-07-20 | plan-run/Codex gpt-5.6-sol high | P3.1 закрыт: D77 заморозил semantic skill/publication contract v1.0.0 и approved review — детали см. phases/P3.md P3.1 Completion Notes. |

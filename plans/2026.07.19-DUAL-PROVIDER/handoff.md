@@ -1,58 +1,43 @@
-# HANDOFF — 2026-07-20 — after P1.1
+# HANDOFF — 2026-07-20 — after P1.2
 
-**Next:** «ОЖИДАНИЕ: Approval Owner D# для P1.2 G1–G6 → ЗАПУСК ВРУЧНУЮ: gpt-5.6-terra/high»
+**Next:** «ЗАПУСК ВРУЧНУЮ: gpt-5.6-terra/high»
 
 | Параметр | Значение |
 |:--|:--|
 | Model | gpt-5.6-terra |
-| Thinking | high — prescribed public core API and contribution gate |
+| Thinking | high — prescribed cross-package resolver and diagnostics |
 | Context | continue (/clear) — ручной item |
-| Суть | Принять или отклонить atomic G1–G6 proposal до первого edit `core/**`; D71 runtime route evidence corrected, но P1.2 не исполнялся. |
+| Суть | P1.3 реализует pure precedence/provenance resolver и thin skiller/maind adapters against frozen P1.1 and P1.2 APIs. |
 
 ```text
-# НЕ раньше: Approval Owner D# принимает exact G1–G6 из artifacts/P1-core-provider-domain-contribution-review.md
-
-Продолжай только P1.2 на gpt-5.6-terra/high. Прочитай plan.md, phases/P1.md,
-handoff.md, all P1.2 Required Reads и approved contribution review. Проверь D70/frozen
-provider-config v1.0.0 и Owner D#; затем реализуй только approved `core/**` API и закрой
-P1.2 полным lifecycle. Не трогай P1.3+, package runtime, provider outputs, восстановленный
-owner-owned dirt на main, FOREMAN, fleet или live carrier state.
+Продолжай только P1.3 плана 2026.07.19-DUAL-PROVIDER на gpt-5.6-terra/high.
+Прочитай plan.md, handoff.md, phases/P1.md и все P1.3 Required Reads в указанном порядке.
+Используй committed P1.2 API from 57b9b2e; implement only P1.3 Files and frozen P1.1
+precedence/diagnostics. Do not touch P1.4+, live config, FOREMAN, fleet, or unrelated
+owner-owned dirt. Close the item through its full validation, two-commit lifecycle, and
+baseline-attributed plan lint.
 ```
 
-**Done:** Approval Owner D70 принял exact F1–F6 candidate SHA-256
-`3ecc108a41ee111c79dbd792ecb45fabfe63024981db724233feefabc1f0c2c3` и заморозил
-`root/contracts/provider-config-contract.md` как v1.0.0. Item commit —
-`e9560bf26de5a256b73d7a4c36dc2ca388d2ba75`; frozen file SHA-256 —
-`4456c60713754034050d9ad6e19945b26a3a017ffcda8f3b21924727d7e98a03`. Required
-validation и adversarial self-review GREEN; обратная реконструкция lifecycle metadata
-совпала с approved candidate SHA. P1.1 закрыт `🟢 Done`, terminal journal event добавлен.
+**Done:** P1.2 closed `🟢 Done`: D73 accepted exact G1–G6, and item commit `57b9b2e` added
+immutable stdlib-only `core.provider`, 13 exports, and focused tests. Core suite, compile,
+forbidden-import scan, and diff check passed. Release/docs assessment found no permitted
+documentation path in P1.2 Files, so neither path was changed.
 
-**Remaining:** contribution review prepared; explicit Approval Owner D# для exact G1–G6
-обязателен до первого `core/**` edit. После approval P1.2 реализует только approved
-immutable provider domain/API. P1.3/P1.4, package adapters, provider outputs, live
-carriers, FOREMAN и fleet остаются закрыты.
+**Remaining:** P1.3 → P1.4 remain sequential. P1.3 owns resolver, exact PCFG diagnostics,
+catalog membership, and skiller/maind carrier adapters; P1.2 intentionally contains none.
 
-**Sources of truth:** `root/contracts/provider-config-contract.md` · `plan.md` D70,
-Contracts/Status Board/Update Log · `phases/P1.md` P1.1/P1.2 ·
-`artifacts/P1-core-provider-domain-contribution-review.md` · `brief/01-refinements.md`
-P1.1 approval · `roadmap.md` S-P1.2 · `journal.jsonl`.
+**Sources of truth:** `root/contracts/provider-config-contract.md` (D70) · capability/artifact
+contracts (D55) · `phases/P1.md` P1.2/P1.3 · accepted contribution review (D73) · item commit
+`57b9b2e` · `journal.jsonl`.
 
-**Open risks:** P1.2 — public shared-core contribution gate ждёт explicit Owner D# для
-atomic G1–G6; до него `core/**` запрещён. D71 завершил main reconciliation без снятия этого
-гейта. Его exact runtime startup banner — authoritative evidence `gpt-5.6-terra/high`,
-approval `never`, sandbox `danger-full-access`; static doctor с persisted `gpt-5.6-sol` и
-без effective effort остаётся D56 non-green environment anomaly, а не routing block.
+**Open risks:** D56 static doctor anomaly remains non-green but non-blocking; D72 runtime banner
+is route evidence. The journal preserves an append-only correction for the superseded premature
+`closed-deviations` P1.2 terminal row.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: D56 — current canonical-main preflight confirms approval `Never`, unrestricted
-  filesystem, `maind health --cwd` and SessionStart probe; doctor reports persisted
-  `gpt-5.6-sol` but not effort. D71's exact runtime startup banner is the separate,
-  authoritative Terra/high route evidence; doctor mismatch does not block routing.
-- deferred: D71 removes only the isolated-worktree timing/target condition from D65-A. P5/P6/P7
-  still own any future isolated/self-host MCP and SessionStart proof; no live/fleet write follows.
-- open_questions: D72 preserves the final historical P1.2 journal row and compensates it
-  append-only because its `2026-07-20T14:00:00Z` timestamp was future-dated at repair time;
-  retained stash `72505e4d8bef2a58f4ed555cc5b6014450aee3a9` is authoritative by OID plus Git
-  commit time `2026-07-20T13:26:51Z`, not by its subject label. See
-  `findings/D71-provenance-bookkeeping-repair-2026-07-20.md`.
+- workarounds: D56/D72 environment evidence remains as documented; P1.3 must use committed
+  validators and avoid mAInd/live-carrier evidence.
+- deferred: provider registry, renderer, artifact lifecycle, and package CLI presentation remain
+  in P2+ and package-owning phases.
+- open_questions: —

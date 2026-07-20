@@ -108,7 +108,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P0 | Evidence, vocabulary и запечатанные provider contracts | 7/7 | 🟢 Done |
-| P1 | Provider config/domain и backward-compatible resolution | 1/4 | 🟡 In progress |
+| P1 | Provider config/domain и backward-compatible resolution | 2/4 | 🟡 In progress |
 | P2 | Deterministic adapters, provenance, lock и drift engine | 0/4 | ⬜ Not started |
 | P3 | Dual skills publication и marketplaces | 0/5 | ⬜ Not started |
 | P4 | Task-command parity и provider-neutral model routing | 0/5 | ⬜ Not started |
@@ -192,6 +192,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | D70 | 2026-07-20 | Approval Owner атомарно принимает provider-config F1–F6 exact candidate SHA-256 `3ecc108a41ee111c79dbd792ecb45fabfe63024981db724233feefabc1f0c2c3` и замораживает `provider-config-contract.md` как v1.0.0: uniform partial layers; exact precedence/per-ID merge; legacy Claude-only no-write default; leaf provenance/closed diagnostics; fail-closed version/unknown policy; normative goldens и неизменная authority boundary. Изменены только lifecycle freeze metadata, утверждённые F1–F6 bytes сохранены. | RAG:— (owner-grounded: exact reply `APPROVE P1.1 PROVIDER-CONFIG F1-F6 AS WRITTEN`; repo-grounded: approved candidate SHA-256 и `root/contracts/provider-config-contract.md`) — открывает P1.2 против frozen input, не разрешая provider outputs, live carriers, FOREMAN, fleet или P1.2 implementation в P1.1. |
 | D71 | 2026-07-20 | Exact Owner instruction supersedes D65-A только в execution target/timing: ранняя D65/D68 reconciliation выполнена сейчас в canonical `main`; retained backup — stash `72505e4d8bef2a58f4ed555cc5b6014450aee3a9`; main остаётся active execution root. Восстановлены все owner-owned dirt, а P1.2/core/**, frozen product semantics, FOREMAN/fleet и live authority не расширены. | RAG:— (owner-grounded: exact reconciliation instruction 2026-07-20; repo-grounded: sealed checker, stash/ff/apply evidence) — historical D65-A/D68 bytes и их exact classifications не переписываются; D71 меняет только уже наступивший срок/target integration. |
 | D72 | 2026-07-20 | D71 provenance addendum: exact runtime startup banner is the authoritative process route evidence for the D71 worker — `gpt-5.6-terra/high`, approval `never`, sandbox `danger-full-access`. Static `codex doctor --json` remains the disclosed D56 environment anomaly: it reports persisted `gpt-5.6-sol` and no effective effort, so it is not a routing block. The retained stash is identified by OID plus Git commit time `2026-07-20T13:26:51Z`; its human subject timestamp is not evidence. | RAG:— (owner-grounded: exact D71 runtime banner and retained-stash correction; repo-grounded: `c09f876`, `c68defc`, `1e9fa8d`, `9fb9f14`, `git show 72505e4…`, `findings/D71-provenance-bookkeeping-repair-2026-07-20.md`) — adds provenance only: no P1.2/core/** execution, frozen-product semantic change, authority expansion, stash mutation, or Owner-gate disposition. |
+| D73 | 2026-07-20 | Approval Owner accepts exact P1.2 CORE-PROVIDER G1–G6 as written: Rule of Three, one pure stdlib-only `core.provider` boundary, exactly 13 public symbols, metadata-only protocol, additive minor SemVer, and P1.2-only authority. | RAG:— (owner-grounded: exact reply `APPROVE P1.2 CORE-PROVIDER G1-G6 AS WRITTEN`; repo-grounded: `artifacts/P1-core-provider-domain-contribution-review.md`) — opens only the prescribed P1.2 core API implementation. |
 
 ## 6. Update Log
 
@@ -233,6 +234,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | 2026-07-20 | plan-run/Codex gpt-5.6-sol xhigh | P1.1 закрыт: D70 заморозил exact F1–F6 provider-config v1.0.0 в item commit `e9560bf` — детали см. phases/P1.md P1.1 Completion Notes. |
 | 2026-07-20 | reconciliation-worker/Codex gpt-5.6-sol (effective doctor; requested Terra/high) | D71: main fast-forwarded to `9fb9f14`, retained stash `72505e4d8bef2a58f4ed555cc5b6014450aee3a9` applied and reconciled; owner dirt preserved unstaged, sealed D65 checker and package/plan gates rerun — P1.2 owner gate remains next. |
 | 2026-07-20 | repair-worker/Codex gpt-5.6-terra high | D72: D71 runtime banner proves Terra/high; D56 doctor remains non-green/non-blocking. Future-dated journal row is preserved/compensated; stash authority is OID+Git time — `findings/D71-provenance-bookkeeping-repair-2026-07-20.md`. |
+| 2026-07-20 | plan-run/Codex gpt-5.6-terra high | P1.2 закрыт: D73 accepted exact G1–G6; immutable `core.provider` API committed — детали см. phases/P1.md P1.2 Completion Notes. |
 
 ## 7. Contracts
 

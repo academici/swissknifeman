@@ -9,8 +9,8 @@
 **Обновлён:** 2026-07-20 · **Соответствует plan.md:** v1.4.3
 
 > **Статус exec:** P0 закрыта и audit attempt 3 завершён literal GREEN на `245bb56`;
-> G01 открыт, P1.1 закрыт D70/item `e9560bf`. Следующий item — owner-gated P1.2
-> в fresh `gpt-5.6-terra/high` process.
+> G01 открыт, P1.1 закрыт D70/item `e9560bf`, P1.2 закрыт D73/item `57b9b2e`.
+> Следующий item — P1.3 в fresh `gpt-5.6-terra/high` process.
 > D71 исполнил D65/D68 reconciliation сейчас: `main` — active execution root, retained stash
 > `72505e4d8bef2a58f4ed555cc5b6014450aee3a9` сохраняет recovery point, unrelated owner dirt
 > возвращён unstaged. Это не открывает FOREMAN/fleet/live authority и не снимает P1.2 owner gate.
@@ -34,7 +34,7 @@
 | P0.6 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | ✅ D63-B · D64-A · D65-A → D71 timing/target | sealed clean-tree lint/evidence replay закрыт; D71 reconciled delivery into main without product-semantic expansion |
 | P0.7 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | ✅ D67/D68 mechanical authority | sealed D65 manifest/derived policy applied in D71; package/main/P1 product semantics не менялись |
 | P1.1 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/xhigh | ✅ D70 | frozen provider-config v1.0.0; exact F1–F6 candidate accepted |
-| P1.2 | solo | plan-run (manual) | gpt-5.6-terra/high | ✅ shared-core contribution | prescribed API после P1.1; public core boundary требует full review |
+| P1.2 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | ✅ D73 shared-core contribution | immutable core API committed in exact item scope |
 | P1.3 | solo | plan-run (manual) | gpt-5.6-terra/high | — | потребляет P1.2 symbols и реализует precedence/diagnostics |
 | P1.4 | solo | plan-exec | gpt-5.6-terra/medium | — | independent compatibility/no-write gate после всей P1 implementation |
 | P2.1 | solo | plan-run (manual) | gpt-5.6-terra/high | ✅ core proposal/ADR | shared artifact kernel; contribution gate и public API review |
@@ -80,25 +80,22 @@ implementation. P5.6→P5.7 — contract→prescribed implementation, поэто
 
 ## Готовый launch-block текущего шага
 
-### S-P1.2 — shared core provider domain
+### S-P1.3 — provider config resolution and diagnostics
 
 | Параметр | Значение |
 |:--|:--|
 | Model | gpt-5.6-terra |
 | Thinking | high |
 | Context | continue (/clear) — ручной item |
-| Суть | Подготовить shared-core contribution review, получить Owner D# и реализовать prescribed immutable provider domain против frozen D70. |
+| Суть | Реализовать pure resolver, diagnostics, and thin carrier adapters against frozen P1.1/P1.2. |
 
 ```text
-$ task:plan-run 2026.07.19-DUAL-PROVIDER P1.2
+$ task:plan-run 2026.07.19-DUAL-PROVIDER P1.3
 
-Продолжай только P1.2 на gpt-5.6-terra/high из P1.1 item commit
-e9560bf26de5a256b73d7a4c36dc2ca388d2ba75. Прочитай plan.md, phases/P1.md,
-handoff.md и все P1.2 Required Reads; проверь D70/frozen provider-config v1.0.0.
-Сначала подготовь `artifacts/P1-core-provider-domain-contribution-review.md` и получи
-Approval Owner D# до первого edit `core/**`, затем реализуй только P1.2 и закрой его
-полным lifecycle. Не трогай P1.3+, восстановленный owner-owned dirt на main, FOREMAN, fleet
-или live carrier state.
+Продолжай только P1.3 на gpt-5.6-terra/high из P1.2 item commit `57b9b2e`.
+Прочитай plan.md, phases/P1.md, handoff.md и все P1.3 Required Reads; реализуй только
+frozen P1.1 precedence/diagnostics и P1.3 Files. Не трогай P1.4+, live config, FOREMAN,
+fleet или unrelated owner-owned dirt.
 ```
 
 ## Гейты владельца (сводно)

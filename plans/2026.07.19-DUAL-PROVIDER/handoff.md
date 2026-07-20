@@ -1,38 +1,42 @@
-# HANDOFF — 2026-07-20 — after P0.3
+# HANDOFF — 2026-07-20 — after P0.4
 
-**Next:** ЗАПУСК ВРУЧНУЮ: gpt-5.6-sol/high
+**Next:** /task:plan-close 2026.07.19-DUAL-PROVIDER P0
 
 | Параметр | Значение |
 |:--|:--|
-| Model | gpt-5.6-sol |
-| Thinking | high — migration/FOREMAN/fleet safety contract |
-| Context | continue (/clear) — ручной item |
-| Суть | Выполнить P0.4 и остановиться на его обязательном Owner Approval gate. |
+| Model | gpt-5.6-terra |
+| Thinking | low — deterministic phase reconciliation |
+| Context | NEW SESSION — шаг-не-item |
+| Суть | Закрыть terminal P0, затем передать её на independent phase audit. |
 
 ```text
-Выполнить P0.4 плана 2026.07.19-DUAL-PROVIDER вручную на gpt-5.6-sol/high. Начать с cold preflight из root AGENTS.md, затем прочитать plan.md, handoff.md, phases/P0.md и Required Reads P0.4 строго в указанном порядке. Использовать frozen D55 capability/artifact contracts и accepted ADR-0001 как неизменяемый input. Подготовить migration/FOREMAN/fleet gate contract и pre-mortem traceability, выполнить validation и остановиться на обязательном Owner Approval D# до frozen status/commits. Не исполнять и не редактировать FOREMAN, не менять fleet/package code и unrelated user changes; environment defect обрабатывать по D56.
+/task:plan-close 2026.07.19-DUAL-PROVIDER P0
 ```
 
-**Done:** P0.3 закрыт item-коммитом `67b0edb`: D55 заморозил capability/artifact
-contracts v1.0.0, принял ADR-0001 и exact `docs/reference.md` diff. D54 hook/command
-ремедиация и D56 environment disclosure rule сохранены отдельными commits/evidence.
+**Done:** P0.4 закрыт GREEN. D59 заморозил
+`root/contracts/provider-migration-gates.md` v1.0.0: G01–G11, independent
+trust/approval/sandbox, explicit-only full access, no-write/rollback, provenance-only cleanup,
+reconcile-only FOREMAN bundle и fleet no-op. Pre-mortem трассирован на P0–P7.
+Item commit: `3eb6aa2` (`docs(provider): заморозить migration gates (P0.4)`).
 
-**Remaining:** P0.4 создаёт и owner-freezes migration/FOREMAN/fleet gates. Затем P0
-становится терминальной и проходит отдельные `plan-close` и independent phase audit;
-P1 стартует только после их green gates.
+**Remaining:** `plan-close P0`, затем independent `/task:plan-audit
+2026.07.19-DUAL-PROVIDER P0`. P1.1 не стартует до literal GREEN P0 audit по G01.
 
-**Sources of truth:** `plan.md` D53–D56 и Contracts · `phases/P0.md` P0.3/P0.4 ·
-`root/contracts/provider-capability-contract.md` ·
-`root/contracts/provider-artifact-contract.md` ·
-`root/adr/0001-provider-adapter-architecture.md` ·
-`brief/03-environment-defect-handling.md`.
+**Sources of truth:** `plan.md` D55/D59 и Contracts · `phases/P0.md` P0.4 ·
+`root/contracts/provider-migration-gates.md` v1.0.0 ·
+`research/03-p0-design-and-premortem.md` · frozen P0.3 contracts/ADR ·
+read-only `plans/2026.07.18-FOREMAN` Status Board row P1/handoff.
 
-**Open risks:** P0.4 не вправе снять FOREMAN pause, разрешить fleet writes или принять
-текущую bootstrap-сессию как release evidence. Любая environment проблема с влиянием на
-качество немедленно раскрывается и блокирует зависимую работу по D56.
+**Open risks:** G01 держит P1 закрытым до independent P0 audit. G08/G09/G10
+имеют свои future Owner D#. Paused FOREMAN D35/P4.4 содержит stale
+`maind memory store`; G10 reconcile обязан заменить его на effective
+`maind memory remember` или MCP `maind_memory_store` до P4.4 execution.
+Plan-local `brief/01-refinements.md` и
+`research/15-command-surface-prerequisite-remediation.md` — unrelated user changes,
+их нельзя включать в close/audit commits.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: executable no-op shim по прежнему project hook path остаётся только для кеша текущего процесса; cold-start project `PreToolUse` пуст.
-- deferred: provider schemas/renderers/package implementation — P1–P6; managed hook projection — P5/P6; release/self-host proof — P7.
+- workarounds: stale-session no-op hook shim остаётся только для кеша текущего процесса; cold registry его не вызывает.
+- deferred: provider implementation — P1–P6; self-host/cleanup/release — P7; FOREMAN reconcile — G10; fleet — separate post-FOREMAN plan.
 - open_questions: —

@@ -105,7 +105,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P0 | Evidence, vocabulary и запечатанные provider contracts | 4/5 | 🟡 In progress |
+| P0 | Evidence, vocabulary и запечатанные provider contracts | 5/5 | 🟢 Done |
 | P1 | Provider config/domain и backward-compatible resolution | 0/4 | ⬜ Not started |
 | P2 | Deterministic adapters, provenance, lock и drift engine | 0/4 | ⬜ Not started |
 | P3 | Dual skills publication и marketplaces | 0/5 | ⬜ Not started |
@@ -203,6 +203,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | 2026-07-20 | Approval Owner + plan-run/Codex gpt-5.6-sol xhigh | D54: исправлены Codex launch/hook registrations и P0.3 Validation scope; contract candidates остаются незамороженными до отдельного D55. |
 | 2026-07-20 | plan-run/Codex gpt-5.6-sol xhigh | P0.3 закрыт: D55 заморозил capability/artifact v1.0.0 и принял ADR-0001 — детали см. phases/P0.md P0.3 Completion Notes. |
 | 2026-07-20 | plan-run/Codex gpt-5.6-sol xhigh | P0.4 candidate: migration/FOREMAN/fleet gates и pre-mortem traceability подготовлены; freeze/close ожидали explicit Owner Approval D59. |
+| 2026-07-20 | plan-run/Codex gpt-5.6-sol xhigh | P0.4 закрыт: D59 заморозил migration gates v1.0.0 и P0–P7 risk traceability — детали см. phases/P0.md P0.4 Completion Notes. |
 
 ## 7. Contracts
 

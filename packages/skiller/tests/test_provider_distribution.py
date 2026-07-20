@@ -77,6 +77,24 @@ class ProviderDistributionCase(unittest.TestCase):
             do_sync(self.env, self.project, {})
         self.assertFalse((self.project / ".agents/skills").exists())
 
+    def test_dual_vendor_unmanaged_codex_conflict_fails_before_any_write(self):
+        self.write_provider_config(providers())
+        unmanaged = self.project / ".agents/skills/code-style"
+        unmanaged.mkdir(parents=True)
+        (unmanaged / "SKILL.md").write_text("user-owned\n", encoding="utf-8")
+
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr), self.assertRaises(SystemExit):
+            do_sync(self.env, self.project, {})
+
+        self.assertIn("SPUB_OWNERSHIP_CONFLICT", stderr.getvalue())
+        self.assertIn("provider codex", stderr.getvalue())
+        self.assertFalse((self.project / ".claude/skills").exists())
+        self.assertFalse((self.project / "skills-lock.json").exists())
+        self.assertFalse(self.env.db_file.exists())
+        self.assertEqual((unmanaged / "SKILL.md").read_text(encoding="utf-8"),
+                         "user-owned\n")
+
     def test_dual_connect_external_target_fails_before_claude_settings_write(self):
         self.write_provider_config(providers())
         with self.assertRaises(SystemExit):

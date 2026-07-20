@@ -772,6 +772,18 @@ def do_sync(env, target, opts, register=True):
         planned.append((provider, plan_sync(
             env, target, provider_cfg, include_core=not opts.get("no_core", False),
             provider=provider)))
+
+    # A selected provider's unmanaged target is an aggregate preflight failure:
+    # applying Claude first and silently skipping Codex would report a misleading
+    # dual-provider success.  ``--force`` remains the explicit, existing escape
+    # hatch for the owner of that target.
+    if not opts.get("force", False):
+        for provider, plan in planned:
+            if plan["conflicts"]:
+                conflicts = ", ".join(plan["conflicts"])
+                die(f"SPUB_OWNERSHIP_CONFLICT: provider {provider} channel vendor "
+                    f"target {plan['skills_path']} has unmanaged conflicts: {conflicts}; "
+                    "repair: resolve the target conflict or rerun `skiller sync --force`")
     records = [_do_sync_provider(env, target, {**opts, "provider": provider},
                                  register=register, plan=plan)
                for provider, plan in planned]

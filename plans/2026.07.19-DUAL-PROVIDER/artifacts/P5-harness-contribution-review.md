@@ -55,3 +55,26 @@ goldens. D85 profiles/surfaces/security rules and frozen P1/P2 contracts are unc
 Accepted under delegated Owner Approval D79: the implementation is bounded to P5.2 Files,
 consumes frozen contracts, and introduces neither a new core abstraction nor authority over
 user-global settings, bootstrap, FOREMAN, or fleet state.
+
+## P5.7 addendum — instruction-projection seam
+
+**Decision authority:** D79 applied against frozen D86
+**Verdict:** ACCEPTED — additive, contract-preserving harness contribution
+
+P5.2's approval is bounded to its listed Files and does not by itself cover P5.7. This
+addendum authorizes only `packages/harness/configs/common/instructions/**`,
+`lib/harness/instructions.py`, focused instruction tests/fixtures and the generated
+instruction reference. The seam has twelve declared consumers (the six frozen scopes × two
+providers); consumer-local code would duplicate D86 catalog, marker and P2 lock semantics.
+
+The contribution reuses the frozen `core.provider_artifact`, `core.provider_lock` and
+`core.provider_registry` APIs without changing core, provider discovery, live targets,
+bootstrap, FOREMAN or fleet authority. Its catalog is explicit; named adapters independently
+consume common plus their own extension fragments; no output translation, generic Markdown
+parser or new public abstraction is introduced. D86 remains unchanged, so this is a
+minor-class additive harness capability under delegated D79.
+
+P5.7 fix-forward D87 preserves that verdict while consuming artifact contract v1.1.0's
+generic metadata carrier. Harness explicitly selects v1.1.0 and stores all D86 semantic
+render parameters there; core still knows no instruction fields or provider content. Exact
+artifact v1.0.0 callers/records and provider-instruction v1.0.0 semantics remain unchanged.

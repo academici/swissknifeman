@@ -9,12 +9,14 @@ from hashlib import sha256
 import json
 import re
 from pathlib import PurePosixPath
+from types import MappingProxyType
 from typing import Callable, Mapping
 
 from .provider import CapabilityRequirement, ProviderId
 
 
-_CONTRACT_VERSION = "1.0.0"
+_DEFAULT_CONTRACT_VERSION = "1.0.0"
+_SUPPORTED_CONTRACT_VERSIONS = frozenset({"1.0.0", "1.1.0"})
 _DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 _IDENTIFIER_RE = re.compile(r"^[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*)*$")
 _SEMVER_RE = re.compile(r"^[0-9]+\.[0-9]+\.[0-9]+$")
@@ -92,6 +94,7 @@ class ArtifactRenderRequest:
     override_layers: tuple[Mapping[str, object], ...]
     semantic_parameters: Mapping[str, object]
     renderer: Callable[["ArtifactRenderRequest"], bytes]
+    contract_version: str = _DEFAULT_CONTRACT_VERSION
 
     def __post_init__(self) -> None:
         _require_identifier(self.artifact_id, "artifact_id")
@@ -113,11 +116,12 @@ class ArtifactRenderRequest:
             self.semantic_parameters, "semantic_parameters"))
         if not callable(self.renderer):
             raise TypeError("renderer must be callable")
+        _require_supported_contract_version(self.contract_version)
 
 
 @dataclass(frozen=True)
 class ArtifactProvenance:
-    """The contract v1.0.0 sidecar/lock record for a rendered artifact."""
+    """A supported artifact-contract sidecar/lock record."""
 
     contract_version: str
     artifact_id: str
@@ -131,11 +135,10 @@ class ArtifactProvenance:
     managed_boundary: tuple[str, tuple[str, ...]]
     override_layers: tuple[tuple[tuple[str, object], ...], ...]
     capability_requirements: tuple[CapabilityRequirement, ...]
+    semantic_metadata: tuple[tuple[str, object], ...] = ()
 
     def __post_init__(self) -> None:
-        _require_semver(self.contract_version, "contract_version")
-        if self.contract_version != _CONTRACT_VERSION:
-            raise ValueError("unsupported artifact contract version")
+        _require_supported_contract_version(self.contract_version)
         _require_identifier(self.artifact_id, "artifact_id")
         if not isinstance(self.canonical_sources, tuple) or not self.canonical_sources:
             raise ValueError("canonical_sources must be a non-empty tuple")
@@ -166,6 +169,10 @@ class ArtifactProvenance:
             raise ValueError("capability_requirements must be canonically ordered")
         if len({item.capability_id for item in ordered_requirements}) != len(ordered_requirements):
             raise ValueError("capability_requirements must not repeat capability IDs")
+        metadata = _validate_semantic_metadata(self.semantic_metadata)
+        if self.contract_version == "1.0.0" and metadata:
+            raise ValueError("semantic_metadata requires artifact contract v1.1.0")
+        object.__setattr__(self, "semantic_metadata", metadata)
 
 
 @dataclass(frozen=True)
@@ -212,7 +219,7 @@ def plan_artifact_render(request: ArtifactRenderRequest) -> ArtifactRenderResult
         raise TypeError("renderer must return bytes")
     source_hash = sha256_digest(canonical_json_bytes(_source_envelope(request)))
     provenance = ArtifactProvenance(
-        contract_version=_CONTRACT_VERSION,
+        contract_version=request.contract_version,
         artifact_id=request.artifact_id,
         canonical_sources=request.canonical_sources,
         adapter_id=request.adapter.adapter_id,
@@ -224,13 +231,15 @@ def plan_artifact_render(request: ArtifactRenderRequest) -> ArtifactRenderResult
         managed_boundary=request.target.managed_boundary,
         override_layers=request.override_layers,
         capability_requirements=request.adapter.capability_requirements,
+        semantic_metadata=(request.semantic_parameters
+                           if request.contract_version == "1.1.0" else ()),
     )
     return ArtifactRenderResult(rendered, request.target, provenance)
 
 
 def _source_envelope(request: ArtifactRenderRequest) -> dict[str, object]:
     return {
-        "contract_version": _CONTRACT_VERSION,
+        "contract_version": request.contract_version,
         "canonical_sources": [
             {"source_id": source.source_id, "path": source.path, "hash": source.content_hash}
             for source in request.canonical_sources
@@ -270,6 +279,32 @@ def _immutable_mapping(value: object, label: str) -> tuple[tuple[str, object], .
     if not all(isinstance(key, str) for key in value):
         raise TypeError(f"{label} keys must be strings")
     return tuple((key, _json_value(item)) for key, item in sorted(value.items()))
+
+
+def _validate_semantic_metadata(value: object) -> tuple[tuple[str, object], ...]:
+    if not _is_pairs(value):
+        raise TypeError("semantic_metadata must be an immutable mapping")
+    if len({key for key, _ in value}) != len(value):
+        raise ValueError("semantic_metadata must not repeat keys")
+    if tuple(key for key, _ in value) != tuple(sorted(key for key, _ in value)):
+        raise ValueError("semantic_metadata must be canonically ordered")
+    return tuple((key, _immutable_json_value(item)) for key, item in value)
+
+
+def _immutable_json_value(value: object) -> object:
+    if value is None or isinstance(value, (str, int, bool)):
+        return value
+    if isinstance(value, float):
+        raise TypeError("canonical JSON values must not use floats")
+    if isinstance(value, Mapping):
+        if not all(isinstance(key, str) for key in value):
+            raise TypeError("canonical JSON object keys must be strings")
+        return MappingProxyType({
+            key: _immutable_json_value(item) for key, item in sorted(value.items())
+        })
+    if isinstance(value, (tuple, list)):
+        return tuple(_immutable_json_value(item) for item in value)
+    raise TypeError("value is not canonical JSON data")
 
 
 def _validate_override_layers(value: object, label: str) -> tuple[tuple[tuple[str, object], ...], ...]:
@@ -342,3 +377,9 @@ def _require_digest(value: object, label: str) -> None:
 def _require_semver(value: object, label: str) -> None:
     if not isinstance(value, str) or not _SEMVER_RE.fullmatch(value):
         raise ValueError(f"{label} must be SemVer")
+
+
+def _require_supported_contract_version(value: object) -> None:
+    _require_semver(value, "contract_version")
+    if value not in _SUPPORTED_CONTRACT_VERSIONS:
+        raise ValueError("unsupported artifact contract version")

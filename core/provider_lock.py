@@ -458,19 +458,23 @@ def _atomic_write_bytes(path: Path, value: bytes) -> None:
 
 
 def _provenance_value(record: ArtifactProvenance) -> dict[str, object]:
-    return {"adapter_id": record.adapter_id, "adapter_version": record.adapter_version,
-            "artifact_id": record.artifact_id,
-            "canonical_sources": [{"hash": source.content_hash, "path": source.path,
-                                   "source_id": source.source_id} for source in record.canonical_sources],
-            "capability_requirements": [{"accepted_levels": [level.value for level in requirement.accepted_levels],
-                                          "id": requirement.capability_id.value}
-                                         for requirement in record.capability_requirements],
-            "contract_version": record.contract_version,
-            "managed_boundary": {"block_ids": list(record.managed_boundary[1]),
-                                 "mode": record.managed_boundary[0]},
-            "override_layers": [dict(layer) for layer in record.override_layers],
-            "provider_id": record.provider_id.value, "rendered_hash": record.rendered_hash,
-            "source_hash": record.source_hash, "target_path": record.target_path}
+    value = {"adapter_id": record.adapter_id, "adapter_version": record.adapter_version,
+             "artifact_id": record.artifact_id,
+             "canonical_sources": [{"hash": source.content_hash, "path": source.path,
+                                    "source_id": source.source_id} for source in record.canonical_sources],
+             "capability_requirements": [{"accepted_levels": [level.value for level in requirement.accepted_levels],
+                                           "id": requirement.capability_id.value}
+                                          for requirement in record.capability_requirements],
+             "contract_version": record.contract_version,
+             "managed_boundary": {"block_ids": list(record.managed_boundary[1]),
+                                  "mode": record.managed_boundary[0]},
+             "override_layers": [dict(layer) for layer in record.override_layers],
+             "provider_id": record.provider_id.value, "rendered_hash": record.rendered_hash,
+             "source_hash": record.source_hash, "target_path": record.target_path}
+    if record.contract_version == "1.1.0":
+        value["semantic_metadata"] = json.loads(canonical_json_bytes(
+            dict(record.semantic_metadata)).decode("utf-8"))
+    return value
 
 
 def _provenance_from_value(value: object) -> ArtifactProvenance:
@@ -479,10 +483,15 @@ def _provenance_from_value(value: object) -> ArtifactProvenance:
     required = {"adapter_id", "adapter_version", "artifact_id", "canonical_sources",
                 "capability_requirements", "contract_version", "managed_boundary",
                 "override_layers", "provider_id", "rendered_hash", "source_hash", "target_path"}
-    if set(value) != required or not isinstance(value["canonical_sources"], list) or not isinstance(value["capability_requirements"], list):
+    version = value.get("contract_version")
+    if version == "1.1.0":
+        required.add("semantic_metadata")
+    if (version not in {"1.0.0", "1.1.0"} or set(value) != required
+            or not isinstance(value["canonical_sources"], list)
+            or not isinstance(value["capability_requirements"], list)
+            or (version == "1.1.0" and not isinstance(value["semantic_metadata"], dict))):
         raise ValueError("corrupt lock")
-    if (value["contract_version"] != "1.0.0" or
-            not all(isinstance(value[field], str) for field in ("adapter_id", "adapter_version", "artifact_id", "target_path", "source_hash", "rendered_hash")) or
+    if (not all(isinstance(value[field], str) for field in ("adapter_id", "adapter_version", "artifact_id", "target_path", "source_hash", "rendered_hash")) or
             not _IDENTIFIER_RE.fullmatch(value["adapter_id"]) or not _IDENTIFIER_RE.fullmatch(value["artifact_id"]) or
             not _SEMVER_RE.fullmatch(value["adapter_version"]) or not _DIGEST_RE.fullmatch(value["source_hash"]) or
             not _DIGEST_RE.fullmatch(value["rendered_hash"])):
@@ -507,7 +516,9 @@ def _provenance_from_value(value: object) -> ArtifactProvenance:
     overrides = tuple(tuple(sorted(layer.items())) for layer in value["override_layers"] if isinstance(layer, dict))
     if len(overrides) != len(value["override_layers"]):
         raise ValueError("corrupt lock")
+    metadata = tuple(sorted(value.get("semantic_metadata", {}).items()))
     return ArtifactProvenance(value["contract_version"], value["artifact_id"], sources,
                               value["adapter_id"], value["adapter_version"], ProviderId(value["provider_id"]),
                               value["target_path"], value["source_hash"], value["rendered_hash"],
-                              (boundary["mode"], tuple(boundary["block_ids"])), overrides, requirements)
+                              (boundary["mode"], tuple(boundary["block_ids"])), overrides, requirements,
+                              metadata)

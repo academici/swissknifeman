@@ -87,3 +87,13 @@ APPROVE P2.1 CORE-ARTIFACT K1-K6 AS WRITTEN
 6. **K6:** authority is limited to P2.1; P2.2+, provider delivery, live carriers, FOREMAN and fleet remain excluded.
 
 Any change to K1–K6 is a revision request, not partial approval.
+
+## P5.7 backward-compatible v1.1 addendum
+
+D87 authorizes one additive P2 v1.1 carrier: a default-at-end `contract_version` selector on
+`ArtifactRenderRequest` and one default-empty immutable, canonically ordered generic
+`semantic_metadata` field on `ArtifactProvenance`. Existing positional callers and exact
+v1.0.0 render/lock bytes remain unchanged. v1.1.0 copies the already-hashed semantic render
+parameters into the lock carrier; it adds no provider/content policy, public symbol, lifecycle
+write authority or weakened validation. This is the proven backward-compatible minor class
+already described by K5, not a rewrite of D75 or K1–K6.

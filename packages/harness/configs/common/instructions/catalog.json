@@ -1,0 +1,2063 @@
+{
+  "contract_version": "1.0.0",
+  "catalog_version": "1.0.0",
+  "capability_requirements": [
+    {
+      "id": "instructions.project",
+      "accepted_levels": [
+        "native",
+        "adapted"
+      ]
+    }
+  ],
+  "scopes": [
+    {
+      "id": "root",
+      "claude_target": "CLAUDE.md",
+      "codex_target": "AGENTS.md",
+      "sections": [
+        {
+          "id": "root.ecosystem-identity",
+          "scope_id": "root",
+          "kind": "common",
+          "provider_id": null,
+          "order": 1,
+          "intent": "Apply this source-derived instruction: `swissknifeman` is the umbrella repository and control layer; `skiller`, `harness`, `maind`, `analyst`, and `task` remain independent capability packages.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "root.maintainer",
+              "action": "preserve",
+              "object": "root.ecosystem-identity.requirements",
+              "boundary": "root.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.root.common",
+              "path": "packages/harness/configs/common/instructions/root/common.md",
+              "sha256": "205356bb377165cf29aeaa30a97ed60e81384853fd64dbd618a8aed0ccdc93dd"
+            }
+          ],
+          "compatibility_assertions": [
+            "`swissknifeman` is the umbrella repository and control layer",
+            "`skiller`, `harness`, `maind`, `analyst`, and `task` remain independent capability packages.",
+            "`swissknifeman`",
+            "`skiller`",
+            "`harness`",
+            "`maind`",
+            "`analyst`",
+            "`task`"
+          ]
+        },
+        {
+          "id": "root.repository-layout",
+          "scope_id": "root",
+          "kind": "common",
+          "provider_id": null,
+          "order": 2,
+          "intent": "Apply this source-derived instruction: Keep `core/` as shared stdlib primitives, the five package roots as independent tools, `.claude-plugin/marketplace.json` as the generated umbrella marketplace, and `docs/` as the aggregated documentation site.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "root.maintainer",
+              "action": "maintain",
+              "object": "root.repository-layout.requirements",
+              "boundary": "root.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.root.common",
+              "path": "packages/harness/configs/common/instructions/root/common.md",
+              "sha256": "205356bb377165cf29aeaa30a97ed60e81384853fd64dbd618a8aed0ccdc93dd"
+            }
+          ],
+          "compatibility_assertions": [
+            "Keep `core/` as shared stdlib primitives, the five package roots as independent tools, `.claude-plugin/marketplace.json` as the generated umbrella marketplace, and `docs/` as the aggregated documentation site.",
+            "`core/`",
+            "`.claude-plugin/marketplace.json`",
+            "`docs/`"
+          ]
+        },
+        {
+          "id": "root.package-boundaries",
+          "scope_id": "root",
+          "kind": "common",
+          "provider_id": null,
+          "order": 3,
+          "intent": "Apply this source-derived instruction: Read the relevant package guide before changing `packages/<name>/`; `task` remains plugin-only and has no standalone CLI.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "root.maintainer",
+              "action": "preserve",
+              "object": "root.package-boundaries.requirements",
+              "boundary": "root.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.root.common",
+              "path": "packages/harness/configs/common/instructions/root/common.md",
+              "sha256": "205356bb377165cf29aeaa30a97ed60e81384853fd64dbd618a8aed0ccdc93dd"
+            }
+          ],
+          "compatibility_assertions": [
+            "Read the relevant package guide before changing `packages/<name>/`",
+            "`task` remains plugin-only and has no standalone CLI.",
+            "`packages/<name>/`",
+            "`task`"
+          ]
+        },
+        {
+          "id": "root.cli-routing",
+          "scope_id": "root",
+          "kind": "common",
+          "provider_id": null,
+          "order": 4,
+          "intent": "Apply this source-derived instruction: Use `swissknifeman skills|env|maind|analyst|setup|doctor` as the root router; keep `skiller`, `harness`, `maind`, and `analyst` as distinct package CLIs, and do not add a root `task` group.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "root.maintainer",
+              "action": "route",
+              "object": "root.cli-routing.requirements",
+              "boundary": "root.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.root.common",
+              "path": "packages/harness/configs/common/instructions/root/common.md",
+              "sha256": "205356bb377165cf29aeaa30a97ed60e81384853fd64dbd618a8aed0ccdc93dd"
+            }
+          ],
+          "compatibility_assertions": [
+            "Use `swissknifeman skills|env|maind|analyst|setup|doctor` as the root router",
+            "keep `skiller`, `harness`, `maind`, and `analyst` as distinct package CLIs, and do not add a root `task` group.",
+            "`swissknifeman skills|env|maind|analyst|setup|doctor`",
+            "`skiller`",
+            "`harness`",
+            "`maind`",
+            "`analyst`",
+            "`task`"
+          ]
+        },
+        {
+          "id": "root.shared-core",
+          "scope_id": "root",
+          "kind": "common",
+          "provider_id": null,
+          "order": 5,
+          "intent": "Apply this source-derived instruction: Put shared primitives in `core/`; package Python runtime stays stdlib-only and reaches `core` through the repository `PYTHONPATH` fallback.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "root.maintainer",
+              "action": "maintain",
+              "object": "root.shared-core.requirements",
+              "boundary": "root.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.root.common",
+              "path": "packages/harness/configs/common/instructions/root/common.md",
+              "sha256": "205356bb377165cf29aeaa30a97ed60e81384853fd64dbd618a8aed0ccdc93dd"
+            }
+          ],
+          "compatibility_assertions": [
+            "Put shared primitives in `core/`",
+            "package Python runtime stays stdlib-only and reaches `core` through the repository `PYTHONPATH` fallback.",
+            "`core/`",
+            "`core`",
+            "`PYTHONPATH`"
+          ]
+        },
+        {
+          "id": "root.marketplace",
+          "scope_id": "root",
+          "kind": "common",
+          "provider_id": null,
+          "order": 6,
+          "intent": "Apply this source-derived instruction: Maintain one generated `swissknifeman` marketplace with package provenance; plugin names remain unprefixed for backward compatibility.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "root.maintainer",
+              "action": "maintain",
+              "object": "root.marketplace.requirements",
+              "boundary": "root.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.root.common",
+              "path": "packages/harness/configs/common/instructions/root/common.md",
+              "sha256": "205356bb377165cf29aeaa30a97ed60e81384853fd64dbd618a8aed0ccdc93dd"
+            }
+          ],
+          "compatibility_assertions": [
+            "Maintain one generated `swissknifeman` marketplace with package provenance",
+            "plugin names remain unprefixed for backward compatibility.",
+            "`swissknifeman`"
+          ]
+        },
+        {
+          "id": "root.engineering-invariants",
+          "scope_id": "root",
+          "kind": "common",
+          "provider_id": null,
+          "order": 7,
+          "intent": "Apply this source-derived instruction: Do not add pip/npm runtime dependencies, duplicate shared primitives, rename the umbrella or `~/.swissknifeman/` state, break embedded `maind` paths, or roll out always-on context without the budget gate.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "root.maintainer",
+              "action": "enforce",
+              "object": "root.engineering-invariants.requirements",
+              "boundary": "root.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.root.common",
+              "path": "packages/harness/configs/common/instructions/root/common.md",
+              "sha256": "205356bb377165cf29aeaa30a97ed60e81384853fd64dbd618a8aed0ccdc93dd"
+            }
+          ],
+          "compatibility_assertions": [
+            "Do not add pip/npm runtime dependencies, duplicate shared primitives, rename the umbrella or `~/.swissknifeman/` state, break embedded `maind` paths, or roll out always-on context without the budget gate.",
+            "`~/.swissknifeman/`",
+            "`maind`"
+          ]
+        },
+        {
+          "id": "root.plan-lifecycle",
+          "scope_id": "root",
+          "kind": "common",
+          "provider_id": null,
+          "order": 8,
+          "intent": "Apply this source-derived instruction: Keep executable master plans in repository `plans/<ID>/` and use the `plan-protocol` schema and commands.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "root.maintainer",
+              "action": "manage",
+              "object": "root.plan-lifecycle.requirements",
+              "boundary": "root.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.root.common",
+              "path": "packages/harness/configs/common/instructions/root/common.md",
+              "sha256": "205356bb377165cf29aeaa30a97ed60e81384853fd64dbd618a8aed0ccdc93dd"
+            }
+          ],
+          "compatibility_assertions": [
+            "Keep executable master plans in repository `plans/<ID>/` and use the `plan-protocol` schema and commands.",
+            "`plans/<ID>/`",
+            "`plan-protocol`"
+          ]
+        },
+        {
+          "id": "root.development-validation",
+          "scope_id": "root",
+          "kind": "common",
+          "provider_id": null,
+          "order": 9,
+          "intent": "Apply this source-derived instruction: Run the affected package validation command before handoff and use Russian Conventional Commit messages.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "root.maintainer",
+              "action": "validate",
+              "object": "root.development-validation.requirements",
+              "boundary": "root.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.root.common",
+              "path": "packages/harness/configs/common/instructions/root/common.md",
+              "sha256": "205356bb377165cf29aeaa30a97ed60e81384853fd64dbd618a8aed0ccdc93dd"
+            }
+          ],
+          "compatibility_assertions": [
+            "Run the affected package validation command before handoff and use Russian Conventional Commit messages."
+          ]
+        },
+        {
+          "id": "root.reference-provenance",
+          "scope_id": "root",
+          "kind": "common",
+          "provider_id": null,
+          "order": 10,
+          "intent": "Apply this source-derived instruction: Record external design sources in `docs/reference.md`, vendor provenance in adjacent `upstream.json`, and deliberately rejected recurring ideas in `docs/rejected-optimizations.md`.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "root.maintainer",
+              "action": "record",
+              "object": "root.reference-provenance.requirements",
+              "boundary": "root.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.root.common",
+              "path": "packages/harness/configs/common/instructions/root/common.md",
+              "sha256": "205356bb377165cf29aeaa30a97ed60e81384853fd64dbd618a8aed0ccdc93dd"
+            }
+          ],
+          "compatibility_assertions": [
+            "Record external design sources in `docs/reference.md`, vendor provenance in adjacent `upstream.json`, and deliberately rejected recurring ideas in `docs/rejected-optimizations.md`.",
+            "`docs/reference.md`",
+            "`upstream.json`",
+            "`docs/rejected-optimizations.md`"
+          ]
+        },
+        {
+          "id": "root.decision-verification",
+          "scope_id": "root",
+          "kind": "common",
+          "provider_id": null,
+          "order": 11,
+          "intent": "Apply this source-derived instruction: Verify external claims through `context7` → `perplexity-web` → `WebSearch`; verify repository claims by reading code and recorded evidence.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "root.maintainer",
+              "action": "verify",
+              "object": "root.decision-verification.requirements",
+              "boundary": "root.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.root.common",
+              "path": "packages/harness/configs/common/instructions/root/common.md",
+              "sha256": "205356bb377165cf29aeaa30a97ed60e81384853fd64dbd618a8aed0ccdc93dd"
+            }
+          ],
+          "compatibility_assertions": [
+            "Verify external claims through `context7` → `perplexity-web` → `WebSearch`",
+            "verify repository claims by reading code and recorded evidence.",
+            "`context7`",
+            "`perplexity-web`",
+            "`WebSearch`"
+          ]
+        },
+        {
+          "id": "root.claude-code.native-surfaces",
+          "scope_id": "root",
+          "kind": "provider-extension",
+          "provider_id": "claude-code",
+          "order": 1,
+          "intent": "Apply this source-derived instruction: Keep Claude Code compatibility surfaces in this extension: `.claude*`, `CLAUDE.md`, existing plugin commands, and managed Claude hooks remain provider-owned.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "root.claude-code.maintainer",
+              "action": "expose",
+              "object": "root.claude-code.native-surfaces.requirements",
+              "boundary": "root.provider.claude-code"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.root.claude-code",
+              "path": "packages/harness/configs/common/instructions/root/claude-code.md",
+              "sha256": "206e76b8fc022c9837e9b40c15a0ec57ee510fb9e5c103ad8046e3cd7a3fe02f"
+            }
+          ],
+          "compatibility_assertions": [
+            "Keep Claude Code compatibility surfaces in this extension: `.claude*`, `CLAUDE.md`, existing plugin commands, and managed Claude hooks remain provider-owned.",
+            "`.claude*`",
+            "`CLAUDE.md`"
+          ]
+        },
+        {
+          "id": "root.claude-code.context-budget",
+          "scope_id": "root",
+          "kind": "provider-extension",
+          "provider_id": "claude-code",
+          "order": 2,
+          "intent": "Apply this source-derived instruction: Run skiller budget --first-turn; target 3–7K, warn at 10K, and require an Owner verdict above the gate.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "root.claude-code.maintainer",
+              "action": "maintain",
+              "object": "root.claude-code.context-budget.requirements",
+              "boundary": "root.provider.claude-code"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.root.claude-code",
+              "path": "packages/harness/configs/common/instructions/root/claude-code.md",
+              "sha256": "206e76b8fc022c9837e9b40c15a0ec57ee510fb9e5c103ad8046e3cd7a3fe02f"
+            }
+          ],
+          "compatibility_assertions": [
+            "Run skiller budget --first-turn",
+            "target 3–7K, warn at 10K, and require an Owner verdict above the gate."
+          ]
+        },
+        {
+          "id": "root.claude-code.research-routing",
+          "scope_id": "root",
+          "kind": "provider-extension",
+          "provider_id": "claude-code",
+          "order": 3,
+          "intent": "Apply this source-derived instruction: For Claude Code research, use the established `perplexity-web` route before `WebSearch`; this native routing does not replace the common external-claim verification rule.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "root.claude-code.maintainer",
+              "action": "route",
+              "object": "root.claude-code.research-routing.requirements",
+              "boundary": "root.provider.claude-code"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.root.claude-code",
+              "path": "packages/harness/configs/common/instructions/root/claude-code.md",
+              "sha256": "206e76b8fc022c9837e9b40c15a0ec57ee510fb9e5c103ad8046e3cd7a3fe02f"
+            }
+          ],
+          "compatibility_assertions": [
+            "For Claude Code research, use the established `perplexity-web` route before `WebSearch`",
+            "this native routing does not replace the common external-claim verification rule.",
+            "`perplexity-web`",
+            "`WebSearch`"
+          ]
+        },
+        {
+          "id": "root.codex.bootstrap",
+          "scope_id": "root",
+          "kind": "provider-extension",
+          "provider_id": "codex",
+          "order": 1,
+          "intent": "Apply this source-derived instruction: Treat `.agents/skills/*` as thin Codex adapters, keep canonical skill and command content under `packages/skiller/skills/` and `packages/task/commands/`, use worktree-local package CLIs for writes, and preserve Claude Code compatibility.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "root.codex.maintainer",
+              "action": "enforce",
+              "object": "root.codex.bootstrap.requirements",
+              "boundary": "root.provider.codex"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.root.codex",
+              "path": "packages/harness/configs/common/instructions/root/codex.md",
+              "sha256": "cef0c1315b7233aa6120d935bd4fc75bf46e3472aeba6a3eb2979b8aa6f2529f"
+            }
+          ],
+          "compatibility_assertions": [
+            "Treat `.agents/skills/*` as thin Codex adapters, keep canonical skill and command content under `packages/skiller/skills/` and `packages/task/commands/`, use worktree-local package CLIs for writes, and preserve Claude Code compatibility.",
+            "`.agents/skills/*`",
+            "`packages/skiller/skills/`",
+            "`packages/task/commands/`"
+          ]
+        },
+        {
+          "id": "root.codex.launch-and-hook-integrity",
+          "scope_id": "root",
+          "kind": "provider-extension",
+          "provider_id": "codex",
+          "order": 2,
+          "intent": "Apply this source-derived instruction: For this trusted repository, a Codex launch names the repository cwd, routed model and effort, `-a never`, and `-s danger-full-access`; preflight checks `pwd`, `git status --short`, `codex doctor --json`, hook integrity, `maind health --cwd`, and applicable plan lint. Treat hook exit `127` as a path defect and repair its effective registration.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "root.codex.maintainer",
+              "action": "enforce",
+              "object": "root.codex.launch-and-hook-integrity.requirements",
+              "boundary": "root.provider.codex"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.root.codex",
+              "path": "packages/harness/configs/common/instructions/root/codex.md",
+              "sha256": "cef0c1315b7233aa6120d935bd4fc75bf46e3472aeba6a3eb2979b8aa6f2529f"
+            }
+          ],
+          "compatibility_assertions": [
+            "For this trusted repository, a Codex launch names the repository cwd, routed model and effort, `-a never`, and `-s danger-full-access`",
+            "preflight checks `pwd`, `git status --short`, `codex doctor --json`, hook integrity, `maind health --cwd`, and applicable plan lint. Treat hook exit `127` as a path defect and repair its effective registration.",
+            "`-a never`",
+            "`-s danger-full-access`",
+            "`pwd`",
+            "`git status --short`",
+            "`codex doctor --json`",
+            "`maind health --cwd`",
+            "`127`"
+          ]
+        },
+        {
+          "id": "root.codex.fresh-agent-execution",
+          "scope_id": "root",
+          "kind": "provider-extension",
+          "provider_id": "codex",
+          "order": 3,
+          "intent": "Apply this source-derived instruction: For an active executable plan, delegate each next executable item from its committed handoff; fix audit regressions forward through the owning item and escalate only an authority or frozen-contract change.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "root.codex.maintainer",
+              "action": "maintain",
+              "object": "root.codex.fresh-agent-execution.requirements",
+              "boundary": "root.provider.codex"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.root.codex",
+              "path": "packages/harness/configs/common/instructions/root/codex.md",
+              "sha256": "cef0c1315b7233aa6120d935bd4fc75bf46e3472aeba6a3eb2979b8aa6f2529f"
+            }
+          ],
+          "compatibility_assertions": [
+            "For an active executable plan, delegate each next executable item from its committed handoff",
+            "fix audit regressions forward through the owning item and escalate only an authority or frozen-contract change."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "skiller",
+      "claude_target": "packages/skiller/CLAUDE.md",
+      "codex_target": "packages/skiller/AGENTS.md",
+      "sections": [
+        {
+          "id": "skiller.identity",
+          "scope_id": "skiller",
+          "kind": "common",
+          "provider_id": null,
+          "order": 1,
+          "intent": "Apply this source-derived instruction: `skiller` is the registry and source of truth for portable AI skills; it distributes skills without becoming the umbrella control layer.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "skiller.maintainer",
+              "action": "preserve",
+              "object": "skiller.identity.requirements",
+              "boundary": "skiller.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.skiller.common",
+              "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
+              "sha256": "8fc55ecbc7f85be0b3b3d49abd570fec3bca9f42716d3ec1dd1e0cbb4c5e712a"
+            }
+          ],
+          "compatibility_assertions": [
+            "`skiller` is the registry and source of truth for portable AI skills",
+            "it distributes skills without becoming the umbrella control layer.",
+            "`skiller`"
+          ]
+        },
+        {
+          "id": "skiller.distribution-channels",
+          "scope_id": "skiller",
+          "kind": "common",
+          "provider_id": null,
+          "order": 2,
+          "intent": "Apply this source-derived instruction: Keep the two distribution channels distinct: `connect` enables a marketplace source, while `vendor`/`sync` delivers managed physical skill copies.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "skiller.maintainer",
+              "action": "maintain",
+              "object": "skiller.distribution-channels.requirements",
+              "boundary": "skiller.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.skiller.common",
+              "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
+              "sha256": "8fc55ecbc7f85be0b3b3d49abd570fec3bca9f42716d3ec1dd1e0cbb4c5e712a"
+            }
+          ],
+          "compatibility_assertions": [
+            "Keep the two distribution channels distinct: `connect` enables a marketplace source, while `vendor`/`sync` delivers managed physical skill copies.",
+            "`connect`",
+            "`vendor`",
+            "`sync`"
+          ]
+        },
+        {
+          "id": "skiller.configuration-ownership",
+          "scope_id": "skiller",
+          "kind": "common",
+          "provider_id": null,
+          "order": 3,
+          "intent": "Apply this source-derived instruction: Keep `.swissknife.json` for connect and legacy vendor selection separate from `.swissknifeman/config.json` for skill-granular vendor sync.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "skiller.maintainer",
+              "action": "maintain",
+              "object": "skiller.configuration-ownership.requirements",
+              "boundary": "skiller.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.skiller.common",
+              "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
+              "sha256": "8fc55ecbc7f85be0b3b3d49abd570fec3bca9f42716d3ec1dd1e0cbb4c5e712a"
+            }
+          ],
+          "compatibility_assertions": [
+            "Keep `.swissknife.json` for connect and legacy vendor selection separate from `.swissknifeman/config.json` for skill-granular vendor sync.",
+            "`.swissknife.json`",
+            "`.swissknifeman/config.json`"
+          ]
+        },
+        {
+          "id": "skiller.core-policy",
+          "scope_id": "skiller",
+          "kind": "common",
+          "provider_id": null,
+          "order": 4,
+          "intent": "Apply this source-derived instruction: Deliver the nine `CORE_SKILLS` by default through the selected channel; `--no-core` is the explicit opt-out and budget reporting remains authoritative.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "skiller.maintainer",
+              "action": "enforce",
+              "object": "skiller.core-policy.requirements",
+              "boundary": "skiller.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.skiller.common",
+              "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
+              "sha256": "8fc55ecbc7f85be0b3b3d49abd570fec3bca9f42716d3ec1dd1e0cbb4c5e712a"
+            }
+          ],
+          "compatibility_assertions": [
+            "Deliver the nine `CORE_SKILLS` by default through the selected channel",
+            "`--no-core` is the explicit opt-out and budget reporting remains authoritative.",
+            "`CORE_SKILLS`",
+            "`--no-core`"
+          ]
+        },
+        {
+          "id": "skiller.layout-and-generation",
+          "scope_id": "skiller",
+          "kind": "common",
+          "provider_id": null,
+          "order": 5,
+          "intent": "Apply this source-derived instruction: Keep skills under `skills/<bucket>/<name>/SKILL.md`; treat `skills.json`, `skills/_index.md`, marketplace manifests, graph, and budget documentation as registry-generated outputs.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "skiller.maintainer",
+              "action": "maintain",
+              "object": "skiller.layout-and-generation.requirements",
+              "boundary": "skiller.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.skiller.common",
+              "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
+              "sha256": "8fc55ecbc7f85be0b3b3d49abd570fec3bca9f42716d3ec1dd1e0cbb4c5e712a"
+            }
+          ],
+          "compatibility_assertions": [
+            "Keep skills under `skills/<bucket>/<name>/SKILL.md`",
+            "treat `skills.json`, `skills/_index.md`, marketplace manifests, graph, and budget documentation as registry-generated outputs.",
+            "`skills/<bucket>/<name>/SKILL.md`",
+            "`skills.json`",
+            "`skills/_index.md`"
+          ]
+        },
+        {
+          "id": "skiller.module-boundaries",
+          "scope_id": "skiller",
+          "kind": "common",
+          "provider_id": null,
+          "order": 6,
+          "intent": "Apply this source-derived instruction: Keep skill selection in `config.resolve_selection`, vendor sync in `skillset.do_sync`, and environment preset ownership delegated to `harness`.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "skiller.maintainer",
+              "action": "preserve",
+              "object": "skiller.module-boundaries.requirements",
+              "boundary": "skiller.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.skiller.common",
+              "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
+              "sha256": "8fc55ecbc7f85be0b3b3d49abd570fec3bca9f42716d3ec1dd1e0cbb4c5e712a"
+            }
+          ],
+          "compatibility_assertions": [
+            "Keep skill selection in `config.resolve_selection`, vendor sync in `skillset.do_sync`, and environment preset ownership delegated to `harness`.",
+            "`config.resolve_selection`",
+            "`skillset.do_sync`",
+            "`harness`"
+          ]
+        },
+        {
+          "id": "skiller.engineering-invariants",
+          "scope_id": "skiller",
+          "kind": "common",
+          "provider_id": null,
+          "order": 7,
+          "intent": "Apply this source-derived instruction: Keep `lib/` stdlib-only, pass frozen `Env` explicitly, use Russian diagnostics and merge-only project writes, and edit local skills through `SKILL.ru.md` before regenerating the compact English canon.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "skiller.maintainer",
+              "action": "enforce",
+              "object": "skiller.engineering-invariants.requirements",
+              "boundary": "skiller.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.skiller.common",
+              "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
+              "sha256": "8fc55ecbc7f85be0b3b3d49abd570fec3bca9f42716d3ec1dd1e0cbb4c5e712a"
+            }
+          ],
+          "compatibility_assertions": [
+            "Keep `lib/` stdlib-only, pass frozen `Env` explicitly, use Russian diagnostics and merge-only project writes, and edit local skills through `SKILL.ru.md` before regenerating the compact English canon.",
+            "`lib/`",
+            "`Env`",
+            "`SKILL.ru.md`"
+          ]
+        },
+        {
+          "id": "skiller.validation-release",
+          "scope_id": "skiller",
+          "kind": "common",
+          "provider_id": null,
+          "order": 8,
+          "intent": "Apply this source-derived instruction: Before release run `bash scripts/test.sh` and `bash scripts/validate.sh`; after skill or bucket changes run `skiller registry` and use Russian Conventional Commit messages.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "skiller.maintainer",
+              "action": "validate",
+              "object": "skiller.validation-release.requirements",
+              "boundary": "skiller.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.skiller.common",
+              "path": "packages/harness/configs/common/instructions/packages/skiller/common.md",
+              "sha256": "8fc55ecbc7f85be0b3b3d49abd570fec3bca9f42716d3ec1dd1e0cbb4c5e712a"
+            }
+          ],
+          "compatibility_assertions": [
+            "Before release run `bash scripts/test.sh` and `bash scripts/validate.sh`",
+            "after skill or bucket changes run `skiller registry` and use Russian Conventional Commit messages.",
+            "`bash scripts/test.sh`",
+            "`bash scripts/validate.sh`",
+            "`skiller registry`"
+          ]
+        },
+        {
+          "id": "skiller.claude-code.marketplace-connect",
+          "scope_id": "skiller",
+          "kind": "provider-extension",
+          "provider_id": "claude-code",
+          "order": 1,
+          "intent": "Apply this source-derived instruction: Claude Code `connect` writes `enabledPlugins` to `.claude/settings.local.json` and points the marketplace channel at the registry rather than copying skill bodies.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "skiller.claude-code.maintainer",
+              "action": "maintain",
+              "object": "skiller.claude-code.marketplace-connect.requirements",
+              "boundary": "skiller.provider.claude-code"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.skiller.claude-code",
+              "path": "packages/harness/configs/common/instructions/packages/skiller/claude-code.md",
+              "sha256": "99eb225779041885e214de7ce00f2735ce18fe225064ff6affbeed3a47bdf71a"
+            }
+          ],
+          "compatibility_assertions": [
+            "Claude Code `connect` writes `enabledPlugins` to `.claude/settings.local.json` and points the marketplace channel at the registry rather than copying skill bodies.",
+            "`connect`",
+            "`enabledPlugins`",
+            "`.claude/settings.local.json`"
+          ]
+        },
+        {
+          "id": "skiller.claude-code.vendor-targets",
+          "scope_id": "skiller",
+          "kind": "provider-extension",
+          "provider_id": "claude-code",
+          "order": 2,
+          "intent": "Apply this source-derived instruction: Claude Code vendor sync writes managed copies to `.claude/skills/` and records ownership in `skills-lock.json`; those files are committed for disconnected consumers.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "skiller.claude-code.maintainer",
+              "action": "maintain",
+              "object": "skiller.claude-code.vendor-targets.requirements",
+              "boundary": "skiller.provider.claude-code"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.skiller.claude-code",
+              "path": "packages/harness/configs/common/instructions/packages/skiller/claude-code.md",
+              "sha256": "99eb225779041885e214de7ce00f2735ce18fe225064ff6affbeed3a47bdf71a"
+            }
+          ],
+          "compatibility_assertions": [
+            "Claude Code vendor sync writes managed copies to `.claude/skills/` and records ownership in `skills-lock.json`",
+            "those files are committed for disconnected consumers.",
+            "`.claude/skills/`",
+            "`skills-lock.json`"
+          ]
+        },
+        {
+          "id": "skiller.claude-code.agent-hub",
+          "scope_id": "skiller",
+          "kind": "provider-extension",
+          "provider_id": "claude-code",
+          "order": 3,
+          "intent": "Apply this source-derived instruction: Claude Code loads skill bodies itself; `hub.py` remains the managed agent-hub generator and Python does not maintain a skill-body loading cache.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "skiller.claude-code.maintainer",
+              "action": "maintain",
+              "object": "skiller.claude-code.agent-hub.requirements",
+              "boundary": "skiller.provider.claude-code"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.skiller.claude-code",
+              "path": "packages/harness/configs/common/instructions/packages/skiller/claude-code.md",
+              "sha256": "99eb225779041885e214de7ce00f2735ce18fe225064ff6affbeed3a47bdf71a"
+            }
+          ],
+          "compatibility_assertions": [
+            "Claude Code loads skill bodies itself",
+            "`hub.py` remains the managed agent-hub generator and Python does not maintain a skill-body loading cache.",
+            "`hub.py`"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "harness",
+      "claude_target": "packages/harness/CLAUDE.md",
+      "codex_target": "packages/harness/AGENTS.md",
+      "sections": [
+        {
+          "id": "harness.identity",
+          "scope_id": "harness",
+          "kind": "common",
+          "provider_id": null,
+          "order": 1,
+          "intent": "Apply this source-derived instruction: `harness` configures project environments with permissions, MCP, hooks, output styles, plan-directory settings, and agent packs.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "harness.maintainer",
+              "action": "preserve",
+              "object": "harness.identity.requirements",
+              "boundary": "harness.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.harness.common",
+              "path": "packages/harness/configs/common/instructions/packages/harness/common.md",
+              "sha256": "9bfcd22c6b5356f01c84288da3a60c5fa2bed11ab7cbec4d62351dda22ef23cf"
+            }
+          ],
+          "compatibility_assertions": [
+            "`harness` configures project environments with permissions, MCP, hooks, output styles, plan-directory settings, and agent packs.",
+            "`harness`"
+          ]
+        },
+        {
+          "id": "harness.semantic-source",
+          "scope_id": "harness",
+          "kind": "common",
+          "provider_id": null,
+          "order": 2,
+          "intent": "Apply this source-derived instruction: Keep `configs/claude-code/` as the current Claude compatibility source and keep common/provider semantic catalogs explicit rather than inferring settings from target files.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "harness.maintainer",
+              "action": "source",
+              "object": "harness.semantic-source.requirements",
+              "boundary": "harness.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.harness.common",
+              "path": "packages/harness/configs/common/instructions/packages/harness/common.md",
+              "sha256": "9bfcd22c6b5356f01c84288da3a60c5fa2bed11ab7cbec4d62351dda22ef23cf"
+            }
+          ],
+          "compatibility_assertions": [
+            "Keep `configs/claude-code/` as the current Claude compatibility source and keep common/provider semantic catalogs explicit rather than inferring settings from target files.",
+            "`configs/claude-code/`"
+          ]
+        },
+        {
+          "id": "harness.layout",
+          "scope_id": "harness",
+          "kind": "common",
+          "provider_id": null,
+          "order": 3,
+          "intent": "Apply this source-derived instruction: Keep `bin/harness` as the thin launcher, `lib/harness/` as stdlib-only logic, `configs/` as source configuration, and `tests/` isolated in temporary directories.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "harness.maintainer",
+              "action": "maintain",
+              "object": "harness.layout.requirements",
+              "boundary": "harness.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.harness.common",
+              "path": "packages/harness/configs/common/instructions/packages/harness/common.md",
+              "sha256": "9bfcd22c6b5356f01c84288da3a60c5fa2bed11ab7cbec4d62351dda22ef23cf"
+            }
+          ],
+          "compatibility_assertions": [
+            "Keep `bin/harness` as the thin launcher, `lib/harness/` as stdlib-only logic, `configs/` as source configuration, and `tests/` isolated in temporary directories.",
+            "`bin/harness`",
+            "`lib/harness/`",
+            "`configs/`",
+            "`tests/`"
+          ]
+        },
+        {
+          "id": "harness.command-surface",
+          "scope_id": "harness",
+          "kind": "common",
+          "provider_id": null,
+          "order": 4,
+          "intent": "Apply this source-derived instruction: Keep the CLI surface `permissions`, `mcp`, `hooks`, `router`, `agent-packs`, `safe-dirs`, and `doctor`, with explicit `--target` and dry-run behavior where defined.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "harness.maintainer",
+              "action": "expose",
+              "object": "harness.command-surface.requirements",
+              "boundary": "harness.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.harness.common",
+              "path": "packages/harness/configs/common/instructions/packages/harness/common.md",
+              "sha256": "9bfcd22c6b5356f01c84288da3a60c5fa2bed11ab7cbec4d62351dda22ef23cf"
+            }
+          ],
+          "compatibility_assertions": [
+            "Keep the CLI surface `permissions`, `mcp`, `hooks`, `router`, `agent-packs`, `safe-dirs`, and `doctor`, with explicit `--target` and dry-run behavior where defined.",
+            "`permissions`",
+            "`mcp`",
+            "`hooks`",
+            "`router`",
+            "`agent-packs`",
+            "`safe-dirs`",
+            "`doctor`",
+            "`--target`"
+          ]
+        },
+        {
+          "id": "harness.agent-pack-lifecycle",
+          "scope_id": "harness",
+          "kind": "common",
+          "provider_id": null,
+          "order": 5,
+          "intent": "Apply this source-derived instruction: Agent packs render templates, upgrade only safe managed files, write conflicts as `*.pack-new`, and remove only unmodified managed files; their lock records preserve ownership.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "harness.maintainer",
+              "action": "manage",
+              "object": "harness.agent-pack-lifecycle.requirements",
+              "boundary": "harness.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.harness.common",
+              "path": "packages/harness/configs/common/instructions/packages/harness/common.md",
+              "sha256": "9bfcd22c6b5356f01c84288da3a60c5fa2bed11ab7cbec4d62351dda22ef23cf"
+            }
+          ],
+          "compatibility_assertions": [
+            "Agent packs render templates, upgrade only safe managed files, write conflicts as `*.pack-new`, and remove only unmodified managed files",
+            "their lock records preserve ownership.",
+            "`*.pack-new`"
+          ]
+        },
+        {
+          "id": "harness.engineering-invariants",
+          "scope_id": "harness",
+          "kind": "common",
+          "provider_id": null,
+          "order": 6,
+          "intent": "Apply this source-derived instruction: Keep `lib/harness/` stdlib-only, pass frozen `Env` explicitly, use merge-only project writes with `*.bak` backups, and emit Russian diagnostics.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "harness.maintainer",
+              "action": "enforce",
+              "object": "harness.engineering-invariants.requirements",
+              "boundary": "harness.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.harness.common",
+              "path": "packages/harness/configs/common/instructions/packages/harness/common.md",
+              "sha256": "9bfcd22c6b5356f01c84288da3a60c5fa2bed11ab7cbec4d62351dda22ef23cf"
+            }
+          ],
+          "compatibility_assertions": [
+            "Keep `lib/harness/` stdlib-only, pass frozen `Env` explicitly, use merge-only project writes with `*.bak` backups, and emit Russian diagnostics.",
+            "`lib/harness/`",
+            "`Env`",
+            "`*.bak`"
+          ]
+        },
+        {
+          "id": "harness.cross-package-boundaries",
+          "scope_id": "harness",
+          "kind": "common",
+          "provider_id": null,
+          "order": 7,
+          "intent": "Apply this source-derived instruction: Keep memory state ownership with `skiller`, retain `.swissknife.json:memory_brain`, and let `skiller` delegate environment operations to the worktree-local `harness` launcher.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "harness.maintainer",
+              "action": "preserve",
+              "object": "harness.cross-package-boundaries.requirements",
+              "boundary": "harness.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.harness.common",
+              "path": "packages/harness/configs/common/instructions/packages/harness/common.md",
+              "sha256": "9bfcd22c6b5356f01c84288da3a60c5fa2bed11ab7cbec4d62351dda22ef23cf"
+            }
+          ],
+          "compatibility_assertions": [
+            "Keep memory state ownership with `skiller`, retain `.swissknife.json:memory_brain`, and let `skiller` delegate environment operations to the worktree-local `harness` launcher.",
+            "`skiller`",
+            "`.swissknife.json:memory_brain`",
+            "`harness`"
+          ]
+        },
+        {
+          "id": "harness.validation-release",
+          "scope_id": "harness",
+          "kind": "common",
+          "provider_id": null,
+          "order": 8,
+          "intent": "Apply this source-derived instruction: Run `bash scripts/test.sh` and `bash scripts/validate.sh` before release; regenerate the umbrella registry after changing harness plugin commands.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "harness.maintainer",
+              "action": "validate",
+              "object": "harness.validation-release.requirements",
+              "boundary": "harness.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.harness.common",
+              "path": "packages/harness/configs/common/instructions/packages/harness/common.md",
+              "sha256": "9bfcd22c6b5356f01c84288da3a60c5fa2bed11ab7cbec4d62351dda22ef23cf"
+            }
+          ],
+          "compatibility_assertions": [
+            "Run `bash scripts/test.sh` and `bash scripts/validate.sh` before release",
+            "regenerate the umbrella registry after changing harness plugin commands.",
+            "`bash scripts/test.sh`",
+            "`bash scripts/validate.sh`"
+          ]
+        },
+        {
+          "id": "harness.claude-code.config-surfaces",
+          "scope_id": "harness",
+          "kind": "provider-extension",
+          "provider_id": "claude-code",
+          "order": 1,
+          "intent": "Apply this source-derived instruction: Claude Code configuration remains under `configs/claude-code/`: settings presets merge into `.claude/settings*.json` and MCP presets merge into `.mcp.json`.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "harness.claude-code.maintainer",
+              "action": "expose",
+              "object": "harness.claude-code.config-surfaces.requirements",
+              "boundary": "harness.provider.claude-code"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.harness.claude-code",
+              "path": "packages/harness/configs/common/instructions/packages/harness/claude-code.md",
+              "sha256": "e19152954fc5af471801833db663d08284691bfa9c0043c0fb805e045f21fc2d"
+            }
+          ],
+          "compatibility_assertions": [
+            "Claude Code configuration remains under `configs/claude-code/`: settings presets merge into `.claude/settings*.json` and MCP presets merge into `.mcp.json`.",
+            "`configs/claude-code/`",
+            "`.claude/settings*.json`",
+            "`.mcp.json`"
+          ]
+        },
+        {
+          "id": "harness.claude-code.lifecycle-surfaces",
+          "scope_id": "harness",
+          "kind": "provider-extension",
+          "provider_id": "claude-code",
+          "order": 2,
+          "intent": "Apply this source-derived instruction: Claude Code lifecycle surfaces include `PreToolUse` auto-approval, memory, notify, router, run-report, output style, and project `plansDirectory` registrations.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "harness.claude-code.maintainer",
+              "action": "manage",
+              "object": "harness.claude-code.lifecycle-surfaces.requirements",
+              "boundary": "harness.provider.claude-code"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.harness.claude-code",
+              "path": "packages/harness/configs/common/instructions/packages/harness/claude-code.md",
+              "sha256": "e19152954fc5af471801833db663d08284691bfa9c0043c0fb805e045f21fc2d"
+            }
+          ],
+          "compatibility_assertions": [
+            "Claude Code lifecycle surfaces include `PreToolUse` auto-approval, memory, notify, router, run-report, output style, and project `plansDirectory` registrations.",
+            "`PreToolUse`",
+            "`plansDirectory`"
+          ]
+        },
+        {
+          "id": "harness.claude-code.settings-precedence",
+          "scope_id": "harness",
+          "kind": "provider-extension",
+          "provider_id": "claude-code",
+          "order": 3,
+          "intent": "Apply this source-derived instruction: Claude Code keeps `outputStyle` in `.claude/settings.local.json`, uses top-level `plansDirectory` in `.claude/settings.json`, and keeps the agent-pack lock at `.claude/agent-pack.lock.json`.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "harness.claude-code.maintainer",
+              "action": "maintain",
+              "object": "harness.claude-code.settings-precedence.requirements",
+              "boundary": "harness.provider.claude-code"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.harness.claude-code",
+              "path": "packages/harness/configs/common/instructions/packages/harness/claude-code.md",
+              "sha256": "e19152954fc5af471801833db663d08284691bfa9c0043c0fb805e045f21fc2d"
+            }
+          ],
+          "compatibility_assertions": [
+            "Claude Code keeps `outputStyle` in `.claude/settings.local.json`, uses top-level `plansDirectory` in `.claude/settings.json`, and keeps the agent-pack lock at `.claude/agent-pack.lock.json`.",
+            "`outputStyle`",
+            "`.claude/settings.local.json`",
+            "`plansDirectory`",
+            "`.claude/settings.json`",
+            "`.claude/agent-pack.lock.json`"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "maind",
+      "claude_target": "packages/maind/CLAUDE.md",
+      "codex_target": "packages/maind/AGENTS.md",
+      "sections": [
+        {
+          "id": "maind.identity",
+          "scope_id": "maind",
+          "kind": "common",
+          "provider_id": null,
+          "order": 1,
+          "intent": "Apply this source-derived instruction: `maind` is the ecosystem control-plane hub for shared memory, cross-project graph data, project and agent registries, and its MCP server.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "maind.maintainer",
+              "action": "preserve",
+              "object": "maind.identity.requirements",
+              "boundary": "maind.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.maind.common",
+              "path": "packages/harness/configs/common/instructions/packages/maind/common.md",
+              "sha256": "c5c2d993d0c9cb5603111d026295864336ec6e2c8ad4a34438da3ccbb30a775e"
+            }
+          ],
+          "compatibility_assertions": [
+            "`maind` is the ecosystem control-plane hub for shared memory, cross-project graph data, project and agent registries, and its MCP server.",
+            "`maind`"
+          ]
+        },
+        {
+          "id": "maind.three-planes",
+          "scope_id": "maind",
+          "kind": "common",
+          "provider_id": null,
+          "order": 2,
+          "intent": "Apply this source-derived instruction: Keep agent-memory, the maind federation graph, and the Serena code graph as independent planes; they meet only in orchestration and remain namespace-isolated.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "maind.maintainer",
+              "action": "maintain",
+              "object": "maind.three-planes.requirements",
+              "boundary": "maind.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.maind.common",
+              "path": "packages/harness/configs/common/instructions/packages/maind/common.md",
+              "sha256": "c5c2d993d0c9cb5603111d026295864336ec6e2c8ad4a34438da3ccbb30a775e"
+            }
+          ],
+          "compatibility_assertions": [
+            "Keep agent-memory, the maind federation graph, and the Serena code graph as independent planes",
+            "they meet only in orchestration and remain namespace-isolated."
+          ]
+        },
+        {
+          "id": "maind.layout",
+          "scope_id": "maind",
+          "kind": "common",
+          "provider_id": null,
+          "order": 3,
+          "intent": "Apply this source-derived instruction: Keep `bin/maind` as the launcher, `lib/maind/` as stdlib-only logic, `provision/` and `analysis/` as named subpackages, and tests independent of a live daemon.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "maind.maintainer",
+              "action": "maintain",
+              "object": "maind.layout.requirements",
+              "boundary": "maind.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.maind.common",
+              "path": "packages/harness/configs/common/instructions/packages/maind/common.md",
+              "sha256": "c5c2d993d0c9cb5603111d026295864336ec6e2c8ad4a34438da3ccbb30a775e"
+            }
+          ],
+          "compatibility_assertions": [
+            "Keep `bin/maind` as the launcher, `lib/maind/` as stdlib-only logic, `provision/` and `analysis/` as named subpackages, and tests independent of a live daemon.",
+            "`bin/maind`",
+            "`lib/maind/`",
+            "`provision/`",
+            "`analysis/`"
+          ]
+        },
+        {
+          "id": "maind.module-boundaries",
+          "scope_id": "maind",
+          "kind": "common",
+          "provider_id": null,
+          "order": 4,
+          "intent": "Apply this source-derived instruction: Read graph data through `federation.graph_reader`, derive graph facts from sources of truth, and retain canonical adapters `federation` or `disabled` with legacy aliases normalized.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "maind.maintainer",
+              "action": "preserve",
+              "object": "maind.module-boundaries.requirements",
+              "boundary": "maind.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.maind.common",
+              "path": "packages/harness/configs/common/instructions/packages/maind/common.md",
+              "sha256": "c5c2d993d0c9cb5603111d026295864336ec6e2c8ad4a34438da3ccbb30a775e"
+            }
+          ],
+          "compatibility_assertions": [
+            "Read graph data through `federation.graph_reader`, derive graph facts from sources of truth, and retain canonical adapters `federation` or `disabled` with legacy aliases normalized.",
+            "`federation.graph_reader`",
+            "`federation`",
+            "`disabled`"
+          ]
+        },
+        {
+          "id": "maind.orchestration",
+          "scope_id": "maind",
+          "kind": "common",
+          "provider_id": null,
+          "order": 5,
+          "intent": "Apply this source-derived instruction: Keep memory, graph, and code-graph modules decoupled; combine them only through onboarding, sync, and orchestration entry points.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "maind.maintainer",
+              "action": "maintain",
+              "object": "maind.orchestration.requirements",
+              "boundary": "maind.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.maind.common",
+              "path": "packages/harness/configs/common/instructions/packages/maind/common.md",
+              "sha256": "c5c2d993d0c9cb5603111d026295864336ec6e2c8ad4a34438da3ccbb30a775e"
+            }
+          ],
+          "compatibility_assertions": [
+            "Keep memory, graph, and code-graph modules decoupled",
+            "combine them only through onboarding, sync, and orchestration entry points."
+          ]
+        },
+        {
+          "id": "maind.engineering-invariants",
+          "scope_id": "maind",
+          "kind": "common",
+          "provider_id": null,
+          "order": 6,
+          "intent": "Apply this source-derived instruction: Keep `lib/maind/` stdlib-only, pass frozen `Env` explicitly, write JSON atomically, emit Russian diagnostics, and preserve `project:`, `ns:`, and `global` memory isolation.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "maind.maintainer",
+              "action": "enforce",
+              "object": "maind.engineering-invariants.requirements",
+              "boundary": "maind.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.maind.common",
+              "path": "packages/harness/configs/common/instructions/packages/maind/common.md",
+              "sha256": "c5c2d993d0c9cb5603111d026295864336ec6e2c8ad4a34438da3ccbb30a775e"
+            }
+          ],
+          "compatibility_assertions": [
+            "Keep `lib/maind/` stdlib-only, pass frozen `Env` explicitly, write JSON atomically, emit Russian diagnostics, and preserve `project:`, `ns:`, and `global` memory isolation.",
+            "`lib/maind/`",
+            "`Env`",
+            "`project:`",
+            "`ns:`",
+            "`global`"
+          ]
+        },
+        {
+          "id": "maind.validation-release",
+          "scope_id": "maind",
+          "kind": "common",
+          "provider_id": null,
+          "order": 7,
+          "intent": "Apply this source-derived instruction: Before release run `bash scripts/test.sh` and `bash scripts/validate.sh`, then use Russian Conventional Commit messages.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "maind.maintainer",
+              "action": "validate",
+              "object": "maind.validation-release.requirements",
+              "boundary": "maind.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.maind.common",
+              "path": "packages/harness/configs/common/instructions/packages/maind/common.md",
+              "sha256": "c5c2d993d0c9cb5603111d026295864336ec6e2c8ad4a34438da3ccbb30a775e"
+            }
+          ],
+          "compatibility_assertions": [
+            "Before release run `bash scripts/test.sh` and `bash scripts/validate.sh`, then use Russian Conventional Commit messages.",
+            "`bash scripts/test.sh`",
+            "`bash scripts/validate.sh`"
+          ]
+        },
+        {
+          "id": "maind.claude-code.plugin-and-mcp",
+          "scope_id": "maind",
+          "kind": "provider-extension",
+          "provider_id": "claude-code",
+          "order": 1,
+          "intent": "Apply this source-derived instruction: The Claude Code plugin exposes only `/maind:*` command wrappers; maind MCP tools arrive through the per-project `maind` server in `.mcp.json`.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "maind.claude-code.maintainer",
+              "action": "maintain",
+              "object": "maind.claude-code.plugin-and-mcp.requirements",
+              "boundary": "maind.provider.claude-code"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.maind.claude-code",
+              "path": "packages/harness/configs/common/instructions/packages/maind/claude-code.md",
+              "sha256": "12df0b3bd6997168f6f45cced97330a4321ea7cc10c5183ef1985c4c31191f8c"
+            }
+          ],
+          "compatibility_assertions": [
+            "The Claude Code plugin exposes only `/maind:*` command wrappers",
+            "maind MCP tools arrive through the per-project `maind` server in `.mcp.json`.",
+            "`/maind:*`",
+            "`maind`",
+            "`.mcp.json`"
+          ]
+        },
+        {
+          "id": "maind.claude-code.workspace-trust",
+          "scope_id": "maind",
+          "kind": "provider-extension",
+          "provider_id": "claude-code",
+          "order": 2,
+          "intent": "Apply this source-derived instruction: Claude Code workspace trust is managed by `workspace.py` in `.claude/settings.local.json` and remains separate from provider-agnostic hub state.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "maind.claude-code.maintainer",
+              "action": "enforce",
+              "object": "maind.claude-code.workspace-trust.requirements",
+              "boundary": "maind.provider.claude-code"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.maind.claude-code",
+              "path": "packages/harness/configs/common/instructions/packages/maind/claude-code.md",
+              "sha256": "12df0b3bd6997168f6f45cced97330a4321ea7cc10c5183ef1985c4c31191f8c"
+            }
+          ],
+          "compatibility_assertions": [
+            "Claude Code workspace trust is managed by `workspace.py` in `.claude/settings.local.json` and remains separate from provider-agnostic hub state.",
+            "`workspace.py`",
+            "`.claude/settings.local.json`"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "analyst",
+      "claude_target": "packages/analyst/CLAUDE.md",
+      "codex_target": "packages/analyst/AGENTS.md",
+      "sections": [
+        {
+          "id": "analyst.identity-human-gate",
+          "scope_id": "analyst",
+          "kind": "common",
+          "provider_id": null,
+          "order": 1,
+          "intent": "Apply this source-derived instruction: `analyst` is an on-demand, stdlib-only learning layer with no daemon; it may propose reusable knowledge but only a human may promote a lesson to curated state.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "analyst.maintainer",
+              "action": "preserve",
+              "object": "analyst.identity-human-gate.requirements",
+              "boundary": "analyst.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.analyst.common",
+              "path": "packages/harness/configs/common/instructions/packages/analyst/common.md",
+              "sha256": "959b545acdcf6d5724855a99a4571d323377604984781685607153fad2f84777"
+            }
+          ],
+          "compatibility_assertions": [
+            "`analyst` is an on-demand, stdlib-only learning layer with no daemon",
+            "it may propose reusable knowledge but only a human may promote a lesson to curated state.",
+            "`analyst`"
+          ]
+        },
+        {
+          "id": "analyst.layer-boundary",
+          "scope_id": "analyst",
+          "kind": "common",
+          "provider_id": null,
+          "order": 2,
+          "intent": "Apply this source-derived instruction: Keep this package as layer-1 data and pipeline work; prompt-discipline skills remain a separate layer and automatic skill writes are forbidden.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "analyst.maintainer",
+              "action": "preserve",
+              "object": "analyst.layer-boundary.requirements",
+              "boundary": "analyst.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.analyst.common",
+              "path": "packages/harness/configs/common/instructions/packages/analyst/common.md",
+              "sha256": "959b545acdcf6d5724855a99a4571d323377604984781685607153fad2f84777"
+            }
+          ],
+          "compatibility_assertions": [
+            "Keep this package as layer-1 data and pipeline work",
+            "prompt-discipline skills remain a separate layer and automatic skill writes are forbidden."
+          ]
+        },
+        {
+          "id": "analyst.layout",
+          "scope_id": "analyst",
+          "kind": "common",
+          "provider_id": null,
+          "order": 3,
+          "intent": "Apply this source-derived instruction: Keep `bin/analyst` as the launcher, `lib/analyst/` as stdlib-only logic, temporary-directory tests, and package documentation that builds standalone and in the umbrella site.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "analyst.maintainer",
+              "action": "maintain",
+              "object": "analyst.layout.requirements",
+              "boundary": "analyst.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.analyst.common",
+              "path": "packages/harness/configs/common/instructions/packages/analyst/common.md",
+              "sha256": "959b545acdcf6d5724855a99a4571d323377604984781685607153fad2f84777"
+            }
+          ],
+          "compatibility_assertions": [
+            "Keep `bin/analyst` as the launcher, `lib/analyst/` as stdlib-only logic, temporary-directory tests, and package documentation that builds standalone and in the umbrella site.",
+            "`bin/analyst`",
+            "`lib/analyst/`"
+          ]
+        },
+        {
+          "id": "analyst.module-boundaries",
+          "scope_id": "analyst",
+          "kind": "common",
+          "provider_id": null,
+          "order": 4,
+          "intent": "Apply this source-derived instruction: Keep extractors pure where possible, confine I/O to `cmd_*` paths, and keep proposal, suggestion, digest, review, promotion, confidence, and recompute responsibilities in their named modules.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "analyst.maintainer",
+              "action": "preserve",
+              "object": "analyst.module-boundaries.requirements",
+              "boundary": "analyst.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.analyst.common",
+              "path": "packages/harness/configs/common/instructions/packages/analyst/common.md",
+              "sha256": "959b545acdcf6d5724855a99a4571d323377604984781685607153fad2f84777"
+            }
+          ],
+          "compatibility_assertions": [
+            "Keep extractors pure where possible, confine I/O to `cmd_*` paths, and keep proposal, suggestion, digest, review, promotion, confidence, and recompute responsibilities in their named modules.",
+            "`cmd_*`"
+          ]
+        },
+        {
+          "id": "analyst.data-lifecycle",
+          "scope_id": "analyst",
+          "kind": "common",
+          "provider_id": null,
+          "order": 5,
+          "intent": "Apply this source-derived instruction: Store lessons in explicit lifecycle directories, append audit and confidence events without rewriting them, and move lessons through `lessons.move_lesson` rather than duplicating state.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "analyst.maintainer",
+              "action": "manage",
+              "object": "analyst.data-lifecycle.requirements",
+              "boundary": "analyst.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.analyst.common",
+              "path": "packages/harness/configs/common/instructions/packages/analyst/common.md",
+              "sha256": "959b545acdcf6d5724855a99a4571d323377604984781685607153fad2f84777"
+            }
+          ],
+          "compatibility_assertions": [
+            "Store lessons in explicit lifecycle directories, append audit and confidence events without rewriting them, and move lessons through `lessons.move_lesson` rather than duplicating state.",
+            "`lessons.move_lesson`"
+          ]
+        },
+        {
+          "id": "analyst.privacy",
+          "scope_id": "analyst",
+          "kind": "common",
+          "provider_id": null,
+          "order": 6,
+          "intent": "Apply this source-derived instruction: Keep raw transcripts local; send only abstracted curated lessons to shared memory and reference secrets without storing their values.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "analyst.maintainer",
+              "action": "protect",
+              "object": "analyst.privacy.requirements",
+              "boundary": "analyst.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.analyst.common",
+              "path": "packages/harness/configs/common/instructions/packages/analyst/common.md",
+              "sha256": "959b545acdcf6d5724855a99a4571d323377604984781685607153fad2f84777"
+            }
+          ],
+          "compatibility_assertions": [
+            "Keep raw transcripts local",
+            "send only abstracted curated lessons to shared memory and reference secrets without storing their values."
+          ]
+        },
+        {
+          "id": "analyst.engineering-invariants",
+          "scope_id": "analyst",
+          "kind": "common",
+          "provider_id": null,
+          "order": 7,
+          "intent": "Apply this source-derived instruction: Keep runtime stdlib-only, pass frozen `Env` explicitly, write JSON atomically, require human confirmation for curated promotion, and emit Russian diagnostics.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "analyst.maintainer",
+              "action": "enforce",
+              "object": "analyst.engineering-invariants.requirements",
+              "boundary": "analyst.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.analyst.common",
+              "path": "packages/harness/configs/common/instructions/packages/analyst/common.md",
+              "sha256": "959b545acdcf6d5724855a99a4571d323377604984781685607153fad2f84777"
+            }
+          ],
+          "compatibility_assertions": [
+            "Keep runtime stdlib-only, pass frozen `Env` explicitly, write JSON atomically, require human confirmation for curated promotion, and emit Russian diagnostics.",
+            "`Env`"
+          ]
+        },
+        {
+          "id": "analyst.validation-release",
+          "scope_id": "analyst",
+          "kind": "common",
+          "provider_id": null,
+          "order": 8,
+          "intent": "Apply this source-derived instruction: Before release run `bash scripts/test.sh` and `bash scripts/validate.sh`; regenerate the umbrella registry after changing analyst plugin commands.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "analyst.maintainer",
+              "action": "validate",
+              "object": "analyst.validation-release.requirements",
+              "boundary": "analyst.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.analyst.common",
+              "path": "packages/harness/configs/common/instructions/packages/analyst/common.md",
+              "sha256": "959b545acdcf6d5724855a99a4571d323377604984781685607153fad2f84777"
+            }
+          ],
+          "compatibility_assertions": [
+            "Before release run `bash scripts/test.sh` and `bash scripts/validate.sh`",
+            "regenerate the umbrella registry after changing analyst plugin commands.",
+            "`bash scripts/test.sh`",
+            "`bash scripts/validate.sh`"
+          ]
+        },
+        {
+          "id": "analyst.claude-code.capture-surfaces",
+          "scope_id": "analyst",
+          "kind": "provider-extension",
+          "provider_id": "claude-code",
+          "order": 1,
+          "intent": "Apply this source-derived instruction: Claude Code capture reads project lessons from `.claude/analyst`, run reports from `.claude/runs`, and session transcripts from `~/.claude/projects/<encoded-cwd>/*.jsonl`.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "analyst.claude-code.maintainer",
+              "action": "expose",
+              "object": "analyst.claude-code.capture-surfaces.requirements",
+              "boundary": "analyst.provider.claude-code"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.analyst.claude-code",
+              "path": "packages/harness/configs/common/instructions/packages/analyst/claude-code.md",
+              "sha256": "afed4e76fc5f0ef2b49057d6b5f95656b0a6d7e12c1b9927b82938bd85eb8f43"
+            }
+          ],
+          "compatibility_assertions": [
+            "Claude Code capture reads project lessons from `.claude/analyst`, run reports from `.claude/runs`, and session transcripts from `~/.claude/projects/<encoded-cwd>/*.jsonl`.",
+            "`.claude/analyst`",
+            "`.claude/runs`",
+            "`~/.claude/projects/<encoded-cwd>/*.jsonl`"
+          ]
+        },
+        {
+          "id": "analyst.claude-code.plugin",
+          "scope_id": "analyst",
+          "kind": "provider-extension",
+          "provider_id": "claude-code",
+          "order": 2,
+          "intent": "Apply this source-derived instruction: The Claude Code plugin exposes command-only `/analyst:*` wrappers and does not add a daemon or automatic promotion path.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "analyst.claude-code.maintainer",
+              "action": "maintain",
+              "object": "analyst.claude-code.plugin.requirements",
+              "boundary": "analyst.provider.claude-code"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.analyst.claude-code",
+              "path": "packages/harness/configs/common/instructions/packages/analyst/claude-code.md",
+              "sha256": "afed4e76fc5f0ef2b49057d6b5f95656b0a6d7e12c1b9927b82938bd85eb8f43"
+            }
+          ],
+          "compatibility_assertions": [
+            "The Claude Code plugin exposes command-only `/analyst:*` wrappers and does not add a daemon or automatic promotion path.",
+            "`/analyst:*`"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "task",
+      "claude_target": "packages/task/CLAUDE.md",
+      "codex_target": "packages/task/AGENTS.md",
+      "sections": [
+        {
+          "id": "task.identity",
+          "scope_id": "task",
+          "kind": "common",
+          "provider_id": null,
+          "order": 1,
+          "intent": "Apply this source-derived instruction: `task` is the plugin-only package for task-intent commands and executable plan protocol; it has no `bin/`, standalone CLI, or installer.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "task.maintainer",
+              "action": "preserve",
+              "object": "task.identity.requirements",
+              "boundary": "task.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.task.common",
+              "path": "packages/harness/configs/common/instructions/packages/task/common.md",
+              "sha256": "6a8b5705cf1c17e4210a46a346b78947f447b2e1e5f9dda113255f88cd70dcae"
+            }
+          ],
+          "compatibility_assertions": [
+            "`task` is the plugin-only package for task-intent commands and executable plan protocol",
+            "it has no `bin/`, standalone CLI, or installer.",
+            "`task`",
+            "`bin/`"
+          ]
+        },
+        {
+          "id": "task.command-catalog",
+          "scope_id": "task",
+          "kind": "common",
+          "provider_id": null,
+          "order": 2,
+          "intent": "Apply this source-derived instruction: Keep the intent command catalog `design`, `dev`, `fix`, `research`, and `review` alongside `plan-design`, `plan-exec`, `plan-run`, `plan-close`, and `plan-audit`.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "task.maintainer",
+              "action": "publish",
+              "object": "task.command-catalog.requirements",
+              "boundary": "task.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.task.common",
+              "path": "packages/harness/configs/common/instructions/packages/task/common.md",
+              "sha256": "6a8b5705cf1c17e4210a46a346b78947f447b2e1e5f9dda113255f88cd70dcae"
+            }
+          ],
+          "compatibility_assertions": [
+            "Keep the intent command catalog `design`, `dev`, `fix`, `research`, and `review` alongside `plan-design`, `plan-exec`, `plan-run`, `plan-close`, and `plan-audit`.",
+            "`design`",
+            "`dev`",
+            "`fix`",
+            "`research`",
+            "`review`",
+            "`plan-design`",
+            "`plan-exec`",
+            "`plan-run`",
+            "`plan-close`",
+            "`plan-audit`"
+          ]
+        },
+        {
+          "id": "task.plan-protocol",
+          "scope_id": "task",
+          "kind": "common",
+          "provider_id": null,
+          "order": 3,
+          "intent": "Apply this source-derived instruction: Keep executable plans in `plans/<PLAN-ID>/`; plan-design, plan-exec, plan-close, and plan-audit remain the protocol’s authoring, execution, closure, and independent-review layers.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "task.maintainer",
+              "action": "maintain",
+              "object": "task.plan-protocol.requirements",
+              "boundary": "task.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.task.common",
+              "path": "packages/harness/configs/common/instructions/packages/task/common.md",
+              "sha256": "6a8b5705cf1c17e4210a46a346b78947f447b2e1e5f9dda113255f88cd70dcae"
+            }
+          ],
+          "compatibility_assertions": [
+            "Keep executable plans in `plans/<PLAN-ID>/`",
+            "plan-design, plan-exec, plan-close, and plan-audit remain the protocol’s authoring, execution, closure, and independent-review layers.",
+            "`plans/<PLAN-ID>/`"
+          ]
+        },
+        {
+          "id": "task.layout",
+          "scope_id": "task",
+          "kind": "common",
+          "provider_id": null,
+          "order": 4,
+          "intent": "Apply this source-derived instruction: Keep command Markdown in `commands/`, the deterministic plan linter in `lib/task/plan_lint.py`, its launcher in `scripts/plan-lint.py`, and isolated tests in `tests/`.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "task.maintainer",
+              "action": "maintain",
+              "object": "task.layout.requirements",
+              "boundary": "task.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.task.common",
+              "path": "packages/harness/configs/common/instructions/packages/task/common.md",
+              "sha256": "6a8b5705cf1c17e4210a46a346b78947f447b2e1e5f9dda113255f88cd70dcae"
+            }
+          ],
+          "compatibility_assertions": [
+            "Keep command Markdown in `commands/`, the deterministic plan linter in `lib/task/plan_lint.py`, its launcher in `scripts/plan-lint.py`, and isolated tests in `tests/`.",
+            "`commands/`",
+            "`lib/task/plan_lint.py`",
+            "`scripts/plan-lint.py`",
+            "`tests/`"
+          ]
+        },
+        {
+          "id": "task.schema-ownership",
+          "scope_id": "task",
+          "kind": "common",
+          "provider_id": null,
+          "order": 5,
+          "intent": "Apply this source-derived instruction: Treat `plan_lint.py` and the `plan-protocol` skill as synchronized sources of the plan schema; change both when the schema changes.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "task.maintainer",
+              "action": "maintain",
+              "object": "task.schema-ownership.requirements",
+              "boundary": "task.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.task.common",
+              "path": "packages/harness/configs/common/instructions/packages/task/common.md",
+              "sha256": "6a8b5705cf1c17e4210a46a346b78947f447b2e1e5f9dda113255f88cd70dcae"
+            }
+          ],
+          "compatibility_assertions": [
+            "Treat `plan_lint.py` and the `plan-protocol` skill as synchronized sources of the plan schema",
+            "change both when the schema changes.",
+            "`plan_lint.py`",
+            "`plan-protocol`"
+          ]
+        },
+        {
+          "id": "task.engineering-invariants",
+          "scope_id": "task",
+          "kind": "common",
+          "provider_id": null,
+          "order": 6,
+          "intent": "Apply this source-derived instruction: Keep `lib/task/` stdlib-only, retain deliberate plugin-only delivery outside root CLI routing, and use Russian diagnostics.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "task.maintainer",
+              "action": "enforce",
+              "object": "task.engineering-invariants.requirements",
+              "boundary": "task.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.task.common",
+              "path": "packages/harness/configs/common/instructions/packages/task/common.md",
+              "sha256": "6a8b5705cf1c17e4210a46a346b78947f447b2e1e5f9dda113255f88cd70dcae"
+            }
+          ],
+          "compatibility_assertions": [
+            "Keep `lib/task/` stdlib-only, retain deliberate plugin-only delivery outside root CLI routing, and use Russian diagnostics.",
+            "`lib/task/`"
+          ]
+        },
+        {
+          "id": "task.validation-release",
+          "scope_id": "task",
+          "kind": "common",
+          "provider_id": null,
+          "order": 7,
+          "intent": "Apply this source-derived instruction: Before release run `bash packages/task/scripts/validate.sh` and use Russian Conventional Commit messages.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "task.maintainer",
+              "action": "validate",
+              "object": "task.validation-release.requirements",
+              "boundary": "task.all"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.task.common",
+              "path": "packages/harness/configs/common/instructions/packages/task/common.md",
+              "sha256": "6a8b5705cf1c17e4210a46a346b78947f447b2e1e5f9dda113255f88cd70dcae"
+            }
+          ],
+          "compatibility_assertions": [
+            "Before release run `bash packages/task/scripts/validate.sh` and use Russian Conventional Commit messages.",
+            "`bash packages/task/scripts/validate.sh`"
+          ]
+        },
+        {
+          "id": "task.claude-code.slash-projection",
+          "scope_id": "task",
+          "kind": "provider-extension",
+          "provider_id": "claude-code",
+          "order": 1,
+          "intent": "Apply this source-derived instruction: Claude Code exposes the catalog as `/task:design`, `/task:dev`, `/task:fix`, `/task:research`, `/task:review`, `/task:plan-design`, `/task:plan-exec`, `/task:plan-run`, `/task:plan-close`, and `/task:plan-audit`.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "task.claude-code.maintainer",
+              "action": "maintain",
+              "object": "task.claude-code.slash-projection.requirements",
+              "boundary": "task.provider.claude-code"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.task.claude-code",
+              "path": "packages/harness/configs/common/instructions/packages/task/claude-code.md",
+              "sha256": "c5a0f2267544823f6243b64c87ca664e08ca7ec47e0e383c8df3196226f8b57e"
+            }
+          ],
+          "compatibility_assertions": [
+            "Claude Code exposes the catalog as `/task:design`, `/task:dev`, `/task:fix`, `/task:research`, `/task:review`, `/task:plan-design`, `/task:plan-exec`, `/task:plan-run`, `/task:plan-close`, and `/task:plan-audit`.",
+            "`/task:design`",
+            "`/task:dev`",
+            "`/task:fix`",
+            "`/task:research`",
+            "`/task:review`",
+            "`/task:plan-design`",
+            "`/task:plan-exec`",
+            "`/task:plan-run`",
+            "`/task:plan-close`",
+            "`/task:plan-audit`"
+          ]
+        },
+        {
+          "id": "task.claude-code.model-pins",
+          "scope_id": "task",
+          "kind": "provider-extension",
+          "provider_id": "claude-code",
+          "order": 2,
+          "intent": "Apply this source-derived instruction: Claude Code command frontmatter pins model and effort for each task type; do not change those pins without explicit intent, while `plan-run` inherits the owner session route.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "task.claude-code.maintainer",
+              "action": "pin",
+              "object": "task.claude-code.model-pins.requirements",
+              "boundary": "task.provider.claude-code"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.task.claude-code",
+              "path": "packages/harness/configs/common/instructions/packages/task/claude-code.md",
+              "sha256": "c5a0f2267544823f6243b64c87ca664e08ca7ec47e0e383c8df3196226f8b57e"
+            }
+          ],
+          "compatibility_assertions": [
+            "Claude Code command frontmatter pins model and effort for each task type",
+            "do not change those pins without explicit intent, while `plan-run` inherits the owner session route.",
+            "`plan-run`"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -8,8 +8,8 @@
 
 **Approval:** D86, 2026-07-21 (delegated under D79)
 
-**Basis:** D2/D5, D45–D47, D79/D82; frozen provider capability,
-configuration, artifact and harness contracts v1.0.0
+**Basis:** D2/D5, D45–D47, D79/D82/D87; frozen provider capability,
+configuration and harness contracts v1.0.0 plus backward-compatible artifact contract v1.1.0
 
 ## Purpose
 
@@ -221,25 +221,26 @@ update, repair or a nearby legacy marker.
 The authoritative carrier is the P2 lock
 `.swissknifeman/provider-artifacts.lock.json`. Each target has exactly one record. The full
 P2 envelope remains mandatory; instruction-specific fields are additive semantic render
-parameters and never replace P2 identity, source, adapter, hash, boundary, override or
-capability fields.
+parameters carried by the v1.1.0 generic `semantic_metadata` mapping and never replace P2
+identity, source, adapter, hash, boundary, override or capability fields. This carrier
+clarification does not change D86 instruction semantics or this contract's v1.0.0 version.
 
 The record contains:
 
 | Field | Contract |
 |:--|:--|
-| `contract_version` | P2 artifact contract version `1.0.0`. |
-| `artifact_id` / `artifact_kind` | Stable identity and literal `instruction-projection`. |
+| `contract_version` | P2 artifact contract version `1.1.0`; old P2 v1.0.0 records remain backward-compatible outside this projection. |
+| `artifact_id` | Stable P2 identity. |
 | `instruction_contract_version` / `catalog_version` | Versions used for semantic validation. |
 | `canonical_sources` | Full ordered source records for contract, catalog, common fragment and provider extension fragment. |
 | `adapter_id` / `adapter_version` | Named independent provider adapter. |
-| `provider_id` / `scope_id` / `target_path` | Exact target identity tuple. |
+| `provider_id` / `target_path` | Exact P2 target identity tuple. |
 | `source_hash` | Full P2 deterministic source-envelope SHA-256. |
 | `rendered_hash` | Full SHA-256 of the exact two managed blocks, including markers, concatenated in block-ID order. |
-| `managed_boundary` / `marker_ids` | `managed-blocks`, exact two ordered block/marker identities. |
-| `semantic_sections` | Ordered common IDs and ordered provider-extension IDs. |
+| `managed_boundary` | `managed-blocks` and exact two ordered block identities. |
 | `override_layers` | Ordered effective provenance; empty in the initial catalog. |
 | `capability_requirements` | Provider instruction capabilities and accepted support levels. |
+| `semantic_metadata` | Generic P2 v1.1.0 mapping containing `artifact_kind`, instruction/catalog versions, `scope_id`, repeated `provider_id`, ordered `marker_ids`, `block_ids`, `semantic_sections`, `capabilities`, `registry`, and any remaining semantic render parameters. |
 
 Every hash is `sha256:<64 lowercase hex>`. `canonical_sources` includes full content hashes;
 the source envelope additionally includes contract/catalog versions, provider/scope/target,
@@ -254,11 +255,8 @@ Normative shape:
   "schema_version": 1,
   "records": [
     {
-      "contract_version": "1.0.0",
+      "contract_version": "1.1.0",
       "artifact_id": "harness.instruction-projection.task.codex",
-      "artifact_kind": "instruction-projection",
-      "instruction_contract_version": "1.0.0",
-      "catalog_version": "1.0.0",
       "canonical_sources": [
         {"source_id": "instruction.catalog", "path": "packages/harness/configs/common/instructions/catalog.json", "hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
         {"source_id": "instruction.contract", "path": "plans/2026.07.19-DUAL-PROVIDER/root/contracts/provider-instruction-contract.md", "hash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
@@ -268,7 +266,6 @@ Normative shape:
       "adapter_id": "harness.instruction.codex",
       "adapter_version": "1.0.0",
       "provider_id": "codex",
-      "scope_id": "task",
       "target_path": "packages/task/AGENTS.md",
       "source_hash": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
       "rendered_hash": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
@@ -279,21 +276,34 @@ Normative shape:
           "instructions.task.codex.extension"
         ]
       },
-      "marker_ids": [
-        "swissknifeman:instructions:task:codex:common",
-        "swissknifeman:instructions:task:codex:extension"
-      ],
-      "semantic_sections": {
-        "common": [
-          "task.identity",
-          "task.command-catalog",
-          "task.plan-protocol",
-          "task.layout",
-          "task.schema-ownership",
-          "task.engineering-invariants",
-          "task.validation-release"
+      "semantic_metadata": {
+        "artifact_kind": "instruction-projection",
+        "block_ids": [
+          "instructions.task.codex.common",
+          "instructions.task.codex.extension"
         ],
-        "provider_extension": []
+        "capabilities": ["instructions.project"],
+        "catalog_version": "1.0.0",
+        "instruction_contract_version": "1.0.0",
+        "marker_ids": [
+          "swissknifeman:instructions:task:codex:common",
+          "swissknifeman:instructions:task:codex:extension"
+        ],
+        "provider_id": "codex",
+        "registry": "explicit",
+        "scope_id": "task",
+        "semantic_sections": {
+          "common": [
+            "task.identity",
+            "task.command-catalog",
+            "task.plan-protocol",
+            "task.layout",
+            "task.schema-ownership",
+            "task.engineering-invariants",
+            "task.validation-release"
+          ],
+          "provider_extension": []
+        }
       },
       "override_layers": [],
       "capability_requirements": [

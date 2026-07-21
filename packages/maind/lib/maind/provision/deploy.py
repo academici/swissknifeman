@@ -19,6 +19,7 @@ from ..mcpconfig import (MCP_FILES, MCPConfigError, load_mcp, mcp_path,
 from ..memory import health, resolve_ports
 from ..projects import get as get_project
 from ..projects import listing, write_config
+from ..provider_deploy import plan_provider_deploy, semantic_servers
 
 
 def _agentmemory_entry(env, config, scope):
@@ -60,8 +61,27 @@ def _resolve_targets(project_path, opt_targets):
     return out
 
 
+def provider_semantic_inventory(env, config, project, *, with_code, maind_server,
+                                with_agentmemory):
+    """Caller-owned server descriptors; P5 supplies provider projections separately."""
+    scope = project.get("memory_scope") or f"project:{project['id']}"
+    st = codegraph.settings(config)
+    if with_code is None:
+        with_code = codegraph.enabled(project, st)
+    code = None
+    if with_code:
+        code = _code_entry(Path(os.path.expanduser(project["local_path"])),
+                           codegraph.command(project, st), codegraph.cmd_args(project, st))
+    pw = pplxweb.settings(config)
+    perplexity = pplxweb.entry(project, pw) if pplxweb.enabled(project, pw) else None
+    return semantic_servers(maind=_maind_entry(scope) if maind_server else None,
+                            agentmemory=_agentmemory_entry(env, config, scope) if with_agentmemory else None,
+                            codegraph=code, perplexity=perplexity)
+
+
 def deploy_project(env, config, project, *, targets=None, with_code=None,
-                   maind_server=True, with_agentmemory=False, dry=False):
+                   maind_server=True, with_agentmemory=False, dry=False,
+                   provider_projections=None):
     """Раскатать серверы хаба в один проект. with_code=None → берётся из политики/полей проекта
     (code|graphify). Память проекта — через сервер `maind` (изоляция по scope на стороне maind);
     raw-сервер `agentmemory` НЕ раскатывается (он пишет мимо scope-маркера → невидимо для
@@ -77,6 +97,13 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
         warn(f"проект '{pid}': путь не найден — {project_path}")
         return None
     scope = project.get("memory_scope") or f"project:{pid}"
+    provider_plan = None
+    if provider_projections is not None:
+        provider_plan = plan_provider_deploy(
+            provider_projections,
+            provider_semantic_inventory(env, config, project, with_code=with_code,
+                                        maind_server=maind_server,
+                                        with_agentmemory=with_agentmemory))
     emit_example = bool((config.get("mcp") or {}).get("emit_example"))  # opt-in: .example + .gitignore
 
     st = codegraph.settings(config)
@@ -133,7 +160,8 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
 
     return {"id": pid, "scope": scope, "written": written, "skipped": skipped,
             "code": code_state, "code_server": codegraph.server_name(project, st),
-            "servers": list(entries), "targets": [w["file"] for w in written]}
+            "servers": list(entries), "targets": [w["file"] for w in written],
+            "provider_plan": provider_plan}
 
 
 def mark_deployed(config, project_id, result):

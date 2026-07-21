@@ -218,6 +218,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-21 | plan-close/Codex gpt-5.6-terra high | P3 повторно закрыта после D83: terminal publication/distribution/parity evidence, full skiller validation и clean-tree registry check сверены; далее fresh G03 audit — детали см. phases/P3.md Phase Handoff. |
 | 2026-07-21 | plan-exec/Codex gpt-5.6-terra medium | P3.5 повторно закрыт после D83: независимый inventory/channel-parity rerun зелёный без изменения fixtures или publication outputs — детали см. phases/P3.md P3.5 Completion Notes. |
 | 2026-07-21 | plan-run/Codex gpt-5.6-terra high | P3.3 D83 закрыт: clean-worktree regeneration restored the stale Codex core cache/lock and added a catalog-vs-cache regression — детали см. phases/P3.md P3.3 Completion Notes. |
 | 2026-07-21 | plan-design/Codex gpt-5.6-sol xhigh | D83: P3 reopened after RED G03; P3.3 owns a bounded clean-worktree Codex core cache/lock regeneration and focused catalog-vs-cache regression, while P3.5 is blocked until repair — details in `research/21-p3-codex-core-registry-remediation.md`. |

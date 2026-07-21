@@ -18,7 +18,7 @@ Read plan.md → handoff.md → phases/P4.md → P4.2 Required Reads in exact or
 **Done:** P4.1 froze `root/contracts/provider-command-routing-contract.md` v1.0.0 through
 delegated Approval D84; the approved review is
 `artifacts/P4-command-routing-contract-review.md`. Bundled item/bookkeeping commit:
-`BUNDLED-COMMIT-HASH-PENDING` (replaced by the immediate mechanical hash-fix commit).
+`a832898` (bundled substantive item/bookkeeping commit; recorded by this immediate mechanical hash fix).
 
 **Remaining:** P4.2 → P4.3 → P4.4 → P4.5, terminal full validation/phase close and fresh
 independent P4 audit. P5+ remains closed.

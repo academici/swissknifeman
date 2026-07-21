@@ -8,7 +8,7 @@ from core import ProviderId
 from harness.mcp import load_mcp_catalog, plan_mcp_projection
 from maind.provider_deploy import plan_provider_deploy, semantic_servers
 from maind.provider_deploy import write_conformance_report
-from maind.provision.deploy import provider_semantic_inventory
+from maind.provision.deploy import mark_deployed, provider_semantic_inventory
 from tests.fixtures import make_repo
 from maind.config import merge_defaults
 import tempfile
@@ -75,6 +75,23 @@ class TestProviderDeploy(unittest.TestCase):
             write_conformance_report(evidence, first)
             self.assertEqual(foreign.read_text(encoding="utf-8"), '{"foreign":true}')
             self.assertIn("Aggregate:** GREEN", evidence.read_text(encoding="utf-8"))
+
+    def test_mark_deployed_keeps_legacy_fields_and_provider_tagged_state(self):
+        root = Path(__file__).resolve().parents[3] / "packages/harness/configs"
+        catalog = load_mcp_catalog(root / "common/mcp/catalog.json")
+        bases = tuple(plan_mcp_projection(catalog, provider_id=provider,
+            bindings_path=root / provider.value / "mcp/bindings.json", selected=(), trusted=True)
+            for provider in (ProviderId.CLAUDE_CODE, ProviderId.CODEX))
+        plan = plan_provider_deploy(bases, semantic_servers(maind={"command": "maind"}))
+        config = merge_defaults({"projects": [{"id": "demo", "name": "Demo",
+            "local_path": "/tmp/demo", "memory_scope": "project:demo"}]})
+        result = {"servers": ["maind"], "code": "disabled", "code_server": "serena",
+                  "targets": [".mcp.json"], "scope": "project:demo", "provider_plan": plan}
+        saved = mark_deployed(config, "demo", result)
+        project = saved["projects"][0]
+        self.assertEqual(project["mcp"]["targets"], [".mcp.json"])
+        self.assertEqual(project["provider_deploy"]["claude-code"]["status"], "planned")
+        self.assertEqual(project["provider_deploy"]["codex"]["target_path"], ".codex/config.toml")
 
 
 if __name__ == "__main__":

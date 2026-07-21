@@ -180,6 +180,22 @@ def mark_deployed(config, project_id, result):
         "targets": result["targets"],
         "scope": result["scope"],
     }
+    provider_plan = result.get("provider_plan")
+    if provider_plan is not None:
+        proj["provider_deploy"] = {
+            row.provider_id.value: {
+                "status": row.status,
+                "target_scope": row.target_scope,
+                "target_path": row.target_path,
+                "server_ids": list(row.server_ids),
+                "diagnostic": row.diagnostic,
+                "provenance": {
+                    "source_path": row.artifact.provenance.canonical_sources[0].path,
+                    "content_hash": row.artifact.provenance.canonical_sources[0].content_hash,
+                } if row.artifact is not None else None,
+            }
+            for row in provider_plan.results
+        }
     return config
 
 

@@ -18,10 +18,22 @@ def _providers(config, selection):
     }
 
 
-EXPECTED_PROVISIONERS = (
-    "mcp", "code-graph", "graph", "memory", "memory-hook", "health-hook", "health-doc",
-    "feature-log-hook", "ecosystem-skill", "setup-skill", "skills-catalog", "agent-pack",
-    "output-style", "router-config", "instructions",
+EXPECTED_MATRIX_CLASSES = (
+    ("mcp", "adapter-projected", "planned", "none"),
+    ("code-graph", "provider-neutral", "not-applicable", "MAIND_PROVIDER_NEUTRAL"),
+    ("graph", "provider-neutral", "not-applicable", "MAIND_PROVIDER_NEUTRAL"),
+    ("memory", "provider-neutral", "not-applicable", "MAIND_PROVIDER_NEUTRAL"),
+    ("memory-hook", "delegated", "not-observed", "MAIND_DELEGATED:memory-context"),
+    ("health-hook", "delegated", "not-observed", "MAIND_DELEGATED:health"),
+    ("health-doc", "delegated", "not-observed", "MAIND_DELEGATED:health"),
+    ("feature-log-hook", "delegated", "not-observed", "MAIND_DELEGATED:health"),
+    ("ecosystem-skill", "delegated", "not-observed", "MAIND_DELEGATED:skills"),
+    ("setup-skill", "delegated", "not-observed", "MAIND_DELEGATED:skills"),
+    ("skills-catalog", "delegated", "not-observed", "MAIND_DELEGATED:skills"),
+    ("agent-pack", "delegated", "not-observed", "MAIND_DELEGATED:agent-pack"),
+    ("output-style", "delegated", "not-observed", "MAIND_DELEGATED:memory-context"),
+    ("router-config", "delegated", "not-observed", "MAIND_DELEGATED:router"),
+    ("instructions", "adapter-projected", "failed", "INSTRUCTION_TARGET_MISSING"),
 )
 
 
@@ -79,16 +91,12 @@ class TestProviderProvisionConformance(unittest.TestCase):
             rows = sync.provisioner_provider_matrix(
                 sync.run_sync_contexts(env, config, [context], dry=True),
                 context.effective_provider_ids)
-        self.assertEqual(sync.provisioner_names(), list(EXPECTED_PROVISIONERS))
-        self.assertEqual(tuple((row["provisioner"], row["provider_id"]) for row in rows),
-                         tuple((name, provider) for name in EXPECTED_PROVISIONERS
-                               for provider in ("claude-code", "codex")))
-        self.assertTrue(all(row["support"] and row["activation"] and row["diagnostic"]
-                            for row in rows))
-        neutral = [row for row in rows if row["support"] == "provider-neutral"]
-        self.assertTrue(neutral)
-        self.assertTrue(all(row["activation"] == "not-applicable"
-                            and row["diagnostic"] == "MAIND_PROVIDER_NEUTRAL" for row in neutral))
+        expected = tuple(
+            {"provisioner": provisioner, "provider_id": provider_id,
+             "support": support, "activation": activation, "diagnostic": diagnostic}
+            for provisioner, support, activation, diagnostic in EXPECTED_MATRIX_CLASSES
+            for provider_id in ("claude-code", "codex"))
+        self.assertEqual(rows, expected)
 
     def test_instruction_contract_negative_matrix_and_critical_partial_gate(self):
         with tempfile.TemporaryDirectory() as tmp:

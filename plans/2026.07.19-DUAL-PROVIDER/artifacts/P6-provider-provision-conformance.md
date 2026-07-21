@@ -25,6 +25,7 @@ Generated through the worktree-local mAInd public APIs on temporary roots.
 
 All roots were temporary. `sync` used the frozen `harness.instructions`
 plan/check/apply/repair API; mAInd did not parse, render or translate instruction files.
+
 | Provisioner | Provider | Support | Activation | Diagnostic |
 |:--|:--|:--|:--|:--|
 | mcp | claude-code | adapter-projected | planned | none |
@@ -55,5 +56,5 @@ plan/check/apply/repair API; mAInd did not parse, render or translate instructio
 | output-style | codex | delegated | not-observed | MAIND_DELEGATED:memory-context |
 | router-config | claude-code | delegated | not-observed | MAIND_DELEGATED:router |
 | router-config | codex | delegated | not-observed | MAIND_DELEGATED:router |
-| instructions | claude-code | adapter-projected | failed | INSTRUCTION_TARGET_MISSING,INSTRUCTION_TARGET_MISSING,INSTRUCTION_TARGET_MISSING,INSTRUCTION_TARGET_MISSING,INSTRUCTION_TARGET_MISSING,INSTRUCTION_TARGET_MISSING |
-| instructions | codex | adapter-projected | failed | INSTRUCTION_TARGET_MISSING,INSTRUCTION_TARGET_MISSING,INSTRUCTION_TARGET_MISSING,INSTRUCTION_TARGET_MISSING,INSTRUCTION_TARGET_MISSING,INSTRUCTION_TARGET_MISSING |
+| instructions | claude-code | adapter-projected | failed | INSTRUCTION_TARGET_MISSING |
+| instructions | codex | adapter-projected | failed | INSTRUCTION_TARGET_MISSING |

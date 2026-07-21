@@ -586,9 +586,10 @@ def provisioner_provider_matrix(results, provider_ids):
         for provider_id in provider_ids:
             row = provider_rows.get(provider_id)
             if row is not None:
+                diagnostic = row["diagnostic"] or "none"
                 matrix.append({"provisioner": name, "provider_id": provider_id,
                                "support": "adapter-projected", "activation": row["status"],
-                               "diagnostic": row["diagnostic"] or "none"})
+                               "diagnostic": ",".join(sorted(set(diagnostic.split(","))))})
             elif intents:
                 matrix.append({"provisioner": name, "provider_id": provider_id,
                                "support": "delegated", "activation": "not-observed",
@@ -650,7 +651,6 @@ def generate_instruction_conformance(env, output_path):
                 project["providers"] = {"contract_version": "1.0.0", "selection": selection}
             config = _conformance_config(project)
             first = run_sync(env, config, [project], only="instructions", mode="auto")[0]
-            operation = None
             # The public result carries the target count; the harness checker is consumed by
             # rerunning its public check operation through the same provisioner context.
             context = contexts(env, config, [project])[0]
@@ -804,7 +804,7 @@ def generate_instruction_conformance(env, output_path):
                        if any(step["name"] == "instructions" for step in report["steps"]) else "RED"})
 
     rendered = instruction_conformance_markdown(cases, checks)
-    rendered += "| Provisioner | Provider | Support | Activation | Diagnostic |\n"
+    rendered += "\n| Provisioner | Provider | Support | Activation | Diagnostic |\n"
     rendered += "|:--|:--|:--|:--|:--|\n"
     for row in matrix:
         rendered += ("| {provisioner} | {provider_id} | {support} | {activation} | "

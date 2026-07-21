@@ -20,7 +20,21 @@ from ..namespaces import in_namespace
 from ..projects import get as get_project
 from ..projects import listing
 
-MODES = ("install", "update", "auto")
+MODES = ("install", "update", "auto", "repair")
+
+# mAInd orders semantic work; provider adapters own native paths, trust and rendering.
+# These IDs deliberately do not encode a provider target or a renderer implementation.
+INTENT_ORDER = ("trust", "memory-context", "health", "skills", "agent-pack", "router",
+                "instruction-root", "instruction-package")
+PROVISIONER_INTENTS = {
+    "mcp": (), "code-graph": (), "graph": (), "memory": (),
+    "memory-hook": ("memory-context",), "health-hook": ("health",),
+    "health-doc": ("health",), "feature-log-hook": ("health",),
+    "ecosystem-skill": ("skills",), "setup-skill": ("skills",),
+    "skills-catalog": ("skills",), "agent-pack": ("agent-pack",),
+    "output-style": ("memory-context",), "router-config": ("router",),
+    "instructions": ("instruction-root", "instruction-package"),
+}
 
 
 # ── контекст проекта (единый резолв пути/scope) ──────────────────────────────
@@ -54,6 +68,16 @@ class ProjectContext:
     @property
     def scope(self):
         return self.project.get("memory_scope") or f"project:{self.id}"
+
+    @property
+    def effective_provider_ids(self):
+        """Stable IDs resolved once by the P6 context, never rediscovered by a provisioner."""
+        return tuple(provider.provider_id.value for provider in
+                     (self.provider_context.effective_providers if self.provider_context else ()))
+
+    @property
+    def semantic_intents(self):
+        return INTENT_ORDER
 
 
 def select_projects(env, config, opts):
@@ -205,6 +229,72 @@ def _health_doc_run(env, config, projects, mode, dry):
     """Управляемый блок «ПРИОРИТЕТ №1 — связь с mAInd» в CLAUDE.md проектов."""
     from ..health import apply_health_doc
     return [apply_health_doc(env, config, p, mode, dry) for p in projects]
+
+
+def _instruction_request(context, operation_id, *, authorized=(), observed=()):
+    """Construct only the frozen public P5 request; maind never reads its catalog/markers."""
+    from harness.instructions import CATALOG_VERSION, CONTRACT_VERSION, SCOPES, InstructionRequest
+    return InstructionRequest(
+        CONTRACT_VERSION, CATALOG_VERSION, operation_id, tuple(SCOPES),
+        context.effective_provider_ids, str(context.path),
+        (("provider-context", context.id),),
+        (("authority", "maind-sync-explicit-targets"),), tuple(authorized),
+        tuple(observed), "adjacent-backup" if operation_id == "repair" else None)
+
+
+def _instruction_aggregate(operation):
+    """Preserve P5 target observations as provider-tagged rows without reclassifying them."""
+    rows = []
+    for provider_id in operation.request.provider_ids:
+        targets = [target for target in operation.targets if target.provider_id == provider_id]
+        diagnostics = [diagnostic.code for target in targets for diagnostic in target.diagnostics]
+        rows.append({"provider_id": provider_id,
+                     "status": "planned" if not diagnostics else "failed",
+                     "required": True, "diagnostic": ",".join(diagnostics) or None})
+    return ProviderProvisionAggregate(tuple(rows))
+
+
+def _instruction_run(env, config, projects, mode, dry):
+    """Provision root plus five package instruction scopes through frozen harness.instructions.
+
+    The plan is always obtained first.  The only write authority supplied to harness is the
+    exact target set returned by that plan; mAInd neither parses nor renders instructions.
+    """
+    from harness.instructions import (apply_instructions, check_instructions,
+                                      plan_instructions, repair_instructions)
+    results = []
+    for context in projects:
+        if not isinstance(context, ProjectContext) or not context.exists:
+            project = context.project if isinstance(context, ProjectContext) else context
+            results.append(_result("instructions", project["id"], "skip", state="absent",
+                                   detail="нет пути проекта"))
+            continue
+        planned = plan_instructions(_instruction_request(context, "plan"))
+        paths = tuple(action.target_path for action in (planned.artifact_plan.actions
+                                                         if planned.artifact_plan else ())
+                      if getattr(action.action, "value", action.action) != "noop")
+        operation = planned
+        # P5 classifies missing/stale targets as diagnostics in the no-write plan; its
+        # apply API is the sole authority that decides whether those planned paths may write.
+        if not dry and planned.artifact_plan is not None:
+            if mode == "repair":
+                observed = tuple((target.target_path, target.render_hash) for target in planned.targets
+                                 if target.observation == "managed-drift")
+                operation = repair_instructions(_instruction_request(
+                    context, "repair", authorized=paths, observed=observed))
+            elif paths:
+                operation = apply_instructions(_instruction_request(
+                    context, "apply" if mode == "install" else "update", authorized=paths))
+            else:
+                operation = check_instructions(_instruction_request(context, "check"))
+        aggregate = _instruction_aggregate(operation)
+        changed = any(target.changed for target in operation.targets)
+        status = "dry" if dry else ("ok" if operation.green else "failed")
+        detail = f"{len(operation.targets)} targets; intents=instruction-root,instruction-package"
+        results.append(_result("instructions", context.id, status, changed=changed,
+                               state="clean" if operation.green else "non-green",
+                               detail=detail, provider_aggregate=aggregate))
+    return results
 
 
 def _feature_log_hook_run(env, config, projects, mode, dry):
@@ -418,10 +508,11 @@ PROVISIONERS = {
     "agent-pack": _agent_pack_run,
     "output-style": _output_style_run,
     "router-config": _router_config_run,
+    "instructions": _instruction_run,
 }
 ORDER = ["mcp", "code-graph", "graph", "memory", "memory-hook", "health-hook",
          "health-doc", "feature-log-hook", "ecosystem-skill", "setup-skill",
-         "skills-catalog", "agent-pack", "output-style", "router-config"]
+         "skills-catalog", "agent-pack", "output-style", "router-config", "instructions"]
 
 
 def provisioner_names(only=None):
@@ -460,8 +551,8 @@ def cmd_sync(env, argv):
         print("maind sync [--project ID | --namespace NS | --all] [--only mcp,code-graph,"
               "graph,memory,memory-hook,health-hook,health-doc,feature-log-hook,"
               "ecosystem-skill,setup-skill,skills-catalog,agent-pack,output-style,"
-              "router-config] "
-              "[--mode install|update|auto] [--dry-run] [--json]")
+              "router-config,instructions] "
+              "[--mode install|update|auto|repair] [--dry-run] [--json]")
         return
     mode = opts["mode"] or "auto"
     if mode not in MODES:

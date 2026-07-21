@@ -110,6 +110,33 @@ class TestProviderContexts(unittest.TestCase):
             self.assertEqual(calls, ["flexcrm"])
             self.assertEqual([row["provisioner"] for row in results], ["mcp", "graph"])
 
+    def test_instruction_provisioner_uses_context_provider_ids_and_is_idempotent(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, project = _setup(tmp)
+            config["projects"][0]["providers"] = {
+                "contract_version": "1.0.0",
+                "selection": {"claude-code": {"enabled": True}, "codex": {"enabled": True}},
+            }
+            first = sync.run_sync(env, config, config["projects"], only="instructions", mode="auto")
+            self.assertEqual(first[0]["provider_aggregate"], "green")
+            self.assertEqual({row["provider_id"] for row in first[0]["providers"]},
+                             {"claude-code", "codex"})
+            self.assertTrue((project / "CLAUDE.md").is_file())
+            self.assertTrue((project / "AGENTS.md").is_file())
+            for package in ("skiller", "harness", "maind", "analyst", "task"):
+                self.assertTrue((project / "packages" / package / "CLAUDE.md").is_file())
+                self.assertTrue((project / "packages" / package / "AGENTS.md").is_file())
+            second = sync.run_sync(env, config, config["projects"], only="instructions", mode="auto")
+            self.assertEqual(second[0]["provider_aggregate"], "green")
+            self.assertFalse(second[0]["changed"])
+
+    def test_instruction_provisioner_dry_run_does_not_write(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, project = _setup(tmp)
+            row = sync.run_sync(env, config, config["projects"], only="instructions", dry=True)[0]
+            self.assertEqual(row["status"], "dry")
+            self.assertFalse((project / "CLAUDE.md").exists())
+
 
 class TestRoleAgentPacks(unittest.TestCase):
     """Вариант C: project.roles → config.role_packs[role], аддитивно к профильному паку."""

@@ -194,8 +194,13 @@ def onboard(env, config, project_or_path, opts):
         proj["code"] = True
         if not dry:
             write_config(env, config)
+    # Reuse the same P6 project context for deployment and instruction provisioning.
+    from .sync import contexts, run_sync
+    project_context = contexts(env, config, [proj])[0]
     res = deploy_project(env, config, proj, targets=opts.get("targets") or None,
-                         with_code=True if want_code else None, dry=dry)
+                         with_code=True if want_code else None, dry=dry,
+                         provider_projections=project_context.provider_context.projections,
+                         provider_repair=bool(opts.get("repair")))
     from .. import codegraph
     if codegraph.enabled(proj, codegraph.settings(config)):  # дефолтный .serena/project.yml
         codegraph.apply_serena_config(env, config, proj, "install", dry)
@@ -208,6 +213,16 @@ def onboard(env, config, project_or_path, opts):
         if not dry:
             config = mark_deployed(config, proj["id"], res)
             write_config(env, config)
+
+    # Root and package instruction semantics are intentionally owned only by frozen P5.
+    # Onboard supplies its already-effective context and explicit repair choice, then reports
+    # the provider-tagged aggregate without parsing/rendering the generated files.
+    instruction_mode = "repair" if opts.get("repair") else "auto"
+    instruction = run_sync(env, config, [proj], only="instructions",
+                           mode=instruction_mode, dry=dry)[0]
+    steps.append({"name": "instructions",
+                  "status": "ok" if instruction["status"] in ("ok", "dry") else "failed",
+                  "detail": instruction["detail"]})
 
     # 3. derive графа из источников истины (код/доки/override/skills) → стор проекта + индекс
     gstats = {}
@@ -289,7 +304,7 @@ def onboard(env, config, project_or_path, opts):
 # Шаги, невыполнение которых означает НЕ поставленное окружение/скиллы/MCP — не
 # маскируем «зелёным» онбордингом (S9): failed или skipped из-за НЕДОСТУПНОЙ зависимости
 # → эскалация в rc≠0 + ATTENTION. Осознанный частичный онбординг снимает --allow-partial.
-_CRITICAL_STEPS = {"skills", "env", "deploy"}
+_CRITICAL_STEPS = {"skills", "env", "deploy", "instructions"}
 
 
 def _unmet_steps(report, *, dry):
@@ -313,6 +328,7 @@ def cmd_onboard(env, argv):
                                "--with-graphify": "bool", "--namespace": "str",
                                "--memory": "str", "--skills-channel": "str",
                                "--with-brain": "bool", "--dry-run": "bool",
+                               "--repair": "bool",
                                "--allow-partial": "bool",
                                "--yes": "bool", "--json": "bool"}, max_pos=1)
     if not pos:
@@ -345,7 +361,8 @@ def cmd_onboard(env, argv):
     opts = {"bundle": o["bundle"], "skip_skills": o["skip_skills"], "targets": o["targets"],
             "with_code": o["with_code"], "with_graphify": o["with_graphify"],
             "namespaces": ns, "memory": memory or "maind", "skills_channel": channel,
-            "with_brain": o["with_brain"], "dry": o["dry_run"], "yes": o["yes"]}
+            "with_brain": o["with_brain"], "dry": o["dry_run"], "yes": o["yes"],
+            "repair": o["repair"]}
     report = onboard(env, config, pos[0], opts)
     unmet = _unmet_steps(report, dry=opts["dry"])
     report["attention"] = [s["name"] for s in unmet]

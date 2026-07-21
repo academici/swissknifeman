@@ -137,6 +137,22 @@ class TestProviderContexts(unittest.TestCase):
             self.assertEqual(row["status"], "dry")
             self.assertFalse((project / "CLAUDE.md").exists())
 
+    def test_instruction_repair_changes_only_managed_blocks(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, project = _setup(tmp)
+            sync.run_sync(env, config, config["projects"], only="instructions", mode="auto")
+            target = project / "CLAUDE.md"
+            original = target.read_text(encoding="utf-8")
+            target.write_text("local heading\n" + original.replace("#", "# drifted", 1)
+                              + "\nlocal footer\n", encoding="utf-8")
+            drift = sync.run_sync(env, config, config["projects"], only="instructions", mode="auto")[0]
+            self.assertEqual(drift["status"], "failed")
+            repaired = sync.run_sync(env, config, config["projects"], only="instructions", mode="repair")[0]
+            self.assertEqual(repaired["status"], "ok")
+            restored = target.read_text(encoding="utf-8")
+            self.assertTrue(restored.startswith("local heading\n"))
+            self.assertTrue(restored.endswith("\nlocal footer\n"))
+
 
 class TestRoleAgentPacks(unittest.TestCase):
     """Вариант C: project.roles → config.role_packs[role], аддитивно к профильному паку."""

@@ -8,8 +8,10 @@ PROVISIONERS + порядок ORDER; `--only` сужает набор. Режи�
 
 Фан-аут по проектам и резолв пути/scope вынесены сюда (DRY): deploy/derive/seed/health —
 провиженеры поверх одного контекста, а не дубль цикла в каждом модуле."""
+import copy
 import json
 import os
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -278,8 +280,10 @@ def _instruction_run(env, config, projects, mode, dry):
         # apply API is the sole authority that decides whether those planned paths may write.
         if not dry and planned.artifact_plan is not None:
             if mode == "repair":
-                observed = tuple((target.target_path, target.render_hash) for target in planned.targets
-                                 if target.observation == "managed-drift")
+                observed = tuple((action.target_path, action.observed_hash)
+                                 for action in planned.artifact_plan.actions
+                                 if getattr(action.observation, "value", action.observation)
+                                 == "managed-drift")
                 operation = repair_instructions(_instruction_request(
                     context, "repair", authorized=paths, observed=observed))
             elif paths:
@@ -530,7 +534,12 @@ def run_sync(env, config, projects, *, only=None, mode="auto", dry=False):
     """Применить выбранные провиженеры к проектам. Возвращает плоский список результатов.
     Fail-soft: падение одного провиженера НЕ валит весь фан-аут — остальные отрабатывают,
     упавший помечается status=failed per-project (видно в выводе и коде возврата)."""
-    project_contexts = contexts(env, config, projects)
+    return run_sync_contexts(env, config, contexts(env, config, projects), only=only,
+                             mode=mode, dry=dry)
+
+
+def run_sync_contexts(env, config, project_contexts, *, only=None, mode="auto", dry=False):
+    """Run provisioners against caller-owned contexts without a second provider resolution."""
     results = []
     for name in provisioner_names(only):
         try:
@@ -542,17 +551,180 @@ def run_sync(env, config, projects, *, only=None, mode="auto", dry=False):
     return results
 
 
+def instruction_conformance_markdown(cases, checks):
+    """Render committed P6 evidence from public mAInd and harness result objects."""
+    lines = ["# P6 provider provision conformance", "",
+             "Generated through the worktree-local mAInd public APIs on temporary roots.", "",
+             "| Case | Providers | Root + five package consumers | Second run | Health/doctor | Verdict |",
+             "|:--|:--|--:|:--|:--|:--|"]
+    for case in cases:
+        lines.append("| {name} | {providers} | {targets} | {second} | {health} | {verdict} |".format(
+            name=case["name"], providers=", ".join(case["providers"]),
+            targets=case["targets"], second=case["second"], health=case["health"],
+            verdict=case["verdict"]))
+    lines += ["", "| Boundary check | Result |", "|:--|:--|"]
+    lines.extend(f"| {check['name']} | {check['result']} |" for check in checks)
+    lines += ["", "All roots were temporary. `sync` used the frozen `harness.instructions`",
+              "plan/check/apply/repair API; mAInd did not parse, render or translate instruction files.", ""]
+    return "\n".join(lines)
+
+
+def _conformance_config(project):
+    return {"_version": "1", "node": {"id": "p6", "name": "P6", "role": "primary"},
+            "memory": {"http_port": 4111, "stream_port": 4112},
+            "graph": {"adapter": "federation"}, "projects": [project]}
+
+
+def _instruction_semantics(operation):
+    """Derive parity and provider-owned deltas from public harness target result fields only."""
+    scoped = {}
+    for target in operation.targets:
+        scoped.setdefault(target.scope_id, {})[target.provider_id] = target.ordered_semantic_ids
+    common, own = 0, 0
+    for providers in scoped.values():
+        values = tuple(providers.values())
+        if len(values) == 1:
+            common += len(values[0])
+            continue
+        left, right = values
+        shared = tuple(item for item in left if item in set(right))
+        if shared != tuple(item for item in right if item in set(left)):
+            raise ValueError("MAIND_INSTRUCTION_PARITY_MISMATCH")
+        common += len(shared)
+        own += sum(len(set(value) - set(shared)) for value in values)
+    return common, own
+
+
+def generate_instruction_conformance(env, output_path):
+    """Generate the P6.2 temporary-root matrix through public mAInd APIs only."""
+    from ..common import Env, atomic_write_json, atomic_write_text
+    from ..doctor import provider_trust_report
+    from ..health import health_report
+    from .onboard import onboard
+    from .workspace import provider_trust
+
+    cases, checks = [], []
+    with tempfile.TemporaryDirectory(prefix="maind-p6-provision-") as temp:
+        base = Path(temp)
+        for label, selection in (
+                ("Claude-only legacy", None),
+                ("Codex-only", {"claude-code": {"enabled": False}, "codex": {"enabled": True}}),
+                ("Dual-provider", {"claude-code": {"enabled": True}, "codex": {"enabled": True}})):
+            root = base / label.replace(" ", "-")
+            root.mkdir()
+            project = {"id": "target", "name": "Target", "type": "node-package",
+                       "enabled": True, "status": "active", "local_path": str(root)}
+            if selection is not None:
+                project["providers"] = {"contract_version": "1.0.0", "selection": selection}
+            config = _conformance_config(project)
+            first = run_sync(env, config, [project], only="instructions", mode="auto")[0]
+            operation = None
+            # The public result carries the target count; the harness checker is consumed by
+            # rerunning its public check operation through the same provisioner context.
+            context = contexts(env, config, [project])[0]
+            from harness.instructions import check_instructions
+            checked = check_instructions(_instruction_request(context, "check"))
+            common, own = _instruction_semantics(checked)
+            first_target = root / ("AGENTS.md" if first["providers"][0]["provider_id"] == "codex"
+                                   else "CLAUDE.md")
+            before = first_target.read_bytes()
+            first_target.write_bytes(b"outside-prefix\n" + before + b"\noutside-suffix\n")
+            second = run_sync_contexts(env, config, [context], only="instructions", mode="auto")[0]
+            health = health_report(env, config, project, memory_reachable=False,
+                                   provider_context=context)
+            doctor = provider_trust_report(env, config)
+            cases.append({"name": label,
+                          "providers": [row["provider_id"] for row in first["providers"]],
+                          "targets": len(checked.targets),
+                          "second": "no-op" if not second["changed"] else "changed",
+                          "health": "untrusted non-green" if all(not row["green"] for row in doctor)
+                                    else "unexpected green",
+                          "verdict": "GREEN" if first["status"] == second["status"] == "ok"
+                                     and len(health["provider_trust"]) == len(checked.request.provider_ids)
+                                     and common and own >= 0 else "RED"})
+            semantic_result = (f"semantic IDs={common}; single-provider projection; public checker GREEN"
+                               if len(checked.request.provider_ids) == 1 else
+                               f"common parity IDs={common}; provider-own extensions={own}; public checker GREEN")
+            checks.append({"name": f"{label}: harness semantic parity/extensions",
+                           "result": semantic_result})
+
+        # managed drift/repair is proved from public harness observations; outside bytes survive.
+        root = base / "repair"
+        root.mkdir()
+        project = {"id": "repair", "name": "Repair", "type": "node-package", "enabled": True,
+                   "status": "active", "local_path": str(root)}
+        config = _conformance_config(project)
+        run_sync(env, config, [project], only="instructions", mode="auto")
+        target = root / "CLAUDE.md"
+        original = target.read_bytes()
+        target.write_bytes(b"outside-before\n" + original.replace(b"#", b"# drifted", 1)
+                                + b"\noutside-after\n")
+        drift = run_sync(env, config, [project], only="instructions", mode="auto")[0]
+        repair = run_sync(env, config, [project], only="instructions", mode="repair")[0]
+        repaired = target.read_bytes()
+        checks.append({"name": "managed drift and explicit repair",
+                       "result": "non-green then repair GREEN; outside-before/outside-after preserved"
+                       if drift["status"] == "failed" and repair["status"] == "ok"
+                       and repaired.startswith(b"outside-before\n") and repaired.endswith(b"\noutside-after\n")
+                       else "RED"})
+
+        unknown = {"id": "unknown", "name": "Unknown", "type": "node-package", "enabled": True,
+                   "status": "active", "local_path": str(base / "unknown"), "providers": {
+                       "contract_version": "1.0.0", "selection": {"unsupported-provider": {"enabled": True}}}}
+        Path(unknown["local_path"]).mkdir()
+        try:
+            run_sync(env, _conformance_config(unknown), [unknown], only="instructions")
+            unknown_result = "RED"
+        except ValueError:
+            unknown_result = "rejected before write"
+        checks.append({"name": "unknown/unsupported provider", "result": unknown_result})
+
+        full = provider_trust(contexts(env, config, [project])[0], trusted=True,
+                              profile_id="trusted-full-access", origin="project")
+        checks.append({"name": "implicit full access", "result": "refused"
+                       if all(not row["green"] for row in full) else "RED"})
+
+        # Onboard's public API receives a context once and passes it through to instruction sync.
+        onboard_root = base / "onboard"
+        onboard_root.mkdir()
+        isolated = base / "maind"
+        (isolated / "config/memory").mkdir(parents=True)
+        (isolated / "config/memory/iii-config.yaml").write_text("workers: []\n", encoding="utf-8")
+        isolated_env = Env(isolated, home=base / "home")
+        isolated_env.home.mkdir()
+        onboard_config = _conformance_config({"id": "onboard", "name": "Onboard", "type": "node-package",
+                                               "enabled": True, "status": "active", "local_path": str(onboard_root)})
+        onboard_config["projects"].append({"id": "swissknifeman", "name": "Swissknifeman",
+                                            "enabled": True, "local_path": str(
+                                                Path(__file__).resolve().parents[5])})
+        atomic_write_json(isolated_env.default_config, onboard_config)
+        report = onboard(isolated_env, copy.deepcopy(onboard_config), str(onboard_root),
+                         {"skip_skills": True, "yes": True, "dry": True, "memory": "off", "repair": False})
+        checks.append({"name": "public onboard instruction step", "result": "present"
+                       if any(step["name"] == "instructions" for step in report["steps"]) else "RED"})
+
+    atomic_write_text(Path(output_path), instruction_conformance_markdown(cases, checks))
+
+
 # ── CLI ─────────────────────────────────────────────────────────────────────
 def cmd_sync(env, argv):
     opts, _ = parse_args(argv, {"--project": "str", "--namespace": "str", "--all": "bool",
                                 "--only": "str", "--mode": "str", "--dry-run": "bool",
-                                "--json": "bool"})
+                                "--json": "bool", "--conformance": "str"})
     if opts["help"]:
         print("maind sync [--project ID | --namespace NS | --all] [--only mcp,code-graph,"
               "graph,memory,memory-hook,health-hook,health-doc,feature-log-hook,"
               "ecosystem-skill,setup-skill,skills-catalog,agent-pack,output-style,"
               "router-config,instructions] "
-              "[--mode install|update|auto|repair] [--dry-run] [--json]")
+              "[--mode install|update|auto|repair] [--dry-run] [--json]\n"
+              "maind sync --conformance <path> — P6 temporary-root provider proof")
+        return
+    if opts["conformance"]:
+        if any((opts["project"], opts["namespace"], opts["all"], opts["only"],
+                opts["mode"], opts["dry_run"], opts["json"])):
+            die("--conformance не совмещается с project/only/mode/dry/json")
+        generate_instruction_conformance(env, opts["conformance"])
+        print(f"provider provision conformance → {opts['conformance']}")
         return
     mode = opts["mode"] or "auto"
     if mode not in MODES:

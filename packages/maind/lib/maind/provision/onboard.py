@@ -195,7 +195,7 @@ def onboard(env, config, project_or_path, opts):
         if not dry:
             write_config(env, config)
     # Reuse the same P6 project context for deployment and instruction provisioning.
-    from .sync import contexts, run_sync
+    from .sync import contexts, run_sync_contexts
     project_context = contexts(env, config, [proj])[0]
     res = deploy_project(env, config, proj, targets=opts.get("targets") or None,
                          with_code=True if want_code else None, dry=dry,
@@ -218,8 +218,8 @@ def onboard(env, config, project_or_path, opts):
     # Onboard supplies its already-effective context and explicit repair choice, then reports
     # the provider-tagged aggregate without parsing/rendering the generated files.
     instruction_mode = "repair" if opts.get("repair") else "auto"
-    instruction = run_sync(env, config, [proj], only="instructions",
-                           mode=instruction_mode, dry=dry)[0]
+    instruction = run_sync_contexts(env, config, [project_context], only="instructions",
+                                    mode=instruction_mode, dry=dry)[0]
     steps.append({"name": "instructions",
                   "status": "ok" if instruction["status"] in ("ok", "dry") else "failed",
                   "detail": instruction["detail"]})

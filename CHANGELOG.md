@@ -4,6 +4,10 @@
 
 ### Added
 
+- **harness/core — dual-provider environment and instruction projections.** Provider-neutral
+  profile, security, hook, MCP, agent and instruction catalogs now render independent native
+  Claude/Codex artifacts. Artifact contract v1.1.0 preserves generic semantic metadata in the
+  authoritative lock while exact v1.0.0 callers and records remain supported.
 - **task — dual-provider command surface.** Immutable semantic command catalog,
   generated Codex adapters, byte-compatible Claude projection, fail-closed neutral
   routing and exhaustive parity/operator reference for the full task inventory.

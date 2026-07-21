@@ -222,6 +222,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-21 | plan-close/Codex gpt-5.6-sol high | P5 закрыта: terminal task/skiller/harness/registry/lint/protected gates GREEN; далее fresh independent Audit P5 — детали см. phases/P5.md Phase Handoff. |
 | 2026-07-21 | plan-sol-high / gpt-5.6-sol/high | P5.7 attempt 5 D87 fix-forward: backward-compatible artifact v1.1.0 generic semantic metadata carrier preserves every D86 render parameter in serialized locks while exact v1.0.0 callers/records stay unchanged — детали см. phases/P5.md P5.7 Completion Notes. |
 | 2026-07-21 | plan-sol-high / gpt-5.6-sol/high | P5.7 attempt 4 исправил единый D86 RED bundle: exact 49+18=67 inventory, fragment canon, normalized conflict model, pre-P2 semantic gate, frozen request/result API, structured diagnostics и independent temp-root conformance — детали см. phases/P5.md P5.7 Completion Notes. |
 | 2026-07-21 | plan-terra-high repair-agent / gpt-5.6-terra/high | P5.7 attempt 3 закрыт: all 56 catalog records now carry guide-derived concrete assertions/obligations and installed temp consumers prove every anchor — детали см. phases/P5.md P5.7 Completion Notes. |

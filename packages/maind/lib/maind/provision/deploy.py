@@ -8,11 +8,12 @@
 import json
 import os
 import shutil
+import sys
 from pathlib import Path
 
 from .. import codegraph, pplxweb
 from ..common import die, now_iso, parse_args, warn
-from ..config import load_config
+from ..config import load_config, resolve_provider_config
 from ..mcpconfig import (MCP_FILES, MCPConfigError, load_mcp, mcp_path,
                         merge_server, reconcile_gitignore, remove_server,
                         write_example, write_mcp)
@@ -20,7 +21,25 @@ from ..memory import health, resolve_ports
 from ..projects import get as get_project
 from ..projects import listing, write_config
 from ..provider_deploy import (apply_provider_artifacts, generate_conformance_report,
-                               plan_provider_artifacts, plan_provider_deploy, semantic_servers)
+                               plan_provider_artifacts, plan_provider_deploy,
+                               resolve_effective_providers, semantic_servers)
+
+
+def _provider_projections(env, config, project):
+    """Build P5 projections after resolving P1 effective providers once per operation."""
+    harness_root = Path(env.root).parent / "harness"
+    harness_lib = str(harness_root / "lib")
+    if harness_lib not in sys.path:
+        sys.path.insert(0, harness_lib)
+    from core import ProviderConfigCatalog, ProviderId
+    from harness.mcp import load_mcp_catalog, plan_mcp_projection
+    providers = resolve_effective_providers(
+        config, ProviderConfigCatalog("1.0.0", (ProviderId.CLAUDE_CODE, ProviderId.CODEX), (), ()),
+        project["id"])
+    catalog = load_mcp_catalog(harness_root / "configs/common/mcp/catalog.json")
+    return tuple(plan_mcp_projection(catalog, provider_id=provider,
+        bindings_path=harness_root / "configs" / provider.value / "mcp/bindings.json",
+        selected=(), trusted=True) for provider in providers)
 
 
 def _agentmemory_entry(env, config, scope):
@@ -236,9 +255,11 @@ def cmd_deploy(env, argv):
     for proj in projects:
         # флаг (--with-code|--with-graphify) форсит код-граф; иначе None → из конфига проекта
         with_code = True if (opts["with_code"] or opts["with_graphify"]) else None
+        projections = _provider_projections(env, config, proj)
         res = deploy_project(env, config, proj, targets=opts["targets"] or None,
                              with_code=with_code, with_agentmemory=opts["with_agentmemory"],
-                             maind_server=not opts["no_maind_server"], dry=opts["dry_run"])
+                             maind_server=not opts["no_maind_server"], dry=opts["dry_run"],
+                             provider_projections=projections)
         if res is None:
             continue
         results.append(res)

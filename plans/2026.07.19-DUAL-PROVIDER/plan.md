@@ -219,6 +219,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-21 | plan-audit/Codex gpt-5.6-sol xhigh | Audit P4 attempt 1: RED — generated Codex runtime snapshots сохраняют imperative Claude model/slash instructions, а parity suite проверяет отдельный renderer report вместо непосредственного consumer; G04 не удовлетворён, P5 не открыт — детали см. phases/P4.md Audit P4. |
 | 2026-07-21 | plan-close/Codex gpt-5.6-sol xhigh | P4 закрыта: terminal task/skiller validation, registry и docs/release assessment GREEN; далее fresh independent G04 audit — детали см. phases/P4.md Phase Handoff. |
 | 2026-07-21 | plan-exec/Codex gpt-5.6-sol xhigh | P4.5 закрыт: independent inventory, dual command/Next parity, fail-closed diagnostics и generated operator reference доказаны — детали см. phases/P4.md P4.5 Completion Notes. |
 | 2026-07-21 | plan-run/Codex gpt-5.6-sol xhigh | P4.4 закрыт: semantic Next, neutral plan routing/capability gates и dual invocation renderer синхронизированы с plan-protocol v2.11.0; focused 181-test seam GREEN — детали см. phases/P4.md P4.4 Completion Notes. |

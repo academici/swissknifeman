@@ -1,6 +1,6 @@
 # HANDOFF — 2026-07-21 — after P6.1
 
-**Next:** run-items: task:plan-run 2026.07.19-DUAL-PROVIDER P6.1
+**Next:** run-items: task:plan-run 2026.07.19-DUAL-PROVIDER P6.2
 
 | Параметр | Значение |
 |:--|:--|
@@ -8,16 +8,16 @@
 | Effort | high |
 | Capabilities | command.filesystem-read · command.filesystem-write · command.git-read |
 | Context | same-session — item |
-| Суть | Fresh plan-terra-high repair agent executes the bounded first-RED P6.1 provider deploy seam. |
+| Суть | Fresh plan-terra-high item-agent executes P6.2 from the committed P6.1 provider deploy seam. |
 
 ```text
-$ task:plan-run 2026.07.19-DUAL-PROVIDER P6.1
+$ task:plan-run 2026.07.19-DUAL-PROVIDER P6.2
 ```
 
-**Done:** P6.1 provisional commits `17b49fe`/`34b33fe` remain evidence only; D88 reopens the
-item because the provisional provider deploy seam is not accepted.
+**Done:** P6.1 D88 repair commits through `99f1852` provide provider resolution, inventory,
+P2 managed-boundary evidence and stable CLI conformance generation.
 
-**Remaining:** P6.1 bounded repair → P6.2 → P6.3 Owner freeze → P6.4 → P6.5 checkpoint → fresh cold
+**Remaining:** P6.2 → P6.3 Owner freeze → P6.4 → P6.5 checkpoint → fresh cold
 P6.6 → phase close → fresh terminal audit. P7+, live self-host, FOREMAN, fleet and push
 remain outside authority.
 

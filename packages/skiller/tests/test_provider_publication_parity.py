@@ -66,6 +66,12 @@ class TestProviderPublicationParity(unittest.TestCase):
         claude_names = {item["name"] for item in claude_marketplace["plugins"]}
         codex_names = {item["name"] for item in codex_marketplace["plugins"]}
         expected_plugins = set(expected_buckets) | {policy["core_plugin"], "generate-skill", "skm"}
+        expected_plugins.update(
+            json.loads((package / ".codex-plugin" / "plugin.json").read_text())["name"]
+            for package in (self.repo_root / "packages").iterdir()
+            if package != self.package_root
+            and (package / ".claude-plugin" / "plugin.json").is_file()
+            and (package / ".codex-plugin" / "plugin.json").is_file())
         self.assertTrue(expected_plugins.issubset(claude_names))
         self.assertEqual(codex_names, expected_plugins)
 

@@ -54,7 +54,7 @@ class PublicationUnit:
 
 @dataclass(frozen=True)
 class SiblingPlugin:
-    """A package-owned Claude marketplace entry preserved outside skiller units."""
+    """A package-owned marketplace entry preserved outside skiller units."""
 
     name: str
     package: str
@@ -63,6 +63,7 @@ class SiblingPlugin:
     tags: tuple[str, ...]
     source_path: str
     content_hash: str
+    codex_supported: bool = False
 
 
 @dataclass(frozen=True)
@@ -323,6 +324,13 @@ def render_codex_publication(catalog: PublicationCatalog, *, repo_root: Path,
                                                     "skiller management skill adapter",
                                                     {"category": "meta", "tags": ["cli", "skills", "management"]}))
 
+    codex_siblings = tuple(
+        sibling for sibling in catalog.sibling_plugins if sibling.codex_supported)
+    plugins.extend(_codex_marketplace_entry(
+        sibling.name, f"./{sibling.source_path}", sibling.description,
+        {"category": sibling.category, "tags": sibling.tags})
+        for sibling in codex_siblings)
+
     marketplace = {
         "name": catalog.marketplace_name,
         "plugins": sorted(plugins, key=lambda plugin: str(plugin["name"])),
@@ -330,7 +338,8 @@ def render_codex_publication(catalog: PublicationCatalog, *, repo_root: Path,
     artifacts.append(_render_codex_artifact(
         repo_root / ".agents" / "plugins" / "marketplace.json",
         PublicationUnit("codex-marketplace", "codex-marketplace", "marketplace", ()),
-        marketplace, tuple(catalog.skills), repo_root, catalog.package_version))
+        marketplace, tuple(catalog.skills) + codex_siblings,
+        repo_root, catalog.package_version))
     return tuple(artifacts)
 
 
@@ -345,7 +354,7 @@ def _codex_marketplace_entry(name: str, path: str, description: str,
         raise ValueError("Codex marketplace source path must be contained and ./-prefixed")
     return {
         "name": name,
-        "source": {"path": path},
+        "source": path,
         "description": description,
         "category": metadata.get("category", ""),
         "tags": list(metadata.get("tags", [])),

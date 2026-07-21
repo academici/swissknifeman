@@ -3,9 +3,7 @@
   "plugins": [
     {
       "name": "ai",
-      "source": {
-        "path": "./packages/skiller/skills/ai"
-      },
+      "source": "./packages/skiller/skills/ai",
       "description": "AI agent building: design, tools, evaluation",
       "category": "engineering",
       "tags": [
@@ -17,9 +15,7 @@
     },
     {
       "name": "architect",
-      "source": {
-        "path": "./packages/skiller/skills/architect"
-      },
+      "source": "./packages/skiller/skills/architect",
       "description": "Architecture, API and data design, security, observability, tech stack selection",
       "category": "engineering",
       "tags": [
@@ -33,9 +29,7 @@
     },
     {
       "name": "axioma",
-      "source": {
-        "path": "./packages/skiller/skills/axioma"
-      },
+      "source": "./packages/skiller/skills/axioma",
       "description": "Axioma ecosystem doctrine & reuse: dev philosophy, tech-radar binding, vendor-vs-build discipline (project-scoped bucket)",
       "category": "engineering",
       "tags": [
@@ -48,9 +42,7 @@
     },
     {
       "name": "azguard",
-      "source": {
-        "path": "./packages/skiller/skills/azguard"
-      },
+      "source": "./packages/skiller/skills/azguard",
       "description": "azguard package usage: code-first RBAC, panels, scoped roles, abilities (academici package — skill will relocate into the package repo)",
       "category": "engineering",
       "tags": [
@@ -63,9 +55,7 @@
     },
     {
       "name": "blender",
-      "source": {
-        "path": "./packages/skiller/skills/blender"
-      },
+      "source": "./packages/skiller/skills/blender",
       "description": "Universal Blender bpy+MCP tooling: MCP workflow primitives, viewport modes, camera helper, version gotchas",
       "category": "engineering",
       "tags": [
@@ -79,9 +69,7 @@
     },
     {
       "name": "blender-modeling",
-      "source": {
-        "path": "./packages/skiller/skills/blender-modeling"
-      },
+      "source": "./packages/skiller/skills/blender-modeling",
       "description": "Parametric CAD modeling in Blender for FDM/SLA: config-driven dataclasses, profile/revolve geometry, threading clearances, config & scene conventions, model-rules template, generic build loop",
       "category": "engineering",
       "tags": [
@@ -97,9 +85,7 @@
     },
     {
       "name": "botkit",
-      "source": {
-        "path": "./packages/skiller/skills/botkit"
-      },
+      "source": "./packages/skiller/skills/botkit",
       "description": "botkit package usage: bot framework patterns — BotDefinition, service provider, webhooks (academici package — skill will relocate into the package repo)",
       "category": "engineering",
       "tags": [
@@ -112,9 +98,7 @@
     },
     {
       "name": "core",
-      "source": {
-        "path": "./packages/skiller/adapters/codex/core"
-      },
+      "source": "./packages/skiller/adapters/codex/core",
       "description": "Curated always-on core skills",
       "category": "meta",
       "tags": [
@@ -126,9 +110,7 @@
     },
     {
       "name": "creative",
-      "source": {
-        "path": "./packages/skiller/skills/creative"
-      },
+      "source": "./packages/skiller/skills/creative",
       "description": "Creative studio: video, design, content production",
       "category": "business",
       "tags": [
@@ -140,9 +122,7 @@
     },
     {
       "name": "devops",
-      "source": {
-        "path": "./packages/skiller/skills/devops"
-      },
+      "source": "./packages/skiller/skills/devops",
       "description": "Docker environments, CI/CD pipelines, GitOps",
       "category": "infrastructure",
       "tags": [
@@ -155,9 +135,7 @@
     },
     {
       "name": "finance",
-      "source": {
-        "path": "./packages/skiller/skills/finance"
-      },
+      "source": "./packages/skiller/skills/finance",
       "description": "Finance and accounting: bookkeeping, reporting, FP&A",
       "category": "business",
       "tags": [
@@ -169,9 +147,7 @@
     },
     {
       "name": "founder",
-      "source": {
-        "path": "./packages/skiller/skills/founder"
-      },
+      "source": "./packages/skiller/skills/founder",
       "description": "Idea discovery, competitive analysis, risk assessment, pitch decks",
       "category": "business",
       "tags": [
@@ -184,9 +160,7 @@
     },
     {
       "name": "frontend",
-      "source": {
-        "path": "./packages/skiller/skills/frontend"
-      },
+      "source": "./packages/skiller/skills/frontend",
       "description": "Frontend core: общие фронт-скиллы (web design guidelines, document writer, file upload)",
       "category": "engineering",
       "tags": [
@@ -198,9 +172,7 @@
     },
     {
       "name": "frontend-animations",
-      "source": {
-        "path": "./packages/skiller/skills/frontend-animations"
-      },
+      "source": "./packages/skiller/skills/frontend-animations",
       "description": "Animations with Motion Vue (motion-v)",
       "category": "engineering",
       "tags": [
@@ -213,9 +185,7 @@
     },
     {
       "name": "frontend-backend",
-      "source": {
-        "path": "./packages/skiller/skills/frontend-backend"
-      },
+      "source": "./packages/skiller/skills/frontend-backend",
       "description": "Backend integration layer: Inertia+Vue, Laravel Echo realtime client, backend→frontend type sync",
       "category": "engineering",
       "tags": [
@@ -228,9 +198,7 @@
     },
     {
       "name": "frontend-figma",
-      "source": {
-        "path": "./packages/skiller/skills/frontend-figma"
-      },
+      "source": "./packages/skiller/skills/frontend-figma",
       "description": "Figma Dev Mode MCP → Vue mapping (uses architect/figma-mcp-core)",
       "category": "engineering",
       "tags": [
@@ -243,9 +211,7 @@
     },
     {
       "name": "frontend-linting",
-      "source": {
-        "path": "./packages/skiller/skills/frontend-linting"
-      },
+      "source": "./packages/skiller/skills/frontend-linting",
       "description": "JS/TS tooling and style: antfu config, ESLint flat config, Spatie JS style, TS library authoring",
       "category": "engineering",
       "tags": [
@@ -258,9 +224,7 @@
     },
     {
       "name": "frontend-naive-ui",
-      "source": {
-        "path": "./packages/skiller/skills/frontend-naive-ui"
-      },
+      "source": "./packages/skiller/skills/frontend-naive-ui",
       "description": "Naive UI component library theming (GlobalThemeOverrides)",
       "category": "engineering",
       "tags": [
@@ -273,9 +237,7 @@
     },
     {
       "name": "frontend-nuxt",
-      "source": {
-        "path": "./packages/skiller/skills/frontend-nuxt"
-      },
+      "source": "./packages/skiller/skills/frontend-nuxt",
       "description": "Nuxt 4+: server routes, modules, SEO meta-module",
       "category": "engineering",
       "tags": [
@@ -288,9 +250,7 @@
     },
     {
       "name": "frontend-reka",
-      "source": {
-        "path": "./packages/skiller/skills/frontend-reka"
-      },
+      "source": "./packages/skiller/skills/frontend-reka",
       "description": "Reka UI headless primitives + CVA variants",
       "category": "engineering",
       "tags": [
@@ -303,9 +263,7 @@
     },
     {
       "name": "frontend-tailwind",
-      "source": {
-        "path": "./packages/skiller/skills/frontend-tailwind"
-      },
+      "source": "./packages/skiller/skills/frontend-tailwind",
       "description": "Tailwind CSS v4 conventions and dark-mode theming",
       "category": "engineering",
       "tags": [
@@ -318,9 +276,7 @@
     },
     {
       "name": "frontend-vite",
-      "source": {
-        "path": "./packages/skiller/skills/frontend-vite"
-      },
+      "source": "./packages/skiller/skills/frontend-vite",
       "description": "Vite build tooling: config/plugins/SSR, project module loader, multi-build, VitePress",
       "category": "engineering",
       "tags": [
@@ -333,9 +289,7 @@
     },
     {
       "name": "frontend-vue",
-      "source": {
-        "path": "./packages/skiller/skills/frontend-vue"
-      },
+      "source": "./packages/skiller/skills/frontend-vue",
       "description": "Vue 3 ecosystem: Composition API, best practices, router, VueUse, Pinia state, Vitest testing",
       "category": "engineering",
       "tags": [
@@ -348,9 +302,7 @@
     },
     {
       "name": "frontend-wayfinder",
-      "source": {
-        "path": "./packages/skiller/skills/frontend-wayfinder"
-      },
+      "source": "./packages/skiller/skills/frontend-wayfinder",
       "description": "Laravel Wayfinder: type-safe routes/controller actions in the frontend",
       "category": "engineering",
       "tags": [
@@ -363,9 +315,7 @@
     },
     {
       "name": "general",
-      "source": {
-        "path": "./packages/skiller/skills/general"
-      },
+      "source": "./packages/skiller/skills/general",
       "description": "General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists",
       "category": "workflow",
       "tags": [
@@ -378,9 +328,7 @@
     },
     {
       "name": "generate-skill",
-      "source": {
-        "path": "./packages/skiller/generate-skill"
-      },
+      "source": "./packages/skiller/generate-skill",
       "description": "Meta-skill for creating new skills from SKILL_TEMPLATE",
       "category": "meta",
       "tags": [
@@ -392,9 +340,7 @@
     },
     {
       "name": "laravel-architecture",
-      "source": {
-        "path": "./packages/skiller/skills/laravel-architecture"
-      },
+      "source": "./packages/skiller/skills/laravel-architecture",
       "description": "Scaling architecture: modular monolith/DDD, enum state machines, enum attributes, subagent orchestration",
       "category": "engineering",
       "tags": [
@@ -407,9 +353,7 @@
     },
     {
       "name": "laravel-auth",
-      "source": {
-        "path": "./packages/skiller/skills/laravel-auth"
-      },
+      "source": "./packages/skiller/skills/laravel-auth",
       "description": "Authorization & security: permissions/RBAC, attribute-based gates, security audit",
       "category": "engineering",
       "tags": [
@@ -422,9 +366,7 @@
     },
     {
       "name": "laravel-data-layer",
-      "source": {
-        "path": "./packages/skiller/skills/laravel-data-layer"
-      },
+      "source": "./packages/skiller/skills/laravel-data-layer",
       "description": "Typed data + realtime: spatie/laravel-data DTOs (TS export), Echo/Reverb broadcasting",
       "category": "engineering",
       "tags": [
@@ -437,9 +379,7 @@
     },
     {
       "name": "laravel-extras",
-      "source": {
-        "path": "./packages/skiller/skills/laravel-extras"
-      },
+      "source": "./packages/skiller/skills/laravel-extras",
       "description": "Optional Laravel runtime packages: media library, typed settings, Pennant feature flags",
       "category": "engineering",
       "tags": [
@@ -452,9 +392,7 @@
     },
     {
       "name": "laravel-filament",
-      "source": {
-        "path": "./packages/skiller/skills/laravel-filament"
-      },
+      "source": "./packages/skiller/skills/laravel-filament",
       "description": "Filament admin panels: resources, schemas, tables, widgets, actions, tenancy",
       "category": "engineering",
       "tags": [
@@ -467,9 +405,7 @@
     },
     {
       "name": "laravel-livewire",
-      "source": {
-        "path": "./packages/skiller/skills/laravel-livewire"
-      },
+      "source": "./packages/skiller/skills/laravel-livewire",
       "description": "Livewire 3 UI: dynamic Blade attributes (ComponentAttributeBag)",
       "category": "engineering",
       "tags": [
@@ -482,9 +418,7 @@
     },
     {
       "name": "laravel-testing",
-      "source": {
-        "path": "./packages/skiller/skills/laravel-testing"
-      },
+      "source": "./packages/skiller/skills/laravel-testing",
       "description": "Laravel testing: Pest feature/unit, DB isolation guard, Dusk browser tests, health checks",
       "category": "engineering",
       "tags": [
@@ -497,9 +431,7 @@
     },
     {
       "name": "legal",
-      "source": {
-        "path": "./packages/skiller/skills/legal"
-      },
+      "source": "./packages/skiller/skills/legal",
       "description": "Legal operations: contracts, compliance, risk",
       "category": "business",
       "tags": [
@@ -511,9 +443,7 @@
     },
     {
       "name": "marketing",
-      "source": {
-        "path": "./packages/skiller/skills/marketing"
-      },
+      "source": "./packages/skiller/skills/marketing",
       "description": "Marketing: strategy, campaigns, content, growth",
       "category": "business",
       "tags": [
@@ -525,9 +455,7 @@
     },
     {
       "name": "mobile",
-      "source": {
-        "path": "./packages/skiller/skills/mobile"
-      },
+      "source": "./packages/skiller/skills/mobile",
       "description": "Mobile development: Flutter — design-to-code, theming, layout mapping from Figma",
       "category": "engineering",
       "tags": [
@@ -541,9 +469,7 @@
     },
     {
       "name": "operator",
-      "source": {
-        "path": "./packages/skiller/skills/operator"
-      },
+      "source": "./packages/skiller/skills/operator",
       "description": "Incident response, runbooks, postmortems, on-call and capacity planning",
       "category": "operations",
       "tags": [
@@ -556,9 +482,7 @@
     },
     {
       "name": "oss-dev",
-      "source": {
-        "path": "./packages/skiller/skills/oss-dev"
-      },
+      "source": "./packages/skiller/skills/oss-dev",
       "description": "Open-source development: releases, governance, DX, dependency audits + language references",
       "category": "engineering",
       "tags": [
@@ -571,9 +495,7 @@
     },
     {
       "name": "php",
-      "source": {
-        "path": "./packages/skiller/skills/php"
-      },
+      "source": "./packages/skiller/skills/php",
       "description": "PHP and Laravel core: architecture, structure, conventions, DI, database, repositories, patterns, static analysis",
       "category": "engineering",
       "tags": [
@@ -586,9 +508,7 @@
     },
     {
       "name": "php-packages",
-      "source": {
-        "path": "./packages/skiller/skills/php-packages"
-      },
+      "source": "./packages/skiller/skills/php-packages",
       "description": "Laravel package development: scaffold, service provider, testing, compatibility, docs, releases",
       "category": "engineering",
       "tags": [
@@ -601,9 +521,7 @@
     },
     {
       "name": "pm",
-      "source": {
-        "path": "./packages/skiller/skills/pm"
-      },
+      "source": "./packages/skiller/skills/pm",
       "description": "Product management: BRD, PRD, roadmap, monetization, unit economics",
       "category": "product",
       "tags": [
@@ -616,9 +534,7 @@
     },
     {
       "name": "python",
-      "source": {
-        "path": "./packages/skiller/skills/python"
-      },
+      "source": "./packages/skiller/skills/python",
       "description": "Python: ML project structure, virtualenv and dependency management",
       "category": "engineering",
       "tags": [
@@ -631,9 +547,7 @@
     },
     {
       "name": "quality",
-      "source": {
-        "path": "./packages/skiller/skills/quality"
-      },
+      "source": "./packages/skiller/skills/quality",
       "description": "Code review, refactoring plans, tech debt audits, test strategy",
       "category": "engineering",
       "tags": [
@@ -646,9 +560,7 @@
     },
     {
       "name": "research",
-      "source": {
-        "path": "./packages/skiller/skills/research"
-      },
+      "source": "./packages/skiller/skills/research",
       "description": "Research and knowledge management",
       "category": "business",
       "tags": [
@@ -660,9 +572,7 @@
     },
     {
       "name": "roles",
-      "source": {
-        "path": "./packages/skiller/skills/roles"
-      },
+      "source": "./packages/skiller/skills/roles",
       "description": "Personas: tech lead, startup CTO, solo founder, open-source maintainer",
       "category": "personas",
       "tags": [
@@ -675,9 +585,7 @@
     },
     {
       "name": "sales",
-      "source": {
-        "path": "./packages/skiller/skills/sales"
-      },
+      "source": "./packages/skiller/skills/sales",
       "description": "Sales: pipeline, outreach, CRM, negotiation",
       "category": "business",
       "tags": [
@@ -688,9 +596,7 @@
     },
     {
       "name": "security",
-      "source": {
-        "path": "./packages/skiller/skills/security"
-      },
+      "source": "./packages/skiller/skills/security",
       "description": "AI agent security: prompt injection defense, hardening",
       "category": "engineering",
       "tags": [
@@ -701,9 +607,7 @@
     },
     {
       "name": "skm",
-      "source": {
-        "path": "./packages/skiller/adapters/codex/skm"
-      },
+      "source": "./packages/skiller/adapters/codex/skm",
       "description": "skiller management skill adapter",
       "category": "meta",
       "tags": [
@@ -716,9 +620,7 @@
     },
     {
       "name": "system",
-      "source": {
-        "path": "./packages/skiller/skills/system"
-      },
+      "source": "./packages/skiller/skills/system",
       "description": "Local environment topology: the three hub nodes (Brain vault, swissknifeman, projects base) and how agents navigate between projects and their docs",
       "category": "meta",
       "tags": [
@@ -731,10 +633,26 @@
       "auth": "none"
     },
     {
+      "name": "task",
+      "source": "./packages/task",
+      "description": "task — интент-команды постановки задач для Claude Code: /task:design|dev|review|research|fix + plan-протокол /task:plan-design|plan-exec|plan-close|plan-audit|plan-run (исполняемые мастер-планы в plans/ по скиллу plan-protocol: opus проектирует, sonnet исполняет, opus аудитит; plan-run — БЕЗ пина модели, исполняет под моделью сессии). Каждая команда пинит свою модель + reasoning effort + профиль workflow (перебивая настройки сессии), чтобы не помнить про ручное переключение модели/effort/режима. Тонкое лицо над agent-packs/workflow экосистемы academici.",
+      "category": "ecosystem",
+      "tags": [
+        "tasks",
+        "claude-code",
+        "workflow",
+        "model-routing",
+        "effort",
+        "lean-tiered",
+        "academici",
+        "ecosystem"
+      ],
+      "install_policy": "explicit",
+      "auth": "none"
+    },
+    {
       "name": "voice-ai",
-      "source": {
-        "path": "./packages/skiller/skills/voice-ai"
-      },
+      "source": "./packages/skiller/skills/voice-ai",
       "description": "Realtime voice AI agents: WebRTC+WebSocket transport, VAD + semantic turn detection, sub-500ms barge-in, sub-800ms latency budget, STT→LLM→TTS orchestration, session state-machine, RU stack (Yandex SpeechKit / SaluteSpeech / GigaChat) + offline fallback",
       "category": "engineering",
       "tags": [

@@ -18,8 +18,8 @@ Read plan.md → handoff.md → phases/P4.md → P4.3 Required Reads in exact or
 **Done:** P4.2 added the immutable exact-set semantic command catalog, frozen provider mappings,
 generated cache-contained Codex wrappers/runtime snapshots, task Codex plugin descriptor and
 P2 provenance/lock/check/repair integration. Focused tests are green for all 11 commands and
-24 rendered artifacts. The bundled substantive item/bookkeeping commit is recorded by the
-immediate mechanical hash fix.
+24 rendered artifacts. Bundled substantive item/bookkeeping commit: `4869813` (recorded by
+this immediate mechanical hash fix).
 
 **Remaining:** P4.3 → P4.4 → P4.5, terminal full validation/phase close and fresh independent
 P4 audit. P5+ remains closed.

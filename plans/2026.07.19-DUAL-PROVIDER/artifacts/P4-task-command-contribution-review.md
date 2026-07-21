@@ -1,7 +1,7 @@
 # P4 task-command contribution review
 
-**Item:** P4.2  
-**Decision authority:** D79 applied against frozen D84  
+**Item:** P4.2
+**Decision authority:** D79 applied against frozen D84
 **Verdict:** ACCEPTED — additive, contract-preserving task-package contribution
 
 ## Rule-of-Three gate

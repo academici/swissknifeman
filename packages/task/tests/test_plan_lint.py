@@ -10,10 +10,16 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from fixtures import (  # noqa: E402
-    active_md, contracts_section, handoff_md, index_md, journal_jsonl, phase_md,
-    plan_md, write_valid_plan,
-)
+try:  # package invocation used by the focused P4 command-projection gate
+    from .fixtures import (  # noqa: E402
+        active_md, contracts_section, handoff_md, index_md, journal_jsonl, phase_md,
+        plan_md, write_valid_plan,
+    )
+except ImportError:  # direct discovery from packages/task remains supported
+    from fixtures import (  # noqa: E402
+        active_md, contracts_section, handoff_md, index_md, journal_jsonl, phase_md,
+        plan_md, write_valid_plan,
+    )
 from task.plan_lint import (  # noqa: E402
     Diagnostics, discover_plan_dirs, lint_plan, lint_plans_root, main,
 )

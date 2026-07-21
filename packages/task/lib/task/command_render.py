@@ -1,9 +1,11 @@
-"""Deterministic Codex projection for the immutable task command catalog."""
+"""Deterministic provider projections for the immutable task command catalog."""
 from __future__ import annotations
 
 from dataclasses import dataclass
+from hashlib import sha256
 import json
 from pathlib import Path
+from pathlib import PurePosixPath
 import re
 from typing import Mapping
 
@@ -75,6 +77,16 @@ class CodexCommandRenderPlan:
         return not any(item.severity == "error" for item in self.diagnostics)
 
 
+@dataclass(frozen=True)
+class ClaudeCommandRenderPlan:
+    artifacts: tuple[RenderedCommandArtifact, ...]
+    diagnostics: tuple[CommandDiagnostic, ...]
+
+    @property
+    def ok(self) -> bool:
+        return not any(item.severity == "error" for item in self.diagnostics)
+
+
 def mapping_from_catalog(catalog: CommandCatalog, provider_id: str) -> ProviderCommandMapping:
     """Resolve one explicit provider mapping captured by the catalog."""
     metadata = metadata_value(catalog)
@@ -103,6 +115,20 @@ def render_invocation(record: CommandRecord, arguments: str,
         raise ValueError("CMD_INVOCATION_INVALID")
     invocation = mapping.invocation_template.format(command_id=record.command_id, arguments=arguments).rstrip()
     if not invocation.startswith("$ ") or invocation.startswith("$task:"):
+        raise ValueError("CMD_INVOCATION_INVALID")
+    return invocation
+
+
+def render_claude_invocation(record: CommandRecord, arguments: str,
+                             mapping: ProviderCommandMapping) -> str:
+    """Render the frozen Claude slash invocation from explicit validated values."""
+    if mapping.provider_id != "claude-code" or not isinstance(arguments, str):
+        raise ValueError("CMD_INVOCATION_INVALID")
+    if "{command_id}" not in mapping.invocation_template or "{arguments}" not in mapping.invocation_template:
+        raise ValueError("CMD_INVOCATION_INVALID")
+    invocation = mapping.invocation_template.format(
+        command_id=record.command_id, arguments=arguments).rstrip()
+    if not invocation.startswith("/task:") or invocation.startswith("//"):
         raise ValueError("CMD_INVOCATION_INVALID")
     return invocation
 
@@ -216,6 +242,80 @@ def plan_codex_command_render(
                                   tuple(diagnostics))
 
 
+def plan_claude_command_render(
+        catalog: CommandCatalog, mapping: ProviderCommandMapping,
+        capability_support: Mapping[str, str], *,
+        plugin_bytes: bytes) -> ClaudeCommandRenderPlan:
+    """Return the complete no-write Claude projection over canonical command bytes."""
+    diagnostics: list[CommandDiagnostic] = []
+    if mapping.provider_id != "claude-code":
+        return ClaudeCommandRenderPlan((), (_diag_raw(
+            "CMD_PROVIDER_DISABLED", "task:catalog", "/provider_id",
+            {"provider_id": "claude-code"}, {"provider_id": mapping.provider_id},
+            mapping, "Claude projection is not selected"),))
+    if not isinstance(capability_support, Mapping):
+        raise TypeError("capability_support must be a mapping")
+    if not isinstance(plugin_bytes, bytes):
+        raise TypeError("plugin_bytes must be bytes")
+
+    diagnostics.extend(_claude_plugin_diagnostics(catalog, mapping, plugin_bytes))
+    for record in catalog.records:
+        diagnostics.extend(_mapping_diagnostics(record, mapping))
+        for requirement in record.capability_requirements:
+            level = capability_support.get(requirement.capability_id)
+            if level not in requirement.accepted_levels:
+                diagnostics.append(_diag(
+                    "CMD_CAPABILITY_UNSUPPORTED", record,
+                    f"/capabilities/{requirement.capability_id}",
+                    {"accepted_levels": requirement.accepted_levels}, {"support_level": level},
+                    mapping, "required command capability is missing or unsupported"))
+        diagnostics.extend(_claude_frontmatter_diagnostics(
+            record, catalog.content_for(record.command_id), mapping))
+    diagnostics = _dedupe_diagnostics(diagnostics)
+    if any(item.severity == "error" for item in diagnostics):
+        return ClaudeCommandRenderPlan((), tuple(diagnostics))
+
+    artifacts = [_claude_artifact(
+        "task.claude.plugin", "packages/task/.claude-plugin/plugin.json", plugin_bytes)]
+    for record in catalog.records:
+        name = record.command_id.removeprefix("task:").replace("-", ".")
+        artifacts.append(_claude_artifact(
+            f"task.claude.{name}.command", record.source.path,
+            catalog.content_for(record.command_id), source_hash=record.source.content_hash))
+    return ClaudeCommandRenderPlan(
+        tuple(sorted(artifacts, key=lambda item: item.path)), tuple(diagnostics))
+
+
+def apply_claude_command_plan(root: Path, render_plan: ClaudeCommandRenderPlan, *,
+                              check: bool) -> tuple[str, ...]:
+    """Check or write one already-validated Claude render plan under an explicit root."""
+    if not render_plan.ok or not render_plan.artifacts:
+        raise ValueError("render diagnostics must be resolved before check/write")
+    root = Path(root).resolve()
+    drift: list[str] = []
+    targets: list[tuple[RenderedCommandArtifact, Path]] = []
+    for artifact in render_plan.artifacts:
+        pure = PurePosixPath(artifact.path)
+        if pure.is_absolute() or ".." in pure.parts:
+            raise ValueError("CMD_INVOCATION_INVALID: unsafe Claude target")
+        target = root.joinpath(*pure.parts)
+        targets.append((artifact, target))
+        try:
+            current = target.read_bytes()
+        except OSError:
+            current = None
+        if current != artifact.managed_bytes:
+            drift.append(artifact.path)
+    if check:
+        return tuple(drift)
+    for artifact, target in targets:
+        if artifact.path not in drift:
+            continue
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(artifact.managed_bytes)
+    return tuple(drift)
+
+
 def plan_codex_command_apply(root: Path, render_plan: CodexCommandRenderPlan, *,
                              lock_bytes: bytes | None,
                              repair_artifact_ids: tuple[str, ...] = ()) -> ArtifactPlan:
@@ -301,6 +401,87 @@ Read `command.md` completely and execute it with the invocation payload as `$ARG
 Preserve the semantic command ID, gates, status literals, scope, and validation behavior.
 '''
     return text.encode("utf-8")
+
+
+def _claude_artifact(artifact_id: str, path: str, managed_bytes: bytes, *,
+                     source_hash: str | None = None) -> RenderedCommandArtifact:
+    digest = "sha256:" + sha256(managed_bytes).hexdigest()
+    return RenderedCommandArtifact(path, managed_bytes, source_hash or digest, digest, artifact_id)
+
+
+def _claude_plugin_diagnostics(catalog: CommandCatalog, mapping: ProviderCommandMapping,
+                               plugin_bytes: bytes) -> tuple[CommandDiagnostic, ...]:
+    try:
+        value = json.loads(plugin_bytes.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as error:
+        return (_diag_raw(
+            "CMD_SOURCE_DRIFT", "task:catalog", "/plugin", {"valid_json": True},
+            {"error": str(error)}, mapping, "Claude plugin descriptor is malformed"),)
+    expected = {"name": "task", "version": catalog.plugin_version,
+                "commands": ["./commands"]}
+    observed = ({key: value.get(key) for key in expected} if isinstance(value, dict)
+                else {"type": type(value).__name__})
+    if observed != expected:
+        return (_diag_raw(
+            "CMD_SOURCE_DRIFT", "task:catalog", "/plugin/registration", expected,
+            observed, mapping, "Claude plugin identity, version or command registration drifted"),)
+    return ()
+
+
+def _claude_frontmatter_diagnostics(
+        record: CommandRecord, content: bytes,
+        mapping: ProviderCommandMapping) -> tuple[CommandDiagnostic, ...]:
+    try:
+        fields = _frontmatter_fields(content)
+    except ValueError as error:
+        return (_diag("CMD_SOURCE_DRIFT", record, "/frontmatter", {"valid": True},
+                      {"error": str(error)}, mapping,
+                      "Claude command frontmatter is malformed"),)
+
+    if record.routing.mode == "inherited-plan":
+        observed = {key: fields.get(key) for key in ("model", "effort") if key in fields}
+        if observed:
+            return (_diag("CMD_SOURCE_DRIFT", record, "/frontmatter/routing", {}, observed,
+                          mapping, "inherited-plan Claude command must not pin model or effort"),)
+        return ()
+
+    classes, efforts = dict(mapping.class_selectors), dict(mapping.effort_selectors)
+    class_values = classes.get(record.routing.model_class, ())
+    effort_values = efforts.get(record.routing.effort, ())
+    if len(class_values) != 1 or len(effort_values) != 1:
+        return ()  # the mapping diagnostic is authoritative; avoid a derivative drift error
+    expected = {
+        "model": class_values[0],
+        "effort": effort_values[0],
+    }
+    observed = {key: fields.get(key) for key in expected}
+    if observed != expected:
+        return (_diag("CMD_SOURCE_DRIFT", record, "/frontmatter/routing", expected, observed,
+                      mapping, "Claude frontmatter does not match the frozen neutral route"),)
+    return ()
+
+
+def _frontmatter_fields(content: bytes) -> dict[str, str]:
+    try:
+        lines = content.decode("utf-8").splitlines()
+    except UnicodeDecodeError as error:
+        raise ValueError("command source is not UTF-8") from error
+    if not lines or lines[0] != "---":
+        raise ValueError("opening delimiter is missing")
+    try:
+        end = lines.index("---", 1)
+    except ValueError as error:
+        raise ValueError("closing delimiter is missing") from error
+    fields: dict[str, str] = {}
+    for line in lines[1:end]:
+        if ":" not in line:
+            raise ValueError("frontmatter field is malformed")
+        key, value = line.split(":", 1)
+        key, value = key.strip(), value.strip()
+        if not key or key in fields:
+            raise ValueError("frontmatter field is empty or duplicated")
+        fields[key] = value
+    return fields
 
 
 def _frontmatter_description(content: bytes) -> str:

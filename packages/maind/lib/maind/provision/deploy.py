@@ -19,8 +19,8 @@ from ..mcpconfig import (MCP_FILES, MCPConfigError, load_mcp, mcp_path,
 from ..memory import health, resolve_ports
 from ..projects import get as get_project
 from ..projects import listing, write_config
-from ..provider_deploy import (generate_conformance_report, plan_provider_deploy,
-                               semantic_servers)
+from ..provider_deploy import (apply_provider_artifacts, generate_conformance_report,
+                               plan_provider_artifacts, plan_provider_deploy, semantic_servers)
 
 
 def _agentmemory_entry(env, config, scope):
@@ -105,6 +105,11 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
             provider_semantic_inventory(env, config, project, with_code=with_code,
                                         maind_server=maind_server,
                                         with_agentmemory=with_agentmemory))
+        provider_check = plan_provider_artifacts(project_path, provider_plan)
+        if provider_check["severity"] == "error":
+            raise ValueError("MAIND_PROVIDER_DEPLOY_REFUSED")
+        if not dry:
+            apply_provider_artifacts(project_path, provider_plan)
     emit_example = bool((config.get("mcp") or {}).get("emit_example"))  # opt-in: .example + .gitignore
 
     st = codegraph.settings(config)

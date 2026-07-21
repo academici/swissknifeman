@@ -4,13 +4,14 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "harness/lib"))
 
-from core import (ConfigSource, ProviderConfigCatalog, ProviderConfigLayer, ProviderId)
+from core import (ConfigSource, ProviderConfigCatalog, ProviderConfigLayer, ProviderId,
+                  canonical_json_bytes, sha256_digest)
 from harness.mcp import load_mcp_catalog, plan_mcp_projection
 from maind.provider_deploy import (ProviderDeployError, plan_provider_deploy,
                                    plan_provider_artifacts, apply_provider_artifacts,
                                    resolve_effective_providers, semantic_servers)
-from maind.provider_deploy import write_conformance_report
-from maind.provision.deploy import mark_deployed, provider_semantic_inventory
+from maind.provider_deploy import conformance_report, write_conformance_report
+from maind.provision.deploy import deploy_project, mark_deployed, provider_semantic_inventory
 from tests.fixtures import make_repo
 from maind.config import merge_defaults
 import tempfile
@@ -54,6 +55,10 @@ class TestProviderDeploy(unittest.TestCase):
                             for row in plan.results))
         self.assertTrue(all(row.artifact.provenance.canonical_sources[0].path ==
                             "packages/maind/lib/maind/provider_deploy.py" for row in plan.results))
+        expected_hash = sha256_digest(canonical_json_bytes({"servers": [
+            {"id": row.id, "binding": dict(row.binding)} for row in servers]}))
+        self.assertTrue(all(row.artifact.provenance.canonical_sources[0].content_hash == expected_hash
+                            for row in plan.results))
 
     def test_missing_disabled_and_selected_provider_are_tagged(self):
         root = Path(__file__).resolve().parents[3] / "packages/harness/configs"
@@ -94,6 +99,35 @@ class TestProviderDeploy(unittest.TestCase):
             self.assertEqual([row.id for row in rows], ["maind", "agentmemory", "codegraph", "perplexity"])
         with self.assertRaisesRegex(ProviderDeployError, "MAIND_SEMANTIC_SERVER_DUPLICATE"):
             plan_provider_deploy((), (semantic_servers(maind={"command": "maind"})[0],) * 2)
+
+    def test_facade_executes_provider_plan_and_dry_is_no_write(self):
+        root = Path(__file__).resolve().parents[3] / "packages/harness/configs"
+        catalog = load_mcp_catalog(root / "common/mcp/catalog.json")
+        bases = tuple(plan_mcp_projection(catalog, provider_id=provider,
+            bindings_path=root / provider.value / "mcp/bindings.json", selected=(), trusted=True)
+            for provider in (ProviderId.CLAUDE_CODE, ProviderId.CODEX))
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp); target = Path(tmp) / "project"; target.mkdir()
+            config = merge_defaults({"projects": [{"id": "demo", "name": "Demo",
+                "local_path": str(target), "memory_scope": "project:demo"}]})
+            project = config["projects"][0]
+            deploy_project(env, config, project, with_code=False, provider_projections=bases, dry=True)
+            self.assertFalse((target / ".codex/config.toml").exists())
+            deploy_project(env, config, project, with_code=False, provider_projections=bases)
+            self.assertTrue((target / ".mcp.json").exists())
+            self.assertTrue((target / ".codex/config.toml").exists())
+
+    def test_secret_reference_is_preserved_without_resolved_value(self):
+        root = Path(__file__).resolve().parents[3] / "packages/harness/configs"
+        catalog = load_mcp_catalog(root / "common/mcp/catalog.json")
+        base = plan_mcp_projection(catalog, provider_id=ProviderId.CLAUDE_CODE,
+            bindings_path=root / "claude-code/mcp/bindings.json", selected=(), trusted=True)
+        plan = plan_provider_deploy((base,), semantic_servers(
+            maind={"command": "maind", "env": {"TOKEN": "${MAIND_TOKEN}"}}))
+        rendered = plan.results[0].rendered.decode("utf-8")
+        self.assertIn("${MAIND_TOKEN}", rendered)
+        self.assertNotIn("resolved-secret-value", rendered)
+        self.assertNotIn("resolved-secret-value", conformance_report(plan))
 
     def test_temp_conformance_is_no_write_deterministic_and_preserves_foreign(self):
         root = Path(__file__).resolve().parents[3] / "packages/harness/configs"

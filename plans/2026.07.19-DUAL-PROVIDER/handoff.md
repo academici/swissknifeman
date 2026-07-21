@@ -1,40 +1,37 @@
 # HANDOFF — 2026-07-21 — after P5
 
-**Next:** audit-phase: task:plan-audit 2026.07.19-DUAL-PROVIDER P5
+**Next:** run-items: task:plan-run 2026.07.19-DUAL-PROVIDER P6.1
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | frontier |
-| Effort | xhigh |
-| Capabilities | command.filesystem-read · command.git-read |
-| Context | cold-start — plan-step |
-| Суть | Fresh independent read-only P5 audit from the terminal close commit; P6 remains unopened. |
+| Model class | implementation |
+| Effort | high |
+| Capabilities | command.filesystem-read · command.filesystem-write · command.git-read |
+| Context | same-session — item |
+| Суть | Fresh plan-terra-high item-agent executes P6.1 in a clean worktree from the P5 GREEN checkpoint. |
 
 ```text
-$ task:plan-audit 2026.07.19-DUAL-PROVIDER P5
+$ task:plan-run 2026.07.19-DUAL-PROVIDER P6.1
 ```
 
-**Done:** P5.1–P5.7 are terminal GREEN. Audit attempt 1's `_common/orchestrator` P2 identity
-finding is repaired without changing valid legacy IDs; all supported Claude/Codex artifacts
-pass independent create→apply→noop lifecycles. The phase delivers provider-neutral harness and
-instruction contracts/catalogs, independent native Claude/Codex projections, fail-closed P2
-ownership/provenance, D87 artifact v1.1 semantic metadata, and actual generated/installed
-consumer conformance. The post-repair terminal task/skiller/harness cycle, worktree-local
-registry check, target lint without new errors, diff check and protected delta check passed.
+**Done:** P5.1–P5.7 are terminal and independent audit attempt 2 is literal GREEN in
+`4470af7`. The P5 repair preserved valid P2 identities, proved actual generated/installed
+Claude and Codex consumers, and left the frozen D85/D86/D87 contracts intact.
 
-**Remaining:** exactly one fresh independent terminal P5 audit attempt 2 and its append-only verdict.
-P6 stays unopened; no live apply, FOREMAN/fleet mutation or push is authorized by this close.
+**Remaining:** P6.1 → P6.2 → P6.3 Owner freeze → P6.4 → P6.5 checkpoint → fresh cold
+P6.6 → phase close → fresh terminal audit. P7+, live self-host, FOREMAN, fleet and push
+remain outside authority.
 
-**Sources of truth:** `phases/P5.md` Phase Handoff; `root/contracts/provider-harness-contract.md`
-D85; `root/contracts/provider-instruction-contract.md` D86; `root/contracts/provider-artifact-contract.md`
-D87; `artifacts/P5-{harness,instruction}-conformance.md`; terminal close commit.
+**Sources of truth:** `phases/P5.md` Audit P5 attempt 2; `phases/P6.md`;
+`research/20-p5-p6-phase-first-execution-playbook.md`; frozen predecessor contracts;
+`artifacts/P5-{harness,instruction}-conformance.md`; audit commit `4470af7`.
 
-**Open risks:** Package `AGENTS.md` targets remain deliberately absent/live-unmanaged until a
-later explicitly authorized phase. Target plan-lint retains two pre-existing warnings and no
-new errors.
+**Open risks:** Target plan-lint retains two historical P5 warnings; P6 requires zero
+new ERROR/WARN delta. Package `AGENTS.md` targets remain live-unmanaged until later
+explicit authority.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: item-level process deviations are aggregated verbatim in `phases/P5.md`.
-- deferred: P6 and all live/self-host operations.
+- workarounds: item-level P5 process deviations remain recorded in `phases/P5.md`.
+- deferred: P7+, live self-host, FOREMAN, fleet and push.
 - open_questions: none.

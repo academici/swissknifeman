@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.4.26 |
+| Version | 1.4.27 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
@@ -222,6 +222,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-21 | plan-audit / plan-sol-xhigh / gpt-5.6-sol/xhigh | Audit P5 attempt 2 завершён literal GREEN в `4470af7`; stale P5 audit pointer снят, entry gate P6 открыт на P6.1. |
 | 2026-07-21 | plan-close/Codex gpt-5.6-sol high | P5 повторно закрыта после audit attempt 1 repair: terminal task/skiller/harness/registry/lint/protected gates GREEN; далее fresh independent Audit P5 attempt 2 — детали см. phases/P5.md Phase Handoff. |
 | 2026-07-21 | plan-terra-high / gpt-5.6-terra/high | P5.4 audit repair attempt 2: P2-safe semantic agent IDs and actual 44/43 temporary create→noop consumer verification make the provider-audit agent count truthful; terminal re-close remains next — детали см. phases/P5.md P5.4 Completion Notes. |
 | 2026-07-21 | plan-close/Codex gpt-5.6-sol high | P5 закрыта: terminal task/skiller/harness/registry/lint/protected gates GREEN; далее fresh independent Audit P5 — детали см. phases/P5.md Phase Handoff. |

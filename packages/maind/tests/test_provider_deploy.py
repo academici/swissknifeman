@@ -122,12 +122,43 @@ class TestProviderDeploy(unittest.TestCase):
         catalog = load_mcp_catalog(root / "common/mcp/catalog.json")
         base = plan_mcp_projection(catalog, provider_id=ProviderId.CLAUDE_CODE,
             bindings_path=root / "claude-code/mcp/bindings.json", selected=(), trusted=True)
-        plan = plan_provider_deploy((base,), semantic_servers(
-            maind={"command": "maind", "env": {"TOKEN": "${MAIND_TOKEN}"}}))
+        codex = plan_mcp_projection(catalog, provider_id=ProviderId.CODEX,
+            bindings_path=root / "codex/mcp/bindings.json", selected=(), trusted=True)
+        plan = plan_provider_deploy((base, codex), semantic_servers(maind={"command": "maind",
+            "env": {"TOKEN": "${MAIND_TOKEN}", "UNRELATED": "resolved-secret-value"}}),
+            secret_values=("resolved-secret-value",))
         rendered = plan.results[0].rendered.decode("utf-8")
         self.assertIn("${MAIND_TOKEN}", rendered)
         self.assertNotIn("resolved-secret-value", rendered)
         self.assertNotIn("resolved-secret-value", conformance_report(plan))
+        self.assertTrue(all(b"${SECRET_REF}" in row.rendered for row in plan.results))
+
+    def test_duplicate_provider_projections_are_refused(self):
+        root = Path(__file__).resolve().parents[3] / "packages/harness/configs"
+        catalog = load_mcp_catalog(root / "common/mcp/catalog.json")
+        claude = plan_mcp_projection(catalog, provider_id=ProviderId.CLAUDE_CODE,
+            bindings_path=root / "claude-code/mcp/bindings.json", selected=(), trusted=True)
+        with self.assertRaisesRegex(ProviderDeployError, "MAIND_PROVIDER_DUPLICATE"):
+            plan_provider_deploy((claude, claude), semantic_servers(maind={"command": "maind"}))
+
+    def test_consumer_inventory_projects_claude_and_codex_outputs(self):
+        root = Path(__file__).resolve().parents[3] / "packages/harness/configs"
+        catalog = load_mcp_catalog(root / "common/mcp/catalog.json")
+        bases = tuple(plan_mcp_projection(catalog, provider_id=provider,
+            bindings_path=root / provider.value / "mcp/bindings.json", selected=(), trusted=True)
+            for provider in (ProviderId.CLAUDE_CODE, ProviderId.CODEX))
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp); target = Path(tmp) / "project"; target.mkdir()
+            config = merge_defaults({"mcp": {"perplexity_web": {"enabled": True}}, "projects": [{
+                "id": "demo", "name": "Demo", "local_path": str(target), "memory_scope": "project:demo",
+                "code_graph": {"enabled": True}}]})
+            rows = provider_semantic_inventory(env, config, config["projects"][0], with_code=True,
+                                               maind_server=True, with_agentmemory=False)
+            plan = plan_provider_deploy(bases, rows)
+            apply_provider_artifacts(target, plan)
+            claude, codex = (target / ".mcp.json").read_bytes(), (target / ".codex/config.toml").read_bytes()
+            self.assertIn(b'"codegraph"', claude); self.assertIn(b'"perplexity"', claude)
+            self.assertIn(b"[mcp_servers.codegraph]", codex); self.assertIn(b"[mcp_servers.perplexity]", codex)
 
     def test_temp_conformance_is_no_write_deterministic_and_preserves_foreign(self):
         root = Path(__file__).resolve().parents[3] / "packages/harness/configs"

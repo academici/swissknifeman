@@ -85,7 +85,7 @@ def semantic_servers(*, maind, agentmemory=None, codegraph=None, perplexity=None
 
 
 def plan_provider_deploy(base_projections, servers, *, selected=None, required_providers=None,
-                         disabled=()):
+                         disabled=(), secret_values=()):
     """Project caller-owned descriptors through P5-owned target/serialization records."""
     from harness.mcp import McpProjection, render_mcp_projection
     base_projections = tuple(base_projections)
@@ -100,7 +100,14 @@ def plan_provider_deploy(base_projections, servers, *, selected=None, required_p
     disabled = frozenset(disabled)
     if len(set(selected)) != len(selected):
         raise ProviderDeployError("MAIND_PROVIDER_DUPLICATE")
-    entries = tuple((item.id, dict(item.binding)) for item in servers)
+    forbidden = frozenset(secret_values)
+    def scrub(value):
+        if isinstance(value, str):
+            return "${SECRET_REF}" if value in forbidden else value
+        if isinstance(value, list): return [scrub(item) for item in value]
+        if isinstance(value, dict): return {key: scrub(item) for key, item in value.items()}
+        return value
+    entries = tuple((item.id, scrub(dict(item.binding))) for item in servers)
     source_bytes = canonical_json_bytes({"servers": [{"id": item.id, "binding": dict(item.binding)}
                                                for item in servers]})
     source = ArtifactSource("maind.provider-deploy.semantic-inventory",

@@ -1,41 +1,28 @@
-# HANDOFF — 2026-07-21 — after P3.3
+# HANDOFF — 2026-07-21 — after P3.5
 
-**Next:** `/task:plan-exec 2026.07.19-DUAL-PROVIDER P3.5`
+**Next:** `/task:plan-close 2026.07.19-DUAL-PROVIDER P3`
 
 | Параметр | Значение |
 |:--|:--|
 | Model | gpt-5.6-terra |
-| Thinking | medium |
-| Context | continue (/clear) — ручной item |
-| Суть | Rerun only the independent P3.5 inventory/channel parity proof against D83's committed clean-tree Codex cache/lock repair. |
+| Thinking | medium — terminal phase verification |
+| Context | NEW SESSION — шаг-не-item |
+| Суть | Close P3 once with full package validation, registry drift gate, plan lint and release/docs assessment; then launch fresh G03 audit. |
 
 ```text
-Execute only P3.5 of 2026.07.19-DUAL-PROVIDER on gpt-5.6-terra/medium.
-
-Read plan.md, handoff.md, phases/P3.md P3.5, then every P3.5 Required Read in order.
-D83 P3.3 is committed at f947d77: the clean-worktree Codex core cache/lock regeneration and
-focused catalog-vs-cache regression are green. Rerun P3.5's independent inventory/channel parity
-evidence without changing fixtures or expected data. Do not modify P3.3, frozen contracts, Claude
-outputs, provider selection/distribution, root .agents/skills, P4+, FOREMAN, fleet, user-global
-state, or unrelated owner dirt. Do not run terminal P3 validation, G03, or create a PR; after the
-P3.5 item closes, hand off only the terminal P3 close/audit route.
+/task:plan-close 2026.07.19-DUAL-PROVIDER P3
 ```
 
-**Done:** D83 P3.3 repair commit `f947d77` regenerated the stale Codex `core` `plan-protocol`
-cache member and `publication-lock.json` from the committed catalog, with a focused regression.
+**Done:** D83 P3.3 repair `f947d77` regenerated the stale Codex core cache/lock and added a focused regression. P3.5 attempt 3 reran independent inventory/channel parity on `119dd7b`: 7 tests passed twice with identical ordered results apart from unittest runtime.
 
-**Remaining:** independent P3.5 rerun → one terminal P3 validation and clean-tree registry check
-→ fresh G03. A P1–P3 review PR and P4 remain prohibited until literal GREEN.
+**Remaining:** terminal P3 close → fresh independent G03 audit → P1–P3 review PR only after literal GREEN. P4 remains a new session after audit and PR.
 
-**Sources of truth:** `phases/P3.md` P3.3/P3.5 and Audit P3; D83 in `plan.md`;
-`research/21-p3-codex-core-registry-remediation.md`; frozen
-`root/contracts/provider-skill-publication-contract.md`; `packages/skiller/lib/skiller/{publication,registry}.py`.
+**Sources of truth:** `phases/P3.md` P3.3/P3.5 and Audit P3; D83 in `plan.md`; `research/21-p3-codex-core-registry-remediation.md`; frozen `root/contracts/provider-skill-publication-contract.md`; `packages/skiller/lib/skiller/{publication,registry}.py`.
 
-**Open risks:** D83 evidence is targeted by D80; only the terminal P3 sequence may claim
-phase-wide validation or an audit verdict.
+**Open risks:** D83/P3.5 evidence is targeted under D80. Only terminal close may claim full validation, registry drift evidence, release/docs assessment or phase completion; only independent G03 may give the audit verdict.
 
 **Workarounds/Deferred/Open questions:**
 
 - workarounds: none; `registry --check` remains the drift gate.
-- deferred: terminal P3 validation/G03, P1–P3 review PR and P4.
+- deferred: terminal P3 close/G03, P1–P3 review PR and P4.
 - open_questions: none.

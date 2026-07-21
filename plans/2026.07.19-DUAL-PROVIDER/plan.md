@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.4.13 |
+| Version | 1.4.14 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
@@ -120,7 +120,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P0 | Evidence, vocabulary и запечатанные provider contracts | 7/7 | 🟢 Done |
 | P1 | Provider config/domain и backward-compatible resolution | 6/6 | 🟢 Done |
 | P2 | Deterministic adapters, provenance, lock и drift engine | 5/5 | 🟢 Done |
-| P3 | Dual skills publication и marketplaces | 4/5 | 🟡 In progress |
+| P3 | Dual skills publication и marketplaces | 5/5 | 🟢 Done |
 | P4 | Task-command parity и provider-neutral model routing | 0/5 | ⬜ Not started |
 | P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 0/7 | ⬜ Not started |
 | P6 | mAInd deployment, memory и provider-neutral analytics | 0/6 | ⬜ Not started |
@@ -217,6 +217,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-21 | plan-exec/Codex gpt-5.6-terra medium | P3.5 закрыт: independent skill inventory/channel parity, D78/D80 no-write and repair evidence committed — детали см. phases/P3.md P3.5 Completion Notes. |
 | 2026-07-21 | issue-planner/Codex gpt-5.6-sol high | D82: P4–P6 получили phase-first execution map: bounded entry/probes, sequential same-seam bundles, один terminal validation/audit и phase PR checkpoints; P3 status/handoff/journal, contracts и item scope не менялись. |
 | 2026-07-20 | plan-run/Codex gpt-5.6-terra high | P3.4 закрыт: provider-aware distribution plan, qualified vendor locks и explicit Codex installer — детали см. phases/P3.md P3.4 Completion Notes. |
 | 2026-07-20 | issue-planner/Codex gpt-5.6-sol high | D78: P3.4 возвращён в работу после P3.5 unmanaged-provider-B escalation; repair ограничен pre-write fail-closed vendor conflict, P3.5/P4+/frozen contracts/live targets не исполнялись. |

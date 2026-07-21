@@ -1,0 +1,4 @@
+interface:
+  display_name: "Plan Protocol"
+  short_description: "Проектирование и жизненный цикл мастер-планов"
+  default_prompt: "Use $plan-protocol to structure this executable master plan."

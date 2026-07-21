@@ -1,0 +1,5 @@
+# Self-host bootstrap: this trusted repository runs autonomously with the
+# broadest provider-native execution boundary. The future managed projection
+# is owned by the DUAL-PROVIDER harness migration.
+approval_policy = "never"
+sandbox_mode = "danger-full-access"

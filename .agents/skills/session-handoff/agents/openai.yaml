@@ -1,0 +1,4 @@
+interface:
+  display_name: "Session Handoff"
+  short_description: "Надёжная передача состояния между сессиями"
+  default_prompt: "Use $session-handoff to prepare a durable session handoff."

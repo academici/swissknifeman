@@ -1,0 +1,4 @@
+interface:
+  display_name: "Package Contribution Protocol"
+  short_description: "Гейт изменений общих пакетов экосистемы"
+  default_prompt: "Use $package-contribution-protocol before changing a shared package."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Task Plan Run"
+  short_description: "Исполнение plan item моделью текущей сессии"
+  default_prompt: "Use $task-plan-run to execute the selected item with this session model."

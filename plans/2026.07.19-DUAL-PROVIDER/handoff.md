@@ -47,7 +47,7 @@ RED routes only to the owning P4 seam under D80/D81.
 
 ## Addendum — Audit P4 attempt 2 remediation
 
-The Audit P4 attempt 2 RED supersedes the launch block at the top. Repair `REPAIR2_COMMIT`
+The Audit P4 attempt 2 RED supersedes the launch block at the top. Repair `0edf17a`
 is implementation-complete in the task-owned Codex projector: adapter `1.0.3` preserves
 ordinary `model/effort` notation, projects standalone `/clear` and uses one shared token-aware
 boundary for projection/fail-closed scanning. Focused suite `22/22`, generated identity
@@ -56,5 +56,5 @@ boundary for projection/fail-closed scanning. Focused suite `22/22`, generated i
 
 **Next:** close: task:plan-close 2026.07.19-DUAL-PROVIDER P4
 
-Run the one terminal P4 close retry on `REPAIR2_COMMIT`, then a fresh independent P4 audit.
+Run the one terminal P4 close retry on `0edf17a`, then a fresh independent P4 audit.
 Do not execute P5.

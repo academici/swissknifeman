@@ -217,6 +217,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-21 | plan-close/Codex gpt-5.6-terra medium | P3 закрыта: terminal publication/distribution/parity evidence, one full skiller validation и registry check сверены; далее fresh G03 audit — детали см. phases/P3.md Phase Handoff. |
 | 2026-07-21 | plan-exec/Codex gpt-5.6-terra medium | P3.5 закрыт: independent skill inventory/channel parity, D78/D80 no-write and repair evidence committed — детали см. phases/P3.md P3.5 Completion Notes. |
 | 2026-07-21 | issue-planner/Codex gpt-5.6-sol high | D82: P4–P6 получили phase-first execution map: bounded entry/probes, sequential same-seam bundles, один terminal validation/audit и phase PR checkpoints; P3 status/handoff/journal, contracts и item scope не менялись. |
 | 2026-07-20 | plan-run/Codex gpt-5.6-terra high | P3.4 закрыт: provider-aware distribution plan, qualified vendor locks и explicit Codex installer — детали см. phases/P3.md P3.4 Completion Notes. |

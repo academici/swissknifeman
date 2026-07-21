@@ -18,7 +18,7 @@ Read plan.md → handoff.md → phases/P4.md. Reconcile only terminal P4: run th
 
 **Done:** P4.5 added independent contract/canonical inventory parity, exhaustive dual
 command/Next projections, fail-closed diagnostic cases and a generated operator reference.
-Substantive item/bookkeeping commit is recorded by the immediate mechanical hash fix.
+Substantive item/bookkeeping commit: `82892b0` (recorded by this immediate mechanical hash fix).
 
 **Remaining:** terminal full task/skiller validation, docs/release assessment, P4 phase close
 and fresh independent P4 audit. P5+ remains closed.

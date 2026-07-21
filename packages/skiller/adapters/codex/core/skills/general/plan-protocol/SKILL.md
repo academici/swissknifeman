@@ -45,7 +45,6 @@ plans/<PLAN-ID>/
 ├── index.md           # file map + findings/research→phase provenance (section 2, optional)
 ├── roadmap.md         # execution map: batches/workflows/owner gates (section 8; mandatory once fully detailed)
 ├── journal.jsonl      # append-only execution history, one entry per /task:plan-* run (section 2)
-├── journal-exceptions.jsonl # optional append-only owner-gated exceptions for historical schema-invalid lines
 ├── brief/             # layer 0 "input": the owner's brief + appended refinements (section 16, MANDATORY)
 ├── findings/          # layer 1 "raw": RAG extracts, recon, source documents (section 16)
 ├── research/          # layer 2 "synthesis": the model's authored design docs (section 16)
@@ -69,17 +68,12 @@ date-based plans from 2026.07.18 a missing/invalid `journal.jsonl` is an ERROR; 
 — WARNING (a soft gate against breaking the already-running fleet — the same pattern as
 brief/roadmap).
 
-**Historical schema exception.** A compensating event cannot validate an earlier invalid
-line because the gate is strict per line. When append-only forbids rewriting, the owner may
-approve one provenance-preserving exception with a D# and
-`python3 -m task.journal exception ...`. The optional append-only
-`journal-exceptions.jsonl` pins the physical target line, SHA-256 of its exact UTF-8 bytes
-without newline, exact `invalid_fields`, owner D#, actor, and reason. v1 allows only
-`friction`; the target must be an existing JSON event for the same plan and have exactly
-those schema errors. Duplicate targets, hash mismatch, a valid target, missing D#, and
-malformed JSON fail closed. The sidecar carries no event/status/next and cannot target
-itself, so it is neither current state nor cyclic correction. Preserve the old line and
-old D#; a new D# explicitly supersedes the failed remediation.
+**Historical schema exception `journal-exceptions.jsonl` (D51, optional).** This is a separate
+append-only sidecar, not an event/status/Next carrier. It can waive only the exact historical
+`friction` error: a physical non-empty target line, raw SHA-256, canonical plan ID, exact
+`invalid_fields:["friction"]`, and an existing owner D# are mandatory. Duplicate, valid/malformed
+target, hash/plan mismatch, or extra errors fail closed; the existing journal line never changes.
+Write it only with `task.journal exception`; a compensating event does not repair invalid history.
 
 **Plan index `index.md`** (optional) — a map of the plan's FILES + provenance links
 (`findings`/`research` → consuming phase); NOT a carrier of status/next (that's the Status
@@ -1169,4 +1163,4 @@ thinking gets lost.
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of editing
   vendor copies (section 12).
 
-<!-- ru-source-sha256: ed305ad41de0e2b37bd5d363da8c7f01f436e8d2d649be52e2bca6003f4e9c47 -->
+<!-- ru-source-sha256: 096b7acc8f65c9939378cf5136fb62f6d39423fb586dd32fa4160e30e3168500 -->

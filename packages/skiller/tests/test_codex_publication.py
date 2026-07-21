@@ -18,6 +18,27 @@ class TestCodexPublication(unittest.TestCase):
         self.golden = json.loads((Path(__file__).parent / "fixtures_data" /
                                   "codex-publication-golden.json").read_text(encoding="utf-8"))
 
+    def _core_artifacts(self):
+        """Return the renderer-derived core cache contract, never cached bytes."""
+        artifacts = build_codex_publication(self.env, self.metadata, self.buckets, self.registry)
+        core_root = self.package_root / "adapters" / "codex" / "core"
+        core = [item for item in artifacts if item.target.is_relative_to(core_root)]
+        return core_root, core
+
+    def _assert_core_cache_matches_catalog(self, cache_root, core_root, artifacts):
+        """Every declared cached core artifact, including its lock, matches the catalog."""
+        expected = {
+            item.target.relative_to(core_root): item.managed_bytes
+            for item in artifacts
+        }
+        actual = {
+            path.relative_to(cache_root): path.read_bytes()
+            for path in cache_root.rglob("*") if path.is_file()
+        }
+        self.assertEqual(set(actual), set(expected))
+        for relative_path, managed_bytes in expected.items():
+            self.assertEqual(actual[relative_path], managed_bytes, relative_path.as_posix())
+
     def test_native_projection_is_deterministic_and_contract_shaped(self):
         first = build_codex_publication(self.env, self.metadata, self.buckets, self.registry)
         second = build_codex_publication(self.env, self.metadata, self.buckets, self.registry)
@@ -42,9 +63,7 @@ class TestCodexPublication(unittest.TestCase):
             self.assertEqual(data["version"], "0.4.0")
 
     def test_core_bundle_is_allowlisted_and_cache_contained(self):
-        artifacts = build_codex_publication(self.env, self.metadata, self.buckets, self.registry)
-        core = [item for item in artifacts if "/adapters/codex/core/" in item.target.as_posix()]
-        core_root = self.package_root / "adapters" / "codex" / "core"
+        core_root, core = self._core_artifacts()
         skill_paths = sorted(item.target.relative_to(core_root).as_posix() for item in core
                              if item.target.name == "SKILL.md")
         expected = sorted(f"skills/{member}/SKILL.md" for member in self.golden["core_members"])
@@ -61,6 +80,16 @@ class TestCodexPublication(unittest.TestCase):
             self.assertTrue(all((cached / path).is_file() for path in expected))
             self.assertTrue((cached / "publication-lock.json").is_file())
             self.assertFalse((cached / "SKILL.ru.md").exists())
+            self._assert_core_cache_matches_catalog(cached, core_root, core)
+
+            stale = cached / "skills" / "general" / "plan-protocol" / "SKILL.md"
+            stale.write_bytes(stale.read_bytes() + b"\n<!-- deliberately stale -->\n")
+            with self.assertRaises(AssertionError):
+                self._assert_core_cache_matches_catalog(cached, core_root, core)
+
+    def test_repository_core_cache_matches_current_catalog(self):
+        core_root, core = self._core_artifacts()
+        self._assert_core_cache_matches_catalog(core_root, core_root, core)
 
 
 if __name__ == "__main__":

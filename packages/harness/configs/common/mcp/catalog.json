@@ -1,0 +1,13 @@
+{
+  "catalog_version": "1.0.0",
+  "servers": [
+    {"id": "context7", "transport": "http", "capability_id": "mcp.catalog", "secret_refs": []},
+    {"id": "fetch", "transport": "stdio", "capability_id": "mcp.catalog", "secret_refs": []},
+    {"id": "filesystem", "transport": "stdio", "capability_id": "mcp.catalog", "secret_refs": []},
+    {"id": "github", "transport": "http", "capability_id": "mcp.catalog", "secret_refs": []},
+    {"id": "memory", "transport": "stdio", "capability_id": "mcp.catalog", "secret_refs": []},
+    {"id": "perplexity", "transport": "stdio", "capability_id": "mcp.catalog", "secret_refs": ["perplexity-api-key"]},
+    {"id": "playwright", "transport": "stdio", "capability_id": "mcp.catalog", "secret_refs": []},
+    {"id": "sequential-thinking", "transport": "stdio", "capability_id": "mcp.catalog", "secret_refs": []}
+  ]
+}

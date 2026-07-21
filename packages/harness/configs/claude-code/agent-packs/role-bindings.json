@@ -1,0 +1,269 @@
+{
+  "binding_version": "1.0.0",
+  "roles": [
+    {
+      "pack_id": "_common",
+      "role_id": "orchestrator",
+      "model_selector": "{{MODEL_ORCHESTRATOR}}",
+      "color": "blue"
+    },
+    {
+      "pack_id": "backend-laravel",
+      "role_id": "blade-review",
+      "model_selector": "{{MODEL_RECON}}",
+      "color": "blue"
+    },
+    {
+      "pack_id": "backend-laravel",
+      "role_id": "db-impact",
+      "model_selector": "{{MODEL_RECON}}",
+      "color": "blue"
+    },
+    {
+      "pack_id": "backend-laravel",
+      "role_id": "reviewer",
+      "model_selector": "{{MODEL_REVIEWER}}",
+      "color": "yellow"
+    },
+    {
+      "pack_id": "backend-laravel",
+      "role_id": "route-mapper",
+      "model_selector": "{{MODEL_RECON}}",
+      "color": "blue"
+    },
+    {
+      "pack_id": "backend-laravel",
+      "role_id": "security-review",
+      "model_selector": "{{MODEL_RECON}}",
+      "color": "red"
+    },
+    {
+      "pack_id": "backend-laravel",
+      "role_id": "slice-builder",
+      "model_selector": "{{MODEL_SLICE_BUILDER}}",
+      "color": "green"
+    },
+    {
+      "pack_id": "backend-laravel",
+      "role_id": "spec-writer",
+      "model_selector": "{{MODEL_SPEC_WRITER}}",
+      "color": "magenta"
+    },
+    {
+      "pack_id": "backend-laravel",
+      "role_id": "test-verifier",
+      "model_selector": "{{MODEL_RECON}}",
+      "color": "cyan"
+    },
+    {
+      "pack_id": "backend-laravel",
+      "role_id": "test-writer",
+      "model_selector": "{{MODEL_TEST_WRITER}}",
+      "color": "cyan"
+    },
+    {
+      "pack_id": "dart-flutter",
+      "role_id": "ffi-reviewer",
+      "model_selector": "{{MODEL_FFI_REVIEWER}}",
+      "color": "red"
+    },
+    {
+      "pack_id": "dart-flutter",
+      "role_id": "reviewer",
+      "model_selector": "{{MODEL_REVIEWER}}",
+      "color": "yellow"
+    },
+    {
+      "pack_id": "dart-flutter",
+      "role_id": "slice-builder",
+      "model_selector": "{{MODEL_SLICE_BUILDER}}",
+      "color": "green"
+    },
+    {
+      "pack_id": "dart-flutter",
+      "role_id": "spec-writer",
+      "model_selector": "{{MODEL_SPEC_WRITER}}",
+      "color": "magenta"
+    },
+    {
+      "pack_id": "dart-flutter",
+      "role_id": "test-writer",
+      "model_selector": "{{MODEL_TEST_WRITER}}",
+      "color": "cyan"
+    },
+    {
+      "pack_id": "laravel-package",
+      "role_id": "api-surface",
+      "model_selector": "{{MODEL_RECON}}",
+      "color": "blue"
+    },
+    {
+      "pack_id": "laravel-package",
+      "role_id": "reviewer",
+      "model_selector": "{{MODEL_REVIEWER}}",
+      "color": "yellow"
+    },
+    {
+      "pack_id": "laravel-package",
+      "role_id": "security-review",
+      "model_selector": "{{MODEL_RECON}}",
+      "color": "red"
+    },
+    {
+      "pack_id": "laravel-package",
+      "role_id": "slice-builder",
+      "model_selector": "{{MODEL_SLICE_BUILDER}}",
+      "color": "green"
+    },
+    {
+      "pack_id": "laravel-package",
+      "role_id": "spec-writer",
+      "model_selector": "{{MODEL_SPEC_WRITER}}",
+      "color": "magenta"
+    },
+    {
+      "pack_id": "laravel-package",
+      "role_id": "test-verifier",
+      "model_selector": "{{MODEL_RECON}}",
+      "color": "cyan"
+    },
+    {
+      "pack_id": "laravel-package",
+      "role_id": "test-writer",
+      "model_selector": "{{MODEL_TEST_WRITER}}",
+      "color": "cyan"
+    },
+    {
+      "pack_id": "node-frontend",
+      "role_id": "component-builder",
+      "model_selector": "{{MODEL_COMPONENT_BUILDER}}",
+      "color": "green"
+    },
+    {
+      "pack_id": "node-frontend",
+      "role_id": "reviewer",
+      "model_selector": "{{MODEL_REVIEWER}}",
+      "color": "yellow"
+    },
+    {
+      "pack_id": "node-frontend",
+      "role_id": "slice-builder",
+      "model_selector": "{{MODEL_SLICE_BUILDER}}",
+      "color": "green"
+    },
+    {
+      "pack_id": "node-frontend",
+      "role_id": "spec-writer",
+      "model_selector": "{{MODEL_SPEC_WRITER}}",
+      "color": "magenta"
+    },
+    {
+      "pack_id": "node-frontend",
+      "role_id": "test-writer",
+      "model_selector": "{{MODEL_TEST_WRITER}}",
+      "color": "cyan"
+    },
+    {
+      "pack_id": "python-backend",
+      "role_id": "reviewer",
+      "model_selector": "{{MODEL_REVIEWER}}",
+      "color": "yellow"
+    },
+    {
+      "pack_id": "python-backend",
+      "role_id": "slice-builder",
+      "model_selector": "{{MODEL_SLICE_BUILDER}}",
+      "color": "green"
+    },
+    {
+      "pack_id": "python-backend",
+      "role_id": "spec-writer",
+      "model_selector": "{{MODEL_SPEC_WRITER}}",
+      "color": "magenta"
+    },
+    {
+      "pack_id": "python-backend",
+      "role_id": "test-writer",
+      "model_selector": "{{MODEL_TEST_WRITER}}",
+      "color": "cyan"
+    },
+    {
+      "pack_id": "python-backend",
+      "role_id": "type-checker",
+      "model_selector": "{{MODEL_TYPE_CHECKER}}",
+      "color": "cyan"
+    },
+    {
+      "pack_id": "role-cto",
+      "role_id": "ai-viability-assessor",
+      "model_selector": "opus",
+      "color": "magenta"
+    },
+    {
+      "pack_id": "role-cto",
+      "role_id": "architecture-decision",
+      "model_selector": "opus",
+      "color": "blue"
+    },
+    {
+      "pack_id": "role-cto",
+      "role_id": "tech-radar-curator",
+      "model_selector": "opus",
+      "color": "green"
+    },
+    {
+      "pack_id": "role-founder",
+      "role_id": "founder-cadence",
+      "model_selector": "sonnet",
+      "color": "green"
+    },
+    {
+      "pack_id": "role-founder",
+      "role_id": "idea-validator",
+      "model_selector": "opus",
+      "color": "red"
+    },
+    {
+      "pack_id": "role-founder",
+      "role_id": "mvp-scoper",
+      "model_selector": "sonnet",
+      "color": "cyan"
+    },
+    {
+      "pack_id": "role-maintainer",
+      "role_id": "contribution-reviewer",
+      "model_selector": "sonnet",
+      "color": "yellow"
+    },
+    {
+      "pack_id": "role-maintainer",
+      "role_id": "issue-triager",
+      "model_selector": "sonnet",
+      "color": "cyan"
+    },
+    {
+      "pack_id": "role-maintainer",
+      "role_id": "release-conductor",
+      "model_selector": "opus",
+      "color": "magenta"
+    },
+    {
+      "pack_id": "role-tech-lead",
+      "role_id": "delegation-triage",
+      "model_selector": "sonnet",
+      "color": "green"
+    },
+    {
+      "pack_id": "role-tech-lead",
+      "role_id": "review-gatekeeper",
+      "model_selector": "sonnet",
+      "color": "yellow"
+    },
+    {
+      "pack_id": "role-tech-lead",
+      "role_id": "sprint-planner",
+      "model_selector": "opus",
+      "color": "blue"
+    }
+  ]
+}

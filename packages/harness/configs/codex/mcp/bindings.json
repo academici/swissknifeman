@@ -1,0 +1,16 @@
+{
+  "binding_version": "1.0.0",
+  "provider_id": "codex",
+  "target_scope": "project",
+  "target_path": ".codex/config.toml",
+  "servers": {
+    "context7": {"url": "https://mcp.context7.com/mcp"},
+    "fetch": {"command": "uvx", "args": ["mcp-server-fetch"]},
+    "filesystem": {"command": "npx", "args": ["-y", "@modelcontextprotocol/server-filesystem", "."]},
+    "github": {"url": "https://api.githubcopilot.com/mcp/"},
+    "memory": {"command": "npx", "args": ["-y", "@modelcontextprotocol/server-memory"]},
+    "perplexity": {"command": "npx", "args": ["-y", "@perplexity-ai/mcp-server"], "env": {"PERPLEXITY_API_KEY": "${PERPLEXITY_API_KEY}"}},
+    "playwright": {"command": "npx", "args": ["@playwright/mcp@latest", "--headless"]},
+    "sequential-thinking": {"command": "npx", "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]}
+  }
+}

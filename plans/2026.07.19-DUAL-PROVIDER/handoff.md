@@ -18,7 +18,7 @@ Read plan.md → handoff.md → phases/P4.md → P4.4 Required Reads in exact or
 **Done:** P4.3 captured the committed pre-change Claude command/plugin surface independently,
 added the named catalog-to-Claude projection and one shared check/write render plan, and proved
 exact slash/frontmatter/body/plugin compatibility without changing canonical Claude bytes.
-Substantive item/bookkeeping commit: `P4.3_SUBSTANTIVE_COMMIT` (replaced by the immediate
+Substantive item/bookkeeping commit: `4162100` (recorded by this immediate
 mechanical hash fix).
 
 **Remaining:** P4.4 → P4.5, terminal full validation/phase close and fresh independent P4

@@ -56,6 +56,45 @@ class TestManagedBlock(unittest.TestCase):
         self.assertIn("hash=", managed_block("x", self.MARK))
 
 
+class TestProviderContexts(unittest.TestCase):
+    def test_context_is_resolved_once_and_reused_across_order(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, _proj = _setup(tmp)
+            import maind.provision.deploy as deploy
+            calls, seen = [], []
+            original_context = deploy.provider_projection_context
+            original_provisioners, original_order = sync.PROVISIONERS, sync.ORDER
+            def first(_env, _config, contexts, _mode, _dry):
+                seen.append(contexts[0])
+                return [sync._result("first", contexts[0]["id"], "ok")]
+            def second(_env, _config, contexts, _mode, _dry):
+                seen.append(contexts[0])
+                return [sync._result("second", contexts[0]["id"], "ok")]
+            def counted(*args):
+                calls.append(args[2]["id"])
+                return original_context(*args)
+            deploy.provider_projection_context = counted
+            sync.PROVISIONERS = {"first": first, "second": second}
+            sync.ORDER = ["first", "second"]
+            try:
+                sync.run_sync(env, config, config["projects"])
+            finally:
+                deploy.provider_projection_context = original_context
+                sync.PROVISIONERS, sync.ORDER = original_provisioners, original_order
+            self.assertEqual(calls, ["flexcrm"])
+            self.assertIs(seen[0], seen[1])
+            self.assertTrue(seen[0].provider_context.providers)
+
+    def test_required_provider_failure_is_visible_in_aggregate(self):
+        aggregate = sync.ProviderProvisionAggregate(({
+            "provider_id": "codex", "status": "failed", "required": True,
+            "diagnostic": "MAIND_PROJECTION_MISSING"},))
+        result = sync._result("mcp", "demo", "failed", provider_aggregate=aggregate)
+        self.assertFalse(aggregate.green)
+        self.assertEqual(result["provider_aggregate"], "non-green")
+        self.assertEqual(result["providers"][0]["diagnostic"], "MAIND_PROJECTION_MISSING")
+
+
 class TestRoleAgentPacks(unittest.TestCase):
     """Вариант C: project.roles → config.role_packs[role], аддитивно к профильному паку."""
     CFG = {"role_packs": {"tech-lead": "role-tech-lead", "solo-founder": "role-founder"}}

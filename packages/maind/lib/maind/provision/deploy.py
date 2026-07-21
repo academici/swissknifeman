@@ -9,6 +9,7 @@ import json
 import os
 import shutil
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 from .. import codegraph, pplxweb
@@ -23,6 +24,13 @@ from ..projects import listing, write_config
 from ..provider_deploy import (apply_provider_artifacts, generate_conformance_report,
                                plan_provider_artifacts, plan_provider_deploy,
                                resolve_effective_providers, semantic_servers)
+
+
+@dataclass(frozen=True)
+class ProviderProjectionContext:
+    """P1 selection and P5 projections resolved once for a project operation."""
+    providers: tuple
+    projections: tuple
 
 
 def _provider_projections(env, config, project):
@@ -40,6 +48,27 @@ def _provider_projections(env, config, project):
     return tuple(plan_mcp_projection(catalog, provider_id=provider,
         bindings_path=harness_root / "configs" / provider.value / "mcp/bindings.json",
         selected=(), trusted=True) for provider in providers)
+
+
+def provider_projection_context(env, config, project):
+    """Public P6 seam: one effective-provider resolution and P5 projections."""
+    harness_root = Path(env.root).parent / "harness"
+    if not harness_root.is_dir():
+        harness_root = Path(__file__).resolve().parents[3].parent / "harness"
+    harness_lib = str(harness_root / "lib")
+    if harness_lib not in sys.path:
+        sys.path.insert(0, harness_lib)
+    from core import ProviderConfigCatalog, ProviderId
+    from harness.mcp import load_mcp_catalog, plan_mcp_projection
+    providers = resolve_effective_providers(
+        config, ProviderConfigCatalog("1.0.0", (ProviderId.CLAUDE_CODE, ProviderId.CODEX), (), ()),
+        project["id"])
+    catalog = load_mcp_catalog(harness_root / "configs/common/mcp/catalog.json")
+    projections = tuple(plan_mcp_projection(
+        catalog, provider_id=provider,
+        bindings_path=harness_root / "configs" / provider.value / "mcp/bindings.json",
+        selected=(), trusted=True) for provider in providers)
+    return ProviderProjectionContext(providers, projections)
 
 
 def _agentmemory_entry(env, config, scope):
@@ -118,6 +147,7 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
         return None
     scope = project.get("memory_scope") or f"project:{pid}"
     provider_plan = None
+    provider_changed = False
     if provider_projections is not None:
         provider_plan = plan_provider_deploy(
             provider_projections,
@@ -127,6 +157,9 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
         provider_check = plan_provider_artifacts(project_path, provider_plan, repair=provider_repair)
         if provider_check["severity"] == "error":
             raise ValueError("MAIND_PROVIDER_DEPLOY_REFUSED")
+        provider_changed = any(
+            getattr(action.action, "value", action.action) != "noop"
+            for action in provider_check["plan"].actions)
         if not dry:
             apply_provider_artifacts(project_path, provider_plan, repair=provider_repair)
     emit_example = bool((config.get("mcp") or {}).get("emit_example"))  # opt-in: .example + .gitignore
@@ -186,7 +219,7 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
     return {"id": pid, "scope": scope, "written": written, "skipped": skipped,
             "code": code_state, "code_server": codegraph.server_name(project, st),
             "servers": list(entries), "targets": [w["file"] for w in written],
-            "provider_plan": provider_plan}
+            "provider_plan": provider_plan, "provider_changed": provider_changed}
 
 
 def mark_deployed(config, project_id, result):

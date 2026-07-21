@@ -24,11 +24,18 @@ MODES = ("install", "update", "auto")
 
 
 # ── контекст проекта (единый резолв пути/scope) ──────────────────────────────
-@dataclass
+@dataclass(frozen=True)
 class ProjectContext:
     env: object
     config: dict
     project: dict
+    provider_context: object | None = None
+
+    def __getitem__(self, key):
+        return self.project[key]
+
+    def get(self, key, default=None):
+        return self.project.get(key, default)
 
     @property
     def id(self):
@@ -69,14 +76,39 @@ def select_projects(env, config, opts):
 
 
 def contexts(env, config, projects):
-    return [ProjectContext(env, config, p) for p in projects]
+    from .deploy import provider_projection_context
+    return [ProjectContext(env, config, p, provider_projection_context(env, config, p))
+            for p in projects]
 
 
-def _result(provisioner, project_id, status, *, changed=False, state="", detail=""):
+@dataclass(frozen=True)
+class ProviderProvisionAggregate:
+    rows: tuple
+
+    @property
+    def green(self):
+        return bool(self.rows) and all(
+            row["status"] == "planned" or not row["required"] for row in self.rows)
+
+
+def _provider_aggregate(plan):
+    return ProviderProvisionAggregate(tuple({"provider_id": row.provider_id.value,
+                                              "status": row.status,
+                                              "required": True,
+                                              "diagnostic": row.diagnostic}
+                                         for row in plan.results))
+
+
+def _result(provisioner, project_id, status, *, changed=False, state="", detail="",
+            provider_aggregate=None):
     """Единая форма результата провиженера (та же, что у health._result): ВСЕ ключи всегда
     присутствуют, поэтому CLI и тесты не зависят от .get()-умолчаний. status: ok|skip|dry."""
-    return {"provisioner": provisioner, "id": project_id, "status": status,
-            "changed": changed, "state": state, "detail": detail}
+    result = {"provisioner": provisioner, "id": project_id, "status": status,
+              "changed": changed, "state": state, "detail": detail}
+    if provider_aggregate is not None:
+        result["providers"] = list(provider_aggregate.rows)
+        result["provider_aggregate"] = "green" if provider_aggregate.green else "non-green"
+    return result
 
 
 # ── провиженеры ──────────────────────────────────────────────────────────────
@@ -85,19 +117,26 @@ def _mcp_run(env, config, projects, mode, dry):
     from .deploy import deploy_project, mark_deployed
     from ..projects import write_config
     results, applied = [], False
-    for p in projects:
-        res = deploy_project(env, config, p, dry=dry)  # with_code=None → из политики/полей проекта
+    for context in projects:
+        p = context.project if isinstance(context, ProjectContext) else context
+        provider_context = context.provider_context if isinstance(context, ProjectContext) else None
+        res = deploy_project(env, config, p, dry=dry,
+                             provider_projections=(provider_context.projections
+                                                   if provider_context is not None else None))
         if res is None:
             results.append(_result("mcp", p["id"], "skip", detail="нет/нет пути проекта"))
             continue
-        changed = any(w["changed"] for w in res["written"])
+        changed = (res["provider_changed"] if res.get("provider_plan") is not None
+                   else any(w["changed"] for w in res["written"]))
         if not dry:
             mark_deployed(config, p["id"], res)
             applied = True
         detail = ", ".join(res["targets"])
         if res.get("skipped"):
             detail += f" (пропущено битых каналов: {', '.join(res['skipped'])})"
-        results.append(_result("mcp", p["id"], "ok", changed=changed, detail=detail))
+        aggregate = _provider_aggregate(res["provider_plan"]) if res.get("provider_plan") else None
+        results.append(_result("mcp", p["id"], "ok" if aggregate is None or aggregate.green else "failed",
+                               changed=changed, detail=detail, provider_aggregate=aggregate))
     if applied:
         write_config(env, config)
     return results
@@ -115,6 +154,7 @@ def _graph_run(env, config, projects, mode, dry):
     --mode update не сообщал об изменении там, где граф фактически не поменялся."""
     from ..derive import build_provider_index, derive_project_graph
     from ..federation import rebuild_index, store_path
+    project_contexts = contexts(env, config, projects)
     results = []
     if dry:
         return [_result("graph", p["id"], "dry") for p in projects]
@@ -400,14 +440,15 @@ def run_sync(env, config, projects, *, only=None, mode="auto", dry=False):
     """Применить выбранные провиженеры к проектам. Возвращает плоский список результатов.
     Fail-soft: падение одного провиженера НЕ валит весь фан-аут — остальные отрабатывают,
     упавший помечается status=failed per-project (видно в выводе и коде возврата)."""
+    project_contexts = contexts(env, config, projects)
     results = []
     for name in provisioner_names(only):
         try:
-            results.extend(PROVISIONERS[name](env, config, projects, mode, dry))
+            results.extend(PROVISIONERS[name](env, config, project_contexts, mode, dry))
         except Exception as e:
             warn(f"провиженер '{name}' упал: {e}")
             results.extend(_result(name, p.get("id", "?"), "failed", detail=str(e))
-                           for p in projects)
+                           for p in project_contexts)
     return results
 
 

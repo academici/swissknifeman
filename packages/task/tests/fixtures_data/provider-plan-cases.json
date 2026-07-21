@@ -1,0 +1,131 @@
+{
+  "contract_version": "1.0.0",
+  "model_classes": ["economy", "implementation", "frontier"],
+  "efforts": ["low", "medium", "high", "xhigh"],
+  "plan_commands": {
+    "task:plan-design": {"kind": "design-phase", "mode": "fixed", "minimum": ["frontier", "high"], "arguments": ["PLAN", "P4"], "claude": "/task:plan-design PLAN P4", "codex": "$ task:plan-design PLAN P4"},
+    "task:plan-exec": {"kind": "exec-items", "mode": "fixed", "minimum": ["implementation", "medium"], "arguments": ["PLAN", "P4.4"], "claude": "/task:plan-exec PLAN P4.4", "codex": "$ task:plan-exec PLAN P4.4"},
+    "task:plan-run": {"kind": "run-items", "mode": "inherited-plan", "minimum": ["implementation", "high"], "arguments": ["PLAN", "P4.4"], "claude": "/task:plan-run PLAN P4.4", "codex": "$ task:plan-run PLAN P4.4"},
+    "task:plan-close": {"kind": "close", "mode": "fixed", "minimum": ["implementation", "low"], "arguments": ["PLAN", "P4.4"], "claude": "/task:plan-close PLAN P4.4", "codex": "$ task:plan-close PLAN P4.4"},
+    "task:plan-audit": {"kind": "audit-phase", "mode": "fixed", "minimum": ["frontier", "xhigh"], "arguments": ["PLAN", "P4"], "claude": "/task:plan-audit PLAN P4", "codex": "$ task:plan-audit PLAN P4"}
+  },
+  "next_kinds": [
+    "exec-items",
+    "run-items",
+    "audit-design",
+    "design-phase",
+    "design-item",
+    "audit-phase",
+    "close",
+    "archive",
+    "terminal",
+    "manual",
+    "waiting"
+  ],
+  "next_declarations": {
+    "exec-items": "exec-items: task:plan-exec PLAN P4.4",
+    "run-items": "run-items: task:plan-run PLAN P4.4-P4.5",
+    "audit-design": "audit-design: task:plan-audit PLAN design",
+    "design-phase": "design-phase: task:plan-design PLAN P4",
+    "design-item": "design-item: task:plan-design PLAN P4.4",
+    "audit-phase": "audit-phase: task:plan-audit PLAN P4",
+    "close": "close: task:plan-close PLAN P4.4",
+    "archive": "archive: task:plan-close archive PLAN",
+    "terminal": "terminal: план закрыт",
+    "manual": "manual: frontier/high P4.4",
+    "waiting": "waiting: gate D79 → exec-items: task:plan-exec PLAN P4.4"
+  },
+  "cold_start_next": {
+    "declaration": "audit-phase: task:plan-audit PLAN P4",
+    "carrier": {
+      "kind": "audit-phase",
+      "command_id": "task:plan-audit",
+      "plan_id": "PLAN",
+      "arguments": ["PLAN", "P4"],
+      "context_kind": "cold-start",
+      "item_ids": ["P4.1", "P4.2", "P4.3", "P4.4", "P4.5"],
+      "cold_start_scope": [
+        ["scope", "P4 only"],
+        ["base", "abc1234"],
+        ["evidence", "artifacts/P4-audit.md"]
+      ]
+    },
+    "invocations": {
+      "claude-code": "/task:plan-audit PLAN P4",
+      "codex": "$ task:plan-audit PLAN P4"
+    }
+  },
+  "route_cases": [
+    {
+      "id": "fixed-exact",
+      "kind": "exec-items",
+      "command_id": "task:plan-exec",
+      "observed": ["implementation", "medium"],
+      "minimum": null,
+      "ok": true,
+      "diagnostics": []
+    },
+    {
+      "id": "inherited-exact",
+      "kind": "run-items",
+      "command_id": "task:plan-run",
+      "observed": ["implementation", "high"],
+      "minimum": ["implementation", "high"],
+      "ok": true,
+      "diagnostics": []
+    },
+    {
+      "id": "legal-overshoot",
+      "kind": "exec-items",
+      "command_id": "task:plan-exec",
+      "observed": ["frontier", "high"],
+      "minimum": null,
+      "ok": true,
+      "diagnostics": ["CMD_ROUTE_OVERSHOOT"]
+    },
+    {
+      "id": "class-undershoot",
+      "kind": "audit-phase",
+      "command_id": "task:plan-audit",
+      "observed": ["implementation", "xhigh"],
+      "minimum": null,
+      "ok": false,
+      "diagnostics": ["CMD_ROUTE_UNDERSHOOT"]
+    },
+    {
+      "id": "effort-undershoot",
+      "kind": "run-items",
+      "command_id": "task:plan-run",
+      "observed": ["frontier", "medium"],
+      "minimum": ["implementation", "high"],
+      "ok": false,
+      "diagnostics": ["CMD_ROUTE_UNDERSHOOT"]
+    },
+    {
+      "id": "unknown-observed",
+      "kind": "exec-items",
+      "command_id": "task:plan-exec",
+      "observed": ["unknown", "medium"],
+      "minimum": null,
+      "ok": false,
+      "diagnostics": ["CMD_MAPPING_MISSING"]
+    },
+    {
+      "id": "inherited-minimum-missing",
+      "kind": "run-items",
+      "command_id": "task:plan-run",
+      "observed": ["frontier", "xhigh"],
+      "minimum": null,
+      "ok": false,
+      "diagnostics": ["CMD_MAPPING_MISSING"]
+    }
+  ],
+  "mapping_failures": [
+    {"id": "missing-selector", "mutation": "missing", "diagnostic": "CMD_MAPPING_MISSING"},
+    {"id": "ambiguous-selector", "mutation": "ambiguous", "diagnostic": "CMD_MAPPING_AMBIGUOUS"}
+  ],
+  "orchestration": {
+    "required_capabilities": ["command.subagents", "command.workflow-carrier"],
+    "missing_diagnostic": "CMD_CAPABILITY_UNSUPPORTED"
+  }
+}

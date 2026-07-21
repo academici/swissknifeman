@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codebase Design"
+  short_description: "Проектирование глубоких модулей и интерфейсов"
+  default_prompt: "Use $codebase-design to improve module boundaries and interfaces."

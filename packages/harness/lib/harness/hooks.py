@@ -3,12 +3,19 @@
 per-project: пишет <project>/.claude/auto-approve.env.ini + memory.env.ini и
 регистрирует хук auto-approve в settings (merge-only). global: ставит файлы хуков
 в ~/.claude/hooks/ через scripts/apply-permissions.sh --global."""
+import json
 import shutil
 import subprocess
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
+from core import (ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource,
+                  ArtifactTarget, DiagnosticSeverity, ProviderId,
+                  plan_artifact_render, sha256_digest)
+
 from .common import die, parse_flags, warn
+from .profiles import HarnessDiagnostic, ProfileCatalog
 from .settings import (add_hook, load_settings, set_setting_key, set_swissknife,
                        write_json, write_text)
 
@@ -19,6 +26,177 @@ RUNREPORT_MODES = ("on", "off")
 PACKGUARD_MODES = ("off", "warn", "strict")
 CHANGELOGGATE_MODES = ("off", "warn", "strict")
 PLANSDIR_DEFAULT = "plans"
+
+
+@dataclass(frozen=True)
+class LifecycleRequest:
+    """A selected common lifecycle/context intent; native details stay in adapters."""
+    surface_id: str
+    required: bool = False
+
+
+@dataclass(frozen=True)
+class LifecycleBinding:
+    surface_id: str
+    support_level: str
+    activation: str
+    event: str = ""
+    matcher: str = ""
+    handler: str = ""
+    kill_switch: str = ""
+    diagnostic_code: str = ""
+
+
+@dataclass(frozen=True)
+class LifecycleRenderPlan:
+    provider_id: ProviderId
+    bindings: tuple[LifecycleBinding, ...]
+    diagnostics: tuple[HarnessDiagnostic, ...]
+
+    @property
+    def green(self):
+        return not any(item.severity is DiagnosticSeverity.ERROR for item in self.diagnostics)
+
+
+_CODEX_HOOK_ADAPTER_VERSION = "1.0.0"
+_LIFECYCLE_KINDS = frozenset(("lifecycle", "context"))
+
+
+def _claude_lifecycle_bindings():
+    """Compatibility projection only; raw Claude registrations are never rendered for Codex."""
+    return {
+        "lifecycle.auto-approval": LifecycleBinding("lifecycle.auto-approval", "native", "project-settings", "PreToolUse", "Bash|ExitPlanMode", "~/.claude/hooks/auto-approve/auto-approve.sh", "MODE=off"),
+        "lifecycle.memory": LifecycleBinding("lifecycle.memory", "native", "global-hook-plus-project-config", handler="~/.claude/hooks/memory/memory.sh", kill_switch="MODE=off"),
+        "lifecycle.notification": LifecycleBinding("lifecycle.notification", "native", "global-hook", handler="~/.claude/hooks/notify/notify.sh"),
+        "lifecycle.command-log": LifecycleBinding("lifecycle.command-log", "native", "global-hook", "PreToolUse", "Bash", "~/.claude/hooks/log-bash-command.sh"),
+        "lifecycle.router": LifecycleBinding("lifecycle.router", "native", "project-settings", "UserPromptSubmit|SessionStart", "", "python3 ~/.claude/hooks/agent-router/router.py", "POLICY=off"),
+        "lifecycle.run-report": LifecycleBinding("lifecycle.run-report", "native", "project-settings", "SessionEnd", "", "python3 ~/.claude/hooks/run-report/run-report.py", "ENABLED=off"),
+        "lifecycle.pack-guard": LifecycleBinding("lifecycle.pack-guard", "native", "project-settings", "PreToolUse", "Edit|Write|MultiEdit|NotebookEdit", "python3 ~/.claude/hooks/pack-guard/pack-guard.py", "MODE=off"),
+        "lifecycle.changelog-gate": LifecycleBinding("lifecycle.changelog-gate", "native", "project-settings", "PreToolUse", "Bash", "python3 ~/.claude/hooks/changelog-gate/changelog-gate.py", "MODE=off"),
+        "lifecycle.review-gate": LifecycleBinding("lifecycle.review-gate", "native", "global-hook", "SubagentStop", "", "~/.claude/hooks/review-gate/review-gate.sh"),
+        "lifecycle.daemon-safety": LifecycleBinding("lifecycle.daemon-safety", "unsupported", "none", diagnostic_code="HARNESS_ACTIVATION_UNSUPPORTED"),
+        "lifecycle.git-guardrails": LifecycleBinding("lifecycle.git-guardrails", "unsupported", "none", diagnostic_code="HARNESS_ACTIVATION_UNSUPPORTED"),
+        "context.observer": LifecycleBinding("context.observer", "unsupported", "none", diagnostic_code="HARNESS_ACTIVATION_UNSUPPORTED"),
+        "context.output-style": LifecycleBinding("context.output-style", "native", "new-session", handler="outputStyle", kill_switch="outputStyle=off"),
+        "context.plans-directory": LifecycleBinding("context.plans-directory", "native", "project-settings", handler="plansDirectory", kill_switch="plansDirectory=off"),
+    }
+
+
+def _load_codex_lifecycle_bindings(path):
+    value = json.loads(Path(path).read_text(encoding="utf-8"))
+    if not isinstance(value, dict) or set(value) != {"provider_id", "bindings"} or value["provider_id"] != "codex":
+        raise ValueError("HARNESS_MAPPING_MISSING")
+    rows = value["bindings"]
+    if not isinstance(rows, list):
+        raise ValueError("HARNESS_MAPPING_MISSING")
+    result = {}
+    fields = {"surface_id", "support_level", "activation", "event", "matcher", "handler", "kill_switch", "diagnostic_code"}
+    for row in rows:
+        if not isinstance(row, dict) or set(row) != fields:
+            raise ValueError("HARNESS_MAPPING_MISSING")
+        binding = LifecycleBinding(**row)
+        if (binding.surface_id in result
+                or binding.support_level not in {"hook-native", "config-native", "unsupported"}
+                or binding.support_level == "hook-native" and (not binding.event or not binding.handler)
+                or binding.support_level != "hook-native" and (binding.event or binding.matcher or binding.handler)):
+            raise ValueError("HARNESS_MAPPING_MISSING")
+        result[binding.surface_id] = binding
+    return result
+
+
+def plan_lifecycle(catalog: ProfileCatalog, *, provider_id: ProviderId,
+                   requests: tuple[LifecycleRequest, ...], trusted: bool,
+                   codex_bindings_path: Path | None = None) -> LifecycleRenderPlan:
+    """Resolve native bindings and diagnostics before any registration artifact is produced."""
+    if not isinstance(catalog, ProfileCatalog) or not isinstance(provider_id, ProviderId):
+        raise TypeError("catalog and provider_id are required")
+    if len({request.surface_id for request in requests}) != len(requests):
+        raise ValueError("HARNESS_CATALOG_MISMATCH")
+    adapters = {ProviderId.CLAUDE_CODE: _claude_lifecycle_bindings(),
+                ProviderId.CODEX: _load_codex_lifecycle_bindings(codex_bindings_path) if codex_bindings_path else None}
+    bindings = adapters.get(provider_id)
+    if bindings is None:
+        raise ValueError("HARNESS_MAPPING_MISSING")
+    valid = {surface.id for surface in catalog.surfaces if surface.kind in _LIFECYCLE_KINDS}
+    rendered, diagnostics = [], []
+    for request in requests:
+        if request.surface_id not in valid:
+            raise ValueError("HARNESS_CATALOG_MISMATCH")
+        binding = bindings.get(request.surface_id)
+        if binding is None:
+            raise ValueError("HARNESS_MAPPING_MISSING")
+        rendered.append(binding)
+        if binding.support_level == "unsupported":
+            diagnostics.append(_lifecycle_diagnostic(binding.diagnostic_code, provider_id, request))
+        elif binding.activation.startswith("trusted-project") and not trusted:
+            diagnostics.append(_lifecycle_diagnostic("HARNESS_TRUST_REQUIRED", provider_id, request))
+    return LifecycleRenderPlan(provider_id, tuple(rendered), tuple(sorted(diagnostics)))
+
+
+def _lifecycle_diagnostic(code, provider_id, request):
+    severity = DiagnosticSeverity.ERROR if request.required else DiagnosticSeverity.WARNING
+    return HarnessDiagnostic(severity, code, provider_id, "", request.surface_id,
+                             path="/lifecycle", required=request.required,
+                             message="native lifecycle activation is unavailable",
+                             next_action="select a supported provider binding")
+
+
+def adapt_codex_hook_payload(binding: LifecycleBinding, payload: dict) -> dict:
+    """Translate documented Codex payload fields to the portable handler envelope."""
+    if (not isinstance(binding, LifecycleBinding) or not isinstance(payload, dict)
+            or binding.support_level != "hook-native"):
+        raise TypeError("binding and payload are required")
+    required = {"session_id", "cwd", "hook_event_name", "model", "permission_mode"}
+    if not required.issubset(payload) or payload["hook_event_name"] != binding.event:
+        raise ValueError("HARNESS_MAPPING_MISSING")
+    if binding.event in {"PreToolUse", "PostToolUse", "PermissionRequest"} and not isinstance(payload.get("tool_name"), str):
+        raise ValueError("HARNESS_MAPPING_MISSING")
+    if binding.event == "SessionStart" and not isinstance(payload.get("source"), str):
+        raise ValueError("HARNESS_MAPPING_MISSING")
+    if binding.event == "UserPromptSubmit" and not isinstance(payload.get("user_input"), str):
+        raise ValueError("HARNESS_MAPPING_MISSING")
+    return {"surface_id": binding.surface_id, "event": binding.event,
+            "session_id": payload["session_id"], "cwd": payload["cwd"],
+            "turn_id": payload.get("turn_id", ""), "tool_name": payload.get("tool_name", ""),
+            "user_input": payload.get("user_input", ""), "permission_mode": payload["permission_mode"]}
+
+
+def render_codex_hooks(plan: LifecycleRenderPlan) -> bytes:
+    """Render only Codex-native hooks.json registration; handlers stay a separate artifact."""
+    if plan.provider_id is not ProviderId.CODEX or not plan.green:
+        raise ValueError("cannot render refused lifecycle plan")
+    hooks = {}
+    for binding in plan.bindings:
+        if binding.support_level != "hook-native":
+            continue
+        group = {"hooks": [{"type": "command", "command":
+                 f'python3 "$(git rev-parse --show-toplevel)/.codex/hooks/lifecycle.py" --surface {binding.surface_id}'}]}
+        if binding.matcher:
+            group["matcher"] = binding.matcher
+        hooks.setdefault(binding.event, []).append(group)
+    return (json.dumps({"description": "Managed provider-native lifecycle hooks.", "hooks": hooks},
+                       ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+
+
+def render_codex_hook_handler() -> bytes:
+    """Generate only the implemented observer handler, with fail-closed input validation."""
+    return b'''#!/usr/bin/env python3\nimport argparse, json, sys\n\nparser = argparse.ArgumentParser()\nparser.add_argument("--surface", required=True)\nargs = parser.parse_args()\nif args.surface != "context.observer":\n    sys.exit(2)\ntry:\n    payload = json.load(sys.stdin)\nexcept (json.JSONDecodeError, TypeError):\n    sys.exit(2)\nrequired = {"session_id", "cwd", "hook_event_name", "model", "permission_mode", "source"}\nif not required.issubset(payload) or payload["hook_event_name"] != "SessionStart":\n    sys.exit(2)\nprint(json.dumps({"systemMessage": "[harness observer] read-only policy active"}))\n'''
+
+
+def plan_codex_lifecycle_artifacts(plan: LifecycleRenderPlan, *, bindings_path: Path):
+    """Use the P2 artifact seam for registration and its generated consumer handler."""
+    if plan.provider_id is not ProviderId.CODEX or not plan.green:
+        raise ValueError("cannot plan refused lifecycle artifact")
+    source = ArtifactSource("harness.codex.lifecycle-bindings",
+                            "packages/harness/configs/codex/hooks/lifecycle-context-bindings.json",
+                            sha256_digest(Path(bindings_path).read_bytes()))
+    identity = ArtifactAdapterIdentity("harness.codex.lifecycle", _CODEX_HOOK_ADAPTER_VERSION,
+                                       ProviderId.CODEX, "1.0.0", ())
+    hooks = plan_artifact_render(ArtifactRenderRequest("harness.codex.lifecycle.hooks", (source,),
+        ArtifactTarget(".codex/hooks.json", ("whole-file", ())), identity, (), {}, lambda _request: render_codex_hooks(plan)))
+    handler = plan_artifact_render(ArtifactRenderRequest("harness.codex.lifecycle.handler", (source,),
+        ArtifactTarget(".codex/hooks/lifecycle.py", ("whole-file", ())), identity, (), {}, lambda _request: render_codex_hook_handler()))
+    return hooks, handler
 
 
 def block_autoapprove(target, mode, settings_file, dry):

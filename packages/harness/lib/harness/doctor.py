@@ -48,13 +48,22 @@ def _cmd_doctor_settings(env, opts):
 def cmd_doctor(env, argv):
     opts = parse_flags(argv, {
         "--settings": "bool", "--target": "str", "--json": "bool",
-        "--profile": "str",
+        "--profile": "str", "--provider-audit": "bool",
     })
     if opts["help"]:
-        print("harness doctor [--settings [--target P] [--json] [--profile NAME]]\n"
+        print("harness doctor [--settings [--target P] [--json] [--profile NAME] | --provider-audit]\n"
               "  без флага:  диагностика окружения harness (пресеты/скрипт/хуки).\n"
               "  --settings: аудит слоёв настроек Claude Code целевого проекта\n"
               "              (отчёт, --json, exit-code 0 чисто / 1 warn / 2 error).")
+        return
+    if opts["provider_audit"]:
+        from .provider_audit import audit_package
+        report = audit_package(env.root)
+        print(report.render() if opts["json"] else "harness provider audit: " + ("OK" if report.green else "ERROR"))
+        if not opts["json"] and report.diagnostics:
+            print("\n".join(report.diagnostics))
+        if not report.green:
+            sys.exit(2)
         return
     if opts["settings"]:
         _cmd_doctor_settings(env, opts)

@@ -118,7 +118,10 @@ effort: high
    (`supersedes` при отмене раннего решения); (3) DoR-свип всех фаз (чеклист ниже, включая
    бриф-трассировку по research/00-user-intent); (4) ТОЛЬКО когда дыры закрыты — последним
    шагом собрать `roadmap.md` (механика режима 6); (5) version bump + Update Log +
-   `plan-lint`. Финал сообщения — launch-block на `/task:plan-audit <PLAN-ID> design`
+   `plan-lint`. Historical schema-invalid journal row не «гасится» compensating event:
+   append-only сохраняется через owner D# + `task.journal exception` sidecar по канону
+   plan-protocol §2, затем lint обязан быть перепроверен. Финал сообщения — launch-block на
+   `/task:plan-audit <PLAN-ID> design`
    (Opus/xhigh, NEW SESSION). Найдены дыры, которые не закрыть этим заходом, → отчёт
    владельцу + launch-block на `<PLAN-ID> Pn` проблемной фазы, roadmap НЕ собирается.
 6. **`<PLAN-ID> roadmap`** — лёгкая пересборка ТОЛЬКО исполнительской карты (без

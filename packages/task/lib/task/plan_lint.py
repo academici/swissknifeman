@@ -37,7 +37,7 @@ except ImportError:  # pragma: no cover - standalone-фолбэк, см. docstri
     def _core_warn(msg):
         print(f"WARN: {msg}", file=sys.stderr)
 
-# task.journal — SSOT схемы записи P1.1 (REQUIRED_FIELDS/enum'ы/validate_entry); лint
+# task.journal — SSOT схемы записи P1.1 и historical exception sidecar; лint
 # журнала реюзает её вместо дубля правил (Code Guidance P1.4 «анти-подгонка»), тот же
 # пакет `task`, тот же lib/ на sys.path (см. scripts/plan-lint.py лаунчер).
 from task import journal as _journal
@@ -120,10 +120,24 @@ PLAN_AUDIT_DESIGN_RE = re.compile(r"/task:plan-audit\s+(\S+)\s+design\b")
 PLAN_AUDIT_RE = re.compile(r"/task:plan-audit\s+(\S+)\s+(P\d+)(?!\.\d)\b")
 PLAN_CLOSE_ARCHIVE_RE = re.compile(r"/task:plan-close\s+archive\s+(\S+)")
 PLAN_CLOSE_RE = re.compile(r"/task:plan-close\s+(\S+)\s+(P\d+)(\.\d+)?\b")
+SEMANTIC_NEXT_RE = re.compile(
+    r"^(exec-items|run-items|audit-design|design-phase|design-item|audit-phase|close|archive|"
+    r"terminal|manual|waiting):\s*(.*)$")
+SEMANTIC_NEXT_COMMANDS = {
+    "exec-items": ("task:plan-exec", "exec"),
+    "run-items": ("task:plan-run", "run"),
+    "audit-design": ("task:plan-audit", "audit-design"),
+    "design-phase": ("task:plan-design", "design-phase"),
+    "design-item": ("task:plan-design", "design-item"),
+    "audit-phase": ("task:plan-audit", "audit"),
+    "close": ("task:plan-close", "close"),
+    "archive": ("task:plan-close", "close-archive"),
+}
 MANUAL_RUN_MARKER = "ЗАПУСК ВРУЧНУЮ"  # Exec=manual (§9): форма без slash-команды, ищется подстрокой
 LITERAL_WAITING = "ОЖИДАНИЕ:"  # 9-я форма Next (§8, D8): здоровое ожидание внешнего времени/гейта, ищется подстрокой
 NEXT_FORMS_HELP = (
     "Next не соответствует ни одной из допустимых форм (SKILL §8): "
+    "`<kind>: task:<plan-command> <arguments>` (provider-neutral канон) · "
     "/task:plan-exec <ID> Pn.m · /task:plan-run <ID> Pn.a[-Pn.b] · "
     "/task:plan-design <ID> Pn · /task:plan-design <ID> Pn.m · "
     "/task:plan-audit <ID> Pn · /task:plan-audit <ID> design · "
@@ -154,7 +168,7 @@ AUDIT_BLOCK_HEADER_RE = re.compile(r"^##\s+Audit\b")
 # ASCII-дефис не канонизирован.
 RAG_MARKER_RE = re.compile(r"RAG:✅|RAG:" + EMPTY_PLACEHOLDER + r"|\[UNVERIFIED\]")
 # launch-block в handoff.Next (SKILL §8): таблица с `| Model |` + code-block.
-LAUNCH_TABLE_ROW_RE = re.compile(r"^\|\s*Model\s*\|")
+LAUNCH_TABLE_ROW_RE = re.compile(r"^\|\s*Model(?:\s+class)?\s*\|")
 CODE_FENCE_RE = re.compile(r"^\s*```")
 # Канонический порядок нумерованных секций plan.md (P0.3 рек#6).
 PLAN_SECTION_NUM_RE = re.compile(r"^##\s+(\d+)\.\s+(.*?)\s*$")
@@ -755,6 +769,51 @@ def _lint_plan_roadmap_20(plan_dir, plan_id, phase_files, diag):
 JOURNAL_CANON_DATE = "2026.07.18"
 
 
+def _lint_journal_exceptions_20(plan_dir, plan_id, report):
+    """Валидирует optional append-only sidecar historical schema exceptions.
+
+    Возвращает ``target_line -> exception`` только для полностью валидных записей.
+    Sidecar не является журналом событий и конструктивно не может образовать
+    correction-цикл: его target всегда строка отдельного ``journal.jsonl``.
+    """
+    exceptions_path = Path(plan_dir) / _journal.EXCEPTIONS_FILENAME
+    if not exceptions_path.is_file():
+        return {}
+    try:
+        lines = exceptions_path.read_text(encoding="utf-8").splitlines()
+    except (OSError, UnicodeDecodeError):
+        report(exceptions_path, None, "journal exceptions sidecar не читается (кодировка/IO)")
+        return {}
+    if not any(line.strip() for line in lines):
+        report(exceptions_path, None, "journal exceptions sidecar пуст")
+        return {}
+
+    by_target = {}
+    for i, raw in enumerate(lines, start=1):
+        if not raw.strip():
+            continue
+        try:
+            exception = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            report(exceptions_path, i,
+                   f"строка не валидный JSON (append-only exception NDJSON): {exc}")
+            continue
+        try:
+            _journal.validate_exception_target(
+                plan_dir, exception, check_duplicate=False)
+        except _journal.JournalValidationError as exc:
+            report(exceptions_path, i, f"schema exception не проходит контракт: {exc}")
+            continue
+
+        target_line = exception["target_line"]
+        if target_line in by_target:
+            report(exceptions_path, i,
+                   f"duplicate schema exception для journal.jsonl:{target_line}")
+            continue
+        by_target[target_line] = exception
+    return by_target
+
+
 def _lint_plan_journal_20(plan_dir, plan_id, diag):
     """journal.jsonl (P1.1, root/contracts/plan-journal-schema.md) — append-only NDJSON,
     одна запись на исполнение item'а любым запуском `/task:plan-*`. Отсутствие/пустой/
@@ -778,9 +837,7 @@ def _lint_plan_journal_20(plan_dir, plan_id, diag):
         report(jf, None, "journal.jsonl не читается (кодировка/IO)")
         return
 
-    exceptions, exception_errors = _journal.validate_exceptions(plan_dir, plan_id)
-    for error in exception_errors:
-        report(plan_dir / _journal.EXCEPTIONS_FILENAME, None, error)
+    exceptions = _lint_journal_exceptions_20(plan_dir, plan_id, report)
 
     for i, ln in enumerate(lines):
         if not ln.strip():
@@ -790,12 +847,16 @@ def _lint_plan_journal_20(plan_dir, plan_id, diag):
         except json.JSONDecodeError as e:
             report(jf, i + 1, f"строка не валидный JSON (append-only NDJSON, §1): {e}")
             continue
-        errors = _journal.entry_error_map(entry)
-        exception = exceptions.get(i + 1)
-        if exception and set(errors) == set(exception["invalid_fields"]):
-            continue
-        if errors:
-            message = "; ".join(msg for values in errors.values() for msg in values)
+        if isinstance(entry, dict) and entry.get("plan_id") != plan_id:
+            report(
+                jf,
+                i + 1,
+                f"event plan_id «{entry.get('plan_id')}» ≠ canonical plan directory "
+                f"«{plan_id}»; mismatch не допускает schema exception",
+            )
+        errors = _journal.entry_validation_errors(entry)
+        if errors and i + 1 not in exceptions:
+            message = "; ".join(error for _, error in errors)
             report(jf, i + 1, f"запись не проходит схему P1.1: {message}")
 
 
@@ -1052,6 +1113,23 @@ def _resolve_next_form(text):
     `/task:plan-exec` (запустится по снятии гейта), который иначе перехватил бы резолвер как
     `exec` — зеркало того, почему «план закрыт» стоит сразу после exec.
     """
+    semantic = SEMANTIC_NEXT_RE.match(text.strip())
+    if semantic:
+        semantic_kind, payload = semantic.groups()
+        if semantic_kind == "terminal":
+            return ("closed", None) if LITERAL_PLAN_CLOSED in payload.lower() else (
+                "invalid-semantic", None)
+        if semantic_kind == "manual":
+            return "manual", None
+        if semantic_kind == "waiting":
+            return "waiting", None
+        expected_command, expected_kind = SEMANTIC_NEXT_COMMANDS[semantic_kind]
+        command, separator, arguments = payload.partition(" ")
+        if command != expected_command or not separator:
+            return "invalid-semantic", None
+        legacy_kind, match = _resolve_next_form("/" + command + " " + arguments)
+        return (legacy_kind, match) if legacy_kind == expected_kind else (
+            "invalid-semantic", None)
     if LITERAL_WAITING in text:
         return "waiting", None
     m = PLAN_EXEC_RE.search(text)

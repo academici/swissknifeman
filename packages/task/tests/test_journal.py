@@ -1,21 +1,22 @@
 """unittest для task.journal — append-only писатель пер-планового журнала (P1.1).
 Запуск: cd packages/task && python3 -m unittest discover -s tests"""
 import json
-import hashlib
 import tempfile
 import unittest
 from pathlib import Path
 
 from task.journal import (  # noqa: E402
-    JournalValidationError, append, append_exception, main, new_entry, validate_entry,
-    validate_exceptions,
+    JournalValidationError, append, append_exception, line_sha256, main,
+    new_entry, new_exception, validate_entry, validate_exception,
 )
 
 
 class TmpDirTestCase(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
-        self.plan_dir = Path(self._tmp.name)
+        self.root = Path(self._tmp.name)
+        self.plan_dir = self.root / "P"
+        self.plan_dir.mkdir()
 
     def tearDown(self):
         self._tmp.cleanup()
@@ -123,6 +124,15 @@ class TestAppend(TmpDirTestCase):
             append(self.plan_dir, entry)
         self.assertFalse((self.plan_dir / "journal.jsonl").exists())
 
+    def test_foreign_plan_id_not_written(self):
+        entry = new_entry(
+            plan_id="FOREIGN", item_id="P1.3", command="plan-exec",
+            actor="sonnet/high", result="in-progress",
+        )
+        with self.assertRaisesRegex(JournalValidationError, "FOREIGN.*P"):
+            append(self.plan_dir, entry)
+        self.assertFalse((self.plan_dir / "journal.jsonl").exists())
+
     def test_every_line_is_parseable_ndjson(self):
         for result in ("in-progress", "closed-deviations", "escalated"):
             append(self.plan_dir, new_entry(
@@ -133,16 +143,103 @@ class TestAppend(TmpDirTestCase):
             json.loads(ln)  # не бросает — валидный NDJSON построчно
 
 
+class TestHistoricalSchemaException(TmpDirTestCase):
+    def _invalid_target(self, *, plan_id="P", invalid_command=False):
+        entry = new_entry(
+            plan_id=plan_id, item_id="design", command="plan-audit",
+            actor="opus/xhigh", result="audit-red",
+            friction=["Major: historical free-form value"],
+        )
+        if invalid_command:
+            entry["command"] = "plan-nope"
+        raw = json.dumps(entry, ensure_ascii=False, sort_keys=True)
+        (self.plan_dir / "journal.jsonl").write_text(raw + "\n", encoding="utf-8")
+        (self.plan_dir / "plan.md").write_text(
+            "| D51 | 2026-07-19 | owner gate | reason |\n", encoding="utf-8")
+        return raw
+
+    def _exception(self, raw):
+        return new_exception(
+            plan_id="P", target_line=1, target_sha256=line_sha256(raw),
+            invalid_fields=["friction"], owner_decision="D51",
+            actor="owner", reason="preserve historical bytes",
+            ts="2026-07-19T20:00:00Z",
+        )
+
+    def test_exception_is_valid_sidecar_and_keeps_journal_bytes(self):
+        raw = self._invalid_target()
+        exception = self._exception(raw)
+        validate_exception(exception)
+        path = append_exception(self.plan_dir, exception)
+        self.assertEqual(path, self.plan_dir / "journal-exceptions.jsonl")
+        self.assertEqual(
+            (self.plan_dir / "journal.jsonl").read_text(encoding="utf-8"), raw + "\n")
+        self.assertEqual(json.loads(path.read_text(encoding="utf-8")), exception)
+
+    def test_exception_requires_existing_owner_decision(self):
+        raw = self._invalid_target()
+        exception = self._exception(raw)
+        exception["owner_decision"] = "D52"
+        with self.assertRaisesRegex(JournalValidationError, "отсутствует"):
+            append_exception(self.plan_dir, exception)
+
+    def test_exception_rejects_unknown_fields(self):
+        raw = self._invalid_target()
+        exception = self._exception(raw)
+        exception["future"] = True
+        with self.assertRaisesRegex(JournalValidationError, "неизвестные поля"):
+            append_exception(self.plan_dir, exception)
+
+    def test_exception_rejects_duplicate_target(self):
+        raw = self._invalid_target()
+        exception = self._exception(raw)
+        append_exception(self.plan_dir, exception)
+        with self.assertRaisesRegex(JournalValidationError, "уже существует"):
+            append_exception(self.plan_dir, exception)
+
+    def test_exception_rejects_valid_target(self):
+        raw = self._invalid_target()
+        valid = json.loads(raw)
+        valid["friction"] = ["deviation"]
+        raw = json.dumps(valid, ensure_ascii=False, sort_keys=True)
+        (self.plan_dir / "journal.jsonl").write_text(raw + "\n", encoding="utf-8")
+        exception = self._exception(raw)
+        with self.assertRaisesRegex(JournalValidationError, "уже проходит"):
+            append_exception(self.plan_dir, exception)
+
+    def test_exception_rejects_foreign_event_plan_id(self):
+        raw = self._invalid_target(plan_id="FOREIGN")
+        exception = self._exception(raw)
+        with self.assertRaisesRegex(JournalValidationError, "target.*FOREIGN.*P"):
+            append_exception(self.plan_dir, exception)
+
+    def test_exception_rejects_foreign_sidecar_plan_id(self):
+        raw = self._invalid_target(plan_id="FOREIGN")
+        exception = self._exception(raw)
+        exception["plan_id"] = "FOREIGN"
+        with self.assertRaisesRegex(JournalValidationError, "exception.*FOREIGN.*P"):
+            append_exception(self.plan_dir, exception)
+
+    def test_exception_requires_exact_invalid_field_set(self):
+        raw = self._invalid_target(invalid_command=True)
+        exception = self._exception(raw)
+        with self.assertRaisesRegex(
+                JournalValidationError, r"\['command', 'friction'\]"):
+            append_exception(self.plan_dir, exception)
+
+
 class TestCli(TmpDirTestCase):
     def test_main_append_writes_entry(self):
+        plan_dir = self.root / "2026.07.18-FOREMAN"
+        plan_dir.mkdir()
         rc = main([
-            "append", "--plan-dir", str(self.plan_dir), "--plan", "2026.07.18-FOREMAN",
+            "append", "--plan-dir", str(plan_dir), "--plan", "2026.07.18-FOREMAN",
             "--item", "P1.3", "--command", "plan-run", "--actor", "sonnet/high",
             "--result", "closed-green", "--friction", "deviation,retry",
             "--attempt", "2", "--note", "test stub",
         ])
         self.assertEqual(rc, 0)
-        lines = (self.plan_dir / "journal.jsonl").read_text(encoding="utf-8").splitlines()
+        lines = (plan_dir / "journal.jsonl").read_text(encoding="utf-8").splitlines()
         self.assertEqual(len(lines), 1)
         entry = json.loads(lines[0])
         self.assertEqual(entry["plan_id"], "2026.07.18-FOREMAN")
@@ -170,107 +267,20 @@ class TestCli(TmpDirTestCase):
         self.assertEqual(rc, 1)
         self.assertFalse((self.plan_dir / "journal.jsonl").exists())
 
-
-class TestHistoricalExceptions(TmpDirTestCase):
-    def setUp(self):
-        super().setUp()
-        self.plan_id = "2026.07.19-DEMO"
-        self.plan_dir = self.plan_dir / self.plan_id
-        self.plan_dir.mkdir()
+    def test_main_exception_appends_sidecar(self):
+        entry = new_entry(
+            plan_id="P", item_id="design", command="plan-audit",
+            actor="opus/xhigh", result="audit-red", friction=["Major: legacy"],
+        )
+        (self.plan_dir / "journal.jsonl").write_text(
+            json.dumps(entry, ensure_ascii=False, sort_keys=True) + "\n", encoding="utf-8")
         (self.plan_dir / "plan.md").write_text(
-            "# План\n\n## 5. Decision Log\n\n| D# | Дата | Решение | Почему |\n"
-            "|:--|:--|:--|:--|\n| D51 | 2026-07-20 | owner | test |\n",
-            encoding="utf-8")
-        entry = new_entry(plan_id=self.plan_id, item_id="P0.1", command="plan-design",
-                          actor="owner", result="no-op")
-        entry["friction"] = "legacy"
-        raw = json.dumps(entry, ensure_ascii=False, sort_keys=True)
-        (self.plan_dir / "journal.jsonl").write_text(raw + "\n", encoding="utf-8")
-        self.raw = raw
-
-    def _record(self, **overrides):
-        record = {
-            "ts": "2026-07-20T00:00:00Z", "plan_id": self.plan_id,
-            "target_line": 1,
-            "target_sha256": hashlib.sha256(self.raw.encode("utf-8")).hexdigest(),
-            "invalid_fields": ["friction"], "owner_decision": "D51",
-            "actor": "owner", "reason": "preserve historical evidence",
-        }
-        record.update(overrides)
-        return record
-
-    def _write(self, *records):
-        path = self.plan_dir / "journal-exceptions.jsonl"
-        path.write_text("".join(json.dumps(r, ensure_ascii=False, sort_keys=True) + "\n"
-                               for r in records), encoding="utf-8")
-
-    def test_exact_valid_exception_is_accepted(self):
-        self._write(self._record())
-        records, errors = validate_exceptions(self.plan_dir, self.plan_id)
-        self.assertEqual(errors, [])
-        self.assertEqual(records[1]["invalid_fields"], ["friction"])
-
-    def test_duplicate_target_fails_closed(self):
-        record = self._record()
-        self._write(record, record)
-        _, errors = validate_exceptions(self.plan_dir, self.plan_id)
-        self.assertTrue(any("duplicate" in error for error in errors), errors)
-
-    def test_raw_hash_mismatch_fails_closed(self):
-        self._write(self._record(target_sha256="0" * 64))
-        _, errors = validate_exceptions(self.plan_dir, self.plan_id)
-        self.assertTrue(any("SHA-256" in error for error in errors), errors)
-
-    def test_valid_or_malformed_target_fails_closed(self):
-        valid = new_entry(plan_id=self.plan_id, item_id="P0.1", command="plan-design",
-                          actor="owner", result="no-op")
-        raw = json.dumps(valid, ensure_ascii=False, sort_keys=True)
-        (self.plan_dir / "journal.jsonl").write_text(raw + "\n", encoding="utf-8")
-        self.raw = raw
-        self._write(self._record(target_sha256=hashlib.sha256(raw.encode()).hexdigest()))
-        _, errors = validate_exceptions(self.plan_dir, self.plan_id)
-        self.assertTrue(any("уже валидна" in error for error in errors), errors)
-        (self.plan_dir / "journal.jsonl").write_text("{bad\n", encoding="utf-8")
-        self._write(self._record(target_sha256=hashlib.sha256(b"{bad").hexdigest()))
-        _, errors = validate_exceptions(self.plan_dir, self.plan_id)
-        self.assertTrue(any("не JSON" in error for error in errors), errors)
-
-    def test_missing_owner_and_foreign_plan_fail_closed(self):
-        self._write(self._record(owner_decision="D52"))
-        _, errors = validate_exceptions(self.plan_dir, self.plan_id)
-        self.assertTrue(any("D52" in error for error in errors), errors)
-        self._write(self._record(plan_id="2026.07.19-FOREIGN"))
-        _, errors = validate_exceptions(self.plan_dir, self.plan_id)
-        self.assertTrue(any("plan_id" in error for error in errors), errors)
-        entry = json.loads(self.raw)
-        entry["plan_id"] = "2026.07.19-FOREIGN"
-        self.raw = json.dumps(entry, ensure_ascii=False, sort_keys=True)
-        (self.plan_dir / "journal.jsonl").write_text(self.raw + "\n", encoding="utf-8")
-        self._write(self._record(target_sha256=hashlib.sha256(self.raw.encode()).hexdigest()))
-        _, errors = validate_exceptions(self.plan_dir, self.plan_id)
-        self.assertTrue(any("target event" in error for error in errors), errors)
-
-    def test_inexact_invalid_field_set_fails_closed(self):
-        self._write(self._record(invalid_fields=["friction", "note"]))
-        _, errors = validate_exceptions(self.plan_dir, self.plan_id)
-        self.assertTrue(any("invalid_fields" in error for error in errors), errors)
-
-    def test_malformed_field_types_fail_closed_with_diagnostics(self):
-        for field, value in (
-                ("owner_decision", 123),
-                ("target_sha256", 123),
-                ("invalid_fields", 123)):
-            with self.subTest(field=field):
-                self._write(self._record(**{field: value}))
-                records, errors = validate_exceptions(self.plan_dir, self.plan_id)
-                self.assertEqual(records, {})
-                self.assertTrue(any(field in error for error in errors), errors)
-
-    def test_exception_cli_appends_valid_record(self):
+            "| D51 | 2026-07-19 | owner gate | reason |\n", encoding="utf-8")
         rc = main([
-            "exception", "--plan-dir", str(self.plan_dir), "--target-line", "1",
-            "--invalid-fields", "friction", "--owner-decision", "D51",
-            "--actor", "owner", "--reason", "preserve historical evidence",
+            "exception", "--plan-dir", str(self.plan_dir), "--plan", "P",
+            "--target-line", "1", "--invalid-fields", "friction",
+            "--owner-decision", "D51", "--actor", "owner",
+            "--reason", "preserve historical bytes",
         ])
         self.assertEqual(rc, 0)
         self.assertTrue((self.plan_dir / "journal-exceptions.jsonl").is_file())

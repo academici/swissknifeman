@@ -1,12 +1,12 @@
 # Provider artifact contract
 
-**Version:** v1.0.0
+**Version:** v1.1.0
 
 **Status:** frozen
 
 **Approval Owner:** Dmitry Vostrikov
 
-**Approval:** D55, 2026-07-20
+**Approval:** D55, 2026-07-20; backward-compatible additive minor D87, 2026-07-21
 
 **Vocabulary:** `../CONTEXT.md`, approved D53
 
@@ -21,8 +21,9 @@ Drift и Repair так, чтобы `render`, `check`, `update` и `repair` од�
 Их выбирают P1/P2 и package contracts, не изменяя invariants ниже. Rendered Artifact никогда
 не становится Canonical Source для другого Provider.
 
-D55 заморозил contract; запись provider outputs остаётся запрещена до реализации и прохождения
-downstream apply gates.
+D55 заморозил v1.0.0; D87 добавил v1.1.0 generic semantic metadata carrier без изменения
+v1.0.0 records, hash/ownership semantics или downstream apply gates. Запись provider outputs
+остаётся запрещена до реализации и прохождения этих gates.
 
 ## Vocabulary
 
@@ -46,7 +47,7 @@ Support Level и не заменяет capability contract.
 
 | Key | Contract |
 |:--|:--|
-| `contract_version` | Artifact contract SemVer; для этого freeze — `1.0.0`. |
+| `contract_version` | Artifact contract SemVer; current freeze — `1.1.0`; exact `1.0.0` records remain supported. |
 | `artifact_id` | Stable logical identity, уникальная внутри lock/catalog. |
 | `canonical_sources` | Непустой ordered set source identity/path/hash records. |
 | `adapter_id` / `adapter_version` | Adapter identity и SemVer implementation contract. |
@@ -57,6 +58,13 @@ Support Level и не заменяет capability contract.
 | `managed_boundary` | Mode и, для blocks, уникальные ordered block IDs. |
 | `override_layers` | Ordered effective Override provenance; MAY быть пустым. |
 | `capability_requirements` | Capability IDs и принятые Support Levels Adapter'а. |
+| `semantic_metadata` | v1.1.0-only optional generic nested JSON-safe mapping of caller-owned semantic render parameters; absent from exact v1.0.0 records. |
+
+`semantic_metadata` is a provider/content-neutral carrier. Keys are canonically ordered;
+nested objects use the same sorted-key canonical JSON rules, arrays preserve declared order,
+and floats/non-JSON values are forbidden. The in-memory value is immutable. v1.0.0 with this
+key, v1.1.0 without the version-declared shape, malformed nested values, or metadata that does
+not match expected provenance is `provenance-invalid`. Removal/change cannot classify clean.
 
 `artifact_id` MUST оставаться стабильным при безопасном переносе target path и MUST NOT
 выводиться только из path. Target с другим `artifact_id` является ownership conflict.
@@ -79,6 +87,10 @@ Inline header/marker metadata MAY дублировать subset для diagnosis
    version, Provider ID, Adapter identity/version, ordered Override records и semantic
    render parameters;
 5. timestamp, host path, temp path и process/environment order запрещены.
+
+In v1.1.0 the same semantic render parameters in the source envelope are also copied exactly
+to `semantic_metadata`; the carrier does not add a second semantic input. v1.0.0 continues to
+hash the same envelope and serialize the same record bytes as before.
 
 Эквивалент canonical serialization — stdlib Python
 `json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")`.
@@ -173,8 +185,10 @@ provider output при сохранённом intent, patch — byte-compatible 
 к `stale-source`, а не к скрытому overwrite.
 
 Unknown artifact contract major, unknown boundary mode, observation или action fail closed.
-Artifact record с более новым minor MAY читаться только если unknown keys игнорируются без
-потери ownership/hash semantics; иначе `provenance-invalid`.
+Exact v1.0.0 records remain readable/writable without metadata. v1.1.0 readers accept the
+exact v1.0.0 shape and the exact v1.1.0 shape only. Artifact record с более новым minor MAY
+читаться только если unknown keys игнорируются без потери ownership/hash semantics; иначе
+`provenance-invalid`.
 
 ## Validation
 

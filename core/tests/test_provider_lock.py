@@ -18,14 +18,17 @@ HASH = "sha256:" + "a" * 64
 
 def result(*, body=b"managed\n", artifact_id="task.plan-exec.codex-skill",
            target=".agents/skills/task-plan-exec/SKILL.md", adapter_version="1.0.0",
-           boundary=("whole-file", ())):
+           boundary=("whole-file", ()), contract_version="1.0.0",
+           semantic_parameters=None):
     adapter = ArtifactAdapterIdentity(
         "task.codex-skill", adapter_version, ProviderId.CODEX, "1.0.0",
         (CapabilityRequirement(CapabilityId("skills.repository"), (SupportLevel.NATIVE,)),),
     )
     return plan_artifact_render(ArtifactRenderRequest(
         artifact_id, (ArtifactSource("task.command.plan-exec", "packages/task/commands/plan-exec.md", HASH),),
-        ArtifactTarget(target, boundary), adapter, (), {"title": "Plan exec"}, lambda _request: body,
+        ArtifactTarget(target, boundary), adapter, (),
+        semantic_parameters or {"title": "Plan exec"}, lambda _request: body,
+        contract_version,
     ))
 
 
@@ -174,7 +177,49 @@ class ProviderLockTests(unittest.TestCase):
         plan = self.plan()
         raw = serialize_lock(plan.next_lock)
         self.assertEqual(serialize_lock(parse_lock(raw)), raw)
+        self.assertNotIn(b"semantic_metadata", raw)
         self.assertRaises(ValueError, parse_lock, raw.replace(b'"records"', b'"z_records"'))
+
+    def test_v1_1_lock_round_trip_emits_semantic_metadata(self):
+        expected = result(
+            contract_version="1.1.0",
+            semantic_parameters={"semantic_sections": {"common": ["task.identity"]},
+                                 "artifact_kind": "instruction-projection"})
+        raw = serialize_lock(self.plan(expected).next_lock)
+        value = json.loads(raw)
+        self.assertEqual(value["records"][0]["semantic_metadata"], {
+            "artifact_kind": "instruction-projection",
+            "semantic_sections": {"common": ["task.identity"]},
+        })
+        self.assertEqual(parse_lock(raw).records, (expected.provenance,))
+
+    def test_malformed_metadata_and_version_combinations_refuse(self):
+        old = json.loads(serialize_lock(self.plan().next_lock))
+        old["records"][0]["semantic_metadata"] = {}
+        new = json.loads(serialize_lock(self.plan(result(
+            contract_version="1.1.0")).next_lock))
+        missing = json.loads(json.dumps(new))
+        missing["records"][0].pop("semantic_metadata")
+        floating = json.loads(json.dumps(new))
+        floating["records"][0]["semantic_metadata"] = {"weight": 1.5}
+        for value in (old, missing, floating):
+            with self.subTest(value=value):
+                raw = json.dumps(value, sort_keys=True, separators=(",", ":")).encode() + b"\n"
+                with self.assertRaises(ValueError):
+                    parse_lock(raw)
+
+    def test_semantic_metadata_change_is_not_clean(self):
+        expected = result(contract_version="1.1.0")
+        initial = self.plan(expected)
+        apply_plan(self.root, initial)
+        value = json.loads(serialize_lock(initial.next_lock))
+        value["records"][0]["semantic_metadata"]["title"] = "Changed"
+        changed_lock = json.dumps(
+            value, sort_keys=True, separators=(",", ":")).encode() + b"\n"
+        planned = self.plan(expected, changed_lock)
+        self.assertEqual(
+            (planned.actions[0].observation, planned.actions[0].action),
+            (DriftObservation.PROVENANCE_INVALID, ArtifactActionKind.REFUSE))
 
 
 if __name__ == "__main__":  # pragma: no cover

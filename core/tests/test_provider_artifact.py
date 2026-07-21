@@ -19,12 +19,14 @@ def _adapter():
     )
 
 
-def _request(*, sources, target=None, override_layers=(), semantic_parameters=None, renderer=None):
+def _request(*, sources, target=None, override_layers=(), semantic_parameters=None,
+             renderer=None, contract_version="1.0.0"):
     return ArtifactRenderRequest(
         "task.plan-exec.codex-skill", tuple(sources),
         target or ArtifactTarget(".agents/skills/task-plan-exec/SKILL.md", ("whole-file", ())),
         _adapter(), override_layers, semantic_parameters or {"title": "Plan exec"},
         renderer or (lambda _request: b"---\nname: task-plan-exec\n---\nbody\n"),
+        contract_version,
     )
 
 
@@ -54,6 +56,34 @@ class ProviderArtifactTests(unittest.TestCase):
         self.assertEqual(one.provenance.source_hash, two.provenance.source_hash)
         self.assertEqual(one.provenance.rendered_hash, two.provenance.rendered_hash)
         self.assertEqual(one.provenance.canonical_sources, two.provenance.canonical_sources)
+
+    def test_v1_0_default_stays_exact_and_v1_1_carries_immutable_semantic_metadata(self):
+        source = ArtifactSource(
+            "task.command.plan-exec", "packages/task/commands/plan-exec.md", SOURCE_HASH_A)
+        semantic = {"z": {"second": [2, 1], "first": "one"}, "a": "first"}
+        old_positional_request = ArtifactRenderRequest(
+            "task.plan-exec.codex-skill", (source,),
+            ArtifactTarget(".agents/skills/task-plan-exec/SKILL.md", ("whole-file", ())),
+            _adapter(), (), semantic, lambda _request: b"managed\n")
+        default = plan_artifact_render(old_positional_request)
+        selected = plan_artifact_render(_request(
+            sources=(source,), semantic_parameters=semantic, contract_version="1.1.0"))
+
+        self.assertEqual(default.provenance.contract_version, "1.0.0")
+        self.assertEqual(default.provenance.semantic_metadata, ())
+        self.assertEqual(tuple(key for key, _ in selected.provenance.semantic_metadata),
+                         ("a", "z"))
+        metadata = dict(selected.provenance.semantic_metadata)
+        self.assertEqual(metadata["z"]["second"], (2, 1))
+        with self.assertRaises(TypeError):
+            metadata["z"]["first"] = "changed"
+        self.assertNotEqual(default.provenance.source_hash, selected.provenance.source_hash)
+
+    def test_rejects_unsupported_contract_version(self):
+        source = ArtifactSource(
+            "task.command.plan-exec", "packages/task/commands/plan-exec.md", SOURCE_HASH_A)
+        with self.assertRaisesRegex(ValueError, "unsupported artifact contract version"):
+            _request(sources=(source,), contract_version="1.2.0")
 
     def test_renderer_runs_once_and_preserves_shebang_then_frontmatter(self):
         calls = []

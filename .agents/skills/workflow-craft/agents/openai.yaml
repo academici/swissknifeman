@@ -1,0 +1,4 @@
+interface:
+  display_name: "Workflow Craft"
+  short_description: "Проектирование multi-agent workflow по шаблонам"
+  default_prompt: "Use $workflow-craft to design this multi-agent workflow."

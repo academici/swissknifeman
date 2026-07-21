@@ -1,6 +1,7 @@
 """journal — append-only писатель пер-планового журнала исполнения
 `plans/<PLAN-ID>/journal.jsonl` (схема P1.1 sealed v1,
-`root/contracts/plan-journal-schema.md`).
+`root/contracts/plan-journal-schema.md`) и optional append-only sidecar
+`journal-exceptions.jsonl` для owner-gated historical schema exceptions.
 
 Одна запись = одна строка валидного JSON (NDJSON, D20). Запись только ДОПИСЫВАЕТСЯ —
 существующие строки никогда не переписываются/не удаляются (§1 контракта); поэтому
@@ -33,11 +34,6 @@ except ImportError:  # pragma: no cover - standalone-фолбэк
 
 FILENAME = "journal.jsonl"
 EXCEPTIONS_FILENAME = "journal-exceptions.jsonl"
-EXCEPTION_REQUIRED_FIELDS = (
-    "ts", "plan_id", "target_line", "target_sha256", "invalid_fields",
-    "owner_decision", "actor", "reason",
-)
-HISTORICAL_EXCEPTION_FIELDS = ("friction",)
 
 # --- канон схемы P1.1 (root/contracts/plan-journal-schema.md §2, §2.1, §2.2) -----
 COMMANDS = ("plan-exec", "plan-run", "plan-close", "plan-audit", "plan-design")
@@ -52,196 +48,213 @@ REQUIRED_FIELDS = (
     "ts", "plan_id", "item_id", "command", "session_id", "run_id", "attempt",
     "actor", "friction", "result", "cost_usd", "num_turns", "duration_ms", "note",
 )
+EXCEPTION_REQUIRED_FIELDS = (
+    "ts", "plan_id", "target_line", "target_sha256", "invalid_fields",
+    "owner_decision", "actor", "reason",
+)
+# v1 намеренно узок: exception не превращается в общий механизм отмены schema.
+EXEMPTABLE_FIELDS = ("friction",)
+_SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
+_DECISION_RE = re.compile(r"^D[1-9][0-9]*$")
 
 
 class JournalValidationError(ValueError):
     """Запись не прошла schema-валидацию P1.1 — `append()` не пишет строку."""
 
 
-def entry_error_map(entry):
-    """Возвращает ошибки P1.1, сгруппированные по полям.
+def entry_validation_errors(entry):
+    """Возвращает schema-нарушения как пары ``(поле, сообщение)``.
 
-    Карта — единый источник для обычной валидации и sealed sidecar: исключение может
-    сопоставить только точный набор ошибочных полей, не повторяя enum-проверки.
-    """
+    Поле нужно linter'у для точного сопоставления с owner-gated historical exception;
+    обычный writer по-прежнему использует :func:`validate_entry` и fail-closed."""
     if not isinstance(entry, dict):
-        return {"<entry>": ["запись обязана быть dict"]}
+        return [("$", "запись обязана быть dict")]
 
-    errors = {}
-
-    def add(name, message):
-        errors.setdefault(name, []).append(message)
-
-    for field in REQUIRED_FIELDS:
-        if field not in entry:
-            add(field, f"нет обязательного поля «{field}»")
+    errors = [(f, f"нет обязательного поля «{f}»")
+              for f in REQUIRED_FIELDS if f not in entry]
     if errors:
         return errors
 
-    def check_str(name, *, allow_none=False, allow_empty=False):
-        value = entry[name]
-        if value is None and allow_none:
+    def _check_str(name, *, allow_none=False, allow_empty=False):
+        v = entry[name]
+        if v is None and allow_none:
             return
-        if not isinstance(value, str) or (not allow_empty and not value):
-            add(name, f"{name}: обязано быть {'str|null' if allow_none else 'непустой str'}")
+        if not isinstance(v, str) or (not allow_empty and not v):
+            errors.append((
+                name,
+                f"{name}: обязано быть {'str|null' if allow_none else 'непустой str'}",
+            ))
 
-    def check_number(name):
-        value = entry[name]
-        if value is not None and (isinstance(value, bool) or not isinstance(value, (int, float))):
-            add(name, f"{name}: обязано быть number|null")
+    def _check_number(name):
+        v = entry[name]
+        if v is not None and (isinstance(v, bool) or not isinstance(v, (int, float))):
+            errors.append((name, f"{name}: обязано быть number|null"))
 
-    check_str("ts")
-    check_str("plan_id")
-    check_str("item_id")
-    check_str("session_id", allow_none=True)
-    check_str("run_id", allow_none=True)
-    check_str("actor")
-    check_str("note", allow_none=True)
+    _check_str("ts")
+    _check_str("plan_id")
+    _check_str("item_id")  # P1.1 — всегда set (сужение P0.6 str|null, §5)
+    _check_str("session_id", allow_none=True)
+    _check_str("run_id", allow_none=True)
+    _check_str("actor")
+    _check_str("note", allow_none=True)
 
     if entry["command"] not in COMMANDS:
-        add("command", f"command: «{entry['command']}» не входит в {COMMANDS}")
+        errors.append(("command", f"command: «{entry['command']}» не входит в {COMMANDS}"))
     if entry["result"] not in RESULT_VALUES:
-        add("result", f"result: «{entry['result']}» не входит в {RESULT_VALUES}")
+        errors.append(("result", f"result: «{entry['result']}» не входит в {RESULT_VALUES}"))
 
     attempt = entry["attempt"]
     if isinstance(attempt, bool) or not isinstance(attempt, int) or attempt < 1:
-        add("attempt", "attempt: обязано быть int ≥1")
+        errors.append(("attempt", "attempt: обязано быть int ≥1"))
 
     friction = entry["friction"]
-    if not isinstance(friction, list) or any(value not in FRICTION_VALUES for value in friction):
-        add("friction", f"friction: обязан быть массивом значений из {FRICTION_VALUES}")
+    if not isinstance(friction, list) or any(v not in FRICTION_VALUES for v in friction):
+        errors.append((
+            "friction",
+            f"friction: обязан быть массивом значений из {FRICTION_VALUES}",
+        ))
 
     for name in ("cost_usd", "num_turns", "duration_ms"):
-        check_number(name)
+        _check_number(name)
+
     return errors
 
 
 def validate_entry(entry):
-    """Сверяет запись со схемой P1.1 (§2). Копит ВСЕ нарушения разом (не первое
-    найденное) — исполнитель чинит одним проходом, не итерацией по одной ошибке.
-    Бросает `JournalValidationError`, если нарушения есть."""
-    errors = entry_error_map(entry)
+    """Сверяет event-запись со схемой P1.1 (§2), копя все нарушения разом."""
+    errors = entry_validation_errors(entry)
     if errors:
-        raise JournalValidationError("; ".join(
-            message for messages in errors.values() for message in messages))
+        raise JournalValidationError("; ".join(message for _, message in errors))
 
 
-def _decision_exists(plan_dir, decision):
-    plan_md = Path(plan_dir) / "plan.md"
-    try:
-        return re.search(rf"^\|\s*{re.escape(decision)}\s*\|", plan_md.read_text(
-            encoding="utf-8"), re.MULTILINE) is not None
-    except OSError:
-        return False
+def validate_exception(exception):
+    """Валидирует одну запись sidecar-схемы historical schema exception v1."""
+    if not isinstance(exception, dict):
+        raise JournalValidationError("schema exception обязано быть dict")
+    errors = [f"нет обязательного поля «{f}»"
+              for f in EXCEPTION_REQUIRED_FIELDS if f not in exception]
+    unknown = sorted(set(exception) - set(EXCEPTION_REQUIRED_FIELDS))
+    if unknown:
+        errors.append(f"неизвестные поля schema exception: {unknown}")
+    if errors:
+        raise JournalValidationError("; ".join(errors))
 
-
-def _exception_errors(record, plan_dir, plan_id, journal_lines, seen_targets):
-    errors = []
-    if not isinstance(record, dict):
-        return ["sidecar record обязан быть JSON object"]
-    keys = set(record)
-    expected = set(EXCEPTION_REQUIRED_FIELDS)
-    if keys != expected:
-        errors.append("sidecar record обязан содержать только exact required fields")
-        return errors
-    for name in ("ts", "plan_id", "target_sha256", "owner_decision", "actor", "reason"):
-        if not isinstance(record[name], str) or not record[name]:
+    for name in ("ts", "plan_id", "actor", "reason"):
+        value = exception[name]
+        if not isinstance(value, str) or not value:
             errors.append(f"{name}: обязано быть непустой str")
-    if record["plan_id"] != plan_id:
-        errors.append("plan_id не совпадает с canonical plan ID")
-    if (not isinstance(record["target_line"], int) or isinstance(record["target_line"], bool)
-            or record["target_line"] < 1 or record["target_line"] > len(journal_lines)
-            or not journal_lines[record["target_line"] - 1].strip()):
-        errors.append("target_line не указывает на physical non-empty journal line")
-        return errors
-    target_line = record["target_line"]
-    if target_line in seen_targets:
-        errors.append("duplicate exception target_line")
-    raw = journal_lines[target_line - 1]
-    if record["target_sha256"] != hashlib.sha256(raw.encode("utf-8")).hexdigest():
-        errors.append("target_sha256 не совпадает с raw SHA-256 target line")
-    if record["invalid_fields"] != list(HISTORICAL_EXCEPTION_FIELDS):
-        errors.append("invalid_fields обязан быть exact [\"friction\"]")
-    owner_decision = record["owner_decision"]
-    if isinstance(owner_decision, str) and (
-            not re.fullmatch(r"D\d+", owner_decision)
-            or not _decision_exists(plan_dir, owner_decision)):
-        errors.append(f"owner_decision {owner_decision!r} отсутствует в plan.md")
-    try:
-        entry = json.loads(raw)
-    except json.JSONDecodeError:
-        errors.append("target journal line не JSON")
-        return errors
-    if not isinstance(entry, dict) or entry.get("plan_id") != plan_id:
-        errors.append("target event не принадлежит canonical plan ID")
-        return errors
-    actual_fields = set(entry_error_map(entry))
-    if not actual_fields:
-        errors.append("target event уже валидна")
-    elif actual_fields != set(HISTORICAL_EXCEPTION_FIELDS):
-        errors.append("invalid_fields не совпадает с exact target schema error set")
-    return errors
+
+    target_line = exception["target_line"]
+    if isinstance(target_line, bool) or not isinstance(target_line, int) or target_line < 1:
+        errors.append("target_line: обязано быть int ≥1")
+    target_sha256 = exception["target_sha256"]
+    if not isinstance(target_sha256, str) or not _SHA256_RE.fullmatch(target_sha256):
+        errors.append("target_sha256: обязан быть lowercase SHA-256")
+    invalid_fields = exception["invalid_fields"]
+    if (not isinstance(invalid_fields, list) or not invalid_fields
+            or len(invalid_fields) != len(set(invalid_fields))
+            or any(v not in EXEMPTABLE_FIELDS for v in invalid_fields)):
+        errors.append(
+            f"invalid_fields: непустой unique-массив значений из {EXEMPTABLE_FIELDS}")
+    owner_decision = exception["owner_decision"]
+    if not isinstance(owner_decision, str) or not _DECISION_RE.fullmatch(owner_decision):
+        errors.append("owner_decision: обязан быть D#")
+
+    if errors:
+        raise JournalValidationError("; ".join(errors))
 
 
-def validate_exceptions(plan_dir, plan_id):
-    """Проверяет optional D51 sidecar и возвращает safe line→record map/error list.
-
-    Любая ошибка делает map пустой: malformed exception никогда не ослабляет журнал.
-    """
-    plan_dir = Path(plan_dir)
-    sidecar = plan_dir / EXCEPTIONS_FILENAME
-    if not sidecar.exists():
-        return {}, []
-    try:
-        journal_lines = (plan_dir / FILENAME).read_text(encoding="utf-8").splitlines()
-        sidecar_lines = sidecar.read_text(encoding="utf-8").splitlines()
-    except (OSError, UnicodeDecodeError) as exc:
-        return {}, [f"{EXCEPTIONS_FILENAME} не читается: {exc}"]
-    records, errors, seen_targets = {}, [], set()
-    for number, raw in enumerate(sidecar_lines, 1):
-        if not raw.strip():
-            errors.append(f"{EXCEPTIONS_FILENAME}:{number}: пустая строка запрещена")
-            continue
-        try:
-            record = json.loads(raw)
-        except json.JSONDecodeError as exc:
-            errors.append(f"{EXCEPTIONS_FILENAME}:{number}: не JSON: {exc}")
-            continue
-        record_errors = _exception_errors(record, plan_dir, plan_id, journal_lines, seen_targets)
-        if record_errors:
-            errors.extend(f"{EXCEPTIONS_FILENAME}:{number}: {error}" for error in record_errors)
-            continue
-        seen_targets.add(record["target_line"])
-        records[record["target_line"]] = record
-    return ({}, errors) if errors else (records, [])
+def line_sha256(raw_line):
+    """SHA-256 точных UTF-8 bytes строки journal без завершающего newline."""
+    return hashlib.sha256(raw_line.encode("utf-8")).hexdigest()
 
 
-def append_exception(plan_dir, *, target_line, invalid_fields, owner_decision, actor, reason,
-                     ts=None):
-    """Append-only writer for one owner-gated historical schema exception."""
-    plan_dir = Path(plan_dir)
-    try:
-        journal_lines = (plan_dir / FILENAME).read_text(encoding="utf-8").splitlines()
-    except (OSError, UnicodeDecodeError) as exc:
-        raise JournalValidationError(f"journal.jsonl не читается: {exc}") from exc
-    if not isinstance(target_line, int) or target_line < 1 or target_line > len(journal_lines):
-        raise JournalValidationError("target_line не указывает на journal.jsonl")
-    record = {
-        "ts": ts or _now_iso(), "plan_id": plan_dir.name, "target_line": target_line,
-        "target_sha256": hashlib.sha256(journal_lines[target_line - 1].encode("utf-8")).hexdigest(),
-        "invalid_fields": list(invalid_fields), "owner_decision": owner_decision,
-        "actor": actor, "reason": reason,
+def new_exception(*, plan_id, target_line, target_sha256, invalid_fields,
+                  owner_decision, actor, reason, ts=None):
+    """Собирает owner-gated sidecar-запись без изменения historical journal bytes."""
+    return {
+        "ts": ts or _now_iso(),
+        "plan_id": plan_id,
+        "target_line": target_line,
+        "target_sha256": target_sha256,
+        "invalid_fields": list(invalid_fields),
+        "owner_decision": owner_decision,
+        "actor": actor,
+        "reason": reason,
     }
-    existing, errors = validate_exceptions(plan_dir, plan_dir.name)
-    if errors:
-        raise JournalValidationError("; ".join(errors))
-    errors = _exception_errors(record, plan_dir, plan_dir.name, journal_lines, set(existing))
-    if errors:
-        raise JournalValidationError("; ".join(errors))
-    path = plan_dir / EXCEPTIONS_FILENAME
-    with open(path, "a", encoding="utf-8") as fh:
-        fh.write(json.dumps(record, ensure_ascii=False, sort_keys=True) + "\n")
-    return path
+
+
+def validate_exception_target(plan_dir, exception, *, check_duplicate=True):
+    """Проверяет provenance, owner gate и точное множество waived schema-полей.
+
+    Sidecar физически отделён от event-журнала, поэтому exception не может ссылаться
+    на другое exception и correction-цикл конструктивно невозможен.
+    """
+    validate_exception(exception)
+    plan_dir = Path(plan_dir)
+    canonical_plan_id = plan_dir.name
+    if exception["plan_id"] != canonical_plan_id:
+        raise JournalValidationError(
+            f"exception: plan_id «{exception['plan_id']}» ≠ canonical plan directory "
+            f"«{canonical_plan_id}»")
+    journal_path = plan_dir / FILENAME
+    try:
+        lines = journal_path.read_text(encoding="utf-8").splitlines()
+    except (OSError, UnicodeDecodeError) as exc:
+        raise JournalValidationError(f"target journal не читается: {exc}") from exc
+
+    target_line = exception["target_line"]
+    if target_line > len(lines) or not lines[target_line - 1].strip():
+        raise JournalValidationError("target_line: нет такой непустой строки journal")
+    raw_line = lines[target_line - 1]
+    if line_sha256(raw_line) != exception["target_sha256"]:
+        raise JournalValidationError("target_sha256: не совпадает с raw journal line")
+    try:
+        target = json.loads(raw_line)
+    except json.JSONDecodeError as exc:
+        raise JournalValidationError(
+            "target: malformed JSON не допускает schema exception") from exc
+    target_plan_id = target.get("plan_id") if isinstance(target, dict) else None
+    if target_plan_id != canonical_plan_id:
+        raise JournalValidationError(
+            f"target event: plan_id «{target_plan_id}» ≠ canonical plan directory "
+            f"«{canonical_plan_id}»")
+
+    target_errors = entry_validation_errors(target)
+    target_fields = {field for field, _ in target_errors}
+    if not target_errors:
+        raise JournalValidationError("target: строка уже проходит event-схему")
+    if target_fields != set(exception["invalid_fields"]):
+        raise JournalValidationError(
+            f"invalid_fields: ожидалось точное множество {sorted(target_fields)}")
+
+    try:
+        plan_text = (plan_dir / "plan.md").read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError) as exc:
+        raise JournalValidationError(f"plan.md не читается: {exc}") from exc
+    decision = re.escape(exception["owner_decision"])
+    if not re.search(rf"^\|\s*{decision}\s*\|", plan_text, re.MULTILINE):
+        raise JournalValidationError("owner_decision: D# отсутствует в plan.md")
+
+    if check_duplicate:
+        exceptions_path = plan_dir / EXCEPTIONS_FILENAME
+        if exceptions_path.is_file():
+            try:
+                existing_lines = exceptions_path.read_text(encoding="utf-8").splitlines()
+            except (OSError, UnicodeDecodeError) as exc:
+                raise JournalValidationError(
+                    f"existing exception sidecar не читается: {exc}") from exc
+            for raw in existing_lines:
+                if not raw.strip():
+                    continue
+                try:
+                    existing = json.loads(raw)
+                except json.JSONDecodeError:
+                    continue
+                if (isinstance(existing, dict)
+                        and existing.get("target_line") == target_line
+                        and existing.get("target_sha256") == exception["target_sha256"]):
+                    raise JournalValidationError("target: exception уже существует")
 
 
 def new_entry(*, plan_id, item_id, command, actor, result, session_id=None, run_id=None,
@@ -272,8 +285,24 @@ def append(plan_dir, entry):
     (§2) — битая запись не попадает в durable-историю плана (§1). Возвращает путь
     файла. Файла нет — создаётся (append-режим сам создаёт)."""
     validate_entry(entry)
-    path = Path(plan_dir) / FILENAME
+    plan_dir = Path(plan_dir)
+    canonical_plan_id = plan_dir.name
+    if entry["plan_id"] != canonical_plan_id:
+        raise JournalValidationError(
+            f"event plan_id «{entry['plan_id']}» ≠ canonical plan directory "
+            f"«{canonical_plan_id}»")
+    path = plan_dir / FILENAME
     line = json.dumps(entry, ensure_ascii=False, sort_keys=True)
+    with open(path, "a", encoding="utf-8") as fh:
+        fh.write(line + "\n")
+    return path
+
+
+def append_exception(plan_dir, exception):
+    """Append-only дописывает ровно одно owner-gated historical schema exception."""
+    validate_exception_target(plan_dir, exception)
+    path = Path(plan_dir) / EXCEPTIONS_FILENAME
+    line = json.dumps(exception, ensure_ascii=False, sort_keys=True)
     with open(path, "a", encoding="utf-8") as fh:
         fh.write(line + "\n")
     return path
@@ -304,29 +333,46 @@ def _build_arg_parser():
     ap.add_argument("--num-turns", type=int, default=None)
     ap.add_argument("--duration-ms", type=float, default=None)
     ap.add_argument("--note", default=None)
-    ep = sub.add_parser("exception", help="дописать owner-gated historical schema exception")
-    ep.add_argument("--plan-dir", required=True, help="каталог plans/<PLAN-ID>")
+    ep = sub.add_parser(
+        "exception", help="дописать owner-gated exception для historical schema-invalid строки")
+    ep.add_argument("--plan-dir", required=True, help="каталог плана plans/<PLAN-ID>")
+    ep.add_argument("--plan", required=True, dest="plan_id")
     ep.add_argument("--target-line", required=True, type=int)
-    ep.add_argument("--invalid-fields", required=True, help="только friction")
-    ep.add_argument("--owner-decision", required=True)
-    ep.add_argument("--actor", required=True)
-    ep.add_argument("--reason", required=True)
+    ep.add_argument("--invalid-fields", required=True,
+                    help="через запятую; v1 допускает только friction")
+    ep.add_argument("--owner-decision", required=True, help="существующая owner-approved D#")
+    ep.add_argument("--actor", required=True, help="`<model>/<effort>` или `owner`")
+    ep.add_argument("--reason", required=True, help="почему exception безопасен и необходим")
     return p
 
 
 def main(argv=None):
     args = _build_arg_parser().parse_args(argv)
     if args.cmd == "exception":
+        journal_path = Path(args.plan_dir) / FILENAME
         try:
-            path = append_exception(
-                args.plan_dir, target_line=args.target_line,
-                invalid_fields=_parse_friction(args.invalid_fields),
-                owner_decision=args.owner_decision, actor=args.actor, reason=args.reason)
-        except JournalValidationError as e:
-            print(f"ERROR: exception sidecar не прошёл валидацию: {e}", file=sys.stderr)
+            lines = journal_path.read_text(encoding="utf-8").splitlines()
+            raw_line = lines[args.target_line - 1]
+        except (OSError, UnicodeDecodeError, IndexError) as exc:
+            print(f"ERROR: target journal line не читается: {exc}", file=sys.stderr)
+            return 1
+        exception = new_exception(
+            plan_id=args.plan_id,
+            target_line=args.target_line,
+            target_sha256=line_sha256(raw_line),
+            invalid_fields=_parse_friction(args.invalid_fields),
+            owner_decision=args.owner_decision,
+            actor=args.actor,
+            reason=args.reason,
+        )
+        try:
+            path = append_exception(args.plan_dir, exception)
+        except JournalValidationError as exc:
+            print(f"ERROR: schema exception не прошёл валидацию: {exc}", file=sys.stderr)
             return 1
         print(f"journal: exception append → {path}")
         return 0
+
     if args.cmd != "append":  # pragma: no cover - argparse уже гейтит choices
         return 1
     entry = new_entry(

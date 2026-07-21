@@ -10,7 +10,7 @@ items, phase handoff. Первый item (P1.1) — полностью запол
 Code Guidance = «—»; без неё пустой Code Guidance — дефект плана):
 
 ```text
-> СКЕЛЕТ — не детализирован, разворачивается /task:plan-design <ID> Pn
+> СКЕЛЕТ — не детализирован, разворачивается `design-phase: task:plan-design <ID> Pn`
 ```
 
 Опционально (режим **contract-first**, скилл `plan-protocol` §5) фаза дополнительно несёт

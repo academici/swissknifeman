@@ -1,0 +1,26 @@
+{
+  "contract_version": "1.0.0",
+  "command_ids": [
+    "task:design",
+    "task:dev",
+    "task:fix",
+    "task:make-workflow",
+    "task:research",
+    "task:review",
+    "task:plan-design",
+    "task:plan-exec",
+    "task:plan-run",
+    "task:plan-close",
+    "task:plan-audit"
+  ],
+  "invocations": {
+    "task:fix": "$ task:fix repair parser",
+    "task:plan-run": "$ task:plan-run 2026.07.19-DUAL-PROVIDER P4.2"
+  },
+  "negative_diagnostics": [
+    "CMD_CAPABILITY_UNSUPPORTED",
+    "CMD_MAPPING_MISSING",
+    "CMD_MAPPING_AMBIGUOUS",
+    "CMD_ROUTE_UNDERSHOOT"
+  ]
+}

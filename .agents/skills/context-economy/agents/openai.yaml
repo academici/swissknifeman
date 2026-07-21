@@ -1,0 +1,4 @@
+interface:
+  display_name: "Context Economy"
+  short_description: "Экономия контекста и маршрутизация моделей"
+  default_prompt: "Use $context-economy to reduce context and tool overhead."

@@ -1,0 +1,76 @@
+{
+  "catalog_version": "1.0.0",
+  "contract_version": "1.0.0",
+  "profiles": [
+    {
+      "allowed_target_scopes": ["project", "managed"],
+      "id": "observe",
+      "intent": "Read, check, and diagnose without activating executable project surfaces.",
+      "optional_surfaces": ["settings.audit", "doctor.environment", "doctor.provider"],
+      "required_surfaces": [],
+      "security": {
+        "approval_intent": "provider-read-check",
+        "explicit_operation_id": null,
+        "inheritable": false,
+        "sandbox_intent": "read-only",
+        "target_identity": null,
+        "trust_requirement": "not-required"
+      }
+    },
+    {
+      "allowed_target_scopes": ["project", "managed"],
+      "id": "workspace-contained",
+      "intent": "Operate autonomously only inside the explicit workspace and managed targets.",
+      "optional_surfaces": [],
+      "required_surfaces": ["settings.permissions", "security.safe-dirs"],
+      "security": {
+        "approval_intent": "provider-interactive-or-never",
+        "explicit_operation_id": null,
+        "inheritable": false,
+        "sandbox_intent": "workspace-contained",
+        "target_identity": null,
+        "trust_requirement": "trusted-project"
+      }
+    },
+    {
+      "allowed_target_scopes": ["project"],
+      "id": "trusted-full-access",
+      "intent": "Perform one named trusted operation using the provider-native full-access boundary.",
+      "optional_surfaces": [],
+      "required_surfaces": ["settings.permissions", "security.safe-dirs"],
+      "security": {
+        "approval_intent": "explicit-operation",
+        "explicit_operation_id": null,
+        "inheritable": false,
+        "sandbox_intent": "full-access",
+        "target_identity": null,
+        "trust_requirement": "trusted-repository"
+      }
+    }
+  ],
+  "surfaces": [
+    {"id": "settings.permissions", "intent": "Render named permission/settings presets without replacing user-owned values.", "kind": "settings", "required_capabilities": [], "secret_refs": [], "ownership": "harness.settings.permissions", "required": true},
+    {"id": "settings.audit", "intent": "Read layered settings and report named policy conformance.", "kind": "doctor", "required_capabilities": [], "secret_refs": [], "ownership": "harness.settings.audit", "required": false},
+    {"id": "security.safe-dirs", "intent": "Maintain a fail-closed destructive-operation allowlist.", "kind": "security", "required_capabilities": [], "secret_refs": [], "ownership": "harness.security.safe-dirs", "required": true},
+    {"id": "lifecycle.auto-approval", "intent": "Apply selected approval policy through a native lifecycle binding.", "kind": "lifecycle", "required_capabilities": [], "secret_refs": [], "ownership": "harness.lifecycle.auto-approval", "required": false},
+    {"id": "lifecycle.memory", "intent": "Activate selected memory lifecycle integration.", "kind": "lifecycle", "required_capabilities": [], "secret_refs": [], "ownership": "harness.lifecycle.memory", "required": false},
+    {"id": "lifecycle.notification", "intent": "Notify on provider-native waiting or approval events.", "kind": "lifecycle", "required_capabilities": [], "secret_refs": [], "ownership": "harness.lifecycle.notification", "required": false},
+    {"id": "lifecycle.command-log", "intent": "Record provider-native command execution evidence.", "kind": "lifecycle", "required_capabilities": [], "secret_refs": [], "ownership": "harness.lifecycle.command-log", "required": false},
+    {"id": "lifecycle.router", "intent": "Project semantic routing into native lifecycle activation.", "kind": "lifecycle", "required_capabilities": [], "secret_refs": [], "ownership": "harness.lifecycle.router", "required": false},
+    {"id": "lifecycle.run-report", "intent": "Capture a provider-qualified run report at a native lifecycle boundary.", "kind": "lifecycle", "required_capabilities": [], "secret_refs": [], "ownership": "harness.lifecycle.run-report", "required": false},
+    {"id": "lifecycle.pack-guard", "intent": "Guard managed agent-pack assets before mutation.", "kind": "lifecycle", "required_capabilities": [], "secret_refs": [], "ownership": "harness.lifecycle.pack-guard", "required": false},
+    {"id": "lifecycle.changelog-gate", "intent": "Gate declared release-sensitive operations.", "kind": "lifecycle", "required_capabilities": [], "secret_refs": [], "ownership": "harness.lifecycle.changelog-gate", "required": false},
+    {"id": "lifecycle.review-gate", "intent": "Gate declared review-sensitive lifecycle completion.", "kind": "lifecycle", "required_capabilities": [], "secret_refs": [], "ownership": "harness.lifecycle.review-gate", "required": false},
+    {"id": "lifecycle.daemon-safety", "intent": "Reject unsafe shared-daemon operations.", "kind": "lifecycle", "required_capabilities": [], "secret_refs": [], "ownership": "harness.lifecycle.daemon-safety", "required": false},
+    {"id": "lifecycle.git-guardrails", "intent": "Reject declared dangerous version-control operations.", "kind": "lifecycle", "required_capabilities": [], "secret_refs": [], "ownership": "harness.lifecycle.git-guardrails", "required": false},
+    {"id": "context.observer", "intent": "Activate the read-oriented observer context policy.", "kind": "context", "required_capabilities": [], "secret_refs": [], "ownership": "harness.context.observer", "required": false},
+    {"id": "context.output-style", "intent": "Select a provider-native output/context style.", "kind": "context", "required_capabilities": [], "secret_refs": [], "ownership": "harness.context.output-style", "required": false},
+    {"id": "context.plans-directory", "intent": "Declare the project plan directory through a native configuration binding.", "kind": "context", "required_capabilities": [], "secret_refs": [], "ownership": "harness.context.plans-directory", "required": false},
+    {"id": "mcp.catalog", "intent": "Render semantic MCP descriptors with secret references only.", "kind": "mcp", "required_capabilities": [], "secret_refs": [], "ownership": "harness.mcp.catalog", "required": false},
+    {"id": "agents.catalog", "intent": "Render semantic agent requirements into native targets.", "kind": "agents", "required_capabilities": [], "secret_refs": [], "ownership": "harness.agents.catalog", "required": false},
+    {"id": "agent-packs.lifecycle", "intent": "Render, check, upgrade, remove and diagnose locked packs.", "kind": "agent-packs", "required_capabilities": [], "secret_refs": [], "ownership": "harness.agent-packs.lifecycle", "required": false},
+    {"id": "workflows.status", "intent": "Read and report provider-qualified workflow run status.", "kind": "workflows", "required_capabilities": [], "secret_refs": [], "ownership": "harness.workflows.status", "required": false},
+    {"id": "doctor.environment", "intent": "Diagnose harness prerequisites without mutation.", "kind": "doctor", "required_capabilities": [], "secret_refs": [], "ownership": "harness.doctor.environment", "required": false},
+    {"id": "doctor.provider", "intent": "Compose named provider validators and catalog diagnostics.", "kind": "doctor", "required_capabilities": [], "secret_refs": [], "ownership": "harness.doctor.provider", "required": false}
+  ]
+}

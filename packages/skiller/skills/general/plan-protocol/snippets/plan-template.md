@@ -24,12 +24,12 @@
 | Version | 0.1.0 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
-| Authoring Model | opus |
+| Authoring Model | frontier |
 | Last Updated | <YYYY-MM-DD> |
 | Repository | <repo> |
 | Related Packages | <pkg1, pkg2> |
 | Execution Mode | phase-first |
-| Target Operator Models | sonnet (exec) · haiku (LOW) · opus (design/audit) |
+| Target Operator Classes | implementation (exec) · economy (LOW) · frontier (design/audit) |
 | Approval Owner | <человек, утверждающий план> |
 | Home | <необязательное: brain ИЛИ repo:путь — где живёт исполняемая копия, по умолчанию репо проекта, SKILL раздел 12> |
 | visibility | <необязательное: private ИЛИ public, дефолт private; public → в git только публичная выжимка, SKILL раздел 4> |
@@ -54,10 +54,10 @@ plan-protocol; не копировать его целиком. Минимум:>
 
 <ТОЛЬКО отклонения от SSOT-матрицы plan-protocol §9. Пусто = дефолты SSOT-матрицы §9.>
 
-| Items | Model/effort | Exec | Почему |
+| Items | Model class/effort | Exec | Почему |
 |:--|:--|:--|:--|
-| <Pn.m–Pn.k> | <fable/high> | manual | <расфриз public-контракта: effort high+ MANDATORY> |
-| <Pn.m–Pn.k> | <sonnet/low> | plan-exec | <doc-cleanup без новых решений> |
+| <Pn.m–Pn.k> | <frontier/high> | manual | <расфриз public-контракта: effort high+ MANDATORY> |
+| <Pn.m–Pn.k> | <implementation/low> | plan-exec | <doc-cleanup без новых решений> |
 
 ## 4. Phase Index & Status Board
 
@@ -76,7 +76,7 @@ plan-protocol; не копировать его целиком. Минимум:>
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
-| <YYYY-MM-DD> | issue-planner/opus | План создан |
+| <YYYY-MM-DD> | issue-planner/frontier | План создан |
 
 ## 7. Contracts
 

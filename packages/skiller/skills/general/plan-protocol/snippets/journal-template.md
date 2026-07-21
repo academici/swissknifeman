@@ -41,6 +41,23 @@ cost/turns/duration — `root/contracts/plan-journal-schema.md` §2–§2.2.
 (контракт §1) — ошибочная запись компенсируется НОВОЙ строкой с
 `friction:["deviation"]` + поясняющим `note`, не правкой задним числом.
 
+Компенсирующая event-строка не может сделать историческую schema-invalid строку валидной:
+`plan-lint` проверяет строки независимо. Для такого единственного случая нужен явный
+owner-gated sidecar (исходная строка остаётся byte-for-byte):
+
+```bash
+PYTHONPATH=packages/task/lib python3 -m task.journal exception \
+  --plan-dir plans/<PLAN-ID> --plan <PLAN-ID> --target-line <N> \
+  --invalid-fields friction --owner-decision <D#> --actor owner \
+  --reason "почему historical exception необходим и безопасен"
+```
+
+Хелпер дописывает `journal-exceptions.jsonl`: target фиксируется физическим номером и
+SHA-256 raw UTF-8 строки без newline; `invalid_fields` обязан точно совпадать с фактическими
+schema-ошибками. v1 допускает только `friction`. D# обязан существовать в `plan.md`; duplicate,
+hash mismatch, valid target и malformed JSON fail closed. Sidecar не является event/current-state
+carrier и не может ссылаться на себя, поэтому correction-цикл конструктивно невозможен.
+
 **Ручной бэкфилл (D22).** Датовый план от cutoff-даты (`plan_lint.py:JOURNAL_CANON_DATE`)
 без валидного `journal.jsonl` — ERROR. Бэкфилл закрытых до канона item'ов — РЕАЛЬНЫЕ
 записи (actor/result/note по факту Update Log плана), не заглушка на пустом файле.

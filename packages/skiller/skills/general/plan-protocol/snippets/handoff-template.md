@@ -11,40 +11,46 @@
 | `# HANDOFF — <YYYY-MM-DD> — after Pn.m` | закрыт item |
 | `# HANDOFF — <YYYY-MM-DD> — after Pn` | закрыта/проаудирована/ре-дизайнена ФАЗА — шаг без «последнего закрытого item'а» как адресата |
 
-**Поле `Context`** launch-block'а — закрытый enum трёх значений (SKILL §8): `continue
-(/clear) — ручной item` · `NEW SESSION — Workflow-оркестрован` · `NEW SESSION —
-шаг-не-item` (`plan-audit`/`plan-close`/`plan-design`). Статичное «рекомендован /clear»
+**Поле `Context`** launch-block'а — закрытый enum трёх значений (SKILL §8):
+`same-session — item` · `cold-start — orchestration` · `cold-start — plan-step`
+(`plan-audit`/`plan-close`/`plan-design`). Статичное «рекомендован /clear»
 независимо от типа следующего шага — запрещено.
 
 Next обязан нести launch-block (полная форма и правила cold-start —
 `snippets/launch-block-template.md`, SKILL раздел 8): таблица параметров запуска
-+ голая команда одним code-block. `plan-lint` проверяет их наличие (warning).
++ provider-rendered invocation одним code-block. `plan-lint` проверяет их наличие.
 
 **Формы `Next`** — закрытый enum (иная форма = ERROR линтера; канон — SKILL §8):
 
 | Форма Next | Когда |
 |:--|:--|
-| `/task:plan-exec <ID> Pn.m` | следующий item детализирован, Exec = plan-exec (§9) |
-| `/task:plan-design <ID> Pn` | следующая фаза — скелет |
-| `/task:plan-design <ID> Pn.m` | item эскалирован (🔴) либо требует ре-дизайна |
-| `/task:plan-audit <ID> Pn` | фаза Pn закрыта (терминальна) — аудит перед следующей |
-| `/task:plan-close <ID> Pn[.m]` | items терминальны: закрыть фазу / сверить item |
-| `/task:plan-close archive <ID>` | план терминален целиком |
-| «план закрыт» | все items терминальны, следующий шаг вне протокола |
-| «ЗАПУСК ВРУЧНУЮ: `<model/effort>`» | Exec = manual (§9): команды нет — launch-block несёт модель и ГОЛЫЙ ПРОМПТ item'а |
-| «ОЖИДАНИЕ: `<условие>` → `<целевая форма>`» | шаг реален, но неисполним сейчас (time-gate/накопление данных/кросс-план-гейт не терминален) — launch-block несёт целевую команду с guard-строкой `# НЕ раньше:` (SKILL §8, D8) |
+| `exec-items: task:plan-exec <ID> Pn.m` | следующий item детализирован, Exec = plan-exec (§9) |
+| `run-items: task:plan-run <ID> Pn.a[-Pn.b]` | manual-item(ы) под проверенным inherited-plan route |
+| `audit-design: task:plan-audit <ID> design` | pre-exec аудит дизайна |
+| `design-phase: task:plan-design <ID> Pn` | следующая фаза — скелет |
+| `design-item: task:plan-design <ID> Pn.m` | item эскалирован (🔴) либо требует ре-дизайна |
+| `audit-phase: task:plan-audit <ID> Pn` | фаза Pn закрыта (терминальна) — аудит перед следующей |
+| `close: task:plan-close <ID> Pn[.m]` | items терминальны: закрыть фазу / сверить item |
+| `archive: task:plan-close archive <ID>` | план терминален целиком |
+| `terminal: план закрыт` | все items терминальны, следующий шаг вне протокола |
+| `manual: <model-class/effort>` | Exec = manual (§9): команды нет — launch-block несёт route и ГОЛЫЙ ПРОМПТ item'а |
+| `waiting: <условие> → <целевая semantic форма>` | шаг реален, но неисполним сейчас — launch-block несёт целевой carrier с guard-строкой `# НЕ раньше:` |
+
+Historical `/task:…` declarations remain compatibility inputs. New plans write the semantic
+form above; provider renderers emit Claude `/task:…` or Codex `$ task:…` without changing payload.
 
 Форма «ЗАПУСК ВРУЧНУЮ» (item с Exec = manual — модель выше пина `plan-exec`):
 
 `````markdown
-**Next:** ЗАПУСК ВРУЧНУЮ: opus/high — Pn.m (§3 Routing: Exec = manual; `/task:plan-exec`
-пинит sonnet/medium и по routing-гейту §9 обязан отказать)
+**Next:** manual: frontier/high — Pn.m (§3 Routing: Exec = manual;
+`task:plan-exec` minimum implementation/medium обязан отказать)
 
 | Параметр | Значение |
 |:--|:--|
-| Model | opus |
-| Thinking | high — <почему high+ MANDATORY по §9> |
-| Context | continue (/clear) — ручной item |
+| Model class | frontier |
+| Effort | high — <почему high+ MANDATORY по §9> |
+| Capabilities | — |
+| Context | same-session — item |
 | Суть | <1 строка> |
 
 ````
@@ -56,35 +62,37 @@ Next обязан нести launch-block (полная форма и прави
 терминален; условие структурно, launch-block несёт целевую команду с guard-строкой):
 
 `````markdown
-**Next:** ОЖИДАНИЕ: ≥2026-07-16 (baseline usage-trend ≥1–2 недель) → /task:plan-exec <ID> P8.5
+**Next:** waiting: ≥2026-07-16 (baseline usage-trend ≥1–2 недель) → exec-items: task:plan-exec <ID> P8.5
 
 | Параметр | Значение |
 |:--|:--|
-| Model | sonnet |
-| Thinking | medium |
-| Context | continue (/clear) — ручной item |
+| Model class | implementation |
+| Effort | medium |
+| Capabilities | — |
+| Context | same-session — item |
 | Суть | <1 строка: что сделает целевой шаг по снятии гейта> |
 
 ````
 # НЕ раньше: baseline usage-trend ≥1–2 недель, ≥2026-07-16
-/task:plan-exec <ID> P8.5 — <cold-start: пути входных доков + утверждение гейта>
+<provider-rendered invocation for `exec-items: task:plan-exec <ID> P8.5`>
 ````
 `````
 
 `````markdown
 # HANDOFF — <YYYY-MM-DD> — after Pn.m
 
-**Next:** /task:plan-exec <PLAN-ID> Pn.k
+**Next:** exec-items: task:plan-exec <PLAN-ID> Pn.k
 
 | Параметр | Значение |
 |:--|:--|
-| Model | <модель> |
-| Thinking | <effort> |
-| Context | <enum §8: continue (/clear) — ручной item · NEW SESSION — Workflow-оркестрован · NEW SESSION — шаг-не-item> |
+| Model class | <economy / implementation / frontier> |
+| Effort | <low / medium / high / xhigh> |
+| Capabilities | <semantic capability IDs; `—` если дополнительных нет> |
+| Context | <enum §8: same-session — item · cold-start — orchestration · cold-start — plan-step> |
 | Суть | <1 строка: что делает следующий запуск> |
 
 ````
-/task:plan-exec <PLAN-ID> Pn.k — <cold-start: пути входных доков + утверждение гейта, если гейтится>
+<provider-rendered invocation for `task:plan-exec <PLAN-ID> Pn.k`; cold-start payload не менять>
 ````
 
 **Done:** <что закрыто с прошлого handoff: items, фазы, решения>

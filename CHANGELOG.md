@@ -4,6 +4,15 @@
 
 ### Added
 
+- **harness/core — dual-provider environment and instruction projections.** Provider-neutral
+  profile, security, hook, MCP, agent and instruction catalogs now render independent native
+  Claude/Codex artifacts. Artifact contract v1.1.0 preserves generic semantic metadata in the
+  authoritative lock while exact v1.0.0 callers and records remain supported.
+- **task — dual-provider command surface.** Immutable semantic command catalog,
+  generated Codex adapters, byte-compatible Claude projection, fail-closed neutral
+  routing and exhaustive parity/operator reference for the full task inventory.
+- **skiller — `plan-protocol` 2.11.0.** Semantic `Next`, model class/effort/capability
+  gates and provider-rendered Claude/Codex invocations are now provider-neutral.
 - **skiller:** provider-aware Claude/Codex distribution preflight, provider-qualified
   vendor locks and explicit `skiller codex-install`; normal connect/update/doctor and
   dry-runs never invoke the native user-global installer.

@@ -1,44 +1,40 @@
-# HANDOFF — 2026-07-21 — after P3
+# HANDOFF — 2026-07-21 — after P5
 
-**Next:** `/task:plan-audit 2026.07.19-DUAL-PROVIDER P3`
+**Next:** audit-phase: task:plan-audit 2026.07.19-DUAL-PROVIDER P5
 
 | Параметр | Значение |
 |:--|:--|
-| Model | gpt-5.6-sol |
-| Thinking | xhigh — independent release-quality verdict |
-| Context | NEW SESSION — шаг-не-item |
-| Суть | Fresh independent G03 audit P3 before the P1–P3 review PR. |
+| Model class | frontier |
+| Effort | xhigh |
+| Capabilities | command.filesystem-read · command.git-read |
+| Context | cold-start — plan-step |
+| Суть | Fresh independent read-only P5 audit from the terminal close commit; P6 remains unopened. |
 
 ```text
-Conduct only fresh independent G03 audit P3 for 2026.07.19-DUAL-PROVIDER on gpt-5.6-sol/xhigh.
-
-Read AGENTS.md, CLAUDE.md, plan.md, handoff.md, phases/P3.md, frozen
-root/contracts/provider-skill-publication-contract.md, P3 artifacts/research, and commits
-P3.1–P3.5 including D80 `1992061`, D83 `f947d77` and rerun `bcd353c`. Independently verify
-semantic publication inventory, Claude byte compatibility, Codex cache-contained projections,
-and pre-write fail-closed unmanaged/drift/corrupt-lock behavior without user-global/live writes.
-Confirm terminal `packages/skiller/scripts/validate.sh` and registry evidence. Preserve
-unrelated owner dirt; do not change frozen contracts, P4+, root `.agents/skills`, FOREMAN,
-fleet or user-global Codex state. Record only audit evidence/verdict. RED returns to owning P3;
-GREEN permits the P1–P3 review PR, after which P4 is a new-session task.
+$ task:plan-audit 2026.07.19-DUAL-PROVIDER P5
 ```
 
-**Done:** P3 is terminal: D83 P3.3 repair `f947d77` regenerated the stale Codex core cache/lock
-and added a focused regression; P3.5 reran independent inventory/channel parity on `bcd353c`.
-Terminal `bash packages/skiller/scripts/validate.sh` passed (408 tests; 67 inherited warnings)
-and `./packages/skiller/bin/skiller registry --check` passed in a clean isolated worktree.
+**Done:** P5.1–P5.7 are terminal GREEN. Audit attempt 1's `_common/orchestrator` P2 identity
+finding is repaired without changing valid legacy IDs; all supported Claude/Codex artifacts
+pass independent create→apply→noop lifecycles. The phase delivers provider-neutral harness and
+instruction contracts/catalogs, independent native Claude/Codex projections, fail-closed P2
+ownership/provenance, D87 artifact v1.1 semantic metadata, and actual generated/installed
+consumer conformance. The post-repair terminal task/skiller/harness cycle, worktree-local
+registry check, target lint without new errors, diff check and protected delta check passed.
 
-**Remaining:** fresh independent G03 audit → P1–P3 review PR only after literal GREEN. P4
-remains a new session after audit and PR.
+**Remaining:** exactly one fresh independent terminal P5 audit attempt 2 and its append-only verdict.
+P6 stays unopened; no live apply, FOREMAN/fleet mutation or push is authorized by this close.
 
-**Sources of truth:** `phases/P3.md` P3.3/P3.5 and Audit P3; D83 in `plan.md`; `research/21-p3-codex-core-registry-remediation.md`; frozen `root/contracts/provider-skill-publication-contract.md`; `packages/skiller/lib/skiller/{publication,registry}.py`.
+**Sources of truth:** `phases/P5.md` Phase Handoff; `root/contracts/provider-harness-contract.md`
+D85; `root/contracts/provider-instruction-contract.md` D86; `root/contracts/provider-artifact-contract.md`
+D87; `artifacts/P5-{harness,instruction}-conformance.md`; terminal close commit.
 
-**Open risks:** G03 remains the release-quality gate for P3; RED returns to the owning P3 seam
-under D80/D81. The 67 validation warnings are inherited, documented warnings rather than
-validation failures. Existing unrelated owner dirt remains excluded from audit and PR staging.
+**Open risks:** Package `AGENTS.md` targets remain deliberately absent/live-unmanaged until a
+later explicitly authorized phase. Target plan-lint retains two pre-existing warnings and no
+new errors.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: none; `registry --check` remains the drift gate.
-- deferred: P1–P3 review PR after G03 GREEN; P4 is a new-session task.
+- workarounds: item-level process deviations are aggregated verbatim in `phases/P5.md`.
+- deferred: P6 and all live/self-host operations.
 - open_questions: none.

@@ -1,17 +1,16 @@
 # HANDOFF — 2026-07-18 — after P1.3
 
-**Next:** /task:plan-run 2026.07.18-FOREMAN P1.4 (P1.4 — Exec=manual sonnet/high по §3 Routing
-и roadmap; **contribution в пакет task/skiller** — owner-гейт; исполняется ИЗ репо swissknifeman,
-§12: код-коммит+bookkeeping в репо, синк в Brain штатным `brain sync`)
+**Next:** ОЖИДАНИЕ: `2026.07.19-DUAL-PROVIDER` P7.4 GREEN + provider-neutral runner reconcile → /task:plan-run 2026.07.18-FOREMAN P1.4
 
 | Параметр | Значение |
 |:--|:--|
 | Model | Sonnet |
 | Thinking | high — контрибьюция в канон plan-protocol (SKILL.ru.md/SKILL.md/lint/snippets), нужен обзор владельца |
 | Context | continue (/clear) — ручной item; запускать ИЗ `~/projects/packages/swissknifeman` (SSOT плана при exec P1.4 = репо, §12) |
-| Суть | Exec P1.4 — внести журнал+индекс в канон plan-protocol (SKILL.ru.md §2 + версия v2.9.0), регенерировать EN-канон, добавить lint-гейт журнала/индекса (soft/hard по cutoff D22), snippets journal/index-template, bootstrap `journal.jsonl` этого плана |
+| Суть | После снятия dual-provider gate выполнить P1.4 и reconcile канона с provider-neutral task command contract |
 
 ```
+# НЕ раньше: plans/2026.07.19-DUAL-PROVIDER P7.4 имеет GREEN verdict и зафиксирован runner reconcile
 /task:plan-run 2026.07.18-FOREMAN P1.4
 ```
 

@@ -30,6 +30,11 @@ import os
 import re
 import stat
 import subprocess
+from dataclasses import dataclass
+from pathlib import Path
+
+from core import (ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource,
+                  ArtifactTarget, ProviderId, plan_artifact_render, sha256_digest)
 
 from .common import die, parse_flags, safe_load_json, sanitize, warn
 from .settings import add_hook, load_settings, write_json, write_text
@@ -836,3 +841,300 @@ def cmd_agent_packs(env, argv):
                                    shell_policy=shell_policy))
 
     die(f"неизвестная подкоманда agent-packs: {sub}")
+
+
+# P5.4 provider projection seam. The role catalog is the semantic source; the
+# established Claude lifecycle and templates above are compatibility consumers.
+@dataclass(frozen=True)
+class AgentRole:
+    pack_id: str
+    role_id: str
+    description_lines: tuple[str, ...]
+    content: str
+    skills: tuple[str, ...]
+    tool_requirements: tuple[str, ...]
+    command_ids: tuple[str, ...]
+    model_class: str
+    activation_requirements: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class AgentProjection:
+    provider_id: str
+    target_path: str
+    rendered: bytes
+    diagnostic: str | None = None
+
+
+_ROLE_FIELDS = {"pack_id", "role_id", "description_lines", "content", "skills",
+                "tool_requirements", "command_ids", "model_class", "activation_requirements"}
+_COMMON_FORBIDDEN = re.compile(
+    r"\.claude(?:/|\b)|(?<![\w-])/(?:task:[a-z-]+|effort|clear)\b|"
+    r"\bWorkflow\b|\bSubagentStop\b|(?<![\w-])(?:Read|Grep|Glob|Bash|Edit|Write|"
+    r"Haiku|Sonnet|Opus)(?![\w-])")
+_TOKEN = re.compile(r"\{\{token:([a-z-]+)\}\}")
+_MODEL_SELECTORS = {"economy": "gpt-5.6-luna", "implementation": "gpt-5.6-terra",
+                    "frontier": "gpt-5.6-sol"}
+_CLAUDE_TOKENS = {
+    "agent-roster": "`.claude/agents/{{PACK_PREFIX}}-*.md` (Glob/Read)",
+    "managed-role-override-pattern": "`.claude/rules/*-overrides.md`",
+    "managed-role-override": "`.claude/rules/{{PACK_PREFIX}}-reviewer-overrides.md`",
+    "background-orchestration": "**фоновый** Workflow `{{PACK_PREFIX}}-dev-loop` (не пошагово\nв основном контексте)",
+    "tool-read": "Read", "tool-grep": "Grep", "tool-glob": "Glob",
+    "tool-shell": "Bash", "tool-edit": "Edit", "tool-write": "Write",
+    "model-economy": "Haiku", "model-implementation": "Sonnet", "model-frontier": "Opus",
+}
+_CODEX_TOKENS = {
+    "agent-roster": "`.codex/agents/{{PACK_PREFIX}}-*.toml`",
+    "managed-role-override-pattern": "`.codex/agents/*-overrides.toml`",
+    "managed-role-override": "`.codex/agents/{{PACK_PREFIX}}-reviewer-overrides.toml`",
+    "tool-read": "filesystem-read capability", "tool-grep": "filesystem-search capability",
+    "tool-glob": "filesystem-search capability", "tool-shell": "shell-execute capability",
+    "tool-edit": "file-edit capability", "tool-write": "filesystem-write capability",
+    "model-economy": "economy model class", "model-implementation": "implementation model class",
+    "model-frontier": "frontier model class",
+}
+_CLAUDE_TOOLS = {
+    "command.filesystem-read": "Read", "agent.tool.search": "Grep, Glob",
+    "agent.tool.edit": "Edit", "command.filesystem-write": "Write",
+    "agent.tool.shell-execute": "Bash",
+}
+
+
+def load_agentpack_catalog(path):
+    """Load the common role source without reading any provider consumer."""
+    value = safe_load_json(Path(path), default=None)
+    if not isinstance(value, dict) or set(value) != {"catalog_version", "roles"}:
+        raise ValueError("HARNESS_CATALOG_MISMATCH")
+    rows = value["roles"]
+    if value["catalog_version"] != "1.0.0" or not isinstance(rows, list):
+        raise ValueError("HARNESS_VERSION_UNSUPPORTED")
+    result, seen = [], set()
+    for row in rows:
+        if not isinstance(row, dict) or set(row) != _ROLE_FIELDS:
+            raise ValueError("HARNESS_CATALOG_MISMATCH")
+        key = (row["pack_id"], row["role_id"])
+        list_fields = ("skills", "tool_requirements", "command_ids", "activation_requirements")
+        if (key in seen or row["model_class"] not in _MODEL_SELECTORS
+                or not all(isinstance(row.get(field), str) and row[field] for field in
+                           ("pack_id", "role_id", "content"))
+                or not isinstance(row["description_lines"], list)
+                or not row["description_lines"]
+                or not all(isinstance(item, str) for item in row["description_lines"])
+                or not all(isinstance(row[field], list)
+                           and all(isinstance(item, str) and item for item in row[field])
+                           for field in list_fields)
+                or _COMMON_FORBIDDEN.search(row["content"])):
+            raise ValueError("HARNESS_CATALOG_MISMATCH")
+        if set(_TOKEN.findall(row["content"])) - set(_CLAUDE_TOKENS):
+            raise ValueError("HARNESS_MAPPING_MISSING")
+        seen.add(key)
+        result.append(AgentRole(row["pack_id"], row["role_id"], tuple(row["description_lines"]),
+                                row["content"], tuple(row["skills"]),
+                                tuple(row["tool_requirements"]), tuple(row["command_ids"]),
+                                row["model_class"], tuple(row["activation_requirements"])))
+    if not result:
+        raise ValueError("HARNESS_CATALOG_MISMATCH")
+    return tuple(result)
+
+
+def semantic_agent_roles(catalog_path):
+    return load_agentpack_catalog(catalog_path)
+
+
+def expected_agent_inventory(env):
+    """Manifest-derived independent expected set; renderer output cannot define it."""
+    result = []
+    for pack in list_packs(env):
+        for entry in load_manifest(env, pack).get("files", []):
+            if entry.get("role") == "agent":
+                result.append((pack, Path(entry["src"]).stem))
+    if len(result) != len(set(result)):
+        raise ValueError("HARNESS_CATALOG_MISMATCH")
+    return tuple(sorted(result))
+
+
+def compare_agent_inventory(roles, expected):
+    observed = [(role.pack_id, role.role_id) for role in roles]
+    return {"missing": tuple(sorted(set(expected) - set(observed))),
+            "extra": tuple(sorted(set(observed) - set(expected))),
+            "duplicates": tuple(sorted({item for item in observed if observed.count(item) > 1}))}
+
+
+def _resolve_tokens(role, provider_id):
+    mapping = _CLAUDE_TOKENS if provider_id == "claude-code" else _CODEX_TOKENS
+    def replace(match):
+        try:
+            return mapping[match.group(1)]
+        except KeyError as error:
+            raise ValueError("HARNESS_ACTIVATION_UNSUPPORTED") from error
+    return _TOKEN.sub(replace, role.content)
+
+
+def load_claude_role_bindings(path, roles):
+    value = safe_load_json(Path(path), default=None)
+    if not isinstance(value, dict) or set(value) != {"binding_version", "roles"}:
+        raise ValueError("HARNESS_CATALOG_MISMATCH")
+    if value["binding_version"] != "1.0.0" or not isinstance(value["roles"], list):
+        raise ValueError("HARNESS_VERSION_UNSUPPORTED")
+    result = {}
+    for row in value["roles"]:
+        if not isinstance(row, dict) or set(row) != {"pack_id", "role_id", "model_selector", "color"}:
+            raise ValueError("HARNESS_CATALOG_MISMATCH")
+        key = (row["pack_id"], row["role_id"])
+        if (key in result or not all(isinstance(row[field], str) and row[field]
+                                     for field in row)):
+            raise ValueError("HARNESS_CATALOG_MISMATCH")
+        result[key] = (row["model_selector"], row["color"])
+    expected = {(role.pack_id, role.role_id) for role in roles}
+    if set(result) != expected:
+        raise ValueError("HARNESS_CATALOG_MISMATCH")
+    return result
+
+
+def agent_model_trace(roles, bindings_path, env):
+    """Independently trace common classes to Claude selectors and pack defaults."""
+    value = safe_load_json(Path(bindings_path), default=None)
+    if not isinstance(value, dict) or value.get("binding_version") != "1.0.0":
+        raise ValueError("HARNESS_VERSION_UNSUPPORTED")
+    rows = value.get("roles")
+    if not isinstance(rows, list):
+        raise ValueError("HARNESS_CATALOG_MISMATCH")
+    bound, duplicates = {}, set()
+    for row in rows:
+        if not isinstance(row, dict) or set(row) != {"pack_id", "role_id", "model_selector", "color"}:
+            raise ValueError("HARNESS_CATALOG_MISMATCH")
+        key = (row["pack_id"], row["role_id"])
+        if key in bound:
+            duplicates.add(key)
+        bound[key] = row["model_selector"]
+    expected = {(role.pack_id, role.role_id): role for role in roles}
+    report = {"missing": tuple(sorted(set(expected) - set(bound))),
+              "extra": tuple(sorted(set(bound) - set(expected))),
+              "duplicates": tuple(sorted(duplicates)), "unknown_selector": (),
+              "model_class_mismatch": ()}
+    unknown, mismatch = [], []
+    classes = {"haiku": "economy", "sonnet": "implementation", "inherit": "implementation",
+               "opus": "frontier"}
+    for key in sorted(set(expected) & set(bound)):
+        selector = bound[key]
+        match = re.fullmatch(r"\{\{([A-Z0-9_]+)\}\}", selector)
+        if match:
+            defaults = {row["id"]: row.get("default")
+                        for row in load_manifest(env, key[0]).get("interview", [])}
+            selector = defaults.get(match.group(1))
+        if selector not in classes:
+            unknown.append((key[0], key[1], selector))
+            continue
+        if expected[key].model_class != classes[selector]:
+            mismatch.append((key[0], key[1], expected[key].model_class, classes[selector]))
+    return {**report, "unknown_selector": tuple(unknown),
+            "model_class_mismatch": tuple(mismatch)}
+
+
+def _claude_frontmatter(role, binding):
+    """Map semantic requirements to Claude syntax; no legacy template is consulted."""
+    try:
+        tools = ", ".join(_CLAUDE_TOOLS[item] for item in role.tool_requirements)
+    except KeyError as error:
+        raise ValueError("HARNESS_MAPPING_MISSING") from error
+    model_selector, color = binding[(role.pack_id, role.role_id)]
+    lines = ["---", f"name: {{{{PACK_PREFIX}}}}-{role.role_id}", "description: >-"]
+    lines.extend("  " + line if line else "" for line in role.description_lines)
+    lines.append(f"tools: {tools}")
+    if role.skills:
+        lines.append("skills:")
+        lines.extend(f"  - {skill}" for skill in role.skills)
+    lines.extend((f"model: {model_selector}", f"color: {color}", "---", ""))
+    return "\n".join(lines)
+
+
+def project_agent_role(role, provider_id, *, claude_bindings=None, pack_prefix=None):
+    """Render named consumers from the semantic record, never from a provider output."""
+    if provider_id == "claude-code":
+        if claude_bindings is None:
+            raise ValueError("HARNESS_MAPPING_MISSING")
+        target = f".claude/agents/{{{{PACK_PREFIX}}}}-{role.role_id}.md"
+        rendered = (_claude_frontmatter(role, claude_bindings) + _resolve_tokens(role, provider_id)).encode("utf-8")
+    elif provider_id == "codex":
+        if "command.workflow-carrier" in role.activation_requirements:
+            raise ValueError("HARNESS_ACTIVATION_UNSUPPORTED:codex:command.workflow-carrier:P4")
+        target = f".codex/agents/{{{{PACK_PREFIX}}}}-{role.role_id}.toml"
+        model = _MODEL_SELECTORS[role.model_class]
+        skills = ", ".join(json.dumps(item, ensure_ascii=False) for item in role.skills)
+        commands = ", ".join(json.dumps(item, ensure_ascii=False) for item in role.command_ids)
+        rendered = (f'name = {json.dumps(role.pack_id + "-" + role.role_id)}\n'
+                    f'model = {json.dumps(model)}\n'
+                    f'skills = [{skills}]\n'
+                    f'command_requirements = [{commands}]\n'
+                    f'developer_instructions = {json.dumps(_resolve_tokens(role, provider_id), ensure_ascii=False)}\n').encode("utf-8")
+    else:
+        raise ValueError("HARNESS_MAPPING_MISSING")
+    if pack_prefix is not None:
+        target = target.replace("{{PACK_PREFIX}}", pack_prefix)
+        rendered = rendered.replace(b"{{PACK_PREFIX}}", pack_prefix.encode("utf-8"))
+    return AgentProjection(provider_id, target, rendered)
+
+
+_ARTIFACT_ID_SEGMENT = re.compile(r"^[a-z][a-z0-9-]*$")
+
+
+def _artifact_identity_component(value):
+    """Preserve valid segments; encode only semantic values P2 cannot represent."""
+    if _ARTIFACT_ID_SEGMENT.fullmatch(value):
+        return value
+    return "encoded-" + value.encode("utf-8").hex()
+
+
+def _agent_artifact_id(role, provider_id):
+    return (f"harness.{provider_id}.agent.{_artifact_identity_component(role.pack_id)}."
+            f"{_artifact_identity_component(role.role_id)}")
+
+
+def _validate_agent_artifact_ids(roles, provider_id):
+    artifact_ids = tuple(_agent_artifact_id(role, provider_id) for role in roles)
+    if len(artifact_ids) != len(set(artifact_ids)):
+        raise ValueError("HARNESS_CATALOG_MISMATCH:agent-artifact-id-collision")
+
+
+def plan_agent_artifact(role, *, provider_id, catalog_path, claude_bindings_path=None,
+                        claude_bindings=None, pack_prefix=None):
+    catalog_roles = semantic_agent_roles(catalog_path)
+    catalog_role = next((candidate for candidate in catalog_roles
+                         if (candidate.pack_id, candidate.role_id)
+                         == (role.pack_id, role.role_id)), None)
+    if catalog_role != role:
+        raise ValueError("HARNESS_CATALOG_MISMATCH")
+    _validate_agent_artifact_ids(catalog_roles, provider_id)
+    if provider_id == "claude-code" and claude_bindings is None:
+        claude_bindings = load_claude_role_bindings(claude_bindings_path, catalog_roles)
+    projection = project_agent_role(role, provider_id, claude_bindings=claude_bindings,
+                                    pack_prefix=pack_prefix)
+    source = ArtifactSource("harness.agent-role.catalog",
+                            "packages/harness/configs/common/agent-packs/roles.json",
+                            sha256_digest(Path(catalog_path).read_bytes()))
+    sources = (source,)
+    if provider_id == "claude-code":
+        sources += (ArtifactSource("harness.claude.agent-bindings",
+                                   "packages/harness/configs/claude-code/agent-packs/role-bindings.json",
+                                   sha256_digest(Path(claude_bindings_path).read_bytes())),)
+    identity = ArtifactAdapterIdentity(f"harness.{provider_id}.agent", "1.0.1",
+                                       ProviderId(provider_id), "1.0.0", ())
+    return plan_artifact_render(ArtifactRenderRequest(
+        _agent_artifact_id(role, provider_id), sources,
+        ArtifactTarget(projection.target_path, ("whole-file", ())), identity, (),
+        {"pack_id": role.pack_id, "role_id": role.role_id, "model_class": role.model_class,
+         "command_ids": list(role.command_ids), "pack_prefix": pack_prefix or "template"},
+        lambda _request: projection.rendered, contract_version="1.1.0"))
+
+
+def classify_agent_projection(*, managed: bool, observed: bytes | None, expected: bytes,
+                              user_owned: bool = False):
+    """Keep P2-style no-adoption and managed-drift states visible for both targets."""
+    if user_owned:
+        return "ownership-conflict"
+    if observed is None:
+        return "missing"
+    if not managed:
+        return "ownership-conflict"
+    return "clean" if observed == expected else "managed-drift"

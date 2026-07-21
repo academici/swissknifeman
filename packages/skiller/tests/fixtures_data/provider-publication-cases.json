@@ -1,0 +1,13 @@
+{
+  "contract_version": "1.0.0",
+  "cases": [
+    "semantic-inventory",
+    "claude-codex-projection",
+    "vendor-dry-run-and-idempotence",
+    "unmanaged-target-no-write",
+    "managed-drift-repair",
+    "corrupt-lock-no-write",
+    "native-install-default-no-subprocess",
+    "protected-path-no-write"
+  ]
+}

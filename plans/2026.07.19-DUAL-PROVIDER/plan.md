@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.4.16 |
+| Version | 1.4.17 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
@@ -121,7 +121,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P1 | Provider config/domain и backward-compatible resolution | 6/6 | 🟢 Done |
 | P2 | Deterministic adapters, provenance, lock и drift engine | 5/5 | 🟢 Done |
 | P3 | Dual skills publication и marketplaces | 5/5 | 🟢 Done |
-| P4 | Task-command parity и provider-neutral model routing | 1/5 | 🟡 In progress |
+| P4 | Task-command parity и provider-neutral model routing | 2/5 | 🟡 In progress |
 | P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 0/7 | ⬜ Not started |
 | P6 | mAInd deployment, memory и provider-neutral analytics | 0/6 | ⬜ Not started |
 | P7 | Docs, self-hosting validation и FOREMAN release gate | 0/4 | ⬜ Not started |
@@ -219,6 +219,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-21 | plan-run/Codex gpt-5.6-terra high | P4.2 закрыт: immutable command catalog и generated cache-contained Codex task adapters добавлены — детали см. phases/P4.md P4.2 Completion Notes. |
 | 2026-07-21 | plan-run/Codex gpt-5.6-sol xhigh | P4.1 закрыт: D84 заморозил command/routing v1.0.0 и reconciled exact canonical inventory including `make-workflow` — детали см. phases/P4.md P4.1 Completion Notes. |
 | 2026-07-21 | plan-close/Codex gpt-5.6-terra high | P3 повторно закрыта после D83: terminal publication/distribution/parity evidence, full skiller validation и clean-tree registry check сверены; далее fresh G03 audit — детали см. phases/P3.md Phase Handoff. |
 | 2026-07-21 | plan-exec/Codex gpt-5.6-terra medium | P3.5 повторно закрыт после D83: независимый inventory/channel-parity rerun зелёный без изменения fixtures или publication outputs — детали см. phases/P3.md P3.5 Completion Notes. |

@@ -1,38 +1,39 @@
-# HANDOFF — 2026-07-21 — after P4.1
+# HANDOFF — 2026-07-21 — after P4.2
 
-**Next:** «ЗАПУСК ВРУЧНУЮ: gpt-5.6-terra/high»
+**Next:** «ЗАПУСК ВРУЧНУЮ: gpt-5.6-terra/medium»
 
 | Параметр | Значение |
 |:--|:--|
 | Model | gpt-5.6-terra |
-| Thinking | high — prescribed shared-package implementation |
+| Thinking | medium — deterministic Claude compatibility projection |
 | Context | continue (/clear) — ручной item |
-| Суть | Execute only P4.2 against frozen D84 in a fresh clean item worktree. |
+| Суть | Execute only P4.3 from the terminal P4.2 catalog/renderer seam. |
 
 ```text
-Execute only P4.2 of plan 2026.07.19-DUAL-PROVIDER on gpt-5.6-terra/high in a fresh clean worktree based on the committed P4.1 tree.
+Execute only P4.3 of plan 2026.07.19-DUAL-PROVIDER on gpt-5.6-terra/medium in a fresh clean worktree based on the committed P4.2 tree.
 
-Read plan.md → handoff.md → phases/P4.md → P4.2 Required Reads in exact order. Apply package-contribution-protocol before package edits. Build only the immutable command catalog and generated Codex adapters against frozen D84/provider contracts, including the exact canonical `make-workflow` member. Preserve root `.agents/skills`, Claude outputs, live/user-global config, FOREMAN, fleet, owner dirt and P4.3+. Run only P4.2 narrow validation; terminal full task/skiller validation remains P4.5. Close/bookkeep P4.2 with explicit paths and report only commit, seam and test facts.
+Read plan.md → handoff.md → phases/P4.md → P4.3 Required Reads in exact order. Preserve the terminal P4.2 Codex projection and frozen D84 routing contract. Capture the committed pre-P4.3 Claude surface independently, then add only the named Claude catalog projection and byte/literal compatibility tests declared by P4.3. Preserve root `.agents/skills`, Codex generated outputs, live/user-global config, FOREMAN, fleet, owner dirt and P4.4+. Run only P4.3 narrow validation; terminal full task/skiller validation remains P4.5. Close/bookkeep P4.3 with explicit paths and report only commit, seam and test facts.
 ```
 
-**Done:** P4.1 froze `root/contracts/provider-command-routing-contract.md` v1.0.0 through
-delegated Approval D84; the approved review is
-`artifacts/P4-command-routing-contract-review.md`. Bundled item/bookkeeping commit:
-`a832898` (bundled substantive item/bookkeeping commit; recorded by this immediate mechanical hash fix).
+**Done:** P4.2 added the immutable exact-set semantic command catalog, frozen provider mappings,
+generated cache-contained Codex wrappers/runtime snapshots, task Codex plugin descriptor and
+P2 provenance/lock/check/repair integration. Focused tests are green for all 11 commands and
+24 rendered artifacts. The bundled substantive item/bookkeeping commit is recorded by the
+immediate mechanical hash fix.
 
-**Remaining:** P4.2 → P4.3 → P4.4 → P4.5, terminal full validation/phase close and fresh
-independent P4 audit. P5+ remains closed.
+**Remaining:** P4.3 → P4.4 → P4.5, terminal full validation/phase close and fresh independent
+P4 audit. P5+ remains closed.
 
-**Sources of truth:** `plan.md` D84/Contracts; `phases/P4.md` P4.1 Completion Notes and P4.2;
-frozen `root/contracts/provider-command-routing-contract.md`; approved
-`artifacts/P4-command-routing-contract-review.md`; canonical `packages/task/commands/`.
+**Sources of truth:** `plan.md` D84/Contracts; `phases/P4.md` P4.2 Completion Notes and P4.3;
+frozen `root/contracts/provider-command-routing-contract.md`; `packages/task/configs/command-routing.json`;
+`packages/task/lib/task/{command_catalog,command_render}.py`; generated `packages/task/adapters/codex/`.
 
-**Open risks:** None in P4.1. Every downstream renderer must preserve the frozen exact inventory,
-provider-qualified fail-closed diagnostics and Claude compatibility; any frozen-contract change or
-authority expansion returns to the Owner.
+**Open risks:** Claude compatibility must be captured independently before renderer wiring and
+must remain byte/literal exact. Any D84 change, Codex projection delta or authority expansion
+returns to the Owner.
 
 **Workarounds/Deferred/Open questions:**
 
 - workarounds: none.
-- deferred: package implementation starts only in P4.2; full task/skiller validation and docs/release assessment run once at terminal P4.5 under D80/D82.
+- deferred: full task/skiller validation, docs/release assessment, phase close and audit run once at terminal P4.5 under D80/D82.
 - open_questions: none.

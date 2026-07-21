@@ -1,5 +1,6 @@
 """P3.4 provider distribution: preflight, provider-owned targets and native boundary."""
 import contextlib
+import hashlib
 import io
 import json
 import tempfile
@@ -10,7 +11,7 @@ from unittest import mock
 from skiller.connect import do_connect
 from skiller.publication import run_codex_native_install
 from skiller.registry import build_registry
-from skiller.skillset import do_sync
+from skiller.skillset import do_sync, plan_sync
 import tests.fixtures as fx
 
 
@@ -158,6 +159,101 @@ class ProviderDistributionCase(unittest.TestCase):
         with contextlib.redirect_stdout(io.StringIO()):
             do_sync(self.env, self.project, {"no_core": True})
         self.assertTrue((self.project / ".agents/skills/code-style/SKILL.md").is_file())
+
+    def test_managed_drift_refuses_all_provider_writes_by_default(self):
+        self.write_provider_config(providers())
+        with contextlib.redirect_stdout(io.StringIO()):
+            do_sync(self.env, self.project, {"no_core": True})
+        edited = b"local Codex edit\n"
+        codex_skill = self.project / ".agents/skills/code-style/SKILL.md"
+        codex_skill.write_bytes(edited)
+        before = {
+            "config": (self.project / ".swissknifeman/config.json").read_bytes(),
+            "lock": (self.project / "skills-lock.json").read_bytes(),
+            "claude": (self.project / ".claude/skills/code-style/SKILL.md").read_bytes(),
+            "codex": codex_skill.read_bytes(),
+            "state": self.env.db_file.read_bytes(),
+        }
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr), self.assertRaises(SystemExit):
+            do_sync(self.env, self.project, {"no_core": True})
+        self.assertIn("SPUB_OWNERSHIP_CONFLICT", stderr.getvalue())
+        self.assertIn("provider codex", stderr.getvalue())
+        self.assertIn("managed-drift", stderr.getvalue())
+        self.assertEqual((self.project / ".swissknifeman/config.json").read_bytes(), before["config"])
+        self.assertEqual((self.project / "skills-lock.json").read_bytes(), before["lock"])
+        self.assertEqual((self.project / ".claude/skills/code-style/SKILL.md").read_bytes(), before["claude"])
+        self.assertEqual(codex_skill.read_bytes(), before["codex"])
+        self.assertEqual(self.env.db_file.read_bytes(), before["state"])
+
+    def test_repair_saves_preimage_reports_hashes_and_replans_clean(self):
+        self.write_provider_config(providers())
+        with contextlib.redirect_stdout(io.StringIO()):
+            do_sync(self.env, self.project, {"no_core": True})
+        codex_skill = self.project / ".agents/skills/code-style/SKILL.md"
+        observed = b"local Codex edit\n"
+        codex_skill.write_bytes(observed)
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            result = do_sync(self.env, self.project, {"no_core": True, "repair": True})
+        backup = codex_skill.with_name("SKILL.md.provider-artifact.bak")
+        self.assertEqual(backup.read_bytes(), observed)
+        source = (self.root / "skills/php/code-style/SKILL.md").read_bytes()
+        self.assertEqual(codex_skill.read_bytes(), source)
+        codex_record = next(record for record in result["providers"]
+                            if record["provider"] == "codex")
+        evidence = codex_record["repair"][0]
+        self.assertEqual(evidence["observed"], "sha256:" + hashlib.sha256(observed).hexdigest())
+        self.assertEqual(evidence["expected"], "sha256:" + hashlib.sha256(source).hexdigest())
+        self.assertEqual(evidence["source"], "sha256:" + hashlib.sha256(source).hexdigest())
+        self.assertIn("observed=", output.getvalue())
+        self.assertIn("expected=", output.getvalue())
+        self.assertIn("source=", output.getvalue())
+        cfg = json.loads((self.project / ".swissknifeman/config.json").read_text())
+        codex_plan = plan_sync(self.env, self.project,
+                               {**cfg, "skills_path": ".agents/skills", "agent": "codex"},
+                               provider="codex")
+        self.assertEqual(codex_plan["managed_drift"], [])
+        self.assertEqual(codex_plan["update"], [])
+        self.assertIn("code-style", codex_plan["keep"])
+
+    def test_source_staleness_updates_without_repair_backup(self):
+        self.write_provider_config(providers())
+        with contextlib.redirect_stdout(io.StringIO()):
+            do_sync(self.env, self.project, {"no_core": True})
+        fx.write_skill(self.root / "skills/php/code-style", "code-style",
+                       description="Changed canonical source", body="Changed.\n")
+        materialize_registry(self.env)
+        cfg = json.loads((self.project / ".swissknifeman/config.json").read_text())
+        codex_plan = plan_sync(self.env, self.project,
+                               {**cfg, "skills_path": ".agents/skills", "agent": "codex"},
+                               provider="codex")
+        self.assertEqual(codex_plan["managed_drift"], [])
+        self.assertIn("code-style", codex_plan["update"])
+        with contextlib.redirect_stdout(io.StringIO()):
+            do_sync(self.env, self.project, {"no_core": True})
+        self.assertIn("Changed.", (self.project / ".agents/skills/code-style/SKILL.md")
+                       .read_text(encoding="utf-8"))
+        self.assertFalse((self.project / ".agents/skills/code-style"
+                          / "SKILL.md.provider-artifact.bak").exists())
+
+    def test_invalid_lock_refuses_before_config_or_provider_write(self):
+        self.write_provider_config(providers())
+        config = self.project / ".swissknifeman/config.json"
+        config.unlink()
+        lock = self.project / "skills-lock.json"
+        lock.write_text('{"version": 2, "skills": {}}', encoding="utf-8")
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr), self.assertRaises(SystemExit):
+            do_sync(self.env, self.project, {"no_core": True})
+        self.assertIn("SPUB_OWNERSHIP_CONFLICT", stderr.getvalue())
+        self.assertIn("provider claude-code, codex", stderr.getvalue())
+        self.assertIn("unsupported-version", stderr.getvalue())
+        self.assertFalse(config.exists())
+        self.assertFalse((self.project / ".claude/skills").exists())
+        self.assertFalse((self.project / ".agents/skills").exists())
+        self.assertEqual(lock.read_text(encoding="utf-8"), '{"version": 2, "skills": {}}')
+        self.assertFalse(self.env.db_file.exists())
 
 
 if __name__ == "__main__":

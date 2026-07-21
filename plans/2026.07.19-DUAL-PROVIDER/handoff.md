@@ -1,44 +1,46 @@
-# HANDOFF — 2026-07-21 — after P4.5
+# HANDOFF — 2026-07-21 — after P4
 
-**Next:** close: task:plan-close 2026.07.19-DUAL-PROVIDER P4
+**Next:** audit-phase: task:plan-audit 2026.07.19-DUAL-PROVIDER P4
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | implementation |
-| Effort | low |
-| Capabilities | skills.repository · command.filesystem-read/write · command.git-read/write |
-| Context | cold-start — phase gate |
-| Суть | Один terminal validation/close retry на repair tree, затем fresh Audit P4 attempt 2. |
+| Model class | frontier |
+| Effort | xhigh |
+| Capabilities | skills.repository · command.filesystem-read · command.git-read |
+| Context | cold-start — plan-step |
+| Суть | Fresh independent G04 Audit P4 attempt 2 on the post-repair closed tree; no P5 execution. |
 
 ```text
-$ task:plan-close 2026.07.19-DUAL-PROVIDER P4
+$ task:plan-audit 2026.07.19-DUAL-PROVIDER P4
 
-RETRY AFTER RED G04: repair commit cd654a4
-RUN ONCE: full task/skiller validation, worktree-local registry check, docs/release assessment
-THEN: fresh independent task:plan-audit 2026.07.19-DUAL-PROVIDER P4 (attempt 2)
-DO NOT START: P5+, FOREMAN/fleet, live/user config or root adapters
+Read AGENTS.md, CLAUDE.md, plan.md, handoff.md, phases/P4.md, the frozen
+root/contracts/provider-command-routing-contract.md, P4 contribution/conformance artifacts,
+P4.1–P4.5 commits, repair `cd654a4` and terminal retry close evidence. Audit only committed
+P4 contract, catalog, Claude/Codex projections, neutral routing/Next gates, generated
+operator reference and protected-path evidence. Confirm the single recorded post-repair
+terminal validation evidence without rerunning package-wide validation. Write only the
+independent Audit P4 attempt 2 evidence/verdict. RED returns to the owning P4 seam; GREEN
+satisfies G04. Do not execute P5+, change frozen contracts, root adapters, live/user-global
+config, external plans, fleet targets or unrelated owner files.
 ```
 
-**Done:** Audit P4 attempt 1 remains append-only RED. Bounded owning-seam repair replaced
-raw canonical Codex runtime copies with deterministic self-contained runtime projections,
-preserved source identity/hash, added fail-closed unsafe-literal validation and regenerated
-only task-owned Codex artifacts/locks through the existing renderer/apply seam.
+**Done:** P4.1–P4.5 and the post-repair terminal phase gate are closed. Repair `cd654a4`
+replaced raw canonical Codex runtime copies with deterministic provider-safe projections;
+full task/skiller validation and the worktree-local registry check are GREEN from the one
+post-repair close cycle on `a45770b`.
 
-**Remaining:** run the single terminal P4 validation/close retry, mark P4.5/phase terminal
-only from that evidence, then launch fresh independent Audit P4 attempt 2. P5 stays unopened.
+**Remaining:** fresh independent G04 Audit P4 attempt 2 only. P5 stays unopened.
 
-**Focused evidence:** `test_codex_command_adapter` + `test_provider_command_parity` GREEN;
-all 11 generated runtimes have zero exact canonical copies and zero Claude model/slash/
-session-route/Workflow execution literals; statuses/item-field sentinels, two-run identity,
-P2 lock lifecycle/cache containment and all-noop second apply remain GREEN. Immediate
-Claude routing/adapter consumers are GREEN; full validation was not rerun in repair.
+**Sources of truth:** `plan.md` D84/Contracts; `phases/P4.md` historical Audit P4 attempt 1,
+current Completion Notes and Phase Handoff; frozen D84 contract; `packages/task/lib/task/
+command_render.py`; generated `packages/task/adapters/codex/**`; `artifacts/
+P4-command-parity-conformance.md`; `packages/task/docs/reference/provider-commands.md`.
 
-**Sources of truth:** `phases/P4.md` historical Audit P4 block and current Phase Handoff;
-`packages/task/lib/task/command_render.py`; generated `packages/task/adapters/codex/**`;
-`artifacts/P4-command-parity-conformance.md`; frozen D84 contract.
+**Open risks:** G04 remains unsatisfied until fresh Audit P4 attempt 2 is literal GREEN;
+RED routes only to the owning P4 seam under D80/D81.
 
-**Open risks:** none inside the bounded repair seam. G04 remains unsatisfied until the
-single terminal close retry and fresh independent Audit P4 attempt 2 are literal GREEN.
+**Workarounds/Deferred/Open questions:**
 
-**Scope boundary:** P5 remains unopened. Canonical task commands, Claude plugin/goldens,
-frozen D84, root `.agents`, external plans, fleet and live/user configuration are untouched.
+- workarounds: none.
+- deferred: P5 and later phases are not part of this execution.
+- open_questions: none.

@@ -13,7 +13,7 @@
 ```text
 $ task:plan-close 2026.07.19-DUAL-PROVIDER P4
 
-RETRY AFTER RED G04: repair commit REPAIR_COMMIT
+RETRY AFTER RED G04: repair commit cd654a4
 RUN ONCE: full task/skiller validation, worktree-local registry check, docs/release assessment
 THEN: fresh independent task:plan-audit 2026.07.19-DUAL-PROVIDER P4 (attempt 2)
 DO NOT START: P5+, FOREMAN/fleet, live/user config or root adapters

@@ -219,7 +219,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
-| 2026-07-21 | plan-run/Codex gpt-5.6-sol xhigh | P4 bounded repair после RED G04: owning Codex renderer выпускает provider-safe runtime projection, direct consumer regression и regenerated locks; terminal validation/close retry и fresh Audit P4 attempt 2 остаются следующими. Repair commit: `REPAIR_COMMIT`. |
+| 2026-07-21 | plan-run/Codex gpt-5.6-sol xhigh | P4 bounded repair после RED G04: owning Codex renderer выпускает provider-safe runtime projection, direct consumer regression и regenerated locks; terminal validation/close retry и fresh Audit P4 attempt 2 остаются следующими. Repair commit: `cd654a4`. |
 | 2026-07-21 | plan-audit/Codex gpt-5.6-sol xhigh | Audit P4 attempt 1: RED — generated Codex runtime snapshots сохраняют imperative Claude model/slash instructions, а parity suite проверяет отдельный renderer report вместо непосредственного consumer; G04 не удовлетворён, P5 не открыт — детали см. phases/P4.md Audit P4. |
 | 2026-07-21 | plan-close/Codex gpt-5.6-sol xhigh | P4 закрыта: terminal task/skiller validation, registry и docs/release assessment GREEN; далее fresh independent G04 audit — детали см. phases/P4.md Phase Handoff. |
 | 2026-07-21 | plan-exec/Codex gpt-5.6-sol xhigh | P4.5 закрыт: independent inventory, dual command/Next parity, fail-closed diagnostics и generated operator reference доказаны — детали см. phases/P4.md P4.5 Completion Notes. |

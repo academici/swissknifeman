@@ -9,5 +9,13 @@
   "_comment_skills_path": "куда ставить относительно корня проекта; по умолчанию зависит от agent",
   "skills_path": ".claude/skills",
   "_comment_agent": "claude | cursor | generic; claude = плоская раскладка",
-  "agent": "claude"
+  "agent": "claude",
+  "_comment_providers": "Опционально: отсутствие блока сохраняет legacy Claude Code-only behavior и ничего не мигрирует.",
+  "providers": {
+    "contract_version": "1.0.0",
+    "selection": {
+      "claude-code": {"enabled": true},
+      "codex": {"enabled": false}
+    }
+  }
 }

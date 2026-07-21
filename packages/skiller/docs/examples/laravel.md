@@ -51,6 +51,11 @@ cp ~/projects/packages/swissknifeman/packages/skiller/.swissknife.example.json .
 # отредактировать под проект и закоммитить
 ```
 
+Опциональный блок `providers` в примере задаёт provider selection v1: отсутствие блока
+сохраняет прежний Claude Code-only результат и не меняет файл автоматически. На текущем
+этапе этот блок только валидируется и разрешается с provenance; он сам по себе не
+устанавливает Codex и не генерирует provider-артефакты.
+
 ## Результат
 
 ```

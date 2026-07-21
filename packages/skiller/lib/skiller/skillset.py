@@ -308,22 +308,51 @@ def load_lock(target):
     return data
 
 
-def _lock_broken(target):
-    """True — lock-файл есть на диске, но структурно битый (не парсится / без dict
-    'skills'), т.е. `load_lock` вернул {} НЕ потому, что managed-набор легитимно
-    пуст (напр. ручная чистка одной записи — валидный `{"skills": {}}`, это НЕ
-    поломка и не должно триггерить восстановление из манифеста), а потому что файл
-    повреждён. Отдельная от load_lock функция (не меняем её сигнатуру — на неё
-    завязаны тесты), с той же логикой парсинга, но без побочных warn (те уже
-    печатаются в load_lock)."""
+def _lock_problem(target):
+    """Вернуть причину provenance-invalid lock или ``None``.
+
+    Обычный sync не восстанавливает и не перезаписывает повреждённый lock: без
+    проверяемого provenance нельзя отличить managed bytes от чужих. Legacy-lock
+    без ``version`` и ``content_sha256`` остаётся читаемым, но unknown/newer
+    version, provider-map и managed record проходят fail-closed проверку.
+    """
     f = Path(target) / LOCK_FILE
     if not f.is_file():
-        return False
+        return None
     try:
         data = json.loads(f.read_text(encoding="utf-8"))
-    except json.JSONDecodeError:
-        return True
-    return not (isinstance(data, dict) and isinstance(data.get("skills"), dict))
+    except (json.JSONDecodeError, UnicodeDecodeError, OSError):
+        return "invalid-json"
+    if not isinstance(data, dict):
+        return "root-not-object"
+    version = data.get("version", LOCK_VERSION)
+    if not isinstance(version, int) or version > LOCK_VERSION:
+        return "unsupported-version"
+    if not isinstance(data.get("skills"), dict):
+        return "skills-map-invalid"
+    providers = data.get("providers", {})
+    if not isinstance(providers, dict) or any(not isinstance(items, dict)
+                                              for items in providers.values()):
+        return "provider-map-invalid"
+    maps = [data["skills"], *providers.values()]
+    for entries in maps:
+        for name, record in entries.items():
+            if not isinstance(name, str) or not isinstance(record, dict):
+                return "record-invalid"
+            if record.get("managed"):
+                digest = record.get("sha256")
+                if (record.get("source") != SOURCE
+                        or not isinstance(digest, str)
+                        or len(digest) != 64
+                        or any(ch not in "0123456789abcdef" for ch in digest)
+                        or not isinstance(record.get("installed_path"), str)):
+                    return "managed-provenance-invalid"
+    return None
+
+
+def _hash_label(value):
+    """P2 diagnostic spelling for an existing bare lock digest."""
+    return f"sha256:{value}" if value else "sha256:<missing>"
 
 
 def write_lock(target, lock):
@@ -338,39 +367,13 @@ def _dir_sha256(skill_dir):
     return hashlib.sha256(md.read_bytes()).hexdigest()
 
 
-def _recover_locked_from_manifest(target, skills_path):
-    """Best-effort managed-набор из `.swissknifeman-manifest.json`, когда lock на
-    диске битый/неожиданной структуры (см. warn в `load_lock`). Без этого пустой
-    `locked` трактует все прежде managed-скиллы как ЧУЖИЕ (dst существует, prev is
-    None) → conflicts → без --force пропускаются → `new_lock` пишется пустым и
-    стирает managed-карту НАВСЕГДА (найдено при аудите, V-3). sha256/content_sha256
-    здесь неизвестны (в манифесте их нет) — восстановленные записи гарантированно
-    не совпадут с реестром и уйдут в `update` (переустановятся), что и обещает
-    предупреждение в `load_lock`."""
-    manifest_file = Path(target) / skills_path / MANIFEST
-    if not manifest_file.is_file():
-        return {}
-    try:
-        data = json.loads(manifest_file.read_text(encoding="utf-8"))
-    except (json.JSONDecodeError, OSError, UnicodeDecodeError):
-        return {}
-    recovered = {}
-    for entry in data.get("skills", []) if isinstance(data, dict) else []:
-        name = entry.get("flat_name")
-        if name:
-            recovered[name] = {
-                "source": SOURCE, "managed": True, "bucket": "",
-                "sha256": "", "content_sha256": "",
-                "installed_path": f"{skills_path}/{name}",
-            }
-    return recovered
-
-
 # --- sync ---------------------------------------------------------------------
-def plan_sync(env, target, cfg, include_core=False):
+def plan_sync(env, target, cfg, include_core=False, provider="claude-code"):
     """Сухой расчёт: что добавить/обновить/удалить. Ничего не пишет.
 
-    Возвращает dict: {add, update, remove, keep, conflicts, skills_path, entries}.
+    Возвращает dict: {add, update, managed_drift, remove, keep, conflicts,
+    skills_path, entries}. ``managed_drift`` имеет приоритет над source staleness:
+    ручная правка installed SKILL.md не становится обычным update.
     - add:    name'ы новых managed-скиллов
     - update: name'ы managed-скиллов с разошедшимся sha256 (или отсутствующим файлом)
     - remove: name'ы managed-скиллов из lock, которых больше нет в конфиге
@@ -382,21 +385,15 @@ def plan_sync(env, target, cfg, include_core=False):
     skills_path = cfg.get("skills_path") or DEFAULT_SKILLS_PATH
     dest_root = Path(target) / skills_path
     lock = load_lock(target)
-    locked = lock.get("skills", {})
-    if not locked and _lock_broken(target):
-        # Lock-файл СТРУКТУРНО битый (не легитимно пустой — см. _lock_broken) —
-        # восстанавливаем managed-набор из манифеста, иначе см. докстринг
-        # _recover_locked_from_manifest (V-3).
-        recovered = _recover_locked_from_manifest(target, skills_path)
-        if recovered:
-            warn(f"восстановлено {len(recovered)} managed-запис(ей) из манифеста "
-                 f"({MANIFEST}) — sha256 неизвестен, они уйдут в update при sync")
-            locked = recovered
+    lock_problem = _lock_problem(target)
+    locked = (lock.get("skills", {}) if provider == "claude-code"
+              else lock.get("providers", {}).get(provider, {}))
 
     desired = {e["name"]: e for e in entries}
     managed_locked = {n: e for n, e in locked.items() if e.get("managed")}
 
-    add, update, keep, conflicts, conflicts_likely_ours = [], [], [], [], []
+    add, update, managed_drift, keep, conflicts, conflicts_likely_ours = [], [], [], [], [], []
+    drift_hashes = {}
     for name, entry in desired.items():
         dst = dest_root / name
         prev = managed_locked.get(name)
@@ -415,8 +412,26 @@ def plan_sync(env, target, cfg, include_core=False):
                     conflicts_likely_ours.append(name)
             else:
                 add.append(name)
-        elif not dst.is_dir() or dst.is_symlink():
+        elif prev.get("installed_path") and prev["installed_path"] != f"{skills_path}/{name}":
+            # A configured target-path move is a managed relocation, not drift in
+            # the old managed bytes. The old location is pruned via ``relocated``.
             add.append(name)
+        elif not dst.is_dir() or dst.is_symlink():
+            managed_drift.append(name)
+            drift_hashes[name] = {
+                "observed": _hash_label(""),
+                "expected": _hash_label(prev.get("sha256", "")),
+                "source": _hash_label(entry["sha256"]),
+            }
+        elif _dir_sha256(dst) != prev.get("sha256"):
+            # Managed bytes are classified before canonical source/content changes:
+            # ordinary sync must never overwrite a local edit incidentally.
+            managed_drift.append(name)
+            drift_hashes[name] = {
+                "observed": _hash_label(_dir_sha256(dst)),
+                "expected": _hash_label(prev.get("sha256", "")),
+                "source": _hash_label(entry["sha256"]),
+            }
         elif prev.get("sha256") != entry["sha256"]:
             update.append(name)
         elif (prev.get("content_sha256")
@@ -435,12 +450,15 @@ def plan_sync(env, target, cfg, include_core=False):
                 if e.get("installed_path") and e["installed_path"] != f"{skills_path}/{n}"}
     return {
         "add": sorted(add), "update": sorted(update),
+        "managed_drift": sorted(managed_drift),
+        "drift_hashes": drift_hashes,
         "remove": sorted(remove), "keep": sorted(keep),
         "conflicts": sorted(conflicts),
         "conflicts_likely_ours": sorted(conflicts_likely_ours),
         "relocated": relocated,
         "skipped": skipped, "skills_path": skills_path,
         "entries": entries, "dest_root": dest_root,
+        "provenance_invalid": lock_problem,
     }
 
 
@@ -452,23 +470,36 @@ def _remove_path(path):
         shutil.rmtree(path)
 
 
-def sync_skillset(env, target, cfg, dry_run=False, force=False,
-                  include_core=False):
+def sync_skillset(env, target, cfg, dry_run=False, force=False, repair=False,
+                  include_core=False, provider="claude-code", plan=None):
     """Применить конфиг: скопировать новые/обновлённые, удалить выбывшие managed,
     переписать skills-lock.json. Чужие скиллы остаются как есть (конфликты
     пропускаются с warning; --force перетирает чужой путь нашим скиллом).
     include_core=True — раздать CORE_SKILLS по умолчанию (как vendor/connect)."""
-    plan = plan_sync(env, target, cfg, include_core=include_core)
+    if plan is None:
+        plan = plan_sync(env, target, cfg, include_core=include_core, provider=provider)
+    if plan.get("provenance_invalid"):
+        die(f"SPUB_OWNERSHIP_CONFLICT: provider {provider} channel vendor "
+            f"target {plan['skills_path']} has invalid skills-lock provenance "
+            f"({plan['provenance_invalid']}); repair: restore a valid lock backup")
+    if plan.get("managed_drift") and not repair:
+        names = ", ".join(plan["managed_drift"])
+        die(f"SPUB_OWNERSHIP_CONFLICT: provider {provider} channel vendor "
+            f"target {plan['skills_path']} has managed-drift: {names}; "
+            "repair: rerun `skiller sync --repair`")
     dest_root = plan["dest_root"]
     entries = {e["name"]: e for e in plan["entries"]}
     lock = load_lock(target)
-    locked = dict(lock.get("skills", {}))
+    locked = dict(lock.get("skills", {}) if provider == "claude-code"
+                  else lock.get("providers", {}).get(provider, {}))
 
     def contained(path):
         return is_within(path, dest_root)
 
     # Конфликты с чужими путями: без force — пропуск; с force — добавить к install.
     install = list(plan["add"]) + list(plan["update"])
+    if repair:
+        install += list(plan.get("managed_drift", []))
     if plan["conflicts"]:
         if force:
             install += plan["conflicts"]
@@ -513,7 +544,7 @@ def sync_skillset(env, target, cfg, dry_run=False, force=False,
     # --- install / update -----------------------------------------------------
     if not dry_run:
         dest_root.mkdir(parents=True, exist_ok=True)
-    installed_names, skip_copy = [], []
+    installed_names, skip_copy, repair_evidence, pending_backups = [], [], [], {}
     for name in install:
         entry = entries[name]
         src = entry["skill_dir"]
@@ -523,6 +554,22 @@ def sync_skillset(env, target, cfg, dry_run=False, force=False,
                 ("replace" if name in plan["conflicts"] else "update")
             print(f"[dry-run] {verb} {entry['bucket']}/{entry['name']} -> {dst}")
             continue
+        if name in plan.get("managed_drift", []):
+            skill_file = dst / "SKILL.md"
+            expected_observed = plan["drift_hashes"][name]["observed"]
+            if _hash_label(_dir_sha256(dst)) != expected_observed:
+                die(f"SPUB_OWNERSHIP_CONFLICT: provider {provider} channel vendor "
+                    f"target {plan['skills_path']}/{name} changed after planning; "
+                    "repair: replan before `skiller sync --repair`")
+            if not skill_file.is_file():
+                die(f"SPUB_OWNERSHIP_CONFLICT: provider {provider} channel vendor "
+                    f"target {plan['skills_path']}/{name} has no recoverable pre-image")
+            # safe_copy_skill replaces the directory, so preserve the exact bytes
+            # immediately beside it until the new directory exists. Then move this
+            # pending file to the P2-standard final backup path beside SKILL.md.
+            pending = dst.parent / f".{name}.provider-artifact.bak.pending"
+            shutil.copy2(skill_file, pending)
+            pending_backups[name] = pending
         # Единый безопасный copy (containment + снятие symlink/файла/каталога + TOCTOU-
         # перепроверка + SKILL_IGNORE) — общий с vendor.copy_skill (не разъезжаться).
         # Пропуск (containment-стоп/TOCTOU-гонка, уже warn'ится внутри) — не тихий:
@@ -531,6 +578,13 @@ def sync_skillset(env, target, cfg, dry_run=False, force=False,
             skip_copy.append(name)
             continue
         installed_names.append(name)
+        if name in plan.get("managed_drift", []):
+            if _dir_sha256(dst) != entry["sha256"]:
+                die(f"SPUB_OWNERSHIP_CONFLICT: provider {provider} channel vendor "
+                    f"target {plan['skills_path']}/{name} repair bytes failed verification")
+            pending_backups[name].replace(
+                (dst / "SKILL.md").with_name("SKILL.md.provider-artifact.bak"))
+            repair_evidence.append({"name": name, **plan["drift_hashes"][name]})
         locked[name] = {
             "source": SOURCE,
             "managed": True,
@@ -554,12 +608,16 @@ def sync_skillset(env, target, cfg, dry_run=False, force=False,
             "installed_path": f"{plan['skills_path']}/{name}",
         })
 
-    new_lock = {
-        "version": lock.get("version", LOCK_VERSION),
-        "skills": dict(sorted(locked.items())),
-        "sources": {**lock.get("sources", {}),
-                    SOURCE: {"ref": "registry", "mode": "vendor"}},
-    }
+    new_lock = dict(lock)
+    new_lock["version"] = lock.get("version", LOCK_VERSION)
+    if provider == "claude-code":
+        new_lock["skills"] = dict(sorted(locked.items()))
+    else:
+        providers = dict(lock.get("providers", {}))
+        providers[provider] = dict(sorted(locked.items()))
+        new_lock["providers"] = dict(sorted(providers.items()))
+    new_lock["sources"] = {**lock.get("sources", {}),
+                           SOURCE: {"ref": "registry", "mode": "vendor"}}
     if not dry_run:
         # Порядок НАМЕРЕННЫЙ: skills-lock.json — источник истины детекта (plan_sync читает
         # load_lock, НЕ манифест), поэтому пишем его авторитетно ПОСЛЕ того, как файлы уже на
@@ -568,18 +626,25 @@ def sync_skillset(env, target, cfg, dry_run=False, force=False,
         # sync корректен (по lock), манифест добьётся. (Не переставлять: манифест-первым сделал
         # бы lock устаревшим при краше и сломал бы детект.)
         write_lock(target, new_lock)
-        _write_manifest(target, plan["skills_path"], new_lock["skills"],
+        for evidence in repair_evidence:
+            name = evidence["name"]
+            if (_dir_sha256(dest_root / name) != entries[name]["sha256"]
+                    or locked.get(name, {}).get("sha256") != entries[name]["sha256"]):
+                die(f"SPUB_OWNERSHIP_CONFLICT: provider {provider} channel vendor "
+                    f"target {plan['skills_path']}/{name} repair lock verification failed")
+        _write_manifest(target, plan["skills_path"], locked,
                         entries, cfg)
         # gitignore_managed: держать managed-скиллы вне git (воспроизводимы sync),
         # локальные/кастомные — в репо. Список авто-сопровождается каждым sync.
         if cfg.get("gitignore_managed"):
-            _write_gitignore(target, plan["skills_path"], new_lock["skills"])
+            _write_gitignore(target, plan["skills_path"], locked)
         else:
             _remove_our_gitignore(target, plan["skills_path"])
     # Факт (что реально скопировано/пропущено) отдельно от плана (plan["add"/"update"]) —
     # do_sync/cmd_sync репортят по installed/skip_copy, а не по плану (V-2).
     plan["installed"] = installed_names
     plan["skip_copy"] = skip_copy
+    plan["repair_evidence"] = repair_evidence
     return plan
 
 
@@ -638,7 +703,7 @@ def _write_manifest(target, skills_path, locked, entries, cfg):
 
 
 # --- config materialization (общая для init и do_sync) ------------------------
-def materialize_skillset_config(env, target, opts, dry=False, force=False):
+def materialize_skillset_config(env, target, opts, dry=False, force=False, quiet=False):
     """Вернуть конфиг vendor-режима; создать `.swissknifeman/config.json` из
     профиля проекта, если его ещё нет (force=True — пересоздать из автодетекта).
 
@@ -658,10 +723,11 @@ def materialize_skillset_config(env, target, opts, dry=False, force=False):
     if not dry:
         cfg_path.parent.mkdir(parents=True, exist_ok=True)
         atomic_write_json(cfg_path, cfg, version=LOCK_VERSION)
-    print(("[dry-run] " if dry else "")
-          + f"конфиг vendor-режима: {CONFIG_DIR}/{CONFIG_FILE} "
-          f"(mode=vendor, buckets: {' '.join(buckets) or '-'})")
-    if source == "autodetect-fallback":
+    if not quiet:
+        print(("[dry-run] " if dry else "")
+              + f"конфиг vendor-режима: {CONFIG_DIR}/{CONFIG_FILE} "
+              f"(mode=vendor, buckets: {' '.join(buckets) or '-'})")
+    if source == "autodetect-fallback" and not quiet:
         print("⚠ тип проекта не распознан — материализовано МИНИМАЛЬНОЕ ядро;\n"
               "  для оптимального набора укажи профиль: --profile <type>")
     return cfg, profile_name, True
@@ -684,7 +750,7 @@ def _sync_report_counts(plan, dry_run, force):
 
 
 # --- integrate/onboard entry (vendor-канал «опубликовать в репо») -------------
-def do_sync(env, target, opts, register=True):
+def _do_sync_provider(env, target, opts, register=True, plan=None):
     """Vendor-канал через sync: «опубликовать» скиллы физически в .claude/skills/.
 
     Это путь для проектов, которые отдают сторонним разработчикам БЕЗ доступа к
@@ -695,13 +761,17 @@ def do_sync(env, target, opts, register=True):
     connect/do_vendor: permissions-пресеты, hub, регистрация (channel=vendor)."""
     dry = opts.get("dry_run", False)
     force = opts.get("force", False)
+    repair = opts.get("repair", False)
     no_core = opts.get("no_core", False)
 
+    provider = opts.get("provider", "claude-code")
     cfg, profile_name, _created = materialize_skillset_config(
         env, target, opts, dry=dry)
+    if provider == "codex":
+        cfg = {**cfg, "skills_path": ".agents/skills", "agent": "codex"}
 
-    plan = sync_skillset(env, target, cfg, dry_run=dry, force=force,
-                         include_core=not no_core)
+    plan = sync_skillset(env, target, cfg, dry_run=dry, force=force, repair=repair,
+                         include_core=not no_core, provider=provider, plan=plan)
     n_add, n_upd, _n_repl, n_skip = _sync_report_counts(plan, dry, force)
     print(("[dry-run] " if dry else "")
           + f"sync: +{n_add} ~{n_upd} "
@@ -716,9 +786,14 @@ def do_sync(env, target, opts, register=True):
         print(f"  ПРОПУЩЕНО при копировании ({n_skip}): "
               f"{', '.join(plan['skip_copy'])} — см. предупреждения выше, "
               f"sync для них НЕ завершён")
+        die(f"SPUB_OWNERSHIP_CONFLICT: provider {provider} vendor apply incomplete; "
+            "repair: resolve the target conflict and rerun `skiller sync`")
+    for evidence in plan.get("repair_evidence", []):
+        print(f"  repair {evidence['name']}: observed={evidence['observed']} "
+              f"expected={evidence['expected']} source={evidence['source']}")
 
     # permissions-пресеты (deny мусора + allow стека) — паритет с connect/do_vendor
-    if not opts.get("no_permissions"):
+    if provider == "claude-code" and not opts.get("no_permissions"):
         apply_permissions(env, target, dry_run=dry)
 
     if opts.get("hub") and not dry:
@@ -728,13 +803,78 @@ def do_sync(env, target, opts, register=True):
         "path": str(target),
         "channel": "vendor",
         "profile": profile_name,
-        "agent": "claude",
+        "agent": "codex" if provider == "codex" else "claude",
         "skills_path": plan["skills_path"],
+        "provider": provider,
         "hub": opts.get("hub") or hub_artifacts_exist(target),
     }
+    if plan.get("repair_evidence"):
+        record["repair"] = plan["repair_evidence"]
     if register and not dry:
         upsert_project(env, record)
     return record
+
+
+def do_sync(env, target, opts, register=True):
+    """Build every selected provider plan before the first managed write."""
+    from .config import load_config
+    from .publication import build_vendor_distribution_plan
+    config = load_config(env, target)
+    # Derive a missing vendor config in memory first.  An aggregate ownership,
+    # drift or provenance refusal must not leave config materialisation behind.
+    preflight_cfg, _profile, _created = materialize_skillset_config(
+        env, target, opts, dry=True, quiet=True)
+    paths = build_vendor_distribution_plan(
+        config, target, project_id=target.name,
+        claude_path=preflight_cfg.get("skills_path") or DEFAULT_SKILLS_PATH,
+        codex_path=".agents/skills")
+    lock_problem = _lock_problem(target)
+    if lock_problem:
+        providers = ", ".join(descriptor.provider_id for descriptor in paths) or "none"
+        targets = ", ".join(descriptor.target.relative_to(target).as_posix()
+                            for descriptor in paths) or "-"
+        die(f"SPUB_OWNERSHIP_CONFLICT: provider {providers} channel vendor "
+            f"target {targets} has invalid skills-lock provenance ({lock_problem}); "
+            "repair: restore a valid lock backup")
+    planned = []
+    for descriptor in paths:
+        provider = descriptor.provider_id
+        provider_cfg = ({**preflight_cfg, "skills_path": ".agents/skills", "agent": "codex"}
+                        if provider == "codex" else preflight_cfg)
+        # The immutable copy plan is calculated for every selected provider
+        # before applying any of them.  A later provider conflict therefore
+        # cannot turn the earlier provider into a misleading partial success.
+        planned.append((provider, plan_sync(
+            env, target, provider_cfg, include_core=not opts.get("no_core", False),
+            provider=provider)))
+
+    # A selected provider's unmanaged target is an aggregate preflight failure:
+    # applying Claude first and silently skipping Codex would report a misleading
+    # dual-provider success.  ``--force`` remains the explicit, existing escape
+    # hatch for the owner of that target.
+    for provider, plan in planned:
+        if plan.get("provenance_invalid"):
+            die(f"SPUB_OWNERSHIP_CONFLICT: provider {provider} channel vendor "
+                f"target {plan['skills_path']} has invalid skills-lock provenance "
+                f"({plan['provenance_invalid']}); repair: restore a valid lock backup")
+        if plan["conflicts"] and not opts.get("force", False):
+            conflicts = ", ".join(plan["conflicts"])
+            die(f"SPUB_OWNERSHIP_CONFLICT: provider {provider} channel vendor "
+                f"target {plan['skills_path']} has unmanaged conflicts: {conflicts}; "
+                "repair: resolve the target conflict or rerun `skiller sync --force`")
+        if plan.get("managed_drift") and not opts.get("repair", False):
+            drifts = ", ".join(plan["managed_drift"])
+            die(f"SPUB_OWNERSHIP_CONFLICT: provider {provider} channel vendor "
+                f"target {plan['skills_path']} has managed-drift: {drifts}; "
+                "repair: rerun `skiller sync --repair`")
+
+    # Only a clean aggregate plan is allowed to materialise the project config.
+    base_cfg, _profile, _created = materialize_skillset_config(
+        env, target, opts, dry=opts.get("dry_run", False))
+    records = [_do_sync_provider(env, target, {**opts, "provider": provider},
+                                 register=register, plan=plan)
+               for provider, plan in planned]
+    return records[0] if len(records) == 1 else {"providers": records}
 
 
 # --- CLI ----------------------------------------------------------------------
@@ -769,15 +909,17 @@ def cmd_init(env, argv):
 def cmd_sync(env, argv):
     opts = parse_flags(argv, {"--target": "str", "--dry-run": "bool",
                               "--force": "bool", "--hub": "bool",
-                              "--no-hub": "bool", "--no-core": "bool"})
+                              "--no-hub": "bool", "--no-core": "bool",
+                              "--repair": "bool"})
     if opts["help"]:
-        print("skiller sync [--target DIR] [--dry-run] [--force] "
+        print("skiller sync [--target DIR] [--dry-run] [--force] [--repair] "
               "[--hub] [--no-hub] [--no-core]\n"
               "  Применяет .swissknifeman/config.json (mode=vendor): копирует "
               "скиллы из библиотеки в проект, пишет skills-lock.json (managed),\n"
               "  манифест .swissknifeman-manifest.json и удаляет выбывшие "
               "managed-скиллы. Чужие скиллы не трогает (--force перетирает\n"
-              "  занятый чужим путь версией из библиотеки). CORE-скиллы "
+              "  занятый чужой путь версией из библиотеки); --repair восстанавливает\n"
+              "  только подтверждённый managed-drift с recoverable pre-image. CORE-скиллы "
               "раздаются по умолчанию (--no-core отключает). Индекс скиллов\n"
               "  (managed-блок CLAUDE.md / .ai/guidelines) обновляется, если он "
               "уже есть в проекте или передан --hub; --no-hub отключает.")
@@ -788,28 +930,8 @@ def cmd_sync(env, argv):
         die(f"{skillset_config_path(target)} не найден — создайте конфиг "
             "vendor-режима (mode=vendor, include/buckets/exclude)")
 
-    plan = sync_skillset(env, target, cfg, dry_run=opts["dry_run"],
-                         force=opts["force"], include_core=not opts["no_core"])
-    prefix = "[dry-run] " if opts["dry_run"] else ""
-    n_add, n_upd, n_repl, n_skip = _sync_report_counts(
-        plan, opts["dry_run"], opts["force"])
-    print(f"{prefix}sync ({via}): +{n_add} ~{n_upd} "
-          f"-{len(plan['remove'])} ={len(plan['keep'])}"
-          + (f" !{n_repl}" if n_repl else "")
-          + f" (skills_path: {plan['skills_path']})")
-    if plan["conflicts"] and not opts["force"]:
-        print(f"  конфликты (чужие, пропущены): {', '.join(plan['conflicts'])} "
-              "— --force чтобы заменить")
-    if plan["skipped"]:
-        print(f"  пропущено (нет в реестре): {', '.join(plan['skipped'])}")
-    if n_skip:
-        print(f"  ПРОПУЩЕНО при копировании ({n_skip}): "
-              f"{', '.join(plan['skip_copy'])} — см. предупреждения выше, "
-              f"sync для них НЕ завершён")
-
     # Индекс скиллов в корне проекта: догоняем поведение vendor — обновляем,
     # если хаб уже есть или запрошен явно. --no-hub перебивает автоопределение.
     want_hub = opts["hub"] or (hub_artifacts_exist(target)
                                and not opts["no_hub"])
-    if want_hub and not opts["dry_run"]:
-        generate_hub(env, target)
+    do_sync(env, target, {**opts, "hub": want_hub})

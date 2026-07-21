@@ -83,6 +83,11 @@ effort: high
    **Журнал (D21, P1.1):** append ОДНУ запись — `python3 -m task.journal append --plan-dir
    plans/<PLAN-ID> --plan <PLAN-ID> --item <Pn.m> --command plan-design --actor opus/high
    --result in-progress --note "ТЗ item'а доведено до DoR"`.
+   **Историческое исключение (D51):** schema-invalid существующую journal-строку нельзя
+   переписывать или компенсировать event'ом. Только explicit Owner D# может дописать
+   `journal-exceptions.jsonl` через `python3 -m task.journal exception --plan-dir
+   plans/<PLAN-ID> --target-line N --invalid-fields friction --owner-decision D# --actor
+   <actor> --reason "..."`; writer и linter fail closed на любом неexact target/hash/field.
 4. **`from-draft <файл>`** — мост встроенного plan mode Claude Code → протокол (событие
    ExitPlanMode не существует — авто-хука нет, мост ручной, но одношаговый). `<файл>` —
    плоский одобренный черновик `plans/<slug>.md` (конвенция: плоский `.md` в `plans/`, кроме

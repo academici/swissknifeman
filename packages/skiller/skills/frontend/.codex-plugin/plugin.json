@@ -1,0 +1,8 @@
+{
+  "name": "frontend",
+  "version": "0.4.0",
+  "description": "Frontend core: общие фронт-скиллы (web design guidelines, document writer, file upload)",
+  "skills": [
+    "./"
+  ]
+}

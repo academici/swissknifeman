@@ -192,20 +192,58 @@ def _downstream_claude_md_summary(env):
         print(f"  [ok ] downstream CLAUDE.md: все {seen} ≤ 200 строк")
 
 
+def _provider_distribution_doctor(env, target):
+    """Read-only provider-aware delivery preflight; never invokes native Codex."""
+    from .config import load_config
+    from .publication import build_connect_distribution_plan, build_vendor_distribution_plan
+    from .skillset import DEFAULT_SKILLS_PATH, load_skillset_config
+    from core import find_repo_root
+    config = load_config(env, target)
+    repo_root = find_repo_root(env.root) or env.root
+    print(f"Provider distribution (target: {target}):")
+    try:
+        connect = build_connect_distribution_plan(config, target, project_id=target.name,
+                                                  repo_root=repo_root)
+        print("  [ok ] marketplace plan: " + ", ".join(item.provider_id for item in connect))
+    except SystemExit as exc:
+        print(f"  [warn] marketplace plan blocked: {exc}")
+    cfg = load_skillset_config(target)
+    if cfg is None:
+        print("  [ok ] vendor plan: no .swissknifeman/config.json")
+        return
+    try:
+        vendor = build_vendor_distribution_plan(
+            config, target, project_id=target.name,
+            claude_path=cfg.get("skills_path") or DEFAULT_SKILLS_PATH,
+            codex_path=".agents/skills")
+        print("  [ok ] vendor plan: " + ", ".join(
+            f"{item.provider_id}:{item.target.relative_to(target)}" for item in vendor))
+    except SystemExit as exc:
+        print(f"  [warn] vendor plan blocked: {exc}")
+
+
 def cmd_doctor(env, argv):
     opts = parse_flags(argv, {"--downstream": "bool", "--vendor-drift": "bool",
-                              "--settings": "bool", "--target": "str"})
+                              "--settings": "bool", "--provider-distribution": "bool",
+                              "--target": "str"})
     if opts["help"]:
         print("skiller doctor [--downstream] [--vendor-drift] [--settings [--target P]]\n"
               "  --downstream:   гигиена publish-surface онбордженных проектов "
               "(CLAUDE.md ≤200, scoped/unscoped rules, deny-пресет).\n"
               "  --vendor-drift: по-проектный дрейф vendor-скиллов от реестра "
               "(новые/изменившиеся managed-скиллы; сухой расчёт).\n"
+              "  --provider-distribution: read-only preflight Claude/Codex delivery; "
+              "не запускает native installer.\n"
               "  --settings:     аудит настроек Claude Code (фасад → harness "
               "doctor --settings).")
         return
     if opts.get("settings"):
         _delegate_settings_doctor(env, opts)
+        return
+    if opts.get("provider_distribution"):
+        from .config import resolve_target
+        target, _ = resolve_target(env, opts)
+        _provider_distribution_doctor(env, target)
         return
     root = env.root
     issues = 0

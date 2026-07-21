@@ -8,6 +8,8 @@ from core import atomic_write_text, find_repo_root, safe_load_json
 from .common import (MARKETPLACE, die, parse_flags, parse_frontmatter,
                      parse_inline_list, skill_content_hash)
 from .config import CORE_PLUGIN, CORE_SKILLS
+from .publication import (SiblingPlugin, build_publication_catalog,
+                          render_claude_publication, render_codex_publication)
 
 OWNER = {"name": "Dmitry Vostrikov", "email": "dv.vostrikov@gmail.com"}
 
@@ -178,7 +180,7 @@ def _repo_root(pkg_root):
     return find_repo_root(pkg_root) or pkg_root
 
 
-def build_plugin_manifests(env, bucket_meta, bucket_dirs):
+def _legacy_build_plugin_manifests(env, bucket_meta, bucket_dirs):
     """Вычислить ВСЕ plugin-манифесты БЕЗ записи: [(path, data_dict)] в порядке записи;
     последний элемент — marketplace.json (корень репо). Чистая (source of truth для
     write_plugin_manifests и registry --check drift-гейта). source-пути от корня репо."""
@@ -342,6 +344,78 @@ def build_plugin_manifests(env, bucket_meta, bucket_dirs):
     return manifests
 
 
+def _package_version(root):
+    """Read the frozen P3 publication-version source explicitly."""
+    package = json.loads((root / "package.json").read_text(encoding="utf-8"))
+    version = package.get("version")
+    if not isinstance(version, str):
+        die("package.json: version must be a string")
+    return version
+
+
+def _sibling_plugins(repo_root, package_root):
+    """Scan the bounded sibling-package manifest input before catalog construction."""
+    if package_root == repo_root or not (repo_root / "packages").is_dir():
+        return ()
+    siblings = []
+    for package in sorted((repo_root / "packages").iterdir()):
+        if not package.is_dir() or package == package_root:
+            continue
+        manifest = package / ".claude-plugin" / "plugin.json"
+        if not manifest.is_file():
+            continue
+        data = json.loads(manifest.read_text(encoding="utf-8"))
+        siblings.append(SiblingPlugin(
+            name=data.get("name", package.name), package=package.name,
+            description=data.get("description", ""),
+            category=data.get("category", "ecosystem"),
+            tags=tuple(data.get("keywords", [])),
+            source_path=f"packages/{package.name}",
+            content_hash=hashlib.sha256(manifest.read_bytes()).hexdigest(),
+        ))
+    return tuple(siblings)
+
+
+def build_claude_publication(env, bucket_meta, bucket_dirs, registry=None):
+    """Render legacy Claude artifacts through the immutable P3 semantic catalog."""
+    root = env.root
+    repo_root = _repo_root(root)
+    if registry is None:
+        registry, _meta, _dirs = build_registry(env)
+    meta_skill = parse_frontmatter(root / "generate-skill" / "generate-skill" / "SKILL.md")
+    catalog = build_publication_catalog(
+        registry=registry, bucket_meta=bucket_meta, bucket_dirs=bucket_dirs,
+        core_skills=CORE_SKILLS, core_plugin=CORE_PLUGIN,
+        package_version=_package_version(root), siblings=_sibling_plugins(repo_root, root),
+        generate_skill_description=meta_skill.get("description", "Meta-skill for creating new skills"),
+        skm_present=(root / "skm" / ".claude-plugin" / "plugin.json").is_file(),
+    )
+    return render_claude_publication(catalog, repo_root=repo_root, package_root=root)
+
+
+def build_codex_publication(env, bucket_meta, bucket_dirs, registry=None):
+    """Render native Codex outputs from the same immutable semantic catalog."""
+    root = env.root
+    repo_root = _repo_root(root)
+    if registry is None:
+        registry, _meta, _dirs = build_registry(env)
+    meta_skill = parse_frontmatter(root / "generate-skill" / "generate-skill" / "SKILL.md")
+    catalog = build_publication_catalog(
+        registry=registry, bucket_meta=bucket_meta, bucket_dirs=bucket_dirs,
+        core_skills=CORE_SKILLS, core_plugin=CORE_PLUGIN,
+        package_version=_package_version(root), siblings=_sibling_plugins(repo_root, root),
+        generate_skill_description=meta_skill.get("description", "Meta-skill for creating new skills"),
+        skm_present=(root / "skm" / ".claude-plugin" / "plugin.json").is_file(),
+    )
+    return render_codex_publication(catalog, repo_root=repo_root, package_root=root)
+
+
+def build_plugin_manifests(env, bucket_meta, bucket_dirs, registry=None):
+    """Compatibility view of Claude artifacts for the legacy registry writer/checker."""
+    return [(artifact.target, json.loads(artifact.managed_bytes.decode("utf-8")))
+            for artifact in build_claude_publication(env, bucket_meta, bucket_dirs, registry)]
+
+
 def _manifest_text(data):
     return json.dumps(data, indent=2, ensure_ascii=False) + "\n"
 
@@ -351,6 +425,8 @@ def write_plugin_manifests(env, bucket_meta, bucket_dirs):
     manifests = build_plugin_manifests(env, bucket_meta, bucket_dirs)
     for path, data in manifests:
         atomic_write_text(path, _manifest_text(data))
+    for artifact in build_codex_publication(env, bucket_meta, bucket_dirs):
+        atomic_write_text(artifact.target, artifact.managed_bytes.decode("utf-8"))
     # число плагинов = размер marketplace.plugins (последний манифест — marketplace.json)
     return len(manifests[-1][1]["plugins"])
 
@@ -381,8 +457,10 @@ def check_drift(env):
 
     _cmp(root / "skills.json", json.dumps(registry, indent=2, ensure_ascii=False) + "\n")
     _cmp(root / "skills" / "_index.md", render_index(registry, bucket_meta))
-    for path, data in build_plugin_manifests(env, bucket_meta, bucket_dirs):
+    for path, data in build_plugin_manifests(env, bucket_meta, bucket_dirs, registry):
         _cmp(path, _manifest_text(data))
+    for artifact in build_codex_publication(env, bucket_meta, bucket_dirs, registry):
+        _cmp(artifact.target, artifact.managed_bytes.decode("utf-8"))
 
     graph_text, _n_nodes, _n_edges = render_graph(registry)
     _cmp(_docs_root(root) / "docs" / "guide" / "graph.md", graph_text)

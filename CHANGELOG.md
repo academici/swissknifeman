@@ -2,6 +2,24 @@
 
 ## [Unreleased]
 
+### Added
+
+- **skiller:** provider-aware Claude/Codex distribution preflight, provider-qualified
+  vendor locks and explicit `skiller codex-install`; normal connect/update/doctor and
+  dry-runs never invoke the native user-global installer.
+
+### Fixed
+
+- **skiller:** dual-provider `sync` now rejects an unmanaged selected-provider target
+  before any provider skill copy, lock write or project registration; `--force` remains
+  the explicit overwrite path.
+
+### Added
+
+- **task — historical journal exception v1.** Owner-gated append-only sidecar for one exact
+  historical `friction` schema error; strict writer/linter validation and negative tests.
+- **skiller — `plan-protocol` 2.9.0 → 2.10.0.** Documents the sealed D51 exception lifecycle.
+
 ### Added (2026.07.18-FOREMAN P1.4 — plan-protocol 2.9.0)
 
 - **skiller — `plan-protocol` 2.8.0 → 2.9.0.** Scope-payload launch-block'а для `RED`/`ATTENTION`

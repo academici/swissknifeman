@@ -44,3 +44,11 @@ cost/turns/duration — `root/contracts/plan-journal-schema.md` §2–§2.2.
 **Ручной бэкфилл (D22).** Датовый план от cutoff-даты (`plan_lint.py:JOURNAL_CANON_DATE`)
 без валидного `journal.jsonl` — ERROR. Бэкфилл закрытых до канона item'ов — РЕАЛЬНЫЕ
 записи (actor/result/note по факту Update Log плана), не заглушка на пустом файле.
+
+## Sealed historical exception (D51)
+
+Не переписывай и не компенсируй event'ом schema-invalid historical line. Только existing Owner
+D# может дописать sidecar через `PYTHONPATH=packages/task/lib python3 -m task.journal exception
+--plan-dir plans/<PLAN-ID> --target-line N --invalid-fields friction --owner-decision D# --actor
+<actor> --reason "..."`. Sidecar принимает только exact `friction` error и fail closed на
+duplicate, hash/plan mismatch, valid/malformed target или inexact field set; он не несёт status/Next.

@@ -9,6 +9,8 @@ plans/<PLAN-ID>/
 ├── plan.md            # мастер-план: Meta, Context, Rules, Routing, Status Board, логи
 ├── phases/Pn.md       # по файлу на фазу: контекст, items (16 полей), phase handoff
 ├── handoff.md         # rolling-указатель «где мы» (перезаписывается, история — в git)
+├── journal.jsonl      # append-only execution history
+├── journal-exceptions.jsonl # optional D51 exact historical-schema exception sidecar
 ├── findings/          # RAG-выжимки и recon-отчёты (компактный синтез, не сырьё)
 ├── 20_research/       # research-артефакты плана
 ├── artifacts/         # рабочий материал фаз — судьба: архив вместе с планом
@@ -19,6 +21,14 @@ plans/<PLAN-ID>/
 Рядом с каталогами планов живёт `plans/ACTIVE.md` — 4-строчный указатель активного плана
 (парсится `plan-lint`); плоские `.md` прямо в `plans/` — черновики plan mode,
 разворачиваются `/task:plan-design from-draft <файл>`.
+
+## Historical journal exception (D51)
+
+`journal-exceptions.jsonl` optional and append-only: it never carries an event, status, or Next.
+It may waive only an exact historical `friction` schema failure when the target physical line, raw
+SHA-256, plan ID, exact field set, and an existing Owner D# all match. Any duplicate, malformed or
+valid target, foreign plan, hash mismatch, or additional invalid field fails closed. Create it only
+with `task.journal exception`; do not rewrite or compensate the historical journal event.
 
 ## root/ против artifacts/ — смысловое различие
 

@@ -624,11 +624,9 @@ class TestLockHygiene(unittest.TestCase):
             self.assertTrue(after["code-style"]["managed"])
             self.assertTrue((target / ".claude/skills/code-style/SKILL.md").is_file())
 
-    def test_broken_lock_json_recovers_managed_from_manifest(self):
-        """Битый (не парсящийся) lock — НЕ то же самое, что легитимно пустой (ручная
-        чистка, см. test_manual_lock_cleanup_*): managed-скилл, чей манифест цел,
-        восстанавливается как update (переустановится), а не улетает в conflicts
-        и не пропадает из нового lock (V-3 — раньше именно это и происходило)."""
+    def test_broken_lock_json_fails_closed_without_reconstruction(self):
+        """Повреждённый provenance lock не восстанавливается из манифеста: обычный
+        sync обязан сохранить и lock, и managed bytes до явного восстановления."""
         with tempfile.TemporaryDirectory() as tmp:
             tmp = Path(tmp)
             root, env, target = self._seed(tmp)
@@ -638,17 +636,15 @@ class TestLockHygiene(unittest.TestCase):
 
             # lock физически битый (не валидный JSON) — манифест при этом цел
             (target / "skills-lock.json").write_text("{not valid json", encoding="utf-8")
-            self.assertTrue(
-                (target / ".claude/skills" / MANIFEST).is_file())
-
             plan = plan_sync(env, target, cfg)
-            self.assertNotIn("code-style", plan["conflicts"])
-            self.assertIn("code-style", plan["update"])
-
-            sync_skillset(env, target, cfg)
-            after = load_lock(target)["skills"]
-            self.assertTrue(after["code-style"]["managed"])
-            self.assertTrue((target / ".claude/skills/code-style/SKILL.md").is_file())
+            self.assertEqual(plan["provenance_invalid"], "invalid-json")
+            before_skill = (target / ".claude/skills/code-style/SKILL.md").read_bytes()
+            with self.assertRaises(SystemExit):
+                sync_skillset(env, target, cfg)
+            self.assertEqual((target / "skills-lock.json").read_text(encoding="utf-8"),
+                             "{not valid json")
+            self.assertEqual((target / ".claude/skills/code-style/SKILL.md").read_bytes(),
+                             before_skill)
 
 
 class TestDoSync(unittest.TestCase):

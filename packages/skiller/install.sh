@@ -10,10 +10,11 @@
 # установке только skiller алиаса `swissknifeman` не будет (используйте `skiller`).
 #
 # Использование:
-#   ./install.sh [--bin-dir DIR] [--force]
+#   ./install.sh [--bin-dir DIR] [--force] [--codex-plugin NAME]
 #
 #   --bin-dir DIR   куда класть симлинк (по умолчанию ~/.local/bin)
 #   --force         заменить чужой файл/симлинк без вопроса
+#   --codex-plugin  явно добавить этот marketplace в Codex и установить NAME
 #
 # Дальше — из любого потребляющего проекта:
 #   skiller connect    # Claude Code (plugin marketplace)
@@ -28,6 +29,8 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CLI="$REPO_ROOT/bin/skiller"
 BIN_DIR="$HOME/.local/bin"
 FORCE=false
+CODEX_PLUGIN=""
+MARKETPLACE="swissknifeman"
 
 usage() { grep '^#' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//' | sed -n '2,18p'; }
 
@@ -35,6 +38,7 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --bin-dir) BIN_DIR="$2"; shift 2 ;;
     --force) FORCE=true; shift ;;
+    --codex-plugin) CODEX_PLUGIN="$2"; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     *)
       echo "ERROR: install.sh теперь устанавливает CLI skiller." >&2
@@ -96,3 +100,22 @@ case ":$PATH:" in
 esac
 
 echo "Проверка: skiller doctor"
+
+# Native Codex state is outside a project distribution transaction.  It is only
+# touched by this explicit install flag; normal install/update/doctor never call
+# `codex plugin`.  The marketplace root is the monorepo root, where P3.3 emits
+# `.agents/plugins/marketplace.json`.
+if [[ -n "$CODEX_PLUGIN" ]]; then
+  MONOREPO_ROOT="$(cd "$REPO_ROOT/../.." && pwd)"
+  [[ -f "$MONOREPO_ROOT/.agents/plugins/marketplace.json" ]] || {
+    echo "ERROR: Codex marketplace not generated: $MONOREPO_ROOT/.agents/plugins/marketplace.json" >&2
+    exit 1
+  }
+  command -v codex >/dev/null 2>&1 || {
+    echo "ERROR: codex CLI not found — native install was not attempted" >&2
+    exit 1
+  }
+  codex plugin marketplace add "$MONOREPO_ROOT"
+  codex plugin add "$CODEX_PLUGIN@$MARKETPLACE"
+  echo "Codex plugin installed explicitly: $CODEX_PLUGIN@$MARKETPLACE"
+fi

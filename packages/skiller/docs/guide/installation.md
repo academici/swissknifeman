@@ -43,6 +43,12 @@ skiller vendor --agent cursor
 |---|---|---|
 | **Claude Code** | `skiller connect` | только записи в `.claude/settings.local.json` |
 | **Cursor / generic** | `skiller vendor` | сами скиллы в `.cursor/skills` / `.ai/skills` |
+| **Codex (vendor)** | `skiller sync` с `providers.codex.enabled=true` | managed copies в `.agents/skills` + provider-qualified lock |
+
+Codex marketplace/plugin installation не является побочным эффектом подключения
+или обновления. Для self-host checkout используйте отдельную явную команду
+`./packages/skiller/install.sh --codex-plugin core`; она может менять user-global Codex state.
+Внешний проект получает Codex skills через vendor sync, а не внешнюю thin-ссылку.
 
 ::: tip Агенты — только в plugin-канале
 Бакет-плагин может нести не только скиллы, но и каталог `agents/` в своём корне

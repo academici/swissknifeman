@@ -1,7 +1,7 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.9.0
+version: 2.10.0
 description: "Исполняемые мастер-планы в plans/<ID>: схемы plan/phase/task, 6 статусов, refine-цикл и DoR-гейт, канонический корень плана, репо-дом по умолчанию + поля visibility/supersedes, два дома и архив, handoff с launch-block, роутинг моделей, команды /task:plan-*."
 risk: write
 persona: oss-dev
@@ -68,6 +68,13 @@ plans/<PLAN-ID>/
 состояние (не дублирует Status Board/handoff). Гейт `plan-lint`: для датовых планов от
 2026.07.18 отсутствие/невалидный `journal.jsonl` — ERROR; старее/legacy — WARNING (soft-гейт
 против поломки уже идущего флота — тот же паттерн, что у брифа/roadmap).
+
+**Историческое schema-исключение `journal-exceptions.jsonl` (D51, optional).** Это отдельный
+append-only sidecar, а не event/status/Next carrier. Он может снять только exact historical
+ошибку `friction`: physical non-empty target line, raw SHA-256, canonical plan ID, exact
+`invalid_fields:["friction"]` и существующий owner D# обязательны. Duplicate, valid/malformed
+target, hash/plan mismatch или extra error fail closed; существующая journal-строка не меняется.
+Писать только `task.journal exception`; compensating event не исправляет schema-invalid history.
 
 **Индекс плана `index.md`** (опционален) — карта ФАЙЛОВ плана + провенанс-связи
 (`findings`/`research` → фаза-потребитель); НЕ носитель статуса/next (это Status Board/

@@ -123,7 +123,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P3 | Dual skills publication и marketplaces | 5/5 | 🟢 Done |
 | P4 | Task-command parity и provider-neutral model routing | 5/5 | 🟢 Done |
 | P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 7/7 | 🟢 Done |
-| P6 | mAInd deployment, memory и provider-neutral analytics | 0/6 | 🔴 Blocked |
+| P6 | mAInd deployment, memory и provider-neutral analytics | 0/6 | 🟡 In progress |
 | P7 | Docs, self-hosting validation и FOREMAN release gate | 0/4 | ⬜ Not started |
 
 ## 5. Decision Log
@@ -223,7 +223,6 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
 | 2026-07-21 | plan-audit / plan-sol-xhigh / gpt-5.6-sol/xhigh | Audit P5 attempt 2 завершён literal GREEN в `4470af7`; stale P5 audit pointer снят, entry gate P6 открыт на P6.1. |
-| 2026-07-21 | plan-terra-high / gpt-5.6-terra/high | P6.1 заблокирован: frozen P5 MCP catalog не содержит bindings semantic mAInd/agentmemory/Serena/Perplexity; требуется plan-design contract decision. |
 | 2026-07-21 | plan-close/Codex gpt-5.6-sol high | P5 повторно закрыта после audit attempt 1 repair: terminal task/skiller/harness/registry/lint/protected gates GREEN; далее fresh independent Audit P5 attempt 2 — детали см. phases/P5.md Phase Handoff. |
 | 2026-07-21 | plan-terra-high / gpt-5.6-terra/high | P5.4 audit repair attempt 2: P2-safe semantic agent IDs and actual 44/43 temporary create→noop consumer verification make the provider-audit agent count truthful; terminal re-close remains next — детали см. phases/P5.md P5.4 Completion Notes. |
 | 2026-07-21 | plan-close/Codex gpt-5.6-sol high | P5 закрыта: terminal task/skiller/harness/registry/lint/protected gates GREEN; далее fresh independent Audit P5 — детали см. phases/P5.md Phase Handoff. |

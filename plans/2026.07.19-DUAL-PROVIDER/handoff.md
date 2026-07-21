@@ -1,39 +1,43 @@
-# HANDOFF — 2026-07-21 — after P4.5
+# HANDOFF — 2026-07-21 — after P4
 
-**Next:** close: task:plan-close 2026.07.19-DUAL-PROVIDER P4
+**Next:** audit-phase: task:plan-audit 2026.07.19-DUAL-PROVIDER P4
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | implementation |
-| Effort | low — terminal validation reconciliation and phase close |
-| Capabilities | skills.repository · command.filesystem-read/write · command.git-read/write |
+| Model class | frontier |
+| Effort | xhigh |
+| Capabilities | skills.repository · command.filesystem-read · command.git-read |
 | Context | cold-start — plan-step |
-| Суть | Run the deferred terminal task/skiller validation and docs/release assessment once, then close P4 before a fresh independent audit. |
+| Суть | Fresh independent G04 audit of the closed P4 command/routing phase; no P5 execution. |
 
 ```text
-Provider render: Claude `/task:plan-close 2026.07.19-DUAL-PROVIDER P4`; Codex `$ task:plan-close 2026.07.19-DUAL-PROVIDER P4`.
+$ task:plan-audit 2026.07.19-DUAL-PROVIDER P4
 
-Read plan.md → handoff.md → phases/P4.md. Reconcile only terminal P4: run the deferred full task/skiller validation exactly once, perform docs/release assessment, close the phase, then hand off to a fresh independent P4 audit. Do not execute P5+, edit root adapters, live/user-global config, any external plan or fleet target, or owner dirt.
+Read AGENTS.md, CLAUDE.md, plan.md, handoff.md, phases/P4.md, the frozen
+root/contracts/provider-command-routing-contract.md, P4 contribution/conformance artifacts
+and P4.1–P4.5 commits. Audit only committed P4 contract, catalog, Claude/Codex projections,
+neutral routing/Next gates, generated operator reference and protected-path evidence.
+Confirm the recorded terminal validation evidence without rerunning package-wide validation.
+Write only the independent Audit P4 evidence/verdict. RED returns to the owning P4 seam;
+GREEN satisfies G04. Do not execute P5+, change frozen contracts, root adapters,
+live/user-global config, external plans, fleet targets or unrelated owner files.
 ```
 
-**Done:** P4.5 added independent contract/canonical inventory parity, exhaustive dual
-command/Next projections, fail-closed diagnostic cases and a generated operator reference.
-Substantive item/bookkeeping commit: `82892b0` (recorded by this immediate mechanical hash fix).
+**Done:** P4.1–P4.5 and the terminal phase gate are closed. Full task/skiller validation,
+worktree-local registry check, current plan lint, docs/release assessment and protected-path
+delta are green in the isolated close worktree.
 
-**Remaining:** terminal full task/skiller validation, docs/release assessment, P4 phase close
-and fresh independent P4 audit. P5+ remains closed.
+**Remaining:** fresh independent G04 audit P4 only. P5+ remains outside this execution scope.
 
-**Sources of truth:** `plan.md` D84/Contracts; `phases/P4.md` P4.5 Completion Notes;
-frozen `root/contracts/provider-command-routing-contract.md`;
-`packages/task/tests/fixtures_data/provider-command-parity.json`;
-`packages/task/tests/test_provider_command_parity.py`;
-`packages/task/docs/reference/provider-commands.md`;
-`artifacts/P4-command-parity-conformance.md`.
+**Sources of truth:** `plan.md` D84/Contracts; `phases/P4.md` Completion Notes and Phase
+Handoff; frozen `root/contracts/provider-command-routing-contract.md`;
+`artifacts/P4-command-parity-conformance.md`; `packages/task/docs/reference/provider-commands.md`.
 
-**Open risks:** terminal full validations and independent audit have not run yet by design.
+**Open risks:** G04 remains the independent release-quality gate for P4; RED routes only to
+the owning P4 seam under D80/D81.
 
 **Workarounds/Deferred/Open questions:**
 
 - workarounds: none.
-- deferred: full task/skiller validation, docs/release assessment, phase close and audit run once at terminal P4 gate under D80/D82.
+- deferred: P5 and later phases are not part of this execution.
 - open_questions: none.

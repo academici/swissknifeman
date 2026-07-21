@@ -6,7 +6,7 @@
      Порядок строго phase-first: P0→P1→P2→P3→P4→P5→P6→P7. До finish + GREEN design
      audit исполнение любого item запрещено. -->
 
-**Обновлён:** 2026-07-21 · **Соответствует plan.md:** v1.4.15
+**Обновлён:** 2026-07-21 · **Соответствует plan.md:** v1.4.20
 
 > **Статус exec:** P0 закрыта и audit attempt 3 завершён literal GREEN на `245bb56`;
 > G01 открыт, P1 повторно закрыта после D74: P1.5 добавила committed synthetic G02 proof,
@@ -14,10 +14,11 @@
 > independent P1 audit literal GREEN на `2363b21`; P2 повторно закрыта после D76: P2.5
 > добавила fail-closed provenance/override, clean/noop no-write и managed-boundary/
 > project-override conformance. P2 audit is GREEN. P3 is terminal after D80 bundled
-> fail-closed remediation, D83 Codex core cache/lock repair and P3.5 independent parity rerun;
-> the one terminal skiller validation and clean-tree registry check are GREEN. Next is fresh
-> independent G03 audit; only then prepare a PR
-> containing the complete P1–P3 delivery for owner review before P4 starts.
+> fail-closed remediation and D83 cache repair; G03 is GREEN and review PR #142 is merged.
+> P4.1–P4.5 are terminal with frozen command/routing v1.0.0, dual provider projections,
+> neutral plan gates and independent parity/operator docs. The one terminal task/skiller
+> validation and clean-tree registry check are GREEN. Next is fresh independent G04 audit;
+> P5 remains closed.
 > D71 исполнил D65/D68 reconciliation сейчас: `main` — active execution root, retained stash
 > `72505e4d8bef2a58f4ed555cc5b6014450aee3a9` сохраняет recovery point, unrelated owner dirt
 > возвращён unstaged. Это не открывает FOREMAN/fleet/live authority и не снимает P1.2 owner gate.
@@ -56,11 +57,11 @@
 | P3.3 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | — | native Codex plugin/cache contract; D83 restored stale core cache/lock with catalog regression |
 | P3.4 | solo | plan-run (manual) — 🟢 D80 bundle | gpt-5.6-terra/high | — | one same-seam repair: unmanaged selected target, managed-byte drift and corrupt-lock provenance all fail closed before write |
 | P3.5 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | independent whole-inventory parity/no-write rerun passed after D83; terminal validation/close complete, next G03 audit then P1–P3 PR |
-| P4.1 | solo | plan-run (manual) | gpt-5.6-sol/xhigh | ✅ command/routing contract | frozen semantic tiers/invocation; отдельный public-contract gate |
-| P4.2 | solo | plan-run (manual) | gpt-5.6-terra/high | ✅ task contribution | complete Codex adapter/catalog against frozen P4.1 |
-| P4.3 | solo | plan-exec | gpt-5.6-terra/medium | — | independent Claude byte/literal compatibility gate |
-| P4.4 | solo | plan-run (manual) | gpt-5.6-sol/high | ✅ plan-protocol canon contribution | canon-the-fleet-follows; нельзя объединять с compatibility или parity |
-| P4.5 | solo | plan-exec | gpt-5.6-terra/medium | — | independent command/plan parity и generated docs gate |
+| P4.1 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/xhigh | ✅ D84 command/routing contract | frozen semantic tiers/invocation |
+| P4.2 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | ✅ task contribution | complete Codex adapter/catalog against frozen P4.1 |
+| P4.3 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | Claude command/plugin bytes preserved by independent golden |
+| P4.4 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/high | ✅ plan-protocol canon contribution | neutral routing/Next/capability canon and dual invocation |
+| P4.5 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | independent command/plan parity, generated docs and terminal close complete; next G04 audit |
 | P5.1 | solo | plan-run (manual) | gpt-5.6-sol/high | ✅ harness/security contract | owner-gated security/profile boundary до provider outputs |
 | P5.2 | solo | plan-run (manual) | gpt-5.6-terra/high | ✅ harness contribution | security projections против frozen contract; full review |
 | P5.3 | solo | plan-run (manual) | gpt-5.6-terra/high | ✅ always-on context budget | lifecycle/trust/context activation после P5.2; budget gate владельца |
@@ -109,26 +110,27 @@ terminal tree фазы. Полные правила и exact probes: `research/2
 
 ## Готовый launch-block текущего шага
 
-### G03 — independent P3 publication gate
+### G04 — independent P4 command/routing gate
 
 | Параметр | Значение |
 |:--|:--|
-| Model | gpt-5.6-sol |
-| Thinking | xhigh |
-| Context | NEW SESSION — шаг-не-item |
-| Суть | Независимо проверить закрытую P3 до P1–P3 review PR. |
+| Model class | frontier |
+| Effort | xhigh |
+| Capabilities | skills.repository · command.filesystem-read · command.git-read |
+| Context | cold-start — plan-step |
+| Суть | Fresh independent audit closed P4 and satisfy G04 without starting P5. |
 
 ```text
-Проведи только fresh independent G03 audit P3 плана 2026.07.19-DUAL-PROVIDER на gpt-5.6-sol/xhigh.
+$ task:plan-audit 2026.07.19-DUAL-PROVIDER P4
 
-Сначала прочитай AGENTS.md, CLAUDE.md, plan.md, handoff.md, phases/P3.md, frozen
-`root/contracts/provider-skill-publication-contract.md`, P3 conformance/research artifacts,
-and commits P3.1–P3.5 including `1992061` and `1e19d47`. Independently verify canonical
-publication inventory, Claude byte compatibility, Codex cache-contained projections, and
-pre-write fail-closed unmanaged/drift/corrupt-lock behavior with no user-global/live writes.
-Confirm the terminal `packages/skiller/scripts/validate.sh` and registry evidence; preserve all
-unrelated dirt. Do not start P4, alter frozen contracts, FOREMAN, fleet, root `.agents/skills`
-or user-global Codex state. Record only the audit verdict/evidence; RED returns to owning P3.
+Read plan.md, handoff.md, phases/P4.md, the frozen provider-command-routing contract,
+P4 contribution/conformance artifacts and committed P4.1–P4.5 history. Independently audit
+the exact task inventory, Claude byte compatibility, Codex cache-contained adapters,
+neutral route/capability diagnostics, semantic Next/provider invocations, generated docs
+and protected-path evidence. Confirm the recorded terminal package-validation evidence
+without rerunning package-wide validation. Record only Audit P4 evidence/verdict. RED
+returns to the owning P4 seam; GREEN satisfies G04. Do not execute P5+ or change frozen
+contracts, root adapters, live/user config, external plans, fleet or unrelated owner files.
 ```
 
 ## Гейты владельца (сводно)

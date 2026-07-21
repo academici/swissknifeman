@@ -23,6 +23,7 @@ except ImportError:  # direct discovery from packages/task remains supported
 from task.plan_lint import (  # noqa: E402
     Diagnostics, _resolve_next_form, discover_plan_dirs, lint_plan, lint_plans_root, main,
 )
+from task.journal import append_exception, line_sha256, new_exception  # noqa: E402
 
 
 def _lint(plan_dir):
@@ -137,6 +138,138 @@ class TestJournalIndexLayer(TmpPlanTestCase):
         plan_dir = write_valid_plan(self.root, plan_id="2026.07.18-DEMO")
         (plan_dir / "journal.jsonl").write_text('{"plan_id":"x"}\n', encoding="utf-8")
         _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "не проходит схему"), diag.errors)
+
+    def test_owner_gated_historical_exception_suppresses_exact_field_only(self):
+        plan_dir = write_valid_plan(self.root, plan_id="2026.07.18-DEMO")
+        journal = plan_dir / "journal.jsonl"
+        entry = json.loads(journal.read_text(encoding="utf-8"))
+        entry["friction"] = ["Major: historical free-form value"]
+        raw = json.dumps(entry, ensure_ascii=False, sort_keys=True)
+        journal.write_text(raw + "\n", encoding="utf-8")
+        plan = plan_dir / "plan.md"
+        plan.write_text(
+            plan.read_text(encoding="utf-8").replace(
+                "| D1 | 2026-07-02 | тест | тест |",
+                "| D1 | 2026-07-02 | тест | тест |\n"
+                "| D2 | 2026-07-19 | historical schema exception | owner gate |"),
+            encoding="utf-8",
+        )
+        append_exception(plan_dir, new_exception(
+            plan_id="2026.07.18-DEMO", target_line=1,
+            target_sha256=line_sha256(raw), invalid_fields=["friction"],
+            owner_decision="D2", actor="owner", reason="preserve historical bytes",
+            ts="2026-07-19T20:00:00Z",
+        ))
+        _, diag = _lint(plan_dir)
+        self.assertEqual(_errors_containing(diag, "journal"), [], diag.errors)
+        self.assertEqual([w for w in diag.warnings if "journal" in w], [], diag.warnings)
+
+    def test_foreign_event_plan_id_is_non_exemptable_error(self):
+        plan_dir = write_valid_plan(self.root, plan_id="2026.07.18-DEMO")
+        journal = plan_dir / "journal.jsonl"
+        entry = json.loads(journal.read_text(encoding="utf-8"))
+        entry["plan_id"] = "2026.07.18-FOREIGN"
+        journal.write_text(
+            json.dumps(entry, ensure_ascii=False, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        _, diag = _lint(plan_dir)
+        self.assertTrue(
+            _errors_containing(diag, "2026.07.18-FOREIGN")
+            and _errors_containing(diag, "2026.07.18-DEMO"),
+            diag.errors,
+        )
+
+    def test_foreign_event_and_sidecar_plan_ids_cannot_exempt_mismatch(self):
+        plan_dir = write_valid_plan(self.root, plan_id="2026.07.18-DEMO")
+        journal = plan_dir / "journal.jsonl"
+        entry = json.loads(journal.read_text(encoding="utf-8"))
+        entry["plan_id"] = "2026.07.18-FOREIGN"
+        entry["friction"] = ["Major: historical free-form value"]
+        raw = json.dumps(entry, ensure_ascii=False, sort_keys=True)
+        journal.write_text(raw + "\n", encoding="utf-8")
+        plan = plan_dir / "plan.md"
+        plan.write_text(
+            plan.read_text(encoding="utf-8").replace(
+                "| D1 | 2026-07-02 | тест | тест |",
+                "| D1 | 2026-07-02 | тест | тест |\n"
+                "| D2 | 2026-07-19 | historical schema exception | owner gate |"),
+            encoding="utf-8",
+        )
+        exception = new_exception(
+            plan_id="2026.07.18-FOREIGN", target_line=1,
+            target_sha256=line_sha256(raw), invalid_fields=["friction"],
+            owner_decision="D2", actor="owner", reason="foreign probe",
+            ts="2026-07-19T20:00:00Z",
+        )
+        (plan_dir / "journal-exceptions.jsonl").write_text(
+            json.dumps(exception, ensure_ascii=False, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "schema exception"), diag.errors)
+        self.assertTrue(_errors_containing(diag, "2026.07.18-FOREIGN"), diag.errors)
+        self.assertTrue(_errors_containing(diag, "2026.07.18-DEMO"), diag.errors)
+
+    def test_historical_exception_rejects_inexact_invalid_field_set(self):
+        plan_dir = write_valid_plan(self.root, plan_id="2026.07.18-DEMO")
+        journal = plan_dir / "journal.jsonl"
+        entry = json.loads(journal.read_text(encoding="utf-8"))
+        entry["command"] = "plan-nope"
+        entry["friction"] = ["Major: historical free-form value"]
+        raw = json.dumps(entry, ensure_ascii=False, sort_keys=True)
+        journal.write_text(raw + "\n", encoding="utf-8")
+        plan = plan_dir / "plan.md"
+        plan.write_text(
+            plan.read_text(encoding="utf-8").replace(
+                "| D1 | 2026-07-02 | тест | тест |",
+                "| D1 | 2026-07-02 | тест | тест |\n"
+                "| D2 | 2026-07-19 | historical schema exception | owner gate |"),
+            encoding="utf-8",
+        )
+        exception = new_exception(
+            plan_id="2026.07.18-DEMO", target_line=1,
+            target_sha256=line_sha256(raw), invalid_fields=["friction"],
+            owner_decision="D2", actor="owner", reason="inexact probe",
+            ts="2026-07-19T20:00:00Z",
+        )
+        (plan_dir / "journal-exceptions.jsonl").write_text(
+            json.dumps(exception, ensure_ascii=False, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        _, diag = _lint(plan_dir)
+        self.assertTrue(
+            _errors_containing(diag, "['command', 'friction']"), diag.errors)
+        self.assertTrue(_errors_containing(diag, "не проходит схему"), diag.errors)
+
+    def test_historical_exception_hash_mismatch_is_error(self):
+        plan_dir = write_valid_plan(self.root, plan_id="2026.07.18-DEMO")
+        journal = plan_dir / "journal.jsonl"
+        entry = json.loads(journal.read_text(encoding="utf-8"))
+        entry["friction"] = ["Major: historical free-form value"]
+        raw = json.dumps(entry, ensure_ascii=False, sort_keys=True)
+        journal.write_text(raw + "\n", encoding="utf-8")
+        plan = plan_dir / "plan.md"
+        plan.write_text(
+            plan.read_text(encoding="utf-8").replace(
+                "| D1 | 2026-07-02 | тест | тест |",
+                "| D1 | 2026-07-02 | тест | тест |\n"
+                "| D2 | 2026-07-19 | historical schema exception | owner gate |"),
+            encoding="utf-8",
+        )
+        exception = new_exception(
+            plan_id="2026.07.18-DEMO", target_line=1,
+            target_sha256="0" * 64, invalid_fields=["friction"],
+            owner_decision="D2", actor="owner", reason="preserve historical bytes",
+            ts="2026-07-19T20:00:00Z",
+        )
+        (plan_dir / "journal-exceptions.jsonl").write_text(
+            json.dumps(exception, ensure_ascii=False, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        _, diag = _lint(plan_dir)
+        self.assertTrue(_errors_containing(diag, "target_sha256"), diag.errors)
         self.assertTrue(_errors_containing(diag, "не проходит схему"), diag.errors)
 
     def test_dated_plan_before_cutoff_journal_gate_is_warning(self):

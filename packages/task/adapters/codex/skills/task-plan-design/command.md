@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-design.md
-Canonical SHA-256: sha256:883a3423951d23c970be4864f4985c191a8e6b5ecb462c9523cb23bd84e21763
+Canonical SHA-256: sha256:27f9e582fa808fd8e8654acb3ac14d1dd0266fd1f6364819d24eb35a9e868922
 Adapter: task.codex-command/1.0.3
 -->
 Это ПРОЕКТИРОВАНИЕ мастер-плана (plan-протокол). Ввод пользователя: «$ARGUMENTS».
@@ -117,7 +117,10 @@ Adapter: task.codex-command/1.0.3
    (`supersedes` при отмене раннего решения); (3) DoR-свип всех фаз (чеклист ниже, включая
    бриф-трассировку по research/00-user-intent); (4) ТОЛЬКО когда дыры закрыты — последним
    шагом собрать `roadmap.md` (механика режима 6); (5) version bump + Update Log +
-   `plan-lint`. Финал сообщения — launch-block на `$ task:plan-audit <PLAN-ID> design`
+   `plan-lint`. Historical schema-invalid journal row не «гасится» compensating event:
+   append-only сохраняется через owner D# + `task.journal exception` sidecar по канону
+   plan-protocol §2, затем lint обязан быть перепроверен. Финал сообщения — launch-block на
+   `$ task:plan-audit <PLAN-ID> design`
    (frontier/xhigh, NEW SESSION). Найдены дыры, которые не закрыть этим заходом, → отчёт
    владельцу + launch-block на `<PLAN-ID> Pn` проблемной фазы, roadmap НЕ собирается.
 6. **`<PLAN-ID> roadmap`** — лёгкая пересборка ТОЛЬКО исполнительской карты (без

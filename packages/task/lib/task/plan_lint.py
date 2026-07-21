@@ -37,7 +37,7 @@ except ImportError:  # pragma: no cover - standalone-фолбэк, см. docstri
     def _core_warn(msg):
         print(f"WARN: {msg}", file=sys.stderr)
 
-# task.journal — SSOT схемы записи P1.1 (REQUIRED_FIELDS/enum'ы/validate_entry); лint
+# task.journal — SSOT схемы записи P1.1 и historical exception sidecar; лint
 # журнала реюзает её вместо дубля правил (Code Guidance P1.4 «анти-подгонка»), тот же
 # пакет `task`, тот же lib/ на sys.path (см. scripts/plan-lint.py лаунчер).
 from task import journal as _journal
@@ -769,6 +769,51 @@ def _lint_plan_roadmap_20(plan_dir, plan_id, phase_files, diag):
 JOURNAL_CANON_DATE = "2026.07.18"
 
 
+def _lint_journal_exceptions_20(plan_dir, plan_id, report):
+    """Валидирует optional append-only sidecar historical schema exceptions.
+
+    Возвращает ``target_line -> exception`` только для полностью валидных записей.
+    Sidecar не является журналом событий и конструктивно не может образовать
+    correction-цикл: его target всегда строка отдельного ``journal.jsonl``.
+    """
+    exceptions_path = Path(plan_dir) / _journal.EXCEPTIONS_FILENAME
+    if not exceptions_path.is_file():
+        return {}
+    try:
+        lines = exceptions_path.read_text(encoding="utf-8").splitlines()
+    except (OSError, UnicodeDecodeError):
+        report(exceptions_path, None, "journal exceptions sidecar не читается (кодировка/IO)")
+        return {}
+    if not any(line.strip() for line in lines):
+        report(exceptions_path, None, "journal exceptions sidecar пуст")
+        return {}
+
+    by_target = {}
+    for i, raw in enumerate(lines, start=1):
+        if not raw.strip():
+            continue
+        try:
+            exception = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            report(exceptions_path, i,
+                   f"строка не валидный JSON (append-only exception NDJSON): {exc}")
+            continue
+        try:
+            _journal.validate_exception_target(
+                plan_dir, exception, check_duplicate=False)
+        except _journal.JournalValidationError as exc:
+            report(exceptions_path, i, f"schema exception не проходит контракт: {exc}")
+            continue
+
+        target_line = exception["target_line"]
+        if target_line in by_target:
+            report(exceptions_path, i,
+                   f"duplicate schema exception для journal.jsonl:{target_line}")
+            continue
+        by_target[target_line] = exception
+    return by_target
+
+
 def _lint_plan_journal_20(plan_dir, plan_id, diag):
     """journal.jsonl (P1.1, root/contracts/plan-journal-schema.md) — append-only NDJSON,
     одна запись на исполнение item'а любым запуском `/task:plan-*`. Отсутствие/пустой/
@@ -792,9 +837,7 @@ def _lint_plan_journal_20(plan_dir, plan_id, diag):
         report(jf, None, "journal.jsonl не читается (кодировка/IO)")
         return
 
-    exceptions, exception_errors = _journal.validate_exceptions(plan_dir, plan_id)
-    for error in exception_errors:
-        report(plan_dir / _journal.EXCEPTIONS_FILENAME, None, error)
+    exceptions = _lint_journal_exceptions_20(plan_dir, plan_id, report)
 
     for i, ln in enumerate(lines):
         if not ln.strip():
@@ -804,12 +847,16 @@ def _lint_plan_journal_20(plan_dir, plan_id, diag):
         except json.JSONDecodeError as e:
             report(jf, i + 1, f"строка не валидный JSON (append-only NDJSON, §1): {e}")
             continue
-        errors = _journal.entry_error_map(entry)
-        exception = exceptions.get(i + 1)
-        if exception and set(errors) == set(exception["invalid_fields"]):
-            continue
-        if errors:
-            message = "; ".join(msg for values in errors.values() for msg in values)
+        if isinstance(entry, dict) and entry.get("plan_id") != plan_id:
+            report(
+                jf,
+                i + 1,
+                f"event plan_id «{entry.get('plan_id')}» ≠ canonical plan directory "
+                f"«{plan_id}»; mismatch не допускает schema exception",
+            )
+        errors = _journal.entry_validation_errors(entry)
+        if errors and i + 1 not in exceptions:
+            message = "; ".join(error for _, error in errors)
             report(jf, i + 1, f"запись не проходит схему P1.1: {message}")
 
 

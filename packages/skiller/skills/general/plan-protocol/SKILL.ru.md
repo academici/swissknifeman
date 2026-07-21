@@ -45,6 +45,7 @@ plans/<PLAN-ID>/
 ├── index.md           # карта файлов + провенанс findings/research→фаза (раздел 2, опционален)
 ├── roadmap.md         # исполнительская карта: батчи/workflow/гейты (раздел 8; обязателен после полной детализации)
 ├── journal.jsonl      # append-only история исполнения item'ов, одна запись на запуск task:plan-* (раздел 2)
+├── journal-exceptions.jsonl # optional append-only owner-gated exceptions для historical schema-invalid строк
 ├── brief/             # слой 0 «вход»: бриф владельца + дописываемые уточнения (раздел 16, ОБЯЗАТЕЛЕН)
 ├── findings/          # слой 1 «сырьё»: RAG-выжимки, recon, исходные документы (раздел 16)
 ├── research/          # слой 2 «синтез»: авторские design-документы (раздел 16)
@@ -68,12 +69,17 @@ plans/<PLAN-ID>/
 2026.07.18 отсутствие/невалидный `journal.jsonl` — ERROR; старее/legacy — WARNING (soft-гейт
 против поломки уже идущего флота — тот же паттерн, что у брифа/roadmap).
 
-**Историческое schema-исключение `journal-exceptions.jsonl` (D51, optional).** Это отдельный
-append-only sidecar, а не event/status/Next carrier. Он может снять только exact historical
-ошибку `friction`: physical non-empty target line, raw SHA-256, canonical plan ID, exact
-`invalid_fields:["friction"]` и существующий owner D# обязательны. Duplicate, valid/malformed
-target, hash/plan mismatch или extra error fail closed; существующая journal-строка не меняется.
-Писать только `task.journal exception`; compensating event не исправляет schema-invalid history.
+**Historical schema exception.** Обычная compensating event-запись не исправляет
+schema-invalid историческую строку: strict per-line gate проверяет её независимо. Если
+переписывание запрещено append-only contract'ом, владелец может одобрить отдельным D# ровно
+одно provenance-preserving исключение через `python3 -m task.journal exception ...`.
+Хелпер дописывает optional `journal-exceptions.jsonl`, фиксируя physical target line + SHA-256
+исходных UTF-8 bytes без newline, точный `invalid_fields`, owner D#, actor и reason. v1
+допускает только поле `friction`; target обязан быть существующей JSON event-строкой того же
+плана и иметь ровно названные schema-ошибки. Duplicate target, hash mismatch, valid target,
+отсутствующий D# и malformed JSON fail closed. Sidecar не несёт event/status/next и не может
+таргетить sidecar, поэтому не становится вторым current-state carrier и не образует cycle.
+Старую строку и старую D# не редактируют; новая D# явно supersedes ошибочную remediation.
 
 **Индекс плана `index.md`** (опционален) — карта ФАЙЛОВ плана + провенанс-связи
 (`findings`/`research` → фаза-потребитель); НЕ носитель статуса/next (это Status Board/

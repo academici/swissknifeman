@@ -1,40 +1,44 @@
-# HANDOFF — 2026-07-21 — after P4
+# HANDOFF — 2026-07-21 — after P4.5
 
-**Next:** design-phase: task:plan-design 2026.07.19-DUAL-PROVIDER P4
+**Next:** close: task:plan-close 2026.07.19-DUAL-PROVIDER P4
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | frontier |
-| Effort | high |
-| Capabilities | skills.repository · command.filesystem-read/write · command.git-read |
-| Context | cold-start — plan-step |
-| Суть | Reopen P4 only for the Codex runtime-projection consumer contradiction; P5 remains untouched. |
+| Model class | implementation |
+| Effort | low |
+| Capabilities | skills.repository · command.filesystem-read/write · command.git-read/write |
+| Context | cold-start — phase gate |
+| Суть | Один terminal validation/close retry на repair tree, затем fresh Audit P4 attempt 2. |
 
 ```text
-$ task:plan-design 2026.07.19-DUAL-PROVIDER P4
+$ task:plan-close 2026.07.19-DUAL-PROVIDER P4
 
-РЕЖИМ: реопен по §3 (4 шага), НЕ детализация
-ВХОД: plans/2026.07.19-DUAL-PROVIDER/phases/P4.md → блок `## Audit P4 — 2026-07-21`; прочитать ПЕРВЫМ
-СКОУП: 1) починить owning Codex runtime projection без изменения Claude canonical bytes 2) добавить узкий consumer regression на отсутствие imperative Claude selector/slash output в Codex runtime 3) регенерировать только task Codex artifacts/locks и повторить непосредственный parity consumer
-НЕ ТРОГАТЬ: frozen D84 contract, Claude golden/canonical commands, statuses/16 fields/journal topology, root adapters, P5+, FOREMAN, fleet, live/user config и unrelated owner files
+RETRY AFTER RED G04: repair commit REPAIR_COMMIT
+RUN ONCE: full task/skiller validation, worktree-local registry check, docs/release assessment
+THEN: fresh independent task:plan-audit 2026.07.19-DUAL-PROVIDER P4 (attempt 2)
+DO NOT START: P5+, FOREMAN/fleet, live/user config or root adapters
 ```
 
-**Done:** independent Audit P4 attempt 1 recorded literal RED on `b921487`; exact-set,
-routing diagnostics, Claude goldens, protected diff and the recorded terminal close gate were
-reconciled without rerunning package-wide validation.
+**Done:** Audit P4 attempt 1 remains append-only RED. Bounded owning-seam repair replaced
+raw canonical Codex runtime copies with deterministic self-contained runtime projections,
+preserved source identity/hash, added fail-closed unsafe-literal validation and regenerated
+only task-owned Codex artifacts/locks through the existing renderer/apply seam.
 
-**Remaining:** one bounded owning-seam P4 reopen/remediation for the generated Codex runtime
-consumer plus focused regression and direct parity rerun. P5+ remains unopened and untouched.
+**Remaining:** run the single terminal P4 validation/close retry, mark P4.5/phase terminal
+only from that evidence, then launch fresh independent Audit P4 attempt 2. P5 stays unopened.
 
-**Sources of truth:** `phases/P4.md` → `## Audit P4 — 2026-07-21`;
-`packages/task/lib/task/command_render.py:428`/`:435`;
-`packages/task/adapters/codex/skills/task-plan-audit/{SKILL,command}.md`; frozen D84 contract.
+**Focused evidence:** `test_codex_command_adapter` + `test_provider_command_parity` GREEN;
+all 11 generated runtimes have zero exact canonical copies and zero Claude model/slash/
+session-route/Workflow execution literals; statuses/item-field sentinels, two-run identity,
+P2 lock lifecycle/cache containment and all-noop second apply remain GREEN. Immediate
+Claude routing/adapter consumers are GREEN; full validation was not rerun in repair.
 
-**Open risks:** current Codex task cache can present a native `$ task:…` wrapper and then
-instruct the session to obey Claude model pins and slash invocations from its runtime body.
+**Sources of truth:** `phases/P4.md` historical Audit P4 block and current Phase Handoff;
+`packages/task/lib/task/command_render.py`; generated `packages/task/adapters/codex/**`;
+`artifacts/P4-command-parity-conformance.md`; frozen D84 contract.
 
-**Workarounds/Deferred/Open questions:**
+**Open risks:** none inside the bounded repair seam. G04 remains unsatisfied until the
+single terminal close retry and fresh independent Audit P4 attempt 2 are literal GREEN.
 
-- workarounds: none accepted; do not use the broken Codex projection as G04 evidence.
-- deferred: P5 and later phases remain outside this execution.
-- open_questions: none; remediation scope is bounded by the audit finding.
+**Scope boundary:** P5 remains unopened. Canonical task commands, Claude plugin/goldens,
+frozen D84, root `.agents`, external plans, fleet and live/user configuration are untouched.

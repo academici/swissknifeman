@@ -1,11 +1,10 @@
----
-description: "План-протокол: закрыть/сверить item Pn.m по git-фактам, закрыть фазу Pn (таблицы, Phase Handoff, lint) или архивировать терминальный план (archive <ID> — конвейер план→архив→docs). Пинит Sonnet/low."
-argument-hint: "<PLAN-ID> Pn[.m] | archive <PLAN-ID>"
-model: sonnet
-effort: low
----
+<!-- Generated Codex runtime projection; do not edit as source.
+Canonical source: packages/task/commands/plan-close.md
+Canonical SHA-256: sha256:335d0f0ee37b49f618d8efaf44adf789a1dea4fbd7297a26a36d8e6d764582d9
+Adapter: task.codex-command/1.0.2
+-->
 Это РЕКОНСИЛЯЦИЯ/ЗАКРЫТИЕ по plan-протоколу. Ввод пользователя: «$ARGUMENTS».
-Модель/effort запинены (Sonnet/low — механическая сверка, thinking тут жжёт токены без
+Модельsession effort setting запинены (implementation/low — механическая сверка, thinking тут жжёт токены без
 пользы) — не переключай вручную. SSOT схем/статусов — скилл `plan-protocol`.
 Статусы — 6 канонических строк байт-в-байт; правки статусов ТОЛЬКО по фактам.
 
@@ -17,15 +16,15 @@ effort: low
   (D40; иная форма/порядок = ERROR `plan-lint`):
   | Форма Next | Когда |
   |:--|:--|
-  | `/task:plan-exec <ID> Pn.m` | следующий item детализирован, `Exec = plan-exec` (§9) |
-  | `/task:plan-design <ID> Pn` | следующая фаза — скелет |
-  | `/task:plan-design <ID> Pn.m` | item эскалирован (🔴) либо требует ре-дизайна |
-  | `/task:plan-audit <ID> Pn` | фаза Pn закрыта (терминальна) — аудит перед следующей |
-  | `/task:plan-close <ID> Pn[.m]` | items терминальны: закрыть фазу / сверить item |
-  | `/task:plan-close archive <ID>` | план терминален целиком |
+  | `$ task:plan-exec <ID> Pn.m` | следующий item детализирован, `Exec = plan-exec` (§9) |
+  | `$ task:plan-design <ID> Pn` | следующая фаза — скелет |
+  | `$ task:plan-design <ID> Pn.m` | item эскалирован (🔴) либо требует ре-дизайна |
+  | `$ task:plan-audit <ID> Pn` | фаза Pn закрыта (терминальна) — аудит перед следующей |
+  | `$ task:plan-close <ID> Pn[.m]` | items терминальны: закрыть фазу / сверить item |
+  | `$ task:plan-close archive <ID>` | план терминален целиком |
   | «план закрыт» | все items терминальны, следующий шаг вне протокола |
-  | «ЗАПУСК ВРУЧНУЮ: `<model/effort>`» | `Exec = manual` (§9): команды нет — launch-block несёт
-  предписанную модель и голый промпт item'а отдельным code-block (либо `/model`+`/effort`+`/task:plan-run <ID> Pn.m`, D18) |
+  | «ЗАПУСК ВРУЧНУЮ: `<modelsession effort setting>`» | `Exec = manual` (§9): команды нет — launch-block несёт
+  предписанную модель и голый промпт item'а отдельным code-block (либо `session model-class setting`+`session effort setting`+`$ task:plan-run <ID> Pn.m`, D18) |
 - **Launch-block ОБЯЗАТЕЛЕН**: таблица `Model / Thinking / Context / Суть` + голая команда
   (или, у `Exec = manual`, голый промпт item'а) ОТДЕЛЬНЫМ code-block'ом (копипаст без
   правок); самодостаточна из холодной сессии — plan-ID + cold-start reads, «эта сессия» —
@@ -35,7 +34,7 @@ effort: low
   `Exec = manual` — рестарт сессии не нужен) · `NEW SESSION — Workflow-оркестрован` ·
   `NEW SESSION — шаг-не-item` (следующий шаг сам — `plan-audit`/`plan-close`/`plan-design`).
 - **Сверка с Execution Rules плана**: команда в Next не должна противоречить
-  `## 2. Execution Rules` — план запрещает `/task:plan-exec` (программный план) →
+  `## 2. Execution Rules` — план запрещает `$ task:plan-exec` (программный план) →
   Next обязан указывать предписанную планом команду запуска делегатов, не plan-exec
   (инцидент FLEX-IMPL: handoff слал исполнителя на запрещённую команду).
 
@@ -54,7 +53,7 @@ effort: low
    (а не в процессе исполнения) · item-коммит несёт дифф вне `Files` item'а (считается
    только по НЕплановым путям — carve-out §8), верен сам дифф или нет. `🟢 Done`
    сохраняется при **process**-отклонении, но запись в Known Deviations ОБЯЗАТЕЛЬНА:
-   перебор тира (исполнено моделью/effort ВЫШЕ предписанных Routing), бандлинг коммитов,
+   перебор тира (исполнено модельюsession effort setting ВЫШЕ предписанных Routing), бандлинг коммитов,
    порядок правок, стилистика отчёта. Тихое умолчание = дефект (находка аудита).
    **Нет подтверждения (нет коммитов/диффа, Validation красная) — НЕ 🟢:** оставь/верни
    `🟡 In progress` или `🔴 Blocked`, причина — в Completion Notes item'а (`phases/Pn.md`).
@@ -69,7 +68,7 @@ effort: low
    форма `Next` — из enum выше).
    **Журнал (D21, P1.1, хелпер `lib/task/journal.py`):** append ОДНУ запись —
    `PYTHONPATH=packages/task/lib python3 -m task.journal append --plan-dir plans/<PLAN-ID>
-   --plan <PLAN-ID> --item <Pn.m> --command plan-close --actor sonnet/low --result
+   --plan <PLAN-ID> --item <Pn.m> --command plan-close --actor implementation/low --result
    <closed-green|closed-deviations|blocked — по итоговому статусу шага 4> --note "<1 строка:
    что сверено>"` (реконсиляция атомарна — старт-запись не нужна, один прогон = один факт).
 
@@ -128,7 +127,7 @@ effort: low
    `handoff.md`. Любое число в отчёте — с якорем дерева `<число> (на <git-ref>)`.
 8. **Журнал (D21, P1.1):** append ОДНУ запись для закрываемой ФАЗЫ (item_id = `Pn`) —
    `python3 -m task.journal append --plan-dir plans/<PLAN-ID> --plan <PLAN-ID> --item Pn
-   --command plan-close --actor sonnet/low --result <closed-green — все items 🟢 |
+   --command plan-close --actor implementation/low --result <closed-green — все items 🟢 |
    closed-deviations — хоть один 🟠> --note "фаза Pn закрыта"` — ДО коммита закрытия (шаг 9,
    `journal.jsonl` входит в `git add plans/<PLAN-ID>` того же коммита).
 9. **Коммит закрытия фазы — ОДИН** (только плановые пути + docs/, если правился шагом 3;
@@ -183,17 +182,17 @@ launch-block не требуется, следующий план выбирае
 ```
 | Параметр | Значение |
 |:--|:--|
-| Model | <sonnet | opus | haiku | fable> |
+| Model | <implementation | frontier | economy | frontier> |
 | Thinking | <effort> — <причина в 3–8 слов> |
 | Context | <РОВНО одно из трёх значений enum'а выше> |
 | Суть | <1 строка: что делает следующий шаг> |
 
 <голая команда (форма из enum 8) ИЛИ, у Exec=manual, голый промпт item'а — ОТДЕЛЬНЫМ
   code-block'ом, копипаст без правок; оценка по факту закрытой фазы:
-  фаза 🟢 без Known Deviations и без эскалаций по её items → `/task:plan-exec <PLAN-ID>
-  P(n+1).1` (sonnet/medium) либо форма «ЗАПУСК ВРУЧНУЮ» при `Exec = manual`;
-  была хоть одна `🟠`/эскалация → сперва `/task:plan-audit <PLAN-ID> Pn` (opus/xhigh);
+  фаза 🟢 без Known Deviations и без эскалаций по её items → `$ task:plan-exec <PLAN-ID>
+  P(n+1).1` (implementation/medium) либо форма «ЗАПУСК ВРУЧНУЮ» при `Exec = manual`;
+  была хоть одна `🟠`/эскалация → сперва `$ task:plan-audit <PLAN-ID> Pn` (frontier/xhigh);
   план закрыт ЦЕЛИКОМ (п.5) → «план закрыт», следующий шаг —
-  `/task:plan-close archive <PLAN-ID>` либо вне протокола;
+  `$ task:plan-close archive <PLAN-ID>` либо вне протокола;
   команда не должна противоречить Execution Rules плана — правила в шапке>
 ```

@@ -46,7 +46,7 @@ class CodexCommandAdapterTests(unittest.TestCase):
             self.assertIn(f"packages/task/adapters/codex/skills/task-{name}/SKILL.md", paths)
             self.assertIn(f"packages/task/adapters/codex/skills/task-{name}/command.md", paths)
 
-    def test_two_renders_are_byte_identical_and_runtime_copies_are_exact(self):
+    def test_two_renders_are_byte_identical_and_runtime_projection_is_self_contained(self):
         first, second = self.render(), self.render()
         self.assertEqual([(item.path, item.managed_bytes, item.rendered_hash)
                           for item in first.artifacts],
@@ -56,8 +56,11 @@ class CodexCommandAdapterTests(unittest.TestCase):
         for record in self.catalog.records:
             name = record.command_id.removeprefix("task:")
             path = f"packages/task/adapters/codex/skills/task-{name}/command.md"
-            self.assertEqual(by_path[path].managed_bytes,
-                             self.catalog.content_for(record.command_id))
+            runtime = by_path[path].managed_bytes
+            self.assertNotEqual(runtime, self.catalog.content_for(record.command_id))
+            self.assertFalse(runtime.startswith(b"---\n"))
+            self.assertIn(record.source.path.encode(), runtime)
+            self.assertIn(record.source.content_hash.encode(), runtime)
 
     def test_negative_diagnostics_precede_results_or_writes(self):
         cases = []
@@ -90,6 +93,19 @@ class CodexCommandAdapterTests(unittest.TestCase):
                     self.assertIn(expected, {item.code for item in plan.diagnostics})
                     self.assertEqual(tuple(root.rglob("*")), before)
 
+            poisoned_contents = tuple(
+                (command_id, content + b"\nWorkflow({unknown})\n"
+                 if command_id == "task:fix" else content)
+                for command_id, content in self.catalog.source_contents)
+            unsafe = plan_codex_command_render(
+                replace(self.catalog, source_contents=poisoned_contents),
+                self.mapping, self.support)
+            self.assertFalse(unsafe.ok)
+            self.assertEqual(unsafe.results, ())
+            self.assertIn("CMD_INVOCATION_INVALID",
+                          {item.code for item in unsafe.diagnostics})
+            self.assertEqual(tuple(root.rglob("*")), before)
+
     def test_lock_lifecycle_repair_and_cache_containment(self):
         render = self.render()
         with tempfile.TemporaryDirectory() as temporary:
@@ -121,7 +137,10 @@ class CodexCommandAdapterTests(unittest.TestCase):
                 root, render, lock_bytes=lock_bytes,
                 repair_artifact_ids=("task.codex.fix.runtime",))
             apply_codex_command_plan(root, repaired)
-            self.assertEqual(target.read_bytes(), self.catalog.content_for("task:fix"))
+            expected_runtime = next(
+                artifact.managed_bytes for artifact in render.artifacts
+                if artifact.path == target.relative_to(root).as_posix())
+            self.assertEqual(target.read_bytes(), expected_runtime)
             self.assertEqual(target.with_name("command.md.provider-artifact.bak").read_bytes(),
                              b"drift\n")
 

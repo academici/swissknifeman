@@ -1,14 +1,13 @@
----
-description: "Авторинг workflow-скрипта через гейт: активация workflow-craft → интервью по типу задачи (spec-interview) → генерация копией шаблона → выходной статический ревьюер (RED блокирует выдачу). Пинит Sonnet/high."
-argument-hint: "[тип/цель workflow: разработка | проектирование | аудит | что оркеструем]"
-model: sonnet
-effort: high
----
+<!-- Generated Codex runtime projection; do not edit as source.
+Canonical source: packages/task/commands/make-workflow.md
+Canonical SHA-256: sha256:de0cb9534e602a48e13fc01c64a62d031f60d1e9a7245b4fbe1566d485090170
+Adapter: task.codex-command/1.0.2
+-->
 Это АВТОРИНГ workflow-скрипта через управляемый контур, а НЕ свободная формулировка. Ввод
-пользователя: «$ARGUMENTS». Модель/effort запинены (Sonnet/high) — не переключай вручную.
+пользователя: «$ARGUMENTS». Модельsession effort setting запинены (implementation/high) — не переключай вручную.
 
 **Зачем гейт.** Field-case vaulter 2026-07-10: свободная формулировка «составь workflow»
-не матчит ни один скилл-триггер — Opus-сессия собрала dev-workflow с нуля и забыла обязательное
+не матчит ни один скилл-триггер — frontier-сессия собрала dev-workflow с нуля и забыла обязательное
 code review. Команда даёт детерминированный контур **требования → интервью по шаблону →
 генерация из шаблона → выходной ревьюер**, где обязательные стадии не теряются, а красный
 вердикт ревьюера не выпускает скрипт.

@@ -26,6 +26,12 @@ Codex wrapper/runtime artifacts/invocation. Each provider row records rendered h
 native selector/effort and diagnostics. The generated operator reference is rendered only
 from this validated report.
 
+The direct Codex consumer regression additionally reads all 11 generated `command.md`
+runtimes: none is an exact canonical byte-copy; provider frontmatter is absent; counts for
+Claude model selectors, `/task:`, session `/model`/`/effort` rituals and `Workflow(` are
+all zero. The six status literals and 16 ordered item-field names remain present in the
+projected plan-command set.
+
 ## Failure and no-write matrix
 
 | Condition | Required result |
@@ -39,6 +45,7 @@ from this validated report.
 | route undershoot | `CMD_ROUTE_UNDERSHOOT`; no invocation/write |
 | legal route overshoot | `CMD_ROUTE_OVERSHOOT`; invocation retained |
 | malformed invocation/Next | `CMD_INVOCATION_INVALID`; no invocation |
+| unsafe literal left after finite Codex runtime projection | `CMD_INVOCATION_INVALID`; no artifacts/write |
 | source/plugin drift | `CMD_SOURCE_DRIFT`; no artifacts/write |
 
 Tests use explicit inputs and temporary roots. The Claude canonical check is empty; the

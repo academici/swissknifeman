@@ -1,11 +1,10 @@
----
-description: "Задача РЕВЬЮ: read-only adversarial-ревью свежим контекстом — диспетчер профилей doc/code (таксономия artifact-review), Stage A детект стека → скиллы, Stage B классика + conformance-finder'ы, Stage C adversarial verify. Пинит Opus/xhigh."
-argument-hint: "[что ревьюим: дифф / ветка / PR# / docs-путь]"
-model: opus
-effort: xhigh
----
+<!-- Generated Codex runtime projection; do not edit as source.
+Canonical source: packages/task/commands/review.md
+Canonical SHA-256: sha256:47375319311f6e441bfc9cff37542ac05136d109f519a6e43fbedb4003a66c0c
+Adapter: task.codex-command/1.0.2
+-->
 Это задача РЕВЬЮ (read-only). Ввод пользователя: «$ARGUMENTS».
-Модель/effort запинены (Opus/xhigh) — не переключай вручную. Файлы НЕ меняй.
+Модельsession effort setting запинены (frontier/xhigh) — не переключай вручную. Файлы НЕ меняй.
 
 **Зачем оркестратор.** Кейс-мотиватор: атрибуты Laravel-моделей не поймал ни один ревью в 5
 проектах — правило жило в скилле, но ревью его не открывало. Laravel-ревью-паки (P7.5) — частный

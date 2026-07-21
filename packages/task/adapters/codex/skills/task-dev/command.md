@@ -1,24 +1,23 @@
----
-description: "Задача РАЗРАБОТКИ: адаптивный dev-loop (срез→impl→tests-to-green→risk-адаптивный review) на Lean-tiered моделях. Пинит Sonnet/high для планирования; субагенты — по риску среза."
-argument-hint: "[что строим: бриф / срезы / ссылка на план]"
-model: sonnet
-effort: high
----
+<!-- Generated Codex runtime projection; do not edit as source.
+Canonical source: packages/task/commands/dev.md
+Canonical SHA-256: sha256:4b3a0743fabdf7e472128c11c0b5c7d713d2416055e5810b79aa778554deaee5
+Adapter: task.codex-command/1.0.2
+-->
 Это задача РАЗРАБОТКИ. Ввод пользователя: «$ARGUMENTS».
 
-Профиль `dev` (token-экономный, Lean-tiered). Модель/effort этой команды уже запинены (Sonnet/high) —
+Профиль `dev` (token-экономный, Lean-tiered). Модельsession effort setting этой команды уже запинены (implementation/high) —
 не переключай вручную.
 
 **Вход — КОРОТКИЙ:** ссылка на durable план-файл (primary source) + что делаем. Детали, якоря и текст
 правок бери ИЗ плана; не жди и не проси бриф на 2 страницы — вся подробность живёт в плане, не в промпте.
 
-1. **Планируй** на текущей (Sonnet) модели: разложи задачу на вертикальные срезы
+1. **Планируй** на текущей (implementation) модели: разложи задачу на вертикальные срезы
    (model→service→controller→test), каждый со своим риском `LOW|MED|HIGH` (blast-radius: concurrency /
    transactions / data-integrity / queue-semantics / connectors). Срез = завершённая вертикаль с проводкой
    и тестом, а не горизонтальная нарезка.
 2. **Если установлен agent-pack** (`.claude/workflows/*-dev-loop.js` + агенты `*-slice-builder/test-writer/
-   reviewer`) — гони срезы через него: impl→tests-to-green→risk-адаптивный review-gate. Модель/effort
-   субагентов уже заданы по риску (Sonnet impl, Opus+xhigh на HIGH-review, Haiku тривиал) и перебивают сессию.
+   reviewer`) — гони срезы через него: impl→tests-to-green→risk-адаптивный review-gate. Модельsession effort setting
+   субагентов уже заданы по риску (implementation impl, frontier+xhigh на HIGH-review, economy тривиал) и перебивают сессию.
    Передай срезы как `args.slices`. Детальный статус фонового workflow-прогона — `swissknifeman wf status`,
    НЕ советовать `/workflows` (такой команды в окружении нет).
    Оркестрация мультиагентным `*.js`-скриптом → сначала скилл `general/workflow-craft` (матчинг 4

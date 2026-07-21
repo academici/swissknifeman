@@ -1,11 +1,10 @@
----
-description: "План-протокол: adversarial-аудит закрытой фазы Pn (сверка 🟢 с кодом/git, no-op, scope drift, handoff) или pre-exec ревью всего плана (design). Пинит Opus/xhigh."
-argument-hint: "<PLAN-ID> Pn | <PLAN-ID> design"
-model: opus
-effort: xhigh
----
+<!-- Generated Codex runtime projection; do not edit as source.
+Canonical source: packages/task/commands/plan-audit.md
+Canonical SHA-256: sha256:e98d0c1937a2895f396b3bea4d70c51764a83f08c799188fcf144351a02df1ba
+Adapter: task.codex-command/1.0.2
+-->
 Это ADVERSARIAL-АУДИТ закрытой фазы мастер-плана (plan-протокол). Ввод пользователя: «$ARGUMENTS».
-Модель/effort запинены (Opus/xhigh) — не переключай вручную. Items НЕ трогай, код НЕ меняй.
+Модельsession effort setting запинены (frontier/xhigh) — не переключай вручную. Items НЕ трогай, код НЕ меняй.
 
 `plan-audit` — профиль **«ревью плана»** таксономии `quality/artifact-review`: конституция соответствия
 = схема plan-protocol (канон 2.5+) + DoR; измерения (RAG-groundedness несущих, структурная полнота,
@@ -102,9 +101,9 @@ effort: xhigh
    - `handoff.md` и `## Phase Handoff` достаточны для холодного старта (агент без этого чата поймёт, где
      правда и что делать дальше); агрегат Known Deviations фазы собран ИЗ ПОЛЕЙ items, а не пересказом;
    - **DoR-ретроспектива**: фаза ушла в exec с незакрытыми `[NEEDS CLARIFICATION]` = находка;
-   - **routing-adherence**: модель/effort фактического исполнения (Update Log / Completion Notes) ≠ строке
+   - **routing-adherence**: модельsession effort setting фактического исполнения (Update Log / Completion Notes) ≠ строке
      §3 Routing без записи в Known Deviations = находка; у item'а с `Exec = manual` ФАКТИЧЕСКАЯ
-     модель/effort обязана быть НАЗВАНА в отчёте (самоатрибуция машинно не проверяема — её отсутствие и
+     модельsession effort setting обязана быть НАЗВАНА в отчёте (самоатрибуция машинно не проверяема — её отсутствие и
      есть находка).
 
 4. **Детект ≠ гейтинг.** Репортишь ВСЕ находки: `severity ∈ {Blocker,Major,Minor,Nit}` + лейбл
@@ -119,7 +118,7 @@ effort: xhigh
    Статусы/поля items НЕ править — их разруливают plan-design/plan-close по твоему отчёту.
    **Журнал (D21, P1.1):** append ОДНУ запись (не правка markdown — не нарушает «единственная
    запись» выше) — `python3 -m task.journal append --plan-dir plans/<PLAN-ID> --plan <PLAN-ID>
-   --item <Pn — режим фазы|design — режим design> --command plan-audit --actor opus/xhigh
+   --item <Pn — режим фазы|design — режим design> --command plan-audit --actor frontier/xhigh
    --result <audit-green|audit-red — GREEN даёт audit-green, ATTENTION/RED дают audit-red>
    --note "заход <N>, вердикт <вердикт>"`.
 
@@ -138,12 +137,12 @@ slash-команда), копипаст без правок. Тот же launch-
 **`RED`/`ATTENTION` → команда несёт SCOPE-PAYLOAD (канон §8), голая ЗАПРЕЩЕНА.** Твой вердикт
 передаёт находки следующей сессии; голая команда их теряет — она заставляет принимающую сессию
 переоткрывать находки самой, а `handoff.md` в этот момент ещё указывает на ПРЕДЫДУЩИЙ шаг и уводит
-мимо. Хуже: `/task:plan-design <ID> Pn` многозначен — свежая сессия сама решает «реопен или
+мимо. Хуже: `$ task:plan-design <ID> Pn` многозначен — свежая сессия сама решает «реопен или
 детализация» и ошибается в сторону дорогого («фазу разрабатывают заново»). Под командой, в том же
 code-block'е, четыре строки фиксированного порядка:
 
 ```
-/task:plan-design <PLAN-ID> Pn
+$ task:plan-design <PLAN-ID> Pn
 
 РЕЖИМ: реопен по §3 (4 шага), НЕ детализация
 ВХОД: plans/<PLAN-ID>/phases/Pn.md → блок `## Audit Pn — <дата>`; прочитать ПЕРВЫМ
@@ -158,11 +157,11 @@ code-block'е, четыре строки фиксированного поряд
 твоём audit-блоке (датовые планы от 2026.07.16 — ERROR).
 
 Команду выбрать по вердикту:
-- `GREEN` / `ATTENTION` → движение ВПЕРЁД: `/task:plan-exec <PLAN-ID> P(n+1).1` (следующая фаза — скелет
-  ⇒ `/task:plan-design <PLAN-ID> P(n+1)`); находки ATTENTION идут в Pending Work items и в follow-up
+- `GREEN` / `ATTENTION` → движение ВПЕРЁД: `$ task:plan-exec <PLAN-ID> P(n+1).1` (следующая фаза — скелет
+  ⇒ `$ task:plan-design <PLAN-ID> P(n+1)`); находки ATTENTION идут в Pending Work items и в follow-up
   СЛЕДУЮЩЕЙ фазы, не в реопен;
-- `RED` → `/task:plan-design <PLAN-ID> Pn` (реопен, 4 шага §3) — ТОЛЬКО если дефект в Deliverable закрытой
-  фазы; иначе follow-up items: `/task:plan-design <PLAN-ID> P(n+1)`;
+- `RED` → `$ task:plan-design <PLAN-ID> Pn` (реопен, 4 шага §3) — ТОЛЬКО если дефект в Deliverable закрытой
+  фазы; иначе follow-up items: `$ task:plan-design <PLAN-ID> P(n+1)`;
 - `AUDIT-CAP` (третий и далее заход) → launch-block адресован ВЛАДЕЛЬЦУ: решение «сдать `🟠` с названным
   долгом / убить фазу»; команду не назначаешь.
 

@@ -37,8 +37,10 @@ surfaces. The shared seam therefore belongs to `packages/task`.
 - Explicit command root, routing carrier, mapping and capability inputs only; no cwd, home,
   import-registry or environment discovery.
 - All catalog/mapping/capability/route diagnostics are computed before any write.
-- Generated Codex skills contain a wrapper plus a locked runtime copy of the canonical body;
-  the copy is provenance-labelled output, never an editable source.
+- Generated Codex skills contain a wrapper plus a locked, deterministic Codex runtime
+  projection of the canonical body. The projection strips provider frontmatter, maps only
+  the finite Claude execution literals into neutral/native Codex forms, preserves canonical
+  source identity/hash, and fails closed before writes if an unsafe literal remains.
 
 ## Compatibility and SemVer
 
@@ -47,6 +49,12 @@ manifest are unchanged. The task package gains a new Codex projection without re
 renaming a public identity, so this is a minor-class capability addition within the existing
 `0.2.0` package/plugin line. D84 identity, routing axes, diagnostics and plan literals are not
 changed; any such change remains an owner-level contract revision.
+
+Audit P4 attempt 1 exposed that the initial byte-copy runtime violated the accepted
+provider-projection boundary at its direct consumer. The bounded repair changes only the
+task-owned Codex renderer/cache artifact, bumps adapter identity to `1.0.2`, and adds a
+consumer regression; canonical command bytes, Claude output and frozen D84/plugin identity
+remain unchanged.
 
 ## Approval record
 

@@ -1,11 +1,10 @@
----
-description: "План-протокол: создать/детализировать мастер-план в plans/ — новый план, фаза Pn, ТЗ подпункта Pn.m, развёртка черновика (from-draft), финальное закрытие дыр (finish) или пересборка roadmap. Пинит Opus/high."
-argument-hint: "[new <название> | <PLAN-ID> [Pn[.m] | finish | roadmap] | from-draft <файл>]"
-model: opus
-effort: high
----
+<!-- Generated Codex runtime projection; do not edit as source.
+Canonical source: packages/task/commands/plan-design.md
+Canonical SHA-256: sha256:883a3423951d23c970be4864f4985c191a8e6b5ecb462c9523cb23bd84e21763
+Adapter: task.codex-command/1.0.2
+-->
 Это ПРОЕКТИРОВАНИЕ мастер-плана (plan-протокол). Ввод пользователя: «$ARGUMENTS».
-Модель/effort запинены (Opus/high) — не переключай вручную. SSOT протокола — скилл
+Модельsession effort setting запинены (frontier/high) — не переключай вручную. SSOT протокола — скилл
 `plan-protocol` (general): схемы, статусы, эскалация, routing-матрица, refine-цикл (§7);
 шаблоны — его `snippets/{plan,phase,handoff,launch-block}-template.md`. Ты пишешь план,
 который дешёвая модель исполнит БЕЗ доступа к этому чату.
@@ -27,7 +26,7 @@ effort: high
    опциональные `## 7. Contracts`/
    `## Обсуждение` — заводи, только если план их несёт), скелеты фаз `plans/<ID>/phases/Pn.md`
    (Phase Context со скелет-маркером — фиксированная строка
-   `> СКЕЛЕТ — не детализирован, разворачивается /task:plan-design <ID> Pn` —
+   `> СКЕЛЕТ — не детализирован, разворачивается $ task:plan-design <ID> Pn` —
    + Phase Status + items-скелеты; каждый item несёт ВСЕ 16 полей строками (при маркере
    пустые поля легальны, включая Code Guidance = «—», но САМИ ПОЛЯ обязаны быть — иначе
    ERROR `plan-lint`)) и `handoff.md` (Next: первый item;
@@ -41,7 +40,7 @@ effort: high
    ВНУТРИ захода фазы; проектировать 5+ фаз одним потоком — риск ошибок и смешанных
    согласований (допустимо только для малых планов ≤3 фаз или по явному выбору владельца)
    → финал `<PLAN-ID> finish` (режим 5: закрытие дыр; roadmap — его последний шаг) →
-   `/task:plan-audit <ID> design` → exec. Exec по живым скелетам — только по явной
+   `$ task:plan-audit <ID> design` → exec. Exec по живым скелетам — только по явной
    D-записи (волатильная фаза).
    **Contract-first (опционально, скилл `plan-protocol` §5):** можно запечатать ВСЕ фазы
    скелет-маркерами и вписать в каждый `Phase Context` контракт-блок
@@ -67,7 +66,7 @@ effort: high
    **Журнал (D21, P1.1):** append ОДНУ запись (item_id = `Pn` — фаза, не item; design-сессия
    не закрывает item'ы, `result` честно отражает это) — `python3 -m task.journal append
    --plan-dir plans/<PLAN-ID> --plan <PLAN-ID> --item Pn --command plan-design --actor
-   opus/high --result in-progress --note "фаза детализирована до DoR"`.
+   frontier/high --result in-progress --note "фаза детализирована до DoR"`.
    **Reconcile контракт-блока (contract-first, скилл `plan-protocol` §5):** если фаза несёт
    контракт-блок `> **Контракт фазы (contract-first).**`, при детализации сверь его `Потребляет`
    с `Производит` уже закрытых фаз; расхождение → обнови блок + D# (`supersedes D#` при отмене
@@ -79,9 +78,9 @@ effort: high
    ДОСЛОВНО `> УСТАРЕЛ — фаза реопенена <D#>` (снимает его только `plan-close` при следующем
    закрытии фазы). `handoff.md` в этом случае пишется с заголовком `after Pn` (не `Pn.m`).
 3. **`<PLAN-ID> Pn.m`** — довести один item до исполняемого ТЗ: дозаполнить все поля
-   до уровня «sonnet исполнит без вопросов». Финал режима — refine-цикл + DoR-чеклист (ниже).
+   до уровня «implementation исполнит без вопросов». Финал режима — refine-цикл + DoR-чеклист (ниже).
    **Журнал (D21, P1.1):** append ОДНУ запись — `python3 -m task.journal append --plan-dir
-   plans/<PLAN-ID> --plan <PLAN-ID> --item <Pn.m> --command plan-design --actor opus/high
+   plans/<PLAN-ID> --plan <PLAN-ID> --item <Pn.m> --command plan-design --actor frontier/high
    --result in-progress --note "ТЗ item'а доведено до DoR"`.
    **Историческое исключение (D51):** schema-invalid существующую journal-строку нельзя
    переписывать или компенсировать event'ом. Только explicit Owner D# может дописать
@@ -118,8 +117,8 @@ effort: high
    (`supersedes` при отмене раннего решения); (3) DoR-свип всех фаз (чеклист ниже, включая
    бриф-трассировку по research/00-user-intent); (4) ТОЛЬКО когда дыры закрыты — последним
    шагом собрать `roadmap.md` (механика режима 6); (5) version bump + Update Log +
-   `plan-lint`. Финал сообщения — launch-block на `/task:plan-audit <PLAN-ID> design`
-   (Opus/xhigh, NEW SESSION). Найдены дыры, которые не закрыть этим заходом, → отчёт
+   `plan-lint`. Финал сообщения — launch-block на `$ task:plan-audit <PLAN-ID> design`
+   (frontier/xhigh, NEW SESSION). Найдены дыры, которые не закрыть этим заходом, → отчёт
    владельцу + launch-block на `<PLAN-ID> Pn` проблемной фазы, roadmap НЕ собирается.
 6. **`<PLAN-ID> roadmap`** — лёгкая пересборка ТОЛЬКО исполнительской карты (без
    полного свипа): после изменения/добавления/закрытия фаз, смены Routing или re-design'а.
@@ -137,10 +136,10 @@ effort: high
   Target Operator Models / Approval Owner; необязательные: `Home` — `brain`|`repo:<путь>`,
   `Paused By` — кто перехватил ACTIVE и когда) · `## 1. Context` (5–15 строк, самодостаточно) ·
   `## 2. Execution Rules` (выжимка ≤20 строк) · `## 3. Routing` — канон-таблица
-  `| Items | Model/effort | Exec | Почему |` (SKILL §9; опц. колонки `Batch` — id группы подфаз
+  `| Items | Modelsession effort setting | Exec | Почему |` (SKILL §9; опц. колонки `Batch` — id группы подфаз
   одной сессии — и `Review` — глубина ревью `full`|`light`|`none` — для батчинга подфаз,
   легаси-форма без них валидна); колонка **Exec** — enum `plan-exec` |
-  `manual` | `plan-design`; пустая ячейка = дефолт-деривация (`model ≤ sonnet` И `effort ≤
+  `manual` | `plan-design`; пустая ячейка = дефолт-деривация (`model ≤ implementation` И `effort ≤
   medium` → `plan-exec`, иначе `manual`); design/contract-item'ы получают `Exec = manual`
   явно; пустая секция = дефолты SSOT-матрицы ·
   `## 4. Phase Index & Status Board` (`Phase | Title | Items 🟢/всего | Status`) ·
@@ -176,7 +175,7 @@ effort: high
 
 ## Требования к качеству
 
-- **Каждый item исполним sonnet'ом без доп. контекста**: Required Reads конечны и
+- **Каждый item исполним implementation'ом без доп. контекста**: Required Reads конечны и
   упорядочены (не «посмотри по репо»), **Code Guidance обязателен** (стиль решения,
   запреты, обязательные тесты, запрещённые shortcuts — то, что дешёвая модель не выведет
   сама; формулировки бери из `snippets/code-guidance-patterns.md` — анти-подгонка,
@@ -239,7 +238,7 @@ design/contract-item'ы несут `Exec = manual`; **план экспорти�
 D-записью; **roadmap.md собран/обновлён**, если этот заход завершил детализацию всех фаз
 (гейт plan-lint: детализирован без roadmap = ERROR). Фаза, ушедшая в exec без DoR, =
 находка plan-audit.
-Финальный гейт перед стартом исполнения ВСЕГО плана — `/task:plan-audit <PLAN-ID> design`
+Финальный гейт перед стартом исполнения ВСЕГО плана — `$ task:plan-audit <PLAN-ID> design`
 (pre-exec ревью: полнота покрытия брифа, слепые зоны, связность слоёв знаний).
 
 **Pre-mortem для high-stakes** (фискалка/платежи/tenant-isolation/ядро экосистемы):
@@ -261,8 +260,8 @@ code-block'ом (копипаст без правок). Строка «Гото�
 дефект (владелец не должен переспрашивать модель/настройки). Какая команда в блоке —
 зависит от DoR-пункта «заявленная оркестрация» (SKILL §7 критерий: N≥3 items с
 независимым scope и детерминированной Validation, либо длинная автономная цепочка с
-внешним состоянием): фаза БЕЗ оркестрации → `/task:plan-exec <ID> Pn.m` (Model/Thinking —
-из §3 Routing, дефолт Sonnet/medium); фаза С заявленной оркестрацией (workflow-скрипт
-готов в `plans/<ID>/workflows/`) → `Workflow({scriptPath: "plans/<ID>/workflows/wf-….js"})`
+внешним состоянием): фаза БЕЗ оркестрации → `$ task:plan-exec <ID> Pn.m` (Model/Thinking —
+из §3 Routing, дефолт implementation/medium); фаза С заявленной оркестрацией (workflow-скрипт
+готов в `plans/<ID>/workflows/`) → `native orchestration carrier for the referenced plan-owned workflow script`
 с пометкой NEW SESSION (session-restart discipline, SKILL §8), не `plan-exec`;
-режим `new` (все фазы — скелеты) → `/task:plan-design <ID> P0` (Opus/high).
+режим `new` (все фазы — скелеты) → `$ task:plan-design <ID> P0` (frontier/high).

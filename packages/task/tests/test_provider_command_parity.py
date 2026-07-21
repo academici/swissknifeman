@@ -3,6 +3,7 @@ from dataclasses import replace
 from hashlib import sha256
 import json
 from pathlib import Path
+import re
 import shutil
 import tempfile
 import unittest
@@ -25,6 +26,22 @@ CONTRACT_PATH = (REPO_ROOT / "plans/2026.07.19-DUAL-PROVIDER/root/contracts/"
 FIXTURE_PATH = (REPO_ROOT / "packages/task/tests/fixtures_data/"
                 "provider-command-parity.json")
 REFERENCE_PATH = REPO_ROOT / "packages/task/docs/reference/provider-commands.md"
+_CODEX_RUNTIME_FORBIDDEN = (
+    re.compile(r"(?i)\b(?:opus|sonnet|haiku|fable)\b"),
+    re.compile(r"/task:"),
+    re.compile(r"/(?:model|effort)\b"),
+    re.compile(r"Workflow\("),
+)
+_PLAN_STATUSES = (
+    "⬜ Not started", "🟡 In progress", "🟢 Done", "🟠 Done with deviations",
+    "🔴 Blocked", "⛔ Skipped by decision",
+)
+_PLAN_ITEM_FIELDS = (
+    "Status", "Intent", "Why", "Scope Included", "Scope Excluded", "Inputs",
+    "Files", "Required Reads", "Implementation Rules", "Code Guidance",
+    "Validation", "Deliverables", "Completion Notes", "Pending Work",
+    "Known Deviations", "Escalation Needed",
+)
 
 
 def _contract_inventory():
@@ -135,6 +152,35 @@ class ProviderCommandParityTests(unittest.TestCase):
         second = render_provider_commands_reference(self.report())
         self.assertEqual(first, second)
         self.assertEqual(REFERENCE_PATH.read_bytes(), first)
+
+    def test_codex_runtime_projection_is_provider_safe_and_semantically_complete(self):
+        artifacts = {item.path: item.managed_bytes for item in self.codex_plan.artifacts}
+        exact_copies = []
+        unsafe = []
+        projected = {}
+        for record in self.catalog.records:
+            name = record.command_id.removeprefix("task:")
+            path = f"packages/task/adapters/codex/skills/task-{name}/command.md"
+            runtime = artifacts[path]
+            wrapper = artifacts[path.removesuffix("command.md") + "SKILL.md"]
+            projected[record.command_id] = runtime.decode("utf-8")
+            if runtime == self.catalog.content_for(record.command_id):
+                exact_copies.append(record.command_id)
+            if any(pattern.search(projected[record.command_id])
+                   for pattern in _CODEX_RUNTIME_FORBIDDEN):
+                unsafe.append(record.command_id)
+            if any(pattern.search(wrapper.decode("utf-8"))
+                   for pattern in _CODEX_RUNTIME_FORBIDDEN):
+                unsafe.append(record.command_id + ":wrapper")
+
+        self.assertEqual(exact_copies, [])
+        self.assertEqual(unsafe, [])
+        plan_text = "\n".join(
+            projected[command_id] for command_id in projected
+            if self.catalog.by_id()[command_id].kind == "plan-protocol")
+        for literal in _PLAN_STATUSES + _PLAN_ITEM_FIELDS:
+            with self.subTest(literal=literal):
+                self.assertIn(literal, plan_text)
 
     def test_all_contract_diagnostics_have_fail_closed_negative_cases(self):
         observed = set()

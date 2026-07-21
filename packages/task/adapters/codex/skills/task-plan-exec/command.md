@@ -1,11 +1,10 @@
----
-description: "План-протокол: исполнить подпункт(ы) Pn.m мастер-плана из plans/ строго по ТЗ, с обязательным закрытием item'а и handoff. Пинит Sonnet/medium."
-argument-hint: "<PLAN-ID> Pn.m [Pn.k]"
-model: sonnet
-effort: medium
----
+<!-- Generated Codex runtime projection; do not edit as source.
+Canonical source: packages/task/commands/plan-exec.md
+Canonical SHA-256: sha256:62aefdb74d1dd3d9c50688fccd61960521fb027ecebaa83d778a7e8962fa4a01
+Adapter: task.codex-command/1.0.2
+-->
 Это ИСПОЛНЕНИЕ item'а мастер-плана (plan-протокол). Ввод пользователя: «$ARGUMENTS».
-Модель/effort запинены (Sonnet/medium) — не переключай вручную. Команда самодостаточна:
+Модельsession effort setting запинены (implementation/medium) — не переключай вручную. Команда самодостаточна:
 весь протокол ниже, скилл `plan-protocol` дочитывай только при явной ссылке из плана.
 Несколько item'ов в аргументах — исполняй последовательно, каждый по полному циклу 1–8.
 **Батч §3 Routing** (item'ы одной группы `Batch`) — та же серия: последовательно, полный цикл
@@ -30,21 +29,21 @@ effort: medium
    (все её items 🟢/🟠/⛔) — иначе стоп + отчёт, какая фаза держит.
 
    **Routing-гейт (ДО п. 3 — заблокированный item в 🟡 не остаётся).** Найди строку item'а в `plan.md`
-   §3 Routing (секции/строки нет → дефолт SSOT-матрицы: `plan-exec` = sonnet/medium). Колонка **Exec** —
-   enum `plan-exec` | `manual` | `plan-design`; пуста → **деривация** по тир-порядку (модели `haiku <
-   sonnet < opus ≈ fable`, effort `low < medium < high < xhigh < max`; недостающее в ячейке берётся из
-   матрицы ролей скилла §9): `model ≤ sonnet` И `effort ≤ medium` → `plan-exec`; `model > sonnet` ИЛИ
+   §3 Routing (секции/строки нет → дефолт SSOT-матрицы: `plan-exec` = implementation/medium). Колонка **Exec** —
+   enum `plan-exec` | `manual` | `plan-design`; пуста → **деривация** по тир-порядку (модели `economy <
+   implementation < frontier ≈ frontier`, effort `low < medium < high < xhigh < max`; недостающее в ячейке берётся из
+   матрицы ролей скилла §9): `model ≤ implementation` И `effort ≤ medium` → `plan-exec`; `model > implementation` ИЛИ
    `effort > medium` → `manual`. Ветки:
    - `Exec = manual` (задан ИЛИ выведен) → item НЕ исполняется командой: СТОП, отчёт
-     `ROUTING-BLOCKED: Pn.m — предписано <model/effort>, команда пинит sonnet/medium`,
+     `ROUTING-BLOCKED: Pn.m — предписано <modelsession effort setting>, команда пинит implementation/medium`,
      launch-block формы «ЗАПУСК ВРУЧНУЮ» (п. 8). Статус item'а НЕ меняется.
-   - `Exec = plan-exec`, Routing НИЖЕ пина (haiku и/или low) → исполнять (перебор безвреден),
+   - `Exec = plan-exec`, Routing НИЖЕ пина (economy и/или low) → исполнять (перебор безвреден),
      process-отклонение — в Known Deviations; статус остаётся 🟢 (п. 7).
-   - `Exec = plan-exec` ПРОТИВОРЕЧИТ model/effort (заполненная Exec перебивает деривацию только
+   - `Exec = plan-exec` ПРОТИВОРЕЧИТ modelsession effort setting (заполненная Exec перебивает деривацию только
      в сторону строгости) → СТОП, отчёт `ROUTING-INCONSISTENT: Pn.m — Exec=plan-exec при
-     <model/effort>`; правит `plan-design`. Статус НЕ меняется.
+     <modelsession effort setting>`; правит `plan-design`. Статус НЕ меняется.
    - `Exec = plan-design` → item не исполняется: СТОП, ре-дизайн (п. 5).
-   - Routing неоднозначен (строки на item нет, «fable ИЛИ opus», проза без модели) И item —
+   - Routing неоднозначен (строки на item нет, «frontier ИЛИ frontier», проза без модели) И item —
      design/contract-класса (сработал бы любой триггер эскалации п. 5) → **СТОП. При сомнении —
      СТОП** (fail-safe: цена ложного стопа — перезапуск, цена ложного прохода — RED-аудит).
    Гейт — ЧТЕНИЕ §3 глазами, не парсинг (форм Routing во флоте много, regex запрещён). Разрешение
@@ -55,8 +54,8 @@ effort: medium
    **Журнал (D21, P1.1, хелпер `lib/task/journal.py`):** следом append старт-запись —
    `PYTHONPATH=packages/task/lib python3 -m task.journal append --plan-dir plans/<PLAN-ID>
    --plan <PLAN-ID> --item <Pn.m> --command <plan-exec|plan-run — фактически вызванная
-   команда> --actor <model>/<effort> --result in-progress` (`<model>/<effort>` — модель/effort
-   ЭТОГО исполнения: pinned Sonnet/medium у `plan-exec`, фактическая сессии у `plan-run`).
+   команда> --actor <model>/<effort> --result in-progress` (`<model>/<effort>` — модельsession effort setting
+   ЭТОГО исполнения: pinned implementation/medium у `plan-exec`, фактическая сессии у `plan-run`).
    Хелпера/каталога плана нет (standalone-раскладка вне монорепо) — предупреди и пропусти
    (не блокер, как `plan-lint`).
 
@@ -72,7 +71,7 @@ effort: medium
    При срабатывании оставь ТРИ greppable-артефакта и остановись:
    - blockquote в item: `> 🔴 ESCALATION Pn.m: <причина> | trigger: <из enum> | нужен: plan-design`;
    - `**Status:** 🔴 Blocked` у item'а (и в Phase Status) + `**Escalation Needed:** yes`;
-   - обнови `handoff.md` (Next: /task:plan-design <PLAN-ID> Pn.m; причина — в Open risks);
+   - обнови `handoff.md` (Next: $ task:plan-design <PLAN-ID> Pn.m; причина — в Open risks);
    - финальная строка отчёта: `ESCALATION-REQUIRED: Pn.m — <причина>`.
    - **Журнал (D21, P1.1):** append финал-запись `--result escalated --friction escalation
      --note "<причина эскалации, ≤1 строка>"` (те же `--plan-dir/--plan/--item/--command/--actor`,
@@ -143,13 +142,13 @@ effort: medium
    который ЖИВЁТ В КОДЕ/артефакте (а не в процессе исполнения) · item-коммит несёт дифф вне `Files`
    item'а (считается только по НЕплановым путям — carve-out выше), верен сам дифф или нет.
    `🟢 Done` сохраняется при **process**-отклонении, но запись в Known Deviations ОБЯЗАТЕЛЬНА: перебор
-   тира (исполнено моделью/effort ВЫШЕ предписанных Routing), бандлинг коммитов, порядок правок,
+   тира (исполнено модельюsession effort setting ВЫШЕ предписанных Routing), бандлинг коммитов, порядок правок,
    стилистика отчёта. Тихое умолчание = дефект (находка аудита).
    Дефект САМОГО ТЗ (правило ТЗ ошибочно или невыполнимо) — тоже НЕ отклонение исполнителя: он
    эскалирует (п. 5: конфликт правил / неясные acceptance), владелец или `plan-design` вносит новый D#
    и СИНХРОНИЗИРУЕТ Scope Included item'а с решением; закрытие идёт по ОБНОВЛЁННОМУ ТЗ → 🟢 + запись в
    Known Deviations (что изменено, каким D#). Правка ТЗ по ходу БЕЗ D# — material-отклонение (scope
-   drift), даже если результат «лучше». **Routing-adherence:** недобор модели/effort снят гейтом п. 2
+   drift), даже если результат «лучше». **Routing-adherence:** недобор моделиsession effort setting снят гейтом п. 2
    (структурно невозможен), остаётся ПЕРЕБОР — та же запись (`исполнено <факт> вместо <из Routing>`).
 
    **Якорь дерева для чисел.** Любое ЧИСЛО в Completion Notes / Validation / Known Deviations /
@@ -183,7 +182,7 @@ effort: medium
    Launch-block (следующий шаг):
    | Параметр | Значение |
    |:--|:--|
-   | Model | <sonnet|opus|haiku|fable> |
+   | Model | <implementation|frontier|economy|frontier> |
    | Thinking | <effort> — <причина в 3–8 слов> |
    | Context | <РОВНО одно из трёх значений enum'а ниже> |
    | Суть | <1 строка: что делает следующий шаг> |
@@ -196,22 +195,22 @@ effort: medium
    **Material-остаток → фикс-предложение, не только Known Deviations (plan-protocol §8, C3/D6).**
    Непустые `Known Deviations`/остаточный `N−K>0` — отчёт называет конкретный фикс (что чинит) и,
    когда этот фикс — самое ценное следующее действие, **Launch-block ниже указывает на него**
-   (`/task:plan-design <ID> Pn.m` ре-дизайн либо follow-up fix-item), а не молча на следующий item.
+   (`$ task:plan-design <ID> Pn.m` ре-дизайн либо follow-up fix-item), а не молча на следующий item.
 
    **Launch-block** — не статичный шаблон, а разовая оценка СЛЕДУЮЩЕГО шага по факту его текста в
    `phases/Pn.md` (уже прочитан в п. 1), `plan.md` §3 Routing И `plans/<PLAN-ID>/roadmap.md`
    (SKILL §8): если roadmap существует и следующий шаг входит в batch/workflow-группу —
-   launch-block несёт КОМАНДУ ГРУППЫ (`/task:plan-run <ID> Pn.a-Pn.b` / `Workflow({scriptPath})`),
+   launch-block несёт КОМАНДУ ГРУППЫ (`$ task:plan-run <ID> Pn.a-Pn.b` / `native orchestration carrier for the referenced plan-owned workflow script`),
    а не одиночный item; расхождение roadmap↔Routing — эскалация, не молчаливый выбор:
-   - Следующий item, `Exec = plan-exec` → голая команда `/task:plan-exec <PLAN-ID> Pn.k`; Model/Thinking
-     — из Routing (дефолт `sonnet/medium`).
+   - Следующий item, `Exec = plan-exec` → голая команда `$ task:plan-exec <PLAN-ID> Pn.k`; Model/Thinking
+     — из Routing (дефолт `implementation/medium`).
    - Следующий item с **`Exec = manual`** (§9 скилла) → форма **«ЗАПУСК ВРУЧНУЮ»**: `Next` =
-     `«ЗАПУСК ВРУЧНУЮ: <model/effort>»`; `Model`/`Thinking` — **предписанные Routing**, НЕ
-     sonnet/medium; code-block несёт **ГОЛЫЙ ПРОМПТ item'а** (копипаст без правок), а НЕ slash-команду
-     (`/task:plan-exec` пинит sonnet/medium и по гейту п. 2 обязан такой item отклонить — команда в
-     code-block'е была бы инструкцией нарушить гейт); `Context` = `continue (/clear) — ручной item`. Либо: `/model <M>` + `/effort <E>` + `/task:plan-run <ID> Pn.m` (D18).
-   - Следующая фаза ещё скелет (16 полей не заполнены) → `/task:plan-design <PLAN-ID> Pn`, не
-     `plan-exec` (упадёт на предусловии). Фаза терминальна → `/task:plan-close <PLAN-ID> Pn`.
+     `«ЗАПУСК ВРУЧНУЮ: <modelsession effort setting>»`; `Model`/`Thinking` — **предписанные Routing**, НЕ
+     implementation/medium; code-block несёт **ГОЛЫЙ ПРОМПТ item'а** (копипаст без правок), а НЕ slash-команду
+     (`$ task:plan-exec` пинит implementation/medium и по гейту п. 2 обязан такой item отклонить — команда в
+     code-block'е была бы инструкцией нарушить гейт); `Context` = `continue (/clear) — ручной item`. Либо: `select session model class <M>` + `select session effort <E>` + `$ task:plan-run <ID> Pn.m` (D18).
+   - Следующая фаза ещё скелет (16 полей не заполнены) → `$ task:plan-design <PLAN-ID> Pn`, не
+     `plan-exec` (упадёт на предусловии). Фаза терминальна → `$ task:plan-close <PLAN-ID> Pn`.
    - **`Context` — РОВНО одно из ТРЁХ значений** (`plan-protocol` §8): `continue (/clear) — ручной
      item` (обычный item-by-item exec, в т.ч. manual — рестарт сессии ему не нужен) ·
      `NEW SESSION — Workflow-оркестрован` (следующий шаг — Workflow-оркестрованный кусок: фоновый

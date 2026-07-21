@@ -19,7 +19,7 @@ from task.command_catalog import (CommandCatalog, CommandRecord, EFFORTS, MODEL_
                                   metadata_value)
 
 
-ADAPTER_VERSION = "1.0.0"
+ADAPTER_VERSION = "1.0.2"
 PROVIDER_LOCK_PATH = "packages/task/adapters/codex/provider-artifacts.lock.json"
 _MAPPING_KEYS = frozenset({
     "provider_id", "mapping_version", "class_selectors", "effort_selectors",
@@ -36,6 +36,29 @@ _PLAN_NEXT_COMMANDS = {
     "archive": "task:plan-close",
 }
 _PLAN_NEXT_TERMINALS = ("terminal", "manual", "waiting")
+_CODEX_MODEL_CLASS_PROJECTIONS = {
+    "haiku": "economy",
+    "sonnet": "implementation",
+    "opus": "frontier",
+    "fable": "frontier",
+}
+_CODEX_RUNTIME_LITERAL_PROJECTIONS = (
+    ("Workflow({scriptPath})",
+     "native orchestration carrier for the referenced plan-owned workflow script"),
+    ('Workflow({scriptPath: "plans/<ID>/workflows/wf-….js"})',
+     "native orchestration carrier for the referenced plan-owned workflow script"),
+    ("/model <M>", "select session model class <M>"),
+    ("/effort <E>", "select session effort <E>"),
+    ("/model", "session model-class setting"),
+    ("/effort", "session effort setting"),
+    ("/task:", "$ task:"),
+)
+_CODEX_RUNTIME_FORBIDDEN = (
+    ("claude-model-selector", re.compile(r"\b(?:opus|sonnet|haiku|fable)\b", re.IGNORECASE)),
+    ("claude-task-invocation", re.compile(r"/task:")),
+    ("claude-session-route-command", re.compile(r"/(?:model|effort)\b")),
+    ("claude-workflow-carrier", re.compile(r"Workflow\(")),
+)
 
 
 @dataclass(frozen=True)
@@ -411,6 +434,38 @@ def plan_codex_command_render(
     if any(item.severity == "error" for item in diagnostics):
         return CodexCommandRenderPlan((), tuple(diagnostics))
 
+    projected_runtime: dict[str, bytes] = {}
+    projected_descriptions: dict[str, str] = {}
+    for record in catalog.records:
+        content = catalog.content_for(record.command_id)
+        try:
+            runtime = _codex_runtime_bytes(record, content)
+            description = _project_codex_model_classes(_frontmatter_description(content))
+            for source_literal, codex_literal in _CODEX_RUNTIME_LITERAL_PROJECTIONS:
+                description = description.replace(source_literal, codex_literal)
+        except (UnicodeDecodeError, ValueError) as error:
+            diagnostics.append(_diag(
+                "CMD_SOURCE_DRIFT", record, "/source/runtime-projection",
+                {"canonical_frontmatter": "UTF-8 fenced metadata"},
+                {"error": str(error)}, mapping,
+                "canonical command cannot be projected into a Codex runtime"))
+            continue
+        unsafe = tuple(sorted(set(
+            _codex_runtime_unsafe_literals(runtime.decode("utf-8"))
+            + _codex_runtime_unsafe_literals(description))))
+        if unsafe:
+            diagnostics.append(_diag(
+                "CMD_INVOCATION_INVALID", record, "/source/runtime-projection",
+                {"unsafe_execution_literals": ()},
+                {"unsafe_execution_literals": unsafe}, mapping,
+                "Codex runtime projection retains provider-specific execution literals"))
+            continue
+        projected_runtime[record.command_id] = runtime
+        projected_descriptions[record.command_id] = description
+    diagnostics = _dedupe_diagnostics(diagnostics)
+    if any(item.severity == "error" for item in diagnostics):
+        return CodexCommandRenderPlan((), tuple(diagnostics))
+
     results: list[ArtifactRenderResult] = []
     plugin = {
         "name": "task", "version": catalog.plugin_version,
@@ -425,16 +480,17 @@ def plan_codex_command_render(
     for record in catalog.records:
         name = record.command_id.removeprefix("task:")
         base = f"packages/task/adapters/codex/skills/task-{name}"
-        content = catalog.content_for(record.command_id)
-        description = _frontmatter_description(content)
+        description = projected_descriptions[record.command_id]
         wrapper = _wrapper_bytes(record, description, mapping)
         capabilities = tuple(item.capability_id for item in record.capability_requirements)
         results.append(_artifact(f"task.codex.{name.replace('-', '.')}.skill", f"{base}/SKILL.md",
                                  wrapper, (_source(record),), capabilities, catalog,
                                  {"command_id": record.command_id, "kind": "skill-wrapper"}))
         results.append(_artifact(f"task.codex.{name.replace('-', '.')}.runtime", f"{base}/command.md",
-                                 content, (_source(record),), capabilities, catalog,
-                                 {"command_id": record.command_id, "kind": "runtime-copy"}))
+                                 projected_runtime[record.command_id], (_source(record),),
+                                 capabilities, catalog,
+                                 {"command_id": record.command_id,
+                                  "kind": "runtime-projection"}))
 
     records = [{
         "path": result.target.path,
@@ -850,12 +906,58 @@ Generated Codex adapter for semantic command `{record.command_id}`.
 - Routing: `{route}`
 - Canonical source: `{record.source.path}`
 - Canonical SHA-256: `{source_hash}`
-- Runtime snapshot: `command.md` (generated and provenance-locked; never edit it as source)
+- Runtime projection: `command.md` (generated and provenance-locked; never edit it as source)
 
 Read `command.md` completely and execute it with the invocation payload as `$ARGUMENTS`.
 Preserve the semantic command ID, gates, status literals, scope, and validation behavior.
 '''
     return text.encode("utf-8")
+
+
+def _codex_runtime_bytes(record: CommandRecord, content: bytes) -> bytes:
+    """Project one canonical Claude command into a finite, provider-safe Codex runtime."""
+    text = content.decode("utf-8")
+    lines = text.splitlines(keepends=True)
+    if not lines or lines[0].rstrip("\r\n") != "---":
+        raise ValueError("canonical frontmatter opening fence is missing")
+    closing = next(
+        (index for index, line in enumerate(lines[1:], start=1)
+         if line.rstrip("\r\n") == "---"),
+        None,
+    )
+    if closing is None:
+        raise ValueError("canonical frontmatter closing fence is missing")
+    body = "".join(lines[closing + 1:])
+    projected = _project_codex_model_classes(body)
+    for source_literal, codex_literal in _CODEX_RUNTIME_LITERAL_PROJECTIONS:
+        projected = projected.replace(source_literal, codex_literal)
+    provenance = (
+        "<!-- Generated Codex runtime projection; do not edit as source.\n"
+        f"Canonical source: {record.source.path}\n"
+        f"Canonical SHA-256: {record.source.content_hash}\n"
+        f"Adapter: task.codex-command/{ADAPTER_VERSION}\n"
+        "-->\n"
+    )
+    return (provenance + projected).encode("utf-8")
+
+
+def _project_codex_model_classes(text: str) -> str:
+    def replacement(match: re.Match[str]) -> str:
+        return _CODEX_MODEL_CLASS_PROJECTIONS[match.group(0).lower()]
+
+    return re.sub(
+        r"\b(?:opus|sonnet|haiku|fable)\b",
+        replacement,
+        text,
+        flags=re.IGNORECASE,
+    )
+
+
+def _codex_runtime_unsafe_literals(runtime: str) -> tuple[str, ...]:
+    return tuple(
+        label for label, pattern in _CODEX_RUNTIME_FORBIDDEN
+        if pattern.search(runtime)
+    )
 
 
 def _claude_artifact(artifact_id: str, path: str, managed_bytes: bytes, *,

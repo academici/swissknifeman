@@ -1,44 +1,38 @@
-# HANDOFF — 2026-07-21 — after P3
+# HANDOFF — 2026-07-21 — after P4.1
 
-**Next:** `/task:plan-audit 2026.07.19-DUAL-PROVIDER P3`
+**Next:** «ЗАПУСК ВРУЧНУЮ: gpt-5.6-terra/high»
 
 | Параметр | Значение |
 |:--|:--|
-| Model | gpt-5.6-sol |
-| Thinking | xhigh — independent release-quality verdict |
-| Context | NEW SESSION — шаг-не-item |
-| Суть | Fresh independent G03 audit P3 before the P1–P3 review PR. |
+| Model | gpt-5.6-terra |
+| Thinking | high — prescribed shared-package implementation |
+| Context | continue (/clear) — ручной item |
+| Суть | Execute only P4.2 against frozen D84 in a fresh clean item worktree. |
 
 ```text
-Conduct only fresh independent G03 audit P3 for 2026.07.19-DUAL-PROVIDER on gpt-5.6-sol/xhigh.
+Execute only P4.2 of plan 2026.07.19-DUAL-PROVIDER on gpt-5.6-terra/high in a fresh clean worktree based on the committed P4.1 tree.
 
-Read AGENTS.md, CLAUDE.md, plan.md, handoff.md, phases/P3.md, frozen
-root/contracts/provider-skill-publication-contract.md, P3 artifacts/research, and commits
-P3.1–P3.5 including D80 `1992061`, D83 `f947d77` and rerun `bcd353c`. Independently verify
-semantic publication inventory, Claude byte compatibility, Codex cache-contained projections,
-and pre-write fail-closed unmanaged/drift/corrupt-lock behavior without user-global/live writes.
-Confirm terminal `packages/skiller/scripts/validate.sh` and registry evidence. Preserve
-unrelated owner dirt; do not change frozen contracts, P4+, root `.agents/skills`, FOREMAN,
-fleet or user-global Codex state. Record only audit evidence/verdict. RED returns to owning P3;
-GREEN permits the P1–P3 review PR, after which P4 is a new-session task.
+Read plan.md → handoff.md → phases/P4.md → P4.2 Required Reads in exact order. Apply package-contribution-protocol before package edits. Build only the immutable command catalog and generated Codex adapters against frozen D84/provider contracts, including the exact canonical `make-workflow` member. Preserve root `.agents/skills`, Claude outputs, live/user-global config, FOREMAN, fleet, owner dirt and P4.3+. Run only P4.2 narrow validation; terminal full task/skiller validation remains P4.5. Close/bookkeep P4.2 with explicit paths and report only commit, seam and test facts.
 ```
 
-**Done:** P3 is terminal: D83 P3.3 repair `f947d77` regenerated the stale Codex core cache/lock
-and added a focused regression; P3.5 reran independent inventory/channel parity on `bcd353c`.
-Terminal `bash packages/skiller/scripts/validate.sh` passed (408 tests; 67 inherited warnings)
-and `./packages/skiller/bin/skiller registry --check` passed in a clean isolated worktree.
+**Done:** P4.1 froze `root/contracts/provider-command-routing-contract.md` v1.0.0 through
+delegated Approval D84; the approved review is
+`artifacts/P4-command-routing-contract-review.md`. Bundled item/bookkeeping commit:
+`BUNDLED-COMMIT-HASH-PENDING` (replaced by the immediate mechanical hash-fix commit).
 
-**Remaining:** fresh independent G03 audit → P1–P3 review PR only after literal GREEN. P4
-remains a new session after audit and PR.
+**Remaining:** P4.2 → P4.3 → P4.4 → P4.5, terminal full validation/phase close and fresh
+independent P4 audit. P5+ remains closed.
 
-**Sources of truth:** `phases/P3.md` P3.3/P3.5 and Audit P3; D83 in `plan.md`; `research/21-p3-codex-core-registry-remediation.md`; frozen `root/contracts/provider-skill-publication-contract.md`; `packages/skiller/lib/skiller/{publication,registry}.py`.
+**Sources of truth:** `plan.md` D84/Contracts; `phases/P4.md` P4.1 Completion Notes and P4.2;
+frozen `root/contracts/provider-command-routing-contract.md`; approved
+`artifacts/P4-command-routing-contract-review.md`; canonical `packages/task/commands/`.
 
-**Open risks:** G03 remains the release-quality gate for P3; RED returns to the owning P3 seam
-under D80/D81. The 67 validation warnings are inherited, documented warnings rather than
-validation failures. Existing unrelated owner dirt remains excluded from audit and PR staging.
+**Open risks:** None in P4.1. Every downstream renderer must preserve the frozen exact inventory,
+provider-qualified fail-closed diagnostics and Claude compatibility; any frozen-contract change or
+authority expansion returns to the Owner.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: none; `registry --check` remains the drift gate.
-- deferred: P1–P3 review PR after G03 GREEN; P4 is a new-session task.
+- workarounds: none.
+- deferred: package implementation starts only in P4.2; full task/skiller validation and docs/release assessment run once at terminal P4.5 under D80/D82.
 - open_questions: none.

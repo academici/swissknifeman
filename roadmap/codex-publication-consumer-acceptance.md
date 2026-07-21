@@ -1,6 +1,6 @@
 # Codex publication → consumer acceptance
 
-**Статус:** ⬜ к внедрению  
+**Статус:** ⬜ к внедрению
 **Измеренная проблема:** Azguard, 2026-07-21. Внутренние generator/unit проверки были GREEN,
 но свежая Codex-сессия не видела `task-plan-run`/`task-plan-exec`: sibling `task` отсутствовал в
 native marketplace, marketplace `source` не принимался Codex, а версия `0.2.0` удерживала

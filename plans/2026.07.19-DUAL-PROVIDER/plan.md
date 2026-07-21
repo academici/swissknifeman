@@ -222,6 +222,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-21 | plan-close/Codex gpt-5.6-sol high | P5 повторно закрыта после audit attempt 1 repair: terminal task/skiller/harness/registry/lint/protected gates GREEN; далее fresh independent Audit P5 attempt 2 — детали см. phases/P5.md Phase Handoff. |
 | 2026-07-21 | plan-terra-high / gpt-5.6-terra/high | P5.4 audit repair attempt 2: P2-safe semantic agent IDs and actual 44/43 temporary create→noop consumer verification make the provider-audit agent count truthful; terminal re-close remains next — детали см. phases/P5.md P5.4 Completion Notes. |
 | 2026-07-21 | plan-close/Codex gpt-5.6-sol high | P5 закрыта: terminal task/skiller/harness/registry/lint/protected gates GREEN; далее fresh independent Audit P5 — детали см. phases/P5.md Phase Handoff. |
 | 2026-07-21 | plan-sol-high / gpt-5.6-sol/high | P5.7 attempt 5 D87 fix-forward: backward-compatible artifact v1.1.0 generic semantic metadata carrier preserves every D86 render parameter in serialized locks while exact v1.0.0 callers/records stay unchanged — детали см. phases/P5.md P5.7 Completion Notes. |

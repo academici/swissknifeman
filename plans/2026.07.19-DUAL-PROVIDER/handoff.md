@@ -14,13 +14,15 @@
 $ task:plan-audit 2026.07.19-DUAL-PROVIDER P5
 ```
 
-**Done:** P5.1–P5.7 are terminal GREEN. The phase delivers provider-neutral harness and
+**Done:** P5.1–P5.7 are terminal GREEN. Audit attempt 1's `_common/orchestrator` P2 identity
+finding is repaired without changing valid legacy IDs; all supported Claude/Codex artifacts
+pass independent create→apply→noop lifecycles. The phase delivers provider-neutral harness and
 instruction contracts/catalogs, independent native Claude/Codex projections, fail-closed P2
 ownership/provenance, D87 artifact v1.1 semantic metadata, and actual generated/installed
-consumer conformance. One terminal task/skiller/harness validation cycle, worktree-local
-registry check, target lint, diff check and protected delta check passed.
+consumer conformance. The post-repair terminal task/skiller/harness cycle, worktree-local
+registry check, target lint without new errors, diff check and protected delta check passed.
 
-**Remaining:** exactly one fresh independent terminal P5 audit and its append-only verdict.
+**Remaining:** exactly one fresh independent terminal P5 audit attempt 2 and its append-only verdict.
 P6 stays unopened; no live apply, FOREMAN/fleet mutation or push is authorized by this close.
 
 **Sources of truth:** `phases/P5.md` Phase Handoff; `root/contracts/provider-harness-contract.md`

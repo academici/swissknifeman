@@ -15,7 +15,7 @@ import tempfile
 from core import (ArtifactActionKind, EffectiveProvider, ProviderId, apply_plan,
                   plan_artifact_lock, serialize_lock)
 from .agentpacks import (load_claude_role_bindings, plan_agent_artifact,
-                         semantic_agent_roles, project_agent_role)
+                         semantic_agent_roles)
 from .hooks import LifecycleRequest, plan_codex_lifecycle_artifacts, plan_lifecycle
 from .mcp import (load_mcp_catalog, plan_mcp_artifact, plan_mcp_projection,
                   render_mcp_projection)
@@ -195,10 +195,14 @@ def audit_package(package_root: Path, fixture_path: Path | None = None) -> Provi
         claude_role_bindings = (load_claude_role_bindings(
             root / "configs/claude-code/agent-packs/role-bindings.json", roles)
             if provider is ProviderId.CLAUDE_CODE else None)
+        agent_artifacts = []
         for role in roles:
             try:
-                projection = project_agent_role(role, provider.value,
-                                                claude_bindings=claude_role_bindings)
+                artifact = plan_agent_artifact(
+                    role, provider_id=provider.value, catalog_path=roles_path,
+                    claude_bindings_path=(root / "configs/claude-code/agent-packs/role-bindings.json"
+                                          if provider is ProviderId.CLAUDE_CODE else None),
+                    claude_bindings=claude_role_bindings)
             except ValueError as error:
                 if "HARNESS_ACTIVATION_UNSUPPORTED" in str(error):
                     evidence.append(("activation", provider.value,
@@ -207,14 +211,19 @@ def audit_package(package_root: Path, fixture_path: Path | None = None) -> Provi
                 else:
                     diagnostics.append(f"{error}:{provider.value}:agents")
             else:
+                agent_artifacts.append(artifact)
                 render_hashes.append((f"agent:{provider.value}:{role.pack_id}.{role.role_id}",
-                                      _bytes_hash(projection.rendered)))
+                                      _bytes_hash(artifact.managed_bytes)))
                 evidence.append(("activation", provider.value,
                                  f"role:{role.pack_id}.{role.role_id}", "positive", "supported",
                                  "HARNESS_AGENT_ACTIVATION_NATIVE"))
+        verified_count = _verify_agent_artifact_plans(provider, tuple(agent_artifacts))
+        evidence.append(("activation", provider.value, "agents.catalog", "positive", "supported",
+                         f"HARNESS_AGENT_ARTIFACT_P2_CREATE_NOOP:{verified_count}"))
         _append_security_evidence(catalog, provider, evidence)
         _append_secret_negative_evidence(mcp, provider, bindings_path, actual["mcp"], evidence)
-        surface_map.extend(_provider_surface_rows(provider, catalog, lifecycle, mcp_plan, roles))
+        surface_map.extend(_provider_surface_rows(provider, catalog, lifecycle, mcp_plan,
+                                                   verified_count))
     diagnostics.extend(_map_diagnostics(surface_map, tuple(fixture["surfaces"])))
     if len({identity for identity, _digest in render_hashes}) != len(render_hashes):
         diagnostics.append("HARNESS_CATALOG_MISMATCH:duplicate-render-hash")
@@ -261,7 +270,25 @@ def _append_secret_negative_evidence(mcp, provider, bindings_path, selected, evi
             evidence.append(("secret", provider.value, "mcp:catalog", "negative", "refused", str(error)))
 
 
-def _provider_surface_rows(provider, catalog, lifecycle, mcp_plan, roles):
+def _verify_agent_artifact_plans(provider, expected):
+    """Prove each supported agent target through its own P2 create/noop lifecycle."""
+    for artifact in expected:
+        with tempfile.TemporaryDirectory() as directory:
+            temporary_root = Path(directory)
+            create = plan_artifact_lock(temporary_root, (artifact,), lock_bytes=None)
+            if (len(create.actions) != 1
+                    or create.actions[0].action is not ArtifactActionKind.CREATE):
+                raise ValueError(f"HARNESS_CATALOG_MISMATCH:{provider.value}:agents:create")
+            apply_plan(temporary_root, create)
+            clean = plan_artifact_lock(temporary_root, (artifact,),
+                                       lock_bytes=serialize_lock(create.next_lock))
+            if (len(clean.actions) != 1
+                    or clean.actions[0].action is not ArtifactActionKind.NOOP):
+                raise ValueError(f"HARNESS_CATALOG_MISMATCH:{provider.value}:agents:noop")
+    return len(expected)
+
+
+def _provider_surface_rows(provider, catalog, lifecycle, mcp_plan, verified_agent_count):
     """One complete provider-qualified row per frozen semantic surface.
 
     The report intentionally keeps named, non-artifact compatibility consumers visible;
@@ -279,13 +306,15 @@ def _provider_surface_rows(provider, catalog, lifecycle, mcp_plan, roles):
         ) or "—"
         ownership = surface.ownership
         artifact, activation, diagnostic = _named_surface_state(
-            provider, surface.id, binding_by_surface, lifecycle_codes, profile_target, mcp_plan, roles)
+            provider, surface.id, binding_by_surface, lifecycle_codes, profile_target, mcp_plan,
+            verified_agent_count)
         rows.append((provider.value, surface.id, semantic_hash, capabilities, ownership,
                      artifact, activation, diagnostic))
     return rows
 
 
-def _named_surface_state(provider, surface_id, bindings, lifecycle_codes, profile_target, mcp_plan, roles):
+def _named_surface_state(provider, surface_id, bindings, lifecycle_codes, profile_target, mcp_plan,
+                         verified_agent_count):
     if surface_id == "settings.permissions":
         return f"artifact:project:{profile_target}", "supported", "HARNESS_PROFILE_RENDERED"
     if surface_id == "settings.audit":
@@ -307,9 +336,8 @@ def _named_surface_state(provider, surface_id, bindings, lifecycle_codes, profil
     if surface_id == "mcp.catalog":
         return f"artifact:{mcp_plan.target_scope}:{mcp_plan.target_path}", "supported", "HARNESS_MCP_PROJECTION_RENDERED"
     if surface_id == "agents.catalog":
-        supported = sum(1 for role in roles if not (
-            provider is ProviderId.CODEX and "command.workflow-carrier" in role.activation_requirements))
-        return f"artifact:project:{supported}-named-agent-targets", "supported", "HARNESS_AGENT_ACTIVATION_NATIVE"
+        return (f"artifact:project:{verified_agent_count}-named-agent-targets", "supported",
+                "HARNESS_AGENT_ACTIVATION_NATIVE")
     if surface_id == "agent-packs.lifecycle":
         if provider is ProviderId.CLAUDE_CODE:
             return "non-artifact:named-agent-pack-engine", "supported", "HARNESS_AGENTPACK_LIFECYCLE_NAMED"

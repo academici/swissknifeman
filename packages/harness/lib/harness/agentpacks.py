@@ -1076,15 +1076,37 @@ def project_agent_role(role, provider_id, *, claude_bindings=None, pack_prefix=N
     return AgentProjection(provider_id, target, rendered)
 
 
+_ARTIFACT_ID_SEGMENT = re.compile(r"^[a-z][a-z0-9-]*$")
+
+
+def _artifact_identity_component(value):
+    """Preserve valid segments; encode only semantic values P2 cannot represent."""
+    if _ARTIFACT_ID_SEGMENT.fullmatch(value):
+        return value
+    return "encoded-" + value.encode("utf-8").hex()
+
+
+def _agent_artifact_id(role, provider_id):
+    return (f"harness.{provider_id}.agent.{_artifact_identity_component(role.pack_id)}."
+            f"{_artifact_identity_component(role.role_id)}")
+
+
+def _validate_agent_artifact_ids(roles, provider_id):
+    artifact_ids = tuple(_agent_artifact_id(role, provider_id) for role in roles)
+    if len(artifact_ids) != len(set(artifact_ids)):
+        raise ValueError("HARNESS_CATALOG_MISMATCH:agent-artifact-id-collision")
+
+
 def plan_agent_artifact(role, *, provider_id, catalog_path, claude_bindings_path=None,
                         claude_bindings=None, pack_prefix=None):
+    catalog_roles = semantic_agent_roles(catalog_path)
+    catalog_role = next((candidate for candidate in catalog_roles
+                         if (candidate.pack_id, candidate.role_id)
+                         == (role.pack_id, role.role_id)), None)
+    if catalog_role != role:
+        raise ValueError("HARNESS_CATALOG_MISMATCH")
+    _validate_agent_artifact_ids(catalog_roles, provider_id)
     if provider_id == "claude-code" and claude_bindings is None:
-        catalog_roles = semantic_agent_roles(catalog_path)
-        catalog_role = next((candidate for candidate in catalog_roles
-                             if (candidate.pack_id, candidate.role_id)
-                             == (role.pack_id, role.role_id)), None)
-        if catalog_role != role:
-            raise ValueError("HARNESS_CATALOG_MISMATCH")
         claude_bindings = load_claude_role_bindings(claude_bindings_path, catalog_roles)
     projection = project_agent_role(role, provider_id, claude_bindings=claude_bindings,
                                     pack_prefix=pack_prefix)
@@ -1096,14 +1118,14 @@ def plan_agent_artifact(role, *, provider_id, catalog_path, claude_bindings_path
         sources += (ArtifactSource("harness.claude.agent-bindings",
                                    "packages/harness/configs/claude-code/agent-packs/role-bindings.json",
                                    sha256_digest(Path(claude_bindings_path).read_bytes())),)
-    identity = ArtifactAdapterIdentity(f"harness.{provider_id}.agent", "1.0.0",
+    identity = ArtifactAdapterIdentity(f"harness.{provider_id}.agent", "1.0.1",
                                        ProviderId(provider_id), "1.0.0", ())
     return plan_artifact_render(ArtifactRenderRequest(
-        f"harness.{provider_id}.agent.{role.pack_id}.{role.role_id}", sources,
+        _agent_artifact_id(role, provider_id), sources,
         ArtifactTarget(projection.target_path, ("whole-file", ())), identity, (),
         {"pack_id": role.pack_id, "role_id": role.role_id, "model_class": role.model_class,
          "command_ids": list(role.command_ids), "pack_prefix": pack_prefix or "template"},
-        lambda _request: projection.rendered))
+        lambda _request: projection.rendered, contract_version="1.1.0"))
 
 
 def classify_agent_projection(*, managed: bool, observed: bytes | None, expected: bytes,

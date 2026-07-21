@@ -13,7 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 from core import ArtifactActionKind, apply_plan, plan_artifact_lock, serialize_lock
 from harness.agentpacks import (agent_model_trace, compare_agent_inventory, expected_agent_inventory,
                                 load_claude_role_bindings, plan_agent_artifact, project_agent_role,
-                                semantic_agent_roles)
+                                semantic_agent_roles, _validate_agent_artifact_ids)
 import tests.fixtures as fx
 
 
@@ -144,6 +144,53 @@ class ProviderAgentpackCase(unittest.TestCase):
             apply_plan(root, claude_plan)
             self.assertEqual((root / claude_expected.target.path).read_text(encoding="utf-8"),
                              legacy_source(role))
+
+    def test_every_claude_role_has_a_valid_p2_identity_and_create_noop_consumer(self):
+        claude = tuple(plan_agent_artifact(role, provider_id="claude-code", catalog_path=CATALOG,
+                                           claude_bindings_path=BINDINGS) for role in self.roles)
+        self.assertEqual(len(claude), 44)
+        self.assertEqual(len({item.provenance.artifact_id for item in claude}), 44)
+        common = next(item for item in claude
+                      if dict(item.provenance.semantic_metadata)["pack_id"] == "_common")
+        repeat = plan_agent_artifact(
+            next(role for role in self.roles if role.pack_id == "_common" and role.role_id == "orchestrator"),
+            provider_id="claude-code", catalog_path=CATALOG, claude_bindings_path=BINDINGS)
+        self.assertEqual(common.provenance.artifact_id,
+                         "harness.claude-code.agent.encoded-5f636f6d6d6f6e.orchestrator")
+        self.assertEqual(common.provenance.artifact_id, repeat.provenance.artifact_id)
+        self.assertEqual(dict(common.provenance.semantic_metadata)["pack_id"], "_common")
+        self.assertEqual(common.managed_bytes.decode("utf-8"), legacy_source(
+            next(role for role in self.roles if role.pack_id == "_common" and role.role_id == "orchestrator")))
+        blade = next(item for item in claude
+                     if dict(item.provenance.semantic_metadata)["pack_id"] == "backend-laravel"
+                     and dict(item.provenance.semantic_metadata)["role_id"] == "blade-review")
+        self.assertEqual(blade.provenance.artifact_id,
+                         "harness.claude-code.agent.backend-laravel.blade-review")
+        codex = []
+        for role in self.roles:
+            try:
+                codex.append(plan_agent_artifact(role, provider_id="codex", catalog_path=CATALOG))
+            except ValueError as error:
+                self.assertEqual(str(error),
+                                 "HARNESS_ACTIVATION_UNSUPPORTED:codex:command.workflow-carrier:P4")
+        self.assertEqual(len(codex), 43)
+        for artifact in (*claude, *codex):
+            with tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                create = plan_artifact_lock(root, (artifact,), lock_bytes=None)
+                self.assertEqual(create.actions[0].action, ArtifactActionKind.CREATE)
+                apply_plan(root, create)
+                clean = plan_artifact_lock(root, (artifact,), lock_bytes=serialize_lock(create.next_lock))
+                self.assertEqual(clean.actions[0].action, ArtifactActionKind.NOOP)
+
+    def test_artifact_identity_collision_fails_closed(self):
+        common = next(role for role in self.roles if role.pack_id == "_common")
+        collision = type(common)("encoded-5f636f6d6d6f6e", common.role_id,
+                                 common.description_lines, common.content, common.skills,
+                                 common.tool_requirements, common.command_ids,
+                                 common.model_class, common.activation_requirements)
+        with self.assertRaisesRegex(ValueError, "agent-artifact-id-collision"):
+            _validate_agent_artifact_ids((common, collision), "claude-code")
 
 
 if __name__ == "__main__":

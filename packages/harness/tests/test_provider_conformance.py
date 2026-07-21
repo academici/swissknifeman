@@ -50,6 +50,14 @@ class ProviderConformanceTests(unittest.TestCase):
         observed = {(row["provider"], row["surface_id"]) for row in report["surface_map"]}
         self.assertEqual(observed, expected)
         self.assertEqual(len(report["surface_map"]), 46)
+        self.assertIn({"category": "activation", "provider": "claude-code",
+                       "identity": "agents.catalog", "polarity": "positive",
+                       "state": "supported", "diagnostic": "HARNESS_AGENT_ARTIFACT_P2_CREATE_NOOP:44"},
+                      report["evidence"])
+        self.assertIn({"category": "activation", "provider": "codex",
+                       "identity": "agents.catalog", "polarity": "positive",
+                       "state": "supported", "diagnostic": "HARNESS_AGENT_ARTIFACT_P2_CREATE_NOOP:43"},
+                      report["evidence"])
         self.assertFalse(_map_diagnostics(
             [(row["provider"], row["surface_id"], "", "", "", "", "", "")
              for row in report["surface_map"]], tuple(fixture["surfaces"])))

@@ -101,7 +101,7 @@ def provider_semantic_inventory(env, config, project, *, with_code, maind_server
 
 def deploy_project(env, config, project, *, targets=None, with_code=None,
                    maind_server=True, with_agentmemory=False, dry=False,
-                   provider_projections=None):
+                   provider_projections=None, provider_repair=False):
     """Раскатать серверы хаба в один проект. with_code=None → берётся из политики/полей проекта
     (code|graphify). Память проекта — через сервер `maind` (изоляция по scope на стороне maind);
     raw-сервер `agentmemory` НЕ раскатывается (он пишет мимо scope-маркера → невидимо для
@@ -124,11 +124,11 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
             provider_semantic_inventory(env, config, project, with_code=with_code,
                                         maind_server=maind_server,
                                         with_agentmemory=with_agentmemory))
-        provider_check = plan_provider_artifacts(project_path, provider_plan)
+        provider_check = plan_provider_artifacts(project_path, provider_plan, repair=provider_repair)
         if provider_check["severity"] == "error":
             raise ValueError("MAIND_PROVIDER_DEPLOY_REFUSED")
         if not dry:
-            apply_provider_artifacts(project_path, provider_plan)
+            apply_provider_artifacts(project_path, provider_plan, repair=provider_repair)
     emit_example = bool((config.get("mcp") or {}).get("emit_example"))  # opt-in: .example + .gitignore
 
     st = codegraph.settings(config)
@@ -229,7 +229,7 @@ def cmd_deploy(env, argv):
                                 "--with-code": "bool", "--with-graphify": "bool",
                                 "--no-maind-server": "bool", "--with-agentmemory": "bool",
                                 "--dry-run": "bool", "--json": "bool",
-                                "--conformance": "str"})
+                                "--conformance": "str", "--repair": "bool"})
     if opts["conformance"]:
         harness_configs = Path(env.root).parent / "harness/configs"
         plan = generate_conformance_report(harness_configs, opts["conformance"])
@@ -259,7 +259,7 @@ def cmd_deploy(env, argv):
         res = deploy_project(env, config, proj, targets=opts["targets"] or None,
                              with_code=with_code, with_agentmemory=opts["with_agentmemory"],
                              maind_server=not opts["no_maind_server"], dry=opts["dry_run"],
-                             provider_projections=projections)
+                             provider_projections=projections, provider_repair=opts["repair"])
         if res is None:
             continue
         results.append(res)

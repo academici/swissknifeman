@@ -116,6 +116,13 @@ class TestProviderDeploy(unittest.TestCase):
             deploy_project(env, config, project, with_code=False, provider_projections=bases)
             self.assertTrue((target / ".mcp.json").exists())
             self.assertTrue((target / ".codex/config.toml").exists())
+            (target / ".mcp.json").write_bytes((target / ".mcp.json").read_bytes() + b"\n")
+            with self.assertRaisesRegex(ValueError, "MAIND_PROVIDER_DEPLOY_REFUSED"):
+                deploy_project(env, config, project, with_code=False, provider_projections=bases)
+            deploy_project(env, config, project, with_code=False, provider_projections=bases,
+                           provider_repair=True)
+            self.assertNotEqual(plan_provider_artifacts(target, plan_provider_deploy(
+                bases, semantic_servers(maind={"command": "maind"}))) ["severity"], "error")
 
     def test_secret_reference_is_preserved_without_resolved_value(self):
         root = Path(__file__).resolve().parents[3] / "packages/harness/configs"

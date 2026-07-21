@@ -1,38 +1,36 @@
-# HANDOFF — 2026-07-21 — after P5.2
+# HANDOFF — 2026-07-21 — after P5.3
 
-**Next:** run-items: task:plan-run 2026.07.19-DUAL-PROVIDER P5.3
+**Next:** run-items: task:plan-run 2026.07.19-DUAL-PROVIDER P5.4
 
 | Параметр | Значение |
 |:--|:--|
 | Model class | implementation |
 | Effort | high |
 | Capabilities | command.filesystem-read · command.filesystem-write · command.git-read · command.git-write |
-| Context | same-session — item |
-| Суть | Добавить provider-native lifecycle/context adapters через P5.2 catalog/render seam, не создавая hidden hook emulation. |
+| Context | continue (reset the session context) — ручной item |
+| Суть | Project MCP, agent and agent-pack projections through the committed P5.3 lifecycle seam. |
 
 ```text
-$ task:plan-run 2026.07.19-DUAL-PROVIDER P5.3
+$ task:plan-run 2026.07.19-DUAL-PROVIDER P5.4
 ```
 
-**Done:** P5.1 and P5.2 are closed. D85 remains the frozen provider-harness v1.0.0
-contract. P5.2 adds the accepted harness contribution record, immutable common
-Profile/Surface catalog, explicit effective-provider gate, provider-qualified diagnostics
-and independent named Claude/Codex render plans using the P2 artifact lifecycle. Full
-access is restricted to the named `self-host-apply` operation for an exact trusted
-repository project target; no live/global/fleet/FOREMAN carrier was touched.
+**Done:** P5.3 maps every common lifecycle/context intent through named Claude and Codex
+projections. Codex emits one hook-native project `hooks.json` observer registration plus its
+generated handler in temporary roots; auto-approval remains P5.2 config-native and every other
+unimplemented lifecycle/context row is explicit unsupported. Existing Claude registrations and
+kill-switches are guarded by an independent fixture; no raw Claude command is reused in Codex output.
 
-**Remaining:** P5.3–P5.7 remain sequential and unopened. P5.3 consumes only the
-committed P5.2 catalog/render seam and the frozen D85 contract. Full package validation,
-phase close and independent audit remain deferred to the terminal P5 gate under D80 and
-the Owner execution instruction.
+**Remaining:** P5.4–P5.7 remain sequential. Full package validation, phase close and independent
+audit remain deferred to the terminal P5 gate under D80 and the Owner execution instruction.
 
-**Sources of truth:** `plan.md` D85/Contracts/Routing; `phases/P5.md` P5.1–P5.3;
-`root/contracts/provider-harness-contract.md`; `artifacts/P5-harness-contract-review.md`;
-`artifacts/P5-harness-contribution-review.md`; `packages/harness/lib/harness/{profiles,provider_render}.py`.
+**Sources of truth:** `plan.md` D85/Contracts/Routing; `phases/P5.md` P5.3–P5.4;
+`root/contracts/provider-harness-contract.md`; `artifacts/P5-hook-context-matrix.md`;
+`packages/harness/lib/harness/{hooks,profiles,provider_render}.py`; native Hooks evidence at
+`/tmp/openai-docs-cache/codex-manual.md`.
 
-**Open risks:** P5.3 must leave provider-specific event, matcher, payload and activation
-binding in named adapters, preserve current Claude hook bytes/kill switches, and obtain a
-context-budget verdict before any new always-on context carrier.
+**Open risks:** Codex project hooks require user trust review and can be disabled with
+`[features].hooks = false`; no live installation was authorized. `context.output-style` and
+`context.plans-directory` remain visible unsupported Codex rows for later provider-qualified work.
 
 **Workarounds/Deferred/Open questions:**
 

@@ -122,7 +122,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P2 | Deterministic adapters, provenance, lock и drift engine | 5/5 | 🟢 Done |
 | P3 | Dual skills publication и marketplaces | 5/5 | 🟢 Done |
 | P4 | Task-command parity и provider-neutral model routing | 5/5 | 🟢 Done |
-| P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 2/7 | 🟡 In progress |
+| P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 3/7 | 🟡 In progress |
 | P6 | mAInd deployment, memory и provider-neutral analytics | 0/6 | ⬜ Not started |
 | P7 | Docs, self-hosting validation и FOREMAN release gate | 0/4 | ⬜ Not started |
 
@@ -220,6 +220,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-21 | plan-run/Codex gpt-5.6-terra high | P5.3 закрыт: one hook-native Codex observer carrier, config-native approval and explicit unsupported lifecycle rows with temp-root consumer evidence — детали см. phases/P5.md P5.3 Completion Notes. |
 | 2026-07-21 | plan-run/Codex gpt-5.6-terra high | P5.2 закрыт: common Profile/Surface catalog и независимые Claude/Codex security projections через P2 render plan — детали см. phases/P5.md P5.2 Completion Notes. |
 | 2026-07-21 | plan-run/Codex gpt-5.6-sol high | P5.1 закрыт: D85 заморозил provider-harness v1.0.0, exact current-surface inventory и security misuse cases — детали см. phases/P5.md P5.1 Completion Notes. |
 | 2026-07-21 | plan-close/Codex implementation/low | P4 повторно закрыта после repair `0edf17a`/`70f9192`: terminal gates GREEN; далее fresh Audit P4 attempt 3 — детали см. phases/P4.md Phase Handoff. |

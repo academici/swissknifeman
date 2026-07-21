@@ -12,6 +12,15 @@
 
 RAG:— (owner-grounded: прямое уточнение владельца в сессии 2026-07-19).
 
+## 2026-07-20 — автономное contract-preserving продолжение active plan
+
+- Для активного `2026.07.19-DUAL-PROVIDER` формальный Owner Approval не является паузой,
+  если решение evidence-backed, сохраняет frozen contracts и остаётся в уже объявленном scope.
+- Агент фиксирует такое решение в D-log/plan carriers и продолжает execution; эскалирует только
+  изменение frozen contract, расширение authority или genuine owner-level fork.
+
+RAG:— (owner-grounded: прямое распоряжение владельца в текущей сессии 2026-07-20).
+
 ## 2026-07-19 — границы design-захода P4
 
 - Детализировать только P4; соседние фазы не разворачивать.
@@ -131,3 +140,35 @@ RAG:— (owner-grounded: прямой запуск remediation audit-r3 2026-07-
 
 RAG:— (owner-grounded: exact substantive approval в сессии 2026-07-20; repo-grounded:
 `root/contracts/provider-config-contract.md`, `plan.md` D70).
+
+## 2026-07-20 — remediation prerequisite P0.2, command-surface inventory
+
+- P0.1 ошибочно сузил command-surface inventory до 11 файлов
+  `packages/task/commands/*.md`.
+- Pass-1 число 32 воспроизводится точно как top-level package command surfaces:
+  task 11 + skiller 5 + harness 6 + maind 8 + analyst 2.
+- Историю terminal P0.1 сохранить; до freeze P0.2 добавить отдельный исполняемый correction
+  carrier.
+- После carrier согласовать glossary/scenario wording и owner gate с различием общего
+  Command Surface и package-specific Task Command.
+
+RAG:— (owner-grounded: прямой escalation/remediation-запуск 2026-07-20).
+
+## 2026-07-20 — Codex harness modes и project rollout
+
+- Codex-настройки не должны оставаться разовым ручным bootstrap-файлом: канонический writer
+  принадлежит `harness`, как и существующая раскатка настроек Claude Code.
+- Общий profile catalog обязан независимо моделировать trust, approval policy и sandbox
+  boundary, а provider adapters — материализовать полные нативные конфиги Claude Code/Codex.
+- Оператор явно выбирает режим проекта. Минимальная матрица должна покрывать controlled,
+  autonomous workspace и trusted full-access; последний для Codex означает
+  `approval_policy = "never"` + `sandbox_mode = "danger-full-access"`.
+- Выбранный режим распространяется штатными `harness`/umbrella
+  `integrate|onboard|sync` operations на явно выбранные проекты, с dry-run/check/repair,
+  идемпотентностью, provenance и сохранением user-owned секций.
+- Для self-hosted `swissknifeman` целевой bootstrap — trusted full-access без запросов.
+  Для fleet нет неявного наследования full-access: каждый project selection остаётся явным.
+- P5 производит profile catalog и оба provider-native renderer'а; P6 подключает их к
+  onboard/sync, P7 проверяет live self-host. Отдельный обходной writer создавать нельзя.
+
+RAG:— (owner-grounded: прямое уточнение владельца в сессии 2026-07-20).

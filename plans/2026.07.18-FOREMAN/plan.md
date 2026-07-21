@@ -17,7 +17,7 @@
 | Target Operator Models | sonnet (exec) · opus (design/контракты) |
 | Approval Owner | Dmitry Vostrikov |
 | Home | brain |
-| Paused By | — |
+| Paused By | 2026.07.19-DUAL-PROVIDER, 2026-07-19 |
 | Design Passes | 2/2 — N сокращён 3→2 (D44): прогон 1 = скелеты+контракты+findings; прогон 2 = детализация всех 8 фаз до DoR (форкаст 2–3 сошёлся в один расширенный прогон) + finish. Все 8 фаз детализированы, roadmap собран, дыр finish не выявил |
 
 ## 1. Context
@@ -198,6 +198,7 @@ Files при решении дома); сырьё майнинга
 | 2026-07-18 | opus/high | P1.1 закрыт 🟢: запечатана схема пер-планового `journal.jsonl` (root/contracts/plan-journal-schema.md sealed v1) + §7 Exported журнал draft→sealed — детали см. phases/P1.md P1.1 Completion Notes. Фаза P1 1/4 🟡 |
 | 2026-07-18 | opus/high (plan-run) | P1.2 закрыт 🟢: запечатана схема корневого индекса `plans/<ID>/index.md` (root/contracts/plan-index-schema.md sealed v1) + §7 Exported индекс draft→sealed — детали см. phases/P1.md P1.2 Completion Notes. Фаза P1 2/4 🟡 |
 | 2026-07-18 | sonnet/high (plan-run) | P1.3 закрыт 🟢: `lib/task/journal.py` (append+валидация P1.1+CLI) + запись журнала врезана в close-протокол 5 команд `plan-{exec,run,close,audit,design}.md` (D21) — детали см. phases/P1.md P1.3 Completion Notes. Фаза P1 3/4 🟡 |
+| 2026-07-19 | issue-planner/Codex gpt-5.6-sol high | План поставлен на паузу новым ACTIVE `2026.07.19-DUAL-PROVIDER`; продолжение с P1.4 запрещено до release gate P7.4 и reconcile provider-neutral runner contract. |
 
 ## 7. Contracts
 

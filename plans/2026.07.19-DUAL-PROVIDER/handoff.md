@@ -1,6 +1,6 @@
-# HANDOFF — 2026-07-21 — after P5.1
+# HANDOFF — 2026-07-21 — after P5.2
 
-**Next:** run-items: task:plan-run 2026.07.19-DUAL-PROVIDER P5.2
+**Next:** run-items: task:plan-run 2026.07.19-DUAL-PROVIDER P5.3
 
 | Параметр | Значение |
 |:--|:--|
@@ -8,30 +8,31 @@
 | Effort | high |
 | Capabilities | command.filesystem-read · command.filesystem-write · command.git-read · command.git-write |
 | Context | same-session — item |
-| Суть | Реализовать common profile catalog и безопасные Claude/Codex settings/security projections строго против frozen D85 harness contract. |
+| Суть | Добавить provider-native lifecycle/context adapters через P5.2 catalog/render seam, не создавая hidden hook emulation. |
 
 ```text
-$ task:plan-run 2026.07.19-DUAL-PROVIDER P5.2
+$ task:plan-run 2026.07.19-DUAL-PROVIDER P5.3
 ```
 
-**Done:** P5.1 is closed. D85 freezes `root/contracts/provider-harness-contract.md`
-v1.0.0 with one Profile/Surface catalog, independent trust/approval/sandbox axes,
-workspace-contained autonomy, operation-only non-inheritable full access, independent
-native projections, explicit scope/P1 precedence/P2 ownership, secret-reference-only
-diagnostics, Claude compatibility and normative goldens. The independent review records
-the committed current-surface inventory, alternatives, misuse cases and consumer handoff.
+**Done:** P5.1 and P5.2 are closed. D85 remains the frozen provider-harness v1.0.0
+contract. P5.2 adds the accepted harness contribution record, immutable common
+Profile/Surface catalog, explicit effective-provider gate, provider-qualified diagnostics
+and independent named Claude/Codex render plans using the P2 artifact lifecycle. Full
+access is restricted to the named `self-host-apply` operation for an exact trusted
+repository project target; no live/global/fleet/FOREMAN carrier was touched.
 
-**Remaining:** P5.2–P5.7 remain sequential and unopened. P5.2 consumes the frozen D85
-contract and review; it may modify only its declared package/test/artifact seam in a fresh
-clean item worktree. Full package validation remains deferred to the terminal P5 gate under
-D80 and the Owner execution instruction.
+**Remaining:** P5.3–P5.7 remain sequential and unopened. P5.3 consumes only the
+committed P5.2 catalog/render seam and the frozen D85 contract. Full package validation,
+phase close and independent audit remain deferred to the terminal P5 gate under D80 and
+the Owner execution instruction.
 
-**Sources of truth:** `plan.md` D85/Contracts/Routing; `phases/P5.md` P5.1 and P5.2;
+**Sources of truth:** `plan.md` D85/Contracts/Routing; `phases/P5.md` P5.1–P5.3;
 `root/contracts/provider-harness-contract.md`; `artifacts/P5-harness-contract-review.md`;
-frozen predecessor contracts; committed harness CLI/modules/config inventory.
+`artifacts/P5-harness-contribution-review.md`; `packages/harness/lib/harness/{profiles,provider_render}.py`.
 
-**Open risks:** none from P5.1. P5.2 must fail closed rather than infer a provider mapping,
-adopt an unmanaged target or allow full access from defaults/project/fleet inheritance.
+**Open risks:** P5.3 must leave provider-specific event, matcher, payload and activation
+binding in named adapters, preserve current Claude hook bytes/kill switches, and obtain a
+context-budget verdict before any new always-on context carrier.
 
 **Workarounds/Deferred/Open questions:**
 

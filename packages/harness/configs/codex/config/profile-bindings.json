@@ -1,0 +1,7 @@
+{
+  "codex": {
+    "observe": {"approval_policy": "untrusted", "sandbox_mode": "read-only"},
+    "workspace-contained": {"approval_policy": "never", "sandbox_mode": "workspace-write"},
+    "trusted-full-access": {"approval_policy": "never", "sandbox_mode": "danger-full-access"}
+  }
+}

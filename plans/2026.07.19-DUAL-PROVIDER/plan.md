@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.4.22 |
+| Version | 1.4.23 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
@@ -122,7 +122,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P2 | Deterministic adapters, provenance, lock и drift engine | 5/5 | 🟢 Done |
 | P3 | Dual skills publication и marketplaces | 5/5 | 🟢 Done |
 | P4 | Task-command parity и provider-neutral model routing | 5/5 | 🟢 Done |
-| P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 5/7 | 🟡 In progress |
+| P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 6/7 | 🟡 In progress |
 | P6 | mAInd deployment, memory и provider-neutral analytics | 0/6 | ⬜ Not started |
 | P7 | Docs, self-hosting validation и FOREMAN release gate | 0/4 | ⬜ Not started |
 
@@ -215,11 +215,13 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | D83 | 2026-07-21 | D58/D80/D81 формально переоткрывают P3.3 как единственный owning seam после RED G03: в isolated clean worktree восстановить Codex cache-contained `core` projection и `publication-lock.json` из уже committed semantic catalog, добавить focused cache-vs-catalog regression и затем повторить independent P3.5/terminal G03. P3.5 имеет статус `🔴 Blocked` до P3.3 repair; frozen P3.1 contract, Claude outputs, provider selection/distribution, root bootstrap, FOREMAN, fleet, user-global state и owner dirt остаются вне scope. | RAG:— (repo-grounded: `phases/P3.md` Audit P3 2026-07-21, `research/21-p3-codex-core-registry-remediation.md`, `packages/skiller/lib/skiller/{publication,registry}.py`) — existing `registry --check` correctly detects the stale cache; repair restores its generated output and adds only a deterministic P3.3 regression, without a contract or authority change. |
 | D84 | 2026-07-21 | Delegated Owner Approval D79 принимает exact P4.1 COMMAND-ROUTING C1–C6 и замораживает `provider-command-routing-contract.md` v1.0.0: stable `task:*` identity и exact current inventory с `make-workflow`; neutral `economy < implementation < frontier` и независимый `low < medium < high < xhigh`; versioned evidence-backed Claude/Codex selectors и invocation; fail-closed capability/mapping/undershoot diagnostics; preserved plan literals/semantic Next/orchestration; legacy Claude compatibility и normative goldens. | RAG:— (owner-grounded: D79 delegated contract-preserving approval; repo-grounded: `artifacts/P4-command-routing-contract-review.md`, canonical `packages/task/commands/*.md`, D19/D38/D44) — reconciles the already-canonical eleventh command without renaming IDs, changing upstream frozen contracts, expanding authority or starting package/P5+ implementation. |
 | D85 | 2026-07-21 | Delegated Owner Approval D79 принимает exact P5.1 HARNESS H1–H7 и замораживает `provider-harness-contract.md` v1.0.0: один semantic Profile/Surface catalog; независимые trust/approval/sandbox axes; workspace-contained autonomy; operation-only non-inheritable full access; independent native projections; explicit scope/P1 precedence/P2 ownership; secret-reference-only diagnostics; Claude compatibility и normative goldens. | RAG:— (owner-grounded: D79 delegated contract-preserving approval; repo-grounded: `artifacts/P5-harness-contract-review.md`, committed harness CLI/modules/config inventory, D28–D32) — создаёт запланированный P5 contract без изменения frozen P0–P4 semantics, live/data authority, FOREMAN/fleet или package implementation и открывает только declared P5 consumers. |
+| D86 | 2026-07-21 | Delegated Owner Approval D79 атомарно принимает exact P5.6 PROVIDER-INSTRUCTION I1–I8 и замораживает `provider-instruction-contract.md` v1.0.0: exact root+five-package `CLAUDE.md`/`AGENTS.md` pairs; ordered common IDs; explicit non-overriding extensions; independent projections; two stable managed blocks; user-owned outside bytes and no implicit adoption; full P2 source/render lock; exact parity/state/action/diagnostic/golden semantics; public later-consumer API and unchanged authority boundary. | RAG:— (owner-grounded: D79 delegated contract-preserving approval; repo-grounded: `artifacts/P5-instruction-contract-review.md`, current root/five-package guides, `core/block.py`, frozen P2/P5.1 contracts) — creates the planned P5.6 freeze without changing frozen P0–P5.1 semantics, package/live targets, FOREMAN/fleet or later-phase authority. |
 
 ## 6. Update Log
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-21 | plan-sol-xhigh / gpt-5.6-sol/xhigh | P5.6 закрыт: D86 заморозил common instruction canon, exact root/package target pairs, two-block/P2-lock ownership и public consumer boundaries — детали см. phases/P5.md P5.6 Completion Notes. |
 | 2026-07-21 | plan-terra-high / gpt-5.6-terra/high | P5.4 закрыт: semantic MCP/agent role sources, exact Claude compatibility binding/projection, native Codex MCP and 43 role consumers plus one qualified workflow blocker — детали см. phases/P5.md P5.4 Completion Notes. |
 | 2026-07-21 | plan-run/Codex gpt-5.6-terra high | P5.3 закрыт: one hook-native Codex observer carrier, config-native approval and explicit unsupported lifecycle rows with temp-root consumer evidence — детали см. phases/P5.md P5.3 Completion Notes. |
 | 2026-07-21 | plan-run/Codex gpt-5.6-terra high | P5.2 закрыт: common Profile/Surface catalog и независимые Claude/Codex security projections через P2 render plan — детали см. phases/P5.md P5.2 Completion Notes. |
@@ -319,7 +321,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | `root/contracts/provider-skill-publication-contract.md` | v1.0.0 | frozen (D77) | P3.2–P3.5, P4 task adapters, P7 self-host/release evidence | 2026-07-20 (D77) |
 | `root/contracts/provider-command-routing-contract.md` | v1.0.0 | frozen (D84) | P4.2–P4.5, P5–P7, FOREMAN reconcile после P7.4 | 2026-07-21 (D84) |
 | `root/contracts/provider-harness-contract.md` | v1.0.0 | frozen (D85) | P5.2–P5.7, P6 deploy/sync, P7 self-host/release evidence | 2026-07-21 (D85) |
-| `root/contracts/provider-instruction-contract.md` | planned v1.0.0 | owner-gated creation/sealing P5.6 after P5.5 | P5.7 renderer/conformance, P6.2/P6.5/P6.6 deploy+restart, P7 self-host/cleanup/release evidence | — |
+| `root/contracts/provider-instruction-contract.md` | v1.0.0 | frozen (D86) | P5.7 renderer/conformance, P6.2/P6.5/P6.6 deploy+restart, P7 self-host/cleanup/release evidence | 2026-07-21 (D86) |
 | `root/contracts/provider-analytics-contract.md` | v0.1.0-draft | draft; owner-gated sealing P6.3 after P6.2 | P6.4–P6.6, P7 self-host/release evidence, future provider telemetry | — |
 
 ## Обсуждение

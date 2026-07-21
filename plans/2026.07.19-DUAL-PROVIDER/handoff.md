@@ -1,43 +1,37 @@
-# HANDOFF — 2026-07-21 — after P5.5
+# HANDOFF — 2026-07-21 — after P5.6
 
-**Next:** design-item: task:plan-design 2026.07.19-DUAL-PROVIDER P5.6
+**Next:** run-items: task:plan-run 2026.07.19-DUAL-PROVIDER P5.7
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | frontier |
-| Effort | xhigh |
+| Model class | implementation |
+| Effort | high |
 | Capabilities | command.filesystem-read · command.filesystem-write · command.git-read · command.git-write |
-| Context | cold-start reads in P5.6 Required Reads |
-| Суть | Freeze the owner-gated common instruction contract; P5.5 conformance is now an input. |
+| Context | cold-start reads in P5.7 Required Reads |
+| Суть | Implement and prove temp-root instruction projections strictly against frozen D86. |
 
 ```text
-$ task:plan-design 2026.07.19-DUAL-PROVIDER P5.6
+$ task:plan-run 2026.07.19-DUAL-PROVIDER P5.7
 ```
 
-**Done:** P5.5 adds a read-only provider conformance layer and operator reference. Its independent
-fixture covers 3 profiles, 23 surfaces, 8 MCP descriptors and 44 agent roles; named Claude
-settings audit remains separate. Two focused runs produced identical ordered reports.
+**Done:** P5.6 froze `provider-instruction-contract.md` v1.0.0 under D86/D79. The contract and
+review define the exact root/five-package target and semantic inventories, common versus
+provider-extension rules, independent projections, two managed blocks, full P2 lock
+provenance, no-implicit-adoption ownership, exact diagnostics/goldens and later-consumer API.
 
-**Remaining:** P5.6–P5.7 remain sequential. Full package validation, phase close and independent
-audit remain deferred to the terminal P5 gate under D80 and the Owner execution instruction.
+**Remaining:** P5.7 implements catalog/renderer and independent temp-root conformance against
+D86. Full package validation, phase close and independent audit remain deferred to the
+terminal P5 gate under D80 and the Owner execution instruction.
 
-**Sources of truth:** `plan.md` D85/Contracts/Routing; `phases/P5.md` P5.5–P5.6;
-`root/contracts/provider-harness-contract.md`; `artifacts/P5-harness-conformance.md`;
-`packages/harness/lib/harness/provider_audit.py`.
+**Sources of truth:** `plan.md` D86/Contracts/Routing; `phases/P5.md` P5.6–P5.7;
+`root/contracts/provider-instruction-contract.md`;
+`artifacts/P5-instruction-contract-review.md`; frozen P2 artifact and P5.1 harness contracts.
 
-**Open risks:** The `_common/orchestrator` remains a visible qualified Codex blocker until a
-frozen native workflow-carrier mapping exists. No live MCP, agent or hook installation was
-authorized; all P5.4 artifacts were rendered only in temporary roots.
+**Open risks:** Current root/package instruction files remain unmanaged by the new contract;
+the package `AGENTS.md` targets are missing by design until authorized later consumers.
+P5.7 is temp-root only and must not edit/adopt any live target.
 
 **Workarounds/Deferred/Open questions:**
-
-- repair 2026-07-21: P5.5 RED fix-forward restores duplicate/no-write/local-doctor/diagnostic/generated-consumer evidence; no later phase work was opened.
-
-- repair attempt 3 2026-07-21: report now retains qualified unsupported lifecycle/workflow rows and supplies the generated P6/P7 evidence matrix; no later phase work was opened.
-
-- repair attempt 4 2026-07-21: report now proves individual independent render hashes, exact provider×surface coverage, P2 temp lifecycle repair, and project/fleet full-access refusals; no later phase work was opened.
-
-- repair attempt 5 2026-07-21: Codex `agent-packs.lifecycle` and `workflows.status` are now visible unsupported rows with stable diagnostics for their missing native consumers; their actual named Claude consumers remain supported.
 
 - workarounds: none.
 - deferred: single-commit item/bookkeeping bundling is an Owner-required process deviation;

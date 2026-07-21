@@ -1,10 +1,10 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-design.md
 Canonical SHA-256: sha256:883a3423951d23c970be4864f4985c191a8e6b5ecb462c9523cb23bd84e21763
-Adapter: task.codex-command/1.0.2
+Adapter: task.codex-command/1.0.3
 -->
 Это ПРОЕКТИРОВАНИЕ мастер-плана (plan-протокол). Ввод пользователя: «$ARGUMENTS».
-Модельsession effort setting запинены (frontier/high) — не переключай вручную. SSOT протокола — скилл
+Модель/effort запинены (frontier/high) — не переключай вручную. SSOT протокола — скилл
 `plan-protocol` (general): схемы, статусы, эскалация, routing-матрица, refine-цикл (§7);
 шаблоны — его `snippets/{plan,phase,handoff,launch-block}-template.md`. Ты пишешь план,
 который дешёвая модель исполнит БЕЗ доступа к этому чату.
@@ -136,7 +136,7 @@ Adapter: task.codex-command/1.0.2
   Target Operator Models / Approval Owner; необязательные: `Home` — `brain`|`repo:<путь>`,
   `Paused By` — кто перехватил ACTIVE и когда) · `## 1. Context` (5–15 строк, самодостаточно) ·
   `## 2. Execution Rules` (выжимка ≤20 строк) · `## 3. Routing` — канон-таблица
-  `| Items | Modelsession effort setting | Exec | Почему |` (SKILL §9; опц. колонки `Batch` — id группы подфаз
+  `| Items | Model/effort | Exec | Почему |` (SKILL §9; опц. колонки `Batch` — id группы подфаз
   одной сессии — и `Review` — глубина ревью `full`|`light`|`none` — для батчинга подфаз,
   легаси-форма без них валидна); колонка **Exec** — enum `plan-exec` |
   `manual` | `plan-design`; пустая ячейка = дефолт-деривация (`model ≤ implementation` И `effort ≤

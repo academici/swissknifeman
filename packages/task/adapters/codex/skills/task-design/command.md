@@ -1,10 +1,10 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/design.md
 Canonical SHA-256: sha256:60fe19dcf6ffb14dd1489a2d65db76d40681069fbcf855693a7dc1a1d42bc59f
-Adapter: task.codex-command/1.0.2
+Adapter: task.codex-command/1.0.3
 -->
 Это задача ПРОЕКТИРОВАНИЯ — выход артефакты, НЕ код. Ввод пользователя: «$ARGUMENTS».
-Модельsession effort setting запинены (frontier/high) — не переключай вручную.
+Модель/effort запинены (frontier/high) — не переключай вручную.
 
 Профиль `design`:
 1. **Research-fan-out оправдан** (breadth-first): несколько независимых исследователей (implementation) по разным

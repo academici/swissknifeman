@@ -1,6 +1,6 @@
 ---
 name: task-plan-run
-description: "План-протокол: исполнить item Pn.m под модельюsession effort setting ТЕКУЩЕЙ СЕССИИ (модель НЕ пинится) — для серии Exec=manual item'ов без ритуала session model-class setting+session effort setting на каждом."
+description: "План-протокол: исполнить item Pn.m под моделью/effort ТЕКУЩЕЙ СЕССИИ (модель НЕ пинится) — для серии Exec=manual item'ов без ритуала select the session model class+select the session effort на каждом."
 ---
 
 # Task plan-run

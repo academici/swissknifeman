@@ -44,3 +44,17 @@ RED routes only to the owning P4 seam under D80/D81.
 - workarounds: none.
 - deferred: P5 and later phases are not part of this execution.
 - open_questions: none.
+
+## Addendum — Audit P4 attempt 2 remediation
+
+The Audit P4 attempt 2 RED supersedes the launch block at the top. Repair `REPAIR2_COMMIT`
+is implementation-complete in the task-owned Codex projector: adapter `1.0.3` preserves
+ordinary `model/effort` notation, projects standalone `/clear` and uses one shared token-aware
+boundary for projection/fail-closed scanning. Focused suite `22/22`, generated identity
+`24/24`, lock `24/24 noop`, runtime scan (`29/29` route notation, `/clear` `5→0`, corruption
+`0`) and plan-lint are GREEN. Canonical/Claude bytes, D84 and P5+ are untouched.
+
+**Next:** close: task:plan-close 2026.07.19-DUAL-PROVIDER P4
+
+Run the one terminal P4 close retry on `REPAIR2_COMMIT`, then a fresh independent P4 audit.
+Do not execute P5.

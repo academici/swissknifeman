@@ -77,3 +77,18 @@ PYTHONPATH=packages/task/lib:. python3 -m unittest \
 The focused suite passed twice with the same ordered test report. Full task/skiller
 validation, docs/release assessment, phase close and independent audit remain the single
 terminal P4 gate under D80/D82.
+
+## Audit P4 attempt 2 remediation
+
+The adapter `1.0.3` projection is one finite token-aware pass. It consumes the two known
+Workflow carriers first, maps model names at word boundaries, and projects only standalone
+`/task:<stable-id>`, `/model`, `/effort` and `/clear` UI tokens. The unsafe scanner uses the
+same standalone boundaries and rejects unknown unsafe carriers/forms before artifacts.
+
+Direct evidence over all 11 generated runtimes preserves all 29 body-level ordinary
+`model/effort` notation occurrences byte-for-byte, projects the five canonical standalone
+`/clear` controls to provider-neutral context language, and leaves zero Audit-attempt-2
+`modelsession effort setting` / `session effort setting` fragments. The synthetic boundary
+case also preserves `model/effort`, `<model/effort>` and `path/effort` while projecting all
+five standalone UI-token classes. Focused parity/adapter/routing/Claude tests pass `22/22`;
+render identity is `24/24` and the committed provider lock classifies `24/24` as `noop`.

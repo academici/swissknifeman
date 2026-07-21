@@ -19,7 +19,7 @@ from task.command_catalog import (CommandCatalog, CommandRecord, EFFORTS, MODEL_
                                   metadata_value)
 
 
-ADAPTER_VERSION = "1.0.2"
+ADAPTER_VERSION = "1.0.3"
 PROVIDER_LOCK_PATH = "packages/task/adapters/codex/provider-artifacts.lock.json"
 _MAPPING_KEYS = frozenset({
     "provider_id", "mapping_version", "class_selectors", "effort_selectors",
@@ -42,21 +42,30 @@ _CODEX_MODEL_CLASS_PROJECTIONS = {
     "opus": "frontier",
     "fable": "frontier",
 }
-_CODEX_RUNTIME_LITERAL_PROJECTIONS = (
-    ("Workflow({scriptPath})",
-     "native orchestration carrier for the referenced plan-owned workflow script"),
-    ('Workflow({scriptPath: "plans/<ID>/workflows/wf-….js"})',
-     "native orchestration carrier for the referenced plan-owned workflow script"),
-    ("/model <M>", "select session model class <M>"),
-    ("/effort <E>", "select session effort <E>"),
-    ("/model", "session model-class setting"),
-    ("/effort", "session effort setting"),
-    ("/task:", "$ task:"),
+_CODEX_WORKFLOW_CARRIER = (
+    "native orchestration carrier for the referenced plan-owned workflow script")
+_CODEX_RUNTIME_TOKEN = re.compile(
+    r'(?P<workflow_path>Workflow\(\{scriptPath: "plans/<ID>/workflows/wf-…\.js"\}\))'
+    r'|(?P<workflow>Workflow\(\{scriptPath\}\))'
+    r'|(?P<model_class>\b(?:opus|sonnet|haiku|fable)\b)'
+    r'|(?<![\w/])(?P<task>/task:(?P<task_id>[a-z][a-z0-9-]*))(?![\w-])'
+    r'|(?<![\w/])(?P<ui>'
+    r'/model[ \t]+<M>|/effort[ \t]+<E>|'
+    r'/model(?![ \t]+<)|/effort(?![ \t]+<)|/clear)(?![\w/-])',
+    re.IGNORECASE,
 )
+_CODEX_UI_PROJECTIONS = {
+    "/model <m>": "select session model class <M>",
+    "/effort <e>": "select session effort <E>",
+    "/model": "select the session model class",
+    "/effort": "select the session effort",
+    "/clear": "reset the session context",
+}
 _CODEX_RUNTIME_FORBIDDEN = (
     ("claude-model-selector", re.compile(r"\b(?:opus|sonnet|haiku|fable)\b", re.IGNORECASE)),
-    ("claude-task-invocation", re.compile(r"/task:")),
-    ("claude-session-route-command", re.compile(r"/(?:model|effort)\b")),
+    ("claude-task-invocation", re.compile(r"(?<![\w/])/task:")),
+    ("claude-session-control",
+     re.compile(r"(?<![\w/])/(?:model|effort|clear)(?![\w/-])")),
     ("claude-workflow-carrier", re.compile(r"Workflow\(")),
 )
 
@@ -440,9 +449,7 @@ def plan_codex_command_render(
         content = catalog.content_for(record.command_id)
         try:
             runtime = _codex_runtime_bytes(record, content)
-            description = _project_codex_model_classes(_frontmatter_description(content))
-            for source_literal, codex_literal in _CODEX_RUNTIME_LITERAL_PROJECTIONS:
-                description = description.replace(source_literal, codex_literal)
+            description = _project_codex_runtime_tokens(_frontmatter_description(content))
         except (UnicodeDecodeError, ValueError) as error:
             diagnostics.append(_diag(
                 "CMD_SOURCE_DRIFT", record, "/source/runtime-projection",
@@ -928,9 +935,7 @@ def _codex_runtime_bytes(record: CommandRecord, content: bytes) -> bytes:
     if closing is None:
         raise ValueError("canonical frontmatter closing fence is missing")
     body = "".join(lines[closing + 1:])
-    projected = _project_codex_model_classes(body)
-    for source_literal, codex_literal in _CODEX_RUNTIME_LITERAL_PROJECTIONS:
-        projected = projected.replace(source_literal, codex_literal)
+    projected = _project_codex_runtime_tokens(body)
     provenance = (
         "<!-- Generated Codex runtime projection; do not edit as source.\n"
         f"Canonical source: {record.source.path}\n"
@@ -941,16 +946,20 @@ def _codex_runtime_bytes(record: CommandRecord, content: bytes) -> bytes:
     return (provenance + projected).encode("utf-8")
 
 
-def _project_codex_model_classes(text: str) -> str:
+def _project_codex_runtime_tokens(text: str) -> str:
+    """Project the finite standalone Claude token set without touching slash notation."""
     def replacement(match: re.Match[str]) -> str:
-        return _CODEX_MODEL_CLASS_PROJECTIONS[match.group(0).lower()]
+        if match.group("workflow_path") or match.group("workflow"):
+            return _CODEX_WORKFLOW_CARRIER
+        if match.group("model_class"):
+            return _CODEX_MODEL_CLASS_PROJECTIONS[match.group(0).lower()]
+        if match.group("task"):
+            return "$ task:" + match.group("task_id")
+        if match.group("ui"):
+            return _CODEX_UI_PROJECTIONS[match.group("ui").lower()]
+        raise AssertionError("unreachable Codex runtime token")
 
-    return re.sub(
-        r"\b(?:opus|sonnet|haiku|fable)\b",
-        replacement,
-        text,
-        flags=re.IGNORECASE,
-    )
+    return _CODEX_RUNTIME_TOKEN.sub(replacement, text)
 
 
 def _codex_runtime_unsafe_literals(runtime: str) -> tuple[str, ...]:

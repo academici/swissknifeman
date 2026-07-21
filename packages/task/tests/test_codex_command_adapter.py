@@ -62,6 +62,31 @@ class CodexCommandAdapterTests(unittest.TestCase):
             self.assertIn(record.source.path.encode(), runtime)
             self.assertIn(record.source.content_hash.encode(), runtime)
 
+    def test_runtime_projection_changes_only_standalone_claude_ui_tokens(self):
+        boundary_case = (
+            b"\nmodel/effort <model/effort> path/effort\n"
+            b"/model /effort /clear /task:fix\n"
+        )
+        source_contents = tuple(
+            (command_id, content + boundary_case
+             if command_id == "task:fix" else content)
+            for command_id, content in self.catalog.source_contents)
+        plan = plan_codex_command_render(
+            replace(self.catalog, source_contents=source_contents),
+            self.mapping, self.support)
+        self.assertTrue(plan.ok, plan.diagnostics)
+        runtime = next(
+            artifact.managed_bytes.decode("utf-8")
+            for artifact in plan.artifacts
+            if artifact.path.endswith("/task-fix/command.md"))
+        self.assertIn("model/effort <model/effort> path/effort", runtime)
+        self.assertIn(
+            "select the session model class select the session effort "
+            "reset the session context $ task:fix",
+            runtime)
+        self.assertNotIn("modelsession effort setting", runtime)
+        self.assertNotIn("session effort setting", runtime)
+
     def test_negative_diagnostics_precede_results_or_writes(self):
         cases = []
         support = dict(self.support)
@@ -93,18 +118,19 @@ class CodexCommandAdapterTests(unittest.TestCase):
                     self.assertIn(expected, {item.code for item in plan.diagnostics})
                     self.assertEqual(tuple(root.rglob("*")), before)
 
-            poisoned_contents = tuple(
-                (command_id, content + b"\nWorkflow({unknown})\n"
-                 if command_id == "task:fix" else content)
-                for command_id, content in self.catalog.source_contents)
-            unsafe = plan_codex_command_render(
-                replace(self.catalog, source_contents=poisoned_contents),
-                self.mapping, self.support)
-            self.assertFalse(unsafe.ok)
-            self.assertEqual(unsafe.results, ())
-            self.assertIn("CMD_INVOCATION_INVALID",
-                          {item.code for item in unsafe.diagnostics})
-            self.assertEqual(tuple(root.rglob("*")), before)
+            for poison in (b"\nWorkflow({unknown})\n", b"\n/model <UNKNOWN>\n"):
+                poisoned_contents = tuple(
+                    (command_id, content + poison
+                     if command_id == "task:fix" else content)
+                    for command_id, content in self.catalog.source_contents)
+                unsafe = plan_codex_command_render(
+                    replace(self.catalog, source_contents=poisoned_contents),
+                    self.mapping, self.support)
+                self.assertFalse(unsafe.ok)
+                self.assertEqual(unsafe.results, ())
+                self.assertIn("CMD_INVOCATION_INVALID",
+                              {item.code for item in unsafe.diagnostics})
+                self.assertEqual(tuple(root.rglob("*")), before)
 
     def test_lock_lifecycle_repair_and_cache_containment(self):
         render = self.render()

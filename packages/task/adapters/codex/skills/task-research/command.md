@@ -1,10 +1,10 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/research.md
 Canonical SHA-256: sha256:18a3496b60197e30100f8e8910e241983d4f2c989a98806023ca0fb05071ea23
-Adapter: task.codex-command/1.0.2
+Adapter: task.codex-command/1.0.3
 -->
 Это задача ИССЛЕДОВАНИЯ. Ввод пользователя: «$ARGUMENTS».
-Модельsession effort setting запинены (frontier/high) — не переключай вручную.
+Модель/effort запинены (frontier/high) — не переключай вручную.
 
 Профиль `research`:
 1. **Формулируй запросы по дисциплине `query-craft`** (никогда не голый «как сделать X» без версии+контекста);

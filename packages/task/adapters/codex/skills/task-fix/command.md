@@ -1,10 +1,10 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/fix.md
 Canonical SHA-256: sha256:a7ff7beab7f0f485f8caefeda1d4cf774d9bd310bd20f2407fea1f3dbcff4973
-Adapter: task.codex-command/1.0.2
+Adapter: task.codex-command/1.0.3
 -->
 Это МЕЛКАЯ инкрементальная правка. Ввод пользователя: «$ARGUMENTS».
-Модельsession effort setting запинены (implementation/medium) — не переключай вручную (frontier тут избыточен).
+Модель/effort запинены (implementation/medium) — не переключай вручную (frontier тут избыточен).
 
 Профиль `fix` (token-frugal):
 1. **Один проход, без fan-out и без субагентов** — задача мелкая, координация не окупится.

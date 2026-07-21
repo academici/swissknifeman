@@ -62,3 +62,9 @@ Accepted under delegated Owner Approval D79 because the implementation is eviden
 contract-preserving, within P4.2 Files and reversible. No new public abstraction outside the
 task package and no authority over live installs, root bootstrap adapters, FOREMAN or fleet is
 created.
+
+Audit P4 attempt 2 found that adapter `1.0.2` used an unbounded literal replacement that
+mutated ordinary slash notation and omitted `/clear`. The owning-seam repair replaces only
+that projector/scanner with a finite shared token boundary, bumps adapter identity to `1.0.3`,
+and adds direct boundary/all-runtime regressions. This remains inside the accepted contract:
+canonical/Claude bytes, D84 identities/routing and package/plugin version `0.2.0` are unchanged.

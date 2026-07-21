@@ -1,10 +1,10 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-close.md
 Canonical SHA-256: sha256:335d0f0ee37b49f618d8efaf44adf789a1dea4fbd7297a26a36d8e6d764582d9
-Adapter: task.codex-command/1.0.2
+Adapter: task.codex-command/1.0.3
 -->
 Это РЕКОНСИЛЯЦИЯ/ЗАКРЫТИЕ по plan-протоколу. Ввод пользователя: «$ARGUMENTS».
-Модельsession effort setting запинены (implementation/low — механическая сверка, thinking тут жжёт токены без
+Модель/effort запинены (implementation/low — механическая сверка, thinking тут жжёт токены без
 пользы) — не переключай вручную. SSOT схем/статусов — скилл `plan-protocol`.
 Статусы — 6 канонических строк байт-в-байт; правки статусов ТОЛЬКО по фактам.
 
@@ -23,14 +23,14 @@ Adapter: task.codex-command/1.0.2
   | `$ task:plan-close <ID> Pn[.m]` | items терминальны: закрыть фазу / сверить item |
   | `$ task:plan-close archive <ID>` | план терминален целиком |
   | «план закрыт» | все items терминальны, следующий шаг вне протокола |
-  | «ЗАПУСК ВРУЧНУЮ: `<modelsession effort setting>`» | `Exec = manual` (§9): команды нет — launch-block несёт
-  предписанную модель и голый промпт item'а отдельным code-block (либо `session model-class setting`+`session effort setting`+`$ task:plan-run <ID> Pn.m`, D18) |
+  | «ЗАПУСК ВРУЧНУЮ: `<model/effort>`» | `Exec = manual` (§9): команды нет — launch-block несёт
+  предписанную модель и голый промпт item'а отдельным code-block (либо `select the session model class`+`select the session effort`+`$ task:plan-run <ID> Pn.m`, D18) |
 - **Launch-block ОБЯЗАТЕЛЕН**: таблица `Model / Thinking / Context / Суть` + голая команда
   (или, у `Exec = manual`, голый промпт item'а) ОТДЕЛЬНЫМ code-block'ом (копипаст без
   правок); самодостаточна из холодной сессии — plan-ID + cold-start reads, «эта сессия» —
   только как дополнение. Скелет — `snippets/launch-block-template.md` скилла `plan-protocol`.
 - **`Context` — РОВНО одно из трёх значений** (§8, статичное общее значение вне enum'а —
-  дефект): `continue (/clear) — ручной item` (обычный item-by-item exec, включая
+  дефект): `continue (reset the session context) — ручной item` (обычный item-by-item exec, включая
   `Exec = manual` — рестарт сессии не нужен) · `NEW SESSION — Workflow-оркестрован` ·
   `NEW SESSION — шаг-не-item` (следующий шаг сам — `plan-audit`/`plan-close`/`plan-design`).
 - **Сверка с Execution Rules плана**: команда в Next не должна противоречить
@@ -53,7 +53,7 @@ Adapter: task.codex-command/1.0.2
    (а не в процессе исполнения) · item-коммит несёт дифф вне `Files` item'а (считается
    только по НЕплановым путям — carve-out §8), верен сам дифф или нет. `🟢 Done`
    сохраняется при **process**-отклонении, но запись в Known Deviations ОБЯЗАТЕЛЬНА:
-   перебор тира (исполнено модельюsession effort setting ВЫШЕ предписанных Routing), бандлинг коммитов,
+   перебор тира (исполнено моделью/effort ВЫШЕ предписанных Routing), бандлинг коммитов,
    порядок правок, стилистика отчёта. Тихое умолчание = дефект (находка аудита).
    **Нет подтверждения (нет коммитов/диффа, Validation красная) — НЕ 🟢:** оставь/верни
    `🟡 In progress` или `🔴 Blocked`, причина — в Completion Notes item'а (`phases/Pn.md`).

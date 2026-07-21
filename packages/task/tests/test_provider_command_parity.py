@@ -28,8 +28,8 @@ FIXTURE_PATH = (REPO_ROOT / "packages/task/tests/fixtures_data/"
 REFERENCE_PATH = REPO_ROOT / "packages/task/docs/reference/provider-commands.md"
 _CODEX_RUNTIME_FORBIDDEN = (
     re.compile(r"(?i)\b(?:opus|sonnet|haiku|fable)\b"),
-    re.compile(r"/task:"),
-    re.compile(r"/(?:model|effort)\b"),
+    re.compile(r"(?<![\w/])/task:"),
+    re.compile(r"(?<![\w/])/(?:model|effort|clear)\b"),
     re.compile(r"Workflow\("),
 )
 _PLAN_STATUSES = (
@@ -175,6 +175,26 @@ class ProviderCommandParityTests(unittest.TestCase):
 
         self.assertEqual(exact_copies, [])
         self.assertEqual(unsafe, [])
+        canonical_route_notation = []
+        projected_route_notation = []
+        canonical_clear_controls = 0
+        projected_text = "\n".join(projected.values())
+        for record in self.catalog.records:
+            canonical = self.catalog.content_for(record.command_id).decode("utf-8")
+            canonical_body = canonical.split("---\n", 2)[2]
+            canonical_route_notation.extend(
+                re.findall(r"[\w<>]+/effort", canonical_body))
+            projected_route_notation.extend(
+                re.findall(r"[\w<>]+/effort", projected[record.command_id]))
+            canonical_clear_controls += len(
+                re.findall(r"(?<![\w/])/clear\b", canonical_body))
+        self.assertEqual(len(canonical_route_notation), 29)
+        self.assertEqual(projected_route_notation, canonical_route_notation)
+        self.assertEqual(canonical_clear_controls, 5)
+        self.assertIsNone(re.search(r"(?<![\w/])/clear\b", projected_text))
+        # Audit P4 attempt 2 observed 32 corrupt replacements across the runtimes.
+        self.assertNotIn("modelsession effort setting", projected_text)
+        self.assertNotIn("session effort setting", projected_text)
         plan_text = "\n".join(
             projected[command_id] for command_id in projected
             if self.catalog.by_id()[command_id].kind == "plan-protocol")

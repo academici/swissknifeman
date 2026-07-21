@@ -1,10 +1,10 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-audit.md
 Canonical SHA-256: sha256:e98d0c1937a2895f396b3bea4d70c51764a83f08c799188fcf144351a02df1ba
-Adapter: task.codex-command/1.0.2
+Adapter: task.codex-command/1.0.3
 -->
 Это ADVERSARIAL-АУДИТ закрытой фазы мастер-плана (plan-протокол). Ввод пользователя: «$ARGUMENTS».
-Модельsession effort setting запинены (frontier/xhigh) — не переключай вручную. Items НЕ трогай, код НЕ меняй.
+Модель/effort запинены (frontier/xhigh) — не переключай вручную. Items НЕ трогай, код НЕ меняй.
 
 `plan-audit` — профиль **«ревью плана»** таксономии `quality/artifact-review`: конституция соответствия
 = схема plan-protocol (канон 2.5+) + DoR; измерения (RAG-groundedness несущих, структурная полнота,
@@ -101,9 +101,9 @@ Adapter: task.codex-command/1.0.2
    - `handoff.md` и `## Phase Handoff` достаточны для холодного старта (агент без этого чата поймёт, где
      правда и что делать дальше); агрегат Known Deviations фазы собран ИЗ ПОЛЕЙ items, а не пересказом;
    - **DoR-ретроспектива**: фаза ушла в exec с незакрытыми `[NEEDS CLARIFICATION]` = находка;
-   - **routing-adherence**: модельsession effort setting фактического исполнения (Update Log / Completion Notes) ≠ строке
+   - **routing-adherence**: модель/effort фактического исполнения (Update Log / Completion Notes) ≠ строке
      §3 Routing без записи в Known Deviations = находка; у item'а с `Exec = manual` ФАКТИЧЕСКАЯ
-     модельsession effort setting обязана быть НАЗВАНА в отчёте (самоатрибуция машинно не проверяема — её отсутствие и
+     модель/effort обязана быть НАЗВАНА в отчёте (самоатрибуция машинно не проверяема — её отсутствие и
      есть находка).
 
 4. **Детект ≠ гейтинг.** Репортишь ВСЕ находки: `severity ∈ {Blocker,Major,Minor,Nit}` + лейбл
@@ -166,5 +166,5 @@ $ task:plan-design <PLAN-ID> Pn
   долгом / убить фазу»; команду не назначаешь.
 
 Model/Thinking — из §3 Routing плана (канон §9). `Context` — РОВНО одно из ТРЁХ значений enum'а §8:
-`continue (/clear) — ручной item` (обычный item-by-item exec, в т.ч. manual) · `NEW SESSION —
+`continue (reset the session context) — ручной item` (обычный item-by-item exec, в т.ч. manual) · `NEW SESSION —
 Workflow-оркестрован` · `NEW SESSION — шаг-не-item` (`plan-audit`/`plan-close`/`plan-design`).

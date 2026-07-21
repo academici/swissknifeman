@@ -1,11 +1,11 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/dev.md
 Canonical SHA-256: sha256:4b3a0743fabdf7e472128c11c0b5c7d713d2416055e5810b79aa778554deaee5
-Adapter: task.codex-command/1.0.2
+Adapter: task.codex-command/1.0.3
 -->
 Это задача РАЗРАБОТКИ. Ввод пользователя: «$ARGUMENTS».
 
-Профиль `dev` (token-экономный, Lean-tiered). Модельsession effort setting этой команды уже запинены (implementation/high) —
+Профиль `dev` (token-экономный, Lean-tiered). Модель/effort этой команды уже запинены (implementation/high) —
 не переключай вручную.
 
 **Вход — КОРОТКИЙ:** ссылка на durable план-файл (primary source) + что делаем. Детали, якоря и текст
@@ -16,7 +16,7 @@ Adapter: task.codex-command/1.0.2
    transactions / data-integrity / queue-semantics / connectors). Срез = завершённая вертикаль с проводкой
    и тестом, а не горизонтальная нарезка.
 2. **Если установлен agent-pack** (`.claude/workflows/*-dev-loop.js` + агенты `*-slice-builder/test-writer/
-   reviewer`) — гони срезы через него: impl→tests-to-green→risk-адаптивный review-gate. Модельsession effort setting
+   reviewer`) — гони срезы через него: impl→tests-to-green→risk-адаптивный review-gate. Модель/effort
    субагентов уже заданы по риску (implementation impl, frontier+xhigh на HIGH-review, economy тривиал) и перебивают сессию.
    Передай срезы как `args.slices`. Детальный статус фонового workflow-прогона — `swissknifeman wf status`,
    НЕ советовать `/workflows` (такой команды в окружении нет).

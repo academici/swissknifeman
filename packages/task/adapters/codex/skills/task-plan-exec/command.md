@@ -1,10 +1,10 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/task/commands/plan-exec.md
 Canonical SHA-256: sha256:62aefdb74d1dd3d9c50688fccd61960521fb027ecebaa83d778a7e8962fa4a01
-Adapter: task.codex-command/1.0.2
+Adapter: task.codex-command/1.0.3
 -->
 Это ИСПОЛНЕНИЕ item'а мастер-плана (plan-протокол). Ввод пользователя: «$ARGUMENTS».
-Модельsession effort setting запинены (implementation/medium) — не переключай вручную. Команда самодостаточна:
+Модель/effort запинены (implementation/medium) — не переключай вручную. Команда самодостаточна:
 весь протокол ниже, скилл `plan-protocol` дочитывай только при явной ссылке из плана.
 Несколько item'ов в аргументах — исполняй последовательно, каждый по полному циклу 1–8.
 **Батч §3 Routing** (item'ы одной группы `Batch`) — та же серия: последовательно, полный цикл
@@ -35,13 +35,13 @@ Adapter: task.codex-command/1.0.2
    матрицы ролей скилла §9): `model ≤ implementation` И `effort ≤ medium` → `plan-exec`; `model > implementation` ИЛИ
    `effort > medium` → `manual`. Ветки:
    - `Exec = manual` (задан ИЛИ выведен) → item НЕ исполняется командой: СТОП, отчёт
-     `ROUTING-BLOCKED: Pn.m — предписано <modelsession effort setting>, команда пинит implementation/medium`,
+     `ROUTING-BLOCKED: Pn.m — предписано <model/effort>, команда пинит implementation/medium`,
      launch-block формы «ЗАПУСК ВРУЧНУЮ» (п. 8). Статус item'а НЕ меняется.
    - `Exec = plan-exec`, Routing НИЖЕ пина (economy и/или low) → исполнять (перебор безвреден),
      process-отклонение — в Known Deviations; статус остаётся 🟢 (п. 7).
-   - `Exec = plan-exec` ПРОТИВОРЕЧИТ modelsession effort setting (заполненная Exec перебивает деривацию только
+   - `Exec = plan-exec` ПРОТИВОРЕЧИТ model/effort (заполненная Exec перебивает деривацию только
      в сторону строгости) → СТОП, отчёт `ROUTING-INCONSISTENT: Pn.m — Exec=plan-exec при
-     <modelsession effort setting>`; правит `plan-design`. Статус НЕ меняется.
+     <model/effort>`; правит `plan-design`. Статус НЕ меняется.
    - `Exec = plan-design` → item не исполняется: СТОП, ре-дизайн (п. 5).
    - Routing неоднозначен (строки на item нет, «frontier ИЛИ frontier», проза без модели) И item —
      design/contract-класса (сработал бы любой триггер эскалации п. 5) → **СТОП. При сомнении —
@@ -54,7 +54,7 @@ Adapter: task.codex-command/1.0.2
    **Журнал (D21, P1.1, хелпер `lib/task/journal.py`):** следом append старт-запись —
    `PYTHONPATH=packages/task/lib python3 -m task.journal append --plan-dir plans/<PLAN-ID>
    --plan <PLAN-ID> --item <Pn.m> --command <plan-exec|plan-run — фактически вызванная
-   команда> --actor <model>/<effort> --result in-progress` (`<model>/<effort>` — модельsession effort setting
+   команда> --actor <model>/<effort> --result in-progress` (`<model>/<effort>` — модель/effort
    ЭТОГО исполнения: pinned implementation/medium у `plan-exec`, фактическая сессии у `plan-run`).
    Хелпера/каталога плана нет (standalone-раскладка вне монорепо) — предупреди и пропусти
    (не блокер, как `plan-lint`).
@@ -142,13 +142,13 @@ Adapter: task.codex-command/1.0.2
    который ЖИВЁТ В КОДЕ/артефакте (а не в процессе исполнения) · item-коммит несёт дифф вне `Files`
    item'а (считается только по НЕплановым путям — carve-out выше), верен сам дифф или нет.
    `🟢 Done` сохраняется при **process**-отклонении, но запись в Known Deviations ОБЯЗАТЕЛЬНА: перебор
-   тира (исполнено модельюsession effort setting ВЫШЕ предписанных Routing), бандлинг коммитов, порядок правок,
+   тира (исполнено моделью/effort ВЫШЕ предписанных Routing), бандлинг коммитов, порядок правок,
    стилистика отчёта. Тихое умолчание = дефект (находка аудита).
    Дефект САМОГО ТЗ (правило ТЗ ошибочно или невыполнимо) — тоже НЕ отклонение исполнителя: он
    эскалирует (п. 5: конфликт правил / неясные acceptance), владелец или `plan-design` вносит новый D#
    и СИНХРОНИЗИРУЕТ Scope Included item'а с решением; закрытие идёт по ОБНОВЛЁННОМУ ТЗ → 🟢 + запись в
    Known Deviations (что изменено, каким D#). Правка ТЗ по ходу БЕЗ D# — material-отклонение (scope
-   drift), даже если результат «лучше». **Routing-adherence:** недобор моделиsession effort setting снят гейтом п. 2
+   drift), даже если результат «лучше». **Routing-adherence:** недобор модели/effort снят гейтом п. 2
    (структурно невозможен), остаётся ПЕРЕБОР — та же запись (`исполнено <факт> вместо <из Routing>`).
 
    **Якорь дерева для чисел.** Любое ЧИСЛО в Completion Notes / Validation / Known Deviations /
@@ -205,15 +205,15 @@ Adapter: task.codex-command/1.0.2
    - Следующий item, `Exec = plan-exec` → голая команда `$ task:plan-exec <PLAN-ID> Pn.k`; Model/Thinking
      — из Routing (дефолт `implementation/medium`).
    - Следующий item с **`Exec = manual`** (§9 скилла) → форма **«ЗАПУСК ВРУЧНУЮ»**: `Next` =
-     `«ЗАПУСК ВРУЧНУЮ: <modelsession effort setting>»`; `Model`/`Thinking` — **предписанные Routing**, НЕ
+     `«ЗАПУСК ВРУЧНУЮ: <model/effort>»`; `Model`/`Thinking` — **предписанные Routing**, НЕ
      implementation/medium; code-block несёт **ГОЛЫЙ ПРОМПТ item'а** (копипаст без правок), а НЕ slash-команду
      (`$ task:plan-exec` пинит implementation/medium и по гейту п. 2 обязан такой item отклонить — команда в
-     code-block'е была бы инструкцией нарушить гейт); `Context` = `continue (/clear) — ручной item`. Либо: `select session model class <M>` + `select session effort <E>` + `$ task:plan-run <ID> Pn.m` (D18).
+     code-block'е была бы инструкцией нарушить гейт); `Context` = `continue (reset the session context) — ручной item`. Либо: `select session model class <M>` + `select session effort <E>` + `$ task:plan-run <ID> Pn.m` (D18).
    - Следующая фаза ещё скелет (16 полей не заполнены) → `$ task:plan-design <PLAN-ID> Pn`, не
      `plan-exec` (упадёт на предусловии). Фаза терминальна → `$ task:plan-close <PLAN-ID> Pn`.
-   - **`Context` — РОВНО одно из ТРЁХ значений** (`plan-protocol` §8): `continue (/clear) — ручной
+   - **`Context` — РОВНО одно из ТРЁХ значений** (`plan-protocol` §8): `continue (reset the session context) — ручной
      item` (обычный item-by-item exec, в т.ч. manual — рестарт сессии ему не нужен) ·
      `NEW SESSION — Workflow-оркестрован` (следующий шаг — Workflow-оркестрованный кусок: фоновый
-     payload растит контекст сессии быстрее самой работы, `/clear` этого не решает) ·
+     payload растит контекст сессии быстрее самой работы, `reset the session context` этого не решает) ·
      `NEW SESSION — шаг-не-item` (`plan-audit`/`plan-close`/`plan-design` — читают план с диска
      заново; аудиту наследовать контекст исполнителя запрещено).

@@ -30,6 +30,6 @@ explicit authority.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: item-level P5 process deviations remain recorded in `phases/P5.md`.
+- workarounds: P6.1 attempt 1 false escalation is preserved and superseded by the append-only retry journal record.
 - deferred: P7+, live self-host, FOREMAN, fleet and push.
 - open_questions: none.

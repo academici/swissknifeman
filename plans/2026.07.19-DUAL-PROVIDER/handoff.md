@@ -18,8 +18,8 @@ Read plan.md → handoff.md → phases/P4.md → P4.5 Required Reads in exact or
 
 **Done:** P4.4 added semantic Next carriers, dual provider invocation rendering, two-axis
 fixed/inherited route gates, orchestration capability failures and neutral plan-protocol v2.11.0
-without changing P4.3 Claude command/plugin bytes. Substantive item/bookkeeping commit is
-recorded by the immediate mechanical hash fix.
+without changing P4.3 Claude command/plugin bytes. Substantive item/bookkeeping commit:
+`2845dd7` (recorded by this immediate mechanical hash fix).
 
 **Remaining:** P4.5, terminal full validation/phase close and fresh independent P4
 audit. P5+ remains closed.

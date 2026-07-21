@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from collections.abc import Mapping
 from types import MappingProxyType
 from pathlib import Path
+import sys
 
 from core import (ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource,
                   ArtifactTarget, ProviderId, canonical_json_bytes,
@@ -150,6 +151,9 @@ def write_conformance_report(path, plan):
 
 def generate_conformance_report(harness_configs, output_path):
     """Generate the fixed P6 semantic inventory through P5 projections only."""
+    harness_lib = str(Path(harness_configs).parent / "lib")
+    if harness_lib not in sys.path:
+        sys.path.insert(0, harness_lib)
     from harness.mcp import load_mcp_catalog, plan_mcp_projection
     root = Path(harness_configs)
     catalog = load_mcp_catalog(root / "common/mcp/catalog.json")

@@ -120,7 +120,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P0 | Evidence, vocabulary и запечатанные provider contracts | 7/7 | 🟢 Done |
 | P1 | Provider config/domain и backward-compatible resolution | 6/6 | 🟢 Done |
 | P2 | Deterministic adapters, provenance, lock и drift engine | 5/5 | 🟢 Done |
-| P3 | Dual skills publication и marketplaces | 3/5 | 🔴 Blocked |
+| P3 | Dual skills publication и marketplaces | 4/5 | 🟡 In progress |
 | P4 | Task-command parity и provider-neutral model routing | 0/5 | ⬜ Not started |
 | P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 0/7 | ⬜ Not started |
 | P6 | mAInd deployment, memory и provider-neutral analytics | 0/6 | ⬜ Not started |
@@ -218,6 +218,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-21 | plan-run/Codex gpt-5.6-terra high | P3.3 D83 закрыт: clean-worktree regeneration restored the stale Codex core cache/lock and added a catalog-vs-cache regression — детали см. phases/P3.md P3.3 Completion Notes. |
 | 2026-07-21 | plan-design/Codex gpt-5.6-sol xhigh | D83: P3 reopened after RED G03; P3.3 owns a bounded clean-worktree Codex core cache/lock regeneration and focused catalog-vs-cache regression, while P3.5 is blocked until repair — details in `research/21-p3-codex-core-registry-remediation.md`. |
 | 2026-07-21 | plan-close/Codex gpt-5.6-terra medium | P3 закрыта: terminal publication/distribution/parity evidence, one full skiller validation и registry check сверены; далее fresh G03 audit — детали см. phases/P3.md Phase Handoff. |
 | 2026-07-21 | plan-exec/Codex gpt-5.6-terra medium | P3.5 закрыт: independent skill inventory/channel parity, D78/D80 no-write and repair evidence committed — детали см. phases/P3.md P3.5 Completion Notes. |

@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.4.14 |
+| Version | 1.4.15 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
@@ -120,7 +120,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P0 | Evidence, vocabulary и запечатанные provider contracts | 7/7 | 🟢 Done |
 | P1 | Provider config/domain и backward-compatible resolution | 6/6 | 🟢 Done |
 | P2 | Deterministic adapters, provenance, lock и drift engine | 5/5 | 🟢 Done |
-| P3 | Dual skills publication и marketplaces | 5/5 | 🟢 Done |
+| P3 | Dual skills publication и marketplaces | 3/5 | 🔴 Blocked |
 | P4 | Task-command parity и provider-neutral model routing | 0/5 | ⬜ Not started |
 | P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 0/7 | ⬜ Not started |
 | P6 | mAInd deployment, memory и provider-neutral analytics | 0/6 | ⬜ Not started |
@@ -212,11 +212,13 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | D80 | 2026-07-21 | Owner directs phase-first fast path: same-item/same-seam confirmed contract-preserving defects are bundled into one minimal remediation; individual symptoms get only targeted regression/static checks, while full package validation, docs/release assessment, phase close and independent audit occur once at terminal phase. First application is the P3.4 bundle in `research/19-p3-fail-closed-bundle-remediation.md`; frozen contracts, fail-closed invariants and escalation boundaries remain unchanged. | RAG:— (owner-grounded: direct instruction 2026-07-21; repo-grounded: D58/D79, P3.5 retry evidence) — removes repeated reopen/review loops without relaxing a safety invariant or extending authority. |
 | D81 | 2026-07-21 | Retrospective control after P3 throughput failure: after the first owning-phase blocker, diagnose and bundle same-seam confirmed causes before another execution/reopen; an item blocked behind remediation is explicitly `🔴 Blocked`, never merely “in progress”; root proactively discloses repeated-reopen schedule/throughput failure. D80/D81 preserve frozen contracts and fail-closed requirements and apply from P3 onward. | RAG:— (owner-grounded: direct feedback 2026-07-21; repo-grounded: `findings/P3-throughput-retrospective-2026-07-21.md`, journal P3.5 attempts) — prevents hidden blocked work and repeated narrow validation loops without altering a product contract. |
 | D82 | 2026-07-21 | P4–P6 execute under the committed phase-first playbooks: one bounded phase-entry inventory/protected-path/test-map pack; sequential bundle lanes with contract-authored early negative/temp-root probes before each consumer; targeted seam/static checks per item or confirmed same-seam repair; and one package-wide validation/docs-release assessment, phase close and fresh independent audit only at each terminal phase. The first blocker triggers D81’s single bounded same-seam scan and truthful `🔴 Blocked` successor, never a per-symptom reopen loop. P4 starts in a NEW SESSION only after committed G03/P1–P3 review-PR evidence; review checkpoints are P4 after GREEN P4 audit, P4–P5 after GREEN P5 audit, and P6 after GREEN P6 audit. | RAG:— (repo-grounded: `research/20-p4-phase-first-execution-playbook.md`, `research/20-p5-p6-phase-first-execution-playbook.md`, D80/D81, `roadmap.md`) — operationalizes existing item contracts/routing/gates without changing frozen semantics, owner authority, no-live-apply/FOREMAN/fleet boundaries, P6 cold-start boundary or item scope. |
+| D83 | 2026-07-21 | D58/D80/D81 формально переоткрывают P3.3 как единственный owning seam после RED G03: в isolated clean worktree восстановить Codex cache-contained `core` projection и `publication-lock.json` из уже committed semantic catalog, добавить focused cache-vs-catalog regression и затем повторить independent P3.5/terminal G03. P3.5 имеет статус `🔴 Blocked` до P3.3 repair; frozen P3.1 contract, Claude outputs, provider selection/distribution, root bootstrap, FOREMAN, fleet, user-global state и owner dirt остаются вне scope. | RAG:— (repo-grounded: `phases/P3.md` Audit P3 2026-07-21, `research/21-p3-codex-core-registry-remediation.md`, `packages/skiller/lib/skiller/{publication,registry}.py`) — existing `registry --check` correctly detects the stale cache; repair restores its generated output and adds only a deterministic P3.3 regression, without a contract or authority change. |
 
 ## 6. Update Log
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-21 | plan-design/Codex gpt-5.6-sol xhigh | D83: P3 reopened after RED G03; P3.3 owns a bounded clean-worktree Codex core cache/lock regeneration and focused catalog-vs-cache regression, while P3.5 is blocked until repair — details in `research/21-p3-codex-core-registry-remediation.md`. |
 | 2026-07-21 | plan-close/Codex gpt-5.6-terra medium | P3 закрыта: terminal publication/distribution/parity evidence, one full skiller validation и registry check сверены; далее fresh G03 audit — детали см. phases/P3.md Phase Handoff. |
 | 2026-07-21 | plan-exec/Codex gpt-5.6-terra medium | P3.5 закрыт: independent skill inventory/channel parity, D78/D80 no-write and repair evidence committed — детали см. phases/P3.md P3.5 Completion Notes. |
 | 2026-07-21 | issue-planner/Codex gpt-5.6-sol high | D82: P4–P6 получили phase-first execution map: bounded entry/probes, sequential same-seam bundles, один terminal validation/audit и phase PR checkpoints; P3 status/handoff/journal, contracts и item scope не менялись. |

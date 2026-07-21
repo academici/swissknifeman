@@ -7,6 +7,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "harness/lib"))
 from core import (ConfigSource, ProviderConfigCatalog, ProviderConfigLayer, ProviderId)
 from harness.mcp import load_mcp_catalog, plan_mcp_projection
 from maind.provider_deploy import (ProviderDeployError, plan_provider_deploy,
+                                   plan_provider_artifacts, apply_provider_artifacts,
                                    resolve_effective_providers, semantic_servers)
 from maind.provider_deploy import write_conformance_report
 from maind.provision.deploy import mark_deployed, provider_semantic_inventory
@@ -117,6 +118,30 @@ class TestProviderDeploy(unittest.TestCase):
                                     text=True, capture_output=True)
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn("| codex | .codex/config.toml | planned |", output.read_text(encoding="utf-8"))
+
+    def test_provider_artifact_check_apply_repair_is_no_write_and_deterministic(self):
+        root = Path(__file__).resolve().parents[3] / "packages/harness/configs"
+        catalog = load_mcp_catalog(root / "common/mcp/catalog.json")
+        bases = tuple(plan_mcp_projection(catalog, provider_id=provider,
+            bindings_path=root / provider.value / "mcp/bindings.json", selected=(), trusted=True)
+            for provider in (ProviderId.CLAUDE_CODE, ProviderId.CODEX))
+        deploy = plan_provider_deploy(bases, semantic_servers(maind={"command": "maind"}))
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp)
+            checked = plan_provider_artifacts(target, deploy)
+            self.assertFalse((target / ".mcp.json").exists())
+            self.assertEqual(checked["mode"], "check")
+            apply_provider_artifacts(target, deploy)
+            self.assertTrue((target / ".mcp.json").exists())
+            self.assertEqual(plan_provider_artifacts(target, deploy)["severity"], "green")
+            (target / ".mcp.json").write_bytes((target / ".mcp.json").read_bytes() + b"\n")
+            self.assertEqual(plan_provider_artifacts(target, deploy)["severity"], "error")
+            repaired = plan_provider_artifacts(target, deploy, repair=True)
+            self.assertEqual(repaired["mode"], "repair")
+            apply_provider_artifacts(target, deploy, repair=True)
+            self.assertEqual(plan_provider_artifacts(target, deploy)["severity"], "green")
+            (target / ".mcp.json").write_text('{"foreign": true}', encoding="utf-8")
+            self.assertEqual(plan_provider_artifacts(target, deploy)["severity"], "error")
 
 
 if __name__ == "__main__":

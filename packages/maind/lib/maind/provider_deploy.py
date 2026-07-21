@@ -10,7 +10,8 @@ from pathlib import Path
 
 from core import (ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource,
                   ArtifactTarget, ProviderId, canonical_json_bytes,
-                  plan_artifact_render, sha256_digest)
+                  apply_plan, plan_artifact_lock, plan_artifact_render, sha256_digest)
+from core.provider_lock import artifact_doctor
 from .common import atomic_write_text
 
 
@@ -162,3 +163,31 @@ def generate_conformance_report(harness_configs, output_path):
         perplexity={"command": "pplx"}))
     write_conformance_report(output_path, plan)
     return plan
+
+
+def plan_provider_artifacts(root, deploy_plan, *, repair=False):
+    """Classify all provider targets through one P2 plan without writing them."""
+    if not deploy_plan.green:
+        return {"mode": "check", "severity": "error", "plan": None,
+                "diagnostics": deploy_plan.diagnostics}
+    root = Path(root)
+    lock_path = root / ".swissknifeman/provider-artifacts.lock.json"
+    lock_bytes = lock_path.read_bytes() if lock_path.exists() else None
+    artifacts = tuple(row.artifact for row in deploy_plan.results if row.artifact is not None)
+    plan = plan_artifact_lock(root, artifacts, lock_bytes=lock_bytes,
+                              repair_artifact_ids=tuple(
+                                  row.artifact.provenance.artifact_id for row in deploy_plan.results)
+                              if repair else ())
+    projection = artifact_doctor(plan)
+    return {"mode": "repair" if repair else "check", "severity": projection["exit_severity"],
+            "plan": plan, "diagnostics": tuple(action["diagnostic"]
+                                                   for action in projection["actions"])}
+
+
+def apply_provider_artifacts(root, deploy_plan, *, repair=False):
+    """Apply a preflighted provider deployment only when P2 has no refusal."""
+    checked = plan_provider_artifacts(root, deploy_plan, repair=repair)
+    if checked["plan"] is None or checked["severity"] == "error":
+        raise ProviderDeployError("MAIND_PROVIDER_DEPLOY_REFUSED")
+    apply_plan(Path(root), checked["plan"])
+    return plan_provider_artifacts(root, deploy_plan)

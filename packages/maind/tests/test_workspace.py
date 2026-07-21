@@ -8,6 +8,9 @@ import unittest
 from pathlib import Path
 
 from maind.provision import workspace
+from maind.provision import sync
+from maind.config import merge_defaults
+from maind.probe import probe_project
 from tests.fixtures import make_repo
 
 
@@ -158,6 +161,35 @@ class TestAudit(unittest.TestCase):
             self.assertEqual([c["id"] for c in au["covered"]], ["a"])
             self.assertEqual([m["id"] for m in au["missing"]], ["b"])
             self.assertEqual(au["registry_count"], 2)
+
+
+class TestProviderTrust(unittest.TestCase):
+    def test_codex_trust_and_full_access_are_fail_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _root, env = make_repo(tmp)
+            project = Path(tmp) / "codex"; project.mkdir()
+            config = merge_defaults({"projects": [{"id": "codex", "name": "Codex",
+                "local_path": str(project), "providers": {"contract_version": "1.0.0",
+                "selection": {"claude-code": {"enabled": False}, "codex": {"enabled": True}}}}]})
+            context = sync.contexts(env, config, config["projects"])[0]
+            untrusted = workspace.provider_trust(context, trusted=False)
+            self.assertEqual(untrusted[0]["provider_id"], "codex")
+            self.assertIn("HARNESS_TRUST_REQUIRED", untrusted[0]["diagnostics"])
+            trusted = workspace.provider_trust(context, trusted=True)
+            self.assertTrue(trusted[0]["green"])
+            full = workspace.provider_trust(context, trusted=True,
+                profile_id="trusted-full-access")
+            self.assertIn("HARNESS_FULL_ACCESS_EXPLICIT_REQUIRED", full[0]["diagnostics"])
+
+    def test_legacy_probe_shape_is_unchanged_without_provider_context(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _root, env = make_repo(tmp)
+            project = Path(tmp) / "legacy"; project.mkdir()
+            config = merge_defaults({"projects": [{"id": "legacy", "name": "Legacy",
+                "local_path": str(project)}]})
+            report = probe_project(env, config, config["projects"][0], memory_reachable=False)
+            self.assertIn("trusted", report)
+            self.assertNotIn("provider_trust", report)
 
 
 if __name__ == "__main__":

@@ -104,13 +104,14 @@ def memory_roundtrip(env, config, project, memory_reachable):
 
 
 # ── отчёт ────────────────────────────────────────────────────────────────────
-def health_report(env, config, project, *, memory_reachable=None):
+def health_report(env, config, project, *, memory_reachable=None, provider_context=None):
     """Состояние связи одного проекта с хабом + проба памяти + подсказки по починке."""
     pid = project["id"]
     if memory_reachable is None:
         _, _, url = resolve_ports(env, config)
         memory_reachable = mem_health(url)
-    rep = probe_project(env, config, project, memory_reachable=memory_reachable)
+    rep = probe_project(env, config, project, memory_reachable=memory_reachable,
+                        provider_context=provider_context)
     c = rep.get("configured", {})
     hook_mode = hook_memory_mode(project)
     native_off, digest_hook = _native_memory_state(project)
@@ -139,7 +140,7 @@ def health_report(env, config, project, *, memory_reachable=None):
         if "missing-example" in issue["problems"]:
             hints.append(f"нет {f}.example → maind sync --only mcp --project {pid} "
                          "(эмитит портируемый шаблон + .gitignore)")
-    return {
+    result = {
         "id": pid, "scope": rep.get("memory_scope", f"project:{pid}"),
         "namespaces": sorted(namespaces_of(project)),
         "status": rep.get("status", "standalone"),
@@ -154,6 +155,9 @@ def health_report(env, config, project, *, memory_reachable=None):
         "mcp_hygiene": hygiene,
         "path": rep.get("path"), "hints": hints,
     }
+    if "provider_trust" in rep:
+        result["provider_trust"] = rep["provider_trust"]
+    return result
 
 
 def _target(env, config, opts):

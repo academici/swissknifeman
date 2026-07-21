@@ -30,6 +30,7 @@ from ..provider_deploy import (apply_provider_artifacts, generate_conformance_re
 class ProviderProjectionContext:
     """P1 selection and P5 projections resolved once for a project operation."""
     providers: tuple
+    effective_providers: tuple
     projections: tuple
 
 
@@ -48,15 +49,22 @@ def provider_projection_context(env, config, project):
         sys.path.insert(0, harness_lib)
     from core import ProviderConfigCatalog, ProviderId
     from harness.mcp import load_mcp_catalog, plan_mcp_projection
-    providers = resolve_effective_providers(
+    resolved = resolve_provider_config(
         config, ProviderConfigCatalog("1.0.0", (ProviderId.CLAUDE_CODE, ProviderId.CODEX), (), ()),
         project["id"])
+    if resolved.selection is None:
+        codes = ",".join(item.code for item in resolved.diagnostics)
+        raise ValueError(codes or "MAIND_PROVIDER_RESOLUTION_INVALID")
+    effective_providers = tuple(row for row in resolved.selection if row.enabled)
+    providers = tuple(row.provider_id for row in effective_providers)
+    if not providers:
+        raise ValueError("MAIND_PROVIDER_DISABLED")
     catalog = load_mcp_catalog(harness_root / "configs/common/mcp/catalog.json")
     projections = tuple(plan_mcp_projection(
         catalog, provider_id=provider,
         bindings_path=harness_root / "configs" / provider.value / "mcp/bindings.json",
         selected=(), trusted=True) for provider in providers)
-    return ProviderProjectionContext(providers, projections)
+    return ProviderProjectionContext(providers, effective_providers, projections)
 
 
 def _agentmemory_entry(env, config, scope):

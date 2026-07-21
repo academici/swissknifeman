@@ -19,7 +19,8 @@ from ..mcpconfig import (MCP_FILES, MCPConfigError, load_mcp, mcp_path,
 from ..memory import health, resolve_ports
 from ..projects import get as get_project
 from ..projects import listing, write_config
-from ..provider_deploy import plan_provider_deploy, semantic_servers
+from ..provider_deploy import (generate_conformance_report, plan_provider_deploy,
+                               semantic_servers)
 
 
 def _agentmemory_entry(env, config, scope):
@@ -203,7 +204,13 @@ def cmd_deploy(env, argv):
     opts, _ = parse_args(argv, {"--project": "str", "--all": "bool", "--targets": "str",
                                 "--with-code": "bool", "--with-graphify": "bool",
                                 "--no-maind-server": "bool", "--with-agentmemory": "bool",
-                                "--dry-run": "bool", "--json": "bool"})
+                                "--dry-run": "bool", "--json": "bool",
+                                "--conformance": "str"})
+    if opts["conformance"]:
+        harness_configs = Path(env.root).parent / "harness/configs"
+        plan = generate_conformance_report(harness_configs, opts["conformance"])
+        print(f"provider deploy conformance: {len(plan.results)} provider rows")
+        return
     config, _src = load_config(env)
     if opts["project"]:
         proj = get_project(config, opts["project"])

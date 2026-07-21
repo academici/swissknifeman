@@ -4,17 +4,33 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "harness/lib"))
 
-from core import ProviderId
+from core import (ConfigSource, ProviderConfigCatalog, ProviderConfigLayer, ProviderId)
 from harness.mcp import load_mcp_catalog, plan_mcp_projection
-from maind.provider_deploy import plan_provider_deploy, semantic_servers
+from maind.provider_deploy import (ProviderDeployError, plan_provider_deploy,
+                                   resolve_effective_providers, semantic_servers)
 from maind.provider_deploy import write_conformance_report
 from maind.provision.deploy import mark_deployed, provider_semantic_inventory
 from tests.fixtures import make_repo
 from maind.config import merge_defaults
 import tempfile
+import subprocess
 
 
 class TestProviderDeploy(unittest.TestCase):
+    def test_effective_provider_resolution_honors_operation_override_and_refuses_invalid(self):
+        catalog = ProviderConfigCatalog("1.0.0", (ProviderId.CLAUDE_CODE, ProviderId.CODEX), (), ())
+        config = merge_defaults({"projects": [{"id": "demo", "name": "Demo"}]})
+        self.assertEqual(resolve_effective_providers(config, catalog, "demo"),
+                         (ProviderId.CLAUDE_CODE,))
+        operation = ProviderConfigLayer(ConfigSource("operation", "test", "operation", "/"), {
+            "contract_version": "1.0.0", "selection": {"codex": {"enabled": True},
+            "claude-code": {"enabled": False}}})
+        self.assertEqual(resolve_effective_providers(config, catalog, "demo", operation=operation),
+                         (ProviderId.CODEX,))
+        unknown = ProviderConfigLayer(ConfigSource("operation", "test", "operation", "/"), {
+            "contract_version": "1.0.0", "selection": {"unknown": {"enabled": True}}})
+        with self.assertRaisesRegex(ProviderDeployError, "PCFG_UNKNOWN_PROVIDER"):
+            resolve_effective_providers(config, catalog, "demo", operation=unknown)
     def test_caller_owned_semantics_use_p5_targets_and_renderers(self):
         root = Path(__file__).resolve().parents[3] / "packages/harness/configs"
         catalog = load_mcp_catalog(root / "common/mcp/catalog.json")
@@ -92,6 +108,15 @@ class TestProviderDeploy(unittest.TestCase):
         self.assertEqual(project["mcp"]["targets"], [".mcp.json"])
         self.assertEqual(project["provider_deploy"]["claude-code"]["status"], "planned")
         self.assertEqual(project["provider_deploy"]["codex"]["target_path"], ".codex/config.toml")
+
+    def test_worktree_local_cli_generates_conformance_report(self):
+        launcher = Path(__file__).resolve().parents[1] / "bin/maind"
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp) / "P6-provider-deploy-conformance.md"
+            result = subprocess.run([str(launcher), "deploy", "--conformance", str(output)],
+                                    text=True, capture_output=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("| codex | .codex/config.toml | planned |", output.read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

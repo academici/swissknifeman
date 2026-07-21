@@ -18,6 +18,23 @@ class ProviderDeployError(ValueError):
     """Stable no-write deployment planning failure."""
 
 
+def resolve_effective_providers(config, catalog, project_id, *, operation=None,
+                                project_config=None):
+    """Resolve P1 provider selection once for a project operation, without I/O."""
+    from .config import resolve_provider_config
+    result = resolve_provider_config(config, catalog, project_id,
+                                     project_config=project_config, operation=operation)
+    if result.selection is None:
+        codes = ",".join(item.code for item in result.diagnostics)
+        raise ProviderDeployError(codes or "MAIND_PROVIDER_RESOLUTION_INVALID")
+    providers = tuple(row.provider_id for row in result.selection if row.enabled)
+    if len(set(providers)) != len(providers):
+        raise ProviderDeployError("MAIND_PROVIDER_DUPLICATE")
+    if not providers:
+        raise ProviderDeployError("MAIND_PROVIDER_DISABLED")
+    return providers
+
+
 @dataclass(frozen=True)
 class SemanticServer:
     id: str
@@ -128,3 +145,20 @@ def conformance_report(plan):
 def write_conformance_report(path, plan):
     """Persist only generated P6 evidence, never provider target output."""
     atomic_write_text(Path(path), conformance_report(plan))
+
+
+def generate_conformance_report(harness_configs, output_path):
+    """Generate the fixed P6 semantic inventory through P5 projections only."""
+    from harness.mcp import load_mcp_catalog, plan_mcp_projection
+    root = Path(harness_configs)
+    catalog = load_mcp_catalog(root / "common/mcp/catalog.json")
+    bases = tuple(plan_mcp_projection(
+        catalog, provider_id=provider,
+        bindings_path=root / provider.value / "mcp/bindings.json", selected=(), trusted=True)
+        for provider in (ProviderId.CLAUDE_CODE, ProviderId.CODEX))
+    plan = plan_provider_deploy(bases, semantic_servers(
+        maind={"command": "maind"},
+        codegraph={"command": "uvx", "args": ["serena"]},
+        perplexity={"command": "pplx"}))
+    write_conformance_report(output_path, plan)
+    return plan

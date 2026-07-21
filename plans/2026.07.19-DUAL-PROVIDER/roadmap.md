@@ -6,15 +6,18 @@
      Порядок строго phase-first: P0→P1→P2→P3→P4→P5→P6→P7. До finish + GREEN design
      audit исполнение любого item запрещено. -->
 
-**Обновлён:** 2026-07-20 · **Соответствует plan.md:** v1.4.9
+**Обновлён:** 2026-07-21 · **Соответствует plan.md:** v1.4.11
 
 > **Статус exec:** P0 закрыта и audit attempt 3 завершён literal GREEN на `245bb56`;
 > G01 открыт, P1 повторно закрыта после D74: P1.5 добавила committed synthetic G02 proof,
 > P1.6 валидировала two documentation projections и exact commit map. Следующий шаг — fresh
 > independent P1 audit literal GREEN на `2363b21`; P2 повторно закрыта после D76: P2.5
 > добавила fail-closed provenance/override, clean/noop no-write и managed-boundary/
-> project-override conformance. Следующий шаг — fresh independent P2 audit; P3.1 остаётся
-> закрыт до literal GREEN verdict.
+> project-override conformance. P2 audit is GREEN. P3.1–P3.3 are closed; P3.4 is in one
+> D80 bundled remediation for selected-provider ownership, managed-byte drift and corrupt-lock
+> provenance refusals, and P3.5 is explicitly blocked behind it. After one P3.5 parity pass,
+> terminal P3 validation/close and independent audit, prepare a PR containing the complete
+> P1–P3 delivery for owner review before P4 starts.
 > D71 исполнил D65/D68 reconciliation сейчас: `main` — active execution root, retained stash
 > `72505e4d8bef2a58f4ed555cc5b6014450aee3a9` сохраняет recovery point, unrelated owner dirt
 > возвращён unstaged. Это не открывает FOREMAN/fleet/live authority и не снимает P1.2 owner gate.
@@ -51,8 +54,8 @@
 | P3.1 | solo | plan-run (manual) | gpt-5.6-sol/high | ✅ publication contract | frozen identity/install/ownership semantics до adapters |
 | P3.2 | solo | plan-exec | gpt-5.6-terra/medium | — | deterministic Claude compatibility projection после P3.1 |
 | P3.3 | solo | plan-run (manual) | gpt-5.6-terra/high | — | native Codex plugin/cache contract, зависит от P3.2 catalog/goldens |
-| P3.4 | solo | plan-run (manual) — 🟢 D78 repair | gpt-5.6-terra/high | — | pre-write unmanaged selected-provider conflict fails closed before any managed write |
-| P3.5 | solo | plan-exec — 🟡 | gpt-5.6-terra/medium | — | independent whole-inventory parity/no-write gate consumes terminal-green D78 repair |
+| P3.4 | solo | plan-run (manual) — 🟡 D80 bundle | gpt-5.6-terra/high | — | one same-seam repair: unmanaged selected target, managed-byte drift and corrupt-lock provenance all fail closed before write |
+| P3.5 | solo | plan-exec — 🔴 blocked by P3.4 | gpt-5.6-terra/medium | — | one independent whole-inventory parity/no-write gate after the D80 bundle; then terminal validation, close, audit and P1–P3 PR |
 | P4.1 | solo | plan-run (manual) | gpt-5.6-sol/xhigh | ✅ command/routing contract | frozen semantic tiers/invocation; отдельный public-contract gate |
 | P4.2 | solo | plan-run (manual) | gpt-5.6-terra/high | ✅ task contribution | complete Codex adapter/catalog against frozen P4.1 |
 | P4.3 | solo | plan-exec | gpt-5.6-terra/medium | — | independent Claude byte/literal compatibility gate |

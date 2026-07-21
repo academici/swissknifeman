@@ -6,11 +6,11 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.4.9 |
+| Version | 1.4.11 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
-| Last Updated | 2026-07-20 |
+| Last Updated | 2026-07-21 |
 | Repository | swissknifeman |
 | Related Packages | core, skiller, task, harness, maind, analyst |
 | Execution Mode | phase-first · contract-first design |
@@ -55,6 +55,13 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 - План разошёлся с кодом/контрактом → не импровизировать, эскалировать через plan-design.
 - После каждого item/фазы обновлять handoff и journal; после bootstrap boundary сохранять mAInd checkpoint.
 - Required Reads конечны и упорядочены: path либо существует до старта item, либо является Deliverable более раннего item; догадки по repo запрещены.
+- D80 phase-first fast path: доказуемо связанные contract-preserving defects одного
+  item/seam собираются в один bounded remediation; между симптомами выполняются только
+  targeted regression/static checks. Полный package validation, release/docs assessment,
+  phase close и independent audit выполняются один раз на terminal phase.
+- D81 throughput control: после первого owning-phase blocker сначала проводится
+  bounded root-cause bundle; dependent item честно `🔴 Blocked`, а repeated re-open и
+  schedule impact proactively сообщаются владельцу. Правило D80/D81 действует с P3 onward.
 
 ## 3. Routing
 
@@ -113,7 +120,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P0 | Evidence, vocabulary и запечатанные provider contracts | 7/7 | 🟢 Done |
 | P1 | Provider config/domain и backward-compatible resolution | 6/6 | 🟢 Done |
 | P2 | Deterministic adapters, provenance, lock и drift engine | 5/5 | 🟢 Done |
-| P3 | Dual skills publication и marketplaces | 4/5 | 🟡 In progress |
+| P3 | Dual skills publication и marketplaces | 3/5 | 🔴 Blocked |
 | P4 | Task-command parity и provider-neutral model routing | 0/5 | ⬜ Not started |
 | P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 0/7 | ⬜ Not started |
 | P6 | mAInd deployment, memory и provider-neutral analytics | 0/6 | ⬜ Not started |
@@ -202,6 +209,8 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | D77 | 2026-07-20 | Approval Owner принимает exact P3.1 SKILL-PUBLICATION S1–S6 as written и замораживает `provider-skill-publication-contract.md` как v1.0.0: один semantic catalog, independent native Claude/Codex projections, same-repository thin adapters versus self-contained cache/vendor artifacts, package-version source, Claude-only legacy compatibility, explicit native install boundary и provider-qualified fail-closed diagnostics. | RAG:— (owner-grounded: exact reply `APPROVE P3.1 SKILL-PUBLICATION S1-S6 AS WRITTEN`; repo-grounded: `artifacts/P3-skill-publication-contract-review.md`, `root/contracts/provider-skill-publication-contract.md`) — открывает P3.2–P3.5 только по их declared scope; не разрешает package/runtime writes в P3.1, public command design, native install, live config, FOREMAN, fleet или owner dirt. |
 | D78 | 2026-07-20 | D58 fix-forward возвращает P3.4 в `🟡 In progress`; P3.5 остаётся `🔴 Blocked` до repair. `do_sync` обязан до первой provider write fail-closed отклонять precomputed unmanaged conflict выбранного provider с `SPUB_OWNERSHIP_CONFLICT`; P3.4 затем снова предшествует P3.5. | RAG:— (repo-grounded: `findings/P3.5-provider-b-unmanaged-partial-success-2026-07-20.md`, `research/18-p3-provider-b-unmanaged-remediation.md`, P3.1 S6/P3.4) — это existing P3.4 ownership/partial-result invariant, не изменение frozen P3.1 contract, provider selection, lock grammar, P4+, FOREMAN, fleet или live state. |
 | D79 | 2026-07-20 | Owner authorizes autonomous continuation only for evidence-backed, contract-preserving decisions within active-plan scope; D-log/plan carriers record the decision, while frozen-contract changes, authority expansion and owner-level forks still escalate. | RAG:— (owner-grounded: `brief/01-refinements.md` 2026-07-20) — снимает routine approval pauses without changing any contract or execution boundary. |
+| D80 | 2026-07-21 | Owner directs phase-first fast path: same-item/same-seam confirmed contract-preserving defects are bundled into one minimal remediation; individual symptoms get only targeted regression/static checks, while full package validation, docs/release assessment, phase close and independent audit occur once at terminal phase. First application is the P3.4 bundle in `research/19-p3-fail-closed-bundle-remediation.md`; frozen contracts, fail-closed invariants and escalation boundaries remain unchanged. | RAG:— (owner-grounded: direct instruction 2026-07-21; repo-grounded: D58/D79, P3.5 retry evidence) — removes repeated reopen/review loops without relaxing a safety invariant or extending authority. |
+| D81 | 2026-07-21 | Retrospective control after P3 throughput failure: after the first owning-phase blocker, diagnose and bundle same-seam confirmed causes before another execution/reopen; an item blocked behind remediation is explicitly `🔴 Blocked`, never merely “in progress”; root proactively discloses repeated-reopen schedule/throughput failure. D80/D81 preserve frozen contracts and fail-closed requirements and apply from P3 onward. | RAG:— (owner-grounded: direct feedback 2026-07-21; repo-grounded: `findings/P3-throughput-retrospective-2026-07-21.md`, journal P3.5 attempts) — prevents hidden blocked work and repeated narrow validation loops without altering a product contract. |
 
 ## 6. Update Log
 
@@ -213,6 +222,8 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | 2026-07-20 | plan-run/Codex gpt-5.6-terra high | P3.3 закрыт: native Codex publication renderer, cache-contained bundles и conformance добавлены без Claude delta — детали см. phases/P3.md P3.3 Completion Notes. |
 | 2026-07-20 | plan-exec/Codex gpt-5.6-terra medium | P3.2 закрыт: semantic catalog и P2-backed Claude renderer сохраняют exact legacy bytes — детали см. phases/P3.md P3.2 Completion Notes. |
 | 2026-07-20 | plan-run/Codex gpt-5.6-sol high | P3.1 закрыт: D77 заморозил semantic skill/publication contract v1.0.0 и approved review — детали см. phases/P3.md P3.1 Completion Notes. |
+| 2026-07-21 | plan-design/Codex gpt-5.6-sol high | D80: P3.4 re-opened once for the bundled managed-byte-drift and corrupt-provenance refusals found by P3.5; per-symptom full validation is replaced by targeted checks until terminal P3. |
+| 2026-07-21 | plan-design/Codex gpt-5.6-sol high | D81: recorded P3 repeated-reopen retrospective, truthful blocked-state reporting and proactive throughput disclosure; controls apply P3 onward. |
 | 2026-07-20 | plan-close/Codex mechanical | P2 повторно закрыта после D76: terminal P2.1–P2.5 и contract-safety/no-write/boundary evidence сверены; далее independent P2 audit — детали см. phases/P2.md Phase Handoff. |
 | 2026-07-20 | plan-close/Codex mechanical | P2 закрыта: terminal artifact kernel/lock/registry/conformance evidence сверены; следующий gate — independent P2 audit — детали см. phases/P2.md Phase Handoff. |
 | 2026-07-20 | plan-run/Codex gpt-5.6-terra high | P2.5 закрыт: D76 fail-closed provenance/override, no-write clean apply и explicit managed-block codec conformance — детали см. phases/P2.md P2.5 Completion Notes. |

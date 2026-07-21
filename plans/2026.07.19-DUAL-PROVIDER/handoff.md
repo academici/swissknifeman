@@ -35,6 +35,8 @@ authorized; all P5.4 artifacts were rendered only in temporary roots.
 
 - repair attempt 3 2026-07-21: report now retains qualified unsupported lifecycle/workflow rows and supplies the generated P6/P7 evidence matrix; no later phase work was opened.
 
+- repair attempt 4 2026-07-21: report now proves individual independent render hashes, exact provider×surface coverage, P2 temp lifecycle repair, and project/fleet full-access refusals; no later phase work was opened.
+
 - workarounds: none.
 - deferred: single-commit item/bookkeeping bundling is an Owner-required process deviation;
   exact commit hash is reported after commit instead of embedded self-referentially.

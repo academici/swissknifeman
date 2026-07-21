@@ -19,6 +19,9 @@
 
 ### Fixed
 
+- **task/skiller — Codex plugin activation.** The native marketplace now publishes
+  package-owned Codex siblings with a Codex-compatible local source shape; `task` 0.3.0
+  includes its generated `task-plan-*` skills, versioned provenance and cold-session coverage.
 - **skiller:** dual-provider `sync` now rejects an unmanaged selected-provider target
   before any provider skill copy, lock write or project registration; `--force` remains
   the explicit overwrite path.

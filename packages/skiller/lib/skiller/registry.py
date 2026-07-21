@@ -364,6 +364,7 @@ def _sibling_plugins(repo_root, package_root):
         manifest = package / ".claude-plugin" / "plugin.json"
         if not manifest.is_file():
             continue
+        codex_manifest = package / ".codex-plugin" / "plugin.json"
         data = json.loads(manifest.read_text(encoding="utf-8"))
         siblings.append(SiblingPlugin(
             name=data.get("name", package.name), package=package.name,
@@ -372,6 +373,7 @@ def _sibling_plugins(repo_root, package_root):
             tags=tuple(data.get("keywords", [])),
             source_path=f"packages/{package.name}",
             content_hash=hashlib.sha256(manifest.read_bytes()).hexdigest(),
+            codex_supported=codex_manifest.is_file(),
         ))
     return tuple(siblings)
 

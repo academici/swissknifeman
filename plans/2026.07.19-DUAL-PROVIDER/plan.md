@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.4.11 |
+| Version | 1.4.12 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
@@ -120,7 +120,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P0 | Evidence, vocabulary и запечатанные provider contracts | 7/7 | 🟢 Done |
 | P1 | Provider config/domain и backward-compatible resolution | 6/6 | 🟢 Done |
 | P2 | Deterministic adapters, provenance, lock и drift engine | 5/5 | 🟢 Done |
-| P3 | Dual skills publication и marketplaces | 3/5 | 🔴 Blocked |
+| P3 | Dual skills publication и marketplaces | 4/5 | 🟡 In progress |
 | P4 | Task-command parity и provider-neutral model routing | 0/5 | ⬜ Not started |
 | P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 0/7 | ⬜ Not started |
 | P6 | mAInd deployment, memory и provider-neutral analytics | 0/6 | ⬜ Not started |
@@ -224,6 +224,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | 2026-07-20 | plan-run/Codex gpt-5.6-sol high | P3.1 закрыт: D77 заморозил semantic skill/publication contract v1.0.0 и approved review — детали см. phases/P3.md P3.1 Completion Notes. |
 | 2026-07-21 | plan-design/Codex gpt-5.6-sol high | D80: P3.4 re-opened once for the bundled managed-byte-drift and corrupt-provenance refusals found by P3.5; per-symptom full validation is replaced by targeted checks until terminal P3. |
 | 2026-07-21 | plan-design/Codex gpt-5.6-sol high | D81: recorded P3 repeated-reopen retrospective, truthful blocked-state reporting and proactive throughput disclosure; controls apply P3 onward. |
+| 2026-07-21 | plan-run/Codex gpt-5.6-terra high | P3.4 D80 закрыт: bundled managed-drift/provenance refusal и explicit repair evidence committed; P3.5 resumes — детали см. phases/P3.md P3.4 Completion Notes. |
 | 2026-07-20 | plan-close/Codex mechanical | P2 повторно закрыта после D76: terminal P2.1–P2.5 и contract-safety/no-write/boundary evidence сверены; далее independent P2 audit — детали см. phases/P2.md Phase Handoff. |
 | 2026-07-20 | plan-close/Codex mechanical | P2 закрыта: terminal artifact kernel/lock/registry/conformance evidence сверены; следующий gate — independent P2 audit — детали см. phases/P2.md Phase Handoff. |
 | 2026-07-20 | plan-run/Codex gpt-5.6-terra high | P2.5 закрыт: D76 fail-closed provenance/override, no-write clean apply и explicit managed-block codec conformance — детали см. phases/P2.md P2.5 Completion Notes. |

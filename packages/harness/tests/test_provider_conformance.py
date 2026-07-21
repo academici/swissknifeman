@@ -188,6 +188,22 @@ class ProviderConformanceTests(unittest.TestCase):
         self.assertTrue(unsupported)
         self.assertTrue(all(item["provider"] and item["identity"] for item in unsupported))
 
+    def test_named_lifecycle_and_workflow_consumers_are_provider_qualified(self):
+        surface_map = {(row["provider"], row["surface_id"]): row
+                       for row in audit_package(PACKAGE).as_dict()["surface_map"]}
+        for surface_id, claude_diagnostic, codex_diagnostic in (
+            ("agent-packs.lifecycle", "HARNESS_AGENTPACK_LIFECYCLE_NAMED",
+             "HARNESS_ACTIVATION_UNSUPPORTED:codex:agent-packs.lifecycle:"
+             "missing-native-codex-pack-lifecycle"),
+            ("workflows.status", "HARNESS_WORKFLOW_STATUS_NAMED",
+             "HARNESS_ACTIVATION_UNSUPPORTED:codex:workflows.status:"
+             "missing-native-codex-workflow-status-consumer"),
+        ):
+            self.assertEqual(surface_map[("claude-code", surface_id)]["activation_state"], "supported")
+            self.assertEqual(surface_map[("claude-code", surface_id)]["diagnostic"], claude_diagnostic)
+            self.assertEqual(surface_map[("codex", surface_id)]["activation_state"], "unsupported")
+            self.assertEqual(surface_map[("codex", surface_id)]["diagnostic"], codex_diagnostic)
+
 
 if __name__ == "__main__":
     unittest.main()

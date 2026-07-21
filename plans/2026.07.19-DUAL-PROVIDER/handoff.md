@@ -37,6 +37,8 @@ authorized; all P5.4 artifacts were rendered only in temporary roots.
 
 - repair attempt 4 2026-07-21: report now proves individual independent render hashes, exact provider×surface coverage, P2 temp lifecycle repair, and project/fleet full-access refusals; no later phase work was opened.
 
+- repair attempt 5 2026-07-21: Codex `agent-packs.lifecycle` and `workflows.status` are now visible unsupported rows with stable diagnostics for their missing native consumers; their actual named Claude consumers remain supported.
+
 - workarounds: none.
 - deferred: single-commit item/bookkeeping bundling is an Owner-required process deviation;
   exact commit hash is reported after commit instead of embedded self-referentially.

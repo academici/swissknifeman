@@ -63,7 +63,7 @@ Every provider-qualified surface row is required: missing, extra or duplicate ro
 | claude-code | settings.audit | `sha256:da70a0c0e55d4324a8704a211532d8398083192570b00a7f1d4f94ab4d9daba7` | — | harness.settings.audit | non-artifact:named-settings-audit | supported | `HARNESS_SETTINGS_AUDIT_NAMED` |
 | claude-code | settings.permissions | `sha256:9049fe9aad45b74bce05c1f7d565cd7f76816605eb3ffd7ffed6b3df6820a745` | — | harness.settings.permissions | artifact:project:.claude/settings.local.json | supported | `HARNESS_PROFILE_RENDERED` |
 | claude-code | workflows.status | `sha256:a535a27aec70899044ca8ca0995cc7bd93e1b1783ae577eb5445b50104db3d27` | — | harness.workflows.status | non-artifact:named-workflow-status | supported | `HARNESS_WORKFLOW_STATUS_NAMED` |
-| codex | agent-packs.lifecycle | `sha256:6b1474a5f1639a652540c5db8fd351ca5aed822ca2c20f48ba7cde99a3750d76` | — | harness.agent-packs.lifecycle | non-artifact:named-agent-pack-engine | supported | `HARNESS_AGENTPACK_LIFECYCLE_NAMED` |
+| codex | agent-packs.lifecycle | `sha256:6b1474a5f1639a652540c5db8fd351ca5aed822ca2c20f48ba7cde99a3750d76` | — | harness.agent-packs.lifecycle | non-artifact:missing-native-codex-pack-lifecycle | unsupported | `HARNESS_ACTIVATION_UNSUPPORTED:codex:agent-packs.lifecycle:missing-native-codex-pack-lifecycle` |
 | codex | agents.catalog | `sha256:31178a06201f890a47e2398758a442712966070d36f336b5ac0eafa542921a36` | — | harness.agents.catalog | artifact:project:43-named-agent-targets | supported | `HARNESS_AGENT_ACTIVATION_NATIVE` |
 | codex | context.observer | `sha256:98df3b65365820591b7a28539560e3180527b9337c8faf018afd25adf9e376ce` | — | harness.context.observer | artifact:project:.codex/hooks.json+.codex/hooks/lifecycle.py | supported | `HARNESS_ACTIVATION_NATIVE` |
 | codex | context.output-style | `sha256:bdb667e3bbd31f2fb10de42a11d8f8f07d0a0e8536c28d9961e8ae1149fd27b0` | — | harness.context.output-style | non-artifact:unsupported-native-binding | unsupported | `HARNESS_ACTIVATION_UNSUPPORTED` |
@@ -85,7 +85,7 @@ Every provider-qualified surface row is required: missing, extra or duplicate ro
 | codex | security.safe-dirs | `sha256:8ce38a9571be6fd4220f256972925f3f84dd844c144ac1d479a5d561b435f312` | — | harness.security.safe-dirs | non-artifact:no-codex-safe-dirs-binding | unsupported | `HARNESS_ACTIVATION_UNSUPPORTED` |
 | codex | settings.audit | `sha256:da70a0c0e55d4324a8704a211532d8398083192570b00a7f1d4f94ab4d9daba7` | — | harness.settings.audit | non-artifact:claude-only-settings-audit | unsupported | `HARNESS_ACTIVATION_UNSUPPORTED` |
 | codex | settings.permissions | `sha256:9049fe9aad45b74bce05c1f7d565cd7f76816605eb3ffd7ffed6b3df6820a745` | — | harness.settings.permissions | artifact:project:.codex/config.toml | supported | `HARNESS_PROFILE_RENDERED` |
-| codex | workflows.status | `sha256:a535a27aec70899044ca8ca0995cc7bd93e1b1783ae577eb5445b50104db3d27` | — | harness.workflows.status | non-artifact:named-workflow-status | supported | `HARNESS_WORKFLOW_STATUS_NAMED` |
+| codex | workflows.status | `sha256:a535a27aec70899044ca8ca0995cc7bd93e1b1783ae577eb5445b50104db3d27` | — | harness.workflows.status | non-artifact:missing-native-codex-workflow-status-consumer | unsupported | `HARNESS_ACTIVATION_UNSUPPORTED:codex:workflows.status:missing-native-codex-workflow-status-consumer` |
 
 ## Temp-contained managed lifecycle evidence
 

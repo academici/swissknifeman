@@ -311,9 +311,17 @@ def _named_surface_state(provider, surface_id, bindings, lifecycle_codes, profil
             provider is ProviderId.CODEX and "command.workflow-carrier" in role.activation_requirements))
         return f"artifact:project:{supported}-named-agent-targets", "supported", "HARNESS_AGENT_ACTIVATION_NATIVE"
     if surface_id == "agent-packs.lifecycle":
-        return "non-artifact:named-agent-pack-engine", "supported", "HARNESS_AGENTPACK_LIFECYCLE_NAMED"
+        if provider is ProviderId.CLAUDE_CODE:
+            return "non-artifact:named-agent-pack-engine", "supported", "HARNESS_AGENTPACK_LIFECYCLE_NAMED"
+        return ("non-artifact:missing-native-codex-pack-lifecycle", "unsupported",
+                "HARNESS_ACTIVATION_UNSUPPORTED:codex:agent-packs.lifecycle:"
+                "missing-native-codex-pack-lifecycle")
     if surface_id == "workflows.status":
-        return "non-artifact:named-workflow-status", "supported", "HARNESS_WORKFLOW_STATUS_NAMED"
+        if provider is ProviderId.CLAUDE_CODE:
+            return "non-artifact:named-workflow-status", "supported", "HARNESS_WORKFLOW_STATUS_NAMED"
+        return ("non-artifact:missing-native-codex-workflow-status-consumer", "unsupported",
+                "HARNESS_ACTIVATION_UNSUPPORTED:codex:workflows.status:"
+                "missing-native-codex-workflow-status-consumer")
     if surface_id == "doctor.environment":
         return "non-artifact:named-harness-doctor", "supported", "HARNESS_DOCTOR_ENVIRONMENT_NAMED"
     if surface_id == "doctor.provider":

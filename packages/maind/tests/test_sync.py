@@ -94,6 +94,22 @@ class TestProviderContexts(unittest.TestCase):
         self.assertEqual(result["provider_aggregate"], "non-green")
         self.assertEqual(result["providers"][0]["diagnostic"], "MAIND_PROJECTION_MISSING")
 
+    def test_real_mcp_and_graph_order_resolves_once(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, _proj = _setup(tmp)
+            import maind.provision.deploy as deploy
+            calls, original = [], deploy.provider_projection_context
+            def counted(*args):
+                calls.append(args[2]["id"])
+                return original(*args)
+            deploy.provider_projection_context = counted
+            try:
+                results = sync.run_sync(env, config, config["projects"], only="mcp,graph")
+            finally:
+                deploy.provider_projection_context = original
+            self.assertEqual(calls, ["flexcrm"])
+            self.assertEqual([row["provisioner"] for row in results], ["mcp", "graph"])
+
 
 class TestRoleAgentPacks(unittest.TestCase):
     """Вариант C: project.roles → config.role_packs[role], аддитивно к профильному паку."""

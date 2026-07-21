@@ -34,20 +34,8 @@ class ProviderProjectionContext:
 
 
 def _provider_projections(env, config, project):
-    """Build P5 projections after resolving P1 effective providers once per operation."""
-    harness_root = Path(env.root).parent / "harness"
-    harness_lib = str(harness_root / "lib")
-    if harness_lib not in sys.path:
-        sys.path.insert(0, harness_lib)
-    from core import ProviderConfigCatalog, ProviderId
-    from harness.mcp import load_mcp_catalog, plan_mcp_projection
-    providers = resolve_effective_providers(
-        config, ProviderConfigCatalog("1.0.0", (ProviderId.CLAUDE_CODE, ProviderId.CODEX), (), ()),
-        project["id"])
-    catalog = load_mcp_catalog(harness_root / "configs/common/mcp/catalog.json")
-    return tuple(plan_mcp_projection(catalog, provider_id=provider,
-        bindings_path=harness_root / "configs" / provider.value / "mcp/bindings.json",
-        selected=(), trusted=True) for provider in providers)
+    """Legacy compatibility projection over the public one-resolution seam."""
+    return provider_projection_context(env, config, project).projections
 
 
 def provider_projection_context(env, config, project):

@@ -154,7 +154,6 @@ def _graph_run(env, config, projects, mode, dry):
     --mode update не сообщал об изменении там, где граф фактически не поменялся."""
     from ..derive import build_provider_index, derive_project_graph
     from ..federation import rebuild_index, store_path
-    project_contexts = contexts(env, config, projects)
     results = []
     if dry:
         return [_result("graph", p["id"], "dry") for p in projects]

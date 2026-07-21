@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.4.12 |
+| Version | 1.4.13 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
@@ -211,11 +211,13 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | D79 | 2026-07-20 | Owner authorizes autonomous continuation only for evidence-backed, contract-preserving decisions within active-plan scope; D-log/plan carriers record the decision, while frozen-contract changes, authority expansion and owner-level forks still escalate. | RAG:— (owner-grounded: `brief/01-refinements.md` 2026-07-20) — снимает routine approval pauses without changing any contract or execution boundary. |
 | D80 | 2026-07-21 | Owner directs phase-first fast path: same-item/same-seam confirmed contract-preserving defects are bundled into one minimal remediation; individual symptoms get only targeted regression/static checks, while full package validation, docs/release assessment, phase close and independent audit occur once at terminal phase. First application is the P3.4 bundle in `research/19-p3-fail-closed-bundle-remediation.md`; frozen contracts, fail-closed invariants and escalation boundaries remain unchanged. | RAG:— (owner-grounded: direct instruction 2026-07-21; repo-grounded: D58/D79, P3.5 retry evidence) — removes repeated reopen/review loops without relaxing a safety invariant or extending authority. |
 | D81 | 2026-07-21 | Retrospective control after P3 throughput failure: after the first owning-phase blocker, diagnose and bundle same-seam confirmed causes before another execution/reopen; an item blocked behind remediation is explicitly `🔴 Blocked`, never merely “in progress”; root proactively discloses repeated-reopen schedule/throughput failure. D80/D81 preserve frozen contracts and fail-closed requirements and apply from P3 onward. | RAG:— (owner-grounded: direct feedback 2026-07-21; repo-grounded: `findings/P3-throughput-retrospective-2026-07-21.md`, journal P3.5 attempts) — prevents hidden blocked work and repeated narrow validation loops without altering a product contract. |
+| D82 | 2026-07-21 | P4–P6 execute under the committed phase-first playbooks: one bounded phase-entry inventory/protected-path/test-map pack; sequential bundle lanes with contract-authored early negative/temp-root probes before each consumer; targeted seam/static checks per item or confirmed same-seam repair; and one package-wide validation/docs-release assessment, phase close and fresh independent audit only at each terminal phase. The first blocker triggers D81’s single bounded same-seam scan and truthful `🔴 Blocked` successor, never a per-symptom reopen loop. P4 starts in a NEW SESSION only after committed G03/P1–P3 review-PR evidence; review checkpoints are P4 after GREEN P4 audit, P4–P5 after GREEN P5 audit, and P6 after GREEN P6 audit. | RAG:— (repo-grounded: `research/20-p4-phase-first-execution-playbook.md`, `research/20-p5-p6-phase-first-execution-playbook.md`, D80/D81, `roadmap.md`) — operationalizes existing item contracts/routing/gates without changing frozen semantics, owner authority, no-live-apply/FOREMAN/fleet boundaries, P6 cold-start boundary or item scope. |
 
 ## 6. Update Log
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-21 | issue-planner/Codex gpt-5.6-sol high | D82: P4–P6 получили phase-first execution map: bounded entry/probes, sequential same-seam bundles, один terminal validation/audit и phase PR checkpoints; P3 status/handoff/journal, contracts и item scope не менялись. |
 | 2026-07-20 | plan-run/Codex gpt-5.6-terra high | P3.4 закрыт: provider-aware distribution plan, qualified vendor locks и explicit Codex installer — детали см. phases/P3.md P3.4 Completion Notes. |
 | 2026-07-20 | issue-planner/Codex gpt-5.6-sol high | D78: P3.4 возвращён в работу после P3.5 unmanaged-provider-B escalation; repair ограничен pre-write fail-closed vendor conflict, P3.5/P4+/frozen contracts/live targets не исполнялись. |
 | 2026-07-20 | plan-run/Codex gpt-5.6-terra high | P3.4 D78 закрыт: aggregate provider preflight now rejects unmanaged selected targets before managed writes — детали см. phases/P3.md P3.4 Completion Notes. |

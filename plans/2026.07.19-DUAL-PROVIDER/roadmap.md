@@ -6,7 +6,7 @@
      Порядок строго phase-first: P0→P1→P2→P3→P4→P5→P6→P7. До finish + GREEN design
      audit исполнение любого item запрещено. -->
 
-**Обновлён:** 2026-07-21 · **Соответствует plan.md:** v1.4.11
+**Обновлён:** 2026-07-21 · **Соответствует plan.md:** v1.4.13
 
 > **Статус exec:** P0 закрыта и audit attempt 3 завершён literal GREEN на `245bb56`;
 > G01 открыт, P1 повторно закрыта после D74: P1.5 добавила committed synthetic G02 proof,
@@ -87,6 +87,25 @@ Inputs следующего, поэтому merge-criterion plan-protocol для
 `Review=full` и owner/commit boundaries; conformance items намеренно отделены от авторов
 implementation. P5.6→P5.7 — contract→prescribed implementation, поэтому их нельзя
 объединять; P6.5→P6.6 и P7.3→P7.4 дополнительно разделены обязательным NEW SESSION.
+
+## D82 — phase-first execution map for P4–P6
+
+Перед каждой фазой выполняется ровно один bounded entry pack: committed predecessor/gate
+check, independent expected-inventory и protected-path snapshot, temp-root convention и
+targeted seam-test map. Это read-only preflight, не ранний full validation. Каждый item
+сохраняет two-commit close topology, но до terminal item запускает только contract-authored
+targeted/static/temp-root negative probes. После первого owning-seam blocker successor
+становится `🔴 Blocked`; один bounded same-seam scan собирает только подтверждённые причины
+в minimal repair, затем targeted regressions выполняются один раз. Полный package
+validation, docs/release assessment, phase close и fresh Sol/xhigh audit — один раз на
+terminal tree фазы. Полные правила и exact probes: `research/20-p4-phase-first-execution-playbook.md`
+и `research/20-p5-p6-phase-first-execution-playbook.md`.
+
+| Фаза | Последовательные lanes и early gate | Terminal gate и PR checkpoint |
+|:--|:--|:--|
+| P4 | **NEW SESSION** только после committed G03 и P1–P3 review PR. `P4.1 → P4.2 → P4.3 → P4.4`; probes: exact command ID/routing inventory, P3 descriptor/cache refusal, Claude golden/two-run, затем one cross-projection routing/invocation integration gate before P4.5. | P4.5 independent parity/docs report → one task+skiller validation, registry/docs/protected delta/plan-lint → close → Sol/xhigh audit → G04. Open/update P4-only PR only after audit evidence; no P5/live/FOREMAN/fleet scope. |
+| P5 | `P5.1 → (P5.2 → P5.3 → P5.4 shared harness lane) → P5.5 → (P5.6 → P5.7 instruction lane)`. Each writer proves its listed negative/ownership/temp-root seam before successor; one dual-provider cross-seam render/check/apply/check gate follows P5.4. | After P5.7: one harness validation, final independent P5.5 inventory + P5.7 instruction parity, generated operator references/protected delta/plan-lint → close → Sol/xhigh audit. Then prepare P4–P5 review PR only, with item commits, frozen D#s and temp-only evidence. |
+| P6 | `(P6.1 → P6.2 deploy/provision lane) → (P6.3 → P6.4 analytics lane) → P6.5 → P6.6`. P6.1/P6.2 and P6.4 run their exact fail-closed integration matrices before successors; P6.5 is the single full integrated checkpoint gate. **P6.6 is a mandatory NEW SESSION** reading disk checkpoint before mAInd recall and runs no code repair. | After GREEN P6.6: close → one fresh Sol/xhigh audit from disk/checkpoint evidence, without rerunning P6.5. Then prepare/update P6 review PR on the P4–P5 checkpoint; separate temp-only provision, analytics migration and read-only checkpoint evidence; P7/self-host, FOREMAN and fleet stay excluded. |
 
 ## Готовый launch-block текущего шага
 

@@ -1,38 +1,41 @@
-# HANDOFF — 2026-07-21 — after P4
+# HANDOFF — 2026-07-21 — after P5.1
 
-**Next:** waiting: P4 review checkpoint complete; G04 GREEN; P5 remains owner-gated and unopened
+**Next:** run-items: task:plan-run 2026.07.19-DUAL-PROVIDER P5.2
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | — |
-| Effort | — |
-| Capabilities | — |
-| Context | checkpoint — no launch |
-| Суть | P4 review checkpoint complete: G04 GREEN; auditor scope stops before P5. |
+| Model class | implementation |
+| Effort | high |
+| Capabilities | command.filesystem-read · command.filesystem-write · command.git-read · command.git-write |
+| Context | same-session — item |
+| Суть | Реализовать common profile catalog и безопасные Claude/Codex settings/security projections строго против frozen D85 harness contract. |
 
 ```text
-# NO EXECUTABLE LAUNCH: P4 review checkpoint complete; P5 remains unopened.
+$ task:plan-run 2026.07.19-DUAL-PROVIDER P5.2
 ```
 
-**Done:** P4.1–P4.5 and the final post-repair terminal phase gate are closed. Repair
-`0edf17a` replaced global literal replacement with a shared token-aware Codex runtime
-boundary and direct consumer regressions; anchor `70f9192` records the repair evidence.
-One terminal close cycle on `70f9192` passed task validate (`218` tests), skiller validate
-(`408` tests, `217` skills), the worktree-local registry check, target plan-lint (`0 ERROR /
-0 WARN / 0 new`), diff-check and protected delta.
+**Done:** P5.1 is closed. D85 freezes `root/contracts/provider-harness-contract.md`
+v1.0.0 with one Profile/Surface catalog, independent trust/approval/sandbox axes,
+workspace-contained autonomy, operation-only non-inheritable full access, independent
+native projections, explicit scope/P1 precedence/P2 ownership, secret-reference-only
+diagnostics, Claude compatibility and normative goldens. The independent review records
+the committed current-surface inventory, alternatives, misuse cases and consumer handoff.
 
-**Remaining:** none in the P4 audit scope. P5 stays unopened and was not touched.
+**Remaining:** P5.2–P5.7 remain sequential and unopened. P5.2 consumes the frozen D85
+contract and review; it may modify only its declared package/test/artifact seam in a fresh
+clean item worktree. Full package validation remains deferred to the terminal P5 gate under
+D80 and the Owner execution instruction.
 
-**Sources of truth:** `plan.md` D84/Contracts; `phases/P4.md` historical Audit P4 attempts
-1–2 plus literal GREEN attempt 3, repair evidence, current Completion Notes and Phase Handoff; frozen D84 contract;
-`packages/task/lib/task/command_render.py`; generated `packages/task/adapters/codex/**`;
-`artifacts/P4-command-parity-conformance.md`; `packages/task/docs/reference/provider-commands.md`.
+**Sources of truth:** `plan.md` D85/Contracts/Routing; `phases/P5.md` P5.1 and P5.2;
+`root/contracts/provider-harness-contract.md`; `artifacts/P5-harness-contract-review.md`;
+frozen predecessor contracts; committed harness CLI/modules/config inventory.
 
-**Open risks:** none in P4. G04 is GREEN on `726f7e2`; later-phase risks remain outside
-this audit and no P5 authority was exercised.
+**Open risks:** none from P5.1. P5.2 must fail closed rather than infer a provider mapping,
+adopt an unmanaged target or allow full access from defaults/project/fleet inheritance.
 
 **Workarounds/Deferred/Open questions:**
 
 - workarounds: none.
-- deferred: P5 and later phases are not part of this execution.
+- deferred: single-commit item/bookkeeping bundling is an Owner-required process deviation;
+  exact commit hash is reported after commit instead of embedded self-referentially.
 - open_questions: none.

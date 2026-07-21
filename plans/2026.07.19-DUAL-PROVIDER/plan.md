@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.4.20 |
+| Version | 1.4.21 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
@@ -122,7 +122,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P2 | Deterministic adapters, provenance, lock и drift engine | 5/5 | 🟢 Done |
 | P3 | Dual skills publication и marketplaces | 5/5 | 🟢 Done |
 | P4 | Task-command parity и provider-neutral model routing | 5/5 | 🟢 Done |
-| P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 0/7 | ⬜ Not started |
+| P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 1/7 | 🟡 In progress |
 | P6 | mAInd deployment, memory и provider-neutral analytics | 0/6 | ⬜ Not started |
 | P7 | Docs, self-hosting validation и FOREMAN release gate | 0/4 | ⬜ Not started |
 
@@ -214,11 +214,13 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | D82 | 2026-07-21 | P4–P6 execute under the committed phase-first playbooks: one bounded phase-entry inventory/protected-path/test-map pack; sequential bundle lanes with contract-authored early negative/temp-root probes before each consumer; targeted seam/static checks per item or confirmed same-seam repair; and one package-wide validation/docs-release assessment, phase close and fresh independent audit only at each terminal phase. The first blocker triggers D81’s single bounded same-seam scan and truthful `🔴 Blocked` successor, never a per-symptom reopen loop. P4 starts in a NEW SESSION only after committed G03/P1–P3 review-PR evidence; review checkpoints are P4 after GREEN P4 audit, P4–P5 after GREEN P5 audit, and P6 after GREEN P6 audit. | RAG:— (repo-grounded: `research/20-p4-phase-first-execution-playbook.md`, `research/20-p5-p6-phase-first-execution-playbook.md`, D80/D81, `roadmap.md`) — operationalizes existing item contracts/routing/gates without changing frozen semantics, owner authority, no-live-apply/FOREMAN/fleet boundaries, P6 cold-start boundary or item scope. |
 | D83 | 2026-07-21 | D58/D80/D81 формально переоткрывают P3.3 как единственный owning seam после RED G03: в isolated clean worktree восстановить Codex cache-contained `core` projection и `publication-lock.json` из уже committed semantic catalog, добавить focused cache-vs-catalog regression и затем повторить independent P3.5/terminal G03. P3.5 имеет статус `🔴 Blocked` до P3.3 repair; frozen P3.1 contract, Claude outputs, provider selection/distribution, root bootstrap, FOREMAN, fleet, user-global state и owner dirt остаются вне scope. | RAG:— (repo-grounded: `phases/P3.md` Audit P3 2026-07-21, `research/21-p3-codex-core-registry-remediation.md`, `packages/skiller/lib/skiller/{publication,registry}.py`) — existing `registry --check` correctly detects the stale cache; repair restores its generated output and adds only a deterministic P3.3 regression, without a contract or authority change. |
 | D84 | 2026-07-21 | Delegated Owner Approval D79 принимает exact P4.1 COMMAND-ROUTING C1–C6 и замораживает `provider-command-routing-contract.md` v1.0.0: stable `task:*` identity и exact current inventory с `make-workflow`; neutral `economy < implementation < frontier` и независимый `low < medium < high < xhigh`; versioned evidence-backed Claude/Codex selectors и invocation; fail-closed capability/mapping/undershoot diagnostics; preserved plan literals/semantic Next/orchestration; legacy Claude compatibility и normative goldens. | RAG:— (owner-grounded: D79 delegated contract-preserving approval; repo-grounded: `artifacts/P4-command-routing-contract-review.md`, canonical `packages/task/commands/*.md`, D19/D38/D44) — reconciles the already-canonical eleventh command without renaming IDs, changing upstream frozen contracts, expanding authority or starting package/P5+ implementation. |
+| D85 | 2026-07-21 | Delegated Owner Approval D79 принимает exact P5.1 HARNESS H1–H7 и замораживает `provider-harness-contract.md` v1.0.0: один semantic Profile/Surface catalog; независимые trust/approval/sandbox axes; workspace-contained autonomy; operation-only non-inheritable full access; independent native projections; explicit scope/P1 precedence/P2 ownership; secret-reference-only diagnostics; Claude compatibility и normative goldens. | RAG:— (owner-grounded: D79 delegated contract-preserving approval; repo-grounded: `artifacts/P5-harness-contract-review.md`, committed harness CLI/modules/config inventory, D28–D32) — создаёт запланированный P5 contract без изменения frozen P0–P4 semantics, live/data authority, FOREMAN/fleet или package implementation и открывает только declared P5 consumers. |
 
 ## 6. Update Log
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-21 | plan-run/Codex gpt-5.6-sol high | P5.1 закрыт: D85 заморозил provider-harness v1.0.0, exact current-surface inventory и security misuse cases — детали см. phases/P5.md P5.1 Completion Notes. |
 | 2026-07-21 | plan-close/Codex implementation/low | P4 повторно закрыта после repair `0edf17a`/`70f9192`: terminal gates GREEN; далее fresh Audit P4 attempt 3 — детали см. phases/P4.md Phase Handoff. |
 | 2026-07-21 | plan-run/Codex gpt-5.6-sol xhigh | Audit P4 attempt 2 owning-seam repair: token-aware Codex runtime projection preserves ordinary slash notation, projects `/clear`, adds direct boundary regression and regenerates only task Codex artifacts/locks; terminal close retry and fresh audit remain. Commit: `0edf17a`. |
 | 2026-07-21 | plan-close/Codex gpt-5.6-sol xhigh | P4 повторно закрыта после `cd654a4`: один post-repair terminal task/skiller/registry gate GREEN; далее fresh Audit P4 attempt 2 — детали см. phases/P4.md Phase Handoff. |
@@ -313,7 +315,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | `root/contracts/provider-config-contract.md` | v1.0.0 | frozen (D70) | P1.2–P7, future FOREMAN/fleet consumers | 2026-07-20 (D70) |
 | `root/contracts/provider-skill-publication-contract.md` | v1.0.0 | frozen (D77) | P3.2–P3.5, P4 task adapters, P7 self-host/release evidence | 2026-07-20 (D77) |
 | `root/contracts/provider-command-routing-contract.md` | v1.0.0 | frozen (D84) | P4.2–P4.5, P5–P7, FOREMAN reconcile после P7.4 | 2026-07-21 (D84) |
-| `root/contracts/provider-harness-contract.md` | v0.1.0-draft | draft; owner-gated sealing P5.1 after P4.5 | P5.2–P5.5, P6 deploy/sync, P7 self-host/release evidence | — |
+| `root/contracts/provider-harness-contract.md` | v1.0.0 | frozen (D85) | P5.2–P5.7, P6 deploy/sync, P7 self-host/release evidence | 2026-07-21 (D85) |
 | `root/contracts/provider-instruction-contract.md` | planned v1.0.0 | owner-gated creation/sealing P5.6 after P5.5 | P5.7 renderer/conformance, P6.2/P6.5/P6.6 deploy+restart, P7 self-host/cleanup/release evidence | — |
 | `root/contracts/provider-analytics-contract.md` | v0.1.0-draft | draft; owner-gated sealing P6.3 after P6.2 | P6.4–P6.6, P7 self-host/release evidence, future provider telemetry | — |
 

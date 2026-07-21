@@ -13,12 +13,14 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 COMMAND_ROOT = REPO_ROOT / "packages/task/commands"
 ROUTING_PATH = REPO_ROOT / "packages/task/configs/command-routing.json"
 FIXTURE = REPO_ROOT / "packages/task/tests/fixtures_data/provider-plan-cases.json"
+PARITY_FIXTURE = REPO_ROOT / "packages/task/tests/fixtures_data/provider-command-parity.json"
 
 
 class ProviderPlanRoutingTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.expected = json.loads(FIXTURE.read_text(encoding="utf-8"))
+        cls.parity = json.loads(PARITY_FIXTURE.read_text(encoding="utf-8"))
         cls.catalog = build_command_catalog(COMMAND_ROOT, ROUTING_PATH)
         cls.records = cls.catalog.by_id()
 
@@ -142,6 +144,34 @@ class ProviderPlanRoutingTests(unittest.TestCase):
                 self.assertIn(
                     self.expected["orchestration"]["missing_diagnostic"],
                     {item.code for item in plan.diagnostics})
+
+    def test_every_next_form_has_positive_and_invalid_contract_cases(self):
+        self.assertEqual(
+            {case["kind"] for case in self.parity["next_forms"]},
+            PlanNextCarrier.allowed_kinds())
+        for case in self.parity["next_forms"]:
+            with self.subTest(kind=case["kind"]):
+                carrier = parse_next_carrier(case["valid"])
+                self.assertEqual(carrier.kind, case["kind"])
+                with self.assertRaisesRegex(ValueError, "CMD_INVOCATION_INVALID"):
+                    parse_next_carrier(case["invalid"])
+                if carrier.command_id is None:
+                    continue
+                record = self.records[carrier.command_id]
+                inherited = (("implementation", "high")
+                             if record.routing.mode == "inherited-plan" else None)
+                observed_class = inherited[0] if inherited else record.routing.model_class
+                observed_effort = inherited[1] if inherited else record.routing.effort
+                for provider_id in ("claude-code", "codex"):
+                    mapping = mapping_from_catalog(self.catalog, provider_id)
+                    plan = plan_provider_invocation(
+                        self.catalog, carrier, mapping,
+                        dict(mapping.capability_bindings),
+                        observed_class=observed_class,
+                        observed_effort=observed_effort,
+                        inherited_minimum=inherited)
+                    self.assertTrue(plan.ok, plan.diagnostics)
+                    self.assertIsNotNone(plan.invocation)
 
 
 if __name__ == "__main__":  # pragma: no cover

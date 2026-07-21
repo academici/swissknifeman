@@ -220,6 +220,18 @@ def parse_next_carrier(declaration: str, *, context_kind: str = "same-session",
     if kind in _PLAN_NEXT_TERMINALS:
         if kind == "terminal" and payload.strip().lower() != "план закрыт":
             raise ValueError("CMD_INVOCATION_INVALID: malformed terminal Next")
+        if kind == "manual" and not re.fullmatch(
+                r"(economy|implementation|frontier)/(low|medium|high|xhigh)"
+                r"(?:\s+P\d+\.\d+)?",
+                payload.strip()):
+            raise ValueError("CMD_INVOCATION_INVALID: malformed manual Next")
+        if kind == "waiting":
+            condition, separator, target = payload.partition("→")
+            if not separator or not condition.strip() or not target.strip():
+                raise ValueError("CMD_INVOCATION_INVALID: malformed waiting Next")
+            nested = parse_next_carrier(target.strip(), context_kind=context_kind)
+            if nested.kind not in _PLAN_NEXT_COMMANDS:
+                raise ValueError("CMD_INVOCATION_INVALID: waiting target is not runnable")
         try:
             arguments = tuple(shlex.split(payload))
         except ValueError as error:
@@ -255,7 +267,7 @@ def plan_provider_invocation(
     record = catalog.by_id().get(carrier.command_id or "")
     if record is None or record.kind != "plan-protocol":
         diagnostic = _diag_raw(
-            "CMD_COMMAND_UNKNOWN", carrier.command_id or "", "/command_id",
+            "CMD_ID_UNKNOWN", carrier.command_id or "", "/command_id",
             {"kind": "plan-protocol"}, {"command_id": carrier.command_id}, mapping,
             "semantic plan command is unknown")
         return PlanProviderInvocation(carrier, None, None, None, (diagnostic,))
@@ -530,6 +542,215 @@ def plan_codex_command_apply(root: Path, render_plan: CodexCommandRenderPlan, *,
 def apply_codex_command_plan(root: Path, artifact_plan: ArtifactPlan) -> ArtifactPlan:
     """Apply an already-classified P2 plan under one explicit root."""
     return apply_plan(Path(root), artifact_plan)
+
+
+def build_provider_command_parity_report(
+        catalog: CommandCatalog, claude_plan: ClaudeCommandRenderPlan,
+        codex_plan: CodexCommandRenderPlan,
+        mappings: Mapping[str, ProviderCommandMapping], *,
+        expected_command_ids: tuple[str, ...],
+        next_carriers: tuple[PlanNextCarrier, ...] = ()) -> dict[str, object]:
+    """Build a deterministic report from an independently validated expected set.
+
+    This is a conformance reporter, not another renderer: it consumes the two named
+    provider plans and refuses any inventory/projection delta before producing rows.
+    """
+    if set(mappings) != {"claude-code", "codex"}:
+        raise ValueError("CMD_PROVIDER_DISABLED: both provider mappings are required")
+    if not claude_plan.ok or not codex_plan.ok:
+        raise ValueError("CMD_SOURCE_DRIFT: provider render plans must be clean")
+
+    catalog_ids = tuple(record.command_id for record in catalog.records)
+    semantic_duplicates = _duplicates(catalog_ids)
+    expected_set, catalog_set = set(expected_command_ids), set(catalog_ids)
+    semantic_delta = {
+        "missing": sorted(expected_set - catalog_set),
+        "extra": sorted(catalog_set - expected_set),
+        "duplicates": semantic_duplicates,
+    }
+
+    expected_claude = {"packages/task/.claude-plugin/plugin.json"}
+    expected_codex = {
+        "packages/task/.codex-plugin/plugin.json",
+        "packages/task/adapters/codex/publication-lock.json",
+    }
+    for command_id in expected_command_ids:
+        name = command_id.removeprefix("task:")
+        expected_claude.add(f"packages/task/commands/{name}.md")
+        expected_codex.add(
+            f"packages/task/adapters/codex/skills/task-{name}/SKILL.md")
+        expected_codex.add(
+            f"packages/task/adapters/codex/skills/task-{name}/command.md")
+
+    claude_paths = tuple(artifact.path for artifact in claude_plan.artifacts)
+    codex_paths = tuple(artifact.path for artifact in codex_plan.artifacts)
+    projections = {
+        "claude-code": _projection_delta(expected_claude, claude_paths),
+        "codex": _projection_delta(expected_codex, codex_paths),
+    }
+    if (any(semantic_delta.values())
+            or any(any(delta.values()) for delta in projections.values())):
+        raise ValueError("CMD_CATALOG_MISMATCH: semantic/provider projection delta")
+
+    claude_artifacts = {item.path: item for item in claude_plan.artifacts}
+    codex_artifacts = {item.path: item for item in codex_plan.artifacts}
+    commands = []
+    for record in catalog.records:
+        route = record.routing
+        name = record.command_id.removeprefix("task:")
+        providers = {}
+        for provider_id in ("claude-code", "codex"):
+            mapping = mappings[provider_id]
+            if route.mode == "fixed":
+                selector = dict(mapping.class_selectors)[route.model_class][0]
+                effort = dict(mapping.effort_selectors)[route.effort][0]
+            else:
+                selector = effort = "routing-required"
+            invocation = (render_claude_invocation(record, "<arguments>", mapping)
+                          if provider_id == "claude-code"
+                          else render_invocation(record, "<arguments>", mapping))
+            if provider_id == "claude-code":
+                artifact = claude_artifacts[record.source.path]
+                artifact_paths = [artifact.path]
+                rendered_hashes = [artifact.rendered_hash]
+            else:
+                paths = [
+                    f"packages/task/adapters/codex/skills/task-{name}/SKILL.md",
+                    f"packages/task/adapters/codex/skills/task-{name}/command.md",
+                ]
+                artifacts = [codex_artifacts[path] for path in paths]
+                artifact_paths = paths
+                rendered_hashes = [artifact.rendered_hash for artifact in artifacts]
+            providers[provider_id] = {
+                "artifacts": artifact_paths,
+                "rendered_hashes": rendered_hashes,
+                "invocation": invocation,
+                "model_selector": selector,
+                "effort_selector": effort,
+                "diagnostics": [],
+            }
+        commands.append({
+            "command_id": record.command_id,
+            "kind": record.kind,
+            "source": record.source.path,
+            "source_hash": record.source.content_hash,
+            "routing": {
+                "mode": route.mode,
+                "model_class": route.model_class,
+                "effort": route.effort,
+            },
+            "capabilities": [item.capability_id for item in record.capability_requirements],
+            "providers": providers,
+        })
+
+    next_rows = []
+    for carrier in next_carriers:
+        providers = {}
+        for provider_id in ("claude-code", "codex"):
+            if carrier.command_id is None:
+                providers[provider_id] = {
+                    "invocation": None, "model_selector": None,
+                    "effort_selector": None, "diagnostics": [],
+                }
+                continue
+            record = catalog.by_id()[carrier.command_id]
+            inherited = (("implementation", "high")
+                         if record.routing.mode == "inherited-plan" else None)
+            observed_class = (inherited[0] if inherited else record.routing.model_class)
+            observed_effort = (inherited[1] if inherited else record.routing.effort)
+            mapping = mappings[provider_id]
+            rendered = plan_provider_invocation(
+                catalog, carrier, mapping, dict(mapping.capability_bindings),
+                observed_class=observed_class, observed_effort=observed_effort,
+                inherited_minimum=inherited)
+            providers[provider_id] = {
+                "invocation": rendered.invocation,
+                "model_selector": rendered.model_selector,
+                "effort_selector": rendered.effort_selector,
+                "diagnostics": [item.code for item in rendered.diagnostics],
+            }
+        next_rows.append({"carrier": carrier.as_dict(), "providers": providers})
+
+    return {
+        "contract_version": catalog.contract_version,
+        "catalog_version": catalog.catalog_version,
+        "inventory": semantic_delta,
+        "projections": projections,
+        "commands": commands,
+        "next_forms": next_rows,
+    }
+
+
+def render_provider_commands_reference(report: Mapping[str, object]) -> bytes:
+    """Render the operator reference from the already validated parity report."""
+    lines = [
+        "# Provider task commands",
+        "",
+        "Generated from the validated provider-command parity report. Do not edit manually.",
+        "",
+        f"Contract: `{report['contract_version']}` · Catalog: `{report['catalog_version']}`",
+        "",
+        "## Command matrix",
+        "",
+        "| Semantic ID | Canonical source / SHA-256 | Neutral route | Capabilities | Claude Code | Codex |",
+        "|:--|:--|:--|:--|:--|:--|",
+    ]
+    for command in report["commands"]:
+        route = command["routing"]
+        neutral = f"{route['mode']} · {route['model_class']}/{route['effort']}"
+        capabilities = "<br>".join(f"`{item}`" for item in command["capabilities"])
+        source = f"`{command['source']}`<br>`{command['source_hash']}`"
+        provider_cells = []
+        for provider_id in ("claude-code", "codex"):
+            projection = command["providers"][provider_id]
+            provider_cells.append(
+                f"`{projection['invocation']}`<br>"
+                f"`{projection['model_selector']}/{projection['effort_selector']}`")
+        lines.append(
+            f"| `{command['command_id']}` | {source} | `{neutral}` | {capabilities} | "
+            f"{provider_cells[0]} | {provider_cells[1]} |")
+
+    lines.extend([
+        "",
+        "## Semantic Next forms",
+        "",
+        "| Kind | Semantic carrier | Claude Code | Codex | Diagnostics |",
+        "|:--|:--|:--|:--|:--|",
+    ])
+    for row in report["next_forms"]:
+        carrier = row["carrier"]
+        claude = row["providers"]["claude-code"]
+        codex = row["providers"]["codex"]
+        diagnostics = sorted(set(claude["diagnostics"] + codex["diagnostics"]))
+        lines.append(
+            f"| `{carrier['kind']}` | `{json.dumps(carrier, ensure_ascii=False, sort_keys=True)}` "
+            f"| `{claude['invocation'] or '—'}` | `{codex['invocation'] or '—'}` "
+            f"| `{', '.join(diagnostics) or '—'}` |")
+
+    lines.extend([
+        "",
+        "## Conformance result",
+        "",
+        "- Semantic inventory: `missing=[]`, `extra=[]`, `duplicates=[]`.",
+        "- Claude Code projection: `missing=[]`, `extra=[]`, `duplicates=[]`.",
+        "- Codex projection: `missing=[]`, `extra=[]`, `duplicates=[]`.",
+        "- Unknown, ambiguous, unsupported, undershoot, invalid invocation and source drift are fail-closed before write.",
+        "",
+    ])
+    return "\n".join(lines).encode("utf-8")
+
+
+def _projection_delta(expected: set[str], actual: tuple[str, ...]) -> dict[str, list[str]]:
+    actual_set = set(actual)
+    return {
+        "missing": sorted(expected - actual_set),
+        "extra": sorted(actual_set - expected),
+        "duplicates": _duplicates(actual),
+    }
+
+
+def _duplicates(values: tuple[str, ...]) -> list[str]:
+    return sorted(value for value in set(values) if values.count(value) > 1)
 
 
 def _mapping_diagnostics(record: CommandRecord,

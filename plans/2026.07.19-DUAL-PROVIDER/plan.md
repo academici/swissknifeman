@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.4.19 |
+| Version | 1.4.20 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
@@ -121,7 +121,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P1 | Provider config/domain и backward-compatible resolution | 6/6 | 🟢 Done |
 | P2 | Deterministic adapters, provenance, lock и drift engine | 5/5 | 🟢 Done |
 | P3 | Dual skills publication и marketplaces | 5/5 | 🟢 Done |
-| P4 | Task-command parity и provider-neutral model routing | 4/5 | 🟡 In progress |
+| P4 | Task-command parity и provider-neutral model routing | 5/5 | 🟢 Done |
 | P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 0/7 | ⬜ Not started |
 | P6 | mAInd deployment, memory и provider-neutral analytics | 0/6 | ⬜ Not started |
 | P7 | Docs, self-hosting validation и FOREMAN release gate | 0/4 | ⬜ Not started |
@@ -219,6 +219,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-21 | plan-exec/Codex gpt-5.6-sol xhigh | P4.5 закрыт: independent inventory, dual command/Next parity, fail-closed diagnostics и generated operator reference доказаны — детали см. phases/P4.md P4.5 Completion Notes. |
 | 2026-07-21 | plan-run/Codex gpt-5.6-sol xhigh | P4.4 закрыт: semantic Next, neutral plan routing/capability gates и dual invocation renderer синхронизированы с plan-protocol v2.11.0; focused 181-test seam GREEN — детали см. phases/P4.md P4.4 Completion Notes. |
 | 2026-07-21 | plan-run/Codex gpt-5.6-sol xhigh | P4.3 закрыт: named Claude projection сохраняет committed slash/frontmatter/body/plugin bytes через independent golden — детали см. phases/P4.md P4.3 Completion Notes. |
 | 2026-07-21 | plan-run/Codex gpt-5.6-terra high | P4.2 закрыт: immutable command catalog и generated cache-contained Codex task adapters добавлены — детали см. phases/P4.md P4.2 Completion Notes. |

@@ -1,6 +1,6 @@
 # HANDOFF — 2026-07-21 — after P6.1
 
-**Next:** run-items: task:plan-run 2026.07.19-DUAL-PROVIDER P6.2
+**Next:** run-items: task:plan-run 2026.07.19-DUAL-PROVIDER P6.1
 
 | Параметр | Значение |
 |:--|:--|
@@ -11,7 +11,7 @@
 | Суть | Fresh plan-terra-high item-agent executes P6.2 from the committed P6.1 provider deploy seam. |
 
 ```text
-$ task:plan-run 2026.07.19-DUAL-PROVIDER P6.2
+$ task:plan-run 2026.07.19-DUAL-PROVIDER P6.1
 ```
 
 **Done:** P6.1 D88 repair commits through `99f1852` provide provider resolution, inventory,

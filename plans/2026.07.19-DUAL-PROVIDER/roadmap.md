@@ -6,12 +6,14 @@
      Порядок строго phase-first: P0→P1→P2→P3→P4→P5→P6→P7. До finish + GREEN design
      audit исполнение любого item запрещено. -->
 
-**Обновлён:** 2026-07-21 · **Соответствует plan.md:** v1.4.27
+**Обновлён:** 2026-07-21 · **Соответствует plan.md:** v1.4.30
 
 > **Статус exec:** P0–P5 terminal. Independent P5 audit attempt 2 записал literal
 > GREEN в `4470af7`, поэтому stale audit pointer снят и P6 entry gate открыт.
-> Текущий шаг — P6.1 на fresh `plan-terra-high` в clean worktree от cumulative
-> `codex/p6-integration`. P7+, live self-host, FOREMAN, fleet и push остаются закрыты.
+> P6.1–P6.2 focused-green. Текущий шаг — P6.3 на fresh `plan-sol-xhigh` в clean
+> worktree от cumulative `codex/p6-integration`; item останавливается только на принятии
+> подготовленного exact analytics contract. P7+, live self-host, FOREMAN, fleet и push
+> остаются закрыты.
 
 ## Карта исполнения
 
@@ -52,8 +54,8 @@
 | P5.5 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | independent harness parity/doctor/docs gate |
 | P5.6 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/xhigh | ✅ D86 instruction freeze | public semantic parity/provenance contract |
 | P5.7 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | ✅ D87 additive carrier | instruction renderer/conformance against frozen D86 |
-| P6.1 | solo | plan-run (manual) | gpt-5.6-terra/high | — | mAInd provider deploy loop против frozen P1/P2/P5 contracts |
-| P6.2 | solo | plan-run (manual) | gpt-5.6-terra/high | — | onboard/sync/security consumes P6.1 provider result shape |
+| P6.1 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | — | mAInd provider deploy loop против frozen P1/P2/P5 contracts |
+| P6.2 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | — | provider context/trust/instructions and exact 30-row provisioner matrix focused-green |
 | P6.3 | solo | plan-run (manual) | gpt-5.6-sol/xhigh | ✅ analytics contract/privacy/migration | owner-gated schema/storage freeze; отдельный design item |
 | P6.4 | solo | plan-run (manual) | gpt-5.6-terra/high | ✅ shared-core/analyst contribution | multi-package readers/store migration после frozen P6.3 |
 | P6.5 | solo | plan-exec | gpt-5.6-terra/medium | — | integrated conformance + durable pre-restart checkpoint |
@@ -93,18 +95,18 @@ terminal tree фазы. Полные правила и exact probes: `research/2
 
 ## Готовый launch-block текущего шага
 
-### P6.1 — provider deploy loop
+### P6.3 — provider-neutral analytics contract
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | implementation |
-| Effort | high |
+| Model class | frontier |
+| Effort | xhigh |
 | Capabilities | command.filesystem-read · command.filesystem-write · command.git-read |
-| Context | same-session — item |
-| Суть | Execute P6.1 provider deploy/managed-boundary integration in a fresh clean worktree. |
+| Context | same-session — owner-gated design item |
+| Суть | Prepare the complete P6.3 analytics recommendation and exact contract text, then stop once for the frozen-contract owner decision. |
 
 ```text
-$ task:plan-run 2026.07.19-DUAL-PROVIDER P6.1
+$ task:plan-run 2026.07.19-DUAL-PROVIDER P6.3
 ```
 
 ## Гейты владельца (сводно)

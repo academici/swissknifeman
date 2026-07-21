@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.4.29 |
+| Version | 1.4.30 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
@@ -123,7 +123,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P3 | Dual skills publication и marketplaces | 5/5 | 🟢 Done |
 | P4 | Task-command parity и provider-neutral model routing | 5/5 | 🟢 Done |
 | P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 7/7 | 🟢 Done |
-| P6 | mAInd deployment, memory и provider-neutral analytics | 1/6 | 🟡 In progress |
+| P6 | mAInd deployment, memory и provider-neutral analytics | 2/6 | 🟡 In progress |
 | P7 | Docs, self-hosting validation и FOREMAN release gate | 0/4 | ⬜ Not started |
 
 ## 5. Decision Log
@@ -224,6 +224,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-21 | plan-terra-high / gpt-5.6-terra/high | P6.2 закрыт: provider context/trust/provisioning и independent 30-row dual-provider matrix focused-green — детали см. phases/P6.md P6.2 Completion Notes. |
 | 2026-07-21 | plan-audit / plan-sol-xhigh / gpt-5.6-sol/xhigh | Audit P5 attempt 2 завершён literal GREEN в `4470af7`; stale P5 audit pointer снят, entry gate P6 открыт на P6.1. |
 | 2026-07-21 | plan-terra-high / gpt-5.6-terra/high | D88: P6.1 formally reopened for bounded first-RED repair; provisional close is not accepted and prior evidence remains append-only — details in `phases/P6.md`. |
 | 2026-07-21 | plan-terra-high / gpt-5.6-terra/high | P6.1 closed: provider resolution, semantic inventory, P2 check/apply/repair and stable CLI conformance are focused-green — details in `phases/P6.md`. |

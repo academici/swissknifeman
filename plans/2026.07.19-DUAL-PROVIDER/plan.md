@@ -122,7 +122,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P2 | Deterministic adapters, provenance, lock и drift engine | 5/5 | 🟢 Done |
 | P3 | Dual skills publication и marketplaces | 5/5 | 🟢 Done |
 | P4 | Task-command parity и provider-neutral model routing | 5/5 | 🟢 Done |
-| P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 4/7 | 🟡 In progress |
+| P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 5/7 | 🟡 In progress |
 | P6 | mAInd deployment, memory и provider-neutral analytics | 0/6 | ⬜ Not started |
 | P7 | Docs, self-hosting validation и FOREMAN release gate | 0/4 | ⬜ Not started |
 

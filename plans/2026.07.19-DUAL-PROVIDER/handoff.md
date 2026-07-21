@@ -1,33 +1,29 @@
-# HANDOFF — 2026-07-21 — after P5.4
+# HANDOFF — 2026-07-21 — after P5.5
 
-**Next:** run-items: task:plan-run 2026.07.19-DUAL-PROVIDER P5.5
+**Next:** design-item: task:plan-design 2026.07.19-DUAL-PROVIDER P5.6
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | implementation |
-| Effort | high |
+| Model class | frontier |
+| Effort | xhigh |
 | Capabilities | command.filesystem-read · command.filesystem-write · command.git-read · command.git-write |
-| Context | continue (reset the session context) — ручной item |
-| Суть | Prove harness conformance and publish the operator reference from committed P5.1–P5.4 sources. |
+| Context | cold-start reads in P5.6 Required Reads |
+| Суть | Freeze the owner-gated common instruction contract; P5.5 conformance is now an input. |
 
 ```text
-$ task:plan-run 2026.07.19-DUAL-PROVIDER P5.5
+$ task:plan-design 2026.07.19-DUAL-PROVIDER P5.6
 ```
 
-**Done:** P5.4 adds semantic MCP and role sources with named Claude and Codex adapters. The
-Claude projection is byte-identical to each of 44 legacy agent sources before the installation
-provenance wrapper. Codex produces and inspects 43 parsed native agent TOMLs; only the frozen-P4
-missing workflow carrier is an explicit qualified blocker. The independent Claude-default model
-trace is economy=8, implementation=22, frontier=14. MCP uses a cache-contained Codex P2
-artifact with create/check-noop/managed-drift-repair evidence while legacy Claude merge-only,
-agentpack provenance, edit-policy, upgrade/remove and doctor consumers remain covered.
+**Done:** P5.5 adds a read-only provider conformance layer and operator reference. Its independent
+fixture covers 3 profiles, 23 surfaces, 8 MCP descriptors and 44 agent roles; named Claude
+settings audit remains separate. Two focused runs produced identical ordered reports.
 
-**Remaining:** P5.5–P5.7 remain sequential. Full package validation, phase close and independent
+**Remaining:** P5.6–P5.7 remain sequential. Full package validation, phase close and independent
 audit remain deferred to the terminal P5 gate under D80 and the Owner execution instruction.
 
-**Sources of truth:** `plan.md` D85/Contracts/Routing; `phases/P5.md` P5.4–P5.5;
-`root/contracts/provider-harness-contract.md`; `artifacts/{P5-hook-context-matrix,P5-mcp-agentpack-matrix}.md`;
-`packages/harness/lib/harness/{mcp,agentpacks,profiles,provider_render}.py`.
+**Sources of truth:** `plan.md` D85/Contracts/Routing; `phases/P5.md` P5.5–P5.6;
+`root/contracts/provider-harness-contract.md`; `artifacts/P5-harness-conformance.md`;
+`packages/harness/lib/harness/provider_audit.py`.
 
 **Open risks:** The `_common/orchestrator` remains a visible qualified Codex blocker until a
 frozen native workflow-carrier mapping exists. No live MCP, agent or hook installation was

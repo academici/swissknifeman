@@ -219,6 +219,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-21 | plan-close/Codex implementation/low | P4 повторно закрыта после repair `0edf17a`/`70f9192`: terminal gates GREEN; далее fresh Audit P4 attempt 3 — детали см. phases/P4.md Phase Handoff. |
 | 2026-07-21 | plan-run/Codex gpt-5.6-sol xhigh | Audit P4 attempt 2 owning-seam repair: token-aware Codex runtime projection preserves ordinary slash notation, projects `/clear`, adds direct boundary regression and regenerates only task Codex artifacts/locks; terminal close retry and fresh audit remain. Commit: `0edf17a`. |
 | 2026-07-21 | plan-close/Codex gpt-5.6-sol xhigh | P4 повторно закрыта после `cd654a4`: один post-repair terminal task/skiller/registry gate GREEN; далее fresh Audit P4 attempt 2 — детали см. phases/P4.md Phase Handoff. |
 | 2026-07-21 | plan-run/Codex gpt-5.6-sol xhigh | P4 bounded repair после RED G04: owning Codex renderer выпускает provider-safe runtime projection, direct consumer regression и regenerated locks; terminal validation/close retry и fresh Audit P4 attempt 2 остаются следующими. Repair commit: `cd654a4`. |

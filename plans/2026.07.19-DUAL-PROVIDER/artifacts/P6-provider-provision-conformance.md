@@ -16,7 +16,44 @@ Generated through the worktree-local mAInd public APIs on temporary roots.
 | managed drift and explicit repair | non-green then repair GREEN; outside-before/outside-after preserved |
 | unknown/unsupported provider | rejected before write |
 | implicit full access | refused |
+| missing/duplicate instruction scope | INSTRUCTION_SCOPE_INVALID |
+| stale source hash | INSTRUCTION_STALE_SOURCE |
+| managed drift repair only managed block | non-green then repair GREEN; outside bytes preserved |
+| one-provider partial failure critical aggregate/allow-partial | non-green; explicit --allow-partial remains required |
+| independent provisioner/provider matrix | 30 explicit support/activation/diagnostic rows |
 | public onboard instruction step | present |
 
 All roots were temporary. `sync` used the frozen `harness.instructions`
 plan/check/apply/repair API; mAInd did not parse, render or translate instruction files.
+| Provisioner | Provider | Support | Activation | Diagnostic |
+|:--|:--|:--|:--|:--|
+| mcp | claude-code | adapter-projected | planned | none |
+| mcp | codex | adapter-projected | planned | none |
+| code-graph | claude-code | provider-neutral | not-applicable | MAIND_PROVIDER_NEUTRAL |
+| code-graph | codex | provider-neutral | not-applicable | MAIND_PROVIDER_NEUTRAL |
+| graph | claude-code | provider-neutral | not-applicable | MAIND_PROVIDER_NEUTRAL |
+| graph | codex | provider-neutral | not-applicable | MAIND_PROVIDER_NEUTRAL |
+| memory | claude-code | provider-neutral | not-applicable | MAIND_PROVIDER_NEUTRAL |
+| memory | codex | provider-neutral | not-applicable | MAIND_PROVIDER_NEUTRAL |
+| memory-hook | claude-code | delegated | not-observed | MAIND_DELEGATED:memory-context |
+| memory-hook | codex | delegated | not-observed | MAIND_DELEGATED:memory-context |
+| health-hook | claude-code | delegated | not-observed | MAIND_DELEGATED:health |
+| health-hook | codex | delegated | not-observed | MAIND_DELEGATED:health |
+| health-doc | claude-code | delegated | not-observed | MAIND_DELEGATED:health |
+| health-doc | codex | delegated | not-observed | MAIND_DELEGATED:health |
+| feature-log-hook | claude-code | delegated | not-observed | MAIND_DELEGATED:health |
+| feature-log-hook | codex | delegated | not-observed | MAIND_DELEGATED:health |
+| ecosystem-skill | claude-code | delegated | not-observed | MAIND_DELEGATED:skills |
+| ecosystem-skill | codex | delegated | not-observed | MAIND_DELEGATED:skills |
+| setup-skill | claude-code | delegated | not-observed | MAIND_DELEGATED:skills |
+| setup-skill | codex | delegated | not-observed | MAIND_DELEGATED:skills |
+| skills-catalog | claude-code | delegated | not-observed | MAIND_DELEGATED:skills |
+| skills-catalog | codex | delegated | not-observed | MAIND_DELEGATED:skills |
+| agent-pack | claude-code | delegated | not-observed | MAIND_DELEGATED:agent-pack |
+| agent-pack | codex | delegated | not-observed | MAIND_DELEGATED:agent-pack |
+| output-style | claude-code | delegated | not-observed | MAIND_DELEGATED:memory-context |
+| output-style | codex | delegated | not-observed | MAIND_DELEGATED:memory-context |
+| router-config | claude-code | delegated | not-observed | MAIND_DELEGATED:router |
+| router-config | codex | delegated | not-observed | MAIND_DELEGATED:router |
+| instructions | claude-code | adapter-projected | failed | INSTRUCTION_TARGET_MISSING,INSTRUCTION_TARGET_MISSING,INSTRUCTION_TARGET_MISSING,INSTRUCTION_TARGET_MISSING,INSTRUCTION_TARGET_MISSING,INSTRUCTION_TARGET_MISSING |
+| instructions | codex | adapter-projected | failed | INSTRUCTION_TARGET_MISSING,INSTRUCTION_TARGET_MISSING,INSTRUCTION_TARGET_MISSING,INSTRUCTION_TARGET_MISSING,INSTRUCTION_TARGET_MISSING,INSTRUCTION_TARGET_MISSING |

@@ -569,6 +569,37 @@ def instruction_conformance_markdown(cases, checks):
     return "\n".join(lines)
 
 
+def provisioner_provider_matrix(results, provider_ids):
+    """Describe every selected provider against every current semantic provisioner.
+
+    This is conformance evidence, not a second provider catalog: provider-qualified rows
+    remain owned by their existing P5/P6 operation result, while provisioners with no
+    provider intent are recorded as deliberately neutral instead of pretending to write a
+    provider target.
+    """
+    by_name = {row["provisioner"]: row for row in results}
+    matrix = []
+    for name in provisioner_names():
+        result = by_name.get(name, {})
+        provider_rows = {row["provider_id"]: row for row in result.get("providers", ())}
+        intents = PROVISIONER_INTENTS[name]
+        for provider_id in provider_ids:
+            row = provider_rows.get(provider_id)
+            if row is not None:
+                matrix.append({"provisioner": name, "provider_id": provider_id,
+                               "support": "adapter-projected", "activation": row["status"],
+                               "diagnostic": row["diagnostic"] or "none"})
+            elif intents:
+                matrix.append({"provisioner": name, "provider_id": provider_id,
+                               "support": "delegated", "activation": "not-observed",
+                               "diagnostic": "MAIND_DELEGATED:" + ",".join(intents)})
+            else:
+                matrix.append({"provisioner": name, "provider_id": provider_id,
+                               "support": "provider-neutral", "activation": "not-applicable",
+                               "diagnostic": "MAIND_PROVIDER_NEUTRAL"})
+    return tuple(matrix)
+
+
 def _conformance_config(project):
     return {"_version": "1", "node": {"id": "p6", "name": "P6", "role": "primary"},
             "memory": {"http_port": 4111, "stream_port": 4112},
@@ -598,6 +629,7 @@ def _instruction_semantics(operation):
 def generate_instruction_conformance(env, output_path):
     """Generate the P6.2 temporary-root matrix through public mAInd APIs only."""
     from ..common import Env, atomic_write_json, atomic_write_text
+    from dataclasses import replace
     from ..doctor import provider_trust_report
     from ..health import health_report
     from .onboard import onboard
@@ -684,6 +716,74 @@ def generate_instruction_conformance(env, output_path):
         checks.append({"name": "implicit full access", "result": "refused"
                        if all(not row["green"] for row in full) else "RED"})
 
+        # Exercise frozen P5 failures through its public request/result contract rather
+        # than recreating instruction parsing or managed-boundary semantics in maind.
+        contract_root = base / "instruction-contract"
+        contract_root.mkdir()
+        contract_project = {"id": "contract", "name": "Contract", "type": "node-package",
+                            "enabled": True, "status": "active", "local_path": str(contract_root),
+                            "providers": {"contract_version": "1.0.0", "selection": {
+                                "claude-code": {"enabled": True}, "codex": {"enabled": True}}}}
+        contract_config = _conformance_config(contract_project)
+        contract_context = contexts(env, contract_config, [contract_project])[0]
+        from harness.instructions import (apply_instructions, load_catalog, plan_instructions,
+                                          repair_instructions)
+        request = _instruction_request(contract_context, "plan")
+        missing = plan_instructions(replace(request, scope_ids=()))
+        duplicate = plan_instructions(replace(request, scope_ids=("root", "root")))
+        checks.append({"name": "missing/duplicate instruction scope",
+                       "result": "INSTRUCTION_SCOPE_INVALID"
+                       if all(any(item.code == "INSTRUCTION_SCOPE_INVALID" for item in value.diagnostics)
+                              for value in (missing, duplicate)) else "RED"})
+
+        created = plan_instructions(request)
+        targets = tuple(action.target_path for action in created.artifact_plan.actions)
+        applied = apply_instructions(replace(request, operation_id="apply",
+                                             authorized_target_paths=targets))
+        changed_catalog = copy.deepcopy(load_catalog())
+        changed_catalog["scopes"][0]["sections"][0]["intent"] += " Contract-derived stale source."
+        stale = plan_instructions(request, catalog=changed_catalog)
+        checks.append({"name": "stale source hash",
+                       "result": "INSTRUCTION_STALE_SOURCE"
+                       if any(item.code == "INSTRUCTION_STALE_SOURCE" for item in stale.diagnostics)
+                       else "RED"})
+
+        target = contract_root / "AGENTS.md"
+        target.write_bytes(b"outside-before\n" + target.read_bytes().replace(
+            b"<!-- semantic:", b"<!-- local:", 1) + b"\noutside-after\n")
+        drift = plan_instructions(request)
+        action = next(item for item in drift.artifact_plan.actions
+                      if item.target_path == "AGENTS.md")
+        partial = _instruction_aggregate(drift)
+        repaired = repair_instructions(replace(
+            request, operation_id="repair", authorized_target_paths=("AGENTS.md",),
+            observed_hashes=(("AGENTS.md", action.observed_hash),),
+            preimage_destination="adjacent-backup"))
+        checks.append({"name": "managed drift repair only managed block",
+                       "result": "non-green then repair GREEN; outside bytes preserved"
+                       if applied.green and not partial.green and repaired.green
+                       and target.read_bytes().startswith(b"outside-before\n")
+                       and target.read_bytes().endswith(b"\noutside-after\n") else "RED"})
+        checks.append({"name": "one-provider partial failure critical aggregate/allow-partial",
+                       "result": "non-green; explicit --allow-partial remains required"
+                       if not partial.green else "RED"})
+
+        # The matrix intentionally uses a dual-provider dry run.  Existing provisioner
+        # results remain the source for provider projections; neutral/delegated rows do not
+        # claim that maind wrote a provider artifact.
+        dual_root = base / "provisioner-matrix"
+        dual_root.mkdir()
+        dual = {"id": "matrix", "name": "Matrix", "type": "node-package", "enabled": True,
+                "status": "active", "local_path": str(dual_root), "providers": {
+                    "contract_version": "1.0.0", "selection": {
+                        "claude-code": {"enabled": True}, "codex": {"enabled": True}}}}
+        dual_config = _conformance_config(dual)
+        dual_context = contexts(env, dual_config, [dual])[0]
+        matrix_results = run_sync_contexts(env, dual_config, [dual_context], dry=True)
+        matrix = provisioner_provider_matrix(matrix_results, dual_context.effective_provider_ids)
+        checks.append({"name": "independent provisioner/provider matrix",
+                       "result": f"{len(matrix)} explicit support/activation/diagnostic rows"})
+
         # Onboard's public API receives a context once and passes it through to instruction sync.
         onboard_root = base / "onboard"
         onboard_root.mkdir()
@@ -703,7 +803,13 @@ def generate_instruction_conformance(env, output_path):
         checks.append({"name": "public onboard instruction step", "result": "present"
                        if any(step["name"] == "instructions" for step in report["steps"]) else "RED"})
 
-    atomic_write_text(Path(output_path), instruction_conformance_markdown(cases, checks))
+    rendered = instruction_conformance_markdown(cases, checks)
+    rendered += "| Provisioner | Provider | Support | Activation | Diagnostic |\n"
+    rendered += "|:--|:--|:--|:--|:--|\n"
+    for row in matrix:
+        rendered += ("| {provisioner} | {provider_id} | {support} | {activation} | "
+                     "{diagnostic} |\n").format(**row)
+    atomic_write_text(Path(output_path), rendered)
 
 
 # ── CLI ─────────────────────────────────────────────────────────────────────

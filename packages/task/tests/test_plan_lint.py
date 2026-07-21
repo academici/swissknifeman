@@ -21,7 +21,7 @@ except ImportError:  # direct discovery from packages/task remains supported
         plan_md, write_valid_plan,
     )
 from task.plan_lint import (  # noqa: E402
-    Diagnostics, discover_plan_dirs, lint_plan, lint_plans_root, main,
+    Diagnostics, _resolve_next_form, discover_plan_dirs, lint_plan, lint_plans_root, main,
 )
 
 
@@ -1227,6 +1227,52 @@ class TestWarnings(TmpPlanTestCase):
         _, diag = _lint(plan_dir)
         self.assertTrue(diag.ok, diag.errors)
         self.assertTrue(any("пустые Required Reads" in w for w in diag.warnings))
+
+
+class TestSemanticNextCarrier(TmpPlanTestCase):
+    """P4.4: neutral Next is canonical; frozen slash syntax remains compatible."""
+
+    def test_semantic_audit_phase_resolves_the_same_plan_and_phase(self):
+        plan_dir = write_valid_plan(self.root)
+        handoff = plan_dir / "handoff.md"
+        text = handoff.read_text(encoding="utf-8").replace(
+            "/task:plan-exec DEMO-1 P1.1",
+            "audit-phase: task:plan-audit DEMO-1 P1")
+        handoff.write_text(text, encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+        self.assertFalse(any("Next не соответствует" in item for item in diag.errors))
+
+    def test_historical_slash_next_remains_accepted(self):
+        plan_dir = write_valid_plan(self.root)
+        _, diag = _lint(plan_dir)
+        self.assertTrue(diag.ok, diag.errors)
+        self.assertFalse(any("Next не соответствует" in item for item in diag.errors))
+
+    def test_semantic_kind_command_mismatch_is_rejected(self):
+        plan_dir = write_valid_plan(self.root)
+        handoff = plan_dir / "handoff.md"
+        text = handoff.read_text(encoding="utf-8").replace(
+            "/task:plan-exec DEMO-1 P1.1",
+            "audit-phase: task:plan-exec DEMO-1 P1.1")
+        handoff.write_text(text, encoding="utf-8")
+        _, diag = _lint(plan_dir)
+        self.assertTrue(any("Next не соответствует" in item for item in diag.errors),
+                        diag.errors)
+
+    def test_all_closed_semantic_kinds_resolve_before_provider_rendering(self):
+        fixture = Path(__file__).with_name("fixtures_data") / "provider-plan-cases.json"
+        declarations = json.loads(fixture.read_text(encoding="utf-8"))["next_declarations"]
+        expected = {
+            "exec-items": "exec", "run-items": "run", "audit-design": "audit-design",
+            "design-phase": "design-phase", "design-item": "design-item",
+            "audit-phase": "audit", "close": "close", "archive": "close-archive",
+            "terminal": "closed", "manual": "manual", "waiting": "waiting",
+        }
+        self.assertEqual(
+            {kind: _resolve_next_form(value)[0] for kind, value in declarations.items()},
+            expected,
+        )
 
 
 class TestPlansRoot(TmpPlanTestCase):

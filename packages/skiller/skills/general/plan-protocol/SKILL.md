@@ -1,8 +1,8 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.10.0
-description: "Executable master plans in plans/<ID>: plan/phase/task schemas, 6 statuses, refine loop and DoR gate, canonical plan root, repo home by default + visibility/supersedes fields, two homes and archive, handoff with launch-block, model routing, /task:plan-* commands."
+version: 2.11.0
+description: "Executable plans in plans/<ID>: schemas, 6 statuses, DoR, neutral class/effort/capability routing, semantic Next with provider renderers, handoff and archive."
 risk: write
 persona: oss-dev
 tags: [workflow, planning, handoff, routing, multi-model]
@@ -17,15 +17,15 @@ sha256: ""
 # Plan Protocol
 
 Ecosystem SSOT for the plan protocol: how an executable master plan is structured — a
-"strong" model writes it, a "cheap" one executes it without access to the planning chat.
+frontier class writes it, implementation/economy execute it without the planning chat.
 It fixes ONLY Axioma specifics — schemas, gates, markers, pipelines; general planning
 practices that plan mode / the model handle on their own are not retold here.
 
 ## 1. When to activate
 
 - Multi-phase work longer than one session (the plan outlives context).
-- "Strong model plans, cheap model executes": opus builds the plan, sonnet/haiku close items.
-- Any `/task:plan-*` command invocation (design/exec/run/close/audit).
+- "Frontier plans; implementation/economy execute."
+- Any semantic `task:plan-*` command (design/exec/run/close/audit).
 
 **"Do we need a plan?" threshold (heuristic):**
 
@@ -33,7 +33,7 @@ practices that plan mode / the model handle on their own are not retold here.
 |:--|:--|
 | Small edit, bugfix, single file | `/task:fix` without a master plan |
 | Feature in one module, PoC, experiment | `/task:dev` without a master plan |
-| Cross-module; compliance (54-FZ/payments/PII); >1 repo; >1 session | `/task:plan-design` with this protocol's gates is MANDATORY |
+| Cross-module; compliance (54-FZ/payments/PII); >1 repo; >1 session | `task:plan-design` with this protocol's gates is MANDATORY |
 
 ## 2. Layout
 
@@ -44,7 +44,7 @@ plans/<PLAN-ID>/
 ├── handoff.md         # rolling "where we are" pointer (overwritten)
 ├── index.md           # file map + findings/research→phase provenance (section 2, optional)
 ├── roadmap.md         # execution map: batches/workflows/owner gates (section 8; mandatory once fully detailed)
-├── journal.jsonl      # append-only execution history, one entry per /task:plan-* run (section 2)
+├── journal.jsonl      # append-only execution history, one entry per task:plan-* run (section 2)
 ├── brief/             # layer 0 "input": the owner's brief + appended refinements (section 16, MANDATORY)
 ├── findings/          # layer 1 "raw": RAG extracts, recon, source documents (section 16)
 ├── research/          # layer 2 "synthesis": the model's authored design docs (section 16)
@@ -60,7 +60,7 @@ plan does not pass approval; older/legacy — WARNING). Everything else is optio
 plan's needs. `PLAN-ID` — one of two canonical patterns:
 
 **Execution journal `journal.jsonl`** (append-only NDJSON, schema — contract
-`plan-journal-schema.md`): one entry per item execution by any `/task:plan-*` run (a start
+`plan-journal-schema.md`): one entry per item execution by any `task:plan-*` run (a start
 entry `result:"in-progress"` + a terminal-`result` final entry), written by the command's
 close protocol (`lib/task/journal.py`). Existing lines are NEVER rewritten/deleted — history,
 not current state (does not duplicate the Status Board/handoff). `plan-lint` gate: for
@@ -98,7 +98,7 @@ The legacy pattern stays valid, existing plans are NOT renamed; migration is for
   (the WHOLE plan closed — resets to `—`).
 - **Draft convention:** any flat `.md` directly in `plans/` (except `ACTIVE.md` and
   `README.md`) is a plan-mode draft; expand it with
-  `/task:plan-design from-draft <файл>` (`plan-lint` warns about lingering drafts).
+  `task:plan-design from-draft <файл>` (`plan-lint` warns about lingering drafts).
 
 **MD-only rule:** the stored plan format is Markdown with strict markers ONLY. Any JSON
 is a derived parser artifact (`plan-lint --json`), never the source of truth.
@@ -259,14 +259,14 @@ Skeleton — `snippets/phase-template.md`. Phase file structure:
 
 **Skeleton-phase marker.** A phase deliberately left undetailed at authoring time carries
 a fixed line in its Phase Context:
-`> СКЕЛЕТ — не детализирован, разворачивается /task:plan-design <ID> Pn`.
+`> СКЕЛЕТ — не детализирован, разворачивается design-phase: task:plan-design <ID> Pn`.
 With the marker, empty item fields are legal, including Code Guidance = «—». Without the
 marker an empty Code Guidance is a plan defect.
 
 **Contract-first design flow (optional authoring mode).** An alternative to per-phase "detail
 one phase → exec immediately": on `new`, seal ALL phases with skeleton markers and write a
 **contract block** into each `Phase Context` — what the phase consumes from earlier phases and
-produces for later ones; detail items just-in-time (`/task:plan-design <ID> Pn`) against the facts
+produces for later ones; detail items just-in-time (`task:plan-design <ID> Pn`) against the facts
 of already-closed phases. Goal — see inter-phase conflicts and the coupling surface BEFORE
 detailing (pre-empts the "fixing one phase breaks another" ripple) without paying the full upfront
 cost of designing all items. OPTIONAL and ADDITIVE to the skeleton marker: the contract block is
@@ -542,7 +542,7 @@ history lives in git, not in the file). Skeleton — `snippets/handoff-template.
     Board OR having a `phases/Pn.md` file) — otherwise ERROR "dangling reference" (D37/D41). The
     only exception — the bootstrap heading `after P0.0` of the starting handoff (there is no
     phase `P0`). The existence of the ITEM `Pn.m` itself is NOT gated (fleet back-compat).
-- **Next:** the next command in launch-block form (below).
+- **Next:** a semantic carrier from the closed enum below; render provider invocation separately.
 - **Done:** what is closed. · **Remaining:** what is left.
 - **Sources of truth:** where the truth is (plan.md, phases/Pn.md, key files).
 - **Open risks:** open risks.
@@ -554,15 +554,18 @@ plan-exec/plan-close/plan-audit reports — must take the fixed form
 (`snippets/launch-block-template.md`):
 
 ```markdown
+**Next:** <kind>: task:<plan-command> <PLAN-ID> <arguments>
+
 | Параметр | Значение |
 |:--|:--|
-| Model | <модель> |
-| Thinking | <effort> |
+| Model class | <economy / implementation / frontier> |
+| Effort | <low / medium / high / xhigh> |
+| Capabilities | <semantic capability IDs; `—` if none are additional> |
 | Context | <одно из трёх значений enum'а ниже> |
 | Суть | <1 строка> |
 
 ````
-<голая команда одним code-block, копипаст без правок>
+<provider renderer: Claude `/task:…` OR Codex `$ task:…`; preserve semantic payload>
 ````
 ```
 
@@ -577,7 +580,7 @@ findings to the next session — a `plan-audit` verdict `RED`/`ATTENTION` (§3) 
 proposal — MUST NOT be bare. Four lines follow it inside the same code block (order fixed):
 
 ````
-<slash command>
+<provider-rendered invocation>
 
 РЕЖИМ: <reopen per §3 (4 steps) | detailing | remediation — what the session actually does>
 ВХОД: <file → block with the findings; cold-start read>
@@ -587,7 +590,7 @@ proposal — MUST NOT be bare. Four lines follow it inside the same code block (
 
 Why each line:
 
-- `РЕЖИМ:` — `/task:plan-design <ID> Pn` is AMBIGUOUS: a fresh session seeing a phase with
+- `РЕЖИМ:` — `design-phase: task:plan-design <ID> Pn` is AMBIGUOUS: a fresh session seeing a phase with
   terminal items decides "reopen or detailing" by itself, and errs toward the expensive one.
 - `ВХОД:` — enforces the cold-start rule above ("input-doc paths"): without it the payload
   lives only in chat and dies with the session. Same class as "debt lives only in handoff":
@@ -620,12 +623,10 @@ line is a free-form note, not an audit report: it is not gated (otherwise the li
 payload from an arbitrary `## Audit` heading). A `GREEN` verdict carries no findings and requires no
 payload.
 
-**The session's final message = a launch-block.** Any `/task:plan-*` session (design / exec /
+**The session's final message = a launch-block.** Any `task:plan-*` session (design / exec /
 run / close / audit) that has a next step ENDS its last message to the owner with a full
-launch-block (the Model/Thinking/Context/Essence table + the bare command as a separate code
-block) — not "run such-and-such command" in prose: the owner must never have to ask back which
-model and settings to launch with. A bare command without Model/Thinking in the finale is a
-session defect (a plan-audit finding).
+launch-block (semantic Next + Model class/Effort/Capabilities/Context/Essence + a provider-
+rendered invocation in a separate code block). Invocation without semantic Next/route is a defect.
 
 **Execution roadmap — `plans/<ID>/roadmap.md` (D-canon 2026-07-16).** Assembled after all phases
 are fully detailed (§5 default) — the plan's execution map answering "which command next?" without
@@ -637,7 +638,7 @@ changed/closed) — the light `plan-design <ID> roadmap` mode. Skeleton —
 - a table of ALL items in execution order: `Item | Batch | Запуск | Model/Thinking | Гейт
   владельца | Примечание`;
 - **Batch** — a group of consecutive small same-model items with coupled scope, executed by ONE
-  session with one command (`/task:plan-run <ID> Pn.a-Pn.b` — a series); a large/complex/risky
+  session with one carrier (`run-items: task:plan-run <ID> Pn.a-Pn.b` — a series); a large/complex/risky
   item — `solo` (own session); scope-INDEPENDENT items — `workflow` (a script in
   `plans/<ID>/workflows/`, one launch). For solo items the "why it can't be merged" justification
   is mandatory (an empty cell = an audit finding);
@@ -662,21 +663,23 @@ forms; any other form = ERROR listing the allowed ones):
 ```text
 | Форма Next | Когда |
 |:--|:--|
-| /task:plan-exec <ID> Pn.m [Pn.k …] | следующий item детализирован, Exec = plan-exec (§9); СПИСОК items = батч-серия roadmap одной сессией (пин sonnet/medium команды — жёсткий гейт тира, §9) |
-| /task:plan-run <ID> Pn.m[-Pn.k]  | manual-item(ы) под моделью ТЕКУЩЕЙ сессии (без пина): перед запуском — ритуал /model+/effort по Routing; для plan-exec-серий НЕ использовать (уедет на модели предыдущего гейта) |
-| /task:plan-audit <ID> design     | план детализирован — pre-exec ревью перед стартом exec |
-| /task:plan-design <ID> Pn        | следующая фаза — скелет |
-| /task:plan-design <ID> Pn.m      | item эскалирован (🔴) либо требует ре-дизайна |
-| /task:plan-audit <ID> Pn         | фаза Pn закрыта (терминальна) — аудит перед следующей |
-| /task:plan-close <ID> Pn[.m]     | items терминальны: закрыть фазу / сверить item |
-| /task:plan-close archive <ID>    | план терминален целиком |
-| «план закрыт»                    | все items терминальны, следующий шаг вне протокола |
-| «ЗАПУСК ВРУЧНУЮ: <model/effort>» | Exec = manual (§9): команды нет — launch-block несёт модель
-                                     и голый промпт item'а отдельным code-block |
-| «ОЖИДАНИЕ: <условие> → <форма>»  | шаг РЕАЛЕН, но неисполним сейчас (time-gate/накопление
-                                     данных/кросс-план-гейт не терминален) — не дефект, не терминал |
+| exec-items: task:plan-exec <ID> Pn.m [Pn.k …] | detailed next item; item list is one-session batch |
+| run-items: task:plan-run <ID> Pn.m[-Pn.k] | manual items under a verified inherited-plan route |
+| audit-design: task:plan-audit <ID> design | pre-exec design audit |
+| design-phase: task:plan-design <ID> Pn | next phase is a skeleton |
+| design-item: task:plan-design <ID> Pn.m | escalated/re-design item |
+| audit-phase: task:plan-audit <ID> Pn | terminal phase audit |
+| close: task:plan-close <ID> Pn[.m] | close phase / reconcile item |
+| archive: task:plan-close archive <ID> | whole plan is terminal |
+| terminal: план закрыт | no protocol work remains |
+| manual: <model-class/effort> | no invocation; carry route and the bare item prompt |
+| waiting: <condition> → <target semantic form> | real step is not executable yet; not defect/terminal |
 Иная форма = ERROR plan-lint.
 ```
+
+New plans store the semantic form. Historical `/task:…`, `ЗАПУСК ВРУЧНУЮ`, and `ОЖИДАНИЕ:`
+remain compatibility inputs. Render Claude `/task:…` or Codex `$ task:…` from the same carrier;
+never alter PLAN-ID, item IDs, cold-start reads, scope payload, or owner gate.
 
 **The `Next` form is declared by the FIRST non-empty line of the field** (D40). The field is
 multi-line (it runs to the next `**Field:**` and includes the launch-block), so the resolver
@@ -747,71 +750,61 @@ absolute count of a foreign root («ERROR 116 → 116») is NOT proof: it does n
 repo's drift from your edit's regression. Delta ≠ 0 — either a true finding of a new rule (name
 it by name) or a blocker.
 
-**"item/phase → handoff → /clear" cycle:** after handoff.md is overwritten, `/clear` is
-recommended — the next item starts from reading the plan (plan.md → phases/Pn.md →
-handoff.md), not the chat tail. plan-exec and plan-close print the fixed reminder line:
-`Context: handoff свежий — рекомендован /clear перед следующим item`.
+**"item/phase → handoff → context boundary" cycle:** the next step reads plan.md →
+phases/Pn.md → handoff.md rather than relying on the chat tail. A provider may project
+`same-session` into its native context-clear action; that action is not plan semantics.
 
 **Session-restart discipline (launch-block Context field, D16 + D30).** The Context field
 carries EXACTLY one of three values — not a static generic "clear recommended" regardless of
 the next step's type:
 
-- **`continue (/clear) — ручной item`** — the next step is a regular item-by-item exec: the
-  current session suffices, `/clear` before the next item.
-- **`NEW SESSION — Workflow-оркестрован`** — the next step is a Workflow-orchestrated chunk
-  (item/phase/chain) that EITHER finished CLEAN (`git status` empty for its Scope, `plan-lint`
-  green) OR is about to launch (section 7 criterion fired, `scriptPath` ready): the
-  launch-block MUST propose a NEW session with the ready `Workflow({scriptPath:...})` command,
-  not a generic `/clear`. Reason: background `Workflow()` notification payload grows the
-  executor session's context faster than the work itself; `/clear` in the same session clears
-  chat context, not that payload / the executor process's limits.
-- **`NEW SESSION — шаг-не-item`** — the next step is not an item exec but a protocol step ABOVE
+- **`same-session — item`** — regular item-by-item exec; the provider chooses its native
+  mechanism for refreshing context.
+- **`cold-start — orchestration`** — an orchestrated chunk. Its carrier stores `kind`,
+  `orchestration_id`, ordered inputs, required capabilities, and a provider-projection reference.
+  Require `command.subagents` and `command.workflow-carrier`; missing/unknown/unsupported support
+  returns `CMD_CAPABILITY_UNSUPPORTED`, with no silent solo fallback.
+- **`cold-start — plan-step`** — not item exec but a protocol step ABOVE
   the plan (`plan-audit` / `plan-close` / `plan-design`): it re-reads the plan from disk (an
-  audit is also adversarial — inheriting the executor's context is forbidden to it), so the
-  launch-block proposes a NEW session, not a `/clear` in the current one.
+  audit is also adversarial — inheriting the executor's context is forbidden).
 
-**An item with `Exec = manual` (§9) — the «ЗАПУСК ВРУЧНУЮ» form.** Such an item has no slash
+**An item with `Exec = manual` (§9) — semantic `manual` form.** Such an item has no
 command, therefore the launch-block:
 
-- `Next` = `«ЗАПУСК ВРУЧНУЮ: <model/effort>»` (a form from the `Next` enum above);
-- `Model`/`Thinking` — as PRESCRIBED by Routing (§9), NOT sonnet/medium;
-- the code block carries the item's **BARE PROMPT** (copy-paste, no edits), NOT a slash
-  command: `/task:plan-exec` pins sonnet/medium and by the routing gate must reject such an
-  item — a command in the code block would be a direct instruction to breach the gate;
+- `Next` = `manual: <model-class/effort>`;
+- `Model class`/`Effort` — as PRESCRIBED by Routing (§9);
+- the code block carries the item's **BARE PROMPT**, NOT a provider invocation;
+  `task:plan-exec` has minimum `implementation/medium` and must reject undershoot;
 - `Context` — from the same enum of THREE values, by the type of the next step. A manual item
-  is a regular item-by-item exec, merely launched by a bare prompt under the prescribed model
-  ⇒ `continue (/clear) — ручной item`. **`NEW SESSION` is NOT required for a manual item**:
-  both NEW values are reserved for Workflow orchestration and steps-that-are-not-items;
-  restarting the session on every manual item is a ritual with no payoff.
+  is regular item-by-item exec under the prescribed route ⇒ `same-session — item`.
 
 This is the ONLY place where a manual item's `Context` is defined; `snippets/` quote it and
 introduce no rules of their own.
 
-**The `Next` «ОЖИДАНИЕ: <условие> → <целевая форма>» form (D8).** The next step is REAL but
+**The `Next` `waiting: <condition> → <target semantic form>` (D8).** The next step is REAL but
 NOT executable RIGHT NOW — a HEALTHY wait on external time/state (time-gate, baseline/usage-trend
 accrual, a cross-plan gate not yet terminal), NOT a plan defect. Do not confuse: `🔴 Blocked`/§10
 escalation = a DEFECT (plan diverged from code, needs re-design); «план закрыт» = TERMINAL
 (nothing left to do); «ОЖИДАНИЕ» = a pause before a real step.
 
-- `Next` = `«ОЖИДАНИЕ: <условие> → <целевая форма>»`, where the **condition is STRUCTURAL**: a
+- `Next` = `waiting: <condition> → <target semantic form>`, where the **condition is STRUCTURAL**: a
   date `≥ГГГГ-ММ-ДД`, or a gate `<PLAN-ID> Pn терминальна`, or `usage-trend ≥N недель` (not prose
   "someday later"); the **target form** — any runnable enum form above (usually
-  `/task:plan-exec <ID> Pn.m`);
-- the launch-block carries the **target command** (the one that runs once the gate lifts), and its
+  `exec-items: task:plan-exec <ID> Pn.m`);
+- the launch-block carries the **target carrier** and provider projection, and its
   FIRST code-block line is the **guard `# НЕ раньше: <условие>`** (copy-pastable and honest about
-  present non-executability); `Model`/`Thinking`/`Context` — of the TARGET step;
-- do NOT write a prose caveat on the declaring line (`/task:plan-exec … — НО не раньше …`): it does
+  present non-executability); `Model class`/`Effort`/`Context` — of the TARGET step;
+- do NOT write a prose caveat on the declaring line (`exec-items: … — НО не раньше …`): it does
   not copy-paste, and `plan-lint` flags it WARNING (C2), suggesting this form instead.
 
-`plan-lint` resolves the form as `waiting` (BEFORE `exec` — the line embeds the target
-`/task:plan-exec`) and requires a launch-block (like other runnable forms — not exempt).
+`plan-lint` resolves the form as `waiting` and requires a launch-block.
 
 **Surfaced error → fix proposal (C3, D6).** A run exposes a material problem (Validation red
 outside Scope · lint remainder N−K>0 · stray diff · a found defect) → the report/handoff MUST
 carry a concrete remediation proposal right away (what + a launch-block for the fix + 1-line
 "why"), not a passive "ready for next, there were errors" note; it ADDS to the Known
 Deviations/Pending Work entry, not replaces it. When the fix is the most valuable next action,
-`Next` points to it (`/task:plan-design <ID> Pn.m` or a follow-up fix item), not silently to the
+`Next` points to it (`design-item: task:plan-design <ID> Pn.m` or a follow-up fix item), not silently to the
 next item. The launch-block of such a `Next` carries the **scope-payload** (§8: `РЕЖИМ:`/`ВХОД:`/
 `СКОУП:`/`НЕ ТРОГАТЬ:`) — a proposal without it hands the next session the problem but not its
 boundaries. Do not confuse with §10 escalation (🔴 = plan↔code defect, needs re-design): here the
@@ -820,22 +813,24 @@ item still closes (🟢/🟠) with an explicit proposal, not a block. Report-qua
 
 ## 9. Routing & Thinking Policy (SSOT matrix)
 
-Default role→model/effort routing. Plan section `## 3. Routing` stores ONLY deviations from
+Default role→neutral model-class/effort routing. Plan section `## 3. Routing` stores ONLY deviations from
 this table:
 
-| Role | Model/effort | Works in |
+| Role | Model class/effort | Works in |
 |:--|:--|:--|
-| issue-planner | opus/high | plan-design |
-| invariant-auditor | opus/xhigh | plan-audit |
-| package-implementer | sonnet/medium | plan-exec |
-| small-implementer | haiku/low ¹ | LOW slices of dev-loop |
-| repo-explorer | haiku/low ¹ | repo recon (grep/read/map) |
-| docs-curator | sonnet/low | plan-close |
+| issue-planner | frontier/high | plan-design |
+| invariant-auditor | frontier/xhigh | plan-audit |
+| package-implementer | implementation/medium | plan-exec |
+| small-implementer | economy/low | LOW slices of dev-loop |
+| repo-explorer | economy/low | repo recon (grep/read/map) |
+| docs-curator | implementation/low | plan-close |
 
-¹ Probe 2026-07-02: haiku + effort=low was accepted by the workflow-agent API. That confirms
-acceptance at that API level only; the effort frontmatter pin inside interactive Claude Code
-(a different mechanism) is NOT verified — on mismatch, treat the model's default effort as
-authoritative.
+Class order: `economy < implementation < frontier`; effort independently:
+`low < medium < high < xhigh`. Select a provider selector only from a verified mapping.
+Gate BEFORE status mutation/work/write/external call/subagent launch: exact/overshoot are legal
+(`CMD_ROUTE_OVERSHOOT` info); undershoot returns `CMD_ROUTE_UNDERSHOOT`; unknown/missing/
+ambiguous selectors or effort block without fallback. One axis never compensates the other.
+Required capabilities accept only `native`/`adapted`; otherwise `CMD_CAPABILITY_UNSUPPORTED`.
 
 **Thinking policy:**
 
@@ -846,16 +841,16 @@ authoritative.
 
 **Tier policy (MODEL-TIER criterion — an axis INDEPENDENT of effort):**
 
-- **top tier (fable/opus)** — only where the item still has OPEN design decisions OR the cost
+- **frontier** — only where the item still has OPEN design decisions OR the cost
   of a semantic mistake is irreversible/gets frozen (freeze mechanism, breaking default
   semantics, fleet canon, cross-phase synthesis);
 - **prescribed implementation** against already-pinned canons (RAG verdict, frozen spec, a
-  ready D# decision) → sonnet/high;
-- **editorial/mechanics** with deterministic gates → sonnet/medium (by derivation below —
+  ready D# decision) → implementation/high;
+- **editorial/mechanics** with deterministic gates → implementation/medium (by derivation below —
   `plan-exec`);
 - "effort high+ MANDATORY" does NOT raise the model tier: a SemVer item against a frozen spec
-  = sonnet/high, not fable/high. Tier overshoot PRESCRIBED by Routing is as much a plan defect
-  as executor undershoot: it burns the top tier on sonnet-class work (field case — azguard
+  = implementation/high, not frontier/high. Tier overshoot PRESCRIBED by Routing is as much a plan defect
+  as executor undershoot: it burns frontier on implementation-class work (historical Claude case — azguard
   D28, 2026-07-18: a blanket fable/high row over 10 heterogeneous items, 7 of 10
   over-provisioned by 1–2 tiers).
 
@@ -865,14 +860,14 @@ batching» below) and `Review` (review depth of the subphase, enum `full`|`light
 `full`, doubt → `full`):
 
 ```text
-| Batch | Items | Model/effort | Exec | Review | Почему |
+| Batch | Items | Model class/effort | Exec | Review | Почему |
 |:--|:--|:--|:--|:--|:--|
-| B1 | P2.7–P2.9 | fable/high | manual | full | расфриз public-контракта: открытые design-решения → верхний тир; effort high+ MANDATORY |
-| B1 | P2.10–P2.13 | sonnet/low | plan-exec | light | doc-cleanup без новых решений |
+| B1 | P2.7–P2.9 | frontier/high | manual | full | расфриз public-контракта: открытые design-решения → frontier; effort high+ MANDATORY |
+| B1 | P2.10–P2.13 | implementation/low | plan-exec | light | doc-cleanup без новых решений |
 ```
 
 Columns `Batch`/`Review` are **OPTIONAL**: the legacy form without them
-(`| Items | Model/effort | Exec | Почему |`) stays VALID (back-compat, below), their absence is
+(`| Items | Model class/effort | Exec | Почему |`) stays VALID (back-compat, below), their absence is
 NOT a defect. `Batch` empty → the subphase runs solo (not in a batch); `Review` empty → depth by
 default (`full`).
 
@@ -883,20 +878,18 @@ phase-level blanket row is legal only as a draft for phases NOT yet detailed. Th
 `plan-design` DoR checklist (there is no machine lint on §3 — Back-compat below).
 
 Column **Exec** — closed enum `plan-exec` | `manual` | `plan-design`: who is allowed to execute
-the item. Tier order: models `haiku < sonnet < opus ≈ fable`, effort
-`low < medium < high < xhigh < max`. The `plan-exec` command pin is **sonnet/medium**.
+the item. Order: `economy < implementation < frontier`, effort
+`low < medium < high < xhigh`. The `task:plan-exec` minimum is **implementation/medium**.
 
 **Exec derivation** (column empty) and **consistency** (column filled):
 
 ```text
 Compare by tier, both axes: overshoot is harmless, undershoot is forbidden.
-- model ≤ sonnet AND effort ≤ medium → plan-exec
-- model > sonnet (opus/fable)        → manual  (a command cannot switch its own model —
-                                                no such API exists)
+- model class ≤ implementation AND effort ≤ medium → plan-exec
+- model class > implementation                     → manual
 - effort > medium (high/xhigh/max)   → manual  (thinking undershoot forbidden — policy above)
 - cell without model / without effort → the missing half comes from the role matrix above
-Tool Capability (perplexity-web/context7/…) goes into the same cell via «+» and SUPPLEMENTS
-model/effort, never replaces it.
+Semantic capability IDs use their own cell/launch-block and SUPPLEMENT route, never replace it.
 
 A filled Exec overrides derivation ONLY toward strictness: `manual` is legal for any
 model/effort pair. The reverse (`Exec = plan-exec` where derivation yields `manual`) is a PLAN
@@ -904,32 +897,32 @@ DEFECT, not a permission: otherwise the column is a hole in the gate — exactly
 ```
 
 **Routing gate** — run by `plan-exec` BEFORE any work (incident basis — F7 of plan
-2026.07.13-PLAN-PROTOCOL-GAP: contract items went to sonnet against a fable/high mandate):
+2026.07.13-PLAN-PROTOCOL-GAP: historically contract items went to Claude sonnet against a fable/high mandate):
 
 ```text
 - Exec = manual (given OR derived) → the item is NOT executed by the command: STOP, report
-  «ROUTING-BLOCKED: Pn.m — предписано <model/effort>, команда пинит sonnet/medium»,
+  «ROUTING-BLOCKED: Pn.m — предписано <model-class/effort>, минимум task:plan-exec implementation/medium»,
   launch-block in the «ЗАПУСК ВРУЧНУЮ» form (§8). The item's status is NOT changed.
-- Exec = plan-exec, Routing BELOW the pin (haiku and/or low) → execute (overshoot is
+- Exec = plan-exec, Routing BELOW the minimum (economy and/or low) → execute (overshoot is
   harmless), process deviation → Known Deviations; status stays 🟢 (§6).
 - Exec = plan-exec CONTRADICTS model/effort → STOP, report «ROUTING-INCONSISTENT: Pn.m —
   Exec=plan-exec при <model/effort>»; `plan-design` fixes it. Status NOT changed.
 - Exec = plan-design → the item is not executed: STOP, re-design (§10).
-- Routing is ambiguous (no row for the item, "fable OR opus", prose without a model) AND the
+- Routing is ambiguous (no row, multiple classes/efforts, prose without a class) AND the
   item is of the design/contract class (any §10 escalation trigger would fire) → STOP
   (fail-safe: a false stop costs one restart, a false pass costs a RED audit).
 ```
 
-**What EXECUTES an `Exec = manual` item.** Two equal paths, both under the model PRESCRIBED by
-Routing: (a) the item's BARE PROMPT from the launch-block (§8, «ЗАПУСК ВРУЧНУЮ» form);
-(b) the command `/task:plan-run <ID> Pn.m` (§13) — the only one with NO `model`/`effort` pin in
-its frontmatter: the owner sets `/model` + `/effort` himself, the command inherits them from the
-session and INVERTS the routing gate — it compares the ACTUAL session model/effort against §3
+**What EXECUTES an `Exec = manual` item.** Two equal paths, both under the route PRESCRIBED by
+Routing: (a) the item's BARE PROMPT from the launch-block (§8, `manual` form);
+(b) semantic `task:plan-run <ID> Pn.m` (§13), routing mode `inherited-plan`: the provider
+sets session selector/effort, the command inherits them and INVERTS the routing gate — it compares
+the ACTUAL session class/effort against §3
 Routing and on an undershoot emits the same `ROUTING-BLOCKED`. The honesty boundary is named
-explicitly: an agent's self-attribution of its model is NOT machine-checkable, so `plan-run`
-removes the switching ritual before a series of manual items, but the HARD gate stays with
+explicitly: an agent's route self-attribution is NOT machine-checkable, so `plan-run`
+removes provider-native switching ritual before a series of manual items, but the HARD gate stays with
 `plan-exec` (its pin makes an undershoot structurally impossible). A `plan-run` executor MUST
-print the actual model/effort pair in the report and in the Update Log.
+print the actual class/effort pair in the report and in the Update Log.
 
 **Back-compat.** Legacy `## 3. Routing` forms (prose, bullets, a table without the
 Exec/`Batch`/`Review` column, an empty section) stay VALID; `plan-lint` does not parse section 3 —
@@ -1026,8 +1019,8 @@ consumer side). The carrier is section `## 7. Contracts` (§4); the addressee is
 **Program plan** (precedents FLEX-IMPL, ECOSYSTEM P4): a coordination plan over delegates —
 `Document Type: Program Master Plan (coordination)`; items = milestone delegates (one delegate
 plan per item); the item's Validation = a GREEN audit of the delegate; NO code is written in a
-program plan. Such a plan's Execution Rules must forbid `/task:plan-exec` and name the
-prescribed command for launching delegates.
+program plan. Such a plan's Execution Rules must forbid `task:plan-exec` and name the
+prescribed orchestration carrier.
 
 ## 12. Lifecycle: two homes, archive, documentation
 
@@ -1054,7 +1047,7 @@ only by `skiller vendor/connect`; a local edit of a vendor copy = defect, the pa
 contribution to the SSOT (see `package-contribution-protocol`).
 
 **Plan→archive→docs pipeline** (RAG:✅ P5.1 §2 Diátaxis + Oxide "committed = implemented"). On
-plan terminality — command `/task:plan-close archive <ID>`:
+plan terminality — carrier `archive: task:plan-close archive <ID>`:
 
 1. The plan moves to `plans/archive/<ID>` as a SEPARATE commit `chore(plan): archive <ID>`.
 2. Project docs are assembled from `root/` by Diátaxis types: architecture/philosophy →
@@ -1070,29 +1063,28 @@ on its own).
 
 ## 13. Command protocol
 
-| Command | Model/effort | Does |
+| Semantic command ID | Model class/effort | Does |
 |:--|:--|:--|
-| `/task:plan-design` | opus/high | new plan / new phase / item specs; refine loop + DoR gate |
-| `/task:plan-exec` | sonnet/medium | execute an item; self-closing (updates statuses + handoff) |
-| `/task:plan-run` | SESSION model/effort (no pin) | execute an `Exec = manual` item under the prescribed model: the whole `plan-exec` protocol, routing gate INVERTED — compares the ACTUAL session against §3 Routing (undershoot → `ROUTING-BLOCKED`) |
-| `/task:plan-close` | sonnet/low | status reconciliation / phase close / `archive` mode |
-| `/task:plan-audit` | opus/xhigh | adversarial phase audit; verdict GREEN/ATTENTION/RED |
+| `task:plan-design` | frontier/high | new plan / phase / item specs; refine loop + DoR gate |
+| `task:plan-exec` | implementation/medium | execute an item; self-closing |
+| `task:plan-run` | item minimum; observed SESSION route | execute `Exec = manual`; inherited-plan gate checks both axes before work |
+| `task:plan-close` | implementation/low | status reconciliation / phase close / `archive` |
+| `task:plan-audit` | frontier/xhigh | adversarial phase audit; GREEN/ATTENTION/RED |
 
-FOUR commands carry a frontmatter model pin — that pin IS the machine tier gate. `plan-run`
-carries none DELIBERATELY (omitting the `model`/`effort` keys = inheriting the session): it is
-not a gate bypass but the removal of the `/model` + `/effort` ritual before a series of manual
-items; what executes an `Exec = manual` item and where the honesty boundary lies — §9.
+Provider mappings project minima to native selectors. `plan-run` has no fixed route: its minimum
+comes from item Routing and the same fail-closed gate checks the observed session route. Claude
+invocation is `/task:…`; Codex is `$ task:…`; UI prefix is not semantic identity.
 
 ## 14. Plan-quality checklist
 
-- [ ] Every item executable by sonnet with no context beyond the plan.
+- [ ] Every item executable by its assigned model class with no context beyond the plan.
 - [ ] Required Reads finite and ordered (not "look around the repo").
 - [ ] Code Guidance filled for every item (not «—»).
 - [ ] An undetailed phase carries the skeleton marker — not "just empty fields".
 - [ ] Load-bearing facts/verdicts carry a marker from the §7 enum: `RAG:✅` · `RAG:—`
       (repo-grounded ONLY) · `[UNVERIFIED]`.
 - [ ] Open Questions don't "hang" in phase bodies — moved to `open-questions.md` with a status.
-- [ ] handoff.Next contains a launch-block (table + code block).
+- [ ] handoff.Next contains semantic carrier + neutral route/capabilities + rendered code block.
 - [ ] Phase-first: phases close sequentially, items don't jump between phases.
 - [ ] `plan-lint` green.
 
@@ -1108,7 +1100,7 @@ the project's `.claude/settings.json` (shared, committed). Rollout — 3 layers:
 
 The convention reaches the project via the managed CLAUDE.md block `maind:plan-conventions`
 (provisioner `plans-doc`). Bridge from built-in plan mode: the approved plan is saved as a flat
-draft in `plans/` → `/task:plan-design from-draft <файл>` expands it into `plans/<ID>/` per this
+draft in `plans/` → `task:plan-design from-draft <файл>` expands it into `plans/<ID>/` per this
 skill's templates (draft deleted, history in git).
 
 ## 16. The plan's knowledge layers: brief/ → findings/ → research/ → decisions
@@ -1163,4 +1155,4 @@ thinking gets lost.
 - `package-contribution-protocol` (architect) — contribution to the SSOT instead of editing
   vendor copies (section 12).
 
-<!-- ru-source-sha256: 096b7acc8f65c9939378cf5136fb62f6d39423fb586dd32fa4160e30e3168500 -->
+<!-- ru-source-sha256: 01be24264fc1b303eb79fe1fc488ebaf3aceb2eb6ae9af9854a2476bf46f1973 -->

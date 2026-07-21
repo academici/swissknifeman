@@ -12,12 +12,12 @@
 
 ## Карта исполнения
 
-| Item | Batch | Запуск | Model/Thinking | Гейт владельца | Примечание |
+| Item | Batch | Запуск | Model class/Effort | Гейт владельца | Примечание |
 |---|---|---|---|---|---|
-| P0.1 | B1 | plan-exec серия | sonnet/medium | — | сцеплен с P0.2 по файлам |
-| P0.2 | B1 | ↑ | sonnet/medium | — | |
-| P1.1 | solo | plan-run (manual) | opus/high | ✅ утверждение матрицы | design-item, объединять нельзя: вердикт владельца посреди; перед запуском /model opus + /effort high |
-| P2.1–P2.3 | W1 | workflow | sonnet/medium | — | независимый scope → wf-<codename>-p2.js |
+| P0.1 | B1 | plan-exec серия | implementation/medium | — | сцеплен с P0.2 по файлам |
+| P0.2 | B1 | ↑ | implementation/medium | — | |
+| P1.1 | solo | plan-run (manual) | frontier/high | ✅ утверждение матрицы | design-item, объединять нельзя: вердикт владельца посреди; provider selector выбирает renderer |
+| P2.1–P2.3 | W1 | orchestration | implementation/medium | — | независимый scope → semantic orchestration carrier |
 | … | | | | | |
 
 ## Готовые launch-block'и групп
@@ -26,23 +26,28 @@
 
 | Параметр | Значение |
 |:--|:--|
-| Model | <model> |
-| Thinking | <effort> — <причина> |
-| Context | Холодный старт: plan.md → roadmap.md → phases/<Pn>.md |
+| Model class | <economy / implementation / frontier> |
+| Effort | <low / medium / high / xhigh> — <причина> |
+| Capabilities | <semantic capability IDs> |
+| Context | cold-start: plan.md → roadmap.md → phases/<Pn>.md |
 | Суть | Серия <Pn.a>–<Pn.b> одной сессией, гейты между items — внутри сессии |
 
 ```
-/task:plan-exec <PLAN-ID> <Pn.a> <Pn.b> <Pn.c>
+exec-items: task:plan-exec <PLAN-ID> <Pn.a> <Pn.b> <Pn.c>
 ```
 
-<!-- Батч-серии — ТОЛЬКО через plan-exec (список items): её пин sonnet/medium — жёсткий
-     гейт тира. /task:plan-run — без пина, для manual design-items под моделью сессии
-     (ритуал /model+/effort по Routing перед запуском). -->
+<!-- Батч-серии — ТОЛЬКО через plan-exec (список items): её минимум
+     implementation/medium — жёсткий гейт тира. task:plan-run — inherited-plan,
+     для manual design-items под проверенным route сессии. -->
 
 ### W1 — <суть workflow-группы>
 
 ```
-Workflow({scriptPath: "plans/<PLAN-ID>/workflows/wf-<codename>-<purpose>.js"})
+kind: orchestration
+orchestration_id: <PLAN-ID>:W1
+inputs: [plan.md, roadmap.md, phases/<Pn>.md]
+required_capabilities: [command.subagents, command.workflow-carrier]
+provider_projection: <verified mapping reference>
 ```
 
 ## Гейты владельца (сводно)

@@ -120,10 +120,24 @@ PLAN_AUDIT_DESIGN_RE = re.compile(r"/task:plan-audit\s+(\S+)\s+design\b")
 PLAN_AUDIT_RE = re.compile(r"/task:plan-audit\s+(\S+)\s+(P\d+)(?!\.\d)\b")
 PLAN_CLOSE_ARCHIVE_RE = re.compile(r"/task:plan-close\s+archive\s+(\S+)")
 PLAN_CLOSE_RE = re.compile(r"/task:plan-close\s+(\S+)\s+(P\d+)(\.\d+)?\b")
+SEMANTIC_NEXT_RE = re.compile(
+    r"^(exec-items|run-items|audit-design|design-phase|design-item|audit-phase|close|archive|"
+    r"terminal|manual|waiting):\s*(.*)$")
+SEMANTIC_NEXT_COMMANDS = {
+    "exec-items": ("task:plan-exec", "exec"),
+    "run-items": ("task:plan-run", "run"),
+    "audit-design": ("task:plan-audit", "audit-design"),
+    "design-phase": ("task:plan-design", "design-phase"),
+    "design-item": ("task:plan-design", "design-item"),
+    "audit-phase": ("task:plan-audit", "audit"),
+    "close": ("task:plan-close", "close"),
+    "archive": ("task:plan-close", "close-archive"),
+}
 MANUAL_RUN_MARKER = "ЗАПУСК ВРУЧНУЮ"  # Exec=manual (§9): форма без slash-команды, ищется подстрокой
 LITERAL_WAITING = "ОЖИДАНИЕ:"  # 9-я форма Next (§8, D8): здоровое ожидание внешнего времени/гейта, ищется подстрокой
 NEXT_FORMS_HELP = (
     "Next не соответствует ни одной из допустимых форм (SKILL §8): "
+    "`<kind>: task:<plan-command> <arguments>` (provider-neutral канон) · "
     "/task:plan-exec <ID> Pn.m · /task:plan-run <ID> Pn.a[-Pn.b] · "
     "/task:plan-design <ID> Pn · /task:plan-design <ID> Pn.m · "
     "/task:plan-audit <ID> Pn · /task:plan-audit <ID> design · "
@@ -154,7 +168,7 @@ AUDIT_BLOCK_HEADER_RE = re.compile(r"^##\s+Audit\b")
 # ASCII-дефис не канонизирован.
 RAG_MARKER_RE = re.compile(r"RAG:✅|RAG:" + EMPTY_PLACEHOLDER + r"|\[UNVERIFIED\]")
 # launch-block в handoff.Next (SKILL §8): таблица с `| Model |` + code-block.
-LAUNCH_TABLE_ROW_RE = re.compile(r"^\|\s*Model\s*\|")
+LAUNCH_TABLE_ROW_RE = re.compile(r"^\|\s*Model(?:\s+class)?\s*\|")
 CODE_FENCE_RE = re.compile(r"^\s*```")
 # Канонический порядок нумерованных секций plan.md (P0.3 рек#6).
 PLAN_SECTION_NUM_RE = re.compile(r"^##\s+(\d+)\.\s+(.*?)\s*$")
@@ -1052,6 +1066,23 @@ def _resolve_next_form(text):
     `/task:plan-exec` (запустится по снятии гейта), который иначе перехватил бы резолвер как
     `exec` — зеркало того, почему «план закрыт» стоит сразу после exec.
     """
+    semantic = SEMANTIC_NEXT_RE.match(text.strip())
+    if semantic:
+        semantic_kind, payload = semantic.groups()
+        if semantic_kind == "terminal":
+            return ("closed", None) if LITERAL_PLAN_CLOSED in payload.lower() else (
+                "invalid-semantic", None)
+        if semantic_kind == "manual":
+            return "manual", None
+        if semantic_kind == "waiting":
+            return "waiting", None
+        expected_command, expected_kind = SEMANTIC_NEXT_COMMANDS[semantic_kind]
+        command, separator, arguments = payload.partition(" ")
+        if command != expected_command or not separator:
+            return "invalid-semantic", None
+        legacy_kind, match = _resolve_next_form("/" + command + " " + arguments)
+        return (legacy_kind, match) if legacy_kind == expected_kind else (
+            "invalid-semantic", None)
     if LITERAL_WAITING in text:
         return "waiting", None
     m = PLAN_EXEC_RE.search(text)

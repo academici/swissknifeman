@@ -5,7 +5,7 @@
   "artifacts": [
     {
       "path": ".codex-plugin/plugin.json",
-      "source_hash": "sha256:f15e9a77879910e4fc26fc29e2936963a63ef4ed919f96a9d783a0d78c7a2880",
+      "source_hash": "sha256:251b7bc522b35f7e56a52cfb2be82dae5fc06c57583317e83203b32353f71062",
       "rendered_hash": "sha256:0234a57e65d6a4828c09dcb752bf68d120ccc24ed5397dc76084a5c5f6e6dfe7"
     },
     {
@@ -50,8 +50,8 @@
     },
     {
       "path": "skills/general/plan-protocol/SKILL.md",
-      "source_hash": "sha256:0a7ca53dfdc3e0e4c84fe01de6e3e9622165dae76d0308796fc0c942a8b3fe4a",
-      "rendered_hash": "sha256:774c08776a103c792297ad014fb8cc5c92d943114993912b5afa224b8ade81a9"
+      "source_hash": "sha256:53fd9beb96af655ba02d8d389d3ffefb0b067b69343129e3746ed57d5df981dc",
+      "rendered_hash": "sha256:88275a49a02b8e603ab495149b77790f260d72be3369a14994d258396034c52d"
     }
   ]
 }

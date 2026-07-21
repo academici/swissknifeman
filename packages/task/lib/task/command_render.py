@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 from pathlib import PurePosixPath
 import re
+import shlex
 from typing import Mapping
 
 from core.provider import CapabilityId, CapabilityRequirement, ProviderId, SupportLevel
@@ -24,6 +25,17 @@ _MAPPING_KEYS = frozenset({
     "provider_id", "mapping_version", "class_selectors", "effort_selectors",
     "capability_bindings", "invocation_binding", "evidence",
 })
+_PLAN_NEXT_COMMANDS = {
+    "exec-items": "task:plan-exec",
+    "run-items": "task:plan-run",
+    "audit-design": "task:plan-audit",
+    "design-phase": "task:plan-design",
+    "design-item": "task:plan-design",
+    "audit-phase": "task:plan-audit",
+    "close": "task:plan-close",
+    "archive": "task:plan-close",
+}
+_PLAN_NEXT_TERMINALS = ("terminal", "manual", "waiting")
 
 
 @dataclass(frozen=True)
@@ -49,6 +61,65 @@ class ProviderCommandMapping:
     capability_bindings: tuple[tuple[str, str], ...]
     invocation_template: str
     evidence: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class PlanNextCarrier:
+    """Provider-neutral plan handoff; provider syntax is rendered later."""
+    kind: str
+    command_id: str | None
+    plan_id: str | None
+    arguments: tuple[str, ...] = ()
+    context_kind: str = "same-session"
+    item_ids: tuple[str, ...] = ()
+    cold_start_scope: tuple[tuple[str, str], ...] = ()
+    orchestration_capabilities: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        if self.kind not in self.allowed_kinds():
+            raise ValueError("CMD_INVOCATION_INVALID: unknown Next kind")
+        expected = _PLAN_NEXT_COMMANDS.get(self.kind)
+        if expected is not None and self.command_id != expected:
+            raise ValueError("CMD_INVOCATION_INVALID: Next kind/command mismatch")
+        if self.kind in _PLAN_NEXT_TERMINALS and self.command_id is not None:
+            raise ValueError("CMD_INVOCATION_INVALID: terminal Next has a command")
+        plan_argument = (self.arguments[1] if self.kind == "archive" and len(self.arguments) > 1
+                         else self.arguments[0] if self.arguments else None)
+        if expected is not None and (not self.plan_id or plan_argument != self.plan_id):
+            raise ValueError("CMD_INVOCATION_INVALID: plan identity is missing")
+        if self.context_kind not in {"same-session", "cold-start"}:
+            raise ValueError("CMD_INVOCATION_INVALID: unknown context kind")
+
+    @classmethod
+    def allowed_kinds(cls) -> set[str]:
+        return set(_PLAN_NEXT_COMMANDS) | set(_PLAN_NEXT_TERMINALS)
+
+    def as_dict(self) -> dict[str, object]:
+        value: dict[str, object] = {
+            "kind": self.kind,
+            "command_id": self.command_id,
+            "plan_id": self.plan_id,
+            "arguments": list(self.arguments),
+            "context_kind": self.context_kind,
+            "item_ids": list(self.item_ids),
+            "cold_start_scope": [list(item) for item in self.cold_start_scope],
+        }
+        if self.orchestration_capabilities:
+            value["orchestration_capabilities"] = list(self.orchestration_capabilities)
+        return value
+
+
+@dataclass(frozen=True)
+class PlanProviderInvocation:
+    carrier: PlanNextCarrier
+    invocation: str | None
+    model_selector: str | None
+    effort_selector: str | None
+    diagnostics: tuple[CommandDiagnostic, ...]
+
+    @property
+    def ok(self) -> bool:
+        return not any(item.severity == "error" for item in self.diagnostics)
 
 
 @dataclass(frozen=True)
@@ -131,6 +202,135 @@ def render_claude_invocation(record: CommandRecord, arguments: str,
     if not invocation.startswith("/task:") or invocation.startswith("//"):
         raise ValueError("CMD_INVOCATION_INVALID")
     return invocation
+
+
+def parse_next_carrier(declaration: str, *, context_kind: str = "same-session",
+                       item_ids: list[str] | tuple[str, ...] = (),
+                       cold_start_scope: list[list[str]] | tuple[tuple[str, str], ...] = (),
+                       orchestration_capabilities: tuple[str, ...] = ()) -> PlanNextCarrier:
+    """Parse the canonical `<kind>: task:<id> <arguments>` Next declaration."""
+    if not isinstance(declaration, str):
+        raise ValueError("CMD_INVOCATION_INVALID: Next declaration is not text")
+    match = re.fullmatch(r"([a-z][a-z-]*):\s*(.*)", declaration.strip())
+    if not match:
+        raise ValueError("CMD_INVOCATION_INVALID: malformed semantic Next")
+    kind, payload = match.groups()
+    if kind not in PlanNextCarrier.allowed_kinds():
+        raise ValueError("CMD_INVOCATION_INVALID: unknown Next kind")
+    if kind in _PLAN_NEXT_TERMINALS:
+        if kind == "terminal" and payload.strip().lower() != "план закрыт":
+            raise ValueError("CMD_INVOCATION_INVALID: malformed terminal Next")
+        try:
+            arguments = tuple(shlex.split(payload))
+        except ValueError as error:
+            raise ValueError("CMD_INVOCATION_INVALID: malformed Next arguments") from error
+        return PlanNextCarrier(
+            kind, None, None, arguments, context_kind, tuple(item_ids),
+            tuple(tuple(item) for item in cold_start_scope),
+            tuple(orchestration_capabilities))
+    command_id, separator, raw_arguments = payload.partition(" ")
+    if not separator:
+        raise ValueError("CMD_INVOCATION_INVALID: plan arguments are missing")
+    try:
+        arguments = tuple(shlex.split(raw_arguments or ""))
+    except ValueError as error:
+        raise ValueError("CMD_INVOCATION_INVALID: malformed Next arguments") from error
+    scope = tuple(tuple(item) for item in cold_start_scope)
+    if any(len(item) != 2 or not all(isinstance(part, str) for part in item)
+           for item in scope):
+        raise ValueError("CMD_INVOCATION_INVALID: malformed cold-start scope")
+    plan_id = (arguments[1] if kind == "archive" and len(arguments) > 1
+               else arguments[0] if arguments else None)
+    return PlanNextCarrier(
+        kind, command_id, plan_id, arguments, context_kind,
+        tuple(item_ids), scope, tuple(orchestration_capabilities))
+
+
+def plan_provider_invocation(
+        catalog: CommandCatalog, carrier: PlanNextCarrier,
+        mapping: ProviderCommandMapping, capability_support: Mapping[str, str], *,
+        observed_class: str, observed_effort: str,
+        inherited_minimum: tuple[str, str] | None = None) -> PlanProviderInvocation:
+    """Gate a semantic plan carrier, then render exactly one provider invocation."""
+    record = catalog.by_id().get(carrier.command_id or "")
+    if record is None or record.kind != "plan-protocol":
+        diagnostic = _diag_raw(
+            "CMD_COMMAND_UNKNOWN", carrier.command_id or "", "/command_id",
+            {"kind": "plan-protocol"}, {"command_id": carrier.command_id}, mapping,
+            "semantic plan command is unknown")
+        return PlanProviderInvocation(carrier, None, None, None, (diagnostic,))
+
+    diagnostics = list(_mapping_diagnostics(record, mapping))
+    required_class, required_effort = record.routing.model_class, record.routing.effort
+    if record.routing.mode == "inherited-plan":
+        if (not inherited_minimum or len(inherited_minimum) != 2
+                or inherited_minimum[0] not in MODEL_CLASSES
+                or inherited_minimum[1] not in EFFORTS):
+            diagnostics.append(_diag(
+                "CMD_MAPPING_MISSING", record, "/routing/inherited-minimum",
+                {"model_class": MODEL_CLASSES, "effort": EFFORTS},
+                {"minimum": inherited_minimum}, mapping,
+                "inherited plan minimum is missing or unknown"))
+        else:
+            required_class, required_effort = inherited_minimum
+
+    if required_class in MODEL_CLASSES and required_effort in EFFORTS:
+        diagnostics.extend(_route_mapping_diagnostics(
+            record, mapping, required_class, required_effort,
+            observed_class, observed_effort))
+        if observed_class in MODEL_CLASSES and observed_effort in EFFORTS:
+            required = (MODEL_CLASSES.index(required_class), EFFORTS.index(required_effort))
+            observed = (MODEL_CLASSES.index(observed_class), EFFORTS.index(observed_effort))
+            if observed[0] < required[0] or observed[1] < required[1]:
+                diagnostics.append(_diag(
+                    "CMD_ROUTE_UNDERSHOOT", record, "/routing",
+                    {"model_class": required_class, "effort": required_effort},
+                    {"model_class": observed_class, "effort": observed_effort}, mapping,
+                    "observed route is below the plan minimum"))
+            elif observed[0] > required[0] or observed[1] > required[1]:
+                diagnostics.append(_diag(
+                    "CMD_ROUTE_OVERSHOOT", record, "/routing",
+                    {"model_class": required_class, "effort": required_effort},
+                    {"model_class": observed_class, "effort": observed_effort}, mapping,
+                    "observed route exceeds the plan minimum", severity="info"))
+
+    for requirement in record.capability_requirements:
+        level = capability_support.get(requirement.capability_id)
+        if level not in requirement.accepted_levels:
+            diagnostics.append(_diag(
+                "CMD_CAPABILITY_UNSUPPORTED", record,
+                f"/capabilities/{requirement.capability_id}",
+                {"accepted_levels": requirement.accepted_levels}, {"support_level": level},
+                mapping, "required command capability is missing or unsupported"))
+    for capability_id in carrier.orchestration_capabilities:
+        level = capability_support.get(capability_id)
+        if level not in {"native", "adapted"}:
+            diagnostics.append(_diag(
+                "CMD_CAPABILITY_UNSUPPORTED", record,
+                f"/orchestration/capabilities/{capability_id}",
+                {"accepted_levels": ("adapted", "native")}, {"support_level": level},
+                mapping, "required orchestration capability is missing or unsupported"))
+
+    diagnostics = _dedupe_diagnostics(diagnostics)
+    if any(item.severity == "error" for item in diagnostics):
+        return PlanProviderInvocation(carrier, None, None, None, tuple(diagnostics))
+
+    arguments = " ".join(shlex.quote(value) for value in carrier.arguments)
+    if mapping.provider_id == "claude-code":
+        invocation = render_claude_invocation(record, arguments, mapping)
+    elif mapping.provider_id == "codex":
+        invocation = render_invocation(record, arguments, mapping)
+    else:
+        diagnostic = _diag(
+            "CMD_PROVIDER_DISABLED", record, "/provider_id",
+            {"provider_id": ("claude-code", "codex")},
+            {"provider_id": mapping.provider_id}, mapping,
+            "provider projection is not enabled")
+        return PlanProviderInvocation(carrier, None, None, None,
+                                      tuple(diagnostics + [diagnostic]))
+    return PlanProviderInvocation(
+        carrier, invocation, dict(mapping.class_selectors)[observed_class][0],
+        dict(mapping.effort_selectors)[observed_effort][0], tuple(diagnostics))
 
 
 def validate_route(record: CommandRecord, observed_class: str, observed_effort: str,
@@ -349,6 +549,40 @@ def _mapping_diagnostics(record: CommandRecord,
                 diagnostics.append(_diag("CMD_MAPPING_AMBIGUOUS", record, path,
                                          {"selector_count": 1}, {"selectors": values}, mapping,
                                          "provider selector mapping is ambiguous"))
+    return tuple(diagnostics)
+
+
+def _route_mapping_diagnostics(
+        record: CommandRecord, mapping: ProviderCommandMapping,
+        required_class: str, required_effort: str,
+        observed_class: str, observed_effort: str) -> tuple[CommandDiagnostic, ...]:
+    """Require unique mappings for both plan minima and the observed session route."""
+    diagnostics: list[CommandDiagnostic] = []
+    classes, efforts = dict(mapping.class_selectors), dict(mapping.effort_selectors)
+    axes = (
+        ("/routing/model_class", "model_class", required_class, classes),
+        ("/routing/effort", "effort", required_effort, efforts),
+        ("/routing/observed/model_class", "model_class", observed_class, classes),
+        ("/routing/observed/effort", "effort", observed_effort, efforts),
+    )
+    for path, label, value, selectors in axes:
+        if value not in selectors:
+            diagnostics.append(_diag(
+                "CMD_MAPPING_MISSING", record, path,
+                {f"known_{label}": tuple(selectors)}, {label: value}, mapping,
+                "semantic route value is unknown"))
+            continue
+        values = selectors[value]
+        if not values:
+            diagnostics.append(_diag(
+                "CMD_MAPPING_MISSING", record, path,
+                {"semantic_value": value}, {"selectors": values}, mapping,
+                "provider selector mapping is missing"))
+        elif len(values) != 1:
+            diagnostics.append(_diag(
+                "CMD_MAPPING_AMBIGUOUS", record, path,
+                {"selector_count": 1}, {"selectors": values}, mapping,
+                "provider selector mapping is ambiguous"))
     return tuple(diagnostics)
 
 

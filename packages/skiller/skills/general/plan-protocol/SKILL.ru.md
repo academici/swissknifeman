@@ -1,8 +1,8 @@
 ---
 name: plan-protocol
 bucket: general
-version: 2.10.0
-description: "Исполняемые мастер-планы в plans/<ID>: схемы plan/phase/task, 6 статусов, refine-цикл и DoR-гейт, канонический корень плана, репо-дом по умолчанию + поля visibility/supersedes, два дома и архив, handoff с launch-block, роутинг моделей, команды /task:plan-*."
+version: 2.11.0
+description: "Исполняемые мастер-планы в plans/<ID>: схемы plan/phase/task, 6 статусов, refine-цикл и DoR-гейт, neutral model-class/effort/capability routing, semantic Next с provider renderers, два дома, архив и handoff."
 risk: write
 persona: oss-dev
 tags: [workflow, planning, handoff, routing, multi-model]
@@ -17,16 +17,15 @@ sha256: ""
 # Plan Protocol
 
 SSOT plan-протокола экосистемы: как устроен исполняемый мастер-план, который «сильная»
-модель пишет, а «дешёвая» исполняет без доступа к чату планирования. Протокол фиксирует
+frontier-класс пишет, а implementation/economy исполняет без доступа к чату планирования. Протокол фиксирует
 ТОЛЬКО Axioma-специфику — схемы, гейты, маркеры, конвейеры; общие практики планирования,
 которые plan mode / модель умеют сами, здесь не пересказываются.
 
 ## 1. Когда активировать
 
 - Многофазная работа длиннее одной сессии (план переживает контекст).
-- Паттерн «сильная модель планирует, дешёвая исполняет»: opus строит план,
-  sonnet/haiku закрывают items по нему.
-- Вызов любой команды `/task:plan-*` (design/exec/run/close/audit).
+- Паттерн «frontier планирует, implementation/economy исполняют».
+- Вызов любого semantic command ID `task:plan-*` (design/exec/run/close/audit).
 
 **Порог «нужен ли план» (эвристика):**
 
@@ -34,7 +33,7 @@ SSOT plan-протокола экосистемы: как устроен исп�
 |:--|:--|
 | Мелкая правка, багфикс, одиночный файл | `/task:fix` без мастер-плана |
 | Фича в одном модуле, PoC, эксперимент | `/task:dev` без мастер-плана |
-| Кросс-модульное; compliance (54-ФЗ/платежи/PII); >1 репо; >1 сессии | ОБЯЗАТЕЛЕН `/task:plan-design` с гейтами этого протокола |
+| Кросс-модульное; compliance (54-ФЗ/платежи/PII); >1 репо; >1 сессии | ОБЯЗАТЕЛЕН `task:plan-design` с гейтами этого протокола |
 
 ## 2. Раскладка
 
@@ -45,7 +44,7 @@ plans/<PLAN-ID>/
 ├── handoff.md         # rolling-указатель «где мы» (перезаписывается)
 ├── index.md           # карта файлов + провенанс findings/research→фаза (раздел 2, опционален)
 ├── roadmap.md         # исполнительская карта: батчи/workflow/гейты (раздел 8; обязателен после полной детализации)
-├── journal.jsonl      # append-only история исполнения item'ов, одна запись на запуск /task:plan-* (раздел 2)
+├── journal.jsonl      # append-only история исполнения item'ов, одна запись на запуск task:plan-* (раздел 2)
 ├── brief/             # слой 0 «вход»: бриф владельца + дописываемые уточнения (раздел 16, ОБЯЗАТЕЛЕН)
 ├── findings/          # слой 1 «сырьё»: RAG-выжимки, recon, исходные документы (раздел 16)
 ├── research/          # слой 2 «синтез»: авторские design-документы (раздел 16)
@@ -62,7 +61,7 @@ plans/<PLAN-ID>/
 
 **Журнал исполнения `journal.jsonl`** (append-only NDJSON, схема — контракт
 `plan-journal-schema.md`, канон-раздел ниже наследует его формат без копирования): одна
-запись на исполнение item'а любым запуском `/task:plan-*` (старт `result:"in-progress"` +
+запись на исполнение item'а любым запуском `task:plan-*` (старт `result:"in-progress"` +
 финал терминальным `result`), пишет close-протокол команды (`lib/task/journal.py`).
 Существующие строки НИКОГДА не переписываются/не удаляются — история, а не текущее
 состояние (не дублирует Status Board/handoff). Гейт `plan-lint`: для датовых планов от
@@ -99,7 +98,7 @@ target, hash/plan mismatch или extra error fail closed; существующ�
   ставит ID нового плана) и `plan-close` (закрыт ВЕСЬ план — сбрасывает в `—`).
 - **Конвенция черновиков:** любой плоский `.md` прямо в `plans/` (кроме `ACTIVE.md` и
   `README.md`) — черновик plan mode; разворачивается командой
-  `/task:plan-design from-draft <файл>` (`plan-lint` предупреждает о залежавшихся).
+  `task:plan-design from-draft <файл>` (`plan-lint` предупреждает о залежавшихся).
 
 **ПРАВИЛО MD-only:** Хранимый формат плана — только Markdown с жёсткими маркерами.
 Любой JSON — производный артефакт парсера (`plan-lint --json`), не источник истины.
@@ -269,7 +268,7 @@ Resolved → D#
 в Phase Context фиксированную строку:
 
 ```text
-> СКЕЛЕТ — не детализирован, разворачивается /task:plan-design <ID> Pn
+> СКЕЛЕТ — не детализирован, разворачивается `design-phase: task:plan-design <ID> Pn`
 ```
 
 При маркере пустые поля item'ов легальны, включая Code Guidance = «—». Без маркера
@@ -278,7 +277,7 @@ Resolved → D#
 **Contract-first дизайн-флоу (опциональный режим авторинга).** Альтернатива пофазному
 «развернул одну фазу → сразу exec»: при `new` запечатать ВСЕ фазы скелет-маркерами и вписать
 в каждый `Phase Context` **контракт-блок** — что фаза потребляет от предыдущих фаз и производит
-для следующих; item-детали разворачивать just-in-time (`/task:plan-design <ID> Pn`) на фактах
+для следующих; item-детали разворачивать just-in-time (`task:plan-design <ID> Pn`) на фактах
 уже закрытых фаз. Цель — увидеть межфазовые конфликты и coupling-поверхность ДО детализации
 (упреждает ripple «фикс одной фазы ломает другую»), не платя полную верхнюю цену дизайна всех
 items сразу. Режим ОПЦИОНАЛЬНЫЙ и АДДИТИВНЫЙ к скелет-маркеру: контракт-блок не обязателен,
@@ -561,7 +560,7 @@ item/фазы (история версий — в git, не в файле). Ск
     ЛИБО имеет файл `phases/Pn.md`) — иначе ERROR «висячая ссылка» (D37/D41). Единственное
     исключение — bootstrap-заголовок `after P0.0` стартового handoff'а (фазы `P0` не бывает).
     Существование самого ITEM'а `Pn.m` не гейтится (back-compat флота).
-- **Next:** следующая команда в форме launch-block (ниже).
+- **Next:** semantic carrier из закрытого enum ниже; provider invocation рендерится отдельно.
 - **Done:** что закрыто.
 - **Remaining:** что осталось.
 - **Sources of truth:** где правда (plan.md, phases/Pn.md, ключевые файлы).
@@ -574,15 +573,18 @@ plan-exec/plan-close/plan-audit — обязана иметь фиксирова
 (`snippets/launch-block-template.md`):
 
 ```markdown
+**Next:** <kind>: task:<plan-command> <PLAN-ID> <arguments>
+
 | Параметр | Значение |
 |:--|:--|
-| Model | <модель> |
-| Thinking | <effort> |
+| Model class | <economy / implementation / frontier> |
+| Effort | <low / medium / high / xhigh> |
+| Capabilities | <semantic capability IDs; `—` если дополнительных нет> |
 | Context | <одно из трёх значений enum'а ниже> |
 | Суть | <1 строка> |
 
 ````
-<голая команда одним code-block, копипаст без правок>
+<provider renderer: Claude `/task:…` ИЛИ Codex `$ task:…`; semantic payload не менять>
 ````
 ```
 
@@ -598,7 +600,7 @@ C3/D6 — голой быть НЕ имеет права. Под ней в то�
 (порядок фиксирован):
 
 ````
-<slash-команда>
+<provider-rendered invocation>
 
 РЕЖИМ: <реопен по §3 (4 шага) | детализация | ремедиация — что именно делает сессия>
 ВХОД: <файл → блок с находками; cold-start read>
@@ -608,7 +610,7 @@ C3/D6 — голой быть НЕ имеет права. Под ней в то�
 
 Почему каждая:
 
-- `РЕЖИМ:` — `/task:plan-design <ID> Pn` МНОГОЗНАЧЕН: свежая сессия, увидев фазу с
+- `РЕЖИМ:` — `design-phase: task:plan-design <ID> Pn` МНОГОЗНАЧЕН: свежая сессия, увидев фазу с
   терминальными items, сама решает «реопен или детализация» и ошибается в сторону дорогого.
 - `ВХОД:` — исполнение правила cold-start выше («пути входных доков»): без него payload
   живёт только в чате и умирает с сессией. Тот же класс, что «долг живёт только в handoff»:
@@ -639,12 +641,12 @@ scope-payload перестаёт требоваться вовсе: это кл�
 payload от произвольного `## Audit`-заголовка). Вердикт `GREEN` находок не несёт и payload'а не
 требует.
 
-**Финальное сообщение сессии = launch-block.** Любая `/task:plan-*` сессия (design / exec /
+**Финальное сообщение сессии = launch-block.** Любая `task:plan-*` сессия (design / exec /
 run / close / audit), у которой есть следующий шаг, ЗАКАНЧИВАЕТ своё последнее сообщение
-владельцу полным launch-block'ом (таблица Model/Thinking/Context/Суть + голая команда
+владельцу полным launch-block'ом (semantic Next + таблица Model class/Effort/Capabilities/
+Context/Суть + provider-rendered invocation
 отдельным code-block'ом) — не «выполните такую-то команду» прозой: владелец не должен
-переспрашивать, какой моделью и с какими настройками запускать. Голая команда без
-Model/Thinking в финале = дефект сессии (находка plan-audit).
+переспрашивать route и настройки. Invocation без semantic Next/route в финале = дефект.
 
 **Roadmap исполнения — `plans/<ID>/roadmap.md` (D-канон 2026-07-16).** После полной
 детализации всех фаз (§5 дефолт) собирается исполнительская карта плана — ответ на
@@ -656,7 +658,7 @@ Model/Thinking в финале = дефект сессии (находка plan-
 - таблица ВСЕХ items по порядку исполнения: `Item | Batch | Запуск | Model/Thinking | Гейт
   владельца | Примечание`;
 - **Batch** — группа последовательных мелких items одной модели со сцепленным scope,
-  исполняемая ОДНОЙ сессией одной командой (`/task:plan-run <ID> Pn.a-Pn.b` — серия);
+  исполняемая ОДНОЙ сессией одним carrier (`run-items: task:plan-run <ID> Pn.a-Pn.b` — серия);
   большой/сложный/рисковый item — `solo` (отдельная сессия); НЕЗАВИСИМЫЕ по scope items —
   `workflow` (скрипт в `plans/<ID>/workflows/`, один запуск). Обоснование «почему нельзя
   объединить» у solo-items обязательно (пустая ячейка = находка аудита);
@@ -682,21 +684,25 @@ roadmap↔Routing§3 — дефект (roadmap не переопределяет
 ```text
 | Форма Next | Когда |
 |:--|:--|
-| /task:plan-exec <ID> Pn.m [Pn.k …] | следующий item детализирован, Exec = plan-exec (§9); СПИСОК items = батч-серия roadmap одной сессией (пин sonnet/medium команды — жёсткий гейт тира, §9) |
-| /task:plan-run <ID> Pn.m[-Pn.k]  | manual-item(ы) под моделью ТЕКУЩЕЙ сессии (без пина): перед запуском — ритуал /model+/effort по Routing; для plan-exec-серий НЕ использовать (уедет на модели предыдущего гейта) |
-| /task:plan-audit <ID> design     | план детализирован — pre-exec ревью перед стартом exec |
-| /task:plan-design <ID> Pn        | следующая фаза — скелет |
-| /task:plan-design <ID> Pn.m      | item эскалирован (🔴) либо требует ре-дизайна |
-| /task:plan-audit <ID> Pn         | фаза Pn закрыта (терминальна) — аудит перед следующей |
-| /task:plan-close <ID> Pn[.m]     | items терминальны: закрыть фазу / сверить item |
-| /task:plan-close archive <ID>    | план терминален целиком |
-| «план закрыт»                    | все items терминальны, следующий шаг вне протокола |
-| «ЗАПУСК ВРУЧНУЮ: <model/effort>» | Exec = manual (§9): команды нет — launch-block несёт модель
-                                     и голый промпт item'а отдельным code-block |
-| «ОЖИДАНИЕ: <условие> → <форма>»  | шаг РЕАЛЕН, но неисполним сейчас (time-gate/накопление
-                                     данных/кросс-план-гейт не терминален) — не дефект, не терминал |
+| exec-items: task:plan-exec <ID> Pn.m [Pn.k …] | следующий item детализирован, Exec = plan-exec (§9); список items = batch одной сессией |
+| run-items: task:plan-run <ID> Pn.m[-Pn.k] | manual-item(ы) под проверенным inherited-plan route сессии |
+| audit-design: task:plan-audit <ID> design | план детализирован — pre-exec ревью |
+| design-phase: task:plan-design <ID> Pn | следующая фаза — скелет |
+| design-item: task:plan-design <ID> Pn.m | item эскалирован (🔴) либо требует ре-дизайна |
+| audit-phase: task:plan-audit <ID> Pn | фаза Pn терминальна — аудит перед следующей |
+| close: task:plan-close <ID> Pn[.m] | закрыть фазу / сверить item |
+| archive: task:plan-close archive <ID> | план терминален целиком |
+| terminal: план закрыт | все items терминальны, следующий шаг вне протокола |
+| manual: <model-class/effort> | Exec = manual (§9): invocation нет, launch-block несёт route и голый промпт item'а |
+| waiting: <условие> → <целевая semantic форма> | шаг реален, но неисполним сейчас; не дефект и не терминал |
 Иная форма = ERROR plan-lint.
 ```
+
+Новые планы хранят semantic форму. Исторические `/task:…` строки остаются compatibility
+input; литералы `ЗАПУСК ВРУЧНУЮ` и `ОЖИДАНИЕ:` также принимаются. Они не переписываются
+blanket-миграцией. Renderer получает тот же carrier и выдаёт
+Claude `/task:…` либо Codex `$ task:…`, не меняя PLAN-ID, item IDs, cold-start reads,
+scope-payload или owner gate.
 
 **Форма `Next` объявляется ПЕРВОЙ непустой строкой поля** (D40). Поле многострочное (тянется
 до следующего `**Поле:**` и включает launch-block), поэтому резолвер читает форму по
@@ -764,74 +770,61 @@ Validation, Known Deviations, Update Log) — счётчик `grep`, число 
 («ERROR 116 → 116») доказательством НЕ является: он не отличает дрейф чужого репо от регресса
 своей правки. Дельта ≠ 0 — либо истинная находка нового правила (назвать поимённо), либо блокер.
 
-**Цикл «item/фаза → handoff → /clear»:** после перезаписи handoff.md рекомендован
-`/clear` — следующий item стартует с чтения плана (plan.md → phases/Pn.md →
-handoff.md), а не хвоста чата. plan-exec и plan-close печатают фиксированную
-строку-напоминание:
-`Context: handoff свежий — рекомендован /clear перед следующим item`.
+**Цикл «item/фаза → handoff → context boundary»:** следующий шаг читает plan.md →
+phases/Pn.md → handoff.md, а не полагается на хвост чата. Конкретный provider может
+проецировать `same-session` в очистку контекста, но это не semantic значение плана.
 
 **Session-restart discipline (различение поля Context launch-block'а, D16 + D30).** Поле
 Context launch-block'а несёт РОВНО одно из трёх значений — не статичное общее
 «рекомендован /clear» независимо от типа следующего шага:
 
-- **`continue (/clear) — ручной item`** — следующий шаг обычный item-by-item exec:
-  текущая сессия достаточна, `/clear` перед следующим item'ом.
-- **`NEW SESSION — Workflow-оркестрован`** — следующий шаг это Workflow-оркестрованный
-  кусок (item/фаза/цепочка), КОТОРЫЙ ЛИБО завершился ЧИСТО (`git status` пусто по его
-  Scope, `plan-lint` зелёный), ЛИБО ещё только запускается (критерий раздела 7
-  сработал, `scriptPath` готов): launch-block ОБЯЗАН явно предложить НОВУЮ сессию с
-  готовой командой `Workflow({scriptPath:...})`, не общий `/clear`. Причина —
-  notification-payload фоновых `Workflow()`-тасков растит контекст сессии-исполнителя
-  быстрее самой работы, если сессию не рестартовать; `/clear` внутри той же сессии
-  этого не решает (сбрасывает контекст чата, не сбрасывает фоновый payload/лимиты
-  процесса-исполнителя).
-- **`NEW SESSION — шаг-не-item`** — следующий шаг не item-exec, а шаг протокола НАД планом
+- **`same-session — item`** — следующий шаг обычный item-by-item exec; текущая сессия
+  достаточна, provider сам выбирает native способ освежить контекст.
+- **`cold-start — orchestration`** — следующий шаг оркестрованный кусок. Carrier хранит
+  `kind`, `orchestration_id`, ordered inputs, required capabilities и provider projection
+  reference. До запуска обязательны `command.subagents` и `command.workflow-carrier`;
+  missing/unknown/unsupported support = `CMD_CAPABILITY_UNSUPPORTED`, silent solo fallback запрещён.
+- **`cold-start — plan-step`** — следующий шаг не item-exec, а шаг протокола НАД планом
   (`plan-audit` / `plan-close` / `plan-design`): он читает план заново с диска (аудит —
-  ещё и adversarial: наследовать контекст исполнителя ему запрещено), поэтому launch-block
-  предлагает НОВУЮ сессию, а не `/clear` в текущей.
+  ещё и adversarial: наследовать контекст исполнителя ему запрещено).
 
-**Item с `Exec = manual` (§9) — форма «ЗАПУСК ВРУЧНУЮ».** Slash-команды у такого item'а не
+**Item с `Exec = manual` (§9) — semantic форма `manual`.** Команды у такого item'а не
 существует, поэтому launch-block:
 
-- `Next` = `«ЗАПУСК ВРУЧНУЮ: <model/effort>»` (форма из enum'а `Next` выше);
-- `Model`/`Thinking` — **предписанные Routing** (§9), НЕ sonnet/medium;
-- code-block несёт **ГОЛЫЙ ПРОМПТ item'а** (копипаст без правок), а НЕ slash-команду:
-  `/task:plan-exec` пинит sonnet/medium и по routing-гейту обязан такой item отклонить —
-  команда в code-block'е была бы прямой инструкцией нарушить гейт;
+- `Next` = `manual: <model-class/effort>`;
+- `Model class`/`Effort` — **предписанные Routing** (§9);
+- code-block несёт **ГОЛЫЙ ПРОМПТ item'а**, а НЕ provider invocation:
+  `task:plan-exec` имеет минимум `implementation/medium` и обязан отклонить undershoot;
 - `Context` — из того же enum'а ТРЁХ значений, по типу следующего шага. Manual-item — это
-  обычный item-by-item exec, просто запускаемый голым промптом под предписанной моделью ⇒
-  `continue (/clear) — ручной item`. **`NEW SESSION` для manual-item'а НЕ требуется**: оба
-  NEW-значения зарезервированы за Workflow-оркестрацией и шагами-не-item, рестарт сессии на
-  каждом ручном item'е — ритуал без выгоды.
+  обычный item-by-item exec под предписанным route ⇒ `same-session — item`.
 
 Это ЕДИНСТВЕННОЕ место, где определяется `Context` manual-item'а; `snippets/` его цитируют,
 собственных правил не заводят.
 
-**Форма `Next` «ОЖИДАНИЕ: <условие> → <целевая форма>» (D8).** Следующий шаг РЕАЛЕН, но
+**Форма `Next` `waiting: <условие> → <целевая semantic форма>` (D8).** Следующий шаг РЕАЛЕН, но
 неисполним ПРЯМО СЕЙЧАС — ЗДОРОВОЕ ожидание внешнего времени/состояния (time-gate,
 накопление baseline/usage-trend, кросс-план-гейт ещё не терминален), а НЕ дефект плана.
 Не путать: `🔴 Blocked`/эскалация §10 = ДЕФЕКТ (план разошёлся с кодом, нужен ре-дизайн);
 «план закрыт» = ТЕРМИНАЛ (делать больше нечего); «ОЖИДАНИЕ» = пауза перед реальным шагом.
 
-- `Next` = `«ОЖИДАНИЕ: <условие> → <целевая форма>»`, где **условие СТРУКТУРНО**: дата
+- `Next` = `waiting: <условие> → <целевая semantic форма>`, где **условие СТРУКТУРНО**: дата
   `≥ГГГГ-ММ-ДД`, либо гейт `<PLAN-ID> Pn терминальна`, либо `usage-trend ≥N недель` (не
   проза «когда-нибудь потом»); **целевая форма** — любая runnable-форма enum'а выше (обычно
-  `/task:plan-exec <ID> Pn.m`);
-- launch-block несёт **целевую команду** (ту, что запустится по снятии гейта), а ПЕРВОЙ
+  `exec-items: task:plan-exec <ID> Pn.m`);
+- launch-block несёт **целевой carrier** и его provider projection, а ПЕРВОЙ
   строкой code-block'а — **guard `# НЕ раньше: <условие>`** (копипастабельно и честно про
-  неисполнимость сейчас); `Model`/`Thinking`/`Context` — **целевого шага**;
-- прозаическую оговорку в строке-объявлении (`/task:plan-exec … — НО не раньше …`) НЕ писать:
+  неисполнимость сейчас); `Model class`/`Effort`/`Context` — **целевого шага**;
+- прозаическую оговорку в строке-объявлении (`exec-items: … — НО не раньше …`) НЕ писать:
   она не копипастится, и `plan-lint` метит её WARNING (C2), предлагая эту форму.
 
-`plan-lint` резолвит форму как `waiting` (ДО `exec` — строка embed'ит целевой
-`/task:plan-exec`) и требует launch-block (как у прочих runnable-форм — не exempt).
+`plan-lint` резолвит форму как `waiting` и требует launch-block.
 
 **Всплывшая ошибка → фикс-предложение (C3, D6).** Прогон обнажил material-проблему (Validation
 осталась красной вне Scope · остаток lint'а N−K>0 · посторонний дифф · найденный дефект) —
 отчёт/handoff СРАЗУ несёт конкретное remediation-предложение (что + launch-block под фикс + 1
 строка «почему»), а НЕ пассивную заметку «готов к следующему, были ошибки»; дополняет запись в
 Known Deviations/Pending Work, не заменяет её. Фикс — самое ценное следующее действие → `Next`
-указывает на него (`/task:plan-design <ID> Pn.m` либо follow-up fix-item), не на следующий item
+указывает на него (`design-item: task:plan-design <ID> Pn.m` либо follow-up fix-item), не на следующий item
 молча. Launch-block такого `Next` несёт **scope-payload** (§8: `РЕЖИМ:`/`ВХОД:`/`СКОУП:`/
 `НЕ ТРОГАТЬ:`) — предложение без него передаёт следующей сессии проблему, но не её границы.
 Не путать с §10-эскалацией (🔴 = дефект план↔код, обязателен ре-дизайн): здесь item
@@ -839,23 +832,25 @@ Known Deviations/Pending Work, не заменяет её. Фикс — само
 
 ## 9. Routing & Thinking Policy (SSOT-матрица)
 
-Дефолтный роутинг ролей на модели/effort. Секция `## 3. Routing` плана хранит
+Дефолтный роутинг ролей на neutral model class/effort. Секция `## 3. Routing` плана хранит
 ТОЛЬКО отклонения от этой таблицы:
 
-| Роль | Модель/effort | Где работает |
+| Роль | Model class/effort | Где работает |
 |:--|:--|:--|
-| issue-planner | opus/high | plan-design |
-| invariant-auditor | opus/xhigh | plan-audit |
-| package-implementer | sonnet/medium | plan-exec |
-| small-implementer | haiku/low ¹ | LOW-срезы dev-loop |
-| repo-explorer | haiku/low ¹ | разведка репо (grep/read/map) |
-| docs-curator | sonnet/low | plan-close |
+| issue-planner | frontier/high | plan-design |
+| invariant-auditor | frontier/xhigh | plan-audit |
+| package-implementer | implementation/medium | plan-exec |
+| small-implementer | economy/low | LOW-срезы dev-loop |
+| repo-explorer | economy/low | разведка репо (grep/read/map) |
+| docs-curator | implementation/low | plan-close |
 
-¹ Проба 2026-07-02: haiku-агент с effort=low, запущенный через workflow-agent API,
-успешно завершился (ответ получен) — раннер принял пару haiku+effort=low без ошибки.
-Проба подтверждает приёмку параметра на уровне workflow-agent API; поведение
-frontmatter-пина effort внутри интерактивного Claude Code ею НЕ проверено (другой
-механизм выбора модели/effort) — при расхождении считать дефолтным effort модели.
+Порядок классов: `economy < implementation < frontier`; effort независимо:
+`low < medium < high < xhigh`. Provider selector выбирается только из проверенной mapping.
+Гейт выполняется ДО status mutation/work/write/external call/subagent launch: exact и overshoot
+по любой оси легальны (`CMD_ROUTE_OVERSHOOT` — info), undershoot блокирует
+`CMD_ROUTE_UNDERSHOOT`; unknown/missing/ambiguous selector или effort блокирует без fallback.
+Повышение effort не компенсирует недобор class и наоборот. Required capabilities принимают
+только `native`/`adapted`; missing/unknown/unsupported = `CMD_CAPABILITY_UNSUPPORTED`.
 
 **Thinking policy:**
 
@@ -867,17 +862,17 @@ frontmatter-пина effort внутри интерактивного Claude Cod
 
 **Tier policy (критерий ТИРА МОДЕЛИ — ось, НЕЗАВИСИМАЯ от effort'а):**
 
-- **верхний тир (fable/opus)** — только где у item'а остаются ОТКРЫТЫЕ design-решения ЛИБО
+- **frontier** — только где у item'а остаются ОТКРЫТЫЕ design-решения ЛИБО
   цена семантической ошибки необратима/замораживается (freeze-механизм, breaking-семантика
   дефолтов, канон флота, кросс-фазный синтез);
 - **предписанная реализация** по уже запинённым канонам (RAG-вердикт, замороженная спека,
-  готовое D#-решение) → sonnet/high;
-- **editorial/механика** с детерминированными гейтами → sonnet/medium (по деривации ниже —
+  готовое D#-решение) → implementation/high;
+- **editorial/механика** с детерминированными гейтами → implementation/medium (по деривации ниже —
   `plan-exec`);
 - «effort high+ ОБЯЗАТЕЛЕН» НЕ поднимает тир модели: SemVer-item по замороженной спеке =
-  sonnet/high, не fable/high. Перебор тира, ПРЕДПИСАННЫЙ Routing'ом, — такой же дефект плана,
-  как недобор исполнителя: жжёт верхний тир на работе sonnet-класса (полевой кейс — azguard
-  D28, 2026-07-18: блочная строка fable/high на 10 разнородных items, 7 из 10
+  implementation/high, не frontier/high. Перебор тира, ПРЕДПИСАННЫЙ Routing'ом, — такой же дефект плана,
+  как недобор исполнителя: жжёт frontier на работе implementation-класса (исторический Claude
+  кейс azguard D28, 2026-07-18: блочная строка fable/high на 10 разнородных items, 7 из 10
   over-provisioned на 1–2 тира).
 
 **Форма строки `## 3. Routing`** — канон для НОВЫХ планов (эмитит `plan-design`). Полная форма
@@ -885,14 +880,14 @@ frontmatter-пина effort внутри интерактивного Claude Cod
 и `Review` (глубина ревью подфазы, enum `full`|`light`|`none`; дефолт `full`, сомнение → `full`):
 
 ```text
-| Batch | Items | Model/effort | Exec | Review | Почему |
+| Batch | Items | Model class/effort | Exec | Review | Почему |
 |:--|:--|:--|:--|:--|:--|
-| B1 | P2.7–P2.9 | fable/high | manual | full | расфриз public-контракта: открытые design-решения → верхний тир; effort high+ MANDATORY |
-| B1 | P2.10–P2.13 | sonnet/low | plan-exec | light | doc-cleanup без новых решений |
+| B1 | P2.7–P2.9 | frontier/high | manual | full | расфриз public-контракта: открытые design-решения → frontier; effort high+ MANDATORY |
+| B1 | P2.10–P2.13 | implementation/low | plan-exec | light | doc-cleanup без новых решений |
 ```
 
 Колонки `Batch`/`Review` — **ОПЦИОНАЛЬНЫЕ**: легаси-форма без них
-(`| Items | Model/effort | Exec | Почему |`) остаётся ВАЛИДНОЙ (back-compat ниже), их
+(`| Items | Model class/effort | Exec | Почему |`) остаётся ВАЛИДНОЙ (back-compat ниже), их
 отсутствие НЕ дефект. `Batch` пуст → подфаза исполняется одиночно (не в батче); `Review`
 пуст → глубина по дефолту (`full`).
 
@@ -903,20 +898,18 @@ frontmatter-пина effort внутри интерактивного Claude Cod
 фаз. Гейт — DoR-чеклист `plan-design` (машинного линта на §3 нет — Back-compat ниже).
 
 Колонка **Exec** — закрытый enum `plan-exec` | `manual` | `plan-design`: кто имеет право
-исполнять item. Тир-порядок: модели `haiku < sonnet < opus ≈ fable`, effort
-`low < medium < high < xhigh < max`. Пин команды `plan-exec` — **sonnet/medium**.
+исполнять item. Порядок: `economy < implementation < frontier`, effort
+`low < medium < high < xhigh`. Минимум `task:plan-exec` — **implementation/medium**.
 
 **Деривация Exec** (колонка пуста) и **консистентность** (колонка заполнена):
 
 ```text
 Сравнение по тирам, обе оси: перебор безвреден, недобор запрещён.
-- model ≤ sonnet И effort ≤ medium  → plan-exec
-- model > sonnet (opus/fable)       → manual  (сменить модель изнутри команды нельзя —
-                                               API не существует)
+- model class ≤ implementation И effort ≤ medium → plan-exec
+- model class > implementation                    → manual
 - effort > medium (high/xhigh/max)  → manual  (недобор thinking запрещён — policy выше)
 - ячейка без модели / без effort    → недостающее берётся из матрицы ролей выше
-Tool Capability (perplexity-web/context7/…) пишется в ту же ячейку через «+» и ДОПОЛНЯЕТ
-model/effort, не заменяет.
+Semantic capability IDs пишутся в отдельной ячейке/launch-block и ДОПОЛНЯЮТ route, не заменяют.
 
 Заполненная Exec перебивает деривацию ТОЛЬКО в сторону строгости: `manual` законен при
 любой паре model/effort. Обратное (`Exec = plan-exec` там, где деривация даёт `manual`) —
@@ -924,32 +917,32 @@ model/effort, не заменяет.
 ```
 
 **Routing-гейт** — исполняет `plan-exec` ДО работы (инцидент-основание — F7 плана
-2026.07.13-PLAN-PROTOCOL-GAP: contract-items ушли под sonnet вопреки мандату fable/high):
+2026.07.13-PLAN-PROTOCOL-GAP: исторически contract-items ушли под Claude sonnet вопреки мандату fable/high):
 
 ```text
 - Exec = manual (задан ИЛИ выведен) → item НЕ исполняется командой: СТОП, отчёт
-  «ROUTING-BLOCKED: Pn.m — предписано <model/effort>, команда пинит sonnet/medium»,
+  «ROUTING-BLOCKED: Pn.m — предписано <model-class/effort>, минимум task:plan-exec implementation/medium»,
   launch-block формы «ЗАПУСК ВРУЧНУЮ» (§8). Статус item'а НЕ меняется.
-- Exec = plan-exec, Routing НИЖЕ пина (haiku и/или low) → исполнять (перебор безвреден),
+- Exec = plan-exec, Routing НИЖЕ минимума (economy и/или low) → исполнять (перебор безвреден),
   process-отклонение — в Known Deviations; статус остаётся 🟢 (§6).
 - Exec = plan-exec ПРОТИВОРЕЧИТ model/effort → СТОП, отчёт «ROUTING-INCONSISTENT: Pn.m —
   Exec=plan-exec при <model/effort>»; правит `plan-design`. Статус НЕ меняется.
 - Exec = plan-design → item не исполняется: СТОП, ре-дизайн (§10).
-- Routing неоднозначен (строки на item нет, «fable ИЛИ opus», проза без модели) И item —
+- Routing неоднозначен (строки на item нет, несколько классов/effort, проза без класса) И item —
   design/contract-класса (сработал бы любой триггер эскалации §10) → СТОП (fail-safe: цена
   ложного стопа — перезапуск, цена ложного прохода — RED-аудит).
 ```
 
 **Чем исполняется `Exec = manual`.** Двумя равноправными путями, оба — под ПРЕДПИСАННОЙ
-Routing моделью: (а) ГОЛЫМ ПРОМПТОМ item'а из launch-block'а (§8, форма «ЗАПУСК ВРУЧНУЮ»);
-(б) командой `/task:plan-run <ID> Pn.m` (§13) — единственной без пина `model`/`effort`
-во frontmatter: владелец сам выставляет `/model` + `/effort`, команда наследует их из сессии
-и инвертирует routing-гейт — сверяет ФАКТИЧЕСКУЮ модель/effort сессии с §3 Routing и на
+Routing route: (а) ГОЛЫМ ПРОМПТОМ item'а из launch-block'а (§8, форма `manual`);
+(б) semantic command `task:plan-run <ID> Pn.m` (§13) с routing mode `inherited-plan`:
+provider устанавливает selector/effort сессии, команда наследует их
+и инвертирует routing-гейт — сверяет ФАКТИЧЕСКИЙ class/effort сессии с §3 Routing и на
 недоборе даёт тот же `ROUTING-BLOCKED`. Граница честности названа явно: самоатрибуция
-модели агентом машинно НЕ проверяема, поэтому `plan-run` снимает ритуал переключения перед
+route агентом машинно НЕ проверяема, поэтому `plan-run` снимает provider-native ритуал переключения перед
 серией manual-item'ов, но ЖЁСТКИЙ гейт остаётся за `plan-exec` (его пин делает недобор
 структурно невозможным). Исполнитель `plan-run` ОБЯЗАН напечатать фактическую пару
-модель/effort в отчёте и в Update Log.
+class/effort в отчёте и в Update Log.
 
 **Back-compat.** Легаси-формы §3 (проза, буллеты, таблица без колонки Exec/`Batch`/`Review`,
 пустая секция) остаются ВАЛИДНЫМИ; `plan-lint` секцию §3 не парсит — гейт исполняет читающий
@@ -1045,7 +1038,7 @@ opt-in: план без батчинга держит легаси-форму §
 делегатами — `Document Type: Program Master Plan (coordination)`; items =
 milestone-делегаты (по плану-делегату на item); Validation item'а = GREEN-аудит
 делегата; код в программном плане НЕ пишется. Execution Rules такого плана обязаны
-запрещать `/task:plan-exec` и указывать предписанную команду запуска делегатов.
+запрещать `task:plan-exec` и указывать предписанный orchestration carrier.
 
 ## 12. Жизненный цикл: два дома, архив, документация
 
@@ -1073,7 +1066,7 @@ milestone-делегаты (по плану-делегату на item); Validat
 дефект, путь — contribution в SSOT (см. `package-contribution-protocol`).
 
 **Конвейер план→архив→docs** (RAG:✅ P5.1 §2 Diátaxis + Oxide «committed =
-реализовано»). По терминальности плана — команда `/task:plan-close archive <ID>`:
+реализовано»). По терминальности плана — carrier `archive: task:plan-close archive <ID>`:
 
 1. План перемещается в `plans/archive/<ID>` ОТДЕЛЬНЫМ коммитом
    `chore(plan): archive <ID>`.
@@ -1092,29 +1085,28 @@ milestone-делегаты (по плану-делегату на item); Validat
 
 ## 13. Командный протокол
 
-| Команда | Модель/effort | Что делает |
+| Semantic command ID | Model class/effort | Что делает |
 |:--|:--|:--|
-| `/task:plan-design` | opus/high | новый план / новая фаза / ТЗ item'ов; refine-цикл + DoR-гейт |
-| `/task:plan-exec` | sonnet/medium | исполнить item; самозакрывающийся (обновляет статусы + handoff) |
-| `/task:plan-run` | модель/effort СЕССИИ (пина нет) | исполнить item с `Exec = manual` под предписанной моделью: протокол `plan-exec` целиком, routing-гейт ИНВЕРТИРОВАН — сверяет ФАКТИЧЕСКУЮ сессию с §3 Routing (недобор → `ROUTING-BLOCKED`) |
-| `/task:plan-close` | sonnet/low | реконсиляция статусов / закрытие фазы / режим `archive` |
-| `/task:plan-audit` | opus/xhigh | adversarial-аудит фазы; вердикт GREEN/ATTENTION/RED |
+| `task:plan-design` | frontier/high | новый план / новая фаза / ТЗ item'ов; refine-цикл + DoR-гейт |
+| `task:plan-exec` | implementation/medium | исполнить item; самозакрывающийся (обновляет статусы + handoff) |
+| `task:plan-run` | minimum item route; observed route СЕССИИ | исполнить `Exec = manual`; inherited-plan гейт сверяет обе оси до работы |
+| `task:plan-close` | implementation/low | реконсиляция статусов / закрытие фазы / режим `archive` |
+| `task:plan-audit` | frontier/xhigh | adversarial-аудит фазы; вердикт GREEN/ATTENTION/RED |
 
-Пин модели во frontmatter несут ЧЕТЫРЕ команды — он и есть машинный гейт тира. `plan-run`
-пина не несёт СОЗНАТЕЛЬНО (омиссия ключей `model`/`effort` = наследование сессии): он —
-не обход гейта, а снятие ритуала `/model` + `/effort` перед серией manual-item'ов; чем
-исполняется `Exec = manual` и где проходит граница честности — §9.
+Provider mapping проецирует эти minima в native selectors. `plan-run` не имеет fixed route:
+его минимум приходит из item Routing, а observed route сессии проверяется тем же fail-closed
+гейтом. Claude invocation — `/task:…`, Codex — `$ task:…`; UI prefix не semantic identity.
 
 ## 14. Чеклист качества плана
 
-- [ ] Каждый item исполним sonnet'ом без дополнительного контекста (вне плана).
+- [ ] Каждый item исполним назначенным model class без дополнительного контекста (вне плана).
 - [ ] Required Reads конечны и упорядочены (не «посмотри по репо»).
 - [ ] Code Guidance заполнен у каждого item (не «—»).
 - [ ] Недетализированная фаза несёт скелет-маркер — не «просто пустые поля».
 - [ ] Несущие факты/вердикты несут маркер из enum'а §7: `RAG:✅` · `RAG:—` (только
       repo-grounded) · `[UNVERIFIED]`.
 - [ ] Open Questions не «висят» в теле фаз — вынесены в `open-questions.md` со статусом.
-- [ ] handoff.Next содержит launch-block (таблица + code-block).
+- [ ] handoff.Next содержит semantic carrier + neutral route/capabilities + provider-rendered code-block.
 - [ ] Phase-first: фазы закрываются последовательно, item'ы не прыгают между фазами.
 - [ ] `plan-lint` зелёный.
 
@@ -1132,7 +1124,7 @@ milestone-делегаты (по плану-делегату на item); Validat
 
 Конвенцию в проект приносит managed-блок `maind:plan-conventions` в CLAUDE.md
 (провижионер `plans-doc`). Мост из встроенного plan mode: одобренный план сохраняется
-плоским черновиком в `plans/` → `/task:plan-design from-draft <файл>` разворачивает
+плоским черновиком в `plans/` → `task:plan-design from-draft <файл>` разворачивает
 его в `plans/<ID>/` по шаблонам этого скилла (черновик удаляется, история — в git).
 
 ## 16. Слои знаний плана: brief/ → findings/ → research/ → решения

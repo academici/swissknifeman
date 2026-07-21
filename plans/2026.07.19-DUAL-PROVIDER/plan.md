@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.4.27 |
+| Version | 1.4.28 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
@@ -123,7 +123,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P3 | Dual skills publication и marketplaces | 5/5 | 🟢 Done |
 | P4 | Task-command parity и provider-neutral model routing | 5/5 | 🟢 Done |
 | P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 7/7 | 🟢 Done |
-| P6 | mAInd deployment, memory и provider-neutral analytics | 1/6 | 🟡 In progress |
+| P6 | mAInd deployment, memory и provider-neutral analytics | 0/6 | 🟡 In progress |
 | P7 | Docs, self-hosting validation и FOREMAN release gate | 0/4 | ⬜ Not started |
 
 ## 5. Decision Log
@@ -217,13 +217,14 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | D85 | 2026-07-21 | Delegated Owner Approval D79 принимает exact P5.1 HARNESS H1–H7 и замораживает `provider-harness-contract.md` v1.0.0: один semantic Profile/Surface catalog; независимые trust/approval/sandbox axes; workspace-contained autonomy; operation-only non-inheritable full access; independent native projections; explicit scope/P1 precedence/P2 ownership; secret-reference-only diagnostics; Claude compatibility и normative goldens. | RAG:— (owner-grounded: D79 delegated contract-preserving approval; repo-grounded: `artifacts/P5-harness-contract-review.md`, committed harness CLI/modules/config inventory, D28–D32) — создаёт запланированный P5 contract без изменения frozen P0–P4 semantics, live/data authority, FOREMAN/fleet или package implementation и открывает только declared P5 consumers. |
 | D86 | 2026-07-21 | Delegated Owner Approval D79 атомарно принимает exact P5.6 PROVIDER-INSTRUCTION I1–I8 и замораживает `provider-instruction-contract.md` v1.0.0: exact root+five-package `CLAUDE.md`/`AGENTS.md` pairs; ordered common IDs; explicit non-overriding extensions; independent projections; two stable managed blocks; user-owned outside bytes and no implicit adoption; full P2 source/render lock; exact parity/state/action/diagnostic/golden semantics; public later-consumer API and unchanged authority boundary. | RAG:— (owner-grounded: D79 delegated contract-preserving approval; repo-grounded: `artifacts/P5-instruction-contract-review.md`, current root/five-package guides, `core/block.py`, frozen P2/P5.1 contracts) — creates the planned P5.6 freeze without changing frozen P0–P5.1 semantics, package/live targets, FOREMAN/fleet or later-phase authority. |
 | D87 | 2026-07-21 | D79 delegates a proven backward-compatible additive minor fix-forward: artifact contract v1.1.0 adds only a default-at-end request selector and generic immutable semantic metadata provenance/lock carrier while exact v1.0.0 callers, records and bytes remain supported. Separate Owner Approval is required only for a breaking change, weakening/change of frozen semantics, authority expansion or a genuine fork. | RAG:— (owner-grounded: explicit P5.7 fix-forward authority 2026-07-21; repo-grounded: D79/D86, `root/contracts/provider-artifact-contract.md`, focused v1.0/v1.1 regressions) — lets P5.7 preserve its already-hashed D86 render parameters in the authoritative lock without teaching core instruction/provider content or weakening fail-closed D86 ownership/hash rules. |
+| D88 | 2026-07-21 | P6.1 reopened for one bounded first-RED repair of its provider-deploy owning seam; prior false escalation and provisional retry evidence remain append-only. | RAG:— (owner-grounded: bounded repair assignment; repo-grounded: `phases/P6.md` P6.1 and provisional focused tests) — repairs contract-preserving provider loop/result/state/provenance defects without changing P1/P2/P5 semantics or entering P6.2+. |
 
 ## 6. Update Log
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
 | 2026-07-21 | plan-audit / plan-sol-xhigh / gpt-5.6-sol/xhigh | Audit P5 attempt 2 завершён literal GREEN в `4470af7`; stale P5 audit pointer снят, entry gate P6 открыт на P6.1. |
-| 2026-07-21 | plan-terra-high / gpt-5.6-terra/high | P6.1 закрыт: caller-owned semantic inventory projected through P5 targets/renderers with focused temp-root conformance — детали см. phases/P6.md P6.1 Completion Notes. |
+| 2026-07-21 | plan-terra-high / gpt-5.6-terra/high | D88: P6.1 formally reopened for bounded first-RED repair; provisional close is not accepted and prior evidence remains append-only — details in `phases/P6.md`. |
 | 2026-07-21 | plan-close/Codex gpt-5.6-sol high | P5 повторно закрыта после audit attempt 1 repair: terminal task/skiller/harness/registry/lint/protected gates GREEN; далее fresh independent Audit P5 attempt 2 — детали см. phases/P5.md Phase Handoff. |
 | 2026-07-21 | plan-terra-high / gpt-5.6-terra/high | P5.4 audit repair attempt 2: P2-safe semantic agent IDs and actual 44/43 temporary create→noop consumer verification make the provider-audit agent count truthful; terminal re-close remains next — детали см. phases/P5.md P5.4 Completion Notes. |
 | 2026-07-21 | plan-close/Codex gpt-5.6-sol high | P5 закрыта: terminal task/skiller/harness/registry/lint/protected gates GREEN; далее fresh independent Audit P5 — детали см. phases/P5.md Phase Handoff. |

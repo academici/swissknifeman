@@ -32,6 +32,10 @@ class TestProviderDeploy(unittest.TestCase):
             "contract_version": "1.0.0", "selection": {"unknown": {"enabled": True}}})
         with self.assertRaisesRegex(ProviderDeployError, "PCFG_UNKNOWN_PROVIDER"):
             resolve_effective_providers(config, catalog, "demo", operation=unknown)
+        disabled = ProviderConfigLayer(ConfigSource("operation", "test", "operation", "/"), {
+            "contract_version": "1.0.0", "selection": {"claude-code": {"enabled": False}}})
+        with self.assertRaisesRegex(ProviderDeployError, "MAIND_PROVIDER_DISABLED"):
+            resolve_effective_providers(config, catalog, "demo", operation=disabled)
     def test_caller_owned_semantics_use_p5_targets_and_renderers(self):
         root = Path(__file__).resolve().parents[3] / "packages/harness/configs"
         catalog = load_mcp_catalog(root / "common/mcp/catalog.json")
@@ -48,6 +52,8 @@ class TestProviderDeploy(unittest.TestCase):
                             for row in plan.results))
         self.assertTrue(all(row.artifact.provenance.target_path == row.target_path
                             for row in plan.results))
+        self.assertTrue(all(row.artifact.provenance.canonical_sources[0].path ==
+                            "packages/maind/lib/maind/provider_deploy.py" for row in plan.results))
 
     def test_missing_disabled_and_selected_provider_are_tagged(self):
         root = Path(__file__).resolve().parents[3] / "packages/harness/configs"
@@ -75,6 +81,19 @@ class TestProviderDeploy(unittest.TestCase):
                                                with_code=False, maind_server=True,
                                                with_agentmemory=False)
             self.assertEqual([row.id for row in rows], ["maind"])
+
+    def test_full_semantic_inventory_and_duplicate_server_refusal(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            project_path = Path(tmp) / "project"; project_path.mkdir()
+            config = merge_defaults({"mcp": {"perplexity_web": {"enabled": True}},
+                "projects": [{"id": "demo", "name": "Demo", "local_path": str(project_path),
+                              "memory_scope": "project:demo", "code_graph": {"enabled": True}}]})
+            rows = provider_semantic_inventory(env, config, config["projects"][0], with_code=True,
+                                               maind_server=True, with_agentmemory=True)
+            self.assertEqual([row.id for row in rows], ["maind", "agentmemory", "codegraph", "perplexity"])
+        with self.assertRaisesRegex(ProviderDeployError, "MAIND_SEMANTIC_SERVER_DUPLICATE"):
+            plan_provider_deploy((), (semantic_servers(maind={"command": "maind"})[0],) * 2)
 
     def test_temp_conformance_is_no_write_deterministic_and_preserves_foreign(self):
         root = Path(__file__).resolve().parents[3] / "packages/harness/configs"

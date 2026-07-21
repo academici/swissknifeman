@@ -104,7 +104,7 @@ def plan_provider_deploy(base_projections, servers, *, selected=None, required_p
     source_bytes = canonical_json_bytes({"servers": [{"id": item.id, "binding": dict(item.binding)}
                                                for item in servers]})
     source = ArtifactSource("maind.provider-deploy.semantic-inventory",
-                            "packages/maind/provider_deploy.py", sha256_digest(source_bytes))
+                            "packages/maind/lib/maind/provider_deploy.py", sha256_digest(source_bytes))
     results = []
     for provider_id in selected:
         if provider_id in disabled:

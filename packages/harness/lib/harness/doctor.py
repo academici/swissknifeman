@@ -56,7 +56,7 @@ def cmd_doctor(env, argv):
               "  --settings: аудит слоёв настроек Claude Code целевого проекта\n"
               "              (отчёт, --json, exit-code 0 чисто / 1 warn / 2 error).")
         return
-    if opts.get("provider-audit", False):
+    if opts["provider_audit"]:
         from .provider_audit import audit_package
         report = audit_package(env.root)
         print(report.render() if opts["json"] else "harness provider audit: " + ("OK" if report.green else "ERROR"))

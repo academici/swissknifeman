@@ -31,6 +31,8 @@ authorized; all P5.4 artifacts were rendered only in temporary roots.
 
 **Workarounds/Deferred/Open questions:**
 
+- repair 2026-07-21: P5.5 RED fix-forward restores duplicate/no-write/local-doctor/diagnostic/generated-consumer evidence; no later phase work was opened.
+
 - workarounds: none.
 - deferred: single-commit item/bookkeeping bundling is an Owner-required process deviation;
   exact commit hash is reported after commit instead of embedded self-referentially.

@@ -35,10 +35,13 @@ class ProviderAuditReport:
         expected, actual = dict(self.expected), dict(self.actual)
         rows = []
         for key in sorted(expected):
-            wanted, seen = set(expected[key]), set(actual.get(key, ()))
+            wanted, seen = expected[key], actual.get(key, ())
+            wanted_set, seen_set = set(wanted), set(seen)
             rows.append({"surface": key, "expected": sorted(wanted), "actual": sorted(seen),
-                         "missing": sorted(wanted - seen), "extra": sorted(seen - wanted),
-                         "duplicates": []})
+                         "missing": sorted(wanted_set - seen_set), "extra": sorted(seen_set - wanted_set),
+                         "expected_duplicates": _duplicates(wanted),
+                         "actual_duplicates": _duplicates(seen),
+                         "duplicates": sorted(set(_duplicates(wanted) + _duplicates(seen)))})
         return {"catalog_hash": self.catalog_hash, "source_hashes": dict(self.source_hashes),
                 "rows": rows, "diagnostics": list(self.diagnostics), "green": self.green}
 
@@ -48,6 +51,27 @@ class ProviderAuditReport:
 
 def _hash(path):
     return "sha256:" + hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def _duplicates(values):
+    """Return repeated identities instead of hiding them behind a set comparison."""
+    return sorted(item for item in set(values) if values.count(item) > 1)
+
+
+def audited_paths(package_root: Path) -> tuple[Path, ...]:
+    """Every package-owned source read by this audit; useful for no-write proof."""
+    root = Path(package_root)
+    paths = (
+        root / "configs/common/profile-catalog.json",
+        root / "configs/common/mcp/catalog.json",
+        root / "configs/common/agent-packs/roles.json",
+        root / "configs/codex/config/profile-bindings.json",
+        root / "configs/codex/hooks/lifecycle-context-bindings.json",
+        root / "configs/claude-code/mcp/bindings.json",
+        root / "configs/codex/mcp/bindings.json",
+        root / "configs/claude-code/agent-packs/role-bindings.json",
+    )
+    return tuple(sorted(paths))
 
 
 def _fixture(path):
@@ -76,6 +100,12 @@ def audit_package(package_root: Path, fixture_path: Path | None = None) -> Provi
     roles = semantic_agent_roles(roles_path)
     actual["agents"] = tuple(f"{item.pack_id}.{item.role_id}" for item in roles)
     diagnostics = []
+    for name, values in expected.items():
+        if _duplicates(values):
+            diagnostics.append(f"HARNESS_CATALOG_MISMATCH:expected:{name}")
+    for name, values in actual.items():
+        if _duplicates(values):
+            diagnostics.append(f"HARNESS_CATALOG_MISMATCH:actual:{name}")
     # Independent provider projections: profile, lifecycle, MCP and every role.
     for provider in ProviderId:
         bindings = root / "configs/codex/config/profile-bindings.json"
@@ -104,6 +134,23 @@ def audit_package(package_root: Path, fixture_path: Path | None = None) -> Provi
             except ValueError as error:
                 if "HARNESS_ACTIVATION_UNSUPPORTED" not in str(error):
                     diagnostics.append(f"{error}:{provider.value}:agents")
-    hashes = tuple((str(path.relative_to(root)), _hash(path)) for path in sorted((catalog_path, mcp_path, roles_path)))
+    hashes = tuple((str(path.relative_to(root)), _hash(path)) for path in audited_paths(root))
     return ProviderAuditReport(_hash(catalog_path), hashes, tuple(sorted(expected.items())),
                                tuple(sorted(actual.items())), tuple(sorted(set(diagnostics))))
+
+
+def render_operator_reference(report: ProviderAuditReport) -> str:
+    """Generated operator text; docs deliberately have no hand-maintained inventory."""
+    counts = {row["surface"]: len(row["expected"]) for row in report.as_dict()["rows"]}
+    return ("# Provider harness conformance\n\n"
+            "> Generated from the validated deterministic provider-audit report; do not maintain an inventory here.\n\n"
+            "`harness doctor --provider-audit [--json]` is read-only. `settings_audit.py` remains the named Claude Code checker behind `harness doctor --settings`; provider audit never universalizes Claude merge rules.\n\n"
+            f"Validated catalog `{report.catalog_hash}`: {counts['profiles']} profiles, {counts['surfaces']} semantic surfaces, {counts['mcp']} MCP descriptors and {counts['agents']} agent roles.\n\n"
+            "Reports retain missing/extra and expected/actual duplicate identities. Full access is only explicit `self-host-apply` for a trusted repository; default, project and fleet selection are rejected. Secret references are value-free.\n")
+
+
+def render_p5_artifact(report: ProviderAuditReport) -> str:
+    return ("# P5 harness conformance — P6/P7 inputs\n\n"
+            "> Generated from the validated deterministic provider-audit report; no second inventory is maintained.\n\n"
+            f"Catalog `{report.catalog_hash}` is the P5.5 preflight input. Run `harness doctor --provider-audit --json` twice and require byte-identical green output with empty missing/extra/duplicates.\n\n"
+            "The audit and named Claude settings doctor are separate consumers. It writes no audited package source or target; P6/P7 must retain trust, capability, activation and value-free secret diagnostics, including full-access rejection outside explicit self-host apply.\n")

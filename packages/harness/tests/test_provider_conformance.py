@@ -68,6 +68,23 @@ class ProviderConformanceTests(unittest.TestCase):
         self.assertEqual((PACKAGE / "docs/reference/provider-harness.md").read_text(), render_operator_reference(report))
         artifact = PACKAGE.parents[1] / "plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md"
         self.assertEqual(artifact.read_text(), render_p5_artifact(report))
+        evidence = report.as_dict()["evidence"]
+        self.assertIn({"category": "activation", "provider": "codex",
+                       "identity": "surface:lifecycle.daemon-safety", "polarity": "negative",
+                       "state": "unsupported", "diagnostic": "HARNESS_ACTIVATION_UNSUPPORTED"}, evidence)
+        self.assertIn({"category": "security", "provider": "codex",
+                       "identity": "origin:fleet-defaults", "polarity": "negative",
+                       "state": "refused", "diagnostic": "HARNESS_FULL_ACCESS_INHERITANCE_FORBIDDEN"}, evidence)
+        self.assertTrue(all(any(item["category"] == category and item["polarity"] == polarity
+                                for item in evidence)
+                            for category in ("security", "trust", "capability", "activation", "secret")
+                            for polarity in ("positive", "negative")))
+        for generated in (render_operator_reference(report), render_p5_artifact(report)):
+            self.assertIn("Deterministic evidence matrix", generated)
+            self.assertIn("HARNESS_SECRET_REFERENCES_ONLY", generated)
+            self.assertNotIn("literal-", generated)
+        self.assertIn("Exact P6 deployment inputs", render_p5_artifact(report))
+        self.assertIn("Exact P7 self-host acceptance inputs", render_p5_artifact(report))
 
     def test_security_trust_capability_activation_and_secret_diagnostics(self):
         catalog = load_catalog(PACKAGE / "configs/common/profile-catalog.json")
@@ -102,6 +119,14 @@ class ProviderConformanceTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "HARNESS_SECRET_REFERENCE_MISSING"):
                 plan_mcp_projection(mcp, provider_id=ProviderId.CODEX, bindings_path=altered,
                     selected=("perplexity",), trusted=True)
+
+    def test_report_retains_nonfatal_unsupported_activation_and_is_green(self):
+        report = audit_package(PACKAGE)
+        self.assertTrue(report.green, report.render())
+        unsupported = [item for item in report.as_dict()["evidence"]
+                       if item["state"] == "unsupported"]
+        self.assertTrue(unsupported)
+        self.assertTrue(all(item["provider"] and item["identity"] for item in unsupported))
 
 
 if __name__ == "__main__":

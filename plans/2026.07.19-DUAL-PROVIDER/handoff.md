@@ -1,39 +1,35 @@
-# HANDOFF — 2026-07-22 — after P6.3
+# HANDOFF — 2026-07-22 — after P6.4
 
-**Next:** run-items: task:plan-run 2026.07.19-DUAL-PROVIDER P6.4
+**Next:** exec-items: task:plan-exec 2026.07.19-DUAL-PROVIDER P6.5
 
 | Параметр | Значение |
 |:--|:--|
 | Model class | implementation |
-| Effort | high |
-| Capabilities | command.filesystem-read · command.filesystem-write · command.git-read |
-| Context | new-session — multi-package implementation item |
-| Суть | Fresh plan-terra-high item-agent implements the D90-frozen neutral store, named readers, legacy migration and analyst/maind consumers without changing contract semantics. |
+| Effort | medium |
+| Capabilities | command.filesystem-read · command.git-read · command.mcp-read |
+| Context | cold-start — plan-step |
+| Суть | Run the independent P6 integrated conformance and pre-restart checkpoint; package source changes are forbidden. |
 
 ```text
-$ task:plan-run 2026.07.19-DUAL-PROVIDER P6.4
+$ task:plan-exec 2026.07.19-DUAL-PROVIDER P6.5
 ```
 
-**Done:** P6.1–P6.3 are focused-green. D90 accepts Alternative C and freezes
-`provider-analytics-contract` v1.0.0 at terminal artifact commit `79ad2acf`: neutral
-project-local stores, explicit named readers, semantic-only normalized events, opaque
-hashed provenance, strict privacy, append-only audit/events, bounded Claude legacy
-fallback, reversible copy+verify migration and unchanged human promotion.
+**Done:** P6.4 closed at item commits `ef21dce7`, `b7548c96`, `fec5769a`, `c3b4d341`,
+`45a57c48`, `2b4621ed`, and `68b8575e`: D90 neutral envelope/store, explicit provider
+readers, idempotent copy+verify migration, mAInd neutral consumer, and P2-generated Codex
+capture bundle. Focused conformance is recorded in `artifacts/P6-analytics-migration-conformance.md`.
 
-**Remaining:** P6.4 implementation → P6.5 single terminal validation/checkpoint → fresh
-cold P6.6 → phase close → fresh terminal audit. P7+, live self-host, FOREMAN, fleet and
-push remain outside authority.
+**Remaining:** P6.5 package-wide integrated conformance/checkpoint, then fresh-session P6.6.
+P7+, live self-host, FOREMAN, fleet, and push remain outside authority.
 
-**Sources of truth:** `phases/P6.md` P6.4 Required Reads;
-`root/contracts/provider-analytics-contract.md`; `artifacts/P6-analytics-contract-review.md`;
-D90; terminal P6.3 artifact commit `79ad2acf`; frozen predecessor contracts and P5 evidence.
+**Sources of truth:** `phases/P6.md` P6.4/P6.5; `root/contracts/provider-analytics-contract.md`;
+`artifacts/P6-analytics-{contribution-review,migration-conformance}.md`; `journal.jsonl`.
 
-**Open risks:** Target plan-lint retains two historical P5 warnings; P6 requires zero new
-ERROR/WARN delta. P6.4 must not infer Codex raw keys beyond committed P5 evidence or weaken
-D90 privacy/migration semantics. P6.5 owns the package-wide terminal validation set.
+**Open risks:** P6.5 must run the terminal package validators and independent dual-provider
+matrix. The focus runner namespace collision is documented in the P6.4 conformance artifact.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: none in P6.3 artifacts; the owner-ordered journal timing deviation is recorded in P6.3 Known Deviations.
-- deferred: package-wide validation to P6.5; P7+, live self-host, FOREMAN, fleet and push.
-- open_questions: none for P6.3; incompatible D90 changes require a new versioned decision.
+- workarounds: none in implementation.
+- deferred: package-wide validation and checkpoint evidence belong only to P6.5.
+- open_questions: none; incompatible D90 changes require a new versioned decision.

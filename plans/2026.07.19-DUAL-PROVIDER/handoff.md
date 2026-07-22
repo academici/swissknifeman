@@ -1,4 +1,4 @@
-# HANDOFF — 2026-07-22 — after P6
+# HANDOFF — 2026-07-22 — P7 entry
 
 **Next:** exec-items: task:plan-exec 2026.07.19-DUAL-PROVIDER P7.1
 
@@ -13,8 +13,7 @@
 $ task:plan-exec 2026.07.19-DUAL-PROVIDER P7.1
 ```
 
-**Done:** P0–P6 are closed. P6 is not reopened or audited again by this plan execution
-stream; its committed evidence remains historical input only.
+**Done:** P7 execution is prepared in the current checkout and delivery branch.
 
 **Remaining:** P7.1 → P7.2 → P7.3 → P7.4 → P7 close. Each item is a separate command in
 the current checkout and `codex/provider-project-sync`; FOREMAN and fleet remain outside scope.

@@ -3,6 +3,8 @@
 per-project: пишет <project>/.claude/auto-approve.env.ini + memory.env.ini и
 регистрирует хук auto-approve в settings (merge-only). global: ставит файлы хуков
 в ~/.claude/hooks/ через scripts/apply-permissions.sh --global."""
+from __future__ import annotations
+
 import json
 import shutil
 import subprocess

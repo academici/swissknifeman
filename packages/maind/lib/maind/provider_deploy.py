@@ -3,6 +3,8 @@
 mAInd owns semantic server selection; harness owns provider target, trust validation and
 serialization through its immutable MCP projection API.
 """
+from __future__ import annotations
+
 from dataclasses import dataclass
 from collections.abc import Mapping
 from types import MappingProxyType

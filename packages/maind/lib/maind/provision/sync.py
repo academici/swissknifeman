@@ -8,6 +8,8 @@ PROVISIONERS + порядок ORDER; `--only` сужает набор. Режи�
 
 Фан-аут по проектам и резолв пути/scope вынесены сюда (DRY): deploy/derive/seed/health —
 провиженеры поверх одного контекста, а не дубль цикла в каждом модуле."""
+from __future__ import annotations
+
 import copy
 import json
 import os

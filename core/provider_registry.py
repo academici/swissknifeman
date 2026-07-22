@@ -4,6 +4,8 @@ The catalog receives adapter descriptors from an owning package.  It performs no
 module discovery, environment lookup, provider-name branching, or global
 registration; a caller supplies both the catalog and effective provider state.
 """
+from __future__ import annotations
+
 from dataclasses import dataclass
 from enum import Enum
 import re

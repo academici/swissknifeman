@@ -672,6 +672,9 @@ def generate_instruction_conformance(env, output_path):
                           "health": "untrusted non-green" if all(not row["green"] for row in doctor)
                                     else "unexpected green",
                           "verdict": "GREEN" if first["status"] == second["status"] == "ok"
+                                     and checked.green
+                                     and all(row["status"] != "failed"
+                                             for row in first["providers"] + second["providers"])
                                      and len(health["provider_trust"]) == len(checked.request.provider_ids)
                                      and common and own >= 0 else "RED"})
             semantic_result = (f"semantic IDs={common}; single-provider projection; public checker GREEN"
@@ -779,10 +782,29 @@ def generate_instruction_conformance(env, output_path):
                         "claude-code": {"enabled": True}, "codex": {"enabled": True}}}}
         dual_config = _conformance_config(dual)
         dual_context = contexts(env, dual_config, [dual])[0]
-        matrix_results = run_sync_contexts(env, dual_config, [dual_context], dry=True)
+        prepared = run_sync(env, dual_config, [dual], only="instructions", mode="auto")[0]
+        worktree_root = Path(__file__).resolve().parents[5]
+        sibling_bins = {
+            "MAIND_SKM_BIN": worktree_root / "packages/skiller/bin/skiller",
+            "MAIND_HARNESS_BIN": worktree_root / "packages/harness/bin/harness",
+            "SKM_HARNESS_BIN": worktree_root / "packages/harness/bin/harness",
+        }
+        if not all(path.is_file() for path in sibling_bins.values()):
+            raise RuntimeError("MAIND_CONFORMANCE_SIBLING_BIN_MISSING")
+        previous_environment = {name: os.environ.get(name) for name in sibling_bins}
+        os.environ.update({name: str(path) for name, path in sibling_bins.items()})
+        try:
+            matrix_results = run_sync_contexts(env, dual_config, [dual_context], dry=True)
+        finally:
+            for name, previous in previous_environment.items():
+                if previous is None:
+                    os.environ.pop(name, None)
+                else:
+                    os.environ[name] = previous
         matrix = provisioner_provider_matrix(matrix_results, dual_context.effective_provider_ids)
         checks.append({"name": "independent provisioner/provider matrix",
-                       "result": f"{len(matrix)} explicit support/activation/diagnostic rows"})
+                       "result": f"{len(matrix)} explicit support/activation/diagnostic rows"
+                       if prepared["status"] == "ok" else "RED"})
 
         # Onboard's public API receives a context once and passes it through to instruction sync.
         onboard_root = base / "onboard"
@@ -798,10 +820,31 @@ def generate_instruction_conformance(env, output_path):
                                             "enabled": True, "local_path": str(
                                                 Path(__file__).resolve().parents[5])})
         atomic_write_json(isolated_env.default_config, onboard_config)
-        report = onboard(isolated_env, copy.deepcopy(onboard_config), str(onboard_root),
-                         {"skip_skills": True, "yes": True, "dry": True, "memory": "off", "repair": False})
-        checks.append({"name": "public onboard instruction step", "result": "present"
-                       if any(step["name"] == "instructions" for step in report["steps"]) else "RED"})
+        worktree_root = Path(__file__).resolve().parents[5]
+        sibling_bins = {
+            "MAIND_SKM_BIN": worktree_root / "packages/skiller/bin/skiller",
+            "MAIND_HARNESS_BIN": worktree_root / "packages/harness/bin/harness",
+            "SKM_HARNESS_BIN": worktree_root / "packages/harness/bin/harness",
+        }
+        if not all(path.is_file() for path in sibling_bins.values()):
+            raise RuntimeError("MAIND_CONFORMANCE_SIBLING_BIN_MISSING")
+        previous_environment = {name: os.environ.get(name) for name in sibling_bins}
+        os.environ.update({name: str(path) for name, path in sibling_bins.items()})
+        try:
+            report = onboard(isolated_env, copy.deepcopy(onboard_config), str(onboard_root),
+                             {"skip_skills": True, "yes": True, "dry": True,
+                              "memory": "off", "repair": False})
+        finally:
+            for name, previous in previous_environment.items():
+                if previous is None:
+                    os.environ.pop(name, None)
+                else:
+                    os.environ[name] = previous
+        critical_steps = {step["name"]: step["status"] for step in report["steps"]}
+        checks.append({"name": "public onboard critical environment/instruction operations",
+                       "result": "GREEN" if all(critical_steps.get(name) in ("ok", "dry")
+                                                   for name in ("env", "deploy", "instructions"))
+                       else "RED"})
 
     rendered = instruction_conformance_markdown(cases, checks)
     rendered += "\n| Provisioner | Provider | Support | Activation | Diagnostic |\n"
@@ -810,6 +853,11 @@ def generate_instruction_conformance(env, output_path):
         rendered += ("| {provisioner} | {provider_id} | {support} | {activation} | "
                      "{diagnostic} |\n").format(**row)
     atomic_write_text(Path(output_path), rendered)
+    if (any(case["verdict"] != "GREEN" for case in cases)
+            or any(check["result"] == "RED" for check in checks)
+            or any(row["provisioner"] == "instructions" and row["activation"] == "failed"
+                   for row in matrix)):
+        raise RuntimeError("MAIND_P6_CONFORMANCE_NON_GREEN")
 
 
 # ── CLI ─────────────────────────────────────────────────────────────────────

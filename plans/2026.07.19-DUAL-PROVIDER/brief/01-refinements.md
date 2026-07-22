@@ -1,5 +1,16 @@
 # Уточнения владельца
 
+## 2026-07-22 — bounded D104 live-admission repair design
+
+- Owner invoked exactly: `task:plan-design 2026.07.19-DUAL-PROVIDER P6` in bounded repair
+  design mode.
+- Input is limited to the P6.8 live-preflight finding and D103/D104 transfer records.
+- The session must explain the non-green no-write result and specify only the owning P2/P5/P6
+  route. It must not execute package repair, live apply/repair, P7.2 rerun, P7.3+, FOREMAN,
+  fleet, tag or push, and must not begin P6 close/audit.
+
+RAG:— (owner-grounded: exact invocation and scope payload 2026-07-22).
+
 ## 2026-07-22 — D103 bootstrap-transfer design approval
 
 - Owner approved exactly: `APPROVE D103 P2/P5/P6 BOOTSTRAP-TRANSFER DESIGN AS WRITTEN; AUTHORIZE ONLY A BOUNDED REMEDIATION PLAN, NOT LIVE APPLY OR P7.3+`.

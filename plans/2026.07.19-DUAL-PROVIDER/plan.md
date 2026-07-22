@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.4.42 |
+| Version | 1.4.43 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
@@ -18,7 +18,7 @@
 | Approval Owner | Dmitry Vostrikov |
 | Home | repo:/home/vostrikov/projects/packages/swissknifeman |
 | Paused By | — |
-| Design Passes | 3/3 — ecosystem core, 8 фаз/42 items, публичные contracts и высокий cross-package coupling; audit fix-forward добавил P0.7 без переписывания terminal P0.1–P0.6 |
+| Design Passes | 3/3 — ecosystem core, 8 фаз/51 items, публичные contracts и высокий cross-package coupling; audit fix-forward items сохраняют terminal history без renumber |
 
 ## 1. Context
 
@@ -112,6 +112,8 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P6.6 | gpt-5.6-terra/medium | plan-exec | full | deterministic cold-session proof по committed checkpoint; package source changes запрещены |
 | P6.7 | gpt-5.6-terra/high | manual | full | prescribed P6 composition/deploy integration with fail-closed transfer request and no-live-apply discipline; effort high+ MANDATORY |
 | P6.8 | gpt-5.6-terra/medium | plan-exec | full | independent temporary-root and live no-write conformance after P6.7; no new semantics or live apply |
+| P6.9 | gpt-5.6-terra/high | manual | full | prescribed fail-closed preflight ordering and structured D104/ordinary-plan separation; write-before-later-refusal risk requires high fidelity |
+| P6.10 | gpt-5.6-terra/medium | plan-exec | full | deterministic independent split-verdict/no-write proof after P6.9; no new semantics or live apply |
 | P7.1 | gpt-5.6-sol/xhigh | manual | full | actual capability-catalog freeze + additive shared-core/public cross-package gate before deterministic docs; effort high+ MANDATORY |
 | P7.2 | gpt-5.6-terra/high | manual | full | live self-host install/update/repair с rollback и security gates; effort high+ MANDATORY |
 | P7.3 | gpt-5.6-terra/high | manual | full | provenance-backed destructive cleanup/release assembly; effort high+ MANDATORY |
@@ -127,7 +129,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P3 | Dual skills publication и marketplaces | 5/5 | 🟢 Done |
 | P4 | Task-command parity и provider-neutral model routing | 5/5 | 🟢 Done |
 | P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 8/8 | 🟢 Done |
-| P6 | mAInd deployment, memory и provider-neutral analytics | 7/8 | 🟡 In progress |
+| P6 | mAInd deployment, memory и provider-neutral analytics | 8/10 | 🟡 In progress |
 | P7 | Docs, self-hosting validation и FOREMAN release gate | 1/4 | 🔴 Blocked |
 
 ## 5. Decision Log
@@ -239,11 +241,14 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | D103 | 2026-07-22 | Owner approves the exact P2/P5/P6 bootstrap-transfer design: only `.codex/hooks.json`, `.codex/hooks/lifecycle.py` and the P2 lock record may ever enter the proposed transfer; D103 authorizes plan remediation only, not package code or live apply. | RAG:— (owner-grounded: exact D103 approval; repo-grounded: `brief/01-refinements.md`, `research/23-p7.2-live-preflight-remediation-design.md`) — preserves fail-closed P2 ownership and requires a later D104 before source implementation. |
 | D104 | 2026-07-22 | Owner accepts the exact `1.2.0` bootstrap-transfer candidate and authorizes only the sequential P2.6→P5.8→P6.7→P6.8 implementation chain. | RAG:— (owner-grounded: exact D104 approval; repo-grounded: `brief/01-refinements.md`, `research/23-p7.2-live-preflight-remediation-design.md`) — no live apply/repair, P7.2 rerun, P7.3+, FOREMAN, fleet, tag or push. |
 | D105 | 2026-07-22 | P2 audit attempt 3 found a D104-invariant bypass in reconstructed `ArtifactPlan`; reopen only P2.6 for a contract-preserving seal/dispatch repair and repeat focused/full validation plus independent audit. | RAG:— (repo-grounded: P2 audit reproduction at `bff70953`; owner-grounded: D104 bounded implementation; `AGENTS.md` automatic audit fix-forward) — no contract/target/API expansion, so no new Owner approval is required. |
+| D106 | 2026-07-22 | The exact D104 P2 candidate is admissible, but the live P6 operation does not select it because only `claude-code` is effective; the command then fails on independently unmanaged `.mcp.json`, while P5's direct lifecycle reader correctly remains a non-selector. Keep P2/P5 terminal and add only P6.9→P6.10 for explicit selection/result projection, preflight-before-write ordering and independent no-write proof. | RAG:— (repo-grounded: `findings/P6-d104-live-admission-root-cause-2026-07-22.md`, `research/24-d104-live-admission-repair-design.md`, D103/D104) — does not adopt `.mcp.json`, widen the frozen transfer, enable Codex selection, authorize live writes or open P7.2. |
 
 ## 6. Update Log
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-22 | task-plan-run / gpt-5.6-sol/high | P6.9 закрыт: D104 bootstrap и ordinary provider plans разделены и preflight выполняется до первой записи — детали см. phases/P6.md P6.9 Completion Notes. |
+| 2026-07-22 | task-plan-design / gpt-5.6-sol/high | D106 separates the P2-admissible but live-not-selected D104 candidate from the unmanaged MCP refusal: P2/P5 stay terminal; only P6.9→P6.10 enter bounded repair design. |
 | 2026-07-22 | task-plan-run / gpt-5.6-terra/high | P6.7 закрыт: mAInd запрашивает только D104 native bootstrap-transfer и возвращает lifecycle artifacts в обычный P2 check/repair — детали см. phases/P6.md P6.7 Completion Notes. |
 | 2026-07-22 | plan-exec / gpt-5.6-terra/medium | P6.8 закрыт с RED admission evidence: disposable-root D104 matrix GREEN, но оба live no-write readers отказали без root delta — детали см. phases/P6.md P6.8 Completion Notes. |
 | 2026-07-22 | task-plan-close / implementation/low | P5 закрыта после terminal P5.8: D104 native lifecycle contribution reconciled; следующий gate — fresh independent P5 audit. |

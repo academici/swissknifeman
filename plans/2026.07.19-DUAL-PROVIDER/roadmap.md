@@ -6,11 +6,12 @@
      Порядок строго phase-first: P0→P1→P2→P3→P4→P5→P6→P7. До finish + GREEN design
      audit исполнение любого item запрещено. -->
 
-**Обновлён:** 2026-07-22 · **Соответствует plan.md:** v1.4.42
+**Обновлён:** 2026-07-22 · **Соответствует plan.md:** v1.4.43
 
-> **Статус exec:** D103 reopens only the sequential P2.6→P5.8→P6.7→P6.8 remediation.
-> D104 and terminal P2.6 are complete; P5.8 and P5 close are complete pending fresh P5 audit. P7.2 remains
-> blocked, while P7.3+, FOREMAN, fleet and push stay closed.
+> **Статус exec:** D106 keeps P2/P5 terminal and opens only sequential P6.9→P6.10.
+> D104 is admissible in P2 but live-not-selected because only `claude-code` is effective; P6.8
+> preserved the unmanaged-MCP and expected P5 ordinary-path refusals. P7.2 remains blocked;
+> P7.3+, FOREMAN, fleet and push stay closed.
 
 ## Карта исполнения
 
@@ -59,16 +60,18 @@
 | P6.4 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | ✅ shared-core/analyst contribution | multi-package readers/store migration completed after frozen P6.3 |
 | P6.5 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | integrated conformance + durable pre-restart checkpoint |
 | P6.6 | solo | plan-exec (NEW SESSION) — 🟢 | gpt-5.6-terra/medium | — | mandatory cold restart; нельзя объединять с P6.5 |
-| P6.7 | solo | plan-run (manual) — ⬜ | gpt-5.6-terra/high | D104 consumed via P2.6 | P6-owned native composition/deploy integration; temporary roots only |
-| P6.8 | solo | plan-exec — ⬜ | gpt-5.6-terra/medium | — | independent temporary-root and live no-write proof; no apply |
+| P6.7 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | D104 consumed via P2.6 | P6-owned native composition/deploy integration; temporary roots only |
+| P6.8 | solo | plan-exec — 🟠 | gpt-5.6-terra/medium | — | evidence preserved: P2-admissible D104 candidate is live-not-selected; ordinary aggregate non-green |
+| P6.9 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | — | preflight all required plans before write and report bootstrap/ordinary results separately |
+| P6.10 | solo | plan-exec — ⬜ | gpt-5.6-terra/medium | — | independent split-verdict and zero-write proof; does not open P7.2 |
 | P7.1 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/xhigh | ✅ D99 | terminal generated docs/exact-set |
-| P7.2 | solo | plan-run (manual) — 🔴 | gpt-5.6-terra/high | ✅ D# on live apply after rerun | blocked until P2.6→P6.8 and fresh P6 audit are GREEN |
+| P7.2 | solo | plan-run (manual) — 🔴 | gpt-5.6-terra/high | ✅ separate D# for residual ownership and later live apply | blocked through P6.9→P6.10, later P6 close/audit and separate `.mcp.json` authority |
 | P7.3 | solo | plan-run (manual) | gpt-5.6-terra/high | ✅ D# на exact bootstrap cleanup inventory | guarded destructive cleanup и release manifest; отдельный rollback boundary |
 | P7.4 | solo | plan-run (manual, NEW SESSION) | gpt-5.6-sol/xhigh | ✅ literal GREEN + explicit owner D# | cold adversarial audit; только GREEN+owner D# открывает reconcile |
 
 ## Solo-обоснование и отсутствие batches/workflows
 
-Все 49 item идут `solo`. В каждой фазе terminal Deliverable предыдущего item является
+Все 51 item идут `solo`. В каждой фазе terminal Deliverable предыдущего item является
 Inputs следующего, поэтому merge-criterion plan-protocol для batch/workflow не выполняется:
 внутрифазных независимых scopes N≥3 нет. Contract/security/canon/release items имеют
 `Review=full` и owner/commit boundaries; conformance items намеренно отделены от авторов
@@ -77,9 +80,9 @@ implementation. P5.6→P5.7 — contract→prescribed implementation, поэто
 
 ## P7 session-by-session execution process
 
-> D103 temporarily blocks this console at P7.2. No P7 command is runnable until P2.6,
-> P5.8, P6.7, P6.8 and a fresh P6 audit are terminal GREEN; this section does not authorize
-> their execution or P7.3+.
+> D106 blocks this console at P7.2. No P7 command is runnable until P6.9/P6.10 and a later
+> P6 close/audit route are terminal, and the residual `.mcp.json` ownership boundary has
+> separate authority. This section does not authorize that work or P7.3+.
 
 P7 исполняется четырьмя независимыми внешними Codex-процессами: каждый item получает
 собственную shell-команду и точный route из `plan.md` §3. После GREEN item executor
@@ -203,22 +206,29 @@ terminal tree фазы. Полные правила и exact probes: `research/2
 |:--|:--|:--|
 | P4 | **NEW SESSION** только после committed G03 и P1–P3 review PR. `P4.1 → P4.2 → P4.3 → P4.4`; probes: exact command ID/routing inventory, P3 descriptor/cache refusal, Claude golden/two-run, затем one cross-projection routing/invocation integration gate before P4.5. | P4.5 independent parity/docs report → one task+skiller validation, registry/docs/protected delta/plan-lint → close → Sol/xhigh audit → G04. Open/update P4-only PR only after audit evidence; no P5/live/FOREMAN/fleet scope. |
 | P5 | `P5.1 → (P5.2 → P5.3 → P5.4 shared harness lane) → P5.5 → (P5.6 → P5.7 instruction lane)`. Each writer proves its listed negative/ownership/temp-root seam before successor; one dual-provider cross-seam render/check/apply/check gate follows P5.4. | After P5.7: one harness validation, final independent P5.5 inventory + P5.7 instruction parity, generated operator references/protected delta/plan-lint → close → Sol/xhigh audit. Then prepare P4–P5 review PR only, with item commits, frozen D#s and temp-only evidence. |
-| P6 | `(P6.1 → P6.2 deploy/provision lane) → (P6.3 → P6.4 analytics lane) → P6.5 → P6.6`. P6.1/P6.2 and P6.4 run their exact fail-closed integration matrices before successors; P6.5 is the single full integrated checkpoint gate. **P6.6 is a mandatory NEW SESSION** reading disk checkpoint before mAInd recall and runs no code repair. | After GREEN P6.6: close → one fresh Sol/xhigh audit from disk/checkpoint evidence, without rerunning P6.5. Then prepare/update P6 review PR on the P4–P5 checkpoint; separate temp-only provision, analytics migration and read-only checkpoint evidence; P7/self-host, FOREMAN and fleet stay excluded. |
+| P6 | Historical P6.1→P6.8 evidence remains immutable; D106 adds only `P6.9 → P6.10`. P6.9 repairs preflight ordering/result separation; P6.10 independently proves the split verdict and zero writes. | P2/P5 remain terminal. P6.9/P6.10 do not adopt `.mcp.json`, change provider selection or open P7.2. P6 close/audit is a later plan step and is not begun by this design. |
 
 ## Готовый launch-block текущего шага
 
-### P5 audit — D104 lifecycle contribution
+### P6.10 — D106 independent split-verdict proof
+
+**Next:** exec-items: task:plan-exec 2026.07.19-DUAL-PROVIDER P6.10
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | frontier |
-| Effort | xhigh |
-| Capabilities | command.filesystem-read · command.filesystem-write · command.git-read |
-| Context | cold-start — plan-step |
-| Суть | Independently audit terminal P5 and the D104 P5.8 lifecycle fragment before P6.7. |
+| Model class | implementation |
+| Effort | medium |
+| Capabilities | command.filesystem-read · command.filesystem-write · command.git-read · command.git-write |
+| Context | cold-start — item |
+| Суть | Independently prove P6.9 split verdict and zero writes; package source and live state stay read-only. |
 
 ```text
-$ task:plan-audit 2026.07.19-DUAL-PROVIDER P5
+$ task:plan-exec 2026.07.19-DUAL-PROVIDER P6.10
+
+РЕЖИМ: D106 independent split-verdict/no-write proof; no source or live mutation
+ВХОД: plans/2026.07.19-DUAL-PROVIDER/research/24-d104-live-admission-repair-design.md; plans/2026.07.19-DUAL-PROVIDER/phases/P6.md P6.9 Completion Notes and P6.10
+СКОУП: independently derive the D104/ordinary oracle; run disposable-root matrices and the two permitted live dry-run readers; prove exact split diagnostics and zero delta
+НЕ ТРОГАТЬ: package source/tests, P2/P5 contracts, `.mcp.json` adoption, provider config, live apply/repair/rollback, P6 close/audit, P7.2+, FOREMAN, fleet, tag or push
 ```
 
 ## Гейты владельца (сводно)
@@ -250,7 +260,7 @@ $ task:plan-audit 2026.07.19-DUAL-PROVIDER P5
 
 - RAG: official OpenAI model catalog + Terra model page, 2026-07-19 — Sol/Terra IDs,
   roles и efforts подтверждены; детали в `findings/P7-openai-model-routing-2026-07-19.md`.
-- Repo-grounding: 42/42 Routing rows, 12 `plan-exec` + 30 `manual`; instruction carrier
+- Repo-grounding: 51/51 Routing rows, 15 `plan-exec` + 36 `manual`; instruction carrier
   и contract/read/owner-gate reconcile — `research/12-final-cross-phase-reconcile.md`,
   `research/13-instruction-contract-remediation.md`.
 - Непроверено → ПОВТОРНЫЙ ПРОХОД: account availability Sol/Terra; runtime fail closed,

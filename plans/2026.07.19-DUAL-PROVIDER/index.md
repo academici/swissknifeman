@@ -1,15 +1,15 @@
 # Индекс плана — `2026.07.19-DUAL-PROVIDER`
 
-**Обновлён:** 2026-07-20
+**Обновлён:** 2026-07-22
 
 ## Карта директорий
 
 | Путь | Назначение |
 |:--|:--|
 | `plan.md` | мета, scope, routing, status board и решения |
-| `phases/P0.md … P7.md` | все 8 фаз детализированы до DoR; 42 item, skeleton markers отсутствуют; P0.7 — terminal ATTENTION fix-forward |
+| `phases/P0.md … P7.md` | все 8 фаз детализированы до DoR; 51 item, skeleton markers отсутствуют; D106 добавляет только P6.9→P6.10 |
 | `handoff.md` | rolling next-step для холодного старта |
-| `roadmap.md` | полная execution map 42/42 с GPT-5.6 Sol/Terra routing и owner gates |
+| `roadmap.md` | полная execution map 51/51 с GPT-5.6 Sol/Terra routing и owner gates |
 | `journal.jsonl` | append-only журнал plan-команд |
 | `journal-exceptions.jsonl` | optional append-only owner-gated provenance exceptions для historical schema-invalid journal rows |
 | `brief/` | полный вход владельца, включая launch/hook и environment-defect refinements |
@@ -54,6 +54,8 @@
 | `research/11-p7-self-host-release-design.md` | research | P7, roadmap | docs source, isolated→live self-host, guarded cleanup, release gate и GPT-5.6 routing |
 | `findings/P7.1-capability-manifest-gap-2026-07-22.md` | finding | P7.1 | frozen manifest obligation против фактического отсутствующего carrier/production gate/docs operation |
 | `research/22-p7-capability-manifest-remediation.md` | research | P7.1 | root manifest, shared validation/projection, production gates и deterministic docs render/check |
+| `findings/P6-d104-live-admission-root-cause-2026-07-22.md` | findings | P6.9–P6.10 | read-only replay: D104 admitted, later unmanaged `.mcp.json` refusal, expected P5 non-selector and write-order defect |
+| `research/24-d104-live-admission-repair-design.md` | research | P6.9–P6.10 | terminal P2/P5 invariants, P6-only atomic/result repair, split-verdict proof and new-authority boundary |
 | `research/12-final-cross-phase-reconcile.md` | research | finish, design audit | contract chain, Required Reads, Routing, owner gates и итоговый DoR pass 3/3 |
 | `research/13-instruction-contract-remediation.md` | research | P5.6–P7, design audit | common instruction contract/projections и restart propagation |
 | `research/14-journal-schema-exception-remediation.md` | research | journal gate, design audits r3–r4 | F1 sidecar alternatives, exact schema и unchanged same-plan contract |

@@ -124,7 +124,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P4 | Task-command parity и provider-neutral model routing | 5/5 | 🟢 Done |
 | P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 7/7 | 🟢 Done |
 | P6 | mAInd deployment, memory и provider-neutral analytics | 6/6 | 🟢 Done |
-| P7 | Docs, self-hosting validation и FOREMAN release gate | 0/4 | 🟡 In progress |
+| P7 | Docs, self-hosting validation и FOREMAN release gate | 0/4 | 🔴 Blocked |
 
 ## 5. Decision Log
 

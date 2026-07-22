@@ -1,30 +1,28 @@
-# HANDOFF — 2026-07-22 — after P2.6
+# HANDOFF — 2026-07-22 — after P2
 
-**Next:** /task:plan-audit 2026.07.19-DUAL-PROVIDER P2
+**Next:** run-items: task:plan-run 2026.07.19-DUAL-PROVIDER P2.6
 
 | Параметр | Значение |
 |:--|:--|
-| Model | gpt-5.6-sol |
-| Thinking | xhigh |
-| Context | new session — independent phase audit |
-| Суть | Audit terminal P2.1–P2.6, including D104 transfer/rollback and ordinary-lock regression; no source change unless RED evidence reopens the owning scope. |
+| Model class | implementation |
+| Effort | high |
+| Capabilities | command.filesystem-read · command.filesystem-write · command.git-read · command.git-write |
+| Context | same-session — item |
+| Суть | D105 repairs only reconstructed-plan seal/dispatch and commits cold-start approval evidence before a final P2 audit. |
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="xhigh"' -a never -s danger-full-access '$ task:plan-audit 2026.07.19-DUAL-PROVIDER P2'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.07.19-DUAL-PROVIDER P2.6'
 ```
 
-**Done:** P2.6 item commit `bff70953` adds the D104-only core v1.2.0 bootstrap-transfer
-admission, exact preimage/target checks, backup/rollback, contract/proposal/ADR and
-temporary-root conformance. No live target was read or written.
+**Done:** P2 audit attempt 3 is RED: reconstructed-plan mutation bypasses D104 canonical-lock
+and backup/rollback dispatch. D105 reopens only P2.6; no live target was read or written.
 
-**Remaining:** P2 audit → P5.8 → P5 close/audit → P6.7 → P6.8 → P6 close/audit. P7.2 rerun,
+**Remaining:** D105 P2.6 repair → final P2 audit → P5.8 → P5 close/audit → P6.7 → P6.8 → P6 close/audit. P7.2 rerun,
 P7.3+, FOREMAN, fleet, tag and push remain closed.
 
 **Sources of truth:** `phases/P2.md` P2.6; `root/contracts/provider-artifact-contract.md`
 v1.2.0; `artifacts/P2-bootstrap-transfer-{contribution-proposal,conformance}.md`;
 `root/adr/ADR-0003-bootstrap-transfer.md`; `core/provider_lock.py`.
 
-**Open risks:** plan lint has 0 ERROR and 2 WARN, including one new-from-dirty-tree P5 DoR/workflow
-warning outside P2.6 Files; it must be resolved by the P5 owner before a plan-wide zero-warning
-claim. The initial P2.6 `plan-exec` journal start is closed append-only as no-op; the actual
-execution used `plan-run`.
+**Open risks:** the D105 seal/dispatch repair must preserve D104 exact paths/preimage and ordinary
+P2 plan/apply/repair semantics. P5 DoR/workflow warnings remain unrelated and P5.8 is closed.

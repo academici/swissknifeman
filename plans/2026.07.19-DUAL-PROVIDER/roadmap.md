@@ -6,10 +6,10 @@
      Порядок строго phase-first: P0→P1→P2→P3→P4→P5→P6→P7. До finish + GREEN design
      audit исполнение любого item запрещено. -->
 
-**Обновлён:** 2026-07-22 · **Соответствует plan.md:** v1.4.37
+**Обновлён:** 2026-07-22 · **Соответствует plan.md:** v1.4.40
 
-> **Статус exec:** текущий scope — только P7. Следующий item — P7.1; P7 идёт четырьмя
-> отдельными routed Codex-сессиями. FOREMAN, fleet и push остаются закрыты.
+> **Статус exec:** D103 reopens only the sequential P2.6→P5.8→P6.7→P6.8 remediation.
+> It is waiting for D104; P7.2 remains blocked, while P7.3+, FOREMAN, fleet and push stay closed.
 
 ## Карта исполнения
 
@@ -33,6 +33,7 @@
 | P2.3 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/high | — | immutable capability-aware catalog committed after P2.2 |
 | P2.4 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | synthetic dry/doctor/conformance gate committed; phase is terminal pending independent audit |
 | P2.5 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | — | D76 contract-required RED remediation committed; phase reclosed pending fresh audit |
+| P2.6 | solo | plan-run (manual) — 🟡 D105 repair | gpt-5.6-terra/high | ✅ D104 exact additive P2 API/contract | reconstructed-plan seal/dispatch repair; no live root write |
 | P3.1 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/high | ✅ publication contract | frozen identity/install/ownership semantics до adapters |
 | P3.2 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | deterministic Claude compatibility projection после P3.1 |
 | P3.3 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | — | native Codex plugin/cache contract; D83 restored stale core cache/lock with catalog regression |
@@ -50,20 +51,23 @@
 | P5.5 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | independent harness parity/doctor/docs gate |
 | P5.6 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/xhigh | ✅ D86 instruction freeze | public semantic parity/provenance contract |
 | P5.7 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | ✅ D87 additive carrier | instruction renderer/conformance against frozen D86 |
+| P5.8 | solo | plan-run (manual) — ⬜ | gpt-5.6-terra/high | D104 consumed via P2.6 | native Codex lifecycle fragment/handler; starts only after P2.6 |
 | P6.1 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | — | mAInd provider deploy loop против frozen P1/P2/P5 contracts |
 | P6.2 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | — | provider context/trust/instructions and exact 30-row provisioner matrix focused-green |
 | P6.3 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/xhigh | ✅ analytics contract/privacy/migration | owner-gated schema/storage freeze completed |
 | P6.4 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | ✅ shared-core/analyst contribution | multi-package readers/store migration completed after frozen P6.3 |
 | P6.5 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | integrated conformance + durable pre-restart checkpoint |
 | P6.6 | solo | plan-exec (NEW SESSION) — 🟢 | gpt-5.6-terra/medium | — | mandatory cold restart; нельзя объединять с P6.5 |
-| P7.1 | solo | plan-run (manual) | gpt-5.6-sol/xhigh | ✅ D# на exact manifest bytes + additive core/public seam | materialize frozen manifest → production gates → named generated docs/exact-set |
-| P7.2 | solo | plan-run (manual) | gpt-5.6-terra/high | ✅ D# на live apply после isolated GREEN | isolated→rollback→live self-host; security/release full review |
+| P6.7 | solo | plan-run (manual) — ⬜ | gpt-5.6-terra/high | D104 consumed via P2.6 | P6-owned native composition/deploy integration; temporary roots only |
+| P6.8 | solo | plan-exec — ⬜ | gpt-5.6-terra/medium | — | independent temporary-root and live no-write proof; no apply |
+| P7.1 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/xhigh | ✅ D99 | terminal generated docs/exact-set |
+| P7.2 | solo | plan-run (manual) — 🔴 | gpt-5.6-terra/high | ✅ D# on live apply after rerun | blocked until P2.6→P6.8 and fresh P6 audit are GREEN |
 | P7.3 | solo | plan-run (manual) | gpt-5.6-terra/high | ✅ D# на exact bootstrap cleanup inventory | guarded destructive cleanup и release manifest; отдельный rollback boundary |
 | P7.4 | solo | plan-run (manual, NEW SESSION) | gpt-5.6-sol/xhigh | ✅ literal GREEN + explicit owner D# | cold adversarial audit; только GREEN+owner D# открывает reconcile |
 
 ## Solo-обоснование и отсутствие batches/workflows
 
-Все 45 item идут `solo`. В каждой фазе terminal Deliverable предыдущего item является
+Все 49 item идут `solo`. В каждой фазе terminal Deliverable предыдущего item является
 Inputs следующего, поэтому merge-criterion plan-protocol для batch/workflow не выполняется:
 внутрифазных независимых scopes N≥3 нет. Contract/security/canon/release items имеют
 `Review=full` и owner/commit boundaries; conformance items намеренно отделены от авторов
@@ -71,6 +75,10 @@ implementation. P5.6→P5.7 — contract→prescribed implementation, поэто
 объединять; P6.5→P6.6 и P7.3→P7.4 дополнительно разделены обязательным NEW SESSION.
 
 ## P7 session-by-session execution process
+
+> D103 temporarily blocks this console at P7.2. No P7 command is runnable until P2.6,
+> P5.8, P6.7, P6.8 and a fresh P6 audit are terminal GREEN; this section does not authorize
+> their execution or P7.3+.
 
 P7 исполняется четырьмя независимыми внешними Codex-процессами: каждый item получает
 собственную shell-команду и точный route из `plan.md` §3. После GREEN item executor

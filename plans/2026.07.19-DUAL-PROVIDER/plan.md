@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.4.41 |
+| Version | 1.4.42 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
@@ -123,7 +123,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 |:--|:--|:--|:--|
 | P0 | Evidence, vocabulary и запечатанные provider contracts | 7/7 | 🟢 Done |
 | P1 | Provider config/domain и backward-compatible resolution | 6/6 | 🟢 Done |
-| P2 | Deterministic adapters, provenance, lock и drift engine | 6/6 | 🟢 Done |
+| P2 | Deterministic adapters, provenance, lock и drift engine | 5/6 | 🟡 In progress |
 | P3 | Dual skills publication и marketplaces | 5/5 | 🟢 Done |
 | P4 | Task-command parity и provider-neutral model routing | 5/5 | 🟢 Done |
 | P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 7/8 | 🟡 In progress |
@@ -238,11 +238,13 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | D102 | 2026-07-22 | P7.2 isolated matrix/rollback GREEN выявила live P2 ownership collision: tracked Codex memory hook не имеет lock, а P5 lifecycle — whole-file peer; P6 MCP deploy отказывается до write. P7.2 не усыновляет target и не меняет source. | RAG:— (repo-grounded: `findings/P7.2-isolated-install-sandbox-block-2026-07-22.md`, `research/23-p7.2-live-preflight-remediation-design.md`, frozen P2/P5/P6 contracts) — требуется отдельный owner-gated additive P2/P5/P6 remediation design; P7.2/P7.3/live gate остаются blocked. |
 | D103 | 2026-07-22 | Owner approves the exact P2/P5/P6 bootstrap-transfer design: only `.codex/hooks.json`, `.codex/hooks/lifecycle.py` and the P2 lock record may ever enter the proposed transfer; D103 authorizes plan remediation only, not package code or live apply. | RAG:— (owner-grounded: exact D103 approval; repo-grounded: `brief/01-refinements.md`, `research/23-p7.2-live-preflight-remediation-design.md`) — preserves fail-closed P2 ownership and requires a later D104 before source implementation. |
 | D104 | 2026-07-22 | Owner accepts the exact `1.2.0` bootstrap-transfer candidate and authorizes only the sequential P2.6→P5.8→P6.7→P6.8 implementation chain. | RAG:— (owner-grounded: exact D104 approval; repo-grounded: `brief/01-refinements.md`, `research/23-p7.2-live-preflight-remediation-design.md`) — no live apply/repair, P7.2 rerun, P7.3+, FOREMAN, fleet, tag or push. |
+| D105 | 2026-07-22 | P2 audit attempt 3 found a D104-invariant bypass in reconstructed `ArtifactPlan`; reopen only P2.6 for a contract-preserving seal/dispatch repair and repeat focused/full validation plus independent audit. | RAG:— (repo-grounded: P2 audit reproduction at `bff70953`; owner-grounded: D104 bounded implementation; `AGENTS.md` automatic audit fix-forward) — no contract/target/API expansion, so no new Owner approval is required. |
 
 ## 6. Update Log
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-22 | task-plan-audit / gpt-5.6-sol/xhigh | P2 audit attempt 3 RED/AUDIT-CAP: reconstructed plan bypasses D104 canonical-lock/backup invariants; D105 reopens only P2.6 for automatic contract-preserving repair. |
 | 2026-07-22 | owner | D104 accepted the exact bounded bootstrap-transfer implementation candidate; execution opens only P2.6→P5.8→P6.7→P6.8, with all live/P7.2+/FOREMAN/fleet/push work excluded. |
 | 2026-07-22 | plan-run / gpt-5.6-terra/high | P2.6 closed: D104-only v1.2.0 core bootstrap-transfer admission, rollback and temporary-root conformance — details in `phases/P2.md` P2.6 Completion Notes. |
 | 2026-07-22 | task-plan-design / gpt-5.6-terra/high | D103 approved bounded P2/P5/P6 bootstrap-transfer remediation design; P2, P5 and P6 are reopened for a sequential no-live chain, with D104 required before source implementation. |

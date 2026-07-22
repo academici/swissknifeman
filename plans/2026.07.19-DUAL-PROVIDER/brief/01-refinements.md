@@ -1,5 +1,29 @@
 # Уточнения владельца
 
+## 2026-07-22 — D103 bootstrap-transfer design approval
+
+- Owner approved exactly: `APPROVE D103 P2/P5/P6 BOOTSTRAP-TRANSFER DESIGN AS WRITTEN; AUTHORIZE ONLY A BOUNDED REMEDIATION PLAN, NOT LIVE APPLY OR P7.3+`.
+- Authority covers only re-design of the owning P2/P5/P6 remediation chain and its plan
+  carriers. It does not authorize package-source implementation, a live apply/repair,
+  P7.3+, FOREMAN, fleet, tag or push.
+- The live inventory remains closed: root `.codex/hooks.json` is SHA-256
+  `7d7538d021228e8e61d124f4b60b6db04434f8121de30b8672f05e4bf038c3db`,
+  `.codex/hooks/lifecycle.py` is missing and the live P2 lock record is absent.
+
+RAG:— (owner-grounded: exact approval in this session 2026-07-22; repo-grounded:
+`research/23-p7.2-live-preflight-remediation-design.md`).
+
+## 2026-07-22 — D104 bootstrap-transfer implementation approval
+
+- Owner approved exactly: `APPROVE D104 BOOTSTRAP-TRANSFER IMPLEMENTATION AS WRITTEN IN research/23 § Candidate Owner Decision D104; RUN P2.6→P5.8→P6.7→P6.8 SEQUENTIALLY; NO LIVE APPLY/REPAIR, P7.2 RERUN, P7.3+, FOREMAN, FLEET, TAG OR PUSH`.
+- The authorization freezes only the D104 candidate in `research/23`: P2 contract `1.2.0`,
+  exact admission/preimage/backup/rollback and the sequential package-source ownership.
+- P2/P5/P6 may use disposable roots and no-write checks as specified. Any live apply/repair,
+  P7.2 rerun, P7.3+, FOREMAN, fleet, tag or push remains outside authority.
+
+RAG:— (owner-grounded: exact approval in this session 2026-07-22; repo-grounded:
+`research/23-p7.2-live-preflight-remediation-design.md`).
+
 ## 2026-07-19 — синтаксис запуска task-команд в ChatGPT/Codex
 
 - В текущей ChatGPT/Codex surface task-команда запускается через `$ task:plan-design …`:

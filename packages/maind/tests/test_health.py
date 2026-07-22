@@ -10,7 +10,9 @@ import unittest
 from pathlib import Path
 
 from maind import health
+from maind.common import Env
 from maind.config import load_config
+from maind.projects import write_config
 from tests.fixtures import FakeMemoryServer, capture, make_repo, write_maind_config
 
 _TEMPLATES = Path(__file__).resolve().parents[1] / "templates"
@@ -41,7 +43,68 @@ def _setup(tmp, *, with_mcp=False, memory_url=None, hook_maind=False):
     return env, config, config["projects"][0], proj
 
 
+def _linked_worktree_env(tmp):
+    """Primary machine-local config plus an isolated linked checkout."""
+    primary = Path(tmp) / "primary"
+    (primary / "core").mkdir(parents=True)
+    (primary / "packages" / "maind").mkdir(parents=True)
+    (primary / "core" / ".keep").write_text("\n", encoding="utf-8")
+    (primary / "packages" / "maind" / ".keep").write_text("\n", encoding="utf-8")
+    subprocess.run(["git", "init", str(primary)], check=True, capture_output=True, text=True)
+    subprocess.run(["git", "-C", str(primary), "config", "user.email", "test@example.invalid"],
+                   check=True, capture_output=True, text=True)
+    subprocess.run(["git", "-C", str(primary), "config", "user.name", "Test"],
+                   check=True, capture_output=True, text=True)
+    (primary / "README").write_text("fixture\n", encoding="utf-8")
+    subprocess.run(["git", "-C", str(primary), "add", "."], check=True,
+                   capture_output=True, text=True)
+    subprocess.run(["git", "-C", str(primary), "commit", "-m", "fixture"], check=True,
+                   capture_output=True, text=True)
+    linked = Path(tmp) / "linked"
+    subprocess.run(["git", "-C", str(primary), "worktree", "add", "--detach", str(linked)],
+                   check=True, capture_output=True, text=True)
+    home = Path(tmp) / "home"
+    home.mkdir()
+    env = Env(linked / "packages" / "maind", home=home)
+    write_maind_config(primary, projects=[{
+        "id": "swissknifeman", "name": "Swissknifeman", "type": "node-package",
+        "status": "active", "enabled": True, "local_path": str(primary),
+        "memory_scope": "project:swissknifeman",
+    }])
+    return primary, linked, env
+
+
 class TestReport(unittest.TestCase):
+    def test_linked_worktree_health_reads_primary_config_without_write_leakage(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            primary, linked, env = _linked_worktree_env(tmp)
+            config, source = load_config(env)
+            self.assertEqual(source, "linked-worktree-config")
+            self.assertFalse((linked / "config.json").exists())
+            cwd0 = os.getcwd()
+            try:
+                os.chdir(linked)
+                _, output = capture(health.cmd_health, env, ["--cwd", "--json"])
+            finally:
+                os.chdir(cwd0)
+            self.assertEqual(json.loads(output)["id"], "swissknifeman")
+            primary_before = (primary / "config.json").read_bytes()
+            write_config(env, config)
+            self.assertEqual((primary / "config.json").read_bytes(), primary_before)
+            self.assertTrue((linked / "config.json").is_file())
+
+    def test_linked_worktree_does_not_match_different_repo_or_unknown_project(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _primary, linked, env = _linked_worktree_env(tmp)
+            config, _ = load_config(env)
+            other = Path(tmp) / "other"
+            other.mkdir()
+            subprocess.run(["git", "init", str(other)], check=True, capture_output=True, text=True)
+            from maind import projects
+            self.assertIsNone(projects.match_cwd(env, config, cwd=other))
+            with self.assertRaises(SystemExit):
+                health._target(env, config, {"project": "unknown"})
+
     def test_standalone_when_nothing(self):
         with tempfile.TemporaryDirectory() as tmp:
             env, config, proj, _ = _setup(tmp)

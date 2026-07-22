@@ -21,7 +21,7 @@ Generated through the worktree-local mAInd public APIs on temporary roots.
 | managed drift repair only managed block | non-green then repair GREEN; outside bytes preserved |
 | one-provider partial failure critical aggregate/allow-partial | non-green; explicit --allow-partial remains required |
 | independent provisioner/provider matrix | 30 explicit support/activation/diagnostic rows |
-| public onboard instruction step | present |
+| public onboard critical environment/instruction operations | GREEN |
 
 All roots were temporary. `sync` used the frozen `harness.instructions`
 plan/check/apply/repair API; mAInd did not parse, render or translate instruction files.
@@ -56,5 +56,5 @@ plan/check/apply/repair API; mAInd did not parse, render or translate instructio
 | output-style | codex | delegated | not-observed | MAIND_DELEGATED:memory-context |
 | router-config | claude-code | delegated | not-observed | MAIND_DELEGATED:router |
 | router-config | codex | delegated | not-observed | MAIND_DELEGATED:router |
-| instructions | claude-code | adapter-projected | failed | INSTRUCTION_TARGET_MISSING |
-| instructions | codex | adapter-projected | failed | INSTRUCTION_TARGET_MISSING |
+| instructions | claude-code | adapter-projected | planned | none |
+| instructions | codex | adapter-projected | planned | none |

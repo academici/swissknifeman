@@ -6,13 +6,13 @@
      Порядок строго phase-first: P0→P1→P2→P3→P4→P5→P6→P7. До finish + GREEN design
      audit исполнение любого item запрещено. -->
 
-**Обновлён:** 2026-07-22 · **Соответствует plan.md:** v1.4.55
+**Обновлён:** 2026-07-22 · **Соответствует plan.md:** v1.4.56
 
 > **Статус exec:** D108 under standing delegation selected `S1+O1` and intentionally
 > superseded the pre-approval no-reopen restriction. P2.7, terminal full-core/docs/release
 > gate and substantive GREEN audit are accepted by D111; D112/D114 bound the P6.11
 > fix-forward seams. D113 routes remaining no-write work through Terra/medium + targeted gates
-> and defers the final heavyweight audit to Claude Code. Current route is P6.11 repair → P6.12 rerun → P6 close →
+> and defers the final heavyweight audit to Claude Code. D115/P6.12 are GREEN; current route is targeted P6 close →
 > fresh P7.2. Remediation uses disposable
 > roots/read-only live preflight only; P7.3+, live writes, FOREMAN, fleet, tag and push remain
 > closed.
@@ -69,8 +69,8 @@
 | P6.8 | solo | plan-exec — 🟠 | gpt-5.6-terra/medium | — | evidence preserved: P2-admissible D104 candidate is live-not-selected; ordinary aggregate non-green |
 | P6.9 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | — | preflight all required plans before write and report bootstrap/ordinary results separately |
 | P6.10 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | independent split-verdict and zero-write proof; does not open P7.2 |
-| P6.11 | solo | plan-run (manual) — 🟡 | gpt-5.6-terra/medium | ✅ D108/D111–D115 | exact unchanged-MCP projection bridge only |
-| P6.12 | solo | plan-exec — 🔴 | gpt-5.6-terra/medium | — | RED oracle `20e31b76`; rerun from first oracle after P6.11 reclose |
+| P6.11 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/medium | ✅ D108/D111–D115 | exact unchanged-MCP projection bridge GREEN |
+| P6.12 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | attempt 4 GREEN: exact dry candidate, writer 0, protected delta 0 |
 | P7.1 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/xhigh | ✅ D99 | terminal generated docs/exact-set |
 | P7.2 | solo | plan-run (manual) — 🔴 | gpt-5.6-terra/high | ✅ D108 `S1+O1`; later exact live apply D# | waits for terminal/fresh-audited P2.7 and P6.11→P6.12, then reruns from first preflight |
 | P7.3 | solo | plan-run (manual) | gpt-5.6-terra/high | ✅ D# на exact bootstrap cleanup inventory | guarded destructive cleanup и release manifest; отдельный rollback boundary |

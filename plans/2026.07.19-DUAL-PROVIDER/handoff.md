@@ -1,6 +1,6 @@
 # HANDOFF — 2026-07-22 — after P6.12
 
-**Next:** run-items: task:plan-run 2026.07.19-DUAL-PROVIDER P6.11
+**Next:** /task:plan-close 2026.07.19-DUAL-PROVIDER P6
 
 | Параметр | Значение |
 |:--|:--|
@@ -9,26 +9,25 @@
 | Approval policy | `never` |
 | Sandbox | `danger-full-access` |
 | CWD | `/home/vostrikov/projects/packages/swissknifeman` |
-| Context | `NEW SESSION — item` |
-| Суть | Execute only D115 exact unchanged-MCP projection bridge, targeted tests and P6.11 reclose. |
+| Context | `NEW SESSION — phase close` |
+| Суть | Targeted P6 close only; reuse committed D115/P6.12 evidence and do not run a heavyweight Codex audit. |
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="medium"' -a never -s danger-full-access '$ task:plan-run 2026.07.19-DUAL-PROVIDER P6.11; execute only D115: D108 supplies the existing regular .mcp.json bytes plus matching rendered provenance hash to the sealed core planner, which alone validates exact digest/server/path/boundary and NOOP. Add targeted refusal/non-D108 regressions and reclose. No live writes, P6.12/P7+, FOREMAN, fleet, tag, push, cleanup or owner AGENTS.md.'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="medium"' -a never -s danger-full-access '$ task:plan-close 2026.07.19-DUAL-PROVIDER P6; read AGENTS.md, CLAUDE.md, plan.md, handoff.md and phases/P6.md. Reuse D115 commit 822234be and P6.12 GREEN evidence; run only targeted close reconciliation, plan-lint and diff checks under D113. Do not rerun heavyweight suites or a Codex Sol audit; final independent audit is deferred to Claude Code. No live apply/repair/rollback, P7+, FOREMAN, fleet, tag, push, cleanup or owner AGENTS.md.'
 ```
 
-**Done:** P6.12 attempt-3 evidence commit `20e31b76` confirms focused disposable suites green
-but records the real dry-reader refusal with writer `0` and unchanged protected hashes.
+**Done:** D115 commit `822234be` and the P6.12 attempt-4 evidence are GREEN: maind `51/51`,
+core P2.7 `26/26`, exact sealed MCP SHA, writer `0`, protected live inventory unchanged.
 
-**Remaining:** Reopen P6.11 only for the byte-render seam, rerun P6.12, then targeted P6
-close. Final heavyweight audit is deferred to Claude Code by D113. P7.2 is not runnable.
+**Remaining:** Targeted P6 close in a lower-cost new session. Final heavyweight audit is deferred
+to Claude Code by D113. P7.2 live execution is not authorized.
 
 **Sources of truth:** `artifacts/P6-d108-independent-conformance.md` ·
-`phases/P6.md` P6.11/P6.12 · D108–D114 in `plan.md` ·
+`phases/P6.md` P6.11/P6.12 · D108–D115 in `plan.md` ·
 `research/26-p7.2-s1-o1-remediation-design.md`.
 
-**Open risks:** D114 repaired IDs only; the P6.11 planned Claude artifact still differs from
-the sealed D108 bytes in the maind binding/order. Until an independent rerun is green, no live
-action is authorized.
+**Open risks:** P6 still needs phase-close bookkeeping. Historical P5 lint retains two inherited
+warnings. No live action is authorized.
 
 **Workarounds/Deferred/Open questions:**
 

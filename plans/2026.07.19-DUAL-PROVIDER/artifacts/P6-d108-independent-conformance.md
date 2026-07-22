@@ -1,4 +1,4 @@
-# P6.12 D108 independent conformance — RED
+# P6.12 D108 independent conformance — GREEN after D115
 
 **Observed:** 2026-07-22  
 **Tree:** `d1a7c6ea` (P6.11 bookkeeping anchor)  
@@ -155,3 +155,37 @@ for all three declared targets before any transaction write. The smallest owning
 semantic inventory/rendering of the D108 Claude `.mcp.json` candidate: it must reproduce the
 sealed preimage bytes (including the existing `maind` command form and ordering) in a disposable
 real-binding regression, without changing D108/P2 constants, the live carrier or authority.
+
+## Attempt 4 after D115 — GREEN
+
+**Observed:** 2026-07-22
+**Tree:** `822234be` (D115 P6.11 exact unchanged-MCP repair)
+**Mode:** targeted frozen-input tests plus one real-root public dry reader with a writer spy.
+
+D115 keeps ordinary rendering unchanged. Only the sealed D108 transaction projects the existing
+regular `.mcp.json` bytes as its explicit `NOOP` artifact and refreshes the immutable provenance
+rendered hash; the closed P2 planner still rejects every digest, server set, path or boundary
+other than D108. A changed-byte temporary candidate is refused before write.
+
+Targeted validation is GREEN:
+
+- maind provider/deploy: `51/51` passed;
+- core P2.7 provider-lock: `26/26` passed, including every-write-boundary rollback and second-run
+  noop;
+- `py_compile` and `git diff --check`: passed.
+
+The public real-root `deploy_project(..., d108=True, dry=True)` reader returned:
+
+| Check | Result |
+|:--|:--|
+| writer calls | `0` |
+| protected SHA inventory | unchanged |
+| bootstrap status | `admitted` |
+| provider plan | `GREEN` |
+| Claude server IDs | `maind`, `serena`, `perplexity-web` (exact set) |
+| Claude rendered SHA-256 | `cf4537196c3fefd6fd3980221bd3677f74e7867392ad49364e1e891e1f7c8283` |
+| sealed `.mcp.json` SHA-256 | `cf4537196c3fefd6fd3980221bd3677f74e7867392ad49364e1e891e1f7c8283` |
+
+No `.swissknife.json`, lifecycle handler, provider lock or other live target was created or
+changed. P6.12 is therefore GREEN for the D108 rollback/no-write boundary. Phase close, final
+audit and every P7/live action remain separate work.

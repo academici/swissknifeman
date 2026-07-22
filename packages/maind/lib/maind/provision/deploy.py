@@ -120,7 +120,7 @@ def _resolve_targets(project_path, opt_targets):
 
 
 def provider_semantic_inventory(env, config, project, *, with_code, maind_server,
-                                with_agentmemory):
+                                with_agentmemory, d108=False):
     """Caller-owned server descriptors; P5 supplies provider projections separately."""
     scope = project.get("memory_scope") or f"project:{project['id']}"
     st = codegraph.settings(config)
@@ -135,6 +135,13 @@ def provider_semantic_inventory(env, config, project, *, with_code, maind_server
     rows = semantic_servers(maind=_maind_entry(scope) if maind_server else None,
                             agentmemory=_agentmemory_entry(env, config, scope) if with_agentmemory else None,
                             codegraph=code, perplexity=perplexity)
+    if d108:
+        # D114: only the sealed D108 candidate serializes configured MCP identities.
+        # Ordinary provider inventory retains its stable internal role labels.
+        names = {"codegraph": codegraph.server_name(project, st),
+                 "perplexity": pplxweb.server_name(pw)}
+        rows = tuple(SemanticServer(names.get(row.id, row.id), row.binding, row.required)
+                     for row in rows)
     extra = (project.get("mcp") or {}).get("extra_servers") or {}
     if not isinstance(extra, dict) or any(not isinstance(value, dict)
                                           for value in extra.values()):
@@ -171,7 +178,7 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
     if provider_projections is not None or d108:
         inventory = provider_semantic_inventory(
             env, config, project, with_code=with_code, maind_server=maind_server,
-            with_agentmemory=with_agentmemory)
+            with_agentmemory=with_agentmemory, d108=d108)
         if d108:
             d108_root = project_path.resolve()
             operation = plan_d108_operation(

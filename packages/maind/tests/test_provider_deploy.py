@@ -423,6 +423,34 @@ class TestProviderDeploy(unittest.TestCase):
         with self.assertRaisesRegex(ProviderDeployError, "MAIND_SEMANTIC_SERVER_DUPLICATE"):
             plan_provider_deploy((), (semantic_servers(maind={"command": "maind"})[0],) * 2)
 
+    def test_d108_inventory_uses_configured_server_names_without_changing_bindings(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            project_path = Path("/tmp/d108-canonical")
+            config = merge_defaults({"mcp": {"perplexity_web": {"enabled": True}},
+                "projects": [{"id": "swissknifeman", "name": "SKM",
+                              "local_path": str(project_path), "memory_scope": "project:skm",
+                              "code_graph": {"enabled": True}}]})
+            project = config["projects"][0]
+            ordinary = provider_semantic_inventory(env, config, project, with_code=True,
+                                                   maind_server=True, with_agentmemory=False)
+            d108 = provider_semantic_inventory(env, config, project, with_code=True,
+                                               maind_server=True, with_agentmemory=False, d108=True)
+            self.assertEqual([row.id for row in ordinary], ["maind", "codegraph", "perplexity"])
+            self.assertEqual([row.id for row in d108], ["maind", "serena", "perplexity-web"])
+            self.assertEqual([dict(row.binding) for row in d108],
+                             [dict(row.binding) for row in ordinary])
+            harness = Path(__file__).resolve().parents[3] / "packages/harness/configs"
+            catalog = load_mcp_catalog(harness / "common/mcp/catalog.json")
+            bases = tuple(plan_mcp_projection(
+                catalog, provider_id=provider,
+                bindings_path=harness / provider.value / "mcp/bindings.json",
+                selected=(), trusted=True) for provider in (ProviderId.CLAUDE_CODE, ProviderId.CODEX))
+            plan = plan_provider_deploy(bases, d108)
+            claude = next(row for row in plan.results if row.provider_id is ProviderId.CLAUDE_CODE)
+            self.assertEqual(sha256_digest(claude.rendered),
+                             "sha256:8adaa29018516734a6af1137fb797562861eb221fe425b03d5d0bcc1d43e4f2f")
+
     def test_facade_executes_provider_plan_and_dry_is_no_write(self):
         root = Path(__file__).resolve().parents[3] / "packages/harness/configs"
         catalog = load_mcp_catalog(root / "common/mcp/catalog.json")

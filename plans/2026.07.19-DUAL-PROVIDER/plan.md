@@ -10,7 +10,7 @@
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
-| Last Updated | 2026-07-21 |
+| Last Updated | 2026-07-22 |
 | Repository | swissknifeman |
 | Related Packages | core, skiller, task, harness, maind, analyst |
 | Execution Mode | phase-first · contract-first design |
@@ -123,7 +123,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P3 | Dual skills publication и marketplaces | 5/5 | 🟢 Done |
 | P4 | Task-command parity и provider-neutral model routing | 5/5 | 🟢 Done |
 | P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 7/7 | 🟢 Done |
-| P6 | mAInd deployment, memory и provider-neutral analytics | 2/6 | 🟡 In progress |
+| P6 | mAInd deployment, memory и provider-neutral analytics | 3/6 | 🟡 In progress |
 | P7 | Docs, self-hosting validation и FOREMAN release gate | 0/4 | ⬜ Not started |
 
 ## 5. Decision Log
@@ -219,11 +219,13 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | D87 | 2026-07-21 | D79 delegates a proven backward-compatible additive minor fix-forward: artifact contract v1.1.0 adds only a default-at-end request selector and generic immutable semantic metadata provenance/lock carrier while exact v1.0.0 callers, records and bytes remain supported. Separate Owner Approval is required only for a breaking change, weakening/change of frozen semantics, authority expansion or a genuine fork. | RAG:— (owner-grounded: explicit P5.7 fix-forward authority 2026-07-21; repo-grounded: D79/D86, `root/contracts/provider-artifact-contract.md`, focused v1.0/v1.1 regressions) — lets P5.7 preserve its already-hashed D86 render parameters in the authoritative lock without teaching core instruction/provider content or weakening fail-closed D86 ownership/hash rules. |
 | D88 | 2026-07-21 | P6.1 reopened for one bounded first-RED repair of its provider-deploy owning seam; prior false escalation and provisional retry evidence remain append-only. | RAG:— (owner-grounded: bounded repair assignment; repo-grounded: `phases/P6.md` P6.1 and provisional focused tests) — repairs contract-preserving provider loop/result/state/provenance defects without changing P1/P2/P5 semantics or entering P6.2+. |
 | D89 | 2026-07-21 | Supervisor acceptance reopens P6.1: live deploy execution, secret-reference proof, direct consumer projection proof and exact provenance checks remain in the D88 owning seam. | RAG:— (owner-grounded: acceptance rejection) — no frozen contract or later phase changes. |
+| D90 | 2026-07-22 | Delegated Owner Approval D79 accepts Alternative C and freezes `provider-analytics-contract` v1.0.0: stable provider IDs `claude-code`/`codex`; neutral project-local `.swissknife/analytics` and `.swissknife/analyst` homes; explicit named readers with semantic-only events and opaque hashed provenance; append-only events/audit and unchanged human promotion; bounded Claude `SCHEMA=2` dual-read/single-write fallback; copy+verify, collision-safe, idempotent migration that never changes or deletes source bytes; no transcripts, prompt bodies, raw event bodies, resolved secrets, global telemetry or cross-project raw aggregation. | RAG:— (owner-grounded: D79 delegated verdict; repo-grounded: `artifacts/P6-analytics-contract-review.md`, `root/contracts/provider-analytics-contract.md`, committed P5 hook/context evidence) — freezes D90 for the prescribed P6.4 consumers without inventing Codex raw keys or expanding package/live/FOREMAN/fleet authority. |
 
 ## 6. Update Log
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-22 | plan-sol-xhigh / gpt-5.6-sol/xhigh | P6.3 закрыт: D90 заморозил neutral analytics storage, named-reader/privacy/provenance boundary, legacy fallback и reversible migration — детали см. phases/P6.md P6.3 Completion Notes. |
 | 2026-07-21 | plan-terra-high / gpt-5.6-terra/high | P6.2 закрыт: provider context/trust/provisioning и independent 30-row dual-provider matrix focused-green — детали см. phases/P6.md P6.2 Completion Notes. |
 | 2026-07-21 | plan-audit / plan-sol-xhigh / gpt-5.6-sol/xhigh | Audit P5 attempt 2 завершён literal GREEN в `4470af7`; stale P5 audit pointer снят, entry gate P6 открыт на P6.1. |
 | 2026-07-21 | plan-terra-high / gpt-5.6-terra/high | D88: P6.1 formally reopened for bounded first-RED repair; provisional close is not accepted and prior evidence remains append-only — details in `phases/P6.md`. |

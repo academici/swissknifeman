@@ -1,40 +1,39 @@
-# HANDOFF — 2026-07-21 — after P6.2
+# HANDOFF — 2026-07-22 — after P6.3
 
-**Next:** run-items: task:plan-run 2026.07.19-DUAL-PROVIDER P6.3
+**Next:** run-items: task:plan-run 2026.07.19-DUAL-PROVIDER P6.4
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | frontier |
-| Effort | xhigh |
+| Model class | implementation |
+| Effort | high |
 | Capabilities | command.filesystem-read · command.filesystem-write · command.git-read |
-| Context | same-session — owner-gated design item |
-| Суть | Fresh plan-sol-xhigh item-agent inventories current raw evidence, evaluates privacy/storage/reader/migration alternatives, and presents one complete recommendation with exact contract text before the single Owner decision. |
+| Context | new-session — multi-package implementation item |
+| Суть | Fresh plan-terra-high item-agent implements the D90-frozen neutral store, named readers, legacy migration and analyst/maind consumers without changing contract semantics. |
 
 ```text
-$ task:plan-run 2026.07.19-DUAL-PROVIDER P6.3
+$ task:plan-run 2026.07.19-DUAL-PROVIDER P6.4
 ```
 
-**Done:** P6.1–P6.2 are focused-green. P6.2 code chain `7d9cb90`..`70416c97`
-reuses immutable effective-provider context, exposes trust/health/doctor diagnostics,
-delegates instruction ownership to frozen harness APIs, and generates exact temporary
-Claude/Codex consumer evidence plus a 30-row provisioner matrix.
+**Done:** P6.1–P6.3 are focused-green. D90 accepts Alternative C and freezes
+`provider-analytics-contract` v1.0.0 at terminal artifact commit `79ad2acf`: neutral
+project-local stores, explicit named readers, semantic-only normalized events, opaque
+hashed provenance, strict privacy, append-only audit/events, bounded Claude legacy
+fallback, reversible copy+verify migration and unchanged human promotion.
 
-**Remaining:** P6.3 prepares the frozen analytics contract and stops once for exact Owner
-acceptance → P6.4 implementation → P6.5 single terminal validation/checkpoint → fresh cold
-P6.6 → phase close → fresh terminal audit. P7+, live self-host, FOREMAN, fleet and push
-remain outside authority.
+**Remaining:** P6.4 implementation → P6.5 single terminal validation/checkpoint → fresh
+cold P6.6 → phase close → fresh terminal audit. P7+, live self-host, FOREMAN, fleet and
+push remain outside authority.
 
-**Sources of truth:** `phases/P6.md` P6.3 Required Reads; frozen P1–P5 contracts;
-`artifacts/P6-provider-deploy-conformance.md`; `artifacts/P6-provider-provision-conformance.md`;
-P6.2 terminal code commit `70416c97`.
+**Sources of truth:** `phases/P6.md` P6.4 Required Reads;
+`root/contracts/provider-analytics-contract.md`; `artifacts/P6-analytics-contract-review.md`;
+D90; terminal P6.3 artifact commit `79ad2acf`; frozen predecessor contracts and P5 evidence.
 
 **Open risks:** Target plan-lint retains two historical P5 warnings; P6 requires zero new
-ERROR/WARN delta. P6.5 owns the one package-wide terminal validation set; it must not be
-pulled forward into P6.3. The repo-level roadmap already records the measured Azguard
-Codex publication-to-fresh-consumer acceptance gap; it is outside P6 package scope.
+ERROR/WARN delta. P6.4 must not infer Codex raw keys beyond committed P5 evidence or weaken
+D90 privacy/migration semantics. P6.5 owns the package-wide terminal validation set.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: none in P6.2 product behavior; one incomplete conformance pass was repaired by the bounded `2255414`/`70416c97` test-only chain.
-- deferred: package-wide validation to P6.5; isolated all-plugin Codex marketplace/cache/fresh-session acceptance to `roadmap/codex-publication-consumer-acceptance.md`; P7+, live self-host, FOREMAN, fleet and push.
-- open_questions: P6.3 exact analytics privacy/storage/reader/migration contract requires the single planned Owner decision after the complete recommendation is written.
+- workarounds: none in P6.3 artifacts; the owner-ordered journal timing deviation is recorded in P6.3 Known Deviations.
+- deferred: package-wide validation to P6.5; P7+, live self-host, FOREMAN, fleet and push.
+- open_questions: none for P6.3; incompatible D90 changes require a new versioned decision.

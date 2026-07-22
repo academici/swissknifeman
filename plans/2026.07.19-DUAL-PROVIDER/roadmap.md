@@ -6,7 +6,7 @@
      Порядок строго phase-first: P0→P1→P2→P3→P4→P5→P6→P7. До finish + GREEN design
      audit исполнение любого item запрещено. -->
 
-**Обновлён:** 2026-07-22 · **Соответствует plan.md:** v1.4.43
+**Обновлён:** 2026-07-22 · **Соответствует plan.md:** v1.4.44
 
 > **Статус exec:** D106 keeps P2/P5 terminal and opens only sequential P6.9→P6.10.
 > D104 is admissible in P2 but live-not-selected because only `claude-code` is effective; P6.8
@@ -63,7 +63,7 @@
 | P6.7 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | D104 consumed via P2.6 | P6-owned native composition/deploy integration; temporary roots only |
 | P6.8 | solo | plan-exec — 🟠 | gpt-5.6-terra/medium | — | evidence preserved: P2-admissible D104 candidate is live-not-selected; ordinary aggregate non-green |
 | P6.9 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | — | preflight all required plans before write and report bootstrap/ordinary results separately |
-| P6.10 | solo | plan-exec — ⬜ | gpt-5.6-terra/medium | — | independent split-verdict and zero-write proof; does not open P7.2 |
+| P6.10 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | independent split-verdict and zero-write proof; does not open P7.2 |
 | P7.1 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/xhigh | ✅ D99 | terminal generated docs/exact-set |
 | P7.2 | solo | plan-run (manual) — 🔴 | gpt-5.6-terra/high | ✅ separate D# for residual ownership and later live apply | blocked through P6.9→P6.10, later P6 close/audit and separate `.mcp.json` authority |
 | P7.3 | solo | plan-run (manual) | gpt-5.6-terra/high | ✅ D# на exact bootstrap cleanup inventory | guarded destructive cleanup и release manifest; отдельный rollback boundary |
@@ -210,25 +210,25 @@ terminal tree фазы. Полные правила и exact probes: `research/2
 
 ## Готовый launch-block текущего шага
 
-### P6.10 — D106 independent split-verdict proof
+### P6 — terminal close after D106 P6.10
 
-**Next:** exec-items: task:plan-exec 2026.07.19-DUAL-PROVIDER P6.10
+**Next:** $ task:plan-close 2026.07.19-DUAL-PROVIDER P6
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | implementation |
-| Effort | medium |
+| Model class | frontier |
+| Effort | xhigh |
 | Capabilities | command.filesystem-read · command.filesystem-write · command.git-read · command.git-write |
-| Context | cold-start — item |
-| Суть | Independently prove P6.9 split verdict and zero writes; package source and live state stay read-only. |
+| Context | NEW SESSION — шаг-не-item |
+| Суть | Reconcile terminal P6 only, then route independent audit; do not open P7. |
 
 ```text
-$ task:plan-exec 2026.07.19-DUAL-PROVIDER P6.10
+$ task:plan-close 2026.07.19-DUAL-PROVIDER P6
 
-РЕЖИМ: D106 independent split-verdict/no-write proof; no source or live mutation
-ВХОД: plans/2026.07.19-DUAL-PROVIDER/research/24-d104-live-admission-repair-design.md; plans/2026.07.19-DUAL-PROVIDER/phases/P6.md P6.9 Completion Notes and P6.10
-СКОУП: independently derive the D104/ordinary oracle; run disposable-root matrices and the two permitted live dry-run readers; prove exact split diagnostics and zero delta
-НЕ ТРОГАТЬ: package source/tests, P2/P5 contracts, `.mcp.json` adoption, provider config, live apply/repair/rollback, P6 close/audit, P7.2+, FOREMAN, fleet, tag or push
+РЕЖИМ: reconcile terminal P6 only; no P7 execution
+ВХОД: plans/2026.07.19-DUAL-PROVIDER/phases/P6.md; P6.10 evidence and handoff
+СКОУП: verify terminal P6 states and immutable D106/P6.10 evidence; prepare close carrier only
+НЕ ТРОГАТЬ: package source/tests, P2/P5 contracts, `.mcp.json` adoption, provider config, live apply/repair/rollback, P7+, FOREMAN, fleet, tag or push
 ```
 
 ## Гейты владельца (сводно)

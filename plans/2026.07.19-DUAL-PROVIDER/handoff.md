@@ -1,48 +1,43 @@
-# HANDOFF — 2026-07-22 — after P6.9
+# HANDOFF — 2026-07-22 — after P6.10
 
-**Next:** exec-items: task:plan-exec 2026.07.19-DUAL-PROVIDER P6.10
+**Next:** close: task:plan-close 2026.07.19-DUAL-PROVIDER P6
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | implementation |
-| Effort | medium |
-| Capabilities | command.filesystem-read · command.filesystem-write · command.git-read · command.git-write |
-| Context | cold-start — item |
-| Суть | Independently prove the P6.9 split verdict and zero-write boundary; do not edit package source or live state. |
+| Model | frontier |
+| Thinking | xhigh — terminal phase reconciliation |
+| Context | NEW SESSION — шаг-не-item |
+| Суть | Reconcile and close P6 only; then route one fresh independent audit without opening P7. |
 
 ```text
-$ task:plan-exec 2026.07.19-DUAL-PROVIDER P6.10
+$ task:plan-close 2026.07.19-DUAL-PROVIDER P6
 
-РЕЖИМ: D106 independent split-verdict/no-write proof; no source or live mutation
-ВХОД: plans/2026.07.19-DUAL-PROVIDER/research/24-d104-live-admission-repair-design.md; plans/2026.07.19-DUAL-PROVIDER/phases/P6.md P6.9 Completion Notes and P6.10
-СКОУП: independently derive the D104/ordinary oracle; run disposable-root matrices and the two permitted live dry-run readers; prove exact split diagnostics and zero delta
-НЕ ТРОГАТЬ: package source/tests, P2/P5 contracts, `.mcp.json` adoption, provider config, live apply/repair/rollback, P6 close/audit, P7.2+, FOREMAN, fleet, tag or push
+РЕЖИМ: reconcile terminal P6 only; no P7 execution
+ВХОД: plans/2026.07.19-DUAL-PROVIDER/phases/P6.md; P6.10 evidence and P6.10 handoff
+СКОУП: verify terminal P6 item states and immutable D106/P6.10 evidence; prepare phase-close carrier only
+НЕ ТРОГАТЬ: package source/tests, P2/P5 contracts, `.mcp.json` adoption, provider config, live apply/repair/rollback, P7+, FOREMAN, fleet, tag or push
 ```
 
-**Done:** P6.9 is terminal. Commits `0b1bff8a`, `5e372d4e` and final item evidence
-`89bd4afe` separate bootstrap admission from ordinary provider projection, preflight both before
-the first write, keep bootstrap refusal non-green through sync/config persistence and preserve
-clean transfer→ordinary idempotence. Focused and full maind validation are green; all mutation
-tests used disposable roots or writer spies. No live apply/repair command ran.
+**Done:** P6.10 independently derived and verified the D104/ordinary oracle. Disposable roots
+show exact bootstrap admission separately from an unmanaged ordinary MCP refusal, while changed
+preimage/handler/lock cases refuse before writes. The live Claude-only reader reports bootstrap
+`not-selected` and ordinary `unmanaged-target` non-green; the direct P5 reader stays an
+`unmanaged-target` refusal. Before/after SHA-256 inventories are equal.
 
-**Remaining:** Execute only P6.10 independent evidence. P6 close/audit remains a later step;
-P7.2 stays blocked and the unmanaged `.mcp.json` ownership boundary still requires separate
-authority.
+**Remaining:** P6 phase close and a fresh independent P6 audit are separate steps. P7.2 remains
+blocked; the unmanaged `.mcp.json` ownership/provider-selection decision requires new authority.
 
-**Sources of truth:** `phases/P6.md` P6.9 Completion Notes;
-`artifacts/P6-bootstrap-transfer-conformance.md`;
-`research/24-d104-live-admission-repair-design.md`;
-`findings/P6-d104-live-admission-root-cause-2026-07-22.md`; D104 in
-`research/23-p7.2-live-preflight-remediation-design.md`.
+**Sources of truth:** `phases/P6.md` P6.9–P6.10 Completion Notes;
+`artifacts/P6-bootstrap-transfer-{conformance,independent-conformance}.md`;
+`findings/P6-bootstrap-transfer-live-preflight-2026-07-22.md`;
+`research/24-d104-live-admission-repair-design.md`.
 
-**Open risks:** The actual live Claude-only operation is expected to remain non-green:
-bootstrap `not-selected`, ordinary `.mcp.json` unmanaged and P5 direct lifecycle refusal.
-P6.10 must prove those separate facts and zero root delta; an admitted temporary candidate is
-not live authority and does not open P7.2.
+**Open risks:** A green bootstrap candidate is not a green whole operation. Live selection remains
+Claude-only, ordinary `.mcp.json` ownership is unmanaged, and the P5 observer remains a negative
+control. No D106 result authorizes an apply, repair, rollback, P7.2 or provider-config change.
 
 **Workarounds/Deferred/Open questions:**
 
 - Workarounds: —
-- Deferred: `.mcp.json` ownership/provider-selection decision, all live transfer/apply/repair,
-  P6 close/audit and the P7.2 full rerun.
-- Open questions: — (the residual ownership decision is outside D106/P6.9).
+- Deferred: `.mcp.json` ownership/provider-selection authority; every live transfer/apply/repair; P7.
+- Open questions: —

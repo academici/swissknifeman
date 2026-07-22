@@ -25,7 +25,8 @@ from ..projects import listing, write_config
 from ..provider_deploy import (apply_provider_artifacts, generate_conformance_report,
                                plan_provider_artifacts, plan_provider_deploy,
                                plan_d104_bootstrap_transfer, project_provider_preflight,
-                               bootstrap_transfer_projection, SemanticServer, semantic_servers)
+                               bootstrap_transfer_projection, plan_d108_operation,
+                               apply_d108_operation, SemanticServer, semantic_servers)
 
 
 @dataclass(frozen=True)
@@ -147,7 +148,7 @@ def provider_semantic_inventory(env, config, project, *, with_code, maind_server
 
 def deploy_project(env, config, project, *, targets=None, with_code=None,
                    maind_server=True, with_agentmemory=False, dry=False,
-                   provider_projections=None, provider_repair=False):
+                   provider_projections=None, provider_repair=False, d108=False):
     """Раскатать серверы хаба в один проект. with_code=None → берётся из политики/полей проекта
     (code|graphify). Память проекта — через сервер `maind` (изоляция по scope на стороне maind);
     raw-сервер `agentmemory` НЕ раскатывается (он пишет мимо scope-маркера → невидимо для
@@ -168,15 +169,30 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
     bootstrap_transfer = None
     bootstrap_projection = None
     if provider_projections is not None:
-        provider_plan = plan_provider_deploy(
-            provider_projections,
-            provider_semantic_inventory(env, config, project, with_code=with_code,
-                                        maind_server=maind_server,
-                                        with_agentmemory=with_agentmemory))
+        inventory = provider_semantic_inventory(
+            env, config, project, with_code=with_code, maind_server=maind_server,
+            with_agentmemory=with_agentmemory)
+        if d108:
+            operation = plan_d108_operation(
+                project_path, config, pid, provider_projections, inventory,
+                harness_configs=_harness_configs(env), expected_root=env.root)
+            provider_plan = operation.deploy
+            bootstrap_transfer = operation.transfer
+            bootstrap_projection = bootstrap_transfer_projection("admitted", bootstrap_transfer)
+            provider_changed = operation.carrier.changed or any(
+                getattr(action.action, "value", action.action) != "noop"
+                for action in operation.chained_plan.actions)
+            if not dry:
+                apply_d108_operation(project_path, operation)
+        else:
+            provider_plan = plan_provider_deploy(provider_projections, inventory)
+        if d108:
+            ordinary_check = {"severity": "green", "plan": operation.chained_plan}
+        else:
         # This ordinary P2 check deliberately does not include transfer artifacts: their
         # pre-transfer state does not exist yet and must not manufacture a staged green.
-        ordinary_check = plan_provider_artifacts(project_path, provider_plan,
-                                                 repair=provider_repair)
+            ordinary_check = plan_provider_artifacts(project_path, provider_plan,
+                                                     repair=provider_repair)
         has_codex = any(projection.provider_id.value == "codex"
                         for projection in provider_projections)
         bootstrap_root = project_path / ".codex/hooks.json"
@@ -184,7 +200,7 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
         bootstrap_handler = project_path / ".codex/hooks/lifecycle.py"
         # A completed transfer has both its lock and handler, so second-run behavior stays
         # on the ordinary managed path. Every incomplete candidate still asks the P2 oracle.
-        if has_codex and bootstrap_root.is_file() and (
+        if not d108 and has_codex and bootstrap_root.is_file() and (
                 not bootstrap_lock.exists() or not bootstrap_handler.is_file()):
             try:
                 bootstrap_transfer = plan_d104_bootstrap_transfer(
@@ -198,14 +214,14 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
                 bootstrap_projection = bootstrap_transfer_projection(
                     "refused" if refused else "admitted", bootstrap_transfer,
                     "MAIND_PROVIDER_DEPLOY_REFUSED" if refused else None)
-        else:
+        elif not d108:
             bootstrap_projection = bootstrap_transfer_projection("not-selected")
 
         provider_check = ordinary_check
         provider_plan = project_provider_preflight(provider_plan, ordinary_check)
         refused = (bootstrap_projection["status"] == "refused"
                    or ordinary_check["severity"] == "error")
-        if not refused:
+        if not refused and not d108:
             provider_changed = any(
                 getattr(action.action, "value", action.action) != "noop"
                 for action in ordinary_check["plan"].actions)

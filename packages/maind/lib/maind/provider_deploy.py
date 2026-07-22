@@ -17,6 +17,7 @@ from core import (ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource
                   SupportLevel, canonical_json_bytes, apply_plan, load_provider_manifest,
                   plan_artifact_lock, plan_artifact_render, provider_config_catalog,
                   plan_bootstrap_transfer, BootstrapTransferAdmission, artifact_dry_run, sha256_digest,
+                  ChainedBootstrapTransferAdmission, plan_chained_bootstrap_transfer,
                   support_for)
 from core.provider_lock import artifact_doctor
 from .common import atomic_write_text
@@ -84,6 +85,137 @@ class BootstrapTransferPlan:
     """The sole P6-owned D104 composition and its already-admitted P2 plan."""
     artifacts: tuple
     plan: object
+
+
+@dataclass(frozen=True)
+class ProjectCarrierPlan:
+    """The closed D108 project-local provider selection mutation."""
+    path: Path
+    before: bytes | None
+    after: bytes
+    providers: dict
+
+    @property
+    def changed(self):
+        return self.before != self.after
+
+
+@dataclass(frozen=True)
+class D108OperationPlan:
+    """All writer inputs for the one D108 operation, prepared before mutation."""
+    carrier: ProjectCarrierPlan
+    deploy: ProviderDeployPlan
+    transfer: BootstrapTransferPlan
+    chained_plan: object
+
+
+def plan_project_carrier(root, config, project_id, *, expected_root=None):
+    """Plan the only allowed `.swissknife.json#/providers` selection merge.
+
+    ``expected_root`` is supplied by the live facade; disposable-root conformance leaves it
+    unset but still uses the canonical project id.  No caller may broaden this to another
+    project or carrier.
+    """
+    root = Path(root)
+    if project_id != "swissknifeman" or (expected_root is not None and
+                                          root.resolve() != Path(expected_root).resolve()):
+        raise ProviderDeployError("MAIND_D108_FOREIGN_PROJECT")
+    path = root / ".swissknife.json"
+    if path.is_symlink() or (path.exists() and not path.is_file()):
+        raise ProviderDeployError("MAIND_D108_CARRIER_UNSAFE")
+    before = path.read_bytes() if path.exists() else None
+    try:
+        document = {} if before is None else json.loads(before.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        raise ProviderDeployError("MAIND_D108_CARRIER_INVALID") from None
+    if not isinstance(document, dict):
+        raise ProviderDeployError("MAIND_D108_CARRIER_INVALID")
+    existing = document.get("providers")
+    if existing is not None:
+        # The frozen P1 parser owns the provider schema; a bad existing layer refuses.
+        from .config import resolve_provider_config
+        resolved = resolve_provider_config(config, None, project_id,
+                                           project_config=existing)
+        if resolved.selection is None:
+            raise ProviderDeployError("MAIND_D108_CARRIER_INVALID")
+    providers = dict(existing or {})
+    providers["contract_version"] = "1.0.0"
+    selection = dict(providers.get("selection") or {})
+    for provider_id in ("claude-code", "codex"):
+        row = dict(selection.get(provider_id) or {})
+        row["enabled"] = True
+        selection[provider_id] = row
+    providers["selection"] = selection
+    # Validate the fully merged layer before it becomes writable.
+    selected = resolve_effective_providers(config, None, project_id,
+                                           project_config=providers)
+    if selected != (ProviderId.CLAUDE_CODE, ProviderId.CODEX):
+        raise ProviderDeployError("MAIND_D108_SELECTION_INVALID")
+    document["providers"] = providers
+    return ProjectCarrierPlan(path, before, canonical_json_bytes(document), providers)
+
+
+def apply_project_carrier(plan):
+    """Apply the explicit carrier plan; callers own cross-plan rollback."""
+    if not isinstance(plan, ProjectCarrierPlan):
+        raise TypeError("project carrier plan required")
+    plan.path.parent.mkdir(parents=True, exist_ok=True)
+    from core import atomic_write_text
+    atomic_write_text(plan.path, plan.after.decode("utf-8"))
+
+
+def _rollback_project_carrier(plan):
+    if plan.before is None:
+        if plan.path.exists() and not plan.path.is_symlink() and plan.path.read_bytes() == plan.after:
+            plan.path.unlink()
+    elif plan.path.exists() and not plan.path.is_symlink() and plan.path.read_bytes() == plan.after:
+        from core import atomic_write_text
+        atomic_write_text(plan.path, plan.before.decode("utf-8"))
+
+
+def plan_d108_operation(root, config, project_id, base_projections, servers, *, harness_configs,
+                        expected_root=None):
+    """Construct every D108 component before returning any writer-capable plan."""
+    carrier = plan_project_carrier(root, config, project_id, expected_root=expected_root)
+    selected = resolve_effective_providers(config, None, project_id,
+                                           project_config=carrier.providers)
+    deploy = plan_provider_deploy(base_projections, servers, selected=selected)
+    if not deploy.green:
+        raise ProviderDeployError("MAIND_PROVIDER_DEPLOY_REFUSED")
+    mcp = next((row.artifact for row in deploy.results
+                if row.provider_id is ProviderId.CLAUDE_CODE and row.target_path == ".mcp.json"), None)
+    if mcp is None:
+        raise ProviderDeployError("MAIND_D108_MCP_PLAN_MISSING")
+    transfer = plan_d104_bootstrap_transfer(root, harness_configs=harness_configs)
+    admission = ChainedBootstrapTransferAdmission(
+        BootstrapTransferAdmission("D104", ".codex/hooks.json",
+            "sha256:7d7538d021228e8e61d124f4b60b6db04434f8121de30b8672f05e4bf038c3db",
+            ".codex/hooks/lifecycle.py", "harness.codex.lifecycle.hooks",
+            "harness.codex.lifecycle.handler"), transfer.plan, "D108", ".mcp.json",
+        "sha256:cf4537196c3fefd6fd3980221bd3677f74e7867392ad49364e1e891e1f7c8283",
+        "maind.provider-deploy.claude-code", ("whole-file", ()),
+        ("maind", "perplexity-web", "serena"))
+    lock = Path(root) / ".swissknifeman/provider-artifacts.lock.json"
+    chained = plan_chained_bootstrap_transfer(Path(root), transfer.artifacts + (mcp,),
+                                               lock_bytes=lock.read_bytes() if lock.exists() else None,
+                                               admission=admission)
+    if any(getattr(action.action, "value", action.action) == "refuse" for action in chained.actions):
+        raise ProviderDeployError("MAIND_D108_CHAIN_REFUSED")
+    return D108OperationPlan(carrier, deploy, transfer, chained)
+
+
+def apply_d108_operation(root, operation):
+    """Apply carrier then P2 transaction, restoring carrier if the latter refuses/fails."""
+    if not isinstance(operation, D108OperationPlan):
+        raise TypeError("D108 operation plan required")
+    try:
+        if operation.carrier.changed:
+            apply_project_carrier(operation.carrier)
+        apply_plan(Path(root), operation.chained_plan)
+    except BaseException:
+        _rollback_project_carrier(operation.carrier)
+        raise
+    return operation
 
 
 def bootstrap_transfer_projection(status, transfer=None, diagnostic=None):

@@ -12,7 +12,8 @@ from maind.provider_deploy import (ProviderDeployError, plan_provider_deploy,
                                    plan_provider_artifacts, apply_provider_artifacts,
                                    resolve_effective_providers, semantic_servers)
 from maind.provider_deploy import (conformance_report, plan_d104_bootstrap_transfer,
-                                   write_conformance_report)
+                                   write_conformance_report, plan_project_carrier,
+                                   apply_project_carrier)
 from maind.provision.deploy import deploy_project, mark_deployed, provider_semantic_inventory
 from tests.fixtures import make_repo
 from maind.config import merge_defaults
@@ -39,6 +40,38 @@ _D104_PREIMAGE = b'''{
 
 
 class TestProviderDeploy(unittest.TestCase):
+    def test_d108_project_carrier_preserves_siblings_and_is_idempotent(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            path = root / ".swissknife.json"
+            path.write_text(json.dumps({"custom": {"keep": True}, "providers": {
+                "contract_version": "1.0.0", "selection": {
+                    "claude-code": {"enabled": False,
+                                     "capabilities": {"mcp.catalog": True}}}}}),
+                            encoding="utf-8")
+            config = merge_defaults({"projects": [{"id": "swissknifeman", "name": "SKM"}]})
+            first = plan_project_carrier(root, config, "swissknifeman")
+            self.assertTrue(first.changed)
+            self.assertEqual(first.providers["selection"]["claude-code"]["enabled"], True)
+            self.assertEqual(first.providers["selection"]["codex"]["enabled"], True)
+            apply_project_carrier(first)
+            value = json.loads(path.read_text(encoding="utf-8"))
+            self.assertEqual(value["custom"], {"keep": True})
+            self.assertEqual(plan_project_carrier(root, config, "swissknifeman").changed, False)
+
+    def test_d108_project_carrier_refuses_foreign_or_invalid_without_write(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            path = root / ".swissknife.json"
+            path.write_text("[]", encoding="utf-8")
+            config = merge_defaults({"projects": [{"id": "swissknifeman", "name": "SKM"}]})
+            before = path.read_bytes()
+            with self.assertRaisesRegex(ProviderDeployError, "MAIND_D108_CARRIER_INVALID"):
+                plan_project_carrier(root, config, "swissknifeman")
+            with self.assertRaisesRegex(ProviderDeployError, "MAIND_D108_FOREIGN_PROJECT"):
+                plan_project_carrier(root, config, "other")
+            self.assertEqual(path.read_bytes(), before)
+
     def test_d104_transfer_composes_then_returns_to_normal_p2_repair(self):
         repo = Path(__file__).resolve().parents[3]
         harness = repo / "packages/harness/configs"

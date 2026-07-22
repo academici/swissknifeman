@@ -6,7 +6,7 @@
      Порядок строго phase-first: P0→P1→P2→P3→P4→P5→P6→P7. До finish + GREEN design
      audit исполнение любого item запрещено. -->
 
-**Обновлён:** 2026-07-22 · **Соответствует plan.md:** v1.4.46
+**Обновлён:** 2026-07-22 · **Соответствует plan.md:** v1.4.47
 
 > **Статус exec:** D108 under standing delegation selected `S1+O1` and intentionally
 > superseded the pre-approval no-reopen restriction. Current route is P2.7 → P2 close/fresh
@@ -37,7 +37,7 @@
 | P2.4 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | synthetic dry/doctor/conformance gate committed; phase is terminal pending independent audit |
 | P2.5 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | — | D76 contract-required RED remediation committed; phase reclosed pending fresh audit |
 | P2.6 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | ✅ D104 exact additive P2 API/contract | D105 seal/dispatch repair and final independent audit complete; no live root write |
-| P2.7 | solo | plan-run (manual) — ⬜ | gpt-5.6-terra/high | ✅ D108; delegated D109 exact proposal seal before source | one closed D104+`.mcp.json` transaction; temporary roots only; no general adoption API |
+| P2.7 | solo | plan-run (manual) — ⬜ | gpt-5.6-terra/high | ✅ D108/D109 carrier correction; delegated D110 exact proposal seal before source | one closed D104+`.mcp.json` transaction; temporary roots only; no general adoption API |
 | P3.1 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/high | ✅ publication contract | frozen identity/install/ownership semantics до adapters |
 | P3.2 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | deterministic Claude compatibility projection после P3.1 |
 | P3.3 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | — | native Codex plugin/cache contract; D83 restored stale core cache/lock with catalog regression |
@@ -231,7 +231,7 @@ terminal tree фазы. Полные правила и exact probes: `research/2
 # plan.md D108 уже зафиксирован; route из §3
 $ task:plan-run 2026.07.19-DUAL-PROVIDER P2.7
 
-РЕЖИМ: один manual item P2.7; перед source edit exact proposal/ADR → delegated D109 only if equivalent to D108
+РЕЖИМ: один manual item P2.7; amend actual D104 proposal/ADR carriers from D109 → delegated D110 only if equivalent to D108
 ВХОД: research/26-p7.2-s1-o1-remediation-design.md; phases/P2.md P2.7 Required Reads in order
 СКОУП: closed D104+exact `.mcp.json` all-or-nothing transaction, focused temp-root refusal/rollback tests, item close/handoff
 НЕ ТРОГАТЬ: live root, `.swissknife.json`, P6/P7 execution, ordinary ownership semantics, FOREMAN, fleet, tag, push or unrelated changes
@@ -249,7 +249,7 @@ $ task:plan-run 2026.07.19-DUAL-PROVIDER P2.7
 | P1.1 | provider-config contract — D70 выполнен | P1.2–P1.4 |
 | P1.2 | contribution в shared core | P1.3–P1.4 |
 | P2.1 | artifact-kernel proposal/ADR | P2.2–P2.4 |
-| P2.7 | D108 exact candidate; delegated D109 seals only an equivalent additive proposal | P2.7 source and P6.11 |
+| P2.7 | D108 exact candidate; D109 corrects the D104 carriers; delegated D110 seals only an equivalent additive amendment | P2.7 source and P6.11 |
 | P3.1 | publication contract | P3.2–P3.5 |
 | P4.1 | command/routing contract | P4.2–P4.5 |
 | P4.2/P4.4 | contributions в task/plan-protocol canons | P4.3/P4.5 и downstream invocations |

@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.4.46 |
+| Version | 1.4.47 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
@@ -247,11 +247,13 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | D106 | 2026-07-22 | The exact D104 P2 candidate is admissible, but the live P6 operation does not select it because only `claude-code` is effective; the command then fails on independently unmanaged `.mcp.json`, while P5's direct lifecycle reader correctly remains a non-selector. Keep P2/P5 terminal and add only P6.9→P6.10 for explicit selection/result projection, preflight-before-write ordering and independent no-write proof. | RAG:— (repo-grounded: `findings/P6-d104-live-admission-root-cause-2026-07-22.md`, `research/24-d104-live-admission-repair-design.md`, D103/D104) — does not adopt `.mcp.json`, widen the frozen transfer, enable Codex selection, authorize live writes or open P7.2. |
 | D107 | 2026-07-22 | Approval Owner принимает P6 как `🟠 Done with deviations` после AUDIT-CAP attempt 4 и сознательно оставляет F1–F4 как явный долг: F1 — P6.7 canonical `PYTHONPATH=.` validation fails before collection; F2 — P6.7–P6.10 Completion Notes lack per-gate anchored outcomes; F3 — P6.8 evidence commit `f18fbd4b` has six trailing-whitespace lines; F4 — stale D106 wording in roadmap. | RAG:— (owner-grounded: explicit option A approval 2026-07-22; repo-grounded: `phases/P6.md` → `## Audit P6 — 2026-07-22 (attempt 4)`) — acceptance does not repair, reopen, or weaken any frozen contract and grants no authority for P7.2 live apply/repair, FOREMAN, fleet, tag or push. |
 | D108 | 2026-07-22 | Select recommended `S1+O1`: explicitly enable `claude-code+codex` only at `swissknifeman` project rank and authorize design/no-write of one exact chained P2 ownership candidate for live-root `.mcp.json` preimage `sha256:cf4537196c3fefd6fd3980221bd3677f74e7867392ad49364e1e891e1f7c8283`. Reopen P2 as 6/7 with P2.7 and P6 as 9/12 with P6.11→P6.12; their phase handoffs are marked stale, while D107 history/F1–F4 remains immutable. | RAG:— (owner-grounded: standing delegation mAInd `project:swissknifeman` memory `mem_mrwffj6x_4e58b0e7e65d`; repo-grounded: D79, `research/{25-p7.2-owner-authority-boundary,26-p7.2-s1-o1-remediation-design}.md`) — this intentionally supersedes research/25's pre-approval “P6 не переоткрывается” restriction because the newly authorized mechanics belong to the existing P2 ownership and P6 project-operation seams. It authorizes plan design only: no package/live apply/repair/rollback, P7.2 execution, FOREMAN, fleet, tag, push or general adoption API. |
+| D109 | 2026-07-22 | Correct the P2.7 specification carriers: the existing D104 bootstrap-transfer admission is owned by `artifacts/P2-bootstrap-transfer-contribution-proposal.md` and `root/adr/ADR-0003-bootstrap-transfer.md`; P2.7 must amend those files, not the unrelated P2.1 proposal or the nonexistent suffixed ADR variant. Reserve D110 for the later delegated exact proposal/ADR seal after those amendments exist. | RAG:— (repo-grounded: the accepted D104 proposal names `BootstrapTransferAdmission`/`plan_bootstrap_transfer`, the accepted ADR owns the same closed descriptor/planner decision, and `phases/P2.md` P2.6 records both as delivered) — this repairs only plan path identity and decision numbering; D108 semantics, authority, source/core/contracts and the no-live boundary remain unchanged. |
 
 ## 6. Update Log
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-22 | task-plan-design / gpt-5.6-sol/high | D109 corrects P2.7 to the actual D104 proposal/ADR carriers and advances the future delegated exact seal to D110; no source, contract, ADR content or live carrier changed. |
 | 2026-07-22 | task-plan-design / gpt-5.6-sol/xhigh | D108 records delegated `S1+O1` and reopens only P2.7 plus P6.11→P6.12 for exact project-carrier/ownership remediation; no source or live carrier was changed. |
 | 2026-07-22 | owner / AUDIT-CAP | D107: P6 принята как 🟠 с долгом F1–F4; следующий carrier — owner-gated P7.2 design, без запуска P7. |
 | 2026-07-22 | task-plan-design / gpt-5.6-sol/high | P7.2 authority boundary сведён к двум owner-осям `S`/`O`; рекомендован `S1+O1`, item остаётся 🔴 до literal D108, package/live work не запускалась. |

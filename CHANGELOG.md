@@ -19,6 +19,9 @@
 
 ### Fixed
 
+- **core/harness/maind — provider project sync.** Managed provider-artifact locks now
+  retain records owned by other packages; Codex observer deployment, agent templates and
+  provider MCP projection preserve independent managed surfaces during check/apply/repair.
 - **task/skiller — Codex plugin activation.** The native marketplace now publishes
   package-owned Codex siblings with a Codex-compatible local source shape; `task` 0.3.0
   includes its generated `task-plan-*` skills, versioned provenance and cold-session coverage.

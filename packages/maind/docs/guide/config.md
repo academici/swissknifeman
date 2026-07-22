@@ -46,6 +46,28 @@ difflib), неизвестный вложенный — предупрежден
 }
 ```
 
+### Дополнительные provider-managed MCP-серверы
+
+Проект может объявить дополнительные серверы, которыми владеет другой package, в
+`projects[].mcp.extra_servers`. `maind deploy` добавляет их в единый semantic inventory
+вместе со своими `maind`/memory/code серверами, проверяет дубликаты ID до записи и затем
+передаёт их provider-managed renderer. Значения — native MCP-объекты (`command`, `args`,
+`env` и т. п.); их owner отвечает за содержимое и lifecycle.
+
+```jsonc
+"mcp": {
+  "extra_servers": {
+    "analytics-capture": {
+      "command": "python3",
+      "args": [".codex/hooks/analytics-capture.py"]
+    }
+  }
+}
+```
+
+`extra_servers` не может переопределять IDs, уже принадлежащие `maind`, memory, code graph
+или включённым интеграциям: такой конфликт останавливает deploy до изменения target-файлов.
+
 Старые имена `graphify` / `graphify_command` / `graphify_args` / `graphify_server_name` /
 `graphify_workspace` принимаются как **legacy-alias** (обратная совместимость).
 

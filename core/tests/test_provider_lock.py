@@ -10,14 +10,21 @@ from unittest.mock import patch
 import core.provider_lock as provider_lock
 from core import (ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource,
                   ArtifactTarget, ArtifactActionKind, CapabilityId, CapabilityRequirement,
-                  BootstrapTransferAdmission, DriftObservation, ProviderId, SupportLevel, apply_plan,
-                  parse_lock, plan_artifact_lock, plan_artifact_render, plan_bootstrap_transfer,
+                  BootstrapTransferAdmission, ChainedBootstrapTransferAdmission, DriftObservation,
+                  ProviderId, SupportLevel, apply_plan, parse_lock, plan_artifact_lock,
+                  plan_artifact_render, plan_bootstrap_transfer,
+                  plan_chained_bootstrap_transfer,
                   serialize_lock)
 
 
 HASH = "sha256:" + "a" * 64
+REAL_SHA256_DIGEST = provider_lock.sha256_digest
 BOOTSTRAP_PREIMAGE = b'{"hooks":{"SessionStart":["memory"]}}\n'
 BOOTSTRAP_DIGEST = "sha256:7d7538d021228e8e61d124f4b60b6db04434f8121de30b8672f05e4bf038c3db"
+MCP_PREIMAGE = (b'{"mcpServers":{"maind":{"command":"maind"},'
+                b'"perplexity-web":{"command":"perplexity-web"},'
+                b'"serena":{"command":"serena"}}}\n')
+MCP_DIGEST = "sha256:cf4537196c3fefd6fd3980221bd3677f74e7867392ad49364e1e891e1f7c8283"
 
 
 def result(*, body=b"managed\n", artifact_id="task.plan-exec.codex-skill",
@@ -63,11 +70,24 @@ class ProviderLockTests(unittest.TestCase):
             ".codex/hooks/lifecycle.py", "harness.codex.lifecycle.hooks",
             "harness.codex.lifecycle.handler")
 
+    def chained_results(self):
+        return self.bootstrap_results() + (
+            result(body=MCP_PREIMAGE, artifact_id="maind.provider-deploy.claude-code",
+                   target=".mcp.json"),
+        )
+
+    def chained_admission(self):
+        return ChainedBootstrapTransferAdmission(
+            self.bootstrap_admission(), "D108", ".mcp.json", MCP_DIGEST,
+            "maind.provider-deploy.claude-code", ("maind", "perplexity-web", "serena"))
+
     @staticmethod
     def bootstrap_digest(value):
         if value == BOOTSTRAP_PREIMAGE:
             return BOOTSTRAP_DIGEST
-        return provider_lock.sha256_digest(value)
+        if value == MCP_PREIMAGE:
+            return MCP_DIGEST
+        return REAL_SHA256_DIGEST(value)
 
     def test_absent_create_apply_and_second_plan_is_noop(self):
         planned = self.plan()
@@ -265,7 +285,9 @@ class ProviderLockTests(unittest.TestCase):
         self.assertTrue((hooks.with_name("hooks.json.provider-artifact.bootstrap-transfer.bak")).exists())
         self.assertEqual(hooks.read_bytes(), results[0].managed_bytes)
         self.assertEqual((self.root / results[1].target.path).read_bytes(), results[1].managed_bytes)
-        second = plan_artifact_lock(self.root, results, lock_bytes=serialize_lock(applied.next_lock))
+        second = plan_artifact_lock(
+            self.root, results,
+            lock_bytes=(self.root / ".swissknifeman/provider-artifacts.lock.json").read_bytes())
         self.assertEqual([action.action for action in second.actions],
                          [ArtifactActionKind.NOOP, ArtifactActionKind.NOOP])
 
@@ -369,6 +391,137 @@ class ProviderLockTests(unittest.TestCase):
         self.assertEqual(hooks.read_bytes(), BOOTSTRAP_PREIMAGE)
         self.assertFalse((self.root / ".codex/hooks/lifecycle.py").exists())
         self.assertFalse((self.root / ".swissknifeman/provider-artifacts.lock.json").exists())
+
+    def test_d108_chained_transfer_preserves_mcp_and_second_plan_is_noop(self):
+        hooks = self.root / ".codex/hooks.json"
+        mcp = self.root / ".mcp.json"
+        hooks.parent.mkdir(parents=True)
+        hooks.write_bytes(BOOTSTRAP_PREIMAGE)
+        mcp.write_bytes(MCP_PREIMAGE)
+        results = self.chained_results()
+        with patch.object(provider_lock, "sha256_digest", side_effect=self.bootstrap_digest):
+            planned = plan_chained_bootstrap_transfer(
+                self.root, results, lock_bytes=None, admission=self.chained_admission())
+            self.assertEqual(
+                {action.target_path: action.action for action in planned.actions},
+                {".codex/hooks.json": ArtifactActionKind.UPDATE,
+                 ".codex/hooks/lifecycle.py": ArtifactActionKind.CREATE,
+                 ".mcp.json": ArtifactActionKind.NOOP})
+            applied = apply_plan(self.root, planned)
+        self.assertEqual(mcp.read_bytes(), MCP_PREIMAGE)
+        self.assertEqual(
+            mcp.with_name(".mcp.json.provider-artifact.bootstrap-transfer.bak").read_bytes(),
+            MCP_PREIMAGE)
+        lock = parse_lock((self.root / ".swissknifeman/provider-artifacts.lock.json").read_bytes())
+        self.assertEqual(
+            [record.artifact_id for record in lock.records],
+            ["harness.codex.lifecycle.handler", "harness.codex.lifecycle.hooks",
+             "maind.provider-deploy.claude-code"])
+        second = plan_artifact_lock(
+            self.root, results,
+            lock_bytes=(self.root / ".swissknifeman/provider-artifacts.lock.json").read_bytes())
+        self.assertTrue(all(action.action is ArtifactActionKind.NOOP for action in second.actions))
+
+    def test_d108_chained_admission_mutations_refuse_before_writer(self):
+        hooks = self.root / ".codex/hooks.json"
+        hooks.parent.mkdir(parents=True)
+        hooks.write_bytes(BOOTSTRAP_PREIMAGE)
+        (self.root / ".mcp.json").write_bytes(MCP_PREIMAGE)
+        results = self.chained_results()
+        mutations = (
+            replace(self.chained_admission(), decision_id="D109"),
+            replace(self.chained_admission(), mcp_target_path="other.mcp.json"),
+            replace(self.chained_admission(), mcp_preimage_sha256=HASH),
+            replace(self.chained_admission(), mcp_artifact_id="maind.other"),
+            replace(self.chained_admission(), mcp_server_ids=("maind", "serena")),
+        )
+        for admission in mutations:
+            with self.subTest(admission=admission), patch.object(
+                    provider_lock, "sha256_digest", side_effect=self.bootstrap_digest), patch.object(
+                    provider_lock, "_atomic_write_bytes", wraps=provider_lock._atomic_write_bytes) as writer:
+                planned = plan_chained_bootstrap_transfer(
+                    self.root, results, lock_bytes=None, admission=admission)
+                self.assertTrue(all(action.action is ArtifactActionKind.REFUSE for action in planned.actions))
+                with self.assertRaises(ValueError):
+                    apply_plan(self.root, planned)
+                self.assertEqual(writer.call_count, 0)
+        changed_boundary = list(results)
+        changed_boundary[2] = result(body=MCP_PREIMAGE,
+                                     artifact_id="maind.provider-deploy.claude-code",
+                                     target=".mcp.json", boundary=("managed-blocks", ("mcp",)))
+        with patch.object(provider_lock, "sha256_digest", side_effect=self.bootstrap_digest):
+            planned = plan_chained_bootstrap_transfer(
+                self.root, changed_boundary, lock_bytes=None, admission=self.chained_admission())
+        self.assertTrue(all(action.action is ArtifactActionKind.REFUSE for action in planned.actions))
+        with patch.object(provider_lock, "sha256_digest", side_effect=self.bootstrap_digest):
+            locked = plan_chained_bootstrap_transfer(
+                self.root, results, lock_bytes=b"{}", admission=self.chained_admission())
+        self.assertTrue(all(action.action is ArtifactActionKind.REFUSE for action in locked.actions))
+
+    def test_d108_chained_apply_refuses_stale_mcp_before_writer(self):
+        hooks = self.root / ".codex/hooks.json"
+        hooks.parent.mkdir(parents=True)
+        hooks.write_bytes(BOOTSTRAP_PREIMAGE)
+        mcp = self.root / ".mcp.json"
+        mcp.write_bytes(MCP_PREIMAGE)
+        with patch.object(provider_lock, "sha256_digest", side_effect=self.bootstrap_digest):
+            planned = plan_chained_bootstrap_transfer(
+                self.root, self.chained_results(), lock_bytes=None, admission=self.chained_admission())
+            mcp.write_bytes(b"stale\n")
+            with patch.object(provider_lock, "_atomic_write_bytes", wraps=provider_lock._atomic_write_bytes) as writer:
+                with self.assertRaisesRegex(ValueError, "chained-bootstrap-mcp-preimage-mismatch"):
+                    apply_plan(self.root, planned)
+        self.assertEqual(writer.call_count, 0)
+
+    def test_d108_reconstructed_chain_cannot_bypass_sealed_dispatch(self):
+        hooks = self.root / ".codex/hooks.json"
+        hooks.parent.mkdir(parents=True)
+        hooks.write_bytes(BOOTSTRAP_PREIMAGE)
+        (self.root / ".mcp.json").write_bytes(MCP_PREIMAGE)
+        with patch.object(provider_lock, "sha256_digest", side_effect=self.bootstrap_digest):
+            planned = plan_chained_bootstrap_transfer(
+                self.root, self.chained_results(), lock_bytes=None, admission=self.chained_admission())
+            reconstructed = replace(planned, chained_bootstrap_transfer=None)
+            before = tuple(sorted((path.relative_to(self.root).as_posix(), path.read_bytes())
+                                  for path in self.root.rglob("*") if path.is_file()))
+            with patch.object(provider_lock, "_atomic_write_bytes", wraps=provider_lock._atomic_write_bytes) as writer:
+                with self.assertRaisesRegex(ValueError, "chained bootstrap transfer"):
+                    apply_plan(self.root, reconstructed)
+        after = tuple(sorted((path.relative_to(self.root).as_posix(), path.read_bytes())
+                             for path in self.root.rglob("*") if path.is_file()))
+        self.assertEqual(after, before)
+        self.assertEqual(writer.call_count, 0)
+
+    def test_d108_chained_write_failures_restore_exact_prestate(self):
+        for failing_write in range(1, 6):
+            with self.subTest(failing_write=failing_write), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                hooks = root / ".codex/hooks.json"
+                hooks.parent.mkdir(parents=True)
+                hooks.write_bytes(BOOTSTRAP_PREIMAGE)
+                (root / ".mcp.json").write_bytes(MCP_PREIMAGE)
+                before = tuple(sorted((path.relative_to(root).as_posix(), path.read_bytes())
+                                      for path in root.rglob("*") if path.is_file()))
+                with patch.object(provider_lock, "sha256_digest", side_effect=self.bootstrap_digest):
+                    planned = plan_chained_bootstrap_transfer(
+                        root, self.chained_results(), lock_bytes=None,
+                        admission=self.chained_admission())
+                    writer = provider_lock._atomic_write_bytes
+                    calls = 0
+
+                    def fail_on_requested_write(path, value):
+                        nonlocal calls
+                        calls += 1
+                        if calls == failing_write:
+                            raise OSError("stop")
+                        writer(path, value)
+
+                    with patch.object(provider_lock, "_atomic_write_bytes", side_effect=fail_on_requested_write):
+                        with self.assertRaisesRegex(OSError, "stop"):
+                            apply_plan(root, planned)
+                after = tuple(sorted((path.relative_to(root).as_posix(), path.read_bytes())
+                                     for path in root.rglob("*") if path.is_file()))
+                self.assertEqual(after, before)
 
     def test_ordinary_plan_retains_unrelated_lock_records(self):
         first = self.plan()

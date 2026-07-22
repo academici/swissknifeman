@@ -1,12 +1,12 @@
 # Provider artifact contract
 
-**Version:** v1.2.0
+**Version:** v1.3.0
 
 **Status:** frozen
 
 **Approval Owner:** Dmitry Vostrikov
 
-**Approval:** D55, 2026-07-20; backward-compatible additive minors D87, 2026-07-21 and D104, 2026-07-22
+**Approval:** D55, 2026-07-20; backward-compatible additive minors D87, D104 and D110, 2026-07-22
 
 **Vocabulary:** `../CONTEXT.md`, approved D53
 
@@ -23,7 +23,8 @@ Drift и Repair так, чтобы `render`, `check`, `update` и `repair` од�
 
 D55 заморозил v1.0.0; D87 добавил v1.1.0 generic semantic metadata carrier без изменения
 v1.0.0 records, hash/ownership semantics или downstream apply gates. D104 добавляет
-v1.2.0 closed bootstrap-transfer admission для ровно одного recorded preimage; normal
+v1.2.0 closed bootstrap-transfer admission для ровно одного recorded preimage. D110 добавляет
+v1.3.0 exact composition этого sealed D104 predecessor с одним `.mcp.json` record; normal
 plan/apply/repair и exact v1.0.0/v1.1.0 lock records не меняются. Запись provider outputs
 остаётся запрещена до реализации и прохождения этих gates.
 
@@ -188,6 +189,22 @@ On an interrupted transaction rollback restores only the captured first target, 
 exact transaction-created handler and exact transaction-created lock, and never removes an
 unrelated record or target. Ordinary `repair` cannot select this admission. `plan`, `doctor` and
 dry-run remain no-write; live application remains a separate owner-gated consumer operation.
+
+### D110 chained bootstrap-transfer transaction
+
+Closed v1.3.0 composition is available only through an immutable descriptor containing the
+sealed D104 descriptor plus `decision_id = D108`, root-relative `.mcp.json`, artifact ID
+`maind.provider-deploy.claude-code`, whole-file boundary, preimage
+`sha256:cf4537196c3fefd6fd3980221bd3677f74e7867392ad49364e1e891e1f7c8283`, and the exact server-ID
+set `maind`, `perplexity-web`, `serena`. Any different path, ID, boundary, preimage, expected
+bytes/server set, D104 predecessor, present lock, created target or backup refuses before write.
+
+The one transaction validates all three records, exact backup destinations and the canonical
+three-record lock before its first write, then creates recoverable backups and writes that lock
+last. `.mcp.json` bytes remain unchanged on success. A failure restores the byte-exact
+pre-transaction root and removes only transaction-created partials. Ordinary plan/update/repair,
+implicit adoption, target discovery, force flags, wildcard/hash-list descriptors and live-root
+apply/repair/rollback remain excluded.
 
 ### Consumer notification
 

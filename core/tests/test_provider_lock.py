@@ -294,6 +294,33 @@ class ProviderLockTests(unittest.TestCase):
                                      for path in self.root.rglob("*") if path.is_file()))
                 self.assertEqual(after, before)
 
+    def test_d105_reconstructed_transfer_cannot_bypass_sealed_dispatch(self):
+        hooks = self.root / ".codex/hooks.json"
+        hooks.parent.mkdir(parents=True)
+        hooks.write_bytes(BOOTSTRAP_PREIMAGE)
+        results = self.bootstrap_results()
+        original_digest = provider_lock.sha256_digest
+
+        def digest(value):
+            return BOOTSTRAP_DIGEST if value == BOOTSTRAP_PREIMAGE else original_digest(value)
+
+        with patch.object(provider_lock, "sha256_digest", side_effect=digest):
+            planned = plan_bootstrap_transfer(self.root, results, lock_bytes=None,
+                                              admission=self.bootstrap_admission())
+            reconstructed = (
+                replace(planned, lock_path=".swissknifeman/rogue-lock.json"),
+                replace(planned, bootstrap_transfer=None),
+            )
+            for mutated in reconstructed:
+                with self.subTest(mutated=mutated):
+                    before = tuple(sorted((path.relative_to(self.root).as_posix(), path.read_bytes())
+                                          for path in self.root.rglob("*") if path.is_file()))
+                    with self.assertRaisesRegex(ValueError, "bootstrap transfer"):
+                        apply_plan(self.root, mutated)
+                    after = tuple(sorted((path.relative_to(self.root).as_posix(), path.read_bytes())
+                                         for path in self.root.rglob("*") if path.is_file()))
+                    self.assertEqual(after, before)
+
     def test_d104_transfer_rechecks_changed_target_before_backup_write(self):
         hooks = self.root / ".codex/hooks.json"
         hooks.parent.mkdir(parents=True)

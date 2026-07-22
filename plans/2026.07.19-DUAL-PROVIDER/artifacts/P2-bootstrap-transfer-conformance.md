@@ -12,5 +12,6 @@ FOREMAN or fleet carrier is read or written.
 | C5 interrupted transaction | handler write raises | restore first preimage; no handler or lock remains |
 | C6 ordinary drift repair | existing P2 regression suite | unchanged explicit-repair semantics |
 | C7 retained records | existing P2 lock planner regression suite | ordinary retained-unexpected-record behavior remains unchanged |
+| C8 reconstructed transfer plan | altered lock path or cleared transfer admission | refuse before backup, target or rogue-lock write |
 
 Focused evidence: `PYTHONPATH=. python3 -m unittest discover -s core/tests -p 'test_provider_lock.py'`.

@@ -344,6 +344,8 @@ def apply_plan(root: Path, plan: ArtifactPlan) -> ArtifactPlan:
         raise TypeError("plan must be ArtifactPlan")
     if plan.bootstrap_transfer is not None:
         return _apply_bootstrap_transfer(root, plan)
+    if _is_bootstrap_transfer_shape(plan):
+        raise ValueError("bootstrap transfer plan is missing admission")
     if plan.next_lock is None or any(action.action is ArtifactActionKind.REFUSE for action in plan.actions):
         raise ValueError("refusing plan cannot be applied")
     writable = tuple(action for action in plan.actions if action.action is not ArtifactActionKind.NOOP)
@@ -425,6 +427,8 @@ def _apply_bootstrap_transfer(root: Path, plan: ArtifactPlan) -> ArtifactPlan:
     admission = plan.bootstrap_transfer
     if admission is None:  # pragma: no cover - dispatch guards this branch
         raise ValueError("bootstrap transfer admission is missing")
+    if plan.lock_path != LOCK_RELATIVE_PATH:
+        raise ValueError("bootstrap transfer lock path is invalid")
     results = tuple(sorted((action.expected for action in plan.actions),
                            key=lambda result: result.target.path))
     error = _bootstrap_admission_error(admission, results, None, root)
@@ -464,6 +468,19 @@ def _apply_bootstrap_transfer(root: Path, plan: ArtifactPlan) -> ArtifactPlan:
                                      admission.existing_preimage_sha256)
         raise
     return plan_artifact_lock(root, results, lock_bytes=lock_value)
+
+
+def _is_bootstrap_transfer_shape(plan: ArtifactPlan) -> bool:
+    """Recognize a reconstructed D104 transaction before ordinary dispatch."""
+    actions_by_target = {action.target_path: action for action in plan.actions}
+    if set(actions_by_target) != {_BOOTSTRAP_EXISTING_TARGET, _BOOTSTRAP_CREATED_TARGET}:
+        return False
+    existing = actions_by_target[_BOOTSTRAP_EXISTING_TARGET]
+    created = actions_by_target[_BOOTSTRAP_CREATED_TARGET]
+    return (existing.action is ArtifactActionKind.UPDATE and
+            created.action is ArtifactActionKind.CREATE and
+            existing.expected.provenance.artifact_id == _BOOTSTRAP_EXISTING_ARTIFACT and
+            created.expected.provenance.artifact_id == _BOOTSTRAP_CREATED_ARTIFACT)
 
 
 def _bootstrap_write_state(root: Path, admission: BootstrapTransferAdmission,

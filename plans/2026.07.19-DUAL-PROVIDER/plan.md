@@ -123,7 +123,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 |:--|:--|:--|:--|
 | P0 | Evidence, vocabulary и запечатанные provider contracts | 7/7 | 🟢 Done |
 | P1 | Provider config/domain и backward-compatible resolution | 6/6 | 🟢 Done |
-| P2 | Deterministic adapters, provenance, lock и drift engine | 5/6 | 🟡 In progress |
+| P2 | Deterministic adapters, provenance, lock и drift engine | 6/6 | 🟢 Done |
 | P3 | Dual skills publication и marketplaces | 5/5 | 🟢 Done |
 | P4 | Task-command parity и provider-neutral model routing | 5/5 | 🟢 Done |
 | P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 7/8 | 🟡 In progress |
@@ -244,6 +244,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-22 | task-plan-run / gpt-5.6-terra/high | P2.6 D105 закрыт: `294157ec` seals reconstructed bootstrap-transfer dispatch; final independent P2 audit remains required — details in `phases/P2.md` P2.6 Completion Notes. |
 | 2026-07-22 | task-plan-audit / gpt-5.6-sol/xhigh | P2 audit attempt 3 RED/AUDIT-CAP: reconstructed plan bypasses D104 canonical-lock/backup invariants; D105 reopens only P2.6 for automatic contract-preserving repair. |
 | 2026-07-22 | owner | D104 accepted the exact bounded bootstrap-transfer implementation candidate; execution opens only P2.6→P5.8→P6.7→P6.8, with all live/P7.2+/FOREMAN/fleet/push work excluded. |
 | 2026-07-22 | plan-run / gpt-5.6-terra/high | P2.6 closed: D104-only v1.2.0 core bootstrap-transfer admission, rollback and temporary-root conformance — details in `phases/P2.md` P2.6 Completion Notes. |

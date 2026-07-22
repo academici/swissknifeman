@@ -39,3 +39,12 @@ supervisor-classified non-gating deviations. Neither is a P6.6 contract verdict;
 dependency installation, live apply, package change, P7, FOREMAN, fleet, or push occurred.
 
 **Verdict:** GREEN.
+
+## Compact checkpoint correction
+
+The malformed self-created post-restart record `mem_mrvmoo1y_7ebb427a0100` was forgotten
+without touching the original P6.5 record `mem_mrvm57ek_aa95bdbc51c7`. Replacement
+`mem_mrvmr84r_ca0a356274a5` in the same exact scope has canonical JSON payload SHA-256
+`7645617fd8ae3124aebe89702deade80deda6eb036e35a13b5c4f7e1c2afae25`; exact-scope recall
+returned byte-equivalent parseable JSON. The original P6.5 record remains the pre-restart
+checkpoint; this record is only the compact P6.6 verdict.

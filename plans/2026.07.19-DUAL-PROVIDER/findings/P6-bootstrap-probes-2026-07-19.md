@@ -150,6 +150,11 @@ committed deploy-render SHA-256 also matched. Scoped graph, Serena and the fixed
 OpenAI Docs MCP query were GREEN. Broad environment doctor and live pre-P7 checker invocations
 are recorded as supervisor-classified non-gating process deviations.
 
+The malformed self-created P6.6 compact record was removed and replaced by
+`mem_mrvmr84r_ca0a356274a5` in the same scope; canonical JSON SHA-256 is
+`7645617fd8ae3124aebe89702deade80deda6eb036e35a13b5c4f7e1c2afae25`. Original P6.5 record
+`mem_mrvm57ek_aa95bdbc51c7` remains preserved.
+
 At `b7373334` after repair `884e146b`, the worktree-local public mAInd MCP server received
 `maind_memory_recall` with explicit `scope=project:swissknifeman`. Every returned record
 declared exactly that scope; no `ns:axioma`, global, or other scope was returned. The one

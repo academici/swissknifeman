@@ -1,44 +1,43 @@
 # HANDOFF — 2026-07-22 — after P6
 
-**Next:** /task:plan-audit 2026.07.19-DUAL-PROVIDER P6
+**Next:** /task:plan-design 2026.07.19-DUAL-PROVIDER P7.2
 
 | Параметр | Значение |
 |:--|:--|
 | Model | frontier |
-| Thinking | xhigh — independent terminal phase audit |
+| Thinking | high — owner-gated blocked-item design |
 | Context | NEW SESSION — шаг-не-item |
-| Суть | Independently audit closed P6 without opening P7. |
+| Суть | Design only the blocked P7.2 authority boundary; do not execute P7. |
 
 ```text
-$ task:plan-audit 2026.07.19-DUAL-PROVIDER P6
+$ task:plan-design 2026.07.19-DUAL-PROVIDER P7.2
 
-РЕЖИМ: fresh independent terminal P6 audit; no P7 execution
-ВХОД: plans/2026.07.19-DUAL-PROVIDER/phases/P6.md; P6.8–P6.10 evidence; phase handoff
-СКОУП: verify the material P6.8 deviation and immutable D106/P6.10 zero-write proof
-НЕ ТРОГАТЬ: package source/tests, P2/P5 contracts, `.mcp.json` adoption, provider config, live apply/repair/rollback, P7+, FOREMAN, fleet, tag or push
+РЕЖИМ: owner-gated blocked-item design only; do not execute P7.2
+ВХОД: plans/2026.07.19-DUAL-PROVIDER/phases/P7.md → P7.2; plans/2026.07.19-DUAL-PROVIDER/plan.md → D102–D107; plans/2026.07.19-DUAL-PROVIDER/phases/P6.md → `## Audit P6 — 2026-07-22 (attempt 4)`
+СКОУП: reconcile the still-blocked P7.2 authority boundary and emit an exact owner-decision carrier; no package or live work
+НЕ ТРОГАТЬ: package source/tests, frozen contracts, `.mcp.json` adoption, provider config, live apply/repair/rollback, P7.3+, FOREMAN, fleet, tag or push
 ```
 
-**Done:** P6 is closed as `🟠 Done with deviations`: all ten items are terminal. D106/P6.9
-preflights bootstrap and ordinary plans before every write; P6.10 independently proves their
-split verdict and zero live-root delta. The live Claude-only reader reports bootstrap
-`not-selected` and ordinary `unmanaged-target` non-green; the direct P5 reader remains a
-negative-control refusal.
+**Done:** D107 records Approval Owner option A: P6 remains closed as `🟠 Done with deviations`
+with all ten items terminal. The accepted debt is F1–F4 from audit attempt 4; it is not repaired
+or waived. D106/P6.9 preflights bootstrap and ordinary plans before every write; P6.10 proves
+their split verdict and zero live-root delta.
 
-**Remaining:** One fresh independent P6 audit. P7.2 remains blocked; the unmanaged `.mcp.json`
-ownership/provider-selection decision requires new authority.
+**Remaining:** P7.2 remains blocked; its unmanaged `.mcp.json` ownership/provider-selection
+boundary requires separate owner authority. The next carrier is design only, not execution.
 
 **Sources of truth:** `phases/P6.md` Phase Handoff and P6.8–P6.10 Completion Notes;
 `artifacts/P6-bootstrap-transfer-{conformance,independent-conformance}.md`;
 `findings/P6-bootstrap-transfer-live-preflight-2026-07-22.md`;
 `research/24-d104-live-admission-repair-design.md`.
 
-**Open risks:** P6.8's material live refusal remains: a green bootstrap candidate is not a green
-whole operation. Live selection remains Claude-only, ordinary `.mcp.json` ownership is unmanaged,
-and the P5 observer remains a negative control. No D106 result authorizes an apply, repair,
-rollback, P7.2 or provider-config change.
+**Open risks:** F1–F4 remain accepted P6 debt. P6.8's material live refusal remains: a green
+bootstrap candidate is not a green whole operation. Live selection remains Claude-only and
+ordinary `.mcp.json` ownership is unmanaged. No D106/D107 result authorizes an apply, repair,
+rollback, P7.2 execution or provider-config change.
 
 **Workarounds/Deferred/Open questions:**
 
 - Workarounds: —
-- Deferred: `.mcp.json` ownership/provider-selection authority; every live transfer/apply/repair; P7.
+- Deferred: F1–F4; `.mcp.json` ownership/provider-selection authority; every live transfer/apply/repair; P7.2 execution.
 - Open questions: —

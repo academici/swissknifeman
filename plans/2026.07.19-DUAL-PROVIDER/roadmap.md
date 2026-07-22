@@ -269,4 +269,5 @@ $ task:plan-audit 2026.07.19-DUAL-PROVIDER P6
   journal IDs; фактический порядок задают D52 и эта execution map. D51 supersedes недостаточный D49 только в части
   schema-invalid row 11; audit-r3 F1 не меняет contract/D51/canon, а закрывает missing
   directory-ID enforcement. Evidence — `findings/journal-same-plan-remediation-verification-2026-07-20.md`.
-  Audit r4 остаётся pre-exec gate.
+  Audit r4 remains recorded as accepted P6 debt F1–F4 under D107; its stale status wording is
+  deliberately not repaired by this owner-disposition bookkeeping.

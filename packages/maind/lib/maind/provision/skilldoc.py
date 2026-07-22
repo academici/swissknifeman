@@ -15,10 +15,16 @@ from ..health import _act, _file_state, _render, _result
 from ..namespaces import namespaces_of
 from ..seed import linked_projects
 
-SKILL_PATH = Path(".claude") / "skills" / "ecosystem-mcp" / "SKILL.md"
+SKILL_PATHS = (
+    Path(".claude") / "skills" / "ecosystem-mcp" / "SKILL.md",
+    Path(".agents") / "skills" / "ecosystem-mcp" / "SKILL.md",
+)
 TEMPLATE = "skills/ecosystem-mcp/SKILL.md"
 
-SETUP_SKILL_PATH = Path(".claude") / "skills" / "ecosystem-setup" / "SKILL.md"
+SETUP_SKILL_PATHS = (
+    Path(".claude") / "skills" / "ecosystem-setup" / "SKILL.md",
+    Path(".agents") / "skills" / "ecosystem-setup" / "SKILL.md",
+)
 SETUP_TEMPLATE = "skills/ecosystem-setup/SKILL.md"
 
 
@@ -35,7 +41,7 @@ def _subst(env, config, project):
     }
 
 
-def _apply_managed_skill(env, config, project, mode, dry, *, label, template, skill_path):
+def _apply_managed_skill(env, config, project, mode, dry, *, label, template, skill_paths):
     """Общий провиженер управляемого скилла (целиком управляем, идемпотентность по content-hash)."""
     pid = project["id"]
     local = project.get("local_path")
@@ -43,23 +49,27 @@ def _apply_managed_skill(env, config, project, mode, dry, *, label, template, sk
     if not path or not path.is_dir():
         return _result(pid, label, "absent", False, dry, "нет пути")
     content = _render(env, template, _subst(env, config, project))
-    target = path / skill_path
-    state = _file_state(target, content)
-    if not _act(mode, state):
-        return _result(pid, label, state, False, dry, str(skill_path))
+    targets = tuple((skill_path, path / skill_path) for skill_path in skill_paths)
+    states = tuple(_file_state(target, content) for _skill_path, target in targets)
+    selected = tuple((skill_path, target) for (skill_path, target), state in zip(targets, states)
+                     if _act(mode, state))
+    state = "fresh" if all(item == "fresh" for item in states) else (
+        "stale" if "stale" in states else "absent")
     if not dry:
         from ..common import atomic_write_text, backup_file
-        if target.is_file():
-            backup_file(target)
-        atomic_write_text(target, content)
-    return _result(pid, label, state, True, dry, str(skill_path))
+        for _skill_path, target in selected:
+            if target.is_file():
+                backup_file(target)
+            atomic_write_text(target, content)
+    detail = ",".join(str(skill_path) for skill_path in skill_paths)
+    return _result(pid, label, state, bool(selected), dry, detail)
 
 
 def apply_ecosystem_skill(env, config, project, mode, dry):
     """Управляемый скилл ecosystem-mcp в <project>/.claude/skills/ecosystem-mcp/SKILL.md."""
     return _apply_managed_skill(env, config, project, mode, dry,
                                 label="ecosystem-skill", template=TEMPLATE,
-                                skill_path=SKILL_PATH)
+                                skill_paths=SKILL_PATHS)
 
 
 def apply_setup_skill(env, config, project, mode, dry):
@@ -67,4 +77,4 @@ def apply_setup_skill(env, config, project, mode, dry):
     <project>/.claude/skills/ecosystem-setup/SKILL.md — доезжает до внешних репо."""
     return _apply_managed_skill(env, config, project, mode, dry,
                                 label="setup-skill", template=SETUP_TEMPLATE,
-                                skill_path=SETUP_SKILL_PATH)
+                                skill_paths=SETUP_SKILL_PATHS)

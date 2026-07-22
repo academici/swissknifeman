@@ -153,6 +153,22 @@ class ProviderArtifactEndToEndTests(unittest.TestCase):
         self.assertEqual([action.action for action in plan.actions],
                          [ArtifactActionKind.CREATE, ArtifactActionKind.CREATE])
 
+    def test_additive_package_plan_retains_unexpected_lock_records(self):
+        first = self.render()
+        initial = self.plan(first)
+        apply_plan(self.root, initial)
+        second = self.render(ProviderId.CLAUDE_CODE, artifact_id="fixture.claude",
+                             target="generated/claude.txt")
+        additive = plan_artifact_lock(
+            self.root, (second,), lock_bytes=serialize_lock(initial.next_lock),
+            retain_unexpected_records=True)
+        applied = apply_plan(self.root, additive)
+        self.assertEqual(
+            [record.artifact_id for record in applied.next_lock.records],
+            ["fixture.claude", "fixture.codex"])
+        self.assertEqual((self.root / "generated/codex.txt").read_bytes(),
+                         first.managed_bytes)
+
     def test_preview_and_apply_share_one_plan_and_preview_is_no_write(self):
         expected = self.render()
         plan = self.plan(expected)

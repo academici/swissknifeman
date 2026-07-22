@@ -23,7 +23,7 @@ from ..projects import get as get_project
 from ..projects import listing, write_config
 from ..provider_deploy import (apply_provider_artifacts, generate_conformance_report,
                                plan_provider_artifacts, plan_provider_deploy,
-                               semantic_servers)
+                               SemanticServer, semantic_servers)
 
 
 @dataclass(frozen=True)
@@ -75,11 +75,9 @@ def _agentmemory_entry(env, config, scope):
 
 
 def _maind_entry(scope):
-    # Индирекция вместо абсолютного пути: `${MAIND_BIN:-maind}` раскрывается Claude Code из
-    # ОКРУЖЕНИЯ процесса (проектный .env он не читает) → дефолт `maind` резолвится по PATH
-    # (~/.local/bin кладёт install.sh). Тот же MAIND_BIN, что у health-хуков. Переносимо на
-    # другую машину/CI и при переносе репо — в .mcp.json не остаётся захардкоженного /home/...
-    return {"command": "${MAIND_BIN:-maind}",
+    # MCP clients execute command directly, without shell parameter expansion.  The installer
+    # places `maind` on PATH, so the bare command is portable for Claude Code and Codex.
+    return {"command": "maind",
             "args": ["mcp", "--scope", scope]}
 
 
@@ -119,9 +117,18 @@ def provider_semantic_inventory(env, config, project, *, with_code, maind_server
                            codegraph.command(project, st), codegraph.cmd_args(project, st))
     pw = pplxweb.settings(config)
     perplexity = pplxweb.entry(project, pw) if pplxweb.enabled(project, pw) else None
-    return semantic_servers(maind=_maind_entry(scope) if maind_server else None,
+    rows = semantic_servers(maind=_maind_entry(scope) if maind_server else None,
                             agentmemory=_agentmemory_entry(env, config, scope) if with_agentmemory else None,
                             codegraph=code, perplexity=perplexity)
+    extra = (project.get("mcp") or {}).get("extra_servers") or {}
+    if not isinstance(extra, dict) or any(not isinstance(value, dict)
+                                          for value in extra.values()):
+        raise ValueError("MAIND_SEMANTIC_SERVER_INVALID")
+    extra_rows = tuple(SemanticServer(str(server_id), dict(extra[server_id]))
+                       for server_id in sorted(extra))
+    if len({row.id for row in rows + extra_rows}) != len(rows) + len(extra_rows):
+        raise ValueError("MAIND_SEMANTIC_SERVER_DUPLICATE")
+    return rows + extra_rows
 
 
 def deploy_project(env, config, project, *, targets=None, with_code=None,
@@ -188,7 +195,8 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
 
     written = []
     skipped = []
-    for _channel, path in _resolve_targets(project_path, targets):
+    legacy_targets = () if provider_plan is not None else _resolve_targets(project_path, targets)
+    for _channel, path in legacy_targets:
         rel = str(path.relative_to(project_path))
         try:
             data, _existed = load_mcp(path)
@@ -211,6 +219,11 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
             write_example(path, data, project_path, dry=dry)
             reconcile_gitignore(project_path, rel, dry=dry)
         written.append({"file": rel, "servers": list(entries), "changed": changed_any})
+
+    if provider_plan is not None:
+        written = [{"file": row.target_path, "servers": list(row.server_ids),
+                    "changed": provider_changed} for row in provider_plan.results
+                   if row.status == "planned"]
 
     return {"id": pid, "scope": scope, "written": written, "skipped": skipped,
             "code": code_state, "code_server": codegraph.server_name(project, st),

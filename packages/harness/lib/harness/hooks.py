@@ -14,10 +14,12 @@ from pathlib import Path
 
 from core import (ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource,
                   ArtifactTarget, DiagnosticSeverity, ProviderId,
-                  plan_artifact_render, sha256_digest)
+                  apply_plan, artifact_dry_run, plan_artifact_lock,
+                  plan_artifact_render, render_artifact_projection, sha256_digest)
 
 from .common import die, parse_flags, warn
-from .profiles import HarnessDiagnostic, ProfileCatalog
+from .profiles import (HarnessDiagnostic, ProfileCatalog, default_catalog_path,
+                       load_catalog)
 from .settings import (add_hook, load_settings, set_setting_key, set_swissknife,
                        write_json, write_text)
 
@@ -200,6 +202,31 @@ def plan_codex_lifecycle_artifacts(plan: LifecycleRenderPlan, *, bindings_path: 
     handler = plan_artifact_render(ArtifactRenderRequest("harness.codex.lifecycle.handler", (source,),
         ArtifactTarget(".codex/hooks/lifecycle.py", ("whole-file", ())), identity, (), {}, lambda _request: render_codex_hook_handler()))
     return hooks, handler
+
+
+def block_codex_observer(env, target, *, trusted, repair, dry):
+    """Deploy the supported Codex lifecycle observer without replacing other package records."""
+    bindings_path = Path(env.root) / "configs/codex/hooks/lifecycle-context-bindings.json"
+    lifecycle = plan_lifecycle(
+        load_catalog(default_catalog_path(env)), provider_id=ProviderId.CODEX,
+        requests=(LifecycleRequest("context.observer", True),), trusted=trusted,
+        codex_bindings_path=bindings_path)
+    if not lifecycle.green:
+        diagnostic = lifecycle.diagnostics[0]
+        die(f"{diagnostic.code}: {diagnostic.next_action}")
+    artifacts = plan_codex_lifecycle_artifacts(lifecycle, bindings_path=bindings_path)
+    lock_path = Path(target) / ".swissknifeman/provider-artifacts.lock.json"
+    lock_bytes = lock_path.read_bytes() if lock_path.is_file() else None
+    repair_ids = tuple(item.provenance.artifact_id for item in artifacts) if repair else ()
+    plan = plan_artifact_lock(
+        Path(target), artifacts, lock_bytes=lock_bytes,
+        repair_artifact_ids=repair_ids, retain_unexpected_records=True)
+    projection = artifact_dry_run(plan)
+    print(render_artifact_projection(projection), end="")
+    if projection["exit_severity"] == "error":
+        die("Codex lifecycle deploy refused; resolve ownership/drift or use --repair")
+    if not dry:
+        apply_plan(Path(target), plan)
 
 
 def render_codex_capture_handler() -> bytes:
@@ -451,7 +478,8 @@ def cmd_hooks(env, argv):
         "--router": "str", "--run-report": "str", "--pack-guard": "str",
         "--changelog-gate": "str",
         "--output-style": "str", "--plans-dir": "str", "--file": "str",
-        "--global": "bool", "--dry-run": "bool",
+        "--provider": "str", "--observer": "bool", "--trusted": "bool",
+        "--repair": "bool", "--global": "bool", "--dry-run": "bool",
     })
     if opts["help"]:
         print("harness hooks [--global] [--target P] [--auto-approve "
@@ -462,6 +490,7 @@ def cmd_hooks(env, argv):
               f"[--changelog-gate {'|'.join(CHANGELOGGATE_MODES)}] "
               "[--output-style lean|off] "
               "[--plans-dir plans|off] "
+              "[--provider codex --observer --trusted [--repair]] "
               "[--file settings.json|settings.local.json] [--dry-run]")
         return
     if opts["global"]:
@@ -470,6 +499,12 @@ def cmd_hooks(env, argv):
     if not opts["target"]:
         die("нужен --target P (или --global)")
     target = Path(opts["target"]).expanduser()
+    if opts["provider"]:
+        if opts["provider"] != "codex" or not opts["observer"]:
+            die("provider lifecycle поддерживает только --provider codex --observer")
+        block_codex_observer(env, target, trusted=bool(opts["trusted"]),
+                             repair=bool(opts["repair"]), dry=bool(opts["dry_run"]))
+        return
     if not (opts["auto_approve"] or opts["memory"] or opts["router"]
             or opts["run_report"] or opts["pack_guard"] or opts["changelog_gate"]
             or opts["output_style"] or opts["plans_dir"]):

@@ -150,7 +150,8 @@ def _mcp_run(env, config, projects, mode, dry):
         provider_context = context.provider_context if isinstance(context, ProjectContext) else None
         res = deploy_project(env, config, p, dry=dry,
                              provider_projections=(provider_context.projections
-                                                   if provider_context is not None else None))
+                                                   if provider_context is not None else None),
+                             provider_repair=(mode == "repair"))
         if res is None:
             results.append(_result("mcp", p["id"], "skip", detail="нет/нет пути проекта"))
             continue

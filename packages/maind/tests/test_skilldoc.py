@@ -10,6 +10,7 @@ from tests.fixtures import make_repo, write_maind_config
 
 _TEMPLATES = Path(__file__).resolve().parents[1] / "templates"
 _SKILL = Path(".claude") / "skills" / "ecosystem-mcp" / "SKILL.md"
+_CODEX_SKILL = Path(".agents") / "skills" / "ecosystem-mcp" / "SKILL.md"
 
 
 def _setup(tmp):
@@ -38,6 +39,7 @@ class TestEcosystemSkill(unittest.TestCase):
             self.assertIn("project:flexcrm", text)    # {{SCOPE}}
             self.assertIn("axioma", text)             # {{NAMESPACES}}
             self.assertNotIn("{{", text)              # все плейсхолдеры подставлены
+            self.assertEqual(text, (pdir / _CODEX_SKILL).read_text(encoding="utf-8"))
             r2 = skilldoc.apply_ecosystem_skill(env, config, proj, "auto", dry=False)
             self.assertEqual(r2["state"], "fresh")
             self.assertFalse(r2["changed"])
@@ -61,6 +63,7 @@ class TestEcosystemSkill(unittest.TestCase):
             r = skilldoc.apply_ecosystem_skill(env, config, proj, "auto", dry=True)
             self.assertEqual(r["status"], "dry")
             self.assertFalse((pdir / _SKILL).exists())
+            self.assertFalse((pdir / _CODEX_SKILL).exists())
 
     def test_no_path(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -73,6 +76,7 @@ class TestEcosystemSkill(unittest.TestCase):
 
 
 _SETUP_SKILL = Path(".claude") / "skills" / "ecosystem-setup" / "SKILL.md"
+_CODEX_SETUP_SKILL = Path(".agents") / "skills" / "ecosystem-setup" / "SKILL.md"
 
 
 class TestSetupSkill(unittest.TestCase):
@@ -87,6 +91,7 @@ class TestSetupSkill(unittest.TestCase):
             self.assertIn("flexcrm", text)            # {{PROJECT}}
             self.assertIn("php-package", text)        # {{TYPE}}
             self.assertNotIn("{{", text)              # все плейсхолдеры подставлены
+            self.assertEqual(text, (pdir / _CODEX_SETUP_SKILL).read_text(encoding="utf-8"))
             r2 = skilldoc.apply_setup_skill(env, config, proj, "auto", dry=False)
             self.assertEqual(r2["state"], "fresh")
             self.assertFalse(r2["changed"])
@@ -97,6 +102,7 @@ class TestSetupSkill(unittest.TestCase):
             r = skilldoc.apply_setup_skill(env, config, proj, "auto", dry=True)
             self.assertEqual(r["status"], "dry")
             self.assertFalse((pdir / _SETUP_SKILL).exists())
+            self.assertFalse((pdir / _CODEX_SETUP_SKILL).exists())
 
 
 if __name__ == "__main__":

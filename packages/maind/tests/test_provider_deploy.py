@@ -1,3 +1,4 @@
+import json
 import unittest
 from pathlib import Path
 import sys
@@ -86,6 +87,39 @@ class TestProviderDeploy(unittest.TestCase):
                                                with_code=False, maind_server=True,
                                                with_agentmemory=False)
             self.assertEqual([row.id for row in rows], ["maind"])
+
+    def test_project_extra_servers_join_provider_neutral_inventory(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            project_path = Path(tmp) / "project"
+            project_path.mkdir()
+            config = merge_defaults({"projects": [{"id": "demo", "name": "Demo",
+                "local_path": str(project_path), "memory_scope": "project:demo",
+                "mcp": {"extra_servers": {
+                    "laravel-boost": {"command": "php", "args": ["artisan", "boost:mcp"]}}}}]})
+            rows = provider_semantic_inventory(env, config, config["projects"][0],
+                                               with_code=False, maind_server=True,
+                                               with_agentmemory=False)
+            self.assertEqual([row.id for row in rows], ["maind", "laravel-boost"])
+
+    def test_provider_deploy_does_not_run_legacy_mcp_writer_twice(self):
+        root = Path(__file__).resolve().parents[3] / "packages/harness/configs"
+        catalog = load_mcp_catalog(root / "common/mcp/catalog.json")
+        bases = tuple(plan_mcp_projection(catalog, provider_id=provider,
+            bindings_path=root / provider.value / "mcp/bindings.json", selected=(), trusted=True)
+            for provider in (ProviderId.CLAUDE_CODE, ProviderId.CODEX))
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            target = Path(tmp) / "project"
+            target.mkdir()
+            config = merge_defaults({"projects": [{"id": "demo", "name": "Demo",
+                "local_path": str(target), "memory_scope": "project:demo"}]})
+            result = deploy_project(env, config, config["projects"][0], with_code=False,
+                                    provider_projections=bases)
+            self.assertEqual(result["targets"], [".mcp.json", ".codex/config.toml"])
+            self.assertEqual(json.loads((target / ".mcp.json").read_text())["mcpServers"],
+                             {"maind": {"command": "maind",
+                                        "args": ["mcp", "--scope", "project:demo"]}})
 
     def test_full_semantic_inventory_and_duplicate_server_refusal(self):
         with tempfile.TemporaryDirectory() as tmp:

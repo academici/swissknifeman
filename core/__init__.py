@@ -40,7 +40,9 @@ from .provider_artifact import (ArtifactAdapterIdentity, ArtifactProvenance,
                                 sha256_digest, validate_target_path)
 from .provider_lock import (ArtifactAction, ArtifactActionKind, ArtifactLock, ArtifactPlan,
                             DriftObservation, LOCK_RELATIVE_PATH, LOCK_SCHEMA_VERSION,
-                            apply_plan, parse_lock, plan_artifact_lock, serialize_lock)
+                            apply_plan, artifact_dry_run, parse_lock,
+                            plan_artifact_lock, render_artifact_projection,
+                            serialize_lock)
 from .provider_registry import (AdapterCatalog, AdapterDescriptor, AdapterSelection,
                                 AdapterSelectionResult, RegistryDiagnostic, RegistrySeverity)
 from .repo import find_monorepo_root, find_repo_root, sibling_bin
@@ -74,7 +76,8 @@ __all__ = [
     "plan_artifact_render",
     "ArtifactLock", "ArtifactAction", "ArtifactPlan", "DriftObservation",
     "ArtifactActionKind", "LOCK_SCHEMA_VERSION", "LOCK_RELATIVE_PATH", "serialize_lock",
-    "parse_lock", "plan_artifact_lock", "apply_plan",
+    "parse_lock", "plan_artifact_lock", "apply_plan", "artifact_dry_run",
+    "render_artifact_projection",
     "RegistrySeverity", "RegistryDiagnostic", "AdapterDescriptor", "AdapterSelection",
     "AdapterSelectionResult", "AdapterCatalog",
 ]

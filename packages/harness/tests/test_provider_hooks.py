@@ -9,13 +9,14 @@ import tempfile
 import unittest
 from contextlib import redirect_stdout
 from pathlib import Path
+from types import SimpleNamespace
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "analyst" / "lib"))
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 from core import ArtifactActionKind, ProviderId, apply_plan, plan_artifact_lock, serialize_lock
-from harness.hooks import (LifecycleRequest, adapt_codex_hook_payload,
+from harness.hooks import (LifecycleRequest, adapt_codex_hook_payload, block_codex_observer,
                            plan_codex_capture_artifact, plan_codex_lifecycle_artifacts, plan_lifecycle,
                            render_codex_hooks)
 from harness.profiles import load_catalog
@@ -158,6 +159,22 @@ class ProviderHookTests(unittest.TestCase):
             second = plan_artifact_lock(root, artifacts, lock_bytes=lock)
             self.assertEqual([action.action for action in second.actions],
                              [ArtifactActionKind.NOOP, ArtifactActionKind.NOOP])
+
+    def test_codex_observer_cli_seam_preserves_other_package_records(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            capture = plan_codex_capture_artifact(bindings_path=BINDINGS)
+            initial = plan_artifact_lock(root, (capture,), lock_bytes=None)
+            apply_plan(root, initial)
+            with redirect_stdout(io.StringIO()):
+                block_codex_observer(SimpleNamespace(root=PACKAGE), root,
+                                     trusted=True, repair=False, dry=False)
+            lock = json.loads((root / ".swissknifeman/provider-artifacts.lock.json")
+                              .read_text(encoding="utf-8"))
+            self.assertEqual({record["artifact_id"] for record in lock["records"]}, {
+                "harness.codex.capture.handler", "harness.codex.lifecycle.handler",
+                "harness.codex.lifecycle.hooks"})
+            self.assertTrue((root / ".codex/hooks/analytics-capture.py").is_file())
 
     def test_generated_capture_bundle_redacts_to_supported_semantics(self):
         artifact = plan_codex_capture_artifact(bindings_path=BINDINGS)

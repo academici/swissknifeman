@@ -1,6 +1,6 @@
 # HANDOFF — 2026-07-22 — after P6.11
 
-**Next:** run-items: task:plan-exec 2026.07.19-DUAL-PROVIDER P6.12
+**Next:** exec-items: task:plan-exec 2026.07.19-DUAL-PROVIDER P6.12
 
 | Параметр | Значение |
 |:--|:--|

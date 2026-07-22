@@ -206,3 +206,18 @@ RAG:— (owner-grounded: требование item-by-item запуска с `/c
 
 RAG:— (owner-grounded: прямое требование владельца 2026-07-22; repo-grounded:
 `plan.md` §3 Routing, `phases/P7.md`, `roadmap.md`).
+
+## 2026-07-22 — redesign P7.1 после docs-generator escalation
+
+- Владелец запустил `task:plan-design 2026.07.19-DUAL-PROVIDER P7.1` после terminal
+  escalation второго execution-attempt: named manifest-backed docs render/check operation
+  отсутствует, а ручная capability matrix запрещена.
+- Redesign обязан сохранить frozen P0–P6 contracts и устранить корень конфликта, а не
+  разрешить hand-authored README или генерацию support truth из actual provider outputs.
+- Package implementation в этой design-сессии не выполняется; разрешены только plan
+  artifacts, journal bookkeeping и plan-lint. FOREMAN, fleet, live self-host и push остаются
+  вне scope.
+
+RAG:— (owner-grounded: semantic invocation 2026-07-22; repo-grounded:
+`phases/P7.md` P7.1 escalation, `journal.jsonl`,
+`findings/P7.1-capability-manifest-gap-2026-07-22.md`).

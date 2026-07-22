@@ -6,7 +6,7 @@
      Порядок строго phase-first: P0→P1→P2→P3→P4→P5→P6→P7. До finish + GREEN design
      audit исполнение любого item запрещено. -->
 
-**Обновлён:** 2026-07-22 · **Соответствует plan.md:** v1.4.36
+**Обновлён:** 2026-07-22 · **Соответствует plan.md:** v1.4.37
 
 > **Статус exec:** текущий scope — только P7. Следующий item — P7.1; P7 идёт четырьмя
 > отдельными routed Codex-сессиями. FOREMAN, fleet и push остаются закрыты.
@@ -56,7 +56,7 @@
 | P6.4 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | ✅ shared-core/analyst contribution | multi-package readers/store migration completed after frozen P6.3 |
 | P6.5 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | integrated conformance + durable pre-restart checkpoint |
 | P6.6 | solo | plan-exec (NEW SESSION) — 🟢 | gpt-5.6-terra/medium | — | mandatory cold restart; нельзя объединять с P6.5 |
-| P7.1 | solo | plan-exec | gpt-5.6-terra/medium | — | generated docs + independent exact-set после GREEN P6.6 |
+| P7.1 | solo | plan-run (manual) | gpt-5.6-sol/xhigh | ✅ D# на exact manifest bytes + additive core/public seam | materialize frozen manifest → production gates → named generated docs/exact-set |
 | P7.2 | solo | plan-run (manual) | gpt-5.6-terra/high | ✅ D# на live apply после isolated GREEN | isolated→rollback→live self-host; security/release full review |
 | P7.3 | solo | plan-run (manual) | gpt-5.6-terra/high | ✅ D# на exact bootstrap cleanup inventory | guarded destructive cleanup и release manifest; отдельный rollback boundary |
 | P7.4 | solo | plan-run (manual, NEW SESSION) | gpt-5.6-sol/xhigh | ✅ literal GREEN + explicit owner D# | cold adversarial audit; только GREEN+owner D# открывает reconcile |
@@ -89,24 +89,25 @@ P7 исполняется четырьмя независимыми внешни
 4. Один writer работает в `/home/vostrikov/projects/packages/swissknifeman` на
    cumulative `codex/provider-project-sync`. Dirty root, закрытые predecessor phases, FOREMAN,
    fleet, unrelated projects и push не трогаются; generic subagents не создаются.
-5. Owner gate внутри P7.2/P7.3/P7.4 не завершает сессию: executor сначала готовит
+5. Owner gate внутри P7.1/P7.2/P7.3/P7.4 не завершает сессию: executor сначала готовит
    exact inventory/evidence/D#, печатает одну copy-paste approval-строку и после ответа
    владельца завершает тот же item в той же сессии.
 
-### P7.1 — generated provider docs
+### P7.1 — capability manifest, production gates и generated provider docs
 
 | Параметр | Значение |
 |:--|:--|
-| Semantic command | `exec-items: task:plan-exec 2026.07.19-DUAL-PROVIDER P7.1` |
-| Model / Effort | `gpt-5.6-terra` / `medium` |
+| Semantic command | `run-items: task:plan-run 2026.07.19-DUAL-PROVIDER P7.1` |
+| Model / Effort | `gpt-5.6-sol` / `xhigh` |
 | Context | mandatory fresh Codex process; no resume/chat carry-over |
+| Owner gate | Exact D# на candidate manifest hash/catalog set и additive core/public seam до production switch. |
 | Переход | Только GREEN P7.1 открывает P7.2; final response печатает launch P7.2. |
 
 ```bash
 codex -C /home/vostrikov/projects/packages/swissknifeman --no-alt-screen \
-  -m gpt-5.6-terra -c 'model_reasoning_effort="medium"' \
+  -m gpt-5.6-sol -c 'model_reasoning_effort="xhigh"' \
   -a never -s danger-full-access \
-  'Выполни $ task:plan-exec 2026.07.19-DUAL-PROVIDER P7.1 в новой сессии. Только P7.1; закрытые predecessor phases, P7.2+, FOREMAN, fleet, dirty root и push не трогать. До writes проверь effective route, hooks, strict mAInd health и plan-lint; при RED не писать, а выдать exact owning seam и bounded repair launch-block. Один writer, branch codex/provider-project-sync. После GREEN не запускай successor: закончи exact P7.2 launch-block из roadmap.md.'
+  'Выполни $ task:plan-run 2026.07.19-DUAL-PROVIDER P7.1 в новой сессии. Начни с research/22-p7-capability-manifest-remediation.md и findings/P7.1-capability-manifest-gap-2026-07-22.md. Собери exact manifest candidate + shared-core contribution review; до production switch выдай один exact Owner D# и approval-строку, затем продолжи тот же item после ответа. Только P7.1; frozen semantics, closed predecessor deliverables, P7.2+, live provider outputs, FOREMAN, fleet, dirty root и push не трогать. До writes проверь effective route, hooks, strict mAInd health и plan-lint. Один writer, branch codex/provider-project-sync. После GREEN не запускай successor: закончи exact P7.2 launch-block из roadmap.md.'
 ```
 
 ### P7.2 — isolated и live self-host E2E
@@ -197,18 +198,18 @@ terminal tree фазы. Полные правила и exact probes: `research/2
 
 ## Готовый launch-block текущего шага
 
-### P7.1 — generated provider docs
+### P7.1 — capability manifest, production gates и generated provider docs
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | implementation |
-| Effort | medium |
+| Model class | frontier |
+| Effort | xhigh |
 | Capabilities | command.filesystem-read · command.filesystem-write · command.git-read · command.git-write |
-| Context | same-session — item; provider action: `/clear` + fresh routed process |
-| Суть | Generate P7.1 provider docs/exact-set evidence against frozen P0–P6 contracts; fail closed on runtime preflight defects. |
+| Context | same-session — item |
+| Суть | Materialize the frozen capability manifest, wire production gates, approve the catalog, then generate exact-set provider docs. |
 
 ```text
-$ task:plan-exec 2026.07.19-DUAL-PROVIDER P7.1
+$ task:plan-run 2026.07.19-DUAL-PROVIDER P7.1
 ```
 
 ## Гейты владельца (сводно)

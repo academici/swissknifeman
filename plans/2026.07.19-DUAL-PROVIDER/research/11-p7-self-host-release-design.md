@@ -10,10 +10,14 @@
 
 ## Граница P7
 
-P7 не добавляет provider semantics и не исправляет package implementation. Она принимает
-terminal/frozen outputs P0–P6, делает их видимыми оператору, затем доказывает end-to-end
-delivery на isolated roots и на самом `swissknifeman`. Только после доказанного self-host
-она заменяет временные bootstrap adapters generated outputs и формирует release manifest.
+P7 не добавляет новые provider semantics. Она принимает terminal/frozen outputs P0–P6,
+делает их видимыми оператору, затем доказывает end-to-end delivery на isolated roots и на
+самом `swissknifeman`. D98 вводит одно bounded исключение прежней границы «не исправляет
+package implementation»: P7.1 обязан materialize и подключить уже frozen capability manifest,
+потому что без него docs/doctor/adapter gates не имеют contract-valid источника. Исправление
+не меняет schema/support vocabulary; детали —
+`research/22-p7-capability-manifest-remediation.md`. Только после доказанного self-host P7
+заменяет временные bootstrap adapters generated outputs и формирует release manifest.
 FOREMAN остаётся read-only consumer будущего GREEN gate; fleet остаётся вне scope.
 
 RAG:— (repo-grounded: `brief/00-brief.md`, `research/02-sequence-and-boundaries.md`, D6/D7/D11/D12)
@@ -54,7 +58,8 @@ RAG:— (repo-grounded: `brief/00-brief.md`, `research/02-sequence-and-boundarie
 
 ## Item sequence и orchestration
 
-1. P7.1 строит docs/matrix из frozen sources и независимый exact-set.
+1. P7.1 materialize'ит root capability manifest, shared validator/projection и production
+   adapter gates, затем строит docs/matrix named render/check operation и независимый exact-set.
 2. P7.2 использует docs+terminal operations для isolated/live self-host E2E.
 3. P7.3 потребляет точный managed diff P7.2, выполняет guarded cleanup и release manifest.
 4. P7.4 cold-start проверяет весь bundle и запрашивает owner verdict.
@@ -68,8 +73,9 @@ entry gate следующего, а P7.4 должен быть контекст�
 Official OpenAI guidance из `findings/P7-openai-model-routing-2026-07-19.md` даёт Sol как
 flagship complex reasoning/coding и Terra как balance tier. Поэтому весь plan Routing
 переводится с Claude model names на current ChatGPT/Codex IDs: design/contracts/audit →
-Sol, prescribed implementation → Terra. P7.1 детерминированный docs item идёт на
-Terra/medium; P7.2–P7.3 — Terra/high; P7.4, `finish` и design audit — Sol/xhigh.
+Sol, prescribed implementation → Terra. После D98 P7.1 идёт на Sol/xhigh: item замораживает
+actual catalog content и additive shared-core/public cross-package seam до prescribed docs
+render. P7.2–P7.3 — Terra/high; P7.4, `finish` и design audit — Sol/xhigh.
 Luna исключена из release critical path.
 
 RAG:✅ 2026-07-19 (official OpenAI model catalog; `findings/P7-openai-model-routing-2026-07-19.md`)
@@ -78,6 +84,8 @@ RAG:✅ 2026-07-19 (official OpenAI model catalog; `findings/P7-openai-model-rou
 
 | Отказ | Ранний сигнал | Mitigation | Owner/item |
 |:--|:--|:--|:--|
+| Manifest существует только для docs, production adapters продолжают обходить его | production `ProviderConfigCatalog(...)`/free-form support map или render без negative manifest gate | explicit manifest projection at every production boundary + missing/unsupported pre-write tests + forbidden-pattern scan | P7.1 |
+| Catalog заморожен со stale/неполным evidence | capability/extension без first-party или committed repo claim, exact set расходится с declared requirements | candidate hash + evidence-freshness review + explicit Owner D# before production switch | P7.1/Owner |
 | Docs подтверждают тот же ошибочный renderer | expected matrix построена из output | independent expected inventory из frozen sources | P7.1 |
 | Live self-host ломает Claude surface | temp зелёный, live diff касается unmanaged bytes | backup+rollback rehearsal, managed-only apply, Claude goldens | P7.2 |
 | Partial provider failure скрыт общим GREEN | нет provider-tagged rows | required-provider fail-closed exact-set | P7.2 |
@@ -93,8 +101,10 @@ RAG:✅ 2026-07-19 (official OpenAI model catalog; `findings/P7-openai-model-rou
   `findings/P7-openai-model-routing-2026-07-19.md`.
 - Repo-grounding: использован только заданный cold-start set плюс read-only
   `plans/2026.07.18-FOREMAN/roadmap.md` как форматный образец после уточнения владельца.
-- Непроверено → ПОВТОРНЫЙ ПРОХОД: exact P3–P6 public command names и final generated paths
-  ещё не существуют; P7 items разрешают их только из terminal predecessor artifacts.
+- Repo gap повторно проверен 2026-07-22: нормативный manifest carrier и production
+  manifest-backed docs operation отсутствуют; evidence и выбранный bounded repair записаны в
+  `findings/P7.1-capability-manifest-gap-2026-07-22.md` и
+  `research/22-p7-capability-manifest-remediation.md`.
 - Обходки/[POSSIBLE-DEFECT]: current bootstrap adapters и draft contracts не считаются
   release evidence; plan-lint не принимает существующую `plan-design <ID> finish` Next-форму,
   поэтому handoff использует manual declaration при сохранённой фактической Codex-команде

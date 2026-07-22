@@ -52,6 +52,8 @@
 | `research/09-p5-harness-provider-surfaces-design.md` | research | P5–P7 | security intent, profiles/hooks/MCP/agents projections и pre-mortem |
 | `research/10-p6-maind-analytics-bootstrap-design.md` | research | P6–P7 | provider deploy loop, neutral analytics/migration и cold restart |
 | `research/11-p7-self-host-release-design.md` | research | P7, roadmap | docs source, isolated→live self-host, guarded cleanup, release gate и GPT-5.6 routing |
+| `findings/P7.1-capability-manifest-gap-2026-07-22.md` | finding | P7.1 | frozen manifest obligation против фактического отсутствующего carrier/production gate/docs operation |
+| `research/22-p7-capability-manifest-remediation.md` | research | P7.1 | root manifest, shared validation/projection, production gates и deterministic docs render/check |
 | `research/12-final-cross-phase-reconcile.md` | research | finish, design audit | contract chain, Required Reads, Routing, owner gates и итоговый DoR pass 3/3 |
 | `research/13-instruction-contract-remediation.md` | research | P5.6–P7, design audit | common instruction contract/projections и restart propagation |
 | `research/14-journal-schema-exception-remediation.md` | research | journal gate, design audits r3–r4 | F1 sidecar alternatives, exact schema и unchanged same-plan contract |

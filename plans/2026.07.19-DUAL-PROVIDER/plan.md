@@ -124,7 +124,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P4 | Task-command parity и provider-neutral model routing | 5/5 | 🟢 Done |
 | P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 7/7 | 🟢 Done |
 | P6 | mAInd deployment, memory и provider-neutral analytics | 6/6 | 🟢 Done |
-| P7 | Docs, self-hosting validation и FOREMAN release gate | 0/4 | 🔴 Blocked |
+| P7 | Docs, self-hosting validation и FOREMAN release gate | 0/4 | 🟡 In progress |
 
 ## 5. Decision Log
 
@@ -226,12 +226,13 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | D94 | 2026-07-22 | P6 is reopened and reclosed for one bounded terminal-audit repair: linked worktrees may read only the primary worktree's machine-local `config.json` when they share its Git common-dir; cwd matching uses the same exact identity; generated provider-provision evidence is regenerated; roadmap status is reconciled; protected root-bootstrap comparison starts at owner-authorized prerequisite `0694379c`. | RAG:— (owner-grounded: bounded repair assignment; repo-grounded: `0694379c`, `d18bf0bc`, P6 audit attempt 1) — unknown projects and all write targets remain isolated; `0694379c` is an ancestor of P6 close and `.agents/plugins/marketplace.json` has zero delta after it. No frozen contract, P7, FOREMAN, fleet, live self-host, or push state changes. |
 | D95 | 2026-07-22 | P6/P6.2 are reopened and reclosed for the attempt-2 RED strict-health defect: any reported required provider trust row with `green=false` fails `maind health --strict`, while non-strict diagnostics and provider selection remain unchanged. | RAG:— (repo-grounded: P6 audit attempt 2, `packages/maind/lib/maind/health.py`, focused CLI tests) — repair is limited to the strict aggregate and regression coverage; frozen contracts, P6.1/P6.3–P6.6, P6.5 validators, P7, FOREMAN, fleet, live self-host, root bootstrap and provider renderers remain unchanged. |
 | D96 | 2026-07-22 | P7 исполняется четырьмя отдельными внешними Codex-сессиями: P7.1, P7.2, P7.3 и P7.4 получают собственную routed shell-команду; `resume --last`, продолжение в текущем чате и автоматический переход без новой команды запрещены. Финал каждого terminal GREEN item обязан предложить полный copy-paste launch следующего шага; P7.4 предлагает отдельный P7 close, а P7 close — следующий GREEN-gated маршрут. | RAG:— (owner-grounded: прямое требование владельца 2026-07-22; repo-grounded: `roadmap.md` P7 session-by-session execution process, `phases/P7.md`, §3 Routing) — сохраняет последовательную зависимость items и owner gates, не меняя P7 contracts или scope. |
-| D97 | 2026-07-22 | P7.1 preflight reopens the P6 deployment/hook seam for design remediation: a current synthetic Codex hook probe sees an unmanaged lifecycle hook target and a missing handler, despite terminal P6 evidence. | RAG:— (repo-grounded: `findings/P7.1-codex-hook-preflight-2026-07-22.md`, `phases/P7.md`) — P7 generates no docs and changes no package source; plan-design must assign the bounded owning repair before P7 retry. |
+| D97 | 2026-07-22 | P7.1 records the synthetic Codex hook deploy dry-run as a non-blocking environment observation: it proposes a lifecycle hook create but sees an unmanaged existing target; P7.1 docs generation neither deploys nor repairs hooks. | RAG:— (repo-grounded: `findings/P7.1-codex-hook-preflight-2026-07-22.md`, `phases/P7.md`) — this observation does not reopen P6.2 or expand P7.1 scope. |
 
 ## 6. Update Log
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-22 | plan-exec / gpt-5.6-terra/medium | P7.1 escalation corrected by owner direction: the hook deploy dry-run is non-blocking for docs; P6.2 remains terminal and P7.1 continues. |
 | 2026-07-22 | plan-exec / gpt-5.6-terra/medium | P7.1 preflight blocked: the synthetic Codex hook probe found an unmanaged lifecycle target and a missing handler; P6.2 is routed to bounded redesign before any docs generation. |
 | 2026-07-22 | task-plan-design / gpt-5.6-sol/high | D96: P7 закреплена как четыре обязательные fresh-session команды с exact route и следующим copy-paste launch после каждого GREEN; контракты/items P7 не менялись. |
 | 2026-07-22 | task-plan-design / gpt-5.6-sol/high | P7 roadmap пересобран как item-by-item Codex launch console: `/clear`, exact model/effort, semantic `$ task:...`, owner gates и automatic next-command handoff. |

@@ -1,25 +1,25 @@
 # HANDOFF — 2026-07-22 — after P7.1
 
-**Next:** /task:plan-design 2026.07.19-DUAL-PROVIDER P6.2
+**Next:** /task:plan-exec 2026.07.19-DUAL-PROVIDER P7.1
 
 | Параметр | Значение |
 |:--|:--|
-| Model | gpt-5.6-sol |
-| Thinking | high — repair bounded deployment seam |
-| Context | NEW SESSION — шаг-не-item |
-| Суть | Redesign the P6.2 hook deployment repair before any P7.1 retry. |
+| Model | gpt-5.6-terra |
+| Thinking | medium — deterministic provider docs gate |
+| Context | NEW SESSION — P7.1 only |
+| Суть | Continue P7.1 only; the hook deploy dry-run is recorded but non-blocking. |
 
 ```text
-$ task:plan-design 2026.07.19-DUAL-PROVIDER P6.2
+$ task:plan-exec 2026.07.19-DUAL-PROVIDER P7.1
 ```
 
-**Done:** P7.1 runtime preflight confirmed the routed Terra/medium session, approval `never`, unrestricted sandbox and strict mAInd health; no P7 documentation output was generated.
+**Done:** P7.1 runtime preflight confirmed the routed Terra/medium session, approval `never`, unrestricted sandbox and strict mAInd health; the hook deploy dry-run observation is recorded as non-blocking for docs.
 
-**Remaining:** bounded P6.2 deployment/hook remediation → fresh audit as required by the reopened phase → fresh P7.1 process → P7.2 → P7.3 → P7.4 → P7 close. FOREMAN and fleet remain outside scope.
+**Remaining:** P7.1 → P7.2 → P7.3 → P7.4 → P7 close. FOREMAN and fleet remain outside scope.
 
 **Sources of truth:** `findings/P7.1-codex-hook-preflight-2026-07-22.md`; `phases/P7.md`; `plan.md` §3 Routing; `roadmap.md`.
 
-**Open risks:** synthetic `harness hooks --provider codex --observer --trusted --dry-run` reports `harness.codex.lifecycle.hooks: ownership-conflict` and `harness.codex.lifecycle.handler: missing`; P7.1 remains blocked until the P6.2 owner repairs and independently revalidates the deployment seam. Plan-lint has 0 ERROR but retains two P7 warnings exposed by the blocked status (pre-existing clarification/workflow metadata); the redesign must decide whether they are relevant to the repair. P7.2–P7.4 owner gates remain closed.
+**Open risks:** synthetic `harness hooks --provider codex --observer --trusted --dry-run` reports an unmanaged existing lifecycle hook target and a proposed missing handler. It is deployment-plan diagnostics only, has no authority to alter P6.2, and is non-blocking for P7.1 docs. P7.2–P7.4 owner gates remain closed.
 
 **Workarounds/Deferred/Open questions:**
 

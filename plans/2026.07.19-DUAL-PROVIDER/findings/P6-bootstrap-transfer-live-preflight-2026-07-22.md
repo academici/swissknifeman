@@ -54,3 +54,14 @@ FOREMAN, fleet, a tag, push, or a live repair. The bounded next action is a new 
 the P2/P5/P6 owning transfer seam to explain why the exact candidate remains refused and to
 specify a contract-preserving repair; it must not infer authorization for an apply from the
 matching preimage.
+
+## P6.10 independent recheck — 2026-07-22
+
+The two same permitted readers were rerun after P6.9. `maind sync --dry-run --json` now exposes
+the split result explicitly: bootstrap `not-selected`, required `claude-code`
+`failed / unmanaged-target`, and `provider_aggregate: non-green`. The direct P5 observer reader
+still exits nonzero with `harness.codex.lifecycle.hooks: ownership-conflict → refuse
+(unmanaged-target)`. Sorted SHA-256 inventories before and after both readers are identical:
+the D104 hooks preimage remains `7d7538d021228e8e61d124f4b60b6db04434f8121de30b8672f05e4bf038c3db`,
+the lifecycle handler remains absent, and no provider lock exists. This confirms the expected
+residual boundary; it does not authorize a live repair or P7.2.

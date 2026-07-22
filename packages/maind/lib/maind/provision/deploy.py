@@ -23,7 +23,7 @@ from ..projects import get as get_project
 from ..projects import listing, write_config
 from ..provider_deploy import (apply_provider_artifacts, generate_conformance_report,
                                plan_provider_artifacts, plan_provider_deploy,
-                               resolve_effective_providers, semantic_servers)
+                               semantic_servers)
 
 
 @dataclass(frozen=True)

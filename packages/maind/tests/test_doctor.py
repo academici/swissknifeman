@@ -46,6 +46,16 @@ class TestDoctor(unittest.TestCase):
             finally:
                 doctor.shutil.which = orig
 
+    def test_provider_trust_json_executes_json_output_path(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, env = make_repo(tmp)
+            write_maind_config(root)
+            rows = [{"project_id": "alpha", "provider_id": "codex",
+                     "green": False, "diagnostics": ["CODEX_TRUST_MISSING"]}]
+            with mock.patch.object(doctor, "provider_trust_report", return_value=rows):
+                _, out = capture(cmd_doctor, env, ["--provider-trust", "--json"])
+            self.assertEqual(json.loads(out), {"providers": rows, "non_green": 1})
+
 
 def _write_ecosystem_templates(root, *, mcp_body="ecosystem-mcp {{PROJECT}} {{SCOPE}}\n",
                                setup_body="ecosystem-setup {{PROJECT}}\n"):

@@ -11,7 +11,6 @@ from maind.doctor import provider_trust_report
 from maind.health import health_report
 from maind.provision import sync
 from maind.provision.onboard import _unmet_steps
-from tests.fixtures import capture
 from tests.test_sync import _setup
 
 

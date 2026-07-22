@@ -14,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 from harness.common import Env
 from harness.settings_audit import (
     build_context, effective_config, load_layers, run_checks,
-    _strip_jsonc_comments, _load_vscode_layer, _vscode_user_path,
+    _load_vscode_layer,
 )
 
 

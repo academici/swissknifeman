@@ -1,4 +1,5 @@
 """doctor — диагностика окружения узла maind."""
+import json
 import os
 import shutil
 import sys

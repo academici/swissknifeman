@@ -8,7 +8,6 @@ from pathlib import Path
 
 from core import parse_frontmatter
 
-from harness import agentpacks as ap
 from tests import fixtures as fx
 
 CAP_BYTES = 600

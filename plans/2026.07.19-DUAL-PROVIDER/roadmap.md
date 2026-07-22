@@ -6,12 +6,11 @@
      Порядок строго phase-first: P0→P1→P2→P3→P4→P5→P6→P7. До finish + GREEN design
      audit исполнение любого item запрещено. -->
 
-**Обновлён:** 2026-07-22 · **Соответствует plan.md:** v1.4.33
+**Обновлён:** 2026-07-22 · **Соответствует plan.md:** v1.4.34
 
-> **Статус exec:** P0–P6 terminal. P6 audit attempt 1 был RED; bounded D94 repair
-> восстановил linked-worktree public health, regenerated provider-provision evidence,
-> current roadmap pointer и authorized protected baseline. Следующий шаг — fresh independent
-> P6 audit; P7+, live self-host, FOREMAN, fleet и push остаются закрыты.
+> **Статус exec:** P0–P6 закрыты. Следующий шаг — P7.1 в текущем checkout
+> `/home/vostrikov/projects/packages/swissknifeman` на ветке `codex/provider-project-sync`.
+> P6 не переоткрывается; FOREMAN и fleet остаются закрыты.
 
 ## Карта исполнения
 
@@ -93,18 +92,18 @@ terminal tree фазы. Полные правила и exact probes: `research/2
 
 ## Готовый launch-block текущего шага
 
-### P6 — fresh independent terminal audit
+### P7.1 — generated provider docs
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | frontier |
-| Effort | xhigh |
-| Capabilities | command.filesystem-read · command.git-read |
-| Context | NEW SESSION — independent audit |
-| Суть | Audit reclosed P6 from committed evidence without rerunning P6.5 full validators; P7 remains closed until literal GREEN. |
+| Model class | implementation |
+| Effort | medium |
+| Capabilities | command.filesystem-read · command.filesystem-write · command.git-read · command.git-write |
+| Context | NEW SESSION — P7.1 only |
+| Суть | Generate P7.1 provider docs and exact-set evidence; do not start P7.2. |
 
 ```text
-$ task:plan-audit 2026.07.19-DUAL-PROVIDER P6
+$ task:plan-exec 2026.07.19-DUAL-PROVIDER P7.1
 ```
 
 ## Гейты владельца (сводно)

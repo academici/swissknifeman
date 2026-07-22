@@ -117,3 +117,41 @@ temporary-root regression that proves the exact D108 plan reaches the three-reco
 fault injection still restores bytes, and dry live reading returns the exact candidate with
 writer count `0`. Do not change P2 ownership, frozen D108 values, live carriers, P7.2, FOREMAN,
 fleet, tag or push.
+
+## Attempt 3 after D114 — RED
+
+**Observed:** 2026-07-22
+**Tree:** `c5d9490b` (D114 P6.11 bookkeeping anchor)
+**Mode:** the frozen-input oracle was rerun on disposable suites, then once against the
+real root through `deploy_project(..., d108=True, dry=True)` with a spy on
+`apply_d108_operation`. No live apply, repair, rollback or carrier write was invoked.
+
+The two focused disposable suites passed: maind provider/deploy `50` tests and P2.7
+provider-lock `26` tests. The real-root candidate still refuses before the writer:
+`MAIND_D108_CHAIN_REFUSED`, writer calls `0`, and the sorted protected inventory is identical
+before and after: `.mcp.json` =
+`cf4537196c3fefd6fd3980221bd3677f74e7867392ad49364e1e891e1f7c8283`,
+`.codex/hooks.json` =
+`7d7538d021228e8e61d124f4b60b6db04434f8121de30b8672f05e4bf038c3db`,
+`.codex/config.toml` =
+`68df0b5bcc069ce64c24aeb63c2bb08773219dff83526398ddba247dee6fb2bc`; the project carrier,
+lifecycle handler and provider lock remain absent.
+
+D114 corrected the required server identities: both planned and sealed candidates contain
+exactly `maind`, `perplexity-web`, `serena`. The remaining byte mismatch is structural and
+isolated to the `maind` binding/order, not any secret value:
+
+| Field | Planned Claude artifact | Sealed live preimage |
+|:--|:--|:--|
+| SHA-256 / bytes / newline | `3511535210edfd79586c7ca47239c14bae36d03bca80f3ff1e7d5f8889bf7518` / 711 / no | `cf4537196c3fefd6fd3980221bd3677f74e7867392ad49364e1e891e1f7c8283` / 725 / no |
+| `mcpServers` order | `maind`, `serena`, `perplexity-web` | `maind`, `perplexity-web`, `serena` |
+| `maind.command` | `maind` | `${MAIND_BIN:-maind}` |
+| `maind.args` | `mcp`, `--scope`, `project:swissknifeman` | identical |
+| `perplexity-web` binding | identical command/args/keys | identical command/args/keys |
+| `serena` binding | identical command/args/keys | identical command/args/keys |
+
+The P2 chain consequently emits `ownership-conflict / chained-bootstrap-mcp-expected-invalid`
+for all three declared targets before any transaction write. The smallest owning seam is P6.11
+semantic inventory/rendering of the D108 Claude `.mcp.json` candidate: it must reproduce the
+sealed preimage bytes (including the existing `maind` command form and ordering) in a disposable
+real-binding regression, without changing D108/P2 constants, the live carrier or authority.

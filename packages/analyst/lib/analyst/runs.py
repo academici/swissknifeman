@@ -1,0 +1,39 @@
+"""Reader orchestration and explicit copy+verify legacy migration."""
+import hashlib
+import json
+from pathlib import Path
+
+from .events import append_event, read_events
+from .readers import reader_for
+
+
+def normalize(provider_id, schema, raw, *, project_id, raw_ref):
+    return reader_for(provider_id, schema).normalize(raw, project_id=project_id, raw_ref=raw_ref)
+
+
+def migrate_legacy(project_path, *, project_id, source, operation="plan"):
+    source = Path(source)
+    if operation not in {"plan", "dry-run", "check", "apply"}:
+        raise ValueError("ANALYTICS_MIGRATION_CONFLICT")
+    if not source.is_file():
+        raise ValueError("ANALYTICS_CORRUPT_EVENT")
+    before = source.read_bytes()
+    try:
+        raw = json.loads(before)
+    except ValueError as exc:
+        raise ValueError("ANALYTICS_CORRUPT_EVENT") from exc
+    event = normalize("claude-code", 2, raw, project_id=project_id,
+                      raw_ref="local:legacy-" + hashlib.sha256(before).hexdigest()[:16])
+    found = [item for item in read_events(project_path)
+             if (item.provider_id, item.project_id, item.session_id, item.event_id)
+             == (event["provider_id"], event["project_id"], event["session_id"], event["event_id"])]
+    if found and found[0].provenance["sha256"] != event["provenance"]["sha256"]:
+        raise ValueError("ANALYTICS_MIGRATION_CONFLICT")
+    result = {"operation": operation, "event_id": event["event_id"], "would_copy": not bool(found)}
+    if operation == "apply" and not found:
+        append_event(project_path, event, audit={"code": "ANALYTICS_LEGACY_INFERRED_PROVIDER",
+                                                 "reader_version": "1.0.0", "redaction": "passed"})
+        if source.read_bytes() != before:
+            raise ValueError("ANALYTICS_MIGRATION_CONFLICT")
+        result["copied"] = True
+    return result

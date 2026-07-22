@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.4.50 |
+| Version | 1.4.51 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
@@ -132,7 +132,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P3 | Dual skills publication и marketplaces | 5/5 | 🟢 Done |
 | P4 | Task-command parity и provider-neutral model routing | 5/5 | 🟢 Done |
 | P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 8/8 | 🟢 Done |
-| P6 | mAInd deployment, memory и provider-neutral analytics | 10/12 | 🔴 Blocked |
+| P6 | mAInd deployment, memory и provider-neutral analytics | 9/12 | 🔴 Blocked |
 | P7 | Docs, self-hosting validation и FOREMAN release gate | 1/4 | 🔴 Blocked |
 
 ## 5. Decision Log
@@ -250,11 +250,13 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | D109 | 2026-07-22 | Correct the P2.7 specification carriers: the existing D104 bootstrap-transfer admission is owned by `artifacts/P2-bootstrap-transfer-contribution-proposal.md` and `root/adr/ADR-0003-bootstrap-transfer.md`; P2.7 must amend those files, not the unrelated P2.1 proposal or the nonexistent suffixed ADR variant. Reserve D110 for the later delegated exact proposal/ADR seal after those amendments exist. | RAG:— (repo-grounded: the accepted D104 proposal names `BootstrapTransferAdmission`/`plan_bootstrap_transfer`, the accepted ADR owns the same closed descriptor/planner decision, and `phases/P2.md` P2.6 records both as delivered) — this repairs only plan path identity and decision numbering; D108 semantics, authority, source/core/contracts and the no-live boundary remain unchanged. |
 | D110 | 2026-07-22 | Under the standing delegation, seal the exact additive D108 composition in the D104 proposal/ADR: immutable `ChainedBootstrapTransferAdmission` plus `plan_chained_bootstrap_transfer` admit only the sealed D104 pair and exact root-relative `.mcp.json` preimage/server set into one three-record, all-or-nothing transaction. | RAG:— (owner-grounded: mAInd `project:swissknifeman` memory `mem_mrwffj6x_4e58b0e7e65d`; repo-grounded: D108, `research/26-p7.2-s1-o1-remediation-design.md`, amended D104 carriers) — equivalent to D108's five closed invariants: no new target/preimage/API class, no general adoption, no live mutation; SemVer-minor only. |
 | D111 | 2026-07-22 | Accept terminal P2 after audit attempt 5 returned substantive `GREEN`, and continue the existing D108 roadmap with P6.11. | RAG:— (owner-grounded: standing delegation mAInd `project:swissknifeman` memory `mem_mrwffj6x_4e58b0e7e65d`; repo-grounded: `phases/P2.md` final Audit P2, audit anchor `224f1688`, audit commit `f9f168a8`) — the audit-cap fork is logically closed by accepting verified GREEN rather than stopping the approved plan; this grants no new semantics or live authority and only removes the satisfied P2 predecessor block. |
+| D112 | 2026-07-22 | Reopen only P6.11 after P6.12 RED evidence `261da27a`: repair the D108 facade to compare the candidate against the canonical configured project root rather than the maind package root, and build the exact dual P5 projection tuple from the already planned carrier selection before D104/D110 planning. | RAG:— (repo-grounded: `artifacts/P6-d108-independent-conformance.md`, `packages/maind/lib/maind/provision/deploy.py`, P6.12 Completion Notes; owner-grounded: standing delegation `mem_mrwffj6x_4e58b0e7e65d`) — both defects are inside the existing P6.11 owning seam and the fix preserves D108–D111, frozen P2 ownership/preimages and no-write ordering; no new owner approval or live/P7 authority is required. |
 
 ## 6. Update Log
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-22 | task-plan-design / root agent | D112 reopens only P6.11 for the P6.12 RED expected-root and pre-carrier dual-projection defects; frozen contracts and live authority remain unchanged. |
 | 2026-07-22 | plan-run/Codex gpt-5.6-terra high | P6.11 закрыт: D108 project carrier и all-plan-before-write composition committed; далее independent P6.12 — детали см. phases/P6.md P6.11 Completion Notes. |
 | 2026-07-22 | task-plan-exec / gpt-5.6-terra/medium | P6.12 blocked: independent live dry-reader proves a bounded P6.11 facade/pre-carrier projection defect with writer `0`; P7 remains closed — details in `phases/P6.md` P6.12 Completion Notes. |
 | 2026-07-22 | owner-delegate / root agent | D111 принимает substantive GREEN Audit P2 attempt 5 по standing delegation и открывает только P6.11; live/P7.2/FOREMAN/fleet authority не меняется. |

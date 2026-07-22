@@ -6,11 +6,12 @@
      Порядок строго phase-first: P0→P1→P2→P3→P4→P5→P6→P7. До finish + GREEN design
      audit исполнение любого item запрещено. -->
 
-**Обновлён:** 2026-07-22 · **Соответствует plan.md:** v1.4.50
+**Обновлён:** 2026-07-22 · **Соответствует plan.md:** v1.4.51
 
 > **Статус exec:** D108 under standing delegation selected `S1+O1` and intentionally
 > superseded the pre-approval no-reopen restriction. P2.7, terminal full-core/docs/release
-> gate and substantive GREEN audit are accepted by D111; current route is P6.11 → P6.12 → P6 close/fresh audit →
+> gate and substantive GREEN audit are accepted by D111; D112 reopens the bounded P6.11
+> facade/projection seam after P6.12 RED. Current route is P6.11 repair → P6.12 rerun → P6 close/fresh audit →
 > fresh P7.2. Remediation uses disposable
 > roots/read-only live preflight only; P7.3+, live writes, FOREMAN, fleet, tag and push remain
 > closed.
@@ -67,8 +68,8 @@
 | P6.8 | solo | plan-exec — 🟠 | gpt-5.6-terra/medium | — | evidence preserved: P2-admissible D104 candidate is live-not-selected; ordinary aggregate non-green |
 | P6.9 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | — | preflight all required plans before write and report bootstrap/ordinary results separately |
 | P6.10 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | independent split-verdict and zero-write proof; does not open P7.2 |
-| P6.11 | solo | plan-run (manual) — ⬜ | gpt-5.6-terra/high | ✅ D108/D111 | predecessor satisfied; project-carrier + all-plan-before-write composition |
-| P6.12 | solo | plan-exec — ⬜ | gpt-5.6-terra/medium | — | independent temporary-root rollback and live zero-write proof after P6.11 |
+| P6.11 | solo | plan-run (manual) — 🟡 | gpt-5.6-terra/high | ✅ D108/D111/D112 | bounded expected-root + planned-dual projection fix-forward |
+| P6.12 | solo | plan-exec — 🔴 | gpt-5.6-terra/medium | — | RED oracle `261da27a`; rerun from first oracle after P6.11 reclose |
 | P7.1 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/xhigh | ✅ D99 | terminal generated docs/exact-set |
 | P7.2 | solo | plan-run (manual) — 🔴 | gpt-5.6-terra/high | ✅ D108 `S1+O1`; later exact live apply D# | waits for terminal/fresh-audited P2.7 and P6.11→P6.12, then reruns from first preflight |
 | P7.3 | solo | plan-run (manual) | gpt-5.6-terra/high | ✅ D# на exact bootstrap cleanup inventory | guarded destructive cleanup и release manifest; отдельный rollback boundary |
@@ -216,7 +217,7 @@ terminal tree фазы. Полные правила и exact probes: `research/2
 
 ## Готовый launch-block текущего шага
 
-### P6.11 — project selection and exact ownership composition
+### P6.11 — D112 bounded facade/projection repair
 
 **Next:** run-items: task:plan-run 2026.07.19-DUAL-PROVIDER P6.11
 
@@ -226,14 +227,14 @@ terminal tree фазы. Полные правила и exact probes: `research/2
 | Effort | high |
 | Capabilities | command.filesystem-read · command.filesystem-write · command.git-read · command.git-write |
 | Context | same-session — item |
-| Суть | Реализовать только P6.11 project carrier и all-plan-before-write D108 composition в temporary roots. |
+| Суть | Исправить только D112 expected-root и planned-dual projection wiring, затем перезакрыть P6.11. |
 
 ```text
 $ task:plan-run 2026.07.19-DUAL-PROVIDER P6.11
 
-РЕЖИМ: один manual item P6.11 после D111; implementation и focused temporary-root validation
-ВХОД: plans/2026.07.19-DUAL-PROVIDER/phases/P6.md → P6.11 Required Reads; `plan.md` D108–D111
-СКОУП: 1) project-local provider carrier plan/apply/rollback 2) P2.7+D104+provider all-plan-before-write composition 3) focused conformance and item close
+РЕЖИМ: P6.11 attempt 2 contract-preserving fix-forward after P6.12 RED; implementation и focused temporary-root validation
+ВХОД: phases/P6.md P6.11 D112 Repair Rules; artifact P6-d108-independent-conformance.md; `plan.md` D108–D112
+СКОУП: 1) canonical configured expected root 2) exact planned dual P5 projections before D104/D110 3) focused public-facade regression and P6.11 reclose
 НЕ ТРОГАТЬ: live root/carriers, P6.12/P7 execution, FOREMAN, fleet, tag, push, owner `AGENTS.md` or unrelated changes
 ```
 

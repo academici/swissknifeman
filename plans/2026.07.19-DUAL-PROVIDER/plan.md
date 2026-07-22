@@ -123,7 +123,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P3 | Dual skills publication и marketplaces | 5/5 | 🟢 Done |
 | P4 | Task-command parity и provider-neutral model routing | 5/5 | 🟢 Done |
 | P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 7/7 | 🟢 Done |
-| P6 | mAInd deployment, memory и provider-neutral analytics | 5/6 | 🟡 In progress |
+| P6 | mAInd deployment, memory и provider-neutral analytics | 6/6 | 🟢 Done |
 | P7 | Docs, self-hosting validation и FOREMAN release gate | 0/4 | ⬜ Not started |
 
 ## 5. Decision Log
@@ -229,6 +229,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
 | 2026-07-22 | plan-terra-medium / gpt-5.6-terra/medium | P6.5 закрыт: independent provider/instruction/analytics evidence, preserved RED recoveries and matching disk+mAInd checkpoint are GREEN; fresh disk-first P6.6 remains next — details in `phases/P6.md` P6.5 Completion Notes. |
+| 2026-07-22 | plan-terra-medium / gpt-5.6-terra/medium | P6.6 закрыт: cold-session disk/memory checkpoint recovery, public temporary-root provider/instruction reproof, graph/Serena/fixed Perplexity and neutral analytics reader probes are GREEN; phase close/audit remain separate. |
 | 2026-07-22 | plan-terra-high / gpt-5.6-terra/high | P6.4 attempt 3 reclosed after D92: actual P5 Claude SCHEMA=2 `reads.total` maps to neutral `reads`, never `tools.by_name.Read`; focused analyst/mAInd consumers are GREEN — details in `phases/P6.md` P6.4 Completion Notes. |
 | 2026-07-22 | plan-terra-high / gpt-5.6-terra/high | D92: P6.4 reopened for the bounded actual-P5 Claude `reads.total` reader correction; D90 remains unchanged — details in `phases/P6.md` P6.4 Completion Notes. |
 | 2026-07-22 | plan-terra-high / gpt-5.6-terra/high | P6.4 повторно закрыт: D90-preserving reader, redaction, projection, consumer, migration и generated-capture repairs have focused GREEN evidence — details in `phases/P6.md` P6.4 Completion Notes. |

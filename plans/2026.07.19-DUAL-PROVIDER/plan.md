@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.4.47 |
+| Version | 1.4.48 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
@@ -128,7 +128,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 |:--|:--|:--|:--|
 | P0 | Evidence, vocabulary и запечатанные provider contracts | 7/7 | 🟢 Done |
 | P1 | Provider config/domain и backward-compatible resolution | 6/6 | 🟢 Done |
-| P2 | Deterministic adapters, provenance, lock и drift engine | 6/7 | 🟡 In progress |
+| P2 | Deterministic adapters, provenance, lock и drift engine | 7/7 | 🟢 Done |
 | P3 | Dual skills publication и marketplaces | 5/5 | 🟢 Done |
 | P4 | Task-command parity и provider-neutral model routing | 5/5 | 🟢 Done |
 | P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 8/8 | 🟢 Done |
@@ -248,11 +248,13 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | D107 | 2026-07-22 | Approval Owner принимает P6 как `🟠 Done with deviations` после AUDIT-CAP attempt 4 и сознательно оставляет F1–F4 как явный долг: F1 — P6.7 canonical `PYTHONPATH=.` validation fails before collection; F2 — P6.7–P6.10 Completion Notes lack per-gate anchored outcomes; F3 — P6.8 evidence commit `f18fbd4b` has six trailing-whitespace lines; F4 — stale D106 wording in roadmap. | RAG:— (owner-grounded: explicit option A approval 2026-07-22; repo-grounded: `phases/P6.md` → `## Audit P6 — 2026-07-22 (attempt 4)`) — acceptance does not repair, reopen, or weaken any frozen contract and grants no authority for P7.2 live apply/repair, FOREMAN, fleet, tag or push. |
 | D108 | 2026-07-22 | Select recommended `S1+O1`: explicitly enable `claude-code+codex` only at `swissknifeman` project rank and authorize design/no-write of one exact chained P2 ownership candidate for live-root `.mcp.json` preimage `sha256:cf4537196c3fefd6fd3980221bd3677f74e7867392ad49364e1e891e1f7c8283`. Reopen P2 as 6/7 with P2.7 and P6 as 9/12 with P6.11→P6.12; their phase handoffs are marked stale, while D107 history/F1–F4 remains immutable. | RAG:— (owner-grounded: standing delegation mAInd `project:swissknifeman` memory `mem_mrwffj6x_4e58b0e7e65d`; repo-grounded: D79, `research/{25-p7.2-owner-authority-boundary,26-p7.2-s1-o1-remediation-design}.md`) — this intentionally supersedes research/25's pre-approval “P6 не переоткрывается” restriction because the newly authorized mechanics belong to the existing P2 ownership and P6 project-operation seams. It authorizes plan design only: no package/live apply/repair/rollback, P7.2 execution, FOREMAN, fleet, tag, push or general adoption API. |
 | D109 | 2026-07-22 | Correct the P2.7 specification carriers: the existing D104 bootstrap-transfer admission is owned by `artifacts/P2-bootstrap-transfer-contribution-proposal.md` and `root/adr/ADR-0003-bootstrap-transfer.md`; P2.7 must amend those files, not the unrelated P2.1 proposal or the nonexistent suffixed ADR variant. Reserve D110 for the later delegated exact proposal/ADR seal after those amendments exist. | RAG:— (repo-grounded: the accepted D104 proposal names `BootstrapTransferAdmission`/`plan_bootstrap_transfer`, the accepted ADR owns the same closed descriptor/planner decision, and `phases/P2.md` P2.6 records both as delivered) — this repairs only plan path identity and decision numbering; D108 semantics, authority, source/core/contracts and the no-live boundary remain unchanged. |
+| D110 | 2026-07-22 | Under the standing delegation, seal the exact additive D108 composition in the D104 proposal/ADR: immutable `ChainedBootstrapTransferAdmission` plus `plan_chained_bootstrap_transfer` admit only the sealed D104 pair and exact root-relative `.mcp.json` preimage/server set into one three-record, all-or-nothing transaction. | RAG:— (owner-grounded: mAInd `project:swissknifeman` memory `mem_mrwffj6x_4e58b0e7e65d`; repo-grounded: D108, `research/26-p7.2-s1-o1-remediation-design.md`, amended D104 carriers) — equivalent to D108's five closed invariants: no new target/preimage/API class, no general adoption, no live mutation; SemVer-minor only. |
 
 ## 6. Update Log
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-22 | task-plan-run / gpt-5.6-terra/high | P2.7 закрыт: D110 exact chained D104 + `.mcp.json` transaction commits only disposable-root rollback/refusal conformance — детали см. phases/P2.md P2.7 Completion Notes. |
 | 2026-07-22 | task-plan-design / gpt-5.6-sol/high | D109 corrects P2.7 to the actual D104 proposal/ADR carriers and advances the future delegated exact seal to D110; no source, contract, ADR content or live carrier changed. |
 | 2026-07-22 | task-plan-design / gpt-5.6-sol/xhigh | D108 records delegated `S1+O1` and reopens only P2.7 plus P6.11→P6.12 for exact project-carrier/ownership remediation; no source or live carrier was changed. |
 | 2026-07-22 | owner / AUDIT-CAP | D107: P6 принята как 🟠 с долгом F1–F4; следующий carrier — owner-gated P7.2 design, без запуска P7. |
@@ -397,7 +399,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | Контракт | Версия | Статус | Потребители | Уведомлены |
 |:--|:--|:--|:--|:--|
 | `root/contracts/provider-capability-contract.md` | v1.0.0 | frozen (D55) | P1–P7, FOREMAN reconcile после P7.4 | 2026-07-20 (D55) |
-| `root/contracts/provider-artifact-contract.md` | v1.2.0 | frozen (D55; additive minors D87/D104) | P2–P7, future fleet rollout; exact v1.0.0/v1.1.0 records remain supported | 2026-07-22 (D104; P5.8/P6.7 notified) |
+| `root/contracts/provider-artifact-contract.md` | v1.3.0 | frozen (D55; additive minors D87/D104/D110) | P2–P7, future fleet rollout; exact v1.0.0/v1.1.0 records remain supported | 2026-07-22 (D110; P6.11 notified) |
 | `root/contracts/provider-migration-gates.md` | v1.0.0 | frozen (D59) | P1–P7, FOREMAN reconcile gate, future fleet plan | 2026-07-20 (D59) |
 | `root/contracts/provider-config-contract.md` | v1.0.0 | frozen (D70) | P1.2–P7, future FOREMAN/fleet consumers | 2026-07-20 (D70) |
 | `root/contracts/provider-skill-publication-contract.md` | v1.0.0 | frozen (D77) | P3.2–P3.5, P4 task adapters, P7 self-host/release evidence | 2026-07-20 (D77) |

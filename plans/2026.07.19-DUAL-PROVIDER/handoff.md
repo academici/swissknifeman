@@ -1,58 +1,40 @@
-# HANDOFF — 2026-07-22 — after P7
+# HANDOFF — 2026-07-22 — after P2.7
 
-**Next:** run-items: task:plan-run 2026.07.19-DUAL-PROVIDER P2.7
+**Next:** close: task:plan-close 2026.07.19-DUAL-PROVIDER P2
 
 | Параметр | Значение |
 |:--|:--|
 | Model | `gpt-5.6-terra` |
-| Thinking | `high` |
+| Thinking | `medium` |
 | Approval policy | `never` |
 | Sandbox | `danger-full-access` |
 | CWD | `/home/vostrikov/projects/packages/swissknifeman` |
-| Context | `NEW SESSION` — manual item |
-| Суть | Выполнить только P2.7 exact D108 chained ownership transaction в disposable roots, затем item close/handoff. |
+| Context | `NEW SESSION` — шаг-не-item |
+| Суть | Закрыть P2: сверить 7 terminal items, выполнить terminal full-core/docs gate и подготовить fresh independent audit. |
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-run 2026.07.19-DUAL-PROVIDER P2.7; first read research/26-p7.2-s1-o1-remediation-design.md and phases/P2.md P2.7 Required Reads in order; amend only artifacts/P2-bootstrap-transfer-contribution-proposal.md and root/adr/ADR-0003-bootstrap-transfer.md, then seal an equivalent exact amendment as delegated D110 before source edit; implement and validate the D104 plus exact .mcp.json all-or-nothing transaction in disposable roots; do not touch live root, .swissknife.json, P6/P7 execution, FOREMAN, fleet, tag, push or unrelated changes'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="medium"' -a never -s danger-full-access '$ task:plan-close 2026.07.19-DUAL-PROVIDER P2; cold-start: read AGENTS.md, CLAUDE.md, plans/2026.07.19-DUAL-PROVIDER/{plan.md,handoff.md}, phases/P2.md and P2.7 Completion Notes; verify all P2 item commits and run terminal full-core validation plus docs-maintenance assessment; do not modify core/package source, live .mcp.json/.swissknife.json, P6/P7 execution, FOREMAN, fleet, tag, push or owner M AGENTS.md'
 ```
 
-**Done:** D108 records the Owner's standing delegation from mAInd
-`project:swissknifeman` memory `mem_mrwffj6x_4e58b0e7e65d` and selects recommended
-`S1+O1`. It intentionally supersedes the pre-approval “P6 не переоткрывается” restriction
-without rewriting D107 history. Four-step reopen bookkeeping is complete: plan version
-`1.4.47`, Status Board P2 `6/7 🟡` and P6 `9/12 🔴`, D108 rationale, and stale markers on
-both former phase handoffs.
+**Done:** P2.7 scope commit `99fc010b` plus review-fix `b39229cc` implement D110's closed D104
+and exact MCP composition in `core.provider_lock`. They preserve MCP bytes, retain recoverable
+backups, bind sealed predecessor bytes/provenance/lock, reject unmarked reserved transfer
+reconstructions before ordinary apply, and prove exact disposable-root rollback/refusal behavior.
+Proposal, ADR and frozen artifact contract carry the same v1.3.0 SemVer-minor boundary; D110
+cites the standing delegation `mem_mrwffj6x_4e58b0e7e65d`.
 
-D109 corrects P2.7 to the actual accepted D104 carriers
-`artifacts/P2-bootstrap-transfer-contribution-proposal.md` and
-`root/adr/ADR-0003-bootstrap-transfer.md`; the future delegated exact seal is D110. No
-proposal/ADR content, source, contract or live carrier changed in this plan-only correction.
+**Remaining:** Close P2, then run a fresh independent P2 audit before P6.11. P6.11/P6.12 and
+fresh P7.2 remain sequentially blocked on those gates.
 
-The exact no-write remediation is materialized as P2.7 → P2 close/fresh audit → P6.11 →
-P6.12 → P6 close/fresh audit → fresh P7.2. Project-carrier merge, exact MCP preimage/server
-set, composed D104 predecessor, canonical three-record lock, all-plan-before-write behavior,
-temporary-root rollback matrix and live no-write proof are fixed in
-`research/26-p7.2-s1-o1-remediation-design.md` and the three item specifications.
+**Sources of truth:** `plan.md` D104–D110 · `phases/P2.md` P2.7 ·
+`research/26-p7.2-s1-o1-remediation-design.md` · `core/provider_lock.py`.
 
-**Remaining:** Execute P2.7. Before source editing, its exact additive amendments to the two
-D109-corrected carriers must be equivalent to D108; the executor records delegated D110 and
-continues without another Owner
-literal. Any broader API, another path/preimage, general adoption semantic or live mutation
-is outside the delegation and must stop. After audited P2.7, P6.11 becomes runnable; P6.12
-remains independent evidence-only. P7.2 restarts from its first preflight only after both
-phases close and pass fresh audits.
-
-**Sources of truth:** `plan.md` D108 · `research/26-p7.2-s1-o1-remediation-design.md` ·
-`phases/P2.md` P2.7 · `phases/P6.md` P6.11/P6.12 · `phases/P7.md` P7.2 ·
-`open-questions.md` OQ-P7.2-1.
-
-**Open risks:** D107 F1–F4 remain accepted historical debt. The current live carrier is still
-legacy Claude-only and `.mcp.json` is still unmanaged; this is expected until the later P7.2
-live gate. No package source, live config/artifact, P2 lock, D104 target, AGENTS, FOREMAN,
-fleet, ACTIVE, tag or push was changed by this design step.
+**Open risks:** P5 retains two pre-existing DoR/workflow warnings; P2.7 adds no new lint
+error. D107 F1–F4 remain accepted historical P6 debt. Live `.mcp.json` and
+`.swissknife.json` were not read or modified by P2.7.
 
 **Workarounds/Deferred/Open questions:**
 
 - workarounds: —
-- deferred: every live apply/repair/rollback and exact live path/action approval remain in P7.2 after isolated GREEN.
+- deferred: all live apply/repair/rollback and exact live action approval remain in P7.2 after isolated GREEN.
 - open_questions: —

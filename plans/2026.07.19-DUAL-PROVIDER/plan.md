@@ -228,6 +228,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-22 | task-plan-close / gpt-5.6-sol/high | P6 закрыта после terminal P6.1–P6.6 reconciliation; next — один fresh independent P6 audit, P7 не открыта. |
 | 2026-07-22 | plan-terra-medium / gpt-5.6-terra/medium | P6.5 закрыт: independent provider/instruction/analytics evidence, preserved RED recoveries and matching disk+mAInd checkpoint are GREEN; fresh disk-first P6.6 remains next — details in `phases/P6.md` P6.5 Completion Notes. |
 | 2026-07-22 | plan-terra-medium / gpt-5.6-terra/medium | P6.6 закрыт: cold-session disk/memory checkpoint recovery, public temporary-root provider/instruction reproof, graph/Serena/fixed Perplexity and neutral analytics reader probes are GREEN; phase close/audit remain separate. |
 | 2026-07-22 | plan-terra-medium / gpt-5.6-terra/medium | P6.6 compact checkpoint correction: malformed self-created post-restart memory fact was forgotten; corrected exact-scope JSON recall is GREEN, original P6.5 checkpoint remains preserved. |

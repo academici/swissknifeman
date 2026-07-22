@@ -9,6 +9,9 @@ written; no P7.2 action was invoked.
 | `claude-code.enabled=false` becomes `true`; Codex is added as `enabled=true` | GREEN |
 | second project-carrier plan is empty | GREEN |
 | non-object carrier and non-`swissknifeman` project reject before a writer | GREEN |
+| public D108 dry facade passes normalized configured `local_path`, never maind `env.root` | GREEN |
+| Claude-only current selection derives the exact planned Claude Code + Codex P5 tuple from the carrier | GREEN |
+| foreign public D108 project refuses before the D108 writer | GREEN |
 | existing D104 refusal, ordinary unmanaged target and no-write provider regressions | GREEN |
 | legacy deploy suite | GREEN |
 
@@ -23,6 +26,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m py_compile \
 git diff --check
 ```
 
-The focused test command passed `46` tests on the P6.11 item tree. The carrier implementation
-uses only temporary roots in its direct tests. Full package validation, release/docs assessment,
-the independent D108 rollback matrix and all live read-only evidence remain P6.12/phase gates.
+The focused test command passed `49` tests on the D112 P6.11 retry tree. The carrier
+implementation and public-facade regressions use only temporary roots. Full package validation,
+release/docs assessment, the independent D108 rollback matrix and all live read-only evidence
+remain P6.12/phase gates.

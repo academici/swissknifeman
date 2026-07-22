@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.4.51 |
+| Version | 1.4.52 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
@@ -132,7 +132,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P3 | Dual skills publication и marketplaces | 5/5 | 🟢 Done |
 | P4 | Task-command parity и provider-neutral model routing | 5/5 | 🟢 Done |
 | P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 8/8 | 🟢 Done |
-| P6 | mAInd deployment, memory и provider-neutral analytics | 9/12 | 🔴 Blocked |
+| P6 | mAInd deployment, memory и provider-neutral analytics | 10/12 | 🔴 Blocked |
 | P7 | Docs, self-hosting validation и FOREMAN release gate | 1/4 | 🔴 Blocked |
 
 ## 5. Decision Log
@@ -256,6 +256,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-22 | plan-run / Codex gpt-5.6-terra/high | P6.11 закрыт: D112 seals the configured-root facade and carrier-derived dual P5 bases; далее независимый P6.12 — детали см. phases/P6.md P6.11 Completion Notes. |
 | 2026-07-22 | task-plan-design / root agent | D112 reopens only P6.11 for the P6.12 RED expected-root and pre-carrier dual-projection defects; frozen contracts and live authority remain unchanged. |
 | 2026-07-22 | plan-run/Codex gpt-5.6-terra high | P6.11 закрыт: D108 project carrier и all-plan-before-write composition committed; далее independent P6.12 — детали см. phases/P6.md P6.11 Completion Notes. |
 | 2026-07-22 | task-plan-exec / gpt-5.6-terra/medium | P6.12 blocked: independent live dry-reader proves a bounded P6.11 facade/pre-carrier projection defect with writer `0`; P7 remains closed — details in `phases/P6.md` P6.12 Completion Notes. |

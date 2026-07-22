@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.4.48 |
+| Version | 1.4.49 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
@@ -254,6 +254,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-22 | task-plan-close / gpt-5.6-terra/medium | P2 закрыта после terminal P2.1–P2.7: full core gate GREEN, docs не требуются; следующий gate — fresh independent P2 audit перед P6.11. |
 | 2026-07-22 | task-plan-run / gpt-5.6-terra/high | P2.7 закрыт: D110 exact chained D104 + `.mcp.json` transaction commits only disposable-root rollback/refusal conformance — детали см. phases/P2.md P2.7 Completion Notes. |
 | 2026-07-22 | task-plan-design / gpt-5.6-sol/high | D109 corrects P2.7 to the actual D104 proposal/ADR carriers and advances the future delegated exact seal to D110; no source, contract, ADR content or live carrier changed. |
 | 2026-07-22 | task-plan-design / gpt-5.6-sol/xhigh | D108 records delegated `S1+O1` and reopens only P2.7 plus P6.11→P6.12 for exact project-carrier/ownership remediation; no source or live carrier was changed. |

@@ -6,11 +6,12 @@
      Порядок строго phase-first: P0→P1→P2→P3→P4→P5→P6→P7. До finish + GREEN design
      audit исполнение любого item запрещено. -->
 
-**Обновлён:** 2026-07-22 · **Соответствует plan.md:** v1.4.47
+**Обновлён:** 2026-07-22 · **Соответствует plan.md:** v1.4.49
 
 > **Статус exec:** D108 under standing delegation selected `S1+O1` and intentionally
-> superseded the pre-approval no-reopen restriction. Current route is P2.7 → P2 close/fresh
-> audit → P6.11 → P6.12 → P6 close/fresh audit → fresh P7.2. Remediation uses disposable
+> superseded the pre-approval no-reopen restriction. P2.7 and the terminal full-core/docs/release
+> gate are complete; current route is fresh P2 audit → P6.11 → P6.12 → P6 close/fresh audit →
+> fresh P7.2. Remediation uses disposable
 > roots/read-only live preflight only; P7.3+, live writes, FOREMAN, fleet, tag and push remain
 > closed.
 
@@ -37,7 +38,7 @@
 | P2.4 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | synthetic dry/doctor/conformance gate committed; phase is terminal pending independent audit |
 | P2.5 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | — | D76 contract-required RED remediation committed; phase reclosed pending fresh audit |
 | P2.6 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | ✅ D104 exact additive P2 API/contract | D105 seal/dispatch repair and final independent audit complete; no live root write |
-| P2.7 | solo | plan-run (manual) — ⬜ | gpt-5.6-terra/high | ✅ D108/D109 carrier correction; delegated D110 exact proposal seal before source | one closed D104+`.mcp.json` transaction; temporary roots only; no general adoption API |
+| P2.7 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | ✅ D108/D109 carrier correction; delegated D110 exact proposal seal before source | terminal closed D104+`.mcp.json` transaction; temporary roots only; no general adoption API; fresh P2 audit remains |
 | P3.1 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/high | ✅ publication contract | frozen identity/install/ownership semantics до adapters |
 | P3.2 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | deterministic Claude compatibility projection после P3.1 |
 | P3.3 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | — | native Codex plugin/cache contract; D83 restored stale core cache/lock with catalog regression |
@@ -215,26 +216,25 @@ terminal tree фазы. Полные правила и exact probes: `research/2
 
 ## Готовый launch-block текущего шага
 
-### P2.7 — exact chained ownership transaction
+### P2 — fresh independent audit
 
-**Next:** run-items: task:plan-run 2026.07.19-DUAL-PROVIDER P2.7
+**Next:** /task:plan-audit 2026.07.19-DUAL-PROVIDER P2
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | implementation (`gpt-5.6-terra`) |
-| Effort | high |
-| Capabilities | command.filesystem-read · command.filesystem-write · command.git-read · command.git-write |
-| Context | NEW SESSION — manual item |
-| Суть | Реализовать только exact D108 chained P2 transaction в disposable roots; затем закрыть и независимо проверить P2. |
+| Model class | audit (`gpt-5.6-sol`) |
+| Effort | xhigh |
+| Capabilities | command.filesystem-read · command.git-read |
+| Context | NEW SESSION — шаг-не-item |
+| Суть | Независимо проверить terminal P2.7/D110 transaction и весь terminal P2 перед P6.11. |
 
 ```text
-# plan.md D108 уже зафиксирован; route из §3
-$ task:plan-run 2026.07.19-DUAL-PROVIDER P2.7
+/task:plan-audit 2026.07.19-DUAL-PROVIDER P2
 
-РЕЖИМ: один manual item P2.7; amend actual D104 proposal/ADR carriers from D109 → delegated D110 only if equivalent to D108
-ВХОД: research/26-p7.2-s1-o1-remediation-design.md; phases/P2.md P2.7 Required Reads in order
-СКОУП: closed D104+exact `.mcp.json` all-or-nothing transaction, focused temp-root refusal/rollback tests, item close/handoff
-НЕ ТРОГАТЬ: live root, `.swissknife.json`, P6/P7 execution, ordinary ownership semantics, FOREMAN, fleet, tag, push or unrelated changes
+РЕЖИМ: fresh independent audit terminal P2; disk/git evidence first, no implementation or bookkeeping edits
+ВХОД: AGENTS.md, CLAUDE.md, plans/2026.07.19-DUAL-PROVIDER/{plan.md,roadmap.md,handoff.md}, phases/P2.md including P2.7 and all Audit P2 blocks; D104–D110 carriers and `core/provider_lock.py` tests
+СКОУП: independently reproduce terminal P2.7/D110 closed admission, three-record transaction, rollback/refusal/no-write and ordinary P2 regressions; verify full-core close evidence and plan records
+НЕ ТРОГАТЬ: live root, `.mcp.json`, `.swissknife.json`, P6/P7 execution, core/package source, FOREMAN, fleet, tag, push or unrelated changes
 ```
 
 ## Гейты владельца (сводно)

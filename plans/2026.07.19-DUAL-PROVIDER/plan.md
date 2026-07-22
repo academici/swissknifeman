@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.4.32 |
+| Version | 1.4.33 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
@@ -223,12 +223,14 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | D91 | 2026-07-22 | P6.4 is reopened for one bounded repair of proven reader, redaction, run-report, consumer, migration, and focused-conformance defects. D90 remains frozen and unchanged. | RAG:— (owner-grounded: repair assignment; repo-grounded: `08c5ce21`, P6.4 contract and focused implementation evidence) — the repair stays in the P6.4 owning seam and does not enter P6.5+, P7, FOREMAN, fleet, or live self-host state. |
 | D92 | 2026-07-22 | Supervisor RED reopens P6.4 attempt 3 for one bounded Claude SCHEMA=2 reader correction: owned top-level `reads.total` must normalize to neutral `reads`; `tools.by_name.Read` is not that semantic. D90 remains frozen and unchanged. | RAG:— (owner-grounded: bounded attempt-3 repair; repo-grounded: `packages/harness/configs/claude-code/hooks/run-report/_lib.py`, `8f23f66b`) — the repair is limited to reader/test evidence and does not enter P6.5+, P7, FOREMAN, fleet, or live self-host state. |
 | D93 | 2026-07-22 | P6.2 is reopened and reclosed for one bounded public MCP memory-isolation repair: an explicit recall scope is exact and must not be expanded to related namespace/global scopes. | RAG:— (owner-grounded: bounded P6.2 repair assignment; repo-grounded: `packages/maind/lib/maind/mcp.py`, `884e146b`) — preserves the backend marker filter and omitted-scope compatibility union; no frozen contract, provider projection, backend, P6.5+, P7, FOREMAN, fleet, or live self-host state changes. |
+| D94 | 2026-07-22 | P6 is reopened and reclosed for one bounded terminal-audit repair: linked worktrees may read only the primary worktree's machine-local `config.json` when they share its Git common-dir; cwd matching uses the same exact identity; generated provider-provision evidence is regenerated; roadmap status is reconciled; protected root-bootstrap comparison starts at owner-authorized prerequisite `0694379c`. | RAG:— (owner-grounded: bounded repair assignment; repo-grounded: `0694379c`, `d18bf0bc`, P6 audit attempt 1) — unknown projects and all write targets remain isolated; `0694379c` is an ancestor of P6 close and `.agents/plugins/marketplace.json` has zero delta after it. No frozen contract, P7, FOREMAN, fleet, live self-host, or push state changes. |
 
 ## 6. Update Log
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
 | 2026-07-22 | task-plan-close / gpt-5.6-sol/high | P6 закрыта после terminal P6.1–P6.6 reconciliation; next — один fresh independent P6 audit, P7 не открыта. |
+| 2026-07-22 | plan-terra-high / gpt-5.6-terra/high | D94 P6 audit repair reclosed: linked-worktree health, generated provision evidence, roadmap and authorized protected baseline are reconciled; fresh audit remains next. |
 | 2026-07-22 | plan-terra-medium / gpt-5.6-terra/medium | P6.5 закрыт: independent provider/instruction/analytics evidence, preserved RED recoveries and matching disk+mAInd checkpoint are GREEN; fresh disk-first P6.6 remains next — details in `phases/P6.md` P6.5 Completion Notes. |
 | 2026-07-22 | plan-terra-medium / gpt-5.6-terra/medium | P6.6 закрыт: cold-session disk/memory checkpoint recovery, public temporary-root provider/instruction reproof, graph/Serena/fixed Perplexity and neutral analytics reader probes are GREEN; phase close/audit remain separate. |
 | 2026-07-22 | plan-terra-medium / gpt-5.6-terra/medium | P6.6 compact checkpoint correction: malformed self-created post-restart memory fact was forgotten; corrected exact-scope JSON recall is GREEN, original P6.5 checkpoint remains preserved. |

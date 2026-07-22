@@ -37,3 +37,12 @@ The D93 worktree-local public MCP recall returns only records declared
 `project:swissknifeman` when explicitly scoped. The compact checkpoint
 `p6.5-bootstrap-b7373334` is stored once, recalled in the same scope, and matches the disk
 payload SHA-256 `22a9c7a82f48ae0e27449ca1be240398b3b8ecd36fbfd50bc2f8bd3a56d60dc9`.
+
+## D94 terminal-audit repair provenance
+
+`0694379c0c62031cee6b428fb1c8eb260f213d44` is the owner-authorized prerequisite before
+P6.1 and an ancestor of P6 phase-close `d18bf0bcbc03674272c9b315b88fbee28987ee1b`.
+Therefore protected root-bootstrap comparison starts at `0694379c`, not its predecessor:
+`.agents/plugins/marketplace.json` has zero delta after that baseline, as do protected
+P7/FOREMAN/fleet paths. This corrects audit provenance only; it does not alter any frozen
+contract or P6.5 validation result.

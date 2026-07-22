@@ -1,6 +1,7 @@
 """Explicit provider reader registry and safe source/provenance boundary."""
 import hashlib
 import json
+from types import MappingProxyType
 
 
 def source_bytes(raw, supplied):
@@ -42,10 +43,10 @@ def reject_sensitive(value):
 from .claude_code import ClaudeRunReportReader
 from .codex import CodexCaptureReader
 
-READERS = {
+READERS = MappingProxyType({
     ("claude-code", 2): ClaudeRunReportReader(),
     ("codex", 1): CodexCaptureReader(),
-}
+})
 
 
 def reader_for(provider_id, schema):

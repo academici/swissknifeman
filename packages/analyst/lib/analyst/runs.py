@@ -24,14 +24,13 @@ def neutral_run_report(project_path, session=None):
     for event in events:
         for name, value in event.metrics.items():
             metrics[name] = metrics.get(name, 0) + value
-    latest = events[-1]
-    return {"schema": "1.0.0", "session_id": latest.session_id,
-            "generated_at": latest.occurred_at,
-            "tools": {"total": metrics.get("tools", 0), "by_name": {}},
-            "files_changed": ["normalized"] * int(metrics.get("files", 0)),
-            "workflows": [], "tool_failures": ["normalized"] * int(metrics.get("errors", 0)),
-            "bash": {"tests": [], "lints": [], "failed": []}, "devloop": {},
-            "analytics_provenance": [dict(event.provenance) for event in events]}
+    result = {"contract_version": "1.0.0",
+              "metrics": {name: metrics[name] for name in sorted(metrics)},
+              "provenance": [dict(event.provenance) for event in events]}
+    sessions = {event.session_id for event in events}
+    if len(sessions) == 1:
+        result["session_id"] = next(iter(sessions))
+    return result
 
 
 def migrate_legacy(project_path, *, project_id, source, operation="plan"):

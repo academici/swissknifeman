@@ -306,7 +306,10 @@ def cmd_digest(env, argv):
 
     ppath = os.getcwd()
     rr = neutral_run_report(ppath, opts["session"] or None)
-    if rr is None:
+    # D90 projection has no raw-shaped bash/workflow/workaround evidence.  Digest consumes
+    # it only once a future neutral semantic explicitly carries those fields; otherwise this
+    # is the bounded legacy Claude reader fallback, never fabricated zero/default evidence.
+    if not isinstance(rr, dict) or not any(key in rr for key in ("bash", "workflows", "devloop")):
         rr = find_run_report(ppath, opts["session"] or None)
     if not rr:
         die("нет run-report в .claude/runs — включи захват прогона: "

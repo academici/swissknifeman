@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 
 from analyst.events import append_event, events_path, read_events
-from analyst.runs import migrate_legacy, normalize
+from analyst.runs import migrate_legacy, neutral_run_report, normalize
 
 
 class ProviderReaderTests(unittest.TestCase):
@@ -72,6 +72,21 @@ class ProviderReaderTests(unittest.TestCase):
             events_path(root).write_text(json.dumps(stored) + "\n", encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "ANALYTICS_MIGRATION_CONFLICT"):
                 migrate_legacy(root, project_id="p", source=legacy, operation="apply")
+
+    def test_neutral_projection_omits_missing_raw_semantics(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            event = normalize("codex", 1, {"schema": 1, "session_id": "s",
+                "occurred_at": "2026-07-22T00:00:00Z", "metrics": {"usage": 1}},
+                project_id="p", raw_ref="local:source")
+            append_event(root, event)
+            report = neutral_run_report(root, "s")
+            self.assertEqual(report["metrics"], {"usage": 1})
+            self.assertEqual(report["session_id"], "s")
+            self.assertNotIn("tools", report)
+            self.assertNotIn("files_changed", report)
+            self.assertNotIn("bash", report)
+            self.assertNotIn("workflows", report)
 
 
 if __name__ == "__main__":

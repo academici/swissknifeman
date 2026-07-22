@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.4.31 |
+| Version | 1.4.32 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
@@ -221,11 +221,14 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | D89 | 2026-07-21 | Supervisor acceptance reopens P6.1: live deploy execution, secret-reference proof, direct consumer projection proof and exact provenance checks remain in the D88 owning seam. | RAG:— (owner-grounded: acceptance rejection) — no frozen contract or later phase changes. |
 | D90 | 2026-07-22 | Delegated Owner Approval D79 accepts Alternative C and freezes `provider-analytics-contract` v1.0.0: stable provider IDs `claude-code`/`codex`; neutral project-local `.swissknife/analytics` and `.swissknife/analyst` homes; explicit named readers with semantic-only events and opaque hashed provenance; append-only events/audit and unchanged human promotion; bounded Claude `SCHEMA=2` dual-read/single-write fallback; copy+verify, collision-safe, idempotent migration that never changes or deletes source bytes; no transcripts, prompt bodies, raw event bodies, resolved secrets, global telemetry or cross-project raw aggregation. | RAG:— (owner-grounded: D79 delegated verdict; repo-grounded: `artifacts/P6-analytics-contract-review.md`, `root/contracts/provider-analytics-contract.md`, committed P5 hook/context evidence) — freezes D90 for the prescribed P6.4 consumers without inventing Codex raw keys or expanding package/live/FOREMAN/fleet authority. |
 | D91 | 2026-07-22 | P6.4 is reopened for one bounded repair of proven reader, redaction, run-report, consumer, migration, and focused-conformance defects. D90 remains frozen and unchanged. | RAG:— (owner-grounded: repair assignment; repo-grounded: `08c5ce21`, P6.4 contract and focused implementation evidence) — the repair stays in the P6.4 owning seam and does not enter P6.5+, P7, FOREMAN, fleet, or live self-host state. |
+| D92 | 2026-07-22 | Supervisor RED reopens P6.4 attempt 3 for one bounded Claude SCHEMA=2 reader correction: owned top-level `reads.total` must normalize to neutral `reads`; `tools.by_name.Read` is not that semantic. D90 remains frozen and unchanged. | RAG:— (owner-grounded: bounded attempt-3 repair; repo-grounded: `packages/harness/configs/claude-code/hooks/run-report/_lib.py`, `8f23f66b`) — the repair is limited to reader/test evidence and does not enter P6.5+, P7, FOREMAN, fleet, or live self-host state. |
 
 ## 6. Update Log
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-22 | plan-terra-high / gpt-5.6-terra/high | P6.4 attempt 3 reclosed after D92: actual P5 Claude SCHEMA=2 `reads.total` maps to neutral `reads`, never `tools.by_name.Read`; focused analyst/mAInd consumers are GREEN — details in `phases/P6.md` P6.4 Completion Notes. |
+| 2026-07-22 | plan-terra-high / gpt-5.6-terra/high | D92: P6.4 reopened for the bounded actual-P5 Claude `reads.total` reader correction; D90 remains unchanged — details in `phases/P6.md` P6.4 Completion Notes. |
 | 2026-07-22 | plan-terra-high / gpt-5.6-terra/high | P6.4 повторно закрыт: D90-preserving reader, redaction, projection, consumer, migration и generated-capture repairs have focused GREEN evidence — details in `phases/P6.md` P6.4 Completion Notes. |
 | 2026-07-22 | plan-terra-high / gpt-5.6-terra/high | D91: P6.4 reopened for bounded repair of its false close; D90 remains unchanged — details in `phases/P6.md` P6.4 Completion Notes. |
 | 2026-07-22 | plan-sol-xhigh / gpt-5.6-sol/xhigh | P6.3 закрыт: D90 заморозил neutral analytics storage, named-reader/privacy/provenance boundary, legacy fallback и reversible migration — детали см. phases/P6.md P6.3 Completion Notes. |

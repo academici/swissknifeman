@@ -10,9 +10,10 @@
 task-plan-exec 2026.07.19-DUAL-PROVIDER P6.5
 ```
 
-**Done:** P6.4 is reclosed after D91 repair commits `f4b3eee7`, `8b917e6c`,
-`9837e72d`, and `810bf587`; focused conformance evidence is `1f467a0f`. D90 remains
-frozen and unchanged.
+**Done:** P6.4 is reclosed after D91 repairs and D92 attempt-3 reader repair
+`8f23f66b`: actual P5 Claude SCHEMA=2 `reads.total` is the sole reads semantic,
+while `tools.by_name.Read` is not used. Focused conformance evidence is recorded in
+`artifacts/P6-analytics-migration-conformance.md`. D90 remains frozen and unchanged.
 
 **Remaining:** P6.5 integrated evidence/checkpoint, then P6.6 cold-session proof. P7+,
 live self-host, FOREMAN, fleet, and push remain outside authority.

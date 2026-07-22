@@ -1,7 +1,7 @@
 # P6 D104 live admission — bounded root-cause replay
 
-**Observed:** 2026-07-22  
-**Mode:** read-only planner replay; no `apply`, `repair`, P7 command or live target write  
+**Observed:** 2026-07-22
+**Mode:** read-only planner replay; no `apply`, `repair`, P7 command or live target write
 **Input:** `findings/P6-bootstrap-transfer-live-preflight-2026-07-22.md`, D103/D104
 
 ## Replayed state

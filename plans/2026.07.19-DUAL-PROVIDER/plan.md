@@ -244,6 +244,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-22 | task-plan-close / implementation/low | P5 закрыта после terminal P5.8: D104 native lifecycle contribution reconciled; следующий gate — fresh independent P5 audit. |
 | 2026-07-22 | task-plan-run / gpt-5.6-terra/high | P2.6 D105 закрыт: `294157ec` seals reconstructed bootstrap-transfer dispatch; final independent P2 audit remains required — details in `phases/P2.md` P2.6 Completion Notes. |
 | 2026-07-22 | task-plan-audit / gpt-5.6-sol/xhigh | P2 audit attempt 3 RED/AUDIT-CAP: reconstructed plan bypasses D104 canonical-lock/backup invariants; D105 reopens only P2.6 for automatic contract-preserving repair. |
 | 2026-07-22 | task-plan-run / gpt-5.6-terra/high | P5.8 supplies the D104 native Codex observer fragment/handler and fail-closed pre-P2 composition validator; ordinary observer conflict behavior remains unchanged. |

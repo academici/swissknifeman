@@ -6,10 +6,10 @@
      Порядок строго phase-first: P0→P1→P2→P3→P4→P5→P6→P7. До finish + GREEN design
      audit исполнение любого item запрещено. -->
 
-**Обновлён:** 2026-07-22 · **Соответствует plan.md:** v1.4.40
+**Обновлён:** 2026-07-22 · **Соответствует plan.md:** v1.4.42
 
 > **Статус exec:** D103 reopens only the sequential P2.6→P5.8→P6.7→P6.8 remediation.
-> D104 and terminal P2.6 are complete; P5.8 is complete pending P5 close/audit. P7.2 remains
+> D104 and terminal P2.6 are complete; P5.8 and P5 close are complete pending fresh P5 audit. P7.2 remains
 > blocked, while P7.3+, FOREMAN, fleet and push stay closed.
 
 ## Карта исполнения
@@ -52,7 +52,7 @@
 | P5.5 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | independent harness parity/doctor/docs gate |
 | P5.6 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/xhigh | ✅ D86 instruction freeze | public semantic parity/provenance contract |
 | P5.7 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | ✅ D87 additive carrier | instruction renderer/conformance against frozen D86 |
-| P5.8 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | D104 consumed via P2.6 | native Codex lifecycle fragment/handler complete; P5 close/audit remains |
+| P5.8 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | D104 consumed via P2.6 | native Codex lifecycle fragment/handler and P5 phase close complete; fresh P5 audit remains |
 | P6.1 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | — | mAInd provider deploy loop против frozen P1/P2/P5 contracts |
 | P6.2 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | — | provider context/trust/instructions and exact 30-row provisioner matrix focused-green |
 | P6.3 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/xhigh | ✅ analytics contract/privacy/migration | owner-gated schema/storage freeze completed |
@@ -207,18 +207,18 @@ terminal tree фазы. Полные правила и exact probes: `research/2
 
 ## Готовый launch-block текущего шага
 
-### P7.1 — capability manifest, production gates и generated provider docs
+### P5 audit — D104 lifecycle contribution
 
 | Параметр | Значение |
 |:--|:--|
 | Model class | frontier |
 | Effort | xhigh |
-| Capabilities | command.filesystem-read · command.filesystem-write · command.git-read · command.git-write |
-| Context | same-session — item |
-| Суть | Materialize the frozen capability manifest, wire production gates, approve the catalog, then generate exact-set provider docs. |
+| Capabilities | command.filesystem-read · command.filesystem-write · command.git-read |
+| Context | cold-start — plan-step |
+| Суть | Independently audit terminal P5 and the D104 P5.8 lifecycle fragment before P6.7. |
 
 ```text
-$ task:plan-run 2026.07.19-DUAL-PROVIDER P7.1
+$ task:plan-audit 2026.07.19-DUAL-PROVIDER P5
 ```
 
 ## Гейты владельца (сводно)

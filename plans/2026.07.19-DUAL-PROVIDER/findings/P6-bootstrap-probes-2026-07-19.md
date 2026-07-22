@@ -99,3 +99,7 @@ rows `planned / none`, actual `failed / INSTRUCTION_TARGET_MISSING`. The sequenc
 harness, integrated terminal conformance, lint, diff/protected checks, probes and checkpoint
 did not run. Only maind validation and downstream checks are invalidated; core/analyst remain
 valid and must not be rerun. P6.5 remains **🟡 In progress**.
+
+## Second RED repair pointer — 2026-07-22
+
+Commit `93b157bc` scopes verified worktree-local sibling launchers in the independent matrix fixture, restores every environment key exactly, and performs production-equivalent instruction preparation before the dry matrix. The focused unittest and one public conformance CLI are GREEN with exact `planned`/`none` instruction rows; only invalidated maind/downstream terminal checks remain. P6.5 stays **🟡 In progress**; P6.6/P7/FOREMAN/fleet/live self-host/push are untouched.

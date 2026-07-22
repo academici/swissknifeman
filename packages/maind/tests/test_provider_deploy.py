@@ -10,7 +10,8 @@ from core import (ConfigSource, ProviderConfigCatalog, ProviderConfigLayer, Prov
 from harness.mcp import load_mcp_catalog, plan_mcp_projection
 from maind.provider_deploy import (ProviderDeployError, plan_provider_deploy,
                                    plan_provider_artifacts, apply_provider_artifacts,
-                                   resolve_effective_providers, semantic_servers)
+                                   resolve_effective_providers, semantic_servers,
+                                   SemanticServer, plan_d108_operation)
 from maind.provider_deploy import (conformance_report, plan_d104_bootstrap_transfer,
                                    write_conformance_report, plan_project_carrier,
                                    apply_project_carrier, _d108_planned_projections)
@@ -84,6 +85,37 @@ class TestProviderDeploy(unittest.TestCase):
             bases = _d108_planned_projections(config, "swissknifeman", carrier, harness)
             self.assertEqual(tuple(base.provider_id for base in bases),
                              (ProviderId.CLAUDE_CODE, ProviderId.CODEX))
+
+    def test_d115_d108_adopts_only_the_sealed_unchanged_mcp_preimage(self):
+        repo = Path(__file__).resolve().parents[3]
+        harness = repo / "packages/harness/configs"
+        sealed = (repo / ".mcp.json").read_bytes()
+        servers = (
+            SemanticServer("maind", {"command": "maind"}),
+            SemanticServer("perplexity-web", {"command": "pplx"}),
+            SemanticServer("serena", {"command": "serena"}),
+        )
+        config = merge_defaults({"projects": [{"id": "swissknifeman", "name": "SKM"}]})
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / ".codex").mkdir()
+            (root / ".codex/hooks.json").write_bytes(_D104_PREIMAGE)
+            (root / ".mcp.json").write_bytes(sealed)
+
+            operation = plan_d108_operation(
+                root, config, "swissknifeman", servers,
+                harness_configs=harness, expected_root=root)
+            mcp = next(action for action in operation.chained_plan.actions
+                       if action.target_path == ".mcp.json")
+            self.assertEqual(mcp.action.value, "noop")
+            self.assertEqual(mcp.expected.managed_bytes, sealed)
+            self.assertEqual(mcp.expected.provenance.rendered_hash,
+                             sha256_digest(sealed))
+
+            (root / ".mcp.json").write_bytes(sealed + b"\n")
+            with self.assertRaisesRegex(ProviderDeployError, "MAIND_D108_CHAIN_REFUSED"):
+                plan_d108_operation(root, config, "swissknifeman", servers,
+                                    harness_configs=harness, expected_root=root)
 
     def test_d104_transfer_composes_then_returns_to_normal_p2_repair(self):
         repo = Path(__file__).resolve().parents[3]

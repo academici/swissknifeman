@@ -192,6 +192,29 @@ def _d108_planned_projections(config, project_id, carrier, harness_configs):
         selected=(), trusted=True) for provider in expected)
 
 
+def _d108_unchanged_mcp_artifact(root, deploy):
+    """Project the sealed existing MCP bytes as D108's explicit NOOP artifact."""
+    rows = []
+    mcp = None
+    for row in deploy.results:
+        if row.provider_id is ProviderId.CLAUDE_CODE and row.target_path == ".mcp.json":
+            if row.artifact is None:
+                raise ProviderDeployError("MAIND_D108_MCP_PLAN_MISSING")
+            path = Path(root) / row.target_path
+            if path.is_file() and not path.is_symlink():
+                managed = path.read_bytes()
+                provenance = replace(row.artifact.provenance,
+                                     rendered_hash=sha256_digest(managed))
+                artifact = replace(row.artifact, managed_bytes=managed,
+                                   provenance=provenance)
+                row = replace(row, rendered=managed, artifact=artifact)
+            mcp = row.artifact
+        rows.append(row)
+    if mcp is None:
+        raise ProviderDeployError("MAIND_D108_MCP_PLAN_MISSING")
+    return ProviderDeployPlan(tuple(rows)), mcp
+
+
 def plan_d108_operation(root, config, project_id, servers, *, harness_configs,
                         expected_root=None):
     """Construct every D108 component before returning any writer-capable plan."""
@@ -203,10 +226,7 @@ def plan_d108_operation(root, config, project_id, servers, *, harness_configs,
         servers, selected=selected)
     if not deploy.green:
         raise ProviderDeployError("MAIND_PROVIDER_DEPLOY_REFUSED")
-    mcp = next((row.artifact for row in deploy.results
-                if row.provider_id is ProviderId.CLAUDE_CODE and row.target_path == ".mcp.json"), None)
-    if mcp is None:
-        raise ProviderDeployError("MAIND_D108_MCP_PLAN_MISSING")
+    deploy, mcp = _d108_unchanged_mcp_artifact(root, deploy)
     transfer = plan_d104_bootstrap_transfer(root, harness_configs=harness_configs)
     admission = ChainedBootstrapTransferAdmission(
         BootstrapTransferAdmission("D104", ".codex/hooks.json",

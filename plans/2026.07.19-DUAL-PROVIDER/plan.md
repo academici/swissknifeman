@@ -132,7 +132,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P3 | Dual skills publication и marketplaces | 5/5 | 🟢 Done |
 | P4 | Task-command parity и provider-neutral model routing | 5/5 | 🟢 Done |
 | P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 8/8 | 🟢 Done |
-| P6 | mAInd deployment, memory и provider-neutral analytics | 9/12 | 🟡 In progress |
+| P6 | mAInd deployment, memory и provider-neutral analytics | 10/12 | 🟡 In progress |
 | P7 | Docs, self-hosting validation и FOREMAN release gate | 1/4 | 🔴 Blocked |
 
 ## 5. Decision Log
@@ -255,6 +255,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-22 | plan-run/Codex gpt-5.6-terra high | P6.11 закрыт: D108 project carrier и all-plan-before-write composition committed; далее independent P6.12 — детали см. phases/P6.md P6.11 Completion Notes. |
 | 2026-07-22 | owner-delegate / root agent | D111 принимает substantive GREEN Audit P2 attempt 5 по standing delegation и открывает только P6.11; live/P7.2/FOREMAN/fleet authority не меняется. |
 | 2026-07-22 | task-plan-close / gpt-5.6-terra/medium | P2 закрыта после terminal P2.1–P2.7: full core gate GREEN, docs не требуются; следующий gate — fresh independent P2 audit перед P6.11. |
 | 2026-07-22 | task-plan-run / gpt-5.6-terra/high | P2.7 закрыт: D110 exact chained D104 + `.mcp.json` transaction commits only disposable-root rollback/refusal conformance — детали см. phases/P2.md P2.7 Completion Notes. |

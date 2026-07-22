@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.4.45 |
+| Version | 1.4.46 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
@@ -18,7 +18,7 @@
 | Approval Owner | Dmitry Vostrikov |
 | Home | repo:/home/vostrikov/projects/packages/swissknifeman |
 | Paused By | — |
-| Design Passes | 3/3 — ecosystem core, 8 фаз/51 items, публичные contracts и высокий cross-package coupling; audit fix-forward items сохраняют terminal history без renumber |
+| Design Passes | 3/3 — ecosystem core, 8 фаз/54 items, публичные contracts и высокий cross-package coupling; audit fix-forward items сохраняют terminal history без renumber |
 
 ## 1. Context
 
@@ -86,6 +86,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P2.4 | gpt-5.6-terra/medium | plan-exec | full | deterministic synthetic conformance/doctor/no-write evidence без новых design-решений |
 | P2.5 | gpt-5.6-terra/high | manual | full | prescribed RED remediation against frozen contract: fail-closed provenance, explicit managed-boundary codec and no-write conformance; effort high+ MANDATORY |
 | P2.6 | gpt-5.6-terra/high | manual | full | D104-gated additive P2 transfer admission/rollback API: public managed-ownership semantics, exact preimage and SemVer-minor risk; effort high+ MANDATORY |
+| P2.7 | gpt-5.6-terra/high | manual | full | D108 exact chained `.mcp.json` transfer: additive public ownership/rollback semantics and all-or-nothing D104 composition require high fidelity |
 | P3.1 | gpt-5.6-sol/high | manual | full | owner-gated public skill/publication contract и необратимые identity/install semantics |
 | P3.2 | gpt-5.6-terra/medium | plan-exec | full | prescribed Claude adapter refactor с byte-compat golden и без новых design-решений |
 | P3.3 | gpt-5.6-terra/high | manual | full | новый native Codex plugin/marketplace contract + cache-contained generated bundles; effort high+ MANDATORY |
@@ -114,6 +115,8 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P6.8 | gpt-5.6-terra/medium | plan-exec | full | independent temporary-root and live no-write conformance after P6.7; no new semantics or live apply |
 | P6.9 | gpt-5.6-terra/high | manual | full | prescribed fail-closed preflight ordering and structured D104/ordinary-plan separation; write-before-later-refusal risk requires high fidelity |
 | P6.10 | gpt-5.6-terra/medium | plan-exec | full | deterministic independent split-verdict/no-write proof after P6.9; no new semantics or live apply |
+| P6.11 | gpt-5.6-terra/high | manual | full | D108 project-carrier merge and P2/P6 all-plan-before-write composition cross provider/config/ownership boundaries; effort high+ MANDATORY |
+| P6.12 | gpt-5.6-terra/medium | plan-exec | full | deterministic independent temporary-root rollback and live no-write proof after P6.11; no new semantics or live apply |
 | P7.1 | gpt-5.6-sol/xhigh | manual | full | actual capability-catalog freeze + additive shared-core/public cross-package gate before deterministic docs; effort high+ MANDATORY |
 | P7.2 | gpt-5.6-terra/high | manual | full | live self-host install/update/repair с rollback и security gates; effort high+ MANDATORY |
 | P7.3 | gpt-5.6-terra/high | manual | full | provenance-backed destructive cleanup/release assembly; effort high+ MANDATORY |
@@ -125,11 +128,11 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 |:--|:--|:--|:--|
 | P0 | Evidence, vocabulary и запечатанные provider contracts | 7/7 | 🟢 Done |
 | P1 | Provider config/domain и backward-compatible resolution | 6/6 | 🟢 Done |
-| P2 | Deterministic adapters, provenance, lock и drift engine | 6/6 | 🟢 Done |
+| P2 | Deterministic adapters, provenance, lock и drift engine | 6/7 | 🟡 In progress |
 | P3 | Dual skills publication и marketplaces | 5/5 | 🟢 Done |
 | P4 | Task-command parity и provider-neutral model routing | 5/5 | 🟢 Done |
 | P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 8/8 | 🟢 Done |
-| P6 | mAInd deployment, memory и provider-neutral analytics | 9/10 | 🟠 Done with deviations |
+| P6 | mAInd deployment, memory и provider-neutral analytics | 9/12 | 🔴 Blocked |
 | P7 | Docs, self-hosting validation и FOREMAN release gate | 1/4 | 🔴 Blocked |
 
 ## 5. Decision Log
@@ -243,11 +246,13 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | D105 | 2026-07-22 | P2 audit attempt 3 found a D104-invariant bypass in reconstructed `ArtifactPlan`; reopen only P2.6 for a contract-preserving seal/dispatch repair and repeat focused/full validation plus independent audit. | RAG:— (repo-grounded: P2 audit reproduction at `bff70953`; owner-grounded: D104 bounded implementation; `AGENTS.md` automatic audit fix-forward) — no contract/target/API expansion, so no new Owner approval is required. |
 | D106 | 2026-07-22 | The exact D104 P2 candidate is admissible, but the live P6 operation does not select it because only `claude-code` is effective; the command then fails on independently unmanaged `.mcp.json`, while P5's direct lifecycle reader correctly remains a non-selector. Keep P2/P5 terminal and add only P6.9→P6.10 for explicit selection/result projection, preflight-before-write ordering and independent no-write proof. | RAG:— (repo-grounded: `findings/P6-d104-live-admission-root-cause-2026-07-22.md`, `research/24-d104-live-admission-repair-design.md`, D103/D104) — does not adopt `.mcp.json`, widen the frozen transfer, enable Codex selection, authorize live writes or open P7.2. |
 | D107 | 2026-07-22 | Approval Owner принимает P6 как `🟠 Done with deviations` после AUDIT-CAP attempt 4 и сознательно оставляет F1–F4 как явный долг: F1 — P6.7 canonical `PYTHONPATH=.` validation fails before collection; F2 — P6.7–P6.10 Completion Notes lack per-gate anchored outcomes; F3 — P6.8 evidence commit `f18fbd4b` has six trailing-whitespace lines; F4 — stale D106 wording in roadmap. | RAG:— (owner-grounded: explicit option A approval 2026-07-22; repo-grounded: `phases/P6.md` → `## Audit P6 — 2026-07-22 (attempt 4)`) — acceptance does not repair, reopen, or weaken any frozen contract and grants no authority for P7.2 live apply/repair, FOREMAN, fleet, tag or push. |
+| D108 | 2026-07-22 | Select recommended `S1+O1`: explicitly enable `claude-code+codex` only at `swissknifeman` project rank and authorize design/no-write of one exact chained P2 ownership candidate for live-root `.mcp.json` preimage `sha256:cf4537196c3fefd6fd3980221bd3677f74e7867392ad49364e1e891e1f7c8283`. Reopen P2 as 6/7 with P2.7 and P6 as 9/12 with P6.11→P6.12; their phase handoffs are marked stale, while D107 history/F1–F4 remains immutable. | RAG:— (owner-grounded: standing delegation mAInd `project:swissknifeman` memory `mem_mrwffj6x_4e58b0e7e65d`; repo-grounded: D79, `research/{25-p7.2-owner-authority-boundary,26-p7.2-s1-o1-remediation-design}.md`) — this intentionally supersedes research/25's pre-approval “P6 не переоткрывается” restriction because the newly authorized mechanics belong to the existing P2 ownership and P6 project-operation seams. It authorizes plan design only: no package/live apply/repair/rollback, P7.2 execution, FOREMAN, fleet, tag, push or general adoption API. |
 
 ## 6. Update Log
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-22 | task-plan-design / gpt-5.6-sol/xhigh | D108 records delegated `S1+O1` and reopens only P2.7 plus P6.11→P6.12 for exact project-carrier/ownership remediation; no source or live carrier was changed. |
 | 2026-07-22 | owner / AUDIT-CAP | D107: P6 принята как 🟠 с долгом F1–F4; следующий carrier — owner-gated P7.2 design, без запуска P7. |
 | 2026-07-22 | task-plan-design / gpt-5.6-sol/high | P7.2 authority boundary сведён к двум owner-осям `S`/`O`; рекомендован `S1+O1`, item остаётся 🔴 до literal D108, package/live work не запускалась. |
 | 2026-07-22 | task-plan-close / implementation/low | P6 закрыта как 🟠: D106 split/zero-write proof terminal, а P6.8 material live refusal сохранён; далее только fresh independent audit P6. |
@@ -435,5 +440,6 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
   прекращаются, поскольку dual-provider acceptance недостижим.
 - **Смешанные S1+O0 / S0+O1.** Не открывают P7.2 и потому не являются исполнимым выбором.
 
-**Статус:** Decision pending (нужен владелец) — `open-questions.md#oq-p72-1--live-provider-selection-и-mcpjson-ownership`,
-exact literal и anti-scope: `research/25-p7.2-owner-authority-boundary.md`.
+**Статус:** Resolved → D108 (`S1+O1`) under standing delegation
+`mem_mrwffj6x_4e58b0e7e65d`; exact implementation/no-write design:
+`research/26-p7.2-s1-o1-remediation-design.md`. Live mutation remains separately gated in P7.2.

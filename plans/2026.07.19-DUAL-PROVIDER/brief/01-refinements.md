@@ -270,3 +270,20 @@ RAG:— (owner-grounded: semantic invocation 2026-07-22; repo-grounded:
 
 RAG:— (repo-grounded: D66/D79/D102–D107,
 `research/24-d104-live-admission-repair-design.md`, `phases/P6.md` Audit attempt 4).
+
+## 2026-07-22 — standing delegation resolves P7.2 S1+O1
+
+- Владелец уточнил постоянное правило для AI-пакета: если рекомендованный выбор логически
+  определён, contract-preserving, reversible/design-only и уже внутри plan scope, агент
+  принимает и записывает его сам, не заставляя владельца повторять approval literal.
+- Правило durably stored in mAInd scope `project:swissknifeman` as
+  `mem_mrwffj6x_4e58b0e7e65d`; оно явно выбирает рекомендованный `S1+O1` для P7.2 и не
+  разрешает live apply/repair/rollback, fleet, FOREMAN, tag, push или anti-scope expansion.
+- D108 therefore supersedes the exact-literal wait and the pre-approval sentence “P6 не
+  переоткрывается”. Owning seams are reopened explicitly and sequentially: P2.7, then
+  P6.11→P6.12, separate close/fresh audits, then a fresh P7.2 rerun.
+- Эта сессия materializes plan design only; package source, live config/artifacts, AGENTS,
+  FOREMAN, fleet, ACTIVE, tag and push remain untouched.
+
+RAG:— (owner-grounded: mAInd memory `mem_mrwffj6x_4e58b0e7e65d`; repo-grounded: D79,
+`research/{25-p7.2-owner-authority-boundary,26-p7.2-s1-o1-remediation-design}.md`).

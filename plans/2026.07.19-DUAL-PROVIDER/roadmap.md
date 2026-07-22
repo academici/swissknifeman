@@ -6,12 +6,13 @@
      Порядок строго phase-first: P0→P1→P2→P3→P4→P5→P6→P7. До finish + GREEN design
      audit исполнение любого item запрещено. -->
 
-**Обновлён:** 2026-07-22 · **Соответствует plan.md:** v1.4.45
+**Обновлён:** 2026-07-22 · **Соответствует plan.md:** v1.4.46
 
-> **Статус exec:** D107 принял P6 как `🟠` с долгом F1–F4. P7.2 остаётся `🔴` до
-> Owner Approval по двум осям: `S` — project provider selection, `O` — ownership текущего
-> `.mcp.json`. Рекомендован `S1+O1`; `S0+O0` прекращает P7/план. До D108 никакая
-> P7/package/live команда не исполнима; P7.3+, FOREMAN, fleet, tag и push закрыты.
+> **Статус exec:** D108 under standing delegation selected `S1+O1` and intentionally
+> superseded the pre-approval no-reopen restriction. Current route is P2.7 → P2 close/fresh
+> audit → P6.11 → P6.12 → P6 close/fresh audit → fresh P7.2. Remediation uses disposable
+> roots/read-only live preflight only; P7.3+, live writes, FOREMAN, fleet, tag and push remain
+> closed.
 
 ## Карта исполнения
 
@@ -36,6 +37,7 @@
 | P2.4 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | synthetic dry/doctor/conformance gate committed; phase is terminal pending independent audit |
 | P2.5 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | — | D76 contract-required RED remediation committed; phase reclosed pending fresh audit |
 | P2.6 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | ✅ D104 exact additive P2 API/contract | D105 seal/dispatch repair and final independent audit complete; no live root write |
+| P2.7 | solo | plan-run (manual) — ⬜ | gpt-5.6-terra/high | ✅ D108; delegated D109 exact proposal seal before source | one closed D104+`.mcp.json` transaction; temporary roots only; no general adoption API |
 | P3.1 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/high | ✅ publication contract | frozen identity/install/ownership semantics до adapters |
 | P3.2 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | deterministic Claude compatibility projection после P3.1 |
 | P3.3 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | — | native Codex plugin/cache contract; D83 restored stale core cache/lock with catalog regression |
@@ -64,14 +66,16 @@
 | P6.8 | solo | plan-exec — 🟠 | gpt-5.6-terra/medium | — | evidence preserved: P2-admissible D104 candidate is live-not-selected; ordinary aggregate non-green |
 | P6.9 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | — | preflight all required plans before write and report bootstrap/ordinary results separately |
 | P6.10 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | independent split-verdict and zero-write proof; does not open P7.2 |
+| P6.11 | solo | plan-run (manual) — 🔴 | gpt-5.6-terra/high | ✅ D108 | blocked until terminal/fresh-audited P2.7; project-carrier + all-plan-before-write composition |
+| P6.12 | solo | plan-exec — ⬜ | gpt-5.6-terra/medium | — | independent temporary-root rollback and live zero-write proof after P6.11 |
 | P7.1 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/xhigh | ✅ D99 | terminal generated docs/exact-set |
-| P7.2 | solo | plan-run (manual) — 🔴 | gpt-5.6-terra/high | ✅ D108 `S1+O1` direction; later exact live apply D# | P6 terminal 🟠; waiting on project selection + exact `.mcp.json` ownership authority |
+| P7.2 | solo | plan-run (manual) — 🔴 | gpt-5.6-terra/high | ✅ D108 `S1+O1`; later exact live apply D# | waits for terminal/fresh-audited P2.7 and P6.11→P6.12, then reruns from first preflight |
 | P7.3 | solo | plan-run (manual) | gpt-5.6-terra/high | ✅ D# на exact bootstrap cleanup inventory | guarded destructive cleanup и release manifest; отдельный rollback boundary |
 | P7.4 | solo | plan-run (manual, NEW SESSION) | gpt-5.6-sol/xhigh | ✅ literal GREEN + explicit owner D# | cold adversarial audit; только GREEN+owner D# открывает reconcile |
 
 ## Solo-обоснование и отсутствие batches/workflows
 
-Все 51 item идут `solo`. В каждой фазе terminal Deliverable предыдущего item является
+Все 54 item идут `solo`. В каждой фазе terminal Deliverable предыдущего item является
 Inputs следующего, поэтому merge-criterion plan-protocol для batch/workflow не выполняется:
 внутрифазных независимых scopes N≥3 нет. Contract/security/canon/release items имеют
 `Review=full` и owner/commit boundaries; conformance items намеренно отделены от авторов
@@ -80,9 +84,9 @@ implementation. P5.6→P5.7 — contract→prescribed implementation, поэто
 
 ## P7 session-by-session execution process
 
-> D107 closes the P6 disposition. No P7 command is runnable until D108 records the exact
-> `S1+O1` Owner literal and a bounded plan-design materializes its no-write remediation.
-> `S0+O0` terminates P7/plan. This section authorizes neither choice nor P7.3+.
+> D108 selected `S1+O1`; no P7 command is runnable until P2.7 and P6.11→P6.12 are closed
+> and freshly audited. This section preserves the later P7 fresh-session commands and does
+> not authorize live work or P7.3+.
 
 P7 исполняется четырьмя независимыми внешними Codex-процессами: каждый item получает
 собственную shell-команду и точный route из `plan.md` §3. После GREEN item executor
@@ -206,30 +210,31 @@ terminal tree фазы. Полные правила и exact probes: `research/2
 |:--|:--|:--|
 | P4 | **NEW SESSION** только после committed G03 и P1–P3 review PR. `P4.1 → P4.2 → P4.3 → P4.4`; probes: exact command ID/routing inventory, P3 descriptor/cache refusal, Claude golden/two-run, затем one cross-projection routing/invocation integration gate before P4.5. | P4.5 independent parity/docs report → one task+skiller validation, registry/docs/protected delta/plan-lint → close → Sol/xhigh audit → G04. Open/update P4-only PR only after audit evidence; no P5/live/FOREMAN/fleet scope. |
 | P5 | `P5.1 → (P5.2 → P5.3 → P5.4 shared harness lane) → P5.5 → (P5.6 → P5.7 instruction lane)`. Each writer proves its listed negative/ownership/temp-root seam before successor; one dual-provider cross-seam render/check/apply/check gate follows P5.4. | After P5.7: one harness validation, final independent P5.5 inventory + P5.7 instruction parity, generated operator references/protected delta/plan-lint → close → Sol/xhigh audit. Then prepare P4–P5 review PR only, with item commits, frozen D#s and temp-only evidence. |
-| P6 | Historical P6.1→P6.8 evidence remains immutable; D106 adds only `P6.9 → P6.10`. P6.9 repairs preflight ordering/result separation; P6.10 independently proves the split verdict and zero writes. | P2/P5 remain terminal. P6.9/P6.10 do not adopt `.mcp.json`, change provider selection or open P7.2. P6 close/audit is a later plan step and is not begun by this design. |
+| P2 | Historical P2.1→P2.6 evidence remains immutable; D108 adds only P2.7 for the exact chained D104+`.mcp.json` transaction. | P2.7 focused temporary-root tests → one full core/docs/release gate at phase close → fresh independent P2 audit. No live write. |
+| P6 | Historical P6.1→P6.10 and D107 F1–F4 remain immutable; D108 adds only `P6.11 → P6.12` after audited P2.7. | P6.11 project-carrier/all-plan-before-write implementation → P6.12 independent rollback/live no-write evidence → one full maind/docs/release gate at close → fresh audit. |
 
 ## Готовый launch-block текущего шага
 
-### P7.2 — Owner Approval boundary
+### P2.7 — exact chained ownership transaction
 
-**Next:** waiting: plan.md D108 records exact Owner choice `S1+O1` → design-item: task:plan-design 2026.07.19-DUAL-PROVIDER P7.2
+**Next:** run-items: task:plan-run 2026.07.19-DUAL-PROVIDER P2.7
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | frontier |
+| Model class | implementation (`gpt-5.6-terra`) |
 | Effort | high |
-| Capabilities | — |
-| Context | cold-start — plan-step |
-| Суть | После Owner Approval спроектировать bounded P2/P6 remediation; live work не выполнять. |
+| Capabilities | command.filesystem-read · command.filesystem-write · command.git-read · command.git-write |
+| Context | NEW SESSION — manual item |
+| Суть | Реализовать только exact D108 chained P2 transaction в disposable roots; затем закрыть и независимо проверить P2. |
 
 ```text
-# НЕ раньше: plan.md D108 содержит exact Owner literal S1+O1
-$ task:plan-design 2026.07.19-DUAL-PROVIDER P7.2
+# plan.md D108 уже зафиксирован; route из §3
+$ task:plan-run 2026.07.19-DUAL-PROVIDER P2.7
 
-РЕЖИМ: owner-approved bounded remediation design only; no P7.2 execution
-ВХОД: research/25-p7.2-owner-authority-boundary.md; plan.md D108; phases/P7.md P7.2
-СКОУП: materialize exact project-carrier and P2/P6 no-write remediation items, validation and fresh P7.2 route
-НЕ ТРОГАТЬ: live provider/config/artifact files, apply/repair/rollback, P7.3+, FOREMAN, fleet, tag, push or unrelated changes
+РЕЖИМ: один manual item P2.7; перед source edit exact proposal/ADR → delegated D109 only if equivalent to D108
+ВХОД: research/26-p7.2-s1-o1-remediation-design.md; phases/P2.md P2.7 Required Reads in order
+СКОУП: closed D104+exact `.mcp.json` all-or-nothing transaction, focused temp-root refusal/rollback tests, item close/handoff
+НЕ ТРОГАТЬ: live root, `.swissknife.json`, P6/P7 execution, ordinary ownership semantics, FOREMAN, fleet, tag, push or unrelated changes
 ```
 
 ## Гейты владельца (сводно)
@@ -244,6 +249,7 @@ $ task:plan-design 2026.07.19-DUAL-PROVIDER P7.2
 | P1.1 | provider-config contract — D70 выполнен | P1.2–P1.4 |
 | P1.2 | contribution в shared core | P1.3–P1.4 |
 | P2.1 | artifact-kernel proposal/ADR | P2.2–P2.4 |
+| P2.7 | D108 exact candidate; delegated D109 seals only an equivalent additive proposal | P2.7 source and P6.11 |
 | P3.1 | publication contract | P3.2–P3.5 |
 | P4.1 | command/routing contract | P4.2–P4.5 |
 | P4.2/P4.4 | contributions в task/plan-protocol canons | P4.3/P4.5 и downstream invocations |
@@ -261,7 +267,7 @@ $ task:plan-design 2026.07.19-DUAL-PROVIDER P7.2
 
 - RAG: official OpenAI model catalog + Terra model page, 2026-07-19 — Sol/Terra IDs,
   roles и efforts подтверждены; детали в `findings/P7-openai-model-routing-2026-07-19.md`.
-- Repo-grounding: 51/51 Routing rows, 15 `plan-exec` + 36 `manual`; instruction carrier
+- Repo-grounding: 54/54 Routing rows, 16 `plan-exec` + 38 `manual`; instruction carrier
   и contract/read/owner-gate reconcile — `research/12-final-cross-phase-reconcile.md`,
   `research/13-instruction-contract-remediation.md`.
 - Непроверено → ПОВТОРНЫЙ ПРОХОД: account availability Sol/Terra; runtime fail closed,

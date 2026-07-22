@@ -13,6 +13,27 @@ def normalize(provider_id, schema, raw, *, project_id, raw_ref, source_bytes=Non
         declared_sha256=declared_sha256)
 
 
+def neutral_run_report(project_path, session=None):
+    """Consumer-safe projection; callers use legacy files only as bounded fallback."""
+    events = [event for event in read_events(project_path)
+              if session is None or event.session_id == session]
+    if not events:
+        return None
+    events.sort(key=lambda event: (event.occurred_at, event.event_id))
+    metrics = {}
+    for event in events:
+        for name, value in event.metrics.items():
+            metrics[name] = metrics.get(name, 0) + value
+    latest = events[-1]
+    return {"schema": "1.0.0", "session_id": latest.session_id,
+            "generated_at": latest.occurred_at,
+            "tools": {"total": metrics.get("tools", 0), "by_name": {}},
+            "files_changed": ["normalized"] * int(metrics.get("files", 0)),
+            "workflows": [], "tool_failures": ["normalized"] * int(metrics.get("errors", 0)),
+            "bash": {"tests": [], "lints": [], "failed": []}, "devloop": {},
+            "analytics_provenance": [dict(event.provenance) for event in events]}
+
+
 def migrate_legacy(project_path, *, project_id, source, operation="plan"):
     source = Path(source)
     if operation not in {"plan", "dry-run", "check", "apply"}:

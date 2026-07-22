@@ -30,3 +30,10 @@ The memory-isolation probe is RED: a recall scoped to `project:swissknifeman` al
 Serena and Perplexity probes succeeded, but they do not override the isolation failure. No
 checkpoint write or P6.5 close is authorized from this state. Only memory-scope repair,
 isolation recheck and downstream checkpoint creation are invalidated.
+
+## D93 recovery and checkpoint — GREEN
+
+The D93 worktree-local public MCP recall returns only records declared
+`project:swissknifeman` when explicitly scoped. The compact checkpoint
+`p6.5-bootstrap-b7373334` is stored once, recalled in the same scope, and matches the disk
+payload SHA-256 `22a9c7a82f48ae0e27449ca1be240398b3b8ecd36fbfd50bc2f8bd3a56d60dc9`.

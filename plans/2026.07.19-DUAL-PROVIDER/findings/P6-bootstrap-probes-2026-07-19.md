@@ -135,3 +135,12 @@ Per the first-RED rule, no mAInd checkpoint write occurred. The owning seam is m
 scope filtering/namespace isolation. Terminal validation and the successful read-only probes
 remain valid; only the memory-isolation recheck and downstream disk+mAInd checkpoint creation
 are invalidated. P6.6 remains blocked and P6.5 remains **🟡 In progress**.
+
+## D93 memory-isolation recovery — GREEN
+
+At `b7373334` after repair `884e146b`, the worktree-local public mAInd MCP server received
+`maind_memory_recall` with explicit `scope=project:swissknifeman`. Every returned record
+declared exactly that scope; no `ns:axioma`, global, or other scope was returned. The one
+authorized checkpoint write and same-scope recall agree on checkpoint
+`p6.5-bootstrap-b7373334`, memory ID `mem_mrvm57ek_aa95bdbc51c7`, and payload SHA-256
+`22a9c7a82f48ae0e27449ca1be240398b3b8ecd36fbfd50bc2f8bd3a56d60dc9`.

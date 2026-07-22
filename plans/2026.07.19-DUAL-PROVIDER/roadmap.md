@@ -210,9 +210,9 @@ terminal tree фазы. Полные правила и exact probes: `research/2
 
 ## Готовый launch-block текущего шага
 
-### P6 — terminal close after D106 P6.10
+### P6 — fresh independent audit after phase close
 
-**Next:** $ task:plan-close 2026.07.19-DUAL-PROVIDER P6
+**Next:** $ task:plan-audit 2026.07.19-DUAL-PROVIDER P6
 
 | Параметр | Значение |
 |:--|:--|
@@ -220,14 +220,14 @@ terminal tree фазы. Полные правила и exact probes: `research/2
 | Effort | xhigh |
 | Capabilities | command.filesystem-read · command.filesystem-write · command.git-read · command.git-write |
 | Context | NEW SESSION — шаг-не-item |
-| Суть | Reconcile terminal P6 only, then route independent audit; do not open P7. |
+| Суть | Independently audit the terminal P6 phase; do not open P7. |
 
 ```text
-$ task:plan-close 2026.07.19-DUAL-PROVIDER P6
+$ task:plan-audit 2026.07.19-DUAL-PROVIDER P6
 
-РЕЖИМ: reconcile terminal P6 only; no P7 execution
-ВХОД: plans/2026.07.19-DUAL-PROVIDER/phases/P6.md; P6.10 evidence and handoff
-СКОУП: verify terminal P6 states and immutable D106/P6.10 evidence; prepare close carrier only
+РЕЖИМ: fresh independent terminal P6 audit; no P7 execution
+ВХОД: plans/2026.07.19-DUAL-PROVIDER/phases/P6.md; P6.8–P6.10 evidence; phase handoff
+СКОУП: independently verify the material P6.8 deviation and D106/P6.10 zero-write boundary
 НЕ ТРОГАТЬ: package source/tests, P2/P5 contracts, `.mcp.json` adoption, provider config, live apply/repair/rollback, P7+, FOREMAN, fleet, tag or push
 ```
 

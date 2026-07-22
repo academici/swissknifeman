@@ -129,7 +129,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P3 | Dual skills publication и marketplaces | 5/5 | 🟢 Done |
 | P4 | Task-command parity и provider-neutral model routing | 5/5 | 🟢 Done |
 | P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 8/8 | 🟢 Done |
-| P6 | mAInd deployment, memory и provider-neutral analytics | 9/10 | 🟡 In progress |
+| P6 | mAInd deployment, memory и provider-neutral analytics | 9/10 | 🟠 Done with deviations |
 | P7 | Docs, self-hosting validation и FOREMAN release gate | 1/4 | 🔴 Blocked |
 
 ## 5. Decision Log
@@ -247,6 +247,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-22 | task-plan-close / implementation/low | P6 закрыта как 🟠: D106 split/zero-write proof terminal, а P6.8 material live refusal сохранён; далее только fresh independent audit P6. |
 | 2026-07-22 | task-plan-exec / gpt-5.6-terra/medium | P6.10 закрыт: независимый literal-oracle подтверждает split verdict и zero-write boundary — детали см. phases/P6.md P6.10 Completion Notes. |
 | 2026-07-22 | task-plan-run / gpt-5.6-sol/high | P6.9 закрыт: D104 bootstrap и ordinary provider plans разделены и preflight выполняется до первой записи — детали см. phases/P6.md P6.9 Completion Notes. |
 | 2026-07-22 | task-plan-design / gpt-5.6-sol/high | D106 separates the P2-admissible but live-not-selected D104 candidate from the unmanaged MCP refusal: P2/P5 stay terminal; only P6.9→P6.10 enter bounded repair design. |

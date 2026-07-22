@@ -698,12 +698,13 @@ def check_4_policy_profile_conformance(ctx):
 _INTERPRETERS = {"bash", "sh", "zsh", "dash", "python", "python3", "node", "perl", "ruby"}
 
 
-def _resolve_hook_command_path(command, target):
+def _resolve_hook_command_path(command, target, home):
     """Токен command-строки → путь к проверяемому файлу. Плейсхолдеры (`$VAR`/`${VAR}`)
     НЕ резолвим (Implementation Rules) — вернём None, вызывающий даёт `info`.
 
     Два класса, которые наивный «первый токен» ломал ложным `error`:
-    - `~/.claude/hooks/x.sh` — тильда обязана раскрываться (иначе клеится к target);
+    - `~/.claude/hooks/x.sh` — тильда обязана раскрываться от явного `env.home`
+      (иначе результат зависит от HOME процесса либо клеится к target);
     - `bash /path/x.sh` — первый токен интерпретатор, проверять надо аргумент-скрипт.
     """
     try:
@@ -726,8 +727,12 @@ def _resolve_hook_command_path(command, target):
         if "$" in first:
             return None
 
-    first = os.path.expanduser(first)
-    path = Path(first)
+    if first == "~":
+        path = Path(home)
+    elif first.startswith("~/"):
+        path = Path(home) / first[2:]
+    else:
+        path = Path(first)
     if not path.is_absolute():
         path = Path(target) / path
     return path
@@ -755,7 +760,7 @@ def check_5_hooks(ctx):
             command = entry.get("command") if isinstance(entry, dict) else None
             if not command:
                 continue
-            path = _resolve_hook_command_path(command, ctx.target)
+            path = _resolve_hook_command_path(command, ctx.target, ctx.env.home)
             if path is None:
                 findings.append(Finding(
                     id=5, level="info",

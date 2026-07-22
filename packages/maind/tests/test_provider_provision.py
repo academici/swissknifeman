@@ -2,6 +2,7 @@
 from copy import deepcopy
 from dataclasses import replace
 from pathlib import Path
+import os
 import subprocess
 import tempfile
 import unittest
@@ -90,15 +91,59 @@ class TestProviderProvisionConformance(unittest.TestCase):
             env, config, _root = _setup(tmp)
             _providers(config, {"claude-code": {"enabled": True}, "codex": {"enabled": True}})
             context = sync.contexts(env, config, config["projects"])[0]
-            rows = sync.provisioner_provider_matrix(
-                sync.run_sync_contexts(env, config, [context], dry=True),
-                context.effective_provider_ids)
+            repo_root = Path(__file__).resolve().parents[3]
+            sibling_environment = {
+                "MAIND_SKM_BIN": repo_root / "packages/skiller/bin/skiller",
+                "MAIND_HARNESS_BIN": repo_root / "packages/harness/bin/harness",
+                "SKM_HARNESS_BIN": repo_root / "packages/harness/bin/harness",
+            }
+            for source_path in sibling_environment.values():
+                self.assertTrue(source_path.is_file(), source_path)
+            previous_environment = {
+                name: os.environ.get(name) for name in sibling_environment
+            }
+            missing_environment = {
+                name for name in sibling_environment if name not in os.environ
+            }
+            os.environ.update({
+                name: str(path) for name, path in sibling_environment.items()
+            })
+            try:
+                prepared = sync.run_sync(
+                    env, config, config["projects"], only="instructions", mode="auto"
+                )[0]
+                self.assertEqual(prepared["status"], "ok", prepared)
+                rows = sync.provisioner_provider_matrix(
+                    sync.run_sync_contexts(env, config, [context], dry=True),
+                    context.effective_provider_ids)
+            finally:
+                for name in missing_environment:
+                    os.environ.pop(name, None)
+                for name, value in previous_environment.items():
+                    if name not in missing_environment:
+                        os.environ[name] = value
+            for name, value in previous_environment.items():
+                self.assertEqual(name in os.environ, name not in missing_environment)
+                if name not in missing_environment:
+                    self.assertEqual(os.environ[name], value)
         expected = tuple(
             {"provisioner": provisioner, "provider_id": provider_id,
              "support": support, "activation": activation, "diagnostic": diagnostic}
             for provisioner, support, activation, diagnostic in EXPECTED_MATRIX_CLASSES
             for provider_id in ("claude-code", "codex"))
         self.assertEqual(rows, expected)
+        instruction_rows = tuple(
+            (row["provider_id"], row["support"], row["activation"], row["diagnostic"])
+            for row in rows
+            if row["provisioner"] == "instructions"
+        )
+        self.assertEqual(
+            instruction_rows,
+            (
+                ("claude-code", "adapter-projected", "planned", "none"),
+                ("codex", "adapter-projected", "planned", "none"),
+            ),
+        )
 
     def test_instruction_contract_negative_matrix_and_critical_partial_gate(self):
         with tempfile.TemporaryDirectory() as tmp:

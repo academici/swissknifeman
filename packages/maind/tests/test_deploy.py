@@ -9,6 +9,7 @@ from unittest import mock
 from core import ProviderId
 from maind.provision import deploy
 from maind.config import merge_defaults
+from maind.provider_deploy import ProviderDeployError
 from maind.projects import get
 from tests.fixtures import make_repo
 
@@ -32,6 +33,40 @@ def _config(path, pid="flexcrm", **memory):
 
 
 class TestDeploy(unittest.TestCase):
+    def test_d108_public_facade_uses_configured_root_not_maind_root(self):
+        """D112: package-root Env cannot become the D108 project identity."""
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            project_path = _project(tmp, "swissknifeman")
+            cfg = _config(project_path, "swissknifeman")
+            current = deploy.provider_projection_context(env, cfg, cfg["projects"][0]).projections
+            self.assertEqual([base.provider_id for base in current], [ProviderId.CLAUDE_CODE])
+            operation = SimpleNamespace(
+                deploy=SimpleNamespace(results=()), transfer=SimpleNamespace(),
+                carrier=SimpleNamespace(changed=False), chained_plan=SimpleNamespace(actions=()))
+            with mock.patch.object(deploy, "plan_d108_operation", return_value=operation) as planner, \
+                    mock.patch.object(deploy, "bootstrap_transfer_projection",
+                                      return_value={"status": "admitted", "actions": (), "diagnostic": None}), \
+                    mock.patch.object(deploy, "project_provider_preflight",
+                                      side_effect=lambda plan, _checked: plan), \
+                    mock.patch.object(deploy, "apply_d108_operation") as writer:
+                deploy.deploy_project(env, cfg, cfg["projects"][0], d108=True, dry=True,
+                                      provider_projections=current)
+            self.assertEqual(planner.call_args.args[0], project_path.resolve())
+            self.assertEqual(planner.call_args.kwargs["expected_root"], project_path.resolve())
+            self.assertNotEqual(planner.call_args.kwargs["expected_root"], env.root)
+            writer.assert_not_called()
+
+    def test_d108_public_facade_refuses_foreign_project_before_writer(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            project_path = _project(tmp, "foreign")
+            cfg = _config(project_path, "foreign")
+            with mock.patch.object(deploy, "apply_d108_operation") as writer:
+                with self.assertRaisesRegex(ProviderDeployError, "MAIND_D108_FOREIGN_PROJECT"):
+                    deploy.deploy_project(env, cfg, cfg["projects"][0], d108=True, dry=True)
+            writer.assert_not_called()
+
     def test_cmd_deploy_refused_bootstrap_does_not_write_project_config(self):
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)

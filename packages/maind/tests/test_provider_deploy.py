@@ -13,7 +13,7 @@ from maind.provider_deploy import (ProviderDeployError, plan_provider_deploy,
                                    resolve_effective_providers, semantic_servers)
 from maind.provider_deploy import (conformance_report, plan_d104_bootstrap_transfer,
                                    write_conformance_report, plan_project_carrier,
-                                   apply_project_carrier)
+                                   apply_project_carrier, _d108_planned_projections)
 from maind.provision.deploy import deploy_project, mark_deployed, provider_semantic_inventory
 from tests.fixtures import make_repo
 from maind.config import merge_defaults
@@ -71,6 +71,19 @@ class TestProviderDeploy(unittest.TestCase):
             with self.assertRaisesRegex(ProviderDeployError, "MAIND_D108_FOREIGN_PROJECT"):
                 plan_project_carrier(root, config, "other")
             self.assertEqual(path.read_bytes(), before)
+
+    def test_d108_plans_exact_dual_p5_bases_after_claude_only_current_selection(self):
+        """D112: the carrier, not the caller's current P1 selection, owns D108 bases."""
+        harness = Path(__file__).resolve().parents[3] / "packages/harness/configs"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            config = merge_defaults({"projects": [{"id": "swissknifeman", "name": "SKM"}]})
+            self.assertEqual(resolve_effective_providers(config, None, "swissknifeman"),
+                             (ProviderId.CLAUDE_CODE,))
+            carrier = plan_project_carrier(root, config, "swissknifeman")
+            bases = _d108_planned_projections(config, "swissknifeman", carrier, harness)
+            self.assertEqual(tuple(base.provider_id for base in bases),
+                             (ProviderId.CLAUDE_CODE, ProviderId.CODEX))
 
     def test_d104_transfer_composes_then_returns_to_normal_p2_repair(self):
         repo = Path(__file__).resolve().parents[3]

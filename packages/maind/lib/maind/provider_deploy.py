@@ -173,13 +173,34 @@ def _rollback_project_carrier(plan):
         atomic_write_text(plan.path, plan.before.decode("utf-8"))
 
 
-def plan_d108_operation(root, config, project_id, base_projections, servers, *, harness_configs,
+def _d108_planned_projections(config, project_id, carrier, harness_configs):
+    """Render the one closed D108 Claude+Codex P5 base tuple from its carrier."""
+    selected = resolve_effective_providers(config, None, project_id,
+                                           project_config=carrier.providers)
+    expected = (ProviderId.CLAUDE_CODE, ProviderId.CODEX)
+    if selected != expected:
+        raise ProviderDeployError("MAIND_D108_SELECTION_INVALID")
+    harness_configs = Path(harness_configs)
+    harness_lib = str(harness_configs.parent / "lib")
+    if harness_lib not in sys.path:
+        sys.path.insert(0, harness_lib)
+    from harness.mcp import load_mcp_catalog, plan_mcp_projection
+    catalog = load_mcp_catalog(harness_configs / "common/mcp/catalog.json")
+    return tuple(plan_mcp_projection(
+        catalog, provider_id=provider,
+        bindings_path=harness_configs / provider.value / "mcp/bindings.json",
+        selected=(), trusted=True) for provider in expected)
+
+
+def plan_d108_operation(root, config, project_id, servers, *, harness_configs,
                         expected_root=None):
     """Construct every D108 component before returning any writer-capable plan."""
     carrier = plan_project_carrier(root, config, project_id, expected_root=expected_root)
     selected = resolve_effective_providers(config, None, project_id,
                                            project_config=carrier.providers)
-    deploy = plan_provider_deploy(base_projections, servers, selected=selected)
+    deploy = plan_provider_deploy(
+        _d108_planned_projections(config, project_id, carrier, harness_configs),
+        servers, selected=selected)
     if not deploy.green:
         raise ProviderDeployError("MAIND_PROVIDER_DEPLOY_REFUSED")
     mcp = next((row.artifact for row in deploy.results

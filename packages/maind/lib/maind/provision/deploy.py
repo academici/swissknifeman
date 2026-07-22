@@ -168,14 +168,15 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
     provider_changed = False
     bootstrap_transfer = None
     bootstrap_projection = None
-    if provider_projections is not None:
+    if provider_projections is not None or d108:
         inventory = provider_semantic_inventory(
             env, config, project, with_code=with_code, maind_server=maind_server,
             with_agentmemory=with_agentmemory)
         if d108:
+            d108_root = project_path.resolve()
             operation = plan_d108_operation(
-                project_path, config, pid, provider_projections, inventory,
-                harness_configs=_harness_configs(env), expected_root=env.root)
+                d108_root, config, pid, inventory,
+                harness_configs=_harness_configs(env), expected_root=d108_root)
             provider_plan = operation.deploy
             bootstrap_transfer = operation.transfer
             bootstrap_projection = bootstrap_transfer_projection("admitted", bootstrap_transfer)

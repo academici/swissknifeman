@@ -3,6 +3,8 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
+from unittest import mock
 
 from core import ProviderId
 from maind.provision import deploy
@@ -30,6 +32,24 @@ def _config(path, pid="flexcrm", **memory):
 
 
 class TestDeploy(unittest.TestCase):
+    def test_cmd_deploy_refused_bootstrap_does_not_write_project_config(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            ppath = _project(tmp)
+            cfg = _config(ppath)
+            result = {"id": "flexcrm", "scope": "project:flexcrm", "written": [],
+                      "skipped": [], "code": "disabled", "servers": [], "targets": [],
+                      "provider_changed": False,
+                      "provider_plan": SimpleNamespace(green=True, results=()),
+                      "bootstrap_transfer": {"status": "refused", "actions": (),
+                                             "diagnostic": "MAIND_PROVIDER_DEPLOY_REFUSED"}}
+            with mock.patch.object(deploy, "load_config", return_value=(cfg, None)), \
+                    mock.patch.object(deploy, "health", return_value=True), \
+                    mock.patch.object(deploy, "deploy_project", return_value=result), \
+                    mock.patch.object(deploy, "write_config") as write_config:
+                deploy.cmd_deploy(env, ["--project", "flexcrm"])
+            write_config.assert_not_called()
+
     def test_claude_only_dry_run_reports_bootstrap_not_selected(self):
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)

@@ -36,6 +36,14 @@ class ProviderProjectionContext:
     projections: tuple
 
 
+def provider_operation_green(result):
+    """A refused D104 bootstrap makes the whole deploy non-green, not its provider row."""
+    provider_plan = result.get("provider_plan")
+    bootstrap = result.get("bootstrap_transfer") or {}
+    return ((provider_plan is None or provider_plan.green)
+            and bootstrap.get("status") != "refused")
+
+
 def _provider_projections(env, config, project):
     """Legacy compatibility projection over the public one-resolution seam."""
     return provider_projection_context(env, config, project).projections
@@ -173,7 +181,11 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
                         for projection in provider_projections)
         bootstrap_root = project_path / ".codex/hooks.json"
         bootstrap_lock = project_path / ".swissknifeman/provider-artifacts.lock.json"
-        if has_codex and bootstrap_root.is_file() and not bootstrap_lock.exists():
+        bootstrap_handler = project_path / ".codex/hooks/lifecycle.py"
+        # A completed transfer has both its lock and handler, so second-run behavior stays
+        # on the ordinary managed path. Every incomplete candidate still asks the P2 oracle.
+        if has_codex and bootstrap_root.is_file() and (
+                not bootstrap_lock.exists() or not bootstrap_handler.is_file()):
             try:
                 bootstrap_transfer = plan_d104_bootstrap_transfer(
                     project_path, harness_configs=_harness_configs(env))
@@ -355,8 +367,7 @@ def cmd_deploy(env, argv):
         if res is None:
             continue
         results.append(res)
-        if (not opts["dry_run"] and
-                (res.get("provider_plan") is None or res["provider_plan"].green)):
+        if not opts["dry_run"] and provider_operation_green(res):
             config = mark_deployed(config, proj["id"], res)
             config_changed = True
 

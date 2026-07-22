@@ -144,7 +144,7 @@ def _result(provisioner, project_id, status, *, changed=False, state="", detail=
 # ── провиженеры ──────────────────────────────────────────────────────────────
 def _mcp_run(env, config, projects, mode, dry):
     """MCP-серверы хаба (agent-memory + maind [+ код-граф/Serena]) в конфиги проектов."""
-    from .deploy import deploy_project, mark_deployed
+    from .deploy import deploy_project, mark_deployed, provider_operation_green
     from ..projects import write_config
     results, applied = [], False
     for context in projects:
@@ -159,15 +159,15 @@ def _mcp_run(env, config, projects, mode, dry):
             continue
         changed = (res["provider_changed"] if res.get("provider_plan") is not None
                    else any(w["changed"] for w in res["written"]))
-        provider_green = (res.get("provider_plan") is None or res["provider_plan"].green)
-        if not dry and provider_green:
+        operation_green = provider_operation_green(res)
+        if not dry and operation_green:
             mark_deployed(config, p["id"], res)
             applied = True
         detail = ", ".join(res["targets"])
         if res.get("skipped"):
             detail += f" (пропущено битых каналов: {', '.join(res['skipped'])})"
         aggregate = _provider_aggregate(res["provider_plan"]) if res.get("provider_plan") else None
-        results.append(_result("mcp", p["id"], "ok" if aggregate is None or aggregate.green else "failed",
+        results.append(_result("mcp", p["id"], "ok" if operation_green else "failed",
                                changed=changed, detail=detail, provider_aggregate=aggregate,
                                bootstrap_transfer=res.get("bootstrap_transfer")))
     if applied:

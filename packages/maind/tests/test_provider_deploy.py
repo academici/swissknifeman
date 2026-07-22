@@ -201,6 +201,41 @@ class TestProviderDeploy(unittest.TestCase):
                      for path in target.rglob("*") if path.is_file()}
             self.assertEqual(after, before)
 
+    def test_incomplete_existing_lock_or_handler_refuses_before_every_write(self):
+        harness = Path(__file__).resolve().parents[3] / "packages/harness/configs"
+        catalog = load_mcp_catalog(harness / "common/mcp/catalog.json")
+        bases = tuple(plan_mcp_projection(
+            catalog, provider_id=provider,
+            bindings_path=harness / provider.value / "mcp/bindings.json",
+            selected=(), trusted=True) for provider in ProviderId)
+        for name, target_path, expected in (
+                ("existing-lock", ".swissknifeman/provider-artifacts.lock.json",
+                 "bootstrap-lock-present"),
+                ("existing-handler", ".codex/hooks/lifecycle.py",
+                 "bootstrap-created-target-present")):
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as tmp:
+                _, env = make_repo(tmp)
+                target = Path(tmp) / "project"
+                (target / ".codex/hooks").mkdir(parents=True)
+                (target / ".codex/hooks.json").write_bytes(_D104_PREIMAGE)
+                path = target / target_path
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text("foreign", encoding="utf-8")
+                before = {item.relative_to(target): item.read_bytes()
+                          for item in target.rglob("*") if item.is_file()}
+                config = merge_defaults({"projects": [{"id": "demo", "name": "Demo",
+                    "local_path": str(target), "memory_scope": "project:demo"}]})
+                with patch("maind.provision.deploy.apply_plan") as writer:
+                    result = deploy_project(env, config, config["projects"][0], with_code=False,
+                                            provider_projections=bases)
+                bootstrap = result["bootstrap_transfer"]
+                self.assertEqual(bootstrap["status"], "refused")
+                self.assertEqual(bootstrap["actions"][0]["diagnostic"], expected)
+                self.assertEqual(writer.call_count, 0)
+                after = {item.relative_to(target): item.read_bytes()
+                         for item in target.rglob("*") if item.is_file()}
+                self.assertEqual(after, before)
+
     def test_manifest_gate_refuses_missing_and_unsupported_before_render(self):
         repo = Path(__file__).resolve().parents[3]
         harness = repo / "packages/harness/configs"

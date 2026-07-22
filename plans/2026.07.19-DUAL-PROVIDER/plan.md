@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.4.52 |
+| Version | 1.4.53 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
@@ -115,7 +115,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P6.8 | gpt-5.6-terra/medium | plan-exec | full | independent temporary-root and live no-write conformance after P6.7; no new semantics or live apply |
 | P6.9 | gpt-5.6-terra/high | manual | full | prescribed fail-closed preflight ordering and structured D104/ordinary-plan separation; write-before-later-refusal risk requires high fidelity |
 | P6.10 | gpt-5.6-terra/medium | plan-exec | full | deterministic independent split-verdict/no-write proof after P6.9; no new semantics or live apply |
-| P6.11 | gpt-5.6-terra/high | manual | full | D108 project-carrier merge and P2/P6 all-plan-before-write composition cross provider/config/ownership boundaries; effort high+ MANDATORY |
+| P6.11 | gpt-5.6-terra/medium | manual | targeted | D113 cost routing: bounded D114 inventory-name fix-forward only; frozen ownership and live boundaries are already sealed |
 | P6.12 | gpt-5.6-terra/medium | plan-exec | full | deterministic independent temporary-root rollback and live no-write proof after P6.11; no new semantics or live apply |
 | P7.1 | gpt-5.6-sol/xhigh | manual | full | actual capability-catalog freeze + additive shared-core/public cross-package gate before deterministic docs; effort high+ MANDATORY |
 | P7.2 | gpt-5.6-terra/high | manual | full | live self-host install/update/repair с rollback и security gates; effort high+ MANDATORY |
@@ -132,7 +132,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P3 | Dual skills publication и marketplaces | 5/5 | 🟢 Done |
 | P4 | Task-command parity и provider-neutral model routing | 5/5 | 🟢 Done |
 | P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 8/8 | 🟢 Done |
-| P6 | mAInd deployment, memory и provider-neutral analytics | 10/12 | 🔴 Blocked |
+| P6 | mAInd deployment, memory и provider-neutral analytics | 9/12 | 🔴 Blocked |
 | P7 | Docs, self-hosting validation и FOREMAN release gate | 1/4 | 🔴 Blocked |
 
 ## 5. Decision Log
@@ -251,11 +251,14 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | D110 | 2026-07-22 | Under the standing delegation, seal the exact additive D108 composition in the D104 proposal/ADR: immutable `ChainedBootstrapTransferAdmission` plus `plan_chained_bootstrap_transfer` admit only the sealed D104 pair and exact root-relative `.mcp.json` preimage/server set into one three-record, all-or-nothing transaction. | RAG:— (owner-grounded: mAInd `project:swissknifeman` memory `mem_mrwffj6x_4e58b0e7e65d`; repo-grounded: D108, `research/26-p7.2-s1-o1-remediation-design.md`, amended D104 carriers) — equivalent to D108's five closed invariants: no new target/preimage/API class, no general adoption, no live mutation; SemVer-minor only. |
 | D111 | 2026-07-22 | Accept terminal P2 after audit attempt 5 returned substantive `GREEN`, and continue the existing D108 roadmap with P6.11. | RAG:— (owner-grounded: standing delegation mAInd `project:swissknifeman` memory `mem_mrwffj6x_4e58b0e7e65d`; repo-grounded: `phases/P2.md` final Audit P2, audit anchor `224f1688`, audit commit `f9f168a8`) — the audit-cap fork is logically closed by accepting verified GREEN rather than stopping the approved plan; this grants no new semantics or live authority and only removes the satisfied P2 predecessor block. |
 | D112 | 2026-07-22 | Reopen only P6.11 after P6.12 RED evidence `261da27a`: repair the D108 facade to compare the candidate against the canonical configured project root rather than the maind package root, and build the exact dual P5 projection tuple from the already planned carrier selection before D104/D110 planning. | RAG:— (repo-grounded: `artifacts/P6-d108-independent-conformance.md`, `packages/maind/lib/maind/provision/deploy.py`, P6.12 Completion Notes; owner-grounded: standing delegation `mem_mrwffj6x_4e58b0e7e65d`) — both defects are inside the existing P6.11 owning seam and the fix preserves D108–D111, frozen P2 ownership/preimages and no-write ordering; no new owner approval or live/P7 authority is required. |
+| D113 | 2026-07-22 | For the remaining no-write DUAL-PROVIDER work, default to `gpt-5.6-terra/medium`, targeted risk-based checks and automatic fix-forward without routine confirmations; do not run another heavyweight Codex Sol audit, and leave the final independent audit to Claude Code. | RAG:— (owner-grounded: direct instruction 2026-07-22, durable mAInd `project:swissknifeman` execution/cost rules) — reduces resource use and repeated ceremony without weakening frozen contracts; actual live/destructive work, FOREMAN, fleet, tag and push remain outside authority. |
+| D114 | 2026-07-22 | Reopen only P6.11's D108 inventory-name seam after RED `f41730e1`: the exact candidate must render configured MCP server identities `maind`, `perplexity-web`, `serena`, not internal role labels `maind`, `perplexity`, `codegraph`; bindings and sealed D108/P2 bytes remain unchanged. | RAG:— (repo-grounded: `artifacts/P6-d108-independent-conformance.md`, `codegraph.server_name`, `pplxweb.server_name`, live `.mcp.json`; owner-grounded: D113 automatic fix-forward) — this is the smallest P6-owned projection repair and grants no general rename API or live mutation authority. |
 
 ## 6. Update Log
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-22 | owner/root agent | D113 makes remaining no-write execution Terra/medium + targeted and defers the final heavyweight audit to Claude Code; D114 reopens only the D108 configured server-name seam. |
 | 2026-07-22 | plan-run / Codex gpt-5.6-terra/high | P6.11 закрыт: D112 seals the configured-root facade and carrier-derived dual P5 bases; далее независимый P6.12 — детали см. phases/P6.md P6.11 Completion Notes. |
 | 2026-07-22 | task-plan-exec / gpt-5.6-terra/medium | P6.12 повторно заблокирован: independent reader reaches D108 chain but sealed MCP expected bytes/IDs diverge; writer 0 — детали см. phases/P6.md P6.12 Completion Notes. |
 | 2026-07-22 | task-plan-design / root agent | D112 reopens only P6.11 for the P6.12 RED expected-root and pre-carrier dual-projection defects; frozen contracts and live authority remain unchanged. |

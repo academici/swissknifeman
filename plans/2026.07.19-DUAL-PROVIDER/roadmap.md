@@ -6,12 +6,12 @@
      Порядок строго phase-first: P0→P1→P2→P3→P4→P5→P6→P7. До finish + GREEN design
      audit исполнение любого item запрещено. -->
 
-**Обновлён:** 2026-07-22 · **Соответствует plan.md:** v1.4.44
+**Обновлён:** 2026-07-22 · **Соответствует plan.md:** v1.4.45
 
-> **Статус exec:** D106 keeps P2/P5 terminal and opens only sequential P6.9→P6.10.
-> D104 is admissible in P2 but live-not-selected because only `claude-code` is effective; P6.8
-> preserved the unmanaged-MCP and expected P5 ordinary-path refusals. P7.2 remains blocked;
-> P7.3+, FOREMAN, fleet and push stay closed.
+> **Статус exec:** D107 принял P6 как `🟠` с долгом F1–F4. P7.2 остаётся `🔴` до
+> Owner Approval по двум осям: `S` — project provider selection, `O` — ownership текущего
+> `.mcp.json`. Рекомендован `S1+O1`; `S0+O0` прекращает P7/план. До D108 никакая
+> P7/package/live команда не исполнима; P7.3+, FOREMAN, fleet, tag и push закрыты.
 
 ## Карта исполнения
 
@@ -65,7 +65,7 @@
 | P6.9 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | — | preflight all required plans before write and report bootstrap/ordinary results separately |
 | P6.10 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | independent split-verdict and zero-write proof; does not open P7.2 |
 | P7.1 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/xhigh | ✅ D99 | terminal generated docs/exact-set |
-| P7.2 | solo | plan-run (manual) — 🔴 | gpt-5.6-terra/high | ✅ separate D# for residual ownership and later live apply | blocked through P6.9→P6.10, later P6 close/audit and separate `.mcp.json` authority |
+| P7.2 | solo | plan-run (manual) — 🔴 | gpt-5.6-terra/high | ✅ D108 `S1+O1` direction; later exact live apply D# | P6 terminal 🟠; waiting on project selection + exact `.mcp.json` ownership authority |
 | P7.3 | solo | plan-run (manual) | gpt-5.6-terra/high | ✅ D# на exact bootstrap cleanup inventory | guarded destructive cleanup и release manifest; отдельный rollback boundary |
 | P7.4 | solo | plan-run (manual, NEW SESSION) | gpt-5.6-sol/xhigh | ✅ literal GREEN + explicit owner D# | cold adversarial audit; только GREEN+owner D# открывает reconcile |
 
@@ -80,9 +80,9 @@ implementation. P5.6→P5.7 — contract→prescribed implementation, поэто
 
 ## P7 session-by-session execution process
 
-> D106 blocks this console at P7.2. No P7 command is runnable until P6.9/P6.10 and a later
-> P6 close/audit route are terminal, and the residual `.mcp.json` ownership boundary has
-> separate authority. This section does not authorize that work or P7.3+.
+> D107 closes the P6 disposition. No P7 command is runnable until D108 records the exact
+> `S1+O1` Owner literal and a bounded plan-design materializes its no-write remediation.
+> `S0+O0` terminates P7/plan. This section authorizes neither choice nor P7.3+.
 
 P7 исполняется четырьмя независимыми внешними Codex-процессами: каждый item получает
 собственную shell-команду и точный route из `plan.md` §3. После GREEN item executor
@@ -210,25 +210,26 @@ terminal tree фазы. Полные правила и exact probes: `research/2
 
 ## Готовый launch-block текущего шага
 
-### P6 — fresh independent audit after phase close
+### P7.2 — Owner Approval boundary
 
-**Next:** $ task:plan-audit 2026.07.19-DUAL-PROVIDER P6
+**Next:** waiting: plan.md D108 records exact Owner choice `S1+O1` → design-item: task:plan-design 2026.07.19-DUAL-PROVIDER P7.2
 
 | Параметр | Значение |
 |:--|:--|
 | Model class | frontier |
-| Effort | xhigh |
-| Capabilities | command.filesystem-read · command.filesystem-write · command.git-read · command.git-write |
-| Context | NEW SESSION — шаг-не-item |
-| Суть | Independently audit the terminal P6 phase; do not open P7. |
+| Effort | high |
+| Capabilities | — |
+| Context | cold-start — plan-step |
+| Суть | После Owner Approval спроектировать bounded P2/P6 remediation; live work не выполнять. |
 
 ```text
-$ task:plan-audit 2026.07.19-DUAL-PROVIDER P6
+# НЕ раньше: plan.md D108 содержит exact Owner literal S1+O1
+$ task:plan-design 2026.07.19-DUAL-PROVIDER P7.2
 
-РЕЖИМ: fresh independent terminal P6 audit; no P7 execution
-ВХОД: plans/2026.07.19-DUAL-PROVIDER/phases/P6.md; P6.8–P6.10 evidence; phase handoff
-СКОУП: independently verify the material P6.8 deviation and D106/P6.10 zero-write boundary
-НЕ ТРОГАТЬ: package source/tests, P2/P5 contracts, `.mcp.json` adoption, provider config, live apply/repair/rollback, P7+, FOREMAN, fleet, tag or push
+РЕЖИМ: owner-approved bounded remediation design only; no P7.2 execution
+ВХОД: research/25-p7.2-owner-authority-boundary.md; plan.md D108; phases/P7.md P7.2
+СКОУП: materialize exact project-carrier and P2/P6 no-write remediation items, validation and fresh P7.2 route
+НЕ ТРОГАТЬ: live provider/config/artifact files, apply/repair/rollback, P7.3+, FOREMAN, fleet, tag, push or unrelated changes
 ```
 
 ## Гейты владельца (сводно)
@@ -269,5 +270,5 @@ $ task:plan-audit 2026.07.19-DUAL-PROVIDER P6
   journal IDs; фактический порядок задают D52 и эта execution map. D51 supersedes недостаточный D49 только в части
   schema-invalid row 11; audit-r3 F1 не меняет contract/D51/canon, а закрывает missing
   directory-ID enforcement. Evidence — `findings/journal-same-plan-remediation-verification-2026-07-20.md`.
-  Audit r4 remains recorded as accepted P6 debt F1–F4 under D107; its stale status wording is
-  deliberately not repaired by this owner-disposition bookkeeping.
+  Audit r4 remains recorded as accepted P6 debt F1–F4 under D107; this later P7.2 design pass
+  supersedes the stale current-status wording without rewriting the historical finding.

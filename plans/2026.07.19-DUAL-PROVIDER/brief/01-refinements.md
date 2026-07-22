@@ -256,3 +256,17 @@ RAG:— (owner-grounded: прямое требование владельца 20
 RAG:— (owner-grounded: semantic invocation 2026-07-22; repo-grounded:
 `phases/P7.md` P7.1 escalation, `journal.jsonl`,
 `findings/P7.1-capability-manifest-gap-2026-07-22.md`).
+
+## 2026-07-22 — P7.2 post-P6 Owner Approval boundary
+
+- После D107 не переоткрывать P6 и не перекладывать на владельца mechanics, уже
+  делегированные D66/D79.
+- Свести остаточный P7.2 blocker к двум реальным authority-осям: project provider selection
+  и ownership существующего live `.mcp.json`.
+- Дать минимальные alternatives, рекомендацию, exact scope/anti-scope и literal Owner reply;
+  смешанные варианты, не открывающие P7.2, назвать явно.
+- До ответа выполнять только plan-design/bookkeeping: не запускать P7.2, package source/tests,
+  provider config/artifacts, apply/repair/rollback, P7.3+, FOREMAN, fleet, tag или push.
+
+RAG:— (repo-grounded: D66/D79/D102–D107,
+`research/24-d104-live-admission-repair-design.md`, `phases/P6.md` Audit attempt 4).

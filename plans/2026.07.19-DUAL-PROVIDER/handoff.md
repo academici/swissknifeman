@@ -1,43 +1,39 @@
-# HANDOFF — 2026-07-22 — after P6
+# HANDOFF — 2026-07-22 — after P7
 
-**Next:** /task:plan-design 2026.07.19-DUAL-PROVIDER P7.2
+**Next:** waiting: plan.md D108 records exact Owner choice `S1+O1` → design-item: task:plan-design 2026.07.19-DUAL-PROVIDER P7.2
 
 | Параметр | Значение |
 |:--|:--|
-| Model | frontier |
-| Thinking | high — owner-gated blocked-item design |
-| Context | NEW SESSION — шаг-не-item |
-| Суть | Design only the blocked P7.2 authority boundary; do not execute P7. |
+| Model class | frontier |
+| Effort | high |
+| Capabilities | — |
+| Context | cold-start — plan-step |
+| Суть | После Owner Approval материализовать bounded P2/P6 remediation design; live work не выполнять. |
 
 ```text
-$ task:plan-design 2026.07.19-DUAL-PROVIDER P7.2
-
-РЕЖИМ: owner-gated blocked-item design only; do not execute P7.2
-ВХОД: plans/2026.07.19-DUAL-PROVIDER/phases/P7.md → P7.2; plans/2026.07.19-DUAL-PROVIDER/plan.md → D102–D107; plans/2026.07.19-DUAL-PROVIDER/phases/P6.md → `## Audit P6 — 2026-07-22 (attempt 4)`
-СКОУП: reconcile the still-blocked P7.2 authority boundary and emit an exact owner-decision carrier; no package or live work
-НЕ ТРОГАТЬ: package source/tests, frozen contracts, `.mcp.json` adoption, provider config, live apply/repair/rollback, P7.3+, FOREMAN, fleet, tag or push
+# НЕ раньше: plan.md D108 содержит exact Owner literal S1+O1
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-design 2026.07.19-DUAL-PROVIDER P7.2; first read research/25-p7.2-owner-authority-boundary.md and plan.md D108; design/no-write only; do not execute P7.2, package/live apply/repair/rollback, P7.3+, FOREMAN, fleet, tag or push'
 ```
 
-**Done:** D107 records Approval Owner option A: P6 remains closed as `🟠 Done with deviations`
-with all ten items terminal. The accepted debt is F1–F4 from audit attempt 4; it is not repaired
-or waived. D106/P6.9 preflights bootstrap and ordinary plans before every write; P6.10 proves
-their split verdict and zero live-root delta.
+**Done:** D107/P6 disposition сохранена. P7.2 post-P6 boundary сведена к двум owner-осям:
+`S` — effective provider selection этого проекта; `O` — ownership текущего live `.mcp.json`.
+Рекомендованный единственный runnable выбор — `S1+O1`; механика остаётся делегированной D66/D79.
 
-**Remaining:** P7.2 remains blocked; its unmanaged `.mcp.json` ownership/provider-selection
-boundary requires separate owner authority. The next carrier is design only, not execution.
+**Remaining:** Approval Owner должен выбрать один exact literal из
+`research/25-p7.2-owner-authority-boundary.md`:
 
-**Sources of truth:** `phases/P6.md` Phase Handoff and P6.8–P6.10 Completion Notes;
-`artifacts/P6-bootstrap-transfer-{conformance,independent-conformance}.md`;
-`findings/P6-bootstrap-transfer-live-preflight-2026-07-22.md`;
-`research/24-d104-live-admission-repair-design.md`.
+- `APPROVE P7.2 AUTHORITY S1+O1: ENABLE PROJECT-LOCAL claude-code+codex FOR swissknifeman ONLY; AUTHORIZE ONE EXACT P2 .mcp.json TRANSFER CANDIDATE FOR SHA256:cf4537196c3fefd6fd3980221bd3677f74e7867392ad49364e1e891e1f7c8283; DESIGN/NO-WRITE ONLY; NO LIVE APPLY/REPAIR/ROLLBACK YET`
+- `REJECT P7.2 AUTHORITY S0+O0: KEEP LEGACY CLAUDE-ONLY AND .mcp.json UNMANAGED; STOP P7 AND THE PLAN`
 
-**Open risks:** F1–F4 remain accepted P6 debt. P6.8's material live refusal remains: a green
-bootstrap candidate is not a green whole operation. Live selection remains Claude-only and
-ordinary `.mcp.json` ownership is unmanaged. No D106/D107 result authorizes an apply, repair,
-rollback, P7.2 execution or provider-config change.
+**Sources of truth:** `research/25-p7.2-owner-authority-boundary.md` · `open-questions.md`
+· `phases/P7.md` P7.2 · `plan.md` D102–D107 · `phases/P6.md` Audit attempt 4.
+
+**Open risks:** No choice has been approved. Mixed `S1+O0`/`S0+O1` leaves P7.2 non-runnable.
+D107 F1–F4 remain accepted debt. No current carrier authorizes project config, `.mcp.json`,
+P2 lock, D104 targets or any other live mutation.
 
 **Workarounds/Deferred/Open questions:**
 
-- Workarounds: —
-- Deferred: F1–F4; `.mcp.json` ownership/provider-selection authority; every live transfer/apply/repair; P7.2 execution.
-- Open questions: —
+- workarounds: —
+- deferred: exact P2/P6 mechanics, fresh P7.2 preflight and normal live path/action gate until D108.
+- open_questions: `OQ-P7.2-1` — Owner choice `S1+O1` or `S0+O0`.

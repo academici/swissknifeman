@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.4.44 |
+| Version | 1.4.45 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
@@ -249,6 +249,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
 | 2026-07-22 | owner / AUDIT-CAP | D107: P6 принята как 🟠 с долгом F1–F4; следующий carrier — owner-gated P7.2 design, без запуска P7. |
+| 2026-07-22 | task-plan-design / gpt-5.6-sol/high | P7.2 authority boundary сведён к двум owner-осям `S`/`O`; рекомендован `S1+O1`, item остаётся 🔴 до literal D108, package/live work не запускалась. |
 | 2026-07-22 | task-plan-close / implementation/low | P6 закрыта как 🟠: D106 split/zero-write proof terminal, а P6.8 material live refusal сохранён; далее только fresh independent audit P6. |
 | 2026-07-22 | task-plan-exec / gpt-5.6-terra/medium | P6.10 закрыт: независимый literal-oracle подтверждает split verdict и zero-write boundary — детали см. phases/P6.md P6.10 Completion Notes. |
 | 2026-07-22 | task-plan-run / gpt-5.6-sol/high | P6.9 закрыт: D104 bootstrap и ordinary provider plans разделены и preflight выполняется до первой записи — детали см. phases/P6.md P6.9 Completion Notes. |
@@ -424,3 +425,15 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 - **Переписать row 11.** Возвращает per-line validity, но уничтожает append-only provenance.
 
 **Статус:** Resolved → D51
+
+### P7.2 live provider selection и `.mcp.json` ownership
+
+- **(рекоменд.) S1+O1.** Явно выбрать `claude-code+codex` только в project-owned carrier
+  `swissknifeman` и разрешить design/no-write одного exact P2 transfer candidate для текущего
+  `.mcp.json` preimage; live mutation остаётся за отдельным P7.2 gate.
+- **S0+O0.** Сохранить legacy Claude-only selection и unmanaged `.mcp.json`; P7 и план
+  прекращаются, поскольку dual-provider acceptance недостижим.
+- **Смешанные S1+O0 / S0+O1.** Не открывают P7.2 и потому не являются исполнимым выбором.
+
+**Статус:** Decision pending (нужен владелец) — `open-questions.md#oq-p72-1--live-provider-selection-и-mcpjson-ownership`,
+exact literal и anti-scope: `research/25-p7.2-owner-authority-boundary.md`.

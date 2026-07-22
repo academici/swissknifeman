@@ -103,3 +103,35 @@ valid and must not be rerun. P6.5 remains **🟡 In progress**.
 ## Second RED repair pointer — 2026-07-22
 
 Commit `93b157bc` scopes verified worktree-local sibling launchers in the independent matrix fixture, restores every environment key exactly, and performs production-equivalent instruction preparation before the dry matrix. The focused unittest and one public conformance CLI are GREEN with exact `planned`/`none` instruction rows; only invalidated maind/downstream terminal checks remain. P6.5 stays **🟡 In progress**; P6.6/P7/FOREMAN/fleet/live self-host/push are untouched.
+
+## Repair 2 terminal revalidation — GREEN
+
+**Repair commits:** `93b157bc`, `d7d80c96`
+**Anchor:** `d7d80c967d9145097d33c7875db5857101190554`
+
+The invalidated worktree-local mAInd validator was rerun once and passed (`449` tests).
+Previously valid broad commands were not repeated: core remains `206` GREEN and analyst
+remains `211` GREEN. The remaining terminal tail each ran once and was GREEN: harness (`406`
+tests), public dual-provider deploy/instruction conformance (two providers, 12 targets, 49
+common IDs, managed-drift/outside-byte proof), target plan-lint (0 errors, 0 new warnings),
+`git diff --check`, and protected P7+/FOREMAN/fleet/root-bootstrap delta (0).
+
+## Live memory isolation — RED
+
+**Timestamp:** 2026-07-22T04:44:42Z
+
+The exact read-only call
+`maind_memory_recall(scope="project:swissknifeman", query="P6 bootstrap checkpoint")`
+returned project-scoped records but also `mem_mrjkvnib_8eaf537d482c`, whose declared scope is
+`ns:axioma`. This does not prove the required `project:swissknifeman` isolation roundtrip.
+
+Preceding read-only probes succeeded: `maind_graph_project(project="swissknifeman")` returned
+the anchored `project:swissknifeman` node; Serena resolved `plan_instructions` at
+`packages/harness/lib/harness/instructions.py:336`; Perplexity returned the official result
+`Docs MCP | OpenAI API` at `https://platform.openai.com/docs/docs-mcp` for the fixed query.
+These successes do not override the memory isolation RED.
+
+Per the first-RED rule, no mAInd checkpoint write occurred. The owning seam is mAInd memory
+scope filtering/namespace isolation. Terminal validation and the successful read-only probes
+remain valid; only the memory-isolation recheck and downstream disk+mAInd checkpoint creation
+are invalidated. P6.6 remains blocked and P6.5 remains **🟡 In progress**.

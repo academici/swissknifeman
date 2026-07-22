@@ -16,3 +16,17 @@ The P6.5 terminal sequence stopped at d.3. Harness validation, integrated termin
 plan lint, diff/protected-delta checks, live probes, and disk/memory checkpoint creation were
 not run. The valid core and analyst results remain reusable; the repair invalidates only maind
 validation and its downstream terminal consumers. No package source was changed by P6.5.
+
+## Repair 2 continuation
+
+The P6.2 repair commits `93b157bc` and `d7d80c96` invalidate only d.3. Its single rerun is
+GREEN (449 tests). The unrun terminal tail is GREEN once: harness (406 tests), integrated
+public CLI conformance (providers `claude-code,codex`, 12 instruction targets, 49 common IDs,
+managed-drift/outside-byte proof), plan-lint (0 errors and 0 new warnings), diff check, and
+protected-delta check (0). Core (206) and analyst (211) remain valid and were not rerun.
+
+The memory-isolation probe is RED: a recall scoped to `project:swissknifeman` also returned
+`mem_mrjkvnib_8eaf537d482c` with declared scope `ns:axioma`. The preceding read-only graph,
+Serena and Perplexity probes succeeded, but they do not override the isolation failure. No
+checkpoint write or P6.5 close is authorized from this state. Only memory-scope repair,
+isolation recheck and downstream checkpoint creation are invalidated.

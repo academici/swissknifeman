@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.4.33 |
+| Version | 1.4.34 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
@@ -224,11 +224,13 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | D92 | 2026-07-22 | Supervisor RED reopens P6.4 attempt 3 for one bounded Claude SCHEMA=2 reader correction: owned top-level `reads.total` must normalize to neutral `reads`; `tools.by_name.Read` is not that semantic. D90 remains frozen and unchanged. | RAG:— (owner-grounded: bounded attempt-3 repair; repo-grounded: `packages/harness/configs/claude-code/hooks/run-report/_lib.py`, `8f23f66b`) — the repair is limited to reader/test evidence and does not enter P6.5+, P7, FOREMAN, fleet, or live self-host state. |
 | D93 | 2026-07-22 | P6.2 is reopened and reclosed for one bounded public MCP memory-isolation repair: an explicit recall scope is exact and must not be expanded to related namespace/global scopes. | RAG:— (owner-grounded: bounded P6.2 repair assignment; repo-grounded: `packages/maind/lib/maind/mcp.py`, `884e146b`) — preserves the backend marker filter and omitted-scope compatibility union; no frozen contract, provider projection, backend, P6.5+, P7, FOREMAN, fleet, or live self-host state changes. |
 | D94 | 2026-07-22 | P6 is reopened and reclosed for one bounded terminal-audit repair: linked worktrees may read only the primary worktree's machine-local `config.json` when they share its Git common-dir; cwd matching uses the same exact identity; generated provider-provision evidence is regenerated; roadmap status is reconciled; protected root-bootstrap comparison starts at owner-authorized prerequisite `0694379c`. | RAG:— (owner-grounded: bounded repair assignment; repo-grounded: `0694379c`, `d18bf0bc`, P6 audit attempt 1) — unknown projects and all write targets remain isolated; `0694379c` is an ancestor of P6 close and `.agents/plugins/marketplace.json` has zero delta after it. No frozen contract, P7, FOREMAN, fleet, live self-host, or push state changes. |
+| D95 | 2026-07-22 | P6/P6.2 are reopened and reclosed for the attempt-2 RED strict-health defect: any reported required provider trust row with `green=false` fails `maind health --strict`, while non-strict diagnostics and provider selection remain unchanged. | RAG:— (repo-grounded: P6 audit attempt 2, `packages/maind/lib/maind/health.py`, focused CLI tests) — repair is limited to the strict aggregate and regression coverage; frozen contracts, P6.1/P6.3–P6.6, P6.5 validators, P7, FOREMAN, fleet, live self-host, root bootstrap and provider renderers remain unchanged. |
 
 ## 6. Update Log
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-22 | plan-terra-high / gpt-5.6-terra/high | P6.2 reclosed after audit attempt 2: strict health now fails closed on a non-green provider-trust row; details in phases/P6.md repair evidence. |
 | 2026-07-22 | task-plan-close / gpt-5.6-sol/high | P6 закрыта после terminal P6.1–P6.6 reconciliation; next — один fresh independent P6 audit, P7 не открыта. |
 | 2026-07-22 | plan-terra-high / gpt-5.6-terra/high | D94 P6 audit repair reclosed: linked-worktree health, generated provision evidence, roadmap and authorized protected baseline are reconciled; fresh audit remains next. |
 | 2026-07-22 | plan-terra-medium / gpt-5.6-terra/medium | P6.5 закрыт: independent provider/instruction/analytics evidence, preserved RED recoveries and matching disk+mAInd checkpoint are GREEN; fresh disk-first P6.6 remains next — details in `phases/P6.md` P6.5 Completion Notes. |

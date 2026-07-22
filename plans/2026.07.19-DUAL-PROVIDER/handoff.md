@@ -1,27 +1,25 @@
 # HANDOFF — 2026-07-22 — after P7.1
 
-**Next:** exec-items: task:plan-exec 2026.07.19-DUAL-PROVIDER P7.1
+**Next:** /task:plan-design 2026.07.19-DUAL-PROVIDER P6.2
 
 | Параметр | Значение |
 |:--|:--|
-| Model | gpt-5.6-terra |
-| Thinking | medium — deterministic provider docs gate |
-| Context | NEW SESSION — P7.1 only |
-| Суть | Execute P7.1 only in the current checkout; print the P7.2 command after terminal GREEN. |
+| Model | gpt-5.6-sol |
+| Thinking | high — repair bounded deployment seam |
+| Context | NEW SESSION — шаг-не-item |
+| Суть | Redesign the P6.2 hook deployment repair before any P7.1 retry. |
 
 ```text
-$ task:plan-exec 2026.07.19-DUAL-PROVIDER P7.1
+$ task:plan-design 2026.07.19-DUAL-PROVIDER P6.2
 ```
 
-**Done:** P7 execution is prepared in the current checkout and delivery branch.
+**Done:** P7.1 runtime preflight confirmed the routed Terra/medium session, approval `never`, unrestricted sandbox and strict mAInd health; no P7 documentation output was generated.
 
-**Remaining:** P7.1 → P7.2 → P7.3 → P7.4 → P7 close. Each item is a separate command in
-the current checkout and `codex/provider-project-sync`; FOREMAN and fleet remain outside scope.
+**Remaining:** bounded P6.2 deployment/hook remediation → fresh audit as required by the reopened phase → fresh P7.1 process → P7.2 → P7.3 → P7.4 → P7 close. FOREMAN and fleet remain outside scope.
 
-**Sources of truth:** `phases/P7.md` Current-checkout execution console; `plan.md` §3
-Routing; `roadmap.md`.
+**Sources of truth:** `findings/P7.1-codex-hook-preflight-2026-07-22.md`; `phases/P7.md`; `plan.md` §3 Routing; `roadmap.md`.
 
-**Open risks:** P7.2–P7.4 retain their explicit owner gates; P7.1 has no live apply authority.
+**Open risks:** synthetic `harness hooks --provider codex --observer --trusted --dry-run` reports `harness.codex.lifecycle.hooks: ownership-conflict` and `harness.codex.lifecycle.handler: missing`; P7.1 remains blocked until the P6.2 owner repairs and independently revalidates the deployment seam. Plan-lint has 0 ERROR but retains two P7 warnings exposed by the blocked status (pre-existing clarification/workflow metadata); the redesign must decide whether they are relevant to the repair. P7.2–P7.4 owner gates remain closed.
 
 **Workarounds/Deferred/Open questions:**
 

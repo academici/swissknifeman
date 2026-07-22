@@ -288,6 +288,23 @@ class TestScopeIsolation(unittest.TestCase):
                 self.assertEqual(json.loads(r["result"]["content"][0]["text"])[0]["text"],
                                  "своя память")
 
+    def test_explicit_recall_scope_never_surfaces_related_namespace_records(self):
+        """Explicit MCP scope is exact even though the backend payload offers all shapes."""
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            with FakeMemoryServer() as url:
+                memory_mod.store(url, "project:a", "fact", "private matching fact")
+                memory_mod.store(url, "ns:axioma", "fact", "shared matching fact")
+                config = cfg(projects=[{"id": "a", "namespaces": ["axioma"]}],
+                             memory={"url": url})
+                response = scoped_call(env, config, "maind_memory_recall",
+                                       {"scope": "project:a", "query": "matching"},
+                                       "project:a")
+                records = json.loads(response["result"]["content"][0]["text"])
+                self.assertEqual(len(records), 1)
+                self.assertEqual(records[0]["text"], "private matching fact")
+                self.assertEqual({record["scope"] for record in records}, {"project:a"})
+
     def test_shared_namespace_allowed(self):
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)

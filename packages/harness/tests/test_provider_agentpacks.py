@@ -3,9 +3,13 @@ import re
 import json
 import sys
 import tempfile
-import tomllib
 import unittest
 from pathlib import Path
+
+try:
+    import tomllib
+except ModuleNotFoundError:  # Python 3.9/3.10 compatibility
+    tomllib = None
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
@@ -32,6 +36,20 @@ def legacy_source(role):
 
 def body(text):
     return text.split("---\n", 2)[2]
+
+
+def assert_codex_role_contract(case, text, *, model, skills, command_requirements):
+    if tomllib is not None:
+        parsed = tomllib.loads(text)
+        case.assertEqual(parsed["model"], model)
+        case.assertEqual(parsed["skills"], skills)
+        case.assertEqual(parsed["command_requirements"], command_requirements)
+        return
+    expected = {"model": model, "skills": skills, "command_requirements": command_requirements}
+    for key, value in expected.items():
+        match = re.search(rf"(?m)^{key} = (.+)$", text)
+        case.assertIsNotNone(match, key)
+        case.assertEqual(json.loads(match.group(1)), value, key)
 
 
 class ProviderAgentpackCase(unittest.TestCase):
@@ -108,12 +126,15 @@ class ProviderAgentpackCase(unittest.TestCase):
                 target.write_bytes(projection.rendered)
                 actual = target.read_bytes()
                 self.assertIsNone(FORBIDDEN.search(actual.decode("utf-8")), key)
-                parsed = tomllib.loads(actual.decode("utf-8"))
-                self.assertEqual(parsed["model"], {"economy": "gpt-5.6-luna",
-                                                   "implementation": "gpt-5.6-terra",
-                                                   "frontier": "gpt-5.6-sol"}[role.model_class])
-                self.assertEqual(parsed["skills"], list(role.skills))
-                self.assertEqual(parsed["command_requirements"], list(role.command_ids))
+                assert_codex_role_contract(
+                    self,
+                    actual.decode("utf-8"),
+                    model={"economy": "gpt-5.6-luna",
+                           "implementation": "gpt-5.6-terra",
+                           "frontier": "gpt-5.6-sol"}[role.model_class],
+                    skills=list(role.skills),
+                    command_requirements=list(role.command_ids),
+                )
                 rendered.append(key)
         self.assertEqual(len(rendered), 43)
         self.assertEqual(blocked, [("_common/orchestrator",

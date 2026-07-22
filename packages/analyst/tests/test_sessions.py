@@ -86,6 +86,14 @@ class SessionMetricsCase(unittest.TestCase):
         _write_jsonl(p, [_assistant(in_=5, out=1)])
         self.assertIsNone(ss.session_metrics(p))
 
+    def test_raw_transcript_acquisition_never_writes_claude_state(self):
+        p = self.root / ".claude" / "projects" / "legacy.jsonl"
+        _write_jsonl(p, [_assistant(in_=5, out=1, ts="2026-07-06T10:00:00Z")])
+        before = {path.relative_to(self.root): path.read_bytes() for path in self.root.rglob("*") if path.is_file()}
+        self.assertIsNotNone(ss.session_metrics(p))
+        after = {path.relative_to(self.root): path.read_bytes() for path in self.root.rglob("*") if path.is_file()}
+        self.assertEqual(after, before)
+
 
 class WeeklyReportCase(unittest.TestCase):
     def setUp(self):

@@ -6,6 +6,7 @@ COMMANDS отображает имя команды на обработчик cm
 import sys
 
 from .common import Env
+from .capture import cmd_capture, cmd_migrate
 from .digest import cmd_digest
 from .doctor import cmd_doctor
 from .ingest import cmd_ingest
@@ -21,6 +22,8 @@ from .token_report import cmd_token_report
 
 COMMANDS = {
     "digest": cmd_digest,
+    "capture": cmd_capture,
+    "migrate": cmd_migrate,
     "ingest": cmd_ingest,
     "scan": cmd_scan,
     "suggest": cmd_suggest,

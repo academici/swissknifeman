@@ -104,13 +104,14 @@ def memory_roundtrip(env, config, project, memory_reachable):
 
 
 # ── отчёт ────────────────────────────────────────────────────────────────────
-def health_report(env, config, project, *, memory_reachable=None):
+def health_report(env, config, project, *, memory_reachable=None, provider_context=None):
     """Состояние связи одного проекта с хабом + проба памяти + подсказки по починке."""
     pid = project["id"]
     if memory_reachable is None:
         _, _, url = resolve_ports(env, config)
         memory_reachable = mem_health(url)
-    rep = probe_project(env, config, project, memory_reachable=memory_reachable)
+    rep = probe_project(env, config, project, memory_reachable=memory_reachable,
+                        provider_context=provider_context)
     c = rep.get("configured", {})
     hook_mode = hook_memory_mode(project)
     native_off, digest_hook = _native_memory_state(project)
@@ -139,7 +140,7 @@ def health_report(env, config, project, *, memory_reachable=None):
         if "missing-example" in issue["problems"]:
             hints.append(f"нет {f}.example → maind sync --only mcp --project {pid} "
                          "(эмитит портируемый шаблон + .gitignore)")
-    return {
+    result = {
         "id": pid, "scope": rep.get("memory_scope", f"project:{pid}"),
         "namespaces": sorted(namespaces_of(project)),
         "status": rep.get("status", "standalone"),
@@ -154,6 +155,9 @@ def health_report(env, config, project, *, memory_reachable=None):
         "mcp_hygiene": hygiene,
         "path": rep.get("path"), "hints": hints,
     }
+    if "provider_trust" in rep:
+        result["provider_trust"] = rep["provider_trust"]
+    return result
 
 
 def _target(env, config, opts):
@@ -352,7 +356,9 @@ def cmd_health(env, argv):
         return
     config, _src = load_config(env)
     project = _target(env, config, opts)
-    rep = health_report(env, config, project)
+    from .provision.sync import contexts
+    context = contexts(env, config, [project])[0]
+    rep = health_report(env, config, project, provider_context=context)
 
     hygiene_fixable = any("missing-example" in i["problems"] for i in rep["mcp_hygiene"])
     if opts["fix"] and (rep["status"] != "connected" or hygiene_fixable):
@@ -364,7 +370,7 @@ def cmd_health(env, argv):
                 warn(f"не удалось поднять память: {e}")
         from .provision.sync import run_sync
         run_sync(env, config, [project], only="mcp")
-        rep = health_report(env, config, project)
+        rep = health_report(env, config, project, provider_context=context)
 
     if opts["json"]:
         print(json.dumps(rep, ensure_ascii=False, indent=2))
@@ -383,8 +389,14 @@ def cmd_health(env, argv):
         print(f"  [{_status(not rep['mcp_hygiene'])}] конфиг-гигиена .mcp.json "
               "(real gitignored + .example в репо)")
         print(f"  ns: [{', '.join(rep['namespaces'])}]  статус: {rep['status']}")
+        for row in rep.get("provider_trust", ()):
+            print(f"  [{_status(row['green'])}] provider:{row['provider_id']} trust"
+                  + (f" ({', '.join(row['diagnostics'])})" if row["diagnostics"] else ""))
         for h in rep["hints"]:
             print(f"    → {h}")
-    # strict падает, если связь не connected ИЛИ память не проходит round-trip
-    if opts["strict"] and (rep["status"] != "connected" or not rep["memory_roundtrip"]):
+    # strict падает, если связь не connected, память не проходит round-trip
+    # или доверие любого включённого/обязательного provider не подтверждено.
+    trust_failed = any(not row["green"] for row in rep.get("provider_trust", ()))
+    if opts["strict"] and (rep["status"] != "connected" or not rep["memory_roundtrip"]
+                           or trust_failed):
         raise SystemExit(1)

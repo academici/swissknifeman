@@ -1,4 +1,5 @@
 """doctor — диагностика окружения узла maind."""
+import json
 import os
 import shutil
 import sys
@@ -6,6 +7,20 @@ from pathlib import Path
 
 from .common import parse_args
 from .memory import health, resolve_ports
+
+
+def provider_trust_report(env, config):
+    """Read-only provider trust aggregate for enabled projects."""
+    from .provision.sync import contexts
+    from .provision.workspace import norm_path, provider_trust, trusted_dirs
+    trusted = trusted_dirs(env)
+    rows = []
+    for context in contexts(env, config, [p for p in config.get("projects") or []
+                                           if p.get("enabled", True)]):
+        path = context.get("local_path")
+        rows.extend({"project_id": context.id, **row} for row in provider_trust(
+            context, trusted=bool(path and norm_path(path) in trusted)))
+    return rows
 
 
 def _skill_drift(env, config):
@@ -165,7 +180,7 @@ def _context_report(env, config, as_json):
 def cmd_doctor(env, argv):
     opts, _ = parse_args(argv, {"--quiet": "bool", "--audit": "str", "--json": "bool",
                                 "--skill-drift": "bool", "--channel-drift": "bool",
-                                "--context": "bool"})
+                                "--context": "bool", "--provider-trust": "bool"})
     if opts["help"]:
         print("maind doctor [--quiet] — проверка окружения узла\n"
               "maind doctor --audit mcp|claude|deny|core|pao|settings|all [--json] — "
@@ -201,6 +216,18 @@ def cmd_doctor(env, argv):
             except SystemExit:
                 config = {}
         _context_report(env, config, as_json=opts["json"])
+        return
+
+    if opts["provider_trust"]:
+        from .config import load_config
+        config, _src = load_config(env)
+        rows = provider_trust_report(env, config)
+        if opts["json"]:
+            print(json.dumps({"providers": rows, "non_green": sum(not row["green"] for row in rows)}, ensure_ascii=False))
+        else:
+            print(f"provider trust: non-green={sum(not row['green'] for row in rows)}")
+            for row in rows:
+                print(f"  {row['project_id']} {row['provider_id']}: " + ("ok" if row["green"] else ", ".join(row["diagnostics"])))
         return
 
     quiet = opts["quiet"]

@@ -876,11 +876,13 @@ def _artifact(artifact_id: str, target: str, rendered: bytes,
     requirements = tuple(CapabilityRequirement(CapabilityId(item),
                                                 (SupportLevel.ADAPTED, SupportLevel.NATIVE))
                          for item in sorted(set(capabilities)))
+    parameters = dict(semantic_parameters)
+    parameters["plugin_version"] = catalog.plugin_version
     request = ArtifactRenderRequest(
         artifact_id, sources, ArtifactTarget(target, ("whole-file", ())),
         ArtifactAdapterIdentity("task.codex-command", ADAPTER_VERSION, ProviderId.CODEX,
                                 catalog.catalog_version, requirements),
-        (), semantic_parameters, lambda _request: rendered,
+        (), parameters, lambda _request: rendered,
     )
     return plan_artifact_render(request)
 

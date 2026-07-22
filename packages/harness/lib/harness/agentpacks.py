@@ -24,6 +24,7 @@ files[]-запись может нести опциональное `src_pack` �
 остаётся текущий пак (см. `src_file`). `remove` — обратная операция к render/upgrade:
 безопасно сносит только неправленные файлы (disk_sha == base_sha256), merge/user_owned
 не трогает (warn), снимает запись пака из lock (пустой lock — удаляется целиком)."""
+from __future__ import annotations
 import hashlib
 import json
 import os

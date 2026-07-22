@@ -184,6 +184,19 @@ class CodexCommandAdapterTests(unittest.TestCase):
                 self.assertIn(b"Read `command.md` completely", skill.read_bytes())
                 self.assertGreater(len(runtime.read_bytes()), 0)
 
+    def test_plugin_version_is_part_of_generated_provenance(self):
+        current = self.render()
+        bumped_catalog = replace(self.catalog, plugin_version="9.9.9")
+        bumped = plan_codex_command_render(
+            bumped_catalog, mapping_from_catalog(bumped_catalog, "codex"), self.support)
+        self.assertTrue(bumped.ok)
+        current_by_id = {item.provenance.artifact_id: item for item in current.results}
+        bumped_by_id = {item.provenance.artifact_id: item for item in bumped.results}
+        self.assertEqual(set(current_by_id), set(bumped_by_id))
+        for artifact_id in current_by_id:
+            self.assertNotEqual(current_by_id[artifact_id].provenance.source_hash,
+                                bumped_by_id[artifact_id].provenance.source_hash)
+
 
 if __name__ == "__main__":  # pragma: no cover
     unittest.main()

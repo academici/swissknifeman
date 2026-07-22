@@ -3,6 +3,8 @@
 This module deliberately contains no carrier parsing, registry, rendering, or I/O.
 Those operations remain owned by the phases and packages that supply their inputs.
 """
+from __future__ import annotations
+
 from dataclasses import dataclass
 from enum import Enum
 import re

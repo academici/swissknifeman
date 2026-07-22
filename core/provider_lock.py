@@ -4,6 +4,8 @@ The module owns a versioned sidecar lock, not provider discovery or rendering.
 Planning is pure and application accepts only a caller-provided root plus the
 immutable plan it produced.
 """
+from __future__ import annotations
+
 from dataclasses import dataclass
 from enum import Enum
 import json

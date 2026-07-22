@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from maind.analysis.analyze import (analyze_report, bash_log_forensics, compute_verdict,
+from maind.analysis.analyze import (analyze_report, analytics_slice, bash_log_forensics, compute_verdict,
                            find_run_report, git_status, pending_lessons)
 from maind.config import load_config
 from tests.fixtures import make_repo, write_maind_config
@@ -181,6 +181,23 @@ class PendingLessonsCase(unittest.TestCase):
             config, _ = load_config(env)
             rep = analyze_report(env, config, config["projects"][0], with_health=False)
             self.assertEqual(rep["pending_lessons"], 1)
+
+
+class AnalyticsConsumerCase(unittest.TestCase):
+    def test_reads_only_normalized_store(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            store = Path(tmp) / ".swissknife" / "analytics"
+            store.mkdir(parents=True)
+            event = {"contract_version": "1.0.0", "provider_id": "codex", "session_id": "s",
+                     "project_id": "p", "event_id": "e", "occurred_at": "2026-07-22T00:00:00Z",
+                     "event_kind": "run_summary", "outcome": "ok", "metrics": {"usage": 1},
+                     "provenance": {"raw_ref": "local:c", "sha256": "a" * 64,
+                                    "reader_id": "codex-hook-context", "reader_version": "1.0.0"}}
+            (store / "events.ndjson").write_text(json.dumps(event) + "\n", encoding="utf-8")
+            slice_ = analytics_slice(tmp, "s")
+            self.assertEqual((slice_["events"], slice_["providers"]), (1, ["codex"]))
+            self.assertEqual(slice_["run_report"]["metrics"], {"usage": 1})
+            self.assertEqual(slice_["run_report"]["provenance"][0]["sha256"], "a" * 64)
 
 
 class MaindObservabilityCase(unittest.TestCase):

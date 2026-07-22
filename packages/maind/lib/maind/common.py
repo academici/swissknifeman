@@ -5,6 +5,7 @@
 вынесен в `maind.http`, управляемый markdown-блок — в `maind.blocks` (реэкспорт ниже
 для обратной совместимости импортов `from .common import ...`)."""
 import os
+import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -88,6 +89,50 @@ class Env(BaseEnv):
             if legacy.exists():
                 return legacy
         return root_cfg  # путь по умолчанию для записи/подсказок — новый
+
+    @property
+    def linked_worktree_config(self):
+        """Read-only config fallback from this repository's primary worktree.
+
+        An isolated linked worktree intentionally has no copied machine-local
+        ``config.json``.  It may read the primary worktree's carrier only when
+        both worktrees resolve to the same Git common directory.  Writers keep
+        using ``default_config`` and therefore never mutate the primary carrier.
+        """
+        if self.default_config.exists():
+            return None
+        try:
+            result = subprocess.run(
+                ["git", "-C", str(self.monorepo_root), "rev-parse", "--git-common-dir"],
+                check=True, capture_output=True, text=True)
+        except (OSError, subprocess.CalledProcessError):
+            return None
+        common_dir = Path(result.stdout.strip())
+        if not common_dir.is_absolute():
+            common_dir = self.monorepo_root / common_dir
+        common_dir = common_dir.resolve()
+        if common_dir.name != ".git":
+            return None
+        primary_root = common_dir.parent
+        candidate = primary_root / "config.json"
+        if not candidate.is_file() or candidate == self.default_config:
+            return None
+        try:
+            primary_common = subprocess.run(
+                ["git", "-C", str(primary_root), "rev-parse", "--git-common-dir"],
+                check=True, capture_output=True, text=True).stdout.strip()
+        except (OSError, subprocess.CalledProcessError):
+            return None
+        primary_common = Path(primary_common)
+        if not primary_common.is_absolute():
+            primary_common = primary_root / primary_common
+        return candidate if primary_common.resolve() == common_dir else None
+
+    @property
+    def config_read_path(self):
+        """Read carrier, keeping ``default_config`` as the isolated write target."""
+        return (self.default_config if self.default_config.is_file()
+                else self.linked_worktree_config or self.default_config)
 
     @property
     def example_config(self):

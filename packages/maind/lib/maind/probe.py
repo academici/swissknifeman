@@ -38,7 +38,8 @@ def _read_agent_pack_lock(project_path):
         return None
 
 
-def probe_project(env, config, project, *, memory_reachable=None, trusted=None):
+def probe_project(env, config, project, *, memory_reachable=None, trusted=None,
+                  provider_context=None):
     """Состояние одного проекта (read-only). status ∈ connected|partial|standalone|missing-path.
 
     trusted: множество доверенных каталогов (из hub-настроек). None → читаем один раз тут;
@@ -98,11 +99,16 @@ def probe_project(env, config, project, *, memory_reachable=None, trusted=None):
     else:
         status = "standalone"
 
-    return {"id": pid, "name": project.get("name", pid), "path": str(path),
+    result = {"id": pid, "name": project.get("name", pid), "path": str(path),
             "memory_scope": project.get("memory_scope") or f"project:{pid}",
             "configured": configured, "skills": skills, "agent_packs": agent_packs,
             "daemons": {"memory_reachable": memory_reachable},
             "trusted": norm_path(local) in trusted, "status": status}
+    if provider_context is not None:
+        from .provision.workspace import provider_trust
+        result["provider_trust"] = provider_trust(provider_context,
+                                                   trusted=result["trusted"])
+    return result
 
 
 def drift_hints(env, config, report):

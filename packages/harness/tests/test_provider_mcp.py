@@ -1,9 +1,14 @@
 import tempfile
-import tomllib
 import unittest
 import json
+import re
 from pathlib import Path
 import sys
+
+try:
+    import tomllib
+except ModuleNotFoundError:  # Python 3.9/3.10 compatibility
+    tomllib = None
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
@@ -18,6 +23,27 @@ ROOT = Path(__file__).resolve().parents[1]
 CATALOG = ROOT / "configs" / "common" / "mcp" / "catalog.json"
 CLAUDE_BINDINGS = ROOT / "configs" / "claude-code" / "mcp" / "bindings.json"
 CODEX_BINDINGS = ROOT / "configs" / "codex" / "mcp" / "bindings.json"
+
+
+def assert_mcp_url(case, text, server_id, expected):
+    if tomllib is not None:
+        case.assertEqual(tomllib.loads(text)["mcp_servers"][server_id]["url"], expected)
+        return
+    table = re.search(
+        rf"(?ms)^\[mcp_servers\.{re.escape(server_id)}\]\n(.*?)(?=^\[|\Z)", text
+    )
+    case.assertIsNotNone(table, server_id)
+    url = re.search(r'(?m)^url = (".*")$', table.group(1))
+    case.assertIsNotNone(url, server_id)
+    case.assertEqual(json.loads(url.group(1)), expected)
+
+
+def assert_mcp_server_ids(case, text, expected):
+    if tomllib is not None:
+        actual = set(tomllib.loads(text)["mcp_servers"])
+    else:
+        actual = set(re.findall(r"(?m)^\[mcp_servers\.([^]]+)\]$", text))
+    case.assertEqual(actual, set(expected))
 
 
 class ProviderMcpCase(unittest.TestCase):
@@ -43,8 +69,8 @@ class ProviderMcpCase(unittest.TestCase):
         self.assertEqual({server_id for server_id, _ in claude.servers}, set(selected))
         self.assertEqual({server_id for server_id, _ in codex.servers}, set(selected))
         self.assertEqual(json.loads(render_mcp_projection(claude))["mcpServers"]["context7"]["type"], "http")
-        self.assertEqual(tomllib.loads(render_mcp_projection(codex).decode("utf-8"))
-                         ["mcp_servers"]["context7"]["url"], "https://mcp.context7.com/mcp")
+        assert_mcp_url(self, render_mcp_projection(codex).decode("utf-8"),
+                       "context7", "https://mcp.context7.com/mcp")
         self.assertEqual(render_mcp_projection(codex), render_mcp_projection(codex))
         self.assertNotIn(b"PERPLEXITY_API_KEY=", render_mcp_projection(codex))
 
@@ -80,8 +106,7 @@ class ProviderMcpCase(unittest.TestCase):
             plan = plan_artifact_lock(root, (expected,), lock_bytes=None)
             apply_plan(root, plan)
             actual = (root / ".codex/config.toml").read_text(encoding="utf-8")
-            parsed = tomllib.loads(actual)
-            self.assertEqual(set(parsed["mcp_servers"]), {"context7", "perplexity"})
+            assert_mcp_server_ids(self, actual, {"context7", "perplexity"})
             self.assertNotIn(".claude", actual)
             self.assertNotIn("real-token", actual)
             self.assertIn("${PERPLEXITY_API_KEY}", actual)

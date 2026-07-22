@@ -316,16 +316,18 @@ def load_brain_projects(path):
 # ── загрузка с приоритетом ──────────────────────────────────────────────────
 def load_config(env):
     """Возвращает (config, source). Приоритет: config.json (корень монорепо;
-    legacy .maind.json подхватывается тем же резолвером env.default_config) →
+    linked-worktree config.json (read-only, same Git common-dir only) → legacy
+    .maind.json подхватывается тем же резолвером env.default_config) →
     legacy .projects.json (brain, read-only, с предупреждением) → пустой конфиг."""
-    primary = env.default_config
+    primary = env.config_read_path
     if primary.is_file():
         try:
             config = json.loads(primary.read_text(encoding="utf-8"))
         except json.JSONDecodeError as e:
             die(f"{primary}: битый JSON: {e}")
         validate_config(config, primary)
-        return merge_defaults(config), primary.name
+        return merge_defaults(config), ("linked-worktree-config"
+                                        if primary != env.default_config else primary.name)
 
     legacy = env.root / ".projects.json"
     if legacy.is_file():
@@ -366,7 +368,7 @@ class Config(dict):
         """Прочитать конфиг узла через общий резолвер (config.json в корне монорепо,
         с legacy-fallback). Возвращает Config с заполненными source/path."""
         data, source = load_config(env)
-        path = env.default_config if source not in ("brain-fallback", "empty") else None
+        path = env.config_read_path if source not in ("brain-fallback", "empty") else None
         return cls(data, source=source, path=path)
 
     def save(self, env):

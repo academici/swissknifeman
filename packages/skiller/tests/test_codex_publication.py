@@ -1,6 +1,5 @@
 """P3.3 native Codex projection conformance tests."""
 import json
-import shutil
 import tempfile
 import unittest
 from pathlib import Path
@@ -51,10 +50,14 @@ class TestCodexPublication(unittest.TestCase):
         names = [plugin["name"] for plugin in marketplace["plugins"]]
         self.assertEqual(names, sorted(names))
         self.assertEqual(len(names), len(set(names)))
+        self.assertIn("task", names)
+        task = next(plugin for plugin in marketplace["plugins"]
+                    if plugin["name"] == "task")
+        self.assertEqual(task["source"], "./packages/task")
         for plugin in marketplace["plugins"]:
             self.assertTrue(set(self.golden["required_marketplace_fields"]).issubset(plugin))
-            self.assertTrue(plugin["source"]["path"].startswith("./"))
-            self.assertNotIn("..", Path(plugin["source"]["path"]).parts)
+            self.assertTrue(plugin["source"].startswith("./"))
+            self.assertNotIn("..", Path(plugin["source"]).parts)
         manifests = [item for item in first if item.target.name == "plugin.json"]
         self.assertTrue(manifests)
         for item in manifests:

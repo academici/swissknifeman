@@ -110,13 +110,15 @@ def _missing_required(tool, args):
     return [k for k in tool["inputSchema"].get("required", []) if not args.get(k)]
 
 
-def _recall_union(config, url, scope, query):
+def _recall_union(config, url, scope, query, *, include_related_scopes=True):
     """Recall с изоляцией + объединением scope'ов проекта: project:<id> разворачивается в
     приватный + ns:<группы> + global (recall_scopes), чтобы Claude видел и приватную, и
-    общую-по-тегу память. Сырой/непроектный scope → ровно он. Дедуп по тексту."""
+    общую-по-тегу память. Явно запрошенный scope не расширяется: публичный MCP-ответ
+    обязан содержать только записи этого scope. Сырой/непроектный scope → ровно он.
+    Дедуп по тексту."""
     from .namespaces import find, recall_scopes
     scopes = [scope]
-    if isinstance(scope, str) and scope.startswith("project:"):
+    if include_related_scopes and isinstance(scope, str) and scope.startswith("project:"):
         proj = find(config, scope.split(":", 1)[1])
         if proj:
             scopes = recall_scopes(proj)
@@ -195,7 +197,8 @@ def _run_tool(env, config, name, args, default_scope):
         if not memory_mod.health(url):
             return _content({"error": "демон памяти не запущен (maind start --only memory)"},
                             is_error=True)
-        scope = args.get("scope") or default_scope
+        requested_scope = args.get("scope")
+        scope = requested_scope or default_scope
         allowed = _allowed_scopes(config, default_scope)
         denied = _scope_error(scope, allowed)
         if denied:
@@ -203,7 +206,8 @@ def _run_tool(env, config, name, args, default_scope):
         if name == "maind_memory_store":
             return _content(memory_mod.store(url, scope, args.get("key", "fact"), args["value"]))
         if name == "maind_memory_recall":
-            return _content(_recall_union(config, url, scope, args["query"]))
+            return _content(_recall_union(config, url, scope, args["query"],
+                                          include_related_scopes=not bool(requested_scope)))
         # forget: scope-арг разрешён, но memoryId глобален — подтверждаем владение по маркеру,
         # иначе клиент удалил бы чужой факт по известному id, не выходя за свой scope.
         if allowed is not None:

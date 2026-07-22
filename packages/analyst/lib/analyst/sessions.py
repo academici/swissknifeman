@@ -74,8 +74,11 @@ def _week_key(ts):
 
 
 def session_metrics(path):
-    """Метрики одной сессии из jsonl-транскрипта. None — файл пуст/битый/без
-    assistant-событий (нечего мерить, скипается тихо — как весь модуль read-only)."""
+    """Read-only provider acquisition from a local transcript.
+
+    This source is allowed only as bounded legacy input: it neither normalizes raw bodies
+    nor writes `.claude`; absent neutral usage semantics remain absent rather than invented.
+    """
     acc = core_usage.new_acc()
     try:
         for ev in core_usage.iter_jsonl(path):

@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.4.38 |
+| Version | 1.4.41 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
@@ -85,6 +85,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P2.3 | gpt-5.6-sol/high | manual | full | explicit capability-aware catalog: открытое public design decision |
 | P2.4 | gpt-5.6-terra/medium | plan-exec | full | deterministic synthetic conformance/doctor/no-write evidence без новых design-решений |
 | P2.5 | gpt-5.6-terra/high | manual | full | prescribed RED remediation against frozen contract: fail-closed provenance, explicit managed-boundary codec and no-write conformance; effort high+ MANDATORY |
+| P2.6 | gpt-5.6-terra/high | manual | full | D104-gated additive P2 transfer admission/rollback API: public managed-ownership semantics, exact preimage and SemVer-minor risk; effort high+ MANDATORY |
 | P3.1 | gpt-5.6-sol/high | manual | full | owner-gated public skill/publication contract и необратимые identity/install semantics |
 | P3.2 | gpt-5.6-terra/medium | plan-exec | full | prescribed Claude adapter refactor с byte-compat golden и без новых design-решений |
 | P3.3 | gpt-5.6-terra/high | manual | full | новый native Codex plugin/marketplace contract + cache-contained generated bundles; effort high+ MANDATORY |
@@ -102,12 +103,15 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P5.5 | gpt-5.6-terra/medium | plan-exec | full | independent deterministic parity/doctor/docs gate без открытых design-решений |
 | P5.6 | gpt-5.6-sol/xhigh | manual | full | freeze публичного common instruction contract и semantic parity/managed-boundary semantics |
 | P5.7 | gpt-5.6-terra/high | manual | full | prescribed root/package catalog+renderer+provenance implementation против frozen P5.6; effort high+ MANDATORY |
+| P5.8 | gpt-5.6-terra/high | manual | full | prescribed native Codex lifecycle composition after P2.6; provider-native JSON/ownership and handler safety require high fidelity |
 | P6.1 | gpt-5.6-terra/high | manual | full | provider deploy/managed-boundary integration против frozen P1/P2/P5 contracts; effort high+ MANDATORY |
 | P6.2 | gpt-5.6-terra/high | manual | full | trust/security + cross-package onboard/sync orchestration; effort high+ MANDATORY |
 | P6.3 | gpt-5.6-sol/xhigh | manual | full | owner-gated public analytics contract: открытый storage/reader/migration freeze с необратимой semantic ценой |
 | P6.4 | gpt-5.6-terra/high | manual | full | prescribed multi-package readers/storage migration против frozen P6.3 contract; effort high+ MANDATORY |
 | P6.5 | gpt-5.6-terra/medium | plan-exec | full | deterministic integrated conformance и pre-restart checkpoint без новых design-решений |
 | P6.6 | gpt-5.6-terra/medium | plan-exec | full | deterministic cold-session proof по committed checkpoint; package source changes запрещены |
+| P6.7 | gpt-5.6-terra/high | manual | full | prescribed P6 composition/deploy integration with fail-closed transfer request and no-live-apply discipline; effort high+ MANDATORY |
+| P6.8 | gpt-5.6-terra/medium | plan-exec | full | independent temporary-root and live no-write conformance after P6.7; no new semantics or live apply |
 | P7.1 | gpt-5.6-sol/xhigh | manual | full | actual capability-catalog freeze + additive shared-core/public cross-package gate before deterministic docs; effort high+ MANDATORY |
 | P7.2 | gpt-5.6-terra/high | manual | full | live self-host install/update/repair с rollback и security gates; effort high+ MANDATORY |
 | P7.3 | gpt-5.6-terra/high | manual | full | provenance-backed destructive cleanup/release assembly; effort high+ MANDATORY |
@@ -119,12 +123,12 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 |:--|:--|:--|:--|
 | P0 | Evidence, vocabulary и запечатанные provider contracts | 7/7 | 🟢 Done |
 | P1 | Provider config/domain и backward-compatible resolution | 6/6 | 🟢 Done |
-| P2 | Deterministic adapters, provenance, lock и drift engine | 5/5 | 🟢 Done |
+| P2 | Deterministic adapters, provenance, lock и drift engine | 6/6 | 🟢 Done |
 | P3 | Dual skills publication и marketplaces | 5/5 | 🟢 Done |
 | P4 | Task-command parity и provider-neutral model routing | 5/5 | 🟢 Done |
-| P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 7/7 | 🟢 Done |
-| P6 | mAInd deployment, memory и provider-neutral analytics | 6/6 | 🟢 Done |
-| P7 | Docs, self-hosting validation и FOREMAN release gate | 1/4 | 🟡 In progress |
+| P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 7/8 | 🟡 In progress |
+| P6 | mAInd deployment, memory и provider-neutral analytics | 6/8 | 🟡 In progress |
+| P7 | Docs, self-hosting validation и FOREMAN release gate | 1/4 | 🔴 Blocked |
 
 ## 5. Decision Log
 
@@ -231,11 +235,18 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | D99 | 2026-07-22 | Approval Owner атомарно принимает P7.1 CAPABILITY-MANIFEST SHA256 `4c479c697c708cfea8d36589c435338094d894bcf428687709987975b13b6ce1` и `SETS-API-SEMVER AS WRITTEN`: contract/catalog `1.0.0/1.0.0`, exact 35 common capabilities, 70 provider support rows, 0 Native Extensions, supplied-path-only fail-closed `core.provider_manifest` API и additive minor shared-core SemVer. | RAG:— (owner-grounded: exact approval `APPROVE P7.1 D99 CAPABILITY-MANIFEST SHA256:4c479c697c708cfea8d36589c435338094d894bcf428687709987975b13b6ce1 SETS-API-SEMVER AS WRITTEN`; repo-grounded: `artifacts/P7-capability-manifest-review.md`, canonical candidate bytes) — разрешает только завершение P7.1 production gates/tests/docs/conformance; P7.2+, live provider outputs, frozen semantics, FOREMAN, fleet, tag and push remain excluded. |
 | D100 | 2026-07-22 | P7.1 Files contract-neutral уточнён одним фактическим production caller `packages/maind/lib/maind/provision/deploy.py`: именно он содержит запрещённый mandatory-grep hardcode `ProviderConfigCatalog(...)` и должен переключиться на уже предписанную manifest-backed maind config seam. | RAG:— (repo-grounded: P7.1 Validation literal и terminal tree `packages/maind/lib/maind/provision/deploy.py`; owner-grounded: D66 automatic contract-neutral fix-forward) — исправляет только ошибочный path allowlist внутри существующего D98 maind production gate; D99 bytes/API/SemVer, frozen semantics, P7.2+, live outputs, FOREMAN, fleet and push remain unchanged. |
 | D101 | 2026-07-22 | Approval Owner разрешает ровно test-only baseline repair в `packages/maind/tests/test_deploy.py`: stale assertion ожидает bare `maind`, уже выдаваемый production P6 carrier; production code, rendered output и P6 product semantics не меняются. | RAG:— (owner-grounded: exact approval `APPROVE P7.1 D101 TEST-ONLY BASELINE REPAIR: packages/maind/tests/test_deploy.py EXPECTS BARE "maind"; NO P6 PRODUCT/OUTPUT SEMANTICS CHANGE`; repo-grounded: HEAD `c9265ebf`, closed P6 commit `64ecaa01`) — снимает единственный inherited full-maind validation blocker без reopen P6, изменения D99/D100 или authority на P7.2+, live outputs, FOREMAN, fleet and push. |
+| D102 | 2026-07-22 | P7.2 isolated matrix/rollback GREEN выявила live P2 ownership collision: tracked Codex memory hook не имеет lock, а P5 lifecycle — whole-file peer; P6 MCP deploy отказывается до write. P7.2 не усыновляет target и не меняет source. | RAG:— (repo-grounded: `findings/P7.2-isolated-install-sandbox-block-2026-07-22.md`, `research/23-p7.2-live-preflight-remediation-design.md`, frozen P2/P5/P6 contracts) — требуется отдельный owner-gated additive P2/P5/P6 remediation design; P7.2/P7.3/live gate остаются blocked. |
+| D103 | 2026-07-22 | Owner approves the exact P2/P5/P6 bootstrap-transfer design: only `.codex/hooks.json`, `.codex/hooks/lifecycle.py` and the P2 lock record may ever enter the proposed transfer; D103 authorizes plan remediation only, not package code or live apply. | RAG:— (owner-grounded: exact D103 approval; repo-grounded: `brief/01-refinements.md`, `research/23-p7.2-live-preflight-remediation-design.md`) — preserves fail-closed P2 ownership and requires a later D104 before source implementation. |
+| D104 | 2026-07-22 | Owner accepts the exact `1.2.0` bootstrap-transfer candidate and authorizes only the sequential P2.6→P5.8→P6.7→P6.8 implementation chain. | RAG:— (owner-grounded: exact D104 approval; repo-grounded: `brief/01-refinements.md`, `research/23-p7.2-live-preflight-remediation-design.md`) — no live apply/repair, P7.2 rerun, P7.3+, FOREMAN, fleet, tag or push. |
 
 ## 6. Update Log
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-22 | owner | D104 accepted the exact bounded bootstrap-transfer implementation candidate; execution opens only P2.6→P5.8→P6.7→P6.8, with all live/P7.2+/FOREMAN/fleet/push work excluded. |
+| 2026-07-22 | plan-run / gpt-5.6-terra/high | P2.6 closed: D104-only v1.2.0 core bootstrap-transfer admission, rollback and temporary-root conformance — details in `phases/P2.md` P2.6 Completion Notes. |
+| 2026-07-22 | task-plan-design / gpt-5.6-terra/high | D103 approved bounded P2/P5/P6 bootstrap-transfer remediation design; P2, P5 and P6 are reopened for a sequential no-live chain, with D104 required before source implementation. |
+| 2026-07-22 | task-plan-design / gpt-5.6-terra/high | D102 materialized as an owner-gated P2/P5/P6 bootstrap-transfer candidate: P7.2 isolated matrix/rollback GREEN, but the exact live P2 ownership/P6 deploy preflight remains RED; design and exact inventory are in `research/23-p7.2-live-preflight-remediation-design.md`. |
 | 2026-07-22 | task-plan-run / gpt-5.6-sol/xhigh | P7.1 закрыт: D99 manifest, production gates и generated docs GREEN; D100/D101 — contract-neutral owner-authorized corrections. Детали см. phases/P7.md P7.1 Completion Notes. |
 | 2026-07-22 | task-plan-design / gpt-5.6-sol/high | D98 довёл P7.1 до DoR: missing manifest/production gate/docs operation объединены в один contract-preserving hotspot; route повышен до Sol/xhigh manual, P7 снова 🟡. |
 | 2026-07-22 | plan-exec / gpt-5.6-terra/medium | P7.1 escalation corrected by owner direction: the hook deploy dry-run is non-blocking for docs; P6.2 remains terminal and P7.1 continues. |
@@ -362,7 +373,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | Контракт | Версия | Статус | Потребители | Уведомлены |
 |:--|:--|:--|:--|:--|
 | `root/contracts/provider-capability-contract.md` | v1.0.0 | frozen (D55) | P1–P7, FOREMAN reconcile после P7.4 | 2026-07-20 (D55) |
-| `root/contracts/provider-artifact-contract.md` | v1.1.0 | frozen (D55; additive minor D87) | P2–P7, future fleet rollout; exact v1.0.0 records remain supported | 2026-07-21 (D87 same-root consumers) |
+| `root/contracts/provider-artifact-contract.md` | v1.2.0 | frozen (D55; additive minors D87/D104) | P2–P7, future fleet rollout; exact v1.0.0/v1.1.0 records remain supported | 2026-07-22 (D104; P5.8/P6.7 notified) |
 | `root/contracts/provider-migration-gates.md` | v1.0.0 | frozen (D59) | P1–P7, FOREMAN reconcile gate, future fleet plan | 2026-07-20 (D59) |
 | `root/contracts/provider-config-contract.md` | v1.0.0 | frozen (D70) | P1.2–P7, future FOREMAN/fleet consumers | 2026-07-20 (D70) |
 | `root/contracts/provider-skill-publication-contract.md` | v1.0.0 | frozen (D77) | P3.2–P3.5, P4 task adapters, P7 self-host/release evidence | 2026-07-20 (D77) |

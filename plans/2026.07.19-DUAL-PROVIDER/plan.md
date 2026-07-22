@@ -340,7 +340,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | `root/contracts/provider-command-routing-contract.md` | v1.0.0 | frozen (D84) | P4.2–P4.5, P5–P7, FOREMAN reconcile после P7.4 | 2026-07-21 (D84) |
 | `root/contracts/provider-harness-contract.md` | v1.0.0 | frozen (D85) | P5.2–P5.7, P6 deploy/sync, P7 self-host/release evidence | 2026-07-21 (D85) |
 | `root/contracts/provider-instruction-contract.md` | v1.0.0 | frozen (D86; semantics unchanged by D87 carrier clarification) | P5.7 renderer/conformance, P6.2/P6.5/P6.6 deploy+restart, P7 self-host/cleanup/release evidence | 2026-07-21 (D86; D87 carrier notice) |
-| `root/contracts/provider-analytics-contract.md` | v0.1.0-draft | draft; owner-gated sealing P6.3 after P6.2 | P6.4–P6.6, P7 self-host/release evidence, future provider telemetry | — |
+| `root/contracts/provider-analytics-contract.md` | v1.0.0 | frozen | P6.4–P6.6, P7 self-host/release evidence, future provider telemetry | 2026-07-22 |
 
 ## Обсуждение
 

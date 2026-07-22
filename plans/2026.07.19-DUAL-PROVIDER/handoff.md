@@ -1,4 +1,4 @@
-# HANDOFF — 2026-07-22 — P7 entry
+# HANDOFF — 2026-07-22 — after P7.1
 
 **Next:** exec-items: task:plan-exec 2026.07.19-DUAL-PROVIDER P7.1
 

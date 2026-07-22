@@ -1,4 +1,5 @@
 import unittest
+from pathlib import Path
 
 from core.provider import (CapabilityId, CapabilityRequirement, EffectiveProvider,
                            NativeExtensionId, ProviderDecision, ProviderId, SupportLevel)
@@ -7,6 +8,7 @@ from core.provider_artifact import (ArtifactAdapterIdentity, ArtifactRenderReque
 from core.provider_lock import ArtifactLock, LOCK_SCHEMA_VERSION
 from core.provider_config import CapabilitySupport, NativeExtension, ProviderConfigCatalog
 from core.provider_registry import (AdapterCatalog, AdapterDescriptor, RegistrySeverity)
+from core.provider_manifest import load_provider_manifest, provider_config_catalog
 
 
 class ProviderRegistryTests(unittest.TestCase):
@@ -44,6 +46,17 @@ class ProviderRegistryTests(unittest.TestCase):
         left = AdapterCatalog((codex, claude))
         right = AdapterCatalog((claude, codex))
         self.assertEqual(left.descriptors, right.descriptors)
+
+    def test_root_manifest_projection_gates_level_before_render(self):
+        root = Path(__file__).resolve().parents[2]
+        catalog = provider_config_catalog(load_provider_manifest(
+            root / "configs/provider-capabilities.json"))
+        descriptor = self._descriptor(requirements=(CapabilityRequirement(
+            self.skills, (SupportLevel.ADAPTED,)),))
+        result = AdapterCatalog((descriptor,)).select(
+            provider_id=ProviderId.CODEX, artifact_kind="skills.catalog",
+            capability_catalog=catalog, effective_provider=self._effective())
+        self.assertEqual(result.diagnostics[0].code, "REGISTRY_CAPABILITY_LEVEL_REJECTED")
 
     def test_duplicate_adapter_key_fails_closed_with_structured_diagnostic(self):
         descriptor = self._descriptor()

@@ -11,6 +11,8 @@ import shlex
 from typing import Mapping
 
 from core.provider import CapabilityId, CapabilityRequirement, ProviderId, SupportLevel
+from core.provider_manifest import (ProviderCapabilityManifest, load_provider_manifest,
+                                    provider_support_projection)
 from core.provider_artifact import (ArtifactAdapterIdentity, ArtifactRenderRequest,
                                     ArtifactRenderResult, ArtifactSource, ArtifactTarget,
                                     plan_artifact_render)
@@ -88,6 +90,7 @@ class CommandDiagnostic:
 class ProviderCommandMapping:
     provider_id: str
     mapping_version: str
+    capability_catalog_version: str
     class_selectors: tuple[tuple[str, tuple[str, ...]], ...]
     effort_selectors: tuple[tuple[str, tuple[str, ...]], ...]
     capability_bindings: tuple[tuple[str, str], ...]
@@ -190,8 +193,10 @@ class ClaudeCommandRenderPlan:
         return not any(item.severity == "error" for item in self.diagnostics)
 
 
-def mapping_from_catalog(catalog: CommandCatalog, provider_id: str) -> ProviderCommandMapping:
-    """Resolve one explicit provider mapping captured by the catalog."""
+def mapping_from_catalog(catalog: CommandCatalog, provider_id: str, *,
+                         manifest: ProviderCapabilityManifest | None = None,
+                         manifest_path: Path | None = None) -> ProviderCommandMapping:
+    """Resolve provider syntax while taking support levels only from the root manifest."""
     metadata = metadata_value(catalog)
     raw = metadata.get("mappings", {}).get(provider_id)
     if not isinstance(raw, dict) or set(raw) != _MAPPING_KEYS or raw.get("provider_id") != provider_id:
@@ -199,11 +204,25 @@ def mapping_from_catalog(catalog: CommandCatalog, provider_id: str) -> ProviderC
     invocation = raw["invocation_binding"]
     if not isinstance(invocation, dict) or set(invocation) != {"template"}:
         raise ValueError(f"CMD_INVOCATION_INVALID: {provider_id}")
+    if manifest is None:
+        manifest_path = Path(manifest_path) if manifest_path is not None else (
+            Path(__file__).resolve().parents[4] / "configs/provider-capabilities.json")
+        manifest = load_provider_manifest(manifest_path)
+    try:
+        provider = ProviderId(provider_id)
+    except ValueError as error:
+        raise ValueError(f"CMD_PROVIDER_DISABLED: {provider_id}") from error
+    declared_ids = _capability_ids(raw["capability_bindings"])
+    manifest_support = provider_support_projection(manifest, provider)
+    missing = tuple(item for item in declared_ids if item not in manifest_support)
+    if missing:
+        raise ValueError("CMD_CAPABILITY_UNSUPPORTED: " + ",".join(missing))
     return ProviderCommandMapping(
         provider_id, _required_string(raw["mapping_version"], "mapping_version"),
+        manifest.catalog_version,
         _selector_pairs(raw["class_selectors"], MODEL_CLASSES, "class_selectors"),
         _selector_pairs(raw["effort_selectors"], EFFORTS, "effort_selectors"),
-        _capability_pairs(raw["capability_bindings"]),
+        tuple((item, manifest_support[item].value) for item in declared_ids),
         _required_string(invocation["template"], "invocation template"),
         tuple(_evidence_label(item) for item in _required_list(raw["evidence"], "evidence")),
     )
@@ -292,10 +311,12 @@ def parse_next_carrier(declaration: str, *, context_kind: str = "same-session",
 
 def plan_provider_invocation(
         catalog: CommandCatalog, carrier: PlanNextCarrier,
-        mapping: ProviderCommandMapping, capability_support: Mapping[str, str], *,
+        mapping: ProviderCommandMapping, capability_support: Mapping[str, str] | None = None, *,
         observed_class: str, observed_effort: str,
         inherited_minimum: tuple[str, str] | None = None) -> PlanProviderInvocation:
     """Gate a semantic plan carrier, then render exactly one provider invocation."""
+    capability_support = (dict(mapping.capability_bindings) if capability_support is None
+                          else capability_support)
     record = catalog.by_id().get(carrier.command_id or "")
     if record is None or record.kind != "plan-protocol":
         diagnostic = _diag_raw(
@@ -410,7 +431,7 @@ def validate_route(record: CommandRecord, observed_class: str, observed_effort: 
 
 def plan_codex_command_render(
         catalog: CommandCatalog, mapping: ProviderCommandMapping,
-        capability_support: Mapping[str, str], *,
+        capability_support: Mapping[str, str] | None = None, *,
         observed_routes: Mapping[str, tuple[str, str]] | None = None) -> CodexCommandRenderPlan:
     """Return a complete no-write Codex render plan or only pre-write diagnostics."""
     diagnostics: list[CommandDiagnostic] = []
@@ -418,6 +439,8 @@ def plan_codex_command_render(
         return CodexCommandRenderPlan((), (_diag_raw(
             "CMD_PROVIDER_DISABLED", "task:catalog", "/provider_id", {"provider_id": "codex"},
             {"provider_id": mapping.provider_id}, mapping, "Codex projection is not selected"),))
+    capability_support = (dict(mapping.capability_bindings) if capability_support is None
+                          else capability_support)
     if not isinstance(capability_support, Mapping):
         raise TypeError("capability_support must be a mapping")
     observed_routes = observed_routes or {}
@@ -482,7 +505,8 @@ def plan_codex_command_render(
     all_sources = tuple(_source(record) for record in catalog.records)
     results.append(_artifact("task.codex.plugin", "packages/task/.codex-plugin/plugin.json",
                              _json_bytes(plugin), all_sources, ("skills.repository",),
-                             catalog, {"publication_unit": "task", "kind": "plugin"}))
+                             catalog, mapping.capability_catalog_version,
+                             {"publication_unit": "task", "kind": "plugin"}))
 
     for record in catalog.records:
         name = record.command_id.removeprefix("task:")
@@ -492,10 +516,12 @@ def plan_codex_command_render(
         capabilities = tuple(item.capability_id for item in record.capability_requirements)
         results.append(_artifact(f"task.codex.{name.replace('-', '.')}.skill", f"{base}/SKILL.md",
                                  wrapper, (_source(record),), capabilities, catalog,
+                                 mapping.capability_catalog_version,
                                  {"command_id": record.command_id, "kind": "skill-wrapper"}))
         results.append(_artifact(f"task.codex.{name.replace('-', '.')}.runtime", f"{base}/command.md",
                                  projected_runtime[record.command_id], (_source(record),),
                                  capabilities, catalog,
+                                 mapping.capability_catalog_version,
                                  {"command_id": record.command_id,
                                   "kind": "runtime-projection"}))
 
@@ -512,14 +538,15 @@ def plan_codex_command_render(
     results.append(_artifact("task.codex.publication-lock",
                              "packages/task/adapters/codex/publication-lock.json",
                              _json_bytes(publication_lock), all_sources, ("skills.repository",),
-                             catalog, {"publication_unit": "task", "kind": "publication-lock"}))
+                             catalog, mapping.capability_catalog_version,
+                             {"publication_unit": "task", "kind": "publication-lock"}))
     return CodexCommandRenderPlan(tuple(sorted(results, key=lambda item: item.target.path)),
                                   tuple(diagnostics))
 
 
 def plan_claude_command_render(
         catalog: CommandCatalog, mapping: ProviderCommandMapping,
-        capability_support: Mapping[str, str], *,
+        capability_support: Mapping[str, str] | None = None, *,
         plugin_bytes: bytes) -> ClaudeCommandRenderPlan:
     """Return the complete no-write Claude projection over canonical command bytes."""
     diagnostics: list[CommandDiagnostic] = []
@@ -528,6 +555,8 @@ def plan_claude_command_render(
             "CMD_PROVIDER_DISABLED", "task:catalog", "/provider_id",
             {"provider_id": "claude-code"}, {"provider_id": mapping.provider_id},
             mapping, "Claude projection is not selected"),))
+    capability_support = (dict(mapping.capability_bindings) if capability_support is None
+                          else capability_support)
     if not isinstance(capability_support, Mapping):
         raise TypeError("capability_support must be a mapping")
     if not isinstance(plugin_bytes, bytes):
@@ -723,7 +752,7 @@ def build_provider_command_parity_report(
             observed_effort = (inherited[1] if inherited else record.routing.effort)
             mapping = mappings[provider_id]
             rendered = plan_provider_invocation(
-                catalog, carrier, mapping, dict(mapping.capability_bindings),
+                catalog, carrier, mapping,
                 observed_class=observed_class, observed_effort=observed_effort,
                 inherited_minimum=inherited)
             providers[provider_id] = {
@@ -872,7 +901,8 @@ def _route_mapping_diagnostics(
 
 def _artifact(artifact_id: str, target: str, rendered: bytes,
               sources: tuple[ArtifactSource, ...], capabilities: tuple[str, ...],
-              catalog: CommandCatalog, semantic_parameters: Mapping[str, object]) -> ArtifactRenderResult:
+              catalog: CommandCatalog, capability_catalog_version: str,
+              semantic_parameters: Mapping[str, object]) -> ArtifactRenderResult:
     requirements = tuple(CapabilityRequirement(CapabilityId(item),
                                                 (SupportLevel.ADAPTED, SupportLevel.NATIVE))
                          for item in sorted(set(capabilities)))
@@ -881,7 +911,7 @@ def _artifact(artifact_id: str, target: str, rendered: bytes,
     request = ArtifactRenderRequest(
         artifact_id, sources, ArtifactTarget(target, ("whole-file", ())),
         ArtifactAdapterIdentity("task.codex-command", ADAPTER_VERSION, ProviderId.CODEX,
-                                catalog.catalog_version, requirements),
+                                capability_catalog_version, requirements),
         (), parameters, lambda _request: rendered,
     )
     return plan_artifact_render(request)
@@ -1115,6 +1145,11 @@ def _capability_pairs(raw: object) -> tuple[tuple[str, str], ...]:
                                             for key, value in raw.items()):
         raise ValueError("CMD_CAPABILITY_UNSUPPORTED: capability_bindings")
     return tuple(sorted(raw.items()))
+
+
+def _capability_ids(raw: object) -> tuple[str, ...]:
+    """Validate the frozen P4 carrier but discard its legacy support-level values."""
+    return tuple(key for key, _level in _capability_pairs(raw))
 
 
 def _evidence_label(raw: object) -> str:

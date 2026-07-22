@@ -1,0 +1,328 @@
+#!/usr/bin/env python3
+"""Generate/check provider support docs from the validated root manifest."""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+from pathlib import Path
+import sys
+
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from core import (ProviderId, SupportLevel, load_provider_manifest,
+                  provider_manifest_sha256, support_for)
+
+
+MANIFEST_PATH = ROOT / "configs/provider-capabilities.json"
+README_PATH = ROOT / "README.md"
+GUIDE_PATH = ROOT / "docs/provider-support.md"
+BEGIN = "<!-- BEGIN GENERATED PROVIDER CAPABILITIES -->"
+END = "<!-- END GENERATED PROVIDER CAPABILITIES -->"
+_ALL_LEVELS = frozenset({"native", "adapted", "unsupported"})
+
+
+def independent_inventory(root: Path = ROOT) -> dict[str, object]:
+    """Derive the expected common set from terminal semantic catalogs/contracts."""
+    task = json.loads((root / "packages/task/configs/command-routing.json").read_text())
+    task_ids = {item for command in task["commands"]
+                for item in command["capability_requirements"]}
+    mapping_ids = {provider: set(mapping["capability_bindings"])
+                   for provider, mapping in task["mappings"].items()}
+    profile = json.loads((root / "packages/harness/configs/common/profile-catalog.json").read_text())
+    harness_ids = {surface["id"] for surface in profile["surfaces"]}
+    instructions = json.loads((root / "packages/harness/configs/common/instructions/catalog.json").read_text())
+    instruction_ids = {item["id"] for item in instructions["capability_requirements"]}
+    analytics_contract = (root / "plans/2026.07.19-DUAL-PROVIDER/root/contracts/"
+                           "provider-analytics-contract.md").read_text(encoding="utf-8")
+    analytics_sections = {
+        "## Event envelope": "analytics.normalized-events",
+        "## Run report": "analytics.run-report",
+        "## Migration": "analytics.legacy-migration",
+    }
+    missing_sections = sorted(section for section in analytics_sections
+                              if section not in analytics_contract)
+    analytics_ids = set(analytics_sections.values()) if not missing_sections else set()
+    expected = task_ids | harness_ids | instruction_ids | analytics_ids
+    return {
+        "expected": tuple(sorted(expected)),
+        "contributors": {
+            "task": tuple(sorted(task_ids)), "harness": tuple(sorted(harness_ids)),
+            "instructions": tuple(sorted(instruction_ids)),
+            "analytics": tuple(sorted(analytics_ids)),
+        },
+        "task_mapping_missing": {
+            provider: sorted(task_ids - values) for provider, values in mapping_ids.items()},
+        "task_mapping_extra": {
+            provider: sorted(values - task_ids) for provider, values in mapping_ids.items()},
+        "analytics_contract_missing_sections": missing_sections,
+    }
+
+
+def production_requirements(root: Path = ROOT) -> tuple[tuple[str, str, str, frozenset[str]], ...]:
+    """List named production pre-render/doctor requirements independently of outputs."""
+    rows = []
+    for provider in ProviderId:
+        rows.append(("skiller.publication", provider.value, "skills.repository",
+                     frozenset({"native", "adapted"})))
+    routing = json.loads((root / "packages/task/configs/command-routing.json").read_text())
+    for provider in ProviderId:
+        for command in routing["commands"]:
+            for capability in command["capability_requirements"]:
+                rows.append((f"task.{command['command_id']}", provider.value, capability,
+                             frozenset({"native", "adapted"})))
+    profile = json.loads((root / "packages/harness/configs/common/profile-catalog.json").read_text())
+    for provider in ProviderId:
+        for surface in profile["surfaces"]:
+            rows.append(("harness.provider-audit", provider.value, surface["id"], _ALL_LEVELS))
+    instructions = json.loads((root / "packages/harness/configs/common/instructions/catalog.json").read_text())
+    for provider in ProviderId:
+        for requirement in instructions["capability_requirements"]:
+            rows.append(("harness.instructions", provider.value, requirement["id"],
+                         frozenset(requirement["accepted_levels"])))
+        rows.append(("maind.provider-deploy", provider.value, "mcp.catalog",
+                     frozenset({"native", "adapted"})))
+        for capability in ("analytics.normalized-events", "analytics.run-report",
+                           "analytics.legacy-migration"):
+            rows.append(("analyst.provider-reader", provider.value, capability, _ALL_LEVELS))
+    return tuple(sorted(set(rows), key=lambda row: (row[0], row[1], row[2])))
+
+
+def conformance(root: Path = ROOT) -> dict[str, object]:
+    manifest_path = root / "configs/provider-capabilities.json"
+    manifest = load_provider_manifest(manifest_path)
+    inventory = independent_inventory(root)
+    actual = tuple(item.capability_id.value for item in manifest.capabilities)
+    expected = inventory["expected"]
+    duplicates = sorted(item for item in set(actual) if actual.count(item) > 1)
+    requirement_failures = []
+    requirement_rows = []
+    for consumer, provider_text, capability_id, accepted in production_requirements(root):
+        try:
+            support = support_for(manifest, capability_id, ProviderId(provider_text))
+        except ValueError:
+            requirement_failures.append(
+                f"{consumer}:{provider_text}:{capability_id}:missing")
+            continue
+        if support.level.value not in accepted:
+            requirement_failures.append(
+                f"{consumer}:{provider_text}:{capability_id}:level-{support.level.value}")
+        requirement_rows.append({"consumer": consumer, "provider": provider_text,
+                                 "capability": capability_id,
+                                 "accepted_levels": sorted(accepted),
+                                 "observed_level": support.level.value})
+    matrix = {(row.provider_id.value, capability.capability_id.value)
+              for capability in manifest.capabilities for row in capability.support}
+    expected_matrix = {(provider.value, capability_id) for provider in ProviderId
+                       for capability_id in actual}
+    source_bytes = manifest_path.read_bytes()
+    report = {
+        "contract_version": manifest.contract_version,
+        "catalog_version": manifest.catalog_version,
+        "canonical_sha256": provider_manifest_sha256(manifest),
+        "carrier_sha256": hashlib.sha256(source_bytes).hexdigest(),
+        "carrier_terminal_lf": source_bytes.endswith(b"\n"),
+        "missing": sorted(set(expected) - set(actual)),
+        "extra": sorted(set(actual) - set(expected)),
+        "duplicates": duplicates,
+        "matrix_missing": sorted(f"{provider}:{capability}"
+                                 for provider, capability in expected_matrix - matrix),
+        "matrix_extra": sorted(f"{provider}:{capability}"
+                               for provider, capability in matrix - expected_matrix),
+        "native_extensions": [item.extension_id.value for item in manifest.native_extensions],
+        "requirement_failures": requirement_failures,
+        "requirements": requirement_rows,
+        **{key: value for key, value in inventory.items() if key != "expected"},
+    }
+    report["green"] = not any((report["missing"], report["extra"], report["duplicates"],
+                               report["matrix_missing"], report["matrix_extra"],
+                               report["requirement_failures"],
+                               report["analytics_contract_missing_sections"],
+                               *report["task_mapping_missing"].values(),
+                               *report["task_mapping_extra"].values()))
+    return report
+
+
+def _matrix(manifest) -> str:
+    lines = ["| Capability | Claude Code | Codex |", "|:--|:--:|:--:|"]
+    for capability in manifest.capabilities:
+        levels = {row.provider_id: row.level.value for row in capability.support}
+        lines.append(f"| `{capability.capability_id.value}` | {levels[ProviderId.CLAUDE_CODE]} | "
+                     f"{levels[ProviderId.CODEX]} |")
+    return "\n".join(lines)
+
+
+def render_readme_block(manifest, report) -> str:
+    return "\n".join([
+        BEGIN,
+        "### Поддержка провайдеров (generated)",
+        "",
+        (f"Единый manifest: contract `{manifest.contract_version}`, catalog "
+         f"`{manifest.catalog_version}`, canonical SHA-256 "
+         f"`{report['canonical_sha256']}`. Подробности и операции: "
+         "[provider support](docs/provider-support.md)."),
+        "",
+        _matrix(manifest),
+        END,
+    ])
+
+
+def render_guide(manifest, report) -> bytes:
+    lines = [
+        "# Provider support",
+        "",
+        "> Generated by `python3 scripts/provider-docs.py --write`; do not edit manually.",
+        "",
+        "## Provenance",
+        "",
+        f"- Contract: `{manifest.contract_version}`",
+        f"- Catalog: `{manifest.catalog_version}`",
+        f"- Canonical JSON SHA-256 (without carrier LF): `{report['canonical_sha256']}`",
+        f"- Carrier SHA-256 (canonical bytes plus one LF): `{report['carrier_sha256']}`",
+        f"- Common capabilities: `{len(manifest.capabilities)}`; Native Extensions: `{len(manifest.native_extensions)}`",
+        "",
+        "Support levels, provider bindings, limitations, evidence and diagnostics below come only from "
+        "[`configs/provider-capabilities.json`](../configs/provider-capabilities.json). Package catalogs own "
+        "semantic intent and requirements, not a second support matrix.",
+        "",
+        "## Capability matrix",
+        "",
+        _matrix(manifest),
+        "",
+        "## Provider selection and precedence",
+        "",
+        "Provider selection uses the frozen precedence `operation > project > fleet-project > fleet-defaults > legacy`. "
+        "An absent project carrier is not `unsupported`: legacy compatibility enables Claude Code and leaves Codex "
+        "disabled, with explicit provenance. Unknown providers/capabilities and an explicitly enabled unsupported "
+        "capability fail before render or write.",
+        "",
+        "Project example (`.swissknife.json`):",
+        "",
+        "```json",
+        '{"providers":{"contract_version":"1.0.0","selection":{"claude-code":{"enabled":true},"codex":{"enabled":true}}}}',
+        "```",
+        "",
+        "## Security and operations",
+        "",
+        "Project Trust, Approval Policy and Sandbox Boundary are independent axes. Full access is never a project or "
+        "fleet default: it requires a trusted repository plus the explicit `self-host-apply` operation and exact "
+        "`repo:` target identity. Provider docs do not grant activation, live apply or repair authority.",
+        "",
+        "Read-only checks:",
+        "",
+        "```bash",
+        "python3 scripts/provider-docs.py --check",
+        "harness doctor --provider-audit --json",
+        "skiller connect --dry-run        # Claude Code projection",
+        "skiller sync --dry-run           # Codex/vendor projection selected by project config",
+        "maind sync --project <id> --dry-run --json",
+        "```",
+        "",
+        "Apply/update/repair are separate explicit operations over managed targets:",
+        "",
+        "```bash",
+        "skiller connect                  # Claude Code install/update",
+        "skiller sync                     # selected managed skill projections",
+        "skiller sync --repair            # explicit managed repair",
+        "maind sync --project <id> --mode update",
+        "maind sync --project <id> --mode repair",
+        "```",
+        "",
+        "Native task invocation examples:",
+        "",
+        "```text",
+        "Claude Code: /task:fix <brief>",
+        "Codex:       $ task:fix <brief>",
+        "```",
+        "",
+        "## Support records",
+        "",
+    ]
+    for capability in manifest.capabilities:
+        lines.extend([f"### `{capability.capability_id.value}`", "", capability.intent, ""])
+        for support in capability.support:
+            evidence = "; ".join(
+                f"[{item.verified_at}] {item.claim} — `{item.source}` ({item.scope})"
+                for item in support.evidence)
+            binding = (json.dumps(_thaw(support.binding), ensure_ascii=False, sort_keys=True)
+                       if support.binding is not None else "—")
+            lines.extend([
+                f"- **{support.provider_id.value}** — `{support.level.value}`; binding: `{binding}`; "
+                f"adapter: `{support.adapter_id or '—'}`.",
+                f"  Diagnostic: {support.diagnostic}",
+                f"  Limitations: {'; '.join(support.limitations) or 'none'}.",
+                f"  Evidence: {evidence}.",
+                "",
+            ])
+    lines.extend(["## Native Extensions", ""])
+    if not manifest.native_extensions:
+        lines.append("None in catalog `1.0.0`. Provider-specific instruction sections are not Native Extensions.")
+    return ("\n".join(lines).rstrip() + "\n").encode("utf-8")
+
+
+def _thaw(value):
+    if isinstance(value, tuple):
+        if all(isinstance(item, tuple) and len(item) == 2 for item in value):
+            return {key: _thaw(item) for key, item in value}
+        return [_thaw(item) for item in value]
+    return value
+
+
+def expected_outputs(root: Path = ROOT) -> dict[Path, bytes]:
+    manifest = load_provider_manifest(root / "configs/provider-capabilities.json")
+    report = conformance(root)
+    if not report["green"]:
+        raise ValueError("PROVIDER_DOCS_CONFORMANCE_FAILED:" + json.dumps(
+            {key: value for key, value in report.items()
+             if key.endswith(("missing", "extra", "failures")) and value}, sort_keys=True))
+    readme_path = root / "README.md"
+    current = readme_path.read_text(encoding="utf-8")
+    block = render_readme_block(manifest, report)
+    if BEGIN in current or END in current:
+        if current.count(BEGIN) != 1 or current.count(END) != 1 or current.index(BEGIN) > current.index(END):
+            raise ValueError("PROVIDER_DOCS_README_MARKERS_INVALID")
+        start, finish = current.index(BEGIN), current.index(END) + len(END)
+        readme = current[:start] + block + current[finish:]
+    else:
+        anchor = "## Возможности\n\n"
+        if anchor not in current:
+            raise ValueError("PROVIDER_DOCS_README_ANCHOR_MISSING")
+        readme = current.replace(anchor, anchor + block + "\n\n", 1)
+    return {readme_path: readme.encode("utf-8"),
+            root / "docs/provider-support.md": render_guide(manifest, report)}
+
+
+def run(mode: str, root: Path = ROOT) -> int:
+    outputs = expected_outputs(root)
+    drift = []
+    for path, expected in outputs.items():
+        current = path.read_bytes() if path.is_file() else None
+        if current != expected:
+            drift.append(path)
+            if mode == "write":
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(expected)
+    if mode == "check" and drift:
+        for path in drift:
+            print(f"provider docs drift: {path.relative_to(root)}", file=sys.stderr)
+        return 1
+    if mode == "write":
+        for path in drift:
+            print(path.relative_to(root))
+    return 0
+
+
+def main(argv=None) -> int:
+    parser = argparse.ArgumentParser()
+    modes = parser.add_mutually_exclusive_group(required=True)
+    modes.add_argument("--write", action="store_true")
+    modes.add_argument("--check", action="store_true")
+    args = parser.parse_args(argv)
+    return run("write" if args.write else "check")
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

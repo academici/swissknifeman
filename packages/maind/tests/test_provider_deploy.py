@@ -20,6 +20,33 @@ import subprocess
 
 
 class TestProviderDeploy(unittest.TestCase):
+    def test_manifest_gate_refuses_missing_and_unsupported_before_render(self):
+        repo = Path(__file__).resolve().parents[3]
+        harness = repo / "packages/harness/configs"
+        catalog = load_mcp_catalog(harness / "common/mcp/catalog.json")
+        bases = tuple(plan_mcp_projection(
+            catalog, provider_id=provider,
+            bindings_path=harness / provider.value / "mcp/bindings.json",
+            selected=(), trusted=True) for provider in ProviderId)
+        servers = semantic_servers(maind={"command": "maind"})
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            with self.assertRaisesRegex(ProviderDeployError,
+                                        "MAIND_CAPABILITY_MANIFEST_INVALID"):
+                plan_provider_deploy(bases, servers, manifest_path=root / "missing.json")
+            value = json.loads((repo / "configs/provider-capabilities.json").read_text())
+            row = next(item for item in value["capabilities"]
+                       if item["id"] == "mcp.catalog")["support"]["codex"]
+            row.pop("adapter_id")
+            row["level"] = "unsupported"
+            row["diagnostic"] = "unsupported fixture; fail closed"
+            path = root / "manifest.json"
+            path.write_text(json.dumps(value), encoding="utf-8")
+            plan = plan_provider_deploy(bases, servers, manifest_path=path)
+            self.assertFalse(plan.green)
+            self.assertEqual(plan.results[1].diagnostic,
+                             "MAIND_CAPABILITY_UNSUPPORTED:codex:mcp.catalog")
+
     def test_effective_provider_resolution_honors_operation_override_and_refuses_invalid(self):
         catalog = ProviderConfigCatalog("1.0.0", (ProviderId.CLAUDE_CODE, ProviderId.CODEX), (), ())
         config = merge_defaults({"projects": [{"id": "demo", "name": "Demo"}]})

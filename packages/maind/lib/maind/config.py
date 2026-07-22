@@ -15,6 +15,7 @@ from pathlib import Path
 
 from core import (ConfigSource, ProviderConfigCatalog, ProviderConfigLayer,
                   ResolvedProviderConfig,
+                  load_provider_manifest, provider_config_catalog,
                   resolve_provider_config as resolve_shared_provider_config)
 from .common import (detect_project_type, die, docs_visibility_for, sanitize,
                      warn)
@@ -422,9 +423,12 @@ def provider_config_layers(config, project_id):
     return default_layer, tuple(matches)
 
 
-def resolve_provider_config(config, catalog: ProviderConfigCatalog, project_id, *,
+def resolve_provider_config(config, catalog: ProviderConfigCatalog | None, project_id, *,
                             project_config=None, operation=None) -> ResolvedProviderConfig:
     """Thin maind carrier adapter; fleet/project precedence is owned by core."""
+    if catalog is None:
+        manifest_path = Path(__file__).resolve().parents[4] / "configs/provider-capabilities.json"
+        catalog = provider_config_catalog(load_provider_manifest(manifest_path))
     defaults, projects = provider_config_layers(config, project_id)
     project_layer = None if project_config is None else ProviderConfigLayer(
         ConfigSource("project", f"project:{project_id}", ".swissknife.json", "/providers"), project_config)

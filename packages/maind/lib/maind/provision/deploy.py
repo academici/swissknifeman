@@ -47,11 +47,9 @@ def provider_projection_context(env, config, project):
     harness_lib = str(harness_root / "lib")
     if harness_lib not in sys.path:
         sys.path.insert(0, harness_lib)
-    from core import ProviderConfigCatalog, ProviderId
+    from core import ProviderId
     from harness.mcp import load_mcp_catalog, plan_mcp_projection
-    resolved = resolve_provider_config(
-        config, ProviderConfigCatalog("1.0.0", (ProviderId.CLAUDE_CODE, ProviderId.CODEX), (), ()),
-        project["id"])
+    resolved = resolve_provider_config(config, None, project["id"])
     if resolved.selection is None:
         codes = ",".join(item.code for item in resolved.diagnostics)
         raise ValueError(codes or "MAIND_PROVIDER_RESOLUTION_INVALID")

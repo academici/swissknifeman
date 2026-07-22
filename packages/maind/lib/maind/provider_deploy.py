@@ -12,8 +12,10 @@ from pathlib import Path
 import sys
 
 from core import (ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource,
-                  ArtifactTarget, ProviderId, canonical_json_bytes,
-                  apply_plan, plan_artifact_lock, plan_artifact_render, sha256_digest)
+                  ArtifactTarget, CapabilityId, CapabilityRequirement, ProviderId,
+                  SupportLevel, canonical_json_bytes, apply_plan, load_provider_manifest,
+                  plan_artifact_lock, plan_artifact_render, provider_config_catalog,
+                  sha256_digest, support_for)
 from core.provider_lock import artifact_doctor
 from .common import atomic_write_text
 
@@ -87,9 +89,16 @@ def semantic_servers(*, maind, agentmemory=None, codegraph=None, perplexity=None
 
 
 def plan_provider_deploy(base_projections, servers, *, selected=None, required_providers=None,
-                         disabled=(), secret_values=()):
+                         disabled=(), secret_values=(), manifest_path=None):
     """Project caller-owned descriptors through P5-owned target/serialization records."""
     from harness.mcp import McpProjection, render_mcp_projection
+    manifest_path = Path(manifest_path) if manifest_path is not None else (
+        Path(__file__).resolve().parents[4] / "configs/provider-capabilities.json")
+    try:
+        manifest = load_provider_manifest(manifest_path)
+        capability_catalog = provider_config_catalog(manifest)
+    except ValueError as error:
+        raise ProviderDeployError(f"MAIND_CAPABILITY_MANIFEST_INVALID:{error}") from error
     base_projections = tuple(base_projections)
     servers = tuple(servers)
     if len({item.provider_id for item in base_projections}) != len(base_projections):
@@ -125,13 +134,27 @@ def plan_provider_deploy(base_projections, servers, *, selected=None, required_p
             results.append(ProviderDeployResult(provider_id, "", "", b"", (), "failed",
                                                 "MAIND_PROJECTION_MISSING"))
             continue
+        try:
+            support = support_for(manifest, "mcp.catalog", provider_id)
+        except ValueError as error:
+            raise ProviderDeployError(
+                f"MAIND_CAPABILITY_MISSING:{provider_id.value}:mcp.catalog") from error
+        if support.level is SupportLevel.UNSUPPORTED:
+            results.append(ProviderDeployResult(
+                provider_id, "", "", b"", (), "failed",
+                f"MAIND_CAPABILITY_UNSUPPORTED:{provider_id.value}:mcp.catalog"))
+            continue
         projection = McpProjection(base.provider_id, base.target_scope, base.target_path,
                                    entries, tuple())
         rendered = render_mcp_projection(projection)
         artifact = plan_artifact_render(ArtifactRenderRequest(
             "maind.provider-deploy." + provider_id.value,
             (source,), ArtifactTarget(base.target_path, ("whole-file", ())),
-            ArtifactAdapterIdentity("maind.provider-deploy", "1.0.0", provider_id, "1.1.0", ()),
+            ArtifactAdapterIdentity(
+                "maind.provider-deploy", "1.0.0", provider_id,
+                capability_catalog.catalog_version,
+                (CapabilityRequirement(CapabilityId("mcp.catalog"),
+                                       (SupportLevel.ADAPTED, SupportLevel.NATIVE)),)),
             (), {"target_scope": base.target_scope, "server_ids": [item.id for item in servers]},
             lambda _request, value=rendered: value))
         results.append(ProviderDeployResult(provider_id, base.target_scope, base.target_path,

@@ -6,9 +6,18 @@ from pathlib import Path
 from core.tests.test_provider_config import catalog, config, layer
 from skiller.common import Env
 from skiller.config import load_config, provider_config_layer, resolve_provider_config
+from skiller.config import resolve_distribution_providers
 
 
 class TestProviderConfigAdapter(unittest.TestCase):
+    def test_distribution_uses_root_manifest_projection(self):
+        root = Path(__file__).resolve().parents[3]
+        result = resolve_distribution_providers(
+            {"providers": config({"codex": {"enabled": True}})}, project_id="manifest",
+            manifest_path=root / "configs/provider-capabilities.json")
+        self.assertTrue(next(row for row in result.effective
+                             if row.provider_id.value == "codex").enabled)
+
     def test_project_adapter_uses_shared_projection(self):
         project = {"providers": config({"codex": {"enabled": True}})}
         result = resolve_provider_config(project, catalog(), project_id="demo")

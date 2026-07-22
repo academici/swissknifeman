@@ -5,7 +5,8 @@ from dataclasses import dataclass
 import json
 from pathlib import Path
 
-from core import DiagnosticSeverity, EffectiveProvider, ProviderId
+from core import (DiagnosticSeverity, EffectiveProvider, ProviderCapabilityManifest,
+                  ProviderId, load_provider_manifest, support_for)
 
 
 _PROFILE_IDS = ("observe", "workspace-contained", "trusted-full-access")
@@ -13,6 +14,8 @@ _SURFACE_KINDS = frozenset({"settings", "security", "lifecycle", "context", "mcp
                             "agents", "agent-packs", "workflows", "doctor"})
 _SCOPES = frozenset({"project", "user", "managed"})
 _ORIGINS = frozenset({"operation", "project", "fleet-project", "fleet-defaults", "legacy"})
+_CAPABILITY_MANIFEST_PATH = (Path(__file__).resolve().parents[4]
+                             / "configs" / "provider-capabilities.json")
 
 
 @dataclass(frozen=True, order=True)
@@ -91,8 +94,9 @@ def default_catalog_path(env) -> Path:
     return Path(env.root) / "configs" / "common" / "profile-catalog.json"
 
 
-def load_catalog(path: Path) -> ProfileCatalog:
-    """Load an explicit common catalog; provider bindings are forbidden here."""
+def load_catalog(path: Path, *, capability_manifest: ProviderCapabilityManifest | None = None
+                 ) -> ProfileCatalog:
+    """Load an explicit common catalog and validate it against the root manifest."""
     value = json.loads(Path(path).read_text(encoding="utf-8"))
     if not isinstance(value, dict) or set(value) != {"contract_version", "catalog_version", "profiles", "surfaces"}:
         raise ValueError("HARNESS_CATALOG_MISMATCH")
@@ -106,7 +110,11 @@ def load_catalog(path: Path) -> ProfileCatalog:
     if any(set(profile.required_surfaces + profile.optional_surfaces) - surface_ids
            or set(profile.required_surfaces) & set(profile.optional_surfaces) for profile in profiles):
         raise ValueError("HARNESS_CATALOG_MISMATCH")
-    return ProfileCatalog(value["contract_version"], value["catalog_version"], profiles, surfaces)
+    catalog = ProfileCatalog(value["contract_version"], value["catalog_version"], profiles, surfaces)
+    manifest = (load_provider_manifest(_CAPABILITY_MANIFEST_PATH)
+                if capability_manifest is None else capability_manifest)
+    _validate_capability_manifest(catalog, manifest)
+    return catalog
 
 
 def resolve_profile(catalog: ProfileCatalog, *, provider_id: ProviderId, profile_id: str,
@@ -212,3 +220,26 @@ def _capability_requirements(value: object) -> tuple[tuple[str, tuple[str, ...]]
 def _diagnostic(code: str, provider_id: ProviderId, profile_id: str, message: str) -> HarnessDiagnostic:
     return HarnessDiagnostic(DiagnosticSeverity.ERROR, code, provider_id, profile_id,
                              path="/profile", message=message, next_action="refuse")
+
+
+def _validate_capability_manifest(catalog: ProfileCatalog,
+                                  manifest: ProviderCapabilityManifest) -> None:
+    """Require the manifest matrix before any harness projection is considered."""
+    if not isinstance(manifest, ProviderCapabilityManifest):
+        raise TypeError("capability_manifest must be ProviderCapabilityManifest")
+    required = {surface.id for surface in catalog.surfaces}
+    required.update(capability for surface in catalog.surfaces
+                    for capability, _levels in surface.required_capabilities)
+    for capability_id in sorted(required):
+        for provider in ProviderId:
+            try:
+                support = support_for(manifest, capability_id, provider)
+            except ValueError as error:
+                raise ValueError(f"HARNESS_CAPABILITY_MANIFEST_INVALID:{provider.value}:"
+                                 f"{capability_id}:missing") from error
+            declared = next((levels for surface in catalog.surfaces
+                             for identifier, levels in surface.required_capabilities
+                             if identifier == capability_id), None)
+            if declared is not None and support.level.value not in declared:
+                raise ValueError(f"HARNESS_CAPABILITY_MANIFEST_INVALID:{provider.value}:"
+                                 f"{capability_id}:level-mismatch")

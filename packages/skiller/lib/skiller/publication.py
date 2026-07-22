@@ -15,9 +15,10 @@ import subprocess
 from pathlib import Path
 from typing import Mapping, Sequence
 
-from core import (ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource,
-                  ArtifactTarget, CapabilityId, CapabilityRequirement, ProviderId,
-                  SupportLevel, plan_artifact_render)
+from core import (AdapterCatalog, AdapterDescriptor, ArtifactAdapterIdentity,
+                  ArtifactRenderRequest, ArtifactSource, ArtifactTarget, CapabilityId,
+                  CapabilityRequirement, EffectiveProvider, ProviderId, SupportLevel,
+                  load_provider_manifest, plan_artifact_render, provider_config_catalog)
 
 
 _CLAUDE_ADAPTER = ArtifactAdapterIdentity(
@@ -31,6 +32,22 @@ _CODEX_ADAPTER = ArtifactAdapterIdentity(
     (CapabilityRequirement(CapabilityId("skills.repository"),
                            (SupportLevel.NATIVE, SupportLevel.ADAPTED)),),
 )
+
+
+def validate_publication_capabilities(provider_id: ProviderId, *, manifest_path=None):
+    """Fail closed against the root manifest before publication bytes are rendered."""
+    manifest_path = Path(manifest_path) if manifest_path is not None else (
+        Path(__file__).resolve().parents[4] / "configs/provider-capabilities.json")
+    manifest = load_provider_manifest(manifest_path)
+    identity = _CLAUDE_ADAPTER if provider_id is ProviderId.CLAUDE_CODE else _CODEX_ADAPTER
+    gate = AdapterCatalog((AdapterDescriptor(
+        "skills.publication", identity, lambda _request: b""),)).select(
+            provider_id=provider_id, artifact_kind="skills.publication",
+            capability_catalog=provider_config_catalog(manifest),
+            effective_provider=EffectiveProvider(provider_id, True))
+    if gate.selection is None:
+        raise ValueError(",".join(item.code for item in gate.diagnostics))
+    return manifest
 
 
 @dataclass(frozen=True)
@@ -164,8 +181,9 @@ def build_publication_catalog(*, registry: Mapping[str, object], bucket_meta: Ma
 
 
 def render_claude_publication(catalog: PublicationCatalog, *, repo_root: Path,
-                              package_root: Path) -> tuple[ClaudePublicationArtifact, ...]:
+                              package_root: Path, manifest_path=None) -> tuple[ClaudePublicationArtifact, ...]:
     """Render the legacy Claude JSON bytes from a catalog and explicit roots only."""
+    validate_publication_capabilities(ProviderId.CLAUDE_CODE, manifest_path=manifest_path)
     if not isinstance(catalog, PublicationCatalog):
         raise TypeError("catalog must be PublicationCatalog")
     repo_root = repo_root.resolve()
@@ -269,13 +287,14 @@ def render_claude_publication(catalog: PublicationCatalog, *, repo_root: Path,
 
 
 def render_codex_publication(catalog: PublicationCatalog, *, repo_root: Path,
-                             package_root: Path) -> tuple[CodexPublicationArtifact, ...]:
+                             package_root: Path, manifest_path=None) -> tuple[CodexPublicationArtifact, ...]:
     """Render native Codex plugins independently from the semantic catalog.
 
     Bucket plugins remain direct canonical roots.  The discontiguous core and
     management unit are explicit cache-contained bundles; only declared SKILL.md
     members are copied into those bundles.
     """
+    validate_publication_capabilities(ProviderId.CODEX, manifest_path=manifest_path)
     if not isinstance(catalog, PublicationCatalog):
         raise TypeError("catalog must be PublicationCatalog")
     repo_root = repo_root.resolve()

@@ -12,6 +12,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+from core import apply_plan
 from .. import codegraph, pplxweb
 from ..common import die, now_iso, parse_args, warn
 from ..config import load_config, resolve_provider_config
@@ -23,7 +24,7 @@ from ..projects import get as get_project
 from ..projects import listing, write_config
 from ..provider_deploy import (apply_provider_artifacts, generate_conformance_report,
                                plan_provider_artifacts, plan_provider_deploy,
-                               SemanticServer, semantic_servers)
+                               plan_d104_bootstrap_transfer, SemanticServer, semantic_servers)
 
 
 @dataclass(frozen=True)
@@ -39,11 +40,17 @@ def _provider_projections(env, config, project):
     return provider_projection_context(env, config, project).projections
 
 
-def provider_projection_context(env, config, project):
-    """Public P6 seam: one effective-provider resolution and P5 projections."""
+def _harness_configs(env):
+    """Resolve the sibling public harness configuration root for a P6 projection."""
     harness_root = Path(env.root).parent / "harness"
     if not harness_root.is_dir():
         harness_root = Path(__file__).resolve().parents[3].parent / "harness"
+    return harness_root / "configs"
+
+
+def provider_projection_context(env, config, project):
+    """Public P6 seam: one effective-provider resolution and P5 projections."""
+    harness_root = _harness_configs(env).parent
     harness_lib = str(harness_root / "lib")
     if harness_lib not in sys.path:
         sys.path.insert(0, harness_lib)
@@ -149,20 +156,39 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
     scope = project.get("memory_scope") or f"project:{pid}"
     provider_plan = None
     provider_changed = False
+    bootstrap_transfer = None
     if provider_projections is not None:
+        has_codex = any(projection.provider_id.value == "codex"
+                        for projection in provider_projections)
+        bootstrap_root = project_path / ".codex/hooks.json"
+        bootstrap_lock = project_path / ".swissknifeman/provider-artifacts.lock.json"
+        if has_codex and bootstrap_root.is_file() and not bootstrap_lock.exists():
+            bootstrap_transfer = plan_d104_bootstrap_transfer(
+                project_path, harness_configs=_harness_configs(env))
+            if any(getattr(action.action, "value", action.action) == "refuse"
+                   for action in bootstrap_transfer.plan.actions):
+                raise ValueError("MAIND_PROVIDER_DEPLOY_REFUSED")
+            provider_changed = any(
+                getattr(action.action, "value", action.action) != "noop"
+                for action in bootstrap_transfer.plan.actions)
+            if not dry:
+                apply_plan(project_path, bootstrap_transfer.plan)
         provider_plan = plan_provider_deploy(
             provider_projections,
             provider_semantic_inventory(env, config, project, with_code=with_code,
                                         maind_server=maind_server,
                                         with_agentmemory=with_agentmemory))
-        provider_check = plan_provider_artifacts(project_path, provider_plan, repair=provider_repair)
+        extra_artifacts = () if dry or bootstrap_transfer is None else bootstrap_transfer.artifacts
+        provider_check = plan_provider_artifacts(project_path, provider_plan, repair=provider_repair,
+                                                 extra_artifacts=extra_artifacts)
         if provider_check["severity"] == "error":
             raise ValueError("MAIND_PROVIDER_DEPLOY_REFUSED")
-        provider_changed = any(
+        provider_changed = provider_changed or any(
             getattr(action.action, "value", action.action) != "noop"
             for action in provider_check["plan"].actions)
         if not dry:
-            apply_provider_artifacts(project_path, provider_plan, repair=provider_repair)
+            apply_provider_artifacts(project_path, provider_plan, repair=provider_repair,
+                                     extra_artifacts=extra_artifacts)
     emit_example = bool((config.get("mcp") or {}).get("emit_example"))  # opt-in: .example + .gitignore
 
     st = codegraph.settings(config)

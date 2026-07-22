@@ -6,20 +6,169 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "harness/lib"))
 
 from core import (ConfigSource, ProviderConfigCatalog, ProviderConfigLayer, ProviderId,
-                  canonical_json_bytes, sha256_digest)
+                  apply_plan, canonical_json_bytes, sha256_digest)
 from harness.mcp import load_mcp_catalog, plan_mcp_projection
 from maind.provider_deploy import (ProviderDeployError, plan_provider_deploy,
                                    plan_provider_artifacts, apply_provider_artifacts,
                                    resolve_effective_providers, semantic_servers)
-from maind.provider_deploy import conformance_report, write_conformance_report
+from maind.provider_deploy import (conformance_report, plan_d104_bootstrap_transfer,
+                                   write_conformance_report)
 from maind.provision.deploy import deploy_project, mark_deployed, provider_semantic_inventory
 from tests.fixtures import make_repo
 from maind.config import merge_defaults
 import tempfile
 import subprocess
+from unittest.mock import patch
+
+
+_D104_PREIMAGE = b'''{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash /home/vostrikov/projects/packages/swissknifeman/.claude/maind-memory.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
+'''
 
 
 class TestProviderDeploy(unittest.TestCase):
+    def test_d104_transfer_composes_then_returns_to_normal_p2_repair(self):
+        repo = Path(__file__).resolve().parents[3]
+        harness = repo / "packages/harness/configs"
+        catalog = load_mcp_catalog(harness / "common/mcp/catalog.json")
+        bases = tuple(plan_mcp_projection(
+            catalog, provider_id=provider,
+            bindings_path=harness / provider.value / "mcp/bindings.json",
+            selected=(), trusted=True) for provider in ProviderId)
+        deploy = plan_provider_deploy(bases, semantic_servers(maind={"command": "maind"}))
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / ".codex/hooks").mkdir(parents=True)
+            (root / ".codex/hooks.json").write_bytes(_D104_PREIMAGE)
+            foreign = root / "foreign.txt"
+            foreign.write_text("preserve", encoding="utf-8")
+
+            transfer = plan_d104_bootstrap_transfer(root, harness_configs=harness)
+            self.assertEqual([action.action.value for action in transfer.plan.actions],
+                             ["update", "create"])
+            apply_plan(root, transfer.plan)
+            hooks = json.loads((root / ".codex/hooks.json").read_text(encoding="utf-8"))
+            commands = [group["hooks"][0]["command"]
+                        for group in hooks["hooks"]["SessionStart"]]
+            self.assertEqual(commands[0],
+                             "bash /home/vostrikov/projects/packages/swissknifeman/.claude/maind-memory.sh")
+            self.assertEqual(len(commands), 2)
+            self.assertTrue((root / ".codex/hooks/lifecycle.py").is_file())
+            self.assertTrue((root / ".codex/hooks.json.provider-artifact.bootstrap-transfer.bak").is_file())
+
+            checked = plan_provider_artifacts(root, deploy, extra_artifacts=transfer.artifacts)
+            self.assertNotEqual(checked["severity"], "error")
+            apply_provider_artifacts(root, deploy, extra_artifacts=transfer.artifacts)
+            clean = plan_provider_artifacts(root, deploy, extra_artifacts=transfer.artifacts)
+            self.assertEqual(clean["severity"], "green")
+            self.assertTrue(all(action.action.value == "noop" for action in clean["plan"].actions))
+            self.assertEqual(foreign.read_text(encoding="utf-8"), "preserve")
+
+            (root / ".codex/hooks.json").write_bytes(
+                (root / ".codex/hooks.json").read_bytes() + b"\n")
+            self.assertEqual(plan_provider_artifacts(
+                root, deploy, extra_artifacts=transfer.artifacts)["severity"], "error")
+            apply_provider_artifacts(root, deploy, repair=True,
+                                     extra_artifacts=transfer.artifacts)
+            self.assertEqual(plan_provider_artifacts(
+                root, deploy, extra_artifacts=transfer.artifacts)["severity"], "green")
+
+    def test_d104_transfer_refuses_changed_preimage_or_existing_handler_without_writes(self):
+        harness = Path(__file__).resolve().parents[3] / "packages/harness/configs"
+        for changed, handler in ((True, False), (False, True)):
+            with self.subTest(changed=changed, handler=handler), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                (root / ".codex/hooks").mkdir(parents=True)
+                preimage = (_D104_PREIMAGE.replace(b"maind-memory.sh", b"other-memory.sh")
+                            if changed else _D104_PREIMAGE)
+                (root / ".codex/hooks.json").write_bytes(preimage)
+                if handler:
+                    (root / ".codex/hooks/lifecycle.py").write_text("foreign", encoding="utf-8")
+                before = {path.relative_to(root): path.read_bytes()
+                          for path in root.rglob("*") if path.is_file()}
+                transfer = plan_d104_bootstrap_transfer(root, harness_configs=harness)
+                self.assertTrue(all(action.action.value == "refuse" for action in transfer.plan.actions))
+                after = {path.relative_to(root): path.read_bytes()
+                         for path in root.rglob("*") if path.is_file()}
+                self.assertEqual(after, before)
+
+    def test_d104_transfer_rolls_back_a_temporary_interrupted_transaction(self):
+        harness = Path(__file__).resolve().parents[3] / "packages/harness/configs"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / ".codex/hooks").mkdir(parents=True)
+            hooks_path = root / ".codex/hooks.json"
+            hooks_path.write_bytes(_D104_PREIMAGE)
+            transfer = plan_d104_bootstrap_transfer(root, harness_configs=harness)
+
+            def interrupted(_root, _admission, _results, state):
+                if state == "created":
+                    raise OSError("simulated interruption")
+
+            with patch("core.provider_lock._bootstrap_write_state", side_effect=interrupted):
+                with self.assertRaisesRegex(OSError, "simulated interruption"):
+                    apply_plan(root, transfer.plan)
+            self.assertEqual(hooks_path.read_bytes(), _D104_PREIMAGE)
+            self.assertFalse((root / ".codex/hooks/lifecycle.py").exists())
+            self.assertFalse((root / ".swissknifeman/provider-artifacts.lock.json").exists())
+
+    def test_deploy_facade_requests_d104_transfer_only_for_the_absent_lock_candidate(self):
+        harness = Path(__file__).resolve().parents[3] / "packages/harness/configs"
+        catalog = load_mcp_catalog(harness / "common/mcp/catalog.json")
+        bases = tuple(plan_mcp_projection(
+            catalog, provider_id=provider,
+            bindings_path=harness / provider.value / "mcp/bindings.json",
+            selected=(), trusted=True) for provider in ProviderId)
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            target = Path(tmp) / "project"
+            (target / ".codex/hooks").mkdir(parents=True)
+            (target / ".codex/hooks.json").write_bytes(_D104_PREIMAGE)
+            config = merge_defaults({"projects": [{"id": "demo", "name": "Demo",
+                "local_path": str(target), "memory_scope": "project:demo"}]})
+            first = deploy_project(env, config, config["projects"][0], with_code=False,
+                                   provider_projections=bases)
+            self.assertTrue(first["provider_changed"])
+            self.assertTrue((target / ".codex/hooks/lifecycle.py").is_file())
+            second = deploy_project(env, config, config["projects"][0], with_code=False,
+                                    provider_projections=bases)
+            self.assertFalse(second["provider_changed"])
+
+    def test_deploy_facade_keeps_d104_preimage_refusal_before_mcp_write(self):
+        harness = Path(__file__).resolve().parents[3] / "packages/harness/configs"
+        catalog = load_mcp_catalog(harness / "common/mcp/catalog.json")
+        bases = tuple(plan_mcp_projection(
+            catalog, provider_id=provider,
+            bindings_path=harness / provider.value / "mcp/bindings.json",
+            selected=(), trusted=True) for provider in ProviderId)
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            target = Path(tmp) / "project"
+            (target / ".codex/hooks").mkdir(parents=True)
+            hooks_path = target / ".codex/hooks.json"
+            hooks_path.write_bytes(_D104_PREIMAGE.replace(
+                b"maind-memory.sh", b"other-memory.sh"))
+            config = merge_defaults({"projects": [{"id": "demo", "name": "Demo",
+                "local_path": str(target), "memory_scope": "project:demo"}]})
+            with self.assertRaisesRegex(ValueError, "MAIND_PROVIDER_DEPLOY_REFUSED"):
+                deploy_project(env, config, config["projects"][0], with_code=False,
+                               provider_projections=bases)
+            self.assertEqual(hooks_path.read_bytes(), _D104_PREIMAGE.replace(
+                b"maind-memory.sh", b"other-memory.sh"))
+            self.assertFalse((target / ".mcp.json").exists())
+
     def test_manifest_gate_refuses_missing_and_unsupported_before_render(self):
         repo = Path(__file__).resolve().parents[3]
         harness = repo / "packages/harness/configs"

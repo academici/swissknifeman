@@ -9,13 +9,15 @@ from dataclasses import dataclass
 from collections.abc import Mapping
 from types import MappingProxyType
 from pathlib import Path
+import json
 import sys
 
 from core import (ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource,
                   ArtifactTarget, CapabilityId, CapabilityRequirement, ProviderId,
                   SupportLevel, canonical_json_bytes, apply_plan, load_provider_manifest,
                   plan_artifact_lock, plan_artifact_render, provider_config_catalog,
-                  sha256_digest, support_for)
+                  plan_bootstrap_transfer, BootstrapTransferAdmission, sha256_digest,
+                  support_for)
 from core.provider_lock import artifact_doctor
 from .common import atomic_write_text
 
@@ -75,6 +77,111 @@ class ProviderDeployPlan:
     @property
     def diagnostics(self):
         return tuple(row.diagnostic for row in self.results if row.diagnostic)
+
+
+@dataclass(frozen=True)
+class BootstrapTransferPlan:
+    """The sole P6-owned D104 composition and its already-admitted P2 plan."""
+    artifacts: tuple
+    plan: object
+
+
+def _d104_memory_registration(preimage):
+    """Read exactly one caller-owned native memory SessionStart registration."""
+    try:
+        value = json.loads(preimage.decode("utf-8"))
+        hooks = value["hooks"]
+        groups = hooks["SessionStart"]
+        group = groups[0]
+        hook = group["hooks"][0]
+    except (AttributeError, IndexError, KeyError, TypeError, UnicodeDecodeError,
+            json.JSONDecodeError):
+        raise ProviderDeployError("MAIND_PROVIDER_DEPLOY_REFUSED") from None
+    if (not isinstance(value, dict) or set(value) != {"hooks"}
+            or not isinstance(hooks, dict) or set(hooks) != {"SessionStart"}
+            or not isinstance(groups, list) or len(groups) != 1
+            or not isinstance(group, dict) or set(group) - {"hooks", "matcher"}
+            or not isinstance(group.get("hooks"), list) or len(group["hooks"]) != 1
+            or not isinstance(hook, dict) or set(hook) != {"type", "command"}
+            or hook["type"] != "command" or not isinstance(hook["command"], str)
+            or not hook["command"] or "matcher" in group and not isinstance(group["matcher"], str)):
+        raise ProviderDeployError("MAIND_PROVIDER_DEPLOY_REFUSED")
+    return group, hook["command"]
+
+
+def _d104_observer_fragment(harness_configs):
+    """Obtain P5's public native fragment without importing its implementation details."""
+    harness_configs = Path(harness_configs)
+    harness_lib = str(harness_configs.parent / "lib")
+    if harness_lib not in sys.path:
+        sys.path.insert(0, harness_lib)
+    from harness.hooks import (LifecycleRequest, codex_d104_observer_fragment,
+                               plan_lifecycle)
+    from harness.profiles import load_catalog
+
+    lifecycle = plan_lifecycle(
+        load_catalog(harness_configs / "common/profile-catalog.json"),
+        provider_id=ProviderId.CODEX,
+        requests=(LifecycleRequest("context.observer", True),), trusted=True,
+        codex_bindings_path=harness_configs / "codex/hooks/lifecycle-context-bindings.json")
+    try:
+        return codex_d104_observer_fragment(lifecycle)
+    except ValueError as error:
+        raise ProviderDeployError("MAIND_PROVIDER_DEPLOY_REFUSED") from error
+
+
+def plan_d104_bootstrap_transfer(root, *, harness_configs):
+    """Compose the exact D104 native Codex pair and ask P2 for its closed admission.
+
+    This is intentionally separate from ordinary provider deployment: callers use it only
+    for the single absent-lock bootstrap candidate, then return to the existing P2 plan.
+    It plans only; callers choose whether a disposable-root apply is permitted.
+    """
+    root = Path(root)
+    existing_path = root / ".codex/hooks.json"
+    preimage = existing_path.read_bytes()
+    memory_group, memory_command = _d104_memory_registration(preimage)
+    fragment = _d104_observer_fragment(harness_configs)
+    from harness.hooks import validate_d104_codex_lifecycle_composition
+    document = (json.dumps({"hooks": {"SessionStart": [memory_group, fragment.group]}},
+                           ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+    try:
+        validate_d104_codex_lifecycle_composition(
+            document, memory_command=memory_command, fragment=fragment)
+    except ValueError as error:
+        raise ProviderDeployError("MAIND_PROVIDER_DEPLOY_REFUSED") from error
+
+    sources = (
+        ArtifactSource("maind.d104.memory-preimage", ".codex/hooks.json",
+                       sha256_digest(preimage)),
+        ArtifactSource("harness.d104.observer-fragment",
+                       "packages/harness/lib/harness/hooks.py",
+                       sha256_digest(canonical_json_bytes({
+                           "event": fragment.event, "group": fragment.group,
+                           "handler_sha256": sha256_digest(fragment.handler_bytes)}))),
+    )
+    identity = ArtifactAdapterIdentity("maind.d104.bootstrap-transfer", "1.0.0",
+                                       ProviderId.CODEX, "1.0.0", ())
+    hooks = plan_artifact_render(ArtifactRenderRequest(
+        "harness.codex.lifecycle.hooks", sources,
+        ArtifactTarget(".codex/hooks.json", ("whole-file", ())), identity, (),
+        {"decision_id": "D104", "component": "composed-session-start"},
+        lambda _request: document))
+    handler = plan_artifact_render(ArtifactRenderRequest(
+        "harness.codex.lifecycle.handler", sources,
+        ArtifactTarget(".codex/hooks/lifecycle.py", ("whole-file", ())), identity, (),
+        {"decision_id": "D104", "component": "lifecycle-handler"},
+        lambda _request: fragment.handler_bytes))
+    admission = BootstrapTransferAdmission(
+        "D104", ".codex/hooks.json",
+        "sha256:7d7538d021228e8e61d124f4b60b6db04434f8121de30b8672f05e4bf038c3db",
+        ".codex/hooks/lifecycle.py", "harness.codex.lifecycle.hooks",
+        "harness.codex.lifecycle.handler")
+    lock_path = root / ".swissknifeman/provider-artifacts.lock.json"
+    plan = plan_bootstrap_transfer(root, (hooks, handler),
+                                   lock_bytes=lock_path.read_bytes() if lock_path.exists() else None,
+                                   admission=admission)
+    return BootstrapTransferPlan((hooks, handler), plan)
 
 
 def semantic_servers(*, maind, agentmemory=None, codegraph=None, perplexity=None):
@@ -201,7 +308,7 @@ def generate_conformance_report(harness_configs, output_path):
     return plan
 
 
-def plan_provider_artifacts(root, deploy_plan, *, repair=False):
+def plan_provider_artifacts(root, deploy_plan, *, repair=False, extra_artifacts=()):
     """Classify all provider targets through one P2 plan without writing them."""
     if not deploy_plan.green:
         return {"mode": "check", "severity": "error", "plan": None,
@@ -210,9 +317,10 @@ def plan_provider_artifacts(root, deploy_plan, *, repair=False):
     lock_path = root / ".swissknifeman/provider-artifacts.lock.json"
     lock_bytes = lock_path.read_bytes() if lock_path.exists() else None
     artifacts = tuple(row.artifact for row in deploy_plan.results if row.artifact is not None)
+    artifacts += tuple(extra_artifacts)
     plan = plan_artifact_lock(root, artifacts, lock_bytes=lock_bytes,
                               repair_artifact_ids=tuple(
-                                  row.artifact.provenance.artifact_id for row in deploy_plan.results)
+                                  artifact.provenance.artifact_id for artifact in artifacts)
                               if repair else ())
     projection = artifact_doctor(plan)
     return {"mode": "repair" if repair else "check", "severity": projection["exit_severity"],
@@ -220,10 +328,11 @@ def plan_provider_artifacts(root, deploy_plan, *, repair=False):
                                                    for action in projection["actions"])}
 
 
-def apply_provider_artifacts(root, deploy_plan, *, repair=False):
+def apply_provider_artifacts(root, deploy_plan, *, repair=False, extra_artifacts=()):
     """Apply a preflighted provider deployment only when P2 has no refusal."""
-    checked = plan_provider_artifacts(root, deploy_plan, repair=repair)
+    checked = plan_provider_artifacts(root, deploy_plan, repair=repair,
+                                      extra_artifacts=extra_artifacts)
     if checked["plan"] is None or checked["severity"] == "error":
         raise ProviderDeployError("MAIND_PROVIDER_DEPLOY_REFUSED")
     apply_plan(Path(root), checked["plan"])
-    return plan_provider_artifacts(root, deploy_plan)
+    return plan_provider_artifacts(root, deploy_plan, extra_artifacts=extra_artifacts)

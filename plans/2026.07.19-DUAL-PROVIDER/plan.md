@@ -132,7 +132,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P3 | Dual skills publication и marketplaces | 5/5 | 🟢 Done |
 | P4 | Task-command parity и provider-neutral model routing | 5/5 | 🟢 Done |
 | P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 8/8 | 🟢 Done |
-| P6 | mAInd deployment, memory и provider-neutral analytics | 9/12 | 🔴 Blocked |
+| P6 | mAInd deployment, memory и provider-neutral analytics | 10/12 | 🔴 Blocked |
 | P7 | Docs, self-hosting validation и FOREMAN release gate | 1/4 | 🔴 Blocked |
 
 ## 5. Decision Log
@@ -259,6 +259,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
 | 2026-07-22 | owner/root agent | D113 makes remaining no-write execution Terra/medium + targeted and defers the final heavyweight audit to Claude Code; D114 reopens only the D108 configured server-name seam. |
+| 2026-07-22 | plan-run / Codex gpt-5.6-terra/medium | P6.11 закрыт: D114 uses configured D108 MCP identities with unchanged bindings; далее независимый P6.12 — детали см. phases/P6.md P6.11 Completion Notes. |
 | 2026-07-22 | plan-run / Codex gpt-5.6-terra/high | P6.11 закрыт: D112 seals the configured-root facade and carrier-derived dual P5 bases; далее независимый P6.12 — детали см. phases/P6.md P6.11 Completion Notes. |
 | 2026-07-22 | task-plan-exec / gpt-5.6-terra/medium | P6.12 повторно заблокирован: independent reader reaches D108 chain but sealed MCP expected bytes/IDs diverge; writer 0 — детали см. phases/P6.md P6.12 Completion Notes. |
 | 2026-07-22 | task-plan-design / root agent | D112 reopens only P6.11 for the P6.12 RED expected-root and pre-carrier dual-projection defects; frozen contracts and live authority remain unchanged. |

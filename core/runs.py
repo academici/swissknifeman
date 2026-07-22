@@ -4,6 +4,7 @@
 (digest) и maind (analyze) с расхождением: analyst раскрывал `~` в пути
 (os.path.expanduser), maind — нет, и на `~`-пути молча возвращал None. Сведено сюда
 с единой нормализацией пути. stdlib-only."""
+import json
 import os
 import re
 from dataclasses import dataclass
@@ -87,6 +88,23 @@ def event_key(envelope):
     if not isinstance(envelope, EventEnvelope):
         raise ValueError("event_key expects EventEnvelope")
     return (envelope.provider_id, envelope.project_id, envelope.session_id, envelope.event_id)
+
+
+def find_analytics_events(project_path, session=None):
+    """Read validated neutral events only; provider raw homes are never consulted."""
+    path = Path(os.path.expanduser(str(project_path))) / ".swissknife" / "analytics" / "events.ndjson"
+    if not path.is_file():
+        return ()
+    events = []
+    with open(path, encoding="utf-8", errors="replace") as handle:
+        for line in handle:
+            try:
+                event = EventEnvelope.from_mapping(json.loads(line))
+            except (ValueError, TypeError):
+                continue
+            if session is None or event.session_id == session:
+                events.append(event)
+    return tuple(events)
 
 
 def find_run_report(project_path, session=None):

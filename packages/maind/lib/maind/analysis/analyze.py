@@ -15,6 +15,7 @@ import os
 from pathlib import Path
 
 from ..common import find_run_report, parse_args, read_ndjson_iter, run_cmd
+from core.runs import find_analytics_events
 from ..config import load_config
 from ..health import _target
 
@@ -119,6 +120,13 @@ def pending_lessons(project_path):
     return total
 
 
+def analytics_slice(project_path, session=None):
+    """Neutral analytics consumer; it deliberately has no provider raw-path knowledge."""
+    events = find_analytics_events(project_path, session=session)
+    providers = sorted({event.provider_id for event in events})
+    return {"events": len(events), "providers": providers}
+
+
 # ── источник 5: health (хаб жив? переиспользуем health_report) ────────────────
 def health_slice(env, config, project):
     """Компактный срез health_report (память/граф/round-trip). None при любой ошибке —
@@ -218,6 +226,7 @@ def analyze_report(env, config, project, *, session=None, base=None, with_health
         "run_report": run_report, "bash_log": bash_log,
         "observer": observer, "git": git, "health": health,
         "pending_lessons": pending_lessons(ppath),
+        "analytics": analytics_slice(ppath, effective_session),
     }
 
 

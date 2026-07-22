@@ -203,12 +203,19 @@ def plan_codex_lifecycle_artifacts(plan: LifecycleRenderPlan, *, bindings_path: 
 def render_codex_capture_handler() -> bytes:
     """Generated local-only capture adapter; it persists no prompt or raw hook body."""
     return b'''#!/usr/bin/env python3
-import json, sys
+import hashlib, json, sys
 payload = json.load(sys.stdin)
 required = {"session_id", "occurred_at", "metrics"}
-if not isinstance(payload, dict) or not required.issubset(payload) or not isinstance(payload["metrics"], dict):
+allowed = {"tools", "files", "workflows", "retrieval", "devloop", "maind", "usage", "reads", "errors"}
+if (not isinstance(payload, dict) or set(payload) - (required | {"outcome"})
+        or not required.issubset(payload) or not isinstance(payload["metrics"], dict)
+        or not set(payload["metrics"]).issubset(allowed)
+        or not all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in payload["metrics"].values())):
     sys.exit(2)
-print(json.dumps({"schema": 1, "session_id": payload["session_id"], "occurred_at": payload["occurred_at"], "metrics": payload["metrics"], "outcome": payload.get("outcome", "unknown")}, sort_keys=True))
+safe = {"schema": 1, "session_id": payload["session_id"], "occurred_at": payload["occurred_at"], "metrics": payload["metrics"], "outcome": payload.get("outcome", "unknown")}
+encoded = json.dumps(safe, sort_keys=True, separators=(",", ":")).encode("utf-8")
+safe["source_sha256"] = hashlib.sha256(encoded).hexdigest()
+print(json.dumps(safe, sort_keys=True))
 '''
 
 

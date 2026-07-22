@@ -194,7 +194,10 @@ class AnalyticsConsumerCase(unittest.TestCase):
                      "provenance": {"raw_ref": "local:c", "sha256": "a" * 64,
                                     "reader_id": "codex-hook-context", "reader_version": "1.0.0"}}
             (store / "events.ndjson").write_text(json.dumps(event) + "\n", encoding="utf-8")
-            self.assertEqual(analytics_slice(tmp, "s"), {"events": 1, "providers": ["codex"]})
+            slice_ = analytics_slice(tmp, "s")
+            self.assertEqual((slice_["events"], slice_["providers"]), (1, ["codex"]))
+            self.assertEqual(slice_["run_report"]["metrics"], {"usage": 1})
+            self.assertEqual(slice_["run_report"]["provenance"][0]["sha256"], "a" * 64)
 
 
 class MaindObservabilityCase(unittest.TestCase):

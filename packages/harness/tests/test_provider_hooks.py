@@ -159,10 +159,16 @@ class ProviderHookTests(unittest.TestCase):
             plan = plan_artifact_lock(root, (artifact,), lock_bytes=None)
             apply_plan(root, plan)
             handler = root / ".codex/hooks/analytics-capture.py"
-            observed = subprocess.run([sys.executable, str(handler)], input=json.dumps(
+            rejected = subprocess.run([sys.executable, str(handler)], input=json.dumps(
                 {"session_id": "s", "occurred_at": "2026-07-22T00:00:00Z", "metrics": {"usage": 1},
-                 "prompt": "must-not-persist"}).encode(), stdout=subprocess.PIPE, check=True)
-            self.assertNotIn("prompt", observed.stdout.decode("utf-8"))
+                 "prompt": "must-not-persist"}).encode(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            self.assertEqual(rejected.returncode, 2)
+            observed = subprocess.run([sys.executable, str(handler)], input=json.dumps(
+                {"session_id": "s", "occurred_at": "2026-07-22T00:00:00Z", "metrics": {"usage": 1}}).encode(),
+                stdout=subprocess.PIPE, check=True)
+            payload = json.loads(observed.stdout)
+            self.assertEqual(payload["metrics"], {"usage": 1})
+            self.assertIn("source_sha256", payload)
 
 
 if __name__ == "__main__":

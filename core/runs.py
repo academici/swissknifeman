@@ -19,6 +19,8 @@ ANALYTICS_PROVIDER_IDS = frozenset(("claude-code", "codex"))
 ANALYTICS_METRICS = frozenset((
     "tools", "files", "workflows", "retrieval", "devloop", "maind", "usage", "reads", "errors",
 ))
+ANALYTICS_EVENT_KINDS = frozenset(("run_summary",))
+ANALYTICS_OUTCOMES = frozenset(("ok", "failed", "unknown"))
 _EVENT_FIELDS = frozenset((
     "contract_version", "provider_id", "session_id", "project_id", "event_id", "occurred_at",
     "event_kind", "outcome", "metrics", "provenance",
@@ -54,8 +56,10 @@ class EventEnvelope:
             raise ValueError("unsupported normalized analytics contract")
         if value["provider_id"] not in ANALYTICS_PROVIDER_IDS:
             raise ValueError("unknown normalized analytics provider")
-        if not all(isinstance(value[name], str) and value[name] for name in (
-                "session_id", "project_id", "event_id", "event_kind", "outcome")):
+        if (not all(isinstance(value[name], str) and value[name] for name in (
+                "session_id", "project_id", "event_id", "event_kind", "outcome"))
+                or value["event_kind"] not in ANALYTICS_EVENT_KINDS
+                or value["outcome"] not in ANALYTICS_OUTCOMES):
             raise ValueError("invalid normalized analytics identity")
         if not isinstance(value["occurred_at"], str) or not value["occurred_at"].endswith("Z"):
             raise ValueError("normalized analytics timestamp must be UTC")
@@ -70,6 +74,7 @@ class EventEnvelope:
         if (not isinstance(provenance["raw_ref"], str)
                 or not provenance["raw_ref"].startswith("local:")
                 or "/" in provenance["raw_ref"].removeprefix("local:")
+                or ".." in provenance["raw_ref"]
                 or not isinstance(provenance["sha256"], str)
                 or not _SHA256.fullmatch(provenance["sha256"])
                 or not all(isinstance(provenance[name], str) and provenance[name]

@@ -50,3 +50,17 @@ def read_events(project_path):
             except (ValueError, TypeError):
                 continue
     return result
+
+
+def run_report(project_path, session_id=None):
+    """Deterministic semantic projection with every contributing provenance record."""
+    events = [event for event in read_events(project_path)
+              if session_id is None or event.session_id == session_id]
+    events.sort(key=lambda event: (event.occurred_at, event.event_id))
+    metrics = {}
+    for event in events:
+        for name, value in event.metrics.items():
+            metrics[name] = metrics.get(name, 0) + value
+    return {"contract_version": "1.0.0", "session_id": session_id,
+            "events": len(events), "metrics": {name: metrics[name] for name in sorted(metrics)},
+            "provenance": [dict(event.provenance) for event in events]}

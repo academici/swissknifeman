@@ -15,9 +15,11 @@ def cmd_capture(env, argv):
         return
     try:
         schema = int(opts["schema"] or "")
-        raw = json.loads(Path(opts["input"] or "").read_text(encoding="utf-8"))
+        source_bytes = Path(opts["input"] or "").read_bytes()
+        raw = json.loads(source_bytes)
         event = normalize(opts["provider"] or "", schema, raw, project_id=Path(os.getcwd()).name,
-                          raw_ref="local:capture")
+                          raw_ref="local:capture", source_bytes=source_bytes,
+                          declared_sha256=__import__("hashlib").sha256(source_bytes).hexdigest())
     except (OSError, ValueError, TypeError) as exc:
         die(str(exc))
     if not opts["dry_run"]:

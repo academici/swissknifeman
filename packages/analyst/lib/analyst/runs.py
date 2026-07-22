@@ -7,8 +7,10 @@ from .events import append_event, read_events
 from .readers import reader_for
 
 
-def normalize(provider_id, schema, raw, *, project_id, raw_ref):
-    return reader_for(provider_id, schema).normalize(raw, project_id=project_id, raw_ref=raw_ref)
+def normalize(provider_id, schema, raw, *, project_id, raw_ref, source_bytes=None, declared_sha256=None):
+    return reader_for(provider_id, schema).normalize(
+        raw, project_id=project_id, raw_ref=raw_ref, source_bytes=source_bytes,
+        declared_sha256=declared_sha256)
 
 
 def migrate_legacy(project_path, *, project_id, source, operation="plan"):
@@ -22,17 +24,21 @@ def migrate_legacy(project_path, *, project_id, source, operation="plan"):
         raw = json.loads(before)
     except ValueError as exc:
         raise ValueError("ANALYTICS_CORRUPT_EVENT") from exc
+    source_hash = hashlib.sha256(before).hexdigest()
     event = normalize("claude-code", 2, raw, project_id=project_id,
-                      raw_ref="local:legacy-" + hashlib.sha256(before).hexdigest()[:16])
+                      raw_ref="local:legacy-" + source_hash[:16], source_bytes=before,
+                      declared_sha256=source_hash)
     found = [item for item in read_events(project_path)
              if (item.provider_id, item.project_id, item.session_id, item.event_id)
              == (event["provider_id"], event["project_id"], event["session_id"], event["event_id"])]
     if found and found[0].provenance["sha256"] != event["provenance"]["sha256"]:
         raise ValueError("ANALYTICS_MIGRATION_CONFLICT")
-    result = {"operation": operation, "event_id": event["event_id"], "would_copy": not bool(found)}
+    result = {"operation": operation, "event_id": event["event_id"], "would_copy": not bool(found),
+              "source_sha256": source_hash}
     if operation == "apply" and not found:
         append_event(project_path, event, audit={"code": "ANALYTICS_LEGACY_INFERRED_PROVIDER",
-                                                 "reader_version": "1.0.0", "redaction": "passed"})
+                                                 "reader_version": "1.0.0", "redaction": "passed",
+                                                 "source_sha256": source_hash})
         if source.read_bytes() != before:
             raise ValueError("ANALYTICS_MIGRATION_CONFLICT")
         result["copied"] = True

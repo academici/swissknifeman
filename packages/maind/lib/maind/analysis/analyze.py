@@ -111,12 +111,19 @@ _PENDING_LESSON_STATES = ("ephemeral", "candidate")
 def pending_lessons(project_path):
     """Сколько уроков analyst ждут ревью человека (ephemeral+candidate). 0 если каталога нет.
     Read-only счётчик файлов — analyst-стор живёт в <project>/.claude/analyst/lessons/<state>/."""
-    base = Path(os.path.expanduser(str(project_path))) / ".claude" / "analyst" / "lessons"
+    roots = (Path(os.path.expanduser(str(project_path))) / ".swissknife" / "analyst" / "lessons",
+             Path(os.path.expanduser(str(project_path))) / ".claude" / "analyst" / "lessons")
     total = 0
-    for state in _PENDING_LESSON_STATES:
-        d = base / state
-        if d.is_dir():
-            total += sum(1 for p in d.glob("*.json") if p.is_file())
+    seen = set()
+    for base in roots:
+        for state in _PENDING_LESSON_STATES:
+            d = base / state
+            if d.is_dir():
+                for p in d.glob("*.json"):
+                    key = (state, p.name)
+                    if p.is_file() and key not in seen:
+                        seen.add(key)
+                        total += 1
     return total
 
 
@@ -124,7 +131,16 @@ def analytics_slice(project_path, session=None):
     """Neutral analytics consumer; it deliberately has no provider raw-path knowledge."""
     events = find_analytics_events(project_path, session=session)
     providers = sorted({event.provider_id for event in events})
-    return {"events": len(events), "providers": providers}
+    metrics = {}
+    provenance = []
+    for event in sorted(events, key=lambda item: (item.occurred_at, item.event_id)):
+        for name, value in event.metrics.items():
+            metrics[name] = metrics.get(name, 0) + value
+        provenance.append(dict(event.provenance))
+    return {"events": len(events), "providers": providers,
+            "run_report": {"contract_version": "1.0.0", "session_id": session,
+                           "metrics": {name: metrics[name] for name in sorted(metrics)},
+                           "provenance": provenance}}
 
 
 # ── источник 5: health (хаб жив? переиспользуем health_report) ────────────────

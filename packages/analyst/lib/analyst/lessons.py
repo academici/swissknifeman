@@ -31,7 +31,11 @@ ACTIVE_STATES = ("curated", "candidate", "ephemeral")
 
 # ── пути ─────────────────────────────────────────────────────────────────────
 def project_dir(project_path):
-    """<project>/.claude/analyst — корень per-project стора уроков."""
+    """New human-curated analyst state; legacy Claude state remains read-only fallback."""
+    return Path(os.path.expanduser(str(project_path))) / ".swissknife" / "analyst"
+
+
+def legacy_project_dir(project_path):
     return Path(os.path.expanduser(str(project_path))) / ".claude" / "analyst"
 
 
@@ -103,13 +107,16 @@ def new_lesson(*, trigger, action, kind="heuristic", scope, session_id="",
 
 # ── чтение ───────────────────────────────────────────────────────────────────
 def _iter_state(project_path, state):
-    d = state_dir(project_path, state)
-    if not d.is_dir():
-        return
-    for p in sorted(d.glob("*.json")):
-        rec = safe_load_json(p, None)
-        if isinstance(rec, dict):
-            yield rec
+    seen = set()
+    for base in (project_dir(project_path), legacy_project_dir(project_path)):
+        d = base / "lessons" / state
+        if not d.is_dir():
+            continue
+        for p in sorted(d.glob("*.json")):
+            rec = safe_load_json(p, None)
+            if isinstance(rec, dict) and rec.get("id") not in seen:
+                seen.add(rec.get("id"))
+                yield rec
 
 
 def list_lessons(project_path, state=None):
@@ -125,11 +132,12 @@ def list_lessons(project_path, state=None):
 def find_lesson(project_path, lesson_id):
     """(lesson, state) первого совпадения по id (порядок STATES) или (None, None)."""
     for st in STATES:
-        p = state_dir(project_path, st) / f"{lesson_id}.json"
-        if p.is_file():
-            rec = safe_load_json(p, None)
-            if isinstance(rec, dict):
-                return rec, st
+        for base in (project_dir(project_path), legacy_project_dir(project_path)):
+            p = base / "lessons" / st / f"{lesson_id}.json"
+            if p.is_file():
+                rec = safe_load_json(p, None)
+                if isinstance(rec, dict):
+                    return rec, st
     return None, None
 
 

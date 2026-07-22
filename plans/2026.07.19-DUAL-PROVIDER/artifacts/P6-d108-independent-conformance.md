@@ -76,6 +76,38 @@ The before/after sorted SHA-256 inventory was identical:
 Absent before and after: `.swissknife.json`, `.codex/hooks/lifecycle.py`, and
 `.swissknifeman/provider-artifacts.lock.json`.
 
+## Attempt 2 after D112 — RED
+
+**Observed:** 2026-07-22  
+**Tree:** `279f1a54` (D112 P6.11 handoff correction)  
+**Mode:** the same independent frozen-input oracle; disposable-root tests plus one real-root
+`dry=True` public-facade reader. No live apply, repair, or rollback was invoked.
+
+The frozen D108 candidate still has the exact `.mcp.json` preimage
+`sha256:cf4537196c3fefd6fd3980221bd3677f74e7867392ad49364e1e891e1f7c8283`, whole-file
+boundary and server IDs `maind`, `perplexity-web`, `serena`. D112 is independently visible:
+the carrier plans the dual Claude Code + Codex tuple from the configured canonical root.
+The composed chain nevertheless refuses before a writer because the Claude artifact rendered by
+the P6 semantic inventory has SHA-256
+`07a033b440f0d2d3031b4b656601b648f33a238cc138e5a9dee95485fe342c95` and server IDs
+`maind`, `codegraph`, `perplexity`, rather than the sealed D108 expected bytes and IDs.
+`plan_chained_bootstrap_transfer` therefore returns
+`chained-bootstrap-mcp-expected-invalid` for all three records; the public reader reports
+`MAIND_D108_CHAIN_REFUSED`.
+
+Focused committed regressions remain green: the P2.7 provider-lock suite passed 26 tests and
+the P6.11 provider/deploy suites passed 49 tests. The real-root reader patched
+`apply_d108_operation`; its writer count was `0`, and the before/after protected inventory was
+identical: `.mcp.json` `cf4537196c3fefd6fd3980221bd3677f74e7867392ad49364e1e891e1f7c8283`,
+`.codex/hooks.json` `7d7538d021228e8e61d124f4b60b6db04434f8121de30b8672f05e4bf038c3db`, and
+`.codex/config.toml` `68df0b5bcc069ce64c24aeb63c2bb08773219dff83526398ddba247dee6fb2bc`.
+
+**Required bounded repair:** reopen only the P6.11 semantic-inventory/render seam so its
+planned Claude `.mcp.json` artifact is byte-identical to the sealed D108 candidate and exposes
+exactly `maind`, `perplexity-web`, `serena`; preserve D112 canonical-root and planned-dual
+behavior. No frozen D108 value, P2 ownership rule, live carrier, P7, FOREMAN, fleet, tag, push,
+or cleanup authority changes.
+
 ## Required bounded repair
 
 Reopen only P6.11's project-operation seam. Its fix must construct provider base projections

@@ -59,8 +59,12 @@ class ClaudeRunReportReader:
                 by_name = tools["by_name"]
                 if not isinstance(by_name, dict):
                     raise ValueError("ANALYTICS_CORRUPT_EVENT")
-                if "Read" in by_name:
-                    metrics["reads"] = _number(by_name["Read"])
+        reads = raw.get("reads")
+        if reads is not None:
+            if not isinstance(reads, dict):
+                raise ValueError("ANALYTICS_CORRUPT_EVENT")
+            if "total" in reads:
+                metrics["reads"] = _number(reads["total"])
         for raw_name, metric_name in (("files_changed", "files"), ("workflows", "workflows"),
                                       ("tool_failures", "errors")):
             if raw_name in raw:

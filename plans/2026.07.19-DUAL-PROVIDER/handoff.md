@@ -1,29 +1,32 @@
 # HANDOFF — 2026-07-22 — after P7.1
 
-**Next:** run-items: task:plan-run 2026.07.19-DUAL-PROVIDER P7.1
+**Next:** run-items: task:plan-run 2026.07.19-DUAL-PROVIDER P7.2
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | frontier |
-| Effort | xhigh |
+| Model class | implementation |
+| Effort | high |
 | Capabilities | command.filesystem-read · command.filesystem-write · command.git-read · command.git-write |
 | Context | same-session — item |
-| Суть | Materialize and approve the frozen capability manifest, wire production gates, then generate/check provider docs. |
+| Суть | Isolated, затем owner-gated live self-host E2E с rollback и provider-tagged evidence. |
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman --no-alt-screen -m gpt-5.6-sol -c 'model_reasoning_effort="xhigh"' -a never -s danger-full-access 'Выполни $ task:plan-run 2026.07.19-DUAL-PROVIDER P7.1 в новой сессии. Начни с plans/2026.07.19-DUAL-PROVIDER/research/22-p7-capability-manifest-remediation.md и plans/2026.07.19-DUAL-PROVIDER/findings/P7.1-capability-manifest-gap-2026-07-22.md. Собери exact manifest candidate + shared-core contribution review; до production switch выдай один exact Owner D# и approval-строку, затем продолжи тот же item после ответа. Только P7.1; frozen semantics, closed predecessor deliverables, P7.2+, live provider outputs, FOREMAN, fleet, dirty root и push не трогать. После GREEN не запускай successor: закончи exact P7.2 launch-block из roadmap.md.'
+codex -C /home/vostrikov/projects/packages/swissknifeman --no-alt-screen \
+  -m gpt-5.6-terra -c 'model_reasoning_effort="high"' \
+  -a never -s danger-full-access \
+  'Выполни $ task:plan-run 2026.07.19-DUAL-PROVIDER P7.2 в новой сессии. Сначала isolated Claude-only, Codex-only и dual-provider matrix с rollback; до доказанного GREEN live state не менять. На owner gate выдай exact D#, exact path/action inventory и одну approval-строку; не спрашивай заранее. Не исправляй package source в evidence item. Только P7.2; закрытые predecessor phases, P7.3+, FOREMAN, fleet и push не трогать. После GREEN не запускай successor: закончи exact P7.3 launch-block из roadmap.md.'
 ```
 
-**Done:** D98 зафиксировал root cause второго P7.1 escalation: отсутствовали не только docs renderer/check, но и normative manifest carrier + production consumption. P7.1 переписан как один bounded manifest→gates→docs hotspot; hook dry-run D97 остаётся non-blocking.
+**Done:** P7.1 terminal GREEN. D99 утвердил canonical capability manifest; shared core validator/projection, production gates и generated provider docs закрыты. Item commits: D101 test-only `6805ca26`, implementation/docs `4177967c`, final conformance `d68ec94d`.
 
-**Remaining:** P7.1 execution + in-item manifest approval → P7.2 → P7.3 → P7.4 → P7 close/audit. FOREMAN и fleet остаются вне scope.
+**Remaining:** P7.2 → P7.3 → P7.4 → P7 close/audit. P7.2 начинает только isolated matrix; live apply остаётся закрыт до exact Owner D#.
 
-**Sources of truth:** `phases/P7.md` P7.1; `research/22-p7-capability-manifest-remediation.md`; `findings/P7.1-capability-manifest-gap-2026-07-22.md`; frozen `root/contracts/provider-capability-contract.md`; accepted `root/adr/0001-provider-adapter-architecture.md`; P3–P6 conformance artifacts.
+**Sources of truth:** `configs/provider-capabilities.json`; `core/provider_manifest.py`; `README.md`; `docs/provider-support.md`; `artifacts/P7-capability-manifest-review.md`; `artifacts/P7-provider-docs-conformance.md`; `phases/P7.md` P7.1.
 
-**Open risks:** exact catalog content/support evidence and additive core/public API require explicit in-item Owner D#; any frozen-schema insufficiency must stop and escalate rather than create a package-local fallback. P7.2–P7.4 gates remain closed.
+**Open risks:** P7.2 требует owner gate на exact live path/action set после isolated GREEN и rollback rehearsal. Stale global Claude-only run-report hook из `findings/P7.1-codex-hook-preflight-2026-07-22.md` разрешается только в этом live gate; P7.3+ закрыты.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: none accepted; no hand-authored or output-derived support matrix.
-- deferred: live self-host, cleanup, release verdict, FOREMAN/fleet, tag and push remain later authority.
-- open_questions: none at design level; exact catalog candidate is the explicit P7.1 owner gate.
+- workarounds: none.
+- deferred: live self-host, cleanup, release verdict, FOREMAN/fleet, tag and push.
+- open_questions: none до появления exact P7.2 live inventory.

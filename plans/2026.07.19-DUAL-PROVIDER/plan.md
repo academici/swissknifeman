@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.4.37 |
+| Version | 1.4.38 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
@@ -124,7 +124,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P4 | Task-command parity и provider-neutral model routing | 5/5 | 🟢 Done |
 | P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 7/7 | 🟢 Done |
 | P6 | mAInd deployment, memory и provider-neutral analytics | 6/6 | 🟢 Done |
-| P7 | Docs, self-hosting validation и FOREMAN release gate | 0/4 | 🟡 In progress |
+| P7 | Docs, self-hosting validation и FOREMAN release gate | 1/4 | 🟡 In progress |
 
 ## 5. Decision Log
 
@@ -228,11 +228,15 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | D96 | 2026-07-22 | P7 исполняется четырьмя отдельными внешними Codex-сессиями: P7.1, P7.2, P7.3 и P7.4 получают собственную routed shell-команду; `resume --last`, продолжение в текущем чате и автоматический переход без новой команды запрещены. Финал каждого terminal GREEN item обязан предложить полный copy-paste launch следующего шага; P7.4 предлагает отдельный P7 close, а P7 close — следующий GREEN-gated маршрут. | RAG:— (owner-grounded: прямое требование владельца 2026-07-22; repo-grounded: `roadmap.md` P7 session-by-session execution process, `phases/P7.md`, §3 Routing) — сохраняет последовательную зависимость items и owner gates, не меняя P7 contracts или scope. |
 | D97 | 2026-07-22 | P7.1 records the synthetic Codex hook deploy dry-run as a non-blocking environment observation: it proposes a lifecycle hook create but sees an unmanaged existing target; P7.1 docs generation neither deploys nor repairs hooks. | RAG:— (repo-grounded: `findings/P7.1-codex-hook-preflight-2026-07-22.md`, `phases/P7.md`) — this observation does not reopen P6.2 or expand P7.1 scope. |
 | D98 | 2026-07-22 | P7.1 supersedes its docs-only specification with one bounded capability-manifest hotspot repair: root `configs/provider-capabilities.json` becomes the sole support/binding/evidence/diagnostic carrier; a pure shared validator projects it into production adapter gates; only then may the named docs write/check operation derive README and provider reference. Frozen schema/provider semantics stay unchanged; exact catalog bytes and additive core/public seam require an in-item Owner D#. | RAG:— (repo-grounded: `findings/P7.1-capability-manifest-gap-2026-07-22.md`, `research/22-p7-capability-manifest-remediation.md`, frozen capability contract and ADR-0001) — no normative manifest carrier or production consumer existed, so hand-authored/output-derived docs had an empty feasible set; the single-hotspot fix preserves D2/D3/D55 and keeps live/FOREMAN/fleet outside scope. |
+| D99 | 2026-07-22 | Approval Owner атомарно принимает P7.1 CAPABILITY-MANIFEST SHA256 `4c479c697c708cfea8d36589c435338094d894bcf428687709987975b13b6ce1` и `SETS-API-SEMVER AS WRITTEN`: contract/catalog `1.0.0/1.0.0`, exact 35 common capabilities, 70 provider support rows, 0 Native Extensions, supplied-path-only fail-closed `core.provider_manifest` API и additive minor shared-core SemVer. | RAG:— (owner-grounded: exact approval `APPROVE P7.1 D99 CAPABILITY-MANIFEST SHA256:4c479c697c708cfea8d36589c435338094d894bcf428687709987975b13b6ce1 SETS-API-SEMVER AS WRITTEN`; repo-grounded: `artifacts/P7-capability-manifest-review.md`, canonical candidate bytes) — разрешает только завершение P7.1 production gates/tests/docs/conformance; P7.2+, live provider outputs, frozen semantics, FOREMAN, fleet, tag and push remain excluded. |
+| D100 | 2026-07-22 | P7.1 Files contract-neutral уточнён одним фактическим production caller `packages/maind/lib/maind/provision/deploy.py`: именно он содержит запрещённый mandatory-grep hardcode `ProviderConfigCatalog(...)` и должен переключиться на уже предписанную manifest-backed maind config seam. | RAG:— (repo-grounded: P7.1 Validation literal и terminal tree `packages/maind/lib/maind/provision/deploy.py`; owner-grounded: D66 automatic contract-neutral fix-forward) — исправляет только ошибочный path allowlist внутри существующего D98 maind production gate; D99 bytes/API/SemVer, frozen semantics, P7.2+, live outputs, FOREMAN, fleet and push remain unchanged. |
+| D101 | 2026-07-22 | Approval Owner разрешает ровно test-only baseline repair в `packages/maind/tests/test_deploy.py`: stale assertion ожидает bare `maind`, уже выдаваемый production P6 carrier; production code, rendered output и P6 product semantics не меняются. | RAG:— (owner-grounded: exact approval `APPROVE P7.1 D101 TEST-ONLY BASELINE REPAIR: packages/maind/tests/test_deploy.py EXPECTS BARE "maind"; NO P6 PRODUCT/OUTPUT SEMANTICS CHANGE`; repo-grounded: HEAD `c9265ebf`, closed P6 commit `64ecaa01`) — снимает единственный inherited full-maind validation blocker без reopen P6, изменения D99/D100 или authority на P7.2+, live outputs, FOREMAN, fleet and push. |
 
 ## 6. Update Log
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-22 | task-plan-run / gpt-5.6-sol/xhigh | P7.1 закрыт: D99 manifest, production gates и generated docs GREEN; D100/D101 — contract-neutral owner-authorized corrections. Детали см. phases/P7.md P7.1 Completion Notes. |
 | 2026-07-22 | task-plan-design / gpt-5.6-sol/high | D98 довёл P7.1 до DoR: missing manifest/production gate/docs operation объединены в один contract-preserving hotspot; route повышен до Sol/xhigh manual, P7 снова 🟡. |
 | 2026-07-22 | plan-exec / gpt-5.6-terra/medium | P7.1 escalation corrected by owner direction: the hook deploy dry-run is non-blocking for docs; P6.2 remains terminal and P7.1 continues. |
 | 2026-07-22 | plan-exec / gpt-5.6-terra/medium | P7.1 preflight blocked: the synthetic Codex hook probe found an unmanaged lifecycle target and a missing handler; P6.2 is routed to bounded redesign before any docs generation. |

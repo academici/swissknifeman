@@ -193,8 +193,9 @@ dry-run remain no-write; live application remains a separate owner-gated consume
 ### D110 chained bootstrap-transfer transaction
 
 Closed v1.3.0 composition is available only through an immutable descriptor containing the
-sealed D104 descriptor plus `decision_id = D108`, root-relative `.mcp.json`, artifact ID
-`maind.provider-deploy.claude-code`, whole-file boundary, preimage
+sealed complete D104 `ArtifactPlan` (exact actions, expected bytes/provenance and two-record
+lock), its D104 descriptor, plus `decision_id = D108`, root-relative `.mcp.json`, artifact ID
+`maind.provider-deploy.claude-code`, immutable `("whole-file", ())` boundary, preimage
 `sha256:cf4537196c3fefd6fd3980221bd3677f74e7867392ad49364e1e891e1f7c8283`, and the exact server-ID
 set `maind`, `perplexity-web`, `serena`. Any different path, ID, boundary, preimage, expected
 bytes/server set, D104 predecessor, present lock, created target or backup refuses before write.

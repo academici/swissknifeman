@@ -102,10 +102,12 @@ class ChainedBootstrapTransferAdmission:
     """The sole D108 composition of the sealed D104 admission and MCP record."""
 
     bootstrap_admission: BootstrapTransferAdmission
+    predecessor_plan: object
     decision_id: str
     mcp_target_path: str
     mcp_preimage_sha256: str
     mcp_artifact_id: str
+    mcp_managed_boundary: tuple[str, tuple[str, ...]]
     mcp_server_ids: tuple[str, ...]
 
     def __post_init__(self) -> None:
@@ -120,6 +122,12 @@ class ChainedBootstrapTransferAdmission:
             raise ValueError("chained bootstrap MCP preimage must be a SHA-256 digest")
         if not _IDENTIFIER_RE.fullmatch(self.mcp_artifact_id):
             raise ValueError("chained bootstrap MCP artifact ID is invalid")
+        if (not isinstance(self.mcp_managed_boundary, tuple) or
+                len(self.mcp_managed_boundary) != 2 or
+                not isinstance(self.mcp_managed_boundary[0], str) or
+                not isinstance(self.mcp_managed_boundary[1], tuple) or
+                not all(isinstance(block_id, str) for block_id in self.mcp_managed_boundary[1])):
+            raise TypeError("chained bootstrap MCP boundary must be an immutable boundary tuple")
         if (not isinstance(self.mcp_server_ids, tuple) or
                 not all(isinstance(server_id, str) for server_id in self.mcp_server_ids)):
             raise TypeError("chained bootstrap MCP server IDs must be a tuple of strings")
@@ -418,7 +426,7 @@ def apply_plan(root: Path, plan: ArtifactPlan) -> ArtifactPlan:
         return _apply_chained_bootstrap_transfer(root, plan)
     if plan.bootstrap_transfer is not None:
         return _apply_bootstrap_transfer(root, plan)
-    if _is_chained_bootstrap_transfer_shape(plan):
+    if _contains_reserved_transfer_reconstruction(plan):
         raise ValueError("chained bootstrap transfer plan is missing admission")
     if _is_bootstrap_transfer_shape(plan):
         raise ValueError("bootstrap transfer plan is missing admission")
@@ -476,6 +484,7 @@ def _chained_bootstrap_admission_error(
             admission.mcp_target_path != _CHAINED_MCP_TARGET or
             admission.mcp_preimage_sha256 != _CHAINED_MCP_PREIMAGE or
             admission.mcp_artifact_id != _CHAINED_MCP_ARTIFACT or
+            admission.mcp_managed_boundary != ("whole-file", ()) or
             admission.mcp_server_ids != _CHAINED_MCP_SERVERS):
         return "chained-bootstrap-admission-invalid"
     by_target = {result.target.path: result for result in results}
@@ -483,15 +492,32 @@ def _chained_bootstrap_admission_error(
                         _CHAINED_MCP_TARGET}
     if set(by_target) != required_targets:
         return "chained-bootstrap-target-set-invalid"
-    predecessor_results = tuple(by_target[target] for target in (
-        _BOOTSTRAP_EXISTING_TARGET, _BOOTSTRAP_CREATED_TARGET))
+    predecessor = admission.predecessor_plan
+    if not isinstance(predecessor, ArtifactPlan):
+        return "chained-bootstrap-predecessor-invalid"
+    predecessor_results = tuple(sorted((action.expected for action in predecessor.actions),
+                                       key=lambda result: result.target.path))
+    if (predecessor.bootstrap_transfer != admission.bootstrap_admission or
+            predecessor.chained_bootstrap_transfer is not None or
+            predecessor.lock_path != LOCK_RELATIVE_PATH):
+        return "chained-bootstrap-predecessor-invalid"
     predecessor_error = _bootstrap_admission_error(
         admission.bootstrap_admission, predecessor_results, lock_bytes, root)
     if predecessor_error is not None:
         return predecessor_error
+    expected_predecessor_lock = ArtifactLock(
+        LOCK_SCHEMA_VERSION, tuple(result.provenance for result in predecessor_results))
+    predecessor_actions = {action.target_path: action for action in predecessor.actions}
+    if (predecessor.next_lock != expected_predecessor_lock or
+            set(predecessor_actions) != {_BOOTSTRAP_EXISTING_TARGET, _BOOTSTRAP_CREATED_TARGET} or
+            predecessor_actions[_BOOTSTRAP_EXISTING_TARGET].action is not ArtifactActionKind.UPDATE or
+            predecessor_actions[_BOOTSTRAP_CREATED_TARGET].action is not ArtifactActionKind.CREATE or
+            any(by_target[target] != predecessor_actions[target].expected for target in
+                (_BOOTSTRAP_EXISTING_TARGET, _BOOTSTRAP_CREATED_TARGET))):
+        return "chained-bootstrap-predecessor-invalid"
     mcp = by_target[_CHAINED_MCP_TARGET]
     if (mcp.provenance.artifact_id != _CHAINED_MCP_ARTIFACT or
-            mcp.provenance.managed_boundary != ("whole-file", ())):
+            mcp.provenance.managed_boundary != admission.mcp_managed_boundary):
         return "chained-bootstrap-mcp-artifact-invalid"
     if sha256_digest(mcp.managed_bytes) != _CHAINED_MCP_PREIMAGE:
         return "chained-bootstrap-mcp-expected-invalid"
@@ -747,21 +773,19 @@ def _is_bootstrap_transfer_shape(plan: ArtifactPlan) -> bool:
             created.expected.provenance.artifact_id == _BOOTSTRAP_CREATED_ARTIFACT)
 
 
-def _is_chained_bootstrap_transfer_shape(plan: ArtifactPlan) -> bool:
-    """Recognize a reconstructed D108 transaction before ordinary dispatch."""
-    actions_by_target = {action.target_path: action for action in plan.actions}
-    if set(actions_by_target) != {_BOOTSTRAP_EXISTING_TARGET, _BOOTSTRAP_CREATED_TARGET,
-                                   _CHAINED_MCP_TARGET}:
-        return False
-    existing = actions_by_target[_BOOTSTRAP_EXISTING_TARGET]
-    created = actions_by_target[_BOOTSTRAP_CREATED_TARGET]
-    mcp = actions_by_target[_CHAINED_MCP_TARGET]
-    return (existing.action is ArtifactActionKind.UPDATE and
-            created.action is ArtifactActionKind.CREATE and
-            mcp.action is ArtifactActionKind.NOOP and
-            existing.expected.provenance.artifact_id == _BOOTSTRAP_EXISTING_ARTIFACT and
-            created.expected.provenance.artifact_id == _BOOTSTRAP_CREATED_ARTIFACT and
-            mcp.expected.provenance.artifact_id == _CHAINED_MCP_ARTIFACT)
+def _contains_reserved_transfer_reconstruction(plan: ArtifactPlan) -> bool:
+    """Refuse unmarked writable D104/D108 ownership-conflict plans before ordinary apply."""
+    reserved = {
+        (_BOOTSTRAP_EXISTING_TARGET, _BOOTSTRAP_EXISTING_ARTIFACT),
+        (_BOOTSTRAP_CREATED_TARGET, _BOOTSTRAP_CREATED_ARTIFACT),
+        (_CHAINED_MCP_TARGET, _CHAINED_MCP_ARTIFACT),
+    }
+    for action in plan.actions:
+        identity = (action.target_path, action.expected.provenance.artifact_id)
+        if (identity in reserved and action.observation is DriftObservation.OWNERSHIP_CONFLICT and
+                action.action is not ArtifactActionKind.NOOP):
+            return True
+    return False
 
 
 def _bootstrap_write_state(root: Path, admission: BootstrapTransferAdmission,

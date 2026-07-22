@@ -25,9 +25,10 @@ new planner. It accepts exactly D104's two paths, IDs and preimage; it adds no t
 environment input, provider branch, global state or lock schema.
 
 `ChainedBootstrapTransferAdmission` is a second immutable, closed descriptor. It contains the
-sealed `BootstrapTransferAdmission` predecessor plus exactly `decision_id = D108`, target
+sealed complete D104 `ArtifactPlan` (actions, expected bytes/provenance and two-record lock) plus
+its `BootstrapTransferAdmission` predecessor, exactly `decision_id = D108`, target
 `.mcp.json`, preimage `sha256:cf4537196c3fefd6fd3980221bd3677f74e7867392ad49364e1e891e1f7c8283`,
-artifact ID `maind.provider-deploy.claude-code`, boundary `whole-file`, and ordered server IDs
+artifact ID `maind.provider-deploy.claude-code`, immutable boundary `("whole-file", ())`, and ordered server IDs
 `maind`, `perplexity-web`, `serena`. `plan_chained_bootstrap_transfer(root, expected, *,
 lock_bytes, admission)` is its sole planner. It accepts only the sealed D104 two-artifact
 predecessor plus that one unchanged MCP record, an absent canonical lock, and the exact

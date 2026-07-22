@@ -16,9 +16,11 @@ IDs and absent lock before every transaction write. It writes a recoverable firs
 the two targets, then one canonical lock. Failure rolls back only exact transaction-created state.
 
 D110 adds one v1.3.0 composition, not a second adoption path: an immutable
-`ChainedBootstrapTransferAdmission` embeds the sealed D104 predecessor and admits exactly one
+`ChainedBootstrapTransferAdmission` embeds the sealed complete D104 `ArtifactPlan` (actions,
+expected bytes/provenance and two-record lock), its D104 descriptor, and admits exactly one
 whole-file `.mcp.json` record, `maind.provider-deploy.claude-code`, only for preimage
-`sha256:cf4537196c3fefd6fd3980221bd3677f74e7867392ad49364e1e891e1f7c8283` whose expected JSON has
+`sha256:cf4537196c3fefd6fd3980221bd3677f74e7867392ad49364e1e891e1f7c8283`, immutable
+whole-file boundary, and expected JSON with
 the exact server-ID set `maind`, `perplexity-web`, `serena`. Its sole planner,
 `plan_chained_bootstrap_transfer`, preflights the D104 pair, MCP record, absent canonical lock,
 exact backup destinations and the canonical three-record final lock before the first write.

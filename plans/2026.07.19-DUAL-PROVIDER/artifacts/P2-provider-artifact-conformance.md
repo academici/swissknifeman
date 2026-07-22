@@ -42,10 +42,12 @@ and doctor consume an already-built immutable plan and do not call a writer.
   sentinel are snapshotted before/after under the fixture parent; delta is 0.
   No real repository, FOREMAN, or fleet root is passed to the engine.
 - D110 conformance builds only the sealed D104 hooks pair plus the exact whole-file MCP
-  record below `TemporaryDirectory`. It verifies the ordered three-record lock, preserves the
-  MCP bytes while retaining its recoverable backup, rejects every closed-admission mutation
-  before the writer, and injects a failure at each transaction write boundary to prove exact
-  rollback without a live-root path.
+  record below `TemporaryDirectory`. It uses hand-authored preimage bytes with real SHA-256
+  vectors, binds the D104 actions/bytes/provenance/two-record lock into the immutable admission,
+  verifies the ordered three-record lock, preserves the MCP bytes while retaining its recoverable
+  backup, rejects every closed-admission/predecessor/boundary mutation before the writer, and
+  injects a failure at each transaction write boundary to prove exact rollback without a live-root
+  path.
 
 ## Reproduction
 

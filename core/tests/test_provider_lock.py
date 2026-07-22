@@ -1,6 +1,7 @@
 """Conformance tests for P2.2 fail-closed artifact lock lifecycle."""
 import json
 import os
+from contextlib import contextmanager
 from dataclasses import replace
 from pathlib import Path
 import tempfile
@@ -64,9 +65,9 @@ class ProviderLockTests(unittest.TestCase):
                    target=".codex/hooks/lifecycle.py"),
         )
 
-    def bootstrap_admission(self):
+    def bootstrap_admission(self, digest=BOOTSTRAP_DIGEST):
         return BootstrapTransferAdmission(
-            "D104", ".codex/hooks.json", BOOTSTRAP_DIGEST,
+            "D104", ".codex/hooks.json", digest,
             ".codex/hooks/lifecycle.py", "harness.codex.lifecycle.hooks",
             "harness.codex.lifecycle.handler")
 
@@ -76,10 +77,24 @@ class ProviderLockTests(unittest.TestCase):
                    target=".mcp.json"),
         )
 
-    def chained_admission(self):
+    def chained_admission(self, predecessor, bootstrap_digest, mcp_digest):
         return ChainedBootstrapTransferAdmission(
-            self.bootstrap_admission(), "D108", ".mcp.json", MCP_DIGEST,
-            "maind.provider-deploy.claude-code", ("maind", "perplexity-web", "serena"))
+            self.bootstrap_admission(bootstrap_digest), predecessor, "D108", ".mcp.json", mcp_digest,
+            "maind.provider-deploy.claude-code", ("whole-file", ()),
+            ("maind", "perplexity-web", "serena"))
+
+    def chained_predecessor(self, root, bootstrap_digest):
+        return plan_bootstrap_transfer(
+            root, self.bootstrap_results(), lock_bytes=None,
+            admission=self.bootstrap_admission(bootstrap_digest))
+
+    @contextmanager
+    def chained_exact_vectors(self):
+        bootstrap_digest = REAL_SHA256_DIGEST(BOOTSTRAP_PREIMAGE)
+        mcp_digest = REAL_SHA256_DIGEST(MCP_PREIMAGE)
+        with patch.object(provider_lock, "_BOOTSTRAP_PREIMAGE", bootstrap_digest), patch.object(
+                provider_lock, "_CHAINED_MCP_PREIMAGE", mcp_digest):
+            yield bootstrap_digest, mcp_digest
 
     @staticmethod
     def bootstrap_digest(value):
@@ -399,9 +414,11 @@ class ProviderLockTests(unittest.TestCase):
         hooks.write_bytes(BOOTSTRAP_PREIMAGE)
         mcp.write_bytes(MCP_PREIMAGE)
         results = self.chained_results()
-        with patch.object(provider_lock, "sha256_digest", side_effect=self.bootstrap_digest):
+        with self.chained_exact_vectors() as (bootstrap_digest, mcp_digest):
+            predecessor = self.chained_predecessor(self.root, bootstrap_digest)
             planned = plan_chained_bootstrap_transfer(
-                self.root, results, lock_bytes=None, admission=self.chained_admission())
+                self.root, results, lock_bytes=None,
+                admission=self.chained_admission(predecessor, bootstrap_digest, mcp_digest))
             self.assertEqual(
                 {action.target_path: action.action for action in planned.actions},
                 {".codex/hooks.json": ArtifactActionKind.UPDATE,
@@ -428,35 +445,53 @@ class ProviderLockTests(unittest.TestCase):
         hooks.write_bytes(BOOTSTRAP_PREIMAGE)
         (self.root / ".mcp.json").write_bytes(MCP_PREIMAGE)
         results = self.chained_results()
-        mutations = (
-            replace(self.chained_admission(), decision_id="D109"),
-            replace(self.chained_admission(), mcp_target_path="other.mcp.json"),
-            replace(self.chained_admission(), mcp_preimage_sha256=HASH),
-            replace(self.chained_admission(), mcp_artifact_id="maind.other"),
-            replace(self.chained_admission(), mcp_server_ids=("maind", "serena")),
-        )
-        for admission in mutations:
-            with self.subTest(admission=admission), patch.object(
-                    provider_lock, "sha256_digest", side_effect=self.bootstrap_digest), patch.object(
-                    provider_lock, "_atomic_write_bytes", wraps=provider_lock._atomic_write_bytes) as writer:
-                planned = plan_chained_bootstrap_transfer(
-                    self.root, results, lock_bytes=None, admission=admission)
-                self.assertTrue(all(action.action is ArtifactActionKind.REFUSE for action in planned.actions))
-                with self.assertRaises(ValueError):
-                    apply_plan(self.root, planned)
-                self.assertEqual(writer.call_count, 0)
-        changed_boundary = list(results)
-        changed_boundary[2] = result(body=MCP_PREIMAGE,
-                                     artifact_id="maind.provider-deploy.claude-code",
-                                     target=".mcp.json", boundary=("managed-blocks", ("mcp",)))
-        with patch.object(provider_lock, "sha256_digest", side_effect=self.bootstrap_digest):
+        with self.chained_exact_vectors() as (bootstrap_digest, mcp_digest):
+            predecessor = self.chained_predecessor(self.root, bootstrap_digest)
+            admission = self.chained_admission(predecessor, bootstrap_digest, mcp_digest)
+            mutations = (
+                replace(admission, decision_id="D109"),
+                replace(admission, mcp_target_path="other.mcp.json"),
+                replace(admission, mcp_preimage_sha256=HASH),
+                replace(admission, mcp_artifact_id="maind.other"),
+                replace(admission, mcp_managed_boundary=("managed-blocks", ("mcp",))),
+                replace(admission, mcp_server_ids=("maind", "serena")),
+            )
+            for altered in mutations:
+                with self.subTest(admission=altered), patch.object(
+                        provider_lock, "_atomic_write_bytes", wraps=provider_lock._atomic_write_bytes) as writer:
+                    planned = plan_chained_bootstrap_transfer(
+                        self.root, results, lock_bytes=None, admission=altered)
+                    self.assertTrue(all(action.action is ArtifactActionKind.REFUSE for action in planned.actions))
+                    with self.assertRaises(ValueError):
+                        apply_plan(self.root, planned)
+                    self.assertEqual(writer.call_count, 0)
+            changed_boundary = list(results)
+            changed_boundary[2] = result(body=MCP_PREIMAGE,
+                                         artifact_id="maind.provider-deploy.claude-code",
+                                         target=".mcp.json", boundary=("managed-blocks", ("mcp",)))
             planned = plan_chained_bootstrap_transfer(
-                self.root, changed_boundary, lock_bytes=None, admission=self.chained_admission())
-        self.assertTrue(all(action.action is ArtifactActionKind.REFUSE for action in planned.actions))
-        with patch.object(provider_lock, "sha256_digest", side_effect=self.bootstrap_digest):
+                self.root, changed_boundary, lock_bytes=None, admission=admission)
+            self.assertTrue(all(action.action is ArtifactActionKind.REFUSE for action in planned.actions))
             locked = plan_chained_bootstrap_transfer(
-                self.root, results, lock_bytes=b"{}", admission=self.chained_admission())
-        self.assertTrue(all(action.action is ArtifactActionKind.REFUSE for action in locked.actions))
+                self.root, results, lock_bytes=b"{}", admission=admission)
+            self.assertTrue(all(action.action is ArtifactActionKind.REFUSE for action in locked.actions))
+            for index, changed in (
+                    (0, result(body=b'{"hooks":{"SessionStart":["changed"]}}\n',
+                               artifact_id="harness.codex.lifecycle.hooks",
+                               target=".codex/hooks.json")),
+                    (1, result(body=b"def lifecycle(event):\n    return 'changed'\n",
+                               artifact_id="harness.codex.lifecycle.handler",
+                               target=".codex/hooks/lifecycle.py"))):
+                with self.subTest(predecessor_index=index), patch.object(
+                        provider_lock, "_atomic_write_bytes", wraps=provider_lock._atomic_write_bytes) as writer:
+                    mutated_predecessor = list(results)
+                    mutated_predecessor[index] = changed
+                    planned = plan_chained_bootstrap_transfer(
+                        self.root, mutated_predecessor, lock_bytes=None, admission=admission)
+                    self.assertTrue(all(action.action is ArtifactActionKind.REFUSE for action in planned.actions))
+                    with self.assertRaises(ValueError):
+                        apply_plan(self.root, planned)
+                    self.assertEqual(writer.call_count, 0)
 
     def test_d108_chained_apply_refuses_stale_mcp_before_writer(self):
         hooks = self.root / ".codex/hooks.json"
@@ -464,9 +499,11 @@ class ProviderLockTests(unittest.TestCase):
         hooks.write_bytes(BOOTSTRAP_PREIMAGE)
         mcp = self.root / ".mcp.json"
         mcp.write_bytes(MCP_PREIMAGE)
-        with patch.object(provider_lock, "sha256_digest", side_effect=self.bootstrap_digest):
+        with self.chained_exact_vectors() as (bootstrap_digest, mcp_digest):
+            predecessor = self.chained_predecessor(self.root, bootstrap_digest)
             planned = plan_chained_bootstrap_transfer(
-                self.root, self.chained_results(), lock_bytes=None, admission=self.chained_admission())
+                self.root, self.chained_results(), lock_bytes=None,
+                admission=self.chained_admission(predecessor, bootstrap_digest, mcp_digest))
             mcp.write_bytes(b"stale\n")
             with patch.object(provider_lock, "_atomic_write_bytes", wraps=provider_lock._atomic_write_bytes) as writer:
                 with self.assertRaisesRegex(ValueError, "chained-bootstrap-mcp-preimage-mismatch"):
@@ -478,19 +515,28 @@ class ProviderLockTests(unittest.TestCase):
         hooks.parent.mkdir(parents=True)
         hooks.write_bytes(BOOTSTRAP_PREIMAGE)
         (self.root / ".mcp.json").write_bytes(MCP_PREIMAGE)
-        with patch.object(provider_lock, "sha256_digest", side_effect=self.bootstrap_digest):
+        with self.chained_exact_vectors() as (bootstrap_digest, mcp_digest):
+            predecessor = self.chained_predecessor(self.root, bootstrap_digest)
             planned = plan_chained_bootstrap_transfer(
-                self.root, self.chained_results(), lock_bytes=None, admission=self.chained_admission())
-            reconstructed = replace(planned, chained_bootstrap_transfer=None)
+                self.root, self.chained_results(), lock_bytes=None,
+                admission=self.chained_admission(predecessor, bootstrap_digest, mcp_digest))
+            mcp_action = next(action for action in planned.actions if action.target_path == ".mcp.json")
+            reconstructed = (
+                replace(planned, chained_bootstrap_transfer=None),
+                replace(planned, actions=(replace(mcp_action, action=ArtifactActionKind.UPDATE),),
+                        chained_bootstrap_transfer=None),
+            )
             before = tuple(sorted((path.relative_to(self.root).as_posix(), path.read_bytes())
                                   for path in self.root.rglob("*") if path.is_file()))
-            with patch.object(provider_lock, "_atomic_write_bytes", wraps=provider_lock._atomic_write_bytes) as writer:
-                with self.assertRaisesRegex(ValueError, "chained bootstrap transfer"):
-                    apply_plan(self.root, reconstructed)
+            for mutated in reconstructed:
+                with self.subTest(mutated=mutated), patch.object(
+                        provider_lock, "_atomic_write_bytes", wraps=provider_lock._atomic_write_bytes) as writer:
+                    with self.assertRaisesRegex(ValueError, "chained bootstrap transfer"):
+                        apply_plan(self.root, mutated)
+                    self.assertEqual(writer.call_count, 0)
         after = tuple(sorted((path.relative_to(self.root).as_posix(), path.read_bytes())
                              for path in self.root.rglob("*") if path.is_file()))
         self.assertEqual(after, before)
-        self.assertEqual(writer.call_count, 0)
 
     def test_d108_chained_write_failures_restore_exact_prestate(self):
         for failing_write in range(1, 6):
@@ -502,10 +548,11 @@ class ProviderLockTests(unittest.TestCase):
                 (root / ".mcp.json").write_bytes(MCP_PREIMAGE)
                 before = tuple(sorted((path.relative_to(root).as_posix(), path.read_bytes())
                                       for path in root.rglob("*") if path.is_file()))
-                with patch.object(provider_lock, "sha256_digest", side_effect=self.bootstrap_digest):
+                with self.chained_exact_vectors() as (bootstrap_digest, mcp_digest):
+                    predecessor = self.chained_predecessor(root, bootstrap_digest)
                     planned = plan_chained_bootstrap_transfer(
                         root, self.chained_results(), lock_bytes=None,
-                        admission=self.chained_admission())
+                        admission=self.chained_admission(predecessor, bootstrap_digest, mcp_digest))
                     writer = provider_lock._atomic_write_bytes
                     calls = 0
 

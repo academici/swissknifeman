@@ -1,19 +1,26 @@
 """P5.3 native lifecycle/context registration and payload adapters."""
 import json
+import hashlib
+import io
+import os
 import subprocess
 import sys
 import tempfile
 import unittest
+from contextlib import redirect_stdout
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "analyst" / "lib"))
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 from core import ArtifactActionKind, ProviderId, apply_plan, plan_artifact_lock, serialize_lock
 from harness.hooks import (LifecycleRequest, adapt_codex_hook_payload,
-                           plan_codex_lifecycle_artifacts, plan_lifecycle,
+                           plan_codex_capture_artifact, plan_codex_lifecycle_artifacts, plan_lifecycle,
                            render_codex_hooks)
 from harness.profiles import load_catalog
+from analyst.events import read_events
+from analyst.cli import main as analyst_main
 
 PACKAGE = Path(__file__).resolve().parents[1]
 CATALOG = PACKAGE / "configs/common/profile-catalog.json"
@@ -151,6 +158,37 @@ class ProviderHookTests(unittest.TestCase):
             second = plan_artifact_lock(root, artifacts, lock_bytes=lock)
             self.assertEqual([action.action for action in second.actions],
                              [ArtifactActionKind.NOOP, ArtifactActionKind.NOOP])
+
+    def test_generated_capture_bundle_redacts_to_supported_semantics(self):
+        artifact = plan_codex_capture_artifact(bindings_path=BINDINGS)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            plan = plan_artifact_lock(root, (artifact,), lock_bytes=None)
+            apply_plan(root, plan)
+            handler = root / ".codex/hooks/analytics-capture.py"
+            rejected = subprocess.run([sys.executable, str(handler)], input=json.dumps(
+                {"session_id": "s", "occurred_at": "2026-07-22T00:00:00Z", "metrics": {"usage": 1},
+                 "prompt": "must-not-persist"}).encode(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            self.assertEqual(rejected.returncode, 2)
+            observed = subprocess.run([sys.executable, str(handler)], input=json.dumps(
+                {"session_id": "s", "occurred_at": "2026-07-22T00:00:00Z", "metrics": {"usage": 1}}).encode(),
+                stdout=subprocess.PIPE, check=True)
+            payload_bytes = observed.stdout
+            payload = json.loads(payload_bytes)
+            self.assertEqual(payload["metrics"], {"usage": 1})
+            self.assertNotIn("source_sha256", payload)
+            source = root / "generated-capture.json"
+            source.write_bytes(payload_bytes)
+            cwd = os.getcwd()
+            try:
+                os.chdir(root)
+                with redirect_stdout(io.StringIO()):
+                    analyst_main([str(root), "capture", "--provider", "codex", "--schema", "1",
+                                  "--input", str(source)])
+            finally:
+                os.chdir(cwd)
+            event = read_events(root)[0]
+            self.assertEqual(event.provenance["sha256"], hashlib.sha256(payload_bytes).hexdigest())
 
 
 if __name__ == "__main__":

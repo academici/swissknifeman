@@ -6,6 +6,8 @@ The Claude renderer is a named adapter which receives that catalog plus explicit
 repository roots; it never scans the filesystem or reads another provider's
 manifest.
 """
+from __future__ import annotations
+
 from dataclasses import dataclass
 import json
 import shutil

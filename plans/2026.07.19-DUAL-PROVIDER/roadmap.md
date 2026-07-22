@@ -6,29 +6,12 @@
      Порядок строго phase-first: P0→P1→P2→P3→P4→P5→P6→P7. До finish + GREEN design
      audit исполнение любого item запрещено. -->
 
-**Обновлён:** 2026-07-21 · **Соответствует plan.md:** v1.4.20
+**Обновлён:** 2026-07-22 · **Соответствует plan.md:** v1.4.33
 
-> **Статус exec:** P0 закрыта и audit attempt 3 завершён literal GREEN на `245bb56`;
-> G01 открыт, P1 повторно закрыта после D74: P1.5 добавила committed synthetic G02 proof,
-> P1.6 валидировала two documentation projections и exact commit map. Следующий шаг — fresh
-> independent P1 audit literal GREEN на `2363b21`; P2 повторно закрыта после D76: P2.5
-> добавила fail-closed provenance/override, clean/noop no-write и managed-boundary/
-> project-override conformance. P2 audit is GREEN. P3 is terminal after D80 bundled
-> fail-closed remediation and D83 cache repair; G03 is GREEN and review PR #142 is merged.
-> P4.1–P4.5 are terminal with frozen command/routing v1.0.0, dual provider projections,
-> neutral plan gates and independent parity/operator docs. The one terminal task/skiller
-> validation and clean-tree registry check are GREEN. Next is fresh independent G04 audit;
-> P5 remains closed.
-> D71 исполнил D65/D68 reconciliation сейчас: `main` — active execution root, retained stash
-> `72505e4d8bef2a58f4ed555cc5b6014450aee3a9` сохраняет recovery point, unrelated owner dirt
-> возвращён unstaged. Это не открывает FOREMAN/fleet/live authority и не снимает P1.2 owner gate.
-> Исполнительские модели — только current ChatGPT/Codex family: Terra для prescribed
-> implementation, Sol для design/contracts/audit. GPT-5.6 Luna не используется на этом
-> public-contract/release critical path. RAG:✅ 2026-07-19
-> (`findings/P7-openai-model-routing-2026-07-19.md`).
-> D69: explicit fresh process на каждом manual item; inherited root xhigh не используется
-> как routine fallback. Каждая terminal phase получает fresh independent Sol/xhigh audit;
-> regression возвращается в owning phase по D58 до продолжения roadmap.
+> **Статус exec:** P0–P6 terminal. P6 audit attempt 1 был RED; bounded D94 repair
+> восстановил linked-worktree public health, regenerated provider-provision evidence,
+> current roadmap pointer и authorized protected baseline. Следующий шаг — fresh independent
+> P6 audit; P7+, live self-host, FOREMAN, fleet и push остаются закрыты.
 
 ## Карта исполнения
 
@@ -61,20 +44,20 @@
 | P4.2 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | ✅ task contribution | complete Codex adapter/catalog against frozen P4.1 |
 | P4.3 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | Claude command/plugin bytes preserved by independent golden |
 | P4.4 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/high | ✅ plan-protocol canon contribution | neutral routing/Next/capability canon and dual invocation |
-| P4.5 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | independent command/plan parity, generated docs and terminal close complete; next G04 audit |
-| P5.1 | solo | plan-run (manual) | gpt-5.6-sol/high | ✅ harness/security contract | owner-gated security/profile boundary до provider outputs |
-| P5.2 | solo | plan-run (manual) | gpt-5.6-terra/high | ✅ harness contribution | security projections против frozen contract; full review |
-| P5.3 | solo | plan-run (manual) | gpt-5.6-terra/high | ✅ always-on context budget | lifecycle/trust/context activation после P5.2; budget gate владельца |
-| P5.4 | solo | plan-run (manual) | gpt-5.6-terra/high | — | MCP/agent packs зависят от P5.3 lifecycle mappings |
-| P5.5 | solo | plan-exec | gpt-5.6-terra/medium | — | independent harness parity/doctor/docs gate |
-| P5.6 | solo | plan-run (manual) | gpt-5.6-sol/xhigh | ✅ instruction contract/source/managed-boundary freeze | public semantic parity/provenance contract; отдельный irreversible owner gate |
-| P5.7 | solo | plan-run (manual) | gpt-5.6-terra/high | ✅ harness contribution | prescribed catalog/renderer/conformance после frozen P5.6; full review |
-| P6.1 | solo | plan-run (manual) | gpt-5.6-terra/high | — | mAInd provider deploy loop против frozen P1/P2/P5 contracts |
-| P6.2 | solo | plan-run (manual) | gpt-5.6-terra/high | — | onboard/sync/security consumes P6.1 provider result shape |
-| P6.3 | solo | plan-run (manual) | gpt-5.6-sol/xhigh | ✅ analytics contract/privacy/migration | owner-gated schema/storage freeze; отдельный design item |
-| P6.4 | solo | plan-run (manual) | gpt-5.6-terra/high | ✅ shared-core/analyst contribution | multi-package readers/store migration после frozen P6.3 |
-| P6.5 | solo | plan-exec | gpt-5.6-terra/medium | — | integrated conformance + durable pre-restart checkpoint |
-| P6.6 | solo | plan-exec (NEW SESSION) | gpt-5.6-terra/medium | — | mandatory cold restart; нельзя объединять с P6.5 |
+| P4.5 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | independent command/plan parity, generated docs and terminal close complete; G04 GREEN |
+| P5.1 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/high | ✅ D85 harness/security contract | frozen security/profile boundary |
+| P5.2 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | ✅ harness contribution | security projections против frozen contract |
+| P5.3 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | ✅ always-on context budget | lifecycle/trust/context activation |
+| P5.4 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | — | MCP/agent packs; audit repair preserves valid P2 identities |
+| P5.5 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | independent harness parity/doctor/docs gate |
+| P5.6 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/xhigh | ✅ D86 instruction freeze | public semantic parity/provenance contract |
+| P5.7 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | ✅ D87 additive carrier | instruction renderer/conformance against frozen D86 |
+| P6.1 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | — | mAInd provider deploy loop против frozen P1/P2/P5 contracts |
+| P6.2 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | — | provider context/trust/instructions and exact 30-row provisioner matrix focused-green |
+| P6.3 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/xhigh | ✅ analytics contract/privacy/migration | owner-gated schema/storage freeze completed |
+| P6.4 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | ✅ shared-core/analyst contribution | multi-package readers/store migration completed after frozen P6.3 |
+| P6.5 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | integrated conformance + durable pre-restart checkpoint |
+| P6.6 | solo | plan-exec (NEW SESSION) — 🟢 | gpt-5.6-terra/medium | — | mandatory cold restart; нельзя объединять с P6.5 |
 | P7.1 | solo | plan-exec | gpt-5.6-terra/medium | — | generated docs + independent exact-set после GREEN P6.6 |
 | P7.2 | solo | plan-run (manual) | gpt-5.6-terra/high | ✅ D# на live apply после isolated GREEN | isolated→rollback→live self-host; security/release full review |
 | P7.3 | solo | plan-run (manual) | gpt-5.6-terra/high | ✅ D# на exact bootstrap cleanup inventory | guarded destructive cleanup и release manifest; отдельный rollback boundary |
@@ -110,27 +93,18 @@ terminal tree фазы. Полные правила и exact probes: `research/2
 
 ## Готовый launch-block текущего шага
 
-### G04 — independent P4 command/routing gate
+### P6 — fresh independent terminal audit
 
 | Параметр | Значение |
 |:--|:--|
 | Model class | frontier |
 | Effort | xhigh |
-| Capabilities | skills.repository · command.filesystem-read · command.git-read |
-| Context | cold-start — plan-step |
-| Суть | Fresh independent audit closed P4 and satisfy G04 without starting P5. |
+| Capabilities | command.filesystem-read · command.git-read |
+| Context | NEW SESSION — independent audit |
+| Суть | Audit reclosed P6 from committed evidence without rerunning P6.5 full validators; P7 remains closed until literal GREEN. |
 
 ```text
-$ task:plan-audit 2026.07.19-DUAL-PROVIDER P4
-
-Read plan.md, handoff.md, phases/P4.md, the frozen provider-command-routing contract,
-P4 contribution/conformance artifacts and committed P4.1–P4.5 history. Independently audit
-the exact task inventory, Claude byte compatibility, Codex cache-contained adapters,
-neutral route/capability diagnostics, semantic Next/provider invocations, generated docs
-and protected-path evidence. Confirm the recorded terminal package-validation evidence
-without rerunning package-wide validation. Record only Audit P4 evidence/verdict. RED
-returns to the owning P4 seam; GREEN satisfies G04. Do not execute P5+ or change frozen
-contracts, root adapters, live/user config, external plans, fleet or unrelated owner files.
+$ task:plan-audit 2026.07.19-DUAL-PROVIDER P6
 ```
 
 ## Гейты владельца (сводно)

@@ -43,6 +43,51 @@ class TestOnboard(unittest.TestCase):
             finally:
                 onb.run_capability = orig
 
+    def test_onboard_runs_instruction_provisioner_and_accepts_explicit_repair(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, env = make_repo(tmp)
+            _seed_config(root)
+            project = Path(tmp) / "instruction-project"
+            project.mkdir()
+            config, _ = load_config(env)
+            onb.onboard(env, config, str(project), {
+                "skip_skills": True, "yes": True, "dry": False,
+                "memory": "off", "repair": False,
+            })
+            (project / "CLAUDE.md").write_text(
+                (project / "CLAUDE.md").read_text(encoding="utf-8").replace("#", "# drifted", 1),
+                encoding="utf-8")
+            config, _ = load_config(env)
+            report = onb.onboard(env, config, str(project), {
+                "skip_skills": True, "yes": True, "dry": False,
+                "memory": "off", "repair": True,
+            })
+            step = next(item for item in report["steps"] if item["name"] == "instructions")
+            self.assertEqual(step["status"], "ok")
+            self.assertTrue((project / "CLAUDE.md").is_file())
+
+    def test_onboard_reuses_one_provider_context_for_deploy_and_instructions(self):
+        import maind.provision.deploy as deploy
+        original, calls = deploy.provider_projection_context, []
+        def counted(*args):
+            calls.append(args[2]["id"])
+            return original(*args)
+        deploy.provider_projection_context = counted
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                root, env = make_repo(tmp)
+                _seed_config(root)
+                project = Path(tmp) / "context-project"
+                project.mkdir()
+                config, _ = load_config(env)
+                onb.onboard(env, config, str(project), {
+                    "skip_skills": True, "yes": True, "dry": True,
+                    "memory": "off", "repair": False,
+                })
+        finally:
+            deploy.provider_projection_context = original
+        self.assertEqual(calls, ["context-project"])
+
     def test_repeat_onboard_by_path_does_not_duplicate_entry(self):
         # Баг (инцидент loqum x3): _ensure_project матчил существующий проект ТОЛЬКО по
         # id — повторный `maind onboard <тот же абсолютный путь>` (не по id) не находил

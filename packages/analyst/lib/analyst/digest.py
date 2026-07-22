@@ -35,6 +35,7 @@ from .common import die, find_run_report, parse_args, safe_load_json
 from .lessons import (ACTIVE_STATES, add_candidate, audit_append,
                       classify_consolidation, event_append, jaccard,
                       new_lesson, similar_lessons)
+from .runs import neutral_run_report
 
 _SIMILAR_CMD = 0.6   # порог «та же по сути команда» для пары fail→pass
 
@@ -304,7 +305,12 @@ def cmd_digest(env, argv):
         return
 
     ppath = os.getcwd()
-    rr = find_run_report(ppath, opts["session"] or None)
+    rr = neutral_run_report(ppath, opts["session"] or None)
+    # D90 projection has no raw-shaped bash/workflow/workaround evidence.  Digest consumes
+    # it only once a future neutral semantic explicitly carries those fields; otherwise this
+    # is the bounded legacy Claude reader fallback, never fabricated zero/default evidence.
+    if not isinstance(rr, dict) or not any(key in rr for key in ("bash", "workflows", "devloop")):
+        rr = find_run_report(ppath, opts["session"] or None)
     if not rr:
         die("нет run-report в .claude/runs — включи захват прогона: "
             "harness hooks --target . --run-report on, затем проведи сессию Claude Code")

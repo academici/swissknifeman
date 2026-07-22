@@ -5,6 +5,7 @@
 maind-only поля (skills/tags/dependencies/agents/repo)."""
 import json
 import os
+import subprocess
 from pathlib import Path
 
 from .common import atomic_write_json, die, parse_args, warn
@@ -39,7 +40,34 @@ def match_cwd(env, config, cwd=None):
         base = norm_path(lp)
         if cwd == base or cwd.startswith(base + os.sep):
             return p
+        if _same_git_worktree(cwd, base):
+            return p
     return None
+
+
+def _git_worktree_identity(path):
+    """Return (worktree_root, common_git_dir) or None without guessing paths."""
+    try:
+        root = subprocess.run(["git", "-C", str(path), "rev-parse", "--show-toplevel"],
+                              check=True, capture_output=True, text=True).stdout.strip()
+        common = subprocess.run(["git", "-C", str(path), "rev-parse", "--git-common-dir"],
+                                check=True, capture_output=True, text=True).stdout.strip()
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    root = Path(root).resolve()
+    common = Path(common)
+    if not common.is_absolute():
+        common = root / common
+    return root, common.resolve()
+
+
+def _same_git_worktree(left, right):
+    """Accept only distinct linked worktrees sharing one Git common directory."""
+    left_identity = _git_worktree_identity(left)
+    right_identity = _git_worktree_identity(right)
+    return bool(left_identity and right_identity
+                and left_identity[0] != right_identity[0]
+                and left_identity[1] == right_identity[1])
 
 
 def _warn_visibility_changes(pid, cur_folders, inc_folders):

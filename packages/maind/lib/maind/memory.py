@@ -543,7 +543,7 @@ def _cmd_digest(env, config, argv):
         print(f"- {t}")
     if shared_max == 0:
         # D10: project-only дефолт — межпроектное поднимается явно, не проглатывается в digest
-        print(f"  (межпроектное: maind memory recall --scope ns:<name> — digest project-only)")
+        print("  (межпроектное: maind memory recall --scope ns:<name> — digest project-only)")
     if dropped > 0:
         print(f"  (+{dropped} фактов — maind memory recall)")
 

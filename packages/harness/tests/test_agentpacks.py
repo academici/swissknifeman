@@ -179,7 +179,7 @@ class TestAgentPacks(unittest.TestCase):
         self.assertEqual(ap.do_doctor(self.env, pack_b), 0)
 
     def test_src_pack_missing_source_is_bad_in_doctor(self):
-        pack_b = make_src_pack_pair(self.root, self.pack, name_b="demo-pack-c")
+        make_src_pack_pair(self.root, self.pack, name_b="demo-pack-c")
         pdir = self.root / "configs" / "claude-code" / "agent-packs" / "demo-pack-c"
         manifest = json.loads((pdir / "pack.json").read_text())
         manifest["files"][0]["src_pack"] = "no-such-pack"

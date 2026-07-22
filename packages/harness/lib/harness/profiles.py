@@ -1,4 +1,6 @@
 """Immutable P5 provider-harness profile catalog and fail-closed resolver."""
+from __future__ import annotations
+
 from dataclasses import dataclass
 import json
 from pathlib import Path

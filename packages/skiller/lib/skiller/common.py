@@ -4,7 +4,6 @@
 вынесен в общий core; здесь — только специфика swissknifeman (path-property,
 parse_flags, frontmatter, делегирование окружения в harness, константы реестра)."""
 import hashlib
-import os
 import shutil
 import subprocess
 import sys

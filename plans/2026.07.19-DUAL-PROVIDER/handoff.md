@@ -1,40 +1,35 @@
-# HANDOFF — 2026-07-21 — after P5
+# HANDOFF — 2026-07-22 — after P6
 
-**Next:** audit-phase: task:plan-audit 2026.07.19-DUAL-PROVIDER P5
+**Next:** audit-phase: task:plan-audit 2026.07.19-DUAL-PROVIDER P6
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | frontier |
-| Effort | xhigh |
-| Capabilities | command.filesystem-read · command.git-read |
-| Context | cold-start — plan-step |
-| Суть | Fresh independent read-only P5 audit from the terminal close commit; P6 remains unopened. |
+| Model | gpt-5.6-sol |
+| Thinking | xhigh — independent terminal audit |
+| Context | NEW SESSION — шаг-не-item |
+| Суть | Audit the D95 P6.2 strict-health repair without rerunning P6.5 validators or starting P7. |
 
 ```text
-$ task:plan-audit 2026.07.19-DUAL-PROVIDER P5
+task-plan-audit 2026.07.19-DUAL-PROVIDER P6
 ```
 
-**Done:** P5.1–P5.7 are terminal GREEN. Audit attempt 1's `_common/orchestrator` P2 identity
-finding is repaired without changing valid legacy IDs; all supported Claude/Codex artifacts
-pass independent create→apply→noop lifecycles. The phase delivers provider-neutral harness and
-instruction contracts/catalogs, independent native Claude/Codex projections, fail-closed P2
-ownership/provenance, D87 artifact v1.1 semantic metadata, and actual generated/installed
-consumer conformance. The post-repair terminal task/skiller/harness cycle, worktree-local
-registry check, target lint without new errors, diff check and protected delta check passed.
+**Done:** P6.2 attempt 3 reclosed with code commit `57fccc1b48a925b0d019b5d483a57e6b4db0821a`:
+strict health now fails on a non-green provider-trust row. Focused health tests and public
+worktree-local strict human/JSON CLI checks are green for the fail-closed contract.
 
-**Remaining:** exactly one fresh independent terminal P5 audit attempt 2 and its append-only verdict.
-P6 stays unopened; no live apply, FOREMAN/fleet mutation or push is authorized by this close.
+**Remaining:** exactly one fresh independent P6 terminal audit. It must not rerun P6.5 full
+validators or fix its own findings. P7+, live self-host, FOREMAN, fleet and push remain outside
+authority.
 
-**Sources of truth:** `phases/P5.md` Phase Handoff; `root/contracts/provider-harness-contract.md`
-D85; `root/contracts/provider-instruction-contract.md` D86; `root/contracts/provider-artifact-contract.md`
-D87; `artifacts/P5-{harness,instruction}-conformance.md`; terminal close commit.
+**Sources of truth:** `phases/P6.md` attempt-2 audit and D95 repair block,
+`packages/maind/lib/maind/health.py`, `packages/maind/tests/test_health.py`, and
+`journal.jsonl` P6.2 attempt 3 entries.
 
-**Open risks:** Package `AGENTS.md` targets remain deliberately absent/live-unmanaged until a
-later explicitly authorized phase. Target plan-lint retains two pre-existing warnings and no
-new errors.
+**Open risks:** the independent audit remains required; no known material deviation from the
+bounded D95 scope.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: item-level process deviations are aggregated verbatim in `phases/P5.md`.
-- deferred: P6 and all live/self-host operations.
+- workarounds: none accepted in package code.
+- deferred: P7 remains unopened until a literal GREEN P6 audit.
 - open_questions: none.

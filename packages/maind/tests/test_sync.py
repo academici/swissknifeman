@@ -56,6 +56,104 @@ class TestManagedBlock(unittest.TestCase):
         self.assertIn("hash=", managed_block("x", self.MARK))
 
 
+class TestProviderContexts(unittest.TestCase):
+    def test_context_is_resolved_once_and_reused_across_order(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, _proj = _setup(tmp)
+            import maind.provision.deploy as deploy
+            calls, seen = [], []
+            original_context = deploy.provider_projection_context
+            original_provisioners, original_order = sync.PROVISIONERS, sync.ORDER
+            def first(_env, _config, contexts, _mode, _dry):
+                seen.append(contexts[0])
+                return [sync._result("first", contexts[0]["id"], "ok")]
+            def second(_env, _config, contexts, _mode, _dry):
+                seen.append(contexts[0])
+                return [sync._result("second", contexts[0]["id"], "ok")]
+            def counted(*args):
+                calls.append(args[2]["id"])
+                return original_context(*args)
+            deploy.provider_projection_context = counted
+            sync.PROVISIONERS = {"first": first, "second": second}
+            sync.ORDER = ["first", "second"]
+            try:
+                sync.run_sync(env, config, config["projects"])
+            finally:
+                deploy.provider_projection_context = original_context
+                sync.PROVISIONERS, sync.ORDER = original_provisioners, original_order
+            self.assertEqual(calls, ["flexcrm"])
+            self.assertIs(seen[0], seen[1])
+            self.assertTrue(seen[0].provider_context.providers)
+
+    def test_required_provider_failure_is_visible_in_aggregate(self):
+        aggregate = sync.ProviderProvisionAggregate(({
+            "provider_id": "codex", "status": "failed", "required": True,
+            "diagnostic": "MAIND_PROJECTION_MISSING"},))
+        result = sync._result("mcp", "demo", "failed", provider_aggregate=aggregate)
+        self.assertFalse(aggregate.green)
+        self.assertEqual(result["provider_aggregate"], "non-green")
+        self.assertEqual(result["providers"][0]["diagnostic"], "MAIND_PROJECTION_MISSING")
+
+    def test_real_mcp_and_graph_order_resolves_once(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, _proj = _setup(tmp)
+            import maind.provision.deploy as deploy
+            calls, original = [], deploy.provider_projection_context
+            def counted(*args):
+                calls.append(args[2]["id"])
+                return original(*args)
+            deploy.provider_projection_context = counted
+            try:
+                results = sync.run_sync(env, config, config["projects"], only="mcp,graph")
+            finally:
+                deploy.provider_projection_context = original
+            self.assertEqual(calls, ["flexcrm"])
+            self.assertEqual([row["provisioner"] for row in results], ["mcp", "graph"])
+
+    def test_instruction_provisioner_uses_context_provider_ids_and_is_idempotent(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, project = _setup(tmp)
+            config["projects"][0]["providers"] = {
+                "contract_version": "1.0.0",
+                "selection": {"claude-code": {"enabled": True}, "codex": {"enabled": True}},
+            }
+            first = sync.run_sync(env, config, config["projects"], only="instructions", mode="auto")
+            self.assertEqual(first[0]["provider_aggregate"], "green")
+            self.assertEqual({row["provider_id"] for row in first[0]["providers"]},
+                             {"claude-code", "codex"})
+            self.assertTrue((project / "CLAUDE.md").is_file())
+            self.assertTrue((project / "AGENTS.md").is_file())
+            for package in ("skiller", "harness", "maind", "analyst", "task"):
+                self.assertTrue((project / "packages" / package / "CLAUDE.md").is_file())
+                self.assertTrue((project / "packages" / package / "AGENTS.md").is_file())
+            second = sync.run_sync(env, config, config["projects"], only="instructions", mode="auto")
+            self.assertEqual(second[0]["provider_aggregate"], "green")
+            self.assertFalse(second[0]["changed"])
+
+    def test_instruction_provisioner_dry_run_does_not_write(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, project = _setup(tmp)
+            row = sync.run_sync(env, config, config["projects"], only="instructions", dry=True)[0]
+            self.assertEqual(row["status"], "dry")
+            self.assertFalse((project / "CLAUDE.md").exists())
+
+    def test_instruction_repair_changes_only_managed_blocks(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, project = _setup(tmp)
+            sync.run_sync(env, config, config["projects"], only="instructions", mode="auto")
+            target = project / "CLAUDE.md"
+            original = target.read_text(encoding="utf-8")
+            target.write_text("local heading\n" + original.replace("#", "# drifted", 1)
+                              + "\nlocal footer\n", encoding="utf-8")
+            drift = sync.run_sync(env, config, config["projects"], only="instructions", mode="auto")[0]
+            self.assertEqual(drift["status"], "failed")
+            repaired = sync.run_sync(env, config, config["projects"], only="instructions", mode="repair")[0]
+            self.assertEqual(repaired["status"], "ok")
+            restored = target.read_text(encoding="utf-8")
+            self.assertTrue(restored.startswith("local heading\n"))
+            self.assertTrue(restored.endswith("\nlocal footer\n"))
+
+
 class TestRoleAgentPacks(unittest.TestCase):
     """Вариант C: project.roles → config.role_packs[role], аддитивно к профильному паку."""
     CFG = {"role_packs": {"tech-lead": "role-tech-lead", "solo-founder": "role-founder"}}

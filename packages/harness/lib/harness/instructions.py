@@ -3,6 +3,8 @@
 The semantic gate is deliberately independent from P2 observation.  Invalid catalog,
 fragment, parity, extension, or compatibility input never reaches artifact planning.
 """
+from __future__ import annotations
+
 from dataclasses import dataclass, replace
 import json
 from pathlib import Path

@@ -48,8 +48,10 @@ from pathlib import Path
 from .common import (atomic_write_json, die, find_run_report, now_iso, parse_args,
                      read_ndjson, safe_load_json, warn)
 
-TREND_REL = Path(".claude") / "analyze" / "usage-trend.ndjson"
-BASELINE_REL = Path(".claude") / "analyze" / "baseline.json"
+TREND_REL = Path(".swissknife") / "analytics" / "usage-trend.ndjson"
+BASELINE_REL = Path(".swissknife") / "analyst" / "baseline.json"
+_LEGACY_TREND_REL = Path(".claude") / "analyze" / "usage-trend.ndjson"
+_LEGACY_BASELINE_REL = Path(".claude") / "analyze" / "baseline.json"
 
 ROLLING_K = 20          # окно rolling-baseline — совпадает с _TREND_K в maind.analyze
 MIN_BASELINE_N = 3      # меньше — сравнивать не с чем (как _TREND_MIN_N в maind.analyze)
@@ -69,7 +71,10 @@ def baseline_path(project_path):
 def read_trend(project_path):
     """Строки usage-trend.ndjson по порядку записи (append-only, старые → новые).
     [] если файла нет/пуст — источник best-effort (пишет хук, ошибки хука не барьер)."""
-    return read_ndjson(trend_path(project_path))
+    rows = read_ndjson(trend_path(project_path))
+    if rows:
+        return rows
+    return read_ndjson(Path(os.path.expanduser(str(project_path))) / _LEGACY_TREND_REL)
 
 
 def read_pinned_baseline(project_path):
@@ -77,6 +82,8 @@ def read_pinned_baseline(project_path):
     generated_at, sessions}. None — файла нет/битый/без totals.median_out (тот же контракт,
     что maind.analyze._read_baseline: totals.median_out — обязательное поле формата)."""
     data = safe_load_json(baseline_path(project_path), None)
+    if not isinstance(data, dict):
+        data = safe_load_json(Path(os.path.expanduser(str(project_path))) / _LEGACY_BASELINE_REL, None)
     if not isinstance(data, dict):
         return None
     totals = data.get("totals")

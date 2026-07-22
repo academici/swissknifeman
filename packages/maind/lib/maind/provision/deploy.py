@@ -8,17 +8,63 @@
 import json
 import os
 import shutil
+import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 from .. import codegraph, pplxweb
 from ..common import die, now_iso, parse_args, warn
-from ..config import load_config
+from ..config import load_config, resolve_provider_config
 from ..mcpconfig import (MCP_FILES, MCPConfigError, load_mcp, mcp_path,
                         merge_server, reconcile_gitignore, remove_server,
                         write_example, write_mcp)
 from ..memory import health, resolve_ports
 from ..projects import get as get_project
 from ..projects import listing, write_config
+from ..provider_deploy import (apply_provider_artifacts, generate_conformance_report,
+                               plan_provider_artifacts, plan_provider_deploy,
+                               semantic_servers)
+
+
+@dataclass(frozen=True)
+class ProviderProjectionContext:
+    """P1 selection and P5 projections resolved once for a project operation."""
+    providers: tuple
+    effective_providers: tuple
+    projections: tuple
+
+
+def _provider_projections(env, config, project):
+    """Legacy compatibility projection over the public one-resolution seam."""
+    return provider_projection_context(env, config, project).projections
+
+
+def provider_projection_context(env, config, project):
+    """Public P6 seam: one effective-provider resolution and P5 projections."""
+    harness_root = Path(env.root).parent / "harness"
+    if not harness_root.is_dir():
+        harness_root = Path(__file__).resolve().parents[3].parent / "harness"
+    harness_lib = str(harness_root / "lib")
+    if harness_lib not in sys.path:
+        sys.path.insert(0, harness_lib)
+    from core import ProviderConfigCatalog, ProviderId
+    from harness.mcp import load_mcp_catalog, plan_mcp_projection
+    resolved = resolve_provider_config(
+        config, ProviderConfigCatalog("1.0.0", (ProviderId.CLAUDE_CODE, ProviderId.CODEX), (), ()),
+        project["id"])
+    if resolved.selection is None:
+        codes = ",".join(item.code for item in resolved.diagnostics)
+        raise ValueError(codes or "MAIND_PROVIDER_RESOLUTION_INVALID")
+    effective_providers = tuple(row for row in resolved.selection if row.enabled)
+    providers = tuple(row.provider_id for row in effective_providers)
+    if not providers:
+        raise ValueError("MAIND_PROVIDER_DISABLED")
+    catalog = load_mcp_catalog(harness_root / "configs/common/mcp/catalog.json")
+    projections = tuple(plan_mcp_projection(
+        catalog, provider_id=provider,
+        bindings_path=harness_root / "configs" / provider.value / "mcp/bindings.json",
+        selected=(), trusted=True) for provider in providers)
+    return ProviderProjectionContext(providers, effective_providers, projections)
 
 
 def _agentmemory_entry(env, config, scope):
@@ -60,8 +106,27 @@ def _resolve_targets(project_path, opt_targets):
     return out
 
 
+def provider_semantic_inventory(env, config, project, *, with_code, maind_server,
+                                with_agentmemory):
+    """Caller-owned server descriptors; P5 supplies provider projections separately."""
+    scope = project.get("memory_scope") or f"project:{project['id']}"
+    st = codegraph.settings(config)
+    if with_code is None:
+        with_code = codegraph.enabled(project, st)
+    code = None
+    if with_code:
+        code = _code_entry(Path(os.path.expanduser(project["local_path"])),
+                           codegraph.command(project, st), codegraph.cmd_args(project, st))
+    pw = pplxweb.settings(config)
+    perplexity = pplxweb.entry(project, pw) if pplxweb.enabled(project, pw) else None
+    return semantic_servers(maind=_maind_entry(scope) if maind_server else None,
+                            agentmemory=_agentmemory_entry(env, config, scope) if with_agentmemory else None,
+                            codegraph=code, perplexity=perplexity)
+
+
 def deploy_project(env, config, project, *, targets=None, with_code=None,
-                   maind_server=True, with_agentmemory=False, dry=False):
+                   maind_server=True, with_agentmemory=False, dry=False,
+                   provider_projections=None, provider_repair=False):
     """Раскатать серверы хаба в один проект. with_code=None → берётся из политики/полей проекта
     (code|graphify). Память проекта — через сервер `maind` (изоляция по scope на стороне maind);
     raw-сервер `agentmemory` НЕ раскатывается (он пишет мимо scope-маркера → невидимо для
@@ -77,6 +142,22 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
         warn(f"проект '{pid}': путь не найден — {project_path}")
         return None
     scope = project.get("memory_scope") or f"project:{pid}"
+    provider_plan = None
+    provider_changed = False
+    if provider_projections is not None:
+        provider_plan = plan_provider_deploy(
+            provider_projections,
+            provider_semantic_inventory(env, config, project, with_code=with_code,
+                                        maind_server=maind_server,
+                                        with_agentmemory=with_agentmemory))
+        provider_check = plan_provider_artifacts(project_path, provider_plan, repair=provider_repair)
+        if provider_check["severity"] == "error":
+            raise ValueError("MAIND_PROVIDER_DEPLOY_REFUSED")
+        provider_changed = any(
+            getattr(action.action, "value", action.action) != "noop"
+            for action in provider_check["plan"].actions)
+        if not dry:
+            apply_provider_artifacts(project_path, provider_plan, repair=provider_repair)
     emit_example = bool((config.get("mcp") or {}).get("emit_example"))  # opt-in: .example + .gitignore
 
     st = codegraph.settings(config)
@@ -133,7 +214,8 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
 
     return {"id": pid, "scope": scope, "written": written, "skipped": skipped,
             "code": code_state, "code_server": codegraph.server_name(project, st),
-            "servers": list(entries), "targets": [w["file"] for w in written]}
+            "servers": list(entries), "targets": [w["file"] for w in written],
+            "provider_plan": provider_plan, "provider_changed": provider_changed}
 
 
 def mark_deployed(config, project_id, result):
@@ -152,6 +234,22 @@ def mark_deployed(config, project_id, result):
         "targets": result["targets"],
         "scope": result["scope"],
     }
+    provider_plan = result.get("provider_plan")
+    if provider_plan is not None:
+        proj["provider_deploy"] = {
+            row.provider_id.value: {
+                "status": row.status,
+                "target_scope": row.target_scope,
+                "target_path": row.target_path,
+                "server_ids": list(row.server_ids),
+                "diagnostic": row.diagnostic,
+                "provenance": {
+                    "source_path": row.artifact.provenance.canonical_sources[0].path,
+                    "content_hash": row.artifact.provenance.canonical_sources[0].content_hash,
+                } if row.artifact is not None else None,
+            }
+            for row in provider_plan.results
+        }
     return config
 
 
@@ -159,7 +257,13 @@ def cmd_deploy(env, argv):
     opts, _ = parse_args(argv, {"--project": "str", "--all": "bool", "--targets": "str",
                                 "--with-code": "bool", "--with-graphify": "bool",
                                 "--no-maind-server": "bool", "--with-agentmemory": "bool",
-                                "--dry-run": "bool", "--json": "bool"})
+                                "--dry-run": "bool", "--json": "bool",
+                                "--conformance": "str", "--repair": "bool"})
+    if opts["conformance"]:
+        harness_configs = Path(env.root).parent / "harness/configs"
+        plan = generate_conformance_report(harness_configs, opts["conformance"])
+        print(f"provider deploy conformance: {len(plan.results)} provider rows")
+        return
     config, _src = load_config(env)
     if opts["project"]:
         proj = get_project(config, opts["project"])
@@ -180,9 +284,11 @@ def cmd_deploy(env, argv):
     for proj in projects:
         # флаг (--with-code|--with-graphify) форсит код-граф; иначе None → из конфига проекта
         with_code = True if (opts["with_code"] or opts["with_graphify"]) else None
+        projections = _provider_projections(env, config, proj)
         res = deploy_project(env, config, proj, targets=opts["targets"] or None,
                              with_code=with_code, with_agentmemory=opts["with_agentmemory"],
-                             maind_server=not opts["no_maind_server"], dry=opts["dry_run"])
+                             maind_server=not opts["no_maind_server"], dry=opts["dry_run"],
+                             provider_projections=projections, provider_repair=opts["repair"])
         if res is None:
             continue
         results.append(res)

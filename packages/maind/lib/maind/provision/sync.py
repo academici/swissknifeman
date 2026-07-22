@@ -8,8 +8,12 @@ PROVISIONERS + порядок ORDER; `--only` сужает набор. Режи�
 
 Фан-аут по проектам и резолв пути/scope вынесены сюда (DRY): deploy/derive/seed/health —
 провиженеры поверх одного контекста, а не дубль цикла в каждом модуле."""
+from __future__ import annotations
+
+import copy
 import json
 import os
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -20,15 +24,36 @@ from ..namespaces import in_namespace
 from ..projects import get as get_project
 from ..projects import listing
 
-MODES = ("install", "update", "auto")
+MODES = ("install", "update", "auto", "repair")
+
+# mAInd orders semantic work; provider adapters own native paths, trust and rendering.
+# These IDs deliberately do not encode a provider target or a renderer implementation.
+INTENT_ORDER = ("trust", "memory-context", "health", "skills", "agent-pack", "router",
+                "instruction-root", "instruction-package")
+PROVISIONER_INTENTS = {
+    "mcp": (), "code-graph": (), "graph": (), "memory": (),
+    "memory-hook": ("memory-context",), "health-hook": ("health",),
+    "health-doc": ("health",), "feature-log-hook": ("health",),
+    "ecosystem-skill": ("skills",), "setup-skill": ("skills",),
+    "skills-catalog": ("skills",), "agent-pack": ("agent-pack",),
+    "output-style": ("memory-context",), "router-config": ("router",),
+    "instructions": ("instruction-root", "instruction-package"),
+}
 
 
 # ── контекст проекта (единый резолв пути/scope) ──────────────────────────────
-@dataclass
+@dataclass(frozen=True)
 class ProjectContext:
     env: object
     config: dict
     project: dict
+    provider_context: object | None = None
+
+    def __getitem__(self, key):
+        return self.project[key]
+
+    def get(self, key, default=None):
+        return self.project.get(key, default)
 
     @property
     def id(self):
@@ -47,6 +72,16 @@ class ProjectContext:
     @property
     def scope(self):
         return self.project.get("memory_scope") or f"project:{self.id}"
+
+    @property
+    def effective_provider_ids(self):
+        """Stable IDs resolved once by the P6 context, never rediscovered by a provisioner."""
+        return tuple(provider.provider_id.value for provider in
+                     (self.provider_context.effective_providers if self.provider_context else ()))
+
+    @property
+    def semantic_intents(self):
+        return INTENT_ORDER
 
 
 def select_projects(env, config, opts):
@@ -69,14 +104,39 @@ def select_projects(env, config, opts):
 
 
 def contexts(env, config, projects):
-    return [ProjectContext(env, config, p) for p in projects]
+    from .deploy import provider_projection_context
+    return [ProjectContext(env, config, p, provider_projection_context(env, config, p))
+            for p in projects]
 
 
-def _result(provisioner, project_id, status, *, changed=False, state="", detail=""):
+@dataclass(frozen=True)
+class ProviderProvisionAggregate:
+    rows: tuple
+
+    @property
+    def green(self):
+        return bool(self.rows) and all(
+            row["status"] == "planned" or not row["required"] for row in self.rows)
+
+
+def _provider_aggregate(plan):
+    return ProviderProvisionAggregate(tuple({"provider_id": row.provider_id.value,
+                                              "status": row.status,
+                                              "required": True,
+                                              "diagnostic": row.diagnostic}
+                                         for row in plan.results))
+
+
+def _result(provisioner, project_id, status, *, changed=False, state="", detail="",
+            provider_aggregate=None):
     """Единая форма результата провиженера (та же, что у health._result): ВСЕ ключи всегда
     присутствуют, поэтому CLI и тесты не зависят от .get()-умолчаний. status: ok|skip|dry."""
-    return {"provisioner": provisioner, "id": project_id, "status": status,
-            "changed": changed, "state": state, "detail": detail}
+    result = {"provisioner": provisioner, "id": project_id, "status": status,
+              "changed": changed, "state": state, "detail": detail}
+    if provider_aggregate is not None:
+        result["providers"] = list(provider_aggregate.rows)
+        result["provider_aggregate"] = "green" if provider_aggregate.green else "non-green"
+    return result
 
 
 # ── провиженеры ──────────────────────────────────────────────────────────────
@@ -85,19 +145,26 @@ def _mcp_run(env, config, projects, mode, dry):
     from .deploy import deploy_project, mark_deployed
     from ..projects import write_config
     results, applied = [], False
-    for p in projects:
-        res = deploy_project(env, config, p, dry=dry)  # with_code=None → из политики/полей проекта
+    for context in projects:
+        p = context.project if isinstance(context, ProjectContext) else context
+        provider_context = context.provider_context if isinstance(context, ProjectContext) else None
+        res = deploy_project(env, config, p, dry=dry,
+                             provider_projections=(provider_context.projections
+                                                   if provider_context is not None else None))
         if res is None:
             results.append(_result("mcp", p["id"], "skip", detail="нет/нет пути проекта"))
             continue
-        changed = any(w["changed"] for w in res["written"])
+        changed = (res["provider_changed"] if res.get("provider_plan") is not None
+                   else any(w["changed"] for w in res["written"]))
         if not dry:
             mark_deployed(config, p["id"], res)
             applied = True
         detail = ", ".join(res["targets"])
         if res.get("skipped"):
             detail += f" (пропущено битых каналов: {', '.join(res['skipped'])})"
-        results.append(_result("mcp", p["id"], "ok", changed=changed, detail=detail))
+        aggregate = _provider_aggregate(res["provider_plan"]) if res.get("provider_plan") else None
+        results.append(_result("mcp", p["id"], "ok" if aggregate is None or aggregate.green else "failed",
+                               changed=changed, detail=detail, provider_aggregate=aggregate))
     if applied:
         write_config(env, config)
     return results
@@ -166,6 +233,74 @@ def _health_doc_run(env, config, projects, mode, dry):
     """Управляемый блок «ПРИОРИТЕТ №1 — связь с mAInd» в CLAUDE.md проектов."""
     from ..health import apply_health_doc
     return [apply_health_doc(env, config, p, mode, dry) for p in projects]
+
+
+def _instruction_request(context, operation_id, *, authorized=(), observed=()):
+    """Construct only the frozen public P5 request; maind never reads its catalog/markers."""
+    from harness.instructions import CATALOG_VERSION, CONTRACT_VERSION, SCOPES, InstructionRequest
+    return InstructionRequest(
+        CONTRACT_VERSION, CATALOG_VERSION, operation_id, tuple(SCOPES),
+        context.effective_provider_ids, str(context.path),
+        (("provider-context", context.id),),
+        (("authority", "maind-sync-explicit-targets"),), tuple(authorized),
+        tuple(observed), "adjacent-backup" if operation_id == "repair" else None)
+
+
+def _instruction_aggregate(operation):
+    """Preserve P5 target observations as provider-tagged rows without reclassifying them."""
+    rows = []
+    for provider_id in operation.request.provider_ids:
+        targets = [target for target in operation.targets if target.provider_id == provider_id]
+        diagnostics = [diagnostic.code for target in targets for diagnostic in target.diagnostics]
+        rows.append({"provider_id": provider_id,
+                     "status": "planned" if not diagnostics else "failed",
+                     "required": True, "diagnostic": ",".join(diagnostics) or None})
+    return ProviderProvisionAggregate(tuple(rows))
+
+
+def _instruction_run(env, config, projects, mode, dry):
+    """Provision root plus five package instruction scopes through frozen harness.instructions.
+
+    The plan is always obtained first.  The only write authority supplied to harness is the
+    exact target set returned by that plan; mAInd neither parses nor renders instructions.
+    """
+    from harness.instructions import (apply_instructions, check_instructions,
+                                      plan_instructions, repair_instructions)
+    results = []
+    for context in projects:
+        if not isinstance(context, ProjectContext) or not context.exists:
+            project = context.project if isinstance(context, ProjectContext) else context
+            results.append(_result("instructions", project["id"], "skip", state="absent",
+                                   detail="нет пути проекта"))
+            continue
+        planned = plan_instructions(_instruction_request(context, "plan"))
+        paths = tuple(action.target_path for action in (planned.artifact_plan.actions
+                                                         if planned.artifact_plan else ())
+                      if getattr(action.action, "value", action.action) != "noop")
+        operation = planned
+        # P5 classifies missing/stale targets as diagnostics in the no-write plan; its
+        # apply API is the sole authority that decides whether those planned paths may write.
+        if not dry and planned.artifact_plan is not None:
+            if mode == "repair":
+                observed = tuple((action.target_path, action.observed_hash)
+                                 for action in planned.artifact_plan.actions
+                                 if getattr(action.observation, "value", action.observation)
+                                 == "managed-drift")
+                operation = repair_instructions(_instruction_request(
+                    context, "repair", authorized=paths, observed=observed))
+            elif paths:
+                operation = apply_instructions(_instruction_request(
+                    context, "apply" if mode == "install" else "update", authorized=paths))
+            else:
+                operation = check_instructions(_instruction_request(context, "check"))
+        aggregate = _instruction_aggregate(operation)
+        changed = any(target.changed for target in operation.targets)
+        status = "dry" if dry else ("ok" if operation.green else "failed")
+        detail = f"{len(operation.targets)} targets; intents=instruction-root,instruction-package"
+        results.append(_result("instructions", context.id, status, changed=changed,
+                               state="clean" if operation.green else "non-green",
+                               detail=detail, provider_aggregate=aggregate))
+    return results
 
 
 def _feature_log_hook_run(env, config, projects, mode, dry):
@@ -379,10 +514,11 @@ PROVISIONERS = {
     "agent-pack": _agent_pack_run,
     "output-style": _output_style_run,
     "router-config": _router_config_run,
+    "instructions": _instruction_run,
 }
 ORDER = ["mcp", "code-graph", "graph", "memory", "memory-hook", "health-hook",
          "health-doc", "feature-log-hook", "ecosystem-skill", "setup-skill",
-         "skills-catalog", "agent-pack", "output-style", "router-config"]
+         "skills-catalog", "agent-pack", "output-style", "router-config", "instructions"]
 
 
 def provisioner_names(only=None):
@@ -400,28 +536,351 @@ def run_sync(env, config, projects, *, only=None, mode="auto", dry=False):
     """Применить выбранные провиженеры к проектам. Возвращает плоский список результатов.
     Fail-soft: падение одного провиженера НЕ валит весь фан-аут — остальные отрабатывают,
     упавший помечается status=failed per-project (видно в выводе и коде возврата)."""
+    return run_sync_contexts(env, config, contexts(env, config, projects), only=only,
+                             mode=mode, dry=dry)
+
+
+def run_sync_contexts(env, config, project_contexts, *, only=None, mode="auto", dry=False):
+    """Run provisioners against caller-owned contexts without a second provider resolution."""
     results = []
     for name in provisioner_names(only):
         try:
-            results.extend(PROVISIONERS[name](env, config, projects, mode, dry))
+            results.extend(PROVISIONERS[name](env, config, project_contexts, mode, dry))
         except Exception as e:
             warn(f"провиженер '{name}' упал: {e}")
             results.extend(_result(name, p.get("id", "?"), "failed", detail=str(e))
-                           for p in projects)
+                           for p in project_contexts)
     return results
+
+
+def instruction_conformance_markdown(cases, checks):
+    """Render committed P6 evidence from public mAInd and harness result objects."""
+    lines = ["# P6 provider provision conformance", "",
+             "Generated through the worktree-local mAInd public APIs on temporary roots.", "",
+             "| Case | Providers | Root + five package consumers | Second run | Health/doctor | Verdict |",
+             "|:--|:--|--:|:--|:--|:--|"]
+    for case in cases:
+        lines.append("| {name} | {providers} | {targets} | {second} | {health} | {verdict} |".format(
+            name=case["name"], providers=", ".join(case["providers"]),
+            targets=case["targets"], second=case["second"], health=case["health"],
+            verdict=case["verdict"]))
+    lines += ["", "| Boundary check | Result |", "|:--|:--|"]
+    lines.extend(f"| {check['name']} | {check['result']} |" for check in checks)
+    lines += ["", "All roots were temporary. `sync` used the frozen `harness.instructions`",
+              "plan/check/apply/repair API; mAInd did not parse, render or translate instruction files.", ""]
+    return "\n".join(lines)
+
+
+def provisioner_provider_matrix(results, provider_ids):
+    """Describe every selected provider against every current semantic provisioner.
+
+    This is conformance evidence, not a second provider catalog: provider-qualified rows
+    remain owned by their existing P5/P6 operation result, while provisioners with no
+    provider intent are recorded as deliberately neutral instead of pretending to write a
+    provider target.
+    """
+    by_name = {row["provisioner"]: row for row in results}
+    matrix = []
+    for name in provisioner_names():
+        result = by_name.get(name, {})
+        provider_rows = {row["provider_id"]: row for row in result.get("providers", ())}
+        intents = PROVISIONER_INTENTS[name]
+        for provider_id in provider_ids:
+            row = provider_rows.get(provider_id)
+            if row is not None:
+                diagnostic = row["diagnostic"] or "none"
+                matrix.append({"provisioner": name, "provider_id": provider_id,
+                               "support": "adapter-projected", "activation": row["status"],
+                               "diagnostic": ",".join(sorted(set(diagnostic.split(","))))})
+            elif intents:
+                matrix.append({"provisioner": name, "provider_id": provider_id,
+                               "support": "delegated", "activation": "not-observed",
+                               "diagnostic": "MAIND_DELEGATED:" + ",".join(intents)})
+            else:
+                matrix.append({"provisioner": name, "provider_id": provider_id,
+                               "support": "provider-neutral", "activation": "not-applicable",
+                               "diagnostic": "MAIND_PROVIDER_NEUTRAL"})
+    return tuple(matrix)
+
+
+def _conformance_config(project):
+    return {"_version": "1", "node": {"id": "p6", "name": "P6", "role": "primary"},
+            "memory": {"http_port": 4111, "stream_port": 4112},
+            "graph": {"adapter": "federation"}, "projects": [project]}
+
+
+def _instruction_semantics(operation):
+    """Derive parity and provider-owned deltas from public harness target result fields only."""
+    scoped = {}
+    for target in operation.targets:
+        scoped.setdefault(target.scope_id, {})[target.provider_id] = target.ordered_semantic_ids
+    common, own = 0, 0
+    for providers in scoped.values():
+        values = tuple(providers.values())
+        if len(values) == 1:
+            common += len(values[0])
+            continue
+        left, right = values
+        shared = tuple(item for item in left if item in set(right))
+        if shared != tuple(item for item in right if item in set(left)):
+            raise ValueError("MAIND_INSTRUCTION_PARITY_MISMATCH")
+        common += len(shared)
+        own += sum(len(set(value) - set(shared)) for value in values)
+    return common, own
+
+
+def generate_instruction_conformance(env, output_path):
+    """Generate the P6.2 temporary-root matrix through public mAInd APIs only."""
+    from ..common import Env, atomic_write_json, atomic_write_text
+    from dataclasses import replace
+    from ..doctor import provider_trust_report
+    from ..health import health_report
+    from .onboard import onboard
+    from .workspace import provider_trust
+
+    cases, checks = [], []
+    with tempfile.TemporaryDirectory(prefix="maind-p6-provision-") as temp:
+        base = Path(temp)
+        for label, selection in (
+                ("Claude-only legacy", None),
+                ("Codex-only", {"claude-code": {"enabled": False}, "codex": {"enabled": True}}),
+                ("Dual-provider", {"claude-code": {"enabled": True}, "codex": {"enabled": True}})):
+            root = base / label.replace(" ", "-")
+            root.mkdir()
+            project = {"id": "target", "name": "Target", "type": "node-package",
+                       "enabled": True, "status": "active", "local_path": str(root)}
+            if selection is not None:
+                project["providers"] = {"contract_version": "1.0.0", "selection": selection}
+            config = _conformance_config(project)
+            first = run_sync(env, config, [project], only="instructions", mode="auto")[0]
+            # The public result carries the target count; the harness checker is consumed by
+            # rerunning its public check operation through the same provisioner context.
+            context = contexts(env, config, [project])[0]
+            from harness.instructions import check_instructions
+            checked = check_instructions(_instruction_request(context, "check"))
+            common, own = _instruction_semantics(checked)
+            first_target = root / ("AGENTS.md" if first["providers"][0]["provider_id"] == "codex"
+                                   else "CLAUDE.md")
+            before = first_target.read_bytes()
+            first_target.write_bytes(b"outside-prefix\n" + before + b"\noutside-suffix\n")
+            second = run_sync_contexts(env, config, [context], only="instructions", mode="auto")[0]
+            health = health_report(env, config, project, memory_reachable=False,
+                                   provider_context=context)
+            doctor = provider_trust_report(env, config)
+            cases.append({"name": label,
+                          "providers": [row["provider_id"] for row in first["providers"]],
+                          "targets": len(checked.targets),
+                          "second": "no-op" if not second["changed"] else "changed",
+                          "health": "untrusted non-green" if all(not row["green"] for row in doctor)
+                                    else "unexpected green",
+                          "verdict": "GREEN" if first["status"] == second["status"] == "ok"
+                                     and checked.green
+                                     and all(row["status"] != "failed"
+                                             for row in first["providers"] + second["providers"])
+                                     and len(health["provider_trust"]) == len(checked.request.provider_ids)
+                                     and common and own >= 0 else "RED"})
+            semantic_result = (f"semantic IDs={common}; single-provider projection; public checker GREEN"
+                               if len(checked.request.provider_ids) == 1 else
+                               f"common parity IDs={common}; provider-own extensions={own}; public checker GREEN")
+            checks.append({"name": f"{label}: harness semantic parity/extensions",
+                           "result": semantic_result})
+
+        # managed drift/repair is proved from public harness observations; outside bytes survive.
+        root = base / "repair"
+        root.mkdir()
+        project = {"id": "repair", "name": "Repair", "type": "node-package", "enabled": True,
+                   "status": "active", "local_path": str(root)}
+        config = _conformance_config(project)
+        run_sync(env, config, [project], only="instructions", mode="auto")
+        target = root / "CLAUDE.md"
+        original = target.read_bytes()
+        target.write_bytes(b"outside-before\n" + original.replace(b"#", b"# drifted", 1)
+                                + b"\noutside-after\n")
+        drift = run_sync(env, config, [project], only="instructions", mode="auto")[0]
+        repair = run_sync(env, config, [project], only="instructions", mode="repair")[0]
+        repaired = target.read_bytes()
+        checks.append({"name": "managed drift and explicit repair",
+                       "result": "non-green then repair GREEN; outside-before/outside-after preserved"
+                       if drift["status"] == "failed" and repair["status"] == "ok"
+                       and repaired.startswith(b"outside-before\n") and repaired.endswith(b"\noutside-after\n")
+                       else "RED"})
+
+        unknown = {"id": "unknown", "name": "Unknown", "type": "node-package", "enabled": True,
+                   "status": "active", "local_path": str(base / "unknown"), "providers": {
+                       "contract_version": "1.0.0", "selection": {"unsupported-provider": {"enabled": True}}}}
+        Path(unknown["local_path"]).mkdir()
+        try:
+            run_sync(env, _conformance_config(unknown), [unknown], only="instructions")
+            unknown_result = "RED"
+        except ValueError:
+            unknown_result = "rejected before write"
+        checks.append({"name": "unknown/unsupported provider", "result": unknown_result})
+
+        full = provider_trust(contexts(env, config, [project])[0], trusted=True,
+                              profile_id="trusted-full-access", origin="project")
+        checks.append({"name": "implicit full access", "result": "refused"
+                       if all(not row["green"] for row in full) else "RED"})
+
+        # Exercise frozen P5 failures through its public request/result contract rather
+        # than recreating instruction parsing or managed-boundary semantics in maind.
+        contract_root = base / "instruction-contract"
+        contract_root.mkdir()
+        contract_project = {"id": "contract", "name": "Contract", "type": "node-package",
+                            "enabled": True, "status": "active", "local_path": str(contract_root),
+                            "providers": {"contract_version": "1.0.0", "selection": {
+                                "claude-code": {"enabled": True}, "codex": {"enabled": True}}}}
+        contract_config = _conformance_config(contract_project)
+        contract_context = contexts(env, contract_config, [contract_project])[0]
+        from harness.instructions import (apply_instructions, load_catalog, plan_instructions,
+                                          repair_instructions)
+        request = _instruction_request(contract_context, "plan")
+        missing = plan_instructions(replace(request, scope_ids=()))
+        duplicate = plan_instructions(replace(request, scope_ids=("root", "root")))
+        checks.append({"name": "missing/duplicate instruction scope",
+                       "result": "INSTRUCTION_SCOPE_INVALID"
+                       if all(any(item.code == "INSTRUCTION_SCOPE_INVALID" for item in value.diagnostics)
+                              for value in (missing, duplicate)) else "RED"})
+
+        created = plan_instructions(request)
+        targets = tuple(action.target_path for action in created.artifact_plan.actions)
+        applied = apply_instructions(replace(request, operation_id="apply",
+                                             authorized_target_paths=targets))
+        changed_catalog = copy.deepcopy(load_catalog())
+        changed_catalog["scopes"][0]["sections"][0]["intent"] += " Contract-derived stale source."
+        stale = plan_instructions(request, catalog=changed_catalog)
+        checks.append({"name": "stale source hash",
+                       "result": "INSTRUCTION_STALE_SOURCE"
+                       if any(item.code == "INSTRUCTION_STALE_SOURCE" for item in stale.diagnostics)
+                       else "RED"})
+
+        target = contract_root / "AGENTS.md"
+        target.write_bytes(b"outside-before\n" + target.read_bytes().replace(
+            b"<!-- semantic:", b"<!-- local:", 1) + b"\noutside-after\n")
+        drift = plan_instructions(request)
+        action = next(item for item in drift.artifact_plan.actions
+                      if item.target_path == "AGENTS.md")
+        partial = _instruction_aggregate(drift)
+        repaired = repair_instructions(replace(
+            request, operation_id="repair", authorized_target_paths=("AGENTS.md",),
+            observed_hashes=(("AGENTS.md", action.observed_hash),),
+            preimage_destination="adjacent-backup"))
+        checks.append({"name": "managed drift repair only managed block",
+                       "result": "non-green then repair GREEN; outside bytes preserved"
+                       if applied.green and not partial.green and repaired.green
+                       and target.read_bytes().startswith(b"outside-before\n")
+                       and target.read_bytes().endswith(b"\noutside-after\n") else "RED"})
+        checks.append({"name": "one-provider partial failure critical aggregate/allow-partial",
+                       "result": "non-green; explicit --allow-partial remains required"
+                       if not partial.green else "RED"})
+
+        # The matrix intentionally uses a dual-provider dry run.  Existing provisioner
+        # results remain the source for provider projections; neutral/delegated rows do not
+        # claim that maind wrote a provider artifact.
+        dual_root = base / "provisioner-matrix"
+        dual_root.mkdir()
+        dual = {"id": "matrix", "name": "Matrix", "type": "node-package", "enabled": True,
+                "status": "active", "local_path": str(dual_root), "providers": {
+                    "contract_version": "1.0.0", "selection": {
+                        "claude-code": {"enabled": True}, "codex": {"enabled": True}}}}
+        dual_config = _conformance_config(dual)
+        dual_context = contexts(env, dual_config, [dual])[0]
+        prepared = run_sync(env, dual_config, [dual], only="instructions", mode="auto")[0]
+        worktree_root = Path(__file__).resolve().parents[5]
+        sibling_bins = {
+            "MAIND_SKM_BIN": worktree_root / "packages/skiller/bin/skiller",
+            "MAIND_HARNESS_BIN": worktree_root / "packages/harness/bin/harness",
+            "SKM_HARNESS_BIN": worktree_root / "packages/harness/bin/harness",
+        }
+        if not all(path.is_file() for path in sibling_bins.values()):
+            raise RuntimeError("MAIND_CONFORMANCE_SIBLING_BIN_MISSING")
+        previous_environment = {name: os.environ.get(name) for name in sibling_bins}
+        os.environ.update({name: str(path) for name, path in sibling_bins.items()})
+        try:
+            matrix_results = run_sync_contexts(env, dual_config, [dual_context], dry=True)
+        finally:
+            for name, previous in previous_environment.items():
+                if previous is None:
+                    os.environ.pop(name, None)
+                else:
+                    os.environ[name] = previous
+        matrix = provisioner_provider_matrix(matrix_results, dual_context.effective_provider_ids)
+        checks.append({"name": "independent provisioner/provider matrix",
+                       "result": f"{len(matrix)} explicit support/activation/diagnostic rows"
+                       if prepared["status"] == "ok" else "RED"})
+
+        # Onboard's public API receives a context once and passes it through to instruction sync.
+        onboard_root = base / "onboard"
+        onboard_root.mkdir()
+        isolated = base / "maind"
+        (isolated / "config/memory").mkdir(parents=True)
+        (isolated / "config/memory/iii-config.yaml").write_text("workers: []\n", encoding="utf-8")
+        isolated_env = Env(isolated, home=base / "home")
+        isolated_env.home.mkdir()
+        onboard_config = _conformance_config({"id": "onboard", "name": "Onboard", "type": "node-package",
+                                               "enabled": True, "status": "active", "local_path": str(onboard_root)})
+        onboard_config["projects"].append({"id": "swissknifeman", "name": "Swissknifeman",
+                                            "enabled": True, "local_path": str(
+                                                Path(__file__).resolve().parents[5])})
+        atomic_write_json(isolated_env.default_config, onboard_config)
+        worktree_root = Path(__file__).resolve().parents[5]
+        sibling_bins = {
+            "MAIND_SKM_BIN": worktree_root / "packages/skiller/bin/skiller",
+            "MAIND_HARNESS_BIN": worktree_root / "packages/harness/bin/harness",
+            "SKM_HARNESS_BIN": worktree_root / "packages/harness/bin/harness",
+        }
+        if not all(path.is_file() for path in sibling_bins.values()):
+            raise RuntimeError("MAIND_CONFORMANCE_SIBLING_BIN_MISSING")
+        previous_environment = {name: os.environ.get(name) for name in sibling_bins}
+        os.environ.update({name: str(path) for name, path in sibling_bins.items()})
+        try:
+            report = onboard(isolated_env, copy.deepcopy(onboard_config), str(onboard_root),
+                             {"skip_skills": True, "yes": True, "dry": True,
+                              "memory": "off", "repair": False})
+        finally:
+            for name, previous in previous_environment.items():
+                if previous is None:
+                    os.environ.pop(name, None)
+                else:
+                    os.environ[name] = previous
+        critical_steps = {step["name"]: step["status"] for step in report["steps"]}
+        checks.append({"name": "public onboard critical environment/instruction operations",
+                       "result": "GREEN" if all(critical_steps.get(name) in ("ok", "dry")
+                                                   for name in ("env", "deploy", "instructions"))
+                       else "RED"})
+
+    rendered = instruction_conformance_markdown(cases, checks)
+    rendered += "\n| Provisioner | Provider | Support | Activation | Diagnostic |\n"
+    rendered += "|:--|:--|:--|:--|:--|\n"
+    for row in matrix:
+        rendered += ("| {provisioner} | {provider_id} | {support} | {activation} | "
+                     "{diagnostic} |\n").format(**row)
+    atomic_write_text(Path(output_path), rendered)
+    if (any(case["verdict"] != "GREEN" for case in cases)
+            or any(check["result"] == "RED" for check in checks)
+            or any(row["provisioner"] == "instructions" and row["activation"] == "failed"
+                   for row in matrix)):
+        raise RuntimeError("MAIND_P6_CONFORMANCE_NON_GREEN")
 
 
 # ── CLI ─────────────────────────────────────────────────────────────────────
 def cmd_sync(env, argv):
     opts, _ = parse_args(argv, {"--project": "str", "--namespace": "str", "--all": "bool",
                                 "--only": "str", "--mode": "str", "--dry-run": "bool",
-                                "--json": "bool"})
+                                "--json": "bool", "--conformance": "str"})
     if opts["help"]:
         print("maind sync [--project ID | --namespace NS | --all] [--only mcp,code-graph,"
               "graph,memory,memory-hook,health-hook,health-doc,feature-log-hook,"
               "ecosystem-skill,setup-skill,skills-catalog,agent-pack,output-style,"
-              "router-config] "
-              "[--mode install|update|auto] [--dry-run] [--json]")
+              "router-config,instructions] "
+              "[--mode install|update|auto|repair] [--dry-run] [--json]\n"
+              "maind sync --conformance <path> — P6 temporary-root provider proof")
+        return
+    if opts["conformance"]:
+        if any((opts["project"], opts["namespace"], opts["all"], opts["only"],
+                opts["mode"], opts["dry_run"], opts["json"])):
+            die("--conformance не совмещается с project/only/mode/dry/json")
+        generate_instruction_conformance(env, opts["conformance"])
+        print(f"provider provision conformance → {opts['conformance']}")
         return
     mode = opts["mode"] or "auto"
     if mode not in MODES:

@@ -162,6 +162,28 @@ def trusted_dirs(env):
     return {norm_path(d) for d in dirs}
 
 
+def provider_trust(context, *, trusted, profile_id="workspace-contained",
+                   operation_id=None, target_identity=None, origin="operation"):
+    """Evaluate P5 trust/security per already-resolved effective provider, no writes."""
+    harness_root = Path(__file__).resolve().parents[3].parent / "harness"
+    import sys
+    harness_lib = str(harness_root / "lib")
+    if harness_lib not in sys.path:
+        sys.path.insert(0, harness_lib)
+    from harness.profiles import load_catalog, resolve_profile
+    catalog = load_catalog(harness_root / "configs/common/profile-catalog.json")
+    rows = []
+    for provider in context.provider_context.effective_providers:
+        resolution = resolve_profile(catalog, provider_id=provider.provider_id,
+                                     profile_id=profile_id, target_scope="project",
+                                     trusted=trusted, operation_id=operation_id,
+                                     target_identity=target_identity, origin=origin,
+                                     effective_provider=provider)
+        rows.append({"provider_id": provider.provider_id.value, "green": resolution.green,
+                     "diagnostics": [item.code for item in resolution.diagnostics]})
+    return tuple(rows)
+
+
 def audit(env, config):
     """Read-only диф реестра и hub-настроек: covered / missing / drift."""
     trusted = trusted_dirs(env)

@@ -8,13 +8,14 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
 from harness.common import Env
 from harness.settings_audit import (
     build_context, effective_config, load_layers, run_checks,
-    _strip_jsonc_comments, _load_vscode_layer, _vscode_user_path,
+    _load_vscode_layer,
 )
 
 
@@ -191,6 +192,8 @@ class SettingsAuditChecksCase(unittest.TestCase):
     # №5 — `~/…` раскрывается: легальный хук в HOME НЕ даёт ложный error
     # (полевой кейс 2026-07-11: ~/.claude/hooks/log-bash-command.sh клеился к target).
     def test_check5_tilde_path_expanded_no_false_error(self):
+        process_home = self.tmp / "process-home"
+        process_home.mkdir()
         hooks_dir = self.home / ".claude" / "hooks"
         hooks_dir.mkdir(parents=True, exist_ok=True)
         script = hooks_dir / "log-bash-command.sh"
@@ -199,7 +202,9 @@ class SettingsAuditChecksCase(unittest.TestCase):
         _write(self.target / ".claude" / "settings.json", {"hooks": {"PreToolUse": [
             {"matcher": "Bash",
              "hooks": [{"type": "command", "command": "~/.claude/hooks/log-bash-command.sh"}]}]}})
-        findings = self._run()
+        with mock.patch.dict("os.environ", {"HOME": str(process_home)}):
+            self.assertNotEqual(Path.home(), self.home)
+            findings = self._run()
         errs = [f for f in _findings_by_id(findings, 5) if f.level == "error"]
         self.assertEqual(errs, [], "тильда обязана раскрываться — ложный error недопустим")
 

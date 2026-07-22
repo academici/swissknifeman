@@ -1,4 +1,6 @@
 """Pure provider-configuration resolution for provider-neutral carriers."""
+from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import Mapping
 

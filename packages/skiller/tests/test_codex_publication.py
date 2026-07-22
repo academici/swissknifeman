@@ -1,6 +1,5 @@
 """P3.3 native Codex projection conformance tests."""
 import json
-import shutil
 import tempfile
 import unittest
 from pathlib import Path

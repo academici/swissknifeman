@@ -59,7 +59,16 @@ replan the ordinary artifacts with the actual transfer records, before any MCP a
 | Claude-only D104-shaped hooks | `not-selected` | ordinary Claude dry plan | no target created |
 | Selected Codex exact preimage + foreign `.mcp.json` | `admitted` with P2 `update` + `create` actions | `failed` / `unmanaged-target` | writer spy `0`; before/after snapshot identical |
 | Selected Codex changed hooks preimage | `refused` | separately planned ordinary projection | no lifecycle or MCP target created |
+| Selected Codex exact preimage + incomplete existing lock or handler | `refused` with P2 `bootstrap-lock-present` / `bootstrap-created-target-present` | separately planned ordinary projection | writer spy `0`; before/after snapshots identical |
 | Selected Codex clean targets | `admitted` | ordinary plan follows the completed transfer and remains idempotent on the second run | normal transfer then ordinary apply |
 
 This evidence remains disposable-root only. It neither adopts `.mcp.json` nor changes provider
 selection, and it does not authorize a live apply, repair, rollback, P7.2, phase close or audit.
+
+The P6.9 focused regression commands cover the deploy facade and sync result/config boundary:
+
+```text
+PYTHONPATH=packages/maind/lib:packages/maind:. python3 -m unittest discover -s packages/maind/tests -p 'test_provider_deploy.py'
+PYTHONPATH=packages/maind/lib:packages/maind:. python3 -m unittest discover -s packages/maind/tests -p 'test_deploy.py'
+PYTHONPATH=packages/maind/lib:packages/maind:. python3 -m unittest discover -s packages/maind/tests -p 'test_sync.py'
+```

@@ -1,6 +1,7 @@
 """Conformance tests for P2.2 fail-closed artifact lock lifecycle."""
 import json
 import os
+from dataclasses import replace
 from pathlib import Path
 import tempfile
 import unittest
@@ -9,11 +10,14 @@ from unittest.mock import patch
 import core.provider_lock as provider_lock
 from core import (ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource,
                   ArtifactTarget, ArtifactActionKind, CapabilityId, CapabilityRequirement,
-                  DriftObservation, ProviderId, SupportLevel, apply_plan,
-                  parse_lock, plan_artifact_lock, plan_artifact_render, serialize_lock)
+                  BootstrapTransferAdmission, DriftObservation, ProviderId, SupportLevel, apply_plan,
+                  parse_lock, plan_artifact_lock, plan_artifact_render, plan_bootstrap_transfer,
+                  serialize_lock)
 
 
 HASH = "sha256:" + "a" * 64
+BOOTSTRAP_PREIMAGE = b'{"hooks":{"SessionStart":["memory"]}}\n'
+BOOTSTRAP_DIGEST = "sha256:7d7538d021228e8e61d124f4b60b6db04434f8121de30b8672f05e4bf038c3db"
 
 
 def result(*, body=b"managed\n", artifact_id="task.plan-exec.codex-skill",
@@ -43,6 +47,27 @@ class ProviderLockTests(unittest.TestCase):
 
     def plan(self, expected=None, lock_bytes=None, **kwargs):
         return plan_artifact_lock(self.root, (expected or self.expected,), lock_bytes=lock_bytes, **kwargs)
+
+    def bootstrap_results(self):
+        return (
+            result(body=b'{"hooks":{"SessionStart":["memory","lifecycle"]}}\n',
+                   artifact_id="harness.codex.lifecycle.hooks", target=".codex/hooks.json"),
+            result(body=b"def lifecycle(event):\n    return event\n",
+                   artifact_id="harness.codex.lifecycle.handler",
+                   target=".codex/hooks/lifecycle.py"),
+        )
+
+    def bootstrap_admission(self):
+        return BootstrapTransferAdmission(
+            "D104", ".codex/hooks.json", BOOTSTRAP_DIGEST,
+            ".codex/hooks/lifecycle.py", "harness.codex.lifecycle.hooks",
+            "harness.codex.lifecycle.handler")
+
+    @staticmethod
+    def bootstrap_digest(value):
+        if value == BOOTSTRAP_PREIMAGE:
+            return BOOTSTRAP_DIGEST
+        return provider_lock.sha256_digest(value)
 
     def test_absent_create_apply_and_second_plan_is_noop(self):
         planned = self.plan()
@@ -220,6 +245,115 @@ class ProviderLockTests(unittest.TestCase):
         self.assertEqual(
             (planned.actions[0].observation, planned.actions[0].action),
             (DriftObservation.PROVENANCE_INVALID, ArtifactActionKind.REFUSE))
+
+    def test_d104_bootstrap_transfer_then_normal_second_plan_is_noop(self):
+        hooks = self.root / ".codex/hooks.json"
+        hooks.parent.mkdir(parents=True)
+        hooks.write_bytes(BOOTSTRAP_PREIMAGE)
+        results = self.bootstrap_results()
+        admission = self.bootstrap_admission()
+        original_digest = provider_lock.sha256_digest
+
+        def digest(value):
+            return BOOTSTRAP_DIGEST if value == BOOTSTRAP_PREIMAGE else original_digest(value)
+
+        with patch.object(provider_lock, "sha256_digest", side_effect=digest):
+            planned = plan_bootstrap_transfer(self.root, results, lock_bytes=None, admission=admission)
+            self.assertEqual([action.action for action in planned.actions],
+                             [ArtifactActionKind.UPDATE, ArtifactActionKind.CREATE])
+            applied = apply_plan(self.root, planned)
+        self.assertTrue((hooks.with_name("hooks.json.provider-artifact.bootstrap-transfer.bak")).exists())
+        self.assertEqual(hooks.read_bytes(), results[0].managed_bytes)
+        self.assertEqual((self.root / results[1].target.path).read_bytes(), results[1].managed_bytes)
+        second = plan_artifact_lock(self.root, results, lock_bytes=serialize_lock(applied.next_lock))
+        self.assertEqual([action.action for action in second.actions],
+                         [ArtifactActionKind.NOOP, ArtifactActionKind.NOOP])
+
+    def test_d104_altered_admission_refuses_without_writes(self):
+        hooks = self.root / ".codex/hooks.json"
+        hooks.parent.mkdir(parents=True)
+        hooks.write_bytes(BOOTSTRAP_PREIMAGE)
+        results = self.bootstrap_results()
+        original_digest = provider_lock.sha256_digest
+
+        def digest(value):
+            return BOOTSTRAP_DIGEST if value == BOOTSTRAP_PREIMAGE else original_digest(value)
+
+        for admission in (
+                replace(self.bootstrap_admission(), decision_id="D105"),
+                replace(self.bootstrap_admission(), existing_preimage_sha256=HASH),
+                replace(self.bootstrap_admission(), created_target_path=".codex/hooks/other.py")):
+            with self.subTest(admission=admission), patch.object(provider_lock, "sha256_digest", side_effect=digest):
+                before = tuple(sorted((path.relative_to(self.root).as_posix(), path.read_bytes())
+                                      for path in self.root.rglob("*") if path.is_file()))
+                planned = plan_bootstrap_transfer(self.root, results, lock_bytes=None, admission=admission)
+                self.assertTrue(all(action.action is ArtifactActionKind.REFUSE for action in planned.actions))
+                with self.assertRaises(ValueError):
+                    apply_plan(self.root, planned)
+                after = tuple(sorted((path.relative_to(self.root).as_posix(), path.read_bytes())
+                                     for path in self.root.rglob("*") if path.is_file()))
+                self.assertEqual(after, before)
+
+    def test_d104_transfer_rechecks_changed_target_before_backup_write(self):
+        hooks = self.root / ".codex/hooks.json"
+        hooks.parent.mkdir(parents=True)
+        hooks.write_bytes(BOOTSTRAP_PREIMAGE)
+        results = self.bootstrap_results()
+        original_digest = provider_lock.sha256_digest
+
+        def digest(value):
+            return BOOTSTRAP_DIGEST if value == BOOTSTRAP_PREIMAGE else original_digest(value)
+
+        with patch.object(provider_lock, "sha256_digest", side_effect=digest):
+            planned = plan_bootstrap_transfer(self.root, results, lock_bytes=None,
+                                              admission=self.bootstrap_admission())
+            hooks.write_bytes(b"raced\n")
+            with self.assertRaisesRegex(ValueError, "bootstrap-preimage-mismatch"):
+                apply_plan(self.root, planned)
+        self.assertFalse(hooks.with_name("hooks.json.provider-artifact.bootstrap-transfer.bak").exists())
+        self.assertFalse((self.root / ".swissknifeman/provider-artifacts.lock.json").exists())
+
+    def test_d104_transfer_failure_rolls_back_only_transaction_created_state(self):
+        hooks = self.root / ".codex/hooks.json"
+        hooks.parent.mkdir(parents=True)
+        hooks.write_bytes(BOOTSTRAP_PREIMAGE)
+        results = self.bootstrap_results()
+        original_digest = provider_lock.sha256_digest
+
+        def digest(value):
+            return BOOTSTRAP_DIGEST if value == BOOTSTRAP_PREIMAGE else original_digest(value)
+
+        with patch.object(provider_lock, "sha256_digest", side_effect=digest):
+            planned = plan_bootstrap_transfer(self.root, results, lock_bytes=None,
+                                              admission=self.bootstrap_admission())
+            writer = provider_lock._atomic_write_bytes
+            calls = 0
+
+            def fail_on_third(path, value):
+                nonlocal calls
+                calls += 1
+                if calls == 3:
+                    raise OSError("stop")
+                writer(path, value)
+
+            with patch.object(provider_lock, "_atomic_write_bytes", side_effect=fail_on_third):
+                with self.assertRaisesRegex(OSError, "stop"):
+                    apply_plan(self.root, planned)
+        self.assertEqual(hooks.read_bytes(), BOOTSTRAP_PREIMAGE)
+        self.assertFalse((self.root / ".codex/hooks/lifecycle.py").exists())
+        self.assertFalse((self.root / ".swissknifeman/provider-artifacts.lock.json").exists())
+
+    def test_ordinary_plan_retains_unrelated_lock_records(self):
+        first = self.plan()
+        apply_plan(self.root, first)
+        other = result(artifact_id="harness.other", target=".codex/other.py")
+        retained = plan_artifact_lock(
+            self.root, (other,), lock_bytes=serialize_lock(first.next_lock),
+            retain_unexpected_records=True)
+        apply_plan(self.root, retained)
+        lock = parse_lock((self.root / ".swissknifeman/provider-artifacts.lock.json").read_bytes())
+        self.assertEqual({record.artifact_id for record in lock.records},
+                         {self.expected.provenance.artifact_id, other.provenance.artifact_id})
 
 
 if __name__ == "__main__":  # pragma: no cover

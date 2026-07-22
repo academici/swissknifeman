@@ -4,6 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from core import ProviderId
 from maind.provision import deploy
 from maind.config import merge_defaults
 from maind.projects import get
@@ -29,6 +30,22 @@ def _config(path, pid="flexcrm", **memory):
 
 
 class TestDeploy(unittest.TestCase):
+    def test_claude_only_dry_run_reports_bootstrap_not_selected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            ppath = _project(tmp)
+            (ppath / ".codex/hooks").mkdir(parents=True)
+            (ppath / ".codex/hooks.json").write_text('{"hooks":{"SessionStart":[]}}',
+                                                       encoding="utf-8")
+            cfg = _config(ppath)
+            projections = deploy.provider_projection_context(env, cfg, cfg["projects"][0]).projections
+            self.assertEqual([projection.provider_id for projection in projections],
+                             [ProviderId.CLAUDE_CODE])
+            result = deploy.deploy_project(env, cfg, cfg["projects"][0], dry=True,
+                                            provider_projections=projections)
+            self.assertEqual(result["bootstrap_transfer"]["status"], "not-selected")
+            self.assertFalse((ppath / ".mcp.json").exists())
+
     def test_creates_mcp(self):
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)

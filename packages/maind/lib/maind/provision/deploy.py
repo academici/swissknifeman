@@ -24,7 +24,8 @@ from ..projects import get as get_project
 from ..projects import listing, write_config
 from ..provider_deploy import (apply_provider_artifacts, generate_conformance_report,
                                plan_provider_artifacts, plan_provider_deploy,
-                               plan_d104_bootstrap_transfer, SemanticServer, semantic_servers)
+                               plan_d104_bootstrap_transfer, project_provider_preflight,
+                               bootstrap_transfer_projection, SemanticServer, semantic_servers)
 
 
 @dataclass(frozen=True)
@@ -157,38 +158,61 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
     provider_plan = None
     provider_changed = False
     bootstrap_transfer = None
+    bootstrap_projection = None
     if provider_projections is not None:
-        has_codex = any(projection.provider_id.value == "codex"
-                        for projection in provider_projections)
-        bootstrap_root = project_path / ".codex/hooks.json"
-        bootstrap_lock = project_path / ".swissknifeman/provider-artifacts.lock.json"
-        if has_codex and bootstrap_root.is_file() and not bootstrap_lock.exists():
-            bootstrap_transfer = plan_d104_bootstrap_transfer(
-                project_path, harness_configs=_harness_configs(env))
-            if any(getattr(action.action, "value", action.action) == "refuse"
-                   for action in bootstrap_transfer.plan.actions):
-                raise ValueError("MAIND_PROVIDER_DEPLOY_REFUSED")
-            provider_changed = any(
-                getattr(action.action, "value", action.action) != "noop"
-                for action in bootstrap_transfer.plan.actions)
-            if not dry:
-                apply_plan(project_path, bootstrap_transfer.plan)
         provider_plan = plan_provider_deploy(
             provider_projections,
             provider_semantic_inventory(env, config, project, with_code=with_code,
                                         maind_server=maind_server,
                                         with_agentmemory=with_agentmemory))
-        extra_artifacts = () if dry or bootstrap_transfer is None else bootstrap_transfer.artifacts
-        provider_check = plan_provider_artifacts(project_path, provider_plan, repair=provider_repair,
-                                                 extra_artifacts=extra_artifacts)
-        if provider_check["severity"] == "error":
-            raise ValueError("MAIND_PROVIDER_DEPLOY_REFUSED")
-        provider_changed = provider_changed or any(
-            getattr(action.action, "value", action.action) != "noop"
-            for action in provider_check["plan"].actions)
-        if not dry:
-            apply_provider_artifacts(project_path, provider_plan, repair=provider_repair,
-                                     extra_artifacts=extra_artifacts)
+        # This ordinary P2 check deliberately does not include transfer artifacts: their
+        # pre-transfer state does not exist yet and must not manufacture a staged green.
+        ordinary_check = plan_provider_artifacts(project_path, provider_plan,
+                                                 repair=provider_repair)
+        has_codex = any(projection.provider_id.value == "codex"
+                        for projection in provider_projections)
+        bootstrap_root = project_path / ".codex/hooks.json"
+        bootstrap_lock = project_path / ".swissknifeman/provider-artifacts.lock.json"
+        if has_codex and bootstrap_root.is_file() and not bootstrap_lock.exists():
+            try:
+                bootstrap_transfer = plan_d104_bootstrap_transfer(
+                    project_path, harness_configs=_harness_configs(env))
+            except ValueError:
+                bootstrap_projection = bootstrap_transfer_projection(
+                    "refused", diagnostic="MAIND_PROVIDER_DEPLOY_REFUSED")
+            else:
+                refused = any(getattr(action.action, "value", action.action) == "refuse"
+                              for action in bootstrap_transfer.plan.actions)
+                bootstrap_projection = bootstrap_transfer_projection(
+                    "refused" if refused else "admitted", bootstrap_transfer,
+                    "MAIND_PROVIDER_DEPLOY_REFUSED" if refused else None)
+        else:
+            bootstrap_projection = bootstrap_transfer_projection("not-selected")
+
+        provider_check = ordinary_check
+        provider_plan = project_provider_preflight(provider_plan, ordinary_check)
+        refused = (bootstrap_projection["status"] == "refused"
+                   or ordinary_check["severity"] == "error")
+        if not refused:
+            provider_changed = any(
+                getattr(action.action, "value", action.action) != "noop"
+                for action in ordinary_check["plan"].actions)
+            if bootstrap_transfer is not None:
+                provider_changed = provider_changed or any(
+                    getattr(action.action, "value", action.action) != "noop"
+                    for action in bootstrap_transfer.plan.actions)
+            if not dry and bootstrap_transfer is not None:
+                apply_plan(project_path, bootstrap_transfer.plan)
+                # Replan only after the admitted transfer has actually completed. This
+                # preserves the initial no-write refusal gate and catches a changed root
+                # before any ordinary provider artifact is applied.
+                provider_check = plan_provider_artifacts(
+                    project_path, provider_plan, repair=provider_repair,
+                    extra_artifacts=bootstrap_transfer.artifacts)
+                if provider_check["severity"] == "error":
+                    raise ValueError("MAIND_PROVIDER_DEPLOY_REFUSED")
+            if not dry:
+                apply_plan(project_path, provider_check["plan"])
     emit_example = bool((config.get("mcp") or {}).get("emit_example"))  # opt-in: .example + .gitignore
 
     st = codegraph.settings(config)
@@ -252,7 +276,8 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
     return {"id": pid, "scope": scope, "written": written, "skipped": skipped,
             "code": code_state, "code_server": codegraph.server_name(project, st),
             "servers": list(entries), "targets": [w["file"] for w in written],
-            "provider_plan": provider_plan, "provider_changed": provider_changed}
+            "provider_plan": provider_plan, "provider_changed": provider_changed,
+            "bootstrap_transfer": bootstrap_projection}
 
 
 def mark_deployed(config, project_id, result):
@@ -318,6 +343,7 @@ def cmd_deploy(env, argv):
              f"(поднимите: maind start --only memory)")
 
     results = []
+    config_changed = False
     for proj in projects:
         # флаг (--with-code|--with-graphify) форсит код-граф; иначе None → из конфига проекта
         with_code = True if (opts["with_code"] or opts["with_graphify"]) else None
@@ -329,10 +355,12 @@ def cmd_deploy(env, argv):
         if res is None:
             continue
         results.append(res)
-        if not opts["dry_run"]:
+        if (not opts["dry_run"] and
+                (res.get("provider_plan") is None or res["provider_plan"].green)):
             config = mark_deployed(config, proj["id"], res)
+            config_changed = True
 
-    if not opts["dry_run"] and results:
+    if not opts["dry_run"] and config_changed:
         write_config(env, config)
 
     if opts["json"]:

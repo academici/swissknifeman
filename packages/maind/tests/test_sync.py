@@ -65,13 +65,16 @@ class TestProviderContexts(unittest.TestCase):
             result = {
                 "provider_plan": None,
                 "provider_changed": False,
+                "bootstrap_transfer": {"status": "not-selected", "actions": (),
+                                       "diagnostic": None},
                 "written": [],
                 "targets": [],
                 "skipped": [],
             }
             with mock.patch("maind.provision.deploy.deploy_project", return_value=result) as deploy:
-                sync._mcp_run(env, config, [context], "repair", True)
+                rows = sync._mcp_run(env, config, [context], "repair", True)
             self.assertTrue(deploy.call_args.kwargs["provider_repair"])
+            self.assertEqual(rows[0]["bootstrap_transfer"]["status"], "not-selected")
 
     def test_context_is_resolved_once_and_reused_across_order(self):
         with tempfile.TemporaryDirectory() as tmp:

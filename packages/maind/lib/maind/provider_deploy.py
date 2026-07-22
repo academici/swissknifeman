@@ -5,7 +5,7 @@ serialization through its immutable MCP projection API.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from collections.abc import Mapping
 from types import MappingProxyType
 from pathlib import Path
@@ -16,7 +16,7 @@ from core import (ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource
                   ArtifactTarget, CapabilityId, CapabilityRequirement, ProviderId,
                   SupportLevel, canonical_json_bytes, apply_plan, load_provider_manifest,
                   plan_artifact_lock, plan_artifact_render, provider_config_catalog,
-                  plan_bootstrap_transfer, BootstrapTransferAdmission, sha256_digest,
+                  plan_bootstrap_transfer, BootstrapTransferAdmission, artifact_dry_run, sha256_digest,
                   support_for)
 from core.provider_lock import artifact_doctor
 from .common import atomic_write_text
@@ -84,6 +84,32 @@ class BootstrapTransferPlan:
     """The sole P6-owned D104 composition and its already-admitted P2 plan."""
     artifacts: tuple
     plan: object
+
+
+def bootstrap_transfer_projection(status, transfer=None, diagnostic=None):
+    """Return the P6-owned no-write D104 result without reclassifying P2 actions."""
+    if status not in {"not-selected", "admitted", "refused"}:
+        raise ValueError("MAIND_BOOTSTRAP_TRANSFER_STATUS_INVALID")
+    actions = ()
+    if transfer is not None:
+        actions = tuple(artifact_dry_run(transfer.plan)["actions"])
+    return {"status": status, "actions": actions, "diagnostic": diagnostic}
+
+
+def project_provider_preflight(deploy_plan, checked):
+    """Keep ordinary-provider rows distinct while reflecting a P2 refusal in their result."""
+    if checked["plan"] is None:
+        return deploy_plan
+    actions = {action["target_path"]: action
+               for action in artifact_doctor(checked["plan"])["actions"]}
+    rows = []
+    for row in deploy_plan.results:
+        action = actions.get(row.target_path)
+        if action and action["action"] == "refuse":
+            rows.append(replace(row, status="failed", diagnostic=action["diagnostic"]))
+        else:
+            rows.append(row)
+    return ProviderDeployPlan(tuple(rows))
 
 
 def _d104_memory_registration(preimage):

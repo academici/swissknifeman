@@ -146,7 +146,7 @@ class TestProviderDeploy(unittest.TestCase):
                                     provider_projections=bases)
             self.assertFalse(second["provider_changed"])
 
-    def test_deploy_facade_keeps_d104_preimage_refusal_before_mcp_write(self):
+    def test_deploy_facade_projects_d104_refusal_before_mcp_write(self):
         harness = Path(__file__).resolve().parents[3] / "packages/harness/configs"
         catalog = load_mcp_catalog(harness / "common/mcp/catalog.json")
         bases = tuple(plan_mcp_projection(
@@ -162,12 +162,44 @@ class TestProviderDeploy(unittest.TestCase):
                 b"maind-memory.sh", b"other-memory.sh"))
             config = merge_defaults({"projects": [{"id": "demo", "name": "Demo",
                 "local_path": str(target), "memory_scope": "project:demo"}]})
-            with self.assertRaisesRegex(ValueError, "MAIND_PROVIDER_DEPLOY_REFUSED"):
-                deploy_project(env, config, config["projects"][0], with_code=False,
-                               provider_projections=bases)
+            result = deploy_project(env, config, config["projects"][0], with_code=False,
+                                    provider_projections=bases)
+            self.assertEqual(result["bootstrap_transfer"]["status"], "refused")
+            self.assertEqual(result["bootstrap_transfer"]["diagnostic"],
+                             "MAIND_PROVIDER_DEPLOY_REFUSED")
             self.assertEqual(hooks_path.read_bytes(), _D104_PREIMAGE.replace(
                 b"maind-memory.sh", b"other-memory.sh"))
             self.assertFalse((target / ".mcp.json").exists())
+
+    def test_selected_transfer_and_unmanaged_mcp_refuse_before_every_write(self):
+        harness = Path(__file__).resolve().parents[3] / "packages/harness/configs"
+        catalog = load_mcp_catalog(harness / "common/mcp/catalog.json")
+        bases = tuple(plan_mcp_projection(
+            catalog, provider_id=provider,
+            bindings_path=harness / provider.value / "mcp/bindings.json",
+            selected=(), trusted=True) for provider in ProviderId)
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            target = Path(tmp) / "project"
+            (target / ".codex/hooks").mkdir(parents=True)
+            (target / ".codex/hooks.json").write_bytes(_D104_PREIMAGE)
+            (target / ".mcp.json").write_text('{"mcpServers":{"foreign":{"command":"x"}}}',
+                                                encoding="utf-8")
+            before = {path.relative_to(target): path.read_bytes()
+                      for path in target.rglob("*") if path.is_file()}
+            config = merge_defaults({"projects": [{"id": "demo", "name": "Demo",
+                "local_path": str(target), "memory_scope": "project:demo"}]})
+            with patch("maind.provision.deploy.apply_plan") as writer:
+                result = deploy_project(env, config, config["projects"][0], with_code=False,
+                                        provider_projections=bases)
+            self.assertEqual(result["bootstrap_transfer"]["status"], "admitted")
+            self.assertEqual(result["provider_plan"].results[0].status, "failed")
+            self.assertEqual(result["provider_plan"].results[0].diagnostic,
+                             "unmanaged-target")
+            self.assertEqual(writer.call_count, 0)
+            after = {path.relative_to(target): path.read_bytes()
+                     for path in target.rglob("*") if path.is_file()}
+            self.assertEqual(after, before)
 
     def test_manifest_gate_refuses_missing_and_unsupported_before_render(self):
         repo = Path(__file__).resolve().parents[3]
@@ -327,8 +359,9 @@ class TestProviderDeploy(unittest.TestCase):
             self.assertTrue((target / ".mcp.json").exists())
             self.assertTrue((target / ".codex/config.toml").exists())
             (target / ".mcp.json").write_bytes((target / ".mcp.json").read_bytes() + b"\n")
-            with self.assertRaisesRegex(ValueError, "MAIND_PROVIDER_DEPLOY_REFUSED"):
-                deploy_project(env, config, project, with_code=False, provider_projections=bases)
+            refused = deploy_project(env, config, project, with_code=False,
+                                     provider_projections=bases)
+            self.assertEqual(refused["provider_plan"].results[0].status, "failed")
             deploy_project(env, config, project, with_code=False, provider_projections=bases,
                            provider_repair=True)
             self.assertNotEqual(plan_provider_artifacts(target, plan_provider_deploy(

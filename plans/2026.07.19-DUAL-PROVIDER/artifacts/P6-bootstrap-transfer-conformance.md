@@ -41,3 +41,25 @@ PYTHONPATH=packages/maind/lib:packages/maind:. python3 -m unittest discover -s p
 
 The plan-prescribed `PYTHONPATH=.` variants do not import the package test layout; this is
 recorded in P6.7 Known Deviations and does not change a target, lock or live root.
+
+## P6.9 preflight and split projection
+
+The P6 facade now projects the D104 bootstrap result separately from the ordinary provider
+aggregate. `not-selected` means Codex is not effective; `admitted` retains the P2 dry-run
+actions; `refused` retains a stable refusal diagnostic. None of those bootstrap results changes
+the ordinary provider aggregate.
+
+For every selected operation, mAInd constructs the ordinary provider plan/check and the exact
+D104 transfer plan before its first write. The initial ordinary check never includes transfer
+artifacts against the unchanged root. Only after an admitted transfer is applied does mAInd
+replan the ordinary artifacts with the actual transfer records, before any MCP artifact write.
+
+| Temporary-root case | Bootstrap | Ordinary provider result | Write proof |
+|:--|:--|:--|:--|
+| Claude-only D104-shaped hooks | `not-selected` | ordinary Claude dry plan | no target created |
+| Selected Codex exact preimage + foreign `.mcp.json` | `admitted` with P2 `update` + `create` actions | `failed` / `unmanaged-target` | writer spy `0`; before/after snapshot identical |
+| Selected Codex changed hooks preimage | `refused` | separately planned ordinary projection | no lifecycle or MCP target created |
+| Selected Codex clean targets | `admitted` | ordinary plan follows the completed transfer and remains idempotent on the second run | normal transfer then ordinary apply |
+
+This evidence remains disposable-root only. It neither adopts `.mcp.json` nor changes provider
+selection, and it does not authorize a live apply, repair, rollback, P7.2, phase close or audit.

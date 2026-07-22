@@ -128,7 +128,7 @@ def _provider_aggregate(plan):
 
 
 def _result(provisioner, project_id, status, *, changed=False, state="", detail="",
-            provider_aggregate=None):
+            provider_aggregate=None, bootstrap_transfer=None):
     """Единая форма результата провиженера (та же, что у health._result): ВСЕ ключи всегда
     присутствуют, поэтому CLI и тесты не зависят от .get()-умолчаний. status: ok|skip|dry."""
     result = {"provisioner": provisioner, "id": project_id, "status": status,
@@ -136,6 +136,8 @@ def _result(provisioner, project_id, status, *, changed=False, state="", detail=
     if provider_aggregate is not None:
         result["providers"] = list(provider_aggregate.rows)
         result["provider_aggregate"] = "green" if provider_aggregate.green else "non-green"
+    if bootstrap_transfer is not None:
+        result["bootstrap_transfer"] = bootstrap_transfer
     return result
 
 
@@ -157,7 +159,8 @@ def _mcp_run(env, config, projects, mode, dry):
             continue
         changed = (res["provider_changed"] if res.get("provider_plan") is not None
                    else any(w["changed"] for w in res["written"]))
-        if not dry:
+        provider_green = (res.get("provider_plan") is None or res["provider_plan"].green)
+        if not dry and provider_green:
             mark_deployed(config, p["id"], res)
             applied = True
         detail = ", ".join(res["targets"])
@@ -165,7 +168,8 @@ def _mcp_run(env, config, projects, mode, dry):
             detail += f" (пропущено битых каналов: {', '.join(res['skipped'])})"
         aggregate = _provider_aggregate(res["provider_plan"]) if res.get("provider_plan") else None
         results.append(_result("mcp", p["id"], "ok" if aggregate is None or aggregate.green else "failed",
-                               changed=changed, detail=detail, provider_aggregate=aggregate))
+                               changed=changed, detail=detail, provider_aggregate=aggregate,
+                               bootstrap_transfer=res.get("bootstrap_transfer")))
     if applied:
         write_config(env, config)
     return results

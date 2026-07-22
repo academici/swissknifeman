@@ -245,6 +245,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
 | 2026-07-22 | task-plan-run / gpt-5.6-terra/high | P6.7 закрыт: mAInd запрашивает только D104 native bootstrap-transfer и возвращает lifecycle artifacts в обычный P2 check/repair — детали см. phases/P6.md P6.7 Completion Notes. |
+| 2026-07-22 | plan-exec / gpt-5.6-terra/medium | P6.8 закрыт с RED admission evidence: disposable-root D104 matrix GREEN, но оба live no-write readers отказали без root delta — детали см. phases/P6.md P6.8 Completion Notes. |
 | 2026-07-22 | task-plan-close / implementation/low | P5 закрыта после terminal P5.8: D104 native lifecycle contribution reconciled; следующий gate — fresh independent P5 audit. |
 | 2026-07-22 | task-plan-run / gpt-5.6-terra/high | P2.6 D105 закрыт: `294157ec` seals reconstructed bootstrap-transfer dispatch; final independent P2 audit remains required — details in `phases/P2.md` P2.6 Completion Notes. |
 | 2026-07-22 | task-plan-audit / gpt-5.6-sol/xhigh | P2 audit attempt 3 RED/AUDIT-CAP: reconstructed plan bypasses D104 canonical-lock/backup invariants; D105 reopens only P2.6 for automatic contract-preserving repair. |

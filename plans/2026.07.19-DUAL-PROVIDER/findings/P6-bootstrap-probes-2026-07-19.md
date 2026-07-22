@@ -138,6 +138,18 @@ are invalidated. P6.6 remains blocked and P6.5 remains **🟡 In progress**.
 
 ## D93 memory-isolation recovery — GREEN
 
+## P6.6 cold-session reproof — GREEN
+
+The verified new P6.6 thread recovered `p6.5-bootstrap-b7373334` disk-first and then
+recalled the same exact-scope `project:swissknifeman` record
+`mem_mrvm57ek_aa95bdbc51c7`; canonical payload SHA-256 matched
+`22a9c7a82f48ae0e27449ca1be240398b3b8ecd36fbfd50bc2f8bd3a56d60dc9`.
+Worktree-local public temporary-root P6 conformance reproduced the checkpointed instruction
+render SHA-256 and its 12-target / 49-common-ID / 18-extension dual-provider proof; the
+committed deploy-render SHA-256 also matched. Scoped graph, Serena and the fixed official
+OpenAI Docs MCP query were GREEN. Broad environment doctor and live pre-P7 checker invocations
+are recorded as supervisor-classified non-gating process deviations.
+
 At `b7373334` after repair `884e146b`, the worktree-local public mAInd MCP server received
 `maind_memory_recall` with explicit `scope=project:swissknifeman`. Every returned record
 declared exactly that scope; no `ns:axioma`, global, or other scope was returned. The one

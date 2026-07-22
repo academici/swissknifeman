@@ -126,7 +126,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P2 | Deterministic adapters, provenance, lock и drift engine | 6/6 | 🟢 Done |
 | P3 | Dual skills publication и marketplaces | 5/5 | 🟢 Done |
 | P4 | Task-command parity и provider-neutral model routing | 5/5 | 🟢 Done |
-| P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 7/8 | 🟡 In progress |
+| P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 8/8 | 🟢 Done |
 | P6 | mAInd deployment, memory и provider-neutral analytics | 6/8 | 🟡 In progress |
 | P7 | Docs, self-hosting validation и FOREMAN release gate | 1/4 | 🔴 Blocked |
 
@@ -246,6 +246,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 |:--|:--|:--|
 | 2026-07-22 | task-plan-run / gpt-5.6-terra/high | P2.6 D105 закрыт: `294157ec` seals reconstructed bootstrap-transfer dispatch; final independent P2 audit remains required — details in `phases/P2.md` P2.6 Completion Notes. |
 | 2026-07-22 | task-plan-audit / gpt-5.6-sol/xhigh | P2 audit attempt 3 RED/AUDIT-CAP: reconstructed plan bypasses D104 canonical-lock/backup invariants; D105 reopens only P2.6 for automatic contract-preserving repair. |
+| 2026-07-22 | task-plan-run / gpt-5.6-terra/high | P5.8 supplies the D104 native Codex observer fragment/handler and fail-closed pre-P2 composition validator; ordinary observer conflict behavior remains unchanged. |
 | 2026-07-22 | owner | D104 accepted the exact bounded bootstrap-transfer implementation candidate; execution opens only P2.6→P5.8→P6.7→P6.8, with all live/P7.2+/FOREMAN/fleet/push work excluded. |
 | 2026-07-22 | plan-run / gpt-5.6-terra/high | P2.6 closed: D104-only v1.2.0 core bootstrap-transfer admission, rollback and temporary-root conformance — details in `phases/P2.md` P2.6 Completion Notes. |
 | 2026-07-22 | task-plan-design / gpt-5.6-terra/high | D103 approved bounded P2/P5/P6 bootstrap-transfer remediation design; P2, P5 and P6 are reopened for a sequential no-live chain, with D104 required before source implementation. |

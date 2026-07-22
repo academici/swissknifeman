@@ -1,33 +1,33 @@
-# HANDOFF — 2026-07-22 — after P2
+# HANDOFF — 2026-07-22 — after P5.8
 
-**Next:** run-items: task:plan-run 2026.07.19-DUAL-PROVIDER P5.8
+**Next:** /task:plan-close 2026.07.19-DUAL-PROVIDER P5
 
 | Параметр | Значение |
 |:--|:--|
 | Model | gpt-5.6-sol |
-| Thinking | xhigh — independent final P2 audit |
+| Thinking | xhigh — phase-close reconciliation |
 | Context | NEW SESSION — шаг-не-item |
-| Суть | Independently audit D105 plan sealing and all terminal P2.1–P2.6 evidence before P5.8. |
+| Суть | Reconcile terminal P5.8 evidence and close P5 before its fresh independent audit. |
 
 ```text
-$ task:plan-audit 2026.07.19-DUAL-PROVIDER P2
+$ task:plan-close 2026.07.19-DUAL-PROVIDER P5
 ```
 
-**Done:** D105 P2.6 item commit `294157ec` rejects a reconstructed D104 transfer with a rogue
-lock path or a cleared admission before any write. Exact D103/D104 approvals are committed in
-`be1432f9`; D104 preimage, paths, API and ordinary P2 behavior remain unchanged.
+**Done:** P5.8 item commit `1402873d` supplies the P5 native observer fragment, handler bytes
+and fail-closed D104 composition validator. The literal D103 preimage remains an unmanaged
+ownership conflict under normal observer planning; full harness validation passed.
 
-**Remaining:** final P2 audit → P5.8 → P5 close/audit → P6.7 → P6.8 → P6 close/audit. P7.2 rerun,
-P7.3+, FOREMAN, fleet, tag and push remain closed.
+**Remaining:** P5 close → fresh P5 audit → P6.7 → P6.8 → P6 close/audit. P7.2 rerun, P7.3+,
+FOREMAN, fleet, tag and push remain closed.
 
-**Sources of truth:** `phases/P2.md` P2.6 and its final Audit P2 block;
-`root/contracts/provider-artifact-contract.md` v1.2.0;
-`artifacts/P2-bootstrap-transfer-{contribution-proposal,conformance}.md`;
-`root/adr/ADR-0003-bootstrap-transfer.md`; `core/provider_lock.py`; committed D103/D104 evidence
-in `brief/01-refinements.md` at `be1432f9`.
+**Sources of truth:** `phases/P5.md` P5.8 and Phase Handoff — P5.8;
+`artifacts/P5-bootstrap-transfer-conformance.md`; `packages/harness/lib/harness/hooks.py`;
+`research/23-p7.2-live-preflight-remediation-design.md`; P2 D104 seam in
+`root/contracts/provider-artifact-contract.md` v1.2.0.
 
-**Open risks:** final audit must confirm that the D105 guard preserves D104 exact
-paths/preimage/API and ordinary plan/apply/repair. Two P5 DoR/workflow warnings are unrelated.
+**Open risks:** P5 close/audit must confirm the generated-doc boundary and preserve the two
+pre-existing P5 DoR/workflow warnings. P6.7 must consume the seam only through the public P2
+transfer API; it cannot start before the P5 gate.
 
-**Workarounds/Deferred/Open questions:** Historical P2 Update Log item hashes are an audit-recorded
-minor bookkeeping debt outside D105 scope; no runtime workaround or open product question.
+**Workarounds/Deferred/Open questions:** Historical P2 Update Log item hashes remain an
+audit-recorded minor bookkeeping debt; no runtime workaround or open product question.

@@ -9,7 +9,8 @@
 **Обновлён:** 2026-07-22 · **Соответствует plan.md:** v1.4.40
 
 > **Статус exec:** D103 reopens only the sequential P2.6→P5.8→P6.7→P6.8 remediation.
-> It is waiting for D104; P7.2 remains blocked, while P7.3+, FOREMAN, fleet and push stay closed.
+> D104 and terminal P2.6 are complete; P5.8 is complete pending P5 close/audit. P7.2 remains
+> blocked, while P7.3+, FOREMAN, fleet and push stay closed.
 
 ## Карта исполнения
 
@@ -51,7 +52,7 @@
 | P5.5 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | independent harness parity/doctor/docs gate |
 | P5.6 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/xhigh | ✅ D86 instruction freeze | public semantic parity/provenance contract |
 | P5.7 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | ✅ D87 additive carrier | instruction renderer/conformance against frozen D86 |
-| P5.8 | solo | plan-run (manual) — ⬜ | gpt-5.6-terra/high | D104 consumed via P2.6 | native Codex lifecycle fragment/handler; starts only after P2.6 |
+| P5.8 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | D104 consumed via P2.6 | native Codex lifecycle fragment/handler complete; P5 close/audit remains |
 | P6.1 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | — | mAInd provider deploy loop против frozen P1/P2/P5 contracts |
 | P6.2 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | — | provider context/trust/instructions and exact 30-row provisioner matrix focused-green |
 | P6.3 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/xhigh | ✅ analytics contract/privacy/migration | owner-gated schema/storage freeze completed |

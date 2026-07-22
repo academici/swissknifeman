@@ -1,6 +1,6 @@
 # HANDOFF — 2026-07-22 — after P6.12
 
-**Next:** /task:plan-design 2026.07.19-DUAL-PROVIDER P6.11
+**Next:** run-items: task:plan-run 2026.07.19-DUAL-PROVIDER P6.11
 
 | Параметр | Значение |
 |:--|:--|
@@ -9,11 +9,11 @@
 | Approval policy | `never` |
 | Sandbox | `danger-full-access` |
 | CWD | `/home/vostrikov/projects/packages/swissknifeman` |
-| Context | `NEW SESSION — шаг-не-item` |
-| Суть | Спроектировать только bounded P6.11 byte-render remediation после RED P6.12. |
+| Context | `NEW SESSION — item` |
+| Суть | Execute only D115 exact unchanged-MCP projection bridge, targeted tests and P6.11 reclose. |
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="medium"' -a never -s danger-full-access '$ task:plan-design 2026.07.19-DUAL-PROVIDER P6.11; read AGENTS.md, CLAUDE.md, plan.md, handoff.md, phases/P6.md P6.11/P6.12 and artifacts/P6-d108-independent-conformance.md. Design only the smallest P6.11 fix for the D108 Claude artifact bytes: D114 fixed IDs, but live dry-read still refuses because planned `maind.command` is `maind` rather than `${MAIND_BIN:-maind}` and server order differs. Preserve D108/P2 constants and all live boundaries. No source edits, live apply/repair/rollback, P7+, FOREMAN, fleet, tag, push, cleanup or owner AGENTS.md.'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="medium"' -a never -s danger-full-access '$ task:plan-run 2026.07.19-DUAL-PROVIDER P6.11; execute only D115: D108 supplies the existing regular .mcp.json bytes plus matching rendered provenance hash to the sealed core planner, which alone validates exact digest/server/path/boundary and NOOP. Add targeted refusal/non-D108 regressions and reclose. No live writes, P6.12/P7+, FOREMAN, fleet, tag, push, cleanup or owner AGENTS.md.'
 ```
 
 **Done:** P6.12 attempt-3 evidence commit `20e31b76` confirms focused disposable suites green

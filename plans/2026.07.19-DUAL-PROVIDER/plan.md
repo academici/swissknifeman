@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.4.54 |
+| Version | 1.4.55 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
@@ -115,7 +115,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P6.8 | gpt-5.6-terra/medium | plan-exec | full | independent temporary-root and live no-write conformance after P6.7; no new semantics or live apply |
 | P6.9 | gpt-5.6-terra/high | manual | full | prescribed fail-closed preflight ordering and structured D104/ordinary-plan separation; write-before-later-refusal risk requires high fidelity |
 | P6.10 | gpt-5.6-terra/medium | plan-exec | full | deterministic independent split-verdict/no-write proof after P6.9; no new semantics or live apply |
-| P6.11 | gpt-5.6-terra/medium | manual | targeted | D113 cost routing: bounded D114 inventory-name fix-forward only; frozen ownership and live boundaries are already sealed |
+| P6.11 | gpt-5.6-terra/medium | manual | targeted | D113 cost routing: bounded D114/D115 D108 fix-forward only; frozen ownership and live boundaries are already sealed |
 | P6.12 | gpt-5.6-terra/medium | plan-exec | full | deterministic independent temporary-root rollback and live no-write proof after P6.11; no new semantics or live apply |
 | P7.1 | gpt-5.6-sol/xhigh | manual | full | actual capability-catalog freeze + additive shared-core/public cross-package gate before deterministic docs; effort high+ MANDATORY |
 | P7.2 | gpt-5.6-terra/high | manual | full | live self-host install/update/repair с rollback и security gates; effort high+ MANDATORY |
@@ -132,7 +132,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P3 | Dual skills publication и marketplaces | 5/5 | 🟢 Done |
 | P4 | Task-command parity и provider-neutral model routing | 5/5 | 🟢 Done |
 | P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 8/8 | 🟢 Done |
-| P6 | mAInd deployment, memory и provider-neutral analytics | 10/12 | 🔴 Blocked |
+| P6 | mAInd deployment, memory и provider-neutral analytics | 9/12 | 🔴 Blocked |
 | P7 | Docs, self-hosting validation и FOREMAN release gate | 1/4 | 🔴 Blocked |
 
 ## 5. Decision Log
@@ -253,11 +253,13 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | D112 | 2026-07-22 | Reopen only P6.11 after P6.12 RED evidence `261da27a`: repair the D108 facade to compare the candidate against the canonical configured project root rather than the maind package root, and build the exact dual P5 projection tuple from the already planned carrier selection before D104/D110 planning. | RAG:— (repo-grounded: `artifacts/P6-d108-independent-conformance.md`, `packages/maind/lib/maind/provision/deploy.py`, P6.12 Completion Notes; owner-grounded: standing delegation `mem_mrwffj6x_4e58b0e7e65d`) — both defects are inside the existing P6.11 owning seam and the fix preserves D108–D111, frozen P2 ownership/preimages and no-write ordering; no new owner approval or live/P7 authority is required. |
 | D113 | 2026-07-22 | For the remaining no-write DUAL-PROVIDER work, default to `gpt-5.6-terra/medium`, targeted risk-based checks and automatic fix-forward without routine confirmations; do not run another heavyweight Codex Sol audit, and leave the final independent audit to Claude Code. | RAG:— (owner-grounded: direct instruction 2026-07-22, durable mAInd `project:swissknifeman` execution/cost rules) — reduces resource use and repeated ceremony without weakening frozen contracts; actual live/destructive work, FOREMAN, fleet, tag and push remain outside authority. |
 | D114 | 2026-07-22 | Reopen only P6.11's D108 inventory-name seam after RED `f41730e1`: the exact candidate must render configured MCP server identities `maind`, `perplexity-web`, `serena`, not internal role labels `maind`, `perplexity`, `codegraph`; bindings and sealed D108/P2 bytes remain unchanged. | RAG:— (repo-grounded: `artifacts/P6-d108-independent-conformance.md`, `codegraph.server_name`, `pplxweb.server_name`, live `.mcp.json`; owner-grounded: D113 automatic fix-forward) — this is the smallest P6-owned projection repair and grants no general rename API or live mutation authority. |
+| D115 | 2026-07-22 | Reopen only P6.11's D108 unchanged-MCP adoption seam after RED `20e31b76`: the D108 Claude artifact presented to the sealed P2 planner must carry the existing `.mcp.json` bytes and matching provenance hash, because D110 requires a `NOOP` transfer of that exact preimage; the core still admits only SHA `cf453…c8283` and server set `maind,perplexity-web,serena`. | RAG:— (repo-grounded: D110 proposal/ADR, `core/provider_lock.py` closed admission, P6.12 attempt 3 exact diff; owner-grounded: D113 automatic fix-forward) — reading the candidate is not general adoption: any other bytes/path/server set refuse before writer, ordinary/non-D108 rendering stays unchanged, and no live mutation authority is granted. |
 
 ## 6. Update Log
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-22 | root agent / D113 | D115 reopens only the D108 unchanged-MCP adoption projection after exact P6.12 byte diff; core frozen admission remains the verifier. |
 | 2026-07-22 | owner/root agent | D113 makes remaining no-write execution Terra/medium + targeted and defers the final heavyweight audit to Claude Code; D114 reopens only the D108 configured server-name seam. |
 | 2026-07-22 | task-plan-exec / gpt-5.6-terra/medium | P6.12 заблокирован: после D114 real dry-reader всё ещё отвергает byte-different D108 candidate до writer; нужен узкий P6.11 render redesign — детали см. phases/P6.md P6.12 Completion Notes. |
 | 2026-07-22 | plan-run / Codex gpt-5.6-terra/medium | P6.11 закрыт: D114 uses configured D108 MCP identities with unchanged bindings; далее независимый P6.12 — детали см. phases/P6.md P6.11 Completion Notes. |

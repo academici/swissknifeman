@@ -73,7 +73,7 @@ Normalized Claude example:
 ```json
 {
   "contract_version": "1.0.0",
-  "provider_id": "claude",
+  "provider_id": "claude-code",
   "session_id": "session-01",
   "project_id": "project-01",
   "event_id": "event-01",

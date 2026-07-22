@@ -10,10 +10,10 @@ Codex evidence is the committed P5 hook/context support matrix. P6.3 treats that
 
 Evidence sources:
 
-- `packages/harness/configs/claude-code/hooks/run-report/run-report.py` — sha256 `72703a62558653ff2a7413641ceb32767e764357e4b43076bf69463342276e3c`
+- `packages/harness/configs/claude-code/hooks/run-report` — sha256 `72703a62558653ff2a7413641ceb32767e764357e4b43076bf69463342276e3c` (`run-report.py`)
 - `plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-hook-context-matrix.md` — sha256 `7695eec299a57e5086be193267965ce1245366938425025e865f907b5be1706a`
 
-Hashes are deliberately placeholders in the creation commit worktree and MUST be computed from the named P5 evidence files only after both P6.3 files exist.
+The recorded hashes were computed from the named P5 evidence sources after both P6.3 files existed.
 
 ## Alternatives
 

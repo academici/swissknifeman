@@ -1,6 +1,8 @@
 """P6.2 public temporary-root conformance for provider provisioning."""
 from copy import deepcopy
 from dataclasses import replace
+from pathlib import Path
+import subprocess
 import tempfile
 import unittest
 
@@ -33,7 +35,7 @@ EXPECTED_MATRIX_CLASSES = (
     ("agent-pack", "delegated", "not-observed", "MAIND_DELEGATED:agent-pack"),
     ("output-style", "delegated", "not-observed", "MAIND_DELEGATED:memory-context"),
     ("router-config", "delegated", "not-observed", "MAIND_DELEGATED:router"),
-    ("instructions", "adapter-projected", "failed", "INSTRUCTION_TARGET_MISSING"),
+    ("instructions", "adapter-projected", "planned", "none"),
 )
 
 
@@ -152,10 +154,22 @@ class TestProviderProvisionConformance(unittest.TestCase):
 
     def test_public_conformance_command_generates_the_artifact(self):
         with tempfile.TemporaryDirectory() as tmp:
-            env, _config, root = _setup(tmp)
-            output = root / "provider-conformance.md"
-            _result, text = capture(sync.cmd_sync, env, ["--conformance", str(output)])
-            self.assertIn("provider provision conformance", text)
+            repo_root = Path(__file__).resolve().parents[3]
+            maind = repo_root / "packages/maind/bin/maind"
+            output = Path(tmp) / "provider-conformance-1.md"
+            repeated = Path(tmp) / "provider-conformance-2.md"
+            first = subprocess.run(
+                [str(maind), "sync", "--conformance", str(output)], cwd=repo_root,
+                text=True, capture_output=True, check=False)
+            second = subprocess.run(
+                [str(maind), "sync", "--conformance", str(repeated)], cwd=repo_root,
+                text=True, capture_output=True, check=False)
+            self.assertEqual(first.returncode, 0, first.stdout + first.stderr)
+            self.assertEqual(second.returncode, 0, second.stdout + second.stderr)
+            output_text = first.stdout + first.stderr + second.stdout + second.stderr
+            self.assertNotIn("swissknifeman не найден", output_text)
+            self.assertNotIn("harness не найден", output_text)
+            self.assertEqual(output.read_bytes(), repeated.read_bytes())
             generated = output.read_text(encoding="utf-8")
             self.assertIn("Dual-provider", generated)
             self.assertIn("harness semantic parity/extensions", generated)
@@ -165,3 +179,15 @@ class TestProviderProvisionConformance(unittest.TestCase):
             self.assertIn("missing/duplicate instruction scope", generated)
             self.assertIn("stale source hash", generated)
             self.assertIn("one-provider partial failure critical aggregate/allow-partial", generated)
+            for case in ("Claude-only legacy", "Codex-only", "Dual-provider"):
+                row = next(line for line in generated.splitlines()
+                           if line.startswith(f"| {case} |"))
+                self.assertTrue(row.endswith("| GREEN |"), row)
+            instruction_rows = [line for line in generated.splitlines()
+                                if line.startswith("| instructions |")]
+            self.assertEqual(len(instruction_rows), 2)
+            self.assertTrue(all("| failed |" not in row and
+                                ("| planned |" in row or "| dry |" in row)
+                                for row in instruction_rows), instruction_rows)
+            self.assertIn("| public onboard critical environment/instruction operations | GREEN |",
+                          generated)

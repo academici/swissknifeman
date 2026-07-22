@@ -257,6 +257,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
 | 2026-07-22 | plan-run / Codex gpt-5.6-terra/high | P6.11 закрыт: D112 seals the configured-root facade and carrier-derived dual P5 bases; далее независимый P6.12 — детали см. phases/P6.md P6.11 Completion Notes. |
+| 2026-07-22 | task-plan-exec / gpt-5.6-terra/medium | P6.12 повторно заблокирован: independent reader reaches D108 chain but sealed MCP expected bytes/IDs diverge; writer 0 — детали см. phases/P6.md P6.12 Completion Notes. |
 | 2026-07-22 | task-plan-design / root agent | D112 reopens only P6.11 for the P6.12 RED expected-root and pre-carrier dual-projection defects; frozen contracts and live authority remain unchanged. |
 | 2026-07-22 | plan-run/Codex gpt-5.6-terra high | P6.11 закрыт: D108 project carrier и all-plan-before-write composition committed; далее independent P6.12 — детали см. phases/P6.md P6.11 Completion Notes. |
 | 2026-07-22 | task-plan-exec / gpt-5.6-terra/medium | P6.12 blocked: independent live dry-reader proves a bounded P6.11 facade/pre-carrier projection defect with writer `0`; P7 remains closed — details in `phases/P6.md` P6.12 Completion Notes. |

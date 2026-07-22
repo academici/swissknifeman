@@ -20,6 +20,10 @@ class CodexCaptureReader:
                 or not all(isinstance(value, (int, float)) and not isinstance(value, bool)
                            for value in metrics.values())):
             raise ValueError("ANALYTICS_REDACTION_FAILED")
+        if "source_sha256" in raw:
+            declared_sha256 = raw["source_sha256"]
+            source_bytes = None
+            raw = {key: value for key, value in raw.items() if key != "source_sha256"}
         source_hash, provenance = source_provenance(
             raw, supplied_bytes=source_bytes, declared_sha256=declared_sha256, raw_ref=raw_ref,
             reader_id=self.reader_id, reader_version=self.reader_version)

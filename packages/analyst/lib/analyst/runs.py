@@ -29,9 +29,10 @@ def migrate_legacy(project_path, *, project_id, source, operation="plan"):
                       raw_ref="local:legacy-" + source_hash[:16], source_bytes=before,
                       declared_sha256=source_hash)
     found = [item for item in read_events(project_path)
-             if (item.provider_id, item.project_id, item.session_id, item.event_id)
-             == (event["provider_id"], event["project_id"], event["session_id"], event["event_id"])]
-    if found and found[0].provenance["sha256"] != event["provenance"]["sha256"]:
+             if (item.provider_id, item.project_id, item.session_id)
+             == (event["provider_id"], event["project_id"], event["session_id"])]
+    if found and (found[0].event_id != event["event_id"]
+                  or found[0].provenance["sha256"] != event["provenance"]["sha256"]):
         raise ValueError("ANALYTICS_MIGRATION_CONFLICT")
     result = {"operation": operation, "event_id": event["event_id"], "would_copy": not bool(found),
               "source_sha256": source_hash}

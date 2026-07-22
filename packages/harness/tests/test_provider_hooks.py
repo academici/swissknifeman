@@ -7,6 +7,7 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "analyst" / "lib"))
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 from core import ArtifactActionKind, ProviderId, apply_plan, plan_artifact_lock, serialize_lock
@@ -14,6 +15,7 @@ from harness.hooks import (LifecycleRequest, adapt_codex_hook_payload,
                            plan_codex_capture_artifact, plan_codex_lifecycle_artifacts, plan_lifecycle,
                            render_codex_hooks)
 from harness.profiles import load_catalog
+from analyst.runs import normalize
 
 PACKAGE = Path(__file__).resolve().parents[1]
 CATALOG = PACKAGE / "configs/common/profile-catalog.json"
@@ -169,6 +171,8 @@ class ProviderHookTests(unittest.TestCase):
             payload = json.loads(observed.stdout)
             self.assertEqual(payload["metrics"], {"usage": 1})
             self.assertIn("source_sha256", payload)
+            event = normalize("codex", 1, payload, project_id="p", raw_ref="local:generated")
+            self.assertEqual(event["provenance"]["sha256"], payload["source_sha256"])
 
 
 if __name__ == "__main__":

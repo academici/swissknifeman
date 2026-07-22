@@ -9,6 +9,37 @@ from analyst.runs import migrate_legacy, neutral_run_report, normalize
 
 
 class ProviderReaderTests(unittest.TestCase):
+    def test_claude_rich_scalar_mapping_and_source_provenance(self):
+        raw = {
+            "schema": 2, "session_id": "s", "generated_at": "2026-07-22T00:00:00Z",
+            "tools": {"total": 9, "by_name": {"Read": 3}},
+            "files_changed": ["a", "b"], "workflows": [{"name": "w"}],
+            "retrieval": {"calls": 2}, "devloop": {"workarounds": ["w"], "deferred": ["d"]},
+            "maind": {"memory_recall": {"calls": 2}, "graph_query": {"calls": 1}},
+            "usage": {"agents": [{"in": 10, "out": 4}, {"in": 3, "out": 2}]},
+            "tool_failures": [{"tool": "Bash"}], "bash": {"failed": []},
+        }
+        source = json.dumps(raw, sort_keys=False, separators=(",", ":")).encode()
+        event = normalize("claude-code", 2, raw, project_id="p", raw_ref="local:claude",
+                          source_bytes=source, declared_sha256=hashlib.sha256(source).hexdigest())
+        self.assertEqual(event["metrics"], {"tools": 9, "reads": 3, "files": 2, "workflows": 1,
+                         "retrieval": 2, "devloop": 2, "maind": 3, "usage": 19, "errors": 1})
+        self.assertEqual(event["outcome"], "ok")
+        self.assertEqual(event["provenance"]["sha256"], hashlib.sha256(source).hexdigest())
+
+    def test_claude_missing_fields_additive_and_corrupt_scalars(self):
+        base = {"schema": 2, "session_id": "s", "generated_at": "2026-07-22T00:00:00Z",
+                "harmless_additive": {"future": True}, "bash": {}}
+        event = normalize("claude-code", 2, base, project_id="p", raw_ref="local:claude")
+        self.assertEqual(event["metrics"], {})
+        self.assertEqual(event["outcome"], "unknown")
+        with self.assertRaisesRegex(ValueError, "ANALYTICS_UNKNOWN_SCHEMA"):
+            normalize("claude-code", 3, base, project_id="p", raw_ref="local:claude")
+        with self.assertRaisesRegex(ValueError, "ANALYTICS_CORRUPT_EVENT") as caught:
+            normalize("claude-code", 2, dict(base, tools={"total": "bad-secret"}),
+                      project_id="p", raw_ref="local:claude")
+        self.assertNotIn("bad-secret", str(caught.exception))
+
     def test_explicit_reader_normalizes_distinct_provider_provenance(self):
         claude = normalize("claude-code", 2, {"schema": 2, "session_id": "s", "generated_at": "2026-07-22T00:00:00Z", "tools": {"total": 1}, "bash": {}}, project_id="p", raw_ref="local:c")
         codex = normalize("codex", 1, {"schema": 1, "session_id": "s", "occurred_at": "2026-07-22T00:00:00Z", "metrics": {"usage": 1}}, project_id="p", raw_ref="local:x")

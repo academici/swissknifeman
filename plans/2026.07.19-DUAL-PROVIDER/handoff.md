@@ -1,35 +1,34 @@
 # HANDOFF — 2026-07-22 — after P6.4
 
-**Next:** exec-items: task:plan-exec 2026.07.19-DUAL-PROVIDER P6.5
+**Next:** ЗАПУСК ВРУЧНУЮ: `gpt-5.6-terra/high`
 
-| Параметр | Значение |
-|:--|:--|
-| Model class | implementation |
-| Effort | medium |
-| Capabilities | command.filesystem-read · command.git-read · command.mcp-read |
-| Context | cold-start — plan-step |
-| Суть | Run the independent P6 integrated conformance and pre-restart checkpoint; package source changes are forbidden. |
+| Model | Thinking | Context | Суть |
+|:--|:--|:--|:--|
+| gpt-5.6-terra | high | continue (/clear) — ручной item | Repair only reopened P6.4 against frozen D90; run focused regressions plus immediate consumers and replace the false-close evidence honestly. |
 
 ```text
-$ task:plan-exec 2026.07.19-DUAL-PROVIDER P6.5
+Repair ONLY reopened P6.4 of plan 2026.07.19-DUAL-PROVIDER from /tmp/swissknifeman-p6.4 on codex/p6.4. Read the frozen provider-analytics contract, P6.4 spec, false implementation/diff, and focused evidence. Keep D90 unchanged. Repair proven reader byte/hash/event-ID, fail-closed redaction, deterministic run projection, migrated consumers, migration modes, and contract-authored focused tests. Do not enter P6.5+, P7, FOREMAN, fleet, live self-host, push, or stashes. Close only after focused integrated conformance, plan-lint baseline HEAD with no new errors, diff-check, protected delta 0, and clean tree.
 ```
 
-**Done:** P6.4 closed at item commits `ef21dce7`, `b7548c96`, `fec5769a`, `c3b4d341`,
-`45a57c48`, `2b4621ed`, and `68b8575e`: D90 neutral envelope/store, explicit provider
-readers, idempotent copy+verify migration, mAInd neutral consumer, and P2-generated Codex
-capture bundle. Focused conformance is recorded in `artifacts/P6-analytics-migration-conformance.md`.
+**Current state:** D91 reopened P6.4 after false-close `08c5ce21`. D90 and
+`provider-analytics-contract` v1.0.0 remain frozen. P6.1–P6.3 are terminal; P6.5–P6.6
+remain unstarted.
 
-**Remaining:** P6.5 package-wide integrated conformance/checkpoint, then fresh-session P6.6.
-P7+, live self-host, FOREMAN, fleet, and push remain outside authority.
+**Done:** The prior P6.4 code chain remains committed as audit history, but its terminal
+claim is invalidated by D91; the item is now `🟡 In progress` for the bounded repair.
 
-**Sources of truth:** `phases/P6.md` P6.4/P6.5; `root/contracts/provider-analytics-contract.md`;
-`artifacts/P6-analytics-{contribution-review,migration-conformance}.md`; `journal.jsonl`.
+**Remaining:** Repair every listed P6.4 owning seam, commit focused code/test slices, replace
+the conformance evidence truthfully, and complete append-only P6.4 close bookkeeping.
 
-**Open risks:** P6.5 must run the terminal package validators and independent dual-provider
-matrix. The focus runner namespace collision is documented in the P6.4 conformance artifact.
+**Sources of truth:** `phases/P6.md` P6.4; `root/contracts/provider-analytics-contract.md`;
+`artifacts/P6-analytics-{contribution-review,contract-review,migration-conformance}.md`;
+the P6.4 code chain `ef21dce7..68b8575e`; `journal.jsonl`.
+
+**Open risks:** The prior conformance statement is invalid for the listed owning seams and
+must be replaced only by focused, reproducible evidence. No frozen contract change is authorized.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: none in implementation.
-- deferred: package-wide validation and checkpoint evidence belong only to P6.5.
-- open_questions: none; incompatible D90 changes require a new versioned decision.
+- workarounds: none accepted.
+- deferred: package-wide validation and checkpoint evidence remain exclusively P6.5.
+- open_questions: none; an incompatible D90 change requires a new versioned decision.

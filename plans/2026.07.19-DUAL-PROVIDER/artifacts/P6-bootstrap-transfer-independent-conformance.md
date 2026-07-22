@@ -41,3 +41,36 @@ temporary fixture diagnostics only. No test targets the live repository root.
 This result proves the disposable-root transfer matrix only. It does not attest the live root;
 that admission is separately recorded in
 `findings/P6-bootstrap-transfer-live-preflight-2026-07-22.md`.
+
+## P6.10 — independent split verdict and zero-write recheck
+
+**Observed:** 2026-07-22T19:09:24+03:00
+**Tree:** `cbca1aff` before P6.10 evidence commits
+**Mode:** literal D104/D106 oracle before observation; disposable roots and the two permitted
+live dry-run readers only.
+
+The independently derived oracle requires the exact-preimage/foreign-MCP case to retain an
+`admitted` bootstrap projection while its ordinary row is `failed / unmanaged-target`; it requires
+changed preimage, existing handler and existing lock to be bootstrap refusals with no writer call
+and an identical root snapshot. Clean targets remain `admitted / planned`. The P6.9 test module
+was not imported to generate these expected values.
+
+| Disposable-root case | Observed split result | No-write result |
+|:--|:--|:--|
+| Exact preimage + foreign `.mcp.json` | bootstrap `admitted` (`update`, `create`); ordinary `failed / unmanaged-target` | dry writer `0`; snapshot equal |
+| Changed preimage | bootstrap `refused / bootstrap-preimage-mismatch` | write facade writer `0`; snapshot equal |
+| Existing handler | bootstrap `refused / bootstrap-created-target-present` | write facade writer `0`; snapshot equal |
+| Existing lock | bootstrap `refused / bootstrap-lock-present` | write facade writer `0`; snapshot equal |
+| Clean target | bootstrap `admitted` (`update`, `create`); ordinary `planned` | dry writer `0`; snapshot equal |
+
+The focused public suites passed: `test_provider_deploy.py` (23 tests on `cbca1aff`) and
+`test_deploy.py` (21 tests on `cbca1aff`). The former independently covers the selected-Codex,
+foreign-MCP write-mode facade with writer `0` and an equal snapshot.
+
+On the live root, `maind sync --dry-run --json` reports bootstrap `not-selected` plus required
+`claude-code failed / unmanaged-target` and `provider_aggregate: non-green`; the P5 observer
+reader exits nonzero with `ownership-conflict → refuse (unmanaged-target)`. Before/after sorted
+SHA-256 inventories agree: hooks preimage
+`7d7538d021228e8e61d124f4b60b6db04434f8121de30b8672f05e4bf038c3db`, absent lifecycle handler,
+and absent provider lock. This proves the required split/no-write boundary, not live admission;
+the unmanaged `.mcp.json` remains a separate authority decision and P7.2 remains closed.

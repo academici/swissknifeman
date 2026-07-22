@@ -1,37 +1,38 @@
-# HANDOFF — 2026-07-22 — after P6.11
+# HANDOFF — 2026-07-22 — after P6.12
 
-**Next:** /task:plan-exec 2026.07.19-DUAL-PROVIDER P6.12
+**Next:** design-item: task:plan-design 2026.07.19-DUAL-PROVIDER P6.11
 
 | Параметр | Значение |
 |:--|:--|
-| Model | `gpt-5.6-terra` |
-| Thinking | `medium` |
+| Model | `gpt-5.6-sol` |
+| Thinking | `high` |
 | Approval policy | `never` |
 | Sandbox | `danger-full-access` |
 | CWD | `/home/vostrikov/projects/packages/swissknifeman` |
 | Context | `NEW SESSION — шаг-не-item` |
-| Суть | Independently prove P6.11 D108 rollback in temporary roots and the live read-only zero-write boundary. |
+| Суть | Reopen only P6.11 for the RED P6.12 live-reader preflight defect, then specify bounded fix-forward. |
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="medium"' -a never -s danger-full-access '$ task:plan-exec 2026.07.19-DUAL-PROVIDER P6.12; read phases/P6.md P6.12 Required Reads in order; independently derive the D108 temporary-root rollback/noop matrix and run the authorized live readers with a writer spy only; do not edit package source/tests, mutate live carriers, run P7, FOREMAN, fleet, tag, push, cleanup, or touch owner AGENTS.md'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access '$ task:plan-design 2026.07.19-DUAL-PROVIDER P6.11; read AGENTS.md, CLAUDE.md, plans/2026.07.19-DUAL-PROVIDER/{plan.md,handoff.md,phases/P6.md,artifacts/P6-d108-independent-conformance.md}; reopen only P6.11 to repair its expected-root and pre-carrier dual-projection wiring. Preserve D108-D111, frozen P2 ownership/preimages, P6.12 evidence, no live apply/repair/rollback, P7+, FOREMAN, fleet, tag, push, cleanup and owner AGENTS.md.'
 ```
 
-**Done:** P6.11 item commit `8618034e` adds the fail-closed project-local `.swissknife.json`
-carrier planner/apply rollback and composes its planned dual selection with D104/D110 before
-any operation writer. The focused maind provider/deploy suites passed 46 tests; no live carrier
-was read or changed.
+**Done:** P6.12 evidence commit `261da27a` independently proves P2.7's 26-test chained rollback
+suite and P6.11's 46-test focused package suite. The real root was inspected only through dry
+readers: writer spy `0`, three explicit existing-path SHA-256 values unchanged, and no absent
+carrier/lock/handler appeared.
 
-**Remaining:** Execute P6.12, close/fresh-audit P6, and only then rerun P7.2.
+**Remaining:** Reopen/repair/reclose P6.11; re-run P6.12 from the independent oracle; then P6
+close and fresh independent audit. P7.2 is not runnable.
 
-**Sources of truth:** `plan.md` D108–D111 · `phases/P6.md` P6.11/P6.12 ·
-`artifacts/P6-d108-remediation-conformance.md` · `research/26-p7.2-s1-o1-remediation-design.md`.
+**Sources of truth:** `artifacts/P6-d108-independent-conformance.md` · `phases/P6.md` P6.11/P6.12 ·
+`research/26-p7.2-s1-o1-remediation-design.md` · D108–D111 in `plan.md`.
 
-**Open risks:** P5 retains `2 (на HEAD)` pre-existing DoR/workflow warnings. D107 F1–F4 remain
-accepted historical P6 debt. Live `.mcp.json` and `.swissknife.json` were not read or modified by
-P2.7.
+**Open risks:** The live facade passes its maind package root to the canonical-project gate and
+builds projections before the planned D108 dual selection; either defect prevents required live
+candidate classification. P5 retains `2 (на HEAD)` inherited DoR/workflow warnings.
 
 **Workarounds/Deferred/Open questions:**
 
 - workarounds: —
-- deferred: all live apply/repair/rollback and exact live action approval remain in P7.2 after isolated GREEN.
+- deferred: all live apply/repair/rollback and exact live action approval remain P7.2-only after isolated GREEN.
 - open_questions: —

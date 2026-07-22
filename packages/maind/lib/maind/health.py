@@ -394,6 +394,9 @@ def cmd_health(env, argv):
                   + (f" ({', '.join(row['diagnostics'])})" if row["diagnostics"] else ""))
         for h in rep["hints"]:
             print(f"    → {h}")
-    # strict падает, если связь не connected ИЛИ память не проходит round-trip
-    if opts["strict"] and (rep["status"] != "connected" or not rep["memory_roundtrip"]):
+    # strict падает, если связь не connected, память не проходит round-trip
+    # или доверие любого включённого/обязательного provider не подтверждено.
+    trust_failed = any(not row["green"] for row in rep.get("provider_trust", ()))
+    if opts["strict"] and (rep["status"] != "connected" or not rep["memory_roundtrip"]
+                           or trust_failed):
         raise SystemExit(1)

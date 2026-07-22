@@ -8,6 +8,7 @@ import subprocess
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from maind import health
 from maind.common import Env
@@ -362,6 +363,49 @@ class TestCLI(unittest.TestCase):
             rep = json.loads(out)
             self.assertEqual(rep["id"], "flexcrm")
             self.assertIn("status", rep)
+
+    def test_strict_rejects_required_provider_trust_failure_in_human_and_json_output(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, _config, _, _ = _setup(tmp)
+            report = {
+                "id": "flexcrm", "scope": "project:flexcrm", "namespaces": [],
+                "status": "connected", "memory_daemon": True,
+                "hook_memory_mode": "maind", "native_memory_off": True,
+                "digest_hook": True, "memory_roundtrip": True,
+                "agentmemory_mcp": True, "maind_mcp": True, "code_mcp": True,
+                "mcp_hygiene": [], "path": None, "hints": [],
+                "provider_trust": [{"provider_id": "claude-code", "green": False,
+                                    "diagnostics": ["HARNESS_TRUST_REQUIRED"]}],
+            }
+            with patch.object(health, "health_report", return_value=report):
+                for output in ([], ["--json"]):
+                    with self.subTest(output=output):
+                        with self.assertRaises(SystemExit) as error:
+                            health.cmd_health(env, ["--project", "flexcrm", "--strict", *output])
+                        self.assertEqual(error.exception.code, 1)
+
+    def test_strict_accepts_satisfied_provider_trust_in_human_and_json_output(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, _config, _, _ = _setup(tmp)
+            report = {
+                "id": "flexcrm", "scope": "project:flexcrm", "namespaces": [],
+                "status": "connected", "memory_daemon": True,
+                "hook_memory_mode": "maind", "native_memory_off": True,
+                "digest_hook": True, "memory_roundtrip": True,
+                "agentmemory_mcp": True, "maind_mcp": True, "code_mcp": True,
+                "mcp_hygiene": [], "path": None, "hints": [],
+                "provider_trust": [{"provider_id": "claude-code", "green": True,
+                                    "diagnostics": []}],
+            }
+            with patch.object(health, "health_report", return_value=report):
+                for output in ([], ["--json"]):
+                    with self.subTest(output=output):
+                        _, text = capture(health.cmd_health, env,
+                                          ["--project", "flexcrm", "--strict", *output])
+                        if output:
+                            self.assertTrue(json.loads(text)["provider_trust"][0]["green"])
+                        else:
+                            self.assertIn("[ok  ] provider:claude-code trust", text)
 
 
 class TestActPrimitive(unittest.TestCase):

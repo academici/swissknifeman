@@ -1,6 +1,6 @@
-# HANDOFF — 2026-07-22 — after P2.6
+# HANDOFF — 2026-07-22 — after P2
 
-**Next:** audit-phase: task:plan-audit 2026.07.19-DUAL-PROVIDER P2
+**Next:** run-items: task:plan-run 2026.07.19-DUAL-PROVIDER P5.8
 
 | Параметр | Значение |
 |:--|:--|

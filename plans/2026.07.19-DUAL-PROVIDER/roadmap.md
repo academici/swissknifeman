@@ -33,7 +33,7 @@
 | P2.3 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/high | — | immutable capability-aware catalog committed after P2.2 |
 | P2.4 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | synthetic dry/doctor/conformance gate committed; phase is terminal pending independent audit |
 | P2.5 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | — | D76 contract-required RED remediation committed; phase reclosed pending fresh audit |
-| P2.6 | solo | plan-run (manual) — 🟡 D105 repair | gpt-5.6-terra/high | ✅ D104 exact additive P2 API/contract | reconstructed-plan seal/dispatch repair; no live root write |
+| P2.6 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | ✅ D104 exact additive P2 API/contract | D105 seal/dispatch repair and final independent audit complete; no live root write |
 | P3.1 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/high | ✅ publication contract | frozen identity/install/ownership semantics до adapters |
 | P3.2 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | deterministic Claude compatibility projection после P3.1 |
 | P3.3 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | — | native Codex plugin/cache contract; D83 restored stale core cache/lock with catalog regression |

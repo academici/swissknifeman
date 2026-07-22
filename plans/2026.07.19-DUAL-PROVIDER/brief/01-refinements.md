@@ -287,3 +287,16 @@ RAG:— (repo-grounded: D66/D79/D102–D107,
 
 RAG:— (owner-grounded: mAInd memory `mem_mrwffj6x_4e58b0e7e65d`; repo-grounded: D79,
 `research/{25-p7.2-owner-authority-boundary,26-p7.2-s1-o1-remediation-design}.md`).
+
+## 2026-07-22 — D111 accepts GREEN P2 audit-cap result
+
+- Fresh independent Audit P2 attempt 5 returned substantive `GREEN` on committed anchor
+  `224f1688`; audit artifact commit is `f9f168a8`.
+- Under the standing delegation `mem_mrwffj6x_4e58b0e7e65d`, the logically determined
+  audit-cap choice is to accept terminal P2 and continue the already approved D108 route,
+  not stop the plan.
+- This removes only the satisfied P2 predecessor block from P6.11. It does not authorize
+  live config/artifact mutation, P7.2, FOREMAN, fleet, tag or push.
+
+RAG:— (owner-grounded: standing delegation; repo-grounded: final Audit P2 block,
+`224f1688`, `f9f168a8`, D108 roadmap).

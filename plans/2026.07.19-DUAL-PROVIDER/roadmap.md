@@ -6,11 +6,11 @@
      Порядок строго phase-first: P0→P1→P2→P3→P4→P5→P6→P7. До finish + GREEN design
      audit исполнение любого item запрещено. -->
 
-**Обновлён:** 2026-07-22 · **Соответствует plan.md:** v1.4.49
+**Обновлён:** 2026-07-22 · **Соответствует plan.md:** v1.4.50
 
 > **Статус exec:** D108 under standing delegation selected `S1+O1` and intentionally
-> superseded the pre-approval no-reopen restriction. P2.7 and the terminal full-core/docs/release
-> gate are complete; current route is fresh P2 audit → P6.11 → P6.12 → P6 close/fresh audit →
+> superseded the pre-approval no-reopen restriction. P2.7, terminal full-core/docs/release
+> gate and substantive GREEN audit are accepted by D111; current route is P6.11 → P6.12 → P6 close/fresh audit →
 > fresh P7.2. Remediation uses disposable
 > roots/read-only live preflight only; P7.3+, live writes, FOREMAN, fleet, tag and push remain
 > closed.
@@ -38,7 +38,7 @@
 | P2.4 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | synthetic dry/doctor/conformance gate committed; phase is terminal pending independent audit |
 | P2.5 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | — | D76 contract-required RED remediation committed; phase reclosed pending fresh audit |
 | P2.6 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | ✅ D104 exact additive P2 API/contract | D105 seal/dispatch repair and final independent audit complete; no live root write |
-| P2.7 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | ✅ D108/D109 carrier correction; delegated D110 exact proposal seal before source | terminal closed D104+`.mcp.json` transaction; temporary roots only; no general adoption API; fresh P2 audit remains |
+| P2.7 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | ✅ D108/D109 carrier correction; delegated D110 exact proposal seal before source | terminal closed D104+`.mcp.json` transaction; temporary roots only; no general adoption API; D111 accepted GREEN audit |
 | P3.1 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/high | ✅ publication contract | frozen identity/install/ownership semantics до adapters |
 | P3.2 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | deterministic Claude compatibility projection после P3.1 |
 | P3.3 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | — | native Codex plugin/cache contract; D83 restored stale core cache/lock with catalog regression |
@@ -67,7 +67,7 @@
 | P6.8 | solo | plan-exec — 🟠 | gpt-5.6-terra/medium | — | evidence preserved: P2-admissible D104 candidate is live-not-selected; ordinary aggregate non-green |
 | P6.9 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/high | — | preflight all required plans before write and report bootstrap/ordinary results separately |
 | P6.10 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | independent split-verdict and zero-write proof; does not open P7.2 |
-| P6.11 | solo | plan-run (manual) — 🔴 | gpt-5.6-terra/high | ✅ D108 | blocked until terminal/fresh-audited P2.7; project-carrier + all-plan-before-write composition |
+| P6.11 | solo | plan-run (manual) — ⬜ | gpt-5.6-terra/high | ✅ D108/D111 | predecessor satisfied; project-carrier + all-plan-before-write composition |
 | P6.12 | solo | plan-exec — ⬜ | gpt-5.6-terra/medium | — | independent temporary-root rollback and live zero-write proof after P6.11 |
 | P7.1 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/xhigh | ✅ D99 | terminal generated docs/exact-set |
 | P7.2 | solo | plan-run (manual) — 🔴 | gpt-5.6-terra/high | ✅ D108 `S1+O1`; later exact live apply D# | waits for terminal/fresh-audited P2.7 and P6.11→P6.12, then reruns from first preflight |
@@ -216,25 +216,25 @@ terminal tree фазы. Полные правила и exact probes: `research/2
 
 ## Готовый launch-block текущего шага
 
-### P2 — fresh independent audit
+### P6.11 — project selection and exact ownership composition
 
-**Next:** /task:plan-audit 2026.07.19-DUAL-PROVIDER P2
+**Next:** run-items: task:plan-run 2026.07.19-DUAL-PROVIDER P6.11
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | audit (`gpt-5.6-sol`) |
-| Effort | xhigh |
-| Capabilities | command.filesystem-read · command.git-read |
-| Context | NEW SESSION — шаг-не-item |
-| Суть | Независимо проверить terminal P2.7/D110 transaction и весь terminal P2 перед P6.11. |
+| Model class | implementation (`gpt-5.6-terra`) |
+| Effort | high |
+| Capabilities | command.filesystem-read · command.filesystem-write · command.git-read · command.git-write |
+| Context | same-session — item |
+| Суть | Реализовать только P6.11 project carrier и all-plan-before-write D108 composition в temporary roots. |
 
 ```text
-/task:plan-audit 2026.07.19-DUAL-PROVIDER P2
+$ task:plan-run 2026.07.19-DUAL-PROVIDER P6.11
 
-РЕЖИМ: fresh independent audit terminal P2; disk/git evidence first, no implementation or bookkeeping edits
-ВХОД: AGENTS.md, CLAUDE.md, plans/2026.07.19-DUAL-PROVIDER/{plan.md,roadmap.md,handoff.md}, phases/P2.md including P2.7 and all Audit P2 blocks; D104–D110 carriers and `core/provider_lock.py` tests
-СКОУП: independently reproduce terminal P2.7/D110 closed admission, three-record transaction, rollback/refusal/no-write and ordinary P2 regressions; verify full-core close evidence and plan records
-НЕ ТРОГАТЬ: live root, `.mcp.json`, `.swissknife.json`, P6/P7 execution, core/package source, FOREMAN, fleet, tag, push or unrelated changes
+РЕЖИМ: один manual item P6.11 после D111; implementation и focused temporary-root validation
+ВХОД: plans/2026.07.19-DUAL-PROVIDER/phases/P6.md → P6.11 Required Reads; `plan.md` D108–D111
+СКОУП: 1) project-local provider carrier plan/apply/rollback 2) P2.7+D104+provider all-plan-before-write composition 3) focused conformance and item close
+НЕ ТРОГАТЬ: live root/carriers, P6.12/P7 execution, FOREMAN, fleet, tag, push, owner `AGENTS.md` or unrelated changes
 ```
 
 ## Гейты владельца (сводно)

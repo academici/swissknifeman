@@ -59,6 +59,7 @@ class LifecycleRenderPlan:
 
 
 _CODEX_HOOK_ADAPTER_VERSION = "1.0.0"
+_CODEX_CAPTURE_ADAPTER_VERSION = "1.0.0"
 _LIFECYCLE_KINDS = frozenset(("lifecycle", "context"))
 
 
@@ -197,6 +198,30 @@ def plan_codex_lifecycle_artifacts(plan: LifecycleRenderPlan, *, bindings_path: 
     handler = plan_artifact_render(ArtifactRenderRequest("harness.codex.lifecycle.handler", (source,),
         ArtifactTarget(".codex/hooks/lifecycle.py", ("whole-file", ())), identity, (), {}, lambda _request: render_codex_hook_handler()))
     return hooks, handler
+
+
+def render_codex_capture_handler() -> bytes:
+    """Generated local-only capture adapter; it persists no prompt or raw hook body."""
+    return b'''#!/usr/bin/env python3
+import json, sys
+payload = json.load(sys.stdin)
+required = {"session_id", "occurred_at", "metrics"}
+if not isinstance(payload, dict) or not required.issubset(payload) or not isinstance(payload["metrics"], dict):
+    sys.exit(2)
+print(json.dumps({"schema": 1, "session_id": payload["session_id"], "occurred_at": payload["occurred_at"], "metrics": payload["metrics"], "outcome": payload.get("outcome", "unknown")}, sort_keys=True))
+'''
+
+
+def plan_codex_capture_artifact(*, bindings_path: Path):
+    """Create a cache-contained P2/P5-rendered Codex capture bundle, never a copied module."""
+    source = ArtifactSource("harness.codex.capture-bindings",
+                            "packages/harness/configs/codex/hooks/lifecycle-context-bindings.json",
+                            sha256_digest(Path(bindings_path).read_bytes()))
+    identity = ArtifactAdapterIdentity("harness.codex.capture", _CODEX_CAPTURE_ADAPTER_VERSION,
+                                       ProviderId.CODEX, "1.0.0", ())
+    return plan_artifact_render(ArtifactRenderRequest("harness.codex.capture.handler", (source,),
+        ArtifactTarget(".codex/hooks/analytics-capture.py", ("whole-file", ())), identity, (), {},
+        lambda _request: render_codex_capture_handler()))
 
 
 def block_autoapprove(target, mode, settings_file, dry):

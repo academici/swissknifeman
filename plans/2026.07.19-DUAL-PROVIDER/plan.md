@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.4.53 |
+| Version | 1.4.54 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
@@ -259,6 +259,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
 | 2026-07-22 | owner/root agent | D113 makes remaining no-write execution Terra/medium + targeted and defers the final heavyweight audit to Claude Code; D114 reopens only the D108 configured server-name seam. |
+| 2026-07-22 | task-plan-exec / gpt-5.6-terra/medium | P6.12 заблокирован: после D114 real dry-reader всё ещё отвергает byte-different D108 candidate до writer; нужен узкий P6.11 render redesign — детали см. phases/P6.md P6.12 Completion Notes. |
 | 2026-07-22 | plan-run / Codex gpt-5.6-terra/medium | P6.11 закрыт: D114 uses configured D108 MCP identities with unchanged bindings; далее независимый P6.12 — детали см. phases/P6.md P6.11 Completion Notes. |
 | 2026-07-22 | plan-run / Codex gpt-5.6-terra/high | P6.11 закрыт: D112 seals the configured-root facade and carrier-derived dual P5 bases; далее независимый P6.12 — детали см. phases/P6.md P6.11 Completion Notes. |
 | 2026-07-22 | task-plan-exec / gpt-5.6-terra/medium | P6.12 повторно заблокирован: independent reader reaches D108 chain but sealed MCP expected bytes/IDs diverge; writer 0 — детали см. phases/P6.md P6.12 Completion Notes. |

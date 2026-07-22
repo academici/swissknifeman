@@ -131,7 +131,8 @@ class Env(BaseEnv):
     @property
     def config_read_path(self):
         """Read carrier, keeping ``default_config`` as the isolated write target."""
-        return self.default_config if self.default_config.is_file() else self.linked_worktree_config
+        return (self.default_config if self.default_config.is_file()
+                else self.linked_worktree_config or self.default_config)
 
     @property
     def example_config(self):

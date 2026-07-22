@@ -35,3 +35,21 @@ until required instruction rows are successful before P6.5 can be rerun.
 
 No package source was modified, no package validator was run, and no live probe or checkpoint
 was written. This evidence does not authorize a P6.5 repair.
+
+## Bounded P6.5 repair pointer — 2026-07-22
+
+The owner authorized one repair only in the RED finding's owning P6.2 seam. Invocation
+metadata is authoritative for this run (`gpt-5.6-terra/high`, approval `never`, sandbox
+`danger-full-access`); `codex doctor --json` reports `gpt-5.6-sol` only as the loaded base
+configuration default, not the command-line invocation override.
+
+Commits `24569b4b` and `887a714b` restore isolated conformance with scoped, verified
+same-worktree skiller/harness launchers; restore the environment afterwards; require successful
+critical onboard environment/instruction operations; and require instruction matrix rows to be
+actual non-failed planned/dry semantics. The focused worktree-local CLI regression ran twice
+with exit `0`, no missing-sibling diagnostics, and byte-identical reports.
+
+The RED evidence above remains the repair pointer and P6.5 remains **🟡 In progress**: no package
+validators, live probes, checkpoint, P6.6, P7, FOREMAN, fleet, or self-host state were run or
+changed. Continue through the existing structured `exec-items: task:plan-exec
+2026.07.19-DUAL-PROVIDER P6.5` handoff route.

@@ -123,7 +123,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P3 | Dual skills publication и marketplaces | 5/5 | 🟢 Done |
 | P4 | Task-command parity и provider-neutral model routing | 5/5 | 🟢 Done |
 | P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 7/7 | 🟢 Done |
-| P6 | mAInd deployment, memory и provider-neutral analytics | 3/6 | 🟡 In progress |
+| P6 | mAInd deployment, memory и provider-neutral analytics | 4/6 | 🟡 In progress |
 | P7 | Docs, self-hosting validation и FOREMAN release gate | 0/4 | ⬜ Not started |
 
 ## 5. Decision Log
@@ -226,6 +226,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-22 | plan-terra-high / gpt-5.6-terra/high | P6.4 повторно закрыт: D90-preserving reader, redaction, projection, consumer, migration и generated-capture repairs have focused GREEN evidence — details in `phases/P6.md` P6.4 Completion Notes. |
 | 2026-07-22 | plan-terra-high / gpt-5.6-terra/high | D91: P6.4 reopened for bounded repair of its false close; D90 remains unchanged — details in `phases/P6.md` P6.4 Completion Notes. |
 | 2026-07-22 | plan-sol-xhigh / gpt-5.6-sol/xhigh | P6.3 закрыт: D90 заморозил neutral analytics storage, named-reader/privacy/provenance boundary, legacy fallback и reversible migration — детали см. phases/P6.md P6.3 Completion Notes. |
 | 2026-07-22 | plan-terra-high / gpt-5.6-terra/high | P6.4 закрыт: реализованы neutral store, explicit readers, copy+verify migration, mAInd consumer и generated Codex capture bundle — детали см. phases/P6.md P6.4 Completion Notes. |

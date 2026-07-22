@@ -31,3 +31,17 @@ focused runners prove the same seams without changing source or weakening a test
 - the P2 artifact API generates a Codex handler that rejects prompt/nested input. Its safe stdout is
   written as a source file and consumed through the public `analyst capture` path, proving stored
   provenance SHA-256 equals the exact file bytes.
+
+## Supervisor acceptance repair — `acfdbaac`
+
+| Seam | Command | Result |
+|---|---|---|
+| Claude reader and immediate analyst consumers | `PYTHONPATH=.:packages/analyst/lib python3 -m unittest packages.analyst.tests.test_provider_readers packages.analyst.tests.test_digest packages.analyst.tests.test_token_report packages.analyst.tests.test_sessions packages.analyst.tests.test_lessons -q` | GREEN (81 tests) |
+| mAInd neutral consumer | `PYTHONPATH=.:packages/maind/lib:packages/maind python3 -m unittest tests.test_analyze -q` | GREEN (17 tests) |
+
+The Claude SCHEMA=2 reader now emits a metric only when its named source evidence exists:
+`tools.total`, `tools.by_name.Read`, list cardinalities for files/workflows/tool failures,
+`retrieval.calls`, documented devloop list cardinalities, mAInd `calls`, and numeric usage
+aggregated from totals or main/subagent rows. Missing evidence stays absent. A malformed scalar
+fails with `ANALYTICS_CORRUPT_EVENT` without exposing its value; harmless additive raw fields are
+ignored. This repair preserves immutable reader registration and exact source-byte provenance.

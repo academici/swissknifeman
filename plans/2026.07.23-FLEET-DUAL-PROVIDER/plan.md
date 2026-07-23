@@ -109,3 +109,5 @@ P1 закрывает только synthetic/disposable conformance MVP; нез�
 | 2026-07-23 | task-plan-design / gpt-5.6-sol/high | D13: azguard diagnosis локализовал project-provider layer defect в mAInd; точный test-first owning repair добавлен в P2.2. |
 | 2026-07-23 | owner / Dmitry Vostrikov | D14: P2.2 сужен до внутренних owning fixes; любой дальнейший live consumer access запрещён, rollout отложен без ослабления D5–D7. |
 | 2026-07-23 | task-plan-run / gpt-5.6-sol/high | P2.2 закрыт по D14: project provider layer, exact managed adoption и canonical contained Codex carrier исправлены и провалидированы; live rollout deferred — детали см. phases/P2.md P2.2 Completion Notes. |
+| 2026-07-23 | independent-acceptance / root | P2.2 reopened: already-desired exact adoption оставлял все actions NOOP и не записывал ownership lock. |
+| 2026-07-23 | task-plan-run / gpt-5.6-sol/high | P2.2 закрыт fix-forward: already-desired adoption теперь атомарно переносит ownership и проходит ordinary no-op planning — детали см. phases/P2.md P2.2 Completion Notes. |

@@ -13,20 +13,21 @@
 | Суть | Сверить terminal P2 items, закрыть фазу с D14 deviation и подготовить независимый audit carrier. |
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="low"' -a never -s danger-full-access 'NEW SESSION: Close phase P2 of plan 2026.07.23-FLEET-DUAL-PROVIDER with task:task-plan-close. Start with pwd, git status --short, effective codex doctor --json, hook-command integrity, ./packages/maind/bin/maind health --cwd, and applicable plan lint. Read AGENTS.md, CLAUDE.md, task-plan-close, plan-protocol, plan.md, handoff.md, phases/P2.md and P2.2 evidence. Reconcile terminal P2 items, commits 8f91865e, 63edc6da and 48c7abbe, package validation claims, D14 material deferral and plan lint; then prepare the independent P2 audit carrier. HARD BOUNDARY: do not inspect, mutate or validate any live consumer repository; never use --repair or --force; preserve D5-D7, FOREMAN and unrelated work.'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="low"' -a never -s danger-full-access 'NEW SESSION: Close phase P2 of plan 2026.07.23-FLEET-DUAL-PROVIDER with task:task-plan-close. Start with pwd, git status --short, effective codex doctor --json, hook-command integrity, ./packages/maind/bin/maind health --cwd, and applicable plan lint. Read AGENTS.md, CLAUDE.md, task-plan-close, plan-protocol, plan.md, handoff.md, phases/P2.md and P2.2 evidence. Reconcile terminal P2 items, commits 8f91865e, 63edc6da, 48c7abbe and be968b96, package validation claims, D14 material deferral and plan lint; then prepare the independent P2 audit carrier. HARD BOUNDARY: do not inspect, mutate or validate any live consumer repository; never use --repair or --force; preserve D5-D7, FOREMAN and unrelated work.'
 ```
 
 **Done:** P2.1 terminal. P2.2 terminal under D14 with internal commits
-`8f91865e`, `63edc6da` and `48c7abbe`; maind/skiller validation is GREEN on
-tree anchor `48c7abbe`.
+`8f91865e`, `63edc6da`, `48c7abbe` and acceptance fix-forward `be968b96`;
+maind validation is GREEN on tree anchor `be968b96`, while the unchanged
+skiller validation remains anchored at `48c7abbe`.
 
 **Remaining:** Close P2 with deviations, then run an independent P2 phase
 audit. Live external consumer rollout is deferred and requires a separate
 future owner-authorized carrier beginning at D7.
 
 **Sources of truth:** `phases/P2.md` P2.2 · `findings/P2.2-rollout.md` Attempt
-2 · `plan.md` D13–D14 · commits `8f91865e`, `63edc6da`, `48c7abbe` ·
-`journal.jsonl`.
+2–3 · `plan.md` D13–D14 · commits `8f91865e`, `63edc6da`, `48c7abbe`,
+`be968b96` · `journal.jsonl`.
 
 **Open risks:** No live consumer proof exists under D14; the audit must not
 reinterpret internal GREEN as completed fleet rollout.

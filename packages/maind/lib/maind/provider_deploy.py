@@ -678,7 +678,7 @@ def plan_exact_artifact_adoption(root, artifacts, *, preimage_hashes,
         raise ProviderDeployError("MAIND_PROVIDER_ADOPTION_ALREADY_MANAGED")
     existing_targets = set()
     observed = {}
-    for target_path, artifact in targets.items():
+    for target_path in targets:
         target = root / target_path
         if target.is_symlink() or target.exists() and not target.is_file():
             raise ProviderDeployError("MAIND_PROVIDER_ADOPTION_TARGET_UNSAFE")

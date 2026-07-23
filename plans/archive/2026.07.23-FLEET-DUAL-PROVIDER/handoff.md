@@ -1,15 +1,15 @@
 # HANDOFF — 2026-07-23 — after P2
 
-**Next:** archive: task:plan-close archive 2026.07.23-FLEET-DUAL-PROVIDER
+**Next:** terminal — план закрыт и архивирован
 
-**Done:** P2 closed with deviations. P2.1 is green; P2.2 internal fixes are
-anchored by `8f91865e`, `63edc6da`, `48c7abbe`, `be968b96` and review-fix
-`24b4d080`, with the D14 evidence correction at `a86cf425`. Audit
-`df05a656` returned ATTENTION on evidence/accounting only; D15 reconciles all
-six findings in `findings/P2-audit-remediation.md`.
+**Done:** P2 closed with deviations; D15 reconciled all six independent-audit
+findings plan-only at `4c1e21ab`. The terminal plan moved to
+`plans/archive/2026.07.23-FLEET-DUAL-PROVIDER` in the dedicated archive commit
+`7044c9c1`. Product anchors remain `8f91865e`, `63edc6da`, `48c7abbe`,
+`be968b96`, review-fix `24b4d080`, and evidence correction `a86cf425`.
 
-**Remaining:** archive the terminal plan. `root/` is absent, so no project-doc
-migration is required. PR #147 merge and live rollout remain outside authority.
+**Remaining:** no executable work in this plan. PR #147 merge and live consumer
+rollout remain outside its authority.
 
 **Sources of truth:** `phases/P2.md` · `findings/P2.1-p1-traceability.md` ·
 `findings/P2.2-rollout.md` Attempt 2–3 · `findings/P2-audit-remediation.md` ·
@@ -25,20 +25,15 @@ live-consumer boundary remain frozen.
 **Workarounds/Deferred/Open questions:**
 - workarounds: none;
 - deferred: live consumer rollout requires a separate D7 owner-authorized carrier;
-- open_questions: none for terminal archive.
+- open_questions: none.
 
-## Archive carrier
+## Archive migration checklist
 
-| Parameter | Value |
-|:--|:--|
-| Model | `gpt-5.6-terra` |
-| Thinking | `low` |
-| Approval policy | `never` |
-| Sandbox | `danger-full-access` |
-| Cwd | `/home/vostrikov/projects/packages/swissknifeman` |
-| Context | `NEW SESSION — шаг-не-item` |
-| Суть | Archive the terminal plan after D15 plan-only audit remediation; no root/ migration is required. |
-
-```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="low"' -a never -s danger-full-access 'NEW SESSION: Archive terminal plan 2026.07.23-FLEET-DUAL-PROVIDER using task:task-plan-close archive after D15 remediation. Read AGENTS.md, CLAUDE.md, plan-protocol, plan.md, handoff.md, phases/P2.md and findings/P2-audit-remediation.md. Verify all phases terminal, root/ absent, plan lint green, then move the plan to plans/archive/ in the required separate archive commit and write the migration checklist in the second commit. HARD BOUNDARY: no live consumer repository access, no rollout, no FOREMAN, no PR #147 merge, no --repair or --force; preserve D5-D7 and unrelated work.'
-```
+- [x] Plan mirror synchronized from project before the move.
+- [x] `root/ → docs`: not applicable — `root/` was absent.
+- [x] `findings/`, `research/` and `artifacts/` retained inside the archive.
+- [x] `plans/ACTIVE.md` already contained `Active: —`; no registry edit needed.
+- [x] No references to the live plan path existed outside the plan before move.
+- [x] Archive move isolated in `7044c9c1`; this checklist is the second
+  migration/docs commit.
+- [x] No consumer repository, rollout, FOREMAN or PR merge action was performed.

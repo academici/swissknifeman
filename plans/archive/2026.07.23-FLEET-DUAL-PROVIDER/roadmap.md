@@ -75,18 +75,11 @@ Audit P1 завершён ATTENTION; remediation carrier — P2.1, P1 не
 P2.1 закрыт item commit `906dddc6`; carrier:
 `findings/P2.1-p1-traceability.md`. Следующий executable item — P2.2.
 
-### Terminal — D15 reconciliation and archive
+### Terminal — archived
 
 P2 closed at `3ebc74d3`; independent audit `df05a656` returned ATTENTION on
-evidence/accounting only. D15 resolves all six findings plan-only and carries
-the owner's instruction to finish without another launch prompt.
+evidence/accounting only. D15 resolved all six findings plan-only at
+`4c1e21ab`; archive move is `7044c9c1`.
 
-**Next:** archive: task:plan-close archive 2026.07.23-FLEET-DUAL-PROVIDER
-
-| Model | Thinking | Context | Суть |
-|:--|:--|:--|:--|
-| `gpt-5.6-terra` | `low` | `NEW SESSION — шаг-не-item` | Архивировать terminal plan after D15 remediation; root/ отсутствует, consumer/rollout/merge вне scope. |
-
-```text
-$ task:plan-close archive 2026.07.23-FLEET-DUAL-PROVIDER
-```
+**Next:** terminal — no executable item. Live rollout and PR merge are outside
+this archived plan.

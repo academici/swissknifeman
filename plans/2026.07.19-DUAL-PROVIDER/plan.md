@@ -132,7 +132,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P3 | Dual skills publication и marketplaces | 5/5 | 🟢 Done |
 | P4 | Task-command parity и provider-neutral model routing | 5/5 | 🟢 Done |
 | P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 8/8 | 🟢 Done |
-| P6 | mAInd deployment, memory и provider-neutral analytics | 11/12 | 🟡 In progress |
+| P6 | mAInd deployment, memory и provider-neutral analytics | 11/12 | 🟠 Done with deviations |
 | P7 | Docs, self-hosting validation и FOREMAN release gate | 1/4 | 🔴 Blocked |
 
 ## 5. Decision Log
@@ -267,6 +267,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-23 | task-plan-close / gpt-5.6-sol/medium | P6 повторно закрыта как 🟠 после terminal P6.1–P6.12: D123/P6.12 GREEN подтверждены, material P6.8 evidence остаётся явным; далее только fresh independent P6 audit — детали см. phases/P6.md Phase Handoff. |
 | 2026-07-23 | owner / D123 evidence | После hash-verification удалены только две named D121 backup residues; это не заменяет P6.11 source repair и не открывает P7.2. |
 | 2026-07-23 | task-plan-design / gpt-5.6-sol/high | D123 assigns only the verified D121 backup lifecycle to P6.11 and reopens independent P6.12 proof; P7.2/live mutation stay closed — детали см. phases/P6.md P6.11/P6.12. |
 | 2026-07-23 | task-plan-exec / gpt-5.6-sol/high | P6.12 закрыт: independent D123 disposable rollback restores the exact inventory and rejects malformed states before writer; real-root dry reader is admitted with writer 0 and no backup residue — детали см. phases/P6.md P6.12 Completion Notes. |

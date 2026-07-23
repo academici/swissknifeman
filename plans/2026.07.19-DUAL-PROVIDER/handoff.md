@@ -1,36 +1,32 @@
-# HANDOFF — 2026-07-23 — after P6.11
+# HANDOFF — 2026-07-23 — after P6
 
-**Next:** `/task:plan-close 2026.07.19-DUAL-PROVIDER P6` — close only the now-terminal P6
-phase; do not audit P6 or run P7.2.
+**Next:** `/task:plan-audit 2026.07.19-DUAL-PROVIDER P6`
 
 | Model | Thinking | Approval policy | Sandbox | CWD | Context |
 |:--|:--|:--|:--|:--|:--|
-| `gpt-5.6-terra` | `low` | `never` | `danger-full-access` | `/home/vostrikov/projects/packages/swissknifeman` | `NEW SESSION — шаг-не-item` |
+| `gpt-5.6-sol` | `xhigh` | `never` | `danger-full-access` | `/home/vostrikov/projects/packages/swissknifeman` | `NEW SESSION — шаг-не-item` |
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="low"' -a never -s danger-full-access 'Read AGENTS.md, CLAUDE.md, packages/maind/CLAUDE.md, packages/task/commands/plan-close.md, and plans/2026.07.19-DUAL-PROVIDER/{plan.md,handoff.md,phases/P6.md,journal.jsonl}. Run task:plan-close 2026.07.19-DUAL-PROVIDER P6 only: reconcile the terminal P6.1–P6.12 statuses, perform the required docs-sync assessment, write the Phase Handoff and phase-close bookkeeping, then run structural plan-lint. Do not audit P6, execute P7.2, change package source/tests, perform live apply/repair/rollback, or touch P7.3+, FOREMAN, fleet, tag, push, cleanup, AGENTS.md, .serena/project.yml, or unrelated dirt.'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="xhigh"' -a never -s danger-full-access 'Read AGENTS.md, CLAUDE.md, packages/maind/CLAUDE.md, packages/task/commands/plan-audit.md, and plans/2026.07.19-DUAL-PROVIDER/{plan.md,handoff.md,phases/P6.md,journal.jsonl}. Run task:plan-audit 2026.07.19-DUAL-PROVIDER P6 only. Audit the committed P6 close independently. Do not execute P7.2, change package source/tests, perform live apply/repair/rollback, or touch P7.3+, FOREMAN, fleet, tag, push, cleanup, AGENTS.md, .serena/project.yml, or unrelated dirt.'
 ```
 
-**Done:** P6.11 D123 source repair `52374d40` is closed after the independent P6.12 GREEN
-evidence `1c0a6990`. The explicit rollback accepts only the exact completed D108 transaction,
-restores the recorded pre-state and removes only its two verified backups. The independent
-disposable replay restored the initial inventory byte-for-byte, refused seven malformed states
-before writer `0`, and the real-root dry reader was admitted with writer `0`, unchanged protected
-inventory and no named backup residue.
+**Done:** P6 is phase-closed as `🟠 Done with deviations` after reconciliation of terminal
+P6.1–P6.12. P6.8's material live-admission RED remains explicit; P6.11 D123 repair
+`52374d40` and independent P6.12 evidence `1c0a6990` are included in the close.
 
-**Remaining:** P6 is terminal at item level but is not phase-closed. The distinct P6 close and
-audit gates remain required before any P7.2 action; no live operation is authorized here.
+**Remaining:** a fresh independent P6 audit is mandatory before any P7.2 action. No P7 or live
+operation is authorized by this handoff.
 
-**Sources of truth:** D123 in `plan.md`; P6.11/P6.12 in `phases/P6.md`; source commit
-`52374d40`; independent evidence commit `1c0a6990` and
-`artifacts/P6-d108-independent-conformance.md`.
+**Sources of truth:** `phases/P6.md` Phase Handoff; `plan.md` Status Board and Update Log;
+`artifacts/P6-d108-independent-conformance.md`; the P6 close commit.
 
-**Open risks:** The explicit rollback is independently proved in disposable roots only. The real
-root was read by dry/check surfaces only; any live action remains a separate Owner-gated P7.2
-boundary.
+**Open risks:** The requested path-bearing `maind health --cwd /home/vostrikov/projects/packages/swissknifeman`
+form is rejected by the local CLI as an extra argument, although the supported `maind health` and
+synthetic SessionStart hook probes are GREEN. Treat this CLI-contract mismatch as non-green
+preflight evidence until its owning work is separately repaired.
 
 **Workarounds/Deferred/Open questions:**
 
 - workarounds: none.
-- deferred: P6 phase close, then its separately required audit.
+- deferred: independent P6 audit; the `maind health --cwd <path>` CLI-contract defect.
 - open_questions: —

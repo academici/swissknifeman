@@ -3,9 +3,13 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
+from unittest import mock
 
+from core import ProviderId
 from maind.provision import deploy
 from maind.config import merge_defaults
+from maind.provider_deploy import ProviderDeployError
 from maind.projects import get
 from tests.fixtures import make_repo
 
@@ -29,6 +33,74 @@ def _config(path, pid="flexcrm", **memory):
 
 
 class TestDeploy(unittest.TestCase):
+    def test_d108_public_facade_uses_configured_root_not_maind_root(self):
+        """D112: package-root Env cannot become the D108 project identity."""
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            project_path = _project(tmp, "swissknifeman")
+            cfg = _config(project_path, "swissknifeman")
+            current = deploy.provider_projection_context(env, cfg, cfg["projects"][0]).projections
+            self.assertEqual([base.provider_id for base in current], [ProviderId.CLAUDE_CODE])
+            operation = SimpleNamespace(
+                deploy=SimpleNamespace(results=()), transfer=SimpleNamespace(),
+                carrier=SimpleNamespace(changed=False), chained_plan=SimpleNamespace(actions=()))
+            with mock.patch.object(deploy, "plan_d108_operation", return_value=operation) as planner, \
+                    mock.patch.object(deploy, "bootstrap_transfer_projection",
+                                      return_value={"status": "admitted", "actions": (), "diagnostic": None}), \
+                    mock.patch.object(deploy, "project_provider_preflight",
+                                      side_effect=lambda plan, _checked: plan), \
+                    mock.patch.object(deploy, "apply_d108_operation") as writer:
+                deploy.deploy_project(env, cfg, cfg["projects"][0], d108=True, dry=True,
+                                      provider_projections=current)
+            self.assertEqual(planner.call_args.args[0], project_path.resolve())
+            self.assertEqual(planner.call_args.kwargs["expected_root"], project_path.resolve())
+            self.assertNotEqual(planner.call_args.kwargs["expected_root"], env.root)
+            writer.assert_not_called()
+
+    def test_d108_public_facade_refuses_foreign_project_before_writer(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            project_path = _project(tmp, "foreign")
+            cfg = _config(project_path, "foreign")
+            with mock.patch.object(deploy, "apply_d108_operation") as writer:
+                with self.assertRaisesRegex(ProviderDeployError, "MAIND_D108_FOREIGN_PROJECT"):
+                    deploy.deploy_project(env, cfg, cfg["projects"][0], d108=True, dry=True)
+            writer.assert_not_called()
+
+    def test_cmd_deploy_refused_bootstrap_does_not_write_project_config(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            ppath = _project(tmp)
+            cfg = _config(ppath)
+            result = {"id": "flexcrm", "scope": "project:flexcrm", "written": [],
+                      "skipped": [], "code": "disabled", "servers": [], "targets": [],
+                      "provider_changed": False,
+                      "provider_plan": SimpleNamespace(green=True, results=()),
+                      "bootstrap_transfer": {"status": "refused", "actions": (),
+                                             "diagnostic": "MAIND_PROVIDER_DEPLOY_REFUSED"}}
+            with mock.patch.object(deploy, "load_config", return_value=(cfg, None)), \
+                    mock.patch.object(deploy, "health", return_value=True), \
+                    mock.patch.object(deploy, "deploy_project", return_value=result), \
+                    mock.patch.object(deploy, "write_config") as write_config:
+                deploy.cmd_deploy(env, ["--project", "flexcrm"])
+            write_config.assert_not_called()
+
+    def test_claude_only_dry_run_reports_bootstrap_not_selected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            ppath = _project(tmp)
+            (ppath / ".codex/hooks").mkdir(parents=True)
+            (ppath / ".codex/hooks.json").write_text('{"hooks":{"SessionStart":[]}}',
+                                                       encoding="utf-8")
+            cfg = _config(ppath)
+            projections = deploy.provider_projection_context(env, cfg, cfg["projects"][0]).projections
+            self.assertEqual([projection.provider_id for projection in projections],
+                             [ProviderId.CLAUDE_CODE])
+            result = deploy.deploy_project(env, cfg, cfg["projects"][0], dry=True,
+                                            provider_projections=projections)
+            self.assertEqual(result["bootstrap_transfer"]["status"], "not-selected")
+            self.assertFalse((ppath / ".mcp.json").exists())
+
     def test_creates_mcp(self):
         with tempfile.TemporaryDirectory() as tmp:
             _, env = make_repo(tmp)
@@ -41,8 +113,8 @@ class TestDeploy(unittest.TestCase):
             self.assertNotIn("agentmemory", servers)   # raw-сервер больше не раскатывается
             self.assertEqual(res["scope"], "project:flexcrm")
             self.assertEqual(servers["maind"]["args"], ["mcp", "--scope", "project:flexcrm"])
-            # индирекция, не абсолютный путь (защита от регресса хардкода /home/...)
-            self.assertEqual(servers["maind"]["command"], "${MAIND_BIN:-maind}")
+            # MCP-клиент запускает bare command без shell expansion.
+            self.assertEqual(servers["maind"]["command"], "maind")
             self.assertNotIn("/", servers["maind"]["command"])
 
     def test_removes_stale_agentmemory(self):

@@ -6,6 +6,8 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
+from core import ProviderId
+from maind.provider_deploy import ProviderDeployPlan, ProviderDeployResult
 _TEMPLATES = Path(__file__).resolve().parents[1] / "templates"
 
 from maind.provision import sync
@@ -58,6 +60,28 @@ class TestManagedBlock(unittest.TestCase):
 
 
 class TestProviderContexts(unittest.TestCase):
+    def test_refused_bootstrap_keeps_mcp_failed_and_config_unwritten(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, _project = _setup(tmp)
+            context = sync.contexts(env, config, config["projects"])[0]
+            ordinary_plan = ProviderDeployPlan((ProviderDeployResult(
+                ProviderId.CLAUDE_CODE, "project", ".mcp.json", b"", (), "planned"),))
+            result = {
+                "provider_plan": ordinary_plan,
+                "provider_changed": False,
+                "bootstrap_transfer": {"status": "refused", "actions": (),
+                                       "diagnostic": "MAIND_PROVIDER_DEPLOY_REFUSED"},
+                "written": [], "targets": [], "skipped": [],
+            }
+            with mock.patch("maind.provision.deploy.deploy_project", return_value=result), \
+                    mock.patch("maind.provision.deploy.mark_deployed") as mark_deployed, \
+                    mock.patch("maind.projects.write_config") as write_config:
+                rows = sync._mcp_run(env, config, [context], "auto", False)
+            self.assertEqual(rows[0]["status"], "failed")
+            self.assertEqual(rows[0]["provider_aggregate"], "green")
+            mark_deployed.assert_not_called()
+            write_config.assert_not_called()
+
     def test_mcp_repair_mode_reaches_provider_deploy(self):
         with tempfile.TemporaryDirectory() as tmp:
             env, config, _project = _setup(tmp)
@@ -65,13 +89,16 @@ class TestProviderContexts(unittest.TestCase):
             result = {
                 "provider_plan": None,
                 "provider_changed": False,
+                "bootstrap_transfer": {"status": "not-selected", "actions": (),
+                                       "diagnostic": None},
                 "written": [],
                 "targets": [],
                 "skipped": [],
             }
             with mock.patch("maind.provision.deploy.deploy_project", return_value=result) as deploy:
-                sync._mcp_run(env, config, [context], "repair", True)
+                rows = sync._mcp_run(env, config, [context], "repair", True)
             self.assertTrue(deploy.call_args.kwargs["provider_repair"])
+            self.assertEqual(rows[0]["bootstrap_transfer"]["status"], "not-selected")
 
     def test_context_is_resolved_once_and_reused_across_order(self):
         with tempfile.TemporaryDirectory() as tmp:

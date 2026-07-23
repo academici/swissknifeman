@@ -15,6 +15,50 @@
 
 ## Возможности
 
+<!-- BEGIN GENERATED PROVIDER CAPABILITIES -->
+### Поддержка провайдеров (generated)
+
+Единый manifest: contract `1.0.0`, catalog `1.0.0`, canonical SHA-256 `4c479c697c708cfea8d36589c435338094d894bcf428687709987975b13b6ce1`. Подробности и операции: [provider support](docs/provider-support.md).
+
+| Capability | Claude Code | Codex |
+|:--|:--:|:--:|
+| `agent-packs.lifecycle` | adapted | unsupported |
+| `agents.catalog` | adapted | adapted |
+| `analytics.legacy-migration` | adapted | unsupported |
+| `analytics.normalized-events` | adapted | adapted |
+| `analytics.run-report` | adapted | adapted |
+| `command.external-research` | adapted | adapted |
+| `command.filesystem-read` | native | native |
+| `command.filesystem-write` | native | native |
+| `command.git-read` | native | native |
+| `command.git-write` | native | native |
+| `command.subagents` | native | native |
+| `command.workflow-carrier` | native | adapted |
+| `context.observer` | unsupported | native |
+| `context.output-style` | native | unsupported |
+| `context.plans-directory` | native | unsupported |
+| `doctor.environment` | adapted | adapted |
+| `doctor.provider` | adapted | adapted |
+| `instructions.project` | native | native |
+| `lifecycle.auto-approval` | adapted | native |
+| `lifecycle.changelog-gate` | adapted | unsupported |
+| `lifecycle.command-log` | adapted | unsupported |
+| `lifecycle.daemon-safety` | unsupported | unsupported |
+| `lifecycle.git-guardrails` | unsupported | unsupported |
+| `lifecycle.memory` | adapted | unsupported |
+| `lifecycle.notification` | adapted | unsupported |
+| `lifecycle.pack-guard` | adapted | unsupported |
+| `lifecycle.review-gate` | adapted | unsupported |
+| `lifecycle.router` | adapted | unsupported |
+| `lifecycle.run-report` | adapted | unsupported |
+| `mcp.catalog` | adapted | adapted |
+| `security.safe-dirs` | adapted | unsupported |
+| `settings.audit` | adapted | unsupported |
+| `settings.permissions` | adapted | adapted |
+| `skills.repository` | native | native |
+| `workflows.status` | adapted | unsupported |
+<!-- END GENERATED PROVIDER CAPABILITIES -->
+
 | Что | Коротко |
 |:--|:--|
 | **🔌 Плагины со скиллами** | Единый marketplace Claude Code (бакеты навыков). Кураторский **CORE** (8 скиллов ≈ 480 резидентных токенов) раздаётся в каждый проект; остальное — по типу проекта. Два канала: `connect` (marketplace, автообновление) и `vendor` (физ. копии для отдачи вовне) |

@@ -22,6 +22,7 @@ and doctor consume an already-built immutable plan and do not call a writer.
 | C9 | caller-coded managed-block update | `stale-source` / `update`; prefix/inter-block/suffix preserved byte-for-byte | `warning`, then `green` |
 | C10 | valid project Override changes source envelope | `stale-source` / `update`, not local drift | `warning` |
 | C11 | duplicate/nested/missing/reordered managed blocks | `boundary-invalid` / `refuse`, no write | `error` |
+| C12 | D110 exact chained D104 + `.mcp.json` admission | three canonical lock records; MCP bytes unchanged; altered path/hash/ID/boundary/server/predecessor and stale preconditions refuse with writer `0`; every write-boundary failure restores the exact temporary-root pre-state | `warning`, then `green` |
 
 ## Assertions
 
@@ -40,6 +41,13 @@ and doctor consume an already-built immutable plan and do not call a writer.
 - Repository `config.json`, FOREMAN plan sentinel, and external fleet config
   sentinel are snapshotted before/after under the fixture parent; delta is 0.
   No real repository, FOREMAN, or fleet root is passed to the engine.
+- D110 conformance builds only the sealed D104 hooks pair plus the exact whole-file MCP
+  record below `TemporaryDirectory`. It uses hand-authored preimage bytes with real SHA-256
+  vectors, binds the D104 actions/bytes/provenance/two-record lock into the immutable admission,
+  verifies the ordered three-record lock, preserves the MCP bytes while retaining its recoverable
+  backup, rejects every closed-admission/predecessor/boundary mutation before the writer, and
+  injects a failure at each transaction write boundary to prove exact rollback without a live-root
+  path.
 
 ## Reproduction
 

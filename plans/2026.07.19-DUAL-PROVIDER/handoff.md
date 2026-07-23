@@ -1,30 +1,25 @@
-# HANDOFF — 2026-07-22 — after P7.1
+# HANDOFF — 2026-07-23 — after P7
 
-**Next:** exec-items: task:plan-exec 2026.07.19-DUAL-PROVIDER P7.1
+**Next:** план закрыт
 
-| Параметр | Значение |
-|:--|:--|
-| Model | gpt-5.6-terra |
-| Thinking | medium — deterministic provider docs gate |
-| Context | NEW SESSION — P7.1 only |
-| Суть | Execute P7.1 only in the current checkout; print the P7.2 command after terminal GREEN. |
+**Done:** P0–P7 терминальны. P7.4 commits `ff4b89c3` / `f1998246` independently reproduced
+GREEN functional/security/rollback gates and found one P7.3 evidence count defect. D127 commits
+`ae36f827` / `44d215fb` / `4dd45283` corrected `16` → `17`, synchronized the manifest and
+reproduced the historical/current count plus unchanged `.agents` aggregate hash.
 
-```text
-$ task:plan-exec 2026.07.19-DUAL-PROVIDER P7.1
-```
+**Remaining:** — within this plan. The historical P7.4 artifact remains literal `ATTENTION`;
+D127 resolves its sole F1 without the Owner-forbidden repeated audit. This terminal state is
+`🟠 Done with deviations`, not a release/publication claim.
 
-**Done:** P7 execution is prepared in the current checkout and delivery branch.
+**Sources of truth:** `artifacts/P7-release-audit.md`; `phases/P7.md` P7.4 Completion Notes;
+`artifacts/P7-bootstrap-cleanup.md`; `artifacts/P7-release-manifest.md`; D126–D127 in `plan.md`.
 
-**Remaining:** P7.1 → P7.2 → P7.3 → P7.4 → P7 close. Each item is a separate command in
-the current checkout and `codex/provider-project-sync`; FOREMAN and fleet remain outside scope.
-
-**Sources of truth:** `phases/P7.md` Current-checkout execution console; `plan.md` §3
-Routing; `roadmap.md`.
-
-**Open risks:** P7.2–P7.4 retain their explicit owner gates; P7.1 has no live apply authority.
+**Open risks:** FOREMAN, fleet, tag, push, publication and cleanup remain closed. Unrelated dirty
+`AGENTS.md` and `.serena/project.yml` remain excluded.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: none accepted.
-- deferred: FOREMAN/fleet, tags and push beyond this PR remain separate authority.
-- open_questions: none.
+- workarounds: —
+- deferred: any bootstrap removal still requires matching managed provenance and dual-provider
+  without-file smoke; no deletion is open.
+- open_questions: —

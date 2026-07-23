@@ -12,6 +12,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+from core import apply_plan
 from .. import codegraph, pplxweb
 from ..common import die, now_iso, parse_args, warn
 from ..config import load_config, resolve_provider_config
@@ -21,9 +22,11 @@ from ..mcpconfig import (MCP_FILES, MCPConfigError, load_mcp, mcp_path,
 from ..memory import health, resolve_ports
 from ..projects import get as get_project
 from ..projects import listing, write_config
-from ..provider_deploy import (apply_provider_artifacts, generate_conformance_report,
-                               plan_provider_artifacts, plan_provider_deploy,
-                               SemanticServer, semantic_servers)
+from ..provider_deploy import (generate_conformance_report, plan_provider_artifacts,
+                               plan_provider_deploy,
+                               plan_d104_bootstrap_transfer, project_provider_preflight,
+                               bootstrap_transfer_projection, plan_d108_operation,
+                               apply_d108_operation, SemanticServer, semantic_servers)
 
 
 @dataclass(frozen=True)
@@ -34,24 +37,35 @@ class ProviderProjectionContext:
     projections: tuple
 
 
+def provider_operation_green(result):
+    """A refused D104 bootstrap makes the whole deploy non-green, not its provider row."""
+    provider_plan = result.get("provider_plan")
+    bootstrap = result.get("bootstrap_transfer") or {}
+    return ((provider_plan is None or provider_plan.green)
+            and bootstrap.get("status") != "refused")
+
+
 def _provider_projections(env, config, project):
     """Legacy compatibility projection over the public one-resolution seam."""
     return provider_projection_context(env, config, project).projections
 
 
-def provider_projection_context(env, config, project):
-    """Public P6 seam: one effective-provider resolution and P5 projections."""
+def _harness_configs(env):
+    """Resolve the sibling public harness configuration root for a P6 projection."""
     harness_root = Path(env.root).parent / "harness"
     if not harness_root.is_dir():
         harness_root = Path(__file__).resolve().parents[3].parent / "harness"
+    return harness_root / "configs"
+
+
+def provider_projection_context(env, config, project):
+    """Public P6 seam: one effective-provider resolution and P5 projections."""
+    harness_root = _harness_configs(env).parent
     harness_lib = str(harness_root / "lib")
     if harness_lib not in sys.path:
         sys.path.insert(0, harness_lib)
-    from core import ProviderConfigCatalog, ProviderId
     from harness.mcp import load_mcp_catalog, plan_mcp_projection
-    resolved = resolve_provider_config(
-        config, ProviderConfigCatalog("1.0.0", (ProviderId.CLAUDE_CODE, ProviderId.CODEX), (), ()),
-        project["id"])
+    resolved = resolve_provider_config(config, None, project["id"])
     if resolved.selection is None:
         codes = ",".join(item.code for item in resolved.diagnostics)
         raise ValueError(codes or "MAIND_PROVIDER_RESOLUTION_INVALID")
@@ -105,7 +119,7 @@ def _resolve_targets(project_path, opt_targets):
 
 
 def provider_semantic_inventory(env, config, project, *, with_code, maind_server,
-                                with_agentmemory):
+                                with_agentmemory, d108=False):
     """Caller-owned server descriptors; P5 supplies provider projections separately."""
     scope = project.get("memory_scope") or f"project:{project['id']}"
     st = codegraph.settings(config)
@@ -120,6 +134,13 @@ def provider_semantic_inventory(env, config, project, *, with_code, maind_server
     rows = semantic_servers(maind=_maind_entry(scope) if maind_server else None,
                             agentmemory=_agentmemory_entry(env, config, scope) if with_agentmemory else None,
                             codegraph=code, perplexity=perplexity)
+    if d108:
+        # D114: only the sealed D108 candidate serializes configured MCP identities.
+        # Ordinary provider inventory retains its stable internal role labels.
+        names = {"codegraph": codegraph.server_name(project, st),
+                 "perplexity": pplxweb.server_name(pw)}
+        rows = tuple(SemanticServer(names.get(row.id, row.id), row.binding, row.required)
+                     for row in rows)
     extra = (project.get("mcp") or {}).get("extra_servers") or {}
     if not isinstance(extra, dict) or any(not isinstance(value, dict)
                                           for value in extra.values()):
@@ -133,7 +154,7 @@ def provider_semantic_inventory(env, config, project, *, with_code, maind_server
 
 def deploy_project(env, config, project, *, targets=None, with_code=None,
                    maind_server=True, with_agentmemory=False, dry=False,
-                   provider_projections=None, provider_repair=False):
+                   provider_projections=None, provider_repair=False, d108=False):
     """Раскатать серверы хаба в один проект. with_code=None → берётся из политики/полей проекта
     (code|graphify). Память проекта — через сервер `maind` (изоляция по scope на стороне maind);
     raw-сервер `agentmemory` НЕ раскатывается (он пишет мимо scope-маркера → невидимо для
@@ -151,20 +172,82 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
     scope = project.get("memory_scope") or f"project:{pid}"
     provider_plan = None
     provider_changed = False
-    if provider_projections is not None:
-        provider_plan = plan_provider_deploy(
-            provider_projections,
-            provider_semantic_inventory(env, config, project, with_code=with_code,
-                                        maind_server=maind_server,
-                                        with_agentmemory=with_agentmemory))
-        provider_check = plan_provider_artifacts(project_path, provider_plan, repair=provider_repair)
-        if provider_check["severity"] == "error":
-            raise ValueError("MAIND_PROVIDER_DEPLOY_REFUSED")
-        provider_changed = any(
-            getattr(action.action, "value", action.action) != "noop"
-            for action in provider_check["plan"].actions)
-        if not dry:
-            apply_provider_artifacts(project_path, provider_plan, repair=provider_repair)
+    bootstrap_transfer = None
+    bootstrap_projection = None
+    if provider_projections is not None or d108:
+        inventory = provider_semantic_inventory(
+            env, config, project, with_code=with_code, maind_server=maind_server,
+            with_agentmemory=with_agentmemory, d108=d108)
+        if d108:
+            d108_root = project_path.resolve()
+            operation = plan_d108_operation(
+                d108_root, config, pid, inventory,
+                harness_configs=_harness_configs(env), expected_root=d108_root)
+            provider_plan = operation.deploy
+            bootstrap_transfer = operation.transfer
+            bootstrap_projection = bootstrap_transfer_projection("admitted", bootstrap_transfer)
+            provider_changed = operation.carrier.changed or any(
+                getattr(action.action, "value", action.action) != "noop"
+                for action in operation.chained_plan.actions)
+            if not dry:
+                apply_d108_operation(project_path, operation)
+        else:
+            provider_plan = plan_provider_deploy(provider_projections, inventory)
+        if d108:
+            ordinary_check = {"severity": "green", "plan": operation.chained_plan}
+        else:
+        # This ordinary P2 check deliberately does not include transfer artifacts: their
+        # pre-transfer state does not exist yet and must not manufacture a staged green.
+            ordinary_check = plan_provider_artifacts(project_path, provider_plan,
+                                                     repair=provider_repair)
+        has_codex = any(projection.provider_id.value == "codex"
+                        for projection in provider_projections)
+        bootstrap_root = project_path / ".codex/hooks.json"
+        bootstrap_lock = project_path / ".swissknifeman/provider-artifacts.lock.json"
+        bootstrap_handler = project_path / ".codex/hooks/lifecycle.py"
+        # A completed transfer has both its lock and handler, so second-run behavior stays
+        # on the ordinary managed path. Every incomplete candidate still asks the P2 oracle.
+        if not d108 and has_codex and bootstrap_root.is_file() and (
+                not bootstrap_lock.exists() or not bootstrap_handler.is_file()):
+            try:
+                bootstrap_transfer = plan_d104_bootstrap_transfer(
+                    project_path, harness_configs=_harness_configs(env))
+            except ValueError:
+                bootstrap_projection = bootstrap_transfer_projection(
+                    "refused", diagnostic="MAIND_PROVIDER_DEPLOY_REFUSED")
+            else:
+                refused = any(getattr(action.action, "value", action.action) == "refuse"
+                              for action in bootstrap_transfer.plan.actions)
+                bootstrap_projection = bootstrap_transfer_projection(
+                    "refused" if refused else "admitted", bootstrap_transfer,
+                    "MAIND_PROVIDER_DEPLOY_REFUSED" if refused else None)
+        elif not d108:
+            bootstrap_projection = bootstrap_transfer_projection("not-selected")
+
+        provider_check = ordinary_check
+        provider_plan = project_provider_preflight(provider_plan, ordinary_check)
+        refused = (bootstrap_projection["status"] == "refused"
+                   or ordinary_check["severity"] == "error")
+        if not refused and not d108:
+            provider_changed = any(
+                getattr(action.action, "value", action.action) != "noop"
+                for action in ordinary_check["plan"].actions)
+            if bootstrap_transfer is not None:
+                provider_changed = provider_changed or any(
+                    getattr(action.action, "value", action.action) != "noop"
+                    for action in bootstrap_transfer.plan.actions)
+            if not dry and bootstrap_transfer is not None:
+                apply_plan(project_path, bootstrap_transfer.plan)
+                # Replan only after the admitted transfer has actually completed. This
+                # preserves the initial no-write refusal gate and catches a changed root
+                # before any ordinary provider artifact is applied.
+                provider_check = plan_provider_artifacts(
+                    project_path, provider_plan, repair=provider_repair,
+                    extra_artifacts=bootstrap_transfer.artifacts)
+                if provider_check["severity"] == "error":
+                    raise ValueError("MAIND_PROVIDER_DEPLOY_REFUSED")
+            if not dry:
+                apply_plan(project_path, provider_check["plan"])
     emit_example = bool((config.get("mcp") or {}).get("emit_example"))  # opt-in: .example + .gitignore
 
     st = codegraph.settings(config)
@@ -228,7 +311,8 @@ def deploy_project(env, config, project, *, targets=None, with_code=None,
     return {"id": pid, "scope": scope, "written": written, "skipped": skipped,
             "code": code_state, "code_server": codegraph.server_name(project, st),
             "servers": list(entries), "targets": [w["file"] for w in written],
-            "provider_plan": provider_plan, "provider_changed": provider_changed}
+            "provider_plan": provider_plan, "provider_changed": provider_changed,
+            "bootstrap_transfer": bootstrap_projection}
 
 
 def mark_deployed(config, project_id, result):
@@ -294,6 +378,7 @@ def cmd_deploy(env, argv):
              f"(поднимите: maind start --only memory)")
 
     results = []
+    config_changed = False
     for proj in projects:
         # флаг (--with-code|--with-graphify) форсит код-граф; иначе None → из конфига проекта
         with_code = True if (opts["with_code"] or opts["with_graphify"]) else None
@@ -305,10 +390,11 @@ def cmd_deploy(env, argv):
         if res is None:
             continue
         results.append(res)
-        if not opts["dry_run"]:
+        if not opts["dry_run"] and provider_operation_green(res):
             config = mark_deployed(config, proj["id"], res)
+            config_changed = True
 
-    if not opts["dry_run"] and results:
+    if not opts["dry_run"] and config_changed:
         write_config(env, config)
 
     if opts["json"]:

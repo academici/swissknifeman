@@ -1,12 +1,12 @@
 # Provider artifact contract
 
-**Version:** v1.1.0
+**Version:** v1.3.0
 
 **Status:** frozen
 
 **Approval Owner:** Dmitry Vostrikov
 
-**Approval:** D55, 2026-07-20; backward-compatible additive minor D87, 2026-07-21
+**Approval:** D55, 2026-07-20; backward-compatible additive minors D87, D104 and D110, 2026-07-22
 
 **Vocabulary:** `../CONTEXT.md`, approved D53
 
@@ -22,7 +22,10 @@ Drift и Repair так, чтобы `render`, `check`, `update` и `repair` од�
 не становится Canonical Source для другого Provider.
 
 D55 заморозил v1.0.0; D87 добавил v1.1.0 generic semantic metadata carrier без изменения
-v1.0.0 records, hash/ownership semantics или downstream apply gates. Запись provider outputs
+v1.0.0 records, hash/ownership semantics или downstream apply gates. D104 добавляет
+v1.2.0 closed bootstrap-transfer admission для ровно одного recorded preimage. D110 добавляет
+v1.3.0 exact composition этого sealed D104 predecessor с одним `.mcp.json` record; normal
+plan/apply/repair и exact v1.0.0/v1.1.0 lock records не меняются. Запись provider outputs
 остаётся запрещена до реализации и прохождения этих gates.
 
 ## Vocabulary
@@ -38,6 +41,14 @@ Owner Approval:
 
 `unsupported` здесь означает, что Capability gate запретил artifact operation; это не новый
 Support Level и не заменяет capability contract.
+
+`bootstrap-transfer` — closed admission до ordinary observation/action state machine, а не
+новая observation class или замена `ownership-conflict`. Его единственный допустимый descriptor
+имеет `decision_id = D104`, existing `.codex/hooks.json` с preimage
+`sha256:7d7538d021228e8e61d124f4b60b6db04434f8121de30b8672f05e4bf038c3db`, created
+`.codex/hooks/lifecycle.py`, artifact IDs `harness.codex.lifecycle.hooks` и
+`harness.codex.lifecycle.handler`, а lock обязан отсутствовать. Любая другая попытка остаётся
+`ownership-conflict/refuse` без backup, target или lock write.
 
 ## Normative model
 
@@ -164,6 +175,38 @@ recoverable pre-image и публикует expected/observed hashes до write.
 объявляться `clean`, пока повторный check не подтвердил оба. Required artifact failure делает
 aggregate result non-green и не скрывается успехом другого Provider.
 
+### D104 bootstrap-transfer transaction
+
+Closed v1.2.0 admission доступен только через caller-supplied immutable descriptor и одну
+предварительно построенную two-artifact plan. Admission проверяется до backup и повторно перед
+каждой subsequent write: decision, two paths, two artifact IDs, absent lock, exact existing
+preimage, absent created target и absent backup. The first target is backed up exactly at
+`.codex/hooks.json.provider-artifact.bootstrap-transfer.bak`, then replaced; the handler is
+created; one canonical P2 lock with exactly those two records is written last. A changed target,
+lock or backup refuses before the relevant write.
+
+On an interrupted transaction rollback restores only the captured first target, removes only an
+exact transaction-created handler and exact transaction-created lock, and never removes an
+unrelated record or target. Ordinary `repair` cannot select this admission. `plan`, `doctor` and
+dry-run remain no-write; live application remains a separate owner-gated consumer operation.
+
+### D110 chained bootstrap-transfer transaction
+
+Closed v1.3.0 composition is available only through an immutable descriptor containing the
+sealed complete D104 `ArtifactPlan` (exact actions, expected bytes/provenance and two-record
+lock), its D104 descriptor, plus `decision_id = D108`, root-relative `.mcp.json`, artifact ID
+`maind.provider-deploy.claude-code`, immutable `("whole-file", ())` boundary, preimage
+`sha256:cf4537196c3fefd6fd3980221bd3677f74e7867392ad49364e1e891e1f7c8283`, and the exact server-ID
+set `maind`, `perplexity-web`, `serena`. Any different path, ID, boundary, preimage, expected
+bytes/server set, D104 predecessor, present lock, created target or backup refuses before write.
+
+The one transaction validates all three records, exact backup destinations and the canonical
+three-record lock before its first write, then creates recoverable backups and writes that lock
+last. `.mcp.json` bytes remain unchanged on success. A failure restores the byte-exact
+pre-transaction root and removes only transaction-created partials. Ordinary plan/update/repair,
+implicit adoption, target discovery, force flags, wildcard/hash-list descriptors and live-root
+apply/repair/rollback remain excluded.
+
 ### Consumer notification
 
 Frozen contract version и artifact provenance MUST быть видны consumers. Contract bump
@@ -175,8 +218,9 @@ cross-repo consumer создаётся explicit mAInd/open-risk notification. Lo
 
 - **major**: изменение artifact identity semantics, hash algorithm, boundary modes,
   precedence invariants, observation/action meaning или ownership safety;
-- **minor**: additive optional provenance key, compatible observation detail или новый
-  boundary mode/action, который old consumer может безопасно отвергнуть;
+- **minor**: additive optional provenance key, compatible observation detail, новый
+  boundary mode/action, который old consumer может безопасно отвергнуть, или closed admission
+  that old consumers safely refuse;
 - **patch**: clarification/diagnostic без изменения bytes, state transition или ownership.
 
 Adapter version меняется отдельно: major — несовместимый rendered contract, minor — additive
@@ -185,8 +229,8 @@ provider output при сохранённом intent, patch — byte-compatible 
 к `stale-source`, а не к скрытому overwrite.
 
 Unknown artifact contract major, unknown boundary mode, observation или action fail closed.
-Exact v1.0.0 records remain readable/writable without metadata. v1.1.0 readers accept the
-exact v1.0.0 shape and the exact v1.1.0 shape only. Artifact record с более новым minor MAY
+Exact v1.0.0 records remain readable/writable without metadata. v1.1.0/v1.2.0 readers accept
+the exact v1.0.0 and v1.1.0 shapes unchanged; v1.2.0 adds no lock-record shape. Artifact record с более новым minor MAY
 читаться только если unknown keys игнорируются без потери ownership/hash semantics; иначе
 `provenance-invalid`.
 
@@ -205,6 +249,8 @@ Validator/check MUST отвергать как минимум:
 9. repair без explicit operation, pre-image и expected/observed evidence;
 10. изменение bytes вне managed boundary;
 11. check/dry-run, оставивший filesystem diff.
+12. any bootstrap-transfer descriptor/path/decision/digest mismatch, present lock/created target
+    or changed preimage before a write; each case leaves target, backup and lock unchanged.
 
 Renderer MUST давать identical managed bytes и provenance hashes на повторном запуске с
 identical envelope. Golden conformance включает at least `whole-file`, `managed-blocks`,

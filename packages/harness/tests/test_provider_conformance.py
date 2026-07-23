@@ -14,12 +14,61 @@ from harness.provider_audit import (ProviderAuditReport, audit_package, audited_
 from harness.profiles import load_catalog, resolve_profile
 from harness.mcp import load_mcp_catalog, plan_mcp_projection
 from harness.hooks import LifecycleRequest, plan_lifecycle
-from core import EffectiveProvider, ProviderId
+from core import (EffectiveProvider, ProviderId, ProviderManifestError,
+                  load_provider_manifest)
 
 PACKAGE = Path(__file__).resolve().parents[1]
 
 
 class ProviderConformanceTests(unittest.TestCase):
+    def test_profile_catalog_default_path_cannot_bypass_manifest_gate(self):
+        manifest_path = PACKAGE.parents[1] / "configs/provider-capabilities.json"
+        manifest = load_provider_manifest(manifest_path)
+        with patch("harness.profiles.load_provider_manifest", return_value=manifest) as loader:
+            catalog = load_catalog(PACKAGE / "configs/common/profile-catalog.json")
+        self.assertEqual(catalog.catalog_version, "1.0.0")
+        loader.assert_called_once_with(manifest_path)
+        with tempfile.TemporaryDirectory() as directory:
+            missing = Path(directory) / "missing.json"
+            with patch("harness.profiles._CAPABILITY_MANIFEST_PATH", missing):
+                with self.assertRaises(ProviderManifestError):
+                    load_catalog(PACKAGE / "configs/common/profile-catalog.json")
+
+    def test_manifest_gate_refuses_missing_and_support_mismatch_before_audit_output(self):
+        manifest_path = PACKAGE.parents[1] / "configs/provider-capabilities.json"
+        source = json.loads(manifest_path.read_text())
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            with self.assertRaises(ProviderManifestError):
+                audit_package(PACKAGE, manifest_path=root / "missing.json")
+            changed = json.loads(json.dumps(source))
+            row = next(item for item in changed["capabilities"]
+                       if item["id"] == "doctor.environment")["support"]["codex"]
+            row.pop("adapter_id")
+            row["level"] = "unsupported"
+            row["diagnostic"] = "unsupported fixture; fail closed"
+            path = root / "manifest.json"
+            path.write_text(json.dumps(changed), encoding="utf-8")
+            report = audit_package(PACKAGE, manifest_path=path)
+            self.assertFalse(report.green)
+            self.assertTrue(any(item.startswith(
+                "HARNESS_CAPABILITY_MANIFEST_INVALID:codex:doctor.environment")
+                for item in report.diagnostics))
+
+    def test_profile_requirement_level_mismatch_is_rejected(self):
+        manifest = load_provider_manifest(
+            PACKAGE.parents[1] / "configs/provider-capabilities.json")
+        value = json.loads((PACKAGE / "configs/common/profile-catalog.json").read_text())
+        surface = next(item for item in value["surfaces"]
+                       if item["id"] == "doctor.provider")
+        surface["required_capabilities"] = [{
+            "capability_id": "mcp.catalog", "accepted_levels": ["native"]}]
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "catalog.json"
+            path.write_text(json.dumps(value), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "level-mismatch"):
+                load_catalog(path, capability_manifest=manifest)
+
     def test_independent_fixture_has_exact_inventory_and_stable_report(self):
         first, second = audit_package(PACKAGE), audit_package(PACKAGE)
         self.assertEqual(first.render(), second.render())

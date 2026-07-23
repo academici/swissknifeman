@@ -6,6 +6,7 @@ from pathlib import Path
 from core import (CapabilityId, CapabilitySupport, ConfigSource, NativeExtension,
                   NativeExtensionId, ProviderConfigCatalog, ProviderConfigLayer,
                   ProviderId, SupportLevel, effective_projection,
+                  load_provider_manifest, provider_config_catalog,
                   resolve_provider_config)
 
 
@@ -56,6 +57,21 @@ def compatibility_layers(case_layers):
 
 
 class TestProviderConfigResolution(unittest.TestCase):
+    def test_root_manifest_projection_resolves_supported_and_unsupported(self):
+        root = Path(__file__).resolve().parents[2]
+        projected = provider_config_catalog(load_provider_manifest(
+            root / "configs/provider-capabilities.json"))
+        accepted = resolve_provider_config(
+            catalog=projected,
+            project=layer("project", config({"codex": {
+                "capabilities": {"skills.repository": True}}})))
+        rejected = resolve_provider_config(
+            catalog=projected,
+            project=layer("project", config({"codex": {
+                "capabilities": {"workflows.status": True}}})))
+        self.assertIsNotNone(accepted.effective)
+        self.assertEqual(rejected.diagnostics[0].code, "PCFG_CAPABILITY_UNSUPPORTED")
+
     def test_synthetic_protected_carriers_remain_byte_identical(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

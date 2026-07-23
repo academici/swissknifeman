@@ -15,6 +15,7 @@ from task.command_render import (build_provider_command_parity_report,
                                  plan_codex_command_render,
                                  render_provider_commands_reference,
                                  validate_route)
+from core import ProviderManifestError
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -73,6 +74,27 @@ def _write_routing(root, mutation):
 
 
 class ProviderCommandParityTests(unittest.TestCase):
+    def test_mapping_support_is_manifest_derived_and_missing_manifest_fails_closed(self):
+        manifest = json.loads((REPO_ROOT / "configs/provider-capabilities.json").read_text())
+        expected = {item["id"]: item["support"]["codex"]["level"]
+                    for item in manifest["capabilities"]}
+        self.assertEqual(dict(self.mappings["codex"].capability_bindings),
+                         {key: expected[key] for key in dict(
+                             self.mappings["codex"].capability_bindings)})
+        with tempfile.TemporaryDirectory() as directory:
+            with self.assertRaises(ProviderManifestError):
+                mapping_from_catalog(self.catalog, "codex",
+                                     manifest_path=Path(directory) / "missing.json")
+
+    def test_manifest_derived_unsupported_level_blocks_before_results(self):
+        support = dict(self.mappings["codex"].capability_bindings)
+        support["skills.repository"] = "unsupported"
+        plan = plan_codex_command_render(self.catalog, self.mappings["codex"], support)
+        self.assertFalse(plan.ok)
+        self.assertEqual(plan.results, ())
+        self.assertIn("CMD_CAPABILITY_UNSUPPORTED",
+                      {item.code for item in plan.diagnostics})
+
     @classmethod
     def setUpClass(cls):
         cls.expected = json.loads(FIXTURE_PATH.read_text(encoding="utf-8"))

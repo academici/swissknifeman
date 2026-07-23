@@ -27,6 +27,17 @@ LOCK_RELATIVE_PATH = ".swissknifeman/provider-artifacts.lock.json"
 _DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 _IDENTIFIER_RE = re.compile(r"^[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*)*$")
 _SEMVER_RE = re.compile(r"^[0-9]+\.[0-9]+\.[0-9]+$")
+_BOOTSTRAP_DECISION_ID = "D104"
+_BOOTSTRAP_EXISTING_TARGET = ".codex/hooks.json"
+_BOOTSTRAP_PREIMAGE = "sha256:7d7538d021228e8e61d124f4b60b6db04434f8121de30b8672f05e4bf038c3db"
+_BOOTSTRAP_CREATED_TARGET = ".codex/hooks/lifecycle.py"
+_BOOTSTRAP_EXISTING_ARTIFACT = "harness.codex.lifecycle.hooks"
+_BOOTSTRAP_CREATED_ARTIFACT = "harness.codex.lifecycle.handler"
+_CHAINED_DECISION_ID = "D108"
+_CHAINED_MCP_TARGET = ".mcp.json"
+_CHAINED_MCP_PREIMAGE = "sha256:cf4537196c3fefd6fd3980221bd3677f74e7867392ad49364e1e891e1f7c8283"
+_CHAINED_MCP_ARTIFACT = "maind.provider-deploy.claude-code"
+_CHAINED_MCP_SERVERS = ("maind", "perplexity-web", "serena")
 
 
 class DriftObservation(str, Enum):
@@ -46,6 +57,80 @@ class ArtifactActionKind(str, Enum):
     UPDATE = "update"
     REPAIR = "repair"
     REFUSE = "refuse"
+
+
+@dataclass(frozen=True)
+class BootstrapTransferAdmission:
+    """The sole D104 exception that can transfer an unmanaged bootstrap preimage.
+
+    The descriptor is caller supplied, but its values are checked against the
+    closed D104 admission both while planning and immediately before each write.
+    It does not alter ordinary artifact planning, update, or repair semantics.
+    """
+
+    decision_id: str
+    existing_target_path: str
+    existing_preimage_sha256: str
+    created_target_path: str
+    existing_artifact_id: str
+    created_artifact_id: str
+    require_absent_lock: bool = True
+
+    def __post_init__(self) -> None:
+        if not all(isinstance(value, str) for value in (
+                self.decision_id, self.existing_target_path,
+                self.existing_preimage_sha256, self.created_target_path,
+                self.existing_artifact_id, self.created_artifact_id)):
+            raise TypeError("bootstrap transfer admission fields must be strings")
+        validate_target_path(self.existing_target_path)
+        validate_target_path(self.created_target_path)
+        if not _DIGEST_RE.fullmatch(self.existing_preimage_sha256):
+            raise ValueError("bootstrap transfer preimage must be a SHA-256 digest")
+        if not _IDENTIFIER_RE.fullmatch(self.existing_artifact_id) or not _IDENTIFIER_RE.fullmatch(
+                self.created_artifact_id):
+            raise ValueError("bootstrap transfer artifact IDs are invalid")
+        if self.existing_target_path == self.created_target_path:
+            raise ValueError("bootstrap transfer targets must differ")
+        if self.existing_artifact_id == self.created_artifact_id:
+            raise ValueError("bootstrap transfer artifact IDs must differ")
+        if self.require_absent_lock is not True:
+            raise ValueError("bootstrap transfer requires an absent lock")
+
+
+@dataclass(frozen=True)
+class ChainedBootstrapTransferAdmission:
+    """The sole D108 composition of the sealed D104 admission and MCP record."""
+
+    bootstrap_admission: BootstrapTransferAdmission
+    predecessor_plan: object
+    decision_id: str
+    mcp_target_path: str
+    mcp_preimage_sha256: str
+    mcp_artifact_id: str
+    mcp_managed_boundary: tuple[str, tuple[str, ...]]
+    mcp_server_ids: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.bootstrap_admission, BootstrapTransferAdmission):
+            raise TypeError("chained bootstrap predecessor must be a bootstrap admission")
+        if not all(isinstance(value, str) for value in (
+                self.decision_id, self.mcp_target_path,
+                self.mcp_preimage_sha256, self.mcp_artifact_id)):
+            raise TypeError("chained bootstrap admission fields must be strings")
+        validate_target_path(self.mcp_target_path)
+        if not _DIGEST_RE.fullmatch(self.mcp_preimage_sha256):
+            raise ValueError("chained bootstrap MCP preimage must be a SHA-256 digest")
+        if not _IDENTIFIER_RE.fullmatch(self.mcp_artifact_id):
+            raise ValueError("chained bootstrap MCP artifact ID is invalid")
+        if (not isinstance(self.mcp_managed_boundary, tuple) or
+                len(self.mcp_managed_boundary) != 2 or
+                not isinstance(self.mcp_managed_boundary[0], str) or
+                not isinstance(self.mcp_managed_boundary[1], tuple) or
+                not all(isinstance(block_id, str) for block_id in self.mcp_managed_boundary[1])):
+            raise TypeError("chained bootstrap MCP boundary must be an immutable boundary tuple")
+        if (not isinstance(self.mcp_server_ids, tuple) or
+                not all(isinstance(server_id, str) for server_id in self.mcp_server_ids)):
+            raise TypeError("chained bootstrap MCP server IDs must be a tuple of strings")
 
 
 @dataclass(frozen=True)
@@ -91,6 +176,8 @@ class ArtifactPlan:
     actions: tuple[ArtifactAction, ...]
     next_lock: ArtifactLock | None
     lock_path: str = LOCK_RELATIVE_PATH
+    bootstrap_transfer: BootstrapTransferAdmission | None = None
+    chained_bootstrap_transfer: ChainedBootstrapTransferAdmission | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.actions, tuple) or not all(isinstance(action, ArtifactAction)
@@ -101,6 +188,14 @@ class ArtifactPlan:
             raise ValueError("actions must not repeat target paths")
         if self.next_lock is not None and not isinstance(self.next_lock, ArtifactLock):
             raise TypeError("next_lock must be ArtifactLock or None")
+        if self.bootstrap_transfer is not None and not isinstance(
+                self.bootstrap_transfer, BootstrapTransferAdmission):
+            raise TypeError("bootstrap_transfer must be BootstrapTransferAdmission or None")
+        if self.chained_bootstrap_transfer is not None and not isinstance(
+                self.chained_bootstrap_transfer, ChainedBootstrapTransferAdmission):
+            raise TypeError("chained_bootstrap_transfer must be ChainedBootstrapTransferAdmission or None")
+        if self.bootstrap_transfer is not None and self.chained_bootstrap_transfer is not None:
+            raise ValueError("bootstrap transfer forms must not be combined")
         validate_target_path(self.lock_path)
         object.__setattr__(self, "actions", ordered)
 
@@ -251,6 +346,73 @@ def plan_artifact_lock(root: Path, expected: Iterable[ArtifactRenderResult], *,
     return ArtifactPlan(tuple(actions), next_lock)
 
 
+def plan_bootstrap_transfer(root: Path, expected: Iterable[ArtifactRenderResult], *,
+                            lock_bytes: bytes | None,
+                            admission: BootstrapTransferAdmission) -> ArtifactPlan:
+    """Plan the closed D104 bootstrap transfer without writing to ``root``.
+
+    This is intentionally not an alternative to :func:`plan_artifact_lock`.
+    Only the exact recorded D104 preimage, pair of target-relative paths and
+    two artifact IDs can enter this one transaction.  Every other preimage or
+    target remains an ordinary ownership conflict.
+    """
+    root = _root(root)
+    results = tuple(sorted(_results(expected), key=lambda result: result.target.path))
+    if not isinstance(admission, BootstrapTransferAdmission):
+        raise TypeError("admission must be BootstrapTransferAdmission")
+    error = _bootstrap_admission_error(admission, results, lock_bytes, root)
+    if error is not None:
+        return _refused_bootstrap_plan(results, admission, error)
+    by_target = {result.target.path: result for result in results}
+    existing = by_target[admission.existing_target_path]
+    created = by_target[admission.created_target_path]
+    actions = (
+        ArtifactAction(existing.provenance.artifact_id, existing.target.path,
+                       DriftObservation.OWNERSHIP_CONFLICT, ArtifactActionKind.UPDATE,
+                       existing, sha256_digest((root / existing.target.path).read_bytes()),
+                       "bootstrap-transfer-admitted"),
+        ArtifactAction(created.provenance.artifact_id, created.target.path,
+                       DriftObservation.MISSING, ArtifactActionKind.CREATE,
+                       created, None, "bootstrap-transfer-admitted"),
+    )
+    return ArtifactPlan(actions, ArtifactLock(LOCK_SCHEMA_VERSION,
+                                              tuple(result.provenance for result in results)),
+                        bootstrap_transfer=admission)
+
+
+def plan_chained_bootstrap_transfer(
+        root: Path, expected: Iterable[ArtifactRenderResult], *, lock_bytes: bytes | None,
+        admission: ChainedBootstrapTransferAdmission) -> ArtifactPlan:
+    """Plan the one D108 three-artifact transaction without writing to ``root``."""
+    root = _root(root)
+    results = tuple(sorted(_results(expected), key=lambda result: result.target.path))
+    if not isinstance(admission, ChainedBootstrapTransferAdmission):
+        raise TypeError("admission must be ChainedBootstrapTransferAdmission")
+    error = _chained_bootstrap_admission_error(admission, results, lock_bytes, root)
+    if error is not None:
+        return _refused_chained_bootstrap_plan(results, admission, error)
+    by_target = {result.target.path: result for result in results}
+    existing = by_target[_BOOTSTRAP_EXISTING_TARGET]
+    created = by_target[_BOOTSTRAP_CREATED_TARGET]
+    mcp = by_target[_CHAINED_MCP_TARGET]
+    actions = (
+        ArtifactAction(existing.provenance.artifact_id, existing.target.path,
+                       DriftObservation.OWNERSHIP_CONFLICT, ArtifactActionKind.UPDATE,
+                       existing, sha256_digest((root / existing.target.path).read_bytes()),
+                       "chained-bootstrap-transfer-admitted"),
+        ArtifactAction(created.provenance.artifact_id, created.target.path,
+                       DriftObservation.MISSING, ArtifactActionKind.CREATE,
+                       created, None, "chained-bootstrap-transfer-admitted"),
+        ArtifactAction(mcp.provenance.artifact_id, mcp.target.path,
+                       DriftObservation.OWNERSHIP_CONFLICT, ArtifactActionKind.NOOP,
+                       mcp, sha256_digest((root / mcp.target.path).read_bytes()),
+                       "chained-bootstrap-transfer-admitted"),
+    )
+    return ArtifactPlan(actions, ArtifactLock(LOCK_SCHEMA_VERSION,
+                                              tuple(result.provenance for result in results)),
+                        chained_bootstrap_transfer=admission)
+
+
 def apply_plan(root: Path, plan: ArtifactPlan) -> ArtifactPlan:
     """Apply an already computed plan under one explicit root, or refuse without writes.
 
@@ -260,6 +422,14 @@ def apply_plan(root: Path, plan: ArtifactPlan) -> ArtifactPlan:
     root = _root(root)
     if not isinstance(plan, ArtifactPlan):
         raise TypeError("plan must be ArtifactPlan")
+    if plan.chained_bootstrap_transfer is not None:
+        return _apply_chained_bootstrap_transfer(root, plan)
+    if plan.bootstrap_transfer is not None:
+        return _apply_bootstrap_transfer(root, plan)
+    if _contains_reserved_transfer_reconstruction(plan):
+        raise ValueError("chained bootstrap transfer plan is missing admission")
+    if _is_bootstrap_transfer_shape(plan):
+        raise ValueError("bootstrap transfer plan is missing admission")
     if plan.next_lock is None or any(action.action is ArtifactActionKind.REFUSE for action in plan.actions):
         raise ValueError("refusing plan cannot be applied")
     writable = tuple(action for action in plan.actions if action.action is not ArtifactActionKind.NOOP)
@@ -284,6 +454,502 @@ def apply_plan(root: Path, plan: ArtifactPlan) -> ArtifactPlan:
                               managed_block_codecs={
                                   action.artifact_id: action.managed_block_codec
                                   for action in plan.actions if action.managed_block_codec is not None})
+
+
+def _refused_bootstrap_plan(results: tuple[ArtifactRenderResult, ...],
+                            admission: BootstrapTransferAdmission,
+                            diagnostic: str) -> ArtifactPlan:
+    actions = tuple(ArtifactAction(
+        result.provenance.artifact_id, result.target.path,
+        DriftObservation.OWNERSHIP_CONFLICT, ArtifactActionKind.REFUSE,
+        result, None, diagnostic) for result in results)
+    return ArtifactPlan(actions, None, bootstrap_transfer=admission)
+
+
+def _refused_chained_bootstrap_plan(
+        results: tuple[ArtifactRenderResult, ...],
+        admission: ChainedBootstrapTransferAdmission, diagnostic: str) -> ArtifactPlan:
+    actions = tuple(ArtifactAction(
+        result.provenance.artifact_id, result.target.path,
+        DriftObservation.OWNERSHIP_CONFLICT, ArtifactActionKind.REFUSE,
+        result, None, diagnostic) for result in results)
+    return ArtifactPlan(actions, None, chained_bootstrap_transfer=admission)
+
+
+def _chained_bootstrap_admission_error(
+        admission: ChainedBootstrapTransferAdmission,
+        results: tuple[ArtifactRenderResult, ...], lock_bytes: bytes | None,
+        root: Path) -> str | None:
+    error = _chained_bootstrap_contract_error(admission, results)
+    if error is not None:
+        return error
+    if lock_bytes is not None:
+        return "bootstrap-lock-present"
+    mcp_path = _contained_target(root, _CHAINED_MCP_TARGET)
+    backup_path = mcp_path.with_name(mcp_path.name + ".provider-artifact.bootstrap-transfer.bak")
+    if not mcp_path.is_file() or mcp_path.is_symlink():
+        return "chained-bootstrap-mcp-preimage-missing"
+    if sha256_digest(mcp_path.read_bytes()) != _CHAINED_MCP_PREIMAGE:
+        return "chained-bootstrap-mcp-preimage-mismatch"
+    if backup_path.exists() or backup_path.is_symlink():
+        return "chained-bootstrap-mcp-backup-present"
+    return None
+
+
+def _chained_bootstrap_contract_error(
+        admission: ChainedBootstrapTransferAdmission,
+        results: tuple[ArtifactRenderResult, ...]) -> str | None:
+    """Validate D108's sealed in-memory shape without inspecting its root."""
+    if (admission.decision_id != _CHAINED_DECISION_ID or
+            admission.mcp_target_path != _CHAINED_MCP_TARGET or
+            admission.mcp_preimage_sha256 != _CHAINED_MCP_PREIMAGE or
+            admission.mcp_artifact_id != _CHAINED_MCP_ARTIFACT or
+            admission.mcp_managed_boundary != ("whole-file", ()) or
+            admission.mcp_server_ids != _CHAINED_MCP_SERVERS):
+        return "chained-bootstrap-admission-invalid"
+    by_target = {result.target.path: result for result in results}
+    required_targets = {_BOOTSTRAP_EXISTING_TARGET, _BOOTSTRAP_CREATED_TARGET,
+                        _CHAINED_MCP_TARGET}
+    if set(by_target) != required_targets:
+        return "chained-bootstrap-target-set-invalid"
+    predecessor = admission.predecessor_plan
+    if not isinstance(predecessor, ArtifactPlan):
+        return "chained-bootstrap-predecessor-invalid"
+    predecessor_results = tuple(sorted((action.expected for action in predecessor.actions),
+                                       key=lambda result: result.target.path))
+    if (predecessor.bootstrap_transfer != admission.bootstrap_admission or
+            predecessor.chained_bootstrap_transfer is not None or
+            predecessor.lock_path != LOCK_RELATIVE_PATH):
+        return "chained-bootstrap-predecessor-invalid"
+    predecessor_error = _bootstrap_admission_contract_error(
+        admission.bootstrap_admission, predecessor_results)
+    if predecessor_error is not None:
+        return predecessor_error
+    expected_predecessor_lock = ArtifactLock(
+        LOCK_SCHEMA_VERSION, tuple(result.provenance for result in predecessor_results))
+    predecessor_actions = {action.target_path: action for action in predecessor.actions}
+    if (predecessor.next_lock != expected_predecessor_lock or
+            set(predecessor_actions) != {_BOOTSTRAP_EXISTING_TARGET, _BOOTSTRAP_CREATED_TARGET} or
+            predecessor_actions[_BOOTSTRAP_EXISTING_TARGET].action is not ArtifactActionKind.UPDATE or
+            predecessor_actions[_BOOTSTRAP_CREATED_TARGET].action is not ArtifactActionKind.CREATE or
+            any(by_target[target] != predecessor_actions[target].expected for target in
+                (_BOOTSTRAP_EXISTING_TARGET, _BOOTSTRAP_CREATED_TARGET))):
+        return "chained-bootstrap-predecessor-invalid"
+    mcp = by_target[_CHAINED_MCP_TARGET]
+    if (mcp.provenance.artifact_id != _CHAINED_MCP_ARTIFACT or
+            mcp.provenance.managed_boundary != admission.mcp_managed_boundary):
+        return "chained-bootstrap-mcp-artifact-invalid"
+    if sha256_digest(mcp.managed_bytes) != _CHAINED_MCP_PREIMAGE:
+        return "chained-bootstrap-mcp-expected-invalid"
+    try:
+        mcp_value = json.loads(mcp.managed_bytes.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return "chained-bootstrap-mcp-server-set-invalid"
+    servers = mcp_value.get("mcpServers") if isinstance(mcp_value, dict) else None
+    if not isinstance(servers, dict) or set(servers) != set(_CHAINED_MCP_SERVERS):
+        return "chained-bootstrap-mcp-server-set-invalid"
+    return None
+
+
+def _bootstrap_admission_error(admission: BootstrapTransferAdmission,
+                               results: tuple[ArtifactRenderResult, ...],
+                               lock_bytes: bytes | None, root: Path) -> str | None:
+    error = _bootstrap_admission_contract_error(admission, results)
+    if error is not None:
+        return error
+    if lock_bytes is not None:
+        return "bootstrap-lock-present"
+    lock_path = _contained_target(root, LOCK_RELATIVE_PATH)
+    existing_path = _contained_target(root, _BOOTSTRAP_EXISTING_TARGET)
+    created_path = _contained_target(root, _BOOTSTRAP_CREATED_TARGET)
+    backup_path = existing_path.with_name(existing_path.name +
+                                          ".provider-artifact.bootstrap-transfer.bak")
+    if lock_path.exists() or lock_path.is_symlink():
+        return "bootstrap-lock-present"
+    if not existing_path.is_file() or existing_path.is_symlink():
+        return "bootstrap-preimage-missing"
+    if sha256_digest(existing_path.read_bytes()) != _BOOTSTRAP_PREIMAGE:
+        return "bootstrap-preimage-mismatch"
+    if created_path.exists() or created_path.is_symlink():
+        return "bootstrap-created-target-present"
+    if backup_path.exists() or backup_path.is_symlink():
+        return "bootstrap-backup-present"
+    return None
+
+
+def _bootstrap_admission_contract_error(admission: BootstrapTransferAdmission,
+                                        results: tuple[ArtifactRenderResult, ...]) -> str | None:
+    """Validate D104's sealed in-memory shape without inspecting its root."""
+    if (admission.decision_id != _BOOTSTRAP_DECISION_ID or
+            admission.existing_target_path != _BOOTSTRAP_EXISTING_TARGET or
+            admission.existing_preimage_sha256 != _BOOTSTRAP_PREIMAGE or
+            admission.created_target_path != _BOOTSTRAP_CREATED_TARGET or
+            admission.existing_artifact_id != _BOOTSTRAP_EXISTING_ARTIFACT or
+            admission.created_artifact_id != _BOOTSTRAP_CREATED_ARTIFACT or
+            admission.require_absent_lock is not True):
+        return "bootstrap-admission-invalid"
+    by_target = {result.target.path: result for result in results}
+    if set(by_target) != {_BOOTSTRAP_EXISTING_TARGET, _BOOTSTRAP_CREATED_TARGET}:
+        return "bootstrap-target-set-invalid"
+    existing = by_target[_BOOTSTRAP_EXISTING_TARGET]
+    created = by_target[_BOOTSTRAP_CREATED_TARGET]
+    if (existing.provenance.artifact_id != _BOOTSTRAP_EXISTING_ARTIFACT or
+            created.provenance.artifact_id != _BOOTSTRAP_CREATED_ARTIFACT or
+            existing.provenance.managed_boundary != ("whole-file", ()) or
+            created.provenance.managed_boundary != ("whole-file", ())):
+        return "bootstrap-artifact-set-invalid"
+    return None
+
+
+def _apply_bootstrap_transfer(root: Path, plan: ArtifactPlan) -> ArtifactPlan:
+    admission = plan.bootstrap_transfer
+    if admission is None:  # pragma: no cover - dispatch guards this branch
+        raise ValueError("bootstrap transfer admission is missing")
+    if plan.lock_path != LOCK_RELATIVE_PATH:
+        raise ValueError("bootstrap transfer lock path is invalid")
+    results = tuple(sorted((action.expected for action in plan.actions),
+                           key=lambda result: result.target.path))
+    error = _bootstrap_admission_error(admission, results, None, root)
+    if error is not None or plan.next_lock is None:
+        raise ValueError(error or "bootstrap transfer plan is invalid")
+    expected_lock = ArtifactLock(LOCK_SCHEMA_VERSION,
+                                 tuple(result.provenance for result in results))
+    if plan.next_lock != expected_lock or any(action.action is ArtifactActionKind.REFUSE
+                                               for action in plan.actions):
+        raise ValueError("bootstrap transfer plan is invalid")
+    actions_by_target = {action.target_path: action for action in plan.actions}
+    if (set(actions_by_target) != {_BOOTSTRAP_EXISTING_TARGET, _BOOTSTRAP_CREATED_TARGET} or
+            actions_by_target[_BOOTSTRAP_EXISTING_TARGET].action is not ArtifactActionKind.UPDATE or
+            actions_by_target[_BOOTSTRAP_CREATED_TARGET].action is not ArtifactActionKind.CREATE):
+        raise ValueError("bootstrap transfer plan is invalid")
+    by_target = {result.target.path: result for result in results}
+    existing = by_target[_BOOTSTRAP_EXISTING_TARGET]
+    created = by_target[_BOOTSTRAP_CREATED_TARGET]
+    existing_path = _contained_target(root, _BOOTSTRAP_EXISTING_TARGET)
+    created_path = _contained_target(root, _BOOTSTRAP_CREATED_TARGET)
+    backup_path = existing_path.with_name(existing_path.name +
+                                          ".provider-artifact.bootstrap-transfer.bak")
+    lock_path = _contained_target(root, plan.lock_path)
+    lock_value = serialize_lock(expected_lock)
+    try:
+        _bootstrap_write_state(root, admission, results, "backup")
+        _atomic_write_bytes(backup_path, existing_path.read_bytes())
+        _bootstrap_write_state(root, admission, results, "existing")
+        _atomic_write_bytes(existing_path, existing.managed_bytes)
+        _bootstrap_write_state(root, admission, results, "created")
+        _atomic_write_bytes(created_path, created.managed_bytes)
+        _bootstrap_write_state(root, admission, results, "lock")
+        _atomic_write_bytes(lock_path, lock_value)
+    except BaseException:
+        _rollback_bootstrap_transfer(existing_path, created_path, backup_path, lock_path,
+                                     existing.managed_bytes, created.managed_bytes, lock_value,
+                                     admission.existing_preimage_sha256)
+        raise
+    return plan_artifact_lock(root, results, lock_bytes=lock_value)
+
+
+def _apply_chained_bootstrap_transfer(root: Path, plan: ArtifactPlan) -> ArtifactPlan:
+    admission = plan.chained_bootstrap_transfer
+    if admission is None:  # pragma: no cover - dispatch guards this branch
+        raise ValueError("chained bootstrap transfer admission is missing")
+    if plan.lock_path != LOCK_RELATIVE_PATH:
+        raise ValueError("chained bootstrap transfer lock path is invalid")
+    results = tuple(sorted((action.expected for action in plan.actions),
+                           key=lambda result: result.target.path))
+    error = _chained_bootstrap_admission_error(admission, results, None, root)
+    if error is not None or plan.next_lock is None:
+        raise ValueError(error or "chained bootstrap transfer plan is invalid")
+    expected_lock = ArtifactLock(LOCK_SCHEMA_VERSION,
+                                 tuple(result.provenance for result in results))
+    if plan.next_lock != expected_lock or any(action.action is ArtifactActionKind.REFUSE
+                                               for action in plan.actions):
+        raise ValueError("chained bootstrap transfer plan is invalid")
+    actions_by_target = {action.target_path: action for action in plan.actions}
+    if (set(actions_by_target) != {_BOOTSTRAP_EXISTING_TARGET, _BOOTSTRAP_CREATED_TARGET,
+                                   _CHAINED_MCP_TARGET} or
+            actions_by_target[_BOOTSTRAP_EXISTING_TARGET].action is not ArtifactActionKind.UPDATE or
+            actions_by_target[_BOOTSTRAP_CREATED_TARGET].action is not ArtifactActionKind.CREATE or
+            actions_by_target[_CHAINED_MCP_TARGET].action is not ArtifactActionKind.NOOP):
+        raise ValueError("chained bootstrap transfer plan is invalid")
+    by_target = {result.target.path: result for result in results}
+    existing = by_target[_BOOTSTRAP_EXISTING_TARGET]
+    created = by_target[_BOOTSTRAP_CREATED_TARGET]
+    mcp = by_target[_CHAINED_MCP_TARGET]
+    existing_path = _contained_target(root, _BOOTSTRAP_EXISTING_TARGET)
+    created_path = _contained_target(root, _BOOTSTRAP_CREATED_TARGET)
+    mcp_path = _contained_target(root, _CHAINED_MCP_TARGET)
+    backup_path = existing_path.with_name(existing_path.name +
+                                          ".provider-artifact.bootstrap-transfer.bak")
+    mcp_backup_path = mcp_path.with_name(mcp_path.name +
+                                         ".provider-artifact.bootstrap-transfer.bak")
+    lock_path = _contained_target(root, plan.lock_path)
+    lock_value = serialize_lock(expected_lock)
+    try:
+        _chained_bootstrap_write_state(root, admission, results, "backup")
+        _atomic_write_bytes(backup_path, existing_path.read_bytes())
+        _chained_bootstrap_write_state(root, admission, results, "existing")
+        _atomic_write_bytes(existing_path, existing.managed_bytes)
+        _chained_bootstrap_write_state(root, admission, results, "created")
+        _atomic_write_bytes(created_path, created.managed_bytes)
+        _chained_bootstrap_write_state(root, admission, results, "mcp-backup")
+        _atomic_write_bytes(mcp_backup_path, mcp_path.read_bytes())
+        _chained_bootstrap_write_state(root, admission, results, "lock")
+        _atomic_write_bytes(lock_path, lock_value)
+    except BaseException:
+        _rollback_chained_bootstrap_transfer(
+            existing_path, created_path, mcp_path, backup_path, mcp_backup_path, lock_path,
+            existing.managed_bytes, created.managed_bytes, mcp.managed_bytes, lock_value,
+            admission.bootstrap_admission.existing_preimage_sha256,
+            admission.mcp_preimage_sha256)
+        raise
+    return plan_artifact_lock(root, results, lock_bytes=lock_value)
+
+
+def _chained_bootstrap_write_state(
+        root: Path, admission: ChainedBootstrapTransferAdmission,
+        results: tuple[ArtifactRenderResult, ...], stage: str) -> None:
+    by_target = {result.target.path: result for result in results}
+    existing = by_target[_BOOTSTRAP_EXISTING_TARGET]
+    created = by_target[_BOOTSTRAP_CREATED_TARGET]
+    mcp = by_target[_CHAINED_MCP_TARGET]
+    existing_path = _contained_target(root, _BOOTSTRAP_EXISTING_TARGET)
+    created_path = _contained_target(root, _BOOTSTRAP_CREATED_TARGET)
+    mcp_path = _contained_target(root, _CHAINED_MCP_TARGET)
+    backup_path = existing_path.with_name(existing_path.name +
+                                          ".provider-artifact.bootstrap-transfer.bak")
+    mcp_backup_path = mcp_path.with_name(mcp_path.name +
+                                         ".provider-artifact.bootstrap-transfer.bak")
+    lock_path = _contained_target(root, LOCK_RELATIVE_PATH)
+    if stage == "backup":
+        error = _chained_bootstrap_admission_error(admission, results, None, root)
+        if error is not None:
+            raise ValueError(error)
+        return
+    if lock_path.exists() or lock_path.is_symlink():
+        raise ValueError("chained bootstrap lock changed after planning")
+    if (not backup_path.exists() or backup_path.is_symlink() or
+            sha256_digest(backup_path.read_bytes()) != admission.bootstrap_admission.existing_preimage_sha256):
+        raise ValueError("chained bootstrap backup changed after planning")
+    if sha256_digest(mcp_path.read_bytes()) != admission.mcp_preimage_sha256:
+        raise ValueError("chained bootstrap MCP preimage changed after planning")
+    if stage == "existing":
+        if (sha256_digest(existing_path.read_bytes()) !=
+                admission.bootstrap_admission.existing_preimage_sha256 or
+                created_path.exists() or created_path.is_symlink() or
+                mcp_backup_path.exists() or mcp_backup_path.is_symlink()):
+            raise ValueError("chained bootstrap transaction changed after planning")
+        return
+    if sha256_digest(existing_path.read_bytes()) != existing.provenance.rendered_hash:
+        raise ValueError("chained bootstrap existing target changed after planning")
+    if stage == "created":
+        if (created_path.exists() or created_path.is_symlink() or
+                mcp_backup_path.exists() or mcp_backup_path.is_symlink()):
+            raise ValueError("chained bootstrap transaction changed after planning")
+        return
+    if sha256_digest(created_path.read_bytes()) != created.provenance.rendered_hash:
+        raise ValueError("chained bootstrap created target changed after planning")
+    if stage == "mcp-backup":
+        if mcp_backup_path.exists() or mcp_backup_path.is_symlink():
+            raise ValueError("chained bootstrap MCP backup changed after planning")
+        return
+    if (stage == "lock" and not mcp_backup_path.is_symlink() and
+            sha256_digest(mcp_backup_path.read_bytes()) == admission.mcp_preimage_sha256 and
+            mcp_path.read_bytes() == mcp.managed_bytes):
+        return
+    raise ValueError("chained bootstrap transaction changed after planning")
+
+
+def _rollback_chained_bootstrap_transfer(
+        existing_path: Path, created_path: Path, mcp_path: Path, backup_path: Path,
+        mcp_backup_path: Path, lock_path: Path, existing_bytes: bytes, created_bytes: bytes,
+        mcp_bytes: bytes, lock_bytes: bytes, existing_preimage_hash: str,
+        mcp_preimage_hash: str) -> None:
+    if lock_path.exists() and not lock_path.is_symlink() and lock_path.read_bytes() == lock_bytes:
+        lock_path.unlink()
+    if created_path.exists() and not created_path.is_symlink() and created_path.read_bytes() == created_bytes:
+        created_path.unlink()
+    if (backup_path.exists() and not backup_path.is_symlink() and
+            sha256_digest(backup_path.read_bytes()) == existing_preimage_hash):
+        if existing_path.exists() and not existing_path.is_symlink() and existing_path.read_bytes() == existing_bytes:
+            _atomic_write_bytes(existing_path, backup_path.read_bytes())
+        if existing_path.exists() and not existing_path.is_symlink() and \
+                sha256_digest(existing_path.read_bytes()) == existing_preimage_hash:
+            backup_path.unlink()
+    if (mcp_backup_path.exists() and not mcp_backup_path.is_symlink() and
+            sha256_digest(mcp_backup_path.read_bytes()) == mcp_preimage_hash and
+            mcp_path.exists() and not mcp_path.is_symlink() and mcp_path.read_bytes() == mcp_bytes):
+        mcp_backup_path.unlink()
+
+
+def rollback_chained_bootstrap_transfer(root: Path, plan: ArtifactPlan) -> ArtifactPlan:
+    """Reverse only one fully completed, already-planned D108 transaction.
+
+    This is deliberately separate from fault rollback: it accepts no paths,
+    backups, or adoption choices from the caller.  Its closed verifier checks
+    every participating state before deleting or restoring anything.
+    """
+    root = _root(root)
+    error = _chained_bootstrap_rollback_error(root, plan)
+    if error is not None:
+        raise ValueError(error)
+    existing_path = _contained_target(root, _BOOTSTRAP_EXISTING_TARGET)
+    created_path = _contained_target(root, _BOOTSTRAP_CREATED_TARGET)
+    mcp_path = _contained_target(root, _CHAINED_MCP_TARGET)
+    lock_path = _contained_target(root, LOCK_RELATIVE_PATH)
+    backup_path = existing_path.with_name(existing_path.name +
+                                          ".provider-artifact.bootstrap-transfer.bak")
+    mcp_backup_path = mcp_path.with_name(mcp_path.name +
+                                         ".provider-artifact.bootstrap-transfer.bak")
+    lock_path.unlink()
+    created_path.unlink()
+    _atomic_write_bytes(existing_path, backup_path.read_bytes())
+    backup_path.unlink()
+    # The MCP file was never changed by D108, but confirm it again immediately
+    # before removing its one transaction-owned backup.
+    if (not mcp_path.is_file() or mcp_path.is_symlink() or
+            not mcp_backup_path.is_file() or mcp_backup_path.is_symlink() or
+            sha256_digest(mcp_path.read_bytes()) != _CHAINED_MCP_PREIMAGE or
+            sha256_digest(mcp_backup_path.read_bytes()) != _CHAINED_MCP_PREIMAGE):
+        raise ValueError("chained bootstrap rollback MCP changed")
+    mcp_backup_path.unlink()
+    return plan
+
+
+def _chained_bootstrap_rollback_error(root: Path, plan: object) -> str | None:
+    """Accept only the exact completed D108 state, before its first mutation."""
+    if not isinstance(plan, ArtifactPlan) or plan.bootstrap_transfer is not None:
+        return "chained bootstrap rollback plan is invalid"
+    admission = plan.chained_bootstrap_transfer
+    if admission is None or plan.lock_path != LOCK_RELATIVE_PATH:
+        return "chained bootstrap rollback plan is invalid"
+    results = tuple(sorted((action.expected for action in plan.actions),
+                           key=lambda result: result.target.path))
+    error = _chained_bootstrap_contract_error(admission, results)
+    if error is not None:
+        return "chained bootstrap rollback " + error
+    expected_lock = ArtifactLock(LOCK_SCHEMA_VERSION,
+                                 tuple(result.provenance for result in results))
+    actions = {action.target_path: action for action in plan.actions}
+    if (plan.next_lock != expected_lock or len(expected_lock.records) != 3 or
+            set(actions) != {_BOOTSTRAP_EXISTING_TARGET, _BOOTSTRAP_CREATED_TARGET,
+                             _CHAINED_MCP_TARGET} or
+            actions[_BOOTSTRAP_EXISTING_TARGET].action is not ArtifactActionKind.UPDATE or
+            actions[_BOOTSTRAP_CREATED_TARGET].action is not ArtifactActionKind.CREATE or
+            actions[_CHAINED_MCP_TARGET].action is not ArtifactActionKind.NOOP):
+        return "chained bootstrap rollback plan is invalid"
+    existing = {result.target.path: result for result in results}[_BOOTSTRAP_EXISTING_TARGET]
+    created = {result.target.path: result for result in results}[_BOOTSTRAP_CREATED_TARGET]
+    mcp = {result.target.path: result for result in results}[_CHAINED_MCP_TARGET]
+    existing_path = _contained_target(root, _BOOTSTRAP_EXISTING_TARGET)
+    created_path = _contained_target(root, _BOOTSTRAP_CREATED_TARGET)
+    mcp_path = _contained_target(root, _CHAINED_MCP_TARGET)
+    lock_path = _contained_target(root, LOCK_RELATIVE_PATH)
+    backup_path = existing_path.with_name(existing_path.name +
+                                          ".provider-artifact.bootstrap-transfer.bak")
+    mcp_backup_path = mcp_path.with_name(mcp_path.name +
+                                         ".provider-artifact.bootstrap-transfer.bak")
+    extra_backup_paths = (
+        created_path.with_name(created_path.name + ".provider-artifact.bootstrap-transfer.bak"),
+        lock_path.with_name(lock_path.name + ".provider-artifact.bootstrap-transfer.bak"),
+    )
+    required = (existing_path, created_path, mcp_path, lock_path, backup_path, mcp_backup_path)
+    if any(not path.is_file() or path.is_symlink() for path in required):
+        return "chained bootstrap rollback state is missing or unsafe"
+    if any(path.exists() or path.is_symlink() for path in extra_backup_paths):
+        return "chained bootstrap rollback backup set is not exact"
+    if lock_path.read_bytes() != serialize_lock(expected_lock):
+        return "chained bootstrap rollback lock changed"
+    if (existing_path.read_bytes() != existing.managed_bytes or
+            created_path.read_bytes() != created.managed_bytes or
+            mcp_path.read_bytes() != mcp.managed_bytes or
+            sha256_digest(mcp.managed_bytes) != _CHAINED_MCP_PREIMAGE):
+        return "chained bootstrap rollback managed state changed"
+    if (sha256_digest(backup_path.read_bytes()) != _BOOTSTRAP_PREIMAGE or
+            sha256_digest(mcp_backup_path.read_bytes()) != _CHAINED_MCP_PREIMAGE):
+        return "chained bootstrap rollback backup changed"
+    return None
+
+
+def _is_bootstrap_transfer_shape(plan: ArtifactPlan) -> bool:
+    """Recognize a reconstructed D104 transaction before ordinary dispatch."""
+    actions_by_target = {action.target_path: action for action in plan.actions}
+    if set(actions_by_target) != {_BOOTSTRAP_EXISTING_TARGET, _BOOTSTRAP_CREATED_TARGET}:
+        return False
+    existing = actions_by_target[_BOOTSTRAP_EXISTING_TARGET]
+    created = actions_by_target[_BOOTSTRAP_CREATED_TARGET]
+    return (existing.action is ArtifactActionKind.UPDATE and
+            created.action is ArtifactActionKind.CREATE and
+            existing.expected.provenance.artifact_id == _BOOTSTRAP_EXISTING_ARTIFACT and
+            created.expected.provenance.artifact_id == _BOOTSTRAP_CREATED_ARTIFACT)
+
+
+def _contains_reserved_transfer_reconstruction(plan: ArtifactPlan) -> bool:
+    """Refuse unmarked writable D104/D108 ownership-conflict plans before ordinary apply."""
+    reserved = {
+        (_BOOTSTRAP_EXISTING_TARGET, _BOOTSTRAP_EXISTING_ARTIFACT),
+        (_BOOTSTRAP_CREATED_TARGET, _BOOTSTRAP_CREATED_ARTIFACT),
+        (_CHAINED_MCP_TARGET, _CHAINED_MCP_ARTIFACT),
+    }
+    for action in plan.actions:
+        identity = (action.target_path, action.expected.provenance.artifact_id)
+        if (identity in reserved and action.observation is DriftObservation.OWNERSHIP_CONFLICT and
+                action.action is not ArtifactActionKind.NOOP):
+            return True
+    return False
+
+
+def _bootstrap_write_state(root: Path, admission: BootstrapTransferAdmission,
+                           results: tuple[ArtifactRenderResult, ...], stage: str) -> None:
+    error = _bootstrap_admission_error(admission, results, None, root)
+    if stage == "backup":
+        if error is not None:
+            raise ValueError(error)
+        return
+    existing_path = _contained_target(root, _BOOTSTRAP_EXISTING_TARGET)
+    created_path = _contained_target(root, _BOOTSTRAP_CREATED_TARGET)
+    backup_path = existing_path.with_name(existing_path.name +
+                                          ".provider-artifact.bootstrap-transfer.bak")
+    lock_path = _contained_target(root, LOCK_RELATIVE_PATH)
+    by_target = {result.target.path: result for result in results}
+    existing = by_target[_BOOTSTRAP_EXISTING_TARGET]
+    created = by_target[_BOOTSTRAP_CREATED_TARGET]
+    if not backup_path.exists() or backup_path.is_symlink():
+        raise ValueError("bootstrap backup changed after planning")
+    if lock_path.exists() or lock_path.is_symlink():
+        raise ValueError("bootstrap lock changed after planning")
+    if stage == "existing":
+        if backup_path.read_bytes() != existing_path.read_bytes():
+            raise ValueError("bootstrap backup changed after planning")
+        if sha256_digest(existing_path.read_bytes()) != admission.existing_preimage_sha256:
+            raise ValueError("bootstrap preimage changed after planning")
+        if created_path.exists() or created_path.is_symlink():
+            raise ValueError("bootstrap created target changed after planning")
+        return
+    if sha256_digest(backup_path.read_bytes()) != admission.existing_preimage_sha256:
+        raise ValueError("bootstrap backup changed after planning")
+    if sha256_digest(existing_path.read_bytes()) != existing.provenance.rendered_hash:
+        raise ValueError("bootstrap existing target changed after planning")
+    if stage == "created":
+        if created_path.exists() or created_path.is_symlink():
+            raise ValueError("bootstrap created target changed after planning")
+        return
+    if stage == "lock" and sha256_digest(created_path.read_bytes()) == created.provenance.rendered_hash:
+        return
+    raise ValueError("bootstrap transaction changed after planning")
+
+
+def _rollback_bootstrap_transfer(existing_path: Path, created_path: Path, backup_path: Path,
+                                 lock_path: Path, existing_bytes: bytes, created_bytes: bytes,
+                                 lock_bytes: bytes, preimage_hash: str) -> None:
+    if lock_path.exists() and not lock_path.is_symlink() and lock_path.read_bytes() == lock_bytes:
+        lock_path.unlink()
+    if created_path.exists() and not created_path.is_symlink() and created_path.read_bytes() == created_bytes:
+        created_path.unlink()
+    if (backup_path.exists() and not backup_path.is_symlink() and
+            sha256_digest(backup_path.read_bytes()) == preimage_hash and
+            existing_path.exists() and not existing_path.is_symlink() and
+            existing_path.read_bytes() == existing_bytes):
+        _atomic_write_bytes(existing_path, backup_path.read_bytes())
 
 
 def _classify(target: Path, result: ArtifactRenderResult, record: ArtifactProvenance | None,

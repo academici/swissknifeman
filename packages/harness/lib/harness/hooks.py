@@ -65,6 +65,16 @@ class LifecycleRenderPlan:
 _CODEX_HOOK_ADAPTER_VERSION = "1.0.0"
 _CODEX_CAPTURE_ADAPTER_VERSION = "1.0.0"
 _LIFECYCLE_KINDS = frozenset(("lifecycle", "context"))
+_D104_CODEX_HOOKS_TARGET = ".codex/hooks.json"
+
+
+@dataclass(frozen=True)
+class CodexLifecycleFragment:
+    """P5-owned observer input for the D104 P6 composition caller."""
+    target_path: str
+    event: str
+    group: dict
+    handler_bytes: bytes
 
 
 def _claude_lifecycle_bindings():
@@ -186,6 +196,71 @@ def render_codex_hooks(plan: LifecycleRenderPlan) -> bytes:
 def render_codex_hook_handler() -> bytes:
     """Generate only the implemented observer handler, with fail-closed input validation."""
     return b'''#!/usr/bin/env python3\nimport argparse, json, sys\n\nparser = argparse.ArgumentParser()\nparser.add_argument("--surface", required=True)\nargs = parser.parse_args()\nif args.surface != "context.observer":\n    sys.exit(2)\ntry:\n    payload = json.load(sys.stdin)\nexcept (json.JSONDecodeError, TypeError):\n    sys.exit(2)\nrequired = {"session_id", "cwd", "hook_event_name", "model", "permission_mode", "source"}\nif not required.issubset(payload) or payload["hook_event_name"] != "SessionStart":\n    sys.exit(2)\nprint(json.dumps({"systemMessage": "[harness observer] read-only policy active"}))\n'''
+
+
+def codex_d104_observer_fragment(plan: LifecycleRenderPlan) -> CodexLifecycleFragment:
+    """Return only P5's native observer registration and companion handler bytes.
+
+    P6 owns selection and preservation of the pre-existing memory command. This helper
+    deliberately has no input for a memory command and does not merge an existing document.
+    """
+    if plan.provider_id is not ProviderId.CODEX or not plan.green:
+        raise ValueError("cannot render refused lifecycle plan")
+    bindings = [binding for binding in plan.bindings
+                if binding.surface_id == "context.observer"]
+    if len(bindings) != 1 or bindings[0].support_level != "hook-native":
+        raise ValueError("HARNESS_MAPPING_MISSING")
+    binding = bindings[0]
+    if binding.event != "SessionStart":
+        raise ValueError("HARNESS_MAPPING_MISSING")
+    group = {"hooks": [{"type": "command", "command":
+             f'python3 "$(git rev-parse --show-toplevel)/.codex/hooks/lifecycle.py" --surface {binding.surface_id}'}]}
+    if binding.matcher:
+        group["matcher"] = binding.matcher
+    return CodexLifecycleFragment(_D104_CODEX_HOOKS_TARGET, binding.event, group,
+                                  render_codex_hook_handler())
+
+
+def validate_d104_codex_lifecycle_composition(document: bytes, *, memory_command: str,
+                                               fragment: CodexLifecycleFragment) -> None:
+    """Fail closed on a P6-composed D104 document before P2 transfer planning.
+
+    This is intentionally a validator, not a generic merger: P6 remains the caller that
+    composes and owns its memory registration, while P5 proves its observer input is intact.
+    """
+    if (not isinstance(document, bytes) or not isinstance(memory_command, str)
+            or not memory_command or not isinstance(fragment, CodexLifecycleFragment)
+            or fragment.target_path != _D104_CODEX_HOOKS_TARGET
+            or fragment.event != "SessionStart"):
+        raise ValueError("HARNESS_D104_LIFECYCLE_INVALID")
+    try:
+        value = json.loads(document.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        raise ValueError("HARNESS_D104_LIFECYCLE_INVALID") from None
+    if not isinstance(value, dict) or set(value) != {"hooks"}:
+        raise ValueError("HARNESS_D104_LIFECYCLE_INVALID")
+    hooks = value["hooks"]
+    if not isinstance(hooks, dict) or set(hooks) != {"SessionStart"}:
+        raise ValueError("HARNESS_D104_LIFECYCLE_INVALID")
+    groups = hooks["SessionStart"]
+    if not isinstance(groups, list) or len(groups) != 2:
+        raise ValueError("HARNESS_D104_LIFECYCLE_INVALID")
+    commands = []
+    for group in groups:
+        if (not isinstance(group, dict) or set(group) - {"hooks", "matcher"}
+                or not isinstance(group.get("hooks"), list) or len(group["hooks"]) != 1
+                or not isinstance(group["hooks"][0], dict)
+                or set(group["hooks"][0]) != {"type", "command"}
+                or group["hooks"][0]["type"] != "command"
+                or not isinstance(group["hooks"][0]["command"], str)
+                or not group["hooks"][0]["command"]
+                or "matcher" in group and not isinstance(group["matcher"], str)):
+            raise ValueError("HARNESS_D104_LIFECYCLE_INVALID")
+        commands.append(group["hooks"][0]["command"])
+    observer_command = fragment.group["hooks"][0]["command"]
+    if (memory_command == observer_command or commands.count(memory_command) != 1
+            or commands.count(observer_command) != 1 or len(set(commands)) != 2):
+        raise ValueError("HARNESS_D104_LIFECYCLE_INVALID")
 
 
 def plan_codex_lifecycle_artifacts(plan: LifecycleRenderPlan, *, bindings_path: Path):

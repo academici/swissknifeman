@@ -13,6 +13,8 @@ from pathlib import Path
 
 from skiller.common import Env
 from skiller.publication import run_codex_native_install
+from skiller.publication import validate_publication_capabilities
+from core import ProviderId, ProviderManifestError
 from skiller.registry import (build_claude_publication, build_codex_publication,
                               build_registry)
 from skiller.skillset import do_sync
@@ -99,6 +101,35 @@ class TestProviderPublicationParity(unittest.TestCase):
                          _digest(build_claude_publication(self.env, metadata, buckets, registry), self.repo_root))
         self.assertEqual(_digest(first_codex, self.repo_root),
                          _digest(build_codex_publication(self.env, metadata, buckets, registry), self.repo_root))
+
+    def test_manifest_gate_refuses_missing_unsupported_and_catalog_mismatch_before_write(self):
+        source = json.loads((self.repo_root / "configs/provider-capabilities.json").read_text())
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            sentinel = root / "sentinel"
+            sentinel.write_text("unchanged\n", encoding="utf-8")
+            before = sentinel.read_bytes()
+            with self.assertRaises(ProviderManifestError):
+                validate_publication_capabilities(
+                    ProviderId.CODEX, manifest_path=root / "missing.json")
+
+            unsupported = json.loads(json.dumps(source))
+            row = next(item for item in unsupported["capabilities"]
+                       if item["id"] == "skills.repository")["support"]["codex"]
+            row.pop("binding")
+            row["level"] = "unsupported"
+            row["limitations"] = ["fixture refusal"]
+            row["diagnostic"] = "unsupported fixture; fail closed"
+            path = root / "unsupported.json"
+            path.write_text(json.dumps(unsupported), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "REGISTRY_CAPABILITY_UNSUPPORTED"):
+                validate_publication_capabilities(ProviderId.CODEX, manifest_path=path)
+
+            mismatch = json.loads(json.dumps(source)); mismatch["catalog_version"] = "1.1.0"
+            path.write_text(json.dumps(mismatch), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "REGISTRY_CATALOG_VERSION_MISMATCH"):
+                validate_publication_capabilities(ProviderId.CODEX, manifest_path=path)
+            self.assertEqual(sentinel.read_bytes(), before)
 
     def test_render_only_leaves_protected_repository_paths_unchanged(self):
         """Render receives explicit roots and must not mutate bootstrap/FOREMAN paths."""

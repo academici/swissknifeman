@@ -1,5 +1,40 @@
 # Уточнения владельца
 
+## 2026-07-22 — bounded D104 live-admission repair design
+
+- Owner invoked exactly: `task:plan-design 2026.07.19-DUAL-PROVIDER P6` in bounded repair
+  design mode.
+- Input is limited to the P6.8 live-preflight finding and D103/D104 transfer records.
+- The session must explain the non-green no-write result and specify only the owning P2/P5/P6
+  route. It must not execute package repair, live apply/repair, P7.2 rerun, P7.3+, FOREMAN,
+  fleet, tag or push, and must not begin P6 close/audit.
+
+RAG:— (owner-grounded: exact invocation and scope payload 2026-07-22).
+
+## 2026-07-22 — D103 bootstrap-transfer design approval
+
+- Owner approved exactly: `APPROVE D103 P2/P5/P6 BOOTSTRAP-TRANSFER DESIGN AS WRITTEN; AUTHORIZE ONLY A BOUNDED REMEDIATION PLAN, NOT LIVE APPLY OR P7.3+`.
+- Authority covers only re-design of the owning P2/P5/P6 remediation chain and its plan
+  carriers. It does not authorize package-source implementation, a live apply/repair,
+  P7.3+, FOREMAN, fleet, tag or push.
+- The live inventory remains closed: root `.codex/hooks.json` is SHA-256
+  `7d7538d021228e8e61d124f4b60b6db04434f8121de30b8672f05e4bf038c3db`,
+  `.codex/hooks/lifecycle.py` is missing and the live P2 lock record is absent.
+
+RAG:— (owner-grounded: exact approval in this session 2026-07-22; repo-grounded:
+`research/23-p7.2-live-preflight-remediation-design.md`).
+
+## 2026-07-22 — D104 bootstrap-transfer implementation approval
+
+- Owner approved exactly: `APPROVE D104 BOOTSTRAP-TRANSFER IMPLEMENTATION AS WRITTEN IN research/23 § Candidate Owner Decision D104; RUN P2.6→P5.8→P6.7→P6.8 SEQUENTIALLY; NO LIVE APPLY/REPAIR, P7.2 RERUN, P7.3+, FOREMAN, FLEET, TAG OR PUSH`.
+- The authorization freezes only the D104 candidate in `research/23`: P2 contract `1.2.0`,
+  exact admission/preimage/backup/rollback and the sequential package-source ownership.
+- P2/P5/P6 may use disposable roots and no-write checks as specified. Any live apply/repair,
+  P7.2 rerun, P7.3+, FOREMAN, fleet, tag or push remains outside authority.
+
+RAG:— (owner-grounded: exact approval in this session 2026-07-22; repo-grounded:
+`research/23-p7.2-live-preflight-remediation-design.md`).
+
 ## 2026-07-19 — синтаксис запуска task-команд в ChatGPT/Codex
 
 - В текущей ChatGPT/Codex surface task-команда запускается через `$ task:plan-design …`:
@@ -206,3 +241,79 @@ RAG:— (owner-grounded: требование item-by-item запуска с `/c
 
 RAG:— (owner-grounded: прямое требование владельца 2026-07-22; repo-grounded:
 `plan.md` §3 Routing, `phases/P7.md`, `roadmap.md`).
+
+## 2026-07-22 — redesign P7.1 после docs-generator escalation
+
+- Владелец запустил `task:plan-design 2026.07.19-DUAL-PROVIDER P7.1` после terminal
+  escalation второго execution-attempt: named manifest-backed docs render/check operation
+  отсутствует, а ручная capability matrix запрещена.
+- Redesign обязан сохранить frozen P0–P6 contracts и устранить корень конфликта, а не
+  разрешить hand-authored README или генерацию support truth из actual provider outputs.
+- Package implementation в этой design-сессии не выполняется; разрешены только plan
+  artifacts, journal bookkeeping и plan-lint. FOREMAN, fleet, live self-host и push остаются
+  вне scope.
+
+RAG:— (owner-grounded: semantic invocation 2026-07-22; repo-grounded:
+`phases/P7.md` P7.1 escalation, `journal.jsonl`,
+`findings/P7.1-capability-manifest-gap-2026-07-22.md`).
+
+## 2026-07-22 — P7.2 post-P6 Owner Approval boundary
+
+- После D107 не переоткрывать P6 и не перекладывать на владельца mechanics, уже
+  делегированные D66/D79.
+- Свести остаточный P7.2 blocker к двум реальным authority-осям: project provider selection
+  и ownership существующего live `.mcp.json`.
+- Дать минимальные alternatives, рекомендацию, exact scope/anti-scope и literal Owner reply;
+  смешанные варианты, не открывающие P7.2, назвать явно.
+- До ответа выполнять только plan-design/bookkeeping: не запускать P7.2, package source/tests,
+  provider config/artifacts, apply/repair/rollback, P7.3+, FOREMAN, fleet, tag или push.
+
+RAG:— (repo-grounded: D66/D79/D102–D107,
+`research/24-d104-live-admission-repair-design.md`, `phases/P6.md` Audit attempt 4).
+
+## 2026-07-22 — standing delegation resolves P7.2 S1+O1
+
+- Владелец уточнил постоянное правило для AI-пакета: если рекомендованный выбор логически
+  определён, contract-preserving, reversible/design-only и уже внутри plan scope, агент
+  принимает и записывает его сам, не заставляя владельца повторять approval literal.
+- Правило durably stored in mAInd scope `project:swissknifeman` as
+  `mem_mrwffj6x_4e58b0e7e65d`; оно явно выбирает рекомендованный `S1+O1` для P7.2 и не
+  разрешает live apply/repair/rollback, fleet, FOREMAN, tag, push или anti-scope expansion.
+- D108 therefore supersedes the exact-literal wait and the pre-approval sentence “P6 не
+  переоткрывается”. Owning seams are reopened explicitly and sequentially: P2.7, then
+  P6.11→P6.12, separate close/fresh audits, then a fresh P7.2 rerun.
+- Эта сессия materializes plan design only; package source, live config/artifacts, AGENTS,
+  FOREMAN, fleet, ACTIVE, tag and push remain untouched.
+
+RAG:— (owner-grounded: mAInd memory `mem_mrwffj6x_4e58b0e7e65d`; repo-grounded: D79,
+`research/{25-p7.2-owner-authority-boundary,26-p7.2-s1-o1-remediation-design}.md`).
+
+## 2026-07-22 — D111 accepts GREEN P2 audit-cap result
+
+- Fresh independent Audit P2 attempt 5 returned substantive `GREEN` on committed anchor
+  `224f1688`; audit artifact commit is `f9f168a8`.
+- Under the standing delegation `mem_mrwffj6x_4e58b0e7e65d`, the logically determined
+  audit-cap choice is to accept terminal P2 and continue the already approved D108 route,
+  not stop the plan.
+- This removes only the satisfied P2 predecessor block from P6.11. It does not authorize
+  live config/artifact mutation, P7.2, FOREMAN, fleet, tag or push.
+
+RAG:— (owner-grounded: standing delegation; repo-grounded: final Audit P2 block,
+`224f1688`, `f9f168a8`, D108 roadmap).
+
+## 2026-07-23 — P7.2 D118 RED: native Codex/session-state isolation
+
+- Preserve unrelated dirty `AGENTS.md` and `.serena/project.yml` plus all uncommitted
+  P7.2 plan/evidence carriers.
+- Treat P6 audit attempt 5 as final Owner-accepted GREEN under AUDIT-CAP; do not reopen P6.
+- Redesign only P7.2 after the isolated native install stored plugin payload under the
+  task-specific `CODEX_HOME` but the active host-backed Codex session changed its own
+  JSONL and SQLite/WAL state.
+- Use only a supported remediation. Host-state attribution exceptions, speculative config
+  keys, host auth/state reuse and weakened zero-delta acceptance are forbidden.
+- Do not execute P7.2, live apply/repair/rollback, P7.3+, FOREMAN, fleet, tag, push or cleanup;
+  do not modify package source/tests.
+- Validate with plan-lint and `git diff --check`; commit only plan paths.
+
+RAG:— (owner-grounded: direct P7.2 D118 RED design instruction 2026-07-23;
+repo-grounded: `findings/P7-self-host-probes-2026-07-19.md`).

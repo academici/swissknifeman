@@ -1,22 +1,23 @@
 # Индекс плана — `2026.07.19-DUAL-PROVIDER`
 
-**Обновлён:** 2026-07-20
+**Обновлён:** 2026-07-22
 
 ## Карта директорий
 
 | Путь | Назначение |
 |:--|:--|
 | `plan.md` | мета, scope, routing, status board и решения |
-| `phases/P0.md … P7.md` | все 8 фаз детализированы до DoR; 42 item, skeleton markers отсутствуют; P0.7 — terminal ATTENTION fix-forward |
-| `handoff.md` | rolling next-step для холодного старта |
-| `roadmap.md` | полная execution map 42/42 с GPT-5.6 Sol/Terra routing и owner gates |
+| `phases/P0.md … P7.md` | все 8 фаз детализированы до DoR; 51 item, skeleton markers отсутствуют; D106 добавляет только P6.9→P6.10 |
+| `handoff.md` | rolling next-step; сейчас waiting Owner Approval `S1+O1`/`S0+O0` для P7.2 |
+| `roadmap.md` | полная execution map 51/51 с GPT-5.6 Sol/Terra routing и owner gates |
 | `journal.jsonl` | append-only журнал plan-команд |
 | `journal-exceptions.jsonl` | optional append-only owner-gated provenance exceptions для historical schema-invalid journal rows |
 | `brief/` | полный вход владельца, включая launch/hook и environment-defect refinements |
 | `findings/` | repo/provider evidence, immutable P0.1/P0.5 carriers, P0 clean-reproducibility repair, package recon P2/P3/P5, P3.5 unmanaged-provider-B reproduction и current OpenAI model routing |
 | `artifacts/p0-evidence-anchors.json` | v1 sealed source-tree/input anchors for P0.1/P0.5 replay; D64 records only one external plugin path, never its contents |
 | `artifacts/d65-main-reconciliation-check.py` + `artifacts/d65-main-reconciliation.json` | stdlib-only D65-A/D68 exact-path checker и sealed base/main/delivery hash manifest; D71 records its completed main reconciliation and retained stash recovery point |
-| `research/` | traceability, architecture/sequence и phase design syntheses P0–P7 |
+| `research/` | traceability, architecture/sequence и phase design syntheses P0–P7, включая P7.2 authority boundary |
+| `open-questions.md` | `OQ-P7.2-1`: pending Owner choice provider selection + `.mcp.json` ownership |
 | `root/contracts/` | frozen P0 capability/artifact/migration-gate + draft config/harness/analytics contracts; skill/command contracts создаются своими owner-gated items |
 | `root/adr/` | архитектурные решения плана; ADR-0001 фиксирует canonical source → deterministic adapters |
 
@@ -52,6 +53,12 @@
 | `research/09-p5-harness-provider-surfaces-design.md` | research | P5–P7 | security intent, profiles/hooks/MCP/agents projections и pre-mortem |
 | `research/10-p6-maind-analytics-bootstrap-design.md` | research | P6–P7 | provider deploy loop, neutral analytics/migration и cold restart |
 | `research/11-p7-self-host-release-design.md` | research | P7, roadmap | docs source, isolated→live self-host, guarded cleanup, release gate и GPT-5.6 routing |
+| `findings/P7.1-capability-manifest-gap-2026-07-22.md` | finding | P7.1 | frozen manifest obligation против фактического отсутствующего carrier/production gate/docs operation |
+| `findings/P7.2-owner-boundary-live-inventory-2026-07-22.md` | finding | P7.2 Owner gate | key-only live inventory: legacy Claude-only selection, exact `.mcp.json` preimage и absent P2 lock |
+| `research/22-p7-capability-manifest-remediation.md` | research | P7.1 | root manifest, shared validation/projection, production gates и deterministic docs render/check |
+| `findings/P6-d104-live-admission-root-cause-2026-07-22.md` | findings | P6.9–P6.10 | read-only replay: D104 admitted, later unmanaged `.mcp.json` refusal, expected P5 non-selector and write-order defect |
+| `research/24-d104-live-admission-repair-design.md` | research | P6.9–P6.10 | terminal P2/P5 invariants, P6-only atomic/result repair, split-verdict proof and new-authority boundary |
+| `research/25-p7.2-owner-authority-boundary.md` | research | P7.2 Owner gate | exact `S`/`O` alternatives, recommended `S1+O1`, approval literal, anti-scope and waiting continuation |
 | `research/12-final-cross-phase-reconcile.md` | research | finish, design audit | contract chain, Required Reads, Routing, owner gates и итоговый DoR pass 3/3 |
 | `research/13-instruction-contract-remediation.md` | research | P5.6–P7, design audit | common instruction contract/projections и restart propagation |
 | `research/14-journal-schema-exception-remediation.md` | research | journal gate, design audits r3–r4 | F1 sidecar alternatives, exact schema и unchanged same-plan contract |

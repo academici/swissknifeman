@@ -12,8 +12,9 @@ import json
 from pathlib import Path
 import tempfile
 
-from core import (ArtifactActionKind, EffectiveProvider, ProviderId, apply_plan,
-                  plan_artifact_lock, serialize_lock)
+from core import (ArtifactActionKind, EffectiveProvider, ProviderId, SupportLevel,
+                  apply_plan, load_provider_manifest, plan_artifact_lock,
+                  serialize_lock, support_for)
 from .agentpacks import (load_claude_role_bindings, plan_agent_artifact,
                          semantic_agent_roles)
 from .hooks import LifecycleRequest, plan_codex_lifecycle_artifacts, plan_lifecycle
@@ -114,12 +115,16 @@ def _fixture(path):
     return value
 
 
-def audit_package(package_root: Path, fixture_path: Path | None = None) -> ProviderAuditReport:
+def audit_package(package_root: Path, fixture_path: Path | None = None, *,
+                  manifest_path: Path | None = None) -> ProviderAuditReport:
     """Audit both native projections without writing or activating any surface."""
     root = Path(package_root)
     fixture = _fixture(fixture_path or root / "tests/fixtures_data/provider-harness-cases.json")
+    manifest_path = Path(manifest_path) if manifest_path is not None else (
+        Path(__file__).resolve().parents[4] / "configs/provider-capabilities.json")
+    manifest = load_provider_manifest(manifest_path)
     catalog_path = root / "configs/common/profile-catalog.json"
-    catalog = load_catalog(catalog_path)
+    catalog = load_catalog(catalog_path, capability_manifest=manifest)
     expected = {
         "profiles": tuple(fixture["profiles"]), "surfaces": tuple(fixture["surfaces"]),
         "mcp": tuple(fixture["mcp_ids"]), "agents": tuple(fixture["agent_roles"]),
@@ -225,6 +230,7 @@ def audit_package(package_root: Path, fixture_path: Path | None = None) -> Provi
         surface_map.extend(_provider_surface_rows(provider, catalog, lifecycle, mcp_plan,
                                                    verified_count))
     diagnostics.extend(_map_diagnostics(surface_map, tuple(fixture["surfaces"])))
+    diagnostics.extend(_manifest_surface_diagnostics(manifest, surface_map))
     if len({identity for identity, _digest in render_hashes}) != len(render_hashes):
         diagnostics.append("HARNESS_CATALOG_MISMATCH:duplicate-render-hash")
     managed_lifecycle = _managed_lifecycle_evidence(root, catalog, mcp, roles)
@@ -233,6 +239,25 @@ def audit_package(package_root: Path, fixture_path: Path | None = None) -> Provi
                                tuple(sorted(actual.items())), tuple(sorted(set(diagnostics))),
                                tuple(sorted(set(evidence))), tuple(sorted(render_hashes)),
                                tuple(sorted(surface_map)), managed_lifecycle)
+
+
+def _manifest_surface_diagnostics(manifest, surface_map):
+    """Compare named package activation evidence to manifest-owned support truth."""
+    diagnostics = []
+    seen = set()
+    for provider_text, surface_id, *_prefix, activation, _diagnostic in surface_map:
+        provider = ProviderId(provider_text)
+        key = (provider, surface_id)
+        if key in seen:
+            continue
+        seen.add(key)
+        support = support_for(manifest, surface_id, provider)
+        expected = "unsupported" if support.level is SupportLevel.UNSUPPORTED else "supported"
+        if activation != expected:
+            diagnostics.append(
+                f"HARNESS_CAPABILITY_MANIFEST_INVALID:{provider_text}:{surface_id}:"
+                f"expected-{expected}:observed-{activation}")
+    return diagnostics
 
 
 def _append_security_evidence(catalog, provider, evidence):

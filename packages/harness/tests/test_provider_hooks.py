@@ -16,9 +16,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "analyst" / "lib"))
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 from core import ArtifactActionKind, ProviderId, apply_plan, plan_artifact_lock, serialize_lock
-from harness.hooks import (LifecycleRequest, adapt_codex_hook_payload, block_codex_observer,
+from harness.hooks import (CodexLifecycleFragment, LifecycleRequest, adapt_codex_hook_payload,
+                           block_codex_observer, codex_d104_observer_fragment,
                            plan_codex_capture_artifact, plan_codex_lifecycle_artifacts, plan_lifecycle,
-                           render_codex_hooks)
+                           render_codex_hook_handler, render_codex_hooks,
+                           validate_d104_codex_lifecycle_composition)
 from harness.profiles import load_catalog
 from analyst.events import read_events
 from analyst.cli import main as analyst_main
@@ -159,6 +161,70 @@ class ProviderHookTests(unittest.TestCase):
             second = plan_artifact_lock(root, artifacts, lock_bytes=lock)
             self.assertEqual([action.action for action in second.actions],
                              [ArtifactActionKind.NOOP, ArtifactActionKind.NOOP])
+
+    def test_d104_fragment_validates_only_native_memory_observer_composition(self):
+        lifecycle = plan_lifecycle(self.catalog, provider_id=ProviderId.CODEX, trusted=True,
+                                   requests=(LifecycleRequest("context.observer", True),),
+                                   codex_bindings_path=BINDINGS)
+        fragment = codex_d104_observer_fragment(lifecycle)
+        self.assertEqual(fragment.target_path, ".codex/hooks.json")
+        self.assertEqual(fragment.event, "SessionStart")
+        self.assertEqual(fragment.handler_bytes, render_codex_hook_handler())
+        memory_command = "bash /home/vostrikov/projects/packages/swissknifeman/.claude/maind-memory.sh"
+        document = {"hooks": {"SessionStart": [
+            {"hooks": [{"type": "command", "command": memory_command}]}, fragment.group
+        ]}}
+        rendered = (json.dumps(document, indent=2) + "\n").encode("utf-8")
+        validate_d104_codex_lifecycle_composition(rendered, memory_command=memory_command,
+                                                  fragment=fragment)
+
+        invalid_documents = (
+            {"hooks": {"PreToolUse": document["hooks"]["SessionStart"]}},
+            {"hooks": {"SessionStart": [fragment.group]}},
+            {"hooks": {"SessionStart": [
+                {"hooks": [{"type": "command", "command": memory_command}]},
+                fragment.group, fragment.group]}},
+            {"hooks": {"SessionStart": [
+                {"hooks": [{"type": "command", "command": memory_command}]},
+                {"hooks": [{"type": "command", "command": memory_command}]}]}},
+        )
+        for invalid in invalid_documents:
+            with self.assertRaisesRegex(ValueError, "HARNESS_D104_LIFECYCLE_INVALID"):
+                validate_d104_codex_lifecycle_composition(
+                    (json.dumps(invalid) + "\n").encode("utf-8"), memory_command=memory_command,
+                    fragment=fragment)
+        invalid_target = CodexLifecycleFragment(".codex/not-hooks.json", fragment.event,
+                                                fragment.group, fragment.handler_bytes)
+        with self.assertRaisesRegex(ValueError, "HARNESS_D104_LIFECYCLE_INVALID"):
+            validate_d104_codex_lifecycle_composition(rendered, memory_command=memory_command,
+                                                      fragment=invalid_target)
+
+    def test_normal_observer_remains_ownership_conflict_on_d104_preimage(self):
+        preimage = '''{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash /home/vostrikov/projects/packages/swissknifeman/.claude/maind-memory.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
+'''.encode("utf-8")
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            target = root / ".codex/hooks.json"
+            target.parent.mkdir(parents=True)
+            target.write_bytes(preimage)
+            with redirect_stdout(io.StringIO()), self.assertRaises(SystemExit):
+                block_codex_observer(SimpleNamespace(root=PACKAGE), root,
+                                     trusted=True, repair=False, dry=True)
+            self.assertEqual(target.read_bytes(), preimage)
+            self.assertFalse((root / ".codex/hooks/lifecycle.py").exists())
 
     def test_codex_observer_cli_seam_preserves_other_package_records(self):
         with tempfile.TemporaryDirectory() as directory:

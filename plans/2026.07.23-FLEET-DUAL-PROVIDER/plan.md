@@ -50,7 +50,7 @@ findings/00-fleet-dry-run-2026-07-23.md).
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P0 | Устранить блокер connect-проекции | 1/2 | 🟠 Done with deviations |
-| P1 | Пилот и стабилизация | 0/2 | ⬜ Not started |
+| P1 | Пилот и стабилизация | 0/2 | 🟡 In progress |
 | P2 | Последовательный fleet rollout | 0/1 | ⬜ Not started |
 
 ## 5. Decision Log
@@ -61,6 +61,7 @@ findings/00-fleet-dry-run-2026-07-23.md).
 | D2 | 2026-07-23 | Drift остаётся fail-closed, repair — только явный. | Иначе автоматизация может стереть локальную работу. RAG:— (repo-grounded: packages/skiller/lib/skiller/skillset.py:857) |
 | D3 | 2026-07-23 | Внешний Codex connect consumer получает repo-contained marketplace и self-contained selected plugin bundles под существующим artifact lock; self-host остаётся thin, install/cache/enable — отдельное user-level действие. | Официальный Codex manual подтверждает repo marketplace и contained local sources, frozen publication contract запрещает внешний thin path и implicit native install. RAG:✅ 2026-07-23 (`findings/P0.1-codex-connect-carrier-verification.md`, Build plugins). |
 | D4 | 2026-07-23 | P0.1 включает owning generated Codex bundle, его conformance test, существующую CLI-документацию и `[Unreleased]`; внешняя копия обязана получать runtime tree уже из self-contained generated source. | Attempt 2 audit доказал, что downstream carrier не может восстановить runtime files, отсутствующие в generated `core`; repo `docs-maintenance`/`release-discipline` требуют синхронных user-facing docs и changelog. Spec синхронизирован до attempt 3; поздняя синхронизация docs/CHANGELOG в attempt 2 остаётся process deviation. RAG:— (`findings/P0.1-attempt2-independent-audit.md`). |
+| D5 | 2026-07-23 | Owner directed P1.1 to skip `sibintek-insiders`: the actively worked consumer must not be mutated; redesign the pilot selection before retry. | P1.1 dry-run found unmanaged root instruction ownership and package-target absence; `--repair`/`--force` are outside scope. RAG:— (`findings/P1.1-pilot.md`). |
 
 ## 6. Update Log
 
@@ -76,3 +77,4 @@ findings/00-fleet-dry-run-2026-07-23.md).
 | 2026-07-23 | task-plan-run / gpt-5.6-sol/high | P0.1 закрыт attempt 3: owning generator публикует canonical runtime tree в generated `core` и внешний carrier — детали см. phases/P0.md P0.1 Completion Notes. |
 | 2026-07-23 | independent-audit / gpt-5.6-sol/high | P0.1 attempt 3 GREEN: canonical → generated → external runtime transfer, exclusions, containment и commit topology подтверждены без findings. |
 | 2026-07-23 | task-plan-run / gpt-5.6-terra/high | P0.2 закрыт с deviations: unavailable registry paths стали provider-qualified skips; no-write fleet rerun классифицировал consumer blockers — детали см. phases/P0.md P0.2 Completion Notes. |
+| 2026-07-23 | task-plan-run / gpt-5.6-terra/high | P1.1 skipped by owner decision: `sibintek-insiders` не изменялся после fail-closed instruction dry-run — детали см. phases/P1.md P1.1 Completion Notes. |

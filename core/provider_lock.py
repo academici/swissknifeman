@@ -792,9 +792,6 @@ def rollback_chained_bootstrap_transfer(root: Path, plan: ArtifactPlan) -> Artif
     error = _chained_bootstrap_rollback_error(root, plan)
     if error is not None:
         raise ValueError(error)
-    results = tuple(sorted((action.expected for action in plan.actions),
-                           key=lambda result: result.target.path))
-    existing = {result.target.path: result for result in results}[_BOOTSTRAP_EXISTING_TARGET]
     existing_path = _contained_target(root, _BOOTSTRAP_EXISTING_TARGET)
     created_path = _contained_target(root, _BOOTSTRAP_CREATED_TARGET)
     mcp_path = _contained_target(root, _CHAINED_MCP_TARGET)

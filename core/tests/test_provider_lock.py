@@ -296,7 +296,7 @@ class ProviderLockTests(unittest.TestCase):
             planned = plan_bootstrap_transfer(self.root, results, lock_bytes=None, admission=admission)
             self.assertEqual([action.action for action in planned.actions],
                              [ArtifactActionKind.UPDATE, ArtifactActionKind.CREATE])
-            applied = apply_plan(self.root, planned)
+            apply_plan(self.root, planned)
         self.assertTrue((hooks.with_name("hooks.json.provider-artifact.bootstrap-transfer.bak")).exists())
         self.assertEqual(hooks.read_bytes(), results[0].managed_bytes)
         self.assertEqual((self.root / results[1].target.path).read_bytes(), results[1].managed_bytes)
@@ -424,7 +424,7 @@ class ProviderLockTests(unittest.TestCase):
                 {".codex/hooks.json": ArtifactActionKind.UPDATE,
                  ".codex/hooks/lifecycle.py": ArtifactActionKind.CREATE,
                  ".mcp.json": ArtifactActionKind.NOOP})
-            applied = apply_plan(self.root, planned)
+            apply_plan(self.root, planned)
         self.assertEqual(mcp.read_bytes(), MCP_PREIMAGE)
         self.assertEqual(
             mcp.with_name(".mcp.json.provider-artifact.bootstrap-transfer.bak").read_bytes(),
@@ -556,12 +556,14 @@ class ProviderLockTests(unittest.TestCase):
                     writer = provider_lock._atomic_write_bytes
                     calls = 0
 
-                    def fail_on_requested_write(path, value):
+                    def fail_on_requested_write(path, value, *,
+                                                requested_write=failing_write,
+                                                original_writer=writer):
                         nonlocal calls
                         calls += 1
-                        if calls == failing_write:
+                        if calls == requested_write:
                             raise OSError("stop")
-                        writer(path, value)
+                        original_writer(path, value)
 
                     with patch.object(provider_lock, "_atomic_write_bytes", side_effect=fail_on_requested_write):
                         with self.assertRaisesRegex(OSError, "stop"):

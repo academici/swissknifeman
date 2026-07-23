@@ -19,6 +19,9 @@
 
 ### Fixed
 
+- **core/harness/maind — clean-runner compatibility.** D108 tests now use a committed sealed
+  MCP preimage instead of a gitignored local file; harness agent-pack projections import on
+  Python 3.9, and the provider rollback/deploy paths pass the repository Ruff gate.
 - **core/harness/maind — provider project sync.** Managed provider-artifact locks now
   retain records owned by other packages; Codex observer deployment, agent templates and
   provider MCP projection preserve independent managed surfaces during check/apply/repair.

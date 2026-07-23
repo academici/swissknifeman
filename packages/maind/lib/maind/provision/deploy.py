@@ -22,8 +22,8 @@ from ..mcpconfig import (MCP_FILES, MCPConfigError, load_mcp, mcp_path,
 from ..memory import health, resolve_ports
 from ..projects import get as get_project
 from ..projects import listing, write_config
-from ..provider_deploy import (apply_provider_artifacts, generate_conformance_report,
-                               plan_provider_artifacts, plan_provider_deploy,
+from ..provider_deploy import (generate_conformance_report, plan_provider_artifacts,
+                               plan_provider_deploy,
                                plan_d104_bootstrap_transfer, project_provider_preflight,
                                bootstrap_transfer_projection, plan_d108_operation,
                                apply_d108_operation, SemanticServer, semantic_servers)
@@ -64,7 +64,6 @@ def provider_projection_context(env, config, project):
     harness_lib = str(harness_root / "lib")
     if harness_lib not in sys.path:
         sys.path.insert(0, harness_lib)
-    from core import ProviderId
     from harness.mcp import load_mcp_catalog, plan_mcp_projection
     resolved = resolve_provider_config(config, None, project["id"])
     if resolved.selection is None:

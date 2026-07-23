@@ -40,6 +40,41 @@ _D104_PREIMAGE = b'''{
 }
 '''
 
+_D108_MCP_PREIMAGE = b'''{
+  "mcpServers": {
+    "maind": {
+      "command": "${MAIND_BIN:-maind}",
+      "args": [
+        "mcp",
+        "--scope",
+        "project:swissknifeman"
+      ]
+    },
+    "perplexity-web": {
+      "command": "${PERPLEXITY_WEB_MCP_BIN:-/home/vostrikov/projects/packages/perplexity-web-mcp/start.sh}",
+      "args": [
+        "--pool=default"
+      ]
+    },
+    "serena": {
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/oraios/serena",
+        "serena",
+        "start-mcp-server",
+        "--context",
+        "ide-assistant",
+        "--project",
+        "/home/vostrikov/projects/packages/swissknifeman",
+        "--enable-web-dashboard",
+        "false"
+      ]
+    }
+  }
+}
+'''
+
 
 class TestProviderDeploy(unittest.TestCase):
     def test_d108_project_carrier_preserves_siblings_and_is_idempotent(self):
@@ -90,7 +125,7 @@ class TestProviderDeploy(unittest.TestCase):
     def test_d115_d108_adopts_only_the_sealed_unchanged_mcp_preimage(self):
         repo = Path(__file__).resolve().parents[3]
         harness = repo / "packages/harness/configs"
-        sealed = (repo / ".mcp.json").read_bytes()
+        sealed = _D108_MCP_PREIMAGE
         servers = (
             SemanticServer("maind", {"command": "maind"}),
             SemanticServer("perplexity-web", {"command": "pplx"}),
@@ -121,7 +156,7 @@ class TestProviderDeploy(unittest.TestCase):
     def test_d122_d108_second_identical_plan_and_apply_are_noops(self):
         repo = Path(__file__).resolve().parents[3]
         harness = repo / "packages/harness/configs"
-        sealed = (repo / ".mcp.json").read_bytes()
+        sealed = _D108_MCP_PREIMAGE
         servers = (SemanticServer("maind", {"command": "maind"}),
                    SemanticServer("perplexity-web", {"command": "pplx"}),
                    SemanticServer("serena", {"command": "serena"}))
@@ -152,7 +187,7 @@ class TestProviderDeploy(unittest.TestCase):
     def test_d122_d108_rejects_malformed_or_changed_managed_observer_before_writer(self):
         repo = Path(__file__).resolve().parents[3]
         harness = repo / "packages/harness/configs"
-        sealed = (repo / ".mcp.json").read_bytes()
+        sealed = _D108_MCP_PREIMAGE
         servers = (SemanticServer("maind", {"command": "maind"}),
                    SemanticServer("perplexity-web", {"command": "pplx"}),
                    SemanticServer("serena", {"command": "serena"}))
@@ -188,7 +223,7 @@ class TestProviderDeploy(unittest.TestCase):
     def test_d123_rolls_back_the_recorded_d108_operation_and_carrier(self):
         repo = Path(__file__).resolve().parents[3]
         harness = repo / "packages/harness/configs"
-        sealed = (repo / ".mcp.json").read_bytes()
+        sealed = _D108_MCP_PREIMAGE
         servers = (SemanticServer("maind", {"command": "maind"}),
                    SemanticServer("perplexity-web", {"command": "pplx"}),
                    SemanticServer("serena", {"command": "serena"}))
@@ -213,7 +248,7 @@ class TestProviderDeploy(unittest.TestCase):
     def test_d123_refuses_changed_carrier_before_core_rollback(self):
         repo = Path(__file__).resolve().parents[3]
         harness = repo / "packages/harness/configs"
-        sealed = (repo / ".mcp.json").read_bytes()
+        sealed = _D108_MCP_PREIMAGE
         servers = (SemanticServer("maind", {"command": "maind"}),
                    SemanticServer("perplexity-web", {"command": "pplx"}),
                    SemanticServer("serena", {"command": "serena"}))

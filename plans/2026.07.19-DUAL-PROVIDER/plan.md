@@ -132,7 +132,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P3 | Dual skills publication и marketplaces | 5/5 | 🟢 Done |
 | P4 | Task-command parity и provider-neutral model routing | 5/5 | 🟢 Done |
 | P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 8/8 | 🟢 Done |
-| P6 | mAInd deployment, memory и provider-neutral analytics | 9/12 | 🟡 In progress |
+| P6 | mAInd deployment, memory и provider-neutral analytics | 9/12 | 🔴 Blocked |
 | P7 | Docs, self-hosting validation и FOREMAN release gate | 1/4 | 🔴 Blocked |
 
 ## 5. Decision Log
@@ -266,6 +266,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-23 | task-plan-exec / gpt-5.6-terra/medium | P6.12 эскалирован: D122 disposable proof green, но D121 оставил exact backup residues, и real-root dry D108 корректно refuses before writer — детали см. phases/P6.md P6.12 Completion Notes. |
 | 2026-07-23 | owner / D116 | Claude Code audit route отменён; final independent P6 audit переносится в ChatGPT/Codex с теми же read-only границами и literal verdict. |
 | 2026-07-23 | task-plan-design / gpt-5.6-sol/high | D117 reconciles the owner-accepted final P6 audit: P7.2 is ready for a fresh first-preflight rerun, while later live mutation remains owner-gated; no P7.2 execution occurred. |
 | 2026-07-23 | task-plan-design / gpt-5.6-sol/high | D118 records the documented disposable `CODEX_HOME`+`HOME` route for P7.2 native marketplace/plugin proof; host Codex state remains excluded. |

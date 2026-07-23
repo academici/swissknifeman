@@ -13,7 +13,7 @@
 $ task:plan-design 2026.07.23-FLEET-DUAL-PROVIDER P1.1
 ```
 
-**Done:** Session gpt-5.6-terra/high ran the fresh registry-order D7 preflight. The only clean external Git worktrees (`azguard`, `botkit`) each had `claude-code` only plus `unmanaged-target` MCP and non-green instructions; normal-apply count was 0.
+**Done:** Session gpt-5.6-terra/high ran the fresh registry-order D7 preflight. The only clean external Git worktrees (`azguard`, `botkit`) each had `claude-code` only plus `unmanaged-target` MCP and non-green instructions; no normal apply ran.
 
 **Remaining:** P1.1 is 🔴 Blocked. A new owner-level D# is required before another candidate scan or a write; P1.2 remains conditional and P2 cannot begin.
 

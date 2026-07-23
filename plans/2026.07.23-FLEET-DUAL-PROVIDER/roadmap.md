@@ -8,8 +8,8 @@
 |---|---|---|---|---|---|
 | P0.1 | solo | plan-run | frontier/high | — | 🟢 attempt 3 закрыт: generated core содержит runtime tree; объединять нельзя |
 | P0.2 | solo | plan-run | implementation/high | — | меняет fleet eligibility semantics |
-| P1.1 | solo | plan-exec | implementation/medium | — | disposable synthetic conformance MVP; весь live rollout остаётся P2 |
-| P1.2 | conditional solo | plan-run | implementation/high | D6/frozen-contract change only | только новый defect после D6; retry того же selected project |
+| P1.1 | solo | plan-exec | implementation/medium | — | 🟢 D9 disposable synthetic conformance MVP закрыт; весь live rollout остаётся P2 |
+| P1.2 | conditional solo | plan-run | implementation/high | D6/frozen-contract change only | GREEN не создал defect; reconcile как не применимый по D9 до закрытия P1 |
 | P2.1 | solo | plan-run | implementation/high | — | последовательный external-state loop с stop-on-defect |
 
 ## Готовые launch-block'и групп
@@ -48,4 +48,20 @@ $ task:plan-run 2026.07.23-FLEET-DUAL-PROVIDER P0.2
 
 ```text
 $ task:plan-exec 2026.07.23-FLEET-DUAL-PROVIDER P1.1
+```
+
+### После P1.1 GREEN — reconcile conditional P1.2
+
+**Next:** close: task:plan-close 2026.07.23-FLEET-DUAL-PROVIDER P1.2
+
+| Параметр | Значение |
+|:--|:--|
+| Model class | implementation |
+| Effort | low |
+| Capabilities | — |
+| Context | cold-start — plan-step |
+| Суть | Сверить P1.2 как не применимый после D9 GREEN и подготовить закрытие P1 без запуска remediation. |
+
+```text
+$ task:plan-close 2026.07.23-FLEET-DUAL-PROVIDER P1.2
 ```

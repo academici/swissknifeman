@@ -1,28 +1,28 @@
-# HANDOFF — 2026-07-23 — after P1
+# HANDOFF — 2026-07-23 — after P1.1
 
-**Next:** exec-items: task:plan-exec 2026.07.23-FLEET-DUAL-PROVIDER P1.1
+**Next:** close: task:plan-close 2026.07.23-FLEET-DUAL-PROVIDER P1.2
 
 | Параметр | Значение |
 |:--|:--|
 | Model class | implementation |
-| Effort | medium |
+| Effort | low |
 | Capabilities | — |
-| Context | same-session — item |
-| Суть | Выполнить один D9 disposable synthetic conformance MVP; live external rollout остаётся P2. |
+| Context | cold-start — plan-step |
+| Суть | Сверить conditional P1.2 как не применимый после D9 GREEN и подготовить закрытие P1. |
 
 ```text
-$ task:plan-exec 2026.07.23-FLEET-DUAL-PROVIDER P1.1
+$ task:plan-close 2026.07.23-FLEET-DUAL-PROVIDER P1.2
 ```
 
-**Done:** Owner-level D9 replaced the exhausted repeated registry scan with exactly one existing isolated synthetic temp-root conformance carrier. P1.1 is redesigned to DoR; no execution or consumer write occurred in this design step.
+**Done:** P1.1 закрыт item-коммитом `d72fe7b6`: existing public mAInd conformance command создал GREEN dual-provider artifact только на temporary roots; verdict append фиксирует неизменный `config.json` и отсутствие новых non-plan delta.
 
-**Remaining:** Execute P1.1 once. GREEN closes only the synthetic conformance MVP and proceeds toward P2; red records one concrete owning defect for conditional P1.2 without rerun or gate relaxation. The complete live external rollout remains P2.
+**Remaining:** Reconcile P1.2 as not applicable because P1.1 produced no owning defect; then close/audit P1. Live external consumers remain untouched and belong to P2.
 
-**Sources of truth:** `plan.md` (D5–D9) · `brief/01-refinements.md` · `phases/P1.md` · `research/01-pilot-selection-contract.md` · `findings/P1.1-pilot-retry.md` · `packages/maind/lib/maind/provision/sync.py:683-934` · `journal.jsonl`.
+**Sources of truth:** `plan.md` (D5–D9) · `phases/P1.md` P1.1 Completion Notes · `artifacts/P1.1-local-pilot-conformance.md` · `findings/P1.1-pilot-retry.md` D9 block · `roadmap.md` · `journal.jsonl`.
 
-**Open risks:** The disposable synthetic fixture proves the minimal conformance carrier, not a live fleet pilot and not that any current consumer passes D7. P2 must retain per-consumer fail-closed checks and cannot infer write or repair authority from fixture GREEN; the internal temp-only repair control is not consumer `--repair`.
+**Open risks:** Synthetic GREEN does not prove any live consumer passes D7. P2 must keep per-consumer fail-closed checks and cannot infer write or repair authority from the disposable fixture.
 
 **Workarounds/Deferred/Open questions:**
-- workarounds: disposable temp-root pilot selected only after repeated empty live D7 eligible-set.
-- deferred: all live consumers until P2; `sibintek-insiders`, self-host, `--repair`, `--force`.
+- workarounds: D9 disposable temp-root conformance carrier after exhausted live D7 eligible-set.
+- deferred: all live consumers to P2; `sibintek-insiders`, self-host, CLI `--repair`, `--force`.
 - open_questions: —

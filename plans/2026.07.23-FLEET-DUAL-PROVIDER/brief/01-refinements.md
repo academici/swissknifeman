@@ -22,3 +22,14 @@ Claude settings. Реальные consumer-проекты в P0.1 не изме�
 Ordinary consumer получает только root instruction scope; package scope
 применим лишь при наличии соответствующего package root. Fail-closed ownership
 сохраняется; `--repair`, `--force` и overwrite unmanaged targets запрещены.
+
+## P1.1 — продолжение rollout после D7 no-candidate evidence
+
+Владелец подтвердил, что rollout продолжается и не переводится в defer. Это не
+даёт права назвать candidate заранее или ослабить D5–D7. Следующее исполнение
+P1.1 начинает с нового read-only скана живого registry в его порядке, исключая
+`sibintek-insiders` и self-host. Только первый external candidate, который в
+этом новом прогоне проходит полный D7 eligibility/provider/worktree/instruction
+preflight, может получить ровно один normal apply. Если таких кандидатов снова
+нет, фиксируется no-write blocked evidence; `--repair`, `--force` и overwrite
+dirty/unmanaged user bytes по-прежнему запрещены.

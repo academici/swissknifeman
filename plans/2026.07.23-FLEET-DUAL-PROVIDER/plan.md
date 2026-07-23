@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.23-FLEET-DUAL-PROVIDER |
 | Title | Последовательная двухпровайдерная настройка проектов |
-| Version | 0.3.0 |
+| Version | 0.4.0 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | frontier |
@@ -50,7 +50,7 @@ findings/00-fleet-dry-run-2026-07-23.md).
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P0 | Устранить блокер connect-проекции | 1/2 | 🟠 Done with deviations |
-| P1 | Пилот и стабилизация | 0/2 | 🔴 Blocked |
+| P1 | Пилот и стабилизация | 0/2 | 🟡 In progress |
 | P2 | Последовательный fleet rollout | 0/1 | ⬜ Not started |
 
 ## 5. Decision Log
@@ -64,6 +64,7 @@ findings/00-fleet-dry-run-2026-07-23.md).
 | D5 | 2026-07-23 | Owner directed P1.1 to skip `sibintek-insiders`: the actively worked consumer must not be mutated; redesign the pilot selection before retry. | P1.1 dry-run found unmanaged root instruction ownership and package-target absence; `--repair`/`--force` are outside scope. RAG:— (`findings/P1.1-pilot.md`). |
 | D6 | 2026-07-23 | Consumer instruction scope is topology-derived: `root` always; each package scope only for its exact real package directory, preserving frozen order. Ordinary consumers do not receive synthetic swissknifeman package targets. | Existing mAInd broadens every request to all scopes while harness already accepts an ordered subset; this resolves the topology conflict without relaxing ownership or changing the harness contract. RAG:— (`research/01-pilot-selection-contract.md`). |
 | D7 | 2026-07-23 | Replacement pilot is the first registry-order external candidate passing the complete no-write eligibility/provider/worktree/instruction preflight; D5 target and self-host are excluded. No match blocks without writes; repair/force stay forbidden. | Committed evidence does not prove a named next candidate, so deterministic selection is the only non-guessing carrier. RAG:— (`research/01-pilot-selection-contract.md`). |
+| D8 | 2026-07-23 | Owner directed rollout to continue: P1.1 reopens as a fresh manual execution beginning with a new live registry-order D7 scan, not a pre-named candidate or a deferral. Exactly one normal apply remains conditional on one candidate passing the complete preflight. | Eligibility is live external state; the owner authorizes a new evidence pass but does not relax D5–D7, permit repair/force, or authorize overwriting dirty/unmanaged bytes. RAG:— (repo-grounded: `brief/01-refinements.md`). |
 
 ## 6. Update Log
 
@@ -82,3 +83,4 @@ findings/00-fleet-dry-run-2026-07-23.md).
 | 2026-07-23 | task-plan-run / gpt-5.6-terra/high | P1.1 skipped by owner decision: `sibintek-insiders` не изменялся после fail-closed instruction dry-run — детали см. phases/P1.md P1.1 Completion Notes. |
 | 2026-07-23 | task-plan-design / gpt-5.6-sol/xhigh | P1.1 redesigned and reopened by D6/D7: topology-derived instruction scopes plus deterministic replacement selection; item spec commit `7df01cbc`. |
 | 2026-07-23 | task-plan-run / gpt-5.6-terra/high | P1.1 blocked: D6 repair is validated, but D7 selected no compatible external candidate — details in `phases/P1.md` P1.1 Completion Notes. |
+| 2026-07-23 | task-plan-design / gpt-5.6-terra/high | P1.1 reopened by D8: rollout continues with a fresh non-named registry-order D7 scan and one conditional normal apply. |

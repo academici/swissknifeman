@@ -1,35 +1,30 @@
 # HANDOFF — 2026-07-23 — after P1.1
 
-**Next:** design-item: task:plan-design 2026.07.23-FLEET-DUAL-PROVIDER P1.1
+**Next:** ЗАПУСК ВРУЧНУЮ: `implementation/high`
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | frontier |
-| Effort | xhigh |
-| Capabilities | — |
-| Context | NEW SESSION — шаг-не-item |
-| Native model | gpt-5.6-sol |
-| Approval policy | never |
-| Sandbox | danger-full-access |
-| Cwd | /home/vostrikov/projects/packages/swissknifeman |
-| Native session | NEW SESSION |
-| Owner Approval | D5–D7 remain frozen; an owner decision is required before another replacement candidate or consumer write. |
-| AUDIT-CAP | Do not audit or close P1; a terminal phase audit follows a green pilot. |
-| Суть | Зафиксировать допустимую owner-level route after D7 found no compatible external pilot. |
+| Model class | implementation |
+| Effort | high |
+| Exec | manual |
+| Native model | gpt-5.6-terra |
+| Context | continue (/clear) — ручной item |
+| Owner Approval | не требуется: D8 уже разрешает новый scan, но не relaxation gates |
+| Суть | Запустить P1.1: свежий registry-order D7 scan без pre-named candidate; ровно один normal apply только при полном pass. |
 
-```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="xhigh"' -a never -s danger-full-access 'NEW SESSION: Run task:plan-design 2026.07.23-FLEET-DUAL-PROVIDER P1.1 only. Start with pwd, git status --short, effective codex doctor --json, hook-command integrity, ./packages/maind/bin/maind health --cwd, and applicable plan lint. Read AGENTS.md, CLAUDE.md, task-plan-design and plan-protocol completely, then plans/2026.07.23-FLEET-DUAL-PROVIDER/plan.md, handoff.md, phases/P1.md, research/01-pilot-selection-contract.md and findings/P1.1-pilot-retry.md. РЕЖИМ: plan-design — resolve the D7 no-candidate boundary; do not execute P1.1. ВХОД: findings/P1.1-pilot-retry.md documents the validated D6 scope repair and every D7 rejection. СКОУП: record the owner-level decision needed to name an eligible replacement or defer rollout, keeping deterministic selection and fail-closed gates. НЕ ТРОГАТЬ: sibintek-insiders, self-host, any consumer apply, --repair, --force, fleet-wide writes, FOREMAN, .serena/project.yml and AGENTS.md.'
+```text
+$ task:plan-run 2026.07.23-FLEET-DUAL-PROVIDER P1.1
 ```
 
-**Done:** `e80b59de` implements and validates topology-derived instruction scope selection. D7 performed only no-write registry-order preflight; no compatible external pilot was found. A repeat verification on 2026-07-23 reached the same blocker; exact evidence is appended to `findings/P1.1-pilot-retry.md`.
+**Done:** `e80b59de` реализует topology-derived instruction scope selection. Предыдущий D7 scan был no-write и не нашёл compatible external pilot; это историческое evidence, не defer route.
 
-**Remaining:** Owner/design route for P1.1; P1.2 remains conditional and P2 remains blocked on a green pilot.
+**Remaining:** P1.1 начинает D8-authorized fresh read-only registry-order scan. При первом complete-D7 pass он делает один normal apply; при отсутствии pass — только blocked evidence без consumer writes. P1.2 conditional; P2 ждёт green pilot.
 
-**Sources of truth:** `plan.md` · `phases/P1.md` · `research/01-pilot-selection-contract.md` · `findings/P1.1-pilot-retry.md` · `journal.jsonl`.
+**Sources of truth:** `plan.md` (D5–D8) · `brief/01-refinements.md` · `phases/P1.md` · `research/01-pilot-selection-contract.md` · `findings/P1.1-pilot-retry.md` · `journal.jsonl`.
 
-**Open risks:** The external registry currently has no clean dual-provider candidate with green MCP and instruction preflight. This is not authority to relax D7.
+**Open risks:** Живой registry может снова не содержать clean dual-provider candidate. Это не разрешает `--repair`, `--force`, overwrite dirty/unmanaged user bytes, apply к rejected/later candidate или изменение `sibintek-insiders`/self-host.
 
 **Workarounds/Deferred/Open questions:**
 - workarounds: —
-- deferred: `sibintek-insiders`, self-host, `--repair`, `--force`, all consumer applies.
-- open_questions: Which owner-approved registry candidate or rollout deferral resolves the D7 boundary?
+- deferred: `sibintek-insiders`, self-host, `--repair`, `--force`.
+- open_questions: —

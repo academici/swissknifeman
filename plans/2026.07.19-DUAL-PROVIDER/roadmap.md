@@ -6,14 +6,15 @@
      Порядок строго phase-first: P0→P1→P2→P3→P4→P5→P6→P7. До finish + GREEN design
      audit исполнение любого item запрещено. -->
 
-**Обновлён:** 2026-07-22 · **Соответствует plan.md:** v1.4.56
+**Обновлён:** 2026-07-23 · **Соответствует plan.md:** v1.4.57
 
 > **Статус exec:** D108 under standing delegation selected `S1+O1` and intentionally
 > superseded the pre-approval no-reopen restriction. P2.7, terminal full-core/docs/release
 > gate and substantive GREEN audit are accepted by D111; D112/D114 bound the P6.11
 > fix-forward seams. D113 routes remaining no-write work through Terra/medium + targeted gates
-> and defers the final heavyweight audit to Claude Code. D115/P6.12 are GREEN; current route is targeted P6 close →
-> fresh P7.2. Remediation uses disposable
+> and defers the final heavyweight audit to Claude Code. P6 is closed as `🟠` after D115/P6.12
+> GREEN; current route is fresh independent Claude Code audit P6 → only then P7.2 design gate.
+> Remediation uses disposable
 > roots/read-only live preflight only; P7.3+, live writes, FOREMAN, fleet, tag and push remain
 > closed.
 
@@ -218,25 +219,25 @@ terminal tree фазы. Полные правила и exact probes: `research/2
 
 ## Готовый launch-block текущего шага
 
-### P6.11 — D112 bounded facade/projection repair
+### P6 — independent terminal audit (Claude Code)
 
-**Next:** run-items: task:plan-run 2026.07.19-DUAL-PROVIDER P6.11
+**Next:** audit-phase: task:plan-audit 2026.07.19-DUAL-PROVIDER P6
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | implementation (`gpt-5.6-terra`) |
-| Effort | high |
-| Capabilities | command.filesystem-read · command.filesystem-write · command.git-read · command.git-write |
-| Context | same-session — item |
-| Суть | Исправить только D112 expected-root и planned-dual projection wiring, затем перезакрыть P6.11. |
+| Model class | frontier (Claude Code) |
+| Effort | xhigh |
+| Capabilities | read-only audit evidence |
+| Context | cold-start — plan-step |
+| Суть | Независимо проверить terminal P6; D113 явно откладывает этот gate в Claude Code. |
 
 ```text
-$ task:plan-run 2026.07.19-DUAL-PROVIDER P6.11
+/task:plan-audit 2026.07.19-DUAL-PROVIDER P6
 
-РЕЖИМ: P6.11 attempt 2 contract-preserving fix-forward after P6.12 RED; implementation и focused temporary-root validation
-ВХОД: phases/P6.md P6.11 D112 Repair Rules; artifact P6-d108-independent-conformance.md; `plan.md` D108–D112
-СКОУП: 1) canonical configured expected root 2) exact planned dual P5 projections before D104/D110 3) focused public-facade regression and P6.11 reclose
-НЕ ТРОГАТЬ: live root/carriers, P6.12/P7 execution, FOREMAN, fleet, tag, push, owner `AGENTS.md` or unrelated changes
+РЕЖИМ: independent terminal audit after P6 close
+ВХОД: plan.md D107–D115; phases/P6.md Phase Handoff and audit history; artifacts/P6-d108-independent-conformance.md
+СКОУП: 1) read-only terminal evidence reconciliation 2) verify D115/P6.12 anchors and P6.8 material deviation 3) emit literal GREEN|ATTENTION|RED
+НЕ ТРОГАТЬ: package/live apply-repair-rollback, P7 execution, FOREMAN, fleet, tag, push, cleanup, owner AGENTS.md or unrelated dirt
 ```
 
 ## Гейты владельца (сводно)

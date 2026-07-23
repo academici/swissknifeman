@@ -6,11 +6,11 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.4.56 |
+| Version | 1.4.57 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
-| Last Updated | 2026-07-22 |
+| Last Updated | 2026-07-23 |
 | Repository | swissknifeman |
 | Related Packages | core, skiller, task, harness, maind, analyst |
 | Execution Mode | phase-first · contract-first design |
@@ -132,7 +132,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P3 | Dual skills publication и marketplaces | 5/5 | 🟢 Done |
 | P4 | Task-command parity и provider-neutral model routing | 5/5 | 🟢 Done |
 | P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 8/8 | 🟢 Done |
-| P6 | mAInd deployment, memory и provider-neutral analytics | 11/12 | 🟡 In progress |
+| P6 | mAInd deployment, memory и provider-neutral analytics | 11/12 | 🟠 Done with deviations |
 | P7 | Docs, self-hosting validation и FOREMAN release gate | 1/4 | 🔴 Blocked |
 
 ## 5. Decision Log
@@ -259,6 +259,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-23 | task-plan-close / gpt-5.6-terra/medium | P6 закрыта как 🟠 после terminal P6.1–P6.12: D115/P6.12 GREEN подтверждены, material P6.8 evidence остаётся явным; далее только независимый Claude Code audit — детали см. phases/P6.md Phase Handoff. |
 | 2026-07-22 | root agent / D113 targeted | D115 P6.11 and P6.12 close GREEN: exact unchanged MCP admission, writer 0 and protected live inventory unchanged; next session starts at targeted P6 close. |
 | 2026-07-22 | root agent / D113 | D115 reopens only the D108 unchanged-MCP adoption projection after exact P6.12 byte diff; core frozen admission remains the verifier. |
 | 2026-07-22 | owner/root agent | D113 makes remaining no-write execution Terra/medium + targeted and defers the final heavyweight audit to Claude Code; D114 reopens only the D108 configured server-name seam. |

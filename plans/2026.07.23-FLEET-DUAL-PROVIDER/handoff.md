@@ -1,27 +1,28 @@
-# HANDOFF — 2026-07-23 — after P1.1
+# HANDOFF — 2026-07-23 — after P1
 
-**Next:** design-item: task:plan-design 2026.07.23-FLEET-DUAL-PROVIDER P1.1
+**Next:** exec-items: task:plan-exec 2026.07.23-FLEET-DUAL-PROVIDER P1.1
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | frontier |
-| Effort | high |
-| Context | cold-start — plan-step |
-| Суть | Зафиксировать owner-level D# для повторного P1.1 после fresh D8 D7 no-candidate evidence, не ослабляя D5–D7. |
+| Model class | implementation |
+| Effort | medium |
+| Capabilities | — |
+| Context | same-session — item |
+| Суть | Выполнить один D9 disposable synthetic conformance MVP; live external rollout остаётся P2. |
 
 ```text
-$ task:plan-design 2026.07.23-FLEET-DUAL-PROVIDER P1.1
+$ task:plan-exec 2026.07.23-FLEET-DUAL-PROVIDER P1.1
 ```
 
-**Done:** Session gpt-5.6-terra/high ran the fresh registry-order D7 preflight. The only clean external Git worktrees (`azguard`, `botkit`) each had `claude-code` only plus `unmanaged-target` MCP and non-green instructions; no normal apply ran.
+**Done:** Owner-level D9 replaced the exhausted repeated registry scan with exactly one existing isolated synthetic temp-root conformance carrier. P1.1 is redesigned to DoR; no execution or consumer write occurred in this design step.
 
-**Remaining:** P1.1 is 🔴 Blocked. A new owner-level D# is required before another candidate scan or a write; P1.2 remains conditional and P2 cannot begin.
+**Remaining:** Execute P1.1 once. GREEN closes only the synthetic conformance MVP and proceeds toward P2; red records one concrete owning defect for conditional P1.2 without rerun or gate relaxation. The complete live external rollout remains P2.
 
-**Sources of truth:** `plan.md` (D5–D8) · `brief/01-refinements.md` · `phases/P1.md` · `research/01-pilot-selection-contract.md` · `findings/P1.1-pilot-retry.md` · `journal.jsonl`.
+**Sources of truth:** `plan.md` (D5–D9) · `brief/01-refinements.md` · `phases/P1.md` · `research/01-pilot-selection-contract.md` · `findings/P1.1-pilot-retry.md` · `packages/maind/lib/maind/provision/sync.py:683-934` · `journal.jsonl`.
 
-**Open risks:** The live registry has no clean complete dual-provider candidate. This does not permit `--repair`, `--force`, overwrite of dirty/unmanaged user bytes, application to rejected/later candidates, or mutation of `sibintek-insiders`/self-host.
+**Open risks:** The disposable synthetic fixture proves the minimal conformance carrier, not a live fleet pilot and not that any current consumer passes D7. P2 must retain per-consumer fail-closed checks and cannot infer write or repair authority from fixture GREEN; the internal temp-only repair control is not consumer `--repair`.
 
 **Workarounds/Deferred/Open questions:**
-- workarounds: —
-- deferred: `sibintek-insiders`, self-host, `--repair`, `--force`.
-- open_questions: owner decision for the next D#.
+- workarounds: disposable temp-root pilot selected only after repeated empty live D7 eligible-set.
+- deferred: all live consumers until P2; `sibintek-insiders`, self-host, `--repair`, `--force`.
+- open_questions: —

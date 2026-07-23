@@ -33,3 +33,20 @@ P1.1 начинает с нового read-only скана живого registry
 preflight, может получить ровно один normal apply. Если таких кандидатов снова
 нет, фиксируется no-write blocked evidence; `--repair`, `--force` и overwrite
 dirty/unmanaged user bytes по-прежнему запрещены.
+
+## P1.1 — минимальный disposable pilot после повторно пустого D7-set
+
+Владелец распорядился не останавливать минимально рабочую раскатку после
+повторного подтверждения пустого live D7 eligible-set и разрешил разрулить
+конфликты только через безопасный disposable synthetic pilot/fixture. P1.1 не
+повторяет registry scan: он выбирает ровно один изолированный local temp-root
+dual-provider carrier, уже предоставляемый conformance-командой mAInd, и
+фиксирует его проверяемый результат в артефакте плана. Это conformance MVP, не
+live fleet pilot; весь live external rollout остаётся отдельным scope P2.
+
+Это разрешение не распространяется на существующие consumer-репозитории и не
+ослабляет D5–D7. `sibintek-insiders`, self-host, dirty/unmanaged bytes,
+`--repair` и `--force` остаются запрещены. Красный disposable carrier означает
+конкретный owning defect для P1.2, а не новый scan, подгонку или обход gate.
+Внутренний temp-only repair safety case самой conformance-команды не считается
+consumer repair и не разрешает CLI `--repair`.

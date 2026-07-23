@@ -1,6 +1,6 @@
 # Roadmap исполнения — 2026.07.23-FLEET-DUAL-PROVIDER
 
-**Обновлён:** 2026-07-23 · **Соответствует plan.md:** v0.4.0
+**Обновлён:** 2026-07-23 · **Соответствует plan.md:** v0.5.0
 
 ## Карта исполнения
 
@@ -8,7 +8,7 @@
 |---|---|---|---|---|---|
 | P0.1 | solo | plan-run | frontier/high | — | 🟢 attempt 3 закрыт: generated core содержит runtime tree; объединять нельзя |
 | P0.2 | solo | plan-run | implementation/high | — | меняет fleet eligibility semantics |
-| P1.1 | solo | manual | implementation/high | — | D8: fresh non-named registry-order D7 scan; exactly one normal apply only for first complete pass |
+| P1.1 | solo | plan-exec | implementation/medium | — | disposable synthetic conformance MVP; весь live rollout остаётся P2 |
 | P1.2 | conditional solo | plan-run | implementation/high | D6/frozen-contract change only | только новый defect после D6; retry того же selected project |
 | P2.1 | solo | plan-run | implementation/high | — | последовательный external-state loop с stop-on-defect |
 
@@ -36,16 +36,16 @@ $ task:plan-run 2026.07.23-FLEET-DUAL-PROVIDER P0.2
 
 ### P1.1 — replacement pilot
 
-**Next:** ЗАПУСК ВРУЧНУЮ: `implementation/high`
+**Next:** exec-items: task:plan-exec 2026.07.23-FLEET-DUAL-PROVIDER P1.1
 
 | Параметр | Значение |
 |:--|:--|
 | Model class | implementation |
-| Effort | high |
+| Effort | medium |
 | Capabilities | — |
-| Context | continue (/clear) — ручной item |
-| Суть | D8: заново просканировать live registry в порядке D7; применить ровно к одному first-passing candidate, иначе зафиксировать no-write blocker. |
+| Context | same-session — item |
+| Суть | Запустить один D9 disposable synthetic conformance MVP; live fleet rollout не входит и остаётся P2. |
 
 ```text
-$ task:plan-run 2026.07.23-FLEET-DUAL-PROVIDER P1.1
+$ task:plan-exec 2026.07.23-FLEET-DUAL-PROVIDER P1.1
 ```

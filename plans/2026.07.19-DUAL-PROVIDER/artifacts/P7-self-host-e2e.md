@@ -44,5 +44,7 @@ both named transaction backups absent. No other provider target was applied.
 - Protected `plans/2026.07.18-FOREMAN/**` and `plans/ACTIVE.md` delta: 0; plan-lint: 0 ERROR,
   2 inherited WARN, 0 new warnings.
 
-**Verdict:** GREEN — P7.2 satisfies the approved D121 apply, idempotence and explicit rollback
-rehearsal without widening its live authority.
+**Functional verdict:** GREEN — P7.2 satisfies the approved D121 apply, idempotence and explicit
+rollback rehearsal without widening its live authority. The item closes `🟠 Done with deviations`
+solely because D124/Owner explicitly prohibits the mandatory plan-protocol launch block, leaving
+the two resulting handoff-schema errors unremediated.

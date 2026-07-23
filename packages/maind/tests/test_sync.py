@@ -278,6 +278,31 @@ class TestAgentPackRun(unittest.TestCase):
 
 
 class TestSync(unittest.TestCase):
+    def test_missing_local_path_is_provider_qualified_skip_while_existing_project_runs(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, project = _setup(tmp)
+            config["projects"].append({
+                "id": "missing", "name": "Missing", "type": "php-package",
+                "status": "active", "enabled": True,
+                "providers": {"contract_version": "1.0.0", "selection": {
+                    "claude-code": {"enabled": True}, "codex": {"enabled": True},
+                }},
+            })
+            rows = sync.run_sync(env, config, config["projects"], only="mcp", dry=True)
+            existing = next(row for row in rows if row["id"] == "flexcrm")
+            missing = next(row for row in rows if row["id"] == "missing")
+            self.assertEqual(existing["status"], "ok")
+            self.assertEqual(missing["status"], "skip")
+            self.assertEqual(missing["state"], "ineligible")
+            self.assertIn("MAIND_PROJECT_LOCAL_PATH_MISSING", missing["detail"])
+            self.assertEqual(missing["provider_aggregate"], "green")
+            self.assertEqual(missing["providers"], [
+                {"provider_id": "claude-code", "status": "skip", "required": False,
+                 "diagnostic": "MAIND_PROJECT_LOCAL_PATH_MISSING"},
+                {"provider_id": "codex", "status": "skip", "required": False,
+                 "diagnostic": "MAIND_PROJECT_LOCAL_PATH_MISSING"},
+            ])
+
     def test_select_projects(self):
         with tempfile.TemporaryDirectory() as tmp:
             env, config, _ = _setup(tmp)

@@ -127,6 +127,31 @@ def _provider_aggregate(plan):
                                          for row in plan.results))
 
 
+def _project_eligibility(context):
+    """Return the one fleet gate for paths that cannot receive provisioning."""
+    if not context.project.get("local_path"):
+        return "MAIND_PROJECT_LOCAL_PATH_MISSING"
+    if not context.exists:
+        return "MAIND_PROJECT_PATH_UNAVAILABLE"
+    return None
+
+
+def _ineligible_provider_aggregate(context, diagnostic):
+    """Keep a skipped fleet row visible for every selected provider."""
+    return ProviderProvisionAggregate(tuple(
+        {"provider_id": provider_id, "status": "skip", "required": False,
+         "diagnostic": diagnostic}
+        for provider_id in context.effective_provider_ids))
+
+
+def _ineligible_result(provisioner, context, diagnostic):
+    detail = ("нет local_path" if diagnostic == "MAIND_PROJECT_LOCAL_PATH_MISSING"
+              else "путь проекта недоступен")
+    return _result(provisioner, context.id, "skip", state="ineligible",
+                   detail=f"{detail}: {diagnostic}",
+                   provider_aggregate=_ineligible_provider_aggregate(context, diagnostic))
+
+
 def _result(provisioner, project_id, status, *, changed=False, state="", detail="",
             provider_aggregate=None, bootstrap_transfer=None):
     """Единая форма результата провиженера (та же, что у health._result): ВСЕ ключи всегда
@@ -547,14 +572,25 @@ def run_sync(env, config, projects, *, only=None, mode="auto", dry=False):
 
 def run_sync_contexts(env, config, project_contexts, *, only=None, mode="auto", dry=False):
     """Run provisioners against caller-owned contexts without a second provider resolution."""
+    eligible, ineligible = [], []
+    for context in project_contexts:
+        diagnostic = _project_eligibility(context)
+        if diagnostic is None:
+            eligible.append(context)
+        else:
+            ineligible.append((context, diagnostic))
     results = []
     for name in provisioner_names(only):
+        results.extend(_ineligible_result(name, context, diagnostic)
+                       for context, diagnostic in ineligible)
+        if not eligible:
+            continue
         try:
-            results.extend(PROVISIONERS[name](env, config, project_contexts, mode, dry))
+            results.extend(PROVISIONERS[name](env, config, eligible, mode, dry))
         except Exception as e:
             warn(f"провиженер '{name}' упал: {e}")
             results.extend(_result(name, p.get("id", "?"), "failed", detail=str(e))
-                           for p in project_contexts)
+                           for p in eligible)
     return results
 
 

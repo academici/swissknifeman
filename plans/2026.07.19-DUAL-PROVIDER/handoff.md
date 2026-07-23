@@ -1,11 +1,12 @@
 # HANDOFF — 2026-07-23 — after P7.2
 
-**Next:** Owner Approval D# for P7.3's exact cleanup inventory/action set. No cleanup, release
-manifest, FOREMAN, fleet, tag, push or audit action is authorized by this handoff.
+**Next:** P7.3 read-only provenance/cleanup inventory and exact action proposal. Stop before the
+first cleanup mutation for a separate Approval Owner D#.
 
-**Done:** P7.2 is `🟢 Done`: fresh isolated provider matrix, D121 exact live apply, three-action
-second-plan noop, handler smoke and D123 explicit rollback are GREEN. The live root is restored to
-the sealed preimage; transaction backup paths are absent.
+**Done:** P7.2 is `🟠 Done with deviations`: fresh isolated provider matrix, D121 exact live
+apply, three-action second-plan noop, handler smoke and D123 explicit rollback are GREEN. The
+only red acceptance is the owner-required no-launch handoff schema; live root is restored to the
+sealed preimage and transaction backup paths are absent.
 
 **Remaining:** P7.3 and P7.4 only. P7.3 needs its independent Approval Owner D# before its first
 destructive mutation.

@@ -24,7 +24,6 @@ files[]-запись может нести опциональное `src_pack` �
 остаётся текущий пак (см. `src_file`). `remove` — обратная операция к render/upgrade:
 безопасно сносит только неправленные файлы (disk_sha == base_sha256), merge/user_owned
 не трогает (warn), снимает запись пака из lock (пустой lock — удаляется целиком)."""
-from __future__ import annotations
 import hashlib
 import json
 import os
@@ -1050,16 +1049,26 @@ def _claude_frontmatter(role, binding):
     return "\n".join(lines)
 
 
-def project_agent_role(role, provider_id, *, claude_bindings=None, pack_prefix=None):
+def project_agent_role(role, provider_id, *, claude_bindings=None, pack_prefix=None,
+                       answers=None):
     """Render named consumers from the semantic record, never from a provider output."""
+    if provider_id == "codex" and "command.workflow-carrier" in role.activation_requirements:
+        raise ValueError("HARNESS_ACTIVATION_UNSUPPORTED:codex:command.workflow-carrier:P4")
+    resolved_answers = dict(answers or {})
+    if pack_prefix is not None:
+        resolved_answers["PACK_PREFIX"] = pack_prefix
+    content = _resolve_tokens(role, provider_id)
+    if resolved_answers:
+        content = _render_template_text(content, resolved_answers)
     if provider_id == "claude-code":
         if claude_bindings is None:
             raise ValueError("HARNESS_MAPPING_MISSING")
         target = f".claude/agents/{{{{PACK_PREFIX}}}}-{role.role_id}.md"
-        rendered = (_claude_frontmatter(role, claude_bindings) + _resolve_tokens(role, provider_id)).encode("utf-8")
+        rendered_text = _claude_frontmatter(role, claude_bindings) + content
+        if resolved_answers:
+            rendered_text = _render_template_text(rendered_text, resolved_answers)
+        rendered = rendered_text.encode("utf-8")
     elif provider_id == "codex":
-        if "command.workflow-carrier" in role.activation_requirements:
-            raise ValueError("HARNESS_ACTIVATION_UNSUPPORTED:codex:command.workflow-carrier:P4")
         target = f".codex/agents/{{{{PACK_PREFIX}}}}-{role.role_id}.toml"
         model = _MODEL_SELECTORS[role.model_class]
         skills = ", ".join(json.dumps(item, ensure_ascii=False) for item in role.skills)
@@ -1068,7 +1077,7 @@ def project_agent_role(role, provider_id, *, claude_bindings=None, pack_prefix=N
                     f'model = {json.dumps(model)}\n'
                     f'skills = [{skills}]\n'
                     f'command_requirements = [{commands}]\n'
-                    f'developer_instructions = {json.dumps(_resolve_tokens(role, provider_id), ensure_ascii=False)}\n').encode("utf-8")
+                    f'developer_instructions = {json.dumps(content, ensure_ascii=False)}\n').encode("utf-8")
     else:
         raise ValueError("HARNESS_MAPPING_MISSING")
     if pack_prefix is not None:
@@ -1099,7 +1108,7 @@ def _validate_agent_artifact_ids(roles, provider_id):
 
 
 def plan_agent_artifact(role, *, provider_id, catalog_path, claude_bindings_path=None,
-                        claude_bindings=None, pack_prefix=None):
+                        claude_bindings=None, pack_prefix=None, answers=None):
     catalog_roles = semantic_agent_roles(catalog_path)
     catalog_role = next((candidate for candidate in catalog_roles
                          if (candidate.pack_id, candidate.role_id)
@@ -1110,7 +1119,7 @@ def plan_agent_artifact(role, *, provider_id, catalog_path, claude_bindings_path
     if provider_id == "claude-code" and claude_bindings is None:
         claude_bindings = load_claude_role_bindings(claude_bindings_path, catalog_roles)
     projection = project_agent_role(role, provider_id, claude_bindings=claude_bindings,
-                                    pack_prefix=pack_prefix)
+                                    pack_prefix=pack_prefix, answers=answers)
     source = ArtifactSource("harness.agent-role.catalog",
                             "packages/harness/configs/common/agent-packs/roles.json",
                             sha256_digest(Path(catalog_path).read_bytes()))
@@ -1125,7 +1134,8 @@ def plan_agent_artifact(role, *, provider_id, catalog_path, claude_bindings_path
         _agent_artifact_id(role, provider_id), sources,
         ArtifactTarget(projection.target_path, ("whole-file", ())), identity, (),
         {"pack_id": role.pack_id, "role_id": role.role_id, "model_class": role.model_class,
-         "command_ids": list(role.command_ids), "pack_prefix": pack_prefix or "template"},
+         "command_ids": list(role.command_ids), "pack_prefix": pack_prefix or "template",
+         "answers": dict(sorted((answers or {}).items()))},
         lambda _request: projection.rendered, contract_version="1.1.0"))
 
 

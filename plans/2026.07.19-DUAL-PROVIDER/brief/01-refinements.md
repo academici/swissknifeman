@@ -172,3 +172,37 @@ RAG:— (owner-grounded: прямой escalation/remediation-запуск 2026-0
   onboard/sync, P7 проверяет live self-host. Отдельный обходной writer создавать нельзя.
 
 RAG:— (owner-grounded: прямое уточнение владельца в сессии 2026-07-20).
+
+## 2026-07-22 — P7 item-by-item Codex launch console
+
+- P6 завершена и не переоткрывается; следующий execution scope — только P7.
+- P7.1–P7.4 выполняются как четыре отдельные Codex-сессии с моделью
+  и effort из Routing; одна долгая Sol-сесия и generic subagents запрещены.
+- После GREEN каждого item executor обязан закончить отчёт точной следующей
+  copy-paste командой из `roadmap.md`: native `/clear`, новый routed Codex process,
+  semantic `$ task:...`, model и effort.
+- Внутри-item owner gate не открывает новую сессию: executor доводит isolated
+  evidence до готового exact D#, выдаёт одну точную approval-строку и продолжает
+  тот же item после ответа владельца.
+- Все item пишут последовательно в cumulative `codex/p7-integration`; dirty root, P6,
+  FOREMAN, fleet, unrelated projects и push не затрагиваются.
+
+RAG:— (owner-grounded: требование item-by-item запуска с `/clear`, model/effort и
+следующей командой; repo-grounded: `plan.md` §3 Routing, `phases/P7.md`).
+
+## 2026-07-22 — обязательная новая сессия на каждый item P7
+
+- Рабочий маршрут касается только P7.1–P7.4; закрытые predecessor phases не являются
+  предметом повторного дизайна, исполнения или аудита.
+- Каждый item P7 запускается отдельной полной shell-командой `codex ...` в новом процессе;
+  `resume --last`, продолжение в текущем чате и автоматический переход без новой команды
+  не считаются новой сессией.
+- После terminal GREEN исполнитель не запускает successor сам: финальный ответ обязан
+  предложить полный copy-paste launch-block следующего item с cwd, model, effort,
+  approval и sandbox. После P7.4 аналогично предлагается отдельная команда P7 close;
+  после close — следующий разрешённый GREEN-gated маршрут.
+- Owner gate внутри P7.2/P7.3/P7.4 остаётся внутри соответствующей item-сессии:
+  новая сессия нужна между items, а не между подготовкой exact approval и ответом владельца.
+
+RAG:— (owner-grounded: прямое требование владельца 2026-07-22; repo-grounded:
+`plan.md` §3 Routing, `phases/P7.md`, `roadmap.md`).

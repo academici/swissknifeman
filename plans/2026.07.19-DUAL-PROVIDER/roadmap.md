@@ -6,12 +6,10 @@
      Порядок строго phase-first: P0→P1→P2→P3→P4→P5→P6→P7. До finish + GREEN design
      audit исполнение любого item запрещено. -->
 
-**Обновлён:** 2026-07-22 · **Соответствует plan.md:** v1.4.33
+**Обновлён:** 2026-07-22 · **Соответствует plan.md:** v1.4.36
 
-> **Статус exec:** P0–P6 terminal. P6 audit attempt 1 был RED; bounded D94 repair
-> восстановил linked-worktree public health, regenerated provider-provision evidence,
-> current roadmap pointer и authorized protected baseline. Следующий шаг — fresh independent
-> P6 audit; P7+, live self-host, FOREMAN, fleet и push остаются закрыты.
+> **Статус exec:** текущий scope — только P7. Следующий item — P7.1; P7 идёт четырьмя
+> отдельными routed Codex-сессиями. FOREMAN, fleet и push остаются закрыты.
 
 ## Карта исполнения
 
@@ -72,6 +70,112 @@ Inputs следующего, поэтому merge-criterion plan-protocol для
 implementation. P5.6→P5.7 — contract→prescribed implementation, поэтому их нельзя
 объединять; P6.5→P6.6 и P7.3→P7.4 дополнительно разделены обязательным NEW SESSION.
 
+## P7 session-by-session execution process
+
+P7 исполняется четырьмя независимыми внешними Codex-процессами: каждый item получает
+собственную shell-команду и точный route из `plan.md` §3. После GREEN item executor
+обязан закончить final response следующим полным launch-block из этого раздела и не
+запускать successor самостоятельно.
+
+Переход между terminal items:
+
+1. Завершить текущий Codex process. `/clear`, compaction и продолжение текущего чата
+   не заменяют обязательную новую сессию.
+2. Запустить точную shell-команду следующего item. `resume --last` и chat summary
+   не использовать; новый процесс читает plan/phase/handoff с диска.
+3. До writes executor печатает observed model/effort, branch/worktree, `approval_policy=never`,
+   `sandbox=unrestricted`, проходит hook probe, `maind health --cwd --strict` и target plan-lint.
+   Route mismatch или RED strict-health останавливают writes и дают bounded repair launch-block.
+4. Один writer работает в `/home/vostrikov/projects/packages/swissknifeman` на
+   cumulative `codex/provider-project-sync`. Dirty root, закрытые predecessor phases, FOREMAN,
+   fleet, unrelated projects и push не трогаются; generic subagents не создаются.
+5. Owner gate внутри P7.2/P7.3/P7.4 не завершает сессию: executor сначала готовит
+   exact inventory/evidence/D#, печатает одну copy-paste approval-строку и после ответа
+   владельца завершает тот же item в той же сессии.
+
+### P7.1 — generated provider docs
+
+| Параметр | Значение |
+|:--|:--|
+| Semantic command | `exec-items: task:plan-exec 2026.07.19-DUAL-PROVIDER P7.1` |
+| Model / Effort | `gpt-5.6-terra` / `medium` |
+| Context | mandatory fresh Codex process; no resume/chat carry-over |
+| Переход | Только GREEN P7.1 открывает P7.2; final response печатает launch P7.2. |
+
+```bash
+codex -C /home/vostrikov/projects/packages/swissknifeman --no-alt-screen \
+  -m gpt-5.6-terra -c 'model_reasoning_effort="medium"' \
+  -a never -s danger-full-access \
+  'Выполни $ task:plan-exec 2026.07.19-DUAL-PROVIDER P7.1 в новой сессии. Только P7.1; закрытые predecessor phases, P7.2+, FOREMAN, fleet, dirty root и push не трогать. До writes проверь effective route, hooks, strict mAInd health и plan-lint; при RED не писать, а выдать exact owning seam и bounded repair launch-block. Один writer, branch codex/provider-project-sync. После GREEN не запускай successor: закончи exact P7.2 launch-block из roadmap.md.'
+```
+
+### P7.2 — isolated и live self-host E2E
+
+| Параметр | Значение |
+|:--|:--|
+| Semantic command | `run-items: task:plan-run 2026.07.19-DUAL-PROVIDER P7.2` |
+| Model / Effort | `gpt-5.6-terra` / `high` |
+| Context | mandatory fresh Codex process; no resume/chat carry-over |
+| Owner gate | Exact D# на live path/action set только после isolated GREEN + rollback rehearsal. |
+| Переход | Только terminal GREEN P7.2 открывает P7.3; final response печатает launch P7.3. |
+
+```bash
+codex -C /home/vostrikov/projects/packages/swissknifeman --no-alt-screen \
+  -m gpt-5.6-terra -c 'model_reasoning_effort="high"' \
+  -a never -s danger-full-access \
+  'Выполни $ task:plan-run 2026.07.19-DUAL-PROVIDER P7.2 в новой сессии. Сначала isolated Claude-only, Codex-only и dual-provider matrix с rollback; до доказанного GREEN live state не менять. На owner gate выдай exact D#, exact path/action inventory и одну approval-строку; не спрашивай заранее. Не исправляй package source в evidence item. Только P7.2; закрытые predecessor phases, P7.3+, FOREMAN, fleet и push не трогать. После GREEN не запускай successor: закончи exact P7.3 launch-block из roadmap.md.'
+```
+
+### P7.3 — guarded bootstrap cleanup и release manifest
+
+| Параметр | Значение |
+|:--|:--|
+| Semantic command | `run-items: task:plan-run 2026.07.19-DUAL-PROVIDER P7.3` |
+| Model / Effort | `gpt-5.6-terra` / `high` |
+| Context | mandatory fresh Codex process; no resume/chat carry-over |
+| Owner gate | Exact D# на provenance-backed cleanup path/action inventory до первой mutation. |
+| Переход | Только terminal GREEN P7.3 открывает fresh P7.4; final response печатает launch P7.4. |
+
+```bash
+codex -C /home/vostrikov/projects/packages/swissknifeman --no-alt-screen \
+  -m gpt-5.6-terra -c 'model_reasoning_effort="high"' \
+  -a never -s danger-full-access \
+  'Выполни $ task:plan-run 2026.07.19-DUAL-PROVIDER P7.3 в новой сессии. До cleanup mutation собери complete provenance table, replacement hashes, reversible actions и post-smoke plan; затем выдай exact D# и одну approval-строку. Unknown/user-owned/Claude compatibility carriers не удалять; generated outputs только через owning API/CLI. Только P7.3; закрытые predecessor phases, P7.4, FOREMAN, fleet, tag и push не трогать. После GREEN не запускай successor: закончи exact fresh P7.4 launch-block из roadmap.md.'
+```
+
+### P7.4 — fresh adversarial release audit
+
+| Параметр | Значение |
+|:--|:--|
+| Semantic command | `run-items: task:plan-run 2026.07.19-DUAL-PROVIDER P7.4` |
+| Model / Effort | `gpt-5.6-sol` / `xhigh` |
+| Context | mandatory fresh Codex process; disk evidence first, no resume/chat summary |
+| Owner gate | Literal GREEN audit плюс explicit release D#; ATTENTION/RED не открывает FOREMAN. |
+| Переход | GREEN + owner D# открывает только `task:plan-close ... P7`; FOREMAN не исполняется. |
+
+```bash
+codex -C /home/vostrikov/projects/packages/swissknifeman --no-alt-screen \
+  -m gpt-5.6-sol -c 'model_reasoning_effort="xhigh"' \
+  -a never -s danger-full-access \
+  'Выполни $ task:plan-run 2026.07.19-DUAL-PROVIDER P7.4 в новой сессии как independent adversarial audit. Сначала прочитай committed release manifest/P7 evidence с диска; не используй chat summary и не исправляй findings. Пересчитай independent exact sets/hashes, проверь actual Claude/Codex consumers, rollback, privacy и protected delta. Выдай literal GREEN|ATTENTION|RED; только GREEN получает exact owner D# и отдельный P7 close launch-block. Не запускай close самостоятельно. FOREMAN, fleet, package fixes, tag и push не трогать.'
+```
+
+### P7 phase close — только после GREEN P7.4 + owner D#
+
+| Параметр | Значение |
+|:--|:--|
+| Semantic command | `close: task:plan-close 2026.07.19-DUAL-PROVIDER P7` |
+| Model / Effort | `gpt-5.6-terra` / `low` |
+| Context | mandatory fresh Codex process; plan-step only; no resume/chat carry-over |
+| Переход | Reconcile status/journal/handoff once; package validators не повторять. Точный FOREMAN payload берётся из P7.4 evidence. |
+
+```bash
+codex -C /home/vostrikov/projects/packages/swissknifeman --no-alt-screen \
+  -m gpt-5.6-terra -c 'model_reasoning_effort="low"' \
+  -a never -s danger-full-access \
+  'Выполни $ task:plan-close 2026.07.19-DUAL-PROVIDER P7 только после committed literal GREEN P7.4 и exact owner D#. Только plan reconciliation; не повторяй P7 validators, не меняй package code, не исполняй FOREMAN/fleet и не push. В final выдай exact GREEN-gated FOREMAN reconcile launch-block из committed P7.4 evidence, но не запускай его.'
+```
+
 ## D82 — phase-first execution map for P4–P6
 
 Перед каждой фазой выполняется ровно один bounded entry pack: committed predecessor/gate
@@ -93,18 +197,18 @@ terminal tree фазы. Полные правила и exact probes: `research/2
 
 ## Готовый launch-block текущего шага
 
-### P6 — fresh independent terminal audit
+### P7.1 — generated provider docs
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | frontier |
-| Effort | xhigh |
-| Capabilities | command.filesystem-read · command.git-read |
-| Context | NEW SESSION — independent audit |
-| Суть | Audit reclosed P6 from committed evidence without rerunning P6.5 full validators; P7 remains closed until literal GREEN. |
+| Model class | implementation |
+| Effort | medium |
+| Capabilities | command.filesystem-read · command.filesystem-write · command.git-read · command.git-write |
+| Context | same-session — item; provider action: `/clear` + fresh routed process |
+| Суть | Generate P7.1 provider docs/exact-set evidence against frozen P0–P6 contracts; fail closed on runtime preflight defects. |
 
 ```text
-$ task:plan-audit 2026.07.19-DUAL-PROVIDER P6
+$ task:plan-exec 2026.07.19-DUAL-PROVIDER P7.1
 ```
 
 ## Гейты владельца (сводно)

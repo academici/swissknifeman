@@ -4,6 +4,7 @@ import shutil
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 _TEMPLATES = Path(__file__).resolve().parents[1] / "templates"
 
@@ -57,6 +58,21 @@ class TestManagedBlock(unittest.TestCase):
 
 
 class TestProviderContexts(unittest.TestCase):
+    def test_mcp_repair_mode_reaches_provider_deploy(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, _project = _setup(tmp)
+            context = sync.contexts(env, config, config["projects"])[0]
+            result = {
+                "provider_plan": None,
+                "provider_changed": False,
+                "written": [],
+                "targets": [],
+                "skipped": [],
+            }
+            with mock.patch("maind.provision.deploy.deploy_project", return_value=result) as deploy:
+                sync._mcp_run(env, config, [context], "repair", True)
+            self.assertTrue(deploy.call_args.kwargs["provider_repair"])
+
     def test_context_is_resolved_once_and_reused_across_order(self):
         with tempfile.TemporaryDirectory() as tmp:
             env, config, _proj = _setup(tmp)
@@ -267,7 +283,7 @@ class TestSync(unittest.TestCase):
                 config["projects"][0]["graphify"] = True
                 projs = sync.select_projects(env, config, {"all": True})
                 sync.run_sync(env, config, projs, only="mcp")
-                self.assertTrue(has_server(proj / ".mcp.json", "serena"))
+                self.assertTrue(has_server(proj / ".mcp.json", "codegraph"))
         finally:
             deploy.shutil.which = orig
 

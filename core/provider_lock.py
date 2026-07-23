@@ -211,6 +211,7 @@ def parse_lock(raw: bytes) -> ArtifactLock:
 def plan_artifact_lock(root: Path, expected: Iterable[ArtifactRenderResult], *,
                        lock_bytes: bytes | None, repair_artifact_ids: tuple[str, ...] = (),
                        unsupported_artifact_ids: tuple[str, ...] = (),
+                       retain_unexpected_records: bool = False,
                        managed_block_codecs: Mapping[str, tuple[
                            Callable[[bytes, tuple[str, ...]], bytes],
                            Callable[[bytes, bytes, tuple[str, ...]], bytes]]] | None = None) -> ArtifactPlan:
@@ -237,8 +238,16 @@ def plan_artifact_lock(root: Path, expected: Iterable[ArtifactRenderResult], *,
         actions.append(ArtifactAction(provenance.artifact_id, provenance.target_path,
                                       observation, action, result, observed_hash, diagnostic,
                                       codecs.get(provenance.artifact_id)))
+    expected_records = tuple(result.provenance for result in results)
+    retained_records = ()
+    if retain_unexpected_records and lock is not None:
+        expected_ids = {record.artifact_id for record in expected_records}
+        expected_targets = {record.target_path for record in expected_records}
+        retained_records = tuple(record for record in lock.records
+                                 if record.artifact_id not in expected_ids
+                                 and record.target_path not in expected_targets)
     next_lock = None if any(action.action is ArtifactActionKind.REFUSE for action in actions) else ArtifactLock(
-        LOCK_SCHEMA_VERSION, tuple(result.provenance for result in results))
+        LOCK_SCHEMA_VERSION, expected_records + retained_records)
     return ArtifactPlan(tuple(actions), next_lock)
 
 
@@ -271,6 +280,7 @@ def apply_plan(root: Path, plan: ArtifactPlan) -> ArtifactPlan:
     _atomic_write_bytes(_contained_target(root, plan.lock_path), serialize_lock(plan.next_lock))
     return plan_artifact_lock(root, (action.expected for action in plan.actions),
                               lock_bytes=serialize_lock(plan.next_lock),
+                              retain_unexpected_records=True,
                               managed_block_codecs={
                                   action.artifact_id: action.managed_block_codec
                                   for action in plan.actions if action.managed_block_codec is not None})

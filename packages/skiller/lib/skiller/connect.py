@@ -2,7 +2,7 @@
 import json
 import shutil
 
-from core import atomic_write_text, find_repo_root, safe_load_json
+from core import apply_plan, atomic_write_text, find_repo_root, safe_load_json
 
 from .common import (AGENT_DEFAULTS, MANIFEST, MARKETPLACE, apply_permissions,
                      die, is_within, parse_flags, warn)
@@ -12,6 +12,49 @@ from .config import (CORE_BUCKETS, CORE_PLUGIN, CORE_SKILLS,
 from .hub import generate_hub, hub_artifacts_exist
 from .state import upsert_project
 from .publication import build_connect_distribution_plan
+
+
+def _prepare_connect_selection(env, target, opts, config):
+    """Resolve the one semantic plugin set used by every selected provider."""
+    flag_plugins = [p for p in opts.get("plugins", "").split(",") if p]
+    plugins, profile_name, profile_source, source, include_meta = \
+        resolve_selection(env, target, config, opts.get("profile", ""), flag_plugins)
+    if profile_source == "items":
+        profile_source = "plugins"
+
+    buckets = all_buckets(env)
+    known_plugins = (set(buckets) | {"generate-skill", CORE_PLUGIN}
+                     | set(DEFAULT_COMMAND_PLUGINS))
+    core_added = []
+    if not opts.get("no_core") and CORE_PLUGIN not in plugins:
+        if _marketplace_declares(env, CORE_PLUGIN):
+            core_added = [CORE_PLUGIN]
+            plugins = list(plugins) + core_added
+        else:
+            warn(f"marketplace '{MARKETPLACE}' не объявляет плагин '{CORE_PLUGIN}' — "
+                 f"ядро (CORE_SKILLS) НЕ доставлено. Прогони `skiller registry` в "
+                 f"реестре, затем повтори connect (или --no-core, если это осознанно).")
+
+    cmd_added = []
+    for cp in DEFAULT_COMMAND_PLUGINS:
+        if cp not in plugins and _marketplace_declares(env, cp):
+            cmd_added.append(cp)
+    plugins = list(plugins) + cmd_added
+
+    for plugin in plugins:
+        if plugin not in known_plugins:
+            die(f"unknown plugin: {plugin} (available: {', '.join(sorted(known_plugins))})")
+    if include_meta and "generate-skill" not in plugins:
+        plugins = list(plugins) + ["generate-skill"]
+    return {
+        "plugins": tuple(sorted(set(plugins))),
+        "profile_name": profile_name,
+        "profile_source": profile_source,
+        "source": source,
+        "include_meta": include_meta,
+        "core_added": tuple(core_added),
+        "cmd_added": tuple(cmd_added),
+    }
 
 
 def _resident_tokens(env, plugins):
@@ -46,18 +89,15 @@ def _marketplace_declares(env, plugin_name):
     return any(p.get("name") == plugin_name for p in data.get("plugins", []))
 
 
-def _do_connect_claude(env, target, opts, register=True, fix_path_drift=False):
+def _do_connect_claude(env, target, opts, register=True, fix_path_drift=False,
+                       prepared=None):
     root = env.root
     config = load_config(env, target)
-    flag_plugins = [p for p in opts.get("plugins", "").split(",") if p]
-    plugins, profile_name, profile_source, source, include_meta = \
-        resolve_selection(env, target, config, opts.get("profile", ""), flag_plugins)
-    if profile_source == "items":
-        profile_source = "plugins"
-
-    buckets = all_buckets(env)
-    known_plugins = (set(buckets) | {"generate-skill", CORE_PLUGIN}
-                     | set(DEFAULT_COMMAND_PLUGINS))
+    prepared = prepared or _prepare_connect_selection(env, target, opts, config)
+    plugins = list(prepared["plugins"])
+    profile_name = prepared["profile_name"]
+    profile_source = prepared["profile_source"]
+    source = prepared["source"]
     # CORE-политика (умное подключение): вместо целых бакетов general(19)+oss-dev(10) ≈ 1956
     # резидентных токенов пушим лёгкий курируемый плагин `core` (== CORE_SKILLS) — экономия
     # даже с текущим составом (8 скиллов, ~696 ток по калиброванным константам budget.py —
@@ -65,35 +105,12 @@ def _do_connect_claude(env, target, opts, register=True, fix_path_drift=False):
     # см. аудит Т-2: «7 ≈ 480» протухло, когда CORE_SKILLS вырос до 8). --no-core отключает.
     # Плагин объявлен в marketplace (registry.py); на старом marketplace / в тест-реестре
     # его может не быть — тогда пропускаем с явным warn (см. ниже, аудит C-1).
-    core_added = []
-    if not opts.get("no_core") and CORE_PLUGIN not in plugins:
-        if _marketplace_declares(env, CORE_PLUGIN):
-            core_added = [CORE_PLUGIN]
-            plugins = list(plugins) + core_added
-        else:
-            # Раньше тихий пропуск (C-1): ядро не доставлено, а обещание токен-экономии
-            # (§CORE-политика) аннулировано без сигнала — выглядит так, будто connect
-            # отработал полностью. marketplace.json не объявляет `core` обычно из-за
-            # непрогнанного `skiller registry` (или синтетического тест-реестра).
-            warn(f"marketplace '{MARKETPLACE}' не объявляет плагин '{CORE_PLUGIN}' — "
-                 f"ядро (CORE_SKILLS) НЕ доставлено. Прогони `skiller registry` в "
-                 f"реестре, затем повтори connect (или --no-core, если это осознанно).")
+    core_added = list(prepared["core_added"])
 
     # Командные плагины по умолчанию (task): включаем в КАЖДЫЙ проект, как core. Marketplace-guarded
     # (на старом marketplace / в тест-реестре тихо пропускаем). --no-core их НЕ трогает — это не
     # CORE-скиллы; отключить точечно можно enabledPlugins[...]=false.
-    cmd_added = []
-    for cp in DEFAULT_COMMAND_PLUGINS:
-        if cp not in plugins and _marketplace_declares(env, cp):
-            cmd_added.append(cp)
-    plugins = list(plugins) + cmd_added
-
-    for p in plugins:
-        if p not in known_plugins:
-            die(f"unknown plugin: {p} (available: {', '.join(sorted(known_plugins))})")
-    if include_meta and "generate-skill" not in plugins:
-        plugins = list(plugins) + ["generate-skill"]
-    plugins = sorted(set(plugins))
+    cmd_added = list(prepared["cmd_added"])
 
     if config.get("exclude"):
         print("NOTE: .swissknife.json 'exclude' is skill-granular and is ignored "
@@ -253,6 +270,47 @@ def _do_connect_claude(env, target, opts, register=True, fix_path_drift=False):
     return record
 
 
+def _preflight_claude_connect_target(target, opts):
+    settings_file = opts.get("file") or "settings.local.json"
+    if settings_file not in ("settings.json", "settings.local.json"):
+        die("--file должен быть settings.json или settings.local.json")
+    dest = target / ".claude" / settings_file
+    if dest.exists():
+        try:
+            json.loads(dest.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            die(f"{dest}: invalid JSON: {exc}")
+
+
+def _apply_codex_connect_plan(env, target, plan, *, dry_run, register):
+    if plan.channel == "marketplace":
+        print(f"Codex marketplace: {plan.target} "
+              "(self-host generated projection; native install is explicit)")
+    else:
+        if dry_run:
+            print(f"--- dry-run: Codex marketplace bundle → {plan.target} ---")
+        else:
+            try:
+                apply_plan(target, plan.artifact_plan)
+            except (OSError, ValueError) as exc:
+                die("SPUB_OWNERSHIP_CONFLICT: provider codex, "
+                    f"channel marketplace-bundle, target {target}: {exc}")
+            print(f"Codex marketplace: {plan.target} "
+                  "(project-scoped contained bundles; install/enable remains explicit)")
+    record = {
+        "path": str(target),
+        "channel": "marketplace",
+        "provider": "codex",
+        "target": str(plan.target),
+        "source_hash": plan.source_hash,
+        "rendered_hash": plan.rendered_hash,
+        "hub": hub_artifacts_exist(target),
+    }
+    if register and not dry_run:
+        upsert_project(env, record)
+    return record
+
+
 def do_connect(env, target, opts, register=True, fix_path_drift=False):
     """Apply a preflighted provider marketplace plan.
 
@@ -262,21 +320,22 @@ def do_connect(env, target, opts, register=True, fix_path_drift=False):
     """
     config = load_config(env, target)
     repo_root = find_repo_root(env.root) or env.root
+    prepared = _prepare_connect_selection(env, target, opts, config)
     plans = build_connect_distribution_plan(config, target, project_id=target.name,
-                                            repo_root=repo_root)
+                                            repo_root=repo_root,
+                                            plugins=prepared["plugins"])
+    if any(plan.provider_id == "claude-code" for plan in plans):
+        _preflight_claude_connect_target(target, opts)
     records = []
     for plan in plans:
         if plan.provider_id == "claude-code":
             records.append(_do_connect_claude(env, target, opts, register=register,
-                                              fix_path_drift=fix_path_drift))
+                                              fix_path_drift=fix_path_drift,
+                                              prepared=prepared))
         elif plan.provider_id == "codex":
-            print(f"Codex marketplace: {plan.target} (self-host generated projection; native install is explicit: skiller codex-install)")
-            record = {"path": str(target), "channel": "marketplace",
-                      "provider": "codex", "target": str(plan.target),
-                      "hub": hub_artifacts_exist(target)}
-            if register and not opts.get("dry_run"):
-                upsert_project(env, record)
-            records.append(record)
+            records.append(_apply_codex_connect_plan(
+                env, target, plan, dry_run=opts.get("dry_run", False),
+                register=register))
     return records[0] if len(records) == 1 else {"providers": records}
 
 

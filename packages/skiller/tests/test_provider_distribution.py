@@ -12,12 +12,41 @@ from skiller.connect import do_connect
 from skiller.publication import run_codex_native_install
 from skiller.registry import build_registry
 from skiller.skillset import do_sync, plan_sync
-import tests.fixtures as fx
+try:
+    import tests.fixtures as fx
+except ModuleNotFoundError:
+    from packages.skiller.tests import fixtures as fx
 
 
 def materialize_registry(env):
     registry, *_ = build_registry(env)
     (env.root / "skills.json").write_text(json.dumps(registry), encoding="utf-8")
+
+
+def materialize_codex_marketplace(root):
+    plugins = []
+    for name in ("php", "quality"):
+        source = root / "skills" / name
+        manifest = source / ".codex-plugin" / "plugin.json"
+        manifest.parent.mkdir(parents=True)
+        manifest.write_text(json.dumps({
+            "name": name,
+            "version": "0.1.0",
+            "description": name,
+            "skills": ["./"],
+        }) + "\n", encoding="utf-8")
+        plugins.append({
+            "name": name,
+            "source": f"./skills/{name}",
+            "description": name,
+            "category": "engineering",
+        })
+    marketplace = root / ".agents" / "plugins" / "marketplace.json"
+    marketplace.parent.mkdir(parents=True)
+    marketplace.write_text(json.dumps({
+        "name": "swissknifeman",
+        "plugins": plugins,
+    }) + "\n", encoding="utf-8")
 
 
 def providers(*, claude=True, codex=True):
@@ -96,11 +125,127 @@ class ProviderDistributionCase(unittest.TestCase):
         self.assertEqual((unmanaged / "SKILL.md").read_text(encoding="utf-8"),
                          "user-owned\n")
 
-    def test_dual_connect_external_target_fails_before_claude_settings_write(self):
+    def test_dual_connect_external_target_gets_contained_bundle_with_claude_parity(self):
         self.write_provider_config(providers())
-        with self.assertRaises(SystemExit):
-            do_connect(self.env, self.project, {"profile": "laravel-project"})
+        materialize_codex_marketplace(self.root)
+        with mock.patch("skiller.publication.subprocess.run",
+                        side_effect=AssertionError("implicit native install")), \
+                contextlib.redirect_stdout(io.StringIO()):
+            do_connect(self.env, self.project, {
+                    "profile": "laravel-project",
+                    "no_permissions": True,
+                })
+
+        settings = json.loads(
+            (self.project / ".claude/settings.local.json").read_text(encoding="utf-8"))
+        claude_plugins = {
+            key.split("@", 1)[0] for key, enabled in settings["enabledPlugins"].items()
+            if enabled
+        }
+        marketplace_path = self.project / ".agents/plugins/marketplace.json"
+        marketplace = json.loads(marketplace_path.read_text(encoding="utf-8"))
+        codex_plugins = {entry["name"] for entry in marketplace["plugins"]}
+        self.assertEqual(codex_plugins, claude_plugins)
+        for entry in marketplace["plugins"]:
+            source = entry["source"]["path"]
+            self.assertTrue(source.startswith("./.agents/plugins/bundles/"))
+            bundle = self.project / source.removeprefix("./")
+            self.assertTrue((bundle / ".codex-plugin/plugin.json").is_file())
+            self.assertTrue(any(bundle.rglob("SKILL.md")))
+        lock = json.loads(
+            (self.project / ".swissknifeman/provider-artifacts.lock.json")
+            .read_text(encoding="utf-8"))
+        codex_targets = {
+            record["target_path"] for record in lock["records"]
+            if record["provider_id"] == "codex"
+        }
+        self.assertIn(".agents/plugins/marketplace.json", codex_targets)
+        self.assertTrue(all(
+            path == ".agents/plugins/marketplace.json"
+            or path.startswith(".agents/plugins/bundles/")
+            for path in codex_targets
+        ))
+
+    def test_dual_connect_preflights_incomplete_codex_before_claude_write(self):
+        self.write_provider_config(providers())
+        materialize_codex_marketplace(self.root)
+        (self.root / "skills/quality/.codex-plugin/plugin.json").write_text(
+            json.dumps({
+                "name": "quality",
+                "version": "0.1.0",
+                "description": "quality",
+                "skills": ["./missing"],
+            }) + "\n",
+            encoding="utf-8")
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr), self.assertRaises(SystemExit):
+            do_connect(self.env, self.project, {
+                "profile": "laravel-project",
+                "no_permissions": True,
+            })
+        self.assertIn("SPUB_BUNDLE_INCOMPLETE", stderr.getvalue())
         self.assertFalse((self.project / ".claude/settings.local.json").exists())
+        self.assertFalse((self.project / ".agents/plugins/marketplace.json").exists())
+
+    def test_dual_connect_preflights_uncontained_codex_source_before_claude_write(self):
+        self.write_provider_config(providers())
+        materialize_codex_marketplace(self.root)
+        marketplace_path = self.root / ".agents/plugins/marketplace.json"
+        marketplace = json.loads(marketplace_path.read_text(encoding="utf-8"))
+        marketplace["plugins"][0]["source"] = "./../outside"
+        marketplace_path.write_text(json.dumps(marketplace) + "\n", encoding="utf-8")
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr), self.assertRaises(SystemExit):
+            do_connect(self.env, self.project, {
+                "profile": "laravel-project",
+                "no_permissions": True,
+            })
+        self.assertIn("SPUB_PATH_UNCONTAINED", stderr.getvalue())
+        self.assertFalse((self.project / ".claude/settings.local.json").exists())
+        self.assertFalse((self.project / ".agents/plugins/marketplace.json").exists())
+
+    def test_dual_connect_refuses_unowned_codex_target_before_claude_write(self):
+        self.write_provider_config(providers())
+        materialize_codex_marketplace(self.root)
+        target = self.project / ".agents/plugins/marketplace.json"
+        target.parent.mkdir(parents=True)
+        target.write_text('{"name":"user-owned"}\n', encoding="utf-8")
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr), self.assertRaises(SystemExit):
+            do_connect(self.env, self.project, {
+                "profile": "laravel-project",
+                "no_permissions": True,
+            })
+        self.assertIn("SPUB_OWNERSHIP_CONFLICT", stderr.getvalue())
+        self.assertFalse((self.project / ".claude/settings.local.json").exists())
+        self.assertEqual(target.read_text(encoding="utf-8"),
+                         '{"name":"user-owned"}\n')
+
+    def test_dual_connect_bundle_is_deterministic_and_self_host_stays_thin(self):
+        self.write_provider_config(providers())
+        materialize_codex_marketplace(self.root)
+        opts = {"profile": "laravel-project", "no_permissions": True}
+        with contextlib.redirect_stdout(io.StringIO()):
+            do_connect(self.env, self.project, opts)
+        first = {
+            path.relative_to(self.project).as_posix(): path.read_bytes()
+            for path in (self.project / ".agents/plugins").rglob("*")
+            if path.is_file()
+        }
+        with contextlib.redirect_stdout(io.StringIO()):
+            do_connect(self.env, self.project, opts)
+        second = {
+            path.relative_to(self.project).as_posix(): path.read_bytes()
+            for path in (self.project / ".agents/plugins").rglob("*")
+            if path.is_file()
+        }
+        self.assertEqual(second, first)
+
+        (self.root / ".swissknife.json").write_text(
+            json.dumps({"providers": providers()}), encoding="utf-8")
+        with contextlib.redirect_stdout(io.StringIO()):
+            do_connect(self.env, self.root, opts, register=False)
+        self.assertFalse((self.root / ".agents/plugins/bundles").exists())
 
     def test_native_install_is_explicit_and_dry_run_never_calls_runner(self):
         calls = []

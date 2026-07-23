@@ -270,3 +270,79 @@ before a fresh P7.2 first-preflight run.
 **Verdict:** RED — D122 itself proves exact post-apply idempotence and fail-closed mutations,
 but the real-root D108 initial candidate cannot be admitted while the D121 rollback backups
 remain. P7.2 remains blocked; no phase close or audit follows this result.
+
+## D123 independent rollback replay — GREEN
+
+**Observed:** 2026-07-23
+**Source anchor:** `52374d40` (`fix: закрыть lifecycle rollback D108`)
+**Mode:** an independent literal oracle seeded task-scoped `TemporaryDirectory` roots with the
+sealed D104 hooks preimage SHA-256
+`7d7538d021228e8e61d124f4b60b6db04434f8121de30b8672f05e4bf038c3db` and the sealed unchanged
+MCP preimage SHA-256
+`cf4537196c3fefd6fd3980221bd3677f74e7867392ad49364e1e891e1f7c8283`. The only disposable
+mutation was one planned D108 apply followed by the new explicit rollback entry point. The real
+repository was inspected only through `deploy_project(..., d108=True, dry=True)` with its
+`apply_d108_operation` seam patched to a spy.
+
+### Disposable-root explicit rollback — GREEN
+
+The oracle starts from the two sealed files plus a sibling-bearing
+`.swissknife.json`, constructs the exact three-server tuple `maind`, `perplexity-web`, `serena`,
+and records a sorted SHA-256 inventory. After apply, exactly these two and no other `*.bak`
+paths exist:
+
+```text
+.codex/hooks.json.provider-artifact.bootstrap-transfer.bak
+.mcp.json.provider-artifact.bootstrap-transfer.bak
+```
+
+Each has the SHA-256 of its respective sealed preimage. The independently replanned second D108
+operation has a unchanged carrier and three `noop` actions; applying that second plan calls its
+writer `0` times and preserves the inventory. The explicit rollback then restores the complete
+initial inventory byte-for-byte, including the original project-carrier bytes, and leaves both
+named backup paths absent.
+
+The same oracle mutates one completed state at a time: missing hook backup, extra handler
+backup, byte-different MCP backup, symlinked hook backup, changed lock, changed handler, and
+changed carrier. Each explicit rollback refuses before its first core writer call (`0`) and
+leaves the complete malformed-state inventory unchanged. This proves a closed exact set, not
+a glob, adoption, or normalization path.
+
+### Focused regressions — GREEN
+
+At `52374d40`, the focused P2.7 provider-lock carrier passed `28/28` and the package-local
+mAInd provider/deploy carrier passed `55/55`:
+
+```text
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=. \
+  python3 -m unittest discover -v -s core/tests -p 'test_provider_lock.py'
+
+cd packages/maind
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=../..:lib:../harness/lib \
+  python3 -m unittest -v tests.test_provider_deploy tests.test_deploy
+```
+
+`PYTHONDONTWRITEBYTECODE=1 python3 -m py_compile` for the D123 core/mAInd modules and both
+`git diff --check 52374d40..HEAD` and the current worktree passed.
+
+### Real-root dry reader — GREEN, zero writes and no residue
+
+The public dry reader used the effective `config.json` project record whose canonical local path
+is this repository. Its writer spy recorded `0` calls. Its sorted before/after protected
+inventory was identical, the bootstrap projection was `admitted`, and the dual provider plan
+was `GREEN`. Neither named backup path existed before or after.
+
+```text
+.codex/config.toml  68df0b5bcc069ce64c24aeb63c2bb08773219dff83526398ddba247dee6fb2bc
+.codex/hooks.json   7d7538d021228e8e61d124f4b60b6db04434f8121de30b8672f05e4bf038c3db
+.mcp.json           cf4537196c3fefd6fd3980221bd3677f74e7867392ad49364e1e891e1f7c8283
+.codex/hooks/lifecycle.py                         absent
+.swissknife.json                                  absent
+.swissknifeman/provider-artifacts.lock.json       absent
+.codex/hooks.json.provider-artifact.bootstrap-transfer.bak  absent
+.mcp.json.provider-artifact.bootstrap-transfer.bak           absent
+```
+
+**Verdict:** GREEN for the D123 P6.12 independent replay. This evidence does not run P7.2,
+authorize a live apply/repair/rollback, or authorize P7.3+, FOREMAN, fleet, tag, push or
+cleanup. P6.11 bookkeeping and the subsequent phase gates remain separate work.

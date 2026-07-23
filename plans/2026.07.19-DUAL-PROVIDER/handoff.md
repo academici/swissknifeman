@@ -1,48 +1,35 @@
-# HANDOFF — 2026-07-23 — after P6
+# HANDOFF — 2026-07-23 — after P6.12
 
-**Next:** manual: implementation/high
+**Next:** ЗАПУСК ВРУЧНУЮ: `gpt-5.6-terra/high` — close only the already-committed D123 P6.11
+item bookkeeping after its independent P6.12 proof; do not run P7.2.
 
-| Parameter | Value |
-|:--|:--|
-| Model class | implementation |
-| Effort | high |
-| Capabilities | — |
-| Native model | `gpt-5.6-terra` |
-| Reasoning effort | `high` |
-| Approval policy | `never` |
-| Sandbox | `danger-full-access` |
-| CWD | `/home/vostrikov/projects/packages/swissknifeman` |
-| Context | `NEW SESSION — P6.11` |
-| Суть | Implement only D123 exact explicit D108 rollback-backup lifecycle, then stop for independent P6.12. |
-
-| Native model | Reasoning effort | Approval policy | Sandbox | CWD | Context |
+| Model | Thinking | Approval policy | Sandbox | CWD | Context |
 |:--|:--|:--|:--|:--|:--|
-| `gpt-5.6-terra` | `high` | `never` | `danger-full-access` | `/home/vostrikov/projects/packages/swissknifeman` | `NEW SESSION` |
+| `gpt-5.6-terra` | `high` | `never` | `danger-full-access` | `/home/vostrikov/projects/packages/swissknifeman` | `continue (/clear) — ручной item` |
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'Read AGENTS.md, CLAUDE.md, packages/maind/CLAUDE.md, and plans/2026.07.19-DUAL-PROVIDER/{plan.md,handoff.md,phases/P6.md,phases/P7.md,artifacts/P6-d108-independent-conformance.md,artifacts/P7-self-host-e2e.md}. Execute task:plan-run 2026.07.19-DUAL-PROVIDER P6.11. Implement only D123 in core/provider_lock.py, core/__init__.py, packages/maind/lib/maind/provider_deploy.py, and focused core/maind tests: explicit D108 rollback removes only the two verified D121 transaction backups after exact state/hash verification, then restores the recorded carrier. Preserve D104/D108/D110; no generic *.bak cleanup/adoption, live retry/normalization, P7.2+, FOREMAN/fleet, tag/push/cleanup, or unrelated dirt. Commit and stop for independent P6.12.'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'Read AGENTS.md, CLAUDE.md, packages/maind/CLAUDE.md, and plans/2026.07.19-DUAL-PROVIDER/{plan.md,handoff.md,phases/P6.md,artifacts/P6-d108-independent-conformance.md,journal.jsonl}. Read commit 52374d40. Close only P6.11 D123 bookkeeping using its already-committed source repair and the independent P6.12 GREEN proof: update plan status/Completion Notes/handoff/journal and commit plan files. Do not change package source/tests, run P6 phase close or audit, execute P7.2, perform live apply/repair/rollback, or touch P7.3+, FOREMAN, fleet, tags, push, cleanup, or unrelated dirt.'
 ```
 
-**Done:** P6.12 D122 independent evidence is committed in `f8d46602`. In disposable roots,
-the exact two-group managed post-apply form makes the second D108 chain all `noop`, its apply
-calls the writer `0` times, and its SHA inventory is unchanged. Reordered, extra, changed and
-malformed observer variants refuse before a writer. Focused maind provider/deploy (`53`) and
-core provider-lock (`26`) regressions and `py_compile` passed at source anchor `5830e631`.
+**Done:** P6.12 D123 independent replay is GREEN at source anchor `52374d40`. In disposable
+roots, the exact explicit rollback removed only the verified hook and MCP transaction backups,
+restored the initial inventory byte-for-byte, and left neither residue. Seven malformed
+completed states refused before writer `0`. Core provider-lock passed 28 tests and mAInd
+provider/deploy passed 55 tests. The public real-root dry reader was admitted and green with
+writer `0`, unchanged protected inventory, and no named backup residue.
 
-**Remaining:** D123 reopens P6.11 only for an explicit completed-D108 rollback lifecycle.
-The owner has removed only the two named D121 backup residues after confirming each equals its
-sealed preimage; this exact cleanup is evidence, not a generic cleanup mechanism. P6.12 must
-independently prove the source repair before any fresh P7.2 first preflight.
+**Remaining:** P6.11 is still `🟡 In progress` solely because D123 source-item bookkeeping has
+not been closed. P6 remains blocked pending that closure and subsequent distinct phase gates.
+P7.2 is not authorized by this handoff.
 
-**Sources of truth:** `phases/P6.md` P6.12; `artifacts/P6-d108-independent-conformance.md`;
-`artifacts/P7-self-host-e2e.md`; D104/D108/D110/D121/D122; `core/provider_lock.py` backup
-admission and rollback paths.
+**Sources of truth:** D123 in `plan.md`; P6.11/P6.12 in `phases/P6.md`; independent evidence in
+`artifacts/P6-d108-independent-conformance.md`; source commit `52374d40`.
 
-**Open risks:** The one owner-authorized evidence cleanup does not replace D123. Any source
-repair must still refuse all non-exact, missing, extra, symlinked or byte-different backups.
+**Open risks:** The explicit rollback entry point is proved only in disposable roots. The real
+root was dry-read only; any live action remains a separate Owner-gated P7.2 boundary.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: none; no live normalization is authorized.
-- deferred: D123 implementation, independent P6.12 rerun, then fresh P7.2 first preflight.
+- workarounds: none.
+- deferred: P6.11 bookkeeping, then separately authorized P6 phase gate work.
 - open_questions: —

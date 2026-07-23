@@ -49,7 +49,7 @@ findings/00-fleet-dry-run-2026-07-23.md).
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P0 | Устранить блокер connect-проекции | 0/2 | 🟡 In progress |
+| P0 | Устранить блокер connect-проекции | 1/2 | 🟡 In progress |
 | P1 | Пилот и стабилизация | 0/2 | ⬜ Not started |
 | P2 | Последовательный fleet rollout | 0/1 | ⬜ Not started |
 
@@ -59,6 +59,7 @@ findings/00-fleet-dry-run-2026-07-23.md).
 |:--|:--|:--|:--|
 | D1 | 2026-07-23 | P1/P2 полностью детализированы до первого exec; carrier implementation остаётся P0 input. | Исполнимый fleet порядок и retry boundary должны быть проверяемы до provider writes. RAG:— (repo-grounded: findings/00-fleet-dry-run-2026-07-23.md) |
 | D2 | 2026-07-23 | Drift остаётся fail-closed, repair — только явный. | Иначе автоматизация может стереть локальную работу. RAG:— (repo-grounded: packages/skiller/lib/skiller/skillset.py:857) |
+| D3 | 2026-07-23 | Внешний Codex connect consumer получает repo-contained marketplace и self-contained selected plugin bundles под существующим artifact lock; self-host остаётся thin, install/cache/enable — отдельное user-level действие. | Официальный Codex manual подтверждает repo marketplace и contained local sources, frozen publication contract запрещает внешний thin path и implicit native install. RAG:✅ 2026-07-23 (`findings/P0.1-codex-connect-carrier-verification.md`, Build plugins). |
 
 ## 6. Update Log
 
@@ -67,3 +68,4 @@ findings/00-fleet-dry-run-2026-07-23.md).
 | 2026-07-23 | issue-planner/frontier | Design pass 1/3: initial fleet dry-run converted into P0 carrier/eligibility design. |
 | 2026-07-23 | issue-planner/frontier | Design pass 2/3: RED audit-1 разобран; добавлены parity acceptance, retry и полная карта rollout. |
 | 2026-07-23 | issue-planner/frontier | Design pass 3/3: cross-phase reconciliation audit-2 — JIT removed, routing/files/budget reconciled. |
+| 2026-07-23 | task-plan-run / gpt-5.6-sol/high | P0.1 закрыт: project-scoped Codex connect carrier публикует contained selected bundles с Claude parity — детали см. phases/P0.md P0.1 Completion Notes. |

@@ -1,29 +1,24 @@
-# HANDOFF — 2026-07-23 — after P0
+# HANDOFF — 2026-07-23 — after P0.1
 
-**Next:** audit-design: task:plan-audit 2026.07.23-FLEET-DUAL-PROVIDER design
+**Next:** run-items: task:plan-run 2026.07.23-FLEET-DUAL-PROVIDER P0.2
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | frontier |
-| Effort | xhigh |
+| Model class | implementation |
+| Effort | high |
 | Capabilities | — |
-| Context | cold-start — plan-step |
-| Суть | Повторно проверить исправленный полный дизайн перед provider carrier. |
+| Context | same-session — item |
+| Суть | Проверить package regression и повторить no-write fleet dry-run с provider-qualified skip evidence. |
 
 ```
-$ task:plan-audit 2026.07.23-FLEET-DUAL-PROVIDER design
-
-РЕЖИМ: remediation дизайна завершена; проверить весь план, не исполнять items
-ВХОД: plans/2026.07.23-FLEET-DUAL-PROVIDER/journal.jsonl (audit-red attempt 1) и plan/phases/P0.md–P2.md
-СКОУП: 1) coverage skills/plugins/MCP 2) eligibility+retry loop 3) routing/design budget/roadmap
-НЕ ТРОГАТЬ: provider code, consumer repositories, item statuses
+$ task:plan-run 2026.07.23-FLEET-DUAL-PROVIDER P0.2
 ```
 
-**Done:** Зафиксирован первый fleet dry-run и создан executable rollout plan.
-**Remaining:** P0 design audit, carrier repair, pilot и последовательный fleet rollout.
-**Sources of truth:** plans/2026.07.23-FLEET-DUAL-PROVIDER/plan.md · phases/P0.md · findings/00-fleet-dry-run-2026-07-23.md.
-**Open risks:** connect carrier может не иметь project-scoped native Codex representation.
+**Done:** P0.1 закрыт item commit `dc9a3fd93cb2c85ca5b3f4f206e39b2147df948b`: внешний Codex connect carrier доставляет contained marketplace и self-contained selected bundles с Claude plugin-set parity; self-host thin и explicit install boundary сохранены.
+**Remaining:** P0.2 — package regression, eligibility semantics и no-write fleet dry-run; затем phase audit/close по roadmap.
+**Sources of truth:** `plan.md` · `phases/P0.md` · `findings/P0.1-codex-connect-carrier-verification.md` · `packages/skiller/lib/skiller/publication.py` · `packages/skiller/lib/skiller/connect.py`.
+**Open risks:** P0.2 должен подтвердить, что отсутствующий registry `local_path` классифицируется provider-qualified skip и не прерывает весь dry-run.
 **Workarounds/Deferred/Open questions:**
 - workarounds: —
-- deferred: repair managed drift только в P1 после per-project evidence.
+- deferred: реальные consumer writes и repair остаются за P1.
 - open_questions: —

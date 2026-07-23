@@ -4,8 +4,9 @@
 bounded P7.3 evidence-only correction. Per D126, this handoff intentionally contains no launch
 block.
 
-**Done:** P7.4 evidence commit `ff4b89c3` independently reproduced the full functional release
-bundle. Capability/provider/instruction exact sets, public Claude/Codex apply/noop/repair,
+**Done:** P7.4 evidence commits `ff4b89c3` / `f1998246` independently reproduced the full
+functional release bundle and close artifact hygiene. Capability/provider/instruction exact
+sets, public Claude/Codex apply/noop/repair,
 frozen hashes, D123 rollback, privacy, protected paths and package/core tests are GREEN. Target
 plan-lint has the exact two D126 no-launch errors and zero new findings.
 

@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.23-FLEET-DUAL-PROVIDER |
 | Title | Последовательная двухпровайдерная настройка проектов |
-| Version | 0.5.0 |
+| Version | 0.6.0 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | frontier |
@@ -48,7 +48,8 @@ P1 закрывает только synthetic/disposable conformance MVP; нез�
 | P0.2 | implementation/high | manual | меняет eligibility/failure semantics fleet sync |
 | P1.1 | implementation/medium | plan-exec | детерминированный existing conformance CLI пишет только disposable roots и plan artifact |
 | P1.2 | implementation/high | manual | conditional owning repair требует high verification |
-| P2.1 | implementation/high | manual | live external state требует per-project high verification |
+| P2.1 | implementation/medium | plan-exec | plan-only commit→item/lint traceability с детерминированными git/lint gates |
+| P2.2 | implementation/high | manual | live external state требует per-project high verification |
 
 ## 4. Phase Index & Status Board
 
@@ -56,7 +57,7 @@ P1 закрывает только synthetic/disposable conformance MVP; нез�
 |:--|:--|:--|:--|
 | P0 | Устранить блокер connect-проекции | 1/2 | 🟠 Done with deviations |
 | P1 | Пилот и стабилизация | 1/2 | 🟢 Done |
-| P2 | Последовательный fleet rollout | 0/1 | ⬜ Not started |
+| P2 | Последовательный fleet rollout | 0/2 | ⬜ Not started |
 
 ## 5. Decision Log
 
@@ -71,6 +72,7 @@ P1 закрывает только synthetic/disposable conformance MVP; нез�
 | D7 | 2026-07-23 | Replacement pilot is the first registry-order external candidate passing the complete no-write eligibility/provider/worktree/instruction preflight; D5 target and self-host are excluded. No match blocks without writes; repair/force stay forbidden. | Committed evidence does not prove a named next candidate, so deterministic selection is the only non-guessing carrier. RAG:— (`research/01-pilot-selection-contract.md`). |
 | D8 | 2026-07-23 | Owner directed rollout to continue: P1.1 reopens as a fresh manual execution beginning with a new live registry-order D7 scan, not a pre-named candidate or a deferral. Exactly one normal apply remains conditional on one candidate passing the complete preflight. | Eligibility is live external state; the owner authorizes a new evidence pass but does not relax D5–D7, permit repair/force, or authorize overwriting dirty/unmanaged bytes. RAG:— (repo-grounded: `brief/01-refinements.md`). |
 | D9 | 2026-07-23 | После двух зафиксированных пустых D7 scans P1.1 прекращает повторять registry scan и выбирает ровно один synthetic/disposable local temp-root dual-provider conformance carrier. Green закрывает только минимальный conformance MVP; red передаёт concrete owning defect в P1.2. Live external rollout остаётся P2 debt, а live consumers не являются target P1.1. | Owner разрешил минимальный disposable fixture без остановки; existing `maind sync --conformance` выполняет dual-provider apply/check и полный provider/provisioner dry-run только в `TemporaryDirectory`. Его внутренний temp-only repair case — safety control, не consumer repair и не разрешение CLI `--repair`. D5–D7 не ослабляются: `sibintek-insiders`, self-host, dirty/unmanaged bytes, `--repair` и `--force` остаются запрещены. RAG:— (repo-grounded: `brief/01-refinements.md`; `research/01-pilot-selection-contract.md`; `packages/maind/lib/maind/provision/sync.py:683-934`). |
+| D10 | 2026-07-23 | P2 принимает D9 synthetic GREEN только как precondition, сначала закрывает plan-only P1.1 traceability carrier, затем заново применяет D5–D7 к каждому live consumer точными public per-project командами. | Disposable temp-root не доказывает eligibility или safety live consumer; audit P1 требует восстановить commit→item/lint traceability до первого consumer access, не реопеняя P1 и не переписывая append-only историю. RAG:— (repo-grounded: `phases/P1.md`, блок `Audit P1 — 2026-07-23`; D5–D9). |
 
 ## 6. Update Log
 
@@ -95,3 +97,4 @@ P1 закрывает только synthetic/disposable conformance MVP; нез�
 | 2026-07-23 | task-plan-exec / gpt-5.6/medium | P1.1 закрыт: D9 disposable dual-provider conformance carrier GREEN без live consumer/registry access — детали см. phases/P1.md P1.1 Completion Notes. |
 | 2026-07-23 | task-plan-close / implementation/low | P1.2 пропущен по D9: conditional remediation не применима после GREEN P1.1 — детали см. phases/P1.md P1.2 Completion Notes. |
 | 2026-07-23 | task-plan-close / implementation/low | P1 закрыта: disposable dual-provider conformance MVP подтверждён, conditional remediation пропущена по D9 — детали см. phases/P1.md Phase Handoff. |
+| 2026-07-23 | task-plan-design / gpt-5.6-sol/high | P2 reconciled after P1 ATTENTION: добавлен plan-only traceability prerequisite и live rollout восстановлен по D5–D7 exact per-consumer commands; P1 не реопенялась. |

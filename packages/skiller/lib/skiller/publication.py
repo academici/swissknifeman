@@ -396,10 +396,13 @@ def _render_codex_bundle(root: Path, unit: PublicationUnit, catalog: Publication
         _codex_plugin_manifest(unit.plugin_id, catalog.package_version, description, [skill_root]),
         members, repo_root, catalog.package_version)]
     for member in members:
-        target = root / "skills" / member.semantic_id / "SKILL.md"
-        source = (package_root / member.source_path).read_bytes()
-        artifacts.append(_render_codex_artifact(target, unit, source, (member,), repo_root,
-                                                catalog.package_version))
+        canonical_root = package_root / Path(member.source_path).parent
+        for source in _codex_skill_runtime_files(
+                canonical_root, source_root=canonical_root, plugin=unit.plugin_id):
+            target = root / "skills" / member.semantic_id / source.relative_to(canonical_root)
+            artifacts.append(_render_codex_artifact(
+                target, unit, source.read_bytes(), (member,), repo_root,
+                catalog.package_version))
     artifacts.append(_codex_bundle_lock(root, unit, catalog.package_version, tuple(artifacts), repo_root))
     return tuple(artifacts)
 

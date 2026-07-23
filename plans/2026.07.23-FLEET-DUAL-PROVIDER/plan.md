@@ -55,7 +55,7 @@ P1 закрывает только synthetic/disposable conformance MVP; нез�
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P0 | Устранить блокер connect-проекции | 1/2 | 🟠 Done with deviations |
-| P1 | Пилот и стабилизация | 1/2 | 🟡 In progress |
+| P1 | Пилот и стабилизация | 1/2 | 🟢 Done |
 | P2 | Последовательный fleet rollout | 0/1 | ⬜ Not started |
 
 ## 5. Decision Log
@@ -94,3 +94,4 @@ P1 закрывает только synthetic/disposable conformance MVP; нез�
 | 2026-07-23 | task-plan-design / frontier/high | P1.1 redesigned by D9: exhausted live selection replaced with one disposable temp-root conformance pilot; D5–D7 remain frozen. |
 | 2026-07-23 | task-plan-exec / gpt-5.6/medium | P1.1 закрыт: D9 disposable dual-provider conformance carrier GREEN без live consumer/registry access — детали см. phases/P1.md P1.1 Completion Notes. |
 | 2026-07-23 | task-plan-close / implementation/low | P1.2 пропущен по D9: conditional remediation не применима после GREEN P1.1 — детали см. phases/P1.md P1.2 Completion Notes. |
+| 2026-07-23 | task-plan-close / implementation/low | P1 закрыта: disposable dual-provider conformance MVP подтверждён, conditional remediation пропущена по D9 — детали см. phases/P1.md Phase Handoff. |

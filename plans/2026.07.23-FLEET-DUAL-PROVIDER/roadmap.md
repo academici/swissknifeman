@@ -50,18 +50,18 @@ $ task:plan-run 2026.07.23-FLEET-DUAL-PROVIDER P0.2
 $ task:plan-exec 2026.07.23-FLEET-DUAL-PROVIDER P1.1
 ```
 
-### После terminal P1.1/P1.2 — закрыть P1
+### P1 закрыта — независимый аудит
 
-**Next:** close: task:plan-close 2026.07.23-FLEET-DUAL-PROVIDER P1
+**Next:** audit-phase: task:plan-audit 2026.07.23-FLEET-DUAL-PROVIDER P1
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | implementation |
-| Effort | low |
+| Model class | frontier |
+| Effort | xhigh |
 | Capabilities | — |
 | Context | cold-start — plan-step |
-| Суть | Закрыть P1 по двум terminal item и передать фазу на независимый аудит. |
+| Суть | Независимо проверить terminal P1 по committed conformance evidence и D9 skip boundary. |
 
 ```text
-$ task:plan-close 2026.07.23-FLEET-DUAL-PROVIDER P1
+$ task:plan-audit 2026.07.23-FLEET-DUAL-PROVIDER P1
 ```

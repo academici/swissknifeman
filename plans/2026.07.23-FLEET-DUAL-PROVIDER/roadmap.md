@@ -10,7 +10,7 @@
 | P0.2 | solo | plan-run | implementation/high | — | меняет fleet eligibility semantics |
 | P1.1 | solo | plan-exec | implementation/medium | — | 🟢 D9 disposable synthetic conformance MVP закрыт; весь live rollout остаётся P2 |
 | P1.2 | conditional solo | plan-run | implementation/high | D6/frozen-contract change only | ⛔ пропущен по D9: GREEN P1.1 не создал concrete owning defect |
-| P2.1 | solo | plan-exec | implementation/medium | — | plan-only traceability prerequisite; live access запрещён |
+| P2.1 | solo | plan-exec | implementation/medium | — | 🟢 plan-only traceability prerequisite закрыт; live access остаётся только P2.2 |
 | P2.2 | solo | plan-run | implementation/high | — | D5–D7 per-consumer external-state loop с stop-on-defect |
 
 ## Готовые launch-block'и групп
@@ -72,19 +72,8 @@ Audit P1 завершён ATTENTION; remediation carrier — P2.1, P1 не
 
 ### P2.1 — P1.1 traceability prerequisite
 
-**Next:** exec-items: task:plan-exec 2026.07.23-FLEET-DUAL-PROVIDER P2.1
-
-| Параметр | Значение |
-|:--|:--|
-| Model class | implementation |
-| Effort | medium |
-| Capabilities | — |
-| Context | same-session — item |
-| Суть | Plan-only закрепить `d72fe7b6`/`7bf70309` и воспроизводимый lint anchor до live rollout. |
-
-```text
-$ task:plan-exec 2026.07.23-FLEET-DUAL-PROVIDER P2.1
-```
+P2.1 закрыт item commit `906dddc6`; carrier:
+`findings/P2.1-p1-traceability.md`. Следующий executable item — P2.2.
 
 ### P2.2 — live rollout после P2.1
 

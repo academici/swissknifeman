@@ -1,32 +1,26 @@
-# HANDOFF — 2026-07-23 — after P6
+# HANDOFF — 2026-07-23 — after P7.2
 
-**Next:** `/task:plan-audit 2026.07.19-DUAL-PROVIDER P6`
+**Next:** Owner Approval D# for P7.3's exact cleanup inventory/action set. No cleanup, release
+manifest, FOREMAN, fleet, tag, push or audit action is authorized by this handoff.
 
-| Model | Thinking | Approval policy | Sandbox | CWD | Context |
-|:--|:--|:--|:--|:--|:--|
-| `gpt-5.6-sol` | `xhigh` | `never` | `danger-full-access` | `/home/vostrikov/projects/packages/swissknifeman` | `NEW SESSION — шаг-не-item` |
+**Done:** P7.2 is `🟢 Done`: fresh isolated provider matrix, D121 exact live apply, three-action
+second-plan noop, handler smoke and D123 explicit rollback are GREEN. The live root is restored to
+the sealed preimage; transaction backup paths are absent.
 
-```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="xhigh"' -a never -s danger-full-access 'Read AGENTS.md, CLAUDE.md, packages/maind/CLAUDE.md, packages/task/commands/plan-audit.md, and plans/2026.07.19-DUAL-PROVIDER/{plan.md,handoff.md,phases/P6.md,journal.jsonl}. Run task:plan-audit 2026.07.19-DUAL-PROVIDER P6 only. Audit the committed P6 close independently. Do not execute P7.2, change package source/tests, perform live apply/repair/rollback, or touch P7.3+, FOREMAN, fleet, tag, push, cleanup, AGENTS.md, .serena/project.yml, or unrelated dirt.'
-```
+**Remaining:** P7.3 and P7.4 only. P7.3 needs its independent Approval Owner D# before its first
+destructive mutation.
 
-**Done:** P6 is phase-closed as `🟠 Done with deviations` after reconciliation of terminal
-P6.1–P6.12. P6.8's material live-admission RED remains explicit; P6.11 D123 repair
-`52374d40` and independent P6.12 evidence `1c0a6990` are included in the close.
+**Sources of truth:** `phases/P7.md` P7.2 Completion Notes;
+`artifacts/P7-self-host-e2e.md`; D121–D124 in `plan.md`; terminal P6.12 evidence.
 
-**Remaining:** a fresh independent P6 audit is mandatory before any P7.2 action. No P7 or live
-operation is authorized by this handoff.
-
-**Sources of truth:** `phases/P6.md` Phase Handoff; `plan.md` Status Board and Update Log;
-`artifacts/P6-d108-independent-conformance.md`; the P6 close commit.
-
-**Open risks:** The requested path-bearing `maind health --cwd /home/vostrikov/projects/packages/swissknifeman`
-form is rejected by the local CLI as an extra argument, although the supported `maind health` and
-synthetic SessionStart hook probes are GREEN. Treat this CLI-contract mismatch as non-green
-preflight evidence until its owning work is separately repaired.
+**Open risks:** `codex doctor --json` reports configured default `gpt-5.6-sol` although the
+recorded P7.2 execution route was `gpt-5.6-terra/high`; treat doctor configuration as diagnostic,
+not session-route attestation.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: none.
-- deferred: independent P6 audit; the `maind health --cwd <path>` CLI-contract defect.
+- workarounds: D123 rollback reconstruction used a task-local sealed preimage after a process
+  boundary discarded the original in-memory operation; exact-state verifier accepted it and restored
+  the live root byte-for-byte.
+- deferred: P7.3 exact owner approval; P7.4 independent audit.
 - open_questions: —

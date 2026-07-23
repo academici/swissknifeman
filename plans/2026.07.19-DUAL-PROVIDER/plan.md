@@ -268,6 +268,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-23 | task-plan-run / gpt-5.6-terra/high | P7.2 закрыт 🟠: D121 live apply, three-noop idempotence and D123 rollback GREEN; D124 no-launch override leaves two handoff errors — детали см. phases/P7.md P7.2 Completion Notes. |
 | 2026-07-23 | owner / D124 | Повторный P6 audit отменён; terminal D123/P6.12 evidence принято как predecessor gate, P7.2 возобновлён под неизменным D121 scope. |
 | 2026-07-23 | task-plan-close / gpt-5.6-sol/medium | P6 повторно закрыта как 🟠 после terminal P6.1–P6.12: D123/P6.12 GREEN подтверждены, material P6.8 evidence остаётся явным; далее только fresh independent P6 audit — детали см. phases/P6.md Phase Handoff. |
 | 2026-07-23 | owner / D123 evidence | После hash-verification удалены только две named D121 backup residues; это не заменяет P6.11 source repair и не открывает P7.2. |

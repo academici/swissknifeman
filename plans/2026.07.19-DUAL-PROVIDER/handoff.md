@@ -1,42 +1,34 @@
-# HANDOFF — 2026-07-23 — after P6
+# HANDOFF — 2026-07-23 — after P7
 
-**Next:** audit-phase: task:plan-audit 2026.07.19-DUAL-PROVIDER P6
+**Next:** manual: frontier/high — P7.2 (§3 Routing: Exec = manual)
 
 | Параметр | Значение |
 |:--|:--|
-| Model | ChatGPT/Codex `gpt-5.6-sol` |
-| Thinking | `xhigh` |
+| Model class | frontier |
+| Effort | high |
+| Capabilities | — |
+| Native model | `gpt-5.6-terra` |
+| Reasoning effort | `high` |
 | Approval policy | `never` |
 | Sandbox | `danger-full-access` |
 | CWD | `/home/vostrikov/projects/packages/swissknifeman` |
-| Context | `NEW SESSION — independent audit` |
-| Суть | D116 supersedes D113's Claude-only assignment; perform the final P6 audit read-only and do not start P7. |
+| Context | cold-start — plan-step |
+| Суть | Fresh P7.2 first-preflight rerun; isolated proof precedes the existing exact live-action Owner gate. |
 
 ```text
-/task:plan-audit 2026.07.19-DUAL-PROVIDER P6
-
-РЕЖИМ: independent terminal audit; D116 assigns this final audit to ChatGPT/Codex
-ВХОД: AGENTS.md; CLAUDE.md; plans/2026.07.19-DUAL-PROVIDER/{plan.md,handoff.md,phases/P6.md,artifacts/P6-d108-independent-conformance.md}; D115 commit 822234be
-СКОУП: 1) read-only reconciliation of terminal P6 evidence 2) verify historical P6.8 material deviation and D115/P6.12 GREEN anchors 3) literal GREEN|ATTENTION|RED audit verdict
-НЕ ТРОГАТЬ: live apply/repair/rollback, package fixes, P7+, FOREMAN, fleet, tag, push, cleanup, owner AGENTS.md or unrelated dirt
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'Execute $ task:plan-run 2026.07.19-DUAL-PROVIDER P7.2 in a NEW SESSION. Read AGENTS.md, CLAUDE.md, plans/2026.07.19-DUAL-PROVIDER/{plan.md,handoff.md,roadmap.md,phases/P2.md,phases/P6.md,phases/P7.md,research/27-p7.2-rerun-design-gate.md}, beginning with P6 audit attempt 5 and its correction. D117 records that the Owner accepted AUDIT-CAP and the P7.2 design gate; start P7.2 from its first preflight and do not reuse earlier escalations as GREEN. Run isolated evidence and rollback rehearsal before any live action. Do not perform live apply/repair/rollback unless the existing P7.2 exact Approval Owner D# is obtained after isolated GREEN. Do not touch P7.3+, FOREMAN, fleet, tag, push, cleanup, owner AGENTS.md, or unrelated dirt.'
 ```
 
-**Done:** P6 is closed as `🟠 Done with deviations`: all 12 items are terminal. D115 commit
-`822234be` and P6.12 attempt-4 evidence are GREEN: maind `51/51`, core P2.7 `26/26`, exact
-sealed MCP SHA, writer `0`, protected live inventory unchanged.
+**Done:** Owner-accepted P6 attempt-5 GREEN reconciled as D117; P7.2 is ready for a fresh first-preflight rerun. No P7.2 execution or live mutation occurred in this design pass.
 
-**Remaining:** Final independent P6 audit in ChatGPT/Codex by D116. P7.2 live execution is not
-authorized before its literal verdict and applicable owner gate.
+**Remaining:** P7.2 isolated E2E and its existing later live-action Approval Owner gate; then P7.3 and P7.4 remain sequentially gated.
 
-**Sources of truth:** `artifacts/P6-d108-independent-conformance.md` ·
-`phases/P6.md` P6.11/P6.12 · D108–D115 in `plan.md` ·
-`research/26-p7.2-s1-o1-remediation-design.md`.
+**Sources of truth:** `plans/2026.07.19-DUAL-PROVIDER/plan.md` D108–D117 · `phases/P6.md` attempt 5 · `phases/P7.md` P7.2 · `research/27-p7.2-rerun-design-gate.md`.
 
-**Open risks:** P6.8 material live-admission RED remains accepted historical evidence; historical
-P5 lint retains two inherited warnings. No live action is authorized.
+**Open risks:** Historical P6.8 deviations remain accepted debt; no live mutation is authorized by D117.
 
 **Workarounds/Deferred/Open questions:**
 
 - workarounds: —
-- deferred: live apply/repair/rollback and exact live action approval remain P7.2-only.
+- deferred: live apply/repair/rollback and exact path/action approval remain P7.2-only.
 - open_questions: —

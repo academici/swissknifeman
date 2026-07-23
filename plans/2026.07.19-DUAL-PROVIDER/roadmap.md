@@ -12,8 +12,10 @@
 > superseded the pre-approval no-reopen restriction. P2.7, terminal full-core/docs/release
 > gate and substantive GREEN audit are accepted by D111; D112/D114 bound the P6.11
 > fix-forward seams. D113 routes remaining no-write work through Terra/medium + targeted gates;
-> D116 supersedes only its final-audit provider assignment to ChatGPT/Codex. P6 is closed as `🟠`
-> after D115/P6.12 GREEN; current route is fresh independent ChatGPT/Codex audit P6 → only then P7.2 design gate.
+> D116 superseded only the final-audit provider assignment to ChatGPT/Codex. Owner accepted
+> attempt-5 `GREEN` under AUDIT-CAP; D117 completed the P7.2 design gate. The current route is
+> a fresh P7.2 first-preflight rerun; any later live mutation remains behind its existing exact
+> Approval Owner D#.
 > Remediation uses disposable
 > roots/read-only live preflight only; P7.3+, live writes, FOREMAN, fleet, tag and push remain
 > closed.
@@ -73,7 +75,7 @@
 | P6.11 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/medium | ✅ D108/D111–D115 | exact unchanged-MCP projection bridge GREEN |
 | P6.12 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | attempt 4 GREEN: exact dry candidate, writer 0, protected delta 0 |
 | P7.1 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/xhigh | ✅ D99 | terminal generated docs/exact-set |
-| P7.2 | solo | plan-run (manual) — 🔴 | gpt-5.6-terra/high | ✅ D108 `S1+O1`; later exact live apply D# | waits for terminal/fresh-audited P2.7 and P6.11→P6.12, then reruns from first preflight |
+| P7.2 | solo | plan-run (manual) — ⬜ | gpt-5.6-terra/high | ✅ D108 `S1+O1`; later exact live apply D# | D117: terminal/fresh-audited P2.7 and P6 gates accepted; rerun from first preflight, earlier escalations are not GREEN |
 | P7.3 | solo | plan-run (manual) | gpt-5.6-terra/high | ✅ D# на exact bootstrap cleanup inventory | guarded destructive cleanup и release manifest; отдельный rollback boundary |
 | P7.4 | solo | plan-run (manual, NEW SESSION) | gpt-5.6-sol/xhigh | ✅ literal GREEN + explicit owner D# | cold adversarial audit; только GREEN+owner D# открывает reconcile |
 

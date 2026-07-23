@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.4.58 |
+| Version | 1.4.59 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
@@ -133,7 +133,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P4 | Task-command parity и provider-neutral model routing | 5/5 | 🟢 Done |
 | P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 8/8 | 🟢 Done |
 | P6 | mAInd deployment, memory и provider-neutral analytics | 11/12 | 🟠 Done with deviations |
-| P7 | Docs, self-hosting validation и FOREMAN release gate | 1/4 | 🔴 Blocked |
+| P7 | Docs, self-hosting validation и FOREMAN release gate | 1/4 | 🟡 In progress |
 
 ## 5. Decision Log
 
@@ -255,12 +255,14 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | D114 | 2026-07-22 | Reopen only P6.11's D108 inventory-name seam after RED `f41730e1`: the exact candidate must render configured MCP server identities `maind`, `perplexity-web`, `serena`, not internal role labels `maind`, `perplexity`, `codegraph`; bindings and sealed D108/P2 bytes remain unchanged. | RAG:— (repo-grounded: `artifacts/P6-d108-independent-conformance.md`, `codegraph.server_name`, `pplxweb.server_name`, live `.mcp.json`; owner-grounded: D113 automatic fix-forward) — this is the smallest P6-owned projection repair and grants no general rename API or live mutation authority. |
 | D115 | 2026-07-22 | Reopen only P6.11's D108 unchanged-MCP adoption seam after RED `20e31b76`: the D108 Claude artifact presented to the sealed P2 planner must carry the existing `.mcp.json` bytes and matching provenance hash, because D110 requires a `NOOP` transfer of that exact preimage; the core still admits only SHA `cf453…c8283` and server set `maind,perplexity-web,serena`. | RAG:— (repo-grounded: D110 proposal/ADR, `core/provider_lock.py` closed admission, P6.12 attempt 3 exact diff; owner-grounded: D113 automatic fix-forward) — reading the candidate is not general adoption: any other bytes/path/server set refuse before writer, ordinary/non-D108 rendering stays unchanged, and no live mutation authority is granted. |
 | D116 | 2026-07-23 | Owner supersedes only D113's final-audit provider assignment: cancel the Claude Code route and run the fresh independent terminal P6 audit in ChatGPT/Codex. The audit remains read-only, evidence-first and must emit literal `GREEN`/`ATTENTION`/`RED`; P7.2, live apply/repair/rollback, FOREMAN, fleet, tag, push and cleanup remain closed until its verdict and existing gates. | RAG:— (owner-grounded: direct instruction «отмена claude, идем по chatgpt» 2026-07-23; repo-grounded: D113, `handoff.md`, `phases/P6.md` Phase Handoff) — restores an executable local audit route after the Claude OAuth failure without changing frozen contracts, P6 evidence, item status or live authority. |
+| D117 | 2026-07-23 | Owner accepted the fifth-attempt `GREEN` P6 audit under AUDIT-CAP and directs only the P7.2 design gate. P7.2 is reclassified from blocked to ready, must restart from its first preflight, and retains its existing post-isolated exact live path/action Approval Owner D# gate. | RAG:— (owner-grounded: P6 audit attempt 5 resolution; repo-grounded: `phases/P6.md` attempt 5 and audit-record correction, D108/D115/D116, `research/27-p7.2-rerun-design-gate.md`) — no P7.2 execution, live apply/repair/rollback, P7.3+, FOREMAN, fleet, tag, push or cleanup is authorized by this design decision. |
 
 ## 6. Update Log
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
 | 2026-07-23 | owner / D116 | Claude Code audit route отменён; final independent P6 audit переносится в ChatGPT/Codex с теми же read-only границами и literal verdict. |
+| 2026-07-23 | task-plan-design / gpt-5.6-sol/high | D117 reconciles the owner-accepted final P6 audit: P7.2 is ready for a fresh first-preflight rerun, while later live mutation remains owner-gated; no P7.2 execution occurred. |
 | 2026-07-23 | task-plan-close / gpt-5.6-terra/medium | P6 закрыта как 🟠 после terminal P6.1–P6.12: D115/P6.12 GREEN подтверждены, material P6.8 evidence остаётся явным; далее только независимый Claude Code audit — детали см. phases/P6.md Phase Handoff. |
 | 2026-07-22 | root agent / D113 targeted | D115 P6.11 and P6.12 close GREEN: exact unchanged MCP admission, writer 0 and protected live inventory unchanged; next session starts at targeted P6 close. |
 | 2026-07-22 | root agent / D113 | D115 reopens only the D108 unchanged-MCP adoption projection after exact P6.12 byte diff; core frozen admission remains the verifier. |

@@ -10,6 +10,7 @@ from core import (ConfigSource, ProviderConfigCatalog, ProviderConfigLayer, Prov
 from harness.mcp import load_mcp_catalog, plan_mcp_projection
 from maind.provider_deploy import (ProviderDeployError, plan_provider_deploy,
                                    plan_provider_artifacts, apply_provider_artifacts,
+                                   plan_provider_artifact_adoption,
                                    resolve_effective_providers, semantic_servers,
                                    SemanticServer, plan_d108_operation)
 from maind.provider_deploy import (conformance_report, plan_d104_bootstrap_transfer,
@@ -77,6 +78,73 @@ _D108_MCP_PREIMAGE = b'''{
 
 
 class TestProviderDeploy(unittest.TestCase):
+    def test_exact_provider_artifact_adoption_updates_and_locks_targets(self):
+        harness = Path(__file__).resolve().parents[3] / "packages/harness/configs"
+        catalog = load_mcp_catalog(harness / "common/mcp/catalog.json")
+        bases = tuple(plan_mcp_projection(
+            catalog, provider_id=provider,
+            bindings_path=harness / provider.value / "mcp/bindings.json",
+            selected=(), trusted=True) for provider in ProviderId)
+        deploy = plan_provider_deploy(
+            bases, semantic_servers(maind={"command": "maind"}))
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            preimages = {}
+            for row in deploy.results:
+                target = root / row.target_path
+                target.parent.mkdir(parents=True, exist_ok=True)
+                content = (b'approval_policy = "never"\n\n'
+                           if row.provider_id is ProviderId.CODEX else
+                           f"foreign {row.provider_id.value}\n".encode())
+                target.write_bytes(content)
+                preimages[row.target_path] = sha256_digest(target.read_bytes())
+
+            adoption = plan_provider_artifact_adoption(
+                root, deploy, preimage_hashes=preimages)
+            self.assertEqual(
+                [action.diagnostic for action in adoption.actions],
+                ["explicit-adoption", "explicit-adoption"])
+            apply_plan(root, adoption)
+
+            for row in deploy.results:
+                current = (root / row.target_path).read_bytes()
+                if row.provider_id is ProviderId.CODEX:
+                    self.assertTrue(current.startswith(
+                        b'approval_policy = "never"\n\n'))
+                    self.assertTrue(current.endswith(row.rendered))
+                else:
+                    self.assertEqual(current, row.rendered)
+            self.assertTrue(
+                (root / ".swissknifeman/provider-artifacts.lock.json").is_file())
+            self.assertEqual(plan_provider_artifacts(root, deploy)["severity"], "green")
+
+    def test_exact_provider_artifact_adoption_refuses_changed_preimage(self):
+        harness = Path(__file__).resolve().parents[3] / "packages/harness/configs"
+        catalog = load_mcp_catalog(harness / "common/mcp/catalog.json")
+        base = plan_mcp_projection(
+            catalog, provider_id=ProviderId.CLAUDE_CODE,
+            bindings_path=harness / "claude-code/mcp/bindings.json",
+            selected=(), trusted=True)
+        deploy = plan_provider_deploy(
+            (base,), semantic_servers(maind={"command": "maind"}))
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            target = root / deploy.results[0].target_path
+            target.write_text("foreign\n", encoding="utf-8")
+            before = target.read_bytes()
+
+            with self.assertRaisesRegex(
+                    ProviderDeployError,
+                    "MAIND_PROVIDER_ADOPTION_PREIMAGE_MISMATCH"):
+                plan_provider_artifact_adoption(
+                    root, deploy,
+                    preimage_hashes={deploy.results[0].target_path:
+                                     "sha256:" + "0" * 64})
+
+            self.assertEqual(target.read_bytes(), before)
+            self.assertFalse(
+                (root / ".swissknifeman/provider-artifacts.lock.json").exists())
+
     def test_d108_project_carrier_preserves_siblings_and_is_idempotent(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

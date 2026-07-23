@@ -8,6 +8,7 @@
 import json
 import os
 import shutil
+import stat
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -58,6 +59,46 @@ def _harness_configs(env):
     return harness_root / "configs"
 
 
+def _load_project_provider_config(project):
+    """Load the exact registered root's regular project provider carrier."""
+    local_path = project.get("local_path")
+    if not local_path:
+        return None
+    carrier = Path(os.path.expanduser(local_path)) / ".swissknife.json"
+    try:
+        carrier_stat = carrier.lstat()
+    except FileNotFoundError:
+        return None
+    except OSError as exc:
+        raise ValueError("MAIND_PROJECT_PROVIDER_CONFIG_INVALID") from exc
+    if stat.S_ISLNK(carrier_stat.st_mode) or not stat.S_ISREG(carrier_stat.st_mode):
+        raise ValueError("MAIND_PROJECT_PROVIDER_CONFIG_UNSAFE")
+    flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
+    try:
+        descriptor = os.open(carrier, flags)
+    except OSError as exc:
+        raise ValueError("MAIND_PROJECT_PROVIDER_CONFIG_UNSAFE") from exc
+    try:
+        if not stat.S_ISREG(os.fstat(descriptor).st_mode):
+            raise ValueError("MAIND_PROJECT_PROVIDER_CONFIG_UNSAFE")
+        with os.fdopen(descriptor, encoding="utf-8") as stream:
+            descriptor = None
+            payload = json.load(stream)
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise ValueError("MAIND_PROJECT_PROVIDER_CONFIG_INVALID") from exc
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
+    if not isinstance(payload, dict):
+        raise ValueError("MAIND_PROJECT_PROVIDER_CONFIG_INVALID")
+    providers = payload.get("providers")
+    if providers is None:
+        return None
+    if not isinstance(providers, dict):
+        raise ValueError("MAIND_PROJECT_PROVIDER_CONFIG_INVALID")
+    return providers
+
+
 def provider_projection_context(env, config, project):
     """Public P6 seam: one effective-provider resolution and P5 projections."""
     harness_root = _harness_configs(env).parent
@@ -65,7 +106,9 @@ def provider_projection_context(env, config, project):
     if harness_lib not in sys.path:
         sys.path.insert(0, harness_lib)
     from harness.mcp import load_mcp_catalog, plan_mcp_projection
-    resolved = resolve_provider_config(config, None, project["id"])
+    project_config = _load_project_provider_config(project)
+    resolved = resolve_provider_config(
+        config, None, project["id"], project_config=project_config)
     if resolved.selection is None:
         codes = ",".join(item.code for item in resolved.diagnostics)
         raise ValueError(codes or "MAIND_PROVIDER_RESOLUTION_INVALID")

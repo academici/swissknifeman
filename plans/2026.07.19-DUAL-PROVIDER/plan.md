@@ -7,7 +7,7 @@
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
 | Version | 1.4.66 |
-| Status | 🟡 In progress |
+| Status | 🟠 Done with deviations |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
 | Last Updated | 2026-07-23 |
@@ -133,7 +133,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P4 | Task-command parity и provider-neutral model routing | 5/5 | 🟢 Done |
 | P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 8/8 | 🟢 Done |
 | P6 | mAInd deployment, memory и provider-neutral analytics | 11/12 | 🟠 Done with deviations |
-| P7 | Docs, self-hosting validation и FOREMAN release gate | 1/4 | 🟡 In progress |
+| P7 | Docs, self-hosting validation и FOREMAN release gate | 1/4 | 🟠 Done with deviations |
 
 ## 5. Decision Log
 
@@ -270,6 +270,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-23 | task-plan-run / gpt-5.6-sol/xhigh | P7.4 закрыт ATTENTION: functional release gates GREEN, но P7.3 cleanup evidence ошибочно считает `openai.yaml` как 16 вместо 17; FOREMAN остаётся закрыт — детали см. phases/P7.md P7.4 Completion Notes. |
 | 2026-07-23 | owner / D126 | P7.3 no-op cleanup and functional GREEN accepted as P7.4 predecessor; inherited no-launch errors are explicit exceptions, new lint delta must remain zero. |
 | 2026-07-23 | owner / D125 | P7.2 functional GREEN accepted as P7.3 predecessor despite no-launch-only 🟠; P7.3 opens read-only inventory, mutation still waits for exact D#. |
 | 2026-07-23 | task-plan-run / gpt-5.6-terra/high | P7.3 closed 🟠: deterministic cleanup set is empty; committed candidate manifest preserves bootstrap/compatibility paths and records only committed evidence — details см. phases/P7.md P7.3 Completion Notes. |

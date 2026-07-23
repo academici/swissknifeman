@@ -1,28 +1,30 @@
-# HANDOFF — 2026-07-23 — after P7.3
+# HANDOFF — 2026-07-23 — after P7.4
 
-**Next:** P7.4 fresh independent adversarial release audit.  Per the Owner's no-launch
-instruction, this handoff intentionally contains no launch block.
+**Next:** Owner resolution only: P7.4 ATTENTION keeps FOREMAN closed; authorize or decline the
+bounded P7.3 evidence-only correction. Per D126, this handoff intentionally contains no launch
+block.
 
-**Done:** P7.3 is `🟠 Done with deviations`.  Its committed inventory proves the cleanup action
-set is empty, preserves every bootstrap/unmanaged/Claude-compatibility carrier, and creates only
-a committed non-release manifest anchored to P2–P7 evidence.  P7.1 docs/registry, twice-identical
-provider audit, P3/P4 focused parity, and skiller/harness/maind/analyst/core validation passed.
+**Done:** P7.4 evidence commit `ff4b89c3` independently reproduced the full functional release
+bundle. Capability/provider/instruction exact sets, public Claude/Codex apply/noop/repair,
+frozen hashes, D123 rollback, privacy, protected paths and package/core tests are GREEN. Target
+plan-lint has the exact two D126 no-launch errors and zero new findings.
 
-**Remaining:** P7.4 only.  It independently audits the committed manifest/inventory/E2E evidence;
-it must not repair, publish, tag, push, run FOREMAN, mutate fleet, or reinterpret retained
-bootstrap ownership.
+**Remaining:** The literal verdict is `ATTENTION`, not GREEN. P7.3's committed cleanup evidence
+says `.agents/skills/**` has `16` tracked `agents/openai.yaml`; `git ls-tree` proves `17` at both
+P7.3 item commit `d43f9549` and P7.4 baseline `b8e2c12a`. The aggregate `.agents` hash matches
+and no unsafe cleanup occurred, but the inaccurate provenance count forbids the release gate.
 
-**Sources of truth:** `phases/P7.md` P7.3 Completion Notes;
-`artifacts/P7-bootstrap-cleanup.md`; `artifacts/P7-release-manifest.md`;
-`artifacts/P7-self-host-e2e.md`; D121–D126 in `plan.md`.
+**Sources of truth:** `artifacts/P7-release-audit.md`; `phases/P7.md` P7.4 Completion Notes;
+`artifacts/P7-bootstrap-cleanup.md`; `artifacts/P7-release-manifest.md`; D126 in `plan.md`.
 
-**Open risks:** The two Owner-required no-launch handoff-schema errors remain inherited and leave
-P7.2/P7.3 orange.  They are the only task/plan validation failure; target plan-lint reports zero
-new findings.  The unrelated dirty `AGENTS.md` and `.serena/project.yml` remain excluded.
+**Open risks:** FOREMAN, fleet, tag, push, publication and cleanup remain closed. The only
+bounded proposal is an owner-authorized P7.3 evidence correction (`16` → `17`) plus independent
+ownership/hash recheck and a later fresh P7.4. This session authorizes and executes none of them.
+Unrelated dirty `AGENTS.md` and `.serena/project.yml` remain excluded.
 
 **Workarounds/Deferred/Open questions:**
 
 - workarounds: —
-- deferred: any future bootstrap removal requires a superseding owner-approved contract proof of
-  matching replacement provenance plus both-provider without-file smoke; no such action is open.
-- open_questions: —
+- deferred: any bootstrap removal still requires matching managed provenance and dual-provider
+  without-file smoke; no deletion is open.
+- open_questions: Owner acceptance or authorization of the bounded P7.3 evidence-only correction.

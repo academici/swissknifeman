@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.23-FLEET-DUAL-PROVIDER |
 | Title | Последовательная двухпровайдерная настройка проектов |
-| Version | 0.2.0 |
+| Version | 0.3.0 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | frontier |
@@ -62,6 +62,8 @@ findings/00-fleet-dry-run-2026-07-23.md).
 | D3 | 2026-07-23 | Внешний Codex connect consumer получает repo-contained marketplace и self-contained selected plugin bundles под существующим artifact lock; self-host остаётся thin, install/cache/enable — отдельное user-level действие. | Официальный Codex manual подтверждает repo marketplace и contained local sources, frozen publication contract запрещает внешний thin path и implicit native install. RAG:✅ 2026-07-23 (`findings/P0.1-codex-connect-carrier-verification.md`, Build plugins). |
 | D4 | 2026-07-23 | P0.1 включает owning generated Codex bundle, его conformance test, существующую CLI-документацию и `[Unreleased]`; внешняя копия обязана получать runtime tree уже из self-contained generated source. | Attempt 2 audit доказал, что downstream carrier не может восстановить runtime files, отсутствующие в generated `core`; repo `docs-maintenance`/`release-discipline` требуют синхронных user-facing docs и changelog. Spec синхронизирован до attempt 3; поздняя синхронизация docs/CHANGELOG в attempt 2 остаётся process deviation. RAG:— (`findings/P0.1-attempt2-independent-audit.md`). |
 | D5 | 2026-07-23 | Owner directed P1.1 to skip `sibintek-insiders`: the actively worked consumer must not be mutated; redesign the pilot selection before retry. | P1.1 dry-run found unmanaged root instruction ownership and package-target absence; `--repair`/`--force` are outside scope. RAG:— (`findings/P1.1-pilot.md`). |
+| D6 | 2026-07-23 | Consumer instruction scope is topology-derived: `root` always; each package scope only for its exact real package directory, preserving frozen order. Ordinary consumers do not receive synthetic swissknifeman package targets. | Existing mAInd broadens every request to all scopes while harness already accepts an ordered subset; this resolves the topology conflict without relaxing ownership or changing the harness contract. RAG:— (`research/01-pilot-selection-contract.md`). |
+| D7 | 2026-07-23 | Replacement pilot is the first registry-order external candidate passing the complete no-write eligibility/provider/worktree/instruction preflight; D5 target and self-host are excluded. No match blocks without writes; repair/force stay forbidden. | Committed evidence does not prove a named next candidate, so deterministic selection is the only non-guessing carrier. RAG:— (`research/01-pilot-selection-contract.md`). |
 
 ## 6. Update Log
 
@@ -78,3 +80,4 @@ findings/00-fleet-dry-run-2026-07-23.md).
 | 2026-07-23 | independent-audit / gpt-5.6-sol/high | P0.1 attempt 3 GREEN: canonical → generated → external runtime transfer, exclusions, containment и commit topology подтверждены без findings. |
 | 2026-07-23 | task-plan-run / gpt-5.6-terra/high | P0.2 закрыт с deviations: unavailable registry paths стали provider-qualified skips; no-write fleet rerun классифицировал consumer blockers — детали см. phases/P0.md P0.2 Completion Notes. |
 | 2026-07-23 | task-plan-run / gpt-5.6-terra/high | P1.1 skipped by owner decision: `sibintek-insiders` не изменялся после fail-closed instruction dry-run — детали см. phases/P1.md P1.1 Completion Notes. |
+| 2026-07-23 | task-plan-design / gpt-5.6-sol/xhigh | P1.1 redesigned and reopened by D6/D7: topology-derived instruction scopes plus deterministic replacement selection; item spec commit `7df01cbc`. |

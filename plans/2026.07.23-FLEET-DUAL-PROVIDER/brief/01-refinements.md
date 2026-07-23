@@ -13,3 +13,12 @@ ownership всех выбранных provider targets. Missing, escaping, incom
 corrupt или unowned Codex target завершает всю операцию fail-closed до записи
 Claude settings. Реальные consumer-проекты в P0.1 не изменяются; проверки
 проводятся только во временных каталогах.
+
+## P1.1 — replacement pilot и instruction target scope
+
+Владелец исключил активно разрабатываемый `sibintek-insiders` и распорядился
+продолжить со следующим совместимым pilot. Следующий pilot нельзя угадывать:
+до единственной consumer-записи он проходит детерминированный no-write preflight.
+Ordinary consumer получает только root instruction scope; package scope
+применим лишь при наличии соответствующего package root. Fail-closed ownership
+сохраняется; `--repair`, `--force` и overwrite unmanaged targets запрещены.

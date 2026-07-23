@@ -6,7 +6,7 @@
 
 | Item | Batch | Запуск | Model class/Effort | Гейт владельца | Примечание |
 |---|---|---|---|---|---|
-| P0.1 | solo | plan-run | frontier/high | — | 🟢 attempt 2 закрыт: runtime support files доставляются; объединять нельзя |
+| P0.1 | solo | plan-run | frontier/high | — | 🟡 attempt 3: owning generated core runtime tree; объединять нельзя |
 | P0.2 | solo | plan-run | implementation/high | — | меняет fleet eligibility semantics |
 | P1.1 | solo | plan-run | implementation/high | — | один consumer, внешнее состояние |
 | P1.2 | conditional solo | plan-run | implementation/high | — | запускается только при P1.1 defect; retry того же project |

@@ -86,6 +86,13 @@ level   # опц.: core|foundation|extension — слой иерархии (см
 | **connect** | бакет = плагин Claude Code marketplace; пишет `enabledPlugins` в `.claude/settings.local.json`; скиллы НЕ копируются, автообновляются из реестра | **bucket-granular** (skill-level `exclude` игнорируется) | `.swissknife.json` |
 | **vendor (`sync`)** | физически копирует скиллы в `.claude/skills/`; файлы коммитятся в репо проекта; для проектов без доступа к реестру | **skill-granular** (`include`/`exclude` по скиллам) | `.swissknifeman/config.json` |
 
+Для внешнего Codex connect-проекта канонический carrier — self-contained
+marketplace под `.agents/plugins/`. Если в том же проекте есть vendor-конфиг,
+`skiller update` продолжает обновлять независимые Claude-копии в
+`.claude/skills/`, но не создаёт дублирующий Codex vendor tree
+`.agents/skills/`. Явный `skiller sync` остаётся самостоятельной vendor-операцией
+и следует provider selection проекта.
+
 Legacy `skiller vendor --agent cursor|generic` — копии в `.cursor/.ai` (для Claude
 deprecated, используй `sync`). См. [Vendor-режим](./vendor-mode.md).
 

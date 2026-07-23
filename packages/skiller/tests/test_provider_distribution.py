@@ -12,6 +12,7 @@ from skiller.connect import do_connect
 from skiller.publication import run_codex_native_install
 from skiller.registry import build_registry
 from skiller.skillset import do_sync, plan_sync
+from skiller.update import update_one
 try:
     import tests.fixtures as fx
 except ModuleNotFoundError:
@@ -165,6 +166,28 @@ class ProviderDistributionCase(unittest.TestCase):
             or path.startswith(".agents/plugins/bundles/")
             for path in codex_targets
         ))
+
+    def test_marketplace_update_keeps_codex_out_of_vendor_channel(self):
+        self.write_provider_config(providers())
+        materialize_codex_marketplace(self.root)
+        with contextlib.redirect_stdout(io.StringIO()):
+            do_connect(self.env, self.project, {
+                "profile": "laravel-project",
+                "no_permissions": True,
+            })
+            update_one(self.env, self.project)
+
+        self.assertTrue((self.project / ".claude/skills/code-style/SKILL.md").is_file())
+        self.assertFalse((self.project / ".agents/skills").exists())
+        lock_path = self.project / "skills-lock.json"
+        lock = json.loads(lock_path.read_text())
+        self.assertNotIn("providers", lock)
+        first_lock = lock_path.read_bytes()
+
+        with contextlib.redirect_stdout(io.StringIO()):
+            update_one(self.env, self.project)
+        self.assertEqual(lock_path.read_bytes(), first_lock)
+        self.assertFalse((self.project / ".agents/skills").exists())
 
     def test_dual_connect_bundle_keeps_runtime_files_and_consumer_exclusions(self):
         self.write_provider_config(providers())

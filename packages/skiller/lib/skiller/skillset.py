@@ -828,6 +828,10 @@ def do_sync(env, target, opts, register=True):
         config, target, project_id=target.name,
         claude_path=preflight_cfg.get("skills_path") or DEFAULT_SKILLS_PATH,
         codex_path=".agents/skills")
+    provider_ids = opts.get("provider_ids")
+    if provider_ids is not None:
+        provider_ids = frozenset(provider_ids)
+        paths = tuple(path for path in paths if path.provider_id in provider_ids)
     lock_problem = _lock_problem(target)
     if lock_problem:
         providers = ", ".join(descriptor.provider_id for descriptor in paths) or "none"

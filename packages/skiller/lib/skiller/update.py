@@ -115,8 +115,16 @@ def update_one(env, target, dry_run=False):
         if not rec:
             print(f"NOTE: {target} не был в projects.json — регистрирую (adopt)")
         print(f"--- update (sync): {target} ---")
-        do_sync(env, target, {"dry_run": dry_run,
-                              "hub": bool(rec.get("hub")) or hub_artifacts_exist(target)})
+        sync_opts = {
+            "dry_run": dry_run,
+            "hub": bool(rec.get("hub")) or hub_artifacts_exist(target),
+        }
+        if codex_marketplace:
+            # Contained marketplace bundles are the canonical Codex connect
+            # carrier.  Keep the independent Claude vendor channel, but do not
+            # duplicate the same Codex skills under .agents/skills.
+            sync_opts["provider_ids"] = ("claude-code",)
+        do_sync(env, target, sync_opts)
     elif vendor_path:
         rec = records.get("vendor", {})
         manifest = {}

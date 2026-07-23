@@ -19,6 +19,10 @@
 
 ### Fixed
 
+- **skiller — единый Codex carrier при update.** Если внешний проект уже получает
+  self-contained Codex marketplace под `.agents/plugins/`, `skiller update`
+  обновляет независимый Claude vendor-канал, но больше не дублирует те же
+  скиллы и lock-записи в `.agents/skills/`.
 - **skiller — идемпотентный vendor sync.** Неизменившийся skill manifest сохраняет
   исходный `installed_at`, поэтому повторный dual-provider `sync` больше не меняет
   snapshot при переходе между секундами.

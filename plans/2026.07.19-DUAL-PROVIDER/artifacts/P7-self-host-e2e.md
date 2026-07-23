@@ -1,7 +1,7 @@
 # P7.2 self-host E2E — D121 live transaction result
 
 **Observed:** 2026-07-23  
-**Session:** `gpt-5.6-terra/high`; approval `never`; sandbox `danger-full-access`.  
+**Session:** `gpt-5.6-terra/high`; approval `never`; sandbox `danger-full-access`.
 **Authority:** D121 exact S1+O1 inventory only; D124 accepts D123/P6.12 as its predecessor.
 
 ## Isolated and native evidence

@@ -6,6 +6,8 @@
 Config.load(env) — обёртка над тем же, инкапсулирует path/source/save и доступ к секциям,
 чтобы менять логику конфига в одном месте. Config — подкласс dict (старый доступ
 config["projects"] продолжает работать)."""
+from __future__ import annotations
+
 import copy
 import difflib
 import json

@@ -11,7 +11,7 @@
 | P1.1 | solo | plan-exec | implementation/medium | — | 🟢 D9 disposable synthetic conformance MVP закрыт; весь live rollout остаётся P2 |
 | P1.2 | conditional solo | plan-run | implementation/high | D6/frozen-contract change only | ⛔ пропущен по D9: GREEN P1.1 не создал concrete owning defect |
 | P2.1 | solo | plan-exec | implementation/medium | — | 🟢 plan-only traceability prerequisite закрыт; live access остаётся только P2.2 |
-| P2.2 | solo | plan-run | frontier/high | D12 approved | Автономно разрешить exact clean-consumer conflicts, выполнить D7 apply/health/no-op и terminal classification |
+| P2.2 | solo | plan-run | frontier/high | D14 scope change | 🟠 internal owning fixes закрыты; live consumer rollout deferred |
 
 ## Готовые launch-block'и групп
 
@@ -75,18 +75,18 @@ Audit P1 завершён ATTENTION; remediation carrier — P2.1, P1 не
 P2.1 закрыт item commit `906dddc6`; carrier:
 `findings/P2.1-p1-traceability.md`. Следующий executable item — P2.2.
 
-### P2.2 — autonomous remediation
+### P2 items terminal — phase close
 
-**Next:** run-items: task:plan-run 2026.07.23-FLEET-DUAL-PROVIDER P2.2
+**Next:** close: task:plan-close 2026.07.23-FLEET-DUAL-PROVIDER P2
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | frontier |
-| Effort | high |
+| Model class | implementation |
+| Effort | low |
 | Capabilities | — |
-| Context | same-session — item |
-| Суть | По D12 автономно разрешить P2.2 conflicts до terminal result без ослабления D5–D7. |
+| Context | cold-start — phase close |
+| Суть | Сверить terminal P2 items, закрыть фазу с D14 deviation и подготовить независимый audit carrier. |
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'NEW SESSION: Execute exactly P2.2 of plan 2026.07.23-FLEET-DUAL-PROVIDER with task:task-plan-run. D12 authorizes autonomous in-scope conflict remediation through terminal item. Preserve D5-D7; never use --repair or --force; never touch sibintek-insiders, self-host, dirty worktrees, registry cleanup or unrelated consumer bytes. Follow phases/P2.md P2.2 exactly, one clean consumer at a time, and continue automatically through validation and close.'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="low"' -a never -s danger-full-access 'NEW SESSION: Close phase P2 of plan 2026.07.23-FLEET-DUAL-PROVIDER with task:task-plan-close. Reconcile terminal P2 items, commits 8f91865e, 63edc6da and 48c7abbe, package validation evidence, D14 material deferral and plan lint; then hand off to an independent P2 audit. HARD BOUNDARY: do not inspect, mutate or validate any live consumer repository; never use --repair or --force; preserve D5-D7.'
 ```

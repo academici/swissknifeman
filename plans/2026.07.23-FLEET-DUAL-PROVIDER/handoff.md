@@ -1,30 +1,39 @@
 # HANDOFF — 2026-07-23 — after P2.2
 
-**Next:** run-items: task:plan-run 2026.07.23-FLEET-DUAL-PROVIDER P2.2
+**Next:** close: task:plan-close 2026.07.23-FLEET-DUAL-PROVIDER P2
 
 | Parameter | Value |
 |:--|:--|
-| Model | `gpt-5.6-sol` |
-| Thinking | `high` |
+| Model | `gpt-5.6-terra` |
+| Thinking | `low` |
 | Approval policy | `never` |
 | Sandbox | `danger-full-access` |
 | Cwd | `/home/vostrikov/projects/packages/swissknifeman` |
 | Context | `NEW SESSION` |
-| Суть | По D12 автономно разрешить P2.2 conflicts до terminal result без ослабления D5–D7. |
+| Суть | Сверить terminal P2 items, закрыть фазу с D14 deviation и подготовить независимый audit carrier. |
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'NEW SESSION: Execute exactly P2.2 of plan 2026.07.23-FLEET-DUAL-PROVIDER with task:task-plan-run. Start with pwd, git status --short, effective codex doctor --json, hook-command integrity, ./packages/maind/bin/maind health --cwd, and applicable plan lint. Read AGENTS.md, CLAUDE.md, task-plan-run, plan-protocol, plan.md, handoff.md, phases/P2.md and P2.2 Required Reads. D12 authorizes autonomous in-scope conflict remediation through terminal item. Preserve D5-D7; never use --repair or --force; never touch sibintek-insiders, self-host, dirty worktrees, registry cleanup, FOREMAN, P1/P2.1 or unrelated consumer bytes. Work one clean consumer at a time and continue automatically through validation and close.'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="low"' -a never -s danger-full-access 'NEW SESSION: Close phase P2 of plan 2026.07.23-FLEET-DUAL-PROVIDER with task:task-plan-close. Start with pwd, git status --short, effective codex doctor --json, hook-command integrity, ./packages/maind/bin/maind health --cwd, and applicable plan lint. Read AGENTS.md, CLAUDE.md, task-plan-close, plan-protocol, plan.md, handoff.md, phases/P2.md and P2.2 evidence. Reconcile terminal P2 items, commits 8f91865e, 63edc6da and 48c7abbe, package validation claims, D14 material deferral and plan lint; then prepare the independent P2 audit carrier. HARD BOUNDARY: do not inspect, mutate or validate any live consumer repository; never use --repair or --force; preserve D5-D7, FOREMAN and unrelated work.'
 ```
 
-**Done:** P2.2 attempt 1 ran the ordered D7 preflight with zero writes. D12 authorizes autonomous remediation. Read-only `azguard` diagnosis localized D13: mAInd ignores the tracked project-local dual-provider layer.
+**Done:** P2.1 terminal. P2.2 terminal under D14 with internal commits
+`8f91865e`, `63edc6da` and `48c7abbe`; maind/skiller validation is GREEN on
+tree anchor `48c7abbe`.
 
-**Remaining:** Execute P2.2 under D12 until terminal; no further owner micro-gates are required inside frozen D5–D7 scope.
+**Remaining:** Close P2 with deviations, then run an independent P2 phase
+audit. Live external consumer rollout is deferred and requires a separate
+future owner-authorized carrier beginning at D7.
 
-**Sources of truth:** `phases/P2.md` P2.2 · `findings/P2.2-azguard-remediation-diagnosis.md` · `findings/P2.2-rollout.md` · `research/02-p2.2-remediation-boundary.md` · `plan.md` D5–D13 · `journal.jsonl`.
+**Sources of truth:** `phases/P2.md` P2.2 · `findings/P2.2-rollout.md` Attempt
+2 · `plan.md` D13–D14 · commits `8f91865e`, `63edc6da`, `48c7abbe` ·
+`journal.jsonl`.
 
-**Open risks:** Dirty worktrees remain excluded; clean-consumer provider/MCP/instruction conflicts require exact reversible remediation before D7 apply.
+**Open risks:** No live consumer proof exists under D14; the audit must not
+reinterpret internal GREEN as completed fleet rollout.
 
 **Workarounds/Deferred/Open questions:**
 - workarounds: none.
-- deferred: `botkit`, every dirty/non-Git consumer, `sibintek-insiders`, self-host, stale registry cleanup, `--repair`, `--force`, all mutation/apply.
-- open_questions: none; D12 approved autonomous in-scope remediation.
+- deferred: all live consumer access, mutation, validation, fleet dry-run and
+  rollout; D5–D7 remain the mandatory restart gate.
+- open_questions: none for the internal close; future rollout authority is an
+  owner decision.

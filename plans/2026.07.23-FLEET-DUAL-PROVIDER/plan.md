@@ -49,7 +49,7 @@ findings/00-fleet-dry-run-2026-07-23.md).
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P0 | Устранить блокер connect-проекции | 0/2 | 🟡 In progress |
+| P0 | Устранить блокер connect-проекции | 1/2 | 🟡 In progress |
 | P1 | Пилот и стабилизация | 0/2 | ⬜ Not started |
 | P2 | Последовательный fleet rollout | 0/1 | ⬜ Not started |
 
@@ -73,3 +73,4 @@ findings/00-fleet-dry-run-2026-07-23.md).
 | 2026-07-23 | root-review / gpt-5.6-sol/high | P0.1 переоткрыт, attempt 2: внешний bundle терял runtime support files (`snippets/`, `references/`, scripts/assets), поэтому claim self-contained не подтверждён. |
 | 2026-07-23 | task-plan-run / gpt-5.6-sol/high | P0.1 закрыт attempt 2: runtime support tree доставляется с consumer exclusions и symlink-containment preflight — детали см. phases/P0.md P0.1 Completion Notes. |
 | 2026-07-23 | independent-audit / gpt-5.6-sol/high | P0.1 attempt 2 RED: generated `core` остаётся thin; item переоткрыт attempt 3, spec синхронизирован D4. |
+| 2026-07-23 | task-plan-run / gpt-5.6-sol/high | P0.1 закрыт attempt 3: owning generator публикует canonical runtime tree в generated `core` и внешний carrier — детали см. phases/P0.md P0.1 Completion Notes. |

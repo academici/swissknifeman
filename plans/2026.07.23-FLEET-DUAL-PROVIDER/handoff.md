@@ -1,27 +1,27 @@
 # HANDOFF — 2026-07-23 — after P0.1
 
-P0.1 переоткрыт для attempt 3: downstream enumeration исправлен, но generated
-`core` source остаётся thin и теряет canonical runtime support files.
+P0.1 закрыт после attempt 3: owning generator теперь материализует canonical
+runtime tree в generated `core`, откуда downstream carrier переносит тот же набор.
 
-**Next:** run-items: task:plan-run 2026.07.23-FLEET-DUAL-PROVIDER P0.1
+**Next:** run-items: task:plan-run 2026.07.23-FLEET-DUAL-PROVIDER P0.2
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | frontier |
+| Model class | implementation |
 | Effort | high |
-| Capabilities | skills.repository |
+| Capabilities | — |
 | Context | same-session — item |
-| Суть | Исправить owning Codex generator: generated core и внешний carrier должны содержать runtime tree. |
+| Суть | Проверить package regression и повторить no-write fleet dry-run с provider-qualified skip evidence. |
 
 ```
-$ task:plan-run 2026.07.23-FLEET-DUAL-PROVIDER P0.1
+$ task:plan-run 2026.07.23-FLEET-DUAL-PROVIDER P0.2
 ```
 
-**Done:** Attempts 1–2 сохранили selected parity, ownership, explicit install boundary, downstream runtime enumeration и symlink containment; independent audit отверг self-contained claim для generated `core`.
-**Remaining:** P0.1 attempt 3 — generator regression test/fix, regeneration, package gates и повторный independent audit. P0.2 не начат.
+**Done:** Attempts 1–2 сохранили selected parity, ownership, explicit install boundary, downstream enumeration и symlink containment; attempt 3 `9a01050f` добавил canonical runtime tree в generated core cache и deterministic lock.
+**Remaining:** P0.2 — package regression, eligibility semantics и no-write fleet dry-run; затем phase audit/close по roadmap.
 **Sources of truth:** `plan.md` · `phases/P0.md` · `findings/P0.1-attempt2-independent-audit.md` · `findings/P0.1-root-review-runtime-assets.md` · `packages/skiller/lib/skiller/publication.py` · `packages/skiller/tests/test_codex_publication.py`.
-**Open risks:** Generated core lock и checked-in adapter cache должны перечислять runtime files детерминированно; downstream carrier обязан перенести тот же набор без maintenance leakage.
+**Open risks:** P0.2 должен подтвердить provider-qualified eligibility/skip semantics на полном no-write fleet dry-run; реальный consumer apply остаётся за P1.
 **Workarounds/Deferred/Open questions:**
 - workarounds: —
-- deferred: реальные consumer writes и repair остаются за P1; P0.2 не начат.
+- deferred: реальные consumer writes и repair остаются за P1.
 - open_questions: —

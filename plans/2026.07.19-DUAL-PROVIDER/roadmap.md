@@ -11,9 +11,9 @@
 > **Статус exec:** D108 under standing delegation selected `S1+O1` and intentionally
 > superseded the pre-approval no-reopen restriction. P2.7, terminal full-core/docs/release
 > gate and substantive GREEN audit are accepted by D111; D112/D114 bound the P6.11
-> fix-forward seams. D113 routes remaining no-write work through Terra/medium + targeted gates
-> and defers the final heavyweight audit to Claude Code. P6 is closed as `🟠` after D115/P6.12
-> GREEN; current route is fresh independent Claude Code audit P6 → only then P7.2 design gate.
+> fix-forward seams. D113 routes remaining no-write work through Terra/medium + targeted gates;
+> D116 supersedes only its final-audit provider assignment to ChatGPT/Codex. P6 is closed as `🟠`
+> after D115/P6.12 GREEN; current route is fresh independent ChatGPT/Codex audit P6 → only then P7.2 design gate.
 > Remediation uses disposable
 > roots/read-only live preflight only; P7.3+, live writes, FOREMAN, fleet, tag and push remain
 > closed.
@@ -219,17 +219,17 @@ terminal tree фазы. Полные правила и exact probes: `research/2
 
 ## Готовый launch-block текущего шага
 
-### P6 — independent terminal audit (Claude Code)
+### P6 — independent terminal audit (ChatGPT/Codex)
 
 **Next:** audit-phase: task:plan-audit 2026.07.19-DUAL-PROVIDER P6
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | frontier (Claude Code) |
+| Model class | frontier (ChatGPT/Codex) |
 | Effort | xhigh |
 | Capabilities | read-only audit evidence |
 | Context | cold-start — plan-step |
-| Суть | Независимо проверить terminal P6; D113 явно откладывает этот gate в Claude Code. |
+| Суть | Независимо проверить terminal P6; D116 переносит provider этого gate в ChatGPT/Codex. |
 
 ```text
 /task:plan-audit 2026.07.19-DUAL-PROVIDER P6

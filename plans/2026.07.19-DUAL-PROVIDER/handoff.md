@@ -4,18 +4,18 @@
 
 | Параметр | Значение |
 |:--|:--|
-| Model | Claude Code `opus` |
+| Model | ChatGPT/Codex `gpt-5.6-sol` |
 | Thinking | `xhigh` |
 | Approval policy | `never` |
 | Sandbox | `danger-full-access` |
 | CWD | `/home/vostrikov/projects/packages/swissknifeman` |
 | Context | `NEW SESSION — independent audit` |
-| Суть | D113 defers the final independent P6 audit to Claude Code; keep it read-only and do not start P7. |
+| Суть | D116 supersedes D113's Claude-only assignment; perform the final P6 audit read-only and do not start P7. |
 
 ```text
 /task:plan-audit 2026.07.19-DUAL-PROVIDER P6
 
-РЕЖИМ: independent terminal audit; D113 assigns this final audit to Claude Code
+РЕЖИМ: independent terminal audit; D116 assigns this final audit to ChatGPT/Codex
 ВХОД: AGENTS.md; CLAUDE.md; plans/2026.07.19-DUAL-PROVIDER/{plan.md,handoff.md,phases/P6.md,artifacts/P6-d108-independent-conformance.md}; D115 commit 822234be
 СКОУП: 1) read-only reconciliation of terminal P6 evidence 2) verify historical P6.8 material deviation and D115/P6.12 GREEN anchors 3) literal GREEN|ATTENTION|RED audit verdict
 НЕ ТРОГАТЬ: live apply/repair/rollback, package fixes, P7+, FOREMAN, fleet, tag, push, cleanup, owner AGENTS.md or unrelated dirt
@@ -25,7 +25,7 @@
 `822234be` and P6.12 attempt-4 evidence are GREEN: maind `51/51`, core P2.7 `26/26`, exact
 sealed MCP SHA, writer `0`, protected live inventory unchanged.
 
-**Remaining:** Final independent P6 audit in Claude Code by D113. P7.2 live execution is not
+**Remaining:** Final independent P6 audit in ChatGPT/Codex by D116. P7.2 live execution is not
 authorized before its literal verdict and applicable owner gate.
 
 **Sources of truth:** `artifacts/P6-d108-independent-conformance.md` ·

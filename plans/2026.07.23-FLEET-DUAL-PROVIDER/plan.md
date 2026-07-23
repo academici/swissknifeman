@@ -93,3 +93,4 @@ P1 закрывает только synthetic/disposable conformance MVP; нез�
 | 2026-07-23 | task-plan-run / gpt-5.6-terra/high | P1.1 blocked: fresh D8 D7 scan found no dual-provider external candidate; no consumer write — details in `phases/P1.md` P1.1 Completion Notes. |
 | 2026-07-23 | task-plan-design / frontier/high | P1.1 redesigned by D9: exhausted live selection replaced with one disposable temp-root conformance pilot; D5–D7 remain frozen. |
 | 2026-07-23 | task-plan-exec / gpt-5.6/medium | P1.1 закрыт: D9 disposable dual-provider conformance carrier GREEN без live consumer/registry access — детали см. phases/P1.md P1.1 Completion Notes. |
+| 2026-07-23 | task-plan-close / implementation/low | P1.2 пропущен по D9: conditional remediation не применима после GREEN P1.1 — детали см. phases/P1.md P1.2 Completion Notes. |

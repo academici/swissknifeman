@@ -50,7 +50,7 @@ findings/00-fleet-dry-run-2026-07-23.md).
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P0 | Устранить блокер connect-проекции | 1/2 | 🟠 Done with deviations |
-| P1 | Пилот и стабилизация | 0/2 | 🟡 In progress |
+| P1 | Пилот и стабилизация | 0/2 | 🔴 Blocked |
 | P2 | Последовательный fleet rollout | 0/1 | ⬜ Not started |
 
 ## 5. Decision Log
@@ -84,3 +84,4 @@ findings/00-fleet-dry-run-2026-07-23.md).
 | 2026-07-23 | task-plan-design / gpt-5.6-sol/xhigh | P1.1 redesigned and reopened by D6/D7: topology-derived instruction scopes plus deterministic replacement selection; item spec commit `7df01cbc`. |
 | 2026-07-23 | task-plan-run / gpt-5.6-terra/high | P1.1 blocked: D6 repair is validated, but D7 selected no compatible external candidate — details in `phases/P1.md` P1.1 Completion Notes. |
 | 2026-07-23 | task-plan-design / gpt-5.6-terra/high | P1.1 reopened by D8: rollout continues with a fresh non-named registry-order D7 scan and one conditional normal apply. |
+| 2026-07-23 | task-plan-run / gpt-5.6-terra/high | P1.1 blocked: fresh D8 D7 scan found no dual-provider external candidate; no consumer write — details in `phases/P1.md` P1.1 Completion Notes. |

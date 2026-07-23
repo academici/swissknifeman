@@ -265,11 +265,21 @@ def _health_doc_run(env, config, projects, mode, dry):
     return [apply_health_doc(env, config, p, mode, dry) for p in projects]
 
 
+def _instruction_scope_ids(context):
+    """Return root plus real, non-symlink swissknifeman package directories in catalog order."""
+    from harness.instructions import SCOPES
+    root = context.path
+    return tuple(scope_id for scope_id in SCOPES
+                 if scope_id == "root" or (
+                     (candidate := root / "packages" / scope_id).is_dir()
+                     and not candidate.is_symlink()))
+
+
 def _instruction_request(context, operation_id, *, authorized=(), observed=()):
     """Construct only the frozen public P5 request; maind never reads its catalog/markers."""
-    from harness.instructions import CATALOG_VERSION, CONTRACT_VERSION, SCOPES, InstructionRequest
+    from harness.instructions import CATALOG_VERSION, CONTRACT_VERSION, InstructionRequest
     return InstructionRequest(
-        CONTRACT_VERSION, CATALOG_VERSION, operation_id, tuple(SCOPES),
+        CONTRACT_VERSION, CATALOG_VERSION, operation_id, _instruction_scope_ids(context),
         context.effective_provider_ids, str(context.path),
         (("provider-context", context.id),),
         (("authority", "maind-sync-explicit-targets"),), tuple(authorized),
@@ -289,7 +299,7 @@ def _instruction_aggregate(operation):
 
 
 def _instruction_run(env, config, projects, mode, dry):
-    """Provision root plus five package instruction scopes through frozen harness.instructions.
+    """Provision root plus applicable real package scopes through frozen harness.instructions.
 
     The plan is always obtained first.  The only write authority supplied to harness is the
     exact target set returned by that plan; mAInd neither parses nor renders instructions.

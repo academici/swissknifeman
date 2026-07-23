@@ -167,11 +167,30 @@ class TestProviderContexts(unittest.TestCase):
             self.assertTrue((project / "CLAUDE.md").is_file())
             self.assertTrue((project / "AGENTS.md").is_file())
             for package in ("skiller", "harness", "maind", "analyst", "task"):
-                self.assertTrue((project / "packages" / package / "CLAUDE.md").is_file())
-                self.assertTrue((project / "packages" / package / "AGENTS.md").is_file())
+                self.assertFalse((project / "packages" / package / "CLAUDE.md").exists())
+                self.assertFalse((project / "packages" / package / "AGENTS.md").exists())
             second = sync.run_sync(env, config, config["projects"], only="instructions", mode="auto")
             self.assertEqual(second[0]["provider_aggregate"], "green")
             self.assertFalse(second[0]["changed"])
+
+    def test_instruction_scope_ids_follow_real_package_topology(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, project = _setup(tmp)
+            context = sync.contexts(env, config, config["projects"])[0]
+            self.assertEqual(sync._instruction_scope_ids(context), ("root",))
+
+            for package in ("skiller", "harness", "maind", "task"):
+                (project / "packages" / package).mkdir(parents=True)
+            linked = Path(tmp) / "linked-analyst"
+            linked.mkdir()
+            (project / "packages" / "analyst").symlink_to(linked, target_is_directory=True)
+            self.assertEqual(sync._instruction_scope_ids(context),
+                             ("root", "skiller", "harness", "maind", "task"))
+
+            (project / "packages" / "analyst").unlink()
+            (project / "packages" / "analyst").mkdir()
+            self.assertEqual(sync._instruction_scope_ids(context),
+                             ("root", "skiller", "harness", "maind", "analyst", "task"))
 
     def test_instruction_provisioner_dry_run_does_not_write(self):
         with tempfile.TemporaryDirectory() as tmp:

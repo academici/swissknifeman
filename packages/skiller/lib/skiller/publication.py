@@ -761,8 +761,10 @@ def _codex_bundle_artifacts(*, source_root: Path, bundle_root: Path, plugin: str
             die(f"SPUB_BUNDLE_INCOMPLETE: provider codex, unit {plugin}, "
                 f"target {root}: declared skill root has no SKILL.md")
         for member in members:
-            files.append(_contained(source_root, member, plugin=plugin,
-                                    label="declared skill member"))
+            _contained(source_root, member, plugin=plugin,
+                       label="declared skill member")
+            files.extend(_codex_skill_runtime_files(
+                member.parent, source_root=source_root, plugin=plugin))
 
     unique = tuple(sorted(set(files), key=lambda item: item.relative_to(source_root).as_posix()))
     artifacts = []
@@ -773,6 +775,40 @@ def _codex_bundle_artifacts(*, source_root: Path, bundle_root: Path, plugin: str
             target, bundle_root / relative, source_bytes,
             source.relative_to(repo_root).as_posix(), source_bytes))
     return tuple(artifacts)
+
+
+def _codex_skill_runtime_files(skill_root: Path, *, source_root: Path,
+                               plugin: str) -> tuple[Path, ...]:
+    """Enumerate one consumer skill tree with the canonical vendor exclusions."""
+    from .common import SKILL_IGNORE, die
+
+    ignore = shutil.ignore_patterns(*SKILL_IGNORE)
+    pending = [skill_root]
+    seen_dirs = set()
+    files = []
+    while pending:
+        directory = pending.pop()
+        resolved_dir = _contained(
+            source_root, directory, plugin=plugin, label="runtime support directory")
+        if resolved_dir in seen_dirs:
+            continue
+        seen_dirs.add(resolved_dir)
+        try:
+            entries = sorted(directory.iterdir(), key=lambda item: item.name)
+        except OSError as exc:
+            die(f"SPUB_BUNDLE_INCOMPLETE: provider codex, unit {plugin}, "
+                f"target {directory}: cannot read runtime support files: {exc}")
+        excluded = ignore(str(directory), [entry.name for entry in entries])
+        for entry in entries:
+            if entry.name in excluded:
+                continue
+            resolved = _contained(
+                source_root, entry, plugin=plugin, label="runtime support file")
+            if resolved.is_dir():
+                pending.append(entry)
+            elif resolved.is_file():
+                files.append(entry)
+    return tuple(files)
 
 
 def _codex_local_source(entry: Mapping[str, object], *, plugin: str) -> str:

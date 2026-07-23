@@ -166,6 +166,66 @@ class ProviderDistributionCase(unittest.TestCase):
             for path in codex_targets
         ))
 
+    def test_dual_connect_bundle_keeps_runtime_files_and_consumer_exclusions(self):
+        self.write_provider_config(providers())
+        skill = self.root / "skills/quality/test-writer"
+        included = {
+            "snippets/tests.md": "tests\n",
+            "references/guide.md": "guide\n",
+            "scripts/check.py": "print('ok')\n",
+            "assets/icon.txt": "icon\n",
+        }
+        excluded = {
+            "upstream.json": "{}\n",
+            ".claude-plugin/plugin.json": "{}\n",
+            "SKILL.ru.md": "private source\n",
+            "SKILL.notes.md": "private notes\n",
+            "evals/case.md": "eval\n",
+            "__pycache__/check.pyc": "bytecode\n",
+            "scripts/cached.pyc": "bytecode\n",
+        }
+        for relative, content in {**included, **excluded}.items():
+            path = skill / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(content, encoding="utf-8")
+        materialize_codex_marketplace(self.root)
+
+        with contextlib.redirect_stdout(io.StringIO()):
+            do_connect(self.env, self.project, {
+                "profile": "laravel-project",
+                "no_permissions": True,
+            })
+
+        bundle_skill = (
+            self.project / ".agents/plugins/bundles/quality/test-writer"
+        )
+        for relative, content in included.items():
+            delivered = bundle_skill / relative
+            self.assertTrue(delivered.is_file(), relative)
+            self.assertEqual(delivered.read_text(encoding="utf-8"), content)
+        for relative in excluded:
+            self.assertFalse((bundle_skill / relative).exists(), relative)
+
+    def test_dual_connect_preflights_escaping_runtime_symlink_before_claude_write(self):
+        self.write_provider_config(providers())
+        outside = self.tmp / "outside.md"
+        outside.write_text("outside\n", encoding="utf-8")
+        reference = self.root / "skills/quality/test-writer/references/escape.md"
+        reference.parent.mkdir(parents=True)
+        reference.symlink_to(outside)
+        materialize_codex_marketplace(self.root)
+
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr), self.assertRaises(SystemExit):
+            do_connect(self.env, self.project, {
+                "profile": "laravel-project",
+                "no_permissions": True,
+            })
+
+        self.assertIn("SPUB_PATH_UNCONTAINED", stderr.getvalue())
+        self.assertFalse((self.project / ".claude/settings.local.json").exists())
+        self.assertFalse((self.project / ".agents/plugins/marketplace.json").exists())
+
     def test_dual_connect_preflights_incomplete_codex_before_claude_write(self):
         self.write_provider_config(providers())
         materialize_codex_marketplace(self.root)

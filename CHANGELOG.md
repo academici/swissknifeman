@@ -19,6 +19,9 @@
 
 ### Fixed
 
+- **skiller — внешний Codex connect bundle.** Repo-contained bundles выбранных
+  plugins теперь включают runtime-файлы скиллов с consumer exclusions; native
+  install/cache/enable остаются отдельным явным действием.
 - **core/harness/maind — clean-runner compatibility.** D108 tests now use a committed sealed
   MCP preimage instead of a gitignored local file; harness agent-pack and maind provider-config
   projections import on Python 3.9, and the provider rollback/deploy paths pass the Ruff gate.

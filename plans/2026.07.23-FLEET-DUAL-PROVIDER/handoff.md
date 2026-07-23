@@ -30,7 +30,10 @@ future owner-authorized carrier beginning at D7.
 `be968b96` · `journal.jsonl`.
 
 **Open risks:** No live consumer proof exists under D14; the audit must not
-reinterpret internal GREEN as completed fleet rollout.
+reinterpret internal GREEN as completed fleet rollout. Attempt 2 records the
+cleanup-only consumer reverts and final read-only status after D14; no
+consumer diff was retained or pushed, but the literal no-access boundary was
+crossed.
 
 **Workarounds/Deferred/Open questions:**
 - workarounds: none.

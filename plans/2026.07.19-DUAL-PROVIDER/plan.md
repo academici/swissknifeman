@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.4.61 |
+| Version | 1.4.62 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
@@ -132,7 +132,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P3 | Dual skills publication и marketplaces | 5/5 | 🟢 Done |
 | P4 | Task-command parity и provider-neutral model routing | 5/5 | 🟢 Done |
 | P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 8/8 | 🟢 Done |
-| P6 | mAInd deployment, memory и provider-neutral analytics | 11/12 | 🟠 Done with deviations |
+| P6 | mAInd deployment, memory и provider-neutral analytics | 9/12 | 🟡 In progress |
 | P7 | Docs, self-hosting validation и FOREMAN release gate | 1/4 | 🔴 Blocked |
 
 ## 5. Decision Log
@@ -260,6 +260,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | D119 | 2026-07-23 | Supersedes D118 only in the P7.2 execution carrier and supersedes D96 only for the P7.2 within-session owner gate: after this design session exits, rerun the RED native row from a neutral shell as one task-scoped `codex exec --ephemeral --ignore-user-config` process with fresh existing `HOME`, `CODEX_HOME` and `CODEX_SQLITE_HOME`, exactly one explicit non-persisted automation credential, and credential exclusion from spawned commands. No host-backed interactive/nested session or active-session path exclusion can prove host-state zero delta. | RAG:✅ 2026-07-23 (`findings/P7-codex-session-isolation-docs-2026-07-23.md`, `research/29-p7.2-native-codex-session-state-isolation.md`; official Codex environment/non-interactive/auth docs) — the failed nested plugin payload was contained, but its parent measurer remained host-backed. This supported clean-room route changes no frozen provider contract, permits no package/live mutation, and ends at the existing exact live-action Approval Owner D# request; an approved live step is a separate self-contained session. |
 | D120 | 2026-07-23 | Owner rejects only D119's temporary `HOME`/`CODEX_HOME`/`CODEX_SQLITE_HOME` plus automation-credential carrier. Resume only the D118 native marketplace/plugin row in this ordinary authenticated `NEW SESSION`; snapshot host and repository before/after, record active-session JSONL and SQLite/WAL changes separately from plugin/install state, and never call runtime state plugin leakage. | RAG:— (owner-grounded: explicit P7.2 carrier resolution) — no frozen provider semantics change; no live apply/repair/rollback, P7.3+, FOREMAN, fleet, tag, push, cleanup, package source/test change, secret capture, `.serena/project.yml` or owner `AGENTS.md` change is authorized. The existing exact live path/action Approval Owner D# remains the stop boundary. |
 | D121 | 2026-07-23 | Approval Owner authorizes the exact P7.2 live S1+O1 transaction: create/merge only `.swissknife.json#/providers` for canonical project `swissknifeman` with `claude-code` and `codex` enabled; apply only sealed D108/D110 chain for `.codex/hooks.json`, `.codex/hooks/lifecycle.py`, unchanged-preimage `.mcp.json`, and `.swissknifeman/provider-artifacts.lock.json`. | RAG:— (owner-grounded: explicit direct instruction relayed to the routed P7.2 executor) — authority is limited to the sealed transaction, its checks, idempotence and rollback rehearsal. It excludes package/source/test changes, any other provider file, P7.3+, FOREMAN, fleet, tag, push and cleanup. |
+| D122 | 2026-07-23 | Reopen only P6.11→P6.12: `plan_d104_bootstrap_transfer` must distinguish the frozen one-entry and exact managed two-entry D104 `.codex/hooks.json` forms; the latter is permitted only as the deterministic `noop` of an identical second D108 plan. | RAG:— (repo-grounded: `artifacts/P7-self-host-e2e.md`, `packages/maind/lib/maind/provider_deploy.py:288-383`) — D121 first apply and rollback are byte-exact, but the second plan refused before writer. The repair preserves D104/D108/D110 targets, preimages, bindings, lock, rollback and live authority; P6.12 independently proves it before fresh P7.2. |
 
 ## 6. Update Log
 
@@ -271,6 +272,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | 2026-07-23 | task-plan-design / gpt-5.6-sol/high | D119 redesigns only the D118 RED carrier: P7.2 native proof moves to an ephemeral non-interactive clean-room with all Codex state redirected; no P7.2/package/live operation ran. |
 | 2026-07-23 | task-plan-run / gpt-5.6-terra/high | D120 accepts the ordinary authenticated native proof: marketplace/plugin commands are green, repository delta is 0, and plugin/install state is recorded separately from active SQLite/WAL runtime state; live mutation remains owner-gated. |
 | 2026-07-23 | task-plan-run / gpt-5.6-terra/high | P7.2 D121 live chain applied only its sealed five-path inventory, then rolled back byte-exactly after required second apply refused pre-write; P6.11 planner idempotence requires bounded redesign — details in phases/P7.md P7.2. |
+| 2026-07-23 | task-plan-design / gpt-5.6-terra/medium | D122 reopens only P6.11→P6.12 for strict D104 post-apply noop repair and independent proof; frozen transaction and live authority stay unchanged. |
 | 2026-07-23 | task-plan-close / gpt-5.6-terra/medium | P6 закрыта как 🟠 после terminal P6.1–P6.12: D115/P6.12 GREEN подтверждены, material P6.8 evidence остаётся явным; далее только независимый Claude Code audit — детали см. phases/P6.md Phase Handoff. |
 | 2026-07-22 | root agent / D113 targeted | D115 P6.11 and P6.12 close GREEN: exact unchanged MCP admission, writer 0 and protected live inventory unchanged; next session starts at targeted P6 close. |
 | 2026-07-22 | root agent / D113 | D115 reopens only the D108 unchanged-MCP adoption projection after exact P6.12 byte diff; core frozen admission remains the verifier. |

@@ -5,12 +5,15 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "harness/lib"))
 
-from core import (ConfigSource, ProviderConfigCatalog, ProviderConfigLayer, ProviderId,
-                  apply_plan, canonical_json_bytes, sha256_digest)
+from core import (ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource,
+                  ArtifactTarget, ConfigSource, ProviderConfigCatalog,
+                  ProviderConfigLayer, ProviderId, apply_plan, canonical_json_bytes,
+                  parse_lock, plan_artifact_render, sha256_digest)
 from harness.mcp import load_mcp_catalog, plan_mcp_projection
 from maind.provider_deploy import (ProviderDeployError, plan_provider_deploy,
                                    plan_provider_artifacts, apply_provider_artifacts,
                                    plan_provider_artifact_adoption,
+                                   plan_exact_artifact_adoption,
                                    resolve_effective_providers, semantic_servers,
                                    SemanticServer, plan_d108_operation)
 from maind.provider_deploy import (conformance_report, plan_d104_bootstrap_transfer,
@@ -144,6 +147,57 @@ class TestProviderDeploy(unittest.TestCase):
             self.assertEqual(target.read_bytes(), before)
             self.assertFalse(
                 (root / ".swissknifeman/provider-artifacts.lock.json").exists())
+
+    def test_exact_adoption_preserves_owner_bytes_and_unrelated_lock_records(self):
+        harness = Path(__file__).resolve().parents[3] / "packages/harness/configs"
+        catalog = load_mcp_catalog(harness / "common/mcp/catalog.json")
+        base = plan_mcp_projection(
+            catalog, provider_id=ProviderId.CLAUDE_CODE,
+            bindings_path=harness / "claude-code/mcp/bindings.json",
+            selected=(), trusted=True)
+        deploy = plan_provider_deploy(
+            (base,), semantic_servers(maind={"command": "maind"}))
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            mcp = root / ".mcp.json"
+            mcp.write_text("foreign\n", encoding="utf-8")
+            apply_plan(root, plan_provider_artifact_adoption(
+                root, deploy, preimage_hashes={
+                    ".mcp.json": sha256_digest(mcp.read_bytes())}))
+            owner = root / "CLAUDE.md"
+            owner.write_bytes(b"# Owner\n")
+            source = ArtifactSource(
+                "test.instructions", "test", sha256_digest(b"managed\n"))
+            artifact = plan_artifact_render(ArtifactRenderRequest(
+                "test.instructions.root", (source,),
+                ArtifactTarget("CLAUDE.md", ("managed-blocks", ("instructions",))),
+                ArtifactAdapterIdentity(
+                    "test.instructions", "1.0.0", ProviderId.CLAUDE_CODE,
+                    "1.0.0", ()), (), {}, lambda _request: b"managed\n"))
+
+            def extract(raw, _ids):
+                return b"managed\n" if raw.endswith(b"managed\n") else b""
+
+            def replace_blocks(raw, managed, _ids):
+                existing = b"managed\n" if raw.endswith(b"managed\n") else b""
+                if existing:
+                    return raw[:-len(existing)] + managed
+                return raw + managed
+
+            plan = plan_exact_artifact_adoption(
+                root, (artifact,),
+                preimage_hashes={"CLAUDE.md": sha256_digest(owner.read_bytes())},
+                managed_block_codecs={
+                    artifact.provenance.artifact_id: (extract, replace_blocks)})
+            apply_plan(root, plan)
+
+            self.assertEqual(owner.read_bytes(), b"# Owner\nmanaged\n")
+            lock = parse_lock(
+                (root / ".swissknifeman/provider-artifacts.lock.json").read_bytes())
+            self.assertEqual(
+                {record.artifact_id for record in lock.records},
+                {"maind.provider-deploy.claude-code",
+                 "test.instructions.root"})
 
     def test_d108_project_carrier_preserves_siblings_and_is_idempotent(self):
         with tempfile.TemporaryDirectory() as directory:

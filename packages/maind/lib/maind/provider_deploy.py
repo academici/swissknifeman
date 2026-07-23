@@ -18,7 +18,7 @@ from core import (ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource
                   ArtifactPlan, CapabilityId, CapabilityRequirement, DriftObservation,
                   ProviderId, SupportLevel, canonical_json_bytes, apply_plan,
                   load_provider_manifest, plan_artifact_lock, plan_artifact_render,
-                  provider_config_catalog,
+                  parse_lock, provider_config_catalog,
                   plan_bootstrap_transfer, BootstrapTransferAdmission, artifact_dry_run, sha256_digest,
                   ChainedBootstrapTransferAdmission, plan_chained_bootstrap_transfer,
                   support_for)
@@ -643,28 +643,39 @@ def plan_provider_artifacts(root, deploy_plan, *, repair=False, extra_artifacts=
                                                    for action in projection["actions"])}
 
 
-def plan_provider_artifact_adoption(root, deploy_plan, *, preimage_hashes):
-    """Adopt exact unmanaged provider targets into the ordinary artifact lock.
+def plan_exact_artifact_adoption(root, artifacts, *, preimage_hashes,
+                                 managed_block_codecs=None):
+    """Admit exact unmanaged targets and preserve unrelated lock records.
 
-    This is a narrow ownership handoff, not repair: every existing target must be
-    named with its exact SHA-256 preimage, the root and targets must be regular
-    non-symlinks, and an existing lock always refuses.
+    Every existing target is pinned by its full-file SHA-256 preimage. Managed
+    block codecs may then update only their declared boundary while unrelated
+    bytes and unrelated existing lock records survive.
     """
-    if not deploy_plan.green:
-        raise ProviderDeployError("MAIND_PROVIDER_DEPLOY_REFUSED")
     root = Path(root)
     if not root.is_absolute() or root != root.resolve() or not root.is_dir():
         raise ProviderDeployError("MAIND_PROVIDER_ADOPTION_ROOT_INVALID")
     lock_path = root / ".swissknifeman/provider-artifacts.lock.json"
-    if lock_path.exists() or lock_path.is_symlink():
-        raise ProviderDeployError("MAIND_PROVIDER_ADOPTION_LOCK_PRESENT")
-    artifacts = tuple(row.artifact for row in deploy_plan.results
-                      if row.artifact is not None)
-    if len(artifacts) != len(deploy_plan.results):
+    if lock_path.is_symlink() or lock_path.exists() and not lock_path.is_file():
+        raise ProviderDeployError("MAIND_PROVIDER_ADOPTION_LOCK_UNSAFE")
+    lock_bytes = lock_path.read_bytes() if lock_path.exists() else None
+    try:
+        existing_lock = ArtifactLock(1, ()) if lock_bytes is None else parse_lock(lock_bytes)
+    except ValueError as error:
+        raise ProviderDeployError("MAIND_PROVIDER_ADOPTION_LOCK_INVALID") from error
+    artifacts = tuple(artifacts)
+    if not artifacts or any(artifact is None for artifact in artifacts):
         raise ProviderDeployError("MAIND_PROVIDER_ADOPTION_PLAN_INVALID")
     if not isinstance(preimage_hashes, Mapping):
         raise TypeError("preimage_hashes must be a mapping")
     targets = {artifact.target.path: artifact for artifact in artifacts}
+    if len(targets) != len(artifacts):
+        raise ProviderDeployError("MAIND_PROVIDER_ADOPTION_PLAN_INVALID")
+    artifact_ids = {artifact.provenance.artifact_id for artifact in artifacts}
+    if len(artifact_ids) != len(artifacts):
+        raise ProviderDeployError("MAIND_PROVIDER_ADOPTION_PLAN_INVALID")
+    if any(record.artifact_id in artifact_ids or record.target_path in targets
+           for record in existing_lock.records):
+        raise ProviderDeployError("MAIND_PROVIDER_ADOPTION_ALREADY_MANAGED")
     existing_targets = set()
     observed = {}
     for target_path, artifact in targets.items():
@@ -679,8 +690,12 @@ def plan_provider_artifact_adoption(root, deploy_plan, *, preimage_hashes):
     for target_path, expected_hash in preimage_hashes.items():
         if not isinstance(expected_hash, str) or observed[target_path] != expected_hash:
             raise ProviderDeployError("MAIND_PROVIDER_ADOPTION_PREIMAGE_MISMATCH")
+    codecs = dict(managed_block_codecs or {})
+    managed_ids = {artifact.provenance.artifact_id for artifact in artifacts
+                   if artifact.provenance.managed_boundary[0] == "managed-blocks"}
+    if set(codecs) != managed_ids:
+        raise ProviderDeployError("MAIND_PROVIDER_ADOPTION_CODEC_SET_INVALID")
     actions = []
-    codecs = _provider_managed_block_codecs(artifacts)
     for target_path, artifact in targets.items():
         current_preimage_hash = observed.get(target_path)
         codec = codecs.get(artifact.provenance.artifact_id)
@@ -706,7 +721,21 @@ def plan_provider_artifact_adoption(root, deploy_plan, *, preimage_hashes):
             artifact.provenance.artifact_id, target_path, observation, action,
             artifact, current_hash, diagnostic, codec))
     return ArtifactPlan(tuple(actions), ArtifactLock(
-        1, tuple(artifact.provenance for artifact in artifacts)))
+        1, existing_lock.records +
+        tuple(artifact.provenance for artifact in artifacts)))
+
+
+def plan_provider_artifact_adoption(root, deploy_plan, *, preimage_hashes):
+    """Adopt exact unmanaged provider targets into the ordinary artifact lock."""
+    if not deploy_plan.green:
+        raise ProviderDeployError("MAIND_PROVIDER_DEPLOY_REFUSED")
+    artifacts = tuple(row.artifact for row in deploy_plan.results
+                      if row.artifact is not None)
+    if len(artifacts) != len(deploy_plan.results):
+        raise ProviderDeployError("MAIND_PROVIDER_ADOPTION_PLAN_INVALID")
+    return plan_exact_artifact_adoption(
+        root, artifacts, preimage_hashes=preimage_hashes,
+        managed_block_codecs=_provider_managed_block_codecs(artifacts))
 
 
 def apply_provider_artifacts(root, deploy_plan, *, repair=False, extra_artifacts=()):

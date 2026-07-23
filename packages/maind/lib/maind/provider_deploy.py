@@ -85,6 +85,7 @@ class BootstrapTransferPlan:
     """The sole P6-owned D104 composition and its already-admitted P2 plan."""
     artifacts: tuple
     plan: object
+    managed_post_apply: bool = False
 
 
 @dataclass(frozen=True)
@@ -228,18 +229,23 @@ def plan_d108_operation(root, config, project_id, servers, *, harness_configs,
         raise ProviderDeployError("MAIND_PROVIDER_DEPLOY_REFUSED")
     deploy, mcp = _d108_unchanged_mcp_artifact(root, deploy)
     transfer = plan_d104_bootstrap_transfer(root, harness_configs=harness_configs)
-    admission = ChainedBootstrapTransferAdmission(
-        BootstrapTransferAdmission("D104", ".codex/hooks.json",
-            "sha256:7d7538d021228e8e61d124f4b60b6db04434f8121de30b8672f05e4bf038c3db",
-            ".codex/hooks/lifecycle.py", "harness.codex.lifecycle.hooks",
-            "harness.codex.lifecycle.handler"), transfer.plan, "D108", ".mcp.json",
-        "sha256:cf4537196c3fefd6fd3980221bd3677f74e7867392ad49364e1e891e1f7c8283",
-        "maind.provider-deploy.claude-code", ("whole-file", ()),
-        ("maind", "perplexity-web", "serena"))
     lock = Path(root) / ".swissknifeman/provider-artifacts.lock.json"
-    chained = plan_chained_bootstrap_transfer(Path(root), transfer.artifacts + (mcp,),
-                                               lock_bytes=lock.read_bytes() if lock.exists() else None,
-                                               admission=admission)
+    lock_bytes = lock.read_bytes() if lock.exists() else None
+    artifacts = transfer.artifacts + (mcp,)
+    if transfer.managed_post_apply:
+        chained = plan_artifact_lock(Path(root), artifacts, lock_bytes=lock_bytes)
+    else:
+        admission = ChainedBootstrapTransferAdmission(
+            BootstrapTransferAdmission("D104", ".codex/hooks.json",
+                "sha256:7d7538d021228e8e61d124f4b60b6db04434f8121de30b8672f05e4bf038c3db",
+                ".codex/hooks/lifecycle.py", "harness.codex.lifecycle.hooks",
+                "harness.codex.lifecycle.handler"), transfer.plan, "D108", ".mcp.json",
+            "sha256:cf4537196c3fefd6fd3980221bd3677f74e7867392ad49364e1e891e1f7c8283",
+            "maind.provider-deploy.claude-code", ("whole-file", ()),
+            ("maind", "perplexity-web", "serena"))
+        chained = plan_chained_bootstrap_transfer(Path(root), artifacts,
+                                                   lock_bytes=lock_bytes,
+                                                   admission=admission)
     if any(getattr(action.action, "value", action.action) == "refuse" for action in chained.actions):
         raise ProviderDeployError("MAIND_D108_CHAIN_REFUSED")
     return D108OperationPlan(carrier, deploy, transfer, chained)
@@ -252,7 +258,9 @@ def apply_d108_operation(root, operation):
     try:
         if operation.carrier.changed:
             apply_project_carrier(operation.carrier)
-        apply_plan(Path(root), operation.chained_plan)
+        if any(getattr(action.action, "value", action.action) != "noop"
+               for action in operation.chained_plan.actions):
+            apply_plan(Path(root), operation.chained_plan)
     except BaseException:
         _rollback_project_carrier(operation.carrier)
         raise
@@ -285,8 +293,8 @@ def project_provider_preflight(deploy_plan, checked):
     return ProviderDeployPlan(tuple(rows))
 
 
-def _d104_memory_registration(preimage):
-    """Read exactly one caller-owned native memory SessionStart registration."""
+def _d104_memory_registration(preimage, *, observer_group=None):
+    """Read the frozen D104 memory registration or its exact managed successor."""
     try:
         value = json.loads(preimage.decode("utf-8"))
         hooks = value["hooks"]
@@ -298,14 +306,19 @@ def _d104_memory_registration(preimage):
         raise ProviderDeployError("MAIND_PROVIDER_DEPLOY_REFUSED") from None
     if (not isinstance(value, dict) or set(value) != {"hooks"}
             or not isinstance(hooks, dict) or set(hooks) != {"SessionStart"}
-            or not isinstance(groups, list) or len(groups) != 1
+            or not isinstance(groups, list) or len(groups) not in {1, 2}
             or not isinstance(group, dict) or set(group) - {"hooks", "matcher"}
             or not isinstance(group.get("hooks"), list) or len(group["hooks"]) != 1
             or not isinstance(hook, dict) or set(hook) != {"type", "command"}
             or hook["type"] != "command" or not isinstance(hook["command"], str)
             or not hook["command"] or "matcher" in group and not isinstance(group["matcher"], str)):
         raise ProviderDeployError("MAIND_PROVIDER_DEPLOY_REFUSED")
-    return group, hook["command"]
+    if len(groups) == 2:
+        document = (json.dumps({"hooks": {"SessionStart": [group, observer_group]}},
+                               ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+        if not isinstance(observer_group, dict) or groups[1] != observer_group or preimage != document:
+            raise ProviderDeployError("MAIND_PROVIDER_DEPLOY_REFUSED")
+    return group, hook["command"], len(groups) == 2
 
 
 def _d104_observer_fragment(harness_configs):
@@ -339,8 +352,9 @@ def plan_d104_bootstrap_transfer(root, *, harness_configs):
     root = Path(root)
     existing_path = root / ".codex/hooks.json"
     preimage = existing_path.read_bytes()
-    memory_group, memory_command = _d104_memory_registration(preimage)
     fragment = _d104_observer_fragment(harness_configs)
+    memory_group, memory_command, managed_post_apply = _d104_memory_registration(
+        preimage, observer_group=fragment.group)
     from harness.hooks import validate_d104_codex_lifecycle_composition
     document = (json.dumps({"hooks": {"SessionStart": [memory_group, fragment.group]}},
                            ensure_ascii=False, indent=2) + "\n").encode("utf-8")
@@ -352,7 +366,8 @@ def plan_d104_bootstrap_transfer(root, *, harness_configs):
 
     sources = (
         ArtifactSource("maind.d104.memory-preimage", ".codex/hooks.json",
-                       sha256_digest(preimage)),
+                       "sha256:7d7538d021228e8e61d124f4b60b6db04434f8121de30b8672f05e4bf038c3db"
+                       if managed_post_apply else sha256_digest(preimage)),
         ArtifactSource("harness.d104.observer-fragment",
                        "packages/harness/lib/harness/hooks.py",
                        sha256_digest(canonical_json_bytes({
@@ -380,7 +395,7 @@ def plan_d104_bootstrap_transfer(root, *, harness_configs):
     plan = plan_bootstrap_transfer(root, (hooks, handler),
                                    lock_bytes=lock_path.read_bytes() if lock_path.exists() else None,
                                    admission=admission)
-    return BootstrapTransferPlan((hooks, handler), plan)
+    return BootstrapTransferPlan((hooks, handler), plan, managed_post_apply)
 
 
 def semantic_servers(*, maind, agentmemory=None, codegraph=None, perplexity=None):

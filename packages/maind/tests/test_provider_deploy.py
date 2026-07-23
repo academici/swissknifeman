@@ -14,7 +14,8 @@ from maind.provider_deploy import (ProviderDeployError, plan_provider_deploy,
                                    SemanticServer, plan_d108_operation)
 from maind.provider_deploy import (conformance_report, plan_d104_bootstrap_transfer,
                                    write_conformance_report, plan_project_carrier,
-                                   apply_project_carrier, _d108_planned_projections)
+                                   apply_project_carrier, apply_d108_operation,
+                                   _d108_planned_projections)
 from maind.provision.deploy import deploy_project, mark_deployed, provider_semantic_inventory
 from tests.fixtures import make_repo
 from maind.config import merge_defaults
@@ -116,6 +117,73 @@ class TestProviderDeploy(unittest.TestCase):
             with self.assertRaisesRegex(ProviderDeployError, "MAIND_D108_CHAIN_REFUSED"):
                 plan_d108_operation(root, config, "swissknifeman", servers,
                                     harness_configs=harness, expected_root=root)
+
+    def test_d122_d108_second_identical_plan_and_apply_are_noops(self):
+        repo = Path(__file__).resolve().parents[3]
+        harness = repo / "packages/harness/configs"
+        sealed = (repo / ".mcp.json").read_bytes()
+        servers = (SemanticServer("maind", {"command": "maind"}),
+                   SemanticServer("perplexity-web", {"command": "pplx"}),
+                   SemanticServer("serena", {"command": "serena"}))
+        config = merge_defaults({"projects": [{"id": "swissknifeman", "name": "SKM"}]})
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / ".codex").mkdir()
+            (root / ".codex/hooks.json").write_bytes(_D104_PREIMAGE)
+            (root / ".mcp.json").write_bytes(sealed)
+            first = plan_d108_operation(root, config, "swissknifeman", servers,
+                                        harness_configs=harness, expected_root=root)
+            apply_d108_operation(root, first)
+            before = {path.relative_to(root): path.read_bytes()
+                      for path in root.rglob("*") if path.is_file()}
+
+            second = plan_d108_operation(root, config, "swissknifeman", servers,
+                                         harness_configs=harness, expected_root=root)
+            self.assertFalse(second.carrier.changed)
+            self.assertTrue(all(action.action.value == "noop"
+                                for action in second.chained_plan.actions))
+            with patch("maind.provider_deploy.apply_plan") as writer:
+                apply_d108_operation(root, second)
+            self.assertEqual(writer.call_count, 0)
+            after = {path.relative_to(root): path.read_bytes()
+                     for path in root.rglob("*") if path.is_file()}
+            self.assertEqual(after, before)
+
+    def test_d122_d108_rejects_malformed_or_changed_managed_observer_before_writer(self):
+        repo = Path(__file__).resolve().parents[3]
+        harness = repo / "packages/harness/configs"
+        sealed = (repo / ".mcp.json").read_bytes()
+        servers = (SemanticServer("maind", {"command": "maind"}),
+                   SemanticServer("perplexity-web", {"command": "pplx"}),
+                   SemanticServer("serena", {"command": "serena"}))
+        config = merge_defaults({"projects": [{"id": "swissknifeman", "name": "SKM"}]})
+        for name, mutate in (
+                ("malformed", lambda group: group.clear()),
+                ("changed", lambda group: group["hooks"][0].__setitem__("command", "python3 foreign.py"))):
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                (root / ".codex").mkdir()
+                (root / ".codex/hooks.json").write_bytes(_D104_PREIMAGE)
+                (root / ".mcp.json").write_bytes(sealed)
+                first = plan_d108_operation(root, config, "swissknifeman", servers,
+                                            harness_configs=harness, expected_root=root)
+                apply_d108_operation(root, first)
+                hooks_path = root / ".codex/hooks.json"
+                hooks = json.loads(hooks_path.read_text(encoding="utf-8"))
+                mutate(hooks["hooks"]["SessionStart"][1])
+                hooks_path.write_text(json.dumps(hooks, ensure_ascii=False, indent=2) + "\n",
+                                      encoding="utf-8")
+                before = {path.relative_to(root): path.read_bytes()
+                          for path in root.rglob("*") if path.is_file()}
+                with patch("maind.provider_deploy.apply_plan") as writer:
+                    with self.assertRaisesRegex(ProviderDeployError,
+                                                "MAIND_PROVIDER_DEPLOY_REFUSED"):
+                        plan_d108_operation(root, config, "swissknifeman", servers,
+                                            harness_configs=harness, expected_root=root)
+                self.assertEqual(writer.call_count, 0)
+                after = {path.relative_to(root): path.read_bytes()
+                         for path in root.rglob("*") if path.is_file()}
+                self.assertEqual(after, before)
 
     def test_d104_transfer_composes_then_returns_to_normal_p2_repair(self):
         repo = Path(__file__).resolve().parents[3]

@@ -85,3 +85,47 @@ Consequently the isolated matrix and rollback rehearsal cannot be declared GREEN
 path/action inventory was derived, and the post-isolated Approval Owner D# request was not
 reached. P7.2 remains in progress; the owning native Codex/session-state isolation surface needs
 a plan-design decision before the row can be rerun.
+
+## D120 ordinary authenticated native proof — GREEN carrier acceptance
+
+**Observed:** 2026-07-23
+
+**Runtime:** `gpt-5.6-terra/high`; approval `never`; sandbox `danger-full-access`.
+**Authority:** D120 is the Owner-authorized narrow replacement for the D119 carrier only. It
+rejects the temporary `HOME`/`CODEX_HOME`/`CODEX_SQLITE_HOME` plus automation-credential
+clean room and uses this ordinary authenticated `NEW SESSION`. Frozen provider semantics and
+the live apply/repair/rollback gate are unchanged.
+
+The host-authenticated native commands both exited `0`:
+
+```text
+codex plugin marketplace add /home/vostrikov/projects/packages/swissknifeman --json
+codex plugin add core@swissknifeman --json
+```
+
+The marketplace response was `alreadyAdded: true`. The plugin response identified
+`core@swissknifeman`, version `0.4.0`, at
+`/home/vostrikov/.codex/plugins/cache/swissknifeman/core/0.4.0`. This is an idempotent native
+marketplace/plugin proof; no plugin was removed, no credential value was printed or persisted,
+and no repository/live provider apply, repair or rollback was invoked.
+
+An explicit before/after metadata snapshot of `/home/vostrikov/.codex` (excluding the contents
+of `auth.json`) and `git status --porcelain=v1` found repository delta `0`. It found no added or
+removed host files and 13 metadata changes, classified as follows:
+
+| Class | Count | Paths / meaning |
+|:--|--:|:--|
+| Plugin/install state | 11 | `plugins/cache/swissknifeman/core/0.4.0/{.codex-plugin/plugin.json,publication-lock.json,skills/**/SKILL.md}` — native cache refresh for the proven plugin |
+| Marketplace/config state | 1 | `config.toml` — ordinary marketplace configuration state |
+| Active-session runtime state | 1 | `logs_2.sqlite-wal` — concurrent Codex runtime state |
+
+No active-session JSONL file changed during this short snapshot interval. JSONL and
+SQLite/WAL files remain separately observable active-session runtime state; they are not
+described as plugin leakage and were not excluded from the snapshot. The preflight lifecycle
+dry-run still returned `ownership-conflict → refuse (unmanaged-target)` for
+`harness.codex.lifecycle.hooks` (exit `1`); it is an environmental known deviation, recorded
+without repair.
+
+**Native-row verdict:** GREEN under D120's ordinary-session acceptance boundary. The earlier
+D118/D119 clean-room RED history remains preserved. P7.2 itself remains `🟡`: the exact live
+path/action Approval Owner D# is still required before any live mutation.

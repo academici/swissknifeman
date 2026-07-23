@@ -1,35 +1,35 @@
-# HANDOFF — 2026-07-23 — after P1
+# HANDOFF — 2026-07-23 — after P1.1
 
-**Next:** run-items: task:plan-run 2026.07.23-FLEET-DUAL-PROVIDER P1.1
+**Next:** design-item: task:plan-design 2026.07.23-FLEET-DUAL-PROVIDER P1.1
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | implementation |
-| Effort | high |
+| Model class | frontier |
+| Effort | xhigh |
 | Capabilities | — |
-| Context | same-session — item |
-| Native model | gpt-5.6-terra |
+| Context | NEW SESSION — шаг-не-item |
+| Native model | gpt-5.6-sol |
 | Approval policy | never |
 | Sandbox | danger-full-access |
 | Cwd | /home/vostrikov/projects/packages/swissknifeman |
 | Native session | NEW SESSION |
-| Owner Approval | D5–D7 only: skip former pilot, topology scopes, one deterministic replacement apply |
-| AUDIT-CAP | P1 phase audit remains a later terminal gate; this launch executes P1.1 only |
-| Суть | Реализовать D6 и провести ровно один D7-compatible replacement pilot. |
+| Owner Approval | D5–D7 remain frozen; an owner decision is required before another replacement candidate or consumer write. |
+| AUDIT-CAP | Do not audit or close P1; a terminal phase audit follows a green pilot. |
+| Суть | Зафиксировать допустимую owner-level route after D7 found no compatible external pilot. |
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'NEW SESSION: Execute exactly P1.1 of plan 2026.07.23-FLEET-DUAL-PROVIDER with task:task-plan-run. Preflight: pwd; git status --short; codex doctor --json; hook-command integrity; ./packages/maind/bin/maind health --cwd; plan lint. Read AGENTS.md, CLAUDE.md, task-plan-run and plan-protocol completely, then plan.md, handoff.md, phases/P1.md and every P1.1 Required Read in order. Owner Approval is D5-D7 only: never touch sibintek-insiders or self-host as pilot; implement and commit the topology-derived scope seam plus tests and green maind validation before any consumer write; select by deterministic no-write registry-order preflight; apply exactly the first compatible external pilot once. Never use --repair/--force, never overwrite unmanaged/dirty targets, never run fleet-wide writes or FOREMAN. If no candidate passes, write the blocked finding and stop without consumer writes. AUDIT-CAP: do not audit/close P1 in this session; independent phase audit stays at the terminal phase gate. Preserve pre-existing .serena/project.yml and AGENTS.md.'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="xhigh"' -a never -s danger-full-access 'NEW SESSION: Run task:plan-design 2026.07.23-FLEET-DUAL-PROVIDER P1.1 only. Start with pwd, git status --short, effective codex doctor --json, hook-command integrity, ./packages/maind/bin/maind health --cwd, and applicable plan lint. Read AGENTS.md, CLAUDE.md, task-plan-design and plan-protocol completely, then plans/2026.07.23-FLEET-DUAL-PROVIDER/plan.md, handoff.md, phases/P1.md, research/01-pilot-selection-contract.md and findings/P1.1-pilot-retry.md. РЕЖИМ: plan-design — resolve the D7 no-candidate boundary; do not execute P1.1. ВХОД: findings/P1.1-pilot-retry.md documents the validated D6 scope repair and every D7 rejection. СКОУП: record the owner-level decision needed to name an eligible replacement or defer rollout, keeping deterministic selection and fail-closed gates. НЕ ТРОГАТЬ: sibintek-insiders, self-host, any consumer apply, --repair, --force, fleet-wide writes, FOREMAN, .serena/project.yml and AGENTS.md.'
 ```
 
-**Done:** P1 redesign item commit `7df01cbc` records D6 target scope and D7 deterministic replacement selection. Historical `sibintek-insiders` skip remains unchanged.
+**Done:** `e80b59de` implements and validates topology-derived instruction scope selection. D7 performed only no-write registry-order preflight; no compatible external pilot was found.
 
-**Remaining:** Execute redesigned P1.1; P1.2 remains conditional; P2 waits for a repeatable GREEN pilot.
+**Remaining:** Owner/design route for P1.1; P1.2 remains conditional and P2 remains blocked on a green pilot.
 
-**Sources of truth:** `plan.md` · `phases/P1.md` · `research/01-pilot-selection-contract.md` · `findings/P1.1-pilot.md` · `journal.jsonl`.
+**Sources of truth:** `plan.md` · `phases/P1.md` · `research/01-pilot-selection-contract.md` · `findings/P1.1-pilot-retry.md` · `journal.jsonl`.
 
-**Open risks:** Committed evidence does not name a compatible candidate; D7 may produce a no-write blocked finding. This is not authority to relax eligibility.
+**Open risks:** The external registry currently has no clean dual-provider candidate with green MCP and instruction preflight. This is not authority to relax D7.
 
 **Workarounds/Deferred/Open questions:**
 - workarounds: —
-- deferred: `sibintek-insiders`, `--repair`, `--force`, P1.2 until a new automation defect.
-- open_questions: exact replacement identity, resolved only by D7 preflight.
+- deferred: `sibintek-insiders`, self-host, `--repair`, `--force`, all consumer applies.
+- open_questions: Which owner-approved registry candidate or rollout deferral resolves the D7 boundary?

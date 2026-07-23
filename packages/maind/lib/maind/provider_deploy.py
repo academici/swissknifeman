@@ -712,10 +712,10 @@ def plan_exact_artifact_adoption(root, artifacts, *, preimage_hashes,
             # The caller's exact hash admission is the ownership handoff.  From
             # this immutable plan onward the admitted bytes are the stale source,
             # so ordinary provider rendering can replace them without repair.
+            # Adoption itself must remain a write even when the rendered bytes
+            # already match: apply_plan skips the lock when every action is NOOP.
             observation = DriftObservation.STALE_SOURCE
-            action = (ArtifactActionKind.NOOP
-                      if current_hash == artifact.provenance.rendered_hash
-                      else ArtifactActionKind.UPDATE)
+            action = ArtifactActionKind.UPDATE
             diagnostic = "explicit-adoption"
         actions.append(ArtifactAction(
             artifact.provenance.artifact_id, target_path, observation, action,

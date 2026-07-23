@@ -5,8 +5,9 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "harness/lib"))
 
-from core import (ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource,
-                  ArtifactTarget, ConfigSource, ProviderConfigCatalog,
+from core import (ArtifactActionKind, ArtifactAdapterIdentity,
+                  ArtifactRenderRequest, ArtifactSource, ArtifactTarget,
+                  ConfigSource, ProviderConfigCatalog,
                   ProviderConfigLayer, ProviderId, apply_plan, canonical_json_bytes,
                   parse_lock, plan_artifact_render, sha256_digest)
 from harness.mcp import load_mcp_catalog, plan_mcp_projection
@@ -120,6 +121,39 @@ class TestProviderDeploy(unittest.TestCase):
             self.assertTrue(
                 (root / ".swissknifeman/provider-artifacts.lock.json").is_file())
             self.assertEqual(plan_provider_artifacts(root, deploy)["severity"], "green")
+
+    def test_exact_adoption_already_desired_target_still_transfers_ownership(self):
+        harness = Path(__file__).resolve().parents[3] / "packages/harness/configs"
+        catalog = load_mcp_catalog(harness / "common/mcp/catalog.json")
+        base = plan_mcp_projection(
+            catalog, provider_id=ProviderId.CLAUDE_CODE,
+            bindings_path=harness / "claude-code/mcp/bindings.json",
+            selected=(), trusted=True)
+        deploy = plan_provider_deploy(
+            (base,), semantic_servers(maind={"command": "maind"}))
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            row = deploy.results[0]
+            target = root / row.target_path
+            target.write_bytes(row.rendered)
+            before = target.read_bytes()
+
+            adoption = plan_provider_artifact_adoption(
+                root, deploy, preimage_hashes={
+                    row.target_path: sha256_digest(before)})
+            self.assertEqual(
+                [action.action for action in adoption.actions],
+                [ArtifactActionKind.UPDATE])
+            apply_plan(root, adoption)
+
+            self.assertEqual(target.read_bytes(), before)
+            self.assertTrue(
+                (root / ".swissknifeman/provider-artifacts.lock.json").is_file())
+            ordinary = plan_provider_artifacts(root, deploy)
+            self.assertEqual(ordinary["severity"], "green")
+            self.assertTrue(all(
+                action.action is ArtifactActionKind.NOOP
+                for action in ordinary["plan"].actions))
 
     def test_exact_provider_artifact_adoption_refuses_changed_preimage(self):
         harness = Path(__file__).resolve().parents[3] / "packages/harness/configs"

@@ -11,7 +11,7 @@ commit is the anchor consumed by P7.4.
 |:--|:--|:--|
 | P7.1 capability/docs | `d68ec94d`, `artifacts/P7-provider-docs-conformance.md` | `e75459ea5ab78ca9e7ac9c6b73c70e5f38e6b63f9379854eec98b1528c0f09e0`; manifest contract/catalog `1.0.0/1.0.0`; GREEN |
 | P7.2 self-host and rollback | `460019a2`, `9057b3f4`, `098df29d`, `artifacts/P7-self-host-e2e.md` | `73ff73d11e0716327b81611609555913eda2a232df15df1bb8b1db8b9dc65bab`; D121 apply, second-plan noop, D123 rollback GREEN |
-| P7.3 no-op cleanup inventory | `d43f9549`, `artifacts/P7-bootstrap-cleanup.md` | `e4be87a3e3b6209d73eebe491612c0ee59e903a8d08a2c3ab89dd09ee6c90bbe`; destructive action set `∅` |
+| P7.3 no-op cleanup inventory | `d43f9549`, `artifacts/P7-bootstrap-cleanup.md` | `f1927e64c4da355d7a33e756c23ff73aa434cf0366a82f93e19ba5f3f244aa0a`; destructive action set `∅` |
 | P6 bootstrap checkpoint | `35924d42`, `artifacts/P6-bootstrap-checkpoint.md` | checkpoint `p6.5-bootstrap-b7373334`; payload `22a9c7a82f48ae0e27449ca1be240398b3b8ecd36fbfd50bc2f8bd3a56d60dc9` |
 | Artifact ownership/conformance | `artifacts/P2-provider-artifact-conformance.md` | `05238abee18b558935e8c12d58f6950ce22d0dafb98f78a305828ab61d88f5de` |
 | Skill publication | `artifacts/P3-skill-publication-conformance.md` | `f4a94c1752add4ea82432c0225829d886b45d0220ccd9a9863c5eb527a407870` |

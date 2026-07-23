@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.4.62 |
+| Version | 1.4.63 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
@@ -115,7 +115,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P6.8 | gpt-5.6-terra/medium | plan-exec | full | independent temporary-root and live no-write conformance after P6.7; no new semantics or live apply |
 | P6.9 | gpt-5.6-terra/high | manual | full | prescribed fail-closed preflight ordering and structured D104/ordinary-plan separation; write-before-later-refusal risk requires high fidelity |
 | P6.10 | gpt-5.6-terra/medium | plan-exec | full | deterministic independent split-verdict/no-write proof after P6.9; no new semantics or live apply |
-| P6.11 | gpt-5.6-terra/medium | manual | targeted | D113 cost routing: bounded D114/D115 D108 fix-forward only; frozen ownership and live boundaries are already sealed |
+| P6.11 | gpt-5.6-terra/high | manual | full | D123 exact D121 rollback-lifecycle repair crosses the sealed P2 D104/D108 transaction, backup provenance and live rollback boundary; effort high+ MANDATORY |
 | P6.12 | gpt-5.6-terra/medium | plan-exec | full | deterministic independent temporary-root rollback and live no-write proof after P6.11; no new semantics or live apply |
 | P7.1 | gpt-5.6-sol/xhigh | manual | full | actual capability-catalog freeze + additive shared-core/public cross-package gate before deterministic docs; effort high+ MANDATORY |
 | P7.2 | gpt-5.6-terra/high | manual | full | live self-host install/update/repair с rollback и security gates; effort high+ MANDATORY |
@@ -261,11 +261,14 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | D120 | 2026-07-23 | Owner rejects only D119's temporary `HOME`/`CODEX_HOME`/`CODEX_SQLITE_HOME` plus automation-credential carrier. Resume only the D118 native marketplace/plugin row in this ordinary authenticated `NEW SESSION`; snapshot host and repository before/after, record active-session JSONL and SQLite/WAL changes separately from plugin/install state, and never call runtime state plugin leakage. | RAG:— (owner-grounded: explicit P7.2 carrier resolution) — no frozen provider semantics change; no live apply/repair/rollback, P7.3+, FOREMAN, fleet, tag, push, cleanup, package source/test change, secret capture, `.serena/project.yml` or owner `AGENTS.md` change is authorized. The existing exact live path/action Approval Owner D# remains the stop boundary. |
 | D121 | 2026-07-23 | Approval Owner authorizes the exact P7.2 live S1+O1 transaction: create/merge only `.swissknife.json#/providers` for canonical project `swissknifeman` with `claude-code` and `codex` enabled; apply only sealed D108/D110 chain for `.codex/hooks.json`, `.codex/hooks/lifecycle.py`, unchanged-preimage `.mcp.json`, and `.swissknifeman/provider-artifacts.lock.json`. | RAG:— (owner-grounded: explicit direct instruction relayed to the routed P7.2 executor) — authority is limited to the sealed transaction, its checks, idempotence and rollback rehearsal. It excludes package/source/test changes, any other provider file, P7.3+, FOREMAN, fleet, tag, push and cleanup. |
 | D122 | 2026-07-23 | Reopen only P6.11→P6.12: `plan_d104_bootstrap_transfer` must distinguish the frozen one-entry and exact managed two-entry D104 `.codex/hooks.json` forms; the latter is permitted only as the deterministic `noop` of an identical second D108 plan. | RAG:— (repo-grounded: `artifacts/P7-self-host-e2e.md`, `packages/maind/lib/maind/provider_deploy.py:288-383`) — D121 first apply and rollback are byte-exact, but the second plan refused before writer. The repair preserves D104/D108/D110 targets, preimages, bindings, lock, rollback and live authority; P6.12 independently proves it before fresh P7.2. |
+| D123 | 2026-07-23 | Reopen only P6.11→P6.12 for the D121 explicit D108 rollback lifecycle: add one exact transaction-owned rollback entry point, invoked only by the explicit P7 rollback carrier, which after exact state/hash verification removes only the `.codex/hooks.json.provider-artifact.bootstrap-transfer.bak` and `.mcp.json.provider-artifact.bootstrap-transfer.bak` residues while restoring the recorded D108 pre-state. | RAG:— (repo-grounded: `artifacts/P7-self-host-e2e.md`, `artifacts/P6-d108-independent-conformance.md`, `core/provider_lock.py:657-785`, `packages/maind/lib/maind/provider_deploy.py:254-267`) — the admission reader is correct: these two ignored files are verified D108 transaction residue, not adoption candidates. No glob, generic `.bak` cleanup, live normalization/retry, D104/D108/D110 contract change, P7.3+, FOREMAN, fleet, tag or push is authorized. |
 
 ## 6. Update Log
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-23 | owner / D123 evidence | После hash-verification удалены только две named D121 backup residues; это не заменяет P6.11 source repair и не открывает P7.2. |
+| 2026-07-23 | task-plan-design / gpt-5.6-sol/high | D123 assigns only the verified D121 backup lifecycle to P6.11 and reopens independent P6.12 proof; P7.2/live mutation stay closed — детали см. phases/P6.md P6.11/P6.12. |
 | 2026-07-23 | task-plan-exec / gpt-5.6-terra/medium | P6.12 эскалирован: D122 disposable proof green, но D121 оставил exact backup residues, и real-root dry D108 корректно refuses before writer — детали см. phases/P6.md P6.12 Completion Notes. |
 | 2026-07-23 | owner / D116 | Claude Code audit route отменён; final independent P6 audit переносится в ChatGPT/Codex с теми же read-only границами и literal verdict. |
 | 2026-07-23 | task-plan-design / gpt-5.6-sol/high | D117 reconciles the owner-accepted final P6 audit: P7.2 is ready for a fresh first-preflight rerun, while later live mutation remains owner-gated; no P7.2 execution occurred. |

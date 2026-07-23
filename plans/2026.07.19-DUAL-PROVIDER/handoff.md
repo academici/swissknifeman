@@ -1,26 +1,26 @@
-# HANDOFF — 2026-07-23 — after P6.12
+# HANDOFF — 2026-07-23 — after P6
 
-**Next:** manual: frontier/high
+**Next:** manual: implementation/high
 
 | Parameter | Value |
 |:--|:--|
-| Model class | frontier |
+| Model class | implementation |
 | Effort | high |
-| Capabilities | plan-design |
-| Native model | `gpt-5.6-sol` |
+| Capabilities | — |
+| Native model | `gpt-5.6-terra` |
 | Reasoning effort | `high` |
 | Approval policy | `never` |
 | Sandbox | `danger-full-access` |
 | CWD | `/home/vostrikov/projects/packages/swissknifeman` |
-| Context | `NEW SESSION — design gate` |
-| Суть | Design only the bounded owning repair for D121 rollback backup residue; no live retry. |
+| Context | `NEW SESSION — P6.11` |
+| Суть | Implement only D123 exact explicit D108 rollback-backup lifecycle, then stop for independent P6.12. |
 
 | Native model | Reasoning effort | Approval policy | Sandbox | CWD | Context |
 |:--|:--|:--|:--|:--|:--|
-| `gpt-5.6-sol` | `high` | `never` | `danger-full-access` | `/home/vostrikov/projects/packages/swissknifeman` | `NEW SESSION` |
+| `gpt-5.6-terra` | `high` | `never` | `danger-full-access` | `/home/vostrikov/projects/packages/swissknifeman` | `NEW SESSION` |
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'Read AGENTS.md, CLAUDE.md, packages/maind/CLAUDE.md, and plans/2026.07.19-DUAL-PROVIDER/{plan.md,handoff.md,phases/P6.md,phases/P7.md,artifacts/P6-d108-independent-conformance.md,artifacts/P7-self-host-e2e.md}. Run task:plan-design 2026.07.19-DUAL-PROVIDER P6.12. Design only the bounded owner/source repair for D121 rollback leaving `.codex/hooks.json.provider-artifact.bootstrap-transfer.bak` and `.mcp.json.provider-artifact.bootstrap-transfer.bak`: preserve D104/D108/D110 targets, preimages, bindings, lock semantics and fail-closed admission. Do not delete or normalize live residue, execute P7.2, apply/repair/rollback, enter P7.3+, FOREMAN/fleet, tag/push/cleanup, or change AGENTS.md, .serena/project.yml, package source/tests, or unrelated dirt.'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'Read AGENTS.md, CLAUDE.md, packages/maind/CLAUDE.md, and plans/2026.07.19-DUAL-PROVIDER/{plan.md,handoff.md,phases/P6.md,phases/P7.md,artifacts/P6-d108-independent-conformance.md,artifacts/P7-self-host-e2e.md}. Execute task:plan-run 2026.07.19-DUAL-PROVIDER P6.11. Implement only D123 in core/provider_lock.py, core/__init__.py, packages/maind/lib/maind/provider_deploy.py, and focused core/maind tests: explicit D108 rollback removes only the two verified D121 transaction backups after exact state/hash verification, then restores the recorded carrier. Preserve D104/D108/D110; no generic *.bak cleanup/adoption, live retry/normalization, P7.2+, FOREMAN/fleet, tag/push/cleanup, or unrelated dirt. Commit and stop for independent P6.12.'
 ```
 
 **Done:** P6.12 D122 independent evidence is committed in `f8d46602`. In disposable roots,
@@ -29,22 +29,20 @@ calls the writer `0` times, and its SHA inventory is unchanged. Reordered, extra
 malformed observer variants refuse before a writer. Focused maind provider/deploy (`53`) and
 core provider-lock (`26`) regressions and `py_compile` passed at source anchor `5830e631`.
 
-**Remaining:** P6.12 is blocked on bounded design of the D121 rollback backup lifecycle. The
-public real-root D108 dry reader is still writer `0` and leaves its protected inventory
-unchanged, but correctly refuses `bootstrap-backup-present` while the two ignored exact backup
-files remain. A fresh P7.2 must begin from first preflight only after redesign, implementation
-and a rerun of independent P6.12 evidence.
+**Remaining:** D123 reopens P6.11 only for an explicit completed-D108 rollback lifecycle.
+The owner has removed only the two named D121 backup residues after confirming each equals its
+sealed preimage; this exact cleanup is evidence, not a generic cleanup mechanism. P6.12 must
+independently prove the source repair before any fresh P7.2 first preflight.
 
 **Sources of truth:** `phases/P6.md` P6.12; `artifacts/P6-d108-independent-conformance.md`;
 `artifacts/P7-self-host-e2e.md`; D104/D108/D110/D121/D122; `core/provider_lock.py` backup
 admission and rollback paths.
 
-**Open risks:** Removing the residue manually would violate the fail-closed ownership and
-rollback boundary. The retained backup bytes exactly match the sealed target preimages, but
-their presence prevents a new initial D108 admission as designed.
+**Open risks:** The one owner-authorized evidence cleanup does not replace D123. Any source
+repair must still refuse all non-exact, missing, extra, symlinked or byte-different backups.
 
 **Workarounds/Deferred/Open questions:**
 
 - workarounds: none; no live normalization is authorized.
-- deferred: bounded design, implementation, independent P6.12 rerun, then fresh P7.2 first preflight.
-- open_questions: which transaction-owned rollback seam removes only transaction-created backups while preserving the existing D104/D108 failure recovery contract.
+- deferred: D123 implementation, independent P6.12 rerun, then fresh P7.2 first preflight.
+- open_questions: —

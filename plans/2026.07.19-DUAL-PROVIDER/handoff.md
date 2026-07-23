@@ -1,8 +1,8 @@
 # HANDOFF — 2026-07-23 — after P7.2
 
-**Next:** manual: implementation/high — P7.2 (§3 Routing: Exec = manual)
+**Next:** ОЖИДАНИЕ: Approval Owner D# for exact P7.2 live inventory → ЗАПУСК ВРУЧНУЮ: gpt-5.6-terra/high
 
-| Параметр | Значение |
+| Parameter | Value |
 |:--|:--|
 | Model class | implementation |
 | Effort | high |
@@ -12,54 +12,33 @@
 | Approval policy | `never` |
 | Sandbox | `danger-full-access` |
 | CWD | `/home/vostrikov/projects/packages/swissknifeman` |
-| Context | same-session — item |
-| Native context | `NEW SESSION` — neutral-shell ephemeral clean room after the current Codex session exits |
-| Суть | Resume only the D118 RED native row with the D119 supported whole-executor state isolation; stop at the existing exact live-action Owner gate. |
+| Context | `NEW SESSION` |
+| Суть | Do not mutate: await the exact Owner D# that approves or rejects the P7.2 live path/action inventory. |
 
 ```bash
-(
-  set -eu
-  P72_AUTH_COUNT=0
-  [ -n "${CODEX_ACCESS_TOKEN:-}" ] && P72_AUTH_COUNT=$((P72_AUTH_COUNT + 1))
-  [ -n "${CODEX_API_KEY:-}" ] && P72_AUTH_COUNT=$((P72_AUTH_COUNT + 1))
-  [ "$P72_AUTH_COUNT" -eq 1 ] || {
-    echo 'P7.2 requires exactly one exported automation credential: CODEX_ACCESS_TOKEN or CODEX_API_KEY' >&2
-    exit 64
-  }
-  P72_RUN_ROOT=$(mktemp -d /tmp/p72-codex-cleanroom.XXXXXX)
-  mkdir -p "$P72_RUN_ROOT/home" "$P72_RUN_ROOT/codex-home" "$P72_RUN_ROOT/sqlite"
-  env HOME="$P72_RUN_ROOT/home" \
-    CODEX_HOME="$P72_RUN_ROOT/codex-home" \
-    CODEX_SQLITE_HOME="$P72_RUN_ROOT/sqlite" \
-    codex -C /home/vostrikov/projects/packages/swissknifeman \
-      -m gpt-5.6-terra -c 'model_reasoning_effort="high"' \
-      -c 'shell_environment_policy.exclude=["CODEX_ACCESS_TOKEN","CODEX_API_KEY"]' \
-      -a never -s danger-full-access \
-      exec --ephemeral --ignore-user-config \
-      'Execute $ task:plan-run 2026.07.19-DUAL-PROVIDER P7.2. Read AGENTS.md, CLAUDE.md and plans/2026.07.19-DUAL-PROVIDER/{plan.md,handoff.md,roadmap.md,phases/P7.md,research/29-p7.2-native-codex-session-state-isolation.md,research/28-p7.2-native-codex-disposable-root.md,findings/P7-self-host-probes-2026-07-19.md,findings/P7-codex-session-isolation-docs-2026-07-23.md}. Resume only at the D118 RED native Codex row. First snapshot the explicit host path /home/vostrikov/.codex and the repository; never print or persist an automation credential. Rerun the native marketplace/plugin proof under the inherited task-specific HOME, CODEX_HOME and CODEX_SQLITE_HOME, then require zero host/repository delta. If green, reconcile the isolated aggregate and stop at the exact live path/action Approval Owner D# request; do not perform live apply/repair/rollback in this ephemeral run. Do not touch package source/tests, P7.3+, FOREMAN, fleet, tag, push, cleanup, owner AGENTS.md or unrelated dirt.'
-)
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'Read AGENTS.md, CLAUDE.md, plans/2026.07.19-DUAL-PROVIDER/{plan.md,handoff.md,phases/P7.md,findings/P7-self-host-probes-2026-07-19.md}. P7.2 D120 native proof is committed; do not run live apply, repair, rollback, P7.3+, FOREMAN, fleet, tag, push, cleanup, package source/tests, or change owner files. Wait for an explicit Owner D# approving or rejecting this exact live inventory: create/merge only .swissknife.json#/providers for swissknifeman with claude-code+codex enabled; apply only the sealed D108/D110 chained transaction for .codex/hooks.json, .codex/hooks/lifecycle.py, unchanged-preimage .mcp.json, and .swissknifeman/provider-artifacts.lock.json. Without that D#, report the boundary and stop.'
 ```
 
-**Done:** D119 supersedes only D118's failed nested execution carrier and D96's P7.2
-within-session owner-gate clause. Current official Codex docs and the installed CLI confirm the
-supported clean-room primitives. No P7.2 command, plugin install, package/source change or live
-mutation occurred in this design pass.
+**Done:** D120 supersedes D119 only as a native-proof carrier. Item evidence commit
+`ab4cf1d1` records native marketplace/plugin success under ordinary host authentication:
+the marketplace was already registered, `core@swissknifeman` resolved to version `0.4.0`, and
+repository status delta was zero. Snapshot metadata records plugin/install state separately from
+active runtime state; it does not call active SQLite/WAL or JSONL state plugin leakage.
 
-**Remaining:** From a neutral owner shell after this session exits, rerun only the D118 RED
-native row under the D119 clean room. If isolated evidence becomes GREEN, emit the exact
-live path/action inventory and Owner D# request; any approved live action is a separate
-self-contained session. P7.3 and P7.4 remain sequentially closed.
+**Remaining:** Reconcile the accepted native row with the already-green isolated matrix and
+rollback evidence, then obtain Approval Owner D# for the listed live paths/actions. Any approved
+live operation starts in a separate self-contained session. P7.3 and P7.4 remain closed.
 
-**Sources of truth:** `plans/2026.07.19-DUAL-PROVIDER/plan.md` D108–D119 ·
-`phases/P7.md` P7.2 · `research/29-p7.2-native-codex-session-state-isolation.md` ·
-`findings/{P7-self-host-probes-2026-07-19,P7-codex-session-isolation-docs-2026-07-23}.md`.
+**Sources of truth:** `plans/2026.07.19-DUAL-PROVIDER/plan.md` D108–D120;
+`phases/P7.md` P7.2; `findings/P7-self-host-probes-2026-07-19.md` D120 section;
+`artifacts/P6-d108-independent-conformance.md`.
 
-**Open risks:** Exactly one owner-provisioned automation credential and the routed model must
-be available in the neutral launch shell. Missing/ambiguous auth or route availability stops
-before P7.2; host auth reuse is forbidden. Historical P6.8/D107 debt remains accepted.
+**Open risks:** The read-only Codex lifecycle hook preflight still refuses its unmanaged target
+(`ownership-conflict`, exit `1`). It is recorded as environmental evidence only; this handoff
+does not authorize repair.
 
 **Workarounds/Deferred/Open questions:**
 
-- workarounds: none; active-session path exclusions and host-auth copying were rejected.
-- deferred: live apply/repair/rollback and exact path/action approval remain P7.2-only.
+- workarounds: none; D119 temporary roots/automation credentials are rejected by D120.
+- deferred: exact Owner D# for the live transaction; all live mutation, P7.3+, FOREMAN and fleet.
 - open_questions: —

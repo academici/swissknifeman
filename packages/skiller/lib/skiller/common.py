@@ -142,16 +142,25 @@ def write_skill_manifest(manifest_file, *, profile, agent, layout, installed,
     skillset.sync_skillset (раньше два независимых писателя с разной схемой:
     date-only timestamp без `version` у vendor, `now_iso`+`version` у skillset —
     аудит V-4, update.detect_vendor_path читает оба и мог упереться в расхождение).
+    Неизменившийся манифест сохраняет исходный installed_at и байты файла.
     Атомарно (tmp+os.replace), `version` первым ключом."""
-    data = {
-        "installed_at": now_iso(),
+    stable_data = {
         "profile": profile,
         "agent": agent,
         "layout": layout,
         "skills": installed,
     }
     if support_files is not None:
-        data["support_files"] = support_files
+        stable_data["support_files"] = support_files
+    existing = safe_load_json(manifest_file)
+    if (isinstance(existing, dict)
+            and existing.get("version") == MANIFEST_VERSION
+            and isinstance(existing.get("installed_at"), str)
+            and existing["installed_at"]
+            and {key: value for key, value in existing.items()
+                 if key not in {"version", "installed_at"}} == stable_data):
+        return
+    data = {"installed_at": now_iso(), **stable_data}
     atomic_write_json(manifest_file, data, version=MANIFEST_VERSION)
 
 

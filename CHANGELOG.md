@@ -19,6 +19,9 @@
 
 ### Fixed
 
+- **skiller — идемпотентный vendor sync.** Неизменившийся skill manifest сохраняет
+  исходный `installed_at`, поэтому повторный dual-provider `sync` больше не меняет
+  snapshot при переходе между секундами.
 - **maind — текущая схема Serena.** Генератор `.serena/project.yml` использует
   канонический ключ `language_servers`; мультиязычные и пустые конфигурации больше
   не создают legacy `languages`, который Serena мигрировала при активации.

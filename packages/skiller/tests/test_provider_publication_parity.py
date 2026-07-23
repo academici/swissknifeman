@@ -10,6 +10,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from skiller.common import Env
 from skiller.publication import run_codex_native_install
@@ -161,13 +162,17 @@ class TestProviderPublicationParity(unittest.TestCase):
                 do_sync(env, project, {"dry_run": True, "no_core": True}, register=False)
             self.assertEqual(_snapshot(project), before)
 
-            with contextlib.redirect_stdout(io.StringIO()):
+            with mock.patch("skiller.common.now_iso",
+                            return_value="2026-07-23T12:57:20Z"), \
+                    contextlib.redirect_stdout(io.StringIO()):
                 do_sync(env, project, {"no_core": True}, register=False)
             self.assertTrue((project / ".claude/skills/code-style/SKILL.md").is_file())
             codex_skill = project / ".agents/skills/code-style/SKILL.md"
             self.assertTrue(codex_skill.is_file())
             applied = _snapshot(project)
-            with contextlib.redirect_stdout(io.StringIO()):
+            with mock.patch("skiller.common.now_iso",
+                            return_value="2026-07-23T12:57:21Z"), \
+                    contextlib.redirect_stdout(io.StringIO()):
                 do_sync(env, project, {"no_core": True}, register=False)
             self.assertEqual(_snapshot(project), applied)
 

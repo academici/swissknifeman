@@ -74,3 +74,4 @@ findings/00-fleet-dry-run-2026-07-23.md).
 | 2026-07-23 | task-plan-run / gpt-5.6-sol/high | P0.1 закрыт attempt 2: runtime support tree доставляется с consumer exclusions и symlink-containment preflight — детали см. phases/P0.md P0.1 Completion Notes. |
 | 2026-07-23 | independent-audit / gpt-5.6-sol/high | P0.1 attempt 2 RED: generated `core` остаётся thin; item переоткрыт attempt 3, spec синхронизирован D4. |
 | 2026-07-23 | task-plan-run / gpt-5.6-sol/high | P0.1 закрыт attempt 3: owning generator публикует canonical runtime tree в generated `core` и внешний carrier — детали см. phases/P0.md P0.1 Completion Notes. |
+| 2026-07-23 | independent-audit / gpt-5.6-sol/high | P0.1 attempt 3 GREEN: canonical → generated → external runtime transfer, exclusions, containment и commit topology подтверждены без findings. |

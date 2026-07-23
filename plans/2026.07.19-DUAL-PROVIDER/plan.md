@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.4.63 |
+| Version | 1.4.64 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
@@ -133,7 +133,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P4 | Task-command parity и provider-neutral model routing | 5/5 | 🟢 Done |
 | P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 8/8 | 🟢 Done |
 | P6 | mAInd deployment, memory и provider-neutral analytics | 11/12 | 🟠 Done with deviations |
-| P7 | Docs, self-hosting validation и FOREMAN release gate | 1/4 | 🔴 Blocked |
+| P7 | Docs, self-hosting validation и FOREMAN release gate | 1/4 | 🟡 In progress |
 
 ## 5. Decision Log
 
@@ -262,11 +262,13 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | D121 | 2026-07-23 | Approval Owner authorizes the exact P7.2 live S1+O1 transaction: create/merge only `.swissknife.json#/providers` for canonical project `swissknifeman` with `claude-code` and `codex` enabled; apply only sealed D108/D110 chain for `.codex/hooks.json`, `.codex/hooks/lifecycle.py`, unchanged-preimage `.mcp.json`, and `.swissknifeman/provider-artifacts.lock.json`. | RAG:— (owner-grounded: explicit direct instruction relayed to the routed P7.2 executor) — authority is limited to the sealed transaction, its checks, idempotence and rollback rehearsal. It excludes package/source/test changes, any other provider file, P7.3+, FOREMAN, fleet, tag, push and cleanup. |
 | D122 | 2026-07-23 | Reopen only P6.11→P6.12: `plan_d104_bootstrap_transfer` must distinguish the frozen one-entry and exact managed two-entry D104 `.codex/hooks.json` forms; the latter is permitted only as the deterministic `noop` of an identical second D108 plan. | RAG:— (repo-grounded: `artifacts/P7-self-host-e2e.md`, `packages/maind/lib/maind/provider_deploy.py:288-383`) — D121 first apply and rollback are byte-exact, but the second plan refused before writer. The repair preserves D104/D108/D110 targets, preimages, bindings, lock, rollback and live authority; P6.12 independently proves it before fresh P7.2. |
 | D123 | 2026-07-23 | Reopen only P6.11→P6.12 for the D121 explicit D108 rollback lifecycle: add one exact transaction-owned rollback entry point, invoked only by the explicit P7 rollback carrier, which after exact state/hash verification removes only the `.codex/hooks.json.provider-artifact.bootstrap-transfer.bak` and `.mcp.json.provider-artifact.bootstrap-transfer.bak` residues while restoring the recorded D108 pre-state. | RAG:— (repo-grounded: `artifacts/P7-self-host-e2e.md`, `artifacts/P6-d108-independent-conformance.md`, `core/provider_lock.py:657-785`, `packages/maind/lib/maind/provider_deploy.py:254-267`) — the admission reader is correct: these two ignored files are verified D108 transaction residue, not adoption candidates. No glob, generic `.bak` cleanup, live normalization/retry, D104/D108/D110 contract change, P7.3+, FOREMAN, fleet, tag or push is authorized. |
+| D124 | 2026-07-23 | Approval Owner directs immediate completion of the remaining plan without another P6 audit or launch ritual. Terminal D123/P6.12 evidence satisfies the repaired predecessor gate; resume P7.2 from its first preflight under the existing exact D121 live transaction authority. | RAG:— (owner-grounded: direct instruction 2026-07-23; repo-grounded: P6.11 `52374d40`, P6.12 `1c0a6990`, P6 close `16e8c85b`) — this changes only the execution carrier after the repaired predecessor; it does not widen D121, authorize P7.3 cleanup, FOREMAN, fleet, tag or push. |
 
 ## 6. Update Log
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-23 | owner / D124 | Повторный P6 audit отменён; terminal D123/P6.12 evidence принято как predecessor gate, P7.2 возобновлён под неизменным D121 scope. |
 | 2026-07-23 | task-plan-close / gpt-5.6-sol/medium | P6 повторно закрыта как 🟠 после terminal P6.1–P6.12: D123/P6.12 GREEN подтверждены, material P6.8 evidence остаётся явным; далее только fresh independent P6 audit — детали см. phases/P6.md Phase Handoff. |
 | 2026-07-23 | owner / D123 evidence | После hash-verification удалены только две named D121 backup residues; это не заменяет P6.11 source repair и не открывает P7.2. |
 | 2026-07-23 | task-plan-design / gpt-5.6-sol/high | D123 assigns only the verified D121 backup lifecycle to P6.11 and reopens independent P6.12 proof; P7.2/live mutation stay closed — детали см. phases/P6.md P6.11/P6.12. |

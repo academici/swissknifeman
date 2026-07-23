@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.23-FLEET-DUAL-PROVIDER |
 | Title | Последовательная двухпровайдерная настройка проектов |
-| Version | 0.6.0 |
+| Version | 0.9.0 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | frontier |
@@ -49,7 +49,7 @@ P1 закрывает только synthetic/disposable conformance MVP; нез�
 | P1.1 | implementation/medium | plan-exec | детерминированный existing conformance CLI пишет только disposable roots и plan artifact |
 | P1.2 | implementation/high | manual | conditional owning repair требует high verification |
 | P2.1 | implementation/medium | plan-exec | plan-only commit→item/lint traceability с детерминированными git/lint gates |
-| P2.2 | implementation/high | manual | live external state требует per-project high verification |
+| P2.2 | frontier/high | manual | D12-authorized consumer remediation: exact ownership/provider decisions и live external state |
 
 ## 4. Phase Index & Status Board
 
@@ -57,7 +57,7 @@ P1 закрывает только synthetic/disposable conformance MVP; нез�
 |:--|:--|:--|:--|
 | P0 | Устранить блокер connect-проекции | 1/2 | 🟠 Done with deviations |
 | P1 | Пилот и стабилизация | 1/2 | 🟢 Done |
-| P2 | Последовательный fleet rollout | 1/2 | 🔴 Blocked |
+| P2 | Последовательный fleet rollout | 1/2 | 🟡 In progress |
 
 ## 5. Decision Log
 
@@ -73,6 +73,9 @@ P1 закрывает только synthetic/disposable conformance MVP; нез�
 | D8 | 2026-07-23 | Owner directed rollout to continue: P1.1 reopens as a fresh manual execution beginning with a new live registry-order D7 scan, not a pre-named candidate or a deferral. Exactly one normal apply remains conditional on one candidate passing the complete preflight. | Eligibility is live external state; the owner authorizes a new evidence pass but does not relax D5–D7, permit repair/force, or authorize overwriting dirty/unmanaged bytes. RAG:— (repo-grounded: `brief/01-refinements.md`). |
 | D9 | 2026-07-23 | После двух зафиксированных пустых D7 scans P1.1 прекращает повторять registry scan и выбирает ровно один synthetic/disposable local temp-root dual-provider conformance carrier. Green закрывает только минимальный conformance MVP; red передаёт concrete owning defect в P1.2. Live external rollout остаётся P2 debt, а live consumers не являются target P1.1. | Owner разрешил минимальный disposable fixture без остановки; existing `maind sync --conformance` выполняет dual-provider apply/check и полный provider/provisioner dry-run только в `TemporaryDirectory`. Его внутренний temp-only repair case — safety control, не consumer repair и не разрешение CLI `--repair`. D5–D7 не ослабляются: `sibintek-insiders`, self-host, dirty/unmanaged bytes, `--repair` и `--force` остаются запрещены. RAG:— (repo-grounded: `brief/01-refinements.md`; `research/01-pilot-selection-contract.md`; `packages/maind/lib/maind/provision/sync.py:683-934`). |
 | D10 | 2026-07-23 | P2 принимает D9 synthetic GREEN только как precondition, сначала закрывает plan-only P1.1 traceability carrier, затем заново применяет D5–D7 к каждому live consumer точными public per-project командами. | Disposable temp-root не доказывает eligibility или safety live consumer; audit P1 требует восстановить commit→item/lint traceability до первого consumer access, не реопеняя P1 и не переписывая append-only историю. RAG:— (repo-grounded: `phases/P1.md`, блок `Audit P1 — 2026-07-23`; D5–D9). |
+| D11 | 2026-07-23 | После committed zero D7-set P2.2 прекращает omnibus scan и предлагает owner-gated read-only remediation diagnosis ровно для `azguard`; proposal не разрешает доступ. До отдельной Owner Approval записи D12 запрещены live inspection, dry-run, mutation и apply; после D12 diagnosis заканчивается preimage classification и новым mutation proposal, а не consumer write. | Dirty/non-Git/stale registry классы требуют project/registry authority; из committed clean roots только `azguard`/`botkit` имеют consumer-owned provider/MCP/instruction conflicts. Названный узкий diagnosis создаёт owning carrier без ослабления D5–D7. RAG:— (repo-grounded: `findings/P2.2-rollout.md`; `research/02-p2.2-remediation-boundary.md`). |
+| D12 | 2026-07-23 | Owner одобрил автономное разрешение P2.2 consumer conflicts до terminal item без промежуточных micro-gates. Агент вправе диагностировать и минимально исправлять exact clean-consumer targets, затем выполнять D7 apply/health/no-op; новый повторяемый automation defect исправляется в owning source. D5–D7, `sibintek-insiders`, self-host, dirty worktrees, registry cleanup, `--repair` и `--force` остаются frozen exclusions. | Прямое распоряжение владельца «конфликты разруливай сам до полного завершения пункта» даёт authority на in-scope remediation, но не на стирание чужой работы или обход fail-closed gates. RAG:— (repo-grounded: `brief/01-refinements.md`, P2.2 Owner Approval). |
+| D13 | 2026-07-23 | P2.2 сначала исправляет mAInd provider-context defect: exact registered root's regular `.swissknife.json#/providers` подаётся в существующий shared resolver как project layer; missing carrier сохраняет fleet/default behavior, unsafe/invalid carrier fail-closed до write. После green tests повторяется тот же `azguard` D7 dry-run. | `azguard` tracked carrier выбирает Claude+Codex, но `provider_projection_context` не передаёт project layer и наблюдаемо возвращает только fleet-default Claude. Shared resolver уже владеет precedence/schema; новый параллельный parser запрещён. RAG:— (repo-grounded: `findings/P2.2-azguard-remediation-diagnosis.md`; `packages/maind/lib/maind/provision/deploy.py:62-81`; `packages/maind/lib/maind/config.py:416-438`). |
 
 ## 6. Update Log
 
@@ -100,3 +103,6 @@ P1 закрывает только synthetic/disposable conformance MVP; нез�
 | 2026-07-23 | task-plan-design / gpt-5.6-sol/high | P2 reconciled after P1 ATTENTION: добавлен plan-only traceability prerequisite и live rollout восстановлен по D5–D7 exact per-consumer commands; P1 не реопенялась. |
 | 2026-07-23 | task-plan-exec / gpt-5.6-terra/medium | P2.1 закрыт: закреплён append-only P1.1 commit→item/lint carrier — детали см. phases/P2.md P2.1 Completion Notes. |
 | 2026-07-23 | task-plan-run / gpt-5.6-terra/high | P2.2 заблокирован: live D7-set исчерпан без apply; per-consumer evidence и owning remediation — в findings/P2.2-rollout.md. |
+| 2026-07-23 | task-plan-design / gpt-5.6-sol/high | P2.2 перепроектирован по D11: proposed `azguard` read-only diagnosis ждёт отдельного D12 Owner Approval; live consumer access не выполнялся. |
+| 2026-07-23 | owner / Dmitry Vostrikov | D12: P2.2 получил authority на автономное conflict remediation до terminal item без ослабления D5–D7. |
+| 2026-07-23 | task-plan-design / gpt-5.6-sol/high | D13: azguard diagnosis локализовал project-provider layer defect в mAInd; точный test-first owning repair добавлен в P2.2. |

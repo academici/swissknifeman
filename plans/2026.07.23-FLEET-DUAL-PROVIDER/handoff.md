@@ -1,6 +1,6 @@
 # HANDOFF — 2026-07-23 — after P2.2
 
-**Next:** /task:plan-design 2026.07.23-FLEET-DUAL-PROVIDER P2.2
+**Next:** run-items: task:plan-run 2026.07.23-FLEET-DUAL-PROVIDER P2.2
 
 | Parameter | Value |
 |:--|:--|
@@ -10,21 +10,21 @@
 | Sandbox | `danger-full-access` |
 | Cwd | `/home/vostrikov/projects/packages/swissknifeman` |
 | Context | `NEW SESSION` |
-| Суть | Разобрать D7-blocked P2.2 без ослабления D5–D7: создать только владеющие remediation items либо exact Owner Approval boundary. |
+| Суть | По D12 автономно разрешить P2.2 conflicts до terminal result без ослабления D5–D7. |
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'NEW SESSION: Work only on the P2.2 D7-blocked boundary of plan 2026.07.23-FLEET-DUAL-PROVIDER using task:task-plan-design. Start with pwd, git status --short, effective codex doctor --json, hook-command integrity, ./packages/maind/bin/maind health --cwd, and applicable plan lint. Read AGENTS.md, CLAUDE.md, task-plan-design, plan-protocol, plan.md, handoff.md, phases/P2.md, and findings/P2.2-rollout.md. Do not inspect or mutate any live consumer until the plan contains an owner-approved remediation item for that named consumer. Do not relax D5–D7; do not use --repair or --force; do not touch sibintek-insiders, self-host, registry cleanup, FOREMAN, or P1/P2.1.'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'NEW SESSION: Execute exactly P2.2 of plan 2026.07.23-FLEET-DUAL-PROVIDER with task:task-plan-run. Start with pwd, git status --short, effective codex doctor --json, hook-command integrity, ./packages/maind/bin/maind health --cwd, and applicable plan lint. Read AGENTS.md, CLAUDE.md, task-plan-run, plan-protocol, plan.md, handoff.md, phases/P2.md and P2.2 Required Reads. D12 authorizes autonomous in-scope conflict remediation through terminal item. Preserve D5-D7; never use --repair or --force; never touch sibintek-insiders, self-host, dirty worktrees, registry cleanup, FOREMAN, P1/P2.1 or unrelated consumer bytes. Work one clean consumer at a time and continue automatically through validation and close.'
 ```
 
-**Done:** P2.2 ran the ordered D7 preflight. No normal apply was authorized; the exact scan and final dry-run evidence are in `findings/P2.2-rollout.md`.
+**Done:** P2.2 attempt 1 ran the ordered D7 preflight with zero writes. D12 authorizes autonomous remediation. Read-only `azguard` diagnosis localized D13: mAInd ignores the tracked project-local dual-provider layer.
 
-**Remaining:** P2.2 is `🔴 Blocked`. The next step is plan design for consumer-owned remediation boundaries, not another scan or a forced apply.
+**Remaining:** Execute P2.2 under D12 until terminal; no further owner micro-gates are required inside frozen D5–D7 scope.
 
-**Sources of truth:** `phases/P2.md` P2.2 · `findings/P2.2-rollout.md` · `plan.md` D5–D10 · `journal.jsonl`.
+**Sources of truth:** `phases/P2.md` P2.2 · `findings/P2.2-azguard-remediation-diagnosis.md` · `findings/P2.2-rollout.md` · `research/02-p2.2-remediation-boundary.md` · `plan.md` D5–D13 · `journal.jsonl`.
 
-**Open risks:** Dirty worktrees, single-provider configurations, MCP unmanaged targets and instruction ownership conflicts make current live consumers unsafe to modify. Treating the synthetic carrier as live proof or using repair/force would violate D5–D7.
+**Open risks:** Dirty worktrees remain excluded; clean-consumer provider/MCP/instruction conflicts require exact reversible remediation before D7 apply.
 
 **Workarounds/Deferred/Open questions:**
 - workarounds: none.
-- deferred: `sibintek-insiders`, self-host, stale registry cleanup, `--repair`, `--force`.
-- open_questions: owner/project remediation selection is required before retry.
+- deferred: `botkit`, every dirty/non-Git consumer, `sibintek-insiders`, self-host, stale registry cleanup, `--repair`, `--force`, all mutation/apply.
+- open_questions: none; D12 approved autonomous in-scope remediation.

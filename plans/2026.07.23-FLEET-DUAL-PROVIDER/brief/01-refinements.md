@@ -50,3 +50,28 @@ live fleet pilot; весь live external rollout остаётся отдельн
 конкретный owning defect для P1.2, а не новый scan, подгонку или обход gate.
 Внутренний temp-only repair safety case самой conformance-команды не считается
 consumer repair и не разрешает CLI `--repair`.
+
+## P2.2 — design-only remediation boundary после zero D7-set
+
+Владелец распорядился выполнить только `task:plan-design` для P2.2 по
+существующим handoff и rollout evidence. До появления отдельного
+owner-approved remediation item запрещено инспектировать или изменять любой
+live consumer. D5–D7 остаются frozen; `--repair`, `--force` и обход
+consumer-owned conflicts запрещены.
+
+Этот design-запрос не является одобрением доступа к конкретному consumer.
+Следующий carrier обязан назвать ровно один project, отделить read-only
+diagnosis от mutation/apply и остановиться на точной Owner Approval boundary.
+
+## P2.2 — Owner Approval на автономное завершение
+
+Владелец явно распорядился: «конфликты разруливай сам до полного завершения
+пункта». Это снимает промежуточные owner micro-gates P2.2 и разрешает агенту
+самостоятельно диагностировать и минимально исправлять consumer-owned
+конфликты, необходимые для terminal P2.2.
+
+Authority не ослабляет D5–D7: `sibintek-insiders`, self-host, dirty worktrees,
+неуправляемые bytes без точного preimage/ownership решения, registry cleanup,
+`--repair` и `--force` остаются запрещены. Исполнение идёт по одному clean
+consumer; каждый write требует точной scope/preimage фиксации, а повторяемый
+automation defect исправляется в owning source до продолжения rollout.

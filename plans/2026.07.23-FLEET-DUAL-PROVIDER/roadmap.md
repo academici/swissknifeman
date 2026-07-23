@@ -1,6 +1,6 @@
 # Roadmap исполнения — 2026.07.23-FLEET-DUAL-PROVIDER
 
-**Обновлён:** 2026-07-23 · **Соответствует plan.md:** v0.6.0
+**Обновлён:** 2026-07-23 · **Соответствует plan.md:** v0.9.0
 
 ## Карта исполнения
 
@@ -11,7 +11,7 @@
 | P1.1 | solo | plan-exec | implementation/medium | — | 🟢 D9 disposable synthetic conformance MVP закрыт; весь live rollout остаётся P2 |
 | P1.2 | conditional solo | plan-run | implementation/high | D6/frozen-contract change only | ⛔ пропущен по D9: GREEN P1.1 не создал concrete owning defect |
 | P2.1 | solo | plan-exec | implementation/medium | — | 🟢 plan-only traceability prerequisite закрыт; live access остаётся только P2.2 |
-| P2.2 | solo | plan-run | implementation/high | — | D5–D7 per-consumer external-state loop с stop-on-defect |
+| P2.2 | solo | plan-run | frontier/high | D12 approved | Автономно разрешить exact clean-consumer conflicts, выполнить D7 apply/health/no-op и terminal classification |
 
 ## Готовые launch-block'и групп
 
@@ -75,18 +75,18 @@ Audit P1 завершён ATTENTION; remediation carrier — P2.1, P1 не
 P2.1 закрыт item commit `906dddc6`; carrier:
 `findings/P2.1-p1-traceability.md`. Следующий executable item — P2.2.
 
-### P2.2 — live rollout после P2.1
+### P2.2 — autonomous remediation
 
 **Next:** run-items: task:plan-run 2026.07.23-FLEET-DUAL-PROVIDER P2.2
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | implementation |
+| Model class | frontier |
 | Effort | high |
 | Capabilities | — |
 | Context | same-session — item |
-| Суть | После terminal P2.1 выполнять D5–D7 exact public commands по одному live consumer. |
+| Суть | По D12 автономно разрешить P2.2 conflicts до terminal result без ослабления D5–D7. |
 
-```text
-$ task:plan-run 2026.07.23-FLEET-DUAL-PROVIDER P2.2
+```bash
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'NEW SESSION: Execute exactly P2.2 of plan 2026.07.23-FLEET-DUAL-PROVIDER with task:task-plan-run. D12 authorizes autonomous in-scope conflict remediation through terminal item. Preserve D5-D7; never use --repair or --force; never touch sibintek-insiders, self-host, dirty worktrees, registry cleanup or unrelated consumer bytes. Follow phases/P2.md P2.2 exactly, one clean consumer at a time, and continue automatically through validation and close.'
 ```

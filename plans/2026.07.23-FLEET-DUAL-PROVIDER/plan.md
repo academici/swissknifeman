@@ -7,7 +7,7 @@
 | Plan ID | 2026.07.23-FLEET-DUAL-PROVIDER |
 | Title | Последовательная двухпровайдерная настройка проектов |
 | Version | 0.9.0 |
-| Status | 🟡 In progress |
+| Status | 🟠 Done with deviations |
 | Document Type | Executable Master Plan |
 | Authoring Model | frontier |
 | Design Passes | 3/3 — ecosystem-core fleet change: initial design, RED remediation, final cross-phase reconciliation |
@@ -57,7 +57,7 @@ P1 закрывает только synthetic/disposable conformance MVP; нез�
 |:--|:--|:--|:--|
 | P0 | Устранить блокер connect-проекции | 1/2 | 🟠 Done with deviations |
 | P1 | Пилот и стабилизация | 1/2 | 🟢 Done |
-| P2 | Последовательный fleet rollout | 1/2 | 🟡 In progress |
+| P2 | Последовательный fleet rollout | 1/2 | 🟠 Done with deviations |
 
 ## 5. Decision Log
 
@@ -111,3 +111,4 @@ P1 закрывает только synthetic/disposable conformance MVP; нез�
 | 2026-07-23 | task-plan-run / gpt-5.6-sol/high | P2.2 закрыт по D14: project provider layer, exact managed adoption и canonical contained Codex carrier исправлены и провалидированы; live rollout deferred — детали см. phases/P2.md P2.2 Completion Notes. |
 | 2026-07-23 | independent-acceptance / root | P2.2 reopened: already-desired exact adoption оставлял все actions NOOP и не записывал ownership lock. |
 | 2026-07-23 | task-plan-run / gpt-5.6-sol/high | P2.2 закрыт fix-forward: already-desired adoption теперь атомарно переносит ownership и проходит ordinary no-op planning — детали см. phases/P2.md P2.2 Completion Notes. |
+| 2026-07-23 | task-plan-close / gpt-5.6-sol | P2 закрыта с D14 material deviation: internal fixes и evidence сверены до `a86cf425`; independent audit carrier подготовлен, live rollout не возобновлён. |

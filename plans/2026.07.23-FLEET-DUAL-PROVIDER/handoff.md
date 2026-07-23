@@ -1,24 +1,27 @@
 # HANDOFF — 2026-07-23 — after P0.1
 
-**Next:** run-items: task:plan-run 2026.07.23-FLEET-DUAL-PROVIDER P0.2
+P0.1 переоткрыт для attempt 2: implementation fix-forward не меняет frozen
+provider contract.
+
+**Next:** run-items: task:plan-run 2026.07.23-FLEET-DUAL-PROVIDER P0.1
 
 | Параметр | Значение |
 |:--|:--|
-| Model class | implementation |
+| Model class | frontier |
 | Effort | high |
-| Capabilities | — |
+| Capabilities | skills.repository |
 | Context | same-session — item |
-| Суть | Проверить package regression и повторить no-write fleet dry-run с provider-qualified skip evidence. |
+| Суть | Fix-forward внешнего Codex bundle: доставить runtime support files выбранных skills и повторить gates. |
 
 ```
-$ task:plan-run 2026.07.23-FLEET-DUAL-PROVIDER P0.2
+$ task:plan-run 2026.07.23-FLEET-DUAL-PROVIDER P0.1
 ```
 
-**Done:** P0.1 закрыт item commit `dc9a3fd93cb2c85ca5b3f4f206e39b2147df948b`: внешний Codex connect carrier доставляет contained marketplace и self-contained selected bundles с Claude plugin-set parity; self-host thin и explicit install boundary сохранены.
-**Remaining:** P0.2 — package regression, eligibility semantics и no-write fleet dry-run; затем phase audit/close по roadmap.
-**Sources of truth:** `plan.md` · `phases/P0.md` · `findings/P0.1-codex-connect-carrier-verification.md` · `packages/skiller/lib/skiller/publication.py` · `packages/skiller/lib/skiller/connect.py`.
-**Open risks:** P0.2 должен подтвердить, что отсутствующий registry `local_path` классифицируется provider-qualified skip и не прерывает весь dry-run.
+**Done:** Attempt 1 commit `dc9a3fd93cb2c85ca5b3f4f206e39b2147df948b` реализовал contained marketplace, selected plugin parity, ownership preflight и explicit install boundary; root-review после закрытия выявил неполную self-contained семантику.
+**Remaining:** P0.1 attempt 2 — test-first repair runtime support files и повторные focused/package gates. P0.2 не начинать до нового green close.
+**Sources of truth:** `plan.md` · `phases/P0.md` · `findings/P0.1-codex-connect-carrier-verification.md` · `findings/P0.1-root-review-runtime-assets.md` · `packages/skiller/lib/skiller/publication.py`.
+**Open risks:** Копирование support files должно повторять consumer exclusions (`upstream.json`, `.claude-plugin`, `SKILL.*.md`, `evals`, bytecode cache), не ослабляя containment и ownership.
 **Workarounds/Deferred/Open questions:**
 - workarounds: —
-- deferred: реальные consumer writes и repair остаются за P1.
+- deferred: реальные consumer writes и repair остаются за P1; P0.2 не начат.
 - open_questions: —

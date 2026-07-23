@@ -49,7 +49,7 @@ findings/00-fleet-dry-run-2026-07-23.md).
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P0 | Устранить блокер connect-проекции | 1/2 | 🟡 In progress |
+| P0 | Устранить блокер connect-проекции | 0/2 | 🟡 In progress |
 | P1 | Пилот и стабилизация | 0/2 | ⬜ Not started |
 | P2 | Последовательный fleet rollout | 0/1 | ⬜ Not started |
 
@@ -69,3 +69,4 @@ findings/00-fleet-dry-run-2026-07-23.md).
 | 2026-07-23 | issue-planner/frontier | Design pass 2/3: RED audit-1 разобран; добавлены parity acceptance, retry и полная карта rollout. |
 | 2026-07-23 | issue-planner/frontier | Design pass 3/3: cross-phase reconciliation audit-2 — JIT removed, routing/files/budget reconciled. |
 | 2026-07-23 | task-plan-run / gpt-5.6-sol/high | P0.1 закрыт: project-scoped Codex connect carrier публикует contained selected bundles с Claude parity — детали см. phases/P0.md P0.1 Completion Notes. |
+| 2026-07-23 | root-review / gpt-5.6-sol/high | P0.1 переоткрыт, attempt 2: внешний bundle терял runtime support files (`snippets/`, `references/`, scripts/assets), поэтому claim self-contained не подтверждён. |

@@ -75,3 +75,21 @@ Authority не ослабляет D5–D7: `sibintek-insiders`, self-host, dirty
 `--repair` и `--force` остаются запрещены. Исполнение идёт по одному clean
 consumer; каждый write требует точной scope/preimage фиксации, а повторяемый
 automation defect исправляется в owning source до продолжения rollout.
+
+## P2.2 — D14: terminal scope только внутри swissknifeman
+
+После обнаружения duplicate Codex vendor carrier владелец сузил P2.2 до
+внутренних owning fixes и запретил любой дальнейший доступ к live consumer
+repositories в этом item. Разрешено завершить D13 provider layer, safe exact
+adoption и устранение duplicate carrier внутри swissknifeman; consumer rollout,
+fleet dry-run и consumer commits отложены в отдельный будущий authority
+carrier. D5–D7, `sibintek-insiders`, self-host, dirty worktrees, registry
+cleanup, `--repair` и `--force` остаются frozen exclusions.
+
+## Terminal completion после P2 audit
+
+Владелец прямо потребовал завершить весь оставшийся контур в одном текущем
+прогоне без новых launch prompts. Это разрешает только plan-only reconciliation
+находок P2 audit, архивирование терминального плана, push существующей ветки и
+ожидание CI. Разрешение не распространяется на live consumer access, rollout,
+FOREMAN или merge PR #147.

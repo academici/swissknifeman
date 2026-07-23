@@ -23,4 +23,5 @@
 | `research/00-rollout-design.md` | research | `P0.1` | последовательность fix-forward rollout |
 | `findings/P2.2-rollout.md` | findings | `P2.2` | committed zero D7 apply-set и consumer-owned blocker classes |
 | `findings/P2.2-azguard-remediation-diagnosis.md` | findings | `P2.2` | exact preimage и D13 provider-context automation defect |
+| `findings/P2-audit-remediation.md` | findings | `P2 terminal` | plan-only reconciliation шести audit evidence/accounting findings |
 | `research/02-p2.2-remediation-boundary.md` | research | `P2.2` | exact owner-gated `azguard` diagnosis boundary без consumer access |

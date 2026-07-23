@@ -75,18 +75,18 @@ Audit P1 завершён ATTENTION; remediation carrier — P2.1, P1 не
 P2.1 закрыт item commit `906dddc6`; carrier:
 `findings/P2.1-p1-traceability.md`. Следующий executable item — P2.2.
 
-### P2 items terminal — phase close
+### Terminal — D15 reconciliation and archive
 
-**Next:** close: task:plan-close 2026.07.23-FLEET-DUAL-PROVIDER P2
+P2 closed at `3ebc74d3`; independent audit `df05a656` returned ATTENTION on
+evidence/accounting only. D15 resolves all six findings plan-only and carries
+the owner's instruction to finish without another launch prompt.
 
-| Параметр | Значение |
-|:--|:--|
-| Model class | implementation |
-| Effort | low |
-| Capabilities | — |
-| Context | cold-start — phase close |
-| Суть | Сверить terminal P2 items, закрыть фазу с D14 deviation и подготовить независимый audit carrier. |
+**Next:** archive: task:plan-close archive 2026.07.23-FLEET-DUAL-PROVIDER
 
-```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="low"' -a never -s danger-full-access 'NEW SESSION: Close phase P2 of plan 2026.07.23-FLEET-DUAL-PROVIDER with task:task-plan-close. Reconcile terminal P2 items, commits 8f91865e, 63edc6da and 48c7abbe, package validation evidence, D14 material deferral and plan lint; then hand off to an independent P2 audit. HARD BOUNDARY: do not inspect, mutate or validate any live consumer repository; never use --repair or --force; preserve D5-D7.'
+| Model | Thinking | Context | Суть |
+|:--|:--|:--|:--|
+| `gpt-5.6-terra` | `low` | `NEW SESSION — шаг-не-item` | Архивировать terminal plan after D15 remediation; root/ отсутствует, consumer/rollout/merge вне scope. |
+
+```text
+$ task:plan-close archive 2026.07.23-FLEET-DUAL-PROVIDER
 ```

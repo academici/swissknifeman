@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.23-FLEET-DUAL-PROVIDER |
 | Title | Последовательная двухпровайдерная настройка проектов |
-| Version | 0.9.0 |
+| Version | 0.9.1 |
 | Status | 🟠 Done with deviations |
 | Document Type | Executable Master Plan |
 | Authoring Model | frontier |
@@ -28,9 +28,10 @@
 фиксируя каждый сбой в плане и возвращаясь к owning source. Пропавшие временные
 записи не являются целью автоматического удаления. RAG:— (repo-grounded:
 findings/00-fleet-dry-run-2026-07-23.md).
-P1 закрывает только synthetic/disposable conformance MVP; незавершённая
-раскатка по live external consumers остаётся явным scope P2 и продолжает
-подчиняться D5–D7.
+P1 закрывает только synthetic/disposable conformance MVP. P2 сохранил D5–D7
+evidence и internal owning fixes, но D14 вывел незавершённую раскатку по live
+external consumers из terminal scope: она требует отдельного будущего
+owner-authorized carrier и продолжает подчиняться D5–D7.
 
 ## 2. Execution Rules
 
@@ -76,7 +77,8 @@ P1 закрывает только synthetic/disposable conformance MVP; нез�
 | D11 | 2026-07-23 | После committed zero D7-set P2.2 прекращает omnibus scan и предлагает owner-gated read-only remediation diagnosis ровно для `azguard`; proposal не разрешает доступ. До отдельной Owner Approval записи D12 запрещены live inspection, dry-run, mutation и apply; после D12 diagnosis заканчивается preimage classification и новым mutation proposal, а не consumer write. | Dirty/non-Git/stale registry классы требуют project/registry authority; из committed clean roots только `azguard`/`botkit` имеют consumer-owned provider/MCP/instruction conflicts. Названный узкий diagnosis создаёт owning carrier без ослабления D5–D7. RAG:— (repo-grounded: `findings/P2.2-rollout.md`; `research/02-p2.2-remediation-boundary.md`). |
 | D12 | 2026-07-23 | Owner одобрил автономное разрешение P2.2 consumer conflicts до terminal item без промежуточных micro-gates. Агент вправе диагностировать и минимально исправлять exact clean-consumer targets, затем выполнять D7 apply/health/no-op; новый повторяемый automation defect исправляется в owning source. D5–D7, `sibintek-insiders`, self-host, dirty worktrees, registry cleanup, `--repair` и `--force` остаются frozen exclusions. | Прямое распоряжение владельца «конфликты разруливай сам до полного завершения пункта» даёт authority на in-scope remediation, но не на стирание чужой работы или обход fail-closed gates. RAG:— (repo-grounded: `brief/01-refinements.md`, P2.2 Owner Approval). |
 | D13 | 2026-07-23 | P2.2 сначала исправляет mAInd provider-context defect: exact registered root's regular `.swissknife.json#/providers` подаётся в существующий shared resolver как project layer; missing carrier сохраняет fleet/default behavior, unsafe/invalid carrier fail-closed до write. После green tests повторяется тот же `azguard` D7 dry-run. | `azguard` tracked carrier выбирает Claude+Codex, но `provider_projection_context` не передаёт project layer и наблюдаемо возвращает только fleet-default Claude. Shared resolver уже владеет precedence/schema; новый параллельный parser запрещён. RAG:— (repo-grounded: `findings/P2.2-azguard-remediation-diagnosis.md`; `packages/maind/lib/maind/provision/deploy.py:62-81`; `packages/maind/lib/maind/config.py:416-438`). |
-| D14 | 2026-07-23 | Owner сузил P2.2 до внутренних swissknifeman fixes и запретил любой дальнейший доступ к live consumer repositories в этом item. D13, safe exact adoption и устранение duplicate Codex vendor carrier закрываются внутри пакетов; live consumer rollout, fleet dry-run и consumer commits отложены в отдельный будущий authority carrier. D5–D7, запрет `--repair`/`--force` и все frozen exclusions сохраняются. | Прямое owner scope change после обнаружения duplicate `.agents/skills` channel требует завершить owning automation fixes без продолжения внешней мутации. Это supersede только live-execution части D12 для P2.2, а не ослабление safety contract. RAG:— (repo-grounded: owner instruction in current P2.2 session; `findings/P2.2-rollout.md`, Attempt 2). |
+| D14 | 2026-07-23 | Owner сузил P2.2 до внутренних swissknifeman fixes и запретил любой дальнейший доступ к live consumer repositories в этом item. D13, safe exact adoption и устранение duplicate Codex vendor carrier закрываются внутри пакетов; live consumer rollout, fleet dry-run и consumer commits отложены в отдельный будущий authority carrier. D5–D7, запрет `--repair`/`--force` и все frozen exclusions сохраняются. | Прямое owner scope change после обнаружения duplicate `.agents/skills` channel требует завершить owning automation fixes без продолжения внешней мутации. Это supersede только live-execution части D12 для P2.2, а не ослабление safety contract. RAG:— (repo-grounded: `brief/01-refinements.md`, P2.2 D14; `findings/P2.2-rollout.md`, Attempt 2). |
+| D15 | 2026-07-23 | Owner потребовал завершить terminal plan без новых launch prompts: plan-only audit remediation, archive, push существующей ветки и ожидание CI выполняются в одном прогоне; P2 не реопеняется. | Все audit findings относятся к evidence/accounting, а не к сломанному product deliverable. Authority не включает consumer access, rollout, FOREMAN или merge PR #147. RAG:— (repo-grounded: `brief/01-refinements.md`, Terminal completion; `phases/P2.md`, Audit P2). |
 
 ## 6. Update Log
 
@@ -111,4 +113,7 @@ P1 закрывает только synthetic/disposable conformance MVP; нез�
 | 2026-07-23 | task-plan-run / gpt-5.6-sol/high | P2.2 закрыт по D14: project provider layer, exact managed adoption и canonical contained Codex carrier исправлены и провалидированы; live rollout deferred — детали см. phases/P2.md P2.2 Completion Notes. |
 | 2026-07-23 | independent-acceptance / root | P2.2 reopened: already-desired exact adoption оставлял все actions NOOP и не записывал ownership lock. |
 | 2026-07-23 | task-plan-run / gpt-5.6-sol/high | P2.2 закрыт fix-forward: already-desired adoption теперь атомарно переносит ownership и проходит ordinary no-op planning — детали см. phases/P2.md P2.2 Completion Notes. |
+| 2026-07-23 | review-fix / gpt-5.6-sol/high | `24b4d080` устранил ruff regression в declared `provider_deploy.py` перед PR head `a86cf425`. |
 | 2026-07-23 | task-plan-close / gpt-5.6-sol | P2 закрыта с D14 material deviation: internal fixes и evidence сверены до `a86cf425`; independent audit carrier подготовлен, live rollout не возобновлён. |
+| 2026-07-23 | task-plan-audit / gpt-5.6-sol/xhigh | P2 audit ATTENTION: product validation GREEN; найдены шесть evidence/accounting defects — детали см. phases/P2.md Audit P2. |
+| 2026-07-23 | task-plan-close / gpt-5.6-sol/xhigh | D15 terminal reconciliation: шесть audit findings закрыты plan-only carrier'ом; consumer boundary сохранён — детали см. findings/P2-audit-remediation.md. |

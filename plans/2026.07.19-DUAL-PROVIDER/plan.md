@@ -132,7 +132,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | P3 | Dual skills publication и marketplaces | 5/5 | 🟢 Done |
 | P4 | Task-command parity и provider-neutral model routing | 5/5 | 🟢 Done |
 | P5 | Harness: permissions, hooks, MCP, native features и instruction projections | 8/8 | 🟢 Done |
-| P6 | mAInd deployment, memory и provider-neutral analytics | 10/12 | 🔴 Blocked |
+| P6 | mAInd deployment, memory и provider-neutral analytics | 11/12 | 🟡 In progress |
 | P7 | Docs, self-hosting validation и FOREMAN release gate | 1/4 | 🔴 Blocked |
 
 ## 5. Decision Log
@@ -270,6 +270,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | 2026-07-23 | owner / D123 evidence | После hash-verification удалены только две named D121 backup residues; это не заменяет P6.11 source repair и не открывает P7.2. |
 | 2026-07-23 | task-plan-design / gpt-5.6-sol/high | D123 assigns only the verified D121 backup lifecycle to P6.11 and reopens independent P6.12 proof; P7.2/live mutation stay closed — детали см. phases/P6.md P6.11/P6.12. |
 | 2026-07-23 | task-plan-exec / gpt-5.6-sol/high | P6.12 закрыт: independent D123 disposable rollback restores the exact inventory and rejects malformed states before writer; real-root dry reader is admitted with writer 0 and no backup residue — детали см. phases/P6.md P6.12 Completion Notes. |
+| 2026-07-23 | task-plan-close / gpt-5.6-terra/low | P6.11 закрыт: D123 explicit rollback repair `52374d40` сверена с независимым P6.12 GREEN `1c0a6990`; следующий отдельный gate — закрытие фазы P6. |
 | 2026-07-23 | task-plan-exec / gpt-5.6-terra/medium | P6.12 эскалирован: D122 disposable proof green, но D121 оставил exact backup residues, и real-root dry D108 корректно refuses before writer — детали см. phases/P6.md P6.12 Completion Notes. |
 | 2026-07-23 | owner / D116 | Claude Code audit route отменён; final independent P6 audit переносится в ChatGPT/Codex с теми же read-only границами и literal verdict. |
 | 2026-07-23 | task-plan-design / gpt-5.6-sol/high | D117 reconciles the owner-accepted final P6 audit: P7.2 is ready for a fresh first-preflight rerun, while later live mutation remains owner-gated; no P7.2 execution occurred. |

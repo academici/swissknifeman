@@ -1,35 +1,36 @@
-# HANDOFF — 2026-07-23 — after P6.12
+# HANDOFF — 2026-07-23 — after P6.11
 
-**Next:** ЗАПУСК ВРУЧНУЮ: `gpt-5.6-terra/high` — close only the already-committed D123 P6.11
-item bookkeeping after its independent P6.12 proof; do not run P7.2.
+**Next:** `/task:plan-close 2026.07.19-DUAL-PROVIDER P6` — close only the now-terminal P6
+phase; do not audit P6 or run P7.2.
 
 | Model | Thinking | Approval policy | Sandbox | CWD | Context |
 |:--|:--|:--|:--|:--|:--|
-| `gpt-5.6-terra` | `high` | `never` | `danger-full-access` | `/home/vostrikov/projects/packages/swissknifeman` | `continue (/clear) — ручной item` |
+| `gpt-5.6-terra` | `low` | `never` | `danger-full-access` | `/home/vostrikov/projects/packages/swissknifeman` | `NEW SESSION — шаг-не-item` |
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'Read AGENTS.md, CLAUDE.md, packages/maind/CLAUDE.md, and plans/2026.07.19-DUAL-PROVIDER/{plan.md,handoff.md,phases/P6.md,artifacts/P6-d108-independent-conformance.md,journal.jsonl}. Read commit 52374d40. Close only P6.11 D123 bookkeeping using its already-committed source repair and the independent P6.12 GREEN proof: update plan status/Completion Notes/handoff/journal and commit plan files. Do not change package source/tests, run P6 phase close or audit, execute P7.2, perform live apply/repair/rollback, or touch P7.3+, FOREMAN, fleet, tags, push, cleanup, or unrelated dirt.'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="low"' -a never -s danger-full-access 'Read AGENTS.md, CLAUDE.md, packages/maind/CLAUDE.md, packages/task/commands/plan-close.md, and plans/2026.07.19-DUAL-PROVIDER/{plan.md,handoff.md,phases/P6.md,journal.jsonl}. Run task:plan-close 2026.07.19-DUAL-PROVIDER P6 only: reconcile the terminal P6.1–P6.12 statuses, perform the required docs-sync assessment, write the Phase Handoff and phase-close bookkeeping, then run structural plan-lint. Do not audit P6, execute P7.2, change package source/tests, perform live apply/repair/rollback, or touch P7.3+, FOREMAN, fleet, tag, push, cleanup, AGENTS.md, .serena/project.yml, or unrelated dirt.'
 ```
 
-**Done:** P6.12 D123 independent replay is GREEN at source anchor `52374d40`. In disposable
-roots, the exact explicit rollback removed only the verified hook and MCP transaction backups,
-restored the initial inventory byte-for-byte, and left neither residue. Seven malformed
-completed states refused before writer `0`. Core provider-lock passed 28 tests and mAInd
-provider/deploy passed 55 tests. The public real-root dry reader was admitted and green with
-writer `0`, unchanged protected inventory, and no named backup residue.
+**Done:** P6.11 D123 source repair `52374d40` is closed after the independent P6.12 GREEN
+evidence `1c0a6990`. The explicit rollback accepts only the exact completed D108 transaction,
+restores the recorded pre-state and removes only its two verified backups. The independent
+disposable replay restored the initial inventory byte-for-byte, refused seven malformed states
+before writer `0`, and the real-root dry reader was admitted with writer `0`, unchanged protected
+inventory and no named backup residue.
 
-**Remaining:** P6.11 is still `🟡 In progress` solely because D123 source-item bookkeeping has
-not been closed. P6 remains blocked pending that closure and subsequent distinct phase gates.
-P7.2 is not authorized by this handoff.
+**Remaining:** P6 is terminal at item level but is not phase-closed. The distinct P6 close and
+audit gates remain required before any P7.2 action; no live operation is authorized here.
 
-**Sources of truth:** D123 in `plan.md`; P6.11/P6.12 in `phases/P6.md`; independent evidence in
-`artifacts/P6-d108-independent-conformance.md`; source commit `52374d40`.
+**Sources of truth:** D123 in `plan.md`; P6.11/P6.12 in `phases/P6.md`; source commit
+`52374d40`; independent evidence commit `1c0a6990` and
+`artifacts/P6-d108-independent-conformance.md`.
 
-**Open risks:** The explicit rollback entry point is proved only in disposable roots. The real
-root was dry-read only; any live action remains a separate Owner-gated P7.2 boundary.
+**Open risks:** The explicit rollback is independently proved in disposable roots only. The real
+root was read by dry/check surfaces only; any live action remains a separate Owner-gated P7.2
+boundary.
 
 **Workarounds/Deferred/Open questions:**
 
 - workarounds: none.
-- deferred: P6.11 bookkeeping, then separately authorized P6 phase gate work.
+- deferred: P6 phase close, then its separately required audit.
 - open_questions: —

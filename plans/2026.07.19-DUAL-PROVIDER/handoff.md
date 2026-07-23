@@ -14,7 +14,7 @@ bootstrap ownership.
 
 **Sources of truth:** `phases/P7.md` P7.3 Completion Notes;
 `artifacts/P7-bootstrap-cleanup.md`; `artifacts/P7-release-manifest.md`;
-`artifacts/P7-self-host-e2e.md`; D121–D125 in `plan.md`.
+`artifacts/P7-self-host-e2e.md`; D121–D126 in `plan.md`.
 
 **Open risks:** The two Owner-required no-launch handoff-schema errors remain inherited and leave
 P7.2/P7.3 orange.  They are the only task/plan validation failure; target plan-lint reports zero

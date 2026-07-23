@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.4.65 |
+| Version | 1.4.66 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
@@ -264,11 +264,13 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 | D123 | 2026-07-23 | Reopen only P6.11→P6.12 for the D121 explicit D108 rollback lifecycle: add one exact transaction-owned rollback entry point, invoked only by the explicit P7 rollback carrier, which after exact state/hash verification removes only the `.codex/hooks.json.provider-artifact.bootstrap-transfer.bak` and `.mcp.json.provider-artifact.bootstrap-transfer.bak` residues while restoring the recorded D108 pre-state. | RAG:— (repo-grounded: `artifacts/P7-self-host-e2e.md`, `artifacts/P6-d108-independent-conformance.md`, `core/provider_lock.py:657-785`, `packages/maind/lib/maind/provider_deploy.py:254-267`) — the admission reader is correct: these two ignored files are verified D108 transaction residue, not adoption candidates. No glob, generic `.bak` cleanup, live normalization/retry, D104/D108/D110 contract change, P7.3+, FOREMAN, fleet, tag or push is authorized. |
 | D124 | 2026-07-23 | Approval Owner directs immediate completion of the remaining plan without another P6 audit or launch ritual. Terminal D123/P6.12 evidence satisfies the repaired predecessor gate; resume P7.2 from its first preflight under the existing exact D121 live transaction authority. | RAG:— (owner-grounded: direct instruction 2026-07-23; repo-grounded: P6.11 `52374d40`, P6.12 `1c0a6990`, P6 close `16e8c85b`) — this changes only the execution carrier after the repaired predecessor; it does not widen D121, authorize P7.3 cleanup, FOREMAN, fleet, tag or push. |
 | D125 | 2026-07-23 | Approval Owner's D124 no-launch override accepts terminal P7.2 functional evidence as the P7.3 predecessor despite the resulting handoff-schema-only `🟠`: isolated/live D121 apply, identical second-plan noop, D123 rollback and package/core gates are GREEN. P7.3 may prepare read-only provenance/inventory, but destructive cleanup still requires its separate exact Owner D#. | RAG:— (owner-grounded: direct instruction 2026-07-23; repo-grounded: P7.2 commits `460019a2`/`9057b3f4`/`098df29d`) — no cleanup mutation, P7.4, FOREMAN, fleet, tag or push is authorized. |
+| D126 | 2026-07-23 | Approval Owner's completion/no-launch direction accepts terminal P7.3 as the P7.4 predecessor: the cleanup set is exactly empty, all non-destructive release checks are GREEN, and its `🟠` is inherited only from the two no-launch handoff-schema errors. P7.4 evaluates the functional release bundle with those two explicit owner exceptions, requires zero new lint errors, and must leave FOREMAN/fleet/tag/push closed. | RAG:— (owner-grounded: direct instruction 2026-07-23; repo-grounded: P7.3 commits `d43f9549`/`f90a2da8`/`3df2f7e9`) — no release publication or external mutation is authorized. |
 
 ## 6. Update Log
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-23 | owner / D126 | P7.3 no-op cleanup and functional GREEN accepted as P7.4 predecessor; inherited no-launch errors are explicit exceptions, new lint delta must remain zero. |
 | 2026-07-23 | owner / D125 | P7.2 functional GREEN accepted as P7.3 predecessor despite no-launch-only 🟠; P7.3 opens read-only inventory, mutation still waits for exact D#. |
 | 2026-07-23 | task-plan-run / gpt-5.6-terra/high | P7.3 closed 🟠: deterministic cleanup set is empty; committed candidate manifest preserves bootstrap/compatibility paths and records only committed evidence — details см. phases/P7.md P7.3 Completion Notes. |
 | 2026-07-23 | task-plan-run / gpt-5.6-terra/high | P7.2 закрыт 🟠: D121 live apply, three-noop idempotence and D123 rollback GREEN; D124 no-launch override leaves two handoff errors — детали см. phases/P7.md P7.2 Completion Notes. |

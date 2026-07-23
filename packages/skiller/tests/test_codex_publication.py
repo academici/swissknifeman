@@ -90,6 +90,31 @@ class TestCodexPublication(unittest.TestCase):
             with self.assertRaises(AssertionError):
                 self._assert_core_cache_matches_catalog(cached, core_root, core)
 
+    def test_core_bundle_keeps_runtime_tree_and_consumer_exclusions(self):
+        core_root, core = self._core_artifacts()
+        runtime_path = Path(
+            "skills/general/plan-protocol/snippets/plan-template.md")
+        excluded_path = Path(
+            "skills/general/plan-protocol/SKILL.ru.md")
+        expected_bytes = (
+            self.package_root / "skills/general/plan-protocol/snippets/plan-template.md"
+        ).read_bytes()
+        artifacts = {
+            item.target.relative_to(core_root): item.managed_bytes
+            for item in core
+        }
+
+        self.assertEqual(artifacts[runtime_path], expected_bytes)
+        self.assertNotIn(excluded_path, artifacts)
+        with tempfile.TemporaryDirectory() as tmp:
+            cached = Path(tmp) / "cached-core"
+            for relative, managed_bytes in artifacts.items():
+                target = cached / relative
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(managed_bytes)
+            self.assertEqual((cached / runtime_path).read_bytes(), expected_bytes)
+            self.assertFalse((cached / excluded_path).exists())
+
     def test_repository_core_cache_matches_current_catalog(self):
         core_root, core = self._core_artifacts()
         self._assert_core_cache_matches_catalog(core_root, core_root, core)

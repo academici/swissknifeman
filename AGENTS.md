@@ -27,6 +27,15 @@ inside `packages/<name>/`, also read that package's `CLAUDE.md`.
   `codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="xhigh"' -a never -s danger-full-access`
   (append `resume --last` when resuming the current thread). These privileges are local
   to this trusted repository; never propagate them implicitly to FOREMAN or fleet projects.
+- Every completed task and terminal handoff must end with a Codex new-session launch
+  block, including `AUDIT-CAP`, Owner Approval and other non-executable boundaries. Give
+  a table with the exact native model, reasoning effort, approval policy, sandbox, cwd and
+  context (`NEW SESSION`), followed by one copy-paste shell command containing `codex -C`,
+  `-m`, `model_reasoning_effort`, `-a never`, `-s danger-full-access` and a self-contained
+  cold-start prompt. If there is no executable next item, the prompt must carry the exact
+  owner decision or verification boundary; never omit the command. A provider-neutral
+  `plan-protocol` launch-block may accompany this table but does not replace it. Treat
+  completion as a `session-handoff` activation; for plan work, apply `plan-protocol` too.
 - Cold-start preflight is `pwd` → `git status --short` → effective `codex doctor --json`
   → hook-command integrity → `maind health --cwd` → applicable plan-lint. Confirm the
   effective model/effort, approval policy and sandbox instead of inferring them from files.

@@ -167,11 +167,30 @@ class TestProviderContexts(unittest.TestCase):
             self.assertTrue((project / "CLAUDE.md").is_file())
             self.assertTrue((project / "AGENTS.md").is_file())
             for package in ("skiller", "harness", "maind", "analyst", "task"):
-                self.assertTrue((project / "packages" / package / "CLAUDE.md").is_file())
-                self.assertTrue((project / "packages" / package / "AGENTS.md").is_file())
+                self.assertFalse((project / "packages" / package / "CLAUDE.md").exists())
+                self.assertFalse((project / "packages" / package / "AGENTS.md").exists())
             second = sync.run_sync(env, config, config["projects"], only="instructions", mode="auto")
             self.assertEqual(second[0]["provider_aggregate"], "green")
             self.assertFalse(second[0]["changed"])
+
+    def test_instruction_scope_ids_follow_real_package_topology(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, project = _setup(tmp)
+            context = sync.contexts(env, config, config["projects"])[0]
+            self.assertEqual(sync._instruction_scope_ids(context), ("root",))
+
+            for package in ("skiller", "harness", "maind", "task"):
+                (project / "packages" / package).mkdir(parents=True)
+            linked = Path(tmp) / "linked-analyst"
+            linked.mkdir()
+            (project / "packages" / "analyst").symlink_to(linked, target_is_directory=True)
+            self.assertEqual(sync._instruction_scope_ids(context),
+                             ("root", "skiller", "harness", "maind", "task"))
+
+            (project / "packages" / "analyst").unlink()
+            (project / "packages" / "analyst").mkdir()
+            self.assertEqual(sync._instruction_scope_ids(context),
+                             ("root", "skiller", "harness", "maind", "analyst", "task"))
 
     def test_instruction_provisioner_dry_run_does_not_write(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -278,6 +297,31 @@ class TestAgentPackRun(unittest.TestCase):
 
 
 class TestSync(unittest.TestCase):
+    def test_missing_local_path_is_provider_qualified_skip_while_existing_project_runs(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env, config, project = _setup(tmp)
+            config["projects"].append({
+                "id": "missing", "name": "Missing", "type": "php-package",
+                "status": "active", "enabled": True,
+                "providers": {"contract_version": "1.0.0", "selection": {
+                    "claude-code": {"enabled": True}, "codex": {"enabled": True},
+                }},
+            })
+            rows = sync.run_sync(env, config, config["projects"], only="mcp", dry=True)
+            existing = next(row for row in rows if row["id"] == "flexcrm")
+            missing = next(row for row in rows if row["id"] == "missing")
+            self.assertEqual(existing["status"], "ok")
+            self.assertEqual(missing["status"], "skip")
+            self.assertEqual(missing["state"], "ineligible")
+            self.assertIn("MAIND_PROJECT_LOCAL_PATH_MISSING", missing["detail"])
+            self.assertEqual(missing["provider_aggregate"], "green")
+            self.assertEqual(missing["providers"], [
+                {"provider_id": "claude-code", "status": "skip", "required": False,
+                 "diagnostic": "MAIND_PROJECT_LOCAL_PATH_MISSING"},
+                {"provider_id": "codex", "status": "skip", "required": False,
+                 "diagnostic": "MAIND_PROJECT_LOCAL_PATH_MISSING"},
+            ])
+
     def test_select_projects(self):
         with tempfile.TemporaryDirectory() as tmp:
             env, config, _ = _setup(tmp)

@@ -127,6 +127,31 @@ def _provider_aggregate(plan):
                                          for row in plan.results))
 
 
+def _project_eligibility(context):
+    """Return the one fleet gate for paths that cannot receive provisioning."""
+    if not context.project.get("local_path"):
+        return "MAIND_PROJECT_LOCAL_PATH_MISSING"
+    if not context.exists:
+        return "MAIND_PROJECT_PATH_UNAVAILABLE"
+    return None
+
+
+def _ineligible_provider_aggregate(context, diagnostic):
+    """Keep a skipped fleet row visible for every selected provider."""
+    return ProviderProvisionAggregate(tuple(
+        {"provider_id": provider_id, "status": "skip", "required": False,
+         "diagnostic": diagnostic}
+        for provider_id in context.effective_provider_ids))
+
+
+def _ineligible_result(provisioner, context, diagnostic):
+    detail = ("нет local_path" if diagnostic == "MAIND_PROJECT_LOCAL_PATH_MISSING"
+              else "путь проекта недоступен")
+    return _result(provisioner, context.id, "skip", state="ineligible",
+                   detail=f"{detail}: {diagnostic}",
+                   provider_aggregate=_ineligible_provider_aggregate(context, diagnostic))
+
+
 def _result(provisioner, project_id, status, *, changed=False, state="", detail="",
             provider_aggregate=None, bootstrap_transfer=None):
     """Единая форма результата провиженера (та же, что у health._result): ВСЕ ключи всегда
@@ -240,11 +265,21 @@ def _health_doc_run(env, config, projects, mode, dry):
     return [apply_health_doc(env, config, p, mode, dry) for p in projects]
 
 
+def _instruction_scope_ids(context):
+    """Return root plus real, non-symlink swissknifeman package directories in catalog order."""
+    from harness.instructions import SCOPES
+    root = context.path
+    return tuple(scope_id for scope_id in SCOPES
+                 if scope_id == "root" or (
+                     (candidate := root / "packages" / scope_id).is_dir()
+                     and not candidate.is_symlink()))
+
+
 def _instruction_request(context, operation_id, *, authorized=(), observed=()):
     """Construct only the frozen public P5 request; maind never reads its catalog/markers."""
-    from harness.instructions import CATALOG_VERSION, CONTRACT_VERSION, SCOPES, InstructionRequest
+    from harness.instructions import CATALOG_VERSION, CONTRACT_VERSION, InstructionRequest
     return InstructionRequest(
-        CONTRACT_VERSION, CATALOG_VERSION, operation_id, tuple(SCOPES),
+        CONTRACT_VERSION, CATALOG_VERSION, operation_id, _instruction_scope_ids(context),
         context.effective_provider_ids, str(context.path),
         (("provider-context", context.id),),
         (("authority", "maind-sync-explicit-targets"),), tuple(authorized),
@@ -264,7 +299,7 @@ def _instruction_aggregate(operation):
 
 
 def _instruction_run(env, config, projects, mode, dry):
-    """Provision root plus five package instruction scopes through frozen harness.instructions.
+    """Provision root plus applicable real package scopes through frozen harness.instructions.
 
     The plan is always obtained first.  The only write authority supplied to harness is the
     exact target set returned by that plan; mAInd neither parses nor renders instructions.
@@ -547,14 +582,25 @@ def run_sync(env, config, projects, *, only=None, mode="auto", dry=False):
 
 def run_sync_contexts(env, config, project_contexts, *, only=None, mode="auto", dry=False):
     """Run provisioners against caller-owned contexts without a second provider resolution."""
+    eligible, ineligible = [], []
+    for context in project_contexts:
+        diagnostic = _project_eligibility(context)
+        if diagnostic is None:
+            eligible.append(context)
+        else:
+            ineligible.append((context, diagnostic))
     results = []
     for name in provisioner_names(only):
+        results.extend(_ineligible_result(name, context, diagnostic)
+                       for context, diagnostic in ineligible)
+        if not eligible:
+            continue
         try:
-            results.extend(PROVISIONERS[name](env, config, project_contexts, mode, dry))
+            results.extend(PROVISIONERS[name](env, config, eligible, mode, dry))
         except Exception as e:
             warn(f"провиженер '{name}' упал: {e}")
             results.extend(_result(name, p.get("id", "?"), "failed", detail=str(e))
-                           for p in project_contexts)
+                           for p in eligible)
     return results
 
 

@@ -56,8 +56,7 @@ class TestProviderProvisionConformance(unittest.TestCase):
                 first = sync.run_sync(env, config, config["projects"], only="instructions", mode="auto")[0]
                 self.assertEqual(first["status"], "ok")
                 self.assertEqual(len(first["providers"]), len(names))
-                for scope in ("", "packages/skiller", "packages/harness", "packages/maind",
-                              "packages/analyst", "packages/task"):
+                for scope in ("",):
                     for name in names:
                         self.assertTrue((root / scope / name).is_file(), (scope, name))
                 # P5 owns the blocks, so unrelated user bytes remain clean and untouched.

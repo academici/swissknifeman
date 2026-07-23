@@ -22,11 +22,13 @@
 включённое сверх профиля не отключается, бэкап в `*.bak`.
 
 Provider selection берётся из `.swissknife.json::providers`: при отсутствии
-слоя сохраняется legacy-режим только для Claude Code. Codex marketplace может
-быть thin-проекцией лишь в self-host checkout реестра; внешний проект получает
-Codex skills через `skiller sync` в `.agents/skills`. Dual-selection проходит
-preflight всех provider-целей до первой записи, поэтому конфликт не оставляет
-успешную половину подключения.
+слоя сохраняется legacy-режим только для Claude Code. Self-host checkout
+использует thin Codex marketplace, а внешний connect-проект получает
+repo-contained marketplace и self-contained bundles только выбранных plugins,
+включая runtime-файлы скиллов (`snippets/`, `references/`, scripts/assets).
+Публикация не устанавливает и не включает plugin на user-level: это отдельная
+явная операция ниже. Dual-selection проходит preflight всех provider-целей до
+первой записи, поэтому конфликт не оставляет успешную половину подключения.
 
 ```
 skiller connect [--profile P | --plugins a,b]

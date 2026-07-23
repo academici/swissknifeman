@@ -116,25 +116,27 @@ class TestSerenaConfig(unittest.TestCase):
             self.assertNotIn("- typescript", txt)
 
     def test_code_languages_list_renders_multi(self):
-        # список языков → несколько записей languages: (мульти-язычный граф смешанного репо)
+        # список языков → несколько language servers (мульти-язычный граф смешанного репо)
         with tempfile.TemporaryDirectory() as tmp:
             env, config, proj, pdir = _setup(tmp, code=True,
                                              code_languages=["python", "typescript"])
             codegraph.apply_serena_config(env, config, proj, "auto", dry=False)
             txt = (pdir / _CFG).read_text()
+            self.assertIn("language_servers:", txt)
+            self.assertNotIn("\nlanguages:", txt)
             self.assertIn("- python", txt)
             self.assertIn("- typescript", txt)
 
-    def test_languages_key_always_present_when_undetected(self):
-        # standalone-тип + пустой репо: язык не определить → ключ languages ВСЁ РАВНО
+    def test_language_servers_key_always_present_when_undetected(self):
+        # standalone-тип + пустой репо: язык не определить → language_servers ВСЁ РАВНО
         # пишется (пустым списком). Текущая Serena требует ключ как обязательный и падает
         # KeyError на его отсутствии — этот тест охраняет от регресса (онбординг chatom).
         with tempfile.TemporaryDirectory() as tmp:
             env, config, proj, pdir = _setup(tmp, code=True, type="standalone")
             codegraph.apply_serena_config(env, config, proj, "auto", dry=False)
             txt = (pdir / _CFG).read_text()
-            self.assertIn("languages:", txt)
-            self.assertIn("languages: []", txt)
+            self.assertIn("language_servers:", txt)
+            self.assertIn("language_servers: []", txt)
 
 
 class TestConfigDriven(unittest.TestCase):

@@ -19,6 +19,19 @@
 
 ### Fixed
 
+- **skiller — единый Codex carrier при update.** Если внешний проект уже получает
+  self-contained Codex marketplace под `.agents/plugins/`, `skiller update`
+  обновляет независимый Claude vendor-канал, но больше не дублирует те же
+  скиллы и lock-записи в `.agents/skills/`.
+- **skiller — идемпотентный vendor sync.** Неизменившийся skill manifest сохраняет
+  исходный `installed_at`, поэтому повторный dual-provider `sync` больше не меняет
+  snapshot при переходе между секундами.
+- **maind — текущая схема Serena.** Генератор `.serena/project.yml` использует
+  канонический ключ `language_servers`; мультиязычные и пустые конфигурации больше
+  не создают legacy `languages`, который Serena мигрировала при активации.
+- **skiller — внешний Codex connect bundle.** Repo-contained bundles выбранных
+  plugins теперь включают runtime-файлы скиллов с consumer exclusions; native
+  install/cache/enable остаются отдельным явным действием.
 - **core/harness/maind — clean-runner compatibility.** D108 tests now use a committed sealed
   MCP preimage instead of a gitignored local file; harness agent-pack and maind provider-config
   projections import on Python 3.9, and the provider rollback/deploy paths pass the Ruff gate.

@@ -9,6 +9,7 @@ manifest.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import hashlib
 import json
 import shutil
 import subprocess
@@ -16,9 +17,12 @@ from pathlib import Path
 from typing import Mapping, Sequence
 
 from core import (AdapterCatalog, AdapterDescriptor, ArtifactAdapterIdentity,
-                  ArtifactRenderRequest, ArtifactSource, ArtifactTarget, CapabilityId,
+                  ArtifactActionKind, ArtifactPlan, ArtifactRenderRequest,
+                  ArtifactRenderResult, ArtifactSource, ArtifactTarget, CapabilityId,
                   CapabilityRequirement, EffectiveProvider, ProviderId, SupportLevel,
-                  load_provider_manifest, plan_artifact_render, provider_config_catalog)
+                  load_provider_manifest, plan_artifact_lock, plan_artifact_render,
+                  provider_config_catalog)
+from core.provider_lock import LOCK_RELATIVE_PATH
 
 
 _CLAUDE_ADAPTER = ArtifactAdapterIdentity(
@@ -392,10 +396,13 @@ def _render_codex_bundle(root: Path, unit: PublicationUnit, catalog: Publication
         _codex_plugin_manifest(unit.plugin_id, catalog.package_version, description, [skill_root]),
         members, repo_root, catalog.package_version)]
     for member in members:
-        target = root / "skills" / member.semantic_id / "SKILL.md"
-        source = (package_root / member.source_path).read_bytes()
-        artifacts.append(_render_codex_artifact(target, unit, source, (member,), repo_root,
-                                                catalog.package_version))
+        canonical_root = package_root / Path(member.source_path).parent
+        for source in _codex_skill_runtime_files(
+                canonical_root, source_root=canonical_root, plugin=unit.plugin_id):
+            target = root / "skills" / member.semantic_id / source.relative_to(canonical_root)
+            artifacts.append(_render_codex_artifact(
+                target, unit, source.read_bytes(), (member,), repo_root,
+                catalog.package_version))
     artifacts.append(_codex_bundle_lock(root, unit, catalog.package_version, tuple(artifacts), repo_root))
     return tuple(artifacts)
 
@@ -540,6 +547,8 @@ class ProviderDistributionPlan:
     target_identity: str
     source_hash: str
     rendered_hash: str
+    artifacts: tuple[ArtifactRenderResult, ...] = ()
+    artifact_plan: ArtifactPlan | None = None
 
 
 def selected_distribution_providers(config, *, project_id: str) -> tuple[str, ...]:
@@ -569,24 +578,286 @@ def build_vendor_distribution_plan(config, target: Path, *, project_id: str,
 
 
 def build_connect_distribution_plan(config, target: Path, *, project_id: str,
-                                    repo_root: Path) -> tuple[ProviderDistributionPlan, ...]:
+                                    repo_root: Path,
+                                    plugins: Sequence[str] = ()) -> tuple[ProviderDistributionPlan, ...]:
     from .common import die
     plans = []
     for provider in selected_distribution_providers(config, project_id=project_id):
+        provider_id = ProviderId(provider)
+        try:
+            validate_publication_capabilities(provider_id)
+        except (OSError, TypeError, ValueError) as exc:
+            die(f"SPUB_CAPABILITY_UNSUPPORTED: provider {provider}, "
+                f"channel marketplace: {exc}")
         if provider == "claude-code":
             plans.append(ProviderDistributionPlan(provider, "marketplace", target / ".claude",
                                                    ".claude", "", ""))
         elif provider == "codex":
-            if target.resolve() != repo_root.resolve():
-                die("SPUB_PATH_UNCONTAINED: Codex marketplace thin adapter is self-host only; use skiller sync for a vendor consumer")
+            repo_root = repo_root.resolve()
+            target = target.resolve()
             marketplace = repo_root / ".agents" / "plugins" / "marketplace.json"
             if not marketplace.is_file():
-                die("SPUB_BUNDLE_INCOMPLETE: generated Codex marketplace is missing; run skiller registry")
-            plans.append(ProviderDistributionPlan(provider, "marketplace", marketplace,
-                                                   marketplace.as_posix(), "", ""))
+                die("SPUB_BUNDLE_INCOMPLETE: provider codex, unit marketplace, "
+                    f"target {marketplace}: generated marketplace is missing; run skiller registry")
+            if target == repo_root:
+                plans.append(ProviderDistributionPlan(
+                    provider, "marketplace", marketplace, marketplace.as_posix(), "", ""))
+            else:
+                if not plugins:
+                    die("SPUB_BUNDLE_INCOMPLETE: provider codex, channel marketplace-bundle, "
+                        f"target {target}: selected plugin set is required")
+                artifacts, artifact_plan = _build_codex_connect_artifacts(
+                    repo_root=repo_root, target=target, plugins=plugins,
+                    marketplace_path=marketplace)
+                marketplace_artifact = next(
+                    item for item in artifacts
+                    if item.target.path == ".agents/plugins/marketplace.json")
+                plans.append(ProviderDistributionPlan(
+                    provider, "marketplace-bundle",
+                    target / marketplace_artifact.target.path,
+                    marketplace_artifact.target.path,
+                    marketplace_artifact.provenance.source_hash,
+                    marketplace_artifact.provenance.rendered_hash,
+                    artifacts, artifact_plan))
         else:
             die(f"SPUB_CAPABILITY_UNSUPPORTED: provider {provider}")
     return tuple(plans)
+
+
+def _build_codex_connect_artifacts(*, repo_root: Path, target: Path,
+                                   plugins: Sequence[str],
+                                   marketplace_path: Path) -> tuple[
+                                       tuple[ArtifactRenderResult, ...], ArtifactPlan]:
+    """Build and ownership-preflight a self-contained repo Codex marketplace.
+
+    The source repository marketplace is only an index.  Every selected plugin
+    is materialized as a deterministic bundle under the consumer repository;
+    no consumer entry points back at the skiller checkout.
+    """
+    from .common import die
+
+    try:
+        source_marketplace = json.loads(marketplace_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        die("SPUB_BUNDLE_INCOMPLETE: provider codex, unit marketplace, "
+            f"target {marketplace_path}: invalid generated marketplace: {exc}")
+    entries = source_marketplace.get("plugins")
+    if not isinstance(entries, list):
+        die("SPUB_BUNDLE_INCOMPLETE: provider codex, unit marketplace, "
+            f"target {marketplace_path}: plugins must be a list")
+    by_name = {}
+    for entry in entries:
+        if not isinstance(entry, dict) or not isinstance(entry.get("name"), str):
+            die("SPUB_BUNDLE_INCOMPLETE: provider codex, unit marketplace: invalid plugin entry")
+        name = entry["name"]
+        if name in by_name:
+            die(f"SPUB_OWNERSHIP_CONFLICT: provider codex, unit {name}: duplicate marketplace entry")
+        by_name[name] = entry
+
+    selected = tuple(sorted(set(plugins)))
+    if len(selected) != len(tuple(plugins)):
+        die("SPUB_OWNERSHIP_CONFLICT: provider codex, channel marketplace-bundle: "
+            "duplicate selected plugin")
+
+    artifacts: list[ArtifactRenderResult] = []
+    consumer_entries = []
+    bundles_root = target / ".agents" / "plugins" / "bundles"
+    for name in selected:
+        if not name or Path(name).name != name or name in {".", ".."}:
+            die(f"SPUB_PATH_UNCONTAINED: provider codex, unit {name!r}: invalid plugin ID")
+        entry = by_name.get(name)
+        if entry is None:
+            die(f"SPUB_BUNDLE_INCOMPLETE: provider codex, unit {name}, "
+                f"target {marketplace_path}: selected plugin is not declared")
+        source_rel = _codex_local_source(entry, plugin=name)
+        source_root = _contained(repo_root, repo_root / source_rel, plugin=name,
+                                 label="source")
+        if not source_root.is_dir():
+            die(f"SPUB_BUNDLE_INCOMPLETE: provider codex, unit {name}, "
+                f"target {source_root}: plugin source is missing")
+        bundle_root = bundles_root / name
+        bundle_artifacts = _codex_bundle_artifacts(
+            source_root=source_root, bundle_root=bundle_root, plugin=name,
+            repo_root=repo_root, target=target)
+        if bundle_root.exists():
+            expected_paths = {
+                target / artifact.target.path for artifact in bundle_artifacts
+            }
+            unexpected = next((
+                path for path in bundle_root.rglob("*")
+                if path.is_file() and path not in expected_paths
+            ), None)
+            if unexpected is not None:
+                die(f"SPUB_OWNERSHIP_CONFLICT: provider codex, unit {name}, "
+                    f"target {unexpected}: unowned file in managed bundle")
+        artifacts.extend(bundle_artifacts)
+        consumer_entries.append({
+            "name": name,
+            "source": {
+                "source": "local",
+                "path": "./" + bundle_root.relative_to(target).as_posix(),
+            },
+            "policy": {
+                "installation": "AVAILABLE",
+                "authentication": "ON_INSTALL",
+            },
+            "category": entry.get("category", ""),
+        })
+
+    marketplace_data = {
+        "name": source_marketplace.get("name", "swissknifeman"),
+        "interface": {"displayName": source_marketplace.get("name", "swissknifeman")},
+        "plugins": consumer_entries,
+    }
+    marketplace_bytes = _manifest_text(marketplace_data)
+    marketplace_target = target / ".agents" / "plugins" / "marketplace.json"
+    artifacts.append(_distribution_artifact(
+        target, marketplace_target, marketplace_bytes,
+        marketplace_path.relative_to(repo_root).as_posix(),
+        marketplace_path.read_bytes()))
+
+    result = tuple(sorted(artifacts, key=lambda item: item.target.path))
+    lock_path = target / LOCK_RELATIVE_PATH
+    lock_bytes = lock_path.read_bytes() if lock_path.is_file() else None
+    artifact_plan = plan_artifact_lock(
+        target, result, lock_bytes=lock_bytes, retain_unexpected_records=True)
+    refused = tuple(action for action in artifact_plan.actions
+                    if action.action is ArtifactActionKind.REFUSE)
+    if refused:
+        details = "; ".join(
+            f"{action.target_path}: {action.diagnostic}" for action in refused)
+        die("SPUB_OWNERSHIP_CONFLICT: provider codex, channel marketplace-bundle, "
+            f"target {target}: {details}")
+    return result, artifact_plan
+
+
+def _codex_bundle_artifacts(*, source_root: Path, bundle_root: Path, plugin: str,
+                            repo_root: Path, target: Path) -> tuple[ArtifactRenderResult, ...]:
+    from .common import die
+
+    manifest = source_root / ".codex-plugin" / "plugin.json"
+    try:
+        data = json.loads(manifest.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        die(f"SPUB_BUNDLE_INCOMPLETE: provider codex, unit {plugin}, "
+            f"target {manifest}: invalid plugin manifest: {exc}")
+    if not isinstance(data, dict) or data.get("name") != plugin:
+        die(f"SPUB_BUNDLE_INCOMPLETE: provider codex, unit {plugin}, "
+            f"target {manifest}: manifest identity mismatch")
+    raw_roots = data.get("skills")
+    roots = [raw_roots] if isinstance(raw_roots, str) else raw_roots
+    if not isinstance(roots, list) or not roots or not all(isinstance(item, str) for item in roots):
+        die(f"SPUB_BUNDLE_INCOMPLETE: provider codex, unit {plugin}, "
+            f"target {manifest}: declared skills are missing")
+
+    files = [manifest]
+    for raw_root in roots:
+        root = _contained(source_root, source_root / raw_root, plugin=plugin,
+                          label="declared skill root")
+        if root.is_file():
+            members = [root] if root.name == "SKILL.md" else []
+        elif root.is_dir():
+            members = sorted(root.rglob("SKILL.md"))
+        else:
+            members = []
+        if not members:
+            die(f"SPUB_BUNDLE_INCOMPLETE: provider codex, unit {plugin}, "
+                f"target {root}: declared skill root has no SKILL.md")
+        for member in members:
+            _contained(source_root, member, plugin=plugin,
+                       label="declared skill member")
+            files.extend(_codex_skill_runtime_files(
+                member.parent, source_root=source_root, plugin=plugin))
+
+    unique = tuple(sorted(set(files), key=lambda item: item.relative_to(source_root).as_posix()))
+    artifacts = []
+    for source in unique:
+        source_bytes = source.read_bytes()
+        relative = source.relative_to(source_root)
+        artifacts.append(_distribution_artifact(
+            target, bundle_root / relative, source_bytes,
+            source.relative_to(repo_root).as_posix(), source_bytes))
+    return tuple(artifacts)
+
+
+def _codex_skill_runtime_files(skill_root: Path, *, source_root: Path,
+                               plugin: str) -> tuple[Path, ...]:
+    """Enumerate one consumer skill tree with the canonical vendor exclusions."""
+    from .common import SKILL_IGNORE, die
+
+    ignore = shutil.ignore_patterns(*SKILL_IGNORE)
+    pending = [skill_root]
+    seen_dirs = set()
+    files = []
+    while pending:
+        directory = pending.pop()
+        resolved_dir = _contained(
+            source_root, directory, plugin=plugin, label="runtime support directory")
+        if resolved_dir in seen_dirs:
+            continue
+        seen_dirs.add(resolved_dir)
+        try:
+            entries = sorted(directory.iterdir(), key=lambda item: item.name)
+        except OSError as exc:
+            die(f"SPUB_BUNDLE_INCOMPLETE: provider codex, unit {plugin}, "
+                f"target {directory}: cannot read runtime support files: {exc}")
+        excluded = ignore(str(directory), [entry.name for entry in entries])
+        for entry in entries:
+            if entry.name in excluded:
+                continue
+            resolved = _contained(
+                source_root, entry, plugin=plugin, label="runtime support file")
+            if resolved.is_dir():
+                pending.append(entry)
+            elif resolved.is_file():
+                files.append(entry)
+    return tuple(files)
+
+
+def _codex_local_source(entry: Mapping[str, object], *, plugin: str) -> str:
+    from .common import die
+
+    source = entry.get("source")
+    if isinstance(source, str):
+        path = source
+    elif isinstance(source, Mapping) and source.get("source") == "local":
+        path = source.get("path")
+    else:
+        path = None
+    if not isinstance(path, str) or not path.startswith("./"):
+        die(f"SPUB_PATH_UNCONTAINED: provider codex, unit {plugin}: "
+            "marketplace source must be a contained local ./ path")
+    return path
+
+
+def _contained(root: Path, candidate: Path, *, plugin: str, label: str) -> Path:
+    from .common import die
+
+    root = root.resolve()
+    resolved = candidate.resolve(strict=False)
+    try:
+        resolved.relative_to(root)
+    except ValueError:
+        die(f"SPUB_PATH_UNCONTAINED: provider codex, unit {plugin}, "
+            f"{label} {candidate} escapes {root}")
+    return resolved
+
+
+def _distribution_artifact(root: Path, target: Path, managed_bytes: bytes,
+                           source_identity: str,
+                           source_bytes: bytes) -> ArtifactRenderResult:
+    relative_target = target.relative_to(root).as_posix()
+    digest = hashlib.sha256(relative_target.encode("utf-8")).hexdigest()[:16]
+    return plan_artifact_render(ArtifactRenderRequest(
+        f"skiller.codex.connect.a{digest}",
+        (ArtifactSource(
+            "skiller.connect.source", source_identity,
+            "sha256:" + hashlib.sha256(source_bytes).hexdigest()),),
+        ArtifactTarget(relative_target, ("whole-file", ())),
+        _CODEX_ADAPTER, (),
+        {"channel": "marketplace-bundle"},
+        lambda _request: managed_bytes,
+    ))
 
 
 def run_codex_native_install(*, repo_root: Path, plugin: str, dry_run: bool,

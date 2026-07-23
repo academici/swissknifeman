@@ -10,12 +10,15 @@ from collections.abc import Mapping
 from types import MappingProxyType
 from pathlib import Path
 import json
+import re
 import sys
 
 from core import (ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource,
-                  ArtifactTarget, CapabilityId, CapabilityRequirement, ProviderId,
-                  SupportLevel, canonical_json_bytes, apply_plan, load_provider_manifest,
-                  plan_artifact_lock, plan_artifact_render, provider_config_catalog,
+                  ArtifactTarget, ArtifactAction, ArtifactActionKind, ArtifactLock,
+                  ArtifactPlan, CapabilityId, CapabilityRequirement, DriftObservation,
+                  ProviderId, SupportLevel, canonical_json_bytes, apply_plan,
+                  load_provider_manifest, plan_artifact_lock, plan_artifact_render,
+                  parse_lock, provider_config_catalog,
                   plan_bootstrap_transfer, BootstrapTransferAdmission, artifact_dry_run, sha256_digest,
                   ChainedBootstrapTransferAdmission, plan_chained_bootstrap_transfer,
                   support_for)
@@ -25,6 +28,54 @@ from .common import atomic_write_text
 
 class ProviderDeployError(ValueError):
     """Stable no-write deployment planning failure."""
+
+
+_TOML_TABLE_HEADER_RE = re.compile(
+    br"(?m)^[ \t]*\[([^\]\r\n]+)\][ \t]*(?:#[^\r\n]*)?\r?$")
+_CODEX_MCP_BLOCK_IDS = ("mcp_servers",)
+
+
+def _codex_mcp_span(raw, block_ids):
+    if block_ids != _CODEX_MCP_BLOCK_IDS:
+        raise ProviderDeployError("MAIND_CODEX_MCP_BOUNDARY_INVALID")
+    headers = tuple(_TOML_TABLE_HEADER_RE.finditer(raw))
+    managed = tuple(index for index, match in enumerate(headers)
+                    if match.group(1).startswith(b"mcp_servers."))
+    if not managed:
+        return None
+    first, last = managed[0], managed[-1]
+    if managed != tuple(range(first, last + 1)):
+        raise ProviderDeployError("MAIND_CODEX_MCP_BOUNDARY_INVALID")
+    start = headers[first].start()
+    end = headers[last + 1].start() if last + 1 < len(headers) else len(raw)
+    return start, end
+
+
+def _extract_codex_mcp_blocks(raw, block_ids):
+    span = _codex_mcp_span(raw, block_ids)
+    return b"" if span is None else raw[span[0]:span[1]]
+
+
+def _replace_codex_mcp_blocks(raw, managed, block_ids):
+    desired = _extract_codex_mcp_blocks(managed, block_ids)
+    if desired != managed:
+        raise ProviderDeployError("MAIND_CODEX_MCP_RENDER_INVALID")
+    span = _codex_mcp_span(raw, block_ids)
+    if span is not None:
+        return raw[:span[0]] + desired + raw[span[1]:]
+    separator = b"" if not raw or raw.endswith(b"\n\n") else (
+        b"\n" if raw.endswith(b"\n") else b"\n\n")
+    return raw + separator + desired
+
+
+def _provider_managed_block_codecs(artifacts):
+    return {
+        artifact.provenance.artifact_id:
+            (_extract_codex_mcp_blocks, _replace_codex_mcp_blocks)
+        for artifact in artifacts
+        if artifact.provenance.managed_boundary ==
+        ("managed-blocks", _CODEX_MCP_BLOCK_IDS)
+    }
 
 
 def resolve_effective_providers(config, catalog, project_id, *, operation=None,
@@ -521,6 +572,11 @@ def plan_provider_deploy(base_projections, servers, *, selected=None, required_p
                                        (SupportLevel.ADAPTED, SupportLevel.NATIVE)),)),
             (), {"target_scope": base.target_scope, "server_ids": [item.id for item in servers]},
             lambda _request, value=rendered: value))
+        if provider_id is ProviderId.CODEX:
+            provenance = replace(
+                artifact.provenance,
+                managed_boundary=("managed-blocks", _CODEX_MCP_BLOCK_IDS))
+            artifact = replace(artifact, provenance=provenance)
         results.append(ProviderDeployResult(provider_id, base.target_scope, base.target_path,
                                              rendered, tuple(item.id for item in servers), "planned",
                                              artifact=artifact))
@@ -575,14 +631,111 @@ def plan_provider_artifacts(root, deploy_plan, *, repair=False, extra_artifacts=
     lock_bytes = lock_path.read_bytes() if lock_path.exists() else None
     artifacts = tuple(row.artifact for row in deploy_plan.results if row.artifact is not None)
     artifacts += tuple(extra_artifacts)
+    codecs = _provider_managed_block_codecs(artifacts)
     plan = plan_artifact_lock(root, artifacts, lock_bytes=lock_bytes,
                               repair_artifact_ids=tuple(
                                   artifact.provenance.artifact_id for artifact in artifacts)
-                              if repair else ())
+                              if repair else (),
+                              managed_block_codecs=codecs)
     projection = artifact_doctor(plan)
     return {"mode": "repair" if repair else "check", "severity": projection["exit_severity"],
             "plan": plan, "diagnostics": tuple(action["diagnostic"]
                                                    for action in projection["actions"])}
+
+
+def plan_exact_artifact_adoption(root, artifacts, *, preimage_hashes,
+                                 managed_block_codecs=None):
+    """Admit exact unmanaged targets and preserve unrelated lock records.
+
+    Every existing target is pinned by its full-file SHA-256 preimage. Managed
+    block codecs may then update only their declared boundary while unrelated
+    bytes and unrelated existing lock records survive.
+    """
+    root = Path(root)
+    if not root.is_absolute() or root != root.resolve() or not root.is_dir():
+        raise ProviderDeployError("MAIND_PROVIDER_ADOPTION_ROOT_INVALID")
+    lock_path = root / ".swissknifeman/provider-artifacts.lock.json"
+    if lock_path.is_symlink() or lock_path.exists() and not lock_path.is_file():
+        raise ProviderDeployError("MAIND_PROVIDER_ADOPTION_LOCK_UNSAFE")
+    lock_bytes = lock_path.read_bytes() if lock_path.exists() else None
+    try:
+        existing_lock = ArtifactLock(1, ()) if lock_bytes is None else parse_lock(lock_bytes)
+    except ValueError as error:
+        raise ProviderDeployError("MAIND_PROVIDER_ADOPTION_LOCK_INVALID") from error
+    artifacts = tuple(artifacts)
+    if not artifacts or any(artifact is None for artifact in artifacts):
+        raise ProviderDeployError("MAIND_PROVIDER_ADOPTION_PLAN_INVALID")
+    if not isinstance(preimage_hashes, Mapping):
+        raise TypeError("preimage_hashes must be a mapping")
+    targets = {artifact.target.path: artifact for artifact in artifacts}
+    if len(targets) != len(artifacts):
+        raise ProviderDeployError("MAIND_PROVIDER_ADOPTION_PLAN_INVALID")
+    artifact_ids = {artifact.provenance.artifact_id for artifact in artifacts}
+    if len(artifact_ids) != len(artifacts):
+        raise ProviderDeployError("MAIND_PROVIDER_ADOPTION_PLAN_INVALID")
+    if any(record.artifact_id in artifact_ids or record.target_path in targets
+           for record in existing_lock.records):
+        raise ProviderDeployError("MAIND_PROVIDER_ADOPTION_ALREADY_MANAGED")
+    existing_targets = set()
+    observed = {}
+    for target_path in targets:
+        target = root / target_path
+        if target.is_symlink() or target.exists() and not target.is_file():
+            raise ProviderDeployError("MAIND_PROVIDER_ADOPTION_TARGET_UNSAFE")
+        if target.exists():
+            existing_targets.add(target_path)
+            observed[target_path] = sha256_digest(target.read_bytes())
+    if set(preimage_hashes) != existing_targets:
+        raise ProviderDeployError("MAIND_PROVIDER_ADOPTION_PREIMAGE_SET_INVALID")
+    for target_path, expected_hash in preimage_hashes.items():
+        if not isinstance(expected_hash, str) or observed[target_path] != expected_hash:
+            raise ProviderDeployError("MAIND_PROVIDER_ADOPTION_PREIMAGE_MISMATCH")
+    codecs = dict(managed_block_codecs or {})
+    managed_ids = {artifact.provenance.artifact_id for artifact in artifacts
+                   if artifact.provenance.managed_boundary[0] == "managed-blocks"}
+    if set(codecs) != managed_ids:
+        raise ProviderDeployError("MAIND_PROVIDER_ADOPTION_CODEC_SET_INVALID")
+    actions = []
+    for target_path, artifact in targets.items():
+        current_preimage_hash = observed.get(target_path)
+        codec = codecs.get(artifact.provenance.artifact_id)
+        if current_preimage_hash is None:
+            current_hash = None
+            observation = DriftObservation.MISSING
+            action = ArtifactActionKind.CREATE
+            diagnostic = "explicit-adoption-create"
+        else:
+            current = (root / target_path).read_bytes()
+            current_hash = (sha256_digest(codec[0](
+                current, artifact.provenance.managed_boundary[1]))
+                            if codec is not None else current_preimage_hash)
+            # The caller's exact hash admission is the ownership handoff.  From
+            # this immutable plan onward the admitted bytes are the stale source,
+            # so ordinary provider rendering can replace them without repair.
+            # Adoption itself must remain a write even when the rendered bytes
+            # already match: apply_plan skips the lock when every action is NOOP.
+            observation = DriftObservation.STALE_SOURCE
+            action = ArtifactActionKind.UPDATE
+            diagnostic = "explicit-adoption"
+        actions.append(ArtifactAction(
+            artifact.provenance.artifact_id, target_path, observation, action,
+            artifact, current_hash, diagnostic, codec))
+    return ArtifactPlan(tuple(actions), ArtifactLock(
+        1, existing_lock.records +
+        tuple(artifact.provenance for artifact in artifacts)))
+
+
+def plan_provider_artifact_adoption(root, deploy_plan, *, preimage_hashes):
+    """Adopt exact unmanaged provider targets into the ordinary artifact lock."""
+    if not deploy_plan.green:
+        raise ProviderDeployError("MAIND_PROVIDER_DEPLOY_REFUSED")
+    artifacts = tuple(row.artifact for row in deploy_plan.results
+                      if row.artifact is not None)
+    if len(artifacts) != len(deploy_plan.results):
+        raise ProviderDeployError("MAIND_PROVIDER_ADOPTION_PLAN_INVALID")
+    return plan_exact_artifact_adoption(
+        root, artifacts, preimage_hashes=preimage_hashes,
+        managed_block_codecs=_provider_managed_block_codecs(artifacts))
 
 
 def apply_provider_artifacts(root, deploy_plan, *, repair=False, extra_artifacts=()):

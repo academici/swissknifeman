@@ -33,6 +33,69 @@ def _config(path, pid="flexcrm", **memory):
 
 
 class TestDeploy(unittest.TestCase):
+    def test_provider_projection_uses_exact_project_provider_carrier(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            project_path = _project(tmp)
+            (project_path / ".swissknife.json").write_text(json.dumps({
+                "providers": {
+                    "contract_version": "1.0.0",
+                    "selection": {
+                        "claude-code": {"enabled": True},
+                        "codex": {"enabled": True},
+                    },
+                },
+            }), encoding="utf-8")
+            cfg = _config(project_path)
+
+            context = deploy.provider_projection_context(env, cfg, cfg["projects"][0])
+
+            self.assertEqual(context.providers,
+                             (ProviderId.CLAUDE_CODE, ProviderId.CODEX))
+
+    def test_provider_projection_missing_project_carrier_preserves_defaults(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            project_path = _project(tmp)
+            cfg = _config(project_path)
+
+            context = deploy.provider_projection_context(env, cfg, cfg["projects"][0])
+
+            self.assertEqual(context.providers, (ProviderId.CLAUDE_CODE,))
+
+    def test_provider_projection_refuses_symlink_project_carrier(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            project_path = _project(tmp)
+            foreign = Path(tmp) / "foreign.json"
+            foreign.write_text(json.dumps({
+                "providers": {
+                    "contract_version": "1.0.0",
+                    "selection": {
+                        "claude-code": {"enabled": True},
+                        "codex": {"enabled": True},
+                    },
+                },
+            }), encoding="utf-8")
+            (project_path / ".swissknife.json").symlink_to(foreign)
+            cfg = _config(project_path)
+
+            with self.assertRaisesRegex(
+                    ValueError, "MAIND_PROJECT_PROVIDER_CONFIG_UNSAFE"):
+                deploy.provider_projection_context(env, cfg, cfg["projects"][0])
+
+    def test_provider_projection_refuses_invalid_project_carrier(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            project_path = _project(tmp)
+            (project_path / ".swissknife.json").write_text(
+                '{"providers": [}', encoding="utf-8")
+            cfg = _config(project_path)
+
+            with self.assertRaisesRegex(
+                    ValueError, "MAIND_PROJECT_PROVIDER_CONFIG_INVALID"):
+                deploy.provider_projection_context(env, cfg, cfg["projects"][0])
+
     def test_d108_public_facade_uses_configured_root_not_maind_root(self):
         """D112: package-root Env cannot become the D108 project identity."""
         with tempfile.TemporaryDirectory() as tmp:

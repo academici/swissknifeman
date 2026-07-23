@@ -57,7 +57,7 @@ P1 закрывает только synthetic/disposable conformance MVP; нез�
 |:--|:--|:--|:--|
 | P0 | Устранить блокер connect-проекции | 1/2 | 🟠 Done with deviations |
 | P1 | Пилот и стабилизация | 1/2 | 🟢 Done |
-| P2 | Последовательный fleet rollout | 1/2 | 🟡 In progress |
+| P2 | Последовательный fleet rollout | 1/2 | 🔴 Blocked |
 
 ## 5. Decision Log
 
@@ -99,3 +99,4 @@ P1 закрывает только synthetic/disposable conformance MVP; нез�
 | 2026-07-23 | task-plan-close / implementation/low | P1 закрыта: disposable dual-provider conformance MVP подтверждён, conditional remediation пропущена по D9 — детали см. phases/P1.md Phase Handoff. |
 | 2026-07-23 | task-plan-design / gpt-5.6-sol/high | P2 reconciled after P1 ATTENTION: добавлен plan-only traceability prerequisite и live rollout восстановлен по D5–D7 exact per-consumer commands; P1 не реопенялась. |
 | 2026-07-23 | task-plan-exec / gpt-5.6-terra/medium | P2.1 закрыт: закреплён append-only P1.1 commit→item/lint carrier — детали см. phases/P2.md P2.1 Completion Notes. |
+| 2026-07-23 | task-plan-run / gpt-5.6-terra/high | P2.2 заблокирован: live D7-set исчерпан без apply; per-consumer evidence и owning remediation — в findings/P2.2-rollout.md. |

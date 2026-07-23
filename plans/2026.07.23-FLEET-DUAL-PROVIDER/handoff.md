@@ -1,37 +1,30 @@
-# HANDOFF — 2026-07-23 — after P2.1
+# HANDOFF — 2026-07-23 — after P2.2
 
-**Next:** run-items: task:plan-run 2026.07.23-FLEET-DUAL-PROVIDER P2.2
+**Next:** /task:plan-design 2026.07.23-FLEET-DUAL-PROVIDER P2.2
 
 | Parameter | Value |
 |:--|:--|
-| Model | `gpt-5.6-terra` |
+| Model | `gpt-5.6-sol` |
 | Thinking | `high` |
 | Approval policy | `never` |
 | Sandbox | `danger-full-access` |
 | Cwd | `/home/vostrikov/projects/packages/swissknifeman` |
 | Context | `NEW SESSION` |
-| Суть | Выполнить только P2.2: D5–D7 per-consumer live rollout с stop-on-defect boundary. |
+| Суть | Разобрать D7-blocked P2.2 без ослабления D5–D7: создать только владеющие remediation items либо exact Owner Approval boundary. |
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'NEW SESSION: Execute exactly P2.2 of plan 2026.07.23-FLEET-DUAL-PROVIDER with task:task-plan-run. Start with pwd, git status --short, effective codex doctor --json, hook-command integrity, ./packages/maind/bin/maind health --cwd, and applicable plan lint. Read AGENTS.md, CLAUDE.md, the task-plan-run skill and canonical plan protocol, then plan.md, handoff.md, phases/P2.md and every P2.2 Required Read in prescribed order; read plans/2026.07.23-FLEET-DUAL-PROVIDER/findings/P2.1-p1-traceability.md first among item evidence. РЕЖИМ: движение вперёд — только P2.2, не reopen P1/P2.1. СКОУП: пройти registry-order D7 candidates exact public per-project commands, сохранить per-consumer evidence, остановиться на первом post-apply recurring defect. НЕ ТРОГАТЬ: P1 spec/evidence/status/audit; P2.1 carrier; self-host; sibintek-insiders; missing/disabled registry entries; dirty/unmanaged bytes; --repair; --force; FOREMAN.'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'NEW SESSION: Work only on the P2.2 D7-blocked boundary of plan 2026.07.23-FLEET-DUAL-PROVIDER using task:task-plan-design. Start with pwd, git status --short, effective codex doctor --json, hook-command integrity, ./packages/maind/bin/maind health --cwd, and applicable plan lint. Read AGENTS.md, CLAUDE.md, task-plan-design, plan-protocol, plan.md, handoff.md, phases/P2.md, and findings/P2.2-rollout.md. Do not inspect or mutate any live consumer until the plan contains an owner-approved remediation item for that named consumer. Do not relax D5–D7; do not use --repair or --force; do not touch sibintek-insiders, self-host, registry cleanup, FOREMAN, or P1/P2.1.'
 ```
 
-**Done:** P2.1 terminal. Append-only carrier `findings/P2.1-p1-traceability.md`
-связывает P1.1 с item commit `d72fe7b6`, bookkeeping commit `7bf70309` и
-exact lint anchor; carrier item commit — `906dddc6`.
+**Done:** P2.2 ran the ordered D7 preflight. No normal apply was authorized; the exact scan and final dry-run evidence are in `findings/P2.2-rollout.md`.
 
-**Remaining:** P2.2 — единственный оставшийся item фазы; live consumer access
-разрешён только в его D5–D7 per-consumer boundary.
+**Remaining:** P2.2 is `🔴 Blocked`. The next step is plan design for consumer-owned remediation boundaries, not another scan or a forced apply.
 
-**Sources of truth:** `findings/P2.1-p1-traceability.md` · `phases/P2.md`
-P2.2 · `plan.md` D5–D10 · `research/01-pilot-selection-contract.md` ·
-`findings/P0.2-fleet-rerun.md` · `roadmap.md` · `journal.jsonl`.
+**Sources of truth:** `phases/P2.md` P2.2 · `findings/P2.2-rollout.md` · `plan.md` D5–D10 · `journal.jsonl`.
 
-**Open risks:** Synthetic GREEN still does not prove any live consumer passes
-D7. P2.2 must preserve fail-closed checks and stop on the first repeatable
-post-apply owning defect.
+**Open risks:** Dirty worktrees, single-provider configurations, MCP unmanaged targets and instruction ownership conflicts make current live consumers unsafe to modify. Treating the synthetic carrier as live proof or using repair/force would violate D5–D7.
 
 **Workarounds/Deferred/Open questions:**
-- workarounds: D9 disposable temp-root conformance carrier remains precondition only.
-- deferred: `sibintek-insiders`, self-host, CLI `--repair`, `--force`.
-- open_questions: —
+- workarounds: none.
+- deferred: `sibintek-insiders`, self-host, stale registry cleanup, `--repair`, `--force`.
+- open_questions: owner/project remediation selection is required before retry.

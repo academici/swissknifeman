@@ -19,6 +19,9 @@
 
 ### Fixed
 
+- **maind — текущая схема Serena.** Генератор `.serena/project.yml` использует
+  канонический ключ `language_servers`; мультиязычные и пустые конфигурации больше
+  не создают legacy `languages`, который Serena мигрировала при активации.
 - **skiller — внешний Codex connect bundle.** Repo-contained bundles выбранных
   plugins теперь включают runtime-файлы скиллов с consumer exclusions; native
   install/cache/enable остаются отдельным явным действием.

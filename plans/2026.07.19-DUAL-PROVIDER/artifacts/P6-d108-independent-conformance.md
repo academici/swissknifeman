@@ -189,3 +189,84 @@ The public real-root `deploy_project(..., d108=True, dry=True)` reader returned:
 No `.swissknife.json`, lifecycle handler, provider lock or other live target was created or
 changed. P6.12 is therefore GREEN for the D108 rollback/no-write boundary. Phase close, final
 audit and every P7/live action remain separate work.
+
+## D122 independent post-apply proof — RED
+
+**Observed:** 2026-07-23
+**Source anchor:** `5830e631` (`fix(maind): принять точный D104 post-apply noop`)
+**Mode:** independently constructed disposable roots, followed by one public real-root
+`dry=True` reader with its D108 writer patched to a spy. No real-root apply, repair,
+rollback, cleanup, or P7.2 retry was invoked.
+
+The frozen root inputs still match their sealed bytes: `.codex/hooks.json` SHA-256 is
+`7d7538d021228e8e61d124f4b60b6db04434f8121de30b8672f05e4bf038c3db` and `.mcp.json`
+SHA-256 is `cf4537196c3fefd6fd3980221bd3677f74e7867392ad49364e1e891e1f7c8283`. The
+current carrier, lifecycle handler and canonical provider lock are absent.
+
+### Disposable-root oracle — GREEN
+
+The oracle seeded only those two sealed preimages, constructed the frozen
+`claude-code` + `codex` project selection and exact server set `maind`,
+`perplexity-web`, `serena`, then performed the first D108 operation.
+
+| Case | Result |
+|:--|:--|
+| exact managed two-group post-apply form | second chain actions are `noop`, `noop`, `noop`; `apply_d108_operation` called its writer `0` times and the complete temporary-root SHA inventory was identical before/after |
+| reordered groups | `MAIND_PROVIDER_DEPLOY_REFUSED`; writer `0`; inventory identical |
+| extra observer group | `MAIND_PROVIDER_DEPLOY_REFUSED`; writer `0`; inventory identical |
+| changed observer command | `MAIND_PROVIDER_DEPLOY_REFUSED`; writer `0`; inventory identical |
+| malformed observer group | `MAIND_PROVIDER_DEPLOY_REFUSED`; writer `0`; inventory identical |
+| changed memory command | `MAIND_D108_CHAIN_REFUSED`; writer `0`; inventory identical |
+| changed handler, lock, or MCP preimage | `MAIND_D108_CHAIN_REFUSED`; writer `0`; inventory identical |
+
+The changed-memory and protected-artifact cases retain the pre-existing D108 chained-plan
+refusal diagnostic; none reaches a writer. This preserves the D104/D108 fail-closed boundary.
+
+Focused committed regressions also passed at `5830e631`:
+
+```text
+cd packages/maind
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=../..:lib:../harness/lib \
+  python3 -m unittest -v tests.test_provider_deploy tests.test_deploy
+# Ran 53 tests — OK
+
+cd ../..
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=. \
+  python3 -m unittest discover -v -s core/tests -p 'test_provider_lock.py'
+# Ran 26 tests — OK
+
+PYTHONDONTWRITEBYTECODE=1 python3 -m py_compile \
+  packages/maind/lib/maind/provider_deploy.py \
+  packages/maind/lib/maind/provision/deploy.py
+```
+
+### Real-root dry reader — RED, fail-closed with zero writes
+
+The public `deploy_project(..., d108=True, dry=True)` reader was invoked with the canonical
+configured `swissknifeman` root and a spy on `apply_d108_operation`. It refused before that
+writer: `plan_d104_bootstrap_transfer` returned `bootstrap-backup-present` for both D104
+records, so the composed public result is `MAIND_D108_CHAIN_REFUSED`. Writer count is `0` and
+the protected inventory before/after is identical.
+
+The exact blockers are ignored rollback residue, not a changed sealed target or lock:
+
+```text
+.codex/hooks.json.provider-artifact.bootstrap-transfer.bak
+  mtime 2026-07-23 08:54:59 +0300
+  sha256 7d7538d021228e8e61d124f4b60b6db04434f8121de30b8672f05e4bf038c3db
+  byte-identical to .codex/hooks.json
+.mcp.json.provider-artifact.bootstrap-transfer.bak
+  mtime 2026-07-23 08:54:59 +0300
+  sha256 cf4537196c3fefd6fd3980221bd3677f74e7867392ad49364e1e891e1f7c8283
+  byte-identical to .mcp.json
+```
+
+Both names are ignored by `.gitignore:52` (`*.bak`) and timestamped inside the D121 first
+apply/rollback window. They are outside the P7 evidence's listed restored target inventory,
+but their existence is an explicit P2 admission predicate. Do not delete, adopt, or normalize
+them in P6.12. The owning rollback/backup-lifecycle seam requires bounded fix-forward design
+before a fresh P7.2 first-preflight run.
+
+**Verdict:** RED — D122 itself proves exact post-apply idempotence and fail-closed mutations,
+but the real-root D108 initial candidate cannot be admitted while the D121 rollback backups
+remain. P7.2 remains blocked; no phase close or audit follows this result.

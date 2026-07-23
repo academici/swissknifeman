@@ -19,7 +19,7 @@ from core import (ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource
                   plan_bootstrap_transfer, BootstrapTransferAdmission, artifact_dry_run, sha256_digest,
                   ChainedBootstrapTransferAdmission, plan_chained_bootstrap_transfer,
                   support_for)
-from core.provider_lock import artifact_doctor
+from core.provider_lock import artifact_doctor, rollback_chained_bootstrap_transfer
 from .common import atomic_write_text
 
 
@@ -166,10 +166,12 @@ def apply_project_carrier(plan):
 
 
 def _rollback_project_carrier(plan):
+    if (not plan.path.is_file() or plan.path.is_symlink() or
+            plan.path.read_bytes() != plan.after):
+        raise ProviderDeployError("MAIND_D108_ROLLBACK_CARRIER_CHANGED")
     if plan.before is None:
-        if plan.path.exists() and not plan.path.is_symlink() and plan.path.read_bytes() == plan.after:
-            plan.path.unlink()
-    elif plan.path.exists() and not plan.path.is_symlink() and plan.path.read_bytes() == plan.after:
+        plan.path.unlink()
+    elif plan.changed:
         from core import atomic_write_text
         atomic_write_text(plan.path, plan.before.decode("utf-8"))
 
@@ -265,6 +267,47 @@ def apply_d108_operation(root, operation):
         _rollback_project_carrier(operation.carrier)
         raise
     return operation
+
+
+def rollback_d108_operation(root, operation):
+    """Reverse only the exact, already-applied D108 operation and its carrier."""
+    if not isinstance(operation, D108OperationPlan):
+        raise TypeError("D108 operation plan required")
+    root = Path(root)
+    error = _d108_rollback_operation_error(root, operation)
+    if error is not None:
+        raise ProviderDeployError(error)
+    try:
+        rollback_chained_bootstrap_transfer(root, operation.chained_plan)
+        _rollback_project_carrier(operation.carrier)
+    except ValueError as error:
+        raise ProviderDeployError("MAIND_D108_ROLLBACK_REFUSED") from error
+    return operation
+
+
+def _d108_rollback_operation_error(root, operation):
+    """Validate the recorded P6 carrier before the core rollback can write."""
+    if not root.is_absolute() or root != root.resolve():
+        return "MAIND_D108_ROLLBACK_ROOT_INVALID"
+    carrier = operation.carrier
+    if (not isinstance(carrier, ProjectCarrierPlan) or
+            carrier.path != root / ".swissknife.json" or
+            carrier.path.is_symlink() or not carrier.path.is_file() or
+            carrier.path.read_bytes() != carrier.after):
+        return "MAIND_D108_ROLLBACK_CARRIER_CHANGED"
+    transfer = operation.transfer
+    chained = operation.chained_plan
+    admission = getattr(chained, "chained_bootstrap_transfer", None)
+    if (not isinstance(transfer, BootstrapTransferPlan) or admission is None or
+            transfer.plan != admission.predecessor_plan):
+        return "MAIND_D108_ROLLBACK_OPERATION_INVALID"
+    expected = tuple(action.expected for action in transfer.plan.actions)
+    chained_expected = {action.target_path: action.expected for action in chained.actions}
+    if (set(chained_expected) != {".codex/hooks.json", ".codex/hooks/lifecycle.py", ".mcp.json"} or
+            any(chained_expected[path] != artifact for path, artifact in
+                zip((".codex/hooks.json", ".codex/hooks/lifecycle.py"), expected))):
+        return "MAIND_D108_ROLLBACK_OPERATION_INVALID"
+    return None
 
 
 def bootstrap_transfer_projection(status, transfer=None, diagnostic=None):

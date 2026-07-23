@@ -52,7 +52,8 @@ from .provider_lock import (ArtifactAction, ArtifactActionKind, ArtifactLock, Ar
                             LOCK_SCHEMA_VERSION, apply_plan, artifact_dry_run, parse_lock,
                             plan_artifact_lock, plan_bootstrap_transfer,
                             plan_chained_bootstrap_transfer,
-                            render_artifact_projection, serialize_lock)
+                            render_artifact_projection, rollback_chained_bootstrap_transfer,
+                            serialize_lock)
 from .provider_registry import (AdapterCatalog, AdapterDescriptor, AdapterSelection,
                                 AdapterSelectionResult, RegistryDiagnostic, RegistrySeverity)
 from .repo import find_monorepo_root, find_repo_root, sibling_bin
@@ -95,7 +96,7 @@ __all__ = [
     "ArtifactActionKind", "LOCK_SCHEMA_VERSION", "LOCK_RELATIVE_PATH", "serialize_lock",
     "parse_lock", "plan_artifact_lock", "plan_bootstrap_transfer",
     "plan_chained_bootstrap_transfer", "apply_plan", "artifact_dry_run",
-    "render_artifact_projection",
+    "render_artifact_projection", "rollback_chained_bootstrap_transfer",
     "RegistrySeverity", "RegistryDiagnostic", "AdapterDescriptor", "AdapterSelection",
     "AdapterSelectionResult", "AdapterCatalog",
 ]

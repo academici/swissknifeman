@@ -15,7 +15,7 @@ from core import (ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource
                   ProviderId, SupportLevel, apply_plan, parse_lock, plan_artifact_lock,
                   plan_artifact_render, plan_bootstrap_transfer,
                   plan_chained_bootstrap_transfer,
-                  serialize_lock)
+                  rollback_chained_bootstrap_transfer, serialize_lock)
 
 
 HASH = "sha256:" + "a" * 64
@@ -569,6 +569,57 @@ class ProviderLockTests(unittest.TestCase):
                 after = tuple(sorted((path.relative_to(root).as_posix(), path.read_bytes())
                                      for path in root.rglob("*") if path.is_file()))
                 self.assertEqual(after, before)
+
+    def test_d123_rolls_back_only_the_completed_exact_d108_state(self):
+        hooks = self.root / ".codex/hooks.json"
+        hooks.parent.mkdir(parents=True)
+        hooks.write_bytes(BOOTSTRAP_PREIMAGE)
+        (self.root / ".mcp.json").write_bytes(MCP_PREIMAGE)
+        before = tuple(sorted((path.relative_to(self.root).as_posix(), path.read_bytes())
+                              for path in self.root.rglob("*") if path.is_file()))
+        with self.chained_exact_vectors() as (bootstrap_digest, mcp_digest):
+            predecessor = self.chained_predecessor(self.root, bootstrap_digest)
+            planned = plan_chained_bootstrap_transfer(
+                self.root, self.chained_results(), lock_bytes=None,
+                admission=self.chained_admission(predecessor, bootstrap_digest, mcp_digest))
+            apply_plan(self.root, planned)
+            self.assertIs(rollback_chained_bootstrap_transfer(self.root, planned), planned)
+        after = tuple(sorted((path.relative_to(self.root).as_posix(), path.read_bytes())
+                             for path in self.root.rglob("*") if path.is_file()))
+        self.assertEqual(after, before)
+
+    def test_d123_refuses_nonexact_completed_d108_state_before_writer(self):
+        cases = (
+            ("missing-backup", lambda root: (root / ".codex/hooks.json.provider-artifact.bootstrap-transfer.bak").unlink()),
+            ("extra-backup", lambda root: (root / ".codex/hooks/lifecycle.py.provider-artifact.bootstrap-transfer.bak").write_bytes(b"extra\n")),
+            ("different-backup", lambda root: (root / ".mcp.json.provider-artifact.bootstrap-transfer.bak").write_bytes(b"different\n")),
+            ("changed-lock", lambda root: (root / ".swissknifeman/provider-artifacts.lock.json").write_bytes(b"changed\n")),
+            ("changed-handler", lambda root: (root / ".codex/hooks/lifecycle.py").write_bytes(b"changed\n")),
+        )
+        for name, mutate in cases:
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                hooks = root / ".codex/hooks.json"
+                hooks.parent.mkdir(parents=True)
+                hooks.write_bytes(BOOTSTRAP_PREIMAGE)
+                (root / ".mcp.json").write_bytes(MCP_PREIMAGE)
+                with self.chained_exact_vectors() as (bootstrap_digest, mcp_digest):
+                    predecessor = self.chained_predecessor(root, bootstrap_digest)
+                    planned = plan_chained_bootstrap_transfer(
+                        root, self.chained_results(), lock_bytes=None,
+                        admission=self.chained_admission(predecessor, bootstrap_digest, mcp_digest))
+                    apply_plan(root, planned)
+                    mutate(root)
+                    before = tuple(sorted((path.relative_to(root).as_posix(), path.read_bytes())
+                                          for path in root.rglob("*") if path.is_file()))
+                    with patch.object(provider_lock, "_atomic_write_bytes",
+                                      wraps=provider_lock._atomic_write_bytes) as writer:
+                        with self.assertRaisesRegex(ValueError, "chained bootstrap rollback"):
+                            rollback_chained_bootstrap_transfer(root, planned)
+                    self.assertEqual(writer.call_count, 0)
+                    after = tuple(sorted((path.relative_to(root).as_posix(), path.read_bytes())
+                                         for path in root.rglob("*") if path.is_file()))
+                    self.assertEqual(after, before)
 
     def test_ordinary_plan_retains_unrelated_lock_records(self):
         first = self.plan()

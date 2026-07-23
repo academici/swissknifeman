@@ -15,7 +15,7 @@ from maind.provider_deploy import (ProviderDeployError, plan_provider_deploy,
 from maind.provider_deploy import (conformance_report, plan_d104_bootstrap_transfer,
                                    write_conformance_report, plan_project_carrier,
                                    apply_project_carrier, apply_d108_operation,
-                                   _d108_planned_projections)
+                                   rollback_d108_operation, _d108_planned_projections)
 from maind.provision.deploy import deploy_project, mark_deployed, provider_semantic_inventory
 from tests.fixtures import make_repo
 from maind.config import merge_defaults
@@ -184,6 +184,59 @@ class TestProviderDeploy(unittest.TestCase):
                 after = {path.relative_to(root): path.read_bytes()
                          for path in root.rglob("*") if path.is_file()}
                 self.assertEqual(after, before)
+
+    def test_d123_rolls_back_the_recorded_d108_operation_and_carrier(self):
+        repo = Path(__file__).resolve().parents[3]
+        harness = repo / "packages/harness/configs"
+        sealed = (repo / ".mcp.json").read_bytes()
+        servers = (SemanticServer("maind", {"command": "maind"}),
+                   SemanticServer("perplexity-web", {"command": "pplx"}),
+                   SemanticServer("serena", {"command": "serena"}))
+        config = merge_defaults({"projects": [{"id": "swissknifeman", "name": "SKM"}]})
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / ".codex").mkdir()
+            (root / ".codex/hooks.json").write_bytes(_D104_PREIMAGE)
+            (root / ".mcp.json").write_bytes(sealed)
+            carrier_before = b'{"custom":{"preserve":true}}\n'
+            (root / ".swissknife.json").write_bytes(carrier_before)
+            before = {path.relative_to(root): path.read_bytes()
+                      for path in root.rglob("*") if path.is_file()}
+            operation = plan_d108_operation(root, config, "swissknifeman", servers,
+                                            harness_configs=harness, expected_root=root)
+            apply_d108_operation(root, operation)
+            self.assertIs(rollback_d108_operation(root, operation), operation)
+            after = {path.relative_to(root): path.read_bytes()
+                     for path in root.rglob("*") if path.is_file()}
+            self.assertEqual(after, before)
+
+    def test_d123_refuses_changed_carrier_before_core_rollback(self):
+        repo = Path(__file__).resolve().parents[3]
+        harness = repo / "packages/harness/configs"
+        sealed = (repo / ".mcp.json").read_bytes()
+        servers = (SemanticServer("maind", {"command": "maind"}),
+                   SemanticServer("perplexity-web", {"command": "pplx"}),
+                   SemanticServer("serena", {"command": "serena"}))
+        config = merge_defaults({"projects": [{"id": "swissknifeman", "name": "SKM"}]})
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / ".codex").mkdir()
+            (root / ".codex/hooks.json").write_bytes(_D104_PREIMAGE)
+            (root / ".mcp.json").write_bytes(sealed)
+            operation = plan_d108_operation(root, config, "swissknifeman", servers,
+                                            harness_configs=harness, expected_root=root)
+            apply_d108_operation(root, operation)
+            (root / ".swissknife.json").write_text('{"foreign":true}\n', encoding="utf-8")
+            before = {path.relative_to(root): path.read_bytes()
+                      for path in root.rglob("*") if path.is_file()}
+            with patch("maind.provider_deploy.rollback_chained_bootstrap_transfer") as rollback:
+                with self.assertRaisesRegex(ProviderDeployError,
+                                            "MAIND_D108_ROLLBACK_CARRIER_CHANGED"):
+                    rollback_d108_operation(root, operation)
+            self.assertEqual(rollback.call_count, 0)
+            after = {path.relative_to(root): path.read_bytes()
+                     for path in root.rglob("*") if path.is_file()}
+            self.assertEqual(after, before)
 
     def test_d104_transfer_composes_then_returns_to_normal_p2_repair(self):
         repo = Path(__file__).resolve().parents[3]

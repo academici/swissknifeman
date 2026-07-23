@@ -1,8 +1,8 @@
 # P7.4 adversarial release audit
 
-**Observed:** 2026-07-23  
-**Session:** `gpt-5.6-sol/xhigh`  
-**Baseline:** `b8e2c12a1c3b050e296132110120dd5ab4e3fb59`  
+**Observed:** 2026-07-23
+**Session:** `gpt-5.6-sol/xhigh`
+**Baseline:** `b8e2c12a1c3b050e296132110120dd5ab4e3fb59`
 **Authority:** read-only release evidence audit under D126; no package/source repair, live
 apply/repair/rollback, cleanup, publication, tag, push, fleet or FOREMAN action.
 

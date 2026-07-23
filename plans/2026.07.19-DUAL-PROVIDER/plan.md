@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.19-DUAL-PROVIDER |
 | Title | Dual-provider foundation: общий канон и нативные adapters для Claude Code и Codex |
-| Version | 1.4.67 |
+| Version | 1.4.68 |
 | Status | 🟠 Done with deviations |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high |
@@ -271,6 +271,7 @@ Owner refinement после RED-аудита: root и package-level `AGENTS.md` 
 
 | Дата | Кто (role/model) | Что |
 |:--|:--|:--|
+| 2026-07-23 | task-plan-close / Codex | P7 и весь план закрыты `🟠`: D127 устранил P7.4 F1 точечной evidence-проверкой; ACTIVE снят, внешние операции закрыты. |
 | 2026-07-23 | owner / D127 | Разрешена только evidence-коррекция P7.3 `16` → `17` и точечная hash/count проверка; повторный P7.4 запрещён, внешние операции остаются закрыты. |
 | 2026-07-23 | task-plan-run / gpt-5.6-sol/xhigh | P7.4 закрыт ATTENTION: functional release gates GREEN, но P7.3 cleanup evidence ошибочно считает `openai.yaml` как 16 вместо 17; FOREMAN остаётся закрыт — детали см. phases/P7.md P7.4 Completion Notes. |
 | 2026-07-23 | owner / D126 | P7.3 no-op cleanup and functional GREEN accepted as P7.4 predecessor; inherited no-launch errors are explicit exceptions, new lint delta must remain zero. |

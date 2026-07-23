@@ -238,28 +238,12 @@ terminal tree фазы. Полные правила и exact probes: `research/2
 | P2 | Historical P2.1→P2.6 evidence remains immutable; D108 adds only P2.7 for the exact chained D104+`.mcp.json` transaction. | P2.7 focused temporary-root tests → one full core/docs/release gate at phase close → fresh independent P2 audit. No live write. |
 | P6 | Historical P6.1→P6.10 and D107 F1–F4 remain immutable; D108 adds only `P6.11 → P6.12` after audited P2.7. | P6.11 project-carrier/all-plan-before-write implementation → P6.12 independent rollback/live no-write evidence → one full maind/docs/release gate at close → fresh audit. |
 
-## Готовый launch-block текущего шага
+## Terminal state
 
-### P6 — independent terminal audit (ChatGPT/Codex)
-
-**Next:** audit-phase: task:plan-audit 2026.07.19-DUAL-PROVIDER P6
-
-| Параметр | Значение |
-|:--|:--|
-| Model class | frontier (ChatGPT/Codex) |
-| Effort | xhigh |
-| Capabilities | read-only audit evidence |
-| Context | cold-start — plan-step |
-| Суть | Независимо проверить terminal P6; D116 переносит provider этого gate в ChatGPT/Codex. |
-
-```text
-/task:plan-audit 2026.07.19-DUAL-PROVIDER P6
-
-РЕЖИМ: independent terminal audit after P6 close
-ВХОД: plan.md D107–D115; phases/P6.md Phase Handoff and audit history; artifacts/P6-d108-independent-conformance.md
-СКОУП: 1) read-only terminal evidence reconciliation 2) verify D115/P6.12 anchors and P6.8 material deviation 3) emit literal GREEN|ATTENTION|RED
-НЕ ТРОГАТЬ: package/live apply-repair-rollback, P7 execution, FOREMAN, fleet, tag, push, cleanup, owner AGENTS.md or unrelated dirt
-```
+План закрыт `🟠 Done with deviations` по D127. Исторический P7.4 `ATTENTION` сохранён;
+его единственный factual F1 исправлен в P7.3 evidence и подтверждён targeted count/hash
+recheck без повторного audit. FOREMAN, fleet, publication, tag и push не авторизованы.
+Исполняемого следующего шага и launch-block нет.
 
 ## Гейты владельца (сводно)
 

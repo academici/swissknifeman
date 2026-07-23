@@ -300,3 +300,20 @@ RAG:— (owner-grounded: mAInd memory `mem_mrwffj6x_4e58b0e7e65d`; repo-grounded
 
 RAG:— (owner-grounded: standing delegation; repo-grounded: final Audit P2 block,
 `224f1688`, `f9f168a8`, D108 roadmap).
+
+## 2026-07-23 — P7.2 D118 RED: native Codex/session-state isolation
+
+- Preserve unrelated dirty `AGENTS.md` and `.serena/project.yml` plus all uncommitted
+  P7.2 plan/evidence carriers.
+- Treat P6 audit attempt 5 as final Owner-accepted GREEN under AUDIT-CAP; do not reopen P6.
+- Redesign only P7.2 after the isolated native install stored plugin payload under the
+  task-specific `CODEX_HOME` but the active host-backed Codex session changed its own
+  JSONL and SQLite/WAL state.
+- Use only a supported remediation. Host-state attribution exceptions, speculative config
+  keys, host auth/state reuse and weakened zero-delta acceptance are forbidden.
+- Do not execute P7.2, live apply/repair/rollback, P7.3+, FOREMAN, fleet, tag, push or cleanup;
+  do not modify package source/tests.
+- Validate with plan-lint and `git diff --check`; commit only plan paths.
+
+RAG:— (owner-grounded: direct P7.2 D118 RED design instruction 2026-07-23;
+repo-grounded: `findings/P7-self-host-probes-2026-07-19.md`).

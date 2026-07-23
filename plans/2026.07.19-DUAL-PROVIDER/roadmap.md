@@ -6,19 +6,19 @@
      Порядок строго phase-first: P0→P1→P2→P3→P4→P5→P6→P7. До finish + GREEN design
      audit исполнение любого item запрещено. -->
 
-**Обновлён:** 2026-07-23 · **Соответствует plan.md:** v1.4.57
+**Обновлён:** 2026-07-23 · **Соответствует plan.md:** v1.4.61
 
 > **Статус exec:** D108 under standing delegation selected `S1+O1` and intentionally
 > superseded the pre-approval no-reopen restriction. P2.7, terminal full-core/docs/release
 > gate and substantive GREEN audit are accepted by D111; D112/D114 bound the P6.11
 > fix-forward seams. D113 routes remaining no-write work through Terra/medium + targeted gates;
 > D116 superseded only the final-audit provider assignment to ChatGPT/Codex. Owner accepted
-> attempt-5 `GREEN` under AUDIT-CAP; D117 completed the P7.2 design gate. The current route is
-> a fresh P7.2 first-preflight rerun; any later live mutation remains behind its existing exact
-> Approval Owner D#.
-> Remediation uses disposable
-> roots/read-only live preflight only; P7.3+, live writes, FOREMAN, fleet, tag and push remain
-> closed.
+> attempt-5 `GREEN` under AUDIT-CAP; D117 completed the P7.2 design gate. D118 then reached
+> the native Codex row but remained RED because the active parent session changed host state.
+> D119 resumes only that row in a neutral-shell ephemeral clean room with `HOME`,
+> `CODEX_HOME` and `CODEX_SQLITE_HOME` redirected. The clean-room run stops at the existing
+> exact live-action Approval Owner D#; any approved live mutation uses a separate
+> self-contained session. P7.3+, live writes, FOREMAN, fleet, tag and push remain closed.
 
 ## Карта исполнения
 
@@ -75,7 +75,7 @@
 | P6.11 | solo | plan-run (manual) — 🟢 | gpt-5.6-terra/medium | ✅ D108/D111–D115 | exact unchanged-MCP projection bridge GREEN |
 | P6.12 | solo | plan-exec — 🟢 | gpt-5.6-terra/medium | — | attempt 4 GREEN: exact dry candidate, writer 0, protected delta 0 |
 | P7.1 | solo | plan-run (manual) — 🟢 | gpt-5.6-sol/xhigh | ✅ D99 | terminal generated docs/exact-set |
-| P7.2 | solo | plan-run (manual) — ⬜ | gpt-5.6-terra/high | ✅ D108 `S1+O1`; later exact live apply D# | D117: terminal/fresh-audited P2.7 and P6 gates accepted; rerun from first preflight, earlier escalations are not GREEN |
+| P7.2 | solo | plan-run (manual) — 🟡 | gpt-5.6-terra/high | ✅ D108 `S1+O1`; later exact live apply D# | D119: resume only the D118 RED native row from a neutral-shell ephemeral clean room; no host-state exclusions |
 | P7.3 | solo | plan-run (manual) | gpt-5.6-terra/high | ✅ D# на exact bootstrap cleanup inventory | guarded destructive cleanup и release manifest; отдельный rollback boundary |
 | P7.4 | solo | plan-run (manual, NEW SESSION) | gpt-5.6-sol/xhigh | ✅ literal GREEN + explicit owner D# | cold adversarial audit; только GREEN+owner D# открывает reconcile |
 
@@ -111,9 +111,11 @@ P7 исполняется четырьмя независимыми внешни
 4. Один writer работает в `/home/vostrikov/projects/packages/swissknifeman` на
    cumulative `codex/provider-project-sync`. Dirty root, закрытые predecessor phases, FOREMAN,
    fleet, unrelated projects и push не трогаются; generic subagents не создаются.
-5. Owner gate внутри P7.1/P7.2/P7.3/P7.4 не завершает сессию: executor сначала готовит
-   exact inventory/evidence/D#, печатает одну copy-paste approval-строку и после ответа
-   владельца завершает тот же item в той же сессии.
+5. Owner gate внутри P7.1/P7.3/P7.4 не завершает сессию: executor сначала готовит exact
+   inventory/evidence/D#, печатает одну copy-paste approval-строку и после ответа владельца
+   завершает тот же item в той же сессии. D119 supersedes this only for P7.2: its ephemeral
+   clean-room run ends at the exact approval request; an approved live action starts in a
+   separate self-contained session carrying that D#.
 
 ### P7.1 — capability manifest, production gates и generated provider docs
 
@@ -138,15 +140,32 @@ codex -C /home/vostrikov/projects/packages/swissknifeman --no-alt-screen \
 |:--|:--|
 | Semantic command | `run-items: task:plan-run 2026.07.19-DUAL-PROVIDER P7.2` |
 | Model / Effort | `gpt-5.6-terra` / `high` |
-| Context | mandatory fresh Codex process; no resume/chat carry-over |
-| Owner gate | Exact D# на live path/action set только после isolated GREEN + rollback rehearsal. |
+| Context | neutral owner shell after the current Codex session exits; non-interactive ephemeral clean room |
+| Owner gate | Exact D# на live path/action set только после isolated GREEN + rollback rehearsal; the D119 native row redirects `HOME`, `CODEX_HOME` and `CODEX_SQLITE_HOME` for the whole executor process. |
 | Переход | Только terminal GREEN P7.2 открывает P7.3; final response печатает launch P7.3. |
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman --no-alt-screen \
-  -m gpt-5.6-terra -c 'model_reasoning_effort="high"' \
-  -a never -s danger-full-access \
-  'Выполни $ task:plan-run 2026.07.19-DUAL-PROVIDER P7.2 в новой сессии. Сначала isolated Claude-only, Codex-only и dual-provider matrix с rollback; до доказанного GREEN live state не менять. На owner gate выдай exact D#, exact path/action inventory и одну approval-строку; не спрашивай заранее. Не исправляй package source в evidence item. Только P7.2; закрытые predecessor phases, P7.3+, FOREMAN, fleet и push не трогать. После GREEN не запускай successor: закончи exact P7.3 launch-block из roadmap.md.'
+(
+  set -eu
+  P72_AUTH_COUNT=0
+  [ -n "${CODEX_ACCESS_TOKEN:-}" ] && P72_AUTH_COUNT=$((P72_AUTH_COUNT + 1))
+  [ -n "${CODEX_API_KEY:-}" ] && P72_AUTH_COUNT=$((P72_AUTH_COUNT + 1))
+  [ "$P72_AUTH_COUNT" -eq 1 ] || {
+    echo 'P7.2 requires exactly one exported automation credential: CODEX_ACCESS_TOKEN or CODEX_API_KEY' >&2
+    exit 64
+  }
+  P72_RUN_ROOT=$(mktemp -d /tmp/p72-codex-cleanroom.XXXXXX)
+  mkdir -p "$P72_RUN_ROOT/home" "$P72_RUN_ROOT/codex-home" "$P72_RUN_ROOT/sqlite"
+  env HOME="$P72_RUN_ROOT/home" \
+    CODEX_HOME="$P72_RUN_ROOT/codex-home" \
+    CODEX_SQLITE_HOME="$P72_RUN_ROOT/sqlite" \
+    codex -C /home/vostrikov/projects/packages/swissknifeman \
+      -m gpt-5.6-terra -c 'model_reasoning_effort="high"' \
+      -c 'shell_environment_policy.exclude=["CODEX_ACCESS_TOKEN","CODEX_API_KEY"]' \
+      -a never -s danger-full-access \
+      exec --ephemeral --ignore-user-config \
+      'Execute $ task:plan-run 2026.07.19-DUAL-PROVIDER P7.2. Read AGENTS.md, CLAUDE.md and plans/2026.07.19-DUAL-PROVIDER/{plan.md,handoff.md,roadmap.md,phases/P7.md,research/29-p7.2-native-codex-session-state-isolation.md,research/28-p7.2-native-codex-disposable-root.md,findings/P7-self-host-probes-2026-07-19.md,findings/P7-codex-session-isolation-docs-2026-07-23.md}. Resume only at the D118 RED native Codex row. First snapshot the explicit host path /home/vostrikov/.codex and the repository; never print or persist an automation credential. Rerun the native marketplace/plugin proof under the inherited task-specific HOME, CODEX_HOME and CODEX_SQLITE_HOME, then require zero host/repository delta. If green, reconcile the isolated aggregate and stop at the exact live path/action Approval Owner D# request; do not perform live apply/repair/rollback in this ephemeral run. Do not touch package source/tests, P7.3+, FOREMAN, fleet, tag, push, cleanup, owner AGENTS.md or unrelated dirt.'
+)
 ```
 
 ### P7.3 — guarded bootstrap cleanup и release manifest
@@ -272,14 +291,20 @@ terminal tree фазы. Полные правила и exact probes: `research/2
 
 - RAG: official OpenAI model catalog + Terra model page, 2026-07-19 — Sol/Terra IDs,
   roles и efforts подтверждены; детали в `findings/P7-openai-model-routing-2026-07-19.md`.
+- RAG: current official Codex environment/non-interactive/auth docs, 2026-07-23 —
+  `CODEX_HOME`, `CODEX_SQLITE_HOME`, `codex exec --ephemeral`, `--ignore-user-config`
+  and single-run automation auth verified; details in
+  `findings/P7-codex-session-isolation-docs-2026-07-23.md`.
 - Repo-grounding: 54/54 Routing rows, 16 `plan-exec` + 38 `manual`; instruction carrier
   и contract/read/owner-gate reconcile — `research/12-final-cross-phase-reconcile.md`,
   `research/13-instruction-contract-remediation.md`.
-- Непроверено → ПОВТОРНЫЙ ПРОХОД: account availability Sol/Terra; runtime fail closed,
-  downgrade запрещён.
+- Непроверено → ПОВТОРНЫЙ ПРОХОД: account availability Sol/Terra and availability of
+  exactly one owner automation credential; runtime fails closed, downgrade/host-auth fallback
+  запрещены.
 - Обходки/[POSSIBLE-DEFECT]: numbering P0.5 отражает новый carrier без renumber существующих
   journal IDs; фактический порядок задают D52 и эта execution map. D51 supersedes недостаточный D49 только в части
   schema-invalid row 11; audit-r3 F1 не меняет contract/D51/canon, а закрывает missing
   directory-ID enforcement. Evidence — `findings/journal-same-plan-remediation-verification-2026-07-20.md`.
   Audit r4 remains recorded as accepted P6 debt F1–F4 under D107; this later P7.2 design pass
   supersedes the stale current-status wording without rewriting the historical finding.
+  D119 is a supported clean-room route, not a host-state exclusion workaround.

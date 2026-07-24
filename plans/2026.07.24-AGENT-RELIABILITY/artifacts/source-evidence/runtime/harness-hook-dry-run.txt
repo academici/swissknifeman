@@ -1,0 +1,11 @@
+Sanitized runtime observation
+Observed date: 2026-07-24
+Command: ./packages/harness/bin/harness hooks --provider codex --observer --trusted --target <repository-root> --dry-run
+Exit status: 1
+Result: error
+Plan SHA-256: 4cb4f4c3ba1dc6398804927bec2d8c23ce692a320b0745cbdf0e97f7bfbafbf6
+Finding: harness.codex.lifecycle.hooks -> ownership-conflict / refuse (unmanaged-target)
+Finding: harness.codex.lifecycle.handler -> missing / create (missing)
+
+This is a minimized projection of the command result. It deliberately excludes
+the host target path, configuration paths, commands, credentials, and raw logs.

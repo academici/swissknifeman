@@ -1,0 +1,16 @@
+{
+  "snapshot_kind": "sanitized runtime inventory",
+  "observed_date": "2026-07-24",
+  "green": {
+    "project_runtime": ["Codex doctor reports configuration readable", "mAInd health was connected with memory and code MCP available"],
+    "provider_features": ["hooks enabled", "plugins enabled", "multi-agent enabled"]
+  },
+  "not_green": [
+    "Codex lifecycle hook deployment refuses an unmanaged target.",
+    "The required Codex lifecycle handler is missing.",
+    "The effective hook set spans global and project sources."
+  ],
+  "evidence_links": ["runtime/codex-doctor.json", "runtime/codex-hooks-sanitized.json", "runtime/harness-hook-dry-run.txt"],
+  "redactions": ["host paths", "raw configuration", "secrets", "session contents", "commands"],
+  "portability": "This document is evidence only. No raw host path is required to read, verify, or execute the bundle verifier."
+}

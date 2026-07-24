@@ -1,0 +1,11 @@
+{
+  "schema_version": "source-evidence-bundle/v1",
+  "record_path": "sessions/selected-incident-events.jsonl",
+  "record_count": 5,
+  "sanitization": {
+    "retained": ["case identifier", "original path and SHA-256", "record selector", "timestamp", "findings-backed observable summary", "confidence"],
+    "excluded": ["raw user/assistant message text", "hidden reasoning", "tool payloads", "credentials", "unrelated session content"],
+    "method": "metadata-only selection; summaries are deliberately non-verbatim and do not assert more than their cited findings"
+  },
+  "case_ids": ["missed-consumer-cold-start", "missing-launch-block-intra-session", "wrong-scope-return", "five-audit-loop", "honest-http-clean-control"]
+}

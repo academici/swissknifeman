@@ -4,6 +4,10 @@
 
 ### Added
 
+- **plan — agent reliability and SSOT recovery.** Добавлен исполнимый план
+  `2026.07.24-AGENT-RELIABILITY`: полевая root-cause модель по четырём проектам,
+  единый task contract, runtime-dedup skills/hooks, bounded review loop,
+  unified traces, behavioral evals и self-host canary до fleet-гейта.
 - **harness/core — dual-provider environment and instruction projections.** Provider-neutral
   profile, security, hook, MCP, agent and instruction catalogs now render independent native
   Claude/Codex artifacts. Artifact contract v1.1.0 preserves generic semantic metadata in the

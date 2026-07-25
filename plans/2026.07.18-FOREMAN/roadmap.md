@@ -27,6 +27,7 @@
 | P1.2 | solo | plan-run (manual) | opus/high | — | корневой индекс плана |
 | P1.3 | solo | plan-run (manual) | sonnet/high | ✅ contribution в task | механизм записи журнала (close-протокол + хелпер) |
 | P1.4 | solo | plan-run (manual) | sonnet/high | ✅ lint-гейт журнала | soft-lint (WARN legacy / ERROR датовые) |
+| P1.5 | solo | plan-run (manual) | sonnet/high | ⛔ fail closed до терминальной P2 плана `2026.07.24-AGENT-RELIABILITY` (D49) | re-пин `driver-plan-protocol.md` (сейчас `v2.8.0 @ 2cf26e8` против живых `2.11.0`) + сверка якорей §1–§4; ЗАКРЫВАЕТ фазу P1 |
 | P2.1 | solo | plan-exec | sonnet/medium | — | механический каркас пакета |
 | P2.2–P2.5 | B-P2 | plan-run серия (manual) | sonnet/high | обзор владельца | ядро драйвера: state-machine→parsing→recovery→resume, сцеплено; review full |
 | P3.1 | solo | plan-exec | sonnet/medium | — | settings-фрагмент (mode флагом); security-surface → review full, не батчить |

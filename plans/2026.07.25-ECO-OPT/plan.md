@@ -50,7 +50,8 @@ P3.1/P6/P7, терминальной P2 — P1.2/P2.2/P7.1. `2026.07.18-FOREMAN`
   FOREMAN); поведение Claude Code — только first-party дока.
 - Coupling с AGENT-RELIABILITY: его P2.2 бампает plan-protocol/task-команды —
   items P2.2 и P7.1 этого плана НЕ стартуют, пока фаза P2 AGENT-RELIABILITY
-  не терминальна (cross-plan gate §11); при конфликте эскалация, не мерж.
+  не терминальна (cross-plan gate — эта же секция §2 + D10/D11; секции §11 в плане нет,
+  ссылка исправлена 2026-07-25); при конфликте эскалация, не мерж.
 - Правки скиллов: SKILL.ru.md → SKILL.md → `check-translations.sh --stamp` →
   `skiller registry`; после always-on правок — `skiller budget --first-turn`.
 - Owner-гейты: P3.3 (решения OQ-4/OQ-5), P4.1 (ADR памяти), P5.2 (adopt/skip

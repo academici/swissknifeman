@@ -68,6 +68,7 @@ exec-волна после «Утверждено». Artifex ≠ maind: executio
 | P0.6 | opus/high | manual | схема run-folder/мандата — контрактная design-работа |
 | P1.1–P1.2 | opus/high | manual | схемы журнала/индекса — правка канона плановой системы |
 | P1.3–P1.4 | sonnet/high | manual | contribution в пакет task (скиллы команд + plan-lint) — нужен обзор владельца |
+| P1.5 | sonnet/high | manual | re-пин parse-контракта P0.2 + построчная сверка четырёх якорей §1–§4; вердикт breaking/non-breaking не выводится дешёвой моделью |
 | P2.1 | sonnet/medium | plan-exec | механический каркас пакета |
 | P2.2–P2.5 | sonnet/high | manual | ядро драйвера: state machine, defensive parsing, crash recovery — нужен обзор владельца |
 | P3.1–P3.2 | sonnet/medium | plan-exec | шаблоны settings/hooks по готовой схеме P0 |

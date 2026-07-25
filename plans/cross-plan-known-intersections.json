@@ -1,0 +1,29 @@
+{
+  "_comment": "Payload D (аудит этапа C, plans/README.md § «Аудит этапа C — 2026-07-25», Ф9). Зафиксированный перечень путей, где живое пересечение (>=2 незакрытых плана) уже несёт владельца и порядок в ТЗ ОБОИХ концов (сверено аудитом этапа C + владение — plans/README.md § «Дисциплина сопровождения»/§ «Кросс-плановая последовательность»). `--strict` этого инструмента возвращает 1 только на путь ВНЕ этого перечня (новое/бесхозное пересечение). 19 путей — исходный замер аудита этапа C; +2 (AGENTS.md, CHANGELOG.md) стали машинно видимы после этого же payload'а (normalize() теперь видит корневые файлы без `/` в пути, И5) — оба уже были известными пересечениями с владельцем/порядком, просто невидимыми гейту. Обновляется вручную тем же коммитом, что меняет `Files` появившегося/закрытого пересечения.",
+  "generated": "2026-07-25",
+  "source": "python3 plans/cross-plan-files.py --strict (после payload D)",
+  "count": 21,
+  "paths": [
+    ".claude-plugin/marketplace.json",
+    "AGENTS.md",
+    "CHANGELOG.md",
+    "docs/reference.md",
+    "packages/harness/configs/claude-code/hooks/run-report/_lib.py",
+    "packages/harness/lib/harness/doctor.py",
+    "packages/harness/lib/harness/hooks.py",
+    "packages/skiller/lib/skiller/quality/eval.py",
+    "packages/skiller/skills.json",
+    "packages/skiller/skills/_index.md",
+    "packages/skiller/skills/general/plan-protocol/SKILL.md",
+    "packages/skiller/skills/general/plan-protocol/SKILL.ru.md",
+    "packages/skiller/tests/test_eval.py",
+    "packages/task/commands/plan-audit.md",
+    "packages/task/commands/plan-close.md",
+    "packages/task/commands/plan-design.md",
+    "packages/task/commands/plan-exec.md",
+    "packages/task/commands/plan-run.md",
+    "packages/task/lib/task/plan_lint.py",
+    "packages/task/tests/test_canon_literals.py",
+    "packages/task/tests/test_plan_lint.py"
+  ]
+}

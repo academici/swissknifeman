@@ -13,12 +13,20 @@
 stdlib-only. Использование:
     python3 plans/cross-plan-files.py                # все живые планы
     python3 plans/cross-plan-files.py <ID> <ID> ...  # только названные
-    python3 plans/cross-plan-files.py --strict       # exit 1 при пересечении
+    python3 plans/cross-plan-files.py --strict       # baseline-режим (см. ниже)
+
+`--strict` — baseline/рэтчет-режим (payload D, аудит этапа C Ф9): полный отчёт печатается
+всегда; exit 1 только если среди живых пересечений нашлось хотя бы одно НЕ из
+`cross-plan-known-intersections.json` (новое или бесхозное). Пересечения, уже зафиксированные
+в этом перечне (владелец+порядок названы в ТЗ обоих концов — сверено аудитом этапа C), зелёный
+`--strict` не требует их закрытия. Обновление перечня при появлении/закрытии пересечения —
+ручное, тем же коммитом, что меняет `Files`.
 """
 from __future__ import annotations
 
 import collections
 import glob
+import json
 import os
 import re
 import sys
@@ -32,6 +40,10 @@ BARE_RE = re.compile(r"(?<![`\w/])((?:[\w.-]+/)+[\w.-]+)")
 STATUS_RE = re.compile(r"^\|\s*Status\s*\|\s*(\S+)", re.M)
 ITEM_STATUS_RE = re.compile(r"^\*\*Status:\*\*\s*(\S+)", re.M)
 TERMINAL = ("\U0001f7e2", "\U0001f7e0", "\u26d4")  # Done / Done with deviations / Skipped
+KNOWN_INTERSECTIONS_FILE = os.path.join(PLANS_DIR, "cross-plan-known-intersections.json")
+# \u043a\u043e\u0440\u043d\u0435\u0432\u044b\u0435 \u043d\u043e\u0441\u0438\u0442\u0435\u043b\u0438 \u0431\u0435\u0437 "/" \u0432 \u043f\u0443\u0442\u0438 (\u04185) \u2014 \u043c\u0430\u0448\u0438\u043d\u043d\u043e\u043c\u0443 \u0433\u0435\u0439\u0442\u0443 \u0438\u043d\u0430\u0447\u0435 \u043d\u0435\u0432\u0438\u0434\u0438\u043c\u044b, \u0441\u043c. plans/README.md
+# \u00a7 \u00ab\u0414\u0438\u0441\u0446\u0438\u043f\u043b\u0438\u043d\u0430 \u0441\u043e\u043f\u0440\u043e\u0432\u043e\u0436\u0434\u0435\u043d\u0438\u044f\u00bb / \u00a7 \u00ab\u0410\u0443\u0434\u0438\u0442 \u044d\u0442\u0430\u043f\u0430 C\u00bb \u04247.
+ROOT_VISIBLE_FILES = {"CLAUDE.md", "AGENTS.md", "CHANGELOG.md", "config.json"}
 
 
 def live_plans() -> list[str]:
@@ -51,6 +63,8 @@ def normalize(token: str) -> str | None:
         if cut in t:
             t = t.split(cut)[0]
     t = t.strip().rstrip("/")
+    if t in ROOT_VISIBLE_FILES:
+        return t
     if "/" not in t or t.startswith("http") or t.endswith(":"):
         return None
     # отсекаем обрывки (regex по голому тексту ловит хвосты вроде "code/hooks/..."):
@@ -99,6 +113,14 @@ def collect(plan_id: str):
     return owners, skeleton, sized
 
 
+def load_known_intersections() -> set[str]:
+    if not os.path.exists(KNOWN_INTERSECTIONS_FILE):
+        return set()
+    with open(KNOWN_INTERSECTIONS_FILE, encoding="utf-8") as fh:
+        data = json.load(fh)
+    return set(data["paths"])
+
+
 def main() -> int:
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     strict = "--strict" in sys.argv
@@ -145,8 +167,20 @@ def main() -> int:
     if not shared:
         print("  (живых пересечений не найдено)")
 
-    if strict and shared:
+    if not strict:
+        return 0
+
+    known = load_known_intersections()
+    uncovered = {p: items for p, items in shared.items() if p not in known}
+    print(f"\n--strict (baseline-режим): известных пересечений в перечне {len(known)}")
+    if uncovered:
+        print(f"НЕПОКРЫТЫЕ (новые/бесхозные) пересечения: {len(uncovered)}")
+        for path in sorted(uncovered):
+            print(f"  {path}")
+            for item in sorted(uncovered[path]):
+                print(f"      {item}")
         return 1
+    print("Все живые пересечения покрыты перечнем — новых/бесхозных нет.")
     return 0
 
 

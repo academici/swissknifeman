@@ -4,6 +4,21 @@
 
 ### Added
 
+- **skiller — root-bootstrap class-B publication and collision closure (P1.5, D40/D42/D43).**
+  Four duplicate `architect` root identities (`architecture`, `codebase-design`,
+  `domain-modeling`, `package-contribution-protocol`) removed from `.agents/skills/` after
+  per-identity ownership proof against the installed `architect` bucket unit. `workflow-craft`
+  (public-bucket canon whose unit is not enabled) gets a generated thin Codex-only root
+  projection with provenance/hash under a new class-B extension to the root-bootstrap
+  renderer — declared asymmetry, no copied body, no Claude projection. `repository-bootstrap`
+  publication unit bumps `0.1.0` → `0.2.0` (`skiller` package API `0.4.1` → `0.4.2`); the 13
+  class-A canonical sources, their 26 projections and lock bytes stay byte-identical (a new
+  D38-frozen `class_a_content_version` decouples the class-A embedded stamp from the umbrella
+  unit version). The generator and `skiller registry --check` now assert each provider's root
+  skills directory equals exactly the declared target set (undeclared directory → hard
+  failure). `skiller doctor --provider-distribution` gains a read-only D42 diagnostic naming
+  every identity the curated `core` unit shares with a donor bucket (`general`/`research`/
+  `oss-dev`) under the worst-case declared set — never a live-profile read, never a repair.
 - **plan — agent reliability and SSOT recovery.** Добавлен исполнимый план
   `2026.07.24-AGENT-RELIABILITY`: полевая root-cause модель по четырём проектам,
   единый task contract, runtime-dedup skills/hooks, bounded review loop,

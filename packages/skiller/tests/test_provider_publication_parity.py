@@ -91,8 +91,13 @@ class TestProviderPublicationParity(unittest.TestCase):
         core = next(item for item in codex if item.publication_unit_id == "core"
                     and item.target.name == "plugin.json")
         core_manifest = json.loads(core.managed_bytes)
-        self.assertEqual(core_manifest["version"],
-                         json.loads((self.package_root / "package.json").read_text())["version"])
+        # D27: a unit's OWN rendered version is its per-unit `content_version`
+        # (configs/publication-versions.json), separate from the skiller package API SemVer
+        # (package.json) — P1.5 bumps the package API without touching `core`'s content
+        # version (byte-identical guard), so the two are no longer expected to match.
+        unit_versions = json.loads(
+            (self.package_root / "configs" / "publication-versions.json").read_text())
+        self.assertEqual(core_manifest["version"], unit_versions["units"]["core"])
         bundled = {item.target.parts[-3] + "/" + item.target.parts[-2]
                    for item in codex if item.publication_unit_id == "core"
                    and item.target.name == "SKILL.md"}

@@ -5,6 +5,8 @@
   "publication_unit": "repository-bootstrap",
   "generator": "packages/skiller/lib/skiller/registry.py→packages/skiller/lib/skiller/publication.py",
   "lock_path": "packages/skiller/adapters/repository-bootstrap/publication-lock.json",
+  "class_a_content_version": "0.1.0",
+  "_class_a_content_version_doc": "D38-frozen per-record `canonical_content_version`/`publication_unit` literal for the 13 class-A identities (`repository-bootstrap-map.json`) — embedded into every class-A projection body and NEVER moves, even when `configs/publication-versions.json` units.repository-bootstrap (the umbrella/lock version, currently bumped by P1.5 to 0.2.0) advances. Decoupling this from the umbrella version is what keeps the 26 class-A projection BYTES byte-identical across an owner bump (generated-artifact-version-v1.md byte-identical guard) — only the combined lock's own top-level `publication_unit` and the class-B projections track the umbrella version.",
   "identities": [
     "cross-project-optimizer",
     "decision-verification",
@@ -19,5 +21,16 @@
     "project-tooling-runbook",
     "release-discipline",
     "skill-authoring"
+  ],
+  "class_b": [
+    {
+      "_doc": "P1.5 (D43): a public-bucket canon whose unit (`general`) is not enabled — the root carrier has no owner/provenance/hash otherwise. Codex-only by declared asymmetry (a Claude root projection changes first-turn budget, requires `skiller budget --first-turn`, outside this scope). Exact acceptance record: plans/2026.07.24-AGENT-RELIABILITY/artifacts/P1.5/root-bootstrap-extension-map.json. `precondition` is enforced against an explicitly-passed enabled-inventory only — this renderer never reads a live provider profile/cache.",
+      "identity": "workflow-craft",
+      "source_class": "public-bucket",
+      "canonical": "packages/skiller/skills/general/workflow-craft/SKILL.md",
+      "providers": ["codex"],
+      "asymmetry_reason": "a Claude root projection changes the first-turn budget and requires `skiller budget --first-turn` (CLAUDE.md), which is outside this scope; the asymmetry is declared, not accidental",
+      "precondition": "no enabled unit serves this identity"
+    }
   ]
 }

@@ -8,9 +8,9 @@ from core import atomic_write_text, find_repo_root, safe_load_json
 from .common import (MARKETPLACE, die, parse_flags, parse_frontmatter,
                      parse_inline_list, skill_content_hash)
 from .config import CORE_PLUGIN, CORE_SKILLS
-from .publication import (SiblingPlugin, build_publication_catalog,
-                          render_claude_publication, render_codex_publication,
-                          render_repository_bootstrap_projections)
+from .publication import (SiblingPlugin, assert_root_bootstrap_set_completeness,
+                          build_publication_catalog, render_claude_publication,
+                          render_codex_publication, render_repository_bootstrap_projections)
 
 OWNER = {"name": "Dmitry Vostrikov", "email": "dv.vostrikov@gmail.com"}
 
@@ -403,15 +403,17 @@ def _sibling_plugins(repo_root, package_root):
     return tuple(siblings)
 
 
-def build_claude_publication(env, bucket_meta, bucket_dirs, registry=None):
-    """Render legacy Claude artifacts through the immutable P3 semantic catalog."""
+def build_catalog(env, bucket_meta, bucket_dirs, registry=None):
+    """Shared semantic-catalog construction — the immutable P1 input every provider renderer
+    consumes AND the read-only D42 core/donor-bucket diagnostic (doctor.py), so the
+    identity→carrier mapping is read from exactly one seam, never re-derived (P1.5)."""
     root = env.root
     repo_root = _repo_root(root)
     if registry is None:
         registry, _meta, _dirs = build_registry(env)
     meta_skill = parse_frontmatter(root / "generate-skill" / "generate-skill" / "SKILL.md")
     unit_versions, default_unit_version = _publication_versions(root)
-    catalog = build_publication_catalog(
+    return build_publication_catalog(
         registry=registry, bucket_meta=bucket_meta, bucket_dirs=bucket_dirs,
         core_skills=CORE_SKILLS, core_plugin=CORE_PLUGIN,
         package_version=_package_version(root), siblings=_sibling_plugins(repo_root, root),
@@ -419,6 +421,13 @@ def build_claude_publication(env, bucket_meta, bucket_dirs, registry=None):
         skm_present=(root / "skm" / ".claude-plugin" / "plugin.json").is_file(),
         unit_versions=unit_versions, default_unit_version=default_unit_version,
     )
+
+
+def build_claude_publication(env, bucket_meta, bucket_dirs, registry=None):
+    """Render legacy Claude artifacts through the immutable P3 semantic catalog."""
+    root = env.root
+    repo_root = _repo_root(root)
+    catalog = build_catalog(env, bucket_meta, bucket_dirs, registry)
     return render_claude_publication(catalog, repo_root=repo_root, package_root=root)
 
 
@@ -426,18 +435,7 @@ def build_codex_publication(env, bucket_meta, bucket_dirs, registry=None):
     """Render native Codex outputs from the same immutable semantic catalog."""
     root = env.root
     repo_root = _repo_root(root)
-    if registry is None:
-        registry, _meta, _dirs = build_registry(env)
-    meta_skill = parse_frontmatter(root / "generate-skill" / "generate-skill" / "SKILL.md")
-    unit_versions, default_unit_version = _publication_versions(root)
-    catalog = build_publication_catalog(
-        registry=registry, bucket_meta=bucket_meta, bucket_dirs=bucket_dirs,
-        core_skills=CORE_SKILLS, core_plugin=CORE_PLUGIN,
-        package_version=_package_version(root), siblings=_sibling_plugins(repo_root, root),
-        generate_skill_description=meta_skill.get("description", "Meta-skill for creating new skills"),
-        skm_present=(root / "skm" / ".claude-plugin" / "plugin.json").is_file(),
-        unit_versions=unit_versions, default_unit_version=default_unit_version,
-    )
+    catalog = build_catalog(env, bucket_meta, bucket_dirs, registry)
     return render_codex_publication(catalog, repo_root=repo_root, package_root=root)
 
 
@@ -472,8 +470,16 @@ def write_plugin_manifests(env, bucket_meta, bucket_dirs):
     for artifact in build_codex_publication(env, bucket_meta, bucket_dirs):
         atomic_write_text(artifact.target, artifact.managed_bytes.decode("utf-8"))
     if _has_repository_bootstrap_config(env.root):
-        for artifact in build_repository_bootstrap_publication(env):
+        bootstrap_artifacts = build_repository_bootstrap_publication(env)
+        for artifact in bootstrap_artifacts:
             atomic_write_text(artifact.target, artifact.managed_bytes.decode("utf-8"))
+        # P1.5 (D40 invariant i): fail closed on write too — an undeclared root directory
+        # (e.g. a stray hand-written adapter reappearing) is never a silent "unique carrier".
+        completeness_failures = assert_root_bootstrap_set_completeness(
+            _repo_root(env.root), bootstrap_artifacts)
+        if completeness_failures:
+            die("root-bootstrap root-set completeness:\n" +
+                "\n".join(f"  - {item}" for item in completeness_failures))
     # число плагинов = размер marketplace.plugins (последний манифест — marketplace.json)
     return len(manifests[-1][1]["plugins"])
 
@@ -509,8 +515,12 @@ def check_drift(env):
     for artifact in build_codex_publication(env, bucket_meta, bucket_dirs, registry):
         _cmp(artifact.target, artifact.managed_bytes.decode("utf-8"))
     if _has_repository_bootstrap_config(root):
-        for artifact in build_repository_bootstrap_publication(env):
+        bootstrap_artifacts = build_repository_bootstrap_publication(env)
+        for artifact in bootstrap_artifacts:
             _cmp(artifact.target, artifact.managed_bytes.decode("utf-8"))
+        # P1.5 (D40 invariant i): registry --check must catch an undeclared root directory,
+        # not only stale bytes of a declared one — ownership, never suppression.
+        drift.extend(assert_root_bootstrap_set_completeness(repo_root, bootstrap_artifacts))
 
     graph_text, _n_nodes, _n_edges = render_graph(registry)
     _cmp(_docs_root(root) / "docs" / "guide" / "graph.md", graph_text)

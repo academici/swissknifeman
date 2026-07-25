@@ -1,4 +1,0 @@
-interface:
-  display_name: "Architecture"
-  short_description: "Архитектура, ADR и системное проектирование"
-  default_prompt: "Use $architecture to design the system architecture and ADRs."

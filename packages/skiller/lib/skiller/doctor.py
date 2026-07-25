@@ -192,6 +192,70 @@ def _downstream_claude_md_summary(env):
         print(f"  [ok ] downstream CLAUDE.md: все {seen} ≤ 200 строк")
 
 
+_CORE_DONOR_BUCKETS = ("general", "research", "oss-dev")
+
+
+def detect_core_donor_collisions(catalog, *, enabled):
+    """D42 (P1.5, read-only): identities the curated `core` unit shares with a donor bucket
+    (`general`/`research`/`oss-dev`) that curated `core` physically copies from.
+
+    `enabled` is an EXPLICIT inventory `{unit_id: bool}` supplied by the caller — this
+    function never reads a live provider profile or cache (`~/.codex`, `~/.claude`) and never
+    writes one; the CLI passes the worst-case declared set (every unit in `catalog.units` is
+    "enabled", matching the D44 cold-detection convention), a test passes a narrow fixture.
+    `core`/donor mutual exclusion is a structural fact of the curated bundle (D42 invariant
+    ii) — this never repairs it, only names identity/carriers/owner/safe action.
+    Returns a tuple of `{identity, carriers, owner, safe_owner_action}` dicts, sorted by
+    `(identity, donor)` — [] when nothing overlaps or `core` itself is not enabled."""
+    core_unit = next((unit for unit in catalog.units
+                      if unit.plugin_id == "core" and unit.kind == "curated"), None)
+    if core_unit is None or not enabled.get("core"):
+        return ()
+    by_id = {skill.semantic_id: skill for skill in catalog.skills}
+    core_names = {by_id[member].name for member in core_unit.member_ids if member in by_id}
+    findings = []
+    for donor in _CORE_DONOR_BUCKETS:
+        if not enabled.get(donor):
+            continue
+        donor_unit = next((unit for unit in catalog.units
+                           if unit.plugin_id == donor and unit.kind == "bucket"), None)
+        if donor_unit is None:
+            continue
+        donor_names = {by_id[member].name for member in donor_unit.member_ids if member in by_id}
+        for identity in sorted(core_names & donor_names):
+            findings.append({
+                "identity": identity,
+                "carriers": ["unit:core", f"unit:{donor}"],
+                "owner": "P1.5",
+                "safe_owner_action": (
+                    "disable either the curated `core` unit or the "
+                    f"`{donor}` bucket for this provider; the plan never writes "
+                    "the user-owned enabled set (D42)"),
+            })
+    return tuple(findings)
+
+
+def _worst_case_enabled(catalog):
+    """Every declared unit is a candidate carrier (D44 cold-detection convention) — never a
+    read of a live provider profile/cache."""
+    return {unit.plugin_id: True for unit in catalog.units}
+
+
+def _core_donor_diagnostics(env):
+    """Print the D42 read-only diagnostic under the worst-case declared inventory."""
+    from .registry import build_catalog, build_registry
+    registry, bucket_meta, bucket_dirs = build_registry(env)
+    catalog = build_catalog(env, bucket_meta, bucket_dirs, registry)
+    findings = detect_core_donor_collisions(catalog, enabled=_worst_case_enabled(catalog))
+    print("\nD42 core↔donor mutual exclusion (read-only, worst-case declared set):")
+    if not findings:
+        print("  [ok ] no core/donor identity overlap in the declared set")
+        return
+    for item in findings:
+        print(f"  [warn] {item['identity']}: carriers={item['carriers']} "
+              f"owner={item['owner']} — {item['safe_owner_action']}")
+
+
 def _provider_distribution_doctor(env, target):
     """Read-only provider-aware delivery preflight; never invokes native Codex."""
     from .config import load_config
@@ -200,7 +264,8 @@ def _provider_distribution_doctor(env, target):
     from core import find_repo_root
     config = load_config(env, target)
     repo_root = find_repo_root(env.root) or env.root
-    print(f"Provider distribution (target: {target}):")
+    _core_donor_diagnostics(env)
+    print(f"\nProvider distribution (target: {target}):")
     try:
         connect = build_connect_distribution_plan(config, target, project_id=target.name,
                                                   repo_root=repo_root)

@@ -4,6 +4,6 @@
   "units": {
     "core": "0.4.1",
     "skm": "0.4.1",
-    "repository-bootstrap": "0.1.0"
+    "repository-bootstrap": "0.2.0"
   }
 }

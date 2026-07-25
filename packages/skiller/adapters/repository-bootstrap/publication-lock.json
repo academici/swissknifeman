@@ -1,6 +1,6 @@
 {
   "contract_version": "1.0.0",
-  "publication_unit": "repository-bootstrap@0.1.0",
+  "publication_unit": "repository-bootstrap@0.2.0",
   "generator": "packages/skiller/lib/skiller/registry.py→packages/skiller/lib/skiller/publication.py",
   "records": [
     {
@@ -262,6 +262,15 @@
       "canonical_en": "packages/skiller/skills/repository-bootstrap/skill-authoring/SKILL.md",
       "canonical_en_sha256": "0962285ea33b0703108a6729f49930dbf65de2f2c6deda168131e1ab5821dc79",
       "rendered_sha256": "ce837edcf0f837b511c16cc0c50ab29e078c4354d0e30093a34ea94d3d0398cb"
+    },
+    {
+      "identity": "workflow-craft",
+      "provider": "codex",
+      "target": ".agents/skills/workflow-craft/SKILL.md",
+      "source_class": "public-bucket",
+      "canonical": "packages/skiller/skills/general/workflow-craft/SKILL.md",
+      "canonical_sha256": "a0d26c8d3fd174ab72de0333377b25e6040d1eecbac5ed9d04a3a4ccd9756586",
+      "rendered_sha256": "7f118a6041f893b912cef6a544b75966c3aba21bdf686c91097facb8423e67f9"
     }
   ]
 }

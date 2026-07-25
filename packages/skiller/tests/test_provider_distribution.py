@@ -527,5 +527,67 @@ class RepositoryBootstrapConsumerRejectionCase(unittest.TestCase):
         self.assertIn("private-example", plan["skipped"])
 
 
+class CoreDonorMutualExclusionCase(unittest.TestCase):
+    """P1.5 (D42): `skiller doctor --provider-distribution` names every identity the curated
+    `core` unit shares with a donor bucket (`general`/`research`/`oss-dev`) — read-only,
+    never a repair, never a live-profile read."""
+
+    def setUp(self):
+        self.repo_root = Path(__file__).resolve().parents[3]
+        self.package_root = self.repo_root / "packages" / "skiller"
+        from skiller.common import Env
+        self.env = Env(self.package_root)
+
+    def _catalog(self):
+        from skiller.registry import build_catalog, build_registry
+        registry, metadata, buckets = build_registry(self.env)
+        return build_catalog(self.env, metadata, buckets, registry)
+
+    def test_worst_case_declared_set_names_exactly_the_nine_known_pairs(self):
+        from skiller.doctor import detect_core_donor_collisions
+        catalog = self._catalog()
+        enabled = {unit.plugin_id: True for unit in catalog.units}
+        findings = detect_core_donor_collisions(catalog, enabled=enabled)
+        pairs = {(item["identity"], tuple(item["carriers"])) for item in findings}
+        general_identities = {"anti-drift", "compact-responses", "context-economy",
+                              "mcp-advisor", "plan-protocol", "session-handoff",
+                              "verify-claims"}
+        for identity in general_identities:
+            self.assertIn((identity, ("unit:core", "unit:general")), pairs)
+        self.assertIn(("gh-review", ("unit:core", "unit:oss-dev")), pairs)
+        self.assertIn(("query-craft", ("unit:core", "unit:research")), pairs)
+        self.assertEqual(len(findings), 9)  # exactly the nine named pairs, not just a count
+        for item in findings:
+            self.assertEqual(item["owner"], "P1.5")
+            self.assertTrue(item["safe_owner_action"])
+
+    def test_core_disabled_yields_no_findings(self):
+        from skiller.doctor import detect_core_donor_collisions
+        catalog = self._catalog()
+        enabled = {unit.plugin_id: True for unit in catalog.units}
+        enabled["core"] = False
+        self.assertEqual(detect_core_donor_collisions(catalog, enabled=enabled), ())
+
+    def test_single_donor_enabled_narrows_to_its_own_identities(self):
+        from skiller.doctor import detect_core_donor_collisions
+        catalog = self._catalog()
+        findings = detect_core_donor_collisions(
+            catalog, enabled={"core": True, "research": True})
+        self.assertEqual({item["identity"] for item in findings}, {"query-craft"})
+
+    def test_doctor_provider_distribution_prints_d42_diagnostics(self):
+        import contextlib
+        import io
+        from skiller.doctor import cmd_doctor
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            with contextlib.suppress(SystemExit):
+                cmd_doctor(self.env, ["--provider-distribution", "--target",
+                                      str(self.package_root)])
+        out = buf.getvalue()
+        self.assertIn("D42 core↔donor mutual exclusion", out)
+        self.assertIn("query-craft", out)
+
+
 if __name__ == "__main__":
     unittest.main()

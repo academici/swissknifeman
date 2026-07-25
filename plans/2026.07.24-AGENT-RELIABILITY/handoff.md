@@ -1,108 +1,111 @@
-# HANDOFF — 2026-07-25 — after P0.4
+# HANDOFF — 2026-07-25 — after P1.1
 
-**Committed item tree: `9fdec6d3`** (item-commit: self-host Codex hook lifecycle restored
-via the existing D104 bootstrap-transfer, plus three synced ТЗ/repo-drift fixes recorded
-D61 — 7 files, 158 insertions). This file's own commit follows as bookkeeping; its hash is
-not self-referenced.
+**Committed item tree: `628092b3`** (завершающий item-коммит; собран двумя атомарными
+коммитами — `1ba0b4e0` запечатал 11 файлов ТЗ, `628092b3` покрыл hook identities, названные
+в Scope Included/Intent, но пропущенные первым проходом). Этот файл коммитится следом
+бухгалтерией; собственный хеш в него не вписывается.
 
-**P0.4 closed `🟠 Done with deviations`.** `findings/04-runtime-preflight.md`'s two defects
-(unmanaged `.codex/hooks.json`, missing `context.observer` handler) are repaired: the memory
-hook is preserved byte-for-byte, the observer is registered second, `.codex/hooks/lifecycle.py`
-and `.swissknifeman/provider-artifacts.lock.json` exist and are `noop`/`clean` under
-`maind.provider_deploy.plan_provider_artifacts`. Full diagnosis —
-`findings/P0.4-hook-integrity.md`. The 🟠 is **process, not product** (D61): the item-commit
-carries a one-line stale-path fix to `packages/harness/lib/harness/instructions.py` (outside
-this item's `Files` — a different plan's archival commit, `5b79f926`, had broken it and, with
-it, `packages/harness/scripts/validate.sh` for the whole package, independent of this item's
-own work).
+**P1.1 закрыт `🟢 Done`.** Заморожены два контракта — `semantic-identity-ownership-v1.md`
+(оба инварианта дословно) и `generated-artifact-version-v1.md` (ledger + baseline-carrier
+D36 + diff-scope guard с foreign-commit атрибуцией D47). Детекция коллизий стала
+**repo-derived и холодной** (D44) вместо диффа против прозаического before-state: Codex —
+20 worst-case коллизий (17 `root-vs-unit`, 9 `unit-vs-unit`), Claude Code — 9; под
+объявленным enabled-литералом `findings/12` — 16 `root↔installed` + 1 `installed↔installed`
+и 14 уникальных root-carriers, то есть D40 воспроизведён счётом, а не пересказан. Все 29
+измеренных коллизий обоих провайдеров имеют owner-item; class-A карта 13 identity / 26
+проекций проходит acceptance D38. Детали и команды — `phases/P1.md` P1.1 Completion Notes.
 
-**Phase P0 is NOT terminal.** All 4 items are now non-`⬜` (P0.1–P0.3 🟢, P0.4 🟠), but
-`## 4. Phase Index & Status Board` stays `3/4` / `🟡 In progress` (the counter counts only
-🟢; closing the phase is a separate `plan-close`/audit step this run did not perform). Phase
-P1 is next; its first item, P1.1, does not require P0 to be formally closed — only terminal
-(`plan.md` Phase-first rule: "все её items 🟢/🟠/⛔"), which P0 now is.
+**Коммит-гигиена, живое предупреждение (не изменилось).** Рабочее дерево несёт чужой дифф
+параллельного процесса, **в том числе 12 записей в индексе** (`roadmap/*.md` удаления,
+`packages/harness/lib/harness/agentpacks.py`, `test_agentpacks.py`,
+`test_settings_audit_fieldcase.py`, `packages/skiller/skills.json`, `docs/*`, архивные
+`plans/*`). Оба коммита этого item'а сделаны формой `git commit … -- <пути>`, поэтому чужое
+содержимое осталось ровно там же и в том же виде. Каждое закрытие в этом дереве обязано
+использовать pathspec-форму; stash/revert/reset чужих правок запрещены.
 
-**Commit hygiene, live warning (unchanged from the previous handoff).** The shared working
-tree still carries an unrelated foreign diff (staged and unstaged, mixed — `roadmap/*.md`
-deletions, `packages/harness/lib/harness/agentpacks.py`, `test_agentpacks.py`,
-`test_settings_audit_fieldcase.py`, `plans/README.md` and several archived `plans/*`
-directories) from a concurrent process. This item was committed with an explicit pathspec
-(`git commit … -- <the seven Files>`), so the foreign content stayed out and stayed exactly
-as it was. Every close in this tree must use the pathspec form.
-
-**Next:** P1.1 — freeze identity/ownership/capability inventory. Routing (`plan.md` §3):
-`frontier/high` / `manual` / `review=full` — above the `plan-exec` pin (`sonnet/medium`), so
-the routing gate blocks a `/task:plan-exec` launch. Form is **ЗАПУСК ВРУЧНУЮ**
-(equivalently: `/model opus` + `/effort high` + `/task:plan-run`). `roadmap.md` lists P1.1 as
-`solo`, so this is a single-item launch, not a group.
+**Next:** P1.2 — 13 приватных канонических skill-источников + root/core publication.
+Routing (`plan.md` §3): `implementation/high` / `manual` / `Review=full` — выше пина
+`plan-exec` (`sonnet/medium`), поэтому routing-гейт обязан отклонить запуск
+`/task:plan-exec`. Форма — **ЗАПУСК ВРУЧНУЮ** (эквивалент: `/model sonnet` + `/effort high`
++ `/task:plan-run`). `roadmap.md` числит P1.2 как `solo` — это одиночный запуск, не группа.
 
 | Параметр | Значение |
 |:--|:--|
-| Model | Opus (`frontier` по §3 Routing; renderer-таблица roadmap, D33) |
-| Thinking | high — freeze item, full review, no batching |
+| Model | sonnet (`implementation` по §3 Routing; renderer-таблица roadmap, D33) |
+| Thinking | high — публикационная мутация, correctness-critical |
 | Capabilities | `command.subagents` |
-| Context | `continue (/clear) — ручной item` (`same-session — item`; P1.1 depends only on terminal P0, which now holds) |
-| Суть | Freeze identity/ownership/capability inventory: repo-derived collision set, machine-readable observed before-state, owner-map of all 16+1 measured collisions, exact 13-identity/26-projection private bootstrap map + `workflow-craft` class-B record |
+| Context | `continue (/clear) — ручной item` |
+| Суть | Создать 13 приватных двуязычных канонов, заменить рукописные root-копии генерируемыми тонкими проекциями (26 целей + lock), поднять skiller/core/skm до 0.4.1 и root-bootstrap до 0.1.0, удалить шесть core-коллизий root после доказательства бандла |
 
 ````
-РЕЖИМ: task:plan-run 2026.07.24-AGENT-RELIABILITY P1.1 (Routing = manual, frontier/high; НЕ plan-exec — тот пинит sonnet/medium и по гейту протокола обязан отклонить этот item).
-ВХОД: plans/2026.07.24-AGENT-RELIABILITY/plan.md → handoff.md → phases/P1.md Phase Context + P1.1 целиком → Required Reads P1.1 (26 файлов, порядок как в ТЗ).
-ПРЕДУСЛОВИЕ: фаза P0 терминальна (все 4 items 🟢/🟠 — P0.1–P0.3 🟢, P0.4 🟠 с Known Deviations, D61); сверить это по `phases/P0.md` Phase Status ДО любой мутации.
-СКОУП: строго Scope Included P1.1 — identity/ownership contract, repo-derived cold collision detection (D44), machine-readable observed before-state (один read-only capture), owner-map всех измеренных коллизий (16 root↔installed + 1 installed↔installed), exact 13-identity/26-projection класс-A bootstrap map + класс-B запись `workflow-craft`, `generated-artifact-version-v1.md` + version ledger по пяти owner-item'ам (P1.2/P1.3/P1.5/P2.2/P2.3), diff-scope guard с foreign-commit атрибуцией. Files — ровно 11 путей из ТЗ P1.1.
-НЕ ТРОГАТЬ: source fixes (skiller/task/harness код) — этот item только замораживает контракт/карты, не правит носители; внешние плагины; fleet-установки; семантический редизайн; user-owned enabled-множество провайдера (D42 — только диагностика, не правка профиля).
-ЗАКРЫТИЕ: полный цикл 1–8 plan-exec/plan-run протокола — все команды Validation P1.1 зелёные ДО item-коммита, item-коммит ПО PATHSPEC (`git commit … -- <Files>`), bookkeeping-коммит плановых путей, handoff.md с реальным хешем, plan-lint --baseline HEAD.
+РЕЖИМ: task:plan-run 2026.07.24-AGENT-RELIABILITY P1.2 (Routing = manual, implementation/high; НЕ plan-exec — тот пинит sonnet/medium и по гейту протокола обязан отклонить этот item).
+ВХОД: plans/2026.07.24-AGENT-RELIABILITY/plan.md → handoff.md → phases/P1.md Phase Context + P1.2 целиком → Required Reads P1.2 (48 пунктов, порядок как в ТЗ).
+ПРЕДУСЛОВИЕ: P1.1 закрыт 🟢 на item-коммите `628092b3` — сверить по `phases/P1.md` Phase Status ДО любой мутации; контракты `root/contracts/semantic-identity-ownership-v1.md` и `generated-artifact-version-v1.md` и карты `artifacts/P1.1/{remediation-map.json,repository-bootstrap-map.json}` — замороженный вход, не переизобретать.
+ПОРЯДОК (шаг 0 первым, до любой другой owned-записи): `python3 plans/2026.07.24-AGENT-RELIABILITY/artifacts/P1.1/assert_generated_scope.py baseline --repo . --owner P1.2 --scope-map plans/2026.07.24-AGENT-RELIABILITY/artifacts/P1.1/remediation-map.json --baseline-file plans/2026.07.24-AGENT-RELIABILITY/artifacts/P1.2/base-sha.txt --capture-or-verify`; при resume байты переиспользуются, перезапись запрещена; ITEM_BASE_SHA берётся ТОЛЬКО через `baseline --verify-and-print`.
+СКОУП: строго Scope Included P1.2 — 13 приватных `SKILL.ru.md` из запиненных seed'ов (карта называет claude-seed для 10 расходящихся пар и причину), EN-каноны штатным промтом + `check-translations.sh --stamp`, приватный source-only бакет `repository-bootstrap`, version-first (skiller/core/skm 0.4.1, root-bootstrap 0.1.0), 26 тонких проекций + один combined lock ТОЛЬКО через `registry.py`→`publication.py`, удаление ровно шести root core-коллизий ПОСЛЕ доказательства бандла.
+НЕ ТРОГАТЬ: task-адаптеры команд (P1.3); четыре `architect` root-дубля, `workflow-craft` и детектор D42 (P1.5); user-owned enabled-множество провайдера; `skillset.py` как продюсер root (только consumer-исключение).
+ЗАКРЫТИЕ: полный цикл 1–8 протокола — вся Validation P1.2 зелёная ДО item-коммита (включая `generated-scope` и `bash packages/skiller/scripts/validate.sh`), item-коммит ПО PATHSPEC, bookkeeping-коммит плановых путей, handoff.md с реальным хешем, plan-lint --baseline HEAD.
+УЧЕСТЬ (измерено P1.1, не блокер): `packages/task/scripts/validate.sh` красный доitem-ным дефектом (устаревший путь в `packages/task/tests/test_provider_command_parity.py:25`) — это НЕ пакет P1.2 и чинится по Pending Work P1.1; висячие ссылки `templates/skills/<identity>/SKILL.md` у `ecosystem-mcp`/`ecosystem-setup` обязан разрешить этот item при авторинге канона, а не перенести в проекцию.
 ````
 
 **Done:**
-- `.codex/hooks.json` — composed `SessionStart`: the pre-existing memory command
-  (byte-identical, first) + the new `context.observer` group (matcher
-  `startup|resume|clear|compact`, second), validated by
-  `harness.hooks.validate_d104_codex_lifecycle_composition` before the write.
-- `.codex/hooks/lifecycle.py` — created (`render_codex_hook_handler()`): validates
-  `--surface context.observer` and the required SessionStart payload keys, emits a
-  read-only `systemMessage`, exits `2` on malformed input.
-- `.swissknifeman/provider-artifacts.lock.json` — created; owns both artifacts under
-  adapter `maind.d104.bootstrap-transfer`. `maind.provider_deploy.plan_provider_artifacts`
-  reports both `noop`/`clean` on the live tree.
-- `~/.claude/hooks/run-report/_lib.py` staleness (`harness doctor`) fixed by
-  `harness hooks --global` (global, non-git action).
-- `packages/harness/lib/harness/instructions.py:241` (`contract_path()`) and one hardcoded
-  path in `test_provider_conformance.py:170` re-pointed from the pre-archival
-  `plans/2026.07.19-DUAL-PROVIDER/...` to `plans/archive/2026.07.19-DUAL-PROVIDER/...` —
-  fixes `test_provider_instructions.py` (28/28), `test_instruction_compatibility.py` (6/6)
-  and `packages/harness/scripts/validate.sh` (`validate: OK`), independent of this item's
-  hook work.
-- `plan.md` D61 (three ТЗ/repo-drift syncs, recorded as process deviations) and Update Log.
+- `root/contracts/semantic-identity-ownership-v1.md` — детекция repo-derived/cold (D44),
+  оба инварианта дословно (root-набор == declared target set; `core` ↔ донорские бакеты
+  взаимоисключающи — диагностика, не запись профиля), класс A / класс B, hook identities,
+  форма записи и запрет «`unknown` как зелёное».
+- `root/contracts/generated-artifact-version-v1.md` — version-first/generator-closed,
+  ledger из 15 бампов пяти owner-item'ов (каждое `From` прочитано из репо),
+  baseline-carrier D36 и diff-scope guard с foreign-commit атрибуцией D47.
+- `artifacts/P1.1/build_effective_inventory.py` — единственный владелец детекции, одного
+  named read-only capture, генерации и обоих гейтов (`--check-bootstrap-map`,
+  `--check-collision-owners`).
+- `artifacts/P1.1/assert_generated_scope.py` — baseline `capture-or-verify` /
+  `verify-and-print` + `generated-scope` (private-leakage, version-completeness,
+  byte-identical guards, undeclared drift, foreign-commit атрибуция, no-op).
+- `artifacts/P1.1/effective-runtime-before-state.json` — schema v1, Codex `read`
+  (23 enabled, совпало с объявленным литералом), Claude Code `unknown`.
+- `artifacts/P1.1/{effective-inventory,remediation-map,repository-bootstrap-map}.json` —
+  472 identity-записи, 29 owner-записей коллизий, 13/26 class-A.
+- `findings/P1.1-capability-gaps.md` — 3 capability-пробела по литералам носителя,
+  5 identity с неразрешёнными ссылками, 21 недекларированный файл root-поверхности,
+  hook-ownership и провенанс `pinned-not-recomputable`.
+- 92 фокусных теста (63 + 29), Validation 13/13 зелёная.
 
-**Remaining:** 18/22 items still `⬜` (or, for P0.4, `🟠`). Phase order unchanged: P0 → P1
-(P1.1→P1.2→P1.3→**P1.5**→P1.4, D41) → P2 → P3 → P4. P1.1 is next.
+**Remaining:** 17/22 items `⬜` (плюс P0.4 `🟠`). Порядок фаз не изменился: P0 → P1
+(**P1.2** → P1.3 → **P1.5** → P1.4, D41) → P2 → P3 → P4. Следующий — P1.2.
 
-**Sources of truth:** `plan.md` v1.12.5 (§5 D61, §4 Phase Index P0 3/4) · `phases/P0.md`
-(P0.4 Completion Notes/Known Deviations, Phase Handoff) · `phases/P1.md` (P1.1 full spec) ·
-`findings/P0.4-hook-integrity.md` · `.swissknifeman/provider-artifacts.lock.json` ·
-`journal.jsonl`.
+**Sources of truth:** `plan.md` v1.12.6 (§4 P1 1/5, §7 Contracts — обе строки
+`committed P1.1`) · `phases/P1.md` (P1.1 Completion Notes/Pending Work) ·
+`root/contracts/{semantic-identity-ownership-v1,generated-artifact-version-v1}.md` ·
+`artifacts/P1.1/{remediation-map,repository-bootstrap-map,effective-inventory,
+effective-runtime-before-state}.json` · `findings/P1.1-capability-gaps.md` · `journal.jsonl`.
 
 **Open risks:**
-- **`harness hooks --provider codex --observer --dry-run` reports `warning: stale-source`
-  (exit 0), not clean.** Named, understood (`findings/P0.4-hook-integrity.md` §5): the
-  plain harness CLI computes its own `ArtifactSource` provenance, distinct by design from
-  the `maind.d104.bootstrap-transfer` adapter that actually owns the composed artifact. The
-  authoritative check is `maind.provider_deploy.plan_provider_artifacts` (green). Not
-  remediated — reconciling the two adapter identities would be a harness/maind
-  cross-package refactor outside P0.4's Scope; named as Pending Work.
-- **Codex process restart not verified from inside this session** (this session is Claude,
-  not Codex). If a live Codex process has this repo open, its cached hook registry predates
-  the observer addition — AGENTS.md's live-path verification step applies at the next Codex
-  cold-start/restart on this repo.
-- Same standing debt as the previous handoff, untouched by this item: three A2 findings
-  (base-sha capture order; missing workflow-carrier for a claimed autonomous multi-session
-  chain; `research/01–03` missing RAG markers); A1 F11; Claude `workflow-craft` projection;
-  read-only Claude enabled-set measurement.
-- `plans/README.md` § «Очередь планов» still shows this plan's stale item counter — outside
-  this item's Files/carve-out, not touched.
+- **`packages/task/scripts/validate.sh` красный — доitem-ный дефект, не мой дифф.**
+  `packages/task/tests/test_provider_command_parity.py:25` держит путь
+  `plans/2026.07.19-DUAL-PROVIDER/root/contracts/provider-command-routing-contract.md`,
+  архивированный коммитом `5b79f926`. Доказано в чистом worktree на `HEAD` (те же 7 тестов,
+  1 error). Класс тот же, что D61(3), который P0.4 закрыл только в `harness`. Владелец —
+  P1.3 (пакет `task` в его Files) либо отдельный fix-item; P1.1 его не чинил, потому что
+  его Scope Excluded прямо называет source fixes.
+- **21 недекларированный файл в root-поверхности** (17 `agents/openai.yaml` — множество их
+  каталогов равно РОВНО 17 Codex `root-vs-unit` identity; 4 `SKILL.md.bak`). 12 исчезнут
+  вместе с каталогами удалений P1.2/P1.3; остаток обязан закрыть гейт полноты P1.5.
+- **`command.interactive-user-input` отсутствует в каталоге capability**, при том что
+  `task:design` спелит `AskUserQuestion`; добавление публичного id идёт по D23
+  (proposal/ADR/SemVer), владелец — P1.3.
+- **Claude enabled-set остаётся `unknown`** (объявленной read-only команды нет) — прежний
+  названный долг `plan.md` §10; на repo-derived worst-case это не влияет по построению.
+- `plan-lint` держит 1 WARN «phase-first: P0 ещё не терминальна» — статус ФАЗЫ P0
+  остаётся `🟡` (все её items терминальны, закрытие фазы — отдельный шаг `plan-close`).
+- Прежний долг без изменений: три находки A2; A1 F11; Claude-проекция `workflow-craft`;
+  read-only измерение Claude enabled-set; несоответствие провенанса harness-CLI ↔
+  maind-адаптера (из P0.4).
+- `plans/README.md` § «Очередь планов» по-прежнему показывает устаревший счётчик item'ов
+  этого плана — вне Files/carve-out этого item'а, не трогалось.
 
 **Workarounds/Deferred/Open questions:**
 - workarounds: —;
-- deferred: the harness-CLI/maind-adapter provenance mismatch (§ Open risks above) —
-  candidate follow-up, no owner item yet;
+- deferred: расхождение провенанса harness-CLI ↔ maind-адаптера (из P0.4, владельца-item
+  нет); добавление capability id `command.interactive-user-input` (требует D23-гейта);
 - open_questions: —.

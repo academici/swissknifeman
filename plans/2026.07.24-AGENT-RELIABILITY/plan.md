@@ -6,11 +6,11 @@
 |:--|:--|
 | Plan ID | 2026.07.24-AGENT-RELIABILITY |
 | Title | Надёжное исполнение: checked task contract, единственный runtime source, bounded review и измеримая обратная связь |
-| Version | 1.12.6 |
+| Version | 1.12.7 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high; Owner-override Pass 4 — gpt-5.6-sol/xhigh; historical authority-C repair — Claude Fable 5/high; bounded redesign Pass 5 — Codex gpt-5.6-sol/high; bounded A1 repair (authority D, D39) — Claude Opus 5/high; bounded A3 repair (authority E, D50) — Claude Opus 5/high |
-| Last Updated | 2026-07-25 (P1.1 закрыт 🟢: Identity/Ownership v1 и Generated Artifact Version v1 заморожены, owner-map 29 коллизий, class-A map 13/26) |
+| Last Updated | 2026-07-25 (P1.2 закрыт 🟠: 13 приватных root-bootstrap identities канонизированы, 26 тонких проекций + lock, skiller/core/skm 0.4.1, шесть root core-коллизий удалены) |
 | Repository | swissknifeman |
 | Related Packages | task, skiller, harness, analyst, maind |
 | Execution Mode | reliability-first · evidence-before-mutation · phase-bounded |
@@ -344,6 +344,7 @@ audit/fix-loop без продукта, который план создан л�
 | 2026-07-25 | plan-run/Claude Opus 5/high | P0.3 закрыт: Acceptance v1 и fixed bank заморожены (31 кейс, детерминированные грейдеры, два слоя baseline, 14 floors), G0 принят агентом записью D59, дефект ТЗ Validation исправлен D60 — детали см. phases/P0.md P0.3 Completion Notes. Version 1.12.3 → 1.12.4. |
 | 2026-07-25 | plan-run/Claude Sonnet 5/high | P0.4 закрыт 🟠: self-host Codex hook lifecycle восстановлен через существующий D104 bootstrap-transfer (maind), три ТЗ/repo-drift дефекта синхронизированы записью D61 — детали см. phases/P0.md P0.4 Completion Notes/Known Deviations, findings/P0.4-hook-integrity.md. Version 1.12.4 → 1.12.5. |
 | 2026-07-25 | plan-run/Claude Opus 5/high | P1.1 закрыт 🟢: Identity/Ownership v1 и Generated Artifact Version v1 заморожены (детекция repo-derived, owner-map всех 29 коллизий, class-A 13/26) — детали см. phases/P1.md P1.1 Completion Notes. Version 1.12.5 → 1.12.6. |
+| 2026-07-25 | plan-run/Claude Sonnet 5/high | P1.2 закрыт 🟠: 13 приватных root-bootstrap identities канонизированы (26 тонких проекций + lock), skiller/core/skm 0.4.1, шесть root core-коллизий удалены — детали см. phases/P1.md P1.2 Completion Notes/Known Deviations. Version 1.12.6 → 1.12.7. |
 
 ## 7. Contracts
 

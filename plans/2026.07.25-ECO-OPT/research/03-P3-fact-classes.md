@@ -36,12 +36,17 @@
 
 | # | Исход | Где лежит |
 |:--|:--|:--|
-| FC-1 | найдено (first-party) | `findings/P3-skill-desc-and-mcp-limits.md` §1 |
-| FC-2 | найдено частично: «+30%» подтверждено first-party для Sonnet 5; про Opus 5 прямого утверждения нет; count_tokens есть, но требует сети/ключа | `findings/P3-skill-desc-and-mcp-limits.md` §2 |
-| FC-3 | **найдено — меняет дизайн P3.2** | `findings/P3-skill-desc-and-mcp-limits.md` §3 |
-| FC-4 | найдено | `findings/P3-skill-desc-and-mcp-limits.md` §4 |
-| FC-5 | найдено (полевая практика) | `findings/P3-mcp-result-field-practice.md` |
-| FC-6 | найдено | `findings/P3-oq4-oq5-decision-inputs.md` §1 |
-| FC-7 | найдено | `findings/P3-oq4-oq5-decision-inputs.md` §2 |
-| FC-8 | найдено (отрицательный результат — ось C схлопывается) | `findings/P3-oq4-oq5-decision-inputs.md` §3 |
+| FC-1 | **найдено — меняет дизайн P3.1.** Резидент — не сумма описаний, а листинг под бюджетом 1% контекста; переполнение → клиент сам роняет описания реже вызываемых скиллов; per-entry cap 1 536 символов | `findings/P3-skill-desc-and-mcp-limits.md` §1 |
+| FC-2 | **найдено частично.** «~+30% токенов» подтверждено first-party **только для Sonnet 5**; Opus 5 несёт токенайзер Opus 4.8/4.7 (относительно 4.6 и старше — 1×–1.35×). Прямого «+30% у Opus 5» нет — оценка D19 в этой части шире доказанного. `count_tokens` — канон подсчёта (нужны сеть/креды, one-off) | `findings/P3-skill-desc-and-mcp-limits.md` §2 |
+| FC-3 | **найдено — меняет дизайн P3.2.** warning >10K ток · дефолт 25K (`MAX_MCP_OUTPUT_TOKENS`) · превышение **выгружается на диск и заменяется file-reference** (не молчаливый обрыв) · per-tool `_meta["anthropic/maxResultSizeChars"]` до 500 000 симв · описания тулов режутся на 2KB | `findings/P3-skill-desc-and-mcp-limits.md` §3 |
+| FC-4 | **найдено частично.** Claude-Code-канал (`_meta`) — first-party; общепротокольного флага «результат усечён» в спеке MCP не найдено, только пагинация `nextCursor` на `tools/list`; остальное — конвенции практики | `findings/P3-skill-desc-and-mcp-limits.md` §4 + `findings/P3-mcp-result-field-practice.md` |
+| FC-5 | найдено (полевая практика, perplexity) | `findings/P3-mcp-result-field-practice.md` |
+| FC-6 | **найдено частично.** Цены/позиционирование Opus 5 vs Sonnet 5 — да; вендорского замера «citation fidelity» между ними **нет**, свидетельство косвенное (честно помечено) | `findings/P3-oq4-oq5-decision-inputs.md` §1 |
+| FC-7 | **найдено — переформулирует OQ-5 ось B.** Клиент сам режет компаунд по 7 разделителям и требует совпадения по каждому подкоманду; `grep` — во встроенном read-only наборе; есть закрытый перечень исключений, при которых read-only всё равно спрашивает | `findings/P3-oq4-oq5-decision-inputs.md` §2 |
+| FC-8 | **найдено — отрицательный результат для «изобретать своё».** `claude_code.tool_decision` (OTel) уже несёт `decision`+`source`; цена — резидентный коллектор | `findings/P3-oq4-oq5-decision-inputs.md` §3 |
+
+**Что карта дала сверх «просто поиска» (проверка D20-механики):** два из восьми классов (FC-1, FC-3)
+оказались **дизайн-меняющими** и ни один из них не следовал из формулировок экс-P7/экс-P8 — их бы не
+искали, если бы заход шёл «по item'ам», а не «по факт-классам фазы». Это второй датированный кейс
+в пользу правки, запланированной P6.3.
 </content>

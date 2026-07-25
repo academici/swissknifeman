@@ -1,126 +1,101 @@
-# HANDOFF — 2026-07-25 — after P1
+# HANDOFF — 2026-07-25 — after P0.1
 
-`P1` в заголовке — реопен фазы P1 по §3 plan-protocol (bounded repair A3 под
-Owner authority E, D50). Ни один item не исполнялся: все 22 остаются
-`⬜ Not started`. **Изменилось главное: `G-EXEC` выдан** (D50) — исполнение
-self-host P0–P3 больше не требует отдельного человеческого гейта.
+**Committed item tree: `a81effd1`** (item-commit: contract + verifier + tests +
+report + `pre-plan-sha.txt` + incident corpus). This file's own commit follows
+as bookkeeping; its hash is not self-referenced.
 
-**Committed post-repair tree: `7d597c696089fc6ee4372a22c2336212be39a9a0`**
-(bookkeeping-коммит D55: весь ремонт v1.9.0 + v1.10.0 вместе с
-`findings/10`–`findings/13`; этот файл проставляет его хеш вторым коммитом
-ровно одного файла — собственный хеш в собственный коммит не вписать). Любая
-холодная сессия работает от этого коммита, а не от рабочего дерева.
+**Programmatic gate D56 is satisfied.** Stages A, A0, B, C of
+`plans/README.md` § «Программа: этапы A–D» are ✅ as of 2026-07-25 (321 paths,
+19 live intersections all owned, 0 blind spots, cross-plan audit verdict
+ATTENTION with 9 findings already routed to Такт 0 payloads). P0.1 is exactly
+step 01 of Такт 1 / Track 1A in that README's «Кросс-плановая
+последовательность» — it is now closed.
 
-**Next:** exec-items: task:plan-exec 2026.07.24-AGENT-RELIABILITY P0.1
-
-**Но не сейчас (D56).** План спроектирован полностью (0 скелетов, 22 items,
-`G-EXEC` выдан D50), однако над `G-EXEC` встал **программный гейт design-first**:
-этап A (проектировка всех живых планов) → B (машинная сверка последовательности)
-→ C (финальный аудит под Fable) → **D (исполнение, старт с P0.1)**. Программа —
-`plans/README.md` § «Программа: этапы A–D». ACTIVE передан `2026.07.25-ECO-OPT`;
-ближайшая работа программы идёт ТАМ (`/task:plan-design 2026.07.25-ECO-OPT P2`).
+**Next:** P0.2 — Task Contract v1. Routing (`plan.md` §3): `frontier/high` /
+`manual` / `review=full` — this exceeds the `plan-exec` pin (`sonnet/medium`),
+so the routing gate (protocol step 2) blocks a `/task:plan-exec` launch. Form
+is **ЗАПУСК ВРУЧНУЮ**.
 
 | Параметр | Значение |
 |:--|:--|
-| Model | Sonnet (`implementation` по §3 Routing) |
-| Effort | medium |
+| Model | Opus (`frontier` по §3 Routing) |
+| Thinking | high — frozen contract с open design decisions, full-класс не батчится |
 | Capabilities | `command.subagents` |
-| Context | `NEW SESSION` |
-| Гейт | **этапы A–C программы завершены** (проектировка всех планов · `plans/cross-plan-files.py --strict` без живых пересечений без владельца · аудит под Fable) |
-| Суть | Первый исполняемый item: 4 режима immutable-верификатора, semantic proof-class отчёт, `artifacts/P0.1/pre-plan-sha.txt` (D45) |
+| Context | `NEW SESSION` — following AR Такт 1 / Track 1A order (P0.2 depends on terminal P0.1) |
+| Суть | Freeze Task Contract v1 schema/spec/examples: Goal/Must/Never/Done/Authority/Next/Route/Evidence/Portability/Conflicts/Version, consuming P0.1's proof-class report |
 
 ````
-# НЕ раньше: этапы A–C программы завершены (plans/README.md § «Программа: этапы A–D»)
-/task:plan-exec 2026.07.24-AGENT-RELIABILITY P0.1
+РЕЖИМ: task:plan-run 2026.07.24-AGENT-RELIABILITY P0.2 (Routing = manual, frontier/high; НЕ plan-exec — тот пинит sonnet/medium и по гейту протокола обязан отклонить этот item).
+ВХОД: plans/2026.07.24-AGENT-RELIABILITY/plan.md → handoff.md → phases/P0.md Phase Context + P0.2 целиком → Required Reads P0.2 (16 файлов, порядок как в ТЗ).
+СКОУП: строго Scope Included P0.2 (phases/P0.md) — schema, precedence/conflict result, content hash/supersedes, authority classes, public acceptance, pre-mutation/pre-final predicates, root/subagent slice, cold-start payload. Files — ровно четыре пути из ТЗ P0.2.
+НЕ ТРОГАТЬ: task package implementation; owner-intent inference; new orchestrator; any behavior mutation (P0.4 остаётся заблокирован до P0.3 G0).
+ЗАКРЫТИЕ: полный цикл 1–8 plan-exec/plan-run протокола — item-коммит по Files, bookkeeping-коммит плановых путей, handoff.md с реальным хешем, plan-lint --baseline HEAD.
 ````
 
-ТЗ P0.1 и его carrier в `roadmap.md` менять не требуется — они готовы и ждут гейта.
+**Done:**
+- `pre-plan-sha.txt` = `7479972f2a582ab8583270c30fad8da1ff56659e` (D45, sole
+  `PRE_PLAN_SHA` producer for the whole plan; read-only for every later item).
+- `root/contracts/source-evidence-verification-v1.md` — machine contract:
+  four closed proof classes, names the exact F1 gap (per-record key closure,
+  fresh histogram recompute, cross-manifest linkage, corpus/session field
+  shape) that the immutable `verify_source_bundle.py` does not cover, and
+  names `classified_lifecycle_events`(550)/`outcomes`/`dedup_correction` as
+  explicitly `pinned-not-recomputable`.
+- `artifacts/P0.1/semantic-verification-contract.json` — 16 declared
+  assertions (7 `recomputed`, 7 `cross-checked`, 2 `pinned-not-recomputable`,
+  0 `unknown`).
+- `artifacts/P0.1/semantic_bundle_verifier.py` + `verification-report.json` —
+  `semantic verification passed: 16/16 assertions` against the committed
+  bundle; delegates the four immutable commands (`verify`/`map-state`/
+  `verify-results`/`verify-claim-inventory`) as subprocess cross-checks and
+  never re-implements them.
+- `artifacts/P0.1/test_semantic_bundle_verifier.py` — 15/15 tests pass:
+  valid-base full pass, 8 mutated-temp-copy failure modes (rehashed manifest
+  field change, missing `source_committed_paths`, duplicate `case_id`,
+  forbidden payload key in a session record, malformed confidence/timestamp/
+  selector, journal `result` drift correctly recomputed not silently matched,
+  journal forbidden-key drift), a structural guard that the two pinned facts
+  are never declared `recomputed`, and a guard that running the verifier
+  never writes below `artifacts/source-evidence/`.
+- `findings/P0.1-incident-corpus.md` — per-hypothesis table linking D1's
+  falsifiable hypothesis to the five committed corpus cases with confidence
+  and proof class, plus the recomputed 591-record journal histograms.
+- `git diff --exit-code -- artifacts/source-evidence` clean — immutable
+  bundle unchanged.
 
-**Состояние межпланового гейта на 2026-07-25** (`python3 plans/cross-plan-files.py`):
-336 путей · **1 живое пересечение** — `packages/harness/configs/claude-code/hooks/run-report/_lib.py`
-(P0.4 этого плана против ECO-OPT P1.2) · 44 исторических · **слепая зона 15 items**
-(скелеты ECO-OPT). Именно слепая зона и есть причина этапа A.
+**Remaining:** 21/22 items still `⬜`. Phase order unchanged: P0 → P1
+(P1.1→P1.2→P1.3→**P1.5**→P1.4, D41) → P2 → P3 → P4.
 
-**Done:** ремонт A3 F1–F6 + внедрение authority E —
-
-- **D50 — authority E.** Владелец: «пакет разрабатывается ИИ для ИИ, участие
-  минимальное, разруливай сам». Переписана §10: персональные слоты A0–A3 —
-  исторические факты, а не механизм; действует канон «два аудита на фазу,
-  третий → решение»; `G-EXEC` выдан для self-host P0–P3; G0 после P0.3
-  принимает агент D-записью; за владельцем остаётся ровно **G1** в P4.3
-  (tag/push/release, fleet и 17 подключённых проектов, consumer-репозитории,
-  `2026.07.18-FOREMAN`). Обоснование: шесть RED и пять design pass при НУЛЕ
-  исполненных items — воспроизведение на самом плане того failure mode, который
-  план создан лечить.
-- **F1 → D51.** Объявлен состав позитивной фикстуры P1.4: все publishable units
-  репозиторного marketplace МИНУС ровно три донорских бакета (`general`,
-  `research`, `oss-dev`), материализуется как
-  `artifacts/P1.4/fixture-unit-set.json` с машинной сверкой. Девять пар
-  `core`↔донор и `workflow-craft`↔`unit:general` — **диагностика D42, а не
-  гейт**: доказываются отдельным негативным прогоном поимённо. Разбор четырёх
-  вариантов состава — `research/04-p1.4-fixture-composition.md` (собственный
-  перезамер: с донорами 10 коллизий, без доноров — 0).
-- **F2 → D52.** `phases/P2.md` P2.2 и `phases/P4.md` P4.3 читают
-  `repository-bootstrap@0.2.0` и **27** проекций; `0.1.0`/26 остались только
-  там, где описывают состояние ДО P1.5.
-- **F3 → D52.** Deliverables P1.4: **30** exactly-once IDs с обязательным
-  выводом по формуле `13 + 1 + 6 + 6 + 4`; тест падает при расхождении формулы
-  с фактическим каталогом.
-- **F4 → D55.** Ремонт закоммичен (`7d597c69`), хеш проставлен здесь.
-- **F5 → D53** (решено агентом, владельцу не выносилось). Метрика §8 —
-  «0 в объявленной фикстуре»; живая пара `core`+`research` даёт диагностику с
-  названным Owner-действием, а не floor. Правка user-owned enabled-множества
-  осталась вне границ плана (D42).
-- **F6.** Required Reads P1.4 #4 — Completion Notes P1.2/P1.3/**P1.5**.
-- **DUAL-PROVIDER → D54.** §7 Consumed переклассифицирован в
-  low-trust/verify-before-use; P1.2/P1.3/P1.5 обязаны доказывать поведение
-  затронутых seam'ов характеризационным тестом на месте (Code Guidance + три
-  Codex-carrier'а roadmap).
-
-**Remaining:** вся исполнительская работа — 22/22 items `⬜`, и она ждёт этапа D.
-Порядок фаз P0 → P1 → P2 → P3 → P4; внутри P1 — P1.1 → P1.2 → P1.3 → **P1.5** →
-P1.4 (D41). Ближайшая работа программы — не здесь, а в ECO-OPT (этап A).
-
-**Sources of truth:** `plan.md` v1.10.0 (§2 Execution Rules, §5 D50–D55, §7, §9,
-§10) · `phases/P0.md` (P0.1 pre-plan baseline) · `phases/P1.md` (5 items,
-declared fixture P1.4) · `phases/P2.md` (P2.2 self-conformance) · `phases/P3.md`
-(P3.4 `PRE_PLAN_SHA` + effort) · `phases/P4.md` (P4.3 G1 packet) · `roadmap.md`
-(22 carriers, exec boundary) · `findings/13-design-audit-a3.md` ·
-`findings/12-effective-collision-remeasure.md` ·
-`research/04-p1.4-fixture-composition.md` · `brief/01-refinements.md`
-§§ «Owner authority E» и «Решения ремонта A3» · `index.md` · `journal.jsonl`.
+**Sources of truth:** `plan.md` v1.12.2 (§2, §5 D45/D50, §7 Exported) ·
+`phases/P0.md` (P0.1 Completion Notes, P0.2 next) · `root/contracts/source-evidence-verification-v1.md` ·
+`artifacts/P0.1/verification-report.json` · `findings/P0.1-incident-corpus.md` ·
+`plans/README.md` § «Программа: этапы A–D» и § «Кросс-плановая
+последовательность» (item-level exec order across the three live plans) ·
+`journal.jsonl`.
 
 **Open risks:**
-- **Ремонт A3 уходит в исполнение без седьмого независимого design-аудита** —
-  принятый риск D50, назван в §9. Первая независимая проверка — канонический
-  аудит фазы P0, а не ещё один design-заход. Если владелец хочет иначе, он
-  говорит это до старта P0.1.
-- **Толкование authority E шире буквы директивы.** Владелец сказал «разруливай
-  сам»; из этого выведены `G-EXEC` для self-host, G0 агенту и снятие
-  audit-рационирования. Толкование записано в D50 и `brief/01-refinements.md`
-  дословно, чтобы его можно было отклонить одной фразой.
-- **Три находки A2 не отремонтированы** (были вне authority D, остались вне
-  скоупа A3-ремонта): порядок capture `base-sha` по D36 против канонического
-  порядка `plan-exec`/`plan-run` — касается P1.2/P1.3/P1.5/P2.2/P2.3 одинаково;
-  отсутствие workflow-carrier у заявленной автономной цепочки; `research/01–03`
-  без ссылок на слой 1 и без RAG-маркеров.
-- **Claude enabled-set не измерялся** read-only → класс `unknown`, не green
-  (`findings/12`); Codex-измерение полное. Числа фикстуры для Claude
-  (~205 identity) — repo-derived, не observed.
-- P1.5 исполняется ПЕРЕД P1.4 при монотонной нумерации — риск, что холодный
-  исполнитель возьмёт следующий item по номеру; смягчено fail-closed Inputs
-  P1.4, порядком в Карте/Phase Status/§3 Routing и текстом в Title.
-- Чужой незакоммиченный дифф (архив-переносы старых планов + `tmp/`) и
-  параллельный план `2026.07.25-ECO-OPT` живут рядом; foreign-commit атрибуция
-  (D47) описана, но ещё не исполнена — первый реальный прогон будет в P1.2.
+- Same three A2 findings named in the previous handoff remain outside this
+  item's scope (base-sha capture order vs canonical `plan-exec`/`plan-run`
+  order; missing workflow-carrier for a claimed autonomous multi-session
+  chain; `research/01–03` missing direct RAG markers) — named debt, not
+  blocking.
+- `classified_lifecycle_events`(550) and `dedup_correction` totals in the
+  committed bundle remain permanently `pinned-not-recomputable`: no
+  classifier or raw-rollout access is committed to the plan directory. Any
+  future item that needs those exact derivations must either accept the
+  bundle's stored value as labelled context (never as a deterministic
+  acceptance predicate, D30) or produce its own committed classifier as new
+  Scope.
+- `plans/README.md` § «Очередь планов» still shows AGENT-RELIABILITY as
+  `🟡 0/22` — that file is outside this item's Files/carve-out
+  (`plans/<PLAN-ID>/**` + `plans/ACTIVE.md`) and was intentionally not
+  touched; the next session that edits `plans/README.md` for another reason
+  should refresh the counter to `1/22`.
 
 **Workarounds/Deferred/Open questions:**
 - workarounds: —;
-- deferred (названный долг, старт не блокирует): три находки A2; A1 **F11**
-  (нет готового launch-block'а для acting provider вне Codex-проекций;
-  неидемпотентность шага (0) описана только через D36); зеркальная
-  `Consumed`-строка в `plans/2026.07.25-ECO-OPT`; Claude-проекция
-  `workflow-craft` (нужен `skiller budget --first-turn`); read-only измерение
-  Claude enabled-set; `findings/P1.5-collision-closure.md` вне Required Reads
-  P2.1/P2.5/P3.4 (их ТЗ вне скоупа ремонта);
+- deferred: same as previous handoff (three A2 findings; A1 F11; mirrored
+  `Consumed` line in `2026.07.25-ECO-OPT`; Claude `workflow-craft` projection;
+  read-only Claude enabled-set measurement; `findings/P1.5-collision-closure.md`
+  outside Required Reads of P2.1/P2.5/P3.4);
 - open_questions: —.

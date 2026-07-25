@@ -153,3 +153,30 @@ independent design audit.
   `registry.py` → `publication.py` path детерминированно эмитит thin Claude и
   Codex root adapters с provenance/hash/version lock; P1.4 проверяет closure и
   exactly-once discovery.
+
+## Owner option B after exceptional attempt 3 — latest authority — 2026-07-25
+
+После exceptional design audit attempt 3 RED владелец снова выбрал option B
+и явно разрешил ровно один bounded redesign pass, ограниченный тремя
+находками `findings/09-design-audit-exceptional-attempt-3.md`, а затем ровно
+один fresh independent design audit. Эта директива является последней и
+append-only supersedes authority-C/Claude repair carrier из
+`brief/02-claude-takeover.md`; исторические D32–D34 и сам файл не
+переписываются и не переименовываются.
+
+Границы последней authority:
+
+- redesign исправляет только deterministic `ITEM_BASE_SHA` contract/carrier,
+  две same-item future-artifact Required Reads и exact P1.1 acceptance для
+  13-source/26-projection bootstrap map;
+- immutable `artifacts/source-evidence/`, packages, runtime, docs,
+  CHANGELOG, FOREMAN, fleet, consumers, release, tag и push не меняются;
+- после redesign разрешён ровно один новый independent design audit
+  (`0/1` до его фактического старта); redesign-сессия его не выполняет;
+- literal GREEN audit останавливается на отдельном Owner gate `G-EXEC` и не
+  разрешает P0.1; RED/ATTENTION возвращает план владельцу без implicit repair
+  или следующего audit;
+- semantic plan carrier остаётся provider-neutral. Текущий recovery carrier
+  будущего audit — native Codex `gpt-5.6-sol/xhigh` NEW SESSION по корневому
+  `AGENTS.md`; это не назначение acting provider для будущих executable
+  items.

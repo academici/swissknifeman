@@ -6,19 +6,19 @@
 |:--|:--|
 | Plan ID | 2026.07.24-AGENT-RELIABILITY |
 | Title | Надёжное исполнение: checked task contract, единственный runtime source, bounded review и измеримая обратная связь |
-| Version | 1.7.0 |
+| Version | 1.8.0 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
-| Authoring Model | Codex gpt-5.6-sol/high; Owner-override Pass 4 — gpt-5.6-sol/xhigh; Owner authority C repair — Claude Fable 5/high |
-| Last Updated | 2026-07-25 (repair F1–F3 attempt-3 + Claude acting provider) |
+| Authoring Model | Codex gpt-5.6-sol/high; Owner-override Pass 4 — gpt-5.6-sol/xhigh; historical authority-C repair — Claude Fable 5/high; bounded redesign Pass 5 — Codex gpt-5.6-sol/high |
+| Last Updated | 2026-07-25 (bounded redesign по attempt-3 F1–F3; latest Owner option B) |
 | Repository | swissknifeman |
 | Related Packages | task, skiller, harness, analyst, maind |
 | Execution Mode | reliability-first · evidence-before-mutation · phase-bounded |
-| Target Operator Models | neutral Routing §3; acting provider — Claude Code (frontier→Opus 5, implementation→Sonnet; renderer table в roadmap); historical Codex blocks — projections |
+| Target Operator Models | neutral Routing §3 is SSOT; provider renderer selected and verified at execution; current next audit recovery renderer — Codex `gpt-5.6-sol/xhigh` |
 | Approval Owner | Dmitry Vostrikov |
 | Home | repo:/home/vostrikov/projects/packages/swissknifeman |
 | Paused By | — |
-| Design Passes | 4/4 — Passes 1–3 завершили исходный design budget; design audit 2/2 вернул RED по F1/F2. Owner override B от 2026-07-25 разрешил ровно один Pass 4: immutable-bundle semantic verifier contract и private canonical/generator closure для 13 bootstrap identities. Следующий шаг — единственный exceptional fresh independent design audit (`0/1` использован до старта) |
+| Design Passes | 5/5 — Passes 1–4 и четыре literal RED audit verdict сохранены в истории. Latest Owner option B после authority-C A1 RED на pre-redesign `fe3e1646` разрешил ровно один bounded Pass 5 только по `findings/09` F1–F3 и ровно один последующий fresh independent design audit A2 (`0/1` до старта). Новый audit этим счётчиком не заявлен и P0.1 не разрешён |
 
 ## 1. Context
 
@@ -50,21 +50,20 @@ artifact directory из plan-protocol, не системный `/root`. План
 contracts/commands одинаково видимы Claude и Codex; provider-specific
 adapters и native launch blocks являются projections, а не скрытым SSOT.
 
-Финальный исходный design audit attempt 2/2 оставлен literal RED:
-`findings/08-design-audit-red-attempt-2.md`. Владелец выбрал capped option B.
-Этот Pass 4 не исполняет P0.1 и не меняет packages/runtime; он устраняет F1
-разделением immutable integrity gate и item-owned semantic verification, а F2
-— private canonical sources плюс единственный deterministic root-bootstrap
-generator. Исторический cap 2/2 не обнулён: отдельно разрешён только один
-exceptional independent design audit после redesign.
+Исторические design audits 1–4 оставлены literal RED. Attempt 2/2 —
+`findings/08-design-audit-red-attempt-2.md`; exceptional attempt 3 —
+`findings/09-design-audit-exceptional-attempt-3.md`; authority-C A1 audited
+pre-redesign `fe3e1646` и также вернул RED. Latest Owner option B разрешает
+ровно Pass 5 только по трём blockers из `findings/09` и один post-redesign A2.
+Pass 5 не исполняет P0.1, не меняет immutable evidence/packages/runtime и не
+чинит дополнительные pre-redesign A1 findings.
 
 ## 2. Execution Rules
 
-- P0 не начинается без обоих gates: literal GREEN независимого
-  `plan-audit design` под Owner authority C (D32: exceptional slot B
-  исчерпан RED'ом attempt 3; authority C разрешает ровно один новый
-  independent audit `0/1` ПОСЛЕ repair F1–F3) и отдельного явного Owner
-  execution approval `G-EXEC`. GREEN и RED/ATTENTION одинаково
+- P0 не начинается без обоих gates: literal GREEN ровно одного fresh
+  independent `plan-audit design` A2 под latest Owner option B (D35,
+  `0/1` до старта) и отдельного явного Owner execution approval `G-EXEC`.
+  GREEN и RED/ATTENTION одинаково
   останавливают audit-сессию на Owner decision; non-GREEN не даёт
   автоматического repair или следующего audit.
 - P0.1–P0.3 только фиксируют evidence/contracts. Любая behavior mutation,
@@ -102,12 +101,13 @@ exceptional independent design audit после redesign.
 - Каждый item коммитит только exact `Files`; `git add -A`, `git commit -a`,
   stash/revert чужих правок и staging `tmp/` запрещены.
 - Item close следует canonical two-commit topology. Plan files закрываются
-  отдельным bookkeeping commit; этот design pass не коммитит ничего.
+  отдельным bookkeeping commit; Pass 5 коммитит только bounded plan redesign.
 - После каждого item — exact focused tests; package validate — перед item
   commit; terminal phase — один bounded independent audit.
-- Acting provider — Claude Code (D33): semantic `task:*` carriers рендерятся
-  `/task:plan-exec` / `/task:plan-run` по renderer-таблице roadmap;
-  исторические native Codex blocks в roadmap — projections, их не копировать.
+- Semantic `task:*` carrier и neutral Routing остаются SSOT. Provider
+  renderer проверяется в cold-start preflight; current A2 recovery block
+  рендерится Codex по D35. Историческая D33 Claude preference не назначает
+  acting provider после latest Owner option B.
 - Каждый item recovery carrier требует `command.subagents`; если cold-start
   preflight не подтверждает capability как `native`/`adapted`, execution
   fail-closed до mutation без silent solo fallback.
@@ -187,6 +187,10 @@ exceptional independent design audit после redesign.
 | D32 | 2026-07-25 | Owner authority C (директива владельца 2026-07-25, `brief/02-claude-takeover.md`): план сохраняется (не kill); bounded repair = ровно три находки attempt 3 (F1 `ITEM_BASE_SHA`, F2 same-item Required Reads, F3 bootstrap-map validation) + смена acting provider на Claude; разрешён ровно один новый independent design audit (`0/1`) после repair; `G-EXEC`/G0/G1 не затронуты, P0.1 этой authority не разрешён. | RAG:— (owner-grounded: `brief/02-claude-takeover.md`; supersedes D29 в части исчерпанного exceptional slot). |
 | D33 | 2026-07-25 | Acting provider — Claude Code: frontier→Opus 5, implementation→Sonnet (renderer-таблица roadmap — SSOT mapping); root supervisory session = Claude main loop, `command.subagents` = native (Agent tool), Codex `multi_agent` preflight D22 заменён Claude-эквивалентом (Agent tool доступен = native); native Codex blocks в roadmap понижены до historical projections. Supersedes D19 (native-Codex-carrier mandate) и провайдер-привязку D22. | RAG:— (repo-grounded: roadmap.md renderer-таблица уже содержит Claude-колонку; `packages/task/configs/command-routing.json`). |
 | D34 | 2026-07-25 | F1 fix канон: item baseline = `artifacts/<Pn.m>/base-sha.txt`, записываемый `git rev-parse HEAD` ПЕРВЫМ действием item'а до любой мутации, коммитится с item; Validation читает `ITEM_BASE_SHA` только из этого файла. F3 fix: `build_effective_inventory.py --check-bootstrap-map` — детерминированный read-only acceptance-гейт P1.1. | RAG:— (plan-grounded: `findings/09-design-audit-exceptional-attempt-3.md` F1/F3). |
+| D35 | 2026-07-25 | Latest Owner option B после authority-C A1 RED на pre-redesign `fe3e1646`: разрешены ровно этот bounded Pass 5 по `findings/09` F1–F3 и один последующий fresh independent audit A2 (`0/1`). Supersedes D32 audit authority и D33 acting-provider assignment, не меняя их исторический факт. A2 GREEN останавливается на `G-EXEC`; non-GREEN возвращается Owner. | RAG:— (owner-grounded: latest appended block in `brief/01-refinements.md`; historical authority-C carrier and concurrent pre-redesign A1 verdict preserved separately). |
+| D36 | 2026-07-25 | Supersedes D34 baseline semantics. P1.1 produces and freezes the only baseline helper/contract. For P1.2/P1.3/P2.2/P2.3 the item-owned `artifacts/<item>/base-sha.txt` is created after Required Reads but before any other item-owned write from exact current `HEAD`; on resume it is validated and reused byte-for-byte, never recomputed. Missing carrier with dirty owner paths, malformed/non-commit/non-ancestor SHA, owner mismatch or overwrite attempt fails closed. The validated file is the sole producer of `ITEM_BASE_SHA`; generated-scope assertions remain unchanged in strength. | RAG:— (repo-grounded: `findings/09-design-audit-exceptional-attempt-3.md` F1; cold-start/item order from plan-protocol). |
+| D37 | 2026-07-25 | P2.3 `review_policy.py`/`test_review_policy.py` and P3.4 `canary-cases.json` are same-item Files/Deliverables only, never Required Reads. Their predecessor inputs and authoring rules are complete before mutation. | RAG:— (repo-grounded: `findings/09-design-audit-exceptional-attempt-3.md` F2). |
+| D38 | 2026-07-25 | P1.1 bootstrap map acceptance is exact set equality, not key-presence: schema v1, exactly the frozen 13 sorted identities, exact per-record shape, both pinned seed path/hash records, canonical bilingual target formulas, two unique provider projections per identity and exact 26-target set, version/unit/generator/lock literals, plus explicit resolution for differing seeds. Focused mutation tests gate every dimension before P1.2. | RAG:— (repo-grounded: `findings/09-design-audit-exceptional-attempt-3.md` F3). |
 
 ## 6. Update Log
 
@@ -202,6 +206,7 @@ exceptional independent design audit после redesign.
 | 2026-07-25 | Owner override B / plan-design Codex gpt-5.6-sol/xhigh | Design pass 4/4: preserved audit RED 2/2, redesigned F1 as immutable-integrity + item-owned semantic verification and F2 as private 13-source + one generated root-bootstrap unit. Version 1.6.0; 21 items; P0 unexecuted; next is the sole exceptional audit `0/1`. |
 | 2026-07-25 | root review / plan-design Codex gpt-5.6-sol/xhigh | Authority correction: option B grants redesign + one audit only. Version 1.6.1 adds `G-EXEC`; even literal GREEN stops at Owner and cannot auto-launch P0.1. |
 | 2026-07-25 | plan-design / Claude Fable 5 (Owner authority C) | Repair F1–F3 attempt 3 (D34: base-sha baseline; F2 Required Reads; F3 bootstrap-map gate) + acting provider → Claude (D32/D33). Version 1.7.0; 21 items; P0 unexecuted; next — A1 audit. |
+| 2026-07-25 | plan-design/Codex gpt-5.6-sol/high | Design pass 5/5: D36–D38 close only `findings/09` F1–F3; 21-item sweep complete. v1.8.0; P0 unexecuted; pre-redesign A1 RED is historical; next exactly A2 audit `0/1`. |
 
 ## 7. Contracts
 
@@ -269,12 +274,15 @@ forbidden; a grader correction versions the bank and reruns both sides.
 
 - **A0 exceptional audit — CONSUMED (RED, attempt 3):** slot D29 исчерпан;
   находки — `findings/09-design-audit-exceptional-attempt-3.md`.
-- **A1 authority-C audit (authorized by D32):** после repair F1–F3 — ровно
-  один fresh independent design audit (`0/1`), Claude frontier/xhigh
-  (`/task:plan-audit 2026.07.24-AGENT-RELIABILITY design`). Every verdict
-  ends that audit session; non-GREEN возвращает Owner decision; GREEN
-  proceeds only to `G-EXEC`.
-- **G-EXEC after A1 GREEN:** Dmitry Vostrikov must explicitly authorize
+- **A1 authority-C audit — CONSUMED RED on pre-redesign `fe3e1646`:**
+  historical concurrent carrier predates Pass 5 and is not the D35
+  post-redesign audit; its extra findings are outside this bounded repair.
+- **A2 latest option-B audit (authorized by D35):** после bounded Pass 5 —
+  ровно один fresh independent design audit (`0/1`) под
+  `frontier/xhigh`, current native recovery Codex
+  `gpt-5.6-sol/xhigh`. Every verdict ends that audit session;
+  non-GREEN возвращает Owner decision; GREEN proceeds only to `G-EXEC`.
+- **G-EXEC after A2 GREEN:** Dmitry Vostrikov must explicitly authorize
   execution before P0.1. Until that separate decision, all 21 items remain
   blocked; option B is not execution approval.
 - **G0 after P0.3:** approve exact Acceptance v1, bank/grader hashes and floors.

@@ -1,0 +1,1076 @@
+{
+  "baseline_owners": [
+    "P1.2",
+    "P1.3",
+    "P1.5",
+    "P2.2",
+    "P2.3"
+  ],
+  "class_a_identities": [
+    {
+      "identity": "cross-project-optimizer"
+    },
+    {
+      "identity": "decision-verification"
+    },
+    {
+      "identity": "docs-maintenance"
+    },
+    {
+      "identity": "ecosystem-integration"
+    },
+    {
+      "identity": "ecosystem-mcp"
+    },
+    {
+      "identity": "ecosystem-setup"
+    },
+    {
+      "identity": "field-feedback-loop"
+    },
+    {
+      "identity": "harness-operations"
+    },
+    {
+      "identity": "maind-overview"
+    },
+    {
+      "identity": "package-architecture"
+    },
+    {
+      "identity": "project-tooling-runbook"
+    },
+    {
+      "identity": "release-discipline"
+    },
+    {
+      "identity": "skill-authoring"
+    }
+  ],
+  "class_b": {
+    "asymmetry_reason": "a Claude root projection changes the first-turn budget and requires `skiller budget --first-turn` (CLAUDE.md), which is outside this scope; the asymmetry is declared, not accidental",
+    "canonical": "packages/skiller/skills/general/workflow-craft/SKILL.md",
+    "canonical_sha256": "a0d26c8d3fd174ab72de0333377b25e6040d1eecbac5ed9d04a3a4ccd9756586",
+    "exact_acceptance_owner": "P1.5 root-bootstrap-extension-map.json",
+    "identity": "workflow-craft",
+    "owner_item": "P1.5",
+    "precondition": "no enabled unit serves this identity",
+    "projection": ".agents/skills/workflow-craft/SKILL.md",
+    "providers": [
+      "codex"
+    ],
+    "publication_unit": "repository-bootstrap@0.2.0"
+  },
+  "collisions": [
+    {
+      "carriers": [
+        "unit:core",
+        "unit:general"
+      ],
+      "classes": [
+        "unit-vs-unit"
+      ],
+      "identity": "anti-drift",
+      "live_under_declared_enabled_set": false,
+      "owners": [
+        {
+          "action": "diagnose-mutual-exclusion",
+          "class": "unit-vs-unit",
+          "owner_item": "P1.5",
+          "rationale": "curated `core` physically copies donor-bucket identities, so `core` and its donor buckets (`general`, `research`, `oss-dev`) are mutually exclusive publications (D42); the detector emits owner/enabled pair/safe Owner action and never writes the user-owned enabled set",
+          "safe_owner_action": "disable either the curated `core` unit or the donor bucket for this provider; the plan never writes the user-owned enabled set (D42)"
+        }
+      ],
+      "provider": "claude-code"
+    },
+    {
+      "carriers": [
+        "unit:core",
+        "unit:general"
+      ],
+      "classes": [
+        "unit-vs-unit"
+      ],
+      "identity": "compact-responses",
+      "live_under_declared_enabled_set": false,
+      "owners": [
+        {
+          "action": "diagnose-mutual-exclusion",
+          "class": "unit-vs-unit",
+          "owner_item": "P1.5",
+          "rationale": "curated `core` physically copies donor-bucket identities, so `core` and its donor buckets (`general`, `research`, `oss-dev`) are mutually exclusive publications (D42); the detector emits owner/enabled pair/safe Owner action and never writes the user-owned enabled set",
+          "safe_owner_action": "disable either the curated `core` unit or the donor bucket for this provider; the plan never writes the user-owned enabled set (D42)"
+        }
+      ],
+      "provider": "claude-code"
+    },
+    {
+      "carriers": [
+        "unit:core",
+        "unit:general"
+      ],
+      "classes": [
+        "unit-vs-unit"
+      ],
+      "identity": "context-economy",
+      "live_under_declared_enabled_set": false,
+      "owners": [
+        {
+          "action": "diagnose-mutual-exclusion",
+          "class": "unit-vs-unit",
+          "owner_item": "P1.5",
+          "rationale": "curated `core` physically copies donor-bucket identities, so `core` and its donor buckets (`general`, `research`, `oss-dev`) are mutually exclusive publications (D42); the detector emits owner/enabled pair/safe Owner action and never writes the user-owned enabled set",
+          "safe_owner_action": "disable either the curated `core` unit or the donor bucket for this provider; the plan never writes the user-owned enabled set (D42)"
+        }
+      ],
+      "provider": "claude-code"
+    },
+    {
+      "carriers": [
+        "unit:core",
+        "unit:oss-dev"
+      ],
+      "classes": [
+        "unit-vs-unit"
+      ],
+      "identity": "gh-review",
+      "live_under_declared_enabled_set": false,
+      "owners": [
+        {
+          "action": "diagnose-mutual-exclusion",
+          "class": "unit-vs-unit",
+          "owner_item": "P1.5",
+          "rationale": "curated `core` physically copies donor-bucket identities, so `core` and its donor buckets (`general`, `research`, `oss-dev`) are mutually exclusive publications (D42); the detector emits owner/enabled pair/safe Owner action and never writes the user-owned enabled set",
+          "safe_owner_action": "disable either the curated `core` unit or the donor bucket for this provider; the plan never writes the user-owned enabled set (D42)"
+        }
+      ],
+      "provider": "claude-code"
+    },
+    {
+      "carriers": [
+        "unit:core",
+        "unit:general"
+      ],
+      "classes": [
+        "unit-vs-unit"
+      ],
+      "identity": "mcp-advisor",
+      "live_under_declared_enabled_set": false,
+      "owners": [
+        {
+          "action": "diagnose-mutual-exclusion",
+          "class": "unit-vs-unit",
+          "owner_item": "P1.5",
+          "rationale": "curated `core` physically copies donor-bucket identities, so `core` and its donor buckets (`general`, `research`, `oss-dev`) are mutually exclusive publications (D42); the detector emits owner/enabled pair/safe Owner action and never writes the user-owned enabled set",
+          "safe_owner_action": "disable either the curated `core` unit or the donor bucket for this provider; the plan never writes the user-owned enabled set (D42)"
+        }
+      ],
+      "provider": "claude-code"
+    },
+    {
+      "carriers": [
+        "unit:core",
+        "unit:general"
+      ],
+      "classes": [
+        "unit-vs-unit"
+      ],
+      "identity": "plan-protocol",
+      "live_under_declared_enabled_set": false,
+      "owners": [
+        {
+          "action": "diagnose-mutual-exclusion",
+          "class": "unit-vs-unit",
+          "owner_item": "P1.5",
+          "rationale": "curated `core` physically copies donor-bucket identities, so `core` and its donor buckets (`general`, `research`, `oss-dev`) are mutually exclusive publications (D42); the detector emits owner/enabled pair/safe Owner action and never writes the user-owned enabled set",
+          "safe_owner_action": "disable either the curated `core` unit or the donor bucket for this provider; the plan never writes the user-owned enabled set (D42)"
+        }
+      ],
+      "provider": "claude-code"
+    },
+    {
+      "carriers": [
+        "unit:core",
+        "unit:research"
+      ],
+      "classes": [
+        "unit-vs-unit"
+      ],
+      "identity": "query-craft",
+      "live_under_declared_enabled_set": false,
+      "owners": [
+        {
+          "action": "diagnose-mutual-exclusion",
+          "class": "unit-vs-unit",
+          "owner_item": "P1.5",
+          "rationale": "curated `core` physically copies donor-bucket identities, so `core` and its donor buckets (`general`, `research`, `oss-dev`) are mutually exclusive publications (D42); the detector emits owner/enabled pair/safe Owner action and never writes the user-owned enabled set",
+          "safe_owner_action": "disable either the curated `core` unit or the donor bucket for this provider; the plan never writes the user-owned enabled set (D42)"
+        }
+      ],
+      "provider": "claude-code"
+    },
+    {
+      "carriers": [
+        "unit:core",
+        "unit:general"
+      ],
+      "classes": [
+        "unit-vs-unit"
+      ],
+      "identity": "session-handoff",
+      "live_under_declared_enabled_set": false,
+      "owners": [
+        {
+          "action": "diagnose-mutual-exclusion",
+          "class": "unit-vs-unit",
+          "owner_item": "P1.5",
+          "rationale": "curated `core` physically copies donor-bucket identities, so `core` and its donor buckets (`general`, `research`, `oss-dev`) are mutually exclusive publications (D42); the detector emits owner/enabled pair/safe Owner action and never writes the user-owned enabled set",
+          "safe_owner_action": "disable either the curated `core` unit or the donor bucket for this provider; the plan never writes the user-owned enabled set (D42)"
+        }
+      ],
+      "provider": "claude-code"
+    },
+    {
+      "carriers": [
+        "unit:core",
+        "unit:general"
+      ],
+      "classes": [
+        "unit-vs-unit"
+      ],
+      "identity": "verify-claims",
+      "live_under_declared_enabled_set": false,
+      "owners": [
+        {
+          "action": "diagnose-mutual-exclusion",
+          "class": "unit-vs-unit",
+          "owner_item": "P1.5",
+          "rationale": "curated `core` physically copies donor-bucket identities, so `core` and its donor buckets (`general`, `research`, `oss-dev`) are mutually exclusive publications (D42); the detector emits owner/enabled pair/safe Owner action and never writes the user-owned enabled set",
+          "safe_owner_action": "disable either the curated `core` unit or the donor bucket for this provider; the plan never writes the user-owned enabled set (D42)"
+        }
+      ],
+      "provider": "claude-code"
+    },
+    {
+      "carriers": [
+        "root:anti-drift",
+        "unit:core",
+        "unit:general"
+      ],
+      "classes": [
+        "root-vs-unit",
+        "unit-vs-unit"
+      ],
+      "identity": "anti-drift",
+      "live_under_declared_enabled_set": true,
+      "owners": [
+        {
+          "action": "delete-root-projection",
+          "class": "root-vs-unit",
+          "owner_item": "P1.2",
+          "rationale": "installed generated `core` bundle is authoritative; the root copy is deleted only after the generated bundle/marketplace proof"
+        },
+        {
+          "action": "diagnose-mutual-exclusion",
+          "class": "unit-vs-unit",
+          "owner_item": "P1.5",
+          "rationale": "curated `core` physically copies donor-bucket identities, so `core` and its donor buckets (`general`, `research`, `oss-dev`) are mutually exclusive publications (D42); the detector emits owner/enabled pair/safe Owner action and never writes the user-owned enabled set",
+          "safe_owner_action": "disable either the curated `core` unit or the donor bucket for this provider; the plan never writes the user-owned enabled set (D42)"
+        }
+      ],
+      "provider": "codex"
+    },
+    {
+      "carriers": [
+        "root:architecture",
+        "unit:architect"
+      ],
+      "classes": [
+        "root-vs-unit"
+      ],
+      "identity": "architecture",
+      "live_under_declared_enabled_set": true,
+      "owners": [
+        {
+          "action": "delete-root-projection",
+          "class": "root-vs-unit",
+          "owner_item": "P1.5",
+          "rationale": "installed generated `architect` unit is authoritative; the root copy is deleted only after per-identity ownership proof"
+        }
+      ],
+      "provider": "codex"
+    },
+    {
+      "carriers": [
+        "root:codebase-design",
+        "unit:architect"
+      ],
+      "classes": [
+        "root-vs-unit"
+      ],
+      "identity": "codebase-design",
+      "live_under_declared_enabled_set": true,
+      "owners": [
+        {
+          "action": "delete-root-projection",
+          "class": "root-vs-unit",
+          "owner_item": "P1.5",
+          "rationale": "installed generated `architect` unit is authoritative; the root copy is deleted only after per-identity ownership proof"
+        }
+      ],
+      "provider": "codex"
+    },
+    {
+      "carriers": [
+        "unit:core",
+        "unit:general"
+      ],
+      "classes": [
+        "unit-vs-unit"
+      ],
+      "identity": "compact-responses",
+      "live_under_declared_enabled_set": false,
+      "owners": [
+        {
+          "action": "diagnose-mutual-exclusion",
+          "class": "unit-vs-unit",
+          "owner_item": "P1.5",
+          "rationale": "curated `core` physically copies donor-bucket identities, so `core` and its donor buckets (`general`, `research`, `oss-dev`) are mutually exclusive publications (D42); the detector emits owner/enabled pair/safe Owner action and never writes the user-owned enabled set",
+          "safe_owner_action": "disable either the curated `core` unit or the donor bucket for this provider; the plan never writes the user-owned enabled set (D42)"
+        }
+      ],
+      "provider": "codex"
+    },
+    {
+      "carriers": [
+        "root:context-economy",
+        "unit:core",
+        "unit:general"
+      ],
+      "classes": [
+        "root-vs-unit",
+        "unit-vs-unit"
+      ],
+      "identity": "context-economy",
+      "live_under_declared_enabled_set": true,
+      "owners": [
+        {
+          "action": "delete-root-projection",
+          "class": "root-vs-unit",
+          "owner_item": "P1.2",
+          "rationale": "installed generated `core` bundle is authoritative; the root copy is deleted only after the generated bundle/marketplace proof"
+        },
+        {
+          "action": "diagnose-mutual-exclusion",
+          "class": "unit-vs-unit",
+          "owner_item": "P1.5",
+          "rationale": "curated `core` physically copies donor-bucket identities, so `core` and its donor buckets (`general`, `research`, `oss-dev`) are mutually exclusive publications (D42); the detector emits owner/enabled pair/safe Owner action and never writes the user-owned enabled set",
+          "safe_owner_action": "disable either the curated `core` unit or the donor bucket for this provider; the plan never writes the user-owned enabled set (D42)"
+        }
+      ],
+      "provider": "codex"
+    },
+    {
+      "carriers": [
+        "root:domain-modeling",
+        "unit:architect"
+      ],
+      "classes": [
+        "root-vs-unit"
+      ],
+      "identity": "domain-modeling",
+      "live_under_declared_enabled_set": true,
+      "owners": [
+        {
+          "action": "delete-root-projection",
+          "class": "root-vs-unit",
+          "owner_item": "P1.5",
+          "rationale": "installed generated `architect` unit is authoritative; the root copy is deleted only after per-identity ownership proof"
+        }
+      ],
+      "provider": "codex"
+    },
+    {
+      "carriers": [
+        "unit:core",
+        "unit:oss-dev"
+      ],
+      "classes": [
+        "unit-vs-unit"
+      ],
+      "identity": "gh-review",
+      "live_under_declared_enabled_set": false,
+      "owners": [
+        {
+          "action": "diagnose-mutual-exclusion",
+          "class": "unit-vs-unit",
+          "owner_item": "P1.5",
+          "rationale": "curated `core` physically copies donor-bucket identities, so `core` and its donor buckets (`general`, `research`, `oss-dev`) are mutually exclusive publications (D42); the detector emits owner/enabled pair/safe Owner action and never writes the user-owned enabled set",
+          "safe_owner_action": "disable either the curated `core` unit or the donor bucket for this provider; the plan never writes the user-owned enabled set (D42)"
+        }
+      ],
+      "provider": "codex"
+    },
+    {
+      "carriers": [
+        "unit:core",
+        "unit:general"
+      ],
+      "classes": [
+        "unit-vs-unit"
+      ],
+      "identity": "mcp-advisor",
+      "live_under_declared_enabled_set": false,
+      "owners": [
+        {
+          "action": "diagnose-mutual-exclusion",
+          "class": "unit-vs-unit",
+          "owner_item": "P1.5",
+          "rationale": "curated `core` physically copies donor-bucket identities, so `core` and its donor buckets (`general`, `research`, `oss-dev`) are mutually exclusive publications (D42); the detector emits owner/enabled pair/safe Owner action and never writes the user-owned enabled set",
+          "safe_owner_action": "disable either the curated `core` unit or the donor bucket for this provider; the plan never writes the user-owned enabled set (D42)"
+        }
+      ],
+      "provider": "codex"
+    },
+    {
+      "carriers": [
+        "root:package-contribution-protocol",
+        "unit:architect"
+      ],
+      "classes": [
+        "root-vs-unit"
+      ],
+      "identity": "package-contribution-protocol",
+      "live_under_declared_enabled_set": true,
+      "owners": [
+        {
+          "action": "delete-root-projection",
+          "class": "root-vs-unit",
+          "owner_item": "P1.5",
+          "rationale": "installed generated `architect` unit is authoritative; the root copy is deleted only after per-identity ownership proof"
+        }
+      ],
+      "provider": "codex"
+    },
+    {
+      "carriers": [
+        "root:plan-protocol",
+        "unit:core",
+        "unit:general"
+      ],
+      "classes": [
+        "root-vs-unit",
+        "unit-vs-unit"
+      ],
+      "identity": "plan-protocol",
+      "live_under_declared_enabled_set": true,
+      "owners": [
+        {
+          "action": "delete-root-projection",
+          "class": "root-vs-unit",
+          "owner_item": "P1.2",
+          "rationale": "installed generated `core` bundle is authoritative; the root copy is deleted only after the generated bundle/marketplace proof"
+        },
+        {
+          "action": "diagnose-mutual-exclusion",
+          "class": "unit-vs-unit",
+          "owner_item": "P1.5",
+          "rationale": "curated `core` physically copies donor-bucket identities, so `core` and its donor buckets (`general`, `research`, `oss-dev`) are mutually exclusive publications (D42); the detector emits owner/enabled pair/safe Owner action and never writes the user-owned enabled set",
+          "safe_owner_action": "disable either the curated `core` unit or the donor bucket for this provider; the plan never writes the user-owned enabled set (D42)"
+        }
+      ],
+      "provider": "codex"
+    },
+    {
+      "carriers": [
+        "root:query-craft",
+        "unit:core",
+        "unit:research"
+      ],
+      "classes": [
+        "root-vs-unit",
+        "unit-vs-unit"
+      ],
+      "identity": "query-craft",
+      "live_under_declared_enabled_set": true,
+      "owners": [
+        {
+          "action": "delete-root-projection",
+          "class": "root-vs-unit",
+          "owner_item": "P1.2",
+          "rationale": "installed generated `core` bundle is authoritative; the root copy is deleted only after the generated bundle/marketplace proof"
+        },
+        {
+          "action": "diagnose-mutual-exclusion",
+          "class": "unit-vs-unit",
+          "owner_item": "P1.5",
+          "rationale": "curated `core` physically copies donor-bucket identities, so `core` and its donor buckets (`general`, `research`, `oss-dev`) are mutually exclusive publications (D42); the detector emits owner/enabled pair/safe Owner action and never writes the user-owned enabled set",
+          "safe_owner_action": "disable either the curated `core` unit or the donor bucket for this provider; the plan never writes the user-owned enabled set (D42)"
+        }
+      ],
+      "provider": "codex"
+    },
+    {
+      "carriers": [
+        "root:session-handoff",
+        "unit:core",
+        "unit:general"
+      ],
+      "classes": [
+        "root-vs-unit",
+        "unit-vs-unit"
+      ],
+      "identity": "session-handoff",
+      "live_under_declared_enabled_set": true,
+      "owners": [
+        {
+          "action": "delete-root-projection",
+          "class": "root-vs-unit",
+          "owner_item": "P1.2",
+          "rationale": "installed generated `core` bundle is authoritative; the root copy is deleted only after the generated bundle/marketplace proof"
+        },
+        {
+          "action": "diagnose-mutual-exclusion",
+          "class": "unit-vs-unit",
+          "owner_item": "P1.5",
+          "rationale": "curated `core` physically copies donor-bucket identities, so `core` and its donor buckets (`general`, `research`, `oss-dev`) are mutually exclusive publications (D42); the detector emits owner/enabled pair/safe Owner action and never writes the user-owned enabled set",
+          "safe_owner_action": "disable either the curated `core` unit or the donor bucket for this provider; the plan never writes the user-owned enabled set (D42)"
+        }
+      ],
+      "provider": "codex"
+    },
+    {
+      "carriers": [
+        "root:task-design",
+        "unit:task"
+      ],
+      "classes": [
+        "root-vs-unit"
+      ],
+      "identity": "task-design",
+      "live_under_declared_enabled_set": true,
+      "owners": [
+        {
+          "action": "delete-root-projection",
+          "class": "root-vs-unit",
+          "owner_item": "P1.3",
+          "rationale": "installed generated `task` bundle is authoritative; the root copy is deleted only after the generated bundle/marketplace proof"
+        }
+      ],
+      "provider": "codex"
+    },
+    {
+      "carriers": [
+        "root:task-plan-audit",
+        "unit:task"
+      ],
+      "classes": [
+        "root-vs-unit"
+      ],
+      "identity": "task-plan-audit",
+      "live_under_declared_enabled_set": true,
+      "owners": [
+        {
+          "action": "delete-root-projection",
+          "class": "root-vs-unit",
+          "owner_item": "P1.3",
+          "rationale": "installed generated `task` bundle is authoritative; the root copy is deleted only after the generated bundle/marketplace proof"
+        }
+      ],
+      "provider": "codex"
+    },
+    {
+      "carriers": [
+        "root:task-plan-close",
+        "unit:task"
+      ],
+      "classes": [
+        "root-vs-unit"
+      ],
+      "identity": "task-plan-close",
+      "live_under_declared_enabled_set": true,
+      "owners": [
+        {
+          "action": "delete-root-projection",
+          "class": "root-vs-unit",
+          "owner_item": "P1.3",
+          "rationale": "installed generated `task` bundle is authoritative; the root copy is deleted only after the generated bundle/marketplace proof"
+        }
+      ],
+      "provider": "codex"
+    },
+    {
+      "carriers": [
+        "root:task-plan-design",
+        "unit:task"
+      ],
+      "classes": [
+        "root-vs-unit"
+      ],
+      "identity": "task-plan-design",
+      "live_under_declared_enabled_set": true,
+      "owners": [
+        {
+          "action": "delete-root-projection",
+          "class": "root-vs-unit",
+          "owner_item": "P1.3",
+          "rationale": "installed generated `task` bundle is authoritative; the root copy is deleted only after the generated bundle/marketplace proof"
+        }
+      ],
+      "provider": "codex"
+    },
+    {
+      "carriers": [
+        "root:task-plan-exec",
+        "unit:task"
+      ],
+      "classes": [
+        "root-vs-unit"
+      ],
+      "identity": "task-plan-exec",
+      "live_under_declared_enabled_set": true,
+      "owners": [
+        {
+          "action": "delete-root-projection",
+          "class": "root-vs-unit",
+          "owner_item": "P1.3",
+          "rationale": "installed generated `task` bundle is authoritative; the root copy is deleted only after the generated bundle/marketplace proof"
+        }
+      ],
+      "provider": "codex"
+    },
+    {
+      "carriers": [
+        "root:task-plan-run",
+        "unit:task"
+      ],
+      "classes": [
+        "root-vs-unit"
+      ],
+      "identity": "task-plan-run",
+      "live_under_declared_enabled_set": true,
+      "owners": [
+        {
+          "action": "delete-root-projection",
+          "class": "root-vs-unit",
+          "owner_item": "P1.3",
+          "rationale": "installed generated `task` bundle is authoritative; the root copy is deleted only after the generated bundle/marketplace proof"
+        }
+      ],
+      "provider": "codex"
+    },
+    {
+      "carriers": [
+        "root:verify-claims",
+        "unit:core",
+        "unit:general"
+      ],
+      "classes": [
+        "root-vs-unit",
+        "unit-vs-unit"
+      ],
+      "identity": "verify-claims",
+      "live_under_declared_enabled_set": true,
+      "owners": [
+        {
+          "action": "delete-root-projection",
+          "class": "root-vs-unit",
+          "owner_item": "P1.2",
+          "rationale": "installed generated `core` bundle is authoritative; the root copy is deleted only after the generated bundle/marketplace proof"
+        },
+        {
+          "action": "diagnose-mutual-exclusion",
+          "class": "unit-vs-unit",
+          "owner_item": "P1.5",
+          "rationale": "curated `core` physically copies donor-bucket identities, so `core` and its donor buckets (`general`, `research`, `oss-dev`) are mutually exclusive publications (D42); the detector emits owner/enabled pair/safe Owner action and never writes the user-owned enabled set",
+          "safe_owner_action": "disable either the curated `core` unit or the donor bucket for this provider; the plan never writes the user-owned enabled set (D42)"
+        }
+      ],
+      "provider": "codex"
+    },
+    {
+      "carriers": [
+        "root:workflow-craft",
+        "unit:general"
+      ],
+      "classes": [
+        "root-vs-unit"
+      ],
+      "identity": "workflow-craft",
+      "live_under_declared_enabled_set": false,
+      "owners": [
+        {
+          "action": "generate-class-b-root-bootstrap",
+          "class": "root-vs-unit",
+          "owner_item": "P1.5",
+          "rationale": "public-bucket canon whose unit is not enabled: P1.5 gives it a generated thin Codex projection with provenance/hash under `repository-bootstrap@0.2.0`; deletion is rejected because the only legal restoration path (enabling `general`) is forbidden by the D42 invariant"
+        }
+      ],
+      "provider": "codex"
+    }
+  ],
+  "owner_item": "plans/2026.07.24-AGENT-RELIABILITY P1.1",
+  "owners": {
+    "P1.2": {
+      "baseline_file": "plans/2026.07.24-AGENT-RELIABILITY/artifacts/P1.2/base-sha.txt",
+      "byte_identical_guards": [],
+      "paths": [
+        "packages/skiller/buckets.json",
+        "packages/skiller/skills/repository-bootstrap/",
+        ".claude/skills/",
+        ".agents/skills/",
+        "packages/skiller/package.json",
+        "packages/skiller/configs/publication-versions.json",
+        "packages/skiller/configs/repository-bootstrap-skills.json",
+        "packages/skiller/lib/skiller/publication.py",
+        "packages/skiller/lib/skiller/registry.py",
+        "packages/skiller/lib/skiller/skillset.py",
+        "packages/skiller/lib/skiller/doctor.py",
+        "packages/skiller/lib/skiller/lock.py",
+        "packages/skiller/adapters/repository-bootstrap/publication-lock.json",
+        "packages/skiller/adapters/codex/core/",
+        "packages/skiller/adapters/codex/skm/",
+        "packages/skiller/skills.json",
+        "packages/skiller/skills/_index.md",
+        "packages/skiller/docs/guide/graph.md",
+        "packages/skiller/docs/guide/budget.md",
+        ".agents/plugins/marketplace.json",
+        ".claude-plugin/marketplace.json",
+        "packages/skiller/tests/",
+        "plans/2026.07.24-AGENT-RELIABILITY/artifacts/P1.2/base-sha.txt",
+        "CHANGELOG.md"
+      ],
+      "version_bumps": [
+        {
+          "carrier": "packages/skiller/package.json",
+          "from": "0.4.0",
+          "owner_item": "P1.2",
+          "to": "0.4.1",
+          "unit": "skiller package API"
+        },
+        {
+          "carrier": "publication-unit",
+          "from": "0.4.0",
+          "owner_item": "P1.2",
+          "to": "0.4.1",
+          "unit": "core"
+        },
+        {
+          "carrier": "publication-unit",
+          "from": "0.4.0",
+          "owner_item": "P1.2",
+          "to": "0.4.1",
+          "unit": "skm"
+        },
+        {
+          "carrier": "publication-unit",
+          "from": "absent",
+          "owner_item": "P1.2",
+          "to": "0.1.0",
+          "unit": "repository-bootstrap"
+        }
+      ]
+    },
+    "P1.3": {
+      "baseline_file": "plans/2026.07.24-AGENT-RELIABILITY/artifacts/P1.3/base-sha.txt",
+      "byte_identical_guards": [],
+      "paths": [
+        ".agents/skills/",
+        "AGENTS.md",
+        "packages/task/.claude-plugin/plugin.json",
+        "packages/task/.codex-plugin/plugin.json",
+        "packages/task/configs/command-routing.json",
+        "packages/task/adapters/codex/",
+        "packages/task/scripts/render-provider-commands.py",
+        "packages/task/lib/task/command_catalog.py",
+        "packages/task/lib/task/command_render.py",
+        "packages/task/tests/",
+        "packages/harness/package.json",
+        "packages/harness/.claude-plugin/plugin.json",
+        "packages/harness/lib/harness/provider_render.py",
+        "packages/harness/lib/harness/provider_audit.py",
+        "packages/harness/lib/harness/doctor.py",
+        "packages/harness/tests/",
+        ".agents/plugins/marketplace.json",
+        ".claude-plugin/marketplace.json",
+        "plans/2026.07.24-AGENT-RELIABILITY/artifacts/P1.3/base-sha.txt",
+        "CHANGELOG.md"
+      ],
+      "version_bumps": [
+        {
+          "carrier": "plugin_version",
+          "from": "0.3.0",
+          "owner_item": "P1.3",
+          "to": "0.3.1",
+          "unit": "task plugin/routing"
+        },
+        {
+          "carrier": "packages/harness/package.json",
+          "from": "0.2.0",
+          "owner_item": "P1.3",
+          "to": "0.3.0",
+          "unit": "harness package"
+        },
+        {
+          "carrier": "packages/harness/.claude-plugin/plugin.json",
+          "from": "0.1.0",
+          "owner_item": "P1.3",
+          "to": "0.2.0",
+          "unit": "harness plugin"
+        }
+      ]
+    },
+    "P1.5": {
+      "baseline_file": "plans/2026.07.24-AGENT-RELIABILITY/artifacts/P1.5/base-sha.txt",
+      "byte_identical_guards": [
+        {
+          "owner_item": "P1.5",
+          "rule": "the 13 class-A canonical sources, their 26 projections and their lock bytes stay byte-identical while P1.5 adds the class-B record",
+          "unit": "repository-bootstrap class-A payload"
+        }
+      ],
+      "paths": [
+        ".agents/skills/",
+        "packages/skiller/configs/repository-bootstrap-skills.json",
+        "packages/skiller/configs/publication-versions.json",
+        "packages/skiller/package.json",
+        "packages/skiller/lib/skiller/publication.py",
+        "packages/skiller/lib/skiller/registry.py",
+        "packages/skiller/lib/skiller/doctor.py",
+        "packages/skiller/adapters/repository-bootstrap/publication-lock.json",
+        "packages/skiller/tests/",
+        ".agents/plugins/marketplace.json",
+        ".claude-plugin/marketplace.json",
+        "plans/2026.07.24-AGENT-RELIABILITY/artifacts/P1.5/root-bootstrap-extension-map.json",
+        "plans/2026.07.24-AGENT-RELIABILITY/artifacts/P1.5/base-sha.txt",
+        "plans/2026.07.24-AGENT-RELIABILITY/findings/P1.5-collision-closure.md",
+        "CHANGELOG.md"
+      ],
+      "version_bumps": [
+        {
+          "carrier": "packages/skiller/package.json",
+          "from": "0.4.1",
+          "owner_item": "P1.5",
+          "to": "0.4.2",
+          "unit": "skiller package API"
+        },
+        {
+          "carrier": "publication-unit",
+          "from": "0.1.0",
+          "owner_item": "P1.5",
+          "to": "0.2.0",
+          "unit": "repository-bootstrap"
+        }
+      ]
+    },
+    "P2.2": {
+      "baseline_file": "plans/2026.07.24-AGENT-RELIABILITY/artifacts/P2.2/base-sha.txt",
+      "byte_identical_guards": [
+        {
+          "owner_item": "P2.2",
+          "rule": "stays 0.2.0 and byte-identical",
+          "unit": "repository-bootstrap"
+        }
+      ],
+      "paths": [
+        "packages/task/.claude-plugin/plugin.json",
+        "packages/task/.codex-plugin/plugin.json",
+        "packages/task/configs/command-routing.json",
+        "packages/task/adapters/codex/",
+        "packages/task/lib/task/task_contract.py",
+        "packages/task/lib/task/plan_lint.py",
+        "packages/task/lib/task/command_render.py",
+        "packages/task/lib/task/journal.py",
+        "packages/task/commands/",
+        "packages/task/tests/",
+        "packages/skiller/package.json",
+        "packages/skiller/configs/publication-versions.json",
+        "packages/skiller/skills/general/plan-protocol/",
+        "packages/skiller/skills/general/.claude-plugin/plugin.json",
+        "packages/skiller/skills/general/.codex-plugin/plugin.json",
+        "packages/skiller/adapters/codex/core/",
+        "packages/skiller/skills.json",
+        "packages/skiller/skills/_index.md",
+        "packages/skiller/docs/guide/graph.md",
+        "packages/skiller/docs/guide/budget.md",
+        ".agents/plugins/marketplace.json",
+        ".claude-plugin/marketplace.json",
+        "plans/2026.07.24-AGENT-RELIABILITY/artifacts/P2.2/base-sha.txt",
+        "CHANGELOG.md"
+      ],
+      "version_bumps": [
+        {
+          "carrier": "packages/skiller/skills/general/plan-protocol/SKILL.md",
+          "from": "2.11.0",
+          "owner_item": "P2.2",
+          "to": "2.12.0",
+          "unit": "plan-protocol skill canon"
+        },
+        {
+          "carrier": "packages/skiller/package.json",
+          "from": "0.4.2",
+          "owner_item": "P2.2",
+          "to": "0.5.0",
+          "unit": "skiller package API"
+        },
+        {
+          "carrier": "publication-unit",
+          "from": "0.4.1",
+          "owner_item": "P2.2",
+          "to": "0.5.0",
+          "unit": "general"
+        },
+        {
+          "carrier": "publication-unit",
+          "from": "0.4.1",
+          "owner_item": "P2.2",
+          "to": "0.5.0",
+          "unit": "core"
+        },
+        {
+          "carrier": "plugin_version",
+          "from": "0.3.1",
+          "owner_item": "P2.2",
+          "to": "0.4.0",
+          "unit": "task plugin/routing"
+        }
+      ]
+    },
+    "P2.3": {
+      "baseline_file": "plans/2026.07.24-AGENT-RELIABILITY/artifacts/P2.3/base-sha.txt",
+      "byte_identical_guards": [],
+      "paths": [
+        "packages/task/.claude-plugin/plugin.json",
+        "packages/task/.codex-plugin/plugin.json",
+        "packages/task/configs/command-routing.json",
+        "packages/task/adapters/codex/",
+        "packages/task/lib/task/task_contract.py",
+        "packages/task/lib/task/review_policy.py",
+        "packages/task/lib/task/journal.py",
+        "packages/task/tests/",
+        ".agents/plugins/marketplace.json",
+        ".claude-plugin/marketplace.json",
+        "plans/2026.07.24-AGENT-RELIABILITY/artifacts/P2.3/base-sha.txt",
+        "CHANGELOG.md"
+      ],
+      "version_bumps": [
+        {
+          "carrier": "plugin_version",
+          "from": "0.4.0",
+          "owner_item": "P2.3",
+          "to": "0.5.0",
+          "unit": "task plugin/routing"
+        }
+      ]
+    }
+  },
+  "private_source_prefix": "packages/skiller/skills/repository-bootstrap/",
+  "schema_version": "remediation-map/v1",
+  "version_ledger": [
+    {
+      "carrier": "packages/skiller/package.json",
+      "from": "0.4.0",
+      "owner_item": "P1.2",
+      "to": "0.4.1",
+      "unit": "skiller package API"
+    },
+    {
+      "carrier": "publication-unit",
+      "from": "0.4.0",
+      "owner_item": "P1.2",
+      "to": "0.4.1",
+      "unit": "core"
+    },
+    {
+      "carrier": "publication-unit",
+      "from": "0.4.0",
+      "owner_item": "P1.2",
+      "to": "0.4.1",
+      "unit": "skm"
+    },
+    {
+      "carrier": "publication-unit",
+      "from": "absent",
+      "owner_item": "P1.2",
+      "to": "0.1.0",
+      "unit": "repository-bootstrap"
+    },
+    {
+      "carrier": "plugin_version",
+      "from": "0.3.0",
+      "owner_item": "P1.3",
+      "to": "0.3.1",
+      "unit": "task plugin/routing"
+    },
+    {
+      "carrier": "packages/harness/package.json",
+      "from": "0.2.0",
+      "owner_item": "P1.3",
+      "to": "0.3.0",
+      "unit": "harness package"
+    },
+    {
+      "carrier": "packages/harness/.claude-plugin/plugin.json",
+      "from": "0.1.0",
+      "owner_item": "P1.3",
+      "to": "0.2.0",
+      "unit": "harness plugin"
+    },
+    {
+      "carrier": "packages/skiller/package.json",
+      "from": "0.4.1",
+      "owner_item": "P1.5",
+      "to": "0.4.2",
+      "unit": "skiller package API"
+    },
+    {
+      "carrier": "publication-unit",
+      "from": "0.1.0",
+      "owner_item": "P1.5",
+      "to": "0.2.0",
+      "unit": "repository-bootstrap"
+    },
+    {
+      "carrier": "packages/skiller/skills/general/plan-protocol/SKILL.md",
+      "from": "2.11.0",
+      "owner_item": "P2.2",
+      "to": "2.12.0",
+      "unit": "plan-protocol skill canon"
+    },
+    {
+      "carrier": "packages/skiller/package.json",
+      "from": "0.4.2",
+      "owner_item": "P2.2",
+      "to": "0.5.0",
+      "unit": "skiller package API"
+    },
+    {
+      "carrier": "publication-unit",
+      "from": "0.4.1",
+      "owner_item": "P2.2",
+      "to": "0.5.0",
+      "unit": "general"
+    },
+    {
+      "carrier": "publication-unit",
+      "from": "0.4.1",
+      "owner_item": "P2.2",
+      "to": "0.5.0",
+      "unit": "core"
+    },
+    {
+      "carrier": "plugin_version",
+      "from": "0.3.1",
+      "owner_item": "P2.2",
+      "to": "0.4.0",
+      "unit": "task plugin/routing"
+    },
+    {
+      "carrier": "plugin_version",
+      "from": "0.4.0",
+      "owner_item": "P2.3",
+      "to": "0.5.0",
+      "unit": "task plugin/routing"
+    }
+  ]
+}

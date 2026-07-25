@@ -1,0 +1,236 @@
+{
+  "assertions": {
+    "classified-lifecycle-events-550": {
+      "detail": {
+        "pinned_classified_lifecycle_events": 550,
+        "pinned_outcomes": {
+          "audit_green": 14,
+          "audit_red": 31,
+          "blocked": 12,
+          "closed_deviations": 34,
+          "closed_green": 150,
+          "deviation": 106,
+          "escalated": 34,
+          "retry": 77
+        },
+        "reason": "no committed classifier maps 591 physical records to 550 classified events or to this outcome breakdown"
+      },
+      "proof_class": "pinned-not-recomputable",
+      "status": "pass"
+    },
+    "control-case-presence": {
+      "detail": {
+        "control_case_id": "honest-http-clean-control"
+      },
+      "proof_class": "recomputed",
+      "status": "pass"
+    },
+    "corpus-case-set-closure": {
+      "detail": {
+        "case_ids": [
+          "five-audit-loop",
+          "honest-http-clean-control",
+          "missed-consumer-cold-start",
+          "missing-launch-block-intra-session",
+          "wrong-scope-return"
+        ],
+        "kind_counts": {
+          "control": 1,
+          "critical": 4
+        }
+      },
+      "proof_class": "recomputed",
+      "status": "pass"
+    },
+    "corpus-source-path-closure": {
+      "detail": {
+        "paths_checked": 8
+      },
+      "proof_class": "cross-checked",
+      "status": "pass"
+    },
+    "dedup-token-totals": {
+      "detail": {
+        "pinned_dedup_correction": {
+          "corrected": {
+            "cached_input_tokens": 130320000,
+            "input_tokens": 135110000,
+            "output_tokens": 533388,
+            "reasoning_tokens": 272779,
+            "tool_calls": 30749
+          },
+          "denominator": "952 deduplicated completed turns from 472 thread artifacts across four named projects",
+          "rejected_naive_cumulative": {
+            "input_tokens": 8300000000,
+            "reason": "resumed/forked files repeated historical events",
+            "turns": 1931
+          }
+        },
+        "reason": "derived from excluded raw rollout files, out of Scope Excluded"
+      },
+      "proof_class": "pinned-not-recomputable",
+      "status": "pass"
+    },
+    "immutable-bundle-map-state": {
+      "detail": {
+        "command": "map-state",
+        "returncode": 0,
+        "stdout": "five-audit-loop | critical | confidence=high\nhonest-http-clean-control | control | confidence=high\nmissed-consumer-cold-start | critical | confidence=high\nmissing-launch-block-intra-session | critical | confidence=high\nwrong-scope-return | critical | confidence=medium"
+      },
+      "proof_class": "cross-checked",
+      "status": "pass"
+    },
+    "immutable-bundle-verify": {
+      "detail": {
+        "command": "verify",
+        "returncode": 0,
+        "stdout": "verified 20 manifest entries; 7 journals; 5 sanitized cases"
+      },
+      "proof_class": "cross-checked",
+      "status": "pass"
+    },
+    "immutable-bundle-verify-claim-inventory": {
+      "detail": {
+        "command": "verify-claim-inventory",
+        "returncode": 0,
+        "stdout": "claim inventory verified: 8 ranges within 2993 audit lines"
+      },
+      "proof_class": "cross-checked",
+      "status": "pass"
+    },
+    "immutable-bundle-verify-results": {
+      "detail": {
+        "command": "verify-results",
+        "returncode": 0,
+        "stdout": "results verified: corrected telemetry denominators and clean control are present"
+      },
+      "proof_class": "cross-checked",
+      "status": "pass"
+    },
+    "journal-friction-histogram": {
+      "detail": {
+        "histogram": {
+          "Major: current plan-lint count was neither independently run nor anchored for the audited worktree": 1,
+          "Major: journal lines 1-10 remain in-progress despite design pass 3/3 being declared complete": 1,
+          "Major: no common instruction source/projections for root/package CLAUDE.md\u2194AGENTS.md": 1,
+          "Minor: restart-durability traceability points to P6.4 instead of the actual P6.5/P6.6 carriers": 1,
+          "PROMOTE-CANDIDATE: design audit has no canonical Markdown report carrier in the audit protocol": 1,
+          "deviation": 113,
+          "escalation": 39,
+          "eslint-hang": 1,
+          "evidence-mismatch": 1,
+          "nitro-runtime-build-time-import": 1,
+          "no-op": 13,
+          "owner-priority-change": 1,
+          "preflight-failure": 1,
+          "protected-delta": 1,
+          "red-audit": 28,
+          "retry": 77,
+          "routing-blocked": 6
+        },
+        "total_entries": 287
+      },
+      "proof_class": "recomputed",
+      "status": "pass"
+    },
+    "journal-key-closure": {
+      "detail": {
+        "records_checked": 591,
+        "violations": 0
+      },
+      "proof_class": "recomputed",
+      "status": "pass"
+    },
+    "journal-manifest-hash-cross-link": {
+      "detail": {
+        "journals_cross_checked": 7
+      },
+      "proof_class": "cross-checked",
+      "status": "pass"
+    },
+    "journal-physical-record-count": {
+      "detail": {
+        "per_file": {
+          "journals/01-swissknifeman-dual-provider.jsonl": 296,
+          "journals/02-swissknifeman-fleet-dual-provider.jsonl": 48,
+          "journals/03-azguard-stable.jsonl": 29,
+          "journals/04-insiders-ins-evo.jsonl": 108,
+          "journals/05-dterema-ux.jsonl": 27,
+          "journals/06-dterema-prod-p0.jsonl": 78,
+          "journals/07-dterema-honest-http-errors.jsonl": 5
+        },
+        "total": 591
+      },
+      "proof_class": "recomputed",
+      "status": "pass"
+    },
+    "journal-result-histogram": {
+      "detail": {
+        "histogram": {
+          "audit-green": 15,
+          "audit-red": 36,
+          "blocked": 13,
+          "closed-deviations": 34,
+          "closed-green": 153,
+          "escalated": 34,
+          "in-progress": 283,
+          "no-op": 22,
+          "skipped": 1
+        },
+        "total": 591
+      },
+      "proof_class": "recomputed",
+      "status": "pass"
+    },
+    "selected-session-cross-link": {
+      "detail": {
+        "case_ids": [
+          "five-audit-loop",
+          "honest-http-clean-control",
+          "missed-consumer-cold-start",
+          "missing-launch-block-intra-session",
+          "wrong-scope-return"
+        ]
+      },
+      "proof_class": "cross-checked",
+      "status": "pass"
+    },
+    "session-record-shape-closure": {
+      "detail": {
+        "records_checked": 5
+      },
+      "proof_class": "recomputed",
+      "status": "pass"
+    }
+  },
+  "schema_version": "p0.1-semantic-verification-contract/v1",
+  "summary": {
+    "by_proof_class": {
+      "cross-checked": [
+        "corpus-source-path-closure",
+        "immutable-bundle-map-state",
+        "immutable-bundle-verify",
+        "immutable-bundle-verify-claim-inventory",
+        "immutable-bundle-verify-results",
+        "journal-manifest-hash-cross-link",
+        "selected-session-cross-link"
+      ],
+      "pinned-not-recomputable": [
+        "classified-lifecycle-events-550",
+        "dedup-token-totals"
+      ],
+      "recomputed": [
+        "control-case-presence",
+        "corpus-case-set-closure",
+        "journal-friction-histogram",
+        "journal-key-closure",
+        "journal-physical-record-count",
+        "journal-result-histogram",
+        "session-record-shape-closure"
+      ]
+    },
+    "failed": 0,
+    "passed": 16,
+    "total": 16
+  }
+}

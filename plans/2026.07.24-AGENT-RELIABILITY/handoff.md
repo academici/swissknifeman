@@ -4,6 +4,19 @@
 report + `pre-plan-sha.txt` + incident corpus). This file's own commit follows
 as bookkeeping; its hash is not self-referenced.
 
+**Incident, corrected same session:** the bookkeeping commit (`55e8477b`) was
+made with a plain `git commit -m ...` (no pathspec) after `git add
+plans/2026.07.24-AGENT-RELIABILITY`; the shared working tree's index already
+carried an unrelated, uncommitted staged deletion of 10 `roadmap/*.md` files
+from a concurrent process, and the plain commit swept the whole index instead
+of only the plan paths. Corrected immediately by `44a5f807`, restoring all 10
+files byte-for-byte from `55e8477b^`. Lesson for every future item-close in
+this shared (non-worktree) tree: commit bookkeeping with an explicit pathspec
+(`git commit -- plans/<PLAN-ID> plans/ACTIVE.md`), never a bare `-m` commit,
+even after a scoped `git add` — the index can carry staged foreign content the
+working-tree `git status` diff review does not surface as "about to be
+committed."
+
 **Programmatic gate D56 is satisfied.** Stages A, A0, B, C of
 `plans/README.md` § «Программа: этапы A–D» are ✅ as of 2026-07-25 (321 paths,
 19 live intersections all owned, 0 blind spots, cross-plan audit verdict

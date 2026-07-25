@@ -166,7 +166,7 @@ codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'mode
 | Context | `NEW SESSION` |
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'NEW SESSION recovery carrier for 2026.07.24-AGENT-RELIABILITY P0.4. Read AGENTS.md, CLAUDE.md and task:task-plan-run completely; run the canonical cold-start preflight. Read plan.md, roadmap.md, handoff.md, phases/P0.md and P0.4 Required Reads. Verify an explicit Owner D# approves the exact P0.3 hashes/floors; if absent, do no writes. Root delegates P0.4 to a fresh grounded subagent. Repair only self-host hook owners/files, prove cold/live paths and rollback, preserve cached compatibility until restart proof, then close and continue automatically.'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'NEW SESSION recovery carrier for 2026.07.24-AGENT-RELIABILITY P0.4. Read AGENTS.md, CLAUDE.md and task:task-plan-run completely; run the canonical cold-start preflight. Read plan.md, roadmap.md, handoff.md, phases/P0.md and P0.4 Required Reads. Verify the G0 freeze record D59 (agent-recorded, D50) and the exact P0.3 hashes/floors in bank-manifest.json; if that record is absent, do no writes. Root delegates P0.4 to a fresh grounded subagent. Repair only self-host hook owners/files, prove cold/live paths and rollback, preserve cached compatibility until restart proof, then close and continue automatically.'
 ```
 
 ### P1.1 — identity/ownership freeze
@@ -554,5 +554,5 @@ codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'mode
 | A0/A1/A2/A3 | historical | четыре персональных audit-слота CONSUMED RED (`findings/09`–`findings/11`, `findings/13`) + два исторических вердикта cap 2/2 (`findings/07`, `findings/08`); факты, не действующий механизм (D50) | ничего: рационирование снято, действует канон «два аудита на фазу» |
 | Authority C/D/E | consumed / **действует E** | C (D32) и D (D39) — CONSUMED, их скоупы закрыты. **E (D50)** — стоячая делегация решений агенту: развилки, скоуп, пороги закрываются записью | E не блокирует ничего; C/D исторические |
 | G-EXEC | **выдан** authority E (D50) | self-host P0–P3 исполняются без отдельного человеческого гейта | — (снят) |
-| G0 | после P0.3 | exact bank/grader/baseline hashes and metric floors — **принимает агент** D-записью (D50) | P0.4–P4 до записи решения |
+| G0 | после P0.3 | **ПРИНЯТ 2026-07-25 записью D59** (агент, D50): exact bank/grader/baseline hashes и 14 floors заморожены, `bank-manifest.json content_hash=82d1e6a9997dc8de…` | — (снят; P0.4 разблокирован) |
 | G1 | после P4.3 packet | exact external targets/actions: fleet, consumers, FOREMAN, tag, push, release — либо hold | external work outside this plan |

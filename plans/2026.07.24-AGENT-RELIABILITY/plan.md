@@ -6,11 +6,11 @@
 |:--|:--|
 | Plan ID | 2026.07.24-AGENT-RELIABILITY |
 | Title | Надёжное исполнение: checked task contract, единственный runtime source, bounded review и измеримая обратная связь |
-| Version | 1.12.3 |
+| Version | 1.12.4 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high; Owner-override Pass 4 — gpt-5.6-sol/xhigh; historical authority-C repair — Claude Fable 5/high; bounded redesign Pass 5 — Codex gpt-5.6-sol/high; bounded A1 repair (authority D, D39) — Claude Opus 5/high; bounded A3 repair (authority E, D50) — Claude Opus 5/high |
-| Last Updated | 2026-07-25 (P0.2 закрыт: Task Contract v1 запечатан — схема, два предиката, 23 проверенных кейса) |
+| Last Updated | 2026-07-25 (P0.3 закрыт: Acceptance v1 и банк заморожены, G0 зафиксирован D59 — P0.4 разблокирован) |
 | Repository | swissknifeman |
 | Related Packages | task, skiller, harness, analyst, maind |
 | Execution Mode | reliability-first · evidence-before-mutation · phase-bounded |
@@ -243,7 +243,7 @@ audit/fix-loop без продукта, который план создан л�
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P0 | Evidence, contracts и acceptance-before-mutation | 2/4 | 🟡 In progress |
+| P0 | Evidence, contracts и acceptance-before-mutation | 3/4 | 🟡 In progress |
 | P1 | Единственный semantic source и runtime uniqueness | 0/5 | ⬜ Not started |
 | P2 | Checked outcome execution и bounded review | 0/5 | ⬜ Not started |
 | P3 | Unified traces, evals и isolated self-host canary | 0/5 | ⬜ Not started |
@@ -314,6 +314,10 @@ audit/fix-loop без продукта, который план создан л�
 
 | D58 | 2026-07-25 | **Payload A (аудит этапа C, Ф1/Ф3/Ф8): G1-формулировка о FOREMAN сужена до наружных частей; долг D47 «зеркальная Consumed-строка ECO» снят.** (1) G1 покрывает ровно наружные, необратимые части `2026.07.18-FOREMAN` — fleet-раскатку и массовость пилота; внутриплановый bookkeeping и дизайн-заходы (включая FM P1.5) идут по регистру очереди `plans/README.md` § «Кросс-плановая последовательность» (терминальные AR P1/P2 открывают CP-гейты) без отдельного G1-решения, если владелец явно не решит иначе. Снимает противоречие Ф1: FM P1.5 открывается терминальной AR P2 без G1 — это и есть регистр очереди, а не нарушение G1. (2) Долг D47 «зеркальная `Consumed`-строка на стороне `2026.07.25-ECO-OPT`» снимается: ECO на `finish` решил `Consumed` для трёх бампов (`plan-protocol@2.12.0`/`skiller@0.5.0`/`task@0.4.0`) не заводить (его D85) — обоснование D85 покрывает ровно три execution-контракта этого плана, пин без реагирующего item'а был бы декоративным. AR работает по фактическому канону экосистемы после CP-P2 без пина этих трёх версий; при появлении item'а, реагирующего на будущий бамп, вопрос переоткрывается адресной D-записью, а не тихим восстановлением строки. | RAG:— (repo-grounded: `plans/README.md` § «Аудит этапа C — 2026-07-25» Ф1/Ф3/Ф8; §2 FOREMAN-строка и §10 G1 этого плана; `plans/2026.07.25-ECO-OPT/plan.md` §5 D52/D85). |
 
+| D59 | 2026-07-25 | **G0 — заморозка Acceptance v1 и банка принята агентом (D50), P0.4 разблокирован.** Заморожено на item-коммите `f405017a`: `root/contracts/reliability-acceptance-v1.md` + банк `artifacts/reliability-bank-v1/` (31 кейс = 25 critical + 6 control, 88 ассершенов, 48 проб, 26 семейств, 14 floors, seed `reliability-bank-v1/2026-07-25`), хеши — `bank-manifest.json` `content_hash=82d1e6a9997dc8de…`, `cases.json`/`graders.json`/`baseline-results.json`/`run_bank.py` запинены там же вместе с `corpus.json`, `baseline.json`, `verification-report.json`. **Четыре решения, принятые записью, а не вопросом (D50):** (1) **два слоя baseline.** Layer-1 — детерминированная оценка ОБЪЯВЛЕННОГО доремонтного поведения, чьё провенанс-заявление исполняемо (48 проб по байтам репозитория; `baseline` отказывается работать, если заявленное отсутствие перестало держаться). Layer-2 — живой парный прогон тех же кейсов/грейдеров на `pre-plan-sha` (D45), производитель P3.3. Альтернативы отклонены: «только объявленный baseline» выдал бы декларацию за измерение, «ждать живого парного прогона» отложил бы заморозку ЗА первую мутацию и сломал бы D15/D16. (2) **Ни один floor не опирается на pinned-not-recomputable величину** — F9 (контекст) и F10 (owner intervention) берут знаменатель у layer-2, а не у `dedup_correction` (135 110 000) и не у `journals.outcomes`; F6 — у контролируемого банка, а не у исторической completeness от 550 classified events. Правило исполняемое: `run_bank.py` отклоняет floor с `pinned_inputs` или с `evidence_refs` в класс `pinned-not-recomputable` отчёта P0.1 (оба зонда дают exit 1). (3) **F14 `false_block_rate == 0` добавлен СВЕРХ §8**: §8 не содержит защиты от лечения через тотальную блокировку — без него максимально консервативная реализация зеленела бы по всем тринадцати остальным строкам. (4) **`routing_compliance` сообщается без floor'а**: §8 порога не содержит, а назначение порога на шаге заморозки было бы ровно тем candidate-side тюнингом, который D15 запрещает. Floors §8 перенесены дословно с квалификатором D53 (F4 — «0 в объявленной фикстуре P1.4»), строка живого хоста `core`+донор осталась диагностикой D42, а не floor'ом. Процедура коррекции (D15) машинно поддержана: `candidate` отказывается писать в замороженный `baseline-results.json` и отказывается от частичного прогона. Принятая и названная граница: layer-1 не является измерением живых прогонов модели, а контрольные кейсы на нём проходят дёшево (блокирующего слоя ещё нет) — их различающая сила на кандидатской стороне, и именно её ловит F14. | RAG:— (repo-grounded: собственные прогоны `run_bank.py baseline/verify/candidate/sample` и пять зондов на временных копиях, `findings/P0.3-acceptance-freeze.md`; plan-grounded: D10/D15/D16/D30/D50/D53). |
+
+| D60 | 2026-07-25 | **Дефект ТЗ P0.3 исправлен записью (D50), а не эскалацией.** Команда Validation №4 `PYTHONPATH=packages/skiller/lib python3 -m unittest discover -s packages/skiller/tests -p 'test_eval.py'` невыполнима по построению: `packages/skiller/tests/test_eval.py:15` импортирует `tests.fixtures`, поэтому на `PYTHONPATH` обязан быть корень пакета, а не только `lib` — исходная форма даёт `ModuleNotFoundError: No module named 'tests'` независимо от работы item'а (канонический `packages/skiller/scripts/test.sh:20` кладёт в `PYTHONPATH` и `lib`, и корень). Синхронизировано: строка Validation P0.3 читает `PYTHONPATH=packages/skiller/lib:packages/skiller …` → `Ran 32 tests OK`; закрытие идёт по обновлённому ТЗ (🟢 + запись в Known Deviations, канон `plan-exec` §7). Эскалация в `plan-design` ради опечатки в `PYTHONPATH` воспроизвела бы ровно тот audit/fix-loop без продукта, который план создан лечить (D50). Правило на будущее (кандидат в `plan-lint`): команда Validation, ссылающаяся на `unittest discover` в пакете с `tests/`-пакетными импортами, обязана нести корень пакета в `PYTHONPATH`. | RAG:— (repo-grounded: `packages/skiller/tests/test_eval.py:15`, `packages/skiller/scripts/test.sh:20`, собственный прогон обеих форм команды). |
+
 ## 6. Update Log
 
 | Дата | Кто (role/model) | Что |
@@ -336,6 +340,7 @@ audit/fix-loop без продукта, который план создан л�
 | 2026-07-25 | bookkeeping/Claude Sonnet 5/high (payload A, аудит этапа C Ф1/Ф3/Ф8) | D58: G1-формулировка о FOREMAN сужена до наружных частей (§2/§10 правлены); долг D47 «зеркальная Consumed-строка ECO» снят; предстартовые строки добавлены в ТЗ P3.3 (`phases/P3.md`) и P4.3 (`phases/P4.md`). Version 1.12.0 → 1.12.1. |
 | 2026-07-25 | plan-exec/Claude Sonnet 5/medium | P0.1 закрыт: item-owned semantic verification contract/verifier/tests/report над immutable bundle (F1 gap, D30) — 16/16 assertions, 15/15 tests, `pre-plan-sha.txt` (D45). Детали — `phases/P0.md` P0.1 Completion Notes. Version 1.12.1 → 1.12.2. |
 | 2026-07-25 | plan-run/Claude Opus 5/high | P0.2 закрыт: Task Contract v1 запечатан — схема, precedence, два предиката с 16 типизированными кодами, 23 проверенных кейса, 4/4 критических кейса корпуса P0.1 связаны с полем и проверкой — детали см. phases/P0.md P0.2 Completion Notes. Version 1.12.2 → 1.12.3. |
+| 2026-07-25 | plan-run/Claude Opus 5/high | P0.3 закрыт: Acceptance v1 и fixed bank заморожены (31 кейс, детерминированные грейдеры, два слоя baseline, 14 floors), G0 принят агентом записью D59, дефект ТЗ Validation исправлен D60 — детали см. phases/P0.md P0.3 Completion Notes. Version 1.12.3 → 1.12.4. |
 
 ## 7. Contracts
 
@@ -345,7 +350,7 @@ audit/fix-loop без продукта, который план создан л�
 |:--|:--|:--|:--|:--|
 | `root/contracts/source-evidence-verification-v1.md` | v1 | committed P0.1 | P0.2, P0.3, P3.2, P3.5 | task, skiller, analyst |
 | `root/contracts/task-contract-v1.md` | v1 | committed P0.2 | P0.3, P2, P3 | task, skiller, harness |
-| `root/contracts/reliability-acceptance-v1.md` | v1 | Owner-freeze P0.3 | P0.4–P3 | skiller, task, analyst, harness |
+| `root/contracts/reliability-acceptance-v1.md` | v1 | committed P0.3 (G0 — агент, D59) | P0.4–P3 | skiller, task, analyst, harness |
 | `root/contracts/semantic-identity-ownership-v1.md` | v1 | planned P1.1 | P1.2, P1.3, P1.5, P1.4 | skiller, task, harness |
 | `root/contracts/generated-artifact-version-v1.md` | v1 | planned P1.1 | P1.2, P1.3, P1.5, P2.2, P2.3, P4.3 | skiller, task, harness |
 | `root/contracts/execution-state-machine-v1.md` | v1 | planned P2.1 | P2.2–P3 | task, analyst |
@@ -380,10 +385,18 @@ audit/fix-loop без продукта, который план создан л�
 | Same-finding loop depth | median ≤1, p95 ≤2 |
 | Critical regression escape | 0 |
 
-These values are proposals until the P0.3 freeze is recorded as a D-entry
-(G0 — агент, D50). Baseline/corpus/grader
-hashes and exact floors freeze together. Candidate-only threshold changes are
-forbidden; a grader correction versions the bank and reruns both sides.
+**ЗАМОРОЖЕНО D59 (G0 — агент, D50), 2026-07-25.** Строки выше перестали быть
+предложением: их исполнимая форма — 14 floors в
+`root/contracts/reliability-acceptance-v1.md` и `artifacts/reliability-bank-v1/bank-manifest.json`
+(`content_hash=82d1e6a9997dc8de…`, item-коммит `f405017a`), где у каждой названы
+measurement owner и слой baseline. Добавлена одна строка сверх таблицы —
+**F14 `false_block_rate == 0` на контрольных кейсах** (защита от лечения через
+тотальную блокировку, обоснование в D59). Две строки таблицы резолвятся ТОЛЬКО
+против живого парного прогона layer-2 (P3.3) и не берут знаменатель у запиненных
+величин бандла: «Context input per successful outcome» и «Owner intervention»
+(D30/D59). Baseline/corpus/grader hashes и точные floors заморожены вместе.
+Candidate-only threshold changes are forbidden; a grader correction versions the
+bank and reruns both sides.
 
 ## 9. Risks and Boundaries
 
@@ -427,9 +440,9 @@ forbidden; a grader correction versions the bank and reruns both sides.
   граница компетенции.
 - **G-EXEC — выдан authority E (D50).** Self-host P0–P3 исполняются без
   отдельного человеческого гейта; P0.1 стартует по `handoff.md`.
-- **G0 after P0.3 — принимает агент** и фиксирует D-записью exact Acceptance v1,
-  bank/grader hashes и floors (§8 с квалификатором D53). Отдельной остановки на
-  владельце нет.
+- **G0 after P0.3 — принят агентом 2026-07-25 записью D59**: exact Acceptance v1,
+  bank/grader hashes и floors (§8 с квалификатором D53) зафиксированы, P0.4
+  разблокирован. Отдельной остановки на владельце не было и не требовалось.
 - **Аудиты — по канону, не по личным слотам (D50).** Действует
   plan-protocol «два аудита на фазу, третий → решение»; вердикт выносит агент.
   Отдельный седьмой design-аудит не назначается — принятый риск назван в §9.

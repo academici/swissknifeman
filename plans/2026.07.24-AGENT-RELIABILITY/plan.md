@@ -6,18 +6,18 @@
 |:--|:--|
 | Plan ID | 2026.07.24-AGENT-RELIABILITY |
 | Title | Надёжное исполнение: checked task contract, единственный runtime source, bounded review и измеримая обратная связь |
-| Version | 1.10.0 |
+| Version | 1.11.0 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high; Owner-override Pass 4 — gpt-5.6-sol/xhigh; historical authority-C repair — Claude Fable 5/high; bounded redesign Pass 5 — Codex gpt-5.6-sol/high; bounded A1 repair (authority D, D39) — Claude Opus 5/high; bounded A3 repair (authority E, D50) — Claude Opus 5/high |
-| Last Updated | 2026-07-25 (bounded repair A3 F1–F6 + Owner authority E, D50–D55) |
+| Last Updated | 2026-07-25 (программный гейт design-first, D56: исполнение ждёт этапов A–C) |
 | Repository | swissknifeman |
 | Related Packages | task, skiller, harness, analyst, maind |
 | Execution Mode | reliability-first · evidence-before-mutation · phase-bounded |
 | Target Operator Models | neutral Routing §3 is SSOT; provider renderer selected and verified at execution; current next audit recovery renderer — Codex `gpt-5.6-sol/xhigh` |
 | Approval Owner | Dmitry Vostrikov |
 | Home | repo:/home/vostrikov/projects/packages/swissknifeman |
-| Paused By | — |
+| Paused By | 2026.07.25-ECO-OPT, 2026-07-25 (D56: ACTIVE ушёл на design pass 2 ECO-OPT — этап A программы; план спроектирован полностью и ждёт этапов B/C) |
 | Design Passes | 5/5 — исчерпан. Passes 1–5 и шесть literal RED design-вердиктов сохранены как история (`findings/07`–`findings/13`). Bounded repairs A1 (authority D, D39) и A3 (authority E, D50) — **не design passes**: счётчик не растёт. Персональное рационирование audit-слотов снято D50; действует канон plan-protocol «два аудита на фазу, третий → решение». `G-EXEC` для self-host P0–P3 выдан authority E; за владельцем остаётся только G1 |
 
 ## 1. Context
@@ -92,7 +92,10 @@ audit/fix-loop без продукта, который план создан л�
 ## 2. Execution Rules
 
 - `G-EXEC` выдан Owner authority E (D50) для self-host работы: P0–P3 исполняются
-  без отдельного человеческого гейта. Персональное рационирование audit-слотов
+  без отдельного человеческого гейта. **Но над ним стоит программный гейт
+  design-first (D56):** исполнение начинается только после этапов A–C программы
+  (`plans/README.md` § «Программа: этапы A–D»). Первый item плана не стартует,
+  пока этап B не показал 0 живых пересечений без владельца. Персональное рационирование audit-слотов
   (A0–A3) снято — это история, не действующий механизм; действует канон
   plan-protocol «два аудита на фазу, третий → решение», и вердикт аудита фазы
   выносит агент. Шесть исторических design-вердиктов остаются literal RED и не
@@ -290,6 +293,7 @@ audit/fix-loop без продукта, который план создан л�
 | D53 | 2026-07-25 | **F5 A3, решено агентом по D50 (владельцу не выносится).** Метрика §8 «Effective semantic identity collisions» получает квалификатор **«0 в объявленной фикстуре P1.4 (D51)»**; живой хост, где `core` и `research` включены одновременно, даёт не floor, а строку диагностики D42 с названным безопасным Owner-действием. Альтернатива «выдать Owner-гейт на правку enabled-множества» отклонена: правка user-owned профиля — живая мутация вне границ плана (D42, §2), а authority E оставляет владельцу только необратимое/наружное. Так floor остаётся достижимым и не превращается ни в RED по неремонтируемой метрике, ни в тихое переопределение на шаге измерения (риск «Self-host GREEN is called fleet GREEN» внутри self-host). | RAG:— (repo-grounded: `findings/13-design-audit-a3.md` F5; `plan.md` D42; `phases/P1.md` P1.5 Pending Work). |
 | D54 | 2026-07-25 | **Провенанс dual-provider.** Строка §7 Consumed «provider publication/artifact contract | 2026.07.19-DUAL-PROVIDER» переклассифицирована в **low-trust / verify-before-use**: план-донор написан Codex, терминален со статусом 🟠 (не 🟢), его historical P7.4 остаётся literal `ATTENTION`, и именно он одним коммитом `e8f5b477` внёс все 30 рукописных root-адаптеров мимо генератора, без provenance/hash — источник 16 коллизий `findings/12`. Поэтому P1.2/P1.3/P1.5 обязаны доказывать поведение затронутых seam'ов характеризационным тестом на месте, а не наследовать «зелёное» от 🟠-плана. Это НЕ приказ переписывать DUAL-PROVIDER (терминален, не исполняется) — это снятие презумпции корректности с его артефактов. | RAG:— (owner-grounded: `brief/01-refinements.md` § «Owner authority E» п.2; repo-grounded: `plans/2026.07.19-DUAL-PROVIDER/plan.md` Meta/статус, коммиты `302a5f0a`, `04be7d9e`, `e8f5b477`). |
 | D55 | 2026-07-25 | **F4 A3 repair.** Bounded repair и design pass считаются завершёнными только после bookkeeping-коммита своих плановых путей: рабочее дерево планом для холодного исполнителя не является. Ремонт v1.9.0 вместе с `findings/10`–`findings/13` и ремонт A3 (v1.10.0) закоммичены одним bookkeeping-коммитом плановых путей; `handoff.md` несёт его хеш отдельным стамп-коммитом (хеш собственного коммита в него не вписать физически — это единственная причина второго коммита, и он трогает ровно один файл). Правило-кандидат в `plan-protocol` §8: handoff, предписывающий следующему шагу «committed tree», обязан нести хеш этого дерева; плейсхолдер = ERROR линтера. | RAG:— (repo-grounded: `findings/13-design-audit-a3.md` F4; `git status --porcelain plans/2026.07.24-AGENT-RELIABILITY` до ремонта — 10 `M` + 4 `??`). |
+| D56 | 2026-07-25 | **Программный гейт: design-first по всей экосистеме (директива владельца 2026-07-25).** Исполнение ЭТОГО плана не начинается сразу после `G-EXEC`: сначала этап A (полная проектировка и актуализация всех живых планов), затем этап B (сверка точной последовательности по фактическим `Files` и допиливание межплановых конфликтов), затем этап C (финальный программный аудит под Fable), и только затем этап D (исполнение). `G-EXEC` (D50) не отзывается — над ним появился программный гейт более высокого уровня. Основание — измерение, а не осторожность: карта владения поверхностями была выведена из заголовков фаз и строк Routing, а `plans/cross-plan-files.py` на фактических `Files` сразу нашёл живое пересечение (`packages/harness/configs/claude-code/hooks/run-report/_lib.py` — P0.4 этого плана против ECO-OPT P1.2) при слепой зоне в 15 недетализированных items ECO-OPT. Принятый риск назван: программа откладывает первый исполненный item ещё на несколько заходов — это ровно тот failure mode, который план лечит; смягчение — этап A конечен (6 фаз ECO-OPT), состоит из проектирования нового, а не из повторного аудита уже спроектированного, и его выход машинно проверяем. ACTIVE передан ECO-OPT, `Paused By` проставлен. | RAG:— (owner-grounded: директива 2026-07-25 «сначала полная проектировка и актуализация всех планов, потом сверка в точную последовательность, финальный аудит из-под Fable»; repo-grounded: прогон `plans/cross-plan-files.py` 2026-07-25). |
 
 ## 6. Update Log
 
@@ -308,6 +312,7 @@ audit/fix-loop без продукта, который план создан л�
 | 2026-07-25 | plan-design/Codex gpt-5.6-sol/high | Design pass 5/5: D36–D38 close only `findings/09` F1–F3; 21-item sweep complete. v1.8.0; P0 unexecuted; pre-redesign A1 RED is historical; next exactly A2 audit `0/1`. |
 | 2026-07-25 | plan-design/Claude Opus 5/high (Owner authority D) | Bounded repair A1 F1–F10 → D39–D48 (коллизии 16+1, item P1.5 перед P1.4, `PRE_PLAN_SHA`, `--effort`, self-conformance P2.2, cross-plan ECO-OPT). v1.9.0; 22 items; P0 unexecuted. D49 фиксирует параллельный A2 RED — его 3 находки вне скоупа, долг владельцу. |
 | 2026-07-25 | plan-design/Claude Opus 5/high (Owner authority E) | Bounded repair A3 F1–F6 → D50–D55; §10 переписана: слоты A0–A3 → история, `G-EXEC` выдан для self-host, за владельцем только G1. v1.10.0; 22 items; старт P0 разрешён. |
+| 2026-07-25 | plan-design/Claude Opus 5/high (программный гейт) | D56: design-first по экосистеме — исполнение после этапов A–C; ACTIVE передан ECO-OPT, `Paused By` проставлен. v1.11.0. |
 
 ## 7. Contracts
 

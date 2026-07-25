@@ -13,21 +13,33 @@ self-host P0–P3 больше не требует отдельного чело
 
 **Next:** exec-items: task:plan-exec 2026.07.24-AGENT-RELIABILITY P0.1
 
+**Но не сейчас (D56).** План спроектирован полностью (0 скелетов, 22 items,
+`G-EXEC` выдан D50), однако над `G-EXEC` встал **программный гейт design-first**:
+этап A (проектировка всех живых планов) → B (машинная сверка последовательности)
+→ C (финальный аудит под Fable) → **D (исполнение, старт с P0.1)**. Программа —
+`plans/README.md` § «Программа: этапы A–D». ACTIVE передан `2026.07.25-ECO-OPT`;
+ближайшая работа программы идёт ТАМ (`/task:plan-design 2026.07.25-ECO-OPT P2`).
+
 | Параметр | Значение |
 |:--|:--|
-| Model class | implementation (Claude `sonnet` · Codex `gpt-5.6-terra`) |
+| Model | Sonnet (`implementation` по §3 Routing) |
 | Effort | medium |
 | Capabilities | `command.subagents` |
 | Context | `NEW SESSION` |
-| Суть | Первый исполняемый item плана: проверить immutable bundle всеми четырьмя режимами, выдать item-owned semantic proof-class отчёт, записать `artifacts/P0.1/pre-plan-sha.txt` (D45) |
+| Гейт | **этапы A–C программы завершены** (проектировка всех планов · `plans/cross-plan-files.py --strict` без живых пересечений без владельца · аудит под Fable) |
+| Суть | Первый исполняемый item: 4 режима immutable-верификатора, semantic proof-class отчёт, `artifacts/P0.1/pre-plan-sha.txt` (D45) |
 
 ````
+# НЕ раньше: этапы A–C программы завершены (plans/README.md § «Программа: этапы A–D»)
 /task:plan-exec 2026.07.24-AGENT-RELIABILITY P0.1
 ````
 
-Codex-проекция того же carrier'а — `roadmap.md` § «P0.1 — verify immutable
-integrity + semantic closure» (native `NEW SESSION` блок). Acting provider не
-назначен ни одной authority: рендерер выбирается из §3 Routing.
+ТЗ P0.1 и его carrier в `roadmap.md` менять не требуется — они готовы и ждут гейта.
+
+**Состояние межпланового гейта на 2026-07-25** (`python3 plans/cross-plan-files.py`):
+336 путей · **1 живое пересечение** — `packages/harness/configs/claude-code/hooks/run-report/_lib.py`
+(P0.4 этого плана против ECO-OPT P1.2) · 44 исторических · **слепая зона 15 items**
+(скелеты ECO-OPT). Именно слепая зона и есть причина этапа A.
 
 **Done:** ремонт A3 F1–F6 + внедрение authority E —
 
@@ -65,9 +77,9 @@ integrity + semantic closure» (native `NEW SESSION` блок). Acting provider 
   затронутых seam'ов характеризационным тестом на месте (Code Guidance + три
   Codex-carrier'а roadmap).
 
-**Remaining:** вся исполнительская работа — 22/22 items `⬜`. Порядок фаз
-P0 → P1 → P2 → P3 → P4; внутри P1 — P1.1 → P1.2 → P1.3 → **P1.5** → P1.4 (D41).
-Первый шаг — P0.1.
+**Remaining:** вся исполнительская работа — 22/22 items `⬜`, и она ждёт этапа D.
+Порядок фаз P0 → P1 → P2 → P3 → P4; внутри P1 — P1.1 → P1.2 → P1.3 → **P1.5** →
+P1.4 (D41). Ближайшая работа программы — не здесь, а в ECO-OPT (этап A).
 
 **Sources of truth:** `plan.md` v1.10.0 (§2 Execution Rules, §5 D50–D55, §7, §9,
 §10) · `phases/P0.md` (P0.1 pre-plan baseline) · `phases/P1.md` (5 items,

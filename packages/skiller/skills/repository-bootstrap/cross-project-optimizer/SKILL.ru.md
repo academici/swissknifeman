@@ -1,0 +1,79 @@
+---
+name: cross-project-optimizer
+bucket: repository-bootstrap
+version: 0.1.0
+description: "Межпроектная оптимизация ~N похожих проектов экосистемы (общие пакеты-ядро) — найти повторяющийся код/схемы across проектов и вынести общее в ядро. Используй, когда нужно проанализировать несколько проектов сразу на дубли/общие паттерны, скоррелировать похожие фичи между проектами, или решить, что вынести в shared-пакет (corex/azguard/vaulter)."
+risk: read
+persona: oss-dev
+tags: [ecosystem, fleet, dedup, shared-package, root-bootstrap]
+requires: []
+produces_for: []
+outputs: [chat]
+snippets: []
+adapters: [claude, cursor, fable]
+sha256: ""
+---
+
+# Межпроектный оптимизатор
+
+Цель: across нескольких похожих проектов (общие пакеты-ядро) находить повторяющийся код и
+схемы, и выносить общее в ядро. Сигнал собирается из **трёх источников** (единого «слитого»
+графа кода нет и не нужно): топология (где искать) → дубли (что повторяется) → общая память
+(что недавно менялось). Точечную правку даёт Serena в нужном проекте.
+
+## Рабочий цикл
+
+### 1. Карта флота — где искать
+```bash
+maind fleet manifest                 # JSON: проекты (пути/scopes/code) + группы по ОБЩИМ пакетам
+```
+`shared_packages` — проекты, делящие пакет (напр. azguard-core у flexcrm+azguard+corex). Это
+готовые группы для оптимизации: что улучшаешь в общем пакете — влияет на всех его консьюмеров.
+
+### 2. Память — что недавно менялось
+```bash
+maind fleet features --namespace axioma     # факты «сделал фичу X» из общей памяти группы
+```
+Коррелируй похожие фичи между проектами: если в двух проектах делали близкое — кандидат на общий
+хелпер. (Записывать факт: `maind fleet log "<что сделал>" --project <id>`.) Это межпроектная
+задача по определению — поднимай контекст группы явно тем же путём, что и общий гайдлайн
+([ecosystem-mcp] → «Межпроектная задача»): `maind memory recall --scope ns:<имя>` (SessionStart-
+дайджест по умолчанию её НЕ несёт, D10 — [docs/guide/memory.md]).
+
+[ecosystem-mcp]: ../ecosystem-mcp/SKILL.md
+[docs/guide/memory.md]: ../../../../../packages/maind/docs/guide/memory.md
+
+### 3. Дубли — что именно повторяется
+```bash
+maind fleet duplicates --group azguard-core --min-tokens 60 --json   # по консьюмерам пакета
+maind fleet duplicates --projects flexcrm,azguard --json            # по явному списку
+```
+Кросс-проектные клоны (`cross_project: true`) — первыми. jscpd (через npx) сканирует исходники
+(vendor/node_modules/packages игнорятся). Подбирай `--min-tokens` (меньше → больше шума).
+
+### 4. Точечный анализ — Serena в проекте
+Для конкретного дубля открой его в каждом проекте через граф кода (Serena):
+`get_symbols_overview`, `find_symbol`, `find_referencing_symbols` → точное место и все вызовы.
+
+### 5. Вынос в ядро
+Общий код → в shared-пакет (corex/azguard/vaulter — они сами проекты, изменения текут назад
+через симлинки). Поправь вызовы в консьюмерах. Запиши результат:
+`maind fleet log "вынес <X> в <core-пакет>" --project <core>`.
+
+## Принципы
+
+- **Группируй по общим пакетам** (`shared_packages`), а не по всем проектам подряд — оптимизация
+  имеет смысл там, где код реально пересекается.
+- **Дубли — кандидаты, не приговор**: похожий код бывает оправдан (разные предметные области).
+  Решение о выносе — по смыслу, через Serena, а не только по jscpd.
+- **Пиши в общую память** что вынес — чтобы следующий проход видел историю и не дублировал работу.
+- Доступ ко всем репозиториям у тебя уже есть (workspace-доверие хаба). Подробнее —
+  [граф кода](../../../../../packages/maind/docs/guide/code-graph.md), [fleet](../../../../../packages/maind/docs/guide/fleet.md).
+
+## Провенанс (root-bootstrap, P1.2)
+
+Класс A private/source-only root-bootstrap identity (D31/D38, `plans/2026.07.24-AGENT-RELIABILITY`):
+канонический источник — этот файл; тонкие проекции — `.claude/skills/cross-project-optimizer/SKILL.md`
+и `.agents/skills/cross-project-optimizer/SKILL.md` (генерируются `skiller registry`, не редактируются
+руками). Бакет `repository-bootstrap` — приватный, не публикуется как обычный unit/core/marketplace,
+не вендорится/коннектится в проекты-потребители.

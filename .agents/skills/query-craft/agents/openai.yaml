@@ -1,4 +1,0 @@
-interface:
-  display_name: "Query Craft"
-  short_description: "Формулирование точных исследовательских запросов"
-  default_prompt: "Use $query-craft to formulate precise research queries."

@@ -20,17 +20,24 @@ LOCK_VERSION = 1
 
 
 def _registry_map(env):
-    """skills.json реестра → {skill_name: bucket}."""
+    """skills.json реестра → {skill_name: bucket}. Private/source-only записи
+    (`buckets.json` `private_source_only`, P1.2/D31 — сейчас: `repository-bootstrap`)
+    исключены: они никогда не являются legit swissknifeman-источником установленной
+    копии в проекте-потребителе (единственный производитель — root-bootstrap
+    рендерер `publication.py`, не этот композитор)."""
     f = env.root / "skills.json"
     if not f.is_file():
         die("skills.json не найден — сначала skiller registry")
     data = json.loads(f.read_text(encoding="utf-8"))
     skills = data["skills"] if isinstance(data, dict) else data
+    from .skillset import private_source_buckets
+    private_buckets = private_source_buckets(env)
     out = {}
     for s in skills:
         name = s.get("name") or s.get("id")
-        if name:
-            out[name] = s.get("bucket", "")
+        bucket = s.get("bucket", "")
+        if name and bucket not in private_buckets:
+            out[name] = bucket
     return out
 
 

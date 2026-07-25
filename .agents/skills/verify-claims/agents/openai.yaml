@@ -1,4 +1,0 @@
-interface:
-  display_name: "Verify Claims"
-  short_description: "Проверка внешних фактов по первичным источникам"
-  default_prompt: "Use $verify-claims to verify the external claims in this task."

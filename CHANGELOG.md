@@ -20,6 +20,19 @@
 - **skiller:** provider-aware Claude/Codex distribution preflight, provider-qualified
   vendor locks and explicit `skiller codex-install`; normal connect/update/doctor and
   dry-runs never invoke the native user-global installer.
+- **skiller — root-bootstrap class-A publication (P1.2, D31/D38).** 13 private/source-only
+  bilingual canonical skills (`skills/repository-bootstrap/<id>/{SKILL.ru.md,SKILL.md}`)
+  replace the 13 hand-maintained duplicate root copies with 26 thin generated
+  `.claude/skills/<id>/`+`.agents/skills/<id>/` projections (trigger metadata + canonical
+  path/hash, no copied body) plus one combined `publication-lock.json`. `registry.py` →
+  `publication.py` is the sole producer; `build_publication_catalog` excludes the private
+  bucket from every ordinary Claude/Codex/marketplace unit and `skillset.py` rejects it from
+  vendor/connect selection outright. `configs/publication-versions.json` (D27) now separates
+  the skiller package API SemVer from finite per-unit manifest versions — `core`/`skm` bump to
+  `0.4.1` alongside the package API, every other unit stays byte-identical at the frozen
+  `0.4.0` baseline. Six duplicate root `core` identities
+  (`anti-drift`/`context-economy`/`plan-protocol`/`query-craft`/`session-handoff`/`verify-claims`)
+  removed from `.agents/skills/` after proving the generated `core@0.4.1` bundle covers them.
 
 ### Fixed
 

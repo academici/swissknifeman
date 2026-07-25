@@ -48,6 +48,13 @@ class TestProviderPublicationParity(unittest.TestCase):
     def test_independent_canonical_inventory_matches_catalog_and_projections(self):
         registry_disk = json.loads((self.package_root / "skills.json").read_text(encoding="utf-8"))
         policy = json.loads((self.package_root / "configs" / "core-policy.json").read_text(encoding="utf-8"))
+        buckets_meta = json.loads((self.package_root / "buckets.json").read_text(encoding="utf-8"))
+        # P1.2 (D31): private/source-only buckets (repository-bootstrap) are indexed by
+        # build_registry for ownership/hash lookup but never become an ordinary publication
+        # unit/plugin — exclude them from the expected marketplace-plugin set below.
+        private_buckets = {name for name, data in buckets_meta.items()
+                           if isinstance(data, dict) and data.get("private_source_only")}
+        self.assertIn("repository-bootstrap", private_buckets)
         expected_ids = tuple(sorted(f"{item['bucket']}/{item['name']}"
                                     for item in registry_disk["skills"]))
         expected_buckets = tuple(sorted({item["bucket"] for item in registry_disk["skills"]}))
@@ -68,7 +75,8 @@ class TestProviderPublicationParity(unittest.TestCase):
                                             if item.target.name == "marketplace.json"))
         claude_names = {item["name"] for item in claude_marketplace["plugins"]}
         codex_names = {item["name"] for item in codex_marketplace["plugins"]}
-        expected_plugins = set(expected_buckets) | {policy["core_plugin"], "generate-skill", "skm"}
+        expected_plugins = (set(expected_buckets) - private_buckets) \
+            | {policy["core_plugin"], "generate-skill", "skm"}
         expected_plugins.update(
             json.loads((package / ".codex-plugin" / "plugin.json").read_text())["name"]
             for package in (self.repo_root / "packages").iterdir()
@@ -77,6 +85,8 @@ class TestProviderPublicationParity(unittest.TestCase):
             and (package / ".codex-plugin" / "plugin.json").is_file())
         self.assertTrue(expected_plugins.issubset(claude_names))
         self.assertEqual(codex_names, expected_plugins)
+        self.assertNotIn("repository-bootstrap", claude_names)
+        self.assertNotIn("repository-bootstrap", codex_names)
 
         core = next(item for item in codex if item.publication_unit_id == "core"
                     and item.target.name == "plugin.json")
@@ -94,10 +104,13 @@ class TestProviderPublicationParity(unittest.TestCase):
         first_codex = build_codex_publication(self.env, metadata, buckets, registry)
         self.assertEqual(first_claude, build_claude_publication(self.env, metadata, buckets, registry))
         self.assertEqual(first_codex, build_codex_publication(self.env, metadata, buckets, registry))
+        package_version = json.loads((self.package_root / "package.json").read_text())["version"]
         for artifact in (*first_claude, *first_codex):
             self.assertTrue(artifact.source_hash.startswith("sha256:"))
             self.assertTrue(artifact.rendered_hash.startswith("sha256:"))
-            self.assertEqual(artifact.package_version, "0.4.0")
+            # `.package_version` is the uniform skiller package API SemVer (provenance), never
+            # a unit's own D27 `content_version` — every artifact carries the same value.
+            self.assertEqual(artifact.package_version, package_version)
         self.assertEqual(_digest(first_claude, self.repo_root),
                          _digest(build_claude_publication(self.env, metadata, buckets, registry), self.repo_root))
         self.assertEqual(_digest(first_codex, self.repo_root),

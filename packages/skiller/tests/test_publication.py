@@ -69,5 +69,29 @@ class TestClaudePublicationGolden(unittest.TestCase):
         self.assertEqual(_artifact_digest(artifacts, repo_root), golden["byte_digest"])
 
 
+class TestRepositoryBootstrapExclusion(unittest.TestCase):
+    """P1.2 (D31): build_registry indexes the 13 class-A identities for ownership/hash lookup,
+    but normal Claude bucket/core/marketplace publication carries zero of them."""
+
+    def test_registry_indexes_13_but_claude_publication_carries_zero(self):
+        repo_root = Path(__file__).resolve().parents[3]
+        package_root = repo_root / "packages" / "skiller"
+        from skiller.common import Env
+        env = Env(package_root)
+        registry, metadata, buckets = build_registry(env)
+        private_members = [item for item in registry["skills"]
+                           if item["bucket"] == "repository-bootstrap"]
+        self.assertEqual(len(private_members), 13)
+        self.assertIn("repository-bootstrap", buckets)  # a real dir, indexed — but never a unit
+
+        artifacts = build_claude_publication(env, metadata, buckets, registry)
+        marketplace = json.loads(next(item.managed_bytes for item in artifacts
+                                      if item.target.name == "marketplace.json"))
+        names = {plugin["name"] for plugin in marketplace["plugins"]}
+        self.assertNotIn("repository-bootstrap", names)
+        for artifact in artifacts:
+            self.assertNotIn("repository-bootstrap", artifact.target.as_posix())
+
+
 if __name__ == "__main__":
     unittest.main()

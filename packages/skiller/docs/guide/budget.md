@@ -66,7 +66,7 @@ flowchart LR
     ci_cd["ci-cd<br/>⊕55 ↻1150"]:::mild
     db_test_preflight["db-test-preflight<br/>⊕104 ↻1703"]:::warm
     docker["docker<br/>⊕66 ↻400"]:::mild
-    docker_dev_prod["docker-dev-prod<br/>⊕42 ↻952"]:::mild
+    docker_dev_prod["docker-dev-prod<br/>⊕42 ↻952"]:::cool
     docker_php["docker-php<br/>⊕40 ↻794"]:::cool
     docker_postgres["docker-postgres<br/>⊕43 ↻834"]:::mild
     docker_services["docker-services<br/>⊕48 ↻885"]:::mild
@@ -82,13 +82,13 @@ flowchart LR
     adversarial_check["adversarial-check<br/>⊕55 ↻1162"]:::mild
     competitive_analysis["competitive-analysis<br/>⊕30 ↻1343"]:::cool
     customer_discovery["customer-discovery<br/>⊕55 ↻1315"]:::mild
-    defensibility["defensibility<br/>⊕42 ↻1151"]:::mild
+    defensibility["defensibility<br/>⊕42 ↻1151"]:::cool
     idea_audit["idea-audit<br/>⊕61 ↻2502"]:::mild
     idea_discovery["idea-discovery<br/>⊕35 ↻1668"]:::cool
     new_project["new-project<br/>⊕28 ↻1476"]:::cool
     pitch_deck["pitch-deck<br/>⊕26 ↻1583"]:::cool
     risk_assessment["risk-assessment<br/>⊕32 ↻1302"]:::cool
-    startup_lifecycle["startup-lifecycle<br/>⊕42 ↻1775"]:::mild
+    startup_lifecycle["startup-lifecycle<br/>⊕42 ↻1775"]:::cool
   end
   subgraph frontend["frontend"]
     document_writer["document-writer<br/>⊕88 ↻1283"]:::warm
@@ -116,7 +116,7 @@ flowchart LR
     naive_ui_theming["naive-ui-theming<br/>⊕103 ↻2041"]:::warm
   end
   subgraph frontend_nuxt["frontend-nuxt"]
-    nuxt["nuxt<br/>⊕80 ↻1095"]:::warm
+    nuxt["nuxt<br/>⊕80 ↻1095"]:::mild
     nuxt_modules["nuxt-modules<br/>⊕125 ↻644"]:::hot
     nuxt_seo["nuxt-seo<br/>⊕50 ↻825"]:::mild
   end
@@ -140,7 +140,7 @@ flowchart LR
     vitest_vue["vitest-vue<br/>⊕55 ↻1049"]:::mild
     vue["vue<br/>⊕63 ↻876"]:::mild
     vue_best_practices["vue-best-practices<br/>⊕99 ↻2560"]:::warm
-    vue_composition_api["vue-composition-api<br/>⊕80 ↻531"]:::warm
+    vue_composition_api["vue-composition-api<br/>⊕80 ↻531"]:::mild
     vue_dynamic_icons["vue-dynamic-icons<br/>⊕76 ↻1303"]:::mild
     vue_router_best_practices["vue-router-best-practices<br/>⊕126 ↻2792"]:::hot
     vue_testing_best_practices["vue-testing-best-practices<br/>⊕77 ↻2367"]:::mild
@@ -159,7 +159,7 @@ flowchart LR
     git_safety["git-safety<br/>⊕84 ↻600"]:::warm
     grill_with_docs["grill-with-docs<br/>⊕98 ↻911"]:::warm
     implement["implement<br/>⊕88 ↻479"]:::warm
-    mcp_advisor["mcp-advisor<br/>⊕107 ↻2387"]:::warm
+    mcp_advisor["mcp-advisor<br/>⊕107 ↻2387"]:::hot
     naming_conventions["naming-conventions<br/>⊕86 ↻1782"]:::warm
     packages_stack["packages-stack<br/>⊕85 ↻530"]:::warm
     plan_protocol["plan-protocol<br/>⊕51 ↻21150"]:::mild
@@ -170,7 +170,7 @@ flowchart LR
     spec_interview["spec-interview<br/>⊕58 ↻753"]:::mild
     task_brief_template["task-brief-template<br/>⊕79 ↻1253"]:::mild
     verify_claims["verify-claims<br/>⊕110 ↻2696"]:::hot
-    workflow_craft["workflow-craft<br/>⊕48 ↻3096"]:::mild
+    workflow_craft["workflow-craft<br/>⊕48 ↻3376"]:::mild
     writing_style["writing-style<br/>⊕98 ↻1905"]:::warm
   end
   subgraph laravel_architecture["laravel-architecture"]
@@ -214,7 +214,7 @@ flowchart LR
     marketing_super_skill["marketing-super-skill<br/>⊕95 ↻663"]:::warm
   end
   subgraph mobile["mobile"]
-    figma_to_flutter["figma-to-flutter<br/>⊕107 ↻867"]:::warm
+    figma_to_flutter["figma-to-flutter<br/>⊕107 ↻867"]:::hot
   end
   subgraph operator["operator"]
     capacity_planning["capacity-planning<br/>⊕41 ↻2083"]:::cool
@@ -238,7 +238,7 @@ flowchart LR
   end
   subgraph php["php"]
     code_style_spatie["code-style-spatie<br/>⊕47 ↻1127"]:::mild
-    cursor_pagination_design["cursor-pagination-design<br/>⊕107 ↻412"]:::warm
+    cursor_pagination_design["cursor-pagination-design<br/>⊕107 ↻412"]:::hot
     database["database<br/>⊕51 ↻961"]:::mild
     dependency_injection["dependency-injection<br/>⊕39 ↻1285"]:::cool
     laravel["laravel<br/>⊕21 ↻1573"]:::cool
@@ -247,7 +247,7 @@ flowchart LR
     named_arguments["named-arguments<br/>⊕50 ↻694"]:::mild
     namespace_refactor_safety["namespace-refactor-safety<br/>⊕110 ↻365"]:::hot
     pao["pao<br/>⊕59 ↻652"]:::mild
-    php_naming_conventions["php-naming-conventions<br/>⊕80 ↻1426"]:::warm
+    php_naming_conventions["php-naming-conventions<br/>⊕80 ↻1426"]:::mild
     php_patterns["php-patterns<br/>⊕25 ↻2538"]:::cool
     php_upgrade_checklist["php-upgrade-checklist<br/>⊕71 ↻672"]:::mild
     production_readiness_checklist["production-readiness-checklist<br/>⊕128 ↻575"]:::hot
@@ -288,12 +288,27 @@ flowchart LR
     code_simplifier["code-simplifier<br/>⊕68 ↻1260"]:::mild
     diagnosing_bugs["diagnosing-bugs<br/>⊕106 ↻2577"]:::warm
     mutation_testing["mutation-testing<br/>⊕106 ↻2580"]:::warm
-    playwright_e2e["playwright-e2e<br/>⊕107 ↻2544"]:::warm
+    playwright_e2e["playwright-e2e<br/>⊕107 ↻2544"]:::hot
     refactoring_plan["refactoring-plan<br/>⊕33 ↻1878"]:::cool
     tdd_discipline["tdd-discipline<br/>⊕100 ↻1374"]:::warm
     tech_debt_audit["tech-debt-audit<br/>⊕44 ↻2200"]:::mild
     test_strategy["test-strategy<br/>⊕61 ↻2274"]:::mild
     testing_safety_report["testing-safety-report<br/>⊕77 ↻756"]:::mild
+  end
+  subgraph repository_bootstrap["repository-bootstrap"]
+    cross_project_optimizer["cross-project-optimizer<br/>⊕95 ↻1056"]:::warm
+    decision_verification["decision-verification<br/>⊕91 ↻1279"]:::warm
+    docs_maintenance["docs-maintenance<br/>⊕88 ↻1047"]:::warm
+    ecosystem_integration["ecosystem-integration<br/>⊕77 ↻1995"]:::mild
+    ecosystem_mcp["ecosystem-mcp<br/>⊕92 ↻1654"]:::warm
+    ecosystem_setup["ecosystem-setup<br/>⊕89 ↻1150"]:::warm
+    field_feedback_loop["field-feedback-loop<br/>⊕91 ↻1373"]:::warm
+    harness_operations["harness-operations<br/>⊕87 ↻2135"]:::warm
+    maind_overview["maind-overview<br/>⊕80 ↻1656"]:::mild
+    package_architecture["package-architecture<br/>⊕85 ↻3771"]:::warm
+    project_tooling_runbook["project-tooling-runbook<br/>⊕93 ↻7001"]:::warm
+    release_discipline["release-discipline<br/>⊕64 ↻835"]:::mild
+    skill_authoring["skill-authoring<br/>⊕88 ↻3724"]:::warm
   end
   subgraph research["research"]
     query_craft["query-craft<br/>⊕103 ↻4221"]:::warm
@@ -424,13 +439,14 @@ flowchart LR
   classDef cool fill:#27ae60,color:#fff,stroke:#1e8449;
 ```
 
-**Итого:** 216 скиллов · ⊕ always **14840** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 321372 ток · ⌥ on-demand 825643 ток (сниппеты + references).
+**Итого:** 229 скиллов · ⊕ always **15960** ток (резидентно всегда, если включить весь реестр) · ↻ bodies 350328 ток · ⌥ on-demand 825643 ток (сниппеты + references).
 
 ## По бакетам
 
 | Бакет | Скиллов | ⊕ always | ↻ bodies | ⌥ on-demand |
 |---|--:|--:|--:|--:|
-| `general` | 22 | 1508 | 49792 | 18336 |
+| `general` | 22 | 1508 | 50072 | 18336 |
+| `repository-bootstrap` | 13 | 1120 | 28676 | 0 |
 | `php` | 17 | 1048 | 19298 | 54837 |
 | `architect` | 15 | 964 | 23520 | 33458 |
 | `quality` | 11 | 831 | 20564 | 7447 |
@@ -503,11 +519,11 @@ flowchart LR
 |---|---|--:|
 | `plan-protocol` | general | 21150 |
 | `vueuse-functions` | frontend-vue | 10838 |
+| `project-tooling-runbook` | repository-bootstrap | 7001 |
 | `query-craft` | research | 4221 |
+| `package-architecture` | repository-bootstrap | 3771 |
+| `skill-authoring` | repository-bootstrap | 3724 |
+| `workflow-craft` | general | 3376 |
 | `voice-ai` | voice-ai | 3193 |
 | `modular-architecture` | laravel-architecture | 3139 |
-| `workflow-craft` | general | 3096 |
 | `laravel-testing` | laravel-testing | 3061 |
-| `vue-router-best-practices` | frontend-vue | 2792 |
-| `spatie-settings` | laravel-extras | 2704 |
-| `verify-claims` | general | 2696 |

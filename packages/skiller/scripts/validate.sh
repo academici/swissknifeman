@@ -717,7 +717,13 @@ def expected_skills_dirs(plugin_root):
 
 
 STALE_HINT = "run 'skiller registry' (or ./sync.sh --update-registry)"
-plugin_roots = {b: root / "skills" / b for b in bucket_dirs}
+# P1.2 (D31): a private/source-only bucket (repository-bootstrap) never gets an ordinary
+# `.claude-plugin/plugin.json` — `publication.py`'s catalog builder excludes it from unit
+# construction outright, so validating one here would demand an artifact the generator never
+# produces. Same `private_source_only` flag `skillset.py`/`publication.py` already read.
+plugin_roots = {b: root / "skills" / b for b in bucket_dirs
+               if not (isinstance(bucket_meta.get(b), dict)
+                       and bucket_meta[b].get("private_source_only"))}
 plugin_roots["generate-skill"] = root / "generate-skill"
 # Management plugin (командное лицо CLI, без скиллов) — валидируем как обычный плагин,
 # если каталог есть; registry.py добавляет его в marketplace.json синхронно.

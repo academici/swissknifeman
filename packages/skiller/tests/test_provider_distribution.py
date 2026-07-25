@@ -484,5 +484,48 @@ class ProviderDistributionCase(unittest.TestCase):
         self.assertFalse(self.env.db_file.exists())
 
 
+class RepositoryBootstrapConsumerRejectionCase(unittest.TestCase):
+    """P1.2 (D31): consumer vendor selection rejects a private/source-only bucket's records
+    outright — never copying them into a project, whether requested by bucket or by name."""
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.tmp = Path(self.temp.name)
+        self.root, self.env = fx.make_registry(self.tmp)
+        fx.write_skill(self.root / "skills" / "repository-bootstrap" / "private-example",
+                       "private-example", description="Private example")
+        bj = json.loads((self.root / "buckets.json").read_text())
+        bj["repository-bootstrap"] = {"description": "Private", "category": "meta",
+                                      "tags": [], "private_source_only": True}
+        (self.root / "buckets.json").write_text(json.dumps(bj), encoding="utf-8")
+        materialize_registry(self.env)
+        self.project = fx.make_laravel_project(self.tmp)
+        (self.project / ".swissknifeman").mkdir()
+
+    def tearDown(self):
+        self.temp.cleanup()
+
+    def test_vendor_bucket_request_dies_before_any_write(self):
+        (self.project / ".swissknifeman" / "config.json").write_text(
+            json.dumps({"mode": "vendor", "buckets": ["repository-bootstrap"]}),
+            encoding="utf-8")
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr), self.assertRaises(SystemExit):
+            do_sync(self.env, self.project, {})
+        self.assertIn("repository-bootstrap", stderr.getvalue())
+        self.assertIn("приватный source-only", stderr.getvalue())
+        self.assertFalse((self.project / ".claude" / "skills").exists())
+
+    def test_vendor_include_by_name_is_never_resolved(self):
+        from skiller.skillset import load_skillset_config
+        (self.project / ".swissknifeman" / "config.json").write_text(
+            json.dumps({"mode": "vendor", "include": ["private-example"]}),
+            encoding="utf-8")
+        cfg = load_skillset_config(self.project)
+        plan = plan_sync(self.env, self.project, cfg)
+        self.assertEqual(plan["add"], [])
+        self.assertIn("private-example", plan["skipped"])
+
+
 if __name__ == "__main__":
     unittest.main()

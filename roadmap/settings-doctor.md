@@ -1,0 +1,119 @@
+# Roadmap: settings-doctor — конфликт-линтер настроек Claude Code
+
+**Статус:** 🟢 внедрено (SKM-ROADMAP-005 P1, 2026-07-10).
+**Дом:** движок — `harness doctor --settings` (per-project, `lib/harness/settings_audit.py`,
+D10 SKM-ROADMAP-005); фасад — `skiller doctor --settings` (subprocess в harness); fleet —
+`maind doctor --audit settings` (subprocess к harness по флоту) — пара к уже существующему
+писателю `scripts/apply-permissions.sh` (он раскатывает, doctor сверяет).
+
+## Проблема (измеренная)
+
+Field-case 2026-07-10 (vault Brain, дизайн-волна ECOSYSTEM P4): владелец не мог отойти от
+компьютера — permission-промпты каждые полминуты при работающем workflow, **хотя в
+`.claude/settings.local.json` стоял `defaultMode: bypassPermissions`**. Разбор показал целый
+класс конфликтов, которые никто не видит целиком, потому что агенты правят настройки точечно,
+не зная всей картины слоёв:
+
+1. `defaultMode` в local задаёт только стартовый режим НОВЫХ сессий — уже запущенная сессия
+   его не подхватывает; выглядит как «настройка не работает».
+2. Хук safe-dirs, который «должен всё разрешать внутри папок», в проекте фактически
+   **не установлен** (в `.claude/settings.json` не было ни одного PreToolUse) — владелец
+   считал, что он есть.
+3. В `~/.claude/settings.json` скопилось ~400 одноразовых точных `Bash(...)`-правил — следы
+   кнопки «always allow», мёртвый груз, не покрывающий ничего нового.
+4. Неканонический ключ `permissions.autoApprove` в настройках проекта — молча игнорируется.
+5. Плейнтекстовый API-ключ в `env` локальных настроек.
+6. Ложное ожидание, что `additionalDirectories`/safe-dirs решают Bash: правила `Bash(...)`
+   матчатся по ТЕКСТУ команды, а не по затрагиваемому пути — «разрешить всё в папке X» для
+   произвольного bash в permission-rules не выражается в принципе.
+
+Каждый пункт по отдельности мелочь; вместе — час диагностики и сорванная автономность волны.
+
+## Что проверяет (таксономия конфликтов)
+
+Doctor читает все слои (`~/.claude/settings.json` → `.claude/settings.json` →
+`.claude/settings.local.json` → managed, в порядке приоритета), строит **эффективную
+конфигурацию** и репортит:
+
+| # | Проверка | Класс |
+|:--|:--|:--|
+| 1 | Валидность JSON каждого слоя (битый файл молча отключает ВЕСЬ слой) | error |
+| 2 | Неканонические ключи против схемы настроек (молча игнорируются) | warn |
+| 3 | Конфликт `defaultMode` между слоями: кто кого переопределил, каков эффективный режим | warn |
+| 4 | Соответствие **policy-профилю проекта** (см. ниже): ожидаемый режим/deny-лист/хуки vs факт | error |
+| 5 | Хуки: объявленные command-файлы существуют и исполняемы; ожидаемые профилем хуки реально прописаны | error |
+| 6 | Мусорные allow-правила: точные одноразовые (не-wildcard), дубли, правила, перекрытые deny; порог N → рекомендация чистки | info |
+| 7 | Противоречия allow/deny (одинаковый паттерн в обоих — deny побеждает молча) | warn |
+| 8 | `additionalDirectories`: несуществующие пути | warn |
+| 9 | Секреты плейнтекстом в `env.*` + gitignore-статус `settings.local.json` | error |
+| 10 | `bypassPermissions` заявлен, но диалог-предупреждение не принят (`skipDangerousModePermissionPrompt` отсутствует) — режим молча не включится | warn |
+
+## Policy-профили (переносимость на разные проекты)
+
+Ключ к «применить к разным проектам»: проект **декларирует** ожидаемую политику
+(например `brain`: `dontAsk` + deny-guardrails + хуки maind-memory/notify; `swissknifeman`:
+свой набор), а doctor сверяет факт с декларацией. Профили — там же, где пресеты
+`apply-permissions.sh` (`base`, `laravel`, `docker`, …): writer раскатывает профиль,
+doctor верифицирует, что он не разъехался. Дрейф = находка, а не молчание.
+
+## Точки интеграции
+
+1. **`skiller doctor --settings`** (или секция в существующем doctor) — on-demand per-project.
+2. **`maind doctor --audit settings`** — fleet-скан по реестру проектов (прецедент
+   `--audit pao`, 20 проектов за прогон).
+3. **Opt-in хук** UserPromptSubmit с дневным sentinel (прецедент `scripts/healthcheck.py`
+   Brain) — quiet-режим, репортит только конфликты. По умолчанию выключен (`context-economy`).
+
+## Набросок реализации
+
+Python в `packages/skiller` (или общий `lib`): загрузка слоёв → merge по приоритету →
+прогон таксономии → человекочитаемый отчёт + `--json` + exit-code (0 чисто / 1 warn / 2 error).
+Схему канонических ключей держать выжимкой (топ-левел ключи + `permissions.*`), не полной
+копией апстрим-схемы — иначе протухнет. Профили — YAML/JSON рядом с пресетами permissions.
+
+## Критерий внедрения
+
+Сработал (field-case выше). Порядок: сначала пп. 1–5, 9 (реальные причины кейса), пп. 6–8, 10
+и fleet-скан — вторым слоем по факту следующего трения.
+
+## Источник
+
+Field-feedback Owner 2026-07-10, сессия дизайн-волны ECOSYSTEM P4 (vault Brain): диагностика
+«промпты каждые полминуты при bypassPermissions в local» → переход политики на
+`dontAsk` + deny-лист глобально.
+
+## Field-case #2 (2026-07-10, вечер): dontAsk тоже не спас — канонический рецепт «никогда не спрашивать»
+
+Политика `dontAsk` снова дала окна подтверждения (vault Brain, exec ECOSYSTEM P4.7). Разбор
+(доки v2.1.200+ + package.json расширения VSCode) дал новые факты для таксономии doctor:
+
+1. **`dontAsk` ≠ «разрешить всё»** — это «тихо ОТКЛОНЯТЬ всё, что не в allow». Окно = сессия
+   вообще не в dontAsk (режим фиксируется на старте сессии; `defaultMode` на лету не действует).
+2. **`ask`-правила форсируют промпт В ЛЮБОМ режиме, включая `bypassPermissions`** — deny и ask
+   применяются всегда. Хочешь «не спрашивать» — `ask: []`.
+3. **VSCode extension стартует сессию из СВОЕЙ настройки** `claudeCode.initialPermissionMode`
+   (default: `"default"` = Manual) — `defaultMode` из local/project слоёв он может игнорировать.
+   Для bypass дополнительно нужен toggle `claudeCode.allowDangerouslySkipPermissions: true`,
+   иначе режим недоступен в селекторе.
+4. **PreToolUse/PermissionRequest-хук НЕ обходит permission-rules** — hook-decision не выше
+   deny/ask; «авто-allow всего хуком» не существует.
+
+**Применённый рецепт (эталон для policy-профиля `max-permissive`):**
+
+| Слой | Ключ | Значение |
+|:--|:--|:--|
+| `~/.claude/settings.json` | `permissions.defaultMode` | `"bypassPermissions"` |
+| `~/.claude/settings.json` | `permissions.ask` | `[]` |
+| `~/.claude/settings.json` | `skipDangerousModePermissionPrompt` | `true` (диалог принятия bypass) |
+| `.claude/settings.local.json` | `permissions.defaultMode` + `ask` | то же (страховка per-project) |
+| VSCode user settings.json | `claudeCode.initialPermissionMode` | `"bypassPermissions"` |
+| VSCode user settings.json | `claudeCode.allowDangerouslySkipPermissions` | `true` |
+
+`deny`-списки НЕ трогать — работают во всех режимах, это и есть guardrail. Что промптит даже
+в bypass (не лечится): MCP-инструменты с `requiresUserInteraction` (auth-флоу), circuit-breaker
+`rm -rf /`. Вступает в силу с НОВОЙ сессии (перезапуск окна VSCode).
+
+**Доп. проверки в таксономию doctor:** (11) `ask`-правила при заявленной политике
+«не спрашивать» — error; (12) `claudeCode.initialPermissionMode` в VSCode settings ≠
+эффективному `defaultMode` слоёв — warn (расширение переопределяет старт сессии);
+(13) `bypassPermissions` без `claudeCode.allowDangerouslySkipPermissions` в VSCode — warn.

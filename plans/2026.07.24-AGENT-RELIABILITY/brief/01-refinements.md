@@ -133,7 +133,10 @@ independent design audit.
   исполнения P0.1 и без package/docs/runtime/fleet/consumer/FOREMAN changes;
 - после redesign разрешён ровно один exceptional independent design audit
   (`0/1` до его старта); он не выполняется в redesign-сессии;
-- P0.1 разрешается только после literal GREEN exceptional audit;
+- literal GREEN exceptional audit необходим, но не разрешает P0.1 сам по
+  себе: audit-сессия останавливается, а P0.1 требует отдельного явного
+  Owner execution approval; option B разрешает redesign + audit, не
+  исполнение;
 - RED/ATTENTION exceptional audit не выдаёт автоматическую authority на
   дополнительный ремонт или ещё один design audit — следующий шаг снова
   Owner decision.

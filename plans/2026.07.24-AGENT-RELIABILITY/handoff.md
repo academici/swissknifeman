@@ -14,10 +14,10 @@ slot 0/1 before launch. This launch consumes the only slot.`
 | Effort | `xhigh` |
 | Capabilities | `—` |
 | Context | `cold-start — plan-step` |
-| Суть | Fresh independent audit of redesigned executable contract v1.6.0; no P0.1 or remediation in the audit session |
+| Суть | Fresh independent audit of redesigned executable contract v1.6.1; no P0.1 or remediation in the audit session |
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="xhigh"' -a never -s danger-full-access 'NEW SESSION exceptional independent design audit for 2026.07.24-AGENT-RELIABILITY after Owner override B. AUDIT-CAP: historical design audits 2/2 remain RED; this is the only exceptional slot 0/1 and consumes it. Read AGENTS.md, CLAUDE.md, task:task-plan-audit and canonical plan-protocol completely; run the full cold-start preflight and scoped plan-lint. Read brief/00-brief.md, brief/01-refinements.md Owner override B, findings/08-design-audit-red-attempt-2.md, plan.md v1.6.0, all phases, roadmap.md, handoff.md and journal.jsonl. Audit independently; do not execute P0.1, repair files, weaken validation or relabel historical RED. Specifically prove F1 is executable with immutable source-evidence bytes plus a P0.1-owned semantic contract/verifier/tests/proof classes, and prove F2 has 13 exact private bilingual canonical sources, normal-publication and consumer vendor/connect exclusion, one registry.py→publication.py generator, 26 thin root targets, version/tree lock and P1.4 exactly-once closure. Then perform the full brief/DoR/routing/Files/Required-Reads/generated-scope sweep. Literal GREEN unlocks P0.1. Any RED or ATTENTION exhausts exceptional 1/1 and returns only an Owner decision boundary; it grants no automatic redesign or further audit.'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="xhigh"' -a never -s danger-full-access 'NEW SESSION exceptional independent design audit for 2026.07.24-AGENT-RELIABILITY after Owner override B. AUDIT-CAP: historical design audits 2/2 remain RED; this is the only exceptional slot 0/1 and consumes it. Read AGENTS.md, CLAUDE.md, task:task-plan-audit and canonical plan-protocol completely; run the full cold-start preflight and scoped plan-lint. Read brief/00-brief.md, brief/01-refinements.md Owner override B, findings/08-design-audit-red-attempt-2.md, plan.md v1.6.1, all phases, roadmap.md, handoff.md and journal.jsonl. Audit independently; do not execute P0.1, repair files, weaken validation or relabel historical RED. Specifically prove F1 is executable with immutable source-evidence bytes plus a P0.1-owned semantic contract/verifier/tests/proof classes, and prove F2 has 13 exact private bilingual canonical sources, normal-publication and consumer vendor/connect exclusion, one registry.py→publication.py generator, 26 thin root targets, version/tree lock and P1.4 exactly-once closure. Then perform the full brief/DoR/routing/Files/Required-Reads/generated-scope sweep. Every verdict ends this audit session. Literal GREEN routes only to Dmitry Vostrikov for a separate explicit G-EXEC decision and does not authorize P0.1. Any RED or ATTENTION exhausts exceptional 1/1 and returns only an Owner decision boundary; it grants no automatic redesign or further audit.'
 ```
 
 **Done:** Owner option B is recorded in `brief/01-refinements.md` and D29.
@@ -51,8 +51,9 @@ F2 is structurally repaired in P1:
    exactly-once resolution together with the 12 core/task collision removals.
 
 **Remaining:** Run the single exceptional independent audit only. P0.1 and
-all implementation/package/docs/changelog/runtime changes remain blocked
-until literal GREEN. G0 still blocks behavior after P0.3; G1 still owns all
+all implementation/package/docs/changelog/runtime changes remain blocked.
+Even literal GREEN routes to separate explicit Owner gate `G-EXEC`; it does
+not start execution. G0 still blocks behavior after P0.3; G1 still owns all
 fleet/consumer/FOREMAN/tag/push/release authority.
 
 **Sources of truth:** `plans/2026.07.24-AGENT-RELIABILITY/brief/01-refinements.md` ·
@@ -73,6 +74,8 @@ prejudged by this redesign.
 - workarounds: none; no hash-green-as-semantic-proof, manual root copy, private
   bucket marketplace publication or conditional collision suppression is
   accepted;
-- deferred: all implementation until exceptional audit GREEN;
-- open_questions: none before audit. A non-GREEN verdict creates a new Owner
-  decision boundary because exceptional audit authority is exhausted.
+- deferred: all implementation until exceptional audit GREEN plus separate
+  explicit Owner `G-EXEC`;
+- open_questions: none before audit. GREEN creates the Owner execution
+  boundary; non-GREEN creates an Owner stop/new-authority boundary because
+  exceptional audit authority is exhausted.

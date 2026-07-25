@@ -6,7 +6,7 @@
 |:--|:--|
 | Plan ID | 2026.07.24-AGENT-RELIABILITY |
 | Title | Надёжное исполнение: checked task contract, единственный runtime source, bounded review и измеримая обратная связь |
-| Version | 1.6.0 |
+| Version | 1.6.1 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high; Owner-override Pass 4 — gpt-5.6-sol/xhigh |
@@ -60,10 +60,12 @@ exceptional independent design audit после redesign.
 
 ## 2. Execution Rules
 
-- P0 не начинается до literal GREEN единственного exceptional independent
-  `plan-audit design`. Исходный cap `2/2` исчерпан; Owner override B разрешает
-  после Pass 4 ровно один новый audit (`0/1`). RED/ATTENTION снова возвращает
-  Owner decision без автоматического repair или следующего audit.
+- P0 не начинается без обоих gates: literal GREEN единственного exceptional
+  independent `plan-audit design` и отдельного явного Owner execution
+  approval `G-EXEC`. Исходный cap `2/2` исчерпан; Owner override B разрешает
+  после Pass 4 ровно один новый audit (`0/1`), но не разрешает P0.1.
+  GREEN и RED/ATTENTION одинаково останавливают audit-сессию на Owner
+  decision; non-GREEN не даёт автоматического repair или следующего audit.
 - P0.1–P0.3 только фиксируют evidence/contracts. Любая behavior mutation,
   включая hooks, начинается не раньше owner-approved P0.3 bank freeze.
 - Latest explicit owner instruction действует только в своём scope; нижний
@@ -177,7 +179,7 @@ exceptional independent design audit после redesign.
 | D26 | 2026-07-24 | Self-contained planning becomes a compiled package capability, not plan-local prose. Canon defines tiers: simple low-risk/single-session plans may use committed brief+acceptance; multi-session, high-risk, handoff and audit plans require committed execution inputs or exact predecessor-produced paths. Host/chat/mAInd/`tmp`/foreign references are provenance/advisory only; evidence bundles are minimized, exclude secrets/chain-of-thought/raw bulk, carry deterministic manifest/verifier, and use one provider-neutral semantic carrier with provider renderers. P2.2 enforces this in Task Contract/plan-design/plan-lint; P2.5/P3.3 prove it; P4.3 documents it. | RAG:— (explicit Owner refinement; local D25 bundle is the first acceptance fixture, not the only implementation). |
 | D27 | 2026-07-24 | Every canonical/package publication change is version-first and generator-closed: one owner item bumps its exact package/plugin/publication-unit version, regenerates the full declared tree/locks/marketplaces, proves a read-only second check, and passes an exact diff-scope guard. `packages/skiller/configs/publication-versions.json` separates package API SemVer from finite unit versions so unaffected bucket manifests remain byte-identical. Reusing `(name,version)` for different tree bytes is forbidden. P1.1 freezes candidate versions; P1.2/P1.3/P2.2/P2.3 publish them; P4.3 is read-only and reopens the owner on drift. | RAG:— (repo-grounded: `skiller validate` includes `registry --check`; registry currently derives all bucket versions from one package version; generated Codex/task locks encode version/tree). |
 | D28 | 2026-07-24 | Resolve all 12 native Codex collisions by ownership, not suppression: installed generated `core` and `task` bundles are authoritative; delete the six exact root core and six exact root task auto-discovered adapter directories only after repository-marketplace/generated-bundle proof. Remaining root adapters are unique bootstrap-only carriers. P1.4 cold-installs from explicit fixture roots and requires each of the 12 semantic IDs exactly once. | RAG:— (repo-grounded: committed effective inventory and read-only `codex plugin list --json` confirm enabled `core@0.4.0` and `task@0.3.0`; root adapters duplicate their semantic IDs). |
-| D29 | 2026-07-25 | Owner chose capped option B: preserve the two historical RED verdicts and exhausted design cap `2/2`, authorize exactly one redesigned executable contract (Pass 4/4) and exactly one later fresh independent exceptional design audit (`0/1` before launch). P0.1 requires its literal GREEN; any non-GREEN returns to Owner without implicit repair/audit authority. | RAG:— (owner-grounded: `brief/01-refinements.md`, Owner override B). |
+| D29 | 2026-07-25 | Owner chose capped option B: preserve the two historical RED verdicts and exhausted design cap `2/2`, authorize exactly one redesigned executable contract (Pass 4/4) and exactly one later fresh independent exceptional design audit (`0/1` before launch). This authority does not include P0.1. Literal GREEN is necessary but routes only to separate Owner gate `G-EXEC`; any verdict ends the audit session, and non-GREEN grants no implicit repair/audit authority. | RAG:— (owner-grounded: `brief/01-refinements.md`, Owner override B). |
 | D30 | 2026-07-25 | F1 repair: immutable `artifacts/source-evidence/verify_source_bundle.py` owns only its actual byte/schema/pinned-constant checks and remains unchanged. P0.1 owns `root/contracts/source-evidence-verification-v1.md`, a machine contract, semantic verifier, focused tests and report outside the bundle. Recomputed/cross-checked facts are distinct from `pinned-not-recomputable`/`unknown`; excluded raw-session dedup and an uncommitted lifecycle classifier can never be reported as semantically verified. | RAG:— (repo-grounded: `findings/08-design-audit-red-attempt-2.md` F1 and `artifacts/source-evidence/verify_source_bundle.py:26-111`). |
 | D31 | 2026-07-25 | F2 repair, supersedes D27/D28 only for the 13 remaining root bootstrap identities: canonical bilingual sources are exact `packages/skiller/skills/repository-bootstrap/<name>/{SKILL.ru.md,SKILL.md}` records in a private/source-only bucket. `build_registry` indexes them, but publication catalog excludes the bucket from normal Claude/Codex bucket, core and marketplace units; consumer vendor/connect selection also rejects these source-only records. `registry.py` invokes the sole `publication.py` root-bootstrap renderer from `configs/repository-bootstrap-skills.json`; it emits only thin `.claude/skills/<name>/SKILL.md` and `.agents/skills/<name>/SKILL.md` projections plus one version/tree lock. `skillset.py` may enforce consumer exclusion but is never this self-host producer. | RAG:— (repo-grounded: `findings/08-design-audit-red-attempt-2.md` F2; current `registry.py:18-24,398-430`; `publication.py:131-177,293-367`; `skillset.py:60-101,223-287,767-853`). |
 
@@ -193,6 +195,7 @@ exceptional independent design audit после redesign.
 | 2026-07-24 | Owner refinement / plan-design | D26 promotes self-contained planning into the canonical package contract without adding a phase/item: P0.2/P0.3 freeze fields/cases; P2.1/P2.2 define and enforce tiers in Task Contract, plan-design and plan-lint; P2.5/P3.3 run conformance; P4.3 publishes docs. Version 1.4.0 remains 21 items. |
 | 2026-07-24 | plan-design/Codex gpt-5.6-sol/high | Audit attempt 2 stopped pre-verdict on SSOT gaps. Reopened Pass 3 added D27 version/generated-tree closure and D28 exact 12-collision removal plus P1.4 cold discovery. Version 1.5.0; 21 items; P0 unexecuted. |
 | 2026-07-25 | Owner override B / plan-design Codex gpt-5.6-sol/xhigh | Design pass 4/4: preserved audit RED 2/2, redesigned F1 as immutable-integrity + item-owned semantic verification and F2 as private 13-source + one generated root-bootstrap unit. Version 1.6.0; 21 items; P0 unexecuted; next is the sole exceptional audit `0/1`. |
+| 2026-07-25 | root review / plan-design Codex gpt-5.6-sol/xhigh | Authority correction: option B grants redesign + one audit only. Version 1.6.1 adds `G-EXEC`; even literal GREEN stops at Owner and cannot auto-launch P0.1. |
 
 ## 7. Contracts
 
@@ -258,9 +261,13 @@ forbidden; a grader correction versions the bank and reruns both sides.
 
 ## 10. Owner Approval Boundaries
 
-- **A0 before P0.1 (already authorized, not a new Owner stop):** run exactly
-  one fresh independent exceptional design audit under D29. Literal GREEN
-  unlocks P0.1; non-GREEN exhausts `1/1` and returns to Owner.
+- **A0 exceptional audit (already authorized):** run exactly one fresh
+  independent exceptional design audit under D29. Every verdict ends that
+  audit session. Non-GREEN exhausts `1/1` and returns to Owner without
+  repair/audit authority; GREEN proceeds only to `G-EXEC`.
+- **G-EXEC after A0 GREEN:** Dmitry Vostrikov must explicitly authorize
+  execution before P0.1. Until that separate decision, all 21 items remain
+  blocked; option B is not execution approval.
 - **G0 after P0.3:** approve exact Acceptance v1, bank/grader hashes and floors.
   P0.4/P1/P2/P3 cannot begin before this decision.
 - **G1 at P4.3:** decide separately whether to authorize any fleet/consumer

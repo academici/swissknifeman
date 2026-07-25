@@ -1,6 +1,6 @@
 # Roadmap исполнения — 2026.07.24-AGENT-RELIABILITY
 
-**Обновлён:** 2026-07-25 · **Соответствует plan.md:** v1.6.0
+**Обновлён:** 2026-07-25 · **Соответствует plan.md:** v1.6.1
 
 Этот roadmap — cold-recovery console. При живом root supervisor владелец не
 перезапускает команды: root после каждого green close/audit автоматически
@@ -18,9 +18,11 @@ native`) и live `codex doctor --json` (`multi_agent` enabled). Любое
 **Pre-exec boundary:** исходный design cap `2/2` исчерпан и оба verdict
 остаются RED. Owner override B разрешил один redesigned contract (Pass 4/4)
 и ровно один exceptional fresh independent design audit (`0/1` до запуска).
-Ни один item ниже, включая P0.1, не исполняется до literal GREEN этого audit.
-Любой non-GREEN исчерпывает exceptional slot и возвращает Owner decision без
-автоматического repair/audit.
+Ни один item ниже, включая P0.1, не исполняется по authority option B.
+Literal GREEN этого audit — необходимый, но недостаточный gate: audit-сессия
+останавливается, и P0.1 требует отдельного explicit Owner execution approval
+`G-EXEC`. Любой non-GREEN исчерпывает exceptional slot и возвращает Owner
+decision без автоматического repair/audit.
 
 ## Provider-neutral carrier и deterministic rendering
 
@@ -51,7 +53,7 @@ profiles, `tmp/`, foreign repositories and mAInd are never evidence inputs.
 
 | Item | Batch | Запуск | Model/Thinking | Гейт владельца | Примечание |
 |:--|:--|:--|:--|:--|:--|
-| P0.1 | solo | task:plan-exec | implementation/medium → gpt-5.6-terra/medium | A0 literal GREEN exceptional design audit | Нельзя объединить: immutable integrity + item-owned semantic proof-class report должны стать отдельным committed anchor до contract design |
+| P0.1 | solo | task:plan-exec | implementation/medium → gpt-5.6-terra/medium | A0 literal GREEN + отдельный explicit Owner `G-EXEC` | Нельзя объединить: immutable integrity + item-owned semantic proof-class report должны стать отдельным committed anchor до contract design |
 | P0.2 | solo | task:plan-run | frontier/high → gpt-5.6-sol/high | — | Нельзя объединить: frozen Task Contract, Review=full |
 | P0.3 | solo | task:plan-run | frontier/high → gpt-5.6-sol/high | G0 — approve bank/grader/baseline hashes and floors | Нельзя объединить: frozen Acceptance + реальный Owner decision в конце |
 | P0.4 | solo | task:plan-run | implementation/high → gpt-5.6-terra/high | G0 precondition from P0.3, not a new stop | Нельзя объединить: первая live behavior mutation, hook rollback |
@@ -93,7 +95,7 @@ profiles, `tmp/`, foreign repositories and mAInd are never evidence inputs.
 | Context | `NEW SESSION` |
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="medium"' -a never -s danger-full-access 'NEW SESSION recovery carrier for 2026.07.24-AGENT-RELIABILITY P0.1. Read AGENTS.md, CLAUDE.md and task:task-plan-exec completely; run the canonical cold-start preflight and plan-lint. Verify the sole exceptional design audit under D29 is committed with literal GREEN; otherwise do no writes. Read plan.md, roadmap.md, handoff.md, findings/08-design-audit-red-attempt-2.md, phases/P0.md and P0.1 Required Reads. Root delegates only P0.1 to a fresh grounded subagent. Keep artifacts/source-evidence byte-identical; run all four immutable verifier modes, then implement the P0.1-owned source-evidence semantic contract/verifier/tests/report. Recompute only facts derivable from committed inputs and label excluded raw-session dedup/classifier claims pinned-not-recomputable or unknown, never verified. Never scan tmp, profiles, mAInd or foreign repositories; do not mutate packages/hooks/consumers/FOREMAN. Close only after bundle diff is empty and tests are green, then continue according to roadmap.'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="medium"' -a never -s danger-full-access 'NEW SESSION recovery carrier for 2026.07.24-AGENT-RELIABILITY P0.1. Read AGENTS.md, CLAUDE.md and task:task-plan-exec completely; run the canonical cold-start preflight and plan-lint. Verify both gates are committed: the sole exceptional design audit under D29 has literal GREEN and Dmitry Vostrikov has separately granted explicit G-EXEC authority to execute P0.1 after that verdict; otherwise do no writes and return the Owner execution boundary. Read plan.md, roadmap.md, handoff.md, the exceptional audit finding, phases/P0.md and P0.1 Required Reads. Root delegates only P0.1 to a fresh grounded subagent. Keep artifacts/source-evidence byte-identical; run all four immutable verifier modes, then implement the P0.1-owned source-evidence semantic contract/verifier/tests/report. Recompute only facts derivable from committed inputs and label excluded raw-session dedup/classifier claims pinned-not-recomputable or unknown, never verified. Never scan tmp, profiles, mAInd or foreign repositories; do not mutate packages/hooks/consumers/FOREMAN. Close only after bundle diff is empty and tests are green, then continue according to roadmap.'
 ```
 
 ### P0.2 — Task Contract v1
@@ -520,6 +522,7 @@ codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'mode
 
 | Gate | Где | Что утверждает | Блокирует |
 |:--|:--|:--|:--|
-| A0 | до P0.1 | единственный exceptional independent design audit under D29 = literal GREEN | все 21 items |
+| A0 | до G-EXEC | единственный exceptional independent design audit under D29; любой verdict завершает audit session | repair/audit beyond exceptional 1/1 |
+| G-EXEC | после A0 GREEN, до P0.1 | explicit Owner execution approval; option B его не подразумевает | все 21 items |
 | G0 | после P0.3 | exact bank/grader/baseline hashes and metric floors | P0.4–P4 |
 | G1 | после P4.3 packet | exact external targets/actions: fleet, consumers, FOREMAN, tag, push, release — либо hold | external work outside this plan |

@@ -1,6 +1,6 @@
 # Roadmap исполнения — 2026.07.24-AGENT-RELIABILITY
 
-**Обновлён:** 2026-07-25 · **Соответствует plan.md:** v1.6.1
+**Обновлён:** 2026-07-25 · **Соответствует plan.md:** v1.7.0 (acting provider — Claude, D32/D33)
 
 Этот roadmap — cold-recovery console. При живом root supervisor владелец не
 перезапускает команды: root после каждого green close/audit автоматически
@@ -10,19 +10,18 @@ blocks ниже нужны для нового процесса/session recovery
 `NEW SESSION`. Поэтому таблицы разделяют `Plan context` (canonical enum
 `same-session — item` для root supervisory cycle) и native `Context`
 (`NEW SESSION` при recovery). `command.subagents` обязателен для каждого
-carrier по D22; cold-start preflight проверяет
-`packages/task/configs/command-routing.json` (`codex.command.subagents =
-native`) и live `codex doctor --json` (`multi_agent` enabled). Любое
-несовпадение fail-closed до mutation без solo fallback.
+carrier (D22/D33); acting provider — Claude Code: preflight проверяет
+`packages/task/configs/command-routing.json` (`claude.command.subagents =
+native`) и доступность Agent tool в сессии. Любое несовпадение
+fail-closed до mutation без solo fallback.
 
-**Pre-exec boundary:** исходный design cap `2/2` исчерпан и оба verdict
-остаются RED. Owner override B разрешил один redesigned contract (Pass 4/4)
-и ровно один exceptional fresh independent design audit (`0/1` до запуска).
-Ни один item ниже, включая P0.1, не исполняется по authority option B.
-Literal GREEN этого audit — необходимый, но недостаточный gate: audit-сессия
-останавливается, и P0.1 требует отдельного explicit Owner execution approval
-`G-EXEC`. Любой non-GREEN исчерпывает exceptional slot и возвращает Owner
-decision без автоматического repair/audit.
+**Pre-exec boundary:** historical cap `2/2` и exceptional slot B (attempt 3)
+исчерпаны, все три verdict — RED. Owner authority C (D32) закрыла repair
+F1–F3 и разрешает ровно один новый independent design audit A1 (`0/1`,
+Claude frontier/xhigh: `/task:plan-audit 2026.07.24-AGENT-RELIABILITY design`).
+Ни один item ниже, включая P0.1, не исполняется до literal GREEN A1 И
+отдельного explicit Owner execution approval `G-EXEC`. Любой non-GREEN
+возвращает Owner decision без автоматического repair/audit.
 
 ## Provider-neutral carrier и deterministic rendering
 
@@ -53,29 +52,35 @@ profiles, `tmp/`, foreign repositories and mAInd are never evidence inputs.
 
 | Item | Batch | Запуск | Model/Thinking | Гейт владельца | Примечание |
 |:--|:--|:--|:--|:--|:--|
-| P0.1 | solo | task:plan-exec | implementation/medium → gpt-5.6-terra/medium | A0 literal GREEN + отдельный explicit Owner `G-EXEC` | Нельзя объединить: immutable integrity + item-owned semantic proof-class report должны стать отдельным committed anchor до contract design |
-| P0.2 | solo | task:plan-run | frontier/high → gpt-5.6-sol/high | — | Нельзя объединить: frozen Task Contract, Review=full |
-| P0.3 | solo | task:plan-run | frontier/high → gpt-5.6-sol/high | G0 — approve bank/grader/baseline hashes and floors | Нельзя объединить: frozen Acceptance + реальный Owner decision в конце |
-| P0.4 | solo | task:plan-run | implementation/high → gpt-5.6-terra/high | G0 precondition from P0.3, not a new stop | Нельзя объединить: первая live behavior mutation, hook rollback |
-| P1.1 | solo | task:plan-run | frontier/high → gpt-5.6-sol/high | — | Нельзя объединить: identity/ownership freeze, Review=full |
-| P1.2 | solo | task:plan-run | implementation/high → gpt-5.6-terra/high | — | Нельзя объединить: 13 bilingual private sources + 26 root projections + core publication form one versioned generator transaction, Review=full |
-| P1.3 | solo | task:plan-run | implementation/high → gpt-5.6-terra/high | — | Нельзя объединить: task/harness effective catalog changes after P1.2 |
-| P1.4 | solo | task:plan-exec | implementation/medium → gpt-5.6-terra/medium | — | Нельзя объединить: terminal cold conformance independently proves 13 private source/projection closures and 12 installed-bundle dedups |
-| P2.1 | solo | task:plan-run | frontier/high → gpt-5.6-sol/high | — | Нельзя объединить: state/authority contract freeze, Review=full |
-| P2.2 | solo | task:plan-run | implementation/high → gpt-5.6-terra/high | — | Нельзя объединить: central compiler/root dispatch seam, Review=full |
-| P2.3 | solo | task:plan-run | implementation/high → gpt-5.6-terra/high | — | Нельзя объединить: audit/reopen/cap enforcement must be isolated from compiler |
-| P2.4 | solo | task:plan-run | implementation/high → gpt-5.6-terra/high | — | Нельзя объединить: actual route evidence has separate fail-closed boundary |
-| P2.5 | solo | task:plan-exec | implementation/medium → gpt-5.6-terra/medium | — | Нельзя объединить: terminal immutable-bank proof after all P2 code |
-| P3.1 | solo | task:plan-run | implementation/high → gpt-5.6-terra/high | — | Нельзя объединить: cross-provider trace schema/version, Review=full |
-| P3.2 | solo | task:plan-run | implementation/high → gpt-5.6-terra/high | — | Нельзя объединить: metric arithmetic consumes frozen trace |
-| P3.3 | solo | task:plan-run | implementation/high → gpt-5.6-terra/high | — | Нельзя объединить: behavioral release gate consumes trace+metrics |
-| P3.4 | solo | task:plan-run | implementation/high → gpt-5.6-terra/high | — | Нельзя объединить: disposable worktree, native trials and rollback |
-| P3.5 | solo | task:plan-run | frontier/xhigh → gpt-5.6-sol/xhigh | — | Нельзя объединить: fresh independent terminal audit |
-| P4.1 | solo | task:plan-run | frontier/high → gpt-5.6-sol/high | — | Нельзя объединить: open accept/reject/unknown architecture verdict |
-| P4.2 | solo | task:plan-exec | implementation/medium → gpt-5.6-terra/medium | — | Нельзя объединить: lower-route one-package doctor after P4.1 |
-| P4.3 | solo | task:plan-run | frontier/high → gpt-5.6-sol/high | G1 — fleet/consumer/FOREMAN/tag/push/release go or hold | Нельзя объединить: final synthesis and external authority boundary |
+| P0.1 | solo | task:plan-exec | implementation/medium → Claude sonnet/medium | A0 literal GREEN + отдельный explicit Owner `G-EXEC` | Нельзя объединить: immutable integrity + item-owned semantic proof-class report должны стать отдельным committed anchor до contract design |
+| P0.2 | solo | task:plan-run | frontier/high → Claude opus/high | — | Нельзя объединить: frozen Task Contract, Review=full |
+| P0.3 | solo | task:plan-run | frontier/high → Claude opus/high | G0 — approve bank/grader/baseline hashes and floors | Нельзя объединить: frozen Acceptance + реальный Owner decision в конце |
+| P0.4 | solo | task:plan-run | implementation/high → Claude sonnet/high | G0 precondition from P0.3, not a new stop | Нельзя объединить: первая live behavior mutation, hook rollback |
+| P1.1 | solo | task:plan-run | frontier/high → Claude opus/high | — | Нельзя объединить: identity/ownership freeze, Review=full |
+| P1.2 | solo | task:plan-run | implementation/high → Claude sonnet/high | — | Нельзя объединить: 13 bilingual private sources + 26 root projections + core publication form one versioned generator transaction, Review=full |
+| P1.3 | solo | task:plan-run | implementation/high → Claude sonnet/high | — | Нельзя объединить: task/harness effective catalog changes after P1.2 |
+| P1.4 | solo | task:plan-exec | implementation/medium → Claude sonnet/medium | — | Нельзя объединить: terminal cold conformance independently proves 13 private source/projection closures and 12 installed-bundle dedups |
+| P2.1 | solo | task:plan-run | frontier/high → Claude opus/high | — | Нельзя объединить: state/authority contract freeze, Review=full |
+| P2.2 | solo | task:plan-run | implementation/high → Claude sonnet/high | — | Нельзя объединить: central compiler/root dispatch seam, Review=full |
+| P2.3 | solo | task:plan-run | implementation/high → Claude sonnet/high | — | Нельзя объединить: audit/reopen/cap enforcement must be isolated from compiler |
+| P2.4 | solo | task:plan-run | implementation/high → Claude sonnet/high | — | Нельзя объединить: actual route evidence has separate fail-closed boundary |
+| P2.5 | solo | task:plan-exec | implementation/medium → Claude sonnet/medium | — | Нельзя объединить: terminal immutable-bank proof after all P2 code |
+| P3.1 | solo | task:plan-run | implementation/high → Claude sonnet/high | — | Нельзя объединить: cross-provider trace schema/version, Review=full |
+| P3.2 | solo | task:plan-run | implementation/high → Claude sonnet/high | — | Нельзя объединить: metric arithmetic consumes frozen trace |
+| P3.3 | solo | task:plan-run | implementation/high → Claude sonnet/high | — | Нельзя объединить: behavioral release gate consumes trace+metrics |
+| P3.4 | solo | task:plan-run | implementation/high → Claude sonnet/high | — | Нельзя объединить: disposable worktree, native trials and rollback |
+| P3.5 | solo | task:plan-run | frontier/xhigh → Claude opus/xhigh | — | Нельзя объединить: fresh independent terminal audit |
+| P4.1 | solo | task:plan-run | frontier/high → Claude opus/high | — | Нельзя объединить: open accept/reject/unknown architecture verdict |
+| P4.2 | solo | task:plan-exec | implementation/medium → Claude sonnet/medium | — | Нельзя объединить: lower-route one-package doctor after P4.1 |
+| P4.3 | solo | task:plan-run | frontier/high → Claude opus/high | G1 — fleet/consumer/FOREMAN/tag/push/release go or hold | Нельзя объединить: final synthesis and external authority boundary |
 
-## Готовые native Codex NEW SESSION launch-blocks
+## Готовые native Codex NEW SESSION launch-blocks (historical projections)
+
+> **D33:** acting provider — Claude Code. Блоки ниже — исторические
+> Codex-projections авторинг-провайдера, их НЕ копировать. Claude-запуск
+> рендерится из semantic carrier по таблице выше: `/model` (opus|sonnet) +
+> `/effort` по Routing §3 → `/task:plan-exec <ID> <item>` или
+> `/task:plan-run <ID> <item>` в НОВОЙ сессии из корня репо.
 
 ### P0.1 — verify immutable integrity + semantic closure
 

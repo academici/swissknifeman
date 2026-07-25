@@ -6,11 +6,11 @@
 |:--|:--|
 | Plan ID | 2026.07.24-AGENT-RELIABILITY |
 | Title | Надёжное исполнение: checked task contract, единственный runtime source, bounded review и измеримая обратная связь |
-| Version | 1.5.0 |
+| Version | 1.6.0 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
-| Authoring Model | Codex gpt-5.6-sol/high |
-| Last Updated | 2026-07-24 |
+| Authoring Model | Codex gpt-5.6-sol/high; Owner-override Pass 4 — gpt-5.6-sol/xhigh |
+| Last Updated | 2026-07-25 |
 | Repository | swissknifeman |
 | Related Packages | task, skiller, harness, analyst, maind |
 | Execution Mode | reliability-first · evidence-before-mutation · phase-bounded |
@@ -18,7 +18,7 @@
 | Approval Owner | Dmitry Vostrikov |
 | Home | repo:/home/vostrikov/projects/packages/swissknifeman |
 | Paused By | — |
-| Design Passes | 3/3 — Pass 1 создал evidence/synthesis и получил audit RED; Pass 2 пересобрал executable contract; fresh Pass 3 выполнил полный DoR/traceability/routing/CLI sweep, материализовал self-contained evidence bundle и после pre-verdict abort audit attempt 2 закрыл обнаруженные version/generated-tree и 12-collision SSOT gaps; следующий шаг — fresh audit-design attempt 2 retry |
+| Design Passes | 4/4 — Passes 1–3 завершили исходный design budget; design audit 2/2 вернул RED по F1/F2. Owner override B от 2026-07-25 разрешил ровно один Pass 4: immutable-bundle semantic verifier contract и private canonical/generator closure для 13 bootstrap identities. Следующий шаг — единственный exceptional fresh independent design audit (`0/1` использован до старта) |
 
 ## 1. Context
 
@@ -50,9 +50,20 @@ artifact directory из plan-protocol, не системный `/root`. План
 contracts/commands одинаково видимы Claude и Codex; provider-specific
 adapters и native launch blocks являются projections, а не скрытым SSOT.
 
+Финальный исходный design audit attempt 2/2 оставлен literal RED:
+`findings/08-design-audit-red-attempt-2.md`. Владелец выбрал capped option B.
+Этот Pass 4 не исполняет P0.1 и не меняет packages/runtime; он устраняет F1
+разделением immutable integrity gate и item-owned semantic verification, а F2
+— private canonical sources плюс единственный deterministic root-bootstrap
+generator. Исторический cap 2/2 не обнулён: отдельно разрешён только один
+exceptional independent design audit после redesign.
+
 ## 2. Execution Rules
 
-- P0 не начинается до fresh Design Pass 3 и GREEN `plan-audit design`.
+- P0 не начинается до literal GREEN единственного exceptional independent
+  `plan-audit design`. Исходный cap `2/2` исчерпан; Owner override B разрешает
+  после Pass 4 ровно один новый audit (`0/1`). RED/ATTENTION снова возвращает
+  Owner decision без автоматического repair или следующего audit.
 - P0.1–P0.3 только фиксируют evidence/contracts. Любая behavior mutation,
   включая hooks, начинается не раньше owner-approved P0.3 bank freeze.
 - Latest explicit owner instruction действует только в своём scope; нижний
@@ -68,10 +79,13 @@ adapters и native launch blocks являются projections, а не скры�
   создаёт incident, а не четвёртый fix loop.
 - `azguard`, `insiders`, `dterema`, FOREMAN и fleet — read-only evidence.
   Writes разрешены только в self-host repo и disposable P3.4 worktree.
-- `.agents/skills` содержит только unique bootstrap adapters для identities,
-  не обслуживаемых authoritative installed bundle; 12 colliding root
-  core/task adapters удаляются в P1.2/P1.3. Canonical skills — только
-  `packages/skiller/skills`, task commands — только `packages/task/commands`.
+- `.agents/skills` и `.claude/skills` содержат только generated thin
+  repository-bootstrap projections для identities, не обслуживаемых
+  authoritative installed bundle; их 13 canonical sources живут только в
+  private/source-only `packages/skiller/skills/repository-bootstrap/`.
+  Normal bucket/core/marketplace publication этих 13 запрещена. 12 colliding
+  root core/task adapters удаляются в P1.2/P1.3; task commands остаются только
+  в `packages/task/commands`.
 - Generated projection обязана иметь owner, provenance/hash, complete
   dependency closure и одну effective semantic identity.
 - Canonical execution inputs живут в repo paths и semantic `task:*`
@@ -163,6 +177,9 @@ adapters и native launch blocks являются projections, а не скры�
 | D26 | 2026-07-24 | Self-contained planning becomes a compiled package capability, not plan-local prose. Canon defines tiers: simple low-risk/single-session plans may use committed brief+acceptance; multi-session, high-risk, handoff and audit plans require committed execution inputs or exact predecessor-produced paths. Host/chat/mAInd/`tmp`/foreign references are provenance/advisory only; evidence bundles are minimized, exclude secrets/chain-of-thought/raw bulk, carry deterministic manifest/verifier, and use one provider-neutral semantic carrier with provider renderers. P2.2 enforces this in Task Contract/plan-design/plan-lint; P2.5/P3.3 prove it; P4.3 documents it. | RAG:— (explicit Owner refinement; local D25 bundle is the first acceptance fixture, not the only implementation). |
 | D27 | 2026-07-24 | Every canonical/package publication change is version-first and generator-closed: one owner item bumps its exact package/plugin/publication-unit version, regenerates the full declared tree/locks/marketplaces, proves a read-only second check, and passes an exact diff-scope guard. `packages/skiller/configs/publication-versions.json` separates package API SemVer from finite unit versions so unaffected bucket manifests remain byte-identical. Reusing `(name,version)` for different tree bytes is forbidden. P1.1 freezes candidate versions; P1.2/P1.3/P2.2/P2.3 publish them; P4.3 is read-only and reopens the owner on drift. | RAG:— (repo-grounded: `skiller validate` includes `registry --check`; registry currently derives all bucket versions from one package version; generated Codex/task locks encode version/tree). |
 | D28 | 2026-07-24 | Resolve all 12 native Codex collisions by ownership, not suppression: installed generated `core` and `task` bundles are authoritative; delete the six exact root core and six exact root task auto-discovered adapter directories only after repository-marketplace/generated-bundle proof. Remaining root adapters are unique bootstrap-only carriers. P1.4 cold-installs from explicit fixture roots and requires each of the 12 semantic IDs exactly once. | RAG:— (repo-grounded: committed effective inventory and read-only `codex plugin list --json` confirm enabled `core@0.4.0` and `task@0.3.0`; root adapters duplicate their semantic IDs). |
+| D29 | 2026-07-25 | Owner chose capped option B: preserve the two historical RED verdicts and exhausted design cap `2/2`, authorize exactly one redesigned executable contract (Pass 4/4) and exactly one later fresh independent exceptional design audit (`0/1` before launch). P0.1 requires its literal GREEN; any non-GREEN returns to Owner without implicit repair/audit authority. | RAG:— (owner-grounded: `brief/01-refinements.md`, Owner override B). |
+| D30 | 2026-07-25 | F1 repair: immutable `artifacts/source-evidence/verify_source_bundle.py` owns only its actual byte/schema/pinned-constant checks and remains unchanged. P0.1 owns `root/contracts/source-evidence-verification-v1.md`, a machine contract, semantic verifier, focused tests and report outside the bundle. Recomputed/cross-checked facts are distinct from `pinned-not-recomputable`/`unknown`; excluded raw-session dedup and an uncommitted lifecycle classifier can never be reported as semantically verified. | RAG:— (repo-grounded: `findings/08-design-audit-red-attempt-2.md` F1 and `artifacts/source-evidence/verify_source_bundle.py:26-111`). |
+| D31 | 2026-07-25 | F2 repair, supersedes D27/D28 only for the 13 remaining root bootstrap identities: canonical bilingual sources are exact `packages/skiller/skills/repository-bootstrap/<name>/{SKILL.ru.md,SKILL.md}` records in a private/source-only bucket. `build_registry` indexes them, but publication catalog excludes the bucket from normal Claude/Codex bucket, core and marketplace units; consumer vendor/connect selection also rejects these source-only records. `registry.py` invokes the sole `publication.py` root-bootstrap renderer from `configs/repository-bootstrap-skills.json`; it emits only thin `.claude/skills/<name>/SKILL.md` and `.agents/skills/<name>/SKILL.md` projections plus one version/tree lock. `skillset.py` may enforce consumer exclusion but is never this self-host producer. | RAG:— (repo-grounded: `findings/08-design-audit-red-attempt-2.md` F2; current `registry.py:18-24,398-430`; `publication.py:131-177,293-367`; `skillset.py:60-101,223-287,767-853`). |
 
 ## 6. Update Log
 
@@ -175,6 +192,7 @@ adapters и native launch blocks являются projections, а не скры�
 | 2026-07-24 | plan-design/Codex gpt-5.6-sol/high | Design pass 3/3 final reconciliation: downstream items, findings, roadmap and handoff consume only the source bundle; version 1.4.0 is ready for separate fresh audit-design. P0 remains unexecuted. |
 | 2026-07-24 | Owner refinement / plan-design | D26 promotes self-contained planning into the canonical package contract without adding a phase/item: P0.2/P0.3 freeze fields/cases; P2.1/P2.2 define and enforce tiers in Task Contract, plan-design and plan-lint; P2.5/P3.3 run conformance; P4.3 publishes docs. Version 1.4.0 remains 21 items. |
 | 2026-07-24 | plan-design/Codex gpt-5.6-sol/high | Audit attempt 2 stopped pre-verdict on SSOT gaps. Reopened Pass 3 added D27 version/generated-tree closure and D28 exact 12-collision removal plus P1.4 cold discovery. Version 1.5.0; 21 items; P0 unexecuted. |
+| 2026-07-25 | Owner override B / plan-design Codex gpt-5.6-sol/xhigh | Design pass 4/4: preserved audit RED 2/2, redesigned F1 as immutable-integrity + item-owned semantic verification and F2 as private 13-source + one generated root-bootstrap unit. Version 1.6.0; 21 items; P0 unexecuted; next is the sole exceptional audit `0/1`. |
 
 ## 7. Contracts
 
@@ -182,6 +200,7 @@ adapters и native launch blocks являются projections, а не скры�
 
 | Контракт | Версия | Статус | Потребители | Уведомлены |
 |:--|:--|:--|:--|:--|
+| `root/contracts/source-evidence-verification-v1.md` | v1 | planned P0.1 | P0.2, P0.3, P3.2, P3.5 | task, skiller, analyst |
 | `root/contracts/task-contract-v1.md` | v1 | planned P0.2 | P0.3, P2, P3 | task, skiller, harness |
 | `root/contracts/reliability-acceptance-v1.md` | v1 | Owner-freeze P0.3 | P0.4–P3 | skiller, task, analyst, harness |
 | `root/contracts/semantic-identity-ownership-v1.md` | v1 | planned P1.1 | P1.2–P1.4 | skiller, task, harness |
@@ -224,6 +243,7 @@ forbidden; a grader correction versions the bank and reruns both sides.
 | RCA again hardens a correlation into cause | P0.1 per-case falsification table; `unknown` allowed |
 | Plan adds another prose control | P2 one compiler/state seam + conformance tests |
 | Source evidence disappears/drifts | committed `artifacts/source-evidence/` with per-file hashes and deterministic verifier; external origins are optional |
+| Immutable integrity verifier again accepted as semantic proof | D30 two-layer contract: all four immutable modes run, then P0.1-owned semantic tests/report classify every claim by proof class; bundle diff must remain empty |
 | Claude/new clone cannot see Codex-host raw evidence | no execution dependency remains: full audit/journals and sanitized selected incidents are committed; raw rollouts are intentionally excluded |
 | Future plans repeat host-bound evidence | D26 compiled portability tiers + plan-design/plan-lint gates + P2.5/P3.3 conformance; not a prose-only reminder |
 | `root/` mistaken for OS `/root` or removed after archived-plan migration | D24 + plan-protocol §3: it is a repo-relative plan artifact directory; `454ea86d` is not a canon change |
@@ -231,12 +251,16 @@ forbidden; a grader correction versions the bank and reruns both sides.
 | Runtime dedup breaks Claude | provider goldens + effective installed-runtime fixtures |
 | Registry package bump rewrites unrelated bucket manifests | D27 per-publication-unit version map + exact diff-scope guard + no-op second check |
 | Collision gate merely suppresses duplicate adapters | D28 exact 12-directory deletion + P1.4 actual cold install/discovery exactly-once proof |
+| Private 13-skill canon leaks into a normal bucket/plugin/consumer vendor channel or root copies drift | D31 source-only publication and vendor/connect exclusion, bilingual source hashes, one `registry.py`→`publication.py` generator, 26 thin projections + version/tree lock and P1.4 exactly-once/provenance checks |
 | Canary touches user work | detached disposable worktree; clean-state cleanup guard |
 | Self-host GREEN is called fleet GREEN | P3.5 scope literal; P4.3 explicit Owner gate |
 | P4 dynamic hypothesis causes wildcard scope | accepted structural refactor leaves this plan as a new proposal |
 
 ## 10. Owner Approval Boundaries
 
+- **A0 before P0.1 (already authorized, not a new Owner stop):** run exactly
+  one fresh independent exceptional design audit under D29. Literal GREEN
+  unlocks P0.1; non-GREEN exhausts `1/1` and returns to Owner.
 - **G0 after P0.3:** approve exact Acceptance v1, bank/grader hashes and floors.
   P0.4/P1/P2/P3 cannot begin before this decision.
 - **G1 at P4.3:** decide separately whether to authorize any fleet/consumer

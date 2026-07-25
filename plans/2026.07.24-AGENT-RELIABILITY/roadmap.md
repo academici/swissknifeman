@@ -1,6 +1,6 @@
 # Roadmap исполнения — 2026.07.24-AGENT-RELIABILITY
 
-**Обновлён:** 2026-07-24 · **Соответствует plan.md:** v1.5.0
+**Обновлён:** 2026-07-25 · **Соответствует plan.md:** v1.6.0
 
 Этот roadmap — cold-recovery console. При живом root supervisor владелец не
 перезапускает команды: root после каждого green close/audit автоматически
@@ -14,6 +14,13 @@ carrier по D22; cold-start preflight проверяет
 `packages/task/configs/command-routing.json` (`codex.command.subagents =
 native`) и live `codex doctor --json` (`multi_agent` enabled). Любое
 несовпадение fail-closed до mutation без solo fallback.
+
+**Pre-exec boundary:** исходный design cap `2/2` исчерпан и оба verdict
+остаются RED. Owner override B разрешил один redesigned contract (Pass 4/4)
+и ровно один exceptional fresh independent design audit (`0/1` до запуска).
+Ни один item ниже, включая P0.1, не исполняется до literal GREEN этого audit.
+Любой non-GREEN исчерпывает exceptional slot и возвращает Owner decision без
+автоматического repair/audit.
 
 ## Provider-neutral carrier и deterministic rendering
 
@@ -44,14 +51,14 @@ profiles, `tmp/`, foreign repositories and mAInd are never evidence inputs.
 
 | Item | Batch | Запуск | Model/Thinking | Гейт владельца | Примечание |
 |:--|:--|:--|:--|:--|:--|
-| P0.1 | solo | task:plan-exec | implementation/medium → gpt-5.6-terra/medium | — | Нельзя объединить: baseline должен быть отдельным committed anchor до contract design |
+| P0.1 | solo | task:plan-exec | implementation/medium → gpt-5.6-terra/medium | A0 literal GREEN exceptional design audit | Нельзя объединить: immutable integrity + item-owned semantic proof-class report должны стать отдельным committed anchor до contract design |
 | P0.2 | solo | task:plan-run | frontier/high → gpt-5.6-sol/high | — | Нельзя объединить: frozen Task Contract, Review=full |
 | P0.3 | solo | task:plan-run | frontier/high → gpt-5.6-sol/high | G0 — approve bank/grader/baseline hashes and floors | Нельзя объединить: frozen Acceptance + реальный Owner decision в конце |
 | P0.4 | solo | task:plan-run | implementation/high → gpt-5.6-terra/high | G0 precondition from P0.3, not a new stop | Нельзя объединить: первая live behavior mutation, hook rollback |
 | P1.1 | solo | task:plan-run | frontier/high → gpt-5.6-sol/high | — | Нельзя объединить: identity/ownership freeze, Review=full |
-| P1.2 | solo | task:plan-run | implementation/high → gpt-5.6-terra/high | — | Нельзя объединить: skiller/root/core publication correctness, Review=full |
+| P1.2 | solo | task:plan-run | implementation/high → gpt-5.6-terra/high | — | Нельзя объединить: 13 bilingual private sources + 26 root projections + core publication form one versioned generator transaction, Review=full |
 | P1.3 | solo | task:plan-run | implementation/high → gpt-5.6-terra/high | — | Нельзя объединить: task/harness effective catalog changes after P1.2 |
-| P1.4 | solo | task:plan-exec | implementation/medium → gpt-5.6-terra/medium | — | Нельзя объединить: terminal installed-runtime conformance must independently test P1.2/P1.3 |
+| P1.4 | solo | task:plan-exec | implementation/medium → gpt-5.6-terra/medium | — | Нельзя объединить: terminal cold conformance independently proves 13 private source/projection closures and 12 installed-bundle dedups |
 | P2.1 | solo | task:plan-run | frontier/high → gpt-5.6-sol/high | — | Нельзя объединить: state/authority contract freeze, Review=full |
 | P2.2 | solo | task:plan-run | implementation/high → gpt-5.6-terra/high | — | Нельзя объединить: central compiler/root dispatch seam, Review=full |
 | P2.3 | solo | task:plan-run | implementation/high → gpt-5.6-terra/high | — | Нельзя объединить: audit/reopen/cap enforcement must be isolated from compiler |
@@ -68,7 +75,7 @@ profiles, `tmp/`, foreign repositories and mAInd are never evidence inputs.
 
 ## Готовые native Codex NEW SESSION launch-blocks
 
-### P0.1 — verify committed manifests, corpus и baseline
+### P0.1 — verify immutable integrity + semantic closure
 
 **Next:** exec-items: task:plan-exec 2026.07.24-AGENT-RELIABILITY P0.1
 
@@ -86,7 +93,7 @@ profiles, `tmp/`, foreign repositories and mAInd are never evidence inputs.
 | Context | `NEW SESSION` |
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="medium"' -a never -s danger-full-access 'NEW SESSION recovery carrier for 2026.07.24-AGENT-RELIABILITY P0.1. Read AGENTS.md, CLAUDE.md and the task:task-plan-exec skill completely; run pwd, git status --short, codex doctor --json, effective hook command integrity, ./packages/maind/bin/maind health --cwd --json, python3 plans/2026.07.24-AGENT-RELIABILITY/artifacts/source-evidence/verify_source_bundle.py verify --root plans/2026.07.24-AGENT-RELIABILITY/artifacts/source-evidence, and python3 packages/task/scripts/plan-lint.py plans/2026.07.24-AGENT-RELIABILITY. Read plan.md, roadmap.md, handoff.md, phases/P0.md and P0.1 Required Reads. Root supervises and delegates P0.1 to a fresh subagent grounded from committed plan/handoff. Execute only P0.1 from committed bundle inputs; never scan tmp, profiles, mAInd or foreign repositories for evidence; preserve unrelated diffs; do not mutate packages/hooks/consumers/FOREMAN. Close through task-plan-exec and automatically continue according to roadmap only after green.'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="medium"' -a never -s danger-full-access 'NEW SESSION recovery carrier for 2026.07.24-AGENT-RELIABILITY P0.1. Read AGENTS.md, CLAUDE.md and task:task-plan-exec completely; run the canonical cold-start preflight and plan-lint. Verify the sole exceptional design audit under D29 is committed with literal GREEN; otherwise do no writes. Read plan.md, roadmap.md, handoff.md, findings/08-design-audit-red-attempt-2.md, phases/P0.md and P0.1 Required Reads. Root delegates only P0.1 to a fresh grounded subagent. Keep artifacts/source-evidence byte-identical; run all four immutable verifier modes, then implement the P0.1-owned source-evidence semantic contract/verifier/tests/report. Recompute only facts derivable from committed inputs and label excluded raw-session dedup/classifier claims pinned-not-recomputable or unknown, never verified. Never scan tmp, profiles, mAInd or foreign repositories; do not mutate packages/hooks/consumers/FOREMAN. Close only after bundle diff is empty and tests are green, then continue according to roadmap.'
 ```
 
 ### P0.2 — Task Contract v1
@@ -170,10 +177,10 @@ codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'mo
 | Context | `NEW SESSION` |
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'NEW SESSION recovery carrier for 2026.07.24-AGENT-RELIABILITY P1.1. Read AGENTS.md, CLAUDE.md and task:task-plan-run completely; run the canonical cold-start preflight. Read plan.md, roadmap.md, handoff.md, phases/P1.md and P1.1 Required Reads; verify terminal P0. Root delegates P1.1 to a fresh grounded subagent. Freeze identity/ownership/capability plus the D27 version/generated-tree ledger and exact D28 12-directory deletion map; approve the per-publication-unit skiller version seam, but do not edit runtime sources. Close and continue automatically.'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'NEW SESSION recovery carrier for 2026.07.24-AGENT-RELIABILITY P1.1. Read AGENTS.md, CLAUDE.md and task:task-plan-run completely; run the canonical cold-start preflight. Read plan.md, roadmap.md, handoff.md, findings/08-design-audit-red-attempt-2.md, phases/P1.md and P1.1 Required Reads; verify terminal P0. Root delegates P1.1 to a fresh grounded subagent. Freeze identity/ownership/capability, D27 versions, exact D28 12 deletions and D31 13-record repository-bootstrap map: pinned migration seed hashes, private canonical RU/EN targets, two provider targets, publication.py generator, root-bootstrap@0.1.0 and combined lock. Prove build_registry indexes private skills while normal publication and consumer vendor/connect selection exclude them. Do not edit runtime sources; close and continue.'
 ```
 
-### P1.2 — skiller/root/core publication
+### P1.2 — 13 private canonical skills + root/core publication
 
 **Next:** run-items: task:plan-run 2026.07.24-AGENT-RELIABILITY P1.2
 
@@ -191,7 +198,7 @@ codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'mode
 | Context | `NEW SESSION` |
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'NEW SESSION recovery carrier for 2026.07.24-AGENT-RELIABILITY P1.2. Read AGENTS.md, CLAUDE.md, packages/skiller/CLAUDE.md and task:task-plan-run completely; run the canonical cold-start preflight. Read plan.md, roadmap.md, handoff.md, phases/P1.md and P1.2 Required Reads; verify committed P1.1. Root delegates P1.2 to a fresh grounded subagent. Implement only exact map records: add per-unit versions, bump skiller API plus core/skm to 0.4.1, regenerate their complete declared trees, prove the second check/no hidden manifest drift, then delete the exact six root core collisions after bundle/marketplace proof. Validate scope, close, continue.'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="high"' -a never -s danger-full-access 'NEW SESSION recovery carrier for 2026.07.24-AGENT-RELIABILITY P1.2. Read AGENTS.md, CLAUDE.md, packages/skiller/CLAUDE.md and task:task-plan-run completely; run the canonical cold-start preflight. Read plan.md, roadmap.md, handoff.md, phases/P1.md and P1.2 Required Reads; verify committed P1.1. Root delegates only P1.2 to a fresh grounded subagent. Materialize exactly 13 private repository-bootstrap SKILL.ru.md sources from pinned seeds, generate/stamp their EN canons, and test that registry indexes them but normal bucket/core/marketplaces and consumer vendor/connect selection exclude them. Version first: skiller/core/skm 0.4.1 and root-bootstrap 0.1.0. Extend the existing publication.py seam; registry.py must generate exactly 13 thin Claude plus 13 thin Codex root pointers and one combined source/rendered lock, never full copied bodies or skillset.py output; skillset.py may only enforce source-only consumer rejection. Regenerate the complete owned tree, prove registry --check no-op/unaffected units byte-identical, then delete exact six core root collisions after proof. Validate scope, close, continue.'
 ```
 
 ### P1.3 — task/harness projection and dedup
@@ -233,7 +240,7 @@ codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'mo
 | Context | `NEW SESSION` |
 
 ```bash
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="medium"' -a never -s danger-full-access 'NEW SESSION recovery carrier for 2026.07.24-AGENT-RELIABILITY P1.4. Read AGENTS.md, CLAUDE.md and task:task-plan-exec completely; run the canonical cold-start preflight. Read plan.md, roadmap.md, handoff.md, phases/P1.md and P1.4 Required Reads; verify P1.2/P1.3 committed green. Root delegates P1.4 to a fresh grounded subagent. Cold-install generated repository marketplaces into explicit temporary roots and discover the actual effective runtime; require all six core and six task semantic IDs exactly once with the 12 root duplicates absent. Do not write live fleet/cache; close through task-plan-exec and continue.'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-terra -c 'model_reasoning_effort="medium"' -a never -s danger-full-access 'NEW SESSION recovery carrier for 2026.07.24-AGENT-RELIABILITY P1.4. Read AGENTS.md, CLAUDE.md and task:task-plan-exec completely; run the canonical cold-start preflight. Read plan.md, roadmap.md, handoff.md, phases/P1.md and P1.4 Required Reads; verify P1.2/P1.3 committed green. Root delegates P1.4 to a fresh grounded subagent. In explicit stdlib temporary roots, materialize each provider root projection, cold-install only normal repository marketplace bundles, discover/activate/resolve and behavior-smoke. Require 13 repository-bootstrap IDs exactly once from thin roots with canonical path/hash/version matching the lock and zero private marketplace entries; require six core plus six task IDs exactly once from installed bundles with all 12 duplicate roots absent. Do not write live fleet/cache; close through task-plan-exec and continue.'
 ```
 
 ### P2.1 — state/authority contract
@@ -513,5 +520,6 @@ codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'mode
 
 | Gate | Где | Что утверждает | Блокирует |
 |:--|:--|:--|:--|
+| A0 | до P0.1 | единственный exceptional independent design audit under D29 = literal GREEN | все 21 items |
 | G0 | после P0.3 | exact bank/grader/baseline hashes and metric floors | P0.4–P4 |
 | G1 | после P4.3 packet | exact external targets/actions: fleet, consumers, FOREMAN, tag, push, release — либо hold | external work outside this plan |

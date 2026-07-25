@@ -1,6 +1,12 @@
-# HANDOFF — 2026-07-24 — after P4
+# HANDOFF — 2026-07-25 — after P4
 
-**Next:** waiting: Owner decision по AUDIT-CAP design 2/2 → manual: frontier/xhigh
+`P4` в заголовке — совместимый с plan-lint lifecycle carrier для Design Pass
+4/4; executable phase P4 и все её items остаются ⬜ Not started.
+
+**Next:** audit-design: task:plan-audit 2026.07.24-AGENT-RELIABILITY design
+
+`AUDIT-CAP: design — historical 2/2 exhausted; Owner override B exceptional
+slot 0/1 before launch. This launch consumes the only slot.`
 
 | Параметр | Значение |
 |:--|:--|
@@ -8,57 +14,65 @@
 | Effort | `xhigh` |
 | Capabilities | `—` |
 | Context | `cold-start — plan-step` |
-| Суть | Зафиксировать решение владельца по двум blocker'ам финального design audit; P0.1 и remediation не запускать без новой authority |
+| Суть | Fresh independent audit of redesigned executable contract v1.6.0; no P0.1 or remediation in the audit session |
 
 ```bash
-# НЕ раньше: Dmitry Vostrikov выбирает явное решение по AUDIT-CAP design 2/2
-codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="xhigh"' -a never -s danger-full-access 'NEW SESSION Owner decision boundary for 2026.07.24-AGENT-RELIABILITY after final design audit attempt 2/2 RED. Do not execute P0.1, do not repair the plan, and do not start a third design audit. Read AGENTS.md, CLAUDE.md, plans/2026.07.24-AGENT-RELIABILITY/findings/08-design-audit-red-attempt-2.md, plan.md, phases/P0.md, phases/P1.md and handoff.md. Present Dmitry Vostrikov only the exact capped choice: (A) stop/kill this plan, or (B) explicitly override the two-audit cap and grant new authority for a redesigned executable contract plus a later independent audit. Record no package, docs, plan-item, FOREMAN, fleet or consumer changes until the owner chooses.'
+codex -C /home/vostrikov/projects/packages/swissknifeman -m gpt-5.6-sol -c 'model_reasoning_effort="xhigh"' -a never -s danger-full-access 'NEW SESSION exceptional independent design audit for 2026.07.24-AGENT-RELIABILITY after Owner override B. AUDIT-CAP: historical design audits 2/2 remain RED; this is the only exceptional slot 0/1 and consumes it. Read AGENTS.md, CLAUDE.md, task:task-plan-audit and canonical plan-protocol completely; run the full cold-start preflight and scoped plan-lint. Read brief/00-brief.md, brief/01-refinements.md Owner override B, findings/08-design-audit-red-attempt-2.md, plan.md v1.6.0, all phases, roadmap.md, handoff.md and journal.jsonl. Audit independently; do not execute P0.1, repair files, weaken validation or relabel historical RED. Specifically prove F1 is executable with immutable source-evidence bytes plus a P0.1-owned semantic contract/verifier/tests/proof classes, and prove F2 has 13 exact private bilingual canonical sources, normal-publication and consumer vendor/connect exclusion, one registry.py→publication.py generator, 26 thin root targets, version/tree lock and P1.4 exactly-once closure. Then perform the full brief/DoR/routing/Files/Required-Reads/generated-scope sweep. Literal GREEN unlocks P0.1. Any RED or ATTENTION exhausts exceptional 1/1 and returns only an Owner decision boundary; it grants no automatic redesign or further audit.'
 ```
 
-**Done:** Fresh frontier/xhigh adversarial design audit attempt 2/2 completed
-without executing P0 or changing package/docs/runtime sources. Live preflight was
-green (`codex doctor`, effective hook executability plus synthetic SessionStart
-probe, `maind health`, installed plugin inventory). All four committed-bundle
-commands and scoped `plan-lint` ran green. The audit nevertheless returned
-literal RED because two executable-contract blockers remain:
+**Done:** Owner option B is recorded in `brief/01-refinements.md` and D29.
+The historical design audit attempts 1/2 and 2/2 remain RED. The one
+authorized redesign pass 4/4 changed only plan artifacts, kept all 21 items
+not started and did not execute P0.1.
 
-1. P0.1 promises semantic provenance/redaction/selection and corrected
-   denominator/dedup verification by the immutable committed
-   `verify_source_bundle.py`, but that verifier only checks hashes, required
-   fields/case IDs and a few stored constants; P0.1 cannot edit it.
-2. P1.2 promises 13 generated thin root adapters, but none of the 13 identities
-   has a canonical source under `packages/skiller/skills/`; the named registry
-   writer does not own root `.agents/skills`, `skillset.py` is outside Files,
-   and the required canonical `skill-authoring` path does not exist.
+F1 is structurally repaired in the executable specification:
 
-The canonical report is
-`findings/08-design-audit-red-attempt-2.md`. This is the capped second verdict:
-no repair or third audit has been assigned.
+1. immutable `artifacts/source-evidence/verify_source_bundle.py` keeps only
+   its actual integrity/pinned checks and is not edited;
+2. P0.1 owns Source Evidence Verification v1, a machine contract, stdlib
+   semantic verifier, mutation tests and deterministic report;
+3. manifest/session/corpus/journal/baseline cross-checks are executable, while
+   excluded raw-session dedup and classifier-derived numbers are explicitly
+   `pinned-not-recomputable`/`unknown`, never semantically verified.
 
-**Remaining:** Owner decision only. P0.1, all implementation/remediation,
-package/docs/changelog changes, P4 structural work and any
-fleet/consumer/FOREMAN/tag/push/release action remain unauthorized.
+F2 is structurally repaired in P1:
 
-**Sources of truth:** `plans/2026.07.24-AGENT-RELIABILITY/findings/08-design-audit-red-attempt-2.md` ·
+1. P1.1 freezes exact migration seeds and 13
+   `packages/skiller/skills/repository-bootstrap/<name>/{SKILL.ru.md,SKILL.md}`
+   targets;
+2. the bucket is private/source-only: indexed for ownership but excluded from
+   normal Claude/Codex bucket, core, marketplace and consumer vendor/connect
+   publication;
+3. the sole `registry.py`→`publication.py` path emits 13 thin Claude plus 13
+   thin Codex root adapters and one `repository-bootstrap@0.1.0` source/tree
+   lock; `skillset.py` enforces consumer exclusion but is explicitly not this
+   producer;
+4. P1.4 validates canonical hash/provenance/private exclusion and per-provider
+   exactly-once resolution together with the 12 core/task collision removals.
+
+**Remaining:** Run the single exceptional independent audit only. P0.1 and
+all implementation/package/docs/changelog/runtime changes remain blocked
+until literal GREEN. G0 still blocks behavior after P0.3; G1 still owns all
+fleet/consumer/FOREMAN/tag/push/release authority.
+
+**Sources of truth:** `plans/2026.07.24-AGENT-RELIABILITY/brief/01-refinements.md` ·
+`plans/2026.07.24-AGENT-RELIABILITY/findings/08-design-audit-red-attempt-2.md` ·
 `plans/2026.07.24-AGENT-RELIABILITY/plan.md` ·
-`plans/2026.07.24-AGENT-RELIABILITY/roadmap.md` ·
 `plans/2026.07.24-AGENT-RELIABILITY/phases/P0.md` ·
 `plans/2026.07.24-AGENT-RELIABILITY/phases/P1.md` ·
-`plans/2026.07.24-AGENT-RELIABILITY/artifacts/source-evidence/verify_source_bundle.py` ·
-`AGENTS.md` · `packages/skiller/CLAUDE.md`.
+`plans/2026.07.24-AGENT-RELIABILITY/roadmap.md` ·
+`plans/2026.07.24-AGENT-RELIABILITY/journal.jsonl`.
 
-**Open risks:** The two blockers above make the declared execution contract
-unachievable as written. Existing planned risks also remain: causal weights are
-unknown until valid P0 evidence verification; the hook before-state is
-intentionally red until an approved P0.4; current root discovery still has 12
-core/task collisions. A green live environment does not waive a red plan
-contract.
+**Open risks:** P0.1 may legitimately leave causal/raw-session quantities
+non-recomputable; downstream acceptance must not promote them. P1.2 is a large
+but closed generator transaction and must preserve the private-bucket exclusion
+and unaffected publication units byte-identically. Audit outcome is not
+prejudged by this redesign.
 
 **Workarounds/Deferred/Open questions:**
-- workarounds: none; accepting hash-green output as semantic verification or
-  hand-authoring the 13 adapters would contradict the plan's own fail-closed and
-  generator-ownership rules;
-- deferred: all plan execution and remediation pending the owner boundary;
-- open_questions: Dmitry Vostrikov must choose exactly (A) stop/kill this plan,
-  or (B) explicitly override the two-audit cap and grant new authority for a
-  redesigned executable contract plus a later independent audit.
+- workarounds: none; no hash-green-as-semantic-proof, manual root copy, private
+  bucket marketplace publication or conditional collision suppression is
+  accepted;
+- deferred: all implementation until exceptional audit GREEN;
+- open_questions: none before audit. A non-GREEN verdict creates a new Owner
+  decision boundary because exceptional audit authority is exhausted.

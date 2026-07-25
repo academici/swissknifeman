@@ -117,3 +117,36 @@ gap, поэтому audit cap не израсходован, P0 не начин�
 - Remaining `.agents/skills` — unique bootstrap adapters. Cold recovery
   проверяет canonical package paths and repository marketplaces, а не
   возвращает дублирующий auto-discovery layer.
+
+## Owner override B — redesigned executable contract — 2026-07-25
+
+После literal RED финального design audit attempt 2/2 владелец выбрал ровно
+вариант B: явно переопределил исчерпанный двух-аудитный cap и выдал новую
+authority на один redesigned executable contract плюс один последующий fresh
+independent design audit.
+
+Границы authority:
+
+- исторические design audit verdicts 1/2 и 2/2 остаются RED и не
+  переименовываются;
+- разрешён ровно один redesign pass 4/4, устраняющий F1/F2 структурно, без
+  исполнения P0.1 и без package/docs/runtime/fleet/consumer/FOREMAN changes;
+- после redesign разрешён ровно один exceptional independent design audit
+  (`0/1` до его старта); он не выполняется в redesign-сессии;
+- P0.1 разрешается только после literal GREEN exceptional audit;
+- RED/ATTENTION exceptional audit не выдаёт автоматическую authority на
+  дополнительный ремонт или ещё один design audit — следующий шаг снова
+  Owner decision.
+
+Обязательная форма ремонта:
+
+- immutable `artifacts/source-evidence/` и его verifier не меняются; P0.1
+  получает отдельного item-owned semantic verifier, детерминированные tests и
+  report, а нерепродуцируемые из committed bundle raw-session dedup/classifier
+  claims маркируются `pinned-not-recomputable`/`unknown`, не «verified»;
+- 13 repository-bootstrap identities получают реальные bilingual canonical
+  sources, private/source-only publication rule и один generator owner.
+  Normal bucket/core/marketplace publication их не публикует. Один
+  `registry.py` → `publication.py` path детерминированно эмитит thin Claude и
+  Codex root adapters с provenance/hash/version lock; P1.4 проверяет closure и
+  exactly-once discovery.

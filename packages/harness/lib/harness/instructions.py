@@ -238,7 +238,7 @@ def catalog_path() -> Path:
 
 
 def contract_path() -> Path:
-    return repository_root() / "plans/2026.07.19-DUAL-PROVIDER/root/contracts/provider-instruction-contract.md"
+    return repository_root() / "plans/archive/2026.07.19-DUAL-PROVIDER/root/contracts/provider-instruction-contract.md"
 
 
 def compatibility_path() -> Path:

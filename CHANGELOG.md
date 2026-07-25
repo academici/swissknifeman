@@ -23,6 +23,30 @@
 
 ### Fixed
 
+- **harness/maind — self-host Codex hook lifecycle: unmanaged target и пропавший
+  handler.** `.codex/hooks.json` нёс только рукописный memory-хук вне артефакт-лока
+  (`harness hooks --provider codex --observer` рефьюзил как `ownership-conflict`), а
+  наблюдатель `context.observer` не был зарегистрирован вовсе — `harness doctor`
+  сообщал `missing → create`. Композиция через уже существующий D104
+  bootstrap-transfer (`maind.provider_deploy.plan_d104_bootstrap_transfer`) сохранила
+  memory-хук байт-в-байт и добавила наблюдателя вторым `SessionStart`-хуком +
+  `.codex/hooks/lifecycle.py`; `.swissknifeman/provider-artifacts.lock.json`
+  теперь владеет обоими. `run-report/_lib.py` в `~/.claude/hooks/` синхронизирован
+  повторным `harness hooks --global` (протух после последнего апдейта).
+- **harness — protracted stale path после архивации `2026.07.19-DUAL-PROVIDER`.**
+  `instructions.py:contract_path()` и один тестовый фикстур несли путь до
+  архивации плана (`5b79f926`), из-за чего `test_provider_instructions.py`,
+  `test_instruction_compatibility.py` и `packages/harness/scripts/validate.sh`
+  падали целиком независимо от текущей задачи. Путь синхронизирован на
+  `plans/archive/2026.07.19-DUAL-PROVIDER/...`.
+- **harness — `agent-packs upgrade` сверяет факт файлов, а не только версию пака.**
+  План апгрейда строится из хэшей (источник и диск против `base_sha256` лока), поэтому
+  забытый бамп `pack.json:version` больше не даёт тихого «уже актуален» (изменение
+  доезжает + warn автору пака), а пропавший target восстанавливается и при равной версии.
+  Совпадающее состояние печатается как «нечего делать»; локальные правки по-прежнему не
+  затираются (`conflict` → `*.pack-new`). `agent-packs doctor` дополнительно предупреждает
+  о targets, на которые претендуют 2+ установленных пака (корень тихой потери файлов при
+  `remove` соседа), и отдаёт их в `--json` полем `shared_targets`.
 - **skiller — единый Codex carrier при update.** Если внешний проект уже получает
   self-contained Codex marketplace под `.agents/plugins/`, `skiller update`
   обновляет независимый Claude vendor-канал, но больше не дублирует те же

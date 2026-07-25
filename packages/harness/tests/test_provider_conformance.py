@@ -167,7 +167,7 @@ class ProviderConformanceTests(unittest.TestCase):
     def test_generated_docs_and_p5_artifact_are_the_validated_report_consumers(self):
         report = audit_package(PACKAGE)
         self.assertEqual((PACKAGE / "docs/reference/provider-harness.md").read_text(), render_operator_reference(report))
-        artifact = PACKAGE.parents[1] / "plans/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md"
+        artifact = PACKAGE.parents[1] / "plans/archive/2026.07.19-DUAL-PROVIDER/artifacts/P5-harness-conformance.md"
         self.assertEqual(artifact.read_text(), render_p5_artifact(report))
         evidence = report.as_dict()["evidence"]
         self.assertIn({"category": "activation", "provider": "codex",

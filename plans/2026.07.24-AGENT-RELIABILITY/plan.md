@@ -6,11 +6,11 @@
 |:--|:--|
 | Plan ID | 2026.07.24-AGENT-RELIABILITY |
 | Title | Надёжное исполнение: checked task contract, единственный runtime source, bounded review и измеримая обратная связь |
-| Version | 1.12.7 |
+| Version | 1.12.8 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high; Owner-override Pass 4 — gpt-5.6-sol/xhigh; historical authority-C repair — Claude Fable 5/high; bounded redesign Pass 5 — Codex gpt-5.6-sol/high; bounded A1 repair (authority D, D39) — Claude Opus 5/high; bounded A3 repair (authority E, D50) — Claude Opus 5/high |
-| Last Updated | 2026-07-25 (P1.2 закрыт 🟠: 13 приватных root-bootstrap identities канонизированы, 26 тонких проекций + lock, skiller/core/skm 0.4.1, шесть root core-коллизий удалены) |
+| Last Updated | 2026-07-25 (P1.3 закрыт 🟢: task@0.3.1/harness 0.3.0 projection перегенерирована через новый render-provider-commands.py, шесть root task-коллизий удалены, AGENTS.md переформулирован) |
 | Repository | swissknifeman |
 | Related Packages | task, skiller, harness, analyst, maind |
 | Execution Mode | reliability-first · evidence-before-mutation · phase-bounded |
@@ -244,7 +244,7 @@ audit/fix-loop без продукта, который план создан л�
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
 | P0 | Evidence, contracts и acceptance-before-mutation | 3/4 | 🟡 In progress |
-| P1 | Единственный semantic source и runtime uniqueness | 1/5 | 🟡 In progress |
+| P1 | Единственный semantic source и runtime uniqueness | 2/5 | 🟡 In progress |
 | P2 | Checked outcome execution и bounded review | 0/5 | ⬜ Not started |
 | P3 | Unified traces, evals и isolated self-host canary | 0/5 | ⬜ Not started |
 | P4 | Hypothesis verdict, operator doctor и Owner packet | 0/3 | ⬜ Not started |
@@ -345,6 +345,7 @@ audit/fix-loop без продукта, который план создан л�
 | 2026-07-25 | plan-run/Claude Sonnet 5/high | P0.4 закрыт 🟠: self-host Codex hook lifecycle восстановлен через существующий D104 bootstrap-transfer (maind), три ТЗ/repo-drift дефекта синхронизированы записью D61 — детали см. phases/P0.md P0.4 Completion Notes/Known Deviations, findings/P0.4-hook-integrity.md. Version 1.12.4 → 1.12.5. |
 | 2026-07-25 | plan-run/Claude Opus 5/high | P1.1 закрыт 🟢: Identity/Ownership v1 и Generated Artifact Version v1 заморожены (детекция repo-derived, owner-map всех 29 коллизий, class-A 13/26) — детали см. phases/P1.md P1.1 Completion Notes. Version 1.12.5 → 1.12.6. |
 | 2026-07-25 | plan-run/Claude Sonnet 5/high | P1.2 закрыт 🟠: 13 приватных root-bootstrap identities канонизированы (26 тонких проекций + lock), skiller/core/skm 0.4.1, шесть root core-коллизий удалены — детали см. phases/P1.md P1.2 Completion Notes/Known Deviations. Version 1.12.6 → 1.12.7. |
+| 2026-07-25 | plan-run/Claude Sonnet 5/high | P1.3 закрыт 🟢: task@0.3.1/harness 0.3.0 projection перегенерирована, шесть root task-коллизий удалены — детали см. phases/P1.md P1.3 Completion Notes. Version 1.12.7 → 1.12.8. |
 
 ## 7. Contracts
 

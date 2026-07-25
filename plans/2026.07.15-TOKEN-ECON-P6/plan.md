@@ -79,10 +79,10 @@
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P6 | MCP-поверхность: прополка резидентных серверов (L1) + ENABLE_TOOL_SEARCH gated (L3) | 1/2 | 🟡 In progress |
-| P7 | Сжатие ⊕always-description топ-скиллов (L2) | 0/2 | ⬜ Not started |
-| P8 | Tool-result trimming в maind MCP (L4) | 0/2 | ⬜ Not started |
-| P9 | Owner-решения: research routing (OQ-4) + permission-friction protection-surface (OQ-5) | 0/2 | ⬜ Not started |
+| P6 | MCP-поверхность: прополка резидентных серверов (L1) + ENABLE_TOOL_SEARCH gated (L3) | 1/2 | 🟠 Done with deviations |
+| P7 | Сжатие ⊕always-description топ-скиллов (L2) | 0/2 | ⛔ Skipped by decision |
+| P8 | Tool-result trimming в maind MCP (L4) | 0/2 | ⛔ Skipped by decision |
+| P9 | Owner-решения: research routing (OQ-4) + permission-friction protection-surface (OQ-5) | 0/2 | ⛔ Skipped by decision |
 
 ## 5. Decision Log
 

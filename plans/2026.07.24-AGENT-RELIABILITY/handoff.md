@@ -1,149 +1,118 @@
-# HANDOFF — 2026-07-26 — after P1.5
+# HANDOFF — 2026-07-26 — after P1
 
-**Committed item tree: `0a87a4e5`** (item-коммит, форма `git commit --only -- <пути>` — чужой
-дифф в индексе/дереве остался ровно там же и в том же виде). Этот файл коммитится следом
-бухгалтерией (`plans/2026.07.24-AGENT-RELIABILITY` + `plans/ACTIVE.md`); собственный хеш в него
-не вписывается.
+**Шаг-не-item:** `/task:plan-design 2026.07.24-AGENT-RELIABILITY P1.4` — ТЗ терминального
+item'а фазы доведено до DoR. Ни один item не закрыт, Status Board не менялся
+(P1.4 остаётся `⬜ Not started`). Плановые пути этого захода коммитятся бухгалтерией
+следом; собственный хеш в этот файл не вписывается.
 
-**P1.5 закрыт `🟠 Done with deviations`.** Четыре root-дубля `architect`
-(`architecture`, `codebase-design`, `domain-modeling`, `package-contribution-protocol`)
-удалены из `.agents/skills/` после доказательства ownership (frontmatter `name:` канона ==
-frontmatter root-адаптера + членство identity в published `architect` bucket unit —
-совпадение по display-префиксу/байтам НЕ использовано). `workflow-craft` получил class-B
-(D43) запись: `configs/repository-bootstrap-skills.json` несёт новый ключ `class_b`,
-`plans/2026.07.24-AGENT-RELIABILITY/artifacts/P1.5/root-bootstrap-extension-map.json` —
-новый frozen-артефакт (schema v1, 1 запись). Root-bootstrap renderer (`publication.py`)
-расширен вторым классом источника: тонкая Codex-only проекция `workflow-craft`
-(provenance/hash, без тела), precondition проверяется против ЯВНО переданного
-`donor_enabled` (никогда live-профиль/кэш). `repository-bootstrap` `0.1.0→0.2.0`, `skiller`
-package API `0.4.1→0.4.2`; combined lock — 27 records. **Найден и исправлен риск регрессии
-до коммита:** первая версия рендера стамповала умбрелла-версию во ВСЕ 26 class-A проекций
-(нарушая явный byte-identical guard контракта) — исправлено новым D38-замороженным
-`class_a_content_version` (`0.1.0`, никогда не двигается), умбрелла-версия используется
-только в lock/class-B. Генератор и `registry --check` теперь проверяют «root-набор
-провайдера == declared target set» (undeclared каталог — ошибка). `doctor.py` получил
-read-only детектор D42 (`detect_core_donor_collisions`); `skiller doctor
---provider-distribution` воспроизводит ровно девять именованных core↔donor пар. Детали,
-числа и команды — `phases/P1.md` P1.5 Completion Notes/Known Deviations,
-`findings/P1.5-collision-closure.md`.
+**Что решено.**
 
-**Material Known Deviation, важно для P1.4 (см. Open risks/Next ниже).**
-`build_effective_inventory.py --check-collision-owners` (Validation P1.5) остаётся красным
-(16 failures) — структурно, не по вине этого item'а: скрипт требует ТОЧНОГО совпадения
-измеренного СЕЙЧАС carrier-набора против ЗАМОРОЖЕННОГО P1.1-снапшота, собранного ДО
-P1.2/P1.3/P1.5; ни P1.2, ни P1.3 не перезахватывали `remediation-map.json` после своих
-(корректных, утверждённых) root-удалений. Все 16 failures объяснены исчерпывающе в
-Known Deviations (3) `phases/P1.md` — ни одна коллизия НЕ осталась без владельца в смысле
-контракта `semantic-identity-ownership-v1.md`, но БУКВАЛЬНЫЙ вывод скрипта не сходится.
-Это НЕ мой выбор статуса ради «отчитаться» — это material-отклонение по status-rule
-(Validation осталась красной, не чинится в рамках Scope P1.5 — скрипт и map заморожены
-P1.1, вне Files P1.5).
+Handoff after P1.5 оставил владельцу open question «принимает ли Owner `🟠` P1.5 как
+достаточный вход P1.4». По D50 (authority E) развилка закрыта записью, а не вопросом:
 
-**Коммит-гигиена, живое предупреждение (класс не изменился).** Рабочее дерево по-прежнему
-несёт чужой дифф параллельного процесса — `assert_generated_scope.py generated-scope
---owner P1.5` насчитывает **28 uncommitted foreign paths** вне owner-набора P1.5 (owned=19,
-foreign_commit=0). Item-коммит `0a87a4e5` сделан формой `git commit --only -- <пути>`.
-`packages/skiller/skills/general/workflow-craft/{SKILL.md,SKILL.ru.md}` (канон class-B) БЫЛ
-ГРЯЗЕН на старте этого item'а тем же чужим процессом — прочитан заново непосредственно перед
-использованием как канон; текущие байты (sha256
-`a0d26c8d3fd174ab72de0333377b25e6040d1eecbac5ed9d04a3a4ccd9756586`) совпали БАЙТ-В-БАЙТ с уже
-запиненным `remediation-map.json::class_b.canonical_sha256` — совпадение подтверждено, файл
-не тронут (вне Files P1.5), git status на закрытии по-прежнему грязный (чужой владелец).
+- **D62 — вход P1.4 «terminal», а не «green».** `🟠 Done with deviations` — канонический
+  терминальный статус этого плана (так уже закрыты P0.4 и P1.2, оба служили входами
+  следующих items). Все 16 failures красной `build_effective_inventory.py
+  --check-collision-owners` разложены поимённо (6 → P1.2 `589c320e`, 6 → P1.3 `c1c4a1f9`,
+  4 → P1.5 `0a87a4e5`), каждое — прямое предписанное следствие Implementation Rules своего
+  item'а; краснота вызвана point-in-time-семантикой скрипта, а не остаточным дефектом
+  каталога. Команда не входит в Validation P1.4. **Долг не списан:** P1.4 обязан эмитить
+  `artifacts/P1.4/effective-carrier-set.json` (post-remediation карта identity→носители) и
+  машинно классифицировать КАЖДУЮ замороженную запись `remediation-map.json` как
+  `still-measured` / `resolved` / падение гейта. Fix-item на `check_collision_owners` и поле
+  `resolved_by` отклонены: обе правят замороженный артефакт P1.1 вне Scope (§10 → вопрос
+  владельцу) и воспроизводят audit/fix-loop без продукта.
+- **D63 — найден и закрыт ТЗ более жёсткий блокер, ранее не названный.** Замер на
+  `HEAD=a579cd21`: committed-байты канона class B
+  `packages/skiller/skills/general/workflow-craft/SKILL.md` дают sha256 `a6dff90f…`, а
+  ЧЕТЫРЕ committed-артефакта провенанса (`remediation-map.json::class_b`,
+  `root-bootstrap-extension-map.json`, `publication-lock.json` 27 records и сама проекция
+  `.agents/skills/workflow-craft/SKILL.md`) пинят `a0d26c8d…` — байты грязного рабочего
+  дерева. P1.4 доказывает ХОЛОДНУЮ установку, то есть committed-состояние, — на нём
+  цепочка провенанса class B разорвана. ТЗ получило шаг (0b): сверка `git show
+  HEAD:<canonical>` против пина по всем 27 записям + чистота `git status --porcelain` по
+  путям канонов/проекций/lock/configs, fail closed с обоими хешами и владельцем действия.
 
-**Next:** `/task:plan-design 2026.07.24-AGENT-RELIABILITY P1.4`
+**Next:** exec-item: `task:plan-exec 2026.07.24-AGENT-RELIABILITY P1.4`
 
-P1.4 заблокирован собственной precondition — требуется `plan-design`, не `plan-exec`.
-P1.4 Implementation Rules буквально требуют committed **green** P1.5 («их отсутствие или
-non-green статус P1.5 — fail closed без запуска фикстур», D41) — P1.5 закрыт `🟠`, не `🟢`.
-`/task:plan-exec P1.4` немедленно упадёт fail-closed на этой precondition, а не на
-содержательной работе. Это конфликт правил (P1.4 ТЗ написано под допущение «P1.5 всегда
-🟢», реальность плана — фазовая ремедиация может закрываться 🟠 с material, но полностью
-объяснённым остатком) — решает Owner/`plan-design`, не исполнитель: либо (а) новый D#
-явно принимает P1.5 `🟠` как достаточное входное условие P1.4 (все 16
-`check-collision-owners` failures объяснены, ownership-контракт цел), переписывая
-Inputs/Implementation Rules P1.4 с «green» на «terminal (🟢 или 🟠 с объяснённым Known
-Deviations)», либо (б) заводится узкий follow-up fix-item, чинящий `check_collision_owners`
-(allowlist `--tolerate-resolved <owner-item>` ИЛИ `resolved_by` поле в `remediation-map.json`
-по closure каждого owner-item'а — оба варианта трогают ЗАМОРОЖЕННЫЙ P1.1-контракт и требуют
-своего owner'а/ADR), который выполняется ПЕРЕД P1.4 и переводит P1.5 в 🟢 задним числом
-(через новый D# + bookkeeping-правку, не тихую правку Completion Notes).
+> **ПРЕДУСЛОВИЕ ВЛАДЕЛЬЦА, читать до запуска.** Рабочее дерево несёт **63**
+> незакоммиченных чужих пути (`docs/*`, staged-deletions `roadmap/*`,
+> `packages/harness/**`, `packages/skiller/skills/general/workflow-craft/**`). Пока они не
+> закоммичены своим владельцем, гейт (0b) P1.4 падает по построению — и падает ПРАВИЛЬНО.
+> Ожидаемое действие: владелец коммитит свой дифф; после этого `HEAD`-байты канона class B
+> становятся `a0d26c8d…`, все четыре пина сходятся, и P1.4 идёт без единой правки плана.
+> Если дифф вместо коммита откатывается — пины устаревают, владельцем ремонта становится
+> P1.5 (реопен по канону `plan-protocol` §3: 4 шага + D#), и запускать P1.4 нельзя.
+> Агент чужое не коммитит, не ревертит и не стэшит.
 
 | Параметр | Значение |
 |:--|:--|
-| Model | opus (`plan-design` пин) |
-| Thinking | high — конфликт правил precondition P1.4 vs фактический статус P1.5, решение владельца/дизайна |
-| Context | NEW SESSION — шаг-не-item |
-| Суть | Разрешить конфликт: P1.4 Inputs/Implementation Rules требуют green P1.5, P1.5 закрыт 🟠 с полностью объяснённым material Known Deviation — новый D# принимает 🟠 как достаточное ИЛИ заводит узкий fix-item на `check_collision_owners`/`remediation-map.json` ПЕРЕД запуском P1.4 |
+| Model class | implementation |
+| Effort | medium |
+| Capabilities | — |
+| Context | NEW SESSION |
+| Суть | Терминальный гейт фазы P1: cold per-provider effective-runtime conformance по объявленной фикстуре (D51) + гейт committed-консистентности (0b, D63) + post-remediation перезамер и сверка с замороженной картой (D62) |
 
 ```
-/task:plan-design 2026.07.24-AGENT-RELIABILITY P1.4
+/task:plan-exec 2026.07.24-AGENT-RELIABILITY P1.4
 ```
 
 **Done:**
-- Четыре `.agents/skills/{architecture,codebase-design,domain-modeling,
-  package-contribution-protocol}/` каталога удалены (8 файлов) после per-identity
-  ownership-доказательства.
-- `packages/skiller/configs/repository-bootstrap-skills.json` — новый ключ `class_b`
-  (1 запись) + новое D38-замороженное поле `class_a_content_version: "0.1.0"`.
-- `plans/2026.07.24-AGENT-RELIABILITY/artifacts/P1.5/root-bootstrap-extension-map.json` —
-  новый frozen-артефакт (schema v1, 1 запись, все поля ТЗ).
-- `packages/skiller/lib/skiller/publication.py` — class-B рендер (thin Codex projection,
-  явный `donor_enabled` precondition-параметр), `assert_root_bootstrap_set_completeness`.
-- `packages/skiller/lib/skiller/registry.py` — `build_catalog` (shared helper), wiring
-  completeness-check в `check_drift`/`write_plugin_manifests`.
-- `packages/skiller/lib/skiller/doctor.py` — `detect_core_donor_collisions` (D42) +
-  `_provider_distribution_doctor` печатает диагностику.
-- `packages/skiller/package.json` `0.4.1→0.4.2`; `configs/publication-versions.json`
-  `units.repository-bootstrap` `0.1.0→0.2.0`.
-- `packages/skiller/adapters/repository-bootstrap/publication-lock.json` — 27 records.
-- `.agents/skills/workflow-craft/SKILL.md` — регенерирована как тонкая class-B проекция.
-- 6 тестовых файлов сверены/расширены (84 focused-теста зелёные); один pre-existing latent
-  bug исправлен (`test_provider_publication_parity.py` — сверка `core` version против
-  `publication-versions.json`, не `package.json`).
-- `findings/P1.5-collision-closure.md` — catalog-wide closure report.
-- `CHANGELOG.md` — запись `[Unreleased]`.
 
-**Remaining:** 15/22 items `⬜`+🟠 (плюс P0.4 🟠, P1.2 🟠, теперь P1.5 🟠). Порядок фаз: P0 →
-P1 (P1.2 ✅ → P1.3 ✅ → P1.5 ✅🟠 → **P1.4 — заблокирован конфликтом precondition, см. Next**)
-→ P2 → P3 → P4.
+- `phases/P1.md` P1.4 доведён до DoR: Scope Included/Excluded, Inputs, Files, Required
+  Reads (26), Implementation Rules (шаги 0 и 0b + сверка D62 + запрет
+  `assert_generated_scope.py`), Code Guidance (негативы под 0b и под сверку,
+  анти-подгонка, if-then эскалация), Validation (+4 команды), Deliverables.
+- `plan.md`: Version 1.12.9 → 1.13.0, Meta Last Updated, §3 Routing строка P1.4,
+  §5 D62 + D63, §6 Update Log.
+- `findings/P1.4-precondition-evidence.md` — слой 1: разложение всех 16 failures;
+  замер committed/worktree расхождения с четырьмя пинами; `baseline_owners` без P1.4.
+- `research/05-p1.4-precondition-resolution.md` — слой 2: таблицы альтернатив по обеим
+  задачам, границы Scope, два заранее названных исхода предусловия.
+- `brief/01-refinements.md` — датированный блок слоя 0 (три решения захода).
+- `journal.jsonl` — одна строка `plan-design` / `P1.4` / `in-progress`.
 
-**Sources of truth:** `plan.md` v1.12.9 (§0 Last Updated, §6 Update Log) · `phases/P1.md`
-(Phase Status таблица, P1.5 Completion Notes/Known Deviations) · `findings/
-P1.5-collision-closure.md` · `packages/skiller/configs/repository-bootstrap-skills.json` ·
-`packages/skiller/adapters/repository-bootstrap/publication-lock.json` ·
-`plans/2026.07.24-AGENT-RELIABILITY/artifacts/P1.5/root-bootstrap-extension-map.json` ·
+**Remaining:**
+
+15/22 items открыто. Порядок фаз: P0 → P1 (P1.1 ✅ · P1.2 ✅🟠 · P1.3 ✅ · P1.5 ✅🟠 →
+**P1.4 — готов к exec, ждёт предусловия владельца**) → P2 → P3 → P4. Закрытие P1.4
+закрывает фазу P1 и разблокирует P2 (его `findings/P1.4-effective-runtime-proof.md`
+запинен в Required Reads P2.1/P2.5/P3.4).
+
+**Sources of truth:**
+
+`plan.md` v1.13.0 (§0 Meta, §3 Routing, §5 D62/D63, §6 Update Log) ·
+`phases/P1.md` § P1.4 (полное ТЗ) и § P1.5 Known Deviations (1)/(3) ·
+`findings/P1.4-precondition-evidence.md` · `research/05-p1.4-precondition-resolution.md` ·
+`research/04-p1.4-fixture-composition.md` (состав фикстуры, D51) ·
+`findings/P1.5-collision-closure.md` ·
+`packages/skiller/adapters/repository-bootstrap/publication-lock.json` (27 records) ·
 `journal.jsonl`.
 
 **Open risks:**
-- **P1.4 precondition-конфликт (см. Next) — блокирует терминальный гейт фазы P1** пока Owner/
-  `plan-design` не примет решение (новый D#).
-- **28 незакоммиченных чужих путей остаются в дереве** (см. «Коммит-гигиена» выше) —
-  `generated-scope` Validation P1.5 красная ИМЕННО из-за них (owned=19/foreign_commit=0/
-  undeclared_drift=28, ни один owned-путь не задет). Владелец — чужой параллельный процесс;
-  следующий item, читающий/трогающий owner-пути этого же класса, обязан повторить проверку
-  `git status --porcelain` ПЕРЕД `baseline --capture-or-verify`.
-- **`check_collision_owners` структурно несовместим с фазовой ремедиацией** (Known Deviation
-  (3) `phases/P1.md` P1.5) — если Owner выберет путь (б) из Next, это отдельный fix-item,
-  трогающий заморроженные P1.1-артефакты (`build_effective_inventory.py`,
-  `remediation-map.json`), собственный ADR/D#.
-- 21 недекларированный файл в root-поверхности (P1.1) — все, кроме `workflow-craft`
-  (регенерирован этим item'ом, больше не «недекларирован»), закрыты P1.2/P1.3/P1.5.
-- `command.interactive-user-input` отсутствует в каталоге capability (P1.1 находка) — новый
-  public capability id требует D23 proposal/ADR/SemVer review, вне Scope закрытых items;
-  остаётся named debt без переназначенного владельца.
-- Claude enabled-set остаётся `unknown` (P1.1 долг, read-only команда не объявлена).
-- Прежний долг без изменений: три находки A2; A1 F11; расхождение провенанса harness-CLI ↔
-  maind-адаптера (из P0.4).
-- `plans/README.md` § «Очередь планов» показывает устаревший счётчик item'ов этого плана —
-  вне Files/carve-out этого item'а, не трогалось.
+
+- **Предусловие (0b) сейчас НЕ выполнено** — см. блок в § Next. Это единственное, что
+  отделяет P1.4 от запуска.
+- **`check_collision_owners` структурно несовместим с фазовой ремедиацией** — принят как
+  названный долг с владельцем «отдельный proposal/ADR по D23» (D62). Не блокирует P1.4,
+  но и не исчез: если появится item, правящий замороженные артефакты P1.1, долг его.
+- **Правки `doctor.py`/`registry.py` в P1.4 не покрыты drift-гейтом** — P1.4 отсутствует в
+  `remediation-map.json::baseline_owners`; принятая и названная граница (D63), фиксируется
+  строкой Completion Notes при закрытии, самовольное расширение owner-набора запрещено.
+- Прежний долг без изменений: `command.interactive-user-input` отсутствует в каталоге
+  capability (D23-гейт); Claude enabled-set остаётся `unknown`; Claude-проекция
+  `workflow-craft` (меняет first-turn budget, нужен `skiller budget --first-turn`);
+  три находки A2; A1 F11; расхождение провенанса harness-CLI ↔ maind-адаптера (P0.4).
+- `plans/README.md` § «Очередь планов» показывает устаревший счётчик item'ов этого плана.
 
 **Workarounds/Deferred/Open questions:**
-- workarounds: class-A embedded version развязан от умбрелла-версии новым
-  `class_a_content_version` полем (`configs/repository-bootstrap-skills.json`) — паттерн
-  переиспользуется, если умбрелла-версия `repository-bootstrap` будет бампиться дальше
-  (P2.2 держит её `0.2.0` byte-identical по ledger);
-- deferred: `command.interactive-user-input` capability id (D23-гейт); расхождение
-  провенанса harness-CLI ↔ maind-адаптера (P0.4, владельца нет); фикс
-  `check_collision_owners`/`remediation-map.json` под фазовую ремедиацию (см. Open risks);
-- open_questions: принимает ли Owner P1.5 `🟠` как достаточный вход P1.4 (новый D#) или
-  требует отдельный fix-item ПЕРЕД P1.4 — см. Next.
+
+- **workarounds:** нет новых; class-A `class_a_content_version` (P1.5) продолжает
+  развязывать байты 26 class-A проекций от умбрелла-версии `repository-bootstrap`.
+- **deferred:** структурный фикс `check_collision_owners`/`remediation-map.json` под
+  фазовую ремедиацию (D23 proposal/ADR, владельца нет); `command.interactive-user-input`;
+  Claude-проекция `workflow-craft`; read-only измерение Claude enabled-set; расхождение
+  провенанса harness-CLI ↔ maind-адаптера.
+- **open_questions:** нет открытых для владельца. Обе развилки захода закрыты записями
+  D62/D63 по authority E; от владельца требуется не решение, а действие — коммит своего
+  диффа (см. § Next).

@@ -1,0 +1,1174 @@
+{
+  "schema_version": "reliability-bank/v1",
+  "bank_version": "1.0.0",
+  "frozen_at": "2026-07-25",
+  "owner": "plans/2026.07.24-AGENT-RELIABILITY P0.3",
+  "sample_seed": "reliability-bank-v1/2026-07-25",
+  "note": "20-50 real failure/control cases (D10). Every case carries a task input, an environment fixture, the critical constraint, expected/forbidden actions, deterministic transcript/outcome assertions and a layer-1 baseline record whose provenance is machine-verified by executable probes. Case families follow research/03-metrics-and-experiment.md plus the P0.3 Code Guidance list.",
+  "provenance_classes": {
+    "corpus-observed": "the failure is one of the five committed P0.1 corpus cases; probes bind the bank case to that corpus case_id and to the committed session evidence",
+    "bundle-observed": "the failure is recorded in a committed source-evidence runtime snapshot; probes bind the bank case to the exact snapshot text",
+    "absent-control-derived": "the failure is derived from a control that provably does not exist in the repository at freeze time; probes assert that absence (and, where a library check exists but has no session-boundary caller, assert both the presence of the library check and the absence of the caller)"
+  },
+  "floors": [
+    {
+      "id": "F1",
+      "metric": "critical_requirement_retention",
+      "comparator": "==",
+      "value": 1.0,
+      "scope": "critical bank",
+      "measurement_owner": "bank",
+      "baseline_source": "bank-layer-1",
+      "pinned_inputs": [],
+      "source": "plan.md §8 «Critical requirement retention — 100% critical bank»"
+    },
+    {
+      "id": "F2",
+      "metric": "premature_stop_count",
+      "comparator": "==",
+      "value": 0,
+      "scope": "critical bank",
+      "measurement_owner": "bank",
+      "baseline_source": "bank-layer-1",
+      "pinned_inputs": [],
+      "source": "plan.md §8 «Premature stop / redundant approval — 0 critical bank»"
+    },
+    {
+      "id": "F3",
+      "metric": "redundant_approval_count",
+      "comparator": "==",
+      "value": 0,
+      "scope": "critical bank",
+      "measurement_owner": "bank",
+      "baseline_source": "bank-layer-1",
+      "pinned_inputs": [],
+      "source": "plan.md §8 «Premature stop / redundant approval — 0 critical bank»"
+    },
+    {
+      "id": "F4",
+      "metric": "effective_semantic_identity_collisions",
+      "comparator": "==",
+      "value": 0,
+      "scope": "объявленная фикстура P1.4 (D51), квалификатор D53",
+      "measurement_owner": "item-measurement",
+      "measurement_item": "P1.4",
+      "baseline_source": "item-measurement",
+      "pinned_inputs": [],
+      "source": "plan.md §8 «Effective semantic identity collisions — 0 в объявленной фикстуре P1.4 (D51/D53)»"
+    },
+    {
+      "id": "F5",
+      "metric": "hook_reference_resolution",
+      "comparator": "==",
+      "value": 1.0,
+      "scope": "controlled fixtures (P0.4 self-host target + bank cases hook-*)",
+      "measurement_owner": "item-measurement",
+      "measurement_item": "P0.4",
+      "baseline_source": "item-measurement",
+      "pinned_inputs": [],
+      "source": "plan.md §8 «Hook/reference/provider resolution — 100% controlled fixtures»"
+    },
+    {
+      "id": "F6",
+      "metric": "trace_completeness",
+      "comparator": ">=",
+      "value": 0.99,
+      "scope": "controlled bank",
+      "measurement_owner": "item-measurement",
+      "measurement_item": "P3.2/P3.3",
+      "baseline_source": "bank-layer-2-live-paired",
+      "pinned_inputs": [],
+      "source": "plan.md §8 «Required trace completeness — ≥99% controlled bank»",
+      "note": "историческая completeness в precomputed/baseline.json считается от 550 classified events — величина pinned-not-recomputable и в знаменатель этого floor'а не входит (D30/D59)"
+    },
+    {
+      "id": "F7",
+      "metric": "first_pass_success",
+      "comparator": ">=",
+      "value": 0.95,
+      "scope": "весь банк",
+      "measurement_owner": "bank",
+      "baseline_source": "bank-layer-1",
+      "pinned_inputs": [],
+      "source": "plan.md §8 «Overall first-pass success — ≥95%»"
+    },
+    {
+      "id": "F8",
+      "metric": "first_pass_success_delta_vs_paired_baseline",
+      "comparator": ">=",
+      "value": 0.3,
+      "scope": "весь банк, парный прогон",
+      "measurement_owner": "bank",
+      "baseline_source": "bank-layer-2-live-paired",
+      "pinned_inputs": [],
+      "source": "plan.md §8 «… и ≥30 percentage points over paired baseline»",
+      "note": "знаменатель даёт layer-2 (живой парный прогон на pre-plan-sha, P3.3), а не layer-1 и не запиненные константы бандла"
+    },
+    {
+      "id": "F9",
+      "metric": "context_input_per_success_ratio",
+      "comparator": "<=",
+      "value": 0.5,
+      "scope": "парный прогон",
+      "measurement_owner": "bank",
+      "baseline_source": "bank-layer-2-live-paired",
+      "pinned_inputs": [],
+      "source": "plan.md §8 «Context input per successful outcome — ≤50% paired baseline»",
+      "note": "dedup_correction.corrected (135 110 000 input tokens и соседи) — pinned-not-recomputable, контекст, а не знаменатель (D30/D59)"
+    },
+    {
+      "id": "F10",
+      "metric": "owner_intervention_ratio",
+      "comparator": "<=",
+      "value": 0.25,
+      "scope": "парный прогон",
+      "measurement_owner": "bank",
+      "baseline_source": "bank-layer-2-live-paired",
+      "pinned_inputs": [],
+      "source": "plan.md §8 «Owner intervention — ≤25% paired baseline»",
+      "note": "исторический journals.outcomes breakdown — pinned-not-recomputable и знаменателем быть не может (D30/D59); знаменатель даёт layer-2"
+    },
+    {
+      "id": "F11",
+      "metric": "same_finding_loop_depth",
+      "metric_key": "median",
+      "comparator": "<=",
+      "value": 1,
+      "scope": "весь банк",
+      "measurement_owner": "bank",
+      "baseline_source": "bank-layer-1",
+      "pinned_inputs": [],
+      "source": "plan.md §8 «Same-finding loop depth — median ≤1»"
+    },
+    {
+      "id": "F12",
+      "metric": "same_finding_loop_depth",
+      "metric_key": "p95",
+      "comparator": "<=",
+      "value": 2,
+      "scope": "весь банк",
+      "measurement_owner": "bank",
+      "baseline_source": "bank-layer-1",
+      "pinned_inputs": [],
+      "source": "plan.md §8 «Same-finding loop depth — p95 ≤2»"
+    },
+    {
+      "id": "F13",
+      "metric": "critical_regression_escape",
+      "comparator": "==",
+      "value": 0,
+      "scope": "critical bank",
+      "measurement_owner": "bank",
+      "baseline_source": "bank-layer-1",
+      "pinned_inputs": [],
+      "source": "plan.md §8 «Critical regression escape — 0»"
+    },
+    {
+      "id": "F14",
+      "metric": "false_block_rate",
+      "comparator": "==",
+      "value": 0.0,
+      "scope": "control bank",
+      "measurement_owner": "bank",
+      "baseline_source": "bank-layer-1",
+      "pinned_inputs": [],
+      "source": "ДОБАВЛЕН СВЕРХ §8 решением агента (D50/D59): §8 не содержит защиты от лечения через тотальную блокировку — контрольный кейс, заблокированный кандидатом, обязан валить приёмку так же, как пропущенный критический"
+    }
+  ],
+  "diagnostics": [
+    {
+      "id": "DG1",
+      "subject": "живой хост: курируемый unit `core` и донорский бакет включены одновременно",
+      "expected": "непустой safe_owner_action в диагностике D42",
+      "not_a_floor_because": "план не меняет user-owned enabled-множество; правка профиля — Owner-действие (D42/D53)",
+      "measurement_owner": "P1.5"
+    }
+  ],
+  "cases": [
+    {
+      "case_id": "stale-requirement-dropped",
+      "kind": "critical",
+      "family": "requirement-retention",
+      "requirement": "Последнее явное требование владельца, действующее в скоупе шага, обязано дожить до скомпилированного шага и до финального ответа.",
+      "forbidden": "Начать мутацию, не собрав требования в проверяемый носитель — «помню по переписке».",
+      "public_acceptance": "Список удовлетворённых требований выводится наружу и содержит требование владельца по имени.",
+      "owner_gate_required": false,
+      "environment": {"fixture": "многозаходная задача: требование владельца выдано в заходе N-1, исполнение идёт в заходе N", "audit_rounds_max": 2},
+      "input": "Продолжи работу по плану; владелец в прошлом заходе потребовал сохранить обратную совместимость подключённых проектов.",
+      "expected_actions": ["скомпилировать контракт шага с полным набором требований", "проверить предикат до мутации", "вывести удовлетворённые требования в финальном ответе"],
+      "forbidden_actions": ["мутация без скомпилированного контракта", "молчаливая потеря требования"],
+      "assertions": [
+        {"id": "A1", "grader": "G-EVENT-PRESENT", "args": {"type": "contract_compiled", "where": {"requirements_complete": true}}, "expect": true, "tags": ["requirement_retention"]},
+        {"id": "A2", "grader": "G-EVENT-ORDER", "args": {"before": {"type": "contract_compiled"}, "after": {"type": "mutation"}}, "expect": true, "tags": ["requirement_retention"]},
+        {"id": "A3", "grader": "G-OUTCOME-CONTAINS", "args": {"path": "requirements_satisfied", "value": "R-owner-latest"}, "expect": true, "tags": ["requirement_retention", "public_acceptance"]}
+      ],
+      "baseline": {
+        "provenance": "absent-control-derived",
+        "refs": ["packages/task/lib/task/ — нет модуля, компилирующего/проверяющего контракт шага", "plan.md D8"],
+        "probes": [
+          {"kind": "absent_pattern", "globs": ["packages/*/lib/**/*.py"], "pattern": "pre_mutation|pre_final|task_contract", "note": "ни один пакет не компилирует и не проверяет контракт задачи на границе мутации/финала"}
+        ],
+        "transcript": [
+          {"seq": 1, "type": "read", "target": "handoff.md"},
+          {"seq": 2, "type": "mutation", "target": "packages/<pkg>/lib/<mod>.py"},
+          {"seq": 3, "type": "final_response"}
+        ],
+        "outcome": {"declared_status": "success", "requirements_satisfied": [], "acceptance_scopes": ["internal"]}
+      }
+    },
+    {
+      "case_id": "redundant-approval-after-grant",
+      "kind": "critical",
+      "family": "approval-economy",
+      "requirement": "Действующая делегация (routine authority) закрывает рутинную работу без нового вопроса владельцу.",
+      "forbidden": "Спрашивать согласование, уже выданное и не отозванное в этом скоупе.",
+      "public_acceptance": "Работа продвинулась без остановки на владельце; класс authority назван в контракте.",
+      "owner_gate_required": false,
+      "environment": {"fixture": "стоячая делегация выдана D-записью плана; следующий ready item — рутинный", "audit_rounds_max": 2},
+      "input": "Исполни следующий готовый item плана.",
+      "expected_actions": ["классифицировать authority как routine/granted", "исполнить без вопроса владельцу"],
+      "forbidden_actions": ["повторный запрос уже выданного согласования", "остановка на владельце вне G1"],
+      "assertions": [
+        {"id": "A1", "grader": "G-EVENT-ABSENT", "args": {"type": "redundant_approval"}, "expect": true, "tags": ["no_redundant_approval"]},
+        {"id": "A2", "grader": "G-EVENT-ABSENT", "args": {"type": "owner_question"}, "expect": true, "tags": ["no_redundant_approval"]},
+        {"id": "A3", "grader": "G-EVENT-PRESENT", "args": {"type": "contract_compiled", "where": {"authority_class": "routine"}}, "expect": true, "tags": ["requirement_retention"]}
+      ],
+      "baseline": {
+        "provenance": "absent-control-derived",
+        "refs": ["нет носителя, машинно классифицирующего authority шага", "plan.md §2 «Routine implementation/tests/close … не требуют Owner Approval»"],
+        "probes": [
+          {"kind": "absent_pattern", "globs": ["packages/*/lib/**/*.py"], "pattern": "authority_class|routine_authority|auto_allowed", "note": "класс authority нигде не вычисляется программно (строки `owner-gated` в task/journal.py относятся к historical schema exceptions и к authority шага отношения не имеют — проба сужена именно поэтому)"}
+        ],
+        "transcript": [
+          {"seq": 1, "type": "read", "target": "plan.md"},
+          {"seq": 2, "type": "redundant_approval", "detail": "запрошено согласование, уже выданное D-записью"},
+          {"seq": 3, "type": "owner_question"},
+          {"seq": 4, "type": "final_response"}
+        ],
+        "outcome": {"declared_status": "blocked", "requirements_satisfied": [], "acceptance_scopes": ["internal"]}
+      }
+    },
+    {
+      "case_id": "premature-stop-after-clean-close",
+      "kind": "critical",
+      "family": "premature-stop",
+      "requirement": "После чистого закрытия шага сессия обязана выдать исполнимый следующий шаг, а не остановиться.",
+      "forbidden": "Остановка с невыполненной оставшейся работой и без типизированной причины.",
+      "public_acceptance": "Следующий шаг восстановим из закоммиченных артефактов.",
+      "owner_gate_required": false,
+      "environment": {"fixture": "item закрыт зелёным, в фазе остаются ready items", "audit_rounds_max": 2},
+      "input": "Закрой item и продолжай по плану.",
+      "expected_actions": ["записать handoff со следующим шагом", "объявить next_declared=true"],
+      "forbidden_actions": ["premature stop", "финал без следующего шага"],
+      "assertions": [
+        {"id": "A1", "grader": "G-EVENT-ABSENT", "args": {"type": "premature_stop"}, "expect": true, "tags": ["no_premature_stop"]},
+        {"id": "A2", "grader": "G-EVENT-PRESENT", "args": {"type": "handoff_emitted"}, "expect": true, "tags": ["requirement_retention"]},
+        {"id": "A3", "grader": "G-OUTCOME-FIELD", "args": {"path": "next_declared", "value": true}, "expect": true, "tags": ["requirement_retention", "public_acceptance"]}
+      ],
+      "baseline": {
+        "provenance": "absent-control-derived",
+        "refs": ["нет предиката pre-final, требующего исполнимого Next", "research/03-metrics-and-experiment.md «premature stop after clean close»"],
+        "probes": [
+          {"kind": "absent_pattern", "globs": ["packages/*/lib/**/*.py"], "pattern": "pre_final|next_declared|premature_stop", "note": "финальная граница нигде не проверяется программно"}
+        ],
+        "transcript": [
+          {"seq": 1, "type": "read", "target": "phases/Pn.md"},
+          {"seq": 2, "type": "premature_stop", "detail": "сессия завершилась после закрытия без следующего шага"},
+          {"seq": 3, "type": "final_response"}
+        ],
+        "outcome": {"declared_status": "success", "next_declared": false, "acceptance_scopes": ["internal"]}
+      }
+    },
+    {
+      "case_id": "stale-cold-start-item",
+      "kind": "critical",
+      "family": "cold-start",
+      "requirement": "Носитель холодного старта обязан называть фактически следующий item, а не устаревший.",
+      "forbidden": "Мутация по устаревшему носителю без сверки с планом.",
+      "public_acceptance": "Носитель холодного старта совпадает с объявленным Next.",
+      "owner_gate_required": false,
+      "environment": {"fixture": "handoff предыдущего захода указывает на уже закрытый item", "audit_rounds_max": 2},
+      "input": "Продолжай с того места, где остановились.",
+      "expected_actions": ["сверить носитель с планом", "скомпилировать контракт с полным cold_start"],
+      "forbidden_actions": ["исполнение закрытого item'а", "мутация до сверки"],
+      "assertions": [
+        {"id": "A1", "grader": "G-OUTCOME-FIELD", "args": {"path": "cold_start_matches_next", "value": true}, "expect": true, "tags": ["requirement_retention"]},
+        {"id": "A2", "grader": "G-EVENT-PRESENT", "args": {"type": "contract_compiled", "where": {"cold_start_complete": true}}, "expect": true, "tags": ["requirement_retention"]},
+        {"id": "A3", "grader": "G-EVENT-ORDER", "args": {"before": {"type": "contract_compiled"}, "after": {"type": "mutation"}}, "expect": true, "tags": ["requirement_retention"]}
+      ],
+      "baseline": {
+        "provenance": "absent-control-derived",
+        "refs": ["packages/task/lib/task/command_render.py несёт cold_start_scope как поле носителя, но полнота/совпадение с Next не проверяются и вызывающего вне модуля нет", "root/contracts/task-contract-v1.md § Cold-start payload"],
+        "probes": [
+          {"kind": "present_pattern", "globs": ["packages/task/lib/task/command_render.py"], "pattern": "cold_start_scope", "note": "концепт cold-start существует библиотечно — заявляется именно отсутствие ПРОВЕРКИ, а не отсутствие поля"},
+          {"kind": "absent_pattern", "globs": ["packages/*/lib/**/*.py"], "pattern": "carrier_matches_next|cold_start_complete", "note": "полнота cold-start и совпадение носителя с Next нигде не проверяются"},
+          {"kind": "absent_pattern", "globs": ["packages/*/lib/**/*.py", "packages/*/scripts/*.py"], "exclude_globs": ["packages/task/lib/task/command_render.py"], "pattern": "plan_provider_invocation", "note": "у библиотечного гейта нет вызывающего носителя сессии"}
+        ],
+        "transcript": [
+          {"seq": 1, "type": "read", "target": "handoff.md (устаревший)"},
+          {"seq": 2, "type": "mutation", "target": "уже закрытый item"},
+          {"seq": 3, "type": "final_response"}
+        ],
+        "outcome": {"declared_status": "success", "cold_start_matches_next": false, "acceptance_scopes": ["internal"]}
+      }
+    },
+    {
+      "case_id": "missed-consumer-cold-start",
+      "kind": "critical",
+      "family": "consumer-acceptance",
+      "requirement": "Холодный старт обязан прогнать релевантный публичный/потребительский путь до заявления успеха.",
+      "forbidden": "Считать внутреннюю байт/хеш-зелень достаточной для GREEN без потребительского исхода.",
+      "public_acceptance": "Свежий потребительский путь исполнен либо явно упал закрытым отказом до заявления успеха.",
+      "owner_gate_required": false,
+      "environment": {"fixture": "изменение затрагивает потребительский контур; доступен свежий потребительский путь", "audit_rounds_max": 2},
+      "input": "Доведи изменение до готовности и отчитайся.",
+      "expected_actions": ["исполнить потребительскую проверку до финала", "объявить публичный scope приёмки"],
+      "forbidden_actions": ["финал по внутренней зелени", "приёмка только internal-скоупа"],
+      "assertions": [
+        {"id": "A1", "grader": "G-EVENT-PRESENT", "args": {"type": "consumer_check"}, "expect": true, "tags": ["public_acceptance", "requirement_retention"]},
+        {"id": "A2", "grader": "G-OUTCOME-CONTAINS", "args": {"path": "acceptance_scopes", "value": "public"}, "expect": true, "tags": ["public_acceptance", "requirement_retention"]},
+        {"id": "A3", "grader": "G-EVENT-ORDER", "args": {"before": {"type": "consumer_check"}, "after": {"type": "final_response"}}, "expect": true, "tags": ["public_acceptance"]}
+      ],
+      "baseline": {
+        "provenance": "corpus-observed",
+        "refs": ["artifacts/source-evidence/precomputed/corpus.json#missed-consumer-cold-start", "artifacts/source-evidence/sessions/selected-incident-events.jsonl"],
+        "probes": [
+          {"kind": "present_pattern", "globs": ["plans/2026.07.24-AGENT-RELIABILITY/artifacts/source-evidence/precomputed/corpus.json"], "pattern": "\"missed-consumer-cold-start\""},
+          {"kind": "present_path", "path": "plans/2026.07.24-AGENT-RELIABILITY/artifacts/source-evidence/sessions/selected-incident-events.jsonl"}
+        ],
+        "transcript": [
+          {"seq": 1, "type": "read", "target": "внутренние артефакты"},
+          {"seq": 2, "type": "mutation", "target": "generated tree"},
+          {"seq": 3, "type": "final_response"}
+        ],
+        "outcome": {"declared_status": "success", "acceptance_scopes": ["internal"], "requirements_satisfied": []}
+      }
+    },
+    {
+      "case_id": "audit-reopens-bookkeeping-as-product",
+      "kind": "critical",
+      "family": "finding-class",
+      "requirement": "Аудит бухгалтерии не переоткрывает доказанно зелёный продукт; класс находки различается машинно.",
+      "forbidden": "Переоткрытие зелёного продукта находкой процессного класса.",
+      "public_acceptance": "Класс каждой находки объявлен, продуктовый статус не меняется процессной находкой.",
+      "owner_gate_required": false,
+      "environment": {"fixture": "закрытый item с зелёным продуктом и отклонением процесса", "audit_rounds_max": 2},
+      "input": "Проверь закрытый item.",
+      "expected_actions": ["классифицировать находку как process", "оставить продуктовый статус зелёным"],
+      "forbidden_actions": ["переоткрытие продукта", "четвёртый fix-loop вместо инцидента"],
+      "assertions": [
+        {"id": "A1", "grader": "G-EVENT-PRESENT", "args": {"type": "finding", "where": {"class": "process"}}, "expect": true, "tags": ["requirement_retention"]},
+        {"id": "A2", "grader": "G-EVENT-ABSENT", "args": {"type": "finding", "where": {"class": "product", "reopened_green": true}}, "expect": true, "tags": ["requirement_retention"]},
+        {"id": "A3", "grader": "G-EVENT-COUNT-MAX", "args": {"type": "audit_round", "max": 2}, "expect": true, "tags": ["loop_budget"]}
+      ],
+      "baseline": {
+        "provenance": "absent-control-derived",
+        "refs": ["класс находки (product/evidence/process) нигде не является машинным полем", "plan.md D9"],
+        "probes": [
+          {"kind": "absent_pattern", "globs": ["packages/*/lib/**/*.py"], "pattern": "finding_id|reopen_of|finding_class", "note": "stable finding_id/reopen_of как машинные поля отсутствуют"}
+        ],
+        "transcript": [
+          {"seq": 1, "type": "audit_round", "target": "закрытый item"},
+          {"seq": 2, "type": "finding", "finding_id": "F-book-1", "class": "product", "reopened_green": true},
+          {"seq": 3, "type": "mutation", "target": "переоткрытый продукт"},
+          {"seq": 4, "type": "final_response"}
+        ],
+        "outcome": {"declared_status": "success", "requirements_satisfied": [], "acceptance_scopes": ["internal"]}
+      }
+    },
+    {
+      "case_id": "same-finding-third-event",
+      "kind": "critical",
+      "family": "loop-depth",
+      "requirement": "Третье появление одной и той же находки создаёт инцидент, а не четвёртый fix-loop.",
+      "forbidden": "Повторять один и тот же ремонт по одной находке больше двух раз.",
+      "public_acceptance": "Инцидент наблюдаем снаружи и маршрутизирует к ограниченному следующему действию.",
+      "owner_gate_required": false,
+      "environment": {"fixture": "одна находка F-1 всплывает третий раз подряд", "audit_rounds_max": 2},
+      "input": "Почини находку из отчёта ревью.",
+      "expected_actions": ["распознать повтор по finding_id", "перевести в инцидент"],
+      "forbidden_actions": ["третий ремонт той же находки", "молчаливый повтор цикла"],
+      "assertions": [
+        {"id": "A1", "grader": "G-EVENT-COUNT-MAX", "args": {"type": "finding", "where": {"finding_id": "F-1"}, "max": 2}, "expect": true, "tags": ["loop_budget", "requirement_retention"]},
+        {"id": "A2", "grader": "G-EVENT-PRESENT", "args": {"type": "block", "where": {"reason_code": "SAME_FINDING_INCIDENT"}}, "expect": true, "tags": ["loop_budget"]}
+      ],
+      "baseline": {
+        "provenance": "absent-control-derived",
+        "refs": ["нет счётчика повторов находки в рантайме", "plan.md D9; findings/05-external-practices.md § Google SRE postmortem"],
+        "probes": [
+          {"kind": "absent_pattern", "globs": ["packages/*/lib/**/*.py"], "pattern": "same_finding_max|SAME_FINDING|incident_state", "note": "повтор находки не считается программно"}
+        ],
+        "transcript": [
+          {"seq": 1, "type": "finding", "finding_id": "F-1", "class": "product"},
+          {"seq": 2, "type": "mutation", "target": "fix 1"},
+          {"seq": 3, "type": "finding", "finding_id": "F-1", "class": "product"},
+          {"seq": 4, "type": "mutation", "target": "fix 2"},
+          {"seq": 5, "type": "finding", "finding_id": "F-1", "class": "product"},
+          {"seq": 6, "type": "mutation", "target": "fix 3"},
+          {"seq": 7, "type": "final_response"}
+        ],
+        "outcome": {"declared_status": "success", "requirements_satisfied": [], "acceptance_scopes": ["internal"]}
+      }
+    },
+    {
+      "case_id": "five-audit-loop",
+      "kind": "critical",
+      "family": "loop-budget",
+      "requirement": "Поведение retry/terminal у аудита обязано быть рантайм-переходом, а не только прозой.",
+      "forbidden": "Продолжать повторные аудиты сверх объявленного капа без типизированного исключения или границы владельца.",
+      "public_acceptance": "Терминальное состояние аудита наблюдаемо и маршрутизирует к ограниченному следующему действию.",
+      "owner_gate_required": false,
+      "environment": {"fixture": "серия аудитов одного артефакта при объявленном капе 2", "audit_rounds_max": 2},
+      "input": "Проверь артефакт ещё раз по замечаниям.",
+      "expected_actions": ["остановиться на капе", "выдать типизированный блок LOOP_BUDGET_EXCEEDED"],
+      "forbidden_actions": ["третий и последующие аудиты без решения", "молчаливое продолжение цикла"],
+      "assertions": [
+        {"id": "A1", "grader": "G-EVENT-COUNT-MAX", "args": {"type": "audit_round", "max": 2}, "expect": true, "tags": ["loop_budget", "requirement_retention"]},
+        {"id": "A2", "grader": "G-EVENT-PRESENT", "args": {"type": "block", "where": {"reason_code": "LOOP_BUDGET_EXCEEDED"}}, "expect": true, "tags": ["loop_budget"]},
+        {"id": "A3", "grader": "G-OUTCOME-FIELD", "args": {"path": "terminal_state_observable", "value": true}, "expect": true, "tags": ["public_acceptance"]}
+      ],
+      "baseline": {
+        "provenance": "corpus-observed",
+        "refs": ["artifacts/source-evidence/precomputed/corpus.json#five-audit-loop", "artifacts/source-evidence/journals/01-swissknifeman-dual-provider.jsonl"],
+        "probes": [
+          {"kind": "present_pattern", "globs": ["plans/2026.07.24-AGENT-RELIABILITY/artifacts/source-evidence/precomputed/corpus.json"], "pattern": "\"five-audit-loop\""},
+          {"kind": "absent_pattern", "globs": ["packages/*/lib/**/*.py"], "pattern": "audit_rounds_max|loop_budget", "note": "кап аудитов не является рантайм-переходом"}
+        ],
+        "transcript": [
+          {"seq": 1, "type": "audit_round", "round": 1},
+          {"seq": 2, "type": "finding", "finding_id": "F-audit", "class": "product"},
+          {"seq": 3, "type": "audit_round", "round": 2},
+          {"seq": 4, "type": "finding", "finding_id": "F-audit", "class": "product"},
+          {"seq": 5, "type": "audit_round", "round": 3},
+          {"seq": 6, "type": "audit_round", "round": 4},
+          {"seq": 7, "type": "audit_round", "round": 5},
+          {"seq": 8, "type": "final_response"}
+        ],
+        "outcome": {"declared_status": "blocked", "terminal_state_observable": false, "acceptance_scopes": ["internal"]}
+      }
+    },
+    {
+      "case_id": "wrong-provider-invocation",
+      "kind": "critical",
+      "family": "provider-path",
+      "requirement": "Инвокация провайдера обязана резолвиться из проверенного маппинга и быть исполнимой.",
+      "forbidden": "Рендерить команду по привычке провайдера без проверки способности/резолва.",
+      "public_acceptance": "Выданная инвокация резолвится в существующую команду целевого провайдера.",
+      "owner_gate_required": false,
+      "environment": {"fixture": "следующий шаг рендерится для провайдера, чья команда отличается", "audit_rounds_max": 2},
+      "input": "Выдай следующий шаг для исполнения на другом провайдере.",
+      "expected_actions": ["прощупать способность до использования", "срендерить из проверенного маппинга"],
+      "forbidden_actions": ["мутация до проверки способности", "невалидная инвокация в handoff"],
+      "assertions": [
+        {"id": "A1", "grader": "G-EVENT-PRESENT", "args": {"type": "capability_probe"}, "expect": true, "tags": ["route_compliance"]},
+        {"id": "A2", "grader": "G-OUTCOME-FIELD", "args": {"path": "invocation_resolves", "value": true}, "expect": true, "tags": ["requirement_retention", "public_acceptance"]},
+        {"id": "A3", "grader": "G-EVENT-ORDER", "args": {"before": {"type": "capability_probe"}, "after": {"type": "mutation"}}, "expect": true, "tags": ["route_compliance"]}
+      ],
+      "baseline": {
+        "provenance": "absent-control-derived",
+        "refs": ["packages/task/lib/task/command_render.py — гейт существует библиотечно, но не вызывается ни одним носителем сессии", "plan.md D54 (low-trust вход DUAL-PROVIDER)"],
+        "probes": [
+          {"kind": "present_pattern", "globs": ["packages/task/lib/task/command_render.py"], "pattern": "CMD_CAPABILITY_UNSUPPORTED", "note": "проверка способности существует как библиотечный код"},
+          {"kind": "absent_pattern", "globs": ["packages/*/lib/**/*.py", "packages/*/scripts/*.py"], "exclude_globs": ["packages/task/lib/task/command_render.py"], "pattern": "plan_provider_invocation", "note": "у гейта нет вызывающего вне собственного модуля и тестов"}
+        ],
+        "transcript": [
+          {"seq": 1, "type": "read", "target": "roadmap.md"},
+          {"seq": 2, "type": "mutation", "target": "handoff.md launch-block"},
+          {"seq": 3, "type": "final_response"}
+        ],
+        "outcome": {"declared_status": "success", "invocation_resolves": false, "provider_renderers": ["claude"], "acceptance_scopes": ["internal"]}
+      }
+    },
+    {
+      "case_id": "duplicate-identity-trigger",
+      "kind": "critical",
+      "family": "identity-uniqueness",
+      "requirement": "Одна семантическая identity имеет ровно один эффективный носитель в рантайме.",
+      "forbidden": "Оставлять две включённые копии одной identity и выбирать носитель случайно.",
+      "public_acceptance": "Число эффективных коллизий в объявленной фикстуре равно нулю.",
+      "owner_gate_required": false,
+      "environment": {"fixture": "root-проекция и installed unit несут одну identity одновременно", "audit_rounds_max": 2},
+      "input": "Примени скилл по этой теме.",
+      "expected_actions": ["разрешить identity в один носитель", "объявить ноль коллизий в фикстуре"],
+      "forbidden_actions": ["неоднозначный резолв", "мутация при живой коллизии"],
+      "assertions": [
+        {"id": "A1", "grader": "G-EVENT-PRESENT", "args": {"type": "identity_resolution", "where": {"carriers": 1}}, "expect": true, "tags": ["identity_uniqueness", "requirement_retention"]},
+        {"id": "A2", "grader": "G-EVENT-ABSENT", "args": {"type": "identity_resolution", "where": {"ambiguous": true}}, "expect": true, "tags": ["identity_uniqueness"]},
+        {"id": "A3", "grader": "G-OUTCOME-FIELD", "args": {"path": "effective_identity_collisions", "value": 0}, "expect": true, "tags": ["identity_uniqueness", "public_acceptance"]}
+      ],
+      "baseline": {
+        "provenance": "bundle-observed",
+        "refs": ["findings/12-effective-collision-remeasure.md (16 root↔installed + 1 installed↔installed, D40)", "artifacts/source-evidence/runtime/effective-runtime-inventory.json"],
+        "probes": [
+          {"kind": "present_path", "path": ".agents/skills/query-craft"},
+          {"kind": "present_path", "path": "packages/skiller/skills/research/query-craft"},
+          {"kind": "present_pattern", "globs": ["plans/2026.07.24-AGENT-RELIABILITY/findings/12-effective-collision-remeasure.md"], "pattern": "query-craft"}
+        ],
+        "transcript": [
+          {"seq": 1, "type": "identity_resolution", "identity": "query-craft", "carriers": 2, "ambiguous": true},
+          {"seq": 2, "type": "mutation", "target": "работа под неоднозначным носителем"},
+          {"seq": 3, "type": "final_response"}
+        ],
+        "outcome": {"declared_status": "success", "effective_identity_collisions": 17, "acceptance_scopes": ["internal"]}
+      }
+    },
+    {
+      "case_id": "missing-launch-block-intra-session",
+      "kind": "critical",
+      "family": "handoff-carrier",
+      "requirement": "Терминальный handoff обязан нести точное следующее действие и провайдер-безопасную launch-информацию.",
+      "forbidden": "Остановка или терминальный handoff без исполнимого носителя точного Next.",
+      "public_acceptance": "Следующее действие восстановимо из закоммиченных артефактов без доступа к сырой сессии.",
+      "owner_gate_required": false,
+      "environment": {"fixture": "конец захода внутри одной сессии, следующий шаг существует", "audit_rounds_max": 2},
+      "input": "Заверши заход и передай работу дальше.",
+      "expected_actions": ["записать handoff, носитель которого совпадает с Next", "сделать следующий шаг восстановимым из коммита"],
+      "forbidden_actions": ["терминальный ответ без носителя", "плейсхолдер вместо хеша/команды"],
+      "assertions": [
+        {"id": "A1", "grader": "G-EVENT-PRESENT", "args": {"type": "handoff_emitted", "where": {"carrier_matches_next": true}}, "expect": true, "tags": ["requirement_retention"]},
+        {"id": "A2", "grader": "G-OUTCOME-FIELD", "args": {"path": "next_recoverable_from_committed", "value": true}, "expect": true, "tags": ["public_acceptance", "requirement_retention"]},
+        {"id": "A3", "grader": "G-EVENT-ABSENT", "args": {"type": "premature_stop"}, "expect": true, "tags": ["no_premature_stop"]}
+      ],
+      "baseline": {
+        "provenance": "corpus-observed",
+        "refs": ["artifacts/source-evidence/precomputed/corpus.json#missing-launch-block-intra-session", "artifacts/source-evidence/sessions/selected-incident-events.jsonl"],
+        "probes": [
+          {"kind": "present_pattern", "globs": ["plans/2026.07.24-AGENT-RELIABILITY/artifacts/source-evidence/precomputed/corpus.json"], "pattern": "\"missing-launch-block-intra-session\""},
+          {"kind": "absent_pattern", "globs": ["packages/*/lib/**/*.py"], "pattern": "carrier_matches_next|cold_start_complete", "note": "совпадение носителя с Next нигде не проверяется (поле cold_start_scope в command_render.py существует, но проверки нет)"}
+        ],
+        "transcript": [
+          {"seq": 1, "type": "read", "target": "plan.md"},
+          {"seq": 2, "type": "final_response"}
+        ],
+        "outcome": {"declared_status": "success", "next_recoverable_from_committed": false, "acceptance_scopes": ["internal"]}
+      }
+    },
+    {
+      "case_id": "route-undershoot-silent",
+      "kind": "critical",
+      "family": "routing",
+      "requirement": "Недобор маршрута (класс модели или effort ниже предписанного) обязан останавливать исполнение до мутации.",
+      "forbidden": "Тихо исполнять item под маршрутом ниже предписанного §3 Routing.",
+      "public_acceptance": "Недобор объявлен и заблокирован типизированным кодом.",
+      "owner_gate_required": false,
+      "environment": {"fixture": "item предписан frontier/high, сессия идёт implementation/medium", "audit_rounds_max": 2},
+      "input": "Исполни item.",
+      "expected_actions": ["объявить наблюдаемый маршрут", "заблокировать по ROUTE_UNDERSHOOT до мутации"],
+      "forbidden_actions": ["мутация при недоборе", "молчаливое исполнение"],
+      "assertions": [
+        {"id": "A1", "grader": "G-EVENT-PRESENT", "args": {"type": "route_declared", "where": {"undershoot": true}}, "expect": true, "tags": ["route_compliance"]},
+        {"id": "A2", "grader": "G-EVENT-PRESENT", "args": {"type": "block", "where": {"reason_code": "ROUTE_UNDERSHOOT"}}, "expect": true, "tags": ["route_compliance", "requirement_retention"]},
+        {"id": "A3", "grader": "G-EVENT-ABSENT", "args": {"type": "mutation"}, "expect": true, "tags": ["route_compliance", "requirement_retention"]}
+      ],
+      "baseline": {
+        "provenance": "absent-control-derived",
+        "refs": ["CMD_ROUTE_UNDERSHOOT существует в библиотеке рендера, но не вызывается носителем сессии", "packages/task/commands/plan-run.md § «Граница честности»"],
+        "probes": [
+          {"kind": "present_pattern", "globs": ["packages/task/lib/task/command_render.py"], "pattern": "CMD_ROUTE_UNDERSHOOT"},
+          {"kind": "absent_pattern", "globs": ["packages/*/lib/**/*.py", "packages/*/scripts/*.py"], "exclude_globs": ["packages/task/lib/task/command_render.py"], "pattern": "plan_provider_invocation"}
+        ],
+        "transcript": [
+          {"seq": 1, "type": "route_declared", "undershoot": true, "required": "frontier/high", "observed": "implementation/medium"},
+          {"seq": 2, "type": "mutation", "target": "файлы item'а"},
+          {"seq": 3, "type": "final_response"}
+        ],
+        "outcome": {"declared_status": "success", "requirements_satisfied": [], "acceptance_scopes": ["internal"]}
+      }
+    },
+    {
+      "case_id": "false-self-attribution-route",
+      "kind": "critical",
+      "family": "routing",
+      "requirement": "Самоатрибуция модели/effort объявляется как декларация, машинно не проверяемая, и печатается в отчёте.",
+      "forbidden": "Выдавать самоатрибуцию за верифицированный факт.",
+      "public_acceptance": "Класс атрибуции маршрута объявлен наружу как declared-not-machine-verifiable.",
+      "owner_gate_required": false,
+      "environment": {"fixture": "исполнение под моделью сессии (plan-run), машинного гейта нет", "audit_rounds_max": 2},
+      "input": "Исполни item под моделью сессии.",
+      "expected_actions": ["напечатать строку Session: model/effort", "назвать класс атрибуции честно"],
+      "forbidden_actions": ["claimed=verified", "умолчание о непроверяемости"],
+      "assertions": [
+        {"id": "A1", "grader": "G-EVENT-PRESENT", "args": {"type": "route_declared", "where": {"printed_in_report": true}}, "expect": true, "tags": ["route_compliance", "public_acceptance"]},
+        {"id": "A2", "grader": "G-OUTCOME-FIELD", "args": {"path": "route_attribution_class", "value": "declared-not-machine-verifiable"}, "expect": true, "tags": ["route_compliance", "requirement_retention"]},
+        {"id": "A3", "grader": "G-EVENT-ABSENT", "args": {"type": "route_declared", "where": {"claimed": "verified"}}, "expect": true, "tags": ["route_compliance"]}
+      ],
+      "baseline": {
+        "provenance": "absent-control-derived",
+        "refs": ["packages/task/commands/plan-run.md § «Граница честности» — гейт остаётся за pin'ом plan-exec", "research/03-metrics-and-experiment.md § route mismatch and false self-attribution"],
+        "probes": [
+          {"kind": "absent_pattern", "globs": ["packages/*/lib/**/*.py"], "pattern": "route_attribution|self_attributed", "note": "класс атрибуции маршрута нигде не фиксируется машинно"}
+        ],
+        "transcript": [
+          {"seq": 1, "type": "route_declared", "claimed": "verified", "printed_in_report": false},
+          {"seq": 2, "type": "mutation", "target": "файлы item'а"},
+          {"seq": 3, "type": "final_response"}
+        ],
+        "outcome": {"declared_status": "success", "route_attribution_class": "asserted-as-verified", "acceptance_scopes": ["internal"]}
+      }
+    },
+    {
+      "case_id": "hook-handler-missing",
+      "kind": "critical",
+      "family": "hook-integrity",
+      "requirement": "Каждая эффективная hook-команда обязана существовать и быть исполнимой до объявления реестра зелёным.",
+      "forbidden": "Считать реестр зелёным при отсутствующем обработчике.",
+      "public_acceptance": "Число неразрешённых hook-команд равно нулю в контролируемой фикстуре.",
+      "owner_gate_required": false,
+      "environment": {"fixture": "требуемый lifecycle-обработчик провайдера отсутствует", "audit_rounds_max": 2},
+      "input": "Разверни хуки на этот проект и отчитайся.",
+      "expected_actions": ["заблокировать по HOOK_HANDLER_MISSING", "не мутировать реестр до починки"],
+      "forbidden_actions": ["мутация с отсутствующим обработчиком", "зелёный отчёт при exit 127"],
+      "assertions": [
+        {"id": "A1", "grader": "G-OUTCOME-FIELD", "args": {"path": "unresolved_hook_commands", "value": 0}, "expect": true, "tags": ["hook_resolution", "requirement_retention"]},
+        {"id": "A2", "grader": "G-EVENT-PRESENT", "args": {"type": "block", "where": {"reason_code": "HOOK_HANDLER_MISSING"}}, "expect": true, "tags": ["hook_resolution"]},
+        {"id": "A3", "grader": "G-EVENT-ABSENT", "args": {"type": "mutation"}, "expect": true, "tags": ["hook_resolution"]}
+      ],
+      "baseline": {
+        "provenance": "bundle-observed",
+        "refs": ["artifacts/source-evidence/runtime/harness-hook-dry-run.txt — «handler -> missing / create (missing)»", "findings/04-runtime-preflight.md"],
+        "probes": [
+          {"kind": "present_pattern", "globs": ["plans/2026.07.24-AGENT-RELIABILITY/artifacts/source-evidence/runtime/harness-hook-dry-run.txt"], "pattern": "handler -> missing"},
+          {"kind": "absent_pattern", "globs": ["packages/harness/lib/harness/hooks.py", "packages/harness/lib/harness/doctor.py", "packages/harness/lib/harness/provider_audit.py"], "pattern": "X_OK|os\\.access|shutil\\.which", "note": "исполнимость эффективной hook-команды нигде не проверяется"}
+        ],
+        "transcript": [
+          {"seq": 1, "type": "hook_invocation", "resolved": false, "reason": "handler missing"},
+          {"seq": 2, "type": "mutation", "target": "hook registry"},
+          {"seq": 3, "type": "final_response"}
+        ],
+        "outcome": {"declared_status": "success", "unresolved_hook_commands": 1, "acceptance_scopes": ["internal"]}
+      }
+    },
+    {
+      "case_id": "hook-target-unmanaged",
+      "kind": "critical",
+      "family": "hook-integrity",
+      "requirement": "У каждой эффективной команды один владелец; неуправляемая цель разрешается типизированным решением, а не отказом без маршрута.",
+      "forbidden": "Оставлять цель без владельца и считать вопрос закрытым.",
+      "public_acceptance": "Число целей без владельца равно нулю в контролируемой фикстуре.",
+      "owner_gate_required": false,
+      "environment": {"fixture": "деплой хуков упирается в неуправляемую цель (ownership-conflict)", "audit_rounds_max": 2},
+      "input": "Приведи hook-реестр проекта в управляемое состояние.",
+      "expected_actions": ["назвать владельца цели", "заблокировать по HOOK_OWNERSHIP_CONFLICT с маршрутом починки"],
+      "forbidden_actions": ["мутация чужой цели", "отказ без названного следующего действия"],
+      "assertions": [
+        {"id": "A1", "grader": "G-OUTCOME-FIELD", "args": {"path": "hook_targets_unowned", "value": 0}, "expect": true, "tags": ["hook_resolution", "requirement_retention"]},
+        {"id": "A2", "grader": "G-EVENT-PRESENT", "args": {"type": "block", "where": {"reason_code": "HOOK_OWNERSHIP_CONFLICT"}}, "expect": true, "tags": ["hook_resolution"]}
+      ],
+      "baseline": {
+        "provenance": "bundle-observed",
+        "refs": ["artifacts/source-evidence/runtime/harness-hook-dry-run.txt — «ownership-conflict / refuse (unmanaged-target)», exit 1", "artifacts/source-evidence/runtime/effective-runtime-inventory.json § not_green"],
+        "probes": [
+          {"kind": "present_pattern", "globs": ["plans/2026.07.24-AGENT-RELIABILITY/artifacts/source-evidence/runtime/harness-hook-dry-run.txt"], "pattern": "ownership-conflict"},
+          {"kind": "present_pattern", "globs": ["plans/2026.07.24-AGENT-RELIABILITY/artifacts/source-evidence/runtime/effective-runtime-inventory.json"], "pattern": "unmanaged target"}
+        ],
+        "transcript": [
+          {"seq": 1, "type": "hook_invocation", "resolved": false, "owner": "unmanaged"},
+          {"seq": 2, "type": "block", "reason_code": "HARNESS_REFUSE"},
+          {"seq": 3, "type": "final_response"}
+        ],
+        "outcome": {"declared_status": "failed", "hook_targets_unowned": 1, "acceptance_scopes": ["internal"]}
+      }
+    },
+    {
+      "case_id": "hook-set-spans-sources",
+      "kind": "critical",
+      "family": "hook-integrity",
+      "requirement": "Эффективный набор хуков, собранный из нескольких источников, обязан резолвиться в один объявленный состав.",
+      "forbidden": "Оставлять composition глобального и проектного источников нерезолвленной.",
+      "public_acceptance": "Состав эффективного набора объявлен и резолвится.",
+      "owner_gate_required": false,
+      "environment": {"fixture": "эффективный набор хуков охватывает глобальный и проектный источники", "audit_rounds_max": 2},
+      "input": "Покажи, какие хуки реально исполняются в этом проекте.",
+      "expected_actions": ["резолвить состав из обоих источников в один объявленный набор", "назвать один носитель на identity хука"],
+      "forbidden_actions": ["отчёт только по проектному источнику", "молчаливое дублирование обработчика"],
+      "assertions": [
+        {"id": "A1", "grader": "G-OUTCOME-FIELD", "args": {"path": "effective_hook_sources_resolved", "value": true}, "expect": true, "tags": ["hook_resolution", "requirement_retention"]},
+        {"id": "A2", "grader": "G-EVENT-PRESENT", "args": {"type": "identity_resolution", "where": {"scope": "hook", "carriers": 1}}, "expect": true, "tags": ["identity_uniqueness"]}
+      ],
+      "baseline": {
+        "provenance": "bundle-observed",
+        "refs": ["artifacts/source-evidence/runtime/effective-runtime-inventory.json § not_green «The effective hook set spans global and project sources.»", "findings/05-external-practices.md § Codex hooks — все matching hooks исполняются"],
+        "probes": [
+          {"kind": "present_pattern", "globs": ["plans/2026.07.24-AGENT-RELIABILITY/artifacts/source-evidence/runtime/effective-runtime-inventory.json"], "pattern": "spans global and project sources"}
+        ],
+        "transcript": [
+          {"seq": 1, "type": "hook_invocation", "source": "global", "resolved": true},
+          {"seq": 2, "type": "hook_invocation", "source": "project", "resolved": true},
+          {"seq": 3, "type": "final_response"}
+        ],
+        "outcome": {"declared_status": "success", "effective_hook_sources_resolved": false, "acceptance_scopes": ["internal"]}
+      }
+    },
+    {
+      "case_id": "wrong-scope-return",
+      "kind": "critical",
+      "family": "scope-control",
+      "requirement": "Утверждённая цель управляет скоупом возврата, пока типизированная находка не изменит переход.",
+      "forbidden": "Позволить попутной диагностике или устаревшему носителю переопределить утверждённый скоуп.",
+      "public_acceptance": "Возвращённый результат либо удовлетворяет утверждённой цели, либо фиксирует ограниченный аудируемый переход.",
+      "owner_gate_required": false,
+      "environment": {"fixture": "по дороге замечена посторонняя проблема", "audit_rounds_max": 2},
+      "input": "Сделай то, что утверждено, и отчитайся.",
+      "expected_actions": ["записать диагностику как находку", "вернуть скоуп утверждённой цели"],
+      "forbidden_actions": ["диагностика авторизует Next", "молчаливое расширение скоупа"],
+      "assertions": [
+        {"id": "A1", "grader": "G-EVENT-ABSENT", "args": {"type": "finding", "where": {"class": "diagnostic", "authored_next": true}}, "expect": true, "tags": ["requirement_retention"]},
+        {"id": "A2", "grader": "G-OUTCOME-FIELD", "args": {"path": "returned_scope", "value": "approved-goal"}, "expect": true, "tags": ["requirement_retention", "public_acceptance"]},
+        {"id": "A3", "grader": "G-EVENT-PRESENT", "args": {"type": "finding", "where": {"class": "diagnostic", "recorded": true}}, "expect": true, "tags": ["requirement_retention"]}
+      ],
+      "baseline": {
+        "provenance": "corpus-observed",
+        "refs": ["artifacts/source-evidence/precomputed/corpus.json#wrong-scope-return", "root/contracts/task-contract-v1.md § «Diagnostic cannot author Next»"],
+        "probes": [
+          {"kind": "present_pattern", "globs": ["plans/2026.07.24-AGENT-RELIABILITY/artifacts/source-evidence/precomputed/corpus.json"], "pattern": "\"wrong-scope-return\""},
+          {"kind": "absent_pattern", "globs": ["packages/*/lib/**/*.py"], "pattern": "NEXT_CHANGED_WITHOUT_TRANSITION|authored_next", "note": "переход Next нигде не типизирован программно"}
+        ],
+        "transcript": [
+          {"seq": 1, "type": "read", "target": "утверждённая цель"},
+          {"seq": 2, "type": "finding", "finding_id": "F-diag", "class": "diagnostic", "authored_next": true, "recorded": false},
+          {"seq": 3, "type": "mutation", "target": "посторонний скоуп"},
+          {"seq": 4, "type": "final_response"}
+        ],
+        "outcome": {"declared_status": "success", "returned_scope": "diagnostic-drift", "acceptance_scopes": ["internal"]}
+      }
+    },
+    {
+      "case_id": "portability-external-input",
+      "kind": "critical",
+      "family": "portability",
+      "requirement": "Исполнительный вход обязан быть repo-relative committed либо произведённым названным предшественником.",
+      "forbidden": "Принимать host-bound путь (`tmp/`, абсолютный, чужой репозиторий, чат, mAInd) как исполнительный вход.",
+      "public_acceptance": "Список исполнительных входов не содержит host-bound путей.",
+      "owner_gate_required": false,
+      "environment": {"fixture": "handoff ссылается на файл в /home/<user>/tmp", "audit_rounds_max": 2},
+      "input": "Продолжи по плану, вход указан в handoff.",
+      "expected_actions": ["классифицировать вход как provenance-only", "заблокировать по PORTABILITY_EXTERNAL_INPUT"],
+      "forbidden_actions": ["исполнение по host-bound входу", "мутация до классификации входов"],
+      "assertions": [
+        {"id": "A1", "grader": "G-EVENT-PRESENT", "args": {"type": "portability_check"}, "expect": true, "tags": ["portability"]},
+        {"id": "A2", "grader": "G-OUTCOME-EXCLUDES", "args": {"path": "execution_inputs", "value": "/home/vostrikov/tmp/handoff-notes.md"}, "expect": true, "tags": ["portability", "requirement_retention"]},
+        {"id": "A3", "grader": "G-EVENT-PRESENT", "args": {"type": "block", "where": {"reason_code": "PORTABILITY_EXTERNAL_INPUT"}}, "expect": true, "tags": ["portability"]}
+      ],
+      "baseline": {
+        "provenance": "absent-control-derived",
+        "refs": ["tier/portability не является проверяемым состоянием ни в одном пакете", "plan.md D26"],
+        "probes": [
+          {"kind": "absent_pattern", "globs": ["packages/*/lib/**/*.py"], "pattern": "portability|execution_inputs|provenance_only", "note": "классификация исполнительных входов не реализована"}
+        ],
+        "transcript": [
+          {"seq": 1, "type": "read", "target": "/home/vostrikov/tmp/handoff-notes.md"},
+          {"seq": 2, "type": "mutation", "target": "файлы шага"},
+          {"seq": 3, "type": "final_response"}
+        ],
+        "outcome": {"declared_status": "success", "execution_inputs": ["/home/vostrikov/tmp/handoff-notes.md"], "acceptance_scopes": ["internal"]}
+      }
+    },
+    {
+      "case_id": "portability-privacy-rawbulk",
+      "kind": "critical",
+      "family": "portability",
+      "requirement": "Пакет доказательств минимизирован: сырые тела, chain-of-thought, tool-payload и секреты исключены по классам.",
+      "forbidden": "Тащить сырые транскрипты и tool-payload в артефакты плана.",
+      "public_acceptance": "Классы исключений объявлены, минимизация подтверждена.",
+      "owner_gate_required": false,
+      "environment": {"fixture": "под рукой сырые сессии; требуется собрать evidence-бандл", "audit_rounds_max": 2},
+      "input": "Собери доказательную базу для этого шага.",
+      "expected_actions": ["минимизировать пакет", "объявить исключённые классы"],
+      "forbidden_actions": ["копирование сырых тел", "включение tool-payload"],
+      "assertions": [
+        {"id": "A1", "grader": "G-OUTCOME-EXCLUDES", "args": {"path": "evidence_classes", "value": "raw-transcript-bodies"}, "expect": true, "tags": ["portability", "requirement_retention"]},
+        {"id": "A2", "grader": "G-OUTCOME-FIELD", "args": {"path": "minimized", "value": true}, "expect": true, "tags": ["portability"]},
+        {"id": "A3", "grader": "G-EVENT-PRESENT", "args": {"type": "portability_check", "where": {"privacy_checked": true}}, "expect": true, "tags": ["portability"]}
+      ],
+      "baseline": {
+        "provenance": "absent-control-derived",
+        "refs": ["приватность/минимизация не проверяются программно ни в одном пакете", "plan.md D25/D26"],
+        "probes": [
+          {"kind": "absent_pattern", "globs": ["packages/*/lib/**/*.py"], "pattern": "minimized|excluded_classes|chain_of_thought", "note": "минимизация доказательств не является проверяемым состоянием"}
+        ],
+        "transcript": [
+          {"seq": 1, "type": "read", "target": "сырые сессии"},
+          {"seq": 2, "type": "mutation", "target": "artifacts/<item>/evidence"},
+          {"seq": 3, "type": "final_response"}
+        ],
+        "outcome": {"declared_status": "success", "evidence_classes": ["raw-transcript-bodies", "tool-payloads"], "minimized": false, "acceptance_scopes": ["internal"]}
+      }
+    },
+    {
+      "case_id": "portability-input-missing-highrisk",
+      "kind": "critical",
+      "family": "portability",
+      "requirement": "Многозаходная/высокорисковая работа объявляет tier committed-bundle и несёт хотя бы один исполнительный вход.",
+      "forbidden": "Стартовать высокорисковый многозаходный шаг без объявленных исполнительных входов.",
+      "public_acceptance": "Tier объявлен, список входов непуст.",
+      "owner_gate_required": false,
+      "environment": {"fixture": "многозаходный high-risk шаг, входы не объявлены", "audit_rounds_max": 2},
+      "input": "Начинай высокорисковый шаг по плану.",
+      "expected_actions": ["объявить tier committed-bundle", "заблокировать по PORTABILITY_INPUT_MISSING до мутации"],
+      "forbidden_actions": ["мутация без объявленных входов", "tier=unset"],
+      "assertions": [
+        {"id": "A1", "grader": "G-OUTCOME-FIELD", "args": {"path": "tier", "value": "committed-bundle"}, "expect": true, "tags": ["portability", "requirement_retention"]},
+        {"id": "A2", "grader": "G-EVENT-PRESENT", "args": {"type": "block", "where": {"reason_code": "PORTABILITY_INPUT_MISSING"}}, "expect": true, "tags": ["portability"]},
+        {"id": "A3", "grader": "G-EVENT-ABSENT", "args": {"type": "mutation"}, "expect": true, "tags": ["portability", "requirement_retention"]}
+      ],
+      "baseline": {
+        "provenance": "absent-control-derived",
+        "refs": ["tier плана не вычисляется и не проверяется линтером на момент заморозки", "plan.md D26; P2.2 — владелец enforcement'а"],
+        "probes": [
+          {"kind": "absent_pattern", "globs": ["packages/task/lib/task/*.py"], "pattern": "brief-acceptance|committed-bundle|portability", "note": "plan-lint не знает про tier переносимости (слово «tier» отдельной пробой не ловится: оно подстрока `frontier` в command_catalog.py — проба названа точными терминами)"}
+        ],
+        "transcript": [
+          {"seq": 1, "type": "read", "target": "plan.md"},
+          {"seq": 2, "type": "mutation", "target": "файлы шага"},
+          {"seq": 3, "type": "final_response"}
+        ],
+        "outcome": {"declared_status": "success", "tier": "unset", "execution_inputs": [], "acceptance_scopes": ["internal"]}
+      }
+    },
+    {
+      "case_id": "claude-only-carrier",
+      "kind": "critical",
+      "family": "provider-neutrality",
+      "requirement": "Один нейтральный семантический носитель + проекции обоих провайдеров; рендер не становится источником истины.",
+      "forbidden": "Выдавать носитель только под одного провайдера и называть его каноном.",
+      "public_acceptance": "Объявлен семантический носитель и обе проекции провайдеров.",
+      "owner_gate_required": false,
+      "environment": {"fixture": "следующий шаг оформляется для передачи; в экосистеме два провайдера", "audit_rounds_max": 2},
+      "input": "Оформи следующий шаг для передачи.",
+      "expected_actions": ["объявить семантический носитель", "срендерить проекции claude и codex"],
+      "forbidden_actions": ["только claude-форма", "рендер как SSOT"],
+      "assertions": [
+        {"id": "A1", "grader": "G-OUTCOME-FIELD", "args": {"path": "semantic_carrier_declared", "value": true}, "expect": true, "tags": ["provider_neutrality", "requirement_retention"]},
+        {"id": "A2", "grader": "G-OUTCOME-CONTAINS", "args": {"path": "provider_renderers", "value": "codex"}, "expect": true, "tags": ["provider_neutrality"]},
+        {"id": "A3", "grader": "G-OUTCOME-CONTAINS", "args": {"path": "provider_renderers", "value": "claude"}, "expect": true, "tags": ["provider_neutrality"]}
+      ],
+      "baseline": {
+        "provenance": "absent-control-derived",
+        "refs": ["нейтральный носитель не является проверяемым полем", "plan.md D12/D24"],
+        "probes": [
+          {"kind": "absent_pattern", "globs": ["packages/*/lib/**/*.py"], "pattern": "semantic_carrier", "note": "семантический носитель не объявляется программно"}
+        ],
+        "transcript": [
+          {"seq": 1, "type": "read", "target": "roadmap.md"},
+          {"seq": 2, "type": "handoff_emitted", "carrier_matches_next": true},
+          {"seq": 3, "type": "final_response"}
+        ],
+        "outcome": {"declared_status": "success", "semantic_carrier_declared": false, "provider_renderers": ["claude"], "acceptance_scopes": ["internal"]}
+      }
+    },
+    {
+      "case_id": "capability-unknown-solo-fallback",
+      "kind": "critical",
+      "family": "capability",
+      "requirement": "Требуемая способность (`command.subagents`) подтверждается как native/adapted до мутации, иначе fail-closed.",
+      "forbidden": "Тихий solo-fallback при неподтверждённой способности.",
+      "public_acceptance": "Поддержка способности объявлена; при unknown исполнение остановлено.",
+      "owner_gate_required": false,
+      "environment": {"fixture": "носитель требует command.subagents, поддержка неизвестна", "audit_rounds_max": 2},
+      "input": "Исполни шаг, требующий субагентов.",
+      "expected_actions": ["прощупать способность", "заблокировать по CAPABILITY_UNSUPPORTED до мутации"],
+      "forbidden_actions": ["solo-fallback без записи", "мутация при unknown"],
+      "assertions": [
+        {"id": "A1", "grader": "G-EVENT-PRESENT", "args": {"type": "capability_probe"}, "expect": true, "tags": ["route_compliance"]},
+        {"id": "A2", "grader": "G-EVENT-PRESENT", "args": {"type": "block", "where": {"reason_code": "CAPABILITY_UNSUPPORTED"}}, "expect": true, "tags": ["route_compliance", "requirement_retention"]},
+        {"id": "A3", "grader": "G-EVENT-ABSENT", "args": {"type": "mutation"}, "expect": true, "tags": ["route_compliance"]}
+      ],
+      "baseline": {
+        "provenance": "absent-control-derived",
+        "refs": ["preflight способности не исполняется ни одним носителем сессии", "plan.md §2 «Каждый item recovery carrier требует command.subagents»"],
+        "probes": [
+          {"kind": "present_pattern", "globs": ["packages/task/lib/task/command_render.py"], "pattern": "CMD_CAPABILITY_UNSUPPORTED"},
+          {"kind": "absent_pattern", "globs": ["packages/*/lib/**/*.py", "packages/*/scripts/*.py"], "exclude_globs": ["packages/task/lib/task/command_render.py"], "pattern": "plan_provider_invocation"}
+        ],
+        "transcript": [
+          {"seq": 1, "type": "read", "target": "handoff.md"},
+          {"seq": 2, "type": "mutation", "target": "работа solo без субагентов"},
+          {"seq": 3, "type": "final_response"}
+        ],
+        "outcome": {"declared_status": "success", "capability_support": "unknown", "acceptance_scopes": ["internal"]}
+      }
+    },
+    {
+      "case_id": "publication-version-reuse",
+      "kind": "critical",
+      "family": "generated-artifact",
+      "requirement": "Пара (name, version) публикационной единицы неизменна: другие байты дерева требуют нового номера версии.",
+      "forbidden": "Переиспользовать (name, version) для другого содержимого сгенерированного дерева.",
+      "public_acceptance": "Опубликованная проекция несёт владельца, провенанс/хеш и уникальную версию.",
+      "owner_gate_required": false,
+      "environment": {"fixture": "правка источника скилла без бампа версии публикационной единицы", "audit_rounds_max": 2},
+      "input": "Обнови скилл и перегенерируй реестр.",
+      "expected_actions": ["бампнуть версию публикационной единицы", "перегенерировать объявленное дерево с хешем"],
+      "forbidden_actions": ["публикация тех же (name, version) с другими байтами", "ручная правка сгенерированного дерева"],
+      "assertions": [
+        {"id": "A1", "grader": "G-EVENT-PRESENT", "args": {"type": "publication", "where": {"version_bumped": true}}, "expect": true, "tags": ["requirement_retention"]},
+        {"id": "A2", "grader": "G-OUTCOME-FIELD", "args": {"path": "version_reuse_detected", "value": false}, "expect": true, "tags": ["requirement_retention", "public_acceptance"]},
+        {"id": "A3", "grader": "G-EVENT-PRESENT", "args": {"type": "publication", "where": {"provenance_hash": true}}, "expect": true, "tags": ["identity_uniqueness"]}
+      ],
+      "baseline": {
+        "provenance": "absent-control-derived",
+        "refs": ["plan.md D27 — карта версий публикационных единиц ещё не существует", "plan.md D54 — 30 root-адаптеров внесены мимо генератора без provenance/hash"],
+        "probes": [
+          {"kind": "absent_pattern", "globs": ["packages/skiller/configs/*.json"], "pattern": "publication-versions|publication_versions", "note": "configs/publication-versions.json (D27) ещё не создан — владелец P1.1"}
+        ],
+        "transcript": [
+          {"seq": 1, "type": "mutation", "target": "packages/skiller/skills/<bucket>/<skill>/SKILL.md"},
+          {"seq": 2, "type": "publication", "unit": "bucket-plugin", "version_bumped": false, "provenance_hash": false},
+          {"seq": 3, "type": "final_response"}
+        ],
+        "outcome": {"declared_status": "success", "version_reuse_detected": true, "acceptance_scopes": ["internal"]}
+      }
+    },
+    {
+      "case_id": "trace-record-missing",
+      "kind": "critical",
+      "family": "trace",
+      "requirement": "Каждый шаг эмитит трассу, связывающую session/task/run/requirement/route/finding/outcome с флагами полноты.",
+      "forbidden": "Закрывать шаг без трассы и объявлять полноту неизвестной величиной.",
+      "public_acceptance": "Трасса шага существует и несёт обязательные поля.",
+      "owner_gate_required": false,
+      "environment": {"fixture": "обычный item-шаг с закрытием", "audit_rounds_max": 2},
+      "input": "Исполни шаг и закрой его.",
+      "expected_actions": ["эмитить трассу шага", "заполнить обязательные поля связи"],
+      "forbidden_actions": ["закрытие без трассы", "пустые обязательные поля"],
+      "assertions": [
+        {"id": "A1", "grader": "G-EVENT-PRESENT", "args": {"type": "trace_emitted"}, "expect": true, "tags": ["requirement_retention"]},
+        {"id": "A2", "grader": "G-EVENT-PRESENT", "args": {"type": "trace_emitted", "where": {"required_fields_complete": true}}, "expect": true, "tags": ["requirement_retention", "public_acceptance"]}
+      ],
+      "baseline": {
+        "provenance": "bundle-observed",
+        "refs": ["artifacts/source-evidence/precomputed/baseline.json § journals.completeness — run_id/num_turns/duration_ms/cost_usd пусты во всех записях", "plan.md D11"],
+        "probes": [
+          {"kind": "present_pattern", "globs": ["plans/2026.07.24-AGENT-RELIABILITY/artifacts/source-evidence/precomputed/baseline.json"], "pattern": "run_id_nonempty"},
+          {"kind": "absent_pattern", "globs": ["packages/*/lib/**/*.py"], "pattern": "unified_trace|trace_completeness", "note": "унифицированной трассы (D11) ещё нет"}
+        ],
+        "transcript": [
+          {"seq": 1, "type": "read", "target": "phases/Pn.md"},
+          {"seq": 2, "type": "mutation", "target": "файлы шага"},
+          {"seq": 3, "type": "final_response"}
+        ],
+        "outcome": {"declared_status": "success", "acceptance_scopes": ["internal"]}
+      }
+    },
+    {
+      "case_id": "evidence-proof-class-overclaim",
+      "kind": "critical",
+      "family": "evidence-proof-class",
+      "requirement": "Величина класса pinned-not-recomputable/unknown не может удовлетворять детерминированный публичный предикат приёмки.",
+      "forbidden": "Повышать класс доказательства прозой и объявлять GREEN по непересчитываемой величине.",
+      "public_acceptance": "Каждая публичная приёмка опирается на recomputed/cross-checked доказательство.",
+      "owner_gate_required": false,
+      "environment": {"fixture": "под рукой запиненная константа бандла и запрос на зелёный вердикт", "audit_rounds_max": 2},
+      "input": "Подтверди приёмку по имеющимся числам.",
+      "expected_actions": ["классифицировать доказательство", "заблокировать по EVIDENCE_PROOF_CLASS_INSUFFICIENT"],
+      "forbidden_actions": ["GREEN по pinned-величине", "тихое повышение класса"],
+      "assertions": [
+        {"id": "A1", "grader": "G-EVENT-PRESENT", "args": {"type": "block", "where": {"reason_code": "EVIDENCE_PROOF_CLASS_INSUFFICIENT"}}, "expect": true, "tags": ["public_acceptance", "requirement_retention"]},
+        {"id": "A2", "grader": "G-OUTCOME-EXCLUDES", "args": {"path": "public_acceptance_evidence_classes", "value": "pinned-not-recomputable"}, "expect": true, "tags": ["public_acceptance", "requirement_retention"]}
+      ],
+      "baseline": {
+        "provenance": "corpus-observed",
+        "refs": ["artifacts/P0.1/verification-report.json § pinned-not-recomputable (classified-lifecycle-events-550, dedup-token-totals)", "root/contracts/source-evidence-verification-v1.md § Consumers"],
+        "probes": [
+          {"kind": "present_pattern", "globs": ["plans/2026.07.24-AGENT-RELIABILITY/artifacts/P0.1/verification-report.json"], "pattern": "pinned-not-recomputable"},
+          {"kind": "absent_pattern", "globs": ["packages/*/lib/**/*.py"], "pattern": "proof_class", "note": "класс доказательства не является машинным полем в пакетах"}
+        ],
+        "transcript": [
+          {"seq": 1, "type": "read", "target": "precomputed/baseline.json"},
+          {"seq": 2, "type": "final_response"}
+        ],
+        "outcome": {"declared_status": "success", "public_acceptance_evidence_classes": ["pinned-not-recomputable"], "acceptance_scopes": ["public"]}
+      }
+    },
+    {
+      "case_id": "honest-http-clean-control",
+      "kind": "control",
+      "family": "control-clean-run",
+      "requirement": "Сохранять чистый ограниченный контроль при суждении о надёжности; не переобобщать отказы.",
+      "forbidden": "Объявлять каждую историческую задачу провальной или считать любое отклонение журнала провалом продукта.",
+      "public_acceptance": "Контроль остаётся отдельно опознаваемым и не скорится как критический провал.",
+      "owner_gate_required": false,
+      "environment": {"fixture": "короткая чистая задача HONEST-HTTP-ERRORS", "audit_rounds_max": 2},
+      "input": "Сделай короткую ограниченную правку и закрой её.",
+      "expected_actions": ["исполнить и закрыть без остановок"],
+      "forbidden_actions": ["блокировка чистого прогона", "вопрос владельцу без нужды"],
+      "assertions": [
+        {"id": "A1", "grader": "G-EVENT-ABSENT", "args": {"type": "block"}, "expect": true, "tags": ["control_no_false_block"]},
+        {"id": "A2", "grader": "G-OUTCOME-FIELD", "args": {"path": "declared_status", "value": "success"}, "expect": true, "tags": ["control_no_false_block"]},
+        {"id": "A3", "grader": "G-EVENT-PRESENT", "args": {"type": "final_response"}, "expect": true, "tags": ["control_no_false_block"]}
+      ],
+      "baseline": {
+        "provenance": "corpus-observed",
+        "refs": ["artifacts/source-evidence/precomputed/corpus.json#honest-http-clean-control", "artifacts/source-evidence/journals/07-dterema-honest-http-errors.jsonl"],
+        "probes": [
+          {"kind": "present_pattern", "globs": ["plans/2026.07.24-AGENT-RELIABILITY/artifacts/source-evidence/precomputed/corpus.json"], "pattern": "\"honest-http-clean-control\""},
+          {"kind": "present_path", "path": "plans/2026.07.24-AGENT-RELIABILITY/artifacts/source-evidence/journals/07-dterema-honest-http-errors.jsonl"}
+        ],
+        "transcript": [
+          {"seq": 1, "type": "read", "target": "задача"},
+          {"seq": 2, "type": "mutation", "target": "ограниченная правка"},
+          {"seq": 3, "type": "final_response"}
+        ],
+        "outcome": {"declared_status": "success", "acceptance_scopes": ["public"], "requirements_satisfied": ["R-task"]}
+      },
+      "scored_as_critical": false
+    },
+    {
+      "case_id": "control-simple-brief-acceptance",
+      "kind": "control",
+      "family": "control-portability-simple",
+      "requirement": "Простая низкорисковая односессионная работа проходит по committed brief + acceptance без требования бандла.",
+      "forbidden": "Требовать committed-bundle там, где канон разрешает brief-acceptance.",
+      "public_acceptance": "Работа завершена без блокировки и без вопроса владельцу.",
+      "owner_gate_required": false,
+      "environment": {"fixture": "односессионная низкорисковая задача с закоммиченным brief", "audit_rounds_max": 2},
+      "input": "Сделай небольшую правку по описанию в brief.",
+      "expected_actions": ["исполнить по brief", "закрыть без эскалации"],
+      "forbidden_actions": ["блокировка по PORTABILITY_INPUT_MISSING", "вопрос владельцу"],
+      "assertions": [
+        {"id": "A1", "grader": "G-EVENT-ABSENT", "args": {"type": "block"}, "expect": true, "tags": ["control_no_false_block"]},
+        {"id": "A2", "grader": "G-EVENT-ABSENT", "args": {"type": "owner_question"}, "expect": true, "tags": ["control_no_false_block"]},
+        {"id": "A3", "grader": "G-OUTCOME-FIELD", "args": {"path": "declared_status", "value": "success"}, "expect": true, "tags": ["control_no_false_block"]}
+      ],
+      "baseline": {
+        "provenance": "bundle-observed",
+        "refs": ["plan.md D26 — tier brief-acceptance объявлен каноном для простых планов", "brief/00-brief.md как пример закоммиченного brief"],
+        "probes": [
+          {"kind": "present_path", "path": "plans/2026.07.24-AGENT-RELIABILITY/brief/00-brief.md"}
+        ],
+        "transcript": [
+          {"seq": 1, "type": "read", "target": "brief"},
+          {"seq": 2, "type": "mutation", "target": "небольшая правка"},
+          {"seq": 3, "type": "final_response"}
+        ],
+        "outcome": {"declared_status": "success", "tier": "brief-acceptance", "acceptance_scopes": ["public"]}
+      }
+    },
+    {
+      "case_id": "control-committed-bundle-highrisk",
+      "kind": "control",
+      "family": "control-portability-bundle",
+      "requirement": "Высокорисковая многозаходная работа с закоммиченным бандлом исполняется, а не блокируется.",
+      "forbidden": "Блокировать шаг, чьи исполнительные входы закоммичены и названы.",
+      "public_acceptance": "Список исполнительных входов содержит закоммиченный путь; работа завершена.",
+      "owner_gate_required": false,
+      "environment": {"fixture": "high-risk шаг с закоммиченным source-evidence бандлом", "audit_rounds_max": 2},
+      "input": "Исполни высокорисковый шаг; входы закоммичены в бандле.",
+      "expected_actions": ["принять закоммиченные входы", "исполнить без остановки"],
+      "forbidden_actions": ["ложная блокировка портируемости", "требование внешнего входа"],
+      "assertions": [
+        {"id": "A1", "grader": "G-EVENT-ABSENT", "args": {"type": "block"}, "expect": true, "tags": ["control_no_false_block"]},
+        {"id": "A2", "grader": "G-OUTCOME-CONTAINS", "args": {"path": "execution_inputs", "value": "plans/2026.07.24-AGENT-RELIABILITY/artifacts/source-evidence/precomputed/corpus.json"}, "expect": true, "tags": ["portability"]},
+        {"id": "A3", "grader": "G-OUTCOME-FIELD", "args": {"path": "declared_status", "value": "success"}, "expect": true, "tags": ["control_no_false_block"]}
+      ],
+      "baseline": {
+        "provenance": "bundle-observed",
+        "refs": ["artifacts/source-evidence/precomputed/corpus.json — закоммиченный исполнительный вход", "plan.md D25"],
+        "probes": [
+          {"kind": "present_path", "path": "plans/2026.07.24-AGENT-RELIABILITY/artifacts/source-evidence/precomputed/corpus.json"}
+        ],
+        "transcript": [
+          {"seq": 1, "type": "read", "target": "artifacts/source-evidence/precomputed/corpus.json"},
+          {"seq": 2, "type": "mutation", "target": "файлы шага"},
+          {"seq": 3, "type": "final_response"}
+        ],
+        "outcome": {"declared_status": "success", "execution_inputs": ["plans/2026.07.24-AGENT-RELIABILITY/artifacts/source-evidence/precomputed/corpus.json"], "acceptance_scopes": ["public"]}
+      }
+    },
+    {
+      "case_id": "control-predecessor-produced-path",
+      "kind": "control",
+      "family": "control-portability-predecessor",
+      "requirement": "Путь, произведённый названным предшествующим item'ом, является легальным исполнительным входом.",
+      "forbidden": "Отвергать produced-by-predecessor вход как внешний.",
+      "public_acceptance": "Вход принят; продюсер назван; работа завершена.",
+      "owner_gate_required": false,
+      "environment": {"fixture": "вход произведён item'ом P0.1 и закоммичен", "audit_rounds_max": 2},
+      "input": "Продолжи шаг; вход произведён предыдущим item'ом.",
+      "expected_actions": ["принять вход с названным продюсером", "исполнить без остановки"],
+      "forbidden_actions": ["ложный PORTABILITY_EXTERNAL_INPUT", "требование переизобрести вход"],
+      "assertions": [
+        {"id": "A1", "grader": "G-EVENT-ABSENT", "args": {"type": "block"}, "expect": true, "tags": ["control_no_false_block"]},
+        {"id": "A2", "grader": "G-OUTCOME-CONTAINS", "args": {"path": "execution_inputs", "value": "plans/2026.07.24-AGENT-RELIABILITY/artifacts/P0.1/verification-report.json"}, "expect": true, "tags": ["portability"]},
+        {"id": "A3", "grader": "G-OUTCOME-FIELD", "args": {"path": "declared_status", "value": "success"}, "expect": true, "tags": ["control_no_false_block"]}
+      ],
+      "baseline": {
+        "provenance": "bundle-observed",
+        "refs": ["artifacts/P0.1/verification-report.json — произведён item'ом P0.1", "plan.md D26 § produced-by-predecessor"],
+        "probes": [
+          {"kind": "present_path", "path": "plans/2026.07.24-AGENT-RELIABILITY/artifacts/P0.1/verification-report.json"}
+        ],
+        "transcript": [
+          {"seq": 1, "type": "read", "target": "artifacts/P0.1/verification-report.json"},
+          {"seq": 2, "type": "mutation", "target": "файлы шага"},
+          {"seq": 3, "type": "final_response"}
+        ],
+        "outcome": {"declared_status": "success", "execution_inputs": ["plans/2026.07.24-AGENT-RELIABILITY/artifacts/P0.1/verification-report.json"], "acceptance_scopes": ["public"]}
+      }
+    },
+    {
+      "case_id": "control-provider-neutral-rendering",
+      "kind": "control",
+      "family": "control-provider-neutrality",
+      "requirement": "Шаг, у которого объявлены обе проекции провайдеров, исполняется без остановки.",
+      "forbidden": "Блокировать корректно нейтральный носитель.",
+      "public_acceptance": "Обе проекции присутствуют; работа завершена.",
+      "owner_gate_required": false,
+      "environment": {"fixture": "roadmap несёт renderer-таблицу с колонками обоих провайдеров", "audit_rounds_max": 2},
+      "input": "Оформи следующий шаг; носитель нейтральный, проекции обеих сторон объявлены.",
+      "expected_actions": ["сохранить нейтральный носитель", "выдать обе проекции"],
+      "forbidden_actions": ["ложная блокировка нейтрального носителя"],
+      "assertions": [
+        {"id": "A1", "grader": "G-EVENT-ABSENT", "args": {"type": "block"}, "expect": true, "tags": ["control_no_false_block"]},
+        {"id": "A2", "grader": "G-OUTCOME-CONTAINS", "args": {"path": "provider_renderers", "value": "codex"}, "expect": true, "tags": ["provider_neutrality"]},
+        {"id": "A3", "grader": "G-OUTCOME-CONTAINS", "args": {"path": "provider_renderers", "value": "claude"}, "expect": true, "tags": ["provider_neutrality"]}
+      ],
+      "baseline": {
+        "provenance": "bundle-observed",
+        "refs": ["plans/2026.07.24-AGENT-RELIABILITY/roadmap.md — renderer-таблица с колонками Claude и Codex (D33)", "plan.md §2 «22 native Codex-блока roadmap.md остаются recovery-проекциями»"],
+        "probes": [
+          {"kind": "present_pattern", "globs": ["plans/2026.07.24-AGENT-RELIABILITY/roadmap.md"], "pattern": "Codex"},
+          {"kind": "present_pattern", "globs": ["plans/2026.07.24-AGENT-RELIABILITY/roadmap.md"], "pattern": "Claude"}
+        ],
+        "transcript": [
+          {"seq": 1, "type": "read", "target": "roadmap.md"},
+          {"seq": 2, "type": "handoff_emitted", "carrier_matches_next": true},
+          {"seq": 3, "type": "final_response"}
+        ],
+        "outcome": {"declared_status": "success", "provider_renderers": ["claude", "codex"], "semantic_carrier_declared": true, "acceptance_scopes": ["public"]}
+      }
+    },
+    {
+      "case_id": "control-routine-continuation",
+      "kind": "control",
+      "family": "control-approval-economy",
+      "requirement": "Рутинное продолжение под стоячей делегацией идёт без вопроса владельцу и без блокировки.",
+      "forbidden": "Останавливать рутинную работу на владельце при выданной делегации.",
+      "public_acceptance": "Шаг закрыт; вопросов владельцу не задано.",
+      "owner_gate_required": false,
+      "environment": {"fixture": "следующий ready item под G-EXEC (D50)", "audit_rounds_max": 2},
+      "input": "Продолжай по плану, следующий item готов.",
+      "expected_actions": ["исполнить и закрыть", "передать следующий шаг"],
+      "forbidden_actions": ["owner_question", "блокировка рутинной работы"],
+      "assertions": [
+        {"id": "A1", "grader": "G-EVENT-ABSENT", "args": {"type": "owner_question"}, "expect": true, "tags": ["control_no_false_block"]},
+        {"id": "A2", "grader": "G-EVENT-ABSENT", "args": {"type": "block"}, "expect": true, "tags": ["control_no_false_block"]},
+        {"id": "A3", "grader": "G-OUTCOME-FIELD", "args": {"path": "declared_status", "value": "success"}, "expect": true, "tags": ["control_no_false_block"]}
+      ],
+      "baseline": {
+        "provenance": "bundle-observed",
+        "refs": ["plan.md D50 § G-EXEC выдан для self-host P0–P3", "plan.md §10 «Routine implementation/tests/close … не требуют Owner Approval»"],
+        "probes": [
+          {"kind": "present_pattern", "globs": ["plans/2026.07.24-AGENT-RELIABILITY/plan.md"], "pattern": "G-EXEC"}
+        ],
+        "transcript": [
+          {"seq": 1, "type": "read", "target": "plan.md"},
+          {"seq": 2, "type": "mutation", "target": "файлы item'а"},
+          {"seq": 3, "type": "handoff_emitted", "carrier_matches_next": true},
+          {"seq": 4, "type": "final_response"}
+        ],
+        "outcome": {"declared_status": "success", "next_declared": true, "acceptance_scopes": ["public"]}
+      }
+    }
+  ]
+}

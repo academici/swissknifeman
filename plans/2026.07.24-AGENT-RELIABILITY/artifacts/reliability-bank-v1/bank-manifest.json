@@ -1,0 +1,435 @@
+{
+  "bank_version": "1.0.0",
+  "baseline_layers": {
+    "layer-1-declared": {
+      "provenance_classes": [
+        "absent-control-derived",
+        "bundle-observed",
+        "corpus-observed"
+      ],
+      "results": "baseline-results.json",
+      "status": "frozen by P0.3"
+    },
+    "layer-2-live-paired": {
+      "producer": "P3.3 paired run on artifacts/P0.1/pre-plan-sha.txt (D45)",
+      "status": "required before any relative floor is claimed"
+    }
+  },
+  "content_hash": "82d1e6a9997dc8de7459085957edb5bb66736e7971e31679d69bf07a7809e987",
+  "correction_rule": "любая правка кейса/грейдера версионирует банк (bank_version, grader_version) и требует переигровки ОБЕИХ сторон; candidate-only правка порога запрещена (D15)",
+  "counts": {
+    "assertions": 88,
+    "cases": 31,
+    "control": 6,
+    "critical": 25,
+    "families": 26,
+    "probes": 48
+  },
+  "decisions": [
+    "D10",
+    "D15",
+    "D16",
+    "D26",
+    "D30",
+    "D50",
+    "D53",
+    "D59"
+  ],
+  "diagnostics": [
+    {
+      "expected": "непустой safe_owner_action в диагностике D42",
+      "id": "DG1",
+      "measurement_owner": "P1.5",
+      "not_a_floor_because": "план не меняет user-owned enabled-множество; правка профиля — Owner-действие (D42/D53)",
+      "subject": "живой хост: курируемый unit `core` и донорский бакет включены одновременно"
+    }
+  ],
+  "files": {
+    "baseline-results.json": "dffa3a5976ca7c730f930f641b246102c37b26386f5d3c9e259c096002a2799c",
+    "cases.json": "a0d667128e710e701d34cc48ea9c04d9cf272e2b74de0399c145fbd464f625c5",
+    "graders.json": "a034a85722268fdb22871f3ddd5742b711870e9df8a7b49c2a26a8094fad7acf",
+    "run_bank.py": "d181adc3c57a6f47c53be4cbd26ea0385d7ce9fd87a724d37950f554aabd4bb7"
+  },
+  "floor_status_layer1": [
+    {
+      "comparator": "==",
+      "id": "F1",
+      "observed": 0.0,
+      "owner": "bank",
+      "status": "not-met",
+      "target": 1.0
+    },
+    {
+      "comparator": "==",
+      "id": "F2",
+      "observed": 1,
+      "owner": "bank",
+      "status": "not-met",
+      "target": 0
+    },
+    {
+      "comparator": "==",
+      "id": "F3",
+      "observed": 1,
+      "owner": "bank",
+      "status": "not-met",
+      "target": 0
+    },
+    {
+      "detail": "effective_semantic_identity_collisions",
+      "id": "F4",
+      "owner": "item-measurement",
+      "status": "deferred"
+    },
+    {
+      "detail": "hook_reference_resolution",
+      "id": "F5",
+      "owner": "item-measurement",
+      "status": "deferred"
+    },
+    {
+      "detail": "trace_completeness",
+      "id": "F6",
+      "owner": "item-measurement",
+      "status": "deferred"
+    },
+    {
+      "comparator": ">=",
+      "id": "F7",
+      "observed": 0.1935,
+      "owner": "bank",
+      "status": "not-met",
+      "target": 0.95
+    },
+    {
+      "detail": "first_pass_success_delta_vs_paired_baseline",
+      "id": "F8",
+      "owner": "bank",
+      "status": "deferred"
+    },
+    {
+      "detail": "context_input_per_success_ratio",
+      "id": "F9",
+      "owner": "bank",
+      "status": "deferred"
+    },
+    {
+      "detail": "owner_intervention_ratio",
+      "id": "F10",
+      "owner": "bank",
+      "status": "deferred"
+    },
+    {
+      "comparator": "<=",
+      "id": "F11",
+      "observed": 1.5,
+      "owner": "bank",
+      "status": "not-met",
+      "target": 1
+    },
+    {
+      "comparator": "<=",
+      "id": "F12",
+      "observed": 3,
+      "owner": "bank",
+      "status": "not-met",
+      "target": 2
+    },
+    {
+      "comparator": "==",
+      "id": "F13",
+      "observed": 22,
+      "owner": "bank",
+      "status": "not-met",
+      "target": 0
+    },
+    {
+      "comparator": "==",
+      "id": "F14",
+      "observed": 0.0,
+      "owner": "bank",
+      "status": "met",
+      "target": 0.0
+    }
+  ],
+  "floors": [
+    {
+      "baseline_source": "bank-layer-1",
+      "comparator": "==",
+      "id": "F1",
+      "measurement_owner": "bank",
+      "metric": "critical_requirement_retention",
+      "pinned_inputs": [],
+      "scope": "critical bank",
+      "source": "plan.md §8 «Critical requirement retention — 100% critical bank»",
+      "value": 1.0
+    },
+    {
+      "baseline_source": "bank-layer-1",
+      "comparator": "==",
+      "id": "F2",
+      "measurement_owner": "bank",
+      "metric": "premature_stop_count",
+      "pinned_inputs": [],
+      "scope": "critical bank",
+      "source": "plan.md §8 «Premature stop / redundant approval — 0 critical bank»",
+      "value": 0
+    },
+    {
+      "baseline_source": "bank-layer-1",
+      "comparator": "==",
+      "id": "F3",
+      "measurement_owner": "bank",
+      "metric": "redundant_approval_count",
+      "pinned_inputs": [],
+      "scope": "critical bank",
+      "source": "plan.md §8 «Premature stop / redundant approval — 0 critical bank»",
+      "value": 0
+    },
+    {
+      "baseline_source": "item-measurement",
+      "comparator": "==",
+      "id": "F4",
+      "measurement_item": "P1.4",
+      "measurement_owner": "item-measurement",
+      "metric": "effective_semantic_identity_collisions",
+      "pinned_inputs": [],
+      "scope": "объявленная фикстура P1.4 (D51), квалификатор D53",
+      "source": "plan.md §8 «Effective semantic identity collisions — 0 в объявленной фикстуре P1.4 (D51/D53)»",
+      "value": 0
+    },
+    {
+      "baseline_source": "item-measurement",
+      "comparator": "==",
+      "id": "F5",
+      "measurement_item": "P0.4",
+      "measurement_owner": "item-measurement",
+      "metric": "hook_reference_resolution",
+      "pinned_inputs": [],
+      "scope": "controlled fixtures (P0.4 self-host target + bank cases hook-*)",
+      "source": "plan.md §8 «Hook/reference/provider resolution — 100% controlled fixtures»",
+      "value": 1.0
+    },
+    {
+      "baseline_source": "bank-layer-2-live-paired",
+      "comparator": ">=",
+      "id": "F6",
+      "measurement_item": "P3.2/P3.3",
+      "measurement_owner": "item-measurement",
+      "metric": "trace_completeness",
+      "note": "историческая completeness в precomputed/baseline.json считается от 550 classified events — величина pinned-not-recomputable и в знаменатель этого floor'а не входит (D30/D59)",
+      "pinned_inputs": [],
+      "scope": "controlled bank",
+      "source": "plan.md §8 «Required trace completeness — ≥99% controlled bank»",
+      "value": 0.99
+    },
+    {
+      "baseline_source": "bank-layer-1",
+      "comparator": ">=",
+      "id": "F7",
+      "measurement_owner": "bank",
+      "metric": "first_pass_success",
+      "pinned_inputs": [],
+      "scope": "весь банк",
+      "source": "plan.md §8 «Overall first-pass success — ≥95%»",
+      "value": 0.95
+    },
+    {
+      "baseline_source": "bank-layer-2-live-paired",
+      "comparator": ">=",
+      "id": "F8",
+      "measurement_owner": "bank",
+      "metric": "first_pass_success_delta_vs_paired_baseline",
+      "note": "знаменатель даёт layer-2 (живой парный прогон на pre-plan-sha, P3.3), а не layer-1 и не запиненные константы бандла",
+      "pinned_inputs": [],
+      "scope": "весь банк, парный прогон",
+      "source": "plan.md §8 «… и ≥30 percentage points over paired baseline»",
+      "value": 0.3
+    },
+    {
+      "baseline_source": "bank-layer-2-live-paired",
+      "comparator": "<=",
+      "id": "F9",
+      "measurement_owner": "bank",
+      "metric": "context_input_per_success_ratio",
+      "note": "dedup_correction.corrected (135 110 000 input tokens и соседи) — pinned-not-recomputable, контекст, а не знаменатель (D30/D59)",
+      "pinned_inputs": [],
+      "scope": "парный прогон",
+      "source": "plan.md §8 «Context input per successful outcome — ≤50% paired baseline»",
+      "value": 0.5
+    },
+    {
+      "baseline_source": "bank-layer-2-live-paired",
+      "comparator": "<=",
+      "id": "F10",
+      "measurement_owner": "bank",
+      "metric": "owner_intervention_ratio",
+      "note": "исторический journals.outcomes breakdown — pinned-not-recomputable и знаменателем быть не может (D30/D59); знаменатель даёт layer-2",
+      "pinned_inputs": [],
+      "scope": "парный прогон",
+      "source": "plan.md §8 «Owner intervention — ≤25% paired baseline»",
+      "value": 0.25
+    },
+    {
+      "baseline_source": "bank-layer-1",
+      "comparator": "<=",
+      "id": "F11",
+      "measurement_owner": "bank",
+      "metric": "same_finding_loop_depth",
+      "metric_key": "median",
+      "pinned_inputs": [],
+      "scope": "весь банк",
+      "source": "plan.md §8 «Same-finding loop depth — median ≤1»",
+      "value": 1
+    },
+    {
+      "baseline_source": "bank-layer-1",
+      "comparator": "<=",
+      "id": "F12",
+      "measurement_owner": "bank",
+      "metric": "same_finding_loop_depth",
+      "metric_key": "p95",
+      "pinned_inputs": [],
+      "scope": "весь банк",
+      "source": "plan.md §8 «Same-finding loop depth — p95 ≤2»",
+      "value": 2
+    },
+    {
+      "baseline_source": "bank-layer-1",
+      "comparator": "==",
+      "id": "F13",
+      "measurement_owner": "bank",
+      "metric": "critical_regression_escape",
+      "pinned_inputs": [],
+      "scope": "critical bank",
+      "source": "plan.md §8 «Critical regression escape — 0»",
+      "value": 0
+    },
+    {
+      "baseline_source": "bank-layer-1",
+      "comparator": "==",
+      "id": "F14",
+      "measurement_owner": "bank",
+      "metric": "false_block_rate",
+      "pinned_inputs": [],
+      "scope": "control bank",
+      "source": "ДОБАВЛЕН СВЕРХ §8 решением агента (D50/D59): §8 не содержит защиты от лечения через тотальную блокировку — контрольный кейс, заблокированный кандидатом, обязан валить приёмку так же, как пропущенный критический",
+      "value": 0.0
+    }
+  ],
+  "frozen_at": "2026-07-25",
+  "frozen_reference_tree": "7479972f2a582ab8583270c30fad8da1ff56659e",
+  "grader_version": "1.0.0",
+  "imported_proof_classes": {
+    "cross-checked": [
+      "corpus-source-path-closure",
+      "immutable-bundle-map-state",
+      "immutable-bundle-verify",
+      "immutable-bundle-verify-claim-inventory",
+      "immutable-bundle-verify-results",
+      "journal-manifest-hash-cross-link",
+      "selected-session-cross-link"
+    ],
+    "pinned-not-recomputable": [
+      "classified-lifecycle-events-550",
+      "dedup-token-totals"
+    ],
+    "recomputed": [
+      "control-case-presence",
+      "corpus-case-set-closure",
+      "journal-friction-histogram",
+      "journal-key-closure",
+      "journal-physical-record-count",
+      "journal-result-histogram",
+      "session-record-shape-closure"
+    ]
+  },
+  "layer1_metrics": {
+    "audit_loop_overrun_cases": [
+      "five-audit-loop"
+    ],
+    "audit_loop_overrun_count": 1,
+    "counts": {
+      "cases": 31,
+      "control": 6,
+      "critical": 25
+    },
+    "critical_regression_escape": 22,
+    "critical_regression_escape_cases": [
+      "stale-requirement-dropped",
+      "premature-stop-after-clean-close",
+      "stale-cold-start-item",
+      "missed-consumer-cold-start",
+      "audit-reopens-bookkeeping-as-product",
+      "same-finding-third-event",
+      "wrong-provider-invocation",
+      "duplicate-identity-trigger",
+      "missing-launch-block-intra-session",
+      "route-undershoot-silent",
+      "false-self-attribution-route",
+      "hook-handler-missing",
+      "hook-set-spans-sources",
+      "wrong-scope-return",
+      "portability-external-input",
+      "portability-privacy-rawbulk",
+      "portability-input-missing-highrisk",
+      "claude-only-carrier",
+      "capability-unknown-solo-fallback",
+      "publication-version-reuse",
+      "trace-record-missing",
+      "evidence-proof-class-overclaim"
+    ],
+    "critical_requirement_retention": 0.0,
+    "deferred": {
+      "context_input_per_success": "requires the layer-2 live paired run (P3.3); the committed dedup token totals are pinned-not-recomputable and are context only (D30/D59)",
+      "trace_completeness": "instrument is produced by P3.1/P3.2 (unified trace); not measurable on a layer-1 declared baseline — reported deferred, never green"
+    },
+    "false_block_rate": 0.0,
+    "first_pass_success": 0.1935,
+    "first_pass_success_critical": 0.0,
+    "layer": "layer-1-declared",
+    "owner_intervention_cases": [
+      "redundant-approval-after-grant"
+    ],
+    "owner_intervention_rate": 0.0323,
+    "premature_stop_cases": [
+      "premature-stop-after-clean-close"
+    ],
+    "premature_stop_count": 1,
+    "redundant_approval_cases": [
+      "redundant-approval-after-grant"
+    ],
+    "redundant_approval_count": 1,
+    "routing_compliance": 0.5,
+    "same_finding_loop_depth": {
+      "median": 1.5,
+      "note": "samples=0 означает «находок не было»: глубина повтора 0, а не неизвестна",
+      "p95": 3,
+      "samples": 4
+    }
+  },
+  "owner_item": "plans/2026.07.24-AGENT-RELIABILITY P0.3",
+  "pinned_context_only": [
+    "dedup_correction.corrected",
+    "journals.classified_lifecycle_events",
+    "journals.outcomes"
+  ],
+  "sample": {
+    "method": "sha256(seed|case_id) ascending over baseline-passing cases",
+    "seed": "reliability-bank-v1/2026-07-25",
+    "selected": [
+      "control-predecessor-produced-path",
+      "control-provider-neutral-rendering",
+      "control-committed-bundle-highrisk",
+      "control-simple-brief-acceptance",
+      "control-routine-continuation"
+    ],
+    "size": 5
+  },
+  "schema_version": "reliability-bank/v1",
+  "source_inputs": {
+    "artifacts/P0.1/verification-report.json": "026d174b3a4c4b347fa1bdfaccc1d5cf3ed83be5f6b641f8470502a3a391e0be",
+    "artifacts/source-evidence/precomputed/baseline.json": "c413f75a41df6c47540b8ed280e512b3ce34fc79b6558a538ce1500c791c69b7",
+    "artifacts/source-evidence/precomputed/corpus.json": "23c8b2ecce9e7fb57daa83b66fc4c16fe7de018b282e76e9c5e97f95d76377c7"
+  }
+}

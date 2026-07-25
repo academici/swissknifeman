@@ -6,11 +6,11 @@
 |:--|:--|
 | Plan ID | 2026.07.24-AGENT-RELIABILITY |
 | Title | Надёжное исполнение: checked task contract, единственный runtime source, bounded review и измеримая обратная связь |
-| Version | 1.12.2 |
+| Version | 1.12.3 |
 | Status | 🟡 In progress |
 | Document Type | Executable Master Plan |
 | Authoring Model | Codex gpt-5.6-sol/high; Owner-override Pass 4 — gpt-5.6-sol/xhigh; historical authority-C repair — Claude Fable 5/high; bounded redesign Pass 5 — Codex gpt-5.6-sol/high; bounded A1 repair (authority D, D39) — Claude Opus 5/high; bounded A3 repair (authority E, D50) — Claude Opus 5/high |
-| Last Updated | 2026-07-25 (P0.1 закрыт: этапы A–C программы пройдены, первый item плана исполнен) |
+| Last Updated | 2026-07-25 (P0.2 закрыт: Task Contract v1 запечатан — схема, два предиката, 23 проверенных кейса) |
 | Repository | swissknifeman |
 | Related Packages | task, skiller, harness, analyst, maind |
 | Execution Mode | reliability-first · evidence-before-mutation · phase-bounded |
@@ -243,7 +243,7 @@ audit/fix-loop без продукта, который план создан л�
 
 | Phase | Title | Items 🟢/всего | Status |
 |:--|:--|:--|:--|
-| P0 | Evidence, contracts и acceptance-before-mutation | 1/4 | 🟡 In progress |
+| P0 | Evidence, contracts и acceptance-before-mutation | 2/4 | 🟡 In progress |
 | P1 | Единственный semantic source и runtime uniqueness | 0/5 | ⬜ Not started |
 | P2 | Checked outcome execution и bounded review | 0/5 | ⬜ Not started |
 | P3 | Unified traces, evals и isolated self-host canary | 0/5 | ⬜ Not started |
@@ -335,6 +335,7 @@ audit/fix-loop без продукта, который план создан л�
 | 2026-07-25 | plan-design/Claude Opus 5/high (принципы) | D57: четыре принципа владельца → 12 инвариантов И1–И12 в `plans/README.md`; §2 несёт ссылку. Version 1.11.0 → 1.12.0. |
 | 2026-07-25 | bookkeeping/Claude Sonnet 5/high (payload A, аудит этапа C Ф1/Ф3/Ф8) | D58: G1-формулировка о FOREMAN сужена до наружных частей (§2/§10 правлены); долг D47 «зеркальная Consumed-строка ECO» снят; предстартовые строки добавлены в ТЗ P3.3 (`phases/P3.md`) и P4.3 (`phases/P4.md`). Version 1.12.0 → 1.12.1. |
 | 2026-07-25 | plan-exec/Claude Sonnet 5/medium | P0.1 закрыт: item-owned semantic verification contract/verifier/tests/report над immutable bundle (F1 gap, D30) — 16/16 assertions, 15/15 tests, `pre-plan-sha.txt` (D45). Детали — `phases/P0.md` P0.1 Completion Notes. Version 1.12.1 → 1.12.2. |
+| 2026-07-25 | plan-run/Claude Opus 5/high | P0.2 закрыт: Task Contract v1 запечатан — схема, precedence, два предиката с 16 типизированными кодами, 23 проверенных кейса, 4/4 критических кейса корпуса P0.1 связаны с полем и проверкой — детали см. phases/P0.md P0.2 Completion Notes. Version 1.12.2 → 1.12.3. |
 
 ## 7. Contracts
 
@@ -343,7 +344,7 @@ audit/fix-loop без продукта, который план создан л�
 | Контракт | Версия | Статус | Потребители | Уведомлены |
 |:--|:--|:--|:--|:--|
 | `root/contracts/source-evidence-verification-v1.md` | v1 | committed P0.1 | P0.2, P0.3, P3.2, P3.5 | task, skiller, analyst |
-| `root/contracts/task-contract-v1.md` | v1 | planned P0.2 | P0.3, P2, P3 | task, skiller, harness |
+| `root/contracts/task-contract-v1.md` | v1 | committed P0.2 | P0.3, P2, P3 | task, skiller, harness |
 | `root/contracts/reliability-acceptance-v1.md` | v1 | Owner-freeze P0.3 | P0.4–P3 | skiller, task, analyst, harness |
 | `root/contracts/semantic-identity-ownership-v1.md` | v1 | planned P1.1 | P1.2, P1.3, P1.5, P1.4 | skiller, task, harness |
 | `root/contracts/generated-artifact-version-v1.md` | v1 | planned P1.1 | P1.2, P1.3, P1.5, P2.2, P2.3, P4.3 | skiller, task, harness |
